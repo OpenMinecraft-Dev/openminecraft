@@ -1,0 +1,272 @@
+name: Build OpenMinecraft native version
+on: [push, pull_request]
+env:
+  LINK_JOBS: 16
+  JOBS: 16
+  MODE: release
+  XMAKE_ARGS: -v
+  ANDROID_NDK_VERSION: r27c
+  OHOS_SDK_VERSION: 5.0.0-Release
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: Windows (x64)
+            plat: windows
+            arch: x64
+            loaderarch: x64
+
+          - os: windows-latest
+            name: Windows (x86)
+            plat: windows
+            arch: x86
+            loaderarch: x86
+
+          - os: windows-latest
+            name: Windows (arm64)
+            plat: windows
+            arch: arm64
+            loaderarch: arm64
+
+          - os: ubuntu-22.04
+            name: OpenHarmony (arm64)
+            plat: harmony
+            arch: arm64-v8a
+            loaderarch: arm64
+
+          - os: ubuntu-22.04
+            name: OpenHarmony (arm32)
+            plat: harmony
+            arch: armeabi-v7a
+            loaderarch: arm32
+
+          - os: ubuntu-22.04
+            name: OpenHarmony (x64)
+            plat: harmony
+            arch: x86_64
+            loaderarch: x64
+
+          - os: ubuntu-22.04
+            name: Android (arm64)
+            plat: android
+            arch: arm64-v8a
+            loaderarch: arm64
+
+          - os: ubuntu-22.04
+            name: Android (arm32)
+            plat: android
+            arch: armeabi-v7a
+            loaderarch: arm32
+
+          - os: ubuntu-22.04
+            name: Android (x86)
+            plat: android
+            arch: x86
+            loaderarch: x86
+
+          - os: ubuntu-22.04
+            name: Android (x64)
+            plat: android
+            arch: x86_64
+            loaderarch: x64
+
+          - os: ubuntu-22.04
+            name: Linux (x64)
+            plat: linux
+            arch: x64
+            loaderarch: x64
+
+          - os: ubuntu-22.04
+            name: Linux (arm64)
+            plat: linux
+            arch: arm64
+            triplet: aarch64-linux-gnu
+            libc_arch: arm64
+            loaderarch: arm64
+
+          - os: ubuntu-22.04
+            name: Linux (arm32)
+            plat: linux
+            arch: arm32
+            triplet: arm-linux-gnueabihf
+            libc_arch: armhf
+            loaderarch: arm32
+
+          - os: ubuntu-22.04
+            name: Linux (ppc64)
+            plat: linux
+            arch: ppc64le
+            triplet: powerpc64le-linux-gnu
+            libc_arch: ppc64el
+            loaderarch: ppc64le
+
+          - os: ubuntu-22.04
+            name: Linux (loongarch64)
+            plat: linux
+            arch: loong64
+            libc_arch: loongarch64
+            loaderarch: loong64
+
+          #- os: ubuntu-22.04
+          #  name: FreeBSD (x64)
+          #  plat: freebsd
+          #  arch: x64
+          #  containerarch: x86-64
+          #  loaderarch: x64
+
+          - os: macos-latest
+            name: MacOS (arm64)
+            plat: macos
+            arch: arm64
+            loaderarch: arm64
+
+          - os: macos-13
+            name: MacOS (x86)
+            plat: macos
+            arch: x64
+            loaderarch: x64
+
+          - os: macos-latest
+            name: IOS
+            plat: ios
+            arch: arm64
+            loaderarch: arm64
+
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: 'true'
+
+      - name: Install xmake
+        if: matrix.plat != 'freebsd'
+        uses: xmake-io/github-action-setup-xmake@v1
+
+      - name: Update xmake repo
+        if: matrix.plat != 'freebsd'
+        run: xmake repo -u
+
+      - name: Free Disk Space (FreeBSD Host)
+        if: matrix.plat == 'freebsd'
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - name: Setup OpenHarmony SDK
+        if: matrix.plat == 'harmony'
+        run: |
+          wget https://repo.huaweicloud.com/openharmony/os/${{ env.OHOS_SDK_VERSION }}/ohos-sdk-windows_linux-public.tar.gz
+          tar -zxvf ohos-sdk-windows_linux-public.tar.gz
+          unzip linux/native*.zip
+
+      - name: Setup Android NDK
+        if: matrix.plat == 'android'
+        run: |
+          wget https://dl.google.com/android/repository/android-ndk-${{ env.ANDROID_NDK_VERSION }}-linux.zip
+          unzip android-ndk-${{ env.ANDROID_NDK_VERSION }}-linux.zip
+
+      - name: Configure MacOS
+        if: matrix.plat == 'macos'
+        run: xmake f -m ${{ env.MODE }} --cxx="clang++" -yc ${{ env.XMAKE_ARGS }}
+
+      - name: Configure IOS
+        if: matrix.plat == 'ios'
+        run: xmake f -p iphoneos -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+          
+      - name: Configure OpenHarmony
+        if: matrix.plat == 'harmony'
+        run: xmake f -p harmony -a ${{ matrix.arch }} --sdk=${{ github.workspace }}/native -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+
+      - name: Configure Android
+        if: matrix.plat == 'android'
+        run: xmake f -p android -a ${{ matrix.arch }} --ndk=${{ github.workspace }}/android-ndk-${{ env.ANDROID_NDK_VERSION }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+
+      - name: Configure Linux
+        if: ${{ matrix.plat == 'linux' && matrix.arch == 'x64' }}
+        run: xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+
+      - name: Configure Linux Cross
+        if: ${{ matrix.plat == 'linux' && matrix.arch != 'x64' && matrix.arch != 'loong64' }}
+        run: |
+          sudo apt update
+          sudo apt install gcc-multilib g++-multilib
+          sudo apt install gcc-${{ matrix.triplet }} g++-${{ matrix.triplet }}
+          sudo apt install libc6-dev-${{ matrix.libc_arch }}-cross
+
+          sudo sed -i 's/deb mirror/deb [arch=amd64,i386] mirror/' /etc/apt/sources.list
+          sudo grep "mirror+file" /etc/apt/sources.list | sudo tee /etc/apt/sources.list.d/ports.list
+          sudo sed -i 's/amd64,i386/${{ matrix.libc_arch }}/' /etc/apt/sources.list.d/ports.list
+          sudo sed -i 's#mirror+file:/etc/apt/apt-mirrors.txt#http://ports.ubuntu.com/ubuntu-ports/#' /etc/apt/sources.list.d/ports.list
+          sudo dpkg --add-architecture ${{ matrix.libc_arch }}
+          sudo apt-get update || true
+
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -yq -f --allow-unauthenticated --no-install-suggests --no-install-recommends install libgtk-3-dev:${{ matrix.libc_arch }} libatk-bridge2.0-dev:${{ matrix.libc_arch }} libgdk-pixbuf2.0-dev:${{ matrix.libc_arch }} libglu-dev:${{ matrix.libc_arch }} libgl1-mesa-glx:${{ matrix.libc_arch }} libx11-dev:${{ matrix.libc_arch }} libxt-dev:${{ matrix.libc_arch }} libdbus-1-dev:${{ matrix.libc_arch }} libatomic1:${{ matrix.libc_arch }} -o Dpkg::Options::="--force-overwrite"
+
+          xmake f -p cross -a ${{ matrix.arch }} --sdk=/usr --cross=${{ matrix.triplet }}- -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }} --cxxflags="-Wno-undef -flax-vector-conversions" --ldflags="-Wno-undef"
+
+      - name: Configure Linux LoongArch
+        if: ${{ matrix.plat == 'linux' && matrix.arch == 'loong64' }}
+        run: |
+          wget https://github.com/loongson/build-tools/releases/download/2024.11.01/x86_64-cross-tools-loongarch64-binutils_2.43.1-gcc_14.2.0-glibc_2.40.tar.xz
+          tar -Jxvf x86_64-cross-tools-loongarch64-binutils_2.43.1-gcc_14.2.0-glibc_2.40.tar.xz
+          xmake f -p cross -a ${{ matrix.arch }} --sdk=${{ github.workspace }}/cross-tools -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }} --cxxflags="-Wno-undef" --ldflags="-Wno-undef"
+ 
+      - name: Configure Windows
+        if: matrix.plat == 'windows'
+        run: xmake f --toolchain=msvc -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+          
+      - name: Build
+        if: matrix.plat != 'freebsd'
+        run: xmake -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }}
+
+      - name: Build FreeBSD
+        if: matrix.plat == 'freebsd'
+        uses: cross-platform-actions/action@v0.25.0
+        with:
+          operating_system: ${{ matrix.plat }}
+          architecture: ${{ matrix.containerarch }}
+          version: '13.3'
+          memory: 8G
+          shell: bash
+          environment_variables: LINK_JOBS JOBS MODE XMAKE_ARGS
+          run: |
+            sudo pkg install -y git cmake gmake
+            git clone --recursive https://github.com/xmake-io/xmake.git
+            cd ./xmake
+
+            /usr/bin/make --version
+            ./configure --make=/usr/bin/make
+            gmake
+            ./scripts/get.sh __local__ __install_only__
+            source ~/.xmake/profile
+            cd ..
+
+            xmake repo -u
+            xmake f -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+            xmake -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }}
+
+            xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft
+
+      - name: Xmake install
+        if: matrix.plat != 'freebsd'
+        run: xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: target-${{ matrix.plat }}-${{ matrix.loaderarch }}
+          path: prod/
+ 
