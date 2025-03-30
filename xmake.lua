@@ -63,12 +63,12 @@ package("vulkan-loader")
         end
     end)
 
-    on_install("windows|x86", "windows|x64", "linux", "macosx", function (package)
-        local configs = {"-DBUILD_TESTS=OFF"}
+    on_install("windows", "linux", "macosx", function (package)
+        local configs = {"-DBUILD_TESTS=OFF", "-DBUILD_WSI_WAYLAND_SUPPORT=OFF"}
         local vulkan_headers = package:dep("vulkan-headers")
         table.insert(configs, "-DVULKAN_HEADERS_INSTALL_DIR=" .. vulkan_headers:installdir())
         if package:is_plat("linux") then
-            import("package.tools.cmake").install(package, configs, {packagedeps = {"wayland", "libxrandr", "libxrender", "libxcb", "libxkbcommon"}})
+            import("package.tools.cmake").install(package, configs, {packagedeps = {"libxrandr", "libxrender", "libxcb", "libxkbcommon"}})
         else
             import("package.tools.cmake").install(package, configs)
         end
@@ -86,7 +86,7 @@ end
 
 if not is_plat("iphoneos", "harmony", "android") then
     includes("extlibs/glfw.lua")
-    add_requires("glfw-mod", "opengl")
+    add_requires("glfw-mod", "opengl", "vulkan-loader", { system = false })
 end
 if is_plat("iphoneos", "macosx") then 
     add_requires("moltenvk")
@@ -107,7 +107,7 @@ end
 add_files("src/entrypoint.cpp")
 add_packages("openal-soft-mod", "freetype", "harfbuzz", "stb", "yoga", "xxhash", "opengl-headers", "vulkan-headers", "glm", "bullet3")
 if not is_plat("iphoneos", "harmony", "android") then
-    add_packages("glfw-mod", "opengl")
+    add_packages("glfw-mod", "opengl", "vulkan-loader")
 end
 if not is_plat("bsd") then
     add_deps("shaderc")
