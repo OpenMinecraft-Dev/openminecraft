@@ -1,6 +1,9 @@
 #include <iostream>
+#include <vulkan/vulkan_core.h>
 
 int main() {
-    std::cout << "test!" << std::endl;
+    uint32_t d;
+    vkEnumerateInstanceLayerProperties(&d, nullptr);
+    std::cout << "test!" << d << std::endl;
     return 0;
 }
