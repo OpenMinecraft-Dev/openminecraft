@@ -86,7 +86,10 @@ end
 
 if not is_plat("iphoneos", "harmony", "android") then
     includes("extlibs/glfw.lua")
-    add_requires("glfw-mod", "opengl", "vulkan-loader", { system = false })
+    add_requires("glfw-mod", "opengl", { system = false })
+    if not is_plat("linux", "cross") then
+        add_requires("vulkan-loader", { system = false })
+    end
 end
 if is_plat("iphoneos", "macosx") then 
     add_requires("moltenvk")
@@ -107,7 +110,10 @@ end
 add_files("src/entrypoint.cpp")
 add_packages("openal-soft-mod", "freetype", "harfbuzz", "stb", "yoga", "xxhash", "opengl-headers", "vulkan-headers", "glm", "bullet3")
 if not is_plat("iphoneos", "harmony", "android") then
-    add_packages("glfw-mod", "opengl", "vulkan-loader")
+    add_packages("glfw-mod", "opengl")
+    if not is_plat("linux", "cross") then
+        add_packages("vulkan-loader")
+    end
 end
 if not is_plat("bsd") then
     add_deps("shaderc")
