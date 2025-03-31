@@ -43,7 +43,7 @@ package("vulkan-hpp")
     end)
 
 
-    on_install("windows", "harmony", "cross", "linux", "macosx", "mingw", "android", "iphoneos", function (package)
+    on_install("windows", "harmony", "cross", "linux", "macosx", "mingw", "android", "iphoneos", "bsd", function (package)
         local arch_prev
         local plat_prev
         if (package:is_plat("mingw") or package:is_cross()) and package.plat_set then
@@ -188,7 +188,7 @@ end
 if not is_plat("iphoneos", "harmony", "android") then
     includes("extlibs/glfw.lua")
     add_requires("glfw-mod", "opengl", { system = false })
-    if not is_plat("linux", "cross") then
+    if not is_plat("linux", "cross", "bsd") then
         add_requires("vulkan-loader", { system = false })
     end
 end
@@ -212,7 +212,7 @@ add_files("src/entrypoint.cpp")
 add_packages("openal-soft-mod", "freetype", "harfbuzz", "stb", "yoga", "xxhash", "opengl-headers", "vulkan-headers", "glm", "bullet3", "vulkan-hpp")
 if not is_plat("iphoneos", "harmony", "android") then
     add_packages("glfw-mod", "opengl")
-    if not is_plat("linux", "cross") then
+    if not is_plat("linux", "cross", "bsd") then
         add_packages("vulkan-loader")
     end
 end
