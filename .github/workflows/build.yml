@@ -75,12 +75,6 @@ jobs:
             loaderarch: x64
 
           - os: ubuntu-22.04
-            name: Android (riscv64)
-            plat: android
-            arch: riscv64
-            loaderarch: riscv64
-
-          - os: ubuntu-22.04
             name: Linux (x64)
             plat: linux
             arch: x64
@@ -111,26 +105,18 @@ jobs:
             loaderarch: ppc64le
 
           - os: ubuntu-22.04
-            name: Linux (riscv64)
-            plat: linux
-            arch: riscv64
-            triplet: riscv64-linux-gnu
-            libc_arch: riscv64
-            loaderarch: riscv64
-
-          - os: ubuntu-22.04
             name: Linux (loongarch64)
             plat: linux
             arch: loong64
             libc_arch: loongarch64
             loaderarch: loong64
 
-          #- os: ubuntu-22.04
-          #  name: FreeBSD (x64)
-          #  plat: freebsd
-          #  arch: x64
-          #  containerarch: x86-64
-          #  loaderarch: x64
+          - os: ubuntu-22.04
+            name: FreeBSD (x64)
+            plat: freebsd
+            arch: x64
+            containerarch: x86-64
+            loaderarch: x64
 
           - os: macos-latest
             name: MacOS (arm64)
