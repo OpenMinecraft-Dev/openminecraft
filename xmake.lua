@@ -202,7 +202,7 @@ target("openminecraft")
 if is_plat("harmony") then
     add_syslinks("vulkan")
 end
-if is_plat("iphoneos", "harmony", "android") then
+if is_plat("iphoneos", "harmony") then
     set_kind("shared")
     add_rules("utils.symbols.export_all")
 else 
