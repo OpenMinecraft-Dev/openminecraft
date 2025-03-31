@@ -111,12 +111,12 @@ jobs:
             libc_arch: loongarch64
             loaderarch: loong64
 
-          - os: ubuntu-22.04
-            name: FreeBSD (x64)
-            plat: freebsd
-            arch: x64
-            containerarch: x86-64
-            loaderarch: x64
+          #- os: ubuntu-22.04
+          #  name: FreeBSD (x64)
+          #  plat: freebsd
+          #  arch: x64
+          #  containerarch: x86-64
+          #  loaderarch: x64
 
           - os: macos-latest
             name: MacOS (arm64)
