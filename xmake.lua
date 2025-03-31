@@ -199,7 +199,7 @@ end
 add_requires("openal-soft-mod", "freetype", "harfbuzz", "stb", "yoga", "xxhash", "opengl-headers", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", { system = false })
 
 target("openminecraft")
-if is_plat("harmony", "android") then
+if is_plat("harmony") then
     add_syslinks("vulkan")
 end
 if is_plat("iphoneos", "harmony", "android") then
