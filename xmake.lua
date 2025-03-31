@@ -196,7 +196,7 @@ if is_plat("iphoneos", "macosx") then
     add_requires("moltenvk")
 end
 
-add_requires("openal-soft-mod", "freetype", "harfbuzz", "stb", "yoga", "xxhash", "opengl-headers", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", { system = false })
+add_requires("openal-soft-mod", "freetype", "harfbuzz", "stb", "yoga", "xxhash", "opengl-headers", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "libsdl3", { system = false })
 
 target("openminecraft")
 if is_plat("harmony") then
@@ -209,7 +209,7 @@ else
     set_kind("binary")
 end
 add_files("src/entrypoint.cpp")
-add_packages("openal-soft-mod", "freetype", "harfbuzz", "stb", "yoga", "xxhash", "opengl-headers", "vulkan-headers", "glm", "bullet3", "vulkan-hpp")
+add_packages("openal-soft-mod", "freetype", "harfbuzz", "stb", "yoga", "xxhash", "opengl-headers", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "libsdl3")
 if not is_plat("iphoneos", "harmony", "android") then
     add_packages("glfw-mod", "opengl")
     if not is_plat("linux", "cross", "bsd") then
