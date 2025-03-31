@@ -36,12 +36,12 @@ package("vulkan-loader")
         add_extsources("pacman::vulkan-loader")
     elseif is_plat("linux") then
         add_extsources("apt::libvulkan-dev", "pacman::vulkan-icd-loader")
-        add_deps("wayland", "libxrandr", "libxrender", "libxcb", "libxkbcommon")
+        add_deps("libxrandr", "libxrender", "libxcb", "libxkbcommon")
     elseif is_plat("macosx") then
         add_extsources("brew::vulkan-loader")
     end
 
-    on_load("windows", "linux", "macosx", function (package)
+    on_load("windows", "linux", "macosx", "cross", function (package)
         local sdkver = package:version():split("%+")[1]
         package:add("deps", "vulkan-headers " .. sdkver)
         if not package.is_built or package:is_built() then
@@ -63,7 +63,7 @@ package("vulkan-loader")
         end
     end)
 
-    on_install("windows", "linux", "macosx", function (package)
+    on_install("windows", "linux", "macosx", "cross", function (package)
         local configs = {"-DBUILD_TESTS=OFF", "-DBUILD_WSI_WAYLAND_SUPPORT=OFF"}
         local vulkan_headers = package:dep("vulkan-headers")
         table.insert(configs, "-DVULKAN_HEADERS_INSTALL_DIR=" .. vulkan_headers:installdir())
