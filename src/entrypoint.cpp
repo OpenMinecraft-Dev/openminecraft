@@ -3,7 +3,7 @@
 
 int main() {
     uint32_t d;
-    vkEnumerateInstanceLayerProperties(&d, nullptr);
+    // vkEnumerateInstanceLayerProperties(&d, nullptr);
     std::cout << "test!" << d << std::endl;
     return 0;
 }
