@@ -215,7 +215,7 @@ jobs:
 
           DEBIAN_FRONTEND=noninteractive sudo apt-get -yq -f --allow-unauthenticated --no-install-suggests --no-install-recommends install libgtk-3-dev:${{ matrix.libc_arch }} libatk-bridge2.0-dev:${{ matrix.libc_arch }} libgdk-pixbuf2.0-dev:${{ matrix.libc_arch }} libglu-dev:${{ matrix.libc_arch }} libgl1-mesa-glx:${{ matrix.libc_arch }} libx11-dev:${{ matrix.libc_arch }} libxt-dev:${{ matrix.libc_arch }} libdbus-1-dev:${{ matrix.libc_arch }} libatomic1:${{ matrix.libc_arch }} -o Dpkg::Options::="--force-overwrite"
 
-          xmake f -a ${{ matrix.arch }} --sdk=/usr --cross=${{ matrix.triplet }}- -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }} --cxxflags="-Wno-undef -flax-vector-conversions" --ldflags="-Wno-undef"
+          xmake f -p cross -a ${{ matrix.arch }} --sdk=/usr --cross=${{ matrix.triplet }}- -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }} --cxxflags="-Wno-undef -flax-vector-conversions" --ldflags="-Wno-undef"
 
       - name: Configure Linux LoongArch
         if: ${{ matrix.plat == 'linux' && matrix.arch == 'loong64' }}
