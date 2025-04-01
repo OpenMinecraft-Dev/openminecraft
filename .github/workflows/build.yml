@@ -213,6 +213,8 @@ jobs:
           sudo dpkg --add-architecture ${{ matrix.libc_arch }}
           sudo apt-get update || true
 
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -yq -f --allow-unauthenticated --no-install-suggests --no-install-recommends install libx11-dev:${{ matrix.libc_arch }} -o Dpkg::Options::="--force-overwrite"
+
           xmake f -p cross -a ${{ matrix.arch }} --sdk=/usr --cross=${{ matrix.triplet }}- -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }} --cxxflags="-Wno-undef -flax-vector-conversions" --ldflags="-Wno-undef"
 
       - name: Configure Linux LoongArch
