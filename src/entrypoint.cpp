@@ -1,15 +1,20 @@
+#ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+#endif
 #include "vulkan/vulkan.hpp"
 #include <iostream>
 
-// Vulkan defined macro storage for dispatch loader
+#ifdef OM_VULKAN_DYNAMIC
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
+#endif
 
 int main()
 {
-    vk::DynamicLoader dl("libvulkan.so");
+    #ifdef OM_VULKAN_DYNAMIC
+    vk::DynamicLoader dl;
     PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
     VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
+    #endif
     vk::Instance instance = vk::createInstance({}, nullptr);
     // initialize function pointers for instance
     VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
