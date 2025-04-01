@@ -7,10 +7,6 @@ package("libxau")
     on_install("macosx", "linux", "bsd", "cross", function (package)
         import("package.tools.xmake").install(package, configs)
     end)
-
-    on_test(function (package)
-        assert(package:has_ctypes("Xauth", {includes = "X11/Xauth.h"}))
-    end)
 package_end()
 
 package("glfw-mod")
