@@ -118,7 +118,7 @@ jobs:
           #  containerarch: x86-64
           #  loaderarch: x64
 
-          - os: macos-22.04
+          - os: macos-latest
             name: MacOS (arm64)
             plat: macos
             arch: arm64
