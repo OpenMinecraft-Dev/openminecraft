@@ -17,7 +17,9 @@ int main()
 #endif
     vk::Instance instance = vk::createInstance({}, nullptr);
     // initialize function pointers for instance
+#ifdef OM_VULKAN_DYNAMIC
     VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
+#endif
     // create a dispatcher, based on additional vkDevice/vkGetDeviceProcAddr
     std::vector<vk::PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();  
     std::cout << physicalDevices.size();
