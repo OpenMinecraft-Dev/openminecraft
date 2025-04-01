@@ -10,11 +10,11 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
 int main()
 {
-    #ifdef OM_VULKAN_DYNAMIC
+#ifdef OM_VULKAN_DYNAMIC
     vk::DynamicLoader dl;
     PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
     VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
-    #endif
+#endif
     vk::Instance instance = vk::createInstance({}, nullptr);
     // initialize function pointers for instance
     VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
@@ -23,5 +23,7 @@ int main()
     std::cout << physicalDevices.size();
     vk::Device device = physicalDevices[0].createDevice({}, nullptr);
     // function pointer specialization for device
+#ifdef OM_VULKAN_DYNAMIC
     VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
+#endif
 }
