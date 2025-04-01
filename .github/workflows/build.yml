@@ -32,55 +32,55 @@ jobs:
             arch: arm64
             loaderarch: arm64
 
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             name: OpenHarmony (arm64)
             plat: harmony
             arch: arm64-v8a
             loaderarch: arm64
 
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             name: OpenHarmony (arm32)
             plat: harmony
             arch: armeabi-v7a
             loaderarch: arm32
 
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             name: OpenHarmony (x64)
             plat: harmony
             arch: x86_64
             loaderarch: x64
 
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             name: Android (arm64)
             plat: android
             arch: arm64-v8a
             loaderarch: arm64
 
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             name: Android (arm32)
             plat: android
             arch: armeabi-v7a
             loaderarch: arm32
 
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             name: Android (x86)
             plat: android
             arch: x86
             loaderarch: x86
 
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             name: Android (x64)
             plat: android
             arch: x86_64
             loaderarch: x64
 
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             name: Linux (x64)
             plat: linux
             arch: x64
             loaderarch: x64
 
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             name: Linux (arm64)
             plat: linux
             arch: arm64
@@ -88,7 +88,7 @@ jobs:
             libc_arch: arm64
             loaderarch: arm64
 
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             name: Linux (arm32)
             plat: linux
             arch: arm32
@@ -96,7 +96,7 @@ jobs:
             libc_arch: armhf
             loaderarch: arm32
 
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             name: Linux (ppc64)
             plat: linux
             arch: ppc64le
@@ -104,21 +104,21 @@ jobs:
             libc_arch: ppc64el
             loaderarch: ppc64le
 
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             name: Linux (loongarch64)
             plat: linux
             arch: loong64
             libc_arch: loongarch64
             loaderarch: loong64
 
-          #- os: ubuntu-latest
+          #- os: ubuntu-22.04
           #  name: FreeBSD (x64)
           #  plat: freebsd
           #  arch: x64
           #  containerarch: x86-64
           #  loaderarch: x64
 
-          - os: macos-latest
+          - os: macos-22.04
             name: MacOS (arm64)
             plat: macos
             arch: arm64
