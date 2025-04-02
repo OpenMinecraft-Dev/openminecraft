@@ -51,7 +51,11 @@ package("moltenvk")
         end
         os.vrunv("./fetchDependencies", configs)
         local conf = package:debug() and "Debug" or "Release"
-        os.vrun("xcodebuild build -quiet -project MoltenVKPackaging.xcodeproj -scheme \"MoltenVK Package (" ..plat .. " only)\" -destination \"generic/platform=" .. plat .. "\" -configuration \"" .. conf")
+        if package:is_plat("iphoneos") then
+            os.vrun("make ios")
+        else
+            os.vrun("make macos")
+        end
         os.mv("Package/" .. conf .. "/MoltenVK/include", package:installdir())
         os.mv("Package/" .. conf .. "/MoltenVK/dylib/" ..plat .. "/*", package:installdir("lib"))
         os.mv("Package/" .. conf .. "/MoltenVK/MoltenVK.xcframework/" .. plat:lower() .. "-*/*.a", package:installdir("lib"))
