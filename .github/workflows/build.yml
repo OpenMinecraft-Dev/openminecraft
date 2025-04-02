@@ -190,7 +190,7 @@ jobs:
 
       - name: Configure IOS
         if: matrix.plat == 'ios'
-        run: xmake f -p iphoneos -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+        run: xmake f -p iphoneos -m ${{ env.MODE }} --cc="clang" -yc ${{ env.XMAKE_ARGS }}
 
       - name: Configure Vision OS
         if: matrix.plat == 'visionos'
