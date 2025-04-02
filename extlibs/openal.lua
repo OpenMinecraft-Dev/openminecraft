@@ -21,7 +21,7 @@ package("openal-soft-mod")
         end
     end)
 
-    on_install("windows", "linux", "mingw", "macosx", "android", "iphoneos", "cross", "bsd", "harmony" , function (package)
+    on_install("windows", "linux", "mingw", "macosx", "android", "iphoneos", "cross", "bsd", "harmony", "visionos", function (package)
         if (package:is_plat("linux") and linuxos.name() == "fedora") or package:is_plat("bsd") then
             -- https://github.com/kcat/openal-soft/issues/864
             io.replace("CMakeLists.txt", "if(HAVE_GCC_PROTECTED_VISIBILITY)", "if(0)", {plain = true})
