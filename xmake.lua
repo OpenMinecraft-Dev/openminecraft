@@ -216,7 +216,7 @@ package("vulkan-hpp")
     end)
 
 
-    on_install("windows", "harmony", "cross", "linux", "macosx", "mingw", "android", "iphoneos", "bsd", function (package)
+    on_install("windows", "harmony", "cross", "linux", "macosx", "mingw", "android", "iphoneos", "bsd", "visionos", function (package)
         local arch_prev
         local plat_prev
         if (package:is_plat("mingw") or package:is_cross()) and package.plat_set then
