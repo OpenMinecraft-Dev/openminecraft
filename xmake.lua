@@ -404,3 +404,6 @@ end
 if is_plat("linux", "cross", "bsd", "android") then
     add_defines("OM_VULKAN_DYNAMIC=")
 end
+if is_plat("iphoneos") then
+    add_frameworks("OpenGLES")
+end
