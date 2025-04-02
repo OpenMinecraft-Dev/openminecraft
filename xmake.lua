@@ -359,8 +359,7 @@ if not is_plat("bsd") then
 end
 
 if not is_plat("iphoneos", "harmony", "android") then
-    includes("extlibs/glfw.lua")
-    add_requires("glfw-mod", "opengl", { system = false })
+    add_requires("opengl", { system = false })
     if not is_plat("linux", "cross", "bsd", "macosx", "iphoneos", "visionos") then
         add_requires("vulkan-loader", { system = false })
     end
@@ -390,7 +389,7 @@ if not is_plat("harmony") then
     add_packages("libsdl3")
 end
 if not is_plat("iphoneos", "harmony", "android") then
-    add_packages("glfw-mod", "opengl")
+    add_packages("opengl")
     if not is_plat("linux", "cross", "bsd", "macosx", "iphoneos", "visionos") then
         add_packages("vulkan-loader")
     end
