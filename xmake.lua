@@ -7,10 +7,6 @@ package("bullet3")
 
     set_urls("https://github.com/bulletphysics/bullet3/archive/$(version).zip",
              "https://github.com/bulletphysics/bullet3.git")
-    add_versions("2.88", "f361d10961021a186b80821cfc1cfafc8dac48ce35f7d5e8de0943af4b3ddce4")
-    add_versions("3.05", "e7ef322d8038e397cd6d79145a856cf5b4d558ce091d49b5239d625a46fef0d7")
-    add_versions("3.09", "8443894e47167cf7f7b4433a365b428ebeb83ba64d64f2a741ec4d2da4992c3d")
-    add_versions("3.24", "1179bcc5cdaf7f73f92f5e8495eaadd6a7216e78cad22f1027e9ce49b7a0bfbe")
     add_versions("3.25", "b9bc8d1443637a9084e2b585ed582abf2da3ddad7d768acccfe4ee17aca56bf7")
 
     add_configs("double_precision", {description = "Enable double precision floats", default = false, type = "boolean"})
@@ -353,7 +349,7 @@ package("vulkan-loader")
     end)
 package_end()
 
-includes("extlibs/openal.lua")
+-- includes("extlibs/openal.lua")
 if not is_plat("bsd") then
     includes("extlibs/shaderc.lua")
 end
@@ -369,7 +365,7 @@ if is_plat("iphoneos", "macosx") then
     add_requires("moltenvk")
 end
 
-add_requires("openal-soft-mod", "freetype", "harfbuzz", "stb", "yoga", "xxhash", "opengl-headers", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", { system = false })
+add_requires("freetype", "harfbuzz", "stb", "yoga", "xxhash", "opengl-headers", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", { system = false })
 if not is_plat("harmony") then
     add_requires("libsdl3")
 end
@@ -385,7 +381,7 @@ else
     set_kind("binary")
 end
 add_files("src/entrypoint.cpp")
-add_packages("openal-soft-mod", "freetype", "harfbuzz", "stb", "yoga", "xxhash", "opengl-headers", "vulkan-headers", "glm", "bullet3", "vulkan-hpp")
+add_packages("freetype", "harfbuzz", "stb", "yoga", "xxhash", "opengl-headers", "vulkan-headers", "glm", "bullet3", "vulkan-hpp")
 if not is_plat("harmony") then
     add_packages("libsdl3")
 end
