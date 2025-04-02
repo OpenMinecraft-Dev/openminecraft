@@ -136,6 +136,12 @@ jobs:
             arch: arm64
             loaderarch: arm64
 
+          - os: macos-latest
+            name: Vision OS
+            plat: visionos
+            arch: arm64
+            loaderarch: arm64
+
     name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -185,6 +191,10 @@ jobs:
       - name: Configure IOS
         if: matrix.plat == 'ios'
         run: xmake f -p iphoneos -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+
+      - name: Configure Vision OS
+        if: matrix.plat == 'visionos'
+        run: xmake f -p visionos -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
           
       - name: Configure OpenHarmony
         if: matrix.plat == 'harmony'
