@@ -104,7 +104,7 @@ jobs:
             libc_arch: ppc64el
             loaderarch: ppc64le
 
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             name: Linux (loongarch64)
             plat: linux
             arch: loong64
