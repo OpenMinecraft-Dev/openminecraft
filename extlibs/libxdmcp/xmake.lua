@@ -1,0 +1,6 @@
+target("libxdmcp")
+set_kind("static")
+add_headerfiles("include/X11/Xdmcp.h")
+add_includedirs("include")
+add_includedirs(".")
+add_files("*.c")
