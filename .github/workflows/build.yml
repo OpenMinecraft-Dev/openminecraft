@@ -222,6 +222,8 @@ jobs:
         run: |
           wget http://ftp.loongnix.cn/toolchain/llvm/llvm18/llvm-toolchain_18.1.6-1_amd64-linux-gnu_debian-10.tar.gz
           tar -zxvf llvm-toolchain_18.1.6-1_amd64-linux-gnu_debian-10.tar.gz
+          sudo rm /usr/bin/ar
+          sudo ln -s ${{ github.workspace }}/llvm-toolchain_18.1.6/bin/llvm-ar /usr/bin/ar
           xmake f -a ${{ matrix.arch }} --sdk=${{ github.workspace }}/llvm-toolchain_18.1.6-1_amd64-linux-gnu_debian-10 -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }} --cxxflags="-Wno-undef" --ldflags="-Wno-undef"
  
       - name: Configure Windows
