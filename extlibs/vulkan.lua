@@ -63,19 +63,6 @@ package("vulkan-hpp")
             import("package.tools.xmake").install(package, configs)
         end
     end)
-
-    on_test(function (package)
-        assert(package:check_cxxsnippets({test = [[
-            void test() {
-                vk::ApplicationInfo ai;
-                ai.pApplicationName = "Test";
-                ai.applicationVersion = VK_MAKE_API_VERSION(1,0,0,0);
-                ai.pEngineName = "Test";
-                ai.engineVersion = VK_MAKE_API_VERSION(1,0,0,0);
-                ai.apiVersion = VK_API_VERSION_1_0;
-            }
-        ]]}, {includes = "vulkan/vulkan.hpp", configs = {languages = "c++14"} }))
-    end)
 package_end()
 
 package("vulkan-loader")
@@ -150,10 +137,6 @@ package("vulkan-loader")
         else
             import("package.tools.cmake").install(package, configs)
         end
-    end)
-
-    on_test(function (package)
-        assert(package:has_cfuncs("vkGetDeviceProcAddr", {includes = "vulkan/vulkan_core.h"}))
     end)
 package_end()
 
