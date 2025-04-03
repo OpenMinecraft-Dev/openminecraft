@@ -5,7 +5,7 @@ package("libxau")
     set_sourcedir(path.join(os.scriptdir(), "libxau"))
 
     on_install("macosx", "linux", "bsd", "cross", function (package)
-        import("package.tools.xmake").install(package, configs)
+        import("package.tools.xmake").install(package)
     end)
 package_end()
 
@@ -14,7 +14,7 @@ if is_arch("loong64") then
         set_sourcedir(path.join(os.scriptdir(), "libxdmcp"))
 
         on_install("macosx", "linux", "bsd", "cross", function (package)
-            import("package.tools.xmake").install(package, configs)
+            import("package.tools.xmake").install(package)
         end)
     package_end()
 end
