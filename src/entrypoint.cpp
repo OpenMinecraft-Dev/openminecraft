@@ -1,4 +1,3 @@
-#include <SDL3/SDL_init.h>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
@@ -23,7 +22,7 @@ int main()
 #endif
     // create a dispatcher, based on additional vkDevice/vkGetDeviceProcAddr
     std::vector<vk::PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();  
-    std::cout << physicalDevices.size();
+    std::cout << "Vulkan devices: " << physicalDevices.size() << std::endl;
     vk::Device device = physicalDevices[0].createDevice({}, nullptr);
     // function pointer specialization for device
 #ifdef OM_VULKAN_DYNAMIC
