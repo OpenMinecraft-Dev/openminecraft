@@ -9,13 +9,15 @@ package("libxau")
     end)
 package_end()
 
---package("libxdmcp")
---set_sourcedir(path.join(os.scriptdir(), "libxdmcp"))
+if is_arch("loong64") then
+    package("libxdmcp")
+        set_sourcedir(path.join(os.scriptdir(), "libxdmcp"))
 
---on_install("macosx", "linux", "bsd", "cross", function (package)
---    import("package.tools.xmake").install(package, configs)
---end)
---package_end()
+        on_install("macosx", "linux", "bsd", "cross", function (package)
+            import("package.tools.xmake").install(package, configs)
+        end)
+    package_end()
+end
 
 package("glfw-mod")
     set_sourcedir(path.join(os.scriptdir(), "glfw"))
