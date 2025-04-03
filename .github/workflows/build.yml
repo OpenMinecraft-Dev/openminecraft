@@ -224,8 +224,8 @@ jobs:
           sudo apt install libx11-dev
           wget https://github.com/loongson/build-tools/releases/download/2025.02.21/x86_64-cross-tools-loongarch64-binutils_2.44-gcc_14.2.0-glibc_2.41.tar.xz
           tar -Jxvf x86_64-cross-tools-loongarch64-binutils_2.44-gcc_14.2.0-glibc_2.41.tar.xz
-          cp -r extlibs/libxdmcp/include/X11 ./cross-tools
-          cp -r extlibs/libxau/include/X11 ./cross-tools
+          cp -r extlibs/libxdmcp/include/X11 ./cross-tools/include
+          cp -r extlibs/libxau/include/X11 ./cross-tools/include
           xmake f -a ${{ matrix.arch }} --sdk=${{ github.workspace }}/cross-tools -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }} --cxxflags="-Wno-undef" --ldflags="-Wno-undef"
  
       - name: Configure Windows
