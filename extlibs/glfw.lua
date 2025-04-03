@@ -1,4 +1,3 @@
-if not is_arch("loong64") then
 package("libxau")
     set_homepage("https://www.x.org/")
     set_description("X.Org: A Sample Authorization Protocol for X")
@@ -9,7 +8,6 @@ package("libxau")
         import("package.tools.xmake").install(package, configs)
     end)
 package_end()
-end
 
 if is_arch("loong64") then
     package("libxdmcp")
