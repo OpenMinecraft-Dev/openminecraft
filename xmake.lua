@@ -188,7 +188,7 @@ if is_plat("iphoneos", "macosx") then
     add_requires("moltenvk")
 end
 
-add_requires("freetype", "harfbuzz", "stb", "yoga", "xxhash", "opengl-headers", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", { system = false })
+add_requires("freetype", "harfbuzz", "stb", "yoga", "xxhash", "vulkan-headers", "glm", "bullet3", "vulkan-hpp v1.3.290", { system = false })
 if not is_plat("harmony") then
     add_requires("libsdl3")
 end
@@ -204,7 +204,7 @@ else
     set_kind("binary")
 end
 add_files("src/entrypoint.cpp")
-add_packages("freetype", "harfbuzz", "stb", "yoga", "xxhash", "opengl-headers", "vulkan-headers", "glm", "bullet3", "vulkan-hpp")
+add_packages("freetype", "harfbuzz", "stb", "yoga", "xxhash", "vulkan-headers", "glm", "bullet3", "vulkan-hpp")
 if not is_plat("harmony") then
     add_packages("libsdl3")
 end

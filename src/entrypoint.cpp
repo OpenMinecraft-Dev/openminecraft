@@ -1,3 +1,4 @@
+#include <SDL3/SDL_init.h>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
@@ -11,7 +12,7 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 int main()
 {
 #ifdef OM_VULKAN_DYNAMIC
-    vk::DynamicLoader dl;
+    vk::detail::DynamicLoader dl;
     PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
     VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
 #endif
