@@ -185,10 +185,10 @@ if not is_plat("iphoneos", "harmony", "android") then
     end
 end
 if is_plat("iphoneos", "macosx") then 
-    add_requires("moltenvk")
+    add_requires("moltenvk", { config = { shared = false } })
 end
 
-add_requires("freetype", "harfbuzz", "stb", "yoga", "xxhash", "vulkan-headers", "glm", "bullet3", "vulkan-hpp v1.3.290", { system = false })
+add_requires("freetype", "harfbuzz", "stb", "yoga", "xxhash", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", { system = false })
 if not is_plat("harmony") then
     add_requires("libsdl3")
 end
