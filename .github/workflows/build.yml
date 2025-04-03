@@ -223,8 +223,8 @@ jobs:
           wget -q http://ftp.loongnix.cn/toolchain/llvm/llvm18/llvm-toolchain_18.1.6-1_amd64-linux-gnu_debian-10.tar.gz
           tar -zxvf llvm-toolchain_18.1.6-1_amd64-linux-gnu_debian-10.tar.gz
           sudo cp -r ${{ github.workspace }}/llvm-toolchain_18.1.6-1_amd64-linux-gnu_debian-10/* /usr
-          ls /usr
-          xmake f -a ${{ matrix.arch }} --toolchain=clang-18 -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+          ls /usr/bin | grep llvm-ar
+          xmake f -a ${{ matrix.arch }} --toolchain=clang -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
  
       - name: Configure Windows
         if: matrix.plat == 'windows'
