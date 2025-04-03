@@ -108,7 +108,7 @@ jobs:
             name: Linux (loongarch64)
             plat: linux
             arch: loong64
-            triplet: gcc-loongarch64-linux-gnu
+            triplet: loongarch64-linux-gnu
             libc_arch: loongarch64
             loaderarch: loong64
 
