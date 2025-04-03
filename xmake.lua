@@ -3,12 +3,14 @@ set_languages("c++17")
 includes("extlibs/libpatches.lua")
 includes("extlibs/vulkan.lua")
 
--- includes("extlibs/openal.lua")
-if not is_plat("bsd") then
-    includes("extlibs/shaderc.lua")
+function mobile()
+    return is_plat("iphoneos", "harmony", "android")
 end
 
-if not is_plat("iphoneos", "harmony", "android") then
+-- includes("extlibs/openal.lua")
+includes("extlibs/shaderc.lua")
+
+if not mobile() then
     includes("extlibs/glfw.lua")
     add_requires("opengl", { system = false })
     if not is_plat("linux", "cross", "bsd", "macosx", "iphoneos", "visionos") then
@@ -28,7 +30,7 @@ target("openminecraft")
 if is_plat("harmony") then
     add_syslinks("vulkan")
 end
-if is_plat("iphoneos", "harmony", "android") then
+if mobile() then
     set_kind("shared")
     add_rules("utils.symbols.export_all")
 else 
@@ -39,15 +41,13 @@ add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bu
 if not is_plat("harmony") then
     add_packages("libsdl3")
 end
-if not is_plat("iphoneos", "harmony", "android") then
+if not mobile() then
     add_packages("opengl")
     if not is_plat("linux", "cross", "bsd", "macosx", "iphoneos", "visionos") then
         add_packages("vulkan-loader")
     end
 end
-if not is_plat("bsd") then
-    add_deps("shaderc")
-end
+add_deps("shaderc")
 if is_plat("iphoneos", "macosx") then 
     add_packages("moltenvk")
 end
