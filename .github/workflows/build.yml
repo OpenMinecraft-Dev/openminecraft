@@ -184,7 +184,7 @@ jobs:
         if: ${{ matrix.plat == 'linux' && matrix.arch == 'x64' }}
         run: |
           sudo apt update
-          sudo apt install libgl1-mesa-glx
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -yq -f --allow-unauthenticated --no-install-suggests --no-install-recommends install libgl1-mesa-glx -o Dpkg::Options::="--force-overwrite"
           xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
 
       - name: Configure Linux Cross
