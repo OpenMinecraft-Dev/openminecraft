@@ -1,6 +1,8 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_plat.hpp"
 #include "openminecraft/log/om_log_ansi.hpp"
+#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_video.h>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
