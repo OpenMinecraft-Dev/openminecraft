@@ -16,7 +16,7 @@ function vulkandyn()
 end
 
 -- includes("extlibs/openal.lua")
--- includes("extlibs/shaderc.lua")
+includes("extlibs/shaderc.lua")
 
 if not mobile() then
     includes("extlibs/glfw.lua")
