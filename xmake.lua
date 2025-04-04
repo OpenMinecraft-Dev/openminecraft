@@ -45,6 +45,7 @@ else
     set_kind("binary")
 end
 add_files("src/entrypoint.cpp")
+add_files("log/**.cpp")
 add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc")
 -- add_deps("shaderc")
 if not is_plat("harmonys") then

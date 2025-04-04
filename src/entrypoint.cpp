@@ -1,3 +1,5 @@
+#include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/log/om_log_plat.hpp"
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
@@ -8,6 +10,8 @@
 #ifdef OM_VULKAN_DYNAMIC
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 #endif
+
+using namespace openminecraft::log;
 
 int main()
 {
@@ -31,4 +35,7 @@ int main()
 #endif
     shaderc::Compiler comp;
     std::cout << (comp.IsValid() ? "true" : "false") << std::endl;
+
+    auto logger = new OMLogger("test", getPlatformLoggingStream());
+    logger->info("test!");
 }
