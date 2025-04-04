@@ -82,7 +82,7 @@ if is_plat("android") then
     add_defines("OM_PLATFORM_ANDROID=")
     add_files("plat/android/**.cpp")
 end
-if is_plat("ios") then
+if is_plat("iphoneos") then
     add_defines("OM_PLATFORM_IOS=")
     add_files("plat/ios/**.cpp")
 end
