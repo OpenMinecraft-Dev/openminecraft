@@ -31,7 +31,7 @@ end
 
 add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", { system = false })
 if not is_plat("harmonys") then
-    add_requires("libsdl3")
+    add_requires("libsdl")
 end
 
 target("openminecraft")
@@ -48,7 +48,7 @@ add_files("src/entrypoint.cpp")
 add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp")
 add_deps("shaderc")
 if not is_plat("harmonys") then
-    add_packages("libsdl3")
+    add_packages("libsdl")
 end
 if not mobile() then
     add_packages("opengl")
