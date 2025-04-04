@@ -3,6 +3,7 @@
 #endif
 #include "vulkan/vulkan.hpp"
 #include <iostream>
+#include "shaderc/shaderc.hpp"
 
 #ifdef OM_VULKAN_DYNAMIC
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
@@ -28,4 +29,6 @@ int main()
 #ifdef OM_VULKAN_DYNAMIC
     VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
 #endif
+    shaderc::Compiler comp;
+    std::cout << (comp.IsValid() ? "true" : "false") << std::endl;
 }
