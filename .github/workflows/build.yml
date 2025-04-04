@@ -32,23 +32,23 @@ jobs:
             arch: arm64
             loaderarch: arm64
 
-          - os: ubuntu-22.04
-            name: OpenHarmony (arm64)
-            plat: harmony
-            arch: arm64-v8a
-            loaderarch: arm64
+          # - os: ubuntu-22.04
+          #   name: OpenHarmony (arm64)
+          #   plat: harmony
+          #   arch: arm64-v8a
+          #   loaderarch: arm64
 
-          - os: ubuntu-22.04
-            name: OpenHarmony (arm32)
-            plat: harmony
-            arch: armeabi-v7a
-            loaderarch: arm32
+          # - os: ubuntu-22.04
+          #   name: OpenHarmony (arm32)
+          #   plat: harmony
+          #   arch: armeabi-v7a
+          #   loaderarch: arm32
 
-          - os: ubuntu-22.04
-            name: OpenHarmony (x64)
-            plat: harmony
-            arch: x86_64
-            loaderarch: x64
+          # - os: ubuntu-22.04
+          #   name: OpenHarmony (x64)
+          #   plat: harmony
+          #   arch: x86_64
+          #   loaderarch: x64
 
           - os: ubuntu-22.04
             name: Android (arm64)

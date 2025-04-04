@@ -29,12 +29,13 @@ if apple() then
     add_requires("moltenvk")
 end
 
-add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", { system = false })
+add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", { system = false })
 if not is_plat("harmonys") then
     add_requires("libsdl")
 end
 
 target("openminecraft")
+add_includedirs("include")
 if is_plat("harmony") then
     add_syslinks("vulkan")
 end
@@ -45,8 +46,8 @@ else
     set_kind("binary")
 end
 add_files("src/entrypoint.cpp")
-add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp")
-add_deps("shaderc")
+add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc")
+-- add_deps("shaderc")
 if not is_plat("harmonys") then
     add_packages("libsdl")
 end
