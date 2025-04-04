@@ -7,6 +7,14 @@ function mobile()
     return is_plat("iphoneos", "harmony", "android")
 end
 
+function apple()
+    return is_plat("iphoneos", "macosx", "visionos")
+end
+
+function vulkandyn()
+    return is_plat("linux", "cross", "bsd", "android")
+end
+
 -- includes("extlibs/openal.lua")
 includes("extlibs/shaderc.lua")
 
@@ -17,7 +25,7 @@ if not mobile() then
         add_requires("vulkan-loader", { system = false })
     end
 end
-if is_plat("iphoneos", "macosx") then 
+if apple() then 
     add_requires("moltenvk", { config = { shared = false } })
 end
 
@@ -38,20 +46,20 @@ else
 end
 add_files("src/entrypoint.cpp")
 add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp")
+add_deps("shaderc")
 if not is_plat("harmony") then
     add_packages("libsdl3")
 end
 if not mobile() then
     add_packages("opengl")
-    if not is_plat("linux", "cross", "bsd", "macosx", "iphoneos", "visionos") then
+    if not vulkandyn() and not apple() then
         add_packages("vulkan-loader")
     end
 end
-add_deps("shaderc")
-if is_plat("iphoneos", "macosx") then 
+if apple() then 
     add_packages("moltenvk")
 end
-if is_plat("linux", "cross", "bsd", "android") then
+if vulkandyn() then
     add_defines("OM_VULKAN_DYNAMIC=")
 end
 if is_plat("iphoneos") then
