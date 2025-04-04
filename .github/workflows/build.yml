@@ -185,7 +185,6 @@ jobs:
         run: |
           sudo apt update
           DEBIAN_FRONTEND=noninteractive sudo apt-get -yq -f --allow-unauthenticated --no-install-suggests --no-install-recommends install libgl1-mesa-glx libgl1 -o Dpkg::Options::="--force-overwrite"
-          sudo cp /usr/lib/x86_64-linux-gnu/libOpenGL.so /usr/lib/libOpenGL.so
           xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
 
       - name: Configure Linux Cross
