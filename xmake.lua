@@ -19,6 +19,7 @@ includes("extlibs/shaderc.lua")
 
 if not mobile() then
     includes("extlibs/libxau.lua")
+    add_requires("opengl")
     if not is_plat("linux", "cross", "bsd", "macosx", "iphoneos", "visionos") then
         add_requires("vulkan-loader", { system = false })
     end
@@ -89,4 +90,5 @@ end
 if not mobile() then
     add_defines("OM_PLATFORM_DESKTOP=")
     add_files("plat/desktop/**.cpp")
+    add_packages("opengl")
 end
