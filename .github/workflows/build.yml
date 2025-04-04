@@ -104,20 +104,6 @@ jobs:
             libc_arch: ppc64el
             loaderarch: ppc64le
 
-          - os: ubuntu-22.04
-            name: Linux (loongarch64)
-            plat: linux
-            arch: loong64
-            libc_arch: loongarch64
-            loaderarch: loong64
-
-          #- os: ubuntu-22.04
-          #  name: FreeBSD (x64)
-          #  plat: freebsd
-          #  arch: x64
-          #  containerarch: x86-64
-          #  loaderarch: x64
-
           - os: macos-latest
             name: MacOS (arm64)
             plat: macos
@@ -216,13 +202,6 @@ jobs:
           DEBIAN_FRONTEND=noninteractive sudo apt-get -yq -f --allow-unauthenticated --no-install-suggests --no-install-recommends install libx11-dev:${{ matrix.libc_arch }} -o Dpkg::Options::="--force-overwrite"
 
           xmake f -p cross -a ${{ matrix.arch }} --sdk=/usr --cross=${{ matrix.triplet }}- -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
-
-      - name: Configure Linux LoongArch
-        if: ${{ matrix.plat == 'linux' && matrix.arch == 'loong64' }}
-        run: |
-          wget -q http://ftp.loongnix.cn/toolchain/llvm/llvm18/llvm-toolchain_18.1.6-1_amd64-linux-gnu_debian-10.tar.gz
-          tar -zxvf llvm-toolchain_18.1.6-1_amd64-linux-gnu_debian-10.tar.gz
-          xmake f -a ${{ matrix.arch }} --sdk=${{ github.workspace }}/llvm-toolchain_18.1.6-1_amd64-linux-gnu_debian-10 -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
  
       - name: Configure Windows
         if: matrix.plat == 'windows'
@@ -232,36 +211,7 @@ jobs:
         if: matrix.plat != 'freebsd'
         run: xmake -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }}
 
-      - name: Build FreeBSD
-        if: matrix.plat == 'freebsd'
-        uses: cross-platform-actions/action@v0.25.0
-        with:
-          operating_system: ${{ matrix.plat }}
-          architecture: ${{ matrix.containerarch }}
-          version: '13.3'
-          memory: 8G
-          shell: bash
-          environment_variables: LINK_JOBS JOBS MODE XMAKE_ARGS
-          run: |
-            sudo pkg install -y git cmake gmake
-            git clone --recursive https://github.com/xmake-io/xmake.git
-            cd ./xmake
-
-            /usr/bin/make --version
-            ./configure --make=/usr/bin/make
-            gmake
-            ./scripts/get.sh __local__ __install_only__
-            source ~/.xmake/profile
-            cd ..
-
-            xmake repo -u
-            xmake f -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
-            xmake -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }}
-
-            xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft
-
       - name: Xmake install
-        if: matrix.plat != 'freebsd'
         run: xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft
 
       - name: Upload Artifacts
