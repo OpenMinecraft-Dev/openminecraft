@@ -15,7 +15,6 @@ function vulkandyn()
     return is_plat("linux", "cross", "bsd", "android")
 end
 
--- includes("extlibs/openal.lua")
 includes("extlibs/shaderc.lua")
 
 if not mobile() then
