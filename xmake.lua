@@ -96,5 +96,5 @@ if is_plat("macosx") then
 elseif is_plat("windows", "mingw") then
     add_links("opengl32")
 elseif is_plat("linux") then
-    add_links("GL")
+    add_links("OpenGL")
 end
