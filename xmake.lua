@@ -32,7 +32,8 @@ end
 add_requires("llvm", { 
     system = false,
     configs = {
-        components = {"core"},
+        components = {"base"},
+        bolt = false,
         shared = false,
         cxxflags = "-fno-rtti"
     }
