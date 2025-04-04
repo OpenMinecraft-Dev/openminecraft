@@ -18,7 +18,7 @@ end
 includes("extlibs/shaderc.lua")
 
 if not mobile() then
-    includes("extlibs/glfw.lua")
+    includes("extlibs/libxau.lua")
     add_requires("opengl", { system = false })
     if not is_plat("linux", "cross", "bsd", "macosx", "iphoneos", "visionos") then
         add_requires("vulkan-loader", { system = false })
