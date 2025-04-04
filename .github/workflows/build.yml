@@ -208,10 +208,9 @@ jobs:
         run: xmake f --toolchain=msvc -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
           
       - name: Build
-        if: matrix.plat != 'freebsd'
         run: xmake -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }}
 
-      - name: Xmake install
+      - name: Xmake Install
         run: xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft
 
       - name: Upload Artifacts
