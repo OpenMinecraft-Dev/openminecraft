@@ -19,7 +19,6 @@ includes("extlibs/shaderc.lua")
 
 if not mobile() then
     includes("extlibs/libxau.lua")
-    add_requires("opengl", { system = false })
     if not is_plat("linux", "cross", "bsd", "macosx", "iphoneos", "visionos") then
         add_requires("vulkan-loader", { system = false })
     end
@@ -30,7 +29,7 @@ end
 
 add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", { system = false })
 if not is_plat("harmonys") then
-    add_requires("libsdl")
+    add_requires("libsdl3")
 end
 
 target("openminecraft")
@@ -47,15 +46,11 @@ end
 add_files("src/entrypoint.cpp")
 add_files("log/**.cpp")
 add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc")
--- add_deps("shaderc")
 if not is_plat("harmonys") then
-    add_packages("libsdl")
+    add_packages("libsdl3")
 end
-if not mobile() then
-    add_packages("opengl")
-    if not vulkandyn() and not apple() then
-        add_packages("vulkan-loader")
-    end
+if not mobile() and not vulkandyn() and not apple() then
+    add_packages("vulkan-loader")
 end
 if apple() then 
     add_packages("moltenvk")

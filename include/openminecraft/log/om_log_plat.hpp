@@ -3,7 +3,8 @@
 
 #include <ostream>
 
-namespace openminecraft::log {
+namespace openminecraft::log
+{
     std::ostream& getPlatformLoggingStream();
 }
 

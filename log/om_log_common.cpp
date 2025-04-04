@@ -1,6 +1,7 @@
 #include <openminecraft/log/om_log_common.hpp>
 
-namespace openminecraft::log {
+namespace openminecraft::log
+{
     OMLogger::OMLogger(std::string name, std::ostream& stream)
     {
         this->loggerName = name;

@@ -5,8 +5,10 @@
 #include <ostream>
 #include <string>
 
-namespace openminecraft::log {
-    enum OMLogType: uint8_t {
+namespace openminecraft::log
+{
+    enum OMLogType: uint8_t
+    {
         Debug, 
         Info,
         Warn,
@@ -14,7 +16,8 @@ namespace openminecraft::log {
         Fatal
     };
 
-    class OMLogger {
+    class OMLogger
+    {
         public:
             OMLogger(std::string name, std::ostream& stream);
             ~OMLogger();

@@ -1,5 +1,6 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_plat.hpp"
+#include "openminecraft/log/om_log_ansi.hpp"
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
@@ -37,5 +38,5 @@ int main()
     std::cout << (comp.IsValid() ? "true" : "false") << std::endl;
 
     auto logger = new OMLogger("test", getPlatformLoggingStream());
-    logger->info("test!");
+    logger->info(std::string(OMLogAnsiRed).append("test!"));
 }

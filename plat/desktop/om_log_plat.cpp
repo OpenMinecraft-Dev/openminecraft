@@ -1,7 +1,10 @@
 #include <openminecraft/log/om_log_plat.hpp>
 #include <iostream>
 
-std::ostream& getPlatformLoggingStream()
+namespace openminecraft::log
 {
-    return std::cout;
+    std::ostream& getPlatformLoggingStream()
+    {
+        return std::cout;
+    }
 }
