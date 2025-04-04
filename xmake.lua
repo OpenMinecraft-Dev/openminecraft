@@ -26,13 +26,13 @@ if not mobile() then
     end
 end
 if apple() then 
-    add_requires("moltenvk", { config = { shared = false } })
+    add_requires("moltenvk")
 end
 
 add_requires("llvm", { 
     system = false,
     configs = {
-        components = {"core", "support", "analysis"},
+        components = {"core"},
         shared = false,
         cxxflags = "-fno-rtti"
     }
