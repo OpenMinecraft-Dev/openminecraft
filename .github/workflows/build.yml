@@ -182,7 +182,10 @@ jobs:
 
       - name: Configure Linux
         if: ${{ matrix.plat == 'linux' && matrix.arch == 'x64' }}
-        run: xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+        run: |
+          sudo apt update
+          sudo apt install libgl1-mesa-glx
+          xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
 
       - name: Configure Linux Cross
         if: ${{ matrix.plat == 'linux' && matrix.arch != 'x64' && matrix.arch != 'loong64' }}
@@ -199,7 +202,7 @@ jobs:
           sudo dpkg --add-architecture ${{ matrix.libc_arch }}
           sudo apt-get update || true
 
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -yq -f --allow-unauthenticated --no-install-suggests --no-install-recommends install libx11-dev:${{ matrix.libc_arch }} -o Dpkg::Options::="--force-overwrite"
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -yq -f --allow-unauthenticated --no-install-suggests --no-install-recommends install libx11-dev:${{ matrix.libc_arch }} libgl1-mesa-glx:${{ matrix.libc_arch }} -o Dpkg::Options::="--force-overwrite"
 
           xmake f -p cross -a ${{ matrix.arch }} --sdk=/usr --cross=${{ matrix.triplet }}- -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
  
