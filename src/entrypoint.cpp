@@ -6,6 +6,7 @@
 #endif
 #include "vulkan/vulkan.hpp"
 #include "shaderc/shaderc.hpp"
+#include <SDL3/SDL.h>
 
 #ifdef OM_VULKAN_DYNAMIC
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
@@ -37,6 +38,19 @@ int main()
     shaderc::Compiler comp;
     omLog(logger->info, "Shaderc available: " << comp.IsValid());
     omLog(logger->info, "hello *OMLogger = " << logger << "!");
+
+    if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO)) {
+        // SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_Init failed (%s)", SDL_GetError());
+        return 1;
+    }
+
+    if (!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Hello World",
+                                 "!! Your SDL project successfully runs on Android !!", NULL)) {
+        // SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_ShowSimpleMessageBox failed (%s)", SDL_GetError());
+        return 1;
+    }
+
+    SDL_Quit();
 
     return 0;
 }
