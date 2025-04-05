@@ -96,5 +96,8 @@ if is_plat("macosx") then
 elseif is_plat("windows", "mingw") then
     add_links("opengl32")
 elseif is_plat("linux") then
+    if is_arch("x86_64", "x64") then
+        add_linkdirs("/usr/lib")
+    end
     add_links("OpenGL")
 end
