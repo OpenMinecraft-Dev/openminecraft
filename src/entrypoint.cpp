@@ -1,7 +1,5 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
 #include <vector>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
