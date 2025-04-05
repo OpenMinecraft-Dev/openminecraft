@@ -178,7 +178,7 @@ jobs:
 
       - name: Configure Android
         if: matrix.plat == 'android'
-        run: xmake f -p android -a ${{ matrix.arch }} --ndk=${{ github.workspace }}/android-ndk-${{ env.ANDROID_NDK_VERSION }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+        run: xmake f -p android -a ${{ matrix.arch }} --ndk=${{ github.workspace }}/android-ndk-${{ env.ANDROID_NDK_VERSION }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }} --cxxflags="-fPIC"
 
       - name: Configure Linux
         if: ${{ matrix.plat == 'linux' && matrix.arch == 'x64' }}
