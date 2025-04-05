@@ -6,6 +6,7 @@
 namespace openminecraft::log
 {
     std::ostream& getPlatformLoggingStream();
+    bool enableFormatting();
 }
 
 #endif

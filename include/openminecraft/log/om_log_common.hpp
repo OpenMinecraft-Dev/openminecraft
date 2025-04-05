@@ -19,7 +19,8 @@ namespace openminecraft::log
     class OMLogger
     {
         public:
-            OMLogger(std::string name, std::ostream& stream);
+            OMLogger(std::string name, std::ostream& stream, bool format);
+            OMLogger(std::string name);
             ~OMLogger();
             void debug(std::string msg);
             void info(std::string msg);
@@ -30,6 +31,7 @@ namespace openminecraft::log
         protected:
             std::string loggerName;
             std::ostream* target;
+            bool enableFormat;
 
         private:
             void log(OMLogType type, std::string msg);

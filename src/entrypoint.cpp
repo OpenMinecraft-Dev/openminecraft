@@ -1,6 +1,5 @@
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/log/om_log_plat.hpp"
-#include "openminecraft/log/om_log_ansi.hpp"
+#include "openminecraft/log/om_log_threadname.hpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_video.h>
 #ifdef OM_VULKAN_DYNAMIC
@@ -15,6 +14,7 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 #endif
 
 using namespace openminecraft::log;
+using namespace openminecraft::log::multithraad;
 
 int main()
 {
@@ -39,6 +39,11 @@ int main()
     shaderc::Compiler comp;
     std::cout << (comp.IsValid() ? "true" : "false") << std::endl;
 
-    auto logger = new OMLogger("test", getPlatformLoggingStream());
-    logger->info(std::string(OMLogAnsiRed).append("test!"));
+    registerCurrentThreadName("engineMain");
+    auto logger = new OMLogger("test");
+    logger->debug("test!");
+    logger->info("test!");
+    logger->warn("test!");
+    logger->error("test!");
+    logger->fatal("test!");
 }

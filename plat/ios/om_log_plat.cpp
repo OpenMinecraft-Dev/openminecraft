@@ -7,4 +7,9 @@ namespace openminecraft::log
     {
         return std::cout;
     }
+
+    bool enableFormatting()
+    {
+        return true;
+    }
 }
