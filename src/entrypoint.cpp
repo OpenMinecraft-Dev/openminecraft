@@ -1,16 +1,13 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
-#include "openminecraft/vm/om_class_file.hpp"
-#include <SDL3/SDL_init.h>
-#include <SDL3/SDL_video.h>
-#include <fstream>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
 #include <vector>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
 #include "vulkan/vulkan.hpp"
 #include "shaderc/shaderc.hpp"
-#include <sstream>
 
 #ifdef OM_VULKAN_DYNAMIC
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
@@ -18,7 +15,6 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
 using namespace openminecraft::log;
 using namespace openminecraft::log::multithraad;
-using namespace openminecraft::vm::classfile;
 
 int main()
 {
@@ -43,4 +39,6 @@ int main()
     shaderc::Compiler comp;
     omLog(logger->info, "Shaderc available: " << comp.IsValid());
     omLog(logger->info, "hello *OMLogger = " << logger << "!");
+
+    return 0;
 }
