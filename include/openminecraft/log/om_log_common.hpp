@@ -4,12 +4,14 @@
 #include <cstdint>
 #include <ostream>
 #include <string>
+#include <format>
 
 #define debugf(n, ...) debug(std::format(n, __VA_ARGS__))
 #define infof(n, ...) info(std::format(n, __VA_ARGS__))
 #define warnf(n, ...) warn(std::format(n, __VA_ARGS__))
 #define errorf(n, ...) error(std::format(n, __VA_ARGS__))
 #define fatalf(n, ...) fatal(std::format(n, __VA_ARGS__))
+#define om_log_ptr(p) (void*) p
 
 namespace openminecraft::log
 {

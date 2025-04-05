@@ -55,10 +55,10 @@ namespace openminecraft::log
                     *this->target << OMLogAnsiYellowLight << "[warn/";
                     break;
                 case Error:
-                    *this->target << OMLogAnsiRed << "[error/";
+                    *this->target << OMLogAnsiRedLight << "[error/";
                     break;
                 case Fatal:
-                    *this->target << OMLogAnsiRedLight << "[fatal/";
+                    *this->target << OMLogAnsiRed << "[fatal/";
                     break;
                 default:
                     *this->target << OMLogAnsiFaint << "[";
