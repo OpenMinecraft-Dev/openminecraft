@@ -8,6 +8,7 @@
 #endif
 #include "vulkan/vulkan.hpp"
 #include "shaderc/shaderc.hpp"
+#include <sstream>
 
 #ifdef OM_VULKAN_DYNAMIC
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
@@ -30,18 +31,18 @@ int main()
 #ifdef OM_VULKAN_DYNAMIC
     VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
 #endif
-    std::vector<vk::PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();  
-    logger->infof("Vulkan devices: {}", physicalDevices.size());
+    std::vector<vk::PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();
+    std::stringstream s1; s1 << "Vulkan devices: " << physicalDevices.size(); logger->info(s1.str());
     vk::Device device = physicalDevices[0].createDevice({}, nullptr);
 #ifdef OM_VULKAN_DYNAMIC
     VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
 #endif
     shaderc::Compiler comp;
-    logger->infof("Shaderc available: {}", comp.IsValid());
-
+    std::stringstream s2; s2 << "Shaderc available: " << comp.IsValid(); logger->info(s2.str());
+    
     logger->debug("test!");
     logger->info("test!");
-    logger->infof("hello *OMLogger = {}!", (void*) logger);
+    std::stringstream s; s << "hellp *OMLogger = " << logger << "!"; logger->info(s.str());
     logger->warn("test!");
     logger->error("test!");
     logger->fatal("test!");

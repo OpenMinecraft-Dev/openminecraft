@@ -18,7 +18,7 @@ namespace openminecraft::log::multithraad {
 
     std::string acquireThreadName(std::thread::id thrid)
     {
-        if (threadNameMap.find(thrid) != threadNameMap.end())
+        if (threadNameMap.count(thrid))
         {
             return threadNameMap[thrid];
         }
@@ -30,7 +30,7 @@ namespace openminecraft::log::multithraad {
 
     void unregisterThread(std::thread::id thrid)
     {
-        if (threadNameMap.find(thrid) != threadNameMap.end())
+        if (threadNameMap.count(thrid))
         {
             threadNameMap.erase(thrid);
         }
