@@ -38,7 +38,10 @@ target("openminecraft")
 add_includedirs("include")
 if is_plat("harmony") then
     add_syslinks("vulkan")
+elseif is_plat("android") then
+    add_syslinks("GLESv2")
 end
+
 if mobile() then
     set_kind("shared")
     add_rules("utils.symbols.export_all")
