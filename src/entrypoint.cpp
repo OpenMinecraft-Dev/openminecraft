@@ -1,4 +1,3 @@
-#include "fmt/format.h"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include <SDL3/SDL_init.h>
@@ -8,7 +7,6 @@
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
 #include "vulkan/vulkan.hpp"
-#include <iostream>
 #include "shaderc/shaderc.hpp"
 
 #ifdef OM_VULKAN_DYNAMIC
@@ -43,7 +41,7 @@ int main()
 
     logger->debug("test!");
     logger->info("test!");
-    logger->infof("hello *OMLogger = {}!", fmt::ptr(logger));
+    logger->infof("hello *OMLogger = {}!", (void*) logger);
     logger->warn("test!");
     logger->error("test!");
     logger->fatal("test!");

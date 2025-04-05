@@ -1,4 +1,4 @@
-set_languages("c++17")
+set_languages("c++20")
 
 includes("extlibs/libpatches.lua")
 includes("extlibs/vulkan.lua")
@@ -27,7 +27,7 @@ if apple() then
     add_requires("moltenvk")
 end
 
-add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", { system = false })
+add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", { system = false })
 if not is_plat("harmonys") then
     add_requires("libsdl3")
 end
@@ -51,7 +51,7 @@ end
 add_files("src/entrypoint.cpp")
 add_deps("openminecraft-log")
 
-add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt")
+add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc")
 if not is_plat("harmonys") then
     add_packages("libsdl3")
 end
