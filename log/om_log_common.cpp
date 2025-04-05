@@ -1,9 +1,11 @@
 #include "openminecraft/log/om_log_ansi.hpp"
 #include "openminecraft/log/om_log_plat.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
+#include <cstdarg>
 #include <ctime>
 #include <iomanip>
 #include <openminecraft/log/om_log_common.hpp>
+#include <string>
 #include <thread>
 
 using namespace openminecraft::log::ansi;

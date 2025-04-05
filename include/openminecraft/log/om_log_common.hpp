@@ -4,6 +4,14 @@
 #include <cstdint>
 #include <ostream>
 #include <string>
+#define FMT_HEADER_ONLY
+#include <fmt/core.h>
+
+#define debugf(n, ...) debug(fmt::format(n, __VA_ARGS__))
+#define infof(n, ...) info(fmt::format(n, __VA_ARGS__))
+#define warnf(n, ...) warn(fmt::format(n, __VA_ARGS__))
+#define errorf(n, ...) error(fmt::format(n, __VA_ARGS__))
+#define fatalf(n, ...) fatal(fmt::format(n, __VA_ARGS__))
 
 namespace openminecraft::log
 {
