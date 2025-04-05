@@ -13,7 +13,8 @@ namespace openminecraft::log::multithraad {
 
     void registerThreadName(std::string name, std::thread::id thrid)
     {
-        threadNameMap[thrid] = name;
+        unregisterThread(thrid);
+        threadNameMap.insert(std::pair<std::thread::id, std::string>(thrid, name));
     }
 
     std::string acquireThreadName(std::thread::id thrid)

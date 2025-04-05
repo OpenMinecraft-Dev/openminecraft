@@ -14,6 +14,12 @@
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 #endif
 
+#define PP_CAT(a, b) PP_CAT_I(a, b)
+#define PP_CAT_I(a, b) PP_CAT_II(~, a ## b)
+#define PP_CAT_II(p, res) res
+#define NM(base) PP_CAT(base, __LINE__)
+#define LOG_TEST(f, caller) std::stringstream NM(temp);NM(temp) << f; caller(NM(temp).str())
+
 using namespace openminecraft::log;
 using namespace openminecraft::log::multithraad;
 
@@ -38,11 +44,13 @@ int main()
     VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
 #endif
     shaderc::Compiler comp;
-    std::stringstream s2; s2 << "Shaderc available: " << comp.IsValid(); logger->info(s2.str());
+    LOG_TEST("Shaderc available: " << comp.IsValid(), logger->info);
+    // std::stringstream s2; s2 << "Shaderc available: " << comp.IsValid(); logger->info(s2.str());
     
     logger->debug("test!");
     logger->info("test!");
-    std::stringstream s; s << "hellp *OMLogger = " << logger << "!"; logger->info(s.str());
+    LOG_TEST("hello *OMLogger = " << logger << "!", logger->info);
+    // std::stringstream s; s << "hellp *OMLogger = " << logger << "!"; logger->info(s.str());
     logger->warn("test!");
     logger->error("test!");
     logger->fatal("test!");

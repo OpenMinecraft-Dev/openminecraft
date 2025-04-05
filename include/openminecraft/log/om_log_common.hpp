@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <ostream>
 #include <string>
+#include <sstream>
 
 namespace openminecraft::log
 {
