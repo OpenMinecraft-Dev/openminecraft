@@ -33,6 +33,7 @@ if not is_plat("harmonys") then
 end
 
 includes("log/xmake.lua")
+includes("vm/xmake.lua")
 
 target("openminecraft")
 add_includedirs("include")
@@ -49,7 +50,7 @@ else
     set_kind("binary")
 end
 add_files("src/entrypoint.cpp")
-add_deps("openminecraft-log")
+add_deps("openminecraft-log", "openminecraft-vm")
 
 add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc")
 if not is_plat("harmonys") then

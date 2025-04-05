@@ -6,6 +6,12 @@
 #include <string>
 #include <sstream>
 
+#define omLogCat(a, b) omLogCatI(a, b)
+#define omLogCatI(a, b) omLogCatII(~, a ## b)
+#define omLogCatII(p, res) res
+#define omLogNameUnique(base) omLogCat(base, __LINE__)
+#define omLog(caller, f) std::stringstream omLogNameUnique(temp);omLogNameUnique(temp) << f; caller(omLogNameUnique(temp).str())
+
 namespace openminecraft::log
 {
     enum OMLogType: uint8_t

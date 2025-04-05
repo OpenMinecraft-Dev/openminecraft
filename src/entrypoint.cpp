@@ -1,7 +1,9 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
+#include "openminecraft/vm/om_class_file.hpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_video.h>
+#include <fstream>
 #include <vector>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
@@ -14,14 +16,9 @@
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 #endif
 
-#define PP_CAT(a, b) PP_CAT_I(a, b)
-#define PP_CAT_I(a, b) PP_CAT_II(~, a ## b)
-#define PP_CAT_II(p, res) res
-#define NM(base) PP_CAT(base, __LINE__)
-#define LOG_TEST(f, caller) std::stringstream NM(temp);NM(temp) << f; caller(NM(temp).str())
-
 using namespace openminecraft::log;
 using namespace openminecraft::log::multithraad;
+using namespace openminecraft::vm::classfile;
 
 int main()
 {
@@ -38,20 +35,12 @@ int main()
     VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
 #endif
     std::vector<vk::PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();
-    std::stringstream s1; s1 << "Vulkan devices: " << physicalDevices.size(); logger->info(s1.str());
+    omLog(logger->info, "Vulkan devices: " << physicalDevices.size());
     vk::Device device = physicalDevices[0].createDevice({}, nullptr);
 #ifdef OM_VULKAN_DYNAMIC
     VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
 #endif
     shaderc::Compiler comp;
-    LOG_TEST("Shaderc available: " << comp.IsValid(), logger->info);
-    // std::stringstream s2; s2 << "Shaderc available: " << comp.IsValid(); logger->info(s2.str());
-    
-    logger->debug("test!");
-    logger->info("test!");
-    LOG_TEST("hello *OMLogger = " << logger << "!", logger->info);
-    // std::stringstream s; s << "hellp *OMLogger = " << logger << "!"; logger->info(s.str());
-    logger->warn("test!");
-    logger->error("test!");
-    logger->fatal("test!");
+    omLog(logger->info, "Shaderc available: " << comp.IsValid());
+    omLog(logger->info, "hello *OMLogger = " << logger << "!");
 }
