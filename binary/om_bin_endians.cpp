@@ -1,4 +1,3 @@
-#include <endian.h>
 #include <openminecraft/binary/om_bin_endians.hpp>
 
 namespace openminecraft::binary

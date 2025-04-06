@@ -1,6 +1,7 @@
 #ifndef OM_CLASS_FILE_HPP
 #define OM_CLASS_FILE_HPP
 
+#include "openminecraft/log/om_log_common.hpp"
 #include <cstdint>
 #include <fstream>
 #include <vector>
@@ -68,6 +69,12 @@ namespace openminecraft::vm::classfile
         uint16_t nameAndTypeIndex;
     };
 
+    struct OMClassConstantClass
+    {
+        uint8_t type;
+        uint16_t nameIndex;
+    };
+
     class OMClassFileParser
     {
         public:
@@ -77,7 +84,10 @@ namespace openminecraft::vm::classfile
 
         private:
             std::ifstream* source;
-            OMClassConstantItem parseConstant();
+            log::OMLogger* logger;
+            OMClassConstantItem parseConstant(int index);
+            OMClassConstantItem parseConstantRef(int index, uint8_t id);
+            OMClassConstantItem parseConstantClass(int index, uint8_t id);
     };
 }
 
