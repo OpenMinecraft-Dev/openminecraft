@@ -38,6 +38,21 @@ namespace openminecraft::vm::classfile
             if (id == JVM_Constant_Long || id == JVM_Constant_Double) i++;
         }
 
+        this->source->readbe16(file->accessFlags);
+        this->source->readbe16(file->thisClass);
+        this->source->readbe16(file->superClass);
+        this->source->readbe16(file->interfacesCount);
+
+        file->interfaces = std::vector<uint16_t>(file->interfacesCount);
+        for (int i = 0; i < file->interfacesCount; i++)
+        {
+            uint16_t id;
+            this->source->readbe16(id);
+            file->interfaces.push_back(id);
+        }
+
+        this->source->readbe16(file->fieldsCount);
+
         return file;
     }
 
@@ -67,6 +82,17 @@ namespace openminecraft::vm::classfile
                 return parseConstantRef(index, id);
             case JVM_Constant_NameAndType:
                 return parseConstantNameAndType(index, id);
+            case JVM_Constant_MethodHandle:
+                return parseConstantMethodHandle(index, id);
+            case JVM_Constant_MethodType:
+                return parseConstantMethodType(index, id);
+            case JVM_Constant_InvokeDynamic:
+            case JVM_Constant_Dynamic:
+                return parseConstantDynamicInfo(index, id);
+            case JVM_Constant_Module:
+                return parseConstantModuleInfo(index, id);
+            case JVM_Constant_Package:
+                return parseConstantPackageInfo(index, id);
         }
 
         std::stringstream s;
@@ -89,7 +115,6 @@ namespace openminecraft::vm::classfile
         ref->type = id;
         this->source->readbe16(ref->classIndex);
         this->source->readbe16(ref->nameAndTypeIndex);
-        omLog(logger->info, "Ref (0x" << std::hex << (int) ref->type << std::dec << ") #" << index << ": #" << ref->classIndex << ".#" << ref->nameAndTypeIndex);
         return (OMClassConstantItem) ref;
     }
 
@@ -152,10 +177,10 @@ namespace openminecraft::vm::classfile
         uint16_t length;
         this->source->readbe16(length);
 
-        auto rawd = new char[length + 1];
-        this->source->read(rawd, length);
-        rawd[length] = '\0';
-        ref->bytes = std::string(toStdUtf8((uint8_t*) rawd, length));
+        auto rawdata = new char[length + 1];
+        this->source->read(rawdata, length);
+        rawdata[length] = '\0';
+        ref->bytes = std::string(toStdUtf8((uint8_t*) rawdata, length));
 
         omLog(logger->info, "Utf8 #" << index << ": " << ref->bytes);
 
@@ -219,6 +244,53 @@ namespace openminecraft::vm::classfile
         data->data = d.ddata;
 
         omLog(logger->info, "Double #" << index << ": " << data->data);
+        return (OMClassConstantItem) data;
+    }
+
+    OMClassConstantItem OMClassFileParser::parseConstantMethodHandle(int index, uint8_t id)
+    {
+        auto data = new OMClassConstantMethodHandle;
+        data->type = id;
+        this->source->read((char*) &data->refKind, 1);
+        this->source->readbe16(data->refIndex);
+
+        return (OMClassConstantItem) data;
+    }
+
+    OMClassConstantItem OMClassFileParser::parseConstantMethodType(int index, uint8_t id)
+    {
+        auto data = new OMClassConstantMethodType;
+        data->type = id;
+        this->source->readbe16(data->descIndex);
+
+        return (OMClassConstantItem) data;
+    }
+
+    OMClassConstantItem OMClassFileParser::parseConstantDynamicInfo(int index, uint8_t id)
+    {
+        auto data = new OMClassConstantDynamicInfo;
+        data->type = id;
+        this->source->readbe16(data->bootMethodAttrIndex);
+        this->source->readbe16(data->nameAndTypeIndex);
+
+        return (OMClassConstantItem) data;
+    }
+
+    OMClassConstantItem OMClassFileParser::parseConstantModuleInfo(int index, uint8_t id)
+    {
+        auto data = new OMClassConstantModuleInfo;
+        data->type = id;
+        this->source->readbe16(data->nameIndex);
+
+        return (OMClassConstantItem) data;
+    }
+
+    OMClassConstantItem OMClassFileParser::parseConstantPackageInfo(int index, uint8_t id)
+    {
+        auto data = new OMClassConstantPackageInfo;
+        data->type = id;
+        this->source->readbe16(data->nameIndex);
+
         return (OMClassConstantItem) data;
     }
 }

@@ -49,6 +49,16 @@
 #define JVM_Constant_Module             19 // Requires Java 9+
 #define JVM_Constant_Package            20 // Requires Java 9+
 
+#define JVM_Acc_Public 0x0001
+#define JVM_Acc_Final 0x0010
+#define JVM_Acc_Super 0x0020
+#define JVM_Acc_Interface 0x0200
+#define JVM_Acc_Abstract 0x0400
+#define JVM_Acc_Synthetic 0x1000
+#define JVM_Acc_Annotation 0x2000
+#define JVM_Acc_Enum 0x4000
+#define JVM_Acc_Module 0x8000
+
 typedef uint8_t* OMClassConstantItem;
 
 namespace openminecraft::vm::classfile
@@ -60,6 +70,12 @@ namespace openminecraft::vm::classfile
         uint16_t major;
         uint16_t constantPoolCount;
         std::vector<OMClassConstantItem> constants;
+        uint16_t accessFlags;
+        uint16_t thisClass;
+        uint16_t superClass;
+        uint16_t interfacesCount;
+        std::vector<uint16_t> interfaces;
+        uint16_t fieldsCount;
     };
 
     struct OMClassConstantRef
@@ -118,6 +134,38 @@ namespace openminecraft::vm::classfile
         double data;
     };
 
+    struct OMClassConstantMethodHandle
+    {
+        uint8_t type;
+        uint8_t refKind;
+        uint16_t refIndex;
+    };
+
+    struct OMClassConstantMethodType
+    {
+        uint8_t type;
+        uint16_t descIndex;
+    };
+
+    struct OMClassConstantDynamicInfo
+    {
+        uint8_t type;
+        uint16_t bootMethodAttrIndex;
+        uint16_t nameAndTypeIndex;
+    };
+
+    struct OMClassConstantModuleInfo
+    {
+        uint8_t type;
+        uint16_t nameIndex;
+    };
+
+    struct OMClassConstantPackageInfo
+    {
+        uint8_t type;
+        uint16_t nameIndex;
+    };
+
     class OMClassFileParser
     {
         public:
@@ -138,6 +186,11 @@ namespace openminecraft::vm::classfile
             OMClassConstantItem parseConstantString(int index, uint8_t id);
             OMClassConstantItem parseConstantLong(int index, uint8_t id);
             OMClassConstantItem parseConstantDouble(int index, uint8_t id);
+            OMClassConstantItem parseConstantMethodHandle(int index, uint8_t id);
+            OMClassConstantItem parseConstantMethodType(int index, uint8_t id);
+            OMClassConstantItem parseConstantDynamicInfo(int index, uint8_t id);
+            OMClassConstantItem parseConstantModuleInfo(int index, uint8_t id);
+            OMClassConstantItem parseConstantPackageInfo(int index, uint8_t id);
 
             char* toStdUtf8(uint8_t* data, int length);
     };

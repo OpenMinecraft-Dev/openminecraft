@@ -1,4 +1,3 @@
-#include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
@@ -58,8 +57,9 @@ int main()
 
     std::ifstream f("/home/coder2/Test.class", std::ios::binary);
     auto par = new OMClassFileParser(f);
+    auto clsfile = par->parse();
 
-    omLog(logger->info, par->parse()->constantPoolCount);
+    omLog(logger->info, clsfile->constantPoolCount << " " << clsfile->fieldsCount);
 
     return 0;
 }
