@@ -12,6 +12,13 @@ using namespace openminecraft::log::ansi;
 
 namespace openminecraft::log
 {
+    static std::string composeName(std::string name, void* obj)
+    {
+        std::stringstream s;
+        s << name << " @ 0x" << std::hex << obj;
+        return s.str();
+    }
+
     OMLogger::OMLogger(std::string name, std::ostream& stream, bool format)
     {
         this->loggerName = name;
@@ -20,6 +27,8 @@ namespace openminecraft::log
     }
 
     OMLogger::OMLogger(std::string name): OMLogger(name, getPlatformLoggingStream(), enableFormatting()) {}
+
+    OMLogger::OMLogger(std::string name, void* obj): OMLogger(composeName(name, obj)) {}
 
     OMLogger::~OMLogger()
     {

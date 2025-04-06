@@ -27,6 +27,7 @@ namespace openminecraft::log
     {
         public:
             OMLogger(std::string name, std::ostream& stream, bool format);
+            OMLogger(std::string name, void* obj);
             OMLogger(std::string name);
             ~OMLogger();
             void debug(std::string msg);

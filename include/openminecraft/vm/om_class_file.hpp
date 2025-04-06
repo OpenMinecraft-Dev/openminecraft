@@ -3,7 +3,7 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include <cstdint>
-#include <fstream>
+#include <istream>
 #include <vector>
 
 #define JVM_VERSION_1_1 45
@@ -75,19 +75,57 @@ namespace openminecraft::vm::classfile
         uint16_t nameIndex;
     };
 
+    struct OMClassConstantNameAndType
+    {
+        uint8_t type;
+        uint16_t nameIndex;
+        uint16_t descriptorIndex;
+    };
+
+    struct OMClassConstantUtf8
+    {
+        uint8_t type;
+        std::string bytes;
+    };
+
+    struct OMClassConstantInteger
+    {
+        uint8_t type;
+        uint32_t data;
+    };
+
+    struct OMClassConstantFloat
+    {
+        uint8_t type;
+        float data;
+    };
+
+    struct OMClassConstantString
+    {
+        uint8_t type;
+        uint16_t stringIndex;
+    };
+
     class OMClassFileParser
     {
         public:
-            OMClassFileParser(std::ifstream& stream);
+            OMClassFileParser(std::istream& stream);
             ~OMClassFileParser();
             OMClassFile* parse();
 
         private:
-            std::ifstream* source;
+            std::istream* source;
             log::OMLogger* logger;
             OMClassConstantItem parseConstant(int index);
             OMClassConstantItem parseConstantRef(int index, uint8_t id);
             OMClassConstantItem parseConstantClass(int index, uint8_t id);
+            OMClassConstantItem parseConstantNameAndType(int index, uint8_t id);
+            OMClassConstantItem parseConstantUtf8(int index, uint8_t id);
+            OMClassConstantItem parseConstantInteger(int index, uint8_t id);
+            OMClassConstantItem parseConstantFloat(int index, uint8_t id);
+            OMClassConstantItem parseConstantString(int index, uint8_t id);
+
+            char* toStdUtf8(uint8_t* data, int length);
     };
 }
 
