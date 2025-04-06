@@ -1,5 +1,8 @@
+#include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
+#include "openminecraft/vm/om_class_file.hpp"
+#include <fstream>
 #include <vector>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
@@ -14,6 +17,7 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
 using namespace openminecraft::log;
 using namespace openminecraft::log::multithraad;
+using namespace openminecraft::vm::classfile;
 
 int main()
 {
@@ -51,6 +55,11 @@ int main()
     }
 
     SDL_Quit();
+
+    std::ifstream f("/home/coder2/Test.class", std::ios::binary);
+    auto par = new OMClassFileParser(f);
+
+    omLog(logger->info, par->parse()->constantPoolCount);
 
     return 0;
 }

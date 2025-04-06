@@ -1,4 +1,5 @@
-set_languages("c++20")
+set_languages("c++17")
+set_optimize("fastest")
 
 includes("extlibs/libpatches.lua")
 includes("extlibs/vulkan.lua")
@@ -34,6 +35,7 @@ end
 
 includes("log/xmake.lua")
 includes("vm/xmake.lua")
+includes("binary/xmake.lua")
 
 target("openminecraft")
 add_includedirs("include")
@@ -50,7 +52,7 @@ else
     set_kind("binary")
 end
 add_files("src/entrypoint.cpp")
-add_deps("openminecraft-log", "openminecraft-vm")
+add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary")
 
 add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc")
 if not is_plat("harmonys") then
