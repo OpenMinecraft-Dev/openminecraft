@@ -50,16 +50,25 @@
 #define JVM_Constant_Package            20 // Requires Java 9+
 
 #define JVM_Acc_Public 0x0001
+#define JVM_Acc_Private 0x0002
+#define JVM_Acc_Protected 0x0004
+#define JVM_Acc_Static 0x0008
 #define JVM_Acc_Final 0x0010
 #define JVM_Acc_Super 0x0020
+#define JVM_Acc_Synchronized 0x0020
+#define JVM_Acc_Bridge 0x0040
+#define JVM_Acc_Varargs 0x0080
+#define JVM_Acc_Native 0x0100
 #define JVM_Acc_Interface 0x0200
 #define JVM_Acc_Abstract 0x0400
+#define JVM_Acc_Strict 0x0800
 #define JVM_Acc_Synthetic 0x1000
 #define JVM_Acc_Annotation 0x2000
 #define JVM_Acc_Enum 0x4000
 #define JVM_Acc_Module 0x8000
 
 typedef uint8_t* OMClassConstantItem;
+typedef uint16_t* OMClassAttrItem;
 
 namespace openminecraft::vm::classfile
 {
@@ -166,6 +175,22 @@ namespace openminecraft::vm::classfile
         uint16_t nameIndex;
     };
 
+    struct OMClassAttrConstantValue
+    {
+        uint16_t attributeNameIndex;
+        uint32_t attributeLength;
+        uint16_t constantValueIndex;
+    };
+
+    struct OMClassFieldInfo
+    {
+        uint16_t accessFlags;
+        uint16_t nameIndex;
+        uint16_t descIndex;
+        uint16_t attributesIndex;
+        std::vector<OMClassAttrItem> attributes;
+    };
+
     class OMClassFileParser
     {
         public:
@@ -191,6 +216,8 @@ namespace openminecraft::vm::classfile
             OMClassConstantItem parseConstantDynamicInfo(int index, uint8_t id);
             OMClassConstantItem parseConstantModuleInfo(int index, uint8_t id);
             OMClassConstantItem parseConstantPackageInfo(int index, uint8_t id);
+
+            OMClassFieldInfo* parseField();
 
             char* toStdUtf8(uint8_t* data, int length);
     };

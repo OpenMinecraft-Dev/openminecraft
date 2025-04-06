@@ -52,6 +52,7 @@ namespace openminecraft::vm::classfile
         }
 
         this->source->readbe16(file->fieldsCount);
+        parseField();
 
         return file;
     }
@@ -292,5 +293,18 @@ namespace openminecraft::vm::classfile
         this->source->readbe16(data->nameIndex);
 
         return (OMClassConstantItem) data;
+    }
+
+    OMClassFieldInfo* OMClassFileParser::parseField()
+    {
+        auto data = new OMClassFieldInfo;
+        this->source->readbe16(data->accessFlags);
+        this->source->readbe16(data->nameIndex);
+        this->source->readbe16(data->descIndex);
+        this->source->readbe16(data->attributesIndex);
+
+        omLog(this->logger->info, data->attributesIndex);
+
+        return data;
     }
 }
