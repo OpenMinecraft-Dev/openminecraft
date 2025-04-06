@@ -106,6 +106,18 @@ namespace openminecraft::vm::classfile
         uint16_t stringIndex;
     };
 
+    struct OMClassConstantLong
+    {
+        uint8_t type;
+        uint64_t data;
+    };
+
+    struct OMClassConstantDouble
+    {
+        uint8_t type;
+        double data;
+    };
+
     class OMClassFileParser
     {
         public:
@@ -124,6 +136,8 @@ namespace openminecraft::vm::classfile
             OMClassConstantItem parseConstantInteger(int index, uint8_t id);
             OMClassConstantItem parseConstantFloat(int index, uint8_t id);
             OMClassConstantItem parseConstantString(int index, uint8_t id);
+            OMClassConstantItem parseConstantLong(int index, uint8_t id);
+            OMClassConstantItem parseConstantDouble(int index, uint8_t id);
 
             char* toStdUtf8(uint8_t* data, int length);
     };

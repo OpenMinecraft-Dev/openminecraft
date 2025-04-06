@@ -1,6 +1,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include <openminecraft/vm/om_class_file.hpp>
 #include <openminecraft/binary/om_bin_endians.hpp>
+#include <sstream>
 #include <stdexcept>
 #include <vector>
 
@@ -33,6 +34,8 @@ namespace openminecraft::vm::classfile
         for (int i = 0; i < file->constantPoolCount - 1; i++)
         {
             file->constants[i] = parseConstant(i + 1);
+            uint8_t id = *file->constants[i];
+            if (id == JVM_Constant_Long || id == JVM_Constant_Double) i++;
         }
 
         return file;
@@ -50,6 +53,10 @@ namespace openminecraft::vm::classfile
                 return parseConstantInteger(index, id);
             case JVM_Constant_Float:
                 return parseConstantFloat(index, id);
+            case JVM_Constant_Long:
+                return parseConstantLong(index, id);
+            case JVM_Constant_Double:
+                return parseConstantDouble(index, id);
             case JVM_Constant_Class:
                 return parseConstantClass(index, id);
             case JVM_Constant_String:
@@ -62,7 +69,9 @@ namespace openminecraft::vm::classfile
                 return parseConstantNameAndType(index, id);
         }
 
-        throw std::invalid_argument("Unknown constant pool id!");
+        std::stringstream s;
+        s << "Unknown constant pool id " << (int) id << "!";
+        throw std::invalid_argument(s.str());
     }
 
     OMClassConstantItem OMClassFileParser::parseConstantClass(int index, uint8_t id)
@@ -80,7 +89,7 @@ namespace openminecraft::vm::classfile
         ref->type = id;
         this->source->readbe16(ref->classIndex);
         this->source->readbe16(ref->nameAndTypeIndex);
-        omLog(logger->info, "Ref 0x" << std::hex << (int) ref->type << " #" << index << ": #" << ref->classIndex << ".#" << ref->nameAndTypeIndex);
+        omLog(logger->info, "Ref (0x" << std::hex << (int) ref->type << std::dec << ") #" << index << ": #" << ref->classIndex << ".#" << ref->nameAndTypeIndex);
         return (OMClassConstantItem) ref;
     }
 
@@ -174,6 +183,42 @@ namespace openminecraft::vm::classfile
         auto data = new OMClassConstantString;
         data->type = id;
         this->source->readbe16(data->stringIndex);
+        return (OMClassConstantItem) data;
+    }
+
+    OMClassConstantItem OMClassFileParser::parseConstantLong(int index, uint8_t id)
+    {
+        auto data = new OMClassConstantLong;
+        data->type = id;
+
+        uint32_t high, low;
+        this->source->readbe32(high);
+        this->source->readbe32(low);
+
+        data->data = ((uint64_t) high << 32) + low;
+
+        omLog(logger->info, "Long #" << index << ": " << data->data);
+        return (OMClassConstantItem) data;
+    }
+
+    OMClassConstantItem OMClassFileParser::parseConstantDouble(int index, uint8_t id)
+    {
+        auto data = new OMClassConstantDouble;
+        data->type = id;
+
+        uint32_t high, low;
+        this->source->readbe32(high);
+        this->source->readbe32(low);
+
+        union
+        {
+            uint64_t ldata;
+            double ddata;
+        } d;
+        d.ldata = ((uint64_t) high << 32) + low;
+        data->data = d.ddata;
+
+        omLog(logger->info, "Double #" << index << ": " << data->data);
         return (OMClassConstantItem) data;
     }
 }
