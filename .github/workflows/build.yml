@@ -80,7 +80,7 @@ jobs:
             arch: x64
             loaderarch: x64
 
-          - os: ubuntu-latest-arm
+          - os: ubuntu-24.04-arm
             name: Linux (arm64)
             plat: linux
             arch: arm64
