@@ -1,3 +1,4 @@
+if not is_plat("x86") then
 package("libxau")
     set_homepage("https://www.x.org/")
     set_description("X.Org: A Sample Authorization Protocol for X")
@@ -8,3 +9,4 @@ package("libxau")
         import("package.tools.xmake").install(package)
     end)
 package_end()
+end
