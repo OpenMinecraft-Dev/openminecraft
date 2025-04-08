@@ -189,7 +189,7 @@ jobs:
         if: ${{ matrix.plat == 'linux' && (matrix.arch == 'x64' || matrix.arch == 'arm64') }}
         run: |
           sudo apt update
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -yq -f --allow-unauthenticated --no-install-suggests --no-install-recommends install libgl1-mesa-glx libgl1 -o Dpkg::Options::="--force-overwrite"
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -yq -f --allow-unauthenticated --no-install-suggests --no-install-recommends install libgl1 -o Dpkg::Options::="--force-overwrite"
           xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
 
       - name: Configure Linux Cross
