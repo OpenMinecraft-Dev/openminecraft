@@ -81,7 +81,7 @@ jobs:
             loaderarch: x64
 
           - os: ubuntu-22.04
-            name: Linux (x64)
+            name: Linux (x86)
             plat: linux
             arch: x86
             loaderarch: x86
@@ -117,7 +117,7 @@ jobs:
             loaderarch: arm64
 
           - os: macos-13
-            name: MacOS (x86)
+            name: MacOS (x64)
             plat: macos
             arch: x64
             loaderarch: x64
