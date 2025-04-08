@@ -81,12 +81,6 @@ jobs:
             loaderarch: x64
 
           - os: ubuntu-22.04
-            name: Linux (x86)
-            plat: linux
-            arch: x86
-            loaderarch: x86
-
-          - os: ubuntu-22.04
             name: Linux (arm64)
             plat: linux
             arch: arm64
