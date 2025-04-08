@@ -80,7 +80,7 @@ jobs:
             arch: x64
             loaderarch: x64
 
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-22.04
             name: Linux (arm64)
             plat: linux
             arch: arm64
@@ -180,20 +180,14 @@ jobs:
         if: matrix.plat == 'android'
         run: xmake f -p android -a ${{ matrix.arch }} --ndk=${{ github.workspace }}/android-ndk-${{ env.ANDROID_NDK_VERSION }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }} --cxxflags="-fPIC"
 
-      - name: Copy stub libs
+      - name: Configure Linux
         if: ${{ matrix.plat == 'linux' && matrix.arch == 'x64' }}
         run: |
           sudo cp stubs/x64-linux/libOpenGL.so /usr/lib
-
-      - name: Configure Linux
-        if: ${{ matrix.plat == 'linux' && (matrix.arch == 'x64' || matrix.arch == 'arm64') }}
-        run: |
-          sudo apt update
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -yq -f --allow-unauthenticated --no-install-suggests --no-install-recommends install libgl1 -o Dpkg::Options::="--force-overwrite"
           xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
 
       - name: Configure Linux Cross
-        if: ${{ matrix.plat == 'linux' && matrix.arch != 'x64' && matrix.arch != 'loong64' && matrix.arch != 'arm64' }}
+        if: ${{ matrix.plat == 'linux' && matrix.arch != 'x64' && matrix.arch != 'loong64' }}
         run: |
           sudo apt update
           sudo apt install gcc-multilib g++-multilib
