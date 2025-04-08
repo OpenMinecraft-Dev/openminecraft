@@ -201,7 +201,7 @@ jobs:
           sudo dpkg --add-architecture ${{ matrix.libc_arch }}
           sudo apt-get update || true
 
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -yq -f --allow-unauthenticated --no-install-suggests --no-install-recommends install libx11-dev:${{ matrix.libc_arch }} libgl1-mesa-glx:${{ matrix.libc_arch }} libgl1:${{ matrix.libc_arch }} -o Dpkg::Options::="--force-overwrite"
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -yq -f --allow-unauthenticated --no-install-suggests --no-install-recommends install libx11-dev:${{ matrix.libc_arch }} libgl1-mesa-glx:${{ matrix.libc_arch }} libgl1:${{ matrix.libc_arch }} libexpat1-dev:${{ matrix.libc_arch }} -o Dpkg::Options::="--force-overwrite"
 
           xmake f -p cross -a ${{ matrix.arch }} --sdk=/usr --cross=${{ matrix.triplet }}- -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
  
