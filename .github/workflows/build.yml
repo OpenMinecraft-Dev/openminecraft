@@ -190,6 +190,7 @@ jobs:
         if: ${{ matrix.plat == 'linux' && (matrix.arch == 'x64' || matrix.arch == 'x86') }}
         run: |
           sudo cp stubs/x64-linux/libOpenGL.so /usr/lib
+          sudo apt install gcc-multilib g++-multilib
           xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
 
       - name: Configure Linux Cross
