@@ -156,6 +156,14 @@ namespace openminecraft::vm::classfile
         const float data;
     };
 
+    class OMClassConstantLong : public OMClassConstant
+    {
+        public:
+        OMClassConstantLong(long long data);
+        virtual OMClassConstantType type() override;
+        const long long data;
+    };
+
     struct OMClassFile
     {
         uint32_t magicNumber;

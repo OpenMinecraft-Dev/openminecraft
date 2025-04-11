@@ -29,6 +29,8 @@ namespace openminecraft::vm::classfile
     OMClassConstantType OMClassConstantInteger::type() { return OMClassConstantType::Integer; }
     OMClassConstantFloat::OMClassConstantFloat(float data): data(data) {}
     OMClassConstantType OMClassConstantFloat::type() { return OMClassConstantType::Float; }
+    OMClassConstantLong::OMClassConstantLong(long long data): data(data) {}
+    OMClassConstantType OMClassConstantLong::type() { return OMClassConstantType::Long; }
 
     OMClassFileParser::OMClassFileParser(std::istream& str)
     {
@@ -69,7 +71,7 @@ namespace openminecraft::vm::classfile
         this->source->read((char*) &type, 1);
 
         uint16_t temp1, temp2, temp3, temp4;
-        uint32_t temp5;
+        uint32_t temp5, temp6;
 
         OMClassConstant* result = nullptr;
         switch (type) {
@@ -153,6 +155,15 @@ namespace openminecraft::vm::classfile
                 d.idata = temp5;
                 result = new OMClassConstantFloat(d.fdata);
                 omLog(this->logger->info, "#" << *idx << " Float(" << d.fdata << ")");
+                break;
+            }
+            case OMClassConstantType::Long:
+            {
+                this->source->readbe32(temp5);
+                this->source->readbe32(temp6);
+                result = new OMClassConstantLong(((long long) temp5 << 32) + temp6);
+                (*idx)++;
+                omLog(this->logger->info, "#" << *idx << " Long(" << ((long long) temp5 << 32) + temp6 << ")");
                 break;
             }
             default:
