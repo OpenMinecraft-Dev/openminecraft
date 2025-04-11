@@ -76,16 +76,84 @@ namespace openminecraft::vm::classfile
     class OMClassConstant
     {
         public: 
-            virtual OMClassConstantType type() = 0;
+        virtual OMClassConstantType type() = 0;
+        template<typename T> T* to();
     };
 
     class OMClassConstantMethodRef : public OMClassConstant
     {
         public:
-            OMClassConstantMethodRef(uint16_t ci, uint16_t nti);
-            virtual OMClassConstantType type() override;
-            const uint16_t classIndex;
-            const uint16_t nameAndTypeIndex;
+        OMClassConstantMethodRef(uint16_t ci, uint16_t nti);
+        virtual OMClassConstantType type() override;
+        const uint16_t classIndex;
+        const uint16_t nameAndTypeIndex;
+    };
+
+    class OMClassConstantFieldRef : public OMClassConstant
+    {
+        public:
+        OMClassConstantFieldRef(uint16_t ci, uint16_t nti);
+        virtual OMClassConstantType type() override;
+        const uint16_t classIndex;
+        const uint16_t nameAndTypeIndex;
+    };
+
+    class OMClassConstantInterfaceMethodRef : public OMClassConstant
+    {
+        public:
+        OMClassConstantInterfaceMethodRef(uint16_t ci, uint16_t nti);
+        virtual OMClassConstantType type() override;
+        const uint16_t classIndex;
+        const uint16_t nameAndTypeIndex;
+    };
+
+    class OMClassConstantClass : public OMClassConstant
+    {
+        public:
+        OMClassConstantClass(uint16_t ni);
+        virtual OMClassConstantType type() override;
+        const uint16_t nameIndex;
+    };
+
+    class OMClassConstantNameAndType : public OMClassConstant
+    {
+        public:
+        OMClassConstantNameAndType(uint16_t ni, uint16_t di);
+        virtual OMClassConstantType type() override;
+        const uint16_t nameIndex;
+        const uint16_t descIndex;
+    };
+
+    class OMClassConstantUtf8 : public OMClassConstant
+    {
+        public:
+        OMClassConstantUtf8(std::string data);
+        virtual OMClassConstantType type() override;
+        const std::string data;
+    };
+
+    class OMClassConstantString : public OMClassConstant
+    {
+        public:
+        OMClassConstantString(uint16_t si);
+        virtual OMClassConstantType type() override;
+        const uint16_t stringIndex;
+    };
+
+    class OMClassConstantInteger : public OMClassConstant
+    {
+        public:
+        OMClassConstantInteger(int data);
+        virtual OMClassConstantType type() override;
+        const int data;
+    };
+
+    class OMClassConstantFloat : public OMClassConstant
+    {
+        public:
+        OMClassConstantFloat(float data);
+        virtual OMClassConstantType type() override;
+        const float data;
     };
 
     struct OMClassFile

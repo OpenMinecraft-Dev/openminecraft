@@ -10,8 +10,25 @@ using namespace openminecraft::binary;
 namespace openminecraft::vm::classfile
 {
     // Constants
+    template<typename T> T* OMClassConstant::to() { return (T*) this; }
+    OMClassConstantFieldRef::OMClassConstantFieldRef(uint16_t ci, uint16_t nti): classIndex(ci), nameAndTypeIndex(nti) {}
+    OMClassConstantType OMClassConstantFieldRef::type() { return OMClassConstantType::FieldRef; }
     OMClassConstantMethodRef::OMClassConstantMethodRef(uint16_t ci, uint16_t nti): classIndex(ci), nameAndTypeIndex(nti) {}
     OMClassConstantType OMClassConstantMethodRef::type() { return OMClassConstantType::MethodRef; }
+    OMClassConstantInterfaceMethodRef::OMClassConstantInterfaceMethodRef(uint16_t ci, uint16_t nti): classIndex(ci), nameAndTypeIndex(nti) {}
+    OMClassConstantType OMClassConstantInterfaceMethodRef::type() { return OMClassConstantType::InterfaceMethodRef; }
+    OMClassConstantClass::OMClassConstantClass(uint16_t ni): nameIndex(ni) {}
+    OMClassConstantType OMClassConstantClass::type() { return OMClassConstantType::Class; }
+    OMClassConstantNameAndType::OMClassConstantNameAndType(uint16_t ni, uint16_t di): nameIndex(ni), descIndex(di) {}
+    OMClassConstantType OMClassConstantNameAndType::type() { return OMClassConstantType::NameAndType; }
+    OMClassConstantUtf8::OMClassConstantUtf8(std::string data): data(data) {}
+    OMClassConstantType OMClassConstantUtf8::type() { return OMClassConstantType::Utf8; }
+    OMClassConstantString::OMClassConstantString(uint16_t si): stringIndex(si) {}
+    OMClassConstantType OMClassConstantString::type() { return OMClassConstantType::String; }
+    OMClassConstantInteger::OMClassConstantInteger(int data): data(data) {}
+    OMClassConstantType OMClassConstantInteger::type() { return OMClassConstantType::Integer; }
+    OMClassConstantFloat::OMClassConstantFloat(float data): data(data) {}
+    OMClassConstantType OMClassConstantFloat::type() { return OMClassConstantType::Float; }
 
     OMClassFileParser::OMClassFileParser(std::istream& str)
     {
@@ -52,9 +69,25 @@ namespace openminecraft::vm::classfile
         this->source->read((char*) &type, 1);
 
         uint16_t temp1, temp2, temp3, temp4;
+        uint32_t temp5;
 
         OMClassConstant* result = nullptr;
         switch (type) {
+            case OMClassConstantType::Class:
+            {
+                this->source->readbe16(temp1);
+                result = new OMClassConstantClass(temp1);
+                omLog(this->logger->info, "#" << *idx << " Class(#" << temp1 << ")");
+                break;
+            }
+            case OMClassConstantType::FieldRef:
+            {
+                this->source->readbe16(temp1);
+                this->source->readbe16(temp2);
+                result = new OMClassConstantFieldRef(temp1, temp2);
+                omLog(this->logger->info, "#" << *idx << " FieldRef(#" << temp1 << ", #" << temp2 << ")");
+                break;
+            }
             case OMClassConstantType::MethodRef:
             {
                 this->source->readbe16(temp1);
@@ -63,9 +96,70 @@ namespace openminecraft::vm::classfile
                 omLog(this->logger->info, "#" << *idx << " MethodRef(#" << temp1 << ", #" << temp2 << ")");
                 break;
             }
+            case OMClassConstantType::InterfaceMethodRef:
+            {
+                this->source->readbe16(temp1);
+                this->source->readbe16(temp2);
+                result = new OMClassConstantInterfaceMethodRef(temp1, temp2);
+                omLog(this->logger->info, "#" << *idx << " InterfaceMethodRef(#" << temp1 << ", #" << temp2 << ")");
+                break;
+            }
+            case OMClassConstantType::NameAndType:
+            {
+                this->source->readbe16(temp1);
+                this->source->readbe16(temp2);
+                result = new OMClassConstantNameAndType(temp1, temp2);
+                omLog(this->logger->info, "#" << *idx << " NameAndType(#" << temp1 << ", #" << temp2 << ")");
+                break;
+            }
+            case OMClassConstantType::Utf8:
+            {
+                this->source->readbe16(temp1);
+                auto temp = new uint8_t[temp1];
+                this->source->read((char*) temp, temp1);
+                auto comp = std::string(toStdUtf8(temp, temp1));
+                result = new OMClassConstantUtf8(comp);
+                omLog(this->logger->info, "#" << *idx << " Utf8(\"" << comp << "\")");
+                break;
+            }
+            case OMClassConstantType::String:
+            {
+                this->source->readbe16(temp1);
+                result = new OMClassConstantString(temp1);
+                omLog(this->logger->info, "#" << *idx << " String(#" << temp1 << ")");
+                break;
+            }
+            case OMClassConstantType::Integer:
+            {
+                this->source->readbe32(temp5);
+                union
+                {
+                    uint32_t uidata;
+                    int idata;
+                } d;
+                d.uidata = temp5;
+                result = new OMClassConstantInteger(d.idata);
+                omLog(this->logger->info, "#" << *idx << " Integer(" << d.idata << ")");
+                break;
+            }
+            case OMClassConstantType::Float:
+            {
+                this->source->readbe32(temp5);
+                union
+                {
+                    uint32_t idata;
+                    float fdata;
+                } d;
+                d.idata = temp5;
+                result = new OMClassConstantFloat(d.fdata);
+                omLog(this->logger->info, "#" << *idx << " Float(" << d.fdata << ")");
+                break;
+            }
             default:
+            {
                 throw std::invalid_argument("Unknown constant type id!");
                 break;
+            }
         }
 
         return result;
