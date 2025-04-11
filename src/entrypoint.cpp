@@ -59,7 +59,7 @@ int main()
     auto par = new OMClassFileParser(f);
     auto clsfile = par->parse();
 
-    omLog(logger->info, clsfile->constantPoolCount << " " << clsfile->fieldsCount);
+    omLog(logger->info, clsfile->magicNumber);
 
     return 0;
 }
