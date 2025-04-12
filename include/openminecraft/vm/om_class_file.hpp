@@ -1,36 +1,37 @@
 #ifndef OM_CLASS_FILE_HPP
 #define OM_CLASS_FILE_HPP
 
-#include "openminecraft/log/om_log_common.hpp"
 #include <cstdint>
 #include <istream>
 #include <ostream>
 #include <vector>
 
+#include "openminecraft/log/om_log_common.hpp"
+
 #define JVM_VERSION_1_1 45
 #define JVM_VERSION_1_2 46
 #define JVM_VERSION_1_3 47
 #define JVM_VERSION_1_4 48
-#define JVM_VERSION_5   49
-#define JVM_VERSION_6   50
-#define JVM_VERSION_7   51
-#define JVM_VERSION_8   52
-#define JVM_VERSION_9   53
-#define JVM_VERSION_10  54
-#define JVM_VERSION_11  55
-#define JVM_VERSION_12  56
-#define JVM_VERSION_13  57
-#define JVM_VERSION_14  58
-#define JVM_VERSION_15  59
-#define JVM_VERSION_16  60
-#define JVM_VERSION_17  61
-#define JVM_VERSION_18  62
-#define JVM_VERSION_19  63
-#define JVM_VERSION_20  64
-#define JVM_VERSION_21  65
-#define JVM_VERSION_22  66
-#define JVM_VERSION_23  67
-#define JVM_VERSION_24  68
+#define JVM_VERSION_5 49
+#define JVM_VERSION_6 50
+#define JVM_VERSION_7 51
+#define JVM_VERSION_8 52
+#define JVM_VERSION_9 53
+#define JVM_VERSION_10 54
+#define JVM_VERSION_11 55
+#define JVM_VERSION_12 56
+#define JVM_VERSION_13 57
+#define JVM_VERSION_14 58
+#define JVM_VERSION_15 59
+#define JVM_VERSION_16 60
+#define JVM_VERSION_17 61
+#define JVM_VERSION_18 62
+#define JVM_VERSION_19 63
+#define JVM_VERSION_20 64
+#define JVM_VERSION_21 65
+#define JVM_VERSION_22 66
+#define JVM_VERSION_23 67
+#define JVM_VERSION_24 68
 
 #define JVM_Acc_Public 0x0001
 #define JVM_Acc_Private 0x0002
@@ -50,211 +51,190 @@
 #define JVM_Acc_Enum 0x4000
 #define JVM_Acc_Module 0x8000
 
-namespace openminecraft::vm::classfile
-{
-    enum class OMClassConstantType : uint8_t
+namespace openminecraft::vm::classfile {
+enum class OMClassConstantType : uint8_t {
+    Utf8 = 1,
+    Integer = 3,
+    Float = 4,
+    Long = 5,
+    Double = 6,
+    Class = 7,
+    String = 8,
+    FieldRef = 9,
+    MethodRef = 10,
+    InterfaceMethodRef = 11,
+    NameAndType = 12,
+    MethodHandle = 15, // Requires Java 7+
+    MethodType = 16, // Requires Java 7+
+    Dynamic = 17, // Requires Java 11+
+    InvokeDynamic = 18, // Requires Java 7+
+    Module = 19, // Requires Java 9+
+    Package = 20 // Requires Java 9+
+};
+
+class OMClassConstant {
+public:
+    virtual OMClassConstantType type() = 0;
+    template <typename T>
+    T* to()
     {
-        Utf8 = 1,
-        Integer = 3,
-        Float = 4,
-        Long = 5,
-        Double = 6, 
-        Class = 7, 
-        String = 8, 
-        FieldRef = 9,
-        MethodRef = 10, 
-        InterfaceMethodRef = 11,
-        NameAndType = 12,
-        MethodHandle = 15,      // Requires Java 7+
-        MethodType = 16,        // Requires Java 7+
-        Dynamic = 17,           // Requires Java 11+
-        InvokeDynamic = 18,     // Requires Java 7+
-        Module = 19,            // Requires Java 9+
-        Package = 20            // Requires Java 9+
-    };
+        return (T*)this;
+    }
+};
 
-    class OMClassConstant
-    {
-        public: 
-        virtual OMClassConstantType type() = 0;
-        template<typename T> T* to()
-        {
-            return (T*) this;
-        }
-    };
+class OMClassConstantMethodRef : public OMClassConstant {
+public:
+    OMClassConstantMethodRef(uint16_t ci, uint16_t nti);
+    virtual OMClassConstantType type() override;
+    const uint16_t classIndex;
+    const uint16_t nameAndTypeIndex;
+};
 
-    class OMClassConstantMethodRef : public OMClassConstant
-    {
-        public:
-        OMClassConstantMethodRef(uint16_t ci, uint16_t nti);
-        virtual OMClassConstantType type() override;
-        const uint16_t classIndex;
-        const uint16_t nameAndTypeIndex;
-    };
+class OMClassConstantFieldRef : public OMClassConstant {
+public:
+    OMClassConstantFieldRef(uint16_t ci, uint16_t nti);
+    virtual OMClassConstantType type() override;
+    const uint16_t classIndex;
+    const uint16_t nameAndTypeIndex;
+};
 
-    class OMClassConstantFieldRef : public OMClassConstant
-    {
-        public:
-        OMClassConstantFieldRef(uint16_t ci, uint16_t nti);
-        virtual OMClassConstantType type() override;
-        const uint16_t classIndex;
-        const uint16_t nameAndTypeIndex;
-    };
+class OMClassConstantInterfaceMethodRef : public OMClassConstant {
+public:
+    OMClassConstantInterfaceMethodRef(uint16_t ci, uint16_t nti);
+    virtual OMClassConstantType type() override;
+    const uint16_t classIndex;
+    const uint16_t nameAndTypeIndex;
+};
 
-    class OMClassConstantInterfaceMethodRef : public OMClassConstant
-    {
-        public:
-        OMClassConstantInterfaceMethodRef(uint16_t ci, uint16_t nti);
-        virtual OMClassConstantType type() override;
-        const uint16_t classIndex;
-        const uint16_t nameAndTypeIndex;
-    };
+class OMClassConstantClass : public OMClassConstant {
+public:
+    OMClassConstantClass(uint16_t ni);
+    virtual OMClassConstantType type() override;
+    const uint16_t nameIndex;
+};
 
-    class OMClassConstantClass : public OMClassConstant
-    {
-        public:
-        OMClassConstantClass(uint16_t ni);
-        virtual OMClassConstantType type() override;
-        const uint16_t nameIndex;
-    };
+class OMClassConstantNameAndType : public OMClassConstant {
+public:
+    OMClassConstantNameAndType(uint16_t ni, uint16_t di);
+    virtual OMClassConstantType type() override;
+    const uint16_t nameIndex;
+    const uint16_t descIndex;
+};
 
-    class OMClassConstantNameAndType : public OMClassConstant
-    {
-        public:
-        OMClassConstantNameAndType(uint16_t ni, uint16_t di);
-        virtual OMClassConstantType type() override;
-        const uint16_t nameIndex;
-        const uint16_t descIndex;
-    };
+class OMClassConstantUtf8 : public OMClassConstant {
+public:
+    OMClassConstantUtf8(std::string data);
+    virtual OMClassConstantType type() override;
+    const std::string data;
+};
 
-    class OMClassConstantUtf8 : public OMClassConstant
-    {
-        public:
-        OMClassConstantUtf8(std::string data);
-        virtual OMClassConstantType type() override;
-        const std::string data;
-    };
+class OMClassConstantString : public OMClassConstant {
+public:
+    OMClassConstantString(uint16_t si);
+    virtual OMClassConstantType type() override;
+    const uint16_t stringIndex;
+};
 
-    class OMClassConstantString : public OMClassConstant
-    {
-        public:
-        OMClassConstantString(uint16_t si);
-        virtual OMClassConstantType type() override;
-        const uint16_t stringIndex;
-    };
+class OMClassConstantInteger : public OMClassConstant {
+public:
+    OMClassConstantInteger(int data);
+    virtual OMClassConstantType type() override;
+    const int data;
+};
 
-    class OMClassConstantInteger : public OMClassConstant
-    {
-        public:
-        OMClassConstantInteger(int data);
-        virtual OMClassConstantType type() override;
-        const int data;
-    };
+class OMClassConstantFloat : public OMClassConstant {
+public:
+    OMClassConstantFloat(float data);
+    virtual OMClassConstantType type() override;
+    const float data;
+};
 
-    class OMClassConstantFloat : public OMClassConstant
-    {
-        public:
-        OMClassConstantFloat(float data);
-        virtual OMClassConstantType type() override;
-        const float data;
-    };
+class OMClassConstantLong : public OMClassConstant {
+public:
+    OMClassConstantLong(int64_t data);
+    virtual OMClassConstantType type() override;
+    const int64_t data;
+};
 
-    class OMClassConstantLong : public OMClassConstant
-    {
-        public:
-        OMClassConstantLong(int64_t data);
-        virtual OMClassConstantType type() override;
-        const int64_t data;
-    };
+class OMClassConstantDouble : public OMClassConstant {
+public:
+    OMClassConstantDouble(double data);
+    virtual OMClassConstantType type() override;
+    const double data;
+};
 
-    class OMClassConstantDouble : public OMClassConstant
-    {
-        public:
-        OMClassConstantDouble(double data);
-        virtual OMClassConstantType type() override;
-        const double data;
-    };
+class OMClassConstantMethodHandle : public OMClassConstant {
+public:
+    OMClassConstantMethodHandle(uint8_t rk, uint16_t ri);
+    virtual OMClassConstantType type() override;
+    const uint8_t refKind;
+    const uint16_t refIndex;
+};
 
-    class OMClassConstantMethodHandle : public OMClassConstant
-    {
-        public:
-        OMClassConstantMethodHandle(uint8_t rk, uint16_t ri);
-        virtual OMClassConstantType type() override;
-        const uint8_t refKind;
-        const uint16_t refIndex;
-    };
+class OMClassConstantMethodType : public OMClassConstant {
+public:
+    OMClassConstantMethodType(uint16_t di);
+    virtual OMClassConstantType type() override;
+    const uint16_t descIndex;
+};
 
-    class OMClassConstantMethodType : public OMClassConstant
-    {
-        public:
-        OMClassConstantMethodType(uint16_t di);
-        virtual OMClassConstantType type() override;
-        const uint16_t descIndex;
-    };
+class OMClassConstantDynamic : public OMClassConstant {
+public:
+    OMClassConstantDynamic(uint16_t bmai, uint16_t nti);
+    virtual OMClassConstantType type() override;
+    const uint16_t bootstrapMethodAttrIndex;
+    const uint16_t nameAndTypeIndex;
+};
 
-    class OMClassConstantDynamic : public OMClassConstant
-    {
-        public:
-        OMClassConstantDynamic(uint16_t bmai, uint16_t nti);
-        virtual OMClassConstantType type() override;
-        const uint16_t bootstrapMethodAttrIndex;
-        const uint16_t nameAndTypeIndex;
-    };
+class OMClassConstantInvokeDynamic : public OMClassConstant {
+public:
+    OMClassConstantInvokeDynamic(uint16_t bmai, uint16_t nti);
+    virtual OMClassConstantType type() override;
+    const uint16_t bootstrapMethodAttrIndex;
+    const uint16_t nameAndTypeIndex;
+};
 
-    class OMClassConstantInvokeDynamic : public OMClassConstant
-    {
-        public:
-        OMClassConstantInvokeDynamic(uint16_t bmai, uint16_t nti);
-        virtual OMClassConstantType type() override;
-        const uint16_t bootstrapMethodAttrIndex;
-        const uint16_t nameAndTypeIndex;
-    };
+class OMClassConstantModule : public OMClassConstant {
+public:
+    OMClassConstantModule(uint16_t ni);
+    virtual OMClassConstantType type() override;
+    const uint16_t nameIndex;
+};
 
-    class OMClassConstantModule : public OMClassConstant
-    {
-        public:
-        OMClassConstantModule(uint16_t ni);
-        virtual OMClassConstantType type() override;
-        const uint16_t nameIndex;
-    };
+class OMClassConstantPackage : public OMClassConstant {
+public:
+    OMClassConstantPackage(uint16_t ni);
+    virtual OMClassConstantType type() override;
+    const uint16_t nameIndex;
+};
 
-    class OMClassConstantPackage : public OMClassConstant
-    {
-        public:
-        OMClassConstantPackage(uint16_t ni);
-        virtual OMClassConstantType type() override;
-        const uint16_t nameIndex;
-    };
+struct OMClassFile {
+    uint32_t magicNumber;
+    uint16_t minor;
+    uint16_t major;
+    uint16_t constantPoolCount;
+    std::vector<OMClassConstant*> constants;
+    uint16_t accessFlags;
+    uint16_t thisClass;
+    uint16_t superClass;
+    uint16_t interfacesCount;
+    std::vector<uint16_t> interfaces;
+    uint16_t fieldsCount;
+};
 
-    struct OMClassFile
-    {
-        uint32_t magicNumber;
-        uint16_t minor;
-        uint16_t major;
-        uint16_t constantPoolCount;
-        std::vector<OMClassConstant*> constants;
-        uint16_t accessFlags;
-        uint16_t thisClass;
-        uint16_t superClass;
-        uint16_t interfacesCount;
-        std::vector<uint16_t> interfaces;
-        uint16_t fieldsCount;
-    };
+class OMClassFileParser {
+public:
+    OMClassFileParser(std::istream& stream);
+    ~OMClassFileParser();
+    OMClassFile* parse();
 
-    class OMClassFileParser
-    {
-        public:
-            OMClassFileParser(std::istream& stream);
-            ~OMClassFileParser();
-            OMClassFile* parse();
+private:
+    std::istream* source;
+    log::OMLogger* logger;
 
-        private:
-            std::istream* source;
-            log::OMLogger* logger;
-
-            OMClassConstant* parseConstant(uint16_t* idx);
-            char* toStdUtf8(uint8_t* data, int length);
-    };
-}
+    OMClassConstant* parseConstant(uint16_t* idx);
+    char* toStdUtf8(uint8_t* data, int length);
+};
+} // namespace openminecraft::vm::classfile
 
 #endif

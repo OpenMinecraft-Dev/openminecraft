@@ -53,6 +53,7 @@ else
 end
 add_files("src/entrypoint.cpp")
 add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary")
+add_includedirs("extlibs/fmt")
 
 add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt")
 if not is_plat("harmonys") then

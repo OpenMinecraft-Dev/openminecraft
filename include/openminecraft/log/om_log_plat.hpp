@@ -3,10 +3,9 @@
 
 #include <ostream>
 
-namespace openminecraft::log
-{
-    std::ostream& getPlatformLoggingStream();
-    bool enableFormatting();
-}
+namespace openminecraft::log {
+std::ostream& getPlatformLoggingStream();
+bool enableFormatting();
+} // namespace openminecraft::log
 
 #endif

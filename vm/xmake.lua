@@ -1,4 +1,6 @@
 target("openminecraft-vm")
 set_kind("static")
+add_includedirs("../extlibs/fmt")
+add_packages("fmt")
 add_files("**.cpp")
 add_includedirs("../include")

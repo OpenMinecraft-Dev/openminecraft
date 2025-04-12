@@ -1,15 +1,14 @@
-#include <openminecraft/log/om_log_plat.hpp>
 #include <iostream>
+#include <openminecraft/log/om_log_plat.hpp>
 
-namespace openminecraft::log
+namespace openminecraft::log {
+std::ostream& getPlatformLoggingStream()
 {
-    std::ostream& getPlatformLoggingStream()
-    {
-        return std::cout;
-    }
-
-    bool enableFormatting()
-    {
-        return true;
-    }
+    return std::cout;
 }
+
+bool enableFormatting()
+{
+    return true;
+}
+} // namespace openminecraft::log

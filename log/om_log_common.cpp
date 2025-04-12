@@ -11,77 +11,93 @@
 
 using namespace openminecraft::log::ansi;
 
-namespace openminecraft::log
+namespace openminecraft::log {
+static std::string composeName(std::string name, void* obj)
 {
-    static std::string composeName(std::string name, void* obj)
-    {
-        std::stringstream s;
-        s << name << " @ 0x" << std::hex << obj;
-        return s.str();
-    }
+    std::stringstream s;
+    s << name << " @ 0x" << std::hex << obj;
+    return s.str();
+}
 
-    OMLogger::OMLogger(std::string name, std::ostream& stream, bool format)
-    {
-        this->loggerName = name;
-        this->target = &stream;
-        this->enableFormat = format;
-    }
+OMLogger::OMLogger(std::string name, std::ostream& stream, bool format)
+{
+    this->loggerName = name;
+    this->target = &stream;
+    this->enableFormat = format;
+}
 
-    OMLogger::OMLogger(std::string name): OMLogger(name, getPlatformLoggingStream(), enableFormatting()) {}
+OMLogger::OMLogger(std::string name)
+    : OMLogger(name, getPlatformLoggingStream(), enableFormatting())
+{
+}
 
-    OMLogger::OMLogger(std::string name, void* obj): OMLogger(composeName(name, obj)) {}
+OMLogger::OMLogger(std::string name, void* obj)
+    : OMLogger(composeName(name, obj))
+{
+}
 
-    OMLogger::~OMLogger()
-    {
-        delete this->target;
-    }
+OMLogger::~OMLogger()
+{
+}
 
-    void OMLogger::debug(std::string msg) { log(Debug, msg); }
-    void OMLogger::info(std::string msg) { log(Info, msg); }
-    void OMLogger::warn(std::string msg) { log(Warn, msg); }
-    void OMLogger::error(std::string msg) { log(Error, msg); }
-    void OMLogger::fatal(std::string msg) { log(Fatal, msg); }
+void OMLogger::debug(std::string msg)
+{
+    log(Debug, msg);
+}
+void OMLogger::info(std::string msg)
+{
+    log(Info, msg);
+}
+void OMLogger::warn(std::string msg)
+{
+    log(Warn, msg);
+}
+void OMLogger::error(std::string msg)
+{
+    log(Error, msg);
+}
+void OMLogger::fatal(std::string msg)
+{
+    log(Fatal, msg);
+}
 
-    void OMLogger::log(OMLogType type, std::string msg)
-    {
-        if (this->enableFormat)
-        {
-            auto now = time(nullptr);
-            auto ltm = localtime(&now);
+void OMLogger::log(OMLogType type, std::string msg)
+{
+    if (this->enableFormat) {
+        auto now = time(nullptr);
+        auto ltm = localtime(&now);
 
-            *this->target << OMLogAnsiReset << OMLogAnsiBlueLight << "[" << std::setw(2) << std::setfill('0') << ltm->tm_hour << ":";
-            *this->target << std::setw(2) << std::setfill('0') << ltm->tm_min << ":";
-            *this->target << std::setw(2) << std::setfill('0') << ltm->tm_sec << "] ";
-            
-            switch (type)
-            {
-                case Debug:
-                    *this->target << OMLogAnsiBlue << "[debug/";
-                    break;
-                case Info:
-                    *this->target << OMLogAnsiGreen << "[info/";
-                    break;
-                case Warn:
-                    *this->target << OMLogAnsiYellowLight << "[warn/";
-                    break;
-                case Error:
-                    *this->target << OMLogAnsiRedLight << "[error/";
-                    break;
-                case Fatal:
-                    *this->target << OMLogAnsiRed << "[fatal/";
-                    break;
-                default:
-                    *this->target << OMLogAnsiFaint << "[";
-                    break;
-            }
-            *this->target << multithraad::acquireThreadName(std::this_thread::get_id()) << "] ";
+        *this->target << OMLogAnsiReset << OMLogAnsiBlueLight << "[" << std::setw(2) << std::setfill('0')
+                      << ltm->tm_hour << ":";
+        *this->target << std::setw(2) << std::setfill('0') << ltm->tm_min << ":";
+        *this->target << std::setw(2) << std::setfill('0') << ltm->tm_sec << "] ";
 
-            *this->target << OMLogAnsiCyan << "(" << this->loggerName << ") " << OMLogAnsiReset;
-            *this->target << msg << std::endl;
+        switch (type) {
+        case Debug:
+            *this->target << OMLogAnsiBlue << "[debug/";
+            break;
+        case Info:
+            *this->target << OMLogAnsiGreen << "[info/";
+            break;
+        case Warn:
+            *this->target << OMLogAnsiYellowLight << "[warn/";
+            break;
+        case Error:
+            *this->target << OMLogAnsiRedLight << "[error/";
+            break;
+        case Fatal:
+            *this->target << OMLogAnsiRed << "[fatal/";
+            break;
+        default:
+            *this->target << OMLogAnsiFaint << "[";
+            break;
         }
-        else
-        {
-            *this->target << (char) type << msg;
-        }
+        *this->target << multithraad::acquireThreadName(std::this_thread::get_id()) << "] ";
+
+        *this->target << OMLogAnsiCyan << "(" << this->loggerName << ") " << OMLogAnsiReset;
+        *this->target << msg << std::endl;
+    } else {
+        *this->target << (char)type << msg;
     }
 }
+} // namespace openminecraft::log

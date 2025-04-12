@@ -1,17 +1,19 @@
+#include <SDL3/SDL_error.h>
+
+#include <fstream>
+#include <vector>
+
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
-#include <SDL3/SDL_error.h>
-#include <fstream>
-#include <stdexcept>
-#include <vector>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
-#include "vulkan/vulkan.hpp"
-#include "shaderc/shaderc.hpp"
 #include <SDL3/SDL.h>
 #include <fmt/format.h>
+
+#include "shaderc/shaderc.hpp"
+#include "vulkan/vulkan.hpp"
 
 #ifdef OM_VULKAN_DYNAMIC
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
@@ -46,14 +48,16 @@ int main()
     logger->info("hello *OMLogger = {}!", fmt::ptr(logger));
 
     if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO)) {
-        // SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_Init failed (%s)", SDL_GetError());
-        return 1;
+        logger->info("SDL Status: {}", SDL_GetError());
+        // SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_Init failed (%s)",
+        // SDL_GetError());
     }
 
     /*if (!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Hello World",
-                                 "!! Your SDL project successfully runs on Android !!", NULL)) {
-        // SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_ShowSimpleMessageBox failed (%s)", SDL_GetError());
-        return 1;
+                                 "!! Your SDL project successfully runs on Android
+    !!", NULL)) {
+        // SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_ShowSimpleMessageBox
+    failed (%s)", SDL_GetError()); return 1;
     }*/
 
     SDL_Quit();
@@ -63,22 +67,24 @@ int main()
     auto clsfile = par->parse();
 
     uint32_t cid = 1;
-    for (auto c : clsfile->constants)
-    {
-        switch (c->type())
-        {
-            case OMClassConstantType::Utf8:
-            {
-                logger->info("#{} Utf8(\"{}\")", cid, c->to<OMClassConstantUtf8>()->data);
-                break;
-            }
-            default:
-            {
-                // throw std::invalid_argument(fmt::format("Unknown constant id {}!", (int) c->type()));
-            }
+    for (auto c : clsfile->constants) {
+        switch (c->type()) {
+        case OMClassConstantType::Utf8: {
+            logger->info("#{} Utf8(\"{}\")", cid,
+                c->to<OMClassConstantUtf8>()->data);
+            break;
+        }
+        default: {
+            // throw std::invalid_argument(fmt::format("Unknown constant id {}!",
+            // (int) c->type()));
+        }
         }
         cid++;
     }
+
+    delete par;
+    delete clsfile;
+    delete logger;
 
     return 0;
 }
