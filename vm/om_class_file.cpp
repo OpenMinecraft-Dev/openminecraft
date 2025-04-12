@@ -1,5 +1,6 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include <cstdint>
+#include <fmt/format.h>
 #include <openminecraft/vm/om_class_file.hpp>
 #include <openminecraft/binary/om_bin_endians.hpp>
 #include <stdexcept>
@@ -9,8 +10,6 @@ using namespace openminecraft::binary;
 
 namespace openminecraft::vm::classfile
 {
-    // Constants
-    template<typename T> T* OMClassConstant::to() { return (T*) this; }
     OMClassConstantFieldRef::OMClassConstantFieldRef(uint16_t ci, uint16_t nti): classIndex(ci), nameAndTypeIndex(nti) {}
     OMClassConstantType OMClassConstantFieldRef::type() { return OMClassConstantType::FieldRef; }
     OMClassConstantMethodRef::OMClassConstantMethodRef(uint16_t ci, uint16_t nti): classIndex(ci), nameAndTypeIndex(nti) {}
@@ -98,7 +97,6 @@ namespace openminecraft::vm::classfile
             {
                 this->source->readbe16(temp1);
                 result = new OMClassConstantClass(temp1);
-                omLog(this->logger->info, "#" << *idx << " Class(#" << temp1 << ")");
                 break;
             }
             case OMClassConstantType::FieldRef:
@@ -106,7 +104,6 @@ namespace openminecraft::vm::classfile
                 this->source->readbe16(temp1);
                 this->source->readbe16(temp2);
                 result = new OMClassConstantFieldRef(temp1, temp2);
-                omLog(this->logger->info, "#" << *idx << " FieldRef(#" << temp1 << ", #" << temp2 << ")");
                 break;
             }
             case OMClassConstantType::MethodRef:
@@ -114,7 +111,6 @@ namespace openminecraft::vm::classfile
                 this->source->readbe16(temp1);
                 this->source->readbe16(temp2);
                 result = new OMClassConstantMethodRef(temp1, temp2);
-                omLog(this->logger->info, "#" << *idx << " MethodRef(#" << temp1 << ", #" << temp2 << ")");
                 break;
             }
             case OMClassConstantType::InterfaceMethodRef:
@@ -122,7 +118,6 @@ namespace openminecraft::vm::classfile
                 this->source->readbe16(temp1);
                 this->source->readbe16(temp2);
                 result = new OMClassConstantInterfaceMethodRef(temp1, temp2);
-                omLog(this->logger->info, "#" << *idx << " InterfaceMethodRef(#" << temp1 << ", #" << temp2 << ")");
                 break;
             }
             case OMClassConstantType::NameAndType:
@@ -130,7 +125,6 @@ namespace openminecraft::vm::classfile
                 this->source->readbe16(temp1);
                 this->source->readbe16(temp2);
                 result = new OMClassConstantNameAndType(temp1, temp2);
-                omLog(this->logger->info, "#" << *idx << " NameAndType(#" << temp1 << ", #" << temp2 << ")");
                 break;
             }
             case OMClassConstantType::Utf8:
@@ -141,14 +135,12 @@ namespace openminecraft::vm::classfile
                 auto comp = std::string(toStdUtf8(temp, temp1));
                 delete[] temp;
                 result = new OMClassConstantUtf8(comp);
-                omLog(this->logger->info, "#" << *idx << " Utf8(\"" << comp << "\")");
                 break;
             }
             case OMClassConstantType::String:
             {
                 this->source->readbe16(temp1);
                 result = new OMClassConstantString(temp1);
-                omLog(this->logger->info, "#" << *idx << " String(#" << temp1 << ")");
                 break;
             }
             case OMClassConstantType::Integer:
@@ -161,7 +153,6 @@ namespace openminecraft::vm::classfile
                 } d;
                 d.uidata = temp5;
                 result = new OMClassConstantInteger(d.idata);
-                omLog(this->logger->info, "#" << *idx << " Integer(" << d.idata << ")");
                 break;
             }
             case OMClassConstantType::Float:
@@ -174,7 +165,6 @@ namespace openminecraft::vm::classfile
                 } d;
                 d.idata = temp5;
                 result = new OMClassConstantFloat(d.fdata);
-                omLog(this->logger->info, "#" << *idx << " Float(" << d.fdata << ")");
                 break;
             }
             case OMClassConstantType::Long:
@@ -182,7 +172,6 @@ namespace openminecraft::vm::classfile
                 this->source->readbe32(temp5);
                 this->source->readbe32(temp6);
                 result = new OMClassConstantLong(((int64_t) temp5 << 32) + temp6);
-                omLog(this->logger->info, "#" << *idx << " Long(" << ((int64_t) temp5 << 32) + temp6 << ")");
                 (*idx)++;
                 break;
             }
@@ -197,7 +186,6 @@ namespace openminecraft::vm::classfile
                 } d;
                 d.idata = ((int64_t) temp5 << 32) + temp6;
                 result = new OMClassConstantDouble(d.ddata);
-                omLog(this->logger->info, "#" << *idx << " Double(" << d.ddata << ")");
                 (*idx)++;
                 break;
             }
@@ -207,14 +195,12 @@ namespace openminecraft::vm::classfile
                 this->source->read((char*) &temp, 1);
                 this->source->readbe16(temp1);
                 result = new OMClassConstantMethodHandle(temp, temp1);
-                omLog(this->logger->info, "#" << *idx << " MethodHandle(" << temp << ", #" << temp1 << ")");
                 break;
             }
             case OMClassConstantType::MethodType:
             {
                 this->source->readbe16(temp1);
                 result = new OMClassConstantMethodType(temp1);
-                omLog(this->logger->info, "#" << *idx << " MethodType(" << temp1 << ")");
                 break;
             }
             case OMClassConstantType::Dynamic:
@@ -222,7 +208,6 @@ namespace openminecraft::vm::classfile
                 this->source->readbe16(temp1);
                 this->source->readbe16(temp2);
                 result = new OMClassConstantDynamic(temp1, temp2);
-                omLog(this->logger->info, "#" << *idx << " Dynamic(" << temp1 << ", #" << temp2 << ")");
                 break;
             }
             case OMClassConstantType::InvokeDynamic:
@@ -230,21 +215,18 @@ namespace openminecraft::vm::classfile
                 this->source->readbe16(temp1);
                 this->source->readbe16(temp2);
                 result = new OMClassConstantInvokeDynamic(temp1, temp2);
-                omLog(this->logger->info, "#" << *idx << " InvokeDynamic(" << temp1 << ", #" << temp2 << ")");
                 break;
             }
             case OMClassConstantType::Module:
             {
                 this->source->readbe16(temp1);
                 result = new OMClassConstantModule(temp1);
-                omLog(this->logger->info, "#" << *idx << " Module(" << temp1 << ")");
                 break;
             }
             case OMClassConstantType::Package:
             {
                 this->source->readbe16(temp1);
                 result = new OMClassConstantPackage(temp1);
-                omLog(this->logger->info, "#" << *idx << " Package(" << temp1 << ")");
                 break;
             }
             default:

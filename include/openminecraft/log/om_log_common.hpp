@@ -2,15 +2,9 @@
 #define OM_LOG_COMMON_HPP
 
 #include <cstdint>
+#include <fmt/format.h>
 #include <ostream>
 #include <string>
-#include <sstream>
-
-#define omLogCat(a, b) omLogCatI(a, b)
-#define omLogCatI(a, b) omLogCatII(~, a ## b)
-#define omLogCatII(p, res) res
-#define omLogNameUnique(base) omLogCat(base, __LINE__)
-#define omLog(caller, f) std::stringstream omLogNameUnique(temp);omLogNameUnique(temp) << f; caller(omLogNameUnique(temp).str())
 
 namespace openminecraft::log
 {
@@ -31,10 +25,35 @@ namespace openminecraft::log
             OMLogger(std::string name);
             ~OMLogger();
             void debug(std::string msg);
+            template<typename... T>
+            void debug(std::string msg, T... args)
+            {
+                debug(fmt::format(msg, args...));
+            }
             void info(std::string msg);
+            template<typename... T>
+            void info(std::string msg, T... args)
+            {
+                info(fmt::format(msg, args...));
+            }
             void warn(std::string msg);
+            template<typename... T>
+            void warn(std::string msg, T... args)
+            {
+                warn(fmt::format(msg, args...));
+            }
             void error(std::string msg);
+            template<typename... T>
+            void error(std::string msg, T... args)
+            {
+                error(fmt::format(msg, args...));
+            }
             void fatal(std::string msg);
+            template<typename... T>
+            void fatal(std::string msg, T... args)
+            {
+                fatal(fmt::format(msg, args...));
+            }
 
         protected:
             std::string loggerName;

@@ -3,6 +3,7 @@
 #include "openminecraft/vm/om_class_file.hpp"
 #include <SDL3/SDL_error.h>
 #include <fstream>
+#include <stdexcept>
 #include <vector>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
@@ -35,14 +36,14 @@ int main()
     VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
 #endif
     std::vector<vk::PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();
-    logger->info(fmt::format("Vulkan devices: {}", physicalDevices.size()));
+    logger->info("Vulkan devices: {}", physicalDevices.size());
     vk::Device device = physicalDevices[0].createDevice({}, nullptr);
 #ifdef OM_VULKAN_DYNAMIC
     VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
 #endif
     shaderc::Compiler comp;
-    logger->info(fmt::format("Shaderc available: {}", comp.IsValid()));
-    logger->info(fmt::format("hello *OMLogger = {}!", fmt::ptr(logger)));
+    logger->info("Shaderc available: {}", comp.IsValid());
+    logger->info("hello *OMLogger = {}!", fmt::ptr(logger));
 
     if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO)) {
         // SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_Init failed (%s)", SDL_GetError());
@@ -61,7 +62,23 @@ int main()
     auto par = new OMClassFileParser(f);
     auto clsfile = par->parse();
 
-    logger->info(fmt::format("{}", clsfile->magicNumber));
+    uint32_t cid = 1;
+    for (auto c : clsfile->constants)
+    {
+        switch (c->type())
+        {
+            case OMClassConstantType::Utf8:
+            {
+                logger->info("#{} Utf8(\"{}\")", cid, c->to<OMClassConstantUtf8>()->data);
+                break;
+            }
+            default:
+            {
+                // throw std::invalid_argument(fmt::format("Unknown constant id {}!", (int) c->type()));
+            }
+        }
+        cid++;
+    }
 
     return 0;
 }

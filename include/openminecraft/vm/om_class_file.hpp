@@ -77,7 +77,10 @@ namespace openminecraft::vm::classfile
     {
         public: 
         virtual OMClassConstantType type() = 0;
-        template<typename T> T* to();
+        template<typename T> T* to()
+        {
+            return (T*) this;
+        }
     };
 
     class OMClassConstantMethodRef : public OMClassConstant
