@@ -208,12 +208,57 @@ public:
     const uint16_t nameIndex;
 };
 
+enum OMClassAttrType {
+    ConstantValue,
+    Code,
+    StackMapTable,
+    Exceptions,
+    InnerClasses,
+    EnclosingMethod,
+    Synthetic,
+    Signature,
+    SourceFile,
+    SourceDebugExtension,
+    LineNumberTable,
+    LocalVariableTable,
+    LocalVariableTypeTable,
+    Deprecated,
+    RuntimeVisibleAnnotations,
+    RuntimeInvisibleAnnotations,
+    RuntimeVisibleParameterAnnotations,
+    RuntimeInvisibleParameterAnnotations,
+    RuntimeVisibleTypeAnnotations,
+    RuntimeInvisibleTypeAnnotations,
+    AnnotationDefault,
+    BootstrapMethods,
+    MethodParameters,
+    Module,
+    ModulePackages,
+    ModuleMainClass,
+    NestHost,
+    NestMembers,
+    Record,
+    PermittedSubclasses
+};
+
+class OMClassAttr {
+public:
+    virtual OMClassAttrType type() = 0;
+};
+
+class OMClassAttrConstantValue : public OMClassAttr {
+public:
+    OMClassAttrConstantValue(uint16_t vi);
+    virtual OMClassAttrType type() override;
+    const uint16_t valueIndex;
+};
+
 struct OMClassFieldInfo {
     uint16_t accessFlags;
     uint16_t nameIndex;
     uint16_t descIndex;
     uint16_t attrCount;
-    void* attrs;
+    std::vector<OMClassAttr*> attrs;
 };
 
 struct OMClassFile {
@@ -244,6 +289,7 @@ private:
     OMClassConstant* parseConstant(uint16_t* idx);
     std::map<uint16_t, OMClassConstant*> buildConstantMapping(std::vector<OMClassConstant*> c);
     OMClassFieldInfo* parseField(std::map<uint16_t, OMClassConstant*> m);
+    OMClassAttr* parseAttr(std::map<uint16_t, OMClassConstant*> m);
     char* toStdUtf8(uint8_t* data, int length);
 };
 } // namespace openminecraft::vm::classfile

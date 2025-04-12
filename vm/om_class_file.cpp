@@ -153,6 +153,12 @@ OMClassConstantType OMClassConstantPackage::type()
     return OMClassConstantType::Package;
 }
 
+OMClassAttrConstantValue::OMClassAttrConstantValue(uint16_t vi)
+    : valueIndex(vi)
+{
+}
+OMClassAttrType OMClassAttrConstantValue::type() { return OMClassAttrType::ConstantValue; }
+
 OMClassFileParser::OMClassFileParser(std::istream& str)
 {
     this->source = &str;
@@ -357,8 +363,28 @@ OMClassFieldInfo* OMClassFileParser::parseField(std::map<uint16_t, OMClassConsta
     this->source->readbe16(field->nameIndex);
     this->source->readbe16(field->descIndex);
     this->source->readbe16(field->attrCount);
+    field->attrs = std::vector<OMClassAttr*>();
+    for (uint16_t c = 0; c < field->attrCount; c++) {
+        field->attrs.push_back(parseAttr(m));
+    }
 
     return field;
+}
+
+OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m)
+{
+    uint16_t ni;
+    uint32_t length;
+    this->source->readbe16(ni);
+    this->source->readbe32(length);
+
+    if (m[ni]->type() != OMClassConstantType::Utf8) {
+        throw std::invalid_argument("Invalid attr name index!");
+    }
+
+    this->logger->info("{}", m[ni]->to<OMClassConstantUtf8>()->data);
+
+    return nullptr;
 }
 
 char* OMClassFileParser::toStdUtf8(uint8_t* data, int length)
