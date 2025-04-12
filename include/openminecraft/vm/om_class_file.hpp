@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <istream>
-#include <ostream>
+#include <map>
 #include <vector>
 
 #include "openminecraft/log/om_log_common.hpp"
@@ -78,7 +78,7 @@ public:
     template <typename T>
     T* to()
     {
-        return (T*)this;
+        return reinterpret_cast<T*>(this);
     }
 };
 
@@ -208,6 +208,14 @@ public:
     const uint16_t nameIndex;
 };
 
+struct OMClassFieldInfo {
+    uint16_t accessFlags;
+    uint16_t nameIndex;
+    uint16_t descIndex;
+    uint16_t attrCount;
+    void* attrs;
+};
+
 struct OMClassFile {
     uint32_t magicNumber;
     uint16_t minor;
@@ -220,6 +228,7 @@ struct OMClassFile {
     uint16_t interfacesCount;
     std::vector<uint16_t> interfaces;
     uint16_t fieldsCount;
+    std::vector<OMClassFieldInfo*> fields;
 };
 
 class OMClassFileParser {
@@ -233,6 +242,8 @@ private:
     log::OMLogger* logger;
 
     OMClassConstant* parseConstant(uint16_t* idx);
+    std::map<uint16_t, OMClassConstant*> buildConstantMapping(std::vector<OMClassConstant*> c);
+    OMClassFieldInfo* parseField(std::map<uint16_t, OMClassConstant*> m);
     char* toStdUtf8(uint8_t* data, int length);
 };
 } // namespace openminecraft::vm::classfile

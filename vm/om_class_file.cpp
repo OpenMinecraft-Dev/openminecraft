@@ -183,6 +183,17 @@ OMClassFile* OMClassFileParser::parse()
     this->source->readbe16(file->thisClass);
     this->source->readbe16(file->superClass);
     this->source->readbe16(file->interfacesCount);
+    file->interfaces = std::vector<uint16_t>();
+    for (uint16_t d = 0; d < file->interfacesCount; d++) {
+        uint16_t a;
+        this->source->readbe16(a);
+        file->interfaces.push_back(a);
+    }
+    this->source->readbe16(file->fieldsCount);
+    file->fields = std::vector<OMClassFieldInfo*>();
+
+    std::map<uint16_t, OMClassConstant*> m = buildConstantMapping(file->constants);
+    file->fields.push_back(parseField(m));
 
     return file;
 }
@@ -322,6 +333,32 @@ OMClassConstant* OMClassFileParser::parseConstant(uint16_t* idx)
     }
 
     return result;
+}
+
+std::map<uint16_t, OMClassConstant*> OMClassFileParser::buildConstantMapping(std::vector<OMClassConstant*> c)
+{
+    std::map<uint16_t, OMClassConstant*> target;
+    uint16_t id = 1;
+    for (auto d : c) {
+        target[id] = d;
+        if (d->type() == OMClassConstantType::Long || d->type() == OMClassConstantType::Double) {
+            id++;
+        }
+        id++;
+    }
+
+    return target;
+}
+
+OMClassFieldInfo* OMClassFileParser::parseField(std::map<uint16_t, OMClassConstant*> m)
+{
+    auto field = new OMClassFieldInfo;
+    this->source->readbe16(field->accessFlags);
+    this->source->readbe16(field->nameIndex);
+    this->source->readbe16(field->descIndex);
+    this->source->readbe16(field->attrCount);
+
+    return field;
 }
 
 char* OMClassFileParser::toStdUtf8(uint8_t* data, int length)

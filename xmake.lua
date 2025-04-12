@@ -1,5 +1,9 @@
 set_languages("c++17")
-set_optimize("fastest")
+add_rules("mode.release")
+add_rules("mode.releasedbg")
+add_rules("mode.minsizerel")
+add_rules("mode.debug")
+add_rules("mode.check")
 
 includes("extlibs/libpatches.lua")
 includes("extlibs/vulkan.lua")
@@ -51,7 +55,7 @@ if mobile() then
 else 
     set_kind("binary")
 end
-add_files("src/entrypoint.cpp")
+add_files("src/**.cpp")
 add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary")
 add_includedirs("extlibs/fmt")
 

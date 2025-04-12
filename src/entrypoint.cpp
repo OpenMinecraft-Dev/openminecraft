@@ -70,13 +70,84 @@ int main()
     for (auto c : clsfile->constants) {
         switch (c->type()) {
         case OMClassConstantType::Utf8: {
-            logger->info("#{} Utf8(\"{}\")", cid,
-                c->to<OMClassConstantUtf8>()->data);
+            logger->info("#{} Utf8(\"{}\")", cid, c->to<OMClassConstantUtf8>()->data);
+            break;
+        }
+        case OMClassConstantType::Integer: {
+            logger->info("#{} Integer({})", cid, c->to<OMClassConstantInteger>()->data);
+            break;
+        }
+        case OMClassConstantType::Float: {
+            logger->info("#{} Float({})", cid, c->to<OMClassConstantFloat>()->data);
+            break;
+        }
+        case OMClassConstantType::Long: {
+            logger->info("#{} Long({})", cid, c->to<OMClassConstantLong>()->data);
+            cid++;
+            break;
+        }
+        case OMClassConstantType::Double: {
+            logger->info("#{} Double({})", cid, c->to<OMClassConstantDouble>()->data);
+            cid++;
+            break;
+        }
+        case OMClassConstantType::Class: {
+            logger->info("#{} Class(#{})", cid, c->to<OMClassConstantClass>()->nameIndex);
+            break;
+        }
+        case OMClassConstantType::String: {
+            logger->info("#{} String(#{})", cid, c->to<OMClassConstantString>()->stringIndex);
+            break;
+        }
+        case OMClassConstantType::FieldRef: {
+            auto d = c->to<OMClassConstantFieldRef>();
+            logger->info("#{} FieldRef(#{}, #{})", cid, d->classIndex, d->nameAndTypeIndex);
+            break;
+        }
+        case OMClassConstantType::MethodRef: {
+            auto d = c->to<OMClassConstantMethodRef>();
+            logger->info("#{} MethodRef(#{}, #{})", cid, d->classIndex, d->nameAndTypeIndex);
+            break;
+        }
+        case OMClassConstantType::InterfaceMethodRef: {
+            auto d = c->to<OMClassConstantInterfaceMethodRef>();
+            logger->info("#{} InterfaceMethodRef(#{}, #{})", cid, d->classIndex, d->nameAndTypeIndex);
+            break;
+        }
+        case OMClassConstantType::NameAndType: {
+            auto d = c->to<OMClassConstantNameAndType>();
+            logger->info("#{} NameAndType(#{}, #{})", cid, d->nameIndex, d->descIndex);
+            break;
+        }
+        case OMClassConstantType::MethodHandle: {
+            auto d = c->to<OMClassConstantMethodHandle>();
+            logger->info("#{} MethodHandle({}, #{})", cid, (int)d->refKind, d->refIndex);
+            break;
+        }
+        case OMClassConstantType::MethodType: {
+            logger->info("#{} MethodType(#{})", cid, c->to<OMClassConstantMethodType>()->descIndex);
+            break;
+        }
+        case OMClassConstantType::Dynamic: {
+            auto d = c->to<OMClassConstantDynamic>();
+            logger->info("#{} Dynamic(#{}, #{})", cid, d->bootstrapMethodAttrIndex, d->nameAndTypeIndex);
+            break;
+        }
+        case OMClassConstantType::InvokeDynamic: {
+            auto d = c->to<OMClassConstantInvokeDynamic>();
+            logger->info("#{} InvokeDynamic(#{}, #{})", cid, d->bootstrapMethodAttrIndex, d->nameAndTypeIndex);
+            break;
+        }
+        case OMClassConstantType::Module: {
+            logger->info("#{} Module(#{})", cid, c->to<OMClassConstantModule>()->nameIndex);
+            break;
+        }
+        case OMClassConstantType::Package: {
+            logger->info("#{} Package(#{})", cid, c->to<OMClassConstantPackage>()->nameIndex);
             break;
         }
         default: {
-            // throw std::invalid_argument(fmt::format("Unknown constant id {}!",
-            // (int) c->type()));
+            throw std::invalid_argument(fmt::format("Unknown constant id {}!", (int)c->type()));
         }
         }
         cid++;
