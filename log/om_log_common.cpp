@@ -6,6 +6,7 @@
 #include <fmt/format.h>
 #include <iomanip>
 #include <openminecraft/log/om_log_common.hpp>
+#include <sstream>
 #include <string>
 #include <thread>
 
