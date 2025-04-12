@@ -29,8 +29,22 @@ namespace openminecraft::vm::classfile
     OMClassConstantType OMClassConstantInteger::type() { return OMClassConstantType::Integer; }
     OMClassConstantFloat::OMClassConstantFloat(float data): data(data) {}
     OMClassConstantType OMClassConstantFloat::type() { return OMClassConstantType::Float; }
-    OMClassConstantLong::OMClassConstantLong(long long data): data(data) {}
+    OMClassConstantLong::OMClassConstantLong(int64_t data): data(data) {}
     OMClassConstantType OMClassConstantLong::type() { return OMClassConstantType::Long; }
+    OMClassConstantDouble::OMClassConstantDouble(double data): data(data) {}
+    OMClassConstantType OMClassConstantDouble::type() { return OMClassConstantType::Double; }
+    OMClassConstantMethodHandle::OMClassConstantMethodHandle(uint8_t rk, uint16_t ri): refKind(rk), refIndex(ri) {}
+    OMClassConstantType OMClassConstantMethodHandle::type() { return OMClassConstantType::MethodHandle; }
+    OMClassConstantMethodType::OMClassConstantMethodType(uint16_t di): descIndex(di) {}
+    OMClassConstantType OMClassConstantMethodType::type() { return OMClassConstantType::MethodType; }
+    OMClassConstantDynamic::OMClassConstantDynamic(uint16_t bmai, uint16_t nti): bootstrapMethodAttrIndex(bmai), nameAndTypeIndex(nti) {}
+    OMClassConstantType OMClassConstantDynamic::type() { return OMClassConstantType::Dynamic; }
+    OMClassConstantInvokeDynamic::OMClassConstantInvokeDynamic(uint16_t bmai, uint16_t nti): bootstrapMethodAttrIndex(bmai), nameAndTypeIndex(nti) {}
+    OMClassConstantType OMClassConstantInvokeDynamic::type() { return OMClassConstantType::InvokeDynamic; }
+    OMClassConstantModule::OMClassConstantModule(uint16_t ni): nameIndex(ni) {}
+    OMClassConstantType OMClassConstantModule::type() { return OMClassConstantType::Module; }
+    OMClassConstantPackage::OMClassConstantPackage(uint16_t ni): nameIndex(ni) {}
+    OMClassConstantType OMClassConstantPackage::type() { return OMClassConstantType::Package; }
 
     OMClassFileParser::OMClassFileParser(std::istream& str)
     {
@@ -52,13 +66,18 @@ namespace openminecraft::vm::classfile
         this->source->readbe16(file->minor);
         this->source->readbe16(file->major);
         this->source->readbe16(file->constantPoolCount);
-        file->constants = std::vector<OMClassConstant*>(file->constantPoolCount - 1);
+        file->constants = std::vector<OMClassConstant*>();
 
         uint16_t idx = 0;
         while (idx < file->constantPoolCount - 1)
         {
             file->constants.push_back(this->parseConstant(&idx));
         }
+
+        this->source->readbe16(file->accessFlags);
+        this->source->readbe16(file->thisClass);
+        this->source->readbe16(file->superClass);
+        this->source->readbe16(file->interfacesCount);
 
         return file;
     }
@@ -120,6 +139,7 @@ namespace openminecraft::vm::classfile
                 auto temp = new uint8_t[temp1];
                 this->source->read((char*) temp, temp1);
                 auto comp = std::string(toStdUtf8(temp, temp1));
+                delete[] temp;
                 result = new OMClassConstantUtf8(comp);
                 omLog(this->logger->info, "#" << *idx << " Utf8(\"" << comp << "\")");
                 break;
@@ -161,9 +181,70 @@ namespace openminecraft::vm::classfile
             {
                 this->source->readbe32(temp5);
                 this->source->readbe32(temp6);
-                result = new OMClassConstantLong(((long long) temp5 << 32) + temp6);
+                result = new OMClassConstantLong(((int64_t) temp5 << 32) + temp6);
+                omLog(this->logger->info, "#" << *idx << " Long(" << ((int64_t) temp5 << 32) + temp6 << ")");
                 (*idx)++;
-                omLog(this->logger->info, "#" << *idx << " Long(" << ((long long) temp5 << 32) + temp6 << ")");
+                break;
+            }
+            case OMClassConstantType::Double:
+            {
+                this->source->readbe32(temp5);
+                this->source->readbe32(temp6);
+                union
+                {
+                    int64_t idata;
+                    double ddata;
+                } d;
+                d.idata = ((int64_t) temp5 << 32) + temp6;
+                result = new OMClassConstantDouble(d.ddata);
+                omLog(this->logger->info, "#" << *idx << " Double(" << d.ddata << ")");
+                (*idx)++;
+                break;
+            }
+            case OMClassConstantType::MethodHandle:
+            {
+                uint8_t temp;
+                this->source->read((char*) &temp, 1);
+                this->source->readbe16(temp1);
+                result = new OMClassConstantMethodHandle(temp, temp1);
+                omLog(this->logger->info, "#" << *idx << " MethodHandle(" << temp << ", #" << temp1 << ")");
+                break;
+            }
+            case OMClassConstantType::MethodType:
+            {
+                this->source->readbe16(temp1);
+                result = new OMClassConstantMethodType(temp1);
+                omLog(this->logger->info, "#" << *idx << " MethodType(" << temp1 << ")");
+                break;
+            }
+            case OMClassConstantType::Dynamic:
+            {
+                this->source->readbe16(temp1);
+                this->source->readbe16(temp2);
+                result = new OMClassConstantDynamic(temp1, temp2);
+                omLog(this->logger->info, "#" << *idx << " Dynamic(" << temp1 << ", #" << temp2 << ")");
+                break;
+            }
+            case OMClassConstantType::InvokeDynamic:
+            {
+                this->source->readbe16(temp1);
+                this->source->readbe16(temp2);
+                result = new OMClassConstantInvokeDynamic(temp1, temp2);
+                omLog(this->logger->info, "#" << *idx << " InvokeDynamic(" << temp1 << ", #" << temp2 << ")");
+                break;
+            }
+            case OMClassConstantType::Module:
+            {
+                this->source->readbe16(temp1);
+                result = new OMClassConstantModule(temp1);
+                omLog(this->logger->info, "#" << *idx << " Module(" << temp1 << ")");
+                break;
+            }
+            case OMClassConstantType::Package:
+            {
+                this->source->readbe16(temp1);
+                result = new OMClassConstantPackage(temp1);
+                omLog(this->logger->info, "#" << *idx << " Package(" << temp1 << ")");
                 break;
             }
             default:

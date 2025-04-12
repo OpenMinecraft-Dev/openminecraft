@@ -159,9 +159,68 @@ namespace openminecraft::vm::classfile
     class OMClassConstantLong : public OMClassConstant
     {
         public:
-        OMClassConstantLong(long long data);
+        OMClassConstantLong(int64_t data);
         virtual OMClassConstantType type() override;
-        const long long data;
+        const int64_t data;
+    };
+
+    class OMClassConstantDouble : public OMClassConstant
+    {
+        public:
+        OMClassConstantDouble(double data);
+        virtual OMClassConstantType type() override;
+        const double data;
+    };
+
+    class OMClassConstantMethodHandle : public OMClassConstant
+    {
+        public:
+        OMClassConstantMethodHandle(uint8_t rk, uint16_t ri);
+        virtual OMClassConstantType type() override;
+        const uint8_t refKind;
+        const uint16_t refIndex;
+    };
+
+    class OMClassConstantMethodType : public OMClassConstant
+    {
+        public:
+        OMClassConstantMethodType(uint16_t di);
+        virtual OMClassConstantType type() override;
+        const uint16_t descIndex;
+    };
+
+    class OMClassConstantDynamic : public OMClassConstant
+    {
+        public:
+        OMClassConstantDynamic(uint16_t bmai, uint16_t nti);
+        virtual OMClassConstantType type() override;
+        const uint16_t bootstrapMethodAttrIndex;
+        const uint16_t nameAndTypeIndex;
+    };
+
+    class OMClassConstantInvokeDynamic : public OMClassConstant
+    {
+        public:
+        OMClassConstantInvokeDynamic(uint16_t bmai, uint16_t nti);
+        virtual OMClassConstantType type() override;
+        const uint16_t bootstrapMethodAttrIndex;
+        const uint16_t nameAndTypeIndex;
+    };
+
+    class OMClassConstantModule : public OMClassConstant
+    {
+        public:
+        OMClassConstantModule(uint16_t ni);
+        virtual OMClassConstantType type() override;
+        const uint16_t nameIndex;
+    };
+
+    class OMClassConstantPackage : public OMClassConstant
+    {
+        public:
+        OMClassConstantPackage(uint16_t ni);
+        virtual OMClassConstantType type() override;
+        const uint16_t nameIndex;
     };
 
     struct OMClassFile
