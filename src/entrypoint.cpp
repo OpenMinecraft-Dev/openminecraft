@@ -1,6 +1,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
+#include <SDL3/SDL_error.h>
 #include <fstream>
 #include <vector>
 #ifdef OM_VULKAN_DYNAMIC
@@ -9,6 +10,7 @@
 #include "vulkan/vulkan.hpp"
 #include "shaderc/shaderc.hpp"
 #include <SDL3/SDL.h>
+#include <fmt/format.h>
 
 #ifdef OM_VULKAN_DYNAMIC
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
@@ -33,14 +35,14 @@ int main()
     VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
 #endif
     std::vector<vk::PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();
-    omLog(logger->info, "Vulkan devices: " << physicalDevices.size());
+    logger->info(fmt::format("Vulkan devices: {}", physicalDevices.size()));
     vk::Device device = physicalDevices[0].createDevice({}, nullptr);
 #ifdef OM_VULKAN_DYNAMIC
     VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
 #endif
     shaderc::Compiler comp;
-    omLog(logger->info, "Shaderc available: " << comp.IsValid());
-    omLog(logger->info, "hello *OMLogger = " << logger << "!");
+    logger->info(fmt::format("Shaderc available: {}", comp.IsValid()));
+    logger->info(fmt::format("hello *OMLogger = {}!", fmt::ptr(logger)));
 
     if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO)) {
         // SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_Init failed (%s)", SDL_GetError());
@@ -59,7 +61,7 @@ int main()
     auto par = new OMClassFileParser(f);
     auto clsfile = par->parse();
 
-    omLog(logger->info, clsfile->magicNumber);
+    logger->info(fmt::format("{}", clsfile->magicNumber));
 
     return 0;
 }
