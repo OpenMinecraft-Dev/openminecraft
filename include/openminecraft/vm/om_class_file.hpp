@@ -369,10 +369,10 @@ struct OMClassAttrInnerClassInfo {
 
 class OMClassAttrInnerClass : public OMClassAttr {
 public:
-    OMClassAttrInnerClass(uint16_t numberOfClasses, OMClassAttrInnerClassInfo* classes);
+    OMClassAttrInnerClass(uint16_t numberOfClasses, std::vector<OMClassAttrInnerClassInfo> classes);
     virtual OMClassAttrType type() override;
     const uint16_t numberOfClasses;
-    const OMClassAttrInnerClassInfo* classes;
+    const std::vector<OMClassAttrInnerClassInfo> classes;
 };
 
 class OMClassAttrEnclosingMethod : public OMClassAttr {
@@ -442,6 +442,36 @@ class OMClassAttrDeprecated : public OMClassAttr {
 public:
     OMClassAttrDeprecated();
     virtual OMClassAttrType type() override;
+};
+
+class OMClassAttrNestHost : public OMClassAttr {
+public:
+    OMClassAttrNestHost(uint16_t hci);
+    virtual OMClassAttrType type() override;
+    const uint16_t hostClassIndex;
+};
+
+class OMClassAttrNestMembers : public OMClassAttr {
+public:
+    OMClassAttrNestMembers(uint16_t noc, std::vector<uint16_t> classes);
+    virtual OMClassAttrType type() override;
+    const uint16_t numberOfClasses;
+    const std::vector<uint16_t> classes;
+};
+
+class OMClassAttrPermittedSubclasses : public OMClassAttr {
+public:
+    OMClassAttrPermittedSubclasses(uint16_t noc, std::vector<uint16_t> classes);
+    virtual OMClassAttrType type() override;
+    const uint16_t numberOfClasses;
+    const std::vector<uint16_t> classes;
+};
+
+class OMClassAttrModuleMainClass : public OMClassAttr {
+public:
+    OMClassAttrModuleMainClass(uint16_t mci);
+    virtual OMClassAttrType type() override;
+    const uint16_t mainClassIndex;
 };
 
 struct OMClassFieldInfo {
