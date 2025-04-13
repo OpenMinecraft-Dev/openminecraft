@@ -74,6 +74,7 @@ enum class OMClassConstantType : uint8_t {
 
 class OMClassConstant {
 public:
+    virtual ~OMClassConstant();
     virtual OMClassConstantType type() = 0;
     template <typename T>
     T* to()
@@ -243,7 +244,13 @@ enum OMClassAttrType {
 
 class OMClassAttr {
 public:
+    virtual ~OMClassAttr();
     virtual OMClassAttrType type() = 0;
+    template <typename T>
+    T* to()
+    {
+        return (T*)this;
+    }
 };
 
 class OMClassAttrConstantValue : public OMClassAttr {
@@ -272,6 +279,143 @@ public:
     const std::vector<OMClassAttrCodeExcTable> excTable;
     const uint16_t attributesCount;
     const std::vector<OMClassAttr*> attributes;
+};
+
+enum OMClassAttrVerifyType : uint8_t {
+    Top,
+    Integer,
+    Float,
+    Double,
+    Long,
+    Null,
+    UninitializedThis,
+    Object,
+    Uninitialized
+};
+
+struct OMClassAttrVerifyTypeInfo {
+    OMClassAttrVerifyType tag;
+    uint16_t arg;
+};
+
+struct OMClassAttrVerifySameFrame {
+    uint8_t tag;
+};
+struct OMClassAttrVerifySameLocals1StackItemFrame {
+    uint8_t tag;
+    OMClassAttrVerifyTypeInfo stack;
+};
+struct OMClassAttrVerifySameLocals1StackItemFrameExt {
+    uint8_t tag;
+    uint16_t offset;
+    OMClassAttrVerifyTypeInfo stack;
+};
+struct OMClassAttrVerifyChopFrame {
+    uint8_t tag;
+    uint16_t offset;
+};
+struct OMClassAttrVerifySameFrameExt {
+    uint8_t tag;
+    uint16_t offset;
+};
+struct OMClassAttrVerifyAppendFrame {
+    uint8_t tag;
+    uint16_t offset;
+    std::vector<OMClassAttrVerifyTypeInfo> locals;
+};
+struct OMClassAttrVerifyFullFrame {
+    uint8_t tag;
+    uint16_t offset;
+    uint16_t numberOfLocals;
+    std::vector<OMClassAttrVerifyTypeInfo> locals;
+    uint16_t numberOfStackItems;
+    std::vector<OMClassAttrVerifyTypeInfo> stackItems;
+};
+union OMClassAttrVerifyStackMapFrame {
+    OMClassAttrVerifyStackMapFrame();
+    ~OMClassAttrVerifyStackMapFrame();
+    uint8_t tag;
+    OMClassAttrVerifySameFrame sameFrame;
+    OMClassAttrVerifySameLocals1StackItemFrame sameLocals1StackItemFrame;
+    OMClassAttrVerifySameLocals1StackItemFrameExt sameLocals1StackItemFrameExt;
+    OMClassAttrVerifyChopFrame chopFrame;
+    OMClassAttrVerifySameFrameExt sameFrameExt;
+    OMClassAttrVerifyAppendFrame appendFrame;
+    OMClassAttrVerifyFullFrame fullFrame;
+};
+
+class OMClassAttrStackMapTable : public OMClassAttr {
+public:
+    OMClassAttrStackMapTable(uint16_t noe, OMClassAttrVerifyStackMapFrame* e);
+    virtual OMClassAttrType type() override;
+    const uint16_t numberOfEntries;
+    const OMClassAttrVerifyStackMapFrame* entries;
+};
+
+class OMClassAttrExceptions : public OMClassAttr {
+public:
+    OMClassAttrExceptions(uint16_t noe, std::vector<uint16_t> eit);
+    virtual OMClassAttrType type() override;
+    const uint16_t numberOfExceptions;
+    const std::vector<uint16_t> exceptionIndexTable;
+};
+
+struct OMClassAttrInnerClassInfo {
+    uint16_t innerClassInfoIndex;
+    uint16_t outerClassInfoIndex;
+    uint16_t innerNameIndex;
+    uint16_t innerClassAccessFlags;
+};
+
+class OMClassAttrInnerClass : public OMClassAttr {
+public:
+    OMClassAttrInnerClass(uint16_t numberOfClasses, OMClassAttrInnerClassInfo* classes);
+    virtual OMClassAttrType type() override;
+    const uint16_t numberOfClasses;
+    const OMClassAttrInnerClassInfo* classes;
+};
+
+class OMClassAttrEnclosingMethod : public OMClassAttr {
+public:
+    OMClassAttrEnclosingMethod(uint16_t ci, uint16_t mi);
+    virtual OMClassAttrType type() override;
+    const uint16_t classIndex;
+    const uint16_t methodIndex;
+};
+
+class OMClassAttrSynthetic : public OMClassAttr {
+public:
+    OMClassAttrSynthetic();
+    virtual OMClassAttrType type() override;
+};
+
+class OMClassAttrSignature : public OMClassAttr {
+public:
+    OMClassAttrSignature(uint16_t si);
+    virtual OMClassAttrType type() override;
+    const uint16_t signatureIndex;
+};
+
+class OMClassAttrSourceFile : public OMClassAttr {
+public:
+    OMClassAttrSourceFile(uint16_t si);
+    virtual OMClassAttrType type() override;
+    const uint16_t sourcefileIndex;
+};
+
+class OMClassAttrSourceDebugExtension : public OMClassAttr {
+public:
+    OMClassAttrSourceDebugExtension(uint8_t* de);
+    virtual OMClassAttrType type() override;
+    const uint8_t* debugExt;
+};
+
+class OMClassAttrLineNumberTable : public OMClassAttr {
+public:
+    OMClassAttrLineNumberTable(uint16_t lntl, std::map<uint16_t, uint16_t> lnt);
+    virtual OMClassAttrType type() override;
+    const uint16_t lineNumberTableLength;
+    const std::map<uint16_t, uint16_t> lineNumberTable;
 };
 
 struct OMClassFieldInfo {

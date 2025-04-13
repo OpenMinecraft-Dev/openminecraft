@@ -11,6 +11,13 @@ using namespace openminecraft::binary;
 using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::classfile {
+OMClassConstant::~OMClassConstant() { }
+OMClassAttr::~OMClassAttr() { }
+OMClassAttrVerifyStackMapFrame::OMClassAttrVerifyStackMapFrame()
+    : tag(0)
+{
+}
+OMClassAttrVerifyStackMapFrame::~OMClassAttrVerifyStackMapFrame() { }
 OMClassConstantFieldRef::OMClassConstantFieldRef(uint16_t ci, uint16_t nti)
     : classIndex(ci)
     , nameAndTypeIndex(nti)
@@ -173,6 +180,62 @@ OMClassAttrCode::OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, uint8_t*
 {
 }
 OMClassAttrType OMClassAttrCode::type() { return OMClassAttrType::Code; }
+
+OMClassAttrStackMapTable::OMClassAttrStackMapTable(uint16_t noe, OMClassAttrVerifyStackMapFrame* e)
+    : numberOfEntries(noe)
+    , entries(e)
+{
+}
+OMClassAttrType OMClassAttrStackMapTable::type() { return OMClassAttrType::StackMapTable; }
+
+OMClassAttrExceptions::OMClassAttrExceptions(uint16_t noe, std::vector<uint16_t> eit)
+    : numberOfExceptions(noe)
+    , exceptionIndexTable(eit)
+{
+}
+OMClassAttrType OMClassAttrExceptions::type() { return OMClassAttrType::Exceptions; }
+
+OMClassAttrInnerClass::OMClassAttrInnerClass(uint16_t numberOfClasses, OMClassAttrInnerClassInfo* classes)
+    : numberOfClasses(numberOfClasses)
+    , classes(classes)
+{
+}
+OMClassAttrType OMClassAttrInnerClass::type() { return OMClassAttrType::InnerClasses; }
+
+OMClassAttrEnclosingMethod::OMClassAttrEnclosingMethod(uint16_t ci, uint16_t mi)
+    : classIndex(ci)
+    , methodIndex(mi)
+{
+}
+OMClassAttrType OMClassAttrEnclosingMethod::type() { return OMClassAttrType::EnclosingMethod; }
+
+OMClassAttrSynthetic::OMClassAttrSynthetic() { }
+OMClassAttrType OMClassAttrSynthetic::type() { return OMClassAttrType::Synthetic; }
+
+OMClassAttrSignature::OMClassAttrSignature(uint16_t si)
+    : signatureIndex(si)
+{
+}
+OMClassAttrType OMClassAttrSignature::type() { return OMClassAttrType::Signature; }
+
+OMClassAttrSourceFile::OMClassAttrSourceFile(uint16_t si)
+    : sourcefileIndex(si)
+{
+}
+OMClassAttrType OMClassAttrSourceFile::type() { return OMClassAttrType::SourceFile; }
+
+OMClassAttrSourceDebugExtension::OMClassAttrSourceDebugExtension(uint8_t* de)
+    : debugExt(de)
+{
+}
+OMClassAttrType OMClassAttrSourceDebugExtension::type() { return OMClassAttrType::SourceDebugExtension; }
+
+OMClassAttrLineNumberTable::OMClassAttrLineNumberTable(uint16_t lntl, std::map<uint16_t, uint16_t> lnt)
+    : lineNumberTableLength(lntl)
+    , lineNumberTable(lnt)
+{
+}
+OMClassAttrType OMClassAttrLineNumberTable::type() { return OMClassAttrType::LineNumberTable; }
 
 OMClassFileParser::OMClassFileParser(std::istream& str)
 {
@@ -435,7 +498,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         attr = new OMClassAttrConstantValue(cvi);
         break;
     }
-    /*case "Code"_hash: {
+    case "Code"_hash: {
         uint16_t ms, ml, etl, ac;
         uint32_t cl;
         this->source->readbe16(ms);
@@ -453,14 +516,132 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             this->source->readbe32(ct);
             et.push_back({ sp, ep, hp, ct });
         }
-        this->source->readbe32(ac);
+        this->source->readbe16(ac);
         std::vector<OMClassAttr*> a;
         for (uint16_t i = 0; i < ac; i++) {
             a.push_back(parseAttr(m));
         }
         attr = new OMClassAttrCode(ms, ml, cl, code, etl, et, ac, a);
         break;
-    }*/
+    }
+    case "StackMapTable"_hash: {
+        uint16_t noe;
+        this->source->readbe16(noe);
+        auto typep = [&]() -> OMClassAttrVerifyTypeInfo {
+            OMClassAttrVerifyTypeInfo s;
+            this->source->read((char*)&s.tag, 1);
+            if (s.tag == OMClassAttrVerifyType::Object || s.tag == OMClassAttrVerifyType::Uninitialized) {
+                this->source->readbe16(s.arg);
+            }
+            return s;
+        };
+        std::vector<OMClassAttrVerifyStackMapFrame> datas;
+        for (uint16_t i = 0; i < noe; i++) {
+            OMClassAttrVerifyStackMapFrame fr;
+            this->source->read((char*)&fr.tag, 1);
+
+            if (fr.tag >= 64 && fr.tag < 128) {
+                fr.sameLocals1StackItemFrame.stack = typep();
+            } else if (fr.tag < 247) {
+                throw std::invalid_argument("Invalid stack map frame type!");
+            } else if (fr.tag == 247) {
+                this->source->readbe16(fr.sameLocals1StackItemFrameExt.offset);
+                fr.sameLocals1StackItemFrameExt.stack = typep();
+            } else if (fr.tag < 251) {
+                this->source->readbe16(fr.chopFrame.offset);
+            } else if (fr.tag == 251) {
+                this->source->readbe16(fr.sameFrameExt.offset);
+            } else if (fr.tag < 255) {
+                this->source->readbe16(fr.appendFrame.offset);
+                fr.appendFrame.locals = std::vector<OMClassAttrVerifyTypeInfo>();
+                for (uint8_t i = 0; i < fr.tag - 251; i++) {
+                    fr.appendFrame.locals.push_back(typep());
+                }
+            } else {
+                this->source->readbe16(fr.fullFrame.offset);
+                this->source->readbe16(fr.fullFrame.numberOfLocals);
+                fr.fullFrame.locals = std::vector<OMClassAttrVerifyTypeInfo>();
+                for (uint16_t i = 0; i < fr.fullFrame.numberOfLocals; i++) {
+                    fr.fullFrame.locals.push_back(typep());
+                }
+                this->source->readbe16(fr.fullFrame.numberOfStackItems);
+                fr.fullFrame.stackItems = std::vector<OMClassAttrVerifyTypeInfo>();
+                for (uint16_t i = 0; i < fr.fullFrame.numberOfStackItems; i++) {
+                    fr.fullFrame.stackItems.push_back(typep());
+                }
+            }
+        }
+        attr = new OMClassAttrStackMapTable(noe, datas.data());
+        break;
+    }
+    case "Exceptions"_hash: {
+        uint16_t cnt;
+        this->source->readbe16(cnt);
+        std::vector<uint16_t> excindex;
+        for (uint16_t i = 0; i < cnt; i++) {
+            uint16_t d;
+            this->source->readbe16(d);
+            excindex.push_back(d);
+        }
+        attr = new OMClassAttrExceptions(cnt, excindex);
+        break;
+    }
+    case "InnerClasses"_hash: {
+        uint16_t numberOfClasses;
+        this->source->readbe16(numberOfClasses);
+        std::vector<OMClassAttrInnerClassInfo> d;
+        for (uint16_t i = 0; i < numberOfClasses; i++) {
+            OMClassAttrInnerClassInfo di;
+            this->source->readbe16(di.innerClassInfoIndex);
+            this->source->readbe16(di.outerClassInfoIndex);
+            this->source->readbe16(di.innerNameIndex);
+            this->source->readbe16(di.innerClassAccessFlags);
+            d.push_back(di);
+        }
+        attr = new OMClassAttrInnerClass(numberOfClasses, d.data());
+        break;
+    }
+    case "EnclosingMethod"_hash: {
+        uint16_t ci, mi;
+        this->source->readbe16(ci);
+        this->source->readbe16(mi);
+        attr = new OMClassAttrEnclosingMethod(ci, mi);
+        break;
+    }
+    case "Synthetic"_hash: {
+        attr = new OMClassAttrSynthetic;
+        break;
+    }
+    case "Signature"_hash: {
+        uint16_t si;
+        this->source->readbe16(si);
+        attr = new OMClassAttrSignature(si);
+        break;
+    }
+    case "SourceFile"_hash: {
+        uint16_t si;
+        this->source->readbe16(si);
+        attr = new OMClassAttrSourceFile(si);
+        break;
+    }
+    case "SourceDebugExtension"_hash: {
+        auto data = new uint8_t[length];
+        this->source->read((char*)data, length);
+        attr = new OMClassAttrSourceDebugExtension(data);
+        break;
+    }
+    case "LineNumberTable"_hash: {
+        uint16_t lntl, a, b;
+        this->source->readbe16(lntl);
+        std::map<uint16_t, uint16_t> lnt;
+        for (uint16_t i = 0; i < lntl; i++) {
+            this->source->readbe16(a);
+            this->source->readbe16(b);
+            lnt[a] = b;
+        }
+        attr = new OMClassAttrLineNumberTable(lntl, lnt);
+        break;
+    }
     default:
         this->source->seekg((uint64_t)this->source->tellg() + length);
         this->logger->info("Unimplemented attr: {}", m[ni]->to<OMClassConstantUtf8>()->data);
