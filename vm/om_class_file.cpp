@@ -161,7 +161,7 @@ OMClassAttrConstantValue::OMClassAttrConstantValue(uint16_t vi)
 }
 OMClassAttrType OMClassAttrConstantValue::type() { return OMClassAttrType::ConstantValue; }
 
-OMClassAttrCode::OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, std::vector<uint8_t> c, uint16_t etl, std::vector<OMClassAttrCodeExcTable> et, uint16_t ac, std::vector<OMClassAttr*> a)
+OMClassAttrCode::OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, uint8_t* c, uint16_t etl, std::vector<OMClassAttrCodeExcTable> et, uint16_t ac, std::vector<OMClassAttr*> a)
     : maxStack(ms)
     , maxLocals(ml)
     , codeLength(cl)
@@ -435,6 +435,32 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         attr = new OMClassAttrConstantValue(cvi);
         break;
     }
+    /*case "Code"_hash: {
+        uint16_t ms, ml, etl, ac;
+        uint32_t cl;
+        this->source->readbe16(ms);
+        this->source->readbe16(ml);
+        this->source->readbe32(cl);
+        auto code = new uint8_t[cl];
+        this->source->read((char*)code, cl);
+        this->source->readbe16(etl);
+        std::vector<OMClassAttrCodeExcTable> et;
+        for (uint16_t i = 0; i < etl; i++) {
+            uint16_t sp, ep, hp, ct;
+            this->source->readbe32(sp);
+            this->source->readbe32(ep);
+            this->source->readbe32(hp);
+            this->source->readbe32(ct);
+            et.push_back({ sp, ep, hp, ct });
+        }
+        this->source->readbe32(ac);
+        std::vector<OMClassAttr*> a;
+        for (uint16_t i = 0; i < ac; i++) {
+            a.push_back(parseAttr(m));
+        }
+        attr = new OMClassAttrCode(ms, ml, cl, code, etl, et, ac, a);
+        break;
+    }*/
     default:
         this->source->seekg((uint64_t)this->source->tellg() + length);
         this->logger->info("Unimplemented attr: {}", m[ni]->to<OMClassConstantUtf8>()->data);

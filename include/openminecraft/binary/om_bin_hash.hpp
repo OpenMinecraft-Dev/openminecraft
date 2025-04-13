@@ -1,6 +1,7 @@
 #ifndef OM_BIN_HASH_HPP
 #define OM_BIN_HASH_HPP
 
+#include <cstddef>
 #include <cstdint>
 
 namespace openminecraft::binary::hash {
@@ -13,7 +14,7 @@ constexpr hash_t hash_compile_time(const char* str, hash_t last_value = basis)
     return *str ? hash_compile_time(str + 1, (*str ^ last_value) * prime) : last_value;
 }
 
-constexpr unsigned long long operator"" _hash(const char* p, std::size_t)
+constexpr unsigned long long operator"" _hash(const char* p, size_t)
 {
     return hash_compile_time(p);
 }
