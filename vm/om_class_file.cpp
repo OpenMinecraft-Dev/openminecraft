@@ -237,6 +237,23 @@ OMClassAttrLineNumberTable::OMClassAttrLineNumberTable(uint16_t lntl, std::map<u
 }
 OMClassAttrType OMClassAttrLineNumberTable::type() { return OMClassAttrType::LineNumberTable; }
 
+OMClassAttrLocalVarTable::OMClassAttrLocalVarTable(uint16_t lvtl, OMClassAttrLocalVar* lvt)
+    : localVarTableLength(lvtl)
+    , localVarTable(lvt)
+{
+}
+OMClassAttrType OMClassAttrLocalVarTable::type() { return OMClassAttrType::LocalVariableTable; }
+
+OMClassAttrLocalVarTypeTable::OMClassAttrLocalVarTypeTable(uint16_t lvtl, OMClassAttrLocalVar* lvt)
+    : localVarTableLength(lvtl)
+    , localVarTable(lvt)
+{
+}
+OMClassAttrType OMClassAttrLocalVarTypeTable::type() { return OMClassAttrType::LocalVariableTypeTable; }
+
+OMClassAttrDeprecated::OMClassAttrDeprecated() { }
+OMClassAttrType OMClassAttrDeprecated::type() { return OMClassAttrType::Deprecated; }
+
 OMClassFileParser::OMClassFileParser(std::istream& str)
 {
     this->source = &str;
@@ -640,6 +657,42 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             lnt[a] = b;
         }
         attr = new OMClassAttrLineNumberTable(lntl, lnt);
+        break;
+    }
+    case "LocalVariableTable"_hash: {
+        uint16_t l;
+        this->source->readbe16(l);
+        std::vector<OMClassAttrLocalVar> d;
+        for (uint16_t i = 0; i < l; i++) {
+            OMClassAttrLocalVar data;
+            this->source->readbe16(data.startPc);
+            this->source->readbe16(data.length);
+            this->source->readbe16(data.nameIndex);
+            this->source->readbe16(data.descIndex);
+            this->source->readbe16(data.index);
+            d.push_back(data);
+        }
+        attr = new OMClassAttrLocalVarTable(l, d.data());
+        break;
+    }
+    case "LocalVariableTypeTable"_hash: {
+        uint16_t l;
+        this->source->readbe16(l);
+        std::vector<OMClassAttrLocalVar> d;
+        for (uint16_t i = 0; i < l; i++) {
+            OMClassAttrLocalVar data;
+            this->source->readbe16(data.startPc);
+            this->source->readbe16(data.length);
+            this->source->readbe16(data.nameIndex);
+            this->source->readbe16(data.descIndex);
+            this->source->readbe16(data.index);
+            d.push_back(data);
+        }
+        attr = new OMClassAttrLocalVarTypeTable(l, d.data());
+        break;
+    }
+    case "Deprecated"_hash: {
+        attr = new OMClassAttrDeprecated;
         break;
     }
     default:

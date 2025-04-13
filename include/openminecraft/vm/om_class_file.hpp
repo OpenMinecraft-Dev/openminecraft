@@ -418,6 +418,32 @@ public:
     const std::map<uint16_t, uint16_t> lineNumberTable;
 };
 
+struct OMClassAttrLocalVar {
+    uint16_t startPc, length, nameIndex, descIndex, index;
+};
+
+class OMClassAttrLocalVarTable : public OMClassAttr {
+public:
+    OMClassAttrLocalVarTable(uint16_t lvtl, OMClassAttrLocalVar* lvt);
+    virtual OMClassAttrType type() override;
+    const uint16_t localVarTableLength;
+    const OMClassAttrLocalVar* localVarTable;
+};
+
+class OMClassAttrLocalVarTypeTable : public OMClassAttr {
+public:
+    OMClassAttrLocalVarTypeTable(uint16_t lvtl, OMClassAttrLocalVar* lvt);
+    virtual OMClassAttrType type() override;
+    const uint16_t localVarTableLength;
+    const OMClassAttrLocalVar* localVarTable;
+};
+
+class OMClassAttrDeprecated : public OMClassAttr {
+public:
+    OMClassAttrDeprecated();
+    virtual OMClassAttrType type() override;
+};
+
 struct OMClassFieldInfo {
     uint16_t accessFlags;
     uint16_t nameIndex;
