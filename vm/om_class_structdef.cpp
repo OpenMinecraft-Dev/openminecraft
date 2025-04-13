@@ -270,4 +270,11 @@ OMClassAttrModuleMainClass::OMClassAttrModuleMainClass(uint16_t mci)
 {
 }
 OMClassAttrType OMClassAttrModuleMainClass::type() { return OMClassAttrType::ModuleMainClass; }
+
+OMClassAttrModulePackages::OMClassAttrModulePackages(uint16_t pc, std::vector<uint16_t> pi)
+    : packageCount(pc)
+    , packageIndex(pi)
+{
+}
+OMClassAttrType OMClassAttrModulePackages::type() { return OMClassAttrType::ModulePackages; }
 }

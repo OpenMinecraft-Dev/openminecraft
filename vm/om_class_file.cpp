@@ -472,6 +472,18 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         break;
     }
     // Records
+    case "ModulePackages"_hash: {
+        uint16_t pc;
+        std::vector<uint16_t> data;
+        this->source->readbe16(pc);
+        for (uint16_t i = 0; i < pc; i++) {
+            uint16_t d;
+            this->source->readbe16(d);
+            data.push_back(d);
+        }
+        attr = new OMClassAttrModulePackages(pc, data);
+        break;
+    }
     case "ModuleMainClass"_hash: {
         uint16_t mci;
         this->source->readbe16(mci);

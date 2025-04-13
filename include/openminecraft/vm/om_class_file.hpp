@@ -474,6 +474,14 @@ public:
     const uint16_t mainClassIndex;
 };
 
+class OMClassAttrModulePackages : public OMClassAttr {
+public:
+    OMClassAttrModulePackages(uint16_t pc, std::vector<uint16_t> pi);
+    virtual OMClassAttrType type() override;
+    const uint16_t packageCount;
+    const std::vector<uint16_t> packageIndex;
+};
+
 struct OMClassFieldInfo {
     uint16_t accessFlags;
     uint16_t nameIndex;
