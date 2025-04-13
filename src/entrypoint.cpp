@@ -6,6 +6,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
+#include "vulkan/vulkan_core.h"
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
@@ -43,6 +44,9 @@ int main()
 #ifdef OM_VULKAN_DYNAMIC
     VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
 #endif
+    device.destroy(nullptr);
+    instance.destroy(nullptr);
+
     shaderc::Compiler comp;
     logger->info("Shaderc available: {}", comp.IsValid());
     logger->info("hello *OMLogger = {}!", fmt::ptr(logger));

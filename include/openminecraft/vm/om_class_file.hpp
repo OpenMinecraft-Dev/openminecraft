@@ -253,7 +253,36 @@ public:
     const uint16_t valueIndex;
 };
 
+struct OMClassAttrCodeExcTable {
+    uint16_t startPc;
+    uint16_t endPc;
+    uint16_t handlerPc;
+    uint16_t catchType;
+};
+
+class OMClassAttrCode : public OMClassAttr {
+public:
+    OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, std::vector<uint8_t> c, uint16_t etl, std::vector<OMClassAttrCodeExcTable> et, uint16_t ac, std::vector<OMClassAttr*> a);
+    virtual OMClassAttrType type() override;
+    const uint16_t maxStack;
+    const uint16_t maxLocals;
+    const uint32_t codeLength;
+    const std::vector<uint8_t> code;
+    const uint16_t excTableLength;
+    const std::vector<OMClassAttrCodeExcTable> excTable;
+    const uint16_t attributesCount;
+    const std::vector<OMClassAttr*> attributes;
+};
+
 struct OMClassFieldInfo {
+    uint16_t accessFlags;
+    uint16_t nameIndex;
+    uint16_t descIndex;
+    uint16_t attrCount;
+    std::vector<OMClassAttr*> attrs;
+};
+
+struct OMClassMethodInfo {
     uint16_t accessFlags;
     uint16_t nameIndex;
     uint16_t descIndex;
@@ -274,6 +303,10 @@ struct OMClassFile {
     std::vector<uint16_t> interfaces;
     uint16_t fieldsCount;
     std::vector<OMClassFieldInfo*> fields;
+    uint16_t methodsCount;
+    std::vector<OMClassMethodInfo*> methods;
+    uint16_t attrCount;
+    std::vector<OMClassAttr*> attrs;
 };
 
 class OMClassFileParser {
@@ -290,6 +323,7 @@ private:
     std::map<uint16_t, OMClassConstant*> buildConstantMapping(std::vector<OMClassConstant*> c);
     OMClassFieldInfo* parseField(std::map<uint16_t, OMClassConstant*> m);
     OMClassAttr* parseAttr(std::map<uint16_t, OMClassConstant*> m);
+    OMClassMethodInfo* parseMethod(std::map<uint16_t, OMClassConstant*> m);
     char* toStdUtf8(uint8_t* data, int length);
 };
 } // namespace openminecraft::vm::classfile

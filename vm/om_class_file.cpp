@@ -1,3 +1,4 @@
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include <cstdint>
 #include <fmt/format.h>
@@ -7,6 +8,7 @@
 #include <vector>
 
 using namespace openminecraft::binary;
+using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::classfile {
 OMClassConstantFieldRef::OMClassConstantFieldRef(uint16_t ci, uint16_t nti)
@@ -159,6 +161,19 @@ OMClassAttrConstantValue::OMClassAttrConstantValue(uint16_t vi)
 }
 OMClassAttrType OMClassAttrConstantValue::type() { return OMClassAttrType::ConstantValue; }
 
+OMClassAttrCode::OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, std::vector<uint8_t> c, uint16_t etl, std::vector<OMClassAttrCodeExcTable> et, uint16_t ac, std::vector<OMClassAttr*> a)
+    : maxStack(ms)
+    , maxLocals(ml)
+    , codeLength(cl)
+    , code(c)
+    , excTableLength(etl)
+    , excTable(et)
+    , attributesCount(ac)
+    , attributes(a)
+{
+}
+OMClassAttrType OMClassAttrCode::type() { return OMClassAttrType::Code; }
+
 OMClassFileParser::OMClassFileParser(std::istream& str)
 {
     this->source = &str;
@@ -199,7 +214,21 @@ OMClassFile* OMClassFileParser::parse()
     file->fields = std::vector<OMClassFieldInfo*>();
 
     std::map<uint16_t, OMClassConstant*> m = buildConstantMapping(file->constants);
-    file->fields.push_back(parseField(m));
+    for (uint16_t d = 0; d < file->fieldsCount; d++) {
+        file->fields.push_back(parseField(m));
+    }
+
+    this->source->readbe16(file->methodsCount);
+    file->methods = std::vector<OMClassMethodInfo*>();
+    for (uint16_t d = 0; d < file->methodsCount; d++) {
+        file->methods.push_back(parseMethod(m));
+    }
+
+    this->source->readbe16(file->attrCount);
+    file->attrs = std::vector<OMClassAttr*>();
+    for (uint16_t d = 0; d < file->attrCount; d++) {
+        file->attrs.push_back(parseAttr(m));
+    }
 
     return file;
 }
@@ -371,6 +400,21 @@ OMClassFieldInfo* OMClassFileParser::parseField(std::map<uint16_t, OMClassConsta
     return field;
 }
 
+OMClassMethodInfo* OMClassFileParser::parseMethod(std::map<uint16_t, OMClassConstant*> m)
+{
+    auto method = new OMClassMethodInfo;
+    this->source->readbe16(method->accessFlags);
+    this->source->readbe16(method->nameIndex);
+    this->source->readbe16(method->descIndex);
+    this->source->readbe16(method->attrCount);
+    method->attrs = std::vector<OMClassAttr*>();
+    for (uint16_t c = 0; c < method->attrCount; c++) {
+        method->attrs.push_back(parseAttr(m));
+    }
+
+    return method;
+}
+
 OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m)
 {
     uint16_t ni;
@@ -382,9 +426,22 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         throw std::invalid_argument("Invalid attr name index!");
     }
 
-    this->logger->info("{}", m[ni]->to<OMClassConstantUtf8>()->data);
+    OMClassAttr* attr;
 
-    return nullptr;
+    switch (hash_compile_time(m[ni]->to<OMClassConstantUtf8>()->data.c_str())) {
+    case "ConstantValue"_hash: {
+        uint16_t cvi;
+        this->source->readbe16(cvi);
+        attr = new OMClassAttrConstantValue(cvi);
+        break;
+    }
+    default:
+        this->source->seekg((uint64_t)this->source->tellg() + length);
+        this->logger->info("Unimplemented attr: {}", m[ni]->to<OMClassConstantUtf8>()->data);
+        break;
+    }
+
+    return attr;
 }
 
 char* OMClassFileParser::toStdUtf8(uint8_t* data, int length)
