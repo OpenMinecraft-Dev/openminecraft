@@ -505,10 +505,23 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
     default:
         this->source->seekg((uint64_t)this->source->tellg() + length);
         this->logger->info("Unimplemented attr: {}", m[ni]->to<OMClassConstantUtf8>()->data);
+        // auto d = parseAnnotation();
+        // this->logger->info("{}", (void*)d);
         break;
     }
 
     return attr;
+}
+
+OMClassAnnotation* OMClassFileParser::parseAnnotation()
+{
+    this->source->seekg((uint64_t)this->source->tellg() + 2);
+    auto anno = new OMClassAnnotation;
+    this->source->readbe16(anno->type);
+    this->source->readbe16(anno->numPairs);
+    anno->pairs = std::map<uint16_t, OMClassAnnotationElemValue>();
+
+    return nullptr;
 }
 
 char* OMClassFileParser::toStdUtf8(uint8_t* data, int length)

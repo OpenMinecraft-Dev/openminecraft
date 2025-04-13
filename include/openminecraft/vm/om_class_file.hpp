@@ -482,6 +482,30 @@ public:
     const std::vector<uint16_t> packageIndex;
 };
 
+struct OMClassAnnotationElemValue {
+    uint8_t tag;
+    union {
+        uint16_t constValueIndex;
+        struct {
+            uint16_t typeNameIndex;
+            uint16_t constNameIndex;
+        } enumConstValue;
+
+        uint16_t classInfoIndex;
+
+        struct {
+            uint16_t numValues;
+            OMClassAnnotationElemValue* values;
+        } arrayValue;
+    } value;
+};
+
+struct OMClassAnnotation {
+    uint16_t type;
+    uint16_t numPairs;
+    std::map<uint16_t, OMClassAnnotationElemValue> pairs;
+};
+
 struct OMClassFieldInfo {
     uint16_t accessFlags;
     uint16_t nameIndex;
@@ -532,6 +556,7 @@ private:
     OMClassFieldInfo* parseField(std::map<uint16_t, OMClassConstant*> m);
     OMClassAttr* parseAttr(std::map<uint16_t, OMClassConstant*> m);
     OMClassMethodInfo* parseMethod(std::map<uint16_t, OMClassConstant*> m);
+    OMClassAnnotation* parseAnnotation();
     char* toStdUtf8(uint8_t* data, int length);
 };
 } // namespace openminecraft::vm::classfile
