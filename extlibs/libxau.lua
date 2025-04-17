@@ -1,4 +1,4 @@
-package("libxau")
+package("libxau0")
     set_homepage("https://www.x.org/")
     set_description("X.Org: A Sample Authorization Protocol for X")
 
