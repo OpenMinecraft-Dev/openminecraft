@@ -80,7 +80,7 @@ jobs:
             arch: x64
             loaderarch: x64
 
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             name: Linux (arm64)
             plat: linux
             arch: arm64
@@ -88,7 +88,7 @@ jobs:
             libc_arch: arm64
             loaderarch: arm64
 
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             name: Linux (arm32)
             plat: linux
             arch: arm32
@@ -96,7 +96,7 @@ jobs:
             libc_arch: armhf
             loaderarch: arm32
 
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             name: Linux (ppc64)
             plat: linux
             arch: ppc64le
