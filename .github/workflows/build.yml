@@ -200,9 +200,9 @@ jobs:
           sudo sed -i 's/amd64,i386/${{ matrix.libc_arch }}/' /etc/apt/sources.list.d/ports.list
           sudo sed -i 's#mirror+file:/etc/apt/apt-mirrors.txt#http://ports.ubuntu.com/ubuntu-ports/#' /etc/apt/sources.list.d/ports.list
           sudo dpkg --add-architecture ${{ matrix.libc_arch }}
-          sudo apt update
+          # sudo apt update
 
-          DEBIAN_FRONTEND=noninteractive sudo apt-get install libx11-dev:${{ matrix.libc_arch }} libgl1-mesa-glx:${{ matrix.libc_arch }} libgl1:${{ matrix.libc_arch }} libexpat1:${{ matrix.libc_arch }} -o Dpkg::Options::="--force-overwrite"
+          # DEBIAN_FRONTEND=noninteractive sudo apt-get install libx11-dev:${{ matrix.libc_arch }} libgl1-mesa-glx:${{ matrix.libc_arch }} libgl1:${{ matrix.libc_arch }} libexpat1:${{ matrix.libc_arch }} -o Dpkg::Options::="--force-overwrite"
 
           xmake f -p cross -a ${{ matrix.arch }} --sdk=/usr --cross=${{ matrix.triplet }}- -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
  
