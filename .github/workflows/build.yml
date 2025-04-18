@@ -209,10 +209,6 @@ jobs:
       - name: Configure Windows
         if: matrix.plat == 'windows'
         run: xmake f --toolchain=msvc -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
-
-      - name: Export symbols
-        if: matrix.plat != 'windows'
-        run: xmake f --ldflags="-rdynamic" -yc ${{ env.XMAKE_ARGS }}
           
       - name: Build
         run: xmake -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }}

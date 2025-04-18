@@ -8,6 +8,10 @@ add_rules("mode.check")
 includes("extlibs/libpatches.lua")
 includes("extlibs/vulkan.lua")
 
+if not is_plat("windows") then 
+    add_ldflags("-rdynamic")
+end
+
 function mobile()
     return is_plat("iphoneos", "harmony", "android")
 end
@@ -32,7 +36,8 @@ if apple() then
     add_requires("moltenvk")
 end
 
-add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", { system = false })
+add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", { system = false })
+add_requires("boost", { system = false, configs = { all = true } })
 if not is_plat("harmonys") then
     add_requires("libsdl3")
 end
