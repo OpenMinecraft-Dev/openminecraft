@@ -293,4 +293,32 @@ OMClassAttrRuntimeInvisibleAnnotations::OMClassAttrRuntimeInvisibleAnnotations(u
 }
 
 OMClassAttrType OMClassAttrRuntimeInvisibleAnnotations::type() { return OMClassAttrType::RuntimeInvisibleAnnotations; }
+
+OMClassAttrAnnotationDefault::OMClassAttrAnnotationDefault(OMClassAnnotationElemValue* v)
+    : value(v)
+{
+}
+
+OMClassAttrType OMClassAttrAnnotationDefault::type() { return OMClassAttrType::AnnotationDefault; }
+
+OMClassAttrMethodParameters::OMClassAttrMethodParameters(uint8_t pc, OMClassParam* p)
+    : paramCount(pc)
+    , params(p)
+{
+}
+OMClassAttrType OMClassAttrMethodParameters::type() { return OMClassAttrType::MethodParameters; }
+
+OMClassAttrBootMethods::OMClassAttrBootMethods(uint16_t n, OMClassBootMethods* d)
+    : numBootMethods(n)
+    , bootMethods(d)
+{
+}
+OMClassAttrType OMClassAttrBootMethods::type() { return OMClassAttrType::BootstrapMethods; }
+
+OMClassAttrRecord::OMClassAttrRecord(uint16_t c, OMClassRecordCompInfo* i)
+    : numComps(c)
+    , comps(i)
+{
+}
+OMClassAttrType OMClassAttrRecord::type() { return OMClassAttrType::Record; }
 }

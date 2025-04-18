@@ -473,7 +473,42 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         break;
     }
     // Annotations
-    // BootstrapMethods
+    case "AnnotationDefault"_hash: {
+        attr = new OMClassAttrAnnotationDefault(parseAnnotationValue());
+        break;
+    }
+    case "BootstrapMethods"_hash: {
+        uint16_t n;
+        std::vector<OMClassBootMethods> data;
+        this->source->readbe16(n);
+        for (uint16_t i = 0; i < n; i++) {
+            uint16_t ref, c;
+            std::vector<uint16_t> d;
+            this->source->readbe16(ref);
+            this->source->readbe16(c);
+            for (uint16_t j = 0; j < c; j++) {
+                uint16_t di;
+                this->source->readbe16(di);
+                d.push_back(di);
+            }
+            data.push_back({ ref, c, d });
+        }
+        attr = new OMClassAttrBootMethods(n, data.data());
+        break;
+    }
+    case "MethodParameters"_hash: {
+        uint8_t pc;
+        uint16_t a, b;
+        std::vector<OMClassParam> d;
+        this->source->read((char*)&pc, 1);
+        for (uint8_t i = 0; i < pc; i++) {
+            this->source->readbe16(a);
+            this->source->readbe16(b);
+            d.push_back({ a, b });
+        }
+        attr = new OMClassAttrMethodParameters(pc, d.data());
+        break;
+    }
     // Module
     case "ModulePackages"_hash: {
         uint16_t pc;
@@ -511,7 +546,24 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         attr = new OMClassAttrNestMembers(noc, data);
         break;
     }
-    // Record
+    case "Record"_hash: {
+        uint16_t c;
+        this->source->readbe16(c);
+        auto da = new OMClassRecordCompInfo[c];
+        for (uint16_t i = 0; i < c; i++) {
+            uint16_t ni, di, ac;
+            std::vector<void*> d;
+            this->source->readbe16(ni);
+            this->source->readbe16(di);
+            this->source->readbe16(ac);
+            for (uint16_t j = 0; j < ac; j++) {
+                d.push_back(parseAttr(m));
+            }
+            da[i] = { ni, di, ac, (OMClassAttr*)d.data() };
+        }
+        attr = new OMClassAttrRecord(c, da);
+        break;
+    }
     case "PermittedSubclasses"_hash: {
         uint16_t noc;
         std::vector<uint16_t> data;

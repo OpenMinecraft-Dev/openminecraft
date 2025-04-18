@@ -525,6 +525,55 @@ public:
     const std::vector<OMClassAnnotation*> annotations;
 };
 
+class OMClassAttrAnnotationDefault : public OMClassAttr {
+public:
+    OMClassAttrAnnotationDefault(OMClassAnnotationElemValue* v);
+    virtual OMClassAttrType type() override;
+    const OMClassAnnotationElemValue* value;
+};
+
+struct OMClassParam {
+    uint16_t nameIndex;
+    uint16_t accessFlags;
+};
+
+class OMClassAttrMethodParameters : public OMClassAttr {
+public:
+    OMClassAttrMethodParameters(uint8_t pc, OMClassParam* p);
+    virtual OMClassAttrType type() override;
+    const uint16_t paramCount;
+    const OMClassParam* params;
+};
+
+struct OMClassBootMethods {
+    uint16_t ref;
+    uint16_t numArgs;
+    std::vector<uint16_t> args;
+};
+
+class OMClassAttrBootMethods : public OMClassAttr {
+public:
+    OMClassAttrBootMethods(uint16_t n, OMClassBootMethods* d);
+    virtual OMClassAttrType type() override;
+    const uint16_t numBootMethods;
+    const OMClassBootMethods* bootMethods;
+};
+
+struct OMClassRecordCompInfo {
+    uint16_t nameIndex;
+    uint16_t descIndex;
+    uint16_t attrCount;
+    OMClassAttr* attrs;
+};
+
+class OMClassAttrRecord : public OMClassAttr {
+public:
+    OMClassAttrRecord(uint16_t c, OMClassRecordCompInfo* i);
+    virtual OMClassAttrType type() override;
+    const uint16_t numComps;
+    const OMClassRecordCompInfo* comps;
+};
+
 struct OMClassFieldInfo {
     uint16_t accessFlags;
     uint16_t nameIndex;
