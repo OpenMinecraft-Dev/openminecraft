@@ -60,12 +60,12 @@ int main()
         // SDL_GetError());
     }
 
-    /*if (!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Hello World",
+    if (!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Hello World",
                                  "!! Your SDL project successfully runs on Android
     !!", NULL)) {
-        // SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_ShowSimpleMessageBox
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_ShowSimpleMessageBox
     failed (%s)", SDL_GetError()); return 1;
-    }*/
+    }
 
     SDL_Quit();
 
