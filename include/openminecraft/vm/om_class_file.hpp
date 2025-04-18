@@ -517,6 +517,14 @@ public:
     const std::vector<OMClassAnnotation*> annotations;
 };
 
+class OMClassAttrRuntimeInvisibleAnnotations : public OMClassAttr {
+public:
+    OMClassAttrRuntimeInvisibleAnnotations(uint16_t na, std::vector<OMClassAnnotation*> data);
+    virtual OMClassAttrType type() override;
+    const uint16_t numAnnotations;
+    const std::vector<OMClassAnnotation*> annotations;
+};
+
 struct OMClassFieldInfo {
     uint16_t accessFlags;
     uint16_t nameIndex;

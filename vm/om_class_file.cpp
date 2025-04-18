@@ -452,25 +452,29 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         attr = new OMClassAttrDeprecated;
         break;
     }
-    case "NestHost"_hash: {
-        uint16_t d;
-        this->source->readbe16(d);
-        attr = new OMClassAttrNestHost(d);
-        break;
-    }
-    case "NestMembers"_hash: {
-        uint16_t noc;
-        std::vector<uint16_t> data;
-        this->source->readbe16(noc);
-        for (uint16_t i = 0; i < noc; i++) {
-            uint16_t d;
-            this->source->readbe16(d);
-            data.push_back(d);
+    case "RuntimeVisibleAnnotations"_hash: {
+        uint16_t na;
+        this->source->readbe16(na);
+        std::vector<OMClassAnnotation*> d;
+        for (uint16_t i = 0; i < na; i++) {
+            d.push_back(parseAnnotation());
         }
-        attr = new OMClassAttrNestMembers(noc, data);
+        attr = new OMClassAttrRuntimeVisibleAnnotations(na, d);
         break;
     }
-    // Records
+    case "RuntimeInvisibleAnnotations"_hash: {
+        uint16_t na;
+        this->source->readbe16(na);
+        std::vector<OMClassAnnotation*> d;
+        for (uint16_t i = 0; i < na; i++) {
+            d.push_back(parseAnnotation());
+        }
+        attr = new OMClassAttrRuntimeInvisibleAnnotations(na, d);
+        break;
+    }
+    // Annotations
+    // BootstrapMethods
+    // Module
     case "ModulePackages"_hash: {
         uint16_t pc;
         std::vector<uint16_t> data;
@@ -489,6 +493,25 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         attr = new OMClassAttrModuleMainClass(mci);
         break;
     }
+    case "NestHost"_hash: {
+        uint16_t d;
+        this->source->readbe16(d);
+        attr = new OMClassAttrNestHost(d);
+        break;
+    }
+    case "NestMembers"_hash: {
+        uint16_t noc;
+        std::vector<uint16_t> data;
+        this->source->readbe16(noc);
+        for (uint16_t i = 0; i < noc; i++) {
+            uint16_t d;
+            this->source->readbe16(d);
+            data.push_back(d);
+        }
+        attr = new OMClassAttrNestMembers(noc, data);
+        break;
+    }
+    // Record
     case "PermittedSubclasses"_hash: {
         uint16_t noc;
         std::vector<uint16_t> data;
@@ -499,16 +522,6 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             data.push_back(d);
         }
         attr = new OMClassAttrPermittedSubclasses(noc, data);
-        break;
-    }
-    case "RuntimeVisibleAnnotations"_hash: {
-        uint16_t na;
-        this->source->readbe16(na);
-        std::vector<OMClassAnnotation*> d;
-        for (uint16_t i = 0; i < na; i++) {
-            d.push_back(parseAnnotation());
-        }
-        attr = new OMClassAttrRuntimeVisibleAnnotations(na, d);
         break;
     }
     default:

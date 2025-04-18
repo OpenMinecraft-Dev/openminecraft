@@ -285,4 +285,12 @@ OMClassAttrRuntimeVisibleAnnotations::OMClassAttrRuntimeVisibleAnnotations(uint1
 }
 
 OMClassAttrType OMClassAttrRuntimeVisibleAnnotations::type() { return OMClassAttrType::RuntimeVisibleAnnotations; }
+
+OMClassAttrRuntimeInvisibleAnnotations::OMClassAttrRuntimeInvisibleAnnotations(uint16_t na, std::vector<OMClassAnnotation*> data)
+    : numAnnotations(na)
+    , annotations(data)
+{
+}
+
+OMClassAttrType OMClassAttrRuntimeInvisibleAnnotations::type() { return OMClassAttrType::RuntimeInvisibleAnnotations; }
 }
