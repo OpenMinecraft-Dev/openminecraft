@@ -32,7 +32,7 @@ if apple() then
     add_requires("moltenvk")
 end
 
-add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", { system = false })
+add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", { system = false })
 if not is_plat("harmonys") then
     add_requires("libsdl3")
 end
@@ -59,7 +59,7 @@ add_files("src/**.cpp")
 add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary")
 add_includedirs("extlibs/fmt")
 
-add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt")
+add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost")
 if not is_plat("harmonys") then
     add_packages("libsdl3")
 end
