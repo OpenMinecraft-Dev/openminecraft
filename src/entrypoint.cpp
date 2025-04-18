@@ -1,5 +1,6 @@
 #include <SDL3/SDL_error.h>
 
+#include <boost/stacktrace/stacktrace.hpp>
 #include <fstream>
 #include <vector>
 
@@ -11,7 +12,9 @@
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
 #include <SDL3/SDL.h>
+#include <boost/stacktrace.hpp>
 #include <fmt/format.h>
+#include <iostream>
 
 #include "shaderc/shaderc.hpp"
 #include "vulkan/vulkan.hpp"
@@ -155,6 +158,13 @@ int main()
         }
         }
         cid++;
+    }
+
+    auto st = boost::stacktrace::stacktrace();
+    int i = 0;
+    for (auto frame : st) {
+        logger->info("#{} 0x{} {} {}:{}", i, frame.address(), frame.name(), frame.source_file(), frame.source_line());
+        i++;
     }
 
     delete par;

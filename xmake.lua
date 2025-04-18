@@ -42,6 +42,13 @@ includes("vm/xmake.lua")
 includes("binary/xmake.lua")
 
 target("openminecraft")
+if mobile() then
+    set_kind("shared")
+    add_rules("utils.symbols.export_all")
+else 
+    set_kind("binary")
+end
+
 add_includedirs("include")
 if is_plat("harmony") then
     add_syslinks("vulkan")
@@ -49,12 +56,6 @@ elseif is_plat("android") then
     add_syslinks("GLESv2")
 end
 
-if mobile() then
-    set_kind("shared")
-    add_rules("utils.symbols.export_all")
-else 
-    set_kind("binary")
-end
 add_files("src/**.cpp")
 add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary")
 add_includedirs("extlibs/fmt")

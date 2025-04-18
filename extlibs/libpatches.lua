@@ -67,26 +67,13 @@ package("harfbuzz")
         end
     end)
 
-    on_install("android", function (package)
+    on_install(function (package)
         local configs = {"-DHB_HAVE_GLIB=OFF", "-DHB_HAVE_GOBJECT=OFF"}
         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
         table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
         table.insert(configs, "-DHB_HAVE_FREETYPE=" .. (package:config("freetype") and "ON" or "OFF"))
         table.insert(configs, "-DHB_HAVE_ICU=" .. (package:config("icu") and "ON" or "OFF"))
         import("package.tools.cmake").install(package, configs)
-    end)
-
-    on_install(function (package)
-        local configs = {"-Dtests=disabled", "-Ddocs=disabled", "-Dbenchmark=disabled", "-Dcairo=disabled"}
-        if package:is_plat("macosx") then
-            table.insert(configs, "-Dcoretext=enabled")
-        end
-        table.insert(configs, "-Ddefault_library=" .. (package:config("shared") and "shared" or "static"))
-        table.insert(configs, "-Dicu=" .. (package:config("icu") and "enabled" or "disabled"))
-        table.insert(configs, "-Dfreetype=" .. (package:config("freetype") and "enabled" or "disabled"))
-        table.insert(configs, "-Dglib=" .. (package:config("glib") and "enabled" or "disabled"))
-        table.insert(configs, "-Dgobject=" .. (package:config("glib") and "enabled" or "disabled"))
-        import("package.tools.meson").install(package, configs, {packagedeps = {"libintl", "libiconv", "pcre2"}})
     end)
 package_end()
 
