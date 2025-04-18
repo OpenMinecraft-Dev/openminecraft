@@ -493,6 +493,9 @@ struct OMClassAnnotationElemValue {
 
         uint16_t classInfoIndex;
 
+        // Cast to OMClassAnnotation* while using
+        void* annotationValue;
+
         struct {
             uint16_t numValues;
             OMClassAnnotationElemValue* values;
@@ -503,7 +506,15 @@ struct OMClassAnnotationElemValue {
 struct OMClassAnnotation {
     uint16_t type;
     uint16_t numPairs;
-    std::map<uint16_t, OMClassAnnotationElemValue> pairs;
+    std::map<uint16_t, OMClassAnnotationElemValue*> pairs;
+};
+
+class OMClassAttrRuntimeVisibleAnnotations : public OMClassAttr {
+public:
+    OMClassAttrRuntimeVisibleAnnotations(uint16_t na, std::vector<OMClassAnnotation*> data);
+    virtual OMClassAttrType type() override;
+    const uint16_t numAnnotations;
+    const std::vector<OMClassAnnotation*> annotations;
 };
 
 struct OMClassFieldInfo {
@@ -557,6 +568,7 @@ private:
     OMClassAttr* parseAttr(std::map<uint16_t, OMClassConstant*> m);
     OMClassMethodInfo* parseMethod(std::map<uint16_t, OMClassConstant*> m);
     OMClassAnnotation* parseAnnotation();
+    OMClassAnnotationElemValue* parseAnnotationValue();
     char* toStdUtf8(uint8_t* data, int length);
 };
 } // namespace openminecraft::vm::classfile

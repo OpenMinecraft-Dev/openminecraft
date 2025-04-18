@@ -277,4 +277,12 @@ OMClassAttrModulePackages::OMClassAttrModulePackages(uint16_t pc, std::vector<ui
 {
 }
 OMClassAttrType OMClassAttrModulePackages::type() { return OMClassAttrType::ModulePackages; }
+
+OMClassAttrRuntimeVisibleAnnotations::OMClassAttrRuntimeVisibleAnnotations(uint16_t na, std::vector<OMClassAnnotation*> data)
+    : numAnnotations(na)
+    , annotations(data)
+{
+}
+
+OMClassAttrType OMClassAttrRuntimeVisibleAnnotations::type() { return OMClassAttrType::RuntimeVisibleAnnotations; }
 }

@@ -452,7 +452,6 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         attr = new OMClassAttrDeprecated;
         break;
     }
-    // Annotations, BootMethods, Module/Package
     case "NestHost"_hash: {
         uint16_t d;
         this->source->readbe16(d);
@@ -502,11 +501,19 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         attr = new OMClassAttrPermittedSubclasses(noc, data);
         break;
     }
+    case "RuntimeVisibleAnnotations"_hash: {
+        uint16_t na;
+        this->source->readbe16(na);
+        std::vector<OMClassAnnotation*> d;
+        for (uint16_t i = 0; i < na; i++) {
+            d.push_back(parseAnnotation());
+        }
+        attr = new OMClassAttrRuntimeVisibleAnnotations(na, d);
+        break;
+    }
     default:
         this->source->seekg((uint64_t)this->source->tellg() + length);
         this->logger->info("Unimplemented attr: {}", m[ni]->to<OMClassConstantUtf8>()->data);
-        // auto d = parseAnnotation();
-        // this->logger->info("{}", (void*)d);
         break;
     }
 
@@ -519,9 +526,56 @@ OMClassAnnotation* OMClassFileParser::parseAnnotation()
     auto anno = new OMClassAnnotation;
     this->source->readbe16(anno->type);
     this->source->readbe16(anno->numPairs);
-    anno->pairs = std::map<uint16_t, OMClassAnnotationElemValue>();
+    anno->pairs = std::map<uint16_t, OMClassAnnotationElemValue*>();
 
-    return nullptr;
+    for (uint16_t idx = 0; idx < anno->numPairs; idx++) {
+        uint16_t i;
+        this->source->readbe16(i);
+        anno->pairs[i] = parseAnnotationValue();
+    }
+
+    return anno;
+}
+
+OMClassAnnotationElemValue* OMClassFileParser::parseAnnotationValue()
+{
+    auto v = new OMClassAnnotationElemValue;
+    this->source->read((char*)&v->tag, 1);
+    switch (v->tag) {
+    case 'B':
+    case 'C':
+    case 'D':
+    case 'F':
+    case 'I':
+    case 'J':
+    case 'S':
+    case 'Z':
+    case 's':
+        this->source->readbe16(v->value.constValueIndex);
+        break;
+    case 'e':
+        this->source->readbe16(v->value.enumConstValue.typeNameIndex);
+        this->source->readbe16(v->value.enumConstValue.constNameIndex);
+        break;
+    case 'c':
+        this->source->readbe16(v->value.classInfoIndex);
+        break;
+    case '@':
+        v->value.annotationValue = parseAnnotation();
+        break;
+    case '[': {
+        std::vector<OMClassAnnotationElemValue> d;
+        this->source->readbe16(v->value.arrayValue.numValues);
+        for (uint16_t i = 0; i < v->value.arrayValue.numValues; i++) {
+            d.push_back(*parseAnnotationValue());
+        }
+        v->value.arrayValue.values = d.data();
+        break;
+    }
+    default:
+        return nullptr;
+    }
+    return v;
 }
 
 char* OMClassFileParser::toStdUtf8(uint8_t* data, int length)
