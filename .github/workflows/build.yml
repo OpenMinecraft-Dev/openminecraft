@@ -63,12 +63,6 @@ jobs:
             loaderarch: arm32
 
           - os: ubuntu-22.04
-            name: Android (x86)
-            plat: android
-            arch: x86
-            loaderarch: x86
-
-          - os: ubuntu-22.04
             name: Android (x64)
             plat: android
             arch: x86_64
