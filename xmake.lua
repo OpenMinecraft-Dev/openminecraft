@@ -61,6 +61,10 @@ elseif is_plat("android") then
     add_syslinks("GLESv2")
 end
 
+if apple() then
+    add_defines("BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED=")
+end
+
 add_files("src/**.cpp")
 add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary")
 add_includedirs("extlibs/fmt")
