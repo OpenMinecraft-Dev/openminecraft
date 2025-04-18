@@ -37,7 +37,7 @@ if apple() then
 end
 
 add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", { system = false })
-add_requires("boost", { system = false, configs = { all = true } })
+add_requires("boost", { system = false, configs = { stacktrace = true } })
 if not is_plat("harmonys") then
     add_requires("libsdl3")
 end
