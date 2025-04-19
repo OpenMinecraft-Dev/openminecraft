@@ -207,7 +207,7 @@ package("moltenvk")
     end)
 package_end()
 
-package("vulkan-headers0")
+package("vulkan-headers")
     set_kind("library", {headeronly = true})
     set_homepage("https://github.com/KhronosGroup/Vulkan-Headers/")
     set_description("Vulkan Header files and API registry")
