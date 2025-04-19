@@ -472,7 +472,10 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         attr = new OMClassAttrRuntimeInvisibleAnnotations(na, d);
         break;
     }
-    // Annotations
+    // RuntimeVisibleParameterAnnotations
+    // RuntimeInvisibleParameterAnnotations
+    // RuntimeVisibleTypeAnnotations
+    // RuntimeInvisibleTypeAnnotations
     case "AnnotationDefault"_hash: {
         attr = new OMClassAttrAnnotationDefault(parseAnnotationValue());
         break;

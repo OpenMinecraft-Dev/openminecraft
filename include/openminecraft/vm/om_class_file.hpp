@@ -574,6 +574,9 @@ public:
     const OMClassRecordCompInfo* comps;
 };
 
+struct OMClassParamAnnotations {
+};
+
 struct OMClassFieldInfo {
     uint16_t accessFlags;
     uint16_t nameIndex;
