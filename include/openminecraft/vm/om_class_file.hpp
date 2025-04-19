@@ -563,7 +563,7 @@ struct OMClassRecordCompInfo {
     uint16_t nameIndex;
     uint16_t descIndex;
     uint16_t attrCount;
-    OMClassAttr* attrs;
+    std::vector<OMClassAttr*> attrs;
 };
 
 class OMClassAttrRecord : public OMClassAttr {
@@ -575,6 +575,24 @@ public:
 };
 
 struct OMClassParamAnnotations {
+    uint16_t numAnnotations;
+    std::vector<OMClassAnnotation*> annotations;
+};
+
+class OMClassRuntimeVisibleParameterAnnotations : public OMClassAttr {
+public:
+    OMClassRuntimeVisibleParameterAnnotations(uint8_t n, OMClassParamAnnotations* d);
+    virtual OMClassAttrType type() override;
+    const uint8_t numParams;
+    const OMClassParamAnnotations* params;
+};
+
+class OMClassRuntimeInvisibleParameterAnnotations : public OMClassAttr {
+public:
+    OMClassRuntimeInvisibleParameterAnnotations(uint8_t n, OMClassParamAnnotations* d);
+    virtual OMClassAttrType type() override;
+    const uint8_t numParams;
+    const OMClassParamAnnotations* params;
 };
 
 struct OMClassFieldInfo {

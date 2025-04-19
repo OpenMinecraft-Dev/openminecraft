@@ -472,8 +472,38 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         attr = new OMClassAttrRuntimeInvisibleAnnotations(na, d);
         break;
     }
-    // RuntimeVisibleParameterAnnotations
-    // RuntimeInvisibleParameterAnnotations
+    case "RuntimeVisibleParameterAnnotations"_hash: {
+        uint8_t n;
+        this->source->read((char*)&n, 1);
+        std::vector<OMClassParamAnnotations> d;
+        for (uint8_t i = 0; i < n; i++) {
+            std::vector<OMClassAnnotation*> d0;
+            uint16_t ca;
+            this->source->readbe16(ca);
+            for (uint16_t j = 0; j < ca; j++) {
+                d0.push_back(parseAnnotation());
+            }
+            d.push_back({ ca, d0 });
+        }
+        attr = new OMClassRuntimeVisibleParameterAnnotations(n, d.data());
+        break;
+    }
+    case "RuntimeInvisibleParameterAnnotations"_hash: {
+        uint8_t n;
+        this->source->read((char*)&n, 1);
+        std::vector<OMClassParamAnnotations> d;
+        for (uint8_t i = 0; i < n; i++) {
+            std::vector<OMClassAnnotation*> d0;
+            uint16_t ca;
+            this->source->readbe16(ca);
+            for (uint16_t j = 0; j < ca; j++) {
+                d0.push_back(parseAnnotation());
+            }
+            d.push_back({ ca, d0 });
+        }
+        attr = new OMClassRuntimeInvisibleParameterAnnotations(n, d.data());
+        break;
+    }
     // RuntimeVisibleTypeAnnotations
     // RuntimeInvisibleTypeAnnotations
     case "AnnotationDefault"_hash: {
@@ -555,14 +585,14 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         auto da = new OMClassRecordCompInfo[c];
         for (uint16_t i = 0; i < c; i++) {
             uint16_t ni, di, ac;
-            std::vector<void*> d;
+            std::vector<OMClassAttr*> d;
             this->source->readbe16(ni);
             this->source->readbe16(di);
             this->source->readbe16(ac);
             for (uint16_t j = 0; j < ac; j++) {
                 d.push_back(parseAttr(m));
             }
-            da[i] = { ni, di, ac, (OMClassAttr*)d.data() };
+            da[i] = { ni, di, ac, d };
         }
         attr = new OMClassAttrRecord(c, da);
         break;

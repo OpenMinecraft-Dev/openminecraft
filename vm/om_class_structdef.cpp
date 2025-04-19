@@ -321,4 +321,18 @@ OMClassAttrRecord::OMClassAttrRecord(uint16_t c, OMClassRecordCompInfo* i)
 {
 }
 OMClassAttrType OMClassAttrRecord::type() { return OMClassAttrType::Record; }
+
+OMClassRuntimeVisibleParameterAnnotations::OMClassRuntimeVisibleParameterAnnotations(uint8_t n, OMClassParamAnnotations* d)
+    : numParams(n)
+    , params(d)
+{
+}
+OMClassAttrType OMClassRuntimeVisibleParameterAnnotations::type() { return OMClassAttrType::RuntimeVisibleParameterAnnotations; }
+
+OMClassRuntimeInvisibleParameterAnnotations::OMClassRuntimeInvisibleParameterAnnotations(uint8_t n, OMClassParamAnnotations* d)
+    : numParams(n)
+    , params(d)
+{
+}
+OMClassAttrType OMClassRuntimeInvisibleParameterAnnotations::type() { return OMClassAttrType::RuntimeInvisibleParameterAnnotations; }
 }
