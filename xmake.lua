@@ -99,7 +99,7 @@ if is_plat("linux") then
     add_defines("OM_PLATFORM_LINUX=")
     add_files("plat/linux/**.cpp")
 end
-if is_plat("macos") then
+if is_plat("macosx") then
     add_defines("OM_PLATFORM_MACOS=")
     add_files("plat/macos/**.cpp")
 end
