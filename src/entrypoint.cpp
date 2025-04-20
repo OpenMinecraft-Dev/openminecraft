@@ -6,7 +6,6 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
-#include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
 #include "vulkan/vulkan_core.h"
 #ifdef OM_VULKAN_DYNAMIC
@@ -27,7 +26,6 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 using namespace openminecraft::log;
 using namespace openminecraft::log::multithraad;
 using namespace openminecraft::vm::classfile;
-using namespace openminecraft::mem::allocator;
 
 int main()
 {

@@ -1,5 +1,4 @@
 #include "openminecraft/mem/om_mem_record.hpp"
-#include <boost/stacktrace/stacktrace.hpp>
 #include <cstdlib>
 #include <malloc.h>
 
