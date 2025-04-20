@@ -17,6 +17,7 @@ struct MemModifyInfo {
     uint8_t tag;
 };
 
+size_t heapSize(void* p);
 void rec(MemModifyInfo i);
 }
 

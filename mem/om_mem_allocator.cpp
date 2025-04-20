@@ -11,25 +11,25 @@ using namespace openminecraft::mem::allocator;
 void* operator new(size_t size)
 {
     void* p = malloc(size);
-    rec({ Allocation, p, malloc_usable_size(p), 0 });
+    rec({ Allocation, p, heapSize(p), 0 });
     return p;
 }
 
 void* operator new[](size_t size)
 {
     void* p = malloc(size);
-    rec({ Allocation, p, malloc_usable_size(p), 0 });
+    rec({ Allocation, p, heapSize(p), 0 });
     return p;
 }
 
 void operator delete(void* p)
 {
-    rec({ Free, p, malloc_usable_size(p), 0 });
+    rec({ Free, p, heapSize(p), 0 });
     free(p);
 }
 
 void operator delete[](void* p)
 {
-    rec({ Free, p, malloc_usable_size(p), 0 });
+    rec({ Free, p, heapSize(p), 0 });
     free(p);
 }

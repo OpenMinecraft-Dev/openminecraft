@@ -88,6 +88,7 @@ end
 
 if not is_plat("windows") then
     add_defines("OM_PLATFORM_UNIX=")
+    add_files("plat/unix/**.cpp")
 end
 
 if is_plat("windows") then
