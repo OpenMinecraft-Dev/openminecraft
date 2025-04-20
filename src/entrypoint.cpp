@@ -1,11 +1,13 @@
 #include <SDL3/SDL_error.h>
 
+#include <SDL3/SDL_stdinc.h>
 #include <boost/stacktrace/stacktrace.hpp>
 #include <fstream>
 #include <vector>
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
+#include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
 #include "vulkan/vulkan_core.h"
 #ifdef OM_VULKAN_DYNAMIC
@@ -26,6 +28,7 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 using namespace openminecraft::log;
 using namespace openminecraft::log::multithraad;
 using namespace openminecraft::vm::classfile;
+using namespace openminecraft::mem::allocator;
 
 int main()
 {
@@ -54,6 +57,7 @@ int main()
     logger->info("Shaderc available: {}", comp.IsValid());
     logger->info("hello *OMLogger = {}!", fmt::ptr(logger));
 
+    SDL_SetMemoryFunctions(tracedMalloc, tracedCalloc, tracedRealloc, tracedFree);
     if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO)) {
         logger->info("SDL Status: {}", SDL_GetError());
     }

@@ -6,8 +6,7 @@
 namespace openminecraft::mem::allocator {
 enum MemModifyType {
     Allocation,
-    Free,
-    Reallocation
+    Free
 };
 
 struct MemModifyInfo {
