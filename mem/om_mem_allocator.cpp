@@ -19,8 +19,10 @@ void* tracedCalloc(size_t count, size_t ilength)
 
 void* tracedRealloc(void* p, size_t length)
 {
+    if (p == nullptr) return tracedMalloc(length);
+    size_t l = heapSize(p);
     void* pr = realloc(p, length);
-    rec({ Free, p, heapSize(p), 1 });
+    rec({ Free, p, l, 1 });
     rec({ Allocation, pr, heapSize(pr), 1 });
     return pr;
 }
