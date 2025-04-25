@@ -495,7 +495,7 @@ struct OMClassAnnotationElemValue {
     uint16_t classInfoIndex;
 
     // Cast to OMClassAnnotation* while using
-    void* annotationValue;
+    std::shared_ptr<void> annotationValue;
 
     struct {
         uint16_t numValues;
@@ -511,18 +511,18 @@ struct OMClassAnnotation {
 
 class OMClassAttrRuntimeVisibleAnnotations : public OMClassAttr {
 public:
-    OMClassAttrRuntimeVisibleAnnotations(uint16_t na, std::vector<OMClassAnnotation*> data);
+    OMClassAttrRuntimeVisibleAnnotations(uint16_t na, std::vector<std::shared_ptr<OMClassAnnotation>> data);
     virtual OMClassAttrType type() override;
     const uint16_t numAnnotations;
-    const std::vector<OMClassAnnotation*> annotations;
+    const std::vector<std::shared_ptr<OMClassAnnotation>> annotations;
 };
 
 class OMClassAttrRuntimeInvisibleAnnotations : public OMClassAttr {
 public:
-    OMClassAttrRuntimeInvisibleAnnotations(uint16_t na, std::vector<OMClassAnnotation*> data);
+    OMClassAttrRuntimeInvisibleAnnotations(uint16_t na, std::vector<std::shared_ptr<OMClassAnnotation>> data);
     virtual OMClassAttrType type() override;
     const uint16_t numAnnotations;
-    const std::vector<OMClassAnnotation*> annotations;
+    const std::vector<std::shared_ptr<OMClassAnnotation>> annotations;
 };
 
 class OMClassAttrAnnotationDefault : public OMClassAttr {
@@ -576,7 +576,7 @@ public:
 
 struct OMClassParamAnnotations {
     uint16_t numAnnotations;
-    std::vector<OMClassAnnotation*> annotations;
+    std::vector<std::shared_ptr<OMClassAnnotation>> annotations;
 };
 
 class OMClassRuntimeVisibleParameterAnnotations : public OMClassAttr {
@@ -645,7 +645,7 @@ private:
     std::shared_ptr<OMClassFieldInfo> parseField(std::map<uint16_t, OMClassConstant*> m);
     OMClassAttr* parseAttr(std::map<uint16_t, OMClassConstant*> m);
     std::shared_ptr<OMClassMethodInfo> parseMethod(std::map<uint16_t, OMClassConstant*> m);
-    OMClassAnnotation* parseAnnotation();
+    std::shared_ptr<OMClassAnnotation> parseAnnotation();
     std::shared_ptr<OMClassAnnotationElemValue> parseAnnotationValue();
     char* toStdUtf8(uint8_t* data, int length);
 };

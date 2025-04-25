@@ -456,7 +456,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
     case "RuntimeVisibleAnnotations"_hash: {
         uint16_t na;
         this->source->readbe16(na);
-        std::vector<OMClassAnnotation*> d;
+        std::vector<std::shared_ptr<OMClassAnnotation>> d;
         for (uint16_t i = 0; i < na; i++) {
             d.push_back(parseAnnotation());
         }
@@ -466,7 +466,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
     case "RuntimeInvisibleAnnotations"_hash: {
         uint16_t na;
         this->source->readbe16(na);
-        std::vector<OMClassAnnotation*> d;
+        std::vector<std::shared_ptr<OMClassAnnotation>> d;
         for (uint16_t i = 0; i < na; i++) {
             d.push_back(parseAnnotation());
         }
@@ -478,7 +478,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         this->source->read((char*)&n, 1);
         std::vector<OMClassParamAnnotations> d;
         for (uint8_t i = 0; i < n; i++) {
-            std::vector<OMClassAnnotation*> d0;
+            std::vector<std::shared_ptr<OMClassAnnotation>> d0;
             uint16_t ca;
             this->source->readbe16(ca);
             for (uint16_t j = 0; j < ca; j++) {
@@ -494,7 +494,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         this->source->read((char*)&n, 1);
         std::vector<OMClassParamAnnotations> d;
         for (uint8_t i = 0; i < n; i++) {
-            std::vector<OMClassAnnotation*> d0;
+            std::vector<std::shared_ptr<OMClassAnnotation>> d0;
             uint16_t ca;
             this->source->readbe16(ca);
             for (uint16_t j = 0; j < ca; j++) {
@@ -619,10 +619,10 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
     return attr;
 }
 
-OMClassAnnotation* OMClassFileParser::parseAnnotation()
+std::shared_ptr<OMClassAnnotation> OMClassFileParser::parseAnnotation()
 {
     this->source->seekg((uint64_t)this->source->tellg() + 2);
-    auto anno = new OMClassAnnotation;
+    auto anno = std::make_shared<OMClassAnnotation>();
     this->source->readbe16(anno->type);
     this->source->readbe16(anno->numPairs);
     anno->pairs = std::map<uint16_t, std::shared_ptr<OMClassAnnotationElemValue>>();

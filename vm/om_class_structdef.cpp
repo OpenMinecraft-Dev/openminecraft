@@ -278,7 +278,7 @@ OMClassAttrModulePackages::OMClassAttrModulePackages(uint16_t pc, std::vector<ui
 }
 OMClassAttrType OMClassAttrModulePackages::type() { return OMClassAttrType::ModulePackages; }
 
-OMClassAttrRuntimeVisibleAnnotations::OMClassAttrRuntimeVisibleAnnotations(uint16_t na, std::vector<OMClassAnnotation*> data)
+OMClassAttrRuntimeVisibleAnnotations::OMClassAttrRuntimeVisibleAnnotations(uint16_t na, std::vector<std::shared_ptr<OMClassAnnotation>> data)
     : numAnnotations(na)
     , annotations(data)
 {
@@ -286,7 +286,7 @@ OMClassAttrRuntimeVisibleAnnotations::OMClassAttrRuntimeVisibleAnnotations(uint1
 
 OMClassAttrType OMClassAttrRuntimeVisibleAnnotations::type() { return OMClassAttrType::RuntimeVisibleAnnotations; }
 
-OMClassAttrRuntimeInvisibleAnnotations::OMClassAttrRuntimeInvisibleAnnotations(uint16_t na, std::vector<OMClassAnnotation*> data)
+OMClassAttrRuntimeInvisibleAnnotations::OMClassAttrRuntimeInvisibleAnnotations(uint16_t na, std::vector<std::shared_ptr<OMClassAnnotation>> data)
     : numAnnotations(na)
     , annotations(data)
 {
