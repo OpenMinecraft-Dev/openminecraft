@@ -650,25 +650,25 @@ OMClassAnnotationElemValue* OMClassFileParser::parseAnnotationValue()
     case 'S':
     case 'Z':
     case 's':
-        this->source->readbe16(v->value.constValueIndex);
+        this->source->readbe16(v->constValueIndex);
         break;
     case 'e':
-        this->source->readbe16(v->value.enumConstValue.typeNameIndex);
-        this->source->readbe16(v->value.enumConstValue.constNameIndex);
+        this->source->readbe16(v->enumConstValue.typeNameIndex);
+        this->source->readbe16(v->enumConstValue.constNameIndex);
         break;
     case 'c':
-        this->source->readbe16(v->value.classInfoIndex);
+        this->source->readbe16(v->classInfoIndex);
         break;
     case '@':
-        v->value.annotationValue = parseAnnotation();
+        v->annotationValue = parseAnnotation();
         break;
     case '[': {
         std::vector<OMClassAnnotationElemValue> d;
-        this->source->readbe16(v->value.arrayValue.numValues);
-        for (uint16_t i = 0; i < v->value.arrayValue.numValues; i++) {
+        this->source->readbe16(v->arrayValue.numValues);
+        for (uint16_t i = 0; i < v->arrayValue.numValues; i++) {
             d.push_back(*parseAnnotationValue());
         }
-        v->value.arrayValue.values = d.data();
+        v->arrayValue.values = d;
         break;
     }
     default:

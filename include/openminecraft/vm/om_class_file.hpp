@@ -485,23 +485,22 @@ public:
 
 struct OMClassAnnotationElemValue {
     uint8_t tag;
-    union {
-        uint16_t constValueIndex;
-        struct {
-            uint16_t typeNameIndex;
-            uint16_t constNameIndex;
-        } enumConstValue;
 
-        uint16_t classInfoIndex;
+    uint16_t constValueIndex;
+    struct {
+        uint16_t typeNameIndex;
+        uint16_t constNameIndex;
+    } enumConstValue;
 
-        // Cast to OMClassAnnotation* while using
-        void* annotationValue;
+    uint16_t classInfoIndex;
 
-        struct {
-            uint16_t numValues;
-            OMClassAnnotationElemValue* values;
-        } arrayValue;
-    } value;
+    // Cast to OMClassAnnotation* while using
+    void* annotationValue;
+
+    struct {
+        uint16_t numValues;
+        std::vector<OMClassAnnotationElemValue> values;
+    } arrayValue;
 };
 
 struct OMClassAnnotation {
