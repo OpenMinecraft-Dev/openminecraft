@@ -2,10 +2,10 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include <cstdint>
 #include <fmt/format.h>
+#include <memory>
 #include <openminecraft/binary/om_bin_endians.hpp>
 #include <openminecraft/vm/om_class_file.hpp>
 #include <stdexcept>
-#include <vector>
 
 using namespace openminecraft::binary;
 using namespace openminecraft::binary::hash;
@@ -14,18 +14,17 @@ namespace openminecraft::vm::classfile {
 OMClassFileParser::OMClassFileParser(std::istream& str)
 {
     this->source = &str;
-    this->logger = new log::OMLogger("OMClassFileParser", this);
+    this->logger = std::make_shared<log::OMLogger>("OMClassFileParser", this);
 }
 
 OMClassFileParser::~OMClassFileParser()
 {
     this->logger->info("Destroying class file parser");
-    delete this->logger;
 }
 
-OMClassFile* OMClassFileParser::parse()
+std::shared_ptr<OMClassFile> OMClassFileParser::parse()
 {
-    auto file = new OMClassFile;
+    auto file = std::make_shared<OMClassFile>();
     this->source->readbe32(file->magicNumber);
     this->source->readbe16(file->minor);
     this->source->readbe16(file->major);

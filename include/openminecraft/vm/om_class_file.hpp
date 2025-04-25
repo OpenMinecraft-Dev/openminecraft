@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <istream>
 #include <map>
+#include <memory>
 #include <vector>
 
 #include "openminecraft/log/om_log_common.hpp"
@@ -634,11 +635,11 @@ class OMClassFileParser {
 public:
     OMClassFileParser(std::istream& stream);
     ~OMClassFileParser();
-    OMClassFile* parse();
+    std::shared_ptr<OMClassFile> parse();
 
 private:
     std::istream* source;
-    log::OMLogger* logger;
+    std::shared_ptr<log::OMLogger> logger;
 
     OMClassConstant* parseConstant(uint16_t* idx);
     std::map<uint16_t, OMClassConstant*> buildConstantMapping(std::vector<OMClassConstant*> c);

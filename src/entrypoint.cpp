@@ -33,7 +33,7 @@ using namespace openminecraft::mem::allocator;
 int main()
 {
     registerCurrentThreadName("engineMain");
-    auto logger = new OMLogger("test");
+    auto logger = std::make_unique<OMLogger>("test");
 
 #ifdef OM_VULKAN_DYNAMIC
     vk::detail::DynamicLoader dl;
@@ -55,7 +55,7 @@ int main()
 
     shaderc::Compiler comp;
     logger->info("Shaderc available: {}", comp.IsValid());
-    logger->info("hello *OMLogger = {}!", fmt::ptr(logger));
+    logger->info("hello *OMLogger = {}!", fmt::ptr(logger.get()));
 
     SDL_SetMemoryFunctions(tracedMalloc, tracedCalloc, tracedRealloc, tracedFree);
     if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO)) {
@@ -70,7 +70,7 @@ int main()
     SDL_Quit();
 
     std::ifstream f("/home/coder2/Test.class", std::ios::binary);
-    auto par = new OMClassFileParser(f);
+    auto par = std::make_unique<OMClassFileParser>(f);
     auto clsfile = par->parse();
 
     uint32_t cid = 1;
@@ -166,10 +166,6 @@ int main()
         logger->info("#{} 0x{} {} {}:{}", i, frame.address(), frame.name(), frame.source_file(), frame.source_line());
         i++;
     }
-
-    delete par;
-    delete clsfile;
-    delete logger;
 
     return 0;
 }
