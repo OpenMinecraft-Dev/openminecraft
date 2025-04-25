@@ -47,7 +47,7 @@ std::shared_ptr<OMClassFile> OMClassFileParser::parse()
         file->interfaces.push_back(a);
     }
     this->source->readbe16(file->fieldsCount);
-    file->fields = std::vector<OMClassFieldInfo*>();
+    file->fields = std::vector<std::shared_ptr<OMClassFieldInfo>>();
 
     std::map<uint16_t, OMClassConstant*> m = buildConstantMapping(file->constants);
     for (uint16_t d = 0; d < file->fieldsCount; d++) {
@@ -55,7 +55,7 @@ std::shared_ptr<OMClassFile> OMClassFileParser::parse()
     }
 
     this->source->readbe16(file->methodsCount);
-    file->methods = std::vector<OMClassMethodInfo*>();
+    file->methods = std::vector<std::shared_ptr<OMClassMethodInfo>>();
     for (uint16_t d = 0; d < file->methodsCount; d++) {
         file->methods.push_back(parseMethod(m));
     }
@@ -221,9 +221,9 @@ std::map<uint16_t, OMClassConstant*> OMClassFileParser::buildConstantMapping(std
     return target;
 }
 
-OMClassFieldInfo* OMClassFileParser::parseField(std::map<uint16_t, OMClassConstant*> m)
+std::shared_ptr<OMClassFieldInfo> OMClassFileParser::parseField(std::map<uint16_t, OMClassConstant*> m)
 {
-    auto field = new OMClassFieldInfo;
+    auto field = std::make_shared<OMClassFieldInfo>();
     this->source->readbe16(field->accessFlags);
     this->source->readbe16(field->nameIndex);
     this->source->readbe16(field->descIndex);
@@ -236,9 +236,9 @@ OMClassFieldInfo* OMClassFileParser::parseField(std::map<uint16_t, OMClassConsta
     return field;
 }
 
-OMClassMethodInfo* OMClassFileParser::parseMethod(std::map<uint16_t, OMClassConstant*> m)
+std::shared_ptr<OMClassMethodInfo> OMClassFileParser::parseMethod(std::map<uint16_t, OMClassConstant*> m)
 {
-    auto method = new OMClassMethodInfo;
+    auto method = std::make_shared<OMClassMethodInfo>();
     this->source->readbe16(method->accessFlags);
     this->source->readbe16(method->nameIndex);
     this->source->readbe16(method->descIndex);
@@ -308,43 +308,45 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             }
             return s;
         };
-        std::vector<OMClassAttrVerifyStackMapFrame> datas;
+        std::vector<std::shared_ptr<OMClassAttrVerifyStackMapFrame>> datas;
         for (uint16_t i = 0; i < noe; i++) {
-            OMClassAttrVerifyStackMapFrame fr;
-            this->source->read((char*)&fr.tag, 1);
+            auto fr = std::make_shared<OMClassAttrVerifyStackMapFrame>();
+            this->source->read((char*)&fr->tag, 1);
 
-            if (fr.tag >= 64 && fr.tag < 128) {
-                fr.sameLocals1StackItemFrame.stack = typep();
-            } else if (fr.tag < 247) {
+            if (fr->tag >= 64 && fr->tag < 128) {
+                fr->sameLocals1StackItemFrame.stack = typep();
+            } else if (fr->tag < 247) {
                 throw std::invalid_argument("Invalid stack map frame type!");
-            } else if (fr.tag == 247) {
-                this->source->readbe16(fr.sameLocals1StackItemFrameExt.offset);
-                fr.sameLocals1StackItemFrameExt.stack = typep();
-            } else if (fr.tag < 251) {
-                this->source->readbe16(fr.chopFrame.offset);
-            } else if (fr.tag == 251) {
-                this->source->readbe16(fr.sameFrameExt.offset);
-            } else if (fr.tag < 255) {
-                this->source->readbe16(fr.appendFrame.offset);
-                fr.appendFrame.locals = std::vector<OMClassAttrVerifyTypeInfo>();
-                for (uint8_t i = 0; i < fr.tag - 251; i++) {
-                    fr.appendFrame.locals.push_back(typep());
+            } else if (fr->tag == 247) {
+                this->source->readbe16(fr->sameLocals1StackItemFrameExt.offset);
+                fr->sameLocals1StackItemFrameExt.stack = typep();
+            } else if (fr->tag < 251) {
+                this->source->readbe16(fr->chopFrame.offset);
+            } else if (fr->tag == 251) {
+                this->source->readbe16(fr->sameFrameExt.offset);
+            } else if (fr->tag < 255) {
+                this->source->readbe16(fr->appendFrame.offset);
+                fr->appendFrame.locals = std::vector<OMClassAttrVerifyTypeInfo>();
+                for (uint8_t i = 0; i < fr->tag - 251; i++) {
+                    fr->appendFrame.locals.push_back(typep());
                 }
             } else {
-                this->source->readbe16(fr.fullFrame.offset);
-                this->source->readbe16(fr.fullFrame.numberOfLocals);
-                fr.fullFrame.locals = std::vector<OMClassAttrVerifyTypeInfo>();
-                for (uint16_t i = 0; i < fr.fullFrame.numberOfLocals; i++) {
-                    fr.fullFrame.locals.push_back(typep());
+                this->source->readbe16(fr->fullFrame.offset);
+                this->source->readbe16(fr->fullFrame.numberOfLocals);
+                fr->fullFrame.locals = std::vector<OMClassAttrVerifyTypeInfo>();
+                for (uint16_t i = 0; i < fr->fullFrame.numberOfLocals; i++) {
+                    fr->fullFrame.locals.push_back(typep());
                 }
-                this->source->readbe16(fr.fullFrame.numberOfStackItems);
-                fr.fullFrame.stackItems = std::vector<OMClassAttrVerifyTypeInfo>();
-                for (uint16_t i = 0; i < fr.fullFrame.numberOfStackItems; i++) {
-                    fr.fullFrame.stackItems.push_back(typep());
+                this->source->readbe16(fr->fullFrame.numberOfStackItems);
+                fr->fullFrame.stackItems = std::vector<OMClassAttrVerifyTypeInfo>();
+                for (uint16_t i = 0; i < fr->fullFrame.numberOfStackItems; i++) {
+                    fr->fullFrame.stackItems.push_back(typep());
                 }
             }
+
+            datas.push_back(fr);
         }
-        attr = new OMClassAttrStackMapTable(noe, datas.data());
+        attr = new OMClassAttrStackMapTable(noe, datas);
         break;
     }
     case "Exceptions"_hash: {

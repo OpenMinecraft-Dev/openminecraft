@@ -347,10 +347,10 @@ union OMClassAttrVerifyStackMapFrame {
 
 class OMClassAttrStackMapTable : public OMClassAttr {
 public:
-    OMClassAttrStackMapTable(uint16_t noe, OMClassAttrVerifyStackMapFrame* e);
+    OMClassAttrStackMapTable(uint16_t noe, std::vector<std::shared_ptr<OMClassAttrVerifyStackMapFrame>> e);
     virtual OMClassAttrType type() override;
     const uint16_t numberOfEntries;
-    const OMClassAttrVerifyStackMapFrame* entries;
+    const std::vector<std::shared_ptr<OMClassAttrVerifyStackMapFrame>> entries;
 };
 
 class OMClassAttrExceptions : public OMClassAttr {
@@ -624,9 +624,9 @@ struct OMClassFile {
     uint16_t interfacesCount;
     std::vector<uint16_t> interfaces;
     uint16_t fieldsCount;
-    std::vector<OMClassFieldInfo*> fields;
+    std::vector<std::shared_ptr<OMClassFieldInfo>> fields;
     uint16_t methodsCount;
-    std::vector<OMClassMethodInfo*> methods;
+    std::vector<std::shared_ptr<OMClassMethodInfo>> methods;
     uint16_t attrCount;
     std::vector<OMClassAttr*> attrs;
 };
@@ -643,9 +643,9 @@ private:
 
     OMClassConstant* parseConstant(uint16_t* idx);
     std::map<uint16_t, OMClassConstant*> buildConstantMapping(std::vector<OMClassConstant*> c);
-    OMClassFieldInfo* parseField(std::map<uint16_t, OMClassConstant*> m);
+    std::shared_ptr<OMClassFieldInfo> parseField(std::map<uint16_t, OMClassConstant*> m);
     OMClassAttr* parseAttr(std::map<uint16_t, OMClassConstant*> m);
-    OMClassMethodInfo* parseMethod(std::map<uint16_t, OMClassConstant*> m);
+    std::shared_ptr<OMClassMethodInfo> parseMethod(std::map<uint16_t, OMClassConstant*> m);
     OMClassAnnotation* parseAnnotation();
     OMClassAnnotationElemValue* parseAnnotationValue();
     char* toStdUtf8(uint8_t* data, int length);

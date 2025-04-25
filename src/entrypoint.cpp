@@ -163,7 +163,7 @@ int main()
     auto st = boost::stacktrace::stacktrace();
     int i = 0;
     for (auto frame : st) {
-        logger->info("#{} 0x{} {} {}:{}", i, frame.address(), frame.name(), frame.source_file(), frame.source_line());
+        logger->info("#{} 0x{} {} {}:{}", i, frame.address(), frame.name() == "" ? "???" : frame.name(), frame.source_file(), frame.source_line());
         i++;
     }
 

@@ -172,7 +172,7 @@ OMClassAttrCode::OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, uint8_t*
 }
 OMClassAttrType OMClassAttrCode::type() { return OMClassAttrType::Code; }
 
-OMClassAttrStackMapTable::OMClassAttrStackMapTable(uint16_t noe, OMClassAttrVerifyStackMapFrame* e)
+OMClassAttrStackMapTable::OMClassAttrStackMapTable(uint16_t noe, std::vector<std::shared_ptr<OMClassAttrVerifyStackMapFrame>> e)
     : numberOfEntries(noe)
     , entries(e)
 {
