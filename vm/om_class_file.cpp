@@ -430,7 +430,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             this->source->readbe16(data.index);
             d.push_back(data);
         }
-        attr = new OMClassAttrLocalVarTable(l, d.data());
+        attr = new OMClassAttrLocalVarTable(l, d);
         break;
     }
     case "LocalVariableTypeTable"_hash: {
@@ -446,7 +446,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             this->source->readbe16(data.index);
             d.push_back(data);
         }
-        attr = new OMClassAttrLocalVarTypeTable(l, d.data());
+        attr = new OMClassAttrLocalVarTypeTable(l, d);
         break;
     }
     case "Deprecated"_hash: {
@@ -486,7 +486,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             }
             d.push_back({ ca, d0 });
         }
-        attr = new OMClassRuntimeVisibleParameterAnnotations(n, d.data());
+        attr = new OMClassRuntimeVisibleParameterAnnotations(n, d);
         break;
     }
     case "RuntimeInvisibleParameterAnnotations"_hash: {
@@ -502,7 +502,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             }
             d.push_back({ ca, d0 });
         }
-        attr = new OMClassRuntimeInvisibleParameterAnnotations(n, d.data());
+        attr = new OMClassRuntimeInvisibleParameterAnnotations(n, d);
         break;
     }
     // RuntimeVisibleTypeAnnotations
@@ -527,7 +527,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             }
             data.push_back({ ref, c, d });
         }
-        attr = new OMClassAttrBootMethods(n, data.data());
+        attr = new OMClassAttrBootMethods(n, data);
         break;
     }
     case "MethodParameters"_hash: {

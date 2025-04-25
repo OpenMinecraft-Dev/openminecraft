@@ -228,14 +228,14 @@ OMClassAttrLineNumberTable::OMClassAttrLineNumberTable(uint16_t lntl, std::map<u
 }
 OMClassAttrType OMClassAttrLineNumberTable::type() { return OMClassAttrType::LineNumberTable; }
 
-OMClassAttrLocalVarTable::OMClassAttrLocalVarTable(uint16_t lvtl, OMClassAttrLocalVar* lvt)
+OMClassAttrLocalVarTable::OMClassAttrLocalVarTable(uint16_t lvtl, std::vector<OMClassAttrLocalVar> lvt)
     : localVarTableLength(lvtl)
     , localVarTable(lvt)
 {
 }
 OMClassAttrType OMClassAttrLocalVarTable::type() { return OMClassAttrType::LocalVariableTable; }
 
-OMClassAttrLocalVarTypeTable::OMClassAttrLocalVarTypeTable(uint16_t lvtl, OMClassAttrLocalVar* lvt)
+OMClassAttrLocalVarTypeTable::OMClassAttrLocalVarTypeTable(uint16_t lvtl, std::vector<OMClassAttrLocalVar> lvt)
     : localVarTableLength(lvtl)
     , localVarTable(lvt)
 {
@@ -308,7 +308,7 @@ OMClassAttrMethodParameters::OMClassAttrMethodParameters(uint8_t pc, std::vector
 }
 OMClassAttrType OMClassAttrMethodParameters::type() { return OMClassAttrType::MethodParameters; }
 
-OMClassAttrBootMethods::OMClassAttrBootMethods(uint16_t n, OMClassBootMethods* d)
+OMClassAttrBootMethods::OMClassAttrBootMethods(uint16_t n, std::vector<OMClassBootMethods> d)
     : numBootMethods(n)
     , bootMethods(d)
 {
@@ -322,14 +322,14 @@ OMClassAttrRecord::OMClassAttrRecord(uint16_t c, OMClassRecordCompInfo* i)
 }
 OMClassAttrType OMClassAttrRecord::type() { return OMClassAttrType::Record; }
 
-OMClassRuntimeVisibleParameterAnnotations::OMClassRuntimeVisibleParameterAnnotations(uint8_t n, OMClassParamAnnotations* d)
+OMClassRuntimeVisibleParameterAnnotations::OMClassRuntimeVisibleParameterAnnotations(uint8_t n, std::vector<OMClassParamAnnotations> d)
     : numParams(n)
     , params(d)
 {
 }
 OMClassAttrType OMClassRuntimeVisibleParameterAnnotations::type() { return OMClassAttrType::RuntimeVisibleParameterAnnotations; }
 
-OMClassRuntimeInvisibleParameterAnnotations::OMClassRuntimeInvisibleParameterAnnotations(uint8_t n, OMClassParamAnnotations* d)
+OMClassRuntimeInvisibleParameterAnnotations::OMClassRuntimeInvisibleParameterAnnotations(uint8_t n, std::vector<OMClassParamAnnotations> d)
     : numParams(n)
     , params(d)
 {

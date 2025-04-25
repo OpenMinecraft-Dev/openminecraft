@@ -425,18 +425,18 @@ struct OMClassAttrLocalVar {
 
 class OMClassAttrLocalVarTable : public OMClassAttr {
 public:
-    OMClassAttrLocalVarTable(uint16_t lvtl, OMClassAttrLocalVar* lvt);
+    OMClassAttrLocalVarTable(uint16_t lvtl, std::vector<OMClassAttrLocalVar> lvt);
     virtual OMClassAttrType type() override;
     const uint16_t localVarTableLength;
-    const OMClassAttrLocalVar* localVarTable;
+    const std::vector<OMClassAttrLocalVar> localVarTable;
 };
 
 class OMClassAttrLocalVarTypeTable : public OMClassAttr {
 public:
-    OMClassAttrLocalVarTypeTable(uint16_t lvtl, OMClassAttrLocalVar* lvt);
+    OMClassAttrLocalVarTypeTable(uint16_t lvtl, std::vector<OMClassAttrLocalVar> lvt);
     virtual OMClassAttrType type() override;
     const uint16_t localVarTableLength;
-    const OMClassAttrLocalVar* localVarTable;
+    const std::vector<OMClassAttrLocalVar> localVarTable;
 };
 
 class OMClassAttrDeprecated : public OMClassAttr {
@@ -554,10 +554,10 @@ struct OMClassBootMethods {
 
 class OMClassAttrBootMethods : public OMClassAttr {
 public:
-    OMClassAttrBootMethods(uint16_t n, OMClassBootMethods* d);
+    OMClassAttrBootMethods(uint16_t n, std::vector<OMClassBootMethods> d);
     virtual OMClassAttrType type() override;
     const uint16_t numBootMethods;
-    const OMClassBootMethods* bootMethods;
+    const std::vector<OMClassBootMethods> bootMethods;
 };
 
 struct OMClassRecordCompInfo {
@@ -582,18 +582,18 @@ struct OMClassParamAnnotations {
 
 class OMClassRuntimeVisibleParameterAnnotations : public OMClassAttr {
 public:
-    OMClassRuntimeVisibleParameterAnnotations(uint8_t n, OMClassParamAnnotations* d);
+    OMClassRuntimeVisibleParameterAnnotations(uint8_t n, std::vector<OMClassParamAnnotations> d);
     virtual OMClassAttrType type() override;
     const uint8_t numParams;
-    const OMClassParamAnnotations* params;
+    const std::vector<OMClassParamAnnotations> params;
 };
 
 class OMClassRuntimeInvisibleParameterAnnotations : public OMClassAttr {
 public:
-    OMClassRuntimeInvisibleParameterAnnotations(uint8_t n, OMClassParamAnnotations* d);
+    OMClassRuntimeInvisibleParameterAnnotations(uint8_t n, std::vector<OMClassParamAnnotations> d);
     virtual OMClassAttrType type() override;
     const uint8_t numParams;
-    const OMClassParamAnnotations* params;
+    const std::vector<OMClassParamAnnotations> params;
 };
 
 struct OMClassFieldInfo {
