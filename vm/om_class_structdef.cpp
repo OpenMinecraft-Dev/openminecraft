@@ -294,7 +294,7 @@ OMClassAttrRuntimeInvisibleAnnotations::OMClassAttrRuntimeInvisibleAnnotations(u
 
 OMClassAttrType OMClassAttrRuntimeInvisibleAnnotations::type() { return OMClassAttrType::RuntimeInvisibleAnnotations; }
 
-OMClassAttrAnnotationDefault::OMClassAttrAnnotationDefault(OMClassAnnotationElemValue* v)
+OMClassAttrAnnotationDefault::OMClassAttrAnnotationDefault(std::shared_ptr<OMClassAnnotationElemValue> v)
     : value(v)
 {
 }
@@ -315,7 +315,7 @@ OMClassAttrBootMethods::OMClassAttrBootMethods(uint16_t n, std::vector<OMClassBo
 }
 OMClassAttrType OMClassAttrBootMethods::type() { return OMClassAttrType::BootstrapMethods; }
 
-OMClassAttrRecord::OMClassAttrRecord(uint16_t c, OMClassRecordCompInfo* i)
+OMClassAttrRecord::OMClassAttrRecord(uint16_t c, std::vector<OMClassRecordCompInfo> i)
     : numComps(c)
     , comps(i)
 {

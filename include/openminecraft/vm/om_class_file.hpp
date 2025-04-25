@@ -506,7 +506,7 @@ struct OMClassAnnotationElemValue {
 struct OMClassAnnotation {
     uint16_t type;
     uint16_t numPairs;
-    std::map<uint16_t, OMClassAnnotationElemValue*> pairs;
+    std::map<uint16_t, std::shared_ptr<OMClassAnnotationElemValue>> pairs;
 };
 
 class OMClassAttrRuntimeVisibleAnnotations : public OMClassAttr {
@@ -527,9 +527,9 @@ public:
 
 class OMClassAttrAnnotationDefault : public OMClassAttr {
 public:
-    OMClassAttrAnnotationDefault(OMClassAnnotationElemValue* v);
+    OMClassAttrAnnotationDefault(std::shared_ptr<OMClassAnnotationElemValue> v);
     virtual OMClassAttrType type() override;
-    const OMClassAnnotationElemValue* value;
+    const std::shared_ptr<OMClassAnnotationElemValue> value;
 };
 
 struct OMClassParam {
@@ -568,10 +568,10 @@ struct OMClassRecordCompInfo {
 
 class OMClassAttrRecord : public OMClassAttr {
 public:
-    OMClassAttrRecord(uint16_t c, OMClassRecordCompInfo* i);
+    OMClassAttrRecord(uint16_t c, std::vector<OMClassRecordCompInfo> i);
     virtual OMClassAttrType type() override;
     const uint16_t numComps;
-    const OMClassRecordCompInfo* comps;
+    const std::vector<OMClassRecordCompInfo> comps;
 };
 
 struct OMClassParamAnnotations {
@@ -646,7 +646,7 @@ private:
     OMClassAttr* parseAttr(std::map<uint16_t, OMClassConstant*> m);
     std::shared_ptr<OMClassMethodInfo> parseMethod(std::map<uint16_t, OMClassConstant*> m);
     OMClassAnnotation* parseAnnotation();
-    OMClassAnnotationElemValue* parseAnnotationValue();
+    std::shared_ptr<OMClassAnnotationElemValue> parseAnnotationValue();
     char* toStdUtf8(uint8_t* data, int length);
 };
 } // namespace openminecraft::vm::classfile

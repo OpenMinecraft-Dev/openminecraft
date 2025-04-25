@@ -583,7 +583,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
     case "Record"_hash: {
         uint16_t c;
         this->source->readbe16(c);
-        auto da = new OMClassRecordCompInfo[c];
+        std::vector<OMClassRecordCompInfo> da;
         for (uint16_t i = 0; i < c; i++) {
             uint16_t ni, di, ac;
             std::vector<OMClassAttr*> d;
@@ -593,7 +593,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             for (uint16_t j = 0; j < ac; j++) {
                 d.push_back(parseAttr(m));
             }
-            da[i] = { ni, di, ac, d };
+            da.push_back({ ni, di, ac, d });
         }
         attr = new OMClassAttrRecord(c, da);
         break;
@@ -625,7 +625,7 @@ OMClassAnnotation* OMClassFileParser::parseAnnotation()
     auto anno = new OMClassAnnotation;
     this->source->readbe16(anno->type);
     this->source->readbe16(anno->numPairs);
-    anno->pairs = std::map<uint16_t, OMClassAnnotationElemValue*>();
+    anno->pairs = std::map<uint16_t, std::shared_ptr<OMClassAnnotationElemValue>>();
 
     for (uint16_t idx = 0; idx < anno->numPairs; idx++) {
         uint16_t i;
@@ -636,9 +636,9 @@ OMClassAnnotation* OMClassFileParser::parseAnnotation()
     return anno;
 }
 
-OMClassAnnotationElemValue* OMClassFileParser::parseAnnotationValue()
+std::shared_ptr<OMClassAnnotationElemValue> OMClassFileParser::parseAnnotationValue()
 {
-    auto v = new OMClassAnnotationElemValue;
+    auto v = std::make_shared<OMClassAnnotationElemValue>();
     this->source->read((char*)&v->tag, 1);
     switch (v->tag) {
     case 'B':
