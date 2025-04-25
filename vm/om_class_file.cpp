@@ -540,7 +540,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             this->source->readbe16(b);
             d.push_back({ a, b });
         }
-        attr = new OMClassAttrMethodParameters(pc, d.data());
+        attr = new OMClassAttrMethodParameters(pc, d);
         break;
     }
     // Module

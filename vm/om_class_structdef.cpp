@@ -301,7 +301,7 @@ OMClassAttrAnnotationDefault::OMClassAttrAnnotationDefault(OMClassAnnotationElem
 
 OMClassAttrType OMClassAttrAnnotationDefault::type() { return OMClassAttrType::AnnotationDefault; }
 
-OMClassAttrMethodParameters::OMClassAttrMethodParameters(uint8_t pc, OMClassParam* p)
+OMClassAttrMethodParameters::OMClassAttrMethodParameters(uint8_t pc, std::vector<OMClassParam> p)
     : paramCount(pc)
     , params(p)
 {

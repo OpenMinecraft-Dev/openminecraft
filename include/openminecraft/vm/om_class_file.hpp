@@ -540,10 +540,10 @@ struct OMClassParam {
 
 class OMClassAttrMethodParameters : public OMClassAttr {
 public:
-    OMClassAttrMethodParameters(uint8_t pc, OMClassParam* p);
+    OMClassAttrMethodParameters(uint8_t pc, std::vector<OMClassParam> p);
     virtual OMClassAttrType type() override;
     const uint16_t paramCount;
-    const OMClassParam* params;
+    const std::vector<OMClassParam> params;
 };
 
 struct OMClassBootMethods {
