@@ -3,21 +3,24 @@
 
 #include <cstdint>
 #include <cstdlib>
-namespace openminecraft::mem::allocator {
-enum MemModifyType {
+namespace openminecraft::mem::allocator
+{
+enum MemModifyType
+{
     Allocation,
     Free
 };
 
-struct MemModifyInfo {
+struct MemModifyInfo
+{
     MemModifyType type;
-    void* addr;
+    void *addr;
     size_t length;
     uint8_t tag;
 };
 
-size_t heapSize(void* p);
+size_t heapSize(void *p);
 void rec(MemModifyInfo i);
-}
+} // namespace openminecraft::mem::allocator
 
 #endif

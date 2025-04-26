@@ -3,15 +3,17 @@
 
 #include <iostream>
 
-namespace openminecraft::io {
-class OMParser {
-public:
-    OMParser(std::istream& stream);
+namespace openminecraft::io
+{
+class OMParser
+{
+  public:
+    OMParser(std::istream &stream);
     ~OMParser();
 
-protected:
-    std::istream* source;
+  protected:
+    std::istream *source;
 };
-}
+} // namespace openminecraft::io
 
 #endif

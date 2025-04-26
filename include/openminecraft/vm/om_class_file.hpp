@@ -53,8 +53,10 @@
 #define JVM_Acc_Enum 0x4000
 #define JVM_Acc_Module 0x8000
 
-namespace openminecraft::vm::classfile {
-enum class OMClassConstantType : uint8_t {
+namespace openminecraft::vm::classfile
+{
+enum class OMClassConstantType : uint8_t
+{
     Utf8 = 1,
     Integer = 3,
     Float = 4,
@@ -66,152 +68,170 @@ enum class OMClassConstantType : uint8_t {
     MethodRef = 10,
     InterfaceMethodRef = 11,
     NameAndType = 12,
-    MethodHandle = 15, // Requires Java 7+
-    MethodType = 16, // Requires Java 7+
-    Dynamic = 17, // Requires Java 11+
+    MethodHandle = 15,  // Requires Java 7+
+    MethodType = 16,    // Requires Java 7+
+    Dynamic = 17,       // Requires Java 11+
     InvokeDynamic = 18, // Requires Java 7+
-    Module = 19, // Requires Java 9+
-    Package = 20 // Requires Java 9+
+    Module = 19,        // Requires Java 9+
+    Package = 20        // Requires Java 9+
 };
 
-class OMClassConstant {
-public:
+class OMClassConstant
+{
+  public:
     virtual ~OMClassConstant();
     virtual OMClassConstantType type() = 0;
-    template <typename T>
-    T* to()
+    template <typename T> T *to()
     {
-        return reinterpret_cast<T*>(this);
+        return reinterpret_cast<T *>(this);
     }
 };
 
-class OMClassConstantMethodRef : public OMClassConstant {
-public:
+class OMClassConstantMethodRef : public OMClassConstant
+{
+  public:
     OMClassConstantMethodRef(uint16_t ci, uint16_t nti);
     virtual OMClassConstantType type() override;
     const uint16_t classIndex;
     const uint16_t nameAndTypeIndex;
 };
 
-class OMClassConstantFieldRef : public OMClassConstant {
-public:
+class OMClassConstantFieldRef : public OMClassConstant
+{
+  public:
     OMClassConstantFieldRef(uint16_t ci, uint16_t nti);
     virtual OMClassConstantType type() override;
     const uint16_t classIndex;
     const uint16_t nameAndTypeIndex;
 };
 
-class OMClassConstantInterfaceMethodRef : public OMClassConstant {
-public:
+class OMClassConstantInterfaceMethodRef : public OMClassConstant
+{
+  public:
     OMClassConstantInterfaceMethodRef(uint16_t ci, uint16_t nti);
     virtual OMClassConstantType type() override;
     const uint16_t classIndex;
     const uint16_t nameAndTypeIndex;
 };
 
-class OMClassConstantClass : public OMClassConstant {
-public:
+class OMClassConstantClass : public OMClassConstant
+{
+  public:
     OMClassConstantClass(uint16_t ni);
     virtual OMClassConstantType type() override;
     const uint16_t nameIndex;
 };
 
-class OMClassConstantNameAndType : public OMClassConstant {
-public:
+class OMClassConstantNameAndType : public OMClassConstant
+{
+  public:
     OMClassConstantNameAndType(uint16_t ni, uint16_t di);
     virtual OMClassConstantType type() override;
     const uint16_t nameIndex;
     const uint16_t descIndex;
 };
 
-class OMClassConstantUtf8 : public OMClassConstant {
-public:
+class OMClassConstantUtf8 : public OMClassConstant
+{
+  public:
     OMClassConstantUtf8(std::string data);
     virtual OMClassConstantType type() override;
     const std::string data;
 };
 
-class OMClassConstantString : public OMClassConstant {
-public:
+class OMClassConstantString : public OMClassConstant
+{
+  public:
     OMClassConstantString(uint16_t si);
     virtual OMClassConstantType type() override;
     const uint16_t stringIndex;
 };
 
-class OMClassConstantInteger : public OMClassConstant {
-public:
+class OMClassConstantInteger : public OMClassConstant
+{
+  public:
     OMClassConstantInteger(int data);
     virtual OMClassConstantType type() override;
     const int data;
 };
 
-class OMClassConstantFloat : public OMClassConstant {
-public:
+class OMClassConstantFloat : public OMClassConstant
+{
+  public:
     OMClassConstantFloat(float data);
     virtual OMClassConstantType type() override;
     const float data;
 };
 
-class OMClassConstantLong : public OMClassConstant {
-public:
+class OMClassConstantLong : public OMClassConstant
+{
+  public:
     OMClassConstantLong(int64_t data);
     virtual OMClassConstantType type() override;
     const int64_t data;
 };
 
-class OMClassConstantDouble : public OMClassConstant {
-public:
+class OMClassConstantDouble : public OMClassConstant
+{
+  public:
     OMClassConstantDouble(double data);
     virtual OMClassConstantType type() override;
     const double data;
 };
 
-class OMClassConstantMethodHandle : public OMClassConstant {
-public:
+class OMClassConstantMethodHandle : public OMClassConstant
+{
+  public:
     OMClassConstantMethodHandle(uint8_t rk, uint16_t ri);
     virtual OMClassConstantType type() override;
     const uint8_t refKind;
     const uint16_t refIndex;
 };
 
-class OMClassConstantMethodType : public OMClassConstant {
-public:
+class OMClassConstantMethodType : public OMClassConstant
+{
+  public:
     OMClassConstantMethodType(uint16_t di);
     virtual OMClassConstantType type() override;
     const uint16_t descIndex;
 };
 
-class OMClassConstantDynamic : public OMClassConstant {
-public:
+class OMClassConstantDynamic : public OMClassConstant
+{
+  public:
     OMClassConstantDynamic(uint16_t bmai, uint16_t nti);
     virtual OMClassConstantType type() override;
     const uint16_t bootstrapMethodAttrIndex;
     const uint16_t nameAndTypeIndex;
 };
 
-class OMClassConstantInvokeDynamic : public OMClassConstant {
-public:
+class OMClassConstantInvokeDynamic : public OMClassConstant
+{
+  public:
     OMClassConstantInvokeDynamic(uint16_t bmai, uint16_t nti);
     virtual OMClassConstantType type() override;
     const uint16_t bootstrapMethodAttrIndex;
     const uint16_t nameAndTypeIndex;
 };
 
-class OMClassConstantModule : public OMClassConstant {
-public:
+class OMClassConstantModule : public OMClassConstant
+{
+  public:
     OMClassConstantModule(uint16_t ni);
     virtual OMClassConstantType type() override;
     const uint16_t nameIndex;
 };
 
-class OMClassConstantPackage : public OMClassConstant {
-public:
+class OMClassConstantPackage : public OMClassConstant
+{
+  public:
     OMClassConstantPackage(uint16_t ni);
     virtual OMClassConstantType type() override;
     const uint16_t nameIndex;
 };
 
-enum OMClassAttrType {
+enum OMClassAttrType
+{
     ConstantValue,
     Code,
     StackMapTable,
@@ -244,34 +264,38 @@ enum OMClassAttrType {
     PermittedSubclasses
 };
 
-class OMClassAttr {
-public:
+class OMClassAttr
+{
+  public:
     virtual ~OMClassAttr();
     virtual OMClassAttrType type() = 0;
-    template <typename T>
-    T* to()
+    template <typename T> T *to()
     {
-        return (T*)this;
+        return (T *)this;
     }
 };
 
-class OMClassAttrConstantValue : public OMClassAttr {
-public:
+class OMClassAttrConstantValue : public OMClassAttr
+{
+  public:
     OMClassAttrConstantValue(uint16_t vi);
     virtual OMClassAttrType type() override;
     const uint16_t valueIndex;
 };
 
-struct OMClassAttrCodeExcTable {
+struct OMClassAttrCodeExcTable
+{
     uint16_t startPc;
     uint16_t endPc;
     uint16_t handlerPc;
     uint16_t catchType;
 };
 
-class OMClassAttrCode : public OMClassAttr {
-public:
-    OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, std::vector<uint8_t> c, uint16_t etl, std::vector<OMClassAttrCodeExcTable> et, uint16_t ac, std::vector<std::shared_ptr<OMClassAttr>> a);
+class OMClassAttrCode : public OMClassAttr
+{
+  public:
+    OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, std::vector<uint8_t> c, uint16_t etl,
+                    std::vector<OMClassAttrCodeExcTable> et, uint16_t ac, std::vector<std::shared_ptr<OMClassAttr>> a);
     virtual OMClassAttrType type() override;
     const uint16_t maxStack;
     const uint16_t maxLocals;
@@ -283,7 +307,8 @@ public:
     const std::vector<std::shared_ptr<OMClassAttr>> attributes;
 };
 
-enum OMClassAttrVerifyType : uint8_t {
+enum OMClassAttrVerifyType : uint8_t
+{
     Top,
     Integer,
     Float,
@@ -295,37 +320,45 @@ enum OMClassAttrVerifyType : uint8_t {
     Uninitialized
 };
 
-struct OMClassAttrVerifyTypeInfo {
+struct OMClassAttrVerifyTypeInfo
+{
     OMClassAttrVerifyType tag;
     uint16_t arg;
 };
 
-struct OMClassAttrVerifySameFrame {
+struct OMClassAttrVerifySameFrame
+{
     uint8_t tag;
 };
-struct OMClassAttrVerifySameLocals1StackItemFrame {
+struct OMClassAttrVerifySameLocals1StackItemFrame
+{
     uint8_t tag;
     OMClassAttrVerifyTypeInfo stack;
 };
-struct OMClassAttrVerifySameLocals1StackItemFrameExt {
+struct OMClassAttrVerifySameLocals1StackItemFrameExt
+{
     uint8_t tag;
     uint16_t offset;
     OMClassAttrVerifyTypeInfo stack;
 };
-struct OMClassAttrVerifyChopFrame {
+struct OMClassAttrVerifyChopFrame
+{
     uint8_t tag;
     uint16_t offset;
 };
-struct OMClassAttrVerifySameFrameExt {
+struct OMClassAttrVerifySameFrameExt
+{
     uint8_t tag;
     uint16_t offset;
 };
-struct OMClassAttrVerifyAppendFrame {
+struct OMClassAttrVerifyAppendFrame
+{
     uint8_t tag;
     uint16_t offset;
     std::vector<OMClassAttrVerifyTypeInfo> locals;
 };
-struct OMClassAttrVerifyFullFrame {
+struct OMClassAttrVerifyFullFrame
+{
     uint8_t tag;
     uint16_t offset;
     uint16_t numberOfLocals;
@@ -346,149 +379,170 @@ union OMClassAttrVerifyStackMapFrame {
     OMClassAttrVerifyFullFrame fullFrame;
 };
 
-class OMClassAttrStackMapTable : public OMClassAttr {
-public:
+class OMClassAttrStackMapTable : public OMClassAttr
+{
+  public:
     OMClassAttrStackMapTable(uint16_t noe, std::vector<std::shared_ptr<OMClassAttrVerifyStackMapFrame>> e);
     virtual OMClassAttrType type() override;
     const uint16_t numberOfEntries;
     const std::vector<std::shared_ptr<OMClassAttrVerifyStackMapFrame>> entries;
 };
 
-class OMClassAttrExceptions : public OMClassAttr {
-public:
+class OMClassAttrExceptions : public OMClassAttr
+{
+  public:
     OMClassAttrExceptions(uint16_t noe, std::vector<uint16_t> eit);
     virtual OMClassAttrType type() override;
     const uint16_t numberOfExceptions;
     const std::vector<uint16_t> exceptionIndexTable;
 };
 
-struct OMClassAttrInnerClassInfo {
+struct OMClassAttrInnerClassInfo
+{
     uint16_t innerClassInfoIndex;
     uint16_t outerClassInfoIndex;
     uint16_t innerNameIndex;
     uint16_t innerClassAccessFlags;
 };
 
-class OMClassAttrInnerClass : public OMClassAttr {
-public:
+class OMClassAttrInnerClass : public OMClassAttr
+{
+  public:
     OMClassAttrInnerClass(uint16_t numberOfClasses, std::vector<OMClassAttrInnerClassInfo> classes);
     virtual OMClassAttrType type() override;
     const uint16_t numberOfClasses;
     const std::vector<OMClassAttrInnerClassInfo> classes;
 };
 
-class OMClassAttrEnclosingMethod : public OMClassAttr {
-public:
+class OMClassAttrEnclosingMethod : public OMClassAttr
+{
+  public:
     OMClassAttrEnclosingMethod(uint16_t ci, uint16_t mi);
     virtual OMClassAttrType type() override;
     const uint16_t classIndex;
     const uint16_t methodIndex;
 };
 
-class OMClassAttrSynthetic : public OMClassAttr {
-public:
+class OMClassAttrSynthetic : public OMClassAttr
+{
+  public:
     OMClassAttrSynthetic();
     virtual OMClassAttrType type() override;
 };
 
-class OMClassAttrSignature : public OMClassAttr {
-public:
+class OMClassAttrSignature : public OMClassAttr
+{
+  public:
     OMClassAttrSignature(uint16_t si);
     virtual OMClassAttrType type() override;
     const uint16_t signatureIndex;
 };
 
-class OMClassAttrSourceFile : public OMClassAttr {
-public:
+class OMClassAttrSourceFile : public OMClassAttr
+{
+  public:
     OMClassAttrSourceFile(uint16_t si);
     virtual OMClassAttrType type() override;
     const uint16_t sourcefileIndex;
 };
 
-class OMClassAttrSourceDebugExtension : public OMClassAttr {
-public:
+class OMClassAttrSourceDebugExtension : public OMClassAttr
+{
+  public:
     OMClassAttrSourceDebugExtension(std::vector<uint8_t> de);
     virtual OMClassAttrType type() override;
     const std::vector<uint8_t> debugExt;
 };
 
-class OMClassAttrLineNumberTable : public OMClassAttr {
-public:
+class OMClassAttrLineNumberTable : public OMClassAttr
+{
+  public:
     OMClassAttrLineNumberTable(uint16_t lntl, std::map<uint16_t, uint16_t> lnt);
     virtual OMClassAttrType type() override;
     const uint16_t lineNumberTableLength;
     const std::map<uint16_t, uint16_t> lineNumberTable;
 };
 
-struct OMClassAttrLocalVar {
+struct OMClassAttrLocalVar
+{
     uint16_t startPc, length, nameIndex, descIndex, index;
 };
 
-class OMClassAttrLocalVarTable : public OMClassAttr {
-public:
+class OMClassAttrLocalVarTable : public OMClassAttr
+{
+  public:
     OMClassAttrLocalVarTable(uint16_t lvtl, std::vector<OMClassAttrLocalVar> lvt);
     virtual OMClassAttrType type() override;
     const uint16_t localVarTableLength;
     const std::vector<OMClassAttrLocalVar> localVarTable;
 };
 
-class OMClassAttrLocalVarTypeTable : public OMClassAttr {
-public:
+class OMClassAttrLocalVarTypeTable : public OMClassAttr
+{
+  public:
     OMClassAttrLocalVarTypeTable(uint16_t lvtl, std::vector<OMClassAttrLocalVar> lvt);
     virtual OMClassAttrType type() override;
     const uint16_t localVarTableLength;
     const std::vector<OMClassAttrLocalVar> localVarTable;
 };
 
-class OMClassAttrDeprecated : public OMClassAttr {
-public:
+class OMClassAttrDeprecated : public OMClassAttr
+{
+  public:
     OMClassAttrDeprecated();
     virtual OMClassAttrType type() override;
 };
 
-class OMClassAttrNestHost : public OMClassAttr {
-public:
+class OMClassAttrNestHost : public OMClassAttr
+{
+  public:
     OMClassAttrNestHost(uint16_t hci);
     virtual OMClassAttrType type() override;
     const uint16_t hostClassIndex;
 };
 
-class OMClassAttrNestMembers : public OMClassAttr {
-public:
+class OMClassAttrNestMembers : public OMClassAttr
+{
+  public:
     OMClassAttrNestMembers(uint16_t noc, std::vector<uint16_t> classes);
     virtual OMClassAttrType type() override;
     const uint16_t numberOfClasses;
     const std::vector<uint16_t> classes;
 };
 
-class OMClassAttrPermittedSubclasses : public OMClassAttr {
-public:
+class OMClassAttrPermittedSubclasses : public OMClassAttr
+{
+  public:
     OMClassAttrPermittedSubclasses(uint16_t noc, std::vector<uint16_t> classes);
     virtual OMClassAttrType type() override;
     const uint16_t numberOfClasses;
     const std::vector<uint16_t> classes;
 };
 
-class OMClassAttrModuleMainClass : public OMClassAttr {
-public:
+class OMClassAttrModuleMainClass : public OMClassAttr
+{
+  public:
     OMClassAttrModuleMainClass(uint16_t mci);
     virtual OMClassAttrType type() override;
     const uint16_t mainClassIndex;
 };
 
-class OMClassAttrModulePackages : public OMClassAttr {
-public:
+class OMClassAttrModulePackages : public OMClassAttr
+{
+  public:
     OMClassAttrModulePackages(uint16_t pc, std::vector<uint16_t> pi);
     virtual OMClassAttrType type() override;
     const uint16_t packageCount;
     const std::vector<uint16_t> packageIndex;
 };
 
-struct OMClassAnnotationElemValue {
+struct OMClassAnnotationElemValue
+{
     uint8_t tag;
 
     uint16_t constValueIndex;
-    struct {
+    struct
+    {
         uint16_t typeNameIndex;
         uint16_t constNameIndex;
     } enumConstValue;
@@ -498,105 +552,120 @@ struct OMClassAnnotationElemValue {
     // Cast to OMClassAnnotation* while using
     std::shared_ptr<void> annotationValue;
 
-    struct {
+    struct
+    {
         uint16_t numValues;
         std::vector<OMClassAnnotationElemValue> values;
     } arrayValue;
 };
 
-struct OMClassAnnotation {
+struct OMClassAnnotation
+{
     uint16_t type;
     uint16_t numPairs;
     std::map<uint16_t, std::shared_ptr<OMClassAnnotationElemValue>> pairs;
 };
 
-class OMClassAttrRuntimeVisibleAnnotations : public OMClassAttr {
-public:
+class OMClassAttrRuntimeVisibleAnnotations : public OMClassAttr
+{
+  public:
     OMClassAttrRuntimeVisibleAnnotations(uint16_t na, std::vector<std::shared_ptr<OMClassAnnotation>> data);
     virtual OMClassAttrType type() override;
     const uint16_t numAnnotations;
     const std::vector<std::shared_ptr<OMClassAnnotation>> annotations;
 };
 
-class OMClassAttrRuntimeInvisibleAnnotations : public OMClassAttr {
-public:
+class OMClassAttrRuntimeInvisibleAnnotations : public OMClassAttr
+{
+  public:
     OMClassAttrRuntimeInvisibleAnnotations(uint16_t na, std::vector<std::shared_ptr<OMClassAnnotation>> data);
     virtual OMClassAttrType type() override;
     const uint16_t numAnnotations;
     const std::vector<std::shared_ptr<OMClassAnnotation>> annotations;
 };
 
-class OMClassAttrAnnotationDefault : public OMClassAttr {
-public:
+class OMClassAttrAnnotationDefault : public OMClassAttr
+{
+  public:
     OMClassAttrAnnotationDefault(std::shared_ptr<OMClassAnnotationElemValue> v);
     virtual OMClassAttrType type() override;
     const std::shared_ptr<OMClassAnnotationElemValue> value;
 };
 
-struct OMClassParam {
+struct OMClassParam
+{
     uint16_t nameIndex;
     uint16_t accessFlags;
 };
 
-class OMClassAttrMethodParameters : public OMClassAttr {
-public:
+class OMClassAttrMethodParameters : public OMClassAttr
+{
+  public:
     OMClassAttrMethodParameters(uint8_t pc, std::vector<OMClassParam> p);
     virtual OMClassAttrType type() override;
     const uint16_t paramCount;
     const std::vector<OMClassParam> params;
 };
 
-struct OMClassBootMethods {
+struct OMClassBootMethods
+{
     uint16_t ref;
     uint16_t numArgs;
     std::vector<uint16_t> args;
 };
 
-class OMClassAttrBootMethods : public OMClassAttr {
-public:
+class OMClassAttrBootMethods : public OMClassAttr
+{
+  public:
     OMClassAttrBootMethods(uint16_t n, std::vector<OMClassBootMethods> d);
     virtual OMClassAttrType type() override;
     const uint16_t numBootMethods;
     const std::vector<OMClassBootMethods> bootMethods;
 };
 
-struct OMClassRecordCompInfo {
+struct OMClassRecordCompInfo
+{
     uint16_t nameIndex;
     uint16_t descIndex;
     uint16_t attrCount;
     std::vector<std::shared_ptr<OMClassAttr>> attrs;
 };
 
-class OMClassAttrRecord : public OMClassAttr {
-public:
+class OMClassAttrRecord : public OMClassAttr
+{
+  public:
     OMClassAttrRecord(uint16_t c, std::vector<OMClassRecordCompInfo> i);
     virtual OMClassAttrType type() override;
     const uint16_t numComps;
     const std::vector<OMClassRecordCompInfo> comps;
 };
 
-struct OMClassParamAnnotations {
+struct OMClassParamAnnotations
+{
     uint16_t numAnnotations;
     std::vector<std::shared_ptr<OMClassAnnotation>> annotations;
 };
 
-class OMClassRuntimeVisibleParameterAnnotations : public OMClassAttr {
-public:
+class OMClassRuntimeVisibleParameterAnnotations : public OMClassAttr
+{
+  public:
     OMClassRuntimeVisibleParameterAnnotations(uint8_t n, std::vector<OMClassParamAnnotations> d);
     virtual OMClassAttrType type() override;
     const uint8_t numParams;
     const std::vector<OMClassParamAnnotations> params;
 };
 
-class OMClassRuntimeInvisibleParameterAnnotations : public OMClassAttr {
-public:
+class OMClassRuntimeInvisibleParameterAnnotations : public OMClassAttr
+{
+  public:
     OMClassRuntimeInvisibleParameterAnnotations(uint8_t n, std::vector<OMClassParamAnnotations> d);
     virtual OMClassAttrType type() override;
     const uint8_t numParams;
     const std::vector<OMClassParamAnnotations> params;
 };
 
-struct OMClassFieldInfo {
+struct OMClassFieldInfo
+{
     uint16_t accessFlags;
     uint16_t nameIndex;
     uint16_t descIndex;
@@ -604,7 +673,8 @@ struct OMClassFieldInfo {
     std::vector<std::shared_ptr<OMClassAttr>> attrs;
 };
 
-struct OMClassMethodInfo {
+struct OMClassMethodInfo
+{
     uint16_t accessFlags;
     uint16_t nameIndex;
     uint16_t descIndex;
@@ -612,7 +682,8 @@ struct OMClassMethodInfo {
     std::vector<std::shared_ptr<OMClassAttr>> attrs;
 };
 
-struct OMClassFile {
+struct OMClassFile
+{
     uint32_t magicNumber;
     uint16_t minor;
     uint16_t major;
@@ -631,18 +702,19 @@ struct OMClassFile {
     std::vector<std::shared_ptr<OMClassAttr>> attrs;
 };
 
-class OMClassFileParser : io::OMParser {
+class OMClassFileParser : io::OMParser
+{
     using ConstantMapping = std::map<uint16_t, std::shared_ptr<OMClassConstant>>;
 
-public:
-    OMClassFileParser(std::istream& stream);
+  public:
+    OMClassFileParser(std::istream &stream);
     ~OMClassFileParser();
     std::shared_ptr<OMClassFile> parse();
 
-private:
+  private:
     std::shared_ptr<log::OMLogger> logger;
 
-    std::shared_ptr<OMClassConstant> parseConstant(uint16_t* idx);
+    std::shared_ptr<OMClassConstant> parseConstant(uint16_t *idx);
     ConstantMapping buildConstantMapping(std::vector<std::shared_ptr<OMClassConstant>> c);
     std::shared_ptr<OMClassFieldInfo> parseField(ConstantMapping m);
     std::shared_ptr<OMClassAttr> parseAttr(ConstantMapping m);

@@ -5,8 +5,9 @@
 #include <malloc.h>
 #endif
 
-namespace openminecraft::mem::allocator {
-size_t heapSize(void* p)
+namespace openminecraft::mem::allocator
+{
+size_t heapSize(void *p)
 {
 #if defined(OM_PLATFORM_IOS) || defined(OM_PLATFORM_MACOS)
     return malloc_size(p);
@@ -14,4 +15,4 @@ size_t heapSize(void* p)
     return malloc_usable_size(p);
 #endif
 }
-}
+} // namespace openminecraft::mem::allocator

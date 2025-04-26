@@ -28,7 +28,8 @@
 
 #include <string>
 
-namespace openminecraft::log::ansi {
+namespace openminecraft::log::ansi
+{
 std::string toAnsi(int code);
 }
 

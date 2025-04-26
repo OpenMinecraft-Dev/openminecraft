@@ -4,7 +4,8 @@
 #include <string>
 #include <thread>
 
-namespace openminecraft::log::multithraad {
+namespace openminecraft::log::multithraad
+{
 void registerCurrentThreadName(std::string name);
 void registerThreadName(std::string name, std::thread::id thrid);
 std::string acquireThreadName(std::thread::id thrid);

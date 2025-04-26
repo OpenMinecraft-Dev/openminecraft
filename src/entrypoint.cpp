@@ -37,7 +37,8 @@ int main()
 
 #ifdef OM_VULKAN_DYNAMIC
     vk::detail::DynamicLoader dl;
-    PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
+    PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr =
+        dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
     VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
 #endif
     vk::Instance instance = vk::createInstance({}, nullptr);
@@ -58,11 +59,14 @@ int main()
     logger->info("hello *OMLogger = {}!", fmt::ptr(logger.get()));
 
     SDL_SetMemoryFunctions(tracedMalloc, tracedCalloc, tracedRealloc, tracedFree);
-    if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO)) {
+    if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO))
+    {
         logger->info("SDL Status: {}", SDL_GetError());
     }
 
-    if (!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Hello World", "!! Your SDL project successfully runs on Android!!", NULL)) {
+    if (!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Hello World",
+                                  "!! Your SDL project successfully runs on Android!!", NULL))
+    {
         logger->info("SDL Status: {}", SDL_GetError());
         return 1;
     }
@@ -74,8 +78,10 @@ int main()
     auto clsfile = par->parse();
 
     uint32_t cid = 1;
-    for (auto c : clsfile->constants) {
-        switch (c->type()) {
+    for (auto c : clsfile->constants)
+    {
+        switch (c->type())
+        {
         case OMClassConstantType::Utf8: {
             logger->info("#{} Utf8(\"{}\")", cid, c->to<OMClassConstantUtf8>()->data);
             break;
@@ -162,8 +168,10 @@ int main()
 
     auto st = boost::stacktrace::stacktrace();
     int i = 0;
-    for (auto frame : st) {
-        logger->info("#{} 0x{} {} {}:{}", i, frame.address(), frame.name() == "" ? "???" : frame.name(), frame.source_file(), frame.source_line());
+    for (auto frame : st)
+    {
+        logger->info("#{} 0x{} {} {}:{}", i, frame.address(), frame.name() == "" ? "???" : frame.name(),
+                     frame.source_file(), frame.source_line());
         i++;
     }
 

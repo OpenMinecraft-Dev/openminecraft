@@ -12,28 +12,27 @@
 
 using namespace openminecraft::log::ansi;
 
-namespace openminecraft::log {
-static std::string composeName(std::string name, void* obj)
+namespace openminecraft::log
+{
+static std::string composeName(std::string name, void *obj)
 {
     std::stringstream s;
     s << name << " @ 0x" << std::hex << obj;
     return s.str();
 }
 
-OMLogger::OMLogger(std::string name, std::ostream& stream, bool format)
+OMLogger::OMLogger(std::string name, std::ostream &stream, bool format)
 {
     this->loggerName = name;
     this->target = &stream;
     this->enableFormat = format;
 }
 
-OMLogger::OMLogger(std::string name)
-    : OMLogger(name, getPlatformLoggingStream(), enableFormatting())
+OMLogger::OMLogger(std::string name) : OMLogger(name, getPlatformLoggingStream(), enableFormatting())
 {
 }
 
-OMLogger::OMLogger(std::string name, void* obj)
-    : OMLogger(composeName(name, obj))
+OMLogger::OMLogger(std::string name, void *obj) : OMLogger(composeName(name, obj))
 {
 }
 
@@ -64,7 +63,8 @@ void OMLogger::fatal(std::string msg)
 
 void OMLogger::log(OMLogType type, std::string msg)
 {
-    if (this->enableFormat) {
+    if (this->enableFormat)
+    {
         auto now = time(nullptr);
         auto ltm = localtime(&now);
 
@@ -73,7 +73,8 @@ void OMLogger::log(OMLogType type, std::string msg)
         *this->target << std::setw(2) << std::setfill('0') << ltm->tm_min << ":";
         *this->target << std::setw(2) << std::setfill('0') << ltm->tm_sec << "] ";
 
-        switch (type) {
+        switch (type)
+        {
         case Debug:
             *this->target << OMLogAnsiBlue << "[debug/";
             break;
@@ -97,7 +98,9 @@ void OMLogger::log(OMLogType type, std::string msg)
 
         *this->target << OMLogAnsiCyan << "(" << this->loggerName << ") " << OMLogAnsiReset;
         *this->target << msg << std::endl;
-    } else {
+    }
+    else
+    {
         *this->target << (char)type << msg;
     }
 }

@@ -3,7 +3,8 @@
 #include <sstream>
 #include <thread>
 
-namespace openminecraft::log::multithraad {
+namespace openminecraft::log::multithraad
+{
 static std::map<std::thread::id, std::string> threadNameMap;
 
 void registerCurrentThreadName(std::string name)
@@ -19,7 +20,8 @@ void registerThreadName(std::string name, std::thread::id thrid)
 
 std::string acquireThreadName(std::thread::id thrid)
 {
-    if (threadNameMap.find(thrid) != threadNameMap.end()) {
+    if (threadNameMap.find(thrid) != threadNameMap.end())
+    {
         return threadNameMap[thrid];
     }
 
@@ -30,7 +32,8 @@ std::string acquireThreadName(std::thread::id thrid)
 
 void unregisterThread(std::thread::id thrid)
 {
-    if (threadNameMap.find(thrid) != threadNameMap.end()) {
+    if (threadNameMap.find(thrid) != threadNameMap.end())
+    {
         threadNameMap.erase(thrid);
     }
 }
