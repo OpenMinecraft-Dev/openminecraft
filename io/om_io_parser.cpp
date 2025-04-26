@@ -8,4 +8,8 @@ OMParser::OMParser(std::istream &stream) : source(&stream)
 OMParser::~OMParser()
 {
 }
+bool OMParser::check()
+{
+    return source->good();
+}
 } // namespace openminecraft::io

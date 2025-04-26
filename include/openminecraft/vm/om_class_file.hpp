@@ -2,6 +2,7 @@
 #define OM_CLASS_FILE_HPP
 
 #include <cstdint>
+#include <exception>
 #include <istream>
 #include <map>
 #include <memory>
@@ -9,6 +10,7 @@
 
 #include "openminecraft/io/om_io_parser.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/util/om_util_result.hpp"
 
 #define JVM_VERSION_1_1 45
 #define JVM_VERSION_1_2 46
@@ -702,19 +704,19 @@ struct OMClassFile
     std::vector<std::shared_ptr<OMClassAttr>> attrs;
 };
 
-class OMClassFileParser : io::OMParser
+class OMClassFileParser : public io::OMParser
 {
     using ConstantMapping = std::map<uint16_t, std::shared_ptr<OMClassConstant>>;
 
   public:
     OMClassFileParser(std::istream &stream);
     ~OMClassFileParser();
-    std::shared_ptr<OMClassFile> parse();
+    util::OMResult<std::shared_ptr<OMClassFile>, std::exception> parse();
 
   private:
     std::shared_ptr<log::OMLogger> logger;
 
-    std::shared_ptr<OMClassConstant> parseConstant(uint16_t *idx);
+    util::OMResult<std::shared_ptr<OMClassConstant>, std::exception> parseConstant(uint16_t *idx);
     ConstantMapping buildConstantMapping(std::vector<std::shared_ptr<OMClassConstant>> c);
     std::shared_ptr<OMClassFieldInfo> parseField(ConstantMapping m);
     std::shared_ptr<OMClassAttr> parseAttr(ConstantMapping m);

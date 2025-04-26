@@ -1,6 +1,7 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/io/om_io_parser.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/util/om_util_result.hpp"
 #include <cstdint>
 #include <fmt/format.h>
 #include <memory>
@@ -10,6 +11,7 @@
 
 using namespace openminecraft::binary;
 using namespace openminecraft::binary::hash;
+using namespace openminecraft::util;
 
 namespace openminecraft::vm::classfile
 {
@@ -24,10 +26,15 @@ OMClassFileParser::~OMClassFileParser()
     io::OMParser::~OMParser();
 }
 
-std::shared_ptr<OMClassFile> OMClassFileParser::parse()
+util::OMResult<std::shared_ptr<OMClassFile>, std::exception> OMClassFileParser::parse()
 {
     auto file = std::make_shared<OMClassFile>();
     this->source->readbe32(file->magicNumber);
+    if (file->magicNumber != 0xcafebabe)
+    {
+        return OMResult<std::shared_ptr<OMClassFile>, std::exception>::err(
+            std::invalid_argument("invalid class file magic number!"));
+    }
     this->source->readbe16(file->minor);
     this->source->readbe16(file->major);
     this->source->readbe16(file->constantPoolCount);
@@ -36,7 +43,17 @@ std::shared_ptr<OMClassFile> OMClassFileParser::parse()
     uint16_t idx = 0;
     while (idx < file->constantPoolCount - 1)
     {
-        file->constants.push_back(this->parseConstant(&idx));
+        auto c = this->parseConstant(&idx);
+        switch (c.type)
+        {
+        case Ok: {
+            file->constants.push_back(c.unwrap());
+            break;
+        }
+        case Err: {
+            return OMResult<std::shared_ptr<OMClassFile>, std::exception>::err(c.unwrap_err());
+        }
+        }
     }
 
     this->source->readbe16(file->accessFlags);
@@ -73,10 +90,10 @@ std::shared_ptr<OMClassFile> OMClassFileParser::parse()
         file->attrs.push_back(parseAttr(m));
     }
 
-    return file;
+    return OMResult<std::shared_ptr<OMClassFile>, std::exception>::ok(file);
 }
 
-std::shared_ptr<OMClassConstant> OMClassFileParser::parseConstant(uint16_t *idx)
+OMResult<std::shared_ptr<OMClassConstant>, std::exception> OMClassFileParser::parseConstant(uint16_t *idx)
 {
     (*idx)++;
 
@@ -191,12 +208,13 @@ std::shared_ptr<OMClassConstant> OMClassFileParser::parseConstant(uint16_t *idx)
         break;
     }
     default: {
-        throw std::invalid_argument("Unknown constant type id!");
+        return OMResult<std::shared_ptr<OMClassConstant>, std::exception>::err(
+            std::invalid_argument("Unknown constant type id!"));
         break;
     }
     }
 
-    return result;
+    return OMResult<std::shared_ptr<OMClassConstant>, std::exception>::ok(result);
 }
 
 OMClassFileParser::ConstantMapping OMClassFileParser::buildConstantMapping(

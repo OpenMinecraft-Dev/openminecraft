@@ -10,6 +10,7 @@ class OMParser
   public:
     OMParser(std::istream &stream);
     ~OMParser();
+    bool check();
 
   protected:
     std::istream *source;
