@@ -159,7 +159,7 @@ OMClassAttrConstantValue::OMClassAttrConstantValue(uint16_t vi)
 }
 OMClassAttrType OMClassAttrConstantValue::type() { return OMClassAttrType::ConstantValue; }
 
-OMClassAttrCode::OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, uint8_t* c, uint16_t etl, std::vector<OMClassAttrCodeExcTable> et, uint16_t ac, std::vector<OMClassAttr*> a)
+OMClassAttrCode::OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, uint8_t* c, uint16_t etl, std::vector<OMClassAttrCodeExcTable> et, uint16_t ac, std::vector<std::shared_ptr<OMClassAttr>> a)
     : maxStack(ms)
     , maxLocals(ml)
     , codeLength(cl)

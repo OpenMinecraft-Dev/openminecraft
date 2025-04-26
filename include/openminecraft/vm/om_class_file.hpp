@@ -270,7 +270,7 @@ struct OMClassAttrCodeExcTable {
 
 class OMClassAttrCode : public OMClassAttr {
 public:
-    OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, uint8_t* c, uint16_t etl, std::vector<OMClassAttrCodeExcTable> et, uint16_t ac, std::vector<OMClassAttr*> a);
+    OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, uint8_t* c, uint16_t etl, std::vector<OMClassAttrCodeExcTable> et, uint16_t ac, std::vector<std::shared_ptr<OMClassAttr>> a);
     virtual OMClassAttrType type() override;
     const uint16_t maxStack;
     const uint16_t maxLocals;
@@ -279,7 +279,7 @@ public:
     const uint16_t excTableLength;
     const std::vector<OMClassAttrCodeExcTable> excTable;
     const uint16_t attributesCount;
-    const std::vector<OMClassAttr*> attributes;
+    const std::vector<std::shared_ptr<OMClassAttr>> attributes;
 };
 
 enum OMClassAttrVerifyType : uint8_t {
@@ -563,7 +563,7 @@ struct OMClassRecordCompInfo {
     uint16_t nameIndex;
     uint16_t descIndex;
     uint16_t attrCount;
-    std::vector<OMClassAttr*> attrs;
+    std::vector<std::shared_ptr<OMClassAttr>> attrs;
 };
 
 class OMClassAttrRecord : public OMClassAttr {
@@ -600,7 +600,7 @@ struct OMClassFieldInfo {
     uint16_t nameIndex;
     uint16_t descIndex;
     uint16_t attrCount;
-    std::vector<OMClassAttr*> attrs;
+    std::vector<std::shared_ptr<OMClassAttr>> attrs;
 };
 
 struct OMClassMethodInfo {
@@ -608,7 +608,7 @@ struct OMClassMethodInfo {
     uint16_t nameIndex;
     uint16_t descIndex;
     uint16_t attrCount;
-    std::vector<OMClassAttr*> attrs;
+    std::vector<std::shared_ptr<OMClassAttr>> attrs;
 };
 
 struct OMClassFile {
@@ -627,7 +627,7 @@ struct OMClassFile {
     uint16_t methodsCount;
     std::vector<std::shared_ptr<OMClassMethodInfo>> methods;
     uint16_t attrCount;
-    std::vector<OMClassAttr*> attrs;
+    std::vector<std::shared_ptr<OMClassAttr>> attrs;
 };
 
 class OMClassFileParser {
@@ -643,11 +643,11 @@ private:
     OMClassConstant* parseConstant(uint16_t* idx);
     std::map<uint16_t, OMClassConstant*> buildConstantMapping(std::vector<OMClassConstant*> c);
     std::shared_ptr<OMClassFieldInfo> parseField(std::map<uint16_t, OMClassConstant*> m);
-    OMClassAttr* parseAttr(std::map<uint16_t, OMClassConstant*> m);
+    std::shared_ptr<OMClassAttr> parseAttr(std::map<uint16_t, OMClassConstant*> m);
     std::shared_ptr<OMClassMethodInfo> parseMethod(std::map<uint16_t, OMClassConstant*> m);
     std::shared_ptr<OMClassAnnotation> parseAnnotation();
     std::shared_ptr<OMClassAnnotationElemValue> parseAnnotationValue();
-    char* toStdUtf8(uint8_t* data, int length);
+    std::string toStdUtf8(std::vector<uint8_t> data, int length);
 };
 } // namespace openminecraft::vm::classfile
 

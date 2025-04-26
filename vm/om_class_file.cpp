@@ -61,7 +61,7 @@ std::shared_ptr<OMClassFile> OMClassFileParser::parse()
     }
 
     this->source->readbe16(file->attrCount);
-    file->attrs = std::vector<OMClassAttr*>();
+    file->attrs = std::vector<std::shared_ptr<OMClassAttr>>();
     for (uint16_t d = 0; d < file->attrCount; d++) {
         file->attrs.push_back(parseAttr(m));
     }
@@ -112,10 +112,9 @@ OMClassConstant* OMClassFileParser::parseConstant(uint16_t* idx)
     }
     case OMClassConstantType::Utf8: {
         this->source->readbe16(temp1);
-        auto temp = new uint8_t[temp1];
-        this->source->read((char*)temp, temp1);
-        auto comp = std::string(toStdUtf8(temp, temp1));
-        delete[] temp;
+        std::vector<uint8_t> temp(temp1);
+        this->source->read((char*)temp.data(), temp1);
+        auto comp = toStdUtf8(temp, temp1);
         result = new OMClassConstantUtf8(comp);
         break;
     }
@@ -228,7 +227,7 @@ std::shared_ptr<OMClassFieldInfo> OMClassFileParser::parseField(std::map<uint16_
     this->source->readbe16(field->nameIndex);
     this->source->readbe16(field->descIndex);
     this->source->readbe16(field->attrCount);
-    field->attrs = std::vector<OMClassAttr*>();
+    field->attrs = std::vector<std::shared_ptr<OMClassAttr>>();
     for (uint16_t c = 0; c < field->attrCount; c++) {
         field->attrs.push_back(parseAttr(m));
     }
@@ -243,7 +242,7 @@ std::shared_ptr<OMClassMethodInfo> OMClassFileParser::parseMethod(std::map<uint1
     this->source->readbe16(method->nameIndex);
     this->source->readbe16(method->descIndex);
     this->source->readbe16(method->attrCount);
-    method->attrs = std::vector<OMClassAttr*>();
+    method->attrs = std::vector<std::shared_ptr<OMClassAttr>>();
     for (uint16_t c = 0; c < method->attrCount; c++) {
         method->attrs.push_back(parseAttr(m));
     }
@@ -251,7 +250,7 @@ std::shared_ptr<OMClassMethodInfo> OMClassFileParser::parseMethod(std::map<uint1
     return method;
 }
 
-OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m)
+std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m)
 {
     uint16_t ni;
     uint32_t length;
@@ -262,13 +261,13 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         throw std::invalid_argument("Invalid attr name index!");
     }
 
-    OMClassAttr* attr;
+    std::shared_ptr<OMClassAttr> attr;
 
     switch (hash_compile_time(m[ni]->to<OMClassConstantUtf8>()->data.c_str())) {
     case "ConstantValue"_hash: {
         uint16_t cvi;
         this->source->readbe16(cvi);
-        attr = new OMClassAttrConstantValue(cvi);
+        attr = std::make_shared<OMClassAttrConstantValue>(cvi);
         break;
     }
     case "Code"_hash: {
@@ -290,11 +289,11 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             et.push_back({ sp, ep, hp, ct });
         }
         this->source->readbe16(ac);
-        std::vector<OMClassAttr*> a;
+        std::vector<std::shared_ptr<OMClassAttr>> a;
         for (uint16_t i = 0; i < ac; i++) {
             a.push_back(parseAttr(m));
         }
-        attr = new OMClassAttrCode(ms, ml, cl, code, etl, et, ac, a);
+        attr = std::make_shared<OMClassAttrCode>(ms, ml, cl, code, etl, et, ac, a);
         break;
     }
     case "StackMapTable"_hash: {
@@ -346,7 +345,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
 
             datas.push_back(fr);
         }
-        attr = new OMClassAttrStackMapTable(noe, datas);
+        attr = std::make_shared<OMClassAttrStackMapTable>(noe, datas);
         break;
     }
     case "Exceptions"_hash: {
@@ -358,7 +357,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             this->source->readbe16(d);
             excindex.push_back(d);
         }
-        attr = new OMClassAttrExceptions(cnt, excindex);
+        attr = std::make_shared<OMClassAttrExceptions>(cnt, excindex);
         break;
     }
     case "InnerClasses"_hash: {
@@ -373,36 +372,36 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             this->source->readbe16(di.innerClassAccessFlags);
             d.push_back(di);
         }
-        attr = new OMClassAttrInnerClass(numberOfClasses, d);
+        attr = std::make_shared<OMClassAttrInnerClass>(numberOfClasses, d);
         break;
     }
     case "EnclosingMethod"_hash: {
         uint16_t ci, mi;
         this->source->readbe16(ci);
         this->source->readbe16(mi);
-        attr = new OMClassAttrEnclosingMethod(ci, mi);
+        attr = std::make_shared<OMClassAttrEnclosingMethod>(ci, mi);
         break;
     }
     case "Synthetic"_hash: {
-        attr = new OMClassAttrSynthetic;
+        attr = std::make_shared<OMClassAttrSynthetic>();
         break;
     }
     case "Signature"_hash: {
         uint16_t si;
         this->source->readbe16(si);
-        attr = new OMClassAttrSignature(si);
+        attr = std::make_shared<OMClassAttrSignature>(si);
         break;
     }
     case "SourceFile"_hash: {
         uint16_t si;
         this->source->readbe16(si);
-        attr = new OMClassAttrSourceFile(si);
+        attr = std::make_shared<OMClassAttrSourceFile>(si);
         break;
     }
     case "SourceDebugExtension"_hash: {
         auto data = new uint8_t[length];
         this->source->read((char*)data, length);
-        attr = new OMClassAttrSourceDebugExtension(data);
+        attr = std::make_shared<OMClassAttrSourceDebugExtension>(data);
         break;
     }
     case "LineNumberTable"_hash: {
@@ -414,7 +413,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             this->source->readbe16(b);
             lnt[a] = b;
         }
-        attr = new OMClassAttrLineNumberTable(lntl, lnt);
+        attr = std::make_shared<OMClassAttrLineNumberTable>(lntl, lnt);
         break;
     }
     case "LocalVariableTable"_hash: {
@@ -430,7 +429,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             this->source->readbe16(data.index);
             d.push_back(data);
         }
-        attr = new OMClassAttrLocalVarTable(l, d);
+        attr = std::make_shared<OMClassAttrLocalVarTable>(l, d);
         break;
     }
     case "LocalVariableTypeTable"_hash: {
@@ -446,11 +445,11 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             this->source->readbe16(data.index);
             d.push_back(data);
         }
-        attr = new OMClassAttrLocalVarTypeTable(l, d);
+        attr = std::make_shared<OMClassAttrLocalVarTypeTable>(l, d);
         break;
     }
     case "Deprecated"_hash: {
-        attr = new OMClassAttrDeprecated;
+        attr = std::make_shared<OMClassAttrDeprecated>();
         break;
     }
     case "RuntimeVisibleAnnotations"_hash: {
@@ -460,7 +459,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         for (uint16_t i = 0; i < na; i++) {
             d.push_back(parseAnnotation());
         }
-        attr = new OMClassAttrRuntimeVisibleAnnotations(na, d);
+        attr = std::make_shared<OMClassAttrRuntimeVisibleAnnotations>(na, d);
         break;
     }
     case "RuntimeInvisibleAnnotations"_hash: {
@@ -470,7 +469,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         for (uint16_t i = 0; i < na; i++) {
             d.push_back(parseAnnotation());
         }
-        attr = new OMClassAttrRuntimeInvisibleAnnotations(na, d);
+        attr = std::make_shared<OMClassAttrRuntimeInvisibleAnnotations>(na, d);
         break;
     }
     case "RuntimeVisibleParameterAnnotations"_hash: {
@@ -486,7 +485,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             }
             d.push_back({ ca, d0 });
         }
-        attr = new OMClassRuntimeVisibleParameterAnnotations(n, d);
+        attr = std::make_shared<OMClassRuntimeVisibleParameterAnnotations>(n, d);
         break;
     }
     case "RuntimeInvisibleParameterAnnotations"_hash: {
@@ -502,13 +501,13 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             }
             d.push_back({ ca, d0 });
         }
-        attr = new OMClassRuntimeInvisibleParameterAnnotations(n, d);
+        attr = std::make_shared<OMClassRuntimeInvisibleParameterAnnotations>(n, d);
         break;
     }
     // RuntimeVisibleTypeAnnotations
     // RuntimeInvisibleTypeAnnotations
     case "AnnotationDefault"_hash: {
-        attr = new OMClassAttrAnnotationDefault(parseAnnotationValue());
+        attr = std::make_shared<OMClassAttrAnnotationDefault>(parseAnnotationValue());
         break;
     }
     case "BootstrapMethods"_hash: {
@@ -527,7 +526,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             }
             data.push_back({ ref, c, d });
         }
-        attr = new OMClassAttrBootMethods(n, data);
+        attr = std::make_shared<OMClassAttrBootMethods>(n, data);
         break;
     }
     case "MethodParameters"_hash: {
@@ -540,7 +539,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             this->source->readbe16(b);
             d.push_back({ a, b });
         }
-        attr = new OMClassAttrMethodParameters(pc, d);
+        attr = std::make_shared<OMClassAttrMethodParameters>(pc, d);
         break;
     }
     // Module
@@ -553,19 +552,19 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             this->source->readbe16(d);
             data.push_back(d);
         }
-        attr = new OMClassAttrModulePackages(pc, data);
+        attr = std::make_shared<OMClassAttrModulePackages>(pc, data);
         break;
     }
     case "ModuleMainClass"_hash: {
         uint16_t mci;
         this->source->readbe16(mci);
-        attr = new OMClassAttrModuleMainClass(mci);
+        attr = std::make_shared<OMClassAttrModuleMainClass>(mci);
         break;
     }
     case "NestHost"_hash: {
         uint16_t d;
         this->source->readbe16(d);
-        attr = new OMClassAttrNestHost(d);
+        attr = std::make_shared<OMClassAttrNestHost>(d);
         break;
     }
     case "NestMembers"_hash: {
@@ -577,7 +576,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             this->source->readbe16(d);
             data.push_back(d);
         }
-        attr = new OMClassAttrNestMembers(noc, data);
+        attr = std::make_shared<OMClassAttrNestMembers>(noc, data);
         break;
     }
     case "Record"_hash: {
@@ -586,7 +585,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
         std::vector<OMClassRecordCompInfo> da;
         for (uint16_t i = 0; i < c; i++) {
             uint16_t ni, di, ac;
-            std::vector<OMClassAttr*> d;
+            std::vector<std::shared_ptr<OMClassAttr>> d;
             this->source->readbe16(ni);
             this->source->readbe16(di);
             this->source->readbe16(ac);
@@ -595,7 +594,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             }
             da.push_back({ ni, di, ac, d });
         }
-        attr = new OMClassAttrRecord(c, da);
+        attr = std::make_shared<OMClassAttrRecord>(c, da);
         break;
     }
     case "PermittedSubclasses"_hash: {
@@ -607,7 +606,7 @@ OMClassAttr* OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m
             this->source->readbe16(d);
             data.push_back(d);
         }
-        attr = new OMClassAttrPermittedSubclasses(noc, data);
+        attr = std::make_shared<OMClassAttrPermittedSubclasses>(noc, data);
         break;
     }
     default:
@@ -677,13 +676,13 @@ std::shared_ptr<OMClassAnnotationElemValue> OMClassFileParser::parseAnnotationVa
     return v;
 }
 
-char* OMClassFileParser::toStdUtf8(uint8_t* data, int length)
+std::string OMClassFileParser::toStdUtf8(std::vector<uint8_t> data, int length)
 {
     int p = 0;
-    auto target = new std::vector<char>();
+    std::vector<char> target;
     while (p < length) {
         if (data[p] >> 7 == 0) {
-            target->push_back(data[p]);
+            target.push_back(data[p]);
             p += 1;
             continue;
         }
@@ -691,25 +690,25 @@ char* OMClassFileParser::toStdUtf8(uint8_t* data, int length)
         if (data[p] >> 5 == 0b110 && data[p + 1] >> 6 == 0b10) {
             auto d = ((data[p] & 0x1f) << 6) + (data[p + 1] & 0x3f);
             if (d != 0)
-                target->push_back(d);
+                target.push_back(d);
             p += 2;
             continue;
         }
 
         if (data[p] >> 4 == 0b1110 && data[p + 1] >> 6 == 0b10 && data[p + 2] >> 5 == 0b10) {
-            target->push_back(((data[p] & 0xf) << 12) + ((data[p + 1] & 0x3f) << 6) + (data[p + 2] & 0x3f));
+            target.push_back(((data[p] & 0xf) << 12) + ((data[p + 1] & 0x3f) << 6) + (data[p + 2] & 0x3f));
             p += 3;
             continue;
         }
 
         if (data[p] == 0b11101101 && data[p + 1] >> 4 == 0b1010 && data[p + 2] >> 6 == 0b10 && data[p + 3] == 0b11101101 && data[p + 4] >> 4 == 0b1011 && data[p + 5] >> 6 == 0b10) {
-            target->push_back(0x10000 + ((data[p + 1] & 0x0f) << 16) + ((data[p + 2] & 0x3f) << 10) + ((data[p + 4] & 0x0f) << 6) + (data[p + 5] & 0x3f));
+            target.push_back(0x10000 + ((data[p + 1] & 0x0f) << 16) + ((data[p + 2] & 0x3f) << 10) + ((data[p + 4] & 0x0f) << 6) + (data[p + 5] & 0x3f));
             p += 6;
             continue;
         }
     }
-    target->push_back('\0');
+    target.push_back('\0');
 
-    return target->data();
+    return std::string(target.data());
 }
 } // namespace openminecraft::vm::classfile
