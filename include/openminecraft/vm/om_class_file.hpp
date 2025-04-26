@@ -709,7 +709,7 @@ class OMClassFileParser : public io::OMParser
     using ConstantMapping = std::map<uint16_t, std::shared_ptr<OMClassConstant>>;
 
   public:
-    OMClassFileParser(std::istream &stream);
+    OMClassFileParser(std::shared_ptr<std::istream> stream);
     ~OMClassFileParser();
     util::OMResult<std::shared_ptr<OMClassFile>, std::exception> parse();
 

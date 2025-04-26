@@ -2,7 +2,7 @@
 
 namespace openminecraft::io
 {
-OMParser::OMParser(std::istream &stream) : source(&stream)
+OMParser::OMParser(std::shared_ptr<std::istream> stream) : source(stream)
 {
 }
 OMParser::~OMParser()

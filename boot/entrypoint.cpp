@@ -10,6 +10,7 @@
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/util/om_util_result.hpp"
+#include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
 #include "vulkan/vulkan_core.h"
 #ifdef OM_VULKAN_DYNAMIC
@@ -32,6 +33,7 @@ using namespace openminecraft::log::multithraad;
 using namespace openminecraft::vm::classfile;
 using namespace openminecraft::mem::allocator;
 using namespace openminecraft::util;
+using namespace openminecraft::vfs;
 
 int main()
 {
@@ -76,7 +78,7 @@ int main()
 
     SDL_Quit();
 
-    std::ifstream f("/home/coder2/Test.class", std::ios::binary);
+    auto f = std::make_shared<std::ifstream>("/home/coder2/Test.class", std::ios::binary);
     auto par = std::make_unique<OMClassFileParser>(f);
     auto clsfile = par->parse();
 
@@ -186,6 +188,11 @@ int main()
                      frame.source_file(), frame.source_line());
         i++;
     }
+
+    /*fsmountReal("/", "/");
+    auto d = fsfetch("/home/coder2/Test.class");
+    logger->info("{}", d);
+    fsumount("/");*/
 
     return 0;
 }

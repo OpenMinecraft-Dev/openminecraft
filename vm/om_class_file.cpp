@@ -15,7 +15,7 @@ using namespace openminecraft::util;
 
 namespace openminecraft::vm::classfile
 {
-OMClassFileParser::OMClassFileParser(std::istream &str) : io::OMParser(str)
+OMClassFileParser::OMClassFileParser(std::shared_ptr<std::istream> str) : io::OMParser(str)
 {
     this->logger = std::make_shared<log::OMLogger>("OMClassFileParser", this);
 }
