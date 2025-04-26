@@ -1,4 +1,5 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
+#include "openminecraft/io/om_io_parser.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include <cstdint>
 #include <fmt/format.h>
@@ -12,14 +13,15 @@ using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::classfile {
 OMClassFileParser::OMClassFileParser(std::istream& str)
+    : io::OMParser(str)
 {
-    this->source = &str;
     this->logger = std::make_shared<log::OMLogger>("OMClassFileParser", this);
 }
 
 OMClassFileParser::~OMClassFileParser()
 {
     this->logger->info("Destroying class file parser");
+    io::OMParser::~OMParser();
 }
 
 std::shared_ptr<OMClassFile> OMClassFileParser::parse()

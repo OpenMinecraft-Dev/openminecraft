@@ -7,6 +7,7 @@
 #include <memory>
 #include <vector>
 
+#include "openminecraft/io/om_io_parser.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 
 #define JVM_VERSION_1_1 45
@@ -630,7 +631,7 @@ struct OMClassFile {
     std::vector<std::shared_ptr<OMClassAttr>> attrs;
 };
 
-class OMClassFileParser {
+class OMClassFileParser : io::OMParser {
     using ConstantMapping = std::map<uint16_t, std::shared_ptr<OMClassConstant>>;
 
 public:
@@ -639,7 +640,6 @@ public:
     std::shared_ptr<OMClassFile> parse();
 
 private:
-    std::istream* source;
     std::shared_ptr<log::OMLogger> logger;
 
     std::shared_ptr<OMClassConstant> parseConstant(uint16_t* idx);

@@ -46,6 +46,7 @@ includes("log/xmake.lua")
 includes("vm/xmake.lua")
 includes("binary/xmake.lua")
 includes("mem/xmake.lua")
+includes("io/xmake.lua")
 
 target("openminecraft")
 if mobile() then
@@ -67,7 +68,7 @@ if apple() then
 end
 
 add_files("src/**.cpp")
-add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem")
+add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io")
 
 add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", { system = false })
 if not is_plat("harmonys") then
