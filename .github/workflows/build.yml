@@ -69,6 +69,12 @@ jobs:
             loaderarch: x64
 
           - os: ubuntu-22.04
+            name: Android (x86)
+            plat: android
+            arch: x86
+            loaderarch: x86
+
+          - os: ubuntu-22.04
             name: Linux (x64)
             plat: linux
             arch: x64
@@ -97,14 +103,6 @@ jobs:
             triplet: powerpc64le-linux-gnu
             libc_arch: ppc64el
             loaderarch: ppc64le
-
-          - os: ubuntu-22.04
-            name: Linux (riscv64)
-            plat: linux
-            arch: riscv64
-            triplet: riscv64-linux-gnu
-            libc_arch: riscv64
-            loaderarch: riscv64
 
           - os: macos-latest
             name: MacOS (arm64)
