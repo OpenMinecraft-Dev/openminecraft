@@ -188,12 +188,11 @@ jobs:
           sudo apt install gcc-${{ matrix.triplet }} g++-${{ matrix.triplet }}
           sudo apt install libc6-dev-${{ matrix.libc_arch }}-cross
 
-          sudo sed -i 's/deb mirror/deb [arch=amd64,i386] mirror/' /etc/apt/sources.list
-          sudo grep "mirror+file" /etc/apt/sources.list | sudo tee /etc/apt/sources.list.d/ports.list
-          sudo sed -i 's/amd64,i386/${{ matrix.libc_arch }}/' /etc/apt/sources.list.d/ports.list
-          sudo sed -i 's#mirror+file:/etc/apt/apt-mirrors.txt#http://ports.ubuntu.com/ubuntu-ports/#' /etc/apt/sources.list.d/ports.list
+          sudo grep 'deb http' /etc/apt/sources.list | sudo tee /etc/apt/sources.list.d/ports.list
+          sudo sed -i 's/^deb http/deb [arch=amd64] http/' /etc/apt/sources.list
+          sudo sed -i 's#^deb http://[^ ]\+#deb [arch=${{ matrix.libc_arch }}] http://ports.ubuntu.com/ubuntu-ports/#' /etc/apt/sources.list.d/ports.list
           sudo dpkg --add-architecture ${{ matrix.libc_arch }}
-          sudo apt update
+          sudo apt-get update || true
 
           DEBIAN_FRONTEND=noninteractive sudo apt-get install libgl1-mesa-dev:${{ matrix.libc_arch }} -o Dpkg::Options::="--force-overwrite"
 
