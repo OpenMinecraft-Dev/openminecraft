@@ -3,6 +3,7 @@
 #include <SDL3/SDL_stdinc.h>
 #include <boost/stacktrace/stacktrace.hpp>
 #include <fstream>
+#include <memory>
 #include <stdexcept>
 #include <vector>
 
@@ -10,6 +11,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/parser/om_parser_json.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
@@ -35,6 +37,7 @@ using namespace openminecraft::vm::classfile;
 using namespace openminecraft::mem::allocator;
 using namespace openminecraft::util;
 using namespace openminecraft::vfs;
+using namespace openminecraft::parser;
 
 namespace openminecraft::boot
 {
@@ -81,8 +84,8 @@ int boot(std::vector<std::string> args)
 
     SDL_Quit();*/
 
-    auto f = std::make_shared<std::ifstream>("/home/coder2/Test.class", std::ios::binary);
-    auto par = std::make_unique<OMClassFileParser>(f);
+    fsmountReal("/home/coder2", "/userhome");
+    auto par = std::make_unique<OMClassFileParser>(fsfetch("/userhome/Test.class"));
     auto clsfile = par->parse();
 
     switch (clsfile.type)
@@ -192,10 +195,10 @@ int boot(std::vector<std::string> args)
         i++;
     }
 
-    fsmountReal("/home/coder2", "/userhome");
-    auto d = fsfetch("/userhome/Test.class");
-    logger->info("{}", d->good());
-    fsumount("/");
+    auto para = std::make_unique<OMParserJson>(fsfetch("/userhome/test.json"));
+    para->test();
+
+    fsumount("/userhome");
 
     return 0;
 }
