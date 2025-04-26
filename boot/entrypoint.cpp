@@ -1,6 +1,7 @@
 #include <SDL3/SDL_error.h>
 
 #include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
 #include <fstream>
 #include <memory>
@@ -69,7 +70,7 @@ int boot(std::vector<std::string> args)
     logger->info("Shaderc available: {}", comp.IsValid());
     logger->info("hello *OMLogger = {}!", fmt::ptr(logger.get()));
 
-    /*SDL_SetMemoryFunctions(tracedMalloc, tracedCalloc, tracedRealloc, tracedFree);
+    SDL_SetMemoryFunctions(tracedMalloc, tracedCalloc, tracedRealloc, tracedFree);
     if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO))
     {
         logger->info("SDL Status: {}", SDL_GetError());
@@ -82,7 +83,7 @@ int boot(std::vector<std::string> args)
         return 1;
     }
 
-    SDL_Quit();*/
+    SDL_Quit();
 
     fsmountReal("/home/coder2", "/userhome");
     auto par = std::make_unique<OMClassFileParser>(fsfetch("/userhome/Test.class"));
