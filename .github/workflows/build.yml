@@ -98,6 +98,14 @@ jobs:
             libc_arch: ppc64el
             loaderarch: ppc64le
 
+          - os: ubuntu-22.04
+            name: Linux (riscv64)
+            plat: linux
+            arch: riscv64
+            triplet: riscv64-linux-gnu
+            libc_arch: riscv64
+            loaderarch: riscv64
+
           - os: macos-latest
             name: MacOS (arm64)
             plat: macos
