@@ -11,7 +11,7 @@ std::map<std::string, std::string> m;
 log::OMLogger logger("test");
 bool fsmountReal(std::string path, std::string mountpoint)
 {
-    if (mountpoint[0] != '/' || mountpoint[mountpoint.length() - 1] == '/')
+    if (mountpoint[0] != '/' || mountpoint == "/")
     {
         return false;
     }

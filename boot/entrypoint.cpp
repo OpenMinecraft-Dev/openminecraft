@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
@@ -35,7 +36,9 @@ using namespace openminecraft::mem::allocator;
 using namespace openminecraft::util;
 using namespace openminecraft::vfs;
 
-int main()
+namespace openminecraft::boot
+{
+int boot(std::vector<std::string> args)
 {
     registerCurrentThreadName("engineMain");
     auto logger = std::make_unique<OMLogger>("test");
@@ -63,7 +66,7 @@ int main()
     logger->info("Shaderc available: {}", comp.IsValid());
     logger->info("hello *OMLogger = {}!", fmt::ptr(logger.get()));
 
-    SDL_SetMemoryFunctions(tracedMalloc, tracedCalloc, tracedRealloc, tracedFree);
+    /*SDL_SetMemoryFunctions(tracedMalloc, tracedCalloc, tracedRealloc, tracedFree);
     if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO))
     {
         logger->info("SDL Status: {}", SDL_GetError());
@@ -76,7 +79,7 @@ int main()
         return 1;
     }
 
-    SDL_Quit();
+    SDL_Quit();*/
 
     auto f = std::make_shared<std::ifstream>("/home/coder2/Test.class", std::ios::binary);
     auto par = std::make_unique<OMClassFileParser>(f);
@@ -189,10 +192,11 @@ int main()
         i++;
     }
 
-    /*fsmountReal("/", "/");
-    auto d = fsfetch("/home/coder2/Test.class");
-    logger->info("{}", d);
-    fsumount("/");*/
+    fsmountReal("/home/coder2", "/userhome");
+    auto d = fsfetch("/userhome/Test.class");
+    logger->info("{}", d->good());
+    fsumount("/");
 
     return 0;
 }
+} // namespace openminecraft::boot
