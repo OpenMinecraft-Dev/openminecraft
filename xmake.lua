@@ -57,6 +57,7 @@ includes("io/xmake.lua")
 includes("boot/xmake.lua")
 includes("vfs/xmake.lua")
 includes("parser/xmake.lua")
+includes("util/xmake.lua")
 
 target("openminecraft")
 if mobile() then
@@ -74,7 +75,7 @@ elseif is_plat("android") then
 end
 
 add_files("launcher/**.cpp")
-add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io", "openminecraft-vfs", "openminecraft-boot", "openminecraft-parser")
+add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io", "openminecraft-vfs", "openminecraft-boot", "openminecraft-parser", "openminecraft-util")
 
 add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", { system = false })
 if not is_plat("harmonys") then

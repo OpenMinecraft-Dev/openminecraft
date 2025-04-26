@@ -40,7 +40,6 @@ std::shared_ptr<std::istream> fsfetch(std::string fullPath)
     {
         if (!fullPath.find(p.first))
         {
-            logger.info("{}", fullPath.substr(p.first.length(), fullPath.length()));
             return p.second(fullPath.substr(p.first.length(), fullPath.length()));
         }
     }
