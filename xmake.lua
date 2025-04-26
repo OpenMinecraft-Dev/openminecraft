@@ -42,11 +42,19 @@ if not is_plat("harmonys") then
     add_requires("libsdl3")
 end
 
+if apple() then
+    add_defines("BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED=")
+end
+if vulkandyn() then
+    add_defines("OM_VULKAN_DYNAMIC=")
+end
+
 includes("log/xmake.lua")
 includes("vm/xmake.lua")
 includes("binary/xmake.lua")
 includes("mem/xmake.lua")
 includes("io/xmake.lua")
+includes("boot/xmake.lua")
 
 target("openminecraft")
 if mobile() then
@@ -63,12 +71,7 @@ elseif is_plat("android") then
     add_syslinks("GLESv2")
 end
 
-if apple() then
-    add_defines("BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED=")
-end
-
-add_files("src/**.cpp")
-add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io")
+add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io", "openminecraft-boot")
 
 add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", { system = false })
 if not is_plat("harmonys") then
@@ -79,9 +82,6 @@ if not mobile() and not vulkandyn() and not apple() then
 end
 if apple() then 
     add_packages("moltenvk")
-end
-if vulkandyn() then
-    add_defines("OM_VULKAN_DYNAMIC=")
 end
 if is_plat("iphoneos") then
     add_frameworks("OpenGLES")

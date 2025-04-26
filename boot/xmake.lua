@@ -1,0 +1,6 @@
+target("openminecraft-boot")
+set_kind("static")
+add_packages("fmt", "boost", "vulkan-hpp", "shaderc")
+add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io")
+add_files("**.cpp")
+add_includedirs("../include")

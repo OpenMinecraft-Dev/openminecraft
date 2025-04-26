@@ -39,7 +39,7 @@ int main()
     auto logger = std::make_unique<OMLogger>("test");
 
 #ifdef OM_VULKAN_DYNAMIC
-    vk::detail::DynamicLoader dl;
+    vk::DynamicLoader dl;
     PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr =
         dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
     VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
@@ -174,7 +174,7 @@ int main()
         break;
     }
     case Err: {
-        logger->info("error occured!");
+        logger->info("error occurred!");
     }
     }
 
