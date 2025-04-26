@@ -29,7 +29,7 @@ std::shared_ptr<OMClassFile> OMClassFileParser::parse()
     this->source->readbe16(file->minor);
     this->source->readbe16(file->major);
     this->source->readbe16(file->constantPoolCount);
-    file->constants = std::vector<OMClassConstant*>();
+    file->constants = std::vector<std::shared_ptr<OMClassConstant>>();
 
     uint16_t idx = 0;
     while (idx < file->constantPoolCount - 1) {
@@ -49,7 +49,7 @@ std::shared_ptr<OMClassFile> OMClassFileParser::parse()
     this->source->readbe16(file->fieldsCount);
     file->fields = std::vector<std::shared_ptr<OMClassFieldInfo>>();
 
-    std::map<uint16_t, OMClassConstant*> m = buildConstantMapping(file->constants);
+    OMClassFileParser::ConstantMapping m = buildConstantMapping(file->constants);
     for (uint16_t d = 0; d < file->fieldsCount; d++) {
         file->fields.push_back(parseField(m));
     }
@@ -69,7 +69,7 @@ std::shared_ptr<OMClassFile> OMClassFileParser::parse()
     return file;
 }
 
-OMClassConstant* OMClassFileParser::parseConstant(uint16_t* idx)
+std::shared_ptr<OMClassConstant> OMClassFileParser::parseConstant(uint16_t* idx)
 {
     (*idx)++;
 
@@ -79,35 +79,35 @@ OMClassConstant* OMClassFileParser::parseConstant(uint16_t* idx)
     uint16_t temp1, temp2, temp3, temp4;
     uint32_t temp5, temp6;
 
-    OMClassConstant* result = nullptr;
+    std::shared_ptr<OMClassConstant> result;
     switch (type) {
     case OMClassConstantType::Class: {
         this->source->readbe16(temp1);
-        result = new OMClassConstantClass(temp1);
+        result = std::make_shared<OMClassConstantClass>(temp1);
         break;
     }
     case OMClassConstantType::FieldRef: {
         this->source->readbe16(temp1);
         this->source->readbe16(temp2);
-        result = new OMClassConstantFieldRef(temp1, temp2);
+        result = std::make_shared<OMClassConstantFieldRef>(temp1, temp2);
         break;
     }
     case OMClassConstantType::MethodRef: {
         this->source->readbe16(temp1);
         this->source->readbe16(temp2);
-        result = new OMClassConstantMethodRef(temp1, temp2);
+        result = std::make_shared<OMClassConstantMethodRef>(temp1, temp2);
         break;
     }
     case OMClassConstantType::InterfaceMethodRef: {
         this->source->readbe16(temp1);
         this->source->readbe16(temp2);
-        result = new OMClassConstantInterfaceMethodRef(temp1, temp2);
+        result = std::make_shared<OMClassConstantInterfaceMethodRef>(temp1, temp2);
         break;
     }
     case OMClassConstantType::NameAndType: {
         this->source->readbe16(temp1);
         this->source->readbe16(temp2);
-        result = new OMClassConstantNameAndType(temp1, temp2);
+        result = std::make_shared<OMClassConstantNameAndType>(temp1, temp2);
         break;
     }
     case OMClassConstantType::Utf8: {
@@ -115,50 +115,36 @@ OMClassConstant* OMClassFileParser::parseConstant(uint16_t* idx)
         std::vector<uint8_t> temp(temp1);
         this->source->read((char*)temp.data(), temp1);
         auto comp = toStdUtf8(temp, temp1);
-        result = new OMClassConstantUtf8(comp);
+        result = std::make_shared<OMClassConstantUtf8>(comp);
         break;
     }
     case OMClassConstantType::String: {
         this->source->readbe16(temp1);
-        result = new OMClassConstantString(temp1);
+        result = std::make_shared<OMClassConstantString>(temp1);
         break;
     }
     case OMClassConstantType::Integer: {
         this->source->readbe32(temp5);
-        union {
-            uint32_t uidata;
-            int idata;
-        } d;
-        d.uidata = temp5;
-        result = new OMClassConstantInteger(d.idata);
+        result = std::make_shared<OMClassConstantInteger>(*((int*)&temp5));
         break;
     }
     case OMClassConstantType::Float: {
         this->source->readbe32(temp5);
-        union {
-            uint32_t idata;
-            float fdata;
-        } d;
-        d.idata = temp5;
-        result = new OMClassConstantFloat(d.fdata);
+        result = std::make_shared<OMClassConstantFloat>(*((float*)&temp5));
         break;
     }
     case OMClassConstantType::Long: {
         this->source->readbe32(temp5);
         this->source->readbe32(temp6);
-        result = new OMClassConstantLong(((int64_t)temp5 << 32) + temp6);
+        result = std::make_shared<OMClassConstantLong>(((int64_t)temp5 << 32) + temp6);
         (*idx)++;
         break;
     }
     case OMClassConstantType::Double: {
         this->source->readbe32(temp5);
         this->source->readbe32(temp6);
-        union {
-            int64_t idata;
-            double ddata;
-        } d;
-        d.idata = ((int64_t)temp5 << 32) + temp6;
-        result = new OMClassConstantDouble(d.ddata);
+        auto temp = ((int64_t)temp5 << 32) + temp6;
+        result = std::make_shared<OMClassConstantDouble>(*((double*)&temp));
         (*idx)++;
         break;
     }
@@ -166,34 +152,34 @@ OMClassConstant* OMClassFileParser::parseConstant(uint16_t* idx)
         uint8_t temp;
         this->source->read((char*)&temp, 1);
         this->source->readbe16(temp1);
-        result = new OMClassConstantMethodHandle(temp, temp1);
+        result = std::make_shared<OMClassConstantMethodHandle>(temp, temp1);
         break;
     }
     case OMClassConstantType::MethodType: {
         this->source->readbe16(temp1);
-        result = new OMClassConstantMethodType(temp1);
+        result = std::make_shared<OMClassConstantMethodType>(temp1);
         break;
     }
     case OMClassConstantType::Dynamic: {
         this->source->readbe16(temp1);
         this->source->readbe16(temp2);
-        result = new OMClassConstantDynamic(temp1, temp2);
+        result = std::make_shared<OMClassConstantDynamic>(temp1, temp2);
         break;
     }
     case OMClassConstantType::InvokeDynamic: {
         this->source->readbe16(temp1);
         this->source->readbe16(temp2);
-        result = new OMClassConstantInvokeDynamic(temp1, temp2);
+        result = std::make_shared<OMClassConstantInvokeDynamic>(temp1, temp2);
         break;
     }
     case OMClassConstantType::Module: {
         this->source->readbe16(temp1);
-        result = new OMClassConstantModule(temp1);
+        result = std::make_shared<OMClassConstantModule>(temp1);
         break;
     }
     case OMClassConstantType::Package: {
         this->source->readbe16(temp1);
-        result = new OMClassConstantPackage(temp1);
+        result = std::make_shared<OMClassConstantPackage>(temp1);
         break;
     }
     default: {
@@ -205,9 +191,9 @@ OMClassConstant* OMClassFileParser::parseConstant(uint16_t* idx)
     return result;
 }
 
-std::map<uint16_t, OMClassConstant*> OMClassFileParser::buildConstantMapping(std::vector<OMClassConstant*> c)
+OMClassFileParser::ConstantMapping OMClassFileParser::buildConstantMapping(std::vector<std::shared_ptr<OMClassConstant>> c)
 {
-    std::map<uint16_t, OMClassConstant*> target;
+    OMClassFileParser::ConstantMapping target;
     uint16_t id = 1;
     for (auto d : c) {
         target[id] = d;
@@ -220,7 +206,7 @@ std::map<uint16_t, OMClassConstant*> OMClassFileParser::buildConstantMapping(std
     return target;
 }
 
-std::shared_ptr<OMClassFieldInfo> OMClassFileParser::parseField(std::map<uint16_t, OMClassConstant*> m)
+std::shared_ptr<OMClassFieldInfo> OMClassFileParser::parseField(OMClassFileParser::ConstantMapping m)
 {
     auto field = std::make_shared<OMClassFieldInfo>();
     this->source->readbe16(field->accessFlags);
@@ -235,7 +221,7 @@ std::shared_ptr<OMClassFieldInfo> OMClassFileParser::parseField(std::map<uint16_
     return field;
 }
 
-std::shared_ptr<OMClassMethodInfo> OMClassFileParser::parseMethod(std::map<uint16_t, OMClassConstant*> m)
+std::shared_ptr<OMClassMethodInfo> OMClassFileParser::parseMethod(OMClassFileParser::ConstantMapping m)
 {
     auto method = std::make_shared<OMClassMethodInfo>();
     this->source->readbe16(method->accessFlags);
@@ -250,7 +236,7 @@ std::shared_ptr<OMClassMethodInfo> OMClassFileParser::parseMethod(std::map<uint1
     return method;
 }
 
-std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(std::map<uint16_t, OMClassConstant*> m)
+std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::ConstantMapping m)
 {
     uint16_t ni;
     uint32_t length;
@@ -276,8 +262,8 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(std::map<uint16_t, OMC
         this->source->readbe16(ms);
         this->source->readbe16(ml);
         this->source->readbe32(cl);
-        auto code = new uint8_t[cl];
-        this->source->read((char*)code, cl);
+        std::vector<uint8_t> code(cl);
+        this->source->read((char*)code.data(), cl);
         this->source->readbe16(etl);
         std::vector<OMClassAttrCodeExcTable> et;
         for (uint16_t i = 0; i < etl; i++) {
@@ -399,8 +385,8 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(std::map<uint16_t, OMC
         break;
     }
     case "SourceDebugExtension"_hash: {
-        auto data = new uint8_t[length];
-        this->source->read((char*)data, length);
+        std::vector<uint8_t> data(length);
+        this->source->read((char*)data.data(), length);
         attr = std::make_shared<OMClassAttrSourceDebugExtension>(data);
         break;
     }

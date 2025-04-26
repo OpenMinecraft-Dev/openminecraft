@@ -270,12 +270,12 @@ struct OMClassAttrCodeExcTable {
 
 class OMClassAttrCode : public OMClassAttr {
 public:
-    OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, uint8_t* c, uint16_t etl, std::vector<OMClassAttrCodeExcTable> et, uint16_t ac, std::vector<std::shared_ptr<OMClassAttr>> a);
+    OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, std::vector<uint8_t> c, uint16_t etl, std::vector<OMClassAttrCodeExcTable> et, uint16_t ac, std::vector<std::shared_ptr<OMClassAttr>> a);
     virtual OMClassAttrType type() override;
     const uint16_t maxStack;
     const uint16_t maxLocals;
     const uint32_t codeLength;
-    const uint8_t* code;
+    const std::vector<uint8_t> code;
     const uint16_t excTableLength;
     const std::vector<OMClassAttrCodeExcTable> excTable;
     const uint16_t attributesCount;
@@ -406,9 +406,9 @@ public:
 
 class OMClassAttrSourceDebugExtension : public OMClassAttr {
 public:
-    OMClassAttrSourceDebugExtension(uint8_t* de);
+    OMClassAttrSourceDebugExtension(std::vector<uint8_t> de);
     virtual OMClassAttrType type() override;
-    const uint8_t* debugExt;
+    const std::vector<uint8_t> debugExt;
 };
 
 class OMClassAttrLineNumberTable : public OMClassAttr {
@@ -616,7 +616,7 @@ struct OMClassFile {
     uint16_t minor;
     uint16_t major;
     uint16_t constantPoolCount;
-    std::vector<OMClassConstant*> constants;
+    std::vector<std::shared_ptr<OMClassConstant>> constants;
     uint16_t accessFlags;
     uint16_t thisClass;
     uint16_t superClass;
@@ -631,6 +631,8 @@ struct OMClassFile {
 };
 
 class OMClassFileParser {
+    using ConstantMapping = std::map<uint16_t, std::shared_ptr<OMClassConstant>>;
+
 public:
     OMClassFileParser(std::istream& stream);
     ~OMClassFileParser();
@@ -640,11 +642,11 @@ private:
     std::istream* source;
     std::shared_ptr<log::OMLogger> logger;
 
-    OMClassConstant* parseConstant(uint16_t* idx);
-    std::map<uint16_t, OMClassConstant*> buildConstantMapping(std::vector<OMClassConstant*> c);
-    std::shared_ptr<OMClassFieldInfo> parseField(std::map<uint16_t, OMClassConstant*> m);
-    std::shared_ptr<OMClassAttr> parseAttr(std::map<uint16_t, OMClassConstant*> m);
-    std::shared_ptr<OMClassMethodInfo> parseMethod(std::map<uint16_t, OMClassConstant*> m);
+    std::shared_ptr<OMClassConstant> parseConstant(uint16_t* idx);
+    ConstantMapping buildConstantMapping(std::vector<std::shared_ptr<OMClassConstant>> c);
+    std::shared_ptr<OMClassFieldInfo> parseField(ConstantMapping m);
+    std::shared_ptr<OMClassAttr> parseAttr(ConstantMapping m);
+    std::shared_ptr<OMClassMethodInfo> parseMethod(ConstantMapping m);
     std::shared_ptr<OMClassAnnotation> parseAnnotation();
     std::shared_ptr<OMClassAnnotationElemValue> parseAnnotationValue();
     std::string toStdUtf8(std::vector<uint8_t> data, int length);

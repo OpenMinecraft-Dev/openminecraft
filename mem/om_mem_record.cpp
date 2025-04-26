@@ -5,6 +5,6 @@
 namespace openminecraft::mem::allocator {
 void rec(MemModifyInfo i)
 {
-    printf("%s %d %p %ld\n", i.type == Free ? "f" : "a", (int)i.tag, i.addr, i.length);
+    // printf("%s %d %p %ld\n", i.type == Free ? "f" : "a", (int)i.tag, i.addr, i.length);
 }
 }
