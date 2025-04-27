@@ -78,25 +78,7 @@ jobs:
             name: Linux (arm64)
             plat: linux
             arch: arm64
-            triplet: aarch64-linux-gnu
-            libc_arch: arm64
             loaderarch: arm64
-
-          #- os: ubuntu-22.04
-          #  name: Linux (arm32)
-          #  plat: linux
-          #  arch: arm32
-          #  triplet: arm-linux-gnueabihf
-          #  libc_arch: armhf
-          #  loaderarch: arm32
-
-          #- os: ubuntu-22.04
-          #  name: Linux (ppc64)
-          #  plat: linux
-          #  arch: ppc64le
-          #  triplet: powerpc64le-linux-gnu
-          #  libc_arch: ppc64el
-          #  loaderarch: ppc64le
 
           - os: macos-latest
             name: MacOS (arm64)
@@ -175,28 +157,10 @@ jobs:
         run: xmake f -p android -a ${{ matrix.arch }} --ndk=${{ github.workspace }}/android-ndk-${{ env.ANDROID_NDK_VERSION }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }} --cxxflags="-fPIC"
 
       - name: Configure Linux
-        if: ${{ matrix.plat == 'linux' && (matrix.arch == 'x64' || matrix.arch == 'x86' || matrix.arch == 'arm64') }}
+        if: ${{ matrix.plat == 'linux' }}
         run: |
           sudo apt install libgl1-mesa-dev
           xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
-
-      - name: Configure Linux Cross
-        if: ${{ matrix.plat == 'linux' && matrix.arch != 'x64' && matrix.arch != 'x86' && matrix.arch != 'arm64' }}
-        run: |
-          sudo apt update
-          sudo apt install gcc-multilib g++-multilib libgl1-mesa-dev
-          sudo apt install gcc-${{ matrix.triplet }} g++-${{ matrix.triplet }}
-          sudo apt install libc6-dev-${{ matrix.libc_arch }}-cross
-
-          sudo grep 'deb http' /etc/apt/sources.list | sudo tee /etc/apt/sources.list.d/ports.list
-          sudo sed -i 's/^deb http/deb [arch=amd64] http/' /etc/apt/sources.list
-          sudo sed -i 's#^deb http://[^ ]\+#deb [arch=${{ matrix.libc_arch }}] http://ports.ubuntu.com/ubuntu-ports/#' /etc/apt/sources.list.d/ports.list
-          sudo dpkg --add-architecture ${{ matrix.libc_arch }}
-          sudo apt-get update || true
-
-          DEBIAN_FRONTEND=noninteractive sudo apt-get install libgl1-mesa-glx:${{ matrix.libc_arch }} -o Dpkg::Options::="--force-overwrite"
-
-          xmake f -p cross -a ${{ matrix.arch }} --sdk=/usr --cross=${{ matrix.triplet }}- -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
  
       - name: Configure Windows
         if: matrix.plat == 'windows'
