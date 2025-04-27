@@ -184,7 +184,7 @@ jobs:
         if: ${{ matrix.plat == 'linux' && matrix.arch != 'x64' && matrix.arch != 'x86' }}
         run: |
           sudo apt update
-          sudo apt install gcc-multilib g++-multilib
+          sudo apt install gcc-multilib g++-multilib libgl1-mesa-dev
           sudo apt install gcc-${{ matrix.triplet }} g++-${{ matrix.triplet }}
           sudo apt install libc6-dev-${{ matrix.libc_arch }}-cross
 
