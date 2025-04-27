@@ -196,7 +196,7 @@ jobs:
 
           DEBIAN_FRONTEND=noninteractive sudo apt-get install libgl1-mesa-glx:${{ matrix.libc_arch }} -o Dpkg::Options::="--force-overwrite"
 
-          xmake f -p linux -a ${{ matrix.arch }} --sdk=/usr --cross=${{ matrix.triplet }}- -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+          xmake f -p cross -a ${{ matrix.arch }} --sdk=/usr --cross=${{ matrix.triplet }}- -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
  
       - name: Configure Windows
         if: matrix.plat == 'windows'
