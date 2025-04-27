@@ -177,7 +177,7 @@ jobs:
       - name: Configure Linux
         if: ${{ matrix.plat == 'linux' && (matrix.arch == 'x64' || matrix.arch == 'x86' || matrix.arch == 'arm64') }}
         run: |
-          sudo apt install gcc-multilib g++-multilib libgl1-mesa-dev
+          sudo apt install libgl1-mesa-dev
           xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
 
       - name: Configure Linux Cross
