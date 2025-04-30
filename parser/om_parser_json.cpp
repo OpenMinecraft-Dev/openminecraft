@@ -4,6 +4,7 @@
 #include "openminecraft/util/om_util_string.hpp"
 #include <istream>
 #include <memory>
+#include <sched.h>
 
 using namespace openminecraft::util::string;
 namespace openminecraft::parser::json
@@ -17,55 +18,7 @@ OMParserJson::~OMParserJson()
     io::OMParser::~OMParser();
 }
 
-void OMParserJson::test()
+void OMParserJson::parseMap()
 {
-    int k;
-    while (source->good())
-    {
-        k = utf8Next(source);
-
-        switch (token)
-        {
-        case JsonStart: {
-            if (k != '{')
-            {
-                // bad json!
-                continue;
-            }
-            else
-            {
-                logger->info("-> JsonObject");
-                token = JsonObject;
-            }
-            break;
-        }
-        case JsonObject: {
-            if (k != '"')
-            {
-                // bad json key!
-                continue;
-            }
-            else
-            {
-                logger->info("-> JsonKey");
-                token = JsonKey;
-            }
-            break;
-        }
-        case JsonKey: {
-            if (k == '"')
-            {
-                logger->info("\"{}\"-> JsonColon", uniToString(keytemp));
-                keytemp.clear();
-                token = JsonColon;
-            }
-            keytemp.push_back(k);
-            break;
-        }
-        default: {
-            break;
-        }
-        }
-    }
 }
 } // namespace openminecraft::parser::json

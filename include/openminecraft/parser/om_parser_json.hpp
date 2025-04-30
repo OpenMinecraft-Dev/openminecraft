@@ -5,34 +5,17 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include <istream>
 #include <memory>
-#include <vector>
 
 namespace openminecraft::parser::json
 {
-enum OMJsonTokens
-{
-    JsonStart,
-    JsonObject,
-    JsonArray,
-    JsonKey,
-    JsonColon,
-    JsonString,
-    JsonNumber,
-    JsonLiteral,
-    JsonComma,
-    JsonEscape
-};
-
 class OMParserJson : io::OMParser
 {
   public:
     OMParserJson(std::shared_ptr<std::istream> s);
     ~OMParserJson();
-    void test();
+    void parseMap();
 
   private:
-    OMJsonTokens token = JsonStart;
-    std::vector<int> keytemp;
     std::shared_ptr<log::OMLogger> logger;
 };
 } // namespace openminecraft::parser::json

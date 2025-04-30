@@ -195,7 +195,7 @@ int boot(std::vector<std::string> args)
     }
 
     auto para = std::make_unique<OMParserJson>(fsfetch("/userhome/test.json"));
-    para->test();
+    para->parseMap();
 
     fsumount("/userhome");
 
