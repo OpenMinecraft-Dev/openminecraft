@@ -4,7 +4,6 @@
 #include "openminecraft/util/om_util_string.hpp"
 #include <istream>
 #include <memory>
-#include <sched.h>
 
 using namespace openminecraft::util::string;
 namespace openminecraft::parser::json
@@ -20,5 +19,29 @@ OMParserJson::~OMParserJson()
 
 void OMParserJson::parseMap()
 {
+    bool inString = false;
+    while (source->good())
+    {
+        int k = utf8Next(source);
+
+        switch (k)
+        {
+        case '{': {
+            logger->info("JsonObjectStart");
+            break;
+        }
+        case '"': {
+            logger->info("JsonStringLitr{}", inString ? "Start" : "End");
+            inString = !inString;
+            break;
+        }
+        default: {
+            if (inString)
+            {
+                logger->info("JsonString");
+            }
+        }
+        }
+    }
 }
 } // namespace openminecraft::parser::json
