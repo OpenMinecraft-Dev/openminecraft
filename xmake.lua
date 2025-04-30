@@ -60,7 +60,7 @@ includes("parser/xmake.lua")
 includes("util/xmake.lua")
 
 target("openminecraft")
-if mobile() then
+if is_plat("android", "harmonyos") then
     set_kind("shared")
     add_rules("utils.symbols.export_all")
 else 
