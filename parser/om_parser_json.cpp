@@ -30,9 +30,43 @@ void OMParserJson::parseMap()
             logger->info("JsonObjectStart");
             break;
         }
+        case '}': {
+            logger->info("JsonObjectEnd");
+            break;
+        }
+        case '[': {
+            logger->info("JsonArrayStart");
+            break;
+        }
+        case ']': {
+            logger->info("JsonArrayEnd");
+            break;
+        }
         case '"': {
-            logger->info("JsonStringLitr{}", inString ? "Start" : "End");
+            logger->info("JsonStringLitr{}", inString ? "End" : "Start");
             inString = !inString;
+            break;
+        }
+        case ':': {
+            logger->info("JsonColon");
+            break;
+        }
+        case ',': {
+            logger->info("JsonComma");
+            break;
+        }
+        case '.':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9': {
+            logger->info("JsonNumber");
             break;
         }
         default: {
