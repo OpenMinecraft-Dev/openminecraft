@@ -115,6 +115,8 @@ jobs:
         if: matrix.plat != 'freebsd'
         run: xmake repo -u
 
+      - name: Setup Python packages
+        run: pip install wheel
       - name: Free Disk Space (FreeBSD Host)
         if: matrix.plat == 'freebsd'
         uses: jlumbroso/free-disk-space@main
