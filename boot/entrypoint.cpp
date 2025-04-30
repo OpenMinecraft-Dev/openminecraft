@@ -36,7 +36,7 @@ using namespace openminecraft::vm::classfile;
 using namespace openminecraft::mem::allocator;
 using namespace openminecraft::util;
 using namespace openminecraft::vfs;
-using namespace openminecraft::parser;
+using namespace openminecraft::parser::json;
 
 namespace openminecraft::boot
 {
