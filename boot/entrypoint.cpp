@@ -3,7 +3,6 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
-#include <fstream>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -23,7 +22,6 @@
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
-#include <iostream>
 
 #include "shaderc/shaderc.hpp"
 #include "vulkan/vulkan.hpp"
@@ -48,7 +46,7 @@ int boot(std::vector<std::string> args)
     auto logger = std::make_unique<OMLogger>("test");
 
 #ifdef OM_VULKAN_DYNAMIC
-    vk::DynamicLoader dl;
+    vk::detail::DynamicLoader dl;
     PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr =
         dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
     VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);

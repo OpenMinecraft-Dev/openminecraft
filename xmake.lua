@@ -32,7 +32,7 @@ if not mobile() then
     end
 end
 if apple() then 
-    add_requires("moltenvk")
+    add_requires("moltenvk", { configs = { shared = false } })
 end
 
 add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", { system = false })
