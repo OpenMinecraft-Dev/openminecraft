@@ -196,11 +196,12 @@ package("moltenvk")
         os.mv("Package/" .. conf .. "/MoltenVK/include", package:installdir())
         os.mv("Package/" .. conf .. "/MoltenVK/dylib/" ..plat .. "/*", package:installdir("lib"))
         os.mv("Package/" .. conf .. "/MoltenVK/MoltenVK.xcframework/" .. plat:lower() .. "-*/*.a", package:installdir("lib"))
-        if package:config("shared") then
-            os.mv("Package/" .. conf .. "/MoltenVK/dynamic/dylib/" .. plat .. "/*.dylib", package:installdir("lib"))
-        else
-            os.mv("Package/" .. conf .. "/MoltenVK/static/MoltenVK.xcframework/" .. plat:lower() .. "-*/*.a", package:installdir("lib"))
-        end
+        --if package:config("shared") then
+        --    os.mv("Package/" .. conf .. "/MoltenVK/dynamic/dylib/" .. plat .. "/*.dylib", package:installdir("lib"))
+        --else
+        --    os.mv("Package/" .. conf .. "/MoltenVK/static/MoltenVK.xcframework/" .. plat:lower() .. "-*/*.a", package:installdir("lib"))
+        --end
+        os.mv("Package/" .. conf .. "/MoltenVK/static/MoltenVK.xcframework/" .. plat:lower() .. "-*/*.a", package:installdir("lib"))
         os.mv("Package/" .. conf .. "/MoltenVKShaderConverter/Tools/*", package:installdir("bin"))
         os.mv("Package/" .. conf .. "/MoltenVKShaderConverter/MoltenVKShaderConverter.xcframework/" .. plat:lower() .. "-*/*.a", package:installdir("lib"))
         os.mv("Package/" .. conf .. "/MoltenVKShaderConverter/include/*.h", package:installdir("include"))
