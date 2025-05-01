@@ -2,10 +2,10 @@
 
 #include "stdio.h"
 
-namespace openminecraft::mem::allocator
+namespace openminecraft::mem::castorice
 {
 void rec(MemModifyInfo i)
 {
     // printf("%s %d %p %ld\n", i.type == Free ? "f" : "a", (int)i.tag, i.addr, i.length);
 }
-} // namespace openminecraft::mem::allocator
+} // namespace openminecraft::mem::castorice

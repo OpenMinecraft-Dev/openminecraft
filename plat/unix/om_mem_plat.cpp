@@ -5,7 +5,7 @@
 #include <malloc.h>
 #endif
 
-namespace openminecraft::mem::allocator
+namespace openminecraft::mem::castorice
 {
 size_t heapSize(void *p)
 {
@@ -15,4 +15,4 @@ size_t heapSize(void *p)
     return malloc_usable_size(p);
 #endif
 }
-} // namespace openminecraft::mem::allocator
+} // namespace openminecraft::mem::castorice

@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <cstdlib>
-namespace openminecraft::mem::allocator
+namespace openminecraft::mem::castorice
 {
 enum MemModifyType
 {
@@ -21,6 +21,6 @@ struct MemModifyInfo
 
 size_t heapSize(void *p);
 void rec(MemModifyInfo i);
-} // namespace openminecraft::mem::allocator
+} // namespace openminecraft::mem::castorice
 
 #endif

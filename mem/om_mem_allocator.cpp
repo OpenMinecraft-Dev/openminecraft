@@ -2,6 +2,8 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 #include <cstdlib>
 
+using namespace openminecraft::mem::castorice;
+
 namespace openminecraft::mem::allocator
 {
 void *tracedMalloc(size_t length)
