@@ -4,6 +4,7 @@
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
 #include <cstdlib>
+#include <filesystem>
 #include <memory>
 #include <vector>
 
@@ -192,10 +193,12 @@ int boot(std::vector<std::string> args)
                      frame.source_file(), frame.source_line());
         i++;
     }
+    fsumount("/userhome");
 
     registerModule("openminecraft-boot");
-
-    fsumount("/userhome");
+    fsmountReal(fmt::format("{}/assets", std::filesystem::current_path().string()), "/assets");
+    switchResourceRoot("/assets");
+    load();
 
     SDL_Quit();
 

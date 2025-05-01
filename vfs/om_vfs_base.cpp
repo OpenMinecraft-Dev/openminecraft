@@ -15,6 +15,7 @@ bool fsmountReal(std::string path, std::string mountpoint)
 {
     if (!std::filesystem::exists(path))
     {
+        logger.info("!real:{}", path);
         return false;
     }
     if (mountpoint.empty() || mountpoint[0] != '/' || mountpoint == "/" || mountpoint[mountpoint.length() - 1] == '/')

@@ -13,7 +13,6 @@ log::OMLogger logger = log::OMLogger("i18n");
 void switchResourceRoot(std::string resRoot)
 {
     base = resRoot;
-    logger.info(base);
 }
 void registerModule(std::string name)
 {
@@ -24,7 +23,7 @@ void load()
     nlohmann::json data;
     for (auto mod : modNames)
     {
-        auto p = fmt::format("{}/{}/lang.json", base, mod);
+        auto p = fmt::format("{}/{}/lang/lang.json", base, mod);
         auto f = vfs::fsfetch(p);
         if (!f->good())
         {
@@ -33,6 +32,10 @@ void load()
         }
 
         *f >> data;
+        for (auto a : data["available"])
+        {
+            logger.info("{}", (std::string)a);
+        }
     }
 }
 } // namespace openminecraft::i18n::res

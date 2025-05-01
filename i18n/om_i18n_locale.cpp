@@ -4,6 +4,7 @@
 #include <cctype>
 #include <fmt/base.h>
 #include <fmt/format.h>
+#include <vector>
 
 namespace openminecraft::i18n::locale
 {
@@ -21,5 +22,10 @@ std::string defaultLocale()
         std::transform(dd.begin(), dd.end(), dd.begin(), ::tolower);
         return dd;
     }
+}
+
+std::vector<std::string> available()
+{
+    return {"zh_cn", "en_us", "ja_jp"};
 }
 } // namespace openminecraft::i18n::locale
