@@ -25,7 +25,7 @@ void load()
     {
         auto p = fmt::format("{}/{}/lang/lang.json", base, mod);
         auto f = vfs::fsfetch(p);
-        if (!f->good())
+        if (!f || !f->good())
         {
             logger.info("Bad module language list file: {}", p);
             continue;

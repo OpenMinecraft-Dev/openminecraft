@@ -83,7 +83,7 @@ int boot(std::vector<std::string> args)
         return 1;
     }
 
-    fsmountReal("/home/coder2", "/userhome");
+    /*fsmountReal("/home/coder2", "/userhome");
     auto par = std::make_unique<OMClassFileParser>(fsfetch("/userhome/Test.class"));
     auto clsfile = par->parse();
 
@@ -193,12 +193,14 @@ int boot(std::vector<std::string> args)
                      frame.source_file(), frame.source_line());
         i++;
     }
-    fsumount("/userhome");
+    fsumount("/userhome");*/
 
     registerModule("openminecraft-boot");
-    fsmountReal(fmt::format("{}/assets", std::filesystem::current_path().string()), "/assets");
+    fsmountAssets("/assets");
     switchResourceRoot("/assets");
     load();
+
+    fsumount("/assets");
 
     SDL_Quit();
 

@@ -2,9 +2,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include <filesystem>
 #include <fstream>
-#include <functional>
 #include <istream>
-#include <map>
 #include <memory>
 
 namespace openminecraft::vfs
