@@ -57,6 +57,7 @@ includes("io/xmake.lua")
 includes("boot/xmake.lua")
 includes("vfs/xmake.lua")
 includes("util/xmake.lua")
+includes("i18n/xmake.lua")
 
 target("openminecraft")
 if is_plat("android", "harmonyos") then
@@ -74,7 +75,7 @@ elseif is_plat("android") then
 end
 
 add_files("launcher/**.cpp")
-add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io", "openminecraft-vfs", "openminecraft-boot", "openminecraft-util")
+add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io", "openminecraft-vfs", "openminecraft-boot", "openminecraft-util", "openminecraft-i18n")
 
 add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", { system = false })
 if not is_plat("harmonys") then

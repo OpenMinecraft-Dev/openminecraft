@@ -3,10 +3,12 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
+#include <cstdlib>
 #include <memory>
 #include <vector>
 
 #include "openminecraft/boot/om_boot.hpp"
+#include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
@@ -35,6 +37,7 @@ using namespace openminecraft::vm::classfile;
 using namespace openminecraft::mem::allocator;
 using namespace openminecraft::util;
 using namespace openminecraft::vfs;
+using namespace openminecraft::i18n::res;
 
 namespace openminecraft::boot
 {
@@ -42,30 +45,30 @@ int boot(std::vector<std::string> args)
 {
     registerCurrentThreadName("engineMain");
     auto logger = std::make_unique<OMLogger>("test");
+    /*
+    #ifdef OM_VULKAN_DYNAMIC
+        vk::detail::DynamicLoader dl;
+        PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr =
+            dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
+        VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
+    #endif
+        vk::Instance instance = vk::createInstance({}, nullptr);
+    #ifdef OM_VULKAN_DYNAMIC
+        VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
+    #endif
+        std::vector<vk::PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();
+        logger->info("Vulkan devices: {}", physicalDevices.size());
+        vk::Device device = physicalDevices[0].createDevice({}, nullptr);
+    #ifdef OM_VULKAN_DYNAMIC
+        VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
+    #endif
+        device.destroy(nullptr);
+        instance.destroy(nullptr);
 
-#ifdef OM_VULKAN_DYNAMIC
-    vk::detail::DynamicLoader dl;
-    PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr =
-        dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
-    VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
-#endif
-    vk::Instance instance = vk::createInstance({}, nullptr);
-#ifdef OM_VULKAN_DYNAMIC
-    VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
-#endif
-    std::vector<vk::PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();
-    logger->info("Vulkan devices: {}", physicalDevices.size());
-    vk::Device device = physicalDevices[0].createDevice({}, nullptr);
-#ifdef OM_VULKAN_DYNAMIC
-    VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
-#endif
-    device.destroy(nullptr);
-    instance.destroy(nullptr);
-
-    shaderc::Compiler comp;
-    logger->info("Shaderc available: {}", comp.IsValid());
-    logger->info("hello *OMLogger = {}!", fmt::ptr(logger.get()));
-
+        shaderc::Compiler comp;
+        logger->info("Shaderc available: {}", comp.IsValid());
+        logger->info("hello *OMLogger = {}!", fmt::ptr(logger.get()));
+    */
     SDL_SetMemoryFunctions(tracedMalloc, tracedCalloc, tracedRealloc, tracedFree);
     if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO))
     {
@@ -78,8 +81,6 @@ int boot(std::vector<std::string> args)
         logger->info("SDL Status: {}", SDL_GetError());
         return 1;
     }
-
-    SDL_Quit();
 
     fsmountReal("/home/coder2", "/userhome");
     auto par = std::make_unique<OMClassFileParser>(fsfetch("/userhome/Test.class"));
@@ -192,10 +193,11 @@ int boot(std::vector<std::string> args)
         i++;
     }
 
-    nlohmann::json d;
-    *fsfetch("/userhome/test.json") >> d;
+    registerModule("openminecraft-boot");
 
     fsumount("/userhome");
+
+    SDL_Quit();
 
     return 0;
 }

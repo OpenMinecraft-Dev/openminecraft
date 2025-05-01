@@ -1,0 +1,6 @@
+target("openminecraft-i18n")
+set_kind("static")
+add_packages("fmt", "libsdl3", "nlohmann_json")
+add_deps("openminecraft-vfs")
+add_files("**.cpp")
+add_includedirs("../include")

@@ -1,5 +1,6 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <istream>
@@ -12,6 +13,10 @@ std::map<std::string, std::function<std::shared_ptr<std::istream>(std::string)>>
 log::OMLogger logger("vfs");
 bool fsmountReal(std::string path, std::string mountpoint)
 {
+    if (!std::filesystem::exists(path))
+    {
+        return false;
+    }
     if (mountpoint.empty() || mountpoint[0] != '/' || mountpoint == "/" || mountpoint[mountpoint.length() - 1] == '/')
     {
         return false;
@@ -19,6 +24,7 @@ bool fsmountReal(std::string path, std::string mountpoint)
     m[mountpoint] = [path](std::string proc) -> std::shared_ptr<std::istream> {
         return std::make_shared<std::ifstream>(path + "/" + proc, std::ios::binary);
     };
+    logger.info("real:{} -> virt:{}", path, mountpoint);
     return true;
 }
 bool fsumount(std::string mountpoint)
@@ -26,6 +32,7 @@ bool fsumount(std::string mountpoint)
     if (m.count(mountpoint))
     {
         m.erase(mountpoint);
+        logger.info("null -> virt:{}", mountpoint);
         return true;
     }
     else
