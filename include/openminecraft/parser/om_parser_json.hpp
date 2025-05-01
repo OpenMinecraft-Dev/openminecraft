@@ -18,8 +18,6 @@ enum OMJsonTokenType
     JsonObjectEnd,
     JsonArrayStart,
     JsonArrayEnd,
-    JsonStringLitrStart,
-    JsonStringLitrEnd,
     JsonComma,
     JsonColon,
     JsonNumber,
