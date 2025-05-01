@@ -4,14 +4,12 @@
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
 #include <memory>
-#include <stdexcept>
 #include <vector>
 
 #include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
-#include "openminecraft/parser/om_parser_json.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
@@ -23,6 +21,7 @@
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
 
+#include "nlohmann/json.hpp"
 #include "shaderc/shaderc.hpp"
 #include "vulkan/vulkan.hpp"
 
@@ -36,7 +35,6 @@ using namespace openminecraft::vm::classfile;
 using namespace openminecraft::mem::allocator;
 using namespace openminecraft::util;
 using namespace openminecraft::vfs;
-using namespace openminecraft::parser::json;
 
 namespace openminecraft::boot
 {
@@ -194,8 +192,8 @@ int boot(std::vector<std::string> args)
         i++;
     }
 
-    auto para = std::make_unique<OMParserJson>(fsfetch("/userhome/test.json"));
-    para->parse();
+    nlohmann::json d;
+    *fsfetch("/userhome/test.json") >> d;
 
     fsumount("/userhome");
 

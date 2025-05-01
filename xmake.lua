@@ -35,7 +35,7 @@ if apple() then
     add_requires("moltenvk", { configs = { shared = false } })
 end
 
-add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", { system = false })
+add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "nlohmann_json", { system = false })
 add_requires("boost", { system = false, configs = { stacktrace = true } })
 add_requires("fmt", { system = false, configs = { header_only = true } })
 if not is_plat("harmonys") then
@@ -56,7 +56,6 @@ includes("mem/xmake.lua")
 includes("io/xmake.lua")
 includes("boot/xmake.lua")
 includes("vfs/xmake.lua")
-includes("parser/xmake.lua")
 includes("util/xmake.lua")
 
 target("openminecraft")
@@ -75,9 +74,9 @@ elseif is_plat("android") then
 end
 
 add_files("launcher/**.cpp")
-add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io", "openminecraft-vfs", "openminecraft-boot", "openminecraft-parser", "openminecraft-util")
+add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io", "openminecraft-vfs", "openminecraft-boot", "openminecraft-util")
 
-add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", { system = false })
+add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", { system = false })
 if not is_plat("harmonys") then
     add_packages("libsdl3")
 end
