@@ -114,7 +114,8 @@ std::string compressPath(std::string vp)
     std::vector<std::string> pathsegs;
     std::vector<int> slash;
     int i = 0;
-    for (auto c : vp) {
+    for (auto c : vp)
+    {
         if (c == '/')
         {
             slash.push_back(i);
