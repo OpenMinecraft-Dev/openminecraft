@@ -2,6 +2,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include <filesystem>
 #include <fstream>
+#include <ios>
 #include <istream>
 #include <memory>
 #include <sstream>
@@ -91,7 +92,7 @@ bool fsmountBundle(BundleInfo info, std::string mountpoint)
             auto dl = rdlen();
             if (name != proc)
             {
-                str.seekg(str.tellg() + (long)dl);
+                str.seekg(str.tellg() + (std::streamoff)dl);
                 delete[] name;
             }
             else
