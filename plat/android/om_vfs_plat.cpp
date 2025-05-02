@@ -43,7 +43,7 @@ bool fsmountAssets(std::string mountpoint)
         std::istream *pd = ifs;
         return std::shared_ptr<std::istream>(pd);
     };
-
+    info[mountpoint] = {Assets, "Android App Assets"};
     return true;
 }
 } // namespace openminecraft::vfs

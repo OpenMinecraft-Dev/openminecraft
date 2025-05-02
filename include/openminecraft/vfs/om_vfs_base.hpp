@@ -3,16 +3,33 @@
 
 #include <functional>
 #include <istream>
-#include <map>
 #include <memory>
 #include <string>
+#include <variant>
 
 namespace openminecraft::vfs
 {
-extern std::map<std::string, std::function<std::shared_ptr<std::istream>(std::string)>> m;
+struct BundleInfo
+{
+    void *p;
+    size_t length;
+};
+enum MountType
+{
+    Real,
+    Assets,
+    Bundle
+};
+struct MountInfo
+{
+    MountType type;
+    std::variant<std::string, BundleInfo> info;
+};
+extern std::unordered_map<std::string, std::function<std::shared_ptr<std::istream>(std::string)>> m;
+extern std::unordered_map<std::string, MountInfo> info;
 bool fsmountReal(std::string path, std::string mountpoint);
 bool fsmountAssets(std::string mountpoint);
-bool fsmountBundle(void *data, size_t length, std::string mountpoint);
+bool fsmountBundle(BundleInfo info, std::string mountpoint);
 bool fsumount(std::string mountpoint);
 std::shared_ptr<std::istream> fsfetch(std::string fullPath);
 } // namespace openminecraft::vfs

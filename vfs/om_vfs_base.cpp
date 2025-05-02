@@ -1,16 +1,17 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <istream>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 
 namespace openminecraft::vfs
 {
-std::map<std::string, std::function<std::shared_ptr<std::istream>(std::string)>> m;
+std::unordered_map<std::string, std::function<std::shared_ptr<std::istream>(std::string)>> m;
+std::unordered_map<std::string, MountInfo> info;
 log::OMLogger logger("vfs");
 bool mountinvaild(std::string mp)
 {
@@ -30,6 +31,7 @@ bool fsmountReal(std::string path, std::string mountpoint)
     m[mountpoint] = [path](std::string proc) -> std::shared_ptr<std::istream> {
         return std::make_shared<std::ifstream>(path + "/" + proc, std::ios::binary);
     };
+    info[mountpoint] = {Real, path};
     logger.info("real:{} -> virt:{}", path, mountpoint);
     return true;
 }
@@ -38,6 +40,7 @@ bool fsumount(std::string mountpoint)
     if (m.count(mountpoint))
     {
         m.erase(mountpoint);
+        info.erase(mountpoint);
         logger.info("null -> virt:{}", mountpoint);
         return true;
     }
@@ -47,18 +50,18 @@ bool fsumount(std::string mountpoint)
     }
     return false;
 }
-bool fsmountBundle(void *data, size_t length, std::string mountpoint)
+bool fsmountBundle(BundleInfo info, std::string mountpoint)
 {
     if (mountinvaild(mountpoint))
     {
         return false;
     }
-    m[mountpoint] = [data, length](std::string proc) -> std::shared_ptr<std::istream> {
+    m[mountpoint] = [info](std::string proc) -> std::shared_ptr<std::istream> {
         if (!proc.empty() && proc[0] == '/')
         {
             proc = proc.substr(1);
         }
-        std::istringstream str(std::string((char *)data, length));
+        std::istringstream str(std::string((char *)info.p, info.length));
         auto rdlen = [&str] {
             uint8_t n0, n1, n2, n3, n4, n5, n6, n7;
             str.read((char *)&n0, 1);
@@ -101,7 +104,8 @@ bool fsmountBundle(void *data, size_t length, std::string mountpoint)
         }
         return nullptr;
     };
-    logger.info("bundle:{} -> virt:{}", data, mountpoint);
+    openminecraft::vfs::info[mountpoint] = {Bundle, info};
+    logger.info("bundle:{}+{} -> virt:{}", info.p, info.length, mountpoint);
     return false;
 }
 std::shared_ptr<std::istream> fsfetch(std::string fullPath)
