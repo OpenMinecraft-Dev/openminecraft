@@ -14,13 +14,8 @@ void handle(int sig)
 
 int main(int argc, char **argv)
 {
-    struct sigaction sa;
-    sa.sa_flags = SA_SIGINFO | SA_RESETHAND | SA_STACK;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_handler = handle;
-
-    sigaction(SIGSEGV, &sa, nullptr);
-    sigaction(SIGABRT, &sa, nullptr);
+    signal(SIGSEGV, handle);
+    signal(SIGABRT, handle);
 
     std::vector<std::string> a(argc);
     logger.info("Args:");
