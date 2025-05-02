@@ -59,6 +59,10 @@ includes("vfs/xmake.lua")
 includes("util/xmake.lua")
 includes("i18n/xmake.lua")
 
+target("openminecraft-bundlemaker")
+set_kind("binary")
+add_files("tools/om_bundle_maker.cpp")
+
 target("openminecraft")
 if is_plat("android", "harmonyos") then
     set_kind("shared")
