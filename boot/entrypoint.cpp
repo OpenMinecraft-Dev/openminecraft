@@ -83,17 +83,17 @@ int boot(std::vector<std::string> args)
         logger->info("hello *OMLogger = {}!", fmt::ptr(logger.get()));
     */
     SDL_SetMemoryFunctions(tracedMalloc, tracedCalloc, tracedRealloc, tracedFree);
-    if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO))
+    if (!SDL_Init(SDL_INIT_EVENTS))
     {
         logger->info("SDL Status: {}", SDL_GetError());
     }
 
-    if (!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Hello World",
+    /*if (!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Hello World",
                                   "!! Your SDL project successfully runs on Android!!", NULL))
     {
         logger->info("SDL Status: {}", SDL_GetError());
         return 1;
-    }
+    }*/
 
     /*fsmountReal("/home/coder2", "/userhome");
     auto par = std::make_unique<OMClassFileParser>(fsfetch("/userhome/Test.class"));

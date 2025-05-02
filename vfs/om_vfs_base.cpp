@@ -109,13 +109,58 @@ bool fsmountBundle(BundleInfo info, std::string mountpoint)
     logger.info("bundle:{}+{} -> virt:{}", info.p, info.length, mountpoint);
     return false;
 }
+std::string compressPath(std::string vp)
+{
+    std::vector<std::string> pathsegs;
+    std::vector<int> slash;
+    int i = 0;
+    for (auto c : vp) {
+        if (c == '/')
+        {
+            slash.push_back(i);
+        }
+        i++;
+    }
+    slash.push_back(vp.length());
+
+    for (int i = 0; i < slash.size() - 1; i++)
+    {
+        pathsegs.push_back(std::string(vp.substr(slash[i] + 1, slash[i + 1] - slash[i] - 1)));
+    }
+
+    std::vector<std::string> proc;
+    for (auto m : pathsegs)
+    {
+        if (m == ".")
+        {
+            continue;
+        }
+        else if (m == ".." && !proc.empty())
+        {
+            proc.erase(proc.end() - 1);
+        }
+        else
+        {
+            proc.push_back(m);
+        }
+    }
+
+    std::string target;
+    for (auto m : proc)
+    {
+        target.append("/").append(m);
+    }
+
+    return target;
+}
 std::shared_ptr<std::istream> fsfetch(std::string fullPath)
 {
+    auto pth = compressPath(fullPath);
     for (auto p : m)
     {
-        if (!fullPath.find(p.first))
+        if (!pth.find(p.first))
         {
-            return p.second(fullPath.substr(p.first.length(), fullPath.length()));
+            return p.second(pth.substr(p.first.length(), pth.length()));
         }
     }
     return std::shared_ptr<std::istream>(nullptr);
