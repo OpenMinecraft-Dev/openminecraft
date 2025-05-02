@@ -13,7 +13,7 @@ std::vector<std::string> fetchFiles(std::string p)
     {
         if (e.is_directory())
         {
-            for (auto m : fetchFiles(e.path()))
+            for (auto m : fetchFiles(e.path().string()))
             {
                 d.push_back(m);
             }
