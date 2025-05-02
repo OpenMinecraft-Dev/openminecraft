@@ -61,6 +61,7 @@ includes("i18n/xmake.lua")
 
 target("openminecraft-bundlemaker")
 set_kind("binary")
+add_packages("fmt")
 add_files("tools/om_bundle_maker.cpp")
 
 target("openminecraft")
