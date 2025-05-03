@@ -20,6 +20,8 @@ class OMRenderer
     OMRenderer(AppInfo info);
     ~OMRenderer();
 
+    virtual std::string driver() = 0;
+
   private:
     const AppInfo info;
 };

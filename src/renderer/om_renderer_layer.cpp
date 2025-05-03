@@ -8,5 +8,4 @@ OMRenderer::OMRenderer(AppInfo info) : info(info)
 OMRenderer::~OMRenderer()
 {
 }
-
 } // namespace openminecraft::renderer

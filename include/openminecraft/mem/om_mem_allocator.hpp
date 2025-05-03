@@ -3,12 +3,16 @@
 
 #include <cstdlib>
 
+#define defmal(id)                                                                                                     \
+    void *tracedMalloc##id(size_t length);                                                                             \
+    void *tracedCalloc##id(size_t count, size_t ilength);                                                              \
+    void *tracedRealloc##id(void *p, size_t length);                                                                   \
+    void tracedFree##id(void *p);
+
 namespace openminecraft::mem::allocator
 {
-void *tracedMalloc(size_t length);
-void *tracedCalloc(size_t count, size_t ilength);
-void *tracedRealloc(void *p, size_t length);
-void tracedFree(void *p);
+defmal(SDL);
+defmal(Vulkan);
 } // namespace openminecraft::mem::allocator
 
 #endif

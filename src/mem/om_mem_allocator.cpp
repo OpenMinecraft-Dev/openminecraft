@@ -6,36 +6,35 @@ using namespace openminecraft::mem::castorice;
 
 namespace openminecraft::mem::allocator
 {
-void *tracedMalloc(size_t length)
-{
-    void *p = malloc(length);
-    rec({Allocation, p, heapSize(p), 1});
-    return p;
-}
-
-void *tracedCalloc(size_t count, size_t ilength)
-{
-    void *p = calloc(count, ilength);
-    rec({Allocation, p, heapSize(p), 1});
-    return p;
-}
-
-void *tracedRealloc(void *p, size_t length)
-{
-    if (p == nullptr)
-        return tracedMalloc(length);
-    size_t l = heapSize(p);
-    void *pr = realloc(p, length);
-    rec({Free, p, l, 1});
-    rec({Allocation, pr, heapSize(pr), 1});
-    return pr;
-}
-
-void tracedFree(void *p)
-{
-    rec({Free, p, heapSize(p), 1});
-    free(p);
-}
+#define defmalr(id, tag)                                                                                               \
+    void *tracedMalloc##id(size_t length)                                                                              \
+    {                                                                                                                  \
+        void *p = malloc(length);                                                                                      \
+        rec({Allocation, p, heapSize(p), tag});                                                                        \
+        return p;                                                                                                      \
+    }                                                                                                                  \
+    void *tracedCalloc##id(size_t count, size_t ilength)                                                               \
+    {                                                                                                                  \
+        void *p = calloc(count, ilength);                                                                              \
+        rec({Allocation, p, heapSize(p), tag});                                                                        \
+        return p;                                                                                                      \
+    }                                                                                                                  \
+    void *tracedRealloc##id(void *p, size_t length)                                                                    \
+    {                                                                                                                  \
+        if (p == nullptr)                                                                                              \
+            return tracedMalloc##id(length);                                                                           \
+        size_t l = heapSize(p);                                                                                        \
+        void *pr = realloc(p, length);                                                                                 \
+        rec({Free, p, l, 1});                                                                                          \
+        rec({Allocation, pr, heapSize(pr), tag});                                                                      \
+        return pr;                                                                                                     \
+    }                                                                                                                  \
+    void tracedFree##id(void *p)                                                                                       \
+    {                                                                                                                  \
+        rec({Free, p, heapSize(p), tag});                                                                              \
+        free(p);                                                                                                       \
+    }
+defmalr(SDL, 1) defmalr(Vulkan, 2)
 } // namespace openminecraft::mem::allocator
 
 using namespace openminecraft::mem::allocator;

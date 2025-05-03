@@ -12,6 +12,7 @@
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "vulkan/vulkan_core.h"
@@ -77,8 +78,8 @@ int boot(std::vector<std::string> args)
         device.destroy(nullptr);
         instance.destroy(nullptr);
     */
-    SDL_SetMemoryFunctions(mem::allocator::tracedMalloc, mem::allocator::tracedCalloc, mem::allocator::tracedRealloc,
-                           mem::allocator::tracedFree);
+    SDL_SetMemoryFunctions(mem::allocator::tracedMallocSDL, mem::allocator::tracedCallocSDL,
+                           mem::allocator::tracedReallocSDL, mem::allocator::tracedFreeSDL);
     if (!SDL_Init(SDL_INIT_EVENTS))
     {
         logger->info("SDL Status: {}", SDL_GetError());
@@ -105,7 +106,7 @@ int boot(std::vector<std::string> args)
 
     renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
                            util::Version(1, 0, 0, 0), util::Version(1, 0, 0, 0)};
-    auto renderer = std::make_unique<renderer::OMRenderer>(a);
+    auto renderer = std::make_unique<renderer::vk::OMRendererVk>(a);
 
     vfs::fsumount("/bootassets");
 
