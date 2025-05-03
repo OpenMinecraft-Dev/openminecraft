@@ -12,7 +12,6 @@
 namespace openminecraft::mem::allocator
 {
 defmal(SDL);
-defmal(Vulkan);
 } // namespace openminecraft::mem::allocator
 
 #endif

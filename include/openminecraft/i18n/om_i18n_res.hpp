@@ -2,6 +2,7 @@
 #define OM_I18N_RES_HPP
 
 #include "fmt/format.h"
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -21,7 +22,7 @@ void updateLocale(std::string loc);
 std::string translate(std::string key);
 template <typename... T> std::string translate(std::string key, T... args)
 {
-    return translate(fmt::format(key, args...));
+    return fmt::format(translate(key), args...);
 }
 } // namespace openminecraft::i18n::res
 

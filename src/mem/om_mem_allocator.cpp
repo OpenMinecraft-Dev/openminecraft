@@ -34,7 +34,8 @@ namespace openminecraft::mem::allocator
         rec({Free, p, heapSize(p), tag});                                                                              \
         free(p);                                                                                                       \
     }
-defmalr(SDL, 1) defmalr(Vulkan, 2)
+
+defmalr(SDL, 1)
 } // namespace openminecraft::mem::allocator
 
 using namespace openminecraft::mem::allocator;
