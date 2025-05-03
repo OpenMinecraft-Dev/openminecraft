@@ -1,3 +1,4 @@
 {
+    "openminecraft.renderer.vk.instance": "Vulkan 实例: {} v{} / {} v{} (API 版本 {})", 
     "openminecraft.renderer.vk.devcount": "共有 {} 个 Vulkan 设备"
 }

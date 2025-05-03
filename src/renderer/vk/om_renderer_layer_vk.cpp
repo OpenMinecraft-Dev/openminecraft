@@ -4,6 +4,7 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "vulkan/vulkan_core.h"
+#include <SDL3/SDL_vulkan.h>
 #include <cstdlib>
 #include <memory>
 #include <vector>
@@ -37,6 +38,8 @@ OMRendererVk::OMRendererVk(AppInfo info) : OMRenderer(info)
                       info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
     InstanceCreateInfo ii(InstanceCreateFlags(), &i);
     instance = createInstance(ii, c);
+    logger->info(translate("openminecraft.renderer.vk.instance", info.appName, info.appVer.toString(), info.engineName,
+                           info.engineVer.toString(), info.minApiVersion.toString()));
 #ifdef OM_VULKAN_DYNAMIC
     VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
 #endif

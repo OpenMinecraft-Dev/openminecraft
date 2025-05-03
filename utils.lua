@@ -7,5 +7,5 @@ function apple()
 end
 
 function vulkandyn()
-    return is_plat("linux", "cross", "bsd", "android")
+    return is_plat("linux", "bsd", "android")
 end
