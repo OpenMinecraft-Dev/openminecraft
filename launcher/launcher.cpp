@@ -1,9 +1,8 @@
-#include "boost/stacktrace/stacktrace.hpp"
 #include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/log/om_log_threadname.hpp"
 #include <csignal>
 #include <cstdlib>
-#include <iostream>
 
 auto logger = openminecraft::log::OMLogger("launcher");
 
@@ -16,6 +15,7 @@ void handle(int sig)
 
 int main(int argc, char **argv)
 {
+    openminecraft::log::multithraad::registerCurrentThreadName("launcher");
     signal(SIGSEGV, handle);
     signal(SIGABRT, handle);
 

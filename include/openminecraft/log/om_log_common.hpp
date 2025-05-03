@@ -16,6 +16,7 @@ enum OMLogType : uint8_t
     Error,
     Fatal
 };
+void logExternal(OMLogType l, std::string msg, std::string name, std::string thr);
 
 class OMLogger
 {

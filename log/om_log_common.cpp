@@ -130,7 +130,7 @@ void OMLogger::log(OMLogType type, std::string msg)
     }
     else
     {
-        *this->target << (char)type << msg;
+        logExternal(type, msg, loggerName, multithraad::acquireThreadName(std::this_thread::get_id()));
     }
 }
 } // namespace openminecraft::log

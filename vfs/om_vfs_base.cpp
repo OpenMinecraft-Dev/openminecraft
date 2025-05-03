@@ -86,6 +86,10 @@ bool fsmountBundle(BundleInfo info, std::string mountpoint)
         while (str.good())
         {
             auto l = rdlen();
+            if (!str.good())
+            {
+                break;
+            }
             auto name = new char[l + 1];
             name[l] = '\0';
             str.read(name, l);
