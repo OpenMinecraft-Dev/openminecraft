@@ -3,8 +3,6 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
-#include <cstdlib>
-#include <filesystem>
 #include <memory>
 #include <vector>
 
@@ -13,9 +11,9 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
-#include "openminecraft/util/om_util_result.hpp"
+#include "openminecraft/renderer/om_renderer_layer.hpp"
+#include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
-#include "openminecraft/vm/om_class_file.hpp"
 #include "vulkan/vulkan_core.h"
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
@@ -78,10 +76,6 @@ int boot(std::vector<std::string> args)
     #endif
         device.destroy(nullptr);
         instance.destroy(nullptr);
-
-        shaderc::Compiler comp;
-        logger->info("Shaderc available: {}", comp.IsValid());
-        logger->info("hello *OMLogger = {}!", fmt::ptr(logger.get()));
     */
     SDL_SetMemoryFunctions(mem::allocator::tracedMalloc, mem::allocator::tracedCalloc, mem::allocator::tracedRealloc,
                            mem::allocator::tracedFree);
@@ -97,122 +91,10 @@ int boot(std::vector<std::string> args)
         return 1;
     }*/
 
-    /*fsmountReal("/home/coder2", "/userhome");
-    auto par = std::make_unique<OMClassFileParser>(fsfetch("/userhome/Test.class"));
-    auto clsfile = par->parse();
-
-    switch (clsfile.type)
-    {
-    case Ok: {
-        uint32_t cid = 1;
-        for (auto c : clsfile.unwrap()->constants)
-        {
-            switch (c->type())
-            {
-            case OMClassConstantType::Utf8: {
-                logger->info("#{} Utf8(\"{}\")", cid, c->to<OMClassConstantUtf8>()->data);
-                break;
-            }
-            case OMClassConstantType::Integer: {
-                logger->info("#{} Integer({})", cid, c->to<OMClassConstantInteger>()->data);
-                break;
-            }
-            case OMClassConstantType::Float: {
-                logger->info("#{} Float({})", cid, c->to<OMClassConstantFloat>()->data);
-                break;
-            }
-            case OMClassConstantType::Long: {
-                logger->info("#{} Long({})", cid, c->to<OMClassConstantLong>()->data);
-                cid++;
-                break;
-            }
-            case OMClassConstantType::Double: {
-                logger->info("#{} Double({})", cid, c->to<OMClassConstantDouble>()->data);
-                cid++;
-                break;
-            }
-            case OMClassConstantType::Class: {
-                logger->info("#{} Class(#{})", cid, c->to<OMClassConstantClass>()->nameIndex);
-                break;
-            }
-            case OMClassConstantType::String: {
-                logger->info("#{} String(#{})", cid, c->to<OMClassConstantString>()->stringIndex);
-                break;
-            }
-            case OMClassConstantType::FieldRef: {
-                auto d = c->to<OMClassConstantFieldRef>();
-                logger->info("#{} FieldRef(#{}, #{})", cid, d->classIndex, d->nameAndTypeIndex);
-                break;
-            }
-            case OMClassConstantType::MethodRef: {
-                auto d = c->to<OMClassConstantMethodRef>();
-                logger->info("#{} MethodRef(#{}, #{})", cid, d->classIndex, d->nameAndTypeIndex);
-                break;
-            }
-            case OMClassConstantType::InterfaceMethodRef: {
-                auto d = c->to<OMClassConstantInterfaceMethodRef>();
-                logger->info("#{} InterfaceMethodRef(#{}, #{})", cid, d->classIndex, d->nameAndTypeIndex);
-                break;
-            }
-            case OMClassConstantType::NameAndType: {
-                auto d = c->to<OMClassConstantNameAndType>();
-                logger->info("#{} NameAndType(#{}, #{})", cid, d->nameIndex, d->descIndex);
-                break;
-            }
-            case OMClassConstantType::MethodHandle: {
-                auto d = c->to<OMClassConstantMethodHandle>();
-                logger->info("#{} MethodHandle({}, #{})", cid, (int)d->refKind, d->refIndex);
-                break;
-            }
-            case OMClassConstantType::MethodType: {
-                logger->info("#{} MethodType(#{})", cid, c->to<OMClassConstantMethodType>()->descIndex);
-                break;
-            }
-            case OMClassConstantType::Dynamic: {
-                auto d = c->to<OMClassConstantDynamic>();
-                logger->info("#{} Dynamic(#{}, #{})", cid, d->bootstrapMethodAttrIndex, d->nameAndTypeIndex);
-                break;
-            }
-            case OMClassConstantType::InvokeDynamic: {
-                auto d = c->to<OMClassConstantInvokeDynamic>();
-                logger->info("#{} InvokeDynamic(#{}, #{})", cid, d->bootstrapMethodAttrIndex, d->nameAndTypeIndex);
-                break;
-            }
-            case OMClassConstantType::Module: {
-                logger->info("#{} Module(#{})", cid, c->to<OMClassConstantModule>()->nameIndex);
-                break;
-            }
-            case OMClassConstantType::Package: {
-                logger->info("#{} Package(#{})", cid, c->to<OMClassConstantPackage>()->nameIndex);
-                break;
-            }
-            default: {
-                throw std::invalid_argument(fmt::format("Unknown constant id {}!", (int)c->type()));
-            }
-            }
-            cid++;
-        }
-        break;
-    }
-    case Err: {
-        logger->info("error occurred!");
-    }
-    }
-
-    auto st = boost::stacktrace::stacktrace();
-    int i = 0;
-    for (auto frame : st)
-    {
-        logger->info("#{} 0x{} {} {}:{}", i, frame.address(), frame.name() == "" ? "???" : frame.name(),
-                     frame.source_file(), frame.source_line());
-        i++;
-    }
-    fsumount("/userhome");*/
-
     logger->info("Setting up i18n environment...");
     i18n::res::registerModule("openminecraft-boot");
     vfs::fsmountBundle({res_bundle, res_bundle_len}, "/bootassets");
-    i18n::res::switchResourceRoot("/bootassets");
+    i18n::res::pushResourceRoot("/bootassets");
     i18n::res::load();
 
     logger->info(i18n::res::translate("openminecraft.boot.arg"));
@@ -220,6 +102,10 @@ int boot(std::vector<std::string> args)
     {
         logger->info(a);
     }
+
+    renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
+                           util::Version(1, 0, 0, 0), util::Version(1, 0, 0, 0)};
+    auto renderer = std::make_unique<renderer::OMRenderer>(a);
 
     vfs::fsumount("/bootassets");
 

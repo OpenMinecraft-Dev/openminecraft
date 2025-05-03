@@ -1,0 +1,5 @@
+target("openminecraft-renderer")
+set_kind("static")
+add_packages("glm", "shaderc", "fmt", "boost", "vulkan-hpp", "libsdl3")
+add_files("**.cpp")
+add_includedirs("../../include")

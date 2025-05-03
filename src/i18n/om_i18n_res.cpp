@@ -11,15 +11,15 @@
 
 namespace openminecraft::i18n::res
 {
-std::string base;
+std::vector<std::string> base;
 std::vector<std::string> modNames;
 std::vector<LangInfo> records;
 std::string locale;
 std::map<std::string, std::map<std::string, std::string>> translates;
 log::OMLogger logger = log::OMLogger("i18n");
-void switchResourceRoot(std::string resRoot)
+void pushResourceRoot(std::string resRoot)
 {
-    base = resRoot;
+    base.push_back(resRoot);
 }
 void registerModule(std::string name)
 {
@@ -55,41 +55,44 @@ void load()
     {
         try
         {
-            auto p = fmt::format("{}/{}/lang/lang.json", base, mod);
-            auto f = vfs::fsfetch(p);
-            if (!f || !f->good())
+            for (auto rt : base)
             {
-                logger.info("Bad module language list file: {}", p);
-                continue;
-            }
-
-            *f >> data;
-            std::vector<std::string> loc;
-            for (auto a : data["available"])
-            {
-                loc.push_back((std::string)a);
-            }
-            records.push_back({mod, loc});
-
-            for (auto l : loc)
-            {
-                if (translates.count(l) == 0)
+                auto p = fmt::format("{}/{}/lang/lang.json", rt, mod);
+                auto f = vfs::fsfetch(p);
+                if (!f || !f->good())
                 {
-                    translates[l] = std::map<std::string, std::string>();
-                }
-
-                auto pr = fmt::format("{}/{}/lang/{}.json", base, mod, l);
-                auto fr = vfs::fsfetch(pr);
-                if (!fr || !fr->good())
-                {
-                    logger.info("Bad module language file: {}", pr);
+                    logger.info("Bad module language list file: {}", p);
                     continue;
                 }
 
-                *fr >> data;
-                for (auto m : data.items())
+                *f >> data;
+                std::vector<std::string> loc;
+                for (auto a : data["available"])
                 {
-                    translates[l][(std::string)m.key()] = (std::string)m.value();
+                    loc.push_back((std::string)a);
+                }
+                records.push_back({mod, loc});
+
+                for (auto l : loc)
+                {
+                    if (translates.count(l) == 0)
+                    {
+                        translates[l] = std::map<std::string, std::string>();
+                    }
+
+                    auto pr = fmt::format("{}/{}/lang/{}.json", rt, mod, l);
+                    auto fr = vfs::fsfetch(pr);
+                    if (!fr || !fr->good())
+                    {
+                        logger.info("Bad module language file: {}", pr);
+                        continue;
+                    }
+
+                    *fr >> data;
+                    for (auto m : data.items())
+                    {
+                        translates[l][(std::string)m.key()] = (std::string)m.value();
+                    }
                 }
             }
         }
@@ -107,6 +110,11 @@ std::string translate(std::string key)
     {
         return data;
     }
-    return translates[DefaultLocale][key];
+    auto fallback = translates[DefaultLocale][key];
+    if (!fallback.empty())
+    {
+        return fallback;
+    }
+    return key;
 }
 } // namespace openminecraft::i18n::res

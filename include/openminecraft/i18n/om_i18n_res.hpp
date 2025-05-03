@@ -13,7 +13,7 @@ struct LangInfo
     std::string modName;
     std::vector<std::string> locales;
 };
-void switchResourceRoot(std::string resRoot);
+void pushResourceRoot(std::string resRoot);
 void registerModule(std::string name);
 void removeModule(std::string name);
 void load();

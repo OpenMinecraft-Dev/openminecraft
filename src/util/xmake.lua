@@ -1,5 +1,5 @@
 target("openminecraft-util")
 set_kind("static")
-add_packages("fmt", "boost")
+add_packages("fmt", "vulkan-hpp")
 add_files("**.cpp")
 add_includedirs("../../include")
