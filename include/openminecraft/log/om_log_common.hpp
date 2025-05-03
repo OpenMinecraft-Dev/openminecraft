@@ -49,6 +49,7 @@ class OMLogger
     {
         fatal(fmt::format(msg, args...));
     }
+    void dumpStacktrace();
 
   protected:
     std::string loggerName;

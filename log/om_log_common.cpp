@@ -1,10 +1,13 @@
+#include "boost/stacktrace/detail/location_from_symbol.hpp"
+#include "boost/stacktrace/frame.hpp"
+#include "boost/stacktrace/stacktrace.hpp"
 #include "openminecraft/log/om_log_ansi.hpp"
 #include "openminecraft/log/om_log_plat.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
-#include <cstdarg>
 #include <ctime>
 #include <fmt/format.h>
 #include <iomanip>
+#include <iostream>
 #include <openminecraft/log/om_log_common.hpp>
 #include <sstream>
 #include <string>
@@ -59,6 +62,32 @@ void OMLogger::error(std::string msg)
 void OMLogger::fatal(std::string msg)
 {
     log(Fatal, msg);
+}
+
+void OMLogger::dumpStacktrace()
+{
+    auto st = boost::stacktrace::stacktrace();
+    std::string imageName;
+    std::string filename;
+    int fileline = 0;
+    int id = st.size();
+    for (auto frame : st)
+    {
+        id--;
+        auto cur = boost::stacktrace::detail::location_from_symbol(frame.address()).name();
+        if (imageName != cur)
+        {
+            fatal("-> {}", cur);
+            imageName = cur;
+        }
+        if (filename != frame.source_file())
+        {
+            fileline = frame.source_line();
+            fatal("*> {}:{}", frame.source_file(), fileline);
+            filename = frame.source_file();
+        }
+        error("#{} {} @ {}", id, frame.address(), frame.name() == "" ? "???" : frame.name());
+    }
 }
 
 void OMLogger::log(OMLogType type, std::string msg)

@@ -9,8 +9,8 @@ auto logger = openminecraft::log::OMLogger("launcher");
 
 void handle(int sig)
 {
-    std::cout << boost::stacktrace::stacktrace();
     logger.fatal("!! KERNEL CRASHED !!");
+    logger.dumpStacktrace();
     exit(-1);
 }
 
@@ -29,5 +29,6 @@ int main(int argc, char **argv)
     logger.info("Booting kernel...");
     int re = openminecraft::boot::boot(a);
     logger.info("Kernel exited with code {}", re);
+    raise(SIGSEGV);
     return re;
 }
