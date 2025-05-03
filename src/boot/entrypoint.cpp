@@ -211,8 +211,8 @@ int boot(std::vector<std::string> args)
 
     logger->info("Setting up i18n environment...");
     i18n::res::registerModule("openminecraft-boot");
-    vfs::fsmountBundle({res_bundle, res_bundle_len}, "/assets");
-    i18n::res::switchResourceRoot("/assets");
+    vfs::fsmountBundle({res_bundle, res_bundle_len}, "/bootassets");
+    i18n::res::switchResourceRoot("/bootassets");
     i18n::res::load();
 
     logger->info(i18n::res::translate("openminecraft.boot.arg"));
@@ -221,7 +221,7 @@ int boot(std::vector<std::string> args)
         logger->info(a);
     }
 
-    vfs::fsumount("/assets");
+    vfs::fsumount("/bootassets");
 
     SDL_Quit();
 

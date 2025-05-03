@@ -1,5 +1,5 @@
-target("openminecraft-vfs")
+target("openminecraft-log")
 set_kind("static")
 add_packages("fmt", "boost")
 add_files("**.cpp")
-add_includedirs("../include")
+add_includedirs("../../include")

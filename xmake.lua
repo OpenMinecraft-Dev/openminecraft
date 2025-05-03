@@ -5,23 +5,12 @@ add_rules("mode.minsizerel")
 add_rules("mode.debug")
 add_rules("mode.check")
 
+includes("utils.lua")
 includes("extlibs/libpatches.lua")
 includes("extlibs/vulkan.lua")
 
 if not is_plat("windows") then 
     add_ldflags("-rdynamic")
-end
-
-function mobile()
-    return is_plat("iphoneos", "harmony", "android")
-end
-
-function apple()
-    return is_plat("iphoneos", "macosx", "visionos")
-end
-
-function vulkandyn()
-    return is_plat("linux", "cross", "bsd", "android")
 end
 
 includes("extlibs/shaderc.lua")
@@ -49,15 +38,15 @@ if vulkandyn() then
     add_defines("OM_VULKAN_DYNAMIC=")
 end
 
-includes("log/xmake.lua")
-includes("vm/xmake.lua")
-includes("binary/xmake.lua")
-includes("mem/xmake.lua")
-includes("io/xmake.lua")
-includes("boot/xmake.lua")
-includes("vfs/xmake.lua")
-includes("util/xmake.lua")
-includes("i18n/xmake.lua")
+includes("src/log/xmake.lua")
+includes("src/vm/xmake.lua")
+includes("src/binary/xmake.lua")
+includes("src/mem/xmake.lua")
+includes("src/io/xmake.lua")
+includes("src/boot/xmake.lua")
+includes("src/vfs/xmake.lua")
+includes("src/util/xmake.lua")
+includes("src/i18n/xmake.lua")
 
 target("openminecraft-bundlemaker")
 set_kind("binary")
