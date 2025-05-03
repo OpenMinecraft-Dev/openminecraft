@@ -15,11 +15,11 @@ void handle(int sig)
 
 int main(int argc, char **argv)
 {
-    openminecraft::log::multithraad::registerCurrentThreadName("launcher");
+    openminecraft::log::multithread::registerCurrentThreadName("launcher");
     signal(SIGSEGV, handle);
     signal(SIGABRT, handle);
 
-    std::vector<std::string> a(argc);
+    std::vector<std::string> a;
     logger.info("Args:");
     for (int i = 0; i < argc; i++)
     {
@@ -29,6 +29,5 @@ int main(int argc, char **argv)
     logger.info("Booting kernel...");
     int re = openminecraft::boot::boot(a);
     logger.info("Kernel exited with code {}", re);
-    raise(SIGSEGV);
     return re;
 }

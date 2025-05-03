@@ -123,14 +123,14 @@ void OMLogger::log(OMLogType type, std::string msg)
             *this->target << OMLogAnsiFaint << "[";
             break;
         }
-        *this->target << multithraad::acquireThreadName(std::this_thread::get_id()) << "] ";
+        *this->target << multithread::acquireThreadName(std::this_thread::get_id()) << "] ";
 
         *this->target << OMLogAnsiCyan << "(" << this->loggerName << ") " << OMLogAnsiReset;
         *this->target << msg << std::endl;
     }
     else
     {
-        logExternal(type, msg, loggerName, multithraad::acquireThreadName(std::this_thread::get_id()));
+        logExternal(type, msg, loggerName, multithread::acquireThreadName(std::this_thread::get_id()));
     }
 }
 } // namespace openminecraft::log

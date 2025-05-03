@@ -3,7 +3,7 @@
 #include <sstream>
 #include <thread>
 
-namespace openminecraft::log::multithraad
+namespace openminecraft::log::multithread
 {
 static std::map<std::thread::id, std::string> threadNameMap;
 
@@ -37,4 +37,4 @@ void unregisterThread(std::thread::id thrid)
         threadNameMap.erase(thrid);
     }
 }
-} // namespace openminecraft::log::multithraad
+} // namespace openminecraft::log::multithread

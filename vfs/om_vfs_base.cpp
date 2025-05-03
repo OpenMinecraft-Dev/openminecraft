@@ -53,15 +53,11 @@ bool fsumount(std::string mountpoint)
 }
 bool fsmountBundle(BundleInfo info, std::string mountpoint)
 {
-    if (mountinvaild(mountpoint))
+    if (mountinvaild(mountpoint) || info.p == nullptr)
     {
         return false;
     }
     m[mountpoint] = [info](std::string proc) -> std::shared_ptr<std::istream> {
-        if (!proc.empty() && proc[0] == '/')
-        {
-            proc = proc.substr(1);
-        }
         std::istringstream str(std::string((char *)info.p, info.length));
         auto rdlen = [&str] {
             uint8_t n0, n1, n2, n3, n4, n5, n6, n7;
@@ -165,7 +161,7 @@ std::shared_ptr<std::istream> fsfetch(std::string fullPath)
     {
         if (!pth.find(p.first))
         {
-            return p.second(pth.substr(p.first.length(), pth.length()));
+            return p.second(pth.substr(p.first.length() + 1, pth.length()));
         }
     }
     return std::shared_ptr<std::istream>(nullptr);
