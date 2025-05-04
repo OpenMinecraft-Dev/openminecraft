@@ -27,6 +27,7 @@ class OMRendererVk : public OMRenderer
 
     ::vk::AllocationCallbacks allocator;
     ::vk::Instance instance;
+    ::vk::PhysicalDevice physicalDevice;
 
   private:
     std::shared_ptr<log::OMLogger> logger;

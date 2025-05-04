@@ -68,13 +68,20 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 #endif
     }
 
-    auto phyDev = instance.enumeratePhysicalDevices();
-    logger->info(translate("openminecraft.renderer.vk.devcount", phyDev.size()));
-    int id = 0;
-    for (auto pdev : phyDev)
     {
-        logger->info(pdev.getProperties().deviceName);
-        id++;
+        auto phyDev = instance.enumeratePhysicalDevices();
+        std::vector<std::string> d;
+        logger->info(translate("openminecraft.renderer.vk.devcount", phyDev.size()));
+        int id = 0;
+        auto ids = dev(d);
+        for (auto pdev : phyDev)
+        {
+            auto n = pdev.getProperties().deviceName;
+            logger->info("{} {}", id == ids ? "->" : "  ", n.data());
+            d.push_back(n.data());
+            id++;
+        }
+        physicalDevice = phyDev[ids];
     }
     /*std::vector<PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();
     logger->info(translate("openminecraft.renderer.vk.devcount", physicalDevices.size()));
