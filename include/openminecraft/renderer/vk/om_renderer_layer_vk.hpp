@@ -3,6 +3,7 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include <functional>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
@@ -19,14 +20,19 @@ void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAll
 class OMRendererVk : public OMRenderer
 {
   public:
-    OMRendererVk(AppInfo info);
+    OMRendererVk(AppInfo info, std::function<int(std::vector<std::string>)> dev);
     ~OMRendererVk();
 
     virtual std::string driver() override;
 
+    ::vk::AllocationCallbacks allocator;
+    ::vk::Instance instance;
+
   private:
     std::shared_ptr<log::OMLogger> logger;
-    ::vk::Instance instance;
+#ifdef OM_VULKAN_DYNAMIC
+    ::vk::detail::DynamicLoader loader;
+#endif
 };
 }; // namespace openminecraft::renderer::vk
 

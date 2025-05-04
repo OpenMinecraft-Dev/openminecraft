@@ -60,7 +60,7 @@ int boot(std::vector<std::string> args)
 
     renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
                            util::Version(1, 0, 0, 0), util::Version(1, 0, 0, 0)};
-    auto renderer = std::make_unique<renderer::vk::OMRendererVk>(a);
+    auto renderer = std::make_unique<renderer::vk::OMRendererVk>(a, [](std::vector<std::string>) { return 0; });
 
     vfs::fsumount("/bootassets");
 
