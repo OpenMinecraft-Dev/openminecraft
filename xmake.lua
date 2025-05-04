@@ -38,6 +38,29 @@ if vulkandyn() then
     add_defines("OM_VULKAN_DYNAMIC=")
 end
 
+if not is_plat("windows") then
+    add_defines("OM_PLATFORM_UNIX=")
+end
+
+if is_plat("windows") then
+    add_defines("OM_PLATFORM_WINDOWS=")
+end
+if is_plat("linux") then
+    add_defines("OM_PLATFORM_LINUX=")
+end
+if is_plat("macosx") then
+    add_defines("OM_PLATFORM_MACOS=")
+end
+if is_plat("android") then
+    add_defines("OM_PLATFORM_ANDROID=")
+end
+if is_plat("iphoneos") then
+    add_defines("OM_PLATFORM_IOS=")
+end
+if not mobile() then
+    add_defines("OM_PLATFORM_DESKTOP=")
+end
+
 includes("src/log/xmake.lua")
 includes("src/vm/xmake.lua")
 includes("src/binary/xmake.lua")
@@ -92,27 +115,21 @@ if not is_plat("windows") then
 end
 
 if is_plat("windows") then
-    add_defines("OM_PLATFORM_WINDOWS=")
     add_files("plat/windows/**.cpp")
 end
 if is_plat("linux") then
-    add_defines("OM_PLATFORM_LINUX=")
     add_files("plat/linux/**.cpp")
 end
 if is_plat("macosx") then
-    add_defines("OM_PLATFORM_MACOS=")
     add_files("plat/macos/**.cpp")
 end
 if is_plat("android") then
-    add_defines("OM_PLATFORM_ANDROID=")
     add_files("plat/android/**.cpp")
 end
 if is_plat("iphoneos") then
-    add_defines("OM_PLATFORM_IOS=")
     add_files("plat/ios/**.cpp")
 end
 if not mobile() then
-    add_defines("OM_PLATFORM_DESKTOP=")
     add_files("plat/desktop/**.cpp")
 end
 

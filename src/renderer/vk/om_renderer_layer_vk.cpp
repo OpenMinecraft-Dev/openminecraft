@@ -34,9 +34,12 @@ OMRendererVk::OMRendererVk(AppInfo info) : OMRenderer(info)
         dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
     VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
 #endif
+    unsigned int extcount = 0;
+    const char *const *ext = SDL_Vulkan_GetInstanceExtensions(&extcount);
+
     ApplicationInfo i(info.appName.c_str(), info.appVer.toVKVersion(), info.engineName.c_str(),
                       info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
-    InstanceCreateInfo ii(InstanceCreateFlags(), &i);
+    InstanceCreateInfo ii(InstanceCreateFlags(), &i, 0, nullptr, extcount, ext);
     instance = createInstance(ii, c);
     logger->info(translate("openminecraft.renderer.vk.instance", info.appName, info.appVer.toString(), info.engineName,
                            info.engineVer.toString(), info.minApiVersion.toString()));

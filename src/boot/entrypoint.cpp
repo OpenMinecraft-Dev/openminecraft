@@ -1,5 +1,6 @@
 #include <SDL3/SDL_error.h>
 
+#include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
@@ -32,7 +33,7 @@ int boot(std::vector<std::string> args)
 
     SDL_SetMemoryFunctions(mem::allocator::tracedMallocSDL, mem::allocator::tracedCallocSDL,
                            mem::allocator::tracedReallocSDL, mem::allocator::tracedFreeSDL);
-    if (!SDL_Init(SDL_INIT_EVENTS))
+    if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO))
     {
         logger->info("SDL Status: {}", SDL_GetError());
     }
