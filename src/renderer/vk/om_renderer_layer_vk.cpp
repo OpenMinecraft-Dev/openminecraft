@@ -43,14 +43,16 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     }
 
     // Required extensions
-    unsigned int extcount = 0;
-    const char *const *ext;
+
+    std::vector<const char *> exts;
     {
-        ext = SDL_Vulkan_GetInstanceExtensions(&extcount);
+        unsigned int extcount = 0;
+        const char *const *ext = SDL_Vulkan_GetInstanceExtensions(&extcount);
         logger->info(translate("openminecraft.renderer.vk.ext", extcount));
         for (int i = 0; i < extcount; i++)
         {
             logger->info(ext[i]);
+            exts.push_back(ext[i]);
         }
 
         auto layers = enumerateInstanceLayerProperties();
@@ -62,26 +64,24 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
                                    util::Version(l.specVersion).toString()));
         }
         validationLayer = std::make_shared<validation::OMRendererVkValidation>(layers);
+        validationLayer->attachExts(&exts);
     }
 
     // Instance
     {
         ApplicationInfo appInfo(info.appName.c_str(), info.appVer.toVKVersion(), info.engineName.c_str(),
                                 info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
-        std::vector<char *> exts;
-        auto e = validationLayer->attach();
-        if (e != "")
-        {
-            exts.push_back((char *)e.c_str());
-        }
-        instance = createInstance({InstanceCreateFlags(), &appInfo, (uint32_t)exts.size(), exts.data(), extcount, ext,
-                                   validationLayer->createInfo},
+        std::vector<const char *> l;
+        validationLayer->attach(&l);
+        instance = createInstance({InstanceCreateFlags(), &appInfo, (uint32_t)l.size(), l.data(), (uint32_t)exts.size(),
+                                   exts.data(), validationLayer->createInfo},
                                   allocator);
         logger->info(translate("openminecraft.renderer.vk.instance", info.appName, info.appVer.toString(),
                                info.engineName, info.engineVer.toString(), info.minApiVersion.toString()));
 #ifdef OM_VULKAN_DYNAMIC
         VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
 #endif
+        messenger = instance.createDebugUtilsMessengerEXT(validationLayer->createInfo, allocator);
     }
 
     {
@@ -145,6 +145,7 @@ void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAll
 }
 OMRendererVk::~OMRendererVk()
 {
+    instance.destroyDebugUtilsMessengerEXT(messenger);
     instance.destroy(allocator);
 }
 std::string OMRendererVk::driver()

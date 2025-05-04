@@ -35,23 +35,24 @@ baseinit:
     enabled = true;
     createInfo = DebugUtilsMessengerCreateInfoEXT(
         DebugUtilsMessengerCreateFlagsEXT(),
-        DebugUtilsMessageSeverityFlagsEXT(
-            -VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT),
-        DebugUtilsMessageTypeFlagsEXT(VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-                                      -VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-                                      -VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT),
-        (PFN_DebugUtilsMessengerCallbackEXT)notify, nullptr, nullptr);
+        DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | DebugUtilsMessageSeverityFlagBitsEXT::eInfo |
+            DebugUtilsMessageSeverityFlagBitsEXT::eWarning | DebugUtilsMessageSeverityFlagBitsEXT::eError,
+        DebugUtilsMessageTypeFlagBitsEXT::eGeneral | DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
+            DebugUtilsMessageTypeFlagBitsEXT::eValidation,
+        PFN_DebugUtilsMessengerCallbackEXT(notify), nullptr, nullptr);
 }
-std::string OMRendererVkValidation::attach()
+void OMRendererVkValidation::attachExts(std::vector<const char *> *data)
 {
     if (enabled)
     {
-        return "VK_LAYER_KHRONOS_validation";
+        data->push_back("VK_EXT_debug_utils");
     }
-    else
+}
+void OMRendererVkValidation::attach(std::vector<const char *> *data)
+{
+    if (enabled)
     {
-        return "";
+        data->push_back("VK_LAYER_KHRONOS_validation");
     }
 }
 OMRendererVkValidation::~OMRendererVkValidation()

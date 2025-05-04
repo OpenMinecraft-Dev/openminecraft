@@ -17,7 +17,8 @@ class OMRendererVkValidation
 
     void attachInstance(::vk::InstanceCreateInfo i);
     ::vk::DebugUtilsMessengerCreateInfoEXT createInfo;
-    std::string attach();
+    void attach(std::vector<const char *> *data);
+    void attachExts(std::vector<const char *> *data);
 
   private:
     bool enabled = false;

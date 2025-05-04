@@ -4,6 +4,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
+#include "vulkan/vulkan_handles.hpp"
 #include <functional>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
@@ -30,6 +31,7 @@ class OMRendererVk : public OMRenderer
     ::vk::AllocationCallbacks allocator;
     ::vk::Instance instance;
     ::vk::PhysicalDevice physicalDevice;
+    ::vk::DebugUtilsMessengerEXT messenger;
 
   private:
     std::shared_ptr<log::OMLogger> logger;
