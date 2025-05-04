@@ -3,6 +3,7 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include <functional>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
@@ -25,6 +26,7 @@ class OMRendererVk : public OMRenderer
 
     virtual std::string driver() override;
 
+    std::shared_ptr<validation::OMRendererVkValidation> validationLayer;
     ::vk::AllocationCallbacks allocator;
     ::vk::Instance instance;
     ::vk::PhysicalDevice physicalDevice;

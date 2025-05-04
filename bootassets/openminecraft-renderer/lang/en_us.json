@@ -3,5 +3,6 @@
     "openminecraft.renderer.vk.ext": "Enabled {} Vulkan extensions: ", 
     "openminecraft.renderer.vk.devcount": "{} Vulkan devices found: ", 
     "openminecraft.renderer.vk.layercount": "{} Layers:", 
-    "openminecraft.renderer.vk.layerdata": "{} ({}, Version {} -> {})"
+    "openminecraft.renderer.vk.layerdata": "{} ({}, Version {} -> {})", 
+    "openminecraft.renderer.vk.validationdisable": "Vulkan validation layer disabled"
 }

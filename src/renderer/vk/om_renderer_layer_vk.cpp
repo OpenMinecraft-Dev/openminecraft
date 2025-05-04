@@ -3,9 +3,11 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "vulkan/vulkan_core.h"
 #include <SDL3/SDL_vulkan.h>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
@@ -20,13 +22,6 @@ using namespace vk;
 using openminecraft::i18n::res::translate;
 namespace openminecraft::renderer::vk
 {
-log::OMLogger internal("Vulkan Validation");
-int test(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT t,
-         DebugUtilsMessengerCallbackDataEXT data, void *user)
-{
-    internal.info("{}", data.pMessage);
-    return VK_SUCCESS;
-}
 OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::string>)> dev) : OMRenderer(info)
 {
     logger = std::make_shared<log::OMLogger>("OMRendererVk", this);
@@ -66,23 +61,22 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
                                    util::Version(l.implementationVersion).toString(),
                                    util::Version(l.specVersion).toString()));
         }
+        validationLayer = std::make_shared<validation::OMRendererVkValidation>(layers);
     }
 
     // Instance
     {
-        DebugUtilsMessengerCreateInfoEXT c(
-            DebugUtilsMessengerCreateFlagsEXT(),
-            DebugUtilsMessageSeverityFlagsEXT(
-                VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
-                VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT),
-            DebugUtilsMessageTypeFlagsEXT(VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-                                          VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-                                          VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT),
-            (PFN_DebugUtilsMessengerCallbackEXT)test, nullptr, nullptr);
-        ApplicationInfo i(info.appName.c_str(), info.appVer.toVKVersion(), info.engineName.c_str(),
-                          info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
-        InstanceCreateInfo ii(InstanceCreateFlags(), &i, 0, nullptr, extcount, ext, c);
-        instance = createInstance(ii, allocator);
+        ApplicationInfo appInfo(info.appName.c_str(), info.appVer.toVKVersion(), info.engineName.c_str(),
+                                info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
+        std::vector<char *> exts;
+        auto e = validationLayer->attach();
+        if (e != "")
+        {
+            exts.push_back((char *)e.c_str());
+        }
+        instance = createInstance({InstanceCreateFlags(), &appInfo, (uint32_t)exts.size(), exts.data(), extcount, ext,
+                                   validationLayer->createInfo},
+                                  allocator);
         logger->info(translate("openminecraft.renderer.vk.instance", info.appName, info.appVer.toString(),
                                info.engineName, info.engineVer.toString(), info.minApiVersion.toString()));
 #ifdef OM_VULKAN_DYNAMIC

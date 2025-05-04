@@ -2,18 +2,25 @@
 #define OM_RENDERER_LAYER_VK_VALIDATION_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
+#ifdef OM_VULKAN_DYNAMIC
+#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+#endif
+#include "vulkan/vulkan.hpp"
 #include <memory>
-#include <vector>
 namespace openminecraft::renderer::vk::validation
 {
 class OMRendererVkValidation
 {
   public:
-    OMRendererVkValidation(OMRendererVk renderer, std::vector<::vk::LayerProperties> props);
+    OMRendererVkValidation(std::vector<::vk::LayerProperties> props);
     ~OMRendererVkValidation();
 
+    void attachInstance(::vk::InstanceCreateInfo i);
+    ::vk::DebugUtilsMessengerCreateInfoEXT createInfo;
+    std::string attach();
+
   private:
+    bool enabled = false;
     std::shared_ptr<log::OMLogger> logger;
 };
 } // namespace openminecraft::renderer::vk::validation

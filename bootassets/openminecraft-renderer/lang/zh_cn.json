@@ -3,5 +3,6 @@
     "openminecraft.renderer.vk.ext": "已启用 {} 个 Vulkan 扩展: ", 
     "openminecraft.renderer.vk.devcount": "共有 {} 个 Vulkan 设备: ", 
     "openminecraft.renderer.vk.layercount": "共有 {} 层:", 
-    "openminecraft.renderer.vk.layerdata": "{} ({}, 版本 {} -> {})"
+    "openminecraft.renderer.vk.layerdata": "{} ({}, 版本 {} -> {})", 
+    "openminecraft.renderer.vk.validationdisable": "Vulkan 验证层已关闭"
 }
