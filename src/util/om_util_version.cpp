@@ -12,6 +12,10 @@ Version::Version(uint16_t major, uint16_t minor, uint16_t patch1)
     : major(major), minor(minor), patch1(patch1), patch2(0)
 {
 }
+Version::Version(uint32_t vkver)
+    : major(VK_VERSION_MAJOR(vkver)), minor(VK_VERSION_MINOR(vkver)), patch1(VK_VERSION_PATCH(vkver)), patch2(0)
+{
+}
 Version::~Version()
 {
 }

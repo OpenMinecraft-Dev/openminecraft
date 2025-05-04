@@ -1,4 +1,6 @@
 {
     "openminecraft.renderer.vk.instance": "Vulkan instance: {} v{} / {} v{} (API Version {})", 
-    "openminecraft.renderer.vk.devcount": "{} Vulkan devices found"
+    "openminecraft.renderer.vk.devcount": "{} Vulkan devices found", 
+    "openminecraft.renderer.vk.layercount": "{} Layers:", 
+    "openminecraft.renderer.vk.layerdata": "{} ({}, Version {} -> {})"
 }

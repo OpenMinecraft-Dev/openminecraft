@@ -3,6 +3,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include "openminecraft/util/om_util_version.hpp"
 #include "vulkan/vulkan_core.h"
 #include <SDL3/SDL_vulkan.h>
 #include <cstdlib>
@@ -36,6 +37,15 @@ OMRendererVk::OMRendererVk(AppInfo info) : OMRenderer(info)
 #endif
     unsigned int extcount = 0;
     const char *const *ext = SDL_Vulkan_GetInstanceExtensions(&extcount);
+
+    auto layers = enumerateInstanceLayerProperties();
+    logger->info(translate("openminecraft.renderer.vk.layercount", layers.size()));
+    for (auto l : layers)
+    {
+        logger->info(translate("openminecraft.renderer.vk.layerdata", l.layerName.data(), l.layerName.data(),
+                               util::Version(l.implementationVersion).toString(),
+                               util::Version(l.specVersion).toString()));
+    }
 
     ApplicationInfo i(info.appName.c_str(), info.appVer.toVKVersion(), info.engineName.c_str(),
                       info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());

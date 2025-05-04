@@ -11,6 +11,7 @@ class Version
   public:
     Version(uint16_t major, uint16_t minor, uint16_t patch1, uint16_t patch2);
     Version(uint16_t major, uint16_t minor, uint16_t patch1);
+    Version(uint32_t vkver);
     ~Version();
 
     std::string toString();
