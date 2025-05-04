@@ -6,6 +6,7 @@
 #include "openminecraft/util/om_util_version.hpp"
 #include "vulkan/vulkan_core.h"
 #include <SDL3/SDL_vulkan.h>
+#include <cstdio>
 #include <cstdlib>
 #include <memory>
 #include <string>
@@ -19,6 +20,13 @@ using namespace vk;
 using openminecraft::i18n::res::translate;
 namespace openminecraft::renderer::vk
 {
+log::OMLogger internal("Vulkan Validation");
+int test(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT t,
+         DebugUtilsMessengerCallbackDataEXT data, void *user)
+{
+    internal.info("{}", data.pMessage);
+    return VK_SUCCESS;
+}
 OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::string>)> dev) : OMRenderer(info)
 {
     logger = std::make_shared<log::OMLogger>("OMRendererVk", this);
@@ -44,12 +52,17 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     const char *const *ext;
     {
         ext = SDL_Vulkan_GetInstanceExtensions(&extcount);
+        logger->info(translate("openminecraft.renderer.vk.ext", extcount));
+        for (int i = 0; i < extcount; i++)
+        {
+            logger->info(ext[i]);
+        }
 
         auto layers = enumerateInstanceLayerProperties();
         logger->info(translate("openminecraft.renderer.vk.layercount", layers.size()));
         for (auto l : layers)
         {
-            logger->info(translate("openminecraft.renderer.vk.layerdata", l.layerName.data(), l.layerName.data(),
+            logger->info(translate("openminecraft.renderer.vk.layerdata", l.layerName.data(), l.description.data(),
                                    util::Version(l.implementationVersion).toString(),
                                    util::Version(l.specVersion).toString()));
         }
@@ -57,9 +70,18 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 
     // Instance
     {
+        DebugUtilsMessengerCreateInfoEXT c(
+            DebugUtilsMessengerCreateFlagsEXT(),
+            DebugUtilsMessageSeverityFlagsEXT(
+                VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
+                VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT),
+            DebugUtilsMessageTypeFlagsEXT(VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                                          VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                                          VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT),
+            (PFN_DebugUtilsMessengerCallbackEXT)test, nullptr, nullptr);
         ApplicationInfo i(info.appName.c_str(), info.appVer.toVKVersion(), info.engineName.c_str(),
                           info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
-        InstanceCreateInfo ii(InstanceCreateFlags(), &i, 0, nullptr, extcount, ext);
+        InstanceCreateInfo ii(InstanceCreateFlags(), &i, 0, nullptr, extcount, ext, c);
         instance = createInstance(ii, allocator);
         logger->info(translate("openminecraft.renderer.vk.instance", info.appName, info.appVer.toString(),
                                info.engineName, info.engineVer.toString(), info.minApiVersion.toString()));
