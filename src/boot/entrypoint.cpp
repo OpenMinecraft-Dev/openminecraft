@@ -1,8 +1,8 @@
-#include <SDL2/SDL_error.h>
+#include <SDL3/SDL_error.h>
 
-#include <SDL2/SDL_init.h>
-#include <SDL2/SDL_stdinc.h>
-#include <SDL2/SDL_video.h>
+#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
 #include <memory>
 #include <vector>
