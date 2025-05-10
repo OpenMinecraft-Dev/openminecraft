@@ -28,7 +28,7 @@ add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bu
 add_requires("boost", { system = false, configs = { stacktrace = true } })
 add_requires("fmt", { system = false, configs = { header_only = true } })
 if not is_plat("harmonys") then
-    add_requires("libsdl3")
+    add_requires("libsdl2")
 end
 
 if apple() then
@@ -97,7 +97,7 @@ add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openm
 
 add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", { system = false })
 if not is_plat("harmonys") then
-    add_packages("libsdl3")
+    add_packages("libsdl2")
 end
 if not mobile() and not vulkandyn() and not apple() then
     add_packages("vulkan-loader")
