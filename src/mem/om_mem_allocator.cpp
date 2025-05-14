@@ -54,7 +54,7 @@ void *operator new[](size_t size)
     return p;
 }
 
-void operator delete(void *p)
+/*void operator delete(void *p)
 {
     rec({Free, p, heapSize(p), 0});
     free(p);
@@ -64,4 +64,4 @@ void operator delete[](void *p)
 {
     rec({Free, p, heapSize(p), 0});
     free(p);
-}
+}*/
