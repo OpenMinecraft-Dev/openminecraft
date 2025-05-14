@@ -22,6 +22,7 @@ int notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT
 OMRendererVkValidation::OMRendererVkValidation(std::vector<LayerProperties> props)
 {
     logger = std::make_shared<log::OMLogger>("OMRendererVkValidation", this);
+    enabled = false;
     for (auto p : props)
     {
         if (std::string(p.layerName.data()) == "VK_LAYER_KHRONOS_validation")
