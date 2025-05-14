@@ -124,7 +124,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         }
         physicalDevice = phyDev[ids];
         auto d = SDL_Vulkan_GetPresentationSupport(instance, physicalDevice, 0);
-        logger->info("{}", d);
+        (void)d;
     }
     /*std::vector<PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();
     logger->info(translate("openminecraft.renderer.vk.devcount", physicalDevices.size()));
