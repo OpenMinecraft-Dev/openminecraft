@@ -124,6 +124,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         }
         physicalDevice = phyDev[ids];
         SDL_Vulkan_LoadLibrary(nullptr);
+        logger->info("{}", SDL_GetError());
         auto presentSupport = SDL_Vulkan_GetPresentationSupport(instance, physicalDevice, 0);
         (void)presentSupport;
     }
