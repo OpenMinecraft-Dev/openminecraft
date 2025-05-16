@@ -24,12 +24,9 @@ if apple() then
     add_requires("moltenvk", { configs = { shared = false } })
 end
 
-add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "nlohmann_json", { system = false })
+add_requires("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "nlohmann_json", "libsdl3", { system = false })
 add_requires("boost", { system = false, configs = { stacktrace = true } })
 add_requires("fmt", { system = false, configs = { header_only = true } })
-if not is_plat("harmonys") then
-    add_requires("libsdl3")
-end
 
 if apple() then
     add_defines("BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED=")
@@ -80,7 +77,7 @@ add_files("tools/om_bundle_maker.cpp")
 target("openminecraft-plat")
 set_kind("static")
 add_includedirs("include")
-add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", { system = false })
+add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", "libsdl3", { system = false })
 if not is_plat("windows") then
     add_files("plat/unix/**.cpp")
 end
@@ -113,10 +110,7 @@ end
 add_files("launcher/**.cpp")
 add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io", "openminecraft-vfs", "openminecraft-boot", "openminecraft-util", "openminecraft-i18n", "openminecraft-renderer", "openminecraft-plat")
 
-add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", { system = false })
-if not is_plat("harmonys") then
-    add_packages("libsdl3")
-end
+add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", "libsdl3", { system = false })
 if not mobile() and not vulkandyn() and not apple() then
     add_packages("vulkan-loader")
 end
