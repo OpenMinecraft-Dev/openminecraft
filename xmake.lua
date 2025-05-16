@@ -77,6 +77,24 @@ set_kind("binary")
 add_packages("fmt")
 add_files("tools/om_bundle_maker.cpp")
 
+target("openminecraft-plat")
+set_kind("static")
+add_includedirs("include")
+add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", { system = false })
+if not is_plat("windows") then
+    add_files("plat/unix/**.cpp")
+end
+if is_plat("windows") then
+    add_files("plat/windows/**.cpp")
+end
+if is_plat("linux") then
+    add_files("plat/linux/**.cpp")                     end                                                    if is_plat("macosx") then                                  add_files("plat/macos/**.cpp")
+end                                                    if is_plat("android") then                                 add_files("plat/android/**.cpp")                   end
+if is_plat("iphoneos") then                                add_files("plat/ios/**.cpp")
+end                                                    if not mobile() then
+    add_files("plat/desktop/**.cpp")
+end
+
 target("openminecraft")
 if is_plat("android", "harmonyos") then
     set_kind("shared")
@@ -93,7 +111,7 @@ elseif is_plat("android") then
 end
 
 add_files("launcher/**.cpp")
-add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io", "openminecraft-vfs", "openminecraft-boot", "openminecraft-util", "openminecraft-i18n", "openminecraft-renderer")
+add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io", "openminecraft-vfs", "openminecraft-boot", "openminecraft-util", "openminecraft-i18n", "openminecraft-renderer", "openminecraft-plat")
 
 add_packages("freetype", "harfbuzz", "stb", "yoga", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", { system = false })
 if not is_plat("harmonys") then
@@ -107,30 +125,6 @@ if apple() then
 end
 if is_plat("iphoneos") then
     add_frameworks("OpenGLES")
-end
-
-if not is_plat("windows") then
-    add_defines("OM_PLATFORM_UNIX=")
-    add_files("plat/unix/**.cpp")
-end
-
-if is_plat("windows") then
-    add_files("plat/windows/**.cpp")
-end
-if is_plat("linux") then
-    add_files("plat/linux/**.cpp")
-end
-if is_plat("macosx") then
-    add_files("plat/macos/**.cpp")
-end
-if is_plat("android") then
-    add_files("plat/android/**.cpp")
-end
-if is_plat("iphoneos") then
-    add_files("plat/ios/**.cpp")
-end
-if not mobile() then
-    add_files("plat/desktop/**.cpp")
 end
 
 if is_plat("macosx") then
