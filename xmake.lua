@@ -85,10 +85,18 @@ if is_plat("windows") then
     add_files("plat/windows/**.cpp")
 end
 if is_plat("linux") then
-    add_files("plat/linux/**.cpp")                     end                                                    if is_plat("macosx") then                                  add_files("plat/macos/**.cpp")
-end                                                    if is_plat("android") then                                 add_files("plat/android/**.cpp")                   end
-if is_plat("iphoneos") then                                add_files("plat/ios/**.cpp")
-end                                                    if not mobile() then
+    add_files("plat/linux/**.cpp")
+end
+if is_plat("macosx") then
+    add_files("plat/macos/**.cpp")
+end
+if is_plat("android") then
+    add_files("plat/android/**.cpp")
+end
+if is_plat("iphoneos") then
+    add_files("plat/ios/**.cpp")
+end
+if not mobile() then
     add_files("plat/desktop/**.cpp")
 end
 
