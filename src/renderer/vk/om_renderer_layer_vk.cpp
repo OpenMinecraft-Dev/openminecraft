@@ -19,8 +19,10 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 #endif
 
 #ifdef OM_PLATFORM_WINDOWS
-VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
-                                        const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pMessenger)
+VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance instance,
+                                                              const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+                                                              const VkAllocationCallbacks *pAllocator,
+                                                              VkDebugUtilsMessengerEXT *pMessenger)
 {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDrbugUtilsMessengerEXT");
     if (func != nullptr)
@@ -30,10 +32,8 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance instanc
     return VK_SUCCESS;
 }
 
-VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(
-    VkInstance                                  instance,
-    VkDebugUtilsMessengerEXT                    messenger,
-    const VkAllocationCallbacks*                pAllocator)
+VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger,
+                                                           const VkAllocationCallbacks *pAllocator)
 {
     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
     if (func != nullptr)
@@ -47,6 +47,9 @@ using namespace vk;
 using openminecraft::i18n::res::translate;
 namespace openminecraft::renderer::vk
 {
+#ifdef OM_VULKAN_DYNAMIC
+detail::DynamicLoader loader;
+#endif
 OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::string>)> dev) : OMRenderer(info)
 {
     logger = std::make_shared<log::OMLogger>("OMRendererVk", this);
@@ -123,18 +126,15 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
             id++;
         }
         physicalDevice = phyDev[ids];
+    }
+
+    {
+        logger->info(translate("openminecraft.renderer.vk.sdl.vulkan"));
         SDL_Vulkan_LoadLibrary(nullptr);
         logger->info("{}", SDL_GetError());
         auto presentSupport = SDL_Vulkan_GetPresentationSupport(instance, physicalDevice, 0);
-        (void)presentSupport;
+        logger->info("{}", presentSupport);
     }
-    /*std::vector<PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();
-    logger->info(translate("openminecraft.renderer.vk.devcount", physicalDevices.size()));
-    Device device = physicalDevices[0].createDevice({}, allocator);
-#ifdef OM_VULKAN_DYNAMIC
-    VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
-#endif
-    device.destroy(allocator);*/
 }
 void *vkAlloc(void *, size_t size, size_t align, VkSystemAllocationScope s)
 {

@@ -4,5 +4,6 @@
     "openminecraft.renderer.vk.devcount": "{} Vulkan devices found: ", 
     "openminecraft.renderer.vk.layercount": "{} Layers:", 
     "openminecraft.renderer.vk.layerdata": "{} ({}, Version {} -> {})", 
-    "openminecraft.renderer.vk.validationdisable": "Vulkan validation layer disabled"
+    "openminecraft.renderer.vk.validationdisable": "Vulkan validation layer disabled", 
+    "openminecraft.renderer.vk.sdl.vulkan": "Loading vulkan library for SDL"
 }

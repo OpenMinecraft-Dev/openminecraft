@@ -19,6 +19,7 @@ void *vkRealloc(void *, void *o, size_t size, size_t align, VkSystemAllocationSc
 void vkFree(void *, void *p);
 void vkInternalAlloc(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s);
 void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s);
+
 class OMRendererVk : public OMRenderer
 {
   public:
@@ -35,9 +36,6 @@ class OMRendererVk : public OMRenderer
 
   private:
     std::shared_ptr<log::OMLogger> logger;
-#ifdef OM_VULKAN_DYNAMIC
-    ::vk::detail::DynamicLoader loader;
-#endif
 };
 }; // namespace openminecraft::renderer::vk
 
