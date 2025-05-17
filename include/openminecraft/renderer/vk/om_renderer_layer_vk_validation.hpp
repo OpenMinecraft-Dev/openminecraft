@@ -19,9 +19,9 @@ class OMRendererVkValidation
     ::vk::DebugUtilsMessengerCreateInfoEXT createInfo;
     void attach(std::vector<const char *> *data);
     void attachExts(std::vector<const char *> *data);
+    bool enabled = false;
 
   private:
-    bool enabled = false;
     std::shared_ptr<log::OMLogger> logger;
 };
 } // namespace openminecraft::renderer::vk::validation

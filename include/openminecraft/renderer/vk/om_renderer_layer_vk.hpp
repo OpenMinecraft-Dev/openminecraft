@@ -27,6 +27,7 @@ class OMRendererVk : public OMRenderer
     ~OMRendererVk();
 
     virtual std::string driver() override;
+    void destroy();
 
     std::shared_ptr<validation::OMRendererVkValidation> validationLayer;
     ::vk::AllocationCallbacks allocator;

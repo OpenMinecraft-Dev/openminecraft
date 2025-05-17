@@ -109,7 +109,10 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 #ifdef OM_VULKAN_DYNAMIC
         VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
 #endif
-        messenger = instance.createDebugUtilsMessengerEXT(validationLayer->createInfo, allocator);
+        if (validationLayer->enabled)
+        {
+            messenger = instance.createDebugUtilsMessengerEXT(validationLayer->createInfo, allocator);
+        }
     }
 
     {
@@ -174,8 +177,12 @@ void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAll
 }
 OMRendererVk::~OMRendererVk()
 {
+}
+void OMRendererVk::destroy()
+{
     instance.destroyDebugUtilsMessengerEXT(messenger);
     instance.destroy(allocator);
+    SDL_Vulkan_UnloadLibrary();
 }
 std::string OMRendererVk::driver()
 {

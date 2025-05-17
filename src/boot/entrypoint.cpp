@@ -64,6 +64,8 @@ int boot(std::vector<std::string> args)
 
     vfs::fsumount("/bootassets");
 
+    renderer->destroy();
+
     SDL_Quit();
 
     return 0;
