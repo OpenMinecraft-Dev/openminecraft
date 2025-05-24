@@ -7,7 +7,9 @@
     "openminecraft.renderer.vk.validationdisable": "Vulkan validation layer disabled", 
     "openminecraft.renderer.vk.sdl.vulkan": "Loading vulkan library for SDL", 
     "openminecraft.renderer.vk.sdl.present": "Device presentation support: {}", 
+    "openminecraft.renderer.vk.sdl.err": "SDL library loading error", 
     "openminecraft.renderer.vk.err.shell": "{} ( {:#010x} )", 
     "openminecraft.renderer.vk.err.instance": "Vulkan Instance Creation: {}", 
-    "openminecraft.renderer.vk.err.preinstance": "Vulkan Pre Instance Creation: {}"
+    "openminecraft.renderer.vk.err.preinstance": "Vulkan Pre Instance Creation: {}", 
+    "openminecraft.renderer.vk.err.phydev": "Vulkan Device Selection: {}"
 }

@@ -7,6 +7,7 @@
     "openminecraft.renderer.vk.validationdisable": "Vulkan 验证层已关闭", 
     "openminecraft.renderer.vk.sdl.vulkan": "为 SDL 库加载 Vulkan", 
     "openminecraft.renderer.vk.sdl.present": "设备显示支持: {}", 
+    "openminecraft.renderer.vk.sdl.err": "SDL 库加载错误", 
     "openminecraft.renderer.vk.err.NotReady": "未准备", 
     "openminecraft.renderer.vk.err.Timeout": "已超时", 
     "openminecraft.renderer.vk.err.EventSet": "事件组", 
@@ -55,5 +56,6 @@
     "openminecraft.renderer.vk.err.ErrorNotEnoughSpaceKHR": "空间不足", 
     "openminecraft.renderer.vk.err.shell": "{} ( {:#010x} )", 
     "openminecraft.renderer.vk.err.instance": "Vulkan 实例创建: {}", 
-    "openminecraft.renderer.vk.err.preinstance": "Vulkan 前实例创建: {}"
+    "openminecraft.renderer.vk.err.preinstance": "Vulkan 前实例创建: {}", 
+    "openminecraft.renderer.vk.err.phydev": "Vulkan 设备选择: {}"
 }

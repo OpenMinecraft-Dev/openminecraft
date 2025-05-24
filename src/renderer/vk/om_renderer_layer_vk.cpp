@@ -14,6 +14,7 @@
 #include <cstring>
 #include <memory>
 #include <string>
+#include <system_error>
 #include <vector>
 
 #ifdef OM_VULKAN_DYNAMIC
@@ -47,6 +48,9 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(VkInstance instance, 
 
 using namespace vk;
 using openminecraft::i18n::res::translate;
+#define VkErrLogAndThrow(err, id)                                                                                      \
+    logger->error(VkErrorTranslate(err, id));                                                                          \
+    throw std::runtime_error(VkErrorTranslate(err, id));
 namespace openminecraft::renderer::vk
 {
 #ifdef OM_VULKAN_DYNAMIC
@@ -96,8 +100,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     }
     catch (SystemError e)
     {
-        logger->info(VkErrorTranslate(e, "openminecraft.renderer.vk.err.preinstance"));
-        throw std::runtime_error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.preinstance"));
+        VkErrLogAndThrow(e, "openminecraft.renderer.vk.err.preinstance");
     }
 
     try
@@ -120,10 +123,10 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     }
     catch (SystemError e)
     {
-        logger->info(VkErrorTranslate(e, "openminecraft.renderer.vk.err.instance"));
-        throw std::runtime_error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.instance"));
+        VkErrLogAndThrow(e, "openminecraft.renderer.vk.err.instance");
     }
 
+    try
     {
         auto phyDev = instance.enumeratePhysicalDevices();
         std::vector<std::string> d;
@@ -139,14 +142,25 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         }
         physicalDevice = phyDev[ids];
     }
+    catch (SystemError e)
+    {
+        VkErrLogAndThrow(e, "openminecraft.renderer.vk.err.phydev");
+    }
 
     {
+        auto d0 = SDL_GetError();
+        if (strlen(d0))
+        {
+            logger->error("{}", d0);
+            throw std::runtime_error(translate("openminecraft.renderer.vk.sdl.err").c_str());
+        }
         logger->info(translate("openminecraft.renderer.vk.sdl.vulkan"));
         SDL_Vulkan_LoadLibrary(nullptr);
         auto d = SDL_GetError();
         if (strlen(d))
         {
             logger->error("{}", d);
+            throw std::runtime_error(translate("openminecraft.renderer.vk.sdl.err").c_str());
         }
         logger->info(translate("openminecraft.renderer.vk.sdl.present"),
                      SDL_Vulkan_GetPresentationSupport(instance, physicalDevice, 0));
