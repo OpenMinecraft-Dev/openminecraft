@@ -109,10 +109,9 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 #ifdef OM_VULKAN_DYNAMIC
         VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
 #endif
-        if (validationLayer->enabled)
-        {
-            messenger = instance.createDebugUtilsMessengerEXT(validationLayer->createInfo, allocator);
-        }
+
+        validationLayer->ifEnable(
+            [&]() { messenger = instance.createDebugUtilsMessengerEXT(validationLayer->createInfo, allocator); });
     }
 
     {
@@ -180,7 +179,7 @@ OMRendererVk::~OMRendererVk()
 }
 void OMRendererVk::destroy()
 {
-    instance.destroyDebugUtilsMessengerEXT(messenger);
+    validationLayer->ifEnable([&]() { instance.destroyDebugUtilsMessengerEXT(messenger); });
     instance.destroy(allocator);
     SDL_Vulkan_UnloadLibrary();
 }

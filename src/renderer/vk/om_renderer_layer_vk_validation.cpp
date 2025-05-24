@@ -56,6 +56,13 @@ void OMRendererVkValidation::attach(std::vector<const char *> *data)
         data->push_back("VK_LAYER_KHRONOS_validation");
     }
 }
+void OMRendererVkValidation::ifEnable(std::function<void()> func)
+{
+    if (enabled)
+    {
+        func();
+    }
+}
 OMRendererVkValidation::~OMRendererVkValidation()
 {
 }
