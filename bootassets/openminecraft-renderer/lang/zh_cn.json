@@ -53,6 +53,7 @@
     "openminecraft.renderer.vk.err.IncompatibleShaderBinaryEXT": "不兼容的着色器二进制格式", 
     "openminecraft.renderer.vk.err.PipelineBinaryMissingKHR": "管线二进制文件缺失", 
     "openminecraft.renderer.vk.err.ErrorNotEnoughSpaceKHR": "空间不足", 
-    "openminecraft.renderer.vk.err.shell": "Vulkan 错误: {} ( {:#010x} )", 
-    "openminecraft.renderer.vk.err.instance": "Vulkan 实例创建: {}"
+    "openminecraft.renderer.vk.err.shell": "{} ( {:#010x} )", 
+    "openminecraft.renderer.vk.err.instance": "Vulkan 实例创建: {}", 
+    "openminecraft.renderer.vk.err.preinstance": "Vulkan 前实例创建: {}"
 }

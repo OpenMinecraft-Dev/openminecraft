@@ -12,6 +12,10 @@
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
 #include <memory>
+#define VkErrorTranslate(err, key)                                                                                     \
+    translate(key, translate("openminecraft.renderer.vk.err.shell",                                                    \
+                             translate(fmt::format("openminecraft.renderer.vk.err.{}", err.code().message())),         \
+                             (uint32_t)err.code().value()))
 namespace openminecraft::renderer::vk
 {
 void *vkAlloc(void *, size_t size, size_t align, VkSystemAllocationScope s);

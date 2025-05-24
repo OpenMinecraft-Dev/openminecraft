@@ -4,9 +4,13 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
+#include <exception>
 #include <memory>
+#include <stdexcept>
+#include <system_error>
 #include <vector>
 
+#include "SDL3/SDL_messagebox.h"
 #include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
@@ -38,13 +42,6 @@ int boot(std::vector<std::string> args)
         logger->info("SDL Status: {}", SDL_GetError());
     }
 
-    /*if (!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Hello World",
-                                  "!! Your SDL project successfully runs on Android!!", NULL))
-    {
-        logger->info("SDL Status: {}", SDL_GetError());
-        return 1;
-    }*/
-
     logger->info("Setting up i18n environment...");
     i18n::res::registerModule("openminecraft-boot");
     i18n::res::registerModule("openminecraft-renderer");
@@ -58,13 +55,24 @@ int boot(std::vector<std::string> args)
         logger->info(a);
     }
 
-    renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
-                           util::Version(1, 0, 0, 0), util::Version(1, 0, 0, 0)};
-    auto renderer = std::make_unique<renderer::vk::OMRendererVk>(a, [](std::vector<std::string>) { return 0; });
+    try
+    {
+        renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
+                               util::Version(1, 0, 0, 0), util::Version(1, 0, 0, 0)};
+        auto renderer = std::make_unique<renderer::vk::OMRendererVk>(a, [](std::vector<std::string>) { return 0; });
 
-    vfs::fsumount("/bootassets");
+        vfs::fsumount("/bootassets");
 
-    renderer->destroy();
+        renderer->destroy();
+    }
+    catch (std::runtime_error e)
+    {
+        if (!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Vulkan Debugger", e.what(), NULL))
+        {
+            logger->info("SDL Status: {}", SDL_GetError());
+            return 1;
+        }
+    }
 
     SDL_Quit();
 

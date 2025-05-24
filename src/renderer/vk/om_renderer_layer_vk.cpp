@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include "openminecraft/util/om_util_version.hpp"
+#include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
 #include <SDL3/SDL_vulkan.h>
 #include <cstddef>
@@ -62,7 +63,6 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
                  (PFN_InternalAllocationNotification)vkInternalAlloc,
                  (PFN_InternalFreeNotification)vkInternalFree};
 
-    // Dynamic loader init
     {
 #ifdef OM_VULKAN_DYNAMIC
         PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr =
@@ -71,9 +71,8 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 #endif
     }
 
-    // Required extensions
-
     std::vector<const char *> exts;
+    try
     {
         unsigned int extcount = 0;
         const char *const *ext = SDL_Vulkan_GetInstanceExtensions(&extcount);
@@ -95,9 +94,12 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         validationLayer = std::make_shared<validation::OMRendererVkValidation>(layers);
         validationLayer->attachExts(&exts);
     }
-    exts.push_back("test");
+    catch (SystemError e)
+    {
+        logger->info(VkErrorTranslate(e, "openminecraft.renderer.vk.err.preinstance"));
+        throw std::runtime_error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.preinstance"));
+    }
 
-    // Instance
     try
     {
         ApplicationInfo appInfo(info.appName.c_str(), info.appVer.toVKVersion(), info.engineName.c_str(),
@@ -118,10 +120,8 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     }
     catch (SystemError e)
     {
-        logger->info("{}", translate("openminecraft.renderer.vk.err.shell",
-                                     translate(fmt::format("openminecraft.renderer.vk.err.{}", e.code().message())),
-                                     (uint32_t)e.code().value()));
-        throw e;
+        logger->info(VkErrorTranslate(e, "openminecraft.renderer.vk.err.instance"));
+        throw std::runtime_error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.instance"));
     }
 
     {
