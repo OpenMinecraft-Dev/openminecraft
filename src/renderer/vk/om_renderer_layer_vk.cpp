@@ -4,6 +4,7 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
+#include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
@@ -13,6 +14,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <system_error>
 #include <vector>
@@ -75,32 +77,17 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 #endif
     }
 
+    auto extResult = fetchRequiredExtensions();
     std::vector<const char *> exts;
-    try
+    switch (extResult.type)
     {
-        unsigned int extcount = 0;
-        const char *const *ext = SDL_Vulkan_GetInstanceExtensions(&extcount);
-        logger->info(translate("openminecraft.renderer.vk.ext", extcount));
-        for (int i = 0; i < 2; i++)
-        {
-            logger->info(ext[i]);
-            exts.push_back(ext[i]);
-        }
-
-        auto layers = enumerateInstanceLayerProperties();
-        logger->info(translate("openminecraft.renderer.vk.layercount", layers.size()));
-        for (auto l : layers)
-        {
-            logger->info(translate("openminecraft.renderer.vk.layerdata", l.layerName.data(), l.description.data(),
-                                   util::Version(l.implementationVersion).toString(),
-                                   util::Version(l.specVersion).toString()));
-        }
-        validationLayer = std::make_shared<validation::OMRendererVkValidation>(layers);
-        validationLayer->attachExts(&exts);
+    case util::Ok: {
+        exts = extResult.unwrap();
+        break;
     }
-    catch (SystemError e)
-    {
-        VkErrLogAndThrow(e, "openminecraft.renderer.vk.err.preinstance");
+    case util::Err: {
+        throw std::runtime_error(extResult.unwrap_err());
+    }
     }
 
     try
@@ -164,6 +151,39 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         }
         logger->info(translate("openminecraft.renderer.vk.sdl.present"),
                      SDL_Vulkan_GetPresentationSupport(instance, physicalDevice, 0));
+    }
+}
+util::OMResult<std::vector<const char *>, std::string> OMRendererVk::fetchRequiredExtensions()
+{
+    try
+    {
+        std::vector<const char *> exts;
+        unsigned int extcount = 0;
+        const char *const *ext = SDL_Vulkan_GetInstanceExtensions(&extcount);
+        logger->info(translate("openminecraft.renderer.vk.ext", extcount));
+        for (int i = 0; i < 2; i++)
+        {
+            logger->info(ext[i]);
+            exts.push_back(ext[i]);
+        }
+
+        auto layers = enumerateInstanceLayerProperties();
+        logger->info(translate("openminecraft.renderer.vk.layercount", layers.size()));
+        for (auto l : layers)
+        {
+            logger->info(translate("openminecraft.renderer.vk.layerdata", l.layerName.data(), l.description.data(),
+                                   util::Version(l.implementationVersion).toString(),
+                                   util::Version(l.specVersion).toString()));
+        }
+        validationLayer = std::make_shared<validation::OMRendererVkValidation>(layers);
+        validationLayer->attachExts(&exts);
+        return util::OMResult<std::vector<const char *>, std::string>::ok(exts);
+    }
+    catch (SystemError e)
+    {
+        logger->error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.preinstance"));
+        return util::OMResult<std::vector<const char *>, std::string>::err(
+            VkErrorTranslate(e, "openminecraft.renderer.vk.err.preinstance"));
     }
 }
 void *vkAlloc(void *, size_t size, size_t align, VkSystemAllocationScope s)

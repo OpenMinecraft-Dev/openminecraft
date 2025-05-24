@@ -4,8 +4,10 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
+#include "openminecraft/util/om_util_result.hpp"
 #include "vulkan/vulkan_handles.hpp"
 #include <functional>
+#include <stdexcept>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
@@ -29,6 +31,8 @@ class OMRendererVk : public OMRenderer
   public:
     OMRendererVk(AppInfo info, std::function<int(std::vector<std::string>)> dev);
     ~OMRendererVk();
+
+    util::OMResult<std::vector<const char *>, std::string> fetchRequiredExtensions();
 
     virtual std::string driver() override;
     void destroy();
