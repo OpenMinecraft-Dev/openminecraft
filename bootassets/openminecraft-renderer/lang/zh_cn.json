@@ -5,5 +5,6 @@
     "openminecraft.renderer.vk.layercount": "共有 {} 层:", 
     "openminecraft.renderer.vk.layerdata": "{} ({}, 版本 {} -> {})", 
     "openminecraft.renderer.vk.validationdisable": "Vulkan 验证层已关闭", 
-    "openminecraft.renderer.vk.sdl.vulkan": "为 SDL 库加载 Vulkan"
+    "openminecraft.renderer.vk.sdl.vulkan": "为 SDL 库加载 Vulkan", 
+    "openminecraft.renderer.vk.sdl.present": "设备显示支持: {}"
 }

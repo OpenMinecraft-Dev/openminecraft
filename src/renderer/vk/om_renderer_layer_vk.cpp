@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <vector>
@@ -133,9 +134,13 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     {
         logger->info(translate("openminecraft.renderer.vk.sdl.vulkan"));
         SDL_Vulkan_LoadLibrary(nullptr);
-        logger->info("{}", SDL_GetError());
-        auto presentSupport = SDL_Vulkan_GetPresentationSupport(instance, physicalDevice, 0);
-        logger->info("{}", presentSupport);
+        auto d = SDL_GetError();
+        if (strlen(d))
+        {
+            logger->error("{}", d);
+        }
+        logger->info(translate("openminecraft.renderer.vk.sdl.present"),
+                     SDL_Vulkan_GetPresentationSupport(instance, physicalDevice, 0));
     }
 }
 void *vkAlloc(void *, size_t size, size_t align, VkSystemAllocationScope s)
