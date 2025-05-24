@@ -95,8 +95,10 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         validationLayer = std::make_shared<validation::OMRendererVkValidation>(layers);
         validationLayer->attachExts(&exts);
     }
+    exts.push_back("test");
 
     // Instance
+    try
     {
         ApplicationInfo appInfo(info.appName.c_str(), info.appVer.toVKVersion(), info.engineName.c_str(),
                                 info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
@@ -113,6 +115,13 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 
         validationLayer->ifEnable(
             [&]() { messenger = instance.createDebugUtilsMessengerEXT(validationLayer->createInfo, allocator); });
+    }
+    catch (SystemError e)
+    {
+        logger->info("{}", translate("openminecraft.renderer.vk.err.shell",
+                                     translate(fmt::format("openminecraft.renderer.vk.err.{}", e.code().message())),
+                                     (uint32_t)e.code().value()));
+        throw e;
     }
 
     {
