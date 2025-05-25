@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "vulkan/vulkan_handles.hpp"
+#include <any>
 #include <functional>
 #include <stdexcept>
 #ifdef OM_VULKAN_DYNAMIC
@@ -33,6 +34,9 @@ class OMRendererVk : public OMRenderer
     ~OMRendererVk();
 
     util::OMResult<std::vector<const char *>, std::string> fetchRequiredExtensions();
+    util::OMResult<::vk::Instance, std::string> instanceCreation(AppInfo info, std::vector<const char *> exts);
+    util::OMResult<::vk::PhysicalDevice, std::string> deviceSelection(std::function<int(std::vector<std::string>)> dev);
+    util::OMResult<std::any, std::string> sdlVulkanLoading();
 
     virtual std::string driver() override;
     void destroy();

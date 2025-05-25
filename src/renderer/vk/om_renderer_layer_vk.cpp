@@ -90,29 +90,64 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     }
     }
 
-    try
+    auto instanceResult = instanceCreation(info, exts);
+    switch (instanceResult.type)
     {
-        ApplicationInfo appInfo(info.appName.c_str(), info.appVer.toVKVersion(), info.engineName.c_str(),
-                                info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
-        std::vector<const char *> l;
-        validationLayer->attach(&l);
-        instance = createInstance({InstanceCreateFlags(), &appInfo, (uint32_t)l.size(), l.data(), (uint32_t)exts.size(),
-                                   exts.data(), validationLayer->createInfo},
-                                  allocator);
-        logger->info(translate("openminecraft.renderer.vk.instance", info.appName, info.appVer.toString(),
-                               info.engineName, info.engineVer.toString(), info.minApiVersion.toString()));
-#ifdef OM_VULKAN_DYNAMIC
-        VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
-#endif
-
-        validationLayer->ifEnable(
-            [&]() { messenger = instance.createDebugUtilsMessengerEXT(validationLayer->createInfo, allocator); });
+    case util::Ok: {
+        instance = instanceResult.unwrap();
+        break;
     }
-    catch (SystemError e)
-    {
-        VkErrLogAndThrow(e, "openminecraft.renderer.vk.err.instance");
+    case util::Err: {
+        throw std::runtime_error(instanceResult.unwrap_err());
+    }
     }
 
+    auto phydevResult = deviceSelection(dev);
+    switch (phydevResult.type)
+    {
+    case util::Ok: {
+        physicalDevice = phydevResult.unwrap();
+        break;
+    }
+    case util::Err: {
+        throw std::runtime_error(phydevResult.unwrap_err());
+    }
+    }
+
+    auto sdlLoadingResult = sdlVulkanLoading();
+    switch (sdlLoadingResult.type)
+    {
+    case util::Ok: {
+        break;
+    }
+    case util::Err: {
+        throw std::runtime_error(sdlLoadingResult.unwrap_err());
+    }
+    }
+}
+util::OMResult<std::any, std::string> OMRendererVk::sdlVulkanLoading()
+{
+#define errRet(a)                                                                                                      \
+    logger->error("{}", a);                                                                                            \
+    return util::OMResult<std::any, std::string>::err(translate("openminecraft.renderer.vk.sdl.err", a));
+
+    auto d0 = SDL_GetError();
+    if (strlen(d0))
+    {
+        errRet(d0);
+    }
+    logger->info(translate("openminecraft.renderer.vk.sdl.vulkan"));
+    SDL_Vulkan_LoadLibrary(nullptr);
+    auto d = SDL_GetError();
+    if (strlen(d))
+    {
+        errRet(d);
+    }
+    return util::OMResult<std::any, std::string>::ok(nullptr);
+}
+util::OMResult<::vk::PhysicalDevice, std::string> OMRendererVk::deviceSelection(
+    std::function<int(std::vector<std::string>)> dev)
+{
     try
     {
         auto phyDev = instance.enumeratePhysicalDevices();
@@ -127,30 +162,41 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
             d.push_back(n.data());
             id++;
         }
-        physicalDevice = phyDev[ids];
+        return util::OMResult<::vk::PhysicalDevice, std::string>::ok(phyDev[ids]);
     }
     catch (SystemError e)
     {
-        VkErrLogAndThrow(e, "openminecraft.renderer.vk.err.phydev");
+        logger->error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.phydev"));
+        return util::OMResult<::vk::PhysicalDevice, std::string>::err(
+            VkErrorTranslate(e, "openminecraft.renderer.vk.err.phydev"));
     }
-
+}
+util::OMResult<::vk::Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std::vector<const char *> exts)
+{
+    try
     {
-        auto d0 = SDL_GetError();
-        if (strlen(d0))
-        {
-            logger->error("{}", d0);
-            throw std::runtime_error(translate("openminecraft.renderer.vk.sdl.err").c_str());
-        }
-        logger->info(translate("openminecraft.renderer.vk.sdl.vulkan"));
-        SDL_Vulkan_LoadLibrary(nullptr);
-        auto d = SDL_GetError();
-        if (strlen(d))
-        {
-            logger->error("{}", d);
-            throw std::runtime_error(translate("openminecraft.renderer.vk.sdl.err").c_str());
-        }
-        logger->info(translate("openminecraft.renderer.vk.sdl.present"),
-                     SDL_Vulkan_GetPresentationSupport(instance, physicalDevice, 0));
+        ApplicationInfo appInfo(info.appName.c_str(), info.appVer.toVKVersion(), info.engineName.c_str(),
+                                info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
+        std::vector<const char *> l;
+        validationLayer->attach(&l);
+        auto i = createInstance({InstanceCreateFlags(), &appInfo, (uint32_t)l.size(), l.data(), (uint32_t)exts.size(),
+                                 exts.data(), validationLayer->createInfo},
+                                allocator);
+        logger->info(translate("openminecraft.renderer.vk.instance", info.appName, info.appVer.toString(),
+                               info.engineName, info.engineVer.toString(), info.minApiVersion.toString()));
+#ifdef OM_VULKAN_DYNAMIC
+        VULKAN_HPP_DEFAULT_DISPATCHER.init(i);
+#endif
+
+        validationLayer->ifEnable(
+            [&]() { messenger = i.createDebugUtilsMessengerEXT(validationLayer->createInfo, allocator); });
+        return util::OMResult<::vk::Instance, std::string>::ok(i);
+    }
+    catch (SystemError e)
+    {
+        logger->error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.instance"));
+        return util::OMResult<::vk::Instance, std::string>::err(
+            VkErrorTranslate(e, "openminecraft.renderer.vk.err.instance"));
     }
 }
 util::OMResult<std::vector<const char *>, std::string> OMRendererVk::fetchRequiredExtensions()
