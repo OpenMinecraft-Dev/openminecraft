@@ -54,6 +54,9 @@ end
 if is_plat("iphoneos") then
     add_defines("OM_PLATFORM_IOS=")
 end
+if is_plat("harmony") then
+    add_defines("OM_PLATFORM_HARMONY=")
+end
 if not mobile() then
     add_defines("OM_PLATFORM_DESKTOP=")
 end
@@ -96,12 +99,15 @@ end
 if is_plat("iphoneos") then
     add_files("plat/ios/**.cpp")
 end
+if is_plat("harmony") then
+    add_files("plat/harmony/**.cpp")
+end
 if not mobile() then
     add_files("plat/desktop/**.cpp")
 end
 
 target("openminecraft")
-if is_plat("android", "harmonyos") then
+if is_plat("android", "harmony") then
     set_kind("shared")
     add_rules("utils.symbols.export_all")
 else 
@@ -111,6 +117,7 @@ end
 add_includedirs("include")
 if is_plat("harmony") then
     add_syslinks("vulkan")
+    add_links("vulkan")
 elseif is_plat("android") then
     add_syslinks("GLESv2")
 end
