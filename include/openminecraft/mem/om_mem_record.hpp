@@ -21,6 +21,7 @@ struct MemModifyInfo
 
 size_t heapSize(void *p);
 void rec(MemModifyInfo i);
+void printres();
 } // namespace openminecraft::mem::castorice
 
 #endif

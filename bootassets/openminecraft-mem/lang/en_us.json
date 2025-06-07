@@ -1,0 +1,5 @@
+{
+    "openminecraft.mem.title": "*** Memory Status ***", 
+    "openminecraft.mem.blocks": "Memory blocks: {}", 
+    "openminecraft.mem.detail": "{} : {}"
+}

@@ -235,7 +235,7 @@ util::OMResult<std::vector<const char *>, std::string> OMRendererVk::fetchRequir
 void *vkAlloc(void *, size_t size, size_t align, VkSystemAllocationScope s)
 {
     void *p = malloc((size / align + 1) * align);
-    mem::castorice::rec({mem::castorice::Allocation, p, (size / align + 1) * align, 2});
+    mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), 2});
     return p;
 }
 void *vkRealloc(void *, void *o, size_t size, size_t align, VkSystemAllocationScope s)
@@ -245,12 +245,12 @@ void *vkRealloc(void *, void *o, size_t size, size_t align, VkSystemAllocationSc
     {
         mem::castorice::rec({mem::castorice::Free, o, mem::castorice::heapSize(o), 2});
         p = realloc(o, (size / align + 1) * align);
-        mem::castorice::rec({mem::castorice::Allocation, p, (size / align + 1) * align, 2});
+        mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), 2});
     }
     else
     {
         p = malloc((size / align + 1) * align);
-        mem::castorice::rec({mem::castorice::Allocation, p, (size / align + 1) * align, 2});
+        mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), 2});
     }
     return p;
 }

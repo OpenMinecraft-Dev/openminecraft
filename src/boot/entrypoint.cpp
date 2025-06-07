@@ -3,6 +3,7 @@
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
+#include <alloca.h>
 #include <boost/stacktrace/stacktrace.hpp>
 #include <exception>
 #include <memory>
@@ -16,6 +17,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/util/om_util_version.hpp"
@@ -45,6 +47,7 @@ int boot(std::vector<std::string> args)
     logger->info("Setting up i18n environment...");
     i18n::res::registerModule("openminecraft-boot");
     i18n::res::registerModule("openminecraft-renderer");
+    i18n::res::registerModule("openminecraft-mem");
     vfs::fsmountBundle({res_bundle, res_bundle_len}, "/bootassets");
     i18n::res::pushResourceRoot("/bootassets");
     i18n::res::load();
@@ -73,6 +76,10 @@ int boot(std::vector<std::string> args)
             return 1;
         }
     }
+
+    alloca(1048576);
+    
+    mem::castorice::printres();
 
     SDL_Quit();
 
