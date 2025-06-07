@@ -5,10 +5,8 @@
 #include <SDL3/SDL_video.h>
 #include <alloca.h>
 #include <boost/stacktrace/stacktrace.hpp>
-#include <exception>
 #include <memory>
 #include <stdexcept>
-#include <system_error>
 #include <vector>
 
 #include "SDL3/SDL_messagebox.h"
@@ -77,11 +75,9 @@ int boot(std::vector<std::string> args)
         }
     }
 
-    alloca(1048576);
+    SDL_Quit();
     
     mem::castorice::printres();
-
-    SDL_Quit();
 
     return 0;
 }
