@@ -3,7 +3,6 @@
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
-#include <alloca.h>
 #include <boost/stacktrace/stacktrace.hpp>
 #include <memory>
 #include <stdexcept>
