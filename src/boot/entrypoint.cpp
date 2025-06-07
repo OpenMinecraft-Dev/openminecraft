@@ -76,7 +76,7 @@ int boot(std::vector<std::string> args)
     }
 
     SDL_Quit();
-    
+
     mem::castorice::printres();
 
     return 0;

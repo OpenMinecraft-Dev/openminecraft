@@ -3,19 +3,9 @@
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 
-uint64_t mems[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-std::string memName[10] = {
-    "C++ allocator", 
-    "SDL", 
-    "Vulkan", 
-    "Vulkan Internal", 
-    "Unknown", 
-    "Unknown", 
-    "Unknown", 
-    "Unknown", 
-    "Unknown", 
-    "Unknown"
-};
+uint64_t mems[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+std::string memName[10] = {"C++ allocator", "SDL",     "Vulkan",  "Vulkan Internal", "Unknown",
+                           "Unknown",       "Unknown", "Unknown", "Unknown",         "Unknown"};
 uint64_t blocks = 0;
 
 using namespace openminecraft::i18n::res;
@@ -47,7 +37,8 @@ std::string toDataSize(uint64_t l)
     {
         return fmt::format("{:.{}f} GB", (double)l / 1024 / 1024 / 1024, 2);
     }
-    else {
+    else
+    {
         return fmt::format("{:.{}f} TB", (double)l / 1024 / 1024 / 1024 / 1024, 2);
     }
 }
