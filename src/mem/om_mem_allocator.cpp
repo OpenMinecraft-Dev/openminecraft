@@ -35,7 +35,7 @@ namespace openminecraft::mem::allocator
         free(p);                                                                                                       \
     }
 
-defmalr(SDL, 1)
+defmalr(SDL, OM_MEM_SDL)
 } // namespace openminecraft::mem::allocator
 
 using namespace openminecraft::mem::allocator;
@@ -43,25 +43,25 @@ using namespace openminecraft::mem::allocator;
 void *operator new(size_t size)
 {
     void *p = malloc(size);
-    rec({Allocation, p, heapSize(p), 0});
+    rec({Allocation, p, heapSize(p), OM_MEM_CPP});
     return p;
 }
 
 void *operator new[](size_t size)
 {
     void *p = malloc(size);
-    rec({Allocation, p, heapSize(p), 0});
+    rec({Allocation, p, heapSize(p), OM_MEM_CPP});
     return p;
 }
 
 void operator delete(void *p)
 {
-    rec({Free, p, heapSize(p), 0});
+    rec({Free, p, heapSize(p), OM_MEM_CPP});
     free(p);
 }
 
 void operator delete[](void *p)
 {
-    rec({Free, p, heapSize(p), 0});
+    rec({Free, p, heapSize(p), OM_MEM_CPP});
     free(p);
 }

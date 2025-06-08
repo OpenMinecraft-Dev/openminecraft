@@ -3,6 +3,10 @@
 
 #include <cstdint>
 #include <cstdlib>
+#define OM_MEM_CPP 0
+#define OM_MEM_SDL 1
+#define OM_MEM_VULKAN 2
+#define OM_MEM_VULKAN_INTERNAL 3
 namespace openminecraft::mem::castorice
 {
 enum MemModifyType

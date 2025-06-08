@@ -712,12 +712,12 @@ class OMClassFileParser : public io::OMParser
     OMClassFileParser(std::shared_ptr<std::istream> stream);
     ~OMClassFileParser();
     util::OMResult<std::shared_ptr<OMClassFile>, std::exception> parse();
+    ConstantMapping buildConstantMapping(std::vector<std::shared_ptr<OMClassConstant>> c);
 
   private:
     std::shared_ptr<log::OMLogger> logger;
 
     util::OMResult<std::shared_ptr<OMClassConstant>, std::exception> parseConstant(uint16_t *idx);
-    ConstantMapping buildConstantMapping(std::vector<std::shared_ptr<OMClassConstant>> c);
     std::shared_ptr<OMClassFieldInfo> parseField(ConstantMapping m);
     std::shared_ptr<OMClassAttr> parseAttr(ConstantMapping m);
     std::shared_ptr<OMClassMethodInfo> parseMethod(ConstantMapping m);

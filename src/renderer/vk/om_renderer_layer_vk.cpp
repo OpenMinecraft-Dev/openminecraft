@@ -235,7 +235,7 @@ util::OMResult<std::vector<const char *>, std::string> OMRendererVk::fetchRequir
 void *vkAlloc(void *, size_t size, size_t align, VkSystemAllocationScope s)
 {
     void *p = malloc((size / align + 1) * align);
-    mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), 2});
+    mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), OM_MEM_VULKAN});
     return p;
 }
 void *vkRealloc(void *, void *o, size_t size, size_t align, VkSystemAllocationScope s)
@@ -243,14 +243,14 @@ void *vkRealloc(void *, void *o, size_t size, size_t align, VkSystemAllocationSc
     void *p;
     if (o != nullptr)
     {
-        mem::castorice::rec({mem::castorice::Free, o, mem::castorice::heapSize(o), 2});
+        mem::castorice::rec({mem::castorice::Free, o, mem::castorice::heapSize(o), OM_MEM_VULKAN});
         p = realloc(o, (size / align + 1) * align);
-        mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), 2});
+        mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), OM_MEM_VULKAN});
     }
     else
     {
         p = malloc((size / align + 1) * align);
-        mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), 2});
+        mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), OM_MEM_VULKAN});
     }
     return p;
 }
@@ -258,15 +258,15 @@ void vkFree(void *, void *p)
 {
     if (p == nullptr)
         return;
-    mem::castorice::rec({mem::castorice::Free, p, mem::castorice::heapSize(p), 2});
+    mem::castorice::rec({mem::castorice::Free, p, mem::castorice::heapSize(p), OM_MEM_VULKAN});
 }
 void vkInternalAlloc(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s)
 {
-    mem::castorice::rec({mem::castorice::Allocation, nullptr, size, 3});
+    mem::castorice::rec({mem::castorice::Allocation, nullptr, size, OM_MEM_VULKAN_INTERNAL});
 }
 void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s)
 {
-    mem::castorice::rec({mem::castorice::Free, nullptr, size, 3});
+    mem::castorice::rec({mem::castorice::Free, nullptr, size, OM_MEM_VULKAN_INTERNAL});
 }
 OMRendererVk::~OMRendererVk()
 {

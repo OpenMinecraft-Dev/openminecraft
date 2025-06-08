@@ -4,6 +4,7 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
+#include <fstream>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -17,13 +18,18 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
+#include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
+#include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
+#include "openminecraft/vm/om_class_file.hpp"
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
 
 using namespace openminecraft;
+using namespace openminecraft::vm::classfile;
+using namespace openminecraft::vm::bytecode;
 
 #include "openminecraft/resource/bootassets.h"
 
@@ -61,6 +67,7 @@ int boot(std::vector<std::string> args)
                                util::Version(1, 0, 0, 0), util::Version(1, 0, 0, 0)};
         auto renderer = std::make_unique<renderer::vk::OMRendererVk>(a, [](std::vector<std::string>) { return 0; });
 
+        mem::castorice::printres();
         vfs::fsumount("/bootassets");
 
         renderer->destroy();
@@ -76,7 +83,19 @@ int boot(std::vector<std::string> args)
 
     SDL_Quit();
 
-    mem::castorice::printres();
+    auto par = std::make_unique<OMClassFileParser>(std::make_shared<std::ifstream>("/home/coder2/Test.class"));
+    auto clsres = par->parse();
+    switch (clsres.type)
+    {
+    case util::Ok: {
+        auto clsfile = clsres.unwrap();
+        auto chk = std::make_unique<OMBytecodeChecker>(clsfile);
+        chk->check();
+        break;
+    }
+    case util::Err: {
+    }
+    }
 
     return 0;
 }
