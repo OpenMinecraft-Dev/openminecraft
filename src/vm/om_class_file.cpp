@@ -90,6 +90,8 @@ util::OMResult<std::shared_ptr<OMClassFile>, std::exception> OMClassFileParser::
         file->attrs.push_back(parseAttr(m));
     }
 
+    file->mapping = m;
+
     return OMResult<std::shared_ptr<OMClassFile>, std::exception>::ok(file);
 }
 

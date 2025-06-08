@@ -702,6 +702,8 @@ struct OMClassFile
     std::vector<std::shared_ptr<OMClassMethodInfo>> methods;
     uint16_t attrCount;
     std::vector<std::shared_ptr<OMClassAttr>> attrs;
+
+    std::map<uint16_t, std::shared_ptr<OMClassConstant>> mapping;
 };
 
 class OMClassFileParser : public io::OMParser
