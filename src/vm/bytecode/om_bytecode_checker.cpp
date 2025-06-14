@@ -97,6 +97,36 @@ void OMBytecodeChecker::check()
                 bytes += 2;
                 break;
             }
+            // iload (index:u8)
+            case op_iload: {
+                logger->info("iload #{}", codeRaw[bytes + 1]);
+                bytes++;
+                break;
+            }
+            // lload (index:u8)
+            case op_lload: {
+                logger->info("lload #{}", codeRaw[bytes + 1]);
+                bytes++;
+                break;
+            }
+            // fload (index:u8)
+            case op_fload: {
+                logger->info("fload #{}", codeRaw[bytes + 1]);
+                bytes++;
+                break;
+            }
+            // dload (index:u8)
+            case op_dload: {
+                logger->info("dload #{}", codeRaw[bytes + 1]);
+                bytes++;
+                break;
+            }
+            // aload (index:u8)
+            case op_aload: {
+                logger->info("aload #{}", codeRaw[bytes + 1]);
+                bytes++;
+                break;
+            }
             // invokevirtual (index:u16)
             case op_invokevirtual: {
                 logger->info("invokevirtual #{}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)));
