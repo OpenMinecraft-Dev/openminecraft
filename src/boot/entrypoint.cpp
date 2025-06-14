@@ -61,7 +61,7 @@ int boot(std::vector<std::string> args)
         logger->info(a);
     }
 
-    try
+    /*try
     {
         renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
                                util::Version(1, 0, 0, 0), util::Version(1, 0, 0, 0)};
@@ -79,7 +79,7 @@ int boot(std::vector<std::string> args)
             logger->info("SDL Status: {}", SDL_GetError());
             return 1;
         }
-    }
+    }*/
 
     SDL_Quit();
 

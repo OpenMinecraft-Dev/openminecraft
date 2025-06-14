@@ -24,10 +24,12 @@ void OMBytecodeChecker::check()
         {
             logger->info("function: <unnamed>");
         }
+
         if (m->attrs.empty())
         {
             continue;
         }
+
         auto attr = m->attrs[0]->to<classfile::OMClassAttrCode>();
         auto codeRaw = attr->code.data();
         auto bytes = 0;

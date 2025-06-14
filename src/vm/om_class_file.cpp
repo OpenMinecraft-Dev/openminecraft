@@ -671,7 +671,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
     }
     default:
         this->source->seekg((uint64_t)this->source->tellg() + length);
-        this->logger->info("Unimplemented attr: {}", m[ni]->to<OMClassConstantUtf8>()->data);
+        this->logger->warn("Unimplemented attr: {}", m[ni]->to<OMClassConstantUtf8>()->data);
         break;
     }
 
@@ -680,7 +680,6 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
 
 std::shared_ptr<OMClassAnnotation> OMClassFileParser::parseAnnotation()
 {
-    this->source->seekg((uint64_t)this->source->tellg() + 2);
     auto anno = std::make_shared<OMClassAnnotation>();
     this->source->readbe16(anno->type);
     this->source->readbe16(anno->numPairs);
