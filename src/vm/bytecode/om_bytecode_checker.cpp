@@ -24,20 +24,18 @@ void OMBytecodeChecker::check()
         auto attr = m->attrs[0]->to<classfile::OMClassAttrCode>();
         auto codeRaw = attr->code.data();
         auto bytes = 0;
+
+#define simpleCommand(operand, msg)                                                                                    \
+    case operand:                                                                                                      \
+        logger->info(msg);                                                                                             \
+        break
+
         while (bytes < attr->codeLength)
         {
             switch (codeRaw[bytes])
             {
-            // nop
-            case op_nop: {
-                logger->info("nop");
-                break;
-            }
-            // aconst_null
-            case op_aconst_null: {
-                logger->info("aconst_null");
-                break;
-            }
+                simpleCommand(op_nop, "nop");
+                simpleCommand(op_aconst_null, "aconst_null");
             // const operands
             case op_iconst_i(-1):
             case op_iconst_i(0):
@@ -127,9 +125,183 @@ void OMBytecodeChecker::check()
                 bytes++;
                 break;
             }
+            // iload_<n>
+            case op_iload_n(0):
+            case op_iload_n(1):
+            case op_iload_n(2):
+            case op_iload_n(3):
+                logger->info("aload_{}", (int)(codeRaw[bytes] - op_iload_n(0)));
+                break;
+
+            // lload_<n>
+            case op_lload_n(0):
+            case op_lload_n(1):
+            case op_lload_n(2):
+            case op_lload_n(3):
+                logger->info("aload_{}", (int)(codeRaw[bytes] - op_lload_n(0)));
+                break;
+            // fload_<n>
+            case op_fload_n(0):
+            case op_fload_n(1):
+            case op_fload_n(2):
+            case op_fload_n(3):
+                logger->info("aload_{}", (int)(codeRaw[bytes] - op_fload_n(0)));
+                break;
+            // dload_<n>
+            case op_dload_n(0):
+            case op_dload_n(1):
+            case op_dload_n(2):
+            case op_dload_n(3):
+                logger->info("aload_{}", (int)(codeRaw[bytes] - op_dload_n(0)));
+                break;
+            // aload_<n>
+            case op_aload_n(0):
+            case op_aload_n(1):
+            case op_aload_n(2):
+            case op_aload_n(3):
+                logger->info("aload_{}", (int)(codeRaw[bytes] - op_aload_n(0)));
+                break;
+
+                simpleCommand(op_iaload, "iaload");
+                simpleCommand(op_laload, "laload");
+                simpleCommand(op_faload, "faload");
+                simpleCommand(op_daload, "daload");
+                simpleCommand(op_aaload, "aaload");
+                simpleCommand(op_baload, "baload");
+                simpleCommand(op_caload, "caload");
+                simpleCommand(op_saload, "saload");
+
+            // istore (index:u8)
+            case op_istore: {
+                logger->info("istore #{}", codeRaw[bytes + 1]);
+                bytes++;
+                break;
+            }
+            // lstore (index:u8)
+            case op_lstore: {
+                logger->info("lstore #{}", codeRaw[bytes + 1]);
+                bytes++;
+                break;
+            }
+            // fstore (index:u8)
+            case op_fstore: {
+                logger->info("fstore #{}", codeRaw[bytes + 1]);
+                bytes++;
+                break;
+            }
+            // dstore (index:u8)
+            case op_dstore: {
+                logger->info("dstore #{}", codeRaw[bytes + 1]);
+                bytes++;
+                break;
+            }
+            // astore (index:u8)
+            case op_astore: {
+                logger->info("astore #{}", codeRaw[bytes + 1]);
+                bytes++;
+                break;
+            }
+            case op_istore_n(0):
+            case op_istore_n(1):
+            case op_istore_n(2):
+            case op_istore_n(3):
+                logger->info("istore_{}", (int)(codeRaw[bytes] - op_istore_n(0)));
+                break;
+            case op_lstore_n(0):
+            case op_lstore_n(1):
+            case op_lstore_n(2):
+            case op_lstore_n(3):
+                logger->info("lstore_{}", (int)(codeRaw[bytes] - op_lstore_n(0)));
+                break;
+            case op_fstore_n(0):
+            case op_fstore_n(1):
+            case op_fstore_n(2):
+            case op_fstore_n(3):
+                logger->info("fstore_{}", (int)(codeRaw[bytes] - op_fstore_n(0)));
+                break;
+            case op_dstore_n(0):
+            case op_dstore_n(1):
+            case op_dstore_n(2):
+            case op_dstore_n(3):
+                logger->info("lstore_{}", (int)(codeRaw[bytes] - op_dstore_n(0)));
+                break;
+            case op_astore_n(0):
+            case op_astore_n(1):
+            case op_astore_n(2):
+            case op_astore_n(3):
+                logger->info("lstore_{}", (int)(codeRaw[bytes] - op_astore_n(0)));
+                break;
+
+                simpleCommand(op_iastore, "iastore");
+                simpleCommand(op_lastore, "lastore");
+                simpleCommand(op_fastore, "fastore");
+                simpleCommand(op_dastore, "dastore");
+                simpleCommand(op_aastore, "aastore");
+                simpleCommand(op_bastore, "bastore");
+                simpleCommand(op_castore, "castore");
+                simpleCommand(op_sastore, "sastore");
+                simpleCommand(op_pop, "pop");
+                simpleCommand(op_pop2, "pop2");
+                simpleCommand(op_dup, "dup");
+                simpleCommand(op_dup_x1, "dup_x1");
+                simpleCommand(op_dup_x2, "dup_x2");
+                simpleCommand(op_dup2, "dup2");
+                simpleCommand(op_dup2_x1, "dup2_x1");
+                simpleCommand(op_dup2_x2, "dup2_x2");
+                simpleCommand(op_swap, "swap");
+                simpleCommand(op_iadd, "iadd");
+                simpleCommand(op_ladd, "ladd");
+                simpleCommand(op_fadd, "fadd");
+                simpleCommand(op_dadd, "dadd");
+                simpleCommand(op_isub, "isub");
+                simpleCommand(op_lsub, "lsub");
+                simpleCommand(op_fsub, "fsub");
+                simpleCommand(op_dsub, "dsub");
+                simpleCommand(op_imul, "imul");
+                simpleCommand(op_lmul, "lmul");
+                simpleCommand(op_fmul, "fmul");
+                simpleCommand(op_dmul, "dmul");
+                simpleCommand(op_idiv, "idiv");
+                simpleCommand(op_ldiv, "ldiv");
+                simpleCommand(op_fdiv, "fdiv");
+                simpleCommand(op_ddiv, "ddiv");
+                simpleCommand(op_irem, "irem");
+                simpleCommand(op_lrem, "lrem");
+                simpleCommand(op_frem, "frem");
+                simpleCommand(op_drem, "drem");
+                simpleCommand(op_ineg, "ineg");
+                simpleCommand(op_lneg, "lneg");
+                simpleCommand(op_fneg, "fneg");
+                simpleCommand(op_dneg, "dneg");
+                simpleCommand(op_ishr, "ishr");
+                simpleCommand(op_ishl, "ishl");
+                simpleCommand(op_lshr, "lshr");
+                simpleCommand(op_lshl, "lshl");
+                simpleCommand(op_iushr, "iushr");
+                simpleCommand(op_lushr, "lushr");
+                simpleCommand(op_iand, "iand");
+                simpleCommand(op_land, "land");
+                simpleCommand(op_ior, "ior");
+                simpleCommand(op_lor, "lor");
+                simpleCommand(op_ixor, "ixor");
+                simpleCommand(op_lxor, "lxor");
+
+            // iinc (index:u8, const:u8)
+            case op_iinc: {
+                logger->info("iinc {} {}", codeRaw[bytes + 1], codeRaw[bytes + 2]);
+                bytes += 2;
+                break;
+            }
+
             // invokevirtual (index:u16)
             case op_invokevirtual: {
                 logger->info("invokevirtual #{}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)));
+                bytes += 2;
+                break;
+            }
+            // op_invokespecial (index:u16)
+            case op_invokespecial: {
+                logger->info("invokespecial #{}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)));
                 bytes += 2;
                 break;
             }

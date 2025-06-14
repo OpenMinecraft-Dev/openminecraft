@@ -93,7 +93,7 @@
 #define op_lor 0x81
 #define op_ixor 0x82
 #define op_lxor 0x83
-#define op_iint 0x84
+#define op_iinc 0x84
 #define op_i2l 0x85
 #define op_i2f 0x86
 #define op_i2d 0x87
