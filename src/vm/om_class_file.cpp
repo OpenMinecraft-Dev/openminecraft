@@ -361,26 +361,26 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             else if (fr->tag < 255)
             {
                 this->source->readbe16(fr->appendFrame.offset);
-                fr->appendFrame.locals = std::vector<OMClassAttrVerifyTypeInfo>();
+                fr->appendFrame.locals = std::make_shared<std::vector<OMClassAttrVerifyTypeInfo>>();
                 for (uint8_t i = 0; i < fr->tag - 251; i++)
                 {
-                    fr->appendFrame.locals.push_back(typep());
+                    fr->appendFrame.locals->push_back(typep());
                 }
             }
             else
             {
                 this->source->readbe16(fr->fullFrame.offset);
                 this->source->readbe16(fr->fullFrame.numberOfLocals);
-                fr->fullFrame.locals = std::vector<OMClassAttrVerifyTypeInfo>();
+                fr->fullFrame.locals = std::make_shared<std::vector<OMClassAttrVerifyTypeInfo>>();
                 for (uint16_t i = 0; i < fr->fullFrame.numberOfLocals; i++)
                 {
-                    fr->fullFrame.locals.push_back(typep());
+                    fr->fullFrame.locals->push_back(typep());
                 }
                 this->source->readbe16(fr->fullFrame.numberOfStackItems);
-                fr->fullFrame.stackItems = std::vector<OMClassAttrVerifyTypeInfo>();
+                fr->fullFrame.stackItems = std::make_shared<std::vector<OMClassAttrVerifyTypeInfo>>();
                 for (uint16_t i = 0; i < fr->fullFrame.numberOfStackItems; i++)
                 {
-                    fr->fullFrame.stackItems.push_back(typep());
+                    fr->fullFrame.stackItems->push_back(typep());
                 }
             }
 

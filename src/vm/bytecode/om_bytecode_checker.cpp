@@ -16,7 +16,14 @@ void OMBytecodeChecker::check()
 {
     for (auto m : cls->methods)
     {
-        logger->info("function: {}", cls->mapping[m->nameIndex]->to<classfile::OMClassConstantUtf8>()->data);
+        if (m->nameIndex != 0)
+        {
+            logger->info("function: {}", cls->mapping[m->nameIndex]->to<classfile::OMClassConstantUtf8>()->data);
+        }
+        else
+        {
+            logger->info("function: <unnamed>");
+        }
         if (m->attrs.empty())
         {
             continue;
@@ -28,6 +35,12 @@ void OMBytecodeChecker::check()
 #define simpleCommand(operand, msg)                                                                                    \
     case operand:                                                                                                      \
         logger->info(msg);                                                                                             \
+        break
+
+#define tbyteCommand(operand, msg)                                                                                     \
+    case operand:                                                                                                      \
+        logger->info(msg, binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)));                                   \
+        bytes += 2;                                                                                                    \
         break
 
         while (bytes < attr->codeLength)
@@ -59,42 +72,21 @@ void OMBytecodeChecker::check()
             case op_dconst_d(1):
                 logger->info("dconst_{}", codeRaw[bytes] - 0xe);
                 break;
-            // getstatic (index:u16)
-            case op_getstatic: {
-                logger->info("getstatic #{}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)));
-                bytes += 2;
-                break;
-            }
             // bipush (value:u8)
             case op_bipush: {
                 logger->info("bipush {0:#x}", codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
-            // sipush (value:u16)
-            case op_sipush: {
-                logger->info("sipush #{}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)));
-                bytes += 2;
-                break;
-            }
+                tbyteCommand(op_sipush, "sipush #{}");
             // ldc (index:u8)
             case op_ldc: {
                 logger->info("ldc #{}", codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
-            // ldc_w (index:u16)
-            case op_ldc_w: {
-                logger->info("ldc_w #{}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)));
-                bytes += 2;
-                break;
-            }
-            // ldc2_w (index:u16)
-            case op_ldc2_w: {
-                logger->info("ldc2_w #{}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)));
-                bytes += 2;
-                break;
-            }
+                tbyteCommand(op_ldc_w, "ldc_w #{}");
+                tbyteCommand(op_ldc2_w, "ldc_w #{}");
             // iload (index:u8)
             case op_iload: {
                 logger->info("iload #{}", codeRaw[bytes + 1]);
@@ -312,39 +304,86 @@ void OMBytecodeChecker::check()
                 simpleCommand(op_fcmpg, "fcmpg");
                 simpleCommand(op_dcmpl, "dcmpl");
                 simpleCommand(op_dcmpg, "dcmpg");
-
-            // if<op> (offset:u16)
-            case op_ifeq:
-            case op_ifne:
-            case op_iflt:
-            case op_ifge:
-            case op_ifgt:
-            case op_ifle:
-                logger->info("if?? {}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)) + bytes);
-                bytes += 2;
-                break;
-
-            // invokevirtual (index:u16)
-            case op_invokevirtual: {
-                logger->info("invokevirtual #{}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)));
-                bytes += 2;
-                break;
-            }
-            // op_invokespecial (index:u16)
-            case op_invokespecial: {
-                logger->info("invokespecial #{}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)));
-                bytes += 2;
+                tbyteCommand(op_ifeq, "ifeq {}");
+                tbyteCommand(op_ifne, "ifne {}");
+                tbyteCommand(op_iflt, "iflt {}");
+                tbyteCommand(op_ifge, "ifge {}");
+                tbyteCommand(op_ifgt, "ifgt {}");
+                tbyteCommand(op_ifle, "ifle {}");
+                tbyteCommand(op_if_icmpeq, "if_icmpeq {}");
+                tbyteCommand(op_if_icmpne, "if_icmpne {}");
+                tbyteCommand(op_if_icmplt, "if_icmplt {}");
+                tbyteCommand(op_if_icmpge, "if_icmpge {}");
+                tbyteCommand(op_if_icmpgt, "if_icmpgt {}");
+                tbyteCommand(op_if_icmple, "if_icmple {}");
+                tbyteCommand(op_if_acmpeq, "if_acmpeq {}");
+                tbyteCommand(op_if_acmpne, "if_acmpne {}");
+                tbyteCommand(op_goto, "if_goto {}");
+                tbyteCommand(op_jsr, "if_jsr {}");
+            // ret (index:u8)
+            case op_ret: {
+                logger->info("ret {}", (int)codeRaw[bytes + 1]);
+                bytes++;
                 break;
             }
-            // invokestatic (index:u16)
-            case op_invokestatic: {
-                logger->info("invokestatic #{}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)));
-                bytes += 2;
+            // tableswitch (padding:variable, default:u32, low:u32, high:u32, offsets:u32[high-low+1])
+            case op_tableswitch: {
+                bytes++;
+                while (bytes % 4 != 0)
+                {
+                    bytes++;
+                }
+                int def = (codeRaw[bytes] << 24) | (codeRaw[bytes + 1] << 16) | (codeRaw[bytes + 2] << 8) |
+                          (codeRaw[bytes + 3]);
+                int low = (codeRaw[bytes + 4] << 24) | (codeRaw[bytes + 5] << 16) | (codeRaw[bytes + 6] << 8) |
+                          (codeRaw[bytes + 7]);
+                int high = (codeRaw[bytes + 8] << 24) | (codeRaw[bytes + 9] << 16) | (codeRaw[bytes + 10] << 8) |
+                           (codeRaw[bytes + 11]);
+                int cont = high - low + 1;
+                logger->info("tableswitch {} {} {} ...", def, low, high);
+                bytes += 12;
+                bytes += cont * 4;
                 break;
             }
-            // return
-            case op_return: {
-                logger->info("return");
+            // tableswitch (padding:variable, default:u32, npairs:u32, pairs:u32[npairs])
+            case op_lookupswitch: {
+                bytes++;
+                while (bytes % 4 != 0)
+                {
+                    bytes++;
+                }
+                int def = (codeRaw[bytes] << 24) | (codeRaw[bytes + 1] << 16) | (codeRaw[bytes + 2] << 8) |
+                          (codeRaw[bytes + 3]);
+                int npairs = (codeRaw[bytes + 4] << 24) | (codeRaw[bytes + 5] << 16) | (codeRaw[bytes + 6] << 8) |
+                             (codeRaw[bytes + 7]);
+                logger->info("lookupswitch {} {} ...", def, npairs);
+                bytes += 8;
+                bytes += npairs * 4;
+                break;
+            }
+                simpleCommand(op_ireturn, "ireturn");
+                simpleCommand(op_lreturn, "lreturn");
+                simpleCommand(op_freturn, "freturn");
+                simpleCommand(op_dreturn, "dreturn");
+                simpleCommand(op_areturn, "areturn");
+                simpleCommand(op_return, "return");
+                tbyteCommand(op_getstatic, "getstatic #{}");
+                tbyteCommand(op_putstatic, "putstatic #{}");
+                tbyteCommand(op_getfield, "getfield #{}");
+                tbyteCommand(op_putfield, "putfield #{}");
+                tbyteCommand(op_invokevirtual, "invokevirtual #{}");
+                tbyteCommand(op_invokespecial, "invokespecial #{}");
+                tbyteCommand(op_invokestatic, "invokestatic #{}");
+            case op_invokeinterface: {
+                logger->info("invokeinterface #{} {}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)),
+                             (int)codeRaw[bytes + 3]);
+                bytes += 4;
+                break;
+            }
+            case op_invokedynamic: {
+                logger->info("invokedynamic #{} {}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)),
+                             (int)codeRaw[bytes + 3]);
+                bytes += 4;
                 break;
             }
             default: {
@@ -354,6 +393,11 @@ void OMBytecodeChecker::check()
             }
             bytes++;
         }
+
+        /*if (cls->mapping[m->nameIndex]->to<classfile::OMClassConstantUtf8>()->data == "main")
+        {
+            break;
+        }*/
     checkend:
         continue;
     }
