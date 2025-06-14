@@ -293,6 +293,37 @@ void OMBytecodeChecker::check()
                 break;
             }
 
+                simpleCommand(op_i2l, "i2l");
+                simpleCommand(op_i2f, "i2f");
+                simpleCommand(op_i2d, "i2d");
+                simpleCommand(op_l2i, "l2i");
+                simpleCommand(op_l2f, "l2f");
+                simpleCommand(op_l2d, "l2d");
+                simpleCommand(op_f2i, "f2i");
+                simpleCommand(op_f2l, "f2l");
+                simpleCommand(op_f2d, "f2d");
+                simpleCommand(op_d2i, "d2i");
+                simpleCommand(op_d2l, "d2l");
+                simpleCommand(op_d2f, "d2f");
+                simpleCommand(op_i2b, "i2b");
+                simpleCommand(op_i2c, "i2c");
+                simpleCommand(op_i2s, "i2s");
+                simpleCommand(op_fcmpl, "fcmpl");
+                simpleCommand(op_fcmpg, "fcmpg");
+                simpleCommand(op_dcmpl, "dcmpl");
+                simpleCommand(op_dcmpg, "dcmpg");
+
+            // if<op> (offset:u16)
+            case op_ifeq:
+            case op_ifne:
+            case op_iflt:
+            case op_ifge:
+            case op_ifgt:
+            case op_ifle:
+                logger->info("if?? {}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)) + bytes);
+                bytes += 2;
+                break;
+
             // invokevirtual (index:u16)
             case op_invokevirtual: {
                 logger->info("invokevirtual #{}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)));

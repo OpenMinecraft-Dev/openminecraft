@@ -56,12 +56,12 @@ void *operator new[](size_t size)
 
 void operator delete(void *p)
 {
-    rec({Free, p, heapSize(p), OM_MEM_CPP});
-    free(p);
+    // rec({Free, p, heapSize(p), OM_MEM_CPP});
+    // free(p);
 }
 
 void operator delete[](void *p)
 {
-    rec({Free, p, heapSize(p), OM_MEM_CPP});
-    free(p);
+    // rec({Free, p, heapSize(p), OM_MEM_CPP});
+    // free(p);
 }
