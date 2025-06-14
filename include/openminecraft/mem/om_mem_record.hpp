@@ -7,6 +7,9 @@
 #define OM_MEM_SDL 1
 #define OM_MEM_VULKAN 2
 #define OM_MEM_VULKAN_INTERNAL 3
+#define OM_MEM_OPENGL 4
+#define OM_MEM_HARFBUZZ 5
+#define OM_MEM_FREETYPE 5
 namespace openminecraft::mem::castorice
 {
 enum MemModifyType

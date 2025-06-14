@@ -1,6 +1,7 @@
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include <cstdlib>
+#include <new>
 
 using namespace openminecraft::mem::castorice;
 
@@ -35,7 +36,10 @@ namespace openminecraft::mem::allocator
         free(p);                                                                                                       \
     }
 
-defmalr(SDL, OM_MEM_SDL)
+defmalr(SDL, OM_MEM_SDL);
+defmalr(Freetype, OM_MEM_FREETYPE);
+defmalr(Harfbuzz, OM_MEM_HARFBUZZ);
+defmalr(GL, OM_MEM_OPENGL);
 } // namespace openminecraft::mem::allocator
 
 using namespace openminecraft::mem::allocator;
@@ -54,14 +58,14 @@ void *operator new[](size_t size)
     return p;
 }
 
-void operator delete(void *p)
+void operator delete(void *p) noexcept
 {
     rec({Free, p, heapSize(p), OM_MEM_CPP});
-    // free(p);
+    free(p);
 }
 
-void operator delete[](void *p)
+void operator delete[](void *p) noexcept
 {
     rec({Free, p, heapSize(p), OM_MEM_CPP});
-    // free(p);
+    free(p);
 }
