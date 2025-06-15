@@ -5,6 +5,8 @@
 #include "openminecraft/vm/om_class_file.hpp"
 #include <memory>
 
+using namespace openminecraft::vm::classfile;
+
 namespace openminecraft::vm::bytecode
 {
 OMBytecodeChecker::OMBytecodeChecker(std::shared_ptr<classfile::OMClassFile> cls) : cls(cls)
@@ -14,34 +16,132 @@ OMBytecodeChecker::OMBytecodeChecker(std::shared_ptr<classfile::OMClassFile> cls
 
 void OMBytecodeChecker::check()
 {
+    logger->info("*** Constant Mapping ***");
+    for (auto pair : cls->mapping)
+    {
+        switch (pair.second->type())
+        {
+        case OMClassConstantType::Utf8:
+            logger->info("#{} Utf8 {}", pair.first, pair.second->to<OMClassConstantUtf8>()->data);
+            break;
+        case OMClassConstantType::Integer:
+            logger->info("#{} Integer {}", pair.first, pair.second->to<OMClassConstantInteger>()->data);
+            break;
+        case OMClassConstantType::Float:
+            logger->info("#{} Float {}", pair.first, pair.second->to<OMClassConstantFloat>()->data);
+            break;
+        case OMClassConstantType::Double:
+            logger->info("#{} Double {}", pair.first, pair.second->to<OMClassConstantDouble>()->data);
+            break;
+        case OMClassConstantType::Long:
+            logger->info("#{} Long {}", pair.first, pair.second->to<OMClassConstantLong>()->data);
+            break;
+        case OMClassConstantType::Class: {
+            auto idx = pair.second->to<OMClassConstantClass>()->nameIndex;
+            logger->info("#{} Class #{}", pair.first, idx);
+            break;
+        }
+        case OMClassConstantType::String: {
+            auto idx = pair.second->to<OMClassConstantString>()->stringIndex;
+            logger->info("#{} String #{}", pair.first, idx);
+            break;
+        }
+        case OMClassConstantType::FieldRef: {
+            auto idx = pair.second->to<OMClassConstantFieldRef>()->classIndex;
+            auto idx2 = pair.second->to<OMClassConstantFieldRef>()->nameAndTypeIndex;
+            logger->info("#{} FieldRef #{}:#{}", pair.first, idx, idx2);
+            break;
+        }
+        case OMClassConstantType::MethodRef: {
+            auto idx = pair.second->to<OMClassConstantMethodRef>()->classIndex;
+            auto idx2 = pair.second->to<OMClassConstantMethodRef>()->nameAndTypeIndex;
+            logger->info("#{} MethodRef #{}:#{}", pair.first, idx, idx2);
+            break;
+        }
+        case OMClassConstantType::InterfaceMethodRef: {
+            auto idx = pair.second->to<OMClassConstantInterfaceMethodRef>()->classIndex;
+            auto idx2 = pair.second->to<OMClassConstantInterfaceMethodRef>()->nameAndTypeIndex;
+            logger->info("#{} MethodRef #{}:#{}", pair.first, idx, idx2);
+            break;
+        }
+        case OMClassConstantType::NameAndType: {
+            auto idx = pair.second->to<OMClassConstantNameAndType>()->nameIndex;
+            auto idx2 = pair.second->to<OMClassConstantNameAndType>()->descIndex;
+            logger->info("#{} NameAndType #{}:#{}", pair.first, idx, idx2);
+            break;
+        }
+        case OMClassConstantType::MethodHandle: {
+            auto idx = pair.second->to<OMClassConstantMethodHandle>()->refKind;
+            auto idx2 = pair.second->to<OMClassConstantMethodHandle>()->refIndex;
+            logger->info("#{} MethodHandle #{}:#{}", pair.first, idx, idx2);
+            break;
+        }
+        case OMClassConstantType::MethodType: {
+            auto idx = pair.second->to<OMClassConstantMethodType>()->descIndex;
+            logger->info("#{} MethodType #{}", pair.first, idx);
+            break;
+        }
+        case OMClassConstantType::Dynamic: {
+            auto idx = pair.second->to<OMClassConstantDynamic>()->bootstrapMethodAttrIndex;
+            auto idx2 = pair.second->to<OMClassConstantDynamic>()->nameAndTypeIndex;
+            logger->info("#{} Dynamic #{}:#{}", pair.first, idx, idx2);
+            break;
+        }
+        case OMClassConstantType::InvokeDynamic: {
+            auto idx = pair.second->to<OMClassConstantInvokeDynamic>()->bootstrapMethodAttrIndex;
+            auto idx2 = pair.second->to<OMClassConstantInvokeDynamic>()->nameAndTypeIndex;
+            logger->info("#{} InvokeDynamic #{}:#{}", pair.first, idx, idx2);
+            break;
+        }
+        case OMClassConstantType::Package: {
+            auto idx = pair.second->to<OMClassConstantPackage>()->nameIndex;
+            logger->info("#{} Package #{}", pair.first, idx);
+            break;
+        }
+        case OMClassConstantType::Module: {
+            auto idx = pair.second->to<OMClassConstantModule>()->nameIndex;
+            logger->info("#{} Module #{}", pair.first, idx);
+            break;
+        }
+        default:
+            logger->info("#{} <unknown>", pair.first);
+        }
+    }
+
+    logger->info("*** Functions ***");
     for (auto m : cls->methods)
     {
         if (m->nameIndex != 0)
         {
-            logger->info("function: {}", cls->mapping[m->nameIndex]->to<classfile::OMClassConstantUtf8>()->data);
+            logger->info("function: {}:{}",
+                         cls->mapping[cls->mapping[cls->thisClass]->to<OMClassConstantClass>()->nameIndex]
+                             ->to<OMClassConstantUtf8>()
+                             ->data,
+                         cls->mapping[m->nameIndex]->to<OMClassConstantUtf8>()->data);
         }
         else
         {
             logger->info("function: <unnamed>");
         }
 
-        if (m->attrs.empty())
+        if (m->attrs.empty() || m->attrs[0]->type() != OMClassAttrType::Code)
         {
+            logger->info("This function doesn't have jvm bytecode");
             continue;
         }
 
-        auto attr = m->attrs[0]->to<classfile::OMClassAttrCode>();
+        auto attr = m->attrs[0]->to<OMClassAttrCode>();
         auto codeRaw = attr->code.data();
         auto bytes = 0;
 
 #define simpleCommand(operand, msg)                                                                                    \
     case operand:                                                                                                      \
-        logger->info(msg);                                                                                             \
+        logger->info(fmt::format("{}: {}", bytes, msg));                                                               \
         break
 
 #define tbyteCommand(operand, msg)                                                                                     \
     case operand:                                                                                                      \
-        logger->info(msg, binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)));                                   \
+        logger->info("{}: {}", bytes, fmt::format(msg, binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1))));     \
         bytes += 2;                                                                                                    \
         break
 
@@ -59,31 +159,31 @@ void OMBytecodeChecker::check()
             case op_iconst_i(3):
             case op_iconst_i(4):
             case op_iconst_i(5):
-                logger->info("iconst_{}", codeRaw[bytes] - 0x3);
+                logger->info("{}: iconst_{}", bytes, codeRaw[bytes] - 0x3);
                 break;
             case op_lconst_l(0):
             case op_lconst_l(1):
-                logger->info("lconst_{}", codeRaw[bytes] - 0x9);
+                logger->info("{}: lconst_{}", bytes, codeRaw[bytes] - 0x9);
                 break;
             case op_fconst_f(0):
             case op_fconst_f(1):
             case op_fconst_f(2):
-                logger->info("fconst_{}", codeRaw[bytes] - 0xb);
+                logger->info("{}: fconst_{}", bytes, codeRaw[bytes] - 0xb);
                 break;
             case op_dconst_d(0):
             case op_dconst_d(1):
-                logger->info("dconst_{}", codeRaw[bytes] - 0xe);
+                logger->info("{}: dconst_{}", bytes, codeRaw[bytes] - 0xe);
                 break;
             // bipush (value:u8)
             case op_bipush: {
-                logger->info("bipush {0:#x}", codeRaw[bytes + 1]);
+                logger->info("{}: bipush {0:#x}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
                 tbyteCommand(op_sipush, "sipush #{}");
             // ldc (index:u8)
             case op_ldc: {
-                logger->info("ldc #{}", codeRaw[bytes + 1]);
+                logger->info("{}: ldc #{}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
@@ -91,31 +191,31 @@ void OMBytecodeChecker::check()
                 tbyteCommand(op_ldc2_w, "ldc_w #{}");
             // iload (index:u8)
             case op_iload: {
-                logger->info("iload #{}", codeRaw[bytes + 1]);
+                logger->info("{}: iload #{}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // lload (index:u8)
             case op_lload: {
-                logger->info("lload #{}", codeRaw[bytes + 1]);
+                logger->info("{}: lload #{}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // fload (index:u8)
             case op_fload: {
-                logger->info("fload #{}", codeRaw[bytes + 1]);
+                logger->info("{}: fload #{}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // dload (index:u8)
             case op_dload: {
-                logger->info("dload #{}", codeRaw[bytes + 1]);
+                logger->info("{}: dload #{}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // aload (index:u8)
             case op_aload: {
-                logger->info("aload #{}", codeRaw[bytes + 1]);
+                logger->info("{}: aload #{}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
@@ -124,7 +224,7 @@ void OMBytecodeChecker::check()
             case op_iload_n(1):
             case op_iload_n(2):
             case op_iload_n(3):
-                logger->info("aload_{}", (int)(codeRaw[bytes] - op_iload_n(0)));
+                logger->info("{}: aload_{}", bytes, (int)(codeRaw[bytes] - op_iload_n(0)));
                 break;
 
             // lload_<n>
@@ -132,28 +232,28 @@ void OMBytecodeChecker::check()
             case op_lload_n(1):
             case op_lload_n(2):
             case op_lload_n(3):
-                logger->info("aload_{}", (int)(codeRaw[bytes] - op_lload_n(0)));
+                logger->info("{}: aload_{}", bytes, (int)(codeRaw[bytes] - op_lload_n(0)));
                 break;
             // fload_<n>
             case op_fload_n(0):
             case op_fload_n(1):
             case op_fload_n(2):
             case op_fload_n(3):
-                logger->info("aload_{}", (int)(codeRaw[bytes] - op_fload_n(0)));
+                logger->info("{}: aload_{}", bytes, (int)(codeRaw[bytes] - op_fload_n(0)));
                 break;
             // dload_<n>
             case op_dload_n(0):
             case op_dload_n(1):
             case op_dload_n(2):
             case op_dload_n(3):
-                logger->info("aload_{}", (int)(codeRaw[bytes] - op_dload_n(0)));
+                logger->info("{}: aload_{}", bytes, (int)(codeRaw[bytes] - op_dload_n(0)));
                 break;
             // aload_<n>
             case op_aload_n(0):
             case op_aload_n(1):
             case op_aload_n(2):
             case op_aload_n(3):
-                logger->info("aload_{}", (int)(codeRaw[bytes] - op_aload_n(0)));
+                logger->info("{}: aload_{}", bytes, (int)(codeRaw[bytes] - op_aload_n(0)));
                 break;
 
                 simpleCommand(op_iaload, "iaload");
@@ -167,31 +267,31 @@ void OMBytecodeChecker::check()
 
             // istore (index:u8)
             case op_istore: {
-                logger->info("istore #{}", codeRaw[bytes + 1]);
+                logger->info("{}: istore #{}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // lstore (index:u8)
             case op_lstore: {
-                logger->info("lstore #{}", codeRaw[bytes + 1]);
+                logger->info("{}: lstore #{}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // fstore (index:u8)
             case op_fstore: {
-                logger->info("fstore #{}", codeRaw[bytes + 1]);
+                logger->info("{}: fstore #{}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // dstore (index:u8)
             case op_dstore: {
-                logger->info("dstore #{}", codeRaw[bytes + 1]);
+                logger->info("{}: dstore #{}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // astore (index:u8)
             case op_astore: {
-                logger->info("astore #{}", codeRaw[bytes + 1]);
+                logger->info("{}: astore #{}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
@@ -199,31 +299,31 @@ void OMBytecodeChecker::check()
             case op_istore_n(1):
             case op_istore_n(2):
             case op_istore_n(3):
-                logger->info("istore_{}", (int)(codeRaw[bytes] - op_istore_n(0)));
+                logger->info("{}: istore_{}", bytes, (int)(codeRaw[bytes] - op_istore_n(0)));
                 break;
             case op_lstore_n(0):
             case op_lstore_n(1):
             case op_lstore_n(2):
             case op_lstore_n(3):
-                logger->info("lstore_{}", (int)(codeRaw[bytes] - op_lstore_n(0)));
+                logger->info("{}: lstore_{}", bytes, (int)(codeRaw[bytes] - op_lstore_n(0)));
                 break;
             case op_fstore_n(0):
             case op_fstore_n(1):
             case op_fstore_n(2):
             case op_fstore_n(3):
-                logger->info("fstore_{}", (int)(codeRaw[bytes] - op_fstore_n(0)));
+                logger->info("{}: fstore_{}", bytes, (int)(codeRaw[bytes] - op_fstore_n(0)));
                 break;
             case op_dstore_n(0):
             case op_dstore_n(1):
             case op_dstore_n(2):
             case op_dstore_n(3):
-                logger->info("lstore_{}", (int)(codeRaw[bytes] - op_dstore_n(0)));
+                logger->info("{}: lstore_{}", bytes, (int)(codeRaw[bytes] - op_dstore_n(0)));
                 break;
             case op_astore_n(0):
             case op_astore_n(1):
             case op_astore_n(2):
             case op_astore_n(3):
-                logger->info("lstore_{}", (int)(codeRaw[bytes] - op_astore_n(0)));
+                logger->info("{}: lstore_{}", bytes, (int)(codeRaw[bytes] - op_astore_n(0)));
                 break;
 
                 simpleCommand(op_iastore, "iastore");
@@ -282,7 +382,7 @@ void OMBytecodeChecker::check()
 
             // iinc (index:u8, const:u8)
             case op_iinc: {
-                logger->info("iinc {} {}", codeRaw[bytes + 1], codeRaw[bytes + 2]);
+                logger->info("{}: iinc {} {}", bytes, codeRaw[bytes + 1], codeRaw[bytes + 2]);
                 bytes += 2;
                 break;
             }
@@ -324,7 +424,7 @@ void OMBytecodeChecker::check()
                 tbyteCommand(op_jsr, "if_jsr {}");
             // ret (index:u8)
             case op_ret: {
-                logger->info("ret {}", (int)codeRaw[bytes + 1]);
+                logger->info("{}: ret {}", bytes, (int)codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
@@ -342,7 +442,7 @@ void OMBytecodeChecker::check()
                 int high = (codeRaw[bytes + 8] << 24) | (codeRaw[bytes + 9] << 16) | (codeRaw[bytes + 10] << 8) |
                            (codeRaw[bytes + 11]);
                 int cont = high - low + 1;
-                logger->info("tableswitch {} {} {} ...", def, low, high);
+                logger->info("{}: tableswitch {} {} {} ...", bytes, def, low, high);
                 bytes += 12;
                 bytes += cont * 4;
                 break;
@@ -358,7 +458,7 @@ void OMBytecodeChecker::check()
                           (codeRaw[bytes + 3]);
                 int npairs = (codeRaw[bytes + 4] << 24) | (codeRaw[bytes + 5] << 16) | (codeRaw[bytes + 6] << 8) |
                              (codeRaw[bytes + 7]);
-                logger->info("lookupswitch {} {} ...", def, npairs);
+                logger->info("{}: lookupswitch {} {} ...", bytes, def, npairs);
                 bytes += 8;
                 bytes += npairs * 4;
                 break;
@@ -377,14 +477,14 @@ void OMBytecodeChecker::check()
                 tbyteCommand(op_invokespecial, "invokespecial #{}");
                 tbyteCommand(op_invokestatic, "invokestatic #{}");
             case op_invokeinterface: {
-                logger->info("invokeinterface #{} {}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)),
-                             (int)codeRaw[bytes + 3]);
+                logger->info("{}: invokeinterface #{} {}", bytes,
+                             binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)), (int)codeRaw[bytes + 3]);
                 bytes += 4;
                 break;
             }
             case op_invokedynamic: {
-                logger->info("invokedynamic #{} {}", binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)),
-                             (int)codeRaw[bytes + 3]);
+                logger->info("{}: invokedynamic #{} {}", bytes,
+                             binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)), (int)codeRaw[bytes + 3]);
                 bytes += 4;
                 break;
             }
