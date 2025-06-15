@@ -183,31 +183,31 @@ void OMBytecodeChecker::detail()
                 tbyteCommand(op_ldc2_w, "ldc_w #{}");
             // iload (index:u8)
             case op_iload: {
-                logger->info("{}: iload #{}", bytes, codeRaw[bytes + 1]);
+                logger->info("{}: iload {}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // lload (index:u8)
             case op_lload: {
-                logger->info("{}: lload #{}", bytes, codeRaw[bytes + 1]);
+                logger->info("{}: lload {}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // fload (index:u8)
             case op_fload: {
-                logger->info("{}: fload #{}", bytes, codeRaw[bytes + 1]);
+                logger->info("{}: fload {}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // dload (index:u8)
             case op_dload: {
-                logger->info("{}: dload #{}", bytes, codeRaw[bytes + 1]);
+                logger->info("{}: dload {}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // aload (index:u8)
             case op_aload: {
-                logger->info("{}: aload #{}", bytes, codeRaw[bytes + 1]);
+                logger->info("{}: aload {}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
@@ -259,31 +259,31 @@ void OMBytecodeChecker::detail()
 
             // istore (index:u8)
             case op_istore: {
-                logger->info("{}: istore #{}", bytes, codeRaw[bytes + 1]);
+                logger->info("{}: istore {}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // lstore (index:u8)
             case op_lstore: {
-                logger->info("{}: lstore #{}", bytes, codeRaw[bytes + 1]);
+                logger->info("{}: lstore {}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // fstore (index:u8)
             case op_fstore: {
-                logger->info("{}: fstore #{}", bytes, codeRaw[bytes + 1]);
+                logger->info("{}: fstore {}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // dstore (index:u8)
             case op_dstore: {
-                logger->info("{}: dstore #{}", bytes, codeRaw[bytes + 1]);
+                logger->info("{}: dstore {}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
             // astore (index:u8)
             case op_astore: {
-                logger->info("{}: astore #{}", bytes, codeRaw[bytes + 1]);
+                logger->info("{}: astore {}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
@@ -422,6 +422,7 @@ void OMBytecodeChecker::detail()
             }
             // tableswitch (padding:variable, default:u32, low:u32, high:u32, offsets:u32[high-low+1])
             case op_tableswitch: {
+                auto insBase = bytes;
                 bytes++;
                 while (bytes % 4 != 0)
                 {
@@ -434,13 +435,22 @@ void OMBytecodeChecker::detail()
                 int high = (codeRaw[bytes + 8] << 24) | (codeRaw[bytes + 9] << 16) | (codeRaw[bytes + 10] << 8) |
                            (codeRaw[bytes + 11]);
                 int cont = high - low + 1;
-                logger->info("{}: tableswitch {} {} {} ...", bytes, def, low, high);
+                logger->info("{}: tableswitch ...", bytes);
                 bytes += 12;
-                bytes += cont * 4;
+                logger->info("\tdefault: {}", insBase + def);
+                for (int i = 0; i < cont; i++)
+                {
+                    auto offsets = (codeRaw[bytes] << 24) | (codeRaw[bytes + 1] << 16) | (codeRaw[bytes + 2] << 8) |
+                                   (codeRaw[bytes + 3]);
+                    logger->info("\t{}", insBase + offsets);
+                    bytes += 4;
+                }
+                bytes--;
                 break;
             }
-            // tableswitch (padding:variable, default:u32, npairs:u32, pairs:u32[npairs])
+            // lookupswitch (padding:variable, default:u32, npairs:u32, pairs:u32[npairs])
             case op_lookupswitch: {
+                auto insBase = bytes;
                 bytes++;
                 while (bytes % 4 != 0)
                 {
@@ -450,9 +460,19 @@ void OMBytecodeChecker::detail()
                           (codeRaw[bytes + 3]);
                 int npairs = (codeRaw[bytes + 4] << 24) | (codeRaw[bytes + 5] << 16) | (codeRaw[bytes + 6] << 8) |
                              (codeRaw[bytes + 7]);
-                logger->info("{}: lookupswitch {} {} ...", bytes, def, npairs);
+                logger->info("{}: lookupswitch ...", bytes);
+                logger->info("\tdefault: {}", insBase + def);
                 bytes += 8;
-                bytes += npairs * 4;
+                for (int i = 0; i < npairs; i++)
+                {
+                    auto id = (codeRaw[bytes] << 24) | (codeRaw[bytes + 1] << 16) | (codeRaw[bytes + 2] << 8) |
+                              (codeRaw[bytes + 3]);
+                    auto offset = (codeRaw[bytes + 4] << 24) | (codeRaw[bytes + 5] << 16) | (codeRaw[bytes + 6] << 8) |
+                                  (codeRaw[bytes + 7]);
+                    logger->info("\t{}: {}", id, insBase + offset);
+                    bytes += 4 * 2;
+                }
+                bytes--;
                 break;
             }
                 simpleCommand(op_ireturn, "ireturn");

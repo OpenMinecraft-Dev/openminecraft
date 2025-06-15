@@ -336,13 +336,16 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         {
             auto fr = std::make_shared<OMClassAttrVerifyStackMapFrame>();
             this->source->read((char *)&fr->tag, 1);
-
-            if (fr->tag >= 64 && fr->tag < 128)
+            if (fr->tag >= 0 && fr->tag < 64)
+            {
+            }
+            else if (fr->tag >= 64 && fr->tag < 128)
             {
                 fr->sameLocals1StackItemFrame.stack = typep();
             }
             else if (fr->tag < 247)
             {
+                logger->info("{}", (int)fr->tag);
                 throw std::invalid_argument("Invalid stack map frame type!");
             }
             else if (fr->tag == 247)
