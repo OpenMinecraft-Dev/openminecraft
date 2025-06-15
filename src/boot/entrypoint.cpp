@@ -90,7 +90,7 @@ int boot(std::vector<std::string> args)
     case util::Ok: {
         auto clsfile = clsres.unwrap();
         auto chk = std::make_unique<OMBytecodeChecker>(clsfile);
-        chk->check();
+        chk->detail();
         break;
     }
     case util::Err: {

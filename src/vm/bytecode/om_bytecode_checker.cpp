@@ -14,7 +14,7 @@ OMBytecodeChecker::OMBytecodeChecker(std::shared_ptr<classfile::OMClassFile> cls
     logger = std::make_unique<log::OMLogger>("OMBytecodeChecker", this);
 }
 
-void OMBytecodeChecker::check()
+void OMBytecodeChecker::detail()
 {
     logger->info("*** Constant Mapping ***");
     for (auto pair : cls->mapping)
@@ -111,18 +111,11 @@ void OMBytecodeChecker::check()
     logger->info("*** Functions ***");
     for (auto m : cls->methods)
     {
-        if (m->nameIndex != 0)
-        {
-            logger->info("function: {}:{}",
-                         cls->mapping[cls->mapping[cls->thisClass]->to<OMClassConstantClass>()->nameIndex]
-                             ->to<OMClassConstantUtf8>()
-                             ->data,
-                         cls->mapping[m->nameIndex]->to<OMClassConstantUtf8>()->data);
-        }
-        else
-        {
-            logger->info("function: <unnamed>");
-        }
+        logger->info("{}:{} -> ",
+                     cls->mapping[cls->mapping[cls->thisClass]->to<OMClassConstantClass>()->nameIndex]
+                         ->to<OMClassConstantUtf8>()
+                         ->data,
+                     cls->mapping[m->nameIndex]->to<OMClassConstantUtf8>()->data);
 
         if (m->attrs.empty() || m->attrs[0]->type() != OMClassAttrType::Code)
         {
@@ -151,7 +144,6 @@ void OMBytecodeChecker::check()
             {
                 simpleCommand(op_nop, "nop");
                 simpleCommand(op_aconst_null, "aconst_null");
-            // const operands
             case op_iconst_i(-1):
             case op_iconst_i(0):
             case op_iconst_i(1):
@@ -495,11 +487,6 @@ void OMBytecodeChecker::check()
             }
             bytes++;
         }
-
-        /*if (cls->mapping[m->nameIndex]->to<classfile::OMClassConstantUtf8>()->data == "main")
-        {
-            break;
-        }*/
     checkend:
         continue;
     }

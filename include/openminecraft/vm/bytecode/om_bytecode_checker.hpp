@@ -10,7 +10,7 @@ class OMBytecodeChecker
 {
   public:
     OMBytecodeChecker(std::shared_ptr<classfile::OMClassFile> cls);
-    void check();
+    void detail();
 
   private:
     std::shared_ptr<classfile::OMClassFile> cls;
