@@ -511,4 +511,8 @@ void OMBytecodeChecker::detail()
         continue;
     }
 }
+
+void OMBytecodeChecker::bytecodeCheck()
+{
+}
 } // namespace openminecraft::vm::bytecode

@@ -11,6 +11,7 @@ class OMBytecodeChecker
   public:
     OMBytecodeChecker(std::shared_ptr<classfile::OMClassFile> cls);
     void detail();
+    void bytecodeCheck();
 
   private:
     std::shared_ptr<classfile::OMClassFile> cls;

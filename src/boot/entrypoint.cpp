@@ -97,6 +97,8 @@ int boot(std::vector<std::string> args)
     }
     }
 
+    logger->dumpStacktrace();
+
     return 0;
 }
 } // namespace openminecraft::boot
