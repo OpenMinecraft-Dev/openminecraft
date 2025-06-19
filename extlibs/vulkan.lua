@@ -42,7 +42,7 @@ package("vulkan-hpp")
         else
             os.cp(path.join("**", "VulkanHppGenerator"), "build")
         end
-        os.runv(path.join("build", "VulkanHppGenerator"))
+        -- os.runv(path.join("build", "VulkanHppGenerator"))
         if not package:config("modules") then
             os.cp("Vulkan-Headers/include", package:installdir())
             os.cp("vulkan/*.hpp", package:installdir(path.join("include", "vulkan")))
