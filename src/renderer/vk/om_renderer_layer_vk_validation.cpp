@@ -40,7 +40,7 @@ baseinit:
             DebugUtilsMessageSeverityFlagBitsEXT::eWarning | DebugUtilsMessageSeverityFlagBitsEXT::eError,
         DebugUtilsMessageTypeFlagBitsEXT::eGeneral | DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
             DebugUtilsMessageTypeFlagBitsEXT::eValidation,
-        PFN_DebugUtilsMessengerCallbackEXT(notify), nullptr, nullptr);
+        PFN_vkDebugUtilsMessengerCallbackEXT(notify), nullptr, nullptr);
 }
 void OMRendererVkValidation::attachExts(std::vector<const char *> *data)
 {
