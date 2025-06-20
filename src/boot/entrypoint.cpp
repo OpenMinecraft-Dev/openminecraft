@@ -7,6 +7,7 @@
 #include <fstream>
 #include <memory>
 #include <stdexcept>
+#include <variant>
 #include <vector>
 
 #include "SDL3/SDL_messagebox.h"
@@ -84,24 +85,43 @@ int boot(std::vector<std::string> args)
 
     SDL_Quit();
 
-    mem::castorice::printres();
+    std::shared_ptr<OMClassFileParser> parser;
 
-    auto par = std::make_unique<OMClassFileParser>(std::make_shared<std::ifstream>("/home/coder2/Test.class"));
-    auto clsres = par->parse();
-    switch (clsres.type)
+    std::string comm;
+    while (true)
     {
-    case Ok: {
-        auto clsfile = clsres.unwrap();
-        auto chk = std::make_unique<OMBytecodeChecker>(clsfile);
-        chk->detail();
-        chk->bytecodeCheck();
-        break;
-    }
-    case Err: {
-    }
-    }
+        std::cin >> comm;
 
-    logger->dumpStacktrace();
+        if (comm == "quit" || comm == "exit")
+        {
+            break;
+        }
+        else if (comm == "dumptrace")
+        {
+            logger->dumpStacktrace();
+        }
+        else if (comm == "dumpmem")
+        {
+            mem::castorice::printres();
+        }
+        else if (comm[0] == 'l' && comm[1] == ':')
+        {
+            parser = std::make_shared<OMClassFileParser>(std::make_shared<std::ifstream>(comm.substr(2)));
+            auto clsres = parser->parse();
+            switch (clsres.type)
+            {
+            case Ok: {
+                auto clsfile = clsres.unwrap();
+                auto chk = std::make_unique<OMBytecodeChecker>(clsfile);
+                chk->detail();
+                chk->bytecodeCheck();
+                break;
+            }
+            case Err: {
+            }
+            }
+        }
+    }
 
     return 0;
 }
