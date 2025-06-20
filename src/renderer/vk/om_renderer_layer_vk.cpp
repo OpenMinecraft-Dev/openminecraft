@@ -49,6 +49,7 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(VkInstance instance, 
 #endif
 
 using namespace vk;
+using namespace openminecraft::util;
 using openminecraft::i18n::res::translate;
 #define VkErrLogAndThrow(err, id)                                                                                      \
     logger->error(VkErrorTranslate(err, id));                                                                          \
@@ -81,11 +82,11 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     std::vector<const char *> exts;
     switch (extResult.type)
     {
-    case util::Ok: {
+    case Ok: {
         exts = extResult.unwrap();
         break;
     }
-    case util::Err: {
+    case Err: {
         throw std::runtime_error(extResult.unwrap_err());
     }
     }
@@ -93,11 +94,11 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     auto instanceResult = instanceCreation(info, exts);
     switch (instanceResult.type)
     {
-    case util::Ok: {
+    case Ok: {
         instance = instanceResult.unwrap();
         break;
     }
-    case util::Err: {
+    case Err: {
         throw std::runtime_error(instanceResult.unwrap_err());
     }
     }
@@ -105,11 +106,11 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     auto phydevResult = deviceSelection(dev);
     switch (phydevResult.type)
     {
-    case util::Ok: {
+    case Ok: {
         physicalDevice = phydevResult.unwrap();
         break;
     }
-    case util::Err: {
+    case Err: {
         throw std::runtime_error(phydevResult.unwrap_err());
     }
     }
@@ -117,10 +118,10 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     auto sdlLoadingResult = sdlVulkanLoading();
     switch (sdlLoadingResult.type)
     {
-    case util::Ok: {
+    case Ok: {
         break;
     }
-    case util::Err: {
+    case Err: {
         throw std::runtime_error(sdlLoadingResult.unwrap_err());
     }
     }

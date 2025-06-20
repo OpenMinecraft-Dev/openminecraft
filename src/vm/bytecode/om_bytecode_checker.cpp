@@ -131,7 +131,7 @@ void OMBytecodeChecker::detail()
     {
         logger->info("{} -> ", funcName(*m));
 
-        if (m->attrs.empty() || m->attrs[0]->type() != OMClassAttrType::Code)
+        if (m->attrs.empty() || m->attrs[0] == nullptr || m->attrs[0]->type() != OMClassAttrType::Code)
         {
             logger->info("This function doesn't have jvm bytecode");
             continue;
@@ -563,7 +563,7 @@ void OMBytecodeChecker::bytecodeCheck()
         OMClassAttrCode *att;
         for (auto attr : method->attrs)
         {
-            if (attr->type() == OMClassAttrType::Code)
+            if (attr != nullptr && attr->type() == OMClassAttrType::Code)
             {
                 att = attr->to<OMClassAttrCode>();
                 goto codeFound;

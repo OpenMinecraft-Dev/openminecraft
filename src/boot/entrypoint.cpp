@@ -22,6 +22,7 @@
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
+#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
@@ -83,24 +84,24 @@ int boot(std::vector<std::string> args)
 
     SDL_Quit();
 
+    mem::castorice::printres();
+
     auto par = std::make_unique<OMClassFileParser>(std::make_shared<std::ifstream>("/home/coder2/Test.class"));
     auto clsres = par->parse();
     switch (clsres.type)
     {
-    case util::Ok: {
+    case Ok: {
         auto clsfile = clsres.unwrap();
         auto chk = std::make_unique<OMBytecodeChecker>(clsfile);
         chk->detail();
         chk->bytecodeCheck();
         break;
     }
-    case util::Err: {
+    case Err: {
     }
     }
 
     logger->dumpStacktrace();
-
-    mem::castorice::printres();
 
     return 0;
 }

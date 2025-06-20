@@ -278,7 +278,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
 
     if (m[ni]->type() != OMClassConstantType::Utf8)
     {
-        throw std::invalid_argument("Invalid attr name index!");
+        return nullptr;
     }
 
     std::shared_ptr<OMClassAttr> attr;
@@ -345,8 +345,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             }
             else if (fr->tag < 247)
             {
-                logger->info("{}", (int)fr->tag);
-                throw std::invalid_argument("Invalid stack map frame type!");
+                return nullptr;
             }
             else if (fr->tag == 247)
             {
