@@ -91,6 +91,7 @@ int boot(std::vector<std::string> args)
         auto clsfile = clsres.unwrap();
         auto chk = std::make_unique<OMBytecodeChecker>(clsfile);
         chk->detail();
+        chk->bytecodeCheck();
         break;
     }
     case util::Err: {
@@ -98,6 +99,8 @@ int boot(std::vector<std::string> args)
     }
 
     logger->dumpStacktrace();
+
+    mem::castorice::printres();
 
     return 0;
 }

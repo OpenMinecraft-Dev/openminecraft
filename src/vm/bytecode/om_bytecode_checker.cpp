@@ -1,17 +1,35 @@
 #include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
+#include <any>
 #include <memory>
+#include <stack>
+#include <stdexcept>
+#include <typeindex>
+#include <vector>
 
 using namespace openminecraft::vm::classfile;
+using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::bytecode
 {
 OMBytecodeChecker::OMBytecodeChecker(std::shared_ptr<classfile::OMClassFile> cls) : cls(cls)
 {
     logger = std::make_unique<log::OMLogger>("OMBytecodeChecker", this);
+    loggerSub = std::make_unique<log::OMLogger>("bytecode checker");
+}
+
+// internal funcs, there is no need to use a pointer
+std::string OMBytecodeChecker::funcName(OMClassMethodInfo info)
+{
+    return fmt::format("{}:{}",
+                       cls->mapping[cls->mapping[cls->thisClass]->to<OMClassConstantClass>()->nameIndex]
+                           ->to<OMClassConstantUtf8>()
+                           ->data,
+                       cls->mapping[info.nameIndex]->to<OMClassConstantUtf8>()->data);
 }
 
 void OMBytecodeChecker::detail()
@@ -111,11 +129,7 @@ void OMBytecodeChecker::detail()
     logger->info("*** Functions ***");
     for (auto m : cls->methods)
     {
-        logger->info("{}:{} -> ",
-                     cls->mapping[cls->mapping[cls->thisClass]->to<OMClassConstantClass>()->nameIndex]
-                         ->to<OMClassConstantUtf8>()
-                         ->data,
-                     cls->mapping[m->nameIndex]->to<OMClassConstantUtf8>()->data);
+        logger->info("{} -> ", funcName(*m));
 
         if (m->attrs.empty() || m->attrs[0]->type() != OMClassAttrType::Code)
         {
@@ -514,5 +528,133 @@ void OMBytecodeChecker::detail()
 
 void OMBytecodeChecker::bytecodeCheck()
 {
+    auto printAny = [&](std::any content, int index) {
+        switch (hash_compile_time(std::type_index(content.type()).name()))
+        {
+        case "i"_hash: {
+            loggerSub->info("[{}] int: {}", index, std::any_cast<int>(content));
+            break;
+        }
+        case "l"_hash: {
+            loggerSub->info("[{}] long: {}", index, std::any_cast<int64_t>(content));
+            break;
+        }
+        case "f"_hash: {
+            loggerSub->info("[{}] float: {}", index, std::any_cast<float>(content));
+            break;
+        }
+        case "d"_hash: {
+            loggerSub->info("[{}] double: {}", index, std::any_cast<double>(content));
+            break;
+        }
+        case "v"_hash: {
+            loggerSub->info("[{}] <empty>", index);
+            break;
+        }
+        default: {
+            loggerSub->info("unknown element type: {}", std::type_index(content.type()).name());
+            break;
+        }
+        }
+    };
+
+    for (auto method : cls->methods)
+    {
+        OMClassAttrCode *att;
+        for (auto attr : method->attrs)
+        {
+            if (attr->type() == OMClassAttrType::Code)
+            {
+                att = attr->to<OMClassAttrCode>();
+                goto codeFound;
+            }
+        }
+        logger->info("{} has no jvm byte codes", funcName(*method));
+        continue;
+
+    codeFound:
+        logger->info("checking {}", funcName(*method));
+        logger->info("{} local variables, {} stack depth", att->maxLocals, att->maxStack);
+
+        std::vector<std::any> locals(att->maxLocals);
+        std::stack<std::any> operatorStack;
+
+        auto codeRaw = att->code.data();
+        auto bytes = 0;
+
+        while (bytes < att->codeLength)
+        {
+            switch (codeRaw[bytes])
+            {
+            case op_nop: {
+                break;
+            }
+            case op_aconst_null:
+                operatorStack.push(std::any(nullptr));
+                break;
+            case op_iconst_i(-1):
+            case op_iconst_i(0):
+            case op_iconst_i(1):
+            case op_iconst_i(2):
+            case op_iconst_i(3):
+            case op_iconst_i(4):
+            case op_iconst_i(5):
+                operatorStack.push(std::any((int)codeRaw[bytes] - 0x3));
+                break;
+            case op_lconst_l(0):
+            case op_lconst_l(1):
+                operatorStack.push(std::any((int64_t)codeRaw[bytes] - 0x9));
+                break;
+            case op_fconst_f(0):
+            case op_fconst_f(1):
+            case op_fconst_f(2):
+                operatorStack.push(std::any((float)codeRaw[bytes] - 0xb));
+                break;
+            case op_dconst_d(0):
+            case op_dconst_d(1):
+                operatorStack.push(std::any((double)codeRaw[bytes] - 0xe));
+                break;
+            case op_istore_n(0):
+            case op_istore_n(1):
+            case op_istore_n(2):
+            case op_istore_n(3): {
+                auto localIndex = (int)(codeRaw[bytes] - op_istore_n(0));
+                if (localIndex >= att->maxLocals)
+                {
+                    throw std::invalid_argument("local table out of index!");
+                }
+                locals[localIndex] = operatorStack.top();
+                operatorStack.pop();
+                break;
+            }
+            default: {
+                loggerSub->info("instruction not implemented");
+                goto checkend;
+            }
+            }
+            bytes++;
+        }
+
+    checkend:
+        loggerSub->info("stack:");
+        int idx = 0;
+        while (!operatorStack.empty())
+        {
+            std::any content = operatorStack.top();
+            printAny(content, idx);
+            operatorStack.pop();
+            idx++;
+        }
+
+        idx = 0;
+        loggerSub->info("local:");
+        for (auto content : locals)
+        {
+            printAny(content, idx);
+            idx++;
+        }
+
+        continue;
+    }
 }
 } // namespace openminecraft::vm::bytecode

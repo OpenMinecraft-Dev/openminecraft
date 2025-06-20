@@ -14,8 +14,10 @@ class OMBytecodeChecker
     void bytecodeCheck();
 
   private:
+    std::string funcName(classfile::OMClassMethodInfo info);
     std::shared_ptr<classfile::OMClassFile> cls;
     std::unique_ptr<log::OMLogger> logger;
+    std::unique_ptr<log::OMLogger> loggerSub;
 };
 }; // namespace openminecraft::vm::bytecode
 
