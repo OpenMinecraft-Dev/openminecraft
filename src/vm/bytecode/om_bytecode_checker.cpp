@@ -2,7 +2,9 @@
 #include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
+#include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
 #include <any>
 #include <memory>
@@ -656,5 +658,11 @@ void OMBytecodeChecker::bytecodeCheck()
 
         continue;
     }
+}
+
+util::OMResult<std::any, err::OMValidationError> constantCheck()
+{
+
+    return util::OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
 } // namespace openminecraft::vm::bytecode

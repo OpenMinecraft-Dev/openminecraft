@@ -11,6 +11,7 @@
 #include "openminecraft/io/om_io_parser.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/util/om_util_result.hpp"
+#include "openminecraft/vm/err/om_validation_error.hpp"
 
 #define JVM_VERSION_1_1 45
 #define JVM_VERSION_1_2 46
@@ -713,13 +714,13 @@ class OMClassFileParser : public io::OMParser
   public:
     OMClassFileParser(std::shared_ptr<std::istream> stream);
     ~OMClassFileParser();
-    util::OMResult<std::shared_ptr<OMClassFile>, std::exception> parse();
+    util::OMResult<std::shared_ptr<OMClassFile>, err::OMValidationError> parse();
     ConstantMapping buildConstantMapping(std::vector<std::shared_ptr<OMClassConstant>> c);
 
   private:
     std::shared_ptr<log::OMLogger> logger;
 
-    util::OMResult<std::shared_ptr<OMClassConstant>, std::exception> parseConstant(uint16_t *idx);
+    util::OMResult<std::shared_ptr<OMClassConstant>, err::OMValidationError> parseConstant(uint16_t *idx);
     std::shared_ptr<OMClassFieldInfo> parseField(ConstantMapping m);
     std::shared_ptr<OMClassAttr> parseAttr(ConstantMapping m);
     std::shared_ptr<OMClassMethodInfo> parseMethod(ConstantMapping m);

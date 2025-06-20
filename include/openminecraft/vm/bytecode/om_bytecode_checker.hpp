@@ -2,7 +2,10 @@
 #define OM_BYTECODE_CHECKER_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/util/om_util_result.hpp"
+#include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
+#include <any>
 #include <memory>
 namespace openminecraft::vm::bytecode
 {
@@ -12,6 +15,7 @@ class OMBytecodeChecker
     OMBytecodeChecker(std::shared_ptr<classfile::OMClassFile> cls);
     void detail();
     void bytecodeCheck();
+    util::OMResult<std::any, err::OMValidationError> constantCheck();
 
   private:
     std::string funcName(classfile::OMClassMethodInfo info);

@@ -26,14 +26,14 @@ OMClassFileParser::~OMClassFileParser()
     io::OMParser::~OMParser();
 }
 
-util::OMResult<std::shared_ptr<OMClassFile>, std::exception> OMClassFileParser::parse()
+util::OMResult<std::shared_ptr<OMClassFile>, err::OMValidationError> OMClassFileParser::parse()
 {
     auto file = std::make_shared<OMClassFile>();
     this->source->readbe32(file->magicNumber);
     if (file->magicNumber != 0xcafebabe)
     {
-        return OMResult<std::shared_ptr<OMClassFile>, std::exception>::err(
-            std::invalid_argument("invalid class file magic number!"));
+        return OMResult<std::shared_ptr<OMClassFile>, err::OMValidationError>::err(
+            err::OMValidationError(err::ValidationState::Loading, "invalid class file magic number", ""));
     }
     this->source->readbe16(file->minor);
     this->source->readbe16(file->major);
@@ -51,7 +51,7 @@ util::OMResult<std::shared_ptr<OMClassFile>, std::exception> OMClassFileParser::
             break;
         }
         case Err: {
-            return OMResult<std::shared_ptr<OMClassFile>, std::exception>::err(c.unwrap_err());
+            return OMResult<std::shared_ptr<OMClassFile>, err::OMValidationError>::err(c.unwrap_err());
         }
         }
     }
@@ -92,10 +92,10 @@ util::OMResult<std::shared_ptr<OMClassFile>, std::exception> OMClassFileParser::
 
     file->mapping = m;
 
-    return OMResult<std::shared_ptr<OMClassFile>, std::exception>::ok(file);
+    return OMResult<std::shared_ptr<OMClassFile>, err::OMValidationError>::ok(file);
 }
 
-OMResult<std::shared_ptr<OMClassConstant>, std::exception> OMClassFileParser::parseConstant(uint16_t *idx)
+OMResult<std::shared_ptr<OMClassConstant>, err::OMValidationError> OMClassFileParser::parseConstant(uint16_t *idx)
 {
     (*idx)++;
 
@@ -210,13 +210,12 @@ OMResult<std::shared_ptr<OMClassConstant>, std::exception> OMClassFileParser::pa
         break;
     }
     default: {
-        return OMResult<std::shared_ptr<OMClassConstant>, std::exception>::err(
-            std::invalid_argument("Unknown constant type id!"));
-        break;
+        return OMResult<std::shared_ptr<OMClassConstant>, err::OMValidationError>::err(err::OMValidationError(
+            err::ValidationState::Loading, "unknown constant type id", fmt::format("{} at index {}", (int)type, *idx)));
     }
     }
 
-    return OMResult<std::shared_ptr<OMClassConstant>, std::exception>::ok(result);
+    return OMResult<std::shared_ptr<OMClassConstant>, err::OMValidationError>::ok(result);
 }
 
 OMClassFileParser::ConstantMapping OMClassFileParser::buildConstantMapping(
@@ -347,6 +346,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             {
                 return nullptr;
             }
+
             else if (fr->tag == 247)
             {
                 this->source->readbe16(fr->sameLocals1StackItemFrameExt.offset);
