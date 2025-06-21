@@ -24,6 +24,7 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
+#include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
@@ -113,6 +114,14 @@ int boot(std::vector<std::string> args)
             case Ok: {
                 auto clsfile = clsres.unwrap();
                 auto chk = std::make_unique<OMBytecodeChecker>(clsfile);
+                auto cons = chk->constantCheck();
+                switch (cons.type)
+                {
+                case Ok:
+                    break;
+                case Err:
+                    throw cons.unwrap_err();
+                }
                 chk->detail();
                 chk->bytecodeCheck();
                 break;

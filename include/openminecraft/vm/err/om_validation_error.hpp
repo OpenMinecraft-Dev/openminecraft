@@ -1,6 +1,7 @@
 #ifndef OM_VALIDATION_ERROR
 #define OM_VALIDATION_ERROR
 
+#include <exception>
 #include <string>
 
 namespace openminecraft::vm::err
@@ -13,7 +14,7 @@ enum ValidationState
     Instructions
 };
 
-class OMValidationError
+class OMValidationError : public std::exception
 {
   private:
     ValidationState state;
@@ -23,7 +24,7 @@ class OMValidationError
   public:
     OMValidationError(ValidationState, std::string, std::string);
     OMValidationError();
-    std::string what() const;
+    virtual const char *what() const throw();
 };
 } // namespace openminecraft::vm::err
 

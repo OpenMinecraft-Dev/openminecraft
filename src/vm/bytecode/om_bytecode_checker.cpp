@@ -15,6 +15,8 @@
 
 using namespace openminecraft::vm::classfile;
 using namespace openminecraft::binary::hash;
+using namespace openminecraft::util;
+using namespace openminecraft::vm::err;
 
 namespace openminecraft::vm::bytecode
 {
@@ -660,9 +662,115 @@ void OMBytecodeChecker::bytecodeCheck()
     }
 }
 
-util::OMResult<std::any, err::OMValidationError> constantCheck()
+OMResult<std::any, OMValidationError> OMBytecodeChecker::constantCheck()
 {
+#define constantTypeCheck(item, target, reason, str)                                                                   \
+    if (cls->mapping[item]->type() != target)                                                                          \
+    {                                                                                                                  \
+        return OMResult<std::any, OMValidationError>::err(                                                             \
+            OMValidationError(ValidationState::ConstantPool, reason, fmt::format(str, pairs.first, item)));            \
+    }
 
-    return util::OMResult<std::any, err::OMValidationError>::ok(nullptr);
+    int bootmethods = 0;
+    for (auto att : cls->attrs)
+    {
+        if (att->type() == OMClassAttrType::BootstrapMethods)
+        {
+            bootmethods = att->to<OMClassAttrBootMethods>()->numBootMethods;
+        }
+    }
+
+    for (auto pairs : cls->mapping)
+    {
+        switch (pairs.second->type())
+        {
+            // There is no need to validate primitive constants
+        case OMClassConstantType::Utf8:
+        case OMClassConstantType::Integer:
+        case OMClassConstantType::Float:
+        case OMClassConstantType::Long:
+        case OMClassConstantType::Double:
+            break;
+        case OMClassConstantType::Class: {
+            constantTypeCheck(pairs.second->to<OMClassConstantClass>()->nameIndex, OMClassConstantType::Utf8,
+                              "sub constant type mismatch for Class", "#{} -> (nameIndex) ${}");
+            break;
+        }
+        case OMClassConstantType::String: {
+            constantTypeCheck(pairs.second->to<OMClassConstantClass>()->nameIndex, OMClassConstantType::Utf8,
+                              "sub constant type mismatch for String", "#{} -> (stringIndex) ${}");
+            break;
+        }
+        case OMClassConstantType::FieldRef: {
+            constantTypeCheck(pairs.second->to<OMClassConstantFieldRef>()->classIndex, OMClassConstantType::Class,
+                              "sub constant type mismatch for FieldRef", "#{} -> (classIndex) ${}");
+            constantTypeCheck(pairs.second->to<OMClassConstantFieldRef>()->nameAndTypeIndex,
+                              OMClassConstantType::NameAndType, "sub constant type mismatch for FieldRef",
+                              "#{} -> (nameAndTypeIndex) ${}");
+            break;
+        }
+        case OMClassConstantType::MethodRef: {
+            constantTypeCheck(pairs.second->to<OMClassConstantMethodRef>()->classIndex, OMClassConstantType::Class,
+                              "sub constant type mismatch for MethodRef", "#{} -> (classIndex) ${}");
+            constantTypeCheck(pairs.second->to<OMClassConstantMethodRef>()->nameAndTypeIndex,
+                              OMClassConstantType::NameAndType, "sub constant type mismatch for MethodRef",
+                              "#{} -> (nameAndTypeIndex) ${}");
+            break;
+        }
+        case OMClassConstantType::InterfaceMethodRef: {
+            constantTypeCheck(pairs.second->to<OMClassConstantInterfaceMethodRef>()->classIndex,
+                              OMClassConstantType::Class, "sub constant type mismatch for InterfaceMethodRef",
+                              "#{} -> (classIndex) ${}");
+            constantTypeCheck(pairs.second->to<OMClassConstantMethodRef>()->nameAndTypeIndex,
+                              OMClassConstantType::NameAndType, "sub constant type mismatch for InterfaceMethodRef",
+                              "#{} -> (nameAndTypeIndex) ${}");
+            break;
+        }
+        case OMClassConstantType::NameAndType: {
+            constantTypeCheck(pairs.second->to<OMClassConstantNameAndType>()->nameIndex, OMClassConstantType::Utf8,
+                              "sub constant type mismatch for NameAndType", "#{} -> (nameIndex) ${}");
+            constantTypeCheck(pairs.second->to<OMClassConstantNameAndType>()->descIndex, OMClassConstantType::Utf8,
+                              "sub constant type mismatch for NameAndType", "#{} -> (descIndex) ${}");
+            break;
+        }
+        case OMClassConstantType::MethodHandle: {
+            constantTypeCheck(pairs.second->to<OMClassConstantMethodHandle>()->refIndex, OMClassConstantType::MethodRef,
+                              "sub constant type mismatch for MethodHandle", "#{} -> (refIndex) ${}");
+            break;
+        }
+        case OMClassConstantType::MethodType: {
+            constantTypeCheck(pairs.second->to<OMClassConstantMethodType>()->descIndex, OMClassConstantType::Utf8,
+                              "sub constant type mismatch for MethodType", "#{} -> (descIndex) ${}");
+            break;
+        }
+        case OMClassConstantType::Dynamic: {
+            constantTypeCheck(pairs.second->to<OMClassConstantDynamic>()->nameAndTypeIndex,
+                              OMClassConstantType::NameAndType, "sub constant type mismatch for Dynamic",
+                              "#{} -> (nameAndTypeIndex) ${}");
+            if (pairs.second->to<OMClassConstantDynamic>()->bootstrapMethodAttrIndex >= bootmethods)
+            {
+                return OMResult<std::any, OMValidationError>::err(OMValidationError(
+                    ValidationState::ConstantPool, "boot methods index out of range", fmt::format("{}", pairs.first)));
+            }
+            break;
+        }
+        case OMClassConstantType::InvokeDynamic: {
+            constantTypeCheck(
+                pairs.second->to<OMClassConstantInvokeDynamic>()->nameAndTypeIndex, OMClassConstantType::NameAndType,
+                "sub constant type mismatch for OMClassConstantInvokeDynamic", "#{} -> (nameAndTypeIndex) ${}");
+            if (pairs.second->to<OMClassConstantInvokeDynamic>()->bootstrapMethodAttrIndex >= bootmethods)
+            {
+                return OMResult<std::any, OMValidationError>::err(OMValidationError(
+                    ValidationState::ConstantPool, "boot methods index out of range", fmt::format("{}", pairs.first)));
+            }
+            break;
+        }
+        // Not implemented
+        case OMClassConstantType::Module:
+        case OMClassConstantType::Package:
+            break;
+        }
+    }
+    return OMResult<std::any, OMValidationError>::ok(nullptr);
 }
 } // namespace openminecraft::vm::bytecode

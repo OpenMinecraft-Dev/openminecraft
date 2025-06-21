@@ -1,5 +1,5 @@
 #include "openminecraft/vm/err/om_validation_error.hpp"
-#include "openminecraft/log/om_log_common.hpp"
+#include "fmt/format.h"
 
 namespace openminecraft::vm::err
 {
@@ -12,8 +12,9 @@ OMValidationError::OMValidationError() : state(Unknown), reason(""), additional(
 {
 }
 
-std::string OMValidationError::what() const
+const char *OMValidationError::what() const throw()
 {
-    return fmt::format("{} -> {}", reason, additional);
+    auto str = new std::string(fmt::format("{} -> {}", reason, additional));
+    return str->c_str();
 }
 } // namespace openminecraft::vm::err
