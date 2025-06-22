@@ -10,6 +10,7 @@
 #include <memory>
 #include <stack>
 #include <typeindex>
+#include <typeinfo>
 #include <vector>
 
 using namespace openminecraft::vm::classfile;
@@ -599,6 +600,15 @@ void OMBytecodeChecker::bytecodeCheck()
         auto codeRaw = att->code.data();
         auto bytes = 0;
 
+#define throwCheckError(rea)                                                                                           \
+    throw OMValidationError(ValidationState::Instructions, rea,                                                        \
+                            fmt::format("function {} + {}", funcName(*method), bytes));
+#define checkStack                                                                                                     \
+    if (operatorStack.size() > att->maxStack)                                                                          \
+    {                                                                                                                  \
+        throwCheckError("operator stack overflow!")                                                                    \
+    }
+
         while (bytes < att->codeLength)
         {
             switch (codeRaw[bytes])
@@ -608,6 +618,7 @@ void OMBytecodeChecker::bytecodeCheck()
             }
             case op_aconst_null:
                 operatorStack.push(std::any(nullptr));
+                checkStack;
                 break;
             case op_iconst_i(-1):
             case op_iconst_i(0):
@@ -616,20 +627,24 @@ void OMBytecodeChecker::bytecodeCheck()
             case op_iconst_i(3):
             case op_iconst_i(4):
             case op_iconst_i(5):
-                operatorStack.push(std::any((int)codeRaw[bytes] - 0x3));
+                operatorStack.push((int)codeRaw[bytes] - 0x3);
+                checkStack;
                 break;
             case op_lconst_l(0):
             case op_lconst_l(1):
-                operatorStack.push(std::any((int64_t)codeRaw[bytes] - 0x9));
+                operatorStack.push((int64_t)codeRaw[bytes] - 0x9);
+                checkStack;
                 break;
             case op_fconst_f(0):
             case op_fconst_f(1):
             case op_fconst_f(2):
-                operatorStack.push(std::any((float)codeRaw[bytes] - 0xb));
+                operatorStack.push((float)codeRaw[bytes] - 0xb);
+                checkStack;
                 break;
             case op_dconst_d(0):
             case op_dconst_d(1):
-                operatorStack.push(std::any((double)codeRaw[bytes] - 0xe));
+                operatorStack.push((double)codeRaw[bytes] - 0xe);
+                checkStack;
                 break;
             case op_istore_n(0):
             case op_istore_n(1):
@@ -638,10 +653,17 @@ void OMBytecodeChecker::bytecodeCheck()
                 auto localIndex = (int)(codeRaw[bytes] - op_istore_n(0));
                 if (localIndex >= att->maxLocals)
                 {
-                    throw OMValidationError(ValidationState::Instructions, "local variable out of range!",
-                                            fmt::format("function {} + {}", funcName(*method), bytes));
+                    throwCheckError("istore_n: local variable out of range!");
+                }
+                if (operatorStack.size() == 0)
+                {
+                    throwCheckError("istore_n: operator stack is empty!");
                 }
                 locals[localIndex] = operatorStack.top();
+                if (std::type_index(locals[localIndex].type()) != std::type_index(typeid(int)))
+                {
+                    throwCheckError("istore_n: operator stack top element type mismatch!");
+                }
                 operatorStack.pop();
                 break;
             }
@@ -649,8 +671,7 @@ void OMBytecodeChecker::bytecodeCheck()
                 auto id = binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1));
                 if (cls->mapping[id]->type() != OMClassConstantType::FieldRef)
                 {
-                    throw OMValidationError(ValidationState::Instructions, "getting data from non fieldref objects!",
-                                            fmt::format("function {} + {}", funcName(*method), bytes));
+                    throwCheckError("getstatic: getting data from non fieldref objects!");
                 }
                 bytes += 2;
                 auto tgt = cls->mapping[cls->mapping[cls->mapping[id]->to<OMClassConstantFieldRef>()->nameAndTypeIndex]
@@ -662,6 +683,7 @@ void OMBytecodeChecker::bytecodeCheck()
                 auto res = bytecode::descriptor::decodeType(tgt, &temp);
                 operatorStack.push(TempNonPrimitiveVariable{
                     res.type == util::Ok ? res.unwrap() : fmt::format("error: {}", res.unwrap_err())});
+                checkStack;
                 break;
             }
             case op_ldc: {
@@ -672,13 +694,22 @@ void OMBytecodeChecker::bytecodeCheck()
                     operatorStack.push(cls->mapping[cls->mapping[id]->to<OMClassConstantString>()->stringIndex]
                                            ->to<OMClassConstantUtf8>()
                                            ->data);
-                    goto checkend;
+                    break;
+                }
+                case OMClassConstantType::Float: {
+                    operatorStack.push(cls->mapping[id]->to<OMClassConstantFloat>()->data);
+                    break;
+                }
+                case OMClassConstantType::Integer: {
+                    operatorStack.push(cls->mapping[id]->to<OMClassConstantInteger>()->data);
+                    break;
                 }
                 default:
-                    goto checkend;
+                    throwCheckError("ldc: loading non-4byte constant!");
                 }
 
                 bytes++;
+                checkStack;
                 break;
             }
             default: {
