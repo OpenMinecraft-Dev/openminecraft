@@ -534,7 +534,7 @@ void OMBytecodeChecker::detail()
     }
 }
 
-void OMBytecodeChecker::bytecodeCheck()
+OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
 {
     auto printAny = [&](std::any content, int index) {
         auto typ = std::type_index(content.type());
@@ -601,8 +601,8 @@ void OMBytecodeChecker::bytecodeCheck()
         auto bytes = 0;
 
 #define throwCheckError(rea)                                                                                           \
-    throw OMValidationError(ValidationState::Instructions, rea,                                                        \
-                            fmt::format("function {} + {}", funcName(*method), bytes));
+    return OMResult<std::any, OMValidationError>::err(OMValidationError(                                               \
+        ValidationState::Instructions, rea, fmt::format("function {} + {}", funcName(*method), bytes)));
 #define checkStack                                                                                                     \
     if (operatorStack.size() > att->maxStack)                                                                          \
     {                                                                                                                  \
@@ -646,6 +646,88 @@ void OMBytecodeChecker::bytecodeCheck()
                 operatorStack.push((double)codeRaw[bytes] - 0xe);
                 checkStack;
                 break;
+            case op_bipush: {
+                operatorStack.push((int)codeRaw[bytes + 1]);
+                bytes++;
+                checkStack;
+                break;
+            }
+            case op_sipush: {
+                operatorStack.push((int)binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)));
+                bytes += 2;
+                checkStack;
+                break;
+            }
+            case op_ldc: {
+                auto id = codeRaw[bytes + 1];
+                switch (cls->mapping[id]->type())
+                {
+                case OMClassConstantType::String: {
+                    operatorStack.push(cls->mapping[cls->mapping[id]->to<OMClassConstantString>()->stringIndex]
+                                           ->to<OMClassConstantUtf8>()
+                                           ->data);
+                    break;
+                }
+                case OMClassConstantType::Float: {
+                    operatorStack.push(cls->mapping[id]->to<OMClassConstantFloat>()->data);
+                    break;
+                }
+                case OMClassConstantType::Integer: {
+                    operatorStack.push(cls->mapping[id]->to<OMClassConstantInteger>()->data);
+                    break;
+                }
+                default:
+                    throwCheckError("ldc: loading non-4byte constant!");
+                }
+
+                bytes++;
+                checkStack;
+                break;
+            }
+            case op_ldc_w: {
+                auto id = binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1));
+                switch (cls->mapping[id]->type())
+                {
+                case OMClassConstantType::String: {
+                    operatorStack.push(cls->mapping[cls->mapping[id]->to<OMClassConstantString>()->stringIndex]
+                                           ->to<OMClassConstantUtf8>()
+                                           ->data);
+                    break;
+                }
+                case OMClassConstantType::Float: {
+                    operatorStack.push(cls->mapping[id]->to<OMClassConstantFloat>()->data);
+                    break;
+                }
+                case OMClassConstantType::Integer: {
+                    operatorStack.push(cls->mapping[id]->to<OMClassConstantInteger>()->data);
+                    break;
+                }
+                default:
+                    throwCheckError("ldc_w: loading non-4byte constant!");
+                }
+                bytes += 2;
+                checkStack;
+                break;
+            }
+            case op_ldc2_w: {
+                auto id = binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1));
+                switch (cls->mapping[id]->type())
+                {
+                case OMClassConstantType::Double: {
+                    operatorStack.push(cls->mapping[id]->to<OMClassConstantDouble>()->data);
+                    break;
+                }
+                case OMClassConstantType::Long: {
+                    operatorStack.push(cls->mapping[id]->to<OMClassConstantLong>()->data);
+                    break;
+                }
+                default:
+                    throwCheckError("ldc_w: loading non-8byte constant!");
+                }
+                bytes += 2;
+                checkStack;
+                break;
+            }
             case op_istore_n(0):
             case op_istore_n(1):
             case op_istore_n(2):
@@ -673,7 +755,6 @@ void OMBytecodeChecker::bytecodeCheck()
                 {
                     throwCheckError("getstatic: getting data from non fieldref objects!");
                 }
-                bytes += 2;
                 auto tgt = cls->mapping[cls->mapping[cls->mapping[id]->to<OMClassConstantFieldRef>()->nameAndTypeIndex]
                                             ->to<OMClassConstantNameAndType>()
                                             ->descIndex]
@@ -683,32 +764,7 @@ void OMBytecodeChecker::bytecodeCheck()
                 auto res = bytecode::descriptor::decodeType(tgt, &temp);
                 operatorStack.push(TempNonPrimitiveVariable{
                     res.type == util::Ok ? res.unwrap() : fmt::format("error: {}", res.unwrap_err())});
-                checkStack;
-                break;
-            }
-            case op_ldc: {
-                auto id = codeRaw[bytes + 1];
-                switch (cls->mapping[id]->type())
-                {
-                case OMClassConstantType::String: {
-                    operatorStack.push(cls->mapping[cls->mapping[id]->to<OMClassConstantString>()->stringIndex]
-                                           ->to<OMClassConstantUtf8>()
-                                           ->data);
-                    break;
-                }
-                case OMClassConstantType::Float: {
-                    operatorStack.push(cls->mapping[id]->to<OMClassConstantFloat>()->data);
-                    break;
-                }
-                case OMClassConstantType::Integer: {
-                    operatorStack.push(cls->mapping[id]->to<OMClassConstantInteger>()->data);
-                    break;
-                }
-                default:
-                    throwCheckError("ldc: loading non-4byte constant!");
-                }
-
-                bytes++;
+                bytes += 2;
                 checkStack;
                 break;
             }
@@ -741,6 +797,8 @@ void OMBytecodeChecker::bytecodeCheck()
 
         continue;
     }
+
+    return OMResult<std::any, OMValidationError>::ok(nullptr);
 }
 
 OMResult<std::any, OMValidationError> OMBytecodeChecker::constantCheck()
