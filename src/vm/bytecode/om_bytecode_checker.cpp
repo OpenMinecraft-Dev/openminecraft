@@ -533,32 +533,38 @@ void OMBytecodeChecker::detail()
 void OMBytecodeChecker::bytecodeCheck()
 {
     auto printAny = [&](std::any content, int index) {
-        switch (hash_compile_time(std::type_index(content.type()).name()))
+        auto typ = std::type_index(content.type());
+        if (typ == std::type_index(typeid(int)))
         {
-        case "i"_hash: {
             loggerSub->info("[{}] int: {}", index, std::any_cast<int>(content));
-            break;
         }
-        case "l"_hash: {
+        else if (typ == std::type_index(typeid(int64_t)))
+        {
             loggerSub->info("[{}] long: {}", index, std::any_cast<int64_t>(content));
-            break;
         }
-        case "f"_hash: {
-            loggerSub->info("[{}] float: {}", index, std::any_cast<float>(content));
-            break;
+        else if (typ == std::type_index(typeid(float)))
+        {
+            loggerSub->info("[{}] long: {}", index, std::any_cast<float>(content));
         }
-        case "d"_hash: {
-            loggerSub->info("[{}] double: {}", index, std::any_cast<double>(content));
-            break;
+        else if (typ == std::type_index(typeid(double)))
+        {
+            loggerSub->info("[{}] long: {}", index, std::any_cast<double>(content));
         }
-        case "v"_hash: {
+        else if (typ == std::type_index(typeid(void)))
+        {
             loggerSub->info("[{}] <empty>", index);
-            break;
         }
-        default: {
-            loggerSub->info("unknown element type: {}", std::type_index(content.type()).name());
-            break;
+        else if (typ == std::type_index(typeid(const char *)))
+        {
+            loggerSub->info("[{}] string: {}", index, std::any_cast<const char *>(content));
         }
+        else if (typ == std::type_index(typeid(std::string)))
+        {
+            loggerSub->info("[{}] string: {}", index, std::any_cast<std::string>(content));
+        }
+        else
+        {
+            loggerSub->info("unknown element type: {}", typ.name());
         }
     };
 
@@ -625,10 +631,31 @@ void OMBytecodeChecker::bytecodeCheck()
                 auto localIndex = (int)(codeRaw[bytes] - op_istore_n(0));
                 if (localIndex >= att->maxLocals)
                 {
-                    throw std::invalid_argument("local table out of index!");
+                    throw OMValidationError(ValidationState::Instructions, "local variable out of range!",
+                                            fmt::format("function {} + {}", funcName(*method), bytes));
                 }
                 locals[localIndex] = operatorStack.top();
                 operatorStack.pop();
+                break;
+            }
+            case op_getstatic: {
+                auto id = binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1));
+                if (cls->mapping[id]->type() != OMClassConstantType::FieldRef)
+                {
+                    throw OMValidationError(ValidationState::Instructions, "getting data from non fieldref objects!",
+                                            fmt::format("function {} + {}", funcName(*method), bytes));
+                }
+                bytes += 2;
+                auto tgt = cls->mapping[cls->mapping[cls->mapping[id]->to<OMClassConstantFieldRef>()->nameAndTypeIndex]
+                                            ->to<OMClassConstantNameAndType>()
+                                            ->descIndex]
+                               ->to<OMClassConstantUtf8>()
+                               ->data;
+                operatorStack.push(tgt);
+                break;
+            }
+            case op_ldc: {
+
                 break;
             }
             default: {

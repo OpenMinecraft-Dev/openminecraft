@@ -91,6 +91,7 @@ int boot(std::vector<std::string> args)
     std::string comm;
     while (true)
     {
+	std::cout << "> ";
         std::cin >> comm;
 
         if (comm == "quit" || comm == "exit")
@@ -130,6 +131,10 @@ int boot(std::vector<std::string> args)
             }
             }
         }
+	else
+        {
+	    logger->warn("unknown command");
+	}
     }
 
     return 0;
