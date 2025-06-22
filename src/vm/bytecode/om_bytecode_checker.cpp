@@ -1,25 +1,28 @@
 #include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
-#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/util/om_util_result.hpp"
+#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
 #include <any>
 #include <memory>
 #include <stack>
-#include <stdexcept>
 #include <typeindex>
 #include <vector>
 
 using namespace openminecraft::vm::classfile;
-using namespace openminecraft::binary::hash;
 using namespace openminecraft::util;
 using namespace openminecraft::vm::err;
 
 namespace openminecraft::vm::bytecode
 {
+struct TempNonPrimitiveVariable
+{
+    std::string type;
+};
+
 OMBytecodeChecker::OMBytecodeChecker(std::shared_ptr<classfile::OMClassFile> cls) : cls(cls)
 {
     logger = std::make_unique<log::OMLogger>("OMBytecodeChecker", this);
@@ -544,11 +547,11 @@ void OMBytecodeChecker::bytecodeCheck()
         }
         else if (typ == std::type_index(typeid(float)))
         {
-            loggerSub->info("[{}] long: {}", index, std::any_cast<float>(content));
+            loggerSub->info("[{}] float: {}", index, std::any_cast<float>(content));
         }
         else if (typ == std::type_index(typeid(double)))
         {
-            loggerSub->info("[{}] long: {}", index, std::any_cast<double>(content));
+            loggerSub->info("[{}] double: {}", index, std::any_cast<double>(content));
         }
         else if (typ == std::type_index(typeid(void)))
         {
@@ -561,6 +564,10 @@ void OMBytecodeChecker::bytecodeCheck()
         else if (typ == std::type_index(typeid(std::string)))
         {
             loggerSub->info("[{}] string: {}", index, std::any_cast<std::string>(content));
+        }
+        else if (typ == std::type_index(typeid(TempNonPrimitiveVariable)))
+        {
+            loggerSub->info("[{}] object with type {}", index, std::any_cast<TempNonPrimitiveVariable>(content).type);
         }
         else
         {
@@ -651,11 +658,27 @@ void OMBytecodeChecker::bytecodeCheck()
                                             ->descIndex]
                                ->to<OMClassConstantUtf8>()
                                ->data;
-                operatorStack.push(tgt);
+                int temp = 0;
+                auto res = bytecode::descriptor::decodeType(tgt, &temp);
+                operatorStack.push(TempNonPrimitiveVariable{
+                    res.type == util::Ok ? res.unwrap() : fmt::format("error: {}", res.unwrap_err())});
                 break;
             }
             case op_ldc: {
+                auto id = codeRaw[bytes + 1];
+                switch (cls->mapping[id]->type())
+                {
+                case OMClassConstantType::String: {
+                    operatorStack.push(cls->mapping[cls->mapping[id]->to<OMClassConstantString>()->stringIndex]
+                                           ->to<OMClassConstantUtf8>()
+                                           ->data);
+                    goto checkend;
+                }
+                default:
+                    goto checkend;
+                }
 
+                bytes++;
                 break;
             }
             default: {
