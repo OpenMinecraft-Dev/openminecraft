@@ -1,8 +1,12 @@
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "fmt/format.h"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/util/om_util_result.hpp"
+#include <typeindex>
 #include <variant>
 #include <vector>
+
+using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::bytecode::descriptor
 {
@@ -41,7 +45,8 @@ OMResult<std::string, std::string> decodeType(std::string raw, int *p)
         }
         // inplace split
         raw[ends] = '\0';
-        auto d = OMResult<std::string, std::string>::ok(std::string(raw.substr(*p, ends).c_str()));
+        auto type = std::string(raw.substr(*p, ends).c_str());
+        auto d = OMResult<std::string, std::string>::ok(type == "java/lang/String" ? "string" : type);
         raw[ends] = ';';
         *p = ends + 1;
         return d;
@@ -90,5 +95,55 @@ OMResult<methodSig, std::string> decodeSignature(std::string raw, int *p)
     case Err:
         return OMResult<methodSig, std::string>::err(ret.unwrap_err());
     }
+}
+OMResult<std::any, std::string> checkArgCompat(std::any data, std::string type)
+{
+    auto typ = std::type_index(data.type());
+    switch (hash_compile_time(type.c_str()))
+    {
+    case "int"_hash:
+    case "byte"_hash:
+    case "char"_hash:
+    case "short"_hash:
+    case "boolean"_hash:
+        if (typ != std::type_index(typeid(int)))
+        {
+            return OMResult<std::any, std::string>::err(
+                fmt::format("requested type {} but found data type non-int!", type));
+        }
+        break;
+    case "void"_hash:
+        return OMResult<std::any, std::string>::err(fmt::format("{} has no instance!", type));
+    case "long"_hash:
+        if (typ != std::type_index(typeid(int64_t)))
+        {
+            return OMResult<std::any, std::string>::err(
+                fmt::format("requested type {} but found data type non-long!", type));
+        }
+        break;
+    case "float"_hash:
+        if (typ != std::type_index(typeid(float)))
+        {
+            return OMResult<std::any, std::string>::err(
+                fmt::format("requested type {} but found data type non-float!", type));
+        }
+        break;
+
+    case "double"_hash:
+        if (typ != std::type_index(typeid(int64_t)))
+        {
+            return OMResult<std::any, std::string>::err(
+                fmt::format("requested type {} but found data type non-double!", type));
+        }
+        break;
+    case "java/lang/String"_hash:
+        if (typ != std::type_index(typeid(std::string)) && typ != std::type_index(typeid(const char *)))
+        {
+            return OMResult<std::any, std::string>::err(
+                fmt::format("requested type {} but found data type non-string!", type));
+        }
+        break;
+    }
+    return OMResult<std::any, std::string>::ok(nullptr);
 }
 } // namespace openminecraft::vm::bytecode::descriptor

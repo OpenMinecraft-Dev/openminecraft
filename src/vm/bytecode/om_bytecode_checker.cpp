@@ -9,8 +9,8 @@
 #include <any>
 #include <memory>
 #include <stack>
+#include <string>
 #include <typeindex>
-#include <typeinfo>
 #include <vector>
 
 using namespace openminecraft::vm::classfile;
@@ -19,10 +19,6 @@ using namespace openminecraft::vm::err;
 
 namespace openminecraft::vm::bytecode
 {
-struct TempNonPrimitiveVariable
-{
-    std::string type;
-};
 
 OMBytecodeChecker::OMBytecodeChecker(std::shared_ptr<classfile::OMClassFile> cls) : cls(cls)
 {
@@ -566,9 +562,10 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
         {
             loggerSub->info("[{}] string: {}", index, std::any_cast<std::string>(content));
         }
-        else if (typ == std::type_index(typeid(TempNonPrimitiveVariable)))
+        else if (typ == std::type_index(typeid(descriptor::TempNonPrimitiveVariable)))
         {
-            loggerSub->info("[{}] object with type {}", index, std::any_cast<TempNonPrimitiveVariable>(content).type);
+            loggerSub->info("[{}] object with type {}", index,
+                            std::any_cast<descriptor::TempNonPrimitiveVariable>(content).type);
         }
         else
         {
@@ -762,11 +759,43 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
                                ->data;
                 int temp = 0;
                 auto res = bytecode::descriptor::decodeType(tgt, &temp);
-                operatorStack.push(TempNonPrimitiveVariable{
+                operatorStack.push(descriptor::TempNonPrimitiveVariable{
                     res.type == util::Ok ? res.unwrap() : fmt::format("error: {}", res.unwrap_err())});
                 bytes += 2;
                 checkStack;
                 break;
+            }
+            case op_invokevirtual: {
+                auto id = binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1));
+                if (cls->mapping[id]->type() != OMClassConstantType::MethodRef)
+                {
+                    throwCheckError("invokevirtual: invoking non-method constants!");
+                }
+                auto methodref = cls->mapping[id]->to<OMClassConstantMethodRef>();
+                auto nt = cls->mapping[methodref->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
+                auto base = cls->mapping[nt->descIndex]->to<OMClassConstantUtf8>();
+
+                auto tempSig = std::string(base->data.c_str());
+                int temp = 0;
+                auto decodeResult = descriptor::decodeSignature(tempSig, &temp);
+                switch (decodeResult.type)
+                {
+                case Ok:
+                    for (int idx = decodeResult.unwrap().first.size() - 1; idx >= 0; idx--)
+                    {
+                        loggerSub->info("{} arg type {}", idx, decodeResult.unwrap().first[idx]);
+                        auto target = descriptor::checkArgCompat(operatorStack.top(), decodeResult.unwrap().first[idx]);
+                        loggerSub->info("Check status: {}", target.type == Ok ? "succ" : "fail");
+                        operatorStack.pop();
+                    }
+                    loggerSub->info("return type {}", decodeResult.unwrap().second);
+                    break;
+                case Err:
+                    throwCheckError(decodeResult.unwrap_err())
+                }
+
+                bytes += 2;
+                goto checkend;
             }
             default: {
                 loggerSub->info("instruction not implemented");
@@ -777,7 +806,7 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
         }
 
     checkend:
-        loggerSub->info("stack:");
+        loggerSub->info("stack (top to bottom):");
         int idx = 0;
         while (!operatorStack.empty())
         {
