@@ -655,7 +655,7 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
                 break;
             }
             case op_aconst_null:
-                operatorStack.push(std::any(nullptr));
+                operatorStack.push(descriptor::TempNonPrimitiveVariable{"java/lang/Object"});
                 checkStack("aconst_null: operator stack overflow!");
                 break;
             case op_iconst_i(-1):
