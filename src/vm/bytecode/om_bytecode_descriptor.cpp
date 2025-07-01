@@ -114,9 +114,12 @@ std::any createEmptyData(std::string type)
         return (double)0;
     case "java/lang/String"_hash:
         return "";
-    default:
-        return TempNonPrimitiveVariable{type};
     }
+    if (type[0] == '[')
+    {
+        return TempArrayVariable{std::string(type.c_str()).substr(1), 0};
+    }
+    return TempNonPrimitiveVariable{type};
 }
 OMResult<std::any, std::string> checkArgCompat(std::any data, std::string type)
 {
@@ -165,6 +168,38 @@ OMResult<std::any, std::string> checkArgCompat(std::any data, std::string type)
                 fmt::format("requested type {} but found data type non-string!", type));
         }
         break;
+    }
+    if (type[0] == '[')
+    {
+        if (typ != std::type_index(typeid(descriptor::TempArrayVariable)))
+        {
+            return OMResult<std::any, std::string>::err(
+                fmt::format("requested type {} but found data type non-array!", type));
+        }
+        auto arrayType = std::any_cast<descriptor::TempArrayVariable>(data).type;
+
+        auto contentType = std::string(type.c_str()).substr(1);
+
+        switch (hash_compile_time(contentType.c_str()))
+        {
+        case "int"_hash:
+        case "byte"_hash:
+        case "char"_hash:
+        case "short"_hash:
+        case "boolean"_hash:
+        case "long"_hash:
+        case "void"_hash:
+        case "float"_hash:
+        case "double"_hash:
+            if (contentType != arrayType)
+            {
+                return OMResult<std::any, std::string>::err(
+                    fmt::format("requested array type {} but found data type {}!", type, arrayType));
+            }
+            break;
+        default:
+            break;
+        }
     }
     return OMResult<std::any, std::string>::ok(nullptr);
 }

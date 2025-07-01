@@ -15,6 +15,11 @@ struct TempNonPrimitiveVariable
 {
     std::string type;
 };
+struct TempArrayVariable
+{
+    std::string type;
+    int length;
+};
 OMResult<std::string, std::string> decodeType(std::string raw, int *p);
 typedef std::pair<std::vector<std::string>, std::string> methodSig;
 OMResult<methodSig, std::string> decodeSignature(std::string raw, int *p);

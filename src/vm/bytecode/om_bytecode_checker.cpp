@@ -567,6 +567,12 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
             loggerSub->info("[{}] object with type {}", index,
                             std::any_cast<descriptor::TempNonPrimitiveVariable>(content).type);
         }
+        else if (typ == std::type_index(typeid(descriptor::TempArrayVariable)))
+        {
+            loggerSub->info("[{}] array with type {}, length {}", index,
+                            std::any_cast<descriptor::TempArrayVariable>(content).type,
+                            std::any_cast<descriptor::TempArrayVariable>(content).length);
+        }
         else
         {
             loggerSub->info("unknown element type: {}", typ.name());
@@ -778,6 +784,55 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
                 checkStack("iload: operator stack overflow!");
                 break;
             }
+            case op_lload: {
+                auto idx = codeRaw[bytes + 1];
+                checkLocalVariableIndex(idx, "lload: local variable out of range!");
+                operatorStack.push(locals[idx]);
+                if (std::type_index(operatorStack.top().type()) != std::type_index(typeid(int64_t)))
+                {
+                    throwCheckError("lload: local variable element type mismatch!");
+                }
+                bytes++;
+                checkStack("lload: operator stack overflow!");
+                break;
+            }
+            case op_fload: {
+                auto idx = codeRaw[bytes + 1];
+                checkLocalVariableIndex(idx, "fload: local variable out of range!");
+                operatorStack.push(locals[idx]);
+                if (std::type_index(operatorStack.top().type()) != std::type_index(typeid(float)))
+                {
+                    throwCheckError("fload: local variable element type mismatch!");
+                }
+                bytes++;
+                checkStack("fload: operator stack overflow!");
+                break;
+            }
+            case op_dload: {
+                auto idx = codeRaw[bytes + 1];
+                checkLocalVariableIndex(idx, "dload: local variable out of range!");
+                operatorStack.push(locals[idx]);
+                if (std::type_index(operatorStack.top().type()) != std::type_index(typeid(double)))
+                {
+                    throwCheckError("dload: local variable element type mismatch!");
+                }
+                bytes++;
+                checkStack("dload: operator stack overflow!");
+                break;
+            }
+            case op_aload: {
+                auto idx = codeRaw[bytes + 1];
+                checkLocalVariableIndex(idx, "aload: local variable out of range!");
+                operatorStack.push(locals[idx]);
+                if (std::type_index(operatorStack.top().type()) !=
+                    std::type_index(typeid(descriptor::TempNonPrimitiveVariable)))
+                {
+                    throwCheckError("aload: local variable element type mismatch!");
+                }
+                bytes++;
+                checkStack("aload: operator stack overflow!");
+                break;
+            }
             case op_iload_n(0):
             case op_iload_n(1):
             case op_iload_n(2):
@@ -790,6 +845,63 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
                     throwCheckError("iload_n: local variable element type mismatch!");
                 }
                 checkStack("iload_n: operator stack overflow!");
+                break;
+            }
+            case op_lload_n(0):
+            case op_lload_n(1):
+            case op_lload_n(2):
+            case op_lload_n(3): {
+                auto idx = codeRaw[bytes] - op_lload_n(0);
+                checkLocalVariableIndex(idx, "lload_n: local variable out of range!");
+                operatorStack.push(locals[idx]);
+                if (std::type_index(operatorStack.top().type()) != std::type_index(typeid(int64_t)))
+                {
+                    throwCheckError("lload_n: local variable element type mismatch!");
+                }
+                checkStack("lload_n: operator stack overflow!");
+                break;
+            }
+            case op_fload_n(0):
+            case op_fload_n(1):
+            case op_fload_n(2):
+            case op_fload_n(3): {
+                auto idx = codeRaw[bytes] - op_fload_n(0);
+                checkLocalVariableIndex(idx, "fload_n: local variable out of range!");
+                operatorStack.push(locals[idx]);
+                if (std::type_index(operatorStack.top().type()) != std::type_index(typeid(float)))
+                {
+                    throwCheckError("fload_n: local variable element type mismatch!");
+                }
+                checkStack("fload_n: operator stack overflow!");
+                break;
+            }
+            case op_dload_n(0):
+            case op_dload_n(1):
+            case op_dload_n(2):
+            case op_dload_n(3): {
+                auto idx = codeRaw[bytes] - op_dload_n(0);
+                checkLocalVariableIndex(idx, "dload_n: local variable out of range!");
+                operatorStack.push(locals[idx]);
+                if (std::type_index(operatorStack.top().type()) != std::type_index(typeid(double)))
+                {
+                    throwCheckError("dload_n: local variable element type mismatch!");
+                }
+                checkStack("dload_n: operator stack overflow!");
+                break;
+            }
+            case op_aload_n(0):
+            case op_aload_n(1):
+            case op_aload_n(2):
+            case op_aload_n(3): {
+                auto idx = codeRaw[bytes] - op_aload_n(0);
+                checkLocalVariableIndex(idx, "aload_n: local variable out of range!");
+                operatorStack.push(locals[idx]);
+                if (std::type_index(operatorStack.top().type()) !=
+                    std::type_index(typeid(descriptor::TempNonPrimitiveVariable)))
+                {
+                    throwCheckError("aload_n: local variable element type mismatch!");
+                }
+                checkStack("aload_n: operator stack overflow!");
                 break;
             }
             case op_istore_n(0):
