@@ -91,7 +91,7 @@ int boot(std::vector<std::string> args)
     std::string comm;
     while (true)
     {
-	std::cout << "> ";
+        std::cout << "> ";
         std::cin >> comm;
 
         if (comm == "quit" || comm == "exit")
@@ -124,17 +124,26 @@ int boot(std::vector<std::string> args)
                     throw cons.unwrap_err();
                 }
                 chk->detail();
-                chk->bytecodeCheck();
+
+                auto target = chk->bytecodeCheck();
+                switch (target.type)
+                {
+                case Ok:
+                    break;
+                case Err:
+                    throw target.unwrap_err();
+                }
+
                 break;
             }
             case Err: {
             }
             }
         }
-	else
+        else
         {
-	    logger->warn("unknown command");
-	}
+            logger->warn("unknown command");
+        }
     }
 
     return 0;

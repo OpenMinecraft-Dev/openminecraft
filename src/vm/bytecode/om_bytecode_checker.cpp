@@ -606,6 +606,28 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
         throwCheckError("operator stack overflow!")                                                                    \
     }
 
+        auto printStatus = [&]() {
+            loggerSub->info("stack (top to bottom):");
+            int idx = 0;
+            while (!operatorStack.empty())
+            {
+                std::any content = operatorStack.top();
+                printAny(content, idx);
+                operatorStack.pop();
+                idx++;
+            }
+
+            idx = 0;
+            loggerSub->info("local:");
+            for (auto content : locals)
+            {
+                printAny(content, idx);
+                idx++;
+            }
+
+            loggerSub->info("*********************");
+        };
+
         while (bytes < att->codeLength)
         {
             switch (codeRaw[bytes])
@@ -775,30 +797,21 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
                 auto nt = cls->mapping[methodref->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
                 auto base = cls->mapping[nt->descIndex]->to<OMClassConstantUtf8>();
 
-                auto tempSig = std::string(base->data.c_str());
-                int temp = 0;
-                auto decodeResult = descriptor::decodeSignature(tempSig, &temp);
-                switch (decodeResult.type)
+                auto checkres = checkInvocationArgs(base->data, &operatorStack, false);
+                switch (checkres.type)
                 {
                 case Ok:
-                    for (int idx = decodeResult.unwrap().first.size() - 1; idx >= 0; idx--)
-                    {
-                        loggerSub->info("{} arg type {}", idx, decodeResult.unwrap().first[idx]);
-                        auto target = descriptor::checkArgCompat(operatorStack.top(), decodeResult.unwrap().first[idx]);
-                        loggerSub->info("Check status: {}", target.type == Ok ? "succ" : "fail");
-                        operatorStack.pop();
-                    }
-                    loggerSub->info("return type {}", decodeResult.unwrap().second);
                     break;
                 case Err:
-                    throwCheckError(decodeResult.unwrap_err())
+                    throwCheckError(checkres.unwrap_err());
                 }
 
                 bytes += 2;
-                goto checkend;
+                checkStack;
+                break;
             }
             default: {
-                loggerSub->info("instruction not implemented");
+                loggerSub->info("instruction not implemented at {} + {}", funcName(*method), bytes);
                 goto checkend;
             }
             }
@@ -824,10 +837,47 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
             idx++;
         }
 
+        loggerSub->info("*********************");
+
         continue;
     }
 
     return OMResult<std::any, OMValidationError>::ok(nullptr);
+}
+
+OMResult<std::any, std::string> OMBytecodeChecker::checkInvocationArgs(std::string sig,
+                                                                       std::stack<std::any> *operatorStack,
+                                                                       bool isstatic)
+{
+    loggerSub->info("function invocation check with signature {}", sig);
+    int temp = 0;
+    auto decodeResult = descriptor::decodeSignature(sig, &temp);
+    switch (decodeResult.type)
+    {
+    case Ok:
+        for (int idx = decodeResult.unwrap().first.size() - 1; idx >= 0; idx--)
+        {
+            auto target = descriptor::checkArgCompat(operatorStack->top(), decodeResult.unwrap().first[idx]);
+            switch (target.type)
+            {
+            case Ok:
+                loggerSub->info("Argument check #{} passed", idx);
+                break;
+            case Err:
+                return OMResult<std::any, std::string>::err(
+                    fmt::format("Argument check #{} failed: {}", idx, target.unwrap_err()));
+            }
+            operatorStack->pop();
+        }
+        if (!isstatic)
+        {
+            operatorStack->pop();
+        }
+        break;
+    case Err:
+        return OMResult<std::any, std::string>::err(decodeResult.unwrap_err());
+    }
+    return OMResult<std::any, std::string>::ok(nullptr);
 }
 
 OMResult<std::any, OMValidationError> OMBytecodeChecker::constantCheck()

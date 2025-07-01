@@ -130,10 +130,10 @@ OMResult<std::any, std::string> checkArgCompat(std::any data, std::string type)
         break;
 
     case "double"_hash:
-        if (typ != std::type_index(typeid(int64_t)))
+        if (typ != std::type_index(typeid(double)))
         {
             return OMResult<std::any, std::string>::err(
-                fmt::format("requested type {} but found data type non-double!", type));
+                fmt::format("requested type {} but found data type non-double! {}", type));
         }
         break;
     case "java/lang/String"_hash:

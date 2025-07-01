@@ -7,6 +7,7 @@
 #include "openminecraft/vm/om_class_file.hpp"
 #include <any>
 #include <memory>
+#include <stack>
 namespace openminecraft::vm::bytecode
 {
 class OMBytecodeChecker
@@ -19,6 +20,8 @@ class OMBytecodeChecker
 
   private:
     std::string funcName(classfile::OMClassMethodInfo info);
+    util::OMResult<std::any, std::string> checkInvocationArgs(std::string sig, std::stack<std::any> *operatorStack,
+                                                              bool isstatic);
     std::shared_ptr<classfile::OMClassFile> cls;
     std::unique_ptr<log::OMLogger> logger;
     std::unique_ptr<log::OMLogger> loggerSub;
