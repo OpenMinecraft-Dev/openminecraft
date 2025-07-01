@@ -96,6 +96,28 @@ OMResult<methodSig, std::string> decodeSignature(std::string raw, int *p)
         return OMResult<methodSig, std::string>::err(ret.unwrap_err());
     }
 }
+std::any createEmptyData(std::string type)
+{
+    switch (hash_compile_time(type.c_str()))
+    {
+    case "byte"_hash:
+    case "char"_hash:
+    case "short"_hash:
+    case "int"_hash:
+    case "boolean"_hash:
+        return 0;
+    case "long"_hash:
+        return (int64_t)0;
+    case "float"_hash:
+        return 0.f;
+    case "double"_hash:
+        return (double)0;
+    case "java/lang/String"_hash:
+        return "";
+    default:
+        return TempNonPrimitiveVariable{type};
+    }
+}
 OMResult<std::any, std::string> checkArgCompat(std::any data, std::string type)
 {
     auto typ = std::type_index(data.type());

@@ -19,6 +19,7 @@ OMResult<std::string, std::string> decodeType(std::string raw, int *p);
 typedef std::pair<std::vector<std::string>, std::string> methodSig;
 OMResult<methodSig, std::string> decodeSignature(std::string raw, int *p);
 OMResult<std::any, std::string> checkArgCompat(std::any data, std::string type);
+std::any createEmptyData(std::string type);
 } // namespace openminecraft::vm::bytecode::descriptor
 
 #endif

@@ -186,11 +186,11 @@ void OMBytecodeChecker::detail()
                 break;
             // bipush (value:u8)
             case op_bipush: {
-                logger->info("{}: bipush {0:#x}", bytes, codeRaw[bytes + 1]);
+                logger->info("{}: bipush {}", bytes, codeRaw[bytes + 1]);
                 bytes++;
                 break;
             }
-                tbyteCommand(op_sipush, "sipush #{}");
+                tbyteCommand(op_sipush, "sipush {}");
             // ldc (index:u8)
             case op_ldc: {
                 logger->info("{}: ldc #{}", bytes, codeRaw[bytes + 1]);
@@ -594,16 +594,35 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
         std::vector<std::any> locals(att->maxLocals);
         std::stack<std::any> operatorStack;
 
+        // Non static method references the object of itself
+        if (!(method->accessFlags & JVM_Acc_Static) && att->maxLocals > 0)
+        {
+            locals[0] = std::make_any<descriptor::TempNonPrimitiveVariable>(descriptor::TempNonPrimitiveVariable{
+                cls->mapping[cls->mapping[cls->thisClass]->to<OMClassConstantClass>()->nameIndex]
+                    ->to<OMClassConstantUtf8>()
+                    ->data});
+        }
+
         auto codeRaw = att->code.data();
         auto bytes = 0;
 
 #define throwCheckError(rea)                                                                                           \
     return OMResult<std::any, OMValidationError>::err(OMValidationError(                                               \
         ValidationState::Instructions, rea, fmt::format("function {} + {}", funcName(*method), bytes)));
-#define checkStack                                                                                                     \
+#define checkStack(msg)                                                                                                \
     if (operatorStack.size() > att->maxStack)                                                                          \
     {                                                                                                                  \
-        throwCheckError("operator stack overflow!")                                                                    \
+        throwCheckError(msg)                                                                                           \
+    }
+#define checkStackNotEmpty(msg)                                                                                        \
+    if (operatorStack.size() == 0)                                                                                     \
+    {                                                                                                                  \
+        throwCheckError(msg)                                                                                           \
+    }
+#define checkLocalVariableIndex(idx, msg)                                                                              \
+    if (idx >= att->maxLocals)                                                                                         \
+    {                                                                                                                  \
+        throwCheckError(msg);                                                                                          \
     }
 
         auto printStatus = [&]() {
@@ -637,7 +656,7 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
             }
             case op_aconst_null:
                 operatorStack.push(std::any(nullptr));
-                checkStack;
+                checkStack("aconst_null: operator stack overflow!");
                 break;
             case op_iconst_i(-1):
             case op_iconst_i(0):
@@ -646,35 +665,35 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
             case op_iconst_i(3):
             case op_iconst_i(4):
             case op_iconst_i(5):
-                operatorStack.push((int)codeRaw[bytes] - 0x3);
-                checkStack;
+                operatorStack.push((int)codeRaw[bytes] - op_iconst_i(0));
+                checkStack("iconst_n: operator stack overflow!");
                 break;
             case op_lconst_l(0):
             case op_lconst_l(1):
-                operatorStack.push((int64_t)codeRaw[bytes] - 0x9);
-                checkStack;
+                operatorStack.push((int64_t)codeRaw[bytes] - op_lconst_l(0));
+                checkStack("lconst_n: operator stack overflow!");
                 break;
             case op_fconst_f(0):
             case op_fconst_f(1):
             case op_fconst_f(2):
-                operatorStack.push((float)codeRaw[bytes] - 0xb);
-                checkStack;
+                operatorStack.push((float)codeRaw[bytes] - op_fconst_f(0));
+                checkStack("fconst_n: operator stack overflow!");
                 break;
             case op_dconst_d(0):
             case op_dconst_d(1):
-                operatorStack.push((double)codeRaw[bytes] - 0xe);
-                checkStack;
+                operatorStack.push((double)codeRaw[bytes] - op_dconst_d(0));
+                checkStack("dconst_n: operator stack overflow!");
                 break;
             case op_bipush: {
                 operatorStack.push((int)codeRaw[bytes + 1]);
                 bytes++;
-                checkStack;
+                checkStack("bipush: operator stack overflow!");
                 break;
             }
             case op_sipush: {
                 operatorStack.push((int)binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)));
                 bytes += 2;
-                checkStack;
+                checkStack("sipush: operator stack overflow!");
                 break;
             }
             case op_ldc: {
@@ -700,7 +719,7 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
                 }
 
                 bytes++;
-                checkStack;
+                checkStack("ldc: operator stack overflow!");
                 break;
             }
             case op_ldc_w: {
@@ -725,7 +744,7 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
                     throwCheckError("ldc_w: loading non-4byte constant!");
                 }
                 bytes += 2;
-                checkStack;
+                checkStack("ldc_w: operator stack overflow!");
                 break;
             }
             case op_ldc2_w: {
@@ -744,7 +763,33 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
                     throwCheckError("ldc_w: loading non-8byte constant!");
                 }
                 bytes += 2;
-                checkStack;
+                checkStack("ldc2_w: operator stack overflow!");
+                break;
+            }
+            case op_iload: {
+                auto idx = codeRaw[bytes + 1];
+                checkLocalVariableIndex(idx, "iload: local variable out of range!");
+                operatorStack.push(locals[idx]);
+                if (std::type_index(operatorStack.top().type()) != std::type_index(typeid(int)))
+                {
+                    throwCheckError("iload: local variable element type mismatch!");
+                }
+                bytes++;
+                checkStack("iload: operator stack overflow!");
+                break;
+            }
+            case op_iload_n(0):
+            case op_iload_n(1):
+            case op_iload_n(2):
+            case op_iload_n(3): {
+                auto idx = codeRaw[bytes] - op_iload_n(0);
+                checkLocalVariableIndex(idx, "iload_n: local variable out of range!");
+                operatorStack.push(locals[idx]);
+                if (std::type_index(operatorStack.top().type()) != std::type_index(typeid(int)))
+                {
+                    throwCheckError("iload_n: local variable element type mismatch!");
+                }
+                checkStack("iload_n: operator stack overflow!");
                 break;
             }
             case op_istore_n(0):
@@ -752,20 +797,27 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
             case op_istore_n(2):
             case op_istore_n(3): {
                 auto localIndex = (int)(codeRaw[bytes] - op_istore_n(0));
-                if (localIndex >= att->maxLocals)
-                {
-                    throwCheckError("istore_n: local variable out of range!");
-                }
-                if (operatorStack.size() == 0)
-                {
-                    throwCheckError("istore_n: operator stack is empty!");
-                }
+                checkLocalVariableIndex(localIndex, "istore_n: local variable out of range!");
+                checkStackNotEmpty("istore_n: operator stack is empty!");
                 locals[localIndex] = operatorStack.top();
                 if (std::type_index(locals[localIndex].type()) != std::type_index(typeid(int)))
                 {
                     throwCheckError("istore_n: operator stack top element type mismatch!");
                 }
                 operatorStack.pop();
+                break;
+            }
+            case op_iadd: {
+                auto i1 = operatorStack.top();
+                operatorStack.pop();
+                auto i2 = operatorStack.top();
+                operatorStack.pop();
+                if (std::type_index(i1.type()) != std::type_index(typeid(int)) ||
+                    std::type_index(i2.type()) != std::type_index(typeid(int)))
+                {
+                    throwCheckError("iadd: not int element!");
+                }
+                operatorStack.push(std::any_cast<int>(i1) + std::any_cast<int>(i2));
                 break;
             }
             case op_getstatic: {
@@ -781,10 +833,16 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
                                ->data;
                 int temp = 0;
                 auto res = bytecode::descriptor::decodeType(tgt, &temp);
-                operatorStack.push(descriptor::TempNonPrimitiveVariable{
-                    res.type == util::Ok ? res.unwrap() : fmt::format("error: {}", res.unwrap_err())});
+                switch (res.type)
+                {
+                case Ok:
+                    operatorStack.push(descriptor::createEmptyData(res.unwrap()));
+                    break;
+                case Err:
+                    throwCheckError(fmt::format("getstatic: failed to fetch variable type: {}", res.unwrap_err()));
+                }
                 bytes += 2;
-                checkStack;
+                checkStack("getstatic: operator stack overflow!");
                 break;
             }
             case op_invokevirtual: {
@@ -807,7 +865,7 @@ OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
                 }
 
                 bytes += 2;
-                checkStack;
+                checkStack("invokevirtual: operator stack overflow!");
                 break;
             }
             default: {
