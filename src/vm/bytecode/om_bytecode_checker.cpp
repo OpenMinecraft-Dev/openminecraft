@@ -518,6 +518,52 @@ void OMBytecodeChecker::detail()
                 bytes += 4;
                 break;
             }
+                tbyteCommand(op_new, "new #{}");
+            case op_newarray: {
+                logger->info("{}: newarray {}", bytes, codeRaw[bytes + 1]);
+                bytes++;
+                break;
+            }
+                tbyteCommand(op_anewarray, "new #{}");
+                simpleCommand(op_arraylength, "arraylength");
+                simpleCommand(op_athrow, "athrow");
+                tbyteCommand(op_checkcast, "checkcast #{}");
+                tbyteCommand(op_instanceof, "instanceof #{}");
+                simpleCommand(op_monitorenter, "monitorenter");
+                simpleCommand(op_monitorexit, "monitorexit");
+            case op_wide: {
+                if (codeRaw[bytes + 1] == op_iinc)
+                {
+                    logger->info("{}: wide iinc {} {}", bytes, binary::be32ToNative(*(uint32_t *)(codeRaw + bytes + 2)),
+                                 binary::be32ToNative(*(uint32_t *)(codeRaw + bytes + 4)));
+                    bytes += 5;
+                }
+                else
+                {
+                    logger->info("{}: wide {} {}", bytes, codeRaw[bytes + 1],
+                                 binary::be32ToNative(*(uint32_t *)(codeRaw + bytes + 2)));
+                    bytes += 3;
+                }
+                break;
+            }
+                tbyteCommand(op_ifnull, "ifnull {}");
+                tbyteCommand(op_ifnonnull, "ifnonnull {}");
+            case op_multianewarray: {
+                logger->info("{}: multianewarray {} {}", bytes,
+                             binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)), codeRaw[bytes + 3]);
+                bytes += 3;
+                break;
+            }
+            case op_goto_w: {
+                logger->info("{}: goto_w {}", bytes, binary::be32ToNative(*(uint32_t *)(codeRaw + bytes + 1)));
+                bytes += 4;
+                break;
+            }
+            case op_jsr_w: {
+                logger->info("{}: jsr_w {}", bytes, binary::be32ToNative(*(uint32_t *)(codeRaw + bytes + 1)));
+                bytes += 4;
+                break;
+            }
             default: {
                 logger->info("unknown operand");
                 goto checkend;
