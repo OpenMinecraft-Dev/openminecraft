@@ -19,7 +19,7 @@ class OMHeapTree
     void checkUnreachable(std::vector<uint64_t> *target, int id = 0);
     void deconstructUnreachable();
 
-    void *&operator[](int i);
+    void *operator[](int i);
 
   private:
     void deconstruct(uint64_t id);

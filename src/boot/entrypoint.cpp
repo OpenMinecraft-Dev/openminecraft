@@ -4,6 +4,7 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
+#include <ctime>
 #include <fstream>
 #include <memory>
 #include <stdexcept>
@@ -139,13 +140,15 @@ int boot(std::vector<std::string> args)
     }
 
     auto tree = new vm::heap::OMHeapTree;
-    tree->allocate(1, 4l * 1024 * 1024 * 1024);
-    tree->allocate(2, 4l * 1024 * 1024 * 1024);
-    tree->allocate(3, 4l * 1024 * 1024 * 1024);
-    tree->allocate(4, 4l * 1024 * 1024 * 1024);
+    for (int i = 0; i < 4096; i++)
+    {
+        tree->allocate(i, 4l * 1024 * 1024);
+    }
+    for (int j = 0; j < 1024 * 4; j++)
+    {
+        tree->attach(SDL_rand(4096), SDL_rand(4096));
+    }
     tree->attach(vm::heap::heapRoot, 1);
-    tree->attach(vm::heap::heapRoot, 3);
-    tree->attach(1, 2);
     logger->info("{}", (*tree)[1]);
     tree->deconstructUnreachable();
     delete tree;

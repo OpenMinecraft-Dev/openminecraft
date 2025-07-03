@@ -63,7 +63,7 @@ void OMHeapTree::checkUnreachable(std::vector<uint64_t> *target, int id)
     }
 }
 
-void *&OMHeapTree::operator[](int i)
+void *OMHeapTree::operator[](int i)
 {
     return data[i];
 }
