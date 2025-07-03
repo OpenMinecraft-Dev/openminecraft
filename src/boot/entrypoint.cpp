@@ -139,20 +139,15 @@ int boot(std::vector<std::string> args)
     }
 
     auto tree = new vm::heap::OMHeapTree;
-    tree->allocate(0, 4l * 1024 * 1024 * 1024);
     tree->allocate(1, 4l * 1024 * 1024 * 1024);
     tree->allocate(2, 4l * 1024 * 1024 * 1024);
     tree->allocate(3, 4l * 1024 * 1024 * 1024);
     tree->allocate(4, 4l * 1024 * 1024 * 1024);
-    tree->attach(0, 1);
-    tree->attach(0, 3);
+    tree->attach(vm::heap::heapRoot, 1);
+    tree->attach(vm::heap::heapRoot, 3);
     tree->attach(1, 2);
-    std::vector<uint64_t> d;
-    tree->checkUnreachable(&d);
-    for (auto i : d)
-    {
-        logger->info("{}", i);
-    }
+    logger->info("{}", (*tree)[1]);
+    tree->deconstructUnreachable();
     delete tree;
 
     mem::castorice::printres();
