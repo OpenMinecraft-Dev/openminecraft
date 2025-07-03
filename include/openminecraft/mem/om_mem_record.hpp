@@ -10,6 +10,8 @@
 #define OM_MEM_OPENGL 4
 #define OM_MEM_HARFBUZZ 5
 #define OM_MEM_FREETYPE 5
+#define OM_MEM_VMDATA 6
+#define OM_MEM_VMCODE 7
 namespace openminecraft::mem::castorice
 {
 enum MemModifyType

@@ -15,6 +15,7 @@ defmal(SDL);
 defmal(GL);
 defmal(Freetype);
 defmal(Harfbuzz);
+defmal(VMData);
 } // namespace openminecraft::mem::allocator
 
 #endif

@@ -4,8 +4,8 @@
 #include "openminecraft/log/om_log_common.hpp"
 
 uint64_t mems[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-std::string memName[10] = {"C++ allocator", "SDL",     "Vulkan",  "Vulkan Internal", "Unknown",
-                           "Unknown",       "Unknown", "Unknown", "Unknown",         "Unknown"};
+std::string memName[10] = {"C++ allocator", "SDL",      "Vulkan",  "Vulkan Internal", "OpenGL",
+                           "Harfbuzz",      "Freetype", "VM Data", "VM Code",         "Unknown"};
 uint64_t blocks = 0;
 
 using namespace openminecraft::i18n::res;

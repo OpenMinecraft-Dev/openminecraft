@@ -40,6 +40,7 @@ defmalr(SDL, OM_MEM_SDL);
 defmalr(Freetype, OM_MEM_FREETYPE);
 defmalr(Harfbuzz, OM_MEM_HARFBUZZ);
 defmalr(GL, OM_MEM_OPENGL);
+defmalr(VMData, OM_MEM_VMDATA);
 } // namespace openminecraft::mem::allocator
 
 using namespace openminecraft::mem::allocator;

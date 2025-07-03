@@ -25,6 +25,7 @@
 #include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
+#include "openminecraft/vm/heap/om_heap_tree.hpp"
 #include "openminecraft/vm/om_class_file.hpp"
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
@@ -125,15 +126,6 @@ int boot(std::vector<std::string> args)
                 }
                 chk->detail();
 
-                auto target = chk->bytecodeCheck();
-                switch (target.type)
-                {
-                case Ok:
-                    break;
-                case Err:
-                    throw target.unwrap_err();
-                }
-
                 break;
             }
             case Err: {
@@ -145,6 +137,25 @@ int boot(std::vector<std::string> args)
             logger->warn("unknown command");
         }
     }
+
+    auto tree = new vm::heap::OMHeapTree;
+    tree->allocate(0, 4l * 1024 * 1024 * 1024);
+    tree->allocate(1, 4l * 1024 * 1024 * 1024);
+    tree->allocate(2, 4l * 1024 * 1024 * 1024);
+    tree->allocate(3, 4l * 1024 * 1024 * 1024);
+    tree->allocate(4, 4l * 1024 * 1024 * 1024);
+    tree->attach(0, 1);
+    tree->attach(0, 3);
+    tree->attach(1, 2);
+    std::vector<uint64_t> d;
+    tree->checkUnreachable(&d);
+    for (auto i : d)
+    {
+        logger->info("{}", i);
+    }
+    delete tree;
+
+    mem::castorice::printres();
 
     return 0;
 }

@@ -576,11 +576,6 @@ void OMBytecodeChecker::detail()
     }
 }
 
-OMResult<std::any, OMValidationError> OMBytecodeChecker::bytecodeCheck()
-{
-    return OMResult<std::any, OMValidationError>::ok(nullptr);
-}
-
 OMResult<std::any, OMValidationError> OMBytecodeChecker::constantCheck()
 {
 #define constantTypeCheck(item, target, reason, str)                                                                   \

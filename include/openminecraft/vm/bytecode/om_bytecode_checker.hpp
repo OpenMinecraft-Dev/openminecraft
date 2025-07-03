@@ -15,7 +15,6 @@ class OMBytecodeChecker
   public:
     OMBytecodeChecker(std::shared_ptr<classfile::OMClassFile> cls);
     void detail();
-    util::OMResult<std::any, err::OMValidationError> bytecodeCheck();
     util::OMResult<std::any, err::OMValidationError> constantCheck();
 
   private:
