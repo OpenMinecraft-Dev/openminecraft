@@ -13,6 +13,7 @@ class OMHeapTree
   public:
     OMHeapTree();
     ~OMHeapTree();
+    uint64_t allocateId();
     bool allocate(uint64_t id, uint64_t length);
     bool attach(uint64_t from, uint64_t to);
     bool detach(uint64_t from, uint64_t to);

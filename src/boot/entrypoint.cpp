@@ -25,9 +25,10 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
+#include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/heap/om_heap_tree.hpp"
-#include "openminecraft/vm/om_class_file.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
@@ -126,6 +127,9 @@ int boot(std::vector<std::string> args)
                     throw cons.unwrap_err();
                 }
                 chk->detail();
+
+                vm::pixeltower::OMInterpreter inter;
+                inter.interpret(clsfile, "main");
 
                 break;
             }

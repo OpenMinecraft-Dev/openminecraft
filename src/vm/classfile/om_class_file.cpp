@@ -6,7 +6,7 @@
 #include <fmt/format.h>
 #include <memory>
 #include <openminecraft/binary/om_bin_endians.hpp>
-#include <openminecraft/vm/om_class_file.hpp>
+#include <openminecraft/vm/classfile/om_class_file.hpp>
 #include <stdexcept>
 
 using namespace openminecraft::binary;

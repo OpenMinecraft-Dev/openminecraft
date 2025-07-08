@@ -4,8 +4,8 @@
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
+#include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
-#include "openminecraft/vm/om_class_file.hpp"
 #include <any>
 #include <memory>
 #include <stack>

@@ -63,6 +63,16 @@ void OMHeapTree::checkUnreachable(std::vector<uint64_t> *target, int id)
     }
 }
 
+uint64_t OMHeapTree::allocateId()
+{
+    uint64_t target = 1;
+    while (data[target] != nullptr)
+    {
+        target++;
+    }
+    return target;
+}
+
 void *OMHeapTree::operator[](int i)
 {
     return data[i];
@@ -100,7 +110,7 @@ bool OMHeapTree::allocate(uint64_t id, uint64_t length)
 {
     for (auto pairs : data)
     {
-        if (pairs.first == id)
+        if (pairs.first == id && pairs.second != nullptr)
         {
             return false;
         }

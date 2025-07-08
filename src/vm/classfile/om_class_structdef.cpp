@@ -1,4 +1,4 @@
-#include <openminecraft/vm/om_class_file.hpp>
+#include <openminecraft/vm/classfile/om_class_file.hpp>
 #include <vector>
 
 namespace openminecraft::vm::classfile
