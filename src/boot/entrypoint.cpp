@@ -139,20 +139,6 @@ int boot(std::vector<std::string> args)
         }
     }
 
-    auto tree = new vm::heap::OMHeapTree;
-    for (int i = 0; i < 4096; i++)
-    {
-        tree->allocate(i, 4l * 1024 * 1024);
-    }
-    for (int j = 0; j < 1024 * 4; j++)
-    {
-        tree->attach(SDL_rand(4096), SDL_rand(4096));
-    }
-    tree->attach(vm::heap::heapRoot, 1);
-    logger->info("{}", (*tree)[1]);
-    tree->deconstructUnreachable();
-    delete tree;
-
     mem::castorice::printres();
 
     return 0;
