@@ -51,11 +51,12 @@ execute:
             frame->offset++;
             break;
         case op_new: {
+            operand_new();
             frame->offset += 2;
-
             break;
         }
         case op_dup: {
+            operand_dup();
             frame->offset++;
             break;
         }
