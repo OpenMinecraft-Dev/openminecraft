@@ -25,9 +25,9 @@ class OMInterpreter
 
     void interpret(std::shared_ptr<vm::classfile::OMClassFile> f, std::string func);
 
-    void operand_nop();
-    void operand_new();
-    void operand_dup();
+    void operand_nop(uint64_t &offset);
+    void operand_new(uint64_t &offset);
+    void operand_dup(uint64_t &offset);
 
   private:
     std::stack<std::any> stack;
