@@ -1,7 +1,9 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
+#include "openminecraft/log/om_log_ansi.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
+#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/heap/om_heap_tree.hpp"
@@ -12,6 +14,7 @@
 
 using namespace openminecraft::vm::classfile;
 using namespace openminecraft::binary::hash;
+using namespace openminecraft::log::ansi;
 
 namespace openminecraft::vm::pixeltower
 {
@@ -68,18 +71,28 @@ execute:
     }
 
 execute_fail:
+    stack.push(0.11f);
     uint64_t idx = 0;
     while (!stack.empty())
     {
         auto target = std::type_index(stack.top().type());
         if (target == std::type_index(typeid(void *)))
         {
-            logger.info("[{}] {} at heap tree", idx, (void *)std::any_cast<void *>(stack.top()));
+            logger.info("{3}[{0}] {2}{1:#018x}{4} at heap tree", idx,
+                        (uint64_t)(void *)std::any_cast<void *>(stack.top()), OMLogAnsiYellowLight, OMLogAnsiBlueLight,
+                        OMLogAnsiReset);
         }
         else if (target == std::type_index(typeid(std::shared_ptr<OMFrameMetadata>)))
         {
             auto fmd = std::any_cast<std::shared_ptr<OMFrameMetadata>>(stack.top());
-            logger.info("[{}] frame metadata {}:{}{} + {}", idx, fmd->clazz, fmd->method, fmd->sig, fmd->offset);
+            logger.info("{6}[{0}]{7} frame metadata {8}{1}.{2}{7}{9}{3}{7} + {5}{4}{7}", idx, fmd->clazz, fmd->method,
+                        fmd->sig, fmd->offset, OMLogAnsiYellowLight, OMLogAnsiBlueLight, OMLogAnsiReset,
+                        OMLogAnsiCyanLight, OMLogAnsiBlackLight);
+        }
+        else if (target == std::type_index(typeid(float)))
+        {
+            logger.info("{3}[{0}] {2}{1}f{4}", idx, std::any_cast<float>(stack.top()), OMLogAnsiGreenLight,
+                        OMLogAnsiBlueLight, OMLogAnsiReset);
         }
 
         stack.pop();
