@@ -111,7 +111,7 @@ int boot(std::vector<std::string> args)
         }
         else if (comm[0] == 'l' && comm[1] == ':')
         {
-            parser = std::make_shared<OMClassFileParser>(std::make_shared<std::ifstream>(comm.substr(2)));
+            parser = std::make_shared<OMClassFileParser>(std::make_shared<std::ifstream>(comm.substr(2), std::ios::binary));
             auto clsres = parser->parse();
             switch (clsres.type)
             {
