@@ -4,9 +4,12 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/heap/om_heap_tree.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_type.hpp"
 #include <any>
 #include <memory>
 #include <stack>
+#include <unordered_map>
+#include <vector>
 namespace openminecraft::vm::pixeltower
 {
 struct OMFrameMetadata
@@ -17,22 +20,39 @@ struct OMFrameMetadata
     uint64_t offset;
 };
 
+template <typename T> struct OMArray
+{
+    uint32_t length;
+    T *data;
+};
+
 class OMInterpreter
 {
   public:
     OMInterpreter();
     ~OMInterpreter();
 
-    void interpret(std::shared_ptr<vm::classfile::OMClassFile> f, std::string func);
+    void loadClass(std::string name);
+    void loadClass(std::shared_ptr<vm::classfile::OMClassFile> f);
+    void execute(std::string clazz, std::string func, std::string desc, bool isStatic);
+
+    void executeBytecode(std::shared_ptr<vm::classfile::OMClassFile> f, classfile::OMClassAttrCode *codeWrap);
+    bool findAndExecuteBytecode(std::string clazz, std::string func, std::string desc, bool isStatic);
 
     void operand_nop(uint64_t &offset);
-    void operand_new(uint64_t &offset);
+    void operand_new(uint64_t &offset, std::string type);
     void operand_dup(uint64_t &offset);
+    void operand_invokespecial(uint64_t &offset, std::string clazz, std::string func, std::string desc);
+    std::stack<std::any> stack;
 
   private:
-    std::stack<std::any> stack;
+    std::vector<std::any> local;
+    uint64_t localOffset = 0;
     heap::OMHeapTree memoryTree;
     log::OMLogger logger;
+
+    std::unordered_map<std::string, std::shared_ptr<vm::classfile::OMClassFile>> loadedClasses;
+    std::unordered_map<std::string, std::shared_ptr<OMNativeObjectType>> loadedNativeClasses;
 };
 }; // namespace openminecraft::vm::pixeltower
 

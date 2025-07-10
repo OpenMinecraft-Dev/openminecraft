@@ -128,8 +128,14 @@ int boot(std::vector<std::string> args)
                 }
                 chk->detail();
 
+                std::vector<const char *> data;
+                data.push_back("--debug");
+                auto tgt = vm::pixeltower::OMArray<const char *>{1, data.data()};
+
                 vm::pixeltower::OMInterpreter inter;
-                inter.interpret(clsfile, "main");
+                inter.loadClass(clsfile);
+                inter.stack.push(tgt);
+                inter.execute("Test", "main", "([Ljava/lang/String;)V", true);
 
                 break;
             }
