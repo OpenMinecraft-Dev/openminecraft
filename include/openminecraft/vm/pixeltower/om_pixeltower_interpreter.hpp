@@ -18,6 +18,7 @@ struct OMFrameMetadata
     std::string method;
     std::string sig;
     uint64_t offset;
+    uint64_t allowedStackDepth;
     std::shared_ptr<std::vector<std::any *>> locals;
 };
 
@@ -28,6 +29,10 @@ template <typename T> struct OMArray
 };
 
 struct OMLocalVariablePlaceholder
+{
+};
+
+struct OMLocalVariableBoundary
 {
 };
 
@@ -50,9 +55,12 @@ class OMInterpreter
     void operand_dup(uint64_t &offset);
     void operand_invokespecial(uint64_t &offset, std::string clazz, std::string func, std::string desc);
     void operand_invokevirtual(uint64_t &offset, std::string clazz, std::string func, std::string desc);
+    void operand_invokestatic(uint64_t &offset, std::string clazz, std::string func, std::string desc);
     std::stack<std::any, std::list<std::any>> stack;
 
   private:
+    void debugStack();
+    void logAnyData(int idx, std::any data);
     heap::OMHeapTree memoryTree;
     log::OMLogger logger;
 
