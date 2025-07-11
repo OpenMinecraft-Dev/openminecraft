@@ -43,6 +43,7 @@ class OMInterpreter
     void operand_new(uint64_t &offset, std::string type);
     void operand_dup(uint64_t &offset);
     void operand_invokespecial(uint64_t &offset, std::string clazz, std::string func, std::string desc);
+    void operand_invokevirtual(uint64_t &offset, std::string clazz, std::string func, std::string desc);
     std::stack<std::any> stack;
 
   private:

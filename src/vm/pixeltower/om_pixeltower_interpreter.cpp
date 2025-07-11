@@ -76,6 +76,18 @@ void OMInterpreter::executeBytecode(std::shared_ptr<OMClassFile> f, OMClassAttrC
             operand_invokespecial(frame->offset, cls, name, desc);
             break;
         }
+        case op_invokevirtual: {
+            auto id = binary::be16ToNative(*(uint16_t *)(codeWrap->code.data() + frame->offset + 1));
+            auto temp1 = f->mapping[id]->to<OMClassConstantMethodRef>();
+            auto cls = f->mapping[f->mapping[temp1->classIndex]->to<OMClassConstantClass>()->nameIndex]
+                           ->to<OMClassConstantUtf8>()
+                           ->data;
+            auto temp2 = f->mapping[temp1->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
+            auto name = f->mapping[temp2->nameIndex]->to<OMClassConstantUtf8>()->data;
+            auto desc = f->mapping[temp2->descIndex]->to<OMClassConstantUtf8>()->data;
+            operand_invokevirtual(frame->offset, cls, name, desc);
+            break;
+        }
         default:
             logger.warn("unknown instruction!");
             return;
@@ -130,7 +142,6 @@ invoke_main:
 
     auto frame = std::make_shared<OMFrameMetadata>(OMFrameMetadata{cls, func, desc, 0});
     stack.push(frame);
-    // stack.push(externalArg);
 
     localOffset += codeWrap->maxLocals;
     executeBytecode(f, codeWrap);
@@ -173,53 +184,81 @@ void OMInterpreter::execute(std::string clazz, std::string func, std::string des
         }
     }
 
-    logger.info("method leaving! {}.{}{}", clazz, func, desc);
     uint64_t idx = 0;
-    while (true)
-    {
-        auto target = std::type_index(stack.top().type());
+    auto printData = [&](std::any data) {
+        auto target = std::type_index(data.type());
+        logger.info("{}", target.name());
         if (target == std::type_index(typeid(void *)))
         {
-            logger.info("{3}[{0}] {2}{1:#018x}{4} at heap tree", idx,
-                        (uint64_t)(void *)std::any_cast<void *>(stack.top()), OMLogAnsiYellowLight, OMLogAnsiBlueLight,
-                        OMLogAnsiReset);
+            logger.info("{3}[{0}] {2}{1:#018x}{4} at heap tree", idx, (uint64_t)(void *)std::any_cast<void *>(data),
+                        OMLogAnsiYellowLight, OMLogAnsiBlueLight, OMLogAnsiReset);
         }
         else if (target == std::type_index(typeid(std::shared_ptr<OMFrameMetadata>)))
         {
-            auto fmd = std::any_cast<std::shared_ptr<OMFrameMetadata>>(stack.top());
+            auto fmd = std::any_cast<std::shared_ptr<OMFrameMetadata>>(data);
             logger.info("{6}[{0}]{7} frame metadata {8}{1}.{2}{7}{9}{3}{7} + {5}{4}{7}", idx, fmd->clazz, fmd->method,
                         fmd->sig, fmd->offset, OMLogAnsiYellowLight, OMLogAnsiBlueLight, OMLogAnsiReset,
                         OMLogAnsiCyanLight, OMLogAnsiBlackLight);
-            stack.pop();
-            break;
         }
         else if (target == std::type_index(typeid(float)))
         {
-            logger.info("{3}[{0}] {2}{1}f{4}", idx, std::any_cast<float>(stack.top()), OMLogAnsiGreenLight,
-                        OMLogAnsiBlueLight, OMLogAnsiReset);
+            logger.info("{3}[{0}] {2}{1}f{4}", idx, std::any_cast<float>(data), OMLogAnsiGreenLight, OMLogAnsiBlueLight,
+                        OMLogAnsiReset);
+        }
+        else if (target == std::type_index(typeid(int)))
+        {
+            logger.info("{3}[{0}] {2}{1}{4}", idx, std::any_cast<int>(data), OMLogAnsiGreenLight, OMLogAnsiBlueLight,
+                        OMLogAnsiReset);
         }
         else if (target == std::type_index(typeid(OMArray<const char *>)))
         {
-            auto data = std::any_cast<OMArray<const char *>>(stack.top());
+            auto data0 = std::any_cast<OMArray<const char *>>(data);
             std::string target;
             target += "[";
-            for (uint32_t i = 0; i < data.length; i++)
+            for (uint32_t i = 0; i < data0.length; i++)
             {
-                target.append(data.data[i]);
+                target.append(data0.data[i]);
                 target.append(", ");
             }
             target.append("]");
             logger.info("{2}[{0}]{3} array {4}{1}{3}", idx, target, OMLogAnsiBlueLight, OMLogAnsiReset,
                         OMLogAnsiGreenLight);
         }
+    };
+    while (true)
+    {
+        printData(stack.top());
+
+        if (std::type_index(stack.top().type()) == std::type_index(typeid(std::shared_ptr<OMFrameMetadata>)))
+        {
+            stack.pop();
+            std::vector<std::any> cache;
+            while (!stack.empty())
+            {
+                cache.push_back(stack.top());
+                idx++;
+                printData(stack.top());
+                stack.pop();
+            }
+            for (int i = cache.size() - 1; i >= 0; i--)
+            {
+                stack.push(cache[i]);
+            }
+            break;
+        }
 
         stack.pop();
         idx++;
     }
-    logger.info("...");
+    logger.info("......................");
     return;
 }
 void OMInterpreter::operand_invokespecial(uint64_t &offset, std::string clazz, std::string func, std::string desc)
+{
+    execute(clazz, func, desc, false);
+    offset += 3;
+}
+void OMInterpreter::operand_invokevirtual(uint64_t &offset, std::string clazz, std::string func, std::string desc)
 {
     execute(clazz, func, desc, false);
     offset += 3;
