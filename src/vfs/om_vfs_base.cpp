@@ -100,7 +100,9 @@ bool fsmountBundle(BundleInfo info, std::string mountpoint)
                 auto data = new char[dl];
                 str.read(data, dl);
                 delete[] name;
-                return std::make_shared<std::istringstream>(std::string(data, dl));
+                auto r = std::make_shared<std::istringstream>(std::string(data, dl));
+		delete[] data;
+		return r;
             }
         }
         return nullptr;
