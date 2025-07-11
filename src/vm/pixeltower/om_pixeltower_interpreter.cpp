@@ -25,24 +25,14 @@ namespace openminecraft::vm::pixeltower
 {
 OMInterpreter::OMInterpreter() : logger("pixeltower/OMInterpreter", this)
 {
+    loader.loadBasicClasses();
 }
 OMInterpreter::~OMInterpreter()
 {
 }
-void OMInterpreter::loadClass(std::string name)
-{
-    logger.info("loading class {}", name);
-    if (name == "java/lang/Object")
-    {
-        loadedNativeClasses["java/lang/Object"] = std::make_shared<stdlib::java::lang::Object>();
-    }
-}
 void OMInterpreter::loadClass(std::shared_ptr<vm::classfile::OMClassFile> f)
 {
-    auto name =
-        f->mapping[f->mapping[f->thisClass]->to<OMClassConstantClass>()->nameIndex]->to<OMClassConstantUtf8>()->data;
-    logger.info("loading class {}", name);
-    loadedClasses[name] = f;
+    loader.loadClass(f);
 }
 void OMInterpreter::executeBytecode(std::shared_ptr<OMClassFile> f, OMClassAttrCode *codeWrap,
                                     std::shared_ptr<OMFrameMetadata> frame)
@@ -113,12 +103,7 @@ void OMInterpreter::executeBytecode(std::shared_ptr<OMClassFile> f, OMClassAttrC
 }
 bool OMInterpreter::findAndExecuteBytecode(std::string clazz, std::string func, std::string desc, bool isStatic)
 {
-    auto f = loadedClasses[clazz];
-    if (f == nullptr)
-    {
-        return false;
-    }
-
+    auto f = loader.fetchClass(clazz);
     OMClassAttrCode *codeWrap;
     for (auto method : f->methods)
     {
@@ -179,7 +164,12 @@ invoke_main:
 }
 void OMInterpreter::execute(std::string clazz, std::string func, std::string desc, bool isStatic)
 {
-    if (!findAndExecuteBytecode(clazz, func, desc, isStatic))
+    if (!loader.classLoaded(clazz))
+    {
+        throw std::logic_error("class not found!");
+    }
+
+    if (loader.isNative(clazz))
     {
         int temp = 0;
         auto res = bytecode::descriptor::decodeSignature(desc, &temp);
@@ -199,22 +189,18 @@ void OMInterpreter::execute(std::string clazz, std::string func, std::string des
             args.push_back(stack.top());
             stack.pop();
         }
-        if (loadedNativeClasses[clazz] == nullptr)
-        {
-            throw std::logic_error("native class not found!");
-        }
 
         for (int i = args.size() - 1; i >= 0; i--)
         {
             stack.push(args[i]);
         }
 
-        loadedNativeClasses[clazz]->invoke(func, stack);
-        if (std::type_index(stack.top().type()) == std::type_index(typeid(OMFrameMetadata)))
-        {
-            throw std::logic_error("native impl not working!");
-        }
+        loader.invokeNative(clazz, func, stack);
         return;
+    }
+    else
+    {
+        findAndExecuteBytecode(clazz, func, desc, isStatic);
     }
 
     logger.debug("");
@@ -322,7 +308,10 @@ void OMInterpreter::operand_nop(uint64_t &offset)
 }
 void OMInterpreter::operand_new(uint64_t &offset, std::string type)
 {
-    loadClass(type);
+    if (!loader.classLoaded(type))
+    {
+        throw std::logic_error("class not loaded!");
+    }
     auto id = memoryTree.allocateId();
     stack.push((void *)id);
     memoryTree.allocate(id, 0);

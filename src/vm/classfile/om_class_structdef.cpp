@@ -226,7 +226,7 @@ OMClassAttrType OMClassAttrSourceDebugExtension::type()
     return OMClassAttrType::SourceDebugExtension;
 }
 
-OMClassAttrLineNumberTable::OMClassAttrLineNumberTable(uint16_t lntl, std::map<uint16_t, uint16_t> lnt)
+OMClassAttrLineNumberTable::OMClassAttrLineNumberTable(uint16_t lntl, std::unordered_map<uint16_t, uint16_t> lnt)
     : lineNumberTableLength(lntl), lineNumberTable(lnt)
 {
 }

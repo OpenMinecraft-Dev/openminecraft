@@ -2,10 +2,9 @@
 #define OM_CLASS_FILE_HPP
 
 #include <cstdint>
-#include <exception>
 #include <istream>
-#include <map>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "openminecraft/io/om_io_parser.hpp"
@@ -460,10 +459,10 @@ class OMClassAttrSourceDebugExtension : public OMClassAttr
 class OMClassAttrLineNumberTable : public OMClassAttr
 {
   public:
-    OMClassAttrLineNumberTable(uint16_t lntl, std::map<uint16_t, uint16_t> lnt);
+    OMClassAttrLineNumberTable(uint16_t lntl, std::unordered_map<uint16_t, uint16_t> lnt);
     virtual OMClassAttrType type() override;
     const uint16_t lineNumberTableLength;
-    const std::map<uint16_t, uint16_t> lineNumberTable;
+    const std::unordered_map<uint16_t, uint16_t> lineNumberTable;
 };
 
 struct OMClassAttrLocalVar
@@ -566,7 +565,7 @@ struct OMClassAnnotation
 {
     uint16_t type;
     uint16_t numPairs;
-    std::map<uint16_t, std::shared_ptr<OMClassAnnotationElemValue>> pairs;
+    std::unordered_map<uint16_t, std::shared_ptr<OMClassAnnotationElemValue>> pairs;
 };
 
 class OMClassAttrRuntimeVisibleAnnotations : public OMClassAttr
@@ -704,12 +703,12 @@ struct OMClassFile
     uint16_t attrCount;
     std::vector<std::shared_ptr<OMClassAttr>> attrs;
 
-    std::map<uint16_t, std::shared_ptr<OMClassConstant>> mapping;
+    std::unordered_map<uint16_t, std::shared_ptr<OMClassConstant>> mapping;
 };
 
 class OMClassFileParser : public io::OMParser
 {
-    using ConstantMapping = std::map<uint16_t, std::shared_ptr<OMClassConstant>>;
+    using ConstantMapping = std::unordered_map<uint16_t, std::shared_ptr<OMClassConstant>>;
 
   public:
     OMClassFileParser(std::shared_ptr<std::istream> stream);

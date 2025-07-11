@@ -130,8 +130,7 @@ int boot(std::vector<std::string> args)
                 chk->detail();
 
                 std::vector<const char *> data;
-                data.push_back("--debug");
-                auto tgt = vm::pixeltower::OMArray<const char *>{1, data.data()};
+                auto tgt = vm::pixeltower::OMArray<const char *>{0, data.data()};
 
                 vm::pixeltower::OMInterpreter inter;
                 inter.loadClass(clsfile);

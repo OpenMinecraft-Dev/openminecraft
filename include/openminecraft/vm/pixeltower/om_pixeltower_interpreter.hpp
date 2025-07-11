@@ -4,6 +4,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/heap/om_heap_tree.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_classloader.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_type.hpp"
 #include <any>
 #include <memory>
@@ -32,17 +33,12 @@ struct OMLocalVariablePlaceholder
 {
 };
 
-struct OMLocalVariableBoundary
-{
-};
-
 class OMInterpreter
 {
   public:
     OMInterpreter();
     ~OMInterpreter();
 
-    void loadClass(std::string name);
     void loadClass(std::shared_ptr<vm::classfile::OMClassFile> f);
     void execute(std::string clazz, std::string func, std::string desc, bool isStatic);
 
@@ -64,8 +60,7 @@ class OMInterpreter
     heap::OMHeapTree memoryTree;
     log::OMLogger logger;
 
-    std::unordered_map<std::string, std::shared_ptr<vm::classfile::OMClassFile>> loadedClasses;
-    std::unordered_map<std::string, std::shared_ptr<OMNativeObjectType>> loadedNativeClasses;
+    OMClassLoader loader;
 };
 }; // namespace openminecraft::vm::pixeltower
 

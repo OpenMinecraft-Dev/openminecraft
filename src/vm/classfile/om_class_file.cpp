@@ -452,7 +452,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
     case "LineNumberTable"_hash: {
         uint16_t lntl, a, b;
         this->source->readbe16(lntl);
-        std::map<uint16_t, uint16_t> lnt;
+        std::unordered_map<uint16_t, uint16_t> lnt;
         for (uint16_t i = 0; i < lntl; i++)
         {
             this->source->readbe16(a);
@@ -685,7 +685,7 @@ std::shared_ptr<OMClassAnnotation> OMClassFileParser::parseAnnotation()
     auto anno = std::make_shared<OMClassAnnotation>();
     this->source->readbe16(anno->type);
     this->source->readbe16(anno->numPairs);
-    anno->pairs = std::map<uint16_t, std::shared_ptr<OMClassAnnotationElemValue>>();
+    anno->pairs = std::unordered_map<uint16_t, std::shared_ptr<OMClassAnnotationElemValue>>();
 
     for (uint16_t idx = 0; idx < anno->numPairs; idx++)
     {
