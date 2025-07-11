@@ -47,8 +47,7 @@ class OMInterpreter
     std::stack<std::any> stack;
 
   private:
-    std::vector<std::any> local;
-    uint64_t localOffset = 0;
+    std::vector<std::any *> local;
     heap::OMHeapTree memoryTree;
     log::OMLogger logger;
 

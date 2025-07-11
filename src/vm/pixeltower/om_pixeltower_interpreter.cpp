@@ -44,7 +44,17 @@ void OMInterpreter::loadClass(std::shared_ptr<vm::classfile::OMClassFile> f)
 }
 void OMInterpreter::executeBytecode(std::shared_ptr<OMClassFile> f, OMClassAttrCode *codeWrap)
 {
+    std::vector<std::any> datas;
+    while (std::type_index(stack.top().type()) != std::type_index(typeid(std::shared_ptr<OMFrameMetadata>)))
+    {
+        datas.push_back(stack.top());
+        stack.pop();
+    }
     auto frame = std::any_cast<std::shared_ptr<OMFrameMetadata>>(stack.top());
+    for (int i = datas.size() - 1; i >= 0; i--)
+    {
+        stack.push(datas[i]);
+    }
     while (frame->offset < codeWrap->codeLength)
     {
         switch (codeWrap->code[frame->offset])
@@ -134,18 +144,28 @@ invoke_main:
     auto cls =
         f->mapping[f->mapping[f->thisClass]->to<OMClassConstantClass>()->nameIndex]->to<OMClassConstantUtf8>()->data;
 
+    std::vector<std::any> args;
     for (int i = 0; i < res.unwrap().first.size() + !isStatic; i++)
     {
-        local.push_back(stack.top());
+        args.push_back(stack.top());
         stack.pop();
     }
 
     auto frame = std::make_shared<OMFrameMetadata>(OMFrameMetadata{cls, func, desc, 0});
     stack.push(frame);
 
-    localOffset += codeWrap->maxLocals;
+    while (args.size() < codeWrap->maxLocals)
+    {
+        args.push_back((uint16_t)0);
+    }
+    local.clear();
+    for (int i = args.size() - 1; i >= 0; i--)
+    {
+        stack.push(args[i]);
+        local.push_back(&stack.top());
+    }
+
     executeBytecode(f, codeWrap);
-    localOffset -= codeWrap->maxLocals;
 
     return true;
 }
@@ -177,17 +197,23 @@ void OMInterpreter::execute(std::string clazz, std::string func, std::string des
         }
         auto frame = std::make_shared<OMFrameMetadata>(OMFrameMetadata{clazz, func, desc, 0});
         stack.push(frame);
-        loadedNativeClasses[clazz]->invoke(func, stack, args);
+
+        for (int i = args.size() - 1; i >= 0; i--)
+        {
+            stack.push(args[i]);
+        }
+
+        loadedNativeClasses[clazz]->invoke(func, stack);
         if (std::type_index(stack.top().type()) == std::type_index(typeid(OMFrameMetadata)))
         {
             throw std::logic_error("native impl not working!");
         }
+        return;
     }
 
     uint64_t idx = 0;
     auto printData = [&](std::any data) {
         auto target = std::type_index(data.type());
-        logger.info("{}", target.name());
         if (target == std::type_index(typeid(void *)))
         {
             logger.info("{3}[{0}] {2}{1:#018x}{4} at heap tree", idx, (uint64_t)(void *)std::any_cast<void *>(data),
@@ -224,10 +250,19 @@ void OMInterpreter::execute(std::string clazz, std::string func, std::string des
             logger.info("{2}[{0}]{3} array {4}{1}{3}", idx, target, OMLogAnsiBlueLight, OMLogAnsiReset,
                         OMLogAnsiGreenLight);
         }
+        else
+        {
+            logger.info("{1}[{0}] {2}uninitialized local variable{3}", idx, OMLogAnsiBlueLight, OMLogAnsiBlackLight,
+                        OMLogAnsiReset);
+        }
     };
     while (true)
     {
         printData(stack.top());
+        if (std::type_index(stack.top().type()) == std::type_index(typeid(void *)))
+        {
+            memoryTree.detach(heap::heapRoot, (uint64_t)(void *)std::any_cast<void *>(stack.top()));
+        }
 
         if (std::type_index(stack.top().type()) == std::type_index(typeid(std::shared_ptr<OMFrameMetadata>)))
         {

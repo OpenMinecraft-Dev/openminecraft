@@ -20,17 +20,20 @@ std::string Object::name()
 {
     return "java/lang/Object";
 }
-void Object::invoke(std::string name, std::stack<std::any> &stk, std::vector<std::any> &args)
+void Object::invoke(std::string name, std::stack<std::any> &stk)
 {
     if (name == "<init>")
     {
+        stk.pop();
+        stk.pop(); // Remove additional frame data!
     }
     else if (name == "equals")
     {
-        auto fm = stk.top();
+        auto arg1 = stk.top();
         stk.pop();
-        auto arg1 = args[0];
-        auto arg2 = args[1];
+        auto arg2 = stk.top();
+        stk.pop();
+        stk.pop(); // Remove additional frame data!
 
         int result;
 
@@ -44,8 +47,6 @@ void Object::invoke(std::string name, std::stack<std::any> &stk, std::vector<std
             result = std::any_cast<void *>(arg2) == std::any_cast<void *>(arg1) ? 1 : 0;
         }
 
-        stk.push(result);
-        stk.push(fm);
         stk.push(result);
     }
 }
