@@ -20,12 +20,11 @@ std::string Object::name()
 {
     return "java/lang/Object";
 }
-void Object::invoke(std::string name, std::stack<std::any> &stk)
+void Object::invoke(std::string name, std::stack<std::any, std::list<std::any>> &stk)
 {
     if (name == "<init>")
     {
         stk.pop();
-        stk.pop(); // Remove additional frame data!
     }
     else if (name == "equals")
     {
@@ -33,7 +32,6 @@ void Object::invoke(std::string name, std::stack<std::any> &stk)
         stk.pop();
         auto arg2 = stk.top();
         stk.pop();
-        stk.pop(); // Remove additional frame data!
 
         int result;
 

@@ -17,7 +17,7 @@ class Object : public pixeltower::OMNativeObjectType
 
     uint64_t length() override;
     std::string name() override;
-    void invoke(std::string name, std::stack<std::any> &stack) override;
+    void invoke(std::string name, std::stack<std::any, std::list<std::any>> &stack) override;
 };
 } // namespace java::lang
 }; // namespace openminecraft::vm::pixeltower::stdlib

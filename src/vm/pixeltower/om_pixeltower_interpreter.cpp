@@ -9,8 +9,10 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/heap/om_heap_tree.hpp"
 #include "openminecraft/vm/pixeltower/stdlib/om_stdlib_object.hpp"
+#include <algorithm>
 #include <any>
 #include <memory>
+#include <stack>
 #include <stdexcept>
 #include <typeindex>
 #include <vector>
@@ -42,19 +44,9 @@ void OMInterpreter::loadClass(std::shared_ptr<vm::classfile::OMClassFile> f)
     logger.info("loading class {}", name);
     loadedClasses[name] = f;
 }
-void OMInterpreter::executeBytecode(std::shared_ptr<OMClassFile> f, OMClassAttrCode *codeWrap)
+void OMInterpreter::executeBytecode(std::shared_ptr<OMClassFile> f, OMClassAttrCode *codeWrap,
+                                    std::shared_ptr<OMFrameMetadata> frame)
 {
-    std::vector<std::any> datas;
-    while (std::type_index(stack.top().type()) != std::type_index(typeid(std::shared_ptr<OMFrameMetadata>)))
-    {
-        datas.push_back(stack.top());
-        stack.pop();
-    }
-    auto frame = std::any_cast<std::shared_ptr<OMFrameMetadata>>(stack.top());
-    for (int i = datas.size() - 1; i >= 0; i--)
-    {
-        stack.push(datas[i]);
-    }
     while (frame->offset < codeWrap->codeLength)
     {
         switch (codeWrap->code[frame->offset])
@@ -151,21 +143,22 @@ invoke_main:
         stack.pop();
     }
 
-    auto frame = std::make_shared<OMFrameMetadata>(OMFrameMetadata{cls, func, desc, 0});
+    auto frame = std::make_shared<OMFrameMetadata>(
+        OMFrameMetadata{cls, func, desc, 0, std::make_shared<std::vector<std::any *>>()});
     stack.push(frame);
 
     while (args.size() < codeWrap->maxLocals)
     {
-        args.push_back((uint16_t)0);
+        args.push_back(OMLocalVariablePlaceholder());
     }
-    local.clear();
     for (int i = args.size() - 1; i >= 0; i--)
     {
         stack.push(args[i]);
-        local.push_back(&stack.top());
+        frame->locals->push_back(&stack.top());
     }
+    std::reverse(frame->locals->begin(), frame->locals->end());
 
-    executeBytecode(f, codeWrap);
+    executeBytecode(f, codeWrap, frame);
 
     return true;
 }
@@ -195,8 +188,6 @@ void OMInterpreter::execute(std::string clazz, std::string func, std::string des
         {
             throw std::logic_error("native class not found!");
         }
-        auto frame = std::make_shared<OMFrameMetadata>(OMFrameMetadata{clazz, func, desc, 0});
-        stack.push(frame);
 
         for (int i = args.size() - 1; i >= 0; i--)
         {
@@ -225,6 +216,7 @@ void OMInterpreter::execute(std::string clazz, std::string func, std::string des
             logger.info("{6}[{0}]{7} frame metadata {8}{1}.{2}{7}{9}{3}{7} + {5}{4}{7}", idx, fmd->clazz, fmd->method,
                         fmd->sig, fmd->offset, OMLogAnsiYellowLight, OMLogAnsiBlueLight, OMLogAnsiReset,
                         OMLogAnsiCyanLight, OMLogAnsiBlackLight);
+            logger.info("with {} local variable pointers", fmd->locals->size());
         }
         else if (target == std::type_index(typeid(float)))
         {
@@ -250,10 +242,18 @@ void OMInterpreter::execute(std::string clazz, std::string func, std::string des
             logger.info("{2}[{0}]{3} array {4}{1}{3}", idx, target, OMLogAnsiBlueLight, OMLogAnsiReset,
                         OMLogAnsiGreenLight);
         }
-        else
+        else if (target == std::type_index(typeid(OMLocalVariablePlaceholder)))
         {
             logger.info("{1}[{0}] {2}uninitialized local variable{3}", idx, OMLogAnsiBlueLight, OMLogAnsiBlackLight,
                         OMLogAnsiReset);
+        }
+        else if (target == std::type_index(typeid(std::vector<std::any>)))
+        {
+            logger.info("{1}[{0}] {2}local variables{3}", idx, OMLogAnsiBlueLight, OMLogAnsiBlackLight, OMLogAnsiReset);
+        }
+        else
+        {
+            logger.info("{1}[{0}] {2}???{3}", idx, OMLogAnsiBlueLight, OMLogAnsiBlackLight, OMLogAnsiReset);
         }
     };
     while (true)
@@ -267,18 +267,6 @@ void OMInterpreter::execute(std::string clazz, std::string func, std::string des
         if (std::type_index(stack.top().type()) == std::type_index(typeid(std::shared_ptr<OMFrameMetadata>)))
         {
             stack.pop();
-            std::vector<std::any> cache;
-            while (!stack.empty())
-            {
-                cache.push_back(stack.top());
-                idx++;
-                printData(stack.top());
-                stack.pop();
-            }
-            for (int i = cache.size() - 1; i >= 0; i--)
-            {
-                stack.push(cache[i]);
-            }
             break;
         }
 

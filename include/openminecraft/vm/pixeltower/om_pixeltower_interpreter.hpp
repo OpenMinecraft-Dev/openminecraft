@@ -18,12 +18,17 @@ struct OMFrameMetadata
     std::string method;
     std::string sig;
     uint64_t offset;
+    std::shared_ptr<std::vector<std::any *>> locals;
 };
 
 template <typename T> struct OMArray
 {
     uint32_t length;
     T *data;
+};
+
+struct OMLocalVariablePlaceholder
+{
 };
 
 class OMInterpreter
@@ -36,7 +41,8 @@ class OMInterpreter
     void loadClass(std::shared_ptr<vm::classfile::OMClassFile> f);
     void execute(std::string clazz, std::string func, std::string desc, bool isStatic);
 
-    void executeBytecode(std::shared_ptr<vm::classfile::OMClassFile> f, classfile::OMClassAttrCode *codeWrap);
+    void executeBytecode(std::shared_ptr<vm::classfile::OMClassFile> f, classfile::OMClassAttrCode *codeWrap,
+                         std::shared_ptr<OMFrameMetadata> frame);
     bool findAndExecuteBytecode(std::string clazz, std::string func, std::string desc, bool isStatic);
 
     void operand_nop(uint64_t &offset);
@@ -44,10 +50,9 @@ class OMInterpreter
     void operand_dup(uint64_t &offset);
     void operand_invokespecial(uint64_t &offset, std::string clazz, std::string func, std::string desc);
     void operand_invokevirtual(uint64_t &offset, std::string clazz, std::string func, std::string desc);
-    std::stack<std::any> stack;
+    std::stack<std::any, std::list<std::any>> stack;
 
   private:
-    std::vector<std::any *> local;
     heap::OMHeapTree memoryTree;
     log::OMLogger logger;
 

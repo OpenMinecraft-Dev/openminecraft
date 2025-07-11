@@ -3,9 +3,9 @@
 
 #include <any>
 #include <cstdint>
+#include <list>
 #include <stack>
 #include <string>
-#include <vector>
 namespace openminecraft::vm::pixeltower
 {
 class OMNativeObjectType
@@ -14,7 +14,7 @@ class OMNativeObjectType
     virtual uint64_t length() = 0;
     virtual std::string name() = 0;
 
-    virtual void invoke(std::string name, std::stack<std::any> &stack) = 0;
+    virtual void invoke(std::string name, std::stack<std::any, std::list<std::any>> &stack) = 0;
 };
 }; // namespace openminecraft::vm::pixeltower
 
