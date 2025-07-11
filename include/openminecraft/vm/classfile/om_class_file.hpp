@@ -358,16 +358,16 @@ struct OMClassAttrVerifyAppendFrame
 {
     uint8_t tag;
     uint16_t offset;
-    std::vector<OMClassAttrVerifyTypeInfo> *locals;
+    std::unique_ptr<std::vector<OMClassAttrVerifyTypeInfo>> locals;
 };
 struct OMClassAttrVerifyFullFrame
 {
     uint8_t tag;
     uint16_t offset;
     uint16_t numberOfLocals;
-    std::vector<OMClassAttrVerifyTypeInfo> *locals;
+    std::unique_ptr<std::vector<OMClassAttrVerifyTypeInfo>> locals;
     uint16_t numberOfStackItems;
-    std::vector<OMClassAttrVerifyTypeInfo> *stackItems;
+    std::unique_ptr<std::vector<OMClassAttrVerifyTypeInfo>> stackItems;
 };
 union OMClassAttrVerifyStackMapFrame {
     OMClassAttrVerifyStackMapFrame();
