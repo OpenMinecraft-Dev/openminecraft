@@ -1,7 +1,9 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_linker.hpp"
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include <any>
+#include <vector>
 
 namespace openminecraft::vm::pixeltower
 {
@@ -50,24 +52,14 @@ void OMLinker::callMethod(std::any interpreter, std::string clazz, std::string f
     else
     {
         auto f = loader.fetchClass(clazz);
-        classfile::OMClassAttrCode *codeWrap;
-        for (auto method : f->methods)
+
+        auto mi = f->methods[fmt::format("{}{}", func, desc)];
+        classfile::OMClassAttrCode *codeWrap = mi.code;
+
+        if (codeWrap == nullptr)
         {
-            auto name = f->mapping[method->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
-            if (func == name && f->mapping[method->descIndex]->to<classfile::OMClassConstantUtf8>()->data == desc)
-            {
-                for (auto attr : method->attrs)
-                {
-                    if (attr->type() == classfile::Code)
-                    {
-                        codeWrap = attr->to<classfile::OMClassAttrCode>();
-                        goto link_main;
-                    }
-                }
-            }
+            throw std::logic_error("method not found!");
         }
-        throw std::logic_error("method not found!");
-    link_main:
         std::vector<std::any> args;
         for (int i = 0; i < argLength + !isStatic; i++)
         {
@@ -76,7 +68,8 @@ void OMLinker::callMethod(std::any interpreter, std::string clazz, std::string f
         }
 
         auto frame = std::make_shared<OMFrameMetadata>(OMFrameMetadata{clazz, func, desc, false, 0, codeWrap->maxStack,
-                                                                       std::make_shared<std::vector<std::any *>>()});
+                                                                       std::make_shared<std::vector<std::any *>>(),
+                                                                       std::vector<void *>(), mi});
         stk.push(frame);
 
         while (args.size() < codeWrap->maxLocals)

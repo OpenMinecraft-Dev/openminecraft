@@ -22,6 +22,7 @@ struct OMFrameMetadata
     uint64_t allowedStackDepth;
     std::shared_ptr<std::vector<std::any *>> locals;
     std::vector<void *> allocatedObjects;
+    OMMethodInfo methodInfo;
 };
 
 template <typename T> struct OMArray
@@ -43,11 +44,12 @@ class OMInterpreter
     void loadClass(std::shared_ptr<vm::classfile::OMClassFile> f);
     void execute(std::string clazz, std::string func, std::string desc, bool isStatic);
 
-    void executeBytecode(std::shared_ptr<vm::classfile::OMClassFile> f, classfile::OMClassAttrCode *codeWrap,
+    void executeBytecode(std::shared_ptr<OMClass> f, classfile::OMClassAttrCode *codeWrap,
                          std::shared_ptr<OMFrameMetadata> frame);
 
     void operand_nop(uint64_t &offset);
     void operand_iconst(uint64_t &offset, int data);
+    void operand_istore(uint64_t &offset, int data, std::shared_ptr<OMFrameMetadata> frame);
     void operand_new(uint64_t &offset, std::string type);
     void operand_dup(uint64_t &offset);
     void operand_pop(uint64_t &offset);

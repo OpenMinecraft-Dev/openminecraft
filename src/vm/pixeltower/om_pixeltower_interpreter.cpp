@@ -34,9 +34,10 @@ void OMInterpreter::loadClass(std::shared_ptr<vm::classfile::OMClassFile> f)
 {
     loader.loadClass(f);
 }
-void OMInterpreter::executeBytecode(std::shared_ptr<OMClassFile> f, OMClassAttrCode *codeWrap,
+void OMInterpreter::executeBytecode(std::shared_ptr<OMClass> f, OMClassAttrCode *codeWrap,
                                     std::shared_ptr<OMFrameMetadata> frame)
 {
+    auto mp = *f->mapping;
     while (frame->offset < codeWrap->codeLength)
     {
         switch (codeWrap->code[frame->offset])
@@ -55,14 +56,20 @@ void OMInterpreter::executeBytecode(std::shared_ptr<OMClassFile> f, OMClassAttrC
             operand_iconst(frame->offset, codeWrap->code[frame->offset] - op_iconst_i(0));
             break;
         }
+        case op_istore_n(0):
+        case op_istore_n(1):
+        case op_istore_n(2):
+        case op_istore_n(3): {
+            operand_istore(frame->offset, codeWrap->code[frame->offset] - op_istore_n(0), frame);
+            break;
+        }
         case op_pop: {
             operand_pop(frame->offset);
             break;
         }
         case op_new: {
             auto id = binary::be16ToNative(*(uint16_t *)(codeWrap->code.data() + frame->offset + 1));
-            auto type =
-                f->mapping[f->mapping[id]->to<OMClassConstantClass>()->nameIndex]->to<OMClassConstantUtf8>()->data;
+            auto type = mp[mp[id]->to<OMClassConstantClass>()->nameIndex]->to<OMClassConstantUtf8>()->data;
             operand_new(frame->offset, type);
             frame->allocatedObjects.push_back(std::any_cast<void *>(stack.top()));
             break;
@@ -73,37 +80,34 @@ void OMInterpreter::executeBytecode(std::shared_ptr<OMClassFile> f, OMClassAttrC
         }
         case op_invokespecial: {
             auto id = binary::be16ToNative(*(uint16_t *)(codeWrap->code.data() + frame->offset + 1));
-            auto temp1 = f->mapping[id]->to<OMClassConstantMethodRef>();
-            auto cls = f->mapping[f->mapping[temp1->classIndex]->to<OMClassConstantClass>()->nameIndex]
-                           ->to<OMClassConstantUtf8>()
-                           ->data;
-            auto temp2 = f->mapping[temp1->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
-            auto name = f->mapping[temp2->nameIndex]->to<OMClassConstantUtf8>()->data;
-            auto desc = f->mapping[temp2->descIndex]->to<OMClassConstantUtf8>()->data;
+            auto temp1 = mp[id]->to<OMClassConstantMethodRef>();
+            auto cls =
+                mp[mp[temp1->classIndex]->to<OMClassConstantClass>()->nameIndex]->to<OMClassConstantUtf8>()->data;
+            auto temp2 = mp[temp1->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
+            auto name = mp[temp2->nameIndex]->to<OMClassConstantUtf8>()->data;
+            auto desc = mp[temp2->descIndex]->to<OMClassConstantUtf8>()->data;
             operand_invokespecial(frame->offset, cls, name, desc);
             break;
         }
         case op_invokevirtual: {
             auto id = binary::be16ToNative(*(uint16_t *)(codeWrap->code.data() + frame->offset + 1));
-            auto temp1 = f->mapping[id]->to<OMClassConstantMethodRef>();
-            auto cls = f->mapping[f->mapping[temp1->classIndex]->to<OMClassConstantClass>()->nameIndex]
-                           ->to<OMClassConstantUtf8>()
-                           ->data;
-            auto temp2 = f->mapping[temp1->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
-            auto name = f->mapping[temp2->nameIndex]->to<OMClassConstantUtf8>()->data;
-            auto desc = f->mapping[temp2->descIndex]->to<OMClassConstantUtf8>()->data;
+            auto temp1 = mp[id]->to<OMClassConstantMethodRef>();
+            auto cls =
+                mp[mp[temp1->classIndex]->to<OMClassConstantClass>()->nameIndex]->to<OMClassConstantUtf8>()->data;
+            auto temp2 = mp[temp1->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
+            auto name = mp[temp2->nameIndex]->to<OMClassConstantUtf8>()->data;
+            auto desc = mp[temp2->descIndex]->to<OMClassConstantUtf8>()->data;
             operand_invokevirtual(frame->offset, cls, name, desc);
             break;
         }
         case op_invokestatic: {
             auto id = binary::be16ToNative(*(uint16_t *)(codeWrap->code.data() + frame->offset + 1));
-            auto temp1 = f->mapping[id]->to<OMClassConstantMethodRef>();
-            auto cls = f->mapping[f->mapping[temp1->classIndex]->to<OMClassConstantClass>()->nameIndex]
-                           ->to<OMClassConstantUtf8>()
-                           ->data;
-            auto temp2 = f->mapping[temp1->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
-            auto name = f->mapping[temp2->nameIndex]->to<OMClassConstantUtf8>()->data;
-            auto desc = f->mapping[temp2->descIndex]->to<OMClassConstantUtf8>()->data;
+            auto temp1 = mp[id]->to<OMClassConstantMethodRef>();
+            auto cls =
+                mp[mp[temp1->classIndex]->to<OMClassConstantClass>()->nameIndex]->to<OMClassConstantUtf8>()->data;
+            auto temp2 = mp[temp1->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
+            auto name = mp[temp2->nameIndex]->to<OMClassConstantUtf8>()->data;
+            auto desc = mp[temp2->descIndex]->to<OMClassConstantUtf8>()->data;
             operand_invokestatic(frame->offset, cls, name, desc);
             break;
         }
@@ -185,6 +189,12 @@ void OMInterpreter::logAnyData(int idx, std::any data)
     {
         logger.info("{1}[{0}] {2}???{3}", idx, OMLogAnsiBlueLight, OMLogAnsiBlackLight, OMLogAnsiReset);
     }
+}
+void OMInterpreter::operand_istore(uint64_t &offset, int data, std::shared_ptr<OMFrameMetadata> frame)
+{
+    *frame->locals->at(data) = stack.top();
+    stack.pop();
+    offset++;
 }
 void OMInterpreter::operand_invokespecial(uint64_t &offset, std::string clazz, std::string func, std::string desc)
 {
