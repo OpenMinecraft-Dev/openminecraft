@@ -1,6 +1,5 @@
-#ifndef OM_STDLIB_OBJECT_HPP
-
-#define OM_STDLIB_OBJECT_HPP
+#ifndef OM_STDLIB_SYSTEM_HPP
+#define OM_STDLIB_SYSTEM_HPP
 
 #include "openminecraft/vm/pixeltower/om_pixeltower_type.hpp"
 #include <any>
@@ -9,11 +8,11 @@ namespace openminecraft::vm::pixeltower::stdlib
 {
 namespace java::lang
 {
-class Object : public pixeltower::OMNativeObjectType
+class System : public pixeltower::OMNativeObjectType
 {
   public:
-    ~Object();
-    Object();
+    ~System();
+    System();
 
     uint64_t length() override;
     std::string name() override;

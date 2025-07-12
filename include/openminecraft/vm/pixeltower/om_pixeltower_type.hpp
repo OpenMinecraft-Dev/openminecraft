@@ -15,6 +15,9 @@ class OMNativeObjectType
     virtual std::string name() = 0;
 
     virtual void invoke(std::string name, std::stack<std::any, std::list<std::any>> &stack) = 0;
+    virtual uint64_t fieldOffset(std::string name) = 0;
+    virtual uint64_t globalFieldOffset(std::string name) = 0;
+    virtual uint8_t *staticData() = 0;
 };
 }; // namespace openminecraft::vm::pixeltower
 

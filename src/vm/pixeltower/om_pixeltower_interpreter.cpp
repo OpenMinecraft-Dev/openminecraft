@@ -25,7 +25,7 @@ namespace openminecraft::vm::pixeltower
 {
 OMInterpreter::OMInterpreter() : logger("pixeltower/OMInterpreter", this), linker(this->loader)
 {
-    loader.loadBasicClasses();
+    loader.loadBasicClasses(memoryTree);
 }
 OMInterpreter::~OMInterpreter()
 {

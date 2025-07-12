@@ -13,6 +13,40 @@ OMLinker::OMLinker(OMClassLoader &loader) : loader(loader)
 OMLinker::~OMLinker()
 {
 }
+uint8_t *OMLinker::staticData(std::string clazz)
+{
+    if (!loader.classLoaded(clazz))
+    {
+        throw std::logic_error("class not found!");
+    }
+
+    if (loader.isNative(clazz))
+    {
+        return loader.fetchNativeClass(clazz)->staticData();
+    }
+    else
+    {
+        return loader.fetchClass(clazz)->staticData;
+    }
+}
+uint64_t OMLinker::fieldOffset(std::string clazz, std::string name, bool isStatic)
+{
+    if (!loader.classLoaded(clazz))
+    {
+        throw std::logic_error("class not found!");
+    }
+
+    if (loader.isNative(clazz))
+    {
+        return isStatic ? loader.fetchNativeClass(clazz)->globalFieldOffset(name)
+                        : loader.fetchNativeClass(clazz)->fieldOffset(name);
+    }
+    else
+    {
+        return isStatic ? loader.fetchClass(clazz)->staticFields[name].offset
+                        : loader.fetchClass(clazz)->objectFields[name].offset;
+    }
+}
 void OMLinker::callMethod(std::any interpreter, std::string clazz, std::string func, std::string desc, bool isStatic,
                           std::stack<std::any, std::list<std::any>> &stk)
 {
@@ -47,7 +81,7 @@ void OMLinker::callMethod(std::any interpreter, std::string clazz, std::string f
         {
             stk.push(args[i]);
         }
-        loader.invokeNative(clazz, func, stk);
+        loader.fetchNativeClass(clazz)->invoke(func, stk);
     }
     else
     {

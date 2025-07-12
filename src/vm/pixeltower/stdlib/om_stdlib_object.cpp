@@ -1,5 +1,6 @@
 #include "openminecraft/vm/pixeltower/stdlib/om_stdlib_object.hpp"
 #include <any>
+#include <cstdint>
 #include <typeindex>
 
 namespace openminecraft::vm::pixeltower::stdlib
@@ -8,6 +9,7 @@ namespace java::lang
 {
 Object ::Object()
 {
+    data = new uint8_t[0];
 }
 Object::~Object()
 {
@@ -19,6 +21,18 @@ uint64_t Object::length()
 std::string Object::name()
 {
     return "java/lang/Object";
+}
+uint64_t Object::fieldOffset(std::string name)
+{
+    return 0;
+}
+uint64_t Object::globalFieldOffset(std::string name)
+{
+    return 0;
+}
+uint8_t *Object::staticData()
+{
+    return data;
 }
 void Object::invoke(std::string name, std::stack<std::any, std::list<std::any>> &stk)
 {
