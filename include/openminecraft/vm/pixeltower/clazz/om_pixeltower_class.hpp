@@ -3,6 +3,7 @@
 
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include <bitset>
+#include <memory>
 #include <string>
 #include <unordered_map>
 namespace openminecraft::vm::pixeltower
@@ -20,6 +21,13 @@ struct OMMethodInfo
     vm::classfile::OMClassAttrCode *code;
 };
 
+struct OMFieldInfo
+{
+    uint64_t offset;
+    std::bitset<16> flags;
+    std::string type;
+};
+
 class OMClass
 {
   public:
@@ -27,6 +35,10 @@ class OMClass
     ~OMClass();
 
     std::string source;
+    std::unordered_map<std::string, OMFieldInfo> staticFields;
+    uint64_t size;
+    uint8_t *staticData;
+    std::unordered_map<std::string, OMFieldInfo> objectFields;
     std::unordered_map<std::string, OMMethodInfo> methods;
     std::unordered_map<uint16_t, std::shared_ptr<classfile::OMClassConstant>> *mapping;
 };

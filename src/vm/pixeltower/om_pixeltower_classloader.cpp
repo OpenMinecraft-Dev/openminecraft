@@ -75,6 +75,48 @@ void OMClassLoader::loadClass(std::shared_ptr<vm::classfile::OMClassFile> f)
                                         ->data;
         }
     }
+
+    uint64_t currentOffsetGlob = 0;
+    uint64_t currentOffset = 0;
+    for (auto fi : f->fields)
+    {
+        auto fieldName = f->mapping[fi->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
+        auto desc = f->mapping[fi->descIndex]->to<classfile::OMClassConstantUtf8>()->data;
+        uint64_t &off = currentOffset;
+        std::unordered_map<std::string, OMFieldInfo> &fields = classes[name]->objectFields;
+
+        if (fi->accessFlags & JVM_Acc_Static)
+        {
+            off = currentOffsetGlob;
+            fields = classes[name]->staticFields;
+        }
+
+        fields[fieldName] = {off, std::bitset<16>(), desc};
+
+        switch (desc[0])
+        {
+        case 'L':
+        case '[':
+        case 'J':
+        case 'D':
+            off += 8 - (off % 8);
+        default:
+            off += 4 - (off % 4);
+        }
+    }
+    classes[name]->size = currentOffset;
+    classes[name]->staticData = new uint8_t[currentOffsetGlob];
+}
+uint64_t OMClassLoader::typeLength(std::string name)
+{
+    if (isNative(name))
+    {
+        return loadedNativeClasses[name]->length();
+    }
+    else
+    {
+        return fetchClass(name)->size;
+    }
 }
 bool OMClassLoader::classLoaded(std::string name)
 {

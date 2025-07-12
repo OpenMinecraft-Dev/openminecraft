@@ -23,6 +23,7 @@ class OMClassLoader
     void loadBasicClasses();
     bool classLoaded(std::string name);
     bool isNative(std::string name);
+    uint64_t typeLength(std::string name);
     std::shared_ptr<OMClass> fetchClass(std::string name);
     void invokeNative(std::string cls, std::string name, std::stack<std::any, std::list<std::any>> &stk);
 

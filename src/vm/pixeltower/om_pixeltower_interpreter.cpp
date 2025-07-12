@@ -229,7 +229,7 @@ void OMInterpreter::operand_new(uint64_t &offset, std::string type)
     auto id = memoryTree.allocateId();
     stack.push((void *)id);
     memoryTree.externalData[id] = type;
-    memoryTree.allocate(id, 0);
+    memoryTree.allocate(id, loader.typeLength(type));
     memoryTree.attach(heap::heapRoot, id);
     offset += 3;
 }
