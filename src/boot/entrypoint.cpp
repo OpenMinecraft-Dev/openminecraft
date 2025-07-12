@@ -134,8 +134,10 @@ int boot(std::vector<std::string> args)
 
                 vm::pixeltower::OMInterpreter inter;
                 inter.loadClass(clsfile);
+                inter.stack.push(std::make_shared<vm::pixeltower::OMFrameMetadata>(vm::pixeltower::OMFrameMetadata{
+                    "<pixeltower core>", "boot", "", true, 0, 0, std::make_shared<std::vector<std::any *>>()}));
                 inter.stack.push(tgt);
-                inter.execute("Test", "main", "([Ljava/lang/String;)V", true);
+                inter.execute("openminecraft/Test", "main", "([Ljava/lang/String;)V", true);
 
                 break;
             }

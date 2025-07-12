@@ -1,10 +1,11 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_classloader.hpp"
+#include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/stdlib/om_stdlib_object.hpp"
 #include <memory>
 
 namespace openminecraft::vm::pixeltower
 {
-OMClassLoader::OMClassLoader()
+OMClassLoader::OMClassLoader() : logger("pixeltower/OMClassLoader", this)
 {
 }
 OMClassLoader::~OMClassLoader()
@@ -20,6 +21,14 @@ void OMClassLoader::loadClass(std::shared_ptr<vm::classfile::OMClassFile> f)
                     ->to<classfile::OMClassConstantUtf8>()
                     ->data;
     loadedClasses[name] = f;
+
+    for (auto field : f->fields)
+    {
+        if ((field->accessFlags & JVM_Acc_Static) == 0)
+        {
+            logger.info("{}", f->mapping[field->descIndex]->to<classfile::OMClassConstantUtf8>()->data);
+        }
+    }
 }
 bool OMClassLoader::classLoaded(std::string name)
 {

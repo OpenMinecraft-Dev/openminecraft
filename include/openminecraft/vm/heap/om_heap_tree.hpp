@@ -2,6 +2,7 @@
 #define OM_HEAP_TREE_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
+#include <any>
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
@@ -21,6 +22,7 @@ class OMHeapTree
     void deconstructUnreachable();
 
     void *operator[](int i);
+    std::unordered_map<uint64_t, std::any> externalData;
 
   private:
     void deconstruct(uint64_t id);

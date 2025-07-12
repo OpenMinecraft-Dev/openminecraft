@@ -25,12 +25,14 @@ void Object::invoke(std::string name, std::stack<std::any, std::list<std::any>> 
     if (name == "<init>")
     {
         stk.pop();
+        stk.pop();
     }
     else if (name == "equals")
     {
         auto arg1 = stk.top();
         stk.pop();
         auto arg2 = stk.top();
+        stk.pop();
         stk.pop();
 
         int result;

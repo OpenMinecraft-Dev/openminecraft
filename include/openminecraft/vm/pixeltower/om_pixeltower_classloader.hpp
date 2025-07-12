@@ -1,6 +1,7 @@
 #ifndef OM_PIXELTOWER_CLASSLOADER_HPP
 #define OM_PIXELTOWER_CLASSLOADER_HPP
 
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_type.hpp"
 #include <list>
@@ -25,6 +26,7 @@ class OMClassLoader
     void invokeNative(std::string cls, std::string name, std::stack<std::any, std::list<std::any>> &stk);
 
   private:
+    log::OMLogger logger;
     std::unordered_map<std::string, std::shared_ptr<vm::classfile::OMClassFile>> loadedClasses;
     std::unordered_map<std::string, std::shared_ptr<OMNativeObjectType>> loadedNativeClasses;
 };
