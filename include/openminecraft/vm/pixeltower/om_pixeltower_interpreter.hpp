@@ -59,8 +59,8 @@ class OMInterpreter
     void operand_return();
     std::stack<std::any, std::list<std::any>> stack;
 
-  private:
     void debugStack();
+  private:
     void logAnyData(int idx, std::any data);
     heap::OMHeapTree memoryTree;
     log::OMLogger logger;

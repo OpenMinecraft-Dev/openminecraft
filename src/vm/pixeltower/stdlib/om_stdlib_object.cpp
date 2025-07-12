@@ -36,12 +36,12 @@ uint8_t *Object::staticData()
 }
 void Object::invoke(std::string name, std::stack<std::any, std::list<std::any>> &stk)
 {
-    if (name == "<init>")
+    if (name == "<init>()V")
     {
         stk.pop();
         stk.pop();
     }
-    else if (name == "equals")
+    else if (name == "equals(Ljava/lang/Object;)Z")
     {
         auto arg1 = stk.top();
         stk.pop();

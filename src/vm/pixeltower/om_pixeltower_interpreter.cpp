@@ -139,6 +139,7 @@ void OMInterpreter::debugStack()
         debugs.pop();
         idx++;
     }
+    logger.debug("***************");
 }
 void OMInterpreter::logAnyData(int idx, std::any data)
 {
@@ -154,7 +155,7 @@ void OMInterpreter::logAnyData(int idx, std::any data)
         logger.debug("{6}[{0}]{7} frame metadata {8}{1}.{2}{7}{9}{3}{7} + {5}{4}{7} ({5}{10}{7} + {12}{11}{7})", idx,
                      fmd->clazz, fmd->method, fmd->sig, fmd->offset, OMLogAnsiYellowLight, OMLogAnsiBlueLight,
                      OMLogAnsiReset, fmd->isNative ? OMLogAnsiMagentaLight : OMLogAnsiCyanLight, OMLogAnsiBlackLight,
-                     fmd->locals->size(), fmd->allowedStackDepth, OMLogAnsiYellow);
+                     fmd->locals == nullptr ? 0 : fmd->locals->size(), fmd->allowedStackDepth, OMLogAnsiYellow);
     }
     else if (target == std::type_index(typeid(float)))
     {

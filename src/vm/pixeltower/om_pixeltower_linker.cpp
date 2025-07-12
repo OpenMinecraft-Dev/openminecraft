@@ -81,7 +81,7 @@ void OMLinker::callMethod(std::any interpreter, std::string clazz, std::string f
         {
             stk.push(args[i]);
         }
-        loader.fetchNativeClass(clazz)->invoke(func, stk);
+        loader.fetchNativeClass(clazz)->invoke(fmt::format("{}{}", func, desc), stk);
     }
     else
     {
