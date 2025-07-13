@@ -61,57 +61,29 @@ util::OMResult<std::any, err::OMValidationError> OMClassLoader::loadClass(std::s
         OMFieldInfo f;
         f.accessFlag = field->accessFlags;
         f.name = m;
-        f.rawDesc = fd->data;
-        while (m[0] == '[')
-        {
-            m = std::string(m.c_str()).substr(1);
-        }
+        f.desc = fd->data;
         switch (m[0])
         {
         case 'Z':
-            f.type = Boolean;
-            break;
         case 'I':
-            f.type = Int;
+        case 'B':
+        case 'S':
+        case 'F':
+        case 'C':
+            f.type = Bytes4;
             break;
         case 'J':
-            f.type = Long;
-            break;
-        case 'B':
-            f.type = Byte;
-            break;
-        case 'S':
-            f.type = Short;
-            break;
-        case 'F':
-            f.type = Float;
-            break;
         case 'D':
-            f.type = Double;
+            f.type = Bytes8;
             break;
-        case 'C':
-            f.type = Char;
-            break;
+        case '[':
         case 'L': {
-            f.type = Reference;
-            int temp = 0;
-            auto res = bytecode::descriptor::decodeType(m, &temp);
-            if (res.type == util::Err)
-            {
-                return util::OMResult<std::any, err::OMValidationError>::err(
-                    {err::ClassLoader, "descriptor parsing error", res.unwrap_err()});
-            }
-            auto d = forName(res.unwrap());
-            if (d.type == util::Err)
-            {
-                return util::OMResult<std::any, err::OMValidationError>::err(d.unwrap_err());
-            }
-            f.ref = d.unwrap();
+            f.type = BytesP;
             break;
         }
         default:
             return util::OMResult<std::any, err::OMValidationError>::err(
-                {err::ClassLoader, "unknown field descriptor", fn->data});
+                {err::ClassLoader, fmt::format("unknown field descriptor {}", fn->data), clsdata->name});
         }
         clsdata->fields.emplace_back(f);
     }
@@ -124,6 +96,25 @@ util::OMResult<std::any, err::OMValidationError> OMClassLoader::loadClass(std::s
                 file->mapping[attrs->to<OMClassAttrSourceFile>()->sourcefileIndex]->to<OMClassConstantUtf8>()->data;
         }
     }
+
+    for (auto method : file->methods)
+    {
+        auto fn = file->mapping[method->nameIndex]->to<OMClassConstantUtf8>();
+        auto fd = file->mapping[method->descIndex]->to<OMClassConstantUtf8>();
+        OMMethodInfo m;
+        m.name = fn->data;
+        m.desc = fd->data;
+        m.accessFlag = method->accessFlags;
+        for (auto attr : method->attrs)
+        {
+            if (attr->type() == OMClassAttrType::Code)
+            {
+                m.code = attr->to<OMClassAttrCode>();
+            }
+        }
+        clsdata->methods.emplace_back(m);
+    }
+
     clsdata->calcFieldOffsets();
     classes[hash_compile_time(clsdata->name.c_str())] = clsdata;
     logger.info("{} loaded", clsdata->name);
@@ -157,7 +148,7 @@ util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError> OMClassLoader::
                 goto subclass_loading;
             }
         }
-        throw nullptr;
+
         return util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError>::err(
             {err::ClassLoader, "class not found", name});
     subclass_loading:

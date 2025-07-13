@@ -32,21 +32,14 @@ void OMClass::calcFieldOffsets()
 
         switch (field.type)
         {
-        case Byte:
-        case Char:
-        case Boolean:
-        case Short:
-        case Int:
-        case Float:
+        case Bytes4:
             *length += 4 - (*length % 4);
             break;
-        case Long:
-        case Double:
+        case Bytes8:
             *length += 8 - (*length % 8);
             break;
             // Variable pointers
-        case Reference:
-        case Array:
+        case BytesP:
             *length += sizeof(void *) - (*length % sizeof(void *));
             break;
         }

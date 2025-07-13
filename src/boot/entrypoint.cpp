@@ -57,7 +57,7 @@ void searchDir(std::vector<std::string> &i, std::filesystem::directory_iterator 
 
         if (entry.is_regular_file())
         {
-            i.push_back(entry.path());
+            i.push_back(entry.path().string());
         }
     }
 }

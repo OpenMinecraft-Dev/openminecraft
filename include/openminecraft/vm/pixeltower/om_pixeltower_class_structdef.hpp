@@ -1,6 +1,7 @@
 #ifndef OM_PIXELTOWER_CLASS_STRUCTDEF_HPP
 #define OM_PIXELTOWER_CLASS_STRUCTDEF_HPP
 
+#include "openminecraft/vm/classfile/om_class_file.hpp"
 #include <any>
 #include <cstdint>
 #include <list>
@@ -9,27 +10,26 @@
 #include <vector>
 namespace openminecraft::vm::pixeltower
 {
-enum OMInstanceType
+enum OMFieldType
 {
-    Byte,
-    Short,
-    Int,
-    Long,
-    Float,
-    Double,
-    Boolean,
-    Char,
-    Reference,
-    Array
+    Bytes4,
+    Bytes8,
+    BytesP
 };
 struct OMFieldInfo
 {
     uint16_t accessFlag;
     std::string name;
-    OMInstanceType type;
-    std::any ref;
-    std::string rawDesc;
+    std::string desc;
+    OMFieldType type;
     uint64_t offset;
+};
+struct OMMethodInfo
+{
+    uint16_t accessFlag;
+    std::string name;
+    std::string desc;
+    classfile::OMClassAttrCode *code;
 };
 class OMClass
 {
@@ -44,6 +44,7 @@ class OMClass
     std::shared_ptr<OMClass> superClass;
     std::vector<std::shared_ptr<OMClass>> interfaces;
     std::list<OMFieldInfo> fields;
+    std::list<OMMethodInfo> methods;
     uint64_t objectLength = 0;
 
     void *staticFieldBlock = nullptr;
