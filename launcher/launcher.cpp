@@ -1,16 +1,19 @@
 #include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
+#include <csetjmp>
 #include <csignal>
-#include <cstdlib>
 
 auto logger = openminecraft::log::OMLogger("launcher");
+
+jmp_buf recoverBuffer;
 
 void handle(int sig)
 {
     logger.fatal("!! KERNEL CRASHED !!");
     logger.dumpStacktrace();
-    exit(-1);
+    longjmp(recoverBuffer, 1);
+    // exit(-1);
 }
 
 int main(int argc, char **argv)
@@ -18,6 +21,7 @@ int main(int argc, char **argv)
     openminecraft::log::multithread::registerCurrentThreadName("launcher");
     signal(SIGSEGV, handle);
     signal(SIGABRT, handle);
+    signal(SIGILL, handle);
 
     std::vector<std::string> a;
     logger.info("Args:");

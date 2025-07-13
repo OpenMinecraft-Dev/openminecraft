@@ -4,6 +4,7 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
+#include <csetjmp>
 #include <ctime>
 #include <fstream>
 #include <memory>
@@ -12,6 +13,7 @@
 #include <vector>
 
 #include "SDL3/SDL_messagebox.h"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
@@ -35,8 +37,11 @@
 using namespace openminecraft;
 using namespace openminecraft::vm::classfile;
 using namespace openminecraft::vm::bytecode;
+using namespace openminecraft::binary::hash;
 
 #include "openminecraft/resource/bootassets.h"
+
+extern jmp_buf recoverBuffer;
 
 namespace openminecraft::boot
 {
@@ -87,61 +92,85 @@ int boot(std::vector<std::string> args)
     }*/
 
     SDL_Quit();
-
     std::shared_ptr<OMClassFileParser> parser;
-
-    std::string comm;
-    while (true)
+    bool recovermode = false;
+    if (setjmp(recoverBuffer) == 0)
     {
-        std::cout << "> ";
-        std::cin >> comm;
-
-        if (comm == "quit" || comm == "exit")
+    program:
+        std::string comm;
+        std::vector<std::string> commandBuffer;
+        while (true)
         {
-            break;
-        }
-        else if (comm == "dumptrace")
-        {
-            logger->dumpStacktrace();
-        }
-        else if (comm == "dumpmem")
-        {
-            mem::castorice::printres();
-        }
-        else if (comm[0] == 'l' && comm[1] == ':')
-        {
-            parser =
-                std::make_shared<OMClassFileParser>(std::make_shared<std::ifstream>(comm.substr(2), std::ios::binary));
-            auto clsres = parser->parse();
-            switch (clsres.type)
+            if (commandBuffer.empty())
             {
-            case Ok: {
-                auto clsfile = clsres.unwrap();
-                auto chk = std::make_unique<OMBytecodeChecker>(clsfile);
-                auto cons = chk->constantCheck();
-                switch (cons.type)
-                {
-                case Ok:
-                    break;
-                case Err:
-                    throw cons.unwrap_err();
-                }
-                chk->detail();
+                std::cout << (recovermode ? "pixeltower recover > " : "pixeltower shell > ");
+            }
 
+            std::cin >> comm;
+            commandBuffer.push_back(comm);
+
+            switch (hash_compile_time(commandBuffer[0].c_str()))
+            {
+            case "quit"_hash:
+            case "exit"_hash:
+                commandBuffer.clear();
+                return 0;
+            case "dumptrace"_hash:
+                commandBuffer.clear();
+                logger->dumpStacktrace();
+                break;
+            case "dumpmem"_hash:
+                commandBuffer.clear();
+                mem::castorice::printres();
+                break;
+            case "pixeltower"_hash: {
+                if (commandBuffer.size() > 2)
+                {
+                    if (commandBuffer[1] == "loadcls")
+                    {
+                        parser = std::make_shared<OMClassFileParser>(
+                            std::make_shared<std::ifstream>(commandBuffer[2], std::ios::binary));
+                        auto clsres = parser->parse();
+                        switch (clsres.type)
+                        {
+                        case Ok: {
+                            auto clsfile = clsres.unwrap();
+                            auto chk = std::make_unique<OMBytecodeChecker>(clsfile);
+                            auto cons = chk->constantCheck();
+                            switch (cons.type)
+                            {
+                            case Ok:
+                                break;
+                            case Err:
+                                throw cons.unwrap_err();
+                            }
+                            chk->detail();
+
+                            break;
+                        }
+                        case Err: {
+                        }
+                        }
+
+                        commandBuffer.clear();
+                    }
+                }
                 break;
             }
-            case Err: {
+            default:
+                commandBuffer.clear();
+                logger->warn("unknown command!");
+                break;
             }
-            }
-        }
-        else
-        {
-            logger->warn("unknown command");
         }
     }
-
-    mem::castorice::printres();
+    else
+    {
+        logger->info("recovering from sigsegv!");
+        recovermode = true;
+        goto program;
+    }
 
     return 0;
-}
+} // namespace openminecraft::boot
 } // namespace openminecraft::boot
