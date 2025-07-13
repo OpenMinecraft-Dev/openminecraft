@@ -1,12 +1,15 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_classloader.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
+#include <any>
 #include <memory>
 namespace openminecraft::vm::pixeltower
 {
 OMPixelTower::OMPixelTower()
 {
     classloader = std::make_shared<OMClassLoader>();
+    interpreter = std::make_shared<runtime::OMInterpreter>(*this);
 }
 OMPixelTower::~OMPixelTower()
 {
@@ -45,5 +48,10 @@ util::OMResult<std::any, err::OMValidationError> OMPixelTower::loadClass(std::sh
 util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError> OMPixelTower::fetchClass(std::string name)
 {
     return classloader->forName(name);
+}
+util::OMResult<std::any, err::OMValidationError> OMPixelTower::execute(std::string clazz, std::string name,
+                                                                       std::string desc)
+{
+    return std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(interpreter)->execute(clazz, name, desc);
 }
 } // namespace openminecraft::vm::pixeltower

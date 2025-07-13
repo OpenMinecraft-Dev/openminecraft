@@ -19,8 +19,11 @@ class OMPixelTower
     util::OMResult<std::any, err::OMValidationError> loadClass(std::shared_ptr<std::istream> file);
     util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError> fetchClass(std::string name);
 
+    util::OMResult<std::any, err::OMValidationError> execute(std::string clazz, std::string name, std::string desc);
+
   private:
     std::shared_ptr<OMClassLoader> classloader;
+    std::any interpreter;
 };
 } // namespace openminecraft::vm::pixeltower
 

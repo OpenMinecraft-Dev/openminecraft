@@ -155,7 +155,8 @@ int boot(std::vector<std::string> args)
                         case Err:
                             throw l.unwrap_err();
                         }
-                        auto c = pt->fetchClass("openminecraft/Test");
+
+                        auto c = pt->execute("openminecraft/Test", "main", "([Ljava/lang/String;)V");
                         logger->info(c.unwrap_err().what());
                         commandBuffer.clear();
                     }
