@@ -28,7 +28,6 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/heap/om_heap_tree.hpp"
-#include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
@@ -128,16 +127,6 @@ int boot(std::vector<std::string> args)
                     throw cons.unwrap_err();
                 }
                 chk->detail();
-
-                std::vector<const char *> data;
-                auto tgt = vm::pixeltower::OMArray<const char *>{0, data.data()};
-
-                vm::pixeltower::OMInterpreter inter;
-                inter.loadClass(clsfile);
-                inter.stack.push(std::make_shared<vm::pixeltower::OMFrameMetadata>(vm::pixeltower::OMFrameMetadata{
-                    "<pixeltower core>", "boot", "", true, 0, 0, std::make_shared<std::vector<std::any *>>()}));
-                inter.stack.push(tgt);
-                inter.execute("openminecraft/Test", "main", "([Ljava/lang/String;)V", true);
 
                 break;
             }
