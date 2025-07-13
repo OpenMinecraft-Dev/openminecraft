@@ -6,6 +6,7 @@
 #include <boost/stacktrace/stacktrace.hpp>
 #include <csetjmp>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <stdexcept>
@@ -29,7 +30,7 @@
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
-#include "openminecraft/vm/heap/om_heap_tree.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
@@ -45,6 +46,21 @@ extern jmp_buf recoverBuffer;
 
 namespace openminecraft::boot
 {
+void searchDir(std::vector<std::string> &i, std::filesystem::directory_iterator di)
+{
+    for (auto entry : di)
+    {
+        if (entry.is_directory())
+        {
+            searchDir(i, std::filesystem::directory_iterator(entry));
+        }
+
+        if (entry.is_regular_file())
+        {
+            i.push_back(entry.path());
+        }
+    }
+}
 int boot(std::vector<std::string> args)
 {
     log::multithread::registerCurrentThreadName("engineMain");
@@ -92,6 +108,9 @@ int boot(std::vector<std::string> args)
     }*/
 
     SDL_Quit();
+
+    auto pt = std::make_unique<vm::pixeltower::OMPixelTower>();
+
     std::shared_ptr<OMClassFileParser> parser;
     bool recovermode = false;
     if (setjmp(recoverBuffer) == 0)
@@ -128,28 +147,29 @@ int boot(std::vector<std::string> args)
                 {
                     if (commandBuffer[1] == "loadcls")
                     {
-                        parser = std::make_shared<OMClassFileParser>(
-                            std::make_shared<std::ifstream>(commandBuffer[2], std::ios::binary));
-                        auto clsres = parser->parse();
-                        switch (clsres.type)
+                        auto l = pt->loadClass(std::make_shared<std::ifstream>(commandBuffer[2], std::ios::binary));
+                        switch (l.type)
                         {
-                        case Ok: {
-                            auto clsfile = clsres.unwrap();
-                            auto chk = std::make_unique<OMBytecodeChecker>(clsfile);
-                            auto cons = chk->constantCheck();
-                            switch (cons.type)
-                            {
-                            case Ok:
-                                break;
-                            case Err:
-                                throw cons.unwrap_err();
-                            }
-                            chk->detail();
-
+                        case Ok:
                             break;
+                        case Err:
+                            throw l.unwrap_err();
                         }
-                        case Err: {
-                        }
+                        auto c = pt->fetchClass("openminecraft/Test");
+                        logger->info(c.unwrap_err().what());
+                        commandBuffer.clear();
+                    }
+                    else if (commandBuffer[1] == "init")
+                    {
+                        std::vector<std::string> m;
+                        searchDir(m, std::filesystem::directory_iterator(commandBuffer[2]));
+                        for (auto a : m)
+                        {
+                            auto resu = pt->loadClass(std::make_shared<std::ifstream>(a, std::ios::binary));
+                            if (resu.type == Err)
+                            {
+                                throw resu.unwrap_err();
+                            }
                         }
 
                         commandBuffer.clear();
@@ -172,5 +192,6 @@ int boot(std::vector<std::string> args)
     }
 
     return 0;
-} // namespace openminecraft::boot
+}
+
 } // namespace openminecraft::boot

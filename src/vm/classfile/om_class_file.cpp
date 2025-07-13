@@ -22,7 +22,7 @@ OMClassFileParser::OMClassFileParser(std::shared_ptr<std::istream> str) : io::OM
 
 OMClassFileParser::~OMClassFileParser()
 {
-    this->logger->info("Destroying class file parser");
+    // this->logger->info("Destroying class file parser");
     io::OMParser::~OMParser();
 }
 

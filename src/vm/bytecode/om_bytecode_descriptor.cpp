@@ -46,7 +46,7 @@ OMResult<std::string, std::string> decodeType(std::string raw, int *p)
         // inplace split
         raw[ends] = '\0';
         auto type = std::string(raw.substr(*p, ends).c_str());
-        auto d = OMResult<std::string, std::string>::ok(type == "java/lang/String" ? "string" : type);
+        auto d = OMResult<std::string, std::string>::ok(type);
         raw[ends] = ';';
         *p = ends + 1;
         return d;

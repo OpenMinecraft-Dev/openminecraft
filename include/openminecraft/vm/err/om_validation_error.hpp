@@ -11,7 +11,7 @@ enum ValidationState
     Unknown,
     Loading,
     ConstantPool,
-    Instructions
+    ClassLoader
 };
 
 class OMValidationError : public std::exception

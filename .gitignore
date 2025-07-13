@@ -10,3 +10,4 @@ cmake*
 prod
 *.log
 *.bundle
+*.class
