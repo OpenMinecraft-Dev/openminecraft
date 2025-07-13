@@ -115,6 +115,7 @@ util::OMResult<std::any, err::OMValidationError> OMClassLoader::loadClass(std::s
         clsdata->methods.emplace_back(m);
     }
 
+    clsdata->mapping = &file->mapping;
     clsdata->calcFieldOffsets();
     classes[hash_compile_time(clsdata->name.c_str())] = clsdata;
     logger.info("{} loaded", clsdata->name);

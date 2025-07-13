@@ -4,7 +4,7 @@
 
 namespace openminecraft::vm::pixeltower
 {
-OMClass::OMClass()
+OMClass::OMClass() : mapping(nullptr)
 {
 }
 OMClass::~OMClass()
@@ -16,6 +16,11 @@ void OMClass::calcFieldOffsets()
     if (staticFieldBlock != nullptr)
     {
         mem::allocator::tracedFreeVMData(staticFieldBlock);
+    }
+
+    if (superClass != nullptr)
+    {
+        objectLength = superClass->objectLength;
     }
 
     uint64_t staticFieldLength = 0;

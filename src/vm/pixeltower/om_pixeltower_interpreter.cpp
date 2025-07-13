@@ -3,6 +3,9 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
+#include <memory>
+#include <vector>
 
 using namespace openminecraft::util;
 using namespace openminecraft::log::ansi;
@@ -42,6 +45,12 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
 {
     logger.info("Execute {3}{0}{5}.{1}{4}{2}{5} !", clazz->name, mi.name, mi.desc, OMLogAnsiCyanLight,
                 OMLogAnsiBlackLight, OMLogAnsiReset);
+    auto frame =
+        std::make_shared<OMFrameMetadata>(OMFrameMetadata{clazz, mi, 0, std::vector<std::any>(mi.code->maxLocals)});
+    stack.push(frame);
+
+    stack.pop();
+
     return OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
 } // namespace openminecraft::vm::pixeltower::runtime
