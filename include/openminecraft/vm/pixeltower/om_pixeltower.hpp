@@ -4,6 +4,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_classloader.hpp"
 #include <any>
 #include <istream>
@@ -23,9 +24,14 @@ class OMPixelTower
     util::OMResult<std::any, err::OMValidationError> execute(std::string clazz, std::string name, std::string desc);
 
     void *allocate(std::shared_ptr<OMClass> cls);
+    void *allocateArray(std::shared_ptr<OMClass> cls, int length);
+    void *allocateMultiArray(std::shared_ptr<OMClass> cls, int *lengths, int dim);
+    void *allocateArray(OMArrayType type, int length);
+    void *allocateMultiArray(OMArrayType type, int *lengths, int dim);
 
     void debugStackStatus();
     std::string printAny(std::any data);
+    std::string fetchType(void *block);
     std::any interpreter;
 
   private:

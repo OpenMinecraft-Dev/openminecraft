@@ -100,6 +100,8 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
                 break;
             }
             default: {
+                int b[2] = {100, 100};
+                stack.push(tower.allocateMultiArray(Long, b, 2));
                 tower.debugStackStatus();
                 return OMResult<std::any, err::OMValidationError>::err(
                     {err::Instructions, "instructions not implemented",

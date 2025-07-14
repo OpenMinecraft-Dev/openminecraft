@@ -182,6 +182,9 @@ int boot(std::vector<std::string> args)
                 }
                 break;
             }
+            case "crash"_hash: {
+                logger->info("{}", *((int *)nullptr));
+            }
             default:
                 commandBuffer.clear();
                 logger->warn("unknown command!");
