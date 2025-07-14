@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 
 import os
-from multiprocessing import Process
+
+try:
+    from tqdm.rich import tqdm
+    TQDM_ENABLED = True
+except BaseException as e:
+    TQDM_ENABLED = False
+import multiprocessing
 
 sources = []
 
@@ -15,15 +21,17 @@ def recursive_listdir(path):
 recursive_listdir("./src")
 
 def compile(s):
-    print(f"Compiling {s} ...")
-    os.system(f"javac -Xlint:-options --release 8 {s} -d out")
+    tqdm.write(f"Compiling {s} ...")
+    ret = os.system(f"javac -Xlint:-options --release 8 {s} -d out")
 
-subpro = []
-for s in sources:
-    p = Process(target=compile,args=(s,))
-    p.start()
-    subpro.append(p)
-
-for b in subpro:
-    b.join()
+    if not ret == 0:
+        tqdm.write(f"{s} compilation failed")
     
+    return ret
+
+if __name__ == '__main__':
+    with multiprocessing.Pool(processes=4) as pool:
+        if TQDM_ENABLED:
+            results = list(tqdm(pool.imap(compile, sources), total=len(sources)))
+        else:
+            results = pool.map(compile, sources)

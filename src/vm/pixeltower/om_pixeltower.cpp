@@ -1,12 +1,12 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
 #include "openminecraft/log/om_log_ansi.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_classloader.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include <any>
-#include <list>
 #include <memory>
 #include <sstream>
 #include <stack>
@@ -109,13 +109,26 @@ std::string OMPixelTower::printAny(std::any data)
         }
         return temp;
     }
+    else if (target == std::type_index(typeid(void *)))
+    {
+        return fmt::format("{2}instance at {1}{0}{2}", std::any_cast<void *>(data), OMLogAnsiRedLight, OMLogAnsiReset);
+    }
     else if (target == std::type_index(typeid(int)))
     {
         return fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<int>(data), OMLogAnsiReset);
     }
     else
     {
-        return fmt::format("{0}???{1}", OMLogAnsiBlackLight, OMLogAnsiReset);
+        return fmt::format("{1}??? with descriptor {0}{2}", target.name(), OMLogAnsiBlackLight, OMLogAnsiReset);
     }
+}
+void *OMPixelTower::allocate(std::shared_ptr<OMClass> cls)
+{
+    // instance structure:
+    // (pointer to the class) (data for this instance)
+    auto result = mem::allocator::tracedCallocVMData(1, cls->objectLength + sizeof(void *));
+    auto clsp = reinterpret_cast<OMClass *>(result);
+    clsp = cls.get();
+    return result;
 }
 } // namespace openminecraft::vm::pixeltower

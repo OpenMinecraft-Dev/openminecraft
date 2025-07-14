@@ -22,6 +22,8 @@ class OMPixelTower
 
     util::OMResult<std::any, err::OMValidationError> execute(std::string clazz, std::string name, std::string desc);
 
+    void *allocate(std::shared_ptr<OMClass> cls);
+
     void debugStackStatus();
     std::string printAny(std::any data);
     std::any interpreter;

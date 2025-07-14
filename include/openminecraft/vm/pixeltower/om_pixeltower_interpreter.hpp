@@ -34,6 +34,7 @@ class OMInterpreter
     std::stack<std::any> stack;
 
     void operand_invokestatic(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_new(std::shared_ptr<OMFrameMetadata> frame);
 
   private:
     OMPixelTower &tower;

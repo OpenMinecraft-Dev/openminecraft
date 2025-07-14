@@ -95,6 +95,10 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
                 stack.pop();
                 return OMResult<std::any, err::OMValidationError>::ok(nullptr);
             }
+            case op_new: {
+                operand_new(frame);
+                break;
+            }
             default: {
                 tower.debugStackStatus();
                 return OMResult<std::any, err::OMValidationError>::err(
@@ -125,6 +129,23 @@ void OMInterpreter::operand_invokestatic(std::shared_ptr<OMFrameMetadata> frame)
     {
         throw r.unwrap_err();
     }
+
+    frame->offset += 3;
+}
+void OMInterpreter::operand_new(std::shared_ptr<OMFrameMetadata> frame)
+{
+    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
+    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantClass>();
+
+    auto cls = frame->clazz->mapping->at(temp1->nameIndex)->to<OMClassConstantUtf8>()->data;
+
+    auto f = tower.fetchClass(cls);
+    if (f.type == util::Err)
+    {
+        throw f.unwrap_err();
+    }
+
+    stack.push(tower.allocate(f.unwrap()));
 
     frame->offset += 3;
 }
