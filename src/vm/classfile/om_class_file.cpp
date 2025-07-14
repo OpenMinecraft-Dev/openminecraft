@@ -296,8 +296,8 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         this->source->readbe16(ms);
         this->source->readbe16(ml);
         this->source->readbe32(cl);
-        std::vector<uint8_t> code(cl);
-        this->source->read((char *)code.data(), cl);
+        auto code = std::make_shared<std::vector<uint8_t>>(cl);
+        this->source->read((char *)code->data(), cl);
         this->source->readbe16(etl);
         std::vector<OMClassAttrCodeExcTable> et;
         for (uint16_t i = 0; i < etl; i++)

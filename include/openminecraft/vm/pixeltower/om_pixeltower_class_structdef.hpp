@@ -39,12 +39,14 @@ class OMClass
 
     void calcFieldOffsets();
 
+    std::shared_ptr<classfile::OMClassFile> rawFile;
+
     std::string name;
     std::string sourceFile;
     std::shared_ptr<OMClass> superClass;
     std::vector<std::shared_ptr<OMClass>> interfaces;
     std::list<OMFieldInfo> fields;
-    std::list<OMMethodInfo> methods;
+    std::list<std::shared_ptr<OMMethodInfo>> methods;
     std::unordered_map<uint16_t, std::shared_ptr<classfile::OMClassConstant>> *mapping;
     uint64_t objectLength = 0;
 

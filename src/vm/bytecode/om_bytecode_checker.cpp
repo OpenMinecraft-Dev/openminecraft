@@ -142,7 +142,7 @@ void OMBytecodeChecker::detail()
         }
 
         auto attr = m->attrs[0]->to<OMClassAttrCode>();
-        auto codeRaw = attr->code.data();
+        auto codeRaw = attr->code->data();
         auto bytes = 0;
 
 #define simpleCommand(operand, msg)                                                                                    \

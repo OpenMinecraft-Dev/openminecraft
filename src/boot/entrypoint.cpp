@@ -31,6 +31,7 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
@@ -155,6 +156,9 @@ int boot(std::vector<std::string> args)
                         case Err:
                             throw l.unwrap_err();
                         }
+
+                        std::any_cast<std::shared_ptr<vm::pixeltower::runtime::OMInterpreter>>(pt->interpreter)
+                            ->stack.push(33550336);
 
                         auto c = pt->execute("openminecraft/Test", "main", "([Ljava/lang/String;)V");
                         logger->info(c.unwrap_err().what());

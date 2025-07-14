@@ -8,9 +8,11 @@ namespace openminecraft::vm::pixeltower::runtime
 struct OMFrameMetadata
 {
     std::shared_ptr<OMClass> clazz;
-    OMMethodInfo &method;
+    std::shared_ptr<OMMethodInfo> method;
+    const uint8_t *codePointer;
     uint64_t offset;
     std::vector<std::any> local;
+    uint64_t codeLength;
 };
 }; // namespace openminecraft::vm::pixeltower::runtime
 

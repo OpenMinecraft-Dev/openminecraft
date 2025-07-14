@@ -101,21 +101,22 @@ util::OMResult<std::any, err::OMValidationError> OMClassLoader::loadClass(std::s
     {
         auto fn = file->mapping[method->nameIndex]->to<OMClassConstantUtf8>();
         auto fd = file->mapping[method->descIndex]->to<OMClassConstantUtf8>();
-        OMMethodInfo m;
-        m.name = fn->data;
-        m.desc = fd->data;
-        m.accessFlag = method->accessFlags;
+        auto m = std::make_shared<OMMethodInfo>();
+        m->name = fn->data;
+        m->desc = fd->data;
+        m->accessFlag = method->accessFlags;
         for (auto attr : method->attrs)
         {
             if (attr->type() == OMClassAttrType::Code)
             {
-                m.code = attr->to<OMClassAttrCode>();
+                m->code = attr->to<OMClassAttrCode>();
             }
         }
-        clsdata->methods.emplace_back(m);
+        clsdata->methods.push_back(m);
     }
 
     clsdata->mapping = &file->mapping;
+    clsdata->rawFile = file;
     clsdata->calcFieldOffsets();
     classes[hash_compile_time(clsdata->name.c_str())] = clsdata;
     logger.info("{} loaded", clsdata->name);

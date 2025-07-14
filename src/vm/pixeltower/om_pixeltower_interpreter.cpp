@@ -1,6 +1,11 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
+#include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/log/om_log_ansi.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/util/om_util_result.hpp"
+#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
+#include "openminecraft/vm/bytecode/om_bytecodes.hpp"
+#include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
@@ -9,6 +14,7 @@
 
 using namespace openminecraft::util;
 using namespace openminecraft::log::ansi;
+using namespace openminecraft::vm::classfile;
 
 namespace openminecraft::vm::pixeltower::runtime
 {
@@ -18,39 +24,108 @@ OMInterpreter::OMInterpreter(OMPixelTower &tower) : tower(tower), logger("pixelt
 OMInterpreter::~OMInterpreter()
 {
 }
-OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::string clazz, std::string method,
-                                                                  std::string sig)
-{
-    auto cls = tower.fetchClass(clazz);
-    if (cls.type == Err)
-    {
-        return OMResult<std::any, err::OMValidationError>::err(cls.unwrap_err());
-    }
-    return execute(cls.unwrap(), method, sig);
-}
 OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::string method,
                                                                   std::string sig)
 {
     for (auto &m : clazz->methods)
     {
-        if (m.name == method && m.desc == sig)
+        if (m->name == method && m->desc == sig)
         {
             return execute(clazz, m);
         }
     }
+    if (clazz->superClass != nullptr)
+    {
+        return execute(clazz->superClass, method, sig);
+    }
     return OMResult<std::any, err::OMValidationError>::err(
         {err::ClassLoader, "method not found", fmt::format("{}.{}{}", clazz->name, method, sig)});
 }
-OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_ptr<OMClass> clazz, OMMethodInfo &mi)
+OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_ptr<OMClass> clazz,
+                                                                  std::shared_ptr<OMMethodInfo> mi)
 {
-    logger.info("Execute {3}{0}{5}.{1}{4}{2}{5} !", clazz->name, mi.name, mi.desc, OMLogAnsiCyanLight,
-                OMLogAnsiBlackLight, OMLogAnsiReset);
-    auto frame =
-        std::make_shared<OMFrameMetadata>(OMFrameMetadata{clazz, mi, 0, std::vector<std::any>(mi.code->maxLocals)});
+    auto frame = std::make_shared<OMFrameMetadata>(
+        OMFrameMetadata{clazz, mi, nullptr, 0, std::vector<std::any>(mi->code->maxLocals)});
+
+    {
+        int temp = 0;
+        auto result = bytecode::descriptor::decodeSignature(mi->desc, &temp);
+        if (result.type == Err)
+        {
+            return OMResult<std::any, err::OMValidationError>::err(
+                {err::Instructions,
+                 fmt::format("unrecognized method descriptor at {}.{}{}", clazz->name, mi->name, mi->desc),
+                 result.unwrap_err()});
+        }
+        auto args = result.unwrap().first.size();
+
+        if ((mi->accessFlag & JVM_Acc_Static) == 0)
+        {
+            args++;
+        }
+
+        for (int argid = args - 1; argid >= 0; argid--)
+        {
+            frame->local[argid] = stack.top();
+            stack.pop();
+        }
+    }
+
     stack.push(frame);
 
-    stack.pop();
+    {
+        if (mi->code == nullptr)
+        {
+            return OMResult<std::any, err::OMValidationError>::err(
+                {err::Instructions, "no bytecode here!", fmt::format("{}.{}{}", clazz->name, mi->name, mi->desc)});
+        }
 
-    return OMResult<std::any, err::OMValidationError>::ok(nullptr);
+        auto codeArea = mi->code->code->data();
+        frame->codePointer = codeArea;
+        frame->codeLength = mi->code->codeLength;
+        while (frame->offset < mi->code->codeLength)
+        {
+            switch (codeArea[frame->offset])
+            {
+            case op_invokestatic: {
+                operand_invokestatic(frame);
+                break;
+            }
+            case op_return: {
+                stack.pop();
+                return OMResult<std::any, err::OMValidationError>::ok(nullptr);
+            }
+            default: {
+                tower.debugStackStatus();
+                return OMResult<std::any, err::OMValidationError>::err(
+                    {err::Instructions, "instructions not implemented",
+                     fmt::format("{}.{}{} + {}", clazz->name, mi->name, mi->desc, frame->offset)});
+            }
+            }
+        }
+    }
+
+    return OMResult<std::any, err::OMValidationError>::err(
+        {err::Instructions, "code heap overflow!",
+         fmt::format("{}.{}{} + {}", clazz->name, mi->name, mi->desc, frame->offset)});
+}
+void OMInterpreter::operand_invokestatic(std::shared_ptr<OMFrameMetadata> frame)
+{
+    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
+    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantMethodRef>();
+    auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();
+    auto temp3 = frame->clazz->mapping->at(temp1->nameAndTypeIndex)->to<OMClassConstantNameAndType>();
+
+    auto cls = frame->clazz->mapping->at(temp2->nameIndex)->to<OMClassConstantUtf8>()->data;
+    auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
+    auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
+
+    auto r = execute(cls, name, desc);
+    if (r.type == util::Err)
+    {
+        throw r.unwrap_err();
+    }
+
+    frame->offset += 3;
 }
 } // namespace openminecraft::vm::pixeltower::runtime
