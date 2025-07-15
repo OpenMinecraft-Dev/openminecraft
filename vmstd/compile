@@ -21,11 +21,11 @@ def recursive_listdir(path):
 recursive_listdir("./src")
 
 def compile(s):
-    tqdm.write(f"Compiling {s} ...")
+    print(f"Compiling {s} ...")
     ret = os.system(f"javac -Xlint:-options --release 8 {s} -d out")
 
     if not ret == 0:
-        tqdm.write(f"{s} compilation failed")
+        print(f"{s} compilation failed")
     
     return ret
 

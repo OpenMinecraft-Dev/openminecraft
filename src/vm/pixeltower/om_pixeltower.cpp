@@ -94,6 +94,36 @@ std::string OMPixelTower::fetchType(void *block)
     }
     else if (((OMArrayHeader *)block)->classifierPointer == &ARRAY_TYPE)
     {
+        auto header = ((OMArrayHeader *)block);
+        std::string pre = "";
+        for (int i = 0; i < header->dim; i++)
+        {
+            pre += "[]";
+        }
+        switch (header->type)
+        {
+        case Byte:
+            return "byte" + pre;
+        case Char:
+            return "char" + pre;
+        case Short:
+            return "short" + pre;
+        case Int:
+            return "int" + pre;
+        case Float:
+            return "float" + pre;
+        case Long:
+            return "long" + pre;
+        case Double:
+            return "double" + pre;
+        case Boolean:
+            return "boolean" + pre;
+        case Reference:
+            return header->classPointer->name + pre;
+        default:
+            break;
+        }
+
         return "<array>";
     }
     else
@@ -231,7 +261,7 @@ void *OMPixelTower::allocateMultiArray(OMArrayType type, int *lengths, int dim)
     auto arr = (OMArrayHeader *)result;
     arr->classifierPointer = &ARRAY_TYPE;
     arr->length = *lengths;
-    arr->type = Reference;
+    arr->type = type;
     arr->dim = dim;
     // offset sizeof(OMArrayHeader) bytes
     auto arrdata = (void **)((uint8_t *)result + sizeof(OMArrayHeader));

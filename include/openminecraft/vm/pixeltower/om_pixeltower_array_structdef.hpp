@@ -17,6 +17,7 @@ enum OMArrayType : uint8_t
     Float,
     Reference
 };
+
 struct OMArrayHeader
 {
     void *classifierPointer; // binded to a std::string which contains data "array"

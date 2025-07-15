@@ -92,7 +92,7 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
                 break;
             }
             case op_return: {
-                stack.pop();
+                operand_return(frame);
                 return OMResult<std::any, err::OMValidationError>::ok(nullptr);
             }
             case op_new: {
@@ -100,8 +100,6 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
                 break;
             }
             default: {
-                int b[2] = {100, 100};
-                stack.push(tower.allocateMultiArray(Long, b, 2));
                 tower.debugStackStatus();
                 return OMResult<std::any, err::OMValidationError>::err(
                     {err::Instructions, "instructions not implemented",
@@ -133,6 +131,14 @@ void OMInterpreter::operand_invokestatic(std::shared_ptr<OMFrameMetadata> frame)
     }
 
     frame->offset += 3;
+}
+void OMInterpreter::operand_return(std::shared_ptr<OMFrameMetadata> frame)
+{
+    while (std::any_cast<std::shared_ptr<OMFrameMetadata>>(stack.top()) != frame) {
+        stack.pop();
+    }
+
+    stack.pop();
 }
 void OMInterpreter::operand_new(std::shared_ptr<OMFrameMetadata> frame)
 {
