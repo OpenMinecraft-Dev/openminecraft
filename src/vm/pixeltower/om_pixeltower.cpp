@@ -143,7 +143,7 @@ std::string OMPixelTower::printAny(std::any data)
         temp += "Next bytecodes:\n";
         for (int i = 0; i < 4; i++)
         {
-            bool overflow = frame->codeLength - frame->offset < i;
+            bool overflow = frame->codeLength - frame->offset <= i;
             temp.append(fmt::format("{0}{1:#04x}{2} ", overflow ? OMLogAnsiBlackLight : OMLogAnsiYellowLight,
                                     frame->codePointer[frame->offset + i], OMLogAnsiReset));
         }
@@ -152,7 +152,8 @@ std::string OMPixelTower::printAny(std::any data)
         bool isStatic = frame->method->accessFlag & JVM_Acc_Static;
         for (auto &l : frame->local)
         {
-            temp += fmt::format("\t{2}[{0}] {1}\n", (!isStatic && !i) ? "this" : fmt::format("{}", i), printAny(l), OMLogAnsiBlueLight);
+            temp += fmt::format("\t{2}[{0}] {1}\n", (!isStatic && !i) ? "this" : fmt::format("{}", i), printAny(l),
+                                OMLogAnsiBlueLight);
             i++;
         }
         return temp;

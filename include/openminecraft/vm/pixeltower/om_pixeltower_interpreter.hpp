@@ -37,6 +37,9 @@ class OMInterpreter
     void operand_dup(std::shared_ptr<OMFrameMetadata> frame);
     void operand_return(std::shared_ptr<OMFrameMetadata> frame);
     void operand_new(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_aload_n(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_if_acmpne(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_iconst_n(std::shared_ptr<OMFrameMetadata> frame);
 
   private:
     OMPixelTower &tower;

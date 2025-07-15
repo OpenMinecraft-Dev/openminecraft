@@ -93,9 +93,29 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
                 auto res = operand_invokeany(frame);
                 if (res.type == Err)
                 {
-                    tower.debugStackStatus();
                     return OMResult<std::any, err::OMValidationError>::err(res.unwrap_err());
                 }
+                break;
+            }
+            case op_aload_n(0):
+            case op_aload_n(1):
+            case op_aload_n(2):
+            case op_aload_n(3): {
+                operand_aload_n(frame);
+                break;
+            }
+            case op_if_acmpne: {
+                operand_if_acmpne(frame);
+                break;
+            }
+            case op_iconst_i(-1):
+            case op_iconst_i(0):
+            case op_iconst_i(1):
+            case op_iconst_i(2):
+            case op_iconst_i(3):
+            case op_iconst_i(4):
+            case op_iconst_i(5): {
+                operand_iconst_n(frame);
                 break;
             }
             case op_dup: {
@@ -123,6 +143,32 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
     return OMResult<std::any, err::OMValidationError>::err(
         {err::Instructions, "code heap overflow!",
          fmt::format("{}.{}{} + {}", clazz->name, mi->name, mi->desc, frame->offset)});
+}
+void OMInterpreter::operand_iconst_n(std::shared_ptr<OMFrameMetadata> frame)
+{
+    stack.push((int)(frame->codePointer[frame->offset] - op_iconst_i(0)));
+    frame->offset++;
+}
+void OMInterpreter::operand_if_acmpne(std::shared_ptr<OMFrameMetadata> frame)
+{
+    auto a1 = stack.top();
+    stack.pop();
+    auto a2 = stack.top();
+    stack.pop();
+
+    if (std::any_cast<void *>(a1) != std::any_cast<void *>(a2))
+    {
+        frame->offset += binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
+    }
+    else
+    {
+        frame->offset += 3;
+    }
+}
+void OMInterpreter::operand_aload_n(std::shared_ptr<OMFrameMetadata> frame)
+{
+    stack.push(frame->local[frame->codePointer[frame->offset] - op_aload_n(0)]);
+    frame->offset++;
 }
 OMResult<std::any, err::OMValidationError> OMInterpreter::operand_invokeany(std::shared_ptr<OMFrameMetadata> frame)
 {
