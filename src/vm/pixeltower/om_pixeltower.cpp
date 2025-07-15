@@ -149,9 +149,10 @@ std::string OMPixelTower::printAny(std::any data)
         }
         temp += "...\nLocals:\n";
         uint64_t i = 0;
+        bool isStatic = frame->method->accessFlag & JVM_Acc_Static;
         for (auto &l : frame->local)
         {
-            temp += fmt::format("\t{2}[{0}] {1}\n", i, printAny(l), OMLogAnsiBlueLight);
+            temp += fmt::format("\t{2}[{0}] {1}\n", (!isStatic && !i) ? "this" : fmt::format("{}", i), printAny(l), OMLogAnsiBlueLight);
             i++;
         }
         return temp;

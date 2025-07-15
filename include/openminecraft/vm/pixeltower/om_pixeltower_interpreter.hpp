@@ -33,7 +33,8 @@ class OMInterpreter
 
     std::stack<std::any> stack;
 
-    void operand_invokestatic(std::shared_ptr<OMFrameMetadata> frame);
+    util::OMResult<std::any, err::OMValidationError> operand_invokeany(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_dup(std::shared_ptr<OMFrameMetadata> frame);
     void operand_return(std::shared_ptr<OMFrameMetadata> frame);
     void operand_new(std::shared_ptr<OMFrameMetadata> frame);
 

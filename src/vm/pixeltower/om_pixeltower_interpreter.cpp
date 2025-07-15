@@ -87,8 +87,18 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
         {
             switch (codeArea[frame->offset])
             {
-            case op_invokestatic: {
-                operand_invokestatic(frame);
+            case op_invokestatic:
+            case op_invokespecial:
+            case op_invokevirtual: {
+                auto res = operand_invokeany(frame);
+                if (res.type == Err) {
+                    tower.debugStackStatus();
+                    return OMResult<std::any, err::OMValidationError>::err(res.unwrap_err());
+                }
+                break;
+            }
+            case op_dup: {
+                operand_dup(frame);
                 break;
             }
             case op_return: {
@@ -113,7 +123,7 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
         {err::Instructions, "code heap overflow!",
          fmt::format("{}.{}{} + {}", clazz->name, mi->name, mi->desc, frame->offset)});
 }
-void OMInterpreter::operand_invokestatic(std::shared_ptr<OMFrameMetadata> frame)
+OMResult<std::any, err::OMValidationError> OMInterpreter::operand_invokeany(std::shared_ptr<OMFrameMetadata> frame)
 {
     auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
     auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantMethodRef>();
@@ -127,10 +137,17 @@ void OMInterpreter::operand_invokestatic(std::shared_ptr<OMFrameMetadata> frame)
     auto r = execute(cls, name, desc);
     if (r.type == util::Err)
     {
-        throw r.unwrap_err();
+        return OMResult<std::any, err::OMValidationError>::err(r.unwrap_err());
     }
 
     frame->offset += 3;
+
+    return OMResult<std::any, err::OMValidationError>::ok(nullptr);
+}
+void OMInterpreter::operand_dup(std::shared_ptr<OMFrameMetadata> frame)
+{
+    stack.push(stack.top());
+    frame->offset++;
 }
 void OMInterpreter::operand_return(std::shared_ptr<OMFrameMetadata> frame)
 {
