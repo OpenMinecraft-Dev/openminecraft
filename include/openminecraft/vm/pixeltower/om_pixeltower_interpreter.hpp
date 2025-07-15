@@ -35,13 +35,20 @@ class OMInterpreter
 
     util::OMResult<std::any, err::OMValidationError> operand_invokeany(std::shared_ptr<OMFrameMetadata> frame);
     void operand_dup(std::shared_ptr<OMFrameMetadata> frame);
-    void operand_return(std::shared_ptr<OMFrameMetadata> frame);
+    util::OMResult<std::any, err::OMValidationError> operand_return(std::shared_ptr<OMFrameMetadata> frame);
+    util::OMResult<std::any, err::OMValidationError> operand_ireturn(std::shared_ptr<OMFrameMetadata> frame);
     void operand_new(std::shared_ptr<OMFrameMetadata> frame);
     void operand_aload_n(std::shared_ptr<OMFrameMetadata> frame);
     void operand_if_acmpne(std::shared_ptr<OMFrameMetadata> frame);
     void operand_iconst_n(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_nop(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_aconst_null(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_pop(std::shared_ptr<OMFrameMetadata> frame);
 
   private:
+    std::string fetchCurrentPosition(std::shared_ptr<OMFrameMetadata> frame);
+    util::OMResult<std::any, err::OMValidationError> popFrame(std::shared_ptr<OMFrameMetadata> frame);
+
     OMPixelTower &tower;
     log::OMLogger logger;
 };
