@@ -91,7 +91,8 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
             case op_invokespecial:
             case op_invokevirtual: {
                 auto res = operand_invokeany(frame);
-                if (res.type == Err) {
+                if (res.type == Err)
+                {
                     tower.debugStackStatus();
                     return OMResult<std::any, err::OMValidationError>::err(res.unwrap_err());
                 }
@@ -151,7 +152,8 @@ void OMInterpreter::operand_dup(std::shared_ptr<OMFrameMetadata> frame)
 }
 void OMInterpreter::operand_return(std::shared_ptr<OMFrameMetadata> frame)
 {
-    while (std::any_cast<std::shared_ptr<OMFrameMetadata>>(stack.top()) != frame) {
+    while (std::any_cast<std::shared_ptr<OMFrameMetadata>>(stack.top()) != frame)
+    {
         stack.pop();
     }
 
