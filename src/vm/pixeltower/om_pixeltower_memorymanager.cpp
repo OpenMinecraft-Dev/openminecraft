@@ -1,19 +1,14 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_memorymanager.hpp"
-#include "openminecraft/log/om_log_ansi.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
-#include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
-#include "openminecraft/vm/pixeltower/om_pixeltower_classloader.hpp"
-#include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
-#include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
-#include <any>
 #include <memory>
 
 namespace openminecraft::vm::pixeltower
 {
 std::string ARRAY_TYPE = "array";
-OMMemoryManager::OMMemoryManager()
+OMMemoryManager::OMMemoryManager(std::shared_ptr<OMClassLoader> cld)
+    : logger("pixeltower/OMMemoryManager", this), cld(cld)
 {
 }
 OMMemoryManager::~OMMemoryManager()
@@ -25,6 +20,7 @@ void *OMMemoryManager::allocate(std::shared_ptr<OMClass> cls)
     auto result = mem::allocator::tracedCallocVMData(1, sizeof(void *) + cls->objectLength);
     auto clsp = (OMClass **)result;
     *clsp = cls.get();
+    blockCache.push_back(result);
     return result;
 }
 void *OMMemoryManager::allocateArray(std::shared_ptr<OMClass> cls, int *lengths, int dim)
@@ -38,6 +34,7 @@ void *OMMemoryManager::allocateArray(std::shared_ptr<OMClass> cls, int *lengths,
         arr->classPointer = cls.get();
         arr->type = Reference;
         arr->dim = 1;
+        blockCache.push_back(result);
         return result;
     }
 
@@ -54,6 +51,7 @@ void *OMMemoryManager::allocateArray(std::shared_ptr<OMClass> cls, int *lengths,
     {
         arrdata[i] = allocateArray(cls, lengths + 1, dim - 1);
     }
+    blockCache.push_back(result);
     return result;
 }
 void *OMMemoryManager::allocateArray(OMArrayType type, int *lengths, int dim)
@@ -90,6 +88,7 @@ void *OMMemoryManager::allocateArray(OMArrayType type, int *lengths, int dim)
         arr->length = *lengths;
         arr->type = type;
         arr->dim = 1;
+        blockCache.push_back(result);
         return result;
     }
 
@@ -105,6 +104,7 @@ void *OMMemoryManager::allocateArray(OMArrayType type, int *lengths, int dim)
     {
         arrdata[i] = allocateArray(type, lengths + 1, dim - 1);
     }
+    blockCache.push_back(result);
     return result;
 }
 

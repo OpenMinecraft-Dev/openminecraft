@@ -10,6 +10,7 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
 #include <memory>
+#include <thread>
 #include <typeindex>
 #include <vector>
 
@@ -19,6 +20,7 @@ using namespace openminecraft::vm::classfile;
 
 namespace openminecraft::vm::pixeltower::runtime
 {
+#define STACK_ACCESS stack[std::this_thread::get_id()]
 OMInterpreter::OMInterpreter(OMPixelTower &tower) : tower(tower), logger("pixeltower/OMInterpreter", this)
 {
 }
@@ -67,12 +69,12 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
 
         for (int argid = args - 1; argid >= 0; argid--)
         {
-            frame->local[argid] = stack.top();
-            stack.pop();
+            frame->local[argid] = STACK_ACCESS.top();
+            STACK_ACCESS.pop();
         }
     }
 
-    stack.push(frame);
+    STACK_ACCESS.push(frame);
 
     {
         if (mi->code == nullptr)
@@ -194,38 +196,38 @@ std::string OMInterpreter::fetchCurrentPosition(std::shared_ptr<OMFrameMetadata>
 }
 util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_ireturn(std::shared_ptr<OMFrameMetadata> frame)
 {
-    auto ret = stack.top();
+    auto ret = STACK_ACCESS.top();
     auto l = popFrame(frame);
-    stack.push(ret);
+    STACK_ACCESS.push(ret);
     return l;
 }
 void OMInterpreter::operand_iconst_n(std::shared_ptr<OMFrameMetadata> frame)
 {
-    stack.push((int)(frame->codePointer[frame->offset] - op_iconst_i(0)));
+    STACK_ACCESS.push((int)(frame->codePointer[frame->offset] - op_iconst_i(0)));
     frame->offset++;
 }
 void OMInterpreter::operand_lconst_n(std::shared_ptr<OMFrameMetadata> frame)
 {
-    stack.push((int64_t)(frame->codePointer[frame->offset] - op_lconst_l(0)));
+    STACK_ACCESS.push((int64_t)(frame->codePointer[frame->offset] - op_lconst_l(0)));
     frame->offset++;
 }
 void OMInterpreter::operand_fconst_n(std::shared_ptr<OMFrameMetadata> frame)
 {
-    stack.push((float)(frame->codePointer[frame->offset] - op_fconst_f(0)));
+    STACK_ACCESS.push((float)(frame->codePointer[frame->offset] - op_fconst_f(0)));
     frame->offset++;
 }
 void OMInterpreter::operand_dconst_n(std::shared_ptr<OMFrameMetadata> frame)
 {
-    stack.push((double)(frame->codePointer[frame->offset] - op_dconst_d(0)));
+    STACK_ACCESS.push((double)(frame->codePointer[frame->offset] - op_dconst_d(0)));
     frame->offset++;
 }
 util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_if_acmpne(
     std::shared_ptr<OMFrameMetadata> frame)
 {
-    auto a1 = stack.top();
-    stack.pop();
-    auto a2 = stack.top();
-    stack.pop();
+    auto a1 = STACK_ACCESS.top();
+    STACK_ACCESS.pop();
+    auto a2 = STACK_ACCESS.top();
+    STACK_ACCESS.pop();
 
     if (std::type_index(a1.type()) != std::type_index(typeid(void *)))
     {
@@ -254,7 +256,7 @@ util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_if_acmpn
 }
 void OMInterpreter::operand_aload_n(std::shared_ptr<OMFrameMetadata> frame)
 {
-    stack.push(frame->local[frame->codePointer[frame->offset] - op_aload_n(0)]);
+    STACK_ACCESS.push(frame->local[frame->codePointer[frame->offset] - op_aload_n(0)]);
     frame->offset++;
 }
 OMResult<std::any, err::OMValidationError> OMInterpreter::operand_invokeany(std::shared_ptr<OMFrameMetadata> frame)
@@ -280,7 +282,7 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_invokeany(std:
 }
 void OMInterpreter::operand_dup(std::shared_ptr<OMFrameMetadata> frame)
 {
-    stack.push(stack.top());
+    STACK_ACCESS.push(STACK_ACCESS.top());
     frame->offset++;
 }
 util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_return(std::shared_ptr<OMFrameMetadata> frame)
@@ -289,18 +291,18 @@ util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_return(s
 }
 util::OMResult<std::any, err::OMValidationError> OMInterpreter::popFrame(std::shared_ptr<OMFrameMetadata> frame)
 {
-    while (std::type_index(stack.top().type()) != std::type_index(typeid(std::shared_ptr<OMFrameMetadata>)) ||
-           std::any_cast<std::shared_ptr<OMFrameMetadata>>(stack.top()) != frame)
+    while (std::type_index(STACK_ACCESS.top().type()) != std::type_index(typeid(std::shared_ptr<OMFrameMetadata>)) ||
+           std::any_cast<std::shared_ptr<OMFrameMetadata>>(STACK_ACCESS.top()) != frame)
     {
-        stack.pop();
-        if (stack.empty())
+        STACK_ACCESS.pop();
+        if (STACK_ACCESS.empty())
         {
             return util::OMResult<std::any, err::OMValidationError>::err(
                 {err::Instructions, "whole operator stack is popped! tower is crashing!", fetchCurrentPosition(frame)});
         }
     }
 
-    stack.pop();
+    STACK_ACCESS.pop();
     return util::OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
 void OMInterpreter::operand_new(std::shared_ptr<OMFrameMetadata> frame)
@@ -316,7 +318,7 @@ void OMInterpreter::operand_new(std::shared_ptr<OMFrameMetadata> frame)
         throw f.unwrap_err();
     }
 
-    stack.push(tower.allocate(f.unwrap()));
+    STACK_ACCESS.push(tower.allocate(f.unwrap()));
 
     frame->offset += 3;
 }
@@ -326,12 +328,12 @@ void OMInterpreter::operand_nop(std::shared_ptr<OMFrameMetadata> frame)
 }
 void OMInterpreter::operand_aconst_null(std::shared_ptr<OMFrameMetadata> frame)
 {
-    stack.push((void *)nullptr);
+    STACK_ACCESS.push((void *)nullptr);
     frame->offset++;
 }
 void OMInterpreter::operand_pop(std::shared_ptr<OMFrameMetadata> frame)
 {
-    stack.pop();
+    STACK_ACCESS.pop();
     frame->offset++;
 }
 } // namespace openminecraft::vm::pixeltower::runtime

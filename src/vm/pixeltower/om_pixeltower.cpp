@@ -1,7 +1,7 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
 #include "openminecraft/log/om_log_ansi.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_classloader.hpp"
@@ -20,8 +20,8 @@ extern std::string ARRAY_TYPE;
 OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
 {
     classloader = std::make_shared<OMClassLoader>();
-    mm = std::make_shared<OMMemoryManager>();
     interpreter = std::make_shared<runtime::OMInterpreter>(*this);
+    mm = std::make_shared<OMMemoryManager>(classloader);
 }
 OMPixelTower::~OMPixelTower()
 {
@@ -68,23 +68,28 @@ util::OMResult<std::any, err::OMValidationError> OMPixelTower::execute(std::stri
 }
 void OMPixelTower::debugStackStatus()
 {
-    std::stack<std::any> ds(std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(interpreter)->stack);
-    uint64_t idx = 0;
-
-    logger.debug("");
-    logger.debug("Stack Details:");
-    while (!ds.empty())
+    auto c = std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(interpreter);
+    for (auto pair : c->stack)
     {
-        auto m = fmt::format("{2}[{0}] {1}", idx, printAny(ds.top()), OMLogAnsiBlueLight);
-        std::istringstream s(m);
-        std::string line;
-        while (std::getline(s, line, '\n'))
-        {
-            logger.debug(line);
-        }
+        std::stack<std::any> ds(pair.second);
+        uint64_t idx = 0;
 
-        idx++;
-        ds.pop();
+        logger.debug(log::multithread::acquireThreadName(pair.first));
+        logger.debug("");
+        logger.debug("Stack Details:");
+        while (!ds.empty())
+        {
+            auto m = fmt::format("{2}[{0}] {1}", idx, printAny(ds.top()), OMLogAnsiBlueLight);
+            std::istringstream s(m);
+            std::string line;
+            while (std::getline(s, line, '\n'))
+            {
+                logger.debug(line);
+            }
+
+            idx++;
+            ds.pop();
+        }
     }
 }
 std::string OMPixelTower::fetchType(void *block)

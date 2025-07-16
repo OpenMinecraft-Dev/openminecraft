@@ -10,6 +10,7 @@
 #include <fstream>
 #include <memory>
 #include <stdexcept>
+#include <thread>
 #include <variant>
 #include <vector>
 
@@ -158,7 +159,8 @@ int boot(std::vector<std::string> args)
                         }
 
                         std::any_cast<std::shared_ptr<vm::pixeltower::runtime::OMInterpreter>>(pt->interpreter)
-                            ->stack.push(33550336);
+                            ->stack[std::this_thread::get_id()]
+                            .push(33550336);
 
                         auto c = pt->execute("openminecraft/Test", "main", "([Ljava/lang/String;)V");
                         logger->info(c.unwrap_err().what());

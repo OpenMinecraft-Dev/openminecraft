@@ -9,6 +9,8 @@
 #include <any>
 #include <memory>
 #include <stack>
+#include <thread>
+#include <unordered_map>
 namespace openminecraft::vm::pixeltower::runtime
 {
 class OMInterpreter
@@ -31,7 +33,7 @@ class OMInterpreter
     util::OMResult<std::any, err::OMValidationError> execute(std::shared_ptr<OMClass> clazz,
                                                              std::shared_ptr<OMMethodInfo> mi);
 
-    std::stack<std::any> stack;
+    std::unordered_map<std::thread::id, std::stack<std::any>> stack;
 
     util::OMResult<std::any, err::OMValidationError> operand_invokeany(std::shared_ptr<OMFrameMetadata> frame);
     void operand_dup(std::shared_ptr<OMFrameMetadata> frame);

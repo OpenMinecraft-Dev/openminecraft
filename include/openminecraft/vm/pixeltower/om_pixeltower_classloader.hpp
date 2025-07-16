@@ -18,12 +18,12 @@ class OMClassLoader
 
     util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError> forName(std::string name);
     void appendStagingClass(std::shared_ptr<classfile::OMClassFile> file);
+    std::unordered_map<uint64_t, std::shared_ptr<OMClass>> classes;
 
   protected:
     util::OMResult<std::any, err::OMValidationError> loadClass(std::shared_ptr<classfile::OMClassFile> file);
 
   private:
-    std::unordered_map<uint64_t, std::shared_ptr<OMClass>> classes;
     std::list<std::shared_ptr<classfile::OMClassFile>> stagingClasses;
     log::OMLogger logger;
 };
