@@ -117,6 +117,7 @@ void OMMemoryManager::searchFromInstance(void *b)
     if (b == nullptr)
     {
         // it's abslutely TOTAL DESTRUCTION to access this pointer!
+        return;
     }
     else if (arrh->classifierPointer == &ARRAY_TYPE)
     {

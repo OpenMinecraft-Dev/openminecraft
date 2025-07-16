@@ -181,6 +181,14 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
                 break;
             }
 
+            case op_istore_n(0):
+            case op_istore_n(1):
+            case op_istore_n(2):
+            case op_istore_n(3): {
+                operand_istore_n(frame);
+                break;
+            }
+
             case op_astore_n(0):
             case op_astore_n(1):
             case op_astore_n(2):
@@ -261,6 +269,13 @@ util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_ireturn(
     auto l = popFrame(frame);
     STACK_ACCESS.push(ret);
     return l;
+}
+void OMInterpreter::operand_istore_n(std::shared_ptr<OMFrameMetadata> frame)
+{
+    auto item = STACK_ACCESS.top();
+    STACK_ACCESS.pop();
+    frame->local[frame->codePointer[frame->offset] - op_istore_n(0)] = item;
+    frame->offset++;
 }
 OMResult<std::any, err::OMValidationError> OMInterpreter::operand_invokeinterface(
     std::shared_ptr<OMFrameMetadata> frame)

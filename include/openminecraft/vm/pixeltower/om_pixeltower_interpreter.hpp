@@ -52,6 +52,7 @@ class OMInterpreter
     void operand_aconst_null(std::shared_ptr<OMFrameMetadata> frame);
     void operand_pop(std::shared_ptr<OMFrameMetadata> frame);
     void operand_astore_n(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_istore_n(std::shared_ptr<OMFrameMetadata> frame);
     util::OMResult<std::any, err::OMValidationError> operand_invokeinterface(std::shared_ptr<OMFrameMetadata> frame);
 
   private:
