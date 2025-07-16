@@ -108,6 +108,25 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
                 break;
             }
 
+            case op_lconst_l(0):
+            case op_lconst_l(1): {
+                operand_lconst_n(frame);
+                break;
+            }
+
+            case op_fconst_f(0):
+            case op_fconst_f(1):
+            case op_fconst_f(2): {
+                operand_fconst_n(frame);
+                break;
+            }
+
+            case op_dconst_d(0):
+            case op_dconst_d(1): {
+                operand_dconst_n(frame);
+                break;
+            }
+
             case op_aload_n(0):
             case op_aload_n(1):
             case op_aload_n(2):
@@ -185,12 +204,42 @@ void OMInterpreter::operand_iconst_n(std::shared_ptr<OMFrameMetadata> frame)
     stack.push((int)(frame->codePointer[frame->offset] - op_iconst_i(0)));
     frame->offset++;
 }
-void OMInterpreter::operand_if_acmpne(std::shared_ptr<OMFrameMetadata> frame)
+void OMInterpreter::operand_lconst_n(std::shared_ptr<OMFrameMetadata> frame)
+{
+    stack.push((int64_t)(frame->codePointer[frame->offset] - op_lconst_l(0)));
+    frame->offset++;
+}
+void OMInterpreter::operand_fconst_n(std::shared_ptr<OMFrameMetadata> frame)
+{
+    stack.push((float)(frame->codePointer[frame->offset] - op_fconst_f(0)));
+    frame->offset++;
+}
+void OMInterpreter::operand_dconst_n(std::shared_ptr<OMFrameMetadata> frame)
+{
+    stack.push((double)(frame->codePointer[frame->offset] - op_dconst_d(0)));
+    frame->offset++;
+}
+util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_if_acmpne(
+    std::shared_ptr<OMFrameMetadata> frame)
 {
     auto a1 = stack.top();
     stack.pop();
     auto a2 = stack.top();
     stack.pop();
+
+    if (std::type_index(a1.type()) != std::type_index(typeid(void *)))
+    {
+        return util::OMResult<std::any, err::OMValidationError>::err(
+            {err::Instructions, "stack element type mismatch, required reference for slot 0",
+             fetchCurrentPosition(frame)});
+    }
+
+    if (std::type_index(a2.type()) != std::type_index(typeid(void *)))
+    {
+        return util::OMResult<std::any, err::OMValidationError>::err(
+            {err::Instructions, "stack element type mismatch, required reference for slot 1",
+             fetchCurrentPosition(frame)});
+    }
 
     if (std::any_cast<void *>(a1) != std::any_cast<void *>(a2))
     {
@@ -200,6 +249,8 @@ void OMInterpreter::operand_if_acmpne(std::shared_ptr<OMFrameMetadata> frame)
     {
         frame->offset += 3;
     }
+
+    return util::OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
 void OMInterpreter::operand_aload_n(std::shared_ptr<OMFrameMetadata> frame)
 {

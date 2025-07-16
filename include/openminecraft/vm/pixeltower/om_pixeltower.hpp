@@ -6,6 +6,7 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_classloader.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_memorymanager.hpp"
 #include <any>
 #include <istream>
 #include <memory>
@@ -36,6 +37,7 @@ class OMPixelTower
 
   private:
     std::shared_ptr<OMClassLoader> classloader;
+    std::shared_ptr<OMMemoryManager> mm;
     log::OMLogger logger;
 };
 } // namespace openminecraft::vm::pixeltower

@@ -16,10 +16,11 @@
 using namespace openminecraft::log::ansi;
 namespace openminecraft::vm::pixeltower
 {
-std::string ARRAY_TYPE = "array";
+extern std::string ARRAY_TYPE;
 OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
 {
     classloader = std::make_shared<OMClassLoader>();
+    mm = std::make_shared<OMMemoryManager>();
     interpreter = std::make_shared<runtime::OMInterpreter>(*this);
 }
 OMPixelTower::~OMPixelTower()
@@ -179,98 +180,23 @@ std::string OMPixelTower::printAny(std::any data)
 }
 void *OMPixelTower::allocate(std::shared_ptr<OMClass> cls)
 {
-    auto result = mem::allocator::tracedCallocVMData(1, sizeof(void *) + cls->objectLength);
-    auto clsp = (OMClass **)result;
-    *clsp = cls.get();
-    return result;
+    return mm->allocate(cls);
 }
 
 void *OMPixelTower::allocateArray(std::shared_ptr<OMClass> cls, int length)
 {
-    auto result = mem::allocator::tracedCallocVMData(1, sizeof(OMArrayHeader) + (cls->objectLength * length));
-    auto arr = (OMArrayHeader *)result;
-    arr->classifierPointer = &ARRAY_TYPE;
-    arr->length = length;
-    arr->classPointer = cls.get();
-    arr->type = Reference;
-    arr->dim = 1;
-    return result;
+    return mm->allocateArray(cls, &length, 1);
 }
 void *OMPixelTower::allocateMultiArray(std::shared_ptr<OMClass> cls, int *lengths, int dim)
 {
-    if (dim == 1)
-    {
-        return allocateArray(cls, *lengths);
-    }
-
-    auto result = mem::allocator::tracedCallocVMData(1, sizeof(OMArrayHeader) + (sizeof(void *) * *lengths));
-    auto arr = (OMArrayHeader *)result;
-    arr->classifierPointer = &ARRAY_TYPE;
-    arr->length = *lengths;
-    arr->classPointer = cls.get();
-    arr->type = Reference;
-    arr->dim = dim;
-    // offset sizeof(OMArrayHeader) bytes
-    auto arrdata = (void **)((uint8_t *)result + sizeof(OMArrayHeader));
-    for (int i = 0; i < *lengths; i++)
-    {
-        arrdata[i] = allocateMultiArray(cls, lengths + 1, dim - 1);
-    }
-    return result;
+    return mm->allocateArray(cls, lengths, dim);
 }
 void *OMPixelTower::allocateArray(OMArrayType type, int length)
 {
-    int objLength;
-    switch (type)
-    {
-    case Byte:
-    case Char:
-    case Boolean:
-        objLength = 1;
-        break;
-    case Short:
-        objLength = 2;
-        break;
-    case Int:
-    case Float:
-    default:
-        objLength = 4;
-        break;
-    case Long:
-    case Double:
-        objLength = 8;
-        break;
-    case Reference:
-        objLength = sizeof(void *);
-        break;
-    }
-    auto result = mem::allocator::tracedCallocVMData(1, sizeof(OMArrayHeader) + objLength * length);
-    auto arr = (OMArrayHeader *)result;
-    arr->classifierPointer = &ARRAY_TYPE;
-    arr->length = length;
-    arr->type = type;
-    arr->dim = 1;
-    return result;
+    return mm->allocateArray(type, &length, 1);
 }
 void *OMPixelTower::allocateMultiArray(OMArrayType type, int *lengths, int dim)
 {
-    if (dim == 1)
-    {
-        return allocateArray(type, *lengths);
-    }
-
-    auto result = mem::allocator::tracedCallocVMData(1, sizeof(OMArrayHeader) + (sizeof(void *) * *lengths));
-    auto arr = (OMArrayHeader *)result;
-    arr->classifierPointer = &ARRAY_TYPE;
-    arr->length = *lengths;
-    arr->type = type;
-    arr->dim = dim;
-    // offset sizeof(OMArrayHeader) bytes
-    auto arrdata = (void **)((uint8_t *)result + sizeof(OMArrayHeader));
-    for (int i = 0; i < *lengths; i++)
-    {
-        arrdata[i] = allocateMultiArray(type, lengths + 1, dim - 1);
-    }
-    return result;
+    return mm->allocateArray(type, lengths, dim);
 }
 } // namespace openminecraft::vm::pixeltower
