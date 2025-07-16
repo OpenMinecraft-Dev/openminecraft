@@ -49,6 +49,7 @@ class OMInterpreter
     void operand_nop(std::shared_ptr<OMFrameMetadata> frame);
     void operand_aconst_null(std::shared_ptr<OMFrameMetadata> frame);
     void operand_pop(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_astore_n(std::shared_ptr<OMFrameMetadata> frame);
 
   private:
     std::string fetchCurrentPosition(std::shared_ptr<OMFrameMetadata> frame);

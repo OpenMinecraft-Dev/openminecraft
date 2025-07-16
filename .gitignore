@@ -6,7 +6,6 @@ CMake*
 cmake*
 .cache
 .idea
-.clang-format
 prod
 *.log
 *.bundle

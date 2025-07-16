@@ -34,10 +34,10 @@ class OMPixelTower
     std::string printAny(std::any data);
     std::string fetchType(void *block);
     std::any interpreter;
+    std::shared_ptr<OMMemoryManager> mm;
 
   private:
     std::shared_ptr<OMClassLoader> classloader;
-    std::shared_ptr<OMMemoryManager> mm;
     log::OMLogger logger;
 };
 } // namespace openminecraft::vm::pixeltower

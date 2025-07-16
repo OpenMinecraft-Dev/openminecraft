@@ -1,7 +1,9 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_memorymanager.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_class_structdef.hpp"
 #include <memory>
 
 namespace openminecraft::vm::pixeltower
@@ -27,7 +29,7 @@ void *OMMemoryManager::allocateArray(std::shared_ptr<OMClass> cls, int *lengths,
 {
     if (dim == 1)
     {
-        auto result = mem::allocator::tracedCallocVMData(1, sizeof(OMArrayHeader) + (cls->objectLength * *lengths));
+        auto result = mem::allocator::tracedCallocVMData(1, sizeof(OMArrayHeader) + (sizeof(void *) * *lengths));
         auto arr = (OMArrayHeader *)result;
         arr->classifierPointer = &ARRAY_TYPE;
         arr->length = *lengths;
@@ -106,6 +108,51 @@ void *OMMemoryManager::allocateArray(OMArrayType type, int *lengths, int dim)
     }
     blockCache.push_back(result);
     return result;
+}
+
+void OMMemoryManager::searchFromInstance(void *b)
+{
+    logger.debug("pointer found: {}", b);
+    auto arrh = (OMArrayHeader *)b;
+    if (b == nullptr)
+    {
+        // it's abslutely TOTAL DESTRUCTION to access this pointer!
+    }
+    else if (arrh->classifierPointer == &ARRAY_TYPE)
+    {
+        // *flat* arrays, no pointers inside it
+        if (arrh->type != Reference && arrh->dim == 1)
+        {
+            return;
+        }
+        auto arr = (void **)((uint8_t *)b + sizeof(OMArrayHeader));
+        for (int i = 0; i < arrh->length; i++)
+        {
+            searchFromInstance(arr[i]);
+        }
+    }
+    else
+    {
+        auto clazz = *((OMClass **)b);
+        auto arrdata = ((uint8_t *)b + sizeof(void *));
+        for (auto fi : clazz->fields)
+        {
+            if (fi.type == OMFieldType::BytesP && (fi.accessFlag & JVM_Acc_Static) == 0)
+            {
+                searchFromInstance(*(void **)(arrdata + fi.offset));
+            }
+        }
+    }
+}
+void OMMemoryManager::seatchFromStatic(std::shared_ptr<OMClass> cls)
+{
+    for (auto fi : cls->fields)
+    {
+        if (fi.type == OMFieldType::BytesP && (fi.accessFlag & JVM_Acc_Static) == 0)
+        {
+            searchFromInstance(*(void **)((uint8_t *)cls->staticFieldBlock + fi.offset));
+        }
+    }
 }
 
 } // namespace openminecraft::vm::pixeltower
