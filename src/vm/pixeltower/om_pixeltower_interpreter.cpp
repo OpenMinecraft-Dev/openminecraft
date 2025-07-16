@@ -1,6 +1,5 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
-#include "openminecraft/log/om_log_ansi.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
@@ -9,13 +8,14 @@
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
+#include <any>
 #include <memory>
+#include <stack>
 #include <thread>
 #include <typeindex>
 #include <vector>
 
 using namespace openminecraft::util;
-using namespace openminecraft::log::ansi;
 using namespace openminecraft::vm::classfile;
 
 namespace openminecraft::vm::pixeltower::runtime
@@ -43,6 +43,50 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
     }
     return OMResult<std::any, err::OMValidationError>::err(
         {err::ClassLoader, "method not found", fmt::format("{}.{}{}", clazz->name, method, sig)});
+}
+OMResult<std::any, err::OMValidationError> OMInterpreter::executeDynamic(std::string clazz, std::string method,
+                                                                         std::string sig)
+{
+    std::stack<std::any> tempst;
+    int temp = 0;
+    auto result = bytecode::descriptor::decodeSignature(sig, &temp);
+    if (result.type == Err)
+    {
+        return OMResult<std::any, err::OMValidationError>::err(
+            {err::Instructions, fmt::format("unrecognized method descriptor at {}.{}{}", clazz, method, sig),
+             result.unwrap_err()});
+    }
+
+    for (int i = 0; i < result.unwrap().first.size(); i++)
+    {
+        tempst.push(STACK_ACCESS.top());
+        STACK_ACCESS.pop();
+    }
+
+    if (std::type_index(STACK_ACCESS.top().type()) == std::type_index(typeid(void *)))
+    {
+        auto obj = std::any_cast<void *>(STACK_ACCESS.top());
+        if (obj == nullptr)
+        {
+            return OMResult<std::any, err::OMValidationError>::err(
+                {err::Instructions, fmt::format("interface linking with nullptr at {}.{}{}", clazz, method, sig),
+                 result.unwrap_err()});
+        }
+
+        while (!tempst.empty())
+        {
+            STACK_ACCESS.push(tempst.top());
+            tempst.pop();
+        }
+
+        return execute((*((OMClass **)obj))->name, method, sig);
+    }
+    else
+    {
+        return OMResult<std::any, err::OMValidationError>::err(
+            {err::Instructions, fmt::format("unrecognized stack item at {}.{}{}", clazz, method, sig),
+             result.unwrap_err()});
+    }
 }
 OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_ptr<OMClass> clazz,
                                                                   std::shared_ptr<OMMethodInfo> mi)
@@ -181,6 +225,15 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
                 break;
             }
 
+            case op_invokeinterface: {
+                auto res = operand_invokeinterface(frame);
+                if (res.type == Err)
+                {
+                    return OMResult<std::any, err::OMValidationError>::err(res.unwrap_err());
+                }
+                break;
+            }
+
             case op_new: {
                 operand_new(frame);
                 break;
@@ -208,6 +261,28 @@ util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_ireturn(
     auto l = popFrame(frame);
     STACK_ACCESS.push(ret);
     return l;
+}
+OMResult<std::any, err::OMValidationError> OMInterpreter::operand_invokeinterface(
+    std::shared_ptr<OMFrameMetadata> frame)
+{
+    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
+    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantMethodRef>();
+    auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();
+    auto temp3 = frame->clazz->mapping->at(temp1->nameAndTypeIndex)->to<OMClassConstantNameAndType>();
+
+    auto cls = frame->clazz->mapping->at(temp2->nameIndex)->to<OMClassConstantUtf8>()->data;
+    auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
+    auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
+
+    auto r = executeDynamic(cls, name, desc);
+    if (r.type == util::Err)
+    {
+        return OMResult<std::any, err::OMValidationError>::err(r.unwrap_err());
+    }
+
+    frame->offset += 5;
+
+    return OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
 void OMInterpreter::operand_astore_n(std::shared_ptr<OMFrameMetadata> frame)
 {
@@ -285,7 +360,13 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_invokeany(std:
     auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
     auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
 
-    auto r = execute(cls, name, desc);
+    auto clss = tower.fetchClass(cls);
+    if (clss.type == util::Err)
+    {
+        return util::OMResult<std::any, err::OMValidationError>::err(clss.unwrap_err());
+    }
+
+    auto r = execute(clss.unwrap(), name, desc);
     if (r.type == util::Err)
     {
         return OMResult<std::any, err::OMValidationError>::err(r.unwrap_err());

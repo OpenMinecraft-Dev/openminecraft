@@ -30,6 +30,8 @@ class OMInterpreter
     }
     util::OMResult<std::any, err::OMValidationError> execute(std::shared_ptr<OMClass> clazz, std::string method,
                                                              std::string sig);
+    util::OMResult<std::any, err::OMValidationError> executeDynamic(std::string clazz, std::string method,
+                                                                    std::string sig);
     util::OMResult<std::any, err::OMValidationError> execute(std::shared_ptr<OMClass> clazz,
                                                              std::shared_ptr<OMMethodInfo> mi);
 
@@ -50,6 +52,7 @@ class OMInterpreter
     void operand_aconst_null(std::shared_ptr<OMFrameMetadata> frame);
     void operand_pop(std::shared_ptr<OMFrameMetadata> frame);
     void operand_astore_n(std::shared_ptr<OMFrameMetadata> frame);
+    util::OMResult<std::any, err::OMValidationError> operand_invokeinterface(std::shared_ptr<OMFrameMetadata> frame);
 
   private:
     std::string fetchCurrentPosition(std::shared_ptr<OMFrameMetadata> frame);
