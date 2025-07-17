@@ -138,9 +138,9 @@ void OMMemoryManager::searchFromInstance(void *b)
         auto arrdata = ((uint8_t *)b + sizeof(void *));
         for (auto fi : clazz->fields)
         {
-            if (fi.type == OMFieldType::BytesP && (fi.accessFlag & JVM_Acc_Static) == 0)
+            if (fi->type == OMFieldType::BytesP && (fi->accessFlag & JVM_Acc_Static) == 0)
             {
-                searchFromInstance(*(void **)(arrdata + fi.offset));
+                searchFromInstance(*(void **)(arrdata + fi->offset));
             }
         }
     }
@@ -149,9 +149,9 @@ void OMMemoryManager::seatchFromStatic(std::shared_ptr<OMClass> cls)
 {
     for (auto fi : cls->fields)
     {
-        if (fi.type == OMFieldType::BytesP && (fi.accessFlag & JVM_Acc_Static) == 0)
+        if (fi->type == OMFieldType::BytesP && (fi->accessFlag & JVM_Acc_Static) == 0)
         {
-            searchFromInstance(*(void **)((uint8_t *)cls->staticFieldBlock + fi.offset));
+            searchFromInstance(*(void **)((uint8_t *)cls->staticFieldBlock + fi->offset));
         }
     }
 }

@@ -548,16 +548,19 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putstatic(std:
 
     for (auto fi : res.unwrap()->fields)
     {
-        if (fi.name == name && (fi.accessFlag & JVM_Acc_Static))
+        if (fi->name == name && (fi->accessFlag & JVM_Acc_Static))
         {
-            writeStackTop((void *)((uint8_t *)res.unwrap()->staticFieldBlock + fi.offset));
+            writeStackTop((void *)((uint8_t *)res.unwrap()->staticFieldBlock + fi->offset));
+            frame->offset += 3;
             return OMResult<std::any, err::OMValidationError>::ok(nullptr);
         }
     }
-
+    logger.debug("not found!");
     frame->offset += 3;
 
-    return OMResult<std::any, err::OMValidationError>::ok(nullptr);
+    return OMResult<std::any, err::OMValidationError>::err(
+        {err::Instructions, fmt::format("static field not found for {} with name {}", cls, name),
+         fetchCurrentPosition(frame)});
 }
 void OMInterpreter::operand_istore_n(std::shared_ptr<OMFrameMetadata> frame)
 {

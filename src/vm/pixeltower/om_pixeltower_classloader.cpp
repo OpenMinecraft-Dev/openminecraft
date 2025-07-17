@@ -58,10 +58,10 @@ util::OMResult<std::any, err::OMValidationError> OMClassLoader::loadClass(std::s
         auto fn = file->mapping[field->nameIndex]->to<OMClassConstantUtf8>();
         auto fd = file->mapping[field->descIndex]->to<OMClassConstantUtf8>();
         auto m = fd->data;
-        OMFieldInfo f;
-        f.accessFlag = field->accessFlags;
-        f.name = m;
-        f.desc = fd->data;
+        auto f = std::make_shared<OMFieldInfo>();
+        f->accessFlag = field->accessFlags;
+        f->name = fn->data;
+        f->desc = fd->data;
         switch (m[0])
         {
         case 'Z':
@@ -70,22 +70,22 @@ util::OMResult<std::any, err::OMValidationError> OMClassLoader::loadClass(std::s
         case 'S':
         case 'F':
         case 'C':
-            f.type = Bytes4;
+            f->type = Bytes4;
             break;
         case 'J':
         case 'D':
-            f.type = Bytes8;
+            f->type = Bytes8;
             break;
         case '[':
         case 'L': {
-            f.type = BytesP;
+            f->type = BytesP;
             break;
         }
         default:
             return util::OMResult<std::any, err::OMValidationError>::err(
-                {err::ClassLoader, fmt::format("unknown field descriptor {}", fn->data), clsdata->name});
+                {err::ClassLoader, fmt::format("unknown field descriptor {}", m), clsdata->name});
         }
-        clsdata->fields.emplace_back(f);
+        clsdata->fields.push_back(f);
     }
 
     for (auto attrs : file->attrs)
@@ -124,6 +124,7 @@ util::OMResult<std::any, err::OMValidationError> OMClassLoader::loadClass(std::s
     {
         if (me->name == "<clinit>")
         {
+            logger.info("{} loaded with class init func", clsdata->name);
             return std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(interpreter)->execute(clsdata, me);
         }
     }

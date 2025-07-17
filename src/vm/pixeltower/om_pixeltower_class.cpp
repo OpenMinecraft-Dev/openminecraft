@@ -28,14 +28,14 @@ void OMClass::calcFieldOffsets()
     {
         uint64_t *length = &objectLength;
 
-        if ((field.accessFlag & JVM_Acc_Static) != 0)
+        if ((field->accessFlag & JVM_Acc_Static) != 0)
         {
             length = &staticFieldLength;
         }
 
-        field.offset = *length;
+        field->offset = *length;
 
-        switch (field.type)
+        switch (field->type)
         {
         case Bytes4:
             *length += 4 - (*length % 4);
