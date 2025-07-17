@@ -222,6 +222,11 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
                 return OMResult<std::any, err::OMValidationError>::ok(nullptr);
             }
 
+            case op_putstatic: {
+                operand_putstatic(frame);
+                break;
+            }
+
             case op_invokestatic:
             case op_invokespecial:
             case op_invokevirtual: {
@@ -259,6 +264,17 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
     return OMResult<std::any, err::OMValidationError>::err(
         {err::Instructions, "code heap overflow!", fetchCurrentPosition(frame)});
 }
+void OMInterpreter::writeStackTop(void *target)
+{
+    auto it = std::type_index(STACK_ACCESS.top().type());
+
+    if (it == std::type_index(typeid(int)))
+    {
+        *((int *)target) = std::any_cast<int>(STACK_ACCESS.top());
+    }
+
+    STACK_ACCESS.pop();
+}
 std::string OMInterpreter::fetchCurrentPosition(std::shared_ptr<OMFrameMetadata> frame)
 {
     return fmt::format("{}.{}{} + {}", frame->clazz->name, frame->method->name, frame->method->desc, frame->offset);
@@ -269,6 +285,36 @@ util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_ireturn(
     auto l = popFrame(frame);
     STACK_ACCESS.push(ret);
     return l;
+}
+OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putstatic(std::shared_ptr<OMFrameMetadata> frame)
+{
+    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
+    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantFieldRef>();
+    auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();
+    auto temp3 = frame->clazz->mapping->at(temp1->nameAndTypeIndex)->to<OMClassConstantNameAndType>();
+
+    auto cls = frame->clazz->mapping->at(temp2->nameIndex)->to<OMClassConstantUtf8>()->data;
+    auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
+    auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
+
+    auto res = tower.fetchClass(cls);
+    if (res.type == util::Err)
+    {
+        return OMResult<std::any, err::OMValidationError>::err(res.unwrap_err());
+    }
+
+    for (auto fi : res.unwrap()->fields)
+    {
+        if (fi.name == name && (fi.accessFlag & JVM_Acc_Static))
+        {
+            writeStackTop((void *)((uint8_t *)res.unwrap()->staticFieldBlock + fi.offset));
+            return OMResult<std::any, err::OMValidationError>::ok(nullptr);
+        }
+    }
+
+    frame->offset += 3;
+
+    return OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
 void OMInterpreter::operand_istore_n(std::shared_ptr<OMFrameMetadata> frame)
 {

@@ -5,6 +5,7 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_class_structdef.hpp"
 #include <any>
+#include <functional>
 #include <list>
 #include <memory>
 
@@ -13,7 +14,7 @@ namespace openminecraft::vm::pixeltower
 class OMClassLoader
 {
   public:
-    OMClassLoader();
+    OMClassLoader(std::any interpreter);
     ~OMClassLoader();
 
     util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError> forName(std::string name);
@@ -26,6 +27,7 @@ class OMClassLoader
   private:
     std::list<std::shared_ptr<classfile::OMClassFile>> stagingClasses;
     log::OMLogger logger;
+    std::any interpreter;
 };
 } // namespace openminecraft::vm::pixeltower
 

@@ -19,8 +19,8 @@ namespace openminecraft::vm::pixeltower
 extern std::string ARRAY_TYPE;
 OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
 {
-    classloader = std::make_shared<OMClassLoader>();
     interpreter = std::make_shared<runtime::OMInterpreter>(*this);
+    classloader = std::make_shared<OMClassLoader>(interpreter);
     mm = std::make_shared<OMMemoryManager>(classloader);
 }
 OMPixelTower::~OMPixelTower()
@@ -158,7 +158,7 @@ std::string OMPixelTower::printAny(std::any data)
         bool isStatic = frame->method->accessFlag & JVM_Acc_Static;
         for (auto &l : frame->local)
         {
-            temp += fmt::format("\t{2}[{0}] {1}\n", (!isStatic && !i) ? "this" : fmt::format("{}", i), printAny(l),
+            temp += fmt::format("* {2}[{0}] {1}\n", (!isStatic && !i) ? "this" : fmt::format("{}", i), printAny(l),
                                 OMLogAnsiBlueLight);
             i++;
         }

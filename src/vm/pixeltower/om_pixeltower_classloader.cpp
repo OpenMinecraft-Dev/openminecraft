@@ -2,10 +2,10 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/util/om_util_result.hpp"
-#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_class_structdef.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include <memory>
 
 using namespace openminecraft::vm::classfile;
@@ -13,7 +13,7 @@ using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::pixeltower
 {
-OMClassLoader::OMClassLoader() : logger("pixeltower/OMClassLoader", this)
+OMClassLoader::OMClassLoader(std::any interpreter) : logger("pixeltower/OMClassLoader", this), interpreter(interpreter)
 {
 }
 OMClassLoader::~OMClassLoader()
@@ -119,13 +119,20 @@ util::OMResult<std::any, err::OMValidationError> OMClassLoader::loadClass(std::s
     clsdata->rawFile = file;
     clsdata->calcFieldOffsets();
     classes[hash_compile_time(clsdata->name.c_str())] = clsdata;
+
+    for (auto me : clsdata->methods)
+    {
+        if (me->name == "<clinit>")
+        {
+            return std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(interpreter)->execute(clsdata, me);
+        }
+    }
+
     logger.info("{} loaded", clsdata->name);
     return util::OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
 util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError> OMClassLoader::forName(std::string name)
 {
-    logger.info("trying load {}", name);
-
     if (name[0] == '[')
     {
         return forName(std::string(name.c_str()).substr(1));

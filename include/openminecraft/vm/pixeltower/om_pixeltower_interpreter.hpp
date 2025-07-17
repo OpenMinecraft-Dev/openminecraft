@@ -54,8 +54,10 @@ class OMInterpreter
     void operand_astore_n(std::shared_ptr<OMFrameMetadata> frame);
     void operand_istore_n(std::shared_ptr<OMFrameMetadata> frame);
     util::OMResult<std::any, err::OMValidationError> operand_invokeinterface(std::shared_ptr<OMFrameMetadata> frame);
+    util::OMResult<std::any, err::OMValidationError> operand_putstatic(std::shared_ptr<OMFrameMetadata> frame);
 
   private:
+    void writeStackTop(void *target);
     std::string fetchCurrentPosition(std::shared_ptr<OMFrameMetadata> frame);
     util::OMResult<std::any, err::OMValidationError> popFrame(std::shared_ptr<OMFrameMetadata> frame);
 
