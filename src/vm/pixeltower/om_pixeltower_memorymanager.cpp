@@ -48,7 +48,7 @@ void *OMMemoryManager::allocateArray(std::shared_ptr<OMClass> cls, int *lengths,
     arr->type = Reference;
     arr->dim = dim;
     // offset sizeof(OMArrayHeader) bytes
-    auto arrdata = (void **)((uint8_t *)result + sizeof(OMArrayHeader));
+    auto arrdata = ARRAY_ACCESS(result, void *);
     for (int i = 0; i < *lengths; i++)
     {
         arrdata[i] = allocateArray(cls, lengths + 1, dim - 1);
@@ -101,7 +101,7 @@ void *OMMemoryManager::allocateArray(OMArrayType type, int *lengths, int dim)
     arr->type = type;
     arr->dim = dim;
     // offset sizeof(OMArrayHeader) bytes
-    auto arrdata = (void **)((uint8_t *)result + sizeof(OMArrayHeader));
+    auto arrdata = ARRAY_ACCESS(result, void *);
     for (int i = 0; i < *lengths; i++)
     {
         arrdata[i] = allocateArray(type, lengths + 1, dim - 1);
@@ -126,7 +126,7 @@ void OMMemoryManager::searchFromInstance(void *b)
         {
             return;
         }
-        auto arr = (void **)((uint8_t *)b + sizeof(OMArrayHeader));
+        auto arr = ARRAY_ACCESS(b, void *);
         for (int i = 0; i < arrh->length; i++)
         {
             searchFromInstance(arr[i]);
@@ -135,7 +135,7 @@ void OMMemoryManager::searchFromInstance(void *b)
     else
     {
         auto clazz = *((OMClass **)b);
-        auto arrdata = ((uint8_t *)b + sizeof(void *));
+        auto arrdata = (uint8_t *)OBJECT_ACCESS(b);
         for (auto fi : clazz->fields)
         {
             if (fi->type == OMFieldType::BytesP && (fi->accessFlag & JVM_Acc_Static) == 0)

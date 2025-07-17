@@ -10,6 +10,7 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_memorymanager.hpp"
 #include <any>
 #include <list>
 #include <memory>
@@ -134,7 +135,6 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
             switch (target.type)
             {
             case util::Ok: {
-                logger.debug("typecheck");
                 break;
             }
             case util::Err: {
@@ -251,6 +251,11 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
 
             case op_putstatic: {
                 operand_putstatic(frame);
+                break;
+            }
+
+            case op_putfield: {
+                operand_putfield(frame);
                 break;
             }
 
@@ -380,74 +385,77 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::checkType(std::shared_
          fmt::format("array dimension mismatched, required {}, actually {}", (int)desc[1], fetchName(header->type)),   \
          fetchCurrentPosition(frame)});
 
-            switch (desc[2])
+            auto descp = std::string(desc.c_str()).substr(2);
+
+            switch (hash_compile_time(descp.c_str()))
             {
-            case 'B':
+            case "byte"_hash:
                 if (header->type != Byte)
                 {
                     TYPE_MISMATCH;
                 }
                 break;
-            case 'C':
+            case "char"_hash:
                 if (header->type != Char)
                 {
                     TYPE_MISMATCH;
                 }
                 break;
-            case 'Z':
+            case "boolean"_hash:
                 if (header->type != Boolean)
                 {
                     TYPE_MISMATCH;
                 }
                 break;
-            case 'I':
+            case "int"_hash:
                 if (header->type != Int)
                 {
                     TYPE_MISMATCH;
                 }
                 break;
-            case 'J':
+            case "long"_hash:
                 if (header->type != Long)
                 {
                     TYPE_MISMATCH;
                 }
-            case 'S':
+            case "short"_hash:
                 if (header->type != Short)
                 {
                     TYPE_MISMATCH;
                 }
                 break;
-            case 'D':
+            case "double"_hash:
                 if (header->type != Double)
                 {
                     TYPE_MISMATCH;
                 }
                 break;
-            case 'F':
+            case "float"_hash:
                 if (header->type != Float)
                 {
                     TYPE_MISMATCH;
                 }
                 break;
-            case 'L': {
-                auto type = tower.fetchClass(std::string(desc.c_str()).substr(3));
-                if (type.type == util::Err)
-                {
-                    return OMResult<std::any, err::OMValidationError>::err(type.unwrap_err());
-                }
-                if (!tower.classloader->isClassCompat(header->classPointer, type.unwrap()))
-                {
-                    return OMResult<std::any, err::OMValidationError>::err(
-                        {err::Instructions,
-                         fmt::format("class type incomptiable ({} and {})", header->classPointer->name,
-                                     type.unwrap()->name),
-                         fetchCurrentPosition(frame)});
-                }
-                return OMResult<std::any, err::OMValidationError>::ok(nullptr);
-            }
             default: {
+                if (descp[0] == 'L')
+                {
+                    auto type = tower.fetchClass(std::string(desc.c_str()).substr(3));
+                    if (type.type == util::Err)
+                    {
+                        return OMResult<std::any, err::OMValidationError>::err(type.unwrap_err());
+                    }
+                    if (!tower.classloader->isClassCompat(header->classPointer, type.unwrap()))
+                    {
+                        return OMResult<std::any, err::OMValidationError>::err(
+                            {err::Instructions,
+                             fmt::format("class type incomptiable ({} and {})", header->classPointer->name,
+                                         type.unwrap()->name),
+                             fetchCurrentPosition(frame)});
+                    }
+                    return OMResult<std::any, err::OMValidationError>::ok(nullptr);
+                }
                 return OMResult<std::any, err::OMValidationError>::err(
-                    {err::Instructions, "unknown descriptor", fetchCurrentPosition(frame)});
+                    {err::Instructions, fmt::format("unknown descriptor {}", desc), fetchCurrentPosition(frame)});
             }
             }
         }
@@ -507,6 +515,7 @@ std::string OMInterpreter::fetchName(OMArrayType type)
         return "ref";
     }
 }
+// TODO: other types
 void OMInterpreter::writeStackTop(void *target)
 {
     auto it = std::type_index(STACK_ACCESS.top().type());
@@ -529,6 +538,47 @@ util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_ireturn(
     STACK_ACCESS.push(ret);
     return l;
 }
+OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putfield(std::shared_ptr<OMFrameMetadata> frame)
+{
+    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
+    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantFieldRef>();
+    auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();
+    auto temp3 = frame->clazz->mapping->at(temp1->nameAndTypeIndex)->to<OMClassConstantNameAndType>();
+
+    auto cls = frame->clazz->mapping->at(temp2->nameIndex)->to<OMClassConstantUtf8>()->data;
+    auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
+    auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
+
+    auto res = tower.fetchClass(cls);
+    if (res.type == util::Err)
+    {
+        return OMResult<std::any, err::OMValidationError>::err(res.unwrap_err());
+    }
+
+    frame->offset += 3;
+    auto value = STACK_ACCESS.top();
+    STACK_ACCESS.pop();
+    auto item = STACK_ACCESS.top();
+    STACK_ACCESS.pop();
+    STACK_ACCESS.push(value);
+    if (std::type_index(item.type()) != std::type_index(typeid(void *)))
+    {
+        return OMResult<std::any, err::OMValidationError>::err(
+            {err::Instructions, "unknown stack item type", fetchCurrentPosition(frame)});
+    }
+    for (auto fi : res.unwrap()->fields)
+    {
+        if (fi->name == name && (fi->accessFlag & JVM_Acc_Static) == 0)
+        {
+            writeStackTop((uint8_t *)OBJECT_ACCESS(std::any_cast<void *>(item)) + fi->offset);
+            return OMResult<std::any, err::OMValidationError>::ok(nullptr);
+        }
+    }
+
+    return OMResult<std::any, err::OMValidationError>::err(
+        {err::Instructions, fmt::format("static field not found for {} with name {}", cls, name),
+         fetchCurrentPosition(frame)});
+}
 OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putstatic(std::shared_ptr<OMFrameMetadata> frame)
 {
     auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
@@ -546,17 +596,15 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putstatic(std:
         return OMResult<std::any, err::OMValidationError>::err(res.unwrap_err());
     }
 
+    frame->offset += 3;
     for (auto fi : res.unwrap()->fields)
     {
         if (fi->name == name && (fi->accessFlag & JVM_Acc_Static))
         {
             writeStackTop((void *)((uint8_t *)res.unwrap()->staticFieldBlock + fi->offset));
-            frame->offset += 3;
             return OMResult<std::any, err::OMValidationError>::ok(nullptr);
         }
     }
-    logger.debug("not found!");
-    frame->offset += 3;
 
     return OMResult<std::any, err::OMValidationError>::err(
         {err::Instructions, fmt::format("static field not found for {} with name {}", cls, name),

@@ -52,15 +52,17 @@ OMResult<std::string, std::string> decodeType(std::string raw, int *p)
         return d;
     }
     case '[': {
+        char begin = *p - 1;
         while (raw[*p] == '[')
         {
             *p = *p + 1;
         }
+        char dim = *p - begin;
         auto sup = decodeType(raw, p);
         switch (sup.type)
         {
         case Ok:
-            return OMResult<std::string, std::string>::ok(fmt::format("[{}{}", (char)*p, sup.unwrap()));
+            return OMResult<std::string, std::string>::ok(fmt::format("[{}{}", dim, sup.unwrap()));
         case Err:
             return OMResult<std::string, std::string>::err(sup.unwrap_err());
         }

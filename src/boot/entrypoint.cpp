@@ -32,7 +32,9 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_memorymanager.hpp"
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
@@ -41,6 +43,7 @@ using namespace openminecraft;
 using namespace openminecraft::vm::classfile;
 using namespace openminecraft::vm::bytecode;
 using namespace openminecraft::binary::hash;
+using namespace openminecraft::vm::pixeltower;
 
 #include "openminecraft/resource/bootassets.h"
 
@@ -111,7 +114,7 @@ int boot(std::vector<std::string> args)
 
     SDL_Quit();
 
-    auto pt = std::make_unique<vm::pixeltower::OMPixelTower>();
+    auto pt = std::make_unique<OMPixelTower>();
 
     std::shared_ptr<OMClassFileParser> parser;
     bool recovermode = false;
@@ -158,9 +161,37 @@ int boot(std::vector<std::string> args)
                             throw l.unwrap_err();
                         }
 
-                        std::any_cast<std::shared_ptr<vm::pixeltower::runtime::OMInterpreter>>(pt->interpreter)
+                        auto cls = pt->fetchClass("java/lang/String");
+                        if (cls.type == Err)
+                        {
+                            logger->warn(cls.unwrap_err().what());
+                            break;
+                        }
+                        void *arr = pt->allocateArray(cls.unwrap(), 1);
+                        std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
                             ->stack[std::this_thread::get_id()]
-                            .push(33550336);
+                            .push(arr);
+                        void *rawarr = pt->allocateArray(Byte, 7);
+                        char *arrdata = ((char *)rawarr) + sizeof(OMArrayHeader);
+                        arrdata[0] = '-';
+                        arrdata[1] = '-';
+                        arrdata[2] = 'd';
+                        arrdata[3] = 'e';
+                        arrdata[4] = 'b';
+                        arrdata[5] = 'u';
+                        arrdata[6] = 'g';
+                        void *str = pt->allocate(cls.unwrap());
+                        std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
+                            ->stack[std::this_thread::get_id()]
+                            .push(str);
+                        std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
+                            ->stack[std::this_thread::get_id()]
+                            .push(rawarr);
+                        auto initresult = std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
+                                              ->execute(cls.unwrap(), "<init>", "([B)V");
+                        logger->warn(initresult.unwrap_err().what());
+
+                        ARRAY_ACCESS(rawarr, void *)[0] = str;
 
                         auto c = pt->execute("openminecraft/Test", "main", "([Ljava/lang/String;)V");
                         logger->info(c.unwrap_err().what());
