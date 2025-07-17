@@ -21,6 +21,8 @@ class OMClassLoader
     void appendStagingClass(std::shared_ptr<classfile::OMClassFile> file);
     std::unordered_map<uint64_t, std::shared_ptr<OMClass>> classes;
 
+    bool isClassCompat(OMClass *src, std::shared_ptr<OMClass> target);
+
   protected:
     util::OMResult<std::any, err::OMValidationError> loadClass(std::shared_ptr<classfile::OMClassFile> file);
 

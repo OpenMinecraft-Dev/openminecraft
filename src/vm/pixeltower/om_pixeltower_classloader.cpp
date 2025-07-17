@@ -131,6 +131,36 @@ util::OMResult<std::any, err::OMValidationError> OMClassLoader::loadClass(std::s
     logger.info("{} loaded", clsdata->name);
     return util::OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
+bool OMClassLoader::isClassCompat(OMClass *src, std::shared_ptr<OMClass> target)
+{
+    if (src == target.get())
+    {
+        return true;
+    }
+    if (src->superClass.get() == target.get())
+    {
+        return true;
+    }
+    // java/lang/Object has no superClass
+    if (src->superClass != nullptr && isClassCompat(src->superClass.get(), target))
+    {
+        return true;
+    }
+
+    for (auto interface : src->interfaces)
+    {
+        if (interface.get() == target.get())
+        {
+            return true;
+        }
+        if (isClassCompat(interface.get(), target))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
 util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError> OMClassLoader::forName(std::string name)
 {
     if (name[0] == '[')

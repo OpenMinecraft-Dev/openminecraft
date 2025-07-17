@@ -1,5 +1,6 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
@@ -7,16 +8,25 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
 #include <any>
+#include <list>
 #include <memory>
 #include <stack>
+#include <string>
 #include <thread>
 #include <typeindex>
 #include <vector>
 
 using namespace openminecraft::util;
 using namespace openminecraft::vm::classfile;
+using namespace openminecraft::binary::hash;
+
+namespace openminecraft::vm::pixeltower
+{
+extern std::string ARRAY_TYPE;
+}
 
 namespace openminecraft::vm::pixeltower::runtime
 {
@@ -105,15 +115,32 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
                  result.unwrap_err()});
         }
         auto args = result.unwrap().first.size();
+        std::vector<std::string> types;
+        for (auto i : result.unwrap().first)
+        {
+            types.push_back(i);
+        }
 
         if ((mi->accessFlag & JVM_Acc_Static) == 0)
         {
             args++;
+            types.insert(types.begin(), "L" + clazz->name);
         }
 
         for (int argid = args - 1; argid >= 0; argid--)
         {
             frame->local[argid] = STACK_ACCESS.top();
+            auto target = checkType(frame, STACK_ACCESS.top(), types[argid]);
+            switch (target.type)
+            {
+            case util::Ok: {
+                logger.debug("typecheck");
+                break;
+            }
+            case util::Err: {
+                logger.debug(target.unwrap_err().what());
+            }
+            }
             STACK_ACCESS.pop();
         }
     }
@@ -263,6 +290,222 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
 
     return OMResult<std::any, err::OMValidationError>::err(
         {err::Instructions, "code heap overflow!", fetchCurrentPosition(frame)});
+}
+OMResult<std::any, err::OMValidationError> OMInterpreter::checkType(std::shared_ptr<OMFrameMetadata> frame,
+                                                                    std::any data, std::string desc)
+{
+    switch (binary::hash::hash_compile_time(desc.c_str()))
+    {
+        // In stack, these types are the same
+    case "short"_hash:
+    case "boolean"_hash:
+    case "int"_hash:
+    case "char"_hash:
+    case "byte"_hash: {
+        if (std::type_index(data.type()) != std::type_index(typeid(int)))
+        {
+            return OMResult<std::any, err::OMValidationError>::err(
+                {err::Instructions,
+                 fmt::format("item type mismatch, required int (actually it contains data with native descriptor {})",
+                             data.type().name()),
+                 fetchCurrentPosition(frame)});
+        }
+        break;
+    }
+    case "long"_hash: {
+        if (std::type_index(data.type()) != std::type_index(typeid(int64_t)))
+        {
+            return OMResult<std::any, err::OMValidationError>::err(
+                {err::Instructions,
+                 fmt::format("item type mismatch, required long (actually it contains data with native descriptor {})",
+                             data.type().name()),
+                 fetchCurrentPosition(frame)});
+        }
+        break;
+    }
+    case "float"_hash: {
+        if (std::type_index(data.type()) != std::type_index(typeid(float)))
+        {
+            return OMResult<std::any, err::OMValidationError>::err(
+                {err::Instructions,
+                 fmt::format("item type mismatch, required float (actually it contains data with native descriptor {})",
+                             data.type().name()),
+                 fetchCurrentPosition(frame)});
+        }
+        break;
+    }
+    case "double"_hash: {
+        if (std::type_index(data.type()) != std::type_index(typeid(double)))
+        {
+            return OMResult<std::any, err::OMValidationError>::err(
+                {err::Instructions,
+                 fmt::format(
+                     "item type mismatch, required double (actually it contains data with native descriptor {})",
+                     data.type().name()),
+                 fetchCurrentPosition(frame)});
+        }
+        break;
+    }
+    default: {
+        if (std::type_index(data.type()) != std::type_index(typeid(void *)))
+        {
+            return OMResult<std::any, err::OMValidationError>::err(
+                {err::Instructions,
+                 fmt::format(
+                     "item type mismatch, required pointer (actually it contains data with native descriptor {})",
+                     data.type().name()),
+                 fetchCurrentPosition(frame)});
+        }
+
+        void *ptr = std::any_cast<void *>(data);
+        if (desc[0] == '[')
+        {
+            auto header = (OMArrayHeader *)ptr;
+            if (header->classifierPointer != &ARRAY_TYPE)
+            {
+                return OMResult<std::any, err::OMValidationError>::err(
+                    {err::Instructions, fmt::format("not a array!"), fetchCurrentPosition(frame)});
+            }
+            if (desc[1] != header->dim)
+            {
+                return OMResult<std::any, err::OMValidationError>::err(
+                    {err::Instructions,
+                     fmt::format("array dimension mismatched, required {}, actually {}", (int)desc[1], header->dim),
+                     fetchCurrentPosition(frame)});
+            }
+
+#define TYPE_MISMATCH                                                                                                  \
+    return OMResult<std::any, err::OMValidationError>::err(                                                            \
+        {err::Instructions,                                                                                            \
+         fmt::format("array dimension mismatched, required {}, actually {}", (int)desc[1], fetchName(header->type)),   \
+         fetchCurrentPosition(frame)});
+
+            switch (desc[2])
+            {
+            case 'B':
+                if (header->type != Byte)
+                {
+                    TYPE_MISMATCH;
+                }
+                break;
+            case 'C':
+                if (header->type != Char)
+                {
+                    TYPE_MISMATCH;
+                }
+                break;
+            case 'Z':
+                if (header->type != Boolean)
+                {
+                    TYPE_MISMATCH;
+                }
+                break;
+            case 'I':
+                if (header->type != Int)
+                {
+                    TYPE_MISMATCH;
+                }
+                break;
+            case 'J':
+                if (header->type != Long)
+                {
+                    TYPE_MISMATCH;
+                }
+            case 'S':
+                if (header->type != Short)
+                {
+                    TYPE_MISMATCH;
+                }
+                break;
+            case 'D':
+                if (header->type != Double)
+                {
+                    TYPE_MISMATCH;
+                }
+                break;
+            case 'F':
+                if (header->type != Float)
+                {
+                    TYPE_MISMATCH;
+                }
+                break;
+            case 'L': {
+                auto type = tower.fetchClass(std::string(desc.c_str()).substr(3));
+                if (type.type == util::Err)
+                {
+                    return OMResult<std::any, err::OMValidationError>::err(type.unwrap_err());
+                }
+                if (!tower.classloader->isClassCompat(header->classPointer, type.unwrap()))
+                {
+                    return OMResult<std::any, err::OMValidationError>::err(
+                        {err::Instructions,
+                         fmt::format("class type incomptiable ({} and {})", header->classPointer->name,
+                                     type.unwrap()->name),
+                         fetchCurrentPosition(frame)});
+                }
+                return OMResult<std::any, err::OMValidationError>::ok(nullptr);
+            }
+            default: {
+                return OMResult<std::any, err::OMValidationError>::err(
+                    {err::Instructions, "unknown descriptor", fetchCurrentPosition(frame)});
+            }
+            }
+        }
+        else if (desc[0] == 'L')
+        {
+            auto src = *((OMClass **)ptr);
+            if (((OMArrayHeader *)ptr)->classifierPointer == &ARRAY_TYPE || src == nullptr)
+            {
+                return OMResult<std::any, err::OMValidationError>::err(
+                    {err::Instructions, fmt::format("not an object!"), fetchCurrentPosition(frame)});
+            }
+            auto type = tower.fetchClass(std::string(desc.c_str()).substr(1));
+            if (type.type == util::Err)
+            {
+                return OMResult<std::any, err::OMValidationError>::err(type.unwrap_err());
+            }
+            if (!tower.classloader->isClassCompat(src, type.unwrap()))
+            {
+                return OMResult<std::any, err::OMValidationError>::err(
+                    {err::Instructions,
+                     fmt::format("class type incomptiable ({} and {})", src->name, type.unwrap()->name),
+                     fetchCurrentPosition(frame)});
+            }
+            return OMResult<std::any, err::OMValidationError>::ok(nullptr);
+        }
+        else
+        {
+            return OMResult<std::any, err::OMValidationError>::err(
+                {err::Instructions, fmt::format("unknown descriptor {}", desc), fetchCurrentPosition(frame)});
+        }
+    }
+    }
+
+    return OMResult<std::any, err::OMValidationError>::ok(nullptr);
+}
+std::string OMInterpreter::fetchName(OMArrayType type)
+{
+    switch (type)
+    {
+    case Byte:
+        return "byte";
+    case Char:
+        return "char";
+    case Short:
+        return "short";
+    case Int:
+        return "int";
+    case Long:
+        return "long";
+    case Boolean:
+        return "boolean";
+    case Double:
+        return "double";
+    case Float:
+        return "float";
+    case Reference:
+        return "ref";
+    }
 }
 void OMInterpreter::writeStackTop(void *target)
 {

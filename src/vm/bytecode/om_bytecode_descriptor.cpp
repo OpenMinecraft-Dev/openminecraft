@@ -45,18 +45,22 @@ OMResult<std::string, std::string> decodeType(std::string raw, int *p)
         }
         // inplace split
         raw[ends] = '\0';
-        auto type = std::string(raw.substr(*p, ends).c_str());
+        auto type = std::string(raw.substr(*p - 1, ends).c_str());
         auto d = OMResult<std::string, std::string>::ok(type);
         raw[ends] = ';';
         *p = ends + 1;
         return d;
     }
     case '[': {
+        while (raw[*p] == '[')
+        {
+            *p = *p + 1;
+        }
         auto sup = decodeType(raw, p);
         switch (sup.type)
         {
         case Ok:
-            return OMResult<std::string, std::string>::ok(fmt::format("[{}", sup.unwrap()));
+            return OMResult<std::string, std::string>::ok(fmt::format("[{}{}", (char)*p, sup.unwrap()));
         case Err:
             return OMResult<std::string, std::string>::err(sup.unwrap_err());
         }
