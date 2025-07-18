@@ -82,7 +82,7 @@ void OMPixelTower::debugStackStatus()
         logger.debug("Stack Details:");
         while (!ds.empty())
         {
-            auto m = fmt::format("{2}[{0}] {1}", idx, printAny(ds.top()), OMLogAnsiBlueLight);
+            auto m = fmt::format("{2}[{0}] {1}", idx, printAny(ds.top(), 0), OMLogAnsiBlueLight);
             std::istringstream s(m);
             std::string line;
             while (std::getline(s, line, '\n'))
@@ -140,52 +140,51 @@ std::string OMPixelTower::fetchType(void *block)
         return (*((OMClass **)block))->name;
     }
 }
-std::string OMPixelTower::printInstanceData(void *block)
+std::string OMPixelTower::printInstanceData(void *block, int layer, bool isArray)
 {
+    auto pref = isArray ? "" : std::string(layer * 4, ' ');
     auto arr = (OMArrayHeader *)block;
     if (block == nullptr)
     {
-        return fmt::format("{}> ???{}", OMLogAnsiBlackLight, OMLogAnsiReset);
+        return pref + fmt::format("{}> ???{}", OMLogAnsiBlackLight, OMLogAnsiReset);
     }
     else if (arr->classifierPointer == &ARRAY_TYPE)
     {
         std::string target = "";
-        target += fmt::format("> length: {}\n", arr->length);
-        target += "------- START OF ARRAY -------\n";
+        target += pref + fmt::format("> length: {}\n", arr->length);
         for (int i = 0; i < arr->length; i++)
         {
-            target += fmt::format("> {}[{}]{} ", OMLogAnsiBlueLight, i, OMLogAnsiReset);
+            target += pref + fmt::format("> {}[{}]{} ", OMLogAnsiBlueLight, i, OMLogAnsiReset);
             switch (arr->type)
             {
             case Byte:
             case Char:
-                target += printAny(ARRAY_ACCESS(block, char)[i]);
+                target += printAny(ARRAY_ACCESS(block, char)[i], layer, true);
                 break;
             case Short:
-                target += printAny(ARRAY_ACCESS(block, short)[i]);
+                target += printAny(ARRAY_ACCESS(block, short)[i], layer, true);
                 break;
             case Int:
-                target += printAny(ARRAY_ACCESS(block, int)[i]);
+                target += printAny(ARRAY_ACCESS(block, int)[i], layer, true);
                 break;
             case Long:
-                target += printAny(ARRAY_ACCESS(block, int64_t)[i]);
+                target += printAny(ARRAY_ACCESS(block, int64_t)[i], layer, true);
                 break;
             case Boolean:
-                target += printAny((bool)ARRAY_ACCESS(block, char)[i]);
+                target += printAny((bool)ARRAY_ACCESS(block, char)[i], layer, true);
                 break;
             case Double:
-                target += printAny(ARRAY_ACCESS(block, double)[i]);
+                target += printAny(ARRAY_ACCESS(block, double)[i], layer, true);
                 break;
             case Float:
-                target += printAny(ARRAY_ACCESS(block, float)[i]);
+                target += printAny(ARRAY_ACCESS(block, float)[i], layer, true);
                 break;
             case Reference:
-                target += printAny(ARRAY_ACCESS(block, void *)[i]);
+                target += printAny(ARRAY_ACCESS(block, void *)[i], layer, true);
                 break;
             }
             target += "\n";
         }
-        target += "------- END OF ARRAY -------";
         return target;
     }
 
@@ -202,104 +201,106 @@ std::string OMPixelTower::printInstanceData(void *block)
             {
             case 'B':
             case 'C':
-                item = printAny(*(char *)OBJECT_ACCESS(block, field->offset));
+                item = printAny(*(char *)OBJECT_ACCESS(block, field->offset), layer + 1, true);
                 break;
             case 'S':
-                item = printAny(*(short *)OBJECT_ACCESS(block, field->offset));
+                item = printAny(*(short *)OBJECT_ACCESS(block, field->offset), layer + 1, true);
                 break;
             case 'I':
-                item = printAny(*(int *)OBJECT_ACCESS(block, field->offset));
+                item = printAny(*(int *)OBJECT_ACCESS(block, field->offset), layer + 1, true);
                 break;
             case 'J':
-                item = printAny(*(int64_t *)OBJECT_ACCESS(block, field->offset));
+                item = printAny(*(int64_t *)OBJECT_ACCESS(block, field->offset), layer + 1, true);
                 break;
             case 'Z':
-                item = printAny(*(bool *)OBJECT_ACCESS(block, field->offset));
+                item = printAny(*(bool *)OBJECT_ACCESS(block, field->offset), layer + 1, true);
                 break;
             case 'F':
-                item = printAny(*(float *)OBJECT_ACCESS(block, field->offset));
+                item = printAny(*(float *)OBJECT_ACCESS(block, field->offset), layer + 1, true);
                 break;
             case 'D':
-                item = printAny(*(double *)OBJECT_ACCESS(block, field->offset));
+                item = printAny(*(double *)OBJECT_ACCESS(block, field->offset), layer + 1, true);
                 break;
             default:
-                item = printAny(*(void **)OBJECT_ACCESS(block, field->offset));
+                item = printAny(*(void **)OBJECT_ACCESS(block, field->offset), layer + 1, true);
                 break;
             }
-            target += fmt::format("> field {2}{0}{3}: {1}\n", field->name, item, OMLogAnsiCyanLight, OMLogAnsiReset);
+            target +=
+                pref + fmt::format("> field {2}{0}{3}: {1}\n", field->name, item, OMLogAnsiCyanLight, OMLogAnsiReset);
         }
     }
 
     return target;
 }
-std::string OMPixelTower::printAny(std::any data)
+std::string OMPixelTower::printAny(std::any data, int layer, bool isArray)
 {
+    auto test = isArray ? "" : std::string(layer * 4, ' ');
     auto target = std::type_index(data.type());
     if (target == std::type_index(typeid(std::shared_ptr<runtime::OMFrameMetadata>)))
     {
         auto frame = std::any_cast<std::shared_ptr<runtime::OMFrameMetadata>>(data);
-        auto temp = fmt::format("{7}frame metadata {4}{0}{7}.{1}{5}{2}{7} + {6}{3}{7}\n", frame->clazz->name,
-                                frame->method->name, frame->method->desc, frame->offset, OMLogAnsiCyanLight,
-                                OMLogAnsiBlackLight, OMLogAnsiYellowLight, OMLogAnsiReset);
-        temp += "Next bytecodes:\n";
+        auto temp = test + fmt::format("{7}frame metadata {4}{0}{7}.{1}{5}{2}{7} + {6}{3}{7}\n", frame->clazz->name,
+                                       frame->method->name, frame->method->desc, frame->offset, OMLogAnsiCyanLight,
+                                       OMLogAnsiBlackLight, OMLogAnsiYellowLight, OMLogAnsiReset);
+        temp += test + "Next bytecodes:\n";
         for (int i = 0; i < 4; i++)
         {
             bool overflow = frame->codeLength - frame->offset <= i;
-            temp.append(fmt::format("{0}{1:#04x}{2} ", overflow ? OMLogAnsiBlackLight : OMLogAnsiYellowLight,
-                                    frame->codePointer[frame->offset + i], OMLogAnsiReset));
+            temp.append(test + fmt::format("{0}{1:#04x}{2} ", overflow ? OMLogAnsiBlackLight : OMLogAnsiYellowLight,
+                                           frame->codePointer[frame->offset + i], OMLogAnsiReset));
         }
-        temp += "...\nLocals:\n";
+        temp += test + "...\nLocals:\n";
         uint64_t i = 0;
         bool isStatic = frame->method->accessFlag & JVM_Acc_Static;
         for (auto &l : frame->local)
         {
-            temp += fmt::format("* {2}[{0}] {1}\n", (!isStatic && !i) ? "this" : fmt::format("{}", i), printAny(l),
-                                OMLogAnsiBlueLight);
+            temp += test + fmt::format("* {2}[{0}] {1}\n", (!isStatic && !i) ? "this" : fmt::format("{}", i),
+                                       printAny(l, layer + 1, true), OMLogAnsiBlueLight);
             i++;
         }
         return temp;
     }
     else if (target == std::type_index(typeid(void *)))
     {
-        return fmt::format("{2}instance at {1}{0} {2}with type {4}{3}{2}\n{5}", std::any_cast<void *>(data),
-                           OMLogAnsiRedLight, OMLogAnsiReset, fetchType(std::any_cast<void *>(data)),
-                           OMLogAnsiCyanLight, printInstanceData(std::any_cast<void *>(data)));
+        return test + fmt::format("{2}instance at {1}{0} {2}with type {4}{3}{2}\n{5}", std::any_cast<void *>(data),
+                                  OMLogAnsiRedLight, OMLogAnsiReset, fetchType(std::any_cast<void *>(data)),
+                                  OMLogAnsiCyanLight, printInstanceData(std::any_cast<void *>(data), layer, false));
     }
     else if (target == std::type_index(typeid(int)))
     {
-        return fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<int>(data), OMLogAnsiReset);
+        return test + fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<int>(data), OMLogAnsiReset);
     }
     else if (target == std::type_index(typeid(bool)))
     {
-        return fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<bool>(data), OMLogAnsiReset);
+        return test + fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<bool>(data), OMLogAnsiReset);
     }
     else if (target == std::type_index(typeid(short)))
     {
-        return fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<short>(data), OMLogAnsiReset);
+        return test + fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<short>(data), OMLogAnsiReset);
     }
     else if (target == std::type_index(typeid(char)))
     {
-        return fmt::format("{}{}{}", OMLogAnsiGreenLight, (int)std::any_cast<char>(data), OMLogAnsiReset);
+        return test + fmt::format("{}{}{}", OMLogAnsiGreenLight, (int)std::any_cast<char>(data), OMLogAnsiReset);
     }
     else if (target == std::type_index(typeid(int64_t)))
     {
-        return fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<int64_t>(data), OMLogAnsiReset);
+        return test + fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<int64_t>(data), OMLogAnsiReset);
     }
     else if (target == std::type_index(typeid(float)))
     {
-        return fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<float>(data), OMLogAnsiReset);
+        return test + fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<float>(data), OMLogAnsiReset);
     }
     else if (target == std::type_index(typeid(double)))
     {
-        return fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<double>(data), OMLogAnsiReset);
+        return test + fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<double>(data), OMLogAnsiReset);
     }
     else if (target == std::type_index(typeid(void)))
     {
-        return fmt::format("{0}nothing{1}", OMLogAnsiBlackLight, OMLogAnsiReset);
+        return test + fmt::format("{0}nothing{1}", OMLogAnsiBlackLight, OMLogAnsiReset);
     }
     else
     {
-        return fmt::format("{1}??? with descriptor {0}{2}", target.name(), OMLogAnsiBlackLight, OMLogAnsiReset);
+        return test + fmt::format("{1}??? with descriptor {0}{2}", target.name(), OMLogAnsiBlackLight, OMLogAnsiReset);
     }
 }
 void *OMPixelTower::allocate(std::shared_ptr<OMClass> cls)

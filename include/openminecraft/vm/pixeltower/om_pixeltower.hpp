@@ -31,8 +31,8 @@ class OMPixelTower
     void *allocateMultiArray(OMArrayType type, int *lengths, int dim);
 
     void debugStackStatus();
-    std::string printAny(std::any data);
-    std::string printInstanceData(void *block);
+    std::string printAny(std::any data, int layer, bool isArray = false);
+    std::string printInstanceData(void *block, int layer, bool isArray);
     std::string fetchType(void *block);
     std::any interpreter;
     std::shared_ptr<OMMemoryManager> mm;
