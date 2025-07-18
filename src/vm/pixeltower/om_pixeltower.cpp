@@ -2,6 +2,7 @@
 #include "openminecraft/log/om_log_ansi.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
+#include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_classloader.hpp"
@@ -26,7 +27,7 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
 OMPixelTower::~OMPixelTower()
 {
 }
-util::OMResult<std::any, err::OMValidationError> OMPixelTower::loadClass(std::shared_ptr<classfile::OMClassFile> file)
+void OMPixelTower::loadClass(std::shared_ptr<classfile::OMClassFile> file)
 {
     auto chk = std::make_unique<bytecode::OMBytecodeChecker>(file);
     auto cons = chk->constantCheck();
@@ -35,36 +36,34 @@ util::OMResult<std::any, err::OMValidationError> OMPixelTower::loadClass(std::sh
     case util::Ok:
         break;
     case util::Err:
-        return util::OMResult<std::any, err::OMValidationError>::err(cons.unwrap_err());
+        throw cons.unwrap_err();
     }
     // chk->detail();
 
     classloader->appendStagingClass(file);
-    return util::OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
-util::OMResult<std::any, err::OMValidationError> OMPixelTower::loadClass(std::shared_ptr<std::istream> file)
+void OMPixelTower::loadClass(std::shared_ptr<std::istream> file)
 {
     auto parser = std::make_shared<classfile::OMClassFileParser>(file);
     auto clsres = parser->parse();
     switch (clsres.type)
     {
     case util::Ok: {
-        return loadClass(clsres.unwrap());
+        loadClass(clsres.unwrap());
         break;
     }
     case util::Err: {
-        return util::OMResult<std::any, err::OMValidationError>::err(clsres.unwrap_err());
+        throw clsres.unwrap_err();
     }
     }
 }
-util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError> OMPixelTower::fetchClass(std::string name)
+std::shared_ptr<OMClass> OMPixelTower::fetchClass(std::string name)
 {
     return classloader->forName(name);
 }
-util::OMResult<std::any, err::OMValidationError> OMPixelTower::execute(std::string clazz, std::string name,
-                                                                       std::string desc)
+void OMPixelTower::execute(std::string clazz, std::string name, std::string desc)
 {
-    return std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(interpreter)->execute(clazz, name, desc);
+    std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(interpreter)->execute(clazz, name, desc);
 }
 void OMPixelTower::debugStackStatus()
 {

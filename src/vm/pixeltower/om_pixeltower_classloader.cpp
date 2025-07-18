@@ -19,7 +19,7 @@ OMClassLoader::OMClassLoader(std::any interpreter) : logger("pixeltower/OMClassL
 OMClassLoader::~OMClassLoader()
 {
 }
-util::OMResult<std::any, err::OMValidationError> OMClassLoader::loadClass(std::shared_ptr<OMClassFile> file)
+void OMClassLoader::loadClass(std::shared_ptr<OMClassFile> file)
 {
     auto clsdata = std::make_shared<OMClass>();
     clsdata->name = file->mapping[file->mapping[file->thisClass]->to<OMClassConstantClass>()->nameIndex]
@@ -27,15 +27,10 @@ util::OMResult<std::any, err::OMValidationError> OMClassLoader::loadClass(std::s
                         ->data;
     if (file->superClass != 0)
     {
-        auto superClassResult =
+        clsdata->superClass =
             forName(file->mapping[file->mapping[file->superClass]->to<OMClassConstantClass>()->nameIndex]
                         ->to<OMClassConstantUtf8>()
                         ->data);
-        if (superClassResult.type == util::Err)
-        {
-            return util::OMResult<std::any, err::OMValidationError>::err(superClassResult.unwrap_err());
-        }
-        clsdata->superClass = superClassResult.unwrap();
     }
     if (file->superClass == 0 && clsdata->name != "java/lang/Object")
     {
@@ -43,14 +38,9 @@ util::OMResult<std::any, err::OMValidationError> OMClassLoader::loadClass(std::s
     }
     for (auto inter : file->interfaces)
     {
-        auto interfaceResult = forName(file->mapping[file->mapping[inter]->to<OMClassConstantClass>()->nameIndex]
-                                           ->to<OMClassConstantUtf8>()
-                                           ->data);
-        if (interfaceResult.type == util::Err)
-        {
-            return util::OMResult<std::any, err::OMValidationError>::err(interfaceResult.unwrap_err());
-        }
-        clsdata->interfaces.push_back(interfaceResult.unwrap());
+        clsdata->interfaces.push_back(forName(file->mapping[file->mapping[inter]->to<OMClassConstantClass>()->nameIndex]
+                                                  ->to<OMClassConstantUtf8>()
+                                                  ->data));
     }
 
     for (auto field : file->fields)
@@ -82,8 +72,8 @@ util::OMResult<std::any, err::OMValidationError> OMClassLoader::loadClass(std::s
             break;
         }
         default:
-            return util::OMResult<std::any, err::OMValidationError>::err(
-                {err::ClassLoader, fmt::format("unknown field descriptor {}", m), clsdata->name});
+            throw err::OMValidationError{err::ClassLoader, fmt::format("unknown field descriptor {}", m),
+                                         clsdata->name};
         }
         clsdata->fields.push_back(f);
     }
@@ -125,12 +115,11 @@ util::OMResult<std::any, err::OMValidationError> OMClassLoader::loadClass(std::s
         if (me->name == "<clinit>")
         {
             logger.info("{} loaded with class init func", clsdata->name);
-            return std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(interpreter)->execute(clsdata, me);
+            std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(interpreter)->execute(clsdata, me);
         }
     }
 
     logger.info("{} loaded", clsdata->name);
-    return util::OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
 bool OMClassLoader::isClassCompat(OMClass *src, std::shared_ptr<OMClass> target)
 {
@@ -162,7 +151,7 @@ bool OMClassLoader::isClassCompat(OMClass *src, std::shared_ptr<OMClass> target)
 
     return false;
 }
-util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError> OMClassLoader::forName(std::string name)
+std::shared_ptr<OMClass> OMClassLoader::forName(std::string name)
 {
     if (name[0] == '[')
     {
@@ -172,8 +161,7 @@ util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError> OMClassLoader::
     if (classes.count(hash_compile_time(name.c_str())))
     {
     find_class:
-        return util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError>::ok(
-            classes[hash_compile_time(name.c_str())]);
+        return classes[hash_compile_time(name.c_str())];
     }
     else // try to load the class from staging area!
     {
@@ -189,18 +177,11 @@ util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError> OMClassLoader::
             }
         }
 
-        return util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError>::err(
-            {err::ClassLoader, "class not found", name});
+        throw err::OMValidationError{err::ClassLoader, "class not found", name};
     subclass_loading:
         stagingClasses.remove(cls);
-        auto result = loadClass(cls);
-        switch (result.type)
-        {
-        case util::Ok:
-            goto find_class;
-        case util::Err:
-            return util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError>::err(result.unwrap_err());
-        }
+        loadClass(cls);
+        goto find_class;
     }
 }
 void OMClassLoader::appendStagingClass(std::shared_ptr<classfile::OMClassFile> file)

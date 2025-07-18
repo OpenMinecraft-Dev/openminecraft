@@ -18,11 +18,11 @@ class OMPixelTower
     OMPixelTower();
     ~OMPixelTower();
 
-    util::OMResult<std::any, err::OMValidationError> loadClass(std::shared_ptr<classfile::OMClassFile> file);
-    util::OMResult<std::any, err::OMValidationError> loadClass(std::shared_ptr<std::istream> file);
-    util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError> fetchClass(std::string name);
+    void loadClass(std::shared_ptr<classfile::OMClassFile> file);
+    void loadClass(std::shared_ptr<std::istream> file);
+    std::shared_ptr<OMClass> fetchClass(std::string name);
 
-    util::OMResult<std::any, err::OMValidationError> execute(std::string clazz, std::string name, std::string desc);
+    void execute(std::string clazz, std::string name, std::string desc);
 
     void *allocate(std::shared_ptr<OMClass> cls);
     void *allocateArray(std::shared_ptr<OMClass> cls, int length);

@@ -50,8 +50,7 @@ OMInterpreter::OMInterpreter(OMPixelTower &tower) : tower(tower), logger("pixelt
 OMInterpreter::~OMInterpreter()
 {
 }
-OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::string method,
-                                                                  std::string sig)
+void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::string method, std::string sig)
 {
     for (auto &m : clazz->methods)
     {
@@ -64,21 +63,20 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
     {
         return execute(clazz->superClass, method, sig);
     }
-    return OMResult<std::any, err::OMValidationError>::err(
-        {err::ClassLoader, "method not found", fmt::format("{}.{}{}", clazz->name, method, sig)});
+    throw err::OMValidationError{err::ClassLoader, "method not found",
+                                 fmt::format("{}.{}{}", clazz->name, method, sig)};
 }
-OMResult<std::any, err::OMValidationError> OMInterpreter::executeDynamic(std::string clazz, std::string method,
-                                                                         std::string sig,
-                                                                         std::shared_ptr<OMFrameMetadata> frame)
+void OMInterpreter::executeDynamic(std::string clazz, std::string method, std::string sig,
+                                   std::shared_ptr<OMFrameMetadata> frame)
 {
     std::stack<std::any> tempst;
     int temp = 0;
     auto result = bytecode::descriptor::decodeSignature(sig, &temp);
     if (result.type == Err)
     {
-        return OMResult<std::any, err::OMValidationError>::err(
-            {err::Instructions, fmt::format("unrecognized method descriptor at {}.{}{}", clazz, method, sig),
-             result.unwrap_err()});
+        throw err::OMValidationError{err::Instructions,
+                                     fmt::format("unrecognized method descriptor at {}.{}{}", clazz, method, sig),
+                                     result.unwrap_err()};
     }
 
     for (int i = 0; i < result.unwrap().first.size(); i++)
@@ -93,9 +91,9 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::executeDynamic(std::st
         auto obj = std::any_cast<void *>(STACK_ACCESS.top());
         if (obj == nullptr)
         {
-            return OMResult<std::any, err::OMValidationError>::err(
-                {err::Instructions, fmt::format("interface linking with nullptr at {}.{}{}", clazz, method, sig),
-                 result.unwrap_err()});
+            throw err::OMValidationError{err::Instructions,
+                                         fmt::format("interface linking with nullptr at {}.{}{}", clazz, method, sig),
+                                         result.unwrap_err()};
         }
 
         while (!tempst.empty())
@@ -108,13 +106,12 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::executeDynamic(std::st
     }
     else
     {
-        return OMResult<std::any, err::OMValidationError>::err(
-            {err::Instructions, fmt::format("unrecognized stack item at {}.{}{}", clazz, method, sig),
-             result.unwrap_err()});
+        throw err::OMValidationError{err::Instructions,
+                                     fmt::format("unrecognized stack item at {}.{}{}", clazz, method, sig),
+                                     result.unwrap_err()};
     }
 }
-OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_ptr<OMClass> clazz,
-                                                                  std::shared_ptr<OMMethodInfo> mi)
+void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMethodInfo> mi)
 {
     auto frame = std::make_shared<OMFrameMetadata>(
         OMFrameMetadata{clazz, mi, nullptr, 0, std::vector<std::any>(mi->code->maxLocals)});
@@ -124,10 +121,10 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
         auto result = bytecode::descriptor::decodeSignature(mi->desc, &temp);
         if (result.type == Err)
         {
-            return OMResult<std::any, err::OMValidationError>::err(
-                {err::Instructions,
-                 fmt::format("unrecognized method descriptor at {}.{}{}", clazz->name, mi->name, mi->desc),
-                 result.unwrap_err()});
+            throw err::OMValidationError{
+                err::Instructions,
+                fmt::format("unrecognized method descriptor at {}.{}{}", clazz->name, mi->name, mi->desc),
+                result.unwrap_err()};
         }
         auto args = result.unwrap().first.size();
         std::vector<std::string> types;
@@ -146,16 +143,7 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
         {
             STACK_CHECK;
             frame->local[argid] = STACK_ACCESS.top();
-            auto target = checkType(frame, STACK_ACCESS.top(), types[argid]);
-            switch (target.type)
-            {
-            case util::Ok: {
-                break;
-            }
-            case util::Err: {
-                logger.debug(target.unwrap_err().what());
-            }
-            }
+            checkType(frame, STACK_ACCESS.top(), types[argid]);
             SAFE_STACK_POP;
         }
     }
@@ -165,8 +153,8 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
     {
         if (mi->code == nullptr)
         {
-            return OMResult<std::any, err::OMValidationError>::err(
-                {err::Instructions, "no bytecode here!", fmt::format("{}.{}{}", clazz->name, mi->name, mi->desc)});
+            throw err::OMValidationError{err::Instructions, "no bytecode here!",
+                                         fmt::format("{}.{}{}", clazz->name, mi->name, mi->desc)};
         }
 
         auto codeArea = mi->code->code->data();
@@ -256,12 +244,12 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
 
             case op_ireturn: {
                 operand_ireturn(frame);
-                return OMResult<std::any, err::OMValidationError>::ok(nullptr);
+                return;
             }
 
             case op_return: {
                 operand_return(frame);
-                return OMResult<std::any, err::OMValidationError>::ok(nullptr);
+                return;
             }
 
             case op_putstatic: {
@@ -277,20 +265,12 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
             case op_invokestatic:
             case op_invokespecial:
             case op_invokevirtual: {
-                auto res = operand_invokeany(frame);
-                if (res.type == Err)
-                {
-                    return OMResult<std::any, err::OMValidationError>::err(res.unwrap_err());
-                }
+                operand_invokeany(frame);
                 break;
             }
 
             case op_invokeinterface: {
-                auto res = operand_invokeinterface(frame);
-                if (res.type == Err)
-                {
-                    return OMResult<std::any, err::OMValidationError>::err(res.unwrap_err());
-                }
+                operand_invokeinterface(frame);
                 break;
             }
 
@@ -301,18 +281,16 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
 
             default: {
                 tower.debugStackStatus();
-                return OMResult<std::any, err::OMValidationError>::err(
-                    {err::Instructions, "instructions not implemented", fetchCurrentPosition(frame)});
+                throw err::OMValidationError{err::Instructions, "instructions not implemented",
+                                             fetchCurrentPosition(frame)};
             }
             }
         }
     }
 
-    return OMResult<std::any, err::OMValidationError>::err(
-        {err::Instructions, "code heap overflow!", fetchCurrentPosition(frame)});
+    throw err::OMValidationError{err::Instructions, "code heap overflow!", fetchCurrentPosition(frame)};
 }
-OMResult<std::any, err::OMValidationError> OMInterpreter::checkType(std::shared_ptr<OMFrameMetadata> frame,
-                                                                    std::any data, std::string desc)
+void OMInterpreter::checkType(std::shared_ptr<OMFrameMetadata> frame, std::any data, std::string desc)
 {
     switch (binary::hash::hash_compile_time(desc.c_str()))
     {
@@ -324,57 +302,56 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::checkType(std::shared_
     case "byte"_hash: {
         if (std::type_index(data.type()) != std::type_index(typeid(int)))
         {
-            return OMResult<std::any, err::OMValidationError>::err(
-                {err::Instructions,
-                 fmt::format("item type mismatch, required int (actually it contains data with native descriptor {})",
-                             data.type().name()),
-                 fetchCurrentPosition(frame)});
+            throw err::OMValidationError{
+                err::Instructions,
+                fmt::format("item type mismatch, required int (actually it contains data with native descriptor {})",
+                            data.type().name()),
+                fetchCurrentPosition(frame)};
         }
         break;
     }
     case "long"_hash: {
         if (std::type_index(data.type()) != std::type_index(typeid(int64_t)))
         {
-            return OMResult<std::any, err::OMValidationError>::err(
-                {err::Instructions,
-                 fmt::format("item type mismatch, required long (actually it contains data with native descriptor {})",
-                             data.type().name()),
-                 fetchCurrentPosition(frame)});
+            throw err::OMValidationError{
+                err::Instructions,
+                fmt::format("item type mismatch, required long (actually it contains data with native descriptor {})",
+                            data.type().name()),
+                fetchCurrentPosition(frame)};
         }
         break;
     }
     case "float"_hash: {
         if (std::type_index(data.type()) != std::type_index(typeid(float)))
         {
-            return OMResult<std::any, err::OMValidationError>::err(
-                {err::Instructions,
-                 fmt::format("item type mismatch, required float (actually it contains data with native descriptor {})",
-                             data.type().name()),
-                 fetchCurrentPosition(frame)});
+            throw err::OMValidationError{
+                err::Instructions,
+                fmt::format("item type mismatch, required float (actually it contains data with native descriptor {})",
+                            data.type().name()),
+                fetchCurrentPosition(frame)};
         }
         break;
     }
     case "double"_hash: {
         if (std::type_index(data.type()) != std::type_index(typeid(double)))
         {
-            return OMResult<std::any, err::OMValidationError>::err(
-                {err::Instructions,
-                 fmt::format(
-                     "item type mismatch, required double (actually it contains data with native descriptor {})",
-                     data.type().name()),
-                 fetchCurrentPosition(frame)});
+            throw err::OMValidationError{
+                err::Instructions,
+                fmt::format("item type mismatch, required double (actually it contains data with native descriptor {})",
+                            data.type().name()),
+                fetchCurrentPosition(frame)};
         }
         break;
     }
     default: {
         if (std::type_index(data.type()) != std::type_index(typeid(void *)))
         {
-            return OMResult<std::any, err::OMValidationError>::err(
-                {err::Instructions,
-                 fmt::format(
-                     "item type mismatch, required pointer (actually it contains data with native descriptor {})",
-                     data.type().name()),
-                 fetchCurrentPosition(frame)});
+            throw err::OMValidationError{
+                err::Instructions,
+                fmt::format(
+                    "item type mismatch, required pointer (actually it contains data with native descriptor {})",
+                    data.type().name()),
+                fetchCurrentPosition(frame)};
         }
 
         void *ptr = std::any_cast<void *>(data);
@@ -383,22 +360,22 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::checkType(std::shared_
             auto header = (OMArrayHeader *)ptr;
             if (header->classifierPointer != &ARRAY_TYPE)
             {
-                return OMResult<std::any, err::OMValidationError>::err(
-                    {err::Instructions, fmt::format("not a array!"), fetchCurrentPosition(frame)});
+                throw err::OMValidationError{err::Instructions, fmt::format("not a array!"),
+                                             fetchCurrentPosition(frame)};
             }
             if (desc[1] != header->dim)
             {
-                return OMResult<std::any, err::OMValidationError>::err(
-                    {err::Instructions,
-                     fmt::format("array dimension mismatched, required {}, actually {}", (int)desc[1], header->dim),
-                     fetchCurrentPosition(frame)});
+                throw err::OMValidationError{
+                    err::Instructions,
+                    fmt::format("array dimension mismatched, required {}, actually {}", (int)desc[1], header->dim),
+                    fetchCurrentPosition(frame)};
             }
 
 #define TYPE_MISMATCH                                                                                                  \
-    return OMResult<std::any, err::OMValidationError>::err(                                                            \
-        {err::Instructions,                                                                                            \
-         fmt::format("array dimension mismatched, required {}, actually {}", (int)desc[1], fetchName(header->type)),   \
-         fetchCurrentPosition(frame)});
+    throw err::OMValidationError{                                                                                      \
+        err::Instructions,                                                                                             \
+        fmt::format("array dimension mismatched, required {}, actually {}", (int)desc[1], fetchName(header->type)),    \
+        fetchCurrentPosition(frame)};
 
             auto descp = std::string(desc.c_str()).substr(2);
 
@@ -455,22 +432,17 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::checkType(std::shared_
                 if (descp[0] == 'L')
                 {
                     auto type = tower.fetchClass(std::string(desc.c_str()).substr(3));
-                    if (type.type == util::Err)
+                    if (!tower.classloader->isClassCompat(header->classPointer, type))
                     {
-                        return OMResult<std::any, err::OMValidationError>::err(type.unwrap_err());
+                        throw err::OMValidationError{
+                            err::Instructions,
+                            fmt::format("class type incomptiable ({} and {})", header->classPointer->name, type->name),
+                            fetchCurrentPosition(frame)};
                     }
-                    if (!tower.classloader->isClassCompat(header->classPointer, type.unwrap()))
-                    {
-                        return OMResult<std::any, err::OMValidationError>::err(
-                            {err::Instructions,
-                             fmt::format("class type incomptiable ({} and {})", header->classPointer->name,
-                                         type.unwrap()->name),
-                             fetchCurrentPosition(frame)});
-                    }
-                    return OMResult<std::any, err::OMValidationError>::ok(nullptr);
+                    return;
                 }
-                return OMResult<std::any, err::OMValidationError>::err(
-                    {err::Instructions, fmt::format("unknown descriptor {}", desc), fetchCurrentPosition(frame)});
+                throw err::OMValidationError{err::Instructions, fmt::format("unknown descriptor {}", desc),
+                                             fetchCurrentPosition(frame)};
             }
             }
         }
@@ -479,32 +451,24 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::checkType(std::shared_
             auto src = *((OMClass **)ptr);
             if (((OMArrayHeader *)ptr)->classifierPointer == &ARRAY_TYPE || src == nullptr)
             {
-                return OMResult<std::any, err::OMValidationError>::err(
-                    {err::Instructions, fmt::format("not an object!"), fetchCurrentPosition(frame)});
+                throw err::OMValidationError{err::Instructions, fmt::format("not an object!"),
+                                             fetchCurrentPosition(frame)};
             }
             auto type = tower.fetchClass(std::string(desc.c_str()).substr(1));
-            if (type.type == util::Err)
+            if (!tower.classloader->isClassCompat(src, type))
             {
-                return OMResult<std::any, err::OMValidationError>::err(type.unwrap_err());
+                throw err::OMValidationError{err::Instructions,
+                                             fmt::format("class type incomptiable ({} and {})", src->name, type->name),
+                                             fetchCurrentPosition(frame)};
             }
-            if (!tower.classloader->isClassCompat(src, type.unwrap()))
-            {
-                return OMResult<std::any, err::OMValidationError>::err(
-                    {err::Instructions,
-                     fmt::format("class type incomptiable ({} and {})", src->name, type.unwrap()->name),
-                     fetchCurrentPosition(frame)});
-            }
-            return OMResult<std::any, err::OMValidationError>::ok(nullptr);
         }
         else
         {
-            return OMResult<std::any, err::OMValidationError>::err(
-                {err::Instructions, fmt::format("unknown descriptor {}", desc), fetchCurrentPosition(frame)});
+            throw err::OMValidationError{err::Instructions, fmt::format("unknown descriptor {}", desc),
+                                         fetchCurrentPosition(frame)};
         }
     }
     }
-
-    return OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
 std::string OMInterpreter::fetchName(OMArrayType type)
 {
@@ -547,15 +511,14 @@ std::string OMInterpreter::fetchCurrentPosition(std::shared_ptr<OMFrameMetadata>
 {
     return fmt::format("{}.{}{} + {}", frame->clazz->name, frame->method->name, frame->method->desc, frame->offset);
 }
-util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_ireturn(std::shared_ptr<OMFrameMetadata> frame)
+void OMInterpreter::operand_ireturn(std::shared_ptr<OMFrameMetadata> frame)
 {
     STACK_CHECK;
     auto ret = STACK_ACCESS.top();
-    auto l = popFrame(frame);
+    popFrame(frame);
     STACK_ACCESS.push(ret);
-    return l;
 }
-OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putfield(std::shared_ptr<OMFrameMetadata> frame)
+void OMInterpreter::operand_putfield(std::shared_ptr<OMFrameMetadata> frame)
 {
     STACK_CHECK;
     auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
@@ -568,10 +531,6 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putfield(std::
     auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
 
     auto res = tower.fetchClass(cls);
-    if (res.type == util::Err)
-    {
-        return OMResult<std::any, err::OMValidationError>::err(res.unwrap_err());
-    }
 
     frame->offset += 3;
     auto value = STACK_ACCESS.top();
@@ -581,23 +540,22 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putfield(std::
     STACK_ACCESS.push(value);
     if (std::type_index(item.type()) != std::type_index(typeid(void *)))
     {
-        return OMResult<std::any, err::OMValidationError>::err(
-            {err::Instructions, "unknown stack item type", fetchCurrentPosition(frame)});
+        throw err::OMValidationError{err::Instructions, "unknown stack item type", fetchCurrentPosition(frame)};
     }
-    for (auto fi : res.unwrap()->fields)
+    for (auto fi : res->fields)
     {
         if (fi->name == name && (fi->accessFlag & JVM_Acc_Static) == 0)
         {
             writeStackTop(OBJECT_ACCESS(std::any_cast<void *>(item), fi->offset), fi->desc, frame);
-            return OMResult<std::any, err::OMValidationError>::ok(nullptr);
+            return;
         }
     }
 
-    return OMResult<std::any, err::OMValidationError>::err(
-        {err::Instructions, fmt::format("static field not found for {} with name {}", cls, name),
-         fetchCurrentPosition(frame)});
+    throw err::OMValidationError{err::Instructions,
+                                 fmt::format("static field not found for {} with name {}", cls, name),
+                                 fetchCurrentPosition(frame)};
 }
-OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putstatic(std::shared_ptr<OMFrameMetadata> frame)
+void OMInterpreter::operand_putstatic(std::shared_ptr<OMFrameMetadata> frame)
 {
     auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
     auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantFieldRef>();
@@ -609,24 +567,20 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putstatic(std:
     auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
 
     auto res = tower.fetchClass(cls);
-    if (res.type == util::Err)
-    {
-        return OMResult<std::any, err::OMValidationError>::err(res.unwrap_err());
-    }
 
     frame->offset += 3;
-    for (auto fi : res.unwrap()->fields)
+    for (auto fi : res->fields)
     {
         if (fi->name == name && (fi->accessFlag & JVM_Acc_Static))
         {
-            writeStackTop(OBJECT_ACCESS(res.unwrap()->staticFieldBlock, fi->offset), fi->desc, frame);
-            return OMResult<std::any, err::OMValidationError>::ok(nullptr);
+            writeStackTop(OBJECT_ACCESS(res->staticFieldBlock, fi->offset), fi->desc, frame);
+            return;
         }
     }
 
-    return OMResult<std::any, err::OMValidationError>::err(
-        {err::Instructions, fmt::format("static field not found for {} with name {}", cls, name),
-         fetchCurrentPosition(frame)});
+    throw err::OMValidationError{err::Instructions,
+                                 fmt::format("static field not found for {} with name {}", cls, name),
+                                 fetchCurrentPosition(frame)};
 }
 void OMInterpreter::operand_istore_n(std::shared_ptr<OMFrameMetadata> frame)
 {
@@ -636,8 +590,7 @@ void OMInterpreter::operand_istore_n(std::shared_ptr<OMFrameMetadata> frame)
     frame->local[frame->codePointer[frame->offset] - op_istore_n(0)] = item;
     frame->offset++;
 }
-OMResult<std::any, err::OMValidationError> OMInterpreter::operand_invokeinterface(
-    std::shared_ptr<OMFrameMetadata> frame)
+void OMInterpreter::operand_invokeinterface(std::shared_ptr<OMFrameMetadata> frame)
 {
     auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
     auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantMethodRef>();
@@ -648,15 +601,9 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_invokeinterfac
     auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
     auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
 
-    auto r = executeDynamic(cls, name, desc, frame);
-    if (r.type == util::Err)
-    {
-        return OMResult<std::any, err::OMValidationError>::err(r.unwrap_err());
-    }
+    executeDynamic(cls, name, desc, frame);
 
     frame->offset += 5;
-
-    return OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
 void OMInterpreter::operand_astore_n(std::shared_ptr<OMFrameMetadata> frame)
 {
@@ -686,8 +633,7 @@ void OMInterpreter::operand_dconst_n(std::shared_ptr<OMFrameMetadata> frame)
     STACK_ACCESS.push((double)(frame->codePointer[frame->offset] - op_dconst_d(0)));
     frame->offset++;
 }
-util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_if_acmpne(
-    std::shared_ptr<OMFrameMetadata> frame)
+void OMInterpreter::operand_if_acmpne(std::shared_ptr<OMFrameMetadata> frame)
 {
     STACK_CHECK;
     auto a1 = STACK_ACCESS.top();
@@ -697,16 +643,14 @@ util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_if_acmpn
 
     if (std::type_index(a1.type()) != std::type_index(typeid(void *)))
     {
-        return util::OMResult<std::any, err::OMValidationError>::err(
-            {err::Instructions, "stack element type mismatch, required reference for slot 0",
-             fetchCurrentPosition(frame)});
+        throw err::OMValidationError{err::Instructions, "stack element type mismatch, required reference for slot 0",
+                                     fetchCurrentPosition(frame)};
     }
 
     if (std::type_index(a2.type()) != std::type_index(typeid(void *)))
     {
-        return util::OMResult<std::any, err::OMValidationError>::err(
-            {err::Instructions, "stack element type mismatch, required reference for slot 1",
-             fetchCurrentPosition(frame)});
+        throw err::OMValidationError{err::Instructions, "stack element type mismatch, required reference for slot 1",
+                                     fetchCurrentPosition(frame)};
     }
 
     if (std::any_cast<void *>(a1) != std::any_cast<void *>(a2))
@@ -717,15 +661,13 @@ util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_if_acmpn
     {
         frame->offset += 3;
     }
-
-    return util::OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
 void OMInterpreter::operand_aload_n(std::shared_ptr<OMFrameMetadata> frame)
 {
     STACK_ACCESS.push(frame->local[frame->codePointer[frame->offset] - op_aload_n(0)]);
     frame->offset++;
 }
-OMResult<std::any, err::OMValidationError> OMInterpreter::operand_invokeany(std::shared_ptr<OMFrameMetadata> frame)
+void OMInterpreter::operand_invokeany(std::shared_ptr<OMFrameMetadata> frame)
 {
     auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
     auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantMethodRef>();
@@ -737,20 +679,10 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_invokeany(std:
     auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
 
     auto clss = tower.fetchClass(cls);
-    if (clss.type == util::Err)
-    {
-        return util::OMResult<std::any, err::OMValidationError>::err(clss.unwrap_err());
-    }
 
-    auto r = execute(clss.unwrap(), name, desc);
-    if (r.type == util::Err)
-    {
-        return OMResult<std::any, err::OMValidationError>::err(r.unwrap_err());
-    }
+    execute(clss, name, desc);
 
     frame->offset += 3;
-
-    return OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
 void OMInterpreter::operand_dup(std::shared_ptr<OMFrameMetadata> frame)
 {
@@ -758,11 +690,11 @@ void OMInterpreter::operand_dup(std::shared_ptr<OMFrameMetadata> frame)
     STACK_ACCESS.push(STACK_ACCESS.top());
     frame->offset++;
 }
-util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_return(std::shared_ptr<OMFrameMetadata> frame)
+void OMInterpreter::operand_return(std::shared_ptr<OMFrameMetadata> frame)
 {
     return popFrame(frame);
 }
-util::OMResult<std::any, err::OMValidationError> OMInterpreter::popFrame(std::shared_ptr<OMFrameMetadata> frame)
+void OMInterpreter::popFrame(std::shared_ptr<OMFrameMetadata> frame)
 {
     STACK_CHECK;
     while (std::type_index(STACK_ACCESS.top().type()) != std::type_index(typeid(std::shared_ptr<OMFrameMetadata>)) ||
@@ -771,13 +703,12 @@ util::OMResult<std::any, err::OMValidationError> OMInterpreter::popFrame(std::sh
         SAFE_STACK_POP;
         if (STACK_ACCESS.empty())
         {
-            return util::OMResult<std::any, err::OMValidationError>::err(
-                {err::Instructions, "whole operator stack is popped! tower is crashing!", fetchCurrentPosition(frame)});
+            throw err::OMValidationError{err::Instructions, "whole operator stack is popped! tower is crashing!",
+                                         fetchCurrentPosition(frame)};
         }
     }
 
     SAFE_STACK_POP;
-    return util::OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
 void OMInterpreter::operand_new(std::shared_ptr<OMFrameMetadata> frame)
 {
@@ -786,13 +717,7 @@ void OMInterpreter::operand_new(std::shared_ptr<OMFrameMetadata> frame)
 
     auto cls = frame->clazz->mapping->at(temp1->nameIndex)->to<OMClassConstantUtf8>()->data;
 
-    auto f = tower.fetchClass(cls);
-    if (f.type == util::Err)
-    {
-        throw f.unwrap_err();
-    }
-
-    STACK_ACCESS.push(tower.allocate(f.unwrap()));
+    STACK_ACCESS.push(tower.allocate(tower.fetchClass(cls)));
 
     frame->offset += 3;
 }
@@ -813,19 +738,14 @@ void OMInterpreter::operand_pop(std::shared_ptr<OMFrameMetadata> frame)
 void *OMInterpreter::newString(std::string data)
 {
     auto cls = tower.fetchClass("java/lang/String");
-    if (cls.type == Err)
-    {
-        logger.warn(cls.unwrap_err().what());
-        return nullptr;
-    }
 
     void *rawarr = tower.allocateArray(Byte, data.size());
     char *arrdata = ((char *)rawarr) + sizeof(OMArrayHeader);
     memcpy(arrdata, data.c_str(), data.size());
-    void *str = tower.allocate(cls.unwrap());
+    void *str = tower.allocate(cls);
     STACK_ACCESS.push(str);
     STACK_ACCESS.push(rawarr);
-    auto initresult = execute(cls.unwrap(), "<init>", "([B)V");
+    execute(cls, "<init>", "([B)V");
     return str;
 }
 } // namespace openminecraft::vm::pixeltower::runtime

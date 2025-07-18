@@ -17,14 +17,14 @@ class OMClassLoader
     OMClassLoader(std::any interpreter);
     ~OMClassLoader();
 
-    util::OMResult<std::shared_ptr<OMClass>, err::OMValidationError> forName(std::string name);
+    std::shared_ptr<OMClass> forName(std::string name);
     void appendStagingClass(std::shared_ptr<classfile::OMClassFile> file);
     std::unordered_map<uint64_t, std::shared_ptr<OMClass>> classes;
 
     bool isClassCompat(OMClass *src, std::shared_ptr<OMClass> target);
 
   protected:
-    util::OMResult<std::any, err::OMValidationError> loadClass(std::shared_ptr<classfile::OMClassFile> file);
+    void loadClass(std::shared_ptr<classfile::OMClassFile> file);
 
   private:
     std::list<std::shared_ptr<classfile::OMClassFile>> stagingClasses;

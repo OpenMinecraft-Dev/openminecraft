@@ -152,32 +152,26 @@ int boot(std::vector<std::string> args)
                 {
                     if (commandBuffer[1] == "loadcls")
                     {
-                        auto l = pt->loadClass(std::make_shared<std::ifstream>(commandBuffer[2], std::ios::binary));
-                        switch (l.type)
+                        try
                         {
-                        case Ok:
-                            break;
-                        case Err:
-                            throw l.unwrap_err();
+                            pt->loadClass(std::make_shared<std::ifstream>(commandBuffer[2], std::ios::binary));
+
+                            auto cls = pt->fetchClass("java/lang/String");
+                            void *arr = pt->allocateArray(cls, 1);
+                            void *str = std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
+                                            ->newString("--debug");
+
+                            ARRAY_ACCESS(arr, void *)[0] = str;
+                            std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
+                                ->stack[std::this_thread::get_id()]
+                                .push(arr);
+                            pt->execute("openminecraft/Test", "main", "([Ljava/lang/String;)V");
+                        }
+                        catch (vm::err::OMValidationError err)
+                        {
+                            logger->error(err.what());
                         }
 
-                        auto cls = pt->fetchClass("java/lang/String");
-                        if (cls.type == Err)
-                        {
-                            logger->warn(cls.unwrap_err().what());
-                            break;
-                        }
-                        void *arr = pt->allocateArray(cls.unwrap(), 1);
-                        void *str = std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
-                                        ->newString("--debug");
-
-                        ARRAY_ACCESS(arr, void *)[0] = str;
-                        std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
-                            ->stack[std::this_thread::get_id()]
-                            .push(arr);
-                        auto c = pt->execute("openminecraft/Test", "main", "([Ljava/lang/String;)V");
-
-                        logger->info(c.unwrap_err().what());
                         commandBuffer.clear();
                     }
                     else if (commandBuffer[1] == "init")
@@ -186,11 +180,7 @@ int boot(std::vector<std::string> args)
                         searchDir(m, std::filesystem::directory_iterator(commandBuffer[2]));
                         for (auto a : m)
                         {
-                            auto resu = pt->loadClass(std::make_shared<std::ifstream>(a, std::ios::binary));
-                            if (resu.type == Err)
-                            {
-                                throw resu.unwrap_err();
-                            }
+                            pt->loadClass(std::make_shared<std::ifstream>(a, std::ios::binary));
                         }
 
                         commandBuffer.clear();
