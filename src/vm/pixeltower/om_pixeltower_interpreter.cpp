@@ -32,6 +32,18 @@ extern std::string ARRAY_TYPE;
 namespace openminecraft::vm::pixeltower::runtime
 {
 #define STACK_ACCESS stack[std::this_thread::get_id()]
+#define SAFE_STACK_POP                                                                                                 \
+    if (STACK_ACCESS.empty())                                                                                          \
+    {                                                                                                                  \
+        throw err::OMValidationError{err::Instructions, "Why the stack is empty?!", fetchCurrentPosition(frame)};      \
+    }                                                                                                                  \
+    STACK_ACCESS.pop();
+#define STACK_CHECK                                                                                                    \
+    if (STACK_ACCESS.empty())                                                                                          \
+    {                                                                                                                  \
+        throw err::OMValidationError{err::Instructions, "Why the stack is empty?!", fetchCurrentPosition(frame)};      \
+    }
+
 OMInterpreter::OMInterpreter(OMPixelTower &tower) : tower(tower), logger("pixeltower/OMInterpreter", this)
 {
 }
@@ -56,7 +68,8 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
         {err::ClassLoader, "method not found", fmt::format("{}.{}{}", clazz->name, method, sig)});
 }
 OMResult<std::any, err::OMValidationError> OMInterpreter::executeDynamic(std::string clazz, std::string method,
-                                                                         std::string sig)
+                                                                         std::string sig,
+                                                                         std::shared_ptr<OMFrameMetadata> frame)
 {
     std::stack<std::any> tempst;
     int temp = 0;
@@ -70,8 +83,9 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::executeDynamic(std::st
 
     for (int i = 0; i < result.unwrap().first.size(); i++)
     {
+        STACK_CHECK;
         tempst.push(STACK_ACCESS.top());
-        STACK_ACCESS.pop();
+        SAFE_STACK_POP;
     }
 
     if (std::type_index(STACK_ACCESS.top().type()) == std::type_index(typeid(void *)))
@@ -130,6 +144,7 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
 
         for (int argid = args - 1; argid >= 0; argid--)
         {
+            STACK_CHECK;
             frame->local[argid] = STACK_ACCESS.top();
             auto target = checkType(frame, STACK_ACCESS.top(), types[argid]);
             switch (target.type)
@@ -141,7 +156,7 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::execute(std::shared_pt
                 logger.debug(target.unwrap_err().what());
             }
             }
-            STACK_ACCESS.pop();
+            SAFE_STACK_POP;
         }
     }
 
@@ -516,8 +531,9 @@ std::string OMInterpreter::fetchName(OMArrayType type)
     }
 }
 // TODO: other types
-void OMInterpreter::writeStackTop(void *target, std::string desc)
+void OMInterpreter::writeStackTop(void *target, std::string desc, std::shared_ptr<OMFrameMetadata> frame)
 {
+    STACK_CHECK;
     auto it = std::type_index(STACK_ACCESS.top().type());
 
     if (it == std::type_index(typeid(int)))
@@ -525,7 +541,7 @@ void OMInterpreter::writeStackTop(void *target, std::string desc)
         *((int *)target) = std::any_cast<int>(STACK_ACCESS.top());
     }
 
-    STACK_ACCESS.pop();
+    SAFE_STACK_POP;
 }
 std::string OMInterpreter::fetchCurrentPosition(std::shared_ptr<OMFrameMetadata> frame)
 {
@@ -533,6 +549,7 @@ std::string OMInterpreter::fetchCurrentPosition(std::shared_ptr<OMFrameMetadata>
 }
 util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_ireturn(std::shared_ptr<OMFrameMetadata> frame)
 {
+    STACK_CHECK;
     auto ret = STACK_ACCESS.top();
     auto l = popFrame(frame);
     STACK_ACCESS.push(ret);
@@ -540,6 +557,7 @@ util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_ireturn(
 }
 OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putfield(std::shared_ptr<OMFrameMetadata> frame)
 {
+    STACK_CHECK;
     auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
     auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantFieldRef>();
     auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();
@@ -557,9 +575,9 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putfield(std::
 
     frame->offset += 3;
     auto value = STACK_ACCESS.top();
-    STACK_ACCESS.pop();
+    SAFE_STACK_POP;
     auto item = STACK_ACCESS.top();
-    STACK_ACCESS.pop();
+    SAFE_STACK_POP;
     STACK_ACCESS.push(value);
     if (std::type_index(item.type()) != std::type_index(typeid(void *)))
     {
@@ -570,7 +588,7 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putfield(std::
     {
         if (fi->name == name && (fi->accessFlag & JVM_Acc_Static) == 0)
         {
-            writeStackTop(OBJECT_ACCESS(std::any_cast<void *>(item), fi->offset), fi->desc);
+            writeStackTop(OBJECT_ACCESS(std::any_cast<void *>(item), fi->offset), fi->desc, frame);
             return OMResult<std::any, err::OMValidationError>::ok(nullptr);
         }
     }
@@ -601,7 +619,7 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putstatic(std:
     {
         if (fi->name == name && (fi->accessFlag & JVM_Acc_Static))
         {
-            writeStackTop(OBJECT_ACCESS(res.unwrap()->staticFieldBlock, fi->offset), fi->desc);
+            writeStackTop(OBJECT_ACCESS(res.unwrap()->staticFieldBlock, fi->offset), fi->desc, frame);
             return OMResult<std::any, err::OMValidationError>::ok(nullptr);
         }
     }
@@ -612,8 +630,9 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putstatic(std:
 }
 void OMInterpreter::operand_istore_n(std::shared_ptr<OMFrameMetadata> frame)
 {
+    STACK_CHECK;
     auto item = STACK_ACCESS.top();
-    STACK_ACCESS.pop();
+    SAFE_STACK_POP;
     frame->local[frame->codePointer[frame->offset] - op_istore_n(0)] = item;
     frame->offset++;
 }
@@ -629,7 +648,7 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_invokeinterfac
     auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
     auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
 
-    auto r = executeDynamic(cls, name, desc);
+    auto r = executeDynamic(cls, name, desc, frame);
     if (r.type == util::Err)
     {
         return OMResult<std::any, err::OMValidationError>::err(r.unwrap_err());
@@ -641,8 +660,9 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_invokeinterfac
 }
 void OMInterpreter::operand_astore_n(std::shared_ptr<OMFrameMetadata> frame)
 {
+    STACK_CHECK;
     auto item = STACK_ACCESS.top();
-    STACK_ACCESS.pop();
+    SAFE_STACK_POP;
     frame->local[frame->codePointer[frame->offset] - op_astore_n(0)] = item;
     frame->offset++;
 }
@@ -669,10 +689,11 @@ void OMInterpreter::operand_dconst_n(std::shared_ptr<OMFrameMetadata> frame)
 util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_if_acmpne(
     std::shared_ptr<OMFrameMetadata> frame)
 {
+    STACK_CHECK;
     auto a1 = STACK_ACCESS.top();
-    STACK_ACCESS.pop();
+    SAFE_STACK_POP;
     auto a2 = STACK_ACCESS.top();
-    STACK_ACCESS.pop();
+    SAFE_STACK_POP;
 
     if (std::type_index(a1.type()) != std::type_index(typeid(void *)))
     {
@@ -733,6 +754,7 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_invokeany(std:
 }
 void OMInterpreter::operand_dup(std::shared_ptr<OMFrameMetadata> frame)
 {
+    STACK_CHECK;
     STACK_ACCESS.push(STACK_ACCESS.top());
     frame->offset++;
 }
@@ -742,10 +764,11 @@ util::OMResult<std::any, err::OMValidationError> OMInterpreter::operand_return(s
 }
 util::OMResult<std::any, err::OMValidationError> OMInterpreter::popFrame(std::shared_ptr<OMFrameMetadata> frame)
 {
+    STACK_CHECK;
     while (std::type_index(STACK_ACCESS.top().type()) != std::type_index(typeid(std::shared_ptr<OMFrameMetadata>)) ||
            std::any_cast<std::shared_ptr<OMFrameMetadata>>(STACK_ACCESS.top()) != frame)
     {
-        STACK_ACCESS.pop();
+        SAFE_STACK_POP;
         if (STACK_ACCESS.empty())
         {
             return util::OMResult<std::any, err::OMValidationError>::err(
@@ -753,7 +776,7 @@ util::OMResult<std::any, err::OMValidationError> OMInterpreter::popFrame(std::sh
         }
     }
 
-    STACK_ACCESS.pop();
+    SAFE_STACK_POP;
     return util::OMResult<std::any, err::OMValidationError>::ok(nullptr);
 }
 void OMInterpreter::operand_new(std::shared_ptr<OMFrameMetadata> frame)
@@ -784,7 +807,7 @@ void OMInterpreter::operand_aconst_null(std::shared_ptr<OMFrameMetadata> frame)
 }
 void OMInterpreter::operand_pop(std::shared_ptr<OMFrameMetadata> frame)
 {
-    STACK_ACCESS.pop();
+    SAFE_STACK_POP;
     frame->offset++;
 }
 void *OMInterpreter::newString(std::string data)

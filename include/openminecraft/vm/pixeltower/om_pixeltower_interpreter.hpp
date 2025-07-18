@@ -33,7 +33,8 @@ class OMInterpreter
     util::OMResult<std::any, err::OMValidationError> execute(std::shared_ptr<OMClass> clazz, std::string method,
                                                              std::string sig);
     util::OMResult<std::any, err::OMValidationError> executeDynamic(std::string clazz, std::string method,
-                                                                    std::string sig);
+                                                                    std::string sig,
+                                                                    std::shared_ptr<OMFrameMetadata> frame);
     util::OMResult<std::any, err::OMValidationError> execute(std::shared_ptr<OMClass> clazz,
                                                              std::shared_ptr<OMMethodInfo> mi);
 
@@ -65,7 +66,7 @@ class OMInterpreter
     util::OMResult<std::any, err::OMValidationError> checkType(std::shared_ptr<OMFrameMetadata> frame, std::any data,
                                                                std::string desc);
     std::string fetchName(OMArrayType type);
-    void writeStackTop(void *target, std::string desc);
+    void writeStackTop(void *target, std::string desc, std::shared_ptr<OMFrameMetadata> frame);
     std::string fetchCurrentPosition(std::shared_ptr<OMFrameMetadata> frame);
     util::OMResult<std::any, err::OMValidationError> popFrame(std::shared_ptr<OMFrameMetadata> frame);
 
