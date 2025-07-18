@@ -59,11 +59,13 @@ class OMInterpreter
     util::OMResult<std::any, err::OMValidationError> operand_putstatic(std::shared_ptr<OMFrameMetadata> frame);
     util::OMResult<std::any, err::OMValidationError> operand_putfield(std::shared_ptr<OMFrameMetadata> frame);
 
+    void *newString(std::string data);
+
   private:
     util::OMResult<std::any, err::OMValidationError> checkType(std::shared_ptr<OMFrameMetadata> frame, std::any data,
                                                                std::string desc);
     std::string fetchName(OMArrayType type);
-    void writeStackTop(void *target);
+    void writeStackTop(void *target, std::string desc);
     std::string fetchCurrentPosition(std::shared_ptr<OMFrameMetadata> frame);
     util::OMResult<std::any, err::OMValidationError> popFrame(std::shared_ptr<OMFrameMetadata> frame);
 

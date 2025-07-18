@@ -135,12 +135,11 @@ void OMMemoryManager::searchFromInstance(void *b)
     else
     {
         auto clazz = *((OMClass **)b);
-        auto arrdata = (uint8_t *)OBJECT_ACCESS(b);
         for (auto fi : clazz->fields)
         {
             if (fi->type == OMFieldType::BytesP && (fi->accessFlag & JVM_Acc_Static) == 0)
             {
-                searchFromInstance(*(void **)(arrdata + fi->offset));
+                searchFromInstance(*(void **)OBJECT_ACCESS(b, fi->offset));
             }
         }
     }
@@ -151,7 +150,7 @@ void OMMemoryManager::seatchFromStatic(std::shared_ptr<OMClass> cls)
     {
         if (fi->type == OMFieldType::BytesP && (fi->accessFlag & JVM_Acc_Static) == 0)
         {
-            searchFromInstance(*(void **)((uint8_t *)cls->staticFieldBlock + fi->offset));
+            searchFromInstance(*(void **)OBJECT_ACCESS(cls->staticFieldBlock, fi->offset));
         }
     }
 }

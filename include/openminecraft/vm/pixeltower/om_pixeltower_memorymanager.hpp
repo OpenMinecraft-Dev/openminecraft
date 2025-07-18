@@ -10,7 +10,7 @@
 
 namespace openminecraft::vm::pixeltower
 {
-#define OBJECT_ACCESS(p) ((void *)((uint8_t *)p + sizeof(void *)))
+#define OBJECT_ACCESS(p, off) ((void *)((uint8_t *)p + off))
 #define ARRAY_ACCESS(p, t) ((t *)((uint8_t *)p + sizeof(openminecraft::vm::pixeltower::OMArrayHeader)))
 class OMMemoryManager
 {

@@ -12,7 +12,7 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_memorymanager.hpp"
 #include <any>
-#include <list>
+#include <cstring>
 #include <memory>
 #include <stack>
 #include <string>
@@ -516,7 +516,7 @@ std::string OMInterpreter::fetchName(OMArrayType type)
     }
 }
 // TODO: other types
-void OMInterpreter::writeStackTop(void *target)
+void OMInterpreter::writeStackTop(void *target, std::string desc)
 {
     auto it = std::type_index(STACK_ACCESS.top().type());
 
@@ -570,7 +570,7 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putfield(std::
     {
         if (fi->name == name && (fi->accessFlag & JVM_Acc_Static) == 0)
         {
-            writeStackTop((uint8_t *)OBJECT_ACCESS(std::any_cast<void *>(item)) + fi->offset);
+            writeStackTop(OBJECT_ACCESS(std::any_cast<void *>(item), fi->offset), fi->desc);
             return OMResult<std::any, err::OMValidationError>::ok(nullptr);
         }
     }
@@ -601,7 +601,7 @@ OMResult<std::any, err::OMValidationError> OMInterpreter::operand_putstatic(std:
     {
         if (fi->name == name && (fi->accessFlag & JVM_Acc_Static))
         {
-            writeStackTop((void *)((uint8_t *)res.unwrap()->staticFieldBlock + fi->offset));
+            writeStackTop(OBJECT_ACCESS(res.unwrap()->staticFieldBlock, fi->offset), fi->desc);
             return OMResult<std::any, err::OMValidationError>::ok(nullptr);
         }
     }
@@ -786,5 +786,23 @@ void OMInterpreter::operand_pop(std::shared_ptr<OMFrameMetadata> frame)
 {
     STACK_ACCESS.pop();
     frame->offset++;
+}
+void *OMInterpreter::newString(std::string data)
+{
+    auto cls = tower.fetchClass("java/lang/String");
+    if (cls.type == Err)
+    {
+        logger.warn(cls.unwrap_err().what());
+        return nullptr;
+    }
+
+    void *rawarr = tower.allocateArray(Byte, data.size());
+    char *arrdata = ((char *)rawarr) + sizeof(OMArrayHeader);
+    memcpy(arrdata, data.c_str(), data.size());
+    void *str = tower.allocate(cls.unwrap());
+    STACK_ACCESS.push(str);
+    STACK_ACCESS.push(rawarr);
+    auto initresult = execute(cls.unwrap(), "<init>", "([B)V");
+    return str;
 }
 } // namespace openminecraft::vm::pixeltower::runtime

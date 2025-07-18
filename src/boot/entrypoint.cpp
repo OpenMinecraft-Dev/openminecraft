@@ -168,32 +168,15 @@ int boot(std::vector<std::string> args)
                             break;
                         }
                         void *arr = pt->allocateArray(cls.unwrap(), 1);
+                        void *str = std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
+                                        ->newString("--debug");
+
+                        ARRAY_ACCESS(arr, void *)[0] = str;
                         std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
                             ->stack[std::this_thread::get_id()]
                             .push(arr);
-                        void *rawarr = pt->allocateArray(Byte, 7);
-                        char *arrdata = ((char *)rawarr) + sizeof(OMArrayHeader);
-                        arrdata[0] = '-';
-                        arrdata[1] = '-';
-                        arrdata[2] = 'd';
-                        arrdata[3] = 'e';
-                        arrdata[4] = 'b';
-                        arrdata[5] = 'u';
-                        arrdata[6] = 'g';
-                        void *str = pt->allocate(cls.unwrap());
-                        std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
-                            ->stack[std::this_thread::get_id()]
-                            .push(str);
-                        std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
-                            ->stack[std::this_thread::get_id()]
-                            .push(rawarr);
-                        auto initresult = std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
-                                              ->execute(cls.unwrap(), "<init>", "([B)V");
-                        logger->warn(initresult.unwrap_err().what());
-
-                        ARRAY_ACCESS(rawarr, void *)[0] = str;
-
                         auto c = pt->execute("openminecraft/Test", "main", "([Ljava/lang/String;)V");
+
                         logger->info(c.unwrap_err().what());
                         commandBuffer.clear();
                     }

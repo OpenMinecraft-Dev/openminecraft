@@ -48,7 +48,7 @@ class OMClass
     std::list<std::shared_ptr<OMFieldInfo>> fields;
     std::list<std::shared_ptr<OMMethodInfo>> methods;
     std::unordered_map<uint16_t, std::shared_ptr<classfile::OMClassConstant>> *mapping;
-    uint64_t objectLength = 0;
+    uint64_t objectLength = sizeof(void *);
 
     void *staticFieldBlock = nullptr;
 };
