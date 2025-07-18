@@ -1,6 +1,7 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
+#include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
@@ -503,6 +504,15 @@ void OMInterpreter::writeStackTop(void *target, std::string desc, std::shared_pt
     if (it == std::type_index(typeid(int)))
     {
         *((int *)target) = std::any_cast<int>(STACK_ACCESS.top());
+    }
+    else if (it == std::type_index(typeid(void *)))
+    {
+        *((void **)target) = std::any_cast<void *>(STACK_ACCESS.top());
+    }
+    else
+    {
+        throw err::OMValidationError{err::Instructions, fmt::format("unknown stack top data"),
+                                     fetchCurrentPosition(frame)};
     }
 
     SAFE_STACK_POP;

@@ -1,13 +1,17 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
+#include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_ansi.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
+#include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_class_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_classloader.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_memorymanager.hpp"
 #include <any>
 #include <memory>
 #include <sstream>
@@ -136,6 +140,98 @@ std::string OMPixelTower::fetchType(void *block)
         return (*((OMClass **)block))->name;
     }
 }
+std::string OMPixelTower::printInstanceData(void *block)
+{
+    auto arr = (OMArrayHeader *)block;
+    if (block == nullptr)
+    {
+        return fmt::format("{}> ???{}", OMLogAnsiBlackLight, OMLogAnsiReset);
+    }
+    else if (arr->classifierPointer == &ARRAY_TYPE)
+    {
+        std::string target = "";
+        target += fmt::format("> length: {}\n", arr->length);
+        target += "------- START OF ARRAY -------\n";
+        for (int i = 0; i < arr->length; i++)
+        {
+            target += fmt::format("> {}[{}]{} ", OMLogAnsiBlueLight, i, OMLogAnsiReset);
+            switch (arr->type)
+            {
+            case Byte:
+            case Char:
+                target += printAny(ARRAY_ACCESS(block, char)[i]);
+                break;
+            case Short:
+                target += printAny(ARRAY_ACCESS(block, short)[i]);
+                break;
+            case Int:
+                target += printAny(ARRAY_ACCESS(block, int)[i]);
+                break;
+            case Long:
+                target += printAny(ARRAY_ACCESS(block, int64_t)[i]);
+                break;
+            case Boolean:
+                target += printAny((bool)ARRAY_ACCESS(block, char)[i]);
+                break;
+            case Double:
+                target += printAny(ARRAY_ACCESS(block, double)[i]);
+                break;
+            case Float:
+                target += printAny(ARRAY_ACCESS(block, float)[i]);
+                break;
+            case Reference:
+                target += printAny(ARRAY_ACCESS(block, void *)[i]);
+                break;
+            }
+            target += "\n";
+        }
+        target += "------- END OF ARRAY -------";
+        return target;
+    }
+
+    std::string target;
+
+    auto f = (*(OMClass **)block)->fields;
+
+    for (auto field : f)
+    {
+        if ((field->accessFlag & JVM_Acc_Static) == 0)
+        {
+            std::string item;
+            switch (field->desc[0])
+            {
+            case 'B':
+            case 'C':
+                item = printAny(*(char *)OBJECT_ACCESS(block, field->offset));
+                break;
+            case 'S':
+                item = printAny(*(short *)OBJECT_ACCESS(block, field->offset));
+                break;
+            case 'I':
+                item = printAny(*(int *)OBJECT_ACCESS(block, field->offset));
+                break;
+            case 'J':
+                item = printAny(*(int64_t *)OBJECT_ACCESS(block, field->offset));
+                break;
+            case 'Z':
+                item = printAny(*(bool *)OBJECT_ACCESS(block, field->offset));
+                break;
+            case 'F':
+                item = printAny(*(float *)OBJECT_ACCESS(block, field->offset));
+                break;
+            case 'D':
+                item = printAny(*(double *)OBJECT_ACCESS(block, field->offset));
+                break;
+            default:
+                item = printAny(*(void **)OBJECT_ACCESS(block, field->offset));
+                break;
+            }
+            target += fmt::format("> field {2}{0}{3}: {1}\n", field->name, item, OMLogAnsiCyanLight, OMLogAnsiReset);
+        }
+    }
+
+    return target;
+}
 std::string OMPixelTower::printAny(std::any data)
 {
     auto target = std::type_index(data.type());
@@ -165,13 +261,37 @@ std::string OMPixelTower::printAny(std::any data)
     }
     else if (target == std::type_index(typeid(void *)))
     {
-        return fmt::format("{2}instance at {1}{0} {2}with type {4}{3}{2}", std::any_cast<void *>(data),
+        return fmt::format("{2}instance at {1}{0} {2}with type {4}{3}{2}\n{5}", std::any_cast<void *>(data),
                            OMLogAnsiRedLight, OMLogAnsiReset, fetchType(std::any_cast<void *>(data)),
-                           OMLogAnsiCyanLight);
+                           OMLogAnsiCyanLight, printInstanceData(std::any_cast<void *>(data)));
     }
     else if (target == std::type_index(typeid(int)))
     {
         return fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<int>(data), OMLogAnsiReset);
+    }
+    else if (target == std::type_index(typeid(bool)))
+    {
+        return fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<bool>(data), OMLogAnsiReset);
+    }
+    else if (target == std::type_index(typeid(short)))
+    {
+        return fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<short>(data), OMLogAnsiReset);
+    }
+    else if (target == std::type_index(typeid(char)))
+    {
+        return fmt::format("{}{}{}", OMLogAnsiGreenLight, (int)std::any_cast<char>(data), OMLogAnsiReset);
+    }
+    else if (target == std::type_index(typeid(int64_t)))
+    {
+        return fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<int64_t>(data), OMLogAnsiReset);
+    }
+    else if (target == std::type_index(typeid(float)))
+    {
+        return fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<float>(data), OMLogAnsiReset);
+    }
+    else if (target == std::type_index(typeid(double)))
+    {
+        return fmt::format("{}{}{}", OMLogAnsiGreenLight, std::any_cast<double>(data), OMLogAnsiReset);
     }
     else if (target == std::type_index(typeid(void)))
     {

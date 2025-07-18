@@ -32,6 +32,7 @@ class OMPixelTower
 
     void debugStackStatus();
     std::string printAny(std::any data);
+    std::string printInstanceData(void *block);
     std::string fetchType(void *block);
     std::any interpreter;
     std::shared_ptr<OMMemoryManager> mm;
