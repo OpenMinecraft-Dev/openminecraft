@@ -8,8 +8,10 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_classloader.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_memorymanager.hpp"
 #include <any>
+#include <functional>
 #include <istream>
 #include <memory>
+#include <unordered_map>
 namespace openminecraft::vm::pixeltower
 {
 class OMPixelTower
@@ -38,8 +40,12 @@ class OMPixelTower
     std::shared_ptr<OMMemoryManager> mm;
     std::shared_ptr<OMClassLoader> classloader;
 
+    void registerNativeFunc(std::string clazz, std::string func, std::string desc, std::function<std::any(std::any)>);
+    std::any callNativeFunc(std::string clazz, std::string func, std::string desc, std::any args);
+
   private:
     log::OMLogger logger;
+    std::unordered_map<std::string, std::function<std::any(std::any)>> nativeFuncs;
 };
 } // namespace openminecraft::vm::pixeltower
 

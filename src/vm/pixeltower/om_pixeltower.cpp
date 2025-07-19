@@ -1,4 +1,5 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_ansi.hpp"
 #include "openminecraft/log/om_log_common.hpp"
@@ -6,6 +7,7 @@
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
+#include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_class_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_classloader.hpp"
@@ -30,6 +32,30 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
 }
 OMPixelTower::~OMPixelTower()
 {
+}
+void OMPixelTower::registerNativeFunc(std::string clazz, std::string func, std::string desc,
+                                      std::function<std::any(std::any)> f)
+{
+    auto cls = fetchClass(clazz);
+    for (auto m : cls->methods)
+    {
+        if (m->name == func && m->desc == desc && (m->accessFlag & JVM_Acc_Native))
+        {
+            nativeFuncs[fmt::format("{}.{}{}", clazz, func, desc)] = f;
+            return;
+        }
+    }
+
+    throw err::OMValidationError{err::Instructions, fmt::format("registering native function to a non-native function!"), fmt::format("{}.{}{}", clazz, func, desc)};
+}
+std::any OMPixelTower::callNativeFunc(std::string clazz, std::string func, std::string desc, std::any args)
+{
+    auto key = fmt::format("{}.{}{}", clazz, func, desc);
+    if (nativeFuncs.count(key)) {
+        return nativeFuncs[key](args);
+    }
+
+    throw err::OMValidationError{err::Instructions, fmt::format("native function not found"), fmt::format("{}.{}{}", clazz, func, desc)};
 }
 void OMPixelTower::loadClass(std::shared_ptr<classfile::OMClassFile> file)
 {
@@ -158,8 +184,10 @@ std::string OMPixelTower::printInstanceData(void *block, int layer, bool isArray
             switch (arr->type)
             {
             case Byte:
-            case Char:
                 target += printAny(ARRAY_ACCESS(block, char)[i], layer, true);
+                break;
+            case Char:
+                target += printAny(ARRAY_ACCESS(block, uint16_t)[i], layer, true);
                 break;
             case Short:
                 target += printAny(ARRAY_ACCESS(block, short)[i], layer, true);
@@ -171,7 +199,7 @@ std::string OMPixelTower::printInstanceData(void *block, int layer, bool isArray
                 target += printAny(ARRAY_ACCESS(block, int64_t)[i], layer, true);
                 break;
             case Boolean:
-                target += printAny((bool)ARRAY_ACCESS(block, char)[i], layer, true);
+                target += printAny(ARRAY_ACCESS(block, bool)[i], layer, true);
                 break;
             case Double:
                 target += printAny(ARRAY_ACCESS(block, double)[i], layer, true);
@@ -200,8 +228,10 @@ std::string OMPixelTower::printInstanceData(void *block, int layer, bool isArray
             switch (field->desc[0])
             {
             case 'B':
-            case 'C':
                 item = printAny(*(char *)OBJECT_ACCESS(block, field->offset), layer + 1, true);
+                break;
+            case 'C':
+                item = printAny(*(uint16_t *)OBJECT_ACCESS(block, field->offset), layer + 1, true);
                 break;
             case 'S':
                 item = printAny(*(short *)OBJECT_ACCESS(block, field->offset), layer + 1, true);
@@ -281,6 +311,10 @@ std::string OMPixelTower::printAny(std::any data, int layer, bool isArray)
     else if (target == std::type_index(typeid(char)))
     {
         return test + fmt::format("{}{}{}", OMLogAnsiGreenLight, (int)std::any_cast<char>(data), OMLogAnsiReset);
+    }
+    else if (target == std::type_index(typeid(uint16_t)))
+    {
+        return test + fmt::format("{}{}{}", OMLogAnsiGreenLight, (int)std::any_cast<uint16_t>(data), OMLogAnsiReset);
     }
     else if (target == std::type_index(typeid(int64_t)))
     {

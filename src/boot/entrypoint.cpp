@@ -157,11 +157,14 @@ int boot(std::vector<std::string> args)
                             pt->loadClass(std::make_shared<std::ifstream>(commandBuffer[2], std::ios::binary));
 
                             auto cls = pt->fetchClass("java/lang/String");
-                            void *arr = pt->allocateArray(cls, 1);
+                            void *arr = pt->allocateArray(cls, 2);
                             void *str = std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
                                             ->newString("--debug");
+                            void *str2 = std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
+                                             ->newString("test");
 
                             ARRAY_ACCESS(arr, void *)[0] = str;
+                            ARRAY_ACCESS(arr, void *)[1] = str2;
                             std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
                                 ->stack[std::this_thread::get_id()]
                                 .push(arr);
@@ -182,6 +185,19 @@ int boot(std::vector<std::string> args)
                         {
                             pt->loadClass(std::make_shared<std::ifstream>(a, std::ios::binary));
                         }
+
+                        auto cmdPrint = [&](std::any data) {
+                            logger->debug("[stdout] {}",
+                                          pt->printAny(*(++std::any_cast<std::list<std::any> *>(data)->begin()), 0));
+                            return nullptr;
+                        };
+
+                        pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(C)V", cmdPrint);
+                        pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(J)V", cmdPrint);
+                        pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(F)V", cmdPrint);
+                        pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(D)V", cmdPrint);
+                        pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(Ljava/lang/String;)V",
+                                               cmdPrint);
 
                         commandBuffer.clear();
                     }

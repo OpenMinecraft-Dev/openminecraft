@@ -51,6 +51,10 @@ OMInterpreter::OMInterpreter(OMPixelTower &tower) : tower(tower), logger("pixelt
 OMInterpreter::~OMInterpreter()
 {
 }
+void OMInterpreter::execute(std::string clazz, std::string method, std::string sig)
+{
+    return execute(tower.fetchClass(clazz), method, sig);
+}
 void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::string method, std::string sig)
 {
     for (auto &m : clazz->methods)
@@ -114,50 +118,55 @@ void OMInterpreter::executeDynamic(std::string clazz, std::string method, std::s
 }
 void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMethodInfo> mi)
 {
+
+    int temp = 0;
+    auto result = bytecode::descriptor::decodeSignature(mi->desc, &temp);
+    if (result.type == Err)
+    {
+        throw err::OMValidationError{
+            err::Instructions,
+            fmt::format("unrecognized method descriptor at {}.{}{}", clazz->name, mi->name, mi->desc),
+            result.unwrap_err()};
+    }
+    auto args = result.unwrap().first.size();
+    std::vector<std::string> types;
+    for (auto i : result.unwrap().first)
+    {
+        types.push_back(i);
+    }
+
+    if ((mi->accessFlag & JVM_Acc_Static) == 0)
+    {
+        args++;
+        types.insert(types.begin(), "L" + clazz->name);
+    }
+
+    if (mi->code == nullptr)
+    {
+        std::list<std::any> argslist;
+        for (int argid = 0; argid < args; argid++)
+        {
+            argslist.push_front(STACK_ACCESS.top());
+            STACK_ACCESS.pop();
+        }
+        tower.callNativeFunc(clazz->name, mi->name, mi->desc, &argslist);
+        return;
+    }
+
     auto frame = std::make_shared<OMFrameMetadata>(
         OMFrameMetadata{clazz, mi, nullptr, 0, std::vector<std::any>(mi->code->maxLocals)});
 
+    for (int argid = args - 1; argid >= 0; argid--)
     {
-        int temp = 0;
-        auto result = bytecode::descriptor::decodeSignature(mi->desc, &temp);
-        if (result.type == Err)
-        {
-            throw err::OMValidationError{
-                err::Instructions,
-                fmt::format("unrecognized method descriptor at {}.{}{}", clazz->name, mi->name, mi->desc),
-                result.unwrap_err()};
-        }
-        auto args = result.unwrap().first.size();
-        std::vector<std::string> types;
-        for (auto i : result.unwrap().first)
-        {
-            types.push_back(i);
-        }
-
-        if ((mi->accessFlag & JVM_Acc_Static) == 0)
-        {
-            args++;
-            types.insert(types.begin(), "L" + clazz->name);
-        }
-
-        for (int argid = args - 1; argid >= 0; argid--)
-        {
-            STACK_CHECK;
-            frame->local[argid] = STACK_ACCESS.top();
-            checkType(frame, STACK_ACCESS.top(), types[argid]);
-            SAFE_STACK_POP;
-        }
+        STACK_CHECK;
+        frame->local[argid] = STACK_ACCESS.top();
+        checkType(frame, STACK_ACCESS.top(), types[argid]);
+        SAFE_STACK_POP;
     }
 
     STACK_ACCESS.push(frame);
 
     {
-        if (mi->code == nullptr)
-        {
-            throw err::OMValidationError{err::Instructions, "no bytecode here!",
-                                         fmt::format("{}.{}{}", clazz->name, mi->name, mi->desc)};
-        }
-
         auto codeArea = mi->code->code->data();
         frame->codePointer = codeArea;
         frame->codeLength = mi->code->codeLength;
@@ -201,6 +210,22 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
             case op_dconst_d(0):
             case op_dconst_d(1): {
                 operand_dconst_n(frame);
+                break;
+            }
+
+            case op_bipush: {
+                operand_bipush(frame);
+                break;
+            }
+
+            case op_ldc: {
+                operand_ldc(frame);
+                break;
+            }
+
+            case op_ldc_w:
+            case op_ldc2_w: {
+                operand_ldc_w(frame);
                 break;
             }
 
@@ -282,9 +307,13 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
             }
 
             case op_invokestatic:
-            case op_invokespecial:
-            case op_invokevirtual: {
+            case op_invokespecial: {
                 operand_invokeany(frame);
+                break;
+            }
+
+            case op_invokevirtual: {
+                operand_invokevirtual(frame);
                 break;
             }
 
@@ -511,6 +540,8 @@ std::string OMInterpreter::fetchName(OMArrayType type)
         return "float";
     case Reference:
         return "ref";
+    default:
+        return "unknown";
     }
 }
 void OMInterpreter::fetchToStackTop(void *target, std::string desc, std::shared_ptr<OMFrameMetadata> frame)
@@ -526,8 +557,14 @@ void OMInterpreter::fetchToStackTop(void *target, std::string desc, std::shared_
 
     switch (hash_compile_time(descparsed.unwrap().c_str()))
     {
-    case "boolean"_hash:
-    case "char"_hash:
+    case "boolean"_hash: {
+        STACK_ACCESS.push((int)*(bool *)target);
+        break;
+    }
+    case "char"_hash: {
+        STACK_ACCESS.push((int)*(uint16_t *)target);
+        break;
+    }
     case "byte"_hash: {
         STACK_ACCESS.push((int)*(char *)target);
         break;
@@ -577,7 +614,11 @@ void OMInterpreter::writeStackTop(void *target, std::string desc, std::shared_pt
     switch (hash_compile_time(descparsed.unwrap().c_str()))
     {
     case "boolean"_hash:
+        *((bool *)target) = std::any_cast<int>(STACK_ACCESS.top());
+        break;
     case "char"_hash:
+        *((uint16_t *)target) = std::any_cast<int>(STACK_ACCESS.top());
+        break;
     case "byte"_hash:
         *((char *)target) = std::any_cast<int>(STACK_ACCESS.top());
         break;
@@ -607,7 +648,48 @@ std::string OMInterpreter::fetchCurrentPosition(std::shared_ptr<OMFrameMetadata>
 {
     return fmt::format("{}.{}{} + {}", frame->clazz->name, frame->method->name, frame->method->desc, frame->offset);
 }
-
+void OMInterpreter::operand_ldc(std::shared_ptr<OMFrameMetadata> frame)
+{
+    constantInternal(frame, frame->codePointer[frame->offset + 1]);
+    frame->offset += 2;
+}
+void OMInterpreter::operand_ldc_w(std::shared_ptr<OMFrameMetadata> frame)
+{
+    constantInternal(frame, binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1)));
+    frame->offset += 3;
+}
+void OMInterpreter::constantInternal(std::shared_ptr<OMFrameMetadata> frame, uint16_t id)
+{
+    auto constant = frame->clazz->rawFile->mapping[id];
+    switch (constant->type())
+    {
+    case OMClassConstantType::Integer:
+        STACK_ACCESS.push(constant->to<OMClassConstantInteger>()->data);
+        break;
+    case OMClassConstantType::Float:
+        STACK_ACCESS.push(constant->to<OMClassConstantFloat>()->data);
+        break;
+    case OMClassConstantType::Long:
+        STACK_ACCESS.push(constant->to<OMClassConstantLong>()->data);
+        break;
+    case OMClassConstantType::Double:
+        STACK_ACCESS.push(constant->to<OMClassConstantDouble>()->data);
+        break;
+    case OMClassConstantType::String:
+        STACK_ACCESS.push(newString(frame->clazz->rawFile->mapping[constant->to<OMClassConstantString>()->stringIndex]
+                                        ->to<OMClassConstantUtf8>()
+                                        ->data));
+        break;
+    default:
+        throw err::OMValidationError{err::Instructions, fmt::format("unknown constant type {}", (int)constant->type()),
+                                     fetchCurrentPosition(frame)};
+    }
+}
+void OMInterpreter::operand_bipush(std::shared_ptr<OMFrameMetadata> frame)
+{
+    STACK_ACCESS.push((int)*(char *)&frame->codePointer[frame->offset + 1]);
+    frame->offset += 2;
+}
 void OMInterpreter::operand_iload_n(std::shared_ptr<OMFrameMetadata> frame)
 {
     STACK_ACCESS.push(frame->local[frame->codePointer[frame->offset] - op_iload_n(0)]);
@@ -764,6 +846,23 @@ void OMInterpreter::operand_invokeinterface(std::shared_ptr<OMFrameMetadata> fra
     executeDynamic(cls, name, desc, frame);
 
     frame->offset += 5;
+}
+void OMInterpreter::operand_invokevirtual(std::shared_ptr<OMFrameMetadata> frame)
+{
+    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
+    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantMethodRef>();
+    auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();
+    auto temp3 = frame->clazz->mapping->at(temp1->nameAndTypeIndex)->to<OMClassConstantNameAndType>();
+
+    auto cls = frame->clazz->mapping->at(temp2->nameIndex)->to<OMClassConstantUtf8>()->data;
+    auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
+    auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
+
+    auto clss = tower.fetchClass(cls);
+
+    executeDynamic(cls, name, desc, frame);
+
+    frame->offset += 3;
 }
 void OMInterpreter::operand_astore_n(std::shared_ptr<OMFrameMetadata> frame)
 {

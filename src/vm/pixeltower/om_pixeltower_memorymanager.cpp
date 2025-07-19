@@ -64,11 +64,11 @@ void *OMMemoryManager::allocateArray(OMArrayType type, int *lengths, int dim)
         switch (type)
         {
         case Byte:
-        case Char:
         case Boolean:
             objLength = 1;
             break;
         case Short:
+        case Char:
             objLength = 2;
             break;
         case Int:
