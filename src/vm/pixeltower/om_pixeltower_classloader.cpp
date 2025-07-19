@@ -55,11 +55,15 @@ void OMClassLoader::loadClass(std::shared_ptr<OMClassFile> file)
         switch (m[0])
         {
         case 'Z':
-        case 'I':
-        case 'B':
-        case 'S':
-        case 'F':
         case 'C':
+        case 'B':
+            f->type = Bytes1;
+            break;
+        case 'S':
+            f->type = Bytes2;
+            break;
+        case 'I':
+        case 'F':
             f->type = Bytes4;
             break;
         case 'J':

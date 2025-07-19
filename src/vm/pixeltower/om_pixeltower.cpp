@@ -146,15 +146,15 @@ std::string OMPixelTower::printInstanceData(void *block, int layer, bool isArray
     auto arr = (OMArrayHeader *)block;
     if (block == nullptr)
     {
-        return pref + fmt::format("{}> ???{}", OMLogAnsiBlackLight, OMLogAnsiReset);
+        return pref + fmt::format("{}???{}", OMLogAnsiBlackLight, OMLogAnsiReset);
     }
     else if (arr->classifierPointer == &ARRAY_TYPE)
     {
         std::string target = "";
-        target += pref + fmt::format("> length: {}\n", arr->length);
+        target += pref + fmt::format("length: {}\n", arr->length);
         for (int i = 0; i < arr->length; i++)
         {
-            target += pref + fmt::format("> {}[{}]{} ", OMLogAnsiBlueLight, i, OMLogAnsiReset);
+            target += pref + fmt::format("{}[{}]{} ", OMLogAnsiBlueLight, i, OMLogAnsiReset);
             switch (arr->type)
             {
             case Byte:
@@ -226,7 +226,7 @@ std::string OMPixelTower::printInstanceData(void *block, int layer, bool isArray
                 break;
             }
             target +=
-                pref + fmt::format("> field {2}{0}{3}: {1}\n", field->name, item, OMLogAnsiCyanLight, OMLogAnsiReset);
+                pref + fmt::format("field {2}{0}{3}: {1}\n", field->name, item, OMLogAnsiCyanLight, OMLogAnsiReset);
         }
     }
 

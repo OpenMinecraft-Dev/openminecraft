@@ -37,6 +37,12 @@ void OMClass::calcFieldOffsets()
 
         switch (field->type)
         {
+        case Bytes1:
+            *length += 1 - (*length % 1);
+            break;
+        case Bytes2:
+            *length += 2 - (*length % 2);
+            break;
         case Bytes4:
             *length += 4 - (*length % 4);
             break;

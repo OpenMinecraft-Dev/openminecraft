@@ -22,7 +22,7 @@ recursive_listdir("./src")
 
 def compile(s):
     print(f"Compiling {s} ...")
-    ret = os.system(f"javac -Xlint:-options --release 8 {s} -d out")
+    ret = os.system(f"javac -Xlint:-options --release 8 {s} -cp src -d out")
 
     if not ret == 0:
         print(f"{s} compilation failed")

@@ -12,6 +12,8 @@ namespace openminecraft::vm::pixeltower
 {
 enum OMFieldType
 {
+    Bytes1,
+    Bytes2,
     Bytes4,
     Bytes8,
     BytesP

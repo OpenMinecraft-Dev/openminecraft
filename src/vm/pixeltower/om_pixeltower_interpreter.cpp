@@ -282,14 +282,14 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
 
             default: {
                 tower.debugStackStatus();
-                throw err::OMValidationError{err::Instructions, "instructions not implemented",
+                throw err::OMValidationError{err::Instructions, "we hitted the azure bounary (unknown instruction)",
                                              fetchCurrentPosition(frame)};
             }
             }
         }
     }
 
-    throw err::OMValidationError{err::Instructions, "code heap overflow!", fetchCurrentPosition(frame)};
+    throw err::OMValidationError{err::Instructions, "what are you executing?", fetchCurrentPosition(frame)};
 }
 void OMInterpreter::checkType(std::shared_ptr<OMFrameMetadata> frame, std::any data, std::string desc)
 {
@@ -495,24 +495,47 @@ std::string OMInterpreter::fetchName(OMArrayType type)
         return "ref";
     }
 }
-// TODO: other types
 void OMInterpreter::writeStackTop(void *target, std::string desc, std::shared_ptr<OMFrameMetadata> frame)
 {
     STACK_CHECK;
     auto it = std::type_index(STACK_ACCESS.top().type());
 
-    if (it == std::type_index(typeid(int)))
+    int temp = 0;
+    auto descparsed = bytecode::descriptor::decodeType(desc, &temp);
+    if (descparsed.type == util::Err)
     {
-        *((int *)target) = std::any_cast<int>(STACK_ACCESS.top());
-    }
-    else if (it == std::type_index(typeid(void *)))
-    {
-        *((void **)target) = std::any_cast<void *>(STACK_ACCESS.top());
-    }
-    else
-    {
-        throw err::OMValidationError{err::Instructions, fmt::format("unknown stack top data"),
+        throw err::OMValidationError{err::Instructions,
+                                     fmt::format("unknown field descriptor, {}", descparsed.unwrap_err()),
                                      fetchCurrentPosition(frame)};
+    }
+
+    checkType(frame, STACK_ACCESS.top(), descparsed.unwrap());
+
+    switch (hash_compile_time(descparsed.unwrap().c_str()))
+    {
+    case "boolean"_hash:
+    case "char"_hash:
+    case "byte"_hash:
+        *((char *)target) = std::any_cast<int>(STACK_ACCESS.top());
+        break;
+    case "short"_hash:
+        *((short *)target) = std::any_cast<int>(STACK_ACCESS.top());
+        break;
+    case "int"_hash:
+        *((int *)target) = std::any_cast<int>(STACK_ACCESS.top());
+        break;
+    case "long"_hash:
+        *((int64_t *)target) = std::any_cast<int64_t>(STACK_ACCESS.top());
+        break;
+    case "float"_hash:
+        *((float *)target) = std::any_cast<float>(STACK_ACCESS.top());
+        break;
+    case "double"_hash:
+        *((double *)target) = std::any_cast<double>(STACK_ACCESS.top());
+        break;
+    default:
+        *((void **)target) = std::any_cast<void *>(STACK_ACCESS.top());
+        break;
     }
 
     SAFE_STACK_POP;
