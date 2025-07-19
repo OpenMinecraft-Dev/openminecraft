@@ -281,6 +281,11 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
                 break;
             }
 
+            case op_i2s: {
+                operand_i2s(frame);
+                break;
+            }
+
             case op_if_acmpne: {
                 operand_if_acmpne(frame);
                 break;
@@ -665,6 +670,15 @@ void OMInterpreter::operand_i2b(std::shared_ptr<OMFrameMetadata> frame)
     STACK_ACCESS.pop();
     checkType(frame, i1, "int");
     STACK_ACCESS.push((int)(char)std::any_cast<int>(i1));
+    frame->offset++;
+}
+void OMInterpreter::operand_i2s(std::shared_ptr<OMFrameMetadata> frame)
+{
+    STACK_CHECK;
+    auto i1 = STACK_ACCESS.top();
+    STACK_ACCESS.pop();
+    checkType(frame, i1, "int");
+    STACK_ACCESS.push((int)(short)std::any_cast<int>(i1));
     frame->offset++;
 }
 void OMInterpreter::operand_iadd(std::shared_ptr<OMFrameMetadata> frame)

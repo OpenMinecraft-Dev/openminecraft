@@ -198,6 +198,7 @@ int boot(std::vector<std::string> args)
                         pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(J)V", cmdPrint);
                         pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(F)V", cmdPrint);
                         pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(D)V", cmdPrint);
+                        pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(I)V", cmdPrint);
                         pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(Ljava/lang/String;)V",
                                                cmdPrint);
 
