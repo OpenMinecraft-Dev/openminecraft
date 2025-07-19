@@ -204,6 +204,14 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
                 break;
             }
 
+            case op_iload_n(0):
+            case op_iload_n(1):
+            case op_iload_n(2):
+            case op_iload_n(3): {
+                operand_iload_n(frame);
+                break;
+            }
+
             case op_aload_n(0):
             case op_aload_n(1):
             case op_aload_n(2):
@@ -253,6 +261,11 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
                 return;
             }
 
+            case op_getstatic: {
+                operand_getstatic(frame);
+                break;
+            }
+
             case op_putstatic: {
                 operand_putstatic(frame);
                 break;
@@ -260,6 +273,11 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
 
             case op_putfield: {
                 operand_putfield(frame);
+                break;
+            }
+
+            case op_getfield: {
+                operand_getfield(frame);
                 break;
             }
 
@@ -495,6 +513,51 @@ std::string OMInterpreter::fetchName(OMArrayType type)
         return "ref";
     }
 }
+void OMInterpreter::fetchToStackTop(void *target, std::string desc, std::shared_ptr<OMFrameMetadata> frame)
+{
+    int temp = 0;
+    auto descparsed = bytecode::descriptor::decodeType(desc, &temp);
+    if (descparsed.type == util::Err)
+    {
+        throw err::OMValidationError{err::Instructions,
+                                     fmt::format("unknown field descriptor, {}", descparsed.unwrap_err()),
+                                     fetchCurrentPosition(frame)};
+    }
+
+    switch (hash_compile_time(descparsed.unwrap().c_str()))
+    {
+    case "boolean"_hash:
+    case "char"_hash:
+    case "byte"_hash: {
+        STACK_ACCESS.push((int)*(char *)target);
+        break;
+    }
+    case "short"_hash: {
+        STACK_ACCESS.push((int)*(short *)target);
+        break;
+    }
+    case "int"_hash: {
+        STACK_ACCESS.push(*(int *)target);
+        break;
+    }
+    case "float"_hash: {
+        STACK_ACCESS.push(*(float *)target);
+        break;
+    }
+    case "long"_hash: {
+        STACK_ACCESS.push(*(int64_t *)target);
+        break;
+    }
+    case "double"_hash: {
+        STACK_ACCESS.push(*(double *)target);
+        break;
+    }
+    default: {
+        STACK_ACCESS.push(*(void **)target);
+        break;
+    }
+    }
+}
 void OMInterpreter::writeStackTop(void *target, std::string desc, std::shared_ptr<OMFrameMetadata> frame)
 {
     STACK_CHECK;
@@ -544,12 +607,77 @@ std::string OMInterpreter::fetchCurrentPosition(std::shared_ptr<OMFrameMetadata>
 {
     return fmt::format("{}.{}{} + {}", frame->clazz->name, frame->method->name, frame->method->desc, frame->offset);
 }
+
+void OMInterpreter::operand_iload_n(std::shared_ptr<OMFrameMetadata> frame)
+{
+    STACK_ACCESS.push(frame->local[frame->codePointer[frame->offset] - op_iload_n(0)]);
+    frame->offset++;
+}
 void OMInterpreter::operand_ireturn(std::shared_ptr<OMFrameMetadata> frame)
 {
     STACK_CHECK;
     auto ret = STACK_ACCESS.top();
     popFrame(frame);
     STACK_ACCESS.push(ret);
+}
+void OMInterpreter::operand_getstatic(std::shared_ptr<OMFrameMetadata> frame)
+{
+    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
+    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantFieldRef>();
+    auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();
+    auto temp3 = frame->clazz->mapping->at(temp1->nameAndTypeIndex)->to<OMClassConstantNameAndType>();
+
+    auto cls = frame->clazz->mapping->at(temp2->nameIndex)->to<OMClassConstantUtf8>()->data;
+    auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
+    auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
+
+    auto res = tower.fetchClass(cls);
+
+    frame->offset += 3;
+    for (auto fi : res->fields)
+    {
+        if (fi->name == name && (fi->accessFlag & JVM_Acc_Static))
+        {
+            fetchToStackTop(OBJECT_ACCESS(res->staticFieldBlock, fi->offset), fi->desc, frame);
+            return;
+        }
+    }
+
+    throw err::OMValidationError{err::Instructions,
+                                 fmt::format("static field not found for {} with name {}", cls, name),
+                                 fetchCurrentPosition(frame)};
+}
+void OMInterpreter::operand_getfield(std::shared_ptr<OMFrameMetadata> frame)
+{
+    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
+    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantFieldRef>();
+    auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();
+    auto temp3 = frame->clazz->mapping->at(temp1->nameAndTypeIndex)->to<OMClassConstantNameAndType>();
+
+    auto cls = frame->clazz->mapping->at(temp2->nameIndex)->to<OMClassConstantUtf8>()->data;
+    auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
+    auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
+
+    auto res = tower.fetchClass(cls);
+
+    frame->offset += 3;
+    auto item = STACK_ACCESS.top();
+    SAFE_STACK_POP;
+    if (std::type_index(item.type()) != std::type_index(typeid(void *)))
+    {
+        throw err::OMValidationError{err::Instructions, "unknown stack item type", fetchCurrentPosition(frame)};
+    }
+    for (auto fi : res->fields)
+    {
+        if (fi->name == name && (fi->accessFlag & JVM_Acc_Static) == 0)
+        {
+            fetchToStackTop(OBJECT_ACCESS(std::any_cast<void *>(item), fi->offset), fi->desc, frame);
+            return;
+        }
+    }
+
+    throw err::OMValidationError{err::Instructions, fmt::format("field not found for {} with name {}", cls, name),
+                                 fetchCurrentPosition(frame)};
 }
 void OMInterpreter::operand_putfield(std::shared_ptr<OMFrameMetadata> frame)
 {
@@ -584,8 +712,7 @@ void OMInterpreter::operand_putfield(std::shared_ptr<OMFrameMetadata> frame)
         }
     }
 
-    throw err::OMValidationError{err::Instructions,
-                                 fmt::format("static field not found for {} with name {}", cls, name),
+    throw err::OMValidationError{err::Instructions, fmt::format("field not found for {} with name {}", cls, name),
                                  fetchCurrentPosition(frame)};
 }
 void OMInterpreter::operand_putstatic(std::shared_ptr<OMFrameMetadata> frame)

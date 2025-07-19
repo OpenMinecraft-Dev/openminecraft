@@ -50,6 +50,9 @@ class OMInterpreter
     void operand_invokeinterface(std::shared_ptr<OMFrameMetadata> frame);
     void operand_putstatic(std::shared_ptr<OMFrameMetadata> frame);
     void operand_putfield(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_getstatic(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_getfield(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_iload_n(std::shared_ptr<OMFrameMetadata> frame);
 
     void *newString(std::string data);
 
@@ -57,6 +60,7 @@ class OMInterpreter
     void checkType(std::shared_ptr<OMFrameMetadata> frame, std::any data, std::string desc);
     std::string fetchName(OMArrayType type);
     void writeStackTop(void *target, std::string desc, std::shared_ptr<OMFrameMetadata> frame);
+    void fetchToStackTop(void *target, std::string desc, std::shared_ptr<OMFrameMetadata> frame);
     std::string fetchCurrentPosition(std::shared_ptr<OMFrameMetadata> frame);
     void popFrame(std::shared_ptr<OMFrameMetadata> frame);
 
