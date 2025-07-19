@@ -271,6 +271,16 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
                 break;
             }
 
+            case op_iadd: {
+                operand_iadd(frame);
+                break;
+            }
+
+            case op_i2b: {
+                operand_i2b(frame);
+                break;
+            }
+
             case op_if_acmpne: {
                 operand_if_acmpne(frame);
                 break;
@@ -648,6 +658,32 @@ std::string OMInterpreter::fetchCurrentPosition(std::shared_ptr<OMFrameMetadata>
 {
     return fmt::format("{}.{}{} + {}", frame->clazz->name, frame->method->name, frame->method->desc, frame->offset);
 }
+void OMInterpreter::operand_i2b(std::shared_ptr<OMFrameMetadata> frame)
+{
+    STACK_CHECK;
+    auto i1 = STACK_ACCESS.top();
+    STACK_ACCESS.pop();
+    checkType(frame, i1, "int");
+    STACK_ACCESS.push((int)(char)std::any_cast<int>(i1));
+    frame->offset++;
+}
+void OMInterpreter::operand_iadd(std::shared_ptr<OMFrameMetadata> frame)
+{
+    STACK_CHECK;
+    auto i1 = STACK_ACCESS.top();
+    STACK_ACCESS.pop();
+
+    STACK_CHECK;
+    auto i2 = STACK_ACCESS.top();
+    STACK_ACCESS.pop();
+
+    checkType(frame, i1, "int");
+    checkType(frame, i2, "int");
+
+    STACK_ACCESS.push(std::any_cast<int>(i1) + std::any_cast<int>(i2));
+
+    frame->offset++;
+}
 void OMInterpreter::operand_ldc(std::shared_ptr<OMFrameMetadata> frame)
 {
     constantInternal(frame, frame->codePointer[frame->offset + 1]);
@@ -700,6 +736,7 @@ void OMInterpreter::operand_ireturn(std::shared_ptr<OMFrameMetadata> frame)
     STACK_CHECK;
     auto ret = STACK_ACCESS.top();
     popFrame(frame);
+    checkType(frame, ret, "int");
     STACK_ACCESS.push(ret);
 }
 void OMInterpreter::operand_getstatic(std::shared_ptr<OMFrameMetadata> frame)

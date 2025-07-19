@@ -1,7 +1,6 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_classloader.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_class_structdef.hpp"

@@ -168,6 +168,8 @@ int boot(std::vector<std::string> args)
                             std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
                                 ->stack[std::this_thread::get_id()]
                                 .push(arr);
+                            OMBytecodeChecker c(pt->fetchClass("openminecraft/Test")->rawFile);
+                            c.detail();
                             pt->execute("openminecraft/Test", "main", "([Ljava/lang/String;)V");
                         }
                         catch (vm::err::OMValidationError err)

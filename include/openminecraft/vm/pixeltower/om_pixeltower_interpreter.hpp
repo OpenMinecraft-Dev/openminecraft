@@ -54,6 +54,8 @@ class OMInterpreter
     void operand_invokevirtual(std::shared_ptr<OMFrameMetadata> frame);
     void operand_ldc(std::shared_ptr<OMFrameMetadata> frame);
     void operand_ldc_w(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_iadd(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_i2b(std::shared_ptr<OMFrameMetadata> frame);
 
     void *newString(std::string data);
 
