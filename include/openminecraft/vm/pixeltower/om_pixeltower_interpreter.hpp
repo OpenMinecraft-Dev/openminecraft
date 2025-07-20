@@ -57,6 +57,10 @@ class OMInterpreter
     void operand_iadd(std::shared_ptr<OMFrameMetadata> frame);
     void operand_i2b(std::shared_ptr<OMFrameMetadata> frame);
     void operand_i2s(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_iinc(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_ifne(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_astore(std::shared_ptr<OMFrameMetadata> frame);
+    void operand_aload(std::shared_ptr<OMFrameMetadata> frame);
 
     void *newString(std::string data);
 
