@@ -1,6 +1,4 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
-#include "openminecraft/binary/om_bin_hash.hpp"
-#include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_ansi.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
@@ -46,16 +44,20 @@ void OMPixelTower::registerNativeFunc(std::string clazz, std::string func, std::
         }
     }
 
-    throw err::OMValidationError{err::Instructions, fmt::format("registering native function to a non-native function!"), fmt::format("{}.{}{}", clazz, func, desc)};
+    throw err::OMValidationError{err::Instructions,
+                                 fmt::format("registering native function to a non-native function!"),
+                                 fmt::format("{}.{}{}", clazz, func, desc)};
 }
 std::any OMPixelTower::callNativeFunc(std::string clazz, std::string func, std::string desc, std::any args)
 {
     auto key = fmt::format("{}.{}{}", clazz, func, desc);
-    if (nativeFuncs.count(key)) {
+    if (nativeFuncs.count(key))
+    {
         return nativeFuncs[key](args);
     }
 
-    throw err::OMValidationError{err::Instructions, fmt::format("native function not found"), fmt::format("{}.{}{}", clazz, func, desc)};
+    throw err::OMValidationError{err::Instructions, fmt::format("native function not found"),
+                                 fmt::format("{}.{}{}", clazz, func, desc)};
 }
 void OMPixelTower::loadClass(std::shared_ptr<classfile::OMClassFile> file)
 {
@@ -93,7 +95,7 @@ std::shared_ptr<OMClass> OMPixelTower::fetchClass(std::string name)
 }
 void OMPixelTower::execute(std::string clazz, std::string name, std::string desc)
 {
-    std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(interpreter)->execute(clazz, name, desc);
+    std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(interpreter)->execute(fetchClass(clazz), name, desc);
 }
 void OMPixelTower::debugStackStatus()
 {

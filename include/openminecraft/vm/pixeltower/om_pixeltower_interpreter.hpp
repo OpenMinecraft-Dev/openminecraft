@@ -19,7 +19,6 @@ class OMInterpreter
     OMInterpreter(OMPixelTower &tower);
     ~OMInterpreter();
 
-    void execute(std::string clazz, std::string method, std::string sig);
     void execute(std::shared_ptr<OMClass> clazz, std::string method, std::string sig);
     void executeDynamic(std::string clazz, std::string method, std::string sig, std::shared_ptr<OMFrameMetadata> frame);
     void execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMethodInfo> mi);

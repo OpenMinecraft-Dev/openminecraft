@@ -50,10 +50,6 @@ OMInterpreter::OMInterpreter(OMPixelTower &tower) : tower(tower), logger("pixelt
 OMInterpreter::~OMInterpreter()
 {
 }
-void OMInterpreter::execute(std::string clazz, std::string method, std::string sig)
-{
-    return execute(tower.fetchClass(clazz), method, sig);
-}
 void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::string method, std::string sig)
 {
     for (auto &m : clazz->methods)
@@ -106,7 +102,7 @@ void OMInterpreter::executeDynamic(std::string clazz, std::string method, std::s
             tempst.pop();
         }
 
-        return execute((*((OMClass **)obj))->name, method, sig);
+        return execute(tower.fetchClass((*((OMClass **)obj))->name), method, sig);
     }
     else
     {
