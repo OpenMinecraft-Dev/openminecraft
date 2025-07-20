@@ -697,13 +697,12 @@ void OMInterpreter::operand_aload(std::shared_ptr<OMFrameMetadata> frame)
 }
 void OMInterpreter::operand_ifne(std::shared_ptr<OMFrameMetadata> frame)
 {
-    auto off = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
-    STACK_CHECK;
     auto target = std::any_cast<int>(STACK_ACCESS.top());
     STACK_ACCESS.pop();
     if (target != 0)
     {
-        frame->offset += off;
+        frame->offset +=
+            binary::be16SignedToNative(frame->codePointer[frame->offset + 1], frame->codePointer[frame->offset + 2]);
     }
     else
     {
@@ -1019,7 +1018,8 @@ void OMInterpreter::operand_if_acmpne(std::shared_ptr<OMFrameMetadata> frame)
 
     if (std::any_cast<void *>(a1) != std::any_cast<void *>(a2))
     {
-        frame->offset += binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
+        frame->offset +=
+            binary::be16SignedToNative(frame->codePointer[frame->offset + 1], frame->codePointer[frame->offset + 2]);
     }
     else
     {

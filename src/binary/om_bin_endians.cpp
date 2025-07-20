@@ -36,6 +36,16 @@ float befToNative(float data)
     return d.fdata;
 }
 
+int16_t be16SignedToNative(uint8_t d1, uint8_t d2)
+{
+    return (int16_t)(((int8_t)d1) << 8 | ((int8_t)d2));
+}
+
+int32_t be32SignedToNative(uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4)
+{
+    return (int16_t)(((int8_t)d1) << 24 | ((int8_t)d2) << 16 | ((int8_t)d3) << 8 | ((uint8_t)d4));
+}
+
 double bedToNative(double data)
 {
     union {

@@ -33,6 +33,9 @@ uint64_t be64ToNative(uint64_t data);
 float befToNative(float data);
 double bedToNative(double data);
 
+int16_t be16SignedToNative(uint8_t d1, uint8_t d2);
+int32_t be32SignedToNative(uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4);
+
 bool checkNativeLe();
 } // namespace openminecraft::binary
 

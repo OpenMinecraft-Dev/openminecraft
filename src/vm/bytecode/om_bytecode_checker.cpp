@@ -156,6 +156,13 @@ void OMBytecodeChecker::detail()
         bytes += 2;                                                                                                    \
         break
 
+#define tsbyteCommand(operand, msg)                                                                                    \
+    case operand:                                                                                                      \
+        logger->info("{}: {}", bytes,                                                                                  \
+                     fmt::format(msg, (int)binary::be16SignedToNative(codeRaw[bytes + 1], codeRaw[bytes + 2])));       \
+        bytes += 2;                                                                                                    \
+        break
+
         while (bytes < attr->codeLength)
         {
             switch (codeRaw[bytes])
@@ -416,22 +423,22 @@ void OMBytecodeChecker::detail()
                 simpleCommand(op_fcmpg, "fcmpg");
                 simpleCommand(op_dcmpl, "dcmpl");
                 simpleCommand(op_dcmpg, "dcmpg");
-                tbyteCommand(op_ifeq, "ifeq {}");
-                tbyteCommand(op_ifne, "ifne {}");
-                tbyteCommand(op_iflt, "iflt {}");
-                tbyteCommand(op_ifge, "ifge {}");
-                tbyteCommand(op_ifgt, "ifgt {}");
-                tbyteCommand(op_ifle, "ifle {}");
-                tbyteCommand(op_if_icmpeq, "if_icmpeq {}");
-                tbyteCommand(op_if_icmpne, "if_icmpne {}");
-                tbyteCommand(op_if_icmplt, "if_icmplt {}");
-                tbyteCommand(op_if_icmpge, "if_icmpge {}");
-                tbyteCommand(op_if_icmpgt, "if_icmpgt {}");
-                tbyteCommand(op_if_icmple, "if_icmple {}");
-                tbyteCommand(op_if_acmpeq, "if_acmpeq {}");
-                tbyteCommand(op_if_acmpne, "if_acmpne {}");
-                tbyteCommand(op_goto, "if_goto {}");
-                tbyteCommand(op_jsr, "if_jsr {}");
+                tsbyteCommand(op_ifeq, "ifeq {}");
+                tsbyteCommand(op_ifne, "ifne {}");
+                tsbyteCommand(op_iflt, "iflt {}");
+                tsbyteCommand(op_ifge, "ifge {}");
+                tsbyteCommand(op_ifgt, "ifgt {}");
+                tsbyteCommand(op_ifle, "ifle {}");
+                tsbyteCommand(op_if_icmpeq, "if_icmpeq {}");
+                tsbyteCommand(op_if_icmpne, "if_icmpne {}");
+                tsbyteCommand(op_if_icmplt, "if_icmplt {}");
+                tsbyteCommand(op_if_icmpge, "if_icmpge {}");
+                tsbyteCommand(op_if_icmpgt, "if_icmpgt {}");
+                tsbyteCommand(op_if_icmple, "if_icmple {}");
+                tsbyteCommand(op_if_acmpeq, "if_acmpeq {}");
+                tsbyteCommand(op_if_acmpne, "if_acmpne {}");
+                tsbyteCommand(op_goto, "goto {}");
+                tsbyteCommand(op_jsr, "jsr {}");
             // ret (index:u8)
             case op_ret: {
                 logger->info("{}: ret {}", bytes, (int)codeRaw[bytes + 1]);
@@ -531,23 +538,25 @@ void OMBytecodeChecker::detail()
                 tbyteCommand(op_instanceof, "instanceof #{}");
                 simpleCommand(op_monitorenter, "monitorenter");
                 simpleCommand(op_monitorexit, "monitorexit");
+
             case op_wide: {
                 if (codeRaw[bytes + 1] == op_iinc)
                 {
-                    logger->info("{}: wide iinc {} {}", bytes, binary::be32ToNative(*(uint32_t *)(codeRaw + bytes + 2)),
-                                 binary::be32ToNative(*(uint32_t *)(codeRaw + bytes + 4)));
+                    logger->info("{}: wide iinc {} {}", bytes,
+                                 binary::be16SignedToNative(codeRaw[bytes + 2], codeRaw[bytes + 3]),
+                                 binary::be16SignedToNative(codeRaw[bytes + 4], codeRaw[bytes + 5]));
                     bytes += 5;
                 }
                 else
                 {
                     logger->info("{}: wide {} {}", bytes, codeRaw[bytes + 1],
-                                 binary::be32ToNative(*(uint32_t *)(codeRaw + bytes + 2)));
+                                 binary::be16SignedToNative(codeRaw[bytes + 2], codeRaw[bytes + 3]));
                     bytes += 3;
                 }
                 break;
             }
-                tbyteCommand(op_ifnull, "ifnull {}");
-                tbyteCommand(op_ifnonnull, "ifnonnull {}");
+                tsbyteCommand(op_ifnull, "ifnull {}");
+                tsbyteCommand(op_ifnonnull, "ifnonnull {}");
             case op_multianewarray: {
                 logger->info("{}: multianewarray {} {}", bytes,
                              binary::be16ToNative(*(uint16_t *)(codeRaw + bytes + 1)), codeRaw[bytes + 3]);
@@ -555,13 +564,17 @@ void OMBytecodeChecker::detail()
                 break;
             }
             case op_goto_w: {
-                logger->info("{}: goto_w {}", bytes, binary::be32ToNative(*(uint32_t *)(codeRaw + bytes + 1)));
-                bytes += 4;
+                logger->info("{}: goto_w {}", bytes,
+                             binary::be32SignedToNative(codeRaw[bytes + 1], codeRaw[bytes + 2], codeRaw[bytes + 3],
+                                                        codeRaw[bytes + 4]));
+                bytes += 5;
                 break;
             }
             case op_jsr_w: {
-                logger->info("{}: jsr_w {}", bytes, binary::be32ToNative(*(uint32_t *)(codeRaw + bytes + 1)));
-                bytes += 4;
+                logger->info("{}: jsr_w {}", bytes,
+                             binary::be32SignedToNative(codeRaw[bytes + 1], codeRaw[bytes + 2], codeRaw[bytes + 3],
+                                                        codeRaw[bytes + 4]));
+                bytes += 5;
                 break;
             }
             default: {
