@@ -33,6 +33,7 @@
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_debugger.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_memorymanager.hpp"
 #include <SDL3/SDL.h>
@@ -115,6 +116,8 @@ int boot(std::vector<std::string> args)
     SDL_Quit();
 
     auto pt = std::make_unique<OMPixelTower>();
+    auto deb =
+        std::make_unique<v1::OMDebugger>(std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter));
 
     std::shared_ptr<OMClassFileParser> parser;
     bool recovermode = false;
@@ -175,6 +178,7 @@ int boot(std::vector<std::string> args)
                         catch (vm::err::OMValidationError err)
                         {
                             logger->error(err.what());
+                            deb->printStack();
                         }
 
                         commandBuffer.clear();
@@ -189,8 +193,9 @@ int boot(std::vector<std::string> args)
                         }
 
                         auto cmdPrint = [&](std::any data) {
-                            logger->debug("[stdout] {}",
-                                          pt->printAny(*(++std::any_cast<std::list<std::any> *>(data)->begin()), 0));
+                            /*logger->debug("[stdout] {}",
+                                          pt->printAny(*(++std::any_cast<std::list<std::any> *>(data)->begin()), 0));*/
+                            logger->debug("[stdout] not implemented");
                             return nullptr;
                         };
 

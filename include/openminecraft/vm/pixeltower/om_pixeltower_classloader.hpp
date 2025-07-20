@@ -5,7 +5,6 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_class_structdef.hpp"
 #include <any>
-#include <functional>
 #include <list>
 #include <memory>
 
