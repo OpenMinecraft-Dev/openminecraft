@@ -1,7 +1,6 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
-#include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
@@ -166,6 +165,15 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
 
     STACK_ACCESS.push(frame);
 
+#define FETCH_DETAIL_ARG                                                                                               \
+    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));                          \
+    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantFieldRef>();                                      \
+    auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();                             \
+    auto temp3 = frame->clazz->mapping->at(temp1->nameAndTypeIndex)->to<OMClassConstantNameAndType>();                 \
+    auto cls = frame->clazz->mapping->at(temp2->nameIndex)->to<OMClassConstantUtf8>()->data;                           \
+    auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;                          \
+    auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
+
     {
         auto codeArea = mi->code->code->data();
         frame->codePointer = codeArea;
@@ -175,12 +183,13 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
             switch (codeArea[frame->offset])
             {
             case op_nop: {
-                operand_nop(frame);
+                frame->offset++;
                 break;
             }
 
             case op_aconst_null: {
-                operand_aconst_null(frame);
+                STACK_ACCESS.push((void *)nullptr);
+                frame->offset++;
                 break;
             }
             case op_iconst_i(-1):
@@ -190,47 +199,55 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
             case op_iconst_i(3):
             case op_iconst_i(4):
             case op_iconst_i(5): {
-                operand_iconst_n(frame);
+                STACK_ACCESS.push((int)(frame->codePointer[frame->offset] - op_iconst_i(0)));
+                frame->offset++;
                 break;
             }
 
             case op_lconst_l(0):
             case op_lconst_l(1): {
-                operand_lconst_n(frame);
+                STACK_ACCESS.push((int64_t)(frame->codePointer[frame->offset] - op_lconst_l(0)));
+                frame->offset++;
                 break;
             }
 
             case op_fconst_f(0):
             case op_fconst_f(1):
             case op_fconst_f(2): {
-                operand_fconst_n(frame);
+                STACK_ACCESS.push((float)(frame->codePointer[frame->offset] - op_fconst_f(0)));
+                frame->offset++;
                 break;
             }
 
             case op_dconst_d(0):
             case op_dconst_d(1): {
-                operand_dconst_n(frame);
+                STACK_ACCESS.push((double)(frame->codePointer[frame->offset] - op_dconst_d(0)));
+                frame->offset++;
                 break;
             }
 
             case op_bipush: {
-                operand_bipush(frame);
+                STACK_ACCESS.push((int)*(char *)&frame->codePointer[frame->offset + 1]);
+                frame->offset += 2;
                 break;
             }
 
             case op_ldc: {
-                operand_ldc(frame);
+                constantInternal(frame, frame->codePointer[frame->offset + 1]);
+                frame->offset += 2;
                 break;
             }
 
             case op_ldc_w:
             case op_ldc2_w: {
-                operand_ldc_w(frame);
+                constantInternal(frame, binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1)));
+                frame->offset += 3;
                 break;
             }
 
             case op_aload: {
-                operand_aload(frame);
+                STACK_ACCESS.push(frame->local[frame->codePointer[frame->offset + 1]]);
+                frame->offset += 2;
                 break;
             }
 
@@ -238,7 +255,8 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
             case op_iload_n(1):
             case op_iload_n(2):
             case op_iload_n(3): {
-                operand_iload_n(frame);
+                STACK_ACCESS.push(frame->local[frame->codePointer[frame->offset] - op_iload_n(0)]);
+                frame->offset++;
                 break;
             }
 
@@ -246,12 +264,16 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
             case op_aload_n(1):
             case op_aload_n(2):
             case op_aload_n(3): {
-                operand_aload_n(frame);
+                STACK_ACCESS.push(frame->local[frame->codePointer[frame->offset] - op_aload_n(0)]);
+                frame->offset++;
                 break;
             }
 
             case op_astore: {
-                operand_astore(frame);
+                auto top = STACK_ACCESS.top();
+                SAFE_STACK_POP;
+                frame->local[frame->codePointer[frame->offset + 1]] = top;
+                frame->offset += 2;
                 break;
             }
 
@@ -259,7 +281,11 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
             case op_istore_n(1):
             case op_istore_n(2):
             case op_istore_n(3): {
-                operand_istore_n(frame);
+                STACK_CHECK;
+                auto item = STACK_ACCESS.top();
+                SAFE_STACK_POP;
+                frame->local[frame->codePointer[frame->offset] - op_istore_n(0)] = item;
+                frame->offset++;
                 break;
             }
 
@@ -267,57 +293,132 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
             case op_astore_n(1):
             case op_astore_n(2):
             case op_astore_n(3): {
-                operand_astore_n(frame);
+                STACK_CHECK;
+                auto item = STACK_ACCESS.top();
+                SAFE_STACK_POP;
+                frame->local[frame->codePointer[frame->offset] - op_astore_n(0)] = item;
+                frame->offset++;
                 break;
             }
 
             case op_pop: {
-                operand_pop(frame);
+                SAFE_STACK_POP;
+                frame->offset++;
                 break;
             }
 
             case op_dup: {
-                operand_dup(frame);
+                STACK_CHECK;
+                STACK_ACCESS.push(STACK_ACCESS.top());
+                frame->offset++;
                 break;
             }
 
             case op_iadd: {
-                operand_iadd(frame);
+                STACK_CHECK;
+                auto i1 = STACK_ACCESS.top();
+                STACK_ACCESS.pop();
+
+                STACK_CHECK;
+                auto i2 = STACK_ACCESS.top();
+                STACK_ACCESS.pop();
+
+                checkType(frame, i1, "int");
+                checkType(frame, i2, "int");
+
+                STACK_ACCESS.push(std::any_cast<int>(i1) + std::any_cast<int>(i2));
+
+                frame->offset++;
                 break;
             }
 
             case op_iinc: {
-                operand_iinc(frame);
+                auto id = frame->codePointer[frame->offset + 1];
+                auto n = (int)(int8_t)frame->codePointer[frame->offset + 2];
+                frame->local[id] = std::any_cast<int>(frame->local[id]) + n;
+                frame->offset += 3;
                 break;
             }
 
             case op_i2b: {
-                operand_i2b(frame);
+                STACK_CHECK;
+                auto i1 = STACK_ACCESS.top();
+                STACK_ACCESS.pop();
+                checkType(frame, i1, "int");
+                STACK_ACCESS.push((int)(char)std::any_cast<int>(i1));
+                frame->offset++;
                 break;
             }
 
             case op_i2s: {
-                operand_i2s(frame);
+                STACK_CHECK;
+                auto i1 = STACK_ACCESS.top();
+                STACK_ACCESS.pop();
+                checkType(frame, i1, "int");
+                STACK_ACCESS.push((int)(short)std::any_cast<int>(i1));
+                frame->offset++;
                 break;
             }
 
             case op_ifne: {
-                operand_ifne(frame);
+                auto target = std::any_cast<int>(STACK_ACCESS.top());
+                STACK_ACCESS.pop();
+                if (target != 0)
+                {
+                    frame->offset += binary::be16SignedToNative(frame->codePointer[frame->offset + 1],
+                                                                frame->codePointer[frame->offset + 2]);
+                }
+                else
+                {
+                    frame->offset += 3;
+                }
                 break;
             }
 
             case op_if_acmpne: {
-                operand_if_acmpne(frame);
+                STACK_CHECK;
+                auto a1 = STACK_ACCESS.top();
+                SAFE_STACK_POP;
+                auto a2 = STACK_ACCESS.top();
+                SAFE_STACK_POP;
+
+                if (std::type_index(a1.type()) != std::type_index(typeid(void *)))
+                {
+                    throw err::OMValidationError{err::Instructions,
+                                                 "stack element type mismatch, required reference for slot 0",
+                                                 fetchCurrentPosition(frame)};
+                }
+
+                if (std::type_index(a2.type()) != std::type_index(typeid(void *)))
+                {
+                    throw err::OMValidationError{err::Instructions,
+                                                 "stack element type mismatch, required reference for slot 1",
+                                                 fetchCurrentPosition(frame)};
+                }
+
+                if (std::any_cast<void *>(a1) != std::any_cast<void *>(a2))
+                {
+                    frame->offset += binary::be16SignedToNative(frame->codePointer[frame->offset + 1],
+                                                                frame->codePointer[frame->offset + 2]);
+                }
+                else
+                {
+                    frame->offset += 3;
+                }
                 break;
             }
 
             case op_ireturn: {
-                operand_ireturn(frame);
+                STACK_CHECK;
+                auto ret = STACK_ACCESS.top();
+                popFrame(frame);
+                checkType(frame, ret, "int");
+                STACK_ACCESS.push(ret);
                 return;
             }
 
             case op_return: {
-                operand_return(frame);
+                popFrame(frame);
                 return;
             }
 
@@ -343,28 +444,91 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
 
             case op_invokestatic:
             case op_invokespecial: {
-                operand_invokeany(frame);
+                FETCH_DETAIL_ARG
+
+                auto clss = tower.fetchClass(cls);
+
+                execute(clss, name, desc);
+
+                frame->offset += 3;
                 break;
             }
 
             case op_invokevirtual: {
-                operand_invokevirtual(frame);
+                FETCH_DETAIL_ARG
+
+                executeDynamic(cls, name, desc, frame);
+
+                frame->offset += 3;
                 break;
             }
 
             case op_invokeinterface: {
-                operand_invokeinterface(frame);
+                FETCH_DETAIL_ARG
+
+                executeDynamic(cls, name, desc, frame);
+
+                frame->offset += 5;
                 break;
             }
 
             case op_new: {
-                operand_new(frame);
+                auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
+                auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantClass>();
+
+                auto cls = frame->clazz->mapping->at(temp1->nameIndex)->to<OMClassConstantUtf8>()->data;
+
+                STACK_ACCESS.push(tower.allocate(tower.fetchClass(cls)));
+
+                frame->offset += 3;
+                break;
+            }
+
+            case op_newarray: {
+                STACK_CHECK;
+                checkType(frame, STACK_ACCESS.top(), "int");
+                auto l = std::any_cast<int>(STACK_ACCESS.top());
+                STACK_ACCESS.pop();
+
+                OMArrayType t;
+                switch (frame->codePointer[frame->offset + 1])
+                {
+                case 4:
+                    t = Boolean;
+                    break;
+                case 5:
+                    t = Char;
+                    break;
+                case 6:
+                    t = Float;
+                    break;
+                case 7:
+                    t = Double;
+                    break;
+                case 8:
+                    t = Byte;
+                    break;
+                case 9:
+                    t = Short;
+                    break;
+                case 10:
+                    t = Int;
+                    break;
+                case 11:
+                    t = Long;
+                    break;
+                default:
+                    throw err::OMValidationError{err::Instructions, "unknown array type!", fetchCurrentPosition(frame)};
+                    break;
+                }
+                STACK_ACCESS.push(tower.allocateArray(t, l));
+                frame->offset += 2;
                 break;
             }
 
             default: {
                 tower.debugStackStatus();
-                throw err::OMValidationError{err::Instructions, "we hitted the azure bounary (unknown instruction)",
+                throw err::OMValidationError{err::Instructions, "entering Mazarine End !! (unknown instruction)",
                                              fetchCurrentPosition(frame)};
             }
             }
@@ -683,84 +847,6 @@ std::string OMInterpreter::fetchCurrentPosition(std::shared_ptr<OMFrameMetadata>
 {
     return fmt::format("{}.{}{} + {}", frame->clazz->name, frame->method->name, frame->method->desc, frame->offset);
 }
-void OMInterpreter::operand_astore(std::shared_ptr<OMFrameMetadata> frame)
-{
-    auto top = STACK_ACCESS.top();
-    SAFE_STACK_POP;
-    frame->local[frame->codePointer[frame->offset + 1]] = top;
-    frame->offset += 2;
-}
-void OMInterpreter::operand_aload(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_ACCESS.push(frame->local[frame->codePointer[frame->offset + 1]]);
-    frame->offset += 2;
-}
-void OMInterpreter::operand_ifne(std::shared_ptr<OMFrameMetadata> frame)
-{
-    auto target = std::any_cast<int>(STACK_ACCESS.top());
-    STACK_ACCESS.pop();
-    if (target != 0)
-    {
-        frame->offset +=
-            binary::be16SignedToNative(frame->codePointer[frame->offset + 1], frame->codePointer[frame->offset + 2]);
-    }
-    else
-    {
-        frame->offset += 3;
-    }
-}
-void OMInterpreter::operand_iinc(std::shared_ptr<OMFrameMetadata> frame)
-{
-    auto id = frame->codePointer[frame->offset + 1];
-    auto n = (int)(int8_t)frame->codePointer[frame->offset + 2];
-    frame->local[id] = std::any_cast<int>(frame->local[id]) + n;
-    frame->offset += 3;
-}
-void OMInterpreter::operand_i2b(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_CHECK;
-    auto i1 = STACK_ACCESS.top();
-    STACK_ACCESS.pop();
-    checkType(frame, i1, "int");
-    STACK_ACCESS.push((int)(char)std::any_cast<int>(i1));
-    frame->offset++;
-}
-void OMInterpreter::operand_i2s(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_CHECK;
-    auto i1 = STACK_ACCESS.top();
-    STACK_ACCESS.pop();
-    checkType(frame, i1, "int");
-    STACK_ACCESS.push((int)(short)std::any_cast<int>(i1));
-    frame->offset++;
-}
-void OMInterpreter::operand_iadd(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_CHECK;
-    auto i1 = STACK_ACCESS.top();
-    STACK_ACCESS.pop();
-
-    STACK_CHECK;
-    auto i2 = STACK_ACCESS.top();
-    STACK_ACCESS.pop();
-
-    checkType(frame, i1, "int");
-    checkType(frame, i2, "int");
-
-    STACK_ACCESS.push(std::any_cast<int>(i1) + std::any_cast<int>(i2));
-
-    frame->offset++;
-}
-void OMInterpreter::operand_ldc(std::shared_ptr<OMFrameMetadata> frame)
-{
-    constantInternal(frame, frame->codePointer[frame->offset + 1]);
-    frame->offset += 2;
-}
-void OMInterpreter::operand_ldc_w(std::shared_ptr<OMFrameMetadata> frame)
-{
-    constantInternal(frame, binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1)));
-    frame->offset += 3;
-}
 void OMInterpreter::constantInternal(std::shared_ptr<OMFrameMetadata> frame, uint16_t id)
 {
     auto constant = frame->clazz->rawFile->mapping[id];
@@ -788,34 +874,9 @@ void OMInterpreter::constantInternal(std::shared_ptr<OMFrameMetadata> frame, uin
                                      fetchCurrentPosition(frame)};
     }
 }
-void OMInterpreter::operand_bipush(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_ACCESS.push((int)*(char *)&frame->codePointer[frame->offset + 1]);
-    frame->offset += 2;
-}
-void OMInterpreter::operand_iload_n(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_ACCESS.push(frame->local[frame->codePointer[frame->offset] - op_iload_n(0)]);
-    frame->offset++;
-}
-void OMInterpreter::operand_ireturn(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_CHECK;
-    auto ret = STACK_ACCESS.top();
-    popFrame(frame);
-    checkType(frame, ret, "int");
-    STACK_ACCESS.push(ret);
-}
 void OMInterpreter::operand_getstatic(std::shared_ptr<OMFrameMetadata> frame)
 {
-    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
-    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantFieldRef>();
-    auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();
-    auto temp3 = frame->clazz->mapping->at(temp1->nameAndTypeIndex)->to<OMClassConstantNameAndType>();
-
-    auto cls = frame->clazz->mapping->at(temp2->nameIndex)->to<OMClassConstantUtf8>()->data;
-    auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
-    auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
+    FETCH_DETAIL_ARG
 
     auto res = tower.fetchClass(cls);
 
@@ -835,14 +896,7 @@ void OMInterpreter::operand_getstatic(std::shared_ptr<OMFrameMetadata> frame)
 }
 void OMInterpreter::operand_getfield(std::shared_ptr<OMFrameMetadata> frame)
 {
-    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
-    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantFieldRef>();
-    auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();
-    auto temp3 = frame->clazz->mapping->at(temp1->nameAndTypeIndex)->to<OMClassConstantNameAndType>();
-
-    auto cls = frame->clazz->mapping->at(temp2->nameIndex)->to<OMClassConstantUtf8>()->data;
-    auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
-    auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
+    FETCH_DETAIL_ARG
 
     auto res = tower.fetchClass(cls);
 
@@ -867,15 +921,7 @@ void OMInterpreter::operand_getfield(std::shared_ptr<OMFrameMetadata> frame)
 }
 void OMInterpreter::operand_putfield(std::shared_ptr<OMFrameMetadata> frame)
 {
-    STACK_CHECK;
-    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
-    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantFieldRef>();
-    auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();
-    auto temp3 = frame->clazz->mapping->at(temp1->nameAndTypeIndex)->to<OMClassConstantNameAndType>();
-
-    auto cls = frame->clazz->mapping->at(temp2->nameIndex)->to<OMClassConstantUtf8>()->data;
-    auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
-    auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
+    FETCH_DETAIL_ARG
 
     auto res = tower.fetchClass(cls);
 
@@ -903,14 +949,7 @@ void OMInterpreter::operand_putfield(std::shared_ptr<OMFrameMetadata> frame)
 }
 void OMInterpreter::operand_putstatic(std::shared_ptr<OMFrameMetadata> frame)
 {
-    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
-    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantFieldRef>();
-    auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();
-    auto temp3 = frame->clazz->mapping->at(temp1->nameAndTypeIndex)->to<OMClassConstantNameAndType>();
-
-    auto cls = frame->clazz->mapping->at(temp2->nameIndex)->to<OMClassConstantUtf8>()->data;
-    auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
-    auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
+    FETCH_DETAIL_ARG
 
     auto res = tower.fetchClass(cls);
 
@@ -928,136 +967,6 @@ void OMInterpreter::operand_putstatic(std::shared_ptr<OMFrameMetadata> frame)
                                  fmt::format("static field not found for {} with name {}", cls, name),
                                  fetchCurrentPosition(frame)};
 }
-void OMInterpreter::operand_istore_n(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_CHECK;
-    auto item = STACK_ACCESS.top();
-    SAFE_STACK_POP;
-    frame->local[frame->codePointer[frame->offset] - op_istore_n(0)] = item;
-    frame->offset++;
-}
-void OMInterpreter::operand_invokeinterface(std::shared_ptr<OMFrameMetadata> frame)
-{
-    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
-    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantMethodRef>();
-    auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();
-    auto temp3 = frame->clazz->mapping->at(temp1->nameAndTypeIndex)->to<OMClassConstantNameAndType>();
-
-    auto cls = frame->clazz->mapping->at(temp2->nameIndex)->to<OMClassConstantUtf8>()->data;
-    auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
-    auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
-
-    executeDynamic(cls, name, desc, frame);
-
-    frame->offset += 5;
-}
-void OMInterpreter::operand_invokevirtual(std::shared_ptr<OMFrameMetadata> frame)
-{
-    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
-    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantMethodRef>();
-    auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();
-    auto temp3 = frame->clazz->mapping->at(temp1->nameAndTypeIndex)->to<OMClassConstantNameAndType>();
-
-    auto cls = frame->clazz->mapping->at(temp2->nameIndex)->to<OMClassConstantUtf8>()->data;
-    auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
-    auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
-
-    auto clss = tower.fetchClass(cls);
-
-    executeDynamic(cls, name, desc, frame);
-
-    frame->offset += 3;
-}
-void OMInterpreter::operand_astore_n(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_CHECK;
-    auto item = STACK_ACCESS.top();
-    SAFE_STACK_POP;
-    frame->local[frame->codePointer[frame->offset] - op_astore_n(0)] = item;
-    frame->offset++;
-}
-void OMInterpreter::operand_iconst_n(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_ACCESS.push((int)(frame->codePointer[frame->offset] - op_iconst_i(0)));
-    frame->offset++;
-}
-void OMInterpreter::operand_lconst_n(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_ACCESS.push((int64_t)(frame->codePointer[frame->offset] - op_lconst_l(0)));
-    frame->offset++;
-}
-void OMInterpreter::operand_fconst_n(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_ACCESS.push((float)(frame->codePointer[frame->offset] - op_fconst_f(0)));
-    frame->offset++;
-}
-void OMInterpreter::operand_dconst_n(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_ACCESS.push((double)(frame->codePointer[frame->offset] - op_dconst_d(0)));
-    frame->offset++;
-}
-void OMInterpreter::operand_if_acmpne(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_CHECK;
-    auto a1 = STACK_ACCESS.top();
-    SAFE_STACK_POP;
-    auto a2 = STACK_ACCESS.top();
-    SAFE_STACK_POP;
-
-    if (std::type_index(a1.type()) != std::type_index(typeid(void *)))
-    {
-        throw err::OMValidationError{err::Instructions, "stack element type mismatch, required reference for slot 0",
-                                     fetchCurrentPosition(frame)};
-    }
-
-    if (std::type_index(a2.type()) != std::type_index(typeid(void *)))
-    {
-        throw err::OMValidationError{err::Instructions, "stack element type mismatch, required reference for slot 1",
-                                     fetchCurrentPosition(frame)};
-    }
-
-    if (std::any_cast<void *>(a1) != std::any_cast<void *>(a2))
-    {
-        frame->offset +=
-            binary::be16SignedToNative(frame->codePointer[frame->offset + 1], frame->codePointer[frame->offset + 2]);
-    }
-    else
-    {
-        frame->offset += 3;
-    }
-}
-void OMInterpreter::operand_aload_n(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_ACCESS.push(frame->local[frame->codePointer[frame->offset] - op_aload_n(0)]);
-    frame->offset++;
-}
-void OMInterpreter::operand_invokeany(std::shared_ptr<OMFrameMetadata> frame)
-{
-    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
-    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantMethodRef>();
-    auto temp2 = frame->clazz->mapping->at(temp1->classIndex)->to<OMClassConstantClass>();
-    auto temp3 = frame->clazz->mapping->at(temp1->nameAndTypeIndex)->to<OMClassConstantNameAndType>();
-
-    auto cls = frame->clazz->mapping->at(temp2->nameIndex)->to<OMClassConstantUtf8>()->data;
-    auto name = frame->clazz->mapping->at(temp3->nameIndex)->to<OMClassConstantUtf8>()->data;
-    auto desc = frame->clazz->mapping->at(temp3->descIndex)->to<OMClassConstantUtf8>()->data;
-
-    auto clss = tower.fetchClass(cls);
-
-    execute(clss, name, desc);
-
-    frame->offset += 3;
-}
-void OMInterpreter::operand_dup(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_CHECK;
-    STACK_ACCESS.push(STACK_ACCESS.top());
-    frame->offset++;
-}
-void OMInterpreter::operand_return(std::shared_ptr<OMFrameMetadata> frame)
-{
-    return popFrame(frame);
-}
 void OMInterpreter::popFrame(std::shared_ptr<OMFrameMetadata> frame)
 {
     STACK_CHECK;
@@ -1073,31 +982,6 @@ void OMInterpreter::popFrame(std::shared_ptr<OMFrameMetadata> frame)
     }
 
     SAFE_STACK_POP;
-}
-void OMInterpreter::operand_new(std::shared_ptr<OMFrameMetadata> frame)
-{
-    auto mrIdx = binary::be16ToNative(*(uint16_t *)(frame->codePointer + frame->offset + 1));
-    auto temp1 = frame->clazz->mapping->at(mrIdx)->to<OMClassConstantClass>();
-
-    auto cls = frame->clazz->mapping->at(temp1->nameIndex)->to<OMClassConstantUtf8>()->data;
-
-    STACK_ACCESS.push(tower.allocate(tower.fetchClass(cls)));
-
-    frame->offset += 3;
-}
-void OMInterpreter::operand_nop(std::shared_ptr<OMFrameMetadata> frame)
-{
-    frame->offset++;
-}
-void OMInterpreter::operand_aconst_null(std::shared_ptr<OMFrameMetadata> frame)
-{
-    STACK_ACCESS.push((void *)nullptr);
-    frame->offset++;
-}
-void OMInterpreter::operand_pop(std::shared_ptr<OMFrameMetadata> frame)
-{
-    SAFE_STACK_POP;
-    frame->offset++;
 }
 void *OMInterpreter::newString(std::string data)
 {

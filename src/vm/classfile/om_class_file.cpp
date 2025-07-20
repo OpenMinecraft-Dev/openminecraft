@@ -7,7 +7,6 @@
 #include <memory>
 #include <openminecraft/binary/om_bin_endians.hpp>
 #include <openminecraft/vm/classfile/om_class_file.hpp>
-#include <stdexcept>
 
 using namespace openminecraft::binary;
 using namespace openminecraft::binary::hash;
@@ -22,7 +21,6 @@ OMClassFileParser::OMClassFileParser(std::shared_ptr<std::istream> str) : io::OM
 
 OMClassFileParser::~OMClassFileParser()
 {
-    // this->logger->info("Destroying class file parser");
     io::OMParser::~OMParser();
 }
 
