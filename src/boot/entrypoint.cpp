@@ -204,8 +204,15 @@ int boot(std::vector<std::string> args)
                         pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(F)V", cmdPrint);
                         pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(D)V", cmdPrint);
                         pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(I)V", cmdPrint);
-                        pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(Ljava/lang/String;)V",
-                                               cmdPrint);
+                        pt->registerNativeFunc(
+                            "vmstd/internal/SystemPrintStream", "println", "(Ljava/lang/String;)V", [&](std::any s) {
+                                auto argl = std::any_cast<std::list<std::any> *>(s);
+                                auto item = std::any_cast<void *>(*(++argl->begin()));
+                                auto arr = (OMArrayHeader *)*(void **)OBJECT_ACCESS(item, sizeof(void *));
+                                auto str = std::string(ARRAY_ACCESS(arr, char), arr->length);
+                                logger->debug("[stdout] {}", str);
+                                return nullptr;
+                            });
 
                         commandBuffer.clear();
                     }

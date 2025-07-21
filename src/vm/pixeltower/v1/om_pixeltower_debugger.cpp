@@ -1,17 +1,22 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_debugger.hpp"
 #include "fmt/color.h"
-#include "openminecraft/i18n/om_i18n_res.hpp"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
+#include "openminecraft/util/om_util_result.hpp"
+#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_class_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_memorymanager.hpp"
 #include <any>
 #include <memory>
 #include <sstream>
 #include <stack>
 #include <typeindex>
+
+using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::pixeltower
 {
@@ -50,7 +55,9 @@ void OMDebugger::printStack()
 }
 std::string OMDebugger::serializeAny(std::any data, int objDepth)
 {
-    auto prefix = std::string(objDepth * 4, ' ');
+#define updatePref prefix = std::string(objDepth, '\t')
+
+    auto updatePref;
 
     auto idx = std::type_index(data.type());
     if (idx == std::type_index(typeid(int)))
@@ -69,6 +76,20 @@ std::string OMDebugger::serializeAny(std::any data, int objDepth)
     {
         return fmt::format("{}{}", prefix, fmt::styled(std::any_cast<int64_t>(data), fmt::fg(fmt::color::light_green)));
     }
+    else if (idx == std::type_index(typeid(uint16_t)))
+    {
+        return fmt::format("{}{}", prefix,
+                           fmt::styled(std::any_cast<uint16_t>(data), fmt::fg(fmt::color::light_green)));
+    }
+    else if (idx == std::type_index(typeid(char)))
+    {
+        return fmt::format("{}{:#04x}", prefix,
+                           fmt::styled((int)std::any_cast<char>(data), fmt::fg(fmt::color::light_green)));
+    }
+    else if (idx == std::type_index(typeid(bool)))
+    {
+        return fmt::format("{}{}", prefix, fmt::styled(std::any_cast<bool>(data), fmt::fg(fmt::color::light_green)));
+    }
     else if (idx == std::type_index(typeid(std::shared_ptr<runtime::OMFrameMetadata>)))
     {
         auto frameMd = std::any_cast<std::shared_ptr<runtime::OMFrameMetadata>>(data);
@@ -85,7 +106,7 @@ std::string OMDebugger::serializeAny(std::any data, int objDepth)
                                 fmt::styled(frameMd->method->desc, fmt::fg(fmt::color::gray)));
 
         objDepth++;
-        prefix = std::string(objDepth * 4, ' ');
+        updatePref;
 
         base += "\n" + prefix + "Next bytecodes: \n" + prefix;
         for (uint64_t i = 0; i < 8; i++)
@@ -98,9 +119,9 @@ std::string OMDebugger::serializeAny(std::any data, int objDepth)
         int i = 0;
         for (auto local : frameMd->local)
         {
-            base += fmt::format("\n{}- {}\n{}", prefix,
-                                fmt::styled(fmt::format("[{}]", i), fmt::fg(fmt::color::light_blue)),
-                                serializeAny(local, objDepth + 1));
+            base +=
+                fmt::format("\n{}- {} {}", prefix, fmt::styled(fmt::format("[{}]", i), fmt::fg(fmt::color::light_blue)),
+                            removeAnyPrefix(serializeAny(local, objDepth + 1)));
             i++;
         }
         return base;
@@ -114,20 +135,174 @@ std::string OMDebugger::serializeAny(std::any data, int objDepth)
         {
             return fmt::format("{}{}", prefix, fmt::styled("null", fmt::fg(fmt::color::gray)));
         }
+
         if (arrh->classifierPointer == &ARRAY_TYPE)
         {
-            return fmt::format("{}{}", prefix, fmt::styled("<array>", fmt::fg(fmt::color::gray)));
+            std::string type;
+            switch (arrh->type)
+            {
+            case Byte:
+                type = "byte";
+                break;
+            case Char:
+                type = "char";
+                break;
+            case Short:
+                type = "short";
+                break;
+            case Int:
+                type = "int";
+                break;
+            case Long:
+                type = "long";
+                break;
+            case Boolean:
+                type = "boolean";
+                break;
+            case Double:
+                type = "double";
+                break;
+            case Float:
+                type = "float";
+                break;
+            case Reference:
+                type = arrh->classPointer->name;
+                break;
+            }
+            for (int i = 0; i < arrh->dim; i++)
+            {
+                type += "[]";
+            }
+            auto target =
+                fmt::format("{}array with type {}", prefix, fmt::styled(type, fmt::fg(fmt::color::light_green)));
+
+            if (objDepth == 0)
+            {
+                objDepth++;
+                updatePref;
+                objDepth--;
+            }
+
+            for (int i = 0; i < arrh->length; i++)
+            {
+                target +=
+                    fmt::format("\n{}{}", prefix, fmt::styled(fmt::format("[{}]", i), fmt::fg(fmt::color::light_blue)));
+
+                if (arrh->dim > 1)
+                {
+                    target +=
+                        fmt::format(" {}", removeAnyPrefix(serializeAny(ARRAY_ACCESS(baseptr, void *)[i], objDepth)));
+                    continue;
+                }
+
+                switch (arrh->type)
+                {
+                case Byte:
+                    target +=
+                        fmt::format(" {}", removeAnyPrefix(serializeAny(ARRAY_ACCESS(baseptr, char)[i], objDepth)));
+                    break;
+                case Char:
+                    target +=
+                        fmt::format(" {}", removeAnyPrefix(serializeAny(ARRAY_ACCESS(baseptr, uint16_t)[i], objDepth)));
+                    break;
+                case Short:
+                    target +=
+                        fmt::format(" {}", removeAnyPrefix(serializeAny(ARRAY_ACCESS(baseptr, short)[i], objDepth)));
+                    break;
+                case Int:
+                    target +=
+                        fmt::format(" {}", removeAnyPrefix(serializeAny(ARRAY_ACCESS(baseptr, int)[i], objDepth)));
+                    break;
+                case Long:
+                    target +=
+                        fmt::format(" {}", removeAnyPrefix(serializeAny(ARRAY_ACCESS(baseptr, int64_t)[i], objDepth)));
+                    break;
+                case Boolean:
+                    target +=
+                        fmt::format(" {}", removeAnyPrefix(serializeAny(ARRAY_ACCESS(baseptr, bool)[i], objDepth)));
+                    break;
+                case Double:
+                    target +=
+                        fmt::format(" {}", removeAnyPrefix(serializeAny(ARRAY_ACCESS(baseptr, double)[i], objDepth)));
+                    break;
+                case Float:
+                    target += fmt::format(" {}", removeAnyPrefix(removeAnyPrefix(
+                                                     serializeAny(ARRAY_ACCESS(baseptr, float)[i], objDepth))));
+                    break;
+                case Reference:
+                    target +=
+                        fmt::format(" {}", removeAnyPrefix(serializeAny(ARRAY_ACCESS(baseptr, void *)[i], objDepth)));
+                    break;
+                }
+            }
+            return target;
         }
 
         auto cls = *((OMClass **)baseptr);
         auto target =
             fmt::format("{}instance at {} with type {}", prefix, fmt::styled(baseptr, fmt::fg(fmt::color::red)),
                         fmt::styled(cls->name, fmt::fg(fmt::color::light_green)));
+
         for (auto fi : cls->fields)
         {
             if ((fi->accessFlag & JVM_Acc_Static) == 0)
             {
-                target += fmt::format("\n{}field {}", prefix, fmt::styled(fi->name, fmt::fg(fmt::color::light_green)));
+                target +=
+                    fmt::format("\n{}field {}: ", prefix, fmt::styled(fi->name, fmt::fg(fmt::color::light_green)));
+
+                int temp = 0;
+                auto pa = bytecode::descriptor::decodeType(fi->desc, &temp);
+                if (pa.type == util::Err)
+                {
+                    target += fmt::format(
+                        "\n{}{}", prefix,
+                        fmt::styled(fmt::format("unknown descriptor {} with error {}", fi->desc, pa.unwrap_err()),
+                                    fmt::fg(fmt::color::red)));
+                }
+                else
+                {
+                    objDepth++;
+                    switch (hash_compile_time(pa.unwrap().c_str()))
+                    {
+                    case "int"_hash:
+                        target += fmt::format(
+                            " {}", removeAnyPrefix(serializeAny(*(int *)OBJECT_ACCESS(baseptr, fi->offset), objDepth)));
+                        break;
+                    case "long"_hash:
+                        target += fmt::format(" {}", removeAnyPrefix(serializeAny(
+                                                         *(int64_t *)OBJECT_ACCESS(baseptr, fi->offset), objDepth)));
+                        break;
+                    case "float"_hash:
+                        target += fmt::format(" {}", removeAnyPrefix(serializeAny(
+                                                         *(float *)OBJECT_ACCESS(baseptr, fi->offset), objDepth)));
+                        break;
+                    case "double"_hash:
+                        target += fmt::format(" {}", removeAnyPrefix(serializeAny(
+                                                         *(double *)OBJECT_ACCESS(baseptr, fi->offset), objDepth)));
+                        break;
+                    case "byte"_hash:
+                        target += fmt::format(" {}", removeAnyPrefix(serializeAny(
+                                                         *(char *)OBJECT_ACCESS(baseptr, fi->offset), objDepth)));
+                        break;
+                    case "char"_hash:
+                        target += fmt::format(" {}", removeAnyPrefix(serializeAny(
+                                                         *(uint16_t *)OBJECT_ACCESS(baseptr, fi->offset), objDepth)));
+                        break;
+                    case "boolean"_hash:
+                        target += fmt::format(" {}", removeAnyPrefix(serializeAny(
+                                                         *(bool *)OBJECT_ACCESS(baseptr, fi->offset), objDepth)));
+                        break;
+                    case "short"_hash:
+                        target += fmt::format(" {}", removeAnyPrefix(serializeAny(
+                                                         *(short *)OBJECT_ACCESS(baseptr, fi->offset), objDepth)));
+                        break;
+                    default:
+                        target += fmt::format(" {}", removeAnyPrefix(serializeAny(
+                                                         *(void **)OBJECT_ACCESS(baseptr, fi->offset), objDepth)));
+                        break;
+                    }
+                    objDepth--;
+                }
             }
         }
         return target;
@@ -142,5 +317,14 @@ std::string OMDebugger::serializeAny(std::any data, int objDepth)
             "{}{}", prefix,
             fmt::styled(fmt::format("unknown data with descriptor {}", data.type().name()), fmt::fg(fmt::color::gray)));
     }
+}
+
+std::string OMDebugger::removeAnyPrefix(std::string s)
+{
+    while (s[0] == '\t')
+    {
+        s.replace(0, 1, "");
+    }
+    return s;
 }
 } // namespace openminecraft::vm::pixeltower::v1

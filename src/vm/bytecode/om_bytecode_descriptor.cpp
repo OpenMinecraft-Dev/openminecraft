@@ -2,7 +2,6 @@
 #include "fmt/format.h"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/util/om_util_result.hpp"
-#include <typeindex>
 #include <variant>
 #include <vector>
 
