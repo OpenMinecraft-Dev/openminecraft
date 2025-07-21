@@ -26,7 +26,7 @@ laload | X
 faload | X
 daload | X
 aaload | X
-baload | X
+baload | v0
 caload | X
 saload | X
 istore | X
@@ -44,7 +44,7 @@ lastore | X
 fastore | X
 dastore | X
 aastore | X
-bastore | X
+bastore | v0
 castore | X
 sastore | X
 pop | v0
@@ -146,7 +146,7 @@ invokestatic | v0
 invokeinterface | v0
 invokedynamic | X
 new | v0
-newarray | X
+newarray | v0
 anewarray | X
 arraylength | X
 athrow | X
