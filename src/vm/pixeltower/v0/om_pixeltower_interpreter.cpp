@@ -9,6 +9,7 @@
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_class_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_memorymanager.hpp"
 #include <any>
@@ -52,17 +53,20 @@ OMInterpreter::~OMInterpreter()
 }
 void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::string method, std::string sig)
 {
-    for (auto &m : clazz->methods)
+    // geo: iterative method linking!
+    auto cls = clazz;
+    while (cls != nullptr)
     {
-        if (m->name == method && m->desc == sig)
+        for (auto &m : cls->methods)
         {
-            return execute(clazz, m);
+            if (m->name == method && m->desc == sig)
+            {
+                return execute(cls, m);
+            }
         }
+        cls = cls->superClass;
     }
-    if (clazz->superClass != nullptr)
-    {
-        return execute(clazz->superClass, method, sig);
-    }
+
     throw err::OMValidationError{err::ClassLoader, "method not found",
                                  fmt::format("{}.{}{}", clazz->name, method, sig)};
 }
@@ -437,6 +441,12 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
                 {
                     frame->offset += 3;
                 }
+                break;
+            }
+
+            case op_goto: {
+                frame->offset += binary::be16SignedToNative(frame->codePointer[frame->offset + 1],
+                                                            frame->codePointer[frame->offset + 2]);
                 break;
             }
 

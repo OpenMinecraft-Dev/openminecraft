@@ -3,15 +3,19 @@
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
+#include <any>
 #include <boost/stacktrace/stacktrace.hpp>
+#include <chrono>
 #include <csetjmp>
 #include <cstdlib>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <stack>
 #include <stdexcept>
 #include <thread>
+#include <typeindex>
 #include <variant>
 #include <vector>
 
@@ -35,6 +39,7 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_debugger.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_memorymanager.hpp"
 #include <SDL3/SDL.h>
@@ -122,6 +127,55 @@ int boot(std::vector<std::string> args)
 
     std::shared_ptr<OMClassFileParser> parser;
     bool recovermode = false;
+
+    std::thread t([&]() {
+        while (true)
+        {
+            mem::castorice::printres();
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+            std::vector<void *> buf;
+
+            for (auto cls : pt->classloader->classes)
+            {
+                pt->mm->seatchFromStatic(cls.second, buf);
+            }
+
+            auto i = std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter);
+
+            for (auto stks : i->stack)
+            {
+                std::stack<std::any> stk(stks.second);
+
+                while (!stk.empty())
+                {
+                    if (std::type_index(stk.top().type()) == std::type_index(typeid(void *)))
+                    {
+                        pt->mm->searchFromInstance(std::any_cast<void *>(stk.top()), buf);
+                    }
+                    else if (std::type_index(stk.top().type()) ==
+                             std::type_index(typeid(std::shared_ptr<runtime::OMFrameMetadata>)))
+                    {
+                        auto frame = std::any_cast<std::shared_ptr<runtime::OMFrameMetadata>>(stk.top());
+                        for (auto fr : frame->local)
+                        {
+                            if (std::type_index(fr.type()) == std::type_index(typeid(void *)))
+                            {
+                                pt->mm->searchFromInstance(std::any_cast<void *>(fr), buf);
+                            }
+                        }
+                    }
+
+                    stk.pop();
+                }
+            }
+
+            std::sort(buf.begin(), buf.end());
+            buf.erase(std::unique(buf.begin(), buf.end()), buf.end());
+            pt->mm->deallocate(buf);
+        }
+    });
+
     if (setjmp(recoverBuffer) == 0)
     {
     program:
@@ -156,6 +210,7 @@ int boot(std::vector<std::string> args)
                 {
                     if (commandBuffer[1] == "loadcls")
                     {
+
                         try
                         {
                             pt->loadClass(std::make_shared<std::ifstream>(commandBuffer[2], std::ios::binary));
@@ -205,6 +260,13 @@ int boot(std::vector<std::string> args)
                         pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(D)V", cmdPrint);
                         pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(I)V", cmdPrint);
                         pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(Z)V", cmdPrint);
+                        pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(Ljava/lang/Object;)V",
+                                               [&](std::any s) {
+                                                   auto argl = std::any_cast<std::list<std::any> *>(s);
+                                                   // logger->debug("[stdout] {}", std::any_cast<void
+                                                   // *>(*(++argl->begin())));
+                                                   return nullptr;
+                                               });
                         pt->registerNativeFunc(
                             "vmstd/internal/SystemPrintStream", "println", "(Ljava/lang/String;)V", [&](std::any s) {
                                 auto argl = std::any_cast<std::list<std::any> *>(s);

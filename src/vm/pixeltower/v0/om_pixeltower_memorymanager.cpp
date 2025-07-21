@@ -4,7 +4,10 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_class_structdef.hpp"
+#include <algorithm>
+#include <cstdio>
 #include <memory>
+#include <vector>
 
 namespace openminecraft::vm::pixeltower
 {
@@ -22,6 +25,7 @@ void *OMMemoryManager::allocate(std::shared_ptr<OMClass> cls)
     auto result = mem::allocator::tracedCallocVMData(1, sizeof(void *) + cls->objectLength);
     auto clsp = (OMClass **)result;
     *clsp = cls.get();
+    std::lock_guard<std::mutex> lock(cacheLock, std::adopt_lock);
     blockCache.push_back(result);
     return result;
 }
@@ -36,6 +40,7 @@ void *OMMemoryManager::allocateArray(std::shared_ptr<OMClass> cls, int *lengths,
         arr->classPointer = cls.get();
         arr->type = Reference;
         arr->dim = 1;
+        std::lock_guard<std::mutex> lock(cacheLock, std::adopt_lock);
         blockCache.push_back(result);
         return result;
     }
@@ -53,6 +58,7 @@ void *OMMemoryManager::allocateArray(std::shared_ptr<OMClass> cls, int *lengths,
     {
         arrdata[i] = allocateArray(cls, lengths + 1, dim - 1);
     }
+    std::lock_guard<std::mutex> lock(cacheLock, std::adopt_lock);
     blockCache.push_back(result);
     return result;
 }
@@ -90,6 +96,7 @@ void *OMMemoryManager::allocateArray(OMArrayType type, int *lengths, int dim)
         arr->length = *lengths;
         arr->type = type;
         arr->dim = 1;
+        std::lock_guard<std::mutex> lock(cacheLock, std::adopt_lock);
         blockCache.push_back(result);
         return result;
     }
@@ -106,13 +113,17 @@ void *OMMemoryManager::allocateArray(OMArrayType type, int *lengths, int dim)
     {
         arrdata[i] = allocateArray(type, lengths + 1, dim - 1);
     }
+    std::lock_guard<std::mutex> lock(cacheLock, std::adopt_lock);
     blockCache.push_back(result);
     return result;
 }
 
-void OMMemoryManager::searchFromInstance(void *b)
+void OMMemoryManager::searchFromInstance(void *b, std::vector<void *> &buf)
 {
-    logger.debug("pointer found: {}", b);
+    if (b != nullptr)
+    {
+        buf.push_back(b);
+    }
     auto arrh = (OMArrayHeader *)b;
     if (b == nullptr)
     {
@@ -129,7 +140,7 @@ void OMMemoryManager::searchFromInstance(void *b)
         auto arr = ARRAY_ACCESS(b, void *);
         for (int i = 0; i < arrh->length; i++)
         {
-            searchFromInstance(arr[i]);
+            searchFromInstance(arr[i], buf);
         }
     }
     else
@@ -139,19 +150,37 @@ void OMMemoryManager::searchFromInstance(void *b)
         {
             if (fi->type == OMFieldType::BytesP && (fi->accessFlag & JVM_Acc_Static) == 0)
             {
-                searchFromInstance(*(void **)OBJECT_ACCESS(b, fi->offset));
+                searchFromInstance(*(void **)OBJECT_ACCESS(b, fi->offset), buf);
             }
         }
     }
 }
-void OMMemoryManager::seatchFromStatic(std::shared_ptr<OMClass> cls)
+void OMMemoryManager::seatchFromStatic(std::shared_ptr<OMClass> cls, std::vector<void *> &buf)
 {
     for (auto fi : cls->fields)
     {
-        if (fi->type == OMFieldType::BytesP && (fi->accessFlag & JVM_Acc_Static) == 0)
+        if (fi->type == OMFieldType::BytesP && (fi->accessFlag & JVM_Acc_Static))
         {
-            searchFromInstance(*(void **)OBJECT_ACCESS(cls->staticFieldBlock, fi->offset));
+            searchFromInstance(*(void **)OBJECT_ACCESS(cls->staticFieldBlock, fi->offset), buf);
         }
+    }
+}
+
+void OMMemoryManager::deallocate(std::vector<void *> &p)
+{
+    std::lock_guard<std::mutex> lock(cacheLock, std::adopt_lock);
+    for (auto pt : blockCache)
+    {
+        if (std::find(p.begin(), p.end(), pt) == p.end())
+        {
+            mem::allocator::tracedFreeVMData(pt);
+        }
+    }
+
+    blockCache.clear();
+    for (auto pp : p)
+    {
+        blockCache.push_back(pp);
     }
 }
 

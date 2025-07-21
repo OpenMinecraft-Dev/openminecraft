@@ -2,9 +2,11 @@ package vmstd.internal;
 
 import java.io.PrintStream;
 
-public class SystemPrintStream extends PrintStream {
+public class SystemPrintStream extends PrintStream
+{
     public final int fd;
-    public SystemPrintStream(int fd) {
+    public SystemPrintStream(int fd)
+    {
         super();
         this.fd = fd;
     }
@@ -17,4 +19,5 @@ public class SystemPrintStream extends PrintStream {
     public native void println(float f);
     public native void println(double d);
     public native void println(String s);
+    public native void println(Object s);
 }
