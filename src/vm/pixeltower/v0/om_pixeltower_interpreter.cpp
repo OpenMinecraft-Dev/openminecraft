@@ -265,6 +265,22 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
                 break;
             }
 
+            case op_baload: {
+                STACK_CHECK;
+                auto idx = STACK_ACCESS.top();
+                STACK_ACCESS.pop();
+                STACK_CHECK;
+                auto arr = STACK_ACCESS.top();
+                STACK_ACCESS.pop();
+
+                checkType(frame, idx, "int");
+                checkType(frame, arr, "[\u0001boolean"); // gino: special descriptor format for arrays
+                STACK_ACCESS.push((int)ARRAY_ACCESS(std::any_cast<void *>(arr), bool)[std::any_cast<int>(idx)]);
+
+                frame->offset++;
+                break;
+            }
+
             case op_astore: {
                 auto top = STACK_ACCESS.top();
                 SAFE_STACK_POP;
@@ -293,6 +309,26 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
                 auto item = STACK_ACCESS.top();
                 SAFE_STACK_POP;
                 frame->local[frame->codePointer[frame->offset] - op_astore_n(0)] = item;
+                frame->offset++;
+                break;
+            }
+
+            case op_bastore: {
+                STACK_CHECK;
+                auto item = STACK_ACCESS.top();
+                STACK_ACCESS.pop();
+                STACK_CHECK;
+                auto idx = STACK_ACCESS.top();
+                STACK_ACCESS.pop();
+                STACK_CHECK;
+                auto arr = STACK_ACCESS.top();
+                STACK_ACCESS.pop();
+
+                checkType(frame, idx, "int");
+                checkType(frame, item, "boolean");
+                checkType(frame, arr, "[\u0001boolean"); // gino: special descriptor format for arrays
+                ARRAY_ACCESS(std::any_cast<void *>(arr), bool)[std::any_cast<int>(idx)] = std::any_cast<int>(item);
+
                 frame->offset++;
                 break;
             }
@@ -523,6 +559,7 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
             }
 
             default: {
+            err:
                 throw err::OMValidationError{err::Instructions, "entering Mazarine End !! (unknown instruction)",
                                              fetchCurrentPosition(frame)};
             }

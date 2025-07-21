@@ -5,6 +5,7 @@
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
 #include <csetjmp>
+#include <cstdlib>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -171,8 +172,7 @@ int boot(std::vector<std::string> args)
                             std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
                                 ->stack[std::this_thread::get_id()]
                                 .push(arr);
-                            OMBytecodeChecker c(pt->fetchClass("openminecraft/Test")->rawFile);
-                            c.detail();
+
                             pt->execute("openminecraft/Test", "main", "([Ljava/lang/String;)V");
                         }
                         catch (vm::err::OMValidationError err)
@@ -204,6 +204,7 @@ int boot(std::vector<std::string> args)
                         pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(F)V", cmdPrint);
                         pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(D)V", cmdPrint);
                         pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(I)V", cmdPrint);
+                        pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(Z)V", cmdPrint);
                         pt->registerNativeFunc(
                             "vmstd/internal/SystemPrintStream", "println", "(Ljava/lang/String;)V", [&](std::any s) {
                                 auto argl = std::any_cast<std::list<std::any> *>(s);

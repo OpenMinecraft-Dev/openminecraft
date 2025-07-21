@@ -174,7 +174,8 @@ std::string OMDebugger::serializeAny(std::any data, int objDepth)
                 type += "[]";
             }
             auto target =
-                fmt::format("{}array with type {}", prefix, fmt::styled(type, fmt::fg(fmt::color::light_green)));
+                fmt::format("{}array at {} with type {}", prefix, fmt::styled(baseptr, fmt::fg(fmt::color::red)),
+                            fmt::styled(type, fmt::fg(fmt::color::light_green)));
 
             if (objDepth == 0)
             {
