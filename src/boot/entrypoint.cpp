@@ -14,6 +14,7 @@
 #include <memory>
 #include <stack>
 #include <stdexcept>
+#include <string>
 #include <thread>
 #include <typeindex>
 #include <variant>
@@ -128,54 +129,6 @@ int boot(std::vector<std::string> args)
     std::shared_ptr<OMClassFileParser> parser;
     bool recovermode = false;
 
-    std::thread t([&]() {
-        while (true)
-        {
-            mem::castorice::printres();
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-            std::vector<void *> buf;
-
-            for (auto cls : pt->classloader->classes)
-            {
-                pt->mm->seatchFromStatic(cls.second, buf);
-            }
-
-            auto i = std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter);
-
-            for (auto stks : i->stack)
-            {
-                std::stack<std::any> stk(stks.second);
-
-                while (!stk.empty())
-                {
-                    if (std::type_index(stk.top().type()) == std::type_index(typeid(void *)))
-                    {
-                        pt->mm->searchFromInstance(std::any_cast<void *>(stk.top()), buf);
-                    }
-                    else if (std::type_index(stk.top().type()) ==
-                             std::type_index(typeid(std::shared_ptr<runtime::OMFrameMetadata>)))
-                    {
-                        auto frame = std::any_cast<std::shared_ptr<runtime::OMFrameMetadata>>(stk.top());
-                        for (auto fr : frame->local)
-                        {
-                            if (std::type_index(fr.type()) == std::type_index(typeid(void *)))
-                            {
-                                pt->mm->searchFromInstance(std::any_cast<void *>(fr), buf);
-                            }
-                        }
-                    }
-
-                    stk.pop();
-                }
-            }
-
-            std::sort(buf.begin(), buf.end());
-            buf.erase(std::unique(buf.begin(), buf.end()), buf.end());
-            pt->mm->deallocate(buf);
-        }
-    });
-
     if (setjmp(recoverBuffer) == 0)
     {
     program:
@@ -210,7 +163,6 @@ int boot(std::vector<std::string> args)
                 {
                     if (commandBuffer[1] == "loadcls")
                     {
-
                         try
                         {
                             pt->loadClass(std::make_shared<std::ifstream>(commandBuffer[2], std::ios::binary));
@@ -235,6 +187,28 @@ int boot(std::vector<std::string> args)
                             logger->error(err.what());
                             deb->printStack();
                         }
+
+                        commandBuffer.clear();
+                    }
+                    else if (commandBuffer[1] == "memtest")
+                    {
+                        std::vector<void *> pp;
+                        try
+                        {
+                            while (true)
+                            {
+                                pp.push_back(pt->mm->allocate(pt->fetchClass("java/lang/String")));
+                            }
+                        }
+                        catch (std::logic_error e)
+                        {
+                            pt->mm->debug();
+                        }
+
+                        pt->mm->deallocate(pp[0]);
+                        pt->mm->deallocate(pp[2]);
+                        pt->mm->deallocate(pp[1]);
+                        pt->mm->debug();
 
                         commandBuffer.clear();
                     }

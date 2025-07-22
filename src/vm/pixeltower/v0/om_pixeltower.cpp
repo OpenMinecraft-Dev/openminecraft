@@ -26,7 +26,7 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
 {
     interpreter = std::make_shared<runtime::OMInterpreter>(*this);
     classloader = std::make_shared<OMClassLoader>(interpreter);
-    mm = std::make_shared<OMMemoryManager>(classloader);
+    mm = std::make_shared<OMMemoryManager>(interpreter, classloader);
 }
 OMPixelTower::~OMPixelTower()
 {

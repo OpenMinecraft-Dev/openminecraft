@@ -4,48 +4,180 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_class_structdef.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include <algorithm>
-#include <cstdio>
+#include <any>
+#include <cstring>
 #include <memory>
+#include <stack>
+#include <typeindex>
 #include <vector>
+
+#define HEAP_SIZE 1024 * 32
 
 namespace openminecraft::vm::pixeltower
 {
 std::string ARRAY_TYPE = "array";
-OMMemoryManager::OMMemoryManager(std::shared_ptr<OMClassLoader> cld)
-    : logger("pixeltower/OMMemoryManager", this), cld(cld)
+OMMemoryManager::OMMemoryManager(std::any tower, std::shared_ptr<OMClassLoader> cld)
+    : logger("pixeltower/OMMemoryManager", this), cld(cld), tower(tower)
 {
+    buffer = mem::allocator::tracedMallocVMData(HEAP_SIZE);
+    blockStatus[buffer] = true;
+    blockStatus[(uint8_t *)buffer + HEAP_SIZE] = false;
 }
 OMMemoryManager::~OMMemoryManager()
 {
+    mem::allocator::tracedFreeVMData(buffer);
+}
+
+void *OMMemoryManager::fetchInternal(int size)
+{
+    std::vector<void *> keys;
+
+alloc:
+    keys.clear();
+    for (auto pairs : blockStatus)
+    {
+        keys.push_back(pairs.first);
+    }
+    std::sort(keys.begin(), keys.end());
+
+    // 8 - (*length % 8)
+
+    for (int i = 0; i < keys.size() - 1; i++)
+    {
+        // usable block
+        auto p = (uint8_t *)keys[i] + 8 - ((size_t)keys[i] % 8);
+        if (blockStatus[keys[i]] && ((size_t)keys[i + 1] - (size_t)p) >= size)
+        {
+            blockStatus[p] = false;
+            blockStatus[(uint8_t *)keys[i] + size] = true;
+            memset(keys[i], 0, size);
+            return p;
+        }
+    }
+
+    auto inter = std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(tower);
+    std::vector<void *> reachable;
+    for (auto h : inter->stack)
+    {
+        std::stack<std::any> d(h.second);
+
+        while (!d.empty())
+        {
+            if (std::type_index(d.top().type()) == std::type_index(typeid(void *)))
+            {
+                reachable.push_back(std::any_cast<void *>(d.top()));
+            }
+            else if (std::type_index(d.top().type()) ==
+                     std::type_index(typeid(std::shared_ptr<runtime::OMFrameMetadata>)))
+            {
+                for (auto l : std::any_cast<std::shared_ptr<runtime::OMFrameMetadata>>(d.top())->local)
+                {
+                    if (std::type_index(l.type()) == std::type_index(typeid(void *)))
+                    {
+                        reachable.push_back(std::any_cast<void *>(l));
+                    }
+                }
+            }
+            d.pop();
+        }
+    }
+
+    logger.debug("{} reachable", reachable.size());
+
+    for (auto m : keys)
+    {
+        if (!blockStatus[m] && m != ((uint8_t *)buffer + HEAP_SIZE) &&
+            std::count(reachable.begin(), reachable.end(), m) == 0)
+        {
+            deallocate(m);
+        }
+    }
+    compatBlocks();
+    debug();
+    goto alloc;
+}
+
+void OMMemoryManager::compatBlocks()
+{
+    if (blockStatus.size() <= 1)
+    {
+        throw 0;
+    }
+
+    std::vector<void *> merged;
+
+    std::vector<void *> keys;
+    for (auto pairs : blockStatus)
+    {
+        keys.push_back(pairs.first);
+    }
+    std::sort(keys.begin(), keys.end());
+
+    for (int i = 1; i < keys.size(); i++)
+    {
+        if (blockStatus[keys[i]] && blockStatus[keys[i - 1]])
+        {
+            merged.push_back(keys[i]);
+        }
+    }
+
+    for (auto m : merged)
+    {
+        blockStatus.erase(m);
+    }
+}
+
+void OMMemoryManager::debug()
+{
+    std::vector<void *> keys;
+    for (auto pairs : blockStatus)
+    {
+        keys.push_back(pairs.first);
+    }
+    std::sort(keys.begin(), keys.end());
+
+    logger.debug("HEAP MEMORY STATUS: ");
+    for (int i = 0; i < keys.size() - 1; i++)
+    {
+        logger.debug("{} ~ {} (size {}) : {}", keys[i], keys[i + 1], (size_t)keys[i + 1] - (size_t)keys[i],
+                     blockStatus[keys[i]]);
+    }
+
+    logger.debug("{} ~ <root> : {}", keys[keys.size() - 1], blockStatus[keys[keys.size() - 1]]);
+}
+
+void OMMemoryManager::registerBlock(void *b)
+{
+    // throw std::logic_error("not implemented!");
 }
 
 void *OMMemoryManager::allocate(std::shared_ptr<OMClass> cls)
 {
-    auto result = mem::allocator::tracedCallocVMData(1, sizeof(void *) + cls->objectLength);
+    auto result = fetchInternal(sizeof(void *) + cls->objectLength);
     auto clsp = (OMClass **)result;
     *clsp = cls.get();
-    std::lock_guard<std::mutex> lock(cacheLock, std::adopt_lock);
-    blockCache.push_back(result);
+    registerBlock(result);
     return result;
 }
 void *OMMemoryManager::allocateArray(std::shared_ptr<OMClass> cls, int *lengths, int dim)
 {
     if (dim == 1)
     {
-        auto result = mem::allocator::tracedCallocVMData(1, sizeof(OMArrayHeader) + (sizeof(void *) * *lengths));
+        auto result = fetchInternal(sizeof(OMArrayHeader) + (sizeof(void *) * *lengths));
         auto arr = (OMArrayHeader *)result;
         arr->classifierPointer = &ARRAY_TYPE;
         arr->length = *lengths;
         arr->classPointer = cls.get();
         arr->type = Reference;
         arr->dim = 1;
-        std::lock_guard<std::mutex> lock(cacheLock, std::adopt_lock);
-        blockCache.push_back(result);
+        registerBlock(result);
         return result;
     }
 
-    auto result = mem::allocator::tracedCallocVMData(1, sizeof(OMArrayHeader) + (sizeof(void *) * *lengths));
+    auto result = fetchInternal(sizeof(OMArrayHeader) + (sizeof(void *) * *lengths));
     auto arr = (OMArrayHeader *)result;
     arr->classifierPointer = &ARRAY_TYPE;
     arr->length = *lengths;
@@ -58,8 +190,7 @@ void *OMMemoryManager::allocateArray(std::shared_ptr<OMClass> cls, int *lengths,
     {
         arrdata[i] = allocateArray(cls, lengths + 1, dim - 1);
     }
-    std::lock_guard<std::mutex> lock(cacheLock, std::adopt_lock);
-    blockCache.push_back(result);
+    registerBlock(result);
     return result;
 }
 void *OMMemoryManager::allocateArray(OMArrayType type, int *lengths, int dim)
@@ -90,18 +221,17 @@ void *OMMemoryManager::allocateArray(OMArrayType type, int *lengths, int dim)
             objLength = sizeof(void *);
             break;
         }
-        auto result = mem::allocator::tracedCallocVMData(1, sizeof(OMArrayHeader) + objLength * *lengths);
+        auto result = fetchInternal(sizeof(OMArrayHeader) + objLength * *lengths);
         auto arr = (OMArrayHeader *)result;
         arr->classifierPointer = &ARRAY_TYPE;
         arr->length = *lengths;
         arr->type = type;
         arr->dim = 1;
-        std::lock_guard<std::mutex> lock(cacheLock, std::adopt_lock);
-        blockCache.push_back(result);
+        registerBlock(result);
         return result;
     }
 
-    auto result = mem::allocator::tracedCallocVMData(1, sizeof(OMArrayHeader) + (sizeof(void *) * *lengths));
+    auto result = fetchInternal(sizeof(OMArrayHeader) + (sizeof(void *) * *lengths));
     auto arr = (OMArrayHeader *)result;
     arr->classifierPointer = &ARRAY_TYPE;
     arr->length = *lengths;
@@ -113,8 +243,7 @@ void *OMMemoryManager::allocateArray(OMArrayType type, int *lengths, int dim)
     {
         arrdata[i] = allocateArray(type, lengths + 1, dim - 1);
     }
-    std::lock_guard<std::mutex> lock(cacheLock, std::adopt_lock);
-    blockCache.push_back(result);
+    registerBlock(result);
     return result;
 }
 
@@ -166,21 +295,11 @@ void OMMemoryManager::seatchFromStatic(std::shared_ptr<OMClass> cls, std::vector
     }
 }
 
-void OMMemoryManager::deallocate(std::vector<void *> &p)
+void OMMemoryManager::deallocate(void *p)
 {
-    std::lock_guard<std::mutex> lock(cacheLock, std::adopt_lock);
-    for (auto pt : blockCache)
+    if (blockStatus.count(p))
     {
-        if (std::find(p.begin(), p.end(), pt) == p.end())
-        {
-            mem::allocator::tracedFreeVMData(pt);
-        }
-    }
-
-    blockCache.clear();
-    for (auto pp : p)
-    {
-        blockCache.push_back(pp);
+        blockStatus[p] = true;
     }
 }
 

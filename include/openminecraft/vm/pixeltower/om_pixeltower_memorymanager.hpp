@@ -7,6 +7,7 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_classloader.hpp"
 #include <memory>
 #include <mutex>
+#include <unordered_map>
 #include <vector>
 
 namespace openminecraft::vm::pixeltower
@@ -16,7 +17,7 @@ namespace openminecraft::vm::pixeltower
 class OMMemoryManager
 {
   public:
-    OMMemoryManager(std::shared_ptr<OMClassLoader> cld);
+    OMMemoryManager(std::any tower, std::shared_ptr<OMClassLoader> cld);
     ~OMMemoryManager();
 
     void *allocate(std::shared_ptr<OMClass> cls);
@@ -26,13 +27,21 @@ class OMMemoryManager
     void searchFromInstance(void *b, std::vector<void *> &buf);
     void seatchFromStatic(std::shared_ptr<OMClass> cls, std::vector<void *> &buf);
 
-    void deallocate(std::vector<void *> &p);
+    void deallocate(void *p);
+
+    void debug();
+    void compatBlocks();
 
   private:
+    void registerBlock(void *b);
+    void *fetchInternal(int size);
+
     log::OMLogger logger;
-    std::vector<void *> blockCache;
+    void *buffer;
+    std::unordered_map<void *, bool> blockStatus;
     std::mutex cacheLock;
     std::shared_ptr<OMClassLoader> cld;
+    std::any tower;
 };
 } // namespace openminecraft::vm::pixeltower
 
