@@ -136,6 +136,13 @@ std::string OMDebugger::serializeAny(std::any data, int objDepth)
             return fmt::format("{}{}", prefix, fmt::styled("null", fmt::fg(fmt::color::gray)));
         }
 
+        if (objDepth == 0)
+        {
+            objDepth++;
+            updatePref;
+            objDepth--;
+        }
+
         if (arrh->classifierPointer == &ARRAY_TYPE)
         {
             std::string type;
@@ -176,13 +183,6 @@ std::string OMDebugger::serializeAny(std::any data, int objDepth)
             auto target =
                 fmt::format("{}array at {} with type {}", prefix, fmt::styled(baseptr, fmt::fg(fmt::color::red)),
                             fmt::styled(type, fmt::fg(fmt::color::light_green)));
-
-            if (objDepth == 0)
-            {
-                objDepth++;
-                updatePref;
-                objDepth--;
-            }
 
             for (int i = 0; i < arrh->length; i++)
             {

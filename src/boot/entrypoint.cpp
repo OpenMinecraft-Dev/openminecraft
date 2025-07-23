@@ -235,8 +235,8 @@ int boot(std::vector<std::string> args)
                         pt->registerNativeFunc("vmstd/internal/SystemPrintStream", "println", "(Ljava/lang/Object;)V",
                                                [&](std::any s) {
                                                    auto argl = std::any_cast<std::list<std::any> *>(s);
-                                                   // logger->debug("[stdout] {}", std::any_cast<void
-                                                   // *>(*(++argl->begin())));
+                                                   // logger->debug("[stdout] {}",
+                                                   // std::any_cast<void*>(*(++argl->begin())));
                                                    return nullptr;
                                                });
                         pt->registerNativeFunc(

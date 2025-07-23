@@ -9,6 +9,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <unordered_map>
 #include <vector>
 
 namespace openminecraft::vm::pixeltower
@@ -25,15 +26,17 @@ class OMMemoryManager
     void *allocateArray(std::shared_ptr<OMClass> cls, int *lengths, int dim);
     void *allocateArray(OMArrayType type, int *lengths, int dim);
 
-    void searchFromInstance(void *b, std::vector<void *> &buf);
-    void seatchFromStatic(std::shared_ptr<OMClass> cls, std::vector<void *> &buf);
+    void searchFromInstance(void *b);
+    void searchFromStatic(std::shared_ptr<OMClass> cls);
 
     void deallocate(void *p);
+    void gc();
 
   private:
     void *fetchInternal(int size);
 
     log::OMLogger logger;
+    std::unordered_map<void *, bool> blockStatus;
     std::mutex cacheLock;
     std::shared_ptr<OMClassLoader> cld;
     std::any tower;

@@ -37,17 +37,15 @@ OMResult<std::string, std::string> decodeType(std::string raw, int *p)
     case 'Z':
         return OMResult<std::string, std::string>::ok("boolean");
     case 'L': {
-        auto ends = raw.find_first_of(';', *p - 1);
+        auto ends = raw.find_first_of(';', *p - 1) - (*p - 1);
         if (ends == std::variant_npos)
         {
             return OMResult<std::string, std::string>::err("nonstop object type!");
         }
         // inplace split
-        raw[ends] = '\0';
-        auto type = std::string(raw.substr(*p - 1, ends).c_str());
+        auto type = std::string(raw.c_str()).substr(*p - 1, ends);
         auto d = OMResult<std::string, std::string>::ok(type);
-        raw[ends] = ';';
-        *p = ends + 1;
+        *p += ends;
         return d;
     }
     case '[': {

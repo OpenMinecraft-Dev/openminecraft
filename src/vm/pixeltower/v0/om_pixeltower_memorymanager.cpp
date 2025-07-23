@@ -4,9 +4,12 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_class_structdef.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
+#include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include <any>
 #include <memory>
-#include <vector>
+#include <stack>
+#include <typeindex>
 
 #define HEAP_SIZE 1024 * 128
 
@@ -23,7 +26,64 @@ OMMemoryManager::~OMMemoryManager()
 
 void *OMMemoryManager::fetchInternal(int size)
 {
-    return mem::allocator::tracedCallocVMData(1, size);
+    auto p = mem::allocator::tracedMallocVMData(size);
+    memset(p, 0, size);
+    blockStatus[p] = false;
+    if (blockStatus.size() > 16384)
+    {
+        gc();
+    }
+    return p;
+}
+
+void OMMemoryManager::gc()
+{
+    logger.debug("serial gc begin");
+    auto interpr = std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(tower);
+    for (auto p : interpr->stack)
+    {
+        std::stack<std::any> stkb(p.second);
+
+        while (!stkb.empty())
+        {
+            auto i = std::type_index(stkb.top().type());
+            if (i == std::type_index(typeid(void *)))
+            {
+                searchFromInstance(std::any_cast<void *>(stkb.top()));
+            }
+            else if (i == std::type_index(typeid(std::shared_ptr<runtime::OMFrameMetadata>)))
+            {
+                auto fr = std::any_cast<std::shared_ptr<runtime::OMFrameMetadata>>(stkb.top());
+                for (auto r : fr->local)
+                {
+                    if (std::type_index(r.type()) == std::type_index(typeid(void *)))
+                    {
+                        searchFromInstance(std::any_cast<void *>(r));
+                    }
+                }
+            }
+            stkb.pop();
+        }
+    }
+
+    for (auto l : cld->classes)
+    {
+        searchFromStatic(l.second);
+    }
+
+    for (auto p = blockStatus.begin(); p != blockStatus.end();)
+    {
+        if (p->second)
+        {
+            p->second = false;
+            ++p;
+        }
+        else
+        {
+            deallocate(p->first);
+            p = blockStatus.erase(p);
+        }
+    }
 }
 
 void *OMMemoryManager::allocate(std::shared_ptr<OMClass> cls)
@@ -114,11 +174,11 @@ void *OMMemoryManager::allocateArray(OMArrayType type, int *lengths, int dim)
     return result;
 }
 
-void OMMemoryManager::searchFromInstance(void *b, std::vector<void *> &buf)
+void OMMemoryManager::searchFromInstance(void *b)
 {
     if (b != nullptr)
     {
-        buf.push_back(b);
+        blockStatus[b] = true;
     }
     auto arrh = (OMArrayHeader *)b;
     if (b == nullptr)
@@ -136,7 +196,7 @@ void OMMemoryManager::searchFromInstance(void *b, std::vector<void *> &buf)
         auto arr = ARRAY_ACCESS(b, void *);
         for (int i = 0; i < arrh->length; i++)
         {
-            searchFromInstance(arr[i], buf);
+            searchFromInstance(arr[i]);
         }
     }
     else
@@ -146,18 +206,18 @@ void OMMemoryManager::searchFromInstance(void *b, std::vector<void *> &buf)
         {
             if (fi->type == OMFieldType::BytesP && (fi->accessFlag & JVM_Acc_Static) == 0)
             {
-                searchFromInstance(*(void **)OBJECT_ACCESS(b, fi->offset), buf);
+                searchFromInstance(*(void **)OBJECT_ACCESS(b, fi->offset));
             }
         }
     }
 }
-void OMMemoryManager::seatchFromStatic(std::shared_ptr<OMClass> cls, std::vector<void *> &buf)
+void OMMemoryManager::searchFromStatic(std::shared_ptr<OMClass> cls)
 {
     for (auto fi : cls->fields)
     {
         if (fi->type == OMFieldType::BytesP && (fi->accessFlag & JVM_Acc_Static))
         {
-            searchFromInstance(*(void **)OBJECT_ACCESS(cls->staticFieldBlock, fi->offset), buf);
+            searchFromInstance(*(void **)OBJECT_ACCESS(cls->staticFieldBlock, fi->offset));
         }
     }
 }
