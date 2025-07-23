@@ -13,7 +13,6 @@ class OMDebugger
     OMDebugger(std::shared_ptr<runtime::OMInterpreter> interpreter);
     void printStack();
 
-  private:
     std::string serializeAny(std::any data, int objDepth = 0);
     static std::string removeAnyPrefix(std::string s);
 

@@ -13,6 +13,7 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_memorymanager.hpp"
 #include <any>
+#include <cstdlib>
 #include <cstring>
 #include <memory>
 #include <stack>
@@ -180,6 +181,7 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
         frame->codeLength = mi->code->codeLength;
         while (frame->offset < mi->code->codeLength)
         {
+            operands++;
             switch (codeArea[frame->offset])
             {
             case op_nop: {
@@ -1029,10 +1031,10 @@ void *OMInterpreter::newString(std::string data)
 {
     auto cls = tower.fetchClass("java/lang/String");
 
-    void *rawarr = tower.allocateArray(Byte, data.size());
-    char *arrdata = ((char *)rawarr) + sizeof(OMArrayHeader);
-    memcpy(arrdata, data.c_str(), data.size());
     void *str = tower.allocate(cls);
+    void *rawarr = tower.allocateArray(Byte, data.size());
+    char *arrdata = ARRAY_ACCESS(rawarr, char);
+    memcpy(arrdata, data.c_str(), data.size());
     STACK_ACCESS.push(str);
     STACK_ACCESS.push(rawarr);
     execute(cls, "<init>", "([B)V");

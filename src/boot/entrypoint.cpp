@@ -52,6 +52,7 @@ using namespace openminecraft::vm::classfile;
 using namespace openminecraft::vm::bytecode;
 using namespace openminecraft::binary::hash;
 using namespace openminecraft::vm::pixeltower;
+using namespace std::chrono_literals;
 
 #include "openminecraft/resource/bootassets.h"
 
@@ -165,6 +166,17 @@ int boot(std::vector<std::string> args)
                     {
                         try
                         {
+                            auto t = new std::thread([&]() {
+                                while (true)
+                                {
+                                    std::this_thread::sleep_for(1s);
+                                    logger->info("{}",
+                                                 std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
+                                                     ->operands);
+                                    std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)->operands =
+                                        0;
+                                }
+                            });
                             pt->loadClass(std::make_shared<std::ifstream>(commandBuffer[2], std::ios::binary));
 
                             auto cls = pt->fetchClass("java/lang/String");
@@ -247,7 +259,7 @@ int boot(std::vector<std::string> args)
                                 auto item = std::any_cast<void *>(*(++argl->begin()));
                                 auto arr = (OMArrayHeader *)*(void **)OBJECT_ACCESS(item, sizeof(void *));
                                 auto str = std::string(ARRAY_ACCESS(arr, char), arr->length);
-                                logger->debug("[stdout] {}", str);
+                                logger->debug("[stdout] str: {}", str);
                                 return nullptr;
                             });
 

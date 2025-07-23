@@ -10,3 +10,4 @@ prod
 *.log
 *.bundle
 *.class
+debug

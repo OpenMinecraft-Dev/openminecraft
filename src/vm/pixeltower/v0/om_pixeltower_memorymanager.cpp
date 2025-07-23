@@ -14,7 +14,7 @@
 #include <typeindex>
 #include <vector>
 
-#define HEAP_SIZE 1024 * 32
+#define HEAP_SIZE 1024 * 128
 
 namespace openminecraft::vm::pixeltower
 {
@@ -43,17 +43,16 @@ alloc:
     }
     std::sort(keys.begin(), keys.end());
 
-    // 8 - (*length % 8)
-
     for (int i = 0; i < keys.size() - 1; i++)
     {
         // usable block
-        auto p = (uint8_t *)keys[i] + 8 - ((size_t)keys[i] % 8);
-        if (blockStatus[keys[i]] && ((size_t)keys[i + 1] - (size_t)p) >= size)
+        auto p = (uint8_t *)keys[i] + sizeof(void *) - ((size_t)keys[i] % sizeof(void *));
+        auto siz = size + sizeof(void *) - (size % sizeof(void *));
+        if (blockStatus[keys[i]] && ((size_t)keys[i + 1] - (size_t)p) >= siz)
         {
             blockStatus[p] = false;
-            blockStatus[(uint8_t *)keys[i] + size] = true;
-            memset(keys[i], 0, size);
+            blockStatus[(uint8_t *)keys[i] + siz] = true;
+            memset(keys[i], 0, siz);
             return p;
         }
     }
@@ -109,18 +108,23 @@ void OMMemoryManager::compatBlocks()
 
     std::vector<void *> merged;
 
-    std::vector<void *> keys;
-    for (auto pairs : blockStatus)
+    for (auto it = blockStatus.begin();; ++it)
     {
-        keys.push_back(pairs.first);
-    }
-    std::sort(keys.begin(), keys.end());
-
-    for (int i = 1; i < keys.size(); i++)
-    {
-        if (blockStatus[keys[i]] && blockStatus[keys[i - 1]])
+        ++it;
+        if (it == blockStatus.end())
         {
-            merged.push_back(keys[i]);
+            break;
+        }
+        if (!it->second)
+        {
+            --it;
+            continue;
+        }
+        auto next = it->first;
+        --it;
+        if (it->second)
+        {
+            merged.push_back(next);
         }
     }
 
@@ -132,26 +136,15 @@ void OMMemoryManager::compatBlocks()
 
 void OMMemoryManager::debug()
 {
-    std::vector<void *> keys;
-    for (auto pairs : blockStatus)
-    {
-        keys.push_back(pairs.first);
-    }
-    std::sort(keys.begin(), keys.end());
-
     logger.debug("HEAP MEMORY STATUS: ");
-    for (int i = 0; i < keys.size() - 1; i++)
+    for (auto it = blockStatus.begin(); it != blockStatus.end(); ++it)
     {
-        logger.debug("{} ~ {} (size {}) : {}", keys[i], keys[i + 1], (size_t)keys[i + 1] - (size_t)keys[i],
-                     blockStatus[keys[i]]);
+        ++it;
+        auto m = it == blockStatus.end() ? nullptr : it->first;
+        --it;
+        logger.debug("{} ~ {} (size {}): {}", it->first, m, m == nullptr ? 0 : ((size_t)m - (size_t)it->first),
+                     it->second);
     }
-
-    logger.debug("{} ~ <root> : {}", keys[keys.size() - 1], blockStatus[keys[keys.size() - 1]]);
-}
-
-void OMMemoryManager::registerBlock(void *b)
-{
-    // throw std::logic_error("not implemented!");
 }
 
 void *OMMemoryManager::allocate(std::shared_ptr<OMClass> cls)
@@ -159,7 +152,6 @@ void *OMMemoryManager::allocate(std::shared_ptr<OMClass> cls)
     auto result = fetchInternal(sizeof(void *) + cls->objectLength);
     auto clsp = (OMClass **)result;
     *clsp = cls.get();
-    registerBlock(result);
     return result;
 }
 void *OMMemoryManager::allocateArray(std::shared_ptr<OMClass> cls, int *lengths, int dim)
@@ -173,7 +165,6 @@ void *OMMemoryManager::allocateArray(std::shared_ptr<OMClass> cls, int *lengths,
         arr->classPointer = cls.get();
         arr->type = Reference;
         arr->dim = 1;
-        registerBlock(result);
         return result;
     }
 
@@ -190,7 +181,6 @@ void *OMMemoryManager::allocateArray(std::shared_ptr<OMClass> cls, int *lengths,
     {
         arrdata[i] = allocateArray(cls, lengths + 1, dim - 1);
     }
-    registerBlock(result);
     return result;
 }
 void *OMMemoryManager::allocateArray(OMArrayType type, int *lengths, int dim)
@@ -227,7 +217,6 @@ void *OMMemoryManager::allocateArray(OMArrayType type, int *lengths, int dim)
         arr->length = *lengths;
         arr->type = type;
         arr->dim = 1;
-        registerBlock(result);
         return result;
     }
 
@@ -243,7 +232,6 @@ void *OMMemoryManager::allocateArray(OMArrayType type, int *lengths, int dim)
     {
         arrdata[i] = allocateArray(type, lengths + 1, dim - 1);
     }
-    registerBlock(result);
     return result;
 }
 

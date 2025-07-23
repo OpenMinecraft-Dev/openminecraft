@@ -5,9 +5,10 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_class_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_classloader.hpp"
+#include <functional>
+#include <map>
 #include <memory>
 #include <mutex>
-#include <unordered_map>
 #include <vector>
 
 namespace openminecraft::vm::pixeltower
@@ -33,12 +34,11 @@ class OMMemoryManager
     void compatBlocks();
 
   private:
-    void registerBlock(void *b);
     void *fetchInternal(int size);
 
     log::OMLogger logger;
     void *buffer;
-    std::unordered_map<void *, bool> blockStatus;
+    std::map<void *, bool, std::less<void *>> blockStatus;
     std::mutex cacheLock;
     std::shared_ptr<OMClassLoader> cld;
     std::any tower;

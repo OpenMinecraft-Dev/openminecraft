@@ -32,6 +32,8 @@ class OMInterpreter
 
     void *newString(std::string data);
 
+    uint64_t operands = 0;
+
   private:
     void checkType(std::shared_ptr<OMFrameMetadata> frame, std::any data, std::string desc);
     std::string fetchName(OMArrayType type);
