@@ -167,12 +167,14 @@ int boot(std::vector<std::string> args)
                         try
                         {
                             auto t = new std::thread([&]() {
+                                log::multithread::registerCurrentThreadName("sppedtesting");
                                 while (true)
                                 {
-                                    std::this_thread::sleep_for(1s);
-                                    logger->info("{}",
+                                    std::this_thread::sleep_for(100ms);
+                                    logger->info("{} operands executed",
                                                  std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
-                                                     ->operands);
+                                                         ->operands *
+                                                     10);
                                     std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)->operands =
                                         0;
                                 }

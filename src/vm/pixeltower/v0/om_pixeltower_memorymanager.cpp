@@ -33,26 +33,25 @@ OMMemoryManager::~OMMemoryManager()
 
 void *OMMemoryManager::fetchInternal(int size)
 {
-    std::vector<void *> keys;
-
 alloc:
-    keys.clear();
-    for (auto pairs : blockStatus)
-    {
-        keys.push_back(pairs.first);
-    }
-    std::sort(keys.begin(), keys.end());
+    auto siz = size + sizeof(void *) - (size % sizeof(void *));
 
-    for (int i = 0; i < keys.size() - 1; i++)
+    auto it1 = blockStatus.begin();
+    for (auto it2 = blockStatus.begin();; ++it2)
     {
-        // usable block
-        auto p = (uint8_t *)keys[i] + sizeof(void *) - ((size_t)keys[i] % sizeof(void *));
-        auto siz = size + sizeof(void *) - (size % sizeof(void *));
-        if (blockStatus[keys[i]] && ((size_t)keys[i + 1] - (size_t)p) >= siz)
+        ++it1;
+        if (it1 == blockStatus.end())
+        {
+            break;
+        }
+
+        auto p = (uint8_t *)it2->first + sizeof(void *) - ((size_t)it2->first % sizeof(void *));
+
+        if (it2->second && ((size_t)it1->first - (size_t)p) >= siz)
         {
             blockStatus[p] = false;
-            blockStatus[(uint8_t *)keys[i] + siz] = true;
-            memset(keys[i], 0, siz);
+            blockStatus[(uint8_t *)it2->first + siz] = true;
+            memset(it2->first, 0, siz);
             return p;
         }
     }
@@ -84,18 +83,18 @@ alloc:
         }
     }
 
-    logger.debug("{} reachable", reachable.size());
+    // logger.debug("{} reachable", reachable.size());
 
-    for (auto m : keys)
+    for (auto p : blockStatus)
     {
-        if (!blockStatus[m] && m != ((uint8_t *)buffer + HEAP_SIZE) &&
-            std::count(reachable.begin(), reachable.end(), m) == 0)
+        auto m = p.first;
+        if (!p.second && m != ((uint8_t *)buffer + HEAP_SIZE) && std::count(reachable.begin(), reachable.end(), m) == 0)
         {
             deallocate(m);
         }
     }
     compatBlocks();
-    debug();
+    // debug();
     goto alloc;
 }
 
