@@ -4,14 +4,8 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_class_structdef.hpp"
-#include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
-#include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
-#include <algorithm>
 #include <any>
-#include <cstring>
 #include <memory>
-#include <stack>
-#include <typeindex>
 #include <vector>
 
 #define HEAP_SIZE 1024 * 128
@@ -22,128 +16,14 @@ std::string ARRAY_TYPE = "array";
 OMMemoryManager::OMMemoryManager(std::any tower, std::shared_ptr<OMClassLoader> cld)
     : logger("pixeltower/OMMemoryManager", this), cld(cld), tower(tower)
 {
-    buffer = mem::allocator::tracedMallocVMData(HEAP_SIZE);
-    blockStatus[buffer] = true;
-    blockStatus[(uint8_t *)buffer + HEAP_SIZE] = false;
 }
 OMMemoryManager::~OMMemoryManager()
 {
-    mem::allocator::tracedFreeVMData(buffer);
 }
 
 void *OMMemoryManager::fetchInternal(int size)
 {
-alloc:
-    auto siz = size + sizeof(void *) - (size % sizeof(void *));
-
-    auto it1 = blockStatus.begin();
-    for (auto it2 = blockStatus.begin();; ++it2)
-    {
-        ++it1;
-        if (it1 == blockStatus.end())
-        {
-            break;
-        }
-
-        auto p = (uint8_t *)it2->first + sizeof(void *) - ((size_t)it2->first % sizeof(void *));
-
-        if (it2->second && ((size_t)it1->first - (size_t)p) >= siz)
-        {
-            blockStatus[p] = false;
-            blockStatus[(uint8_t *)it2->first + siz] = true;
-            memset(it2->first, 0, siz);
-            return p;
-        }
-    }
-
-    auto inter = std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(tower);
-    std::vector<void *> reachable;
-    for (auto h : inter->stack)
-    {
-        std::stack<std::any> d(h.second);
-
-        while (!d.empty())
-        {
-            if (std::type_index(d.top().type()) == std::type_index(typeid(void *)))
-            {
-                reachable.push_back(std::any_cast<void *>(d.top()));
-            }
-            else if (std::type_index(d.top().type()) ==
-                     std::type_index(typeid(std::shared_ptr<runtime::OMFrameMetadata>)))
-            {
-                for (auto l : std::any_cast<std::shared_ptr<runtime::OMFrameMetadata>>(d.top())->local)
-                {
-                    if (std::type_index(l.type()) == std::type_index(typeid(void *)))
-                    {
-                        reachable.push_back(std::any_cast<void *>(l));
-                    }
-                }
-            }
-            d.pop();
-        }
-    }
-
-    // logger.debug("{} reachable", reachable.size());
-
-    for (auto p : blockStatus)
-    {
-        auto m = p.first;
-        if (!p.second && m != ((uint8_t *)buffer + HEAP_SIZE) && std::count(reachable.begin(), reachable.end(), m) == 0)
-        {
-            deallocate(m);
-        }
-    }
-    compatBlocks();
-    // debug();
-    goto alloc;
-}
-
-void OMMemoryManager::compatBlocks()
-{
-    if (blockStatus.size() <= 1)
-    {
-        throw 0;
-    }
-
-    std::vector<void *> merged;
-
-    for (auto it = blockStatus.begin();; ++it)
-    {
-        ++it;
-        if (it == blockStatus.end())
-        {
-            break;
-        }
-        if (!it->second)
-        {
-            --it;
-            continue;
-        }
-        auto next = it->first;
-        --it;
-        if (it->second)
-        {
-            merged.push_back(next);
-        }
-    }
-
-    for (auto m : merged)
-    {
-        blockStatus.erase(m);
-    }
-}
-
-void OMMemoryManager::debug()
-{
-    logger.debug("HEAP MEMORY STATUS: ");
-    for (auto it = blockStatus.begin(); it != blockStatus.end(); ++it)
-    {
-        ++it;
-        auto m = it == blockStatus.end() ? nullptr : it->first;
-        --it;
-        logger.debug("{} ~ {} (size {}): {}", it->first, m, m == nullptr ? 0 : ((size_t)m - (size_t)it->first),
-                     it->second);
-    }
+    return mem::allocator::tracedCallocVMData(1, size);
 }
 
 void *OMMemoryManager::allocate(std::shared_ptr<OMClass> cls)
@@ -284,10 +164,7 @@ void OMMemoryManager::seatchFromStatic(std::shared_ptr<OMClass> cls, std::vector
 
 void OMMemoryManager::deallocate(void *p)
 {
-    if (blockStatus.count(p))
-    {
-        blockStatus[p] = true;
-    }
+    mem::allocator::tracedFreeVMData(p);
 }
 
 } // namespace openminecraft::vm::pixeltower

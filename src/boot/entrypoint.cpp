@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <new>
 #include <stack>
 #include <stdexcept>
 #include <string>
@@ -201,28 +202,11 @@ int boot(std::vector<std::string> args)
                             logger->error(err.what());
                             deb->printStack();
                         }
-
-                        commandBuffer.clear();
-                    }
-                    else if (commandBuffer[1] == "memtest")
-                    {
-                        std::vector<void *> pp;
-                        try
+                        catch (std::bad_alloc err)
                         {
-                            while (true)
-                            {
-                                pp.push_back(pt->mm->allocate(pt->fetchClass("java/lang/String")));
-                            }
+                            logger->error(err.what());
+                            deb->printStack();
                         }
-                        catch (std::logic_error e)
-                        {
-                            pt->mm->debug();
-                        }
-
-                        pt->mm->deallocate(pp[0]);
-                        pt->mm->deallocate(pp[2]);
-                        pt->mm->deallocate(pp[1]);
-                        pt->mm->debug();
 
                         commandBuffer.clear();
                     }

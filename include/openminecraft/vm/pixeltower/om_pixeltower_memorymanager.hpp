@@ -30,15 +30,10 @@ class OMMemoryManager
 
     void deallocate(void *p);
 
-    void debug();
-    void compatBlocks();
-
   private:
     void *fetchInternal(int size);
 
     log::OMLogger logger;
-    void *buffer;
-    std::map<void *, bool, std::less<void *>> blockStatus;
     std::mutex cacheLock;
     std::shared_ptr<OMClassLoader> cld;
     std::any tower;
