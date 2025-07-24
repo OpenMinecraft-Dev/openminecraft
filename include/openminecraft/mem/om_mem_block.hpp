@@ -5,6 +5,8 @@ namespace openminecraft::mem
 {
 class OMMemBlock
 {
+  public:
+    OMMemBlock();
 };
 }; // namespace openminecraft::mem
 
