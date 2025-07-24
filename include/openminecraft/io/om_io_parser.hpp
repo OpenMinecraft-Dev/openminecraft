@@ -9,12 +9,12 @@ namespace openminecraft::io
 class OMParser
 {
   public:
-    OMParser(std::shared_ptr<std::istream> stream);
+    OMParser(std::istream *stream);
     ~OMParser();
     bool check();
 
   protected:
-    std::shared_ptr<std::istream> source;
+    std::istream *source;
 };
 } // namespace openminecraft::io
 

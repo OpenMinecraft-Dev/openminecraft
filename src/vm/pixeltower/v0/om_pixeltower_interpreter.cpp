@@ -182,6 +182,7 @@ void OMInterpreter::execute(std::shared_ptr<OMClass> clazz, std::shared_ptr<OMMe
         while (frame->offset < mi->code->codeLength)
         {
             operands++;
+            tower.mm->gc();
             switch (codeArea[frame->offset])
             {
             case op_nop: {

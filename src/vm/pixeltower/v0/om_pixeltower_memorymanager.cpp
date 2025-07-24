@@ -29,15 +29,14 @@ void *OMMemoryManager::fetchInternal(int size)
     auto p = mem::allocator::tracedMallocVMData(size);
     memset(p, 0, size);
     blockStatus[p] = false;
-    if (blockStatus.size() > 16384)
-    {
-        gc();
-    }
     return p;
 }
 
 void OMMemoryManager::gc()
 {
+    if (blockStatus.size() < 16384) {
+        return;
+    }
     logger.debug("serial gc begin");
     auto interpr = std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(tower);
     for (auto p : interpr->stack)

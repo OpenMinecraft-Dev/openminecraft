@@ -21,7 +21,7 @@ class OMPixelTower
     ~OMPixelTower();
 
     void loadClass(std::shared_ptr<classfile::OMClassFile> file);
-    void loadClass(std::shared_ptr<std::istream> file);
+    void loadClass(std::istream *file);
     std::shared_ptr<OMClass> fetchClass(std::string name);
 
     void execute(std::string clazz, std::string name, std::string desc);

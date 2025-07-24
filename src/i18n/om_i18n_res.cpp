@@ -4,6 +4,7 @@
 #include "nlohmann/json_fwd.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
+#include "openminecraft/mem/om_mem_allocator.hpp"
 #include <SDL3/SDL_locale.h>
 #include <algorithm>
 #include <cctype>
@@ -47,6 +48,7 @@ void load()
         std::transform(c.begin(), c.end(), c.begin(), ::tolower);
         locale = fmt::format("{}_{}", loc[0]->language, c);
     }
+    mem::allocator::tracedFreeSDL(loc);
 
     records.clear();
     translates.clear();

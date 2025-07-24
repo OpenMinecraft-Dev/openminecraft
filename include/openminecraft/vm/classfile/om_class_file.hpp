@@ -711,7 +711,7 @@ class OMClassFileParser : public io::OMParser
     using ConstantMapping = std::unordered_map<uint16_t, std::shared_ptr<OMClassConstant>>;
 
   public:
-    OMClassFileParser(std::shared_ptr<std::istream> stream);
+    OMClassFileParser(std::istream *stream);
     ~OMClassFileParser();
     util::OMResult<std::shared_ptr<OMClassFile>, err::OMValidationError> parse();
     ConstantMapping buildConstantMapping(std::vector<std::shared_ptr<OMClassConstant>> c);

@@ -180,7 +180,9 @@ int boot(std::vector<std::string> args)
                                         0;
                                 }
                             });
-                            pt->loadClass(std::make_shared<std::ifstream>(commandBuffer[2], std::ios::binary));
+                            auto stti = new std::ifstream(commandBuffer[2], std::ios::binary);
+                            pt->loadClass(stti);
+			    delete stti;
 
                             auto cls = pt->fetchClass("java/lang/String");
                             void *arr = pt->allocateArray(cls, 2);
@@ -216,7 +218,9 @@ int boot(std::vector<std::string> args)
                         searchDir(m, std::filesystem::directory_iterator(commandBuffer[2]));
                         for (auto a : m)
                         {
-                            pt->loadClass(std::make_shared<std::ifstream>(a, std::ios::binary));
+                            auto stt = new std::ifstream(a, std::ios::binary);
+			    pt->loadClass(stt);
+			    delete stt;
                         }
 
                         auto cmdPrint = [&](std::any data) {

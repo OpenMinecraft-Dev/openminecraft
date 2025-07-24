@@ -74,7 +74,7 @@ void OMPixelTower::loadClass(std::shared_ptr<classfile::OMClassFile> file)
 
     classloader->appendStagingClass(file);
 }
-void OMPixelTower::loadClass(std::shared_ptr<std::istream> file)
+void OMPixelTower::loadClass(std::istream *file)
 {
     auto parser = std::make_shared<classfile::OMClassFileParser>(file);
     auto clsres = parser->parse();
