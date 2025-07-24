@@ -2,9 +2,10 @@
 #include "nlohmann/detail/exceptions.hpp"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
+#include "openminecraft/i18n/om_i18n_locale.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/vfs/om_vfs_base.hpp"
 #include <SDL3/SDL_locale.h>
 #include <algorithm>
 #include <cctype>
@@ -40,15 +41,7 @@ void updateLocale(std::string loc)
 }
 void load()
 {
-    int c;
-    SDL_Locale **loc = SDL_GetPreferredLocales(&c);
-    if (c > 0)
-    {
-        std::string c = loc[0]->country;
-        std::transform(c.begin(), c.end(), c.begin(), ::tolower);
-        locale = fmt::format("{}_{}", loc[0]->language, c);
-    }
-    mem::allocator::tracedFreeSDL(loc);
+    locale = locale::defaultLocale();
 
     records.clear();
     translates.clear();

@@ -56,4 +56,8 @@ void printres()
     logger.info(translate("openminecraft.mem.detail", "*", toDataSize(data)));
     logger.info(translate("openminecraft.mem.detail", "/*", toDataSize(data / blocks)));
 }
+uint64_t fetchSize(int t)
+{
+    return mems[t];
+}
 } // namespace openminecraft::mem::castorice

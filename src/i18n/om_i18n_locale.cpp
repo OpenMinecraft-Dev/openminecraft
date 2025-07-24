@@ -1,4 +1,5 @@
 #include "openminecraft/i18n/om_i18n_locale.hpp"
+#include "openminecraft/mem/om_mem_allocator.hpp"
 #include <SDL3/SDL_locale.h>
 #include <algorithm>
 #include <cctype>
@@ -20,6 +21,7 @@ std::string defaultLocale()
     {
         auto dd = fmt::format("{}_{}", d[0]->language, d[0]->country);
         std::transform(dd.begin(), dd.end(), dd.begin(), ::tolower);
+        mem::allocator::tracedFreeSDL(d);
         return dd;
     }
 }

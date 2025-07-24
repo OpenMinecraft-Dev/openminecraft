@@ -31,6 +31,7 @@ struct MemModifyInfo
 size_t heapSize(void *p);
 void rec(MemModifyInfo i);
 void printres();
+uint64_t fetchSize(int t);
 } // namespace openminecraft::mem::castorice
 
 #endif

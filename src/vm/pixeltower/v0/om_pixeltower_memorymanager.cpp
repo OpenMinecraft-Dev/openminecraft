@@ -1,15 +1,21 @@
 #include "openminecraft/vm/pixeltower/om_pixeltower_memorymanager.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_array_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_class_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_frame_structdef.hpp"
 #include "openminecraft/vm/pixeltower/om_pixeltower_interpreter.hpp"
 #include <any>
+#include <bitset>
 #include <memory>
 #include <stack>
 #include <typeindex>
+#include <unordered_map>
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb/stb_image_write.h"
 
 #define HEAP_SIZE 1024 * 128
 
@@ -22,19 +28,26 @@ OMMemoryManager::OMMemoryManager(std::any tower, std::shared_ptr<OMClassLoader> 
 }
 OMMemoryManager::~OMMemoryManager()
 {
+    logger.info("TOTAL DESTRUCTION !!");
+    for (auto b : blockStatus)
+    {
+        mem::allocator::tracedFreeVMData(b.first);
+    }
 }
 
 void *OMMemoryManager::fetchInternal(int size)
 {
     auto p = mem::allocator::tracedMallocVMData(size);
     memset(p, 0, size);
-    blockStatus[p] = false;
+    blockStatus[p] = std::bitset<8>(0);
+    blockStatus[p][OBJECT_EMPTY_BIT] = (size == sizeof(void *)); // EMPTY objects, optimization ready!
     return p;
 }
 
 void OMMemoryManager::gc()
 {
-    if (blockStatus.size() < 16384) {
+    if (mem::castorice::fetchSize(OM_MEM_VMDATA) < 1024 * 1024 * 16)
+    {
         return;
     }
     logger.debug("serial gc begin");
@@ -70,11 +83,26 @@ void OMMemoryManager::gc()
         searchFromStatic(l.second);
     }
 
+    int total = 0, reachable = 0, empty = 0;
+    for (auto d : blockStatus)
+    {
+        total++;
+        if (d.second[OBJECT_REACHABLE_BIT])
+        {
+            reachable++;
+        }
+        if (d.second[OBJECT_EMPTY_BIT])
+        {
+            empty++;
+        }
+    }
+    logger.debug("{} objects, {} reachable, {} empty objects", total, reachable, empty);
+
     for (auto p = blockStatus.begin(); p != blockStatus.end();)
     {
-        if (p->second)
+        if (p->second[OBJECT_REACHABLE_BIT])
         {
-            p->second = false;
+            p->second[OBJECT_REACHABLE_BIT] = false; // RESET reachable bit
             ++p;
         }
         else
@@ -83,11 +111,21 @@ void OMMemoryManager::gc()
             p = blockStatus.erase(p);
         }
     }
+
+    std::unordered_map<void *, std::bitset<8>> temp;
+    for (auto p : blockStatus)
+    {
+        temp[p.first] = p.second;
+    }
+
+    blockStatus.clear();
+    blockStatus.reserve(0);
+    blockStatus.insert(temp.begin(), temp.end());
 }
 
 void *OMMemoryManager::allocate(std::shared_ptr<OMClass> cls)
 {
-    auto result = fetchInternal(sizeof(void *) + cls->objectLength);
+    auto result = fetchInternal(cls->objectLength);
     auto clsp = (OMClass **)result;
     *clsp = cls.get();
     return result;
@@ -177,7 +215,7 @@ void OMMemoryManager::searchFromInstance(void *b)
 {
     if (b != nullptr)
     {
-        blockStatus[b] = true;
+        blockStatus[b][OBJECT_REACHABLE_BIT] = true; // This object is reachable
     }
     auto arrh = (OMArrayHeader *)b;
     if (b == nullptr)

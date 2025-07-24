@@ -171,18 +171,18 @@ int boot(std::vector<std::string> args)
                                 log::multithread::registerCurrentThreadName("sppedtesting");
                                 while (true)
                                 {
-                                    std::this_thread::sleep_for(100ms);
+                                    std::this_thread::sleep_for(1s);
                                     logger->info("{} operands executed",
                                                  std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)
-                                                         ->operands *
-                                                     10);
+                                                     ->operands);
+                                    mem::castorice::printres();
                                     std::any_cast<std::shared_ptr<runtime::OMInterpreter>>(pt->interpreter)->operands =
                                         0;
                                 }
                             });
                             auto stti = new std::ifstream(commandBuffer[2], std::ios::binary);
                             pt->loadClass(stti);
-			    delete stti;
+                            delete stti;
 
                             auto cls = pt->fetchClass("java/lang/String");
                             void *arr = pt->allocateArray(cls, 2);
@@ -219,8 +219,8 @@ int boot(std::vector<std::string> args)
                         for (auto a : m)
                         {
                             auto stt = new std::ifstream(a, std::ios::binary);
-			    pt->loadClass(stt);
-			    delete stt;
+                            pt->loadClass(stt);
+                            delete stt;
                         }
 
                         auto cmdPrint = [&](std::any data) {

@@ -73,12 +73,12 @@ void operator delete[](void *p) noexcept
 
 void operator delete(void *p, size_t l) noexcept
 {
-    rec({Free, p, l, OM_MEM_CPP});
+    rec({Free, p, heapSize(p), OM_MEM_CPP});
     free(p);
 }
 
 void operator delete[](void *p, size_t l) noexcept
 {
-    rec({Free, p, l, OM_MEM_CPP});
+    rec({Free, p, heapSize(p), OM_MEM_CPP});
     free(p);
 }
