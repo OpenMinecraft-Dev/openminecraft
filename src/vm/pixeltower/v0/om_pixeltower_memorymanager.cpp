@@ -46,7 +46,7 @@ void *OMMemoryManager::fetchInternal(int size)
 
 void OMMemoryManager::gc()
 {
-    if (mem::castorice::fetchSize(OM_MEM_VMDATA) < 1024 * 1024 * 16)
+    if (mem::castorice::fetchSize(OM_MEM_VMDATA) + mem::castorice::fetchSize(OM_MEM_CPP) < 1024 * 1024 * 128)
     {
         return;
     }

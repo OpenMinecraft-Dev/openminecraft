@@ -12,7 +12,18 @@ constexpr hash_t basis = 0xCBF29CE484222325ull;
 
 constexpr hash_t hash_compile_time(const char *str, hash_t last_value = basis)
 {
-    return *str ? hash_compile_time(str + 1, (*str ^ last_value) * prime) : last_value;
+    if (*str)
+    {
+        hash_t result = last_value;
+        const char *current = str;
+        while (*current)
+        {
+            result = (*current ^ result) * prime;
+            current++;
+        }
+        return result;
+    }
+    return last_value;
 }
 
 constexpr unsigned long long operator""_hash(const char *p, size_t)
