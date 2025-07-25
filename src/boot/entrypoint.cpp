@@ -35,16 +35,13 @@
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
-#include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
-#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
-#include "openminecraft/vm/classfile/om_class_file.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
 
 using namespace openminecraft;
-using namespace openminecraft::vm::classfile;
-using namespace openminecraft::vm::bytecode;
+using namespace openminecraft::vm;
 using namespace openminecraft::binary::hash;
 using namespace std::chrono_literals;
 
@@ -118,8 +115,6 @@ int boot(std::vector<std::string> args)
     SDL_Quit();
 
     bool recovermode = false;
-    mem::OMHeap heap(0ul, 8ull * 1024 * 1024 * 1024);
-    heap.init();
 
     if (setjmp(recoverBuffer) == 0)
     {
@@ -151,11 +146,24 @@ int boot(std::vector<std::string> args)
                 mem::castorice::printres();
                 break;
             case "memtest"_hash: {
-                heap.expand(static_cast<uint8_t *>(heap.block) + 255);
-                auto i = static_cast<int *>(heap.block);
-                i[0] = 33550336;
-                logger->debug("heap write : {}", i[0]);
-                heap.shrink(heap.block);
+                pixeltower::v0::OMPixelTowerHeap heap(0, 1ul * 1024 * 1024 * 1024);
+                std::vector<void *> targets;
+                for (int i = 0; i < 2048; i++)
+                {
+                    targets.push_back(heap.allocate(1024));
+                }
+
+                srand(time(nullptr));
+                while (!targets.empty())
+                {
+                    auto idx = rand() % targets.size();
+                    heap.deallocate(targets[idx], 1024);
+                    targets.erase(targets.begin() + idx);
+                    if (targets.size() % 64 == 0)
+                    {
+                        heap.debug();
+                    }
+                }
 
                 commandBuffer.clear();
 

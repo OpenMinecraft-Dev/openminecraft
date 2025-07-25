@@ -1,4 +1,5 @@
 #include "openminecraft/mem/om_mem_prealloc.hpp"
+#include <new>
 
 namespace openminecraft::mem
 {
@@ -11,11 +12,16 @@ void OMHeap::init()
     }
     expand(static_cast<uint8_t *>(block) + minSize);
 }
+uint64_t OMHeap::currentSizeAllocated()
+{
+    return (size_t)heapTop - (size_t)block;
+}
 void OMHeap::expand(void *target)
 {
-    if (target < block || target <= heapTop)
+    if (target < block || target <= heapTop || ((size_t)target - (size_t)block) > maxSize)
     {
         logger.error("target is not valid!");
+        throw std::bad_alloc();
     }
 
     activate(heapTop, (size_t)target - (size_t)heapTop);
@@ -26,6 +32,7 @@ void OMHeap::shrink(void *target)
     if (target < block || target >= heapTop)
     {
         logger.error("target is not valid!");
+        throw std::bad_alloc();
     }
 
     deactivate(target, (size_t)heapTop - (size_t)target);

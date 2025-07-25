@@ -15,7 +15,15 @@ class OMHeap
     void expand(void *target);
     void shrink(void *target);
 
+    uint64_t currentSizeAllocated();
+
+    bool vaild(void *p)
+    {
+        return p >= block && p < heapTop;
+    }
+
     void *block;
+    void *heapTop;
 
   private:
     log::OMLogger logger;
@@ -24,7 +32,6 @@ class OMHeap
 
     void activate(void *p, uint64_t length);
     void deactivate(void *p, uint64_t length);
-    void *heapTop;
 };
 } // namespace openminecraft::mem
 
