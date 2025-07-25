@@ -14,6 +14,8 @@ typedef uint16_t jchar;
 typedef bool jbool;
 typedef char jbyte;
 
+typedef int AccessFlags;
+
 typedef std::variant<int, int64_t, float, double, void *> OMTowerStackElement;
 } // namespace openminecraft::vm::pixeltower::v0
 

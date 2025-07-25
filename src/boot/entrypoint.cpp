@@ -35,6 +35,7 @@
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
@@ -114,6 +115,8 @@ int boot(std::vector<std::string> args)
 
     SDL_Quit();
 
+    auto tower = std::make_unique<pixeltower::v0::OMPixelTower>();
+
     bool recovermode = false;
 
     if (setjmp(recoverBuffer) == 0)
@@ -128,6 +131,7 @@ int boot(std::vector<std::string> args)
                 std::cout << (recovermode ? "pixeltower recover > " : "pixeltower shell > ");
             }
 
+        unk:
             std::cin >> comm;
             commandBuffer.push_back(comm);
 
@@ -145,32 +149,19 @@ int boot(std::vector<std::string> args)
                 commandBuffer.clear();
                 mem::castorice::printres();
                 break;
-            case "memtest"_hash: {
-                pixeltower::v0::OMPixelTowerHeap heap(0, 1ul * 1024 * 1024 * 1024);
-                std::vector<void *> targets;
-                for (int i = 0; i < 2048; i++)
+            case "pixeltower"_hash: {
+                if (commandBuffer.size() >= 3 && commandBuffer[1] == "init")
                 {
-                    targets.push_back(heap.allocate(1024));
+                    tower->init(commandBuffer[2]);
+                    tower->loader->loadClass("vmstd/internal/SystemPrintStream");
+                    logger->info("{}", (void *)tower->loader->fetchClass("vmstd/internal/SystemPrintStream"));
+                    commandBuffer.clear();
+                    break;
                 }
-
-                srand(time(nullptr));
-                while (!targets.empty())
-                {
-                    auto idx = rand() % targets.size();
-                    heap.deallocate(targets[idx], 1024);
-                    targets.erase(targets.begin() + idx);
-                    if (targets.size() % 64 == 0)
-                    {
-                        heap.debug();
-                    }
-                }
-
-                commandBuffer.clear();
-
-                break;
+                goto unk;
             }
             case "crash"_hash: {
-                logger->info("{}", *((int *)nullptr));
+                logger->info("{}", *((int *)33550336));
             }
             default:
                 commandBuffer.clear();

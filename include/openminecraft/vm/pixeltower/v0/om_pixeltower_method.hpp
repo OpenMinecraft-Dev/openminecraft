@@ -11,7 +11,7 @@ class OMMethod
     jbyte *code;
     jint codeSize;
     jint *lineNumberTable;
-    jint accessFlags;
+    AccessFlags accessFlags;
 };
 } // namespace openminecraft::vm::pixeltower::v0
 

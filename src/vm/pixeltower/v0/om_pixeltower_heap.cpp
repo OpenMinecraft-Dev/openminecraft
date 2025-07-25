@@ -60,6 +60,11 @@ void OMPixelTowerHeap::debug()
 }
 void OMPixelTowerHeap::deallocate(void *ptr, uint64_t length)
 {
+    if (length % 8 != 0)
+    {
+        length = length + 8 - (length % 8);
+    }
+
     if (!heap->vaild(ptr))
     {
         logger.error("{} not vaild!", ptr);
