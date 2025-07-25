@@ -28,6 +28,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/mem/om_mem_prealloc.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
@@ -116,8 +117,9 @@ int boot(std::vector<std::string> args)
 
     SDL_Quit();
 
-    std::shared_ptr<OMClassFileParser> parser;
     bool recovermode = false;
+    mem::OMHeap heap(0ul, 8ull * 1024 * 1024 * 1024);
+    heap.init();
 
     if (setjmp(recoverBuffer) == 0)
     {
@@ -148,6 +150,17 @@ int boot(std::vector<std::string> args)
                 commandBuffer.clear();
                 mem::castorice::printres();
                 break;
+            case "memtest"_hash: {
+                heap.expand(static_cast<uint8_t *>(heap.block) + 255);
+                auto i = static_cast<int *>(heap.block);
+                i[0] = 33550336;
+                logger->debug("heap write : {}", i[0]);
+                heap.shrink(heap.block);
+
+                commandBuffer.clear();
+
+                break;
+            }
             case "crash"_hash: {
                 logger->info("{}", *((int *)nullptr));
             }

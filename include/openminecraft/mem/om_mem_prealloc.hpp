@@ -1,0 +1,31 @@
+#ifndef OM_MEM_PREALLOC_HPP
+#define OM_MEM_PREALLOC_HPP
+
+#include "openminecraft/log/om_log_common.hpp"
+#include <cstdint>
+namespace openminecraft::mem
+{
+class OMHeap
+{
+  public:
+    OMHeap(uint64_t minSize, uint64_t maxSize);
+    ~OMHeap();
+
+    void init();
+    void expand(void *target);
+    void shrink(void *target);
+
+    void *block;
+
+  private:
+    log::OMLogger logger;
+    uint64_t minSize;
+    uint64_t maxSize;
+
+    void activate(void *p, uint64_t length);
+    void deactivate(void *p, uint64_t length);
+    void *heapTop;
+};
+} // namespace openminecraft::mem
+
+#endif
