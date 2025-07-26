@@ -37,6 +37,9 @@ void OMPixelTower::stackTest(OMMethod *method)
 
     currentThread.currentFrame = frame;
     currentThread.pc = method->code;
+
+    logger.debug("method {} code {}", (void *)method, (void *)method->code);
+    logger.debug("stack: {}", currentThread.stack);
 }
 
 void OMPixelTower::init(std::string basePath)
