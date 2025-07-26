@@ -207,7 +207,7 @@ void OMKlassLoader::classInit(OMKlass *klass)
             loff += 8 - (loff % 8);
             break;
         default:
-            loff += heap->pointerSize() - (loff % heap->pointerSize());
+            loff += heap->ptrSize() - (loff % heap->ptrSize());
             break;
         }
     }

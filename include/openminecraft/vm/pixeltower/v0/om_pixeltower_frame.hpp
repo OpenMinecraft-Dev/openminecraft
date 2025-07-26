@@ -9,7 +9,7 @@ struct OMFrame
     OMMethod *method;
     void *stackPointer;
     void *returnAddr;
-    jint locals[0];
+    jbyte locals[0];
 };
 } // namespace openminecraft::vm::pixeltower::v0
 

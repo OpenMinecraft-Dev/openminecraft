@@ -30,21 +30,23 @@ class OMPixelTowerHeap
         return heap->block;
     }
 
-    bool enablePointerCompression()
+    bool ptrCompEnabled()
     {
         return maxSize < 32ull * 1024 * 1024 * 1024 && (sizeof(void *) == 8);
     }
-    uint64_t pointerSize()
+    uint64_t ptrSize()
     {
-        return enablePointerCompression() ? 4 : sizeof(void *);
+        return ptrCompEnabled() ? 4 : sizeof(void *);
     }
 
-    uint32_t compressPointer(void *p)
+    uint32_t compressPtr(void *p)
     {
+        static_assert(sizeof(void *) == 8, "pointer compressing only works on 64-byte pointers!");
         return ((size_t)p - (size_t)heap->block) >> 3;
     }
-    void *decompressPointer(uint32_t p)
+    void *decompressPtr(uint32_t p)
     {
+        static_assert(sizeof(void *) == 8, "pointer compressing only works on 64-byte pointers!");
         return (void *)((size_t)(p << 3) + (size_t)heap->block);
     }
 

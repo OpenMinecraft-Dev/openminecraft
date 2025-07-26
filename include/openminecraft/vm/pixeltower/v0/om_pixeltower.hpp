@@ -3,6 +3,7 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klassloader.hpp"
 #include <istream>
 #include <vector>
@@ -26,6 +27,7 @@ class OMPixelTower
     void destroyCurrentThread();
 
   private:
+    OMInterpreter *interpreter;
     log::OMLogger logger;
 };
 } // namespace openminecraft::vm::pixeltower::v0
