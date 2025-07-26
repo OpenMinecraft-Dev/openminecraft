@@ -3,6 +3,7 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_prealloc.hpp"
+#include <cassert>
 #include <cstdint>
 #include <mutex>
 #include <vector>
@@ -41,12 +42,12 @@ class OMPixelTowerHeap
 
     uint32_t compressPtr(void *p)
     {
-        static_assert(sizeof(void *) == 8, "pointer compressing only works on 64-byte pointers!");
+        assert(sizeof(void *) == 8);
         return ((size_t)p - (size_t)heap->block) >> 3;
     }
     void *decompressPtr(uint32_t p)
     {
-        static_assert(sizeof(void *) == 8, "pointer compressing only works on 64-byte pointers!");
+        assert(sizeof(void *) == 8);
         return (void *)((size_t)(p << 3) + (size_t)heap->block);
     }
 
