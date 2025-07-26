@@ -17,10 +17,13 @@ class OMPixelTower
     void init(std::string basePath);
     void load(std::string path);
     void init(std::vector<std::shared_ptr<std::istream>> &streams);
-    void testAppendMethod();
+    void stackTest(OMMethod *method);
     OMKlassLoader *loader;
     OMPixelTowerHeap *heap;
     OMPixelTowerHeap *metaspace;
+
+    void initCurrentThread(uint64_t tlsSize);
+    void destroyCurrentThread();
 
   private:
     log::OMLogger logger;

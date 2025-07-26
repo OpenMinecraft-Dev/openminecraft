@@ -1,9 +1,13 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_base.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_frame.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -23,41 +27,16 @@ OMPixelTower::~OMPixelTower()
     delete metaspace;
 }
 
-void OMPixelTower::testAppendMethod()
+void OMPixelTower::stackTest(OMMethod *method)
 {
-    auto alloc = (OMMethod *)metaspace->allocate(sizeof(OMMethod) + 128);
-    loader->loadClass("java/lang/Object");
-    alloc->klass = loader->fetchClass("java/lang/Object");
-    alloc->name = "equals";
-    alloc->desc = "(Ljava/lang/Object;)Z";
-    alloc->accessFlags = JVM_Acc_Public;
-    alloc->codeSize = 128;
-    alloc->lineNumberTable = nullptr;
+    auto frame = (OMFrame *)(currentThread.currentFrame == nullptr ? currentThread.stack
+                                                                   : currentThread.currentFrame->stackPointer);
+    frame->stackPointer = (jbyte *)currentThread.stack + sizeof(OMFrame);
+    frame->returnAddr = (void *)33550336;
+    frame->method = method;
 
-    for (auto i = 0; i < 128; i++)
-    {
-        alloc->code[i] = 0xcc;
-    }
-    logger.debug("function inserted at {}", (void *)alloc);
-
-    if (alloc == metaspace->heapBase())
-    {
-        return;
-    }
-
-    auto currentMet = (OMMethod *)metaspace->heapBase();
-    while (true)
-    {
-        if (currentMet->next == nullptr)
-        {
-            currentMet->next = alloc;
-            break;
-        }
-        else
-        {
-            currentMet = currentMet->next;
-        }
-    }
+    currentThread.currentFrame = frame;
+    currentThread.pc = method->code;
 }
 
 void OMPixelTower::init(std::string basePath)
@@ -95,6 +74,24 @@ void OMPixelTower::init(std::vector<std::shared_ptr<std::istream>> &streams)
         }
 
         loader->stagClass(target.unwrap());
+    }
+}
+
+void OMPixelTower::initCurrentThread(uint64_t tlsSize)
+{
+    if (currentThread.stack)
+    {
+        return;
+    }
+
+    currentThread.stack = mem::allocator::tracedCallocVMData(1, tlsSize);
+}
+
+void OMPixelTower::destroyCurrentThread()
+{
+    if (currentThread.stack)
+    {
+        mem::allocator::tracedFreeVMData(currentThread.stack);
     }
 }
 } // namespace openminecraft::vm::pixeltower::v0

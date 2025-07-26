@@ -37,10 +37,12 @@ class OMKlass
 
     OMPixelTowerHeap *heap;
 
-    void *allocateInstance()
+    OMOOPDesc *allocateInstance()
     {
         assert(kind == OMKlassKind::Normal);
-        return heap->allocate(sizeof(OMOOPDesc) + length);
+        auto obj = (OMOOPDesc *)heap->allocate(sizeof(OMOOPDesc) + length);
+        obj->klass = this;
+        return obj;
     }
 };
 } // namespace openminecraft::vm::pixeltower::v0

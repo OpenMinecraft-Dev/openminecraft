@@ -8,6 +8,7 @@
 #include <chrono>
 #include <csetjmp>
 #include <cstdlib>
+#include <cstring>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -154,11 +155,22 @@ int boot(std::vector<std::string> args)
             case "pixeltower"_hash: {
                 if (commandBuffer.size() >= 3 && commandBuffer[1] == "init")
                 {
+                    tower->initCurrentThread(1ul * 1024 * 1024);
                     tower->init(commandBuffer[2]);
                     tower->load("../Test.class");
                     tower->loader->loadClass("openminecraft/Test");
                     auto cls = tower->loader->fetchClass("openminecraft/Test");
-                    logger->info("{}", (void *)cls);
+                    auto met = cls->methods;
+                    while (met != nullptr)
+                    {
+                        if (strcmp(met->name, "main") == 0 && strcmp(met->desc, "([Ljava/lang/String;)V") == 0)
+                        {
+                            tower->stackTest(met);
+                            break;
+                        }
+                        met = met->next;
+                    }
+                    tower->destroyCurrentThread();
                     commandBuffer.clear();
 
                     break;
