@@ -5,7 +5,8 @@
 
 namespace openminecraft::vm::pixeltower::v0
 {
-OMPixelTowerHeap::OMPixelTowerHeap(uint64_t minSize, uint64_t maxSize) : logger("OMPixelTowerHeap", this)
+OMPixelTowerHeap::OMPixelTowerHeap(uint64_t minSize, uint64_t maxSize)
+    : logger("OMPixelTowerHeap", this), maxSize(maxSize)
 {
     heap = new mem::OMHeap(minSize, maxSize);
     heap->init();

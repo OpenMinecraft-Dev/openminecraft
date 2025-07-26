@@ -37,6 +37,8 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
@@ -153,9 +155,12 @@ int boot(std::vector<std::string> args)
                 if (commandBuffer.size() >= 3 && commandBuffer[1] == "init")
                 {
                     tower->init(commandBuffer[2]);
-                    tower->loader->loadClass("vmstd/internal/SystemPrintStream");
-                    logger->info("{}", (void *)tower->loader->fetchClass("vmstd/internal/SystemPrintStream"));
+                    tower->load("../Test.class");
+                    tower->loader->loadClass("openminecraft/Test");
+                    auto cls = tower->loader->fetchClass("openminecraft/Test");
+                    logger->info("{}", (void *)cls);
                     commandBuffer.clear();
+
                     break;
                 }
                 goto unk;

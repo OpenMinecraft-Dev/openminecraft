@@ -15,11 +15,14 @@ class OMPixelTower
     ~OMPixelTower();
 
     void init(std::string basePath);
+    void load(std::string path);
     void init(std::vector<std::shared_ptr<std::istream>> &streams);
+    void testAppendMethod();
     OMKlassLoader *loader;
+    OMPixelTowerHeap *heap;
+    OMPixelTowerHeap *metaspace;
 
   private:
-    OMPixelTowerHeap *heap;
     log::OMLogger logger;
 };
 } // namespace openminecraft::vm::pixeltower::v0

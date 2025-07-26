@@ -5,13 +5,19 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 namespace openminecraft::vm::pixeltower::v0
 {
-class OMMethod
+struct OMMethod
 {
     OMKlass *klass;
-    jbyte *code;
-    jint codeSize;
+    const jbyte *name;
+    const jbyte *desc;
+    OMMethod *next;
     jint *lineNumberTable;
     AccessFlags accessFlags;
+    jint maxLocals;
+    jint maxStack;
+    jint codeSize;
+    uint8_t code[0];
+    // code space
 };
 } // namespace openminecraft::vm::pixeltower::v0
 
