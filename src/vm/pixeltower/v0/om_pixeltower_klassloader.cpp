@@ -1,5 +1,6 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klassloader.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
@@ -122,6 +123,23 @@ loadMethods:
         m->accessFlags = method->accessFlags;
         m->name = klass->raw->mapping[method->nameIndex]->to<classfile::OMClassConstantUtf8>()->data.c_str();
         m->desc = klass->raw->mapping[method->descIndex]->to<classfile::OMClassConstantUtf8>()->data.c_str();
+
+        {
+            auto target = bytecode::descriptor::decodeSignature(
+                klass->raw->mapping[method->descIndex]->to<classfile::OMClassConstantUtf8>()->data, &m->args);
+            if (target.type == util::Err)
+            {
+                throw err::OMValidationError{err::ClassLoader,
+                                             fmt::format("error loading {}.{}{}", klass->name, m->name, m->desc),
+                                             target.unwrap_err()};
+            }
+            m->args = target.unwrap().first.size();
+            if ((m->accessFlags & JVM_Acc_Static) == 0)
+            {
+                m->args++;
+            }
+        }
+
         if (code != nullptr)
         {
             m->maxLocals = code->maxLocals;

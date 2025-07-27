@@ -16,6 +16,7 @@ struct OMMethod
     jint maxLocals;
     jint maxStack;
     jint codeSize;
+    jint args;
     uint8_t code[0];
     // code space
 };

@@ -17,19 +17,24 @@ class OMPixelTowerThread
     uint8_t *pc;
     OMFrame *currentFrame;
     void *stack;
+    void *stackPointer;
     void *stackEnd;
 };
 
-#define stackBump                                                                                                      \
-    currentThread.currentFrame->stackPointer = (uint8_t *)currentThread.currentFrame->stackPointer - sizeof(void *);
+#define stackPush currentThread.stackPointer = (uint8_t *)currentThread.stackPointer - sizeof(void *);
+#define stackPop currentThread.stackPointer = (uint8_t *)currentThread.stackPointer + sizeof(void *);
+
 #define stackPushPointer(p)                                                                                            \
-    *(void **)currentThread.currentFrame->stackPointer = p;                                                            \
-    stackBump;
+    *(void **)currentThread.stackPointer = p;                                                                          \
+    stackPush;
 #define stackPushInt(i)                                                                                                \
-    *(jint **)currentThread.currentFrame->stackPointer = i;                                                            \
-    stackBump;
-#define stackTopPointer (*((void **)currentThread.currentFrame->stackPointer + 1))
-#define stackTopInt (*(jint *)((void **)currentThread.currentFrame->stackPointer + 1))
+    *(jint **)currentThread.stackPointer = i;                                                                          \
+    stackPush;
+#define stackTopPointer (*((void **)currentThread.stackPointer + 1))
+#define stackTopInt (*(jint *)((void **)currentThread.stackPointer + 1))
+
+#define localAccess(idx) (currentThread.currentFrame->locals - sizeof(void *) * (idx + 1))
+#define localAccessForeign(f, idx) (currentThread.currentFrame->locals - sizeof(void *) * (idx + 1))
 
 extern thread_local OMPixelTowerThread currentThread;
 } // namespace openminecraft::vm::pixeltower::v0

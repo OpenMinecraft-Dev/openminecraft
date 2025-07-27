@@ -32,9 +32,11 @@ OMPixelTower::~OMPixelTower()
 
 void OMPixelTower::stackTest(OMMethod *method)
 {
-    auto frame = (OMFrame *)((uint8_t *)currentThread.stack - sizeof(OMFrame));
-    frame->stackPointer = (jbyte *)currentThread.stack - sizeof(OMFrame) - method->maxLocals * sizeof(void *);
-    frame->returnAddr = currentThread.pc;
+    auto frame = (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame));
+    currentThread.stackPointer = (jbyte *)currentThread.stackPointer - sizeof(OMFrame) -
+                                 method->maxLocals * sizeof(void *); // allocate whole frame + locals
+    stackPush;
+    frame->returnAddr = (void *)0x33550336;
     frame->method = method;
 
     currentThread.currentFrame = frame;
@@ -92,6 +94,7 @@ void OMPixelTower::initCurrentThread(uint64_t tlsSize)
 
     currentThread.stackEnd = mem::allocator::tracedCallocVMData(1, tlsSize);
     currentThread.stack = (uint8_t *)currentThread.stackEnd + tlsSize;
+    currentThread.stackPointer = currentThread.stack;
 }
 
 void OMPixelTower::destroyCurrentThread()

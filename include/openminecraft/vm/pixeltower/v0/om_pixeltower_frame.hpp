@@ -6,11 +6,10 @@ namespace openminecraft::vm::pixeltower::v0
 {
 struct OMFrame
 {
+    jbyte locals[0];
     OMMethod *method;
     OMFrame *prev;
-    void *stackPointer;
     void *returnAddr;
-    jbyte locals[0];
 };
 } // namespace openminecraft::vm::pixeltower::v0
 
