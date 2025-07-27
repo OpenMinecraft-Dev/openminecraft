@@ -83,7 +83,7 @@ bool OMInterpreter::execute()
         logger.debug("sp pointed at {}", (void *)currentThread.stackPointer);
         logger.debug("method metadata at {}", (void *)frame);
 
-        void *currentData = currentThread.stackPointer;
+        void *currentData = (uint8_t *)currentThread.stackPointer - 6 * sizeof(void *);
         while (true)
         {
             bool dirty = false;
@@ -91,6 +91,10 @@ bool OMInterpreter::execute()
             if (currentData == currentThread.stackPointer)
             {
                 ext = "<== Stack pointer (dirty data)";
+                dirty = true;
+            }
+            else if (currentData < currentThread.stackPointer)
+            {
                 dirty = true;
             }
             logger.debug("STACK {}: {} {}", currentData,

@@ -36,6 +36,7 @@ void OMPixelTower::stackTest(OMMethod *method)
     currentThread.stackPointer = (jbyte *)currentThread.stackPointer - sizeof(OMFrame) -
                                  method->maxLocals * sizeof(void *); // allocate whole frame + locals
     stackPush;
+    logger.debug("current sp: {}", currentThread.stackPointer);
     frame->returnAddr = (void *)0x33550336;
     frame->method = method;
 
