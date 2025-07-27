@@ -33,8 +33,8 @@ class OMPixelTowerThread
 #define stackTopPointer (*((void **)currentThread.stackPointer + 1))
 #define stackTopInt (*(jint *)((void **)currentThread.stackPointer + 1))
 
-#define localAccess(idx) (currentThread.currentFrame->locals - sizeof(void *) * (idx + 1))
-#define localAccessForeign(f, idx) (currentThread.currentFrame->locals - sizeof(void *) * (idx + 1))
+#define localAccess(idx) (((uint8_t *)currentThread.currentFrame) - sizeof(void *) * (idx + 1))
+#define localAccessForeign(f, idx) (((uint8_t *)f) - sizeof(void *) * (idx + 1))
 
 extern thread_local OMPixelTowerThread currentThread;
 } // namespace openminecraft::vm::pixeltower::v0
