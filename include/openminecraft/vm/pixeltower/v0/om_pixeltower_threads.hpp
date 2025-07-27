@@ -14,10 +14,22 @@ class OMPixelTowerThread
 
     std::thread::id id;
     std::string name;
-    jbyte *pc;
+    uint8_t *pc;
     OMFrame *currentFrame;
     void *stack;
+    void *stackEnd;
 };
+
+#define stackBump                                                                                                      \
+    currentThread.currentFrame->stackPointer = (uint8_t *)currentThread.currentFrame->stackPointer - sizeof(void *);
+#define stackPushPointer(p)                                                                                            \
+    *(void **)currentThread.currentFrame->stackPointer = p;                                                            \
+    stackBump;
+#define stackPushInt(i)                                                                                                \
+    *(jint **)currentThread.currentFrame->stackPointer = i;                                                            \
+    stackBump;
+#define stackTopPointer (*((void **)currentThread.currentFrame->stackPointer + 1))
+#define stackTopInt (*(jint *)((void **)currentThread.currentFrame->stackPointer + 1))
 
 extern thread_local OMPixelTowerThread currentThread;
 } // namespace openminecraft::vm::pixeltower::v0

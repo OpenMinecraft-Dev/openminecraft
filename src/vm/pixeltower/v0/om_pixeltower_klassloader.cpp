@@ -5,6 +5,7 @@
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_base.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_field.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
@@ -26,6 +27,10 @@ OMKlassLoader::~OMKlassLoader()
         if (k->staticBlock)
         {
             mem::allocator::tracedFreeVMData(k->staticBlock);
+        }
+        if (k->constantPool)
+        {
+            mem::allocator::tracedFreeVMData(k->constantPool);
         }
         mem::allocator::tracedFreeVMData(k);
     }
@@ -145,6 +150,73 @@ loadMethods:
                                  klass->raw->mapping[field->descIndex]->to<classfile::OMClassConstantUtf8>()->data, 0,
                                  field->accessFlags});
     }
+
+    klass->constantPool = (uint64_t *)mem::allocator::tracedCallocVMData(klass->raw->mapping.size(), sizeof(uint64_t));
+    for (auto cppair : klass->raw->mapping)
+    {
+#define acc (klass->constantPool + cppair.first)
+        switch (cppair.second->type())
+        {
+        case classfile::OMClassConstantType::Long:
+            *(jlong *)acc = cppair.second->to<classfile::OMClassConstantLong>()->data;
+            break;
+        case classfile::OMClassConstantType::Integer:
+            *(jint *)acc = cppair.second->to<classfile::OMClassConstantInteger>()->data;
+            break;
+        case classfile::OMClassConstantType::Float:
+            *(jfloat *)acc = cppair.second->to<classfile::OMClassConstantFloat>()->data;
+            break;
+        case classfile::OMClassConstantType::Double:
+            *(jdouble *)acc = cppair.second->to<classfile::OMClassConstantDouble>()->data;
+            break;
+        case classfile::OMClassConstantType::Class: {
+            auto &cls = klass->raw->mapping[cppair.second->to<classfile::OMClassConstantClass>()->nameIndex]
+                            ->to<classfile::OMClassConstantUtf8>()
+                            ->data;
+            loadClass(cls);
+            *(OMKlass **)acc = fetchClass(cls);
+            break;
+        }
+        case classfile::OMClassConstantType::MethodRef: {
+            auto temp = cppair.second->to<classfile::OMClassConstantMethodRef>();
+            auto &clsname =
+                klass->raw
+                    ->mapping[klass->raw->mapping[temp->classIndex]->to<classfile::OMClassConstantClass>()->nameIndex]
+                    ->to<classfile::OMClassConstantUtf8>()
+                    ->data;
+            loadClass(clsname);
+            auto temp2 = klass->raw->mapping[temp->nameAndTypeIndex]->to<classfile::OMClassConstantNameAndType>();
+            auto &name = klass->raw->mapping[temp2->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
+            auto &desc = klass->raw->mapping[temp2->descIndex]->to<classfile::OMClassConstantUtf8>()->data;
+            auto met = fetchClass(clsname)->methods;
+            while (met != nullptr)
+            {
+                if (strcmp(met->name, name.c_str()) == 0 && strcmp(met->desc, desc.c_str()) == 0)
+                {
+                    *(OMMethod **)acc = met;
+                    break;
+                }
+
+                met = met->next;
+            }
+            break;
+        }
+
+        case classfile::OMClassConstantType::Utf8:
+        case classfile::OMClassConstantType::String:
+        case classfile::OMClassConstantType::FieldRef:
+        case classfile::OMClassConstantType::InterfaceMethodRef:
+        case classfile::OMClassConstantType::NameAndType:
+        case classfile::OMClassConstantType::MethodHandle:
+        case classfile::OMClassConstantType::MethodType:
+        case classfile::OMClassConstantType::Dynamic:
+        case classfile::OMClassConstantType::InvokeDynamic:
+        case classfile::OMClassConstantType::Module:
+        case classfile::OMClassConstantType::Package:
+            break;
+        }
+    }
+
     classInit(klass);
 }
 

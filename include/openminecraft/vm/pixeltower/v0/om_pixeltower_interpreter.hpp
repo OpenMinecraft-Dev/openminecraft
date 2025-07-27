@@ -3,18 +3,23 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 namespace openminecraft::vm::pixeltower::v0
 {
+class OMPixelTower;
 class OMInterpreter
 {
   public:
-    OMInterpreter(OMPixelTowerHeap *heap);
+    OMInterpreter(OMPixelTowerHeap *heap, OMPixelTower *tower);
     ~OMInterpreter();
 
     bool execute();
 
   private:
+    void call(OMMethod *met);
+
     log::OMLogger logger;
+    OMPixelTower *tower;
     OMPixelTowerHeap *heap;
 };
 } // namespace openminecraft::vm::pixeltower::v0

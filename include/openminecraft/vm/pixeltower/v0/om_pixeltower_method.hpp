@@ -16,7 +16,7 @@ struct OMMethod
     jint maxLocals;
     jint maxStack;
     jint codeSize;
-    jbyte code[0];
+    uint8_t code[0];
     // code space
 };
 } // namespace openminecraft::vm::pixeltower::v0

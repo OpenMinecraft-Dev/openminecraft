@@ -20,7 +20,7 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
     heap = new OMPixelTowerHeap(1ul * 1024 * 1024, 1ul * 1024 * 1024 * 1024);
     metaspace = new OMPixelTowerHeap(1ul * 1024 * 1024, 8ul * 1024 * 1024);
     loader = new OMKlassLoader(heap, metaspace);
-    interpreter = new OMInterpreter(heap);
+    interpreter = new OMInterpreter(heap, this);
 }
 OMPixelTower::~OMPixelTower()
 {
@@ -32,21 +32,17 @@ OMPixelTower::~OMPixelTower()
 
 void OMPixelTower::stackTest(OMMethod *method)
 {
-    auto frame = (OMFrame *)(currentThread.currentFrame == nullptr ? currentThread.stack
-                                                                   : currentThread.currentFrame->stackPointer);
-    frame->stackPointer = (jbyte *)currentThread.stack + sizeof(OMFrame);
+    auto frame = (OMFrame *)((uint8_t *)currentThread.stack - sizeof(OMFrame));
+    frame->stackPointer = (jbyte *)currentThread.stack - sizeof(OMFrame) - method->maxLocals * sizeof(void *);
     frame->returnAddr = currentThread.pc;
     frame->method = method;
-
-    frame->stackPointer = (uint8_t *)frame->stackPointer + method->maxLocals * sizeof(void *);
 
     currentThread.currentFrame = frame;
     currentThread.pc = method->code;
 
-    logger.debug("method {} code {}", (void *)method, (void *)method->code);
-    logger.debug("stack: {}", currentThread.stack);
-
-    interpreter->execute();
+    while (interpreter->execute())
+    {
+    }
 }
 
 void OMPixelTower::init(std::string basePath)
@@ -89,19 +85,20 @@ void OMPixelTower::init(std::vector<std::shared_ptr<std::istream>> &streams)
 
 void OMPixelTower::initCurrentThread(uint64_t tlsSize)
 {
-    if (currentThread.stack)
+    if (currentThread.stackEnd)
     {
         return;
     }
 
-    currentThread.stack = mem::allocator::tracedCallocVMData(1, tlsSize);
+    currentThread.stackEnd = mem::allocator::tracedCallocVMData(1, tlsSize);
+    currentThread.stack = (uint8_t *)currentThread.stackEnd + tlsSize;
 }
 
 void OMPixelTower::destroyCurrentThread()
 {
-    if (currentThread.stack)
+    if (currentThread.stackEnd)
     {
-        mem::allocator::tracedFreeVMData(currentThread.stack);
+        mem::allocator::tracedFreeVMData(currentThread.stackEnd);
     }
 }
 } // namespace openminecraft::vm::pixeltower::v0

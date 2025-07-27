@@ -35,6 +35,8 @@ class OMKlass
     void *staticBlock;
     uint64_t staticLength;
 
+    uint64_t *constantPool;
+
     OMPixelTowerHeap *heap;
 
     OMOOPDesc *allocateInstance()
