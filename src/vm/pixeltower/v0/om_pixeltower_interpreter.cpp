@@ -23,26 +23,31 @@ OMInterpreter::~OMInterpreter()
 void OMInterpreter::call(OMMethod *met)
 {
     auto frame = currentThread.currentFrame;
-    auto nextframe =
-        (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame) + (met->args * sizeof(void *)));
-
+    auto nextframe =                                           (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame) + sizeof(void *) + met->args * sizeof(void *));
+    for (int i = 0; i < met->maxLocals; i++)
+    {
+	    *(void **)localAccessForeign(nextframe, i) = nullptr;
+    } 
     for (int i = 0; i < met->args; i++)
     {
-        stackPop;
-        logger.info("stack element ({}) -> new frame locals ({}) arg #{}",
-                    (void *)((void **)currentThread.stackPointer - 1), (void *)localAccessForeign(nextframe, i), i);
+        logger.info("stack element ({}) arg #{}",
+                    (void *)(&stackTopPointer), i);
         logger.info("{}", stackTopPointer);
+	*(void **)localAccessForeign(nextframe, i) = stackTopPointer;
+	stackPop;
     }
+    debugStack();
 
     nextframe->returnAddr = currentThread.pc + 3;
     nextframe->method = met;
     nextframe->prev = frame;
 
     currentThread.stackPointer =
-        (jbyte *)currentThread.stackPointer - sizeof(OMFrame) - met->maxLocals * sizeof(void *);
-    stackPush;
+        (jbyte *)nextframe - met->maxLocals * sizeof(void *);
     currentThread.currentFrame = nextframe;
+    stackPush;
     currentThread.pc = met->code;
+    debugStack();
 }
 
 bool OMInterpreter::execute()
@@ -58,6 +63,7 @@ bool OMInterpreter::execute()
     case op_return: {
         currentThread.pc = (uint8_t *)currentThread.currentFrame->returnAddr;
         currentThread.stackPointer = (uint8_t *)currentThread.currentFrame + sizeof(OMFrame); // popped whole frame
+        stackPush;
         currentThread.currentFrame = currentThread.currentFrame->prev;
 
         return true;
@@ -83,7 +89,17 @@ bool OMInterpreter::execute()
         logger.debug("sp pointed at {}", (void *)currentThread.stackPointer);
         logger.debug("method metadata at {}", (void *)frame);
 
-        void *currentData = (uint8_t *)currentThread.stackPointer - 6 * sizeof(void *);
+        debugStack();
+
+        break;
+    }
+    }
+    return false;
+}
+
+void OMInterpreter::debugStack()
+{
+void *currentData = (uint8_t *)currentThread.stackPointer - 6 * sizeof(void *);
         while (true)
         {
             bool dirty = false;
@@ -107,10 +123,5 @@ bool OMInterpreter::execute()
                 break;
             }
         }
-
-        break;
-    }
-    }
-    return false;
 }
 } // namespace openminecraft::vm::pixeltower::v0

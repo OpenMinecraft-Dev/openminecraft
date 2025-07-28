@@ -17,6 +17,7 @@ class OMInterpreter
 
   private:
     void call(OMMethod *met);
+    void debugStack();
 
     log::OMLogger logger;
     OMPixelTower *tower;
