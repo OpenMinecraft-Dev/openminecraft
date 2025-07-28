@@ -21,23 +21,26 @@ class OMPixelTowerThread
     void *stackEnd;
 };
 
+extern thread_local OMPixelTowerThread currentThread;
+
 #define stackPush currentThread.stackPointer = (uint8_t *)currentThread.stackPointer - sizeof(void *);
 #define stackPop currentThread.stackPointer = (uint8_t *)currentThread.stackPointer + sizeof(void *);
 
-#define stackPushPointer(p)                                                                                            \
-    *(void **)currentThread.stackPointer = p;                                                                          \
+template <typename T> T stackTopAccess()
+{
+    return (*(T *)((void **)currentThread.stackPointer + 1));
+}
+
+template <typename T> void stackPushAccess(T data)
+{
+    *(void **)currentThread.stackPointer = nullptr; // clears the whole slot
+    *(T *)currentThread.stackPointer = data;
     stackPush;
-#define stackPushInt(i)                                                                                                \
-    *(void **)currentThread.stackPointer = nullptr;                                                                    \
-    *(jint *)currentThread.stackPointer = i;                                                                           \
-    stackPush;
-#define stackTopPointer (*((void **)currentThread.stackPointer + 1))
-#define stackTopInt (*(jint *)((void **)currentThread.stackPointer + 1))
+}
 
 #define localAccess(idx) localAccessForeign(currentThread.currentFrame, idx)
 #define localAccessForeign(f, idx) (((uint8_t *)f) - sizeof(void *) * (f->method->maxLocals - (idx)))
 
-extern thread_local OMPixelTowerThread currentThread;
 } // namespace openminecraft::vm::pixeltower::v0
 
 #endif

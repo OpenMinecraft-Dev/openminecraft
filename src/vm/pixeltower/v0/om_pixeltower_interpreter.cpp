@@ -33,7 +33,7 @@ void OMInterpreter::call(OMMethod *met)
     }
     for (int i = 0; i < met->args; i++)
     {
-        *(void **)localAccessForeign(nextframe, i) = stackTopPointer;
+        *(void **)localAccessForeign(nextframe, i) = stackTopAccess<void *>();
         stackPop;
     }
 
@@ -61,10 +61,10 @@ void OMInterpreter::callDynamic(OMMethod *met)
     uint8_t *codetarget = met->code;
     for (int i = 0; i < met->args; i++)
     {
-        *(void **)localAccessForeign(nextframe, i) = stackTopPointer;
+        *(void **)localAccessForeign(nextframe, i) = stackTopAccess<void *>();
         if (i == met->args - 1)
         {
-            auto cls = static_cast<OMOOPDesc *>(stackTopPointer)->klass;
+            auto cls = static_cast<OMOOPDesc *>(stackTopAccess<void *>())->klass;
             while (cls != nullptr)
             {
                 auto m = cls->methods;
@@ -79,7 +79,7 @@ void OMInterpreter::callDynamic(OMMethod *met)
                 }
                 cls = cls->superClass;
             }
-            logger.debug("dyn object {}", stackTopPointer);
+            logger.debug("dyn object {}", stackTopAccess<void *>());
         }
     endSea:
         stackPop;
@@ -114,7 +114,7 @@ bool OMInterpreter::execute()
     case op_iconst_i(3):
     case op_iconst_i(4):
     case op_iconst_i(5): {
-        stackPushInt(currentThread.pc[0] - op_iconst_i(0));
+        stackPushAccess<jint>(currentThread.pc[0] - op_iconst_i(0));
         currentThread.pc++;
         return true;
     }
@@ -122,7 +122,7 @@ bool OMInterpreter::execute()
     case op_aload_n(1):
     case op_aload_n(2):
     case op_aload_n(3): {
-        stackPushPointer(*(void **)localAccess(currentThread.pc[0] - op_aload_n(0)));
+        stackPushAccess<void *>(*(void **)localAccess(currentThread.pc[0] - op_aload_n(0)));
         currentThread.pc++;
         return true;
     }
@@ -132,14 +132,14 @@ bool OMInterpreter::execute()
         return true;
     }
     case op_dup: {
-        stackPushPointer(stackTopPointer);
+        stackPushAccess<void *>(stackTopAccess<void *>());
         currentThread.pc++;
         return true;
     }
     case op_if_acmpne: {
-        auto item = stackTopPointer;
+        auto item = stackTopAccess<void *>();
         stackPop;
-        auto item2 = stackTopPointer;
+        auto item2 = stackTopAccess<void *>();
         stackPop;
         if (item != item2)
         {
@@ -153,9 +153,9 @@ bool OMInterpreter::execute()
         return true;
     }
     case op_ireturn: {
-        auto ret = stackTopInt;
+        auto ret = stackTopAccess<jint>();
         popLastFrame();
-        stackPushInt(ret);
+        stackPushAccess<jint>(ret);
         return true;
     }
     case op_return: {
@@ -179,7 +179,7 @@ bool OMInterpreter::execute()
     case op_new: {
         auto n = *static_cast<OMKlass **>(static_cast<void *>(
             frame->method->klass->constantPool + binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
-        stackPushPointer(n->allocateInstance());
+        stackPushAccess<void *>(n->allocateInstance());
         currentThread.pc += 3;
         return true;
     }
