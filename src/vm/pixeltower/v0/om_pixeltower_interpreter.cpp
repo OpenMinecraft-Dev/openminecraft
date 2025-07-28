@@ -1,5 +1,4 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
-#include "fmt/color.h"
 #include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
@@ -23,31 +22,30 @@ OMInterpreter::~OMInterpreter()
 void OMInterpreter::call(OMMethod *met)
 {
     auto frame = currentThread.currentFrame;
-    auto nextframe =                                           (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame) + sizeof(void *) + met->args * sizeof(void *));
+    auto nextframe = (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame) + sizeof(void *) +
+                                 met->args * sizeof(void *));
     for (int i = 0; i < met->maxLocals; i++)
     {
-	    *(void **)localAccessForeign(nextframe, i) = nullptr;
-    } 
+        *(void **)localAccessForeign(nextframe, i) = nullptr;
+    }
     for (int i = 0; i < met->args; i++)
     {
-        logger.info("stack element ({}) arg #{}",
-                    (void *)(&stackTopPointer), i);
+        logger.info("stack element ({}) arg #{}", (void *)(&stackTopPointer), i);
         logger.info("{}", stackTopPointer);
-	*(void **)localAccessForeign(nextframe, i) = stackTopPointer;
-	stackPop;
+        *(void **)localAccessForeign(nextframe, i) = stackTopPointer;
+        stackPop;
     }
-    debugStack();
+    debugger.debugStack();
 
     nextframe->returnAddr = currentThread.pc + 3;
     nextframe->method = met;
     nextframe->prev = frame;
 
-    currentThread.stackPointer =
-        (jbyte *)nextframe - met->maxLocals * sizeof(void *);
+    currentThread.stackPointer = (jbyte *)nextframe - met->maxLocals * sizeof(void *);
     currentThread.currentFrame = nextframe;
     stackPush;
     currentThread.pc = met->code;
-    debugStack();
+    debugger.debugStack();
 }
 
 bool OMInterpreter::execute()
@@ -89,39 +87,11 @@ bool OMInterpreter::execute()
         logger.debug("sp pointed at {}", (void *)currentThread.stackPointer);
         logger.debug("method metadata at {}", (void *)frame);
 
-        debugStack();
+        debugger.debugStack();
 
         break;
     }
     }
     return false;
-}
-
-void OMInterpreter::debugStack()
-{
-void *currentData = (uint8_t *)currentThread.stackPointer - 6 * sizeof(void *);
-        while (true)
-        {
-            bool dirty = false;
-            std::string ext = "";
-            if (currentData == currentThread.stackPointer)
-            {
-                ext = "<== Stack pointer (dirty data)";
-                dirty = true;
-            }
-            else if (currentData < currentThread.stackPointer)
-            {
-                dirty = true;
-            }
-            logger.debug("STACK {}: {} {}", currentData,
-                         fmt::styled(*(void **)currentData, fmt::fg(dirty ? fmt::color::gray : fmt::color::white)),
-                         ext);
-
-            currentData = (uint8_t *)currentData + sizeof(void *);
-            if (currentData == currentThread.stack)
-            {
-                break;
-            }
-        }
 }
 } // namespace openminecraft::vm::pixeltower::v0

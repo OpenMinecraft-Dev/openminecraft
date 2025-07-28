@@ -152,6 +152,7 @@ int boot(std::vector<std::string> args)
                 commandBuffer.clear();
                 mem::castorice::printres();
                 break;
+            case "pt"_hash:
             case "pixeltower"_hash: {
                 if (commandBuffer.size() >= 3 && commandBuffer[1] == "init")
                 {

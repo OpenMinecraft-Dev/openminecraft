@@ -139,16 +139,19 @@ loadMethods:
                 m->args++;
             }
 
-	    if (sizeof(void *) == 8) {
-	        goto codeload;
-	    }
-	    for (auto g : target.unwrap().first) {
-	        if (g == "double" || g == "long") {
-		    m->args++;
-		}
-	    }
+            if (sizeof(void *) == 8)
+            {
+                goto codeload;
+            }
+            for (auto g : target.unwrap().first)
+            {
+                if (g == "double" || g == "long")
+                {
+                    m->args++;
+                }
+            }
         }
-codeload:
+    codeload:
         if (code != nullptr)
         {
             m->maxLocals = code->maxLocals;
