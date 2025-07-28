@@ -28,7 +28,8 @@ class OMPixelTowerThread
     *(void **)currentThread.stackPointer = p;                                                                          \
     stackPush;
 #define stackPushInt(i)                                                                                                \
-    *(jint **)currentThread.stackPointer = i;                                                                          \
+    *(void **)currentThread.stackPointer = nullptr;                                                                    \
+    *(jint *)currentThread.stackPointer = i;                                                                           \
     stackPush;
 #define stackTopPointer (*((void **)currentThread.stackPointer + 1))
 #define stackTopInt (*(jint *)((void **)currentThread.stackPointer + 1))

@@ -18,6 +18,8 @@ class OMInterpreter
 
   private:
     void call(OMMethod *met);
+    void callDynamic(OMMethod *met);
+    void popLastFrame();
 
     log::OMLogger logger;
     OMPixelTower *tower;

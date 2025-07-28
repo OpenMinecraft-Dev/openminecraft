@@ -8,6 +8,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
+#include <cstring>
 
 namespace openminecraft::vm::pixeltower::v0
 {
@@ -30,12 +31,9 @@ void OMInterpreter::call(OMMethod *met)
     }
     for (int i = 0; i < met->args; i++)
     {
-        logger.info("stack element ({}) arg #{}", (void *)(&stackTopPointer), i);
-        logger.info("{}", stackTopPointer);
         *(void **)localAccessForeign(nextframe, i) = stackTopPointer;
         stackPop;
     }
-    debugger.debugStack();
 
     nextframe->returnAddr = currentThread.pc + 3;
     nextframe->method = met;
@@ -45,7 +43,61 @@ void OMInterpreter::call(OMMethod *met)
     currentThread.currentFrame = nextframe;
     stackPush;
     currentThread.pc = met->code;
-    debugger.debugStack();
+}
+
+void OMInterpreter::callDynamic(OMMethod *met)
+{
+    auto frame = currentThread.currentFrame;
+    auto nextframe = (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame) + sizeof(void *) +
+                                 met->args * sizeof(void *));
+    for (int i = 0; i < met->maxLocals; i++)
+    {
+        *(void **)localAccessForeign(nextframe, i) = nullptr;
+    }
+
+    uint8_t *codetarget = met->code;
+    for (int i = 0; i < met->args; i++)
+    {
+        *(void **)localAccessForeign(nextframe, i) = stackTopPointer;
+        if (i == met->args - 1)
+        {
+            auto cls = static_cast<OMOOPDesc *>(stackTopPointer)->klass;
+            while (cls != nullptr)
+            {
+                auto m = cls->methods;
+                while (m != nullptr)
+                {
+                    if (strcmp(m->name, met->name) == 0 && strcmp(m->desc, m->desc) == 0)
+                    {
+                        codetarget = m->code;
+                        goto endSea;
+                    }
+                    m = m->next;
+                }
+                cls = cls->superClass;
+            }
+            logger.debug("dyn object {}", stackTopPointer);
+        }
+    endSea:
+        stackPop;
+    }
+
+    nextframe->returnAddr = currentThread.pc + 3;
+    nextframe->method = met;
+    nextframe->prev = frame;
+
+    currentThread.stackPointer = (jbyte *)nextframe - met->maxLocals * sizeof(void *);
+    currentThread.currentFrame = nextframe;
+    stackPush;
+    currentThread.pc = met->code;
+}
+
+void OMInterpreter::popLastFrame()
+{
+    currentThread.pc = (uint8_t *)currentThread.currentFrame->returnAddr;
+    currentThread.stackPointer = (uint8_t *)currentThread.currentFrame + sizeof(OMFrame); // popped whole frame
+    currentThread.currentFrame = currentThread.currentFrame->prev;
+    stackPush;
 }
 
 bool OMInterpreter::execute()
@@ -53,16 +105,65 @@ bool OMInterpreter::execute()
     auto frame = currentThread.currentFrame;
     switch (currentThread.pc[0])
     {
+    case op_iconst_i(-1):
+    case op_iconst_i(0):
+    case op_iconst_i(1):
+    case op_iconst_i(2):
+    case op_iconst_i(3):
+    case op_iconst_i(4):
+    case op_iconst_i(5): {
+        stackPushInt(currentThread.pc[0] - op_iconst_i(0));
+        currentThread.pc++;
+        return true;
+    }
+    case op_aload_n(0):
+    case op_aload_n(1):
+    case op_aload_n(2):
+    case op_aload_n(3): {
+        stackPushPointer(*(void **)localAccess(currentThread.pc[0] - op_aload_n(0)));
+        currentThread.pc++;
+        return true;
+    }
+    case op_pop: {
+        stackPop;
+        currentThread.pc++;
+        return true;
+    }
     case op_dup: {
         stackPushPointer(stackTopPointer);
         currentThread.pc++;
         return true;
     }
+    case op_if_acmpne: {
+        auto item = stackTopPointer;
+        stackPop;
+        auto item2 = stackTopPointer;
+        stackPop;
+        if (item != item2)
+        {
+            currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);
+        }
+        else
+        {
+            currentThread.pc += 3;
+        }
+
+        return true;
+    }
+    case op_ireturn: {
+        auto ret = stackTopInt;
+        popLastFrame();
+        stackPushInt(ret);
+        return true;
+    }
     case op_return: {
-        currentThread.pc = (uint8_t *)currentThread.currentFrame->returnAddr;
-        currentThread.stackPointer = (uint8_t *)currentThread.currentFrame + sizeof(OMFrame); // popped whole frame
-        stackPush;
-        currentThread.currentFrame = currentThread.currentFrame->prev;
+        popLastFrame();
+        return true;
+    }
+    case op_invokevirtual: {
+        auto n = *static_cast<OMMethod **>(static_cast<void *>(
+            frame->method->klass->constantPool + binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
+        callDynamic(n);
 
         return true;
     }
