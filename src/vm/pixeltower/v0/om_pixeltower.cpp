@@ -38,6 +38,7 @@ void OMPixelTower::stackTest(OMMethod *method)
     stackPush;
     logger.debug("current sp: {}", currentThread.stackPointer);
     frame->returnAddr = (void *)0x33550336;
+    frame->prev = nullptr;
     frame->method = method;
 
     currentThread.currentFrame = frame;

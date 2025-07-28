@@ -18,12 +18,14 @@ class OMDebugger
     void debugStack()
     {
         logger.debug("format examples: ");
-        logger.debug(fmt::format("{}", fmt::styled("normal data", fmt::fg(fmt::color::white))));
+        logger.debug(fmt::format("{}", fmt::styled("operator stack", fmt::fg(fmt::color::alice_blue))));
+        logger.debug(fmt::format("{}", fmt::styled("local variable table", fmt::fg(fmt::color::light_blue))));
         logger.debug(fmt::format("{}", fmt::styled("frame metadata", fmt::fg(fmt::color::yellow_green))));
         logger.debug(fmt::format("{}", fmt::styled("free / dirty data", fmt::fg(fmt::color::gray))));
 
         void *currentData = (uint8_t *)v0::currentThread.stackPointer - 6 * sizeof(void *);
-        auto style = fmt::fg(fmt::color::white);
+        auto style = fmt::fg(fmt::color::dark_green);
+        auto frame = v0::currentThread.currentFrame;
         while (true)
         {
             std::string desc = "";
@@ -38,21 +40,27 @@ class OMDebugger
             }
             else
             {
-                style = fmt::fg(fmt::color::antique_white);
+                style = fmt::fg(fmt::color::alice_blue);
 
-                auto frame = v0::currentThread.currentFrame;
-                while (frame != nullptr)
+                if (frame == currentData)
                 {
-                    if (frame == currentData)
+                    desc = fmt::format("<== Frame base of {}.{}{}", frame->method->klass->name, frame->method->name,
+                                       frame->method->desc);
+                }
+
+                if ((size_t)currentData - (size_t)frame < sizeof(v0::OMFrame))
+                {
+                    style = fmt::fg(fmt::color::yellow_green);
+                    if ((size_t)currentData - (size_t)frame + sizeof(void *) >= sizeof(v0::OMFrame))
                     {
-                        desc = fmt::format("<== Frame base of {}.{}{}", frame->method->klass->name, frame->method->name,
-                                           frame->method->desc);
+                        frame = frame->prev;
                     }
-                    if ((size_t)currentData - (size_t)frame < sizeof(v0::OMFrame))
-                    {
-                        style = fmt::fg(fmt::color::yellow_green);
-                    }
-                    frame = frame->prev;
+                }
+                else if ((size_t)frame - (size_t)currentData <= frame->method->maxLocals * sizeof(void *))
+                {
+                    style = fmt::fg(fmt::color::light_blue);
+                    desc = fmt::format("<== Local variable #{}",
+                                       ((size_t)frame - (size_t)currentData) / sizeof(void *) - 1);
                 }
             }
 
