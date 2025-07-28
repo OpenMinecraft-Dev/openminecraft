@@ -59,8 +59,9 @@ class OMDebugger
                 else if ((size_t)frame - (size_t)currentData <= frame->method->maxLocals * sizeof(void *))
                 {
                     style = fmt::fg(fmt::color::light_blue);
-                    desc = fmt::format("<== Local variable #{}",
-                                       ((size_t)frame - (size_t)currentData) / sizeof(void *) - 1);
+                    desc =
+                        fmt::format("<== Local variable #{}",
+                                    frame->method->maxLocals - ((size_t)frame - (size_t)currentData) / sizeof(void *));
                 }
             }
 

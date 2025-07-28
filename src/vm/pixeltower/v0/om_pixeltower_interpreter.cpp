@@ -25,6 +25,8 @@ void OMInterpreter::call(OMMethod *met)
     auto frame = currentThread.currentFrame;
     auto nextframe = (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame) + sizeof(void *) +
                                  met->args * sizeof(void *));
+    nextframe->method = met;
+
     for (int i = 0; i < met->maxLocals; i++)
     {
         *(void **)localAccessForeign(nextframe, i) = nullptr;
@@ -36,7 +38,6 @@ void OMInterpreter::call(OMMethod *met)
     }
 
     nextframe->returnAddr = currentThread.pc + 3;
-    nextframe->method = met;
     nextframe->prev = frame;
 
     currentThread.stackPointer = (jbyte *)nextframe - met->maxLocals * sizeof(void *);
@@ -50,6 +51,8 @@ void OMInterpreter::callDynamic(OMMethod *met)
     auto frame = currentThread.currentFrame;
     auto nextframe = (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame) + sizeof(void *) +
                                  met->args * sizeof(void *));
+    nextframe->method = met;
+
     for (int i = 0; i < met->maxLocals; i++)
     {
         *(void **)localAccessForeign(nextframe, i) = nullptr;
@@ -83,7 +86,6 @@ void OMInterpreter::callDynamic(OMMethod *met)
     }
 
     nextframe->returnAddr = currentThread.pc + 3;
-    nextframe->method = met;
     nextframe->prev = frame;
 
     currentThread.stackPointer = (jbyte *)nextframe - met->maxLocals * sizeof(void *);
