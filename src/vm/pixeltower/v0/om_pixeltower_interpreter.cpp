@@ -9,6 +9,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
 #include <cstring>
+#include <vector>
 
 namespace openminecraft::vm::pixeltower::v0
 {
@@ -27,14 +28,20 @@ void OMInterpreter::call(OMMethod *met)
                                  met->args * sizeof(void *));
     nextframe->method = met;
 
+    std::vector<void *> args(met->args);
+    for (int i = met->args - 1; i >= 0; i--)
+    {
+        args[i] = stackTopAccess<void *>();
+        stackPop;
+    }
+
     for (int i = 0; i < met->maxLocals; i++)
     {
-        *(void **)localAccessForeign(nextframe, i) = nullptr;
+        *localAccess<void *>(i, nextframe) = nullptr;
     }
-    for (int i = 0; i < met->args; i++)
+    for (int i = 0; i < args.size(); i++)
     {
-        *(void **)localAccessForeign(nextframe, i) = stackTopAccess<void *>();
-        stackPop;
+        *localAccess<void *>(i, nextframe) = args[i];
     }
 
     nextframe->returnAddr = currentThread.pc + 3;
@@ -51,47 +58,49 @@ void OMInterpreter::callDynamic(OMMethod *met)
     auto frame = currentThread.currentFrame;
     auto nextframe = (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame) + sizeof(void *) +
                                  met->args * sizeof(void *));
-    nextframe->method = met;
+
+    std::vector<void *> args(met->args);
+    for (int i = met->args - 1; i >= 0; i--)
+    {
+        args[i] = stackTopAccess<void *>();
+        stackPop;
+    }
+
+    OMMethod *codetarget = met;
+    auto cls = static_cast<OMOOPDesc *>(args[0])->klass;
+    while (cls != nullptr)
+    {
+        auto m = cls->methods;
+        while (m != nullptr)
+        {
+            if (strcmp(m->name, met->name) == 0 && strcmp(m->desc, m->desc) == 0)
+            {
+                codetarget = m;
+                goto endSea;
+            }
+            m = m->next;
+        }
+        cls = cls->superClass;
+    }
+endSea:
+    nextframe->method = codetarget;
 
     for (int i = 0; i < met->maxLocals; i++)
     {
-        *(void **)localAccessForeign(nextframe, i) = nullptr;
+        *localAccess<void *>(i, nextframe) = nullptr;
     }
-
-    uint8_t *codetarget = met->code;
-    for (int i = 0; i < met->args; i++)
+    for (int i = 0; i < args.size(); i++)
     {
-        *(void **)localAccessForeign(nextframe, i) = stackTopAccess<void *>();
-        if (i == met->args - 1)
-        {
-            auto cls = static_cast<OMOOPDesc *>(stackTopAccess<void *>())->klass;
-            while (cls != nullptr)
-            {
-                auto m = cls->methods;
-                while (m != nullptr)
-                {
-                    if (strcmp(m->name, met->name) == 0 && strcmp(m->desc, m->desc) == 0)
-                    {
-                        codetarget = m->code;
-                        goto endSea;
-                    }
-                    m = m->next;
-                }
-                cls = cls->superClass;
-            }
-            logger.debug("dyn object {}", stackTopAccess<void *>());
-        }
-    endSea:
-        stackPop;
+        *localAccess<void *>(i, nextframe) = args[i];
     }
 
     nextframe->returnAddr = currentThread.pc + 3;
     nextframe->prev = frame;
 
-    currentThread.stackPointer = (jbyte *)nextframe - met->maxLocals * sizeof(void *);
+    currentThread.stackPointer = (jbyte *)nextframe - nextframe->method->maxLocals * sizeof(void *);
     currentThread.currentFrame = nextframe;
     stackPush;
-    currentThread.pc = met->code;
+    currentThread.pc = codetarget->code;
 }
 
 void OMInterpreter::popLastFrame()
@@ -114,7 +123,13 @@ bool OMInterpreter::execute()
     case op_iconst_i(3):
     case op_iconst_i(4):
     case op_iconst_i(5): {
-        stackPushAccess<jint>(currentThread.pc[0] - op_iconst_i(0));
+        stackPushAccess<jint>((jint)currentThread.pc[0] - (jint)op_iconst_i(0));
+        currentThread.pc++;
+        return true;
+    }
+    case op_lconst_l(0):
+    case op_lconst_l(1): {
+        stackPushAccessW<jlong>((jlong)currentThread.pc[0] - (jlong)op_lconst_l(0));
         currentThread.pc++;
         return true;
     }
@@ -122,7 +137,7 @@ bool OMInterpreter::execute()
     case op_aload_n(1):
     case op_aload_n(2):
     case op_aload_n(3): {
-        stackPushAccess<void *>(*(void **)localAccess(currentThread.pc[0] - op_aload_n(0)));
+        stackPushAccess<void *>(localAccessValue<void *>(currentThread.pc[0] - op_aload_n(0)));
         currentThread.pc++;
         return true;
     }

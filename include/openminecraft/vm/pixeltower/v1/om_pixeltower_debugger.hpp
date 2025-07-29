@@ -15,7 +15,7 @@ class OMDebugger
     }
     ~OMDebugger() = default;
 
-    void debugStack()
+    inline void debugStack()
     {
         logger.debug("format examples: ");
         logger.debug(fmt::format("{}", fmt::styled("operator stack", fmt::fg(fmt::color::alice_blue))));
