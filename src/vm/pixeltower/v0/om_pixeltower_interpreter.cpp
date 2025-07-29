@@ -133,6 +133,14 @@ bool OMInterpreter::execute()
         currentThread.pc++;
         return true;
     }
+    case op_iload_n(0):
+    case op_iload_n(1):
+    case op_iload_n(2):
+    case op_iload_n(3): {
+        stackPushAccess<jint>(localAccessValue<jint>(currentThread.pc[0] - op_iload_n(0)));
+        currentThread.pc++;
+        return true;
+    }
     case op_lload_n(0):
     case op_lload_n(1):
     case op_lload_n(2):
@@ -164,6 +172,22 @@ bool OMInterpreter::execute()
         currentThread.pc++;
         return true;
     }
+    case op_ladd: {
+        auto item2 = stackTopAccessW<jlong>();
+        stackPopW();
+        auto item = stackTopAccessW<jlong>();
+        stackPopW();
+        stackPushAccessW<jlong>(item2 + item);
+        currentThread.pc++;
+        return true;
+    }
+    case op_i2l: {
+        auto v = stackTopAccess<jint>();
+        stackPop();
+        stackPushAccessW<jlong>(v);
+        currentThread.pc++;
+        return true;
+    }
     case op_lcmp: {
         auto item2 = stackTopAccessW<jlong>();
         stackPopW();
@@ -182,6 +206,19 @@ bool OMInterpreter::execute()
             stackPushAccess<jint>(-1);
         }
         currentThread.pc++;
+        return true;
+    }
+    case op_ifge: {
+        auto i = stackTopAccess<jint>();
+        stackPop();
+        if (i >= 0)
+        {
+            currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);
+        }
+        else
+        {
+            currentThread.pc += 3;
+        }
         return true;
     }
     case op_if_acmpne: {
@@ -204,6 +241,12 @@ bool OMInterpreter::execute()
         auto ret = stackTopAccess<jint>();
         popLastFrame();
         stackPushAccess<jint>(ret);
+        return true;
+    }
+    case op_lreturn: {
+        auto ret = stackTopAccessW<jlong>();
+        popLastFrame();
+        stackPushAccessW<jlong>(ret);
         return true;
     }
     case op_return: {
@@ -234,7 +277,12 @@ bool OMInterpreter::execute()
     default: {
         logger.debug("unknown command at {}", (void *)currentThread.pc);
         logger.debug("thread {}", (void *)&currentThread.id);
-        logger.debug("pc pointed at {}", (void *)currentThread.pc);
+        logger.debug("pc pointed at {} ({}.{}{} + {})", (void *)currentThread.pc,
+                     currentThread.currentFrame->method->klass->name, currentThread.currentFrame->method->name,
+                     currentThread.currentFrame->method->desc,
+                     reinterpret_cast<size_t>(
+                         reinterpret_cast<void *>(static_cast<uint8_t *>(currentThread.pc) -
+                                                  static_cast<uint8_t *>(currentThread.currentFrame->method->code))));
         logger.debug("sp pointed at {}", (void *)currentThread.stackPointer);
         logger.debug("method metadata at {}", (void *)frame);
 
