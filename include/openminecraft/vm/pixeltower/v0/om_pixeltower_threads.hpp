@@ -25,8 +25,21 @@ class OMPixelTowerThread
 
 extern thread_local OMPixelTowerThread currentThread;
 
-#define stackPush currentThread.stackPointer = (uint8_t *)currentThread.stackPointer - sizeof(void *);
-#define stackPop currentThread.stackPointer = (uint8_t *)currentThread.stackPointer + sizeof(void *);
+inline void stackPush()
+{
+    currentThread.stackPointer = (uint8_t *)currentThread.stackPointer - sizeof(void *);
+}
+
+inline void stackPop()
+{
+    currentThread.stackPointer = (uint8_t *)currentThread.stackPointer + sizeof(void *);
+}
+
+inline void stackPopW()
+{
+    stackPop();
+    stackPop();
+}
 
 template <typename T> inline T stackTopAccess()
 {
@@ -41,7 +54,7 @@ template <typename T> inline void stackPushAccess(T data)
                   "unsatisfied type!");
     *static_cast<void **>(currentThread.stackPointer) = nullptr; // clears the whole slot
     *static_cast<T *>(currentThread.stackPointer) = data;
-    stackPush;
+    stackPush();
 }
 
 template <typename T> inline T stackTopAccessW()
@@ -69,7 +82,7 @@ template <typename T> inline void stackPushAccessW(T data)
     if (sizeof(void *) == 8)
     {
         *(T *)currentThread.stackPointer = data;
-        stackPush;
+        stackPush();
         stackPushAccess<void *>(nullptr);
     }
     else

@@ -32,7 +32,7 @@ void OMInterpreter::call(OMMethod *met)
     for (int i = met->args - 1; i >= 0; i--)
     {
         args[i] = stackTopAccess<void *>();
-        stackPop;
+        stackPop();
     }
 
     for (int i = 0; i < met->maxLocals; i++)
@@ -49,7 +49,7 @@ void OMInterpreter::call(OMMethod *met)
 
     currentThread.stackPointer = (jbyte *)nextframe - met->maxLocals * sizeof(void *);
     currentThread.currentFrame = nextframe;
-    stackPush;
+    stackPush();
     currentThread.pc = met->code;
 }
 
@@ -63,7 +63,7 @@ void OMInterpreter::callDynamic(OMMethod *met)
     for (int i = met->args - 1; i >= 0; i--)
     {
         args[i] = stackTopAccess<void *>();
-        stackPop;
+        stackPop();
     }
 
     OMMethod *codetarget = met;
@@ -99,7 +99,7 @@ endSea:
 
     currentThread.stackPointer = (jbyte *)nextframe - nextframe->method->maxLocals * sizeof(void *);
     currentThread.currentFrame = nextframe;
-    stackPush;
+    stackPush();
     currentThread.pc = codetarget->code;
 }
 
@@ -108,7 +108,7 @@ void OMInterpreter::popLastFrame()
     currentThread.pc = (uint8_t *)currentThread.currentFrame->returnAddr;
     currentThread.stackPointer = (uint8_t *)currentThread.currentFrame + sizeof(OMFrame); // popped whole frame
     currentThread.currentFrame = currentThread.currentFrame->prev;
-    stackPush;
+    stackPush();
 }
 
 bool OMInterpreter::execute()
@@ -133,6 +133,14 @@ bool OMInterpreter::execute()
         currentThread.pc++;
         return true;
     }
+    case op_lload_n(0):
+    case op_lload_n(1):
+    case op_lload_n(2):
+    case op_lload_n(3): {
+        stackPushAccessW<jlong>(localAccessValueW<jlong>(currentThread.pc[0] - op_lload_n(0)));
+        currentThread.pc++;
+        return true;
+    }
     case op_aload_n(0):
     case op_aload_n(1):
     case op_aload_n(2):
@@ -142,7 +150,12 @@ bool OMInterpreter::execute()
         return true;
     }
     case op_pop: {
-        stackPop;
+        stackPop();
+        currentThread.pc++;
+        return true;
+    }
+    case op_pop2: {
+        stackPopW();
         currentThread.pc++;
         return true;
     }
@@ -151,11 +164,31 @@ bool OMInterpreter::execute()
         currentThread.pc++;
         return true;
     }
+    case op_lcmp: {
+        auto item2 = stackTopAccessW<jlong>();
+        stackPopW();
+        auto item = stackTopAccessW<jlong>();
+        stackPopW();
+        if (item > item2)
+        {
+            stackPushAccess<jint>(1);
+        }
+        else if (item == item2)
+        {
+            stackPushAccess<jint>(0);
+        }
+        else
+        {
+            stackPushAccess<jint>(-1);
+        }
+        currentThread.pc++;
+        return true;
+    }
     case op_if_acmpne: {
         auto item = stackTopAccess<void *>();
-        stackPop;
+        stackPop();
         auto item2 = stackTopAccess<void *>();
-        stackPop;
+        stackPop();
         if (item != item2)
         {
             currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);
