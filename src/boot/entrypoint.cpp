@@ -162,8 +162,6 @@ int boot(std::vector<std::string> args)
                     tower->load("../Test.class");
                     tower->loader->loadClass("openminecraft/Test");
                     auto cls = tower->loader->fetchClass("openminecraft/Test");
-                    logger->debug("{}", (void *)cls);
-
                     auto met = cls->methods;
                     while (met != nullptr)
                     {

@@ -2,6 +2,8 @@
 #include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
+#include "openminecraft/vm/classfile/om_class_file.hpp"
+#include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_field.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_frame.hpp"
@@ -24,8 +26,12 @@ OMInterpreter::~OMInterpreter()
 
 void OMInterpreter::call(OMMethod *met)
 {
-    logger.info("{}.{}{}, first frame: {}", met->klass->name, met->name, met->desc,
-                currentThread.currentFrame == nullptr);
+    if (met->accessFlags & JVM_Acc_Native)
+    {
+        throw err::OMValidationError{err::Instructions, "native functions not supported!",
+                                     fmt::format("{}.{}{}", met->klass->name, met->name, met->desc)};
+    }
+
     if (!currentThread.currentFrame)
     {
         currentThread.stackPointer = currentThread.stack;
@@ -77,6 +83,12 @@ void OMInterpreter::call(OMMethod *met)
 
 void OMInterpreter::callDynamic(OMMethod *met)
 {
+    if (met->accessFlags & JVM_Acc_Native)
+    {
+        throw err::OMValidationError{err::Instructions, "native functions not supported!",
+                                     fmt::format("{}.{}{}", met->klass->name, met->name, met->desc)};
+    }
+
     auto frame = currentThread.currentFrame;
     auto nextframe = (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame) + sizeof(void *) +
                                  met->args * sizeof(void *));
