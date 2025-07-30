@@ -40,6 +40,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
+#include "openminecraft/vm/pixeltower/v1/om_pixeltower_debugger.hpp"
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
@@ -161,16 +162,21 @@ int boot(std::vector<std::string> args)
                     tower->load("../Test.class");
                     tower->loader->loadClass("openminecraft/Test");
                     auto cls = tower->loader->fetchClass("openminecraft/Test");
+                    logger->debug("{}", (void *)cls);
+                    pixeltower::v1::OMDebugger deb;
+                    deb.debugStack();
+                    /*
                     auto met = cls->methods;
                     while (met != nullptr)
                     {
                         if (strcmp(met->name, "main") == 0 && strcmp(met->desc, "([Ljava/lang/String;)V") == 0)
                         {
-                            tower->stackTest(met);
+                            tower->boot(met);
+                            tower->mainLoop();
                             break;
                         }
                         met = met->next;
-                    }
+                    }*/
                     tower->destroyCurrentThread();
                     commandBuffer.clear();
 

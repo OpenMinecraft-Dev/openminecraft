@@ -17,8 +17,8 @@ using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::pixeltower::v0
 {
-OMKlassLoader::OMKlassLoader(OMPixelTowerHeap *heap, OMPixelTowerHeap *metaspace)
-    : logger("OMKlassLoader", this), metaspace(metaspace), heap(heap)
+OMKlassLoader::OMKlassLoader(OMPixelTowerHeap *heap, OMPixelTowerHeap *metaspace, OMInterpreter *interpreter)
+    : logger("OMKlassLoader", this), metaspace(metaspace), heap(heap), interpreter(interpreter)
 {
 }
 OMKlassLoader::~OMKlassLoader()
@@ -310,6 +310,33 @@ void OMKlassLoader::classInit(OMKlass *klass)
     }
 
     klass->staticBlock = mem::allocator::tracedCallocVMData(1, klass->staticLength);
+
+    auto me = klass->methods;
+    while (me)
+    {
+        if (strcmp(me->name, "<clinit>") == 0)
+        {
+            logger.info("clinit found for {}, executing", klass->name);
+
+            interpreter->call(me);
+            jint result = 0;
+            while (!result)
+            {
+                result = interpreter->execute();
+            }
+
+            if (result == 2) // clinit finish
+            {
+                break;
+            }
+            else
+            {
+                throw err::OMValidationError{
+                    err::ClassLoader, fmt::format("class clinit executing failed with code {}", result), klass->name};
+            }
+        }
+        me = me->next;
+    }
 }
 
 OMKlass *OMKlassLoader::fetchClass(std::string name)

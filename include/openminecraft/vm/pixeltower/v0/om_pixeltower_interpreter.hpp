@@ -14,10 +14,10 @@ class OMInterpreter
     OMInterpreter(OMPixelTowerHeap *heap, OMPixelTower *tower);
     ~OMInterpreter();
 
-    bool execute();
+    jint execute();
+    void call(OMMethod *met);
 
   private:
-    void call(OMMethod *met);
     void callDynamic(OMMethod *met);
     void popLastFrame();
 

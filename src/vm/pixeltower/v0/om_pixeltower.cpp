@@ -4,7 +4,6 @@
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_base.hpp"
-#include "openminecraft/vm/pixeltower/v0/om_pixeltower_frame.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
@@ -19,8 +18,8 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
 {
     heap = new OMPixelTowerHeap(1ul * 1024 * 1024, 1ul * 1024 * 1024 * 1024);
     metaspace = new OMPixelTowerHeap(1ul * 1024 * 1024, 8ul * 1024 * 1024);
-    loader = new OMKlassLoader(heap, metaspace);
     interpreter = new OMInterpreter(heap, this);
+    loader = new OMKlassLoader(heap, metaspace, interpreter);
 }
 OMPixelTower::~OMPixelTower()
 {
@@ -30,22 +29,17 @@ OMPixelTower::~OMPixelTower()
     delete metaspace;
 }
 
-void OMPixelTower::stackTest(OMMethod *method)
+void OMPixelTower::boot(OMMethod *method)
 {
-    auto frame = (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame));
-    currentThread.stackPointer = (jbyte *)currentThread.stackPointer - sizeof(OMFrame) -
-                                 method->maxLocals * sizeof(void *); // allocate whole frame + locals
-    stackPush();
-    logger.debug("current sp: {}", currentThread.stackPointer);
-    frame->returnAddr = (void *)0x33550336;
-    frame->prev = nullptr;
-    frame->method = method;
+    interpreter->call(method);
+}
 
-    currentThread.currentFrame = frame;
-    currentThread.pc = method->code;
-
-    while (interpreter->execute())
+void OMPixelTower::mainLoop()
+{
+    jint result = 0;
+    while (!result)
     {
+        result = interpreter->execute();
     }
 }
 

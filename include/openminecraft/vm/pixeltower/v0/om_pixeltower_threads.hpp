@@ -16,11 +16,11 @@ class OMPixelTowerThread
 
     std::thread::id id;
     std::string name;
-    uint8_t *pc;
-    OMFrame *currentFrame;
-    void *stack;
-    void *stackPointer;
-    void *stackEnd;
+    uint8_t *pc = nullptr;
+    OMFrame *currentFrame = nullptr;
+    void *stack = nullptr;
+    void *stackPointer = nullptr;
+    void *stackEnd = nullptr;
 };
 
 extern thread_local OMPixelTowerThread currentThread;
