@@ -3,6 +3,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_field.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_frame.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
@@ -288,6 +289,14 @@ jint OMInterpreter::execute()
         popLastFrame();
         return isClinit ? 2 : 0;
     }
+    case op_putfield: {
+        auto n = *static_cast<OMField **>(static_cast<void *>(
+            frame->method->klass->constantPool + binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
+        accessField(n);
+        currentThread.pc += 3;
+
+        return 0;
+    }
     case op_invokevirtual: {
         auto n = *static_cast<OMMethod **>(static_cast<void *>(
             frame->method->klass->constantPool + binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
@@ -310,6 +319,7 @@ jint OMInterpreter::execute()
         return 0;
     }
     default: {
+    endExec:
         logger.debug("unknown operand at {}", (void *)currentThread.pc);
         logger.debug("thread {}", (void *)&currentThread.id);
         logger.debug("pc pointed at {} ({}.{}{} + {})", (void *)currentThread.pc,

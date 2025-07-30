@@ -11,8 +11,9 @@ typedef int64_t jlong;
 typedef float jfloat;
 typedef double jdouble;
 typedef uint16_t jchar;
-typedef bool jbool;
+typedef bool jboolean;
 typedef char jbyte;
+typedef short jshort;
 
 typedef int AccessFlags;
 

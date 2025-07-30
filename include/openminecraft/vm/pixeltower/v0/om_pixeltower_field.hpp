@@ -5,10 +5,12 @@
 #include <string>
 namespace openminecraft::vm::pixeltower::v0
 {
+class OMKlass;
 struct OMField
 {
     std::string name;
     std::string desc;
+    OMKlass *klass;
     jint offset;
     AccessFlags accessFlags;
 };

@@ -172,8 +172,8 @@ loadMethods:
     for (auto field : klass->raw->fields)
     {
         klass->fields.push_back({klass->raw->mapping[field->nameIndex]->to<classfile::OMClassConstantUtf8>()->data,
-                                 klass->raw->mapping[field->descIndex]->to<classfile::OMClassConstantUtf8>()->data, 0,
-                                 field->accessFlags});
+                                 klass->raw->mapping[field->descIndex]->to<classfile::OMClassConstantUtf8>()->data,
+                                 klass, 0, field->accessFlags});
     }
 
     klass->constantPool = (uint64_t *)mem::allocator::tracedCallocVMData(klass->raw->mapping.size(), sizeof(uint64_t));
@@ -226,10 +226,31 @@ loadMethods:
             }
             break;
         }
+        case classfile::OMClassConstantType::FieldRef: {
+            auto temp = cppair.second->to<classfile::OMClassConstantFieldRef>();
+            auto &clsname =
+                klass->raw
+                    ->mapping[klass->raw->mapping[temp->classIndex]->to<classfile::OMClassConstantClass>()->nameIndex]
+                    ->to<classfile::OMClassConstantUtf8>()
+                    ->data;
+            loadClass(clsname);
+            auto temp2 = klass->raw->mapping[temp->nameAndTypeIndex]->to<classfile::OMClassConstantNameAndType>();
+            auto &name = klass->raw->mapping[temp2->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
+            auto &desc = klass->raw->mapping[temp2->descIndex]->to<classfile::OMClassConstantUtf8>()->data;
+
+            for (auto &fi : fetchClass(clsname)->fields)
+            {
+                if (fi.name == name && fi.desc == desc)
+                {
+                    *(OMField **)acc = &fi;
+                    break;
+                }
+            }
+            break;
+        }
 
         case classfile::OMClassConstantType::Utf8:
         case classfile::OMClassConstantType::String:
-        case classfile::OMClassConstantType::FieldRef:
         case classfile::OMClassConstantType::InterfaceMethodRef:
         case classfile::OMClassConstantType::NameAndType:
         case classfile::OMClassConstantType::MethodHandle:

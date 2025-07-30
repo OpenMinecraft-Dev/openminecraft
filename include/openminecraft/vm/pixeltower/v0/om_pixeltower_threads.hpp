@@ -1,11 +1,20 @@
 #ifndef OM_PIXELTOWER_THREADS_HPP
 #define OM_PIXELTOWER_THREADS_HPP
 
+#include "openminecraft/binary/om_bin_hash.hpp"
+#include "openminecraft/util/om_util_result.hpp"
+#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
+#include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_base.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_field.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_frame.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
+#include <cstdio>
 #include <string>
 #include <thread>
 #include <type_traits>
+
+using namespace openminecraft::binary::hash;
 namespace openminecraft::vm::pixeltower::v0
 {
 class OMPixelTowerThread
@@ -122,6 +131,91 @@ template <typename T> inline T localAccessValueW(int idx, OMFrame *f = currentTh
         int64_t temp = (highbits << 32) + lowbits;
 
         return *(T *)temp;
+    }
+}
+
+inline void accessField(OMField *field)
+{
+    int p = 0;
+    auto res = bytecode::descriptor::decodeType(field->desc, &p);
+    if (res.type == util::Err)
+    {
+        throw err::OMValidationError{err::Instructions, "unknown field descriptor", field->desc};
+    }
+
+    switch (hash_compile_time(res.unwrap().c_str()))
+    {
+    case "byte"_hash: {
+        auto data = stackTopAccess<jint>();
+        stackPop();
+        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
+        stackPop();
+        *reinterpret_cast<jbyte *>(&obj->data[field->offset]) = data;
+        break;
+    }
+    case "short"_hash: {
+        auto data = stackTopAccess<jint>();
+        stackPop();
+        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
+        stackPop();
+        *reinterpret_cast<jshort *>(&obj->data[field->offset]) = data;
+        break;
+    }
+    case "boolean"_hash: {
+        auto data = stackTopAccess<jint>();
+        stackPop();
+        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
+        stackPop();
+        *reinterpret_cast<jboolean *>(&obj->data[field->offset]) = data;
+        break;
+    }
+    case "int"_hash: {
+        auto data = stackTopAccess<jint>();
+        stackPop();
+        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
+        stackPop();
+        *reinterpret_cast<jint *>(&obj->data[field->offset]) = data;
+        break;
+    }
+    case "float"_hash: {
+        auto data = stackTopAccess<jfloat>();
+        stackPop();
+        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
+        stackPop();
+        *reinterpret_cast<jfloat *>(&obj->data[field->offset]) = data;
+        break;
+    }
+    case "long"_hash: {
+        auto data = stackTopAccessW<jlong>();
+        stackPopW();
+        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
+        stackPop();
+        *reinterpret_cast<jlong *>(&obj->data[field->offset]) = data;
+        break;
+    }
+    case "double"_hash: {
+        auto data = stackTopAccessW<jdouble>();
+        stackPopW();
+        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
+        stackPop();
+        *reinterpret_cast<jdouble *>(&obj->data[field->offset]) = data;
+        break;
+    }
+    default: {
+        auto data = stackTopAccess<void *>();
+        stackPop();
+        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
+        stackPop();
+        if (obj->klass->heap->ptrCompEnabled())
+        {
+            *reinterpret_cast<uint32_t *>(&obj->data[field->offset]) = obj->klass->heap->compressPtr(obj);
+        }
+        else
+        {
+            *reinterpret_cast<void **>(&obj->data[field->offset]) = obj;
+        }
+        break;
+    }
     }
 }
 
