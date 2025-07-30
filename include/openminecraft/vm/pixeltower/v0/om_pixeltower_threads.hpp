@@ -129,7 +129,7 @@ template <typename T> inline T localAccessValueW(int idx, OMFrame *f = currentTh
 
         int64_t temp = (highbits << 32) + lowbits;
 
-        return *(T *)temp;
+        return *(T *)&temp;
     }
 }
 
