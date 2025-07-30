@@ -157,6 +157,15 @@ bool OMInterpreter::execute()
         currentThread.pc++;
         return true;
     }
+    case op_astore_n(0):
+    case op_astore_n(1):
+    case op_astore_n(2):
+    case op_astore_n(3): {
+        *localAccess<void *>(currentThread.pc[0] - op_astore_n(0)) = stackTopAccess<void *>();
+	stackPop();
+        currentThread.pc++;
+        return true;			 
+    }	
     case op_pop: {
         stackPop();
         currentThread.pc++;
