@@ -9,7 +9,6 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_field.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_frame.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
-#include <cstdio>
 #include <string>
 #include <thread>
 #include <type_traits>
@@ -134,6 +133,24 @@ template <typename T> inline T localAccessValueW(int idx, OMFrame *f = currentTh
     }
 }
 
+template <typename Ttarget, typename Tvalue> inline void accessFieldI(OMField *field)
+{
+    auto data = stackTopAccess<Tvalue>();
+    stackPop();
+    auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
+    stackPop();
+    *reinterpret_cast<Ttarget *>(&obj->data[field->offset]) = data;
+}
+
+template <typename Ttarget, typename Tvalue> inline void accessFieldW(OMField *field)
+{
+    auto data = stackTopAccessW<Tvalue>();
+    stackPopW();
+    auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
+    stackPop();
+    *reinterpret_cast<Ttarget *>(&obj->data[field->offset]) = data;
+}
+
 inline void accessField(OMField *field)
 {
     int p = 0;
@@ -146,59 +163,31 @@ inline void accessField(OMField *field)
     switch (hash_compile_time(res.unwrap().c_str()))
     {
     case "byte"_hash: {
-        auto data = stackTopAccess<jint>();
-        stackPop();
-        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
-        stackPop();
-        *reinterpret_cast<jbyte *>(&obj->data[field->offset]) = data;
+        accessFieldI<jbyte, jint>(field);
         break;
     }
     case "short"_hash: {
-        auto data = stackTopAccess<jint>();
-        stackPop();
-        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
-        stackPop();
-        *reinterpret_cast<jshort *>(&obj->data[field->offset]) = data;
+        accessFieldI<jshort, jint>(field);
         break;
     }
     case "boolean"_hash: {
-        auto data = stackTopAccess<jint>();
-        stackPop();
-        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
-        stackPop();
-        *reinterpret_cast<jboolean *>(&obj->data[field->offset]) = data;
+        accessFieldI<jboolean, jint>(field);
         break;
     }
     case "int"_hash: {
-        auto data = stackTopAccess<jint>();
-        stackPop();
-        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
-        stackPop();
-        *reinterpret_cast<jint *>(&obj->data[field->offset]) = data;
+        accessFieldI<jint, jint>(field);
         break;
     }
     case "float"_hash: {
-        auto data = stackTopAccess<jfloat>();
-        stackPop();
-        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
-        stackPop();
-        *reinterpret_cast<jfloat *>(&obj->data[field->offset]) = data;
+        accessFieldI<jfloat, jfloat>(field);
         break;
     }
     case "long"_hash: {
-        auto data = stackTopAccessW<jlong>();
-        stackPopW();
-        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
-        stackPop();
-        *reinterpret_cast<jlong *>(&obj->data[field->offset]) = data;
+        accessFieldW<jlong, jlong>(field);
         break;
     }
     case "double"_hash: {
-        auto data = stackTopAccessW<jdouble>();
-        stackPopW();
-        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
-        stackPop();
-        *reinterpret_cast<jdouble *>(&obj->data[field->offset]) = data;
+        accessFieldW<jdouble, jdouble>(field);
         break;
     }
     default: {
@@ -206,13 +195,86 @@ inline void accessField(OMField *field)
         stackPop();
         auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
         stackPop();
+        auto target = &obj->data[field->offset];
         if (obj->klass->heap->ptrCompEnabled())
         {
-            *reinterpret_cast<uint32_t *>(&obj->data[field->offset]) = obj->klass->heap->compressPtr(obj);
+            *reinterpret_cast<uint32_t *>(target) = obj->klass->heap->compressPtr(data);
         }
         else
         {
-            *reinterpret_cast<void **>(&obj->data[field->offset]) = obj;
+            *reinterpret_cast<void **>(target) = data;
+        }
+        break;
+    }
+    }
+}
+
+template <typename Ttarget, typename Tvalue> inline void accessFieldStaticI(OMField *field)
+{
+    auto data = stackTopAccess<Tvalue>();
+    stackPop();
+    *reinterpret_cast<Ttarget *>(
+        static_cast<void *>(static_cast<uint8_t *>(field->klass->staticBlock) + field->offset)) = data;
+}
+
+template <typename Ttarget, typename Tvalue> inline void accessFieldStaticW(OMField *field)
+{
+    auto data = stackTopAccessW<Tvalue>();
+    stackPopW();
+    *reinterpret_cast<Ttarget *>(
+        static_cast<void *>(static_cast<uint8_t *>(field->klass->staticBlock) + field->offset)) = data;
+}
+
+inline void accessFieldStatic(OMField *field)
+{
+    int p = 0;
+    auto res = bytecode::descriptor::decodeType(field->desc, &p);
+    if (res.type == util::Err)
+    {
+        throw err::OMValidationError{err::Instructions, "unknown field descriptor", field->desc};
+    }
+
+    switch (hash_compile_time(res.unwrap().c_str()))
+    {
+    case "byte"_hash: {
+        accessFieldStaticI<jbyte, jint>(field);
+        break;
+    }
+    case "short"_hash: {
+        accessFieldStaticI<jshort, jint>(field);
+        break;
+    }
+    case "boolean"_hash: {
+        accessFieldStaticI<jboolean, jint>(field);
+        break;
+    }
+    case "int"_hash: {
+        accessFieldStaticI<jint, jint>(field);
+        break;
+    }
+    case "float"_hash: {
+        accessFieldStaticI<jfloat, jfloat>(field);
+        break;
+    }
+    case "long"_hash: {
+        accessFieldStaticW<jlong, jlong>(field);
+        break;
+    }
+    case "double"_hash: {
+        accessFieldStaticW<jdouble, jdouble>(field);
+        break;
+    }
+    default: {
+        auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
+        stackPop();
+        auto target = static_cast<void *>(static_cast<uint8_t *>(field->klass->staticBlock) + field->offset);
+        if (obj->klass->heap->ptrCompEnabled())
+        {
+            *reinterpret_cast<uint32_t *>(target) = obj->klass->heap->compressPtr(obj);
+        }
+        else
+        {
+            *reinterpret_cast<void **>(target) = obj;
         }
         break;
     }

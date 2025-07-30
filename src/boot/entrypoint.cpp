@@ -163,9 +163,7 @@ int boot(std::vector<std::string> args)
                     tower->loader->loadClass("openminecraft/Test");
                     auto cls = tower->loader->fetchClass("openminecraft/Test");
                     logger->debug("{}", (void *)cls);
-                    pixeltower::v1::OMDebugger deb;
-                    deb.debugStack();
-                    /*
+
                     auto met = cls->methods;
                     while (met != nullptr)
                     {
@@ -176,7 +174,7 @@ int boot(std::vector<std::string> args)
                             break;
                         }
                         met = met->next;
-                    }*/
+                    }
                     tower->destroyCurrentThread();
                     commandBuffer.clear();
 

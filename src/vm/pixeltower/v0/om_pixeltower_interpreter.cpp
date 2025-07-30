@@ -24,8 +24,11 @@ OMInterpreter::~OMInterpreter()
 
 void OMInterpreter::call(OMMethod *met)
 {
+    logger.info("{}.{}{}, first frame: {}", met->klass->name, met->name, met->desc,
+                currentThread.currentFrame == nullptr);
     if (!currentThread.currentFrame)
     {
+        currentThread.stackPointer = currentThread.stack;
         auto frame = (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame));
         currentThread.stackPointer = (jbyte *)currentThread.stackPointer - sizeof(OMFrame) -
                                      met->maxLocals * sizeof(void *); // allocate whole frame + locals
@@ -33,9 +36,12 @@ void OMInterpreter::call(OMMethod *met)
         frame->returnAddr = (void *)0x33550336;
         frame->prev = nullptr;
         frame->method = met;
-
         currentThread.currentFrame = frame;
         currentThread.pc = met->code;
+        for (int i = 0; i < met->maxLocals; i++)
+        {
+            *localAccess<void *>(i) = nullptr;
+        }
         return;
     }
 
@@ -288,6 +294,14 @@ jint OMInterpreter::execute()
         bool isClinit = strcmp("<clinit>", currentThread.currentFrame->method->name) == 0;
         popLastFrame();
         return isClinit ? 2 : 0;
+    }
+    case op_putstatic: {
+        auto n = *static_cast<OMField **>(static_cast<void *>(
+            frame->method->klass->constantPool + binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
+        accessFieldStatic(n);
+        currentThread.pc += 3;
+
+        return 0;
     }
     case op_putfield: {
         auto n = *static_cast<OMField **>(static_cast<void *>(
