@@ -1,5 +1,6 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
@@ -103,27 +104,34 @@ void OMInterpreter::callDynamic(OMMethod *met)
         stackPop();
     }
 
-    // dynamic linking!
-    OMMethod *codetarget = met;
     auto cls = static_cast<OMOOPDesc *>(args[0])->klass;
-    while (cls != nullptr)
+    auto temp = fmt::format("{}{}", met->name, met->desc);
+    OMMethod *codetarget = cls->vtable[hash_compile_time(temp.c_str())];
+    if (codetarget == nullptr)
     {
-        auto m = cls->methods;
-        while (m != nullptr)
-        {
-            if (strcmp(m->name, met->name) == 0 && strcmp(m->desc, m->desc) == 0)
-            {
-                codetarget = m;
-                goto endSea;
-            }
-            m = m->next;
-        }
-        cls = cls->superClass;
+        codetarget = met;
     }
-endSea:
     nextframe->method = codetarget;
 
-    for (int i = 0; i < met->maxLocals; i++)
+    // context switching
+    nextframe->returnAddr = currentThread.pc + 3;
+    nextframe->prev = frame;
+    currentThread.stackPointer = (jbyte *)nextframe - nextframe->method->maxLocals * sizeof(void *);
+    currentThread.currentFrame = nextframe;
+    stackPush();
+    currentThread.pc = nextframe->method->code;
+
+    if (codetarget->accessFlags & JVM_Acc_Native)
+    {
+        debugger.debugStack();
+        popLastFrame();
+        throw err::OMValidationError{
+            err::Instructions, "native functions not supported!",
+            fmt::format("{}.{}{}", codetarget->klass->name, codetarget->name, codetarget->desc)};
+    }
+
+    // clears local variable & pass arguments
+    for (int i = 0; i < codetarget->maxLocals; i++)
     {
         *localAccess<void *>(i, nextframe) = nullptr;
     }
@@ -132,13 +140,6 @@ endSea:
         *localAccess<void *>(i, nextframe) = args[i];
     }
 
-    nextframe->returnAddr = currentThread.pc + 3;
-    nextframe->prev = frame;
-
-    currentThread.stackPointer = (jbyte *)nextframe - nextframe->method->maxLocals * sizeof(void *);
-    currentThread.currentFrame = nextframe;
-    stackPush();
-    currentThread.pc = nextframe->method->code;
     loop();
 }
 
@@ -171,6 +172,14 @@ jint OMInterpreter::execute()
     case op_lconst_l(1): {
         stackPushAccessW<jlong>((jlong)currentThread.pc[0] - (jlong)op_lconst_l(0));
         currentThread.pc++;
+        return EXEC_OK;
+    }
+    case op_ldc2_w: {
+        // compatible with jdouble
+        auto n = *static_cast<jlong *>(static_cast<void *>(frame->method->klass->constantPool +
+                                                           binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
+        stackPushAccessW<jlong>(n);
+        currentThread.pc += 3;
         return EXEC_OK;
     }
     case op_iload_n(0):

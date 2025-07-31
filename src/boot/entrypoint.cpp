@@ -36,6 +36,7 @@
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
+#include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
@@ -167,7 +168,14 @@ int boot(std::vector<std::string> args)
                     {
                         if (strcmp(met->name, "main") == 0 && strcmp(met->desc, "([Ljava/lang/String;)V") == 0)
                         {
-                            tower->boot(met);
+                            try
+                            {
+                                tower->boot(met);
+                            }
+                            catch (err::OMValidationError e)
+                            {
+                                logger->info("{}", e.what());
+                            }
                             break;
                         }
                         met = met->next;

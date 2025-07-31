@@ -12,6 +12,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 #include <cstring>
+#include <unordered_map>
 
 using namespace openminecraft::binary::hash;
 
@@ -53,6 +54,7 @@ void OMKlassLoader::loadClass(std::string name)
                 ->data == name)
         {
             klass = (OMKlass *)mem::allocator::tracedCallocVMData(1, sizeof(OMKlass));
+            klass->vtable = std::unordered_map<hash_t, OMMethod *>(1);
             klass->kind = Normal;
             klass->heap = heap;
             klass->name = name;
@@ -94,6 +96,14 @@ void OMKlassLoader::loadClass(std::string name)
     throw err::OMValidationError{err::ClassLoader, "class not found", name};
 
 loadMethods:
+    if (klass->superClass)
+    {
+        for (auto p : klass->superClass->vtable)
+        {
+            klass->vtable[p.first] = p.second;
+        }
+    }
+
     OMMethod *lastMethod = nullptr;
     for (auto method : klass->raw->methods)
     {
@@ -156,6 +166,13 @@ loadMethods:
         else if ((m->accessFlags & JVM_Acc_Abstract) == 0)
         {
             *(void **)m->code = (void *)33550336;
+        }
+
+        if ((m->accessFlags & JVM_Acc_Static) == 0 && (m->accessFlags & JVM_Acc_Private) == 0 &&
+            (m->accessFlags & JVM_Acc_Final) == 0 && strcmp(m->name, "<init>"))
+        {
+            auto temp = fmt::format("{}{}", m->name, m->desc);
+            klass->vtable[hash_compile_time(temp.c_str())] = m;
         }
 
         if (lastMethod != nullptr)

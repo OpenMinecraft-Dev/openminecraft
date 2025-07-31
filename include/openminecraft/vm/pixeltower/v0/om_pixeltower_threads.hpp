@@ -8,6 +8,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_base.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_field.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_frame.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include <string>
 #include <thread>
@@ -347,6 +348,11 @@ inline void fetchFieldStatic(OMField *field)
         break;
     }
     }
+}
+
+inline std::string methodName(OMMethod *m)
+{
+    return fmt::format("{}.{}{}", m->klass->name, m->name, m->desc);
 }
 
 } // namespace openminecraft::vm::pixeltower::v0
