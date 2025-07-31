@@ -168,7 +168,6 @@ int boot(std::vector<std::string> args)
                         if (strcmp(met->name, "main") == 0 && strcmp(met->desc, "([Ljava/lang/String;)V") == 0)
                         {
                             tower->boot(met);
-                            tower->mainLoop();
                             break;
                         }
                         met = met->next;

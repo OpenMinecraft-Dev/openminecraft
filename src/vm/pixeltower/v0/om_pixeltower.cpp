@@ -3,7 +3,6 @@
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
-#include "openminecraft/vm/pixeltower/v0/om_pixeltower_base.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
@@ -32,10 +31,6 @@ OMPixelTower::~OMPixelTower()
 void OMPixelTower::boot(OMMethod *method)
 {
     interpreter->call(method);
-}
-
-void OMPixelTower::mainLoop()
-{
 }
 
 void OMPixelTower::init(std::string basePath)

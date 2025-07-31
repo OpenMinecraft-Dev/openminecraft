@@ -95,9 +95,10 @@ template <typename T> inline void stackPushAccessW(T data)
     }
     else
     {
-        auto raw = (jint *)&data;
-        stackPushAccess<jint>(data);       // low bits
-        stackPushAccess<jint>(data >> 32); // high bits
+        auto raw = *(int64_t *)&data;
+
+        stackPushAccess<jint>(raw & 0xffffffff); // low bits
+        stackPushAccess<jint>(raw >> 32);        // high bits
     }
 }
 
@@ -275,6 +276,73 @@ inline void accessFieldStatic(OMField *field)
         else
         {
             *reinterpret_cast<void **>(target) = obj;
+        }
+        break;
+    }
+    }
+}
+
+template <typename Ttarget, typename Tvalue> inline void fetchFieldStaticI(OMField *field)
+{
+    stackPushAccess<Tvalue>(*reinterpret_cast<Ttarget *>(
+        static_cast<void *>(static_cast<uint8_t *>(field->klass->staticBlock) + field->offset)));
+}
+
+template <typename Ttarget, typename Tvalue> inline void fetchFieldStaticW(OMField *field)
+{
+    stackPushAccessW<Tvalue>(*reinterpret_cast<Ttarget *>(
+        static_cast<void *>(static_cast<uint8_t *>(field->klass->staticBlock) + field->offset)));
+}
+
+inline void fetchFieldStatic(OMField *field)
+{
+    int p = 0;
+    auto res = bytecode::descriptor::decodeType(field->desc, &p);
+    if (res.type == util::Err)
+    {
+        throw err::OMValidationError{err::Instructions, "unknown field descriptor", field->desc};
+    }
+
+    switch (hash_compile_time(res.unwrap().c_str()))
+    {
+    case "byte"_hash: {
+        fetchFieldStaticI<jbyte, jint>(field);
+        break;
+    }
+    case "short"_hash: {
+        fetchFieldStaticI<jshort, jint>(field);
+        break;
+    }
+    case "boolean"_hash: {
+        fetchFieldStaticI<jboolean, jint>(field);
+        break;
+    }
+    case "int"_hash: {
+        fetchFieldStaticI<jint, jint>(field);
+        break;
+    }
+    case "float"_hash: {
+        fetchFieldStaticI<jfloat, jfloat>(field);
+        break;
+    }
+    case "long"_hash: {
+        fetchFieldStaticW<jlong, jlong>(field);
+        break;
+    }
+    case "double"_hash: {
+        fetchFieldStaticW<jdouble, jdouble>(field);
+        break;
+    }
+    default: {
+        auto h = currentThread.currentFrame->method->klass->heap;
+        auto target = static_cast<void *>(static_cast<uint8_t *>(field->klass->staticBlock) + field->offset);
+        if (h->ptrCompEnabled())
+        {
+            stackPushAccess<void *>(h->decompressPtr(*reinterpret_cast<uint32_t *>(target)));
+        }
+        else
+        {
+            stackPushAccess<void *>(*reinterpret_cast<void **>(target));
         }
         break;
     }

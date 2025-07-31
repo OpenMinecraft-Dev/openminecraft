@@ -19,7 +19,6 @@ class OMPixelTower
     void load(std::string path);
     void init(std::vector<std::shared_ptr<std::istream>> &streams);
     void boot(OMMethod *method);
-    void mainLoop();
     OMKlassLoader *loader;
     OMPixelTowerHeap *heap;
     OMPixelTowerHeap *metaspace;

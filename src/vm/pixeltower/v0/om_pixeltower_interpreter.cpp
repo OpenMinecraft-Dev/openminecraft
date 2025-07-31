@@ -48,7 +48,7 @@ void OMInterpreter::call(OMMethod *met)
         {
             *localAccess<void *>(i) = nullptr;
         }
-	loop();
+        loop();
         return;
     }
 
@@ -165,13 +165,13 @@ jint OMInterpreter::execute()
     case op_iconst_i(5): {
         stackPushAccess<jint>((jint)currentThread.pc[0] - (jint)op_iconst_i(0));
         currentThread.pc++;
-        return 0;
+        return EXEC_OK;
     }
     case op_lconst_l(0):
     case op_lconst_l(1): {
         stackPushAccessW<jlong>((jlong)currentThread.pc[0] - (jlong)op_lconst_l(0));
         currentThread.pc++;
-        return 0;
+        return EXEC_OK;
     }
     case op_iload_n(0):
     case op_iload_n(1):
@@ -179,7 +179,7 @@ jint OMInterpreter::execute()
     case op_iload_n(3): {
         stackPushAccess<jint>(localAccessValue<jint>(currentThread.pc[0] - op_iload_n(0)));
         currentThread.pc++;
-        return 0;
+        return EXEC_OK;
     }
     case op_lload_n(0):
     case op_lload_n(1):
@@ -187,7 +187,7 @@ jint OMInterpreter::execute()
     case op_lload_n(3): {
         stackPushAccessW<jlong>(localAccessValueW<jlong>(currentThread.pc[0] - op_lload_n(0)));
         currentThread.pc++;
-        return 0;
+        return EXEC_OK;
     }
     case op_aload_n(0):
     case op_aload_n(1):
@@ -195,7 +195,7 @@ jint OMInterpreter::execute()
     case op_aload_n(3): {
         stackPushAccess<void *>(localAccessValue<void *>(currentThread.pc[0] - op_aload_n(0)));
         currentThread.pc++;
-        return 0;
+        return EXEC_OK;
     }
     case op_istore_n(0):
     case op_istore_n(1):
@@ -204,7 +204,7 @@ jint OMInterpreter::execute()
         *localAccess<jint>(currentThread.pc[0] - op_istore_n(0)) = stackTopAccess<jint>();
         stackPop();
         currentThread.pc++;
-        return 0;
+        return EXEC_OK;
     }
     case op_astore_n(0):
     case op_astore_n(1):
@@ -213,22 +213,22 @@ jint OMInterpreter::execute()
         *localAccess<void *>(currentThread.pc[0] - op_astore_n(0)) = stackTopAccess<void *>();
         stackPop();
         currentThread.pc++;
-        return 0;
+        return EXEC_OK;
     }
     case op_pop: {
         stackPop();
         currentThread.pc++;
-        return 0;
+        return EXEC_OK;
     }
     case op_pop2: {
         stackPopW();
         currentThread.pc++;
-        return 0;
+        return EXEC_OK;
     }
     case op_dup: {
         stackPushAccess<void *>(stackTopAccess<void *>());
         currentThread.pc++;
-        return 0;
+        return EXEC_OK;
     }
     case op_ladd: {
         auto item2 = stackTopAccessW<jlong>();
@@ -237,14 +237,14 @@ jint OMInterpreter::execute()
         stackPopW();
         stackPushAccessW<jlong>(item2 + item);
         currentThread.pc++;
-        return 0;
+        return EXEC_OK;
     }
     case op_i2l: {
         auto v = stackTopAccess<jint>();
         stackPop();
         stackPushAccessW<jlong>(v);
         currentThread.pc++;
-        return 0;
+        return EXEC_OK;
     }
     case op_lcmp: {
         auto item2 = stackTopAccessW<jlong>();
@@ -264,7 +264,7 @@ jint OMInterpreter::execute()
             stackPushAccess<jint>(-1);
         }
         currentThread.pc++;
-        return 0;
+        return EXEC_OK;
     }
     case op_ifge: {
         auto i = stackTopAccess<jint>();
@@ -277,7 +277,7 @@ jint OMInterpreter::execute()
         {
             currentThread.pc += 3;
         }
-        return 0;
+        return EXEC_OK;
     }
     case op_if_acmpne: {
         auto item = stackTopAccess<void *>();
@@ -293,23 +293,30 @@ jint OMInterpreter::execute()
             currentThread.pc += 3;
         }
 
-        return 0;
+        return EXEC_OK;
     }
     case op_ireturn: {
         auto ret = stackTopAccess<jint>();
         popLastFrame();
         stackPushAccess<jint>(ret);
-        return 2;
+        return EXEC_RETURN;
     }
     case op_lreturn: {
         auto ret = stackTopAccessW<jlong>();
         popLastFrame();
         stackPushAccessW<jlong>(ret);
-        return 2;
+        return EXEC_RETURN;
     }
     case op_return: {
         popLastFrame();
-        return 2;
+        return EXEC_RETURN;
+    }
+    case op_getstatic: {
+        auto n = *static_cast<OMField **>(static_cast<void *>(
+            frame->method->klass->constantPool + binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
+        fetchFieldStatic(n);
+        currentThread.pc += 3;
+        return EXEC_OK;
     }
     case op_putstatic: {
         auto n = *static_cast<OMField **>(static_cast<void *>(
@@ -317,7 +324,7 @@ jint OMInterpreter::execute()
         accessFieldStatic(n);
         currentThread.pc += 3;
 
-        return 0;
+        return EXEC_OK;
     }
     case op_putfield: {
         auto n = *static_cast<OMField **>(static_cast<void *>(
@@ -325,28 +332,28 @@ jint OMInterpreter::execute()
         accessField(n);
         currentThread.pc += 3;
 
-        return 0;
+        return EXEC_OK;
     }
     case op_invokevirtual: {
         auto n = *static_cast<OMMethod **>(static_cast<void *>(
             frame->method->klass->constantPool + binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
         callDynamic(n);
 
-        return 0;
+        return EXEC_OK;
     }
     case op_invokespecial: {
         auto n = *static_cast<OMMethod **>(static_cast<void *>(
             frame->method->klass->constantPool + binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
         call(n);
 
-        return 0;
+        return EXEC_OK;
     }
     case op_new: {
         auto n = *static_cast<OMKlass **>(static_cast<void *>(
             frame->method->klass->constantPool + binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
         stackPushAccess<void *>(n->allocateInstance());
         currentThread.pc += 3;
-        return 0;
+        return EXEC_OK;
     }
     default: {
     endExec:
@@ -364,6 +371,6 @@ jint OMInterpreter::execute()
         break;
     }
     }
-    return 1;
+    return EXEC_FAIL;
 }
 } // namespace openminecraft::vm::pixeltower::v0
