@@ -66,7 +66,10 @@ class OMDebugger
             }
 
             logger.debug("{}: {} {}", currentData,
-                         fmt::styled(fmt::format("{:#018x}", (size_t)*static_cast<void **>(currentData)), style), desc);
+                         fmt::styled(fmt::format(sizeof(void *) == 8 ? "{:#018x}" : "{:#010x}",
+                                                 (size_t)*static_cast<void **>(currentData)),
+                                     style),
+                         desc);
 
             currentData = (uint8_t *)currentData + sizeof(void *);
             if (currentData == v0::currentThread.stack)

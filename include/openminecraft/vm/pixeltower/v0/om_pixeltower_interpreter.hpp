@@ -20,6 +20,23 @@ class OMInterpreter
   private:
     void callDynamic(OMMethod *met);
     void popLastFrame();
+    void loop() {
+        jint result = 0;
+	while (!result)
+	{
+	    result = execute();
+	}
+
+	if (result == 2)
+	{
+	    return;
+	}
+	else
+	{
+	    logger.error("function exited with code {}", result);
+	    throw result;
+	}
+    }
 
     log::OMLogger logger;
     OMPixelTower *tower;

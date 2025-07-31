@@ -48,6 +48,7 @@ void OMInterpreter::call(OMMethod *met)
         {
             *localAccess<void *>(i) = nullptr;
         }
+	loop();
         return;
     }
 
@@ -79,6 +80,8 @@ void OMInterpreter::call(OMMethod *met)
     currentThread.currentFrame = nextframe;
     stackPush();
     currentThread.pc = met->code;
+
+    loop();
 }
 
 void OMInterpreter::callDynamic(OMMethod *met)
@@ -100,6 +103,7 @@ void OMInterpreter::callDynamic(OMMethod *met)
         stackPop();
     }
 
+    // dynamic linking!
     OMMethod *codetarget = met;
     auto cls = static_cast<OMOOPDesc *>(args[0])->klass;
     while (cls != nullptr)
@@ -134,7 +138,8 @@ endSea:
     currentThread.stackPointer = (jbyte *)nextframe - nextframe->method->maxLocals * sizeof(void *);
     currentThread.currentFrame = nextframe;
     stackPush();
-    currentThread.pc = codetarget->code;
+    currentThread.pc = nextframe->method->code;
+    loop();
 }
 
 void OMInterpreter::popLastFrame()
@@ -294,18 +299,17 @@ jint OMInterpreter::execute()
         auto ret = stackTopAccess<jint>();
         popLastFrame();
         stackPushAccess<jint>(ret);
-        return 0;
+        return 2;
     }
     case op_lreturn: {
         auto ret = stackTopAccessW<jlong>();
         popLastFrame();
         stackPushAccessW<jlong>(ret);
-        return 0;
+        return 2;
     }
     case op_return: {
-        bool isClinit = strcmp("<clinit>", currentThread.currentFrame->method->name) == 0;
         popLastFrame();
-        return isClinit ? 2 : 0;
+        return 2;
     }
     case op_putstatic: {
         auto n = *static_cast<OMField **>(static_cast<void *>(

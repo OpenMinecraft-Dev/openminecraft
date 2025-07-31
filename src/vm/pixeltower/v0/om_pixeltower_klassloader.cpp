@@ -340,21 +340,6 @@ void OMKlassLoader::classInit(OMKlass *klass)
             logger.info("clinit found for {}, executing", klass->name);
 
             interpreter->call(me);
-            jint result = 0;
-            while (!result)
-            {
-                result = interpreter->execute();
-            }
-
-            if (result == 2) // clinit finish
-            {
-                break;
-            }
-            else
-            {
-                throw err::OMValidationError{
-                    err::ClassLoader, fmt::format("class clinit executing failed with code {}", result), klass->name};
-            }
         }
         me = me->next;
     }

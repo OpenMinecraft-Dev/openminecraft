@@ -36,11 +36,6 @@ void OMPixelTower::boot(OMMethod *method)
 
 void OMPixelTower::mainLoop()
 {
-    jint result = 0;
-    while (!result)
-    {
-        result = interpreter->execute();
-    }
 }
 
 void OMPixelTower::init(std::string basePath)
