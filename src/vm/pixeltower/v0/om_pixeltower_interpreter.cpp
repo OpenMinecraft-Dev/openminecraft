@@ -25,9 +25,9 @@ OMInterpreter::~OMInterpreter()
 
 void OMInterpreter::call(OMMethod *met)
 {
-    if (met->accessFlags & JVM_Acc_Native)
+    if (met->accessFlags & JVM_Acc_Native && !currentThread.currentFrame)
     {
-        throw err::OMValidationError{err::Instructions, "native functions not supported!",
+        throw err::OMValidationError{err::Instructions, "native boot functions not supported!",
                                      fmt::format("{}.{}{}", met->klass->name, met->name, met->desc)};
     }
 
@@ -67,18 +67,24 @@ void OMInterpreter::call(OMMethod *met)
         args[i] = stackTopAccess<void *>();
         stackPop();
     }
+
+    nextframe->returnAddr = currentThread.pc + 3;
+    nextframe->prev = frame;
+    currentThread.stackPointer = (jbyte *)nextframe - met->maxLocals * sizeof(void *);
+    currentThread.pc = met->code;
+    currentThread.currentFrame = nextframe;
+    stackPush();
+
+    if (met->accessFlags & JVM_Acc_Native)
+    {
+        invokeNative(met, args);
+        return;
+    }
+
     for (int i = 0; i < args.size(); i++)
     {
         *localAccess<void *>(i, nextframe) = args[i];
     }
-
-    nextframe->returnAddr = currentThread.pc + 3;
-    nextframe->prev = frame;
-
-    currentThread.stackPointer = (jbyte *)nextframe - met->maxLocals * sizeof(void *);
-    currentThread.currentFrame = nextframe;
-    stackPush();
-    currentThread.pc = met->code;
 
     loop();
 }
@@ -115,11 +121,8 @@ void OMInterpreter::callDynamic(OMMethod *met)
 
     if (codetarget->accessFlags & JVM_Acc_Native)
     {
-        debugger.debugStack();
-        popLastFrame();
-        throw err::OMValidationError{
-            err::Instructions, "native functions not supported!",
-            fmt::format("{}.{}{}", codetarget->klass->name, codetarget->name, codetarget->desc)};
+        invokeNative(codetarget, args);
+        return;
     }
 
     // clears local variable & pass arguments
@@ -133,6 +136,14 @@ void OMInterpreter::callDynamic(OMMethod *met)
     }
 
     loop();
+}
+
+void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args)
+{
+    debugger.debugStack();
+    popLastFrame();
+    throw err::OMValidationError{err::Instructions, "native functions not supported!",
+                                 fmt::format("{}.{}{}", codetarget->klass->name, codetarget->name, codetarget->desc)};
 }
 
 void OMInterpreter::popLastFrame()

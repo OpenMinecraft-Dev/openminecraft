@@ -5,6 +5,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_debugger.hpp"
+#include <vector>
 namespace openminecraft::vm::pixeltower::v0
 {
 class OMPixelTower;
@@ -21,6 +22,7 @@ class OMInterpreter
     void call(OMMethod *met);
 
   private:
+    void invokeNative(OMMethod *m, std::vector<void *> &args);
     void callDynamic(OMMethod *met);
     void popLastFrame();
     void loop()
