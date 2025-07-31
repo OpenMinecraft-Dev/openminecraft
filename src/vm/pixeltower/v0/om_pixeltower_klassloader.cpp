@@ -34,6 +34,10 @@ OMKlassLoader::~OMKlassLoader()
         {
             mem::allocator::tracedFreeVMData(k->constantPool);
         }
+        if (k->vtable)
+        {
+            delete k->vtable;
+        }
         mem::allocator::tracedFreeVMData(k);
     }
 }
@@ -54,7 +58,7 @@ void OMKlassLoader::loadClass(std::string name)
                 ->data == name)
         {
             klass = (OMKlass *)mem::allocator::tracedCallocVMData(1, sizeof(OMKlass));
-            klass->vtable = std::unordered_map<hash_t, OMMethod *>(1);
+            klass->vtable = new std::unordered_map<std::string, OMMethod *>();
             klass->kind = Normal;
             klass->heap = heap;
             klass->name = name;
@@ -98,9 +102,9 @@ void OMKlassLoader::loadClass(std::string name)
 loadMethods:
     if (klass->superClass)
     {
-        for (auto p : klass->superClass->vtable)
+        for (auto p : *klass->superClass->vtable)
         {
-            klass->vtable[p.first] = p.second;
+            (*klass->vtable)[p.first] = p.second;
         }
     }
 
@@ -171,8 +175,7 @@ loadMethods:
         if ((m->accessFlags & JVM_Acc_Static) == 0 && (m->accessFlags & JVM_Acc_Private) == 0 &&
             (m->accessFlags & JVM_Acc_Final) == 0 && strcmp(m->name, "<init>"))
         {
-            auto temp = fmt::format("{}{}", m->name, m->desc);
-            klass->vtable[hash_compile_time(temp.c_str())] = m;
+            (*klass->vtable)[fmt::format("{}{}", m->name, m->desc)] = m;
         }
 
         if (lastMethod != nullptr)

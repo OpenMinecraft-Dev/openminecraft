@@ -1,7 +1,6 @@
 #ifndef OM_PIXELTOWER_KLASS_HPP
 #define OM_PIXELTOWER_KLASS_HPP
 
-#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_base.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_field.hpp"
@@ -11,9 +10,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <unordered_map>
 
-using namespace openminecraft::binary::hash;
 namespace openminecraft::vm::pixeltower::v0
 {
 enum OMKlassKind : uint8_t
@@ -33,7 +30,7 @@ class OMKlass
     OMKlass *superClass;
     std::vector<OMKlass *> interfaces;
     OMMethod *methods;
-    std::unordered_map<hash_t, OMMethod *> vtable;
+    std::unordered_map<std::string, OMMethod *> *vtable;
     AccessFlags accessFlags;
     std::vector<OMField> fields;
     uint64_t length;

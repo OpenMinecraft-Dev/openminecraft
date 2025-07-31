@@ -1,6 +1,5 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
-#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
@@ -98,8 +97,7 @@ void OMInterpreter::callDynamic(OMMethod *met)
     }
 
     auto cls = static_cast<OMOOPDesc *>(args[0])->klass;
-    auto temp = fmt::format("{}{}", met->name, met->desc);
-    OMMethod *codetarget = cls->vtable[hash_compile_time(temp.c_str())];
+    OMMethod *codetarget = (*cls->vtable)[fmt::format("{}{}", met->name, met->desc)];
     if (codetarget == nullptr)
     {
         throw err::OMValidationError{err::Instructions, fmt::format("vtable corruption found at klass {}", cls->name),
