@@ -355,6 +355,13 @@ inline std::string methodName(OMMethod *m)
     return fmt::format("{}.{}{}", m->klass->name, m->name, m->desc);
 }
 
+inline std::string currentPosition()
+{
+    auto me = currentThread.currentFrame->method;
+    return fmt::format("{}.{}{} + {}", me->klass->name, me->name, me->desc,
+                       static_cast<size_t>(currentThread.pc - me->code));
+}
+
 } // namespace openminecraft::vm::pixeltower::v0
 
 #endif

@@ -12,7 +12,6 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
-#include <cstring>
 #include <vector>
 
 namespace openminecraft::vm::pixeltower::v0
@@ -58,16 +57,16 @@ void OMInterpreter::call(OMMethod *met)
                                  met->args * sizeof(void *));
     nextframe->method = met;
 
+    // TODO: optimization
+    for (int i = 0; i < met->maxLocals; i++)
+    {
+        *localAccess<void *>(i, nextframe) = nullptr;
+    }
     std::vector<void *> args(met->args);
     for (int i = met->args - 1; i >= 0; i--)
     {
         args[i] = stackTopAccess<void *>();
         stackPop();
-    }
-
-    for (int i = 0; i < met->maxLocals; i++)
-    {
-        *localAccess<void *>(i, nextframe) = nullptr;
     }
     for (int i = 0; i < args.size(); i++)
     {
@@ -87,12 +86,6 @@ void OMInterpreter::call(OMMethod *met)
 
 void OMInterpreter::callDynamic(OMMethod *met)
 {
-    if (met->accessFlags & JVM_Acc_Native)
-    {
-        throw err::OMValidationError{err::Instructions, "native functions not supported!",
-                                     fmt::format("{}.{}{}", met->klass->name, met->name, met->desc)};
-    }
-
     auto frame = currentThread.currentFrame;
     auto nextframe = (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame) + sizeof(void *) +
                                  met->args * sizeof(void *));
@@ -109,7 +102,8 @@ void OMInterpreter::callDynamic(OMMethod *met)
     OMMethod *codetarget = cls->vtable[hash_compile_time(temp.c_str())];
     if (codetarget == nullptr)
     {
-        codetarget = met;
+        throw err::OMValidationError{err::Instructions, fmt::format("vtable corruption found at klass {}", cls->name),
+                                     methodName(frame->method)};
     }
     nextframe->method = codetarget;
 
@@ -365,15 +359,10 @@ jint OMInterpreter::execute()
         return EXEC_OK;
     }
     default: {
-    endExec:
-        logger.debug("unknown operand at {}", (void *)currentThread.pc);
-        logger.debug("thread {}", (void *)&currentThread.id);
-        logger.debug("pc pointed at {} ({}.{}{} + {})", (void *)currentThread.pc,
-                     currentThread.currentFrame->method->klass->name, currentThread.currentFrame->method->name,
-                     currentThread.currentFrame->method->desc,
-                     reinterpret_cast<size_t>(
-                         reinterpret_cast<void *>(static_cast<uint8_t *>(currentThread.pc) -
-                                                  static_cast<uint8_t *>(currentThread.currentFrame->method->code))));
+        logger.error("We are hitting Mazarine End!");
+        logger.error("unknown operand at {}", fmt::ptr(currentThread.pc));
+        logger.error("thread {}", fmt::ptr(&currentThread.id));
+        logger.error("pc pointed at {} ({})", fmt::ptr(currentThread.pc), currentPosition());
 
         debugger.debugStack();
 
