@@ -6,6 +6,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 #include <memory>
 #include <vector>
 namespace openminecraft::vm::pixeltower::v0
@@ -24,6 +25,10 @@ class OMKlassLoader
     void loadSpecialClass(std::string name);
     void classInit(OMKlass *klass);
     OMKlass *fetchClass(std::string name);
+
+    OMKlass *lazyClassInit(OMKlass *klass, uint16_t id);
+    OMField *lazyFieldInit(OMKlass *klass, uint16_t id);
+    OMMethod *lazyMethodInit(OMKlass *klass, uint16_t id);
 
   private:
     OMPixelTowerHeap *metaspace;

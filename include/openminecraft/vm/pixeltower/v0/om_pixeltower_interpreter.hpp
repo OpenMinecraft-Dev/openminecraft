@@ -9,9 +9,8 @@
 namespace openminecraft::vm::pixeltower::v0
 {
 class OMPixelTower;
-#define EXEC_OK 0
+#define EXEC_RETURN 0
 #define EXEC_FAIL 1
-#define EXEC_RETURN 2
 class OMInterpreter
 {
   public:
@@ -19,27 +18,20 @@ class OMInterpreter
     ~OMInterpreter();
 
     jint execute();
-    void call(OMMethod *met);
+    void call(OMMethod *met, uint8_t *retAddr);
 
   private:
     void invokeNative(OMMethod *m, std::vector<void *> &args);
-    void callDynamic(OMMethod *met);
+    void callDynamic(OMMethod *met, uint8_t *retAddr);
     void popLastFrame();
-    void loop()
+    inline void loop()
     {
-        jint result = EXEC_OK;
-        while (!result)
+        switch (jint result = execute())
         {
-            result = execute();
-        }
-
-        if (result == EXEC_RETURN)
-        {
-            return;
-        }
-        else
-        {
-            logger.error("function exited with code {}", result);
+        case EXEC_RETURN:
+            break;
+        default:
+            logger.error("function execution failed with code {}", result);
             throw result;
         }
     }

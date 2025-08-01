@@ -1,0 +1,809 @@
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc/src/shaderc.cc.o", "extlibs/shaderc/libshaderc/src/shaderc.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc/src/shaderc.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/args.cc.o", "extlibs/shaderc/libshaderc_util/src/args.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/args.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/compiler_test.cc.o", "extlibs/shaderc/libshaderc_util/src/compiler_test.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/compiler_test.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/counting_includer_test.cc.o", "extlibs/shaderc/libshaderc_util/src/counting_includer_test.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/counting_includer_test.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/file_finder.cc.o", "extlibs/shaderc/libshaderc_util/src/file_finder.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/file_finder.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/file_finder_test.cc.o", "extlibs/shaderc/libshaderc_util/src/file_finder_test.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/file_finder_test.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/format_test.cc.o", "extlibs/shaderc/libshaderc_util/src/format_test.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/format_test.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/io_shaderc.cc.o", "extlibs/shaderc/libshaderc_util/src/io_shaderc.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/io_shaderc.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/io_shaderc_test.cc.o", "extlibs/shaderc/libshaderc_util/src/io_shaderc_test.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/io_shaderc_test.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/message.cc.o", "extlibs/shaderc/libshaderc_util/src/message.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/message.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/message_test.cc.o", "extlibs/shaderc/libshaderc_util/src/message_test.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/message_test.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/mutex_test.cc.o", "extlibs/shaderc/libshaderc_util/src/mutex_test.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/mutex_test.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/resources.cc.o", "extlibs/shaderc/libshaderc_util/src/resources.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/resources.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/shader_stage.cc.o", "extlibs/shaderc/libshaderc_util/src/shader_stage.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/shader_stage.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/spirv_tools_wrapper.cc.o", "extlibs/shaderc/libshaderc_util/src/spirv_tools_wrapper.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/spirv_tools_wrapper.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/string_piece_test.cc.o", "extlibs/shaderc/libshaderc_util/src/string_piece_test.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/string_piece_test.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/version_profile.cc.o", "extlibs/shaderc/libshaderc_util/src/version_profile.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/version_profile.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/version_profile_test.cc.o", "extlibs/shaderc/libshaderc_util/src/version_profile_test.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/version_profile_test.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/shaderc/libshaderc_util/src/compiler.cc.o", "extlibs/shaderc/libshaderc_util/src/compiler.cc"],
+.vscode/compile_commands.json:  "file": "extlibs/shaderc/libshaderc_util/src/compiler.cc"
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/spirv-tools/source/util/timer.cpp.o", "extlibs/spirv-tools/source/util/timer.cpp"],
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-Iextlibs/spirv-headers/include", "-Iextlibs/glslang", "-Iextlibs/shaderc/libshaderc/include", "-Iextlibs/shaderc/libshaderc/src", "-Iextlibs/shaderc/libshaderc_util/include", "-Iextlibs/spirv-tools", "-DENABLE_HLSL=1", "-DSPIRV_TIMER_ENABLED=1", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/glslang-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/s/spirv-tools-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-I", "/home/coder2/openminecraft-cpp/build/.packages/g/googletest-local/latest/4e0143c97b65425b855ad5fd03038b6a/include", "-o", "build/.objs/shaderc/linux/x86_64/release/extlibs/spirv-tools/source/util/bit_vector.cpp.o", "extlibs/spirv-tools/source/util/bit_vector.cpp"],
+.vscode/compile_commands.json:  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++17", "-DOM_VULKAN_DYNAMIC=", "-I", "/home/coder2/.xmake/packages/h/harfbuzz/10.4.0/8685d82dce4e42a3a468d597fa12d7a7/include", "-I", "/home/coder2/.xmake/packages/h/harfbuzz/10.4.0/8685d82dce4e42a3a468d597fa12d7a7/include/harfbuzz", "-I", "/home/coder2/.xmake/packages/f/freetype/2.13.1/22773b67079e4fc8a5c5e1f2b2afdc21/include/freetype2", "-I", "/home/coder2/.xmake/packages/s/stb/2025.03.14/67005fc11486400896028eb775a57270/include", "-I", "/home/coder2/.xmake/packages/s/stb/2025.03.14/67005fc11486400896028eb775a57270/include/stb", "-I", "/home/coder2/.xmake/packages/y/yoga/v3.2.1/7acfa0a1d10643ff81c12bd9c4cd161c/include", "-I", "/home/coder2/.xmake/packages/x/xxhash/v0.8.3/6c9c3d1188624b3e9863255b5bf9fc93/include", "-I", "/home/coder2/.xmake/packages/v/vulkan-headers/1.3.290+0/23bc610e18fe4185afc749fa4675812a/include", "-I", "/home/coder2/.xmake/packages/g/glm/1.0.1/1781f3ac6d8141628505a9ae557cd017/include", "-I", "/home/coder2/.xmake/packages/b/bullet3/3.25/57736783d7fe4831ac50fa03b71c8085/include", "-I", "/home/coder2/.xmake/packages/b/bullet3/3.25/57736783d7fe4831ac50fa03b71c8085/include/bullet", "-I", "/home/coder2/.xmake/packages/v/vulkan-hpp/v1.3.290/652a83bbeb1e4cd7b87a4fc7aed438a0/include", "-I", "/home/coder2/.xmake/packages/l/libsdl3/3.2.8/a7af9f2ad5614db1a890bfcc0a5320a3/include", "-I", "/home/coder2/.xmake/packages/o/opengl-headers/2024.01.04/59ed79d7030a4b298d033d457b08e5ff/include", "-I", "/home/coder2/.xmake/packages/e/egl-headers/2023.12.16/cd777b21b8c84268bf5e21c2813eae03/include", "-o", "build/.objs/openminecraft/linux/x86_64/release/src/entrypoint.cpp.o", "src/entrypoint.cpp"],
+.vscode/compile_commands.json:  "file": "src/entrypoint.cpp"
+xmake.lua:includes("src/log/xmake.lua")
+xmake.lua:includes("src/vm/xmake.lua")
+xmake.lua:includes("src/binary/xmake.lua")
+xmake.lua:includes("src/mem/xmake.lua")
+xmake.lua:includes("src/io/xmake.lua")
+xmake.lua:includes("src/boot/xmake.lua")
+xmake.lua:includes("src/vfs/xmake.lua")
+xmake.lua:includes("src/util/xmake.lua")
+xmake.lua:includes("src/i18n/xmake.lua")
+xmake.lua:includes("src/renderer/xmake.lua")
+.xmake/linux/x86_64/cache/config:        ["src/vfs/xmake.lua"] = 1751963057,
+.xmake/linux/x86_64/cache/config:        ["src/vm/xmake.lua"] = 1753960026,
+.xmake/linux/x86_64/cache/config:        ["src/mem/xmake.lua"] = 1751963057,
+.xmake/linux/x86_64/cache/config:        ["src/log/xmake.lua"] = 1751963057,
+.xmake/linux/x86_64/cache/config:        ["src/renderer/xmake.lua"] = 1751963057,
+.xmake/linux/x86_64/cache/config:        ["src/i18n/xmake.lua"] = 1751963057,
+.xmake/linux/x86_64/cache/config:        ["src/io/xmake.lua"] = 1751963057,
+.xmake/linux/x86_64/cache/config:        ["src/boot/xmake.lua"] = 1751963057,
+.xmake/linux/x86_64/cache/config:        ["src/util/xmake.lua"] = 1751963057,
+.xmake/linux/x86_64/cache/config:        ["src/binary/xmake.lua"] = 1751963057
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:# 1 "src/util/om_util_version.cpp"
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:# 1 "src/util/om_util_version.cpp" 2
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:   const wchar_t *__restrict __src)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:    const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:         const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:         const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:   const wchar_t *__restrict __src)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:    const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:extern wchar_t *wcsrchr (const wchar_t *__wcs, wchar_t __wc)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:    const char **__restrict __src, size_t __len,
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:    const wchar_t **__restrict __src, size_t __len,
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:     const char **__restrict __src, size_t __nmc,
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:     const wchar_t **__restrict __src,
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:   const wchar_t *__restrict __src) noexcept (true);
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:    const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:  using ::wcsrchr;
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:  wcsrchr(wchar_t* __p, wchar_t __c)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:  { return wcsrchr(const_cast<const wchar_t*>(__p), __c); }
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:# 2 "src/util/om_util_version.cpp" 2
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:extern void *memcpy (void *__restrict __dest, const void *__restrict __src,
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:extern void *memmove (void *__dest, const void *__src, size_t __n)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:extern void *memccpy (void *__restrict __dest, const void *__restrict __src,
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:extern char *strcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:        const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:extern char *strcat (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:extern char *strncat (char *__restrict __dest, const char *__restrict __src,
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:extern size_t strxfrm_l (char *__dest, const char *__src, size_t __n,
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:   const void *__restrict __src, size_t __n)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:        const void *__restrict __src, size_t __n)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:extern void bcopy (const void *__src, void *__dest, size_t __n)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:extern char *__stpcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:extern char *stpcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:   const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:        const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-util/linux/x86_64/debug/src/util/__cpp_om_util_version.cpp-c6ae50bb.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:# 1 "src/i18n/om_i18n_res.cpp"
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:# 1 "src/i18n/om_i18n_res.cpp" 2
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:extern void *memcpy (void *__restrict __dest, const void *__restrict __src,
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:extern void *memmove (void *__dest, const void *__src, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:extern void *memccpy (void *__restrict __dest, const void *__restrict __src,
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:extern char *strcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:        const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:extern char *strcat (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:extern char *strncat (char *__restrict __dest, const char *__restrict __src,
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:extern size_t strxfrm_l (char *__dest, const char *__src, size_t __n,
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:   const void *__restrict __src, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:        const void *__restrict __src, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:extern void bcopy (const void *__src, void *__dest, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:extern char *__stpcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:extern char *stpcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:   const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:        const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:   const wchar_t *__restrict __src)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:    const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:         const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:         const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:   const wchar_t *__restrict __src)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:    const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:extern wchar_t *wcsrchr (const wchar_t *__wcs, wchar_t __wc)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:    const char **__restrict __src, size_t __len,
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:    const wchar_t **__restrict __src, size_t __len,
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:     const char **__restrict __src, size_t __nmc,
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:     const wchar_t **__restrict __src,
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:   const wchar_t *__restrict __src) noexcept (true);
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:    const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:  using ::wcsrchr;
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:  wcsrchr(wchar_t* __p, wchar_t __c)
+build/.objs/openminecraft-i18n/linux/x86_64/debug/src/i18n/__cpp_om_i18n_res.cpp-d3cfe16f.cpp.tmp:  { return wcsrchr(const_cast<const wchar_t*>(__p), __c); }
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:# 1 "src/boot/entrypoint.cpp"
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:# 1 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern void *memcpy (void *__restrict __dest, const void *__restrict __src,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern void *memmove (void *__dest, const void *__src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern void *memccpy (void *__restrict __dest, const void *__restrict __src,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern char *strcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:        const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern char *strcat (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern char *strncat (char *__restrict __dest, const char *__restrict __src,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern size_t strxfrm_l (char *__dest, const char *__src, size_t __n,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   const void *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:        const void *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern void bcopy (const void *__src, void *__dest, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern char *__stpcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern char *stpcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:        const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   const wchar_t *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:         const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:         const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   const wchar_t *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern wchar_t *wcsrchr (const wchar_t *__wcs, wchar_t __wc)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    const char **__restrict __src, size_t __len,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    const wchar_t **__restrict __src, size_t __len,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:     const char **__restrict __src, size_t __nmc,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:     const wchar_t **__restrict __src,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   const wchar_t *__restrict __src) noexcept (true);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) void * SDL_memcpy( void *dst, const void *src, size_t len);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) void * SDL_memmove( void *dst, const void *src, size_t len);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) size_t SDL_wcslcpy( wchar_t *dst, const wchar_t *src, size_t maxlen);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) size_t SDL_wcslcat( wchar_t *dst, const wchar_t *src, size_t maxlen);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) size_t SDL_strlcpy( char *dst, const char *src, size_t maxlen);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) size_t SDL_utf8strlcpy( char *dst, const char *src, size_t dst_bytes);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) size_t SDL_strlcat( char *dst, const char *src, size_t maxlen);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:# 2 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_CopyProperties(SDL_PropertiesID src, SDL_PropertiesID dst);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) void * SDL_LoadFile_IO(SDL_IOStream *src, size_t *datasize, bool closeio);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_SaveFile_IO(SDL_IOStream *src, const void *data, size_t datasize, bool closeio);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU8(SDL_IOStream *src, Uint8 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS8(SDL_IOStream *src, Sint8 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU16LE(SDL_IOStream *src, Uint16 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS16LE(SDL_IOStream *src, Sint16 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU16BE(SDL_IOStream *src, Uint16 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS16BE(SDL_IOStream *src, Sint16 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU32LE(SDL_IOStream *src, Uint32 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS32LE(SDL_IOStream *src, Sint32 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU32BE(SDL_IOStream *src, Uint32 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS32BE(SDL_IOStream *src, Sint32 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU64LE(SDL_IOStream *src, Uint64 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS64LE(SDL_IOStream *src, Sint64 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU64BE(SDL_IOStream *src, Uint64 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS64BE(SDL_IOStream *src, Sint64 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) SDL_AudioStream * SDL_CreateAudioStream(const SDL_AudioSpec *src_spec, const SDL_AudioSpec *dst_spec);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_GetAudioStreamFormat(SDL_AudioStream *stream, SDL_AudioSpec *src_spec, SDL_AudioSpec *dst_spec);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_SetAudioStreamFormat(SDL_AudioStream *stream, const SDL_AudioSpec *src_spec, const SDL_AudioSpec *dst_spec);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_LoadWAV_IO(SDL_IOStream *src, bool closeio, SDL_AudioSpec *spec, Uint8 **audio_buf, Uint32 *audio_len);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_MixAudio(Uint8 *dst, const Uint8 *src, SDL_AudioFormat format, Uint32 len, float volume);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ConvertAudioSamples(const SDL_AudioSpec *src_spec, const Uint8 *src_data, int src_len, const SDL_AudioSpec *dst_spec, Uint8 **dst_data, int *dst_len);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) SDL_BlendMode SDL_ComposeCustomBlendMode(SDL_BlendFactor srcColorFactor,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:                                                                 SDL_BlendFactor srcAlphaFactor,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) SDL_Surface * SDL_LoadBMP_IO(SDL_IOStream *src, bool closeio);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ConvertPixels(int width, int height, SDL_PixelFormat src_format, const void *src, int src_pitch, SDL_PixelFormat dst_format, void *dst, int dst_pitch);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ConvertPixelsAndColorspace(int width, int height, SDL_PixelFormat src_format, SDL_Colorspace src_colorspace, SDL_PropertiesID src_properties, const void *src, int src_pitch, SDL_PixelFormat dst_format, SDL_Colorspace dst_colorspace, SDL_PropertiesID dst_properties, void *dst, int dst_pitch);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_PremultiplyAlpha(int width, int height, SDL_PixelFormat src_format, const void *src, int src_pitch, SDL_PixelFormat dst_format, void *dst, int dst_pitch, bool linear);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurface(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurfaceUnchecked(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurfaceScaled(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect, SDL_ScaleMode scaleMode);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurfaceUncheckedScaled(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect, SDL_ScaleMode scaleMode);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_StretchSurface(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect, SDL_ScaleMode scaleMode);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurfaceTiled(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurfaceTiledWithScale(SDL_Surface *src, const SDL_Rect *srcrect, float scale, SDL_ScaleMode scaleMode, SDL_Surface *dst, const SDL_Rect *dstrect);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurface9Grid(SDL_Surface *src, const SDL_Rect *srcrect, int left_width, int right_width, int top_height, int bottom_height, float scale, SDL_ScaleMode scaleMode, SDL_Surface *dst, const SDL_Rect *dstrect);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:extern __attribute__ ((visibility("default"))) int SDL_AddGamepadMappingsFromIO(SDL_IOStream *src, bool closeio);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:# 4 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:  using ::wcsrchr;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:  wcsrchr(wchar_t* __p, wchar_t __c)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:  { return wcsrchr(const_cast<const wchar_t*>(__p), __c); }
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:  __cxa_vec_cctor(void* __dest_array, void* __src_array,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    __find_public_src(ptrdiff_t __src2dst, const void* __obj_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:        const __class_type_info* __src_type,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:        const void* __src_ptr) const;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    __do_dyncast(ptrdiff_t __src2dst, __sub_kind __access_path,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   const __class_type_info* __src_type, const void* __src_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    __do_find_public_src(ptrdiff_t __src2dst, const void* __obj_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    const __class_type_info* __src_type,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    const void* __src_ptr) const;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    __do_dyncast(ptrdiff_t __src2dst, __sub_kind __access_path,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   const __class_type_info* __src_type, const void* __src_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    __do_find_public_src(ptrdiff_t __src2dst, const void* __obj_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    const __class_type_info* __src_type,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    __do_dyncast(ptrdiff_t __src2dst, __sub_kind __access_path,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   const __class_type_info* __src_type, const void* __src_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    __do_find_public_src(ptrdiff_t __src2dst, const void* __obj_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    const __class_type_info* __src_type,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:    const void* __src_ptr) const;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:  __dynamic_cast(const void* __src_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   const __class_type_info* __src_type,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   ptrdiff_t __src2dst);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:# 7 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:# 8 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:# 12 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:# 15 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:# 16 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:# 17 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:# 18 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:# 19 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:# 20 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:# 21 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:# 22 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp: _M_src_hash_code(const _H2&, const __node_value_type& __src_n) const
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:     return __src_n._M_hash_code;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:     return this->_M_hash_code(_ExtractKey{}(__src_n._M_v()));
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:      _M_merge_unique(_Hashtable& __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp: do { if (__builtin_expect(!bool(get_allocator() == __src.get_allocator()), false)) std::__glibcxx_assert_fail("/usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/15.1.1/../../../../include/c++/15.1.1/bits/hashtable.h", 1287, __PRETTY_FUNCTION__, "get_allocator() == __src.get_allocator()"); } while (false);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp: auto __n_elt = __src.size();
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp: auto __prev = _PTr::pointer_to(__src._M_before_begin);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:     auto __src_bkt = __src._M_bucket_index(__node);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:     auto __nh = __src._M_extract_node(__src_bkt, __prev);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp: _M_merge_unique(_Compatible_Hashtable& __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   do { if (__builtin_expect(!bool(get_allocator() == __src.get_allocator()), false)) std::__glibcxx_assert_fail("/usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/15.1.1/../../../../include/c++/15.1.1/bits/hashtable.h", 1324, __PRETTY_FUNCTION__, "get_allocator() == __src.get_allocator()"); } while (false);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   auto __n_elt = __src.size();
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   for (auto __i = __src.cbegin(), __end = __src.cend(); __i != __end;)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:       auto __nh = __src.extract(__pos);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:      _M_merge_multi(_Hashtable& __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp: do { if (__builtin_expect(!bool(get_allocator() == __src.get_allocator()), false)) std::__glibcxx_assert_fail("/usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/15.1.1/../../../../include/c++/15.1.1/bits/hashtable.h", 1352, __PRETTY_FUNCTION__, "get_allocator() == __src.get_allocator()"); } while (false);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp: if (__src.size() == 0) [[__unlikely__]]
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp: this->reserve(size() + __src.size());
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp: auto __prev = _PTr::pointer_to(__src._M_before_begin);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:     size_type __src_bkt = __src._M_bucket_index(__node);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:     auto __nh = __src._M_extract_node(__src_bkt, __prev);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp: _M_merge_multi(_Compatible_Hashtable& __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   do { if (__builtin_expect(!bool(get_allocator() == __src.get_allocator()), false)) std::__glibcxx_assert_fail("/usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/15.1.1/../../../../include/c++/15.1.1/bits/hashtable.h", 1385, __PRETTY_FUNCTION__, "get_allocator() == __src.get_allocator()"); } while (false);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   this->reserve(size() + __src.size());
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:   for (auto __i = __src.cbegin(), __end = __src.cend(); __i != __end;)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:  = _M_src_hash_code(__src.hash_function(), *__pos._M_cur);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-34a8f8a9.cpp.tmp:       auto __nh = __src.extract(__pos);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:# 1 "src/boot/entrypoint.cpp"
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:# 1 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern void *memcpy (void *__restrict __dest, const void *__restrict __src,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern void *memmove (void *__dest, const void *__src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern void *memccpy (void *__restrict __dest, const void *__restrict __src,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern char *strcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:        const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern char *strcat (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern char *strncat (char *__restrict __dest, const char *__restrict __src,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern size_t strxfrm_l (char *__dest, const char *__src, size_t __n,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   const void *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:        const void *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern void bcopy (const void *__src, void *__dest, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern char *__stpcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern char *stpcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:        const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   const wchar_t *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:         const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:         const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   const wchar_t *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern wchar_t *wcsrchr (const wchar_t *__wcs, wchar_t __wc)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    const char **__restrict __src, size_t __len,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    const wchar_t **__restrict __src, size_t __len,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:     const char **__restrict __src, size_t __nmc,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:     const wchar_t **__restrict __src,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   const wchar_t *__restrict __src) noexcept (true);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) void * SDL_memcpy( void *dst, const void *src, size_t len);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) void * SDL_memmove( void *dst, const void *src, size_t len);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) size_t SDL_wcslcpy( wchar_t *dst, const wchar_t *src, size_t maxlen);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) size_t SDL_wcslcat( wchar_t *dst, const wchar_t *src, size_t maxlen);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) size_t SDL_strlcpy( char *dst, const char *src, size_t maxlen);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) size_t SDL_utf8strlcpy( char *dst, const char *src, size_t dst_bytes);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) size_t SDL_strlcat( char *dst, const char *src, size_t maxlen);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:# 2 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_CopyProperties(SDL_PropertiesID src, SDL_PropertiesID dst);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) void * SDL_LoadFile_IO(SDL_IOStream *src, size_t *datasize, bool closeio);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_SaveFile_IO(SDL_IOStream *src, const void *data, size_t datasize, bool closeio);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU8(SDL_IOStream *src, Uint8 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS8(SDL_IOStream *src, Sint8 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU16LE(SDL_IOStream *src, Uint16 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS16LE(SDL_IOStream *src, Sint16 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU16BE(SDL_IOStream *src, Uint16 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS16BE(SDL_IOStream *src, Sint16 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU32LE(SDL_IOStream *src, Uint32 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS32LE(SDL_IOStream *src, Sint32 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU32BE(SDL_IOStream *src, Uint32 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS32BE(SDL_IOStream *src, Sint32 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU64LE(SDL_IOStream *src, Uint64 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS64LE(SDL_IOStream *src, Sint64 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU64BE(SDL_IOStream *src, Uint64 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS64BE(SDL_IOStream *src, Sint64 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) SDL_AudioStream * SDL_CreateAudioStream(const SDL_AudioSpec *src_spec, const SDL_AudioSpec *dst_spec);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_GetAudioStreamFormat(SDL_AudioStream *stream, SDL_AudioSpec *src_spec, SDL_AudioSpec *dst_spec);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_SetAudioStreamFormat(SDL_AudioStream *stream, const SDL_AudioSpec *src_spec, const SDL_AudioSpec *dst_spec);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_LoadWAV_IO(SDL_IOStream *src, bool closeio, SDL_AudioSpec *spec, Uint8 **audio_buf, Uint32 *audio_len);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_MixAudio(Uint8 *dst, const Uint8 *src, SDL_AudioFormat format, Uint32 len, float volume);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ConvertAudioSamples(const SDL_AudioSpec *src_spec, const Uint8 *src_data, int src_len, const SDL_AudioSpec *dst_spec, Uint8 **dst_data, int *dst_len);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) SDL_BlendMode SDL_ComposeCustomBlendMode(SDL_BlendFactor srcColorFactor,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:                                                                 SDL_BlendFactor srcAlphaFactor,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) SDL_Surface * SDL_LoadBMP_IO(SDL_IOStream *src, bool closeio);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ConvertPixels(int width, int height, SDL_PixelFormat src_format, const void *src, int src_pitch, SDL_PixelFormat dst_format, void *dst, int dst_pitch);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ConvertPixelsAndColorspace(int width, int height, SDL_PixelFormat src_format, SDL_Colorspace src_colorspace, SDL_PropertiesID src_properties, const void *src, int src_pitch, SDL_PixelFormat dst_format, SDL_Colorspace dst_colorspace, SDL_PropertiesID dst_properties, void *dst, int dst_pitch);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_PremultiplyAlpha(int width, int height, SDL_PixelFormat src_format, const void *src, int src_pitch, SDL_PixelFormat dst_format, void *dst, int dst_pitch, bool linear);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurface(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurfaceUnchecked(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurfaceScaled(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect, SDL_ScaleMode scaleMode);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurfaceUncheckedScaled(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect, SDL_ScaleMode scaleMode);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_StretchSurface(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect, SDL_ScaleMode scaleMode);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurfaceTiled(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurfaceTiledWithScale(SDL_Surface *src, const SDL_Rect *srcrect, float scale, SDL_ScaleMode scaleMode, SDL_Surface *dst, const SDL_Rect *dstrect);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurface9Grid(SDL_Surface *src, const SDL_Rect *srcrect, int left_width, int right_width, int top_height, int bottom_height, float scale, SDL_ScaleMode scaleMode, SDL_Surface *dst, const SDL_Rect *dstrect);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:extern __attribute__ ((visibility("default"))) int SDL_AddGamepadMappingsFromIO(SDL_IOStream *src, bool closeio);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:# 4 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:  using ::wcsrchr;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:  wcsrchr(wchar_t* __p, wchar_t __c)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:  { return wcsrchr(const_cast<const wchar_t*>(__p), __c); }
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:  __cxa_vec_cctor(void* __dest_array, void* __src_array,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    __find_public_src(ptrdiff_t __src2dst, const void* __obj_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:        const __class_type_info* __src_type,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:        const void* __src_ptr) const;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    __do_dyncast(ptrdiff_t __src2dst, __sub_kind __access_path,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   const __class_type_info* __src_type, const void* __src_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    __do_find_public_src(ptrdiff_t __src2dst, const void* __obj_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    const __class_type_info* __src_type,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    const void* __src_ptr) const;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    __do_dyncast(ptrdiff_t __src2dst, __sub_kind __access_path,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   const __class_type_info* __src_type, const void* __src_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    __do_find_public_src(ptrdiff_t __src2dst, const void* __obj_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    const __class_type_info* __src_type,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    __do_dyncast(ptrdiff_t __src2dst, __sub_kind __access_path,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   const __class_type_info* __src_type, const void* __src_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    __do_find_public_src(ptrdiff_t __src2dst, const void* __obj_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    const __class_type_info* __src_type,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    const void* __src_ptr) const;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:  __dynamic_cast(const void* __src_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   const __class_type_info* __src_type,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   ptrdiff_t __src2dst);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:# 7 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:# 8 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:# 12 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:# 15 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:# 16 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:# 17 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:# 18 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:# 19 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:# 20 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:# 21 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:# 22 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp: _M_src_hash_code(const _H2&, const __node_value_type& __src_n) const
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:     return __src_n._M_hash_code;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:     return this->_M_hash_code(_ExtractKey{}(__src_n._M_v()));
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:      _M_merge_unique(_Hashtable& __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp: do { if (__builtin_expect(!bool(get_allocator() == __src.get_allocator()), false)) std::__glibcxx_assert_fail("/usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/15.1.1/../../../../include/c++/15.1.1/bits/hashtable.h", 1287, __PRETTY_FUNCTION__, "get_allocator() == __src.get_allocator()"); } while (false);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp: auto __n_elt = __src.size();
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp: auto __prev = _PTr::pointer_to(__src._M_before_begin);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:     auto __src_bkt = __src._M_bucket_index(__node);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:     auto __nh = __src._M_extract_node(__src_bkt, __prev);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp: _M_merge_unique(_Compatible_Hashtable& __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   do { if (__builtin_expect(!bool(get_allocator() == __src.get_allocator()), false)) std::__glibcxx_assert_fail("/usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/15.1.1/../../../../include/c++/15.1.1/bits/hashtable.h", 1324, __PRETTY_FUNCTION__, "get_allocator() == __src.get_allocator()"); } while (false);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   auto __n_elt = __src.size();
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   for (auto __i = __src.cbegin(), __end = __src.cend(); __i != __end;)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:       auto __nh = __src.extract(__pos);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:      _M_merge_multi(_Hashtable& __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp: do { if (__builtin_expect(!bool(get_allocator() == __src.get_allocator()), false)) std::__glibcxx_assert_fail("/usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/15.1.1/../../../../include/c++/15.1.1/bits/hashtable.h", 1352, __PRETTY_FUNCTION__, "get_allocator() == __src.get_allocator()"); } while (false);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp: if (__src.size() == 0) [[__unlikely__]]
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp: this->reserve(size() + __src.size());
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp: auto __prev = _PTr::pointer_to(__src._M_before_begin);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:     size_type __src_bkt = __src._M_bucket_index(__node);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:     auto __nh = __src._M_extract_node(__src_bkt, __prev);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp: _M_merge_multi(_Compatible_Hashtable& __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   do { if (__builtin_expect(!bool(get_allocator() == __src.get_allocator()), false)) std::__glibcxx_assert_fail("/usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/15.1.1/../../../../include/c++/15.1.1/bits/hashtable.h", 1385, __PRETTY_FUNCTION__, "get_allocator() == __src.get_allocator()"); } while (false);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   this->reserve(size() + __src.size());
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:   for (auto __i = __src.cbegin(), __end = __src.cend(); __i != __end;)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:  = _M_src_hash_code(__src.hash_function(), *__pos._M_cur);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:       auto __nh = __src.extract(__pos);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkAccessFlags srcAccessMask;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    uint32_t srcQueueFamilyIndex;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkAccessFlags srcAccessMask;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    uint32_t srcQueueFamilyIndex;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkAccessFlags srcAccessMask;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkBlendFactor srcColorBlendFactor;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkBlendFactor srcAlphaBlendFactor;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkDescriptorSet srcSet;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    uint32_t srcBinding;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    uint32_t srcArrayElement;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    uint32_t srcSubpass;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkPipelineStageFlags srcStageMask;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkAccessFlags srcAccessMask;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkDeviceSize srcOffset;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageSubresourceLayers srcSubresource;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkOffset3D srcOffsets[2];
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageSubresourceLayers srcSubresource;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkOffset3D srcOffset;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageSubresourceLayers srcSubresource;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkOffset3D srcOffset;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:typedef VkResult ( *PFN_vkMergePipelineCaches)(VkDevice device, VkPipelineCache dstCache, uint32_t srcCacheCount, const VkPipelineCache* pSrcCaches);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:typedef void ( *PFN_vkCmdCopyBuffer)(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferCopy* pRegions);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:typedef void ( *PFN_vkCmdCopyImage)(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageCopy* pRegions);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:typedef void ( *PFN_vkCmdBlitImage)(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageBlit* pRegions, VkFilter filter);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:typedef void ( *PFN_vkCmdCopyBufferToImage)(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkBufferImageCopy* pRegions);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:typedef void ( *PFN_vkCmdCopyImageToBuffer)(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferImageCopy* pRegions);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:typedef void ( *PFN_vkCmdResolveImage)(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageResolve* pRegions);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:typedef void ( *PFN_vkCmdWaitEvents)(VkCommandBuffer commandBuffer, uint32_t eventCount, const VkEvent* pEvents, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, uint32_t memoryBarrierCount, const VkMemoryBarrier* pMemoryBarriers, uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier* pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier* pImageMemoryBarriers);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:typedef void ( *PFN_vkCmdPipelineBarrier)(VkCommandBuffer commandBuffer, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags, uint32_t memoryBarrierCount, const VkMemoryBarrier* pMemoryBarriers, uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier* pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier* pImageMemoryBarriers);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    uint32_t srcCacheCount,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkBuffer srcBuffer,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImage srcImage,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageLayout srcImageLayout,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImage srcImage,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageLayout srcImageLayout,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkBuffer srcBuffer,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImage srcImage,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageLayout srcImageLayout,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImage srcImage,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageLayout srcImageLayout,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkPipelineStageFlags srcStageMask,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkPipelineStageFlags srcStageMask,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    uint32_t srcSubpass;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkPipelineStageFlags srcStageMask;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkAccessFlags srcAccessMask;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkPipelineStageFlags2 srcStageMask;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkAccessFlags2 srcAccessMask;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkPipelineStageFlags2 srcStageMask;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkAccessFlags2 srcAccessMask;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    uint32_t srcQueueFamilyIndex;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkPipelineStageFlags2 srcStageMask;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkAccessFlags2 srcAccessMask;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    uint32_t srcQueueFamilyIndex;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkDeviceSize srcOffset;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkBuffer srcBuffer;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageSubresourceLayers srcSubresource;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkOffset3D srcOffset;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImage srcImage;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageLayout srcImageLayout;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkBuffer srcBuffer;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImage srcImage;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageLayout srcImageLayout;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageSubresourceLayers srcSubresource;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkOffset3D srcOffsets[2];
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImage srcImage;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageLayout srcImageLayout;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageSubresourceLayers srcSubresource;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkOffset3D srcOffset;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImage srcImage;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageLayout srcImageLayout;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImage srcImage;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageLayout srcImageLayout;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImage srcImage;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkImageLayout srcImageLayout;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkRect2D srcRect;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkBuffer srcBuffer;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkDeviceSize srcBufferOffset;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-a0b2e1be.cpp.tmp:    VkDeviceSize srcBufferRange;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:# 1 "src/boot/entrypoint.cpp"
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:# 1 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern void *memcpy (void *__restrict __dest, const void *__restrict __src,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern void *memmove (void *__dest, const void *__src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern void *memccpy (void *__restrict __dest, const void *__restrict __src,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern char *strcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:        const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern char *strcat (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern char *strncat (char *__restrict __dest, const char *__restrict __src,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern size_t strxfrm_l (char *__dest, const char *__src, size_t __n,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:   const void *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:        const void *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern void bcopy (const void *__src, void *__dest, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern char *__stpcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern char *stpcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:   const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:        const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:   const wchar_t *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:         const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:         const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:   const wchar_t *__restrict __src)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern wchar_t *wcsrchr (const wchar_t *__wcs, wchar_t __wc)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    const char **__restrict __src, size_t __len,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    const wchar_t **__restrict __src, size_t __len,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:     const char **__restrict __src, size_t __nmc,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:     const wchar_t **__restrict __src,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:   const wchar_t *__restrict __src) noexcept (true);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    const wchar_t *__restrict __src, size_t __n)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) void * SDL_memcpy( void *dst, const void *src, size_t len);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) void * SDL_memmove( void *dst, const void *src, size_t len);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) size_t SDL_wcslcpy( wchar_t *dst, const wchar_t *src, size_t maxlen);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) size_t SDL_wcslcat( wchar_t *dst, const wchar_t *src, size_t maxlen);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) size_t SDL_strlcpy( char *dst, const char *src, size_t maxlen);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) size_t SDL_utf8strlcpy( char *dst, const char *src, size_t dst_bytes);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) size_t SDL_strlcat( char *dst, const char *src, size_t maxlen);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:# 2 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_CopyProperties(SDL_PropertiesID src, SDL_PropertiesID dst);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) void * SDL_LoadFile_IO(SDL_IOStream *src, size_t *datasize, bool closeio);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_SaveFile_IO(SDL_IOStream *src, const void *data, size_t datasize, bool closeio);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU8(SDL_IOStream *src, Uint8 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS8(SDL_IOStream *src, Sint8 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU16LE(SDL_IOStream *src, Uint16 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS16LE(SDL_IOStream *src, Sint16 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU16BE(SDL_IOStream *src, Uint16 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS16BE(SDL_IOStream *src, Sint16 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU32LE(SDL_IOStream *src, Uint32 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS32LE(SDL_IOStream *src, Sint32 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU32BE(SDL_IOStream *src, Uint32 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS32BE(SDL_IOStream *src, Sint32 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU64LE(SDL_IOStream *src, Uint64 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS64LE(SDL_IOStream *src, Sint64 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadU64BE(SDL_IOStream *src, Uint64 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ReadS64BE(SDL_IOStream *src, Sint64 *value);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) SDL_AudioStream * SDL_CreateAudioStream(const SDL_AudioSpec *src_spec, const SDL_AudioSpec *dst_spec);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_GetAudioStreamFormat(SDL_AudioStream *stream, SDL_AudioSpec *src_spec, SDL_AudioSpec *dst_spec);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_SetAudioStreamFormat(SDL_AudioStream *stream, const SDL_AudioSpec *src_spec, const SDL_AudioSpec *dst_spec);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_LoadWAV_IO(SDL_IOStream *src, bool closeio, SDL_AudioSpec *spec, Uint8 **audio_buf, Uint32 *audio_len);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_MixAudio(Uint8 *dst, const Uint8 *src, SDL_AudioFormat format, Uint32 len, float volume);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ConvertAudioSamples(const SDL_AudioSpec *src_spec, const Uint8 *src_data, int src_len, const SDL_AudioSpec *dst_spec, Uint8 **dst_data, int *dst_len);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) SDL_BlendMode SDL_ComposeCustomBlendMode(SDL_BlendFactor srcColorFactor,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:                                                                 SDL_BlendFactor srcAlphaFactor,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) SDL_Surface * SDL_LoadBMP_IO(SDL_IOStream *src, bool closeio);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ConvertPixels(int width, int height, SDL_PixelFormat src_format, const void *src, int src_pitch, SDL_PixelFormat dst_format, void *dst, int dst_pitch);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_ConvertPixelsAndColorspace(int width, int height, SDL_PixelFormat src_format, SDL_Colorspace src_colorspace, SDL_PropertiesID src_properties, const void *src, int src_pitch, SDL_PixelFormat dst_format, SDL_Colorspace dst_colorspace, SDL_PropertiesID dst_properties, void *dst, int dst_pitch);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_PremultiplyAlpha(int width, int height, SDL_PixelFormat src_format, const void *src, int src_pitch, SDL_PixelFormat dst_format, void *dst, int dst_pitch, bool linear);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurface(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurfaceUnchecked(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurfaceScaled(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect, SDL_ScaleMode scaleMode);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurfaceUncheckedScaled(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect, SDL_ScaleMode scaleMode);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_StretchSurface(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect, SDL_ScaleMode scaleMode);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurfaceTiled(SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface *dst, const SDL_Rect *dstrect);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurfaceTiledWithScale(SDL_Surface *src, const SDL_Rect *srcrect, float scale, SDL_ScaleMode scaleMode, SDL_Surface *dst, const SDL_Rect *dstrect);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) bool SDL_BlitSurface9Grid(SDL_Surface *src, const SDL_Rect *srcrect, int left_width, int right_width, int top_height, int bottom_height, float scale, SDL_ScaleMode scaleMode, SDL_Surface *dst, const SDL_Rect *dstrect);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:extern __attribute__ ((visibility("default"))) int SDL_AddGamepadMappingsFromIO(SDL_IOStream *src, bool closeio);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:# 4 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:  using ::wcsrchr;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:  wcsrchr(wchar_t* __p, wchar_t __c)
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:  { return wcsrchr(const_cast<const wchar_t*>(__p), __c); }
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:  __cxa_vec_cctor(void* __dest_array, void* __src_array,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    __find_public_src(ptrdiff_t __src2dst, const void* __obj_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:        const __class_type_info* __src_type,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:        const void* __src_ptr) const;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    __do_dyncast(ptrdiff_t __src2dst, __sub_kind __access_path,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:   const __class_type_info* __src_type, const void* __src_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    __do_find_public_src(ptrdiff_t __src2dst, const void* __obj_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    const __class_type_info* __src_type,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    const void* __src_ptr) const;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    __do_dyncast(ptrdiff_t __src2dst, __sub_kind __access_path,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:   const __class_type_info* __src_type, const void* __src_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    __do_find_public_src(ptrdiff_t __src2dst, const void* __obj_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    const __class_type_info* __src_type,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    __do_dyncast(ptrdiff_t __src2dst, __sub_kind __access_path,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:   const __class_type_info* __src_type, const void* __src_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    __do_find_public_src(ptrdiff_t __src2dst, const void* __obj_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    const __class_type_info* __src_type,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:    const void* __src_ptr) const;
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:  __dynamic_cast(const void* __src_ptr,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:   const __class_type_info* __src_type,
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:   ptrdiff_t __src2dst);
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:# 7 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:# 8 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-boot/linux/x86_64/debug/src/boot/__cpp_entrypoint.cpp-b842a0ea.cpp.tmp:# 12 "src/boot/entrypoint.cpp" 2
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:# 1 "src/renderer/vk/om_renderer_layer_vk.cpp"
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:# 1 "src/renderer/vk/om_renderer_layer_vk.cpp" 2
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:extern void *memcpy (void *__restrict __dest, const void *__restrict __src,
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:extern void *memmove (void *__dest, const void *__src, size_t __n)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:extern void *memccpy (void *__restrict __dest, const void *__restrict __src,
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:extern char *strcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:        const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:extern char *strcat (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:extern char *strncat (char *__restrict __dest, const char *__restrict __src,
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:extern size_t strxfrm_l (char *__dest, const char *__src, size_t __n,
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:   const void *__restrict __src, size_t __n)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:        const void *__restrict __src, size_t __n)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:extern void bcopy (const void *__src, void *__dest, size_t __n)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:extern char *__stpcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:extern char *stpcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:   const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:        const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk.cpp-b389537f.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk_validation.cpp-59a811fb.cpp.tmp:# 1 "src/renderer/vk/om_renderer_layer_vk_validation.cpp"
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk_validation.cpp-59a811fb.cpp.tmp:# 1 "src/renderer/vk/om_renderer_layer_vk_validation.cpp" 2
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk_validation.cpp-59a811fb.cpp.tmp:extern void *memcpy (void *__restrict __dest, const void *__restrict __src,
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk_validation.cpp-59a811fb.cpp.tmp:extern void *memmove (void *__dest, const void *__src, size_t __n)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk_validation.cpp-59a811fb.cpp.tmp:extern void *memccpy (void *__restrict __dest, const void *__restrict __src,
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk_validation.cpp-59a811fb.cpp.tmp:extern char *strcpy (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk_validation.cpp-59a811fb.cpp.tmp:        const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk_validation.cpp-59a811fb.cpp.tmp:extern char *strcat (char *__restrict __dest, const char *__restrict __src)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk_validation.cpp-59a811fb.cpp.tmp:extern char *strncat (char *__restrict __dest, const char *__restrict __src,
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk_validation.cpp-59a811fb.cpp.tmp:         const char *__restrict __src, size_t __n)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk_validation.cpp-59a811fb.cpp.tmp:extern size_t strxfrm_l (char *__dest, const char *__src, size_t __n,
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk_validation.cpp-59a811fb.cpp.tmp:   const void *__restrict __src, size_t __n)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk_validation.cpp-59a811fb.cpp.tmp:        const void *__restrict __src, size_t __n)
+build/.objs/openminecraft-renderer/linux/x86_64/debug/src/renderer/vk/__cpp_om_renderer_layer_vk_validation.cpp-59a811fb.cpp.tmp:extern void bcopy (const void *__src, void *__dest, size_t __n)
+build/.build_cache/95/954c80c6bf5d12eb2c29825d2ff6e683.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/95/95457c4446f0313464cef980d46cca80.txt:    errdata = "In file included from src/boot/entrypoint.cpp:25:\
+build/.build_cache/95/95503f7459ced8e1af5f6591d0ea7d31.txt:    errdata = "In file included from src/boot/entrypoint.cpp:31:\
+build/.build_cache/95/95503f7459ced8e1af5f6591d0ea7d31.txt:\27[1msrc/boot/entrypoint.cpp:286:36: \27[0m\27[0;1;35mwarning: \27[0m\27[1mindirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]\27[0m\
+build/.build_cache/95/95503f7459ced8e1af5f6591d0ea7d31.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:286:36: \27[0m\27[0;1;36mnote: \27[0mconsider using __builtin_trap() or qualifying pointer with 'volatile'\27[0m\
+build/.build_cache/95/956ac19029b3bbc72f4cb4b5727d5d0c.txt:    errdata = "In file included from src/boot/entrypoint.cpp:32:\
+build/.build_cache/95/956ac19029b3bbc72f4cb4b5727d5d0c.txt:\27[1msrc/boot/entrypoint.cpp:259:36: \27[0m\27[0;1;35mwarning: \27[0m\27[1mindirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]\27[0m\
+build/.build_cache/95/956ac19029b3bbc72f4cb4b5727d5d0c.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:259:36: \27[0m\27[0;1;36mnote: \27[0mconsider using __builtin_trap() or qualifying pointer with 'volatile'\27[0m\
+build/.build_cache/95/9586f1f60ee95116d49c3cd5153cca79.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:34\27[m\27[K:\
+build/.build_cache/a7/a7409276fb6d59663136538276ab1823.txt:        于 \27[01m\27[Ksrc/renderer/vk/om_renderer_layer_vk_validation.cpp:1\27[m\27[K:\
+build/.build_cache/a7/a7a9005c22eaa0ab477f3a7618fe4ea5.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/a7/a7d61a471297777a9b696126747f38f3.txt:    errdata = "In file included from src/boot/entrypoint.cpp:23:\
+build/.build_cache/a7/a7b7568697d14dbcaf54509e759ae34d.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/a7/a7946f9733dc69fdc2f4d7ec1fb98397.txt:    errdata = "In file included from src/boot/entrypoint.cpp:31:\
+build/.build_cache/a7/a7946f9733dc69fdc2f4d7ec1fb98397.txt:\27[1msrc/boot/entrypoint.cpp:289:36: \27[0m\27[0;1;35mwarning: \27[0m\27[1mindirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]\27[0m\
+build/.build_cache/a7/a7946f9733dc69fdc2f4d7ec1fb98397.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:289:36: \27[0m\27[0;1;36mnote: \27[0mconsider using __builtin_trap() or qualifying pointer with 'volatile'\27[0m\
+build/.build_cache/a7/a7e488a8cc8d08a675ac1d07b4927611.txt:    errdata = "In file included from src/boot/entrypoint.cpp:32:\
+build/.build_cache/a7/a7e488a8cc8d08a675ac1d07b4927611.txt:\27[1msrc/boot/entrypoint.cpp:278:36: \27[0m\27[0;1;35mwarning: \27[0m\27[1mindirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]\27[0m\
+build/.build_cache/a7/a7e488a8cc8d08a675ac1d07b4927611.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:278:36: \27[0m\27[0;1;36mnote: \27[0mconsider using __builtin_trap() or qualifying pointer with 'volatile'\27[0m\
+build/.build_cache/a7/a7ee308e826163da599e0c8c2d088e11.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:34\27[m\27[K:\
+build/.build_cache/ad/ada590e45419e5720955eafcd41f8b1f.txt:    errdata = "In file included from src/boot/entrypoint.cpp:25:\
+build/.build_cache/83/83390aecbf4805cfa8720ae01b05aff5.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/83/835ed95f9c8c16c1c19bb18eb18741b9.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/83/83b1a3787570ae978ee7aa3c51bc5dd9.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:33\27[m\27[K:\
+build/.build_cache/02/02661d7f8122a978c8ea22dc663ce37a.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/02/0238dff252f86dad7329d3a1aa7a8a4b.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/02/0278acbb628876905e7d6669af7b6278.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:32\27[m\27[K:\
+build/.build_cache/02/02cc7a88e532eb4e8f69812be39af165.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/de/ded6fba1be8e4fbdf81c4af302720bda.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/de/ded6fba1be8e4fbdf81c4af302720bda.txt:In file included from src/boot/entrypoint.cpp:29:\
+build/.build_cache/de/ded6fba1be8e4fbdf81c4af302720bda.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:158:14: \27[0m\27[0;1;36mnote: \27[0min instantiation of member function 'openminecraft::vm::heap::OMHeapObjectTree<std::any>::append' requested here\27[0m\
+build/.build_cache/de/de53d4e882e93a68ccfa7278cec2ea25.txt:    errdata = "In file included from src/boot/entrypoint.cpp:23:\
+build/.build_cache/de/de79dbadd308b1e7e0b03de0202062e8.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/de/de5e651748a8a5bcfbe4b13212da7f3a.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/de/de85ae29339e0100e82158295224a9d8.txt:    errdata = "In file included from src/boot/entrypoint.cpp:25:\
+build/.build_cache/34/34b00347bc3cfc2950c46dfc12b2f92d.txt:    errdata = "\27[01m\27[Ksrc/vm/bytecode/om_bytecode_descriptor.cpp:\27[m\27[K In function ‘\27[01m\27[Kopenminecraft::util::OMResult<std::pair<std::vector<std::__cxx11::basic_string<char> >, std::__cxx11::basic_string<char> >, std::__cxx11::basic_string<char> > openminecraft::vm::bytecode::descriptor::\27[01;32m\27[KdecodeSignature\27[m\27[K(std::string, int*)\27[m\27[K’:\
+build/.build_cache/34/34b00347bc3cfc2950c46dfc12b2f92d.txt:\27[01m\27[Ksrc/vm/bytecode/om_bytecode_descriptor.cpp:101:1:\27[m\27[K \27[01;35m\27[K警告：\27[m\27[K在有返回值的函数中，控制流程到达函数尾 [\27[01;35m\27[K-Wreturn-type\27[m\27[K]\
+build/.build_cache/78/78ab832e1e442db5d5629fd57b6135e7.txt:    errdata = "In file included from src/boot/entrypoint.cpp:31:\
+build/.build_cache/78/78ab832e1e442db5d5629fd57b6135e7.txt:\27[1msrc/boot/entrypoint.cpp:286:36: \27[0m\27[0;1;35mwarning: \27[0m\27[1mindirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]\27[0m\
+build/.build_cache/78/78ab832e1e442db5d5629fd57b6135e7.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:286:36: \27[0m\27[0;1;36mnote: \27[0mconsider using __builtin_trap() or qualifying pointer with 'volatile'\27[0m\
+build/.build_cache/8d/8d2e9b6c4f51c6524cd822a924b99f1d.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:21\27[m\27[K:\
+build/.build_cache/8d/8d54b864e46795231805d5406716df66.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:20\27[m\27[K:\
+build/.build_cache/8d/8d659ce3306a6b1be5a35aa533a22e9d.txt:    errdata = "In file included from src/boot/entrypoint.cpp:20:\
+build/.build_cache/8d/8d29a103153fe5f05b9f83afe06d0165.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/8d/8df47017024d825c084c7e6866b49ae3.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:34\27[m\27[K:\
+build/.build_cache/b3/b3a42a9091e4310044b7154c1ad90e45.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:34\27[m\27[K:\
+build/.build_cache/cd/cd6cee3184abfeb07da0b49767032bf7.txt:    errdata = "\27[1msrc/mem/om_mem_allocator.cpp:57:6: \27[0m\27[0;1;35mwarning: \27[0m\27[1mfunction previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]\27[0m\
+build/.build_cache/cd/cd6cee3184abfeb07da0b49767032bf7.txt:\27[0m\27[1msrc/mem/om_mem_allocator.cpp:63:6: \27[0m\27[0;1;35mwarning: \27[0m\27[1mfunction previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]\27[0m\
+build/.build_cache/cd/cd8d3f252dd49885fc22a851f81606d0.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:20\27[m\27[K:\
+build/.build_cache/cd/cd72c949039d804ca5373c88dfc957e5.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/cd/cd6bb62f03af056052c190602640607e.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/cd/cdf01edc64c2512c7710e5a3feced622.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/cd/cd2193104a69ac8768e92a287338166c.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/cd/cd56751c79aa55963f0d39814f6a6c82.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:32\27[m\27[K:\
+build/.build_cache/cd/cdce47639564e69e5abe2030a241ceb8.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/d1/d174e9cb3a4371fb9d3cf39309c94987.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/d1/d1ea5de7e697cd15594182849ff8f969.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/6d/6da1854859eb94b515331cac472dccc8.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/6d/6d42abe9973acd37d85aa06bc723d28a.txt:    errdata = "In file included from src/boot/entrypoint.cpp:23:\
+build/.build_cache/9d/9dd5c91fc93e7c042930572ff6c0ff55.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/9d/9dcb60dc4b7bdbd45fb41cfc1edb5229.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/9d/9deb85664ae1bc63e89997b058c15f9b.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/9d/9daab36d3061fc23d1e975c2a98b78ca.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/09/098e0150eb41fb193eda608f0f7e048e.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/09/090c13e16be9cf9e76d57c454f40f877.txt:    errdata = "\27[01m\27[Ksrc/vm/bytecode/om_bytecode_descriptor.cpp:\27[m\27[K In function ‘\27[01m\27[Kopenminecraft::util::OMResult<std::pair<std::vector<std::__cxx11::basic_string<char> >, std::__cxx11::basic_string<char> >, std::__cxx11::basic_string<char> > openminecraft::vm::bytecode::descriptor::\27[01;32m\27[KdecodeSignature\27[m\27[K(std::string, int*)\27[m\27[K’:\
+build/.build_cache/09/090c13e16be9cf9e76d57c454f40f877.txt:\27[01m\27[Ksrc/vm/bytecode/om_bytecode_descriptor.cpp:101:1:\27[m\27[K \27[01;35m\27[K警告：\27[m\27[K在有返回值的函数中，控制流程到达函数尾 [\27[01;35m\27[K-Wreturn-type\27[m\27[K]\
+build/.build_cache/09/09025d75e2e6dda8af17234be77be993.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/09/09a0a24eefd2cdb1c2593558d131dbc7.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/b7/b7173b89518b6757ef2abd1614ba1bc8.txt:    errdata = "In file included from src/boot/entrypoint.cpp:23:\
+build/.build_cache/b7/b7cea69a04c052b64fdbdb275311e2c5.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/b7/b7d3456b3f2f47aebb1ee309c3334661.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:34\27[m\27[K:\
+build/.build_cache/a5/a50a498785a7b255c5c091e47e1228b4.txt:    errdata = "In file included from src/boot/entrypoint.cpp:25:\
+build/.build_cache/59/59544a1022869f7c215f0753c3fb542f.txt:    errdata = "In file included from src/renderer/vk/om_renderer_layer_vk_validation.cpp:1:\
+build/.build_cache/59/5970947752663c0467d503d165e3373a.txt:    errdata = "\27[1msrc/mem/om_mem_allocator.cpp:57:6: \27[0m\27[0;1;35mwarning: \27[0m\27[1mfunction previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]\27[0m\
+build/.build_cache/59/5970947752663c0467d503d165e3373a.txt:\27[0m\27[1msrc/mem/om_mem_allocator.cpp:63:6: \27[0m\27[0;1;35mwarning: \27[0m\27[1mfunction previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]\27[0m\
+build/.build_cache/59/59ea1b51adf0322cfc9f99fbc4295c97.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/59/59bdc89a66ca3f8027e368cf9d120eba.txt:    errdata = "In file included from src/boot/entrypoint.cpp:24:\
+build/.build_cache/e6/e6be1384cace22d8d5481339c9717aed.txt:    errdata = "In file included from src/boot/entrypoint.cpp:20:\
+build/.build_cache/e6/e63c8cc371c246bda913390d94ba0d72.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:20\27[m\27[K:\
+build/.build_cache/e6/e664bb13a4560bdcd5f793876b9f9e48.txt:    errdata = "In file included from src/boot/entrypoint.cpp:28:\
+build/.build_cache/e6/e664bb13a4560bdcd5f793876b9f9e48.txt:\27[1msrc/boot/entrypoint.cpp:239:36: \27[0m\27[0;1;35mwarning: \27[0m\27[1mindirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]\27[0m\
+build/.build_cache/e6/e664bb13a4560bdcd5f793876b9f9e48.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:239:36: \27[0m\27[0;1;36mnote: \27[0mconsider using __builtin_trap() or qualifying pointer with 'volatile'\27[0m\
+build/.build_cache/e6/e629a259447328b264b6d53b862f69f8.txt:    errdata = "In file included from src/boot/entrypoint.cpp:33:\
+build/.build_cache/e6/e629a259447328b264b6d53b862f69f8.txt:\27[1msrc/boot/entrypoint.cpp:257:36: \27[0m\27[0;1;35mwarning: \27[0m\27[1mindirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]\27[0m\
+build/.build_cache/e6/e629a259447328b264b6d53b862f69f8.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:257:36: \27[0m\27[0;1;36mnote: \27[0mconsider using __builtin_trap() or qualifying pointer with 'volatile'\27[0m\
+build/.build_cache/e6/e632375b650716923a3704d13e7285dd.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/7b/7b640e7ecbdd82183bdbfa3792a71874.txt:    errdata = "In file included from src/renderer/vk/om_renderer_layer_vk.cpp:1:\
+build/.build_cache/7b/7b002d2cfe77c94d89f99aa9a5277f11.txt:    errdata = "In file included from src/boot/entrypoint.cpp:20:\
+build/.build_cache/7b/7b5ab796d714d2115c0c37de25a951ed.txt:    errdata = "In file included from src/boot/entrypoint.cpp:23:\
+build/.build_cache/7b/7b8c5063daafbb788ba77b4557a29d8a.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/4a/4a7b18fcc2629df505bd0c9d5884a79f.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/a1/a14ac0981fe9f610e2ca1c2144f35897.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/a1/a17bcef3759e4d53d4f2eaec647c82fc.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/a1/a1929e3da4403767a604aaf9eb20ba09.txt:    errdata = "In file included from src/boot/entrypoint.cpp:24:\
+build/.build_cache/a1/a1d3aa73f7537ceceda7cdb9a0d15460.txt:    errdata = "In file included from src/boot/entrypoint.cpp:32:\
+build/.build_cache/a1/a1d3aa73f7537ceceda7cdb9a0d15460.txt:\27[1msrc/boot/entrypoint.cpp:252:36: \27[0m\27[0;1;35mwarning: \27[0m\27[1mindirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]\27[0m\
+build/.build_cache/a1/a1d3aa73f7537ceceda7cdb9a0d15460.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:252:36: \27[0m\27[0;1;36mnote: \27[0mconsider using __builtin_trap() or qualifying pointer with 'volatile'\27[0m\
+build/.build_cache/a1/a1e9957cc38aace946baeaed4432b9ad.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:33\27[m\27[K:\
+build/.build_cache/d3/d316266c176dfa7d9cb74eb087e52054.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/42/42f12ee7a343be41f5dc23c5c6eaeaab.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/42/42fc7eae975420dd0ff1a51e2e4c98ab.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/86/86141fded90e0d4791d70200ea0ccf75.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:22\27[m\27[K:\
+build/.build_cache/86/8624bccc167d3f9255696ca0ef68e13e.txt:    errdata = "In file included from src/boot/entrypoint.cpp:31:\
+build/.build_cache/86/8624bccc167d3f9255696ca0ef68e13e.txt:\27[1msrc/boot/entrypoint.cpp:281:36: \27[0m\27[0;1;35mwarning: \27[0m\27[1mindirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]\27[0m\
+build/.build_cache/86/8624bccc167d3f9255696ca0ef68e13e.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:281:36: \27[0m\27[0;1;36mnote: \27[0mconsider using __builtin_trap() or qualifying pointer with 'volatile'\27[0m\
+build/.build_cache/86/86ff8dce079693913a2f9f2562fc9e4c.txt:    errdata = "In file included from src/boot/entrypoint.cpp:31:\
+build/.build_cache/86/86ff8dce079693913a2f9f2562fc9e4c.txt:\27[1msrc/boot/entrypoint.cpp:286:36: \27[0m\27[0;1;35mwarning: \27[0m\27[1mindirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]\27[0m\
+build/.build_cache/86/86ff8dce079693913a2f9f2562fc9e4c.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:286:36: \27[0m\27[0;1;36mnote: \27[0mconsider using __builtin_trap() or qualifying pointer with 'volatile'\27[0m\
+build/.build_cache/72/72066d500fbe2f432186f82910158956.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/7d/7d31129cf87180e89f8fb45f500cbec8.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:20\27[m\27[K:\
+build/.build_cache/7d/7d22ce4dfb90a926aa4a16214e74bc42.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/7d/7da0b652395828b2b5003f0213e6be8f.txt:    errdata = "In file included from src/renderer/vk/om_renderer_layer_vk.cpp:1:\
+build/.build_cache/7d/7db26025547c14d0f2850443f4087c56.txt:    errdata = "In file included from src/boot/entrypoint.cpp:24:\
+build/.build_cache/7d/7dfb9cf8bfec0dd12ee9114ef6f5153b.txt:    errdata = "In file included from src/boot/entrypoint.cpp:25:\
+build/.build_cache/7d/7d36ac023a644c03c17fb688d3297adf.txt:    errdata = "In file included from src/boot/entrypoint.cpp:31:\
+build/.build_cache/7d/7d36ac023a644c03c17fb688d3297adf.txt:\27[1msrc/boot/entrypoint.cpp:286:36: \27[0m\27[0;1;35mwarning: \27[0m\27[1mindirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]\27[0m\
+build/.build_cache/7d/7d36ac023a644c03c17fb688d3297adf.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:286:36: \27[0m\27[0;1;36mnote: \27[0mconsider using __builtin_trap() or qualifying pointer with 'volatile'\27[0m\
+build/.build_cache/7d/7da7e82a1bbe1e282adf8955609c830a.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:33\27[m\27[K:\
+build/.build_cache/7d/7d65193568194bf7c23eaee110485041.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:34\27[m\27[K:\
+build/.build_cache/7d/7d85de31e8f5c615b2b508e6fa4d1290.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/61/613101e51c704cac6542d72988dc8c57.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/61/6118db3d812d4e53f04f9929abb61aab.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/61/61560d266d62ceb78af1f969683febe5.txt:    errdata = "In file included from src/boot/entrypoint.cpp:24:\
+build/.build_cache/69/691fbf4ebe788bb839c952dba5f091e1.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/69/698a2a537d8fb69454571992626e70f1.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/c5/c53a32c85236a810bb8e7dc49b49b11a.txt:    errdata = "\27[1msrc/mem/om_mem_allocator.cpp:57:6: \27[0m\27[0;1;35mwarning: \27[0m\27[1mfunction previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]\27[0m\
+build/.build_cache/c5/c53a32c85236a810bb8e7dc49b49b11a.txt:\27[0m\27[1msrc/mem/om_mem_allocator.cpp:63:6: \27[0m\27[0;1;35mwarning: \27[0m\27[1mfunction previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]\27[0m\
+build/.build_cache/c5/c5104ad2c12c4fe42e900f739d4456d1.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:20\27[m\27[K:\
+build/.build_cache/c5/c5ca1d3b92fd63c80a7385875b160e47.txt:    errdata = "In file included from src/boot/entrypoint.cpp:24:\
+build/.build_cache/c1/c148add1dac1cda4cf89b07e4dcc4482.txt:    errdata = "In file included from src/renderer/vk/om_renderer_layer_vk.cpp:1:\
+build/.build_cache/c1/c18ac99a8718489723ed23ae3a5a9d15.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:20\27[m\27[K:\
+build/.build_cache/c1/c11240f666ed8fa2afda0356f9b720cd.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/c1/c1d4bf073f5fef1b617561414ce04980.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/c1/c1972e0e7b600cc0cc3653a902a4e35c.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/c1/c159edcc655addfbba65dad75efbd472.txt:    errdata = "In file included from src/boot/entrypoint.cpp:24:\
+build/.build_cache/c1/c15161a5b4c70ba368b021831326585c.txt:    errdata = "In file included from src/boot/entrypoint.cpp:33:\
+build/.build_cache/c1/c15161a5b4c70ba368b021831326585c.txt:\27[1msrc/boot/entrypoint.cpp:258:36: \27[0m\27[0;1;35mwarning: \27[0m\27[1mindirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]\27[0m\
+build/.build_cache/c1/c15161a5b4c70ba368b021831326585c.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:258:36: \27[0m\27[0;1;36mnote: \27[0mconsider using __builtin_trap() or qualifying pointer with 'volatile'\27[0m\
+build/.build_cache/c1/c17d35e00e9ab03d49b3129baed702f9.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/a2/a242380c6d90000bc5d74e9e0215abe5.txt:    errdata = "In file included from src/boot/entrypoint.cpp:20:\
+build/.build_cache/a2/a21025ff8ae1c9157ef20d3b724ac8f2.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/a2/a2fb6b804ba2a55312bed899904b81aa.txt:    errdata = "In file included from src/boot/entrypoint.cpp:25:\
+build/.build_cache/a2/a2f8d6358030fbdeb2de07254c9f0da7.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/22/225b62d7276084d3f96eb11662ffaf9b.txt:    errdata = "In file included from src/renderer/vk/om_renderer_layer_vk_validation.cpp:1:\
+build/.build_cache/22/225e9ad28b7bb6cfbe950034654a07f1.txt:    errdata = "In file included from src/boot/entrypoint.cpp:23:\
+build/.build_cache/22/224d8513c88d9adf4891d4107b748b44.txt:    errdata = "In file included from src/boot/entrypoint.cpp:31:\
+build/.build_cache/22/224d8513c88d9adf4891d4107b748b44.txt:\27[1msrc/boot/entrypoint.cpp:285:36: \27[0m\27[0;1;35mwarning: \27[0m\27[1mindirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]\27[0m\
+build/.build_cache/22/224d8513c88d9adf4891d4107b748b44.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:285:36: \27[0m\27[0;1;36mnote: \27[0mconsider using __builtin_trap() or qualifying pointer with 'volatile'\27[0m\
+build/.build_cache/60/60e1db23634ce5c3c3d448acff8c9fbe.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/60/60635785825d0b2040ed7dc0711b8830.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:32\27[m\27[K:\
+build/.build_cache/60/608a6f23ef12b11bf1a8f7eb7209f949.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/cb/cb30556a6ebd9bfaf389b4b42718ba8c.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:34\27[m\27[K:\
+build/.build_cache/cb/cbcec212eaf37d9e7976b9cbc18abc8f.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\
+build/.build_cache/65/65b4e7837956059983c918ddd28bc047.txt:        于 \27[01m\27[Ksrc/renderer/vk/om_renderer_layer_vk.cpp:1\27[m\27[K:\
+build/.build_cache/65/650fcf0a6b893443d5c914bb47076464.txt:    errdata = "In file included from src/boot/entrypoint.cpp:21:\
+build/.build_cache/65/651e5db8e1c3e2c218a82b1c87e3712a.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/65/651e5db8e1c3e2c218a82b1c87e3712a.txt:In file included from src/boot/entrypoint.cpp:29:\
+build/.build_cache/65/651e5db8e1c3e2c218a82b1c87e3712a.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:158:14: \27[0m\27[0;1;36mnote: \27[0min instantiation of member function 'openminecraft::vm::heap::OMHeapObjectTree<std::any>::append' requested here\27[0m\
+build/.build_cache/65/659939de4394339483cf8a22551f0ae0.txt:    errdata = "In file included from src/boot/entrypoint.cpp:25:\
+build/.build_cache/65/65e10854505c64f54608721ee9618022.txt:    errdata = "In file included from src/boot/entrypoint.cpp:32:\
+build/.build_cache/65/65e10854505c64f54608721ee9618022.txt:\27[1msrc/boot/entrypoint.cpp:272:36: \27[0m\27[0;1;35mwarning: \27[0m\27[1mindirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]\27[0m\
+build/.build_cache/65/65e10854505c64f54608721ee9618022.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:272:36: \27[0m\27[0;1;36mnote: \27[0mconsider using __builtin_trap() or qualifying pointer with 'volatile'\27[0m\
+build/.build_cache/76/76f7d4fa2964f84583d44d4442b421c8.txt:    errdata = "In file included from src/boot/entrypoint.cpp:24:\
+build/.build_cache/76/76c25d2e197427a202f2d91ad22ee8a6.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:34\27[m\27[K:\
+build/.build_cache/e5/e5236a3705145884aef071e67e09d7ab.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:20\27[m\27[K:\
+build/.build_cache/e5/e50610e271b7c33cbf6ad9ff7471419c.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/e5/e51a0afd8e21aff9e7dd958bd47a2a20.txt:    errdata = "In file included from src/boot/entrypoint.cpp:22:\
+build/.build_cache/e5/e5468ba7c525898e17a103e8ab3fccb2.txt:    errdata = "In file included from src/boot/entrypoint.cpp:27:\
+build/.build_cache/e5/e5468ba7c525898e17a103e8ab3fccb2.txt:\27[1msrc/boot/entrypoint.cpp:224:36: \27[0m\27[0;1;35mwarning: \27[0m\27[1mindirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]\27[0m\
+build/.build_cache/e5/e5468ba7c525898e17a103e8ab3fccb2.txt:\27[0m\27[1msrc/boot/entrypoint.cpp:224:36: \27[0m\27[0;1;36mnote: \27[0mconsider using __builtin_trap() or qualifying pointer with 'volatile'\27[0m\
+build/.build_cache/e5/e571f9b0286a0188f8d7d6bfc58e1c7e.txt:        于 \27[01m\27[Ksrc/boot/entrypoint.cpp:35\27[m\27[K:\

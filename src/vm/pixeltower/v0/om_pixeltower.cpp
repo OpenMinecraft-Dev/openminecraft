@@ -30,7 +30,7 @@ OMPixelTower::~OMPixelTower()
 
 void OMPixelTower::boot(OMMethod *method)
 {
-    interpreter->call(method);
+    interpreter->call(method, (uint8_t *)0x33550336);
 }
 
 void OMPixelTower::init(std::string basePath)

@@ -11,6 +11,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
 #include <cstring>
 #include <unordered_map>
 
@@ -50,6 +51,7 @@ void OMKlassLoader::loadClass(std::string name)
         return;
     }
 
+    logger.debug("try loading class {}", name);
     for (auto fi = files.begin(); fi != files.end(); ++fi)
     {
         auto f = *fi;
@@ -214,61 +216,9 @@ loadMethods:
         case classfile::OMClassConstantType::Double:
             *(jdouble *)acc = cppair.second->to<classfile::OMClassConstantDouble>()->data;
             break;
-        case classfile::OMClassConstantType::Class: {
-            auto &cls = klass->raw->mapping[cppair.second->to<classfile::OMClassConstantClass>()->nameIndex]
-                            ->to<classfile::OMClassConstantUtf8>()
-                            ->data;
-            loadClass(cls);
-            *(OMKlass **)acc = fetchClass(cls);
-            break;
-        }
-        case classfile::OMClassConstantType::MethodRef: {
-            auto temp = cppair.second->to<classfile::OMClassConstantMethodRef>();
-            auto &clsname =
-                klass->raw
-                    ->mapping[klass->raw->mapping[temp->classIndex]->to<classfile::OMClassConstantClass>()->nameIndex]
-                    ->to<classfile::OMClassConstantUtf8>()
-                    ->data;
-            loadClass(clsname);
-            auto temp2 = klass->raw->mapping[temp->nameAndTypeIndex]->to<classfile::OMClassConstantNameAndType>();
-            auto &name = klass->raw->mapping[temp2->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
-            auto &desc = klass->raw->mapping[temp2->descIndex]->to<classfile::OMClassConstantUtf8>()->data;
-            auto met = fetchClass(clsname)->methods;
-            while (met != nullptr)
-            {
-                if (strcmp(met->name, name.c_str()) == 0 && strcmp(met->desc, desc.c_str()) == 0)
-                {
-                    *(OMMethod **)acc = met;
-                    break;
-                }
-
-                met = met->next;
-            }
-            break;
-        }
-        case classfile::OMClassConstantType::FieldRef: {
-            auto temp = cppair.second->to<classfile::OMClassConstantFieldRef>();
-            auto &clsname =
-                klass->raw
-                    ->mapping[klass->raw->mapping[temp->classIndex]->to<classfile::OMClassConstantClass>()->nameIndex]
-                    ->to<classfile::OMClassConstantUtf8>()
-                    ->data;
-            loadClass(clsname);
-            auto temp2 = klass->raw->mapping[temp->nameAndTypeIndex]->to<classfile::OMClassConstantNameAndType>();
-            auto &name = klass->raw->mapping[temp2->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
-            auto &desc = klass->raw->mapping[temp2->descIndex]->to<classfile::OMClassConstantUtf8>()->data;
-
-            for (auto &fi : fetchClass(clsname)->fields)
-            {
-                if (fi.name == name && fi.desc == desc)
-                {
-                    *(OMField **)acc = &fi;
-                    break;
-                }
-            }
-            break;
-        }
-
+        case classfile::OMClassConstantType::MethodRef:
+        case classfile::OMClassConstantType::Class:
+        case classfile::OMClassConstantType::FieldRef:
         case classfile::OMClassConstantType::Utf8:
         case classfile::OMClassConstantType::String:
         case classfile::OMClassConstantType::InterfaceMethodRef:
@@ -284,6 +234,74 @@ loadMethods:
     }
 
     classInit(klass);
+}
+
+OMMethod *OMKlassLoader::lazyMethodInit(OMKlass *klass, uint16_t id)
+{
+    auto target = reinterpret_cast<OMKlass **>(klass->constantPool + id);
+    auto temp = klass->raw->mapping[id]->to<classfile::OMClassConstantMethodRef>();
+    auto &clsname =
+        klass->raw->mapping[klass->raw->mapping[temp->classIndex]->to<classfile::OMClassConstantClass>()->nameIndex]
+            ->to<classfile::OMClassConstantUtf8>()
+            ->data;
+    loadClass(clsname);
+    auto temp2 = klass->raw->mapping[temp->nameAndTypeIndex]->to<classfile::OMClassConstantNameAndType>();
+    auto &name = klass->raw->mapping[temp2->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
+    auto &desc = klass->raw->mapping[temp2->descIndex]->to<classfile::OMClassConstantUtf8>()->data;
+    auto met = fetchClass(clsname)->methods;
+    while (met != nullptr)
+    {
+        if (strcmp(met->name, name.c_str()) == 0 && strcmp(met->desc, desc.c_str()) == 0)
+        {
+            *(OMMethod **)target = met;
+            return met;
+        }
+
+        met = met->next;
+    }
+
+    return nullptr;
+}
+
+OMField *OMKlassLoader::lazyFieldInit(OMKlass *klass, uint16_t id)
+{
+    auto target = reinterpret_cast<OMKlass **>(klass->constantPool + id);
+    auto temp = klass->raw->mapping[id]->to<classfile::OMClassConstantFieldRef>();
+    auto &clsname =
+        klass->raw->mapping[klass->raw->mapping[temp->classIndex]->to<classfile::OMClassConstantClass>()->nameIndex]
+            ->to<classfile::OMClassConstantUtf8>()
+            ->data;
+    loadClass(clsname);
+    auto temp2 = klass->raw->mapping[temp->nameAndTypeIndex]->to<classfile::OMClassConstantNameAndType>();
+    auto &name = klass->raw->mapping[temp2->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
+    auto &desc = klass->raw->mapping[temp2->descIndex]->to<classfile::OMClassConstantUtf8>()->data;
+
+    for (auto &fi : fetchClass(clsname)->fields)
+    {
+        if (fi.name == name && fi.desc == desc)
+        {
+            *(OMField **)target = &fi;
+            return &fi;
+        }
+    }
+
+    return nullptr;
+}
+
+OMKlass *OMKlassLoader::lazyClassInit(OMKlass *klass, uint16_t id)
+{
+    auto target = reinterpret_cast<OMKlass **>(klass->constantPool + id);
+    if (!*target)
+    {
+        auto &cls = klass->raw->mapping[klass->raw->mapping[id]->to<classfile::OMClassConstantClass>()->nameIndex]
+                        ->to<classfile::OMClassConstantUtf8>()
+                        ->data;
+        loadClass(cls);
+        *target = fetchClass(cls);
+        return *target;
+    }
+
+    return nullptr;
 }
 
 // for array classes
@@ -359,7 +377,7 @@ void OMKlassLoader::classInit(OMKlass *klass)
         {
             logger.info("clinit found for {}, executing", klass->name);
 
-            interpreter->call(me);
+            interpreter->call(me, currentThread.pc);
         }
         me = me->next;
     }

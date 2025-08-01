@@ -11,6 +11,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
+#include <cassert>
 #include <vector>
 
 namespace openminecraft::vm::pixeltower::v0
@@ -23,7 +24,7 @@ OMInterpreter::~OMInterpreter()
 {
 }
 
-void OMInterpreter::call(OMMethod *met)
+void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
 {
     if (met->accessFlags & JVM_Acc_Native && !currentThread.currentFrame)
     {
@@ -38,7 +39,7 @@ void OMInterpreter::call(OMMethod *met)
         currentThread.stackPointer = (jbyte *)currentThread.stackPointer - sizeof(OMFrame) -
                                      met->maxLocals * sizeof(void *); // allocate whole frame + locals
         stackPush();
-        frame->returnAddr = (void *)0x33550336;
+        frame->returnAddr = retAddr;
         frame->prev = nullptr;
         frame->method = met;
         currentThread.currentFrame = frame;
@@ -68,7 +69,7 @@ void OMInterpreter::call(OMMethod *met)
         stackPop();
     }
 
-    nextframe->returnAddr = currentThread.pc + 3;
+    nextframe->returnAddr = retAddr;
     nextframe->prev = frame;
     currentThread.stackPointer = (jbyte *)nextframe - met->maxLocals * sizeof(void *);
     currentThread.pc = met->code;
@@ -89,7 +90,7 @@ void OMInterpreter::call(OMMethod *met)
     loop();
 }
 
-void OMInterpreter::callDynamic(OMMethod *met)
+void OMInterpreter::callDynamic(OMMethod *met, uint8_t *retAddr)
 {
     auto frame = currentThread.currentFrame;
     auto nextframe = (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame) + sizeof(void *) +
@@ -112,7 +113,7 @@ void OMInterpreter::callDynamic(OMMethod *met)
     nextframe->method = codetarget;
 
     // context switching
-    nextframe->returnAddr = currentThread.pc + 3;
+    nextframe->returnAddr = retAddr;
     nextframe->prev = frame;
     currentThread.stackPointer = (jbyte *)nextframe - nextframe->method->maxLocals * sizeof(void *);
     currentThread.currentFrame = nextframe;
@@ -140,6 +141,8 @@ void OMInterpreter::callDynamic(OMMethod *met)
 
 void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args)
 {
+    reinterpret_cast<void (*)()>(codetarget)();
+    logger.debug("arg size: {}", args.size());
     debugger.debugStack();
     popLastFrame();
     throw err::OMValidationError{err::Instructions, "native functions not supported!",
@@ -158,6 +161,7 @@ void OMInterpreter::popLastFrame()
 jint OMInterpreter::execute()
 {
     auto frame = currentThread.currentFrame;
+operand:
     switch (currentThread.pc[0])
     {
     case op_iconst_i(-1):
@@ -169,21 +173,22 @@ jint OMInterpreter::execute()
     case op_iconst_i(5): {
         stackPushAccess<jint>((jint)currentThread.pc[0] - (jint)op_iconst_i(0));
         currentThread.pc++;
-        return EXEC_OK;
+        goto operand;
     }
     case op_lconst_l(0):
     case op_lconst_l(1): {
         stackPushAccessW<jlong>((jlong)currentThread.pc[0] - (jlong)op_lconst_l(0));
         currentThread.pc++;
-        return EXEC_OK;
+        goto operand;
     }
     case op_ldc2_w: {
         // compatible with jdouble
-        auto n = *static_cast<jlong *>(static_cast<void *>(frame->method->klass->constantPool +
-                                                           binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
-        stackPushAccessW<jlong>(n);
+        auto n = static_cast<jlong *>(static_cast<void *>(frame->method->klass->constantPool +
+                                                          binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
+        assert(n != nullptr);
+        stackPushAccessW<jlong>(*n);
         currentThread.pc += 3;
-        return EXEC_OK;
+        goto operand;
     }
     case op_iload_n(0):
     case op_iload_n(1):
@@ -191,7 +196,7 @@ jint OMInterpreter::execute()
     case op_iload_n(3): {
         stackPushAccess<jint>(localAccessValue<jint>(currentThread.pc[0] - op_iload_n(0)));
         currentThread.pc++;
-        return EXEC_OK;
+        goto operand;
     }
     case op_lload_n(0):
     case op_lload_n(1):
@@ -199,7 +204,7 @@ jint OMInterpreter::execute()
     case op_lload_n(3): {
         stackPushAccessW<jlong>(localAccessValueW<jlong>(currentThread.pc[0] - op_lload_n(0)));
         currentThread.pc++;
-        return EXEC_OK;
+        goto operand;
     }
     case op_aload_n(0):
     case op_aload_n(1):
@@ -207,7 +212,7 @@ jint OMInterpreter::execute()
     case op_aload_n(3): {
         stackPushAccess<void *>(localAccessValue<void *>(currentThread.pc[0] - op_aload_n(0)));
         currentThread.pc++;
-        return EXEC_OK;
+        goto operand;
     }
     case op_istore_n(0):
     case op_istore_n(1):
@@ -216,7 +221,7 @@ jint OMInterpreter::execute()
         *localAccess<jint>(currentThread.pc[0] - op_istore_n(0)) = stackTopAccess<jint>();
         stackPop();
         currentThread.pc++;
-        return EXEC_OK;
+        goto operand;
     }
     case op_astore_n(0):
     case op_astore_n(1):
@@ -225,22 +230,22 @@ jint OMInterpreter::execute()
         *localAccess<void *>(currentThread.pc[0] - op_astore_n(0)) = stackTopAccess<void *>();
         stackPop();
         currentThread.pc++;
-        return EXEC_OK;
+        goto operand;
     }
     case op_pop: {
         stackPop();
         currentThread.pc++;
-        return EXEC_OK;
+        goto operand;
     }
     case op_pop2: {
         stackPopW();
         currentThread.pc++;
-        return EXEC_OK;
+        goto operand;
     }
     case op_dup: {
         stackPushAccess<void *>(stackTopAccess<void *>());
         currentThread.pc++;
-        return EXEC_OK;
+        goto operand;
     }
     case op_ladd: {
         auto item2 = stackTopAccessW<jlong>();
@@ -249,14 +254,14 @@ jint OMInterpreter::execute()
         stackPopW();
         stackPushAccessW<jlong>(item2 + item);
         currentThread.pc++;
-        return EXEC_OK;
+        goto operand;
     }
     case op_i2l: {
         auto v = stackTopAccess<jint>();
         stackPop();
         stackPushAccessW<jlong>(v);
         currentThread.pc++;
-        return EXEC_OK;
+        goto operand;
     }
     case op_lcmp: {
         auto item2 = stackTopAccessW<jlong>();
@@ -276,7 +281,7 @@ jint OMInterpreter::execute()
             stackPushAccess<jint>(-1);
         }
         currentThread.pc++;
-        return EXEC_OK;
+        goto operand;
     }
     case op_ifge: {
         auto i = stackTopAccess<jint>();
@@ -289,7 +294,7 @@ jint OMInterpreter::execute()
         {
             currentThread.pc += 3;
         }
-        return EXEC_OK;
+        goto operand;
     }
     case op_if_acmpne: {
         auto item = stackTopAccess<void *>();
@@ -305,7 +310,7 @@ jint OMInterpreter::execute()
             currentThread.pc += 3;
         }
 
-        return EXEC_OK;
+        goto operand;
     }
     case op_ireturn: {
         auto ret = stackTopAccess<jint>();
@@ -324,48 +329,78 @@ jint OMInterpreter::execute()
         return EXEC_RETURN;
     }
     case op_getstatic: {
-        auto n = *static_cast<OMField **>(static_cast<void *>(
-            frame->method->klass->constantPool + binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
+        auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
+        auto n = *static_cast<OMField **>(static_cast<void *>(frame->method->klass->constantPool + id));
+        if (n == nullptr)
+        {
+            n = tower->loader->lazyFieldInit(currentThread.currentFrame->method->klass, id);
+        }
+        assert(n != nullptr);
         fetchFieldStatic(n);
         currentThread.pc += 3;
-        return EXEC_OK;
+        goto operand;
     }
     case op_putstatic: {
-        auto n = *static_cast<OMField **>(static_cast<void *>(
-            frame->method->klass->constantPool + binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
+        auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
+        auto n = *static_cast<OMField **>(static_cast<void *>(frame->method->klass->constantPool + id));
+        if (n == nullptr)
+        {
+            n = tower->loader->lazyFieldInit(currentThread.currentFrame->method->klass, id);
+        }
+        assert(n != nullptr);
         accessFieldStatic(n);
         currentThread.pc += 3;
 
-        return EXEC_OK;
+        goto operand;
     }
     case op_putfield: {
-        auto n = *static_cast<OMField **>(static_cast<void *>(
-            frame->method->klass->constantPool + binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
+        auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
+        auto n = *static_cast<OMField **>(static_cast<void *>(frame->method->klass->constantPool + id));
+        if (n == nullptr)
+        {
+            n = tower->loader->lazyFieldInit(currentThread.currentFrame->method->klass, id);
+        }
+        assert(n != nullptr);
         accessField(n);
         currentThread.pc += 3;
 
-        return EXEC_OK;
+        goto operand;
     }
     case op_invokevirtual: {
-        auto n = *static_cast<OMMethod **>(static_cast<void *>(
-            frame->method->klass->constantPool + binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
-        callDynamic(n);
+        auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
+        auto n = *static_cast<OMMethod **>(static_cast<void *>(frame->method->klass->constantPool + id));
+        if (n == nullptr)
+        {
+            n = tower->loader->lazyMethodInit(currentThread.currentFrame->method->klass, id);
+        }
+        assert(n != nullptr);
+        callDynamic(n, currentThread.pc + 3);
 
-        return EXEC_OK;
+        goto operand;
     }
     case op_invokespecial: {
-        auto n = *static_cast<OMMethod **>(static_cast<void *>(
-            frame->method->klass->constantPool + binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
-        call(n);
+        auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
+        auto n = *static_cast<OMMethod **>(static_cast<void *>(frame->method->klass->constantPool + id));
+        if (n == nullptr)
+        {
+            n = tower->loader->lazyMethodInit(currentThread.currentFrame->method->klass, id);
+        }
+        assert(n != nullptr);
+        call(n, currentThread.pc + 3);
 
-        return EXEC_OK;
+        goto operand;
     }
     case op_new: {
-        auto n = *static_cast<OMKlass **>(static_cast<void *>(
-            frame->method->klass->constantPool + binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
+        auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
+        auto n = *static_cast<OMKlass **>(static_cast<void *>(frame->method->klass->constantPool + id));
+        if (n == nullptr)
+        {
+            n = tower->loader->lazyClassInit(currentThread.currentFrame->method->klass, id);
+        }
+        assert(n != nullptr);
         stackPushAccess<void *>(n->allocateInstance());
         currentThread.pc += 3;
-        return EXEC_OK;
+        goto operand;
     }
     default: {
         logger.error("We are hitting Mazarine End!");
