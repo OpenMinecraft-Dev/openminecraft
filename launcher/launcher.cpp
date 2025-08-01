@@ -12,6 +12,7 @@ void handle(int sig)
 {
     logger.fatal("!! KERNEL CRASHED !!");
     logger.dumpStacktrace();
+    openminecraft::boot::onCrash(sig);
     longjmp(recoverBuffer, 1);
     // exit(-1);
 }

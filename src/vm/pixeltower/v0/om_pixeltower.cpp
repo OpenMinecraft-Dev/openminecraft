@@ -11,10 +11,23 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <memory>
 
 namespace openminecraft::vm::pixeltower::v0
 {
+std::any println_impl(std::any *)
+{
+    std::cout << "printing!" << std::endl;
+    *(int *)nullptr = 0;
+    return nullptr;
+}
+void OMPixelTower::handleCrash()
+{
+    bool inNative = currentThread.currentFrame->method->accessFlags & JVM_Acc_Native;
+    logger.debug("in native: {}", inNative);
+    logger.dumpStacktrace();
+}
 OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
 {
     heap = new OMPixelTowerHeap(1ul * 1024 * 1024, 1ul * 1024 * 1024 * 1024);
@@ -22,10 +35,7 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
     interpreter = new OMInterpreter(heap, this);
     loader = new OMKlassLoader(heap, metaspace, interpreter);
 
-    loader->nativeMethods["vmstd/internal/SystemPrintStream.println(J)V"] = [&](std::any *) {
-        logger.debug("printing!");
-        return nullptr;
-    };
+    loader->nativeMethods["vmstd/internal/SystemPrintStream.println(J)V"] = println_impl;
 }
 OMPixelTower::~OMPixelTower()
 {

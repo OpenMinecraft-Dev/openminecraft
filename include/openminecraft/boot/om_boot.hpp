@@ -6,7 +6,8 @@
 
 namespace openminecraft::boot
 {
+void onCrash(int sig);
 int boot(std::vector<std::string> args);
-}
+} // namespace openminecraft::boot
 
 #endif

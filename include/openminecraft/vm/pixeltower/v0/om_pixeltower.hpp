@@ -26,6 +26,8 @@ class OMPixelTower
     void initCurrentThread(uint64_t tlsSize);
     void destroyCurrentThread();
 
+    void handleCrash();
+
   private:
     OMInterpreter *interpreter;
     log::OMLogger logger;

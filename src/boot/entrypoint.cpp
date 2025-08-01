@@ -41,6 +41,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_debugger.hpp"
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
@@ -57,6 +58,15 @@ extern jmp_buf recoverBuffer;
 
 namespace openminecraft::boot
 {
+std::shared_ptr<pixeltower::v0::OMPixelTower> tower;
+log::OMLogger logger("Crash Handler");
+
+void onCrash(int sig)
+{
+    logger.debug("tracing stack... (exit code {})", sig);
+    tower->handleCrash();
+}
+
 void searchDir(std::vector<std::string> &i, std::filesystem::directory_iterator di)
 {
     for (auto entry : di)
@@ -120,7 +130,7 @@ int boot(std::vector<std::string> args)
 
     SDL_Quit();
 
-    auto tower = std::make_unique<pixeltower::v0::OMPixelTower>();
+    tower = std::make_unique<pixeltower::v0::OMPixelTower>();
 
     bool recovermode = false;
 

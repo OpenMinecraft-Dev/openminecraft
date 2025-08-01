@@ -242,8 +242,6 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
         }
     }
 
-    debugger.debugStack();
-
     auto funcp = *reinterpret_cast<std::function<std::any(std::any *)> **>(codetarget->code);
     if (funcp == nullFunction)
     {
