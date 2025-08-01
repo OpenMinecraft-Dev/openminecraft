@@ -10,7 +10,11 @@ static void crash_handler(int sig, siginfo_t *info, void *context)
 {
     ucontext_t *const uc = (ucontext_t *)context;
 #ifdef __x86_64__
+#if defined(__APPLE__)
+    std::cout << uc->uc_mcontext->__ss.__rip << std::endl;
+#else
     std::cout << uc->uc_mcontext.gregs[REG_RIP] << std::endl;
+#endif
 #endif
 
     raise(SIGKILL);
