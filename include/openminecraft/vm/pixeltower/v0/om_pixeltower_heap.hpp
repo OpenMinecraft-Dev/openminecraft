@@ -26,29 +26,34 @@ class OMPixelTowerHeap
     void debug();
     void merge();
 
-    void *heapBase()
+    inline void *heapBase()
     {
         return heap->block;
     }
 
-    bool ptrCompEnabled()
+    inline bool ptrCompEnabled()
     {
         return maxSize < 32ull * 1024 * 1024 * 1024 && (sizeof(void *) == 8);
     }
-    uint64_t ptrSize()
+    inline uint64_t ptrSize()
     {
         return ptrCompEnabled() ? 4 : sizeof(void *);
     }
 
-    uint32_t compressPtr(void *p)
+    inline uint32_t compressPtr(void *p)
     {
         assert(sizeof(void *) == 8);
         return ((size_t)p - (size_t)heap->block) >> 3;
     }
-    void *decompressPtr(uint32_t p)
+    inline void *decompressPtr(uint32_t p)
     {
         assert(sizeof(void *) == 8);
         return (void *)((size_t)(p << 3) + (size_t)heap->block);
+    }
+
+    inline bool inside(void *p)
+    {
+        return heap->vaild(p);
     }
 
   private:

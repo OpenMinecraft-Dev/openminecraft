@@ -26,7 +26,16 @@ void OMPixelTower::handleCrash()
 {
     bool inNative = currentThread.currentFrame->method->accessFlags & JVM_Acc_Native;
     logger.debug("in native: {}", inNative);
-    logger.dumpStacktrace();
+
+    auto fr = currentThread.currentFrame;
+    while (fr)
+    {
+	logger.info("{}.{}{} returns to {}", fr->method->klass->name, fr->method->name, fr->method->desc, fmt::ptr(fr->returnAddr));
+	if (!metaspace->inside(fr->returnAddr)) {
+	    logger.info("entering native frames!");
+	}
+	fr = fr->prev;
+    }
 }
 OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
 {
@@ -47,7 +56,7 @@ OMPixelTower::~OMPixelTower()
 
 void OMPixelTower::boot(OMMethod *method)
 {
-    interpreter->call(method, (uint8_t *)0x33550336);
+    interpreter->call(method, (uint8_t *)nullFunction);
 }
 
 void OMPixelTower::init(std::string basePath)
