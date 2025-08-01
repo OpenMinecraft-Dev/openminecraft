@@ -45,6 +45,9 @@ end
 if is_plat("linux") then
     add_defines("OM_PLATFORM_LINUX=")
 end
+if is_plat("bsd") then
+    add_defines("OM_PLATFORM_BSD=")
+end
 if is_plat("macosx") then
     add_defines("OM_PLATFORM_MACOS=")
 end
@@ -89,6 +92,9 @@ if is_plat("windows") then
 end
 if is_plat("linux") then
     add_files("plat/linux/**.cpp")
+end
+if is_plat("bsd") then
+    add_files("plat/bsd/**.cpp")
 end
 if is_plat("macosx") then
     add_files("plat/macos/**.cpp")

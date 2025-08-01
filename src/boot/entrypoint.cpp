@@ -43,6 +43,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_debugger.hpp"
+#include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
@@ -168,6 +169,7 @@ int boot(std::vector<std::string> args)
             case "pixeltower"_hash: {
                 if (commandBuffer.size() >= 3 && commandBuffer[1] == "init")
                 {
+                    pixeltower::v1::tracing::installHandler();
                     tower->initCurrentThread(1ul * 1024 * 1024);
                     tower->init(commandBuffer[2]);
                     tower->load("../Test.class");
