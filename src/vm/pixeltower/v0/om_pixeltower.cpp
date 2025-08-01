@@ -5,6 +5,8 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_klassloader.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
 #include <filesystem>
@@ -19,6 +21,11 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
     metaspace = new OMPixelTowerHeap(1ul * 1024 * 1024, 8ul * 1024 * 1024);
     interpreter = new OMInterpreter(heap, this);
     loader = new OMKlassLoader(heap, metaspace, interpreter);
+
+    loader->nativeMethods["vmstd/internal/SystemPrintStream.println(J)V"] = [&](std::any *) {
+        logger.debug("printing!");
+        return nullptr;
+    };
 }
 OMPixelTower::~OMPixelTower()
 {

@@ -15,6 +15,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
 #include <any>
 #include <cassert>
+#include <functional>
 #include <vector>
 
 namespace openminecraft::vm::pixeltower::v0
@@ -241,12 +242,19 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
         }
     }
 
-    logger.debug("arg length: {} {}", data.size(), std::any_cast<jlong>(data[1]));
-
     debugger.debugStack();
+
+    auto funcp = *reinterpret_cast<std::function<std::any(std::any *)> **>(codetarget->code);
+    if (funcp == nullFunction)
+    {
+        throw err::OMValidationError{err::Instructions, "unsatisfied link!", currentPosition()};
+    }
+    else
+    {
+        (*funcp)(data.data());
+    }
+
     popLastFrame();
-    throw err::OMValidationError{err::Instructions, "native functions not supported!",
-                                 fmt::format("{}.{}{}", codetarget->klass->name, codetarget->name, codetarget->desc)};
 }
 
 void OMInterpreter::popLastFrame()

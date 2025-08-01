@@ -171,7 +171,17 @@ loadMethods:
         }
         else if ((m->accessFlags & JVM_Acc_Abstract) == 0)
         {
-            *(void **)m->code = (void *)33550336;
+            // loading native function handles
+            auto fnn = fmt::format("{}.{}{}", klass->name, m->name, m->desc);
+            if (nativeMethods.count(fnn))
+            {
+                logger.info("native function found!");
+                *(void **)m->code = (void *)&nativeMethods[fnn];
+            }
+            else
+            {
+                *(void **)m->code = nullFunction;
+            }
         }
 
         if ((m->accessFlags & JVM_Acc_Static) == 0 && (m->accessFlags & JVM_Acc_Private) == 0 &&

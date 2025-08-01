@@ -7,10 +7,14 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
+#include <any>
+#include <functional>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 namespace openminecraft::vm::pixeltower::v0
 {
+#define nullFunction (void *)0x33550336
 class OMKlassLoader
 {
   public:
@@ -29,6 +33,8 @@ class OMKlassLoader
     OMKlass *lazyClassInit(OMKlass *klass, uint16_t id);
     OMField *lazyFieldInit(OMKlass *klass, uint16_t id);
     OMMethod *lazyMethodInit(OMKlass *klass, uint16_t id);
+
+    std::unordered_map<std::string, std::function<std::any(std::any *)>> nativeMethods;
 
   private:
     OMPixelTowerHeap *metaspace;
