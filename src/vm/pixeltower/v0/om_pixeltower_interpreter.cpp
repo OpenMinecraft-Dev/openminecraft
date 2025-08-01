@@ -1,6 +1,8 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
@@ -11,6 +13,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
+#include <any>
 #include <cassert>
 #include <vector>
 
@@ -141,8 +144,105 @@ void OMInterpreter::callDynamic(OMMethod *met, uint8_t *retAddr)
 
 void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args)
 {
-    reinterpret_cast<void (*)()>(codetarget)();
-    logger.debug("arg size: {}", args.size());
+    int p = 0;
+    auto result = bytecode::descriptor::decodeSignature(codetarget->desc, &p);
+    if (result.type == util::Err)
+    {
+        throw err::OMValidationError{
+            err::Instructions, fmt::format("unknown function descriptor {}: {}", codetarget->desc, result.unwrap_err()),
+            currentPosition()};
+    }
+
+    std::vector<std::any> data;
+
+    auto itt = args.begin();
+    if ((codetarget->accessFlags & JVM_Acc_Static) == 0)
+    {
+        data.push_back(*itt); // this pointer
+        ++itt;
+    }
+    for (auto t : result.unwrap().first)
+    {
+        switch (hash_compile_time(t.c_str()))
+        {
+        case "boolean"_hash: {
+            data.push_back((jboolean)(size_t)*itt);
+            ++itt;
+            break;
+        }
+        case "byte"_hash: {
+            data.push_back((jbyte)(size_t)*itt);
+            ++itt;
+            break;
+        }
+        case "char"_hash: {
+            data.push_back((jchar)(size_t)*itt);
+            ++itt;
+            break;
+        }
+        case "short"_hash: {
+            data.push_back((jshort)(size_t)*itt);
+            ++itt;
+            break;
+        }
+        case "int"_hash: {
+            data.push_back((jint)(size_t)*itt);
+            ++itt;
+            break;
+        }
+        case "float"_hash: {
+            data.push_back((jfloat)(size_t)*itt);
+            ++itt;
+            break;
+        }
+        case "long"_hash: {
+            if (sizeof(void *) == 8)
+            {
+                data.push_back((jlong)(size_t)*itt);
+                ++itt;
+            }
+            else
+            {
+                auto low = (uint64_t)(size_t)*itt;
+                ++itt;
+                auto high = (uint64_t)(size_t)*itt;
+
+                uint64_t raw = high << 32 | low;
+
+                data.push_back(*reinterpret_cast<jlong *>(&raw));
+            }
+            ++itt;
+            break;
+        }
+        case "double"_hash: {
+            if (sizeof(void *) == 8)
+            {
+                data.push_back((jlong)(size_t)*itt);
+                ++itt;
+            }
+            else
+            {
+                auto low = (uint64_t)(size_t)*itt;
+                ++itt;
+                auto high = (uint64_t)(size_t)*itt;
+
+                uint64_t raw = high << 32 | low;
+
+                data.push_back(*reinterpret_cast<jdouble *>(&raw));
+            }
+            ++itt;
+            break;
+        }
+        default: {
+            data.push_back(*itt);
+            ++itt;
+            break;
+        }
+        }
+    }
+
+    logger.debug("arg length: {} {}", data.size(), std::any_cast<jlong>(data[1]));
+
     debugger.debugStack();
     popLastFrame();
     throw err::OMValidationError{err::Instructions, "native functions not supported!",
