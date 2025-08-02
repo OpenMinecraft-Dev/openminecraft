@@ -1,5 +1,5 @@
 function mobile()
-    return is_plat("iphoneos", "harmony", "android")
+    return is_plat("iphoneos", "harmony", "android", "visionos")
 end
 
 function apple()
