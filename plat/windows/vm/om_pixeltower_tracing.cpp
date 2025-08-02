@@ -30,7 +30,10 @@ static long WINAPI handler(_EXCEPTION_POINTERS *pt)
     stackFrame.AddrFrame.Offset = context->Rbp;
     auto machineType = IMAGE_FILE_MACHINE_AMD64;
 #elif defined(_M_ARM64)
-    err
+    stackFrame.AddrPC.Offset = context->Pc;
+    stackFrame.AddrStack.Offset = context->Sp;
+    stackFrame.AddrFrame.Offset = context->Fp;
+    auto machineType = IMAGE_FILE_MACHINE_ARM64;
 #endif
     stackFrame.AddrPC.Mode = AddrModeFlat;
     stackFrame.AddrStack.Mode = AddrModeFlat;
