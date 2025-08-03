@@ -343,9 +343,9 @@ static void crash_handler(int sig, siginfo_t *info, void *context)
     }
 #else
     pc = (void *)uc->uc_mcontext.pc;
-    for (int i = 0; xi < 31; xi++)
+    for (int xi = 0; xi < 31; xi++)
     {
-        registers[fmt::format("x{}", i)] = (void *)uc->uc_mcontext.regs[r];
+        registers[fmt::format("x{}", xi)] = (void *)uc->uc_mcontext.regs[xi];
     }
 #endif
 #endif
