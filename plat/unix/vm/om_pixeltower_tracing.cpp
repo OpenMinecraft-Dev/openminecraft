@@ -3,7 +3,6 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "sys/signal.h"
 #include <csignal>
-#include <cstdint>
 #include <sys/ucontext.h>
 #include <unistd.h>
 #include <vector>
@@ -19,46 +18,245 @@ static void crash_handler(int sig, siginfo_t *info, void *context)
 
     void *pc = nullptr;
 
-#ifdef __x86_64__
-#if defined(__APPLE__)
-    pc = (void *)uc->uc_mcontext->__ss.__rip;
-#define storeReg(n, idx) registers[n] = (void *)uc->uc_mcontext->__ss.__##idx;
-    storeReg("r8", r8);
-    storeReg("r9", r9);
-    storeReg("r10", r10);
-    storeReg("r11", r11);
-    storeReg("r12", r12);
-    storeReg("r13", r13);
-    storeReg("r14", r14);
-    storeReg("r15", r15);
-    storeReg("rdi", rdi);
-    storeReg("rsi", rsi);
-    storeReg("rbp", rbp);
-    storeReg("rbx", rbx);
-    storeReg("rdx", rdx);
-    storeReg("rax", rax);
-    storeReg("rcx", rcx);
-    storeReg("rsp", rsp);
+#ifdef __i386__
+#if defined(OM_PLATFORM_BSD) || defined(__APPLE__)
+#ifdef __FreeBSD__
+#define context_pc uc_mcontext.mc_eip
+#define context_sp uc_mcontext.mc_esp
+#define context_fp uc_mcontext.mc_ebp
+#define context_eip uc_mcontext.mc_eip
+#define context_esp uc_mcontext.mc_esp
+#define context_eax uc_mcontext.mc_eax
+#define context_ebx uc_mcontext.mc_ebx
+#define context_ecx uc_mcontext.mc_ecx
+#define context_edx uc_mcontext.mc_edx
+#define context_ebp uc_mcontext.mc_ebp
+#define context_esi uc_mcontext.mc_esi
+#define context_edi uc_mcontext.mc_edi
+#define context_eflags uc_mcontext.mc_eflags
+#define context_trapno uc_mcontext.mc_trapno
+#endif
 
-#elif defined(OM_PLATFORM_BSD)
-    pc = (void *)uc->uc_mcontext.mc_rip;
-#define storeReg(n, idx) registers[n] = (void *)uc->uc_mcontext.##idx;
-    storeReg("r8", r8);
-    storeReg("r9", r9);
-    storeReg("r10", r10);
-    storeReg("r11", r11);
-    storeReg("r12", r12);
-    storeReg("r13", r13);
-    storeReg("r14", r14);
-    storeReg("r15", r15);
-    storeReg("rdi", rdi);
-    storeReg("rsi", rsi);
-    storeReg("rbp", rbp);
-    storeReg("rbx", rbx);
-    storeReg("rdx", rdx);
-    storeReg("rax", rax);
-    storeReg("rcx", rcx);
-    storeReg("rsp", rsp);
+#ifdef __APPLE__
+#if __DARWIN_UNIX03 && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
+// 10.5 UNIX03 member name prefixes
+#define DU3_PREFIX(s, m) __##s.__##m
+#else
+#define DU3_PREFIX(s, m) s##.##m
+#endif
+
+#define context_pc context_eip
+#define context_sp context_esp
+#define context_fp context_ebp
+#define context_eip uc_mcontext->DU3_PREFIX(ss, eip)
+#define context_esp uc_mcontext->DU3_PREFIX(ss, esp)
+#define context_eax uc_mcontext->DU3_PREFIX(ss, eax)
+#define context_ebx uc_mcontext->DU3_PREFIX(ss, ebx)
+#define context_ecx uc_mcontext->DU3_PREFIX(ss, ecx)
+#define context_edx uc_mcontext->DU3_PREFIX(ss, edx)
+#define context_ebp uc_mcontext->DU3_PREFIX(ss, ebp)
+#define context_esi uc_mcontext->DU3_PREFIX(ss, esi)
+#define context_edi uc_mcontext->DU3_PREFIX(ss, edi)
+#define context_eflags uc_mcontext->DU3_PREFIX(ss, eflags)
+#define context_trapno uc_mcontext->DU3_PREFIX(es, trapno)
+#endif
+
+#ifdef __OpenBSD__
+#define context_pc sc_eip
+#define context_sp sc_esp
+#define context_fp sc_ebp
+#define context_eip sc_eip
+#define context_esp sc_esp
+#define context_eax sc_eax
+#define context_ebx sc_ebx
+#define context_ecx sc_ecx
+#define context_edx sc_edx
+#define context_ebp sc_ebp
+#define context_esi sc_esi
+#define context_edi sc_edi
+#define context_eflags sc_eflags
+#define context_trapno sc_trapno
+#endif
+
+#ifdef __NetBSD__
+#define context_pc uc_mcontext.__gregs[_REG_EIP]
+#define context_sp uc_mcontext.__gregs[_REG_UESP]
+#define context_fp uc_mcontext.__gregs[_REG_EBP]
+#define context_eip uc_mcontext.__gregs[_REG_EIP]
+#define context_esp uc_mcontext.__gregs[_REG_UESP]
+#define context_eax uc_mcontext.__gregs[_REG_EAX]
+#define context_ebx uc_mcontext.__gregs[_REG_EBX]
+#define context_ecx uc_mcontext.__gregs[_REG_ECX]
+#define context_edx uc_mcontext.__gregs[_REG_EDX]
+#define context_ebp uc_mcontext.__gregs[_REG_EBP]
+#define context_esi uc_mcontext.__gregs[_REG_ESI]
+#define context_edi uc_mcontext.__gregs[_REG_EDI]
+#define context_eflags uc_mcontext.__gregs[_REG_EFL]
+#define context_trapno uc_mcontext.__gregs[_REG_TRAPNO]
+#endif
+
+    pc = (void *)uc->context_pc;
+#define storeReg(n, idx) registers[n] = (void *)uc->##idx;
+    storeReg("eax", context_eax);
+    storeReg("ebx", context_ebx);
+    storeReg("ecx", context_ecx);
+    storeReg("edx", context_edx);
+    storeReg("esp", context_esp);
+    storeReg("ebp", context_ebp);
+    storeReg("esi", context_esi);
+    storeReg("edi", context_edi);
+    storeReg("efl", context_eflags);
+    storeReg("trapno", context_trapno);
+#else
+    pc = (void *)uc->uc_mcontext.gregs[REG_EIP];
+#define storeReg(n, idx) registers[n] = (void *)uc->uc_mcontext.gregs[REG_##idx];
+    storeReg("eax", EAX);
+    storeReg("ebx", EBX);
+    storeReg("ecx", ECX);
+    storeReg("edx", EDX);
+    storeReg("esp", ESP);
+    storeReg("ebp", EBP);
+    storeReg("esi", ESI);
+    storeReg("edi", EDI);
+    storeReg("efl", EFL);
+#endif
+#endif
+
+#ifdef __x86_64__
+#if defined(OM_PLATFORM_BSD) || defined(__APPLE__)
+#ifdef __FreeBSD__
+#define context_trapno uc_mcontext.mc_trapno
+#define context_pc uc_mcontext.mc_rip
+#define context_sp uc_mcontext.mc_rsp
+#define context_fp uc_mcontext.mc_rbp
+#define context_rip uc_mcontext.mc_rip
+#define context_rsp uc_mcontext.mc_rsp
+#define context_rbp uc_mcontext.mc_rbp
+#define context_rax uc_mcontext.mc_rax
+#define context_rbx uc_mcontext.mc_rbx
+#define context_rcx uc_mcontext.mc_rcx
+#define context_rdx uc_mcontext.mc_rdx
+#define context_rsi uc_mcontext.mc_rsi
+#define context_rdi uc_mcontext.mc_rdi
+#define context_r8 uc_mcontext.mc_r8
+#define context_r9 uc_mcontext.mc_r9
+#define context_r10 uc_mcontext.mc_r10
+#define context_r11 uc_mcontext.mc_r11
+#define context_r12 uc_mcontext.mc_r12
+#define context_r13 uc_mcontext.mc_r13
+#define context_r14 uc_mcontext.mc_r14
+#define context_r15 uc_mcontext.mc_r15
+#define context_flags uc_mcontext.mc_flags
+#define context_err uc_mcontext.mc_err
+#endif
+
+#ifdef __APPLE__
+#if __DARWIN_UNIX03 && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
+// 10.5 UNIX03 member name prefixes
+#define DU3_PREFIX(s, m) __##s.__##m
+#else
+#define DU3_PREFIX(s, m) s##.##m
+#endif
+
+#define context_pc context_rip
+#define context_sp context_rsp
+#define context_fp context_rbp
+#define context_rip uc_mcontext->DU3_PREFIX(ss, rip)
+#define context_rsp uc_mcontext->DU3_PREFIX(ss, rsp)
+#define context_rax uc_mcontext->DU3_PREFIX(ss, rax)
+#define context_rbx uc_mcontext->DU3_PREFIX(ss, rbx)
+#define context_rcx uc_mcontext->DU3_PREFIX(ss, rcx)
+#define context_rdx uc_mcontext->DU3_PREFIX(ss, rdx)
+#define context_rbp uc_mcontext->DU3_PREFIX(ss, rbp)
+#define context_rsi uc_mcontext->DU3_PREFIX(ss, rsi)
+#define context_rdi uc_mcontext->DU3_PREFIX(ss, rdi)
+#define context_r8 uc_mcontext->DU3_PREFIX(ss, r8)
+#define context_r9 uc_mcontext->DU3_PREFIX(ss, r9)
+#define context_r10 uc_mcontext->DU3_PREFIX(ss, r10)
+#define context_r11 uc_mcontext->DU3_PREFIX(ss, r11)
+#define context_r12 uc_mcontext->DU3_PREFIX(ss, r12)
+#define context_r13 uc_mcontext->DU3_PREFIX(ss, r13)
+#define context_r14 uc_mcontext->DU3_PREFIX(ss, r14)
+#define context_r15 uc_mcontext->DU3_PREFIX(ss, r15)
+#define context_flags uc_mcontext->DU3_PREFIX(ss, rflags)
+#define context_trapno uc_mcontext->DU3_PREFIX(es, trapno)
+#define context_err uc_mcontext->DU3_PREFIX(es, err)
+#endif
+
+#ifdef __OpenBSD__
+#define context_trapno sc_trapno
+#define context_pc sc_rip
+#define context_sp sc_rsp
+#define context_fp sc_rbp
+#define context_rip sc_rip
+#define context_rsp sc_rsp
+#define context_rbp sc_rbp
+#define context_rax sc_rax
+#define context_rbx sc_rbx
+#define context_rcx sc_rcx
+#define context_rdx sc_rdx
+#define context_rsi sc_rsi
+#define context_rdi sc_rdi
+#define context_r8 sc_r8
+#define context_r9 sc_r9
+#define context_r10 sc_r10
+#define context_r11 sc_r11
+#define context_r12 sc_r12
+#define context_r13 sc_r13
+#define context_r14 sc_r14
+#define context_r15 sc_r15
+#define context_flags sc_rflags
+#define context_err sc_err
+#endif
+
+#ifdef __NetBSD__
+#define context_trapno uc_mcontext.__gregs[_REG_TRAPNO]
+#define __register_t __greg_t
+#define context_pc uc_mcontext.__gregs[_REG_RIP]
+#define context_sp uc_mcontext.__gregs[_REG_URSP]
+#define context_fp uc_mcontext.__gregs[_REG_RBP]
+#define context_rip uc_mcontext.__gregs[_REG_RIP]
+#define context_rsp uc_mcontext.__gregs[_REG_URSP]
+#define context_rax uc_mcontext.__gregs[_REG_RAX]
+#define context_rbx uc_mcontext.__gregs[_REG_RBX]
+#define context_rcx uc_mcontext.__gregs[_REG_RCX]
+#define context_rdx uc_mcontext.__gregs[_REG_RDX]
+#define context_rbp uc_mcontext.__gregs[_REG_RBP]
+#define context_rsi uc_mcontext.__gregs[_REG_RSI]
+#define context_rdi uc_mcontext.__gregs[_REG_RDI]
+#define context_r8 uc_mcontext.__gregs[_REG_R8]
+#define context_r9 uc_mcontext.__gregs[_REG_R9]
+#define context_r10 uc_mcontext.__gregs[_REG_R10]
+#define context_r11 uc_mcontext.__gregs[_REG_R11]
+#define context_r12 uc_mcontext.__gregs[_REG_R12]
+#define context_r13 uc_mcontext.__gregs[_REG_R13]
+#define context_r14 uc_mcontext.__gregs[_REG_R14]
+#define context_r15 uc_mcontext.__gregs[_REG_R15]
+#define context_flags uc_mcontext.__gregs[_REG_RFL]
+#define context_err uc_mcontext.__gregs[_REG_ERR]
+#endif
+
+    pc = (void *)uc->context_pc;
+#define storeReg(n, idx) registers[n] = (void *)uc->##idx;
+    storeReg("r8", context_r8);
+    storeReg("r9", context_r9);
+    storeReg("r10", context_r10);
+    storeReg("r11", context_r11);
+    storeReg("r12", context_r12);
+    storeReg("r13", context_r13);
+    storeReg("r14", context_r14);
+    storeReg("r15", context_r15);
+    storeReg("rdi", context_rdi);
+    storeReg("rsi", context_rsi);
+    storeReg("rbp", context_rbp);
+    storeReg("rbx", context_rbx);
+    storeReg("rdx", context_rdx);
+    storeReg("rax", context_rax);
+    storeReg("rcx", context_rcx);
+    storeReg("rsp", context_rsp);
+    storeReg("trapno", context_trapno);
+    storeReg("rfl", context_flags);
+    storeReg("err", context_err);
 #else
     pc = (void *)uc->uc_mcontext.gregs[REG_RIP];
 #define storeReg(n, idx) registers[n] = (void *)uc->uc_mcontext.gregs[REG_##idx];
@@ -96,7 +294,7 @@ static void crash_handler(int sig, siginfo_t *info, void *context)
 
 #ifdef __aarch64__
 #if defined(__APPLE__)
-    pc = (void *)uc->uc_mcontext->__ss.pc;
+    pc = (void *)uc->uc_mcontext->__ss.__pc;
 #endif
 #endif
 
@@ -141,7 +339,7 @@ int install_sigaction_signal_handler(struct sigaction *sigAct, struct sigaction 
 
 void installHandler()
 {
-    static const int signals_to_handle[] = {SIGSEGV, SIGBUS, SIGILL, SIGFPE, SIGTRAP, 0};
+    static const int signals_to_handle[] = {SIGSEGV, SIGBUS, SIGILL, SIGFPE, SIGTRAP, SIGABRT, 0};
     for (int i = 0; signals_to_handle[i] != 0; i++)
     {
         struct sigaction sigAct, oldSigAct;
