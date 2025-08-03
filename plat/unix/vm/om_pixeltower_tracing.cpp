@@ -237,26 +237,25 @@ static void crash_handler(int sig, siginfo_t *info, void *context)
 #endif
 
     pc = (void *)uc->context_pc;
-#define storeReg(n, idx) registers[n] = (void *)uc->##idx;
-    storeReg("r8", context_r8);
-    storeReg("r9", context_r9);
-    storeReg("r10", context_r10);
-    storeReg("r11", context_r11);
-    storeReg("r12", context_r12);
-    storeReg("r13", context_r13);
-    storeReg("r14", context_r14);
-    storeReg("r15", context_r15);
-    storeReg("rdi", context_rdi);
-    storeReg("rsi", context_rsi);
-    storeReg("rbp", context_rbp);
-    storeReg("rbx", context_rbx);
-    storeReg("rdx", context_rdx);
-    storeReg("rax", context_rax);
-    storeReg("rcx", context_rcx);
-    storeReg("rsp", context_rsp);
-    storeReg("trapno", context_trapno);
-    storeReg("rfl", context_flags);
-    storeReg("err", context_err);
+    registers["r8"] = (void *)uc->context_r8;
+    registers["r9"] = (void *)uc->context_r9;
+    registers["r10"] = (void *)uc->context_r10;
+    registers["r11"] = (void *)uc->context_r11;
+    registers["r12"] = (void *)uc->context_r12;
+    registers["r13"] = (void *)uc->context_r13;
+    registers["r14"] = (void *)uc->context_r14;
+    registers["r15"] = (void *)uc->context_r15;
+    registers["rdi"] = (void *)uc->context_rdi;
+    registers["rsi"] = (void *)uc->context_rsi;
+    registers["rbp"] = (void *)uc->context_rbp;
+    registers["rbx"] = (void *)uc->context_rbx;
+    registers["rdx"] = (void *)uc->context_rdx;
+    registers["rax"] = (void *)uc->context_rax;
+    registers["rcx"] = (void *)uc->context_rcx;
+    registers["rsp"] = (void *)uc->context_rsp;
+    registers["trapno"] = (void *)uc->context_trapno;
+    registers["rfl"] = (void *)uc->context_flags;
+    registers["err"] = (void *)uc->context_err;
 #else
     pc = (void *)uc->uc_mcontext.gregs[REG_RIP];
 #define storeReg(n, idx) registers[n] = (void *)uc->uc_mcontext.gregs[REG_##idx];
@@ -348,6 +347,14 @@ static void crash_handler(int sig, siginfo_t *info, void *context)
         registers[fmt::format("x{}", xi)] = (void *)uc->uc_mcontext.regs[xi];
     }
 #endif
+#endif
+
+#ifdef __loongarch__
+    pc = (void *)uc->uc_mcontext.__pc;
+    for (int i = 0; i < 32; i++)
+    {
+        registers[fmt::format("r{}", i)] = (void *)uc->uc_mcontext.__gregs[i];
+    }
 #endif
 
     registers["pc"] = pc;
