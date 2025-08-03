@@ -3,6 +3,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "sys/signal.h"
 #include <csignal>
+#include <cstdint>
 #include <sys/ucontext.h>
 #include <unistd.h>
 #include <vector>
@@ -77,12 +78,25 @@ static void crash_handler(int sig, siginfo_t *info, void *context)
     storeReg("rax", RAX);
     storeReg("rcx", RCX);
     storeReg("rsp", RSP);
+
+    storeReg("efl", EFL);
+    storeReg("csgsfs", CSGSFS);
+    storeReg("err", ERR);
+    storeReg("trapno", TRAPNO);
+
+    registers["mxcsr"] = (void *)(size_t)uc->uc_mcontext.fpregs->mxcsr;
+    for (int xmmid = 0; xmmid < 16; xmmid++)
+    {
+        void **data = (void **)&uc->uc_mcontext.fpregs->_xmm[xmmid];
+        registers[fmt::format("xmmh{}", xmmid)] = data[1];
+        registers[fmt::format("xmml{}", xmmid)] = data[0];
+    }
 #endif
 #endif
 
 #ifdef __aarch64__
 #if defined(__APPLE__)
-    pc = (void *)uc->uc_mcontext.pc;
+    pc = (void *)uc->uc_mcontext->__ss.pc;
 #endif
 #endif
 
