@@ -11,6 +11,7 @@
 
 namespace openminecraft::vm::pixeltower::v1::tracing
 {
+std::map<std::string, void *> registers;
 static long WINAPI handler(_EXCEPTION_POINTERS *pt)
 {
     SymInitialize(GetCurrentProcess(), nullptr, true);
@@ -23,11 +24,64 @@ static long WINAPI handler(_EXCEPTION_POINTERS *pt)
     stackFrame.AddrPC.Offset = context->Eip;
     stackFrame.AddrStack.Offset = context->Esp;
     stackFrame.AddrFrame.Offset = context->Ebp;
+
+    registers["pc"] = (void *)context->Eip;
+    registers["eax"] = (void *)context->Eax;
+    registers["ebx"] = (void *)context->Ebx;
+    registers["ecx"] = (void *)context->Ecx;
+    registers["edx"] = (void *)context->Edx;
+    registers["esp"] = (void *)context->Esp;
+    registers["ebp"] = (void *)context->Ebp;
+    registers["esi"] = (void *)context->Esi;
+    registers["edi"] = (void *)context->Edi;
+    registers["efl"] = (void *)context->EFlags;
     auto machineType = IMAGE_FILE_MACHINE_I386;
 #elif defined(_M_X64)
     stackFrame.AddrPC.Offset = context->Rip;
     stackFrame.AddrStack.Offset = context->Rsp;
     stackFrame.AddrFrame.Offset = context->Rbp;
+
+    registers["pc"] = (void *)context->Rip;
+    registers["rax"] = (void *)context->Rax;
+    registers["rbx"] = (void *)context->Rbx;
+    registers["rcx"] = (void *)context->Rcx;
+    registers["rdx"] = (void *)context->Rdx;
+    registers["rsp"] = (void *)context->Rsp;
+    registers["rbp"] = (void *)context->Rbp;
+    registers["rsi"] = (void *)context->Rsi;
+    registers["rdi"] = (void *)context->Rdi;
+
+    registers["r8"] = (void *)context->R8;
+    registers["r9"] = (void *)context->R9;
+    registers["r10"] = (void *)context->R10;
+    registers["r11"] = (void *)context->R11;
+    registers["r12"] = (void *)context->R12;
+    registers["r13"] = (void *)context->R13;
+    registers["r14"] = (void *)context->R14;
+    registers["r15"] = (void *)context->R15;
+
+#define regxmm(tgt, n, hn, ln)          \
+    void ** n = (void **)&context->tgt; \
+    registers[hn] = n[1];               \
+    registers[ln] = n[0];
+
+    regxmm(Xmm0, xmm0, "xmmh0", "xmml0");
+    regxmm(Xmm1, xmm1, "xmmh1", "xmml1");
+    regxmm(Xmm2, xmm2, "xmmh2", "xmml2");
+    regxmm(Xmm3, xmm3, "xmmh3", "xmml3");
+    regxmm(Xmm4, xmm4, "xmmh4", "xmml4");
+    regxmm(Xmm5, xmm5, "xmmh5", "xmml5");
+    regxmm(Xmm6, xmm6, "xmmh6", "xmml6");
+    regxmm(Xmm7, xmm7, "xmmh7", "xmml7");
+    regxmm(Xmm8, xmm8, "xmmh8", "xmml8");
+    regxmm(Xmm9, xmm9, "xmmh9", "xmml9");
+    regxmm(Xmm10, xmm10, "xmmh10", "xmml10");
+    regxmm(Xmm11, xmm11, "xmmh11", "xmml11");
+    regxmm(Xmm12, xmm12, "xmmh12", "xmml12");
+    regxmm(Xmm13, xmm13, "xmmh13", "xmml13");
+    regxmm(Xmm14, xmm14, "xmmh14", "xmml14");
+    regxmm(Xmm15, xmm15, "xmmh15", "xmml15");
+
     auto machineType = IMAGE_FILE_MACHINE_AMD64;
 #elif defined(_M_ARM64)
     stackFrame.AddrPC.Offset = context->Pc;
@@ -62,6 +116,11 @@ static long WINAPI handler(_EXCEPTION_POINTERS *pt)
     }
 
     log::OMLogger l("Crash handler");
+    for (auto &regs : registers)
+    {
+        l.info("Reg {}: {}", regs.first, regs.second);
+    }
+
     for (auto &ff : frames)
     {
         l.info("{} @ {}", ff.location, ff.name);
