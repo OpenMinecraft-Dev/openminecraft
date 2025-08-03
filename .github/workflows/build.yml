@@ -143,7 +143,7 @@ jobs:
           unzip android-ndk-${{ env.ANDROID_NDK_VERSION }}-linux.zip
 
       - name: Cache xmake results
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/../.xmake
           key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('package-lock.json') }}
