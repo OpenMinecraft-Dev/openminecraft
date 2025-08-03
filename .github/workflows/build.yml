@@ -145,7 +145,7 @@ jobs:
       - name: Cache xmake results
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace }}/../.xmake
+          path: ~/.xmake
           key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('package-lock.json') }}
           restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-
 
