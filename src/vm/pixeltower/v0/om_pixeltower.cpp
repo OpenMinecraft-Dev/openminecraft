@@ -22,6 +22,7 @@ std::any println_impl(std::any *)
     *(int *)nullptr = 0;
     return nullptr;
 }
+
 void OMPixelTower::handleCrash()
 {
     bool inNative = currentThread.currentFrame->method->accessFlags & JVM_Acc_Native;
