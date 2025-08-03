@@ -336,10 +336,10 @@ static void crash_handler(int sig, siginfo_t *info, void *context)
 
     pc = (void *)uc->context_pc;
 #define storeReg(n, idx) registers[n] = (void *)uc->##idx;
-    storeReg("lr", context_lr);
+    registers["lr"] = (void *)uc->context_lr;
     for (int xi = 0; xi < 31; xi++)
     {
-        storeReg(fmt::format("x{}", xi), context_x[xi]);
+        registers[fmt::format("x{}", xi)] = (void *)uc->context_x[xi];
     }
 #else
     pc = (void *)uc->uc_mcontext.pc;
