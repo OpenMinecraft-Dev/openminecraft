@@ -142,10 +142,19 @@ jobs:
           wget https://dl.google.com/android/repository/android-ndk-${{ env.ANDROID_NDK_VERSION }}-linux.zip
           unzip android-ndk-${{ env.ANDROID_NDK_VERSION }}-linux.zip
 
-      - name: Cache xmake results
+      - name: Cache xmake results (UNIX)
         uses: actions/cache@v4
+        if: matrix.plat != 'windows'
         with:
           path: ~/.xmake
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-
+
+      - name: Cache xmake results (Windows)
+        uses: actions/cache@v4
+        if: matrix.plat == 'windows'
+        with:
+          path: $HOME/.xmake
           key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('package-lock.json') }}
           restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-
 
