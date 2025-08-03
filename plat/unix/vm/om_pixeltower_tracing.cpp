@@ -9,11 +9,89 @@
 
 namespace openminecraft::vm::pixeltower::v1::tracing
 {
+std::map<std::string, void *> registers;
 static void crash_handler(int sig, siginfo_t *info, void *context)
 {
     ucontext_t *const uc = (ucontext_t *)context;
     log::OMLogger l("Crash Handler");
-    l.info("errno: {}, signo: {}, code: {}, {}", info->si_errno, info->si_signo, info->si_code, getpid());
+    l.info("signo: {}, {}", info->si_signo, getpid());
+
+    void *pc = nullptr;
+
+#ifdef __x86_64__
+#if defined(__APPLE__)
+    pc = (void *)uc->uc_mcontext->__ss.__rip;
+#define storeReg(n, idx) registers[n] = (void *)uc->uc_mcontext->__ss.__##idx;
+    storeReg("r8", r8);
+    storeReg("r9", r9);
+    storeReg("r10", r10);
+    storeReg("r11", r11);
+    storeReg("r12", r12);
+    storeReg("r13", r13);
+    storeReg("r14", r14);
+    storeReg("r15", r15);
+    storeReg("rdi", rdi);
+    storeReg("rsi", rsi);
+    storeReg("rbp", rbp);
+    storeReg("rbx", rbx);
+    storeReg("rdx", rdx);
+    storeReg("rax", rax);
+    storeReg("rcx", rcx);
+    storeReg("rsp", rsp);
+
+#elif defined(OM_PLATFORM_BSD)
+    pc = (void *)uc->uc_mcontext.mc_rip;
+#define storeReg(n, idx) registers[n] = (void *)uc->uc_mcontext.##idx;
+    storeReg("r8", r8);
+    storeReg("r9", r9);
+    storeReg("r10", r10);
+    storeReg("r11", r11);
+    storeReg("r12", r12);
+    storeReg("r13", r13);
+    storeReg("r14", r14);
+    storeReg("r15", r15);
+    storeReg("rdi", rdi);
+    storeReg("rsi", rsi);
+    storeReg("rbp", rbp);
+    storeReg("rbx", rbx);
+    storeReg("rdx", rdx);
+    storeReg("rax", rax);
+    storeReg("rcx", rcx);
+    storeReg("rsp", rsp);
+#else
+    pc = (void *)uc->uc_mcontext.gregs[REG_RIP];
+#define storeReg(n, idx) registers[n] = (void *)uc->uc_mcontext.gregs[REG_##idx];
+    storeReg("r8", R8);
+    storeReg("r9", R9);
+    storeReg("r10", R10);
+    storeReg("r11", R11);
+    storeReg("r12", R12);
+    storeReg("r13", R13);
+    storeReg("r14", R14);
+    storeReg("r15", R15);
+    storeReg("rdi", RDI);
+    storeReg("rsi", RSI);
+    storeReg("rbp", RBP);
+    storeReg("rbx", RBX);
+    storeReg("rdx", RDX);
+    storeReg("rax", RAX);
+    storeReg("rcx", RCX);
+    storeReg("rsp", RSP);
+#endif
+#endif
+
+#ifdef __aarch64__
+#if defined(__APPLE__)
+    pc = (void *)uc->uc_mcontext.pc;
+#endif
+#endif
+
+    registers["pc"] = pc;
+
+    for (auto &reg : registers)
+    {
+        l.info("Reg {}: {}", reg.first, reg.second);
+    }
 
     std::vector<OMTracingFrame> frames;
     boost::stacktrace::stacktrace s;
