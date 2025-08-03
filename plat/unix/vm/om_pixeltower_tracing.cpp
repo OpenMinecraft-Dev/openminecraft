@@ -42,7 +42,7 @@ static void crash_handler(int sig, siginfo_t *info, void *context)
 // 10.5 UNIX03 member name prefixes
 #define DU3_PREFIX(s, m) __##s.__##m
 #else
-#define DU3_PREFIX(s, m) s##.##m
+#define DU3_PREFIX(s, m) ##s.##m
 #endif
 
 #define context_pc context_eip
