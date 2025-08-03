@@ -151,36 +151,29 @@ static void crash_handler(int sig, siginfo_t *info, void *context)
 #endif
 
 #ifdef __APPLE__
-#if __DARWIN_UNIX03 && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
-// 10.5 UNIX03 member name prefixes
-#define DU3_PREFIX(s, m) __##s.__##m
-#else
-#define DU3_PREFIX(s, m) ss.##m
-#endif
-
 #define context_pc context_rip
 #define context_sp context_rsp
 #define context_fp context_rbp
-#define context_rip uc_mcontext->DU3_PREFIX(ss, rip)
-#define context_rsp uc_mcontext->DU3_PREFIX(ss, rsp)
-#define context_rax uc_mcontext->DU3_PREFIX(ss, rax)
-#define context_rbx uc_mcontext->DU3_PREFIX(ss, rbx)
-#define context_rcx uc_mcontext->DU3_PREFIX(ss, rcx)
-#define context_rdx uc_mcontext->DU3_PREFIX(ss, rdx)
-#define context_rbp uc_mcontext->DU3_PREFIX(ss, rbp)
-#define context_rsi uc_mcontext->DU3_PREFIX(ss, rsi)
-#define context_rdi uc_mcontext->DU3_PREFIX(ss, rdi)
-#define context_r8 uc_mcontext->DU3_PREFIX(ss, r8)
-#define context_r9 uc_mcontext->DU3_PREFIX(ss, r9)
-#define context_r10 uc_mcontext->DU3_PREFIX(ss, r10)
-#define context_r11 uc_mcontext->DU3_PREFIX(ss, r11)
-#define context_r12 uc_mcontext->DU3_PREFIX(ss, r12)
-#define context_r13 uc_mcontext->DU3_PREFIX(ss, r13)
-#define context_r14 uc_mcontext->DU3_PREFIX(ss, r14)
-#define context_r15 uc_mcontext->DU3_PREFIX(ss, r15)
-#define context_flags uc_mcontext->DU3_PREFIX(ss, rflags)
-#define context_trapno uc_mcontext->DU3_PREFIX(es, trapno)
-#define context_err uc_mcontext->DU3_PREFIX(es, err)
+#define context_rip uc_mcontext->__ss.__rip
+#define context_rsp uc_mcontext->__ss.__rsp
+#define context_rax uc_mcontext->__ss.__rax
+#define context_rbx uc_mcontext->__ss.__rbx
+#define context_rcx uc_mcontext->__ss.__rcx
+#define context_rdx uc_mcontext->__ss.__rdx
+#define context_rbp uc_mcontext->__ss.__rbp
+#define context_rsi uc_mcontext->__ss.__rsi
+#define context_rdi uc_mcontext->__ss.__rdi
+#define context_r8 uc_mcontext->__ss.__r8
+#define context_r9 uc_mcontext->__ss.__r9
+#define context_r10 uc_mcontext->__ss.__r10
+#define context_r11 uc_mcontext->__ss.__r11
+#define context_r12 uc_mcontext->__ss.__r12
+#define context_r13 uc_mcontext->__ss.__r13
+#define context_r14 uc_mcontext->__ss.__r14
+#define context_r15 uc_mcontext->__ss.__r15
+#define context_flags uc_mcontext->__ss.__rflags
+#define context_trapno uc_mcontext->__es.__trapno
+#define context_err uc_mcontext->__es.__err
 #endif
 
 #ifdef __OpenBSD__
