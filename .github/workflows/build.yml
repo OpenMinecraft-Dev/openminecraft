@@ -142,6 +142,13 @@ jobs:
           wget https://dl.google.com/android/repository/android-ndk-${{ env.ANDROID_NDK_VERSION }}-linux.zip
           unzip android-ndk-${{ env.ANDROID_NDK_VERSION }}-linux.zip
 
+      - name: Cache xmake results
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/../.xmake
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-
+
       - name: Configure MacOS
         if: matrix.plat == 'macos'
         run: xmake f -m ${{ env.MODE }} --cxx="clang++" -yc ${{ env.XMAKE_ARGS }}
