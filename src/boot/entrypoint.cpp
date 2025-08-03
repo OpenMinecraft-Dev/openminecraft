@@ -12,8 +12,10 @@
 #include <ctime>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <memory>
 #include <new>
+#include <sstream>
 #include <stack>
 #include <stdexcept>
 #include <string>
@@ -198,6 +200,28 @@ int boot(std::vector<std::string> args)
                     break;
                 }
                 goto unk;
+            }
+            case "cat"_hash: {
+                if (commandBuffer.size() >= 2)
+                {
+                    std::ifstream s(commandBuffer[1], std::ios::binary);
+                    while (true)
+                    {
+                        auto buf = new char[1025];
+                        buf[1024] = '\0';
+                        s.read(buf, 1024);
+                        std::cout << buf;
+                        delete[] buf;
+
+                        if (!s.good())
+                        {
+                            break;
+                        }
+                    }
+                    s.close();
+                    commandBuffer.clear();
+                }
+                break;
             }
             case "crash"_hash: {
                 logger->info("{}", *((int *)33550336));
