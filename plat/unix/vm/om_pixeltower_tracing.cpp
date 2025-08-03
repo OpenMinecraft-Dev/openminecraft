@@ -293,8 +293,60 @@ static void crash_handler(int sig, siginfo_t *info, void *context)
 #endif
 
 #ifdef __aarch64__
-#if defined(__APPLE__)
-    pc = (void *)uc->uc_mcontext->__ss.__pc;
+#if defined(OM_PLATFORM_BSD) || defined(__APPLE__)
+
+#ifdef __APPLE__
+// see darwin-xnu/osfmk/mach/arm/_structs.h
+
+// 10.5 UNIX03 member name prefixes
+#define DU3_PREFIX(s, m) __##s.__##m
+
+#define context_x uc_mcontext->DU3_PREFIX(ss, x)
+#define context_fp uc_mcontext->DU3_PREFIX(ss, fp)
+#define context_lr uc_mcontext->DU3_PREFIX(ss, lr)
+#define context_sp uc_mcontext->DU3_PREFIX(ss, sp)
+#define context_pc uc_mcontext->DU3_PREFIX(ss, pc)
+#define context_cpsr uc_mcontext->DU3_PREFIX(ss, cpsr)
+#define context_esr uc_mcontext->DU3_PREFIX(es, esr)
+#endif
+
+#ifdef __FreeBSD__
+#define context_x uc_mcontext.mc_gpregs.gp_x
+#define context_fp context_x[REG_FP]
+#define context_lr uc_mcontext.mc_gpregs.gp_lr
+#define context_sp uc_mcontext.mc_gpregs.gp_sp
+#define context_pc uc_mcontext.mc_gpregs.gp_elr
+#endif
+
+#ifdef __NetBSD__
+#define context_x uc_mcontext.__gregs
+#define context_fp uc_mcontext.__gregs[_REG_FP]
+#define context_lr uc_mcontext.__gregs[_REG_LR]
+#define context_sp uc_mcontext.__gregs[_REG_SP]
+#define context_pc uc_mcontext.__gregs[_REG_ELR]
+#endif
+
+#ifdef __OpenBSD__
+#define context_x sc_x
+#define context_fp sc_x[REG_FP]
+#define context_lr sc_lr
+#define context_sp sc_sp
+#define context_pc sc_elr
+#endif
+
+    pc = (void *)uc->context_pc;
+#define storeReg(n, idx) registers[n] = (void *)uc->##idx;
+    storeReg("lr", context_lr);
+    for (int xi = 0; xi < 31; xi++)
+    {
+        storeReg(fmt::format("x{}", xi), context_x[xi]);
+    }
+#else
+    pc = (void *)uc->uc_mcontext.pc;
+    for (int i = 0; xi < 31; xi++)
+    {
+        registers[fmt::format("x{}", i)] = (void *)uc->uc_mcontext.regs[r];
+    }
 #endif
 #endif
 
