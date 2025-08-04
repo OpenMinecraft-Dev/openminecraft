@@ -87,6 +87,42 @@ static long WINAPI handler(_EXCEPTION_POINTERS *pt)
     stackFrame.AddrPC.Offset = context->Pc;
     stackFrame.AddrStack.Offset = context->Sp;
     stackFrame.AddrFrame.Offset = context->Fp;
+
+    registers["pc"] = (void *)context->Pc;
+    registers["sp"] = (void *)context->Sp;
+    registers["fp"] = (void *)context->Fp;
+    registers["lr"] = (void *)context->Lr;
+
+    registers["x0"] = (void *)context->X0;
+    registers["x1"] = (void *)context->X1;
+    registers["x2"] = (void *)context->X2;
+    registers["x3"] = (void *)context->X3;
+    registers["x4"] = (void *)context->X4;
+    registers["x5"] = (void *)context->X5;
+    registers["x6"] = (void *)context->X6;
+    registers["x7"] = (void *)context->X7;
+    registers["x8"] = (void *)context->X8;
+    registers["x9"] = (void *)context->X9;
+    registers["x10"] = (void *)context->X10;
+    registers["x11"] = (void *)context->X11;
+    registers["x12"] = (void *)context->X12;
+    registers["x13"] = (void *)context->X13;
+    registers["x14"] = (void *)context->X14;
+    registers["x15"] = (void *)context->X15;
+    registers["x16"] = (void *)context->X16;
+    registers["x17"] = (void *)context->X17;
+    registers["x18"] = (void *)context->X18;
+    registers["x19"] = (void *)context->X19;
+    registers["x20"] = (void *)context->X20;
+    registers["x21"] = (void *)context->X21;
+    registers["x22"] = (void *)context->X22;
+    registers["x23"] = (void *)context->X23;
+    registers["x24"] = (void *)context->X24;
+    registers["x25"] = (void *)context->X25;
+    registers["x26"] = (void *)context->X26;
+    registers["x27"] = (void *)context->X27;
+    registers["x28"] = (void *)context->X28;
+
     auto machineType = IMAGE_FILE_MACHINE_ARM64;
 #endif
     stackFrame.AddrPC.Mode = AddrModeFlat;
@@ -116,6 +152,7 @@ static long WINAPI handler(_EXCEPTION_POINTERS *pt)
     }
 
     log::OMLogger l("Crash handler");
+    l.info("code: {}, {}" , pt->ExceptionRecord->ExceptionCode, GetProcessId(proc));
     for (auto &regs : registers)
     {
         l.info("Reg {}: {}", regs.first, regs.second);
