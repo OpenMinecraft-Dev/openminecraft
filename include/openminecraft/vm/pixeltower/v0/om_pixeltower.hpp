@@ -5,6 +5,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klassloader.hpp"
+#include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
 #include <istream>
 #include <vector>
 namespace openminecraft::vm::pixeltower::v0
@@ -26,7 +27,7 @@ class OMPixelTower
     void initCurrentThread(uint64_t tlsSize);
     void destroyCurrentThread();
 
-    void handleCrash();
+    void handleCrash(int code, int pid, std::vector<v1::tracing::OMTracingFrame> &frames);
 
   private:
     OMInterpreter *interpreter;

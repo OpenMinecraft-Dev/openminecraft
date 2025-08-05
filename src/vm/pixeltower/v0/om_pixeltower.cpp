@@ -23,7 +23,7 @@ std::any println_impl(std::any *)
     return nullptr;
 }
 
-void OMPixelTower::handleCrash()
+void OMPixelTower::handleCrash(int code, int pid, std::vector<v1::tracing::OMTracingFrame> &frames)
 {
     bool inNative = currentThread.currentFrame->method->accessFlags & JVM_Acc_Native;
     logger.debug("in native: {}", inNative);
@@ -31,11 +31,13 @@ void OMPixelTower::handleCrash()
     auto fr = currentThread.currentFrame;
     while (fr)
     {
-	logger.info("{}.{}{} returns to {}", fr->method->klass->name, fr->method->name, fr->method->desc, fmt::ptr(fr->returnAddr));
-	if (!metaspace->inside(fr->returnAddr)) {
-	    logger.info("entering native frames!");
-	}
-	fr = fr->prev;
+        logger.info("{}.{}{} returns to {}", fr->method->klass->name, fr->method->name, fr->method->desc,
+                    fmt::ptr(fr->returnAddr));
+        if (!metaspace->inside(fr->returnAddr))
+        {
+            logger.info("entering native frames!");
+        }
+        fr = fr->prev;
     }
 }
 OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)

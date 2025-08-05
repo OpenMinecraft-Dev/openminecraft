@@ -64,10 +64,10 @@ namespace openminecraft::boot
 std::shared_ptr<pixeltower::v0::OMPixelTower> tower;
 log::OMLogger logger("Crash Handler");
 
-void onCrash(int sig)
+void onCrash(int code, int pid, std::vector<openminecraft::vm::pixeltower::v1::tracing::OMTracingFrame> &frames)
 {
-    logger.debug("tracing stack... (exit code {})", sig);
-    tower->handleCrash();
+    logger.debug("tracing stack... (exit code {})", code);
+    tower->handleCrash(code, pid, frames);
 }
 
 void searchDir(std::vector<std::string> &i, std::filesystem::directory_iterator di)
