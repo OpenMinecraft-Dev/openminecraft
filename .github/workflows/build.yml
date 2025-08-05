@@ -155,8 +155,8 @@ jobs:
         if: matrix.plat == 'windows'
         with:
           path: $HOME/.xmake
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
-          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}-${{ hashFiles('utils.lua') }}
+          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}-${{ hashFiles('utils.lua') }}
 
       - name: Configure MacOS
         if: matrix.plat == 'macos'

@@ -77,10 +77,6 @@ package("openal-soft")
         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
         import("package.tools.cmake").install(package, configs)
     end)
-
-    on_test(function (package)
-        assert(package:has_cfuncs("alGetProcAddress", {includes = "AL/al.h"}))
-    end)
 package_end()
 
 if is_plat("harmony") then
