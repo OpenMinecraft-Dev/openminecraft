@@ -147,7 +147,7 @@ jobs:
         if: matrix.plat != 'windows'
         with:
           path: ~/.xmake
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('package-lock.json') }}
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
           restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-
 
       - name: Cache xmake results (Windows)
@@ -155,7 +155,7 @@ jobs:
         if: matrix.plat == 'windows'
         with:
           path: $HOME/.xmake
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('package-lock.json') }}
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
           restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-
 
       - name: Configure MacOS
