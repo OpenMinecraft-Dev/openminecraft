@@ -24,7 +24,7 @@ if apple() then
     add_requires("moltenvk", { configs = { shared = false } })
 end
 
-add_requires("freetype", "harfbuzz", "stb", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "nlohmann_json", "libsdl3", { system = false })
+add_requires("freetype", "harfbuzz", "stb", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "nlohmann_json", "libsdl3", "openal-soft", { system = false })
 add_requires("boost", { system = false, configs = { stacktrace = true } })
 add_requires("fmt", { system = false, configs = { header_only = true } })
 
@@ -83,7 +83,7 @@ add_files("tools/om_bundle_maker.cpp")
 target("openminecraft-plat")
 set_kind("static")
 add_includedirs("include")
-add_packages("freetype", "harfbuzz", "stb", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", "libsdl3", "libffi", { system = false })
+add_packages("freetype", "harfbuzz", "stb", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", "libsdl3", "openal-soft", { system = false })
 if not is_plat("windows") then
     add_files("plat/unix/**.cpp")
 end
