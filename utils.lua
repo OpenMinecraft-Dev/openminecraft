@@ -10,7 +10,6 @@ function vulkandyn()
     return is_plat("linux", "bsd", "android")
 end
 
-if is_plat("harmony") then
 package("openal-soft")
 
     set_homepage("https://openal-soft.org")
@@ -37,9 +36,9 @@ package("openal-soft")
     end
 
     add_deps("cmake")
-    if is_plat("linux") then
-        add_deps("libsndio")
-    end
+    -- if is_plat("linux") then
+    --     add_deps("libsndio")
+    -- end
 
     if is_plat("windows", "mingw") then
         add_syslinks("ole32", "shell32", "user32", "winmm", "kernel32", "Avrt")
@@ -84,6 +83,7 @@ package("openal-soft")
     end)
 package_end()
 
+if is_plat("harmony") then
 package("libsdl3")
     set_homepage("https://www.libsdl.org/")
     set_description("Simple DirectMedia Layer")
