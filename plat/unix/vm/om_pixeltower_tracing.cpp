@@ -1,5 +1,6 @@
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
 #include "boost/stacktrace/stacktrace.hpp"
+#include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "sys/signal.h"
 #include <csignal>
@@ -13,8 +14,6 @@ std::map<std::string, void *> registers;
 static void crash_handler(int sig, siginfo_t *info, void *context)
 {
     ucontext_t *const uc = (ucontext_t *)context;
-    log::OMLogger l("Crash Handler");
-    l.info("signo: {}, {}", info->si_signo, getpid());
 
     void *pc = nullptr;
 
@@ -336,7 +335,7 @@ static void crash_handler(int sig, siginfo_t *info, void *context)
         registers[fmt::format("x{}", xi)] = (void *)uc->context_x[xi];
     }
 #else
-    pc = (void *)uc->uc_mcontext.pc;    
+    pc = (void *)uc->uc_mcontext.pc;
     registers["sp"] = (void *)uc->uc_mcontext.sp;
     for (int xi = 0; xi < 31; xi++)
     {
@@ -355,11 +354,6 @@ static void crash_handler(int sig, siginfo_t *info, void *context)
 
     registers["pc"] = pc;
 
-    for (auto &reg : registers)
-    {
-        l.info("Reg {}: {}", reg.first, reg.second);
-    }
-
     std::vector<OMTracingFrame> frames;
     boost::stacktrace::stacktrace s;
     for (auto f : s)
@@ -367,10 +361,7 @@ static void crash_handler(int sig, siginfo_t *info, void *context)
         frames.push_back(OMTracingFrame{(void *)f.address(), f.name()});
     }
 
-    for (auto &ff : frames)
-    {
-        l.info("{} @ {}", ff.location, ff.name);
-    }
+    openminecraft::boot::onCrash(info->si_signo, getpid(), frames);
 
     raise(SIGKILL);
     abort();

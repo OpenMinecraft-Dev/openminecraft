@@ -480,7 +480,8 @@ operand:
             n = tower->loader->lazyMethodInit(currentThread.currentFrame->method->klass, id);
         }
         assert(n != nullptr);
-        callDynamic(n, currentThread.pc + 3);
+        callDynamic(n, currentThread.pc);
+        currentThread.pc += 3;
 
         goto operand;
     }
@@ -492,7 +493,8 @@ operand:
             n = tower->loader->lazyMethodInit(currentThread.currentFrame->method->klass, id);
         }
         assert(n != nullptr);
-        call(n, currentThread.pc + 3);
+        call(n, currentThread.pc);
+        currentThread.pc += 3;
 
         goto operand;
     }

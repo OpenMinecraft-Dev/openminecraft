@@ -60,9 +60,9 @@ static long WINAPI handler(_EXCEPTION_POINTERS *pt)
     registers["r14"] = (void *)context->R14;
     registers["r15"] = (void *)context->R15;
 
-#define regxmm(tgt, n, hn, ln)          \
-    void ** n = (void **)&context->tgt; \
-    registers[hn] = n[1];               \
+#define regxmm(tgt, n, hn, ln)                                                                                         \
+    void **n = (void **)&context->tgt;                                                                                 \
+    registers[hn] = n[1];                                                                                              \
     registers[ln] = n[0];
 
     regxmm(Xmm0, xmm0, "xmmh0", "xmml0");
@@ -151,17 +151,7 @@ static long WINAPI handler(_EXCEPTION_POINTERS *pt)
         }
     }
 
-    log::OMLogger l("Crash handler");
-    l.info("code: {}, {}" , pt->ExceptionRecord->ExceptionCode, GetProcessId(proc));
-    for (auto &regs : registers)
-    {
-        l.info("Reg {}: {}", regs.first, regs.second);
-    }
-
-    for (auto &ff : frames)
-    {
-        l.info("{} @ {}", ff.location, ff.name);
-    }
+    openminecraft::boot::onCrash((int)pt->ExceptionRecord->ExceptionCode, (int)GetProcessId(proc), frames);
 
     return EXCEPTION_CONTINUE_SEARCH;
 }

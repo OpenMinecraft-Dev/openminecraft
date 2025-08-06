@@ -3,12 +3,15 @@
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
+#include "openminecraft/vm/impl/om_impl_printstream.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klassloader.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
+#include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -16,28 +19,88 @@
 
 namespace openminecraft::vm::pixeltower::v0
 {
-std::any println_impl(std::any *)
-{
-    std::cout << "printing!" << std::endl;
-    *(int *)nullptr = 0;
-    return nullptr;
-}
-
 void OMPixelTower::handleCrash(int code, int pid, std::vector<v1::tracing::OMTracingFrame> &frames)
 {
+    logger.error("{} crashed with code {}", pid, code);
+
+    auto nativeFrameInPt = [](v1::tracing::OMTracingFrame &f) {
+        return f.name.rfind("openminecraft::vm::pixeltower", 0) == 0;
+    };
+
+    bool findedFrame = false;
+    for (auto fr : frames)
+    {
+        logger.info(fr.name);
+        if (fr.name.rfind("openminecraft::vm::pixeltower", 0) == 0)
+        {
+            findedFrame = true;
+            break;
+        }
+    }
+
     bool inNative = currentThread.currentFrame->method->accessFlags & JVM_Acc_Native;
     logger.debug("in native: {}", inNative);
 
-    auto fr = currentThread.currentFrame;
-    while (fr)
+    if (findedFrame)
     {
-        logger.info("{}.{}{} returns to {}", fr->method->klass->name, fr->method->name, fr->method->desc,
-                    fmt::ptr(fr->returnAddr));
-        if (!metaspace->inside(fr->returnAddr))
+        logger.error("pixeltower frames found!");
+        auto fr = currentThread.currentFrame;
+        void *tracingPC = currentThread.pc;
+        auto nfitt = frames.begin();
+        while (fr)
         {
-            logger.info("entering native frames!");
+            bool inNative = fr->method->accessFlags & JVM_Acc_Native;
+            if (inNative)
+            {
+                while (!nativeFrameInPt(*nfitt))
+                {
+                    logger.error("C {} @ {}", nfitt->location, nfitt->name);
+                    ++nfitt;
+                }
+
+                while (nativeFrameInPt(*nfitt))
+                {
+                    ++nfitt;
+                }
+            }
+
+            logger.error("J {}.{}{} + {}", fr->method->klass->name, fr->method->name, fr->method->desc,
+                         reinterpret_cast<size_t>(tracingPC) - reinterpret_cast<size_t>(fr->method->code));
+            tracingPC = fr->returnAddr;
+            fr = fr->prev;
+
+            if (fr == nullptr)
+            {
+                while (nfitt != frames.end())
+                {
+                    logger.error("C {} @ {}", nfitt->location, nfitt->name);
+                    ++nfitt;
+                }
+            }
         }
-        fr = fr->prev;
+    }
+    else
+    {
+        logger.error("debug info stripped or corrupted, only shows pixeltower vm frames");
+        logger.error("C {} @ {}", frames[0].location, frames[0].name);
+        logger.error("(unknown call stack)");
+        auto fr = currentThread.currentFrame;
+        while (fr)
+        {
+            logger.error("J {}.{}{} returns to {}", fr->method->klass->name, fr->method->name, fr->method->desc,
+                         fmt::ptr(fr->returnAddr));
+            if (!metaspace->inside(fr->returnAddr))
+            {
+                logger.error("entering native frames!");
+            }
+            fr = fr->prev;
+        }
+    }
+
+    logger.error("register dumps: ");
+    for (auto tar : v1::tracing::registers)
+    {
+        logger.error("{}: {}", tar.first, tar.second);
     }
 }
 OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
@@ -47,7 +110,8 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
     interpreter = new OMInterpreter(heap, this);
     loader = new OMKlassLoader(heap, metaspace, interpreter);
 
-    loader->nativeMethods["vmstd/internal/SystemPrintStream.println(J)V"] = println_impl;
+    loader->nativeMethods["vmstd/internal/SystemPrintStream.println(J)V"] =
+        impl::vmstd_internal_SystemPrintStream_println;
 }
 OMPixelTower::~OMPixelTower()
 {
