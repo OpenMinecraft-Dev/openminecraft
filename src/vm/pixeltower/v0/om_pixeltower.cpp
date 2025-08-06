@@ -30,7 +30,6 @@ void OMPixelTower::handleCrash(int code, int pid, std::vector<v1::tracing::OMTra
     bool findedFrame = false;
     for (auto fr : frames)
     {
-        logger.info(fr.name);
         if (fr.name.rfind("openminecraft::vm::pixeltower", 0) == 0)
         {
             findedFrame = true;
@@ -47,36 +46,33 @@ void OMPixelTower::handleCrash(int code, int pid, std::vector<v1::tracing::OMTra
         auto fr = currentThread.currentFrame;
         void *tracingPC = currentThread.pc;
         auto nfitt = frames.begin();
-        while (fr)
-        {
-            bool inNative = fr->method->accessFlags & JVM_Acc_Native;
-            if (inNative)
-            {
-                while (!nativeFrameInPt(*nfitt))
-                {
-                    logger.error("C {} @ {}", nfitt->location, nfitt->name);
-                    ++nfitt;
-                }
 
+        while (nfitt != frames.end())
+        {
+            if (nativeFrameInPt(*nfitt))
+            {
                 while (nativeFrameInPt(*nfitt))
                 {
                     ++nfitt;
                 }
-            }
 
-            logger.error("J {}.{}{} + {}", fr->method->klass->name, fr->method->name, fr->method->desc,
-                         reinterpret_cast<size_t>(tracingPC) - reinterpret_cast<size_t>(fr->method->code));
-            tracingPC = fr->returnAddr;
-            fr = fr->prev;
-
-            if (fr == nullptr)
-            {
-                while (nfitt != frames.end())
+                logger.error("J {}.{}{} + {}", fr->method->klass->name, fr->method->name, fr->method->desc,
+                             reinterpret_cast<size_t>(tracingPC) - reinterpret_cast<size_t>(fr->method->code));
+                tracingPC = fr->returnAddr;
+                fr = fr->prev;
+                while (fr != nullptr && (fr->method->accessFlags & JVM_Acc_Native) == 0)
                 {
-                    logger.error("C {} @ {}", nfitt->location, nfitt->name);
-                    ++nfitt;
+                    logger.error("J {}.{}{} + {}", fr->method->klass->name, fr->method->name, fr->method->desc,
+                                 reinterpret_cast<size_t>(tracingPC) - reinterpret_cast<size_t>(fr->method->code));
+                    tracingPC = fr->returnAddr;
+                    fr = fr->prev;
                 }
+
+                continue;
             }
+
+            logger.error("C {} @ {}", nfitt->location, nfitt->name == "" ? "???" : nfitt->name);
+            ++nfitt;
         }
     }
     else
@@ -87,12 +83,7 @@ void OMPixelTower::handleCrash(int code, int pid, std::vector<v1::tracing::OMTra
         auto fr = currentThread.currentFrame;
         while (fr)
         {
-            logger.error("J {}.{}{} returns to {}", fr->method->klass->name, fr->method->name, fr->method->desc,
-                         fmt::ptr(fr->returnAddr));
-            if (!metaspace->inside(fr->returnAddr))
-            {
-                logger.error("entering native frames!");
-            }
+            logger.error("J {}.{}{}", fr->method->klass->name, fr->method->name, fr->method->desc);
             fr = fr->prev;
         }
     }
