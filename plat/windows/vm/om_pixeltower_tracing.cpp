@@ -3,6 +3,7 @@
 #include "boost/stacktrace/detail/frame_decl.hpp"
 #include "dbgHelp.h"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/boot/om_boot.hpp"
 #include <iostream>
 #include <minwindef.h>
 #include <processthreadsapi.h>
