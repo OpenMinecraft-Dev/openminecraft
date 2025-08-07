@@ -287,6 +287,14 @@ operand:
         currentThread.pc++;
         goto operand;
     }
+    case op_ldc: {
+        auto n = static_cast<jint *>(static_cast<void *>(frame->method->klass->constantPool +
+                                                         binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
+        assert(n != nullptr);
+        stackPushAccess<jint>(*n);
+        currentThread.pc += 2;
+        goto operand;
+    }
     case op_ldc2_w: {
         // compatible with jdouble
         auto n = static_cast<jlong *>(static_cast<void *>(frame->method->klass->constantPool +

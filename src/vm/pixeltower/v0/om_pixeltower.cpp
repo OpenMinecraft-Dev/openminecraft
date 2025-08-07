@@ -103,6 +103,8 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
 
     loader->nativeMethods["vmstd/internal/SystemPrintStream.println(J)V"] =
         impl::vmstd_internal_SystemPrintStream_println;
+    loader->nativeMethods["vmstd/internal/SystemPrintStream.println(F)V"] =
+        impl::vmstd_internal_SystemPrintStream_println;
 }
 OMPixelTower::~OMPixelTower()
 {
