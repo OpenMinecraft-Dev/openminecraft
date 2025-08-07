@@ -12,6 +12,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
 #include <cstdint>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -175,5 +176,26 @@ void OMPixelTower::destroyCurrentThread()
     {
         mem::allocator::tracedFreeVMData(currentThread.stackEnd);
     }
+}
+
+void *OMPixelTower::createString(std::string str)
+{
+    loader->loadClass("[B"); // class for byte[]
+    auto barr = loader->fetchClass("[B");
+    auto att = barr->allocateArray(str.length());
+    std::memcpy(att->data, str.c_str(), att->length);
+    loader->loadClass("java/lang/String");
+    auto stt = loader->fetchClass("java/lang/String");
+    auto tgt = stt->allocateInstance();
+    if (heap->ptrCompEnabled())
+    {
+        *reinterpret_cast<uint32_t *>(tgt->data) = heap->compressPtr(att);
+    }
+    else
+    {
+        *reinterpret_cast<void **>(tgt->data) = att;
+    }
+    logger.debug("Heap base: {}", heap->heapBase());
+    return tgt;
 }
 } // namespace openminecraft::vm::pixeltower::v0

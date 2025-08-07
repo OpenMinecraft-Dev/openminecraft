@@ -48,6 +48,15 @@ class OMKlass
         obj->klass = this;
         return obj;
     }
+
+    OMOOPArrDesc *allocateArray(jint n)
+    {
+        assert(kind == OMKlassKind::Array);
+        auto obj = (OMOOPArrDesc *)heap->allocate(sizeof(OMOOPArrDesc) + length * n);
+        obj->klass = this;
+        obj->length = n;
+        return obj;
+    }
 };
 } // namespace openminecraft::vm::pixeltower::v0
 

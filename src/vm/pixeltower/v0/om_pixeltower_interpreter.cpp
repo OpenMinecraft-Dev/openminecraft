@@ -192,7 +192,7 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
             break;
         }
         case "float"_hash: {
-            data.push_back((jfloat)(size_t)*itt);
+            data.push_back(*reinterpret_cast<jfloat *>(&*itt));
             ++itt;
             break;
         }
@@ -288,10 +288,9 @@ operand:
         goto operand;
     }
     case op_ldc: {
-        auto n = static_cast<jint *>(static_cast<void *>(frame->method->klass->constantPool +
-                                                         binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
+        auto n = static_cast<void **>(static_cast<void *>(frame->method->klass->constantPool + currentThread.pc[1]));
         assert(n != nullptr);
-        stackPushAccess<jint>(*n);
+        stackPushAccess<void *>(*n);
         currentThread.pc += 2;
         goto operand;
     }

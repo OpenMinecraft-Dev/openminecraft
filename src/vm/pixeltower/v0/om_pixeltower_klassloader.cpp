@@ -330,7 +330,36 @@ void OMKlassLoader::loadSpecialClass(std::string name)
     klass->superClass = fetchClass("java/lang/Object");
     klass->methods = nullptr;
     klass->accessFlags = JVM_Acc_Public;
-    klass->length = 0;
+    switch (hash_compile_time(r.unwrap().c_str()))
+    {
+    case "[\u0001byte"_hash:
+        klass->length = 1;
+        break;
+    case "[\u0001boolean"_hash:
+        klass->length = 1;
+        break;
+    case "[\u0001short"_hash:
+        klass->length = 2;
+        break;
+    case "[\u0001char"_hash:
+        klass->length = 2;
+        break;
+    case "[\u0001int"_hash:
+        klass->length = 4;
+        break;
+    case "[\u0001float"_hash:
+        klass->length = 4;
+        break;
+    case "[\u0001double"_hash:
+        klass->length = 8;
+        break;
+    case "[\u0001long"_hash:
+        klass->length = 8;
+        break;
+    default:
+        klass->length = heap->ptrSize();
+        break;
+    }
     klass->staticBlock = nullptr;
     klass->staticLength = 0;
     klass->heap = heap;

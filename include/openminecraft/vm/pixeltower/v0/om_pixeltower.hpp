@@ -29,6 +29,8 @@ class OMPixelTower
 
     void handleCrash(int code, int pid, std::vector<v1::tracing::OMTracingFrame> &frames);
 
+    void *createString(std::string str);
+
   private:
     OMInterpreter *interpreter;
     log::OMLogger logger;
