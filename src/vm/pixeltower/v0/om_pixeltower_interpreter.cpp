@@ -288,6 +288,11 @@ operand:
         currentThread.pc++;
         goto operand;
     }
+    case op_bipush: {
+        stackPushAccess<jint>((jint)currentThread.pc[1]);
+        currentThread.pc += 2;
+        goto operand;
+    }
     case op_ldc: {
         auto n = static_cast<void **>(static_cast<void *>(frame->method->klass->constantPool + currentThread.pc[1]));
         assert(n != nullptr);
@@ -358,6 +363,15 @@ operand:
     }
     case op_dup: {
         stackPushAccess<void *>(stackTopAccess<void *>());
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_iadd: {
+        auto i1 = stackTopAccess<jint>();
+        stackPop();
+        auto i2 = stackTopAccess<jint>();
+        stackPop();
+        stackPushAccess<jint>(i1 + i2);
         currentThread.pc++;
         goto operand;
     }
@@ -519,7 +533,7 @@ operand:
         goto operand;
     }
     default: {
-        logger.error("We are hitting Mazarine End!");
+        logger.error("We are hitting the Mazarine End!");
         logger.error("unknown operand at {}", fmt::ptr(currentThread.pc));
         logger.error("thread {}", fmt::ptr(&currentThread.id));
         logger.error("pc pointed at {} ({})", fmt::ptr(currentThread.pc), currentPosition());

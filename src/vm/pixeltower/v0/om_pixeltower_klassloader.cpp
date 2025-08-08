@@ -332,7 +332,7 @@ void OMKlassLoader::loadSpecialClass(std::string name)
 
     auto klass = (OMKlass *)mem::allocator::tracedCallocVMData(1, sizeof(OMKlass));
     klass->kind = Array;
-    // gino: I don't know why variable ncpy exists...
+    // gino: msvc bug? string doesn't copy with the operator equals call
     klass->name = name;
     name.copy((char *)klass->name.c_str(), name.length());
     klass->superClass = fetchClass("java/lang/Object");
