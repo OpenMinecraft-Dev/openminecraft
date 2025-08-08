@@ -174,7 +174,7 @@ int boot(std::vector<std::string> args)
                     pixeltower::v1::tracing::installHandler();
                     tower->initCurrentThread(1ul * 1024 * 1024);
                     tower->init(commandBuffer[2]);
-                    tower->load("../Test.class");
+                    tower->load("C:/Users/Coder2/Test.class");
                     tower->loader->loadClass("openminecraft/Test");
                     auto cls = tower->loader->fetchClass("openminecraft/Test");
                     auto met = cls->methods;

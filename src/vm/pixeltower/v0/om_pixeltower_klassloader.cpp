@@ -332,7 +332,7 @@ void OMKlassLoader::loadSpecialClass(std::string name)
 
     auto klass = (OMKlass *)mem::allocator::tracedCallocVMData(1, sizeof(OMKlass));
     klass->kind = Array;
-    klass->name = name;
+    klass->name = std::string(name.c_str());
     klass->superClass = fetchClass("java/lang/Object");
     klass->methods = nullptr;
     klass->accessFlags = JVM_Acc_Public;
