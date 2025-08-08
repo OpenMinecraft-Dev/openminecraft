@@ -391,6 +391,20 @@ operand:
         currentThread.pc++;
         goto operand;
     }
+    case op_i2b: {
+        auto v = stackTopAccess<jint>();
+        stackPop();
+        stackPushAccess<jint>((jint)(jbyte)v);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_i2s: {
+        auto v = stackTopAccess<jint>();
+        stackPop();
+        stackPushAccess<jint>((jint)(jshort)v);
+        currentThread.pc++;
+        goto operand;
+    }
     case op_lcmp: {
         auto item2 = stackTopAccessW<jlong>();
         stackPopW();
