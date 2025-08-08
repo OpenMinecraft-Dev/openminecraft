@@ -333,8 +333,8 @@ void OMKlassLoader::loadSpecialClass(std::string name)
     auto klass = (OMKlass *)mem::allocator::tracedCallocVMData(1, sizeof(OMKlass));
     klass->kind = Array;
     // gino: I don't know why variable ncpy exists...
-    auto ncpy = std::string(name);
-    klass->name = ncpy;
+    klass->name = name;
+    name.copy((char *)klass->name.c_str(), name.length());
     klass->superClass = fetchClass("java/lang/Object");
     klass->methods = nullptr;
     klass->accessFlags = JVM_Acc_Public;
