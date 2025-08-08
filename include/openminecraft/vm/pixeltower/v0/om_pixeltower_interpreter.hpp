@@ -19,6 +19,7 @@ class OMInterpreter
 
     jint execute();
     void call(OMMethod *met, uint8_t *retAddr);
+    OMPixelTower *tower;
 
   private:
     void invokeNative(OMMethod *m, std::vector<void *> &args);
@@ -37,7 +38,6 @@ class OMInterpreter
     }
 
     log::OMLogger logger;
-    OMPixelTower *tower;
     OMPixelTowerHeap *heap;
     v1::OMDebugger debugger;
 };

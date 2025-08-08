@@ -189,7 +189,6 @@ int boot(std::vector<std::string> args)
                             catch (err::OMValidationError e)
                             {
                                 logger->info("{}", e.what());
-                                logger->info("{}", tower->createString("Test!!!!Test!!!!!!"));
                             }
                             break;
                         }

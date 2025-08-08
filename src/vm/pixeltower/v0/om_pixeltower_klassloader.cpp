@@ -6,6 +6,7 @@
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_base.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_field.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
@@ -226,11 +227,16 @@ loadMethods:
         case classfile::OMClassConstantType::Double:
             *(jdouble *)acc = cppair.second->to<classfile::OMClassConstantDouble>()->data;
             break;
+        case classfile::OMClassConstantType::String:
+            *(void **)acc = interpreter->tower->createString(
+                klass->raw->mapping[cppair.second->to<classfile::OMClassConstantString>()->stringIndex]
+                    ->to<classfile::OMClassConstantUtf8>()
+                    ->data);
+            break;
         case classfile::OMClassConstantType::MethodRef:
         case classfile::OMClassConstantType::Class:
         case classfile::OMClassConstantType::FieldRef:
         case classfile::OMClassConstantType::Utf8:
-        case classfile::OMClassConstantType::String:
         case classfile::OMClassConstantType::InterfaceMethodRef:
         case classfile::OMClassConstantType::NameAndType:
         case classfile::OMClassConstantType::MethodHandle:

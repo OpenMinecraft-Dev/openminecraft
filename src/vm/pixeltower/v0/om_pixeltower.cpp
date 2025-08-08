@@ -106,6 +106,10 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
         impl::vmstd_internal_SystemPrintStream_println;
     loader->nativeMethods["vmstd/internal/SystemPrintStream.println(F)V"] =
         impl::vmstd_internal_SystemPrintStream_println;
+    loader->nativeMethods["vmstd/internal/SystemPrintStream.println(Ljava/lang/String;)V"] =
+        impl::vmstd_internal_SystemPrintStream_println;
+    loader->nativeMethods["vmstd/internal/SystemPrintStream.println(D)V"] =
+        impl::vmstd_internal_SystemPrintStream_println;
 }
 OMPixelTower::~OMPixelTower()
 {
@@ -195,7 +199,7 @@ void *OMPixelTower::createString(std::string str)
     {
         *reinterpret_cast<void **>(tgt->data) = att;
     }
-    logger.debug("Heap base: {}", heap->heapBase());
+    logger.info("loading {} into {}", str, fmt::ptr(tgt));
     return tgt;
 }
 } // namespace openminecraft::vm::pixeltower::v0

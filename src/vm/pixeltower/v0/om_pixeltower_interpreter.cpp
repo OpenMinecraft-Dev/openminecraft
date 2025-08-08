@@ -7,6 +7,7 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_base.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_field.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_frame.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
@@ -199,7 +200,7 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
         case "long"_hash: {
             if (sizeof(void *) == 8)
             {
-                data.push_back((jlong)(size_t)*itt);
+                data.push_back(*reinterpret_cast<jlong *>(&*itt));
                 ++itt;
             }
             else
@@ -218,7 +219,7 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
         case "double"_hash: {
             if (sizeof(void *) == 8)
             {
-                data.push_back((jlong)(size_t)*itt);
+                data.push_back(*reinterpret_cast<jdouble *>(&*itt));
                 ++itt;
             }
             else
