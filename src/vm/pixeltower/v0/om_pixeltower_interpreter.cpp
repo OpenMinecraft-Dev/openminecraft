@@ -52,7 +52,7 @@ void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
         currentThread.pc = met->code;
         for (int i = 0; i < met->maxLocals; i++)
         {
-            *localAccess<void *>(i) = nullptr;
+            localAccessMod<void *>(i, nullptr);
         }
         loop();
         return;
@@ -66,7 +66,7 @@ void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
     // TODO: optimization
     for (int i = 0; i < met->maxLocals; i++)
     {
-        *localAccess<void *>(i, nextframe) = nullptr;
+        localAccessMod<void *>(i, nullptr, nextframe);
     }
     std::vector<void *> args(met->args);
     for (int i = met->args - 1; i >= 0; i--)
@@ -90,7 +90,7 @@ void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
 
     for (int i = 0; i < args.size(); i++)
     {
-        *localAccess<void *>(i, nextframe) = args[i];
+        localAccessMod(i, args[i], nextframe);
     }
 
     loop();
@@ -135,11 +135,11 @@ void OMInterpreter::callDynamic(OMMethod *met, uint8_t *retAddr)
     // clears local variable & pass arguments
     for (int i = 0; i < codetarget->maxLocals; i++)
     {
-        *localAccess<void *>(i, nextframe) = nullptr;
+        localAccessMod<void *>(i, nullptr, nextframe);
     }
     for (int i = 0; i < args.size(); i++)
     {
-        *localAccess<void *>(i, nextframe) = args[i];
+        localAccessMod<void *>(i, args[i], nextframe);
     }
 
     loop();
@@ -334,11 +334,29 @@ operand:
         currentThread.pc++;
         goto operand;
     }
+    case op_istore: {
+        localAccessMod<jint>(currentThread.pc[1], stackTopAccess<jint>());
+        stackPop();
+        currentThread.pc += 2;
+        goto operand;
+    }
+    case op_lstore: {
+        localAccessModW<jlong>(currentThread.pc[1], stackTopAccessW<jlong>());
+        stackPopW();
+        currentThread.pc += 2;
+        goto operand;
+    }
+    case op_astore: {
+        localAccessMod<void *>(currentThread.pc[1], stackTopAccess<void *>());
+        stackPop();
+        currentThread.pc += 2;
+        goto operand;
+    }
     case op_istore_n(0):
     case op_istore_n(1):
     case op_istore_n(2):
     case op_istore_n(3): {
-        *localAccess<jint>(currentThread.pc[0] - op_istore_n(0)) = stackTopAccess<jint>();
+        localAccessMod<jint>(currentThread.pc[0] - op_istore_n(0), stackTopAccess<jint>());
         stackPop();
         currentThread.pc++;
         goto operand;
@@ -347,7 +365,7 @@ operand:
     case op_astore_n(1):
     case op_astore_n(2):
     case op_astore_n(3): {
-        *localAccess<void *>(currentThread.pc[0] - op_astore_n(0)) = stackTopAccess<void *>();
+        localAccessMod<void *>(currentThread.pc[0] - op_astore_n(0), stackTopAccess<void *>());
         stackPop();
         currentThread.pc++;
         goto operand;
@@ -386,7 +404,7 @@ operand:
         goto operand;
     }
     case op_iinc: {
-        *localAccess<jint>(currentThread.pc[1]) = localAccessValue<jint>(currentThread.pc[1]) + currentThread.pc[2];
+        localAccessMod<jint>(currentThread.pc[1], localAccessValue<jint>(currentThread.pc[1]) + currentThread.pc[2]);
         currentThread.pc += 3;
         goto operand;
     }
@@ -429,6 +447,19 @@ operand:
             stackPushAccess<jint>(-1);
         }
         currentThread.pc++;
+        goto operand;
+    }
+    case op_ifne: {
+        auto i = stackTopAccess<jint>();
+        stackPop();
+        if (i != 0)
+        {
+            currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);
+        }
+        else
+        {
+            currentThread.pc += 3;
+        }
         goto operand;
     }
     case op_ifge: {

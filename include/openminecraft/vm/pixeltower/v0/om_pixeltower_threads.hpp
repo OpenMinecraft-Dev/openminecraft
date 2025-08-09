@@ -103,11 +103,34 @@ template <typename T> inline void stackPushAccessW(T data)
     }
 }
 
-template <typename T> inline T *localAccess(int idx, OMFrame *f = currentThread.currentFrame)
+/*template <typename T> inline T *localAccess(int idx, OMFrame *f = currentThread.currentFrame)
 {
     static_assert(std::is_same_v<T, jint> || std::is_same_v<T, void *> || std::is_same_v<T, jfloat>,
                   "unsatisfied type!");
     return (T *)(((uint8_t *)f) - sizeof(void *) * (f->method->maxLocals - idx));
+}*/
+
+template <typename T> inline void localAccessMod(int idx, T value, OMFrame *f = currentThread.currentFrame)
+{
+    static_assert(std::is_same_v<T, jint> || std::is_same_v<T, void *> || std::is_same_v<T, jfloat>,
+                  "unsatisfied type!");
+    *(T *)(((uint8_t *)f) - sizeof(void *) * (f->method->maxLocals - idx)) = value;
+}
+
+template <typename T> inline void localAccessModW(int idx, T value, OMFrame *f = currentThread.currentFrame)
+{
+    static_assert(std::is_same_v<T, jlong> || std::is_same_v<T, jdouble>, "unsatisfied type!");
+    if (sizeof(void *) == 8)
+    {
+        *(T *)(((uint8_t *)f) - sizeof(void *) * (f->method->maxLocals - idx)) = value;
+    }
+    else
+    {
+        int64_t temp = *reinterpret_cast<int64_t *>(&value);
+
+        localAccessMod<jint>(idx, temp & 0xffffffff, f);
+        localAccessMod<jint>(idx + 1, temp >> 32, f);
+    }
 }
 
 template <typename T> inline T localAccessValue(int idx, OMFrame *f = currentThread.currentFrame)
