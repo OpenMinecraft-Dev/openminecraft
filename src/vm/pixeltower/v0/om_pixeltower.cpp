@@ -108,9 +108,13 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
         impl::vmstd_internal_SystemPrintStream_println;
     loader->nativeMethods["vmstd/internal/SystemPrintStream.println(Ljava/lang/String;)V"] =
         impl::vmstd_internal_SystemPrintStream_println;
+    loader->nativeMethods["vmstd/internal/SystemPrintStream.println(Ljava/lang/Object;)V"] =
+        impl::vmstd_internal_SystemPrintStream_println;
     loader->nativeMethods["vmstd/internal/SystemPrintStream.println(D)V"] =
         impl::vmstd_internal_SystemPrintStream_println;
     loader->nativeMethods["vmstd/internal/SystemPrintStream.println(I)V"] =
+        impl::vmstd_internal_SystemPrintStream_println;
+    loader->nativeMethods["vmstd/internal/SystemPrintStream.println(Z)V"] =
         impl::vmstd_internal_SystemPrintStream_println;
 }
 OMPixelTower::~OMPixelTower()
@@ -190,7 +194,7 @@ void *OMPixelTower::createString(std::string str)
     auto barr = loader->fetchClass("[B");
     logger.info("{}", fmt::ptr(barr));
     auto att = barr->allocateArray(str.length());
-    std::memcpy(att->data, str.c_str(), att->length);
+    std::memcpy(att->array<jbyte>(), str.c_str(), att->length);
     loader->loadClass("java/lang/String");
     auto stt = loader->fetchClass("java/lang/String");
     auto tgt = stt->allocateInstance();

@@ -19,6 +19,10 @@ std::any vmstd_internal_SystemPrintStream_println(std::any *args)
     {
         std::cout << "[stdout] " << std::any_cast<pixeltower::v0::jfloat>(args[1]) << std::endl;
     }
+    else if (t.name() == std::type_index(typeid(pixeltower::v0::jboolean)).name())
+    {
+        std::cout << "[stdout] " << (std::any_cast<pixeltower::v0::jboolean>(args[1]) ? "true" : "false") << std::endl;
+    }
     else if (t.name() == std::type_index(typeid(pixeltower::v0::jint)).name())
     {
         std::cout << "[stdout] " << std::any_cast<pixeltower::v0::jint>(args[1]) << std::endl;
@@ -30,18 +34,25 @@ std::any vmstd_internal_SystemPrintStream_println(std::any *args)
     else if (t.name() == std::type_index(typeid(void *)).name())
     {
         auto t = static_cast<pixeltower::v0::OMOOPDesc *>(std::any_cast<void *>(args[1]));
-        auto h = t->klass->heap;
-        void *ptt;
-        if (h->ptrCompEnabled())
+        if (t->klass->name == "java/lang/String")
         {
-            ptt = h->decompressPtr(*(uint32_t *)t->data);
+            auto h = t->klass->heap;
+            void *ptt;
+            if (h->ptrCompEnabled())
+            {
+                ptt = h->decompressPtr(*(uint32_t *)t->data);
+            }
+            else
+            {
+                ptt = *(void **)t->data;
+            }
+            auto arr = static_cast<pixeltower::v0::OMOOPArrDesc *>(ptt);
+            std::cout << "[stdout] " << std::string(arr->data, arr->length) << std::endl;
         }
         else
         {
-            ptt = *(void **)t->data;
+            std::cout << "[stdout] " << t << std::endl;
         }
-        auto arr = static_cast<pixeltower::v0::OMOOPArrDesc *>(ptt);
-        std::cout << "[stdout] " << std::string(arr->data, arr->length) << std::endl;
     }
     return nullptr;
 }

@@ -310,6 +310,11 @@ operand:
         currentThread.pc += 3;
         goto operand;
     }
+    case op_aload: {
+        stackPushAccess<void *>(localAccessValue<void *>(currentThread.pc[1]));
+        currentThread.pc += 2;
+        goto operand;
+    }
     case op_iload_n(0):
     case op_iload_n(1):
     case op_iload_n(2):
@@ -331,6 +336,17 @@ operand:
     case op_aload_n(2):
     case op_aload_n(3): {
         stackPushAccess<void *>(localAccessValue<void *>(currentThread.pc[0] - op_aload_n(0)));
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_baload: {
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        stackPushAccess<jint>(arr->array<jboolean>()[idx]);
+
         currentThread.pc++;
         goto operand;
     }
@@ -367,6 +383,19 @@ operand:
     case op_astore_n(3): {
         localAccessMod<void *>(currentThread.pc[0] - op_astore_n(0), stackTopAccess<void *>());
         stackPop();
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_bastore: {
+        auto value = (jboolean)stackTopAccess<jint>();
+        stackPop();
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        arr->array<jboolean>()[idx] = value;
+
         currentThread.pc++;
         goto operand;
     }
@@ -596,11 +625,40 @@ operand:
         currentThread.pc += 3;
         goto operand;
     }
+    case op_newarray: {
+        OMKlass *arrkl;
+#define mapAndLoad(id, name)                                                                                           \
+    case id:                                                                                                           \
+        tower->loader->loadClass(name);                                                                                \
+        arrkl = tower->loader->fetchClass(name);                                                                       \
+        break;
+
+        switch (currentThread.pc[1])
+        {
+            mapAndLoad(4, "[Z");
+            mapAndLoad(5, "[C");
+            mapAndLoad(6, "[F");
+            mapAndLoad(7, "[D");
+            mapAndLoad(8, "[B");
+            mapAndLoad(9, "[S");
+            mapAndLoad(10, "[I");
+            mapAndLoad(11, "[J");
+        }
+
+        auto r = arrkl->allocateArray(stackTopAccess<jint>());
+        stackPop();
+        stackPushAccess<void *>(r);
+
+        currentThread.pc += 2;
+        goto operand;
+    }
     default: {
+    exerr:
         logger.error("We are hitting the Mazarine End!");
-        logger.error("unknown operand at {}", fmt::ptr(currentThread.pc));
+        logger.error("unknown operand at {} ({:#04x})", fmt::ptr(currentThread.pc), (int)*currentThread.pc);
         logger.error("thread {}", fmt::ptr(&currentThread.id));
-        logger.error("pc pointed at {} ({})", fmt::ptr(currentThread.pc), currentPosition());
+        logger.error("pc pointed at {} ({} at {})", fmt::ptr(currentThread.pc), currentPosition(),
+                     fmt::ptr(currentThread.currentFrame->method->code));
 
         debugger.debugStack();
 

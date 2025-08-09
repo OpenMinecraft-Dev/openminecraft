@@ -182,6 +182,7 @@ int boot(std::vector<std::string> args)
                     {
                         if (strcmp(met->name, "main") == 0 && strcmp(met->desc, "([Ljava/lang/String;)V") == 0)
                         {
+                            auto now = std::chrono::system_clock::now();
                             try
                             {
                                 tower->boot(met);
@@ -190,6 +191,13 @@ int boot(std::vector<std::string> args)
                             {
                                 logger->info("{}", e.what());
                             }
+                            catch (int g)
+                            {
+                            }
+                            auto now2 = std::chrono::system_clock::now();
+                            logger->info("VM exited {} ns",
+                                         std::chrono::duration_cast<std::chrono::nanoseconds>(now2 - now).count());
+
                             break;
                         }
                         met = met->next;

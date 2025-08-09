@@ -20,6 +20,11 @@ struct OMOOPArrDesc
     jint length;
     jbyte data[0];
     // array data area
+
+    template <typename T> inline T *array()
+    {
+        return (T *)data;
+    }
 };
 } // namespace openminecraft::vm::pixeltower::v0
 
