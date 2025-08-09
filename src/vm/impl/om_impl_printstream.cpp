@@ -19,6 +19,10 @@ std::any vmstd_internal_SystemPrintStream_println(std::any *args)
     {
         std::cout << "[stdout] " << std::any_cast<pixeltower::v0::jfloat>(args[1]) << std::endl;
     }
+    else if (t.name() == std::type_index(typeid(pixeltower::v0::jint)).name())
+    {
+        std::cout << "[stdout] " << std::any_cast<pixeltower::v0::jint>(args[1]) << std::endl;
+    }
     else if (t.name() == std::type_index(typeid(pixeltower::v0::jdouble)).name())
     {
         std::cout << "[stdout] " << std::any_cast<pixeltower::v0::jdouble>(args[1]) << std::endl;

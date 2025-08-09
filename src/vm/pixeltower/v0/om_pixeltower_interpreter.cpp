@@ -39,6 +39,7 @@ void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
 
     if (!currentThread.currentFrame)
     {
+        // geopeila: maybe the stack pointer need to be reset
         currentThread.stackPointer = currentThread.stack;
         auto frame = (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame));
         currentThread.stackPointer = (jbyte *)currentThread.stackPointer - sizeof(OMFrame) -
@@ -384,6 +385,11 @@ operand:
         currentThread.pc++;
         goto operand;
     }
+    case op_iinc: {
+        *localAccess<jint>(currentThread.pc[1]) = localAccessValue<jint>(currentThread.pc[1]) + currentThread.pc[2];
+        currentThread.pc += 3;
+        goto operand;
+    }
     case op_i2l: {
         auto v = stackTopAccess<jint>();
         stackPop();
@@ -522,6 +528,19 @@ operand:
         goto operand;
     }
     case op_invokespecial: {
+        auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
+        auto n = *static_cast<OMMethod **>(static_cast<void *>(frame->method->klass->constantPool + id));
+        if (n == nullptr)
+        {
+            n = tower->loader->lazyMethodInit(currentThread.currentFrame->method->klass, id);
+        }
+        assert(n != nullptr);
+        call(n, currentThread.pc);
+        currentThread.pc += 3;
+
+        goto operand;
+    }
+    case op_invokestatic: {
         auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
         auto n = *static_cast<OMMethod **>(static_cast<void *>(frame->method->klass->constantPool + id));
         if (n == nullptr)
