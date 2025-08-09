@@ -40,6 +40,7 @@ class OMInterpreter
     log::OMLogger logger;
     OMPixelTowerHeap *heap;
     v1::OMDebugger debugger;
+    uint64_t operands = 0;
 };
 } // namespace openminecraft::vm::pixeltower::v0
 

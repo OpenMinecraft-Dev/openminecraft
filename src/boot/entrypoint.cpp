@@ -87,6 +87,8 @@ void searchDir(std::vector<std::string> &i, std::filesystem::directory_iterator 
 }
 int boot(std::vector<std::string> args)
 {
+    std::cin.tie(0);
+    std::cout.tie(0);
     log::multithread::registerCurrentThreadName("engineMain");
     auto logger = std::make_unique<log::OMLogger>("boot");
 

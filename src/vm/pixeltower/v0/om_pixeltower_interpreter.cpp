@@ -270,6 +270,11 @@ jint OMInterpreter::execute()
 {
     auto frame = currentThread.currentFrame;
 operand:
+    operands++;
+    if (operands % 1000 == 0)
+    {
+        logger.info("{} operands", operands);
+    }
     switch (currentThread.pc[0])
     {
     case op_iconst_i(-1):
@@ -520,6 +525,10 @@ operand:
 
         goto operand;
     }
+    case op_goto: {
+        currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);
+        goto operand;
+    }
     case op_ireturn: {
         auto ret = stackTopAccess<jint>();
         popLastFrame();
@@ -653,7 +662,6 @@ operand:
         goto operand;
     }
     default: {
-    exerr:
         logger.error("We are hitting the Mazarine End!");
         logger.error("unknown operand at {} ({:#04x})", fmt::ptr(currentThread.pc), (int)*currentThread.pc);
         logger.error("thread {}", fmt::ptr(&currentThread.id));

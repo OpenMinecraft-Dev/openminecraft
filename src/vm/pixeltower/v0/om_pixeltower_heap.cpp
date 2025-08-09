@@ -51,7 +51,7 @@ alloc:
 }
 void OMPixelTowerHeap::debug()
 {
-    logger.info("{} bytes allocated", heap->currentSizeAllocated());
+    logger.info("{} / {} bytes allocated", heap->currentSizeAllocated(), maxSize);
     uint64_t t = 0;
     for (auto p : emptyBlocks)
     {

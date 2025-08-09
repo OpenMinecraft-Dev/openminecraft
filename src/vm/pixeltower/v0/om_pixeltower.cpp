@@ -192,7 +192,6 @@ void *OMPixelTower::createString(std::string str)
 {
     loader->loadClass("[B"); // class for byte[]
     auto barr = loader->fetchClass("[B");
-    logger.info("{}", fmt::ptr(barr));
     auto att = barr->allocateArray(str.length());
     std::memcpy(att->array<jbyte>(), str.c_str(), att->length);
     loader->loadClass("java/lang/String");
@@ -206,7 +205,6 @@ void *OMPixelTower::createString(std::string str)
     {
         *reinterpret_cast<void **>(tgt->data) = att;
     }
-    logger.info("loading {} into {}", str, fmt::ptr(tgt));
     return tgt;
 }
 } // namespace openminecraft::vm::pixeltower::v0
