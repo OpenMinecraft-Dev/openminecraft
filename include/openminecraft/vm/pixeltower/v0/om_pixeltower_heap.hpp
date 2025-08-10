@@ -31,6 +31,11 @@ class OMPixelTowerHeap
         return heap->block;
     }
 
+    inline void *heapTop()
+    {
+        return heap->heapTop;
+    }
+
     inline bool ptrCompEnabled()
     {
         return maxSize < 32ull * 1024 * 1024 * 1024 && (sizeof(void *) == 8);
@@ -54,6 +59,27 @@ class OMPixelTowerHeap
     inline bool inside(void *p)
     {
         return heap->vaild(p);
+    }
+
+    inline void *nextPtr(void *p, uint64_t length)
+    {
+        auto r = ((uint8_t *)p) + length;
+        for (auto &p : emptyBlocks)
+        {
+            if (r == p.ptr)
+            {
+                auto rpp = reinterpret_cast<void *>(((uint8_t *)r) + p.length);
+                if (inside(rpp))
+                {
+                    return rpp;
+                }
+                else
+                {
+                    return nullptr;
+                }
+            }
+        }
+        return r;
     }
 
   private:

@@ -20,6 +20,7 @@ class OMInterpreter
     jint execute();
     void call(OMMethod *met, uint8_t *retAddr);
     OMPixelTower *tower;
+    v1::OMDebugger debugger;
 
   private:
     void invokeNative(OMMethod *m, std::vector<void *> &args);
@@ -39,7 +40,6 @@ class OMInterpreter
 
     log::OMLogger logger;
     OMPixelTowerHeap *heap;
-    v1::OMDebugger debugger;
     uint64_t operands = 0;
 };
 } // namespace openminecraft::vm::pixeltower::v0

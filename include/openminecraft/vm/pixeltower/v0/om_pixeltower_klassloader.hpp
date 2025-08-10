@@ -35,13 +35,13 @@ class OMKlassLoader
     OMMethod *lazyMethodInit(OMKlass *klass, uint16_t id);
 
     std::unordered_map<std::string, std::function<std::any(std::any *)>> nativeMethods;
+    std::vector<OMKlass *> classes;
 
   private:
     OMPixelTowerHeap *metaspace;
     OMPixelTowerHeap *heap;
     OMInterpreter *interpreter;
     log::OMLogger logger;
-    std::vector<OMKlass *> classes;
     std::vector<std::shared_ptr<classfile::OMClassFile>> files;
 };
 } // namespace openminecraft::vm::pixeltower::v0

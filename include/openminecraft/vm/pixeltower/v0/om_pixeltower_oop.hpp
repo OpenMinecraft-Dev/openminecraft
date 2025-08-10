@@ -6,6 +6,8 @@
 namespace openminecraft::vm::pixeltower::v0
 {
 class OMKlass;
+constexpr jint mreachable = 0x0001;
+constexpr jint mconst = 0x0002;
 struct OMOOPDesc
 {
     OMKlass *klass;

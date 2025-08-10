@@ -103,13 +103,6 @@ template <typename T> inline void stackPushAccessW(T data)
     }
 }
 
-/*template <typename T> inline T *localAccess(int idx, OMFrame *f = currentThread.currentFrame)
-{
-    static_assert(std::is_same_v<T, jint> || std::is_same_v<T, void *> || std::is_same_v<T, jfloat>,
-                  "unsatisfied type!");
-    return (T *)(((uint8_t *)f) - sizeof(void *) * (f->method->maxLocals - idx));
-}*/
-
 template <typename T> inline void localAccessMod(int idx, T value, OMFrame *f = currentThread.currentFrame)
 {
     static_assert(std::is_same_v<T, jint> || std::is_same_v<T, void *> || std::is_same_v<T, jfloat>,

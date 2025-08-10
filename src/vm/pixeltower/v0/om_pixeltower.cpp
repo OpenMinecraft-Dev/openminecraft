@@ -9,14 +9,17 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klassloader.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
+#include "openminecraft/vm/pixeltower/v2/om_pixeltower_gc_serial.hpp"
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <thread>
 
 namespace openminecraft::vm::pixeltower::v0
 {
@@ -101,6 +104,7 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
     metaspace = new OMPixelTowerHeap(1ul * 1024 * 1024, 8ul * 1024 * 1024);
     interpreter = new OMInterpreter(heap, this);
     loader = new OMKlassLoader(heap, metaspace, interpreter);
+    gc = new v2::OMGarbageCollectorSerial(heap, this);
 
     loader->nativeMethods["vmstd/internal/SystemPrintStream.println(J)V"] =
         impl::vmstd_internal_SystemPrintStream_println;
@@ -119,6 +123,7 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
 }
 OMPixelTower::~OMPixelTower()
 {
+    delete gc;
     delete interpreter;
     delete loader;
     delete heap;
@@ -178,6 +183,8 @@ void OMPixelTower::initCurrentThread(uint64_t tlsSize)
     currentThread.stackEnd = mem::allocator::tracedCallocVMData(1, tlsSize);
     currentThread.stack = (uint8_t *)currentThread.stackEnd + tlsSize;
     currentThread.stackPointer = currentThread.stack;
+
+    threadMap[std::this_thread::get_id()] = &currentThread;
 }
 
 void OMPixelTower::destroyCurrentThread()
@@ -193,10 +200,12 @@ void *OMPixelTower::createString(std::string str)
     loader->loadClass("[B"); // class for byte[]
     auto barr = loader->fetchClass("[B");
     auto att = barr->allocateArray(str.length());
+    att->mark |= mconst;
     std::memcpy(att->array<jbyte>(), str.c_str(), att->length);
     loader->loadClass("java/lang/String");
     auto stt = loader->fetchClass("java/lang/String");
     auto tgt = stt->allocateInstance();
+    tgt->mark |= mconst;
     if (heap->ptrCompEnabled())
     {
         *reinterpret_cast<uint32_t *>(tgt->data) = heap->compressPtr(att);

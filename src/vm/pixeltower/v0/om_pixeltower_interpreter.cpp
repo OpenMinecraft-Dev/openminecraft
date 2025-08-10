@@ -14,6 +14,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
+#include "openminecraft/vm/pixeltower/v2/om_pixeltower_gc.hpp"
 #include <any>
 #include <cassert>
 #include <functional>
@@ -271,9 +272,10 @@ jint OMInterpreter::execute()
     auto frame = currentThread.currentFrame;
 operand:
     operands++;
-    if (operands % 1000 == 0)
+    if (operands % 10000000 == 0)
     {
         logger.info("{} operands", operands);
+        tower->gc->signUnreachable();
     }
     switch (currentThread.pc[0])
     {

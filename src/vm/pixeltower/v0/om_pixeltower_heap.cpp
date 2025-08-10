@@ -1,6 +1,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/mem/om_mem_prealloc.hpp"
 #include <algorithm>
+#include <cstring>
 #include <mutex>
 
 namespace openminecraft::vm::pixeltower::v0
@@ -38,6 +39,7 @@ alloc:
             {
                 emptyBlocks.erase(it);
             }
+            memset(target, 0, length);
             return target;
         }
     }
@@ -53,8 +55,9 @@ void OMPixelTowerHeap::debug()
 {
     logger.info("{} / {} bytes allocated", heap->currentSizeAllocated(), maxSize);
     uint64_t t = 0;
-    for (auto p : emptyBlocks)
+    for (auto &p : emptyBlocks)
     {
+        logger.info("{} + {} bytes", p.ptr, p.length);
         t += p.length;
     }
     logger.info("{} bytes free", t);
