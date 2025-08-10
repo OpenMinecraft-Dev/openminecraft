@@ -2,15 +2,12 @@
 #include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/util/om_util_result.hpp"
-#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include <any>
 #include <memory>
-#include <stack>
 #include <string>
-#include <typeindex>
 #include <vector>
 
 using namespace openminecraft::vm::classfile;
@@ -182,13 +179,13 @@ void OMBytecodeChecker::detail()
             case op_lconst_l(1):
                 logger->info("{}: lconst_{}", bytes, codeRaw[bytes] - 0x9);
                 break;
-            case op_fconst_f(0):
-            case op_fconst_f(1):
-            case op_fconst_f(2):
+            case op_fconst_f(0.f):
+            case op_fconst_f(1.f):
+            case op_fconst_f(2.f):
                 logger->info("{}: fconst_{}", bytes, codeRaw[bytes] - 0xb);
                 break;
-            case op_dconst_d(0):
-            case op_dconst_d(1):
+            case op_dconst_d(0.0):
+            case op_dconst_d(1.0):
                 logger->info("{}: dconst_{}", bytes, codeRaw[bytes] - 0xe);
                 break;
             // bipush (value:u8)

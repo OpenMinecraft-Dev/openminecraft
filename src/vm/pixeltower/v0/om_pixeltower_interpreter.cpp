@@ -271,6 +271,7 @@ jint OMInterpreter::execute()
 {
     auto frame = currentThread.currentFrame;
 operand:
+    // gino: we need memory usage limit (etc >=60%), not the operand counter
     operands++;
     if (operands % 10000000 == 0)
     {

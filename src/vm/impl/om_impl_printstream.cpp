@@ -51,7 +51,7 @@ std::any vmstd_internal_SystemPrintStream_println(std::any *args)
         }
         else
         {
-            std::cout << "[stdout] " << t << std::endl;
+            std::cout << "[stdout] " << t->klass->name << "@" << t << std::endl;
         }
     }
     return nullptr;
