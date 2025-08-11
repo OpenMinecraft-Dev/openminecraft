@@ -66,27 +66,15 @@ void OMGarbageCollectorSerial::markSub(void *root)
     i->mark |= v0::mreachable;
     if (i->klass->kind == v0::Array)
     {
-        switch (hash_compile_time(i->klass->name.c_str()))
+        // gino: array with pointers, we need store these flags in OMKlass
+        if (i->klass->name[1] == '[' || i->klass->name[1] == 'L')
         {
-        case "[I"_hash:
-        case "[J"_hash:
-        case "[C"_hash:
-        case "[Z"_hash:
-        case "[B"_hash:
-        case "[F"_hash:
-        case "[D"_hash:
-        case "[S"_hash:
-            // gino: no refs in this array!
-            break;
-        default: {
             auto arr = reinterpret_cast<v0::OMOOPArrDesc *>(i);
             auto arrd = arr->array<void *>();
-            for (int i = 0; i < arr->length; i++)
+            for (int ix = 0; ix < arr->length; ix++)
             {
-                markSub(arrd[i]);
+                markSub(arrd[ix]);
             }
-            break;
-        }
         }
     }
     else
