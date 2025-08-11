@@ -24,7 +24,7 @@ if apple() then
     add_requires("moltenvk", { configs = { shared = false } })
 end
 
-add_requires("freetype", "harfbuzz", "stb", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "nlohmann_json", "libsdl3", "openal-soft", { system = false })
+add_requires("freetype", "harfbuzz", "stb", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "nlohmann_json", "libsdl3", "openal-soft", "cpuinfo", { system = false })
 add_requires("boost", { system = false, configs = { stacktrace = true } })
 add_requires("fmt", { system = false, configs = { header_only = true } })
 
@@ -131,7 +131,7 @@ end
 add_files("launcher/**.cpp")
 add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io", "openminecraft-vfs", "openminecraft-boot", "openminecraft-util", "openminecraft-i18n", "openminecraft-renderer", "openminecraft-plat")
 
-add_packages("freetype", "harfbuzz", "stb", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", "libsdl3", "libffi", { system = false })
+add_packages("freetype", "harfbuzz", "stb", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", "libsdl3", "cpuinfo", { system = false })
 if not mobile() and not vulkandyn() and not apple() then
     add_packages("vulkan-loader")
 end

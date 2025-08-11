@@ -4,11 +4,9 @@
 #include "nlohmann/json_fwd.hpp"
 #include "openminecraft/i18n/om_i18n_locale.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include <SDL3/SDL_locale.h>
 #include <algorithm>
-#include <cctype>
 #include <iterator>
 
 namespace openminecraft::i18n::res
@@ -56,7 +54,7 @@ void load()
                 auto f = vfs::fsfetch(p);
                 if (!f || !f->good())
                 {
-                    logger.info("Bad module language list file: {}", p);
+                    logger.warn("Bad module language list file: {}", p);
                     continue;
                 }
 
@@ -79,7 +77,7 @@ void load()
                     auto fr = vfs::fsfetch(pr);
                     if (!fr || !fr->good())
                     {
-                        logger.info("Bad module language file: {}", pr);
+                        logger.warn("Bad module language file: {}", pr);
                         continue;
                     }
 

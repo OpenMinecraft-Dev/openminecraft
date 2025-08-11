@@ -271,11 +271,12 @@ jint OMInterpreter::execute()
 {
     auto frame = currentThread.currentFrame;
 operand:
-    // gino: we need memory usage limit (etc >=60%), not the operand counter
     operands++;
-    if (operands % 10000000 == 0)
+    // gino: we need memory usage limit (etc >=60%), not the operand counter (solved)
+    // gino: implemented!
+    if (heap->usage() >= 0.6)
     {
-        logger.info("{} operands", operands);
+        logger.info("heap usage: {:.2f} % used, gc begin", heap->usage() * 100);
         tower->gc->signUnreachable();
     }
     switch (currentThread.pc[0])
