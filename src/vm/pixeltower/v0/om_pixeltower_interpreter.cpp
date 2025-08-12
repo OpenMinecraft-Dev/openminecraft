@@ -279,6 +279,7 @@ operand:
         logger.info("heap usage: {:.2f} % used, gc begin", heap->usage() * 100);
         tower->gc->signUnreachable();
     }
+
     switch (currentThread.pc[0])
     {
     case op_nop: {
@@ -324,11 +325,24 @@ operand:
         currentThread.pc += 2;
         goto operand;
     }
+    case op_sipush: {
+        stackPushAccess<jint>(binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]));
+        currentThread.pc += 3;
+        goto operand;
+    }
     case op_ldc: {
         auto n = static_cast<void **>(static_cast<void *>(frame->method->klass->constantPool + currentThread.pc[1]));
         assert(n != nullptr);
         stackPushAccess<void *>(*n);
         currentThread.pc += 2;
+        goto operand;
+    }
+    case op_ldc_w: {
+        auto n = static_cast<void **>(static_cast<void *>(frame->method->klass->constantPool +
+                                                          binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
+        assert(n != nullptr);
+        stackPushAccess<void *>(*n);
+        currentThread.pc += 3;
         goto operand;
     }
     case op_ldc2_w: {

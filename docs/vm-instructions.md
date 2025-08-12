@@ -7,9 +7,9 @@ lconst_n | y | n
 fconst_n | y | n
 dconst_n | y | n
 bipush | y | n
-sipush | n | n
+sipush | y | n
 ldc | y | n
-ldc_w | n | n
+ldc_w | y | n
 ldc2_w | y | n
 iload | n | n
 lload | n | n

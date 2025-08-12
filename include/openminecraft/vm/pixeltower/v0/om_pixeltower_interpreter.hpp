@@ -9,8 +9,8 @@
 namespace openminecraft::vm::pixeltower::v0
 {
 class OMPixelTower;
-#define EXEC_RETURN 0
-#define EXEC_FAIL 1
+constexpr int EXEC_RETURN = 0;
+constexpr int EXEC_FAIL = 1;
 class OMInterpreter
 {
   public:

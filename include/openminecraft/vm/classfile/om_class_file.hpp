@@ -12,48 +12,48 @@
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 
-#define JVM_VERSION_1_1 45
-#define JVM_VERSION_1_2 46
-#define JVM_VERSION_1_3 47
-#define JVM_VERSION_1_4 48
-#define JVM_VERSION_5 49
-#define JVM_VERSION_6 50
-#define JVM_VERSION_7 51
-#define JVM_VERSION_8 52
-#define JVM_VERSION_9 53
-#define JVM_VERSION_10 54
-#define JVM_VERSION_11 55
-#define JVM_VERSION_12 56
-#define JVM_VERSION_13 57
-#define JVM_VERSION_14 58
-#define JVM_VERSION_15 59
-#define JVM_VERSION_16 60
-#define JVM_VERSION_17 61
-#define JVM_VERSION_18 62
-#define JVM_VERSION_19 63
-#define JVM_VERSION_20 64
-#define JVM_VERSION_21 65
-#define JVM_VERSION_22 66
-#define JVM_VERSION_23 67
-#define JVM_VERSION_24 68
+constexpr int JVM_VERSION_1_1 = 45;
+constexpr int JVM_VERSION_1_2 = 46;
+constexpr int JVM_VERSION_1_3 = 47;
+constexpr int JVM_VERSION_1_4 = 48;
+constexpr int JVM_VERSION_5 = 49;
+constexpr int JVM_VERSION_6 = 50;
+constexpr int JVM_VERSION_7 = 51;
+constexpr int JVM_VERSION_8 = 52;
+constexpr int JVM_VERSION_9 = 53;
+constexpr int JVM_VERSION_10 = 54;
+constexpr int JVM_VERSION_11 = 55;
+constexpr int JVM_VERSION_12 = 56;
+constexpr int JVM_VERSION_13 = 57;
+constexpr int JVM_VERSION_14 = 58;
+constexpr int JVM_VERSION_15 = 59;
+constexpr int JVM_VERSION_16 = 60;
+constexpr int JVM_VERSION_17 = 61;
+constexpr int JVM_VERSION_18 = 62;
+constexpr int JVM_VERSION_19 = 63;
+constexpr int JVM_VERSION_20 = 64;
+constexpr int JVM_VERSION_21 = 65;
+constexpr int JVM_VERSION_22 = 66;
+constexpr int JVM_VERSION_23 = 67;
+constexpr int JVM_VERSION_24 = 68;
 
-#define JVM_Acc_Public 0x0001
-#define JVM_Acc_Private 0x0002
-#define JVM_Acc_Protected 0x0004
-#define JVM_Acc_Static 0x0008
-#define JVM_Acc_Final 0x0010
-#define JVM_Acc_Super 0x0020
-#define JVM_Acc_Synchronized 0x0020
-#define JVM_Acc_Bridge 0x0040
-#define JVM_Acc_Varargs 0x0080
-#define JVM_Acc_Native 0x0100
-#define JVM_Acc_Interface 0x0200
-#define JVM_Acc_Abstract 0x0400
-#define JVM_Acc_Strict 0x0800
-#define JVM_Acc_Synthetic 0x1000
-#define JVM_Acc_Annotation 0x2000
-#define JVM_Acc_Enum 0x4000
-#define JVM_Acc_Module 0x8000
+constexpr int JVM_Acc_Public = 0x0001;
+constexpr int JVM_Acc_Private = 0x0002;
+constexpr int JVM_Acc_Protected = 0x0004;
+constexpr int JVM_Acc_Static = 0x0008;
+constexpr int JVM_Acc_Final = 0x0010;
+constexpr int JVM_Acc_Super = 0x0020;
+constexpr int JVM_Acc_Synchronized = 0x0020;
+constexpr int JVM_Acc_Bridge = 0x0040;
+constexpr int JVM_Acc_Varargs = 0x0080;
+constexpr int JVM_Acc_Native = 0x0100;
+constexpr int JVM_Acc_Interface = 0x0200;
+constexpr int JVM_Acc_Abstract = 0x0400;
+constexpr int JVM_Acc_Strict = 0x0800;
+constexpr int JVM_Acc_Synthetic = 0x1000;
+constexpr int JVM_Acc_Annotation = 0x2000;
+constexpr int JVM_Acc_Enum = 0x4000;
+constexpr int JVM_Acc_Module = 0x8000;
 
 namespace openminecraft::vm::classfile
 {
