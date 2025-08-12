@@ -354,6 +354,16 @@ operand:
         currentThread.pc += 3;
         goto operand;
     }
+    case op_iload: {
+        stackPushAccess<jint>(localAccessValue<jint>(currentThread.pc[1]));
+        currentThread.pc += 2;
+        goto operand;
+    }
+    case op_lload: {
+        stackPushAccessW<jlong>(localAccessValueW<jlong>(currentThread.pc[1]));
+        currentThread.pc += 2;
+        goto operand;
+    }
     case op_aload: {
         stackPushAccess<void *>(localAccessValue<void *>(currentThread.pc[1]));
         currentThread.pc += 2;

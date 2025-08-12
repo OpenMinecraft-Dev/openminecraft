@@ -11,8 +11,8 @@ sipush | y | n
 ldc | y | n
 ldc_w | y | n
 ldc2_w | y | n
-iload | n | n
-lload | n | n
+iload | y | n
+lload | y | n
 fload | n | n
 dload | n | n
 aload | y | n
