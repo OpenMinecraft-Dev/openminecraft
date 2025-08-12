@@ -1,162 +1,162 @@
-Instruction | impl status
------ | -----
-nop | v0
-aconst_null | v0
-iconst_n | v0
-lconst_n | v0
-fconst_n | v0
-dconst_n | v0
-bipush | v0
-sipush | X
-ldc | v0
-ldc_w | v0
-ldc2_w | v0
-iload | X
-lload | X
-fload | X
-dload | X
-aload | v0
-iload_n | v0
-lload_n | X
-fload_n | X
-dload_n | X
-aload_n | v0
-iaload | X
-laload | X
-faload | X
-daload | X
-aaload | X
-baload | v0
-caload | X
-saload | X
-istore | X
-lstore | X
-fstore | X
-dstore | X
-astore | v0
-istore_n | v0
-lstore_n | X
-fstore_n | X
-dstore_n | X
-astore_n | v0
-iastore | X
-lastore | X
-fastore | X
-dastore | X
-aastore | X
-bastore | v0
-castore | X
-sastore | X
-pop | v0
-pop2 | X
-dup | v0
-dup_x1 | X
-dup_x2 | X
-dup2 | X
-dup2_x1 | X
-dup2_x2 | X
-swap | X
-iadd | v0
-ladd | X
-fadd | X
-dadd | X
-isub | X
-lsub | X
-fsub | X
-dsub | X
-imul | X
-lmul | X
-fmul | X
-dmul | X
-idiv | X
-ldiv | X
-fdiv | X
-ddiv | X
-irem | X
-lrem | X
-frem | X
-drem | X
-ineg | X
-lneg | X
-fneg | X
-dneg | X
-ishl | X
-lshl | X
-ishr | X
-lshr | X
-iushr | X
-lushr | X
-iand | X
-land | X
-ior |  X
-lor | X
-iinc | v0
-i2l | X
-i2f | X
-i2d | X
-l2i | X
-l2f | X
-l2d | X
-f2i | X
-f2l | X
-d2i | X
-f2d | X
-d2l | X
-d2f | X
-i2b | v0
-i2c | X
-i2s | v0
-lcmp | X
-fcmpl | X
-fcmpg | X
-dcmpl | X
-dcmpg | X
-ifeq | X
-ifne | v0
-iflt | X
-ifge | X
-ifgt | X
-ifle | X
-if_icmpeq | X
-if_icmpne | v0
-if_icmplt | X
-if_icmpge | X
-if_icmpgt | X
-if_icmple | X
-if_acmpeq | X
-if_acmpne | X
-goto | X
-jsr | X
-ret | X
-tableswitch | X
-lookupswitch | X
-ireturn | v0
-lreturn | X
-freturn | X
-dreturn | X
-areturn | X
-return | v0
-getstatic | v0
-putstatic | v0
-getfield | v0
-putfield | v0
-invokevirtual | v0
-invokespecial | v0
-invokestatic | v0
-invokeinterface | v0
-invokedynamic | X
-new | v0
-newarray | v0
-anewarray | X
-arraylength | X
-athrow | X
-checkcast | X 
-instanceof | X
-monitorenter | X
-monitorexit | X
-wide | X
-multianewarray | X
-ifnull | X
-ifnonnull | X
-goto_w | X
-jsr_w | X
+Instructions | interpreter | jit (x86)
+----- | ----- | -----
+nop | y | n
+aconst_null | y | n
+iconst_n | y | n
+lconst_n | y | n
+fconst_n | y | n
+dconst_n | y | n
+bipush | y | n
+sipush | n | n
+ldc | y | n
+ldc_w | n | n
+ldc2_w | y | n
+iload | n | n
+lload | n | n
+fload | n | n
+dload | n | n
+aload | y | n
+iload_n | y | n
+lload_n | y | n
+fload_n | n | n
+dload_n | n | n
+aload_n | y | n
+iaload | n | n
+laload | n | n
+faload | n | n
+daload | n | n
+aaload | n | n
+baload | y | n
+caload | n | n
+saload | n | n
+istore | y | n
+lstore | y | n
+fstore | n | n
+dstore | n | n
+astore | y | n
+istore_n | y | n
+lstore_n | n | n
+fstore_n | n | n
+dstore_n | n | n
+astore_n | y | n
+iastore | n | n
+lastore | n | n
+fastore | n | n
+dastore | n | n
+aastore | n | n
+bastore | y | n
+castore | n | n
+sastore | n | n
+pop | y | n
+pop2 | y | n
+dup | y | n
+dup_x1 | n | n
+dup_x2 | n | n
+dup2 | n | n
+dup2_x1 | n | n
+dup2_x2 | n | n
+swap | n | n
+iadd | y | n
+ladd | n | n
+fadd | n | n
+dadd | n | n
+isub | n | n
+lsub | n | n
+fsub | n | n
+dsub | n | n
+imul | n | n
+lmul | n | n
+fmul | n | n
+dmul | n | n
+idiv | n | n
+ldiv | n | n
+fdiv | n | n | n
+ddiv | n | n
+irem | n | n
+lrem | n | n
+frem | n | n
+drem | n | n
+ineg | n | n
+lneg | n | n
+fneg | n | n
+dneg | n | n
+ishl | n | n
+lshl | n | n
+ishr | n | n
+lshr | n | n
+iushr | n | n
+lushr | n | n
+iand | n | n
+land | n | n
+ior |  n | n
+lor | n | n
+iinc | y | n
+i2l | y | n
+i2f | n | n
+i2d | n | n
+l2i | n | n
+l2f | n | n
+l2d | n | n
+f2i | n | n
+f2l | n | n
+d2i | n | n
+f2d | n | n
+d2l | n | n
+d2f | n | n
+i2b | y | n
+i2c | n | n
+i2s | y | n
+lcmp | y | n
+fcmpl | n | n
+fcmpg | n | n
+dcmpl | n | n
+dcmpg | n | n
+ifeq | n | n
+ifne | y | n
+iflt | n | n
+ifge | y | n
+ifgt | n | n
+ifle | n | n
+if_icmpeq | n | n
+if_icmpne | y | n
+if_icmplt | n | n
+if_icmpge | n | n
+if_icmpgt | n | n
+if_icmple | n | n
+if_acmpeq | n | n
+if_acmpne | n | n
+goto | y | n
+jsr | n | n
+ret | n | n
+tableswitch | n | n
+lookupswitch | n | n
+ireturn | y | n
+lreturn | y | n
+freturn | n | n
+dreturn | n | n
+areturn | n | n
+return | y | n
+getstatic | y | n
+putstatic | y | n
+getfield | n | n
+putfield | y | n
+invokevirtual | y | n
+invokespecial | y | n
+invokestatic | y | n
+invokeinterface | n | n
+invokedynamic | n | n
+new | y | n
+newarray | y | n
+anewarray | n | n
+arraylength | n | n
+athrow | n | n
+checkcast | n | n
+instanceof | n | n
+monitorenter | n | n
+monitorexit | n | n
+wide | n | n
+multianewarray | n | n
+ifnull | n | n
+ifnonnull | n | n
+goto_w | n | n
+jsr_w | n | n

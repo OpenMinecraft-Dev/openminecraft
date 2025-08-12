@@ -281,6 +281,15 @@ operand:
     }
     switch (currentThread.pc[0])
     {
+    case op_nop: {
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_aconst_null: {
+        stackPushAccess<void *>(nullptr);
+        currentThread.pc++;
+        goto operand;
+    }
     case op_iconst_i(-1):
     case op_iconst_i(0):
     case op_iconst_i(1):
@@ -295,6 +304,18 @@ operand:
     case op_lconst_l(0):
     case op_lconst_l(1): {
         stackPushAccessW<jlong>((jlong)currentThread.pc[0] - (jlong)op_lconst_l(0));
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_fconst_f(0.0f):
+    case op_fconst_f(1.0f): {
+        stackPushAccess<jfloat>((jfloat)(currentThread.pc[0] - op_fconst_f(0.0f)));
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_dconst_d(0.0):
+    case op_dconst_d(1.0): {
+        stackPushAccessW<jdouble>((jdouble)(currentThread.pc[0] - op_dconst_d(0.0)));
         currentThread.pc++;
         goto operand;
     }
