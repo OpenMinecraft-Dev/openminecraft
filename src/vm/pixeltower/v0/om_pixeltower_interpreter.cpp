@@ -40,7 +40,7 @@ void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
 
     if (!currentThread.currentFrame)
     {
-        // geopeila: maybe the stack pointer need to be reset
+        // geopelia: maybe the stack pointer need to be reset
         currentThread.stackPointer = currentThread.stack;
         auto frame = (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame));
         currentThread.stackPointer = (jbyte *)currentThread.stackPointer - sizeof(OMFrame) -

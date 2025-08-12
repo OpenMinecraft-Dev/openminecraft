@@ -135,6 +135,19 @@ int boot(std::vector<std::string> args)
 
     SDL_Quit();
 
+    /*int cpuidlevel;
+    char vendor[16] = {0};
+    cpuinfo_x86(0x0, &cpuidlevel, (int32_t *)&vendor[0], (int32_t *)&vendor[8], (int32_t *)&vendor[4]);
+
+    char model[64] = {0};
+    int32_t *d = (int32_t *)model;
+    cpuinfo_x86(0x80000002, &d[0], &d[1], &d[2], &d[3]);
+    cpuinfo_x86(0x80000003, &d[4], &d[5], &d[6], &d[7]);
+    cpuinfo_x86(0x80000004, &d[8], &d[9], &d[10], &d[11]);
+    model[48] = '\0';
+
+    logger->info("{} {}", vendor, model);*/
+
     tower = std::make_unique<pixeltower::v0::OMPixelTower>();
 
     bool recovermode = false;

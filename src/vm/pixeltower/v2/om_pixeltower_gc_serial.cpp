@@ -1,5 +1,4 @@
 #include "openminecraft/vm/pixeltower/v2/om_pixeltower_gc_serial.hpp"
-#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
@@ -36,7 +35,7 @@ void OMGarbageCollectorSerial::freeObjects()
             l += 8 - (l % 8);
         }
 
-        // geopeila: don't try to get anything from the Mazarine End!
+        // geopelia: don't try to get anything from the Mazarine End!
         auto inext = reinterpret_cast<v0::OMOOPDesc *>(heap->nextPtr(i, l));
         if (!(i->mark & v0::mreachable))
         {
