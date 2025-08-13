@@ -9,7 +9,6 @@
 #include <iomanip>
 #include <iostream>
 #include <openminecraft/log/om_log_common.hpp>
-#include <sstream>
 #include <string>
 #include <thread>
 
@@ -17,13 +16,6 @@ using namespace openminecraft::log::ansi;
 
 namespace openminecraft::log
 {
-static std::string composeName(std::string name, void *obj)
-{
-    std::stringstream s;
-    s << name << " @ 0x" << std::hex << obj;
-    return s.str();
-}
-
 OMLogger::OMLogger(std::string name, std::ostream &stream, bool format)
 {
     this->loggerName = name;
@@ -35,7 +27,7 @@ OMLogger::OMLogger(std::string name) : OMLogger(name, getPlatformLoggingStream()
 {
 }
 
-OMLogger::OMLogger(std::string name, void *obj) : OMLogger(composeName(name, obj))
+OMLogger::OMLogger(std::string name, void *obj) : OMLogger(fmt::format("{} @ {}", name, obj))
 {
 }
 

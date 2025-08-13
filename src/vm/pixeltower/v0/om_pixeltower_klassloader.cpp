@@ -1,7 +1,6 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klassloader.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
@@ -30,17 +29,19 @@ OMKlassLoader::~OMKlassLoader()
     {
         if (k->staticBlock)
         {
-            mem::allocator::tracedFreeVMData(k->staticBlock);
+            metaspace->deallocate(k->staticBlock, k->staticLength);
         }
         if (k->constantPool)
         {
-            mem::allocator::tracedFreeVMData(k->constantPool);
+            metaspace->deallocate(k->constantPool, k->raw->mapping.size() * sizeof(void *));
         }
         if (k->vtable)
         {
-            delete k->vtable;
+            k->vtable->~unordered_map<std::string, OMMethod *>();
+            metaspace->deallocate(k->vtable, sizeof(std::unordered_map<std::string, OMMethod *>));
         }
-        mem::allocator::tracedFreeVMData(k);
+
+        metaspace->deallocate((void *)k, sizeof(OMKlass));
     }
 }
 
@@ -60,8 +61,10 @@ void OMKlassLoader::loadClass(std::string name)
                 ->to<classfile::OMClassConstantUtf8>()
                 ->data == name)
         {
-            klass = (OMKlass *)mem::allocator::tracedCallocVMData(1, sizeof(OMKlass));
-            klass->vtable = new std::unordered_map<std::string, OMMethod *>();
+            klass = (OMKlass *)metaspace->allocate(sizeof(OMKlass));
+            memset((void *)klass, 0, sizeof(OMKlass));
+            void *rawmap = metaspace->allocate(sizeof(std::unordered_map<std::string, OMMethod *>));
+            klass->vtable = new (rawmap) std::unordered_map<std::string, OMMethod *>();
             klass->kind = Normal;
             klass->heap = heap;
             klass->name = name;
@@ -209,7 +212,9 @@ loadMethods:
                                  klass, 0, field->accessFlags});
     }
 
-    klass->constantPool = (uint64_t *)mem::allocator::tracedCallocVMData(klass->raw->mapping.size(), sizeof(uint64_t));
+    auto cpool = klass->raw->mapping.size() * sizeof(void *);
+    klass->constantPool = (void **)metaspace->allocate(cpool);
+    memset(klass->constantPool, 0, cpool);
     for (auto cppair : klass->raw->mapping)
     {
 #define acc (klass->constantPool + cppair.first)
@@ -330,7 +335,8 @@ void OMKlassLoader::loadSpecialClass(std::string name)
         throw r.unwrap_err();
     }
 
-    auto klass = (OMKlass *)mem::allocator::tracedCallocVMData(1, sizeof(OMKlass));
+    auto klass = (OMKlass *)metaspace->allocate(sizeof(OMKlass));
+    memset((void *)klass, 0, sizeof(OMKlass));
     klass->kind = Array;
     // gino: msvc bug? string doesn't copy with the operator equals call
     klass->name = name;
@@ -415,7 +421,8 @@ void OMKlassLoader::classInit(OMKlass *klass)
         }
     }
 
-    klass->staticBlock = mem::allocator::tracedCallocVMData(1, klass->staticLength);
+    klass->staticBlock = metaspace->allocate(klass->staticLength);
+    memset(klass->staticBlock, 0, klass->staticLength);
 
     auto me = klass->methods;
     while (me)

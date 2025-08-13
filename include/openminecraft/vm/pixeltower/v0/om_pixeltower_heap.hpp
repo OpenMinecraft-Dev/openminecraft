@@ -94,6 +94,17 @@ class OMPixelTowerHeap
         return 1.0 - ((double)t / (double)total);
     }
 
+    inline double totalUsage()
+    {
+        uint64_t t = heap->currentSizeAllocated();
+        for (auto &p : emptyBlocks)
+        {
+            t -= p.length;
+        }
+
+        return (double)t / (double)maxSize;
+    }
+
   private:
     uint64_t maxSize;
     mem::OMHeap *heap;

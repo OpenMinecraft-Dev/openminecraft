@@ -276,7 +276,9 @@ operand:
     // gino: implemented!
     if (heap->usage() >= 0.6)
     {
-        logger.info("heap usage: {:.2f} % used, gc begin", heap->usage() * 100);
+        logger.info("main heap usage: {:.2f}% used ({:.2f}% of total)", heap->usage() * 100, heap->totalUsage() * 100);
+        logger.info("metaspace heap usage: {:.2f}% used ({:.2f}% of total)", tower->metaspace->usage() * 100,
+                    tower->metaspace->usage() * 100);
         tower->gc->signUnreachable();
     }
 
@@ -364,6 +366,16 @@ operand:
         currentThread.pc += 2;
         goto operand;
     }
+    case op_fload: {
+        stackPushAccess<jfloat>(localAccessValue<jfloat>(currentThread.pc[1]));
+        currentThread.pc += 2;
+        goto operand;
+    }
+    case op_dload: {
+        stackPushAccessW<jdouble>(localAccessValueW<jdouble>(currentThread.pc[1]));
+        currentThread.pc += 2;
+        goto operand;
+    }
     case op_aload: {
         stackPushAccess<void *>(localAccessValue<void *>(currentThread.pc[1]));
         currentThread.pc += 2;
@@ -382,6 +394,22 @@ operand:
     case op_lload_n(2):
     case op_lload_n(3): {
         stackPushAccessW<jlong>(localAccessValueW<jlong>(currentThread.pc[0] - op_lload_n(0)));
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_fload_n(0):
+    case op_fload_n(1):
+    case op_fload_n(2):
+    case op_fload_n(3): {
+        stackPushAccess<jfloat>(localAccessValue<jfloat>(currentThread.pc[0] - op_fload_n(0)));
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_dload_n(0):
+    case op_dload_n(1):
+    case op_dload_n(2):
+    case op_dload_n(3): {
+        stackPushAccessW<jdouble>(localAccessValueW<jdouble>(currentThread.pc[0] - op_dload_n(0)));
         currentThread.pc++;
         goto operand;
     }
@@ -416,6 +444,18 @@ operand:
         currentThread.pc += 2;
         goto operand;
     }
+    case op_fstore: {
+        localAccessMod<jfloat>(currentThread.pc[1], stackTopAccess<jfloat>());
+        stackPop();
+        currentThread.pc += 2;
+        goto operand;
+    }
+    case op_dstore: {
+        localAccessModW<jdouble>(currentThread.pc[1], stackTopAccessW<jdouble>());
+        stackPopW();
+        currentThread.pc += 2;
+        goto operand;
+    }
     case op_astore: {
         localAccessMod<void *>(currentThread.pc[1], stackTopAccess<void *>());
         stackPop();
@@ -427,6 +467,33 @@ operand:
     case op_istore_n(2):
     case op_istore_n(3): {
         localAccessMod<jint>(currentThread.pc[0] - op_istore_n(0), stackTopAccess<jint>());
+        stackPop();
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_lstore_n(0):
+    case op_lstore_n(1):
+    case op_lstore_n(2):
+    case op_lstore_n(3): {
+        localAccessModW<jlong>(currentThread.pc[0] - op_lstore_n(0), stackTopAccessW<jlong>());
+        stackPop();
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_fstore_n(0):
+    case op_fstore_n(1):
+    case op_fstore_n(2):
+    case op_fstore_n(3): {
+        localAccessMod<jfloat>(currentThread.pc[0] - op_fstore_n(0), stackTopAccess<jfloat>());
+        stackPop();
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_dstore_n(0):
+    case op_dstore_n(1):
+    case op_dstore_n(2):
+    case op_dstore_n(3): {
+        localAccessModW<jdouble>(currentThread.pc[0] - op_dstore_n(0), stackTopAccessW<jdouble>());
         stackPop();
         currentThread.pc++;
         goto operand;
@@ -465,6 +532,16 @@ operand:
     }
     case op_dup: {
         stackPushAccess<void *>(stackTopAccess<void *>());
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_swap: {
+        auto value1 = stackTopAccess<void *>();
+        stackPop();
+        auto value2 = stackTopAccess<void *>();
+        stackPop();
+        stackPushAccess<void *>(value1);
+        stackPushAccess<void *>(value2);
         currentThread.pc++;
         goto operand;
     }
