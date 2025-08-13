@@ -50,28 +50,32 @@ inline void stackPopW()
     stackPop();
 }
 
-template <typename T> inline T stackTopAccess()
+template <typename T> inline T stackTopAccess(bool needPop = false)
 {
-    static_assert(std::is_same_v<T, jint> || std::is_same_v<T, void *> || std::is_same_v<T, jfloat>,
-                  "unsatisfied type!");
-    return (*(T *)((void **)currentThread.stackPointer + 1));
+    static_assert(std::is_same_v<T, jint> || std::is_pointer_v<T> || std::is_same_v<T, jfloat>, "unsatisfied type!");
+    T value = (*(T *)((void **)currentThread.stackPointer + 1));
+    if (needPop)
+    {
+        stackPop();
+    }
+    return value;
 }
 
 template <typename T> inline void stackPushAccess(T data)
 {
-    static_assert(std::is_same_v<T, jint> || std::is_same_v<T, void *> || std::is_same_v<T, jfloat>,
-                  "unsatisfied type!");
+    static_assert(std::is_same_v<T, jint> || std::is_pointer_v<T> || std::is_same_v<T, jfloat>, "unsatisfied type!");
     *static_cast<void **>(currentThread.stackPointer) = nullptr; // clears the whole slot
     *static_cast<T *>(currentThread.stackPointer) = data;
     stackPush();
 }
 
-template <typename T> inline T stackTopAccessW()
+template <typename T> inline T stackTopAccessW(bool needPop = false)
 {
     static_assert(std::is_same_v<T, jdouble> || std::is_same_v<T, jlong>, "unsatisfied type!");
+    T value;
     if (sizeof(void *) == 8)
     {
-        return (*(T *)((void **)currentThread.stackPointer + 2)); // padding
+        value = (*(T *)((void **)currentThread.stackPointer + 2)); // padding
     }
     else
     {
@@ -80,8 +84,13 @@ template <typename T> inline T stackTopAccessW()
 
         int64_t temp = (highbits << 32) + lowbits;
 
-        return *(T *)&temp;
+        value = *(T *)&temp;
     }
+    if (needPop)
+    {
+        stackPopW();
+    }
+    return value;
 }
 
 template <typename T> inline void stackPushAccessW(T data)
@@ -105,8 +114,7 @@ template <typename T> inline void stackPushAccessW(T data)
 
 template <typename T> inline void localAccessMod(int idx, T value, OMFrame *f = currentThread.currentFrame)
 {
-    static_assert(std::is_same_v<T, jint> || std::is_same_v<T, void *> || std::is_same_v<T, jfloat>,
-                  "unsatisfied type!");
+    static_assert(std::is_same_v<T, jint> || std::is_pointer_v<T> || std::is_same_v<T, jfloat>, "unsatisfied type!");
     *(T *)(((uint8_t *)f) - sizeof(void *) * (f->method->maxLocals - idx)) = value;
 }
 
@@ -128,8 +136,7 @@ template <typename T> inline void localAccessModW(int idx, T value, OMFrame *f =
 
 template <typename T> inline T localAccessValue(int idx, OMFrame *f = currentThread.currentFrame)
 {
-    static_assert(std::is_same_v<T, jint> || std::is_same_v<T, void *> || std::is_same_v<T, jfloat>,
-                  "unsatisfied type!");
+    static_assert(std::is_same_v<T, jint> || std::is_pointer_v<T> || std::is_same_v<T, jfloat>, "unsatisfied type!");
     return *(T *)(((uint8_t *)f) - sizeof(void *) * (f->method->maxLocals - idx));
 }
 

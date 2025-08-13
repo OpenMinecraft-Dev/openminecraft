@@ -422,10 +422,8 @@ operand:
         goto operand;
     }
     case op_iaload: {
-        auto idx = stackTopAccess<jint>();
-        stackPop();
-        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
-        stackPop();
+        auto idx = stackTopAccess<jint>(true);
+        auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
         stackPushAccess<jint>(arr->array<jint>()[idx]);
 
@@ -433,10 +431,8 @@ operand:
         goto operand;
     }
     case op_laload: {
-        auto idx = stackTopAccess<jint>();
-        stackPop();
-        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
-        stackPop();
+        auto idx = stackTopAccess<jint>(true);
+        auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
         stackPushAccessW<jlong>(arr->array<jlong>()[idx]);
 
@@ -444,10 +440,8 @@ operand:
         goto operand;
     }
     case op_faload: {
-        auto idx = stackTopAccess<jint>();
-        stackPop();
-        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
-        stackPop();
+        auto idx = stackTopAccess<jint>(true);
+        auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
         stackPushAccess<jfloat>(arr->array<jfloat>()[idx]);
 
@@ -455,10 +449,8 @@ operand:
         goto operand;
     }
     case op_daload: {
-        auto idx = stackTopAccess<jint>();
-        stackPop();
-        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
-        stackPop();
+        auto idx = stackTopAccess<jint>(true);
+        auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
         stackPushAccessW<jdouble>(arr->array<jdouble>()[idx]);
 
@@ -466,10 +458,8 @@ operand:
         goto operand;
     }
     case op_aaload: {
-        auto idx = stackTopAccess<jint>();
-        stackPop();
-        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
-        stackPop();
+        auto idx = stackTopAccess<jint>(true);
+        auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
         if (heap->ptrCompEnabled())
         {
@@ -484,10 +474,8 @@ operand:
         goto operand;
     }
     case op_baload: {
-        auto idx = stackTopAccess<jint>();
-        stackPop();
-        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
-        stackPop();
+        auto idx = stackTopAccess<jint>(true);
+        auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
         stackPushAccess<jint>(arr->array<jboolean>()[idx]);
 
@@ -495,10 +483,8 @@ operand:
         goto operand;
     }
     case op_caload: {
-        auto idx = stackTopAccess<jint>();
-        stackPop();
-        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
-        stackPop();
+        auto idx = stackTopAccess<jint>(true);
+        auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
         stackPushAccess<jint>(arr->array<jchar>()[idx]);
 
@@ -506,10 +492,8 @@ operand:
         goto operand;
     }
     case op_saload: {
-        auto idx = stackTopAccess<jint>();
-        stackPop();
-        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
-        stackPop();
+        auto idx = stackTopAccess<jint>(true);
+        auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
         stackPushAccess<jint>(arr->array<jshort>()[idx]);
 
@@ -517,32 +501,27 @@ operand:
         goto operand;
     }
     case op_istore: {
-        localAccessMod<jint>(currentThread.pc[1], stackTopAccess<jint>());
-        stackPop();
+        localAccessMod<jint>(currentThread.pc[1], stackTopAccess<jint>(true));
         currentThread.pc += 2;
         goto operand;
     }
     case op_lstore: {
-        localAccessModW<jlong>(currentThread.pc[1], stackTopAccessW<jlong>());
-        stackPopW();
+        localAccessModW<jlong>(currentThread.pc[1], stackTopAccessW<jlong>(true));
         currentThread.pc += 2;
         goto operand;
     }
     case op_fstore: {
-        localAccessMod<jfloat>(currentThread.pc[1], stackTopAccess<jfloat>());
-        stackPop();
+        localAccessMod<jfloat>(currentThread.pc[1], stackTopAccess<jfloat>(true));
         currentThread.pc += 2;
         goto operand;
     }
     case op_dstore: {
-        localAccessModW<jdouble>(currentThread.pc[1], stackTopAccessW<jdouble>());
-        stackPopW();
+        localAccessModW<jdouble>(currentThread.pc[1], stackTopAccessW<jdouble>(true));
         currentThread.pc += 2;
         goto operand;
     }
     case op_astore: {
-        localAccessMod<void *>(currentThread.pc[1], stackTopAccess<void *>());
-        stackPop();
+        localAccessMod<void *>(currentThread.pc[1], stackTopAccess<void *>(true));
         currentThread.pc += 2;
         goto operand;
     }
@@ -550,8 +529,7 @@ operand:
     case op_istore_n(1):
     case op_istore_n(2):
     case op_istore_n(3): {
-        localAccessMod<jint>(currentThread.pc[0] - op_istore_n(0), stackTopAccess<jint>());
-        stackPop();
+        localAccessMod<jint>(currentThread.pc[0] - op_istore_n(0), stackTopAccess<jint>(true));
         currentThread.pc++;
         goto operand;
     }
@@ -559,8 +537,7 @@ operand:
     case op_lstore_n(1):
     case op_lstore_n(2):
     case op_lstore_n(3): {
-        localAccessModW<jlong>(currentThread.pc[0] - op_lstore_n(0), stackTopAccessW<jlong>());
-        stackPop();
+        localAccessModW<jlong>(currentThread.pc[0] - op_lstore_n(0), stackTopAccessW<jlong>(true));
         currentThread.pc++;
         goto operand;
     }
@@ -568,8 +545,7 @@ operand:
     case op_fstore_n(1):
     case op_fstore_n(2):
     case op_fstore_n(3): {
-        localAccessMod<jfloat>(currentThread.pc[0] - op_fstore_n(0), stackTopAccess<jfloat>());
-        stackPop();
+        localAccessMod<jfloat>(currentThread.pc[0] - op_fstore_n(0), stackTopAccess<jfloat>(true));
         currentThread.pc++;
         goto operand;
     }
@@ -577,8 +553,7 @@ operand:
     case op_dstore_n(1):
     case op_dstore_n(2):
     case op_dstore_n(3): {
-        localAccessModW<jdouble>(currentThread.pc[0] - op_dstore_n(0), stackTopAccessW<jdouble>());
-        stackPop();
+        localAccessModW<jdouble>(currentThread.pc[0] - op_dstore_n(0), stackTopAccessW<jdouble>(true));
         currentThread.pc++;
         goto operand;
     }
@@ -586,18 +561,14 @@ operand:
     case op_astore_n(1):
     case op_astore_n(2):
     case op_astore_n(3): {
-        localAccessMod<void *>(currentThread.pc[0] - op_astore_n(0), stackTopAccess<void *>());
-        stackPop();
+        localAccessMod<void *>(currentThread.pc[0] - op_astore_n(0), stackTopAccess<void *>(true));
         currentThread.pc++;
         goto operand;
     }
     case op_iastore: {
-        auto value = stackTopAccess<jint>();
-        stackPop();
-        auto idx = stackTopAccess<jint>();
-        stackPop();
-        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
-        stackPop();
+        auto value = stackTopAccess<jint>(true);
+        auto idx = stackTopAccess<jint>(true);
+        auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
         arr->array<jint>()[idx] = value;
 
@@ -606,7 +577,7 @@ operand:
     }
     case op_lastore: {
         auto value = stackTopAccessW<jlong>();
-        stackPop();
+        stackPopW();
         auto idx = stackTopAccess<jint>();
         stackPop();
         auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
@@ -632,7 +603,7 @@ operand:
     }
     case op_dastore: {
         auto value = stackTopAccessW<jdouble>();
-        stackPop();
+        stackPopW();
         auto idx = stackTopAccess<jint>();
         stackPop();
         auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
@@ -717,6 +688,74 @@ operand:
         currentThread.pc++;
         goto operand;
     }
+    case op_dup_x1: {
+        auto value1 = stackTopAccess<void *>();
+        stackPop();
+        auto value2 = stackTopAccess<void *>();
+        stackPop();
+        stackPushAccess<void *>(value1);
+        stackPushAccess<void *>(value2);
+        stackPushAccess<void *>(value1);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_dup_x2: {
+        auto value1 = stackTopAccess<void *>();
+        stackPop();
+        auto value2 = stackTopAccess<void *>();
+        stackPop();
+        auto value3 = stackTopAccess<void *>();
+        stackPop();
+        stackPushAccess<void *>(value1);
+        stackPushAccess<void *>(value3);
+        stackPushAccess<void *>(value2);
+        stackPushAccess<void *>(value1);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_dup2: {
+        auto value1 = stackTopAccess<void *>();
+        stackPop();
+        auto value2 = stackTopAccess<void *>();
+        stackPushAccess<void *>(value1);
+        stackPushAccess<void *>(value2);
+        stackPushAccess<void *>(value1);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_dup2_x1: {
+        auto value1 = stackTopAccess<void *>();
+        stackPop();
+        auto value2 = stackTopAccess<void *>();
+        stackPop();
+        auto value3 = stackTopAccess<void *>();
+        stackPop();
+        stackPushAccess<void *>(value2);
+        stackPushAccess<void *>(value1);
+        stackPushAccess<void *>(value3);
+        stackPushAccess<void *>(value2);
+        stackPushAccess<void *>(value1);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_dup2_x2: {
+        auto value1 = stackTopAccess<void *>();
+        stackPop();
+        auto value2 = stackTopAccess<void *>();
+        stackPop();
+        auto value3 = stackTopAccess<void *>();
+        stackPop();
+        auto value4 = stackTopAccess<void *>();
+        stackPop();
+        stackPushAccess<void *>(value2);
+        stackPushAccess<void *>(value1);
+        stackPushAccess<void *>(value4);
+        stackPushAccess<void *>(value3);
+        stackPushAccess<void *>(value2);
+        stackPushAccess<void *>(value1);
+        currentThread.pc++;
+        goto operand;
+    }
     case op_swap: {
         auto value1 = stackTopAccess<void *>();
         stackPop();
@@ -789,6 +828,27 @@ operand:
         currentThread.pc++;
         goto operand;
     }
+    case op_l2i: {
+        auto v = stackTopAccessW<jlong>();
+        stackPopW();
+        stackPushAccess<jint>(v);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_l2f: {
+        auto v = stackTopAccessW<jlong>();
+        stackPopW();
+        stackPushAccess<jfloat>(v);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_l2d: {
+        auto v = stackTopAccessW<jlong>();
+        stackPopW();
+        stackPushAccessW<jdouble>(v);
+        currentThread.pc++;
+        goto operand;
+    }
     case op_i2b: {
         auto v = stackTopAccess<jint>();
         stackPop();
@@ -811,10 +871,8 @@ operand:
         goto operand;
     }
     case op_lcmp: {
-        auto item2 = stackTopAccessW<jlong>();
-        stackPopW();
-        auto item = stackTopAccessW<jlong>();
-        stackPopW();
+        auto item2 = stackTopAccessW<jlong>(true);
+        auto item = stackTopAccessW<jlong>(true);
         if (item > item2)
         {
             stackPushAccess<jint>(1);

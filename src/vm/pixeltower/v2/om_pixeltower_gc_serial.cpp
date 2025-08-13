@@ -92,7 +92,7 @@ void OMGarbageCollectorSerial::markSub(void *root)
                     }
                     else
                     {
-                        markSub(ptrb);
+                        markSub(*ptrb);
                     }
                 }
             }
@@ -141,7 +141,7 @@ void OMGarbageCollectorSerial::signUnreachable()
                 }
                 else
                 {
-                    markSub(ptrb);
+                    markSub(*ptrb);
                 }
             }
         }
