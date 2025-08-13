@@ -591,6 +591,58 @@ operand:
         currentThread.pc++;
         goto operand;
     }
+    case op_iastore: {
+        auto value = stackTopAccess<jint>();
+        stackPop();
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        arr->array<jint>()[idx] = value;
+
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_lastore: {
+        auto value = stackTopAccessW<jlong>();
+        stackPop();
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        arr->array<jlong>()[idx] = value;
+
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_fastore: {
+        auto value = stackTopAccess<jfloat>();
+        stackPop();
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        arr->array<jfloat>()[idx] = value;
+
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_dastore: {
+        auto value = stackTopAccessW<jdouble>();
+        stackPop();
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        arr->array<jdouble>()[idx] = value;
+
+        currentThread.pc++;
+        goto operand;
+    }
     case op_bastore: {
         auto value = (jboolean)stackTopAccess<jint>();
         stackPop();
@@ -600,6 +652,52 @@ operand:
         stackPop();
 
         arr->array<jboolean>()[idx] = value;
+
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_aastore: {
+        auto value = stackTopAccess<void *>();
+        stackPop();
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        if (heap->ptrCompEnabled())
+        {
+            arr->array<uint32_t>()[idx] = heap->compressPtr(value);
+        }
+        else
+        {
+            arr->array<void *>()[idx] = value;
+        }
+
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_castore: {
+        auto value = stackTopAccess<jint>();
+        stackPop();
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        arr->array<jchar>()[idx] = value;
+
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_sastore: {
+        auto value = stackTopAccess<jint>();
+        stackPop();
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        arr->array<jshort>()[idx] = value;
 
         currentThread.pc++;
         goto operand;
@@ -684,10 +782,24 @@ operand:
         currentThread.pc++;
         goto operand;
     }
+    case op_i2d: {
+        auto v = stackTopAccess<jint>();
+        stackPop();
+        stackPushAccessW<jdouble>(v);
+        currentThread.pc++;
+        goto operand;
+    }
     case op_i2b: {
         auto v = stackTopAccess<jint>();
         stackPop();
         stackPushAccess<jint>((jint)(jbyte)v);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_i2c: {
+        auto v = stackTopAccess<jint>();
+        stackPop();
+        stackPushAccess<jint>((jint)(jchar)v);
         currentThread.pc++;
         goto operand;
     }
