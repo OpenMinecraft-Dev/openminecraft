@@ -421,6 +421,68 @@ operand:
         currentThread.pc++;
         goto operand;
     }
+    case op_iaload: {
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        stackPushAccess<jint>(arr->array<jint>()[idx]);
+
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_laload: {
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        stackPushAccessW<jlong>(arr->array<jlong>()[idx]);
+
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_faload: {
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        stackPushAccess<jfloat>(arr->array<jfloat>()[idx]);
+
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_daload: {
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        stackPushAccessW<jdouble>(arr->array<jdouble>()[idx]);
+
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_aaload: {
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        if (heap->ptrCompEnabled())
+        {
+            stackPushAccess<void *>(heap->decompressPtr(arr->array<uint32_t>()[idx]));
+        }
+        else
+        {
+            stackPushAccess<void *>(arr->array<void *>()[idx]);
+        }
+
+        currentThread.pc++;
+        goto operand;
+    }
     case op_baload: {
         auto idx = stackTopAccess<jint>();
         stackPop();
@@ -428,6 +490,28 @@ operand:
         stackPop();
 
         stackPushAccess<jint>(arr->array<jboolean>()[idx]);
+
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_caload: {
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        stackPushAccess<jint>(arr->array<jchar>()[idx]);
+
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_saload: {
+        auto idx = stackTopAccess<jint>();
+        stackPop();
+        auto arr = (OMOOPArrDesc *)stackTopAccess<void *>();
+        stackPop();
+
+        stackPushAccess<jint>(arr->array<jshort>()[idx]);
 
         currentThread.pc++;
         goto operand;
@@ -563,6 +647,24 @@ operand:
         currentThread.pc++;
         goto operand;
     }
+    case op_fadd: {
+        auto i1 = stackTopAccess<jfloat>();
+        stackPop();
+        auto i2 = stackTopAccess<jfloat>();
+        stackPop();
+        stackPushAccess<jfloat>(i1 + i2);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_dadd: {
+        auto item2 = stackTopAccessW<jdouble>();
+        stackPopW();
+        auto item = stackTopAccessW<jdouble>();
+        stackPopW();
+        stackPushAccessW<jdouble>(item2 + item);
+        currentThread.pc++;
+        goto operand;
+    }
     case op_iinc: {
         localAccessMod<jint>(currentThread.pc[1], localAccessValue<jint>(currentThread.pc[1]) + currentThread.pc[2]);
         currentThread.pc += 3;
@@ -572,6 +674,13 @@ operand:
         auto v = stackTopAccess<jint>();
         stackPop();
         stackPushAccessW<jlong>(v);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_i2f: {
+        auto v = stackTopAccess<jint>();
+        stackPop();
+        stackPushAccess<jfloat>(v);
         currentThread.pc++;
         goto operand;
     }
