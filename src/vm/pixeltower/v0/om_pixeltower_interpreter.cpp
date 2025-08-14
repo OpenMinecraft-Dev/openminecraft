@@ -947,9 +947,31 @@ operand:
         ifcond(op_ifeq, ==);
         ifcond(op_ifne, !=);
         ifcond(op_iflt, <);
-        ifcond(op_ifgt, >);
         ifcond(op_ifge, >=);
+        ifcond(op_ifgt, >);
         ifcond(op_ifle, <=);
+
+#define icmpcond(op, sign)                                                                                             \
+    case op: {                                                                                                         \
+        auto item = stackTopAccess<jint>(true);                                                                        \
+        auto item2 = stackTopAccess<jint>(true);                                                                       \
+        if (item sign item2)                                                                                           \
+        {                                                                                                              \
+            currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);                  \
+        }                                                                                                              \
+        else                                                                                                           \
+        {                                                                                                              \
+            currentThread.pc += 3;                                                                                     \
+        }                                                                                                              \
+        goto operand;                                                                                                  \
+    }
+
+        icmpcond(op_if_icmpeq, ==);
+        icmpcond(op_if_icmpne, !=);
+        icmpcond(op_if_icmplt, <);
+        icmpcond(op_if_icmpge, >=);
+        icmpcond(op_if_icmpgt, >);
+        icmpcond(op_if_icmple, <=);
 
 #define acmpcond(op, sign)                                                                                             \
     case op: {                                                                                                         \
