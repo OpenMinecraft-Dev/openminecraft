@@ -17,6 +17,7 @@
 #include "openminecraft/vm/pixeltower/v2/om_pixeltower_gc.hpp"
 #include <any>
 #include <cassert>
+#include <cmath>
 #include <functional>
 #include <vector>
 
@@ -856,46 +857,129 @@ operand:
         currentThread.pc++;
         goto operand;
     }
-    case op_ifne: {
-        auto i = stackTopAccess<jint>(true);
-        if (i != 0)
+    case op_fcmpg: {
+        auto value2 = stackTopAccess<jfloat>(true);
+        auto value1 = stackTopAccess<jfloat>(true);
+        if (std::isnan(value1) || std::isnan(value2) || value1 > value2)
         {
-            currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);
+            stackPushAccess<jint>(1);
+        }
+        else if (value1 == value2)
+        {
+            stackPushAccess<jint>(0);
         }
         else
         {
-            currentThread.pc += 3;
+            stackPushAccess<jint>(-1);
         }
+        currentThread.pc++;
         goto operand;
     }
-    case op_ifge: {
-        auto i = stackTopAccess<jint>(true);
-        if (i >= 0)
+    case op_fcmpl: {
+        auto value2 = stackTopAccess<jfloat>(true);
+        auto value1 = stackTopAccess<jfloat>(true);
+        if (std::isnan(value1) || std::isnan(value2) || value1 < value2)
         {
-            currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);
+            stackPushAccess<jint>(-1);
+        }
+        else if (value1 == value2)
+        {
+            stackPushAccess<jint>(0);
         }
         else
         {
-            currentThread.pc += 3;
+            stackPushAccess<jint>(1);
         }
+        currentThread.pc++;
         goto operand;
     }
-    case op_if_acmpne: {
-        auto item = stackTopAccess<void *>(true);
-        auto item2 = stackTopAccess<void *>(true);
-        if (item != item2)
+    case op_dcmpg: {
+        auto value2 = stackTopAccessW<jdouble>(true);
+        auto value1 = stackTopAccessW<jdouble>(true);
+        if (std::isnan(value1) || std::isnan(value2) || value1 > value2)
         {
-            currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);
+            stackPushAccess<jint>(1);
+        }
+        else if (value1 == value2)
+        {
+            stackPushAccess<jint>(0);
         }
         else
         {
-            currentThread.pc += 3;
+            stackPushAccess<jint>(-1);
         }
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_dcmpl: {
+        auto value2 = stackTopAccessW<jdouble>(true);
+        auto value1 = stackTopAccessW<jdouble>(true);
+        if (std::isnan(value1) || std::isnan(value2) || value1 < value2)
+        {
+            stackPushAccess<jint>(-1);
+        }
+        else if (value1 == value2)
+        {
+            stackPushAccess<jint>(0);
+        }
+        else
+        {
+            stackPushAccess<jint>(1);
+        }
+        currentThread.pc++;
+        goto operand;
+    }
 
-        goto operand;
+#define ifcond(op, sign)                                                                                               \
+    case op: {                                                                                                         \
+        auto i = stackTopAccess<jint>(true);                                                                           \
+        if (i sign 0)                                                                                                  \
+        {                                                                                                              \
+            currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);                  \
+        }                                                                                                              \
+        else                                                                                                           \
+        {                                                                                                              \
+            currentThread.pc += 3;                                                                                     \
+        }                                                                                                              \
+        goto operand;                                                                                                  \
     }
+
+        ifcond(op_ifeq, ==);
+        ifcond(op_ifne, !=);
+        ifcond(op_iflt, <);
+        ifcond(op_ifgt, >);
+        ifcond(op_ifge, >=);
+        ifcond(op_ifle, <=);
+
+#define acmpcond(op, sign)                                                                                             \
+    case op: {                                                                                                         \
+        auto item = stackTopAccess<void *>(true);                                                                      \
+        auto item2 = stackTopAccess<void *>(true);                                                                     \
+        if (item sign item2)                                                                                           \
+        {                                                                                                              \
+            currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);                  \
+        }                                                                                                              \
+        else                                                                                                           \
+        {                                                                                                              \
+            currentThread.pc += 3;                                                                                     \
+        }                                                                                                              \
+        goto operand;                                                                                                  \
+    }
+
+        acmpcond(op_if_acmpeq, ==);
+        acmpcond(op_if_acmpne, !=);
+
     case op_goto: {
         currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);
+        goto operand;
+    }
+    case op_jsr: {
+        stackPushAccess<void *>(currentThread.pc);
+        currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);
+        goto operand;
+    }
+    case op_ret: {
+        currentThread.pc = localAccessValue<uint8_t *>(currentThread.pc[1]);
         goto operand;
     }
     case op_ireturn: {
