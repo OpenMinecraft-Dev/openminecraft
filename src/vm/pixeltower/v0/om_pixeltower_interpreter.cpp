@@ -759,6 +759,90 @@ operand:
         currentThread.pc++;
         goto operand;
     }
+    case op_isub: {
+        auto item2 = stackTopAccess<jint>(true);
+        auto item = stackTopAccess<jint>(true);
+        stackPushAccess<jint>(item - item2);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_lsub: {
+        auto item2 = stackTopAccessW<jlong>(true);
+        auto item = stackTopAccessW<jlong>(true);
+        stackPushAccessW<jlong>(item - item2);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_fsub: {
+        auto item2 = stackTopAccess<jfloat>(true);
+        auto item = stackTopAccess<jfloat>(true);
+        stackPushAccess<jfloat>(item - item2);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_dsub: {
+        auto item2 = stackTopAccessW<jdouble>(true);
+        auto item = stackTopAccessW<jdouble>(true);
+        stackPushAccessW<jdouble>(item - item2);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_imul: {
+        auto item2 = stackTopAccess<jint>(true);
+        auto item = stackTopAccess<jint>(true);
+        stackPushAccess<jint>(item * item2);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_lmul: {
+        auto item2 = stackTopAccessW<jlong>(true);
+        auto item = stackTopAccessW<jlong>(true);
+        stackPushAccessW<jlong>(item * item2);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_fmul: {
+        auto item2 = stackTopAccess<jfloat>(true);
+        auto item = stackTopAccess<jfloat>(true);
+        stackPushAccess<jfloat>(item * item2);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_dmul: {
+        auto item2 = stackTopAccessW<jdouble>(true);
+        auto item = stackTopAccessW<jdouble>(true);
+        stackPushAccessW<jdouble>(item * item2);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_idiv: {
+        auto item2 = stackTopAccess<jint>(true);
+        auto item = stackTopAccess<jint>(true);
+        stackPushAccess<jint>(item / item2);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_ldiv: {
+        auto item2 = stackTopAccessW<jlong>(true);
+        auto item = stackTopAccessW<jlong>(true);
+        stackPushAccessW<jlong>(item / item2);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_fdiv: {
+        auto item2 = stackTopAccess<jfloat>(true);
+        auto item = stackTopAccess<jfloat>(true);
+        stackPushAccess<jfloat>(item / item2);
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_ddiv: {
+        auto item2 = stackTopAccessW<jdouble>(true);
+        auto item = stackTopAccessW<jdouble>(true);
+        stackPushAccessW<jdouble>(item / item2);
+        currentThread.pc++;
+        goto operand;
+    }
     case op_iinc: {
         localAccessMod<jint>(currentThread.pc[1], localAccessValue<jint>(currentThread.pc[1]) + currentThread.pc[2]);
         currentThread.pc += 3;
