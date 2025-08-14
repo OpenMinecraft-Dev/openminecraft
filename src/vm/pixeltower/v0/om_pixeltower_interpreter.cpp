@@ -793,6 +793,36 @@ operand:
         currentThread.pc++;
         goto operand;
     }
+    case op_f2i: {
+        stackPushAccess<jint>(stackTopAccess<jfloat>(true));
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_f2l: {
+        stackPushAccessW<jlong>(stackTopAccess<jfloat>(true));
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_d2i: {
+        stackPushAccess<jint>(stackTopAccessW<jdouble>(true));
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_f2d: {
+        stackPushAccessW<jdouble>(stackTopAccess<jfloat>(true));
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_d2l: {
+        stackPushAccessW<jlong>(stackTopAccessW<jdouble>(true));
+        currentThread.pc++;
+        goto operand;
+    }
+    case op_d2f: {
+        stackPushAccess<jfloat>(stackTopAccessW<jdouble>(true));
+        currentThread.pc++;
+        goto operand;
+    }
     case op_i2b: {
         stackPushAccess<jint>((jint)(jbyte)stackTopAccess<jint>(true));
         currentThread.pc++;
@@ -878,6 +908,24 @@ operand:
         auto ret = stackTopAccessW<jlong>();
         popLastFrame();
         stackPushAccessW<jlong>(ret);
+        return EXEC_RETURN;
+    }
+    case op_freturn: {
+        auto ret = stackTopAccess<jfloat>();
+        popLastFrame();
+        stackPushAccess<jfloat>(ret);
+        return EXEC_RETURN;
+    }
+    case op_dreturn: {
+        auto ret = stackTopAccessW<jdouble>();
+        popLastFrame();
+        stackPushAccessW<jdouble>(ret);
+        return EXEC_RETURN;
+    }
+    case op_areturn: {
+        auto ret = stackTopAccess<void *>();
+        popLastFrame();
+        stackPushAccess<void *>(ret);
         return EXEC_RETURN;
     }
     case op_return: {
