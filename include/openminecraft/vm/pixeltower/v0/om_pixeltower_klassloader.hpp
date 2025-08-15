@@ -7,6 +7,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
+#include "openminecraft/vm/pixeltower/v3/om_pixeltower_validator.hpp"
 #include <any>
 #include <functional>
 #include <memory>
@@ -41,6 +42,7 @@ class OMKlassLoader
     OMPixelTowerHeap *metaspace;
     OMPixelTowerHeap *heap;
     OMInterpreter *interpreter;
+    v3::OMValidator validator;
     log::OMLogger logger;
     std::vector<std::shared_ptr<classfile::OMClassFile>> files;
 };

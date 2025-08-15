@@ -61,6 +61,7 @@ void OMKlassLoader::loadClass(std::string name)
                 ->to<classfile::OMClassConstantUtf8>()
                 ->data == name)
         {
+            validator.validate(f, name);
             klass = (OMKlass *)metaspace->allocate(sizeof(OMKlass));
             memset((void *)klass, 0, sizeof(OMKlass));
             void *rawmap = metaspace->allocate(sizeof(std::unordered_map<std::string, OMMethod *>));
