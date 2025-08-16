@@ -1,8 +1,10 @@
 #include "openminecraft/vm/pixeltower/v3/om_pixeltower_validator.hpp"
+#include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
+#include <cstdint>
 #include <memory>
 #include <stack>
 #include <vector>
@@ -16,9 +18,9 @@ constexpr int doubleItem = 0x0008;
 constexpr int charItem = 0x0010;
 constexpr int shortItem = 0x0020;
 constexpr int byteItem = 0x0040;
-// geopelia: maybe the validation may fail before the object initialization
-// xxxxxxxx | xxxxxxxx      | xxxxxxxx   | xxxxxxxx    (LE mode)
-// (flags)  | (initialized) | (reserved)
+// geopelia: if it's a reference of an oop, check the 2nd segment of the flag
+// xxxxxxxx | xxxxxxxx      | ...
+// (flags)  | (initialized)
 constexpr int refItem = 0x0080;
 // geopelia: the flag says it's an array
 // xxxxxxxx | xxxxxxxx    | xxxxxxxx       | xxxxxxxx    (LE mode)
@@ -169,10 +171,7 @@ std::string OMValidator::fetchContent(int flags)
         {
             return "(reference to oop)";
         }
-        else
-        {
-            return "(reference to oop, not initialized)";
-        }
+        return "(reference to oop, uninitialized)";
     }
     if (flags & arrItem)
     {
@@ -218,25 +217,37 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
 
         if (mname != "<init>")
         {
-            locals[0] |= 0b100000000;
+            locals[0] |= 0x1F;
         }
     }
 
+    auto codeheap = code->code->data();
     for (int offset = 0; offset < code->codeLength;)
     {
-        switch (code->code->at(offset))
+        auto loc = [&]() { return fmt::format("{}.{}{} + {}", name, mname, desc, offset); };
+
+        auto op = codeheap[offset];
+        switch (op)
         {
-        case op_new: {
-            stack.push(refItem);
-            offset += 3;
-            break;
-        }
         case op_aload_n(0):
         case op_aload_n(1):
         case op_aload_n(2):
         case op_aload_n(3): {
-            stack.push(locals[code->code->at(offset) - op_aload_n(0)]);
+            stack.push(locals[op - op_aload_n(0)]);
+            if (!(stack.top() & refItem || stack.top() & arrItem))
+            {
+                throw err::OMValidationError{
+                    err::Instructions,
+                    fmt::format("aload: loading non ref data {} to stack!", fetchContent(stack.top())), loc()};
+            }
             offset++;
+            break;
+        }
+        case op_new: {
+            checkRecursively(file, binary::be16ToNative(*(uint16_t *)(codeheap + offset)), name,
+                             OMClassConstantType::Class);
+            stack.push(refItem);
+            offset += 3;
             break;
         }
         default: {
@@ -253,8 +264,7 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
                 logger.info("#{} {}", i, fetchContent(locals[i]));
             }
 
-            throw err::OMValidationError{err::Instructions, "unknown operand detected!",
-                                         fmt::format("{}.{}{} + {}", name, mname, desc, offset)};
+            throw err::OMValidationError{err::Instructions, "unknown operand detected!", loc()};
         }
         }
     }
