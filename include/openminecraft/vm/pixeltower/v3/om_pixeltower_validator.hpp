@@ -16,8 +16,12 @@ class OMValidator
 
   private:
     void validateConstantPool(std::shared_ptr<classfile::OMClassFile> file, std::string name);
-    void checkRecursively(std::shared_ptr<classfile::OMClassFile> file, std::shared_ptr<classfile::OMClassConstant> c,
-                          uint16_t id, std::string name, classfile::OMClassConstantType type);
+    void checkRecursively(std::shared_ptr<classfile::OMClassFile> file, uint16_t id, std::string name,
+                          classfile::OMClassConstantType type);
+
+    void checkMethod(std::shared_ptr<classfile::OMClassFile> file, std::shared_ptr<classfile::OMClassMethodInfo> method,
+                     std::string name);
+    std::string fetchContent(int flags);
 
     log::OMLogger logger;
 };
