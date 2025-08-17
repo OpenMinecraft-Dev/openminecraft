@@ -313,6 +313,7 @@ operand:
     }
     case op_fconst_f(0.0f):
     case op_fconst_f(1.0f): {
+    case op_fconst_f(2.0f):
         stackPushAccess<jfloat>((jfloat)(currentThread.pc[0] - op_fconst_f(0.0f)));
         currentThread.pc++;
         goto operand;

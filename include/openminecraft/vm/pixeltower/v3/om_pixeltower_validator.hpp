@@ -4,24 +4,17 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include <cstdint>
+#include <map>
 #include <memory>
+#include <stack>
+#include <vector>
 namespace openminecraft::vm::pixeltower::v3
 {
-enum OMOperandType : uint8_t
+struct OMContext
 {
-    StackPop,
-    StackPush,
-    LocalGet,
-    LocalSet,
-    Jump
+    std::vector<int> locals;
+    std::stack<int> stack;
 };
-struct OMOperand
-{
-    OMOperandType type;
-    int allowedType;
-    int target;
-};
-
 class OMValidator
 {
   public:
@@ -36,8 +29,16 @@ class OMValidator
                           classfile::OMClassConstantType type);
 
     void checkMethod(std::shared_ptr<classfile::OMClassFile> file, std::shared_ptr<classfile::OMClassMethodInfo> method,
-                     std::string name);
+                     std::string name, std::map<int, bool> &checked, OMContext *context = nullptr, int offset = 0);
     std::string fetchContent(int flags);
+
+    void safeStackPush(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos, int i);
+    void safeStackPop(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos, int i);
+    void safeLocalSet(std::vector<int> &local, classfile::OMClassAttrCode *code, std::string pos, int index, int i);
+    void safeLocalGet(std::vector<int> &local, classfile::OMClassAttrCode *code, std::string pos, int index, int i);
+    void safeArgFetch(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos, std::string desc);
+    void safeReturnFetch(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos, std::string desc);
+    int toFlag(std::string name);
 
     log::OMLogger logger;
 };

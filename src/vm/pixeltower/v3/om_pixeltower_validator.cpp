@@ -1,6 +1,9 @@
 #include "openminecraft/vm/pixeltower/v3/om_pixeltower_validator.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/util/om_util_result.hpp"
+#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
@@ -11,21 +14,14 @@
 #include <vector>
 
 using namespace openminecraft::vm::classfile;
+using namespace openminecraft::binary::hash;
 
 constexpr int intItem = 0x0001;
 constexpr int floatItem = 0x0002;
 constexpr int longItem = 0x0004;
 constexpr int doubleItem = 0x0008;
-constexpr int charItem = 0x0010;
-constexpr int shortItem = 0x0020;
-constexpr int byteItem = 0x0040;
-// geopelia: if it's a reference of an oop, check the 2nd segment of the flag
-// xxxxxxx | x ...
-// (flags) | (initialized)
-// geopelia: if it is an array
-// xxxxxxxx | xxxxxxxx    | xxxxxxxx       | xxxxxxxx    (LE mode)
-// (flags)  | (dimension) | (content type) | (reserved)
-constexpr int refItem = 0x0080;
+constexpr int refItem = 0x0010;
+constexpr int slot2Item = 0x0020;
 
 namespace openminecraft::vm::pixeltower::v3
 {
@@ -39,12 +35,17 @@ void OMValidator::validate(std::shared_ptr<OMClassFile> file, std::string name)
 
     for (auto m : file->methods)
     {
-        checkMethod(file, m, name);
+        std::map<int, bool> d;
+        checkMethod(file, m, name, d);
     }
 }
 void OMValidator::checkRecursively(std::shared_ptr<OMClassFile> file, uint16_t id, std::string name,
                                    OMClassConstantType type)
 {
+    if (!file->mapping.count(id))
+    {
+        throw err::OMValidationError(err::Instructions, fmt::format("undefined constant with id {}", id), name);
+    }
     auto c = file->mapping[id];
     if (c->type() != type)
     {
@@ -147,41 +148,143 @@ std::string OMValidator::fetchContent(int flags)
     }
     if (flags & longItem)
     {
+        if (flags & slot2Item)
+        {
+            return "(long, 2nd part)";
+        }
         return "(long)";
     }
     if (flags & doubleItem)
     {
+        if (flags & slot2Item)
+        {
+            return "(double, 2nd part)";
+        }
         return "(double)";
-    }
-    if (flags & charItem)
-    {
-        return "(char)";
-    }
-    if (flags & shortItem)
-    {
-        return "(short)";
-    }
-    if (flags & byteItem)
-    {
-        return "(byte)";
     }
     if (flags & refItem)
     {
-        int dim = flags >> 8 & 0xFF;
-        if (dim)
-        {
-            auto type = fetchContent(flags >> 16 & 0xff);
-
-            return fmt::format("(array of {} with dimension {})", type, dim);
-        }
-
         return "(reference to oop)";
     }
 
     return "(not initialized)";
 }
+void OMValidator::safeStackPush(std::stack<int> &stack, OMClassAttrCode *code, std::string pos, int i)
+{
+    if (stack.size() > code->maxStack)
+    {
+        throw err::OMValidationError{err::Instructions, "stack depth out of bounds", pos};
+    }
+    stack.push(i);
+}
+void OMValidator::safeStackPop(std::stack<int> &stack, OMClassAttrCode *code, std::string pos, int i)
+{
+    if (stack.size() == 0)
+    {
+        throw err::OMValidationError{err::Instructions, "stack is empty!", pos};
+    }
+    if ((stack.top() & i) == 0)
+    {
+        throw err::OMValidationError{err::Instructions,
+                                     fmt::format("stack top type mismatch, required {}, actually {}", fetchContent(i),
+                                                 fetchContent(stack.top())),
+                                     pos};
+    }
+    stack.pop();
+}
+void OMValidator::safeLocalSet(std::vector<int> &local, classfile::OMClassAttrCode *code, std::string pos, int index,
+                               int i)
+{
+    if (index >= local.size())
+    {
+        throw err::OMValidationError{err::Instructions, "local out of bounds", pos};
+    }
+
+    // gino: if we are overriding a 2 slot item ...
+    // gino: first, we are overriding the second part of the value
+    if (local[index] & slot2Item)
+    {
+        local[index - 1] = 0x0;
+    }
+    // gino: otherwise ...
+    else if (local[index] & doubleItem || local[index] & longItem)
+    {
+        local[index + 1] = 0x0;
+    }
+
+    local[index] = i;
+    if (i == longItem || i == doubleItem)
+    {
+        local[index + 1] = i | slot2Item;
+    }
+}
+void OMValidator::safeLocalGet(std::vector<int> &local, classfile::OMClassAttrCode *code, std::string pos, int index,
+                               int i)
+{
+    if (index >= local.size())
+    {
+        throw err::OMValidationError{err::Instructions, "local out of bounds", pos};
+    }
+    if ((local[index] & i) == 0)
+    {
+        throw err::OMValidationError{err::Instructions,
+                                     fmt::format("local access type mismatch, required {}, actually {}",
+                                                 fetchContent(i), fetchContent(local[index])),
+                                     pos};
+    }
+}
+int OMValidator::toFlag(std::string name)
+{
+    switch (hash_compile_time(name.c_str()))
+    {
+    case "int"_hash:
+    case "char"_hash:
+    case "short"_hash:
+    case "byte"_hash:
+    case "boolean"_hash:
+        return intItem;
+    case "float"_hash:
+        return floatItem;
+    case "long"_hash:
+        return longItem;
+    case "double"_hash:
+        return doubleItem;
+    default:
+        return refItem;
+    }
+}
+void OMValidator::safeReturnFetch(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos,
+                                  std::string desc)
+{
+    int i = 0;
+    auto fetc = bytecode::descriptor::decodeSignature(desc, &i);
+    if (fetc.type == util::Err)
+    {
+        throw err::OMValidationError{err::Instructions,
+                                     fmt::format("unknown descriptor {} ({})", desc, fetc.unwrap_err()), pos};
+    }
+
+    stack.push(toFlag(fetc.unwrap().second));
+}
+void OMValidator::safeArgFetch(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos,
+                               std::string desc)
+{
+    int i = 0;
+    auto fetc = bytecode::descriptor::decodeSignature(desc, &i);
+    if (fetc.type == util::Err)
+    {
+        throw err::OMValidationError{err::Instructions,
+                                     fmt::format("unknown descriptor {} ({})", desc, fetc.unwrap_err()), pos};
+    }
+
+    auto base = fetc.unwrap().first;
+    for (auto it = base.rbegin(); it != base.rend(); ++it)
+    {
+        safeStackPop(stack, code, pos, toFlag(*it));
+    }
+}
 void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr<OMClassMethodInfo> method,
-                              std::string name)
+                              std::string name, std::map<int, bool> &checked, OMContext *context, int o)
 {
     checkRecursively(file, method->nameIndex, name, OMClassConstantType::Utf8);
     checkRecursively(file, method->descIndex, name, OMClassConstantType::Utf8);
@@ -209,272 +312,339 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
     auto mname = file->mapping[method->nameIndex]->to<OMClassConstantUtf8>()->data;
     auto desc = file->mapping[method->descIndex]->to<OMClassConstantUtf8>()->data;
 
+    if (o >= code->codeLength)
+    {
+        throw err::OMValidationError{err::Instructions, "code offset out of bounds!",
+                                     fmt::format("{}.{}{}", name, mname, desc)};
+    }
+
+    if (checked.size() == 0)
+    {
+        for (int i = 0; i < code->codeLength; i++)
+        {
+            checked[i] = false;
+        }
+    }
+
     std::vector<int> locals(code->maxLocals);
     std::stack<int> stack;
 
-    if ((method->accessFlags & JVM_Acc_Static) == 0)
+    if (context)
     {
-        // geopelia: local slot 0 refers to **this** pointer in JVM language sources ...
-        locals[0] = refItem;
+        locals = context->locals;
+        stack = context->stack;
     }
 
-    std::unordered_map<int, int> jumps;
-    for (int offset = 0; offset < code->codeLength;)
+    auto descInsert = [&](std::string desc, int begin, std::string loc) {
+        switch (hash_compile_time(desc.c_str()))
+        {
+        case "int"_hash:
+        case "char"_hash:
+        case "byte"_hash:
+        case "short"_hash:
+        case "boolean"_hash:
+            safeLocalSet(locals, code, loc, begin, intItem);
+            break;
+        case "float"_hash:
+            safeLocalSet(locals, code, loc, begin, floatItem);
+            break;
+        case "long"_hash:
+            safeLocalSet(locals, code, loc, begin, longItem);
+            break;
+        case "double"_hash:
+            safeLocalSet(locals, code, loc, begin, doubleItem);
+            break;
+        default:
+            safeLocalSet(locals, code, loc, begin, refItem);
+            break;
+        }
+    };
+    auto descPush = [&](std::string desc, std::string loc) {
+        switch (hash_compile_time(desc.c_str()))
+        {
+        case "int"_hash:
+        case "char"_hash:
+        case "byte"_hash:
+        case "short"_hash:
+        case "boolean"_hash:
+            safeStackPush(stack, code, loc, intItem);
+            break;
+        case "float"_hash:
+            safeStackPush(stack, code, loc, floatItem);
+            break;
+        case "long"_hash:
+            safeStackPush(stack, code, loc, longItem);
+            break;
+        case "double"_hash:
+            safeStackPush(stack, code, loc, doubleItem);
+            break;
+        default:
+            safeStackPush(stack, code, loc, refItem);
+            break;
+        }
+    };
+
+    int begin = 0;
+    auto pars = bytecode::descriptor::decodeSignature(desc, &begin);
+    if (pars.type == util::Err)
     {
+        throw err::OMValidationError{err::Instructions,
+                                     fmt::format("unrecognized function descriptor: {} {}", desc, pars.unwrap_err()),
+                                     fmt::format("{}.{}{}", name, mname, desc)};
+    }
+    begin = 0;
+
+    if ((method->accessFlags & JVM_Acc_Static) == 0)
+    {
+        locals[0] = refItem;
+        begin++;
+    }
+    for (auto refs : pars.unwrap().first)
+    {
+        descInsert(refs, begin, fmt::format("{}.{}{}", name, mname, desc));
+        begin++;
+        if (refs == "long" || refs == "double")
+        {
+            begin++;
+        }
+    }
+
+    for (int offset = o; offset < code->codeLength;)
+    {
+        // geopelia: loop or control flow merging, checking complete
+        if (checked[offset])
+        {
+            return;
+        }
+
+        auto fn = [&]() { return fmt::format("{}.{}{} + {}", name, mname, desc, offset); };
+        auto bump = [&](int s) {
+            for (int i = 0; i < s; i++)
+            {
+                checked[offset + i] = true;
+            }
+            offset += s;
+        };
+
         switch (code->code->at(offset))
         {
         case op_nop:
+            bump(1);
+            break;
         case op_aconst_null:
+            safeStackPush(stack, code, fn(), refItem);
+            bump(1);
+            break;
         case op_iconst_i(-1):
         case op_iconst_i(0):
         case op_iconst_i(1):
         case op_iconst_i(2):
         case op_iconst_i(3):
         case op_iconst_i(4):
-        case op_iconst_i(5):
+            safeStackPush(stack, code, fn(), intItem);
+            bump(1);
+            break;
         case op_lconst_l(0):
         case op_lconst_l(1):
+            safeStackPush(stack, code, fn(), longItem);
+            bump(1);
+            break;
         case op_fconst_f(0):
         case op_fconst_f(1):
-        case op_dconst_d(0):
-        case op_dconst_d(1):
-        case op_iload_n(0):
-        case op_iload_n(1):
-        case op_iload_n(2):
-        case op_iload_n(3):
-        case op_lload_n(0):
-        case op_lload_n(1):
-        case op_lload_n(2):
-        case op_lload_n(3):
-        case op_fload_n(0):
-        case op_fload_n(1):
-        case op_fload_n(2):
-        case op_fload_n(3):
-        case op_dload_n(0):
-        case op_dload_n(1):
-        case op_dload_n(2):
-        case op_dload_n(3):
-        case op_aload_n(0):
-        case op_aload_n(1):
-        case op_aload_n(2):
-        case op_aload_n(3):
-        case op_istore_n(0):
-        case op_istore_n(1):
-        case op_istore_n(2):
-        case op_istore_n(3):
-        case op_lstore_n(0):
-        case op_lstore_n(1):
-        case op_lstore_n(2):
-        case op_lstore_n(3):
-        case op_fstore_n(0):
-        case op_fstore_n(1):
-        case op_fstore_n(2):
-        case op_fstore_n(3):
-        case op_dstore_n(0):
-        case op_dstore_n(1):
-        case op_dstore_n(2):
-        case op_dstore_n(3):
-        case op_astore_n(0):
-        case op_astore_n(1):
-        case op_astore_n(2):
-        case op_astore_n(3):
-        case op_iaload:
-        case op_laload:
-        case op_faload:
-        case op_daload:
-        case op_aaload:
-        case op_baload:
-        case op_caload:
-        case op_saload:
-        case op_iastore:
-        case op_lastore:
-        case op_fastore:
-        case op_dastore:
-        case op_aastore:
-        case op_bastore:
-        case op_castore:
-        case op_sastore:
-        case op_pop:
-        case op_pop2:
-        case op_dup:
-        case op_dup_x1:
-        case op_dup_x2:
-        case op_dup2:
-        case op_dup2_x1:
-        case op_dup2_x2:
-        case op_swap:
-        case op_iadd:
-        case op_ladd:
-        case op_fadd:
-        case op_dadd:
-        case op_isub:
-        case op_lsub:
-        case op_fsub:
-        case op_dsub:
-        case op_imul:
-        case op_lmul:
-        case op_fmul:
-        case op_dmul:
-        case op_idiv:
-        case op_ldiv:
-        case op_fdiv:
-        case op_ddiv:
-        case op_irem:
-        case op_lrem:
-        case op_frem:
-        case op_drem:
-        case op_ineg:
-        case op_lneg:
-        case op_fneg:
-        case op_dneg:
-        case op_ishl:
-        case op_lshl:
-        case op_ishr:
-        case op_lshr:
-        case op_iushr:
-        case op_lushr:
-        case op_iand:
-        case op_land:
-        case op_ior:
-        case op_lor:
-        case op_ixor:
-        case op_lxor:
-        case op_i2l:
-        case op_i2f:
-        case op_i2d:
-        case op_l2i:
-        case op_l2f:
-        case op_l2d:
-        case op_f2i:
-        case op_f2l:
-        case op_d2i:
-        case op_f2d:
-        case op_d2l:
-        case op_d2f:
-        case op_i2b:
-        case op_i2c:
-        case op_i2s:
-        case op_lcmp:
-        case op_fcmpl:
-        case op_fcmpg:
-        case op_dcmpl:
-        case op_dcmpg:
-        case op_arraylength:
-        case op_athrow:
-        case op_monitorenter:
-        case op_monitorexit:
-            offset++;
+        case op_fconst_f(2):
+            safeStackPush(stack, code, fn(), floatItem);
+            bump(1);
             break;
+        case op_dconst_d(0):
+            safeStackPush(stack, code, fn(), doubleItem);
+            bump(1);
         case op_bipush:
-        case op_ldc:
-        case op_iload:
-        case op_lload:
-        case op_fload:
-        case op_dload:
-        case op_aload:
-        case op_istore:
-        case op_lstore:
-        case op_fstore:
-        case op_dstore:
-        case op_astore:
-        case op_newarray:
-            offset += 2;
+            safeStackPush(stack, code, fn(), intItem);
+            bump(2);
             break;
         case op_sipush:
+            safeStackPush(stack, code, fn(), intItem);
+            bump(3);
+            break;
+        case op_ldc:
+            switch (file->mapping[code->code->at(offset + 1)]->type())
+            {
+            case OMClassConstantType::Integer:
+                safeStackPush(stack, code, fn(), intItem);
+                break;
+            case OMClassConstantType::Float:
+                safeStackPush(stack, code, fn(), floatItem);
+                break;
+            case OMClassConstantType::String:
+                safeStackPush(stack, code, fn(), refItem);
+                break;
+            default:
+                throw err::OMValidationError{err::Instructions, "loading constant with wrong type", fn()};
+            }
+            bump(2);
+            break;
+
         case op_ldc_w:
+            switch (file->mapping[binary::be16ToNative(*(uint16_t *)(code->code->data() + offset))]->type())
+            {
+            case OMClassConstantType::Integer:
+                safeStackPush(stack, code, fn(), intItem);
+                break;
+            case OMClassConstantType::Float:
+                safeStackPush(stack, code, fn(), floatItem);
+                break;
+            case OMClassConstantType::String:
+                safeStackPush(stack, code, fn(), refItem);
+                break;
+            default:
+                throw err::OMValidationError{err::Instructions, "loading constant with wrong type", fn()};
+            }
+            bump(3);
+            break;
+
         case op_ldc2_w:
-        case op_iinc:
-        case op_getstatic:
-        case op_putstatic:
-        case op_getfield:
-        case op_putfield:
-        case op_invokevirtual:
-        case op_invokespecial:
-        case op_invokestatic:
-        case op_invokeinterface:
-        case op_invokedynamic:
-        case op_new:
-        case op_anewarray:
-        case op_checkcast:
-        case op_instanceof:
-            offset += 3;
-            break;
-        case op_multianewarray:
-            offset += 4;
-            break;
-        case op_ifeq:
-        case op_ifne:
-        case op_iflt:
-        case op_ifge:
-        case op_ifgt:
-        case op_ifle:
-        case op_if_icmpeq:
-        case op_if_icmpne:
-        case op_if_icmplt:
-        case op_if_icmpge:
-        case op_if_icmpgt:
-        case op_if_icmple:
-        case op_if_acmpeq:
-        case op_if_acmpne:
-        case op_goto:
-        case op_jsr:
-        case op_ifnull:
-        case op_ifnonnull: {
-            // gino: another code block!
-            auto target = offset + binary::be16SignedToNative(code->code->at(offset + 1), code->code->at(offset + 2));
-            jumps[offset] = target;
-            offset += 3;
-            break;
-        }
-        case op_ret:
-            offset += 2;
-            break;
-        case op_goto_w:
-        case op_jsr_w: {
-            auto target = offset + binary::be32SignedToNative(code->code->at(offset + 1), code->code->at(offset + 2),
-                                                              code->code->at(offset + 3), code->code->at(offset + 4));
-            jumps[offset] = target;
-            offset += 5;
-            break;
-        }
-        case op_tableswitch:
-        case op_lookupswitch:
-            logger.info("{}", offset);
-            throw 0;
-            // gino: complex structures inside the operand
-            break;
-        case op_ireturn:
-        case op_lreturn:
-        case op_freturn:
-        case op_dreturn:
-        case op_areturn:
-        case op_return:
-            // gino: ends a code block
-            jumps[offset] = -1;
-            offset++;
-            break;
-        case op_wide:
-            if (code->code->at(offset + 1) == op_iinc)
+            switch (file->mapping[binary::be16ToNative(*(uint16_t *)(code->code->data() + offset))]->type())
             {
-                offset += 4;
+            case OMClassConstantType::Long:
+                safeStackPush(stack, code, fn(), longItem);
                 break;
-            }
-            else
-            {
-                offset += 6;
+            case OMClassConstantType::Double:
+                safeStackPush(stack, code, fn(), doubleItem);
                 break;
+            default:
+                throw err::OMValidationError{err::Instructions, "loading constant with wrong type", fn()};
             }
+            bump(3);
             break;
-        default:
-            break;
-        }
+
+#define loadOp(op, id)                                                                                                 \
+    case op: {                                                                                                         \
+        safeLocalGet(locals, code, fn(), code->code->at(offset + 1), id);                                              \
+        safeStackPush(stack, code, fn(), intItem);                                                                     \
+        bump(2);                                                                                                       \
+        break;                                                                                                         \
     }
 
-    logger.info("{}.{}{}", name, mname, desc);
-    for (auto &p : jumps)
-    {
-        logger.info("{} -> {}", p.first, p.second);
+            loadOp(op_iload, intItem);
+            loadOp(op_lload, longItem);
+            loadOp(op_fload, floatItem);
+            loadOp(op_dload, doubleItem);
+            loadOp(op_aload, refItem);
+
+#define loadOpN(op, id)                                                                                                \
+    case op(0):                                                                                                        \
+    case op(1):                                                                                                        \
+    case op(2):                                                                                                        \
+    case op(3): {                                                                                                      \
+        safeLocalGet(locals, code, fn(), (int)(code->code->at(offset) - op(0)), id);                                   \
+        safeStackPush(stack, code, fn(), id);                                                                          \
+        bump(1);                                                                                                       \
+        break;                                                                                                         \
     }
-    logger.info("-----------");
+
+            loadOpN(op_iload_n, intItem);
+            loadOpN(op_lload_n, longItem);
+            loadOpN(op_fload_n, floatItem);
+            loadOpN(op_dload_n, doubleItem);
+            loadOpN(op_aload_n, refItem);
+
+        case op_lcmp: {
+            safeStackPop(stack, code, fn(), longItem);
+            safeStackPop(stack, code, fn(), longItem);
+            safeStackPush(stack, code, fn(), intItem);
+            bump(1);
+            break;
+        }
+
+        // geopelia: check the branch after jumps
+        case op_ifge: {
+            safeStackPop(stack, code, fn(), intItem);
+            auto target = offset + binary::be16SignedToNative(code->code->at(offset + 1), code->code->at(offset + 2));
+            // geopelia: copies the current context
+            OMContext con{locals, stack};
+            checkMethod(file, method, name, checked, &con, target);
+            bump(3);
+            break;
+        }
+
+        case op_return: {
+            return;
+        }
+
+        case op_getstatic: {
+            auto id = binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1));
+            checkRecursively(file, id, name, OMClassConstantType::FieldRef);
+            auto ref = file->mapping[id]->to<OMClassConstantFieldRef>();
+            auto nat = file->mapping[ref->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
+            auto desc = file->mapping[nat->descIndex]->to<OMClassConstantUtf8>()->data;
+
+            int i = 0;
+            auto r = bytecode::descriptor::decodeType(desc, &i);
+            if (r.type == Err)
+            {
+                throw err::OMValidationError{err::Instructions,
+                                             fmt::format("unknown type {} ({})", desc, r.unwrap_err()), fn()};
+            }
+
+            safeStackPush(stack, code, fn(), toFlag(r.unwrap()));
+
+            bump(3);
+            break;
+        }
+
+        case op_invokespecial: {
+            auto id = binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1));
+            checkRecursively(file, id, name, OMClassConstantType::MethodRef);
+            auto ref = file->mapping[id]->to<OMClassConstantMethodRef>();
+            auto nat = file->mapping[ref->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
+            auto name = file->mapping[nat->nameIndex]->to<OMClassConstantUtf8>()->data;
+            auto desc = file->mapping[nat->descIndex]->to<OMClassConstantUtf8>()->data;
+            // gino: calling non constructor is not allowed
+            if (name != "<init>")
+            {
+                throw err::OMValidationError{err::Instructions, "calling non constructor method!", fn()};
+            }
+
+            safeArgFetch(stack, code, fn(), desc);
+
+            bump(3);
+            break;
+        }
+
+        case op_invokevirtual: {
+            auto id = binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1));
+            checkRecursively(file, id, name, OMClassConstantType::MethodRef);
+            auto ref = file->mapping[id]->to<OMClassConstantMethodRef>();
+            auto nat = file->mapping[ref->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
+            auto name = file->mapping[nat->nameIndex]->to<OMClassConstantUtf8>()->data;
+            auto desc = file->mapping[nat->descIndex]->to<OMClassConstantUtf8>()->data;
+            if (name == "<init>" || name == "<clinit>")
+            {
+                throw err::OMValidationError{err::Instructions, "calling invalid method!", fn()};
+            }
+
+            safeArgFetch(stack, code, fn(), desc);
+            safeStackPop(stack, code, fn(), refItem);
+            safeReturnFetch(stack, code, fn(), desc);
+
+            bump(3);
+            break;
+        }
+
+        default:
+            logger.info("{} elements in stack", stack.size());
+            while (!stack.empty())
+            {
+                logger.info(fetchContent(stack.top()));
+                stack.pop();
+            }
+
+            for (int i = 0; i < locals.size(); i++)
+            {
+                logger.info("#{}: {}", i, fetchContent(locals[i]));
+            }
+            throw err::OMValidationError{err::Instructions, "unknown instruction!", fn()};
+        }
+    }
 }
 } // namespace openminecraft::vm::pixeltower::v3
