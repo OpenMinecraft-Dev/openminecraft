@@ -275,6 +275,11 @@ void OMValidator::safeReturnFetch(std::stack<int> &stack, classfile::OMClassAttr
                                      fmt::format("unknown descriptor {} ({})", desc, fetc.unwrap_err()), pos};
     }
 
+    if (fetc.unwrap().second == "void")
+    {
+        return;
+    }
+
     stack.push(toFlag(fetc.unwrap().second));
 }
 void OMValidator::safeArgFetch(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos,
@@ -294,6 +299,7 @@ void OMValidator::safeArgFetch(std::stack<int> &stack, classfile::OMClassAttrCod
         safeStackPop(stack, code, pos, toFlag(*it));
     }
 }
+// gino: we haven't checked the exception handlers yet
 void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr<OMClassMethodInfo> method,
                               std::string name, std::map<int, bool> &checked, OMContext *context, int o)
 {
@@ -452,6 +458,7 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
         case op_iconst_i(2):
         case op_iconst_i(3):
         case op_iconst_i(4):
+        case op_iconst_i(5):
             safeStackPush(stack, code, fn(), intItem);
             bump(1);
             break;
@@ -469,6 +476,7 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
         case op_dconst_d(0):
             safeStackPush(stack, code, fn(), doubleItem);
             bump(1);
+            break;
         case op_bipush:
             safeStackPush(stack, code, fn(), intItem);
             bump(2);
@@ -496,7 +504,7 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             break;
 
         case op_ldc_w:
-            switch (file->mapping[binary::be16ToNative(*(uint16_t *)(code->code->data() + offset))]->type())
+            switch (file->mapping[binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1))]->type())
             {
             case OMClassConstantType::Integer:
                 safeStackPush(stack, code, fn(), intItem);
@@ -514,7 +522,7 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             break;
 
         case op_ldc2_w:
-            switch (file->mapping[binary::be16ToNative(*(uint16_t *)(code->code->data() + offset))]->type())
+            switch (file->mapping[binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1))]->type())
             {
             case OMClassConstantType::Long:
                 safeStackPush(stack, code, fn(), longItem);
@@ -531,7 +539,7 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
 #define loadOp(op, id)                                                                                                 \
     case op: {                                                                                                         \
         safeLocalGet(locals, code, fn(), code->code->at(offset + 1), id);                                              \
-        safeStackPush(stack, code, fn(), intItem);                                                                     \
+        safeStackPush(stack, code, fn(), id);                                                                          \
         bump(2);                                                                                                       \
         break;                                                                                                         \
     }
@@ -598,7 +606,7 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
     case op(3): {                                                                                                      \
         safeStackPop(stack, code, fn(), id);                                                                           \
         safeLocalSet(locals, code, fn(), code->code->at(offset) - op(0), id);                                          \
-        bump(3);                                                                                                       \
+        bump(1);                                                                                                       \
         break;                                                                                                         \
     }
 
@@ -939,9 +947,73 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
         case op_ret: {
             return;
         }
+        case op_tableswitch: {
+            std::vector<int> targets;
+            auto codeRaw = code->code->data();
+            auto insBase = offset;
+            bump(1);
+            while (offset % 4 != 0)
+            {
+                bump(1);
+            }
+            int def = (codeRaw[offset] << 24) | (codeRaw[offset + 1] << 16) | (codeRaw[offset + 2] << 8) |
+                      (codeRaw[offset + 3]);
+            int low = (codeRaw[offset + 4] << 24) | (codeRaw[offset + 5] << 16) | (codeRaw[offset + 6] << 8) |
+                      (codeRaw[offset + 7]);
+            int high = (codeRaw[offset + 8] << 24) | (codeRaw[offset + 9] << 16) | (codeRaw[offset + 10] << 8) |
+                       (codeRaw[offset + 11]);
+            int cont = high - low + 1;
+            bump(12);
+            targets.push_back(insBase + def);
+            for (int i = 0; i < cont; i++)
+            {
+                auto offsets = (codeRaw[offset] << 24) | (codeRaw[offset + 1] << 16) | (codeRaw[offset + 2] << 8) |
+                               (codeRaw[offset + 3]);
+                targets.push_back(insBase + offsets);
+                bump(4);
+            }
+            for (auto target : targets)
+            {
+                OMContext con{locals, stack};
+                checkMethod(file, method, name, checked, &con, target);
+            }
+            return;
+        }
+        case op_lookupswitch: {
+            std::vector<int> targets;
+            auto codeRaw = code->code->data();
+            auto insBase = offset;
+            bump(1);
+            while (offset % 4 != 0)
+            {
+                bump(1);
+            }
+            int def = (codeRaw[offset] << 24) | (codeRaw[offset + 1] << 16) | (codeRaw[offset + 2] << 8) |
+                      (codeRaw[offset + 3]);
+            int npairs = (codeRaw[offset + 4] << 24) | (codeRaw[offset + 5] << 16) | (codeRaw[offset + 6] << 8) |
+                         (codeRaw[offset + 7]);
+            targets.push_back(insBase + def);
+            bump(8);
+            for (int i = 0; i < npairs; i++)
+            {
+                auto id = (codeRaw[offset] << 24) | (codeRaw[offset + 1] << 16) | (codeRaw[offset + 2] << 8) |
+                          (codeRaw[offset + 3]);
+                auto off = (codeRaw[offset + 4] << 24) | (codeRaw[offset + 5] << 16) | (codeRaw[offset + 6] << 8) |
+                           (codeRaw[offset + 7]);
+                targets.push_back(insBase + off);
+                bump(4 * 2);
+            }
+            for (auto target : targets)
+            {
+                OMContext con{locals, stack};
+                checkMethod(file, method, name, checked, &con, target);
+            }
+            return;
+        }
 
         case op_ireturn: {
-            if (pars.unwrap().second != "int")
+            if (pars.unwrap().second != "int" && pars.unwrap().second != "byte" && pars.unwrap().second != "char" &&
+                pars.unwrap().second != "short" && pars.unwrap().second != "boolean")
             {
                 throw err::OMValidationError{err::Instructions, "invalid return value type!", fn()};
             }
@@ -984,12 +1056,16 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             return;
         }
 
+#define fetchRef(t)                                                                                                    \
+    auto id = binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1));                                    \
+    checkRecursively(file, id, name, t);                                                                               \
+    auto ref = file->mapping[id]->to<OMClassConstantFieldRef>();                                                       \
+    auto nat = file->mapping[ref->nameAndTypeIndex]->to<OMClassConstantNameAndType>();                                 \
+    auto name = file->mapping[nat->nameIndex]->to<OMClassConstantUtf8>()->data;                                        \
+    auto desc = file->mapping[nat->descIndex]->to<OMClassConstantUtf8>()->data;
+
         case op_getstatic: {
-            auto id = binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1));
-            checkRecursively(file, id, name, OMClassConstantType::FieldRef);
-            auto ref = file->mapping[id]->to<OMClassConstantFieldRef>();
-            auto nat = file->mapping[ref->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
-            auto desc = file->mapping[nat->descIndex]->to<OMClassConstantUtf8>()->data;
+            fetchRef(OMClassConstantType::FieldRef);
 
             int i = 0;
             auto r = bytecode::descriptor::decodeType(desc, &i);
@@ -1005,32 +1081,62 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             break;
         }
 
-        case op_invokespecial: {
-            auto id = binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1));
-            checkRecursively(file, id, name, OMClassConstantType::MethodRef);
-            auto ref = file->mapping[id]->to<OMClassConstantMethodRef>();
-            auto nat = file->mapping[ref->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
-            auto name = file->mapping[nat->nameIndex]->to<OMClassConstantUtf8>()->data;
-            auto desc = file->mapping[nat->descIndex]->to<OMClassConstantUtf8>()->data;
-            // gino: calling non constructor is not allowed
-            if (name != "<init>")
+        case op_putstatic: {
+            fetchRef(OMClassConstantType::FieldRef);
+
+            int i = 0;
+            auto r = bytecode::descriptor::decodeType(desc, &i);
+            if (r.type == Err)
             {
-                throw err::OMValidationError{err::Instructions, "calling non constructor method!", fn()};
+                throw err::OMValidationError{err::Instructions,
+                                             fmt::format("unknown type {} ({})", desc, r.unwrap_err()), fn()};
             }
 
-            safeArgFetch(stack, code, fn(), desc);
+            safeStackPop(stack, code, fn(), toFlag(r.unwrap()));
+
+            bump(3);
+            break;
+        }
+
+        case op_getfield: {
+            fetchRef(OMClassConstantType::FieldRef);
+
+            int i = 0;
+            auto r = bytecode::descriptor::decodeType(desc, &i);
+            if (r.type == Err)
+            {
+                throw err::OMValidationError{err::Instructions,
+                                             fmt::format("unknown type {} ({})", desc, r.unwrap_err()), fn()};
+            }
+
+            safeStackPop(stack, code, fn(), refItem);
+            safeStackPush(stack, code, fn(), toFlag(r.unwrap()));
+
+            bump(3);
+            break;
+        }
+
+        case op_putfield: {
+            fetchRef(OMClassConstantType::FieldRef);
+
+            int i = 0;
+            auto r = bytecode::descriptor::decodeType(desc, &i);
+            if (r.type == Err)
+            {
+                throw err::OMValidationError{err::Instructions,
+                                             fmt::format("unknown type {} ({})", desc, r.unwrap_err()), fn()};
+            }
+
+            safeStackPop(stack, code, fn(), toFlag(r.unwrap()));
+            safeStackPop(stack, code, fn(), refItem);
 
             bump(3);
             break;
         }
 
         case op_invokevirtual: {
-            auto id = binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1));
-            checkRecursively(file, id, name, OMClassConstantType::MethodRef);
-            auto ref = file->mapping[id]->to<OMClassConstantMethodRef>();
-            auto nat = file->mapping[ref->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
-            auto name = file->mapping[nat->nameIndex]->to<OMClassConstantUtf8>()->data;
-            auto desc = file->mapping[nat->descIndex]->to<OMClassConstantUtf8>()->data;
+            fetchRef(OMClassConstantType::MethodRef);
+
             if (name == "<init>" || name == "<clinit>")
             {
                 throw err::OMValidationError{err::Instructions, "calling invalid method!", fn()};
@@ -1041,6 +1147,106 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             safeReturnFetch(stack, code, fn(), desc);
 
             bump(3);
+            break;
+        }
+
+        case op_invokespecial: {
+            fetchRef(OMClassConstantType::MethodRef);
+
+            // gino: calling non constructor is not allowed
+            if (name != "<init>")
+            {
+                throw err::OMValidationError{err::Instructions, "calling non constructor method!", fn()};
+            }
+
+            safeArgFetch(stack, code, fn(), desc);
+            safeStackPop(stack, code, fn(), refItem);
+
+            bump(3);
+            break;
+        }
+
+        case op_invokestatic: {
+            fetchRef(OMClassConstantType::MethodRef);
+
+            if (name == "<init>" || name == "<clinit>")
+            {
+                throw err::OMValidationError{err::Instructions, "calling invalid method!", fn()};
+            }
+
+            safeArgFetch(stack, code, fn(), desc);
+            safeReturnFetch(stack, code, fn(), desc);
+
+            bump(3);
+            break;
+        }
+
+        case op_invokeinterface: {
+            fetchRef(OMClassConstantType::InterfaceMethodRef);
+
+            if (name == "<init>" || name == "<clinit>")
+            {
+                throw err::OMValidationError{err::Instructions, "calling invalid method!", fn()};
+            }
+
+            safeArgFetch(stack, code, fn(), desc);
+            safeReturnFetch(stack, code, fn(), desc);
+
+            bump(3);
+            break;
+        }
+
+            /*case op_invokedynamic: {
+            }*/
+
+        case op_new: {
+            auto id = binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1));
+            checkRecursively(file, id, name, OMClassConstantType::Class);
+            safeStackPush(stack, code, fn(), refItem);
+            bump(3);
+            break;
+        }
+        case op_newarray: {
+            safeStackPop(stack, code, fn(), intItem);
+            safeStackPush(stack, code, fn(), refItem);
+            bump(2);
+            break;
+        }
+        case op_anewarray: {
+            auto id = binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1));
+            checkRecursively(file, id, name, OMClassConstantType::Class);
+            safeStackPop(stack, code, fn(), intItem);
+            safeStackPush(stack, code, fn(), refItem);
+            bump(3);
+            break;
+        }
+        case op_arraylength: {
+            safeStackPop(stack, code, fn(), refItem);
+            safeStackPush(stack, code, fn(), intItem);
+            bump(1);
+            break;
+        }
+        case op_athrow: {
+            safeStackCheck(stack, code, fn(), refItem);
+            return;
+        }
+        case op_checkcast: {
+            safeStackCheck(stack, code, fn(), refItem);
+            bump(1);
+            break;
+        }
+        case op_instanceof: {
+            auto id = binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1));
+            checkRecursively(file, id, name, OMClassConstantType::Class);
+            safeStackPop(stack, code, fn(), refItem);
+            safeStackPush(stack, code, fn(), intItem);
+            bump(1);
+            break;
+        }
+        case op_monitorenter:
+        case op_monitorexit: {
+            safeStackPop(stack, code, fn(), refItem);
+            bump(1);
             break;
         }
 
