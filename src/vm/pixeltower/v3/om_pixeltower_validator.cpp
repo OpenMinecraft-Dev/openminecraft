@@ -22,6 +22,7 @@ constexpr int longItem = 0x0004;
 constexpr int doubleItem = 0x0008;
 constexpr int refItem = 0x0010;
 constexpr int slot2Item = 0x0020;
+constexpr int addrItem = 0x0040;
 
 namespace openminecraft::vm::pixeltower::v3
 {
@@ -162,6 +163,10 @@ std::string OMValidator::fetchContent(int flags)
         }
         return "(double)";
     }
+    if (flags & addrItem)
+    {
+        return "(address)";
+    }
     if (flags & refItem)
     {
         return "(reference to oop)";
@@ -177,12 +182,19 @@ void OMValidator::safeStackPush(std::stack<int> &stack, OMClassAttrCode *code, s
     }
     stack.push(i);
 }
-void OMValidator::safeStackPop(std::stack<int> &stack, OMClassAttrCode *code, std::string pos, int i)
+int OMValidator::safeStackPop(std::stack<int> &stack, OMClassAttrCode *code, std::string pos, int i)
 {
     if (stack.size() == 0)
     {
         throw err::OMValidationError{err::Instructions, "stack is empty!", pos};
     }
+    safeStackCheck(stack, code, pos, i);
+    auto ii = stack.top();
+    stack.pop();
+    return ii;
+}
+void OMValidator::safeStackCheck(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos, int i)
+{
     if ((stack.top() & i) == 0)
     {
         throw err::OMValidationError{err::Instructions,
@@ -190,7 +202,6 @@ void OMValidator::safeStackPop(std::stack<int> &stack, OMClassAttrCode *code, st
                                                  fetchContent(stack.top())),
                                      pos};
     }
-    stack.pop();
 }
 void OMValidator::safeLocalSet(std::vector<int> &local, classfile::OMClassAttrCode *code, std::string pos, int index,
                                int i)
@@ -411,7 +422,7 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
 
     for (int offset = o; offset < code->codeLength;)
     {
-        // geopelia: loop or control flow merging, checking complete
+        // geopelia: loop, return or control flow merging, checking complete
         if (checked[offset])
         {
             return;
@@ -548,6 +559,304 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             loadOpN(op_dload_n, doubleItem);
             loadOpN(op_aload_n, refItem);
 
+#define naload(op, id)                                                                                                 \
+    case op: {                                                                                                         \
+        safeStackPop(stack, code, fn(), intItem);                                                                      \
+        safeStackPop(stack, code, fn(), refItem);                                                                      \
+        safeStackPush(stack, code, fn(), id);                                                                          \
+        bump(1);                                                                                                       \
+        break;                                                                                                         \
+    }
+
+            naload(op_iaload, intItem);
+            naload(op_laload, longItem);
+            naload(op_faload, floatItem);
+            naload(op_daload, doubleItem);
+            naload(op_aaload, refItem);
+            naload(op_baload, intItem);
+            naload(op_caload, intItem);
+            naload(op_saload, intItem);
+
+#define storeOp(op, id)                                                                                                \
+    case op: {                                                                                                         \
+        safeStackPop(stack, code, fn(), id);                                                                           \
+        safeLocalSet(locals, code, fn(), code->code->at(offset + 1), id);                                              \
+        bump(2);                                                                                                       \
+        break;                                                                                                         \
+    };
+
+            storeOp(op_istore, intItem);
+            storeOp(op_lstore, longItem);
+            storeOp(op_fstore, floatItem);
+            storeOp(op_dstore, doubleItem);
+            storeOp(op_astore, refItem);
+
+#define storeOpN(op, id)                                                                                               \
+    case op(0):                                                                                                        \
+    case op(1):                                                                                                        \
+    case op(2):                                                                                                        \
+    case op(3): {                                                                                                      \
+        safeStackPop(stack, code, fn(), id);                                                                           \
+        safeLocalSet(locals, code, fn(), code->code->at(offset) - op(0), id);                                          \
+        bump(3);                                                                                                       \
+        break;                                                                                                         \
+    }
+
+            storeOpN(op_istore_n, intItem);
+            storeOpN(op_lstore_n, longItem);
+            storeOpN(op_fstore_n, floatItem);
+            storeOpN(op_dstore_n, doubleItem);
+            storeOpN(op_astore_n, refItem);
+
+#define nastore(op, id)                                                                                                \
+    case op: {                                                                                                         \
+        safeStackPop(stack, code, fn(), id);                                                                           \
+        safeStackPop(stack, code, fn(), intItem);                                                                      \
+        safeStackPop(stack, code, fn(), refItem);                                                                      \
+        bump(1);                                                                                                       \
+        break;                                                                                                         \
+    }
+
+            nastore(op_iastore, intItem);
+            nastore(op_lastore, longItem);
+            nastore(op_fastore, floatItem);
+            nastore(op_dastore, doubleItem);
+            nastore(op_aastore, refItem);
+            nastore(op_bastore, intItem);
+            nastore(op_castore, intItem);
+            nastore(op_sastore, intItem);
+
+        case op_pop: {
+            safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+            bump(1);
+            break;
+        }
+        case op_pop2: {
+            safeStackPop(stack, code, fn(), longItem | doubleItem);
+            bump(1);
+            break;
+        }
+
+        case op_dup: {
+            safeStackCheck(stack, code, fn(), intItem | floatItem | refItem);
+            safeStackPush(stack, code, fn(), intItem | floatItem | refItem);
+            bump(1);
+            break;
+        }
+
+        case op_dup_x1: {
+            auto i = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+            safeStackPush(stack, code, fn(), i);
+            safeStackPush(stack, code, fn(), i);
+            bump(1);
+            break;
+        }
+
+        case op_dup_x2: {
+            try
+            {
+                auto i1 = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+                auto i2 = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+                auto i3 = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+                safeStackPush(stack, code, fn(), i1);
+                safeStackPush(stack, code, fn(), i3);
+                safeStackPush(stack, code, fn(), i2);
+                safeStackPush(stack, code, fn(), i1);
+            }
+            catch (err::OMValidationError _)
+            {
+                auto i1 = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+                auto i2 = safeStackPop(stack, code, fn(), longItem | doubleItem);
+                safeStackPush(stack, code, fn(), i1);
+                safeStackPush(stack, code, fn(), i2);
+                safeStackPush(stack, code, fn(), i1);
+            }
+            bump(1);
+            break;
+        }
+
+        case op_dup2: {
+            safeStackCheck(stack, code, fn(), longItem | doubleItem);
+            bump(1);
+            break;
+        }
+
+        case op_dup2_x1: {
+            try
+            {
+                auto i1 = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+                auto i2 = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+                auto i3 = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+                safeStackPush(stack, code, fn(), i2);
+                safeStackPush(stack, code, fn(), i1);
+                safeStackPush(stack, code, fn(), i3);
+                safeStackPush(stack, code, fn(), i2);
+                safeStackPush(stack, code, fn(), i1);
+            }
+            catch (err::OMValidationError _)
+            {
+                auto i1 = safeStackPop(stack, code, fn(), longItem | doubleItem);
+                auto i2 = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+                safeStackPush(stack, code, fn(), i1);
+                safeStackPush(stack, code, fn(), i2);
+                safeStackPush(stack, code, fn(), i1);
+            }
+            bump(1);
+            break;
+        }
+
+        case op_dup2_x2: {
+            try
+            {
+                auto i1 = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+                auto i2 = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+                auto i3 = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+                auto i4 = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+                safeStackPush(stack, code, fn(), i2);
+                safeStackPush(stack, code, fn(), i1);
+                safeStackPush(stack, code, fn(), i4);
+                safeStackPush(stack, code, fn(), i3);
+                safeStackPush(stack, code, fn(), i2);
+                safeStackPush(stack, code, fn(), i1);
+                goto finish;
+            }
+            catch (err::OMValidationError _)
+            {
+            }
+
+            try
+            {
+                auto i1 = safeStackPop(stack, code, fn(), longItem | doubleItem);
+                auto i2 = safeStackPop(stack, code, fn(), longItem | doubleItem);
+                safeStackPush(stack, code, fn(), i1);
+                safeStackPush(stack, code, fn(), i2);
+                safeStackPush(stack, code, fn(), i1);
+                goto finish;
+            }
+            catch (err::OMValidationError _)
+            {
+            }
+
+            try
+            {
+                auto i1 = safeStackPop(stack, code, fn(), longItem | doubleItem);
+                auto i2 = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+                auto i3 = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+                safeStackPush(stack, code, fn(), i1);
+                safeStackPush(stack, code, fn(), i3);
+                safeStackPush(stack, code, fn(), i2);
+                safeStackPush(stack, code, fn(), i1);
+                goto finish;
+            }
+            catch (err::OMValidationError _)
+            {
+            }
+
+            try
+            {
+                auto i1 = safeStackPop(stack, code, fn(), longItem | doubleItem);
+                auto i2 = safeStackPop(stack, code, fn(), longItem | doubleItem);
+                auto i3 = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+                safeStackPush(stack, code, fn(), i2);
+                safeStackPush(stack, code, fn(), i1);
+                safeStackPush(stack, code, fn(), i3);
+                safeStackPush(stack, code, fn(), i2);
+                safeStackPush(stack, code, fn(), i1);
+                goto finish;
+            }
+            catch (err::OMValidationError _)
+            {
+            }
+
+            throw err::OMValidationError{err::Instructions, "invalid item type!", fn()};
+
+        finish:
+            bump(1);
+            break;
+        }
+
+        case op_swap: {
+            auto i = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+            auto l = safeStackPop(stack, code, fn(), intItem | floatItem | refItem);
+            safeStackPush(stack, code, fn(), i);
+            safeStackPush(stack, code, fn(), l);
+            break;
+        }
+
+#define noperate(op, id)                                                                                               \
+    case op: {                                                                                                         \
+        safeStackPop(stack, code, fn(), id);                                                                           \
+        safeStackPop(stack, code, fn(), id);                                                                           \
+        safeStackPush(stack, code, fn(), id);                                                                          \
+        bump(1);                                                                                                       \
+        break;                                                                                                         \
+    }
+            noperate(op_iadd, intItem);
+            noperate(op_ladd, longItem);
+            noperate(op_fadd, floatItem);
+            noperate(op_dadd, doubleItem);
+            noperate(op_isub, intItem);
+            noperate(op_lsub, longItem);
+            noperate(op_fsub, floatItem);
+            noperate(op_dsub, doubleItem);
+            noperate(op_imul, intItem);
+            noperate(op_lmul, longItem);
+            noperate(op_fmul, floatItem);
+            noperate(op_dmul, doubleItem);
+            noperate(op_idiv, intItem);
+            noperate(op_ldiv, longItem);
+            noperate(op_fdiv, floatItem);
+            noperate(op_ddiv, doubleItem);
+            noperate(op_irem, intItem);
+            noperate(op_lrem, longItem);
+            noperate(op_frem, floatItem);
+            noperate(op_drem, doubleItem);
+            noperate(op_ineg, intItem);
+            noperate(op_lneg, longItem);
+            noperate(op_fneg, floatItem);
+            noperate(op_dneg, doubleItem);
+            noperate(op_ishl, intItem);
+            noperate(op_lshl, longItem);
+            noperate(op_ishr, intItem);
+            noperate(op_lshr, longItem);
+            noperate(op_iushr, intItem);
+            noperate(op_lushr, longItem);
+            noperate(op_iand, intItem);
+            noperate(op_land, longItem);
+            noperate(op_ior, intItem);
+            noperate(op_lor, longItem);
+            noperate(op_ixor, intItem);
+            noperate(op_lxor, longItem);
+
+        case op_iinc: {
+            safeLocalGet(locals, code, fn(), code->code->at(offset + 1), intItem);
+            bump(3);
+            break;
+        }
+
+#define opConv(op, src, dst)                                                                                           \
+    case op: {                                                                                                         \
+        safeStackPop(stack, code, fn(), src);                                                                          \
+        safeStackPush(stack, code, fn(), dst);                                                                         \
+        bump(1);                                                                                                       \
+        break;                                                                                                         \
+    }
+            opConv(op_i2l, intItem, longItem);
+            opConv(op_i2f, intItem, floatItem);
+            opConv(op_i2d, intItem, doubleItem);
+            opConv(op_l2i, longItem, intItem);
+            opConv(op_l2f, longItem, floatItem);
+            opConv(op_l2d, longItem, doubleItem);
+            opConv(op_f2i, floatItem, intItem);
+            opConv(op_f2l, floatItem, longItem);
+            opConv(op_d2i, doubleItem, intItem);
+            opConv(op_f2d, floatItem, doubleItem);
+            opConv(op_d2l, doubleItem, longItem);
+            opConv(op_d2f, doubleItem, floatItem);
+            opConv(op_i2b, intItem, intItem);
+            opConv(op_i2c, intItem, intItem);
+            opConv(op_i2s, intItem, intItem);
+
         case op_lcmp: {
             safeStackPop(stack, code, fn(), longItem);
             safeStackPop(stack, code, fn(), longItem);
@@ -556,8 +865,31 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             break;
         }
 
+        case op_fcmpl:
+        case op_fcmpg: {
+            safeStackPop(stack, code, fn(), floatItem);
+            safeStackPop(stack, code, fn(), floatItem);
+            safeStackPush(stack, code, fn(), intItem);
+            bump(1);
+            break;
+        }
+
+        case op_dcmpl:
+        case op_dcmpg: {
+            safeStackPop(stack, code, fn(), doubleItem);
+            safeStackPop(stack, code, fn(), doubleItem);
+            safeStackPush(stack, code, fn(), intItem);
+            bump(1);
+            break;
+        }
+
         // geopelia: check the branch after jumps
-        case op_ifge: {
+        case op_ifge:
+        case op_ifgt:
+        case op_ifle:
+        case op_iflt:
+        case op_ifeq:
+        case op_ifne: {
             safeStackPop(stack, code, fn(), intItem);
             auto target = offset + binary::be16SignedToNative(code->code->at(offset + 1), code->code->at(offset + 2));
             // geopelia: copies the current context
@@ -566,8 +898,89 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             bump(3);
             break;
         }
+        case op_if_icmpeq:
+        case op_if_icmpne:
+        case op_if_icmpge:
+        case op_if_icmpgt:
+        case op_if_icmple:
+        case op_if_icmplt: {
+            safeStackPop(stack, code, fn(), intItem);
+            safeStackPop(stack, code, fn(), intItem);
+            auto target = offset + binary::be16SignedToNative(code->code->at(offset + 1), code->code->at(offset + 2));
+            OMContext con{locals, stack};
+            checkMethod(file, method, name, checked, &con, target);
+            bump(3);
+            break;
+        }
+        case op_if_acmpeq:
+        case op_if_acmpne: {
+            safeStackPop(stack, code, fn(), refItem);
+            safeStackPop(stack, code, fn(), refItem);
+            auto target = offset + binary::be16SignedToNative(code->code->at(offset + 1), code->code->at(offset + 2));
+            OMContext con{locals, stack};
+            checkMethod(file, method, name, checked, &con, target);
+            bump(3);
+            break;
+        }
+        case op_goto: {
+            auto target = offset + binary::be16SignedToNative(code->code->at(offset + 1), code->code->at(offset + 2));
+            OMContext con{locals, stack};
+            checkMethod(file, method, name, checked, &con, target);
+            return;
+        }
+        case op_jsr: {
+            safeStackPush(stack, code, fn(), addrItem);
+            auto target = offset + binary::be16SignedToNative(code->code->at(offset + 1), code->code->at(offset + 2));
+            OMContext con{locals, stack};
+            checkMethod(file, method, name, checked, &con, target);
+            bump(3);
+            break;
+        }
+        case op_ret: {
+            return;
+        }
 
+        case op_ireturn: {
+            if (pars.unwrap().second != "int")
+            {
+                throw err::OMValidationError{err::Instructions, "invalid return value type!", fn()};
+            }
+            return;
+        }
+        case op_lreturn: {
+            if (pars.unwrap().second != "long")
+            {
+                throw err::OMValidationError{err::Instructions, "invalid return value type!", fn()};
+            }
+            return;
+        }
+        case op_freturn: {
+            if (pars.unwrap().second != "float")
+            {
+                throw err::OMValidationError{err::Instructions, "invalid return value type!", fn()};
+            }
+            return;
+        }
+        case op_dreturn: {
+            if (pars.unwrap().second != "double")
+            {
+                throw err::OMValidationError{err::Instructions, "invalid return value type!", fn()};
+            }
+            return;
+        }
+        case op_areturn: {
+            auto ii = pars.unwrap().second[0];
+            if (ii != 'L' && ii != '[')
+            {
+                throw err::OMValidationError{err::Instructions, "invalid return value type!", fn()};
+            }
+            return;
+        }
         case op_return: {
+            if (pars.unwrap().second != "void")
+            {
+                throw err::OMValidationError{err::Instructions, "invalid return value type!", fn()};
+            }
             return;
         }
 

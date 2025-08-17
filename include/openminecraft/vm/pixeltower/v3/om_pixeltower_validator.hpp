@@ -33,7 +33,8 @@ class OMValidator
     std::string fetchContent(int flags);
 
     void safeStackPush(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos, int i);
-    void safeStackPop(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos, int i);
+    int safeStackPop(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos, int i);
+    void safeStackCheck(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos, int i);
     void safeLocalSet(std::vector<int> &local, classfile::OMClassAttrCode *code, std::string pos, int index, int i);
     void safeLocalGet(std::vector<int> &local, classfile::OMClassAttrCode *code, std::string pos, int index, int i);
     void safeArgFetch(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos, std::string desc);
