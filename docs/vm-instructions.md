@@ -90,6 +90,8 @@ iand | ❌️ | ❌️
 land | ❌️ | ❌️
 ior | ❌️ | ❌️
 lor | ❌️ | ❌️
+ixor | ❌️ | ❌️
+lxor | ❌️ | ❌️
 iinc | ✔️ | ❌️
 i2l | ✔️ | ❌️
 i2f | ✔️ | ❌️
@@ -147,8 +149,8 @@ invokeinterface | ❌️ | ❌️
 invokedynamic | ❌️ | ❌️
 new | ✔️ | ❌️
 newarray | ✔️ | ❌️
-anewarray | ❌️ | ❌️
-arraylength | ❌️ | ❌️
+anewarray | ✔️ | ❌️
+arraylength | ✔️ | ❌️
 athrow | ❌️ | ❌️
 checkcast | ❌️ | ❌️
 instanceof | ❌️ | ❌️
