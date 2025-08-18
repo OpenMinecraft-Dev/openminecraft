@@ -892,6 +892,16 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
         }
 
         // geopelia: check the branch after jumps
+        case op_ifnull:
+        case op_ifnonnull: {
+            safeStackPop(stack, code, fn(), refItem);
+            auto target = offset + binary::be16SignedToNative(code->code->at(offset + 1), code->code->at(offset + 2));
+            // geopelia: copies the current context
+            OMContext con{locals, stack};
+            checkMethod(file, method, name, checked, &con, target);
+            bump(3);
+            break;
+        }
         case op_ifge:
         case op_ifgt:
         case op_ifle:
@@ -900,7 +910,6 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
         case op_ifne: {
             safeStackPop(stack, code, fn(), intItem);
             auto target = offset + binary::be16SignedToNative(code->code->at(offset + 1), code->code->at(offset + 2));
-            // geopelia: copies the current context
             OMContext con{locals, stack};
             checkMethod(file, method, name, checked, &con, target);
             bump(3);
@@ -936,6 +945,13 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             checkMethod(file, method, name, checked, &con, target);
             return;
         }
+        case op_goto_w: {
+            auto target = offset + binary::be32SignedToNative(code->code->at(offset + 1), code->code->at(offset + 2),
+                                                              code->code->at(offset + 3), code->code->at(offset + 4));
+            OMContext con{locals, stack};
+            checkMethod(file, method, name, checked, &con, target);
+            return;
+        }
         case op_jsr: {
             safeStackPush(stack, code, fn(), addrItem);
             auto target = offset + binary::be16SignedToNative(code->code->at(offset + 1), code->code->at(offset + 2));
@@ -944,7 +960,17 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             bump(3);
             break;
         }
+        case op_jsr_w: {
+            safeStackPush(stack, code, fn(), addrItem);
+            auto target = offset + binary::be32SignedToNative(code->code->at(offset + 1), code->code->at(offset + 2),
+                                                              code->code->at(offset + 3), code->code->at(offset + 4));
+            OMContext con{locals, stack};
+            checkMethod(file, method, name, checked, &con, target);
+            bump(3);
+            break;
+        }
         case op_ret: {
+            safeStackPop(stack, code, fn(), addrItem);
             return;
         }
         case op_tableswitch: {
@@ -1250,6 +1276,49 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             break;
         }
 
+        case op_wide: {
+            switch (code->code->at(offset + 1))
+            {
+            case op_iinc: {
+                safeLocalGet(locals, code, fn(), binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 2)),
+                             intItem);
+                bump(6);
+                break;
+            }
+
+#define opinter(op1, op2, id)                                                                                          \
+    case op1:                                                                                                          \
+    case op2: {                                                                                                        \
+        safeLocalGet(locals, code, fn(), binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 2)), id);    \
+        bump(4);                                                                                                       \
+        break;                                                                                                         \
+    }
+                opinter(op_iload, op_istore, intItem);
+                opinter(op_lload, op_lstore, longItem);
+                opinter(op_fload, op_fstore, floatItem);
+                opinter(op_dload, op_dstore, doubleItem);
+                opinter(op_aload, op_astore, refItem);
+
+            case op_jsr:
+                bump(4);
+                break;
+
+            default:
+                throw err::OMValidationError{err::Instructions, "invalid extra operand for wide", fn()};
+            }
+        }
+
+        case op_multianewarray: {
+            auto id = binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1));
+            checkRecursively(file, id, name, OMClassConstantType::Class);
+            for (auto i = 0; i < code->code->at(3); i++)
+            {
+                safeStackPop(stack, code, fn(), intItem);
+            }
+            bump(4);
+            break;
+        }
+
         default:
             logger.info("{} elements in stack", stack.size());
             while (!stack.empty())
@@ -1265,5 +1334,5 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             throw err::OMValidationError{err::Instructions, "unknown instruction!", fn()};
         }
     }
-}
+} // namespace openminecraft::vm::pixeltower::v3
 } // namespace openminecraft::vm::pixeltower::v3
