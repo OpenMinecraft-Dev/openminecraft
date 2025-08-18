@@ -76,7 +76,11 @@ class OMKlass
     inline bool isObjArr()
     {
         return !isIntArr() && !isFloatArr() && !isLongArr() && !isDoubleArr() && !isCharArr() && !isShortArr() &&
-               !isByteArr() && !isBooleanArr();
+               !isByteArr() && !isBooleanArr() && isArr();
+    }
+    inline bool isArr()
+    {
+        return name[0] == '[';
     }
 
     inline OMOOPDesc *allocateInstance()

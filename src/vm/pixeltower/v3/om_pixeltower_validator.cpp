@@ -1222,8 +1222,22 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             break;
         }
 
-            /*case op_invokedynamic: {
-            }*/
+        case op_invokedynamic: {
+            auto id = binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1));
+            checkRecursively(file, id, name, OMClassConstantType::InvokeDynamic);
+            auto ref = file->mapping[id]->to<OMClassConstantFieldRef>();
+            auto nat = file->mapping[ref->nameAndTypeIndex]->to<OMClassConstantNameAndType>();
+            auto name = file->mapping[nat->nameIndex]->to<OMClassConstantUtf8>()->data;
+            auto desc = file->mapping[nat->descIndex]->to<OMClassConstantUtf8>()->data;
+
+            auto mettarget = code->code->at(offset + 2);
+
+            safeArgFetch(stack, code, fn(), desc);
+            safeStackPush(stack, code, fn(), refItem);
+
+            bump(4);
+            break;
+        }
 
         case op_new: {
             auto id = binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1));

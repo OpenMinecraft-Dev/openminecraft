@@ -39,6 +39,7 @@
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
+#include "openminecraft/vm/pixeltower/internal/om_pixeltower_funcs.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
@@ -148,6 +149,7 @@ int boot(std::vector<std::string> args)
 
     logger->info("{} {}", vendor, model);*/
 
+    pixeltower::registerFuncs();
     tower = std::make_unique<pixeltower::v0::OMPixelTower>();
 
     bool recovermode = false;

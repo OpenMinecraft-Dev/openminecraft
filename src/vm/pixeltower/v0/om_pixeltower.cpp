@@ -20,6 +20,7 @@
 #include <iostream>
 #include <memory>
 #include <thread>
+#include <vector>
 
 namespace openminecraft::vm::pixeltower::v0
 {
@@ -147,17 +148,17 @@ void OMPixelTower::init(std::string basePath)
             logger.debug("{} found", itt->path().string());
         }
     }
-    init(target);
+    initStreams(target);
 }
 
 void OMPixelTower::load(std::string path)
 {
     std::vector<std::shared_ptr<std::istream>> target;
     target.push_back(std::make_shared<std::ifstream>(path, std::ios::binary));
-    init(target);
+    initStreams(target);
 }
 
-void OMPixelTower::init(std::vector<std::shared_ptr<std::istream>> &streams)
+void OMPixelTower::initStreams(std::vector<std::shared_ptr<std::istream>> &streams)
 {
     for (auto &s : streams)
     {

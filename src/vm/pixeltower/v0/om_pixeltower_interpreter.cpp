@@ -1289,6 +1289,8 @@ operand:
 
         goto operand;
     }
+    // op_invokeinterface
+    // op_invokedynamic
     case op_new: {
         auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
         auto n = *static_cast<OMKlass **>(static_cast<void *>(frame->method->klass->constantPool + id));
@@ -1336,6 +1338,11 @@ operand:
         auto length = stackTopAccess<jint>(true);
         stackPushAccess<void *>(arrc->allocateArray(length));
         currentThread.pc += 3;
+        goto operand;
+    }
+    case op_arraylength: {
+        stackPushAccess<jint>(stackTopAccess<OMOOPArrDesc *>(true)->length);
+        currentThread.pc++;
         goto operand;
     }
     default: {
