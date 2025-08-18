@@ -41,7 +41,45 @@ class OMKlass
 
     OMPixelTowerHeap *heap;
 
-    OMOOPDesc *allocateInstance()
+    inline bool isIntArr()
+    {
+        return name == "[I";
+    }
+    inline bool isFloatArr()
+    {
+        return name == "[F";
+    }
+    inline bool isLongArr()
+    {
+        return name == "[J";
+    }
+    inline bool isDoubleArr()
+    {
+        return name == "[D";
+    }
+    inline bool isCharArr()
+    {
+        return name == "[C";
+    }
+    inline bool isShortArr()
+    {
+        return name == "[S";
+    }
+    inline bool isByteArr()
+    {
+        return name == "[B";
+    }
+    inline bool isBooleanArr()
+    {
+        return name == "[Z";
+    }
+    inline bool isObjArr()
+    {
+        return !isIntArr() && !isFloatArr() && !isLongArr() && !isDoubleArr() && !isCharArr() && !isShortArr() &&
+               !isByteArr() && !isBooleanArr();
+    }
+
+    inline OMOOPDesc *allocateInstance()
     {
         assert(kind == OMKlassKind::Normal);
         auto obj = (OMOOPDesc *)heap->allocate(sizeof(OMOOPDesc) + length);
@@ -49,7 +87,7 @@ class OMKlass
         return obj;
     }
 
-    OMOOPArrDesc *allocateArray(jint n)
+    inline OMOOPArrDesc *allocateArray(jint n)
     {
         assert(kind == OMKlassKind::Array);
         auto obj = (OMOOPArrDesc *)heap->allocate(sizeof(OMOOPArrDesc) + length * n);

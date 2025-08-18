@@ -198,6 +198,23 @@ int boot(std::vector<std::string> args)
                         if (strcmp(met->name, "main") == 0 && strcmp(met->desc, "([Ljava/lang/String;)V") == 0)
                         {
                             auto now = std::chrono::system_clock::now();
+
+                            std::thread t([&]() {
+                                while (true)
+                                {
+                                    auto now2 = std::chrono::system_clock::now();
+                                    auto cont =
+                                        std::chrono::duration_cast<std::chrono::milliseconds>(now2 - now).count();
+                                    if (cont > 1000)
+                                    {
+                                        logger->info("{} operands in 1 second",
+                                                     (double)tower->interpreter->operands / cont * 1000);
+                                        tower->interpreter->operands = 0;
+                                        now = std::chrono::system_clock::now();
+                                    }
+                                }
+                            });
+
                             try
                             {
                                 tower->boot(met);

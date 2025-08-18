@@ -326,14 +326,14 @@ OMKlass *OMKlassLoader::lazyClassInit(OMKlass *klass, uint16_t id)
     return nullptr;
 }
 
-// for array classes
+// gino: for array classes, we use this method to construct OMKlass objects
 void OMKlassLoader::loadSpecialClass(std::string name)
 {
     int i = 0;
     auto r = bytecode::descriptor::decodeType(name, &i);
     if (r.type == util::Err)
     {
-        throw r.unwrap_err();
+        throw err::OMValidationError{err::ClassLoader, "unknown desc format", r.unwrap_err()};
     }
 
     auto klass = (OMKlass *)metaspace->allocate(sizeof(OMKlass));
@@ -373,6 +373,7 @@ void OMKlassLoader::loadSpecialClass(std::string name)
         break;
     default:
         klass->length = heap->ptrSize();
+        loadClass(std::string(r.unwrap().c_str()).substr(3));
         break;
     }
     klass->staticBlock = nullptr;

@@ -336,7 +336,10 @@ operand:
     }
     case op_ldc: {
         auto n = static_cast<void **>(static_cast<void *>(frame->method->klass->constantPool + currentThread.pc[1]));
-        assert(n != nullptr);
+        if (!n)
+        {
+            throwTypeCheckError("there is no constant here!");
+        }
         stackPushAccess<void *>(*n);
         currentThread.pc += 2;
         goto operand;
@@ -344,16 +347,22 @@ operand:
     case op_ldc_w: {
         auto n = static_cast<void **>(static_cast<void *>(frame->method->klass->constantPool +
                                                           binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
-        assert(n != nullptr);
+        if (!n)
+        {
+            throwTypeCheckError("there is no constant here!");
+        }
         stackPushAccess<void *>(*n);
         currentThread.pc += 3;
         goto operand;
     }
     case op_ldc2_w: {
-        // compatible with jdouble
+        // gino: compatible with jdouble
         auto n = static_cast<jlong *>(static_cast<void *>(frame->method->klass->constantPool +
                                                           binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1))));
-        assert(n != nullptr);
+        if (!n)
+        {
+            throwTypeCheckError("there is no constant here!");
+        }
         stackPushAccessW<jlong>(*n);
         currentThread.pc += 3;
         goto operand;
@@ -427,6 +436,11 @@ operand:
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
+        if (!arr->klass->isIntArr())
+        {
+            throwTypeCheckError("it's not an int array!");
+        }
+
         stackPushAccess<jint>(arr->array<jint>()[idx]);
 
         currentThread.pc++;
@@ -435,6 +449,11 @@ operand:
     case op_laload: {
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+
+        if (!arr->klass->isLongArr())
+        {
+            throwTypeCheckError("it's not an long array!");
+        }
 
         stackPushAccessW<jlong>(arr->array<jlong>()[idx]);
 
@@ -445,6 +464,11 @@ operand:
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
+        if (!arr->klass->isFloatArr())
+        {
+            throwTypeCheckError("it's not an float array!");
+        }
+
         stackPushAccess<jfloat>(arr->array<jfloat>()[idx]);
 
         currentThread.pc++;
@@ -454,6 +478,11 @@ operand:
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
+        if (!arr->klass->isDoubleArr())
+        {
+            throwTypeCheckError("it's not an double array!");
+        }
+
         stackPushAccessW<jdouble>(arr->array<jdouble>()[idx]);
 
         currentThread.pc++;
@@ -462,6 +491,11 @@ operand:
     case op_aaload: {
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+
+        if (!arr->klass->isObjArr())
+        {
+            throwTypeCheckError("it's not an reference array!");
+        }
 
         if (heap->ptrCompEnabled())
         {
@@ -479,6 +513,11 @@ operand:
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
+        if (!arr->klass->isByteArr() && !arr->klass->isBooleanArr())
+        {
+            throwTypeCheckError("it's not an byte or boolean array!");
+        }
+
         stackPushAccess<jint>(arr->array<jboolean>()[idx]);
 
         currentThread.pc++;
@@ -488,6 +527,11 @@ operand:
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
+        if (!arr->klass->isCharArr())
+        {
+            throwTypeCheckError("it's not an char array!");
+        }
+
         stackPushAccess<jint>(arr->array<jchar>()[idx]);
 
         currentThread.pc++;
@@ -496,6 +540,11 @@ operand:
     case op_saload: {
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+
+        if (!arr->klass->isShortArr())
+        {
+            throwTypeCheckError("it's not an short array!");
+        }
 
         stackPushAccess<jint>(arr->array<jshort>()[idx]);
 
@@ -572,6 +621,11 @@ operand:
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
+        if (!arr->klass->isIntArr())
+        {
+            throwTypeCheckError("it's not an int array!");
+        }
+
         arr->array<jint>()[idx] = value;
 
         currentThread.pc++;
@@ -581,6 +635,11 @@ operand:
         auto value = stackTopAccessW<jlong>(true);
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+
+        if (!arr->klass->isLongArr())
+        {
+            throwTypeCheckError("it's not an long array!");
+        }
 
         arr->array<jlong>()[idx] = value;
 
@@ -592,6 +651,11 @@ operand:
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
+        if (!arr->klass->isFloatArr())
+        {
+            throwTypeCheckError("it's not an float array!");
+        }
+
         arr->array<jfloat>()[idx] = value;
 
         currentThread.pc++;
@@ -601,6 +665,11 @@ operand:
         auto value = stackTopAccessW<jdouble>(true);
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+
+        if (!arr->klass->isDoubleArr())
+        {
+            throwTypeCheckError("it's not an double array!");
+        }
 
         arr->array<jdouble>()[idx] = value;
 
@@ -612,6 +681,11 @@ operand:
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
+        if (!arr->klass->isByteArr() && !arr->klass->isBooleanArr())
+        {
+            throwTypeCheckError("it's not an byte or boolean array!");
+        }
+
         arr->array<jboolean>()[idx] = value;
 
         currentThread.pc++;
@@ -621,6 +695,11 @@ operand:
         auto value = stackTopAccess<void *>(true);
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+
+        if (!arr->klass->isObjArr())
+        {
+            throwTypeCheckError("it's not an reference array!");
+        }
 
         if (heap->ptrCompEnabled())
         {
@@ -639,6 +718,11 @@ operand:
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
+        if (!arr->klass->isCharArr())
+        {
+            throwTypeCheckError("it's not an char array!");
+        }
+
         arr->array<jchar>()[idx] = value;
 
         currentThread.pc++;
@@ -648,6 +732,11 @@ operand:
         auto value = stackTopAccess<jint>(true);
         auto idx = stackTopAccess<jint>(true);
         auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+
+        if (!arr->klass->isShortArr())
+        {
+            throwTypeCheckError("it's not an short array!");
+        }
 
         arr->array<jshort>()[idx] = value;
 
@@ -1236,6 +1325,17 @@ operand:
         stackPushAccess<void *>(r);
 
         currentThread.pc += 2;
+        goto operand;
+    }
+    case op_anewarray: {
+        auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
+        auto n = *static_cast<OMKlass **>(static_cast<void *>(frame->method->klass->constantPool + id));
+        auto arrn = fmt::format("[L{};", n->name);
+        tower->loader->loadClass(arrn);
+        auto arrc = tower->loader->fetchClass(arrn);
+        auto length = stackTopAccess<jint>(true);
+        stackPushAccess<void *>(arrc->allocateArray(length));
+        currentThread.pc += 3;
         goto operand;
     }
     default: {
