@@ -1276,6 +1276,8 @@ operand:
 
         goto operand;
     }
+    // gino: for invokeinterface, we need to check if the interface is implemented by this class
+    case op_invokeinterface:
     case op_invokestatic: {
         auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
         auto n = *static_cast<OMMethod **>(static_cast<void *>(frame->method->klass->constantPool + id));
@@ -1289,7 +1291,6 @@ operand:
 
         goto operand;
     }
-    // op_invokeinterface
     // op_invokedynamic
     case op_new: {
         auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));

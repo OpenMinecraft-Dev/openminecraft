@@ -298,13 +298,18 @@ OMField *OMKlassLoader::lazyFieldInit(OMKlass *klass, uint16_t id)
     auto &name = klass->raw->mapping[temp2->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
     auto &desc = klass->raw->mapping[temp2->descIndex]->to<classfile::OMClassConstantUtf8>()->data;
 
-    for (auto &fi : fetchClass(clsname)->fields)
+    auto cls = fetchClass(clsname);
+    while (cls)
     {
-        if (fi.name == name && fi.desc == desc)
+        for (auto &fi : cls->fields)
         {
-            *(OMField **)target = &fi;
-            return &fi;
+            if (fi.name == name && fi.desc == desc)
+            {
+                *(OMField **)target = &fi;
+                return &fi;
+            }
         }
+        cls = cls->superClass;
     }
 
     return nullptr;
