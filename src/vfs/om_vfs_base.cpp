@@ -51,6 +51,8 @@ bool fsumount(std::string mountpoint)
     }
     return false;
 }
+// gino: bundle is a simple file format which contains the path and file data like deflated zip files, but it doesn't
+// contain any other file metadata
 bool fsmountBundle(BundleInfo info, std::string mountpoint)
 {
     if (mountinvaild(mountpoint) || info.p == nullptr)

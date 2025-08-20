@@ -1,5 +1,5 @@
 package java.lang;
 
-public class Exception
+public class Throwable
 {
 }

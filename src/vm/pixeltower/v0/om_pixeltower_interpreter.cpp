@@ -18,7 +18,7 @@
 #include <any>
 #include <cassert>
 #include <cmath>
-#include <functional>
+#include <typeindex>
 #include <vector>
 
 namespace openminecraft::vm::pixeltower::v0
@@ -246,17 +246,44 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
         }
     }
 
-    auto funcp = *reinterpret_cast<std::function<std::any(std::any *)> **>(codetarget->code);
+    auto funcp = (std::any (*)(std::any *)) * reinterpret_cast<void **>(codetarget->code);
+    std::any ret;
     if (funcp == nullFunction)
     {
         throw err::OMValidationError{err::Instructions, "unsatisfied link!", currentPosition()};
     }
     else
     {
-        (*funcp)(data.data());
+        ret = (*funcp)(data.data());
     }
 
     popLastFrame();
+
+    auto typ = std::type_index(ret.type());
+    if (typ == std::type_index(typeid(jint)))
+    {
+        stackPushAccess<jint>(std::any_cast<jint>(ret));
+    }
+    else if (typ == std::type_index(typeid(jfloat)))
+    {
+        stackPushAccess<jfloat>(std::any_cast<jfloat>(ret));
+    }
+    else if (typ == std::type_index(typeid(jlong)))
+    {
+        stackPushAccessW<jlong>(std::any_cast<jlong>(ret));
+    }
+    else if (typ == std::type_index(typeid(jdouble)))
+    {
+        stackPushAccessW<jdouble>(std::any_cast<jdouble>(ret));
+    }
+    else if (typ == std::type_index(typeid(OMOOPDesc *)))
+    {
+        stackPushAccess<OMOOPDesc *>(std::any_cast<OMOOPDesc *>(ret));
+    }
+    else if (typ == std::type_index(typeid(OMOOPArrDesc *)))
+    {
+        stackPushAccess<OMOOPArrDesc *>(std::any_cast<OMOOPArrDesc *>(ret));
+    }
 }
 
 void OMInterpreter::popLastFrame()

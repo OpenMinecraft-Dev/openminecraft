@@ -1,3 +1,9 @@
+/*
+This code is part of the source code of OpenMinecraft VM
+
+SystemPrintStream.java - temporary system output implementation
+*/
+
 package vmstd.internal;
 
 import java.io.PrintStream;

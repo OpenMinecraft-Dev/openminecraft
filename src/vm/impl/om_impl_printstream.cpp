@@ -10,6 +10,7 @@ namespace openminecraft::vm::impl
 {
 std::any vmstd_internal_SystemPrintStream_println(std::any *args)
 {
+    std::cout << *(int *)0;
     auto t = std::type_index(args[1].type());
     if (t.name() == std::type_index(typeid(pixeltower::v0::jlong)).name())
     {

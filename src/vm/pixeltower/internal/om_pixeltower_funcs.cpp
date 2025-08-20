@@ -9,7 +9,7 @@ namespace openminecraft::vm::pixeltower
 {
 void registerFuncs()
 {
-    /*mem::tagger::tagFunc(&OMPixelTower::boot, "OMPixelTower::boot");
+    mem::tagger::tagFunc(&OMPixelTower::boot, "OMPixelTower::boot");
     mem::tagger::tagFunc(&OMPixelTower::init, "OMPixelTower::int");
     mem::tagger::tagFunc(&OMPixelTower::initStreams, "OMPixelTower::initStreams");
     mem::tagger::tagFunc(&OMPixelTower::load, "OMPixelTower::load");
@@ -30,6 +30,6 @@ void registerFuncs()
     mem::tagger::tagFunc(&OMPixelTowerHeap::inside, "OMPixelTowerHeap::inside");
     mem::tagger::tagFunc(&OMPixelTowerHeap::nextPtr, "OMPixelTowerHeap::nextPtr");
     mem::tagger::tagFunc(&OMPixelTowerHeap::usage, "OMPixelTowerHeap::usage");
-    mem::tagger::tagFunc(&OMPixelTowerHeap::totalUsage, "OMPixelTowerHeap::totalUsage");*/
+    mem::tagger::tagFunc(&OMPixelTowerHeap::totalUsage, "OMPixelTowerHeap::totalUsage");
 }
 } // namespace openminecraft::vm::pixeltower

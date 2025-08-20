@@ -176,12 +176,11 @@ loadMethods:
         }
         else if ((m->accessFlags & JVM_Acc_Abstract) == 0)
         {
-            // loading native function handles
+            // geopelia: load native function handles
             auto fnn = fmt::format("{}.{}{}", klass->name, m->name, m->desc);
             if (nativeMethods.count(fnn))
             {
-                logger.info("native function found!");
-                *(void **)m->code = (void *)&nativeMethods[fnn];
+                *(void **)m->code = (void *)nativeMethods[fnn];
             }
             else
             {

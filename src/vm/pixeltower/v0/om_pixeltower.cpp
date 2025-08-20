@@ -28,69 +28,20 @@ void OMPixelTower::handleCrash(int code, int pid, std::vector<v1::tracing::OMTra
 {
     logger.error("{} crashed with code {}", pid, code);
 
-    auto nativeFrameInPt = [](v1::tracing::OMTracingFrame &f) {
-        return f.name.rfind("openminecraft::vm::pixeltower", 0) == 0;
-    };
-
-    bool findedFrame = false;
-    for (auto fr : frames)
+    logger.error("traceback:");
+    auto d = v1::tracing::fetchFrames(frames);
+    while (d)
     {
-        if (fr.name.rfind("openminecraft::vm::pixeltower", 0) == 0)
+        if (d->type == v1::tracing::JavaFrame || d->type == v1::tracing::JavaJITFrame)
         {
-            findedFrame = true;
-            break;
+            logger.error("J {}.{}{} + {}", d->jvm.method->klass->name, d->jvm.method->name, d->jvm.method->desc,
+                         d->jvm.offset);
         }
-    }
-
-    bool inNative = currentThread.currentFrame->method->accessFlags & JVM_Acc_Native;
-    logger.debug("in native: {}", inNative);
-
-    if (findedFrame)
-    {
-        logger.error("pixeltower frames found!");
-        auto fr = currentThread.currentFrame;
-        void *tracingPC = currentThread.pc;
-        auto nfitt = frames.begin();
-
-        while (nfitt != frames.end())
+        else
         {
-            if (nativeFrameInPt(*nfitt))
-            {
-                while (nativeFrameInPt(*nfitt))
-                {
-                    ++nfitt;
-                }
-
-                logger.error("J {}.{}{} + {}", fr->method->klass->name, fr->method->name, fr->method->desc,
-                             reinterpret_cast<size_t>(tracingPC) - reinterpret_cast<size_t>(fr->method->code));
-                tracingPC = fr->returnAddr;
-                fr = fr->prev;
-                while (fr != nullptr && (fr->method->accessFlags & JVM_Acc_Native) == 0)
-                {
-                    logger.error("J {}.{}{} + {}", fr->method->klass->name, fr->method->name, fr->method->desc,
-                                 reinterpret_cast<size_t>(tracingPC) - reinterpret_cast<size_t>(fr->method->code));
-                    tracingPC = fr->returnAddr;
-                    fr = fr->prev;
-                }
-
-                continue;
-            }
-
-            logger.error("C {} @ {}", nfitt->location, nfitt->name == "" ? "???" : nfitt->name);
-            ++nfitt;
+            logger.error("C {} @ {}", d->native.name, d->target);
         }
-    }
-    else
-    {
-        logger.error("debug info stripped or corrupted, only shows pixeltower vm frames");
-        logger.error("C {} @ {}", frames[0].location, frames[0].name);
-        logger.error("(unknown call stack)");
-        auto fr = currentThread.currentFrame;
-        while (fr)
-        {
-            logger.error("J {}.{}{}", fr->method->klass->name, fr->method->name, fr->method->desc);
-            fr = fr->prev;
-        }
+        d = d->next;
     }
 
     logger.error("register dumps: ");
