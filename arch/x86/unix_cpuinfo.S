@@ -1,5 +1,5 @@
 .globl cpuinfo_x86
-.type cpuinfo_x86, @function
+// .type cpuinfo_x86, @function
 
 // geopelia: function with prototype (uint32_t op, int32_t *eax, int32_t *ebx, int32_t *ecx, int32_t *edx)
 // in POSIX ABI (x64): 
