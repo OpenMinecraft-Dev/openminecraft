@@ -14,7 +14,6 @@ std::string fetchCpuName()
 {
     struct utsname n;
     uname(&n);
-    std::cout << n.domainname << std::endl;
     std::cout << n.machine << std::endl;
     std::cout << n.nodename << std::endl;
     std::cout << n.release << std::endl;
