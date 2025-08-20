@@ -112,6 +112,14 @@ if not mobile() then
     add_files("plat/desktop/**.cpp")
 end
 
+if is_arch("x86_64", "x64", "x86", "amd64") then
+    if not is_plat("windows") then
+        add_files("arch/x86/unix_**.S")
+    else
+        add_files("arch/x86/msvc_**.S")
+    end
+end
+
 target("openminecraft")
 if is_plat("android", "harmony") then
     set_kind("shared")
