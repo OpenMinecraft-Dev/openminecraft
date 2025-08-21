@@ -119,6 +119,13 @@ if is_arch("x86_64", "x64", "x86", "amd64") then
         add_files("arch/x86/msvc_**.S")
     end
 end
+if is_arch("arm64-v8a", "arm64") then
+    if not is_plat("windows") then
+        add_files("arch/aarch64/unix_**.S")
+    else
+        add_files("arch/aarch64/msvc_**.S")
+    end
+end
 
 target("openminecraft")
 if is_plat("android", "harmony") then
