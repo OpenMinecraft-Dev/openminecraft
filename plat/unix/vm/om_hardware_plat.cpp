@@ -1,20 +1,22 @@
-#include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/vm/os/om_cpuname.hpp"
+#include "fmt/format.h"
+#include "openminecraft/vm/os/om_hardware.hpp"
 #include <cstdint>
-#include <cstdio>
 #include <fstream>
 #include <pwd.h>
+#include <sstream>
 #include <stdlib.h>
 #include <string>
 #include <sys/resource.h>
 #include <sys/utsname.h>
 #include <unistd.h>
 #include <unordered_map>
+#include <variant>
 
 extern "C"
 {
     void cpuinfo_x86(uint32_t op, int32_t *eax, int32_t *ebx, int32_t *ecx, int32_t *edx);
     uint64_t cpuinfo_aarch64();
+    uint64_t cpuinfo_arm();
 }
 
 struct id_part
@@ -221,8 +223,36 @@ static const struct hw_impl hw_implementer[] = {
 static std::string aarch64_tocpuname(uint64_t d)
 {
     auto impl = d >> 24 & 0xff;
-    auto part = d >> 4 & 0b111111111111;
-    return "";
+    auto part = d >> 4 & 0xfff;
+
+    const char *manu;
+    const char *name;
+    for (int imp = 0; imp < 20; imp++)
+    {
+        if (impl == hw_implementer[imp].id)
+        {
+            manu = hw_implementer[imp].name;
+            auto pt = hw_implementer[imp].parts;
+            while (pt->id != -1)
+            {
+                if (pt->id == part)
+                {
+                    name = pt->name;
+                    break;
+                }
+                pt++;
+            }
+        }
+    }
+    if (!manu)
+    {
+        manu = "Unknown";
+    }
+    else if (!name)
+    {
+        name = "Unknown";
+    }
+    return fmt::format("{} {}", manu, name);
 }
 
 namespace openminecraft::vm::os
@@ -241,27 +271,64 @@ static std::unordered_map<std::string, std::string> fetchConfig()
 
     f.close();
 
-    char data[64] = {0};
-    if (sscanf(staging.c_str(), "NAME=\"%[^\"]\"\n", data))
+    std::istringstream ss(staging);
+    std::string n;
+    while (std::getline(ss, n, '\n'))
     {
-        result["name"] = std::string(data);
+        if (n.find("NAME=") != std::variant_npos && !result["name"].size())
+        {
+            result["name"] = n.substr(5);
+        }
+        else if (n.find("BUILD_ID=") != std::variant_npos && !result["version"].size())
+        {
+            result["version"] = n.substr(9);
+        }
+        else if (n.find("VERSION=") != std::variant_npos && !result["version"].size())
+        {
+            result["version"] = n.substr(8);
+        }
     }
-    if (sscanf(staging.c_str(), "BUILD_ID=\"%[^\"]\"\n", data))
+
+    while (result["name"].find("\"") != std::variant_npos)
     {
-        result["version"] = std::string(data);
+        result["name"].erase(result["name"].find("\""), 1);
     }
-    if (sscanf(staging.c_str(), "VERSION=\"%[^\"]\"\n", data))
+    while (result["version"].find("\"") != std::variant_npos)
     {
-        result["version"] = std::string(data);
+        result["version"].erase(result["version"].find("\""), 1);
     }
 
     return result;
 }
-void fetchFromDevFs()
+static std::string fetchFromDevFs()
 {
+    std::ifstream f("/proc/cpuinfo");
+    std::string staging;
+    while (f.good())
+    {
+        char d;
+        f.read(&d, 1);
+        staging += d;
+    }
+
+    f.close();
+    auto d = staging.find("model name");
+    if (d == std::variant_npos)
+    {
+        d = staging.find("Model Name");
+    }
+    if (d != std::variant_npos)
+    {
+        auto d2 = staging.find("\n", d + 10);
+        auto temp = std::string(staging.c_str()).substr(d + 10, d2 - d - 10);
+        auto dt = temp.find(":");
+        return temp.substr(dt + 2);
+    }
+    return "";
 }
 std::string fetchCpuName()
 {
+    fetchFromDevFs();
     struct utsname n;
     uname(&n);
 #if defined(__x86_64__) || defined(__x86__)
@@ -274,8 +341,11 @@ std::string fetchCpuName()
     return std::string(model);
 #elif defined(__aarch64__)
     return aarch64_tocpuname(cpuinfo_aarch64());
+#elif defined(__arm__)
+    return aarch64_tocpuname(cpuinfo_arm());
 #else
-    return fmt::format("unknown {} cpu", n.machine);
+    auto st = fetchFromDevFs();
+    return st == "" ? fmt::format("unknown {} cpu", n.machine) : st;
 #endif
 }
 std::string fetchUsername()
@@ -311,9 +381,5 @@ std::string fetchSystemVersion()
 uint64_t fetchMemoryTotal()
 {
     return sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGESIZE);
-}
-uint64_t fetchMemoryAvailable()
-{
-    return sysconf(_SC_AVPHYS_PAGES) * sysconf(_SC_PAGESIZE);
 }
 } // namespace openminecraft::vm::os

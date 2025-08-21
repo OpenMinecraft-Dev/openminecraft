@@ -1,5 +1,5 @@
-#ifndef OM_CPUNAME_HPP
-#define OM_CPUNAME_HPP
+#ifndef OM_HARDWARE_HPP
+#define OM_HARDWARE_HPP
 
 #include <cstdint>
 #include <string>
@@ -12,7 +12,6 @@ std::string fetchSystemName();
 std::string fetchSystemVersion();
 
 uint64_t fetchMemoryTotal();
-uint64_t fetchMemoryAvailable();
 } // namespace openminecraft::vm::os
 
 #endif

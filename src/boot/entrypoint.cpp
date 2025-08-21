@@ -39,7 +39,7 @@
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
-#include "openminecraft/vm/os/om_cpuname.hpp"
+#include "openminecraft/vm/os/om_hardware.hpp"
 #include "openminecraft/vm/pixeltower/internal/om_pixeltower_funcs.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
@@ -137,12 +137,8 @@ int boot(std::vector<std::string> args)
 
     SDL_Quit();
 
-    /*int cpuidlevel;
-    char vendor[16] = {0};
-    cpuinfo_x86(0x0, &cpuidlevel, (int32_t *)&vendor[0], (int32_t *)&vendor[8], (int32_t *)&vendor[4]);*/
-
-    /*logger->info("{} {} {} {} {} {} {}", os::fetchCpuName(), os::fetchSystemName(), os::fetchSystemVersion(),
-                 os::fetchUsername(), os::fetchLoginUser(), os::fetchMemoryTotal(), os::fetchMemoryAvailable());*/
+    logger->info("{} {} {} {} {} {}", os::fetchCpuName(), os::fetchSystemName(), os::fetchSystemVersion(),
+                 os::fetchUsername(), os::fetchLoginUser(), os::fetchMemoryTotal());
 
     pixeltower::registerFuncs();
     tower = std::make_unique<pixeltower::v0::OMPixelTower>();
