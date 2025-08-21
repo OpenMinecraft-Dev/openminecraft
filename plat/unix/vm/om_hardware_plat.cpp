@@ -16,7 +16,6 @@ extern "C"
 {
     void cpuinfo_x86(uint32_t op, int32_t *eax, int32_t *ebx, int32_t *ecx, int32_t *edx);
     uint64_t cpuinfo_aarch64();
-    uint64_t cpuinfo_arm();
 }
 
 struct id_part
@@ -341,8 +340,6 @@ std::string fetchCpuName()
     return std::string(model);
 #elif defined(__aarch64__)
     return aarch64_tocpuname(cpuinfo_aarch64());
-#elif defined(__arm__)
-    return aarch64_tocpuname(cpuinfo_arm());
 #else
     auto st = fetchFromDevFs();
     return st == "" ? fmt::format("unknown {} cpu", n.machine) : st;

@@ -4,3 +4,8 @@
 cpuinfo_aarch64:
     mrs x0, midr_el1
     ret
+
+.globl _cpuinfo_aarch64
+
+_cpuinfo_aarch64:
+    b cpuinfo_aarch64

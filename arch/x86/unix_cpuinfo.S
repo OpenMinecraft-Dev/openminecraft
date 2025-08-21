@@ -68,3 +68,7 @@ cpuinfo_x86:
     // function return
     ret
 #endif
+
+.globl _cpuinfo_x86
+_cpuinfo_x86:
+    jmp cpuinfo_x86
