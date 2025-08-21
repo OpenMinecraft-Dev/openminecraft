@@ -141,6 +141,9 @@ int boot(std::vector<std::string> args)
     char vendor[16] = {0};
     cpuinfo_x86(0x0, &cpuidlevel, (int32_t *)&vendor[0], (int32_t *)&vendor[8], (int32_t *)&vendor[4]);*/
 
+    /*logger->info("{} {} {} {} {} {} {}", os::fetchCpuName(), os::fetchSystemName(), os::fetchSystemVersion(),
+                 os::fetchUsername(), os::fetchLoginUser(), os::fetchMemoryTotal(), os::fetchMemoryAvailable());*/
+
     pixeltower::registerFuncs();
     tower = std::make_unique<pixeltower::v0::OMPixelTower>();
 

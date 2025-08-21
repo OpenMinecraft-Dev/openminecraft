@@ -177,6 +177,7 @@ jobs:
       - name: Configure Linux
         if: ${{ matrix.plat == 'linux' }}
         run: |
+          cat /proc/cpuinfo
           sudo apt update
           sudo apt install libgl1-mesa-dev
           xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
