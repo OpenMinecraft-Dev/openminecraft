@@ -44,11 +44,13 @@ OMKlassLoader::~OMKlassLoader()
         auto m = k->methods;
         while (m)
         {
+            auto nxt = m->next;
             if (m->argCheck)
             {
                 delete m->argCheck;
             }
-            m = m->next;
+            metaspace->deallocate(m, sizeof(OMMethod) + m->codeSize);
+            m = nxt;
         }
 
         metaspace->deallocate((void *)k, sizeof(OMKlass));
@@ -57,6 +59,11 @@ OMKlassLoader::~OMKlassLoader()
 
 void OMKlassLoader::loadClass(std::string name)
 {
+    if (fetchClass(name) != nullptr)
+    {
+        return;
+    }
+
     if (name[0] == '[')
     {
         loadSpecialClass(name);
@@ -64,10 +71,6 @@ void OMKlassLoader::loadClass(std::string name)
     }
 
     OMKlass *klass;
-    if (fetchClass(name) != nullptr)
-    {
-        return;
-    }
 
     logger.debug("try loading class {}", name);
     for (auto fi = files.begin(); fi != files.end(); ++fi)
@@ -140,13 +143,7 @@ void OMKlassLoader::loadClass(std::string name)
     throw err::OMValidationError{err::ClassLoader, "class not found", name};
 
 loadMethods:
-    if (klass->superClass)
-    {
-        for (auto p : *klass->superClass->vtable)
-        {
-            (*klass->vtable)[p.first] = p.second;
-        }
-    }
+    klassVtableInit(klass);
 
     OMMethod *lastMethod = nullptr;
     for (auto method : klass->raw->methods)
@@ -268,6 +265,22 @@ loadMethods:
         lastMethod = m;
     }
 
+    klassConstantPoolLoad(klass);
+    klassFieldInit(klass);
+}
+void OMKlassLoader::klassVtableInit(OMKlass *klass)
+{
+    if (klass->superClass)
+    {
+        for (auto p : *klass->superClass->vtable)
+        {
+            (*klass->vtable)[p.first] = p.second;
+        }
+    }
+}
+
+void OMKlassLoader::klassFieldInit(OMKlass *klass)
+{
     for (auto field : klass->raw->fields)
     {
         klass->fields.push_back({klass->raw->mapping[field->nameIndex]->to<classfile::OMClassConstantUtf8>()->data,
@@ -275,6 +288,63 @@ loadMethods:
                                  klass, 0, field->accessFlags});
     }
 
+    klass->staticLength = 0;
+    klass->length = klass->superClass ? klass->superClass->length : 0;
+    for (auto &f : klass->fields)
+    {
+        int i = 0;
+        auto result = bytecode::descriptor::decodeType(f.desc, &i);
+        if (result.type == util::Err)
+        {
+            throw result.unwrap_err();
+        }
+
+        auto &loff = (f.accessFlags & JVM_Acc_Static) ? klass->staticLength : klass->length;
+
+        f.offset = loff;
+
+        switch (hash_compile_time(result.unwrap().c_str()))
+        {
+        case "byte"_hash:
+        case "boolean"_hash:
+            loff += 1 - (loff % 1);
+            break;
+        case "short"_hash:
+        case "char"_hash:
+            loff += 2 - (loff % 2);
+            break;
+        case "int"_hash:
+        case "float"_hash:
+            loff += 4 - (loff % 4);
+            break;
+        case "long"_hash:
+        case "double"_hash:
+            loff += 8 - (loff % 8);
+            break;
+        default:
+            loff += heap->ptrSize() - (loff % heap->ptrSize());
+            break;
+        }
+    }
+
+    klass->staticBlock = metaspace->allocate(klass->staticLength);
+    memset(klass->staticBlock, 0, klass->staticLength);
+
+    auto me = klass->methods;
+    while (me)
+    {
+        if (strcmp(me->name, "<clinit>") == 0)
+        {
+            logger.info("clinit found for {}, executing", klass->name);
+
+            interpreter->call(me, currentThread.pc);
+        }
+        me = me->next;
+    }
+}
+
+void OMKlassLoader::klassConstantPoolLoad(OMKlass *klass)
+{
     auto cpool = klass->raw->mapping.size() * sizeof(void *);
     klass->constantPool = (void **)metaspace->allocate(cpool);
     memset(klass->constantPool, 0, cpool);
@@ -316,8 +386,6 @@ loadMethods:
             break;
         }
     }
-
-    classInit(klass);
 }
 
 OMMethod *OMKlassLoader::lazyMethodInit(OMKlass *klass, uint16_t id)
@@ -455,63 +523,6 @@ void OMKlassLoader::loadSpecialClass(std::string name)
     klass->staticLength = 0;
     klass->heap = heap;
     classes.push_back(klass);
-}
-
-void OMKlassLoader::classInit(OMKlass *klass)
-{
-    klass->staticLength = 0;
-    klass->length = klass->superClass ? klass->superClass->length : 0;
-    for (auto &f : klass->fields)
-    {
-        int i = 0;
-        auto result = bytecode::descriptor::decodeType(f.desc, &i);
-        if (result.type == util::Err)
-        {
-            throw result.unwrap_err();
-        }
-
-        auto &loff = (f.accessFlags & JVM_Acc_Static) ? klass->staticLength : klass->length;
-
-        f.offset = loff;
-
-        switch (hash_compile_time(result.unwrap().c_str()))
-        {
-        case "byte"_hash:
-        case "boolean"_hash:
-            loff += 1 - (loff % 1);
-            break;
-        case "short"_hash:
-        case "char"_hash:
-            loff += 2 - (loff % 2);
-            break;
-        case "int"_hash:
-        case "float"_hash:
-            loff += 4 - (loff % 4);
-            break;
-        case "long"_hash:
-        case "double"_hash:
-            loff += 8 - (loff % 8);
-            break;
-        default:
-            loff += heap->ptrSize() - (loff % heap->ptrSize());
-            break;
-        }
-    }
-
-    klass->staticBlock = metaspace->allocate(klass->staticLength);
-    memset(klass->staticBlock, 0, klass->staticLength);
-
-    auto me = klass->methods;
-    while (me)
-    {
-        if (strcmp(me->name, "<clinit>") == 0)
-        {
-            logger.info("clinit found for {}, executing", klass->name);
-
-            interpreter->call(me, currentThread.pc);
-        }
-        me = me->next;
-    }
 }
 
 OMKlass *OMKlassLoader::fetchClass(std::string name)

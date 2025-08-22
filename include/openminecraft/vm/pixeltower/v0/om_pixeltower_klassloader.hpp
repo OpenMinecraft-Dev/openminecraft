@@ -28,7 +28,6 @@ class OMKlassLoader
     }
     void loadClass(std::string name);
     void loadSpecialClass(std::string name);
-    void classInit(OMKlass *klass);
     OMKlass *fetchClass(std::string name);
 
     OMKlass *lazyClassInit(OMKlass *klass, uint16_t id);
@@ -39,6 +38,10 @@ class OMKlassLoader
     std::vector<OMKlass *> classes;
 
   private:
+    void klassVtableInit(OMKlass *klass);
+    void klassConstantPoolLoad(OMKlass *klass);
+    void klassFieldInit(OMKlass *klass);
+
     OMPixelTowerHeap *metaspace;
     OMPixelTowerHeap *heap;
     OMInterpreter *interpreter;
