@@ -47,6 +47,12 @@ OMKlassLoader::~OMKlassLoader()
 
 void OMKlassLoader::loadClass(std::string name)
 {
+    if (name[0] == '[')
+    {
+        loadSpecialClass(name);
+        return;
+    }
+
     OMKlass *klass;
     if (fetchClass(name) != nullptr)
     {
@@ -66,12 +72,39 @@ void OMKlassLoader::loadClass(std::string name)
             memset((void *)klass, 0, sizeof(OMKlass));
             void *rawmap = metaspace->allocate(sizeof(std::unordered_map<std::string, OMMethod *>));
             klass->vtable = new (rawmap) std::unordered_map<std::string, OMMethod *>();
-            klass->kind = Normal;
             klass->heap = heap;
             klass->name = name;
             klass->accessFlags = f->accessFlags;
+
+            // geopelia: determine the type of the class
+            if (klass->accessFlags & JVM_Acc_Abstract)
+            {
+                if (klass->accessFlags & JVM_Acc_Interface)
+                {
+                    klass->kind = Interface;
+                }
+                else if (klass->accessFlags & JVM_Acc_Annotation)
+                {
+                    klass->kind = Annotation;
+                }
+                else
+                {
+                    klass->kind = AbstractClass;
+                }
+            }
+            else if (klass->accessFlags & JVM_Acc_Enum)
+            {
+                klass->kind = Enum;
+            }
+            else
+            {
+                klass->kind = Normal;
+            }
+
             klass->raw = f;
             files.erase(fi);
+
+            klass->superClass = nullptr;
             if (f->superClass != 0)
             {
                 auto supClass = f->mapping[f->mapping[f->superClass]->to<classfile::OMClassConstantClass>()->nameIndex]
@@ -79,10 +112,6 @@ void OMKlassLoader::loadClass(std::string name)
                                     ->data;
                 loadClass(supClass);
                 klass->superClass = fetchClass(supClass);
-            }
-            else
-            {
-                klass->superClass = nullptr;
             }
 
             for (auto i : f->interfaces)
@@ -97,12 +126,6 @@ void OMKlassLoader::loadClass(std::string name)
             classes.push_back(klass);
             goto loadMethods;
         }
-    }
-
-    if (name[0] == '[')
-    {
-        loadSpecialClass(name);
-        return;
     }
     throw err::OMValidationError{err::ClassLoader, "class not found", name};
 
@@ -154,20 +177,50 @@ loadMethods:
                                              fmt::format("error loading {}.{}{}", klass->name, m->name, m->desc),
                                              target.unwrap_err()};
             }
-            m->args = target.unwrap().first.size();
+
+            m->argCheck = std::unordered_map<jint, OMKlass *>();
+            auto tt = bytecode::descriptor::revertRefType(target.unwrap().second);
+            if (tt[0] == 'L' || tt[0] == '[')
+            {
+                if (tt[0] == 'L' && tt[tt.length() - 1] == ';')
+                {
+                    tt = tt.substr(1, tt.length() - 2);
+                }
+
+                loadClass(tt);
+                m->argCheck[-1] = fetchClass(tt);
+            }
+
+            m->args = 0;
             if ((m->accessFlags & JVM_Acc_Static) == 0)
             {
+                m->argCheck[0] = klass;
                 m->args++;
             }
 
             for (auto g : target.unwrap().first)
             {
+                if (g[0] == '[' || g[0] == 'L')
+                {
+                    auto tt = bytecode::descriptor::revertRefType(g);
+
+                    if (tt[0] == 'L' && tt[tt.length() - 1] == ';')
+                    {
+                        tt = tt.substr(1, tt.length() - 2);
+                    }
+
+                    loadClass(tt);
+                    m->argCheck[m->args] = fetchClass(tt);
+                }
+
+                m->args++;
                 if (g == "double" || g == "long")
                 {
                     m->args++;
                 }
             }
         }
+
         if (code != nullptr)
         {
             m->maxLocals = code->maxLocals;
@@ -375,10 +428,18 @@ void OMKlassLoader::loadSpecialClass(std::string name)
     case "[\u0001long"_hash:
         klass->length = 8;
         break;
-    default:
+    default: {
         klass->length = heap->ptrSize();
+        if (r.unwrap()[1] != 1)
+        {
+            std::string cpy(r.unwrap().c_str());
+            cpy[1]--;
+            loadSpecialClass(cpy);
+            break;
+        }
         loadClass(std::string(r.unwrap().c_str()).substr(3));
         break;
+    }
     }
     klass->staticBlock = nullptr;
     klass->staticLength = 0;

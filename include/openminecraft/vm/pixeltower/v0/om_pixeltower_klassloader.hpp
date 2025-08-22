@@ -14,7 +14,7 @@
 #include <vector>
 namespace openminecraft::vm::pixeltower::v0
 {
-// geopelia: just some random magic number for unsatisfied funcs
+// geopelia: just some random magic number for unsatisfied native functions
 #define nullFunction (void *)0x33550336
 class OMKlassLoader
 {
@@ -35,7 +35,7 @@ class OMKlassLoader
     OMField *lazyFieldInit(OMKlass *klass, uint16_t id);
     OMMethod *lazyMethodInit(OMKlass *klass, uint16_t id);
 
-    std::unordered_map<std::string, std::any (*)(std::any *)> nativeMethods;
+    std::unordered_map<std::string, std::any (*)(OMPixelTower *, std::any *)> nativeMethods;
     std::vector<OMKlass *> classes;
 
   private:

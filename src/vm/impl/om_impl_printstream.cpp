@@ -8,7 +8,7 @@
 
 namespace openminecraft::vm::impl
 {
-std::any vmstd_internal_SystemPrintStream_println(std::any *args)
+std::any vmstd_internal_SystemPrintStream_println(pixeltower::v0::OMPixelTower *tower, std::any *args)
 {
     auto t = std::type_index(args[1].type());
     if (t.name() == std::type_index(typeid(pixeltower::v0::jlong)).name())
@@ -51,7 +51,7 @@ std::any vmstd_internal_SystemPrintStream_println(std::any *args)
         }
         else
         {
-            std::cout << "[stdout] " << t->klass->name << "@" << t << std::endl;
+            // std::cout << "[stdout] " << t->klass->name << "@" << t << std::endl;
         }
     }
     return nullptr;

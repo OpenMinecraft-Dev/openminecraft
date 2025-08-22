@@ -246,7 +246,7 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
         }
     }
 
-    auto funcp = (std::any (*)(std::any *)) * reinterpret_cast<void **>(codetarget->code);
+    auto funcp = (std::any (*)(OMPixelTower *, std::any *)) * reinterpret_cast<void **>(codetarget->code);
     std::any ret;
     if (funcp == nullFunction)
     {
@@ -254,7 +254,7 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
     }
     else
     {
-        ret = (*funcp)(data.data());
+        ret = (*funcp)(tower, data.data());
     }
 
     popLastFrame();

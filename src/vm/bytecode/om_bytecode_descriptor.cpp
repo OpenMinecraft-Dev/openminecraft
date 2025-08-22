@@ -1,14 +1,72 @@
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "fmt/format.h"
-#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include <variant>
 #include <vector>
 
-using namespace openminecraft::binary::hash;
-
 namespace openminecraft::vm::bytecode::descriptor
 {
+std::string revertRefType(std::string s)
+{
+    if (s == "void")
+    {
+        return "V";
+    }
+    if (s == "int")
+    {
+        return "I";
+    }
+    if (s == "byte")
+    {
+        return "B";
+    }
+    if (s == "short")
+    {
+        return "S";
+    }
+    if (s == "char")
+    {
+        return "C";
+    }
+    if (s == "boolean")
+    {
+        return "Z";
+    }
+    if (s == "float")
+    {
+        return "F";
+    }
+    if (s == "double")
+    {
+        return "D";
+    }
+    if (s == "long")
+    {
+        return "J";
+    }
+    if (s == "void")
+    {
+        return "V";
+    }
+
+    if (s[0] == 'L')
+    {
+        return fmt::format("{};", s);
+    }
+
+    if (s[0] == '[')
+    {
+        std::string pref = "";
+        for (int i = 0; i < s[1]; i++)
+        {
+            pref += "[";
+        }
+
+        return fmt::format("{}{}", pref, revertRefType(std::string(s.c_str()).substr(2)));
+    }
+
+    return "Ljava/lang/Object;";
+}
 OMResult<std::string, std::string> decodeType(std::string raw, int *p)
 {
     if (*p >= raw.length())

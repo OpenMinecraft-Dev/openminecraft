@@ -3,6 +3,7 @@
 
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_base.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
+#include <unordered_map>
 namespace openminecraft::vm::pixeltower::v0
 {
 struct OMMethod
@@ -10,6 +11,7 @@ struct OMMethod
     OMKlass *klass;
     const jbyte *name;
     const jbyte *desc;
+    std::unordered_map<jint, OMKlass *> argCheck;
     OMMethod *next;
     jint *lineNumberTable;
     AccessFlags accessFlags;

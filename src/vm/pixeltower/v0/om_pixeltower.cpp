@@ -1,4 +1,5 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower.hpp"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/util/om_util_result.hpp"
@@ -149,9 +150,15 @@ void OMPixelTower::destroyCurrentThread()
 
 void *OMPixelTower::createString(std::string str)
 {
+    auto hsh = hash_compile_time(str.c_str());
+    if (pooledStrings.count(hsh))
+    {
+        return pooledStrings[hsh];
+    }
     loader->loadClass("[B"); // class for byte[]
     auto barr = loader->fetchClass("[B");
     auto att = barr->allocateArray(str.length());
+    // geopelia: this object will never be collected!
     att->mark |= mconst;
     std::memcpy(att->array<jbyte>(), str.c_str(), att->length);
     loader->loadClass("java/lang/String");
@@ -166,6 +173,7 @@ void *OMPixelTower::createString(std::string str)
     {
         *reinterpret_cast<void **>(tgt->data) = att;
     }
+    pooledStrings[hsh] = tgt;
     return tgt;
 }
 } // namespace openminecraft::vm::pixeltower::v0

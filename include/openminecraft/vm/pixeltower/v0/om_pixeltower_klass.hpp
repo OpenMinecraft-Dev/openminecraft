@@ -16,6 +16,10 @@ namespace openminecraft::vm::pixeltower::v0
 enum OMKlassKind : uint8_t
 {
     Normal,
+    Interface,
+    AbstractClass,
+    Annotation,
+    Enum,
     Array
 };
 
