@@ -4,7 +4,9 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_debugger.hpp"
 #include <vector>
@@ -26,6 +28,9 @@ class OMInterpreter
     uint64_t operands = 0;
 
   private:
+    void validateArgs();
+    bool checkCompat(OMKlass *src, OMKlass *target);
+
     void invokeNative(OMMethod *m, std::vector<void *> &args);
     void callDynamic(OMMethod *met, uint8_t *retAddr);
     void popLastFrame();

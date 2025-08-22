@@ -95,6 +95,8 @@ void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
         localAccessMod(i, args[i], nextframe);
     }
 
+    validateArgs();
+
     loop();
 }
 
@@ -144,7 +146,55 @@ void OMInterpreter::callDynamic(OMMethod *met, uint8_t *retAddr)
         localAccessMod<void *>(i, args[i], nextframe);
     }
 
+    validateArgs();
+
     loop();
+}
+
+void OMInterpreter::validateArgs()
+{
+    for (auto pairs : *currentThread.currentFrame->method->argCheck)
+    {
+        if (pairs.first >= 0)
+        {
+            auto cll = localAccessValue<OMOOPDesc *>(pairs.first)->klass;
+            if (!checkCompat(cll, pairs.second))
+            {
+                throw err::OMValidationError{
+                    err::Instructions,
+                    fmt::format("incompatible args, required {}, actually {}", pairs.second->name, cll->name),
+                    currentPosition()};
+            }
+        }
+    }
+}
+
+bool OMInterpreter::checkCompat(OMKlass *src, OMKlass *target)
+{
+    if (!src || !target)
+    {
+        return false;
+    }
+
+    if (src == target)
+    {
+        return true;
+    }
+
+    if (checkCompat(src->superClass, target))
+    {
+        return true;
+    }
+
+    for (auto i : src->interfaces)
+    {
+        if (checkCompat(i, target))
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args)
