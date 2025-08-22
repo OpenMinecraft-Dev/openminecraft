@@ -11,7 +11,7 @@ struct OMMethod
     OMKlass *klass;
     const jbyte *name;
     const jbyte *desc;
-    std::unordered_map<jint, OMKlass *> argCheck;
+    std::unordered_map<jint, OMKlass *> *argCheck;
     OMMethod *next;
     jint *lineNumberTable;
     AccessFlags accessFlags;

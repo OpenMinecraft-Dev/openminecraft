@@ -41,6 +41,16 @@ OMKlassLoader::~OMKlassLoader()
             metaspace->deallocate(k->vtable, sizeof(std::unordered_map<std::string, OMMethod *>));
         }
 
+        auto m = k->methods;
+        while (m)
+        {
+            if (m->argCheck)
+            {
+                delete m->argCheck;
+            }
+            m = m->next;
+        }
+
         metaspace->deallocate((void *)k, sizeof(OMKlass));
     }
 }
@@ -178,7 +188,7 @@ loadMethods:
                                              target.unwrap_err()};
             }
 
-            m->argCheck = std::unordered_map<jint, OMKlass *>();
+            m->argCheck = new std::unordered_map<jint, OMKlass *>();
             auto tt = bytecode::descriptor::revertRefType(target.unwrap().second);
             if (tt[0] == 'L' || tt[0] == '[')
             {
@@ -188,13 +198,13 @@ loadMethods:
                 }
 
                 loadClass(tt);
-                m->argCheck[-1] = fetchClass(tt);
+                (*m->argCheck)[-1] = fetchClass(tt);
             }
 
             m->args = 0;
             if ((m->accessFlags & JVM_Acc_Static) == 0)
             {
-                m->argCheck[0] = klass;
+                (*m->argCheck)[0] = klass;
                 m->args++;
             }
 
@@ -210,7 +220,7 @@ loadMethods:
                     }
 
                     loadClass(tt);
-                    m->argCheck[m->args] = fetchClass(tt);
+                    (*m->argCheck)[m->args] = fetchClass(tt);
                 }
 
                 m->args++;
