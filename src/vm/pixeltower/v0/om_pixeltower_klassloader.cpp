@@ -12,6 +12,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
 #include <cstring>
 #include <unordered_map>
+#include <vector>
 
 using openminecraft::vm::bytecode::descriptor::OMTypeDesc;
 
@@ -45,7 +46,8 @@ OMKlassLoader::~OMKlassLoader()
             auto nxt = m->next;
             if (m->argCheck)
             {
-                delete m->argCheck;
+                m->argCheck->~unordered_map<jint, OMKlass *>();
+                metaspace->deallocate(m->argCheck, sizeof(std::unordered_map<jint, OMKlass *>));
             }
             metaspace->deallocate(m, sizeof(OMMethod) + m->codeSize);
             m = nxt;
@@ -53,6 +55,11 @@ OMKlassLoader::~OMKlassLoader()
 
         metaspace->deallocate((void *)k, sizeof(OMKlass));
     }
+}
+
+void OMKlassLoader::initBase()
+{
+    loadClass({bytecode::descriptor::Reference, "java/lang/String"});
 }
 
 void OMKlassLoader::loadClass(OMTypeDesc name)
@@ -75,7 +82,7 @@ void OMKlassLoader::loadClass(OMTypeDesc name)
 
     OMKlass *klass;
 
-    logger.debug("try loading class {} {}", name.name, (int)name.type);
+    logger.debug("try loading class {}", bytecode::descriptor::restore(name));
     for (auto fi = files.begin(); fi != files.end(); ++fi)
     {
         auto f = *fi;
@@ -84,73 +91,104 @@ void OMKlassLoader::loadClass(OMTypeDesc name)
                 ->data == name.name)
         {
             validator.validate(f, name.name);
-            klass = (OMKlass *)metaspace->allocate(sizeof(OMKlass));
-            memset((void *)klass, 0, sizeof(OMKlass));
-            void *rawmap = metaspace->allocate(sizeof(std::unordered_map<std::string, OMMethod *>));
-            klass->vtable = new (rawmap) std::unordered_map<std::string, OMMethod *>();
-            klass->heap = heap;
-            klass->name = name.name;
-            klass->accessFlags = f->accessFlags;
-            klass->raw = f;
-            files.erase(fi);
+            klass = klassConstruct(fi, name);
 
-            // geopelia: determine the type of the class
-            if (klass->accessFlags & JVM_Acc_Abstract)
-            {
-                if (klass->accessFlags & JVM_Acc_Interface)
-                {
-                    klass->kind = Interface;
-                }
-                else if (klass->accessFlags & JVM_Acc_Annotation)
-                {
-                    klass->kind = Annotation;
-                }
-                else
-                {
-                    klass->kind = AbstractClass;
-                }
-            }
-            else if (klass->accessFlags & JVM_Acc_Enum)
-            {
-                klass->kind = Enum;
-            }
-            else
-            {
-                klass->kind = Normal;
-            }
+            klassVtableInit(klass);
+            klassMethodInit(klass);
+            klassConstantPoolLoad(klass);
+            klassFieldInit(klass);
+            klassOopCreate(klass);
 
-            klass->superClass = nullptr;
-            if (f->superClass != 0)
-            {
-                auto supClass = f->mapping[f->mapping[f->superClass]->to<classfile::OMClassConstantClass>()->nameIndex]
-                                    ->to<classfile::OMClassConstantUtf8>()
-                                    ->data;
-                OMTypeDesc dd = {bytecode::descriptor::Reference, supClass};
-                loadClass(dd);
-                klass->superClass = fetchClass(dd);
-            }
-
-            for (auto i : f->interfaces)
-            {
-                auto data = f->mapping[f->mapping[i]->to<classfile::OMClassConstantClass>()->nameIndex]
-                                ->to<classfile::OMClassConstantUtf8>()
-                                ->data;
-                OMTypeDesc dd = {bytecode::descriptor::Reference, data};
-                loadClass(dd);
-                klass->interfaces.push_back(fetchClass(dd));
-            }
-
-            classes.push_back(klass);
-            goto loadMethods;
+            return;
         }
     }
 
-    logger.dumpStacktrace();
+    // geopelia: we need this check for teh case below:
+    // String -> CharSequence -> String -> ...
+    // CharSequence has method toString, and it will loads String recursively if this check doesn't exist
+    for (auto l : classes)
+    {
+        if (l->name == bytecode::descriptor::restore(name))
+        {
+            return;
+        }
+    }
     throw err::OMValidationError{err::ClassLoader, "class not found", name.name};
+}
 
-loadMethods:
-    klassVtableInit(klass);
+void OMKlassLoader::klassOopCreate(OMKlass *klass)
+{
+    auto clsklass = fetchClass({bytecode::descriptor::Reference, "java/lang/String"});
+    auto tgt = clsklass->allocateInstance();
+    klass->oop = tgt;
+}
 
+OMKlass *OMKlassLoader::klassConstruct(
+    std::vector<std::shared_ptr<openminecraft::vm::classfile::OMClassFile>>::iterator fi, OMTypeDesc desc)
+{
+    auto f = *fi;
+    auto klass = (OMKlass *)metaspace->allocate(sizeof(OMKlass));
+    memset((void *)klass, 0, sizeof(OMKlass));
+    void *rawmap = metaspace->allocate(sizeof(std::unordered_map<std::string, OMMethod *>));
+    klass->vtable = new (rawmap) std::unordered_map<std::string, OMMethod *>();
+    klass->heap = heap;
+    klass->name = bytecode::descriptor::restore(desc);
+    klass->accessFlags = f->accessFlags;
+    klass->raw = f;
+    files.erase(fi);
+    classes.push_back(klass);
+
+    // geopelia: determine the type of the class
+    if (klass->accessFlags & JVM_Acc_Abstract)
+    {
+        if (klass->accessFlags & JVM_Acc_Interface)
+        {
+            klass->kind = Interface;
+        }
+        else if (klass->accessFlags & JVM_Acc_Annotation)
+        {
+            klass->kind = Annotation;
+        }
+        else
+        {
+            klass->kind = AbstractClass;
+        }
+    }
+    else if (klass->accessFlags & JVM_Acc_Enum)
+    {
+        klass->kind = Enum;
+    }
+    else
+    {
+        klass->kind = Normal;
+    }
+
+    klass->superClass = nullptr;
+    if (f->superClass != 0)
+    {
+        auto supClass = f->mapping[f->mapping[f->superClass]->to<classfile::OMClassConstantClass>()->nameIndex]
+                            ->to<classfile::OMClassConstantUtf8>()
+                            ->data;
+        OMTypeDesc dd = {bytecode::descriptor::Reference, supClass};
+        loadClass(dd);
+        klass->superClass = fetchClass(dd);
+    }
+
+    for (auto i : f->interfaces)
+    {
+        auto data = f->mapping[f->mapping[i]->to<classfile::OMClassConstantClass>()->nameIndex]
+                        ->to<classfile::OMClassConstantUtf8>()
+                        ->data;
+        OMTypeDesc dd = {bytecode::descriptor::Reference, data};
+        loadClass(dd);
+        klass->interfaces.push_back(fetchClass(dd));
+    }
+
+    return klass;
+}
+
+void OMKlassLoader::klassMethodInit(OMKlass *klass)
+{
     OMMethod *lastMethod = nullptr;
     for (auto method : klass->raw->methods)
     {
@@ -181,35 +219,34 @@ loadMethods:
         m->name = klass->raw->mapping[method->nameIndex]->to<classfile::OMClassConstantUtf8>()->data.c_str();
         m->desc = klass->raw->mapping[method->descIndex]->to<classfile::OMClassConstantUtf8>()->data.c_str();
 
+        auto target = bytecode::descriptor::decodeSignatureTo(
+            klass->raw->mapping[method->descIndex]->to<classfile::OMClassConstantUtf8>()->data, &m->args);
+
+        auto rawcheck = metaspace->allocate(sizeof(std::unordered_map<jint, OMKlass *>));
+        m->argCheck = new (rawcheck) std::unordered_map<jint, OMKlass *>();
+        loadClass(target.second);
+        (*m->argCheck)[-1] = fetchClass(target.second);
+
+        m->args = 0;
+        if ((m->accessFlags & JVM_Acc_Static) == 0)
         {
-            auto target = bytecode::descriptor::decodeSignatureTo(
-                klass->raw->mapping[method->descIndex]->to<classfile::OMClassConstantUtf8>()->data, &m->args);
+            (*m->argCheck)[0] = klass;
+            m->args++;
+        }
 
-            m->argCheck = new std::unordered_map<jint, OMKlass *>();
-            loadClass(target.second);
-            (*m->argCheck)[-1] = fetchClass(target.second);
-
-            m->args = 0;
-            if ((m->accessFlags & JVM_Acc_Static) == 0)
+        for (auto g : target.first)
+        {
+            loadClass(g);
+            auto dd = fetchClass(g);
+            if (dd)
             {
-                (*m->argCheck)[0] = klass;
-                m->args++;
+                (*m->argCheck)[-1] = dd;
             }
 
-            for (auto g : target.first)
+            m->args++;
+            if (g.type == bytecode::descriptor::Double || g.type == bytecode::descriptor::Long)
             {
-                loadClass(g);
-                auto dd = fetchClass(g);
-                if (dd)
-                {
-                    (*m->argCheck)[-1] = dd;
-                }
-
                 m->args++;
-                if (g.type == bytecode::descriptor::Double || g.type == bytecode::descriptor::Long)
-                {
-                    m->args++;
-                }
             }
         }
 
@@ -249,9 +286,6 @@ loadMethods:
         }
         lastMethod = m;
     }
-
-    klassConstantPoolLoad(klass);
-    klassFieldInit(klass);
 }
 
 void OMKlassLoader::klassVtableInit(OMKlass *klass)

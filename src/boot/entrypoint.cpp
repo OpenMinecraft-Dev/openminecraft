@@ -195,8 +195,9 @@ int boot(std::vector<std::string> args)
                         {
                             auto now = std::chrono::system_clock::now();
 
-                            std::thread t([&]() {
-                                while (true)
+                            bool running = true;
+                            auto t = new std::thread([&]() {
+                                while (running)
                                 {
                                     auto now2 = std::chrono::system_clock::now();
                                     auto cont =
@@ -222,6 +223,8 @@ int boot(std::vector<std::string> args)
                             catch (int g)
                             {
                             }
+
+                            running = false;
                             auto now2 = std::chrono::system_clock::now();
                             logger->info("VM exited {} ns",
                                          std::chrono::duration_cast<std::chrono::nanoseconds>(now2 - now).count());

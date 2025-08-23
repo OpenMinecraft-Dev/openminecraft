@@ -1179,7 +1179,7 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             safeArgFetch(stack, code, fn(), desc);
             safeReturnFetch(stack, code, fn(), desc);
 
-            bump(3);
+            bump(5);
             break;
         }
 

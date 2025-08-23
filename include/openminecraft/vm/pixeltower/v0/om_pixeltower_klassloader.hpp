@@ -28,6 +28,7 @@ class OMKlassLoader
         files.push_back(file);
     }
 
+    void initBase();
     void loadClass(bytecode::descriptor::OMTypeDesc name);
     void loadSpecialClass(bytecode::descriptor::OMTypeDesc name);
     OMKlass *fetchClass(bytecode::descriptor::OMTypeDesc name);
@@ -40,9 +41,13 @@ class OMKlassLoader
     std::vector<OMKlass *> classes;
 
   private:
+    OMKlass *klassConstruct(std::vector<std::shared_ptr<openminecraft::vm::classfile::OMClassFile>>::iterator fi,
+                            bytecode::descriptor::OMTypeDesc desc);
+    void klassMethodInit(OMKlass *klass);
     void klassVtableInit(OMKlass *klass);
     void klassConstantPoolLoad(OMKlass *klass);
     void klassFieldInit(OMKlass *klass);
+    void klassOopCreate(OMKlass *klass);
 
     OMPixelTowerHeap *metaspace;
     OMPixelTowerHeap *heap;

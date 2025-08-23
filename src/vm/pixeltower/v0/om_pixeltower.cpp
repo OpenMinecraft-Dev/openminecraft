@@ -102,6 +102,8 @@ void OMPixelTower::init(std::string basePath)
         }
     }
     initStreams(target);
+
+    loader->initBase();
 }
 
 void OMPixelTower::load(std::string path)

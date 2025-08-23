@@ -108,8 +108,7 @@ void OMInterpreter::callDynamic(OMMethod *met, uint8_t *retAddr)
     std::vector<void *> args(met->args);
     for (int i = met->args - 1; i >= 0; i--)
     {
-        args[i] = stackTopAccess<void *>();
-        stackPop();
+        args[i] = stackTopAccess<void *>(true);
     }
 
     auto cls = static_cast<OMOOPDesc *>(args[0])->klass;
@@ -156,7 +155,12 @@ void OMInterpreter::validateArgs()
     {
         if (pairs.first >= 0)
         {
-            auto cll = localAccessValue<OMOOPDesc *>(pairs.first)->klass;
+            auto oop = localAccessValue<OMOOPDesc *>(pairs.first);
+            if (!oop)
+            {
+                continue;
+            }
+            auto cll = oop->klass;
             if (!checkCompat(cll, pairs.second))
             {
                 throw err::OMValidationError{

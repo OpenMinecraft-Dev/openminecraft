@@ -31,6 +31,7 @@ class OMKlass
     OMKlassKind kind;
     std::string name;
     std::shared_ptr<classfile::OMClassFile> raw;
+    OMOOPDesc *oop;
     OMKlass *superClass;
     std::vector<OMKlass *> interfaces;
     OMMethod *methods;
