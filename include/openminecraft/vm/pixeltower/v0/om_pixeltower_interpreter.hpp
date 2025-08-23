@@ -26,6 +26,7 @@ class OMInterpreter
     OMPixelTower *tower;
     v1::OMDebugger debugger;
     uint64_t operands = 0;
+    std::vector<void *> bootArgs;
 
   private:
     void validateArgs();

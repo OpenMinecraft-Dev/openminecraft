@@ -121,6 +121,23 @@ void OMKlassLoader::klassOopCreate(OMKlass *klass)
     auto clsklass = fetchClass({bytecode::descriptor::Reference, "java/lang/String"});
     auto tgt = clsklass->allocateInstance();
     klass->oop = tgt;
+    auto ii = interpreter->tower->createString(klass->name);
+
+    for (auto &f : clsklass->fields)
+    {
+        if (f.name == "name")
+        {
+            stackPushAccess<void *>(tgt);
+            stackPushAccess<void *>(ii);
+            accessField(&f);
+        }
+        if (f.name == "nativePtr")
+        {
+            stackPushAccess<void *>(tgt);
+            stackPushAccessW<jlong>((jlong)(size_t)klass);
+            accessField(&f);
+        }
+    }
 }
 
 OMKlass *OMKlassLoader::klassConstruct(

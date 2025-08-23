@@ -55,6 +55,12 @@ void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
         {
             localAccessMod<void *>(i, nullptr);
         }
+
+        for (int i = 0; i < bootArgs.size(); i++)
+        {
+            localAccessMod<void *>(i, bootArgs[i]);
+        }
+        bootArgs.clear();
         loop();
         return;
     }
