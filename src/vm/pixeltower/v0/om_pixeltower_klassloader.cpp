@@ -88,6 +88,8 @@ void OMKlassLoader::loadClass(std::string name)
             klass->heap = heap;
             klass->name = name;
             klass->accessFlags = f->accessFlags;
+            klass->raw = f;
+            files.erase(fi);
 
             // geopelia: determine the type of the class
             if (klass->accessFlags & JVM_Acc_Abstract)
@@ -113,9 +115,6 @@ void OMKlassLoader::loadClass(std::string name)
             {
                 klass->kind = Normal;
             }
-
-            klass->raw = f;
-            files.erase(fi);
 
             klass->superClass = nullptr;
             if (f->superClass != 0)
@@ -186,17 +185,7 @@ loadMethods:
             }
 
             m->argCheck = new std::unordered_map<jint, OMKlass *>();
-            auto tt = bytecode::descriptor::revertRefType(target.unwrap().second);
-            if (tt[0] == 'L' || tt[0] == '[')
-            {
-                if (tt[0] == 'L' && tt[tt.length() - 1] == ';')
-                {
-                    tt = tt.substr(1, tt.length() - 2);
-                }
-
-                loadClass(tt);
-                (*m->argCheck)[-1] = fetchClass(tt);
-            }
+            (*m->argCheck)[-1] = loadClassWithDesc(target.unwrap().second);
 
             m->args = 0;
             if ((m->accessFlags & JVM_Acc_Static) == 0)
@@ -207,18 +196,7 @@ loadMethods:
 
             for (auto g : target.unwrap().first)
             {
-                if (g[0] == '[' || g[0] == 'L')
-                {
-                    auto tt = bytecode::descriptor::revertRefType(g);
-
-                    if (tt[0] == 'L' && tt[tt.length() - 1] == ';')
-                    {
-                        tt = tt.substr(1, tt.length() - 2);
-                    }
-
-                    loadClass(tt);
-                    (*m->argCheck)[m->args] = fetchClass(tt);
-                }
+                (*m->argCheck)[-1] = loadClassWithDesc(g);
 
                 m->args++;
                 if (g == "double" || g == "long")
@@ -268,6 +246,21 @@ loadMethods:
     klassConstantPoolLoad(klass);
     klassFieldInit(klass);
 }
+OMKlass *OMKlassLoader::loadClassWithDesc(std::string name)
+{
+    auto tt = bytecode::descriptor::revertRefType(name);
+    if (tt[0] == 'L' || tt[0] == '[')
+    {
+        if (tt[0] == 'L' && tt[tt.length() - 1] == ';')
+        {
+            tt = tt.substr(1, tt.length() - 2);
+        }
+
+        loadClass(tt);
+    }
+    return fetchClass(tt);
+}
+
 void OMKlassLoader::klassVtableInit(OMKlass *klass)
 {
     if (klass->superClass)

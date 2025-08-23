@@ -26,6 +26,8 @@ class OMKlassLoader
     {
         files.push_back(file);
     }
+
+    OMKlass *loadClassWithDesc(std::string name);
     void loadClass(std::string name);
     void loadSpecialClass(std::string name);
     OMKlass *fetchClass(std::string name);
