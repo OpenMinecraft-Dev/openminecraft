@@ -1,109 +1,100 @@
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
-#include "fmt/format.h"
-#include "openminecraft/util/om_util_result.hpp"
+#include "openminecraft/vm/err/om_validation_error.hpp"
 #include <variant>
 #include <vector>
 
 namespace openminecraft::vm::bytecode::descriptor
 {
-std::string revertRefType(std::string s)
+std::string restore(OMTypeDesc type)
 {
-    if (s == "void")
+    switch (type.type)
     {
-        return "V";
-    }
-    if (s == "int")
-    {
-        return "I";
-    }
-    if (s == "byte")
-    {
+    case Byte:
         return "B";
-    }
-    if (s == "short")
-    {
-        return "S";
-    }
-    if (s == "char")
-    {
-        return "C";
-    }
-    if (s == "boolean")
-    {
+    case Boolean:
         return "Z";
-    }
-    if (s == "float")
-    {
+    case Char:
+        return "C";
+    case Short:
+        return "S";
+    case Int:
+        return "I";
+    case Float:
         return "F";
-    }
-    if (s == "double")
-    {
-        return "D";
-    }
-    if (s == "long")
-    {
+    case Long:
         return "J";
+    case Double:
+        return "D";
+    case Array: {
+        std::string ii = "";
+        for (int i = 0; i < type.depth; i++)
+        {
+            ii += "[";
+        }
+        ii += restore({type.subtype, type.name});
+        return ii;
     }
-    if (s == "void")
-    {
+    case Reference:
+        return type.name;
+    case Void:
+    default:
         return "V";
     }
-
-    if (s[0] == 'L')
-    {
-        return fmt::format("{};", s);
-    }
-
-    if (s[0] == '[')
-    {
-        std::string pref = "";
-        for (int i = 0; i < s[1]; i++)
-        {
-            pref += "[";
-        }
-
-        return fmt::format("{}{}", pref, revertRefType(std::string(s.c_str()).substr(2)));
-    }
-
-    return "Ljava/lang/Object;";
 }
-OMResult<std::string, std::string> decodeType(std::string raw, int *p)
+std::pair<std::vector<OMTypeDesc>, OMTypeDesc> decodeSignatureTo(std::string raw, int *p)
+{
+    if (raw[*p] != '(')
+    {
+        throw err::OMValidationError{err::Unknown, "not a method signature", raw};
+    }
+    *p = *p + 1;
+    std::vector<OMTypeDesc> args;
+    while (raw[*p] != ')')
+    {
+        args.push_back(decodeTypeTo(raw, p));
+    }
+    *p = *p + 1;
+
+    auto ret = decodeTypeTo(raw, p);
+    return std::pair<std::vector<OMTypeDesc>, OMTypeDesc>(args, ret);
+}
+OMTypeDesc decodeTypeTo(std::string raw, int *p)
 {
     if (*p >= raw.length())
     {
-        return OMResult<std::string, std::string>::err("string end");
+        throw err::OMValidationError{err::Unknown, "type string ends!", raw};
     }
     *p = *p + 1;
     switch (raw[*p - 1])
     {
     case 'V':
-        return OMResult<std::string, std::string>::ok("void");
+        return {Void};
     case 'B':
-        return OMResult<std::string, std::string>::ok("byte");
+        return {Byte};
     case 'C':
-        return OMResult<std::string, std::string>::ok("char");
+        return {Char};
     case 'D':
-        return OMResult<std::string, std::string>::ok("double");
+        return {Double};
     case 'F':
-        return OMResult<std::string, std::string>::ok("float");
+        return {Float};
     case 'I':
-        return OMResult<std::string, std::string>::ok("int");
+        return {Int};
     case 'J':
-        return OMResult<std::string, std::string>::ok("long");
+        return {Long};
     case 'S':
-        return OMResult<std::string, std::string>::ok("short");
+        return {Short};
     case 'Z':
-        return OMResult<std::string, std::string>::ok("boolean");
+        return {Boolean};
     case 'L': {
-        auto ends = raw.find_first_of(';', *p - 1) - (*p - 1);
+        auto ends = raw.find_first_of(';', *p - 1) - *p;
         if (ends == std::variant_npos)
         {
-            return OMResult<std::string, std::string>::err("nonstop object type!");
+            throw err::OMValidationError{err::Unknown, "nonstop object type", raw};
         }
         // inplace split
-        auto type = std::string(raw.c_str()).substr(*p - 1, ends);
-        auto d = OMResult<std::string, std::string>::ok(type);
-        *p += ends;
+        auto type = std::string(raw.c_str()).substr(*p, ends);
+        OMTypeDesc d = {Reference, type};
+        *p += ends + 1;
         return d;
     }
     case '[': {
@@ -113,48 +104,11 @@ OMResult<std::string, std::string> decodeType(std::string raw, int *p)
             *p = *p + 1;
         }
         char dim = *p - begin;
-        auto sup = decodeType(raw, p);
-        switch (sup.type)
-        {
-        case Ok:
-            return OMResult<std::string, std::string>::ok(fmt::format("[{}{}", dim, sup.unwrap()));
-        case Err:
-            return OMResult<std::string, std::string>::err(sup.unwrap_err());
-        }
+        auto sup = decodeTypeTo(raw, p);
+        return {Array, sup.name, dim, sup.type};
     }
     }
     *p = *p - 1;
-    return OMResult<std::string, std::string>::err("not recognized");
-}
-OMResult<methodSig, std::string> decodeSignature(std::string raw, int *p)
-{
-    if (raw[*p] != '(')
-    {
-        return OMResult<methodSig, std::string>::err("not a method signature");
-    }
-    *p = *p + 1;
-    std::vector<std::string> args;
-    while (raw[*p] != ')')
-    {
-        auto data = decodeType(raw, p);
-        switch (data.type)
-        {
-        case Ok:
-            args.push_back(data.unwrap());
-            break;
-        case Err:
-            return OMResult<methodSig, std::string>::err(data.unwrap_err());
-        }
-    }
-    *p = *p + 1;
-
-    auto ret = decodeType(raw, p);
-    switch (ret.type)
-    {
-    case Ok:
-        return OMResult<methodSig, std::string>::ok(methodSig(args, ret.unwrap()));
-    case Err:
-        return OMResult<methodSig, std::string>::err(ret.unwrap_err());
-    }
+    throw err::OMValidationError{err::Unknown, "not recognized", raw};
 }
 } // namespace openminecraft::vm::bytecode::descriptor

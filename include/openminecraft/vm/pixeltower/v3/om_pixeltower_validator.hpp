@@ -2,6 +2,7 @@
 #define OM_PIXELTOWER_VALIDATOR_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include <cstdint>
 #include <map>
@@ -39,7 +40,7 @@ class OMValidator
     void safeLocalGet(std::vector<int> &local, classfile::OMClassAttrCode *code, std::string pos, int index, int i);
     void safeArgFetch(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos, std::string desc);
     void safeReturnFetch(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos, std::string desc);
-    int toFlag(std::string name);
+    int toFlag(bytecode::descriptor::OMTypeDesc name);
 
     log::OMLogger logger;
 };

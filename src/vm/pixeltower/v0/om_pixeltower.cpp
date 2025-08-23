@@ -3,6 +3,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/util/om_util_result.hpp"
+#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/impl/om_impl_printstream.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
@@ -150,19 +151,22 @@ void OMPixelTower::destroyCurrentThread()
 
 void *OMPixelTower::createString(std::string str)
 {
-    auto hsh = hash_compile_time(str.c_str());
+    auto hsh = binary::hash::hash_compile_time(str.c_str());
     if (pooledStrings.count(hsh))
     {
         return pooledStrings[hsh];
     }
-    loader->loadClass("[B"); // class for byte[]
-    auto barr = loader->fetchClass("[B");
+
+    bytecode::descriptor::OMTypeDesc barrdesc = {bytecode::descriptor::Array, "", 1, bytecode::descriptor::Byte};
+    loader->loadClass(barrdesc); // class for byte[]
+    auto barr = loader->fetchClass(barrdesc);
     auto att = barr->allocateArray(str.length());
     // geopelia: this object will never be collected!
     att->mark |= mconst;
     std::memcpy(att->array<jbyte>(), str.c_str(), att->length);
-    loader->loadClass("java/lang/String");
-    auto stt = loader->fetchClass("java/lang/String");
+    bytecode::descriptor::OMTypeDesc strdesc = {bytecode::descriptor::Reference, "java/lang/String"};
+    loader->loadClass(strdesc);
+    auto stt = loader->fetchClass(strdesc);
     auto tgt = stt->allocateInstance();
     tgt->mark |= mconst;
     if (heap->ptrCompEnabled())

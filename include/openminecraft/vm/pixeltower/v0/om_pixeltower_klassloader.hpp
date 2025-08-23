@@ -2,6 +2,7 @@
 #define OM_PIXELTOWER_KLASSLOADER_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
@@ -27,10 +28,9 @@ class OMKlassLoader
         files.push_back(file);
     }
 
-    OMKlass *loadClassWithDesc(std::string name);
-    void loadClass(std::string name);
-    void loadSpecialClass(std::string name);
-    OMKlass *fetchClass(std::string name);
+    void loadClass(bytecode::descriptor::OMTypeDesc name);
+    void loadSpecialClass(bytecode::descriptor::OMTypeDesc name);
+    OMKlass *fetchClass(bytecode::descriptor::OMTypeDesc name);
 
     OMKlass *lazyClassInit(OMKlass *klass, uint16_t id);
     OMField *lazyFieldInit(OMKlass *klass, uint16_t id);

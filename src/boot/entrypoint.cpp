@@ -38,6 +38,7 @@
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
+#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include "openminecraft/vm/pixeltower/internal/om_pixeltower_funcs.hpp"
@@ -183,8 +184,10 @@ int boot(std::vector<std::string> args)
                     tower->initCurrentThread(1ul * 1024 * 1024);
                     tower->init(commandBuffer[2]);
                     tower->load("../Test.class");
-                    tower->loader->loadClass("openminecraft/Test");
-                    auto cls = tower->loader->fetchClass("openminecraft/Test");
+
+                    bytecode::descriptor::OMTypeDesc tgt = {bytecode::descriptor::Reference, "openminecraft/Test"};
+                    tower->loader->loadClass(tgt);
+                    auto cls = tower->loader->fetchClass(tgt);
                     auto met = cls->methods;
                     while (met != nullptr)
                     {

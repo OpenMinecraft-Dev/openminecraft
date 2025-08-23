@@ -45,7 +45,7 @@ class OMPixelTower
 
   private:
     log::OMLogger logger;
-    std::unordered_map<hash_t, OMOOPDesc *> pooledStrings;
+    std::unordered_map<binary::hash::hash_t, OMOOPDesc *> pooledStrings;
 };
 } // namespace openminecraft::vm::pixeltower::v0
 

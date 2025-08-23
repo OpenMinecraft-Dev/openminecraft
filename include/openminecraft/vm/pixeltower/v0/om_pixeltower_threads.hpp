@@ -1,10 +1,7 @@
 #ifndef OM_PIXELTOWER_THREADS_HPP
 #define OM_PIXELTOWER_THREADS_HPP
 
-#include "openminecraft/binary/om_bin_hash.hpp"
-#include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
-#include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_base.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_field.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_frame.hpp"
@@ -13,8 +10,6 @@
 #include <string>
 #include <thread>
 #include <type_traits>
-
-using namespace openminecraft::binary::hash;
 namespace openminecraft::vm::pixeltower::v0
 {
 class OMPixelTowerThread
@@ -179,43 +174,36 @@ template <typename Ttarget, typename Tvalue> inline void accessFieldW(OMField *f
 inline void accessField(OMField *field)
 {
     int p = 0;
-    auto res = bytecode::descriptor::decodeType(field->desc, &p);
-    if (res.type == util::Err)
+    auto res = bytecode::descriptor::decodeTypeTo(field->desc, &p);
+    switch (res.type)
     {
-        throw err::OMValidationError{err::Instructions, "unknown field descriptor", field->desc};
-    }
-
-    switch (hash_compile_time(res.unwrap().c_str()))
-    {
-    case "byte"_hash: {
+    case bytecode::descriptor::Byte:
         accessFieldI<jbyte, jint>(field);
         break;
-    }
-    case "short"_hash: {
-        accessFieldI<jshort, jint>(field);
-        break;
-    }
-    case "boolean"_hash: {
+    case bytecode::descriptor::Boolean:
         accessFieldI<jboolean, jint>(field);
         break;
-    }
-    case "int"_hash: {
+    case bytecode::descriptor::Char:
+        accessFieldI<jchar, jint>(field);
+        break;
+    case bytecode::descriptor::Short:
+        accessFieldI<jshort, jint>(field);
+        break;
+    case bytecode::descriptor::Int:
         accessFieldI<jint, jint>(field);
         break;
-    }
-    case "float"_hash: {
+    case bytecode::descriptor::Float:
         accessFieldI<jfloat, jfloat>(field);
         break;
-    }
-    case "long"_hash: {
+    case bytecode::descriptor::Long:
         accessFieldW<jlong, jlong>(field);
         break;
-    }
-    case "double"_hash: {
+    case bytecode::descriptor::Double:
         accessFieldW<jdouble, jdouble>(field);
         break;
-    }
-    default: {
+    case bytecode::descriptor::Array:
+    case bytecode::descriptor::Void:
+    case bytecode::descriptor::Reference:
         auto data = stackTopAccess<void *>();
         stackPop();
         auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
@@ -230,7 +218,6 @@ inline void accessField(OMField *field)
             *reinterpret_cast<void **>(target) = data;
         }
         break;
-    }
     }
 }
 
@@ -253,43 +240,37 @@ template <typename Ttarget, typename Tvalue> inline void accessFieldStaticW(OMFi
 inline void accessFieldStatic(OMField *field)
 {
     int p = 0;
-    auto res = bytecode::descriptor::decodeType(field->desc, &p);
-    if (res.type == util::Err)
-    {
-        throw err::OMValidationError{err::Instructions, "unknown field descriptor", field->desc};
-    }
+    auto res = bytecode::descriptor::decodeTypeTo(field->desc, &p);
 
-    switch (hash_compile_time(res.unwrap().c_str()))
+    switch (res.type)
     {
-    case "byte"_hash: {
+    case bytecode::descriptor::Byte:
         accessFieldStaticI<jbyte, jint>(field);
         break;
-    }
-    case "short"_hash: {
-        accessFieldStaticI<jshort, jint>(field);
-        break;
-    }
-    case "boolean"_hash: {
+    case bytecode::descriptor::Boolean:
         accessFieldStaticI<jboolean, jint>(field);
         break;
-    }
-    case "int"_hash: {
+    case bytecode::descriptor::Char:
+        accessFieldStaticI<jchar, jint>(field);
+        break;
+    case bytecode::descriptor::Short:
+        accessFieldStaticI<jshort, jint>(field);
+        break;
+    case bytecode::descriptor::Int:
         accessFieldStaticI<jint, jint>(field);
         break;
-    }
-    case "float"_hash: {
+    case bytecode::descriptor::Float:
         accessFieldStaticI<jfloat, jfloat>(field);
         break;
-    }
-    case "long"_hash: {
+    case bytecode::descriptor::Long:
         accessFieldStaticW<jlong, jlong>(field);
         break;
-    }
-    case "double"_hash: {
+    case bytecode::descriptor::Double:
         accessFieldStaticW<jdouble, jdouble>(field);
         break;
-    }
-    default: {
+    case bytecode::descriptor::Array:
+    case bytecode::descriptor::Void:
+    case bytecode::descriptor::Reference:
         auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
         stackPop();
         auto target = static_cast<void *>(static_cast<uint8_t *>(field->klass->staticBlock) + field->offset);
@@ -302,7 +283,6 @@ inline void accessFieldStatic(OMField *field)
             *reinterpret_cast<void **>(target) = obj;
         }
         break;
-    }
     }
 }
 
@@ -321,43 +301,37 @@ template <typename Ttarget, typename Tvalue> inline void fetchFieldStaticW(OMFie
 inline void fetchFieldStatic(OMField *field)
 {
     int p = 0;
-    auto res = bytecode::descriptor::decodeType(field->desc, &p);
-    if (res.type == util::Err)
-    {
-        throw err::OMValidationError{err::Instructions, "unknown field descriptor", field->desc};
-    }
+    auto res = bytecode::descriptor::decodeTypeTo(field->desc, &p);
 
-    switch (hash_compile_time(res.unwrap().c_str()))
+    switch (res.type)
     {
-    case "byte"_hash: {
+    case bytecode::descriptor::Byte:
         fetchFieldStaticI<jbyte, jint>(field);
         break;
-    }
-    case "short"_hash: {
-        fetchFieldStaticI<jshort, jint>(field);
-        break;
-    }
-    case "boolean"_hash: {
+    case bytecode::descriptor::Boolean:
         fetchFieldStaticI<jboolean, jint>(field);
         break;
-    }
-    case "int"_hash: {
+    case bytecode::descriptor::Char:
+        fetchFieldStaticI<jchar, jint>(field);
+        break;
+    case bytecode::descriptor::Short:
+        fetchFieldStaticI<jshort, jint>(field);
+        break;
+    case bytecode::descriptor::Int:
         fetchFieldStaticI<jint, jint>(field);
         break;
-    }
-    case "float"_hash: {
+    case bytecode::descriptor::Float:
         fetchFieldStaticI<jfloat, jfloat>(field);
         break;
-    }
-    case "long"_hash: {
+    case bytecode::descriptor::Long:
         fetchFieldStaticW<jlong, jlong>(field);
         break;
-    }
-    case "double"_hash: {
+    case bytecode::descriptor::Double:
         fetchFieldStaticW<jdouble, jdouble>(field);
         break;
-    }
-    default: {
+    case bytecode::descriptor::Array:
+    case bytecode::descriptor::Void:
+    case bytecode::descriptor::Reference:
         auto h = currentThread.currentFrame->method->klass->heap;
         auto target = static_cast<void *>(static_cast<uint8_t *>(field->klass->staticBlock) + field->offset);
         if (h->ptrCompEnabled())
@@ -369,7 +343,6 @@ inline void fetchFieldStatic(OMField *field)
             stackPushAccess<void *>(*reinterpret_cast<void **>(target));
         }
         break;
-    }
     }
 }
 

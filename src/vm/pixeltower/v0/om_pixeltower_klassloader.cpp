@@ -1,7 +1,5 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klassloader.hpp"
-#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
@@ -15,7 +13,7 @@
 #include <cstring>
 #include <unordered_map>
 
-using namespace openminecraft::binary::hash;
+using openminecraft::vm::bytecode::descriptor::OMTypeDesc;
 
 namespace openminecraft::vm::pixeltower::v0
 {
@@ -57,36 +55,41 @@ OMKlassLoader::~OMKlassLoader()
     }
 }
 
-void OMKlassLoader::loadClass(std::string name)
+void OMKlassLoader::loadClass(OMTypeDesc name)
 {
     if (fetchClass(name) != nullptr)
     {
         return;
     }
 
-    if (name[0] == '[')
+    if (name.type == bytecode::descriptor::Array)
     {
         loadSpecialClass(name);
         return;
     }
 
+    if (name.type != bytecode::descriptor::Reference)
+    {
+        return;
+    }
+
     OMKlass *klass;
 
-    logger.debug("try loading class {}", name);
+    logger.debug("try loading class {} {}", name.name, (int)name.type);
     for (auto fi = files.begin(); fi != files.end(); ++fi)
     {
         auto f = *fi;
         if (f->mapping[f->mapping[f->thisClass]->to<classfile::OMClassConstantClass>()->nameIndex]
                 ->to<classfile::OMClassConstantUtf8>()
-                ->data == name)
+                ->data == name.name)
         {
-            validator.validate(f, name);
+            validator.validate(f, name.name);
             klass = (OMKlass *)metaspace->allocate(sizeof(OMKlass));
             memset((void *)klass, 0, sizeof(OMKlass));
             void *rawmap = metaspace->allocate(sizeof(std::unordered_map<std::string, OMMethod *>));
             klass->vtable = new (rawmap) std::unordered_map<std::string, OMMethod *>();
             klass->heap = heap;
-            klass->name = name;
+            klass->name = name.name;
             klass->accessFlags = f->accessFlags;
             klass->raw = f;
             files.erase(fi);
@@ -122,8 +125,9 @@ void OMKlassLoader::loadClass(std::string name)
                 auto supClass = f->mapping[f->mapping[f->superClass]->to<classfile::OMClassConstantClass>()->nameIndex]
                                     ->to<classfile::OMClassConstantUtf8>()
                                     ->data;
-                loadClass(supClass);
-                klass->superClass = fetchClass(supClass);
+                OMTypeDesc dd = {bytecode::descriptor::Reference, supClass};
+                loadClass(dd);
+                klass->superClass = fetchClass(dd);
             }
 
             for (auto i : f->interfaces)
@@ -131,15 +135,18 @@ void OMKlassLoader::loadClass(std::string name)
                 auto data = f->mapping[f->mapping[i]->to<classfile::OMClassConstantClass>()->nameIndex]
                                 ->to<classfile::OMClassConstantUtf8>()
                                 ->data;
-                loadClass(data);
-                klass->interfaces.push_back(fetchClass(data));
+                OMTypeDesc dd = {bytecode::descriptor::Reference, data};
+                loadClass(dd);
+                klass->interfaces.push_back(fetchClass(dd));
             }
 
             classes.push_back(klass);
             goto loadMethods;
         }
     }
-    throw err::OMValidationError{err::ClassLoader, "class not found", name};
+
+    logger.dumpStacktrace();
+    throw err::OMValidationError{err::ClassLoader, "class not found", name.name};
 
 loadMethods:
     klassVtableInit(klass);
@@ -175,17 +182,12 @@ loadMethods:
         m->desc = klass->raw->mapping[method->descIndex]->to<classfile::OMClassConstantUtf8>()->data.c_str();
 
         {
-            auto target = bytecode::descriptor::decodeSignature(
+            auto target = bytecode::descriptor::decodeSignatureTo(
                 klass->raw->mapping[method->descIndex]->to<classfile::OMClassConstantUtf8>()->data, &m->args);
-            if (target.type == util::Err)
-            {
-                throw err::OMValidationError{err::ClassLoader,
-                                             fmt::format("error loading {}.{}{}", klass->name, m->name, m->desc),
-                                             target.unwrap_err()};
-            }
 
             m->argCheck = new std::unordered_map<jint, OMKlass *>();
-            (*m->argCheck)[-1] = loadClassWithDesc(target.unwrap().second);
+            loadClass(target.second);
+            (*m->argCheck)[-1] = fetchClass(target.second);
 
             m->args = 0;
             if ((m->accessFlags & JVM_Acc_Static) == 0)
@@ -194,12 +196,17 @@ loadMethods:
                 m->args++;
             }
 
-            for (auto g : target.unwrap().first)
+            for (auto g : target.first)
             {
-                (*m->argCheck)[-1] = loadClassWithDesc(g);
+                loadClass(g);
+                auto dd = fetchClass(g);
+                if (dd)
+                {
+                    (*m->argCheck)[-1] = dd;
+                }
 
                 m->args++;
-                if (g == "double" || g == "long")
+                if (g.type == bytecode::descriptor::Double || g.type == bytecode::descriptor::Long)
                 {
                     m->args++;
                 }
@@ -246,20 +253,6 @@ loadMethods:
     klassConstantPoolLoad(klass);
     klassFieldInit(klass);
 }
-OMKlass *OMKlassLoader::loadClassWithDesc(std::string name)
-{
-    auto tt = bytecode::descriptor::revertRefType(name);
-    if (tt[0] == 'L' || tt[0] == '[')
-    {
-        if (tt[0] == 'L' && tt[tt.length() - 1] == ';')
-        {
-            tt = tt.substr(1, tt.length() - 2);
-        }
-
-        loadClass(tt);
-    }
-    return fetchClass(tt);
-}
 
 void OMKlassLoader::klassVtableInit(OMKlass *klass)
 {
@@ -286,35 +279,34 @@ void OMKlassLoader::klassFieldInit(OMKlass *klass)
     for (auto &f : klass->fields)
     {
         int i = 0;
-        auto result = bytecode::descriptor::decodeType(f.desc, &i);
-        if (result.type == util::Err)
-        {
-            throw result.unwrap_err();
-        }
+        auto result = bytecode::descriptor::decodeTypeTo(f.desc, &i);
 
         auto &loff = (f.accessFlags & JVM_Acc_Static) ? klass->staticLength : klass->length;
 
         f.offset = loff;
 
-        switch (hash_compile_time(result.unwrap().c_str()))
+        switch (result.type)
         {
-        case "byte"_hash:
-        case "boolean"_hash:
+        case bytecode::descriptor::Byte:
+        case bytecode::descriptor::Boolean:
             loff += 1 - (loff % 1);
             break;
-        case "short"_hash:
-        case "char"_hash:
+        case bytecode::descriptor::Char:
+        case bytecode::descriptor::Short:
             loff += 2 - (loff % 2);
             break;
-        case "int"_hash:
-        case "float"_hash:
+        case bytecode::descriptor::Int:
+        case bytecode::descriptor::Float:
             loff += 4 - (loff % 4);
             break;
-        case "long"_hash:
-        case "double"_hash:
+        case bytecode::descriptor::Long:
+        case bytecode::descriptor::Double:
             loff += 8 - (loff % 8);
             break;
         default:
+        case bytecode::descriptor::Array:
+        case bytecode::descriptor::Void:
+        case bytecode::descriptor::Reference:
             loff += heap->ptrSize() - (loff % heap->ptrSize());
             break;
         }
@@ -389,11 +381,11 @@ OMMethod *OMKlassLoader::lazyMethodInit(OMKlass *klass, uint16_t id)
         klass->raw->mapping[klass->raw->mapping[temp->classIndex]->to<classfile::OMClassConstantClass>()->nameIndex]
             ->to<classfile::OMClassConstantUtf8>()
             ->data;
-    loadClass(clsname);
+    loadClass({bytecode::descriptor::Reference, clsname});
     auto temp2 = klass->raw->mapping[temp->nameAndTypeIndex]->to<classfile::OMClassConstantNameAndType>();
     auto &name = klass->raw->mapping[temp2->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
     auto &desc = klass->raw->mapping[temp2->descIndex]->to<classfile::OMClassConstantUtf8>()->data;
-    auto met = fetchClass(clsname)->methods;
+    auto met = fetchClass({bytecode::descriptor::Reference, clsname})->methods;
     while (met != nullptr)
     {
         if (strcmp(met->name, name.c_str()) == 0 && strcmp(met->desc, desc.c_str()) == 0)
@@ -416,12 +408,12 @@ OMField *OMKlassLoader::lazyFieldInit(OMKlass *klass, uint16_t id)
         klass->raw->mapping[klass->raw->mapping[temp->classIndex]->to<classfile::OMClassConstantClass>()->nameIndex]
             ->to<classfile::OMClassConstantUtf8>()
             ->data;
-    loadClass(clsname);
+    loadClass({bytecode::descriptor::Reference, clsname});
     auto temp2 = klass->raw->mapping[temp->nameAndTypeIndex]->to<classfile::OMClassConstantNameAndType>();
     auto &name = klass->raw->mapping[temp2->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
     auto &desc = klass->raw->mapping[temp2->descIndex]->to<classfile::OMClassConstantUtf8>()->data;
 
-    auto cls = fetchClass(clsname);
+    auto cls = fetchClass({bytecode::descriptor::Reference, clsname});
     while (cls)
     {
         for (auto &fi : cls->fields)
@@ -446,8 +438,8 @@ OMKlass *OMKlassLoader::lazyClassInit(OMKlass *klass, uint16_t id)
         auto &cls = klass->raw->mapping[klass->raw->mapping[id]->to<classfile::OMClassConstantClass>()->nameIndex]
                         ->to<classfile::OMClassConstantUtf8>()
                         ->data;
-        loadClass(cls);
-        *target = fetchClass(cls);
+        loadClass({bytecode::descriptor::Reference, cls});
+        *target = fetchClass({bytecode::descriptor::Reference, cls});
         return *target;
     }
 
@@ -455,74 +447,67 @@ OMKlass *OMKlassLoader::lazyClassInit(OMKlass *klass, uint16_t id)
 }
 
 // gino: for array classes, we use this method to construct OMKlass objects
-void OMKlassLoader::loadSpecialClass(std::string name)
+void OMKlassLoader::loadSpecialClass(OMTypeDesc name)
 {
-    int i = 0;
-    auto r = bytecode::descriptor::decodeType(name, &i);
-    if (r.type == util::Err)
-    {
-        throw err::OMValidationError{err::ClassLoader, "unknown desc format", r.unwrap_err()};
-    }
-
     auto klass = (OMKlass *)metaspace->allocate(sizeof(OMKlass));
     memset((void *)klass, 0, sizeof(OMKlass));
     klass->kind = Array;
     // gino: msvc bug? string doesn't copy with the operator equals call
-    klass->name = name;
-    name.copy((char *)klass->name.c_str(), name.length());
-    klass->superClass = fetchClass("java/lang/Object");
+    auto tgt = bytecode::descriptor::restore(name);
+    klass->name = tgt;
+    tgt.copy((char *)klass->name.c_str(), tgt.length());
+    klass->superClass = fetchClass({bytecode::descriptor::Reference, "java/lang/Object"});
     klass->methods = nullptr;
     klass->accessFlags = JVM_Acc_Public;
-    switch (hash_compile_time(r.unwrap().c_str()))
+
+    if (name.depth == 1)
     {
-    case "[\u0001byte"_hash:
-        klass->length = 1;
-        break;
-    case "[\u0001boolean"_hash:
-        klass->length = 1;
-        break;
-    case "[\u0001short"_hash:
-        klass->length = 2;
-        break;
-    case "[\u0001char"_hash:
-        klass->length = 2;
-        break;
-    case "[\u0001int"_hash:
-        klass->length = 4;
-        break;
-    case "[\u0001float"_hash:
-        klass->length = 4;
-        break;
-    case "[\u0001double"_hash:
-        klass->length = 8;
-        break;
-    case "[\u0001long"_hash:
-        klass->length = 8;
-        break;
-    default: {
-        klass->length = heap->ptrSize();
-        if (r.unwrap()[1] != 1)
+        switch (name.subtype)
         {
-            std::string cpy(r.unwrap().c_str());
-            cpy[1]--;
-            loadSpecialClass(cpy);
+        case bytecode::descriptor::Boolean:
+        case bytecode::descriptor::Byte:
+            klass->length = 1;
+            break;
+        case bytecode::descriptor::Char:
+        case bytecode::descriptor::Short:
+            klass->length = 2;
+            break;
+        case bytecode::descriptor::Int:
+        case bytecode::descriptor::Float:
+            klass->length = 4;
+            break;
+        case bytecode::descriptor::Long:
+        case bytecode::descriptor::Double:
+            klass->length = 8;
+            break;
+        case bytecode::descriptor::Array:
+        case bytecode::descriptor::Void:
+        case bytecode::descriptor::Reference:
+            klass->length = heap->ptrSize();
             break;
         }
-        loadClass(std::string(r.unwrap().c_str()).substr(3));
-        break;
     }
+    else
+    {
+        klass->length = heap->ptrSize();
     }
+
+    if (name.subtype == bytecode::descriptor::Reference)
+    {
+        loadClass({bytecode::descriptor::Reference, name.name});
+    }
+
     klass->staticBlock = nullptr;
     klass->staticLength = 0;
     klass->heap = heap;
     classes.push_back(klass);
 }
 
-OMKlass *OMKlassLoader::fetchClass(std::string name)
+OMKlass *OMKlassLoader::fetchClass(OMTypeDesc name)
 {
     for (auto k : classes)
     {
-        if (k->name == name)
+        if (k->name == bytecode::descriptor::restore(name))
         {
             return k;
         }

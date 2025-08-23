@@ -1,8 +1,6 @@
 #include "openminecraft/vm/pixeltower/v3/om_pixeltower_validator.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
-#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
@@ -14,7 +12,6 @@
 #include <vector>
 
 using namespace openminecraft::vm::classfile;
-using namespace openminecraft::binary::hash;
 
 constexpr int intItem = 0x0001;
 constexpr int floatItem = 0x0002;
@@ -244,21 +241,21 @@ void OMValidator::safeLocalGet(std::vector<int> &local, classfile::OMClassAttrCo
                                      pos};
     }
 }
-int OMValidator::toFlag(std::string name)
+int OMValidator::toFlag(bytecode::descriptor::OMTypeDesc name)
 {
-    switch (hash_compile_time(name.c_str()))
+    switch (name.type)
     {
-    case "int"_hash:
-    case "char"_hash:
-    case "short"_hash:
-    case "byte"_hash:
-    case "boolean"_hash:
+    case bytecode::descriptor::Int:
+    case bytecode::descriptor::Char:
+    case bytecode::descriptor::Short:
+    case bytecode::descriptor::Byte:
+    case bytecode::descriptor::Boolean:
         return intItem;
-    case "float"_hash:
+    case bytecode::descriptor::Float:
         return floatItem;
-    case "long"_hash:
+    case bytecode::descriptor::Long:
         return longItem;
-    case "double"_hash:
+    case bytecode::descriptor::Double:
         return doubleItem;
     default:
         return refItem;
@@ -268,32 +265,22 @@ void OMValidator::safeReturnFetch(std::stack<int> &stack, classfile::OMClassAttr
                                   std::string desc)
 {
     int i = 0;
-    auto fetc = bytecode::descriptor::decodeSignature(desc, &i);
-    if (fetc.type == util::Err)
-    {
-        throw err::OMValidationError{err::Instructions,
-                                     fmt::format("unknown descriptor {} ({})", desc, fetc.unwrap_err()), pos};
-    }
+    auto fetc = bytecode::descriptor::decodeSignatureTo(desc, &i);
 
-    if (fetc.unwrap().second == "void")
+    if (fetc.second.type == bytecode::descriptor::Void)
     {
         return;
     }
 
-    stack.push(toFlag(fetc.unwrap().second));
+    stack.push(toFlag(fetc.second));
 }
 void OMValidator::safeArgFetch(std::stack<int> &stack, classfile::OMClassAttrCode *code, std::string pos,
                                std::string desc)
 {
     int i = 0;
-    auto fetc = bytecode::descriptor::decodeSignature(desc, &i);
-    if (fetc.type == util::Err)
-    {
-        throw err::OMValidationError{err::Instructions,
-                                     fmt::format("unknown descriptor {} ({})", desc, fetc.unwrap_err()), pos};
-    }
+    auto fetc = bytecode::descriptor::decodeSignatureTo(desc, &i);
 
-    auto base = fetc.unwrap().first;
+    auto base = fetc.first;
     for (auto it = base.rbegin(); it != base.rend(); ++it)
     {
         safeStackPop(stack, code, pos, toFlag(*it));
@@ -352,23 +339,23 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
         stack = context->stack;
     }
 
-    auto descInsert = [&](std::string desc, int begin, std::string loc) {
-        switch (hash_compile_time(desc.c_str()))
+    auto descInsert = [&](bytecode::descriptor::OMTypeDesc desc, int begin, std::string loc) {
+        switch (desc.type)
         {
-        case "int"_hash:
-        case "char"_hash:
-        case "byte"_hash:
-        case "short"_hash:
-        case "boolean"_hash:
+        case bytecode::descriptor::Int:
+        case bytecode::descriptor::Char:
+        case bytecode::descriptor::Byte:
+        case bytecode::descriptor::Short:
+        case bytecode::descriptor::Boolean:
             safeLocalSet(locals, code, loc, begin, intItem);
             break;
-        case "float"_hash:
+        case bytecode::descriptor::Float:
             safeLocalSet(locals, code, loc, begin, floatItem);
             break;
-        case "long"_hash:
+        case bytecode::descriptor::Long:
             safeLocalSet(locals, code, loc, begin, longItem);
             break;
-        case "double"_hash:
+        case bytecode::descriptor::Double:
             safeLocalSet(locals, code, loc, begin, doubleItem);
             break;
         default:
@@ -376,23 +363,23 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             break;
         }
     };
-    auto descPush = [&](std::string desc, std::string loc) {
-        switch (hash_compile_time(desc.c_str()))
+    auto descPush = [&](bytecode::descriptor::OMTypeDesc desc, std::string loc) {
+        switch (desc.type)
         {
-        case "int"_hash:
-        case "char"_hash:
-        case "byte"_hash:
-        case "short"_hash:
-        case "boolean"_hash:
+        case bytecode::descriptor::Int:
+        case bytecode::descriptor::Char:
+        case bytecode::descriptor::Byte:
+        case bytecode::descriptor::Short:
+        case bytecode::descriptor::Boolean:
             safeStackPush(stack, code, loc, intItem);
             break;
-        case "float"_hash:
+        case bytecode::descriptor::Float:
             safeStackPush(stack, code, loc, floatItem);
             break;
-        case "long"_hash:
+        case bytecode::descriptor::Long:
             safeStackPush(stack, code, loc, longItem);
             break;
-        case "double"_hash:
+        case bytecode::descriptor::Double:
             safeStackPush(stack, code, loc, doubleItem);
             break;
         default:
@@ -402,13 +389,7 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
     };
 
     int begin = 0;
-    auto pars = bytecode::descriptor::decodeSignature(desc, &begin);
-    if (pars.type == util::Err)
-    {
-        throw err::OMValidationError{err::Instructions,
-                                     fmt::format("unrecognized function descriptor: {} {}", desc, pars.unwrap_err()),
-                                     fmt::format("{}.{}{}", name, mname, desc)};
-    }
+    auto pars = bytecode::descriptor::decodeSignatureTo(desc, &begin);
     begin = 0;
 
     if ((method->accessFlags & JVM_Acc_Static) == 0)
@@ -416,11 +397,11 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
         locals[0] = refItem;
         begin++;
     }
-    for (auto refs : pars.unwrap().first)
+    for (auto refs : pars.first)
     {
         descInsert(refs, begin, fmt::format("{}.{}{}", name, mname, desc));
         begin++;
-        if (refs == "long" || refs == "double")
+        if (refs.type == bytecode::descriptor::Double || refs.type == bytecode::descriptor::Long)
         {
             begin++;
         }
@@ -1038,44 +1019,44 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
         }
 
         case op_ireturn: {
-            if (pars.unwrap().second != "int" && pars.unwrap().second != "byte" && pars.unwrap().second != "char" &&
-                pars.unwrap().second != "short" && pars.unwrap().second != "boolean")
+            if (pars.second.type != bytecode::descriptor::Int && pars.second.type != bytecode::descriptor::Boolean &&
+                pars.second.type != bytecode::descriptor::Char && pars.second.type != bytecode::descriptor::Byte &&
+                pars.second.type != bytecode::descriptor::Short)
             {
                 throw err::OMValidationError{err::Instructions, "invalid return value type!", fn()};
             }
             return;
         }
         case op_lreturn: {
-            if (pars.unwrap().second != "long")
+            if (pars.second.type != bytecode::descriptor::Long)
             {
                 throw err::OMValidationError{err::Instructions, "invalid return value type!", fn()};
             }
             return;
         }
         case op_freturn: {
-            if (pars.unwrap().second != "float")
+            if (pars.second.type != bytecode::descriptor::Float)
             {
                 throw err::OMValidationError{err::Instructions, "invalid return value type!", fn()};
             }
             return;
         }
         case op_dreturn: {
-            if (pars.unwrap().second != "double")
+            if (pars.second.type != bytecode::descriptor::Double)
             {
                 throw err::OMValidationError{err::Instructions, "invalid return value type!", fn()};
             }
             return;
         }
         case op_areturn: {
-            auto ii = pars.unwrap().second[0];
-            if (ii != 'L' && ii != '[')
+            if (pars.second.type != bytecode::descriptor::Reference && pars.second.type != bytecode::descriptor::Array)
             {
                 throw err::OMValidationError{err::Instructions, "invalid return value type!", fn()};
             }
             return;
         }
         case op_return: {
-            if (pars.unwrap().second != "void")
+            if (pars.second.type != bytecode::descriptor::Void)
             {
                 throw err::OMValidationError{err::Instructions, "invalid return value type!", fn()};
             }
@@ -1094,14 +1075,9 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             fetchRef(OMClassConstantType::FieldRef);
 
             int i = 0;
-            auto r = bytecode::descriptor::decodeType(desc, &i);
-            if (r.type == Err)
-            {
-                throw err::OMValidationError{err::Instructions,
-                                             fmt::format("unknown type {} ({})", desc, r.unwrap_err()), fn()};
-            }
+            auto r = bytecode::descriptor::decodeTypeTo(desc, &i);
 
-            safeStackPush(stack, code, fn(), toFlag(r.unwrap()));
+            safeStackPush(stack, code, fn(), toFlag(r));
 
             bump(3);
             break;
@@ -1111,14 +1087,9 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             fetchRef(OMClassConstantType::FieldRef);
 
             int i = 0;
-            auto r = bytecode::descriptor::decodeType(desc, &i);
-            if (r.type == Err)
-            {
-                throw err::OMValidationError{err::Instructions,
-                                             fmt::format("unknown type {} ({})", desc, r.unwrap_err()), fn()};
-            }
+            auto r = bytecode::descriptor::decodeTypeTo(desc, &i);
 
-            safeStackPop(stack, code, fn(), toFlag(r.unwrap()));
+            safeStackPop(stack, code, fn(), toFlag(r));
 
             bump(3);
             break;
@@ -1128,15 +1099,10 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             fetchRef(OMClassConstantType::FieldRef);
 
             int i = 0;
-            auto r = bytecode::descriptor::decodeType(desc, &i);
-            if (r.type == Err)
-            {
-                throw err::OMValidationError{err::Instructions,
-                                             fmt::format("unknown type {} ({})", desc, r.unwrap_err()), fn()};
-            }
+            auto r = bytecode::descriptor::decodeTypeTo(desc, &i);
 
             safeStackPop(stack, code, fn(), refItem);
-            safeStackPush(stack, code, fn(), toFlag(r.unwrap()));
+            safeStackPush(stack, code, fn(), toFlag(r));
 
             bump(3);
             break;
@@ -1146,14 +1112,9 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
             fetchRef(OMClassConstantType::FieldRef);
 
             int i = 0;
-            auto r = bytecode::descriptor::decodeType(desc, &i);
-            if (r.type == Err)
-            {
-                throw err::OMValidationError{err::Instructions,
-                                             fmt::format("unknown type {} ({})", desc, r.unwrap_err()), fn()};
-            }
+            auto r = bytecode::descriptor::decodeTypeTo(desc, &i);
 
-            safeStackPop(stack, code, fn(), toFlag(r.unwrap()));
+            safeStackPop(stack, code, fn(), toFlag(r));
             safeStackPop(stack, code, fn(), refItem);
 
             bump(3);

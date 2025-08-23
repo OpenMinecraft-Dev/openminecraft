@@ -1,8 +1,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
-#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/util/om_util_result.hpp"
+#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
@@ -200,13 +199,7 @@ bool OMInterpreter::checkCompat(OMKlass *src, OMKlass *target)
 void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args)
 {
     int p = 0;
-    auto result = bytecode::descriptor::decodeSignature(codetarget->desc, &p);
-    if (result.type == util::Err)
-    {
-        throw err::OMValidationError{
-            err::Instructions, fmt::format("unknown function descriptor {}: {}", codetarget->desc, result.unwrap_err()),
-            currentPosition()};
-    }
+    auto result = bytecode::descriptor::decodeSignatureTo(codetarget->desc, &p);
 
     std::vector<std::any> data;
 
@@ -216,41 +209,35 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
         data.push_back(*itt); // this pointer
         ++itt;
     }
-    for (auto t : result.unwrap().first)
+    for (auto t : result.first)
     {
-        switch (hash_compile_time(t.c_str()))
+        switch (t.type)
         {
-        case "boolean"_hash: {
-            data.push_back((jboolean)(size_t)*itt);
-            ++itt;
-            break;
-        }
-        case "byte"_hash: {
+        case bytecode::descriptor::Byte:
             data.push_back((jbyte)(size_t)*itt);
             ++itt;
             break;
-        }
-        case "char"_hash: {
+        case bytecode::descriptor::Boolean:
+            data.push_back((jboolean)(size_t)*itt);
+            ++itt;
+            break;
+        case bytecode::descriptor::Char:
             data.push_back((jchar)(size_t)*itt);
             ++itt;
             break;
-        }
-        case "short"_hash: {
+        case bytecode::descriptor::Short:
             data.push_back((jshort)(size_t)*itt);
             ++itt;
             break;
-        }
-        case "int"_hash: {
+        case bytecode::descriptor::Int:
             data.push_back((jint)(size_t)*itt);
             ++itt;
             break;
-        }
-        case "float"_hash: {
+        case bytecode::descriptor::Float:
             data.push_back(*reinterpret_cast<jfloat *>(&*itt));
             ++itt;
             break;
-        }
-        case "long"_hash: {
+        case bytecode::descriptor::Long:
             if (sizeof(void *) == 8)
             {
                 data.push_back(*reinterpret_cast<jlong *>(&*itt));
@@ -268,8 +255,7 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
             }
             ++itt;
             break;
-        }
-        case "double"_hash: {
+        case bytecode::descriptor::Double:
             if (sizeof(void *) == 8)
             {
                 data.push_back(*reinterpret_cast<jdouble *>(&*itt));
@@ -287,12 +273,12 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
             }
             ++itt;
             break;
-        }
-        default: {
+        case bytecode::descriptor::Array:
+        case bytecode::descriptor::Void:
+        case bytecode::descriptor::Reference:
             data.push_back(*itt);
             ++itt;
             break;
-        }
         }
     }
 
@@ -1382,25 +1368,38 @@ operand:
         goto operand;
     }
     case op_newarray: {
-        OMKlass *arrkl;
-#define mapAndLoad(id, name)                                                                                           \
-    case id:                                                                                                           \
-        tower->loader->loadClass(name);                                                                                \
-        arrkl = tower->loader->fetchClass(name);                                                                       \
-        break;
+        bytecode::descriptor::OMTypeDesc desc = {bytecode::descriptor::Array, "", 1, bytecode::descriptor::Void};
 
         switch (currentThread.pc[1])
         {
-            mapAndLoad(4, "[Z");
-            mapAndLoad(5, "[C");
-            mapAndLoad(6, "[F");
-            mapAndLoad(7, "[D");
-            mapAndLoad(8, "[B");
-            mapAndLoad(9, "[S");
-            mapAndLoad(10, "[I");
-            mapAndLoad(11, "[J");
+        case 4:
+            desc.subtype = bytecode::descriptor::Boolean;
+            break;
+        case 5:
+            desc.subtype = bytecode::descriptor::Char;
+            break;
+        case 6:
+            desc.subtype = bytecode::descriptor::Float;
+            break;
+        case 7:
+            desc.subtype = bytecode::descriptor::Double;
+            break;
+        case 8:
+            desc.subtype = bytecode::descriptor::Byte;
+            break;
+        case 9:
+            desc.subtype = bytecode::descriptor::Short;
+            break;
+        case 10:
+            desc.subtype = bytecode::descriptor::Int;
+            break;
+        case 11:
+            desc.subtype = bytecode::descriptor::Long;
+            break;
         }
 
+        tower->loader->loadClass(desc);
+        OMKlass *arrkl = tower->loader->fetchClass(desc);
         auto r = arrkl->allocateArray(stackTopAccess<jint>(true));
         stackPushAccess<void *>(r);
 
@@ -1410,7 +1409,8 @@ operand:
     case op_anewarray: {
         auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
         auto n = *static_cast<OMKlass **>(static_cast<void *>(frame->method->klass->constantPool + id));
-        auto arrn = fmt::format("[L{};", n->name);
+        bytecode::descriptor::OMTypeDesc arrn = {bytecode::descriptor::Array, n->name, 1,
+                                                 bytecode::descriptor::Reference};
         tower->loader->loadClass(arrn);
         auto arrc = tower->loader->fetchClass(arrn);
         auto length = stackTopAccess<jint>(true);
