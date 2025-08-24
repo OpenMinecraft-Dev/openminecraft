@@ -50,10 +50,15 @@ OMKlassLoader::~OMKlassLoader()
                 metaspace->deallocate(m->argCheck, sizeof(std::unordered_map<jint, OMKlass *>));
             }
             metaspace->deallocate(m, sizeof(OMMethod) + m->codeSize);
+            if (m->exceptionHandlers)
+            {
+                m->exceptionHandlers->~vector<OMMethodExceptionCaught>();
+                metaspace->deallocate(m->exceptionHandlers, sizeof(std::vector<OMMethodExceptionCaught>));
+            }
             m = nxt;
         }
 
-        metaspace->deallocate((void *)k, sizeof(OMKlass));
+        metaspace->deallocate(k, sizeof(OMKlass));
     }
 }
 
@@ -219,7 +224,7 @@ void OMKlassLoader::klassMethodInit(OMKlass *klass)
             }
         }
 
-        uint64_t length = 0;
+        int length = 0;
         if (code != nullptr)
         {
             length = code->codeLength;
@@ -229,7 +234,7 @@ void OMKlassLoader::klassMethodInit(OMKlass *klass)
             length = sizeof(void *);
         }
 
-        auto m = (OMMethod *)metaspace->allocate(sizeof(OMMethod) + length);
+        auto m = static_cast<OMMethod *>(metaspace->allocate(sizeof(OMMethod) + length));
         m->klass = klass;
         m->codeSize = length;
         m->accessFlags = method->accessFlags;
@@ -272,6 +277,17 @@ void OMKlassLoader::klassMethodInit(OMKlass *klass)
             m->maxLocals = code->maxLocals;
             m->maxStack = code->maxStack;
             memcpy(m->code, code->code->data(), code->codeLength);
+
+            auto hnd = metaspace->allocate(sizeof(std::vector<OMMethodExceptionCaught>));
+            m->exceptionHandlers = new (hnd) std::vector<OMMethodExceptionCaught>();
+            for (auto handler : code->excTable)
+            {
+                auto d = klass->raw->mapping[klass->raw->mapping[handler.catchType]->to<classfile::OMClassConstantClass>()->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
+                OMTypeDesc desc = {bytecode::descriptor::Reference, d};
+
+                loadClass(desc);
+                m->exceptionHandlers->push_back({handler.startPc, handler.endPc, handler.handlerPc, fetchClass(desc)});
+            }
         }
         else if ((m->accessFlags & JVM_Acc_Abstract) == 0)
         {
@@ -279,16 +295,16 @@ void OMKlassLoader::klassMethodInit(OMKlass *klass)
             auto fnn = fmt::format("{}.{}{}", klass->name, m->name, m->desc);
             if (nativeMethods.count(fnn))
             {
-                *(void **)m->code = (void *)nativeMethods[fnn];
+                *reinterpret_cast<void **>(m->code) = (void *)nativeMethods[fnn];
             }
             else
             {
-                *(void **)m->code = nullFunction;
+                *reinterpret_cast<void **>(m->code) = nullFunction;
             }
         }
 
         if ((m->accessFlags & JVM_Acc_Static) == 0 && (m->accessFlags & JVM_Acc_Private) == 0 &&
-            (m->accessFlags & JVM_Acc_Final) == 0 && strcmp(m->name, "<init>"))
+            (m->accessFlags & JVM_Acc_Final) == 0 && strcmp(m->name, "<init>") != 0)
         {
             (*klass->vtable)[fmt::format("{}{}", m->name, m->desc)] = m;
         }

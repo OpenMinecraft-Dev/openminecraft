@@ -301,10 +301,10 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         for (uint16_t i = 0; i < etl; i++)
         {
             uint16_t sp, ep, hp, ct;
-            this->source->readbe32(sp);
-            this->source->readbe32(ep);
-            this->source->readbe32(hp);
-            this->source->readbe32(ct);
+            this->source->readbe16(sp);
+            this->source->readbe16(ep);
+            this->source->readbe16(hp);
+            this->source->readbe16(ct);
             et.push_back({sp, ep, hp, ct});
         }
         this->source->readbe16(ac);

@@ -183,7 +183,7 @@ int boot(std::vector<std::string> args)
                     pixeltower::v1::tracing::installHandler();
                     tower->initCurrentThread(1ul * 1024 * 1024);
                     tower->init(commandBuffer[2]);
-                    tower->load("../Test.class");
+                    tower->load("/home/coder2/Test.class");
 
                     bytecode::descriptor::OMTypeDesc tgt = {bytecode::descriptor::Reference, "openminecraft/Test"};
                     tower->loader->loadClass(tgt);
@@ -216,7 +216,7 @@ int boot(std::vector<std::string> args)
                             {
                                 tower->boot(met);
                             }
-                            catch (err::OMValidationError e)
+                            catch (err::OMValidationError &e)
                             {
                                 logger->info("{}", e.what());
                             }
@@ -264,6 +264,15 @@ int boot(std::vector<std::string> args)
             }
             case "crash"_hash: {
                 logger->info("{}", *((int *)33550336));
+            }
+            case "pwd"_hash: {
+                char pwd[1024];
+                if (getcwd(pwd, 1024) != nullptr)
+                {
+                    logger->info("{}", pwd);
+                }
+                commandBuffer.clear();
+                break;
             }
             default:
                 commandBuffer.clear();

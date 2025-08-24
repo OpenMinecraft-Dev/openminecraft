@@ -107,6 +107,11 @@ template <typename T> inline void stackPushAccessW(T data)
     }
 }
 
+inline void *stackBottom(OMFrame *f = currentThread.currentFrame)
+{
+    return ((uint8_t *)f) - sizeof(void *) * f->method->maxLocals - sizeof(void *);
+}
+
 template <typename T> inline void localAccessMod(int idx, T value, OMFrame *f = currentThread.currentFrame)
 {
     static_assert(std::is_same_v<T, jint> || std::is_pointer_v<T> || std::is_same_v<T, jfloat>, "unsatisfied type!");

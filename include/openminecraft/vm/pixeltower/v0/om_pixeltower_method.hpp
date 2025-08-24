@@ -6,6 +6,14 @@
 #include <unordered_map>
 namespace openminecraft::vm::pixeltower::v0
 {
+struct OMMethodExceptionCaught
+{
+    jint begin;
+    jint end;
+    jint target;
+    OMKlass *klass;
+};
+
 struct OMMethod
 {
     OMKlass *klass;
@@ -19,6 +27,7 @@ struct OMMethod
     jint maxStack;
     jint codeSize;
     jint args;
+    std::vector<OMMethodExceptionCaught> *exceptionHandlers;
     uint8_t code[0];
     // code space
 };

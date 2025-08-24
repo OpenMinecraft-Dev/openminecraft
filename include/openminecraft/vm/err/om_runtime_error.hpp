@@ -7,12 +7,11 @@ namespace openminecraft::vm::err
 {
 class OMRuntimeError : public std::exception
 {
-  private:
+  public:
     void *errInstance;
 
-  public:
-    OMRuntimeError(void *errInstance);
-    virtual const char *what() const throw();
+    explicit OMRuntimeError(void *errInstance);
+    [[nodiscard]] const char *what() const noexcept override;
 };
 } // namespace openminecraft::vm::err
 

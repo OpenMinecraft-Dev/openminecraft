@@ -34,6 +34,11 @@ std::any vmstd_internal_SystemPrintStream_println(pixeltower::v0::OMPixelTower *
     else if (t.name() == std::type_index(typeid(void *)).name())
     {
         auto t = static_cast<pixeltower::v0::OMOOPDesc *>(std::any_cast<void *>(args[1]));
+        if (t == nullptr)
+        {
+            std::cout << "[stdout] null" << std::endl;
+            return nullptr;
+        }
         if (t->klass->name == "java/lang/String")
         {
             auto h = t->klass->heap;
@@ -51,7 +56,7 @@ std::any vmstd_internal_SystemPrintStream_println(pixeltower::v0::OMPixelTower *
         }
         else
         {
-            // std::cout << "[stdout] " << t->klass->name << "@" << t << std::endl;
+            std::cout << "[stdout] " << t->klass->name << "@" << t << std::endl;
         }
     }
     return nullptr;
