@@ -35,19 +35,16 @@ class OMInterpreter
     void invokeNative(OMMethod *m, std::vector<void *> &args);
     void callDynamic(OMMethod *met, uint8_t *retAddr);
     void popLastFrame();
-    inline void loop()
+    void loop()
     {
-        switch (jint result = execute())
-        {
-        case EXEC_RETURN:
-            break;
-        default:
+        jint result = execute();
+        if (result != EXEC_RETURN) {
             logger.error("function execution failed with code {}", result);
             throw result;
         }
     }
 
-    inline void throwTypeCheckError(std::string r)
+    static void throwTypeCheckError(std::string r)
     {
         throw err::OMValidationError{err::Instructions, r, currentPosition()};
     }

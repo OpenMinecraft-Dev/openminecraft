@@ -265,15 +265,6 @@ int boot(std::vector<std::string> args)
             case "crash"_hash: {
                 logger->info("{}", *((int *)33550336));
             }
-            case "pwd"_hash: {
-                char pwd[1024];
-                if (getcwd(pwd, 1024) != nullptr)
-                {
-                    logger->info("{}", pwd);
-                }
-                commandBuffer.clear();
-                break;
-            }
             default:
                 commandBuffer.clear();
                 logger->warn("unknown command!");
