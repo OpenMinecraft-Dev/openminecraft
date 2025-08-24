@@ -1,12 +1,12 @@
 #ifndef OM_PIXELTOWER_INTERPRETER_HPP
 #define OM_PIXELTOWER_INTERPRETER_HPP
 
+#include "om_pixeltower.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/vm/err/om_runtime_error.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
-#include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
-#include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_debugger.hpp"
 #include <vector>
@@ -23,6 +23,7 @@ class OMInterpreter
 
     jint execute();
     void call(OMMethod *met, uint8_t *retAddr);
+    void checkNotNull(void * p) const;
     OMPixelTower *tower;
     v1::OMDebugger debugger;
     uint64_t operands = 0;

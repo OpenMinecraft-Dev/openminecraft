@@ -67,7 +67,7 @@ void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
     }
 
     auto frame = currentThread.currentFrame;
-    auto nextframe = (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame) + sizeof(void *) +
+    auto nextframe = (OMFrame *)(static_cast<uint8_t *>(currentThread.stackPointer) - sizeof(OMFrame) + sizeof(void *) +
                                  met->args * sizeof(void *));
     nextframe->method = met;
 
@@ -83,9 +83,14 @@ void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
         stackPop();
     }
 
+    if ((met->accessFlags & JVM_Acc_Static) == 0)
+    {
+        checkNotNull(args[0]);
+    }
+
     nextframe->returnAddr = retAddr;
     nextframe->prev = frame;
-    currentThread.stackPointer = (jbyte *)nextframe - met->maxLocals * sizeof(void *);
+    currentThread.stackPointer = reinterpret_cast<jbyte *>(nextframe) - met->maxLocals * sizeof(void *);
     currentThread.pc = met->code;
     currentThread.currentFrame = nextframe;
     stackPush();
@@ -106,11 +111,22 @@ void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
     loop();
 }
 
+void OMInterpreter::checkNotNull(void *p) const
+{
+    if (!p)
+    {
+        bytecode::descriptor::OMTypeDesc dec = {bytecode::descriptor::Reference, "java/lang/NullPointerException"};
+        tower->loader->loadClass(dec);
+        auto npecls = tower->loader->fetchClass(dec);
+        throw err::OMRuntimeError{npecls->allocateInstance()};
+    }
+}
+
 void OMInterpreter::callDynamic(OMMethod *met, uint8_t *retAddr)
 {
     auto frame = currentThread.currentFrame;
-    auto nextframe = (OMFrame *)((uint8_t *)currentThread.stackPointer - sizeof(OMFrame) + sizeof(void *) +
-                                 met->args * sizeof(void *));
+    auto nextframe = reinterpret_cast<OMFrame *>((uint8_t *)currentThread.stackPointer - sizeof(OMFrame) +
+                                                 sizeof(void *) + met->args * sizeof(void *));
 
     std::vector<void *> args(met->args);
     for (int i = met->args - 1; i >= 0; i--)
@@ -118,6 +134,7 @@ void OMInterpreter::callDynamic(OMMethod *met, uint8_t *retAddr)
         args[i] = stackTopAccess<void *>(true);
     }
 
+    checkNotNull(args[0]);
     auto cls = static_cast<OMOOPDesc *>(args[0])->klass;
     OMMethod *codetarget = (*cls->vtable)[fmt::format("{}{}", met->name, met->desc)];
     if (codetarget == nullptr)
@@ -127,10 +144,9 @@ void OMInterpreter::callDynamic(OMMethod *met, uint8_t *retAddr)
     }
     nextframe->method = codetarget;
 
-    // context switching
     nextframe->returnAddr = retAddr;
     nextframe->prev = frame;
-    currentThread.stackPointer = (jbyte *)nextframe - nextframe->method->maxLocals * sizeof(void *);
+    currentThread.stackPointer = reinterpret_cast<jbyte *>(nextframe) - nextframe->method->maxLocals * sizeof(void *);
     currentThread.currentFrame = nextframe;
     stackPush();
     currentThread.pc = nextframe->method->code;
@@ -141,7 +157,7 @@ void OMInterpreter::callDynamic(OMMethod *met, uint8_t *retAddr)
         return;
     }
 
-    // clears local variable & pass arguments
+    // gino: clears local variable & pass arguments
     for (int i = 0; i < codetarget->maxLocals; i++)
     {
         localAccessMod<void *>(i, nullptr, nextframe);
@@ -514,6 +530,8 @@ jint OMInterpreter::execute()
             auto idx = stackTopAccess<jint>(true);
             auto arr = stackTopAccess<OMOOPArrDesc *>(true);
 
+            checkNotNull(arr);
+
             if (!arr->klass->isIntArr())
             {
                 throwTypeCheckError("it's not an int array!");
@@ -526,7 +544,9 @@ jint OMInterpreter::execute()
         }
         case op_laload: {
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+
+            checkNotNull(arr);
 
             if (!arr->klass->isLongArr())
             {
@@ -540,7 +560,9 @@ jint OMInterpreter::execute()
         }
         case op_faload: {
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+
+            checkNotNull(arr);
 
             if (!arr->klass->isFloatArr())
             {
@@ -554,7 +576,9 @@ jint OMInterpreter::execute()
         }
         case op_daload: {
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+
+            checkNotNull(arr);
 
             if (!arr->klass->isDoubleArr())
             {
@@ -568,7 +592,9 @@ jint OMInterpreter::execute()
         }
         case op_aaload: {
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+
+            checkNotNull(arr);
 
             if (!arr->klass->isObjArr())
             {
@@ -589,7 +615,9 @@ jint OMInterpreter::execute()
         }
         case op_baload: {
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+
+            checkNotNull(arr);
 
             if (!arr->klass->isByteArr() && !arr->klass->isBooleanArr())
             {
@@ -603,7 +631,9 @@ jint OMInterpreter::execute()
         }
         case op_caload: {
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+
+            checkNotNull(arr);
 
             if (!arr->klass->isCharArr())
             {
@@ -617,7 +647,9 @@ jint OMInterpreter::execute()
         }
         case op_saload: {
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+
+            checkNotNull(arr);
 
             if (!arr->klass->isShortArr())
             {
@@ -697,7 +729,9 @@ jint OMInterpreter::execute()
         case op_iastore: {
             auto value = stackTopAccess<jint>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+
+            checkNotNull(arr);
 
             if (!arr->klass->isIntArr())
             {
@@ -712,7 +746,9 @@ jint OMInterpreter::execute()
         case op_lastore: {
             auto value = stackTopAccessW<jlong>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+
+            checkNotNull(arr);
 
             if (!arr->klass->isLongArr())
             {
@@ -727,7 +763,9 @@ jint OMInterpreter::execute()
         case op_fastore: {
             auto value = stackTopAccess<jfloat>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+
+            checkNotNull(arr);
 
             if (!arr->klass->isFloatArr())
             {
@@ -742,7 +780,9 @@ jint OMInterpreter::execute()
         case op_dastore: {
             auto value = stackTopAccessW<jdouble>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+
+            checkNotNull(arr);
 
             if (!arr->klass->isDoubleArr())
             {
@@ -757,7 +797,9 @@ jint OMInterpreter::execute()
         case op_bastore: {
             auto value = (jboolean)stackTopAccess<jint>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+
+            checkNotNull(arr);
 
             if (!arr->klass->isByteArr() && !arr->klass->isBooleanArr())
             {
@@ -772,7 +814,9 @@ jint OMInterpreter::execute()
         case op_aastore: {
             auto value = stackTopAccess<void *>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+
+            checkNotNull(arr);
 
             if (!arr->klass->isObjArr())
             {
@@ -794,7 +838,9 @@ jint OMInterpreter::execute()
         case op_castore: {
             auto value = stackTopAccess<jint>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+
+            checkNotNull(arr);
 
             if (!arr->klass->isCharArr())
             {
@@ -809,7 +855,9 @@ jint OMInterpreter::execute()
         case op_sastore: {
             auto value = stackTopAccess<jint>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+
+            checkNotNull(arr);
 
             if (!arr->klass->isShortArr())
             {
@@ -1292,7 +1340,7 @@ jint OMInterpreter::execute()
             return EXEC_RETURN;
         }
         case op_getstatic: {
-            auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
+            auto id = binary::be16ToNative(*reinterpret_cast<uint16_t *>(currentThread.pc + 1));
             auto n = *static_cast<OMField **>(static_cast<void *>(frame->method->klass->constantPool + id));
             if (n == nullptr)
             {
@@ -1304,7 +1352,7 @@ jint OMInterpreter::execute()
             goto operand;
         }
         case op_putstatic: {
-            auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
+            auto id = binary::be16ToNative(*reinterpret_cast<uint16_t *>(currentThread.pc + 1));
             auto n = *static_cast<OMField **>(static_cast<void *>(frame->method->klass->constantPool + id));
             if (n == nullptr)
             {
@@ -1316,6 +1364,7 @@ jint OMInterpreter::execute()
 
             goto operand;
         }
+            // op_getfield
         case op_putfield: {
             auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
             auto n = *static_cast<OMField **>(static_cast<void *>(frame->method->klass->constantPool + id));
@@ -1330,7 +1379,7 @@ jint OMInterpreter::execute()
             goto operand;
         }
         case op_invokevirtual: {
-            auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
+            auto id = binary::be16ToNative(*reinterpret_cast<uint16_t *>(currentThread.pc + 1));
             auto n = *static_cast<OMMethod **>(static_cast<void *>(frame->method->klass->constantPool + id));
             if (n == nullptr)
             {
@@ -1343,7 +1392,7 @@ jint OMInterpreter::execute()
             goto operand;
         }
         case op_invokespecial: {
-            auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
+            auto id = binary::be16ToNative(*reinterpret_cast<uint16_t *>(currentThread.pc + 1));
             auto n = *static_cast<OMMethod **>(static_cast<void *>(frame->method->klass->constantPool + id));
             if (n == nullptr)
             {
@@ -1406,6 +1455,7 @@ jint OMInterpreter::execute()
             case 9:
                 desc.subtype = bytecode::descriptor::Short;
                 break;
+            default:
             case 10:
                 desc.subtype = bytecode::descriptor::Int;
                 break;
@@ -1435,12 +1485,15 @@ jint OMInterpreter::execute()
             goto operand;
         }
         case op_arraylength: {
-            stackPushAccess<jint>(stackTopAccess<OMOOPArrDesc *>(true)->length);
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            checkNotNull(arr);
+            stackPushAccess<jint>(arr->length);
             currentThread.pc++;
             goto operand;
         }
         case op_athrow: {
             auto exci = stackTopAccess<OMOOPDesc *>(true);
+            checkNotNull(exci);
             while (currentThread.stackPointer < stackBottom())
             {
                 stackPop();

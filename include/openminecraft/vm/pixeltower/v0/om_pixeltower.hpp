@@ -18,6 +18,7 @@ class OMGarbageCollector;
 
 namespace openminecraft::vm::pixeltower::v0
 {
+class OMKlassLoader;
 class OMPixelTower
 {
   public:

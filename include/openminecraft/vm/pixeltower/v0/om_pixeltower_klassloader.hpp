@@ -4,10 +4,10 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
-#include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 #include "openminecraft/vm/pixeltower/v3/om_pixeltower_validator.hpp"
 #include <any>
 #include <memory>
@@ -15,6 +15,8 @@
 #include <vector>
 namespace openminecraft::vm::pixeltower::v0
 {
+class OMInterpreter;
+class OMPixelTower;
 // geopelia: just some random magic number for unsatisfied native functions
 #define nullFunction (void *)0x33550336
 class OMKlassLoader
@@ -23,7 +25,7 @@ class OMKlassLoader
     OMKlassLoader(OMPixelTowerHeap *heap, OMPixelTowerHeap *metaspace, OMInterpreter *interpreter);
     ~OMKlassLoader();
 
-    void stagClass(std::shared_ptr<classfile::OMClassFile> file)
+    void stagClass(const std::shared_ptr<classfile::OMClassFile>& file)
     {
         files.push_back(file);
     }

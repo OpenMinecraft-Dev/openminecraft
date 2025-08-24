@@ -13,4 +13,15 @@ public class Throwable
     {
         this.reason = reason;
     }
+
+    public Throwable(String reason, Throwable cause)
+    {
+        this.reason = reason;
+        this.cause = cause;
+    }
+
+    public Throwable(Throwable cause)
+    {
+        this.cause = cause;
+    }
 }
