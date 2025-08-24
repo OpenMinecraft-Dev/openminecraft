@@ -1462,7 +1462,7 @@ jint OMInterpreter::execute()
         return EXEC_FAIL;
     }
     catch (err::OMRuntimeError &e)
-    {\
+    {
         auto m = currentThread.currentFrame->method;
         for (auto &ext : *m->exceptionHandlers)
         {
