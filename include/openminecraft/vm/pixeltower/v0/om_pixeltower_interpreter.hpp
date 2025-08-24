@@ -23,7 +23,7 @@ class OMInterpreter
 
     jint execute();
     void call(OMMethod *met, uint8_t *retAddr);
-    void checkNotNull(void * p) const;
+    void checkNotNull(const void *p) const;
     OMPixelTower *tower;
     v1::OMDebugger debugger;
     uint64_t operands = 0;
@@ -39,7 +39,8 @@ class OMInterpreter
     void loop()
     {
         jint result = execute();
-        if (result != EXEC_RETURN) {
+        if (result != EXEC_RETURN)
+        {
             logger.error("function execution failed with code {}", result);
             throw result;
         }

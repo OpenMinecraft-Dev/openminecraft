@@ -14,11 +14,11 @@ constexpr uint8_t op_lconst_l(int64_t i)
 }
 constexpr uint8_t op_fconst_f(float i)
 {
-    return 0xb + (uint8_t)i;
+    return 0xb + static_cast<uint8_t>(i);
 }
 constexpr uint8_t op_dconst_d(double i)
 {
-    return 0xe + (uint8_t)i;
+    return 0xe + static_cast<uint8_t>(i);
 }
 constexpr uint8_t op_bipush = 0x10;
 constexpr uint8_t op_sipush = 0x11;

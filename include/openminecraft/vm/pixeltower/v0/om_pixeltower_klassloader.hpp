@@ -25,7 +25,7 @@ class OMKlassLoader
     OMKlassLoader(OMPixelTowerHeap *heap, OMPixelTowerHeap *metaspace, OMInterpreter *interpreter);
     ~OMKlassLoader();
 
-    void stagClass(const std::shared_ptr<classfile::OMClassFile>& file)
+    void stagClass(const std::shared_ptr<classfile::OMClassFile> &file)
     {
         files.push_back(file);
     }

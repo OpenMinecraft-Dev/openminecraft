@@ -96,7 +96,7 @@ OMParsedFrame *fetchFrames(std::vector<OMTracingFrame> &frames)
         void *tracingPC = v0::currentThread.pc;
         while (fr)
         {
-            auto root = (OMParsedFrame *)mem::allocator::tracedCallocVMData(1, sizeof(OMParsedFrame));
+            auto root = static_cast<OMParsedFrame *>(mem::allocator::tracedCallocVMData(1, sizeof(OMParsedFrame)));
             root->target = tracingPC;
             root->type = JavaFrame;
             root->jvm.method = fr->method;

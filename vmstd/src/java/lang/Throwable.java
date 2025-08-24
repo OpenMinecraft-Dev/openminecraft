@@ -5,6 +5,10 @@ public class Throwable
     private String reason;
     private Throwable cause;
 
+    private static StackTraceElement[] EMPTY_STACKTRACE = new StackTraceElement[0];
+
+    private StackTraceElement[] stacktrace = EMPTY_STACKTRACE;
+
     public Throwable()
     {
     }

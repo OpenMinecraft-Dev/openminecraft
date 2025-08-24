@@ -46,60 +46,60 @@ class OMKlass
 
     OMPixelTowerHeap *heap;
 
-    inline bool isIntArr()
+    [[nodiscard]] bool isIntArr() const
     {
         return name == "[I";
     }
-    inline bool isFloatArr()
+    [[nodiscard]] bool isFloatArr() const
     {
         return name == "[F";
     }
-    inline bool isLongArr()
+    [[nodiscard]] bool isLongArr() const
     {
         return name == "[J";
     }
-    inline bool isDoubleArr()
+    [[nodiscard]] bool isDoubleArr() const
     {
         return name == "[D";
     }
-    inline bool isCharArr()
+    [[nodiscard]] bool isCharArr() const
     {
         return name == "[C";
     }
-    inline bool isShortArr()
+    [[nodiscard]] bool isShortArr() const
     {
         return name == "[S";
     }
-    inline bool isByteArr()
+    [[nodiscard]] bool isByteArr() const
     {
         return name == "[B";
     }
-    inline bool isBooleanArr()
+    [[nodiscard]] bool isBooleanArr() const
     {
         return name == "[Z";
     }
-    inline bool isObjArr()
+    [[nodiscard]] bool isObjArr() const
     {
         return !isIntArr() && !isFloatArr() && !isLongArr() && !isDoubleArr() && !isCharArr() && !isShortArr() &&
                !isByteArr() && !isBooleanArr() && isArr();
     }
-    inline bool isArr()
+    [[nodiscard]] bool isArr() const
     {
         return name[0] == '[';
     }
 
-    inline OMOOPDesc *allocateInstance()
+    OMOOPDesc *allocateInstance()
     {
         assert(kind == OMKlassKind::Normal);
-        auto obj = (OMOOPDesc *)heap->allocate(sizeof(OMOOPDesc) + length);
+        auto obj = static_cast<OMOOPDesc *>(heap->allocate(sizeof(OMOOPDesc) + length));
         obj->klass = this;
         return obj;
     }
 
-    inline OMOOPArrDesc *allocateArray(jint n)
+    OMOOPArrDesc *allocateArray(jint n)
     {
         assert(kind == OMKlassKind::Array);
-        auto obj = (OMOOPArrDesc *)heap->allocate(sizeof(OMOOPArrDesc) + length * n);
+        auto obj = static_cast<OMOOPArrDesc *>(heap->allocate(sizeof(OMOOPArrDesc) + length * n));
         obj->klass = this;
         obj->length = n;
         return obj;

@@ -282,7 +282,12 @@ void OMKlassLoader::klassMethodInit(OMKlass *klass)
             m->exceptionHandlers = new (hnd) std::vector<OMMethodExceptionCaught>();
             for (auto handler : code->excTable)
             {
-                auto d = klass->raw->mapping[klass->raw->mapping[handler.catchType]->to<classfile::OMClassConstantClass>()->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
+                auto d =
+                    klass->raw
+                        ->mapping
+                            [klass->raw->mapping[handler.catchType]->to<classfile::OMClassConstantClass>()->nameIndex]
+                        ->to<classfile::OMClassConstantUtf8>()
+                        ->data;
                 OMTypeDesc desc = {bytecode::descriptor::Reference, d};
 
                 loadClass(desc);

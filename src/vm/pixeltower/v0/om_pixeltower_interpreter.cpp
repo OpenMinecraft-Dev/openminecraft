@@ -1,6 +1,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
@@ -27,9 +28,7 @@ OMInterpreter::OMInterpreter(OMPixelTowerHeap *heap, OMPixelTower *tower)
     : heap(heap), logger("OMInterpreter", this), tower(tower)
 {
 }
-OMInterpreter::~OMInterpreter()
-{
-}
+OMInterpreter::~OMInterpreter() = default;
 
 void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
 {
@@ -67,8 +66,8 @@ void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
     }
 
     auto frame = currentThread.currentFrame;
-    auto nextframe = (OMFrame *)(static_cast<uint8_t *>(currentThread.stackPointer) - sizeof(OMFrame) + sizeof(void *) +
-                                 met->args * sizeof(void *));
+    auto nextframe = reinterpret_cast<OMFrame *>(static_cast<uint8_t *>(currentThread.stackPointer) - sizeof(OMFrame) +
+                                                 sizeof(void *) + met->args * sizeof(void *));
     nextframe->method = met;
 
     // TODO: optimization
@@ -111,7 +110,7 @@ void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
     loop();
 }
 
-void OMInterpreter::checkNotNull(void *p) const
+void OMInterpreter::checkNotNull(const void *p) const
 {
     if (!p)
     {
@@ -212,15 +211,8 @@ bool OMInterpreter::checkCompat(OMKlass *src, OMKlass *target)
         return true;
     }
 
-    for (auto i : src->interfaces)
-    {
-        if (checkCompat(i, target))
-        {
-            return true;
-        }
-    }
-
-    return false;
+    return std::any_of(src->interfaces.begin(), src->interfaces.end(),
+                       [&](OMKlass *i) { return checkCompat(i, target); });
 }
 
 void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args)
@@ -233,7 +225,7 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
     auto itt = args.begin();
     if ((codetarget->accessFlags & JVM_Acc_Static) == 0)
     {
-        data.push_back(*itt); // this pointer
+        data.emplace_back(*itt); // this pointer
         ++itt;
     }
     for (auto t : result.first)
@@ -241,33 +233,33 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
         switch (t.type)
         {
         case bytecode::descriptor::Byte:
-            data.push_back((jbyte)(size_t)*itt);
+            data.emplace_back((jbyte)(size_t)*itt);
             ++itt;
             break;
         case bytecode::descriptor::Boolean:
-            data.push_back((jboolean)(size_t)*itt);
+            data.emplace_back((jboolean)(size_t)*itt);
             ++itt;
             break;
         case bytecode::descriptor::Char:
-            data.push_back((jchar)(size_t)*itt);
+            data.emplace_back((jchar)(size_t)*itt);
             ++itt;
             break;
         case bytecode::descriptor::Short:
-            data.push_back((jshort)(size_t)*itt);
+            data.emplace_back((jshort)(size_t)*itt);
             ++itt;
             break;
         case bytecode::descriptor::Int:
-            data.push_back((jint)(size_t)*itt);
+            data.emplace_back((jint)(size_t)*itt);
             ++itt;
             break;
         case bytecode::descriptor::Float:
-            data.push_back(*reinterpret_cast<jfloat *>(&*itt));
+            data.emplace_back(*reinterpret_cast<jfloat *>(&*itt));
             ++itt;
             break;
         case bytecode::descriptor::Long:
-            if (sizeof(void *) == 8)
+            if constexpr (sizeof(void *) == 8)
             {
-                data.push_back(*reinterpret_cast<jlong *>(&*itt));
+                data.emplace_back(*reinterpret_cast<jlong *>(&*itt));
                 ++itt;
             }
             else
@@ -278,14 +270,14 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
 
                 uint64_t raw = high << 32 | low;
 
-                data.push_back(*reinterpret_cast<jlong *>(&raw));
+                data.emplace_back(*reinterpret_cast<jlong *>(&raw));
             }
             ++itt;
             break;
         case bytecode::descriptor::Double:
-            if (sizeof(void *) == 8)
+            if constexpr (sizeof(void *) == 8)
             {
-                data.push_back(*reinterpret_cast<jdouble *>(&*itt));
+                data.emplace_back(*reinterpret_cast<jdouble *>(&*itt));
                 ++itt;
             }
             else
@@ -296,14 +288,14 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
 
                 uint64_t raw = high << 32 | low;
 
-                data.push_back(*reinterpret_cast<jdouble *>(&raw));
+                data.emplace_back(*reinterpret_cast<jdouble *>(&raw));
             }
             ++itt;
             break;
         case bytecode::descriptor::Array:
         case bytecode::descriptor::Void:
         case bytecode::descriptor::Reference:
-            data.push_back(*itt);
+            data.emplace_back(*itt);
             ++itt;
             break;
         }
@@ -352,7 +344,7 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
 void OMInterpreter::popLastFrame()
 {
     auto met = currentThread.currentFrame->method;
-    currentThread.pc = (uint8_t *)currentThread.currentFrame->returnAddr;
+    currentThread.pc = static_cast<uint8_t *>(currentThread.currentFrame->returnAddr);
     currentThread.stackPointer = (uint8_t *)currentThread.currentFrame + sizeof(OMFrame); // popped whole frame
     currentThread.currentFrame = currentThread.currentFrame->prev;
     stackPush();
@@ -360,12 +352,12 @@ void OMInterpreter::popLastFrame()
 
 jint OMInterpreter::execute()
 {
-    operand:
+operand:
     try
     {
         auto frame = currentThread.currentFrame;
         operands++;
-        // gino: we need memory usage limit (etc >=60%), not the operand counter (solved)
+        // gino: we need memory usage limit (etc. >=60%), not the operand counter (solved)
         // gino: implemented!
         if (heap->usage() >= 0.6)
         {
@@ -544,7 +536,8 @@ jint OMInterpreter::execute()
         }
         case op_laload: {
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            ;
 
             checkNotNull(arr);
 
@@ -560,7 +553,8 @@ jint OMInterpreter::execute()
         }
         case op_faload: {
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            ;
 
             checkNotNull(arr);
 
@@ -576,7 +570,8 @@ jint OMInterpreter::execute()
         }
         case op_daload: {
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            ;
 
             checkNotNull(arr);
 
@@ -592,7 +587,8 @@ jint OMInterpreter::execute()
         }
         case op_aaload: {
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            ;
 
             checkNotNull(arr);
 
@@ -615,7 +611,8 @@ jint OMInterpreter::execute()
         }
         case op_baload: {
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            ;
 
             checkNotNull(arr);
 
@@ -631,7 +628,8 @@ jint OMInterpreter::execute()
         }
         case op_caload: {
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            ;
 
             checkNotNull(arr);
 
@@ -647,7 +645,8 @@ jint OMInterpreter::execute()
         }
         case op_saload: {
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            ;
 
             checkNotNull(arr);
 
@@ -729,7 +728,8 @@ jint OMInterpreter::execute()
         case op_iastore: {
             auto value = stackTopAccess<jint>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            ;
 
             checkNotNull(arr);
 
@@ -746,7 +746,8 @@ jint OMInterpreter::execute()
         case op_lastore: {
             auto value = stackTopAccessW<jlong>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            ;
 
             checkNotNull(arr);
 
@@ -763,7 +764,8 @@ jint OMInterpreter::execute()
         case op_fastore: {
             auto value = stackTopAccess<jfloat>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            ;
 
             checkNotNull(arr);
 
@@ -780,7 +782,8 @@ jint OMInterpreter::execute()
         case op_dastore: {
             auto value = stackTopAccessW<jdouble>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            ;
 
             checkNotNull(arr);
 
@@ -797,7 +800,8 @@ jint OMInterpreter::execute()
         case op_bastore: {
             auto value = (jboolean)stackTopAccess<jint>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            ;
 
             checkNotNull(arr);
 
@@ -814,7 +818,8 @@ jint OMInterpreter::execute()
         case op_aastore: {
             auto value = stackTopAccess<void *>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            ;
 
             checkNotNull(arr);
 
@@ -838,7 +843,8 @@ jint OMInterpreter::execute()
         case op_castore: {
             auto value = stackTopAccess<jint>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            ;
 
             checkNotNull(arr);
 
@@ -855,7 +861,8 @@ jint OMInterpreter::execute()
         case op_sastore: {
             auto value = stackTopAccess<jint>(true);
             auto idx = stackTopAccess<jint>(true);
-            auto arr = stackTopAccess<OMOOPArrDesc *>(true);;
+            auto arr = stackTopAccess<OMOOPArrDesc *>(true);
+            ;
 
             checkNotNull(arr);
 
@@ -1473,8 +1480,13 @@ jint OMInterpreter::execute()
             goto operand;
         }
         case op_anewarray: {
-            auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
+            auto id = binary::be16ToNative(*reinterpret_cast<uint16_t *>(currentThread.pc + 1));
             auto n = *static_cast<OMKlass **>(static_cast<void *>(frame->method->klass->constantPool + id));
+            if (n == nullptr)
+            {
+                n = tower->loader->lazyClassInit(currentThread.currentFrame->method->klass, id);
+            }
+            assert(n != nullptr);
             bytecode::descriptor::OMTypeDesc arrn = {bytecode::descriptor::Array, n->name, 1,
                                                      bytecode::descriptor::Reference};
             tower->loader->loadClass(arrn);
@@ -1519,7 +1531,8 @@ jint OMInterpreter::execute()
         auto m = currentThread.currentFrame->method;
         for (auto &ext : *m->exceptionHandlers)
         {
-            if (checkCompat(static_cast<OMOOPDesc *>(e.errInstance)->klass, ext.klass) && (currentThread.pc >= (m->code + ext.begin)) && (currentThread.pc < (m->code + ext.end)))
+            if (checkCompat(static_cast<OMOOPDesc *>(e.errInstance)->klass, ext.klass) &&
+                (currentThread.pc >= (m->code + ext.begin)) && (currentThread.pc < (m->code + ext.end)))
             {
                 currentThread.pc = m->code + ext.target;
                 stackPushAccess<void *>(e.errInstance);
