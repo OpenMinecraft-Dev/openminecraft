@@ -6,6 +6,7 @@
 #include <any>
 #include <functional>
 #include <memory>
+#include <algorithm>
 
 namespace openminecraft::vm::pixeltower::v3
 {

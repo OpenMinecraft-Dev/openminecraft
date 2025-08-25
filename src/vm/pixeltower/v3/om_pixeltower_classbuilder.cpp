@@ -106,9 +106,22 @@ void OMMethodBuilder::instConst(const std::any& c)
     auto typ = std::type_index(c.type());
     if (typ == std::type_index(typeid(int)))
     {
-
+        auto cnt = std::any_cast<int>(c);
+        if (-1 <= cnt && cnt <= 5)
+        {
+            code->code->push_back(op_iconst_i(cnt));
+        }
+        else
+        {
+            auto idx = builder->klassConstantPutInt(cnt);
+            code->code->push_back(op_ldc);
+            code->code->push_back(idx);
+        }
     }
-    code->code->push_back(op_aconst_null);
+    else
+    {
+        code->code->push_back(op_aconst_null);
+    }
     codeStackPush();
 }
 void OMMethodBuilder::methodCodeFinish() const
