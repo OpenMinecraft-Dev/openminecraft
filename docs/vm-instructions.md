@@ -156,7 +156,7 @@ checkcast | ❌️ | ❌️
 instanceof | ❌️ | ❌️
 monitorenter | ❌️ | ❌️
 monitorexit | ❌️ | ❌️
-wide | ❌️ | ❌️
+wide | ✔️ | ❌️
 multianewarray | ❌️ | ❌️
 ifnull | ❌️ | ❌️
 ifnonnull | ❌️ | ❌️

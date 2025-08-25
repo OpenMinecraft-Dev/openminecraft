@@ -25,7 +25,7 @@
 namespace openminecraft::vm::pixeltower::v0
 {
 OMInterpreter::OMInterpreter(OMPixelTowerHeap *heap, OMPixelTower *tower)
-    : heap(heap), logger("OMInterpreter", this), tower(tower)
+    : tower(tower), logger("OMInterpreter", this), heap(heap)
 {
 }
 OMInterpreter::~OMInterpreter() = default;
@@ -343,7 +343,6 @@ void OMInterpreter::invokeNative(OMMethod *codetarget, std::vector<void *> &args
 
 void OMInterpreter::popLastFrame()
 {
-    auto met = currentThread.currentFrame->method;
     currentThread.pc = static_cast<uint8_t *>(currentThread.currentFrame->returnAddr);
     currentThread.stackPointer = (uint8_t *)currentThread.currentFrame + sizeof(OMFrame); // popped whole frame
     currentThread.currentFrame = currentThread.currentFrame->prev;
@@ -1512,7 +1511,79 @@ operand:
             }
             throw err::OMRuntimeError(exci);
         }
+            // op_checkcast
+            // op_instanceof
+            // op_monitorenter
+            // op_monitorexit
+        case op_wide: {
+            auto c = currentThread.pc[1];
+            auto id = binary::be16ToNative(*reinterpret_cast<uint16_t *>(currentThread.pc[2]));
+
+            if (c == op_iload)
+            {
+                stackPushAccess<jint>(localAccessValue<jint>(id));
+                currentThread.pc += 4;
+            }
+            else if (c == op_lload)
+            {
+                stackPushAccessW<jlong>(localAccessValueW<jlong>(id));
+                currentThread.pc += 4;
+            }
+            else if (c == op_fload)
+            {
+                stackPushAccess<jfloat>(localAccessValue<jfloat>(id));
+                currentThread.pc += 4;
+            }
+            else if (c == op_dload)
+            {
+                stackPushAccessW<jdouble>(localAccessValueW<jdouble>(id));
+                currentThread.pc += 4;
+            }
+            else if (c == op_aload)
+            {
+                stackPushAccess<void *>(localAccessValue<void *>(id));
+                currentThread.pc += 4;
+            }
+            else if (c == op_istore)
+            {
+                localAccessMod<jint>(id, stackTopAccess<jint>(true));
+                currentThread.pc += 4;
+            }
+            else if (c == op_lstore)
+            {
+                localAccessModW<jlong>(id, stackTopAccessW<jlong>(true));
+                currentThread.pc += 4;
+            }
+            else if (c == op_fstore)
+            {
+                localAccessMod<jfloat>(id, stackTopAccess<jfloat>(true));
+                currentThread.pc += 4;
+            }
+            else if (c == op_dstore)
+            {
+                localAccessModW<jdouble>(id, stackTopAccessW<jdouble>(true));
+                currentThread.pc += 4;
+            }
+            else if (c == op_astore)
+            {
+                localAccessMod<void *>(id, stackTopAccess<void *>(true));
+                currentThread.pc += 4;
+            }
+            else if (c == op_iinc)
+            {
+                auto incn = binary::be16SignedToNative(currentThread.pc[4], currentThread.pc[5]);
+
+                localAccessMod<jint>(id, localAccessValue<jint>(id) + incn);
+                currentThread.pc += 6;
+            }
+            else
+            {
+                goto errInsn;
+            }
+            break;
+        }
         default: {
+            errInsn:
             logger.error("We are hitting the Mazarine End!");
             logger.error("unknown operand at {} ({:#04x})", fmt::ptr(currentThread.pc), (int)*currentThread.pc);
             logger.error("thread {}", fmt::ptr(&currentThread.id));
@@ -1540,7 +1611,7 @@ operand:
             }
         }
 
-        throw e;
+        throw;
     }
 }
 } // namespace openminecraft::vm::pixeltower::v0
