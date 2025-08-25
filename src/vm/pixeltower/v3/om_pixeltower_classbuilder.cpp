@@ -1,6 +1,9 @@
 #include <utility>
 
+#include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/pixeltower/v3/om_pixeltower_classbuilder.hpp"
+
+#include <typeindex>
 
 namespace openminecraft::vm::pixeltower::v3
 {
@@ -86,10 +89,32 @@ void OMMethodBuilder::methodFinish() const
 }
 void OMMethodBuilder::methodCodeBegin()
 {
-    // code = std::make_shared<classfile::OMClassAttrCode>();
+    code = std::make_shared<classfile::OMClassAttrCode>(
+        0, (result->accessFlags & JVM_Acc_Static) ? 0 : 1, 0, std::make_shared<std::vector<uint8_t>>(), 0,
+        std::vector<classfile::OMClassAttrCodeExcTable>(), 0, std::vector<std::shared_ptr<classfile::OMClassAttr>>());
+}
+void OMMethodBuilder::instReturn() const
+{
+    code->code->push_back(op_return);
+}
+void OMMethodBuilder::instNop() const
+{
+    code->code->push_back(op_nop);
+}
+void OMMethodBuilder::instConst(const std::any& c)
+{
+    auto typ = std::type_index(c.type());
+    if (typ == std::type_index(typeid(int)))
+    {
+
+    }
+    code->code->push_back(op_aconst_null);
+    codeStackPush();
 }
 void OMMethodBuilder::methodCodeFinish() const
 {
+    code->codeLength = code->code->size();
+    code->maxStack = maxStackHeight;
     result->attrs.push_back(code);
 }
 } // namespace openminecraft::vm::pixeltower::v3

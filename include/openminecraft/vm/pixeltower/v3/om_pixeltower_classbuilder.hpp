@@ -3,6 +3,7 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 
+#include <any>
 #include <functional>
 #include <memory>
 
@@ -55,6 +56,15 @@ class OMClassBuilder
                                    });
     }
 
+    uint16_t klassConstantPutInt(int i)
+    {
+        return klassConstantPutAny(std::make_shared<classfile::OMClassConstantInteger>(i),
+                                   [&](const std::shared_ptr<classfile::OMClassConstant> &r) -> bool {
+                                       return r.get() && r->type() == classfile::OMClassConstantType::Integer &&
+                                              r->to<classfile::OMClassConstantInteger>()->data == i;
+                                   });
+    }
+
     std::shared_ptr<OMMethodBuilder> klassConstructMethod();
 
     std::shared_ptr<classfile::OMClassFile> file;
@@ -74,11 +84,28 @@ class OMMethodBuilder
     void methodAccessFlags(int f) const;
     void methodFinish() const;
     void methodCodeBegin();
+
+    void instNop() const;
+    void instConst(const std::any& c);
+    void instReturn() const;
+
+    void codeStackPush()
+    {
+        currentStackHeight++;
+        maxStackHeight = std::max(maxStackHeight, currentStackHeight);
+    }
+    void codeStackPop()
+    {
+        currentStackHeight--;
+    }
+
     void methodCodeFinish() const;
 
   private:
     std::shared_ptr<classfile::OMClassMethodInfo> result;
     std::shared_ptr<classfile::OMClassAttrCode> code;
+    int currentStackHeight = 0;
+    int maxStackHeight = 0;
     OMClassBuilder *builder;
 };
 } // namespace openminecraft::vm::pixeltower::v3

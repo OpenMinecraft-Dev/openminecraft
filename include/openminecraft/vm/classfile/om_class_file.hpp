@@ -298,10 +298,10 @@ class OMClassAttrCode : public OMClassAttr
   public:
     OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, std::shared_ptr<std::vector<uint8_t>> c, uint16_t etl,
                     std::vector<OMClassAttrCodeExcTable> et, uint16_t ac, std::vector<std::shared_ptr<OMClassAttr>> a);
-    virtual OMClassAttrType type() override;
-    const uint16_t maxStack;
+    OMClassAttrType type() override;
+    uint16_t maxStack;
     const uint16_t maxLocals;
-    const uint32_t codeLength;
+    uint32_t codeLength;
     const std::shared_ptr<std::vector<uint8_t>> code;
     const uint16_t excTableLength;
     const std::vector<OMClassAttrCodeExcTable> excTable;

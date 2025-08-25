@@ -203,8 +203,11 @@ int boot(std::vector<std::string> args)
                     func->methodBegin();
                     func->methodAccessFlags(JVM_Acc_Public);
                     func->methodNameAndDesc("<init>", "()V");
-                    /*func->methodCodeBegin();
-                    func->methodCodeFinish();*/
+                    func->methodCodeBegin();
+                    func->instNop();
+                    func->instConst(nullptr);
+                    func->instReturn();
+                    func->methodCodeFinish();
                     func->methodFinish();
 
                     tower->loader->stagClass(builder.file);
