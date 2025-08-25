@@ -1,8 +1,8 @@
 #ifndef OM_PIXELTOWER_CLASSBUILDER_HPP
 #define OM_PIXELTOWER_CLASSBUILDER_HPP
+#include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
-#include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 
 #include <algorithm>
 #include <any>
@@ -103,8 +103,7 @@ class OMMethodBuilder
     void instConst(v0::jlong i);
     void instConst(v0::jdouble i);
 
-    template <typename T>
-    void instLoad(uint16_t slot)
+    template <typename T> void instLoad(uint16_t slot)
     {
         uint8_t opcode;
         if constexpr (std::is_same_v<T, v0::jint>)

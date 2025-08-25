@@ -89,9 +89,9 @@ void OMMethodBuilder::methodCodeBegin()
     currentStackHeight = 0;
     maxStackHeight = 0;
     maxLocals = (result->accessFlags & JVM_Acc_Static) ? 0 : 1;
-    code = std::make_shared<classfile::OMClassAttrCode>(
-        0, 0, 0, std::make_shared<std::vector<uint8_t>>(), 0,
-        std::vector<classfile::OMClassAttrCodeExcTable>(), 0, std::vector<std::shared_ptr<classfile::OMClassAttr>>());
+    code = std::make_shared<classfile::OMClassAttrCode>(0, 0, 0, std::make_shared<std::vector<uint8_t>>(), 0,
+                                                        std::vector<classfile::OMClassAttrCodeExcTable>(), 0,
+                                                        std::vector<std::shared_ptr<classfile::OMClassAttr>>());
 }
 void OMMethodBuilder::instReturn() const
 {

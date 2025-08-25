@@ -207,9 +207,7 @@ int boot(std::vector<std::string> args)
                     func->methodCodeBegin();
                     func->instNop();
                     func->instLoad<void *>(0);
-                    func->instConst(421);
                     func->instConst(421.f);
-                    func->instConst(421l);
                     func->instReturn();
                     func->methodCodeFinish();
                     func->methodFinish();

@@ -151,7 +151,7 @@ new | ✔️ | ❌️
 newarray | ✔️ | ❌️
 anewarray | ✔️ | ❌️
 arraylength | ✔️ | ❌️
-athrow | ❌️ | ❌️
+athrow | ✔️ | ❌️
 checkcast | ❌️ | ❌️
 instanceof | ❌️ | ❌️
 monitorenter | ❌️ | ❌️
