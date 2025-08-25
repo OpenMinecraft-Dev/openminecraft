@@ -49,6 +49,8 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_debugger.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
+#include "openminecraft/vm/pixeltower/v3/om_pixeltower_classbuilder.hpp"
+
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
@@ -178,6 +180,38 @@ int boot(std::vector<std::string> args)
                 break;
             case "pt"_hash:
             case "pixeltower"_hash: {
+                if (commandBuffer.size() >= 3 && commandBuffer[1] == "buildcls")
+                {
+                    commandBuffer.clear();
+                    pixeltower::v3::OMClassBuilder builder;
+                    builder.klassBegin();
+                    builder.klassAccessFlags(JVM_Acc_Public);
+                    builder.klassName("openminecraft/DynamicTest");
+
+                    pixeltower::v1::tracing::installHandler();
+                    tower->initCurrentThread(1ul * 1024 * 1024);
+                    tower->init(commandBuffer[2]);
+
+                    bytecode::descriptor::OMTypeDesc tgt = {bytecode::descriptor::Reference, "java/lang/Object"};
+                    tower->loader->loadClass(tgt);
+                    auto cls = tower->loader->fetchClass(tgt);
+
+                    builder.klassSuperKlass(cls);
+                    builder.klassVersion(JVM_VERSION_8, 0);
+
+                    auto func = builder.klassConstructMethod();
+                    func->methodBegin();
+                    func->methodAccessFlags(JVM_Acc_Public);
+                    func->methodNameAndDesc("<init>", "()V");
+                    /*func->methodCodeBegin();
+                    func->methodCodeFinish();*/
+                    func->methodFinish();
+
+                    tower->loader->stagClass(builder.file);
+                    tower->loader->loadClass({bytecode::descriptor::Reference, "openminecraft/DynamicTest"});
+
+                    break;
+                }
                 if (commandBuffer.size() >= 3 && commandBuffer[1] == "init")
                 {
                     pixeltower::v1::tracing::installHandler();
