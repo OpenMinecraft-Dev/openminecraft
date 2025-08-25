@@ -202,7 +202,7 @@ void OMBytecodeChecker::detail()
                 break;
             }
                 tbyteCommand(op_ldc_w, "ldc_w #{}");
-                tbyteCommand(op_ldc2_w, "ldc_w #{}");
+                tbyteCommand(op_ldc2_w, "ldc2_w #{}");
             // iload (index:u8)
             case op_iload: {
                 logger->info("{}: iload {}", bytes, codeRaw[bytes + 1]);

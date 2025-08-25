@@ -2,11 +2,13 @@
 #define OM_PIXELTOWER_CLASSBUILDER_HPP
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
+#include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 
+#include <algorithm>
 #include <any>
 #include <functional>
 #include <memory>
-#include <algorithm>
+#include <type_traits>
 
 namespace openminecraft::vm::pixeltower::v3
 {
@@ -22,8 +24,8 @@ class OMClassBuilder
     void klassVersion(int major, int minor) const;
     void klassAccessFlags(int f) const;
     void klassName(const std::string &name);
-    void klassSuperKlass(v0::OMKlass *klass);
-    void klassInterface(v0::OMKlass *klass);
+    void klassSuperKlass(const v0::OMKlass *klass);
+    void klassInterface(const v0::OMKlass *klass);
     [[nodiscard]] uint16_t klassConstantPut(const std::shared_ptr<classfile::OMClassConstant> &constant) const;
 
     template <typename T>
@@ -57,12 +59,20 @@ class OMClassBuilder
                                    });
     }
 
-    uint16_t klassConstantPutInt(int i)
+    uint16_t klassConstantPutInt(v0::jint i)
     {
         return klassConstantPutAny(std::make_shared<classfile::OMClassConstantInteger>(i),
                                    [&](const std::shared_ptr<classfile::OMClassConstant> &r) -> bool {
                                        return r.get() && r->type() == classfile::OMClassConstantType::Integer &&
                                               r->to<classfile::OMClassConstantInteger>()->data == i;
+                                   });
+    }
+
+    template <typename T, typename C, classfile::OMClassConstantType id> uint16_t klassConstantPutNumber(T i)
+    {
+        return klassConstantPutAny(std::make_shared<C>(i),
+                                   [&](const std::shared_ptr<classfile::OMClassConstant> &r) -> bool {
+                                       return r.get() && r->type() == id && r->to<C>()->data == i;
                                    });
     }
 
@@ -87,26 +97,116 @@ class OMMethodBuilder
     void methodCodeBegin();
 
     void instNop() const;
-    void instConst(const std::any& c);
+    void instConst();
+    void instConst(v0::jint i);
+    void instConst(v0::jfloat i);
+    void instConst(v0::jlong i);
+    void instConst(v0::jdouble i);
+
+    template <typename T>
+    void instLoad(uint16_t slot)
+    {
+        uint8_t opcode;
+        if constexpr (std::is_same_v<T, v0::jint>)
+        {
+            opcode = op_iload;
+        }
+        else if constexpr (std::is_same_v<T, v0::jfloat>)
+        {
+            opcode = op_fload;
+        }
+        else if constexpr (std::is_same_v<T, v0::jlong>)
+        {
+            opcode = op_lload;
+        }
+        else if constexpr (std::is_same_v<T, v0::jdouble>)
+        {
+            opcode = op_dload;
+        }
+        else
+        {
+            opcode = op_aload;
+        }
+
+        if (slot <= 0xff)
+        {
+            code->code->push_back(opcode);
+            code->code->push_back(slot);
+        }
+        else
+        {
+            code->code->push_back(op_wide);
+            code->code->push_back(opcode);
+            codePutId(slot);
+        }
+
+        codeLocalAccess(slot);
+        codeStackPush();
+    }
+    void instILoad(uint8_t i);
+    void instLLoad(uint8_t i);
+    void instFLoad(uint8_t i);
+    void instDLoad(uint8_t i);
+    void instALoad(uint8_t i);
+
     void instReturn() const;
 
     void codeStackPush()
     {
         currentStackHeight++;
-        maxStackHeight = std::max(maxStackHeight, currentStackHeight);
+        if (currentStackHeight > maxStackHeight)
+        {
+            maxStackHeight = currentStackHeight;
+        }
     }
     void codeStackPop()
     {
         currentStackHeight--;
     }
+    void codeLocalAccess(int id)
+    {
+        if (id > maxLocals)
+        {
+            maxLocals = id + 1;
+        }
+    }
 
     void methodCodeFinish() const;
 
   private:
+    void codePutConstantLoading(uint16_t id) const
+    {
+        if (id <= 0xff)
+        {
+            code->code->push_back(op_ldc);
+        }
+        else
+        {
+            code->code->push_back(op_ldc_w);
+        }
+    }
+    void codePutId(uint16_t id) const
+    {
+        code->code->push_back(id >> 8);
+        code->code->push_back(id & 0xff);
+    }
+    void codePutVaryId(uint16_t id) const
+    {
+        if (id <= 0xff)
+        {
+            code->code->push_back(id);
+        }
+        else
+        {
+            codePutId(id);
+        }
+    }
+
     std::shared_ptr<classfile::OMClassMethodInfo> result;
     std::shared_ptr<classfile::OMClassAttrCode> code;
     int currentStackHeight = 0;
     int maxStackHeight = 0;
+    int maxLocals = 0;
     OMClassBuilder *builder;
 };
 } // namespace openminecraft::vm::pixeltower::v3

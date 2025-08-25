@@ -38,6 +38,7 @@
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
+#include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
@@ -205,10 +206,16 @@ int boot(std::vector<std::string> args)
                     func->methodNameAndDesc("<init>", "()V");
                     func->methodCodeBegin();
                     func->instNop();
-                    func->instConst(nullptr);
+                    func->instLoad<void *>(0);
+                    func->instConst(421);
+                    func->instConst(421.f);
+                    func->instConst(421l);
                     func->instReturn();
                     func->methodCodeFinish();
                     func->methodFinish();
+
+                    bytecode::OMBytecodeChecker chk(builder.file);
+                    chk.detail();
 
                     tower->loader->stagClass(builder.file);
                     tower->loader->loadClass({bytecode::descriptor::Reference, "openminecraft/DynamicTest"});

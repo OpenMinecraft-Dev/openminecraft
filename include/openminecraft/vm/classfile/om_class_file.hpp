@@ -281,7 +281,7 @@ class OMClassAttrConstantValue : public OMClassAttr
 {
   public:
     OMClassAttrConstantValue(uint16_t vi);
-    virtual OMClassAttrType type() override;
+    OMClassAttrType type() override;
     const uint16_t valueIndex;
 };
 
@@ -300,7 +300,7 @@ class OMClassAttrCode : public OMClassAttr
                     std::vector<OMClassAttrCodeExcTable> et, uint16_t ac, std::vector<std::shared_ptr<OMClassAttr>> a);
     OMClassAttrType type() override;
     uint16_t maxStack;
-    const uint16_t maxLocals;
+    uint16_t maxLocals;
     uint32_t codeLength;
     const std::shared_ptr<std::vector<uint8_t>> code;
     const uint16_t excTableLength;
