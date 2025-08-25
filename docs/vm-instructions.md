@@ -1,164 +1,164 @@
-Instructions | interpreter | jit (x86)
------ | ----- | -----
-nop | ✔️ | ❌️
-aconst_null | ✔️ | ❌️
-iconst_n | ✔️ | ❌️
-lconst_n | ✔️ | ❌️
-fconst_n | ✔️ | ❌️
-dconst_n | ✔️ | ❌️
-bipush | ✔️ | ❌️
-sipush | ✔️ | ❌️
-ldc | ✔️ | ❌️
-ldc_w | ✔️ | ❌️
-ldc2_w | ✔️ | ❌️
-iload | ✔️ | ❌️
-lload | ✔️ | ❌️
-fload | ✔️ | ❌️
-dload | ✔️ | ❌️
-aload | ✔️ | ❌️
-iload_n | ✔️ | ❌️
-lload_n | ✔️ | ❌️
-fload_n | ✔️ | ❌️
-dload_n | ✔️ | ❌️
-aload_n | ✔️ | ❌️
-iaload | ✔️ | ❌️
-laload | ✔️ | ❌️
-faload | ✔️ | ❌️
-daload | ✔️ | ❌️
-aaload | ✔️ | ❌️
-baload | ✔️ | ❌️
-caload | ✔️ | ❌️
-saload | ✔️ | ❌️
-istore | ✔️ | ❌️
-lstore | ✔️ | ❌️
-fstore | ✔️ | ❌️
-dstore | ✔️ | ❌️
-astore | ✔️ | ❌️
-istore_n | ✔️ | ❌️
-lstore_n | ✔️ | ❌️
-fstore_n | ✔️ | ❌️
-dstore_n | ✔️ | ❌️
-astore_n | ✔️ | ❌️
-iastore | ✔️ | ❌️
-lastore | ✔️ | ❌️
-fastore | ✔️ | ❌️
-dastore | ✔️ | ❌️
-aastore | ✔️ | ❌️
-bastore | ✔️ | ❌️
-castore | ✔️ | ❌️
-sastore | ✔️ | ❌️
-pop | ✔️ | ❌️
-pop2 | ✔️ | ❌️
-dup | ✔️ | ❌️
-dup_x1 | ✔️ | ❌️
-dup_x2 | ✔️ | ❌️
-dup2 | ✔️ | ❌️
-dup2_x1 | ✔️ | ❌️
-dup2_x2 | ✔️ | ❌️
-swap | ✔️ | ❌️
-iadd | ✔️ | ❌️
-ladd | ✔️ | ❌️
-fadd | ✔️ | ❌️
-dadd | ✔️ | ❌️
-isub | ✔️ | ❌️
-lsub | ✔️ | ❌️
-fsub | ✔️| ❌️
-dsub | ✔️ | ❌️
-imul | ✔️ | ❌️
-lmul | ✔️ | ❌️
-fmul | ✔️ | ❌️
-dmul | ✔️ | ❌️
-idiv | ✔️ | ❌️
-ldiv | ✔️ | ❌️
-fdiv | ✔️ | ❌️
-ddiv | ✔️ | ❌️
-irem | ❌️ | ❌️
-lrem | ❌️ | ❌️
-frem | ❌️ | ❌️
-drem | ❌️ | ❌️
-ineg | ❌️ | ❌️
-lneg | ❌️ | ❌️
-fneg | ❌️ | ❌️
-dneg | ❌️ | ❌️
-ishl | ❌️ | ❌️
-lshl | ❌️ | ❌️
-ishr | ❌️ | ❌️
-lshr | ❌️ | ❌️
-iushr | ❌️ | ❌️
-lushr | ❌️ | ❌️
-iand | ❌️ | ❌️
-land | ❌️ | ❌️
-ior | ❌️ | ❌️
-lor | ❌️ | ❌️
-ixor | ❌️ | ❌️
-lxor | ❌️ | ❌️
-iinc | ✔️ | ❌️
-i2l | ✔️ | ❌️
-i2f | ✔️ | ❌️
-i2d | ✔️ | ❌️
-l2i | ✔️ | ❌️
-l2f | ✔️ | ❌️
-l2d | ✔️ | ❌️
-f2i | ✔️ | ❌️
-f2l | ✔️ | ❌️
-d2i | ✔️ | ❌️
-f2d | ✔️ | ❌️
-d2l | ✔️ | ❌️
-d2f | ✔️ | ❌️
-i2b | ✔️ | ❌️
-i2c | ✔️ | ❌️
-i2s | ✔️ | ❌️
-lcmp | ✔️ | ❌️
-fcmpl | ✔️ | ❌️
-fcmpg | ✔️ | ❌️
-dcmpl | ✔️ | ❌️
-dcmpg | ✔️ | ❌️
-ifeq | ✔️ | ❌️
-ifne | ✔️ | ❌️
-iflt | ✔️ | ❌️
-ifge | ✔️ | ❌️
-ifgt | ✔️ | ❌️
-ifle | ✔️ | ❌️
-if_icmpeq | ✔️ | ❌️
-if_icmpne | ✔️ | ❌️
-if_icmplt | ✔️ | ❌️
-if_icmpge | ✔️ | ❌️
-if_icmpgt | ✔️ | ❌️
-if_icmple | ✔️ | ❌️
-if_acmpeq | ✔️ | ❌️
-if_acmpne | ✔️ | ❌️
-goto | ✔️ | ❌️
-jsr | ✔️ | ❌️
-ret | ✔️ | ❌️
-tableswitch | ❌️ | ❌️
-lookupswitch | ❌️ | ❌️
-ireturn | ✔️ | ❌️
-lreturn | ✔️ | ❌️
-freturn | ✔️ | ❌️
-dreturn | ✔️ | ❌️
-areturn | ✔️ | ❌️
-return | ✔️ | ❌️
-getstatic | ✔️ | ❌️
-putstatic | ✔️ | ❌️
-getfield | ❌️ | ❌️
-putfield | ✔️ | ❌️
-invokevirtual | ✔️ | ❌️
-invokespecial | ✔️ | ❌️
-invokestatic | ✔️ | ❌️
-invokeinterface | ❌️ | ❌️
-invokedynamic | ❌️ | ❌️
-new | ✔️ | ❌️
-newarray | ✔️ | ❌️
-anewarray | ✔️ | ❌️
-arraylength | ✔️ | ❌️
-athrow | ✔️ | ❌️
-checkcast | ❌️ | ❌️
-instanceof | ❌️ | ❌️
-monitorenter | ❌️ | ❌️
-monitorexit | ❌️ | ❌️
-wide | ✔️ | ❌️
-multianewarray | ❌️ | ❌️
-ifnull | ❌️ | ❌️
-ifnonnull | ❌️ | ❌️
-goto_w | ❌️ | ❌️
-jsr_w | ❌️ | ❌️
+| Instructions    | interpreter | jit (x86) |
+|-----------------|-------------|-----------|
+| nop             | ✔️          | ❌️        |
+| aconst_null     | ✔️          | ❌️        |
+| iconst_n        | ✔️          | ❌️        |
+| lconst_n        | ✔️          | ❌️        |
+| fconst_n        | ✔️          | ❌️        |
+| dconst_n        | ✔️          | ❌️        |
+| bipush          | ✔️          | ❌️        |
+| sipush          | ✔️          | ❌️        |
+| ldc             | ✔️          | ❌️        |
+| ldc_w           | ✔️          | ❌️        |
+| ldc2_w          | ✔️          | ❌️        |
+| iload           | ✔️          | ❌️        |
+| lload           | ✔️          | ❌️        |
+| fload           | ✔️          | ❌️        |
+| dload           | ✔️          | ❌️        |
+| aload           | ✔️          | ❌️        |
+| iload_n         | ✔️          | ❌️        |
+| lload_n         | ✔️          | ❌️        |
+| fload_n         | ✔️          | ❌️        |
+| dload_n         | ✔️          | ❌️        |
+| aload_n         | ✔️          | ❌️        |
+| iaload          | ✔️          | ❌️        |
+| laload          | ✔️          | ❌️        |
+| faload          | ✔️          | ❌️        |
+| daload          | ✔️          | ❌️        |
+| aaload          | ✔️          | ❌️        |
+| baload          | ✔️          | ❌️        |
+| caload          | ✔️          | ❌️        |
+| saload          | ✔️          | ❌️        |
+| istore          | ✔️          | ❌️        |
+| lstore          | ✔️          | ❌️        |
+| fstore          | ✔️          | ❌️        |
+| dstore          | ✔️          | ❌️        |
+| astore          | ✔️          | ❌️        |
+| istore_n        | ✔️          | ❌️        |
+| lstore_n        | ✔️          | ❌️        |
+| fstore_n        | ✔️          | ❌️        |
+| dstore_n        | ✔️          | ❌️        |
+| astore_n        | ✔️          | ❌️        |
+| iastore         | ✔️          | ❌️        |
+| lastore         | ✔️          | ❌️        |
+| fastore         | ✔️          | ❌️        |
+| dastore         | ✔️          | ❌️        |
+| aastore         | ✔️          | ❌️        |
+| bastore         | ✔️          | ❌️        |
+| castore         | ✔️          | ❌️        |
+| sastore         | ✔️          | ❌️        |
+| pop             | ✔️          | ❌️        |
+| pop2            | ✔️          | ❌️        |
+| dup             | ✔️          | ❌️        |
+| dup_x1          | ✔️          | ❌️        |
+| dup_x2          | ✔️          | ❌️        |
+| dup2            | ✔️          | ❌️        |
+| dup2_x1         | ✔️          | ❌️        |
+| dup2_x2         | ✔️          | ❌️        |
+| swap            | ✔️          | ❌️        |
+| iadd            | ✔️          | ❌️        |
+| ladd            | ✔️          | ❌️        |
+| fadd            | ✔️          | ❌️        |
+| dadd            | ✔️          | ❌️        |
+| isub            | ✔️          | ❌️        |
+| lsub            | ✔️          | ❌️        |
+| fsub            | ✔️          | ❌️        |
+| dsub            | ✔️          | ❌️        |
+| imul            | ✔️          | ❌️        |
+| lmul            | ✔️          | ❌️        |
+| fmul            | ✔️          | ❌️        |
+| dmul            | ✔️          | ❌️        |
+| idiv            | ✔️          | ❌️        |
+| ldiv            | ✔️          | ❌️        |
+| fdiv            | ✔️          | ❌️        |
+| ddiv            | ✔️          | ❌️        |
+| irem            | ❌️          | ❌️        |
+| lrem            | ❌️          | ❌️        |
+| frem            | ❌️          | ❌️        |
+| drem            | ❌️          | ❌️        |
+| ineg            | ❌️          | ❌️        |
+| lneg            | ❌️          | ❌️        |
+| fneg            | ❌️          | ❌️        |
+| dneg            | ❌️          | ❌️        |
+| ishl            | ❌️          | ❌️        |
+| lshl            | ❌️          | ❌️        |
+| ishr            | ❌️          | ❌️        |
+| lshr            | ❌️          | ❌️        |
+| iushr           | ❌️          | ❌️        |
+| lushr           | ❌️          | ❌️        |
+| iand            | ❌️          | ❌️        |
+| land            | ❌️          | ❌️        |
+| ior             | ❌️          | ❌️        |
+| lor             | ❌️          | ❌️        |
+| ixor            | ❌️          | ❌️        |
+| lxor            | ❌️          | ❌️        |
+| iinc            | ✔️          | ❌️        |
+| i2l             | ✔️          | ❌️        |
+| i2f             | ✔️          | ❌️        |
+| i2d             | ✔️          | ❌️        |
+| l2i             | ✔️          | ❌️        |
+| l2f             | ✔️          | ❌️        |
+| l2d             | ✔️          | ❌️        |
+| f2i             | ✔️          | ❌️        |
+| f2l             | ✔️          | ❌️        |
+| d2i             | ✔️          | ❌️        |
+| f2d             | ✔️          | ❌️        |
+| d2l             | ✔️          | ❌️        |
+| d2f             | ✔️          | ❌️        |
+| i2b             | ✔️          | ❌️        |
+| i2c             | ✔️          | ❌️        |
+| i2s             | ✔️          | ❌️        |
+| lcmp            | ✔️          | ❌️        |
+| fcmpl           | ✔️          | ❌️        |
+| fcmpg           | ✔️          | ❌️        |
+| dcmpl           | ✔️          | ❌️        |
+| dcmpg           | ✔️          | ❌️        |
+| ifeq            | ✔️          | ❌️        |
+| ifne            | ✔️          | ❌️        |
+| iflt            | ✔️          | ❌️        |
+| ifge            | ✔️          | ❌️        |
+| ifgt            | ✔️          | ❌️        |
+| ifle            | ✔️          | ❌️        |
+| if_icmpeq       | ✔️          | ❌️        |
+| if_icmpne       | ✔️          | ❌️        |
+| if_icmplt       | ✔️          | ❌️        |
+| if_icmpge       | ✔️          | ❌️        |
+| if_icmpgt       | ✔️          | ❌️        |
+| if_icmple       | ✔️          | ❌️        |
+| if_acmpeq       | ✔️          | ❌️        |
+| if_acmpne       | ✔️          | ❌️        |
+| goto            | ✔️          | ❌️        |
+| jsr             | ✔️          | ❌️        |
+| ret             | ✔️          | ❌️        |
+| tableswitch     | ❌️          | ❌️        |
+| lookupswitch    | ❌️          | ❌️        |
+| ireturn         | ✔️          | ❌️        |
+| lreturn         | ✔️          | ❌️        |
+| freturn         | ✔️          | ❌️        |
+| dreturn         | ✔️          | ❌️        |
+| areturn         | ✔️          | ❌️        |
+| return          | ✔️          | ❌️        |
+| getstatic       | ✔️          | ❌️        |
+| putstatic       | ✔️          | ❌️        |
+| getfield        | ❌️          | ❌️        |
+| putfield        | ✔️          | ❌️        |
+| invokevirtual   | ✔️          | ❌️        |
+| invokespecial   | ✔️          | ❌️        |
+| invokestatic    | ✔️          | ❌️        |
+| invokeinterface | ❌️          | ❌️        |
+| invokedynamic   | ❌️          | ❌️        |
+| new             | ✔️          | ❌️        |
+| newarray        | ✔️          | ❌️        |
+| anewarray       | ✔️          | ❌️        |
+| arraylength     | ✔️          | ❌️        |
+| athrow          | ✔️          | ❌️        |
+| checkcast       | ❌️          | ❌️        |
+| instanceof      | ❌️          | ❌️        |
+| monitorenter    | ❌️          | ❌️        |
+| monitorexit     | ❌️          | ❌️        |
+| wide            | ✔️          | ❌️        |
+| multianewarray  | ❌️          | ❌️        |
+| ifnull          | ✔️          | ❌️        |
+| ifnonnull       | ✔️          | ❌️        |
+| goto_w          | ❌️          | ❌️        |
+| jsr_w           | ❌️          | ❌️        |

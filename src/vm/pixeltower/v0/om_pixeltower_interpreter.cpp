@@ -1582,8 +1582,28 @@ operand:
             }
             break;
         }
+        case op_ifnull: {
+            if (stackTopAccess<void *>(true) == nullptr)
+            {
+                currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);
+            }
+            else
+            {
+                currentThread.pc += 3;
+            }
+        }
+        case op_ifnonnull: {
+            if (stackTopAccess<void *>(true))
+            {
+                currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);
+            }
+            else
+            {
+                currentThread.pc += 3;
+            }
+        }
         default: {
-            errInsn:
+        errInsn:
             logger.error("We are hitting the Mazarine End!");
             logger.error("unknown operand at {} ({:#04x})", fmt::ptr(currentThread.pc), (int)*currentThread.pc);
             logger.error("thread {}", fmt::ptr(&currentThread.id));

@@ -183,7 +183,6 @@ int boot(std::vector<std::string> args)
             case "pixeltower"_hash: {
                 if (commandBuffer.size() >= 3 && commandBuffer[1] == "buildcls")
                 {
-                    commandBuffer.clear();
                     pixeltower::v3::OMClassBuilder builder;
                     builder.klassBegin();
                     builder.klassAccessFlags(JVM_Acc_Public);
@@ -218,6 +217,7 @@ int boot(std::vector<std::string> args)
                     tower->loader->stagClass(builder.file);
                     tower->loader->loadClass({bytecode::descriptor::Reference, "openminecraft/DynamicTest"});
 
+                    commandBuffer.clear();
                     break;
                 }
                 if (commandBuffer.size() >= 3 && commandBuffer[1] == "init")
