@@ -147,6 +147,91 @@ class OMMethodBuilder
     void instFLoad(uint8_t i);
     void instDLoad(uint8_t i);
     void instALoad(uint8_t i);
+    template <typename T> void instXALoad()
+    {
+        uint8_t opcode;
+        if constexpr (std::is_same_v<T, v0::jint>)
+        {
+            opcode = op_iaload;
+        }
+        else if constexpr (std::is_same_v<T, v0::jfloat>)
+        {
+            opcode = op_faload;
+        }
+        else if constexpr (std::is_same_v<T, v0::jlong>)
+        {
+            opcode = op_laload;
+        }
+        else if constexpr (std::is_same_v<T, v0::jdouble>)
+        {
+            opcode = op_daload;
+        }
+        else if constexpr (std::is_same_v<T, v0::jchar>)
+        {
+            opcode = op_caload;
+        }
+        else if constexpr (std::is_same_v<T, v0::jbyte> || std::is_same_v<T, v0::jboolean>)
+        {
+            opcode = op_baload;
+        }
+        else if constexpr (std::is_same_v<T, v0::jshort>)
+        {
+            opcode = op_saload;
+        }
+        else
+        {
+            opcode = op_aaload;
+        }
+
+        code->code->push_back(opcode);
+        codeStackPop();
+        codeStackPop();
+    }
+
+    template <typename T> void instStore(uint16_t slot)
+    {
+        uint8_t opcode;
+        if constexpr (std::is_same_v<T, v0::jint>)
+        {
+            opcode = op_istore;
+        }
+        else if constexpr (std::is_same_v<T, v0::jfloat>)
+        {
+            opcode = op_fstore;
+        }
+        else if constexpr (std::is_same_v<T, v0::jlong>)
+        {
+            opcode = op_lstore;
+        }
+        else if constexpr (std::is_same_v<T, v0::jdouble>)
+        {
+            opcode = op_dstore;
+        }
+        else
+        {
+            opcode = op_astore;
+        }
+
+        if (slot <= 0xff)
+        {
+            code->code->push_back(opcode);
+            code->code->push_back(slot);
+        }
+        else
+        {
+            code->code->push_back(op_wide);
+            code->code->push_back(opcode);
+            codePutId(slot);
+        }
+
+        codeLocalAccess(slot);
+        codeStackPop();
+    }
+    void instIStore(uint8_t i);
+    void instLStore(uint8_t i);
+    void instFStore(uint8_t i);
+    void instDStore(uint8_t i);
+    void instAStore(uint8_t i);
 
     void instReturn() const;
 

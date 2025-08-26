@@ -158,21 +158,17 @@ template <typename T> inline T localAccessValueW(int idx, OMFrame *f = currentTh
     }
 }
 
-template <typename Ttarget, typename Tvalue> inline void accessFieldI(OMField *field)
+template <typename Ttarget, typename Tvalue> void accessFieldI(OMField *field)
 {
-    auto data = stackTopAccess<Tvalue>();
-    stackPop();
-    auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
-    stackPop();
+    auto data = stackTopAccess<Tvalue>(true);
+    auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>(true));
     *reinterpret_cast<Ttarget *>(&obj->data[field->offset]) = data;
 }
 
 template <typename Ttarget, typename Tvalue> inline void accessFieldW(OMField *field)
 {
-    auto data = stackTopAccessW<Tvalue>();
-    stackPopW();
-    auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>());
-    stackPop();
+    auto data = stackTopAccessW<Tvalue>(true);
+    auto obj = static_cast<OMOOPDesc *>(stackTopAccess<void *>(true));
     *reinterpret_cast<Ttarget *>(&obj->data[field->offset]) = data;
 }
 
@@ -291,15 +287,76 @@ inline void accessFieldStatic(OMField *field)
     }
 }
 
-template <typename Ttarget, typename Tvalue> inline void fetchFieldStaticI(OMField *field)
+template <typename Ttarget, typename Tvalue> void fetchFieldI(OMField *field)
 {
-    stackPushAccess<Tvalue>(*reinterpret_cast<Ttarget *>(
+    auto obj = stackTopAccess<OMOOPDesc *>(true);
+    stackPushAccess<Tvalue>(*static_cast<Ttarget *>(static_cast<void *>(&obj->data[field->offset])));
+}
+
+template <typename Ttarget, typename Tvalue> void fetchFieldW(OMField *field)
+{
+    auto obj = stackTopAccess<OMOOPDesc *>(true);
+    stackPushAccessW<Tvalue>(*static_cast<Ttarget *>(static_cast<void *>(&obj->data[field->offset])));
+}
+
+inline void fetchField(OMField *field)
+{
+    int p = 0;
+    auto res = bytecode::descriptor::decodeTypeTo(field->desc, &p);
+
+    switch (res.type)
+    {
+    case bytecode::descriptor::Byte:
+        fetchFieldI<jbyte, jint>(field);
+        break;
+    case bytecode::descriptor::Boolean:
+        fetchFieldI<jboolean, jint>(field);
+        break;
+    case bytecode::descriptor::Char:
+        fetchFieldI<jchar, jint>(field);
+        break;
+    case bytecode::descriptor::Short:
+        fetchFieldI<jshort, jint>(field);
+        break;
+    case bytecode::descriptor::Int:
+        fetchFieldI<jint, jint>(field);
+        break;
+    case bytecode::descriptor::Float:
+        fetchFieldI<jfloat, jfloat>(field);
+        break;
+    case bytecode::descriptor::Long:
+        fetchFieldW<jlong, jlong>(field);
+        break;
+    case bytecode::descriptor::Double:
+        fetchFieldW<jdouble, jdouble>(field);
+        break;
+    case bytecode::descriptor::Array:
+    case bytecode::descriptor::Void:
+    case bytecode::descriptor::Reference:
+        auto h = currentThread.currentFrame->method->klass->heap;
+        auto obj = stackTopAccess<OMOOPDesc *>(true);
+        auto target = &obj->data[field->offset];
+        if (h->ptrCompEnabled())
+        {
+            stackPushAccess<void *>(h->decompressPtr(*reinterpret_cast<uint32_t *>(target)));
+        }
+        else
+        {
+            stackPushAccess<void *>(*reinterpret_cast<void **>(target));
+        }
+        break;
+    }
+}
+
+template <typename Ttarget, typename Tvalue> void fetchFieldStaticI(OMField *field)
+{
+    stackPushAccess<Tvalue>(*static_cast<Ttarget *>(
         static_cast<void *>(static_cast<uint8_t *>(field->klass->staticBlock) + field->offset)));
 }
 
-template <typename Ttarget, typename Tvalue> inline void fetchFieldStaticW(OMField *field)
+template <typename Ttarget, typename Tvalue> void fetchFieldStaticW(OMField *field)
 {
-    stackPushAccessW<Tvalue>(*reinterpret_cast<Ttarget *>(
+    stackPushAccessW<Tvalue>(*static_cast<Ttarget *>(
         static_cast<void *>(static_cast<uint8_t *>(field->klass->staticBlock) + field->offset)));
 }
 

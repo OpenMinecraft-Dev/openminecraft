@@ -1370,7 +1370,19 @@ operand:
 
             goto operand;
         }
-            // op_getfield
+        case op_getfield: {
+            auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
+            auto n = *static_cast<OMField **>(static_cast<void *>(frame->method->klass->constantPool + id));
+            if (n == nullptr)
+            {
+                n = tower->loader->lazyFieldInit(currentThread.currentFrame->method->klass, id);
+            }
+            assert(n != nullptr);
+            fetchField(n);
+            currentThread.pc += 3;
+
+            goto operand;
+        }
         case op_putfield: {
             auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
             auto n = *static_cast<OMField **>(static_cast<void *>(frame->method->klass->constantPool + id));
@@ -1384,6 +1396,8 @@ operand:
 
             goto operand;
         }
+        // gino: for invokeinterface, we need to check if the interface is implemented by this class
+        case op_invokeinterface:
         case op_invokevirtual: {
             auto id = binary::be16ToNative(*reinterpret_cast<uint16_t *>(currentThread.pc + 1));
             auto n = *static_cast<OMMethod **>(static_cast<void *>(frame->method->klass->constantPool + id));
@@ -1410,8 +1424,6 @@ operand:
 
             goto operand;
         }
-        // gino: for invokeinterface, we need to check if the interface is implemented by this class
-        case op_invokeinterface:
         case op_invokestatic: {
             auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
             auto n = *static_cast<OMMethod **>(static_cast<void *>(frame->method->klass->constantPool + id));
@@ -1601,6 +1613,15 @@ operand:
             {
                 currentThread.pc += 3;
             }
+        }
+        case op_goto_w: {
+            currentThread.pc += binary::be32SignedToNative(currentThread.pc[1], currentThread.pc[2], currentThread.pc[3], currentThread.pc[4]);
+            goto operand;
+        }
+        case op_jsr_w: {
+            stackPushAccess<void *>(currentThread.pc);
+            currentThread.pc += binary::be32SignedToNative(currentThread.pc[1], currentThread.pc[2], currentThread.pc[3], currentThread.pc[4]);
+            goto operand;
         }
         default: {
         errInsn:

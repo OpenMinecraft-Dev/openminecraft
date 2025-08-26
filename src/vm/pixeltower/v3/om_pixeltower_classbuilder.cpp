@@ -194,6 +194,37 @@ void OMMethodBuilder::instALoad(uint8_t i)
     codeLocalAccess(i);
     codeStackPush();
 }
+
+void OMMethodBuilder::instIStore(uint8_t i)
+{
+    code->code->push_back(op_istore_n(i));
+    codeLocalAccess(i);
+    codeStackPop();
+}
+void OMMethodBuilder::instLStore(uint8_t i)
+{
+    code->code->push_back(op_lstore_n(i));
+    codeLocalAccess(i);
+    codeStackPop();
+}
+void OMMethodBuilder::instFStore(uint8_t i)
+{
+    code->code->push_back(op_fstore_n(i));
+    codeLocalAccess(i);
+    codeStackPop();
+}
+void OMMethodBuilder::instDStore(uint8_t i)
+{
+    code->code->push_back(op_dstore_n(i));
+    codeLocalAccess(i);
+    codeStackPop();
+}
+void OMMethodBuilder::instAStore(uint8_t i)
+{
+    code->code->push_back(op_astore_n(i));
+    codeLocalAccess(i);
+    codeStackPop();
+}
 void OMMethodBuilder::methodCodeFinish() const
 {
     code->codeLength = code->code->size();
