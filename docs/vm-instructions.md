@@ -1,4 +1,4 @@
-| Instructions    | interpreter | jit (x86) |
+| Instructions    | Interpreter | JIT (x86) |
 |-----------------|-------------|-----------|
 | nop             | ✔️          | ❌️        |
 | aconst_null     | ✔️          | ❌️        |
@@ -72,26 +72,26 @@
 | ldiv            | ✔️          | ❌️        |
 | fdiv            | ✔️          | ❌️        |
 | ddiv            | ✔️          | ❌️        |
-| irem            | ❌️          | ❌️        |
-| lrem            | ❌️          | ❌️        |
-| frem            | ❌️          | ❌️        |
-| drem            | ❌️          | ❌️        |
-| ineg            | ❌️          | ❌️        |
-| lneg            | ❌️          | ❌️        |
-| fneg            | ❌️          | ❌️        |
-| dneg            | ❌️          | ❌️        |
-| ishl            | ❌️          | ❌️        |
-| lshl            | ❌️          | ❌️        |
-| ishr            | ❌️          | ❌️        |
-| lshr            | ❌️          | ❌️        |
-| iushr           | ❌️          | ❌️        |
-| lushr           | ❌️          | ❌️        |
-| iand            | ❌️          | ❌️        |
-| land            | ❌️          | ❌️        |
-| ior             | ❌️          | ❌️        |
-| lor             | ❌️          | ❌️        |
-| ixor            | ❌️          | ❌️        |
-| lxor            | ❌️          | ❌️        |
+| irem            | ✔️️         | ❌️        |
+| lrem            | ✔️          | ❌️        |
+| frem            | ✔️          | ❌️        |
+| drem            | ✔️          | ❌️        |
+| ineg            | ✔️️         | ❌️        |
+| lneg            | ✔️          | ❌️        |
+| fneg            | ✔️️         | ❌️        |
+| dneg            | ✔️          | ❌️        |
+| ishl            | ✔️          | ❌️        |
+| lshl            | ✔️          | ❌️        |
+| ishr            | ✔️          | ❌️        |
+| lshr            | ✔️          | ❌️        |
+| iushr           | ✔️️         | ❌️        |
+| lushr           | ✔️          | ❌️        |
+| iand            | ✔           | ❌️        |
+| land            | ✔           | ❌️        |
+| ior             | ✔           | ❌️        |
+| lor             | ✔️          | ❌️        |
+| ixor            | ✔️          | ❌️        |
+| lxor            | ✔           | ❌️        |
 | iinc            | ✔️          | ❌️        |
 | i2l             | ✔️          | ❌️        |
 | i2f             | ✔️          | ❌️        |
@@ -140,12 +140,12 @@
 | return          | ✔️          | ❌️        |
 | getstatic       | ✔️          | ❌️        |
 | putstatic       | ✔️          | ❌️        |
-| getfield        | ❌️          | ❌️        |
+| getfield        | ✔️          | ❌️        |
 | putfield        | ✔️          | ❌️        |
 | invokevirtual   | ✔️          | ❌️        |
 | invokespecial   | ✔️          | ❌️        |
 | invokestatic    | ✔️          | ❌️        |
-| invokeinterface | ❌️          | ❌️        |
+| invokeinterface | ✔️          | ❌️        |
 | invokedynamic   | ❌️          | ❌️        |
 | new             | ✔️          | ❌️        |
 | newarray        | ✔️          | ❌️        |
@@ -153,7 +153,7 @@
 | arraylength     | ✔️          | ❌️        |
 | athrow          | ✔️          | ❌️        |
 | checkcast       | ❌️          | ❌️        |
-| instanceof      | ❌️          | ❌️        |
+| instanceof      | ✔️️         | ❌️        |
 | monitorenter    | ❌️          | ❌️        |
 | monitorexit     | ❌️          | ❌️        |
 | wide            | ✔️          | ❌️        |

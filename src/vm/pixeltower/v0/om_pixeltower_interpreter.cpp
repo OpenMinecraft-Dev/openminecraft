@@ -1065,6 +1065,140 @@ operand:
             currentThread.pc++;
             goto operand;
         }
+        case op_irem: {
+            auto value2 = stackTopAccess<jint>(true);
+            auto value1 = stackTopAccess<jint>(true);
+            stackPushAccess<jint>(value1 % value2);
+            currentThread.pc++;
+            goto operand;
+        }
+        case op_lrem: {
+            auto value2 = stackTopAccessW<jlong>(true);
+            auto value1 = stackTopAccessW<jlong>(true);
+            stackPushAccessW<jlong>(value1 % value2);
+            currentThread.pc++;
+            goto operand;
+        }
+        case op_frem: {
+            auto value2 = stackTopAccess<jfloat>(true);
+            auto value1 = stackTopAccess<jfloat>(true);
+            stackPushAccess<jfloat>(std::fmod(value1, value2));
+            currentThread.pc++;
+            goto operand;
+        }
+        case op_drem: {
+            auto value2 = stackTopAccessW<jdouble>(true);
+            auto value1 = stackTopAccessW<jdouble>(true);
+            stackPushAccessW<jdouble>(std::fmod(value1, value2));
+            currentThread.pc++;
+            goto operand;
+        }
+        case op_ineg: {
+            stackPushAccess<jint>(-stackTopAccess<jint>(true));
+            currentThread.pc++;
+            goto operand;
+        }
+        case op_lneg: {
+            stackPushAccessW<jlong>(-stackTopAccessW<jlong>(true));
+            currentThread.pc++;
+            goto operand;
+        }
+        case op_fneg: {
+            stackPushAccess<jfloat>(-stackTopAccess<jfloat>(true));
+            currentThread.pc++;
+            goto operand;
+        }
+        case op_dneg: {
+            stackPushAccessW<jdouble>(-stackTopAccessW<jdouble>(true));
+            currentThread.pc++;
+            goto operand;
+        }
+        case op_ishl: {
+            auto value2 = stackTopAccess<jint>(true);
+            auto value1 = stackTopAccess<jint>(true);
+            stackPushAccess<jint>(value1 << (value2 & 0b11111));
+            goto operand;
+        }
+        case op_lshl: {
+            auto value2 = stackTopAccess<jint>(true);
+            auto value1 = stackTopAccessW<jlong>(true);
+            stackPushAccessW<jlong>(value1 << (value2 & 0b111111));
+            goto operand;
+        }
+        case op_ishr: {
+            auto value2 = stackTopAccess<jint>(true);
+            auto value1 = stackTopAccess<jint>(true);
+            stackPushAccess<jint>(value1 >> (value2 & 0b11111));
+            goto operand;
+        }
+        case op_lshr: {
+            auto value2 = stackTopAccess<jint>(true);
+            auto value1 = stackTopAccessW<jlong>(true);
+            stackPushAccessW<jlong>(value1 >> (value2 & 0b111111));
+            goto operand;
+        }
+        case op_iushr: {
+            auto value2 = stackTopAccess<jint>(true) & 0b11111;
+            auto value1 = stackTopAccess<jint>(true);
+            if (value1 >= 0)
+            {
+                stackPushAccess<jint>(value1 >> value2);
+            }
+            else
+            {
+                stackPushAccess<jint>((value1 >> value2) + (2 << ~value2));
+            }
+            goto operand;
+        }
+        case op_lushr: {
+            auto value2 = stackTopAccess<jint>(true) & 0b111111;
+            auto value1 = stackTopAccessW<jlong>(true);
+            if (value1 >= 0)
+            {
+                stackPushAccessW<jlong>(value1 >> value2);
+            }
+            else
+            {
+                stackPushAccessW<jlong>((value1 >> value2) + (2 << ~value2));
+            }
+            goto operand;
+        }
+        case op_iand: {
+            auto value2 = stackTopAccess<jint>(true);
+            auto value1 = stackTopAccess<jint>(true);
+            stackPushAccess<jint>(value1 & value2);
+            break;
+        }
+        case op_land: {
+            auto value2 = stackTopAccessW<jlong>(true);
+            auto value1 = stackTopAccessW<jlong>(true);
+            stackPushAccessW<jlong>(value1 & value2);
+            break;
+        }
+        case op_ior: {
+            auto value2 = stackTopAccess<jint>(true);
+            auto value1 = stackTopAccess<jint>(true);
+            stackPushAccess<jint>(value1 | value2);
+            break;
+        }
+        case op_lor: {
+            auto value2 = stackTopAccessW<jlong>(true);
+            auto value1 = stackTopAccessW<jlong>(true);
+            stackPushAccessW<jlong>(value1 | value2);
+            break;
+        }
+        case op_ixor: {
+            auto value2 = stackTopAccess<jint>(true);
+            auto value1 = stackTopAccess<jint>(true);
+            stackPushAccess<jint>(value1 ^ value2);
+            break;
+        }
+        case op_lxor: {
+            auto value2 = stackTopAccessW<jlong>(true);
+            auto value1 = stackTopAccessW<jlong>(true);
+            stackPushAccessW<jlong>(value1 ^ value2);
+            break;
+        }
         case op_iinc: {
             localAccessMod<jint>(currentThread.pc[1],
                                  localAccessValue<jint>(currentThread.pc[1]) + currentThread.pc[2]);
@@ -1311,6 +1445,8 @@ operand:
             currentThread.pc = localAccessValue<uint8_t *>(currentThread.pc[1]);
             goto operand;
         }
+            // op_tableswitch
+            // op_lookupswitch
         case op_ireturn: {
             auto ret = stackTopAccess<jint>();
             popLastFrame();
@@ -1524,6 +1660,24 @@ operand:
             throw err::OMRuntimeError(exci);
         }
             // op_checkcast
+        case op_instanceof: {
+            auto obj = stackTopAccess<OMOOPDesc *>(true);
+            if (!obj)
+            {
+                stackPushAccess<jint>(0);
+            }
+            else
+            {
+                auto id = binary::be16ToNative(*(uint16_t *)(currentThread.pc + 1));
+                auto n = *static_cast<OMKlass **>(static_cast<void *>(frame->method->klass->constantPool + id));
+                if (n == nullptr)
+                {
+                    n = tower->loader->lazyClassInit(currentThread.currentFrame->method->klass, id);
+                }
+                assert(n != nullptr);
+                stackPushAccess<jint>(checkCompat(obj->klass, n));
+            }
+        }
             // op_instanceof
             // op_monitorenter
             // op_monitorexit
