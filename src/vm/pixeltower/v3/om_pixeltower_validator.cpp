@@ -1286,10 +1286,11 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
         case op_multianewarray: {
             auto id = binary::be16ToNative(*(uint16_t *)(code->code->data() + offset + 1));
             checkRecursively(file, id, name, OMClassConstantType::Class);
-            for (auto i = 0; i < code->code->at(3); i++)
+            for (auto i = 0; i < code->code->at(offset + 3); i++)
             {
                 safeStackPop(stack, code, fn(), intItem);
             }
+            safeStackPush(stack, code, fn(), refItem);
             bump(4);
             break;
         }

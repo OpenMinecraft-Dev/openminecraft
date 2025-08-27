@@ -510,8 +510,18 @@ OMKlass *OMKlassLoader::lazyClassInit(OMKlass *klass, uint16_t id)
         auto &cls = klass->raw->mapping[klass->raw->mapping[id]->to<classfile::OMClassConstantClass>()->nameIndex]
                         ->to<classfile::OMClassConstantUtf8>()
                         ->data;
-        loadClass({bytecode::descriptor::Reference, cls});
-        *target = fetchClass({bytecode::descriptor::Reference, cls});
+        if (cls[0] == '[')
+        {
+            int i = 0;
+            auto type = bytecode::descriptor::decodeTypeTo(cls, &i);
+            loadClass(type);
+            *target = fetchClass(type);
+        }
+        else
+        {
+            loadClass({bytecode::descriptor::Reference, cls});
+            *target = fetchClass({bytecode::descriptor::Reference, cls});
+        }
         return *target;
     }
 
@@ -521,7 +531,7 @@ OMKlass *OMKlassLoader::lazyClassInit(OMKlass *klass, uint16_t id)
 // gino: for array classes, we use this method to construct OMKlass objects
 void OMKlassLoader::loadSpecialClass(OMTypeDesc name)
 {
-    auto klass = (OMKlass *)metaspace->allocate(sizeof(OMKlass));
+    auto klass = static_cast<OMKlass *>(metaspace->allocate(sizeof(OMKlass)));
     memset((void *)klass, 0, sizeof(OMKlass));
     klass->kind = Array;
     // gino: msvc bug? string doesn't copy with the operator equals call

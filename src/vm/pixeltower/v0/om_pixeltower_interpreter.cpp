@@ -1748,6 +1748,33 @@ operand:
             }
             break;
         }
+        case op_multianewarray: {
+            auto id = binary::be16ToNative(*reinterpret_cast<uint16_t *>(currentThread.pc + 1));
+            auto n = *static_cast<OMKlass **>(static_cast<void *>(frame->method->klass->constantPool + id));
+            if (n == nullptr)
+            {
+                n = tower->loader->lazyClassInit(currentThread.currentFrame->method->klass, id);
+            }
+            assert(n != nullptr);
+
+            int p = 0;
+            auto typ = bytecode::descriptor::decodeTypeTo(n->name, &p);
+
+            auto dim = currentThread.pc[3];
+            std::vector<jint> lengths(dim);
+
+            for (auto i = 0; i < dim; i++)
+            {
+                lengths[dim - i - 1] = stackTopAccess<jint>(true);
+            }
+
+            auto root = n->allocateArray(lengths[0]);
+
+            stackPushAccess<void *>(root);
+
+            currentThread.pc += 4;
+            goto errInsn;
+        }
         case op_ifnull: {
             if (stackTopAccess<void *>(true) == nullptr)
             {
@@ -1769,12 +1796,14 @@ operand:
             }
         }
         case op_goto_w: {
-            currentThread.pc += binary::be32SignedToNative(currentThread.pc[1], currentThread.pc[2], currentThread.pc[3], currentThread.pc[4]);
+            currentThread.pc += binary::be32SignedToNative(currentThread.pc[1], currentThread.pc[2],
+                                                           currentThread.pc[3], currentThread.pc[4]);
             goto operand;
         }
         case op_jsr_w: {
             stackPushAccess<void *>(currentThread.pc);
-            currentThread.pc += binary::be32SignedToNative(currentThread.pc[1], currentThread.pc[2], currentThread.pc[3], currentThread.pc[4]);
+            currentThread.pc += binary::be32SignedToNative(currentThread.pc[1], currentThread.pc[2],
+                                                           currentThread.pc[3], currentThread.pc[4]);
             goto operand;
         }
         default: {
