@@ -1768,12 +1768,10 @@ operand:
                 lengths[dim - i - 1] = stackTopAccess<jint>(true);
             }
 
-            auto root = n->allocateArray(lengths[0]);
-
-            stackPushAccess<void *>(root);
+            stackPushAccess<void *>(allocateMultiArray(typ, lengths.data()));
 
             currentThread.pc += 4;
-            goto errInsn;
+            goto operand;
         }
         case op_ifnull: {
             if (stackTopAccess<void *>(true) == nullptr)
@@ -1837,5 +1835,22 @@ operand:
 
         throw;
     }
+}
+
+OMOOPArrDesc *OMInterpreter::allocateMultiArray(bytecode::descriptor::OMTypeDesc desc, jint* length)
+{
+    tower->loader->loadClass(desc);
+    auto kls = tower->loader->fetchClass(desc);
+    auto arr = kls->allocateArray(*length);
+    if (desc.depth != 1)
+    {
+        desc.depth--;
+        for (int i = 0; i < *length; i++)
+        {
+            arr->array<OMOOPArrDesc *>()[i] = allocateMultiArray(desc, length + 1);
+        }
+    }
+
+    return arr;
 }
 } // namespace openminecraft::vm::pixeltower::v0

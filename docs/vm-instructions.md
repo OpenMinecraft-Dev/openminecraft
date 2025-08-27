@@ -157,7 +157,7 @@
 | monitorenter    | ❌️          | ❌️        |
 | monitorexit     | ❌️          | ❌️        |
 | wide            | ✔️          | ❌️        |
-| multianewarray  | ❌️          | ❌️        |
+| multianewarray  | ✔️          | ❌️        |
 | ifnull          | ✔️          | ❌️        |
 | ifnonnull       | ✔️          | ❌️        |
 | goto_w          | ✔️          | ❌️        |

@@ -30,6 +30,8 @@ class OMInterpreter
     std::vector<void *> bootArgs;
 
   private:
+    OMOOPArrDesc *allocateMultiArray(bytecode::descriptor::OMTypeDesc desc, jint* length);
+
     void validateArgs();
     bool checkCompat(OMKlass *src, OMKlass *target);
 
