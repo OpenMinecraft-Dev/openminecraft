@@ -46,6 +46,8 @@ class OMKlass
 
     OMPixelTowerHeap *heap;
 
+    std::string source;
+
     [[nodiscard]] bool isIntArr() const
     {
         return name == "[I";

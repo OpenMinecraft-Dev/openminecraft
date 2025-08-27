@@ -50,6 +50,7 @@ class OMKlassLoader
     void klassConstantPoolLoad(OMKlass *klass);
     void klassFieldInit(OMKlass *klass);
     void klassOopCreate(OMKlass *klass);
+    void klassLoadDebugStatus(OMKlass *klass);
 
     OMPixelTowerHeap *metaspace;
     OMPixelTowerHeap *heap;

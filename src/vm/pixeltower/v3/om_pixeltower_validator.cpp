@@ -1140,12 +1140,6 @@ void OMValidator::checkMethod(std::shared_ptr<OMClassFile> file, std::shared_ptr
         case op_invokespecial: {
             fetchRef(OMClassConstantType::MethodRef);
 
-            // gino: calling non constructor is not allowed
-            if (name != "<init>")
-            {
-                throw err::OMValidationError{err::Instructions, "calling non constructor method!", fn()};
-            }
-
             safeArgFetch(stack, code, fn(), desc);
             safeStackPop(stack, code, fn(), refItem);
 

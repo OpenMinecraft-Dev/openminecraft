@@ -7,6 +7,7 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/impl/om_impl_object.hpp"
 #include "openminecraft/vm/impl/om_impl_printstream.hpp"
+#include "openminecraft/vm/impl/om_impl_throwable.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
@@ -76,6 +77,7 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
     loader->nativeMethods["vmstd/internal/SystemPrintStream.println(Z)V"] =
         impl::vmstd_internal_SystemPrintStream_println;
     loader->nativeMethods["java/lang/Object.hashCode()I"] = impl::java_lang_Object_hashCode;
+    loader->nativeMethods["java/lang/Throwable.fillInStackTrace()V"] = impl::java_lang_Throwable_fillInStackTrace;
 }
 OMPixelTower::~OMPixelTower()
 {

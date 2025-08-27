@@ -1678,7 +1678,6 @@ operand:
                 stackPushAccess<jint>(checkCompat(obj->klass, n));
             }
         }
-            // op_instanceof
             // op_monitorenter
             // op_monitorexit
         case op_wide: {
@@ -1837,7 +1836,7 @@ operand:
     }
 }
 
-OMOOPArrDesc *OMInterpreter::allocateMultiArray(bytecode::descriptor::OMTypeDesc desc, jint* length)
+OMOOPArrDesc *OMInterpreter::allocateMultiArray(bytecode::descriptor::OMTypeDesc desc, jint *length)
 {
     tower->loader->loadClass(desc);
     auto kls = tower->loader->fetchClass(desc);

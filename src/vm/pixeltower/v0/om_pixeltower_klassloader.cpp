@@ -55,6 +55,11 @@ OMKlassLoader::~OMKlassLoader()
                 m->exceptionHandlers->~vector<OMMethodExceptionCaught>();
                 metaspace->deallocate(m->exceptionHandlers, sizeof(std::vector<OMMethodExceptionCaught>));
             }
+            if (m->sourceMap)
+            {
+                m->sourceMap->~unordered_map<jint, jint>();
+                metaspace->deallocate(m->sourceMap, sizeof(std::unordered_map<jint, jint>));
+            }
             m = nxt;
         }
 
@@ -103,6 +108,7 @@ void OMKlassLoader::loadClass(OMTypeDesc name)
             klassConstantPoolLoad(klass);
             klassFieldInit(klass);
             klassOopCreate(klass);
+            klassLoadDebugStatus(klass);
 
             return;
         }
@@ -149,7 +155,7 @@ OMKlass *OMKlassLoader::klassConstruct(
     std::vector<std::shared_ptr<openminecraft::vm::classfile::OMClassFile>>::iterator fi, OMTypeDesc desc)
 {
     auto f = *fi;
-    auto klass = (OMKlass *)metaspace->allocate(sizeof(OMKlass));
+    auto klass = static_cast<OMKlass *>(metaspace->allocate(sizeof(OMKlass)));
     memset((void *)klass, 0, sizeof(OMKlass));
     void *rawmap = metaspace->allocate(sizeof(std::unordered_map<std::string, OMMethod *>));
     klass->vtable = new (rawmap) std::unordered_map<std::string, OMMethod *>();
@@ -207,6 +213,19 @@ OMKlass *OMKlassLoader::klassConstruct(
     }
 
     return klass;
+}
+
+void OMKlassLoader::klassLoadDebugStatus(OMKlass *klass)
+{
+    auto target = std::find_if(
+        klass->raw->attrs.begin(), klass->raw->attrs.end(),
+        [](const std::shared_ptr<classfile::OMClassAttr> &att) { return att->type() == classfile::SourceFile; });
+    if (target != klass->raw->attrs.end())
+    {
+        klass->source = klass->raw->mapping[target->get()->to<classfile::OMClassAttrSourceFile>()->sourcefileIndex]
+                            ->to<classfile::OMClassConstantUtf8>()
+                            ->data;
+    }
 }
 
 void OMKlassLoader::klassMethodInit(OMKlass *klass)
@@ -292,6 +311,29 @@ void OMKlassLoader::klassMethodInit(OMKlass *klass)
 
                 loadClass(desc);
                 m->exceptionHandlers->push_back({handler.startPc, handler.endPc, handler.handlerPc, fetchClass(desc)});
+            }
+
+            auto res = std::find_if(code->attributes.begin(), code->attributes.end(),
+                                    [](const std::shared_ptr<classfile::OMClassAttr> &att) {
+                                        return att->type() == classfile::LineNumberTable;
+                                    });
+            if (res != code->attributes.end())
+            {
+                auto rawmap = metaspace->allocate(sizeof(std::unordered_map<jint, jint>));
+                m->sourceMap = new (rawmap) std::unordered_map<jint, jint>();
+
+                auto mmp = res->get()->to<classfile::OMClassAttrLineNumberTable>();
+
+                int currentLine = 0;
+                for (int i = 0; i < m->codeSize; i++)
+                {
+                    if (mmp->lineNumberTable.count(i))
+                    {
+                        currentLine = mmp->lineNumberTable.at(i);
+                    }
+
+                    (*m->sourceMap)[i] = currentLine;
+                }
             }
         }
         else if ((m->accessFlags & JVM_Acc_Abstract) == 0)
