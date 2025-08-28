@@ -48,11 +48,19 @@ class OMPixelTowerHeap
     inline uint32_t compressPtr(void *p)
     {
         assert(sizeof(void *) == 8);
+        if (!p)
+        {
+            return 0x1;
+        }
         return ((size_t)p - (size_t)heap->block) >> 3;
     }
     inline void *decompressPtr(uint32_t p)
     {
         assert(sizeof(void *) == 8);
+        if (p == 0x1)
+        {
+            return nullptr;
+        }
         return (void *)((size_t)(p << 3) + (size_t)heap->block);
     }
 

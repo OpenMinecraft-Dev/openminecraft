@@ -22,7 +22,6 @@ struct OMMethod
     std::unordered_map<jint, OMKlass *> *argCheck;
     std::unordered_map<jint, jint> *sourceMap;
     OMMethod *next;
-    jint *lineNumberTable;
     AccessFlags accessFlags;
     jint maxLocals;
     jint maxStack;

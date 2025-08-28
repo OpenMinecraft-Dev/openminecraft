@@ -69,6 +69,7 @@ OMKlassLoader::~OMKlassLoader()
 
 void OMKlassLoader::initBase()
 {
+    loadClass({bytecode::descriptor::Reference, "java/lang/Class"});
     loadClass({bytecode::descriptor::Reference, "java/lang/String"});
 }
 
@@ -129,17 +130,17 @@ void OMKlassLoader::loadClass(OMTypeDesc name)
 
 void OMKlassLoader::klassOopCreate(OMKlass *klass)
 {
-    auto clsklass = fetchClass({bytecode::descriptor::Reference, "java/lang/String"});
+    auto clsklass = fetchClass({bytecode::descriptor::Reference, "java/lang/Class"});
     auto tgt = clsklass->allocateInstance();
+    tgt->mark |= mconst;
     klass->oop = tgt;
-    auto ii = interpreter->tower->createString(klass->name);
 
     for (auto &f : clsklass->fields)
     {
         if (f.name == "name")
         {
             stackPushAccess<void *>(tgt);
-            stackPushAccess<void *>(ii);
+            stackPushAccess<void *>(interpreter->tower->createString(klass->name));
             accessField(&f);
         }
         if (f.name == "nativePtr")
@@ -160,7 +161,8 @@ OMKlass *OMKlassLoader::klassConstruct(
     void *rawmap = metaspace->allocate(sizeof(std::unordered_map<std::string, OMMethod *>));
     klass->vtable = new (rawmap) std::unordered_map<std::string, OMMethod *>();
     klass->heap = heap;
-    klass->name = bytecode::descriptor::restore(desc);
+    auto nn = bytecode::descriptor::restore(desc);
+    klass->name = nn;
     klass->accessFlags = f->accessFlags;
     klass->raw = f;
     files.erase(fi);

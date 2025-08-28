@@ -1394,8 +1394,8 @@ operand:
 
 #define icmpcond(op, sign)                                                                                             \
     case op: {                                                                                                         \
-        auto item = stackTopAccess<jint>(true);                                                                        \
         auto item2 = stackTopAccess<jint>(true);                                                                       \
+        auto item = stackTopAccess<jint>(true);                                                                        \
         if (item sign item2)                                                                                           \
         {                                                                                                              \
             currentThread.pc += binary::be16SignedToNative(currentThread.pc[1], currentThread.pc[2]);                  \

@@ -2,12 +2,12 @@ package java.lang;
 
 public class StackTraceElement
 {
-    private Class<?> declaringClass;
-    private String name;
-    private String descriptor;
+    Class<?> declaringClass;
+    String name;
+    String descriptor;
 
-    private String sourceFile;
-    private int line;
+    String sourceFile;
+    int line;
 
     private StackTraceElement()
     {

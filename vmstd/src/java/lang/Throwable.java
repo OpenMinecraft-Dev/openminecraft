@@ -34,4 +34,16 @@ public class Throwable
     }
 
     private native void fillInStackTrace();
+
+    public void printStackTrace()
+    {
+        for (StackTraceElement e : stacktrace)
+        {
+            System.out.println(e.declaringClass.getName());
+            System.out.println(e.name);
+            System.out.println(e.descriptor);
+            System.out.println(e.sourceFile);
+            System.out.println(e.line);
+        }
+    }
 }
