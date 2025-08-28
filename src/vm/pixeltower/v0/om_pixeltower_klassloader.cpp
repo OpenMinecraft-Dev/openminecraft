@@ -69,7 +69,6 @@ OMKlassLoader::~OMKlassLoader()
 
 void OMKlassLoader::initBase()
 {
-    loadClass({bytecode::descriptor::Reference, "java/lang/Class"});
     loadClass({bytecode::descriptor::Reference, "java/lang/String"});
 }
 
@@ -130,7 +129,9 @@ void OMKlassLoader::loadClass(OMTypeDesc name)
 
 void OMKlassLoader::klassOopCreate(OMKlass *klass)
 {
-    auto clsklass = fetchClass({bytecode::descriptor::Reference, "java/lang/Class"});
+    OMTypeDesc kl = {bytecode::descriptor::Reference, "java/lang/Class"};
+    loadClass(kl);
+    auto clsklass = fetchClass(kl);
     auto tgt = clsklass->allocateInstance();
     tgt->mark |= mconst;
     klass->oop = tgt;
