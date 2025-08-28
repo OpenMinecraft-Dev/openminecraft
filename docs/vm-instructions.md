@@ -154,8 +154,8 @@
 | athrow          | ✔️          | ❌️        |
 | checkcast       | ❌️          | ❌️        |
 | instanceof      | ✔️️         | ❌️        |
-| monitorenter    | ❌️          | ❌️        |
-| monitorexit     | ❌️          | ❌️        |
+| monitorenter    | ✔️          | ❌️        |
+| monitorexit     | ✔️          | ❌️        |
 | wide            | ✔️          | ❌️        |
 | multianewarray  | ✔️          | ❌️        |
 | ifnull          | ✔️          | ❌️        |

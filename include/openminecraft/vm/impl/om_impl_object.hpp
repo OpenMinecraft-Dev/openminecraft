@@ -8,6 +8,6 @@ namespace openminecraft::vm::impl
 {
 std::any java_lang_Object_hashCode(pixeltower::v0::OMPixelTower *, std::any *);
 std::any java_lang_Object_getClass(pixeltower::v0::OMPixelTower *, std::any *);
-}
+} // namespace openminecraft::vm::impl
 
 #endif

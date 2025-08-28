@@ -119,6 +119,10 @@ void OMInterpreter::checkNotNull(const void *p) const
         auto npecls = tower->loader->fetchClass(dec);
         throw err::OMRuntimeError{npecls->allocateInstance()};
     }
+
+    // gino: check if this thread holds the ownership of the object, otherwise we need to wait until the lock is released;
+    auto oop = static_cast<OMOOPDesc *>(const_cast<void *>(p));
+    while (std::find(currentThread.monitored.begin(), currentThread.monitored.end(), oop) == currentThread.monitored.end() && oop->mark & mlocked) {}
 }
 
 void OMInterpreter::callDynamic(OMMethod *met, uint8_t *retAddr)
@@ -1678,8 +1682,26 @@ operand:
                 stackPushAccess<jint>(checkCompat(obj->klass, n));
             }
         }
-            // op_monitorenter
-            // op_monitorexit
+        case op_monitorenter: {
+            auto obj = stackTopAccess<OMOOPDesc *>(true);
+            checkNotNull(obj);
+            currentThread.monitored.push_back(obj);
+            obj->mark |= mlocked;
+            currentThread.pc++;
+            goto operand;
+        }
+        case op_monitorexit: {
+            auto obj = stackTopAccess<OMOOPDesc *>(true);
+            checkNotNull(obj);
+            auto itt = std::find(currentThread.monitored.begin(), currentThread.monitored.end(), obj);
+            if (itt != currentThread.monitored.end())
+            {
+                currentThread.monitored.erase(itt);
+            }
+            obj->mark &= ~mlocked;
+            currentThread.pc++;
+            goto operand;
+        }
         case op_wide: {
             auto c = currentThread.pc[1];
             auto id = binary::be16ToNative(*reinterpret_cast<uint16_t *>(currentThread.pc[2]));

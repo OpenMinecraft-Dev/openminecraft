@@ -30,7 +30,7 @@ def compile(s):
     return ret
 
 if __name__ == '__main__':
-    with multiprocessing.Pool(processes=8) as pool:
+    with multiprocessing.Pool(processes=__import__("multiprocessing").cpu_count()) as pool:
         if TQDM_ENABLED:
             results = list(tqdm(pool.imap(compile, sources), total=len(sources)))
         else:

@@ -100,7 +100,7 @@ void OMKlassLoader::loadClass(OMTypeDesc name)
                 ->to<classfile::OMClassConstantUtf8>()
                 ->data == name.name)
         {
-            validator.validate(f, name.name);
+            // validator.validate(f, name.name);
             klass = klassConstruct(fi, name);
 
             klassVtableInit(klass);

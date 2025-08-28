@@ -1,6 +1,6 @@
 package java.lang;
 
-public class String implements CharSequence
+public final class String implements CharSequence, java.io.Serializable, Comparable<String>
 {
     private byte[] data;
     public String(byte[] data)
@@ -31,5 +31,10 @@ public class String implements CharSequence
     public String toString()
     {
         return this;
+    }
+
+    public int compare(String s)
+    {
+        return 0;
     }
 }

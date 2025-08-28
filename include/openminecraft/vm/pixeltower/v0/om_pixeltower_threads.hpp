@@ -18,6 +18,7 @@ class OMPixelTowerThread
     OMPixelTowerThread() = default;
     ~OMPixelTowerThread() = default;
 
+    std::vector<void *> monitored;
     std::thread::id id;
     std::string name;
     uint8_t *pc = nullptr;
