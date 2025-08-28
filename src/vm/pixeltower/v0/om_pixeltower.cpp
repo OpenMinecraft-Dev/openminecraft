@@ -77,6 +77,7 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
     loader->nativeMethods["vmstd/internal/SystemPrintStream.println(Z)V"] =
         impl::vmstd_internal_SystemPrintStream_println;
     loader->nativeMethods["java/lang/Object.hashCode()I"] = impl::java_lang_Object_hashCode;
+    loader->nativeMethods["java/lang/Object.getClass()Ljava/lang/Class;"] = impl::java_lang_Object_getClass;
     loader->nativeMethods["java/lang/Throwable.fillInStackTrace()V"] = impl::java_lang_Throwable_fillInStackTrace;
 }
 OMPixelTower::~OMPixelTower()
