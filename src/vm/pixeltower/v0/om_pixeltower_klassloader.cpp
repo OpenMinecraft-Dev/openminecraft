@@ -119,6 +119,7 @@ void OMKlassLoader::loadClass(OMTypeDesc name)
     // CharSequence has method toString, and it will loads String recursively if this check doesn't exist
     for (auto l : classes)
     {
+        logger.info(l->name);
         if (l->name == bytecode::descriptor::restore(name))
         {
             return;
@@ -164,6 +165,7 @@ OMKlass *OMKlassLoader::klassConstruct(
     klass->heap = heap;
     auto nn = bytecode::descriptor::restore(desc);
     klass->name = nn;
+    nn.copy((char *)klass->name.c_str(), nn.length());
     klass->accessFlags = f->accessFlags;
     klass->raw = f;
     files.erase(fi);
@@ -225,9 +227,11 @@ void OMKlassLoader::klassLoadDebugStatus(OMKlass *klass)
         [](const std::shared_ptr<classfile::OMClassAttr> &att) { return att->type() == classfile::SourceFile; });
     if (target != klass->raw->attrs.end())
     {
-        klass->source = klass->raw->mapping[target->get()->to<classfile::OMClassAttrSourceFile>()->sourcefileIndex]
-                            ->to<classfile::OMClassConstantUtf8>()
-                            ->data;
+        auto tgt = klass->raw->mapping[target->get()->to<classfile::OMClassAttrSourceFile>()->sourcefileIndex]
+                       ->to<classfile::OMClassConstantUtf8>()
+                       ->data;
+        klass->source = tgt;
+        tgt.copy((char *)klass->source.c_str(), tgt.length());
     }
 }
 
