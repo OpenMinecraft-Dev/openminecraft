@@ -114,12 +114,11 @@ void OMKlassLoader::loadClass(OMTypeDesc name)
         }
     }
 
-    // geopelia: we need this check for teh case below:
+    // geopelia: we need this check for the case below:
     // String -> CharSequence -> String -> ...
     // CharSequence has method toString, and it will loads String recursively if this check doesn't exist
     for (auto l : classes)
     {
-        logger.info(l->name);
         if (l->name == bytecode::descriptor::restore(name))
         {
             return;

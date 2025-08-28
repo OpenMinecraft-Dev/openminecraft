@@ -6,7 +6,8 @@ namespace openminecraft::vm::impl
 {
 std::any java_lang_Throwable_fillInStackTrace(OMPixelTower *tower, std::any *d)
 {
-    auto arrcls = tower->loader->fetchClass({bytecode::descriptor::Array, "java/lang/StackTraceElement", 1, bytecode::descriptor::Reference});
+    auto arrcls = tower->loader->fetchClass(
+        {bytecode::descriptor::Array, "java/lang/StackTraceElement", 1, bytecode::descriptor::Reference});
     auto cls = tower->loader->fetchClass({bytecode::descriptor::Reference, "java/lang/StackTraceElement"});
     auto thr = tower->loader->fetchClass({bytecode::descriptor::Reference, "java/lang/Throwable"});
     auto fr = currentThread.currentFrame;
@@ -46,7 +47,8 @@ std::any java_lang_Throwable_fillInStackTrace(OMPixelTower *tower, std::any *d)
             else if (fr->method->sourceMap && f.name == "line")
             {
                 stackPushAccess<void *>(frame);
-                stackPushAccess<jint>(fr->method->sourceMap->at(static_cast<jint>(static_cast<size_t>(pc - fr->method->code))));
+                stackPushAccess<jint>(
+                    fr->method->sourceMap->at(static_cast<jint>(static_cast<size_t>(pc - fr->method->code))));
                 accessField(&f);
             }
         }
