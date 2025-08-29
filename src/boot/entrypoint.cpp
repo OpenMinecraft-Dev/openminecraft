@@ -150,7 +150,6 @@ int boot(std::vector<std::string> args)
 
     auto ss = "test\u00ff测试abcdありがとう😄";
     auto res = encoding::utf32ToUtf8(encoding::utf16ToUtf32(encoding::utf32ToUtf16(encoding::utf8ToUtf32(ss))));
-    // auto res = encoding::utf32ToUtf8(encoding::utf8ToUtf32(ss));
     logger->info(res);
 
     pixeltower::registerFuncs();

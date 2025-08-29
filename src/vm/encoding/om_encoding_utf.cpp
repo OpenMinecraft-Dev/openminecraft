@@ -133,9 +133,9 @@ std::vector<uint8_t> utf32ToUtf16(std::vector<int> cps)
         }
         else
         {
-            s.push_back(0b11011000 | (i >> 18));
+            s.push_back(0b11011000 | ((i >> 18) & 0b11));
             s.push_back((i >> 10) & 0b11111111);
-            s.push_back(0b11011100 | (i >> 8));
+            s.push_back(0b11011100 | ((i >> 8) & 0b11));
             s.push_back(i & 0b11111111);
         }
     }
