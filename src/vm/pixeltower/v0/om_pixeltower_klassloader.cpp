@@ -387,7 +387,7 @@ void OMKlassLoader::klassVtableInit(OMKlass *klass)
 
 void OMKlassLoader::klassFieldInit(OMKlass *klass)
 {
-    for (auto field : klass->raw->fields)
+    for (auto &field : klass->raw->fields)
     {
         klass->fields.push_back({klass->raw->mapping[field->nameIndex]->to<classfile::OMClassConstantUtf8>()->data,
                                  klass->raw->mapping[field->descIndex]->to<classfile::OMClassConstantUtf8>()->data,
@@ -403,7 +403,7 @@ void OMKlassLoader::klassFieldInit(OMKlass *klass)
 
         auto &loff = (f.accessFlags & JVM_Acc_Static) ? klass->staticLength : klass->length;
 
-        f.offset = loff;
+        f.offset = static_cast<jint>(loff);
 
         switch (result.type)
         {

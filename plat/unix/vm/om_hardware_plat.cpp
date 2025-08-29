@@ -328,7 +328,7 @@ static std::string fetchFromDevFs()
 std::string fetchCpuName()
 {
     fetchFromDevFs();
-    struct utsname n;
+    struct utsname n{};
     uname(&n);
 #if defined(__x86_64__) || defined(__x86__)
     char model[64] = {0};
@@ -337,7 +337,16 @@ std::string fetchCpuName()
     cpuinfo_x86(0x80000003, &d[4], &d[5], &d[6], &d[7]);
     cpuinfo_x86(0x80000004, &d[8], &d[9], &d[10], &d[11]);
     model[48] = '\0';
-    return std::string(model);
+    auto st = std::string(model);
+    std::string result;
+    for (auto ch : st)
+    {
+        if (ch != ' ' || result[result.size() - 1] != ' ')
+        {
+            result += ch;
+        }
+    }
+    return result;
 #elif defined(__aarch64__)
     return aarch64_tocpuname(cpuinfo_aarch64());
 #else

@@ -95,6 +95,16 @@ class OMKlass
         assert(kind == OMKlassKind::Normal);
         auto obj = static_cast<OMOOPDesc *>(heap->allocate(sizeof(OMOOPDesc) + length));
         obj->klass = this;
+        if (heap->ptrCompEnabled())
+        {
+            for (auto &f : fields)
+            {
+                if (f.desc[0] == 'L' && f.desc[0] == '[')
+                {
+                    *reinterpret_cast<uint32_t *>(&obj->data[f.offset]) = 0x1;
+                }
+            }
+        }
         return obj;
     }
 

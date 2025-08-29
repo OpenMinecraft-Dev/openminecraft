@@ -40,6 +40,7 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
 #include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
+#include "openminecraft/vm/encoding/om_encoding_utf.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include "openminecraft/vm/pixeltower/internal/om_pixeltower_funcs.hpp"
@@ -141,8 +142,16 @@ int boot(std::vector<std::string> args)
 
     SDL_Quit();
 
-    logger->info("{} {} {} {} {} {}", os::fetchCpuName(), os::fetchSystemName(), os::fetchSystemVersion(),
-                 os::fetchUsername(), os::fetchLoginUser(), os::fetchMemoryTotal());
+    logger->info("hardware / software status");
+    logger->info("CPU Name: {}", os::fetchCpuName());
+    logger->info("System: {}, version {}", os::fetchSystemName(), os::fetchSystemVersion());
+    logger->info("User: {} / {}", os::fetchUsername(), os::fetchLoginUser());
+    logger->info("Total memory: {} bytes", os::fetchMemoryTotal());
+
+    auto ss = "test\u00ff测试abcdありがとう😄";
+    auto res = encoding::utf32ToUtf8(encoding::utf16ToUtf32(encoding::utf32ToUtf16(encoding::utf8ToUtf32(ss))));
+    // auto res = encoding::utf32ToUtf8(encoding::utf8ToUtf32(ss));
+    logger->info(res);
 
     pixeltower::registerFuncs();
     tower = std::make_unique<pixeltower::v0::OMPixelTower>();
@@ -305,7 +314,7 @@ int boot(std::vector<std::string> args)
                 break;
             }
             case "crash"_hash: {
-                logger->info("{}", *((int *)33550336));
+                logger->info("{}", *reinterpret_cast<int *>(33550336));
             }
             default:
                 commandBuffer.clear();
