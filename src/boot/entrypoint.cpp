@@ -56,7 +56,6 @@
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
-#include <sys/mman.h>
 
 using namespace openminecraft;
 using namespace openminecraft::vm;

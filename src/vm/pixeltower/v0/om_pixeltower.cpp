@@ -86,7 +86,7 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
     auto target = metaspace->allocate(1024, true);
     uint8_t code[] = {
         0x8d, 0x04, 0x37,
-        0xf4
+        0xc3
     };
 
     std::memcpy(target, code, 4);
