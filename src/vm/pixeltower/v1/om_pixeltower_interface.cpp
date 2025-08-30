@@ -2,7 +2,7 @@
 
 namespace openminecraft::vm::pixeltower::v1
 {
-OMPixelTowerInterface::OMPixelTowerInterface(v0::OMPixelTower *t) : tower(t)
+OMPixelTowerInterface::OMPixelTowerInterface()
 {
 }
 

@@ -7,14 +7,12 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klassloader.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
+#include "openminecraft/vm/pixeltower/v1/om_pixeltower_interface.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
 #include <istream>
 #include <unordered_map>
 #include <vector>
-namespace openminecraft::vm::pixeltower::v1
-{
-class OMPixelTowerInterface;
-}
+
 namespace openminecraft::vm::pixeltower::v2
 {
 class OMGarbageCollector;

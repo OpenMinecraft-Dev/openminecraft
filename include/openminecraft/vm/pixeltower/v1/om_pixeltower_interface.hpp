@@ -1,13 +1,15 @@
 #ifndef OM_PIXELTOWER_INTERFACE_HPP
 #define OM_PIXELTOWER_INTERFACE_HPP
-#include "openminecraft/vm/pixeltower/v0/om_pixeltower.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_field.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 
 namespace openminecraft::vm::pixeltower::v1
 {
 class OMPixelTowerInterface
 {
   public:
-    OMPixelTowerInterface(v0::OMPixelTower *);
+    OMPixelTowerInterface();
     ~OMPixelTowerInterface() = default;
 
     v0::OMField *findField(v0::OMKlass *klass, std::string name, std::string desc);
@@ -17,9 +19,9 @@ class OMPixelTowerInterface
         {
             if constexpr (std::is_pointer_v<T>)
             {
-                if (tower->heap->ptrCompEnabled())
+                if (field->klass->heap->ptrCompEnabled())
                 {
-                    *reinterpret_cast<uint32_t *>(&obj->data[field->offset]) = tower->heap->compressPtr(value);
+                    *reinterpret_cast<uint32_t *>(&obj->data[field->offset]) = field->klass->heap->compressPtr(value);
                 }
                 else
                 {
@@ -38,9 +40,9 @@ class OMPixelTowerInterface
         {
             if constexpr (std::is_pointer_v<T>)
             {
-                if (tower->heap->ptrCompEnabled())
+                if (klass->heap->ptrCompEnabled())
                 {
-                    *static_cast<uint32_t *>(static_cast<void *>(static_cast<uint8_t *>(field->klass->staticBlock) + field->offset)) = tower->heap->compressPtr(value);
+                    *static_cast<uint32_t *>(static_cast<void *>(static_cast<uint8_t *>(field->klass->staticBlock) + field->offset)) = klass->heap->compressPtr(value);
                 }
                 else
                 {
@@ -53,9 +55,6 @@ class OMPixelTowerInterface
             }
         }
     }
-
-  private:
-    v0::OMPixelTower *tower;
 };
 } // namespace openminecraft::vm::pixeltower::v1
 

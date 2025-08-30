@@ -61,7 +61,7 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
     interpreter = new OMInterpreter(heap, this);
     loader = new OMKlassLoader(heap, metaspace, interpreter);
     gc = new v2::OMGarbageCollectorSerial(heap, this);
-    interface = new v1::OMPixelTowerInterface(this);
+    interface = new v1::OMPixelTowerInterface();
 
     loader->nativeMethods["vmstd/internal/SystemPrintStream.println(J)V"] =
         impl::vmstd_internal_SystemPrintStream_println;
