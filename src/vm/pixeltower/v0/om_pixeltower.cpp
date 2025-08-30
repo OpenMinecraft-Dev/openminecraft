@@ -15,7 +15,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
-#include "openminecraft/vm/pixeltower/v1/om_pixeltower_interface.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_interface.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
 #include "openminecraft/vm/pixeltower/v2/om_pixeltower_gc_serial.hpp"
 #include <cstdint>
@@ -61,7 +61,7 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
     interpreter = new OMInterpreter(heap, this);
     loader = new OMKlassLoader(heap, metaspace, interpreter);
     gc = new v2::OMGarbageCollectorSerial(heap, this);
-    interface = new v1::OMPixelTowerInterface();
+    interface = new OMPixelTowerInterface();
 
     loader->nativeMethods["vmstd/internal/SystemPrintStream.println(J)V"] =
         impl::vmstd_internal_SystemPrintStream_println;

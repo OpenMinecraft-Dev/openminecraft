@@ -1,6 +1,6 @@
 #include "openminecraft/vm/impl/om_impl_throwable.hpp"
 
-#include "openminecraft/vm/pixeltower/v1/om_pixeltower_interface.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_interface.hpp"
 
 using namespace openminecraft::vm::pixeltower::v0;
 

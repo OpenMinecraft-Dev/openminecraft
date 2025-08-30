@@ -4,7 +4,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 
-namespace openminecraft::vm::pixeltower::v1
+namespace openminecraft::vm::pixeltower::v0
 {
 class OMPixelTowerInterface
 {

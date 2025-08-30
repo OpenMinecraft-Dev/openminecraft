@@ -7,7 +7,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klassloader.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
-#include "openminecraft/vm/pixeltower/v1/om_pixeltower_interface.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_interface.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
 #include <istream>
 #include <unordered_map>
@@ -34,7 +34,7 @@ class OMPixelTower
     OMKlassLoader *loader;
     OMPixelTowerHeap *heap;
     OMPixelTowerHeap *metaspace;
-    v1::OMPixelTowerInterface *interface;
+    OMPixelTowerInterface *interface;
     v2::OMGarbageCollector *gc;
     OMInterpreter *interpreter;
 

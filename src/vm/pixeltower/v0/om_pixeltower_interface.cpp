@@ -1,6 +1,6 @@
-#include "openminecraft/vm/pixeltower/v1/om_pixeltower_interface.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_interface.hpp"
 
-namespace openminecraft::vm::pixeltower::v1
+namespace openminecraft::vm::pixeltower::v0
 {
 OMPixelTowerInterface::OMPixelTowerInterface()
 {

@@ -10,7 +10,7 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
-#include "openminecraft/vm/pixeltower/v1/om_pixeltower_interface.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_interface.hpp"
 
 #include <cstring>
 #include <unordered_map>
