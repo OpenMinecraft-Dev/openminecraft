@@ -1873,7 +1873,14 @@ OMOOPArrDesc *OMInterpreter::allocateMultiArray(bytecode::descriptor::OMTypeDesc
         desc.depth--;
         for (int i = 0; i < *length; i++)
         {
-            arr->array<OMOOPArrDesc *>()[i] = allocateMultiArray(desc, length + 1);
+            if (heap->ptrCompEnabled())
+            {
+                arr->array<uint32_t>()[i] = heap->compressPtr(allocateMultiArray(desc, length + 1));
+            }
+            else
+            {
+                arr->array<OMOOPArrDesc *>()[i] = allocateMultiArray(desc, length + 1);
+            }
         }
     }
 

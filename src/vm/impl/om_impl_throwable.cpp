@@ -1,5 +1,7 @@
 #include "openminecraft/vm/impl/om_impl_throwable.hpp"
 
+#include "openminecraft/vm/pixeltower/v1/om_pixeltower_interface.hpp"
+
 using namespace openminecraft::vm::pixeltower::v0;
 
 namespace openminecraft::vm::impl
@@ -18,40 +20,17 @@ std::any java_lang_Throwable_fillInStackTrace(OMPixelTower *tower, std::any *d)
     {
         auto frame = cls->allocateInstance();
         frames.push_back(frame);
-        for (auto &f : cls->fields)
+
+        tower->loader->klassOopCreate(fr->method->klass);
+        tower->interface->putField(frame, tower->interface->findField(cls, "declaringClass", "Ljava/lang/Class;"), fr->method->klass->oop);
+        tower->interface->putField(frame, tower->interface->findField(cls, "name", "Ljava/lang/String;"), tower->createString(fr->method->name));
+        tower->interface->putField(frame, tower->interface->findField(cls, "descriptor", "Ljava/lang/String;"), tower->createString(fr->method->desc));
+        tower->interface->putField(frame, tower->interface->findField(cls, "sourceFile", "Ljava/lang/String;"), tower->createString(fr->method->klass->source));
+        if (fr->method->sourceMap)
         {
-            if (f.name == "declaringClass")
-            {
-                stackPushAccess<void *>(frame);
-                stackPushAccess<void *>(fr->method->klass->oop);
-                accessField(&f);
-            }
-            else if (f.name == "name")
-            {
-                stackPushAccess<void *>(frame);
-                stackPushAccess<void *>(tower->createString(fr->method->name));
-                accessField(&f);
-            }
-            else if (f.name == "descriptor")
-            {
-                stackPushAccess<void *>(frame);
-                stackPushAccess<void *>(tower->createString(fr->method->desc));
-                accessField(&f);
-            }
-            else if (f.name == "sourceFile")
-            {
-                stackPushAccess<void *>(frame);
-                stackPushAccess<void *>(tower->createString(fr->method->klass->source));
-                accessField(&f);
-            }
-            else if (fr->method->sourceMap && f.name == "line")
-            {
-                stackPushAccess<void *>(frame);
-                stackPushAccess<jint>(
-                    fr->method->sourceMap->at(static_cast<jint>(static_cast<size_t>(pc - fr->method->code))));
-                accessField(&f);
-            }
+            tower->interface->putField(frame, tower->interface->findField(cls, "line", "I"), fr->method->sourceMap->at(static_cast<jint>(static_cast<size_t>(pc - fr->method->code))));
         }
+
         pc = static_cast<uint8_t *>(fr->returnAddr);
         fr = fr->prev;
     }

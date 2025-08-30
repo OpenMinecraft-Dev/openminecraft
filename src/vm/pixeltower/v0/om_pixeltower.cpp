@@ -15,13 +15,13 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
+#include "openminecraft/vm/pixeltower/v1/om_pixeltower_interface.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
 #include "openminecraft/vm/pixeltower/v2/om_pixeltower_gc_serial.hpp"
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <memory>
 #include <thread>
 #include <vector>
@@ -61,6 +61,7 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
     interpreter = new OMInterpreter(heap, this);
     loader = new OMKlassLoader(heap, metaspace, interpreter);
     gc = new v2::OMGarbageCollectorSerial(heap, this);
+    interface = new v1::OMPixelTowerInterface(this);
 
     loader->nativeMethods["vmstd/internal/SystemPrintStream.println(J)V"] =
         impl::vmstd_internal_SystemPrintStream_println;
@@ -82,19 +83,10 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
 
     logger.info("heap base: {}", heap->heapBase());
     logger.info("metaspace base: {}", metaspace->heapBase());
-
-    auto target = metaspace->allocate(1024, true);
-    uint8_t code[] = {
-        0x8d, 0x04, 0x37,
-        0xc3
-    };
-
-    std::memcpy(target, code, 4);
-    logger.info("{}", reinterpret_cast<int (*)(int, int)>(target)(4, 5));
-    metaspace->deallocate(target, 1024);
 }
 OMPixelTower::~OMPixelTower()
 {
+    delete interface;
     delete gc;
     delete interpreter;
     delete loader;
@@ -189,14 +181,9 @@ void *OMPixelTower::createString(std::string str)
     auto stt = loader->fetchClass(strdesc);
     auto tgt = stt->allocateInstance();
     tgt->mark |= mconst;
-    if (heap->ptrCompEnabled())
-    {
-        *reinterpret_cast<uint32_t *>(tgt->data) = heap->compressPtr(att);
-    }
-    else
-    {
-        *reinterpret_cast<void **>(tgt->data) = att;
-    }
+
+    interface->putField(tgt, interface->findField(stt, "value", "[B"), att);
+
     pooledStrings[hsh] = tgt;
     return tgt;
 }

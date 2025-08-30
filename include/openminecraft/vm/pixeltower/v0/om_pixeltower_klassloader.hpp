@@ -38,6 +38,7 @@ class OMKlassLoader
     OMKlass *lazyClassInit(OMKlass *klass, uint16_t id);
     OMField *lazyFieldInit(OMKlass *klass, uint16_t id);
     OMMethod *lazyMethodInit(OMKlass *klass, uint16_t id);
+    void klassOopCreate(OMKlass *klass);
 
     std::unordered_map<std::string, std::any (*)(OMPixelTower *, std::any *)> nativeMethods;
     std::vector<OMKlass *> classes;
@@ -48,8 +49,8 @@ class OMKlassLoader
     void klassMethodInit(OMKlass *klass);
     void klassVtableInit(OMKlass *klass);
     void klassConstantPoolLoad(OMKlass *klass);
+    void klassClinit(OMKlass *klass);
     void klassFieldInit(OMKlass *klass);
-    void klassOopCreate(OMKlass *klass);
     void klassLoadDebugStatus(OMKlass *klass);
 
     OMPixelTowerHeap *metaspace;

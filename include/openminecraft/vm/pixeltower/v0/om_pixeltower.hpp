@@ -15,6 +15,10 @@ namespace openminecraft::vm::pixeltower::v2
 {
 class OMGarbageCollector;
 }
+namespace openminecraft::vm::pixeltower::v1
+{
+class OMPixelTowerInterface;
+}
 
 namespace openminecraft::vm::pixeltower::v0
 {
@@ -32,6 +36,7 @@ class OMPixelTower
     OMKlassLoader *loader;
     OMPixelTowerHeap *heap;
     OMPixelTowerHeap *metaspace;
+    v1::OMPixelTowerInterface *interface;
     v2::OMGarbageCollector *gc;
     OMInterpreter *interpreter;
 

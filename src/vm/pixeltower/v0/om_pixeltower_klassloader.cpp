@@ -10,6 +10,8 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
+#include "openminecraft/vm/pixeltower/v1/om_pixeltower_interface.hpp"
+
 #include <cstring>
 #include <unordered_map>
 #include <vector>
@@ -103,11 +105,11 @@ void OMKlassLoader::loadClass(OMTypeDesc name)
             // validator.validate(f, name.name);
             klass = klassConstruct(fi, name);
 
+            klassFieldInit(klass);
             klassVtableInit(klass);
             klassMethodInit(klass);
             klassConstantPoolLoad(klass);
-            klassFieldInit(klass);
-            klassOopCreate(klass);
+            klassClinit(klass);
             klassLoadDebugStatus(klass);
 
             return;
@@ -129,6 +131,10 @@ void OMKlassLoader::loadClass(OMTypeDesc name)
 
 void OMKlassLoader::klassOopCreate(OMKlass *klass)
 {
+    if (klass->oop)
+    {
+        return;
+    }
     OMTypeDesc kl = {bytecode::descriptor::Reference, "java/lang/Class"};
     loadClass(kl);
     auto clsklass = fetchClass(kl);
@@ -136,21 +142,8 @@ void OMKlassLoader::klassOopCreate(OMKlass *klass)
     tgt->mark |= mconst;
     klass->oop = tgt;
 
-    for (auto &f : clsklass->fields)
-    {
-        if (f.name == "name")
-        {
-            stackPushAccess<void *>(tgt);
-            stackPushAccess<void *>(interpreter->tower->createString(klass->name));
-            accessField(&f);
-        }
-        if (f.name == "nativePtr")
-        {
-            stackPushAccess<void *>(tgt);
-            stackPushAccessW<jlong>((jlong)(size_t)klass);
-            accessField(&f);
-        }
-    }
+    interpreter->tower->interface->putField(tgt, interpreter->tower->interface->findField(clsklass, "name", "Ljava/lang/String;"), interpreter->tower->createString(klass->name));
+    interpreter->tower->interface->putField(tgt, interpreter->tower->interface->findField(clsklass, "nativePtr", "J"), static_cast<jlong>(reinterpret_cast<size_t>(klass)));
 }
 
 OMKlass *OMKlassLoader::klassConstruct(
@@ -434,7 +427,10 @@ void OMKlassLoader::klassFieldInit(OMKlass *klass)
 
     klass->staticBlock = metaspace->allocate(klass->staticLength);
     memset(klass->staticBlock, 0, klass->staticLength);
+}
 
+void OMKlassLoader::klassClinit(OMKlass *klass)
+{
     auto me = klass->methods;
     while (me)
     {

@@ -69,10 +69,22 @@ void OMGarbageCollectorSerial::markSub(void *root)
         if (i->klass->name[1] == '[' || i->klass->name[1] == 'L')
         {
             auto arr = reinterpret_cast<v0::OMOOPArrDesc *>(i);
-            auto arrd = arr->array<void *>();
-            for (int ix = 0; ix < arr->length; ix++)
+
+            if (arr->klass->heap->ptrCompEnabled())
             {
-                markSub(arrd[ix]);
+                auto arrd = arr->array<uint32_t>();
+                for (int ix = 0; ix < arr->length; ix++)
+                {
+                    markSub(arr->klass->heap->decompressPtr(arrd[ix]));
+                }
+            }
+            else
+            {
+                auto arrd = arr->array<void *>();
+                for (int ix = 0; ix < arr->length; ix++)
+                {
+                    markSub(arrd[ix]);
+                }
             }
         }
     }
@@ -105,7 +117,7 @@ void OMGarbageCollectorSerial::signUnreachable()
     auto i = reinterpret_cast<v0::OMOOPDesc *>(heap->heapBase());
     while (i)
     {
-        if ((existsInStack(i) || (bool)(i->mark & v0::mconst)))
+        if ((existsInStack(i) || static_cast<bool>(i->mark & v0::mconst)))
         {
             markSub(i);
         }
@@ -113,7 +125,7 @@ void OMGarbageCollectorSerial::signUnreachable()
         if (i->klass->kind == v0::Array)
         {
             l += sizeof(v0::OMOOPArrDesc);
-            auto arrd = (v0::OMOOPArrDesc *)i;
+            auto arrd = reinterpret_cast<v0::OMOOPArrDesc *>(i);
             l += i->klass->length * arrd->length;
         }
         else
