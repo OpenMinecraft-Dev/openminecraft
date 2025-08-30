@@ -11,13 +11,13 @@
 #include <istream>
 #include <unordered_map>
 #include <vector>
-namespace openminecraft::vm::pixeltower::v2
-{
-class OMGarbageCollector;
-}
 namespace openminecraft::vm::pixeltower::v1
 {
 class OMPixelTowerInterface;
+}
+namespace openminecraft::vm::pixeltower::v2
+{
+class OMGarbageCollector;
 }
 
 namespace openminecraft::vm::pixeltower::v0
