@@ -21,7 +21,7 @@ class OMPixelTowerHeap
     OMPixelTowerHeap(uint64_t minSize, uint64_t maxSize);
     ~OMPixelTowerHeap();
 
-    void *allocate(uint64_t length);
+    void *allocate(uint64_t length, bool exec = false);
     void deallocate(void *ptr, uint64_t length);
     void debug();
     void merge();

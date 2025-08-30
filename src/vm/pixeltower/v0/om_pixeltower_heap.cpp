@@ -18,7 +18,7 @@ OMPixelTowerHeap::~OMPixelTowerHeap()
     delete heap;
 }
 
-void *OMPixelTowerHeap::allocate(uint64_t length)
+void *OMPixelTowerHeap::allocate(uint64_t length, bool exec)
 {
     // force 8-byte alignment
     if (length % 8 != 0)
@@ -40,6 +40,10 @@ alloc:
                 emptyBlocks.erase(it);
             }
             memset(target, 0, length);
+            if (exec)
+            {
+                heap->activateExecutable(target, length);
+            }
             return target;
         }
     }

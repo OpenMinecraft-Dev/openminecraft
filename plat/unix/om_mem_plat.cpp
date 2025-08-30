@@ -14,7 +14,7 @@
 
 namespace openminecraft::mem
 {
-OMHeap::OMHeap(uint64_t minSize, uint64_t maxSize) : logger("OMHeap", this), maxSize(maxSize), minSize(minSize)
+OMHeap::OMHeap(uint64_t minSize, uint64_t maxSize) : heapTop(nullptr), logger("OMHeap", this), minSize(minSize), maxSize(maxSize)
 {
     block = mmap(nullptr, maxSize, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (block == nullptr)
@@ -47,6 +47,15 @@ void OMHeap::deactivate(void *p, uint64_t length)
     }
 
     if (mprotect(p, length, PROT_NONE) == -1)
+    {
+        logger.error("[unix-like] mprotect fail ({})", strerror(errno));
+        throw std::bad_alloc();
+    }
+}
+
+void OMHeap::activateExecutable(void *p, uint64_t length)
+{
+    if (mprotect(p, length, PROT_READ | PROT_WRITE | PROT_EXEC) == -1)
     {
         logger.error("[unix-like] mprotect fail ({})", strerror(errno));
         throw std::bad_alloc();

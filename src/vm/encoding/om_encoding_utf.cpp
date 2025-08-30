@@ -112,7 +112,7 @@ std::vector<int> utf16ToUtf32(std::vector<uint8_t> d)
         }
         else
         {
-            normal:
+        normal:
             int i = *itt << 8;
             ++itt;
             i |= *itt;
@@ -141,4 +141,4 @@ std::vector<uint8_t> utf32ToUtf16(std::vector<int> cps)
     }
     return s;
 }
-}
+} // namespace openminecraft::vm::encoding

@@ -120,9 +120,14 @@ void OMInterpreter::checkNotNull(const void *p) const
         throw err::OMRuntimeError{npecls->allocateInstance()};
     }
 
-    // gino: check if this thread holds the ownership of the object, otherwise we need to wait until the lock is released;
+    // gino: check if this thread holds the ownership of the object, otherwise we need to wait until the lock is
+    // released;
     auto oop = static_cast<OMOOPDesc *>(const_cast<void *>(p));
-    while (std::find(currentThread.monitored.begin(), currentThread.monitored.end(), oop) == currentThread.monitored.end() && oop->mark & mlocked) {}
+    while (std::find(currentThread.monitored.begin(), currentThread.monitored.end(), oop) ==
+               currentThread.monitored.end() &&
+           oop->mark & mlocked)
+    {
+    }
 }
 
 void OMInterpreter::callDynamic(OMMethod *met, uint8_t *retAddr)

@@ -79,6 +79,19 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
     loader->nativeMethods["java/lang/Object.hashCode()I"] = impl::java_lang_Object_hashCode;
     loader->nativeMethods["java/lang/Object.getClass()Ljava/lang/Class;"] = impl::java_lang_Object_getClass;
     loader->nativeMethods["java/lang/Throwable.fillInStackTrace()V"] = impl::java_lang_Throwable_fillInStackTrace;
+
+    logger.info("heap base: {}", heap->heapBase());
+    logger.info("metaspace base: {}", metaspace->heapBase());
+
+    auto target = metaspace->allocate(1024, true);
+    uint8_t code[] = {
+        0x8d, 0x04, 0x37,
+        0xf4
+    };
+
+    std::memcpy(target, code, 4);
+    logger.info("{}", reinterpret_cast<int (*)(int, int)>(target)(4, 5));
+    metaspace->deallocate(target, 1024);
 }
 OMPixelTower::~OMPixelTower()
 {

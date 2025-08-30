@@ -14,6 +14,7 @@ class OMHeap
     void init();
     void expand(void *target);
     void shrink(void *target);
+    void activateExecutable(void *p, uint64_t length);
 
     uint64_t currentSizeAllocated();
 
@@ -23,7 +24,7 @@ class OMHeap
     }
 
     void *block;
-    void *heapTop;
+    void *heapTop{};
 
   private:
     log::OMLogger logger;
