@@ -13,6 +13,8 @@
 #include <unordered_map>
 #include <vector>
 
+#undef interface
+
 namespace openminecraft::vm::pixeltower::v2
 {
 class OMGarbageCollector;
