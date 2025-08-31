@@ -8,6 +8,22 @@ try:
 except BaseException as e:
     TQDM_ENABLED = False
 import multiprocessing
+import hashlib
+import json
+import warnings
+warnings.filterwarnings('ignore')
+
+def calculate_sha256(file_path):
+    sha256 = hashlib.sha256()
+    with open(file_path, 'rb') as f:
+        for chunk in iter(lambda: f.read(4096), b''):
+            sha256.update(chunk)
+    return sha256.hexdigest()
+
+if os.path.exists("files.json"):
+    hashes : dict = json.load(open("files.json", "r"))
+else:
+    hashes = {}
 
 sources = []
 
@@ -17,7 +33,11 @@ def recursive_listdir(path):
         if os.path.isdir(full_path):
             recursive_listdir(full_path)
         else:
-            sources.append(full_path)
+            shares = calculate_sha256(full_path)
+            if not full_path in hashes.keys() and hashes.keys() != shares:
+                sources.append(full_path)
+                hashes[full_path] = shares
+
 recursive_listdir("./src")
 
 def compile(s):
@@ -35,3 +55,5 @@ if __name__ == '__main__':
             results = list(tqdm(pool.imap(compile, sources), total=len(sources)))
         else:
             results = pool.map(compile, sources)
+
+    json.dump(hashes, open("files.json", "w"))

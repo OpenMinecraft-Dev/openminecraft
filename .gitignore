@@ -11,3 +11,4 @@ prod
 *.bundle
 *.class
 debug
+vmstd/files.json

@@ -45,11 +45,11 @@ std::any vmstd_internal_SystemPrintStream_println(pixeltower::v0::OMPixelTower *
             void *ptt;
             if (h->ptrCompEnabled())
             {
-                ptt = h->decompressPtr(*(uint32_t *)t->data);
+                ptt = h->decompressPtr(*reinterpret_cast<uint32_t *>(t->data));
             }
             else
             {
-                ptt = *(void **)t->data;
+                ptt = *reinterpret_cast<void **>(t->data);
             }
             auto arr = static_cast<pixeltower::v0::OMOOPArrDesc *>(ptt);
             std::cout << "[stdout] " << std::string(arr->data, arr->length) << std::endl;
