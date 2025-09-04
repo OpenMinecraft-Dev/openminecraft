@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
+#include <pthread.h>
 int add(int a, int b) { return a + b; }
 typedef int (*func_t)(int, int);
 int main() {
     const size_t PAGE_SIZE = 4096;
     const size_t CODE_SIZE = PAGE_SIZE; // 申请一页内存作为可执行代码区域
     // 使用 mmap 分配一块可读写、可执行的内存区域
-    void *code_ptr = mmap(NULL, fc.size, PROT_EXEC | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_JIT, -1, 0);
+    void *code_ptr = mmap(NULL, PAGE_SIZE, PROT_EXEC | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_JIT, -1, 0);
     if (code_ptr == MAP_FAILED) {
         perror("mmap failed");
         exit(EXIT_FAILURE);
