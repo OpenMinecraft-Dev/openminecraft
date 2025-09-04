@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <pthread.h>
+#include <string.h>
 int add(int a, int b) { return a + b; }
 typedef int (*func_t)(int, int);
 int main() {
