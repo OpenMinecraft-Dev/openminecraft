@@ -108,7 +108,7 @@ jobs:
           submodules: 'true'
 
       - name: macos test
-        if: matrix.plat == 'macos' && matrix.arch == 'arm64'
+        if: matrix.plat == 'macos'
         run: |
           /usr/libexec/PlistBuddy -c "Add :com.apple.security.cs.allow-jit bool true" jit.entitlements
           gcc -g -std=c17 -Wall -Wdeprecated -Wpedantic -Wextra -o ./jit jit.c
