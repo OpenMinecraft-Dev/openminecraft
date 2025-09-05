@@ -19,7 +19,7 @@ int main() {
     unsigned char code[] = {0x20, 0x00, 0x00, 0x0b, // mov x16, #42
                             0xc0, 0x03, 0x5f, 0xd6}; // ret
 #else
-    unsigned char code[] = {0x8d, 0x04, 0x37, 0xf4};
+    unsigned char code[] = {0x8d, 0x04, 0x37, 0xc3};
 #endif
     pthread_jit_write_protect_np(0);
     memcpy(code_ptr, code, sizeof(code));
