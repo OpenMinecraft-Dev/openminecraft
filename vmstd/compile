@@ -34,7 +34,7 @@ def recursive_listdir(path):
             recursive_listdir(full_path)
         else:
             shares = calculate_sha256(full_path)
-            if not full_path in hashes.keys() and hashes.keys() != shares:
+            if (not full_path in hashes.keys()) or hashes[full_path] != shares:
                 sources.append(full_path)
                 hashes[full_path] = shares
 
