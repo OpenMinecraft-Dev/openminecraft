@@ -63,6 +63,12 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
     gc = new v2::OMGarbageCollectorSerial(heap, this);
     interface = new OMPixelTowerInterface();
 
+    // geopeila: we don't need the first 8 bytes when the ptr compress is enabled, or we won't able to know if a pointer is pointing into the Mazarine End
+    if (heap->ptrCompEnabled())
+    {
+        heap->allocate(8);
+    }
+
     loader->nativeMethods["vmstd/internal/SystemPrintStream.println(J)V"] =
         impl::vmstd_internal_SystemPrintStream_println;
     loader->nativeMethods["vmstd/internal/SystemPrintStream.println(F)V"] =

@@ -15,14 +15,20 @@ OMGarbageCollectorSerial::OMGarbageCollectorSerial(v0::OMPixelTowerHeap *heap, v
 void OMGarbageCollectorSerial::freeObjects()
 {
     auto count = 0;
-    auto i = reinterpret_cast<v0::OMOOPDesc *>(heap->heapBase());
+    auto i = static_cast<v0::OMOOPDesc *>(heap->heapBase());
     while (i)
     {
+        if (!tower->metaspace->inside(i->klass))
+        {
+            i = reinterpret_cast<v0::OMOOPDesc *>(reinterpret_cast<void **>(i) + 1);
+            continue;
+        }
+
         auto l = 0;
         if (i->klass->kind == v0::Array)
         {
             l += sizeof(v0::OMOOPArrDesc);
-            auto arrd = (v0::OMOOPArrDesc *)i;
+            auto arrd = reinterpret_cast<v0::OMOOPArrDesc *>(i);
             l += i->klass->length * arrd->length;
         }
         else
@@ -36,7 +42,7 @@ void OMGarbageCollectorSerial::freeObjects()
         }
 
         // geopelia: don't try to get anything from the Mazarine End!
-        auto inext = reinterpret_cast<v0::OMOOPDesc *>(heap->nextPtr(i, l));
+        auto inext = static_cast<v0::OMOOPDesc *>(heap->nextPtr(i, l));
         if (!(i->mark & v0::mreachable))
         {
             heap->deallocate(i, l);
@@ -57,7 +63,7 @@ void OMGarbageCollectorSerial::markSub(void *root)
     {
         return;
     }
-    auto i = reinterpret_cast<v0::OMOOPDesc *>(root);
+    auto i = static_cast<v0::OMOOPDesc *>(root);
     if (i->mark & v0::mreachable)
     {
         return;
@@ -114,9 +120,15 @@ void OMGarbageCollectorSerial::markSub(void *root)
 }
 void OMGarbageCollectorSerial::signUnreachable()
 {
-    auto i = reinterpret_cast<v0::OMOOPDesc *>(heap->heapBase());
+    auto i = static_cast<v0::OMOOPDesc *>(heap->heapBase());
     while (i)
     {
+        if (!tower->metaspace->inside(i->klass))
+        {
+            i = reinterpret_cast<v0::OMOOPDesc *>(reinterpret_cast<void **>(i) + 1);
+            continue;
+        }
+
         if ((existsInStack(i) || static_cast<bool>(i->mark & v0::mconst)))
         {
             markSub(i);
@@ -137,7 +149,7 @@ void OMGarbageCollectorSerial::signUnreachable()
         {
             l += 8 - (l % 8);
         }
-        i = reinterpret_cast<v0::OMOOPDesc *>(heap->nextPtr(i, l));
+        i = static_cast<v0::OMOOPDesc *>(heap->nextPtr(i, l));
     }
 
     for (auto &i : tower->loader->classes)
@@ -146,10 +158,10 @@ void OMGarbageCollectorSerial::signUnreachable()
         {
             if ((f.desc[0] == '[' || f.desc[0] == 'L') && (f.accessFlags & JVM_Acc_Static))
             {
-                auto ptrb = (void **)(reinterpret_cast<uint8_t *>(i->staticBlock) + f.offset);
+                auto ptrb = reinterpret_cast<void **>(static_cast<uint8_t *>(i->staticBlock) + f.offset);
                 if (heap->ptrCompEnabled())
                 {
-                    markSub(heap->decompressPtr(*(uint32_t *)ptrb));
+                    markSub(heap->decompressPtr(*reinterpret_cast<uint32_t *>(ptrb)));
                 }
                 else
                 {
@@ -167,7 +179,7 @@ bool OMGarbageCollectorSerial::existsInStack(void *p)
 {
     for (auto &th : tower->threadMap)
     {
-        auto tgt = ((void **)th.second->stackPointer) - 1; // stack top
+        auto tgt = static_cast<void **>(th.second->stackPointer) - 1; // stack top
         while (tgt < th.second->stack)
         {
             if (*tgt == p)

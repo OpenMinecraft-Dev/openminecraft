@@ -36,40 +36,40 @@ class OMPixelTowerHeap
         return heap->heapTop;
     }
 
-    inline bool ptrCompEnabled()
+    [[nodiscard]] inline bool ptrCompEnabled() const
     {
         return maxSize < 32ull * 1024 * 1024 * 1024 && (sizeof(void *) == 8);
     }
-    inline uint64_t ptrSize()
+    [[nodiscard]] inline uint64_t ptrSize() const
     {
         return ptrCompEnabled() ? 4 : sizeof(void *);
     }
 
-    inline uint32_t compressPtr(void *p)
+    uint32_t compressPtr(void *p) const
     {
         assert(sizeof(void *) == 8);
         if (!p)
         {
-            return 0x1;
+            return 0x0;
         }
         return ((size_t)p - (size_t)heap->block) >> 3;
     }
-    inline void *decompressPtr(uint32_t p)
+    [[nodiscard]] void *decompressPtr(uint32_t p) const
     {
         assert(sizeof(void *) == 8);
-        if (p == 0x1)
+        if (p == 0x0)
         {
             return nullptr;
         }
         return (void *)((size_t)(p << 3) + (size_t)heap->block);
     }
 
-    inline bool inside(void *p)
+    bool inside(void *p) const
     {
         return heap->vaild(p);
     }
 
-    inline void *nextPtr(void *p, uint64_t length)
+    void *nextPtr(void *p, uint64_t length) const
     {
         auto r = ((uint8_t *)p) + length;
         for (auto &p : emptyBlocks)
@@ -90,7 +90,7 @@ class OMPixelTowerHeap
         return r;
     }
 
-    inline double usage()
+    [[nodiscard]] double usage() const
     {
         auto total = heap->currentSizeAllocated();
         uint64_t t = 0;
@@ -102,7 +102,7 @@ class OMPixelTowerHeap
         return 1.0 - ((double)t / (double)total);
     }
 
-    inline double totalUsage()
+    [[nodiscard]] double totalUsage() const
     {
         uint64_t t = heap->currentSizeAllocated();
         for (auto &p : emptyBlocks)
