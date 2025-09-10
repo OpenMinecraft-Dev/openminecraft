@@ -23,7 +23,7 @@ class OMInterpreter
 
     jint execute();
     void call(OMMethod *met, uint8_t *retAddr);
-    void checkNotNull(const void *p) const;
+    void checkNotNull(const void *p);
     OMPixelTower *tower;
     v1::OMDebugger debugger;
     uint64_t operands = 0;
