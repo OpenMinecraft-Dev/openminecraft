@@ -24,7 +24,7 @@ if apple() then
     add_requires("moltenvk", { configs = { shared = false } })
 end
 if not is_plat("harmony") then
-    -- add_requires("openal-soft")
+    add_requires("openal-soft")
 end
 
 add_requires("freetype", "harfbuzz", "stb", "vulkan-headers", "glm","bullet3",  "vulkan-hpp", "shaderc", "nlohmann_json", "libsdl3")
