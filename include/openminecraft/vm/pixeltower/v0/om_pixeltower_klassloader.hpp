@@ -17,8 +17,7 @@ namespace openminecraft::vm::pixeltower::v0
 {
 class OMInterpreter;
 class OMPixelTower;
-// geopelia: just some random magic number for unsatisfied native functions
-#define nullFunction (void *)0x33550336
+
 class OMKlassLoader
 {
   public:

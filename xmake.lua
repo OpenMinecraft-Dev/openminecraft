@@ -23,11 +23,11 @@ end
 if apple() then 
     add_requires("moltenvk", { configs = { shared = false } })
 end
-if not is_plat("openal-soft") then
-    add_requires("openal-soft")
+if not is_plat("harmony") then
+    -- add_requires("openal-soft")
 end
 
-add_requires("freetype", "harfbuzz", "stb", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "nlohmann_json", "libsdl3", { system = false })
+add_requires("freetype", "harfbuzz", "stb", "vulkan-headers", "glm","bullet3",  "vulkan-hpp", "shaderc", "nlohmann_json", "libsdl3")
 add_requires("boost", { system = false, configs = { stacktrace = true } })
 add_requires("fmt", { system = false, configs = { header_only = true } })
 

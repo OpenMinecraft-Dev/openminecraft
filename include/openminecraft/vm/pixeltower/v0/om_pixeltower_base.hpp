@@ -4,6 +4,9 @@
 #include <cstdint>
 #include <variant>
 
+// geopelia: just some random magic number for unsatisfied native functions
+#define nullFunction (void *)0x33550336
+
 namespace openminecraft::vm::pixeltower::v0
 {
 typedef int jint;
@@ -16,8 +19,6 @@ typedef char jbyte;
 typedef short jshort;
 
 typedef int AccessFlags;
-
-typedef std::variant<int, int64_t, float, double, void *> OMTowerStackElement;
 } // namespace openminecraft::vm::pixeltower::v0
 
 #endif

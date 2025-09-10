@@ -233,7 +233,7 @@ int boot(std::vector<std::string> args)
                     pixeltower::v1::tracing::installHandler();
                     tower->initCurrentThread(1ul * 1024 * 1024);
                     tower->init(commandBuffer[2]);
-                    tower->load("/home/coder2/Test.class");
+                    tower->load("../Test.class");
 
                     bytecode::descriptor::OMTypeDesc tgt = {bytecode::descriptor::Reference, "openminecraft/Test"};
                     tower->loader->loadClass(tgt);

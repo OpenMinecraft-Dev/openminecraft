@@ -21,7 +21,7 @@ class OMPixelTowerThread
     std::vector<void *> monitored;
     std::thread::id id;
     std::string name;
-    uint8_t *pc = nullptr;
+    uint8_t *pc = (uint8_t *)nullFunction;
     OMFrame *currentFrame = nullptr;
     void *stack = nullptr;
     void *stackPointer = nullptr;

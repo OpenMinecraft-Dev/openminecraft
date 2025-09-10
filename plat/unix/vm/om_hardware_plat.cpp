@@ -360,7 +360,14 @@ std::string fetchUsername()
 }
 std::string fetchLoginUser()
 {
-    return std::string(getlogin());
+    if (getlogin())
+    {
+        return std::string(getlogin());
+    }
+    else
+    {
+        return "unknown";
+    }
 }
 std::string fetchSystemName()
 {

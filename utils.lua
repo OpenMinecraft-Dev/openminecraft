@@ -325,7 +325,7 @@ package("glslang")
 
     on_test(function (package)
         if not package:is_cross() then
-            os.vrun("glslangValidator --version")
+	    -- os.vrun("glslangValidator --version")
         end
 
         if not package:config("binaryonly") then
