@@ -5,8 +5,8 @@
 #include "openminecraft/vm/encoding/om_encoding_utf.hpp"
 
 #include <cstdint>
-#include <istream>
 #include <fmt/format.h>
+#include <istream>
 #include <memory>
 #include <openminecraft/binary/om_bin_endians.hpp>
 #include <openminecraft/vm/classfile/om_class_file.hpp>

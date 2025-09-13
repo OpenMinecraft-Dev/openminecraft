@@ -384,8 +384,8 @@ OMClassRuntimeTypeAnnotationInfo::~OMClassRuntimeTypeAnnotationInfo()
 {
 }
 
-OMClassAttrRuntimeVisibleTypeAnnotation::OMClassAttrRuntimeVisibleTypeAnnotation(uint16_t na,
-                                                                         std::vector<std::shared_ptr<OMClassRuntimeTypeAnnotation>> a)
+OMClassAttrRuntimeVisibleTypeAnnotation::OMClassAttrRuntimeVisibleTypeAnnotation(
+    uint16_t na, std::vector<std::shared_ptr<OMClassRuntimeTypeAnnotation>> a)
     : numAnnotations(na), annotations(std::move(a))
 {
 }
@@ -406,7 +406,13 @@ OMClassAttrType OMClassAttrRuntimeInvisibleTypeAnnotation::type()
     return OMClassAttrType::RuntimeInvisibleTypeAnnotations;
 }
 
-OMClassAttrModule::OMClassAttrModule(uint16_t mni, uint16_t mf, uint16_t mvi, uint16_t rc, std::vector<OMClassModuleRequire> r, uint16_t ec, std::vector<OMClassModuleExport> e, uint16_t oc, std::vector<OMClassModuleOpen> o, uint16_t uc, std::vector<uint16_t> u, uint16_t pc, std::vector<OMClassModuleProvide> p): moduleNameIndex(mni), moduleFlags(mf), moduleVersionIndex(mvi), requiresCount(rc), requires(r), exportsCount(ec), exports(e), opensCount(oc), opens(o), usesCount(uc), usesIndex(u), providesCount(pc), provides(p)
+OMClassAttrModule::OMClassAttrModule(uint16_t mni, uint16_t mf, uint16_t mvi, uint16_t rc,
+                                     std::vector<OMClassModuleRequire> r, uint16_t ec,
+                                     std::vector<OMClassModuleExport> e, uint16_t oc, std::vector<OMClassModuleOpen> o,
+                                     uint16_t uc, std::vector<uint16_t> u, uint16_t pc,
+                                     std::vector<OMClassModuleProvide> p)
+    : moduleNameIndex(mni), moduleFlags(mf), moduleVersionIndex(mvi), requiresCount(rc), requires(r), exportsCount(ec),
+      exports(e), opensCount(oc), opens(o), usesCount(uc), usesIndex(u), providesCount(pc), provides(p)
 {
 }
 

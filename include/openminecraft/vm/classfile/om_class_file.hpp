@@ -781,7 +781,8 @@ class OMClassAttrRuntimeVisibleTypeAnnotation : public OMClassAttr
 class OMClassAttrRuntimeInvisibleTypeAnnotation : public OMClassAttr
 {
   public:
-    OMClassAttrRuntimeInvisibleTypeAnnotation(uint16_t na, std::vector<std::shared_ptr<OMClassRuntimeTypeAnnotation>> a);
+    OMClassAttrRuntimeInvisibleTypeAnnotation(uint16_t na,
+                                              std::vector<std::shared_ptr<OMClassRuntimeTypeAnnotation>> a);
     OMClassAttrType type() override;
     const uint16_t numAnnotations;
     const std::vector<std::shared_ptr<OMClassRuntimeTypeAnnotation>> annotations;
@@ -819,14 +820,17 @@ struct OMClassModuleProvide
 
 class OMClassAttrModule : public OMClassAttr
 {
-public:
-    OMClassAttrModule(uint16_t mni, uint16_t mf, uint16_t mvi, uint16_t rc, std::vector<OMClassModuleRequire> r, uint16_t ec, std::vector<OMClassModuleExport> e, uint16_t oc, std::vector<OMClassModuleOpen> o, uint16_t uc, std::vector<uint16_t> u, uint16_t pc, std::vector<OMClassModuleProvide> p);
+  public:
+    OMClassAttrModule(uint16_t mni, uint16_t mf, uint16_t mvi, uint16_t rc, std::vector<OMClassModuleRequire> r,
+                      uint16_t ec, std::vector<OMClassModuleExport> e, uint16_t oc, std::vector<OMClassModuleOpen> o,
+                      uint16_t uc, std::vector<uint16_t> u, uint16_t pc, std::vector<OMClassModuleProvide> p);
     OMClassAttrType type() override;
     uint16_t moduleNameIndex;
     uint16_t moduleFlags;
     uint16_t moduleVersionIndex;
     uint16_t requiresCount;
-    std::vector<OMClassModuleRequire> requires;
+    std::vector<OMClassModuleRequire>
+        requires;
 
     uint16_t exportsCount;
     std::vector<OMClassModuleExport> exports;
