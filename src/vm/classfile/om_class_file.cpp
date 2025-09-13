@@ -5,6 +5,7 @@
 #include "openminecraft/vm/encoding/om_encoding_utf.hpp"
 
 #include <cstdint>
+#include <istream>
 #include <fmt/format.h>
 #include <memory>
 #include <openminecraft/binary/om_bin_endians.hpp>
@@ -537,7 +538,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             }
             d.push_back({ca, d0});
         }
-        attr = std::make_shared<OMClassRuntimeVisibleParameterAnnotations>(n, d);
+        attr = std::make_shared<OMClassAttrRuntimeVisibleParameterAnnotations>(n, d);
         break;
     }
     case "RuntimeInvisibleParameterAnnotations"_hash: {
@@ -555,11 +556,31 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             }
             d.push_back({ca, d0});
         }
-        attr = std::make_shared<OMClassRuntimeInvisibleParameterAnnotations>(n, d);
+        attr = std::make_shared<OMClassAttrRuntimeInvisibleParameterAnnotations>(n, d);
         break;
     }
-    // RuntimeVisibleTypeAnnotations
-    // RuntimeInvisibleTypeAnnotations
+    case "RuntimeVisibleTypeAnnotations"_hash: {
+        uint16_t n = 0;
+        std::vector<std::shared_ptr<OMClassRuntimeTypeAnnotation>> data;
+        this->source->readbe16(n);
+        for (int i = 0; i < n; i++)
+        {
+            data.push_back(parseTypeAnnotation());
+        }
+        attr = std::make_shared<OMClassAttrRuntimeVisibleTypeAnnotation>(n, data);
+        break;
+    }
+    case "RuntimeInvisibleTypeAnnotations"_hash: {
+        uint16_t n = 0;
+        std::vector<std::shared_ptr<OMClassRuntimeTypeAnnotation>> data;
+        this->source->readbe16(n);
+        for (int i = 0; i < n; i++)
+        {
+            data.push_back(parseTypeAnnotation());
+        }
+        attr = std::make_shared<OMClassAttrRuntimeInvisibleTypeAnnotation>(n, data);
+        break;
+    }
     case "AnnotationDefault"_hash: {
         attr = std::make_shared<OMClassAttrAnnotationDefault>(parseAnnotationValue());
         break;
@@ -678,6 +699,109 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
     }
 
     return attr;
+}
+
+std::shared_ptr<OMClassRuntimeTypeAnnotation> OMClassFileParser::parseTypeAnnotation()
+{
+    auto result = std::make_shared<OMClassRuntimeTypeAnnotation>();
+
+    this->source->read(reinterpret_cast<char *>(&result->targetType), 1);
+
+    switch (result->targetType)
+    {
+    case 0x00:
+    case 0x01: {
+        this->source->read(reinterpret_cast<char *>(&result->targetInfo.typeParameter.typeParamIndex), 1);
+        break;
+    }
+    case 0x10: {
+        this->source->readbe16(result->targetInfo.supertype.supertypeIndex);
+        break;
+    }
+    case 0x11:
+    case 0x12: {
+        this->source->read(reinterpret_cast<char *>(&result->targetInfo.typeParameterBound.typeParamIndex), 1);
+        this->source->read(reinterpret_cast<char *>(&result->targetInfo.typeParameterBound.boundIndex), 1);
+        break;
+    }
+    case 0x13:
+    case 0x14:
+    case 0x15: {
+        break;
+    }
+    case 0x16: {
+        this->source->read(reinterpret_cast<char *>(&result->targetInfo.formalParameter.formalParamIndex), 1);
+        break;
+    }
+    case 0x17: {
+        this->source->readbe16(result->targetInfo.throws.throwsTypeIndex);
+        break;
+    }
+    case 0x40:
+    case 0x41: {
+        this->source->readbe16(result->targetInfo.localVar.tableLength);
+        for (int i = 0; i < result->targetInfo.localVar.tableLength; i++)
+        {
+            OMClassRuntimeTypeTargetTableItem item;
+
+            this->source->read(reinterpret_cast<char *>(&item.startPc), 1);
+            this->source->read(reinterpret_cast<char *>(&item.length), 1);
+            this->source->read(reinterpret_cast<char *>(&item.index), 1);
+
+            result->targetInfo.localVar.table.emplace_back(item);
+        }
+        break;
+    }
+    case 0x42: {
+        this->source->readbe16(result->targetInfo.catches.exceptionTableIndex);
+        break;
+    }
+    case 0x43:
+    case 0x44:
+    case 0x45:
+    case 0x46: {
+        this->source->readbe16(result->targetInfo.offset.offset);
+        break;
+    }
+    case 0x47:
+    case 0x48:
+    case 0x49:
+    case 0x4a:
+    case 0x4b: {
+        this->source->readbe16(result->targetInfo.typeArgument.offset);
+        this->source->read(reinterpret_cast<char *>(&result->targetInfo.typeArgument.typeArgumentIndex), 1);
+        break;
+    }
+    default: {
+        break;
+    }
+    }
+
+    this->source->read(reinterpret_cast<char *>(&result->targetPath.length), 1);
+    for (int i = 0; i < result->targetPath.length; i++)
+    {
+        OMClassRuntimeTypePath pth;
+
+        this->source->read(reinterpret_cast<char *>(&pth.typePathKind), 1);
+        this->source->read(reinterpret_cast<char *>(&pth.typeArgumentIndex), 1);
+
+        result->targetPath.paths.emplace_back(pth);
+    }
+
+    this->source->readbe16(result->typeIndex);
+    this->source->readbe16(result->numEnumValuePairs);
+
+    for (int i = 0; i < result->numEnumValuePairs; i++)
+    {
+        OMClassRuntimeTypeElementValue v;
+
+        this->source->readbe16(v.elementNameIndex);
+        v.value = parseAnnotationValue();
+
+        result->enumValuePairs.emplace_back(v);
+    }
+
+    return result;
 }
 
 std::shared_ptr<OMClassAnnotation> OMClassFileParser::parseAnnotation()

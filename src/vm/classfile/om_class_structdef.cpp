@@ -356,22 +356,22 @@ OMClassAttrType OMClassAttrRecord::type()
     return OMClassAttrType::Record;
 }
 
-OMClassRuntimeVisibleParameterAnnotations::OMClassRuntimeVisibleParameterAnnotations(
+OMClassAttrRuntimeVisibleParameterAnnotations::OMClassAttrRuntimeVisibleParameterAnnotations(
     uint8_t n, std::vector<OMClassParamAnnotations> d)
     : numParams(n), params(std::move(d))
 {
 }
-OMClassAttrType OMClassRuntimeVisibleParameterAnnotations::type()
+OMClassAttrType OMClassAttrRuntimeVisibleParameterAnnotations::type()
 {
     return OMClassAttrType::RuntimeVisibleParameterAnnotations;
 }
 
-OMClassRuntimeInvisibleParameterAnnotations::OMClassRuntimeInvisibleParameterAnnotations(
+OMClassAttrRuntimeInvisibleParameterAnnotations::OMClassAttrRuntimeInvisibleParameterAnnotations(
     uint8_t n, std::vector<OMClassParamAnnotations> d)
     : numParams(n), params(std::move(d))
 {
 }
-OMClassAttrType OMClassRuntimeInvisibleParameterAnnotations::type()
+OMClassAttrType OMClassAttrRuntimeInvisibleParameterAnnotations::type()
 {
     return OMClassAttrType::RuntimeInvisibleParameterAnnotations;
 }
@@ -384,24 +384,24 @@ OMClassRuntimeTypeAnnotationInfo::~OMClassRuntimeTypeAnnotationInfo()
 {
 }
 
-OMClassRuntimeVisibleTypeAnnotation::OMClassRuntimeVisibleTypeAnnotation(uint16_t na,
-                                                                         std::vector<OMClassRuntimeTypeAnnotation> a)
+OMClassAttrRuntimeVisibleTypeAnnotation::OMClassAttrRuntimeVisibleTypeAnnotation(uint16_t na,
+                                                                         std::vector<std::shared_ptr<OMClassRuntimeTypeAnnotation>> a)
     : numAnnotations(na), annotations(std::move(a))
 {
 }
 
-OMClassAttrType OMClassRuntimeVisibleTypeAnnotation::type()
+OMClassAttrType OMClassAttrRuntimeVisibleTypeAnnotation::type()
 {
     return OMClassAttrType::RuntimeVisibleTypeAnnotations;
 }
 
-OMClassRuntimeInvisibleTypeAnnotation::OMClassRuntimeInvisibleTypeAnnotation(
-    uint16_t na, std::vector<OMClassRuntimeTypeAnnotation> a)
+OMClassAttrRuntimeInvisibleTypeAnnotation::OMClassAttrRuntimeInvisibleTypeAnnotation(
+    uint16_t na, std::vector<std::shared_ptr<OMClassRuntimeTypeAnnotation>> a)
     : numAnnotations(na), annotations(std::move(a))
 {
 }
 
-OMClassAttrType OMClassRuntimeInvisibleTypeAnnotation::type()
+OMClassAttrType OMClassAttrRuntimeInvisibleTypeAnnotation::type()
 {
     return OMClassAttrType::RuntimeInvisibleTypeAnnotations;
 }

@@ -648,19 +648,19 @@ struct OMClassParamAnnotations
     std::vector<std::shared_ptr<OMClassAnnotation>> annotations;
 };
 
-class OMClassRuntimeVisibleParameterAnnotations : public OMClassAttr
+class OMClassAttrRuntimeVisibleParameterAnnotations : public OMClassAttr
 {
   public:
-    OMClassRuntimeVisibleParameterAnnotations(uint8_t n, std::vector<OMClassParamAnnotations> d);
+    OMClassAttrRuntimeVisibleParameterAnnotations(uint8_t n, std::vector<OMClassParamAnnotations> d);
     OMClassAttrType type() override;
     const uint8_t numParams;
     const std::vector<OMClassParamAnnotations> params;
 };
 
-class OMClassRuntimeInvisibleParameterAnnotations : public OMClassAttr
+class OMClassAttrRuntimeInvisibleParameterAnnotations : public OMClassAttr
 {
   public:
-    OMClassRuntimeInvisibleParameterAnnotations(uint8_t n, std::vector<OMClassParamAnnotations> d);
+    OMClassAttrRuntimeInvisibleParameterAnnotations(uint8_t n, std::vector<OMClassParamAnnotations> d);
     OMClassAttrType type() override;
     const uint8_t numParams;
     const std::vector<OMClassParamAnnotations> params;
@@ -728,7 +728,7 @@ struct OMClassRuntimeTypeTargetTypeArgument
 union OMClassRuntimeTypeAnnotationInfo {
     OMClassRuntimeTypeAnnotationInfo();
     ~OMClassRuntimeTypeAnnotationInfo();
-    uint8_t type{};
+
     OMClassRuntimeTypeTargetTypeParameter typeParameter;
     OMClassRuntimeTypeTargetSupertype supertype;
     OMClassRuntimeTypeTargetTypeParameterBound typeParameterBound;
@@ -769,22 +769,22 @@ struct OMClassRuntimeTypeAnnotation
     std::vector<OMClassRuntimeTypeElementValue> enumValuePairs;
 };
 
-class OMClassRuntimeVisibleTypeAnnotation : public OMClassAttr
+class OMClassAttrRuntimeVisibleTypeAnnotation : public OMClassAttr
 {
   public:
-    OMClassRuntimeVisibleTypeAnnotation(uint16_t na, std::vector<OMClassRuntimeTypeAnnotation> a);
+    OMClassAttrRuntimeVisibleTypeAnnotation(uint16_t na, std::vector<std::shared_ptr<OMClassRuntimeTypeAnnotation>> a);
     OMClassAttrType type() override;
     const uint16_t numAnnotations;
-    const std::vector<OMClassRuntimeTypeAnnotation> annotations;
+    const std::vector<std::shared_ptr<OMClassRuntimeTypeAnnotation>> annotations;
 };
 
-class OMClassRuntimeInvisibleTypeAnnotation : public OMClassAttr
+class OMClassAttrRuntimeInvisibleTypeAnnotation : public OMClassAttr
 {
   public:
-    OMClassRuntimeInvisibleTypeAnnotation(uint16_t na, std::vector<OMClassRuntimeTypeAnnotation> a);
+    OMClassAttrRuntimeInvisibleTypeAnnotation(uint16_t na, std::vector<std::shared_ptr<OMClassRuntimeTypeAnnotation>> a);
     OMClassAttrType type() override;
     const uint16_t numAnnotations;
-    const std::vector<OMClassRuntimeTypeAnnotation> annotations;
+    const std::vector<std::shared_ptr<OMClassRuntimeTypeAnnotation>> annotations;
 };
 
 struct OMClassFieldInfo
@@ -846,6 +846,7 @@ class OMClassFileParser : public io::OMParser
     std::shared_ptr<OMClassMethodInfo> parseMethod(const ConstantMapping &m);
     std::shared_ptr<OMClassAnnotation> parseAnnotation();
     std::shared_ptr<OMClassAnnotationElemValue> parseAnnotationValue();
+    std::shared_ptr<OMClassRuntimeTypeAnnotation> parseTypeAnnotation();
     static std::string toStdUtf8(std::vector<uint8_t> data, int length);
 };
 } // namespace openminecraft::vm::classfile
