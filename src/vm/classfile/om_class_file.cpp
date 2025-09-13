@@ -620,7 +620,102 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         attr = std::make_shared<OMClassAttrMethodParameters>(pc, d);
         break;
     }
-    // Module
+    case "Module"_hash: {
+        uint16_t mni;
+        uint16_t mf;
+        uint16_t mvi;
+        uint16_t rc;
+        std::vector<OMClassModuleRequire> r;
+        uint16_t ec;
+        std::vector<OMClassModuleExport> e;
+        uint16_t oc;
+        std::vector<OMClassModuleOpen> o;
+        uint16_t uc;
+        std::vector<uint16_t> u;
+        uint16_t pc;
+        std::vector<OMClassModuleProvide> p;
+
+        this->source->readbe16(mni);
+        this->source->readbe16(mf);
+        this->source->readbe16(mvi);
+        this->source->readbe16(rc);
+        for (int i = 0; i < rc; i++)
+        {
+            OMClassModuleRequire req;
+
+            this->source->readbe16(req.requireIndex);
+            this->source->readbe16(req.requireFlags);
+            this->source->readbe16(req.requireVersionIndex);
+
+            r.emplace_back(req);
+        }
+
+        this->source->readbe16(ec);
+        for (int i = 0; i < ec; i++)
+        {
+            OMClassModuleExport exp;
+
+            this->source->readbe16(exp.exportIndex);
+            this->source->readbe16(exp.exportFlags);
+            this->source->readbe16(exp.exportToCount);
+
+            for (int j = 0; j < exp.exportToCount; j++)
+            {
+                uint16_t l;
+                this->source->readbe16(l);
+                exp.exportToIndex.push_back(l);
+            }
+
+            e.emplace_back(exp);
+        }
+
+        this->source->readbe16(oc);
+        for (int i = 0; i < oc; i++)
+        {
+            OMClassModuleOpen op;
+
+            this->source->readbe16(op.openIndex);
+            this->source->readbe16(op.openFlags);
+            this->source->readbe16(op.openToCount);
+
+            for (int j = 0; j < op.openToCount; j++)
+            {
+                uint16_t l;
+                this->source->readbe16(l);
+                op.openToIndex.push_back(l);
+            }
+
+            o.emplace_back(op);
+        }
+
+        this->source->readbe16(uc);
+        for (int i = 0; i < uc; i++)
+        {
+            uint16_t l;
+            this->source->readbe16(l);
+            u.push_back(l);
+        }
+
+        this->source->readbe16(pc);
+        for (int i = 0; i < pc; i++)
+        {
+            OMClassModuleProvide pv;
+
+            this->source->readbe16(pv.provideIndex);
+            this->source->readbe16(pv.provideWithCount);
+
+            for (int j = 0; j < pv.provideWithCount; j++)
+            {
+                uint16_t l;
+                this->source->readbe16(l);
+                pv.provideWithIndex.push_back(l);
+            }
+        }
+
+        attr = std::make_shared<OMClassAttrModule>(mni, mf, mvi, rc, r, ec, e, oc, o, uc, u, pc, p);
+
+        break;
+    }
     case "ModulePackages"_hash: {
         uint16_t pc;
         std::vector<uint16_t> data;

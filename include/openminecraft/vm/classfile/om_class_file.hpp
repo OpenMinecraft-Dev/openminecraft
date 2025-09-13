@@ -787,6 +787,60 @@ class OMClassAttrRuntimeInvisibleTypeAnnotation : public OMClassAttr
     const std::vector<std::shared_ptr<OMClassRuntimeTypeAnnotation>> annotations;
 };
 
+struct OMClassModuleRequire
+{
+    uint16_t requireIndex;
+    uint16_t requireFlags;
+    uint16_t requireVersionIndex;
+};
+
+struct OMClassModuleExport
+{
+    uint16_t exportIndex;
+    uint16_t exportFlags;
+    uint16_t exportToCount;
+    std::vector<uint16_t> exportToIndex;
+};
+
+struct OMClassModuleOpen
+{
+    uint16_t openIndex;
+    uint16_t openFlags;
+    uint16_t openToCount;
+    std::vector<uint16_t> openToIndex;
+};
+
+struct OMClassModuleProvide
+{
+    uint16_t provideIndex;
+    uint16_t provideWithCount;
+    std::vector<uint16_t> provideWithIndex;
+};
+
+class OMClassAttrModule : public OMClassAttr
+{
+public:
+    OMClassAttrModule(uint16_t mni, uint16_t mf, uint16_t mvi, uint16_t rc, std::vector<OMClassModuleRequire> r, uint16_t ec, std::vector<OMClassModuleExport> e, uint16_t oc, std::vector<OMClassModuleOpen> o, uint16_t uc, std::vector<uint16_t> u, uint16_t pc, std::vector<OMClassModuleProvide> p);
+    OMClassAttrType type() override;
+    uint16_t moduleNameIndex;
+    uint16_t moduleFlags;
+    uint16_t moduleVersionIndex;
+    uint16_t requiresCount;
+    std::vector<OMClassModuleRequire> requires;
+
+    uint16_t exportsCount;
+    std::vector<OMClassModuleExport> exports;
+
+    uint16_t opensCount;
+    std::vector<OMClassModuleOpen> opens;
+
+    uint16_t usesCount;
+    std::vector<uint16_t> usesIndex;
+
+    uint16_t providesCount;
+    std::vector<OMClassModuleProvide> provides;
+};
+
 struct OMClassFieldInfo
 {
     uint16_t accessFlags;
