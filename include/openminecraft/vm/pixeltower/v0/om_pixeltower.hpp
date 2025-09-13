@@ -3,11 +3,11 @@
 
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_interface.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klassloader.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
-#include "openminecraft/vm/pixeltower/v0/om_pixeltower_interface.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
 #include <istream>
 #include <unordered_map>

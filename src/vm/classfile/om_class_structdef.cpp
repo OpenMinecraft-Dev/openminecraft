@@ -1,14 +1,11 @@
 #include <openminecraft/vm/classfile/om_class_file.hpp>
+#include <utility>
 #include <vector>
 
 namespace openminecraft::vm::classfile
 {
-OMClassConstant::~OMClassConstant()
-{
-}
-OMClassAttr::~OMClassAttr()
-{
-}
+OMClassConstant::~OMClassConstant() = default;
+OMClassAttr::~OMClassAttr() = default;
 OMClassAttrVerifyStackMapFrame::OMClassAttrVerifyStackMapFrame() : tag(0)
 {
 }
@@ -51,7 +48,7 @@ OMClassConstantType OMClassConstantNameAndType::type()
 {
     return OMClassConstantType::NameAndType;
 }
-OMClassConstantUtf8::OMClassConstantUtf8(std::string data) : data(data)
+OMClassConstantUtf8::OMClassConstantUtf8(std::string data) : data(std::move(data))
 {
 }
 OMClassConstantType OMClassConstantUtf8::type()
@@ -149,8 +146,8 @@ OMClassAttrType OMClassAttrConstantValue::type()
 OMClassAttrCode::OMClassAttrCode(uint16_t ms, uint16_t ml, uint32_t cl, std::shared_ptr<std::vector<uint8_t>> c,
                                  uint16_t etl, std::vector<OMClassAttrCodeExcTable> et, uint16_t ac,
                                  std::vector<std::shared_ptr<OMClassAttr>> a)
-    : maxStack(ms), maxLocals(ml), codeLength(cl), code(c), excTableLength(etl), excTable(et), attributesCount(ac),
-      attributes(a)
+    : maxStack(ms), maxLocals(ml), codeLength(cl), code(std::move(c)), excTableLength(etl), excTable(std::move(et)),
+      attributesCount(ac), attributes(std::move(a))
 {
 }
 OMClassAttrType OMClassAttrCode::type()
@@ -160,7 +157,7 @@ OMClassAttrType OMClassAttrCode::type()
 
 OMClassAttrStackMapTable::OMClassAttrStackMapTable(uint16_t noe,
                                                    std::vector<std::shared_ptr<OMClassAttrVerifyStackMapFrame>> e)
-    : numberOfEntries(noe), entries(e)
+    : numberOfEntries(noe), entries(std::move(e))
 {
 }
 OMClassAttrType OMClassAttrStackMapTable::type()
@@ -169,7 +166,7 @@ OMClassAttrType OMClassAttrStackMapTable::type()
 }
 
 OMClassAttrExceptions::OMClassAttrExceptions(uint16_t noe, std::vector<uint16_t> eit)
-    : numberOfExceptions(noe), exceptionIndexTable(eit)
+    : numberOfExceptions(noe), exceptionIndexTable(std::move(eit))
 {
 }
 OMClassAttrType OMClassAttrExceptions::type()
@@ -178,7 +175,7 @@ OMClassAttrType OMClassAttrExceptions::type()
 }
 
 OMClassAttrInnerClass::OMClassAttrInnerClass(uint16_t numberOfClasses, std::vector<OMClassAttrInnerClassInfo> classes)
-    : numberOfClasses(numberOfClasses), classes(classes)
+    : numberOfClasses(numberOfClasses), classes(std::move(classes))
 {
 }
 OMClassAttrType OMClassAttrInnerClass::type()
@@ -194,9 +191,7 @@ OMClassAttrType OMClassAttrEnclosingMethod::type()
     return OMClassAttrType::EnclosingMethod;
 }
 
-OMClassAttrSynthetic::OMClassAttrSynthetic()
-{
-}
+OMClassAttrSynthetic::OMClassAttrSynthetic() = default;
 OMClassAttrType OMClassAttrSynthetic::type()
 {
     return OMClassAttrType::Synthetic;
@@ -218,7 +213,7 @@ OMClassAttrType OMClassAttrSourceFile::type()
     return OMClassAttrType::SourceFile;
 }
 
-OMClassAttrSourceDebugExtension::OMClassAttrSourceDebugExtension(std::vector<uint8_t> de) : debugExt(de)
+OMClassAttrSourceDebugExtension::OMClassAttrSourceDebugExtension(std::vector<uint8_t> de) : debugExt(std::move(de))
 {
 }
 OMClassAttrType OMClassAttrSourceDebugExtension::type()
@@ -227,7 +222,7 @@ OMClassAttrType OMClassAttrSourceDebugExtension::type()
 }
 
 OMClassAttrLineNumberTable::OMClassAttrLineNumberTable(uint16_t lntl, std::unordered_map<uint16_t, uint16_t> lnt)
-    : lineNumberTableLength(lntl), lineNumberTable(lnt)
+    : lineNumberTableLength(lntl), lineNumberTable(std::move(lnt))
 {
 }
 OMClassAttrType OMClassAttrLineNumberTable::type()
@@ -236,7 +231,7 @@ OMClassAttrType OMClassAttrLineNumberTable::type()
 }
 
 OMClassAttrLocalVarTable::OMClassAttrLocalVarTable(uint16_t lvtl, std::vector<OMClassAttrLocalVar> lvt)
-    : localVarTableLength(lvtl), localVarTable(lvt)
+    : localVarTableLength(lvtl), localVarTable(std::move(lvt))
 {
 }
 OMClassAttrType OMClassAttrLocalVarTable::type()
@@ -245,7 +240,7 @@ OMClassAttrType OMClassAttrLocalVarTable::type()
 }
 
 OMClassAttrLocalVarTypeTable::OMClassAttrLocalVarTypeTable(uint16_t lvtl, std::vector<OMClassAttrLocalVar> lvt)
-    : localVarTableLength(lvtl), localVarTable(lvt)
+    : localVarTableLength(lvtl), localVarTable(std::move(lvt))
 {
 }
 OMClassAttrType OMClassAttrLocalVarTypeTable::type()
@@ -253,9 +248,7 @@ OMClassAttrType OMClassAttrLocalVarTypeTable::type()
     return OMClassAttrType::LocalVariableTypeTable;
 }
 
-OMClassAttrDeprecated::OMClassAttrDeprecated()
-{
-}
+OMClassAttrDeprecated::OMClassAttrDeprecated() = default;
 OMClassAttrType OMClassAttrDeprecated::type()
 {
     return OMClassAttrType::Deprecated;
@@ -270,7 +263,7 @@ OMClassAttrType OMClassAttrNestHost::type()
 }
 
 OMClassAttrNestMembers::OMClassAttrNestMembers(uint16_t noc, std::vector<uint16_t> classes)
-    : numberOfClasses(noc), classes(classes)
+    : numberOfClasses(noc), classes(std::move(classes))
 {
 }
 OMClassAttrType OMClassAttrNestMembers::type()
@@ -279,7 +272,7 @@ OMClassAttrType OMClassAttrNestMembers::type()
 }
 
 OMClassAttrPermittedSubclasses::OMClassAttrPermittedSubclasses(uint16_t noc, std::vector<uint16_t> classes)
-    : numberOfClasses(noc), classes(classes)
+    : numberOfClasses(noc), classes(std::move(classes))
 {
 }
 OMClassAttrType OMClassAttrPermittedSubclasses::type()
@@ -296,7 +289,7 @@ OMClassAttrType OMClassAttrModuleMainClass::type()
 }
 
 OMClassAttrModulePackages::OMClassAttrModulePackages(uint16_t pc, std::vector<uint16_t> pi)
-    : packageCount(pc), packageIndex(pi)
+    : packageCount(pc), packageIndex(std::move(pi))
 {
 }
 OMClassAttrType OMClassAttrModulePackages::type()
@@ -306,7 +299,7 @@ OMClassAttrType OMClassAttrModulePackages::type()
 
 OMClassAttrRuntimeVisibleAnnotations::OMClassAttrRuntimeVisibleAnnotations(
     uint16_t na, std::vector<std::shared_ptr<OMClassAnnotation>> data)
-    : numAnnotations(na), annotations(data)
+    : numAnnotations(na), annotations(std::move(data))
 {
 }
 
@@ -317,7 +310,7 @@ OMClassAttrType OMClassAttrRuntimeVisibleAnnotations::type()
 
 OMClassAttrRuntimeInvisibleAnnotations::OMClassAttrRuntimeInvisibleAnnotations(
     uint16_t na, std::vector<std::shared_ptr<OMClassAnnotation>> data)
-    : numAnnotations(na), annotations(data)
+    : numAnnotations(na), annotations(std::move(data))
 {
 }
 
@@ -326,7 +319,8 @@ OMClassAttrType OMClassAttrRuntimeInvisibleAnnotations::type()
     return OMClassAttrType::RuntimeInvisibleAnnotations;
 }
 
-OMClassAttrAnnotationDefault::OMClassAttrAnnotationDefault(std::shared_ptr<OMClassAnnotationElemValue> v) : value(v)
+OMClassAttrAnnotationDefault::OMClassAttrAnnotationDefault(std::shared_ptr<OMClassAnnotationElemValue> v)
+    : value(std::move(v))
 {
 }
 
@@ -336,7 +330,7 @@ OMClassAttrType OMClassAttrAnnotationDefault::type()
 }
 
 OMClassAttrMethodParameters::OMClassAttrMethodParameters(uint8_t pc, std::vector<OMClassParam> p)
-    : paramCount(pc), params(p)
+    : paramCount(pc), params(std::move(p))
 {
 }
 OMClassAttrType OMClassAttrMethodParameters::type()
@@ -345,7 +339,7 @@ OMClassAttrType OMClassAttrMethodParameters::type()
 }
 
 OMClassAttrBootMethods::OMClassAttrBootMethods(uint16_t n, std::vector<OMClassBootMethods> d)
-    : numBootMethods(n), bootMethods(d)
+    : numBootMethods(n), bootMethods(std::move(d))
 {
 }
 OMClassAttrType OMClassAttrBootMethods::type()
@@ -353,7 +347,8 @@ OMClassAttrType OMClassAttrBootMethods::type()
     return OMClassAttrType::BootstrapMethods;
 }
 
-OMClassAttrRecord::OMClassAttrRecord(uint16_t c, std::vector<OMClassRecordCompInfo> i) : numComps(c), comps(i)
+OMClassAttrRecord::OMClassAttrRecord(uint16_t c, std::vector<OMClassRecordCompInfo> i)
+    : numComps(c), comps(std::move(i))
 {
 }
 OMClassAttrType OMClassAttrRecord::type()
@@ -363,7 +358,7 @@ OMClassAttrType OMClassAttrRecord::type()
 
 OMClassRuntimeVisibleParameterAnnotations::OMClassRuntimeVisibleParameterAnnotations(
     uint8_t n, std::vector<OMClassParamAnnotations> d)
-    : numParams(n), params(d)
+    : numParams(n), params(std::move(d))
 {
 }
 OMClassAttrType OMClassRuntimeVisibleParameterAnnotations::type()
@@ -373,11 +368,41 @@ OMClassAttrType OMClassRuntimeVisibleParameterAnnotations::type()
 
 OMClassRuntimeInvisibleParameterAnnotations::OMClassRuntimeInvisibleParameterAnnotations(
     uint8_t n, std::vector<OMClassParamAnnotations> d)
-    : numParams(n), params(d)
+    : numParams(n), params(std::move(d))
 {
 }
 OMClassAttrType OMClassRuntimeInvisibleParameterAnnotations::type()
 {
     return OMClassAttrType::RuntimeInvisibleParameterAnnotations;
+}
+
+OMClassRuntimeTypeAnnotationInfo::OMClassRuntimeTypeAnnotationInfo()
+{
+}
+
+OMClassRuntimeTypeAnnotationInfo::~OMClassRuntimeTypeAnnotationInfo()
+{
+}
+
+OMClassRuntimeVisibleTypeAnnotation::OMClassRuntimeVisibleTypeAnnotation(uint16_t na,
+                                                                         std::vector<OMClassRuntimeTypeAnnotation> a)
+    : numAnnotations(na), annotations(std::move(a))
+{
+}
+
+OMClassAttrType OMClassRuntimeVisibleTypeAnnotation::type()
+{
+    return OMClassAttrType::RuntimeVisibleTypeAnnotations;
+}
+
+OMClassRuntimeInvisibleTypeAnnotation::OMClassRuntimeInvisibleTypeAnnotation(
+    uint16_t na, std::vector<OMClassRuntimeTypeAnnotation> a)
+    : numAnnotations(na), annotations(std::move(a))
+{
+}
+
+OMClassAttrType OMClassRuntimeInvisibleTypeAnnotation::type()
+{
+    return OMClassAttrType::RuntimeInvisibleTypeAnnotations;
 }
 } // namespace openminecraft::vm::classfile

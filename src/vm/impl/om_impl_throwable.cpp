@@ -22,13 +22,19 @@ std::any java_lang_Throwable_fillInStackTrace(OMPixelTower *tower, std::any *d)
         frames.push_back(frame);
 
         tower->loader->klassOopCreate(fr->method->klass);
-        tower->interface->putField(frame, tower->interface->findField(cls, "declaringClass", "Ljava/lang/Class;"), fr->method->klass->oop);
-        tower->interface->putField(frame, tower->interface->findField(cls, "name", "Ljava/lang/String;"), tower->createString(fr->method->name));
-        tower->interface->putField(frame, tower->interface->findField(cls, "descriptor", "Ljava/lang/String;"), tower->createString(fr->method->desc));
-        tower->interface->putField(frame, tower->interface->findField(cls, "sourceFile", "Ljava/lang/String;"), tower->createString(fr->method->klass->source));
+        tower->interface->putField(frame, tower->interface->findField(cls, "declaringClass", "Ljava/lang/Class;"),
+                                   fr->method->klass->oop);
+        tower->interface->putField(frame, tower->interface->findField(cls, "name", "Ljava/lang/String;"),
+                                   tower->createString(fr->method->name));
+        tower->interface->putField(frame, tower->interface->findField(cls, "descriptor", "Ljava/lang/String;"),
+                                   tower->createString(fr->method->desc));
+        tower->interface->putField(frame, tower->interface->findField(cls, "sourceFile", "Ljava/lang/String;"),
+                                   tower->createString(fr->method->klass->source));
         if (fr->method->sourceMap)
         {
-            tower->interface->putField(frame, tower->interface->findField(cls, "line", "I"), fr->method->sourceMap->at(static_cast<jint>(static_cast<size_t>(pc - fr->method->code))));
+            tower->interface->putField(
+                frame, tower->interface->findField(cls, "line", "I"),
+                fr->method->sourceMap->at(static_cast<jint>(static_cast<size_t>(pc - fr->method->code))));
         }
 
         pc = static_cast<uint8_t *>(fr->returnAddr);

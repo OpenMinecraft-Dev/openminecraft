@@ -2,6 +2,8 @@
 #include "openminecraft/io/om_io_parser.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/util/om_util_result.hpp"
+#include "openminecraft/vm/encoding/om_encoding_utf.hpp"
+
 #include <cstdint>
 #include <fmt/format.h>
 #include <memory>
@@ -93,14 +95,14 @@ util::OMResult<std::shared_ptr<OMClassFile>, err::OMValidationError> OMClassFile
     return OMResult<std::shared_ptr<OMClassFile>, err::OMValidationError>::ok(file);
 }
 
-OMResult<std::shared_ptr<OMClassConstant>, err::OMValidationError> OMClassFileParser::parseConstant(uint16_t *idx)
+OMResult<std::shared_ptr<OMClassConstant>, err::OMValidationError> OMClassFileParser::parseConstant(uint16_t *idx) const
 {
     (*idx)++;
 
     OMClassConstantType type;
     this->source->read((char *)&type, 1);
 
-    uint16_t temp1, temp2, temp3, temp4;
+    uint16_t temp1, temp2;
     uint32_t temp5, temp6;
 
     std::shared_ptr<OMClassConstant> result;
@@ -217,11 +219,11 @@ OMResult<std::shared_ptr<OMClassConstant>, err::OMValidationError> OMClassFilePa
 }
 
 OMClassFileParser::ConstantMapping OMClassFileParser::buildConstantMapping(
-    std::vector<std::shared_ptr<OMClassConstant>> c)
+    const std::vector<std::shared_ptr<OMClassConstant>> &c)
 {
     OMClassFileParser::ConstantMapping target;
     uint16_t id = 1;
-    for (auto d : c)
+    for (const auto &d : c)
     {
         target[id] = d;
         if (d->type() == OMClassConstantType::Long || d->type() == OMClassConstantType::Double)
@@ -234,7 +236,7 @@ OMClassFileParser::ConstantMapping OMClassFileParser::buildConstantMapping(
     return target;
 }
 
-std::shared_ptr<OMClassFieldInfo> OMClassFileParser::parseField(OMClassFileParser::ConstantMapping m)
+std::shared_ptr<OMClassFieldInfo> OMClassFileParser::parseField(const OMClassFileParser::ConstantMapping &m)
 {
     auto field = std::make_shared<OMClassFieldInfo>();
     this->source->readbe16(field->accessFlags);
@@ -250,7 +252,7 @@ std::shared_ptr<OMClassFieldInfo> OMClassFileParser::parseField(OMClassFileParse
     return field;
 }
 
-std::shared_ptr<OMClassMethodInfo> OMClassFileParser::parseMethod(OMClassFileParser::ConstantMapping m)
+std::shared_ptr<OMClassMethodInfo> OMClassFileParser::parseMethod(const OMClassFileParser::ConstantMapping &m)
 {
     auto method = std::make_shared<OMClassMethodInfo>();
     this->source->readbe16(method->accessFlags);
@@ -320,7 +322,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         uint16_t noe;
         this->source->readbe16(noe);
         auto typep = [&]() -> OMClassAttrVerifyTypeInfo {
-            OMClassAttrVerifyTypeInfo s;
+            OMClassAttrVerifyTypeInfo s{};
             this->source->read((char *)&s.tag, 1);
             if (s.tag == OMClassAttrVerifyType::Object || s.tag == OMClassAttrVerifyType::Uninitialized)
             {
@@ -332,8 +334,8 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         for (uint16_t i = 0; i < noe; i++)
         {
             auto fr = std::make_shared<OMClassAttrVerifyStackMapFrame>();
-            this->source->read((char *)&fr->tag, 1);
-            if (fr->tag >= 0 && fr->tag < 64)
+            this->source->read(reinterpret_cast<char *>(&fr->tag), 1);
+            if (fr->tag < 64)
             {
             }
             else if (fr->tag >= 64 && fr->tag < 128)
@@ -362,7 +364,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             {
                 this->source->readbe16(fr->appendFrame.offset);
                 fr->appendFrame.locals = new std::vector<OMClassAttrVerifyTypeInfo>();
-                for (uint8_t i = 0; i < fr->tag - 251; i++)
+                for (uint8_t idx = 0; idx < fr->tag - 251; idx++)
                 {
                     fr->appendFrame.locals->push_back(typep());
                 }
@@ -372,13 +374,13 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
                 this->source->readbe16(fr->fullFrame.offset);
                 this->source->readbe16(fr->fullFrame.numberOfLocals);
                 fr->fullFrame.locals = new std::vector<OMClassAttrVerifyTypeInfo>();
-                for (uint16_t i = 0; i < fr->fullFrame.numberOfLocals; i++)
+                for (uint16_t idxx = 0; idxx < fr->fullFrame.numberOfLocals; idxx++)
                 {
                     fr->fullFrame.locals->push_back(typep());
                 }
                 this->source->readbe16(fr->fullFrame.numberOfStackItems);
                 fr->fullFrame.stackItems = new std::vector<OMClassAttrVerifyTypeInfo>();
-                for (uint16_t i = 0; i < fr->fullFrame.numberOfStackItems; i++)
+                for (uint16_t idxx = 0; idxx < fr->fullFrame.numberOfStackItems; idxx++)
                 {
                     fr->fullFrame.stackItems->push_back(typep());
                 }
@@ -408,7 +410,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         std::vector<OMClassAttrInnerClassInfo> d;
         for (uint16_t i = 0; i < numberOfClasses; i++)
         {
-            OMClassAttrInnerClassInfo di;
+            OMClassAttrInnerClassInfo di{};
             this->source->readbe16(di.innerClassInfoIndex);
             this->source->readbe16(di.outerClassInfoIndex);
             this->source->readbe16(di.innerNameIndex);
@@ -466,7 +468,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         std::vector<OMClassAttrLocalVar> d;
         for (uint16_t i = 0; i < l; i++)
         {
-            OMClassAttrLocalVar data;
+            OMClassAttrLocalVar data{};
             this->source->readbe16(data.startPc);
             this->source->readbe16(data.length);
             this->source->readbe16(data.nameIndex);
@@ -483,7 +485,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         std::vector<OMClassAttrLocalVar> d;
         for (uint16_t i = 0; i < l; i++)
         {
-            OMClassAttrLocalVar data;
+            OMClassAttrLocalVar data{};
             this->source->readbe16(data.startPc);
             this->source->readbe16(data.length);
             this->source->readbe16(data.nameIndex);
@@ -642,16 +644,16 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         std::vector<OMClassRecordCompInfo> da;
         for (uint16_t i = 0; i < c; i++)
         {
-            uint16_t ni, di, ac;
+            uint16_t nib, di, ac;
             std::vector<std::shared_ptr<OMClassAttr>> d;
-            this->source->readbe16(ni);
+            this->source->readbe16(nib);
             this->source->readbe16(di);
             this->source->readbe16(ac);
             for (uint16_t j = 0; j < ac; j++)
             {
                 d.push_back(parseAttr(m));
             }
-            da.push_back({ni, di, ac, d});
+            da.push_back({nib, di, ac, d});
         }
         attr = std::make_shared<OMClassAttrRecord>(c, da);
         break;
@@ -670,7 +672,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         break;
     }
     default:
-        this->source->seekg((uint64_t)this->source->tellg() + length);
+        this->source->seekg(static_cast<int64_t>(this->source->tellg()) + length);
         this->logger->warn("Unimplemented attr: {}", m[ni]->to<OMClassConstantUtf8>()->data);
         break;
     }
@@ -741,7 +743,8 @@ std::shared_ptr<OMClassAnnotationElemValue> OMClassFileParser::parseAnnotationVa
 std::string OMClassFileParser::toStdUtf8(std::vector<uint8_t> data, int length)
 {
     int p = 0;
-    std::vector<char> target;
+
+    std::vector<int> target;
     while (p < length)
     {
         if (data[p] >> 7 == 0)
@@ -755,12 +758,14 @@ std::string OMClassFileParser::toStdUtf8(std::vector<uint8_t> data, int length)
         {
             auto d = ((data[p] & 0x1f) << 6) + (data[p + 1] & 0x3f);
             if (d != 0)
+            {
                 target.push_back(d);
+            }
             p += 2;
             continue;
         }
 
-        if (data[p] >> 4 == 0b1110 && data[p + 1] >> 6 == 0b10 && data[p + 2] >> 5 == 0b10)
+        if (data[p] >> 4 == 0b1110 && data[p + 1] >> 6 == 0b10 && data[p + 2] >> 6 == 0b10)
         {
             target.push_back(((data[p] & 0xf) << 12) + ((data[p + 1] & 0x3f) << 6) + (data[p + 2] & 0x3f));
             p += 3;
@@ -776,8 +781,7 @@ std::string OMClassFileParser::toStdUtf8(std::vector<uint8_t> data, int length)
             continue;
         }
     }
-    target.push_back('\0');
 
-    return std::string(target.data());
+    return encoding::utf32ToUtf8(target);
 }
 } // namespace openminecraft::vm::classfile

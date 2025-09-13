@@ -18,4 +18,4 @@ v0::OMField *OMPixelTowerInterface::findField(v0::OMKlass *klass, std::string na
 
     return nullptr;
 }
-} // namespace openminecraft::vm::pixeltower::v1
+} // namespace openminecraft::vm::pixeltower::v0

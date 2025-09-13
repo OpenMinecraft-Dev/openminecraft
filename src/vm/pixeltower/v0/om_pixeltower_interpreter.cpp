@@ -106,7 +106,6 @@ void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
     }
 
     validateArgs();
-
 }
 
 void OMInterpreter::checkNotNull(const void *p)
@@ -175,7 +174,6 @@ void OMInterpreter::callDynamic(OMMethod *met, uint8_t *retAddr)
     }
 
     validateArgs();
-
 }
 
 void OMInterpreter::validateArgs()
@@ -1458,40 +1456,58 @@ operand:
             auto ret = stackTopAccess<jint>();
             popLastFrame();
             stackPushAccess<jint>(ret);
-	    if (currentThread.pc != nullFunction) { goto operand; }
+            if (currentThread.pc != nullFunction)
+            {
+                goto operand;
+            }
             return EXEC_RETURN;
         }
         case op_lreturn: {
             auto ret = stackTopAccessW<jlong>();
             popLastFrame();
             stackPushAccessW<jlong>(ret);
-	    if (currentThread.pc != nullFunction) { goto operand; }
+            if (currentThread.pc != nullFunction)
+            {
+                goto operand;
+            }
             return EXEC_RETURN;
         }
         case op_freturn: {
             auto ret = stackTopAccess<jfloat>();
             popLastFrame();
             stackPushAccess<jfloat>(ret);
-	    if (currentThread.pc != nullFunction) { goto operand; }
+            if (currentThread.pc != nullFunction)
+            {
+                goto operand;
+            }
             return EXEC_RETURN;
         }
         case op_dreturn: {
             auto ret = stackTopAccessW<jdouble>();
             popLastFrame();
             stackPushAccessW<jdouble>(ret);
-	    if (currentThread.pc != nullFunction) { goto operand; }
+            if (currentThread.pc != nullFunction)
+            {
+                goto operand;
+            }
             return EXEC_RETURN;
         }
         case op_areturn: {
             auto ret = stackTopAccess<void *>();
             popLastFrame();
             stackPushAccess<void *>(ret);
-	    if (currentThread.pc != nullFunction) { goto operand; }
+            if (currentThread.pc != nullFunction)
+            {
+                goto operand;
+            }
             return EXEC_RETURN;
         }
         case op_return: {
             popLastFrame();
-	    if (currentThread.pc != nullFunction) { goto operand; }
+            if (currentThread.pc != nullFunction)
+            {
+                goto operand;
+            }
             return EXEC_RETURN;
         }
         case op_getstatic: {
@@ -1500,7 +1516,7 @@ operand:
             if (n == nullptr)
             {
                 n = tower->loader->lazyFieldInit(currentThread.currentFrame->method->klass, id);
-		goto operand;
+                goto operand;
             }
             assert(n != nullptr);
             fetchFieldStatic(n);
@@ -1513,7 +1529,7 @@ operand:
             if (n == nullptr)
             {
                 n = tower->loader->lazyFieldInit(currentThread.currentFrame->method->klass, id);
-		goto operand;
+                goto operand;
             }
             assert(n != nullptr);
             accessFieldStatic(n);
@@ -1527,7 +1543,7 @@ operand:
             if (n == nullptr)
             {
                 n = tower->loader->lazyFieldInit(currentThread.currentFrame->method->klass, id);
-		goto operand;
+                goto operand;
             }
             assert(n != nullptr);
             fetchField(n);
@@ -1541,7 +1557,7 @@ operand:
             if (n == nullptr)
             {
                 n = tower->loader->lazyFieldInit(currentThread.currentFrame->method->klass, id);
-		goto operand;
+                goto operand;
             }
             assert(n != nullptr);
             accessField(n);
@@ -1852,27 +1868,28 @@ operand:
     }
     catch (err::OMRuntimeError &e)
     {
-	auto fr = currentThread.currentFrame;
-	while (true) {
-        auto m = fr->method;
-        for (auto &ext : *m->exceptionHandlers)
+        auto fr = currentThread.currentFrame;
+        while (true)
         {
-            if (checkCompat(static_cast<OMOOPDesc *>(e.errInstance)->klass, ext.klass) &&
-                (currentThread.pc >= (m->code + ext.begin)) && (currentThread.pc < (m->code + ext.end)))
+            auto m = fr->method;
+            for (auto &ext : *m->exceptionHandlers)
             {
-                currentThread.pc = m->code + ext.target;
-                stackPushAccess<void *>(e.errInstance);
-                goto operand;
+                if (checkCompat(static_cast<OMOOPDesc *>(e.errInstance)->klass, ext.klass) &&
+                    (currentThread.pc >= (m->code + ext.begin)) && (currentThread.pc < (m->code + ext.end)))
+                {
+                    currentThread.pc = m->code + ext.target;
+                    stackPushAccess<void *>(e.errInstance);
+                    goto operand;
+                }
             }
+
+            if (fr->returnAddr == nullFunction)
+            {
+                break;
+            }
+
+            fr = fr->prev;
         }
-
-        if (fr->returnAddr == nullFunction) {
-            break;
-	}
-
-	fr = fr->prev;
-
-	}
 
         throw;
     }

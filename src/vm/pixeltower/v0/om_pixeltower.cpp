@@ -9,13 +9,13 @@
 #include "openminecraft/vm/impl/om_impl_printstream.hpp"
 #include "openminecraft/vm/impl/om_impl_throwable.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_interface.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_interpreter.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klassloader.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
-#include "openminecraft/vm/pixeltower/v0/om_pixeltower_interface.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
 #include "openminecraft/vm/pixeltower/v2/om_pixeltower_gc_serial.hpp"
 #include <cstdint>
@@ -63,7 +63,8 @@ OMPixelTower::OMPixelTower() : logger("OMPixelTower", this)
     gc = new v2::OMGarbageCollectorSerial(heap, this);
     interface = new OMPixelTowerInterface();
 
-    // geopeila: we don't need the first 8 bytes when the ptr compress is enabled, or we won't able to know if a pointer is pointing into the Mazarine End
+    // geopeila: we don't need the first 8 bytes when the ptr compress is enabled, or we won't able to know if a pointer
+    // is pointing into the Mazarine End
     if (heap->ptrCompEnabled())
     {
         heap->allocate(8);

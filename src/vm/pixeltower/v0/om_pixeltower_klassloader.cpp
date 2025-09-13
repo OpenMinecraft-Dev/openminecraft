@@ -7,10 +7,10 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_base.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_field.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
+#include "openminecraft/vm/pixeltower/v0/om_pixeltower_interface.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_klass.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
-#include "openminecraft/vm/pixeltower/v0/om_pixeltower_interface.hpp"
 
 #include <cstring>
 #include <unordered_map>
@@ -142,8 +142,11 @@ void OMKlassLoader::klassOopCreate(OMKlass *klass)
     tgt->mark |= mconst;
     klass->oop = tgt;
 
-    interpreter->tower->interface->putField(tgt, interpreter->tower->interface->findField(clsklass, "name", "Ljava/lang/String;"), interpreter->tower->createString(klass->name));
-    interpreter->tower->interface->putField(tgt, interpreter->tower->interface->findField(clsklass, "nativePtr", "J"), static_cast<jlong>(reinterpret_cast<size_t>(klass)));
+    interpreter->tower->interface->putField(
+        tgt, interpreter->tower->interface->findField(clsklass, "name", "Ljava/lang/String;"),
+        interpreter->tower->createString(klass->name));
+    interpreter->tower->interface->putField(tgt, interpreter->tower->interface->findField(clsklass, "nativePtr", "J"),
+                                            static_cast<jlong>(reinterpret_cast<size_t>(klass)));
 }
 
 OMKlass *OMKlassLoader::klassConstruct(
@@ -349,8 +352,8 @@ void OMKlassLoader::klassMethodInit(OMKlass *klass)
             }
         }
 
-        if ((m->accessFlags & JVM_Acc_Static) == 0 &&
-            (m->accessFlags & JVM_Acc_Final) == 0 && strcmp(m->name, "<init>") != 0)
+        if ((m->accessFlags & JVM_Acc_Static) == 0 && (m->accessFlags & JVM_Acc_Final) == 0 &&
+            strcmp(m->name, "<init>") != 0)
         {
             (*klass->vtable)[fmt::format("{}{}", m->name, m->desc)] = m;
         }
