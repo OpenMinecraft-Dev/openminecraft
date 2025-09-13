@@ -109,8 +109,8 @@ void OMKlassLoader::loadClass(OMTypeDesc name)
             klassVtableInit(klass);
             klassMethodInit(klass);
             klassConstantPoolLoad(klass);
-            klassClinit(klass);
             klassLoadDebugStatus(klass);
+            klassClinit(klass);
 
             return;
         }
@@ -349,7 +349,7 @@ void OMKlassLoader::klassMethodInit(OMKlass *klass)
             }
         }
 
-        if ((m->accessFlags & JVM_Acc_Static) == 0 && (m->accessFlags & JVM_Acc_Private) == 0 &&
+        if ((m->accessFlags & JVM_Acc_Static) == 0 &&
             (m->accessFlags & JVM_Acc_Final) == 0 && strcmp(m->name, "<init>") != 0)
         {
             (*klass->vtable)[fmt::format("{}{}", m->name, m->desc)] = m;
