@@ -40,10 +40,6 @@ alloc:
                 emptyBlocks.erase(it);
             }
             memset(target, 0, length);
-            if (exec)
-            {
-                heap->activateExecutable(target, length);
-            }
             return target;
         }
     }

@@ -12,3 +12,4 @@ prod
 *.class
 debug
 vmstd/files.json
+vs*

@@ -34,15 +34,6 @@ void OMHeap::activate(void *p, uint64_t length)
     }
 }
 
-void OMHeap::activateExecutable(void *p, uint64_t length)
-{
-    if (!VirtualAlloc(p, length, MEM_COMMIT, PAGE_EXECUTE_READWRITE))
-    {
-        logger.error("[windows] VirtualAlloc fail ({})", GetLastError());
-        throw std::bad_alloc();
-    }
-}
-
 void OMHeap::deactivate(void *p, uint64_t length)
 {
     if (!VirtualFree(p, length, MEM_DECOMMIT))

@@ -52,15 +52,6 @@ void OMHeap::deactivate(void *p, uint64_t length)
         throw std::bad_alloc();
     }
 }
-
-void OMHeap::activateExecutable(void *p, uint64_t length)
-{
-    if (mprotect(p, length, PROT_READ | PROT_WRITE | PROT_EXEC) == -1)
-    {
-        logger.error("[unix-like] mprotect fail ({})", strerror(errno));
-        throw std::bad_alloc();
-    }
-}
 } // namespace openminecraft::mem
 
 namespace openminecraft::mem::castorice

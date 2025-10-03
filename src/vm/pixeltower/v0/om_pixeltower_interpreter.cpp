@@ -1450,8 +1450,80 @@ operand:
             currentThread.pc = localAccessValue<uint8_t *>(currentThread.pc[1]);
             goto operand;
         }
-            // op_tableswitch
-            // op_lookupswitch
+        case op_tableswitch: {
+            auto currentPos = currentThread.pc;
+            currentThread.pc++;
+            auto fnc = [] {
+                return binary::be32SignedToNative(currentThread.pc[0], currentThread.pc[1], currentThread.pc[2], currentThread.pc[3]);};
+            while (true)
+            {
+                auto off = currentThread.pc - currentThread.currentFrame->method->code;
+                if (off % 4 == 0)
+                {
+                    goto execMain2;
+                }
+                currentThread.pc++;
+            }
+
+            execMain2:
+            auto defaultret = fnc();
+            currentThread.pc += 4;
+            auto low = fnc();
+            currentThread.pc += 4;
+            auto high = fnc();
+            currentThread.pc += 4;
+
+            auto stp = stackTopAccess<jint>(true);
+            if (stp < low || stp > high)
+            {
+                currentThread.pc = currentPos + defaultret;
+                goto operand;
+            }
+
+            currentThread.pc += 4 * (stp - low);
+            currentThread.pc = currentPos + fnc();
+            goto operand;
+        }
+        // geopelia: we need binary search here!
+        case op_lookupswitch: {
+            auto currentPos = currentThread.pc;
+            currentThread.pc++;
+            auto fnc = [] {
+                return binary::be32SignedToNative(currentThread.pc[0], currentThread.pc[1], currentThread.pc[2], currentThread.pc[3]);};
+            while (true)
+            {
+                auto off = currentThread.pc - currentThread.currentFrame->method->code;
+                if (off % 4 == 0)
+                {
+                    goto execMain;
+                }
+                currentThread.pc++;
+            }
+
+            execMain:
+            auto st = stackTopAccess<jint>(true);
+
+            auto defaultret = fnc();
+            currentThread.pc += 4;
+            auto npairs = fnc();
+
+            for (int i = 0; i < npairs; i++)
+            {
+                currentThread.pc += 4;
+                auto mat = fnc();
+                currentThread.pc += 4;
+                auto offset = fnc();
+
+                if (st == mat)
+                {
+                    currentThread.pc = currentPos + offset;
+                    goto operand;
+                }
+            }
+
+            currentThread.pc = currentPos + defaultret;
+            goto operand;
+        }
         case op_ireturn: {
             auto ret = stackTopAccess<jint>();
             popLastFrame();
