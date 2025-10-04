@@ -31,7 +31,7 @@ class OMKlassLoader
 
     void initBase();
     void loadClass(bytecode::descriptor::OMTypeDesc name);
-    void loadSpecialClass(bytecode::descriptor::OMTypeDesc name);
+    void loadArrayClass(bytecode::descriptor::OMTypeDesc name);
     OMKlass *fetchClass(bytecode::descriptor::OMTypeDesc name);
 
     OMKlass *lazyClassInit(OMKlass *klass, uint16_t id);
@@ -51,6 +51,8 @@ class OMKlassLoader
     void klassClinit(OMKlass *klass);
     void klassFieldInit(OMKlass *klass);
     void klassLoadDebugStatus(OMKlass *klass);
+
+    void loadPrimitiveClass(bytecode::descriptor::OMType type);
 
     OMPixelTowerHeap *metaspace;
     OMPixelTowerHeap *heap;

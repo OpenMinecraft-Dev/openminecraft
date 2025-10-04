@@ -20,7 +20,8 @@ enum OMKlassKind : uint8_t
     AbstractClass,
     Annotation,
     Enum,
-    Array
+    Array,
+    Primitive
 };
 
 struct OMMethod;
@@ -87,7 +88,7 @@ class OMKlass
     }
     [[nodiscard]] bool isArr() const
     {
-        return name[0] == '[';
+        return kind == Array;
     }
 
     OMOOPDesc *allocateInstance()

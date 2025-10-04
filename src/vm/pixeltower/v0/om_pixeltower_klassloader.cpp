@@ -72,6 +72,29 @@ OMKlassLoader::~OMKlassLoader()
 void OMKlassLoader::initBase()
 {
     loadClass({bytecode::descriptor::Reference, "java/lang/String"});
+    loadPrimitiveClass(bytecode::descriptor::Int);
+    loadPrimitiveClass(bytecode::descriptor::Float);
+    loadPrimitiveClass(bytecode::descriptor::Double);
+    loadPrimitiveClass(bytecode::descriptor::Long);
+    loadPrimitiveClass(bytecode::descriptor::Short);
+    loadPrimitiveClass(bytecode::descriptor::Byte);
+    loadPrimitiveClass(bytecode::descriptor::Char);
+    loadPrimitiveClass(bytecode::descriptor::Void);
+    loadPrimitiveClass(bytecode::descriptor::Boolean);
+}
+
+void OMKlassLoader::loadPrimitiveClass(bytecode::descriptor::OMType type)
+{
+    auto klass = static_cast<OMKlass *>(metaspace->allocate(sizeof(OMKlass)));
+    memset((void *)klass, 0, sizeof(OMKlass));
+
+    klass->accessFlags = JVM_Acc_Public | JVM_Acc_Final;
+    klass->heap = heap;
+    auto nn = bytecode::descriptor::restore(OMTypeDesc{type, ""});
+    klass->name = nn;
+    nn.copy((char *)klass->name.c_str(), nn.length());
+    klass->kind = Primitive;
+    classes.push_back(klass);
 }
 
 void OMKlassLoader::loadClass(OMTypeDesc name)
@@ -83,7 +106,7 @@ void OMKlassLoader::loadClass(OMTypeDesc name)
 
     if (name.type == bytecode::descriptor::Array)
     {
-        loadSpecialClass(name);
+        loadArrayClass(name);
         return;
     }
 
@@ -576,7 +599,7 @@ OMKlass *OMKlassLoader::lazyClassInit(OMKlass *klass, uint16_t id)
 }
 
 // gino: for array classes, we use this method to construct OMKlass objects
-void OMKlassLoader::loadSpecialClass(OMTypeDesc name)
+void OMKlassLoader::loadArrayClass(OMTypeDesc name)
 {
     auto klass = static_cast<OMKlass *>(metaspace->allocate(sizeof(OMKlass)));
     memset((void *)klass, 0, sizeof(OMKlass));
