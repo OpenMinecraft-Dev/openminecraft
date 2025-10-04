@@ -57,5 +57,7 @@
     "openminecraft.renderer.vk.err.shell": "{} ( {:#010x} )", 
     "openminecraft.renderer.vk.err.instance": "Vulkan 实例创建: {}", 
     "openminecraft.renderer.vk.err.preinstance": "Vulkan 前实例创建: {}", 
-    "openminecraft.renderer.vk.err.phydev": "Vulkan 设备选择: {}"
+    "openminecraft.renderer.vk.err.phydev": "Vulkan 设备选择: {}",
+    "openminecraft.renderer.vk.err.family": "没有合适的图形组",
+    "openminecraft.renderer.vk.err.dev": "创建逻辑设备: {}"
 }

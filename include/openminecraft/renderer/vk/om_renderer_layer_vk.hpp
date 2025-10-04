@@ -30,13 +30,14 @@ void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAll
 class OMRendererVk : public OMRenderer
 {
   public:
-    OMRendererVk(AppInfo info, std::function<int(std::vector<std::string>)> dev);
+    OMRendererVk(AppInfo info, std::function<int(std::vector<std::string>)> dev, void *window);
     ~OMRendererVk();
 
     util::OMResult<std::vector<const char *>, std::string> fetchRequiredExtensions();
     util::OMResult<::vk::Instance, std::string> instanceCreation(AppInfo info, std::vector<const char *> exts);
     util::OMResult<::vk::PhysicalDevice, std::string> deviceSelection(std::function<int(std::vector<std::string>)> dev);
     util::OMResult<std::any, std::string> sdlVulkanLoading();
+    util::OMResult<::vk::Device, std::string> deviceCreation();
 
     virtual std::string driver() override;
     void destroy();
@@ -45,7 +46,10 @@ class OMRendererVk : public OMRenderer
     ::vk::AllocationCallbacks allocator;
     ::vk::Instance instance;
     ::vk::PhysicalDevice physicalDevice;
+    ::vk::Device logicalDevice;
     ::vk::DebugUtilsMessengerEXT messenger;
+    ::vk::SurfaceKHR surface;
+    std::pair<uint32_t, uint32_t> queueFamilyIndex;
 
   private:
     std::shared_ptr<log::OMLogger> logger;

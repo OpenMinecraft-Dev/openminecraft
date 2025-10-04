@@ -11,5 +11,7 @@
     "openminecraft.renderer.vk.err.shell": "{} ( {:#010x} )", 
     "openminecraft.renderer.vk.err.instance": "Vulkan Instance Creation: {}", 
     "openminecraft.renderer.vk.err.preinstance": "Vulkan Pre Instance Creation: {}", 
-    "openminecraft.renderer.vk.err.phydev": "Vulkan Device Selection: {}"
+    "openminecraft.renderer.vk.err.phydev": "Vulkan Device Selection: {}",
+    "openminecraft.renderer.vk.err.family": "No suitable graphics family found",
+    "openminecraft.renderer.vk.err.dev": "Logical Device Creation: {}"
 }

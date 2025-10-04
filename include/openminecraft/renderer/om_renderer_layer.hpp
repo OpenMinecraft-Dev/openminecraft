@@ -17,10 +17,13 @@ struct AppInfo
 class OMRenderer
 {
   public:
-    OMRenderer(AppInfo info);
-    ~OMRenderer();
+    OMRenderer(AppInfo info, void *window);
+    virtual ~OMRenderer() = default;
 
     virtual std::string driver() = 0;
+
+  protected:
+    void *window;
 
   private:
     const AppInfo info;

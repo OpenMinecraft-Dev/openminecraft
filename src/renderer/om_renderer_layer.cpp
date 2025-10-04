@@ -2,10 +2,7 @@
 
 namespace openminecraft::renderer
 {
-OMRenderer::OMRenderer(AppInfo info) : info(info)
-{
-}
-OMRenderer::~OMRenderer()
+OMRenderer::OMRenderer(AppInfo info, void *window) : info(info), window(window)
 {
 }
 } // namespace openminecraft::renderer

@@ -54,6 +54,7 @@
 #include "openminecraft/vm/pixeltower/v3/om_pixeltower_classbuilder.hpp"
 
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_vulkan.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
 
@@ -120,39 +121,13 @@ int boot(std::vector<std::string> args)
         logger->info(a);
     }
 
-    /*try
-    {
-        renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
-                               util::Version(1, 0, 0, 0), util::Version(1, 0, 0, 0)};
-        auto renderer = std::make_unique<renderer::vk::OMRendererVk>(a, [](std::vector<std::string>) { return 0; });
-
-        mem::castorice::printres();
-        vfs::fsumount("/bootassets");
-
-        renderer->destroy();
-    }
-    catch (std::runtime_error e)
-    {
-        if (!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Vulkan Debugger", e.what(), NULL))
-        {
-            logger->info("SDL Status: {}", SDL_GetError());
-            return 1;
-        }
-    }*/
-
-    SDL_Quit();
-
     logger->info("hardware / software status");
     logger->info("CPU Name: {}", os::fetchCpuName());
     logger->info("System: {}, version {}", os::fetchSystemName(), os::fetchSystemVersion());
     logger->info("User: {} / {}", os::fetchUsername(), os::fetchLoginUser());
     logger->info("Total memory: {} bytes", os::fetchMemoryTotal());
 
-    auto ss = "test\u00ff测试abcdありがとう😄";
-    auto res = encoding::utf32ToUtf8(encoding::utf16ToUtf32(encoding::utf32ToUtf16(encoding::utf8ToUtf32(ss))));
-    logger->info(res);
-
-    pixeltower::registerFuncs();
+    // pixeltower::registerFuncs();
     tower = std::make_unique<pixeltower::v0::OMPixelTower>();
 
     bool recovermode = false;
@@ -175,6 +150,30 @@ int boot(std::vector<std::string> args)
 
             switch (hash_compile_time(commandBuffer[0].c_str()))
             {
+            case "vktest"_hash: {
+                try {
+                    renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
+                                           util::Version(1, 0, 0, 0), util::Version(1, 0, 0, 0)};
+
+                    auto wnd = SDL_CreateWindow("Vulkan Test", 800, 800, SDL_WINDOW_VULKAN);
+                    auto renderer = std::make_unique<renderer::vk::OMRendererVk>(a, [](std::vector<std::string>) { return 0; }, wnd);
+                    SDL_ShowWindow(wnd);
+
+                    mem::castorice::printres();
+                    vfs::fsumount("/bootassets");
+
+                    renderer->destroy();
+                }
+                catch (std::runtime_error &e)
+                {
+                    if (!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Vulkan Debugger", e.what(), nullptr))
+                    {
+                        logger->info("SDL Status: {}", SDL_GetError());
+                    }
+                }
+                commandBuffer.clear();
+                break;
+            }
             case "quit"_hash:
             case "exit"_hash:
                 commandBuffer.clear();
@@ -328,6 +327,8 @@ int boot(std::vector<std::string> args)
         recovermode = true;
         goto program;
     }
+
+    SDL_Quit();
 
     return 0;
 }
