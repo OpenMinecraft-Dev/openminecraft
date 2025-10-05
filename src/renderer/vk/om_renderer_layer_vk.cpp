@@ -139,7 +139,50 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     }
     }
 
+    auto queuefetch = deviceQueueFetch();
+    switch (queuefetch.type)
+    {
+    case Ok: {
+        break;
+    }
+    case Err: {
+        throw std::runtime_error(queuefetch.unwrap_err());
+    }
+    }
 
+    try
+    {
+        swapchainManager = std::make_shared<swapchain::OMSwapchainManager>(surface, [&]() {return getSwapchainCap();}, queueFamilyIndex, logicalDevice, allocator, window);
+    }
+    catch (SystemError &e)
+    {
+        throw std::runtime_error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.swp"));
+    }
+}
+
+swapchain::OMSwapchainCap OMRendererVk::getSwapchainCap()
+{
+    return swapchain::OMSwapchainCap{
+        physicalDevice.getSurfaceCapabilitiesKHR(surface),
+        physicalDevice.getSurfaceFormatsKHR(surface),
+        physicalDevice.getSurfacePresentModesKHR(surface)
+    };
+}
+
+OMResult<std::any, std::string> OMRendererVk::deviceQueueFetch()
+{
+    try
+    {
+        queues = std::make_pair(logicalDevice.getQueue(queueFamilyIndex.first, 0), logicalDevice.getQueue(queueFamilyIndex.second, 0));
+    }
+    catch (SystemError &e)
+    {
+        logger->error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.devqueue"));
+        return OMResult<std::any, std::string>::err(
+            VkErrorTranslate(e, "openminecraft.renderer.vk.err.devqueue"));
+    }
+
+    return OMResult<std::any, std::string>::ok(0);
 }
 
 OMResult<Device, std::string> OMRendererVk::deviceCreation()
@@ -154,9 +197,11 @@ OMResult<Device, std::string> OMRendererVk::deviceCreation()
             qis.push_back(DeviceQueueCreateInfo({}, queueFamilyIndex.second, 1, &f));
         }
         auto fea = physicalDevice.getFeatures();
-        return OMResult<Device, std::string>::ok(physicalDevice.createDevice(DeviceCreateInfo({}, qis.size(), qis.data(), 0, nullptr, 0, nullptr, &fea)));
+
+        const char *ext = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+        return OMResult<Device, std::string>::ok(physicalDevice.createDevice(DeviceCreateInfo({}, qis.size(), qis.data(), 0, nullptr, 1, &ext, &fea)));
     }
-    catch (SystemError e)
+    catch (SystemError &e)
     {
         logger->error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.dev"));
         return OMResult<Device, std::string>::err(
@@ -183,7 +228,9 @@ OMResult<std::any, std::string> OMRendererVk::sdlVulkanLoading()
         errRet(d);
     }
 
-    SDL_Vulkan_CreateSurface(static_cast<SDL_Window *>(window), instance, allocator, reinterpret_cast<VkSurfaceKHR *>(&surface));
+    VkSurfaceKHR sf;
+    SDL_Vulkan_CreateSurface(static_cast<SDL_Window *>(window), instance, allocator, &sf);
+    surface = sf;
 
     return OMResult<std::any, std::string>::ok(nullptr);
 }
@@ -239,7 +286,7 @@ OMResult<PhysicalDevice, std::string> OMRendererVk::deviceSelection(
 
         return OMResult<PhysicalDevice, std::string>::ok(devtarget);
     }
-    catch (SystemError e)
+    catch (SystemError &e)
     {
         logger->error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.phydev"));
         return OMResult<PhysicalDevice, std::string>::err(
@@ -267,7 +314,7 @@ OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std
             [&]() { messenger = i.createDebugUtilsMessengerEXT(validationLayer->createInfo, allocator); });
         return OMResult<Instance, std::string>::ok(i);
     }
-    catch (SystemError e)
+    catch (SystemError &e)
     {
         logger->error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.instance"));
         return OMResult<Instance, std::string>::err(
@@ -300,7 +347,7 @@ OMResult<std::vector<const char *>, std::string> OMRendererVk::fetchRequiredExte
         validationLayer->attachExts(&exts);
         return util::OMResult<std::vector<const char *>, std::string>::ok(exts);
     }
-    catch (SystemError e)
+    catch (SystemError &e)
     {
         logger->error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.preinstance"));
         return OMResult<std::vector<const char *>, std::string>::err(
@@ -348,12 +395,15 @@ OMRendererVk::~OMRendererVk()
 }
 void OMRendererVk::destroy()
 {
+    swapchainManager->destroy();
+    SDL_Vulkan_DestroySurface(instance, surface, allocator);
+    logicalDevice.destroy(allocator);
     validationLayer->ifEnable([&]() { instance.destroyDebugUtilsMessengerEXT(messenger); });
     instance.destroy(allocator);
     SDL_Vulkan_UnloadLibrary();
 }
 std::string OMRendererVk::driver()
 {
-    return "";
+    return physicalDevice.getProperties().deviceName;
 }
 } // namespace openminecraft::renderer::vk

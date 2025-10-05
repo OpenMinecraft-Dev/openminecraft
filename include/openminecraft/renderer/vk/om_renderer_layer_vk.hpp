@@ -8,10 +8,10 @@
 #include "vulkan/vulkan_handles.hpp"
 #include <any>
 #include <functional>
-#include <stdexcept>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
+#include "om_renderer_layer_vk_swapchainmanager.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
 #include <memory>
@@ -38,11 +38,14 @@ class OMRendererVk : public OMRenderer
     util::OMResult<::vk::PhysicalDevice, std::string> deviceSelection(std::function<int(std::vector<std::string>)> dev);
     util::OMResult<std::any, std::string> sdlVulkanLoading();
     util::OMResult<::vk::Device, std::string> deviceCreation();
+    util::OMResult<std::any, std::string> deviceQueueFetch();
+    swapchain::OMSwapchainCap getSwapchainCap();
 
-    virtual std::string driver() override;
+    std::string driver() override;
     void destroy();
 
     std::shared_ptr<validation::OMRendererVkValidation> validationLayer;
+    std::shared_ptr<swapchain::OMSwapchainManager> swapchainManager;
     ::vk::AllocationCallbacks allocator;
     ::vk::Instance instance;
     ::vk::PhysicalDevice physicalDevice;
@@ -50,6 +53,7 @@ class OMRendererVk : public OMRenderer
     ::vk::DebugUtilsMessengerEXT messenger;
     ::vk::SurfaceKHR surface;
     std::pair<uint32_t, uint32_t> queueFamilyIndex;
+    std::pair<::vk::Queue, ::vk::Queue> queues;
 
   private:
     std::shared_ptr<log::OMLogger> logger;
