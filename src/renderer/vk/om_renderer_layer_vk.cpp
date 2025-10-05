@@ -396,7 +396,7 @@ OMRendererVk::~OMRendererVk()
 void OMRendererVk::destroy()
 {
     swapchainManager->destroy();
-    SDL_Vulkan_DestroySurface(instance, surface, allocator);
+    SDL_Vulkan_DestroySurface(instance, VkSurfaceKHR(surface), allocator);
     logicalDevice.destroy(allocator);
     validationLayer->ifEnable([&]() { instance.destroyDebugUtilsMessengerEXT(messenger); });
     instance.destroy(allocator);
