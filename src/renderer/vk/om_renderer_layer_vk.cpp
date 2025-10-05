@@ -158,6 +158,8 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     {
         throw std::runtime_error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.swp"));
     }
+
+    testRenderer = std::make_shared<test::OMTestRenderer>(this);
 }
 
 swapchain::OMSwapchainCap OMRendererVk::getSwapchainCap()

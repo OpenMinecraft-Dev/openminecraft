@@ -12,6 +12,7 @@
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
 #include "om_renderer_layer_vk_swapchainmanager.hpp"
+#include "om_renderer_layer_vk_testrenderer.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
 #include <memory>
@@ -46,6 +47,7 @@ class OMRendererVk : public OMRenderer
 
     std::shared_ptr<validation::OMRendererVkValidation> validationLayer;
     std::shared_ptr<swapchain::OMSwapchainManager> swapchainManager;
+    std::shared_ptr<test::OMTestRenderer> testRenderer;
     ::vk::AllocationCallbacks allocator;
     ::vk::Instance instance;
     ::vk::PhysicalDevice physicalDevice;
