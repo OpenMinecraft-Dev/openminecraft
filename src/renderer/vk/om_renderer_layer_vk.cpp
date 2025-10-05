@@ -230,7 +230,7 @@ OMResult<std::any, std::string> OMRendererVk::sdlVulkanLoading()
 
     VkSurfaceKHR sf;
     SDL_Vulkan_CreateSurface(static_cast<SDL_Window *>(window), instance, allocator, &sf);
-    surface = sf;
+    surface = SurfaceKHR(sf);
 
     return OMResult<std::any, std::string>::ok(nullptr);
 }

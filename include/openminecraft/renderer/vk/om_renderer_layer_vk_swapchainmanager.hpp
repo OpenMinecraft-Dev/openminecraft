@@ -24,10 +24,9 @@ class OMSwapchainManager : public util::OMReinitable
 {
 public:
     OMSwapchainManager(::vk::SurfaceKHR surface, std::function<OMSwapchainCap()> fetch, std::pair<uint32_t, uint32_t> families, ::vk::Device dev, ::vk::AllocationCallbacks callbacks, void *window);
-    static ::vk::Format chooseImageFormat(OMSwapchainCap cap);
-    static ::vk::ColorSpaceKHR chooseColorSpace(OMSwapchainCap cap);
-    ::vk::Extent2D chooseExtent(OMSwapchainCap cap);
-    static ::vk::PresentModeKHR choosePresentMode(OMSwapchainCap cap);
+    static ::vk::SurfaceFormatKHR chooseSurfaceFormat(OMSwapchainCap cap);
+    ::vk::Extent2D chooseExtent(const OMSwapchainCap &cap);
+    static ::vk::PresentModeKHR choosePresentMode(const OMSwapchainCap& cap);
     ~OMSwapchainManager() = default;
 
     void reinit() override;
@@ -41,6 +40,10 @@ private:
     ::vk::Device device;
     ::vk::AllocationCallbacks callbacks;
     void *window;
+
+    uint32_t swapchainImageCount;
+    std::vector<::vk::Image> swapchainImages;
+    std::vector<::vk::ImageView> swapchainImageViews;
 };
 }
 
