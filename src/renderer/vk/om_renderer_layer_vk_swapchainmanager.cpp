@@ -143,6 +143,7 @@ void OMSwapchainManager::destroy()
     {
         device.destroyImageView(view, callbacks);
     }
+    swapchainImageViews.clear();
     device.destroySwapchainKHR(swapchain, callbacks);
 }
 }

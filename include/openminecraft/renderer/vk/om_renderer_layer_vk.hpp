@@ -73,6 +73,8 @@ class OMRendererVk : public OMRenderer
 
     int framesInFlight = 3;
     int thisFrame = 0;
+
+    bool needRebuild = false;
   private:
     std::shared_ptr<log::OMLogger> logger;
 };

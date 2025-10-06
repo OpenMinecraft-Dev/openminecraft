@@ -34,6 +34,7 @@ public:
     ::vk::CommandPool commandPool;
     std::vector<::vk::CommandBuffer> commandBuffers;
 private:
+    bool firstTime = true;
     OMRendererVk *renderer;
 
     std::shared_ptr<common::OMShader> vtxShader;

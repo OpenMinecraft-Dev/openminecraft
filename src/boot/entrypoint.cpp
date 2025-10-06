@@ -164,6 +164,11 @@ int boot(std::vector<std::string> args)
                         SDL_Event e;
                         SDL_PollEvent(&e);
 
+                        if (e.type == SDL_EVENT_WINDOW_RESIZED)
+                        {
+                            renderer->needRebuild = true;
+                        }
+
                         if (e.type == SDL_EVENT_QUIT)
                         {
                             renderer->logicalDevice.waitIdle();

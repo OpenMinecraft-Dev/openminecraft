@@ -88,6 +88,51 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer): renderer(renderer)
         renderer->allocator
     );
 
+    auto siz = (3 + 2) * 3 * sizeof(float);
+    vertexBuffer = renderer->logicalDevice.createBuffer(BufferCreateInfo({}, siz, BufferUsageFlagBits::eVertexBuffer, SharingMode::eExclusive), renderer->allocator);
+
+    auto req = renderer->logicalDevice.getBufferMemoryRequirements(vertexBuffer);
+    auto prop = renderer->physicalDevice.getMemoryProperties();
+
+    vertexBufferMemory = renderer->logicalDevice.allocateMemory(MemoryAllocateInfo(req.size, findMemoryType(req.memoryTypeBits, MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent, prop)), renderer->allocator);
+
+    renderer->logicalDevice.bindBufferMemory(vertexBuffer, vertexBufferMemory, 0);
+
+    auto r = renderer->logicalDevice.mapMemory(vertexBufferMemory, 0, siz);
+
+    float arr[] = {
+        0.0f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+        -0.5f, 0.5f, 0.0f, 0.0f, 1.0f
+    };
+
+    std::memcpy(r, arr, sizeof(float) * 15);
+
+    renderer->logicalDevice.unmapMemory(vertexBufferMemory);
+
+    commandPool = renderer->logicalDevice.createCommandPool(CommandPoolCreateInfo({}, renderer->queueFamilyIndex.first), renderer->allocator);
+
+    OMTestRenderer::reinit();
+
+    firstTime = false;
+}
+
+void OMTestRenderer::reinit()
+{
+    renderer->logicalDevice.freeCommandBuffers(commandPool, commandBuffers);
+    for (auto framebuffer : framebuffers)
+    {
+        renderer->logicalDevice.destroyFramebuffer(framebuffer, renderer->allocator);
+    }
+    commandBuffers.clear();
+    framebuffers.clear();
+
+    if (!firstTime)
+    {
+        renderer->logicalDevice.destroyPipeline(pipeline, renderer->allocator);
+        renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
+    }
+
     pipelineLayout = renderer->logicalDevice.createPipelineLayout(PipelineLayoutCreateInfo(), renderer->allocator);
 
     {
@@ -174,35 +219,6 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer): renderer(renderer)
         }
     }
 
-    auto siz = (3 + 2) * 3 * sizeof(float);
-    vertexBuffer = renderer->logicalDevice.createBuffer(BufferCreateInfo({}, siz, BufferUsageFlagBits::eVertexBuffer, SharingMode::eExclusive), renderer->allocator);
-
-    auto req = renderer->logicalDevice.getBufferMemoryRequirements(vertexBuffer);
-    auto prop = renderer->physicalDevice.getMemoryProperties();
-
-    vertexBufferMemory = renderer->logicalDevice.allocateMemory(MemoryAllocateInfo(req.size, findMemoryType(req.memoryTypeBits, MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent, prop)), renderer->allocator);
-
-    renderer->logicalDevice.bindBufferMemory(vertexBuffer, vertexBufferMemory, 0);
-
-    auto r = renderer->logicalDevice.mapMemory(vertexBufferMemory, 0, siz);
-
-    float arr[] = {
-        0.0f, -0.5f, 1.0f, 0.0f, 0.0f,
-        0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-        -0.5f, 0.5f, 0.0f, 0.0f, 1.0f
-    };
-
-    std::memcpy(r, arr, sizeof(float) * 15);
-
-    renderer->logicalDevice.unmapMemory(vertexBufferMemory);
-
-    commandPool = renderer->logicalDevice.createCommandPool(CommandPoolCreateInfo({}, renderer->queueFamilyIndex.first), renderer->allocator);
-
-    OMTestRenderer::reinit();
-}
-
-void OMTestRenderer::reinit()
-{
     for (auto img : renderer->swapchainManager->swapchainImageViews)
     {
         framebuffers.push_back(renderer->logicalDevice.createFramebuffer(FramebufferCreateInfo({}, renderPass, img, renderer->swapchainManager->extent.width, renderer->swapchainManager->extent.height, 1), renderer->allocator));

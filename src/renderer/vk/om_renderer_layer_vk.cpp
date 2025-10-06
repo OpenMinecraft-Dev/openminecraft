@@ -178,50 +178,75 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 
 void OMRendererVk::render()
 {
-    auto result = logicalDevice.waitForFences(std::vector{frameSyncs[thisFrame].inFlightFence}, true, std::numeric_limits<uint64_t>::max());
-    if (result != Result::eSuccess)
+    if (needRebuild)
     {
-        throw SystemError(result);
+        goto reb;
     }
-
-    auto [nxtRes, imageIndex] = logicalDevice.acquireNextImageKHR(swapchainManager->swapchain, std::numeric_limits<uint64_t>::max(), frameSyncs[thisFrame].imageAvailableSemaphore, {});
-    if (nxtRes != Result::eSuccess)
+    try
     {
-        throw SystemError(nxtRes);
-    }
-
-    if (inflights.count(imageIndex) > 0)
-    {
-        auto result = logicalDevice.waitForFences(std::vector{inflights[imageIndex].inFlightFence}, true, std::numeric_limits<uint64_t>::max());
+        auto result = logicalDevice.waitForFences(std::vector{frameSyncs[thisFrame].inFlightFence}, true, std::numeric_limits<uint64_t>::max());
         if (result != Result::eSuccess)
         {
             throw SystemError(result);
         }
+
+        auto [nxtRes, imageIndex] = logicalDevice.acquireNextImageKHR(swapchainManager->swapchain, std::numeric_limits<uint64_t>::max(), frameSyncs[thisFrame].imageAvailableSemaphore, {});
+        if (nxtRes != Result::eSuccess)
+        {
+            throw SystemError(nxtRes);
+        }
+
+        if (inflights.count(imageIndex) > 0)
+        {
+            auto result = logicalDevice.waitForFences(std::vector{inflights[imageIndex].inFlightFence}, true, std::numeric_limits<uint64_t>::max());
+            if (result != Result::eSuccess)
+            {
+                throw SystemError(result);
+            }
+        }
+        inflights[imageIndex] = frameSyncs[thisFrame];
+        logicalDevice.resetFences(std::vector{frameSyncs[thisFrame].inFlightFence});
+
+        SubmitInfo submitInfo;
+
+        submitInfo.setWaitSemaphores(frameSyncs[thisFrame].imageAvailableSemaphore);
+        std::array<PipelineStageFlags,1> waitStages = { PipelineStageFlagBits::eColorAttachmentOutput};
+        submitInfo.setWaitDstStageMask(waitStages);
+        submitInfo.setCommandBuffers(testRenderer->commandBuffers[imageIndex]);
+        submitInfo.setSignalSemaphores(frameSyncs[thisFrame].renderFinishedSemaphore);
+        queues.first.submit(submitInfo, frameSyncs[thisFrame].inFlightFence);
+
+        PresentInfoKHR presentInfo;
+        presentInfo.setWaitSemaphores(frameSyncs[thisFrame].renderFinishedSemaphore);
+        presentInfo.setSwapchains(swapchainManager->swapchain);
+        presentInfo.pImageIndices = &imageIndex;
+
+        result = queues.second.presentKHR(presentInfo);
+        if (result != Result::eSuccess)
+        {
+            throw SystemError(result);
+        }
+
+        thisFrame = (thisFrame + 1) % framesInFlight;
+        return;
     }
-    inflights[imageIndex] = frameSyncs[thisFrame];
-    logicalDevice.resetFences(std::vector{frameSyncs[thisFrame].inFlightFence});
-
-    SubmitInfo submitInfo;
-
-    submitInfo.setWaitSemaphores(frameSyncs[thisFrame].imageAvailableSemaphore);
-    std::array<PipelineStageFlags,1> waitStages = { PipelineStageFlagBits::eColorAttachmentOutput};
-    submitInfo.setWaitDstStageMask(waitStages);
-    submitInfo.setCommandBuffers(testRenderer->commandBuffers[imageIndex]);
-    submitInfo.setSignalSemaphores(frameSyncs[thisFrame].renderFinishedSemaphore);
-    queues.first.submit(submitInfo, frameSyncs[thisFrame].inFlightFence);
-
-    PresentInfoKHR presentInfo;
-    presentInfo.setWaitSemaphores(frameSyncs[thisFrame].renderFinishedSemaphore);
-    presentInfo.setSwapchains(swapchainManager->swapchain);
-    presentInfo.pImageIndices = &imageIndex;
-
-    result = queues.second.presentKHR(presentInfo);
-    if (result != Result::eSuccess)
+    catch (SystemError &e)
     {
-        throw SystemError(result);
+        if (e.code().value() == VK_SUBOPTIMAL_KHR || e.code().value() == VK_ERROR_OUT_OF_DATE_KHR)
+        {
+        }
+        else
+        {
+            throw;
+        }
     }
 
-    thisFrame = (thisFrame + 1) % framesInFlight;
+    reb:
+    logicalDevice.waitIdle();
+    swapchainManager->destroy();
+    swapchainManager->reinit();
+    testRenderer->reinit();
+    needRebuild = false;
 }
 
 swapchain::OMSwapchainCap OMRendererVk::getSwapchainCap()
