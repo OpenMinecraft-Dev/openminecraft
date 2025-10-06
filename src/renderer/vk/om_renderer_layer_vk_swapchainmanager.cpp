@@ -70,6 +70,9 @@ void OMSwapchainManager::reinit()
     }
 
     auto form = chooseSurfaceFormat(supp);
+    this->format = form;
+
+    extent = chooseExtent(supp);
 
     SwapchainCreateInfoKHR createInfo(
         {},
@@ -77,14 +80,14 @@ void OMSwapchainManager::reinit()
         imageCount,
         form.format,
         form.colorSpace,
-        chooseExtent(supp),
+        extent,
         1,
         ImageUsageFlagBits::eColorAttachment,
         {},
         {},
         {},
         supp.capabilities.currentTransform,
-        CompositeAlphaFlagBitsKHR::eInherit,
+        CompositeAlphaFlagBitsKHR::eOpaque,
         choosePresentMode(supp),
         false,
         nullptr
@@ -105,11 +108,17 @@ void OMSwapchainManager::reinit()
     swapchain = device.createSwapchainKHR(createInfo, callbacks);
 
     auto target = device.getSwapchainImagesKHR(swapchain, &swapchainImageCount, nullptr);
-    (void)target;
+    if (target != Result::eSuccess)
+    {
+        throw SystemError(target);
+    }
 
     std::vector<Image> images(swapchainImageCount);
     target = device.getSwapchainImagesKHR(swapchain, &swapchainImageCount, images.data());
-    (void)target;
+    if (target != Result::eSuccess)
+    {
+        throw SystemError(target);
+    }
 
     swapchainImages = images;
 
@@ -119,7 +128,10 @@ void OMSwapchainManager::reinit()
 
         ImageView imgv;
         target = device.createImageView(&createInfo, &callbacks, &imgv);
-        (void)target;
+        if (target != Result::eSuccess)
+        {
+            throw SystemError(target);
+        }
 
         swapchainImageViews.push_back(imgv);
     }
@@ -127,6 +139,10 @@ void OMSwapchainManager::reinit()
 
 void OMSwapchainManager::destroy()
 {
+    for (auto view : swapchainImageViews)
+    {
+        device.destroyImageView(view, callbacks);
+    }
     device.destroySwapchainKHR(swapchain, callbacks);
 }
 }

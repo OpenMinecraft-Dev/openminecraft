@@ -14,7 +14,7 @@ namespace openminecraft::mem::castorice
 log::OMLogger logger("Memory Record/Castorice");
 void rec(MemModifyInfo i)
 {
-    i.type == Free ? (mems[i.tag] -= i.length) : (mems[i.tag] += i.length);
+    i.type == Free ? (mems[i.tag] <= i.length ? 0 : mems[i.tag] -= i.length) : (mems[i.tag] += i.length);
     i.type == Free ? (blocks--) : (blocks++);
 }
 

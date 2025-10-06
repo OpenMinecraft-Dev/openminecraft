@@ -4,7 +4,10 @@
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
+#include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "vulkan/vulkan.hpp"
+
+#include <memory>
 
 namespace openminecraft::renderer::vk
 {
@@ -23,8 +26,18 @@ public:
     void destroy();
 
     ::vk::RenderPass renderPass;
+    std::vector<::vk::Framebuffer> framebuffers;
+    ::vk::PipelineLayout pipelineLayout;
+    ::vk::Pipeline pipeline;
+    ::vk::Buffer vertexBuffer;
+    ::vk::DeviceMemory vertexBufferMemory;
+    ::vk::CommandPool commandPool;
+    std::vector<::vk::CommandBuffer> commandBuffers;
 private:
     OMRendererVk *renderer;
+
+    std::shared_ptr<common::OMShader> vtxShader;
+    std::shared_ptr<common::OMShader> frgShader;
 };
 }
 

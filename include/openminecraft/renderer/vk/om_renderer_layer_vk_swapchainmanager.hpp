@@ -32,18 +32,21 @@ public:
     void reinit() override;
     void destroy();
 
+    ::vk::SurfaceFormatKHR format;
+    ::vk::Extent2D extent;
+    std::vector<::vk::ImageView> swapchainImageViews;
+    ::vk::SwapchainKHR swapchain;
+
 private:
     std::pair<uint32_t, uint32_t> families;
     std::function<OMSwapchainCap()> fetch;
     ::vk::SurfaceKHR surface;
-    ::vk::SwapchainKHR swapchain;
     ::vk::Device device;
     ::vk::AllocationCallbacks callbacks;
     void *window;
 
     uint32_t swapchainImageCount;
     std::vector<::vk::Image> swapchainImages;
-    std::vector<::vk::ImageView> swapchainImageViews;
 };
 }
 

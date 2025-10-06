@@ -16,6 +16,10 @@ log::OMLogger internal("Vulkan Validation");
 int notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT t,
            DebugUtilsMessengerCallbackDataEXT data, void *user)
 {
+    if (data.pMessage <= reinterpret_cast<void *>(0x100000))
+    {
+        return VK_SUCCESS;
+    }
     internal.info("{}", data.pMessage);
     return VK_SUCCESS;
 }

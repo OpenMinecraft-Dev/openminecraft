@@ -13,10 +13,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <future>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <system_error>
+#include <unistd.h>
 #include <utility>
 #include <vector>
 
@@ -159,7 +161,67 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         throw std::runtime_error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.swp"));
     }
 
-    testRenderer = std::make_shared<test::OMTestRenderer>(this);
+    try
+    {
+        testRenderer = std::make_shared<test::OMTestRenderer>(this);
+
+        for (int i = 0; i < framesInFlight; i++)
+        {
+            frameSyncs.push_back({logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator), logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator), logicalDevice.createFence(FenceCreateInfo(FenceCreateFlagBits::eSignaled), allocator)});
+        }
+    }
+    catch (SystemError &e)
+    {
+        throw std::runtime_error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.swp1")); // ???
+    }
+}
+
+void OMRendererVk::render()
+{
+    auto result = logicalDevice.waitForFences(std::vector{frameSyncs[thisFrame].inFlightFence}, true, std::numeric_limits<uint64_t>::max());
+    if (result != Result::eSuccess)
+    {
+        throw SystemError(result);
+    }
+
+    auto [nxtRes, imageIndex] = logicalDevice.acquireNextImageKHR(swapchainManager->swapchain, std::numeric_limits<uint64_t>::max(), frameSyncs[thisFrame].imageAvailableSemaphore, {});
+    if (nxtRes != Result::eSuccess)
+    {
+        throw SystemError(nxtRes);
+    }
+
+    if (inflights.count(imageIndex) > 0)
+    {
+        auto result = logicalDevice.waitForFences(std::vector{inflights[imageIndex].inFlightFence}, true, std::numeric_limits<uint64_t>::max());
+        if (result != Result::eSuccess)
+        {
+            throw SystemError(result);
+        }
+    }
+    inflights[imageIndex] = frameSyncs[thisFrame];
+    logicalDevice.resetFences(std::vector{frameSyncs[thisFrame].inFlightFence});
+
+    SubmitInfo submitInfo;
+
+    submitInfo.setWaitSemaphores(frameSyncs[thisFrame].imageAvailableSemaphore);
+    std::array<PipelineStageFlags,1> waitStages = { PipelineStageFlagBits::eColorAttachmentOutput};
+    submitInfo.setWaitDstStageMask(waitStages);
+    submitInfo.setCommandBuffers(testRenderer->commandBuffers[imageIndex]);
+    submitInfo.setSignalSemaphores(frameSyncs[thisFrame].renderFinishedSemaphore);
+    queues.first.submit(submitInfo, frameSyncs[thisFrame].inFlightFence);
+
+    PresentInfoKHR presentInfo;
+    presentInfo.setWaitSemaphores(frameSyncs[thisFrame].renderFinishedSemaphore);
+    presentInfo.setSwapchains(swapchainManager->swapchain);
+    presentInfo.pImageIndices = &imageIndex;
+
+    result = queues.second.presentKHR(presentInfo);
+    if (result != Result::eSuccess)
+    {
+        throw SystemError(result);
+    }
+
+    thisFrame = (thisFrame + 1) % framesInFlight;
 }
 
 swapchain::OMSwapchainCap OMRendererVk::getSwapchainCap()
@@ -200,8 +262,10 @@ OMResult<Device, std::string> OMRendererVk::deviceCreation()
         }
         auto fea = physicalDevice.getFeatures();
 
-        const char *ext = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
-        return OMResult<Device, std::string>::ok(physicalDevice.createDevice(DeviceCreateInfo({}, qis.size(), qis.data(), 0, nullptr, 1, &ext, &fea)));
+        std::vector<const char*> lay{};
+        std::vector ext{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+        validationLayer->attach(&lay);
+        return OMResult<Device, std::string>::ok(physicalDevice.createDevice(DeviceCreateInfo({}, qis, lay, ext, &fea)));
     }
     catch (SystemError &e)
     {
@@ -303,9 +367,7 @@ OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std
                                 info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
         std::vector<const char *> l;
         validationLayer->attach(&l);
-        auto i = createInstance({InstanceCreateFlags(), &appInfo, (uint32_t)l.size(), l.data(), (uint32_t)exts.size(),
-                                 exts.data(), validationLayer->createInfo},
-                                allocator);
+        auto i = createInstance({InstanceCreateFlags(), &appInfo, l, exts, validationLayer->createInfo}, allocator);
         logger->info(translate("openminecraft.renderer.vk.instance", info.appName, info.appVer.toString(),
                                info.engineName, info.engineVer.toString(), info.minApiVersion.toString()));
 #ifdef OM_VULKAN_DYNAMIC
@@ -342,12 +404,12 @@ OMResult<std::vector<const char *>, std::string> OMRendererVk::fetchRequiredExte
         for (auto l : layers)
         {
             logger->info(translate("openminecraft.renderer.vk.layerdata", l.layerName.data(), l.description.data(),
-                                   util::Version(l.implementationVersion).toString(),
-                                   util::Version(l.specVersion).toString()));
+                                   Version(l.implementationVersion).toString(),
+                                   Version(l.specVersion).toString()));
         }
         validationLayer = std::make_shared<validation::OMRendererVkValidation>(layers);
         validationLayer->attachExts(&exts);
-        return util::OMResult<std::vector<const char *>, std::string>::ok(exts);
+        return OMResult<std::vector<const char *>, std::string>::ok(exts);
     }
     catch (SystemError &e)
     {
@@ -397,10 +459,17 @@ OMRendererVk::~OMRendererVk()
 }
 void OMRendererVk::destroy()
 {
+    for (auto sync : frameSyncs)
+    {
+        logicalDevice.destroySemaphore(sync.imageAvailableSemaphore, allocator);
+        logicalDevice.destroySemaphore(sync.renderFinishedSemaphore, allocator);
+        logicalDevice.destroyFence(sync.inFlightFence, allocator);
+    }
+    testRenderer->destroy();
     swapchainManager->destroy();
     SDL_Vulkan_DestroySurface(instance, VkSurfaceKHR(surface), allocator);
     logicalDevice.destroy(allocator);
-    validationLayer->ifEnable([&]() { instance.destroyDebugUtilsMessengerEXT(messenger); });
+    validationLayer->ifEnable([&]() { instance.destroyDebugUtilsMessengerEXT(messenger, allocator); });
     instance.destroy(allocator);
     SDL_Vulkan_UnloadLibrary();
 }

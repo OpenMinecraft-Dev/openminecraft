@@ -155,14 +155,31 @@ int boot(std::vector<std::string> args)
                     renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
                                            util::Version(1, 0, 0, 0), util::Version(1, 0, 0, 0)};
 
-                    auto wnd = SDL_CreateWindow("Vulkan Test", 800, 800, SDL_WINDOW_VULKAN);
+                    auto wnd = SDL_CreateWindow("Vulkan Test", 800, 800, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
                     auto renderer = std::make_unique<renderer::vk::OMRendererVk>(a, [](std::vector<std::string>) { return 0; }, wnd);
                     SDL_ShowWindow(wnd);
 
+                    while (true)
+                    {
+                        SDL_Event e;
+                        SDL_PollEvent(&e);
+
+                        if (e.type == SDL_EVENT_QUIT)
+                        {
+                            renderer->logicalDevice.waitIdle();
+                            break;
+                        }
+
+                        renderer->render();
+                    }
+
                     mem::castorice::printres();
-                    vfs::fsumount("/bootassets");
 
                     renderer->destroy();
+                    mem::castorice::printres();
+
+                    SDL_DestroyWindow(wnd);
+                    mem::castorice::printres();
                 }
                 catch (std::runtime_error &e)
                 {

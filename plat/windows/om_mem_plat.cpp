@@ -48,6 +48,10 @@ namespace openminecraft::mem::castorice
 {
 size_t heapSize(void *p)
 {
+    if (p == nullptr)
+    {
+        return 0;
+    }
     return _msize(p);
 }
 } // namespace openminecraft::mem::castorice

@@ -15,6 +15,8 @@
 #include "om_renderer_layer_vk_testrenderer.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
+
+#include <map>
 #include <memory>
 #define VkErrorTranslate(err, key)                                                                                     \
     translate(key, translate("openminecraft.renderer.vk.err.shell",                                                    \
@@ -27,6 +29,13 @@ void *vkRealloc(void *, void *o, size_t size, size_t align, VkSystemAllocationSc
 void vkFree(void *, void *p);
 void vkInternalAlloc(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s);
 void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s);
+
+struct FrameSync
+{
+    ::vk::Semaphore renderFinishedSemaphore;
+    ::vk::Semaphore imageAvailableSemaphore;
+    ::vk::Fence inFlightFence;
+};
 
 class OMRendererVk : public OMRenderer
 {
@@ -45,6 +54,8 @@ class OMRendererVk : public OMRenderer
     std::string driver() override;
     void destroy();
 
+    void render();
+
     std::shared_ptr<validation::OMRendererVkValidation> validationLayer;
     std::shared_ptr<swapchain::OMSwapchainManager> swapchainManager;
     std::shared_ptr<test::OMTestRenderer> testRenderer;
@@ -57,6 +68,11 @@ class OMRendererVk : public OMRenderer
     std::pair<uint32_t, uint32_t> queueFamilyIndex;
     std::pair<::vk::Queue, ::vk::Queue> queues;
 
+    std::vector<FrameSync> frameSyncs;
+    std::map<uint32_t, FrameSync> inflights;
+
+    int framesInFlight = 3;
+    int thisFrame = 0;
   private:
     std::shared_ptr<log::OMLogger> logger;
 };
