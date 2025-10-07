@@ -31,6 +31,8 @@ public:
     ::vk::Pipeline pipeline;
     ::vk::Buffer vertexBuffer;
     ::vk::DeviceMemory vertexBufferMemory;
+    ::vk::Buffer indexBuffer;
+    ::vk::DeviceMemory indexBufferMemory;
     ::vk::CommandPool commandPool;
     std::vector<::vk::CommandBuffer> commandBuffers;
 private:
