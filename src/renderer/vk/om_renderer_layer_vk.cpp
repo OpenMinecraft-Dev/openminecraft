@@ -460,8 +460,8 @@ void vkFree(void *, void *p)
 {
     if (p == nullptr)
         return;
-    free(p);
     mem::castorice::rec({mem::castorice::Free, p, mem::castorice::heapSize(p), OM_MEM_VULKAN});
+    free(p);
 }
 void vkInternalAlloc(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s)
 {

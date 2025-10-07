@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <vulkan/vulkan_core.h>
+#include <glm/glm.hpp>
 
 using namespace ::vk;
 
@@ -88,33 +89,101 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer): renderer(renderer)
         renderer->allocator
     );
 
-    auto siz = (3 + 2) * 3 * sizeof(float);
-    vertexBuffer = renderer->logicalDevice.createBuffer(BufferCreateInfo({}, siz, BufferUsageFlagBits::eVertexBuffer, SharingMode::eExclusive), renderer->allocator);
-
-    auto req = renderer->logicalDevice.getBufferMemoryRequirements(vertexBuffer);
     auto prop = renderer->physicalDevice.getMemoryProperties();
+    {
+        auto siz = (3 + 2) * 4 * sizeof(float);
+        vertexBuffer = renderer->logicalDevice.createBuffer(BufferCreateInfo({}, siz, BufferUsageFlagBits::eVertexBuffer, SharingMode::eExclusive), renderer->allocator);
 
-    vertexBufferMemory = renderer->logicalDevice.allocateMemory(MemoryAllocateInfo(req.size, findMemoryType(req.memoryTypeBits, MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent, prop)), renderer->allocator);
+        auto req = renderer->logicalDevice.getBufferMemoryRequirements(vertexBuffer);
 
-    renderer->logicalDevice.bindBufferMemory(vertexBuffer, vertexBufferMemory, 0);
+        vertexBufferMemory = renderer->logicalDevice.allocateMemory(MemoryAllocateInfo(req.size, findMemoryType(req.memoryTypeBits, MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent, prop)), renderer->allocator);
 
-    auto r = renderer->logicalDevice.mapMemory(vertexBufferMemory, 0, siz);
+        renderer->logicalDevice.bindBufferMemory(vertexBuffer, vertexBufferMemory, 0);
 
-    float arr[] = {
-        0.0f, -0.5f, 1.0f, 0.0f, 0.0f,
-        0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-        -0.5f, 0.5f, 0.0f, 0.0f, 1.0f
-    };
+        auto r = renderer->logicalDevice.mapMemory(vertexBufferMemory, 0, siz);
 
-    std::memcpy(r, arr, sizeof(float) * 15);
+        float arr[] = {
+            -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+            0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+            0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+            -0.5f, 0.5f, 1.0f, 1.0f, 1.0f
+        };
 
-    renderer->logicalDevice.unmapMemory(vertexBufferMemory);
+        std::memcpy(r, arr, sizeof(float) * 20);
+
+        renderer->logicalDevice.unmapMemory(vertexBufferMemory);
+    }
+
+    {
+        auto siz = 6 * sizeof(uint32_t);
+        indexBuffer = renderer->logicalDevice.createBuffer(BufferCreateInfo({}, siz, BufferUsageFlagBits::eIndexBuffer, SharingMode::eExclusive), renderer->allocator);
+
+        auto req = renderer->logicalDevice.getBufferMemoryRequirements(indexBuffer);
+        indexBufferMemory = renderer->logicalDevice.allocateMemory(MemoryAllocateInfo(req.size, findMemoryType(req.memoryTypeBits, MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent, prop)), renderer->allocator);
+
+        renderer->logicalDevice.bindBufferMemory(indexBuffer, indexBufferMemory, 0);
+
+        auto r = renderer->logicalDevice.mapMemory(indexBufferMemory, 0, siz);
+
+        uint32_t arr[] = {
+            0, 1, 2, 2, 3, 0
+        };
+
+        std::memcpy(r, arr, sizeof(uint32_t) * 6);
+
+        renderer->logicalDevice.unmapMemory(indexBufferMemory);
+    }
+
+    {
+        for (auto i = 0; i < renderer->framesInFlight; i++)
+        {
+            auto siz = sizeof(UniformStructure);
+            auto unib = renderer->logicalDevice.createBuffer(BufferCreateInfo({}, siz, BufferUsageFlagBits::eUniformBuffer, SharingMode::eExclusive), renderer->allocator);
+            auto req = renderer->logicalDevice.getBufferMemoryRequirements(unib);
+            auto unim = renderer->logicalDevice.allocateMemory(MemoryAllocateInfo(req.size, findMemoryType(req.memoryTypeBits, MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent, prop)), renderer->allocator);
+            renderer->logicalDevice.bindBufferMemory(unib, unim, 0);
+
+            uniformBuffers.push_back(unib);
+            uniformBufferMemory.push_back(unim);
+            mappedUniformBuffers.push_back(renderer->logicalDevice.mapMemory(unim, 0, siz));
+        }
+    }
 
     commandPool = renderer->logicalDevice.createCommandPool(CommandPoolCreateInfo({}, renderer->queueFamilyIndex.first), renderer->allocator);
+
+    const std::vector b = {DescriptorSetLayoutBinding(0, DescriptorType::eUniformBuffer, 1, ShaderStageFlagBits::eVertex)};
+    descriptorSetLayout = renderer->logicalDevice.createDescriptorSetLayout(DescriptorSetLayoutCreateInfo({}, b));
 
     OMTestRenderer::reinit();
 
     firstTime = false;
+}
+
+void OMTestRenderer::updateUniform(int idx)
+{
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    const auto currentTime = std::chrono::high_resolution_clock::now();
+    const float timee = std::chrono::duration<float>(currentTime - startTime).count();
+    UniformStructure ubo{};
+    ubo.model = glm::rotate(
+        glm::mat4(1.0f),
+        timee * glm::radians(90.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f)
+    );
+    ubo.view = glm::lookAt(
+        glm::vec3(2.0f, 2.0f, 2.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f)
+    );
+    ubo.proj = glm::perspective(
+        glm::radians(45.0f),
+        static_cast<float>(renderer->swapchainManager->extent.width) / static_cast<float>(renderer->swapchainManager->extent.height),
+        0.1f,
+        20.0f
+    );
+    ubo.proj[1][1] *= -1;
+
+    std::memcpy(mappedUniformBuffers[idx], &ubo, sizeof(UniformStructure));
 }
 
 void OMTestRenderer::reinit()
@@ -136,7 +205,7 @@ void OMTestRenderer::reinit()
         renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
     }
 
-    pipelineLayout = renderer->logicalDevice.createPipelineLayout(PipelineLayoutCreateInfo(), renderer->allocator);
+    pipelineLayout = renderer->logicalDevice.createPipelineLayout(PipelineLayoutCreateInfo({}, 1, &descriptorSetLayout), renderer->allocator);
 
     {
         auto shaders = std::vector{
@@ -241,20 +310,26 @@ void OMTestRenderer::reinit()
             renderPass, framebuffer, Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent), test
         ), SubpassContents::eInline);
         commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, pipeline);
-        commandBuffer.bindVertexBuffers(0, std::vector{vertexBuffer}, std::vector{static_cast<DeviceSize>(0)});
-        commandBuffer.draw(3, 1, 0, 0);
+        commandBuffer.bindVertexBuffers(0, std::vector{vertexBuffer}, std::vector<DeviceSize>{0});
+        commandBuffer.bindIndexBuffer(indexBuffer, 0, IndexType::eUint32);
+        commandBuffer.drawIndexed(6, 1, 0, 0, 0);
         commandBuffer.endRenderPass();
         commandBuffer.end();
 
         commandBuffers.push_back(commandBuffer);
+
+
     }
 }
 void OMTestRenderer::destroy()
 {
+    renderer->logicalDevice.destroyDescriptorSetLayout(descriptorSetLayout, renderer->allocator);
+    renderer->logicalDevice.destroyBuffer(indexBuffer, renderer->allocator);
+    renderer->logicalDevice.destroyBuffer(vertexBuffer, renderer->allocator);
+    renderer->logicalDevice.freeMemory(indexBufferMemory, renderer->allocator);
+    renderer->logicalDevice.freeMemory(vertexBufferMemory, renderer->allocator);
     renderer->logicalDevice.freeCommandBuffers(commandPool, commandBuffers);
     renderer->logicalDevice.destroyCommandPool(commandPool, renderer->allocator);
-    renderer->logicalDevice.destroyBuffer(vertexBuffer, renderer->allocator);
-    renderer->logicalDevice.freeMemory(vertexBufferMemory, renderer->allocator);
     renderer->logicalDevice.destroyPipeline(pipeline, renderer->allocator);
     renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
     for (auto framebuffer : framebuffers)

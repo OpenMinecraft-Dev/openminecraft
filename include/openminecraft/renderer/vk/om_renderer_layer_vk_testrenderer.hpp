@@ -7,6 +7,11 @@
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "vulkan/vulkan.hpp"
 
+#include <chrono>
+
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 
 namespace openminecraft::renderer::vk
@@ -16,6 +21,13 @@ class OMRendererVk;
 
 namespace openminecraft::renderer::vk::test
 {
+struct UniformStructure
+{
+    glm::mat4 model;
+    glm::mat4 view;
+    glm::mat4 proj;
+};
+
 class OMTestRenderer : public util::OMReinitable
 {
 public:
@@ -24,6 +36,8 @@ public:
 
     void reinit() override;
     void destroy();
+
+    void updateUniform(int idx);
 
     ::vk::RenderPass renderPass;
     std::vector<::vk::Framebuffer> framebuffers;
@@ -35,6 +49,12 @@ public:
     ::vk::DeviceMemory indexBufferMemory;
     ::vk::CommandPool commandPool;
     std::vector<::vk::CommandBuffer> commandBuffers;
+
+    ::vk::DescriptorSetLayout descriptorSetLayout;
+
+    std::vector<::vk::Buffer> uniformBuffers;
+    std::vector<::vk::DeviceMemory> uniformBufferMemory;
+    std::vector<void *> mappedUniformBuffers;
 private:
     bool firstTime = true;
     OMRendererVk *renderer;
