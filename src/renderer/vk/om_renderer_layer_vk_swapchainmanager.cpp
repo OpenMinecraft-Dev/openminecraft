@@ -13,7 +13,11 @@ using namespace ::vk;
 
 namespace openminecraft::renderer::vk::swapchain
 {
-OMSwapchainManager::OMSwapchainManager(SurfaceKHR surface, std::function<OMSwapchainCap()> fetch, std::pair<uint32_t, uint32_t> families, Device dev, AllocationCallbacks callbacks, void *window): families(std::move(families)), fetch(std::move(fetch)), surface(surface), device(dev), callbacks(callbacks), window(window)
+OMSwapchainManager::OMSwapchainManager(SurfaceKHR surface, std::function<OMSwapchainCap()> fetch,
+                                       std::pair<uint32_t, uint32_t> families, Device dev,
+                                       AllocationCallbacks callbacks, void *window)
+    : families(std::move(families)), fetch(std::move(fetch)), surface(surface), device(dev), callbacks(callbacks),
+      window(window)
 {
     OMSwapchainManager::reinit();
 }
@@ -41,13 +45,13 @@ Extent2D OMSwapchainManager::chooseExtent(const OMSwapchainCap &cap)
     int w = 0, h = 0;
     SDL_GetWindowSize(static_cast<SDL_Window *>(window), &w, &h);
 
-    return VkExtent2D{
-        std::min(cap.capabilities.maxImageExtent.width, std::max(static_cast<uint32_t>(w), cap.capabilities.minImageExtent.width)),
-        std::min(cap.capabilities.maxImageExtent.height, std::max(static_cast<uint32_t>(h), cap.capabilities.minImageExtent.height))
-    };
+    return VkExtent2D{std::min(cap.capabilities.maxImageExtent.width,
+                               std::max(static_cast<uint32_t>(w), cap.capabilities.minImageExtent.width)),
+                      std::min(cap.capabilities.maxImageExtent.height,
+                               std::max(static_cast<uint32_t>(h), cap.capabilities.minImageExtent.height))};
 }
 
-PresentModeKHR OMSwapchainManager::choosePresentMode(const OMSwapchainCap& cap)
+PresentModeKHR OMSwapchainManager::choosePresentMode(const OMSwapchainCap &cap)
 {
     for (auto pm : cap.presentModes)
     {
@@ -74,24 +78,10 @@ void OMSwapchainManager::reinit()
 
     extent = chooseExtent(supp);
 
-    SwapchainCreateInfoKHR createInfo(
-        {},
-        surface,
-        imageCount,
-        form.format,
-        form.colorSpace,
-        extent,
-        1,
-        ImageUsageFlagBits::eColorAttachment,
-        {},
-        {},
-        {},
-        supp.capabilities.currentTransform,
-        CompositeAlphaFlagBitsKHR::eOpaque,
-        choosePresentMode(supp),
-        false,
-        nullptr
-        );
+    SwapchainCreateInfoKHR createInfo({}, surface, imageCount, form.format, form.colorSpace, extent, 1,
+                                      ImageUsageFlagBits::eColorAttachment, {}, {}, {},
+                                      supp.capabilities.currentTransform, CompositeAlphaFlagBitsKHR::eOpaque,
+                                      choosePresentMode(supp), false, nullptr);
 
     if (families.first != families.second)
     {
@@ -124,7 +114,10 @@ void OMSwapchainManager::reinit()
 
     for (auto img : images)
     {
-        ImageViewCreateInfo createInfo({}, img, ImageViewType::e2D, form.format, {ComponentSwizzle::eIdentity, ComponentSwizzle::eIdentity, ComponentSwizzle::eIdentity, ComponentSwizzle::eIdentity}, ImageSubresourceRange(ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+        ImageViewCreateInfo createInfo({}, img, ImageViewType::e2D, form.format,
+                                       {ComponentSwizzle::eIdentity, ComponentSwizzle::eIdentity,
+                                        ComponentSwizzle::eIdentity, ComponentSwizzle::eIdentity},
+                                       ImageSubresourceRange(ImageAspectFlagBits::eColor, 0, 1, 0, 1));
 
         ImageView imgv;
         target = device.createImageView(&createInfo, &callbacks, &imgv);
@@ -146,4 +139,4 @@ void OMSwapchainManager::destroy()
     swapchainImageViews.clear();
     device.destroySwapchainKHR(swapchain, callbacks);
 }
-}
+} // namespace openminecraft::renderer::vk::swapchain

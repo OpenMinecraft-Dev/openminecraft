@@ -59,7 +59,8 @@ namespace openminecraft::renderer::vk
 #ifdef OM_VULKAN_DYNAMIC
 detail::DynamicLoader loader;
 #endif
-OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::string>)> dev, void *window) : OMRenderer(info, window)
+OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::string>)> dev, void *window)
+    : OMRenderer(info, window)
 {
     logger = std::make_shared<log::OMLogger>("OMRendererVk", this);
 
@@ -151,7 +152,8 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 
     try
     {
-        swapchainManager = std::make_shared<swapchain::OMSwapchainManager>(surface, [&]() {return getSwapchainCap();}, queueFamilyIndex, logicalDevice, allocator, window);
+        swapchainManager = std::make_shared<swapchain::OMSwapchainManager>(
+            surface, [&]() { return getSwapchainCap(); }, queueFamilyIndex, logicalDevice, allocator, window);
     }
     catch (SystemError &e)
     {
@@ -164,7 +166,10 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 
         for (int i = 0; i < framesInFlight; i++)
         {
-            frameSyncs.push_back({logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator), logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator), logicalDevice.createFence(FenceCreateInfo(FenceCreateFlagBits::eSignaled), allocator)});
+            frameSyncs.push_back(
+                {logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator),
+                 logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator),
+                 logicalDevice.createFence(FenceCreateInfo(FenceCreateFlagBits::eSignaled), allocator)});
         }
     }
     catch (SystemError &e)
@@ -181,13 +186,17 @@ void OMRendererVk::render()
     }
     try
     {
-        auto result = logicalDevice.waitForFences(1, &frameSyncs[thisFrame].inFlightFence, true, std::numeric_limits<uint64_t>::max());
+        testRenderer->updateUniform();
+        auto result = logicalDevice.waitForFences(1, &frameSyncs[thisFrame].inFlightFence, true,
+                                                  std::numeric_limits<uint64_t>::max());
         if (result != Result::eSuccess)
         {
             throw SystemError(result);
         }
 
-        auto [nxtRes, imageIndex] = logicalDevice.acquireNextImageKHR(swapchainManager->swapchain, std::numeric_limits<uint64_t>::max(), frameSyncs[thisFrame].imageAvailableSemaphore, {});
+        auto [nxtRes, imageIndex] =
+            logicalDevice.acquireNextImageKHR(swapchainManager->swapchain, std::numeric_limits<uint64_t>::max(),
+                                              frameSyncs[thisFrame].imageAvailableSemaphore, {});
         if (nxtRes != Result::eSuccess)
         {
             throw SystemError(nxtRes);
@@ -195,7 +204,8 @@ void OMRendererVk::render()
 
         if (inflights.count(imageIndex) > 0)
         {
-            auto result = logicalDevice.waitForFences(1, &inflights[imageIndex].inFlightFence, true, std::numeric_limits<uint64_t>::max());
+            auto result = logicalDevice.waitForFences(1, &inflights[imageIndex].inFlightFence, true,
+                                                      std::numeric_limits<uint64_t>::max());
             if (result != Result::eSuccess)
             {
                 throw SystemError(result);
@@ -210,11 +220,14 @@ void OMRendererVk::render()
         }
 
         const PipelineStageFlags msk = PipelineStageFlagBits::eColorAttachmentOutput;
-        SubmitInfo submitInfo(1, &frameSyncs[thisFrame].imageAvailableSemaphore, &msk, 1, &testRenderer->commandBuffers[imageIndex], 1, &frameSyncs[thisFrame].renderFinishedSemaphore);
+        SubmitInfo submitInfo(1, &frameSyncs[thisFrame].imageAvailableSemaphore, &msk, 1,
+                              &testRenderer->commandBuffers[imageIndex], 1,
+                              &frameSyncs[thisFrame].renderFinishedSemaphore);
 
         queues.first.submit(submitInfo, frameSyncs[thisFrame].inFlightFence);
 
-        PresentInfoKHR presentInfo(1, &frameSyncs[thisFrame].renderFinishedSemaphore, 1, &swapchainManager->swapchain, &imageIndex);
+        PresentInfoKHR presentInfo(1, &frameSyncs[thisFrame].renderFinishedSemaphore, 1, &swapchainManager->swapchain,
+                                   &imageIndex);
 
         result = queues.second.presentKHR(presentInfo);
         if (result != Result::eSuccess)
@@ -234,7 +247,7 @@ void OMRendererVk::render()
         throw;
     }
 
-    reb:
+reb:
     logicalDevice.waitIdle();
     swapchainManager->destroy();
     swapchainManager->reinit();
@@ -244,24 +257,22 @@ void OMRendererVk::render()
 
 swapchain::OMSwapchainCap OMRendererVk::getSwapchainCap()
 {
-    return swapchain::OMSwapchainCap{
-        physicalDevice.getSurfaceCapabilitiesKHR(surface),
-        physicalDevice.getSurfaceFormatsKHR(surface),
-        physicalDevice.getSurfacePresentModesKHR(surface)
-    };
+    return swapchain::OMSwapchainCap{physicalDevice.getSurfaceCapabilitiesKHR(surface),
+                                     physicalDevice.getSurfaceFormatsKHR(surface),
+                                     physicalDevice.getSurfacePresentModesKHR(surface)};
 }
 
 OMResult<std::any, std::string> OMRendererVk::deviceQueueFetch()
 {
     try
     {
-        queues = std::make_pair(logicalDevice.getQueue(queueFamilyIndex.first, 0), logicalDevice.getQueue(queueFamilyIndex.second, 0));
+        queues = std::make_pair(logicalDevice.getQueue(queueFamilyIndex.first, 0),
+                                logicalDevice.getQueue(queueFamilyIndex.second, 0));
     }
     catch (SystemError &e)
     {
         logger->error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.devqueue"));
-        return OMResult<std::any, std::string>::err(
-            VkErrorTranslate(e, "openminecraft.renderer.vk.err.devqueue"));
+        return OMResult<std::any, std::string>::err(VkErrorTranslate(e, "openminecraft.renderer.vk.err.devqueue"));
     }
 
     return OMResult<std::any, std::string>::ok(0);
@@ -286,8 +297,7 @@ OMResult<Device, std::string> OMRendererVk::deviceCreation()
     catch (SystemError &e)
     {
         logger->error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.dev"));
-        return OMResult<Device, std::string>::err(
-            VkErrorTranslate(e, "openminecraft.renderer.vk.err.dev"));
+        return OMResult<Device, std::string>::err(VkErrorTranslate(e, "openminecraft.renderer.vk.err.dev"));
     }
 }
 
@@ -316,8 +326,7 @@ OMResult<std::any, std::string> OMRendererVk::sdlVulkanLoading()
 
     return OMResult<std::any, std::string>::ok(nullptr);
 }
-OMResult<PhysicalDevice, std::string> OMRendererVk::deviceSelection(
-    std::function<int(std::vector<std::string>)> dev)
+OMResult<PhysicalDevice, std::string> OMRendererVk::deviceSelection(std::function<int(std::vector<std::string>)> dev)
 {
     try
     {
@@ -371,8 +380,7 @@ OMResult<PhysicalDevice, std::string> OMRendererVk::deviceSelection(
     catch (SystemError &e)
     {
         logger->error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.phydev"));
-        return OMResult<PhysicalDevice, std::string>::err(
-            VkErrorTranslate(e, "openminecraft.renderer.vk.err.phydev"));
+        return OMResult<PhysicalDevice, std::string>::err(VkErrorTranslate(e, "openminecraft.renderer.vk.err.phydev"));
     }
 }
 OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std::vector<const char *> exts)
@@ -397,8 +405,7 @@ OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std
     catch (SystemError &e)
     {
         logger->error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.instance"));
-        return OMResult<Instance, std::string>::err(
-            VkErrorTranslate(e, "openminecraft.renderer.vk.err.instance"));
+        return OMResult<Instance, std::string>::err(VkErrorTranslate(e, "openminecraft.renderer.vk.err.instance"));
     }
 }
 OMResult<std::vector<const char *>, std::string> OMRendererVk::fetchRequiredExtensions()
@@ -420,8 +427,7 @@ OMResult<std::vector<const char *>, std::string> OMRendererVk::fetchRequiredExte
         for (auto l : layers)
         {
             logger->info(translate("openminecraft.renderer.vk.layerdata", l.layerName.data(), l.description.data(),
-                                   Version(l.implementationVersion).toString(),
-                                   Version(l.specVersion).toString()));
+                                   Version(l.implementationVersion).toString(), Version(l.specVersion).toString()));
         }
         validationLayer = std::make_shared<validation::OMRendererVkValidation>(layers);
         validationLayer->attachExts(&exts);

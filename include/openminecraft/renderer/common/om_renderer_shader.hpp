@@ -32,9 +32,11 @@ enum OMShaderType
 
 class OMShader
 {
-public:
+  public:
     OMShader() = default;
-    OMShader(OMShaderFileType type, std::vector<uint8_t> data, std::string filename, std::string entrypoint, OMShaderType typebase): type(type), data(data), entrypoint(entrypoint), filename(filename), typebase(typebase)
+    OMShader(OMShaderFileType type, std::vector<uint8_t> data, std::string filename, std::string entrypoint,
+             OMShaderType typebase)
+        : type(type), data(data), entrypoint(entrypoint), filename(filename), typebase(typebase)
     {
     }
     ~OMShader() = default;
@@ -47,6 +49,6 @@ public:
     std::string entrypoint;
     OMShaderType typebase;
 };
-};
+}; // namespace openminecraft::renderer::common
 
 #endif

@@ -75,6 +75,7 @@ class OMRendererVk : public OMRenderer
     int thisFrame = 0;
 
     bool needRebuild = false;
+
   private:
     std::shared_ptr<log::OMLogger> logger;
 };

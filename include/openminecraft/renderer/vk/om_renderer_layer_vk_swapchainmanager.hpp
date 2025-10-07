@@ -22,11 +22,13 @@ struct OMSwapchainCap
 
 class OMSwapchainManager : public util::OMReinitable
 {
-public:
-    OMSwapchainManager(::vk::SurfaceKHR surface, std::function<OMSwapchainCap()> fetch, std::pair<uint32_t, uint32_t> families, ::vk::Device dev, ::vk::AllocationCallbacks callbacks, void *window);
+  public:
+    OMSwapchainManager(::vk::SurfaceKHR surface, std::function<OMSwapchainCap()> fetch,
+                       std::pair<uint32_t, uint32_t> families, ::vk::Device dev, ::vk::AllocationCallbacks callbacks,
+                       void *window);
     static ::vk::SurfaceFormatKHR chooseSurfaceFormat(OMSwapchainCap cap);
     ::vk::Extent2D chooseExtent(const OMSwapchainCap &cap);
-    static ::vk::PresentModeKHR choosePresentMode(const OMSwapchainCap& cap);
+    static ::vk::PresentModeKHR choosePresentMode(const OMSwapchainCap &cap);
     ~OMSwapchainManager() = default;
 
     void reinit() override;
@@ -37,7 +39,7 @@ public:
     std::vector<::vk::ImageView> swapchainImageViews;
     ::vk::SwapchainKHR swapchain;
 
-private:
+  private:
     std::pair<uint32_t, uint32_t> families;
     std::function<OMSwapchainCap()> fetch;
     ::vk::SurfaceKHR surface;
@@ -48,6 +50,6 @@ private:
     uint32_t swapchainImageCount;
     std::vector<::vk::Image> swapchainImages;
 };
-}
+} // namespace openminecraft::renderer::vk::swapchain
 
 #endif

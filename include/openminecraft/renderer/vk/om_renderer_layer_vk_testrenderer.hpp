@@ -10,8 +10,8 @@
 #include <chrono>
 
 #define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 #include <memory>
 
 namespace openminecraft::renderer::vk
@@ -30,14 +30,14 @@ struct UniformStructure
 
 class OMTestRenderer : public util::OMReinitable
 {
-public:
+  public:
     OMTestRenderer(OMRendererVk *renderer);
     ~OMTestRenderer() = default;
 
     void reinit() override;
     void destroy();
 
-    void updateUniform(int idx);
+    void updateUniform();
 
     ::vk::RenderPass renderPass;
     std::vector<::vk::Framebuffer> framebuffers;
@@ -52,16 +52,20 @@ public:
 
     ::vk::DescriptorSetLayout descriptorSetLayout;
 
-    std::vector<::vk::Buffer> uniformBuffers;
-    std::vector<::vk::DeviceMemory> uniformBufferMemory;
-    std::vector<void *> mappedUniformBuffers;
-private:
+    ::vk::Buffer uniformBuffer;
+    ::vk::DeviceMemory uniformBufferMemory;
+    void *mappedUniformBuffer;
+
+    ::vk::DescriptorPool descriptorPool;
+    ::vk::DescriptorSet descriptorSet;
+
+  private:
     bool firstTime = true;
     OMRendererVk *renderer;
 
     std::shared_ptr<common::OMShader> vtxShader;
     std::shared_ptr<common::OMShader> frgShader;
 };
-}
+} // namespace openminecraft::renderer::vk::test
 
 #endif

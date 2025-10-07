@@ -1454,7 +1454,9 @@ operand:
             auto currentPos = currentThread.pc;
             currentThread.pc++;
             auto fnc = [] {
-                return binary::be32SignedToNative(currentThread.pc[0], currentThread.pc[1], currentThread.pc[2], currentThread.pc[3]);};
+                return binary::be32SignedToNative(currentThread.pc[0], currentThread.pc[1], currentThread.pc[2],
+                                                  currentThread.pc[3]);
+            };
             while (true)
             {
                 auto off = currentThread.pc - currentThread.currentFrame->method->code;
@@ -1465,7 +1467,7 @@ operand:
                 currentThread.pc++;
             }
 
-            execMain2:
+        execMain2:
             auto defaultret = fnc();
             currentThread.pc += 4;
             auto low = fnc();
@@ -1489,7 +1491,9 @@ operand:
             auto currentPos = currentThread.pc;
             currentThread.pc++;
             auto fnc = [] {
-                return binary::be32SignedToNative(currentThread.pc[0], currentThread.pc[1], currentThread.pc[2], currentThread.pc[3]);};
+                return binary::be32SignedToNative(currentThread.pc[0], currentThread.pc[1], currentThread.pc[2],
+                                                  currentThread.pc[3]);
+            };
             while (true)
             {
                 auto off = currentThread.pc - currentThread.currentFrame->method->code;
@@ -1500,7 +1504,7 @@ operand:
                 currentThread.pc++;
             }
 
-            execMain:
+        execMain:
             auto st = stackTopAccess<jint>(true);
 
             auto defaultret = fnc();

@@ -5,9 +5,9 @@ namespace openminecraft::util
 {
 class OMReinitable
 {
-public:
+  public:
     virtual void reinit() = 0;
 };
-}
+} // namespace openminecraft::util
 
 #endif

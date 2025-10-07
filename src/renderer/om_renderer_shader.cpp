@@ -61,7 +61,8 @@ std::shared_ptr<OMShader> OMShader::convertTo(OMShaderFileType type)
     shaderc::CompileOptions opt;
 
     opt.SetSourceLanguage(this->type == GLSLSource ? shaderc_source_language_glsl : shaderc_source_language_hlsl);
-    auto result = compiler->CompileGlslToSpv(reinterpret_cast<const char *>(this->data.data()), this->data.size(), k, filename.c_str(), entrypoint.c_str(), opt);
+    auto result = compiler->CompileGlslToSpv(reinterpret_cast<const char *>(this->data.data()), this->data.size(), k,
+                                             filename.c_str(), entrypoint.c_str(), opt);
 
     if (result.GetCompilationStatus() == shaderc_compilation_status_success)
     {
@@ -88,4 +89,4 @@ std::shared_ptr<OMShader> OMShader::convertTo(OMShaderFileType type)
 
     return std::make_shared<OMShader>(SPIRVBinary, data, filename + ".spirv", entrypoint, this->typebase);
 }
-}
+} // namespace openminecraft::renderer::common
