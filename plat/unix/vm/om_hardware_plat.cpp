@@ -327,9 +327,6 @@ static std::string fetchFromDevFs()
 }
 std::string fetchCpuName()
 {
-    fetchFromDevFs();
-    struct utsname n{};
-    uname(&n);
 #if defined(__x86_64__) || defined(__x86__)
     char model[64] = {0};
     int32_t *d = (int32_t *)model;

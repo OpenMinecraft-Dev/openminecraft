@@ -119,7 +119,10 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer): renderer(renderer)
 
 void OMTestRenderer::reinit()
 {
-    renderer->logicalDevice.freeCommandBuffers(commandPool, commandBuffers);
+    if (!commandBuffers.empty())
+    {
+        renderer->logicalDevice.freeCommandBuffers(commandPool, commandBuffers);
+    }
     for (auto framebuffer : framebuffers)
     {
         renderer->logicalDevice.destroyFramebuffer(framebuffer, renderer->allocator);

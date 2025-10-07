@@ -9,8 +9,6 @@
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
 #include <SDL3/SDL_vulkan.h>
-#include <cstddef>
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <future>
@@ -183,7 +181,7 @@ void OMRendererVk::render()
     }
     try
     {
-        auto result = logicalDevice.waitForFences(std::vector{frameSyncs[thisFrame].inFlightFence}, true, std::numeric_limits<uint64_t>::max());
+        auto result = logicalDevice.waitForFences(1, &frameSyncs[thisFrame].inFlightFence, true, std::numeric_limits<uint64_t>::max());
         if (result != Result::eSuccess)
         {
             throw SystemError(result);
@@ -197,28 +195,26 @@ void OMRendererVk::render()
 
         if (inflights.count(imageIndex) > 0)
         {
-            auto result = logicalDevice.waitForFences(std::vector{inflights[imageIndex].inFlightFence}, true, std::numeric_limits<uint64_t>::max());
+            auto result = logicalDevice.waitForFences(1, &inflights[imageIndex].inFlightFence, true, std::numeric_limits<uint64_t>::max());
             if (result != Result::eSuccess)
             {
                 throw SystemError(result);
             }
         }
         inflights[imageIndex] = frameSyncs[thisFrame];
-        logicalDevice.resetFences(std::vector{frameSyncs[thisFrame].inFlightFence});
 
-        SubmitInfo submitInfo;
+        result = logicalDevice.resetFences(1, &frameSyncs[thisFrame].inFlightFence);
+        if (result != Result::eSuccess)
+        {
+            throw SystemError(result);
+        }
 
-        submitInfo.setWaitSemaphores(frameSyncs[thisFrame].imageAvailableSemaphore);
-        std::array<PipelineStageFlags,1> waitStages = { PipelineStageFlagBits::eColorAttachmentOutput};
-        submitInfo.setWaitDstStageMask(waitStages);
-        submitInfo.setCommandBuffers(testRenderer->commandBuffers[imageIndex]);
-        submitInfo.setSignalSemaphores(frameSyncs[thisFrame].renderFinishedSemaphore);
+        const PipelineStageFlags msk = PipelineStageFlagBits::eColorAttachmentOutput;
+        SubmitInfo submitInfo(1, &frameSyncs[thisFrame].imageAvailableSemaphore, &msk, 1, &testRenderer->commandBuffers[imageIndex], 1, &frameSyncs[thisFrame].renderFinishedSemaphore);
+
         queues.first.submit(submitInfo, frameSyncs[thisFrame].inFlightFence);
 
-        PresentInfoKHR presentInfo;
-        presentInfo.setWaitSemaphores(frameSyncs[thisFrame].renderFinishedSemaphore);
-        presentInfo.setSwapchains(swapchainManager->swapchain);
-        presentInfo.pImageIndices = &imageIndex;
+        PresentInfoKHR presentInfo(1, &frameSyncs[thisFrame].renderFinishedSemaphore, 1, &swapchainManager->swapchain, &imageIndex);
 
         result = queues.second.presentKHR(presentInfo);
         if (result != Result::eSuccess)
@@ -233,11 +229,9 @@ void OMRendererVk::render()
     {
         if (e.code().value() == VK_SUBOPTIMAL_KHR || e.code().value() == VK_ERROR_OUT_OF_DATE_KHR)
         {
+            goto reb;
         }
-        else
-        {
-            throw;
-        }
+        throw;
     }
 
     reb:
@@ -286,10 +280,8 @@ OMResult<Device, std::string> OMRendererVk::deviceCreation()
         }
         auto fea = physicalDevice.getFeatures();
 
-        std::vector<const char*> lay{};
         std::vector ext{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-        validationLayer->attach(&lay);
-        return OMResult<Device, std::string>::ok(physicalDevice.createDevice(DeviceCreateInfo({}, qis, lay, ext, &fea)));
+        return OMResult<Device, std::string>::ok(physicalDevice.createDevice(DeviceCreateInfo({}, qis, {}, ext, &fea)));
     }
     catch (SystemError &e)
     {
@@ -391,7 +383,7 @@ OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std
                                 info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
         std::vector<const char *> l;
         validationLayer->attach(&l);
-        auto i = createInstance({InstanceCreateFlags(), &appInfo, l, exts, validationLayer->createInfo}, allocator);
+        auto i = createInstance({InstanceCreateFlags(), &appInfo, l, exts, validationLayer->createInfo});
         logger->info(translate("openminecraft.renderer.vk.instance", info.appName, info.appVer.toString(),
                                info.engineName, info.engineVer.toString(), info.minApiVersion.toString()));
 #ifdef OM_VULKAN_DYNAMIC
@@ -468,6 +460,7 @@ void vkFree(void *, void *p)
 {
     if (p == nullptr)
         return;
+    free(p);
     mem::castorice::rec({mem::castorice::Free, p, mem::castorice::heapSize(p), OM_MEM_VULKAN});
 }
 void vkInternalAlloc(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s)
@@ -492,9 +485,9 @@ void OMRendererVk::destroy()
     testRenderer->destroy();
     swapchainManager->destroy();
     SDL_Vulkan_DestroySurface(instance, VkSurfaceKHR(surface), allocator);
-    logicalDevice.destroy(allocator);
+    logicalDevice.destroy();
     validationLayer->ifEnable([&]() { instance.destroyDebugUtilsMessengerEXT(messenger, allocator); });
-    instance.destroy(allocator);
+    instance.destroy();
     SDL_Vulkan_UnloadLibrary();
 }
 std::string OMRendererVk::driver()

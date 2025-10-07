@@ -5,11 +5,11 @@
 
 namespace openminecraft::renderer::common
 {
-shaderc::Compiler compiler;
 log::OMLogger logger("SPIRV Compiler");
 
 std::shared_ptr<OMShader> OMShader::convertTo(OMShaderFileType type)
 {
+    auto compiler = std::make_unique<shaderc::Compiler>();
     if (this->type == type || type == GLSLSource || type == HLSLSource || this->type == SPIRVBinary)
     {
         return nullptr;
@@ -61,7 +61,7 @@ std::shared_ptr<OMShader> OMShader::convertTo(OMShaderFileType type)
     shaderc::CompileOptions opt;
 
     opt.SetSourceLanguage(this->type == GLSLSource ? shaderc_source_language_glsl : shaderc_source_language_hlsl);
-    auto result = compiler.CompileGlslToSpv(reinterpret_cast<const char *>(this->data.data()), this->data.size(), k, filename.c_str(), entrypoint.c_str(), opt);
+    auto result = compiler->CompileGlslToSpv(reinterpret_cast<const char *>(this->data.data()), this->data.size(), k, filename.c_str(), entrypoint.c_str(), opt);
 
     if (result.GetCompilationStatus() == shaderc_compilation_status_success)
     {

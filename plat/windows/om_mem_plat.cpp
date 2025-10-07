@@ -7,6 +7,7 @@
 #include <new>
 #include <oleauto.h>
 #include <winnt.h>
+#include <iostream>
 
 namespace openminecraft::mem
 {
