@@ -184,7 +184,20 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer)
         renderer->logicalDevice.unmapMemory(stagingBufferMemory);
 
         stbi_image_free(pixels);
+
+        textureImage = renderer->logicalDevice.createImage(ImageCreateInfo({}, ImageType::e2D, Format::eR8G8B8A8Srgb, Extent3D(texWidth, texHeight, 1), 1, 1, {}, ImageTiling::eOptimal, ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled, SharingMode::eExclusive, {}, ImageLayout::eUndefined), renderer->allocator);
+
+        req = renderer->logicalDevice.getImageMemoryRequirements(textureImage);
+        imageMemory = renderer->logicalDevice.allocateMemory(
+            MemoryAllocateInfo(
+                req.size,
+                findMemoryType(req.memoryTypeBits,
+                               MemoryPropertyFlagBits::eDeviceLocal, prop)),
+            renderer->allocator);
+
+        renderer->logicalDevice.bindImageMemory(textureImage, imageMemory, 0);
     }
+
 
     OMTestRenderer::reinit();
 

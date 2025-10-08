@@ -62,6 +62,9 @@ class OMTestRenderer : public util::OMReinitable
     ::vk::Buffer stagingBuffer;
     ::vk::DeviceMemory stagingBufferMemory;
 
+    ::vk::DeviceMemory imageMemory;
+    ::vk::Image textureImage;
+
   private:
     bool firstTime = true;
     OMRendererVk *renderer;
