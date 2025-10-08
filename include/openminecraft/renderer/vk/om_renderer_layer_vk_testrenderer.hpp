@@ -59,6 +59,9 @@ class OMTestRenderer : public util::OMReinitable
     ::vk::DescriptorPool descriptorPool;
     ::vk::DescriptorSet descriptorSet;
 
+    ::vk::Buffer stagingBuffer;
+    ::vk::DeviceMemory stagingBufferMemory;
+
   private:
     bool firstTime = true;
     OMRendererVk *renderer;

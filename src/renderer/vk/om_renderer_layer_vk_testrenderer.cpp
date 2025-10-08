@@ -9,6 +9,9 @@
 #include <glm/glm.hpp>
 #include <vulkan/vulkan_core.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 using namespace ::vk;
 
 namespace openminecraft::renderer::vk::test
@@ -155,6 +158,33 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer)
     const std::vector c = {DescriptorBufferInfo(uniformBuffer, 0, sizeof(UniformStructure))};
     renderer->logicalDevice.updateDescriptorSets(
         WriteDescriptorSet(descriptorSet, 0, 0, DescriptorType::eUniformBuffer, {}, c), nullptr);
+
+    {
+        int texWidth, texHeight, texChannels;
+        stbi_uc* pixels = stbi_load("/usr/share/wallpapers/Next/contents/images/5120x2880.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        if (!pixels) throw std::runtime_error("failed to load texture image!");
+        auto imageSize = texWidth * texHeight * 4;
+
+        stagingBuffer = renderer->logicalDevice.createBuffer(
+            BufferCreateInfo({}, imageSize, BufferUsageFlagBits::eTransferSrc, SharingMode::eExclusive),
+            renderer->allocator);
+        auto req = renderer->logicalDevice.getBufferMemoryRequirements(stagingBuffer);
+        stagingBufferMemory = renderer->logicalDevice.allocateMemory(
+            MemoryAllocateInfo(
+                req.size,
+                findMemoryType(req.memoryTypeBits,
+                               MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent, prop)),
+            renderer->allocator);
+        renderer->logicalDevice.bindBufferMemory(stagingBuffer, stagingBufferMemory, 0);
+
+        auto r = renderer->logicalDevice.mapMemory(stagingBufferMemory, 0, imageSize);
+
+        std::memcpy(r, pixels, imageSize);
+
+        renderer->logicalDevice.unmapMemory(stagingBufferMemory);
+
+        stbi_image_free(pixels);
+    }
 
     OMTestRenderer::reinit();
 
