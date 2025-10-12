@@ -56,7 +56,7 @@ class OMTestRenderer : public util::OMReinitable
     ::vk::CommandPool commandPool;
     std::vector<::vk::CommandBuffer> commandBuffers;
 
-    ::vk::DescriptorSetLayout descriptorSetLayout;
+    std::vector<::vk::DescriptorSetLayout> descriptorSetLayouts;
 
     ::vk::Buffer uniformBuffer;
     ::vk::DeviceMemory uniformBufferMemory;
@@ -64,12 +64,16 @@ class OMTestRenderer : public util::OMReinitable
 
     ::vk::DescriptorPool descriptorPool;
     ::vk::DescriptorSet descriptorSet;
+    ::vk::DescriptorSet combinedDescriptorSet;
 
     ::vk::Buffer stagingBuffer;
     ::vk::DeviceMemory stagingBufferMemory;
 
     ::vk::DeviceMemory imageMemory;
     ::vk::Image textureImage;
+    ::vk::ImageView textureImageView;
+
+    ::vk::Sampler textureSampler;
 
   private:
     bool firstTime = true;
