@@ -34,6 +34,12 @@ class OMTestRenderer : public util::OMReinitable
     OMTestRenderer(OMRendererVk *renderer);
     ~OMTestRenderer() = default;
 
+    ::vk::CommandBuffer beginSingleTimeCommands();
+    void endSingleTimeCommands(::vk::CommandBuffer cmdbuff);
+    void copyBuffer(::vk::Buffer srcBuff, ::vk::Buffer dstBuff, ::vk::DeviceSize size);
+    void transitionImageLayout(::vk::Image image, ::vk::Format format, ::vk::ImageLayout oldLayout, ::vk::ImageLayout newLayout);
+    void copyBufferToImage(::vk::Buffer buffer, ::vk::Image image, uint32_t width, uint32_t height);
+
     void reinit() override;
     void destroy();
 

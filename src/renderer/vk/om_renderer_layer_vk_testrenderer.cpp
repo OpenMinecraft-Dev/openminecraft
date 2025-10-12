@@ -161,8 +161,10 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer)
 
     {
         int texWidth, texHeight, texChannels;
-        stbi_uc* pixels = stbi_load("/usr/share/wallpapers/Next/contents/images/5120x2880.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-        if (!pixels) throw std::runtime_error("failed to load texture image!");
+        stbi_uc *pixels = stbi_load("/usr/share/wallpapers/Next/contents/images/5120x2880.png", &texWidth, &texHeight,
+                                    &texChannels, STBI_rgb_alpha);
+        if (!pixels)
+            throw std::runtime_error("failed to load texture image!");
         auto imageSize = texWidth * texHeight * 4;
 
         stagingBuffer = renderer->logicalDevice.createBuffer(
@@ -185,23 +187,89 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer)
 
         stbi_image_free(pixels);
 
-        textureImage = renderer->logicalDevice.createImage(ImageCreateInfo({}, ImageType::e2D, Format::eR8G8B8A8Srgb, Extent3D(texWidth, texHeight, 1), 1, 1, {}, ImageTiling::eOptimal, ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled, SharingMode::eExclusive, {}, ImageLayout::eUndefined), renderer->allocator);
+        textureImage = renderer->logicalDevice.createImage(
+            ImageCreateInfo({}, ImageType::e2D, Format::eR8G8B8A8Srgb, Extent3D(texWidth, texHeight, 1), 1, 1, {},
+                            ImageTiling::eOptimal, ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled,
+                            SharingMode::eExclusive, {}, ImageLayout::eUndefined),
+            renderer->allocator);
 
         req = renderer->logicalDevice.getImageMemoryRequirements(textureImage);
         imageMemory = renderer->logicalDevice.allocateMemory(
-            MemoryAllocateInfo(
-                req.size,
-                findMemoryType(req.memoryTypeBits,
-                               MemoryPropertyFlagBits::eDeviceLocal, prop)),
+            MemoryAllocateInfo(req.size,
+                               findMemoryType(req.memoryTypeBits, MemoryPropertyFlagBits::eDeviceLocal, prop)),
             renderer->allocator);
 
         renderer->logicalDevice.bindImageMemory(textureImage, imageMemory, 0);
-    }
 
+        transitionImageLayout(textureImage, Format::eR8G8B8A8Srgb, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal);
+        copyBufferToImage(stagingBuffer, textureImage, texWidth, texHeight);
+        transitionImageLayout(textureImage, Format::eR8G8B8A8Srgb, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal);
+    }
 
     OMTestRenderer::reinit();
 
     firstTime = false;
+}
+
+CommandBuffer OMTestRenderer::beginSingleTimeCommands()
+{
+    auto cmdBuff = renderer->logicalDevice.allocateCommandBuffers(
+        CommandBufferAllocateInfo(commandPool, CommandBufferLevel::ePrimary, 1))[0];
+    cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
+    return cmdBuff;
+}
+void OMTestRenderer::endSingleTimeCommands(CommandBuffer cmdBuff)
+{
+    cmdBuff.end();
+
+    renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
+    renderer->queues.first.waitIdle();
+}
+
+void OMTestRenderer::copyBufferToImage(Buffer buffer, Image image, uint32_t width, uint32_t height)
+{
+    auto cmd = beginSingleTimeCommands();
+    cmd.copyBufferToImage(buffer, image, ImageLayout::eTransferDstOptimal, BufferImageCopy(0, 0, 0, ImageSubresourceLayers(ImageAspectFlagBits::eColor, 0, 0, 1), Offset3D(0, 0, 0), Extent3D(width, height, 1)));
+    endSingleTimeCommands(cmd);
+}
+
+void OMTestRenderer::copyBuffer(Buffer srcBuff, Buffer dstBuff, DeviceSize size)
+{
+    auto cmd = beginSingleTimeCommands();
+    cmd.copyBuffer(srcBuff, dstBuff, BufferCopy({}, {}, size));
+    endSingleTimeCommands(cmd);
+}
+
+void OMTestRenderer::transitionImageLayout(Image image, Format format, ImageLayout oldLayout, ImageLayout newLayout)
+{
+    auto barrier = ImageMemoryBarrier({}, {}, oldLayout, newLayout, QueueFamilyIgnored, QueueFamilyIgnored, image,
+                                      ImageSubresourceRange(ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+
+    PipelineStageFlagBits sourceStage, destinationStage;
+
+    if (oldLayout == ImageLayout::eUndefined && newLayout == ImageLayout::eTransferDstOptimal)
+    {
+        barrier.srcAccessMask = {};
+        barrier.dstAccessMask = AccessFlagBits::eTransferWrite;
+        sourceStage = PipelineStageFlagBits::eTopOfPipe;
+        destinationStage = PipelineStageFlagBits::eTransfer;
+    }
+    else if (oldLayout == ImageLayout::eTransferDstOptimal && newLayout == ImageLayout::eShaderReadOnlyOptimal)
+    {
+        barrier.srcAccessMask = AccessFlagBits::eTransferWrite;
+        barrier.dstAccessMask = AccessFlagBits::eShaderRead;
+
+        sourceStage = PipelineStageFlagBits::eTransfer;
+        destinationStage = PipelineStageFlagBits::eFragmentShader;
+    }
+    else
+    {
+        throw std::invalid_argument("unsupported layout transition!");
+    }
+
+    auto cmd = beginSingleTimeCommands();
+    cmd.pipelineBarrier(sourceStage, destinationStage, {}, nullptr, nullptr, barrier);
+    endSingleTimeCommands(cmd);
 }
 
 void OMTestRenderer::updateUniform()
@@ -338,6 +406,10 @@ void OMTestRenderer::reinit()
 }
 void OMTestRenderer::destroy()
 {
+    renderer->logicalDevice.freeMemory(stagingBufferMemory, renderer->allocator);
+    renderer->logicalDevice.destroyBuffer(stagingBuffer, renderer->allocator);
+    renderer->logicalDevice.freeMemory(imageMemory, renderer->allocator);
+    renderer->logicalDevice.destroyImage(textureImage, renderer->allocator);
     renderer->logicalDevice.freeDescriptorSets(descriptorPool, descriptorSet);
     renderer->logicalDevice.destroyDescriptorPool(descriptorPool, renderer->allocator);
     renderer->logicalDevice.unmapMemory(uniformBufferMemory);

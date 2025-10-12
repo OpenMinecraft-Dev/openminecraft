@@ -27,9 +27,10 @@ if not is_plat("harmony") then
     add_requires("openal-soft")
 end
 
-add_requires("freetype", "harfbuzz", "stb", "vulkan-headers", "glm","bullet3",  "vulkan-hpp", "shaderc", "nlohmann_json", "libsdl3")
+add_requires("freetype", "harfbuzz", "stb", "vulkan-headers", "glm", "bullet3",  "vulkan-hpp", "shaderc", "nlohmann_json", "libsdl3", { system = false })
 add_requires("boost", { system = false, configs = { stacktrace = true } })
 add_requires("fmt", { system = false, configs = { header_only = true } })
+
 
 if apple() then
     add_defines("BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED=")

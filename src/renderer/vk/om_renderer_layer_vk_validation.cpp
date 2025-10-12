@@ -16,11 +16,31 @@ log::OMLogger internal("Vulkan Validation");
 int notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT t,
            DebugUtilsMessengerCallbackDataEXT data, void *user)
 {
-    if (data.pMessage <= reinterpret_cast<void *>(0x100000))
+    /*if (data.pMessage <= reinterpret_cast<void *>(0x100000))
     {
         return VK_SUCCESS;
+    }*/
+
+    switch (s)
+    {
+    default:
+    case DebugUtilsMessageSeverityFlagBitsEXT::eVerbose:
+        internal.debug("{}", data.pMessage);
+        break;
+
+    case DebugUtilsMessageSeverityFlagBitsEXT::eInfo:
+        internal.info("{}", data.pMessage);
+        break;
+
+    case DebugUtilsMessageSeverityFlagBitsEXT::eWarning:
+        internal.warn("{}", data.pMessage);
+        break;
+
+    case DebugUtilsMessageSeverityFlagBitsEXT::eError:
+        internal.error("{}", data.pMessage);
+        break;
     }
-    internal.info("{}", data.pMessage);
+
     return VK_SUCCESS;
 }
 OMRendererVkValidation::OMRendererVkValidation(std::vector<LayerProperties> props)
