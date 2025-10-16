@@ -166,7 +166,7 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer)
 
     {
         int texWidth, texHeight, texChannels;
-        stbi_uc *pixels = stbi_load("/usr/share/wallpapers/Next/contents/images/5120x2880.png", &texWidth, &texHeight,
+        stbi_uc *pixels = stbi_load("/usr/share/wallpapers/Next/contents/images_dark/5120x2880.png", &texWidth, &texHeight,
                                     &texChannels, STBI_rgb_alpha);
         if (!pixels)
             throw std::runtime_error("failed to load texture image!");
@@ -193,7 +193,7 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer)
         stbi_image_free(pixels);
 
         textureImage = renderer->logicalDevice.createImage(
-            ImageCreateInfo({}, ImageType::e2D, Format::eR8G8B8A8Srgb, Extent3D(texWidth, texHeight, 1), 1, 1, {},
+            ImageCreateInfo({}, ImageType::e2D, Format::eR8G8B8A8Srgb, Extent3D(texWidth, texHeight, 1), 1, 1, SampleCountFlagBits::e1,
                             ImageTiling::eOptimal, ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled,
                             SharingMode::eExclusive, {}, ImageLayout::eUndefined),
             renderer->allocator);
@@ -272,6 +272,7 @@ void OMTestRenderer::transitionImageLayout(Image image, Format format, ImageLayo
     {
         barrier.srcAccessMask = {};
         barrier.dstAccessMask = AccessFlagBits::eTransferWrite;
+
         sourceStage = PipelineStageFlagBits::eTopOfPipe;
         destinationStage = PipelineStageFlagBits::eTransfer;
     }
@@ -370,7 +371,7 @@ void OMTestRenderer::reinit()
                                               ColorComponentFlagBits::eA | ColorComponentFlagBits::eR |
                                                   ColorComponentFlagBits::eG | ColorComponentFlagBits::eB)};
         auto colorblend =
-            PipelineColorBlendStateCreateInfo({}, false, LogicOp::eCopy, attc, std::array{0.f, 0.f, 0.f, 0.f});
+            PipelineColorBlendStateCreateInfo({}, true, LogicOp::eCopy, attc, std::array{0.f, 0.f, 0.f, 0.f});
 
         auto result = renderer->logicalDevice.createGraphicsPipeline(
             {},
@@ -407,7 +408,7 @@ void OMTestRenderer::reinit()
         auto test = std::vector<ClearValue>();
         for (int i = 0; i < renderer->swapchainManager->swapchainImageViews.size(); i++)
         {
-            test.push_back(ClearValue({0, 0, 0, 0}));
+            test.push_back(ClearValue({55, 55, 55, 55}));
         }
         commandBuffer.beginRenderPass(RenderPassBeginInfo(renderPass, framebuffer,
                                                           Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent),
