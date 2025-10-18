@@ -392,6 +392,7 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp,
     static auto startTime = std::chrono::high_resolution_clock::now();
     const auto currentTime = std::chrono::high_resolution_clock::now();
     const float time = std::chrono::duration<float>(currentTime - startTime).count();
+    startTime = currentTime;
 
     glm::vec3 front;
     front.x = std::cos(glm::radians(m_yaw)) * std::cos(glm::radians(m_pitch));
@@ -442,7 +443,7 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp,
 
     if (m_yaw < 0.0f)
         m_yaw += 360.0f;
-    m_yaw = std::fmodf(m_yaw + 180.0f, 360.0f);
+    m_yaw = std::fmod(m_yaw + 180.0f, 360.0f);
     m_yaw -= 180.0f;
 
     if (m_pitch > 89.0f)
