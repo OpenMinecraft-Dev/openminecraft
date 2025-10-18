@@ -38,7 +38,8 @@ class OMTestRenderer : public util::OMReinitable
     ::vk::CommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(::vk::CommandBuffer cmdbuff);
     void copyBuffer(::vk::Buffer srcBuff, ::vk::Buffer dstBuff, ::vk::DeviceSize size);
-    void transitionImageLayout(::vk::Image image, ::vk::Format format, ::vk::ImageLayout oldLayout, ::vk::ImageLayout newLayout);
+    void transitionImageLayout(::vk::Image image, ::vk::Format format, ::vk::ImageLayout oldLayout,
+                               ::vk::ImageLayout newLayout);
     void copyBufferToImage(::vk::Buffer buffer, ::vk::Image image, uint32_t width, uint32_t height);
 
     void reinit() override;
@@ -80,9 +81,19 @@ class OMTestRenderer : public util::OMReinitable
     ::vk::Image depthImage;
     ::vk::ImageView depthImageView;
 
+    void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp, bool upk, bool downk, bool leftk, bool rightk);
+
   private:
     bool firstTime = true;
+    int vertexCount = 0;
     OMRendererVk *renderer;
+
+    glm::vec3 m_cameraPos{2.0f, 2.0f, 2.0f};
+    glm::vec3 m_cameraUp{0.0f, 1.0f, 0.0f};
+    float m_pitch = -35.0f;
+    float m_yaw = -135.0f;
+    float m_cameraMoveSpeed = 0.005f;
+    float m_cameraRotateSpeed = 0.5f;
 
     std::shared_ptr<common::OMShader> vtxShader;
     std::shared_ptr<common::OMShader> frgShader;

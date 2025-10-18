@@ -24,6 +24,8 @@
 #include <variant>
 #include <vector>
 
+#include "SDL3/SDL_events.h"
+#include "SDL3/SDL_keycode.h"
 #include "SDL3/SDL_messagebox.h"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/boot/om_boot.hpp"
@@ -149,7 +151,7 @@ int boot(std::vector<std::string> args)
             if (commandBuffer.empty())
             {
                 std::cin >> comm;
-            commandBuffer.push_back(comm);
+                commandBuffer.push_back(comm);
             }
 
             switch (hash_compile_time(commandBuffer[0].c_str()))
@@ -165,10 +167,101 @@ int boot(std::vector<std::string> args)
                         a, [](std::vector<std::string>) { return 0; }, wnd);
                     SDL_ShowWindow(wnd);
 
+                    bool wk = false, ak = false, sk = false, dk = false, spk = false, lshk = false;
+                    bool up = false, down = false, left = false, right = false;
+
                     while (true)
                     {
                         SDL_Event e;
                         SDL_PollEvent(&e);
+
+                        if (e.type == SDL_EVENT_KEY_DOWN)
+                        {
+                            if (e.key.key == SDLK_W)
+                            {
+                                wk = true;
+                            }
+                            else if (e.key.key == SDLK_A)
+                            {
+                                ak = true;
+                            }
+                            else if (e.key.key == SDLK_S)
+                            {
+                                sk = true;
+                            }
+                            else if (e.key.key == SDLK_D)
+                            {
+                                dk = true;
+                            }
+                            else if (e.key.key == SDLK_LSHIFT)
+                            {
+                                lshk = true;
+                            }
+                            else if (e.key.key == SDLK_SPACE)
+                            {
+                                spk = true;
+                            }
+                            else if (e.key.key == SDLK_UP)
+                            {
+                                up = true;
+                            }
+                            else if (e.key.key == SDLK_DOWN)
+                            {
+                                down = true;
+                            }
+                            else if (e.key.key == SDLK_LEFT)
+                            {
+                                left = true;
+                            }
+                            else if (e.key.key == SDLK_RIGHT)
+                            {
+                                right = true;
+                            }
+                        }
+
+                        if (e.type == SDL_EVENT_KEY_UP)
+                        {
+                            if (e.key.key == SDLK_W)
+                            {
+                                wk = false;
+                            }
+                            else if (e.key.key == SDLK_A)
+                            {
+                                ak = false;
+                            }
+                            else if (e.key.key == SDLK_S)
+                            {
+                                sk = false;
+                            }
+                            else if (e.key.key == SDLK_D)
+                            {
+                                dk = false;
+                            }
+                            else if (e.key.key == SDLK_LSHIFT)
+                            {
+                                lshk = false;
+                            }
+                            else if (e.key.key == SDLK_SPACE)
+                            {
+                                spk = false;
+                            }
+                            else if (e.key.key == SDLK_UP)
+                            {
+                                up = false;
+                            }
+                            else if (e.key.key == SDLK_DOWN)
+                            {
+                                down = false;
+                            }
+                            else if (e.key.key == SDLK_LEFT)
+                            {
+                                left = false;
+                            }
+                            else if (e.key.key == SDLK_RIGHT)
+                            {
+                                right = false;
+                            }
+                        }
 
                         if (e.type == SDL_EVENT_WINDOW_RESIZED)
                         {
@@ -181,6 +274,7 @@ int boot(std::vector<std::string> args)
                             break;
                         }
 
+                        renderer->testRenderer->keyInput(wk, ak, sk, dk, lshk, spk, up, down, left, right);
                         renderer->render();
                     }
 
