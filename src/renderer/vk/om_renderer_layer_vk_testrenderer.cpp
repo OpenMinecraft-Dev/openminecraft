@@ -57,23 +57,28 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer)
     }
 
     auto attaches = std::vector{AttachmentReference(0, ImageLayout::eColorAttachmentOptimal)};
+    auto depthAtt = AttachmentReference(1, ImageLayout::eDepthStencilAttachmentOptimal);
 
     auto attachments = std::vector{
         AttachmentDescription({}, renderer->swapchainManager->format.format, SampleCountFlagBits::e1,
                               AttachmentLoadOp::eClear, AttachmentStoreOp::eStore, AttachmentLoadOp::eDontCare,
-                              AttachmentStoreOp::eDontCare, ImageLayout::eUndefined, ImageLayout::ePresentSrcKHR)};
-    auto subpasses = std::vector{SubpassDescription({}, PipelineBindPoint::eGraphics, nullptr, attaches, nullptr)};
+                              AttachmentStoreOp::eDontCare, ImageLayout::eUndefined, ImageLayout::ePresentSrcKHR),
+        AttachmentDescription({}, Format::eD32Sfloat, SampleCountFlagBits::e1,
+                                  AttachmentLoadOp::eClear, AttachmentStoreOp::eDontCare, AttachmentLoadOp::eDontCare,
+                                  AttachmentStoreOp::eDontCare, ImageLayout::eUndefined, ImageLayout::eDepthStencilAttachmentOptimal)
+    };
+    auto subpasses = std::vector{SubpassDescription({}, PipelineBindPoint::eGraphics, nullptr, attaches, {}, &depthAtt)};
     auto depe =
-        std::vector{SubpassDependency(VK_SUBPASS_EXTERNAL, 0, PipelineStageFlagBits::eColorAttachmentOutput,
-                                      PipelineStageFlagBits::eColorAttachmentOutput, {},
-                                      AccessFlagBits::eColorAttachmentRead | AccessFlagBits::eColorAttachmentWrite)};
+        std::vector{SubpassDependency(VK_SUBPASS_EXTERNAL, 0, PipelineStageFlagBits::eColorAttachmentOutput | PipelineStageFlagBits::eEarlyFragmentTests,
+                                      PipelineStageFlagBits::eColorAttachmentOutput | PipelineStageFlagBits::eEarlyFragmentTests, {},
+                                      AccessFlagBits::eColorAttachmentRead | AccessFlagBits::eColorAttachmentWrite | AccessFlagBits::eDepthStencilAttachmentWrite)};
 
     renderPass = renderer->logicalDevice.createRenderPass(RenderPassCreateInfo({}, attachments, subpasses, depe),
                                                           renderer->allocator);
 
     auto prop = renderer->physicalDevice.getMemoryProperties();
     {
-        auto siz = (3 + 2 + 2) * 4 * sizeof(float);
+        auto siz = (3 + 3 + 2) * 8 * sizeof(float);
         vertexBuffer = renderer->logicalDevice.createBuffer(
             BufferCreateInfo({}, siz, BufferUsageFlagBits::eVertexBuffer, SharingMode::eExclusive),
             renderer->allocator);
@@ -91,10 +96,15 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer)
 
         auto r = renderer->logicalDevice.mapMemory(vertexBufferMemory, 0, siz);
 
-        float arr[] = {-0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-            0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-                       0.5f,  0.5f,  0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-            -0.5f, 0.5f,  1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+        float arr[] = {-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+            0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+                       0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+            -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+
+            -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+                0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+                           0.5f,  0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+                -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 
         std::memcpy(r, arr, siz);
 
@@ -102,7 +112,7 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer)
     }
 
     {
-        auto siz = 6 * sizeof(uint32_t);
+        auto siz = 12 * sizeof(uint32_t);
         indexBuffer = renderer->logicalDevice.createBuffer(
             BufferCreateInfo({}, siz, BufferUsageFlagBits::eIndexBuffer, SharingMode::eExclusive), renderer->allocator);
 
@@ -118,9 +128,9 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer)
 
         auto r = renderer->logicalDevice.mapMemory(indexBufferMemory, 0, siz);
 
-        uint32_t arr[] = {0, 1, 2, 2, 3, 0};
+        uint32_t arr[] = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
 
-        std::memcpy(r, arr, sizeof(uint32_t) * 6);
+        std::memcpy(r, arr, siz);
 
         renderer->logicalDevice.unmapMemory(indexBufferMemory);
     }
@@ -326,6 +336,9 @@ void OMTestRenderer::reinit()
 
     if (!firstTime)
     {
+        renderer->logicalDevice.freeMemory(depthImageMemory, renderer->allocator);
+        renderer->logicalDevice.destroyImageView(depthImageView, renderer->allocator);
+        renderer->logicalDevice.destroyImage(depthImage, renderer->allocator);
         renderer->logicalDevice.destroyPipeline(pipeline, renderer->allocator);
         renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
     }
@@ -349,10 +362,10 @@ void OMTestRenderer::reinit()
                                 renderer->allocator),
                             "main")};
 
-        const std::vector bi = {VertexInputBindingDescription(0, (2 + 3 + 2) * sizeof(float), VertexInputRate::eVertex)};
-        const std::vector ad = {VertexInputAttributeDescription(0, 0, Format::eR32G32Sfloat, 0),
-                                VertexInputAttributeDescription(1, 0, Format::eR32G32B32Sfloat, 2 * sizeof(float)),
-                                VertexInputAttributeDescription(2, 0, Format::eR32G32Sfloat, 5 * sizeof(float))};
+        const std::vector bi = {VertexInputBindingDescription(0, (3 + 3 + 2) * sizeof(float), VertexInputRate::eVertex)};
+        const std::vector ad = {VertexInputAttributeDescription(0, 0, Format::eR32G32B32Sfloat, 0),
+                                VertexInputAttributeDescription(1, 0, Format::eR32G32B32Sfloat, 3 * sizeof(float)),
+                                VertexInputAttributeDescription(2, 0, Format::eR32G32Sfloat, 6 * sizeof(float))};
 
         auto vertexInput = PipelineVertexInputStateCreateInfo({}, bi, ad);
         auto inputAssembly = PipelineInputAssemblyStateCreateInfo({}, PrimitiveTopology::eTriangleList, false);
@@ -373,10 +386,12 @@ void OMTestRenderer::reinit()
         auto colorblend =
             PipelineColorBlendStateCreateInfo({}, true, LogicOp::eCopy, attc, std::array{0.f, 0.f, 0.f, 0.f});
 
+        auto depthStencil = PipelineDepthStencilStateCreateInfo({}, true, true, CompareOp::eLess, true, true, {}, {}, 0.0f, 1.0f);
+
         auto result = renderer->logicalDevice.createGraphicsPipeline(
             {},
             GraphicsPipelineCreateInfo({}, shaders, &vertexInput, &inputAssembly, {}, &viewportState, &rasterization,
-                                       &multisample, {}, &colorblend, {}, pipelineLayout, renderPass, 0, {}, -1),
+                                       &multisample, &depthStencil, &colorblend, {}, pipelineLayout, renderPass, 0, {}, -1),
             renderer->allocator);
         if (result.result != Result::eSuccess)
         {
@@ -390,10 +405,21 @@ void OMTestRenderer::reinit()
         }
     }
 
+    {
+        auto prop = renderer->physicalDevice.getMemoryProperties();
+        depthImage = renderer->logicalDevice.createImage(ImageCreateInfo({}, ImageType::e2D, Format::eD32Sfloat, Extent3D(renderer->swapchainManager->extent.width, renderer->swapchainManager->extent.height, 1), 1, 1, SampleCountFlagBits::e1, ImageTiling::eOptimal, ImageUsageFlagBits::eDepthStencilAttachment, SharingMode::eExclusive, {}, ImageLayout::eUndefined), renderer->allocator);
+        auto req = renderer->logicalDevice.getImageMemoryRequirements(depthImage);
+        depthImageMemory = renderer->logicalDevice.allocateMemory(MemoryAllocateInfo(req.size,findMemoryType(req.memoryTypeBits, MemoryPropertyFlagBits::eDeviceLocal, prop)),renderer->allocator);
+        renderer->logicalDevice.bindImageMemory(depthImage, depthImageMemory, 0);
+
+        depthImageView = renderer->logicalDevice.createImageView(ImageViewCreateInfo({}, depthImage, ImageViewType::e2D, Format::eD32Sfloat, {}, ImageSubresourceRange(ImageAspectFlagBits::eDepth, 0, 1, 0, 1)), renderer->allocator);
+    }
+
     for (auto img : renderer->swapchainManager->swapchainImageViews)
     {
+        const std::vector ii = {img, depthImageView};
         framebuffers.push_back(renderer->logicalDevice.createFramebuffer(
-            FramebufferCreateInfo({}, renderPass, img, renderer->swapchainManager->extent.width,
+            FramebufferCreateInfo({}, renderPass, ii, renderer->swapchainManager->extent.width,
                                   renderer->swapchainManager->extent.height, 1),
             renderer->allocator));
     }
@@ -405,11 +431,7 @@ void OMTestRenderer::reinit()
             CommandBufferAllocateInfo(commandPool, CommandBufferLevel::ePrimary, 1))[0];
 
         commandBuffer.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eSimultaneousUse));
-        auto test = std::vector<ClearValue>();
-        for (int i = 0; i < renderer->swapchainManager->swapchainImageViews.size(); i++)
-        {
-            test.push_back(ClearValue({55, 55, 55, 55}));
-        }
+        std::vector test = {ClearValue({55, 55, 55, 55}), ClearValue({1.0f, 0})};
         commandBuffer.beginRenderPass(RenderPassBeginInfo(renderPass, framebuffer,
                                                           Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent),
                                                           test),
@@ -418,7 +440,7 @@ void OMTestRenderer::reinit()
         commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, pipelineLayout, 0, std::vector{descriptorSet, combinedDescriptorSet}, nullptr);
         commandBuffer.bindVertexBuffers(0, std::vector{vertexBuffer}, std::vector<DeviceSize>{0});
         commandBuffer.bindIndexBuffer(indexBuffer, 0, IndexType::eUint32);
-        commandBuffer.drawIndexed(6, 1, 0, 0, 0);
+        commandBuffer.drawIndexed(12, 1, 0, 0, 0);
         commandBuffer.endRenderPass();
         commandBuffer.end();
 
@@ -428,6 +450,10 @@ void OMTestRenderer::reinit()
 }
 void OMTestRenderer::destroy()
 {
+    renderer->logicalDevice.freeMemory(depthImageMemory, renderer->allocator);
+    renderer->logicalDevice.destroyImageView(depthImageView, renderer->allocator);
+    renderer->logicalDevice.destroyImage(depthImage, renderer->allocator);
+
     renderer->logicalDevice.freeDescriptorSets(descriptorPool, combinedDescriptorSet);
     renderer->logicalDevice.destroySampler(textureSampler, renderer->allocator);
     renderer->logicalDevice.destroyImageView(textureImageView, renderer->allocator);

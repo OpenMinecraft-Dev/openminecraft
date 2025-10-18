@@ -137,6 +137,7 @@ int boot(std::vector<std::string> args)
     program:
         std::string comm;
         std::vector<std::string> commandBuffer;
+        commandBuffer.push_back("vktest");
         while (true)
         {
             if (commandBuffer.empty())
@@ -145,8 +146,11 @@ int boot(std::vector<std::string> args)
             }
 
         unk:
-            std::cin >> comm;
+            if (commandBuffer.empty())
+            {
+                std::cin >> comm;
             commandBuffer.push_back(comm);
+            }
 
             switch (hash_compile_time(commandBuffer[0].c_str()))
             {
