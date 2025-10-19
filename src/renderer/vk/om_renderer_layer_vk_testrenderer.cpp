@@ -32,7 +32,7 @@ uint32_t findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properties,
     return 0;
 }
 
-OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer)
+OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), logger("OMTestRenderer", this)
 {
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.frag.glsl");
@@ -377,7 +377,7 @@ void OMTestRenderer::updateUniform()
     ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     ubo.model *= glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     ubo.view = glm::lookAt(m_cameraPos, m_cameraPos + front, m_cameraUp);
-    ubo.proj = glm::perspective(glm::radians(45.0f),
+    ubo.proj = glm::perspective(glm::radians(70.0f),
                                 static_cast<float>(renderer->swapchainManager->extent.width) /
                                     static_cast<float>(renderer->swapchainManager->extent.height),
                                 0.1f, 20.0f);
@@ -450,6 +450,8 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp,
         m_pitch = 89.0f;
     if (m_pitch < -89.0f)
         m_pitch = -89.0f;
+
+    logger.info("pitch: {} yaw: {} {} {} {}", m_pitch, m_yaw, m_cameraPos.x, m_cameraPos.y, m_cameraPos.z);
 }
 
 void OMTestRenderer::reinit()

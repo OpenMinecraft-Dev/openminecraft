@@ -1,5 +1,6 @@
 #ifndef OM_RENDERER_LAYER_VK_TESTRENDERER
 #define OM_RENDERER_LAYER_VK_TESTRENDERER
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/util/om_util_reinitable.hpp"
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
@@ -82,6 +83,8 @@ class OMTestRenderer : public util::OMReinitable
     ::vk::ImageView depthImageView;
 
     void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp, bool upk, bool downk, bool leftk, bool rightk);
+
+    log::OMLogger logger;
 
   private:
     bool firstTime = true;
