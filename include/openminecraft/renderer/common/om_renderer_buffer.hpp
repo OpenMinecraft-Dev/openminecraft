@@ -1,6 +1,7 @@
 #ifndef OM_RENDERER_BUFFER_HPP
 #define OM_RENDERER_BUFFER_HPP
 #include <functional>
+#include <openminecraft/log/om_log_common.hpp>
 
 namespace openminecraft::renderer::common
 {
@@ -24,6 +25,7 @@ class OMRendererBuffer
 
   private:
     std::function<void(OMRendererBuffer *)> free;
+    log::OMLogger logger;
 };
 } // namespace openminecraft::renderer::common
 

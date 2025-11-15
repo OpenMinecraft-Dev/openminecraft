@@ -52,7 +52,7 @@ class OMRendererVk : public OMRenderer
     swapchain::OMSwapchainCap getSwapchainCap();
 
     std::string driver() override;
-    std::shared_ptr<common::OMRendererBuffer> allocateBuffer(common::OMBufferUsage usage, uint64_t length) override;
+    std::shared_ptr<common::OMRendererBuffer> allocateVertexBuffer(uint64_t length) override;
     void destroy();
 
     void render();
@@ -79,6 +79,7 @@ class OMRendererVk : public OMRenderer
 
   private:
     std::shared_ptr<log::OMLogger> logger;
+    ::vk::PhysicalDeviceMemoryProperties memProps;
 };
 }; // namespace openminecraft::renderer::vk
 

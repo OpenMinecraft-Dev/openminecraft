@@ -23,7 +23,7 @@ class OMRenderer
     virtual ~OMRenderer() = default;
 
     virtual std::string driver() = 0;
-    virtual std::shared_ptr<common::OMRendererBuffer> allocateBuffer(common::OMBufferUsage usage, uint64_t length) = 0;
+    virtual std::shared_ptr<common::OMRendererBuffer> allocateVertexBuffer(uint64_t length) = 0;
 
   protected:
     void *window;

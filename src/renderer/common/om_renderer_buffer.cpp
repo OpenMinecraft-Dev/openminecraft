@@ -4,12 +4,14 @@ namespace openminecraft::renderer::common
 {
 OMRendererBuffer::OMRendererBuffer(OMBufferUsage usage, std::function<void *(OMRendererBuffer *)> alloc,
                                    std::function<void(OMRendererBuffer *)> free)
-    : usage(usage), free(free), actualBuffer(alloc(this))
+    : usage(usage), free(free), actualBuffer(alloc(this)), logger("OMRendererBuffer", this)
 {
+    logger.info("Allocated");
 }
 
 OMRendererBuffer::~OMRendererBuffer()
 {
     this->free(this);
+    logger.info("Freed");
 }
 } // namespace openminecraft::renderer::common
