@@ -1,0 +1,30 @@
+#ifndef OM_RENDERER_BUFFER_HPP
+#define OM_RENDERER_BUFFER_HPP
+#include <functional>
+
+namespace openminecraft::renderer::common
+{
+enum OMBufferUsage
+{
+    VertexIndex,
+    VertexData,
+    InstanceData,
+    Texture,
+    Misc
+};
+
+class OMRendererBuffer
+{
+  public:
+    OMRendererBuffer(OMBufferUsage usage, std::function<void *(OMRendererBuffer *)> alloc, std::function<void(OMRendererBuffer *)> free);
+    ~OMRendererBuffer();
+    OMBufferUsage const usage;
+    void *const actualBuffer;
+    void *reserved;
+
+  private:
+    std::function<void(OMRendererBuffer *)> free;
+};
+} // namespace openminecraft::renderer::common
+
+#endif

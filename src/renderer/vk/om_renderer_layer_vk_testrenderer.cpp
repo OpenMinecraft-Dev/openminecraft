@@ -451,7 +451,10 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp,
     if (m_pitch < -89.0f)
         m_pitch = -89.0f;
 
-    logger.info("pitch: {} yaw: {} {} {} {}", m_pitch, m_yaw, m_cameraPos.x, m_cameraPos.y, m_cameraPos.z);
+    if (w || a || s || d || lsh || sp || upk || downk || leftk || rightk)
+    {
+        logger.info("pitch: {} yaw: {} {} {} {}", m_pitch, m_yaw, m_cameraPos.x, m_cameraPos.y, m_cameraPos.z);
+    }
 }
 
 void OMTestRenderer::reinit()

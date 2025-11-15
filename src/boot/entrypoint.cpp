@@ -24,6 +24,7 @@
 #include <variant>
 #include <vector>
 
+#include "SDL3/SDL_dialog.h"
 #include "SDL3/SDL_events.h"
 #include "SDL3/SDL_keycode.h"
 #include "SDL3/SDL_messagebox.h"
@@ -129,6 +130,11 @@ int boot(std::vector<std::string> args)
     logger->info("User: {} / {}", os::fetchUsername(), os::fetchLoginUser());
     logger->info("Total memory: {} bytes", os::fetchMemoryTotal());
 
+    /*SDL_ShowFileDialogWithProperties(
+        SDL_FileDialogType::SDL_FILEDIALOG_OPENFILE,
+        [](void *userdata, const char *const *filelist, int filter) { SDL_Log("testf: %s", filelist[0]); }, nullptr,
+        -1);*/
+
     // pixeltower::registerFuncs();
     tower = std::make_unique<pixeltower::v0::OMPixelTower>();
 
@@ -138,23 +144,14 @@ int boot(std::vector<std::string> args)
     {
     program:
         std::string comm;
-        std::vector<std::string> commandBuffer;
-        commandBuffer.push_back("vktest");
         while (true)
         {
-            if (commandBuffer.empty())
-            {
-                std::cout << (recovermode ? "pixeltower recover > " : "pixeltower shell > ");
-            }
+            std::cout << (recovermode ? "pixeltower recover > " : "pixeltower shell > ");
 
         unk:
-            if (commandBuffer.empty())
-            {
-                std::cin >> comm;
-                commandBuffer.push_back(comm);
-            }
+            std::cin >> comm;
 
-            switch (hash_compile_time(commandBuffer[0].c_str()))
+            switch (hash_compile_time(comm.c_str()))
             {
             case "vktest"_hash: {
                 try
@@ -166,6 +163,8 @@ int boot(std::vector<std::string> args)
                     auto renderer = std::make_unique<renderer::vk::OMRendererVk>(
                         a, [](std::vector<std::string>) { return 0; }, wnd);
                     SDL_ShowWindow(wnd);
+
+                    logger->info("driver: {}", renderer->driver());
 
                     bool wk = false, ak = false, sk = false, dk = false, spk = false, lshk = false;
                     bool up = false, down = false, left = false, right = false;
@@ -293,151 +292,113 @@ int boot(std::vector<std::string> args)
                         logger->info("SDL Status: {}", SDL_GetError());
                     }
                 }
-                commandBuffer.clear();
                 break;
             }
             case "quit"_hash:
             case "exit"_hash:
-                commandBuffer.clear();
                 return 0;
             case "dumptrace"_hash:
-                commandBuffer.clear();
                 logger->dumpStacktrace();
                 break;
             case "dumpmem"_hash:
-                commandBuffer.clear();
                 mem::castorice::printres();
                 break;
-            case "pt"_hash:
-            case "pixeltower"_hash: {
-                if (commandBuffer.size() >= 3 && commandBuffer[1] == "buildcls")
-                {
-                    pixeltower::v3::OMClassBuilder builder;
-                    builder.klassBegin();
-                    builder.klassAccessFlags(JVM_Acc_Public);
-                    builder.klassName("openminecraft/DynamicTest");
+            case "pt_buildcls"_hash: {
+                pixeltower::v3::OMClassBuilder builder;
+                builder.klassBegin();
+                builder.klassAccessFlags(JVM_Acc_Public);
+                builder.klassName("openminecraft/DynamicTest");
 
-                    pixeltower::v1::tracing::installHandler();
-                    tower->initCurrentThread(1ul * 1024 * 1024);
-                    tower->init(commandBuffer[2]);
+                pixeltower::v1::tracing::installHandler();
+                tower->initCurrentThread(1ul * 1024 * 1024);
+                tower->init("vmstd/out");
 
-                    bytecode::descriptor::OMTypeDesc tgt = {bytecode::descriptor::Reference, "java/lang/Object"};
-                    tower->loader->loadClass(tgt);
-                    auto cls = tower->loader->fetchClass(tgt);
+                bytecode::descriptor::OMTypeDesc tgt = {bytecode::descriptor::Reference, "java/lang/Object"};
+                tower->loader->loadClass(tgt);
+                auto cls = tower->loader->fetchClass(tgt);
 
-                    builder.klassSuperKlass(cls);
-                    builder.klassVersion(JVM_VERSION_8, 0);
+                builder.klassSuperKlass(cls);
+                builder.klassVersion(JVM_VERSION_8, 0);
 
-                    auto func = builder.klassConstructMethod();
-                    func->methodBegin();
-                    func->methodAccessFlags(JVM_Acc_Public);
-                    func->methodNameAndDesc("<init>", "()V");
-                    func->methodCodeBegin();
-                    func->instNop();
-                    func->instLoad<void *>(0);
-                    func->instConst(421.f);
-                    func->instReturn();
-                    func->methodCodeFinish();
-                    func->methodFinish();
+                auto func = builder.klassConstructMethod();
+                func->methodBegin();
+                func->methodAccessFlags(JVM_Acc_Public);
+                func->methodNameAndDesc("<init>", "()V");
+                func->methodCodeBegin();
+                func->instNop();
+                func->instLoad<void *>(0);
+                func->instConst(421.f);
+                func->instReturn();
+                func->methodCodeFinish();
+                func->methodFinish();
 
-                    bytecode::OMBytecodeChecker chk(builder.file);
-                    chk.detail();
+                bytecode::OMBytecodeChecker chk(builder.file);
+                chk.detail();
 
-                    tower->loader->stagClass(builder.file);
-                    tower->loader->loadClass({bytecode::descriptor::Reference, "openminecraft/DynamicTest"});
+                tower->loader->stagClass(builder.file);
+                tower->loader->loadClass({bytecode::descriptor::Reference, "openminecraft/DynamicTest"});
 
-                    commandBuffer.clear();
-                    break;
-                }
-                if (commandBuffer.size() >= 3 && commandBuffer[1] == "init")
-                {
-                    pixeltower::v1::tracing::installHandler();
-                    tower->initCurrentThread(1ul * 1024 * 1024);
-                    tower->init(commandBuffer[2]);
-                    tower->load("../Test.class");
-
-                    bytecode::descriptor::OMTypeDesc tgt = {bytecode::descriptor::Reference, "openminecraft/Test"};
-                    tower->loader->loadClass(tgt);
-                    auto cls = tower->loader->fetchClass(tgt);
-                    auto met = cls->methods;
-                    while (met != nullptr)
-                    {
-                        if (strcmp(met->name, "main") == 0 && strcmp(met->desc, "([Ljava/lang/String;)V") == 0)
-                        {
-                            auto now = std::chrono::system_clock::now();
-
-                            bool running = true;
-                            auto t = new std::thread([&]() {
-                                while (running)
-                                {
-                                    auto now2 = std::chrono::system_clock::now();
-                                    auto cont =
-                                        std::chrono::duration_cast<std::chrono::milliseconds>(now2 - now).count();
-                                    if (cont > 1000)
-                                    {
-                                        logger->info("{} operands in 1 second",
-                                                     (double)tower->interpreter->operands / cont * 1000);
-                                        tower->interpreter->operands = 0;
-                                        now = std::chrono::system_clock::now();
-                                    }
-                                }
-                            });
-
-                            try
-                            {
-                                tower->boot(met);
-                            }
-                            catch (err::OMValidationError &e)
-                            {
-                                logger->info("{}", e.what());
-                            }
-                            catch (int g)
-                            {
-                            }
-
-                            running = false;
-                            auto now2 = std::chrono::system_clock::now();
-                            logger->info("VM exited {} ns",
-                                         std::chrono::duration_cast<std::chrono::nanoseconds>(now2 - now).count());
-
-                            break;
-                        }
-                        met = met->next;
-                    }
-                    tower->destroyCurrentThread();
-                    commandBuffer.clear();
-
-                    break;
-                }
-                goto unk;
-            }
-            case "cat"_hash: {
-                if (commandBuffer.size() >= 2)
-                {
-                    std::ifstream s(commandBuffer[1], std::ios::binary);
-                    while (true)
-                    {
-                        auto buf = new char[1025];
-                        buf[1024] = '\0';
-                        s.read(buf, 1024);
-                        std::cout << buf;
-                        delete[] buf;
-
-                        if (!s.good())
-                        {
-                            break;
-                        }
-                    }
-                    s.close();
-                    commandBuffer.clear();
-                }
                 break;
+            }
+            case "ptinit"_hash: {
+                pixeltower::v1::tracing::installHandler();
+                tower->initCurrentThread(1ul * 1024 * 1024);
+                tower->init("vmstd/out");
+                tower->load("../Test.class");
+
+                bytecode::descriptor::OMTypeDesc tgt = {bytecode::descriptor::Reference, "openminecraft/Test"};
+                tower->loader->loadClass(tgt);
+                auto cls = tower->loader->fetchClass(tgt);
+                auto met = cls->methods;
+                while (met != nullptr)
+                {
+                    if (strcmp(met->name, "main") == 0 && strcmp(met->desc, "([Ljava/lang/String;)V") == 0)
+                    {
+                        auto now = std::chrono::system_clock::now();
+
+                        bool running = true;
+                        auto t = new std::thread([&]() {
+                            while (running)
+                            {
+                                auto now2 = std::chrono::system_clock::now();
+                                auto cont = std::chrono::duration_cast<std::chrono::milliseconds>(now2 - now).count();
+                                if (cont > 1000)
+                                {
+                                    logger->info("{} operands in 1 second",
+                                                 (double)tower->interpreter->operands / cont * 1000);
+                                    tower->interpreter->operands = 0;
+                                    now = std::chrono::system_clock::now();
+                                }
+                            }
+                        });
+
+                        try
+                        {
+                            tower->boot(met);
+                        }
+                        catch (err::OMValidationError &e)
+                        {
+                            logger->info("{}", e.what());
+                        }
+                        catch (int g)
+                        {
+                        }
+
+                        running = false;
+                        auto now2 = std::chrono::system_clock::now();
+                        logger->info("VM exited {} ns",
+                                     std::chrono::duration_cast<std::chrono::nanoseconds>(now2 - now).count());
+
+                        break;
+                    }
+                    met = met->next;
+                }
+                tower->destroyCurrentThread();
             }
             case "crash"_hash: {
                 logger->info("{}", *reinterpret_cast<int *>(33550336));
             }
             default:
-                commandBuffer.clear();
                 logger->warn("unknown command!");
                 break;
             }

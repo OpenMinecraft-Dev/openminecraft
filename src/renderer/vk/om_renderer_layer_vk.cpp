@@ -174,8 +174,24 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     }
     catch (SystemError &e)
     {
-        throw std::runtime_error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.swp1")); // ???
+        throw std::runtime_error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.renderer"));
     }
+}
+
+static BufferUsageFlagBits bufferFlagMap(common::OMBufferUsage usage)
+{
+    return BufferUsageFlagBits::eVertexBuffer;
+}
+
+std::shared_ptr<common::OMRendererBuffer> OMRendererVk::allocateBuffer(common::OMBufferUsage usage, uint64_t length)
+{
+    return std::make_shared<common::OMRendererBuffer>(
+        usage, [&](common::OMRendererBuffer *buffer) {
+            auto buff = logicalDevice.createBuffer(BufferCreateInfo({}, length, BufferUsageFlagBits::eVertexBuffer, SharingMode::eExclusive), allocator);
+            return buff;
+        }, [&](common::OMRendererBuffer *buffer) {
+            logicalDevice.destroyBuffer(Buffer(static_cast<VkBuffer>(buffer->actualBuffer)), allocator);
+        });
 }
 
 void OMRendererVk::render()

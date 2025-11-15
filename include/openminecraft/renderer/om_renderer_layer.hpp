@@ -1,7 +1,9 @@
 #ifndef OM_RENDERER_LAYER_HPP
 #define OM_RENDERER_LAYER_HPP
 
+#include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/util/om_util_version.hpp"
+#include <memory>
 #include <string>
 
 namespace openminecraft::renderer
@@ -21,6 +23,7 @@ class OMRenderer
     virtual ~OMRenderer() = default;
 
     virtual std::string driver() = 0;
+    virtual std::shared_ptr<common::OMRendererBuffer> allocateBuffer(common::OMBufferUsage usage, uint64_t length) = 0;
 
   protected:
     void *window;
