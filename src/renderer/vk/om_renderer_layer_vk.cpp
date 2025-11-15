@@ -206,11 +206,11 @@ std::shared_ptr<common::OMRendererBuffer> OMRendererVk::allocateVertexBuffer(uin
                 findMemoryType(req.memoryTypeBits,
                                MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent, memProps)), allocator);
             logicalDevice.bindBufferMemory(buff, mem, 0);
-            buffer->reserved = mem;
+            // buffer->reserved = mem;
             return buff;
         }, [&](common::OMRendererBuffer *buffer) {
-            logicalDevice.freeMemory(DeviceMemory(static_cast<VkDeviceMemory>(buffer->reserved)), allocator);
-            logicalDevice.destroyBuffer(Buffer(static_cast<VkBuffer>(buffer->actualBuffer)), allocator);
+            // logicalDevice.freeMemory(DeviceMemory(static_cast<VkDeviceMemory>(buffer->reserved)), allocator);
+            // logicalDevice.destroyBuffer(Buffer(static_cast<VkBuffer>(buffer->actualBuffer)), allocator);
         });
 }
 
