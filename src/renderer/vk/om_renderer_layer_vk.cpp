@@ -196,7 +196,7 @@ static uint32_t findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properti
 
 std::shared_ptr<common::OMRendererBuffer> OMRendererVk::allocateVertexBuffer(uint64_t length)
 {
-    return std::make_shared<common::OMRendererBuffer>(
+    /* return std::make_shared<common::OMRendererBuffer>(
         common::VertexData, [&](common::OMRendererBuffer *buffer) {
             auto buff = logicalDevice.createBuffer(BufferCreateInfo({}, length, BufferUsageFlagBits::eVertexBuffer, SharingMode::eExclusive), allocator);
             auto req = logicalDevice.getBufferMemoryRequirements(buff);
@@ -211,7 +211,8 @@ std::shared_ptr<common::OMRendererBuffer> OMRendererVk::allocateVertexBuffer(uin
         }, [&](common::OMRendererBuffer *buffer) {
             // logicalDevice.freeMemory(DeviceMemory(static_cast<VkDeviceMemory>(buffer->reserved)), allocator);
             // logicalDevice.destroyBuffer(Buffer(static_cast<VkBuffer>(buffer->actualBuffer)), allocator);
-        });
+        }); */
+    return nullptr;
 }
 
 void OMRendererVk::render()
