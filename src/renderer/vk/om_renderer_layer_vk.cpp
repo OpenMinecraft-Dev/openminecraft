@@ -3,6 +3,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/util/om_util_version.hpp"
@@ -81,6 +82,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 
     auto extResult = fetchRequiredExtensions();
     std::vector<const char *> exts;
+
     switch (extResult.type)
     {
     case Ok: {
@@ -180,39 +182,9 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     }
 }
 
-static uint32_t findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properties,
-                        PhysicalDeviceMemoryProperties &memProperties)
-{
-    for (uint32_t i = 0; i < memProperties.memoryTypeCount; ++i)
-    {
-        if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-        {
-            return i;
-        }
-    }
-
-    return 0;
-}
-
 std::shared_ptr<common::OMRendererBuffer> OMRendererVk::allocateVertexBuffer(uint64_t length)
 {
-    /* return std::make_shared<common::OMRendererBuffer>(
-        common::VertexData, [&](common::OMRendererBuffer *buffer) {
-            auto buff = logicalDevice.createBuffer(BufferCreateInfo({}, length, BufferUsageFlagBits::eVertexBuffer, SharingMode::eExclusive), allocator);
-            auto req = logicalDevice.getBufferMemoryRequirements(buff);
-            auto mem = logicalDevice.allocateMemory(
-            MemoryAllocateInfo(
-                req.size,
-                findMemoryType(req.memoryTypeBits,
-                               MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent, memProps)), allocator);
-            logicalDevice.bindBufferMemory(buff, mem, 0);
-            // buffer->reserved = mem;
-            return buff;
-        }, [&](common::OMRendererBuffer *buffer) {
-            // logicalDevice.freeMemory(DeviceMemory(static_cast<VkDeviceMemory>(buffer->reserved)), allocator);
-            // logicalDevice.destroyBuffer(Buffer(static_cast<VkBuffer>(buffer->actualBuffer)), allocator);
-        }); */
-    return nullptr;
+    return std::make_shared<OMRendererBufferVk>(common::VertexData, length);
 }
 
 void OMRendererVk::render()

@@ -17,14 +17,17 @@ enum OMBufferUsage
 class OMRendererBuffer
 {
   public:
-    OMRendererBuffer(OMBufferUsage usage, std::function<void *(OMRendererBuffer *)> alloc, std::function<void(OMRendererBuffer *)> free);
-    ~OMRendererBuffer();
-    OMBufferUsage const usage;
-    void *const actualBuffer;
-    void *reserved;
+    OMRendererBuffer(OMBufferUsage usage, uint64_t length);
+    virtual ~OMRendererBuffer();
+    const OMBufferUsage usage;
+    const uint64_t length;
+
+    virtual void initialize() = 0;
+    virtual void release() = 0;
+
+    virtual void updateData(void *src) = 0;
 
   private:
-    std::function<void(OMRendererBuffer *)> free;
     log::OMLogger logger;
 };
 } // namespace openminecraft::renderer::common
