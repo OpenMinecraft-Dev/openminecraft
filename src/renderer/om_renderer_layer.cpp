@@ -4,6 +4,6 @@ namespace openminecraft::renderer
 {
 OMRenderer::OMRenderer(AppInfo info, void *window) : info(info), window(window)
 {
-  window;
+    window;
 }
 } // namespace openminecraft::renderer

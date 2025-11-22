@@ -5,9 +5,6 @@
 
 auto logger = openminecraft::log::OMLogger("launcher");
 
-jmp_buf recoverBuffer;
-// longjmp(recoverBuffer, 1);
-
 int main(int argc, char **argv)
 {
     openminecraft::log::multithread::registerCurrentThreadName("launcher");

@@ -12,6 +12,8 @@
 #include <vulkan/vulkan_core.h>
 
 #define STB_IMAGE_IMPLEMENTATION
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
+
 #include <stb_image.h>
 
 using namespace ::vk;
@@ -133,46 +135,13 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
         }
 
         auto siz = vtxnew.size() * sizeof(VertexPart);
-        vertexBuffer = renderer->logicalDevice.createBuffer(
-            BufferCreateInfo({}, siz, BufferUsageFlagBits::eVertexBuffer, SharingMode::eExclusive),
-            renderer->allocator);
 
-        auto req = renderer->logicalDevice.getBufferMemoryRequirements(vertexBuffer);
-
-        vertexBufferMemory = renderer->logicalDevice.allocateMemory(
-            MemoryAllocateInfo(
-                req.size,
-                findMemoryType(req.memoryTypeBits,
-                               MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent, prop)),
-            renderer->allocator);
-
-        renderer->logicalDevice.bindBufferMemory(vertexBuffer, vertexBufferMemory, 0);
-
-        auto r = renderer->logicalDevice.mapMemory(vertexBufferMemory, 0, siz);
-
-        std::memcpy(r, vtxnew.data(), siz);
-
-        renderer->logicalDevice.unmapMemory(vertexBufferMemory);
+        vertexBuffer = renderer->allocateBuffer(common::VertexData, siz);
+        vertexBuffer->updateData(vtxnew.data());
 
         siz = indices.size() * sizeof(uint32_t);
-        indexBuffer = renderer->logicalDevice.createBuffer(
-            BufferCreateInfo({}, siz, BufferUsageFlagBits::eIndexBuffer, SharingMode::eExclusive), renderer->allocator);
-
-        req = renderer->logicalDevice.getBufferMemoryRequirements(indexBuffer);
-        indexBufferMemory = renderer->logicalDevice.allocateMemory(
-            MemoryAllocateInfo(
-                req.size,
-                findMemoryType(req.memoryTypeBits,
-                               MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent, prop)),
-            renderer->allocator);
-
-        renderer->logicalDevice.bindBufferMemory(indexBuffer, indexBufferMemory, 0);
-
-        r = renderer->logicalDevice.mapMemory(indexBufferMemory, 0, siz);
-
-        std::memcpy(r, indices.data(), siz);
-
-        renderer->logicalDevice.unmapMemory(indexBufferMemory);
+        indexBuffer = renderer->allocateBuffer(common::VertexIndex, siz);
+        indexBuffer->updateData(indices.data());
 
         vertexCount = indices.size();
     }
@@ -589,8 +558,9 @@ void OMTestRenderer::reinit()
         commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, pipeline);
         commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, pipelineLayout, 0,
                                          std::vector{descriptorSet, combinedDescriptorSet}, nullptr);
-        commandBuffer.bindVertexBuffers(0, std::vector{vertexBuffer}, std::vector<DeviceSize>{0});
-        commandBuffer.bindIndexBuffer(indexBuffer, 0, IndexType::eUint32);
+        commandBuffer.bindVertexBuffers(0, std::vector{reinterpret_cast<OMRendererBufferVk *>(vertexBuffer)->buffer},
+                                        std::vector<DeviceSize>{0});
+        commandBuffer.bindIndexBuffer(reinterpret_cast<OMRendererBufferVk *>(indexBuffer)->buffer, 0, IndexType::eUint32);
         commandBuffer.drawIndexed(vertexCount, 1, 0, 0, 0);
         commandBuffer.endRenderPass();
         commandBuffer.end();
@@ -621,10 +591,8 @@ void OMTestRenderer::destroy()
     {
         renderer->logicalDevice.destroyDescriptorSetLayout(l, renderer->allocator);
     }
-    renderer->logicalDevice.destroyBuffer(indexBuffer, renderer->allocator);
-    renderer->logicalDevice.destroyBuffer(vertexBuffer, renderer->allocator);
-    renderer->logicalDevice.freeMemory(indexBufferMemory, renderer->allocator);
-    renderer->logicalDevice.freeMemory(vertexBufferMemory, renderer->allocator);
+    delete vertexBuffer;
+    delete indexBuffer;
     renderer->logicalDevice.freeCommandBuffers(commandPool, commandBuffers);
     renderer->logicalDevice.destroyCommandPool(commandPool, renderer->allocator);
     renderer->logicalDevice.destroyPipeline(pipeline, renderer->allocator);

@@ -7,15 +7,12 @@
 #include <boost/stacktrace/stacktrace.hpp>
 #include <chrono>
 #include <csetjmp>
-#include <cstdlib>
 #include <cstring>
-#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <new>
-#include <sstream>
 #include <stack>
 #include <stdexcept>
 #include <string>
@@ -98,8 +95,8 @@ void searchDir(std::vector<std::string> &i, std::filesystem::directory_iterator 
 }
 int boot(std::vector<std::string> args)
 {
-    std::cin.tie(0);
-    std::cout.tie(0);
+    // std::cin.tie(0);
+    // std::cout.tie(0);
     log::multithread::registerCurrentThreadName("engineMain");
     auto logger = std::make_unique<log::OMLogger>("boot");
 
@@ -138,17 +135,12 @@ int boot(std::vector<std::string> args)
     // pixeltower::registerFuncs();
     tower = std::make_unique<pixeltower::v0::OMPixelTower>();
 
-    bool recovermode = false;
-
-    if (setjmp(recoverBuffer) == 0)
+    if constexpr (true)
     {
-    program:
         std::string comm;
         while (true)
         {
-            std::cout << (recovermode ? "pixeltower recover > " : "pixeltower shell > ");
-
-        unk:
+            std::cout << "pixeltower shell > ";
             std::cin >> comm;
 
             switch (hash_compile_time(comm.c_str()))
@@ -356,22 +348,6 @@ int boot(std::vector<std::string> args)
                     {
                         auto now = std::chrono::system_clock::now();
 
-                        bool running = true;
-                        auto t = new std::thread([&]() {
-                            while (running)
-                            {
-                                auto now2 = std::chrono::system_clock::now();
-                                auto cont = std::chrono::duration_cast<std::chrono::milliseconds>(now2 - now).count();
-                                if (cont > 1000)
-                                {
-                                    logger->info("{} operands in 1 second",
-                                                 (double)tower->interpreter->operands / cont * 1000);
-                                    tower->interpreter->operands = 0;
-                                    now = std::chrono::system_clock::now();
-                                }
-                            }
-                        });
-
                         try
                         {
                             tower->boot(met);
@@ -384,7 +360,6 @@ int boot(std::vector<std::string> args)
                         {
                         }
 
-                        running = false;
                         auto now2 = std::chrono::system_clock::now();
                         logger->info("VM exited {} ns",
                                      std::chrono::duration_cast<std::chrono::nanoseconds>(now2 - now).count());
@@ -403,12 +378,6 @@ int boot(std::vector<std::string> args)
                 break;
             }
         }
-    }
-    else
-    {
-        logger->info("recovering from sigsegv!");
-        recovermode = true;
-        goto program;
     }
 
     SDL_Quit();

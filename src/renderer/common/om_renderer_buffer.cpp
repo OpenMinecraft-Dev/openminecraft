@@ -2,8 +2,8 @@
 
 namespace openminecraft::renderer::common
 {
-OMRendererBuffer::OMRendererBuffer(OMBufferUsage usage, uint64_t length)
-    : usage(usage), length(length), logger("OMRendererBuffer", this)
+OMRendererBuffer::OMRendererBuffer(OMBufferUsage usage, uint64_t length, OMRenderer *renderer)
+    : usage(usage), length(length), renderer(renderer), logger("OMRendererBuffer", this)
 {
     logger.info("Allocated");
 }

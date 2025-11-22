@@ -16,6 +16,10 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include <memory>
 
+namespace openminecraft::renderer::common
+{
+class OMRendererBuffer;
+}
 namespace openminecraft::renderer::vk
 {
 class OMRendererVk;
@@ -52,10 +56,10 @@ class OMTestRenderer : public util::OMReinitable
     std::vector<::vk::Framebuffer> framebuffers;
     ::vk::PipelineLayout pipelineLayout;
     ::vk::Pipeline pipeline;
-    ::vk::Buffer vertexBuffer;
-    ::vk::DeviceMemory vertexBufferMemory;
-    ::vk::Buffer indexBuffer;
-    ::vk::DeviceMemory indexBufferMemory;
+
+    common::OMRendererBuffer *vertexBuffer;
+    common::OMRendererBuffer *indexBuffer;
+
     ::vk::CommandPool commandPool;
     std::vector<::vk::CommandBuffer> commandBuffers;
 

@@ -182,9 +182,9 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     }
 }
 
-std::shared_ptr<common::OMRendererBuffer> OMRendererVk::allocateVertexBuffer(uint64_t length)
+common::OMRendererBuffer *OMRendererVk::allocateBuffer(common::OMBufferUsage usage, uint64_t length)
 {
-    return std::make_shared<OMRendererBufferVk>(common::VertexData, length);
+    return new OMRendererBufferVk(usage, length, this);
 }
 
 void OMRendererVk::render()

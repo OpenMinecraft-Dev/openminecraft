@@ -10,20 +10,22 @@
 
 namespace openminecraft::renderer::vk
 {
-class OMRendererBufferVk: public common::OMRendererBuffer
+class OMRendererVk;
+class OMRendererBufferVk : public common::OMRendererBuffer
 {
   public:
-    OMRendererBufferVk(common::OMBufferUsage usage, uint64_t length);
-
-    void initialize() override;
-    void release() override;
+    OMRendererBufferVk(common::OMBufferUsage usage, uint64_t length, OMRendererVk *renderer);
+    ~OMRendererBufferVk() override;
 
     void updateData(void *src) override;
 
-private:
     ::vk::Buffer buffer;
     ::vk::DeviceMemory bufferMemory;
+
+  private:
+    void initialize();
+    void release() const;
 };
-}
+} // namespace openminecraft::renderer::vk
 
 #endif
