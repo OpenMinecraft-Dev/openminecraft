@@ -16,7 +16,6 @@ enum OMBufferUsage
     VertexIndex,
     VertexData,
     InstanceData,
-    Texture,
     Misc
 };
 

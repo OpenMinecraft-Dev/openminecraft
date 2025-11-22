@@ -45,10 +45,7 @@ bool fsumount(std::string mountpoint)
         logger.info("null -> virt:{}", mountpoint);
         return true;
     }
-    else
-    {
-        return false;
-    }
+
     return false;
 }
 // gino: bundle is a simple file format which contains the path and file data like deflated zip files, but it doesn't
@@ -109,7 +106,7 @@ bool fsmountBundle(BundleInfo info, std::string mountpoint)
         }
         return nullptr;
     };
-    openminecraft::vfs::info[mountpoint] = {Bundle, info};
+    vfs::info[mountpoint] = {Bundle, info};
     logger.info("bundle:{}+{} -> virt:{}", info.p, info.length, mountpoint);
     return false;
 }
@@ -138,7 +135,6 @@ std::string compressPath(std::string vp)
     {
         if (m == ".")
         {
-            continue;
         }
         else if (m == ".." && !proc.empty())
         {

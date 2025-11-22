@@ -104,9 +104,11 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
         std::vector<tinyobj::material_t> materials;
         std::string warn, err;
 
-        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "/bridge/models/objs/viking_room.obj"))
+        auto strr = vfs::fsfetch("/bootassets/openminecraft-renderer/models/viking_room.obj");
+
+        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, strr.get()))
         {
-            throw std::runtime_error(warn + err);
+            throw std::runtime_error("Warn: " + warn + "\nError: " + err);
         }
 
         std::vector<VertexPart> vtxnew;
@@ -118,7 +120,6 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
         {
             for (const auto &index : shape.mesh.indices)
             {
-                auto idx = vtxnew.size();
                 VertexPart prt = {{attrib.vertices[3 * index.vertex_index + 0],
                                    attrib.vertices[3 * index.vertex_index + 1],
                                    attrib.vertices[3 * index.vertex_index + 2]},
@@ -191,8 +192,18 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
 
     {
         int texWidth, texHeight, texChannels;
+
+        auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/viking_room.png");
+        std::vector<stbi_uc> tex;
+        while (imgraw->good())
+        {
+            char cb;
+            imgraw->read(&cb, 1);
+            tex.push_back(cb);
+        }
+
         stbi_uc *pixels =
-            stbi_load("/bridge/models/objs/viking_room.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+            stbi_load_from_memory(tex.data(), tex.size(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         if (!pixels)
             throw std::runtime_error("failed to load texture image!");
         auto imageSize = texWidth * texHeight * 4;
