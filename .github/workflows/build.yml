@@ -152,7 +152,7 @@ jobs:
 
       - name: Cache xmake results (UNIX)
         uses: actions/cache@v4
-        if: matrix.plat != 'windows'
+        if: matrix.plat != 'windows' && matrix.plat != 'macos' && matrix.plat != 'ios'
         with:
           path: ~/.xmake/packages
           key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}

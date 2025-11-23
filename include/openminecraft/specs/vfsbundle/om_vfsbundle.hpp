@@ -33,6 +33,7 @@ class OMBundle
 {
   public:
     OMBundle(std::shared_ptr<std::istream> stream);
+    OMBundle(void *, uint64_t);
     OMBundle();
     ~OMBundle();
 
