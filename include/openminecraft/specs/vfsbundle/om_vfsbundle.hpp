@@ -34,13 +34,14 @@ class OMBundle
   public:
     OMBundle(std::shared_ptr<std::istream> stream);
     OMBundle();
-    ~OMBundle() = default;
+    ~OMBundle();
 
   private:
-    std::vector<std::pair<OMBundleFileMetadata, std::vector<uint8_t>>> files;
+    std::vector<std::pair<OMBundleFileMetadata, uint8_t *>> files;
     log::OMLogger logger;
 
     OMBundleFileMetadata fetchMetadata(std::shared_ptr<std::istream> stream);
+    bool isOnHeap = false;
 };
 } // namespace openminecraft::specs::vfsbundle
 

@@ -78,26 +78,36 @@ OMBundle::OMBundle(std::shared_ptr<std::istream> stream) : OMBundle()
         auto pp = stream->tellg();
         STRERR
 
-        stream->seekg(off);
+        stream->seekg(static_cast<std::streamoff>(off));
         auto fmd = fetchMetadata(stream);
         STRERR
 
-        stream->seekg(fileoff);
-        std::vector<uint8_t> data;
-        for (uint64_t idx = 0; idx < fmd.length; idx++)
-        {
-            char c;
-            stream->read(&c, 1);
-            data.push_back(c);
-            STRERR
-        }
+        stream->seekg(static_cast<std::streamoff>(fileoff));
 
-        files.push_back(std::make_pair(fmd, data));
+        auto dd = new uint8_t[fmd.length];
+        stream->read(reinterpret_cast<char *>(dd), static_cast<std::streamsize>(fmd.length));
+        STRERR
+
+        files.emplace_back(fmd, dd);
 
         logger.info("{}", fmd);
         stream->seekg(pp);
     }
+
+    isOnHeap = true;
 }
+
+OMBundle::~OMBundle()
+{
+    if (isOnHeap)
+    {
+        for (auto itt : files)
+        {
+            delete[] itt.second;
+        }
+    }
+}
+
 
 OMBundleFileMetadata OMBundle::fetchMetadata(std::shared_ptr<std::istream> stream)
 {
