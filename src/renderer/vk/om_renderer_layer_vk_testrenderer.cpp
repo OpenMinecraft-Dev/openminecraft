@@ -571,7 +571,8 @@ void OMTestRenderer::reinit()
                                          std::vector{descriptorSet, combinedDescriptorSet}, nullptr);
         commandBuffer.bindVertexBuffers(0, std::vector{reinterpret_cast<OMRendererBufferVk *>(vertexBuffer)->buffer},
                                         std::vector<DeviceSize>{0});
-        commandBuffer.bindIndexBuffer(reinterpret_cast<OMRendererBufferVk *>(indexBuffer)->buffer, 0, IndexType::eUint32);
+        commandBuffer.bindIndexBuffer(reinterpret_cast<OMRendererBufferVk *>(indexBuffer)->buffer, 0,
+                                      IndexType::eUint32);
         commandBuffer.drawIndexed(vertexCount, 1, 0, 0, 0);
         commandBuffer.endRenderPass();
         commandBuffer.end();

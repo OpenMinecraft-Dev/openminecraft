@@ -1,0 +1,5 @@
+target("openminecraft-specs")
+set_kind("static")
+add_files("**.cpp")
+add_packages("fmt")
+add_includedirs("../../include")

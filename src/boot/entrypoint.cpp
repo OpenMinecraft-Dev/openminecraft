@@ -35,6 +35,7 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
+#include "openminecraft/specs/vfsbundle/om_vfsbundle.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
@@ -134,6 +135,11 @@ int boot(std::vector<std::string> args)
 
     // pixeltower::registerFuncs();
     tower = std::make_unique<pixeltower::v0::OMPixelTower>();
+
+    auto target = new specs::vfsbundle::OMBundle(
+        std::make_shared<std::ifstream>("/home/coder2/servers/personalmcserver/test.bin", std::ios::binary));
+    logger->info("{}", (void *)target);
+    delete target;
 
     if constexpr (true)
     {
