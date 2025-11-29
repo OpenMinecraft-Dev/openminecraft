@@ -62,17 +62,17 @@ int main(int argc, char **argv)
 
     int opt;
     int option_index = 0;
-    const char *optstring = "h:a:t:P:c:r";
+    const char *optstring = "h:a:t:P:cr";
     static option long_options[] = {
-        {"help", no_argument, nullptr, 'h'},
         {"read", no_argument, nullptr, 'r'},
         {"create", no_argument, nullptr, 'c'},
         {"push", optional_argument, nullptr, 'P'},
         {"author", optional_argument, nullptr, 'a'},
         {"target", optional_argument, nullptr, 't'},
+        {"help", no_argument, nullptr, 'h'},
         {nullptr, 0, nullptr, 0}
     };
-    while ((opt = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, optstring, long_options, &option_index)) != -1) {
         switch (opt)
         {
         case 'h':
