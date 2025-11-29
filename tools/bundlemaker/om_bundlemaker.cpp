@@ -9,8 +9,6 @@
 
 using namespace openminecraft::specs::vfsbundle;
 
-const char *usagetext = "Usage: bundlemaker [options] <file>\nthis tool will read the target file in default\n\n  -r\treads the bundle file\n  -c\tcreate bundle file, target output file is the last argument";
-
 struct file_path
 {
     std::string full;
@@ -33,11 +31,13 @@ static void appendFile(std::vector<file_path> &pth, std::string base, std::strin
     }
 }
 
+const char *usagetext = " [options] <file>\nthis tool will read the target file in default\n\n  -r / --read\treads the bundle file\n  -c / --create\tcreate bundle file\n  -P / --push\tonly works in create mode, attach file to new archives\n  -a / --author\tset the name of the author\n  -t / --target\tset the target input/output file\n  -h / --help\tshow this message";
+
 int main(int argc, char **argv)
 {
     if (argc < 3)
     {
-        std::cout << usagetext << std::endl;
+        std::cout << "Usage: " << std::filesystem::path(argv[0]).filename().string() << usagetext << std::endl;
         return 1;
     }
 
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
         switch (opt)
         {
         case 'h':
-            std::cout << usagetext << std::endl;
+            std::cout << "Usage: " << std::filesystem::path(argv[0]).filename().string() << usagetext << std::endl;
             return 0;
         case 'r':
             isread = true;
