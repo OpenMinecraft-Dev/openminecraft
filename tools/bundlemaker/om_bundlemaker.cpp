@@ -21,13 +21,13 @@ static void appendFile(std::vector<file_path> &pth, std::string base, std::strin
     {
         for (auto const &it : std::filesystem::directory_iterator(base))
         {
-            appendFile(pth, it.path(), rt);
+            appendFile(pth, it.path().string(), rt);
         }
     }
     else
     {
         std::filesystem::path pp(base);
-        pth.push_back({base, pp.lexically_relative(rt)});
+        pth.push_back({base, pp.lexically_relative(rt).string()});
     }
 }
 
