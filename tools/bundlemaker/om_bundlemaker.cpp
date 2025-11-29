@@ -5,7 +5,12 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+
+#ifdef OM_PLATFORM_WINDOWS
 #include "getopt.h"
+#else
+#include <getopt.h>
+#endif
 
 using namespace openminecraft::specs::vfsbundle;
 
