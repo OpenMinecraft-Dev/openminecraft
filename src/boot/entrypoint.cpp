@@ -112,7 +112,7 @@ int boot(std::vector<std::string> args)
     i18n::res::registerModule("openminecraft-boot");
     i18n::res::registerModule("openminecraft-renderer");
     i18n::res::registerModule("openminecraft-mem");
-    vfs::fsmountBundle({res_bundle, res_bundle_len}, "/bootassets");
+    vfs::fsmountBundle(std::make_shared<specs::vfsbundle::OMBundle>(res_bundle, res_bundle_len), "/bootassets");
     i18n::res::pushResourceRoot("/bootassets");
     i18n::res::load();
 
@@ -136,8 +136,13 @@ int boot(std::vector<std::string> args)
     // pixeltower::registerFuncs();
     tower = std::make_unique<pixeltower::v0::OMPixelTower>();
 
-    auto target = new specs::vfsbundle::OMBundle(
-        std::make_shared<std::ifstream>("/home/coder2/servers/personalmcserver/test.bin", std::ios::binary));
+    auto target = new specs::vfsbundle::OMBundle();
+    auto ttstr = std::ifstream("/home/coder2/launch.sh");
+    auto ostr = std::ofstream("/home/coder2/testbundle.bin");
+    target->appendFile({static_cast<uint64_t>(time(nullptr)), 0, "test.txt", "Cyrene"}, ttstr);
+    target->saveBundle(ostr);
+    ostr.flush();
+    ostr.close();
     logger->info("{}", (void *)target);
     delete target;
 

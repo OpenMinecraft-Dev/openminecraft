@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <ios>
+#include <iostream>
 #include <istream>
 #include <memory>
 #include <sstream>
@@ -48,58 +49,24 @@ bool fsumount(std::string mountpoint)
 
     return false;
 }
-// gino: bundle is a simple file format which contains the path and file data like deflated zip files, but it doesn't
-// contain any other file metadata
-bool fsmountBundle(BundleInfo info, std::string mountpoint)
+bool fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string mountpoint)
 {
-    if (mountinvaild(mountpoint) || info.p == nullptr)
+    if (mountinvaild(mountpoint))
     {
         return false;
     }
     m[mountpoint] = [info](std::string proc) -> std::shared_ptr<std::istream> {
-        std::istringstream str(std::string((char *)info.p, info.length));
-        auto rdlen = [&str] {
-            uint64_t result = 0;
-            for (int i = 0; i < 8; i++)
-            {
-                uint8_t bt = 0;
-                str.read(reinterpret_cast<char *>(&bt), 1);
-
-                result |= static_cast<uint64_t>(bt) << (i * 8);
-            }
-
-            return result;
-        };
-        while (str.good())
+        for (auto i : info->files)
         {
-            auto l = rdlen();
-            if (!str.good())
+            if (i.first.name == proc)
             {
-                break;
-            }
-            auto name = new char[l + 1];
-            name[l] = '\0';
-            str.read(name, l);
-            auto dl = rdlen();
-            if (name != proc)
-            {
-                str.seekg(str.tellg() + (std::streamoff)dl);
-                delete[] name;
-            }
-            else
-            {
-                auto data = new char[dl];
-                str.read(data, dl);
-                delete[] name;
-                auto r = std::make_shared<std::istringstream>(std::string(data, dl));
-                delete[] data;
-                return r;
+                return std::make_shared<std::istringstream>(std::string(reinterpret_cast<char *>(i.second), i.first.length));
             }
         }
         return nullptr;
     };
     vfs::info[mountpoint] = {Bundle, info};
-    logger.info("bundle:{}+{} -> virt:{}", info.p, info.length, mountpoint);
+    logger.info("bundle -> virt:{}", mountpoint);
     return false;
 }
 std::string compressPath(std::string vp)

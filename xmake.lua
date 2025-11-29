@@ -80,11 +80,6 @@ includes("src/i18n/xmake.lua")
 includes("src/renderer/xmake.lua")
 includes("src/specs/xmake.lua")
 
-target("openminecraft-bundlemaker")
-set_kind("binary")
-add_packages("fmt")
-add_files("tools/om_bundle_maker.cpp")
-
 target("openminecraft-plat")
 set_kind("static")
 add_includedirs("include")
@@ -160,6 +155,7 @@ else
     add_files("arch/fallback/**.cpp")
 end
 
+includes("tools/bundlemaker/xmake.lua")
 
 target("openminecraft")
 if is_plat("android", "harmony") then

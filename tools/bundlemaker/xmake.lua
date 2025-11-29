@@ -1,0 +1,6 @@
+target("openminecraft-bundlemaker")
+set_kind("binary")
+add_files("**.cpp")
+add_deps("openminecraft-specs", "openminecraft-log", "openminecraft-binary", "openminecraft-plat")
+add_packages("fmt")
+add_includedirs("../../include")
