@@ -136,16 +136,6 @@ int boot(std::vector<std::string> args)
     // pixeltower::registerFuncs();
     tower = std::make_unique<pixeltower::v0::OMPixelTower>();
 
-    auto target = new specs::vfsbundle::OMBundle();
-    auto ttstr = std::ifstream("/home/coder2/launch.sh");
-    auto ostr = std::ofstream("/home/coder2/testbundle.bin");
-    target->appendFile({static_cast<uint64_t>(time(nullptr)), 0, "test.txt", "Cyrene"}, ttstr);
-    target->saveBundle(ostr);
-    ostr.flush();
-    ostr.close();
-    logger->info("{}", (void *)target);
-    delete target;
-
     if constexpr (true)
     {
         std::string comm;
