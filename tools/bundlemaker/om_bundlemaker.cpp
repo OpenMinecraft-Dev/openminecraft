@@ -4,6 +4,7 @@
 #include <bitset>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 
 using namespace openminecraft::specs::vfsbundle;
 
