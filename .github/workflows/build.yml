@@ -149,7 +149,7 @@ jobs:
         uses: actions/cache@v4
         if: matrix.plat == 'windows'
         with:
-          path: $HOME/AppData/Local/.xmake/packages
+          path: C:/Users/runneradmin/AppData/Local/.xmake/packages
           key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
           restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
 
