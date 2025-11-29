@@ -137,6 +137,22 @@ jobs:
           docker-images: true
           swap-storage: true
 
+      - name: Cache xmake results (UNIX)
+        uses: actions/cache@v4
+        if: matrix.plat != 'windows' && matrix.plat != 'macos' && matrix.plat != 'ios'
+        with:
+          path: ~/.xmake/packages
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
+          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
+
+      - name: Cache xmake results (Windows)
+        uses: actions/cache@v4
+        if: matrix.plat == 'windows'
+        with:
+          path: $HOME/AppData/Local/.xmake/packages
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
+          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
+
       - name: Generate header
         run: |
           xmake f -yc ${{ env.XMAKE_ARGS }}
@@ -157,22 +173,6 @@ jobs:
         run: |
           wget https://dl.google.com/android/repository/android-ndk-${{ env.ANDROID_NDK_VERSION }}-linux.zip
           unzip android-ndk-${{ env.ANDROID_NDK_VERSION }}-linux.zip
-
-      - name: Cache xmake results (UNIX)
-        uses: actions/cache@v4
-        if: matrix.plat != 'windows' && matrix.plat != 'macos' && matrix.plat != 'ios'
-        with:
-          path: ~/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
-          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
-
-      - name: Cache xmake results (Windows)
-        uses: actions/cache@v4
-        if: matrix.plat == 'windows'
-        with:
-          path: $HOME/AppData/Local/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
-          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
 
       - name: Configure MacOS
         if: matrix.plat == 'macos'
