@@ -194,3 +194,4 @@ elseif is_plat("windows", "mingw") then
 elseif is_plat("linux", "cross") then
     add_links("OpenGL")
 end
+
