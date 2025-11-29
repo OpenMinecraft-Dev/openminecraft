@@ -5,10 +5,11 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include "getopt.h"
 
 using namespace openminecraft::specs::vfsbundle;
 
-const char *usagetext = "Usage: bundlemaker [options] <file>\nthis tool will read the target file in default\n\n  -r\treads the bundle file\n  -c\tcreate bundle file, target output file is the last arg";
+const char *usagetext = "Usage: bundlemaker [options] <file>\nthis tool will read the target file in default\n\n  -r\treads the bundle file\n  -c\tcreate bundle file, target output file is the last argument";
 
 struct file_path
 {
@@ -41,39 +42,59 @@ int main(int argc, char **argv)
     }
 
     bool isread = true;
+    auto author = "Cyrene";
+    std::string targetfile = "";
+    std::vector<std::string> filelist = {};
 
-    for (int i = 1; i < argc; i++)
-    {
-        if (argv[i][0] == '-')
+    int opt;
+    int option_index = 0;
+    const char *optstring = "h:a:t:P:cr";
+    static option long_options[] = {
+        {"read", no_argument, nullptr, 'r'},
+        {"create", no_argument, nullptr, 'c'},
+        {"push", optional_argument, nullptr, 'P'},
+        {"author", optional_argument, nullptr, 'a'},
+        {"target", optional_argument, nullptr, 't'},
+        {"help", no_argument, nullptr, 'h'},
+        {nullptr, 0, nullptr, 0}
+    };
+    while ((opt = getopt_long_only(argc, argv, optstring, long_options, &option_index)) != -1) {
+        switch (opt)
         {
-            for (int ci = 1; ci < std::strlen(argv[i]); ci++)
-            {
-                switch (argv[i][ci])
-                {
-                    case 'r':
-                        isread = true;
-                        break;
-                    case 'c':
-                        isread = false;
-                        break;
-                    default:
-                        break;
-                }
-            }
+        case 'h':
+            std::cout << usagetext << std::endl;
+            return 0;
+        case 'r':
+            isread = true;
+            break;
+        case 'c':
+            isread = false;
+            break;
+        case 'a':
+            author = optarg;
+            break;
+        case 't':
+            targetfile = optarg;
+            break;
+        case 'P':
+            filelist.emplace_back(optarg);
+            break;
+        default:
+            break;
         }
     }
 
     if (isread)
     {
-        auto ins = std::make_shared<std::ifstream>(argv[argc - 1]);
+        auto ins = std::make_shared<std::ifstream>(targetfile);
         if (!ins->good())
         {
-            std::cerr << "Cannot read file " << argv[argc - 1] << std::endl;
+            std::cerr << "Cannot read file " << targetfile << std::endl;
             return 1;
         }
 
         OMBundle om(ins);
-        std::cout << "Contents of " << argv[argc - 1] << ": " << std::endl;
+        std::cout << "Contents of " << targetfile << ": " << std::endl;
         for (const auto &[metadata, content] : om.files)
         {
             auto c = static_cast<time_t>(metadata.timestamp);
@@ -118,26 +139,14 @@ int main(int argc, char **argv)
     }
 
     OMBundle om;
-    std::vector<std::string> files;
-    for (int i = 1; i < argc; i++)
-    {
-        if (argv[i][0] != '-')
-        {
-            files.emplace_back(argv[i]);
-        }
-    }
-
-    std::string target = files[files.size() - 1];
-    files.pop_back();
-
-    if (files.empty())
+    if (filelist.empty())
     {
         std::cerr << "no files added!" << std::endl;
         return 1;
     }
 
     std::vector<file_path> filesa;
-    for (auto &file : files)
+    for (auto &file : filelist)
     {
         if (!std::filesystem::exists(file))
         {
@@ -151,10 +160,10 @@ int main(int argc, char **argv)
     for (auto const &l : filesa)
     {
         std::ifstream ifs(l.full);
-        om.appendFile({static_cast<uint64_t>(time(nullptr)), 0, l.name, "Cyrene"}, ifs);
+        om.appendFile({static_cast<uint64_t>(time(nullptr)), 0, l.name, author}, ifs);
     }
 
-    std::ofstream ofs(target);
+    std::ofstream ofs(targetfile);
     om.saveBundle(ofs);
 
     return 0;
