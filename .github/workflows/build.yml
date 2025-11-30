@@ -111,9 +111,10 @@ jobs:
         if: matrix.plat == 'macos'
         run: |
           /usr/libexec/PlistBuddy -c "Add :com.apple.security.cs.allow-jit bool true" jit.entitlements
-          gcc -g -std=c17 -Wall -Wdeprecated -Wpedantic -Wextra -o ./jit jit.c
+          gcc -g -std=c17 -Wall -Wdeprecated -Wpedantic -Wextra -o ./jit ./misc/jit.c
           codesign -s - -f --entitlements jit.entitlements jit
           lldb -o r -o exit ./jit
+          rm jit
 
       - name: Install xmake
         if: matrix.plat != 'freebsd'
