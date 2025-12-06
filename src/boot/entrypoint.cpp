@@ -155,12 +155,15 @@ int boot(std::vector<std::string> args)
                     auto wnd = SDL_CreateWindow("Vulkan Test", 800, 800, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
                     auto renderer = std::make_unique<renderer::vk::OMRendererVk>(
                         a, [](std::vector<std::string>) { return 0; }, wnd);
+
                     SDL_ShowWindow(wnd);
+                    SDL_SetWindowMouseGrab(wnd, true);
+
+                    float mcurrx = -1, mcurry = -1;
 
                     logger->info("driver: {}", renderer->driver());
 
                     bool wk = false, ak = false, sk = false, dk = false, spk = false, lshk = false;
-                    bool up = false, down = false, left = false, right = false;
 
                     while (true)
                     {
@@ -193,21 +196,9 @@ int boot(std::vector<std::string> args)
                             {
                                 spk = true;
                             }
-                            else if (e.key.key == SDLK_UP)
+                            else if (e.key.key == SDLK_ESCAPE)
                             {
-                                up = true;
-                            }
-                            else if (e.key.key == SDLK_DOWN)
-                            {
-                                down = true;
-                            }
-                            else if (e.key.key == SDLK_LEFT)
-                            {
-                                left = true;
-                            }
-                            else if (e.key.key == SDLK_RIGHT)
-                            {
-                                right = true;
+                                SDL_SetWindowMouseGrab(wnd, false);
                             }
                         }
 
@@ -237,27 +228,32 @@ int boot(std::vector<std::string> args)
                             {
                                 spk = false;
                             }
-                            else if (e.key.key == SDLK_UP)
-                            {
-                                up = false;
-                            }
-                            else if (e.key.key == SDLK_DOWN)
-                            {
-                                down = false;
-                            }
-                            else if (e.key.key == SDLK_LEFT)
-                            {
-                                left = false;
-                            }
-                            else if (e.key.key == SDLK_RIGHT)
-                            {
-                                right = false;
-                            }
                         }
 
                         if (e.type == SDL_EVENT_WINDOW_RESIZED)
                         {
                             renderer->needRebuild = true;
+                        }
+
+                        if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+                        {
+                            SDL_SetWindowMouseGrab(wnd, true);
+                            mcurrx = e.button.x;
+                            mcurry = e.button.y;
+                        }
+
+                        if (e.type == SDL_EVENT_MOUSE_MOTION)
+                        {
+                            if (mcurrx != -1 && mcurry != -1 && SDL_GetWindowMouseGrab(wnd))
+                            {
+                                int ww, hh;
+                                SDL_GetWindowSize(wnd, &ww, &hh);
+                                auto mx = (e.motion.x - mcurrx) / ww;
+                                auto my = (e.motion.y - mcurry) / hh;
+                                renderer->testRenderer->mouseOffset(mx, my);
+                            }
+                            mcurrx = e.motion.x;
+                            mcurry = e.motion.y;
                         }
 
                         if (e.type == SDL_EVENT_QUIT)
@@ -266,7 +262,7 @@ int boot(std::vector<std::string> args)
                             break;
                         }
 
-                        renderer->testRenderer->keyInput(wk, ak, sk, dk, lshk, spk, up, down, left, right);
+                        renderer->testRenderer->keyInput(wk, ak, sk, dk, lshk, spk);
                         renderer->render();
                     }
 

@@ -333,8 +333,25 @@ void OMTestRenderer::updateUniform()
     uniformBuffer->updateData(&ubo);
 }
 
-void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp, bool upk, bool downk, bool leftk,
-                              bool rightk)
+void OMTestRenderer::mouseOffset(float dx, float dy)
+{
+    m_pitch += dy * m_cameraRotateSpeed;
+    m_yaw -= dx * m_cameraRotateSpeed;
+
+    if (m_yaw < 0.0f)
+        m_yaw += 360.0f;
+    m_yaw = std::fmod(m_yaw + 180.0f, 360.0f);
+    m_yaw -= 180.0f;
+
+    if (m_pitch > 89.0f)
+        m_pitch = 89.0f;
+    if (m_pitch < -89.0f)
+        m_pitch = -89.0f;
+
+    logger.info("pitch: {} yaw: {} {} {} {}", m_pitch, m_yaw, m_cameraPos.x, m_cameraPos.y, m_cameraPos.z);
+}
+
+void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
 {
     static auto startTime = std::chrono::high_resolution_clock::now();
     const auto currentTime = std::chrono::high_resolution_clock::now();
@@ -369,38 +386,6 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp,
     if (lsh)
     {
         m_cameraPos -= m_cameraUp * m_cameraMoveSpeed * time;
-    }
-
-    if (upk)
-    {
-        m_pitch += m_cameraRotateSpeed * time;
-    }
-    if (downk)
-    {
-        m_pitch -= m_cameraRotateSpeed * time;
-    }
-    if (leftk)
-    {
-        m_yaw -= m_cameraRotateSpeed * time;
-    }
-    if (rightk)
-    {
-        m_yaw += m_cameraRotateSpeed * time;
-    }
-
-    if (m_yaw < 0.0f)
-        m_yaw += 360.0f;
-    m_yaw = std::fmod(m_yaw + 180.0f, 360.0f);
-    m_yaw -= 180.0f;
-
-    if (m_pitch > 89.0f)
-        m_pitch = 89.0f;
-    if (m_pitch < -89.0f)
-        m_pitch = -89.0f;
-
-    if (w || a || s || d || lsh || sp || upk || downk || leftk || rightk)
-    {
-        logger.info("pitch: {} yaw: {} {} {} {}", m_pitch, m_yaw, m_cameraPos.x, m_cameraPos.y, m_cameraPos.z);
     }
 }
 

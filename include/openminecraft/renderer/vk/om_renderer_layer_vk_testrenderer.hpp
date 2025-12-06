@@ -84,7 +84,8 @@ class OMTestRenderer : public util::OMReinitable
     ::vk::Image depthImage;
     ::vk::ImageView depthImageView;
 
-    void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp, bool upk, bool downk, bool leftk, bool rightk);
+    void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp);
+    void mouseOffset(float dx, float dy);
 
     log::OMLogger logger;
 
