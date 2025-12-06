@@ -157,9 +157,6 @@ int boot(std::vector<std::string> args)
                         a, [](std::vector<std::string>) { return 0; }, wnd);
 
                     SDL_ShowWindow(wnd);
-                    SDL_SetWindowMouseGrab(wnd, true);
-
-                    float mcurrx = -1, mcurry = -1;
 
                     logger->info("driver: {}", renderer->driver());
 
@@ -198,7 +195,7 @@ int boot(std::vector<std::string> args)
                             }
                             else if (e.key.key == SDLK_ESCAPE)
                             {
-                                SDL_SetWindowMouseGrab(wnd, false);
+                                SDL_SetWindowRelativeMouseMode(wnd, false);
                             }
                         }
 
@@ -237,23 +234,15 @@ int boot(std::vector<std::string> args)
 
                         if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
                         {
-                            SDL_SetWindowMouseGrab(wnd, true);
-                            mcurrx = e.button.x;
-                            mcurry = e.button.y;
+                            SDL_SetWindowRelativeMouseMode(wnd, true);
                         }
 
-                        if (e.type == SDL_EVENT_MOUSE_MOTION)
+                        if (e.type == SDL_EVENT_MOUSE_MOTION && SDL_GetWindowRelativeMouseMode(wnd))
                         {
-                            if (mcurrx != -1 && mcurry != -1 && SDL_GetWindowMouseGrab(wnd))
-                            {
-                                int ww, hh;
-                                SDL_GetWindowSize(wnd, &ww, &hh);
-                                auto mx = (e.motion.x - mcurrx) / ww;
-                                auto my = (e.motion.y - mcurry) / hh;
-                                renderer->testRenderer->mouseOffset(mx, my);
-                            }
-                            mcurrx = e.motion.x;
-                            mcurry = e.motion.y;
+                            int ww, hh;
+                            SDL_GetWindowSize(wnd, &ww, &hh);
+                            renderer->testRenderer->mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
+                            // SDL_WarpMouseInWindow(wnd, ww / 2, hh / 2);
                         }
 
                         if (e.type == SDL_EVENT_QUIT)

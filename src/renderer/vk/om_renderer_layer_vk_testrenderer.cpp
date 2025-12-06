@@ -335,8 +335,8 @@ void OMTestRenderer::updateUniform()
 
 void OMTestRenderer::mouseOffset(float dx, float dy)
 {
-    m_pitch += dy * m_cameraRotateSpeed;
-    m_yaw -= dx * m_cameraRotateSpeed;
+    m_pitch -= dy * m_cameraRotateSpeed;
+    m_yaw += dx * m_cameraRotateSpeed;
 
     if (m_yaw < 0.0f)
         m_yaw += 360.0f;
@@ -347,8 +347,6 @@ void OMTestRenderer::mouseOffset(float dx, float dy)
         m_pitch = 89.0f;
     if (m_pitch < -89.0f)
         m_pitch = -89.0f;
-
-    logger.info("pitch: {} yaw: {} {} {} {}", m_pitch, m_yaw, m_cameraPos.x, m_cameraPos.y, m_cameraPos.z);
 }
 
 void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
