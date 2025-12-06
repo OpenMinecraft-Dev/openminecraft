@@ -50,6 +50,8 @@ static BufferUsageFlagBits mapToUsageFlag(OMBufferUsage usage)
         return BufferUsageFlagBits::eIndexBuffer;
     case Misc:
         return BufferUsageFlagBits::eStorageBuffer;
+    case Uniform:
+        return BufferUsageFlagBits::eUniformBuffer;
     }
 }
 
@@ -70,6 +72,12 @@ void OMRendererBufferVk::initialize()
 void OMRendererBufferVk::release() const
 {
     auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
+
+    if (alwaysMapped)
+    {
+        renderer->logicalDevice.unmapMemory(this->bufferMemory);
+    }
+
     renderer->logicalDevice.freeMemory(this->bufferMemory, renderer->allocator);
     renderer->logicalDevice.destroyBuffer(this->buffer, renderer->allocator);
 }
@@ -79,6 +87,12 @@ void OMRendererBufferVk::updateData(void *src)
     auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
     auto vtx = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
     std::memcpy(vtx, src, this->length);
+
+    if (alwaysMapped)
+    {
+        return;
+    }
+
     renderer->logicalDevice.unmapMemory(this->bufferMemory);
 }
 } // namespace openminecraft::renderer::vk

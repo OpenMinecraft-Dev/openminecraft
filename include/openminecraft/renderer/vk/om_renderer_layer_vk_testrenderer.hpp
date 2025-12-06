@@ -65,9 +65,10 @@ class OMTestRenderer : public util::OMReinitable
 
     std::vector<::vk::DescriptorSetLayout> descriptorSetLayouts;
 
-    ::vk::Buffer uniformBuffer;
+    common::OMRendererBuffer *uniformBuffer;
+    /*::vk::Buffer uniformBuffer;
     ::vk::DeviceMemory uniformBufferMemory;
-    void *mappedUniformBuffer;
+    void *mappedUniformBuffer;*/
 
     ::vk::DescriptorPool descriptorPool;
     ::vk::DescriptorSet descriptorSet;

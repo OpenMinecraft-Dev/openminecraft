@@ -16,6 +16,7 @@ enum OMBufferUsage
     VertexIndex,
     VertexData,
     InstanceData,
+    Uniform,
     Misc
 };
 
@@ -26,6 +27,7 @@ class OMRendererBuffer
     virtual ~OMRendererBuffer();
     const OMBufferUsage usage;
     const uint64_t length;
+    bool alwaysMapped = false;
 
     virtual void updateData(void *src) = 0;
 
@@ -55,6 +57,9 @@ template <> struct fmt::formatter<openminecraft::renderer::common::OMBufferUsage
             break;
         case openminecraft::renderer::common::OMBufferUsage::Misc:
             s = "Misc";
+            break;
+        case openminecraft::renderer::common::OMBufferUsage::Uniform:
+            s = "Un";
             break;
         default:
             s = "<Invalid>";

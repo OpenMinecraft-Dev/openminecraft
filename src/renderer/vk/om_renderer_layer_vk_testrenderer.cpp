@@ -3,7 +3,6 @@
 #include "glm/fwd.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
-#include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "tiny_obj_loader.h"
 
@@ -12,6 +11,8 @@
 #include <vulkan/vulkan_core.h>
 
 #define STB_IMAGE_IMPLEMENTATION
+#include "openminecraft/binary/om_bin_hash.hpp"
+#include "openminecraft/io/om_io_utils.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 
 #include <stb_image.h>
@@ -38,25 +39,13 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
 {
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.frag.glsl");
-        target->seekg(0, target->end);
-        auto length = target->tellg();
-        target->seekg(0, target->beg);
-        std::vector<uint8_t> data(length);
-        target->read((char *)data.data(), length);
-
-        common::OMShader shader(common::GLSLSource, data, "simple.frag.glsl", "main", common::Fragment);
+        common::OMShader shader(common::GLSLSource, io::readOnce(target.get()), "simple.frag.glsl", "main", common::Fragment);
         frgShader = shader.convertTo(common::SPIRVBinary);
     }
 
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.vert.glsl");
-        target->seekg(0, target->end);
-        auto length = target->tellg();
-        target->seekg(0, target->beg);
-        std::vector<uint8_t> data(length);
-        target->read((char *)data.data(), length);
-
-        common::OMShader shader(common::GLSLSource, data, "simple.vert.glsl", "main", common::Vertex);
+        common::OMShader shader(common::GLSLSource, io::readOnce(target.get()), "simple.vert.glsl", "main", common::Vertex);
         vtxShader = shader.convertTo(common::SPIRVBinary);
     }
 
@@ -90,12 +79,11 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
             glm::vec2 textureUV;
 
           public:
-            VertexPart(glm::vec3 p, glm::vec2 uv) : pos(p), textureUV(uv) {};
+            VertexPart(glm::vec3 p, glm::vec2 uv) : pos(p), textureUV(uv) {}
 
             bool operator<(const VertexPart &other) const
             {
-                return std::tie(pos.x, pos.y, pos.z, textureUV.x, textureUV.y) <
-                       std::tie(other.pos.x, other.pos.y, other.pos.z, other.textureUV.x, other.textureUV.y);
+                return std::memcmp(&other, this, sizeof(VertexPart)) < 0;
             }
         };
 
@@ -147,22 +135,7 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
         vertexCount = indices.size();
     }
 
-    {
-        auto siz = sizeof(UniformStructure);
-        uniformBuffer = renderer->logicalDevice.createBuffer(
-            BufferCreateInfo({}, siz, BufferUsageFlagBits::eUniformBuffer, SharingMode::eExclusive),
-            renderer->allocator);
-        auto req = renderer->logicalDevice.getBufferMemoryRequirements(uniformBuffer);
-        uniformBufferMemory = renderer->logicalDevice.allocateMemory(
-            MemoryAllocateInfo(
-                req.size,
-                findMemoryType(req.memoryTypeBits,
-                               MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent, prop)),
-            renderer->allocator);
-        renderer->logicalDevice.bindBufferMemory(uniformBuffer, uniformBufferMemory, 0);
-
-        mappedUniformBuffer = renderer->logicalDevice.mapMemory(uniformBufferMemory, 0, siz);
-    }
+    uniformBuffer = renderer->allocateBuffer(common::Uniform, sizeof(UniformStructure));
 
     commandPool = renderer->logicalDevice.createCommandPool(CommandPoolCreateInfo({}, renderer->queueFamilyIndex.first),
                                                             renderer->allocator);
@@ -186,7 +159,7 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
     descriptorSet = renderer->logicalDevice.allocateDescriptorSets(
         DescriptorSetAllocateInfo(descriptorPool, descriptorSetLayouts[0]))[0];
 
-    const std::vector c = {DescriptorBufferInfo(uniformBuffer, 0, sizeof(UniformStructure))};
+    const std::vector c = {DescriptorBufferInfo(reinterpret_cast<OMRendererBufferVk *>(uniformBuffer)->buffer, 0, sizeof(UniformStructure))};
     renderer->logicalDevice.updateDescriptorSets(
         WriteDescriptorSet(descriptorSet, 0, 0, DescriptorType::eUniformBuffer, {}, c), nullptr);
 
@@ -363,7 +336,7 @@ void OMTestRenderer::updateUniform()
                                 0.1f, 20.0f);
     ubo.proj[1][1] *= -1;
 
-    std::memcpy(mappedUniformBuffer, &ubo, sizeof(UniformStructure));
+    uniformBuffer->updateData(&ubo);
 }
 
 void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp, bool upk, bool downk, bool leftk,
@@ -596,9 +569,7 @@ void OMTestRenderer::destroy()
     renderer->logicalDevice.destroyImage(textureImage, renderer->allocator);
     renderer->logicalDevice.freeDescriptorSets(descriptorPool, descriptorSet);
     renderer->logicalDevice.destroyDescriptorPool(descriptorPool, renderer->allocator);
-    renderer->logicalDevice.unmapMemory(uniformBufferMemory);
-    renderer->logicalDevice.freeMemory(uniformBufferMemory, renderer->allocator);
-    renderer->logicalDevice.destroyBuffer(uniformBuffer, renderer->allocator);
+    delete uniformBuffer;
     for (auto l : descriptorSetLayouts)
     {
         renderer->logicalDevice.destroyDescriptorSetLayout(l, renderer->allocator);
