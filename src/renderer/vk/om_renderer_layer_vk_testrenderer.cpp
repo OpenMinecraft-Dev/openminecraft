@@ -167,13 +167,7 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
         int texWidth, texHeight, texChannels;
 
         auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/viking_room.png");
-        std::vector<stbi_uc> tex;
-        while (imgraw->good())
-        {
-            char cb;
-            imgraw->read(&cb, 1);
-            tex.push_back(cb);
-        }
+        auto tex = io::readOnce(imgraw.get());
 
         stbi_uc *pixels =
             stbi_load_from_memory(tex.data(), tex.size(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
