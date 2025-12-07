@@ -15,6 +15,6 @@ static std::vector<uint8_t> readOnce(std::istream *f)
     f->read(reinterpret_cast<char *>(data.data()), length);
     return data;
 }
-}
+} // namespace openminecraft::io
 
 #endif

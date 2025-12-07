@@ -19,7 +19,7 @@ OMRendererBufferVk::~OMRendererBufferVk()
 }
 
 static uint32_t findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properties,
-                               PhysicalDeviceMemoryProperties &memProperties)
+                               const PhysicalDeviceMemoryProperties &memProperties)
 {
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; ++i)
     {
@@ -49,7 +49,7 @@ static BufferUsageFlagBits mapToUsageFlag(OMBufferUsage usage)
     case VertexIndex:
         return BufferUsageFlagBits::eIndexBuffer;
     case Misc:
-        return BufferUsageFlagBits::eStorageBuffer;
+        return BufferUsageFlagBits::eTransferSrc;
     case Uniform:
         return BufferUsageFlagBits::eUniformBuffer;
     }

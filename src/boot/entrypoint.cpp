@@ -242,7 +242,6 @@ int boot(std::vector<std::string> args)
                             int ww, hh;
                             SDL_GetWindowSize(wnd, &ww, &hh);
                             renderer->testRenderer->mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
-                            // SDL_WarpMouseInWindow(wnd, ww / 2, hh / 2);
                         }
 
                         if (e.type == SDL_EVENT_QUIT)
@@ -255,12 +254,9 @@ int boot(std::vector<std::string> args)
                         renderer->render();
                     }
 
-                    mem::castorice::printres();
-
                     renderer->destroy();
-                    mem::castorice::printres();
-
                     SDL_DestroyWindow(wnd);
+
                     mem::castorice::printres();
                 }
                 catch (std::runtime_error &e)
@@ -274,7 +270,7 @@ int boot(std::vector<std::string> args)
             }
             case "quit"_hash:
             case "exit"_hash:
-                return 0;
+                goto progEnd;
             case "dumptrace"_hash:
                 logger->dumpStacktrace();
                 break;
@@ -366,7 +362,9 @@ int boot(std::vector<std::string> args)
         }
     }
 
+progEnd:
     SDL_Quit();
+    mem::castorice::printres();
 
     return 0;
 }

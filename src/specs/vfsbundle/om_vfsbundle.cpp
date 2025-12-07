@@ -149,7 +149,8 @@ OMBundle::OMBundle(void *base, uint64_t length) : OMBundle()
         entBegin += std::strlen(entBegin) + 1; // bump 1 byte for next string!
         auto owner = std::string(entBegin);
 
-        files.emplace_back(OMBundleFileMetadata{timestamp, length, filename, owner}, static_cast<uint8_t *>(base) + off2);
+        files.emplace_back(OMBundleFileMetadata{timestamp, length, filename, owner},
+                           static_cast<uint8_t *>(base) + off2);
     }
 
     writable = false;

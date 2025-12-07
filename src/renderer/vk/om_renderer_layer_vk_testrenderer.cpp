@@ -39,13 +39,15 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
 {
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.frag.glsl");
-        common::OMShader shader(common::GLSLSource, io::readOnce(target.get()), "simple.frag.glsl", "main", common::Fragment);
+        common::OMShader shader(common::GLSLSource, io::readOnce(target.get()), "simple.frag.glsl", "main",
+                                common::Fragment);
         frgShader = shader.convertTo(common::SPIRVBinary);
     }
 
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.vert.glsl");
-        common::OMShader shader(common::GLSLSource, io::readOnce(target.get()), "simple.vert.glsl", "main", common::Vertex);
+        common::OMShader shader(common::GLSLSource, io::readOnce(target.get()), "simple.vert.glsl", "main",
+                                common::Vertex);
         vtxShader = shader.convertTo(common::SPIRVBinary);
     }
 
@@ -79,7 +81,9 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
             glm::vec2 textureUV;
 
           public:
-            VertexPart(glm::vec3 p, glm::vec2 uv) : pos(p), textureUV(uv) {}
+            VertexPart(glm::vec3 p, glm::vec2 uv) : pos(p), textureUV(uv)
+            {
+            }
 
             bool operator<(const VertexPart &other) const
             {
@@ -159,7 +163,8 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
     descriptorSet = renderer->logicalDevice.allocateDescriptorSets(
         DescriptorSetAllocateInfo(descriptorPool, descriptorSetLayouts[0]))[0];
 
-    const std::vector c = {DescriptorBufferInfo(reinterpret_cast<OMRendererBufferVk *>(uniformBuffer)->buffer, 0, sizeof(UniformStructure))};
+    const std::vector c = {DescriptorBufferInfo(reinterpret_cast<OMRendererBufferVk *>(uniformBuffer)->buffer, 0,
+                                                sizeof(UniformStructure))};
     renderer->logicalDevice.updateDescriptorSets(
         WriteDescriptorSet(descriptorSet, 0, 0, DescriptorType::eUniformBuffer, {}, c), nullptr);
 
@@ -175,23 +180,8 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
             throw std::runtime_error("failed to load texture image!");
         auto imageSize = texWidth * texHeight * 4;
 
-        stagingBuffer = renderer->logicalDevice.createBuffer(
-            BufferCreateInfo({}, imageSize, BufferUsageFlagBits::eTransferSrc, SharingMode::eExclusive),
-            renderer->allocator);
-        auto req = renderer->logicalDevice.getBufferMemoryRequirements(stagingBuffer);
-        stagingBufferMemory = renderer->logicalDevice.allocateMemory(
-            MemoryAllocateInfo(
-                req.size,
-                findMemoryType(req.memoryTypeBits,
-                               MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent, prop)),
-            renderer->allocator);
-        renderer->logicalDevice.bindBufferMemory(stagingBuffer, stagingBufferMemory, 0);
-
-        auto r = renderer->logicalDevice.mapMemory(stagingBufferMemory, 0, imageSize);
-
-        std::memcpy(r, pixels, imageSize);
-
-        renderer->logicalDevice.unmapMemory(stagingBufferMemory);
+        stagingBuffer = renderer->allocateBuffer(common::Misc, imageSize);
+        stagingBuffer->updateData(pixels);
 
         stbi_image_free(pixels);
 
@@ -202,7 +192,7 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
                             {}, ImageLayout::eUndefined),
             renderer->allocator);
 
-        req = renderer->logicalDevice.getImageMemoryRequirements(textureImage);
+        auto req = renderer->logicalDevice.getImageMemoryRequirements(textureImage);
         imageMemory = renderer->logicalDevice.allocateMemory(
             MemoryAllocateInfo(req.size,
                                findMemoryType(req.memoryTypeBits, MemoryPropertyFlagBits::eDeviceLocal, prop)),
@@ -212,7 +202,8 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
 
         transitionImageLayout(textureImage, Format::eR8G8B8A8Srgb, ImageLayout::eUndefined,
                               ImageLayout::eTransferDstOptimal);
-        copyBufferToImage(stagingBuffer, textureImage, texWidth, texHeight);
+        copyBufferToImage(reinterpret_cast<OMRendererBufferVk *>(stagingBuffer)->buffer, textureImage, texWidth,
+                          texHeight);
         transitionImageLayout(textureImage, Format::eR8G8B8A8Srgb, ImageLayout::eTransferDstOptimal,
                               ImageLayout::eShaderReadOnlyOptimal);
 
@@ -358,7 +349,7 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
 
     glm::vec3 front;
     front.x = std::cos(glm::radians(m_yaw)) * std::cos(glm::radians(m_pitch));
-    front.y = std::sin(glm::radians(m_pitch));
+    // front.y = std::sin(glm::radians(m_pitch));
     front.z = std::sin(glm::radians(m_yaw)) * std::cos(glm::radians(m_pitch));
     front = glm::normalize(front);
     if (w)
@@ -540,8 +531,7 @@ void OMTestRenderer::destroy()
     renderer->logicalDevice.freeDescriptorSets(descriptorPool, combinedDescriptorSet);
     renderer->logicalDevice.destroySampler(textureSampler, renderer->allocator);
     renderer->logicalDevice.destroyImageView(textureImageView, renderer->allocator);
-    renderer->logicalDevice.freeMemory(stagingBufferMemory, renderer->allocator);
-    renderer->logicalDevice.destroyBuffer(stagingBuffer, renderer->allocator);
+    delete stagingBuffer;
     renderer->logicalDevice.freeMemory(imageMemory, renderer->allocator);
     renderer->logicalDevice.destroyImage(textureImage, renderer->allocator);
     renderer->logicalDevice.freeDescriptorSets(descriptorPool, descriptorSet);

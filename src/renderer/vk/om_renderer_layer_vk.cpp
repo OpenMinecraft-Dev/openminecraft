@@ -166,6 +166,8 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 
     try
     {
+        tempCommandPool = logicalDevice.createCommandPool(CommandPoolCreateInfo({}, queueFamilyIndex.first), allocator);
+
         testRenderer = std::make_shared<test::OMTestRenderer>(this);
 
         for (int i = 0; i < framesInFlight; i++)
@@ -330,7 +332,7 @@ OMResult<std::any, std::string> OMRendererVk::sdlVulkanLoading()
     }
 
     VkSurfaceKHR sf;
-    SDL_Vulkan_CreateSurface(static_cast<SDL_Window *>(window), instance, allocator, &sf);
+    SDL_Vulkan_CreateSurface(static_cast<SDL_Window *>(window), instance, reinterpret_cast<const VkAllocationCallbacks *>(&allocator), &sf);
     surface = SurfaceKHR(sf);
 
     return OMResult<std::any, std::string>::ok(nullptr);
@@ -400,7 +402,7 @@ OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std
                                 info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
         std::vector<const char *> l;
         validationLayer->attach(&l);
-        auto i = createInstance({InstanceCreateFlags(), &appInfo, l, exts, validationLayer->createInfo});
+        auto i = createInstance(InstanceCreateInfo{{}, &appInfo, l, exts, &validationLayer->createInfo});
         logger->info(translate("openminecraft.renderer.vk.instance", info.appName, info.appVer.toString(),
                                info.engineName, info.engineVer.toString(), info.minApiVersion.toString()));
 #ifdef OM_VULKAN_DYNAMIC
@@ -497,9 +499,10 @@ void OMRendererVk::destroy()
         logicalDevice.destroySemaphore(sync.renderFinishedSemaphore, allocator);
         logicalDevice.destroyFence(sync.inFlightFence, allocator);
     }
+    logicalDevice.destroyCommandPool(tempCommandPool, allocator);
     testRenderer->destroy();
     swapchainManager->destroy();
-    SDL_Vulkan_DestroySurface(instance, VkSurfaceKHR(surface), allocator);
+    SDL_Vulkan_DestroySurface(instance, static_cast<VkSurfaceKHR>(surface), reinterpret_cast<const VkAllocationCallbacks *>(&allocator));
     logicalDevice.destroy();
     validationLayer->ifEnable([&]() { instance.destroyDebugUtilsMessengerEXT(messenger, allocator); });
     instance.destroy();

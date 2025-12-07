@@ -69,6 +69,8 @@ class OMRendererVk : public OMRenderer
     std::pair<uint32_t, uint32_t> queueFamilyIndex;
     std::pair<::vk::Queue, ::vk::Queue> queues;
 
+    ::vk::CommandPool tempCommandPool;
+
     std::vector<FrameSync> frameSyncs;
     std::map<uint32_t, FrameSync> inflights;
 

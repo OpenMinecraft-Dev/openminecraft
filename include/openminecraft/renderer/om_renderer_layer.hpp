@@ -1,6 +1,7 @@
 #ifndef OM_RENDERER_LAYER_HPP
 #define OM_RENDERER_LAYER_HPP
 
+#include "common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include <string>
@@ -23,6 +24,7 @@ class OMRenderer
 
     virtual std::string driver() = 0;
     virtual common::OMRendererBuffer *allocateBuffer(common::OMBufferUsage usage, uint64_t length) = 0;
+    // virtual common::OMRendererTexture *allocateTexture(uint64_t width, uint64_t height) = 0;
 
   protected:
     void *window;

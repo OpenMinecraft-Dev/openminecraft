@@ -71,8 +71,9 @@ class OMTestRenderer : public util::OMReinitable
     ::vk::DescriptorSet descriptorSet;
     ::vk::DescriptorSet combinedDescriptorSet;
 
-    ::vk::Buffer stagingBuffer;
-    ::vk::DeviceMemory stagingBufferMemory;
+    common::OMRendererBuffer *stagingBuffer;
+    /*::vk::Buffer stagingBuffer;
+    ::vk::DeviceMemory stagingBufferMemory;*/
 
     ::vk::DeviceMemory imageMemory;
     ::vk::Image textureImage;
@@ -98,7 +99,7 @@ class OMTestRenderer : public util::OMReinitable
     glm::vec3 m_cameraUp{0.0f, 1.0f, 0.0f};
     float m_pitch = -35.0f;
     float m_yaw = -135.0f;
-    float m_cameraMoveSpeed = 1.0f;
+    float m_cameraMoveSpeed = 2.0f;
     float m_cameraRotateSpeed = 45.0f;
 
     std::shared_ptr<common::OMShader> vtxShader;

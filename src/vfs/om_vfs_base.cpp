@@ -60,7 +60,8 @@ bool fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string
         {
             if (i.first.name == proc)
             {
-                return std::make_shared<std::istringstream>(std::string(reinterpret_cast<char *>(i.second), i.first.length));
+                return std::make_shared<std::istringstream>(
+                    std::string(reinterpret_cast<char *>(i.second), i.first.length));
             }
         }
         return nullptr;
