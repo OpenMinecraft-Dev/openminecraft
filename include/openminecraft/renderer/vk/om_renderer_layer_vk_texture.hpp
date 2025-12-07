@@ -11,16 +11,22 @@
 
 namespace openminecraft::renderer::vk
 {
-class OMRendererTextureVk : common::OMRendererTexture
+class OMRendererTextureVk : public common::OMRendererTexture
 {
   public:
     OMRendererTextureVk(uint64_t width, uint64_t height, common::OMTextureType type, common::OMTextureArrangement arr, OMRendererVk *renderer);
     ~OMRendererTextureVk() override;
 
-  private:
+    void transitionImageLayout(::vk::CommandBuffer cmd, ::vk::ImageLayout oldLayout, ::vk::ImageLayout newLayout);
+    void updateData(void *p) override;
+
+    ::vk::Format format;
     ::vk::Image image;
     ::vk::ImageView imageView;
     ::vk::DeviceMemory imageMemory;
+
+  private:
+    OMRendererVk *renderer;
 };
 } // namespace openminecraft::renderer::vk
 

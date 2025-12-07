@@ -4,6 +4,7 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/util/om_util_version.hpp"
@@ -189,6 +190,11 @@ common::OMRendererBuffer *OMRendererVk::allocateBuffer(common::OMBufferUsage usa
     return new OMRendererBufferVk(usage, length, this);
 }
 
+common::OMRendererTexture *OMRendererVk::allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type, common::OMTextureArrangement arr)
+{
+    return new OMRendererTextureVk(width, height, type, arr, this);
+}
+
 void OMRendererVk::render()
 {
     if (needRebuild)
@@ -332,7 +338,8 @@ OMResult<std::any, std::string> OMRendererVk::sdlVulkanLoading()
     }
 
     VkSurfaceKHR sf;
-    SDL_Vulkan_CreateSurface(static_cast<SDL_Window *>(window), instance, reinterpret_cast<const VkAllocationCallbacks *>(&allocator), &sf);
+    SDL_Vulkan_CreateSurface(static_cast<SDL_Window *>(window), instance,
+                             reinterpret_cast<const VkAllocationCallbacks *>(&allocator), &sf);
     surface = SurfaceKHR(sf);
 
     return OMResult<std::any, std::string>::ok(nullptr);
@@ -502,7 +509,8 @@ void OMRendererVk::destroy()
     logicalDevice.destroyCommandPool(tempCommandPool, allocator);
     testRenderer->destroy();
     swapchainManager->destroy();
-    SDL_Vulkan_DestroySurface(instance, static_cast<VkSurfaceKHR>(surface), reinterpret_cast<const VkAllocationCallbacks *>(&allocator));
+    SDL_Vulkan_DestroySurface(instance, static_cast<VkSurfaceKHR>(surface),
+                              reinterpret_cast<const VkAllocationCallbacks *>(&allocator));
     logicalDevice.destroy();
     validationLayer->ifEnable([&]() { instance.destroyDebugUtilsMessengerEXT(messenger, allocator); });
     instance.destroy();

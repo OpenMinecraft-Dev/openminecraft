@@ -29,6 +29,8 @@ class OMRendererTexture
     const OMTextureType type;
     const OMTextureArrangement arr;
 
+    virtual void updateData(void *p) = 0;
+
   protected:
     OMRenderer *renderer;
 
