@@ -103,18 +103,26 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
             throw std::runtime_error("Warn: " + warn + "\nError: " + err);
         }
 
-        std::vector<VertexPart> vtxnew;
-        std::vector<uint32_t> indices;
+        std::vector<VertexPart> vtxnew = {{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+                                          {{0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+                                          {{1.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+                                          {{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+                                    {{0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+                                  {{0.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+                                  {{1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+                                  {{1.0f, 1.0f, 0.0f}, {1.0f, 0.0f}}};
+        std::vector<uint32_t> indices = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
 
-        std::map<VertexPart, uint32_t> uniqueVertices;
+        /*std::map<VertexPart, uint32_t> uniqueVertices;
 
         for (const auto &shape : shapes)
         {
             for (const auto &index : shape.mesh.indices)
             {
                 VertexPart prt = {{attrib.vertices[3 * index.vertex_index + 0],
+                                    attrib.vertices[3 * index.vertex_index + 2],
                                    attrib.vertices[3 * index.vertex_index + 1],
-                                   attrib.vertices[3 * index.vertex_index + 2]},
+                                   },
                                   {attrib.texcoords[2 * index.texcoord_index + 0],
                                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1]}};
 
@@ -125,7 +133,7 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
                 }
                 indices.push_back(uniqueVertices[prt]);
             }
-        }
+        }*/
 
         auto siz = vtxnew.size() * sizeof(VertexPart);
 
@@ -200,7 +208,9 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
     combinedDescriptorSet = renderer->logicalDevice.allocateDescriptorSets(
         DescriptorSetAllocateInfo(descriptorPool, descriptorSetLayouts[1]))[0];
 
-    const auto cc = DescriptorImageInfo(textureSampler, reinterpret_cast<OMRendererTextureVk *>(textureImage)->imageView, ImageLayout::eShaderReadOnlyOptimal);
+    const auto cc =
+        DescriptorImageInfo(textureSampler, reinterpret_cast<OMRendererTextureVk *>(textureImage)->imageView,
+                            ImageLayout::eShaderReadOnlyOptimal);
     renderer->logicalDevice.updateDescriptorSets(
         WriteDescriptorSet(combinedDescriptorSet, 0, 0, DescriptorType::eCombinedImageSampler, cc), nullptr);
 
@@ -218,14 +228,13 @@ void OMTestRenderer::updateUniform()
     front = glm::normalize(front);
 
     UniformStructure ubo{};
-    ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    ubo.model *= glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.model = glm::mat4(1.0f);
     ubo.view = glm::lookAt(m_cameraPos, m_cameraPos + front, m_cameraUp);
     ubo.proj = glm::perspective(glm::radians(70.0f),
                                 static_cast<float>(renderer->swapchainManager->extent.width) /
                                     static_cast<float>(renderer->swapchainManager->extent.height),
-                                0.1f, 20.0f);
-    ubo.proj[1][1] *= -1;
+                                0.01f, 5.0f);
+    ubo.proj *= glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, -1.0f, 1.0f));
 
     uniformBuffer->updateData(&ubo);
 }

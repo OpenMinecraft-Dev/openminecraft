@@ -1,0 +1,6 @@
+target("openminecraft-fontproc")
+set_kind("static")
+add_packages("fmt", "boost", "freetype", "harfbuzz")
+add_deps("openminecraft-io")
+add_files("**.cpp")
+add_includedirs("../../include")

@@ -119,10 +119,13 @@ void OMRendererTextureVk::updateData(void *p)
 
     cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
     transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal);
-    cmdBuff.copyBufferToImage(reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image,
-                              ImageLayout::eTransferDstOptimal,
-                              BufferImageCopy(0, 0, 0, ImageSubresourceLayers((this->arr == common::Depth) ? ImageAspectFlagBits::eDepth : ImageAspectFlagBits::eColor, 0, 0, 1),
-                                              Offset3D(0, 0, 0), Extent3D(width, height, 1)));
+    cmdBuff.copyBufferToImage(
+        reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
+        BufferImageCopy(0, 0, 0,
+                        ImageSubresourceLayers((this->arr == common::Depth) ? ImageAspectFlagBits::eDepth
+                                                                            : ImageAspectFlagBits::eColor,
+                                               0, 0, 1),
+                        Offset3D(0, 0, 0), Extent3D(width, height, 1)));
     transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal);
 
     cmdBuff.end();

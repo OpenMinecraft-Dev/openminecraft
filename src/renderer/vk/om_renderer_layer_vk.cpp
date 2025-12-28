@@ -190,7 +190,8 @@ common::OMRendererBuffer *OMRendererVk::allocateBuffer(common::OMBufferUsage usa
     return new OMRendererBufferVk(usage, length, this);
 }
 
-common::OMRendererTexture *OMRendererVk::allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type, common::OMTextureArrangement arr)
+common::OMRendererTexture *OMRendererVk::allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type,
+                                                         common::OMTextureArrangement arr)
 {
     return new OMRendererTextureVk(width, height, type, arr, this);
 }

@@ -79,6 +79,7 @@ includes("src/util/xmake.lua")
 includes("src/i18n/xmake.lua")
 includes("src/renderer/xmake.lua")
 includes("src/specs/xmake.lua")
+includes("src/fontproc/xmake.lua")
 
 target("openminecraft-plat")
 set_kind("static")
@@ -174,7 +175,7 @@ elseif is_plat("android") then
 end
 
 add_files("launcher/**.cpp")
-add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io", "openminecraft-vfs", "openminecraft-boot", "openminecraft-util", "openminecraft-i18n", "openminecraft-renderer", "openminecraft-plat", "openminecraft-specs")
+add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io", "openminecraft-vfs", "openminecraft-boot", "openminecraft-util", "openminecraft-i18n", "openminecraft-renderer", "openminecraft-plat", "openminecraft-specs", "openminecraft-fontproc")
 
 add_packages("freetype", "harfbuzz", "stb", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", "libsdl3", { system = false })
 if not mobile() and not vulkandyn() and not apple() then
