@@ -183,6 +183,7 @@ if not mobile() and not vulkandyn() and not apple() then
 end
 if apple() then 
     add_packages("moltenvk")
+    add_frameworks("CoreText", "CoreFoundation", "CoreGraphics")
 end
 if is_plat("iphoneos") then
     add_frameworks("OpenGLES")
