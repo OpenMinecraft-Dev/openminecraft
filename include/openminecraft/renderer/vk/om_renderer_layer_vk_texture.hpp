@@ -14,7 +14,8 @@ namespace openminecraft::renderer::vk
 class OMRendererTextureVk : public common::OMRendererTexture
 {
   public:
-    OMRendererTextureVk(uint64_t width, uint64_t height, common::OMTextureType type, common::OMTextureArrangement arr, OMRendererVk *renderer);
+    OMRendererTextureVk(uint64_t width, uint64_t height, common::OMTextureType type, common::OMTextureArrangement arr,
+                        OMRendererVk *renderer);
     ~OMRendererTextureVk() override;
 
     void transitionImageLayout(::vk::CommandBuffer cmd, ::vk::ImageLayout oldLayout, ::vk::ImageLayout newLayout);

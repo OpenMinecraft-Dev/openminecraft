@@ -103,14 +103,10 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
             throw std::runtime_error("Warn: " + warn + "\nError: " + err);
         }
 
-        std::vector<VertexPart> vtxnew = {{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-                                          {{0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-                                          {{1.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-                                          {{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-                                    {{0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-                                  {{0.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-                                  {{1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
-                                  {{1.0f, 1.0f, 0.0f}, {1.0f, 0.0f}}};
+        std::vector<VertexPart> vtxnew = {{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}}, {{0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+                                          {{1.0f, 0.0f, 1.0f}, {1.0f, 1.0f}}, {{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+                                          {{0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}}, {{0.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+                                          {{1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}, {{1.0f, 1.0f, 0.0f}, {1.0f, 0.0f}}};
         std::vector<uint32_t> indices = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
 
         /*std::map<VertexPart, uint32_t> uniqueVertices;

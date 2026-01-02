@@ -12,18 +12,23 @@ namespace openminecraft::renderer::common
 {
 enum OMTextureType : uint8_t
 {
-    Dim1, Dim2, Dim3
+    Dim1,
+    Dim2,
+    Dim3
 };
 
 enum OMTextureArrangement
 {
-    Depth, ColorRgba, ColorRgb
+    Depth,
+    ColorRgba,
+    ColorRgb
 };
 
 class OMRendererTexture
 {
   public:
-    OMRendererTexture(uint64_t width, uint64_t height, OMTextureType type, OMTextureArrangement arr, OMRenderer *renderer);
+    OMRendererTexture(uint64_t width, uint64_t height, OMTextureType type, OMTextureArrangement arr,
+                      OMRenderer *renderer);
     virtual ~OMRendererTexture();
     const uint64_t width, height;
     const OMTextureType type;

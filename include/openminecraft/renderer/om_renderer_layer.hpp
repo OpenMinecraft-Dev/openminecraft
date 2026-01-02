@@ -24,7 +24,8 @@ class OMRenderer
 
     virtual std::string driver() = 0;
     virtual common::OMRendererBuffer *allocateBuffer(common::OMBufferUsage usage, uint64_t length) = 0;
-    virtual common::OMRendererTexture *allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type, common::OMTextureArrangement arr) = 0;
+    virtual common::OMRendererTexture *allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type,
+                                                       common::OMTextureArrangement arr) = 0;
 
   protected:
     void *window;

@@ -27,6 +27,7 @@
 #include "SDL3/SDL_messagebox.h"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/boot/om_boot.hpp"
+#include "openminecraft/fontproc/om_font.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
@@ -271,6 +272,13 @@ int boot(std::vector<std::string> args)
             case "quit"_hash:
             case "exit"_hash:
                 goto progEnd;
+            case "font"_hash: {
+                auto iff = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
+                auto f = new fontproc::OMFont(*iff.get());
+                f->parseChar(0x6211);
+                delete f;
+                break;
+            }
             case "dumptrace"_hash:
                 logger->dumpStacktrace();
                 break;

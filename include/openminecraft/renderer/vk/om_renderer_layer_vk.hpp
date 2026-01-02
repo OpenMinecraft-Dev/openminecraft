@@ -53,7 +53,8 @@ class OMRendererVk : public OMRenderer
 
     std::string driver() override;
     common::OMRendererBuffer *allocateBuffer(common::OMBufferUsage usage, uint64_t length) override;
-    common::OMRendererTexture *allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type, common::OMTextureArrangement arr) override;
+    common::OMRendererTexture *allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type,
+                                               common::OMTextureArrangement arr) override;
     void destroy();
 
     void render();
