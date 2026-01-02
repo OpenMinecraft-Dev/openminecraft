@@ -39,7 +39,7 @@ package("harfbuzz")
         end
     end
     add_includedirs("include", "include/harfbuzz")
-    if is_plat("macosx", "ios") then
+    if is_plat("macosx", "iphoneos") then
         add_frameworks("CoreText", "CoreFoundation", "CoreGraphics")
     elseif is_plat("bsd", "android") then
         add_configs("freetype", {description = "Enable freetype interop helpers.", default = false, type = "boolean", readonly = true})
