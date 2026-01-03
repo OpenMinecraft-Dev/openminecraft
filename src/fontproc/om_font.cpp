@@ -14,7 +14,7 @@ OMFont::OMFont(std::istream &istr) : logger("OMFont", this)
 {
     auto temp = io::readOnce(&istr);
 
-    auto blob = hb_blob_create(reinterpret_cast<const char *>(temp.data()), temp.size(), HB_MEMORY_MODE_READONLY,
+    auto blob = hb_blob_create(reinterpret_cast<const char *>(temp.data()), temp.size(), HB_MEMORY_MODE_DUPLICATE,
                                nullptr, nullptr);
     hbFace = hb_face_create(blob, 0);
     hbFont = hb_font_create(static_cast<hb_face_t *>(hbFace));
