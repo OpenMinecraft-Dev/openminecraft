@@ -70,7 +70,22 @@ void OMFont::parseChar(int charcode)
     hb_font_get_scale(font, &xsc, &ysc);
 
     auto ll = outline.buildPolygons(2, xsc, ysc);
-    logger.info("{}", ll.size());
+    std::sort(ll.begin(), ll.end(), [](std::shared_ptr<OMFontPolygon> p1, std::shared_ptr<OMFontPolygon> p2) { return p1->area() > p2->area(); });
+
+    for (int i = 0; i < ll.size(); i++)
+    {
+        int parent = -1;
+        for (int j = 0; j < i; j++)
+        {
+            if (ll[j]->isPolyInside(*ll[i].get()))
+            {
+                parent = j;
+            }
+        }
+
+        logger.info("{} -> parent:{}", i, parent);
+    }
+
     for (auto &p : ll)
     {
         logger.info("area: {}", p->area());
