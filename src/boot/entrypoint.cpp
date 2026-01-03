@@ -275,7 +275,11 @@ int boot(std::vector<std::string> args)
             case "font"_hash: {
                 auto iff = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
                 auto f = new fontproc::OMFont(*iff.get());
-                f->parseChar(0x6211);
+                f->parseChar('8');
+                delete f;
+                std::ifstream ff("/usr/share/fonts/Monaspace/MonaspiceRnNerdFont-Bold.otf");
+                f = new fontproc::OMFont(ff);
+                f->parseChar('8');
                 delete f;
                 break;
             }

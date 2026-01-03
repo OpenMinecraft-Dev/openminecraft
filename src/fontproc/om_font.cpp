@@ -1,5 +1,4 @@
 #include "openminecraft/fontproc/om_font.hpp"
-#include "freetype/ftoutln.h"
 #include "harfbuzz/hb.h"
 #include "openminecraft/fontproc/om_font_outline.hpp"
 
@@ -10,7 +9,6 @@
 
 namespace openminecraft::fontproc
 {
-long width, height;
 
 OMFont::OMFont(std::istream &istr) : logger("OMFont", this)
 {
@@ -21,108 +19,68 @@ OMFont::OMFont(std::istream &istr) : logger("OMFont", this)
     hbFace = hb_face_create(blob, 0);
     hbFont = hb_font_create(static_cast<hb_face_t *>(hbFace));
     hb_blob_destroy(blob);
+}
 
-    FT_Init_FreeType(&ftLibrary);
-    FT_New_Memory_Face(ftLibrary, temp.data(), temp.size(), 0, &ftFace);
-    FT_Set_Pixel_Sizes(ftFace, 0, 12);
+static void acceptOutlineMoveTo(hb_draw_funcs_t *, void *drawdata, hb_draw_state_t *state, float x, float y, void *user_data)
+{
+    static_cast<OMFontOutline *>(drawdata)->moveTo({x, y});
+}
+
+static void acceptOutlineLineTo(hb_draw_funcs_t *, void *drawdata, hb_draw_state_t *state, float x, float y, void *user_data)
+{
+    static_cast<OMFontOutline *>(drawdata)->lineTo({x, y});
+}
+
+static void acceptOutlineQuadraticTo(hb_draw_funcs_t *, void *drawdata, hb_draw_state_t *state, float cx, float cy, float x, float y, void *user_data)
+{
+    static_cast<OMFontOutline *>(drawdata)->quadraticTo({x, y}, {cx, cy});
+}
+
+static void acceptOutlineCubicTo(hb_draw_funcs_t *, void *drawdata, hb_draw_state_t *state, float cx1, float cy1, float cx2, float cy2, float x, float y, void *user_data)
+{
+    static_cast<OMFontOutline *>(drawdata)->cubicTo({x, y}, {cx1, cy1}, {cx2, cy2});
+}
+
+static void acceptOutlineClosePath(hb_draw_funcs_t *, void *drawdata, hb_draw_state_t *state, void *user_data)
+{
+    static_cast<OMFontOutline *>(drawdata)->closePath();
 }
 
 void OMFont::parseChar(int charcode)
 {
-    char name[128];
-    auto idx = FT_Get_Char_Index(ftFace, charcode);
-    FT_Get_Glyph_Name(ftFace, idx, name, 128);
-    FT_Load_Glyph(ftFace, idx, 0x00);
-    width = std::max(ftFace->glyph->metrics.width, ftFace->glyph->metrics.horiAdvance);
-    height = std::max(ftFace->glyph->metrics.height, ftFace->glyph->metrics.vertAdvance);
+    auto font = static_cast<hb_font_t *>(hbFont);
+    hb_font_set_scale(font, 1, 1);
 
-    auto otline = new OMFontOutline;
-    FT_Outline_Funcs functest = {
-        [](const FT_Vector *to, void *user) {
-            static_cast<OMFontOutline *>(user)->moveTo(to);
-            return 0;
-        },
-        [](const FT_Vector *to, void *user) {
-            static_cast<OMFontOutline *>(user)->lineTo(to);
-            return 0;
-        },
-        [](const FT_Vector *control, const FT_Vector *to, void *user) {
-            static_cast<OMFontOutline *>(user)->conicTo(to, control);
-            return 0;
-        },
-        [](const FT_Vector *control1, const FT_Vector *control2, const FT_Vector *to, void *user) {
-            static_cast<OMFontOutline *>(user)->cubicTo(to, control1, control2);
-            return 0;
-        },
-        0,
-        0};
-    FT_Outline_Decompose(&ftFace->glyph->outline, &functest, otline);
+    hb_codepoint_t gly;
+    hb_font_get_nominal_glyph(font, charcode, &gly);
 
-    auto stt = std::ofstream("out.csv");
-    logger.info("{} x {}", width, height);
+    OMFontOutline outline;
+    auto funcs = hb_draw_funcs_create();
 
-    std::vector<glm::vec2> points;
-    glm::vec2 current = {};
-    for (auto &t : otline->operations)
+    hb_draw_funcs_set_move_to_func(funcs, acceptOutlineMoveTo, this, nullptr);
+    hb_draw_funcs_set_line_to_func(funcs, acceptOutlineLineTo, this, nullptr);
+    hb_draw_funcs_set_quadratic_to_func(funcs, acceptOutlineQuadraticTo, this, nullptr);
+    hb_draw_funcs_set_cubic_to_func(funcs, acceptOutlineCubicTo, this, nullptr);
+    hb_draw_funcs_set_close_path_func(funcs, acceptOutlineClosePath, this, nullptr);
+
+    hb_font_draw_glyph(font, gly, funcs, &outline);
+    hb_draw_funcs_destroy(funcs);
+
+    int xsc, ysc;
+    hb_font_get_scale(font, &xsc, &ysc);
+
+    auto ll = outline.buildPolygons(2, xsc, ysc);
+    logger.info("{}", ll.size());
+    for (auto &p : ll)
     {
-        t.target /= glm::vec2{width, height};
-        t.control1 /= glm::vec2{width, height};
-        t.control2 /= glm::vec2{width, height};
-
-#define prec 256
-
-        switch (t.type)
-        {
-        case Move:
-            current = t.target;
-            break;
-        case Line:
-            points.push_back(current);
-            current = t.target;
-            points.push_back(current);
-            break;
-        case Conic:
-            for (int i = 0; i <= prec; i++)
-            {
-                auto add = static_cast<float>(i) / static_cast<float>(prec);
-                auto a = current * glm::vec2{(1 - add) * (1 - add)} +
-                         t.control1 * glm::vec2{2 * add * (1 - add)} +
-                         t.target * glm::vec2{add * add};
-                points.push_back(a);
-            }
-            current = t.target;
-            break;
-        case Cubic:
-            for (int i = 0; i <= prec; i++)
-            {
-                auto add = static_cast<float>(i) / static_cast<float>(prec);
-                auto a = current * glm::vec2{(1 - add) * (1 - add) * (1 - add)} +
-                         t.control1 * glm::vec2{3 * add * (1 - add) * (1 - add)} +
-                         t.control2 * glm::vec2{3 * add * add * (1 - add)} +
-                         t.target * glm::vec2{add * add * add};
-                points.push_back(a);
-            }
-            current = t.target;
-            break;
-        }
+        logger.info("area: {}", p->area());
     }
-    for (auto &p : points)
-    {
-        auto fmt = fmt::format("{},{}\n", p.x, p.y);
-        stt.write(fmt.c_str(), fmt.size());
-    }
-    stt.close();
-
-    delete otline;
-    logger.info("glyph name: {}", name);
 }
 
 OMFont::~OMFont()
 {
     hb_font_destroy(static_cast<hb_font_t *>(hbFont));
     hb_face_destroy(static_cast<hb_face_t *>(hbFace));
-    FT_Done_Face(ftFace);
-    FT_Done_FreeType(ftLibrary);
 }
 
 } // namespace openminecraft::fontproc
