@@ -1,7 +1,8 @@
 #ifndef OM_FONT_HPP
 #define OM_FONT_HPP
-#include <iosfwd>
+#include "openminecraft/fontproc/om_font_triangle_list.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include <iosfwd>
 
 namespace openminecraft::fontproc
 {
@@ -11,7 +12,7 @@ class OMFont
     OMFont(std::istream &istr);
     ~OMFont();
 
-    void parseChar(int charcode);
+    std::shared_ptr<OMTriangleList> buildBasicPolygon(int charcode);
 
   private:
     void *hbFont;

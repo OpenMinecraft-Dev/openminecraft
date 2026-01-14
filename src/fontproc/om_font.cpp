@@ -3,31 +3,12 @@
 #include "harfbuzz/hb.h"
 #include "openminecraft/fontproc/om_font_outline.hpp"
 
+#include "openminecraft/fontproc/om_font_triangle_list.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
 
-#include "mapbox/earcut.hpp"
 #include <glm/ext/matrix_transform.hpp>
+#include <memory>
 #include <unordered_map>
-
-namespace mapbox::util
-{
-
-template <> struct nth<0, glm::vec2>
-{
-    inline static auto get(const glm::vec2 &t)
-    {
-        return t.x;
-    };
-};
-template <> struct nth<1, glm::vec2>
-{
-    inline static auto get(const glm::vec2 &t)
-    {
-        return t.y;
-    };
-};
-
-} // namespace mapbox::util
 
 namespace openminecraft::fontproc
 {
@@ -72,10 +53,9 @@ static void acceptOutlineClosePath(hb_draw_funcs_t *, void *drawdata, hb_draw_st
     static_cast<OMFontOutline *>(drawdata)->closePath();
 }
 
-void OMFont::parseChar(int charcode)
+std::shared_ptr<OMTriangleList> OMFont::buildBasicPolygon(int charcode)
 {
     auto font = static_cast<hb_font_t *>(hbFont);
-    hb_font_set_scale(font, 1, 1);
 
     hb_codepoint_t gly;
     hb_font_get_nominal_glyph(font, charcode, &gly);
@@ -95,7 +75,7 @@ void OMFont::parseChar(int charcode)
     int xsc, ysc;
     hb_font_get_scale(font, &xsc, &ysc);
 
-    auto ll = outline.buildPolygons(8, xsc, ysc);
+    auto ll = outline.buildPolygons(4, xsc, ysc);
     std::sort(ll.begin(), ll.end(), [](std::shared_ptr<OMFontPolygon> p1, std::shared_ptr<OMFontPolygon> p2) {
         return p1->area() > p2->area();
     });
@@ -113,7 +93,6 @@ void OMFont::parseChar(int charcode)
         }
 
         matches[i] = parent;
-        logger.info("parent:{} <- {}", parent, i);
     }
 
     std::vector<int> filledPoly;
@@ -133,22 +112,27 @@ void OMFont::parseChar(int charcode)
         }
     }
 
+    std::vector<std::shared_ptr<OMTriangleList>> listbase;
     for (auto ii : filledPoly)
     {
-        logger.info("#{} holes:", ii);
+        std::vector<std::shared_ptr<OMFontPolygon>> polys;
         for (auto lli = matches.begin(); lli != matches.end(); ++lli)
         {
             if ((*lli).second == ii)
             {
-                logger.info("  -> {}", (*lli).first);
+                polys.push_back(ll[(*lli).first]);
             }
         }
+
+        listbase.push_back(std::make_shared<OMTriangleList>(ll[ii], polys));
     }
 
-    for (auto &p : ll)
-    {
-        logger.info("area: {}", p->area());
-    }
+    hb_glyph_extents_t extents;
+    hb_font_get_glyph_extents(font, gly, &extents);
+    logger.info("xmin {} xmax {} ymin {} ymax {}", extents.x_bearing, extents.x_bearing + extents.width,
+                extents.y_bearing + extents.height, extents.y_bearing);
+
+    return std::make_shared<OMTriangleList>(listbase);
 }
 
 OMFont::~OMFont()

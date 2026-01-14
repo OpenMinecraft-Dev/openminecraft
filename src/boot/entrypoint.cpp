@@ -275,8 +275,8 @@ int boot(std::vector<std::string> args)
             case "font"_hash: {
                 auto iff = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
                 auto f = new fontproc::OMFont(*iff.get());
-                f->parseChar(0x2609);
-                f->parseChar('8');
+                f->buildBasicPolygon(0x2609);
+                f->buildBasicPolygon('8');
                 delete f;
                 break;
             }

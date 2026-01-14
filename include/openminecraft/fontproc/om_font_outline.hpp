@@ -95,8 +95,9 @@ class OMFontOutline
                 for (int i = 1; i <= prec; i++)
                 {
                     auto add = static_cast<float>(i) / static_cast<float>(prec);
-                    auto pp =
-                        current * (1 - add) * (1 - add) * (1 - add) + op.control1 * (3 * add * (1 - add) * (1 - add)) + op.control2 * (3 * add * add * (1 - add)) + op.target * add * add * add;
+                    auto pp = current * (1 - add) * (1 - add) * (1 - add) +
+                              op.control1 * (3 * add * (1 - add) * (1 - add)) +
+                              op.control2 * (3 * add * add * (1 - add)) + op.target * add * add * add;
                     poly->addVertex(pp);
                 }
                 current = op.target;

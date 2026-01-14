@@ -36,7 +36,8 @@ class OMFontPolygon
         {
             auto p1 = vertices[i];
             auto p2 = vertices[(i + 1) % vertices.size()];
-            if ((p1.y > point.y) != (p2.y > point.y) && (point.x < (p2.x - p1.x) * (point.y - p1.y) / (p2.y - p1.y) + p1.x))
+            if ((p1.y > point.y) != (p2.y > point.y) &&
+                (point.x < (p2.x - p1.x) * (point.y - p1.y) / (p2.y - p1.y) + p1.x))
             {
                 count++;
             }
