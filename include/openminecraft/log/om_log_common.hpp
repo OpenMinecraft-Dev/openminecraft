@@ -1,7 +1,6 @@
 #ifndef OM_LOG_COMMON_HPP
 #define OM_LOG_COMMON_HPP
 
-#include "glm/glm.hpp"
 #include <cstdint>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -63,13 +62,5 @@ class OMLogger
     void log(OMLogType type, std::string msg);
 };
 } // namespace openminecraft::log
-
-template <> struct fmt::formatter<glm::vec2> : formatter<string_view>
-{
-    auto format(glm::vec2 c, format_context &ctx) const -> format_context::iterator
-    {
-        return formatter<string_view>::format(fmt::format("({}, {})", c.x, c.y), ctx);
-    }
-};
 
 #endif
