@@ -1,11 +1,33 @@
 #include "openminecraft/fontproc/om_font.hpp"
+#include "glm/glm.hpp"
 #include "harfbuzz/hb.h"
 #include "openminecraft/fontproc/om_font_outline.hpp"
 
 #include "openminecraft/io/om_io_utils.hpp"
 
-#include <fstream>
+#include "mapbox/earcut.hpp"
 #include <glm/ext/matrix_transform.hpp>
+#include <unordered_map>
+
+namespace mapbox::util
+{
+
+template <> struct nth<0, glm::vec2>
+{
+    inline static auto get(const glm::vec2 &t)
+    {
+        return t.x;
+    };
+};
+template <> struct nth<1, glm::vec2>
+{
+    inline static auto get(const glm::vec2 &t)
+    {
+        return t.y;
+    };
+};
+
+} // namespace mapbox::util
 
 namespace openminecraft::fontproc
 {
@@ -21,22 +43,26 @@ OMFont::OMFont(std::istream &istr) : logger("OMFont", this)
     hb_blob_destroy(blob);
 }
 
-static void acceptOutlineMoveTo(hb_draw_funcs_t *, void *drawdata, hb_draw_state_t *state, float x, float y, void *user_data)
+static void acceptOutlineMoveTo(hb_draw_funcs_t *, void *drawdata, hb_draw_state_t *state, float x, float y,
+                                void *user_data)
 {
     static_cast<OMFontOutline *>(drawdata)->moveTo({x, y});
 }
 
-static void acceptOutlineLineTo(hb_draw_funcs_t *, void *drawdata, hb_draw_state_t *state, float x, float y, void *user_data)
+static void acceptOutlineLineTo(hb_draw_funcs_t *, void *drawdata, hb_draw_state_t *state, float x, float y,
+                                void *user_data)
 {
     static_cast<OMFontOutline *>(drawdata)->lineTo({x, y});
 }
 
-static void acceptOutlineQuadraticTo(hb_draw_funcs_t *, void *drawdata, hb_draw_state_t *state, float cx, float cy, float x, float y, void *user_data)
+static void acceptOutlineQuadraticTo(hb_draw_funcs_t *, void *drawdata, hb_draw_state_t *state, float cx, float cy,
+                                     float x, float y, void *user_data)
 {
     static_cast<OMFontOutline *>(drawdata)->quadraticTo({x, y}, {cx, cy});
 }
 
-static void acceptOutlineCubicTo(hb_draw_funcs_t *, void *drawdata, hb_draw_state_t *state, float cx1, float cy1, float cx2, float cy2, float x, float y, void *user_data)
+static void acceptOutlineCubicTo(hb_draw_funcs_t *, void *drawdata, hb_draw_state_t *state, float cx1, float cy1,
+                                 float cx2, float cy2, float x, float y, void *user_data)
 {
     static_cast<OMFontOutline *>(drawdata)->cubicTo({x, y}, {cx1, cy1}, {cx2, cy2});
 }
@@ -69,9 +95,12 @@ void OMFont::parseChar(int charcode)
     int xsc, ysc;
     hb_font_get_scale(font, &xsc, &ysc);
 
-    auto ll = outline.buildPolygons(2, xsc, ysc);
-    std::sort(ll.begin(), ll.end(), [](std::shared_ptr<OMFontPolygon> p1, std::shared_ptr<OMFontPolygon> p2) { return p1->area() > p2->area(); });
+    auto ll = outline.buildPolygons(8, xsc, ysc);
+    std::sort(ll.begin(), ll.end(), [](std::shared_ptr<OMFontPolygon> p1, std::shared_ptr<OMFontPolygon> p2) {
+        return p1->area() > p2->area();
+    });
 
+    std::unordered_map<int, int> matches;
     for (int i = 0; i < ll.size(); i++)
     {
         int parent = -1;
@@ -83,7 +112,37 @@ void OMFont::parseChar(int charcode)
             }
         }
 
-        logger.info("{} -> parent:{}", i, parent);
+        matches[i] = parent;
+        logger.info("parent:{} <- {}", parent, i);
+    }
+
+    std::vector<int> filledPoly;
+    for (int pi = 0; pi < ll.size(); pi++)
+    {
+        auto currentIdx = pi;
+        int depth = 0;
+        while (currentIdx != -1)
+        {
+            currentIdx = matches[currentIdx];
+            depth++;
+        }
+
+        if (depth % 2 == 1)
+        {
+            filledPoly.push_back(pi);
+        }
+    }
+
+    for (auto ii : filledPoly)
+    {
+        logger.info("#{} holes:", ii);
+        for (auto lli = matches.begin(); lli != matches.end(); ++lli)
+        {
+            if ((*lli).second == ii)
+            {
+                logger.info("  -> {}", (*lli).first);
+            }
+        }
     }
 
     for (auto &p : ll)
