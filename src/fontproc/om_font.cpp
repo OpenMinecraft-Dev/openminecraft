@@ -52,29 +52,34 @@ static void acceptOutlineClosePath(hb_draw_funcs_t *, void *drawdata, hb_draw_st
     static_cast<OMFontOutline *>(drawdata)->closePath();
 }
 
+hb_draw_funcs_t *drawfuncs = nullptr;
+
 std::shared_ptr<OMTriangleList> OMFont::buildBasicPolygon(int charcode)
 {
+    if (!drawfuncs)
+    {
+        drawfuncs = hb_draw_funcs_create();
+
+        hb_draw_funcs_set_move_to_func(drawfuncs, acceptOutlineMoveTo, nullptr, nullptr);
+        hb_draw_funcs_set_line_to_func(drawfuncs, acceptOutlineLineTo, nullptr, nullptr);
+        hb_draw_funcs_set_quadratic_to_func(drawfuncs, acceptOutlineQuadraticTo, nullptr, nullptr);
+        hb_draw_funcs_set_cubic_to_func(drawfuncs, acceptOutlineCubicTo, nullptr, nullptr);
+        hb_draw_funcs_set_close_path_func(drawfuncs, acceptOutlineClosePath, nullptr, nullptr);
+    }
+
     auto font = static_cast<hb_font_t *>(hbFont);
 
     hb_codepoint_t gly;
     hb_font_get_nominal_glyph(font, charcode, &gly);
 
     OMFontOutline outline;
-    auto funcs = hb_draw_funcs_create();
 
-    hb_draw_funcs_set_move_to_func(funcs, acceptOutlineMoveTo, this, nullptr);
-    hb_draw_funcs_set_line_to_func(funcs, acceptOutlineLineTo, this, nullptr);
-    hb_draw_funcs_set_quadratic_to_func(funcs, acceptOutlineQuadraticTo, this, nullptr);
-    hb_draw_funcs_set_cubic_to_func(funcs, acceptOutlineCubicTo, this, nullptr);
-    hb_draw_funcs_set_close_path_func(funcs, acceptOutlineClosePath, this, nullptr);
-
-    hb_font_draw_glyph(font, gly, funcs, &outline);
-    hb_draw_funcs_destroy(funcs);
+    hb_font_draw_glyph(font, gly, drawfuncs, &outline);
 
     int xsc, ysc;
     hb_font_get_scale(font, &xsc, &ysc);
 
-    auto ll = outline.buildPolygons(4, xsc, ysc);
+    auto ll = outline.buildPolygons(8, xsc, ysc);
     std::sort(ll.begin(), ll.end(), [](std::shared_ptr<OMFontPolygon> p1, std::shared_ptr<OMFontPolygon> p2) {
         return p1->area() > p2->area();
     });
@@ -82,10 +87,11 @@ std::shared_ptr<OMTriangleList> OMFont::buildBasicPolygon(int charcode)
     std::unordered_map<int, int> matches;
     for (int i = 0; i < ll.size(); i++)
     {
+        // gino: -1 for virtual root
         int parent = -1;
         for (int j = 0; j < i; j++)
         {
-            if (ll[j]->isPolyInside(*ll[i].get()))
+            if (ll[j]->isPolyInside(ll[i]))
             {
                 parent = j;
             }
@@ -105,7 +111,8 @@ std::shared_ptr<OMTriangleList> OMFont::buildBasicPolygon(int charcode)
             depth++;
         }
 
-        if (depth % 2 == 1)
+        // gino: the depth is even, means that this polygon need to be rendered
+        if (depth & 0x1)
         {
             filledPoly.push_back(pi);
         }
@@ -115,11 +122,11 @@ std::shared_ptr<OMTriangleList> OMFont::buildBasicPolygon(int charcode)
     for (auto ii : filledPoly)
     {
         std::vector<std::shared_ptr<OMFontPolygon>> polys;
-        for (auto lli = matches.begin(); lli != matches.end(); ++lli)
+        for (auto lli : matches)
         {
-            if ((*lli).second == ii)
+            if (lli.second == ii)
             {
-                polys.push_back(ll[(*lli).first]);
+                polys.push_back(ll[lli.first]);
             }
         }
 

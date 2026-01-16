@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_testrenderer.hpp"
 
 #include "glm/fwd.hpp"
+#include "openminecraft/fontproc/om_font.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
@@ -103,11 +104,29 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
             throw std::runtime_error("Warn: " + warn + "\nError: " + err);
         }
 
+        auto iff = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
+        auto f = new fontproc::OMFont(*iff.get());
+        auto ppo = f->buildBasicPolygon(0x221e);
+        delete f;
+
         std::vector<VertexPart> vtxnew = {{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}}, {{0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
                                           {{1.0f, 0.0f, 1.0f}, {1.0f, 1.0f}}, {{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
                                           {{0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}}, {{0.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
                                           {{1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}, {{1.0f, 1.0f, 0.0f}, {1.0f, 0.0f}}};
         std::vector<uint32_t> indices = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
+
+        vtxnew.clear();
+        indices.clear();
+
+        for (auto &v : ppo->vertices)
+        {
+            vtxnew.push_back({{v.x, v.y, 0.0f}, {0.0f, 0.0f}});
+        }
+
+        for (auto i : ppo->indices)
+        {
+            indices.push_back(i);
+        }
 
         /*std::map<VertexPart, uint32_t> uniqueVertices;
 
@@ -115,10 +134,11 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
         {
             for (const auto &index : shape.mesh.indices)
             {
-                VertexPart prt = {{attrib.vertices[3 * index.vertex_index + 0],
-                                    attrib.vertices[3 * index.vertex_index + 2],
-                                   attrib.vertices[3 * index.vertex_index + 1],
-                                   },
+                VertexPart prt = {{
+                                      attrib.vertices[3 * index.vertex_index + 0],
+                                      attrib.vertices[3 * index.vertex_index + 2],
+                                      attrib.vertices[3 * index.vertex_index + 1],
+                                  },
                                   {attrib.texcoords[2 * index.texcoord_index + 0],
                                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1]}};
 

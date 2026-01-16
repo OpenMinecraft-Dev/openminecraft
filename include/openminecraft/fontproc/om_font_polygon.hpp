@@ -1,6 +1,7 @@
 #ifndef OM_FONT_POLYGON_HPP
 #define OM_FONT_POLYGON_HPP
 #include <glm/glm.hpp>
+#include <memory>
 #include <vector>
 
 namespace openminecraft::fontproc
@@ -45,9 +46,9 @@ class OMFontPolygon
         return count % 2 == 1;
     }
 
-    bool isPolyInside(OMFontPolygon &p)
+    bool isPolyInside(std::shared_ptr<OMFontPolygon> p)
     {
-        for (auto pp : p.vertices)
+        for (auto pp : p->vertices)
         {
             if (!isPointInside(pp))
             {
