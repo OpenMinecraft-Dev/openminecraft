@@ -41,7 +41,7 @@ class OMTriangleList
         for (auto ph : holes)
         {
             polybase.push_back(ph->vertices);
-            vertices.insert(vertices.end(), mainPoly->vertices.begin(), mainPoly->vertices.end());
+            vertices.insert(vertices.end(), ph->vertices.begin(), ph->vertices.end());
         }
         indices = mapbox::earcut<uint32_t>(polybase);
     }

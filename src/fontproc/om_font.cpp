@@ -5,6 +5,7 @@
 
 #include "openminecraft/fontproc/om_font_triangle_list.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
+#include <fstream>
 #include <memory>
 #include <unordered_map>
 
