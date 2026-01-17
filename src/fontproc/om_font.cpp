@@ -79,19 +79,19 @@ std::shared_ptr<OMTriangleList> OMFont::buildBasicPolygon(int charcode)
     int xsc, ysc;
     hb_font_get_scale(font, &xsc, &ysc);
 
-    auto ll = outline.buildPolygons(8, xsc, ysc);
-    std::sort(ll.begin(), ll.end(), [](std::shared_ptr<OMFontPolygon> p1, std::shared_ptr<OMFontPolygon> p2) {
+    auto rawpoly = outline.buildPolygons(8, xsc, ysc);
+    std::sort(rawpoly.begin(), rawpoly.end(), [](std::shared_ptr<OMFontPolygon> p1, std::shared_ptr<OMFontPolygon> p2) {
         return p1->area() > p2->area();
     });
 
     std::unordered_map<int, int> matches;
-    for (int i = 0; i < ll.size(); i++)
+    for (int i = 0; i < rawpoly.size(); i++)
     {
         // gino: -1 for virtual root
         int parent = -1;
         for (int j = 0; j < i; j++)
         {
-            if (ll[j]->isPolyInside(ll[i]))
+            if (rawpoly[j]->isPolyInside(rawpoly[i]))
             {
                 parent = j;
             }
@@ -101,7 +101,7 @@ std::shared_ptr<OMTriangleList> OMFont::buildBasicPolygon(int charcode)
     }
 
     std::vector<int> filledPoly;
-    for (int pi = 0; pi < ll.size(); pi++)
+    for (int pi = 0; pi < rawpoly.size(); pi++)
     {
         auto currentIdx = pi;
         int depth = 0;
@@ -119,18 +119,18 @@ std::shared_ptr<OMTriangleList> OMFont::buildBasicPolygon(int charcode)
     }
 
     std::vector<std::shared_ptr<OMTriangleList>> listbase;
-    for (auto ii : filledPoly)
+    for (auto polyid : filledPoly)
     {
         std::vector<std::shared_ptr<OMFontPolygon>> polys;
-        for (auto lli : matches)
+        for (auto sid : matches)
         {
-            if (lli.second == ii)
+            if (sid.second == polyid)
             {
-                polys.push_back(ll[lli.first]);
+                polys.push_back(rawpoly[sid.first]);
             }
         }
 
-        listbase.push_back(std::make_shared<OMTriangleList>(ll[ii], polys));
+        listbase.push_back(std::make_shared<OMTriangleList>(rawpoly[polyid], polys));
     }
 
     return std::make_shared<OMTriangleList>(listbase);

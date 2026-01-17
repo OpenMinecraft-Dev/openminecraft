@@ -195,6 +195,10 @@ common::OMRendererTexture *OMRendererVk::allocateTexture(uint64_t width, uint64_
 {
     return new OMRendererTextureVk(width, height, type, arr, this);
 }
+glm::vec2 OMRendererVk::getExtent()
+{
+    return {static_cast<float>(swapchainManager->extent.width), static_cast<float>(swapchainManager->extent.height)};
+}
 
 void OMRendererVk::render()
 {

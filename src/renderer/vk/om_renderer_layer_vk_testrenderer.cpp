@@ -7,8 +7,9 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "tiny_obj_loader.h"
 
-#include <fstream>
+#include <chrono>
 #include <glm/glm.hpp>
+#include <random>
 #include <vulkan/vulkan_core.h>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -106,7 +107,7 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
 
         auto iff = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
         auto f = new fontproc::OMFont(*iff.get());
-        auto ppo = f->buildBasicPolygon(0x221e);
+        auto ppo = f->buildBasicPolygon('@');
         delete f;
 
         std::vector<VertexPart> vtxnew = {{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}}, {{0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
@@ -118,9 +119,24 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
         vtxnew.clear();
         indices.clear();
 
+        std::random_device dev;
+        std::ranlux48 eng(dev());
+        std::uniform_real_distribution<> dist(0.0f, 1.0f);
+
+        auto uvv = 0.0f;
+        auto uvv2 = 0.0f;
+        auto iid = 0;
+
         for (auto &v : ppo->vertices)
         {
-            vtxnew.push_back({{v.x, v.y, 0.0f}, {0.0f, 0.0f}});
+            if (!iid)
+            {
+                uvv = dist(eng);
+                uvv2 = dist(eng);
+            }
+            vtxnew.push_back({{v.x, v.y, 0.0f}, {uvv, uvv2}});
+            iid++;
+            iid = iid % 3;
         }
 
         for (auto i : ppo->indices)
@@ -246,10 +262,9 @@ void OMTestRenderer::updateUniform()
     UniformStructure ubo{};
     ubo.model = glm::mat4(1.0f);
     ubo.view = glm::lookAt(m_cameraPos, m_cameraPos + front, m_cameraUp);
-    ubo.proj = glm::perspective(glm::radians(70.0f),
-                                static_cast<float>(renderer->swapchainManager->extent.width) /
-                                    static_cast<float>(renderer->swapchainManager->extent.height),
-                                0.01f, 5.0f);
+    auto extent = renderer->getExtent();
+    ubo.proj = glm::perspective(glm::radians(70.0f), extent.x / extent.y, 0.01f, 5.0f);
+    // vulkan only!
     ubo.proj *= glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, -1.0f, 1.0f));
 
     uniformBuffer->updateData(&ubo);
@@ -322,6 +337,7 @@ void OMTestRenderer::reinit()
     commandBuffers.clear();
     framebuffers.clear();
 
+    // these old resources need to be cleaned
     if (!firstTime)
     {
         renderer->logicalDevice.freeMemory(depthImageMemory, renderer->allocator);
