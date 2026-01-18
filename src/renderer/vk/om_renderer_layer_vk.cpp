@@ -50,6 +50,29 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(VkInstance instance, 
         func(instance, messenger, pAllocator);
     }
 }
+
+VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugReportCallbackEXT(VkInstance instance,
+                                                              const VkDebugReportCallbackCreateInfoEXT *pCreateInfo,
+                                                              const VkAllocationCallbacks *pAllocator,
+                                                              VkDebugReportCallbackEXT *pCallback)
+{
+    auto func = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
+    if (func != nullptr)
+    {
+        return func(instance, pCreateInfo, pAllocator, pCallback);
+    }
+    return VK_SUCCESS;
+}
+
+VKAPI_ATTR void VKAPI_CALL vkDestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback,
+                                                           const VkAllocationCallbacks *pAllocator)
+{
+    auto func = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
+    if (func != nullptr)
+    {
+        func(instance, callback, pAllocator);
+    }
+}
 #endif
 
 using namespace vk;
@@ -423,8 +446,13 @@ OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std
         VULKAN_HPP_DEFAULT_DISPATCHER.init(i);
 #endif
 
-        validationLayer->ifEnable(
-            [&]() { i.createDebugReportCallbackEXT(&validationLayer->callbackInfo, &allocator, &reportCallback); });
+        validationLayer->ifEnable([&]() {
+            auto r = i.createDebugReportCallbackEXT(&validationLayer->callbackInfo, &allocator, &reportCallback);
+            if (r != Result::eSuccess)
+            {
+                throw SystemError(r);
+            }
+        });
 
         return OMResult<Instance, std::string>::ok(i);
     }
@@ -517,7 +545,7 @@ void OMRendererVk::destroy()
     logicalDevice.destroyCommandPool(tempCommandPool, allocator);
     testRenderer->destroy();
     swapchainManager->destroy();
-    SDL_Vulkan_DestroySurface(instance, static_cast<VkSurfaceKHR>(surface),
+    SDL_Vulkan_DestroySurface(instance, VkSurfaceKHR(surface),
                               reinterpret_cast<const VkAllocationCallbacks *>(&allocator));
     logicalDevice.destroy(allocator);
     validationLayer->ifEnable([&]() { instance.destroyDebugReportCallbackEXT(reportCallback, &allocator); });
