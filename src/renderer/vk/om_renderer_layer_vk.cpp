@@ -10,6 +10,8 @@
 #include "openminecraft/util/om_util_version.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
+#include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan_structs.hpp"
 #include <SDL3/SDL_vulkan.h>
 #include <cstdlib>
 #include <cstring>
@@ -421,8 +423,6 @@ OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std
         VULKAN_HPP_DEFAULT_DISPATCHER.init(i);
 #endif
 
-        validationLayer->ifEnable(
-            [&]() { messenger = i.createDebugUtilsMessengerEXT(validationLayer->createInfo, allocator); });
         return OMResult<Instance, std::string>::ok(i);
     }
     catch (SystemError &e)
@@ -514,10 +514,9 @@ void OMRendererVk::destroy()
     logicalDevice.destroyCommandPool(tempCommandPool, allocator);
     testRenderer->destroy();
     swapchainManager->destroy();
-    // SDL_Vulkan_DestroySurface(instance, static_cast<VkSurfaceKHR>(surface),
-    //                           reinterpret_cast<const VkAllocationCallbacks *>(&allocator));
+    SDL_Vulkan_DestroySurface(instance, static_cast<VkSurfaceKHR>(surface),
+                              reinterpret_cast<const VkAllocationCallbacks *>(&allocator));
     logicalDevice.destroy(allocator);
-    validationLayer->ifEnable([&]() { instance.destroyDebugUtilsMessengerEXT(messenger, allocator); });
     instance.destroy(allocator);
     SDL_Vulkan_UnloadLibrary();
 }

@@ -41,8 +41,8 @@ template <typename E> class OMTicker
         return target;
     }
 
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> begin;
-    std::unordered_map<E, std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> eventMap;
+    std::chrono::high_resolution_clock::time_point begin;
+    std::unordered_map<E, std::chrono::high_resolution_clock::time_point> eventMap;
 };
 } // namespace openminecraft::util
 

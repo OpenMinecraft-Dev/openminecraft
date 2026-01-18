@@ -68,7 +68,6 @@ class OMRendererVk : public OMRenderer
     ::vk::Instance instance;
     ::vk::PhysicalDevice physicalDevice;
     ::vk::Device logicalDevice;
-    ::vk::DebugUtilsMessengerEXT messenger;
     ::vk::SurfaceKHR surface;
     std::pair<uint32_t, uint32_t> queueFamilyIndex;
     std::pair<::vk::Queue, ::vk::Queue> queues;

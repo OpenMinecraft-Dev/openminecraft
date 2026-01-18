@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
 #include <vector>
 #ifdef OM_VULKAN_DYNAMIC
@@ -14,11 +15,11 @@ using openminecraft::i18n::res::translate;
 namespace openminecraft::renderer::vk::validation
 {
 log::OMLogger internal("Vulkan Validation");
-int notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT t,
-           DebugUtilsMessengerCallbackDataEXT data, void *user)
+static int notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT t,
+                  DebugUtilsMessengerCallbackDataEXT data, void *user)
 {
     // gino: some drivers provide bad message string
-    if (((uintptr_t)data.pMessage) % sizeof(void *) != 0)
+    if (((uintptr_t)data.pMessage) % sizeof(void *) != 0 || data.messageIdNumber == 0)
     {
         return VK_SUCCESS;
     }
@@ -27,23 +28,30 @@ int notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT
     {
     default:
     case DebugUtilsMessageSeverityFlagBitsEXT::eVerbose:
-        internal.debug("{}", data.pMessage);
+        internal.debug("#{} {}", static_cast<uint32_t>(data.messageIdNumber), data.pMessage);
         break;
 
     case DebugUtilsMessageSeverityFlagBitsEXT::eInfo:
-        internal.info("{}", data.pMessage);
+        internal.info("#{} {}", static_cast<uint32_t>(data.messageIdNumber), data.pMessage);
         break;
 
     case DebugUtilsMessageSeverityFlagBitsEXT::eWarning:
-        internal.warn("{}", data.pMessage);
+        internal.warn("#{} {}", static_cast<uint32_t>(data.messageIdNumber), data.pMessage);
         break;
 
     case DebugUtilsMessageSeverityFlagBitsEXT::eError:
-        internal.error("{}", data.pMessage);
+        internal.error("#{} {}", static_cast<uint32_t>(data.messageIdNumber), data.pMessage);
         break;
     }
 
     return VK_SUCCESS;
+}
+static VkBool32 notifyNew(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object,
+                          size_t location, int32_t messageCode, const char *pLayerPrefix, const char *pMessage,
+                          void *pUserData)
+{
+    internal.info("{}", pMessage);
+    return true;
 }
 OMRendererVkValidation::OMRendererVkValidation(std::vector<LayerProperties> props)
 {
@@ -60,19 +68,25 @@ OMRendererVkValidation::OMRendererVkValidation(std::vector<LayerProperties> prop
     return;
 baseinit:
     enabled = true;
-    createInfo = DebugUtilsMessengerCreateInfoEXT(
-        DebugUtilsMessengerCreateFlagsEXT(),
-        DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | DebugUtilsMessageSeverityFlagBitsEXT::eInfo |
-            DebugUtilsMessageSeverityFlagBitsEXT::eWarning | DebugUtilsMessageSeverityFlagBitsEXT::eError,
-        DebugUtilsMessageTypeFlagBitsEXT::eGeneral | DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
-            DebugUtilsMessageTypeFlagBitsEXT::eValidation,
-        PFN_DebugUtilsMessengerCallbackEXT(notify), nullptr, nullptr);
+    createInfo = {{},
+                  DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | DebugUtilsMessageSeverityFlagBitsEXT::eInfo |
+                      DebugUtilsMessageSeverityFlagBitsEXT::eWarning | DebugUtilsMessageSeverityFlagBitsEXT::eError,
+                  DebugUtilsMessageTypeFlagBitsEXT::eGeneral | DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
+                      DebugUtilsMessageTypeFlagBitsEXT::eValidation,
+                  PFN_DebugUtilsMessengerCallbackEXT(notify),
+                  nullptr,
+                  nullptr};
+    callbackInfo = {DebugReportFlagBitsEXT::eDebug | DebugReportFlagBitsEXT::eInformation |
+                        DebugReportFlagBitsEXT::eWarning | DebugReportFlagBitsEXT::ePerformanceWarning |
+                        DebugReportFlagBitsEXT::eError,
+                    PFN_DebugReportCallbackEXT(notifyNew), nullptr, nullptr};
 }
 void OMRendererVkValidation::attachExts(std::vector<const char *> *data)
 {
     if (enabled)
     {
-        data->push_back("VK_EXT_debug_utils");
+        data->push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        data->push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
     }
 }
 void OMRendererVkValidation::attach(std::vector<const char *> *data)
