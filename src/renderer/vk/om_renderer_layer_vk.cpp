@@ -423,6 +423,9 @@ OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std
         VULKAN_HPP_DEFAULT_DISPATCHER.init(i);
 #endif
 
+        validationLayer->ifEnable(
+            [&]() { i.createDebugReportCallbackEXT(&validationLayer->callbackInfo, &allocator, &reportCallback); });
+
         return OMResult<Instance, std::string>::ok(i);
     }
     catch (SystemError &e)
@@ -517,6 +520,7 @@ void OMRendererVk::destroy()
     SDL_Vulkan_DestroySurface(instance, static_cast<VkSurfaceKHR>(surface),
                               reinterpret_cast<const VkAllocationCallbacks *>(&allocator));
     logicalDevice.destroy(allocator);
+    validationLayer->ifEnable([&]() { instance.destroyDebugReportCallbackEXT(reportCallback, &allocator); });
     instance.destroy(allocator);
     SDL_Vulkan_UnloadLibrary();
 }

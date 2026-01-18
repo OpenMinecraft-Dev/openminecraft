@@ -4,6 +4,7 @@
 #include "openminecraft/log/om_log_ansi.hpp"
 #include "openminecraft/log/om_log_plat.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
+#include <cstring>
 #include <ctime>
 #include <fmt/format.h>
 #include <iomanip>
@@ -86,6 +87,14 @@ void OMLogger::dumpStacktrace()
 
 void OMLogger::log(OMLogType type, std::string msg)
 {
+    for (auto ch : msg)
+    {
+        if (ch == '\n')
+        {
+            goto multiLine;
+        }
+    }
+
     if (this->enableFormat)
     {
         auto now = time(nullptr);
@@ -126,5 +135,15 @@ void OMLogger::log(OMLogType type, std::string msg)
     {
         logExternal(type, msg, loggerName, multithread::acquireThreadName(std::this_thread::get_id()));
     }
+    return;
+
+multiLine:
+    char *p = std::strtok((char *)msg.c_str(), "\n");
+    while (p)
+    {
+        log(type, std::string(p));
+        p = std::strtok(nullptr, "\n");
+    }
+    return;
 }
 } // namespace openminecraft::log

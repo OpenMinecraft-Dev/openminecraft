@@ -19,39 +19,55 @@ static int notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeF
                   DebugUtilsMessengerCallbackDataEXT data, void *user)
 {
     // gino: some drivers provide bad message string
-    if (((uintptr_t)data.pMessage) % sizeof(void *) != 0 || data.messageIdNumber == 0)
+    /*if (((uintptr_t)data.pMessage) % sizeof(void *) != 0 || data.messageIdNumber == 0)
     {
         return VK_SUCCESS;
-    }
+    }*/
 
     switch (s)
     {
     default:
     case DebugUtilsMessageSeverityFlagBitsEXT::eVerbose:
-        internal.debug("#{} {}", static_cast<uint32_t>(data.messageIdNumber), data.pMessage);
+        internal.debug("{}", data.pMessage);
         break;
 
     case DebugUtilsMessageSeverityFlagBitsEXT::eInfo:
-        internal.info("#{} {}", static_cast<uint32_t>(data.messageIdNumber), data.pMessage);
+        internal.info("{}", data.pMessage);
         break;
 
     case DebugUtilsMessageSeverityFlagBitsEXT::eWarning:
-        internal.warn("#{} {}", static_cast<uint32_t>(data.messageIdNumber), data.pMessage);
+        internal.warn("{}", data.pMessage);
         break;
 
     case DebugUtilsMessageSeverityFlagBitsEXT::eError:
-        internal.error("#{} {}", static_cast<uint32_t>(data.messageIdNumber), data.pMessage);
+        internal.error("{}", data.pMessage);
         break;
     }
 
     return VK_SUCCESS;
 }
-static VkBool32 notifyNew(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object,
+static VkBool32 notifyNew(DebugReportFlagBitsEXT flags, DebugReportObjectTypeEXT objectType, uint64_t object,
                           size_t location, int32_t messageCode, const char *pLayerPrefix, const char *pMessage,
                           void *pUserData)
 {
-    internal.info("{}", pMessage);
-    return true;
+    switch (flags)
+    {
+    case DebugReportFlagBitsEXT::eDebug:
+        internal.debug("{}", pMessage);
+        break;
+    default:
+    case DebugReportFlagBitsEXT::eInformation:
+        internal.info("{}", pMessage);
+        break;
+    case DebugReportFlagBitsEXT::eWarning:
+    case DebugReportFlagBitsEXT::ePerformanceWarning:
+        internal.warn("{}", pMessage);
+        break;
+    case DebugReportFlagBitsEXT::eError:
+        internal.error("{}", pMessage);
+        break;
+    }
+    return false;
 }
 OMRendererVkValidation::OMRendererVkValidation(std::vector<LayerProperties> props)
 {
