@@ -4,6 +4,7 @@
 #include "common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/util/om_util_version.hpp"
+#include <exception>
 #include <glm/glm.hpp>
 #include <string>
 
@@ -26,8 +27,8 @@ class OMRenderer
     virtual std::string driver() = 0;
     virtual common::OMRendererBuffer *allocateBuffer(common::OMBufferUsage usage, uint64_t length) = 0;
     virtual common::OMRendererTexture *allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type,
-                                                       common::OMTextureArrangement arr) = 0;
-    virtual glm::vec2 getExtent() = 0;
+                                                       common::OMTextureArrangement arrangement) = 0;
+    virtual glm::vec2 getExtent() const = 0;
 
   protected:
     void *window;

@@ -195,7 +195,7 @@ common::OMRendererTexture *OMRendererVk::allocateTexture(uint64_t width, uint64_
 {
     return new OMRendererTextureVk(width, height, type, arr, this);
 }
-glm::vec2 OMRendererVk::getExtent()
+glm::vec2 OMRendererVk::getExtent() const
 {
     return {static_cast<float>(swapchainManager->extent.width), static_cast<float>(swapchainManager->extent.height)};
 }
@@ -514,11 +514,11 @@ void OMRendererVk::destroy()
     logicalDevice.destroyCommandPool(tempCommandPool, allocator);
     testRenderer->destroy();
     swapchainManager->destroy();
-    SDL_Vulkan_DestroySurface(instance, static_cast<VkSurfaceKHR>(surface),
-                              reinterpret_cast<const VkAllocationCallbacks *>(&allocator));
-    logicalDevice.destroy();
+    // SDL_Vulkan_DestroySurface(instance, static_cast<VkSurfaceKHR>(surface),
+    //                           reinterpret_cast<const VkAllocationCallbacks *>(&allocator));
+    logicalDevice.destroy(allocator);
     validationLayer->ifEnable([&]() { instance.destroyDebugUtilsMessengerEXT(messenger, allocator); });
-    instance.destroy();
+    instance.destroy(allocator);
     SDL_Vulkan_UnloadLibrary();
 }
 std::string OMRendererVk::driver()

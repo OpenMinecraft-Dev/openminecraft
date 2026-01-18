@@ -2,6 +2,7 @@
 
 #include "glm/fwd.hpp"
 #include "openminecraft/fontproc/om_font.hpp"
+#include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
@@ -40,6 +41,7 @@ uint32_t findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properties,
 
 OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), logger("OMTestRenderer", this)
 {
+    camera = std::make_shared<common::basics::OMCamera>(renderer, m_cameraPos, m_yaw, m_pitch);
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.frag.glsl");
         common::OMShader shader(common::GLSLSource, io::readOnce(target.get()), "simple.frag.glsl", "main",
@@ -253,17 +255,10 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
 
 void OMTestRenderer::updateUniform()
 {
-    glm::vec3 front;
-    front.x = std::cos(glm::radians(m_yaw)) * std::cos(glm::radians(m_pitch));
-    front.y = std::sin(glm::radians(m_pitch));
-    front.z = std::sin(glm::radians(m_yaw)) * std::cos(glm::radians(m_pitch));
-    front = glm::normalize(front);
-
     UniformStructure ubo{};
     ubo.model = glm::mat4(1.0f);
-    ubo.view = glm::lookAt(m_cameraPos, m_cameraPos + front, m_cameraUp);
-    auto extent = renderer->getExtent();
-    ubo.proj = glm::perspective(glm::radians(70.0f), extent.x / extent.y, 0.01f, 5.0f);
+    ubo.view = camera->fetchViewMat();
+    ubo.proj = camera->fetchProjMat();
     // vulkan only!
     ubo.proj *= glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, -1.0f, 1.0f));
 
@@ -272,18 +267,8 @@ void OMTestRenderer::updateUniform()
 
 void OMTestRenderer::mouseOffset(float dx, float dy)
 {
-    m_pitch -= dy * m_cameraRotateSpeed;
-    m_yaw += dx * m_cameraRotateSpeed;
-
-    if (m_yaw < 0.0f)
-        m_yaw += 360.0f;
-    m_yaw = std::fmod(m_yaw + 180.0f, 360.0f);
-    m_yaw -= 180.0f;
-
-    if (m_pitch > 89.0f)
-        m_pitch = 89.0f;
-    if (m_pitch < -89.0f)
-        m_pitch = -89.0f;
+    camera->modPitch(-dy * m_cameraRotateSpeed);
+    camera->modYaw(dx * m_cameraRotateSpeed);
 }
 
 void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
@@ -293,34 +278,29 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
     const float time = std::chrono::duration<float>(currentTime - startTime).count();
     startTime = currentTime;
 
-    glm::vec3 front;
-    front.x = std::cos(glm::radians(m_yaw)) * std::cos(glm::radians(m_pitch));
-    // front.y = std::sin(glm::radians(m_pitch));
-    front.z = std::sin(glm::radians(m_yaw)) * std::cos(glm::radians(m_pitch));
-    front = glm::normalize(front);
     if (w)
     {
-        m_cameraPos += front * m_cameraMoveSpeed * time;
+        camera->moveCamera(common::basics::Forward, m_cameraMoveSpeed * time);
     }
     if (s)
     {
-        m_cameraPos -= front * m_cameraMoveSpeed * time;
+        camera->moveCamera(common::basics::Back, m_cameraMoveSpeed * time);
     }
     if (a)
     {
-        m_cameraPos -= glm::normalize(glm::cross(front, m_cameraUp)) * m_cameraMoveSpeed * time;
+        camera->moveCamera(common::basics::Left, m_cameraMoveSpeed * time);
     }
     if (d)
     {
-        m_cameraPos += glm::normalize(glm::cross(front, m_cameraUp)) * m_cameraMoveSpeed * time;
+        camera->moveCamera(common::basics::Right, m_cameraMoveSpeed * time);
     }
     if (sp)
     {
-        m_cameraPos += m_cameraUp * m_cameraMoveSpeed * time;
+        camera->moveCamera(common::basics::Up, m_cameraMoveSpeed * time);
     }
     if (lsh)
     {
-        m_cameraPos -= m_cameraUp * m_cameraMoveSpeed * time;
+        camera->moveCamera(common::basics::Down, m_cameraMoveSpeed * time);
     }
 }
 

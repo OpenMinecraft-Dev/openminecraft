@@ -55,7 +55,7 @@ class OMRendererVk : public OMRenderer
     common::OMRendererBuffer *allocateBuffer(common::OMBufferUsage usage, uint64_t length) override;
     common::OMRendererTexture *allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type,
                                                common::OMTextureArrangement arr) override;
-    glm::vec2 getExtent() override;
+    glm::vec2 getExtent() const override;
 
     void destroy();
 

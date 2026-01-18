@@ -1,6 +1,7 @@
 #ifndef OM_RENDERER_LAYER_VK_TESTRENDERER
 #define OM_RENDERER_LAYER_VK_TESTRENDERER
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/util/om_util_reinitable.hpp"
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
@@ -76,6 +77,8 @@ class OMTestRenderer : public util::OMReinitable
 
     void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp);
     void mouseOffset(float dx, float dy);
+
+    std::shared_ptr<common::basics::OMCamera> camera;
 
     log::OMLogger logger;
 
