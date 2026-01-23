@@ -81,6 +81,8 @@ includes("src/renderer/xmake.lua")
 includes("src/specs/xmake.lua")
 includes("src/fontproc/xmake.lua")
 
+includes("tests/xmake.lua")
+
 target("openminecraft-plat")
 set_kind("static")
 add_includedirs("include")

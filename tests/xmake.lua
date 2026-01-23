@@ -1,0 +1,6 @@
+target("openminecraft-test-io-json")
+set_kind("binary")
+add_deps("openminecraft-io", "openminecraft-log")
+add_packages("fmt", "boost")
+add_files("io/test-json.cpp")
+add_includedirs("../include")
