@@ -244,7 +244,9 @@ class OMJsonNodePrimitive : public OMJsonNode
 class OMJsonNodeNull : public OMJsonNode
 {
   public:
-    OMJsonNodeNull();
+    OMJsonNodeNull()
+    {
+    }
 
     OMJsonNodeType type() override
     {
