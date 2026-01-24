@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
+#include <iostream>
 
 using namespace ::vk;
 
@@ -34,6 +35,20 @@ static ImageType fromCommonType(common::OMTextureType type)
     }
 }
 
+static ImageViewType fromCommonType2(common::OMTextureType type)
+{
+    switch (type)
+    {
+    case common::Dim1:
+        return ImageViewType::e1D;
+    default:
+    case common::Dim2:
+        return ImageViewType::e2D;
+    case common::Dim3:
+        return ImageViewType::e3D;
+    }
+}
+
 static Format fromCommonUsage(common::OMTextureArrangement arr)
 {
     switch (arr)
@@ -56,7 +71,9 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, common
     format = fromCommonUsage(arr);
     image = renderer->logicalDevice.createImage(
         ImageCreateInfo({}, fromCommonType(type), format, Extent3D(width, height, 1), 1, 1, SampleCountFlagBits::e1,
-                        ImageTiling::eOptimal, ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled,
+                        ImageTiling::eOptimal,
+                        (arr == common::Depth) ? ImageUsageFlagBits::eDepthStencilAttachment
+                                               : ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled,
                         SharingMode::eExclusive, {}, ImageLayout::eUndefined),
         renderer->allocator);
 
@@ -66,6 +83,11 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, common
         renderer->allocator);
 
     renderer->logicalDevice.bindImageMemory(image, imageMemory, 0);
+
+    imageView = renderer->logicalDevice.createImageView(
+        ImageViewCreateInfo({}, image, fromCommonType2(type), format, {},
+                            ImageSubresourceRange(ImageAspectFlagBits::eColor, 0, 1, 0, 1)),
+        renderer->allocator);
 
     // TODO: copy data!!
 }
@@ -136,9 +158,9 @@ void OMRendererTextureVk::updateData(void *p)
 
     delete stagBuffer;
 
-    imageView = renderer->logicalDevice.createImageView(
+    /*imageView = renderer->logicalDevice.createImageView(
         ImageViewCreateInfo({}, image, ImageViewType::e2D, Format::eR8G8B8A8Srgb, {},
                             ImageSubresourceRange(ImageAspectFlagBits::eColor, 0, 1, 0, 1)),
-        renderer->allocator);
+        renderer->allocator);*/
 }
 } // namespace openminecraft::renderer::vk

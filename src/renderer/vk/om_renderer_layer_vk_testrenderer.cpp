@@ -321,9 +321,7 @@ void OMTestRenderer::reinit()
     // these old resources need to be cleaned
     if (!firstTime)
     {
-        renderer->logicalDevice.freeMemory(depthImageMemory, renderer->allocator);
-        renderer->logicalDevice.destroyImageView(depthImageView, renderer->allocator);
-        renderer->logicalDevice.destroyImage(depthImage, renderer->allocator);
+        delete depthBuffer;
         renderer->logicalDevice.destroyPipeline(pipeline, renderer->allocator);
         renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
     }
@@ -393,30 +391,13 @@ void OMTestRenderer::reinit()
     }
 
     {
-        auto prop = renderer->physicalDevice.getMemoryProperties();
-        depthImage = renderer->logicalDevice.createImage(
-            ImageCreateInfo(
-                {}, ImageType::e2D, Format::eD32Sfloat,
-                Extent3D(renderer->swapchainManager->extent.width, renderer->swapchainManager->extent.height, 1), 1, 1,
-                SampleCountFlagBits::e1, ImageTiling::eOptimal, ImageUsageFlagBits::eDepthStencilAttachment,
-                SharingMode::eExclusive, {}, ImageLayout::eUndefined),
-            renderer->allocator);
-        auto req = renderer->logicalDevice.getImageMemoryRequirements(depthImage);
-        depthImageMemory = renderer->logicalDevice.allocateMemory(
-            MemoryAllocateInfo(req.size,
-                               findMemoryType(req.memoryTypeBits, MemoryPropertyFlagBits::eDeviceLocal, prop)),
-            renderer->allocator);
-        renderer->logicalDevice.bindImageMemory(depthImage, depthImageMemory, 0);
-
-        depthImageView = renderer->logicalDevice.createImageView(
-            ImageViewCreateInfo({}, depthImage, ImageViewType::e2D, Format::eD32Sfloat, {},
-                                ImageSubresourceRange(ImageAspectFlagBits::eDepth, 0, 1, 0, 1)),
-            renderer->allocator);
+        depthBuffer = renderer->allocateTexture(renderer->swapchainManager->extent.width,
+                                                renderer->swapchainManager->extent.height, common::Dim2, common::Depth);
     }
 
     for (auto img : renderer->swapchainManager->swapchainImageViews)
     {
-        const std::vector ii = {img, depthImageView};
+        const std::vector ii = {img, reinterpret_cast<OMRendererTextureVk *>(depthBuffer)->imageView}; // depthImageView
         framebuffers.push_back(renderer->logicalDevice.createFramebuffer(
             FramebufferCreateInfo({}, renderPass, ii, renderer->swapchainManager->extent.width,
                                   renderer->swapchainManager->extent.height, 1),
@@ -452,9 +433,7 @@ void OMTestRenderer::reinit()
 }
 void OMTestRenderer::destroy()
 {
-    renderer->logicalDevice.freeMemory(depthImageMemory, renderer->allocator);
-    renderer->logicalDevice.destroyImageView(depthImageView, renderer->allocator);
-    renderer->logicalDevice.destroyImage(depthImage, renderer->allocator);
+    delete depthBuffer;
 
     renderer->logicalDevice.freeDescriptorSets(descriptorPool, combinedDescriptorSet);
     renderer->logicalDevice.destroySampler(textureSampler, renderer->allocator);

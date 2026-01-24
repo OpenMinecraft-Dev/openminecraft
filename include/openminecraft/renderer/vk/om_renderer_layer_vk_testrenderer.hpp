@@ -71,9 +71,7 @@ class OMTestRenderer : public util::OMReinitable
 
     ::vk::Sampler textureSampler;
 
-    ::vk::DeviceMemory depthImageMemory;
-    ::vk::Image depthImage;
-    ::vk::ImageView depthImageView;
+    common::OMRendererTexture *depthBuffer;
 
     void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp);
     void mouseOffset(float dx, float dy);
