@@ -1,13 +1,16 @@
 #include "openminecraft/i18n/om_i18n_res.hpp"
-#include "nlohmann/detail/exceptions.hpp"
-#include "nlohmann/json.hpp"
-#include "nlohmann/json_fwd.hpp"
 #include "openminecraft/i18n/om_i18n_locale.hpp"
+#include "openminecraft/io/json/om_io_ast_builder_json.hpp"
+#include "openminecraft/io/json/om_io_tokeniter_json.hpp"
+#include "openminecraft/io/om_io_tokeniter_exception.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include <SDL3/SDL_locale.h>
 #include <algorithm>
 #include <iterator>
+#include <unordered_map>
+
+using namespace openminecraft::io;
 
 namespace openminecraft::i18n::res
 {
@@ -15,7 +18,7 @@ std::vector<std::string> base;
 std::vector<std::string> modNames;
 std::vector<LangInfo> records;
 std::string locale;
-std::map<std::string, std::map<std::string, std::string>> translates;
+std::unordered_map<std::string, std::unordered_map<std::string, std::string>> translates;
 log::OMLogger logger = log::OMLogger("i18n");
 void pushResourceRoot(std::string resRoot)
 {
@@ -43,7 +46,6 @@ void load()
 
     records.clear();
     translates.clear();
-    nlohmann::json data;
     for (auto mod : modNames)
     {
         try
@@ -51,18 +53,19 @@ void load()
             for (auto rt : base)
             {
                 auto p = fmt::format("{}/{}/lang/lang.json", rt, mod);
-                auto f = vfs::fsfetch(p);
-                if (!f || !f->good())
+
+                auto ff = vfs::fsfetch(p);
+                if (!ff || !ff->good())
                 {
                     logger.warn("Bad module language list file: {}", p);
-                    continue;
                 }
+                json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(ff));
+                auto ll = bld.build();
 
-                *f >> data;
                 std::vector<std::string> loc;
-                for (auto a : data["available"])
+                for (auto &a : ll->getMap()["available"]->getArray())
                 {
-                    loc.push_back((std::string)a);
+                    loc.push_back(a->getString());
                 }
                 records.push_back({mod, loc});
 
@@ -70,7 +73,7 @@ void load()
                 {
                     if (translates.count(l) == 0)
                     {
-                        translates[l] = std::map<std::string, std::string>();
+                        translates[l] = std::unordered_map<std::string, std::string>();
                     }
 
                     auto pr = fmt::format("{}/{}/lang/{}.json", rt, mod, l);
@@ -81,17 +84,23 @@ void load()
                         continue;
                     }
 
-                    *fr >> data;
-                    for (auto m : data.items())
+                    json::OMJsonAstBuilder bld2(std::make_shared<json::OMJsonTokenIter>(fr));
+                    auto ll2 = bld2.build();
+
+                    for (auto &p : ll2->getMap())
                     {
-                        translates[l][(std::string)m.key()] = (std::string)m.value();
+                        translates[l][p.first] = p.second->getString();
                     }
                 }
             }
         }
-        catch (nlohmann::detail::type_error e)
+        catch (std::logic_error e)
         {
             logger.error("parsing exception: {}", e.what());
+        }
+        catch (OMTokenIterException e)
+        {
+            logger.error("tokenizer exception: {}", e.what());
         }
     }
 }

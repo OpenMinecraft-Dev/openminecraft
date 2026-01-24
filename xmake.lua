@@ -9,63 +9,74 @@ includes("utils.lua")
 includes("extlibs/libpatches.lua")
 includes("extlibs/vulkan.lua")
 
-if not is_plat("windows") then 
-    add_ldflags("-rdynamic")
+if not is_plat("windows") then
+	add_ldflags("-rdynamic")
 end
 
 includes("extlibs/shaderc.lua")
 
 if not mobile() then
-    if not is_plat("linux", "cross", "bsd", "macosx", "iphoneos", "visionos") then
-        add_requires("vulkan-loader", { system = false })
-    end
+	if not is_plat("linux", "cross", "bsd", "macosx", "iphoneos", "visionos") then
+		add_requires("vulkan-loader", { system = false })
+	end
 end
-if apple() then 
-    add_requires("moltenvk", { configs = { shared = false } })
+if apple() then
+	add_requires("moltenvk", { configs = { shared = false } })
 end
 if not is_plat("harmony") then
-    add_requires("openal-soft")
+	add_requires("openal-soft")
 end
 
-add_requires("freetype", "stb", "vulkan-headers", "glm", "bullet3",  "vulkan-hpp", "shaderc", "nlohmann_json", "libsdl3", "tinyobjloader", { system = false })
+add_requires(
+	"freetype",
+	"stb",
+	"vulkan-headers",
+	"glm",
+	"bullet3",
+	"vulkan-hpp",
+	"shaderc",
+	"libsdl3",
+	"tinyobjloader",
+	{ system = false }
+)
 add_requires("boost", { system = false, configs = { stacktrace = true } })
 add_requires("fmt", { system = false, configs = { header_only = true } })
 add_requires("harfbuzz", { system = false, configs = { freetype = false } })
 
 if apple() then
-    add_defines("BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED=")
+	add_defines("BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED=")
 end
 if vulkandyn() then
-    add_defines("OM_VULKAN_DYNAMIC=")
+	add_defines("OM_VULKAN_DYNAMIC=")
 end
 
 if not is_plat("windows") then
-    add_defines("OM_PLATFORM_UNIX=")
+	add_defines("OM_PLATFORM_UNIX=")
 end
 
 if is_plat("windows") then
-    add_defines("OM_PLATFORM_WINDOWS=")
+	add_defines("OM_PLATFORM_WINDOWS=")
 end
 if is_plat("linux") then
-    add_defines("OM_PLATFORM_LINUX=")
+	add_defines("OM_PLATFORM_LINUX=")
 end
 if is_plat("bsd") then
-    add_defines("OM_PLATFORM_BSD=")
+	add_defines("OM_PLATFORM_BSD=")
 end
 if is_plat("macosx") then
-    add_defines("OM_PLATFORM_MACOS=")
+	add_defines("OM_PLATFORM_MACOS=")
 end
 if is_plat("android") then
-    add_defines("OM_PLATFORM_ANDROID=")
+	add_defines("OM_PLATFORM_ANDROID=")
 end
 if is_plat("iphoneos") then
-    add_defines("OM_PLATFORM_IOS=")
+	add_defines("OM_PLATFORM_IOS=")
 end
 if is_plat("harmony") then
-    add_defines("OM_PLATFORM_HARMONY=")
+	add_defines("OM_PLATFORM_HARMONY=")
 end
 if not mobile() then
-    add_defines("OM_PLATFORM_DESKTOP=")
+	add_defines("OM_PLATFORM_DESKTOP=")
 end
 
 includes("src/log/xmake.lua")
@@ -86,116 +97,158 @@ includes("tests/xmake.lua")
 target("openminecraft-plat")
 set_kind("static")
 add_includedirs("include")
-add_packages("freetype", "harfbuzz", "stb", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", "libsdl3", "openal-soft", { system = false })
+add_packages(
+	"freetype",
+	"harfbuzz",
+	"stb",
+	"vulkan-headers",
+	"glm",
+	"bullet3",
+	"vulkan-hpp",
+	"shaderc",
+	"fmt",
+	"boost",
+	"nlohmann_json",
+	"libsdl3",
+	"openal-soft",
+	{ system = false }
+)
 if not is_plat("windows") then
-    add_files("plat/unix/**.cpp")
+	add_files("plat/unix/**.cpp")
 end
 if is_plat("windows") then
-    add_files("plat/windows/**.cpp")
+	add_files("plat/windows/**.cpp")
 end
 if is_plat("linux") then
-    add_files("plat/linux/**.cpp")
+	add_files("plat/linux/**.cpp")
 end
 if is_plat("bsd") then
-    add_files("plat/bsd/**.cpp")
+	add_files("plat/bsd/**.cpp")
 end
 if is_plat("macosx") then
-    add_files("plat/macos/**.cpp")
+	add_files("plat/macos/**.cpp")
 end
 if is_plat("android") then
-    add_files("plat/android/**.cpp")
+	add_files("plat/android/**.cpp")
 end
 if is_plat("iphoneos") then
-    add_files("plat/ios/**.cpp")
+	add_files("plat/ios/**.cpp")
 end
 if is_plat("harmony") then
-    add_files("plat/harmony/**.cpp")
+	add_files("plat/harmony/**.cpp")
 end
 if not mobile() then
-    add_files("plat/desktop/**.cpp")
+	add_files("plat/desktop/**.cpp")
 end
 
 if is_arch("x86", "i386", "x86_64", "x64") then
-    if not is_plat("windows") then
-        add_files("arch/x86/unix_**.S")
-    else
-        add_files("arch/x86/msvc_**.S")
-    end
-    add_files("arch/x86/**.cpp")
+	if not is_plat("windows") then
+		add_files("arch/x86/unix_**.S")
+	else
+		add_files("arch/x86/msvc_**.S")
+	end
+	add_files("arch/x86/**.cpp")
 elseif is_arch("arm64-v8a", "arm64") then
-    if not is_plat("windows") then
-        add_files("arch/aarch64/unix_**.S")
-    else
-        add_files("arch/aarch64/msvc_**.S")
-    end
-    add_files("arch/aarch64/**.cpp")
+	if not is_plat("windows") then
+		add_files("arch/aarch64/unix_**.S")
+	else
+		add_files("arch/aarch64/msvc_**.S")
+	end
+	add_files("arch/aarch64/**.cpp")
 elseif is_arch("armeabi", "armv7k", "armeabi-v7a", "arm", "armv7s", "armv7") then
-    add_files("arch/arm/unix_**.S")
-    add_files("arch/arm/**.cpp")
+	add_files("arch/arm/unix_**.S")
+	add_files("arch/arm/**.cpp")
 elseif is_arch("loong64") then
-    add_files("arch/loongarch/unix_**.S")
-    add_files("arch/loongarch/**.cpp")
+	add_files("arch/loongarch/unix_**.S")
+	add_files("arch/loongarch/**.cpp")
 elseif is_arch("mips64", "mips64el", "mip64") then
-    add_files("arch/mips64/unix_**.S")
-    add_files("arch/mips64/**.cpp")
+	add_files("arch/mips64/unix_**.S")
+	add_files("arch/mips64/**.cpp")
 elseif is_arch("mips", "mipsel") then
-    add_files("arch/mips/unix_**.S")
-    add_files("arch/mips/**.cpp")
+	add_files("arch/mips/unix_**.S")
+	add_files("arch/mips/**.cpp")
 elseif is_arch("ppc") then
-    add_files("arch/ppc/unix_**.S")
-    add_files("arch/ppc/**.cpp")
+	add_files("arch/ppc/unix_**.S")
+	add_files("arch/ppc/**.cpp")
 elseif is_arch("ppc64") then
-    add_files("arch/ppc64/unix_**.S")
-    add_files("arch/ppc64/**.cpp")
+	add_files("arch/ppc64/unix_**.S")
+	add_files("arch/ppc64/**.cpp")
 elseif is_arch("riscv") then
-    add_files("arch/riscv/unix_**.S")
-    add_files("arch/riscv/**.cpp")
+	add_files("arch/riscv/unix_**.S")
+	add_files("arch/riscv/**.cpp")
 elseif is_arch("riscv64") then
-    add_files("arch/riscv64/unix_**.S")
-    add_files("arch/riscv64/**.cpp")
+	add_files("arch/riscv64/unix_**.S")
+	add_files("arch/riscv64/**.cpp")
 else
-    add_files("arch/fallback/unix_**.S")
-    add_files("arch/fallback/**.cpp")
+	add_files("arch/fallback/unix_**.S")
+	add_files("arch/fallback/**.cpp")
 end
 
 includes("tools/bundlemaker/xmake.lua")
 
 target("openminecraft")
 if is_plat("android", "harmony") then
-    set_kind("shared")
-    add_rules("utils.symbols.export_all")
-else 
-    set_kind("binary")
+	set_kind("shared")
+	add_rules("utils.symbols.export_all")
+else
+	set_kind("binary")
 end
 
 add_includedirs("include")
 if is_plat("harmony") then
-    add_syslinks("vulkan")
-    add_links("vulkan")
+	add_syslinks("vulkan")
+	add_links("vulkan")
 elseif is_plat("android") then
-    add_syslinks("GLESv2")
+	add_syslinks("GLESv2")
 end
 
 add_files("launcher/**.cpp")
-add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-binary", "openminecraft-mem", "openminecraft-io", "openminecraft-vfs", "openminecraft-boot", "openminecraft-util", "openminecraft-i18n", "openminecraft-renderer", "openminecraft-plat", "openminecraft-specs", "openminecraft-fontproc")
+add_deps(
+	"openminecraft-log",
+	"openminecraft-vm",
+	"openminecraft-binary",
+	"openminecraft-mem",
+	"openminecraft-io",
+	"openminecraft-vfs",
+	"openminecraft-boot",
+	"openminecraft-util",
+	"openminecraft-i18n",
+	"openminecraft-renderer",
+	"openminecraft-plat",
+	"openminecraft-specs",
+	"openminecraft-fontproc"
+)
 
-add_packages("freetype", "harfbuzz", "stb", "vulkan-headers", "glm", "bullet3", "vulkan-hpp", "shaderc", "fmt", "boost", "nlohmann_json", "libsdl3", { system = false })
+add_packages(
+	"freetype",
+	"harfbuzz",
+	"stb",
+	"vulkan-headers",
+	"glm",
+	"bullet3",
+	"vulkan-hpp",
+	"shaderc",
+	"fmt",
+	"boost",
+	"nlohmann_json",
+	"libsdl3",
+	{ system = false }
+)
 if not mobile() and not vulkandyn() and not apple() then
-    add_packages("vulkan-loader")
+	add_packages("vulkan-loader")
 end
-if apple() then 
-    add_packages("moltenvk")
-    add_frameworks("CoreText", "CoreFoundation", "CoreGraphics")
+if apple() then
+	add_packages("moltenvk")
+	add_frameworks("CoreText", "CoreFoundation", "CoreGraphics")
 end
 if is_plat("iphoneos") then
-    add_frameworks("OpenGLES")
+	add_frameworks("OpenGLES")
 end
 
 if is_plat("macosx") then
-    add_frameworks("OpenGL")
+	add_frameworks("OpenGL")
 elseif is_plat("windows", "mingw") then
-    add_links("opengl32", "dbghelp")
+	add_links("opengl32", "dbghelp")
 elseif is_plat("linux", "cross") then
-    add_links("OpenGL")
+	add_links("OpenGL")
 end
-
