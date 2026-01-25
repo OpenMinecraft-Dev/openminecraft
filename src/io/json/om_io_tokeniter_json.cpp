@@ -117,7 +117,7 @@ beg:
         return nullptr;
     }
 
-    throw OMTokenIterException(fmt::format("json: unknown token {} {}", static_cast<char>(this->source->peek())));
+    throw OMTokenIterException(fmt::format("json: unknown token {}", static_cast<char>(this->source->peek())));
 }
 
 bool OMJsonTokenIter::end()
