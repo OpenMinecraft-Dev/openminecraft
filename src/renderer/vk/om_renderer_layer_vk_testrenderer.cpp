@@ -411,7 +411,7 @@ void OMTestRenderer::reinit()
             CommandBufferAllocateInfo(commandPool, CommandBufferLevel::ePrimary, 1))[0];
 
         commandBuffer.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eSimultaneousUse));
-        std::vector test = {ClearValue({55, 55, 55, 55}), ClearValue({1.0f, 0})};
+        std::vector test = {ClearValue({200u, 200u, 200u, 200u}), ClearValue({1.0f, 0})};
         commandBuffer.beginRenderPass(RenderPassBeginInfo(renderPass, framebuffer,
                                                           Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent),
                                                           test),

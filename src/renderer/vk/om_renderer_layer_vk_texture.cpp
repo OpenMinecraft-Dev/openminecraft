@@ -85,8 +85,10 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, common
     renderer->logicalDevice.bindImageMemory(image, imageMemory, 0);
 
     imageView = renderer->logicalDevice.createImageView(
-        ImageViewCreateInfo({}, image, fromCommonType2(type), format, {},
-                            ImageSubresourceRange(ImageAspectFlagBits::eColor, 0, 1, 0, 1)),
+        ImageViewCreateInfo(
+            {}, image, fromCommonType2(type), format, {},
+            ImageSubresourceRange(((arr == common::Depth) ? ImageAspectFlagBits::eDepth : ImageAspectFlagBits::eColor),
+                                  0, 1, 0, 1)),
         renderer->allocator);
 
     // TODO: copy data!!
