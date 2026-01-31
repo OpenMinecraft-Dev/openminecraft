@@ -199,8 +199,12 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         {
             frameSyncs.push_back(
                 {logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator),
-                 logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator),
                  logicalDevice.createFence(FenceCreateInfo(FenceCreateFlagBits::eSignaled), allocator)});
+        }
+
+        for (int i = 0; i < swapchainManager->swapchainImageViews.size(); i++)
+        {
+            frameRenderSemaphores.push_back(logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator));
         }
     }
     catch (SystemError &e)
@@ -267,13 +271,11 @@ void OMRendererVk::render()
 
         const PipelineStageFlags msk = PipelineStageFlagBits::eColorAttachmentOutput;
         SubmitInfo submitInfo(1, &frameSyncs[thisFrame].imageAvailableSemaphore, &msk, 1,
-                              &testRenderer->commandBuffers[imageIndex], 1,
-                              &frameSyncs[thisFrame].renderFinishedSemaphore);
+                              &testRenderer->commandBuffers[imageIndex], 1, &frameRenderSemaphores[imageIndex]);
 
         queues.first.submit(submitInfo, frameSyncs[thisFrame].inFlightFence);
 
-        PresentInfoKHR presentInfo(1, &frameSyncs[thisFrame].renderFinishedSemaphore, 1, &swapchainManager->swapchain,
-                                   &imageIndex);
+        PresentInfoKHR presentInfo(1, &frameRenderSemaphores[imageIndex], 1, &swapchainManager->swapchain, &imageIndex);
 
         result = queues.second.presentKHR(presentInfo);
         if (result != Result::eSuccess)
@@ -538,8 +540,11 @@ void OMRendererVk::destroy()
     for (auto sync : frameSyncs)
     {
         logicalDevice.destroySemaphore(sync.imageAvailableSemaphore, allocator);
-        logicalDevice.destroySemaphore(sync.renderFinishedSemaphore, allocator);
         logicalDevice.destroyFence(sync.inFlightFence, allocator);
+    }
+    for (auto sep : frameRenderSemaphores)
+    {
+        logicalDevice.destroySemaphore(sep, allocator);
     }
     logicalDevice.destroyCommandPool(tempCommandPool, allocator);
     testRenderer->destroy();

@@ -32,7 +32,6 @@ void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAll
 
 struct FrameSync
 {
-    ::vk::Semaphore renderFinishedSemaphore;
     ::vk::Semaphore imageAvailableSemaphore;
     ::vk::Fence inFlightFence;
 };
@@ -76,6 +75,7 @@ class OMRendererVk : public OMRenderer
     ::vk::CommandPool tempCommandPool;
 
     std::vector<FrameSync> frameSyncs;
+    std::vector<::vk::Semaphore> frameRenderSemaphores;
     std::map<uint32_t, FrameSync> inflights;
 
     int framesInFlight = 3;
