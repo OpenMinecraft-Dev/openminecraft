@@ -2,6 +2,7 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "shaderc/shaderc.hpp"
+#include <stdexcept>
 
 namespace openminecraft::renderer::common
 {
@@ -64,15 +65,17 @@ std::shared_ptr<OMShader> OMShader::convertTo(OMShaderFileType type)
     auto result = compiler->CompileGlslToSpv(reinterpret_cast<const char *>(this->data.data()), this->data.size(), k,
                                              filename.c_str(), entrypoint.c_str(), opt);
 
-    if (result.GetCompilationStatus() == shaderc_compilation_status_success)
-    {
-        logger.info("complied shader {}", filename);
-    }
-    else
-    {
-        logger.error("{}: {}", filename, result.GetErrorMessage());
-    }
+    logger.info("complied shader {}", filename);
     logger.info("{} errors, {} warnings", result.GetNumErrors(), result.GetNumWarnings());
+    if (result.GetNumWarnings() != 0 && result.GetNumErrors() == 0)
+    {
+        logger.warn(result.GetErrorMessage());
+    }
+    if (result.GetCompilationStatus() != shaderc_compilation_status_success)
+    {
+        throw std::logic_error(
+            fmt::format("Shader compliation failed for {}: \n{}", filename, result.GetErrorMessage()));
+    }
 
     std::vector<uint8_t> data;
     for (auto itt = result.begin(); itt != result.end(); ++itt)

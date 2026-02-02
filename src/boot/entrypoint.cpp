@@ -135,7 +135,7 @@ int boot(std::vector<std::string> args)
         -1);*/
 
     // pixeltower::registerFuncs();
-    tower = std::make_unique<pixeltower::v0::OMPixelTower>();
+    std::unique_ptr<pixeltower::v0::OMPixelTower> tower;
 
     if constexpr (true)
     {
@@ -151,7 +151,7 @@ int boot(std::vector<std::string> args)
                 try
                 {
                     renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
-                                           util::Version(1, 0, 0, 0), util::Version(1, 0, 0, 0)};
+                                           util::Version(1, 0, 0, 0), util::Version(1, 2, 0, 0)};
 
                     auto wnd = SDL_CreateWindow("Vulkan Test", 800, 800, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
                     auto renderer = std::make_unique<renderer::vk::OMRendererVk>(
@@ -287,6 +287,7 @@ int boot(std::vector<std::string> args)
                 mem::castorice::printres();
                 break;
             case "pt_buildcls"_hash: {
+                tower = std::make_unique<pixeltower::v0::OMPixelTower>();
                 pixeltower::v3::OMClassBuilder builder;
                 builder.klassBegin();
                 builder.klassAccessFlags(JVM_Acc_Public);
@@ -324,6 +325,7 @@ int boot(std::vector<std::string> args)
                 break;
             }
             case "ptinit"_hash: {
+                tower = std::make_unique<pixeltower::v0::OMPixelTower>();
                 pixeltower::v1::tracing::installHandler();
                 tower->initCurrentThread(1ul * 1024 * 1024);
                 tower->init("vmstd/out");

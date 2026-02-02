@@ -148,7 +148,7 @@ std::shared_ptr<OMTriangleList> OMFont::buildBasicPolygon(int charcode)
     logger.info("Glyph build process: ");
     for (auto &pp : ticker.fetchEvents<std::chrono::microseconds>())
     {
-        logger.info("{}: +{} us", pp.first, pp.second);
+        logger.info("{}: ~{} us", pp.first, pp.second);
     }
 
     return std::make_shared<OMTriangleList>(listbase);

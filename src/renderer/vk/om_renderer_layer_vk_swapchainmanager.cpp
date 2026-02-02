@@ -7,6 +7,7 @@
 
 #include <SDL3/SDL_video.h>
 
+#include <iostream>
 #include <utility>
 
 using namespace ::vk;
@@ -83,16 +84,18 @@ void OMSwapchainManager::reinit()
                                       supp.capabilities.currentTransform, CompositeAlphaFlagBitsKHR::eOpaque,
                                       choosePresentMode(supp), false, nullptr);
 
+    std::vector<uint32_t> fams = {families.first, families.second};
     if (families.first != families.second)
     {
         createInfo.imageSharingMode = SharingMode::eConcurrent;
-        uint32_t data[] = {families.first, families.second};
         createInfo.queueFamilyIndexCount = 2;
-        createInfo.pQueueFamilyIndices = data;
+        createInfo.pQueueFamilyIndices = fams.data();
     }
     else
     {
         createInfo.imageSharingMode = SharingMode::eExclusive;
+        createInfo.queueFamilyIndexCount = 1;
+        createInfo.pQueueFamilyIndices = fams.data();
     }
 
     swapchain = device.createSwapchainKHR(createInfo, callbacks);

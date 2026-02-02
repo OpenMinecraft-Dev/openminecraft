@@ -8,6 +8,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "tiny_obj_loader.h"
+#include "vulkan/vulkan.hpp"
 
 #include <chrono>
 #include <glm/glm.hpp>
@@ -353,15 +354,11 @@ void OMTestRenderer::reinit()
         auto vertexInput = PipelineVertexInputStateCreateInfo({}, bi, ad);
         auto inputAssembly = PipelineInputAssemblyStateCreateInfo({}, PrimitiveTopology::eTriangleList, false);
 
-        const std::vector vp = {Viewport(0, 0, static_cast<float>(renderer->swapchainManager->extent.width),
-                                         static_cast<float>(renderer->swapchainManager->extent.height), 0, 1)};
-        const std::vector scis = {Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent)};
-        auto viewportState = PipelineViewportStateCreateInfo({}, vp, scis);
         auto rasterization =
             PipelineRasterizationStateCreateInfo({}, false, false, PolygonMode::eFill, CullModeFlagBits::eNone,
                                                  FrontFace::eCounterClockwise, true, 0, 0, 0, 1);
         auto multisample = PipelineMultisampleStateCreateInfo({}, SampleCountFlagBits::e1, false);
-
+        auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
         const std::vector attc = {
             PipelineColorBlendAttachmentState(false, {}, {}, {}, {}, {}, {},
                                               ColorComponentFlagBits::eA | ColorComponentFlagBits::eR |
@@ -371,12 +368,14 @@ void OMTestRenderer::reinit()
 
         auto depthStencil =
             PipelineDepthStencilStateCreateInfo({}, true, true, CompareOp::eLess, true, true, {}, {}, 0.0f, 1.0f);
+        std::vector<DynamicState> states = {DynamicState::eScissor, DynamicState::eViewport};
+        auto dynamicState = PipelineDynamicStateCreateInfo({}, 2, states.data());
 
         auto result = renderer->logicalDevice.createGraphicsPipeline(
             {},
             GraphicsPipelineCreateInfo({}, shaders, &vertexInput, &inputAssembly, {}, &viewportState, &rasterization,
-                                       &multisample, &depthStencil, &colorblend, {}, pipelineLayout, renderPass, 0, {},
-                                       -1),
+                                       &multisample, &depthStencil, &colorblend, &dynamicState, pipelineLayout,
+                                       renderPass, 0, {}, -1),
             renderer->allocator);
         if (result.result != Result::eSuccess)
         {
@@ -411,11 +410,14 @@ void OMTestRenderer::reinit()
             CommandBufferAllocateInfo(commandPool, CommandBufferLevel::ePrimary, 1))[0];
 
         commandBuffer.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eSimultaneousUse));
-        std::vector test = {ClearValue({200u, 200u, 200u, 200u}), ClearValue({1.0f, 0})};
+        std::vector test = {ClearValue({0, 0, 0, 0}), ClearValue({1.0f, 0})};
         commandBuffer.beginRenderPass(RenderPassBeginInfo(renderPass, framebuffer,
                                                           Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent),
                                                           test),
                                       SubpassContents::eInline);
+        commandBuffer.setViewport(0, {Viewport(0, 0, static_cast<float>(renderer->swapchainManager->extent.width),
+                                               static_cast<float>(renderer->swapchainManager->extent.height), 0, 1)});
+        commandBuffer.setScissor(0, {Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent)});
         commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, pipeline);
         commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, pipelineLayout, 0,
                                          std::vector{descriptorSet, combinedDescriptorSet}, nullptr);

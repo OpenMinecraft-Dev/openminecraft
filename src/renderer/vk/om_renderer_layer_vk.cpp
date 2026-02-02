@@ -549,10 +549,10 @@ void OMRendererVk::destroy()
     logicalDevice.destroyCommandPool(tempCommandPool, allocator);
     testRenderer->destroy();
     swapchainManager->destroy();
+    validationLayer->ifEnable([&]() { instance.destroyDebugReportCallbackEXT(reportCallback, &allocator); });
+    logicalDevice.destroy(allocator);
     SDL_Vulkan_DestroySurface(instance, VkSurfaceKHR(surface),
                               reinterpret_cast<const VkAllocationCallbacks *>(&allocator));
-    logicalDevice.destroy(allocator);
-    validationLayer->ifEnable([&]() { instance.destroyDebugReportCallbackEXT(reportCallback, &allocator); });
     instance.destroy(allocator);
     SDL_Vulkan_UnloadLibrary();
 }
