@@ -58,6 +58,7 @@ class OMTestRenderer : public util::OMReinitable
 
     ::vk::CommandPool commandPool;
     std::vector<::vk::CommandBuffer> commandBuffers;
+    ::vk::CommandBuffer intermediateBuffer;
 
     std::vector<::vk::DescriptorSetLayout> descriptorSetLayouts;
 

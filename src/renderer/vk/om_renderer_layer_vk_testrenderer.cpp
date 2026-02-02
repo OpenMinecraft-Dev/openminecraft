@@ -250,6 +250,89 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
     renderer->logicalDevice.updateDescriptorSets(
         WriteDescriptorSet(combinedDescriptorSet, 0, 0, DescriptorType::eCombinedImageSampler, cc), nullptr);
 
+    pipelineLayout = renderer->logicalDevice.createPipelineLayout(PipelineLayoutCreateInfo({}, descriptorSetLayouts),
+                                                                  renderer->allocator);
+
+    {
+        auto shaders =
+            std::vector{PipelineShaderStageCreateInfo(
+                            {}, ShaderStageFlagBits::eVertex,
+                            renderer->logicalDevice.createShaderModule(
+                                ShaderModuleCreateInfo({}, vtxShader->data.size(),
+                                                       reinterpret_cast<const uint32_t *>(vtxShader->data.data())),
+                                renderer->allocator),
+                            "main"),
+                        PipelineShaderStageCreateInfo(
+                            {}, ShaderStageFlagBits::eFragment,
+                            renderer->logicalDevice.createShaderModule(
+                                ShaderModuleCreateInfo({}, frgShader->data.size(),
+                                                       reinterpret_cast<const uint32_t *>(frgShader->data.data())),
+                                renderer->allocator),
+                            "main")};
+
+        const std::vector bi = {VertexInputBindingDescription(0, (3 + 2) * sizeof(float), VertexInputRate::eVertex)};
+        const std::vector ad = {VertexInputAttributeDescription(0, 0, Format::eR32G32B32Sfloat, 0),
+                                VertexInputAttributeDescription(1, 0, Format::eR32G32Sfloat, 3 * sizeof(float))};
+
+        auto vertexInput = PipelineVertexInputStateCreateInfo({}, bi, ad);
+        auto inputAssembly = PipelineInputAssemblyStateCreateInfo({}, PrimitiveTopology::eTriangleList, false);
+
+        auto rasterization =
+            PipelineRasterizationStateCreateInfo({}, false, false, PolygonMode::eFill, CullModeFlagBits::eNone,
+                                                 FrontFace::eCounterClockwise, true, 0, 0, 0, 1);
+        auto multisample = PipelineMultisampleStateCreateInfo({}, SampleCountFlagBits::e1, false);
+        auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
+        const std::vector attc = {
+            PipelineColorBlendAttachmentState(false, {}, {}, {}, {}, {}, {},
+                                              ColorComponentFlagBits::eA | ColorComponentFlagBits::eR |
+                                                  ColorComponentFlagBits::eG | ColorComponentFlagBits::eB)};
+        auto colorblend =
+            PipelineColorBlendStateCreateInfo({}, true, LogicOp::eCopy, attc, std::array{0.f, 0.f, 0.f, 0.f});
+
+        auto depthStencil =
+            PipelineDepthStencilStateCreateInfo({}, true, true, CompareOp::eLess, true, true, {}, {}, 0.0f, 1.0f);
+        std::vector<DynamicState> states = {DynamicState::eScissor, DynamicState::eViewport};
+        auto dynamicState = PipelineDynamicStateCreateInfo({}, 2, states.data());
+
+        auto result = renderer->logicalDevice.createGraphicsPipeline(
+            {},
+            GraphicsPipelineCreateInfo({}, shaders, &vertexInput, &inputAssembly, {}, &viewportState, &rasterization,
+                                       &multisample, &depthStencil, &colorblend, &dynamicState, pipelineLayout,
+                                       renderPass, 0, {}, -1),
+            renderer->allocator);
+        if (result.result != Result::eSuccess)
+        {
+            throw SystemError(result.result);
+        }
+        pipeline = result.value;
+
+        for (auto sd : shaders)
+        {
+            renderer->logicalDevice.destroyShaderModule(sd.module, renderer->allocator);
+        }
+    }
+
+    {
+        intermediateBuffer =
+            renderer->logicalDevice.allocateCommandBuffers({commandPool, CommandBufferLevel::eSecondary, 1})[0];
+        auto ii = CommandBufferInheritanceInfo(renderPass, 0);
+        intermediateBuffer.begin(
+            {CommandBufferUsageFlagBits::eSimultaneousUse | CommandBufferUsageFlagBits::eRenderPassContinue, &ii});
+        intermediateBuffer.setViewport(0,
+                                       {Viewport(0, 0, static_cast<float>(renderer->swapchainManager->extent.width),
+                                                 static_cast<float>(renderer->swapchainManager->extent.height), 0, 1)});
+        intermediateBuffer.setScissor(0, {Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent)});
+        intermediateBuffer.bindPipeline(PipelineBindPoint::eGraphics, pipeline);
+        intermediateBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, pipelineLayout, 0,
+                                              std::vector{descriptorSet, combinedDescriptorSet}, nullptr);
+        intermediateBuffer.bindVertexBuffers(
+            0, std::vector{reinterpret_cast<OMRendererBufferVk *>(vertexBuffer)->buffer}, std::vector<DeviceSize>{0});
+        intermediateBuffer.bindIndexBuffer(reinterpret_cast<OMRendererBufferVk *>(indexBuffer)->buffer, 0,
+                                           IndexType::eUint32);
+        intermediateBuffer.drawIndexed(vertexCount, 1, 0, 0, 0);
+        intermediateBuffer.end();
+    }
+
     OMTestRenderer::reinit();
 
     firstTime = false;
@@ -323,70 +406,6 @@ void OMTestRenderer::reinit()
     if (!firstTime)
     {
         delete depthBuffer;
-        renderer->logicalDevice.destroyPipeline(pipeline, renderer->allocator);
-        renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
-    }
-
-    pipelineLayout = renderer->logicalDevice.createPipelineLayout(PipelineLayoutCreateInfo({}, descriptorSetLayouts),
-                                                                  renderer->allocator);
-
-    {
-        auto shaders =
-            std::vector{PipelineShaderStageCreateInfo(
-                            {}, ShaderStageFlagBits::eVertex,
-                            renderer->logicalDevice.createShaderModule(
-                                ShaderModuleCreateInfo({}, vtxShader->data.size(),
-                                                       reinterpret_cast<const uint32_t *>(vtxShader->data.data())),
-                                renderer->allocator),
-                            "main"),
-                        PipelineShaderStageCreateInfo(
-                            {}, ShaderStageFlagBits::eFragment,
-                            renderer->logicalDevice.createShaderModule(
-                                ShaderModuleCreateInfo({}, frgShader->data.size(),
-                                                       reinterpret_cast<const uint32_t *>(frgShader->data.data())),
-                                renderer->allocator),
-                            "main")};
-
-        const std::vector bi = {VertexInputBindingDescription(0, (3 + 2) * sizeof(float), VertexInputRate::eVertex)};
-        const std::vector ad = {VertexInputAttributeDescription(0, 0, Format::eR32G32B32Sfloat, 0),
-                                VertexInputAttributeDescription(1, 0, Format::eR32G32Sfloat, 3 * sizeof(float))};
-
-        auto vertexInput = PipelineVertexInputStateCreateInfo({}, bi, ad);
-        auto inputAssembly = PipelineInputAssemblyStateCreateInfo({}, PrimitiveTopology::eTriangleList, false);
-
-        auto rasterization =
-            PipelineRasterizationStateCreateInfo({}, false, false, PolygonMode::eFill, CullModeFlagBits::eNone,
-                                                 FrontFace::eCounterClockwise, true, 0, 0, 0, 1);
-        auto multisample = PipelineMultisampleStateCreateInfo({}, SampleCountFlagBits::e1, false);
-        auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
-        const std::vector attc = {
-            PipelineColorBlendAttachmentState(false, {}, {}, {}, {}, {}, {},
-                                              ColorComponentFlagBits::eA | ColorComponentFlagBits::eR |
-                                                  ColorComponentFlagBits::eG | ColorComponentFlagBits::eB)};
-        auto colorblend =
-            PipelineColorBlendStateCreateInfo({}, true, LogicOp::eCopy, attc, std::array{0.f, 0.f, 0.f, 0.f});
-
-        auto depthStencil =
-            PipelineDepthStencilStateCreateInfo({}, true, true, CompareOp::eLess, true, true, {}, {}, 0.0f, 1.0f);
-        std::vector<DynamicState> states = {DynamicState::eScissor, DynamicState::eViewport};
-        auto dynamicState = PipelineDynamicStateCreateInfo({}, 2, states.data());
-
-        auto result = renderer->logicalDevice.createGraphicsPipeline(
-            {},
-            GraphicsPipelineCreateInfo({}, shaders, &vertexInput, &inputAssembly, {}, &viewportState, &rasterization,
-                                       &multisample, &depthStencil, &colorblend, &dynamicState, pipelineLayout,
-                                       renderPass, 0, {}, -1),
-            renderer->allocator);
-        if (result.result != Result::eSuccess)
-        {
-            throw SystemError(result.result);
-        }
-        pipeline = result.value;
-
-        for (auto sd : shaders)
-        {
-            renderer->logicalDevice.destroyShaderModule(sd.module, renderer->allocator);
-        }
     }
 
     {
@@ -414,8 +433,8 @@ void OMTestRenderer::reinit()
         commandBuffer.beginRenderPass(RenderPassBeginInfo(renderPass, framebuffer,
                                                           Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent),
                                                           test),
-                                      SubpassContents::eInline);
-        commandBuffer.setViewport(0, {Viewport(0, 0, static_cast<float>(renderer->swapchainManager->extent.width),
+                                      SubpassContents::eSecondaryCommandBuffers);
+        /*commandBuffer.setViewport(0, {Viewport(0, 0, static_cast<float>(renderer->swapchainManager->extent.width),
                                                static_cast<float>(renderer->swapchainManager->extent.height), 0, 1)});
         commandBuffer.setScissor(0, {Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent)});
         commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, pipeline);
@@ -425,7 +444,8 @@ void OMTestRenderer::reinit()
                                         std::vector<DeviceSize>{0});
         commandBuffer.bindIndexBuffer(reinterpret_cast<OMRendererBufferVk *>(indexBuffer)->buffer, 0,
                                       IndexType::eUint32);
-        commandBuffer.drawIndexed(vertexCount, 1, 0, 0, 0);
+        commandBuffer.drawIndexed(vertexCount, 1, 0, 0, 0);*/
+        commandBuffer.executeCommands(intermediateBuffer);
         commandBuffer.endRenderPass();
         commandBuffer.end();
 
@@ -449,6 +469,7 @@ void OMTestRenderer::destroy()
     }
     delete vertexBuffer;
     delete indexBuffer;
+    renderer->logicalDevice.freeCommandBuffers(commandPool, intermediateBuffer);
     renderer->logicalDevice.freeCommandBuffers(commandPool, commandBuffers);
     renderer->logicalDevice.destroyCommandPool(commandPool, renderer->allocator);
     renderer->logicalDevice.destroyPipeline(pipeline, renderer->allocator);
