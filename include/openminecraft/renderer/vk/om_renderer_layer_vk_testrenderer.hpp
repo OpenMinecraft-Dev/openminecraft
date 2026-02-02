@@ -60,13 +60,12 @@ class OMTestRenderer : public util::OMReinitable
     std::vector<::vk::CommandBuffer> commandBuffers;
     ::vk::CommandBuffer intermediateBuffer;
 
-    std::vector<::vk::DescriptorSetLayout> descriptorSetLayouts;
-
     common::OMRendererBuffer *uniformBuffer;
 
+    std::vector<::vk::DescriptorSetLayout> descriptorSetLayouts;
+
     ::vk::DescriptorPool descriptorPool;
-    ::vk::DescriptorSet descriptorSet;
-    ::vk::DescriptorSet combinedDescriptorSet;
+    std::vector<::vk::DescriptorSet> descriptorSets;
 
     common::OMRendererTexture *textureImage;
 
