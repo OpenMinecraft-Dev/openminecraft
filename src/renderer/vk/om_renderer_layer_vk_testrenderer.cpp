@@ -3,6 +3,7 @@
 #include "glm/fwd.hpp"
 #include "openminecraft/fontproc/om_font.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
+#include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
@@ -84,6 +85,12 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
     }
 
     {
+        common::basics::OMVertexFormat format;
+        format.appendPart("position", common::basics::Vec3f);
+        format.appendPart("textureUV", common::basics::Vec2f);
+        format.decideStruct();
+        format.debugState();
+
         class VertexPart
         {
             glm::vec3 pos;
@@ -221,34 +228,33 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
     }
 
     {
-        const std::vector b = {
+        std::vector b = {
             DescriptorSetLayoutBinding(0, DescriptorType::eUniformBuffer, 1, ShaderStageFlagBits::eVertex)};
         descriptorSetLayouts.emplace_back(renderer->logicalDevice.createDescriptorSetLayout(
             DescriptorSetLayoutCreateInfo({}, b), renderer->allocator));
 
-        const std::vector b2 = {
+        std::vector b2 = {
             DescriptorSetLayoutBinding(0, DescriptorType::eCombinedImageSampler, 1, ShaderStageFlagBits::eFragment)};
         descriptorSetLayouts.emplace_back(renderer->logicalDevice.createDescriptorSetLayout(
             DescriptorSetLayoutCreateInfo({}, b2), renderer->allocator));
 
-        const std::vector a = {DescriptorPoolSize(DescriptorType::eUniformBuffer, 1),
-                               DescriptorPoolSize(DescriptorType::eCombinedImageSampler, 1)};
+        std::vector a = {DescriptorPoolSize(DescriptorType::eUniformBuffer, 1),
+                         DescriptorPoolSize(DescriptorType::eCombinedImageSampler, 1)};
 
         descriptorPool = renderer->logicalDevice.createDescriptorPool(
             DescriptorPoolCreateInfo(DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 2, a), renderer->allocator);
         descriptorSets = renderer->logicalDevice.allocateDescriptorSets(
             DescriptorSetAllocateInfo(descriptorPool, descriptorSetLayouts));
 
-        const std::vector c = {DescriptorBufferInfo(reinterpret_cast<OMRendererBufferVk *>(uniformBuffer)->buffer, 0,
-                                                    sizeof(UniformStructure))};
+        std::vector c = {DescriptorBufferInfo(reinterpret_cast<OMRendererBufferVk *>(uniformBuffer)->buffer, 0,
+                                              sizeof(UniformStructure))};
         renderer->logicalDevice.updateDescriptorSets(
             WriteDescriptorSet(descriptorSets[0], 0, 0, DescriptorType::eUniformBuffer, {}, c), nullptr);
 
-        const auto cc =
-            DescriptorImageInfo(textureSampler, reinterpret_cast<OMRendererTextureVk *>(textureImage)->imageView,
-                                ImageLayout::eShaderReadOnlyOptimal);
+        auto cc = DescriptorImageInfo(textureSampler, reinterpret_cast<OMRendererTextureVk *>(textureImage)->imageView,
+                                      ImageLayout::eShaderReadOnlyOptimal);
         renderer->logicalDevice.updateDescriptorSets(
-            WriteDescriptorSet(descriptorSets[1], 0, 0, DescriptorType::eCombinedImageSampler, cc), nullptr);
+            WriteDescriptorSet(descriptorSets[1], 0, 0, DescriptorType::eCombinedImageSampler, cc, {}), nullptr);
     }
 
     {
@@ -271,9 +277,9 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
                                 renderer->allocator),
                             "main")};
 
-        const std::vector bi = {VertexInputBindingDescription(0, (3 + 2) * sizeof(float), VertexInputRate::eVertex)};
-        const std::vector ad = {VertexInputAttributeDescription(0, 0, Format::eR32G32B32Sfloat, 0),
-                                VertexInputAttributeDescription(1, 0, Format::eR32G32Sfloat, 3 * sizeof(float))};
+        std::vector bi = {VertexInputBindingDescription(0, (3 + 2) * sizeof(float), VertexInputRate::eVertex)};
+        std::vector ad = {VertexInputAttributeDescription(0, 0, Format::eR32G32B32Sfloat, 0),
+                          VertexInputAttributeDescription(1, 0, Format::eR32G32Sfloat, 3 * sizeof(float))};
 
         auto vertexInput = PipelineVertexInputStateCreateInfo({}, bi, ad);
         auto inputAssembly = PipelineInputAssemblyStateCreateInfo({}, PrimitiveTopology::eTriangleList, false);
@@ -283,17 +289,17 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
                                                  FrontFace::eCounterClockwise, true, 0, 0, 0, 1);
         auto multisample = PipelineMultisampleStateCreateInfo({}, SampleCountFlagBits::e1, false);
         auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
-        const std::vector attc = {
-            PipelineColorBlendAttachmentState(false, {}, {}, {}, {}, {}, {},
-                                              ColorComponentFlagBits::eA | ColorComponentFlagBits::eR |
-                                                  ColorComponentFlagBits::eG | ColorComponentFlagBits::eB)};
+        std::vector attc = {PipelineColorBlendAttachmentState(false, {}, {}, {}, {}, {}, {},
+                                                              ColorComponentFlagBits::eA | ColorComponentFlagBits::eR |
+                                                                  ColorComponentFlagBits::eG |
+                                                                  ColorComponentFlagBits::eB)};
         auto colorblend =
             PipelineColorBlendStateCreateInfo({}, true, LogicOp::eCopy, attc, std::array{0.f, 0.f, 0.f, 0.f});
 
         auto depthStencil =
             PipelineDepthStencilStateCreateInfo({}, true, true, CompareOp::eLess, true, true, {}, {}, 0.0f, 1.0f);
         std::vector<DynamicState> states = {DynamicState::eScissor, DynamicState::eViewport};
-        auto dynamicState = PipelineDynamicStateCreateInfo({}, 2, states.data());
+        auto dynamicState = PipelineDynamicStateCreateInfo({}, states);
 
         auto result = renderer->logicalDevice.createGraphicsPipeline(
             {},
@@ -415,7 +421,7 @@ void OMTestRenderer::reinit()
 
     for (auto img : renderer->swapchainManager->swapchainImageViews)
     {
-        const std::vector ii = {img, reinterpret_cast<OMRendererTextureVk *>(depthBuffer)->imageView}; // depthImageView
+        const std::vector ii = {img, reinterpret_cast<OMRendererTextureVk *>(depthBuffer)->imageView};
         framebuffers.push_back(renderer->logicalDevice.createFramebuffer(
             FramebufferCreateInfo({}, renderPass, ii, renderer->swapchainManager->extent.width,
                                   renderer->swapchainManager->extent.height, 1),
@@ -424,13 +430,12 @@ void OMTestRenderer::reinit()
 
     for (int i = 0; i < framebuffers.size(); i++)
     {
-        auto framebuffer = framebuffers[i];
         auto commandBuffer = renderer->logicalDevice.allocateCommandBuffers(
             CommandBufferAllocateInfo(commandPool, CommandBufferLevel::ePrimary, 1))[0];
 
         commandBuffer.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eSimultaneousUse));
         std::vector test = {ClearValue({0, 0, 0, 0}), ClearValue({1.0f, 0})};
-        commandBuffer.beginRenderPass(RenderPassBeginInfo(renderPass, framebuffer,
+        commandBuffer.beginRenderPass(RenderPassBeginInfo(renderPass, framebuffers[i],
                                                           Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent),
                                                           test),
                                       SubpassContents::eSecondaryCommandBuffers);
