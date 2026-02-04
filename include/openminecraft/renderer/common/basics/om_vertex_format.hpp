@@ -24,7 +24,16 @@ enum OMVertexPropType
     Boolean,
     Vec2b,
     Vec3b,
-    Vec4b
+    Vec4b,
+    Mat4x4,
+    Mat3x3
+};
+
+struct OMVertexFormatGroup
+{
+    bool isInstance = false;
+    int binding = 0;
+    std::vector<std::tuple<std::string, OMVertexPropType, int>> parts;
 };
 
 class OMVertexFormat
@@ -39,9 +48,14 @@ class OMVertexFormat
     static int typeSize(OMVertexPropType);
     static int typeAlign(OMVertexPropType);
 
-    std::vector<std::tuple<std::string, OMVertexPropType, int>> parts;
+    void setInstance();
+    void nextGroup();
+
+    std::vector<OMVertexFormatGroup> parts;
+    OMVertexFormatGroup currentGroup;
 
   private:
+    int binding = 0;
     log::OMLogger logger;
 };
 } // namespace openminecraft::renderer::common::basics

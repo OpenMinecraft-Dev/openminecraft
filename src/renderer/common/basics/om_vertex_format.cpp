@@ -1,4 +1,5 @@
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
+#include <tuple>
 
 namespace openminecraft::renderer::common::basics
 {
@@ -11,32 +12,52 @@ OMVertexFormat::~OMVertexFormat()
 
 void OMVertexFormat::appendPart(std::string id, OMVertexPropType type)
 {
-    parts.push_back(std::make_tuple(id, type, 0));
+    currentGroup.parts.push_back(std::make_tuple(id, type, 0));
 }
 
 void OMVertexFormat::decideStruct()
 {
-    int offset = 0;
-    for (auto &p : parts)
+    for (auto &part : parts)
     {
-        auto align = typeAlign(std::get<OMVertexPropType>(p));
-        if (offset % align != 0)
+        int offset = 0;
+        for (auto &p : part.parts)
         {
-            offset += align - (offset % align);
+            auto align = typeAlign(std::get<OMVertexPropType>(p));
+            if (offset % align != 0)
+            {
+                offset += align - (offset % align);
+            }
+            int &off = std::get<int>(p);
+            off = offset;
+            offset += typeSize(std::get<OMVertexPropType>(p));
         }
-        int &off = std::get<int>(p);
-        off = offset;
-        offset += typeSize(std::get<OMVertexPropType>(p));
     }
 }
 
 void OMVertexFormat::debugState()
 {
-    for (auto &o : parts)
+    for (auto &p : parts)
     {
-        logger.info("{}: size {} @ +{}", std::get<std::string>(o), typeSize(std::get<OMVertexPropType>(o)),
-                    std::get<int>(o));
+        logger.info("binding {}, instance = {}", p.binding, p.binding ? "true" : "false");
+        for (auto &o : p.parts)
+        {
+            logger.info("{}: size {} @ +{}", std::get<std::string>(o), typeSize(std::get<OMVertexPropType>(o)),
+                        std::get<int>(o));
+        }
     }
+}
+
+void OMVertexFormat::setInstance()
+{
+    currentGroup.isInstance = true;
+}
+
+void OMVertexFormat::nextGroup()
+{
+    parts.push_back(currentGroup);
+    currentGroup = OMVertexFormatGroup();
+    binding++;
+    currentGroup.binding = binding;
 }
 
 int OMVertexFormat::typeAlign(OMVertexPropType type)
@@ -56,6 +77,8 @@ int OMVertexFormat::typeAlign(OMVertexPropType type)
     case Vec3i:
     case Vec4f:
     case Vec4i:
+    case Mat3x3:
+    case Mat4x4:
     default:
         return sizeof(float);
     case Boolean:
@@ -102,6 +125,10 @@ int OMVertexFormat::typeSize(OMVertexPropType type)
         return sizeof(bool) * 3;
     case Vec4b:
         return sizeof(bool) * 4;
+    case Mat3x3:
+        return sizeof(float) * 3 * 3;
+    case Mat4x4:
+        return sizeof(float) * 4 * 4;
     default:
         return 0;
     }

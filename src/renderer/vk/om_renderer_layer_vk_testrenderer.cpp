@@ -88,6 +88,10 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
         common::basics::OMVertexFormat format;
         format.appendPart("position", common::basics::Vec3f);
         format.appendPart("textureUV", common::basics::Vec2f);
+        format.nextGroup();
+        format.setInstance();
+        format.appendPart("modelMat", common::basics::Mat4x4);
+        format.nextGroup();
         format.decideStruct();
         format.debugState();
 
