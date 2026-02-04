@@ -229,37 +229,34 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
 
     {
         std::vector b = {
-            DescriptorSetLayoutBinding(0, DescriptorType::eUniformBuffer, 1, ShaderStageFlagBits::eVertex)};
-        descriptorSetLayouts.emplace_back(renderer->logicalDevice.createDescriptorSetLayout(
-            DescriptorSetLayoutCreateInfo({}, b), renderer->allocator));
+            DescriptorSetLayoutBinding(0, DescriptorType::eUniformBuffer, 1, ShaderStageFlagBits::eVertex),
+            DescriptorSetLayoutBinding(1, DescriptorType::eCombinedImageSampler, 1, ShaderStageFlagBits::eFragment)};
 
-        std::vector b2 = {
-            DescriptorSetLayoutBinding(0, DescriptorType::eCombinedImageSampler, 1, ShaderStageFlagBits::eFragment)};
-        descriptorSetLayouts.emplace_back(renderer->logicalDevice.createDescriptorSetLayout(
-            DescriptorSetLayoutCreateInfo({}, b2), renderer->allocator));
+        descriptorSetLayout = renderer->logicalDevice.createDescriptorSetLayout(DescriptorSetLayoutCreateInfo({}, b),
+                                                                                renderer->allocator);
 
         std::vector a = {DescriptorPoolSize(DescriptorType::eUniformBuffer, 1),
                          DescriptorPoolSize(DescriptorType::eCombinedImageSampler, 1)};
 
         descriptorPool = renderer->logicalDevice.createDescriptorPool(
             DescriptorPoolCreateInfo(DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 2, a), renderer->allocator);
-        descriptorSets = renderer->logicalDevice.allocateDescriptorSets(
-            DescriptorSetAllocateInfo(descriptorPool, descriptorSetLayouts));
+        descriptorSet = renderer->logicalDevice.allocateDescriptorSets(
+            DescriptorSetAllocateInfo(descriptorPool, 1, &descriptorSetLayout))[0];
 
         std::vector c = {DescriptorBufferInfo(reinterpret_cast<OMRendererBufferVk *>(uniformBuffer)->buffer, 0,
                                               sizeof(UniformStructure))};
         renderer->logicalDevice.updateDescriptorSets(
-            WriteDescriptorSet(descriptorSets[0], 0, 0, DescriptorType::eUniformBuffer, {}, c), nullptr);
+            WriteDescriptorSet(descriptorSet, 0, 0, DescriptorType::eUniformBuffer, {}, c), nullptr);
 
         auto cc = DescriptorImageInfo(textureSampler, reinterpret_cast<OMRendererTextureVk *>(textureImage)->imageView,
                                       ImageLayout::eShaderReadOnlyOptimal);
         renderer->logicalDevice.updateDescriptorSets(
-            WriteDescriptorSet(descriptorSets[1], 0, 0, DescriptorType::eCombinedImageSampler, cc, {}), nullptr);
+            WriteDescriptorSet(descriptorSet, 1, 0, DescriptorType::eCombinedImageSampler, cc, {}), nullptr);
     }
 
     {
-        pipelineLayout = renderer->logicalDevice.createPipelineLayout(
-            PipelineLayoutCreateInfo({}, descriptorSetLayouts), renderer->allocator);
+        pipelineLayout = renderer->logicalDevice.createPipelineLayout(PipelineLayoutCreateInfo({}, descriptorSetLayout),
+                                                                      renderer->allocator);
 
         auto shaders =
             std::vector{PipelineShaderStageCreateInfo(
@@ -330,7 +327,7 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
                                                  static_cast<float>(renderer->swapchainManager->extent.height), 0, 1)});
         intermediateBuffer.setScissor(0, {Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent)});
         intermediateBuffer.bindPipeline(PipelineBindPoint::eGraphics, pipeline);
-        intermediateBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets, nullptr);
+        intermediateBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
         intermediateBuffer.bindVertexBuffers(
             0, std::vector{reinterpret_cast<OMRendererBufferVk *>(vertexBuffer)->buffer}, std::vector<DeviceSize>{0});
         intermediateBuffer.bindIndexBuffer(reinterpret_cast<OMRendererBufferVk *>(indexBuffer)->buffer, 0,
@@ -452,13 +449,10 @@ void OMTestRenderer::destroy()
 
     renderer->logicalDevice.destroySampler(textureSampler, renderer->allocator);
     delete textureImage;
-    renderer->logicalDevice.freeDescriptorSets(descriptorPool, descriptorSets);
+    renderer->logicalDevice.freeDescriptorSets(descriptorPool, descriptorSet);
     renderer->logicalDevice.destroyDescriptorPool(descriptorPool, renderer->allocator);
     delete uniformBuffer;
-    for (auto l : descriptorSetLayouts)
-    {
-        renderer->logicalDevice.destroyDescriptorSetLayout(l, renderer->allocator);
-    }
+    renderer->logicalDevice.destroyDescriptorSetLayout(descriptorSetLayout, renderer->allocator);
     delete vertexBuffer;
     delete indexBuffer;
     renderer->logicalDevice.freeCommandBuffers(commandPool, intermediateBuffer);

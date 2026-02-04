@@ -62,10 +62,10 @@ class OMTestRenderer : public util::OMReinitable
 
     common::OMRendererBuffer *uniformBuffer;
 
-    std::vector<::vk::DescriptorSetLayout> descriptorSetLayouts;
+    ::vk::DescriptorSetLayout descriptorSetLayout;
 
     ::vk::DescriptorPool descriptorPool;
-    std::vector<::vk::DescriptorSet> descriptorSets;
+    ::vk::DescriptorSet descriptorSet;
 
     common::OMRendererTexture *textureImage;
 
