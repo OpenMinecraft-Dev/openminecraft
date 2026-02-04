@@ -21,6 +21,7 @@ class OMRendererPipeline
 
     virtual void attachShader(std::shared_ptr<OMShader> shader) = 0;
     virtual void vertexFormat(basics::OMVertexFormat format) = 0;
+    virtual void build() = 0;
 };
 } // namespace openminecraft::renderer::common
 

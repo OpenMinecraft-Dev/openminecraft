@@ -16,5 +16,6 @@
     "openminecraft.renderer.vk.err.dev": "Logical Device Creation: {}",
     "openminecraft.renderer.vk.err.devqueue": "Logical Device Queue: {}",
     "openminecraft.renderer.vk.err.swp": "Swapchain: {}",
-    "openminecraft.renderer.vk.err.renderer": "Renderer: {}"
+    "openminecraft.renderer.vk.err.renderer": "Renderer: {}", 
+    "openminecraft.renderer.vk.err.shaderstat": "Unknown shader!"
 }

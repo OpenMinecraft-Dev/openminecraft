@@ -62,5 +62,6 @@
     "openminecraft.renderer.vk.err.dev": "创建逻辑设备: {}",
     "openminecraft.renderer.vk.err.devqueue": "逻辑设备队列: {}",
     "openminecraft.renderer.vk.err.swp": "交换链: {}",
-    "openminecraft.renderer.vk.err.renderer": "渲染器: {}"
+    "openminecraft.renderer.vk.err.renderer": "渲染器: {}", 
+    "openminecraft.renderer.vk.err.shaderstat": "未知着色器！"
 }

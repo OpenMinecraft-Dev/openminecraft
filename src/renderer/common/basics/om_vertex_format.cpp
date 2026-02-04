@@ -56,6 +56,7 @@ int OMVertexFormat::typeAlign(OMVertexPropType type)
     case Vec3i:
     case Vec4f:
     case Vec4i:
+    default:
         return sizeof(float);
     case Boolean:
     case Vec2b:
