@@ -356,17 +356,6 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
 
 void OMTestRenderer::reinit()
 {
-    if (!commandBuffers.empty())
-    {
-        renderer->logicalDevice.freeCommandBuffers(commandPool, commandBuffers);
-    }
-    for (auto framebuffer : framebuffers)
-    {
-        renderer->logicalDevice.destroyFramebuffer(framebuffer, renderer->allocator);
-    }
-    commandBuffers.clear();
-    framebuffers.clear();
-
     // this old resources need to be cleaned
     if (!firstTime)
     {
@@ -393,36 +382,6 @@ void OMTestRenderer::reinit()
         intermediateBuffer.drawIndexed(vertexCount, 1, 0, 0, 0);
         intermediateBuffer.end();
     }
-
-    for (auto img : renderer->swapchainManager->swapchainImageViews)
-    {
-        std::vector ii = {img, reinterpret_cast<OMRendererTextureVk *>(renderer->defaultDepthBuffer)->imageView};
-        framebuffers.push_back(renderer->logicalDevice.createFramebuffer(
-            FramebufferCreateInfo(
-                {}, reinterpret_cast<OMRendererRenderTargetVk *>(renderer->getDefaultRenderTarget())->renderPass, ii,
-                renderer->swapchainManager->extent.width, renderer->swapchainManager->extent.height, 1),
-            renderer->allocator));
-    }
-
-    for (int i = 0; i < framebuffers.size(); i++)
-    {
-        auto commandBuffer = renderer->logicalDevice.allocateCommandBuffers(
-            CommandBufferAllocateInfo(commandPool, CommandBufferLevel::ePrimary, 1))[0];
-
-        commandBuffer.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eSimultaneousUse));
-        std::vector test = {ClearValue({0, 0, 0, 0}), ClearValue({1.0f, 0})};
-        commandBuffer.beginRenderPass(
-            RenderPassBeginInfo(
-                reinterpret_cast<OMRendererRenderTargetVk *>(renderer->getDefaultRenderTarget())->renderPass,
-                framebuffers[i], Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent), test),
-            SubpassContents::eSecondaryCommandBuffers);
-
-        commandBuffer.executeCommands(intermediateBuffer);
-        commandBuffer.endRenderPass();
-        commandBuffer.end();
-
-        commandBuffers.push_back(commandBuffer);
-    }
 }
 void OMTestRenderer::destroy()
 {
@@ -435,14 +394,9 @@ void OMTestRenderer::destroy()
     delete vertexBuffer;
     delete indexBuffer;
     renderer->logicalDevice.freeCommandBuffers(commandPool, intermediateBuffer);
-    renderer->logicalDevice.freeCommandBuffers(commandPool, commandBuffers);
     renderer->logicalDevice.destroyCommandPool(commandPool, renderer->allocator);
     renderer->logicalDevice.destroyPipeline(pipeline, renderer->allocator);
     renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
-    for (auto framebuffer : framebuffers)
-    {
-        renderer->logicalDevice.destroyFramebuffer(framebuffer, renderer->allocator);
-    }
 }
 
 } // namespace openminecraft::renderer::vk::test

@@ -49,7 +49,6 @@ class OMTestRenderer : public util::OMReinitable
 
     void updateUniform();
 
-    std::vector<::vk::Framebuffer> framebuffers;
     ::vk::PipelineLayout pipelineLayout;
     ::vk::Pipeline pipeline;
 
@@ -57,7 +56,6 @@ class OMTestRenderer : public util::OMReinitable
     common::OMRendererBuffer *indexBuffer;
 
     ::vk::CommandPool commandPool;
-    std::vector<::vk::CommandBuffer> commandBuffers;
     ::vk::CommandBuffer intermediateBuffer;
 
     common::OMRendererBuffer *uniformBuffer;

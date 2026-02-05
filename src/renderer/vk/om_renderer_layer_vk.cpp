@@ -199,6 +199,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height,
                                                    common::Dim2, common::Depth);
         testRenderer = std::make_shared<test::OMTestRenderer>(this);
+        rebuildDefaults();
 
         for (int i = 0; i < framesInFlight; i++)
         {
@@ -215,6 +216,48 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     catch (SystemError &e)
     {
         throw std::runtime_error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.renderer"));
+    }
+}
+
+void OMRendererVk::rebuildDefaults()
+{
+    for (auto &fb : defaultFramebuffers)
+    {
+        logicalDevice.destroyFramebuffer(fb, allocator);
+    }
+    defaultFramebuffers.clear();
+    for (auto &cb : defaultCommandBuffers)
+    {
+        logicalDevice.freeCommandBuffers(tempCommandPool, cb);
+    }
+    defaultCommandBuffers.clear();
+
+    for (auto img : swapchainManager->swapchainImageViews)
+    {
+        std::vector ii = {img, reinterpret_cast<OMRendererTextureVk *>(defaultDepthBuffer)->imageView};
+        defaultFramebuffers.push_back(logicalDevice.createFramebuffer(
+            FramebufferCreateInfo({},
+                                  reinterpret_cast<OMRendererRenderTargetVk *>(getDefaultRenderTarget())->renderPass,
+                                  ii, swapchainManager->extent.width, swapchainManager->extent.height, 1),
+            allocator));
+    }
+    for (int i = 0; i < defaultFramebuffers.size(); i++)
+    {
+        auto commandBuffer = logicalDevice.allocateCommandBuffers(
+            CommandBufferAllocateInfo(tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
+
+        commandBuffer.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eSimultaneousUse));
+        std::vector test = {ClearValue({0.0f, 0.0f, 0.0f, 0.0f}), ClearValue({1.0f, 0})};
+        commandBuffer.beginRenderPass(
+            RenderPassBeginInfo(reinterpret_cast<OMRendererRenderTargetVk *>(getDefaultRenderTarget())->renderPass,
+                                defaultFramebuffers[i], Rect2D(Offset2D(0, 0), swapchainManager->extent), test),
+            SubpassContents::eSecondaryCommandBuffers);
+
+        commandBuffer.executeCommands(testRenderer->intermediateBuffer);
+        commandBuffer.endRenderPass();
+        commandBuffer.end();
+
+        defaultCommandBuffers.push_back(commandBuffer);
     }
 }
 
@@ -284,7 +327,7 @@ void OMRendererVk::render()
 
         const PipelineStageFlags msk = PipelineStageFlagBits::eColorAttachmentOutput;
         SubmitInfo submitInfo(1, &frameSyncs[thisFrame].imageAvailableSemaphore, &msk, 1,
-                              &testRenderer->commandBuffers[imageIndex], 1, &frameRenderSemaphores[imageIndex]);
+                              &defaultCommandBuffers[imageIndex], 1, &frameRenderSemaphores[imageIndex]);
 
         queues.first.submit(submitInfo, frameSyncs[thisFrame].inFlightFence);
 
@@ -316,8 +359,8 @@ reb:
     delete defaultDepthBuffer;
     defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height,
                                                common::Dim2, common::Depth);
-
     testRenderer->reinit();
+    rebuildDefaults();
     needRebuild = false;
 }
 
@@ -564,10 +607,18 @@ void OMRendererVk::destroy()
     {
         logicalDevice.destroySemaphore(sep, allocator);
     }
-    logicalDevice.destroyCommandPool(tempCommandPool, allocator);
 
     delete defaultDepthBuffer;
     testRenderer->destroy();
+    for (auto &fb : defaultFramebuffers)
+    {
+        logicalDevice.destroyFramebuffer(fb, allocator);
+    }
+    for (auto &cb : defaultCommandBuffers)
+    {
+        logicalDevice.freeCommandBuffers(tempCommandPool, cb);
+    }
+    logicalDevice.destroyCommandPool(tempCommandPool, allocator);
     delete defaultTarget;
 
     swapchainManager->destroy();
