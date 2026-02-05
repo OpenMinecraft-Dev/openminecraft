@@ -2,6 +2,8 @@
 #define OM_RENDERER_LAYER_VK_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
+#include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include "openminecraft/util/om_util_result.hpp"
@@ -55,6 +57,7 @@ class OMRendererVk : public OMRenderer
     common::OMRendererTexture *allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type,
                                                common::OMTextureArrangement arr) override;
     common::OMRendererRenderTarget *createRenderTarget() override;
+    common::OMRendererRenderTarget *getDefaultRenderTarget() override;
     glm::vec2 getExtent() const override;
 
     void destroy();
@@ -64,6 +67,10 @@ class OMRendererVk : public OMRenderer
     std::shared_ptr<validation::OMRendererVkValidation> validationLayer;
     std::shared_ptr<swapchain::OMSwapchainManager> swapchainManager;
     std::shared_ptr<test::OMTestRenderer> testRenderer;
+
+    common::OMRendererRenderTarget *defaultTarget;
+    common::OMRendererTexture *defaultDepthBuffer;
+
     ::vk::AllocationCallbacks allocator;
     ::vk::Instance instance;
     ::vk::PhysicalDevice physicalDevice;

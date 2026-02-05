@@ -61,11 +61,6 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
     }
 
     {
-        renderTarget = renderer->createRenderTarget();
-        renderTarget->build();
-    }
-
-    {
         common::basics::OMVertexFormat format;
         format.appendPart("position", common::basics::Vec3f);
         format.appendPart("textureUV", common::basics::Vec2f);
@@ -285,10 +280,11 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
 
         auto result = renderer->logicalDevice.createGraphicsPipeline(
             {},
-            GraphicsPipelineCreateInfo({}, shaders, &vertexInput, &inputAssembly, {}, &viewportState, &rasterization,
-                                       &multisample, &depthStencil, &colorblend, &dynamicState, pipelineLayout,
-                                       reinterpret_cast<OMRendererRenderTargetVk *>(renderTarget)->renderPass, 0, {},
-                                       -1),
+            GraphicsPipelineCreateInfo(
+                {}, shaders, &vertexInput, &inputAssembly, {}, &viewportState, &rasterization, &multisample,
+                &depthStencil, &colorblend, &dynamicState, pipelineLayout,
+                reinterpret_cast<OMRendererRenderTargetVk *>(renderer->getDefaultRenderTarget())->renderPass, 0, {},
+                -1),
             renderer->allocator);
         if (result.result != Result::eSuccess)
         {
@@ -300,26 +296,6 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
         {
             renderer->logicalDevice.destroyShaderModule(sd.module, renderer->allocator);
         }
-    }
-
-    {
-        intermediateBuffer =
-            renderer->logicalDevice.allocateCommandBuffers({commandPool, CommandBufferLevel::eSecondary, 1})[0];
-        auto ii = CommandBufferInheritanceInfo(reinterpret_cast<OMRendererRenderTargetVk *>(renderTarget)->renderPass);
-        intermediateBuffer.begin(
-            {CommandBufferUsageFlagBits::eSimultaneousUse | CommandBufferUsageFlagBits::eRenderPassContinue, &ii});
-        intermediateBuffer.setViewport(0,
-                                       {Viewport(0, 0, static_cast<float>(renderer->swapchainManager->extent.width),
-                                                 static_cast<float>(renderer->swapchainManager->extent.height), 0, 1)});
-        intermediateBuffer.setScissor(0, {Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent)});
-        intermediateBuffer.bindPipeline(PipelineBindPoint::eGraphics, pipeline);
-        intermediateBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
-        intermediateBuffer.bindVertexBuffers(
-            0, std::vector{reinterpret_cast<OMRendererBufferVk *>(vertexBuffer)->buffer}, std::vector<DeviceSize>{0});
-        intermediateBuffer.bindIndexBuffer(reinterpret_cast<OMRendererBufferVk *>(indexBuffer)->buffer, 0,
-                                           IndexType::eUint32);
-        intermediateBuffer.drawIndexed(vertexCount, 1, 0, 0, 0);
-        intermediateBuffer.end();
     }
 
     OMTestRenderer::reinit();
@@ -391,22 +367,40 @@ void OMTestRenderer::reinit()
     commandBuffers.clear();
     framebuffers.clear();
 
-    // these old resources need to be cleaned
+    // this old resources need to be cleaned
     if (!firstTime)
     {
-        delete depthBuffer;
+        renderer->logicalDevice.freeCommandBuffers(commandPool, intermediateBuffer);
     }
 
-    depthBuffer = renderer->allocateTexture(renderer->swapchainManager->extent.width,
-                                            renderer->swapchainManager->extent.height, common::Dim2, common::Depth);
+    {
+        intermediateBuffer =
+            renderer->logicalDevice.allocateCommandBuffers({commandPool, CommandBufferLevel::eSecondary, 1})[0];
+        auto ii = CommandBufferInheritanceInfo(
+            reinterpret_cast<OMRendererRenderTargetVk *>(renderer->getDefaultRenderTarget())->renderPass);
+        intermediateBuffer.begin(
+            {CommandBufferUsageFlagBits::eSimultaneousUse | CommandBufferUsageFlagBits::eRenderPassContinue, &ii});
+        intermediateBuffer.setViewport(0,
+                                       {Viewport(0, 0, static_cast<float>(renderer->swapchainManager->extent.width),
+                                                 static_cast<float>(renderer->swapchainManager->extent.height), 0, 1)});
+        intermediateBuffer.setScissor(0, {Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent)});
+        intermediateBuffer.bindPipeline(PipelineBindPoint::eGraphics, pipeline);
+        intermediateBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
+        intermediateBuffer.bindVertexBuffers(
+            0, std::vector{reinterpret_cast<OMRendererBufferVk *>(vertexBuffer)->buffer}, std::vector<DeviceSize>{0});
+        intermediateBuffer.bindIndexBuffer(reinterpret_cast<OMRendererBufferVk *>(indexBuffer)->buffer, 0,
+                                           IndexType::eUint32);
+        intermediateBuffer.drawIndexed(vertexCount, 1, 0, 0, 0);
+        intermediateBuffer.end();
+    }
 
     for (auto img : renderer->swapchainManager->swapchainImageViews)
     {
-        std::vector ii = {img, reinterpret_cast<OMRendererTextureVk *>(depthBuffer)->imageView};
+        std::vector ii = {img, reinterpret_cast<OMRendererTextureVk *>(renderer->defaultDepthBuffer)->imageView};
         framebuffers.push_back(renderer->logicalDevice.createFramebuffer(
-            FramebufferCreateInfo({}, reinterpret_cast<OMRendererRenderTargetVk *>(renderTarget)->renderPass, ii,
-                                  renderer->swapchainManager->extent.width, renderer->swapchainManager->extent.height,
-                                  1),
+            FramebufferCreateInfo(
+                {}, reinterpret_cast<OMRendererRenderTargetVk *>(renderer->getDefaultRenderTarget())->renderPass, ii,
+                renderer->swapchainManager->extent.width, renderer->swapchainManager->extent.height, 1),
             renderer->allocator));
     }
 
@@ -418,9 +412,11 @@ void OMTestRenderer::reinit()
         commandBuffer.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eSimultaneousUse));
         std::vector test = {ClearValue({0, 0, 0, 0}), ClearValue({1.0f, 0})};
         commandBuffer.beginRenderPass(
-            RenderPassBeginInfo(reinterpret_cast<OMRendererRenderTargetVk *>(renderTarget)->renderPass, framebuffers[i],
-                                Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent), test),
+            RenderPassBeginInfo(
+                reinterpret_cast<OMRendererRenderTargetVk *>(renderer->getDefaultRenderTarget())->renderPass,
+                framebuffers[i], Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent), test),
             SubpassContents::eSecondaryCommandBuffers);
+
         commandBuffer.executeCommands(intermediateBuffer);
         commandBuffer.endRenderPass();
         commandBuffer.end();
@@ -430,8 +426,6 @@ void OMTestRenderer::reinit()
 }
 void OMTestRenderer::destroy()
 {
-    delete depthBuffer;
-
     renderer->logicalDevice.destroySampler(textureSampler, renderer->allocator);
     delete textureImage;
     renderer->logicalDevice.freeDescriptorSets(descriptorPool, descriptorSet);
@@ -449,7 +443,6 @@ void OMTestRenderer::destroy()
     {
         renderer->logicalDevice.destroyFramebuffer(framebuffer, renderer->allocator);
     }
-    delete renderTarget;
 }
 
 } // namespace openminecraft::renderer::vk::test

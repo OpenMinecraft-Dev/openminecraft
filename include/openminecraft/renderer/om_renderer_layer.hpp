@@ -30,6 +30,7 @@ class OMRenderer
     virtual common::OMRendererTexture *allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type,
                                                        common::OMTextureArrangement arrangement) = 0;
     virtual common::OMRendererRenderTarget *createRenderTarget() = 0;
+    virtual common::OMRendererRenderTarget *getDefaultRenderTarget() = 0;
     virtual glm::vec2 getExtent() const = 0;
 
   protected:

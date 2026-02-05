@@ -194,6 +194,10 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     {
         tempCommandPool = logicalDevice.createCommandPool(CommandPoolCreateInfo({}, queueFamilyIndex.first), allocator);
 
+        defaultTarget = this->createRenderTarget();
+        defaultTarget->build();
+        defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height,
+                                                   common::Dim2, common::Depth);
         testRenderer = std::make_shared<test::OMTestRenderer>(this);
 
         for (int i = 0; i < framesInFlight; i++)
@@ -227,6 +231,10 @@ common::OMRendererTexture *OMRendererVk::allocateTexture(uint64_t width, uint64_
 common::OMRendererRenderTarget *OMRendererVk::createRenderTarget()
 {
     return new OMRendererRenderTargetVk(this);
+}
+common::OMRendererRenderTarget *OMRendererVk::getDefaultRenderTarget()
+{
+    return this->defaultTarget;
 }
 glm::vec2 OMRendererVk::getExtent() const
 {
@@ -304,6 +312,11 @@ reb:
     logicalDevice.waitIdle();
     swapchainManager->destroy();
     swapchainManager->reinit();
+
+    delete defaultDepthBuffer;
+    defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height,
+                                               common::Dim2, common::Depth);
+
     testRenderer->reinit();
     needRebuild = false;
 }
@@ -552,7 +565,11 @@ void OMRendererVk::destroy()
         logicalDevice.destroySemaphore(sep, allocator);
     }
     logicalDevice.destroyCommandPool(tempCommandPool, allocator);
+
+    delete defaultDepthBuffer;
     testRenderer->destroy();
+    delete defaultTarget;
+
     swapchainManager->destroy();
     validationLayer->ifEnable([&]() { instance.destroyDebugReportCallbackEXT(reportCallback, &allocator); });
     logicalDevice.destroy(allocator);

@@ -49,7 +49,6 @@ class OMTestRenderer : public util::OMReinitable
 
     void updateUniform();
 
-    common::OMRendererRenderTarget *renderTarget;
     std::vector<::vk::Framebuffer> framebuffers;
     ::vk::PipelineLayout pipelineLayout;
     ::vk::Pipeline pipeline;
@@ -71,8 +70,6 @@ class OMTestRenderer : public util::OMReinitable
     common::OMRendererTexture *textureImage;
 
     ::vk::Sampler textureSampler;
-
-    common::OMRendererTexture *depthBuffer;
 
     void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp);
     void mouseOffset(float dx, float dy);
