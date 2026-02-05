@@ -7,6 +7,7 @@
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "tiny_obj_loader.h"
 #include "vulkan/vulkan.hpp"
@@ -60,28 +61,8 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
     }
 
     {
-        auto attaches = std::vector{AttachmentReference(0, ImageLayout::eColorAttachmentOptimal)};
-        auto depthAtt = AttachmentReference(1, ImageLayout::eDepthStencilAttachmentOptimal);
-
-        auto attachments = std::vector{
-            AttachmentDescription({}, renderer->swapchainManager->format.format, SampleCountFlagBits::e1,
-                                  AttachmentLoadOp::eClear, AttachmentStoreOp::eStore, AttachmentLoadOp::eDontCare,
-                                  AttachmentStoreOp::eDontCare, ImageLayout::eUndefined, ImageLayout::ePresentSrcKHR),
-            AttachmentDescription({}, Format::eD32Sfloat, SampleCountFlagBits::e1, AttachmentLoadOp::eClear,
-                                  AttachmentStoreOp::eDontCare, AttachmentLoadOp::eDontCare,
-                                  AttachmentStoreOp::eDontCare, ImageLayout::eUndefined,
-                                  ImageLayout::eDepthStencilAttachmentOptimal)};
-        auto subpasses =
-            std::vector{SubpassDescription({}, PipelineBindPoint::eGraphics, nullptr, attaches, {}, &depthAtt)};
-        auto depe = std::vector{SubpassDependency(
-            VK_SUBPASS_EXTERNAL, 0,
-            PipelineStageFlagBits::eColorAttachmentOutput | PipelineStageFlagBits::eEarlyFragmentTests,
-            PipelineStageFlagBits::eColorAttachmentOutput | PipelineStageFlagBits::eEarlyFragmentTests, {},
-            AccessFlagBits::eColorAttachmentRead | AccessFlagBits::eColorAttachmentWrite |
-                AccessFlagBits::eDepthStencilAttachmentWrite)};
-
-        renderPass = renderer->logicalDevice.createRenderPass(RenderPassCreateInfo({}, attachments, subpasses, depe),
-                                                              renderer->allocator);
+        renderTarget = renderer->createRenderTarget();
+        renderTarget->build();
     }
 
     {
@@ -306,7 +287,8 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
             {},
             GraphicsPipelineCreateInfo({}, shaders, &vertexInput, &inputAssembly, {}, &viewportState, &rasterization,
                                        &multisample, &depthStencil, &colorblend, &dynamicState, pipelineLayout,
-                                       renderPass, 0, {}, -1),
+                                       reinterpret_cast<OMRendererRenderTargetVk *>(renderTarget)->renderPass, 0, {},
+                                       -1),
             renderer->allocator);
         if (result.result != Result::eSuccess)
         {
@@ -323,7 +305,7 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
     {
         intermediateBuffer =
             renderer->logicalDevice.allocateCommandBuffers({commandPool, CommandBufferLevel::eSecondary, 1})[0];
-        auto ii = CommandBufferInheritanceInfo(renderPass);
+        auto ii = CommandBufferInheritanceInfo(reinterpret_cast<OMRendererRenderTargetVk *>(renderTarget)->renderPass);
         intermediateBuffer.begin(
             {CommandBufferUsageFlagBits::eSimultaneousUse | CommandBufferUsageFlagBits::eRenderPassContinue, &ii});
         intermediateBuffer.setViewport(0,
@@ -415,17 +397,16 @@ void OMTestRenderer::reinit()
         delete depthBuffer;
     }
 
-    {
-        depthBuffer = renderer->allocateTexture(renderer->swapchainManager->extent.width,
-                                                renderer->swapchainManager->extent.height, common::Dim2, common::Depth);
-    }
+    depthBuffer = renderer->allocateTexture(renderer->swapchainManager->extent.width,
+                                            renderer->swapchainManager->extent.height, common::Dim2, common::Depth);
 
     for (auto img : renderer->swapchainManager->swapchainImageViews)
     {
-        const std::vector ii = {img, reinterpret_cast<OMRendererTextureVk *>(depthBuffer)->imageView};
+        std::vector ii = {img, reinterpret_cast<OMRendererTextureVk *>(depthBuffer)->imageView};
         framebuffers.push_back(renderer->logicalDevice.createFramebuffer(
-            FramebufferCreateInfo({}, renderPass, ii, renderer->swapchainManager->extent.width,
-                                  renderer->swapchainManager->extent.height, 1),
+            FramebufferCreateInfo({}, reinterpret_cast<OMRendererRenderTargetVk *>(renderTarget)->renderPass, ii,
+                                  renderer->swapchainManager->extent.width, renderer->swapchainManager->extent.height,
+                                  1),
             renderer->allocator));
     }
 
@@ -436,10 +417,10 @@ void OMTestRenderer::reinit()
 
         commandBuffer.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eSimultaneousUse));
         std::vector test = {ClearValue({0, 0, 0, 0}), ClearValue({1.0f, 0})};
-        commandBuffer.beginRenderPass(RenderPassBeginInfo(renderPass, framebuffers[i],
-                                                          Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent),
-                                                          test),
-                                      SubpassContents::eSecondaryCommandBuffers);
+        commandBuffer.beginRenderPass(
+            RenderPassBeginInfo(reinterpret_cast<OMRendererRenderTargetVk *>(renderTarget)->renderPass, framebuffers[i],
+                                Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent), test),
+            SubpassContents::eSecondaryCommandBuffers);
         commandBuffer.executeCommands(intermediateBuffer);
         commandBuffer.endRenderPass();
         commandBuffer.end();
@@ -468,7 +449,7 @@ void OMTestRenderer::destroy()
     {
         renderer->logicalDevice.destroyFramebuffer(framebuffer, renderer->allocator);
     }
-    renderer->logicalDevice.destroyRenderPass(renderPass, renderer->allocator);
+    delete renderTarget;
 }
 
 } // namespace openminecraft::renderer::vk::test

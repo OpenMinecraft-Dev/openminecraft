@@ -4,6 +4,7 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include "openminecraft/util/om_util_result.hpp"
@@ -222,6 +223,10 @@ common::OMRendererTexture *OMRendererVk::allocateTexture(uint64_t width, uint64_
                                                          common::OMTextureArrangement arr)
 {
     return new OMRendererTextureVk(width, height, type, arr, this);
+}
+common::OMRendererRenderTarget *OMRendererVk::createRenderTarget()
+{
+    return new OMRendererRenderTargetVk(this);
 }
 glm::vec2 OMRendererVk::getExtent() const
 {

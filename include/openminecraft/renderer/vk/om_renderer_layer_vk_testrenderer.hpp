@@ -2,6 +2,7 @@
 #define OM_RENDERER_LAYER_VK_TESTRENDERER
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
+#include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/util/om_util_reinitable.hpp"
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
@@ -48,7 +49,7 @@ class OMTestRenderer : public util::OMReinitable
 
     void updateUniform();
 
-    ::vk::RenderPass renderPass;
+    common::OMRendererRenderTarget *renderTarget;
     std::vector<::vk::Framebuffer> framebuffers;
     ::vk::PipelineLayout pipelineLayout;
     ::vk::Pipeline pipeline;
