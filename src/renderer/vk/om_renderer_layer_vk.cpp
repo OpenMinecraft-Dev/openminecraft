@@ -380,6 +380,10 @@ reb:
     defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height,
                                                common::Dim2, common::Depth);
 
+    for (auto tsk : tasks)
+    {
+        delete tsk;
+    }
     tasks.clear();
     testRenderer->reinit();
     rebuildDefaults();
@@ -639,6 +643,10 @@ void OMRendererVk::destroy()
     for (auto &cb : defaultCommandBuffers)
     {
         logicalDevice.freeCommandBuffers(tempCommandPool, cb);
+    }
+    for (auto tsk : tasks)
+    {
+        delete tsk;
     }
     logicalDevice.destroyCommandPool(tempCommandPool, allocator);
     delete defaultTarget;

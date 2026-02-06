@@ -47,7 +47,7 @@ class OMTestRenderer : public util::OMReinitable
     common::OMRendererBuffer *vertexBuffer;
     common::OMRendererBuffer *indexBuffer;
 
-    common::OMRendererTask *task;
+    // common::OMRendererTask *task;
 
     common::OMRendererBuffer *uniformBuffer;
 

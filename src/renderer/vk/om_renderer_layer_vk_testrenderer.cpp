@@ -262,12 +262,7 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
 
 void OMTestRenderer::reinit()
 {
-    if (!firstTime)
-    {
-        delete task;
-    }
-
-    task = renderer->createTask();
+    auto task = renderer->createTask();
     task->bindTarget(renderer->defaultTarget);
     task->bindPipeline(pipeline);
     task->bindVertexBuffer({vertexBuffer});
@@ -284,7 +279,6 @@ void OMTestRenderer::destroy()
     delete uniformBuffer;
     delete vertexBuffer;
     delete indexBuffer;
-    delete task;
 }
 
 } // namespace openminecraft::renderer::vk::test
