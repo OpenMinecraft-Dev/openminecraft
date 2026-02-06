@@ -45,7 +45,7 @@ uint32_t findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properties,
     return 0;
 }
 
-OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), logger("OMTestRenderer", this)
+OMTestRenderer::OMTestRenderer(OMRenderer *renderer) : renderer(renderer), logger("OMTestRenderer", this)
 {
     camera = std::make_shared<common::basics::OMCamera>(renderer, m_cameraPos, m_yaw, m_pitch);
     {
@@ -184,10 +184,17 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
         stbi_image_free(pixels);
     }
 
+    tempTexture = renderer->allocateTexture(800, 800, common::Dim2, common::ColorRgba);
+    tempDepth = renderer->allocateTexture(800, 800, common::Dim2, common::Depth);
+    renderTarget = renderer->createRenderTarget();
+    renderTarget->attachTarget(tempTexture);
+    renderTarget->attachTarget(tempDepth);
+    renderTarget->build();
+
     pipeline = renderer->createPipeline();
     pipeline->appendInput(common::OMRendererPipelineInputType::UniformBuffer);
     pipeline->appendInput(common::OMRendererPipelineInputType::ImageSampler);
-    pipeline->bindOutput(renderer->defaultTarget);
+    pipeline->bindOutput(renderTarget);
     pipeline->attachShader(frgShader);
     pipeline->attachShader(vtxShader);
 
@@ -263,7 +270,7 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
 void OMTestRenderer::reinit()
 {
     auto task = renderer->createTask();
-    task->bindTarget(renderer->defaultTarget);
+    task->bindTarget(renderTarget);
     task->bindPipeline(pipeline);
     task->bindVertexBuffer({vertexBuffer});
     task->bindIndexBuffer(indexBuffer);
@@ -279,6 +286,10 @@ void OMTestRenderer::destroy()
     delete uniformBuffer;
     delete vertexBuffer;
     delete indexBuffer;
+
+    delete tempTexture;
+    delete tempDepth;
+    delete renderTarget;
 }
 
 } // namespace openminecraft::renderer::vk::test

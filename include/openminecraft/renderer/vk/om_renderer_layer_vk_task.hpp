@@ -19,10 +19,13 @@ class OMRendererTaskVk : public common::OMRendererTask
     void draw(uint64_t vertexCount) override;
     void finish() override;
 
+    bool isOnDefault();
+
     ::vk::CommandBuffer commandBuffer;
 
   private:
     OMRendererVk *renderer;
+    bool isDefault = false;
 };
 }; // namespace openminecraft::renderer::vk
 

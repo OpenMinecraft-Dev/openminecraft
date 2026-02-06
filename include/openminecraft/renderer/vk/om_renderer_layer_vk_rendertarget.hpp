@@ -13,6 +13,11 @@
 
 namespace openminecraft::renderer::vk
 {
+struct OMRendererRenderTargetBlock
+{
+    ::vk::Framebuffer framebuffer;
+};
+
 class OMRendererRenderTargetVk : public common::OMRendererRenderTarget
 {
   public:
@@ -24,6 +29,8 @@ class OMRendererRenderTargetVk : public common::OMRendererRenderTarget
     void build() override;
 
     ::vk::RenderPass renderPass;
+
+    OMRendererRenderTargetBlock *block;
 
   private:
     OMRendererVk *renderer;

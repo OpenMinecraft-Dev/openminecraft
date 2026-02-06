@@ -3,6 +3,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
+#include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/util/om_util_reinitable.hpp"
@@ -36,7 +37,7 @@ struct UniformStructure
 class OMTestRenderer : public util::OMReinitable
 {
   public:
-    OMTestRenderer(OMRendererVk *renderer);
+    OMTestRenderer(OMRenderer *renderer);
     ~OMTestRenderer() = default;
 
     void reinit() override;
@@ -46,14 +47,13 @@ class OMTestRenderer : public util::OMReinitable
 
     common::OMRendererBuffer *vertexBuffer;
     common::OMRendererBuffer *indexBuffer;
-
-    // common::OMRendererTask *task;
-
     common::OMRendererBuffer *uniformBuffer;
-
     common::OMRendererTexture *textureImage;
-
     common::OMRendererPipeline *pipeline;
+
+    common::OMRendererTexture *tempTexture;
+    common::OMRendererTexture *tempDepth;
+    common::OMRendererRenderTarget *renderTarget;
 
     void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp);
     void mouseOffset(float dx, float dy);
@@ -65,7 +65,7 @@ class OMTestRenderer : public util::OMReinitable
   private:
     bool firstTime = true;
     int vertexCount = 0;
-    OMRendererVk *renderer;
+    OMRenderer *renderer;
 
     glm::vec3 m_cameraPos{2.f, 2.0f, 2.f};
     glm::vec3 m_cameraUp{0.0f, 1.0f, 0.0f};

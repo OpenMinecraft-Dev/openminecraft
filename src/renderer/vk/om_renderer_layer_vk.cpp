@@ -257,6 +257,10 @@ void OMRendererVk::rebuildDefaults()
 
         for (auto tsk : tasks)
         {
+            if (!reinterpret_cast<OMRendererTaskVk *>(tsk)->isOnDefault())
+            {
+                break;
+            }
             commandBuffer.executeCommands(reinterpret_cast<OMRendererTaskVk *>(tsk)->commandBuffer);
         }
         commandBuffer.endRenderPass();
@@ -345,9 +349,19 @@ void OMRendererVk::render()
             throw SystemError(result);
         }
 
+        std::vector<CommandBuffer> cmdBuffers = {defaultCommandBuffers[imageIndex]};
+        for (auto tsk : tasks)
+        {
+            auto tt = reinterpret_cast<OMRendererTaskVk *>(tsk);
+            if (!tt->isOnDefault())
+            {
+                cmdBuffers.push_back(tt->commandBuffer);
+            }
+        }
+
         const PipelineStageFlags msk = PipelineStageFlagBits::eColorAttachmentOutput;
-        SubmitInfo submitInfo(1, &frameSyncs[thisFrame].imageAvailableSemaphore, &msk, 1,
-                              &defaultCommandBuffers[imageIndex], 1, &frameRenderSemaphores[imageIndex]);
+        SubmitInfo submitInfo(1, &frameSyncs[thisFrame].imageAvailableSemaphore, &msk, cmdBuffers.size(),
+                              cmdBuffers.data(), 1, &frameRenderSemaphores[imageIndex]);
 
         queues.first.submit(submitInfo, frameSyncs[thisFrame].inFlightFence);
 
@@ -635,7 +649,6 @@ void OMRendererVk::destroy()
     }
 
     delete defaultDepthBuffer;
-    testRenderer->destroy();
     for (auto &fb : defaultFramebuffers)
     {
         logicalDevice.destroyFramebuffer(fb, allocator);
@@ -650,6 +663,7 @@ void OMRendererVk::destroy()
     }
     logicalDevice.destroyCommandPool(tempCommandPool, allocator);
     delete defaultTarget;
+    testRenderer->destroy();
 
     swapchainManager->destroy();
     validationLayer->ifEnable([&]() { instance.destroyDebugReportCallbackEXT(reportCallback, &allocator); });

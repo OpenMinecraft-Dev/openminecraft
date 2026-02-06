@@ -3,6 +3,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_pipeline.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
+#include "vulkan/vulkan.hpp"
 #include <iterator>
 #include <vulkan/vulkan.hpp>
 
@@ -18,6 +19,11 @@ OMRendererTaskVk::OMRendererTaskVk(OMRendererVk *renderer) : renderer(renderer),
 OMRendererTaskVk::~OMRendererTaskVk()
 {
     renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, commandBuffer);
+}
+
+bool OMRendererTaskVk::isOnDefault()
+{
+    return isDefault;
 }
 
 void OMRendererTaskVk::bindPipeline(common::OMRendererPipeline *pipeline)
@@ -45,10 +51,31 @@ void OMRendererTaskVk::bindIndexBuffer(common::OMRendererBuffer *buffer)
 }
 void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
 {
+    if (target == renderer->getDefaultRenderTarget())
+    {
+        isDefault = true;
+    }
     auto ext = target->fetchSize();
-    auto ii = CommandBufferInheritanceInfo(reinterpret_cast<OMRendererRenderTargetVk *>(target)->renderPass);
-    commandBuffer.begin(
-        {CommandBufferUsageFlagBits::eSimultaneousUse | CommandBufferUsageFlagBits::eRenderPassContinue, &ii});
+    if (isDefault)
+    {
+        auto ii = CommandBufferInheritanceInfo(reinterpret_cast<OMRendererRenderTargetVk *>(target)->renderPass);
+        commandBuffer.begin(
+            {CommandBufferUsageFlagBits::eSimultaneousUse | CommandBufferUsageFlagBits::eRenderPassContinue, &ii});
+    }
+    else
+    {
+        renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, commandBuffer);
+        commandBuffer = renderer->logicalDevice.allocateCommandBuffers(
+            {renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1})[0];
+
+        std::vector test = {ClearValue({0.0f, 0.0f, 0.0f, 0.0f}), ClearValue({1.0f, 0})};
+        commandBuffer.begin({CommandBufferUsageFlagBits::eSimultaneousUse});
+        commandBuffer.beginRenderPass(
+            RenderPassBeginInfo(reinterpret_cast<OMRendererRenderTargetVk *>(target)->renderPass,
+                                reinterpret_cast<OMRendererRenderTargetVk *>(target)->block->framebuffer,
+                                Rect2D(Offset2D(0, 0), Extent2D(ext.x, ext.y)), test),
+            SubpassContents::eInline);
+    }
     commandBuffer.setViewport(0, {Viewport(0, 0, ext.x, ext.y, 0, 1)});
     commandBuffer.setScissor(0, {Rect2D(Offset2D(0, 0), Extent2D(ext.x, ext.y))});
 }
@@ -58,6 +85,10 @@ void OMRendererTaskVk::draw(uint64_t vertexCount)
 }
 void OMRendererTaskVk::finish()
 {
+    if (!isDefault)
+    {
+        commandBuffer.endRenderPass();
+    }
     commandBuffer.end();
 }
 } // namespace openminecraft::renderer::vk

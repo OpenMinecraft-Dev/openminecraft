@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
+#include "vulkan/vulkan.hpp"
 #include <iostream>
 
 using namespace ::vk;
@@ -73,7 +74,8 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, common
         ImageCreateInfo({}, fromCommonType(type), format, Extent3D(width, height, 1), 1, 1, SampleCountFlagBits::e1,
                         ImageTiling::eOptimal,
                         (arr == common::Depth) ? ImageUsageFlagBits::eDepthStencilAttachment
-                                               : ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled,
+                                               : ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled |
+                                                     ImageUsageFlagBits::eColorAttachment,
                         SharingMode::eExclusive, {}, ImageLayout::eUndefined),
         renderer->allocator);
 
@@ -90,8 +92,6 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, common
             ImageSubresourceRange(((arr == common::Depth) ? ImageAspectFlagBits::eDepth : ImageAspectFlagBits::eColor),
                                   0, 1, 0, 1)),
         renderer->allocator);
-
-    // TODO: copy data!!
 }
 
 OMRendererTextureVk::~OMRendererTextureVk()
@@ -159,10 +159,5 @@ void OMRendererTextureVk::updateData(void *p)
     renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
 
     delete stagBuffer;
-
-    /*imageView = renderer->logicalDevice.createImageView(
-        ImageViewCreateInfo({}, image, ImageViewType::e2D, Format::eR8G8B8A8Srgb, {},
-                            ImageSubresourceRange(ImageAspectFlagBits::eColor, 0, 1, 0, 1)),
-        renderer->allocator);*/
 }
 } // namespace openminecraft::renderer::vk

@@ -18,6 +18,11 @@ OMRendererRenderTargetVk::OMRendererRenderTargetVk(OMRendererVk *renderer)
 
 OMRendererRenderTargetVk::~OMRendererRenderTargetVk()
 {
+    if (block)
+    {
+        renderer->logicalDevice.destroyFramebuffer(block->framebuffer, renderer->allocator);
+        delete block;
+    }
     if (available)
     {
         renderer->logicalDevice.destroyRenderPass(renderPass, renderer->allocator);
@@ -85,9 +90,6 @@ void OMRendererRenderTargetVk::build()
         uint32_t a = 0;
         for (auto tt : textures)
         {
-            depthAttach.push_back({a, tt->arr == common::OMTextureArrangement::Depth
-                                          ? ImageLayout::eDepthStencilAttachmentOptimal
-                                          : ImageLayout::eColorAttachmentOptimal});
             if (tt->arr == common::OMTextureArrangement::Depth)
             {
                 attachDesc.push_back({{},
@@ -99,6 +101,7 @@ void OMRendererRenderTargetVk::build()
                                       AttachmentStoreOp::eDontCare,
                                       ImageLayout::eUndefined,
                                       ImageLayout::eDepthStencilAttachmentOptimal});
+                depthAttach.push_back({a, ImageLayout::eDepthStencilAttachmentOptimal});
             }
             else
             {
@@ -110,7 +113,8 @@ void OMRendererRenderTargetVk::build()
                                       AttachmentLoadOp::eDontCare,
                                       AttachmentStoreOp::eDontCare,
                                       ImageLayout::eUndefined,
-                                      ImageLayout::ePresentSrcKHR});
+                                      ImageLayout::eShaderReadOnlyOptimal});
+                colorAttach.push_back({a, ImageLayout::eColorAttachmentOptimal});
             }
             a++;
         }
@@ -131,6 +135,17 @@ void OMRendererRenderTargetVk::build()
 
         renderPass = renderer->logicalDevice.createRenderPass(RenderPassCreateInfo({}, attachDesc, subpasses, depe),
                                                               renderer->allocator);
+
+        block = new OMRendererRenderTargetBlock;
+        std::vector<ImageView> attch;
+        for (auto tt : textures)
+        {
+            attch.push_back(reinterpret_cast<OMRendererTextureVk *>(tt)->imageView);
+        }
+
+        auto ext = fetchSize();
+        block->framebuffer = renderer->logicalDevice.createFramebuffer(
+            FramebufferCreateInfo({}, renderPass, attch, ext.x, ext.y, 1), renderer->allocator);
     }
     available = true;
 }
