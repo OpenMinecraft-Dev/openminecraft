@@ -3,15 +3,9 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
-#include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
-#include "openminecraft/util/om_util_reinitable.hpp"
-#ifdef OM_VULKAN_DYNAMIC
-#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
-#endif
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
-#include "vulkan/vulkan.hpp"
-
-#include <chrono>
+#include "openminecraft/renderer/common/om_renderer_task.hpp"
+#include "openminecraft/util/om_util_reinitable.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_FORCE_RADIANS
@@ -53,8 +47,7 @@ class OMTestRenderer : public util::OMReinitable
     common::OMRendererBuffer *vertexBuffer;
     common::OMRendererBuffer *indexBuffer;
 
-    ::vk::CommandPool commandPool;
-    ::vk::CommandBuffer intermediateBuffer;
+    common::OMRendererTask *task;
 
     common::OMRendererBuffer *uniformBuffer;
 

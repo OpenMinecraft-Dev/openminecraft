@@ -20,6 +20,7 @@ class OMRendererRenderTargetVk : public common::OMRendererRenderTarget
     ~OMRendererRenderTargetVk() override;
 
     void attachTarget(common::OMRendererTexture *texture) override;
+    glm::vec2 fetchSize() override;
     void build() override;
 
     ::vk::RenderPass renderPass;

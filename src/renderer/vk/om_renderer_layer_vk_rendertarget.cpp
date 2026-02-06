@@ -4,6 +4,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "vulkan/vulkan.hpp"
+#include <algorithm>
 #include <stdexcept>
 
 using namespace ::vk;
@@ -26,6 +27,23 @@ OMRendererRenderTargetVk::~OMRendererRenderTargetVk()
 void OMRendererRenderTargetVk::attachTarget(common::OMRendererTexture *texture)
 {
     textures.push_back(texture);
+}
+
+glm::vec2 OMRendererRenderTargetVk::fetchSize()
+{
+    if (textures.empty())
+    {
+        return {renderer->swapchainManager->extent.width, renderer->swapchainManager->extent.height};
+    }
+
+    glm::vec2 target = {0.0f, 0.0f};
+    for (auto tex : textures)
+    {
+        auto tt = reinterpret_cast<OMRendererTextureVk *>(tex);
+        target.x = std::max(target.x, static_cast<float>(tt->width));
+        target.y = std::max(target.y, static_cast<float>(tt->height));
+    }
+    return target;
 }
 
 void OMRendererRenderTargetVk::build()

@@ -58,6 +58,7 @@ class OMRendererVk : public OMRenderer
                                                common::OMTextureArrangement arr) override;
     common::OMRendererRenderTarget *createRenderTarget() override;
     common::OMRendererRenderTarget *getDefaultRenderTarget() override;
+    common::OMRendererPipeline *createPipeline() override;
     glm::vec2 getExtent() const override;
 
     void destroy();

@@ -4,7 +4,9 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_pipeline.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_task.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include "openminecraft/util/om_util_result.hpp"
@@ -253,12 +255,17 @@ void OMRendererVk::rebuildDefaults()
                                 defaultFramebuffers[i], Rect2D(Offset2D(0, 0), swapchainManager->extent), test),
             SubpassContents::eSecondaryCommandBuffers);
 
-        commandBuffer.executeCommands(testRenderer->intermediateBuffer);
+        commandBuffer.executeCommands(reinterpret_cast<OMRendererTaskVk *>(testRenderer->task)->commandBuffer);
         commandBuffer.endRenderPass();
         commandBuffer.end();
 
         defaultCommandBuffers.push_back(commandBuffer);
     }
+}
+
+common::OMRendererPipeline *OMRendererVk::createPipeline()
+{
+    return new OMRendererPipelineVk(this);
 }
 
 common::OMRendererBuffer *OMRendererVk::allocateBuffer(common::OMBufferUsage usage, uint64_t length)

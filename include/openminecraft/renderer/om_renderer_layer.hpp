@@ -3,6 +3,7 @@
 
 #include "common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
+#include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include <exception>
@@ -31,6 +32,7 @@ class OMRenderer
                                                        common::OMTextureArrangement arrangement) = 0;
     virtual common::OMRendererRenderTarget *createRenderTarget() = 0;
     virtual common::OMRendererRenderTarget *getDefaultRenderTarget() = 0;
+    virtual common::OMRendererPipeline *createPipeline() = 0;
     virtual glm::vec2 getExtent() const = 0;
 
   protected:

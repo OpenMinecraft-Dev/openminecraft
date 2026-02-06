@@ -9,6 +9,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_pipeline.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_task.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "tiny_obj_loader.h"
 #include "vulkan/vulkan.hpp"
@@ -119,7 +120,7 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
                 uvv = dist(eng);
                 uvv2 = dist(eng);
             }
-            vtxnew.push_back({{v.x, v.y, 0.0f}, {uvv, uvv2}});
+            vtxnew.push_back({{v.x, v.y, 0.0f}, {v.x, v.y}});
             iid++;
             iid = iid % 3;
         }
@@ -166,9 +167,6 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
 
     uniformBuffer = renderer->allocateBuffer(common::Uniform, sizeof(UniformStructure));
 
-    commandPool = renderer->logicalDevice.createCommandPool(CommandPoolCreateInfo({}, renderer->queueFamilyIndex.first),
-                                                            renderer->allocator);
-
     {
         int texWidth, texHeight, texChannels;
 
@@ -186,7 +184,7 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
         stbi_image_free(pixels);
     }
 
-    pipeline = new OMRendererPipelineVk(renderer);
+    pipeline = renderer->createPipeline();
     pipeline->appendInput(common::OMRendererPipelineInputType::UniformBuffer);
     pipeline->appendInput(common::OMRendererPipelineInputType::ImageSampler);
     pipeline->bindOutput(renderer->defaultTarget);
@@ -266,32 +264,16 @@ void OMTestRenderer::reinit()
 {
     if (!firstTime)
     {
-        renderer->logicalDevice.freeCommandBuffers(commandPool, intermediateBuffer);
+        delete task;
     }
 
-    {
-        intermediateBuffer =
-            renderer->logicalDevice.allocateCommandBuffers({commandPool, CommandBufferLevel::eSecondary, 1})[0];
-        auto ii = CommandBufferInheritanceInfo(
-            reinterpret_cast<OMRendererRenderTargetVk *>(renderer->getDefaultRenderTarget())->renderPass);
-        intermediateBuffer.begin(
-            {CommandBufferUsageFlagBits::eSimultaneousUse | CommandBufferUsageFlagBits::eRenderPassContinue, &ii});
-        intermediateBuffer.setViewport(0,
-                                       {Viewport(0, 0, static_cast<float>(renderer->swapchainManager->extent.width),
-                                                 static_cast<float>(renderer->swapchainManager->extent.height), 0, 1)});
-        intermediateBuffer.setScissor(0, {Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent)});
-        intermediateBuffer.bindPipeline(PipelineBindPoint::eGraphics,
-                                        reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getPipeline());
-        intermediateBuffer.bindDescriptorSets(
-            PipelineBindPoint::eGraphics, reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getPipelineLayout(), 0,
-            reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getDescSet(), nullptr);
-        intermediateBuffer.bindVertexBuffers(
-            0, std::vector{reinterpret_cast<OMRendererBufferVk *>(vertexBuffer)->buffer}, std::vector<DeviceSize>{0});
-        intermediateBuffer.bindIndexBuffer(reinterpret_cast<OMRendererBufferVk *>(indexBuffer)->buffer, 0,
-                                           IndexType::eUint32);
-        intermediateBuffer.drawIndexed(vertexCount, 1, 0, 0, 0);
-        intermediateBuffer.end();
-    }
+    task = new OMRendererTaskVk(renderer);
+    task->bindTarget(renderer->defaultTarget);
+    task->bindPipeline(pipeline);
+    task->bindVertexBuffer({vertexBuffer});
+    task->bindIndexBuffer(indexBuffer);
+    task->draw(vertexCount);
+    task->finish();
 }
 void OMTestRenderer::destroy()
 {
@@ -300,8 +282,7 @@ void OMTestRenderer::destroy()
     delete uniformBuffer;
     delete vertexBuffer;
     delete indexBuffer;
-    renderer->logicalDevice.freeCommandBuffers(commandPool, intermediateBuffer);
-    renderer->logicalDevice.destroyCommandPool(commandPool, renderer->allocator);
+    delete task;
 }
 
 } // namespace openminecraft::renderer::vk::test
