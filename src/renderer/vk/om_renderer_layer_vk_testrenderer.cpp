@@ -267,13 +267,15 @@ void OMTestRenderer::reinit()
         delete task;
     }
 
-    task = new OMRendererTaskVk(renderer);
+    task = renderer->createTask();
     task->bindTarget(renderer->defaultTarget);
     task->bindPipeline(pipeline);
     task->bindVertexBuffer({vertexBuffer});
     task->bindIndexBuffer(indexBuffer);
     task->draw(vertexCount);
     task->finish();
+
+    renderer->attachTask(task);
 }
 void OMTestRenderer::destroy()
 {

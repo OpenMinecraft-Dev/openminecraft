@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
+#include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include <exception>
 #include <glm/glm.hpp>
@@ -33,6 +34,8 @@ class OMRenderer
     virtual common::OMRendererRenderTarget *createRenderTarget() = 0;
     virtual common::OMRendererRenderTarget *getDefaultRenderTarget() = 0;
     virtual common::OMRendererPipeline *createPipeline() = 0;
+    virtual common::OMRendererTask *createTask() = 0;
+    virtual void attachTask(common::OMRendererTask *task) = 0;
     virtual glm::vec2 getExtent() const = 0;
 
   protected:

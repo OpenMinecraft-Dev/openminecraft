@@ -255,12 +255,25 @@ void OMRendererVk::rebuildDefaults()
                                 defaultFramebuffers[i], Rect2D(Offset2D(0, 0), swapchainManager->extent), test),
             SubpassContents::eSecondaryCommandBuffers);
 
-        commandBuffer.executeCommands(reinterpret_cast<OMRendererTaskVk *>(testRenderer->task)->commandBuffer);
+        for (auto tsk : tasks)
+        {
+            commandBuffer.executeCommands(reinterpret_cast<OMRendererTaskVk *>(tsk)->commandBuffer);
+        }
         commandBuffer.endRenderPass();
         commandBuffer.end();
 
         defaultCommandBuffers.push_back(commandBuffer);
     }
+}
+
+void OMRendererVk::attachTask(common::OMRendererTask *task)
+{
+    tasks.push_back(task);
+}
+
+common::OMRendererTask *OMRendererVk::createTask()
+{
+    return new OMRendererTaskVk(this);
 }
 
 common::OMRendererPipeline *OMRendererVk::createPipeline()
@@ -366,6 +379,8 @@ reb:
     delete defaultDepthBuffer;
     defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height,
                                                common::Dim2, common::Depth);
+
+    tasks.clear();
     testRenderer->reinit();
     rebuildDefaults();
     needRebuild = false;

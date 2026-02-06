@@ -3,6 +3,7 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
+#include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
@@ -59,6 +60,8 @@ class OMRendererVk : public OMRenderer
     common::OMRendererRenderTarget *createRenderTarget() override;
     common::OMRendererRenderTarget *getDefaultRenderTarget() override;
     common::OMRendererPipeline *createPipeline() override;
+    common::OMRendererTask *createTask() override;
+    void attachTask(common::OMRendererTask *task) override;
     glm::vec2 getExtent() const override;
 
     void destroy();
@@ -73,6 +76,8 @@ class OMRendererVk : public OMRenderer
     common::OMRendererTexture *defaultDepthBuffer;
     std::vector<::vk::Framebuffer> defaultFramebuffers;
     std::vector<::vk::CommandBuffer> defaultCommandBuffers;
+
+    std::vector<common::OMRendererTask *> tasks;
 
     ::vk::AllocationCallbacks allocator;
     ::vk::Instance instance;
