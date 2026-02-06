@@ -30,6 +30,10 @@ void OMRendererRenderTargetVk::attachTarget(common::OMRendererTexture *texture)
 
 void OMRendererRenderTargetVk::build()
 {
+    if (available)
+    {
+        return;
+    }
     // gino: no textures, render it to the screen (default properties)
     if (textures.empty())
     {

@@ -20,13 +20,7 @@ enum OMVertexPropType
     Double,
     Vec2d,
     Vec3d,
-    Vec4d,
-    Boolean,
-    Vec2b,
-    Vec3b,
-    Vec4b,
-    Mat4x4,
-    Mat3x3
+    Vec4d
 };
 
 struct OMVertexFormatGroup
@@ -34,6 +28,7 @@ struct OMVertexFormatGroup
     bool isInstance = false;
     int binding = 0;
     std::vector<std::tuple<std::string, OMVertexPropType, int>> parts;
+    int size;
 };
 
 class OMVertexFormat

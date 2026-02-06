@@ -7,6 +7,7 @@
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_pipeline.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "tiny_obj_loader.h"
@@ -61,16 +62,6 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
     }
 
     {
-        common::basics::OMVertexFormat format;
-        format.appendPart("position", common::basics::Vec3f);
-        format.appendPart("textureUV", common::basics::Vec2f);
-        format.nextGroup();
-        format.setInstance();
-        format.appendPart("modelMat", common::basics::Mat4x4);
-        format.nextGroup();
-        format.decideStruct();
-        format.debugState();
-
         class VertexPart
         {
             glm::vec3 pos;
@@ -195,108 +186,25 @@ OMTestRenderer::OMTestRenderer(OMRendererVk *renderer) : renderer(renderer), log
         stbi_image_free(pixels);
     }
 
-    {
-        auto prop = renderer->physicalDevice.getProperties();
-        auto fea = renderer->physicalDevice.getFeatures();
+    pipeline = new OMRendererPipelineVk(renderer);
+    pipeline->appendInput(common::OMRendererPipelineInputType::UniformBuffer);
+    pipeline->appendInput(common::OMRendererPipelineInputType::ImageSampler);
+    pipeline->bindOutput(renderer->defaultTarget);
+    pipeline->attachShader(frgShader);
+    pipeline->attachShader(vtxShader);
 
-        textureSampler = renderer->logicalDevice.createSampler(
-            SamplerCreateInfo({}, Filter::eLinear, Filter::eLinear, SamplerMipmapMode::eLinear,
-                              SamplerAddressMode::eRepeat, SamplerAddressMode::eRepeat, SamplerAddressMode::eRepeat,
-                              0.0f, fea.samplerAnisotropy, prop.limits.maxSamplerAnisotropy, false, CompareOp::eAlways,
-                              0.0f, 0.0f, BorderColor::eIntOpaqueBlack, false),
-            renderer->allocator);
-    }
+    common::basics::OMVertexFormat format;
+    format.appendPart("position", common::basics::Vec3f);
+    format.appendPart("textureUV", common::basics::Vec2f);
+    format.nextGroup();
+    format.decideStruct();
+    format.debugState();
 
-    {
-        std::vector b = {
-            DescriptorSetLayoutBinding(0, DescriptorType::eUniformBuffer, 1, ShaderStageFlagBits::eVertex),
-            DescriptorSetLayoutBinding(1, DescriptorType::eCombinedImageSampler, 1, ShaderStageFlagBits::eFragment)};
+    pipeline->vertexFormat(format);
+    pipeline->build();
 
-        descriptorSetLayout = renderer->logicalDevice.createDescriptorSetLayout(DescriptorSetLayoutCreateInfo({}, b),
-                                                                                renderer->allocator);
-
-        std::vector a = {DescriptorPoolSize(DescriptorType::eUniformBuffer, 1),
-                         DescriptorPoolSize(DescriptorType::eCombinedImageSampler, 1)};
-
-        descriptorPool = renderer->logicalDevice.createDescriptorPool(
-            DescriptorPoolCreateInfo(DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 2, a), renderer->allocator);
-        descriptorSet = renderer->logicalDevice.allocateDescriptorSets(
-            DescriptorSetAllocateInfo(descriptorPool, 1, &descriptorSetLayout))[0];
-
-        std::vector c = {DescriptorBufferInfo(reinterpret_cast<OMRendererBufferVk *>(uniformBuffer)->buffer, 0,
-                                              sizeof(UniformStructure))};
-        renderer->logicalDevice.updateDescriptorSets(
-            WriteDescriptorSet(descriptorSet, 0, 0, DescriptorType::eUniformBuffer, {}, c), nullptr);
-
-        auto cc = DescriptorImageInfo(textureSampler, reinterpret_cast<OMRendererTextureVk *>(textureImage)->imageView,
-                                      ImageLayout::eShaderReadOnlyOptimal);
-        renderer->logicalDevice.updateDescriptorSets(
-            WriteDescriptorSet(descriptorSet, 1, 0, DescriptorType::eCombinedImageSampler, cc, {}), nullptr);
-    }
-
-    {
-        pipelineLayout = renderer->logicalDevice.createPipelineLayout(PipelineLayoutCreateInfo({}, descriptorSetLayout),
-                                                                      renderer->allocator);
-
-        auto shaders =
-            std::vector{PipelineShaderStageCreateInfo(
-                            {}, ShaderStageFlagBits::eVertex,
-                            renderer->logicalDevice.createShaderModule(
-                                ShaderModuleCreateInfo({}, vtxShader->data.size(),
-                                                       reinterpret_cast<const uint32_t *>(vtxShader->data.data())),
-                                renderer->allocator),
-                            "main"),
-                        PipelineShaderStageCreateInfo(
-                            {}, ShaderStageFlagBits::eFragment,
-                            renderer->logicalDevice.createShaderModule(
-                                ShaderModuleCreateInfo({}, frgShader->data.size(),
-                                                       reinterpret_cast<const uint32_t *>(frgShader->data.data())),
-                                renderer->allocator),
-                            "main")};
-
-        std::vector bi = {VertexInputBindingDescription(0, (3 + 2) * sizeof(float), VertexInputRate::eVertex)};
-        std::vector ad = {VertexInputAttributeDescription(0, 0, Format::eR32G32B32Sfloat, 0),
-                          VertexInputAttributeDescription(1, 0, Format::eR32G32Sfloat, 3 * sizeof(float))};
-
-        auto vertexInput = PipelineVertexInputStateCreateInfo({}, bi, ad);
-        auto inputAssembly = PipelineInputAssemblyStateCreateInfo({}, PrimitiveTopology::eTriangleList, false);
-
-        auto rasterization =
-            PipelineRasterizationStateCreateInfo({}, false, false, PolygonMode::eFill, CullModeFlagBits::eNone,
-                                                 FrontFace::eCounterClockwise, true, 0, 0, 0, 1);
-        auto multisample = PipelineMultisampleStateCreateInfo({}, SampleCountFlagBits::e1, false);
-        auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
-        std::vector attc = {PipelineColorBlendAttachmentState(false, {}, {}, {}, {}, {}, {},
-                                                              ColorComponentFlagBits::eA | ColorComponentFlagBits::eR |
-                                                                  ColorComponentFlagBits::eG |
-                                                                  ColorComponentFlagBits::eB)};
-        auto colorblend =
-            PipelineColorBlendStateCreateInfo({}, true, LogicOp::eCopy, attc, std::array{0.f, 0.f, 0.f, 0.f});
-
-        auto depthStencil =
-            PipelineDepthStencilStateCreateInfo({}, true, true, CompareOp::eLess, true, true, {}, {}, 0.0f, 1.0f);
-        std::vector<DynamicState> states = {DynamicState::eScissor, DynamicState::eViewport};
-        auto dynamicState = PipelineDynamicStateCreateInfo({}, states);
-
-        auto result = renderer->logicalDevice.createGraphicsPipeline(
-            {},
-            GraphicsPipelineCreateInfo(
-                {}, shaders, &vertexInput, &inputAssembly, {}, &viewportState, &rasterization, &multisample,
-                &depthStencil, &colorblend, &dynamicState, pipelineLayout,
-                reinterpret_cast<OMRendererRenderTargetVk *>(renderer->getDefaultRenderTarget())->renderPass, 0, {},
-                -1),
-            renderer->allocator);
-        if (result.result != Result::eSuccess)
-        {
-            throw SystemError(result.result);
-        }
-        pipeline = result.value;
-
-        for (auto sd : shaders)
-        {
-            renderer->logicalDevice.destroyShaderModule(sd.module, renderer->allocator);
-        }
-    }
+    pipeline->bindInput(0, uniformBuffer);
+    pipeline->bindInput(1, textureImage);
 
     OMTestRenderer::reinit();
 
@@ -356,7 +264,6 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
 
 void OMTestRenderer::reinit()
 {
-    // this old resources need to be cleaned
     if (!firstTime)
     {
         renderer->logicalDevice.freeCommandBuffers(commandPool, intermediateBuffer);
@@ -373,8 +280,11 @@ void OMTestRenderer::reinit()
                                        {Viewport(0, 0, static_cast<float>(renderer->swapchainManager->extent.width),
                                                  static_cast<float>(renderer->swapchainManager->extent.height), 0, 1)});
         intermediateBuffer.setScissor(0, {Rect2D(Offset2D(0, 0), renderer->swapchainManager->extent)});
-        intermediateBuffer.bindPipeline(PipelineBindPoint::eGraphics, pipeline);
-        intermediateBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
+        intermediateBuffer.bindPipeline(PipelineBindPoint::eGraphics,
+                                        reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getPipeline());
+        intermediateBuffer.bindDescriptorSets(
+            PipelineBindPoint::eGraphics, reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getPipelineLayout(), 0,
+            reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getDescSet(), nullptr);
         intermediateBuffer.bindVertexBuffers(
             0, std::vector{reinterpret_cast<OMRendererBufferVk *>(vertexBuffer)->buffer}, std::vector<DeviceSize>{0});
         intermediateBuffer.bindIndexBuffer(reinterpret_cast<OMRendererBufferVk *>(indexBuffer)->buffer, 0,
@@ -385,18 +295,13 @@ void OMTestRenderer::reinit()
 }
 void OMTestRenderer::destroy()
 {
-    renderer->logicalDevice.destroySampler(textureSampler, renderer->allocator);
+    delete pipeline;
     delete textureImage;
-    renderer->logicalDevice.freeDescriptorSets(descriptorPool, descriptorSet);
-    renderer->logicalDevice.destroyDescriptorPool(descriptorPool, renderer->allocator);
     delete uniformBuffer;
-    renderer->logicalDevice.destroyDescriptorSetLayout(descriptorSetLayout, renderer->allocator);
     delete vertexBuffer;
     delete indexBuffer;
     renderer->logicalDevice.freeCommandBuffers(commandPool, intermediateBuffer);
     renderer->logicalDevice.destroyCommandPool(commandPool, renderer->allocator);
-    renderer->logicalDevice.destroyPipeline(pipeline, renderer->allocator);
-    renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
 }
 
 } // namespace openminecraft::renderer::vk::test

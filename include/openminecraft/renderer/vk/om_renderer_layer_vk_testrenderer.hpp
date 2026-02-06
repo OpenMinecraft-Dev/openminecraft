@@ -2,6 +2,7 @@
 #define OM_RENDERER_LAYER_VK_TESTRENDERER
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
+#include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/util/om_util_reinitable.hpp"
 #ifdef OM_VULKAN_DYNAMIC
@@ -49,9 +50,6 @@ class OMTestRenderer : public util::OMReinitable
 
     void updateUniform();
 
-    ::vk::PipelineLayout pipelineLayout;
-    ::vk::Pipeline pipeline;
-
     common::OMRendererBuffer *vertexBuffer;
     common::OMRendererBuffer *indexBuffer;
 
@@ -60,14 +58,9 @@ class OMTestRenderer : public util::OMReinitable
 
     common::OMRendererBuffer *uniformBuffer;
 
-    ::vk::DescriptorSetLayout descriptorSetLayout;
-
-    ::vk::DescriptorPool descriptorPool;
-    ::vk::DescriptorSet descriptorSet;
-
     common::OMRendererTexture *textureImage;
 
-    ::vk::Sampler textureSampler;
+    common::OMRendererPipeline *pipeline;
 
     void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp);
     void mouseOffset(float dx, float dy);

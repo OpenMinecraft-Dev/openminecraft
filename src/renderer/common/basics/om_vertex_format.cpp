@@ -31,6 +31,7 @@ void OMVertexFormat::decideStruct()
             off = offset;
             offset += typeSize(std::get<OMVertexPropType>(p));
         }
+        part.size = offset;
     }
 }
 
@@ -77,15 +78,8 @@ int OMVertexFormat::typeAlign(OMVertexPropType type)
     case Vec3i:
     case Vec4f:
     case Vec4i:
-    case Mat3x3:
-    case Mat4x4:
     default:
         return sizeof(float);
-    case Boolean:
-    case Vec2b:
-    case Vec3b:
-    case Vec4b:
-        return sizeof(bool);
     }
 }
 
@@ -117,18 +111,6 @@ int OMVertexFormat::typeSize(OMVertexPropType type)
         return sizeof(double) * 3;
     case Vec4d:
         return sizeof(double) * 4;
-    case Boolean:
-        return sizeof(bool);
-    case Vec2b:
-        return sizeof(bool) * 2;
-    case Vec3b:
-        return sizeof(bool) * 3;
-    case Vec4b:
-        return sizeof(bool) * 4;
-    case Mat3x3:
-        return sizeof(float) * 3 * 3;
-    case Mat4x4:
-        return sizeof(float) * 4 * 4;
     default:
         return 0;
     }
