@@ -30,7 +30,7 @@ class OMRendererRenderTargetVk : public common::OMRendererRenderTarget
 
     ::vk::RenderPass renderPass;
 
-    OMRendererRenderTargetBlock *block;
+    OMRendererRenderTargetBlock *block = nullptr;
 
   private:
     OMRendererVk *renderer;

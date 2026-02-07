@@ -442,7 +442,7 @@ OMResult<Device, std::string> OMRendererVk::deviceCreation()
         auto fea = physicalDevice.getFeatures();
 
         std::vector ext{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-        return OMResult<Device, std::string>::ok(physicalDevice.createDevice(DeviceCreateInfo({}, qis, {}, ext, &fea)));
+        return OMResult<Device, std::string>::ok(physicalDevice.createDevice(DeviceCreateInfo({}, qis, {}, ext, &fea), allocator));
     }
     catch (SystemError &e)
     {
@@ -471,8 +471,7 @@ OMResult<std::any, std::string> OMRendererVk::sdlVulkanLoading()
     }
 
     VkSurfaceKHR sf;
-    SDL_Vulkan_CreateSurface(static_cast<SDL_Window *>(window), instance,
-                             reinterpret_cast<const VkAllocationCallbacks *>(&allocator), &sf);
+    SDL_Vulkan_CreateSurface(static_cast<SDL_Window *>(window), instance, reinterpret_cast<VkAllocationCallbacks *>(&allocator), &sf);
     surface = SurfaceKHR(sf);
 
     return OMResult<std::any, std::string>::ok(nullptr);
@@ -542,7 +541,7 @@ OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std
                                 info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
         std::vector<const char *> l;
         validationLayer->attach(&l);
-        auto i = createInstance(InstanceCreateInfo{{}, &appInfo, l, exts, &validationLayer->createInfo});
+        auto i = createInstance(InstanceCreateInfo{{}, &appInfo, l, exts, &validationLayer->createInfo}, allocator);
         logger->info(translate("openminecraft.renderer.vk.instance", info.appName, info.appVer.toString(),
                                info.engineName, info.engineVer.toString(), info.minApiVersion.toString()));
 #ifdef OM_VULKAN_DYNAMIC
@@ -668,9 +667,11 @@ void OMRendererVk::destroy()
 
     swapchainManager->destroy();
     validationLayer->ifEnable([&]() { instance.destroyDebugReportCallbackEXT(reportCallback, &allocator); });
+    
     logicalDevice.destroy(allocator);
-    SDL_Vulkan_DestroySurface(instance, VkSurfaceKHR(surface),
-                              reinterpret_cast<const VkAllocationCallbacks *>(&allocator));
+    /*SDL_Vulkan_DestroySurface(instance, VkSurfaceKHR(surface),
+                              reinterpret_cast<const VkAllocationCallbacks *>(&allocator));*/
+    instance.destroySurfaceKHR(surface, allocator);
     instance.destroy(allocator);
     SDL_Vulkan_UnloadLibrary();
 }

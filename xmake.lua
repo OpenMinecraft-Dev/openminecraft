@@ -39,7 +39,7 @@ add_requires(
 	"tinyobjloader",
 	{ system = false }
 )
-add_requires("boost", { system = false, configs = { stacktrace = true } })
+add_requires("boost", { system = false, configs = { stacktrace = true, asio = true } })
 add_requires("fmt", { system = false, configs = { header_only = true } })
 add_requires("harfbuzz", { system = false, configs = { freetype = false } })
 
