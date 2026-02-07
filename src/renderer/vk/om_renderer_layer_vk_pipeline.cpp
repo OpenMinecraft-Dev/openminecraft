@@ -79,7 +79,6 @@ void OMRendererPipelineVk::attachShader(std::shared_ptr<common::OMShader> shader
     {
         throw std::logic_error(translate("openminecraft.renderer.vk.err.shaderstat"));
     }
-    logger.info("{} {}", shader->data.size(), (void *)shader->data.data());
     auto sm = renderer->logicalDevice.createShaderModule(
         ShaderModuleCreateInfo({}, shader->data.size(), reinterpret_cast<const uint32_t *>(shader->data.data())),
         renderer->allocator);

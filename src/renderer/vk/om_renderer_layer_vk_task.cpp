@@ -4,7 +4,6 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_pipeline.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
 #include "vulkan/vulkan.hpp"
-#include <iterator>
 #include <vulkan/vulkan.hpp>
 
 using namespace ::vk;

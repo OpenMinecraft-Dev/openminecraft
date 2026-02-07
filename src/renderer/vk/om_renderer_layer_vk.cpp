@@ -259,7 +259,7 @@ void OMRendererVk::rebuildDefaults()
         {
             if (!reinterpret_cast<OMRendererTaskVk *>(tsk)->isOnDefault())
             {
-                break;
+                continue;
             }
             commandBuffer.executeCommands(reinterpret_cast<OMRendererTaskVk *>(tsk)->commandBuffer);
         }
@@ -349,7 +349,7 @@ void OMRendererVk::render()
             throw SystemError(result);
         }
 
-        std::vector<CommandBuffer> cmdBuffers = {defaultCommandBuffers[imageIndex]};
+        std::vector<CommandBuffer> cmdBuffers = {};
         for (auto tsk : tasks)
         {
             auto tt = reinterpret_cast<OMRendererTaskVk *>(tsk);
@@ -358,6 +358,7 @@ void OMRendererVk::render()
                 cmdBuffers.push_back(tt->commandBuffer);
             }
         }
+        cmdBuffers.push_back(defaultCommandBuffers[imageIndex]);
 
         const PipelineStageFlags msk = PipelineStageFlagBits::eColorAttachmentOutput;
         SubmitInfo submitInfo(1, &frameSyncs[thisFrame].imageAvailableSemaphore, &msk, cmdBuffers.size(),

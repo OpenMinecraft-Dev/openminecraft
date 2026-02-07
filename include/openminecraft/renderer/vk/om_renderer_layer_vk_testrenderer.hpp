@@ -48,8 +48,14 @@ class OMTestRenderer : public util::OMReinitable
     common::OMRendererBuffer *vertexBuffer;
     common::OMRendererBuffer *indexBuffer;
     common::OMRendererBuffer *uniformBuffer;
+    common::OMRendererBuffer *tempUniformBuffer;
     common::OMRendererTexture *textureImage;
     common::OMRendererPipeline *pipeline;
+
+    common::OMRendererBuffer *mainVtxBuffer;
+    common::OMRendererBuffer *mainIdxBuffer;
+
+    common::OMRendererPipeline *mainPipeline;
 
     common::OMRendererTexture *tempTexture;
     common::OMRendererTexture *tempDepth;
@@ -76,6 +82,7 @@ class OMTestRenderer : public util::OMReinitable
 
     std::shared_ptr<common::OMShader> vtxShader;
     std::shared_ptr<common::OMShader> frgShader;
+    std::shared_ptr<common::OMShader> frgShader2;
 };
 } // namespace openminecraft::renderer::vk::test
 

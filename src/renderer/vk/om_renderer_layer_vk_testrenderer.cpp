@@ -1,9 +1,13 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_testrenderer.hpp"
 
+#include "glm/detail/qualifier.hpp"
+#include "glm/ext/scalar_constants.hpp"
 #include "glm/fwd.hpp"
 #include "openminecraft/fontproc/om_font.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
+#include "openminecraft/renderer/common/om_renderer_buffer.hpp"
+#include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
@@ -53,6 +57,13 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer) : renderer(renderer), logge
         common::OMShader shader(common::GLSLSource, io::readOnce(target.get()), "simple.frag.glsl", "main",
                                 common::Fragment);
         frgShader = shader.convertTo(common::SPIRVBinary);
+    }
+
+    {
+        auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple2.frag.glsl");
+        common::OMShader shader(common::GLSLSource, io::readOnce(target.get()), "simple.frag.glsl", "main",
+                                common::Fragment);
+        frgShader2 = shader.convertTo(common::SPIRVBinary);
     }
 
     {
@@ -165,7 +176,26 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer) : renderer(renderer), logge
         vertexCount = indices.size();
     }
 
+    {
+        mainVtxBuffer = renderer->allocateBuffer(common::VertexData, 4 * (3 + 2) * sizeof(float));
+        mainIdxBuffer = renderer->allocateBuffer(common::VertexIndex, 6 * sizeof(uint32_t));
+
+        float vtxs[] = {-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f,  0.0f, 0.0f, 1.0f,
+                        1.0f,  1.0f,  0.0f, 1.0f, 1.0f, 1.0f,  -1.0f, 0.0f, 1.0f, 0.0f};
+        uint32_t vtxi[] = {0, 1, 2, 2, 3, 0};
+        mainVtxBuffer->updateData(vtxs);
+        mainIdxBuffer->updateData(vtxi);
+    }
+
     uniformBuffer = renderer->allocateBuffer(common::Uniform, sizeof(UniformStructure));
+
+    UniformStructure stru{};
+    stru.model = glm::mat4(1.0f);
+    stru.proj = glm::mat4(1.0f);
+    stru.view = glm::mat4(1.0f);
+
+    tempUniformBuffer = renderer->allocateBuffer(common::Uniform, sizeof(UniformStructure));
+    tempUniformBuffer->updateData(&stru);
 
     {
         int texWidth, texHeight, texChannels;
@@ -184,7 +214,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer) : renderer(renderer), logge
         stbi_image_free(pixels);
     }
 
-    tempTexture = renderer->allocateTexture(800, 800, common::Dim2, common::ColorRgba);
+    /*tempTexture = renderer->allocateTexture(800, 800, common::Dim2, common::ColorRgba);
     tempDepth = renderer->allocateTexture(800, 800, common::Dim2, common::Depth);
     renderTarget = renderer->createRenderTarget();
     renderTarget->attachTarget(tempTexture);
@@ -192,24 +222,34 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer) : renderer(renderer), logge
     renderTarget->build();
 
     pipeline = renderer->createPipeline();
-    pipeline->appendInput(common::OMRendererPipelineInputType::UniformBuffer);
-    pipeline->appendInput(common::OMRendererPipelineInputType::ImageSampler);
+    pipeline->appendInput(common::UniformBuffer);
+    pipeline->appendInput(common::ImageSampler);
     pipeline->bindOutput(renderTarget);
     pipeline->attachShader(frgShader);
-    pipeline->attachShader(vtxShader);
-
+    pipeline->attachShader(vtxShader);*/
     common::basics::OMVertexFormat format;
     format.appendPart("position", common::basics::Vec3f);
     format.appendPart("textureUV", common::basics::Vec2f);
     format.nextGroup();
     format.decideStruct();
     format.debugState();
-
-    pipeline->vertexFormat(format);
+    /*pipeline->vertexFormat(format);
     pipeline->build();
-
     pipeline->bindInput(0, uniformBuffer);
-    pipeline->bindInput(1, textureImage);
+    pipeline->bindInput(1, textureImage);*/
+
+    // OMTestRenderer::reinit();
+
+    mainPipeline = renderer->createPipeline();
+    mainPipeline->appendInput(common::UniformBuffer);
+    mainPipeline->appendInput(common::ImageSampler);
+    mainPipeline->bindOutput(renderer->getDefaultRenderTarget());
+    mainPipeline->attachShader(frgShader);
+    mainPipeline->attachShader(vtxShader);
+    mainPipeline->vertexFormat(format);
+    mainPipeline->build();
+    mainPipeline->bindInput(0, tempUniformBuffer);
+    // mainPipeline->bindInput(1, tempTexture);
 
     OMTestRenderer::reinit();
 
@@ -269,6 +309,41 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
 
 void OMTestRenderer::reinit()
 {
+    if (!firstTime)
+    {
+        delete tempTexture;
+        delete tempDepth;
+        delete renderTarget;
+        delete pipeline;
+    }
+
+    auto ext = renderer->getDefaultRenderTarget()->fetchSize();
+    tempTexture = renderer->allocateTexture(ext.x * 4, ext.y * 4, common::Dim2, common::ColorRgba);
+    tempDepth = renderer->allocateTexture(ext.x * 4, ext.y * 4, common::Dim2, common::Depth);
+    renderTarget = renderer->createRenderTarget();
+    renderTarget->attachTarget(tempTexture);
+    renderTarget->attachTarget(tempDepth);
+    renderTarget->build();
+
+    pipeline = renderer->createPipeline();
+    pipeline->appendInput(common::UniformBuffer);
+    pipeline->appendInput(common::ImageSampler);
+    pipeline->bindOutput(renderTarget);
+    pipeline->attachShader(frgShader2);
+    pipeline->attachShader(vtxShader);
+    common::basics::OMVertexFormat format;
+    format.appendPart("position", common::basics::Vec3f);
+    format.appendPart("textureUV", common::basics::Vec2f);
+    format.nextGroup();
+    format.decideStruct();
+    format.debugState();
+    pipeline->vertexFormat(format);
+    pipeline->build();
+    pipeline->bindInput(0, uniformBuffer);
+    pipeline->bindInput(1, textureImage);
+
+    mainPipeline->bindInput(1, tempTexture);
+
     auto task = renderer->createTask();
     task->bindTarget(renderTarget);
     task->bindPipeline(pipeline);
@@ -278,14 +353,29 @@ void OMTestRenderer::reinit()
     task->finish();
 
     renderer->attachTask(task);
+
+    auto task2 = renderer->createTask();
+    task2->bindTarget(renderer->getDefaultRenderTarget());
+    task2->bindPipeline(mainPipeline);
+    task2->bindVertexBuffer({mainVtxBuffer});
+    task2->bindIndexBuffer(mainIdxBuffer);
+    task2->draw(6);
+    task2->finish();
+
+    renderer->attachTask(task2);
 }
 void OMTestRenderer::destroy()
 {
+    delete mainPipeline;
     delete pipeline;
     delete textureImage;
     delete uniformBuffer;
+    delete tempUniformBuffer;
     delete vertexBuffer;
     delete indexBuffer;
+
+    delete mainIdxBuffer;
+    delete mainVtxBuffer;
 
     delete tempTexture;
     delete tempDepth;
