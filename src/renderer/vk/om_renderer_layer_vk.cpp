@@ -7,6 +7,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_pipeline.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_task.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_testrenderer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include "openminecraft/util/om_util_result.hpp"
@@ -200,7 +201,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         defaultTarget->build();
         defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height,
                                                    common::Dim2, common::Depth);
-        testRenderer = std::make_shared<test::OMTestRenderer>(this);
+        testRenderer = new test::OMTestRenderer(this);
         rebuildDefaults();
 
         for (int i = 0; i < framesInFlight; i++)
@@ -316,7 +317,7 @@ void OMRendererVk::render()
     }
     try
     {
-        testRenderer->updateUniform();
+        testRenderer->beforeFrame();
         auto result = logicalDevice.waitForFences(1, &frameSyncs[thisFrame].inFlightFence, true,
                                                   std::numeric_limits<uint64_t>::max());
         if (result != Result::eSuccess)
@@ -400,7 +401,7 @@ reb:
         delete tsk;
     }
     tasks.clear();
-    testRenderer->reinit();
+    testRenderer->onResize();
     rebuildDefaults();
     needRebuild = false;
 }
@@ -663,14 +664,12 @@ OMRendererVk::~OMRendererVk()
     }
     logicalDevice.destroyCommandPool(tempCommandPool, allocator);
     delete defaultTarget;
-    testRenderer->destroy();
+    delete testRenderer;
 
     swapchainManager->destroy();
     validationLayer->ifEnable([&]() { instance.destroyDebugReportCallbackEXT(reportCallback, &allocator); });
 
     logicalDevice.destroy(allocator);
-    /*SDL_Vulkan_DestroySurface(instance, VkSurfaceKHR(surface),
-                              reinterpret_cast<const VkAllocationCallbacks *>(&allocator));*/
     instance.destroySurfaceKHR(surface, allocator);
     instance.destroy(allocator);
     SDL_Vulkan_UnloadLibrary();

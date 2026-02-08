@@ -53,7 +53,7 @@ OMRendererOpenGL::~OMRendererOpenGL()
 
 std::string OMRendererOpenGL::driver()
 {
-    return "unknown";
+    return reinterpret_cast<const char *>(gl.glGetString(GL_RENDERER));
 }
 common::OMRendererBuffer *OMRendererOpenGL::allocateBuffer(common::OMBufferUsage usage, uint64_t length)
 {

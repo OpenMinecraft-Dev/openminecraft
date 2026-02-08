@@ -68,7 +68,7 @@ class OMRendererVk : public OMRenderer
 
     std::shared_ptr<validation::OMRendererVkValidation> validationLayer;
     std::shared_ptr<swapchain::OMSwapchainManager> swapchainManager;
-    std::shared_ptr<test::OMTestRenderer> testRenderer;
+    test::OMTestRenderer *testRenderer;
 
     common::OMRendererRenderTarget *defaultTarget;
     common::OMRendererTexture *defaultDepthBuffer;

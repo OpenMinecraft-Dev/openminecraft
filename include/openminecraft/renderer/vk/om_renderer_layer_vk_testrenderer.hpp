@@ -37,16 +37,15 @@ struct UniformStructure
     float sigma;
 };
 
-class OMTestRenderer : public util::OMReinitable
+class OMTestRenderer
 {
   public:
     OMTestRenderer(OMRenderer *renderer);
-    ~OMTestRenderer() = default;
+    ~OMTestRenderer();
 
-    void reinit() override;
-    void destroy();
+    void onResize();
 
-    void updateUniform();
+    void beforeFrame();
 
     common::OMRendererBuffer *vertexBuffer;
     common::OMRendererBuffer *indexBuffer;

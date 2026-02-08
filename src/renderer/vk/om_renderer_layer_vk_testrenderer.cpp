@@ -226,12 +226,12 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer) : renderer(renderer), logge
     mainPipeline->bindInput(0, tempUniformBuffer);
     // mainPipeline->bindInput(1, tempTexture);
 
-    OMTestRenderer::reinit();
+    OMTestRenderer::onResize();
 
     firstTime = false;
 }
 
-void OMTestRenderer::updateUniform()
+void OMTestRenderer::beforeFrame()
 {
     UniformStructure ubo{};
     ubo.model = glm::mat4(1.0f);
@@ -282,7 +282,7 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
     }
 }
 
-void OMTestRenderer::reinit()
+void OMTestRenderer::onResize()
 {
     if (!firstTime)
     {
@@ -347,7 +347,7 @@ void OMTestRenderer::reinit()
 
     renderer->attachTask(task2);
 }
-void OMTestRenderer::destroy()
+OMTestRenderer::~OMTestRenderer()
 {
     delete mainPipeline;
     delete pipeline;
