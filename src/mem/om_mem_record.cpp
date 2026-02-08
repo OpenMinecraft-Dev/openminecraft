@@ -2,23 +2,59 @@
 
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-
-uint64_t mems[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-std::string memName[10] = {"C++ allocator", "SDL",      "Vulkan",  "Vulkan Internal", "OpenGL",
-                           "Harfbuzz",      "Freetype", "VM Data", "VM Code",         "Unknown"};
-uint64_t blocks = 0;
+#include <cstdio>
+#include <string>
 
 using namespace openminecraft::i18n::res;
 namespace openminecraft::mem::castorice
 {
+struct OMMemEntry
+{
+    const char *tag;
+    uint64_t size;
+};
+int entryLength = 0;
+OMMemEntry *entries = nullptr;
+uint64_t blocks = 0;
+
 log::OMLogger logger("Memory Record/Castorice");
 void rec(MemModifyInfo i)
 {
-    i.type == Free ? (mems[i.tag] <= i.length ? 0 : mems[i.tag] -= i.length) : (mems[i.tag] += i.length);
-    i.type == Free ? (blocks--) : (blocks++);
+begin:
+    for (int id = 0; id < entryLength; id++)
+    {
+        if (std::strcmp(entries[id].tag, i.tag) == 0)
+        {
+            if (i.type == Free)
+            {
+                if (entries[id].size <= i.length)
+                {
+                    entries[id].size = 0;
+                }
+                else
+                {
+                    entries[id].size -= i.length;
+                }
+                blocks--;
+            }
+            else
+            {
+                entries[id].size += i.length;
+                blocks++;
+            }
+
+            return;
+        }
+    }
+
+    entryLength++;
+    entries = entries ? reinterpret_cast<OMMemEntry *>(realloc(entries, sizeof(OMMemEntry) * entryLength))
+                      : reinterpret_cast<OMMemEntry *>(calloc(entryLength, sizeof(OMMemEntry)));
+    entries[entryLength - 1].tag = i.tag;
+    entries[entryLength - 1].size = 0;
+    goto begin;
 }
 
-// TODO: Precision lost !!!
 std::string toDataSize(uint64_t l)
 {
     if (l < 1024)
@@ -48,15 +84,11 @@ void printres()
     logger.info(translate("openminecraft.mem.title"));
     logger.info(translate("openminecraft.mem.blocks", blocks));
     uint64_t data = 0;
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < entryLength; i++)
     {
-        logger.info(translate("openminecraft.mem.detail", memName[i], toDataSize(mems[i])));
-        data += mems[i];
+        data += entries[i].size;
+        logger.info(translate("openminecraft.mem.detail", entries[i].tag, toDataSize(entries[i].size)));
     }
     logger.info(translate("openminecraft.mem.detail", "*", toDataSize(data)));
-}
-uint64_t fetchSize(int t)
-{
-    return mems[t];
 }
 } // namespace openminecraft::mem::castorice

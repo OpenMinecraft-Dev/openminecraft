@@ -1,5 +1,6 @@
 #ifndef OM_RENDERER_LAYER_VK_TESTRENDERER
 #define OM_RENDERER_LAYER_VK_TESTRENDERER
+#include "glm/fwd.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
@@ -32,6 +33,7 @@ struct UniformStructure
     glm::mat4 model;
     glm::mat4 view;
     glm::mat4 proj;
+    float kernelSize;
 };
 
 class OMTestRenderer : public util::OMReinitable

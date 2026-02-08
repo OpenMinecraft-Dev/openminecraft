@@ -442,7 +442,8 @@ OMResult<Device, std::string> OMRendererVk::deviceCreation()
         auto fea = physicalDevice.getFeatures();
 
         std::vector ext{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-        return OMResult<Device, std::string>::ok(physicalDevice.createDevice(DeviceCreateInfo({}, qis, {}, ext, &fea), allocator));
+        return OMResult<Device, std::string>::ok(
+            physicalDevice.createDevice(DeviceCreateInfo({}, qis, {}, ext, &fea), allocator));
     }
     catch (SystemError &e)
     {
@@ -471,7 +472,8 @@ OMResult<std::any, std::string> OMRendererVk::sdlVulkanLoading()
     }
 
     VkSurfaceKHR sf;
-    SDL_Vulkan_CreateSurface(static_cast<SDL_Window *>(window), instance, reinterpret_cast<VkAllocationCallbacks *>(&allocator), &sf);
+    SDL_Vulkan_CreateSurface(static_cast<SDL_Window *>(window), instance,
+                             reinterpret_cast<VkAllocationCallbacks *>(&allocator), &sf);
     surface = SurfaceKHR(sf);
 
     return OMResult<std::any, std::string>::ok(nullptr);
@@ -599,22 +601,23 @@ OMResult<std::vector<const char *>, std::string> OMRendererVk::fetchRequiredExte
 void *vkAlloc(void *, size_t size, size_t align, VkSystemAllocationScope s)
 {
     void *p = malloc((size / align + 1) * align);
-    mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), OM_MEM_VULKAN});
+    mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), "vulkan"});
     return p;
 }
 void *vkRealloc(void *, void *o, size_t size, size_t align, VkSystemAllocationScope s)
 {
     void *p;
+    auto newsize = (size / align + 1) * align;
     if (o != nullptr)
     {
-        mem::castorice::rec({mem::castorice::Free, o, mem::castorice::heapSize(o), OM_MEM_VULKAN});
-        p = realloc(o, (size / align + 1) * align);
-        mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), OM_MEM_VULKAN});
+        mem::castorice::rec({mem::castorice::Free, o, mem::castorice::heapSize(o), "vulkan"});
+        p = realloc(o, newsize);
+        mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), "vulkan"});
     }
     else
     {
-        p = malloc((size / align + 1) * align);
-        mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), OM_MEM_VULKAN});
+        p = malloc(newsize);
+        mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), "vulkan"});
     }
     return p;
 }
@@ -622,16 +625,16 @@ void vkFree(void *, void *p)
 {
     if (p == nullptr)
         return;
-    mem::castorice::rec({mem::castorice::Free, p, mem::castorice::heapSize(p), OM_MEM_VULKAN});
+    mem::castorice::rec({mem::castorice::Free, p, mem::castorice::heapSize(p), "vulkan"});
     free(p);
 }
 void vkInternalAlloc(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s)
 {
-    mem::castorice::rec({mem::castorice::Allocation, nullptr, size, OM_MEM_VULKAN_INTERNAL});
+    mem::castorice::rec({mem::castorice::Allocation, nullptr, size, "vulkan_internal"});
 }
 void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s)
 {
-    mem::castorice::rec({mem::castorice::Free, nullptr, size, OM_MEM_VULKAN_INTERNAL});
+    mem::castorice::rec({mem::castorice::Free, nullptr, size, "vulkan_internal"});
 }
 OMRendererVk::~OMRendererVk()
 {
@@ -667,7 +670,7 @@ void OMRendererVk::destroy()
 
     swapchainManager->destroy();
     validationLayer->ifEnable([&]() { instance.destroyDebugReportCallbackEXT(reportCallback, &allocator); });
-    
+
     logicalDevice.destroy(allocator);
     /*SDL_Vulkan_DestroySurface(instance, VkSurfaceKHR(surface),
                               reinterpret_cast<const VkAllocationCallbacks *>(&allocator));*/

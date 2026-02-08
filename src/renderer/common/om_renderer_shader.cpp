@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 
 #include "openminecraft/log/om_log_common.hpp"
+#include "shaderc/shaderc.h"
 #include "shaderc/shaderc.hpp"
 #include <stdexcept>
 
@@ -62,6 +63,7 @@ std::shared_ptr<OMShader> OMShader::convertTo(OMShaderFileType type)
     shaderc::CompileOptions opt;
 
     opt.SetSourceLanguage(this->type == GLSLSource ? shaderc_source_language_glsl : shaderc_source_language_hlsl);
+
     auto result = compiler->CompileGlslToSpv(reinterpret_cast<const char *>(this->data.data()), this->data.size(), k,
                                              filename.c_str(), entrypoint.c_str(), opt);
 

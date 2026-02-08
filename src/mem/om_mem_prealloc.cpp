@@ -26,7 +26,7 @@ void OMHeap::expand(void *target)
     }
 
     activate(heapTop, (size_t)target - (size_t)heapTop);
-    mem::castorice::rec({castorice::Allocation, heapTop, (size_t)target - (size_t)heapTop, OM_MEM_VMDATA});
+    mem::castorice::rec({castorice::Allocation, heapTop, (size_t)target - (size_t)heapTop, "vmdata"});
     heapTop = target;
 }
 void OMHeap::shrink(void *target)
@@ -38,7 +38,7 @@ void OMHeap::shrink(void *target)
     }
 
     deactivate(target, (size_t)heapTop - (size_t)target);
-    mem::castorice::rec({castorice::Free, target, (size_t)heapTop - (size_t)target, OM_MEM_VMDATA});
+    mem::castorice::rec({castorice::Free, target, (size_t)heapTop - (size_t)target, "vmdata"});
     heapTop = target;
 }
 } // namespace openminecraft::mem
