@@ -304,7 +304,8 @@ void OMTestRenderer::reinit()
     stru.model = glm::mat4(1.0f);
     stru.proj = glm::mat4(1.0f);
     stru.view = glm::mat4(1.0f);
-    stru.kernelSize = 8;
+    stru.kernelSize = 9;
+    stru.sigma = 3;
     tempUniformBuffer->updateData(&stru);
 
     pipeline = renderer->createPipeline();

@@ -34,6 +34,7 @@ struct UniformStructure
     glm::mat4 view;
     glm::mat4 proj;
     float kernelSize;
+    float sigma;
 };
 
 class OMTestRenderer : public util::OMReinitable

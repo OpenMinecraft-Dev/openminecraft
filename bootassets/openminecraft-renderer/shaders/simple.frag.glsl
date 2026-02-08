@@ -11,6 +11,7 @@ layout(binding = 0) uniform UniformBufferObject {
     mat4 view;
     mat4 proj;
     float kernelSize;
+    float sigma;
 } ubo;
 
 #define MAX_KERNEL_RADIUS 10
@@ -25,9 +26,9 @@ void main() {
     vec2 texSize = textureSize(texSampler, 0);
     vec2 texelSize = 1.0 / texSize;
 
-    int radius = 9;
+    int radius = int(ubo.kernelSize);
     if (radius <= 0) {
-        radius = int(ceil(3.0 * 3));
+        radius = int(ceil(3.0 * ubo.sigma));
     }
     radius = min(radius, MAX_KERNEL_RADIUS);
     
@@ -36,7 +37,7 @@ void main() {
     
     for (int y = -radius; y <= radius; y++) {
         for (int x = -radius; x <= radius; x++) {
-            float weight = gaussianWeight(float(x), float(y), 3);
+            float weight = gaussianWeight(float(x), float(y), ubo.sigma);
             
             vec2 off = outTexCoord + vec2(x, y) * texelSize;
             off = max(min(off, vec2(1.0)), vec2(0.0));

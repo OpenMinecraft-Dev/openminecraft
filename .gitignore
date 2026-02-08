@@ -15,3 +15,4 @@ vmstd/files.json
 vs*
 include/openminecraft/resource/bootassets.h
 *.ttf
+massif*
