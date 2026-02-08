@@ -638,9 +638,6 @@ void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAll
 }
 OMRendererVk::~OMRendererVk()
 {
-}
-void OMRendererVk::destroy()
-{
     for (auto sync : frameSyncs)
     {
         logicalDevice.destroySemaphore(sync.imageAvailableSemaphore, allocator);

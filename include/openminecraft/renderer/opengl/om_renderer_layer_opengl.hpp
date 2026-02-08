@@ -1,9 +1,23 @@
 #ifndef OM_RENDERER_LAYER_OPENGL_HPP
 #define OM_RENDERER_LAYER_OPENGL_HPP
 
+#include "GL/glcorearb.h"
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 namespace openminecraft::renderer::opengl
 {
+struct OMRendererOpenGLFuncs
+{
+    PFNGLGETERRORPROC glGetError;
+    PFNGLGETSTRINGPROC glGetString;
+    PFNGLGETINTEGERVPROC glGetIntegerv;
+    PFNGLGENBUFFERSPROC glGenBuffers;
+    PFNGLCREATESHADERPROC glCreateShader;
+    PFNGLSHADERSOURCEPROC glShaderSource;
+    PFNGLCOMPILESHADERPROC glCompileShader;
+    PFNGLGETSHADERIVPROC glGetShaderiv;
+    PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog;
+};
 class OMRendererOpenGL : public OMRenderer
 {
   public:
@@ -20,6 +34,13 @@ class OMRendererOpenGL : public OMRenderer
     common::OMRendererTask *createTask() override;
     void attachTask(common::OMRendererTask *task) override;
     glm::vec2 getExtent() const override;
+
+  private:
+    void *glContext;
+    log::OMLogger logger;
+
+    OMRendererOpenGLFuncs gl;
+    void initGlFuncs();
 };
 } // namespace openminecraft::renderer::opengl
 

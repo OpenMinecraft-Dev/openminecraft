@@ -64,8 +64,6 @@ class OMRendererVk : public OMRenderer
     void attachTask(common::OMRendererTask *task) override;
     glm::vec2 getExtent() const override;
 
-    void destroy();
-
     void render();
 
     std::shared_ptr<validation::OMRendererVkValidation> validationLayer;

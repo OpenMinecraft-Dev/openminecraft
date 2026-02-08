@@ -35,6 +35,7 @@
 #include "openminecraft/mem/om_mem_prealloc.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/specs/vfsbundle/om_vfsbundle.hpp"
 #include "openminecraft/util/om_util_result.hpp"
@@ -154,10 +155,9 @@ int boot(std::vector<std::string> args)
                                            util::Version(1, 0, 0, 0), util::Version(1, 2, 0, 0)};
 
                     auto wnd = SDL_CreateWindow("Vulkan Test", 800, 800, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
-                    auto renderer = std::make_unique<renderer::vk::OMRendererVk>(
-                        a, [](std::vector<std::string>) { return 0; }, wnd);
+                    auto renderer = new renderer::vk::OMRendererVk(a, [](std::vector<std::string>) { return 0; }, wnd);
 
-                    SDL_ShowWindow(wnd);
+                    // SDL_ShowWindow(wnd);
 
                     logger->info("driver: {}", renderer->driver());
 
@@ -255,7 +255,8 @@ int boot(std::vector<std::string> args)
                         renderer->render();
                     }
 
-                    renderer->destroy();
+                    // renderer->destroy();
+                    delete renderer;
                     SDL_DestroyWindow(wnd);
 
                     mem::castorice::printres();
@@ -267,6 +268,17 @@ int boot(std::vector<std::string> args)
                         logger->info("SDL Status: {}", SDL_GetError());
                     }
                 }
+                break;
+            }
+            case "gltest"_hash: {
+                renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
+                                       util::Version(1, 0, 0, 0), util::Version(3, 3, 0, 0)};
+
+                auto wnd2 = SDL_CreateWindow("OpenGL Test", 800, 800, SDL_WINDOW_OPENGL);
+                auto renderer = new renderer::opengl::OMRendererOpenGL(a, wnd2);
+
+                delete renderer;
+                SDL_DestroyWindow(wnd2);
                 break;
             }
             case "quit"_hash:
