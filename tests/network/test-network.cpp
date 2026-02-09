@@ -31,7 +31,7 @@ int main()
         logger.info("{}", (*i).host_name());
     }
     connect(socket, temp);
-    unsigned char payload[] = {16, 0x00, 0b0111011, 0b10000101, // VarInt protocol version
+    unsigned char payload[] = {16, 0x00, 0b10000101, 0b00000110, // VarInt protocol version
                                9, 'l', 'o', 'c', 'a', 'l', 'h', 'o', 's', 't', 0b00000001,
                                0b10111100, // String + UShort
                                            // server ip/port
