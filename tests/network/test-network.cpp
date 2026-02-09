@@ -8,9 +8,11 @@
 #include <boost/system/system_error.hpp>
 #include <boost/throw_exception.hpp>
 #include <cstddef>
+#include <cstdint>
 #include <ctime>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 using namespace openminecraft;
 using namespace boost::asio;
@@ -26,19 +28,28 @@ int main()
     ip::tcp::socket socket(io);
     ip::tcp::resolver reso(io);
     auto temp = reso.resolve("localhost", "25566");
-    for (auto i = temp.begin(); i != temp.end(); ++i)
-    {
-        logger.info("{}", (*i).host_name());
-    }
     connect(socket, temp);
-    unsigned char payload[] = {16, 0x00, 0b10000101, 0b00000110, // VarInt protocol version
-                               9, 'l', 'o', 'c', 'a', 'l', 'h', 'o', 's', 't', 0b00000001,
-                               0b10111100, // String + UShort
-                                           // server ip/port
-                               1,          // Enum status
-                               1, 0x00, 9, 0x01, 0, 0, 0, 0, 0, 0, 0, 0};
 
-    write(socket, buffer(payload, sizeof(payload)));
+    auto timestmp = (uint64_t)time(nullptr);
+
+    std::ostringstream payld;
+    // packet 1: Handshake
+    payld << (char)16;
+    payld << (char)0x00;
+    payld << (char)0b10000101 << (char)0b00000110;
+    payld << (char)9;
+    payld.write("localhost", 9);
+    payld << (char)0b10000001 << (char)0b00111100;
+    payld << (char)1;
+    // packet 2: Fetch metadata
+    payld << (char)1;
+    payld << (char)0x00;
+    // packet 3: ping request
+    payld << (char)9;
+    payld << (char)0x01;
+    payld.write((char *)&timestmp, sizeof(uint64_t));
+
+    write(socket, buffer(payld.str().c_str(), payld.str().size()));
     logger.info("connected to the Minecraft server!");
 
     std::ofstream of("server.dat");
@@ -55,7 +66,9 @@ int main()
         catch (boost::wrapexcept<boost::system::system_error> &e)
         {
             of.close();
-            throw e;
+            logger.info("connection closed");
+            socket.close();
+            break;
         }
     }
 
