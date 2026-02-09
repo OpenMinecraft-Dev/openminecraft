@@ -36,7 +36,7 @@ int main()
                                0b10111100, // String + UShort
                                            // server ip/port
                                1,          // Enum status
-                               1, 0x00};
+                               1, 0x00, 9, 0x01, 0, 0, 0, 0, 0, 0, 0, 0};
 
     write(socket, buffer(payload, sizeof(payload)));
     logger.info("connected to the Minecraft server!");
