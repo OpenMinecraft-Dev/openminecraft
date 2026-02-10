@@ -6,11 +6,24 @@
 #include "openminecraft/vm/pixeltower/v0/om_pixeltower.hpp"
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
 #include "openminecraft/vm/pixeltower/v3/om_pixeltower_classbuilder.hpp"
+#include <chrono>
 
 using namespace openminecraft::vm;
 
 namespace openminecraft::boot
 {
+std::shared_ptr<pixeltower::v0::OMPixelTower> towerb = nullptr;
+log::OMLogger logger("Crash Handler");
+
+void onCrash(int code, int pid, std::vector<openminecraft::vm::pixeltower::v1::tracing::OMTracingFrame> &frames)
+{
+    logger.debug("tracing stack... (exit code {})", code);
+    if (towerb)
+    {
+        towerb->handleCrash(code, pid, frames);
+    }
+}
+
 void pixeltowerDynTest()
 {
     auto tower = std::make_shared<pixeltower::v0::OMPixelTower>();
@@ -47,11 +60,13 @@ void pixeltowerDynTest()
 
     tower->loader->stagClass(builder.file);
     tower->loader->loadClass({bytecode::descriptor::Reference, "openminecraft/DynamicTest"});
+    towerb = tower;
 }
 void pixeltowerLoadTest()
 {
     auto logger = log::OMLogger("VM Test");
     auto tower = std::make_shared<pixeltower::v0::OMPixelTower>();
+    towerb = tower;
     pixeltower::v1::tracing::installHandler();
     tower->initCurrentThread(1ul * 1024 * 1024);
     tower->init("vmstd/out");

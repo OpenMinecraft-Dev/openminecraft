@@ -32,33 +32,16 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
-#include "openminecraft/mem/om_mem_prealloc.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/om_renderer_testrenderer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
-#include "openminecraft/specs/vfsbundle/om_vfsbundle.hpp"
-#include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
-#include "openminecraft/vm/bytecode/om_bytecode_checker.hpp"
-#include "openminecraft/vm/bytecode/om_bytecode_descriptor.hpp"
-#include "openminecraft/vm/encoding/om_encoding_utf.hpp"
-#include "openminecraft/vm/err/om_validation_error.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
-#include "openminecraft/vm/pixeltower/internal/om_pixeltower_funcs.hpp"
-#include "openminecraft/vm/pixeltower/v0/om_pixeltower.hpp"
-#include "openminecraft/vm/pixeltower/v0/om_pixeltower_heap.hpp"
-#include "openminecraft/vm/pixeltower/v0/om_pixeltower_method.hpp"
-#include "openminecraft/vm/pixeltower/v0/om_pixeltower_oop.hpp"
-#include "openminecraft/vm/pixeltower/v0/om_pixeltower_threads.hpp"
-#include "openminecraft/vm/pixeltower/v1/om_pixeltower_debugger.hpp"
-#include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
-#include "openminecraft/vm/pixeltower/v3/om_pixeltower_classbuilder.hpp"
 
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_vulkan.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
 
@@ -67,19 +50,8 @@ using namespace openminecraft::vm;
 using namespace openminecraft::binary::hash;
 using namespace std::chrono_literals;
 
-extern jmp_buf recoverBuffer;
-
 namespace openminecraft::boot
 {
-std::shared_ptr<pixeltower::v0::OMPixelTower> tower;
-log::OMLogger logger("Crash Handler");
-
-void onCrash(int code, int pid, std::vector<openminecraft::vm::pixeltower::v1::tracing::OMTracingFrame> &frames)
-{
-    logger.debug("tracing stack... (exit code {})", code);
-    tower->handleCrash(code, pid, frames);
-}
-
 void searchDir(std::vector<std::string> &i, std::filesystem::directory_iterator di)
 {
     for (auto entry : di)

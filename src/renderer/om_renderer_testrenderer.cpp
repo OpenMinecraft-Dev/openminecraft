@@ -12,7 +12,6 @@
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "tiny_obj_loader.h"
-#include "vulkan/vulkan.hpp"
 
 #include <chrono>
 #include <glm/glm.hpp>
