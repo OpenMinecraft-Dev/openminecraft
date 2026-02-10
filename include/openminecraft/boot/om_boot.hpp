@@ -9,6 +9,9 @@ namespace openminecraft::boot
 {
 void onCrash(int code, int pid, std::vector<openminecraft::vm::pixeltower::v1::tracing::OMTracingFrame> &frames);
 int boot(std::vector<std::string> args);
+
+void pixeltowerDynTest();
+void pixeltowerLoadTest();
 } // namespace openminecraft::boot
 
 #endif

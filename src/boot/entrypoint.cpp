@@ -97,10 +97,19 @@ void searchDir(std::vector<std::string> &i, std::filesystem::directory_iterator 
         }
     }
 }
+
+static void setupI18nEnv()
+{
+    i18n::res::registerModule("openminecraft-boot");
+    i18n::res::registerModule("openminecraft-renderer");
+    i18n::res::registerModule("openminecraft-mem");
+    vfs::fsmountBundle(std::make_shared<specs::vfsbundle::OMBundle>(res_bundle, res_bundle_len), "/bootassets");
+    i18n::res::pushResourceRoot("/bootassets");
+    i18n::res::load();
+}
+
 int boot(std::vector<std::string> args)
 {
-    // std::cin.tie(0);
-    // std::cout.tie(0);
     log::multithread::registerCurrentThreadName("engineMain");
     auto logger = std::make_unique<log::OMLogger>("boot");
 
@@ -112,13 +121,7 @@ int boot(std::vector<std::string> args)
     }
 
     logger->info("Setting up i18n environment...");
-    i18n::res::registerModule("openminecraft-boot");
-    i18n::res::registerModule("openminecraft-renderer");
-    i18n::res::registerModule("openminecraft-mem");
-    vfs::fsmountBundle(std::make_shared<specs::vfsbundle::OMBundle>(res_bundle, res_bundle_len), "/bootassets");
-    i18n::res::pushResourceRoot("/bootassets");
-    i18n::res::load();
-
+    setupI18nEnv();
     logger->info(i18n::res::translate("openminecraft.boot.arg"));
     for (auto a : args)
     {
@@ -131,258 +134,179 @@ int boot(std::vector<std::string> args)
     logger->info("User: {} / {}", os::fetchUsername(), os::fetchLoginUser());
     logger->info("Total memory: {} bytes", os::fetchMemoryTotal());
 
-    /*SDL_ShowFileDialogWithProperties(
-        SDL_FileDialogType::SDL_FILEDIALOG_OPENFILE,
-        [](void *userdata, const char *const *filelist, int filter) { SDL_Log("testf: %s", filelist[0]); }, nullptr,
-        -1);*/
-
-    // pixeltower::registerFuncs();
-
-    if constexpr (true)
+    std::string comm;
+    while (true)
     {
-        std::string comm;
-        while (true)
+        std::cout << "pixeltower shell > ";
+        std::cin >> comm;
+
+        switch (hash_compile_time(comm.c_str()))
         {
-            std::cout << "pixeltower shell > ";
-            std::cin >> comm;
-
-            switch (hash_compile_time(comm.c_str()))
+        case "vktest"_hash: {
+            try
             {
-            case "vktest"_hash: {
-                try
-                {
-                    renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
-                                           util::Version(1, 0, 0, 0), util::Version(1, 2, 0, 0)};
-
-                    auto wnd = SDL_CreateWindow("Vulkan Test", 800, 800, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
-                    auto renderer = new renderer::vk::OMRendererVk(a, [](std::vector<std::string>) { return 0; }, wnd);
-
-                    // SDL_ShowWindow(wnd);
-
-                    logger->info("driver: {}", renderer->driver());
-
-                    bool wk = false, ak = false, sk = false, dk = false, spk = false, lshk = false;
-
-                    while (true)
-                    {
-                        SDL_Event e;
-                        SDL_PollEvent(&e);
-
-                        if (e.type == SDL_EVENT_KEY_DOWN)
-                        {
-                            if (e.key.key == SDLK_W)
-                            {
-                                wk = true;
-                            }
-                            else if (e.key.key == SDLK_A)
-                            {
-                                ak = true;
-                            }
-                            else if (e.key.key == SDLK_S)
-                            {
-                                sk = true;
-                            }
-                            else if (e.key.key == SDLK_D)
-                            {
-                                dk = true;
-                            }
-                            else if (e.key.key == SDLK_LSHIFT)
-                            {
-                                lshk = true;
-                            }
-                            else if (e.key.key == SDLK_SPACE)
-                            {
-                                spk = true;
-                            }
-                            else if (e.key.key == SDLK_ESCAPE)
-                            {
-                                SDL_SetWindowRelativeMouseMode(wnd, false);
-                            }
-                        }
-
-                        if (e.type == SDL_EVENT_KEY_UP)
-                        {
-                            if (e.key.key == SDLK_W)
-                            {
-                                wk = false;
-                            }
-                            else if (e.key.key == SDLK_A)
-                            {
-                                ak = false;
-                            }
-                            else if (e.key.key == SDLK_S)
-                            {
-                                sk = false;
-                            }
-                            else if (e.key.key == SDLK_D)
-                            {
-                                dk = false;
-                            }
-                            else if (e.key.key == SDLK_LSHIFT)
-                            {
-                                lshk = false;
-                            }
-                            else if (e.key.key == SDLK_SPACE)
-                            {
-                                spk = false;
-                            }
-                        }
-
-                        if (e.type == SDL_EVENT_WINDOW_RESIZED)
-                        {
-                            renderer->needRebuild = true;
-                        }
-
-                        if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
-                        {
-                            SDL_SetWindowRelativeMouseMode(wnd, true);
-                        }
-
-                        if (e.type == SDL_EVENT_MOUSE_MOTION && SDL_GetWindowRelativeMouseMode(wnd))
-                        {
-                            int ww, hh;
-                            SDL_GetWindowSize(wnd, &ww, &hh);
-                            reinterpret_cast<renderer::test::OMTestRenderer *>(renderer->testRenderer)
-                                ->mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
-                        }
-
-                        if (e.type == SDL_EVENT_QUIT)
-                        {
-                            renderer->logicalDevice.waitIdle();
-                            break;
-                        }
-
-                        reinterpret_cast<renderer::test::OMTestRenderer *>(renderer->testRenderer)
-                            ->keyInput(wk, ak, sk, dk, lshk, spk);
-                        renderer->render();
-                    }
-
-                    delete renderer;
-                    SDL_DestroyWindow(wnd);
-
-                    mem::castorice::printres();
-                }
-                catch (std::runtime_error &e)
-                {
-                    if (!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Vulkan Debugger", e.what(), nullptr))
-                    {
-                        logger->info("SDL Status: {}", SDL_GetError());
-                    }
-                }
-                break;
-            }
-            case "gltest"_hash: {
                 renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
-                                       util::Version(1, 0, 0, 0), util::Version(3, 3, 0, 0)};
+                                       util::Version(1, 0, 0, 0), util::Version(1, 2, 0, 0)};
 
-                auto wnd2 = SDL_CreateWindow("OpenGL Test", 800, 800, SDL_WINDOW_OPENGL);
-                auto renderer = new renderer::opengl::OMRendererOpenGL(a, wnd2);
+                auto wnd = SDL_CreateWindow("Vulkan Test", 800, 800, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+                auto renderer = new renderer::vk::OMRendererVk(a, [](std::vector<std::string>) { return 0; }, wnd);
 
-                delete renderer;
-                SDL_DestroyWindow(wnd2);
-                break;
-            }
-            case "quit"_hash:
-            case "exit"_hash:
-                goto progEnd;
-            case "font"_hash: {
-                auto iff = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
-                auto f = new fontproc::OMFont(*iff.get());
-                f->buildBasicPolygon(0x2609);
-                f->buildBasicPolygon('8');
-                delete f;
-                break;
-            }
-            case "dumptrace"_hash:
-                logger->dumpStacktrace();
-                break;
-            case "dumpmem"_hash:
-                mem::castorice::printres();
-                break;
-            case "pt_buildcls"_hash: {
-                auto tower = std::make_shared<pixeltower::v0::OMPixelTower>();
-                pixeltower::v3::OMClassBuilder builder;
-                builder.klassBegin();
-                builder.klassAccessFlags(JVM_Acc_Public);
-                builder.klassName("openminecraft/DynamicTest");
+                // SDL_ShowWindow(wnd);
 
-                pixeltower::v1::tracing::installHandler();
-                tower->initCurrentThread(1ul * 1024 * 1024);
-                tower->init("vmstd/out");
+                logger->info("driver: {}", renderer->driver());
 
-                bytecode::descriptor::OMTypeDesc tgt = {bytecode::descriptor::Reference, "java/lang/Object"};
-                tower->loader->loadClass(tgt);
-                auto cls = tower->loader->fetchClass(tgt);
+                bool wk = false, ak = false, sk = false, dk = false, spk = false, lshk = false;
 
-                builder.klassSuperKlass(cls);
-                builder.klassVersion(JVM_VERSION_8, 0);
-
-                auto func = builder.klassConstructMethod();
-                func->methodBegin();
-                func->methodAccessFlags(JVM_Acc_Public);
-                func->methodNameAndDesc("<init>", "()V");
-                func->methodCodeBegin();
-                func->instNop();
-                func->instLoad<void *>(0);
-                func->instConst(421.f);
-                func->instReturn();
-                func->methodCodeFinish();
-                func->methodFinish();
-
-                bytecode::OMBytecodeChecker chk(builder.file);
-                chk.detail();
-
-                tower->loader->stagClass(builder.file);
-                tower->loader->loadClass({bytecode::descriptor::Reference, "openminecraft/DynamicTest"});
-
-                break;
-            }
-            case "ptinit"_hash: {
-                auto tower = std::make_shared<pixeltower::v0::OMPixelTower>();
-                pixeltower::v1::tracing::installHandler();
-                tower->initCurrentThread(1ul * 1024 * 1024);
-                tower->init("vmstd/out");
-                tower->load("../Test.class");
-
-                bytecode::descriptor::OMTypeDesc tgt = {bytecode::descriptor::Reference, "openminecraft/Test"};
-                tower->loader->loadClass(tgt);
-                auto cls = tower->loader->fetchClass(tgt);
-                auto met = cls->methods;
-                while (met != nullptr)
+                while (true)
                 {
-                    if (strcmp(met->name, "main") == 0 && strcmp(met->desc, "([Ljava/lang/String;)V") == 0)
+                    SDL_Event e;
+                    SDL_PollEvent(&e);
+
+                    if (e.type == SDL_EVENT_KEY_DOWN)
                     {
-                        auto now = std::chrono::system_clock::now();
-
-                        try
+                        if (e.key.key == SDLK_W)
                         {
-                            tower->boot(met);
+                            wk = true;
                         }
-                        catch (err::OMValidationError &e)
+                        else if (e.key.key == SDLK_A)
                         {
-                            logger->info("{}", e.what());
+                            ak = true;
                         }
-                        catch (int g)
+                        else if (e.key.key == SDLK_S)
                         {
+                            sk = true;
                         }
+                        else if (e.key.key == SDLK_D)
+                        {
+                            dk = true;
+                        }
+                        else if (e.key.key == SDLK_LSHIFT)
+                        {
+                            lshk = true;
+                        }
+                        else if (e.key.key == SDLK_SPACE)
+                        {
+                            spk = true;
+                        }
+                        else if (e.key.key == SDLK_ESCAPE)
+                        {
+                            SDL_SetWindowRelativeMouseMode(wnd, false);
+                        }
+                    }
 
-                        auto now2 = std::chrono::system_clock::now();
-                        logger->info("VM exited {} ns",
-                                     std::chrono::duration_cast<std::chrono::nanoseconds>(now2 - now).count());
+                    if (e.type == SDL_EVENT_KEY_UP)
+                    {
+                        if (e.key.key == SDLK_W)
+                        {
+                            wk = false;
+                        }
+                        else if (e.key.key == SDLK_A)
+                        {
+                            ak = false;
+                        }
+                        else if (e.key.key == SDLK_S)
+                        {
+                            sk = false;
+                        }
+                        else if (e.key.key == SDLK_D)
+                        {
+                            dk = false;
+                        }
+                        else if (e.key.key == SDLK_LSHIFT)
+                        {
+                            lshk = false;
+                        }
+                        else if (e.key.key == SDLK_SPACE)
+                        {
+                            spk = false;
+                        }
+                    }
 
+                    if (e.type == SDL_EVENT_WINDOW_RESIZED)
+                    {
+                        renderer->needRebuild = true;
+                    }
+
+                    if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+                    {
+                        SDL_SetWindowRelativeMouseMode(wnd, true);
+                    }
+
+                    if (e.type == SDL_EVENT_MOUSE_MOTION && SDL_GetWindowRelativeMouseMode(wnd))
+                    {
+                        int ww, hh;
+                        SDL_GetWindowSize(wnd, &ww, &hh);
+                        reinterpret_cast<renderer::test::OMTestRenderer *>(renderer->testRenderer)
+                            ->mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
+                    }
+
+                    if (e.type == SDL_EVENT_QUIT)
+                    {
+                        renderer->logicalDevice.waitIdle();
                         break;
                     }
-                    met = met->next;
+
+                    reinterpret_cast<renderer::test::OMTestRenderer *>(renderer->testRenderer)
+                        ->keyInput(wk, ak, sk, dk, lshk, spk);
+                    renderer->render();
                 }
-                tower->destroyCurrentThread();
+
+                delete renderer;
+                SDL_DestroyWindow(wnd);
+
+                mem::castorice::printres();
             }
-            case "crash"_hash: {
-                logger->info("{}", *reinterpret_cast<int *>(33550336));
+            catch (std::runtime_error &e)
+            {
+                if (!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Vulkan Debugger", e.what(), nullptr))
+                {
+                    logger->info("SDL Status: {}", SDL_GetError());
+                }
             }
-            default:
-                logger->warn("unknown command!");
-                break;
-            }
+            break;
+        }
+        case "gltest"_hash: {
+            renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
+                                   util::Version(1, 0, 0, 0), util::Version(3, 3, 0, 0)};
+
+            auto wnd2 = SDL_CreateWindow("OpenGL Test", 800, 800, SDL_WINDOW_OPENGL);
+            auto renderer = new renderer::opengl::OMRendererOpenGL(a, wnd2);
+
+            delete renderer;
+            SDL_DestroyWindow(wnd2);
+            break;
+        }
+        case "quit"_hash:
+        case "exit"_hash:
+            goto progEnd;
+        case "font"_hash: {
+            auto iff = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
+            auto f = new fontproc::OMFont(*iff.get());
+            f->buildBasicPolygon(0x2609);
+            f->buildBasicPolygon('8');
+            delete f;
+            break;
+        }
+        case "dumptrace"_hash:
+            logger->dumpStacktrace();
+            break;
+        case "dumpmem"_hash:
+            mem::castorice::printres();
+            break;
+        case "pt_buildcls"_hash: {
+            pixeltowerDynTest();
+            break;
+        }
+        case "ptinit"_hash: {
+            pixeltowerLoadTest();
+            break;
+        }
+        case "crash"_hash: {
+            logger->info("{}", *reinterpret_cast<int *>(33550336));
+        }
+        default:
+            logger->warn("unknown command!");
+            break;
         }
     }
 
