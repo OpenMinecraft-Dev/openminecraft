@@ -11,6 +11,8 @@
 #include "vulkan/vulkan_handles.hpp"
 #include <any>
 #include <functional>
+#include <string>
+#include <unordered_map>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
@@ -61,7 +63,9 @@ class OMRendererVk : public OMRenderer
     common::OMRendererRenderTarget *getDefaultRenderTarget() override;
     common::OMRendererPipeline *createPipeline() override;
     common::OMRendererTask *createTask() override;
-    void attachTask(common::OMRendererTask *task) override;
+    void registerTask(std::string id, common::OMRendererTask *task) override;
+    common::OMRendererTask *fetchTask(std::string id) override;
+    void clearTasks() override;
     glm::vec2 getExtent() const override;
 
     void render();
@@ -75,7 +79,7 @@ class OMRendererVk : public OMRenderer
     std::vector<::vk::Framebuffer> defaultFramebuffers;
     std::vector<::vk::CommandBuffer> defaultCommandBuffers;
 
-    std::vector<common::OMRendererTask *> tasks;
+    std::unordered_map<std::string, common::OMRendererTask *> tasks;
 
     ::vk::AllocationCallbacks allocator;
     ::vk::Instance instance;

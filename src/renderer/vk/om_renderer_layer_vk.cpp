@@ -2,6 +2,7 @@
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
+#include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_pipeline.hpp"
@@ -258,11 +259,11 @@ void OMRendererVk::rebuildDefaults()
 
         for (auto tsk : tasks)
         {
-            if (!reinterpret_cast<OMRendererTaskVk *>(tsk)->isOnDefault())
+            if (!reinterpret_cast<OMRendererTaskVk *>(tsk.second)->isOnDefault())
             {
                 continue;
             }
-            commandBuffer.executeCommands(reinterpret_cast<OMRendererTaskVk *>(tsk)->commandBuffer);
+            commandBuffer.executeCommands(reinterpret_cast<OMRendererTaskVk *>(tsk.second)->commandBuffer);
         }
         commandBuffer.endRenderPass();
         commandBuffer.end();
@@ -271,9 +272,28 @@ void OMRendererVk::rebuildDefaults()
     }
 }
 
-void OMRendererVk::attachTask(common::OMRendererTask *task)
+/*void OMRendererVk::attachTask(common::OMRendererTask *task)
 {
     tasks.push_back(task);
+}*/
+
+void OMRendererVk::registerTask(std::string id, common::OMRendererTask *task)
+{
+    tasks[id] = task;
+}
+
+common::OMRendererTask *OMRendererVk::fetchTask(std::string id)
+{
+    return tasks[id];
+}
+
+void OMRendererVk::clearTasks()
+{
+    for (auto &p : tasks)
+    {
+        delete p.second;
+    }
+    tasks.clear();
 }
 
 common::OMRendererTask *OMRendererVk::createTask()
@@ -353,7 +373,7 @@ void OMRendererVk::render()
         std::vector<CommandBuffer> cmdBuffers = {};
         for (auto tsk : tasks)
         {
-            auto tt = reinterpret_cast<OMRendererTaskVk *>(tsk);
+            auto tt = reinterpret_cast<OMRendererTaskVk *>(tsk.second);
             if (!tt->isOnDefault())
             {
                 cmdBuffers.push_back(tt->commandBuffer);
@@ -396,11 +416,7 @@ reb:
     defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height,
                                                common::Dim2, common::Depth);
 
-    for (auto tsk : tasks)
-    {
-        delete tsk;
-    }
-    tasks.clear();
+    this->clearTasks();
     testRenderer->onResize();
     rebuildDefaults();
     needRebuild = false;
@@ -658,10 +674,7 @@ OMRendererVk::~OMRendererVk()
     {
         logicalDevice.freeCommandBuffers(tempCommandPool, cb);
     }
-    for (auto tsk : tasks)
-    {
-        delete tsk;
-    }
+    this->clearTasks();
     logicalDevice.destroyCommandPool(tempCommandPool, allocator);
     delete defaultTarget;
     delete testRenderer;

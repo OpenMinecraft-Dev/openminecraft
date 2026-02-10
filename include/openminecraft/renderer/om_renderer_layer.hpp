@@ -35,7 +35,11 @@ class OMRenderer
     virtual common::OMRendererRenderTarget *getDefaultRenderTarget() = 0;
     virtual common::OMRendererPipeline *createPipeline() = 0;
     virtual common::OMRendererTask *createTask() = 0;
-    virtual void attachTask(common::OMRendererTask *task) = 0;
+    // virtual void attachTask(common::OMRendererTask *task) = 0;
+    virtual void registerTask(std::string id, common::OMRendererTask *task) = 0;
+    virtual common::OMRendererTask *fetchTask(std::string id) = 0;
+    virtual void clearTasks() = 0;
+
     virtual glm::vec2 getExtent() const = 0;
 
   protected:

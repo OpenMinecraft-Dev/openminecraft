@@ -335,7 +335,7 @@ void OMTestRenderer::onResize()
     task->draw(vertexCount);
     task->finish();
 
-    renderer->attachTask(task);
+    renderer->registerTask("intermediate", task);
 
     auto task2 = renderer->createTask();
     task2->bindTarget(renderer->getDefaultRenderTarget());
@@ -345,7 +345,7 @@ void OMTestRenderer::onResize()
     task2->draw(6);
     task2->finish();
 
-    renderer->attachTask(task2);
+    renderer->registerTask("main", task2);
 }
 OMTestRenderer::~OMTestRenderer()
 {

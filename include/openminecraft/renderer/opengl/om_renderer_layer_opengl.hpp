@@ -32,7 +32,9 @@ class OMRendererOpenGL : public OMRenderer
     common::OMRendererRenderTarget *getDefaultRenderTarget() override;
     common::OMRendererPipeline *createPipeline() override;
     common::OMRendererTask *createTask() override;
-    void attachTask(common::OMRendererTask *task) override;
+    void registerTask(std::string id, common::OMRendererTask *task) override;
+    common::OMRendererTask *fetchTask(std::string id) override;
+    void clearTasks() override;
     glm::vec2 getExtent() const override;
 
   private:

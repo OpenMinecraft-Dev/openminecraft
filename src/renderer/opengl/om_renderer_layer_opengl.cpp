@@ -2,7 +2,6 @@
 #include "GL/glcorearb.h"
 #include "SDL3/SDL_video.h"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include <cstring>
 
 namespace openminecraft::renderer::opengl
 {
@@ -81,12 +80,21 @@ common::OMRendererTask *OMRendererOpenGL::createTask()
 {
     return nullptr;
 }
-void OMRendererOpenGL::attachTask(common::OMRendererTask *task)
-{
-}
 glm::vec2 OMRendererOpenGL::getExtent() const
 {
     return {0.0f, 0.0f};
+}
+void OMRendererOpenGL::registerTask(std::string id, common::OMRendererTask *task)
+{
+}
+
+common::OMRendererTask *OMRendererOpenGL::fetchTask(std::string id)
+{
+    return nullptr;
+}
+
+void OMRendererOpenGL::clearTasks()
+{
 }
 
 } // namespace openminecraft::renderer::opengl
