@@ -1,27 +1,5 @@
 #include <SDL3/SDL_error.h>
 
-#include <SDL3/SDL_init.h>
-#include <SDL3/SDL_stdinc.h>
-#include <SDL3/SDL_video.h>
-#include <any>
-#include <boost/stacktrace/stacktrace.hpp>
-#include <chrono>
-#include <csetjmp>
-#include <cstring>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <new>
-#include <stack>
-#include <stdexcept>
-#include <string>
-#include <thread>
-#include <typeindex>
-#include <variant>
-#include <vector>
-
-#include "SDL3/SDL_dialog.h"
 #include "SDL3/SDL_events.h"
 #include "SDL3/SDL_keycode.h"
 #include "SDL3/SDL_messagebox.h"
@@ -40,6 +18,15 @@
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
+#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_video.h>
+#include <boost/stacktrace/stacktrace.hpp>
+#include <iostream>
+#include <memory>
+#include <new>
+#include <stdexcept>
+#include <string>
 
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
@@ -52,22 +39,6 @@ using namespace std::chrono_literals;
 
 namespace openminecraft::boot
 {
-void searchDir(std::vector<std::string> &i, std::filesystem::directory_iterator di)
-{
-    for (auto entry : di)
-    {
-        if (entry.is_directory())
-        {
-            searchDir(i, std::filesystem::directory_iterator(entry));
-        }
-
-        if (entry.is_regular_file())
-        {
-            i.push_back(entry.path().string());
-        }
-    }
-}
-
 static void setupI18nEnv()
 {
     i18n::res::registerModule("openminecraft-boot");
