@@ -67,8 +67,6 @@ using namespace openminecraft::vm;
 using namespace openminecraft::binary::hash;
 using namespace std::chrono_literals;
 
-#include "openminecraft/resource/bootassets.h"
-
 extern jmp_buf recoverBuffer;
 
 namespace openminecraft::boot
@@ -103,7 +101,6 @@ static void setupI18nEnv()
     i18n::res::registerModule("openminecraft-boot");
     i18n::res::registerModule("openminecraft-renderer");
     i18n::res::registerModule("openminecraft-mem");
-    vfs::fsmountBundle(std::make_shared<specs::vfsbundle::OMBundle>(res_bundle, res_bundle_len), "/bootassets");
     i18n::res::pushResourceRoot("/bootassets");
     i18n::res::load();
 }
