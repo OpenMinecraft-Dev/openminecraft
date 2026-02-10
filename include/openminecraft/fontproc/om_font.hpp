@@ -8,6 +8,8 @@
 
 namespace openminecraft::fontproc
 {
+constexpr const char allocatorId[] = "font_processor";
+
 class OMFont
 {
   public:

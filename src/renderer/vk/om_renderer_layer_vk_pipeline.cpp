@@ -73,17 +73,19 @@ void OMRendererPipelineVk::attachShader(std::shared_ptr<common::OMShader> shader
     auto fin = shader;
     if (fin->type != common::OMShaderFileType::SPIRVBinary)
     {
-        fin = fin->convertTo(common::OMShaderFileType::GLSLSource);
+        fin = fin->convertTo(common::OMShaderFileType::SPIRVBinary);
     }
     if (fin == nullptr)
     {
         throw std::logic_error(translate("openminecraft.renderer.vk.err.shaderstat"));
     }
+    compiledShaders.push_back(fin);
+
     auto sm = renderer->logicalDevice.createShaderModule(
-        ShaderModuleCreateInfo({}, shader->data.size(), reinterpret_cast<const uint32_t *>(shader->data.data())),
+        ShaderModuleCreateInfo({}, fin->data.size(), reinterpret_cast<const uint32_t *>(fin->data.data())),
         renderer->allocator);
     shaders.push_back(sm);
-    shaderCreateInfos.push_back({{}, convertTo(shader->typebase), sm, "main"});
+    shaderCreateInfos.push_back({{}, convertTo(shader->typebase), sm, fin->entrypoint.c_str()});
 }
 
 Format OMRendererPipelineVk::convertTo(common::basics::OMVertexPropType type)

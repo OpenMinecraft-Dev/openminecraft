@@ -54,23 +54,20 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer) : renderer(renderer), logge
     camera = std::make_shared<common::basics::OMCamera>(renderer, m_cameraPos, m_yaw, m_pitch);
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.frag.glsl");
-        common::OMShader shader(common::GLSLSource, io::readOnce(target.get()), "simple.frag.glsl", "main",
-                                common::Fragment);
-        frgShader = shader.convertTo(common::SPIRVBinary);
+        frgShader = std::make_shared<common::OMShader>(common::GLSLSource, io::readOnce(target.get()),
+                                                       "simple.frag.glsl", "main", common::Fragment);
     }
 
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple2.frag.glsl");
-        common::OMShader shader(common::GLSLSource, io::readOnce(target.get()), "simple2.frag.glsl", "main",
-                                common::Fragment);
-        frgShader2 = shader.convertTo(common::SPIRVBinary);
+        frgShader2 = std::make_shared<common::OMShader>(common::GLSLSource, io::readOnce(target.get()),
+                                                        "simple2.frag.glsl", "main", common::Fragment);
     }
 
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.vert.glsl");
-        common::OMShader shader(common::GLSLSource, io::readOnce(target.get()), "simple.vert.glsl", "main",
-                                common::Vertex);
-        vtxShader = shader.convertTo(common::SPIRVBinary);
+        vtxShader = std::make_shared<common::OMShader>(common::GLSLSource, io::readOnce(target.get()),
+                                                       "simple.vert.glsl", "main", common::Vertex);
     }
 
     {
@@ -190,6 +187,13 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer) : renderer(renderer), logge
     uniformBuffer = renderer->allocateBuffer(common::Uniform, sizeof(UniformStructure));
 
     tempUniformBuffer = renderer->allocateBuffer(common::Uniform, sizeof(UniformStructure));
+    UniformStructure stru = {};
+    stru.model = glm::mat4(1.0f);
+    stru.proj = glm::mat4(1.0f);
+    stru.view = glm::mat4(1.0f);
+    stru.kernelSize = 9;
+    stru.sigma = 3;
+    tempUniformBuffer->updateData(&stru);
 
     {
         int texWidth, texHeight, texChannels;
@@ -224,7 +228,6 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer) : renderer(renderer), logge
     mainPipeline->vertexFormat(format);
     mainPipeline->build();
     mainPipeline->bindInput(0, tempUniformBuffer);
-    // mainPipeline->bindInput(1, tempTexture);
 
     OMTestRenderer::onResize();
 
@@ -299,14 +302,6 @@ void OMTestRenderer::onResize()
     renderTarget->attachTarget(tempTexture);
     renderTarget->attachTarget(tempDepth);
     renderTarget->build();
-
-    UniformStructure stru = {};
-    stru.model = glm::mat4(1.0f);
-    stru.proj = glm::mat4(1.0f);
-    stru.view = glm::mat4(1.0f);
-    stru.kernelSize = 9;
-    stru.sigma = 3;
-    tempUniformBuffer->updateData(&stru);
 
     pipeline = renderer->createPipeline();
     pipeline->appendInput(common::UniformBuffer);

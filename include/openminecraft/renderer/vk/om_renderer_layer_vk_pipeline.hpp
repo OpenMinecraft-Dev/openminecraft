@@ -72,6 +72,8 @@ class OMRendererPipelineVk : public common::OMRendererPipeline
     std::vector<::vk::Sampler> tempSamplers;
 
     log::OMLogger logger;
+
+    std::vector<std::shared_ptr<common::OMShader>> compiledShaders;
 };
 } // namespace openminecraft::renderer::vk
 

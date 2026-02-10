@@ -1,6 +1,8 @@
 #ifndef OM_FONT_OUTLINE_HPP
 #define OM_FONT_OUTLINE_HPP
 #include "om_font_polygon.hpp"
+#include "openminecraft/fontproc/om_font.hpp"
+#include "openminecraft/mem/om_mem_stl_allocator.hpp"
 
 #include <fmt/format.h>
 #include <glm/glm.hpp>
@@ -66,7 +68,7 @@ class OMFontOutline
     std::vector<std::shared_ptr<OMFontPolygon>> buildPolygons(int prec, int xsc, int ysc)
     {
         std::vector<std::shared_ptr<OMFontPolygon>> polygons;
-        auto poly = std::make_shared<OMFontPolygon>();
+        auto poly = mem::fast_shared<allocatorId, OMFontPolygon>();
         glm::vec2 current;
         for (auto op : operations)
         {
@@ -74,7 +76,7 @@ class OMFontOutline
             {
             case Close:
                 polygons.push_back(poly);
-                poly = std::make_shared<OMFontPolygon>();
+                poly = mem::fast_shared<allocatorId, OMFontPolygon>();
                 break;
             case Move:
             case Line:

@@ -272,11 +272,6 @@ void OMRendererVk::rebuildDefaults()
     }
 }
 
-/*void OMRendererVk::attachTask(common::OMRendererTask *task)
-{
-    tasks.push_back(task);
-}*/
-
 void OMRendererVk::registerTask(std::string id, common::OMRendererTask *task)
 {
     tasks[id] = task;
@@ -559,6 +554,7 @@ OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std
         ApplicationInfo appInfo(info.appName.c_str(), info.appVer.toVKVersion(), info.engineName.c_str(),
                                 info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
         std::vector<const char *> l;
+        // l.push_back("VK_LAYER_LUNARG_api_dump");
         validationLayer->attach(&l);
         auto i = createInstance(InstanceCreateInfo{{}, &appInfo, l, exts, &validationLayer->createInfo}, allocator);
         logger->info(translate("openminecraft.renderer.vk.instance", info.appName, info.appVer.toString(),

@@ -1,21 +1,21 @@
 #include "openminecraft/fontproc/om_font.hpp"
+#include "fmt/ranges.h"
 #include "glm/glm.hpp"
 #include "harfbuzz/hb.h"
+#include "openminecraft/fontproc/om_font_glyph.hpp"
 #include "openminecraft/fontproc/om_font_outline.hpp"
 
 #include "openminecraft/fontproc/om_font_triangle_list.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
+#include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/util/om_util_ticker.hpp"
 #include <chrono>
-#include <fstream>
 #include <memory>
-#include <thread>
 #include <unordered_map>
 #include <vector>
 
 namespace openminecraft::fontproc
 {
-
 OMFont::OMFont(std::istream &istr) : logger("OMFont", this)
 {
     auto temp = io::readOnce(&istr);
@@ -110,7 +110,7 @@ std::shared_ptr<OMTriangleList> OMFont::buildBasicPolygon(int charcode)
     }
     ticker.recordEvent("glyph_polygon_tree");
 
-    std::vector<int> filledPoly;
+    std::vector<int, mem::OMStlAllocator<allocatorId, int>> filledPoly;
     for (int pi = 0; pi < rawpoly.size(); pi++)
     {
         auto currentIdx = pi;
@@ -141,7 +141,7 @@ std::shared_ptr<OMTriangleList> OMFont::buildBasicPolygon(int charcode)
             }
         }
 
-        listbase.push_back(std::make_shared<OMTriangleList>(rawpoly[polyid], polys));
+        listbase.push_back(mem::fast_shared<allocatorId, OMTriangleList>(rawpoly[polyid], polys));
     }
     ticker.recordEvent("glyph_triangulation");
 
@@ -151,7 +151,7 @@ std::shared_ptr<OMTriangleList> OMFont::buildBasicPolygon(int charcode)
         logger.info("{}: ~{} us", pp.first, pp.second);
     }
 
-    return std::make_shared<OMTriangleList>(listbase);
+    return mem::fast_shared<allocatorId, OMTriangleList>(listbase);
 }
 
 std::shared_ptr<OMFontGlyph> OMFont::buildGlyph(int charcode)
@@ -172,7 +172,7 @@ std::shared_ptr<OMFontGlyph> OMFont::buildGlyph(int charcode)
     glm::vec4 siz = {
         static_cast<float>(extents.x_bearing) / xsc, static_cast<float>(extents.x_bearing + extents.width) / xsc,
         static_cast<float>(extents.y_bearing + extents.height) / ysc, static_cast<float>(extents.y_bearing) / ysc};
-    return std::make_shared<OMFontGlyph>(ots, siz);
+    return mem::fast_shared<allocatorId, OMFontGlyph>(ots, siz);
 }
 
 OMFont::~OMFont()
