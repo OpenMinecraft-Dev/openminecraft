@@ -2,6 +2,7 @@
 #define OM_RENDERER_LAYER_VK_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/renderer/common/om_renderer_app.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
@@ -16,8 +17,7 @@
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
-#include "om_renderer_layer_vk_swapchainmanager.hpp"
-#include "om_renderer_layer_vk_testrenderer.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_swapchainmanager.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
 
@@ -72,7 +72,7 @@ class OMRendererVk : public OMRenderer
 
     std::shared_ptr<validation::OMRendererVkValidation> validationLayer;
     std::shared_ptr<swapchain::OMSwapchainManager> swapchainManager;
-    test::OMTestRenderer *testRenderer;
+    common::OMRendererApp *testRenderer;
 
     common::OMRendererRenderTarget *defaultTarget;
     common::OMRendererTexture *defaultDepthBuffer;

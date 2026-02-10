@@ -35,6 +35,7 @@
 #include "openminecraft/mem/om_mem_prealloc.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include "openminecraft/renderer/om_renderer_testrenderer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/specs/vfsbundle/om_vfsbundle.hpp"
@@ -136,7 +137,6 @@ int boot(std::vector<std::string> args)
         -1);*/
 
     // pixeltower::registerFuncs();
-    std::unique_ptr<pixeltower::v0::OMPixelTower> tower;
 
     if constexpr (true)
     {
@@ -242,7 +242,8 @@ int boot(std::vector<std::string> args)
                         {
                             int ww, hh;
                             SDL_GetWindowSize(wnd, &ww, &hh);
-                            renderer->testRenderer->mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
+                            reinterpret_cast<renderer::test::OMTestRenderer *>(renderer->testRenderer)
+                                ->mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
                         }
 
                         if (e.type == SDL_EVENT_QUIT)
@@ -251,11 +252,11 @@ int boot(std::vector<std::string> args)
                             break;
                         }
 
-                        renderer->testRenderer->keyInput(wk, ak, sk, dk, lshk, spk);
+                        reinterpret_cast<renderer::test::OMTestRenderer *>(renderer->testRenderer)
+                            ->keyInput(wk, ak, sk, dk, lshk, spk);
                         renderer->render();
                     }
 
-                    // renderer->destroy();
                     delete renderer;
                     SDL_DestroyWindow(wnd);
 
@@ -299,7 +300,7 @@ int boot(std::vector<std::string> args)
                 mem::castorice::printres();
                 break;
             case "pt_buildcls"_hash: {
-                tower = std::make_unique<pixeltower::v0::OMPixelTower>();
+                auto tower = std::make_shared<pixeltower::v0::OMPixelTower>();
                 pixeltower::v3::OMClassBuilder builder;
                 builder.klassBegin();
                 builder.klassAccessFlags(JVM_Acc_Public);
@@ -337,7 +338,7 @@ int boot(std::vector<std::string> args)
                 break;
             }
             case "ptinit"_hash: {
-                tower = std::make_unique<pixeltower::v0::OMPixelTower>();
+                auto tower = std::make_shared<pixeltower::v0::OMPixelTower>();
                 pixeltower::v1::tracing::installHandler();
                 tower->initCurrentThread(1ul * 1024 * 1024);
                 tower->init("vmstd/out");

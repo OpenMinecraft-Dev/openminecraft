@@ -1,4 +1,4 @@
-#include "openminecraft/renderer/vk/om_renderer_layer_vk_testrenderer.hpp"
+#include "openminecraft/renderer/om_renderer_testrenderer.hpp"
 
 #include "glm/detail/qualifier.hpp"
 #include "glm/ext/scalar_constants.hpp"
@@ -10,10 +10,6 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
-#include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
-#include "openminecraft/renderer/vk/om_renderer_layer_vk_pipeline.hpp"
-#include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
-#include "openminecraft/renderer/vk/om_renderer_layer_vk_task.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "tiny_obj_loader.h"
 #include "vulkan/vulkan.hpp"
@@ -21,34 +17,15 @@
 #include <chrono>
 #include <glm/glm.hpp>
 #include <random>
-#include <vulkan/vulkan_core.h>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "openminecraft/binary/om_bin_hash.hpp"
-#include "openminecraft/io/om_io_utils.hpp"
-#include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
-#include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 
 #include <stb_image.h>
 
-using namespace ::vk;
+#include "openminecraft/io/om_io_utils.hpp"
 
-namespace openminecraft::renderer::vk::test
+namespace openminecraft::renderer::test
 {
-uint32_t findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properties,
-                        PhysicalDeviceMemoryProperties &memProperties)
-{
-    for (uint32_t i = 0; i < memProperties.memoryTypeCount; ++i)
-    {
-        if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-        {
-            return i;
-        }
-    }
-
-    return 0;
-}
-
 OMTestRenderer::OMTestRenderer(OMRenderer *renderer) : renderer(renderer), logger("OMTestRenderer", this)
 {
     camera = std::make_shared<common::basics::OMCamera>(renderer, m_cameraPos, m_yaw, m_pitch);
@@ -236,7 +213,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer) : renderer(renderer), logge
 
 void OMTestRenderer::beforeFrame()
 {
-    UniformStructure ubo{};
+    UniformStructure ubo;
     ubo.model = glm::mat4(1.0f);
     ubo.view = camera->fetchViewMat();
     ubo.proj = camera->fetchProjMat();
@@ -283,6 +260,10 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
     {
         camera->moveCamera(common::basics::Down, m_cameraMoveSpeed * time);
     }
+}
+
+void OMTestRenderer::afterFrame()
+{
 }
 
 void OMTestRenderer::onResize()
@@ -360,4 +341,4 @@ OMTestRenderer::~OMTestRenderer()
     delete renderTarget;
 }
 
-} // namespace openminecraft::renderer::vk::test
+} // namespace openminecraft::renderer::test

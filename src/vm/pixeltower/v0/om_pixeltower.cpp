@@ -99,6 +99,11 @@ OMPixelTower::~OMPixelTower()
     delete loader;
     delete heap;
     delete metaspace;
+
+    for (auto l : threadMap)
+    {
+        mem::allocator::tracedFreeVMData(l.second->stackEnd);
+    }
 }
 
 void OMPixelTower::boot(OMMethod *method)

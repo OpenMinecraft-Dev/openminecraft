@@ -3,11 +3,12 @@
 #include "glm/fwd.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
+#include "openminecraft/renderer/common/om_renderer_app.hpp"
+#include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
-#include "openminecraft/util/om_util_reinitable.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_FORCE_RADIANS
@@ -17,16 +18,7 @@
 
 #include <memory>
 
-namespace openminecraft::renderer::common
-{
-class OMRendererBuffer;
-}
-namespace openminecraft::renderer::vk
-{
-class OMRendererVk;
-}
-
-namespace openminecraft::renderer::vk::test
+namespace openminecraft::renderer::test
 {
 struct UniformStructure
 {
@@ -37,15 +29,15 @@ struct UniformStructure
     float sigma;
 };
 
-class OMTestRenderer
+class OMTestRenderer : public common::OMRendererApp
 {
   public:
     OMTestRenderer(OMRenderer *renderer);
-    ~OMTestRenderer();
+    ~OMTestRenderer() override;
 
-    void onResize();
-
-    void beforeFrame();
+    void onResize() override;
+    void beforeFrame() override;
+    void afterFrame() override;
 
     common::OMRendererBuffer *vertexBuffer;
     common::OMRendererBuffer *indexBuffer;
@@ -86,6 +78,6 @@ class OMTestRenderer
     std::shared_ptr<common::OMShader> frgShader;
     std::shared_ptr<common::OMShader> frgShader2;
 };
-} // namespace openminecraft::renderer::vk::test
+} // namespace openminecraft::renderer::test
 
 #endif

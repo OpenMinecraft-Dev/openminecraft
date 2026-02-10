@@ -2,12 +2,12 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 #include <Windows.h>
 #include <errhandlingapi.h>
+#include <iostream>
 #include <malloc.h>
 #include <memoryapi.h>
 #include <new>
 #include <oleauto.h>
 #include <winnt.h>
-#include <iostream>
 
 namespace openminecraft::mem
 {
@@ -23,6 +23,7 @@ OMHeap::OMHeap(uint64_t minSize, uint64_t maxSize) : logger("OMHeap", this), max
 
 OMHeap::~OMHeap()
 {
+    this->shrink(block);
     VirtualFree(block, 0, MEM_RELEASE);
 }
 

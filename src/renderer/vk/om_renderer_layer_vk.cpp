@@ -8,7 +8,6 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_pipeline.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_task.hpp"
-#include "openminecraft/renderer/vk/om_renderer_layer_vk_testrenderer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include "openminecraft/util/om_util_result.hpp"
@@ -26,6 +25,8 @@
 #include <system_error>
 #include <utility>
 #include <vector>
+
+#include "openminecraft/renderer/om_renderer_testrenderer.hpp"
 
 #ifdef OM_VULKAN_DYNAMIC
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
@@ -391,6 +392,7 @@ void OMRendererVk::render()
         }
 
         thisFrame = (thisFrame + 1) % framesInFlight;
+        testRenderer->afterFrame();
         return;
     }
     catch (SystemError &e)
@@ -415,6 +417,8 @@ reb:
     testRenderer->onResize();
     rebuildDefaults();
     needRebuild = false;
+
+    testRenderer->afterFrame();
 }
 
 swapchain::OMSwapchainCap OMRendererVk::getSwapchainCap()

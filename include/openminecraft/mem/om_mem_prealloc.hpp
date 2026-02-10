@@ -23,7 +23,7 @@ class OMHeap
     }
 
     void *block;
-    void *heapTop{};
+    void *heapTop;
 
   private:
     log::OMLogger logger;

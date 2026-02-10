@@ -7,6 +7,8 @@
 
 namespace openminecraft::io
 {
+constexpr const char allocatorId[] = "io_parser";
+
 template <typename T> class OMTokenIter : public OMParser
 {
   public:

@@ -14,7 +14,8 @@
 
 namespace openminecraft::mem
 {
-OMHeap::OMHeap(uint64_t minSize, uint64_t maxSize) : heapTop(nullptr), logger("OMHeap", this), minSize(minSize), maxSize(maxSize)
+OMHeap::OMHeap(uint64_t minSize, uint64_t maxSize)
+    : heapTop(nullptr), logger("OMHeap", this), minSize(minSize), maxSize(maxSize)
 {
     block = mmap(nullptr, maxSize, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (block == nullptr)
@@ -26,6 +27,7 @@ OMHeap::OMHeap(uint64_t minSize, uint64_t maxSize) : heapTop(nullptr), logger("O
 
 OMHeap::~OMHeap()
 {
+    this->shrink(block);
     munmap(block, maxSize);
 }
 
