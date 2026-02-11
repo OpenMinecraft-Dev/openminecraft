@@ -98,12 +98,6 @@ jobs:
             arch: arm64
             loaderarch: arm64
 
-          - os: ubuntu-latest
-            name: MinGW
-            plat: mingw
-            arch: x86_64
-            loaderarch: x64
-
     name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -204,13 +198,6 @@ jobs:
           sudo apt update
           sudo apt install libgl1-mesa-dev
           xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
-
-      - name: Configure MinGW
-        if: ${{ matrix.plat == 'mingw' }}
-        run: |
-          sudo apt update
-          sudo apt install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64
-          xmake f -p mingw -a x86_64 --toolchain=mingw --sdk=/usr/x86_64-w64-mingw32 --ldflags="-static" -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
 
       - name: Configure Windows
         if: matrix.plat == 'windows'
