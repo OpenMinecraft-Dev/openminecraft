@@ -98,7 +98,7 @@ jobs:
             arch: arm64
             loaderarch: arm64
 
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             name: MinGW
             plat: mingw
             arch: x86_64
