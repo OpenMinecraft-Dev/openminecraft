@@ -250,6 +250,4 @@ if is_plat("macosx") then
 	add_frameworks("OpenGL")
 elseif is_plat("windows", "mingw") then
 	add_links("opengl32", "dbghelp")
-elseif is_plat("linux", "cross") then
-	add_links("OpenGL")
 end

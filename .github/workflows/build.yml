@@ -74,6 +74,12 @@ jobs:
             arch: x64
             loaderarch: x64
 
+          - os: ubuntu-latest
+            name: Linux (RISCV)
+            plat: linux
+            arch: riscv
+            loaderarch: riscv
+
           - os: ubuntu-24.04-arm
             name: Linux (arm64)
             plat: linux
@@ -192,11 +198,18 @@ jobs:
         run: xmake f -p android -a ${{ matrix.arch }} --ndk=${{ github.workspace }}/android-ndk-${{ env.ANDROID_NDK_VERSION }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }} --cxxflags="-fPIC"
 
       - name: Configure Linux
-        if: ${{ matrix.plat == 'linux' }}
+        if: ${{ matrix.plat == 'linux' && (matrix.arch == 'x64' || matrix.arch == 'arm64') }}
         run: |
           sudo apt update
           sudo apt install libgl1-mesa-dev
           xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+
+      - name: Configure Linux Cross (RISCV)
+        if: ${{ matrix.plat == 'linux' && matrix.arch == 'riscv' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+          xmake f -a ${{ matrix.arch }} --sdk=/usr --bin=/usr/bin --cross=riscv64-linux-gnu- -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
  
       - name: Configure Windows
         if: matrix.plat == 'windows'

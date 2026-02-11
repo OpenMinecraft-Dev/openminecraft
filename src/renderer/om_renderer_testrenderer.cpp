@@ -321,6 +321,9 @@ void OMTestRenderer::onResize()
     task2->finish();
 
     renderer->registerTask("main", task2);
+
+    logger.info("Task intermediate: {}", fmt::ptr(renderer->fetchTask("intermediate")));
+    logger.info("Task main: {}", fmt::ptr(renderer->fetchTask("main")));
 }
 OMTestRenderer::~OMTestRenderer()
 {
