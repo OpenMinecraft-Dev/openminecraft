@@ -100,6 +100,10 @@ add_includedirs("include")
 if not is_plat("harmony", "mingw") then
 	add_packages("openal-soft", { system = false })
 end
+-- mingw require this
+if is_plat("mingw") then
+	add_links("dbghelp")
+end
 add_packages(
 	"freetype",
 	"harfbuzz",
