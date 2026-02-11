@@ -132,7 +132,8 @@ jobs:
 
       - name: Setup Python packages
         run: pip install wheel
-      - name: Free Disk Space (FreeBSD Host)
+
+      - name: Free Disk Space
         if: matrix.plat == 'freebsd'
         uses: jlumbroso/free-disk-space@main
         with:
@@ -208,7 +209,13 @@ jobs:
         if: ${{ matrix.plat == 'linux' && matrix.arch == 'riscv' }}
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+          sudo apt-get install -y gcc-${{ matrix.arch }}-linux-gnu g++-${{ matrix.arch }}-linux-gnu
+          sudo grep 'deb ' /etc/apt/sources.list | sudo tee /etc/apt/sources.list.d/ports.list
+          sudo sed -i 's/^deb /deb [arch=amd64] /' /etc/apt/sources.list
+          sudo sed -i 's#^deb [^ ]\+#deb [arch=${{ matrix.arch }}] https://ports.ubuntu.com/ubuntu-ports/#' /etc/apt/sources.list.d/ports.list
+          sudo dpkg --add-architecture ${{ matrix.arch }}
+          sudo apt-get update || true
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -yq install libx11-dev:${{matrix.arch}} libgl1-mesa-glx:${{matrix.arch}}
           xmake f -a ${{ matrix.arch }} --sdk=/usr --bin=/usr/bin --cross=riscv64-linux-gnu- -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
  
       - name: Configure Windows

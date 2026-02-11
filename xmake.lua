@@ -32,7 +32,6 @@ add_requires(
 	"stb",
 	"vulkan-headers",
 	"glm",
-	"bullet3",
 	"vulkan-hpp",
 	"shaderc",
 	"libsdl3",
@@ -40,6 +39,7 @@ add_requires(
 	"opengl-headers",
 	{ system = false }
 )
+add_requires("libsdl3", { system = false, configs = { x11 = false } })
 add_requires("boost", { system = false, configs = { stacktrace = true, asio = true } })
 add_requires("fmt", { system = false, configs = { header_only = true } })
 add_requires("harfbuzz", { system = false, configs = { freetype = false } })
@@ -51,11 +51,11 @@ if vulkandyn() then
 	add_defines("OM_VULKAN_DYNAMIC=")
 end
 
-if not is_plat("windows") then
+if not is_plat("windows", "mingw") then
 	add_defines("OM_PLATFORM_UNIX=")
 end
 
-if is_plat("windows") then
+if is_plat("windows", "mingw") then
 	add_defines("OM_PLATFORM_WINDOWS=")
 end
 if is_plat("linux") then
@@ -114,10 +114,10 @@ add_packages(
 	"openal-soft",
 	{ system = false }
 )
-if not is_plat("windows") then
+if not is_plat("windows", "mingw") then
 	add_files("plat/unix/**.cpp")
 end
-if is_plat("windows") then
+if is_plat("windows", "mingw") then
 	add_files("plat/windows/**.cpp")
 end
 if is_plat("linux") then
@@ -143,14 +143,14 @@ if not mobile() then
 end
 
 if is_arch("x86", "i386", "x86_64", "x64") then
-	if not is_plat("windows") then
+	if not is_plat("windows", "mingw") then
 		add_files("arch/x86/unix_**.S")
 	else
 		add_files("arch/x86/msvc_**.S")
 	end
 	add_files("arch/x86/**.cpp")
 elseif is_arch("arm64-v8a", "arm64") then
-	if not is_plat("windows") then
+	if not is_plat("windows", "mingw") then
 		add_files("arch/aarch64/unix_**.S")
 	else
 		add_files("arch/aarch64/msvc_**.S")
