@@ -66,6 +66,8 @@ on_load(function(package)
 			package:add("deps", "libiconv", { system = true })
 		elseif package:is_plat("linux") then
 			package:add("deps", "libiconv")
+		elseif package:is_plat("mingw") then
+			package:add("deps", "libpthread")
 		end
 	end
 end)
@@ -131,9 +133,8 @@ add_deps("cmake")
 if on_check then
 	on_check(function(package)
 		assert(
-			package:check_cxxsnippets(
-				{
-					test = [[
+			package:check_cxxsnippets({
+				test = [[
                 #include <bit>
                 #include <cstdint>
                 void test() {
@@ -141,9 +142,7 @@ if on_check then
                     constexpr auto u64v = std::bit_cast<std::uint64_t>(f64v);
                 }
             ]],
-				},
-				{ configs = { languages = "c++20" } }
-			),
+			}, { configs = { languages = "c++20" } }),
 			"package(yoga) Require at least C++20."
 		)
 	end)
@@ -175,15 +174,12 @@ add_versions("1.0.0", "e51f6c89ff33b7cfb19daafb215f293d106cd900f8d681b9b1295312c
 add_versions("0.9.9+8", "7d508ab72cb5d43227a3711420f06ff99b0a0cb63ee2f93631b162bfe1fe9592")
 
 add_configs("header_only", { description = "Use header only version.", default = true, type = "boolean" })
-add_configs(
-	"cxx_standard",
-	{
-		description = "Select c++ standard to build.",
-		default = "14",
-		type = "string",
-		values = { "98", "11", "14", "17", "20" },
-	}
-)
+add_configs("cxx_standard", {
+	description = "Select c++ standard to build.",
+	default = "14",
+	type = "string",
+	values = { "98", "11", "14", "17", "20" },
+})
 add_configs("modules", { description = "Build with C++20 modules support.", default = false, type = "boolean" })
 
 on_load(function(package)
@@ -619,4 +615,3 @@ on_install(function(package)
 	import("package.tools.cmake").install(package, configs)
 end)
 package_end()
-
