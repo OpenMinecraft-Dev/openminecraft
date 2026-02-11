@@ -253,6 +253,8 @@ end
 
 if is_plat("macosx") then
 	add_frameworks("OpenGL")
-elseif is_plat("windows", "mingw") then
+elseif is_plat("windows") then
 	add_links("opengl32", "dbghelp")
+elseif is_plat("mingw") then
+	add_links("pthread", "opengl32", "dbghelp")
 end
