@@ -1,5 +1,5 @@
-#include <iostream>
 #include "openminecraft/specs/vfsbundle/om_vfsbundle.hpp"
+#include <iostream>
 
 #include <bitset>
 #include <filesystem>
@@ -37,20 +37,20 @@ static void appendFile(std::vector<file_path> &pth, std::string base, std::strin
 }
 
 const char *usagetext = " [options] <file>\n"
-"this tool will read the target file in default\n"
-"\n"
-"  -r / --read\tread the bundle file\n"
-"  -c / --create\tcreate bundle file\n"
-"  -P / --push\tonly works in create mode, attach file to new archives\n"
-"  -a / --author\tonly works in create mode, set the name of the author\n"
-"  -t / --target\tset the target input/output file\n"
-"  -h / --help\tshow this message\n"
-"\n"
-"For example: \n"
-"  -a Cyrene -c -t out.bundle -P hello_world.txt\n"
-"    create a bundle out.bundle with file hello_world.txt (author is Cyrene)\n"
-"  -r -t out.bundle\n"
-"    read the out.bundle";
+                        "this tool will read the target file in default\n"
+                        "\n"
+                        "  -r / --read\tread the bundle file\n"
+                        "  -c / --create\tcreate bundle file\n"
+                        "  -P / --push\tonly works in create mode, attach file to new archives\n"
+                        "  -a / --author\tonly works in create mode, set the name of the author\n"
+                        "  -t / --target\tset the target input/output file\n"
+                        "  -h / --help\tshow this message\n"
+                        "\n"
+                        "For example: \n"
+                        "  -a Cyrene -c -t out.bundle -P hello_world.txt\n"
+                        "    create a bundle out.bundle with file hello_world.txt (author is Cyrene)\n"
+                        "  -r -t out.bundle\n"
+                        "    read the out.bundle";
 
 int main(int argc, char **argv)
 {
@@ -68,16 +68,15 @@ int main(int argc, char **argv)
     int opt;
     int option_index = 0;
     const char *optstring = "h:a:t:P:cr";
-    static option long_options[] = {
-        {"read", no_argument, nullptr, 'r'},
-        {"create", no_argument, nullptr, 'c'},
-        {"push", optional_argument, nullptr, 'P'},
-        {"author", optional_argument, nullptr, 'a'},
-        {"target", optional_argument, nullptr, 't'},
-        {"help", no_argument, nullptr, 'h'},
-        {nullptr, 0, nullptr, 0}
-    };
-    while ((opt = getopt_long_only(argc, argv, optstring, long_options, &option_index)) != -1) {
+    static option long_options[] = {{"read", no_argument, nullptr, 'r'},
+                                    {"create", no_argument, nullptr, 'c'},
+                                    {"push", optional_argument, nullptr, 'P'},
+                                    {"author", optional_argument, nullptr, 'a'},
+                                    {"target", optional_argument, nullptr, 't'},
+                                    {"help", no_argument, nullptr, 'h'},
+                                    {nullptr, 0, nullptr, 0}};
+    while ((opt = getopt_long_only(argc, argv, optstring, long_options, &option_index)) != -1)
+    {
         switch (opt)
         {
         case 'h':
@@ -142,7 +141,7 @@ int main(int argc, char **argv)
             {
                 ss << std::fixed << static_cast<double>(metadata.length) / 1024 / 1024 << "mB\t";
             }
-            else if (metadata.length < 1024l * 1024 * 1024 * 1024)
+            else if (metadata.length < 1024ll * 1024 * 1024 * 1024)
             {
                 ss << std::fixed << static_cast<double>(metadata.length) / 1024 / 1024 / 1024 << "gB\t";
             }

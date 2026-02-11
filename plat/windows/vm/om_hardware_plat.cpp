@@ -1,6 +1,6 @@
-#include "openminecraft/vm/os/om_hardware.hpp"
-#include "Windows.h"
 #include "fmt/format.h"
+#include "openminecraft/vm/os/om_hardware.hpp"
+#include "windows.h"
 
 namespace openminecraft::vm::os
 {
@@ -8,7 +8,8 @@ std::string fetchCpuName()
 {
     DWORD length = 256;
     char name[256] = {0};
-    RegGetValue(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", "ProcessorNameString", REG_SZ, nullptr, name, &length);
+    RegGetValue(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", "ProcessorNameString", REG_SZ,
+                nullptr, name, &length);
     return name;
 }
 std::string fetchUsername()
@@ -34,7 +35,7 @@ std::string fetchSystemVersion()
     GetSystemInfo(&info);
     OSVERSIONINFOEX os;
     os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-    
+
     if (GetVersionEx((OSVERSIONINFO *)&os))
     {
         switch (os.dwMajorVersion)
@@ -110,11 +111,13 @@ std::string fetchSystemVersion()
                 {
                     return "8";
                 }
-                else {
+                else
+                {
                     return "Server 2012";
                 }
             case 3:
-                if (os.wProductType == VER_NT_WORKSTATION) {
+                if (os.wProductType == VER_NT_WORKSTATION)
+                {
                     return "8.1";
                 }
                 else

@@ -1,9 +1,10 @@
 #include "openminecraft/vm/pixeltower/v1/om_pixeltower_tracing.hpp"
-#include "Windows.h"
 #include "boost/stacktrace/detail/frame_decl.hpp"
-#include "dbgHelp.h"
-#include "openminecraft/log/om_log_common.hpp"
+
 #include "openminecraft/boot/om_boot.hpp"
+#include "openminecraft/log/om_log_common.hpp"
+#include "windows.h"
+#include "dbghelp.h"
 #include <iostream>
 #include <minwindef.h>
 #include <processthreadsapi.h>

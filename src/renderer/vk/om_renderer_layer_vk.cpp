@@ -32,7 +32,7 @@
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 #endif
 
-#ifdef OM_PLATFORM_WINDOWS
+#if defined(OM_PLATFORM_WINDOWS) && !defined(OM_VULKAN_DYNAMIC)
 VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance instance,
                                                               const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
                                                               const VkAllocationCallbacks *pAllocator,
