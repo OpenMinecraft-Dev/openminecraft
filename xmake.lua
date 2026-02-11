@@ -16,14 +16,14 @@ end
 includes("extlibs/shaderc.lua")
 
 if not mobile() then
-	if not is_plat("linux", "cross", "bsd", "macosx", "iphoneos", "visionos") then
+	if not is_plat("linux", "cross", "bsd", "macosx", "iphoneos", "visionos", "mingw") then
 		add_requires("vulkan-loader", { system = false })
 	end
 end
 if apple() then
 	add_requires("moltenvk", { configs = { shared = false } })
 end
-if not is_plat("harmony") then
+if not is_plat("harmony", "mingw") then
 	add_requires("openal-soft")
 end
 
@@ -97,6 +97,9 @@ includes("tests/xmake.lua")
 target("openminecraft-plat")
 set_kind("static")
 add_includedirs("include")
+if not is_plat("harmony", "mingw") then
+	add_packages("openal-soft", { system = false })
+end
 add_packages(
 	"freetype",
 	"harfbuzz",
@@ -110,7 +113,6 @@ add_packages(
 	"boost",
 	"nlohmann_json",
 	"libsdl3",
-	"openal-soft",
 	{ system = false }
 )
 if not is_plat("windows", "mingw") then

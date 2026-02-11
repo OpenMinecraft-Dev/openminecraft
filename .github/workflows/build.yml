@@ -74,12 +74,6 @@ jobs:
             arch: x64
             loaderarch: x64
 
-          - os: ubuntu-latest
-            name: Linux (RISCV)
-            plat: linux
-            arch: riscv
-            loaderarch: riscv
-
           - os: ubuntu-24.04-arm
             name: Linux (arm64)
             plat: linux
@@ -205,19 +199,6 @@ jobs:
           sudo apt install libgl1-mesa-dev
           xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
 
-      - name: Configure Linux Cross (RISCV)
-        if: ${{ matrix.plat == 'linux' && matrix.arch == 'riscv' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-${{ matrix.arch }}-linux-gnu g++-${{ matrix.arch }}-linux-gnu
-          sudo grep 'deb ' /etc/apt/sources.list | sudo tee /etc/apt/sources.list.d/ports.list
-          sudo sed -i 's/^deb /deb [arch=amd64] /' /etc/apt/sources.list
-          sudo sed -i 's#^deb [^ ]\+#deb [arch=${{ matrix.arch }}] https://ports.ubuntu.com/ubuntu-ports/#' /etc/apt/sources.list.d/ports.list
-          sudo dpkg --add-architecture ${{ matrix.arch }}
-          sudo apt-get update || true
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -yq install libx11-dev:${{matrix.arch}} libgl1-mesa-glx:${{matrix.arch}}
-          xmake f -a ${{ matrix.arch }} --sdk=/usr --bin=/usr/bin --cross=riscv64-linux-gnu- -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
- 
       - name: Configure Windows
         if: matrix.plat == 'windows'
         run: xmake f --toolchain=msvc -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
