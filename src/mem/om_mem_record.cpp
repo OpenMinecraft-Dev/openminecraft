@@ -69,7 +69,7 @@ std::string toDataSize(uint64_t l)
     {
         return fmt::format("{:.{}f} MB", (double)l / 1024 / 1024, 2);
     }
-    else if (l < 1024l * 1024 * 1024 * 1024)
+    else if (l < 1024ll * 1024 * 1024 * 1024)
     {
         return fmt::format("{:.{}f} GB", (double)l / 1024 / 1024 / 1024, 2);
     }
