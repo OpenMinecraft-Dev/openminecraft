@@ -139,16 +139,16 @@ jobs:
           docker-images: true
           swap-storage: true
 
-      - name: Restore xmake results (UNIX)
-        uses: actions/cache/restore@v4
+      - name: Cache xmake results (UNIX)
+        uses: actions/cache@v4
         if: matrix.plat != 'windows'
         with:
           path: ~/.xmake/packages
           key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
           restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
 
-      - name: Restore xmake results (Windows)
-        uses: actions/cache/restore@v4
+      - name: Cache xmake results (Windows)
+        uses: actions/cache@v4
         if: matrix.plat == 'windows'
         with:
           path: C:/Users/runneradmin/AppData/Local/.xmake/packages
@@ -203,22 +203,6 @@ jobs:
         if: matrix.plat == 'windows'
         run: xmake f --toolchain=msvc -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
 
-      - name: Save xmake results (UNIX)
-        uses: actions/cache/save@v4
-        if: matrix.plat != 'windows'
-        with:
-          path: ~/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
-          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
-
-      - name: Save xmake results (Windows)
-        uses: actions/cache/save@v4
-        if: matrix.plat == 'windows'
-        with:
-          path: C:/Users/runneradmin/AppData/Local/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
-          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake-${{ hashFiles('xmake.lua') }}
-          
       - name: Build
         run: xmake -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }}
 
