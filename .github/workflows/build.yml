@@ -215,7 +215,7 @@ jobs:
         if: ${{ matrix.plat == 'linux-cross' }}
         run: |
           sudo apt update
-          sudo apt install clang
+          sudo apt install clang llvm
           wget https://github.com/OpenMinecraft-Dev/cross-toolchain-sysroot/releases/download/toolchain-20260212/llvm-toolchain-linux-debian-${{ matrix.arch }}.zip
           unzip llvm-toolchain-linux-debian-${{ matrix.arch }}.zip
           mkdir toolchain
