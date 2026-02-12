@@ -58,7 +58,6 @@ bool fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string
     m[mountpoint] = [info](std::string proc) -> std::shared_ptr<std::istream> {
         for (auto i : info->files)
         {
-            logger.info("{} {}", proc, i.first.name);
             if (i.first.name == proc)
             {
                 return std::make_shared<std::istringstream>(

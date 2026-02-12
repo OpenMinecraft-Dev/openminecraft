@@ -80,6 +80,18 @@ jobs:
             arch: arm64
             loaderarch: arm64
 
+          - os: ubuntu-latest
+            name: Linux (LoongArch Cross)
+            plat: linux-cross
+            arch: loong64
+            loaderarch: loong64
+
+          - os: ubuntu-latest
+            name: Linux (RISCV Cross)
+            plat: linux-cross
+            arch: riscv64
+            loaderarch: riscv64
+
           - os: macos-latest
             name: MacOS (arm64)
             plat: macos
@@ -198,6 +210,20 @@ jobs:
           sudo apt update
           sudo apt install libgl1-mesa-dev
           xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+
+      - name: Configure Linux Cross
+        if: ${{ matrix.plat == 'linux-cross' }}
+        run: |
+          sudo apt update
+          sudo apt install clang
+          wget https://github.com/OpenMinecraft-Dev/cross-toolchain-sysroot/releases/download/toolchain-20260212/llvm-toolchain-linux-debian-${{ matrix.arch }}.zip
+          unzip llvm-toolchain-linux-debian-${{ matrix.arch }}.zip
+          cd toolchain
+          tar -xf ../toolchain.tar
+          cd ..
+          rm toolchain.tar
+
+          xmake f --toolchain=llvm --sdk=${{ github.workspace }}/toolchain -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
 
       - name: Configure Windows
         if: matrix.plat == 'windows'
