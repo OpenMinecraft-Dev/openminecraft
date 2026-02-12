@@ -218,6 +218,7 @@ jobs:
           sudo apt install clang
           wget https://github.com/OpenMinecraft-Dev/cross-toolchain-sysroot/releases/download/toolchain-20260212/llvm-toolchain-linux-debian-${{ matrix.arch }}.zip
           unzip llvm-toolchain-linux-debian-${{ matrix.arch }}.zip
+          mkdir toolchain
           cd toolchain
           tar -xf ../toolchain.tar
           cd ..
