@@ -1,0 +1,2 @@
+#!/bin/bash
+xmake f -p mingw -a x86_64 --toolchain=mingw --sdk=/usr/x86_64-w64-mingw32 --ldflags="-static" -m releasedbg -v

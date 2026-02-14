@@ -105,12 +105,6 @@ jobs:
             arch: ppc64
             loaderarch: ppc64
 
-          - os: ubuntu-latest
-            name: FreeBSD (x86_64 Cross)
-            plat: freebsd-cross
-            arch: x86_64
-            loaderarch: x86_64
-
           - os: macos-latest
             name: MacOS (arm64)
             plat: macos
@@ -242,18 +236,6 @@ jobs:
           rm llvm-toolchain-linux-debian-${{ matrix.arch }}.tar.xz
 
           xmake f --toolchain=llvm --sdk=${{ github.workspace }}/toolchain -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
-
-      - name: Configure FreeBSD Cross
-        if: ${{ matrix.plat == 'freebsd-cross' }}
-        run: |
-          sudo apt update
-          sudo apt install clang llvm
-          wget https://github.com/OpenMinecraft-Dev/cross-toolchain-sysroot/releases/download/${{ env.CROSS_TOOL_VERSION }}/llvm-toolchain-freebsd-${{ matrix.arch }}.tar.xz
-          mkdir toolchain
-          tar -xJf llvm-toolchain-freebsd-${{ matrix.arch }}.tar.xz -C ./toolchain/
-          rm llvm-toolchain-freebsd-${{ matrix.arch }}.tar.xz
-
-          xmake f --toolchain=llvm --sdk=${{ github.workspace }}/toolchain -p bsd -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }} 
 
       - name: Configure Windows
         if: matrix.plat == 'windows'
