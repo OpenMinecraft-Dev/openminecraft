@@ -1,8 +1,5 @@
 #include "openminecraft/renderer/om_renderer_testrenderer.hpp"
 
-#include "glm/detail/qualifier.hpp"
-#include "glm/ext/scalar_constants.hpp"
-#include "glm/fwd.hpp"
 #include "openminecraft/fontproc/om_font.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"

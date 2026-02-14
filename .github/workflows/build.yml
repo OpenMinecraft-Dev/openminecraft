@@ -7,6 +7,7 @@ env:
   XMAKE_ARGS: -v
   ANDROID_NDK_VERSION: r27c
   OHOS_SDK_VERSION: 5.0.0-Release
+  CROSS_TOOL_VERSION: toolchain-20260214-5
 
 jobs:
   build:
@@ -229,13 +230,10 @@ jobs:
         run: |
           sudo apt update
           sudo apt install clang llvm
-          wget https://github.com/OpenMinecraft-Dev/cross-toolchain-sysroot/releases/download/toolchain-20260212/llvm-toolchain-linux-debian-${{ matrix.arch }}.zip
-          unzip llvm-toolchain-linux-debian-${{ matrix.arch }}.zip
+          wget https://github.com/OpenMinecraft-Dev/cross-toolchain-sysroot/releases/download/${{ env.CROSS_TOOL_VERSION }}/llvm-toolchain-linux-debian-${{ matrix.arch }}.tar.xz
           mkdir toolchain
-          cd toolchain
-          tar -xf ../toolchain.tar
-          cd ..
-          rm toolchain.tar
+          tar -xJf llvm-toolchain-linux-debian-${{ matrix.arch }}.tar.xz -C ./toolchain/
+          rm llvm-toolchain-linux-debian-${{ matrix.arch }}.tar.xz
 
           xmake f --toolchain=llvm --sdk=${{ github.workspace }}/toolchain -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
 
