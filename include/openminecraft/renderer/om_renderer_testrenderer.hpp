@@ -3,8 +3,8 @@
 #include "glm/fwd.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
-#include "openminecraft/renderer/common/om_renderer_app.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
+#include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
@@ -29,7 +29,7 @@ struct UniformStructure
     float sigma;
 };
 
-class OMTestRenderer : public common::OMRendererApp
+class OMTestRenderer : public common::OMRendererHandler
 {
   public:
     OMTestRenderer(OMRenderer *renderer);

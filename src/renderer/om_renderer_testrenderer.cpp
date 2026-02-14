@@ -4,6 +4,7 @@
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
+#include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
@@ -12,7 +13,6 @@
 
 #include <chrono>
 #include <glm/glm.hpp>
-#include <random>
 
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -22,7 +22,8 @@
 
 namespace openminecraft::renderer::test
 {
-OMTestRenderer::OMTestRenderer(OMRenderer *renderer) : renderer(renderer), logger("OMTestRenderer", this)
+OMTestRenderer::OMTestRenderer(OMRenderer *renderer)
+    : renderer(renderer), logger("OMTestRenderer", this), common::OMRendererHandler(renderer)
 {
     camera = std::make_shared<common::basics::OMCamera>(renderer, m_cameraPos, m_yaw, m_pitch);
     {
@@ -86,24 +87,9 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer) : renderer(renderer), logge
         vtxnew.clear();
         indices.clear();
 
-        std::random_device dev;
-        std::ranlux48 eng(dev());
-        std::uniform_real_distribution<> dist(0.0f, 1.0f);
-
-        auto uvv = 0.0f;
-        auto uvv2 = 0.0f;
-        auto iid = 0;
-
         for (auto &v : ppo->vertices)
         {
-            if (!iid)
-            {
-                uvv = dist(eng);
-                uvv2 = dist(eng);
-            }
             vtxnew.push_back({{v.x, v.y, 0.0f}, {v.x, v.y}});
-            iid++;
-            iid = iid % 3;
         }
 
         for (auto i : ppo->indices)

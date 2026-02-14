@@ -2,7 +2,7 @@
 #define OM_RENDERER_LAYER_VK_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/renderer/common/om_renderer_app.hpp"
+#include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
@@ -14,6 +14,7 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
+#include <vector>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #endif
@@ -68,11 +69,14 @@ class OMRendererVk : public OMRenderer
     void clearTasks() override;
     glm::vec2 getExtent() const override;
 
+    void registerHandler(std::shared_ptr<common::OMRendererHandler> handler) override;
+    void clearHandlers() override;
+
     void render();
 
     std::shared_ptr<validation::OMRendererVkValidation> validationLayer;
     std::shared_ptr<swapchain::OMSwapchainManager> swapchainManager;
-    common::OMRendererApp *testRenderer;
+    std::vector<std::shared_ptr<common::OMRendererHandler>> handlers;
 
     common::OMRendererRenderTarget *defaultTarget;
     common::OMRendererTexture *defaultDepthBuffer;

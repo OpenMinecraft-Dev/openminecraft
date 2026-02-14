@@ -91,6 +91,9 @@ int boot(std::vector<std::string> args)
                 auto wnd = SDL_CreateWindow("Vulkan Test", 800, 800, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
                 auto renderer = new renderer::vk::OMRendererVk(a, [](std::vector<std::string>) { return 0; }, wnd);
 
+                auto hnd = std::make_shared<renderer::test::OMTestRenderer>(renderer);
+                renderer->registerHandler(hnd);
+
                 // SDL_ShowWindow(wnd);
 
                 logger->info("driver: {}", renderer->driver());
@@ -176,8 +179,7 @@ int boot(std::vector<std::string> args)
                     {
                         int ww, hh;
                         SDL_GetWindowSize(wnd, &ww, &hh);
-                        reinterpret_cast<renderer::test::OMTestRenderer *>(renderer->testRenderer)
-                            ->mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
+                        hnd->mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
                     }
 
                     if (e.type == SDL_EVENT_QUIT)
@@ -186,11 +188,11 @@ int boot(std::vector<std::string> args)
                         break;
                     }
 
-                    reinterpret_cast<renderer::test::OMTestRenderer *>(renderer->testRenderer)
-                        ->keyInput(wk, ak, sk, dk, lshk, spk);
+                    hnd->keyInput(wk, ak, sk, dk, lshk, spk);
                     renderer->render();
                 }
 
+                hnd = nullptr;
                 delete renderer;
                 SDL_DestroyWindow(wnd);
 

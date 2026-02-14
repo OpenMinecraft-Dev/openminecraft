@@ -3,6 +3,7 @@
 
 #include "GL/glcorearb.h"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 namespace openminecraft::renderer::opengl
 {
@@ -36,6 +37,9 @@ class OMRendererOpenGL : public OMRenderer
     common::OMRendererTask *fetchTask(std::string id) override;
     void clearTasks() override;
     glm::vec2 getExtent() const override;
+
+    void registerHandler(std::shared_ptr<common::OMRendererHandler>) override;
+    void clearHandlers() override;
 
   private:
     void *glContext;

@@ -203,7 +203,6 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         defaultTarget->build();
         defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height,
                                                    common::Dim2, common::Depth);
-        testRenderer = new test::OMTestRenderer(this);
         rebuildDefaults();
 
         for (int i = 0; i < framesInFlight; i++)
@@ -273,6 +272,16 @@ void OMRendererVk::rebuildDefaults()
     }
 }
 
+void OMRendererVk::registerHandler(std::shared_ptr<common::OMRendererHandler> handler)
+{
+    handlers.push_back(handler);
+    rebuildDefaults();
+}
+void OMRendererVk::clearHandlers()
+{
+    handlers.clear();
+}
+
 void OMRendererVk::registerTask(std::string id, common::OMRendererTask *task)
 {
     tasks[id] = task;
@@ -333,7 +342,10 @@ void OMRendererVk::render()
     }
     try
     {
-        testRenderer->beforeFrame();
+        for (auto r : handlers)
+        {
+            r->beforeFrame();
+        }
         auto result = logicalDevice.waitForFences(1, &frameSyncs[thisFrame].inFlightFence, true,
                                                   std::numeric_limits<uint64_t>::max());
         if (result != Result::eSuccess)
@@ -392,7 +404,10 @@ void OMRendererVk::render()
         }
 
         thisFrame = (thisFrame + 1) % framesInFlight;
-        testRenderer->afterFrame();
+        for (auto r : handlers)
+        {
+            r->afterFrame();
+        }
         return;
     }
     catch (SystemError &e)
@@ -414,11 +429,17 @@ reb:
                                                common::Dim2, common::Depth);
 
     this->clearTasks();
-    testRenderer->onResize();
+    for (auto r : handlers)
+    {
+        r->onResize();
+    }
     rebuildDefaults();
     needRebuild = false;
 
-    testRenderer->afterFrame();
+    for (auto r : handlers)
+    {
+        r->afterFrame();
+    }
 }
 
 swapchain::OMSwapchainCap OMRendererVk::getSwapchainCap()
@@ -677,7 +698,7 @@ OMRendererVk::~OMRendererVk()
     this->clearTasks();
     logicalDevice.destroyCommandPool(tempCommandPool, allocator);
     delete defaultTarget;
-    delete testRenderer;
+    handlers.clear();
 
     swapchainManager->destroy();
     validationLayer->ifEnable([&]() { instance.destroyDebugReportCallbackEXT(reportCallback, &allocator); });

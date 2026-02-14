@@ -97,4 +97,11 @@ void OMRendererOpenGL::clearTasks()
 {
 }
 
+void OMRendererOpenGL::registerHandler(std::shared_ptr<common::OMRendererHandler>)
+{
+}
+void OMRendererOpenGL::clearHandlers()
+{
+}
+
 } // namespace openminecraft::renderer::opengl
