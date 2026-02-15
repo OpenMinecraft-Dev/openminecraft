@@ -34,7 +34,7 @@ struct UniformStructure
 class OMTestRenderer : public OMRendererHandler
 {
   public:
-    OMTestRenderer(OMRenderer *renderer);
+    OMTestRenderer(renderer::OMRenderer *renderer);
     ~OMTestRenderer() override;
 
     void submitTasks() override;
@@ -67,7 +67,7 @@ class OMTestRenderer : public OMRendererHandler
   private:
     bool firstTime = true;
     int vertexCount = 0;
-    OMRenderer *renderer;
+    renderer::OMRenderer *renderer;
 
     glm::vec3 m_cameraPos{2.f, 2.0f, 2.f};
     glm::vec3 m_cameraUp{0.0f, 1.0f, 0.0f};
