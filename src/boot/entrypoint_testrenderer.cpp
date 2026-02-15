@@ -20,31 +20,33 @@
 
 #include "openminecraft/io/om_io_utils.hpp"
 
+using namespace openminecraft::renderer::common;
+
 namespace openminecraft::boot::test
 {
-OMTestRenderer::OMTestRenderer(OMRenderer *renderer)
-    : renderer(renderer), logger("OMTestRenderer", this), common::OMRendererHandler(renderer)
+OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
+    : renderer(renderer), logger("OMTestRenderer", this), OMRendererHandler(renderer)
 {
-    camera = std::make_shared<common::basics::OMCamera>(renderer, m_cameraPos, m_yaw, m_pitch);
+    camera = std::make_shared<basics::OMCamera>(renderer, m_cameraPos, m_yaw, m_pitch);
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.frag.glsl");
-        frgShader = std::make_shared<common::OMShader>(common::GLSLSource, io::readOnce(target.get()),
-                                                       "simple.frag.glsl", "main", common::Fragment)
-                        ->convertTo(common::SPIRVBinary);
+        frgShader = std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()),
+                                                       "simple.frag.glsl", "main", Fragment)
+                        ->convertTo(SPIRVBinary);
     }
 
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple2.frag.glsl");
-        frgShader2 = std::make_shared<common::OMShader>(common::GLSLSource, io::readOnce(target.get()),
-                                                        "simple2.frag.glsl", "main", common::Fragment)
-                         ->convertTo(common::SPIRVBinary);
+        frgShader2 = std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()),
+                                                        "simple2.frag.glsl", "main", Fragment)
+                         ->convertTo(SPIRVBinary);
     }
 
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.vert.glsl");
-        vtxShader = std::make_shared<common::OMShader>(common::GLSLSource, io::readOnce(target.get()),
-                                                       "simple.vert.glsl", "main", common::Vertex)
-                        ->convertTo(common::SPIRVBinary);
+        vtxShader = std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()),
+                                                       "simple.vert.glsl", "main", Vertex)
+                        ->convertTo(SPIRVBinary);
     }
 
     {
@@ -125,19 +127,19 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer)
 
         auto siz = vtxnew.size() * sizeof(VertexPart);
 
-        vertexBuffer = renderer->allocateBuffer(common::VertexData, siz);
+        vertexBuffer = renderer->allocateBuffer(VertexData, siz);
         vertexBuffer->updateData(vtxnew.data());
 
         siz = indices.size() * sizeof(uint32_t);
-        indexBuffer = renderer->allocateBuffer(common::VertexIndex, siz);
+        indexBuffer = renderer->allocateBuffer(VertexIndex, siz);
         indexBuffer->updateData(indices.data());
 
         vertexCount = indices.size();
     }
 
     {
-        mainVtxBuffer = renderer->allocateBuffer(common::VertexData, 4 * (3 + 2) * sizeof(float));
-        mainIdxBuffer = renderer->allocateBuffer(common::VertexIndex, 6 * sizeof(uint32_t));
+        mainVtxBuffer = renderer->allocateBuffer(VertexData, 4 * (3 + 2) * sizeof(float));
+        mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
 
         float vtxs[] = {-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f,  0.0f, 0.0f, 1.0f,
                         1.0f,  1.0f,  0.0f, 1.0f, 1.0f, 1.0f,  -1.0f, 0.0f, 1.0f, 0.0f};
@@ -146,9 +148,9 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer)
         mainIdxBuffer->updateData(vtxi);
     }
 
-    uniformBuffer = renderer->allocateBuffer(common::Uniform, sizeof(UniformStructure));
+    uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));
 
-    tempUniformBuffer = renderer->allocateBuffer(common::Uniform, sizeof(UniformStructure));
+    tempUniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));
     UniformStructure stru = {};
     stru.model = glm::mat4(1.0f);
     stru.proj = glm::mat4(1.0f);
@@ -168,22 +170,22 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer)
         if (!pixels)
             throw std::runtime_error("failed to load texture image!");
 
-        textureImage = renderer->allocateTexture(texWidth, texHeight, common::Dim2, common::ColorRgba);
+        textureImage = renderer->allocateTexture(texWidth, texHeight, Dim2, ColorRgba);
         textureImage->updateData(pixels);
 
         stbi_image_free(pixels);
     }
 
-    common::basics::OMVertexFormat format;
-    format.appendPart("position", common::basics::Vec3f);
-    format.appendPart("textureUV", common::basics::Vec2f);
+    basics::OMVertexFormat format;
+    format.appendPart("position", basics::Vec3f);
+    format.appendPart("textureUV", basics::Vec2f);
     format.nextGroup();
     format.decideStruct();
     format.debugState();
 
     mainPipeline = renderer->createPipeline();
-    mainPipeline->appendInput(common::UniformBuffer);
-    mainPipeline->appendInput(common::ImageSampler);
+    mainPipeline->appendInput(UniformBuffer);
+    mainPipeline->appendInput(ImageSampler);
     mainPipeline->bindOutput(renderer->getDefaultRenderTarget());
     mainPipeline->attachShader(frgShader);
     mainPipeline->attachShader(vtxShader);
@@ -221,27 +223,27 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
 
     if (w)
     {
-        camera->moveCamera(common::basics::Forward, m_cameraMoveSpeed * time);
+        camera->moveCamera(basics::Forward, m_cameraMoveSpeed * time);
     }
     if (s)
     {
-        camera->moveCamera(common::basics::Back, m_cameraMoveSpeed * time);
+        camera->moveCamera(basics::Back, m_cameraMoveSpeed * time);
     }
     if (a)
     {
-        camera->moveCamera(common::basics::Left, m_cameraMoveSpeed * time);
+        camera->moveCamera(basics::Left, m_cameraMoveSpeed * time);
     }
     if (d)
     {
-        camera->moveCamera(common::basics::Right, m_cameraMoveSpeed * time);
+        camera->moveCamera(basics::Right, m_cameraMoveSpeed * time);
     }
     if (sp)
     {
-        camera->moveCamera(common::basics::Up, m_cameraMoveSpeed * time);
+        camera->moveCamera(basics::Up, m_cameraMoveSpeed * time);
     }
     if (lsh)
     {
-        camera->moveCamera(common::basics::Down, m_cameraMoveSpeed * time);
+        camera->moveCamera(basics::Down, m_cameraMoveSpeed * time);
     }
 }
 
@@ -260,22 +262,22 @@ void OMTestRenderer::submitTasks()
     }
 
     auto ext = renderer->getDefaultRenderTarget()->fetchSize();
-    tempTexture = renderer->allocateTexture(ext.x, ext.y, common::Dim2, common::ColorRgba);
-    tempDepth = renderer->allocateTexture(ext.x, ext.y, common::Dim2, common::Depth);
+    tempTexture = renderer->allocateTexture(ext.x, ext.y, Dim2, ColorRgba);
+    tempDepth = renderer->allocateTexture(ext.x, ext.y, Dim2, Depth);
     renderTarget = renderer->createRenderTarget();
     renderTarget->attachTarget(tempTexture);
     renderTarget->attachTarget(tempDepth);
     renderTarget->build();
 
     pipeline = renderer->createPipeline();
-    pipeline->appendInput(common::UniformBuffer);
-    pipeline->appendInput(common::ImageSampler);
+    pipeline->appendInput(UniformBuffer);
+    pipeline->appendInput(ImageSampler);
     pipeline->bindOutput(renderTarget);
     pipeline->attachShader(frgShader2);
     pipeline->attachShader(vtxShader);
-    common::basics::OMVertexFormat format;
-    format.appendPart("position", common::basics::Vec3f);
-    format.appendPart("textureUV", common::basics::Vec2f);
+    basics::OMVertexFormat format;
+    format.appendPart("position", basics::Vec3f);
+    format.appendPart("textureUV", basics::Vec2f);
     format.nextGroup();
     format.decideStruct();
     format.debugState();

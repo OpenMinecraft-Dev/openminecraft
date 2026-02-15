@@ -18,7 +18,7 @@
 
 #include <memory>
 
-using namespace openminecraft::renderer;
+using namespace openminecraft::renderer::common;
 
 namespace openminecraft::boot::test
 {
@@ -31,7 +31,7 @@ struct UniformStructure
     float sigma;
 };
 
-class OMTestRenderer : public common::OMRendererHandler
+class OMTestRenderer : public OMRendererHandler
 {
   public:
     OMTestRenderer(OMRenderer *renderer);
@@ -41,26 +41,26 @@ class OMTestRenderer : public common::OMRendererHandler
     void beforeFrame() override;
     void afterFrame() override;
 
-    common::OMRendererBuffer *vertexBuffer;
-    common::OMRendererBuffer *indexBuffer;
-    common::OMRendererBuffer *uniformBuffer;
-    common::OMRendererBuffer *tempUniformBuffer;
-    common::OMRendererTexture *textureImage;
-    common::OMRendererPipeline *pipeline;
+    OMRendererBuffer *vertexBuffer;
+    OMRendererBuffer *indexBuffer;
+    OMRendererBuffer *uniformBuffer;
+    OMRendererBuffer *tempUniformBuffer;
+    OMRendererTexture *textureImage;
+    OMRendererPipeline *pipeline;
 
-    common::OMRendererBuffer *mainVtxBuffer;
-    common::OMRendererBuffer *mainIdxBuffer;
+    OMRendererBuffer *mainVtxBuffer;
+    OMRendererBuffer *mainIdxBuffer;
 
-    common::OMRendererPipeline *mainPipeline;
+    OMRendererPipeline *mainPipeline;
 
-    common::OMRendererTexture *tempTexture;
-    common::OMRendererTexture *tempDepth;
-    common::OMRendererRenderTarget *renderTarget;
+    OMRendererTexture *tempTexture;
+    OMRendererTexture *tempDepth;
+    OMRendererRenderTarget *renderTarget;
 
     void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp);
     void mouseOffset(float dx, float dy);
 
-    std::shared_ptr<common::basics::OMCamera> camera;
+    std::shared_ptr<basics::OMCamera> camera;
 
     log::OMLogger logger;
 
@@ -76,9 +76,9 @@ class OMTestRenderer : public common::OMRendererHandler
     float m_cameraMoveSpeed = 2.0f;
     float m_cameraRotateSpeed = 45.0f;
 
-    std::shared_ptr<common::OMShader> vtxShader;
-    std::shared_ptr<common::OMShader> frgShader;
-    std::shared_ptr<common::OMShader> frgShader2;
+    std::shared_ptr<OMShader> vtxShader;
+    std::shared_ptr<OMShader> frgShader;
+    std::shared_ptr<OMShader> frgShader2;
 };
 } // namespace openminecraft::boot::test
 
