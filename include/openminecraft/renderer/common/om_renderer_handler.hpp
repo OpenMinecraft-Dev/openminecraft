@@ -16,7 +16,7 @@ class OMRendererHandler
 
     virtual void beforeFrame() = 0;
     virtual void afterFrame() = 0;
-    virtual void onResize() = 0;
+    virtual void submitTasks() = 0;
 };
 } // namespace openminecraft::renderer::common
 

@@ -26,8 +26,6 @@
 #include <utility>
 #include <vector>
 
-#include "openminecraft/renderer/om_renderer_testrenderer.hpp"
-
 #ifdef OM_VULKAN_DYNAMIC
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 #endif
@@ -203,7 +201,6 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         defaultTarget->build();
         defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height,
                                                    common::Dim2, common::Depth);
-        rebuildDefaults();
 
         for (int i = 0; i < framesInFlight; i++)
         {
@@ -272,10 +269,18 @@ void OMRendererVk::rebuildDefaults()
     }
 }
 
+void OMRendererVk::baseInit()
+{
+    for (auto h : handlers)
+    {
+        h->submitTasks();
+    }
+    rebuildDefaults();
+}
+
 void OMRendererVk::registerHandler(std::shared_ptr<common::OMRendererHandler> handler)
 {
     handlers.push_back(handler);
-    rebuildDefaults();
 }
 void OMRendererVk::clearHandlers()
 {
@@ -431,7 +436,7 @@ reb:
     this->clearTasks();
     for (auto r : handlers)
     {
-        r->onResize();
+        r->submitTasks();
     }
     rebuildDefaults();
     needRebuild = false;

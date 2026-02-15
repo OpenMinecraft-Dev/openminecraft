@@ -41,6 +41,8 @@ class OMRendererOpenGL : public OMRenderer
     void registerHandler(std::shared_ptr<common::OMRendererHandler>) override;
     void clearHandlers() override;
 
+    void baseInit() override;
+
   private:
     void *glContext;
     log::OMLogger logger;

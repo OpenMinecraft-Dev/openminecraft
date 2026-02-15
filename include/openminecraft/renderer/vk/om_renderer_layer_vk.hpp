@@ -72,6 +72,8 @@ class OMRendererVk : public OMRenderer
     void registerHandler(std::shared_ptr<common::OMRendererHandler> handler) override;
     void clearHandlers() override;
 
+    void baseInit() override;
+
     void render();
 
     std::shared_ptr<validation::OMRendererVkValidation> validationLayer;

@@ -104,4 +104,8 @@ void OMRendererOpenGL::clearHandlers()
 {
 }
 
+void OMRendererOpenGL::baseInit()
+{
+}
+
 } // namespace openminecraft::renderer::opengl

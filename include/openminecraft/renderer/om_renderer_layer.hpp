@@ -47,6 +47,8 @@ class OMRenderer
     virtual void registerHandler(std::shared_ptr<common::OMRendererHandler> handler) = 0;
     virtual void clearHandlers() = 0;
 
+    virtual void baseInit() = 0;
+
     virtual glm::vec2 getExtent() const = 0;
 
   protected:

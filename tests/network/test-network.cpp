@@ -27,7 +27,7 @@ int main()
     io_context io;
     ip::tcp::socket socket(io);
     ip::tcp::resolver reso(io);
-    auto temp = reso.resolve("localhost", "25566");
+    auto temp = reso.resolve("MinecraftOnline.com", "25565");
     connect(socket, temp);
 
     auto timestmp = (uint64_t)time(nullptr);

@@ -29,19 +29,22 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer)
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.frag.glsl");
         frgShader = std::make_shared<common::OMShader>(common::GLSLSource, io::readOnce(target.get()),
-                                                       "simple.frag.glsl", "main", common::Fragment);
+                                                       "simple.frag.glsl", "main", common::Fragment)
+                        ->convertTo(common::SPIRVBinary);
     }
 
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple2.frag.glsl");
         frgShader2 = std::make_shared<common::OMShader>(common::GLSLSource, io::readOnce(target.get()),
-                                                        "simple2.frag.glsl", "main", common::Fragment);
+                                                        "simple2.frag.glsl", "main", common::Fragment)
+                         ->convertTo(common::SPIRVBinary);
     }
 
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.vert.glsl");
         vtxShader = std::make_shared<common::OMShader>(common::GLSLSource, io::readOnce(target.get()),
-                                                       "simple.vert.glsl", "main", common::Vertex);
+                                                       "simple.vert.glsl", "main", common::Vertex)
+                        ->convertTo(common::SPIRVBinary);
     }
 
     {
@@ -188,8 +191,6 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer)
     mainPipeline->build();
     mainPipeline->bindInput(0, tempUniformBuffer);
 
-    OMTestRenderer::onResize();
-
     firstTime = false;
 }
 
@@ -248,7 +249,7 @@ void OMTestRenderer::afterFrame()
 {
 }
 
-void OMTestRenderer::onResize()
+void OMTestRenderer::submitTasks()
 {
     if (!firstTime)
     {

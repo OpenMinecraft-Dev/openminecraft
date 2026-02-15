@@ -12,6 +12,8 @@ int boot(std::vector<std::string> args);
 
 void pixeltowerDynTest();
 void pixeltowerLoadTest();
+
+void vulkanRendererTest();
 } // namespace openminecraft::boot
 
 #endif

@@ -35,7 +35,7 @@ class OMTestRenderer : public common::OMRendererHandler
     OMTestRenderer(OMRenderer *renderer);
     ~OMTestRenderer() override;
 
-    void onResize() override;
+    void submitTasks() override;
     void beforeFrame() override;
     void afterFrame() override;
 
