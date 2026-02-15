@@ -18,7 +18,9 @@
 
 #include <memory>
 
-namespace openminecraft::renderer::test
+using namespace openminecraft::renderer;
+
+namespace openminecraft::boot::test
 {
 struct UniformStructure
 {
@@ -78,6 +80,6 @@ class OMTestRenderer : public common::OMRendererHandler
     std::shared_ptr<common::OMShader> frgShader;
     std::shared_ptr<common::OMShader> frgShader2;
 };
-} // namespace openminecraft::renderer::test
+} // namespace openminecraft::boot::test
 
 #endif

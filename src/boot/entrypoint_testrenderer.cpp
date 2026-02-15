@@ -1,4 +1,4 @@
-#include "openminecraft/renderer/om_renderer_testrenderer.hpp"
+#include "openminecraft/boot/entrypoint_testrenderer.hpp"
 
 #include "openminecraft/fontproc/om_font.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
@@ -20,7 +20,7 @@
 
 #include "openminecraft/io/om_io_utils.hpp"
 
-namespace openminecraft::renderer::test
+namespace openminecraft::boot::test
 {
 OMTestRenderer::OMTestRenderer(OMRenderer *renderer)
     : renderer(renderer), logger("OMTestRenderer", this), common::OMRendererHandler(renderer)
@@ -327,4 +327,4 @@ OMTestRenderer::~OMTestRenderer()
     delete renderTarget;
 }
 
-} // namespace openminecraft::renderer::test
+} // namespace openminecraft::boot::test

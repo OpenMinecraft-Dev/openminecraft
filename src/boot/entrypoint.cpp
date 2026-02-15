@@ -1,8 +1,5 @@
 #include <SDL3/SDL_error.h>
 
-#include "SDL3/SDL_events.h"
-#include "SDL3/SDL_keycode.h"
-#include "SDL3/SDL_messagebox.h"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/fontproc/om_font.hpp"
@@ -12,9 +9,7 @@
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include "openminecraft/renderer/om_renderer_testrenderer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
-#include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
@@ -25,7 +20,6 @@
 #include <iostream>
 #include <memory>
 #include <new>
-#include <stdexcept>
 #include <string>
 
 #include <SDL3/SDL.h>
