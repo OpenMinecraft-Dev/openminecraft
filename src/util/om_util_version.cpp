@@ -5,15 +5,15 @@
 namespace openminecraft::util
 {
 Version::Version(uint16_t major, uint16_t minor, uint16_t patch1, uint16_t patch2)
-    : major(major), minor(minor), patch1(patch1), patch2(patch2)
+    : majorver(major), minorver(minor), patch1(patch1), patch2(patch2)
 {
 }
 Version::Version(uint16_t major, uint16_t minor, uint16_t patch1)
-    : major(major), minor(minor), patch1(patch1), patch2(0)
+    : majorver(major), minorver(minor), patch1(patch1), patch2(0)
 {
 }
 Version::Version(uint32_t vkver)
-    : major(VK_VERSION_MAJOR(vkver)), minor(VK_VERSION_MINOR(vkver)), patch1(VK_VERSION_PATCH(vkver)), patch2(0)
+    : majorver(VK_VERSION_MAJOR(vkver)), minorver(VK_VERSION_MINOR(vkver)), patch1(VK_VERSION_PATCH(vkver)), patch2(0)
 {
 }
 Version::~Version()
@@ -21,14 +21,14 @@ Version::~Version()
 }
 std::string Version::toString()
 {
-    return fmt::format("{}.{}.{}.{}", major, minor, patch1, patch2);
+    return fmt::format("{}.{}.{}.{}", majorver, minorver, patch1, patch2);
 }
 int Version::toVKVersion()
 {
-    return VK_MAKE_VERSION(major, minor, patch1);
+    return VK_MAKE_VERSION(majorver, minorver, patch1);
 }
 int Version::toVKApiVersion()
 {
-    return VK_MAKE_API_VERSION(major, minor, patch1, patch2);
+    return VK_MAKE_API_VERSION(majorver, minorver, patch1, patch2);
 }
 } // namespace openminecraft::util

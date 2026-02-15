@@ -8,8 +8,8 @@ namespace openminecraft::renderer::opengl
 OMRendererOpenGL::OMRendererOpenGL(AppInfo info, void *window)
     : OMRenderer(info, window), logger("OMRendererOpenGL", this)
 {
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, info.minApiVersion.major);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, info.minApiVersion.minor);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, info.minApiVersion.majorver);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, info.minApiVersion.minorver);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     glContext = SDL_GL_CreateContext(reinterpret_cast<SDL_Window *>(window));

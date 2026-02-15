@@ -19,8 +19,8 @@ class Version
     int toVKVersion();
     int toVKApiVersion();
 
-    const uint16_t major;
-    const uint16_t minor;
+    const uint16_t majorver;
+    const uint16_t minorver;
     const uint16_t patch1;
     const uint16_t patch2;
 };
