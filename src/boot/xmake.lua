@@ -10,7 +10,6 @@ add_packages(
 	"nlohmann_json",
 	"glm",
 	"harfbuzz",
-	"freetype",
 	"tinyobjloader",
 	"stb"
 )

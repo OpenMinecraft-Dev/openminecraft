@@ -28,7 +28,6 @@ if not is_plat("harmony", "mingw") then
 end
 
 add_requires(
-	"freetype",
 	"stb",
 	"vulkan-headers",
 	"glm",
@@ -105,7 +104,6 @@ if is_plat("mingw") then
 	add_links("dbghelp")
 end
 add_packages(
-	"freetype",
 	"harfbuzz",
 	"stb",
 	"vulkan-headers",
@@ -226,7 +224,6 @@ add_deps(
 )
 
 add_packages(
-	"freetype",
 	"harfbuzz",
 	"stb",
 	"vulkan-headers",
