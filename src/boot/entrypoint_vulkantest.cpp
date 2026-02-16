@@ -1,10 +1,10 @@
 #include "SDL3/SDL.h"
+#include "openminecraft/boot/entrypoint_testrenderer.hpp"
 #include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
-#include "openminecraft/boot/entrypoint_testrenderer.hpp"
 
 namespace openminecraft::boot
 {

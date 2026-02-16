@@ -30,23 +30,23 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     camera = std::make_shared<basics::OMCamera>(renderer, m_cameraPos, m_yaw, m_pitch);
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.frag.glsl");
-        frgShader = std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()),
-                                                       "simple.frag.glsl", "main", Fragment)
-                        ->convertTo(SPIRVBinary);
+        frgShader =
+            std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), "simple.frag.glsl", "main", Fragment)
+                ->convertTo(SPIRVBinary);
     }
 
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple2.frag.glsl");
-        frgShader2 = std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()),
-                                                        "simple2.frag.glsl", "main", Fragment)
-                         ->convertTo(SPIRVBinary);
+        frgShader2 =
+            std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), "simple2.frag.glsl", "main", Fragment)
+                ->convertTo(SPIRVBinary);
     }
 
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.vert.glsl");
-        vtxShader = std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()),
-                                                       "simple.vert.glsl", "main", Vertex)
-                        ->convertTo(SPIRVBinary);
+        vtxShader =
+            std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), "simple.vert.glsl", "main", Vertex)
+                ->convertTo(SPIRVBinary);
     }
 
     {
