@@ -112,11 +112,6 @@ jobs:
 
           - os: ubuntu-latest
             plat: freebsd
-            arch: x86
-            loaderarch: x86
-
-          - os: ubuntu-latest
-            plat: freebsd
             arch: arm64
             loaderarch: arm64
 

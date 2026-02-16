@@ -328,7 +328,7 @@ static void crash_handler(int sig, siginfo_t *info, void *context)
     pc = (void *)uc->context_pc;
 #define storeReg(n, idx) registers[n] = (void *)uc->##idx;
     registers["lr"] = (void *)uc->context_lr;
-    registers["fp"] = (void *)uc->context_fp;
+    // registers["fp"] = (void *)uc->context_fp;
     registers["sp"] = (void *)uc->context_sp;
     for (int xi = 0; xi < 31; xi++)
     {
