@@ -110,6 +110,26 @@ jobs:
             arch: x86_64
             loaderarch: amd64
 
+          - os: ubuntu-latest
+            plat: freebsd
+            arch: x86
+            loaderarch: x86
+
+          - os: ubuntu-latest
+            plat: freebsd
+            arch: arm64
+            loaderarch: arm64
+
+          - os: ubuntu-latest
+            plat: freebsd
+            arch: riscv64
+            loaderarch: riscv64
+
+          - os: ubuntu-latest
+            plat: freebsd
+            arch: ppc64
+            loaderarch: ppc64
+
     name: Build ${{ matrix.plat }}-${{ matrix.loaderarch }}
     runs-on: ${{ matrix.os }}
     steps:
