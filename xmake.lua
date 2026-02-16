@@ -22,9 +22,6 @@ end
 if apple() then
 	add_requires("moltenvk", { configs = { shared = false } })
 end
-if not is_plat("harmony", "mingw") then
-	add_requires("openal-soft")
-end
 
 add_requires(
 	"stb",
@@ -96,9 +93,6 @@ includes("tests/xmake.lua")
 target("openminecraft-plat")
 set_kind("static")
 add_includedirs("include")
-if not is_plat("harmony", "mingw") then
-	add_packages("openal-soft", { system = false })
-end
 -- mingw require this
 if is_plat("mingw") then
 	add_links("dbghelp")
