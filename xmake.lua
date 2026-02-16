@@ -6,7 +6,6 @@ add_rules("mode.debug")
 add_rules("mode.check")
 
 includes("utils.lua")
-includes("extlibs/libpatches.lua")
 includes("extlibs/vulkan.lua")
 
 if not is_plat("windows") then
