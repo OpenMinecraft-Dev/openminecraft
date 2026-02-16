@@ -159,21 +159,19 @@ jobs:
       - name: Setup Python packages
         run: pip install wheel
 
-      - name: Cache xmake results (UNIX)
-        uses: actions/cache@v4
+      - name: Restore xmake packages (UNIX)
         if: matrix.plat != 'windows'
+        uses: actions/cache/restore@v5
         with:
           path: ~/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake
-          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake
+        key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake
 
-      - name: Cache xmake results (Windows)
-        uses: actions/cache@v4
+      - name: Restore xmake packages (Windows)
         if: matrix.plat == 'windows'
+        uses: actions/cache/restore@v5
         with:
           path: C:/Users/runneradmin/AppData/Local/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake
-          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-xmake
+        key: ${{ matrix.plat }}-${{ matrix.arch }}-xmake
 
       - name: Generate header
         run: |
@@ -245,6 +243,20 @@ jobs:
       - name: Configure Windows
         if: matrix.plat == 'windows'
         run: xmake f --toolchain=msvc -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+
+      - name: Save xmake packages (UNIX)
+        if: matrix.plat != 'windows'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.xmake/packages
+        key: ${{ steps.cache-primes-restore.outputs.cache-primary-key }}
+
+      - name: Save xmake packages (Windows)
+        if: matrix.plat == 'windows'
+        uses: actions/cache/save@v5
+        with:
+          path: C:/Users/runneradmin/AppData/Local/.xmake/packages
+        key: ${{ steps.cache-primes-restore.outputs.cache-primary-key }}
 
       - name: Build
         run: xmake -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }}
