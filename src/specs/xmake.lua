@@ -1,6 +1,6 @@
 target("openminecraft-specs")
 set_kind("static")
 add_files("**.cpp")
-add_packages("fmt")
+add_packages("fmt", "zlib")
 add_deps("openminecraft-log", "openminecraft-binary")
 add_includedirs("../../include")

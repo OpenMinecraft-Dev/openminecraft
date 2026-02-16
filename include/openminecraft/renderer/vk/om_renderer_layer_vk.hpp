@@ -74,7 +74,8 @@ class OMRendererVk : public OMRenderer
 
     void baseInit() override;
 
-    void render();
+    void render() override;
+    void requestResize() override;
 
     std::shared_ptr<validation::OMRendererVkValidation> validationLayer;
     std::shared_ptr<swapchain::OMSwapchainManager> swapchainManager;

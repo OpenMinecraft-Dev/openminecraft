@@ -447,6 +447,11 @@ reb:
     }
 }
 
+void OMRendererVk::requestResize()
+{
+    this->needRebuild = true;
+}
+
 swapchain::OMSwapchainCap OMRendererVk::getSwapchainCap()
 {
     return swapchain::OMSwapchainCap{physicalDevice.getSurfaceCapabilitiesKHR(surface),
@@ -681,6 +686,7 @@ void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAll
 }
 OMRendererVk::~OMRendererVk()
 {
+    logicalDevice.waitIdle();
     for (auto sync : frameSyncs)
     {
         logicalDevice.destroySemaphore(sync.imageAvailableSemaphore, allocator);

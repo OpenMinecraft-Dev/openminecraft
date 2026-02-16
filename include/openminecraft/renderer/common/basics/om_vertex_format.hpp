@@ -3,7 +3,6 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include <string>
-#include <utility>
 #include <vector>
 namespace openminecraft::renderer::common::basics
 {

@@ -108,4 +108,11 @@ void OMRendererOpenGL::baseInit()
 {
 }
 
+void OMRendererOpenGL::render()
+{
+}
+
+void OMRendererOpenGL::requestResize()
+{
+}
 } // namespace openminecraft::renderer::opengl

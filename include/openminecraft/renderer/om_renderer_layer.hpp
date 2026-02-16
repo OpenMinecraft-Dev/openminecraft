@@ -51,6 +51,9 @@ class OMRenderer
 
     virtual glm::vec2 getExtent() const = 0;
 
+    virtual void render() = 0;
+    virtual void requestResize() = 0;
+
   protected:
     void *window;
 

@@ -13,6 +13,7 @@
 
 #include <chrono>
 #include <glm/glm.hpp>
+#include <stdexcept>
 
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -48,6 +49,13 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
             std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), "simple.vert.glsl", "main", Vertex)
                 ->convertTo(SPIRVBinary);
     }
+
+    basics::OMVertexFormat format;
+    format.appendPart("position", basics::Vec3f);
+    format.appendPart("textureUV", basics::Vec2f);
+    format.nextGroup();
+    format.decideStruct();
+    format.debugState();
 
     {
         class VertexPart
@@ -175,13 +183,6 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
 
         stbi_image_free(pixels);
     }
-
-    basics::OMVertexFormat format;
-    format.appendPart("position", basics::Vec3f);
-    format.appendPart("textureUV", basics::Vec2f);
-    format.nextGroup();
-    format.decideStruct();
-    format.debugState();
 
     mainPipeline = renderer->createPipeline();
     mainPipeline->appendInput(UniformBuffer);

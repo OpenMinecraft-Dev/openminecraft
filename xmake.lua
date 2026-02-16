@@ -31,6 +31,7 @@ add_requires(
 	"tinyobjloader",
 	"opengl-headers",
 	"bullet3",
+	"zlib",
 	{ system = false }
 )
 add_requires("boost", { system = false, configs = { stacktrace = true, asio = true } })

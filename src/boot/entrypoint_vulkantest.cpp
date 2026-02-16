@@ -95,7 +95,7 @@ void vulkanRendererTest()
 
             if (e.type == SDL_EVENT_WINDOW_RESIZED)
             {
-                renderer->needRebuild = true;
+                renderer->requestResize();
             }
 
             if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
@@ -112,7 +112,6 @@ void vulkanRendererTest()
 
             if (e.type == SDL_EVENT_QUIT)
             {
-                renderer->logicalDevice.waitIdle();
                 break;
             }
 

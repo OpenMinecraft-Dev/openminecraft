@@ -1,4 +1,6 @@
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
+#include "glm/glm.hpp"
+#include <cstdint>
 #include <tuple>
 
 namespace openminecraft::renderer::common::basics

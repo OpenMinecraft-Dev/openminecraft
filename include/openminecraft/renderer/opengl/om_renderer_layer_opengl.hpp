@@ -43,6 +43,9 @@ class OMRendererOpenGL : public OMRenderer
 
     void baseInit() override;
 
+    void render() override;
+    void requestResize() override;
+
   private:
     void *glContext;
     log::OMLogger logger;
