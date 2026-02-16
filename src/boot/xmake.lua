@@ -11,6 +11,7 @@ add_packages(
 	"glm",
 	"harfbuzz",
 	"tinyobjloader",
+	"bullet3",
 	"stb"
 )
 add_deps(
