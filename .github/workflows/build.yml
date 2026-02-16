@@ -160,7 +160,7 @@ jobs:
         run: pip install wheel
 
       - name: Restore xmake packages (UNIX)
-        if: matrix.plat != 'windows' && false
+        if: matrix.plat != 'windows'
         uses: actions/cache/restore@v5
         with:
           path: ~/.xmake/packages
@@ -245,7 +245,7 @@ jobs:
         run: xmake f --toolchain=msvc -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
 
       - name: Save xmake packages (UNIX)
-        if: matrix.plat != 'windows' && false
+        if: matrix.plat != 'windows'
         uses: actions/cache/save@v5
         with:
           path: ~/.xmake/packages
