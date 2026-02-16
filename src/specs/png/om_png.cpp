@@ -1,6 +1,5 @@
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
-#include "openminecraft/mem/om_mem_allocator.hpp"
 #include "zlib.h"
 #include <cstdint>
 #include <iostream>
@@ -34,7 +33,7 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
         cnk.length = length;
         istr->read(cnk.name, 4);
 
-        auto datac = mem::allocator::tracedMallocParser(length);
+        auto datac = malloc(length);
         istr->read(reinterpret_cast<char *>(datac), length);
         cnk.data = datac;
 
