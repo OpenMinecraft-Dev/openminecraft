@@ -14,6 +14,7 @@ namespace openminecraft::mem::allocator
 defmal(SDL);
 defmal(GL);
 defmal(VMData);
+defmal(Parser);
 } // namespace openminecraft::mem::allocator
 
 #endif

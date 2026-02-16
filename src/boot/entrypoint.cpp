@@ -10,6 +10,7 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
+#include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
@@ -118,6 +119,11 @@ int boot(std::vector<std::string> args)
         }
         case "crash"_hash: {
             logger->info("{}", *reinterpret_cast<int *>(33550336));
+        }
+        case "png"_hash: {
+            specs::png::OMPngFile pf(std::make_shared<std::ifstream>("/home/coder2/avatars/Coder2.png"));
+            logger->info("test!");
+            break;
         }
         default:
             logger->warn("unknown command!");
