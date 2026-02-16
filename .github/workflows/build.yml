@@ -123,6 +123,12 @@ jobs:
             arch: arm64
             loaderarch: arm64
 
+          - os: ubuntu-latest
+            name: FreeBSD (x86_64)
+            plat: freebsd
+            arch: x86_64
+            loaderarch: x64
+
 
     name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
@@ -146,9 +152,14 @@ jobs:
         if: matrix.plat != 'freebsd'
         uses: xmake-io/github-action-setup-xmake@v1
 
-      - name: Update xmake repo
-        if: matrix.plat != 'freebsd'
-        run: xmake repo -u
+      - name: Install xmake from source
+        if: matrix.plat == 'freebsd'
+        run: |
+          git clone https://github.com/OpenMinecraft-Dev/xmake
+          cd xmake
+          git submodule update --recursive --init
+          ./scripts/get.sh __local__
+          source ~/.xmake/profile
 
       - name: Setup Python packages
         run: pip install wheel
@@ -236,6 +247,17 @@ jobs:
           rm llvm-toolchain-linux-debian-${{ matrix.arch }}.tar.xz
 
           xmake f --toolchain=llvm --sdk=${{ github.workspace }}/toolchain -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+      - name: Configure FreeBSD Cross
+        if: ${{ matrix.plat == 'freebsd' }}
+        run: |
+          sudo apt update
+          sudo apt install clang llvm
+          wget https://github.com/OpenMinecraft-Dev/cross-toolchain-sysroot/releases/download/${{ env.CROSS_TOOL_VERSION }}/llvm-toolchain-freebsd-${{ matrix.arch }}.tar.xz
+          mkdir toolchain
+          tar -xJf llvm-toolchain-freebsd-${{ matrix.arch }}.tar.xz -C ./toolchain/
+          rm llvm-toolchain-freebsd-${{ matrix.arch }}.tar.xz
+
+          xmake f --toolchain=llvm --sdk=${{ github.workspace }}/toolchain -a ${{ matrix.arch }} -m ${{ env.MODE }} -p bsd --target_os=FreeBSD -yc ${{ env.XMAKE_ARGS }}
 
       - name: Configure Windows
         if: matrix.plat == 'windows'
