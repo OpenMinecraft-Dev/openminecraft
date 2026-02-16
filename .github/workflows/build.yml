@@ -176,8 +176,8 @@ jobs:
       - name: Generate header
         run: |
           xmake f -yc ${{ env.XMAKE_ARGS }}
-          xmake -v -b openminecraft-bundlemaker
-          xmake run -w . openminecraft-bundlemaker -a Cyrene -c -t res.bundle -P bootassets
+          xmake -y -v -b openminecraft-bundlemaker
+          xmake run -y -w . openminecraft-bundlemaker -a Cyrene -c -t res.bundle -P bootassets
           xxd -i res.bundle > include/openminecraft/resource/bootassets.h
           rm res.bundle
 
