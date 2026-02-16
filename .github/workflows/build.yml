@@ -164,18 +164,6 @@ jobs:
       - name: Setup Python packages
         run: pip install wheel
 
-      - name: Free Disk Space
-        if: matrix.plat == 'freebsd'
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: true
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
-
       - name: Cache xmake results (UNIX)
         uses: actions/cache@v4
         if: matrix.plat != 'windows'
