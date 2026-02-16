@@ -16,121 +16,101 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            name: Windows (x64)
             plat: windows
             arch: x64
-            loaderarch: x64
+            loaderarch: amd64
 
           - os: windows-latest
-            name: Windows (x86)
             plat: windows
             arch: x86
             loaderarch: x86
 
           - os: windows-latest
-            name: Windows (arm64)
             plat: windows
             arch: arm64
             loaderarch: arm64
 
           # - os: ubuntu-22.04
-          #   name: OpenHarmony (arm64)
           #   plat: harmony
           #   arch: arm64-v8a
           #   loaderarch: arm64
 
           # - os: ubuntu-22.04
-          #   name: OpenHarmony (arm32)
           #   plat: harmony
           #   arch: armeabi-v7a
           #   loaderarch: arm32
 
           # - os: ubuntu-22.04
-          #   name: OpenHarmony (x64)
           #   plat: harmony
           #   arch: x86_64
-          #   loaderarch: x64
+          #   loaderarch: amd64
 
           - os: ubuntu-22.04
-            name: Android (arm64)
             plat: android
             arch: arm64-v8a
             loaderarch: arm64
 
           - os: ubuntu-22.04
-            name: Android (arm32)
             plat: android
             arch: armeabi-v7a
             loaderarch: arm32
 
           - os: ubuntu-22.04
-            name: Android (x64)
             plat: android
             arch: x86_64
-            loaderarch: x64
+            loaderarch: amd64
 
           - os: ubuntu-22.04
-            name: Linux (x64)
             plat: linux
             arch: x64
-            loaderarch: x64
+            loaderarch: amd64
 
           - os: ubuntu-24.04-arm
-            name: Linux (arm64)
             plat: linux
             arch: arm64
             loaderarch: arm64
 
           - os: ubuntu-latest
-            name: Linux (LoongArch Cross)
             plat: linux-cross
             arch: loong64
             loaderarch: loong64
 
           - os: ubuntu-latest
-            name: Linux (RISCV Cross)
             plat: linux-cross
             arch: riscv64
             loaderarch: riscv64
 
           - os: ubuntu-latest
-            name: Linux (S390X Cross)
             plat: linux-cross
             arch: s390x
             loaderarch: s390x
 
           - os: ubuntu-latest
-            name: Linux (PowerPC Cross)
             plat: linux-cross
             arch: ppc64
             loaderarch: ppc64
 
           - os: macos-latest
-            name: MacOS (arm64)
             plat: macos
             arch: arm64
             loaderarch: arm64
 
           - os: macos-15-intel
-            name: MacOS (x64)
             plat: macos
             arch: x64
-            loaderarch: x64
+            loaderarch: amd64
 
           - os: macos-latest
-            name: IOS
             plat: ios
             arch: arm64
             loaderarch: arm64
 
           - os: ubuntu-latest
-            name: FreeBSD (x86_64)
             plat: freebsd
             arch: x86_64
-            loaderarch: x64
+            loaderarch: amd64
 
-
-    name: Build ${{ matrix.name }}
+    name: Build ${{ matrix.plat }}-${{ matrix.loaderarch }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
