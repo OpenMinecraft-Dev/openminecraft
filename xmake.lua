@@ -12,8 +12,6 @@ if not is_plat("windows") then
 	add_ldflags("-rdynamic")
 end
 
-includes("extlibs/shaderc.lua")
-
 if not mobile() then
 	if not is_plat("linux", "cross", "bsd", "macosx", "iphoneos", "visionos", "mingw") then
 		add_requires("vulkan-loader", { system = false })
