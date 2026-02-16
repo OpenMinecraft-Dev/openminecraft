@@ -43,7 +43,7 @@ add_requires("boost", { system = false, configs = { stacktrace = true, asio = tr
 add_requires("fmt", { system = false, configs = { header_only = true } })
 add_requires("harfbuzz", { system = false, configs = { freetype = false } })
 
-if apple() then
+if apple() or is_plat("bsd") then
 	add_defines("BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED=")
 end
 if vulkandyn() then
