@@ -22,6 +22,7 @@
 #include <memory>
 #include <new>
 #include <string>
+#include <fstream>
 
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
@@ -121,8 +122,8 @@ int boot(std::vector<std::string> args)
             logger->info("{}", *reinterpret_cast<int *>(33550336));
         }
         case "png"_hash: {
-            std::ifstream ist("/home/coder2/avatars/Coder2.png");
-            specs::png::OMPngFile pf(&ist);
+            auto ist = std::make_shared<std::ifstream>("/home/coder2/avatars/Coder2.png");
+            specs::png::OMPngFile pf(ist);
             logger->info("test!");
             break;
         }

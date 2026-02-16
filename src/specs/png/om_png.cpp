@@ -10,7 +10,7 @@
 
 namespace openminecraft::specs::png
 {
-OMPngFile::OMPngFile(std::istream *istr)
+OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
 {
     std::array<uint8_t, 8> hd = {};
     istr->read(reinterpret_cast<char *>(hd.data()), 8);

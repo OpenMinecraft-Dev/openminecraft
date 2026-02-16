@@ -20,7 +20,7 @@ struct OMPngChunk
 class OMPngFile
 {
   public:
-    OMPngFile(std::istream *istr);
+    OMPngFile(std::shared_ptr<std::istream> istr);
     ~OMPngFile();
 };
 } // namespace openminecraft::specs::png
