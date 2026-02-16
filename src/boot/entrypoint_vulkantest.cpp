@@ -5,6 +5,7 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
+#include <memory>
 
 namespace openminecraft::boot
 {
