@@ -1,11 +1,9 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 
-#include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include <cstdio>
 #include <string>
 
-using namespace openminecraft::i18n::res;
 namespace openminecraft::mem::castorice
 {
 struct OMMemEntry
@@ -81,14 +79,14 @@ std::string toDataSize(uint64_t l)
 
 void printres()
 {
-    logger.info(translate("openminecraft.mem.title"));
-    logger.info(translate("openminecraft.mem.blocks", blocks));
+    logger.info("Memory blocks");
+    logger.info("{} blocks recorded", blocks);
     uint64_t data = 0;
     for (int i = 0; i < entryLength; i++)
     {
         data += entries[i].size;
-        logger.info(translate("openminecraft.mem.detail", entries[i].tag, toDataSize(entries[i].size)));
+        logger.info("{} => {}", entries[i].tag, toDataSize(entries[i].size));
     }
-    logger.info(translate("openminecraft.mem.detail", "*", toDataSize(data)));
+    logger.info("* => {}", toDataSize(data));
 }
 } // namespace openminecraft::mem::castorice
