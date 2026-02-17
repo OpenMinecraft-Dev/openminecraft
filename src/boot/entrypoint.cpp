@@ -18,11 +18,11 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <new>
 #include <string>
-#include <fstream>
 
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
