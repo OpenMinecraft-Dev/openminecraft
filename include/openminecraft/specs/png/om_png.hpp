@@ -1,6 +1,7 @@
 #ifndef OM_PNG_HPP
 #define OM_PNG_HPP
 
+#include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include <array>
 #include <cstdint>
 #include <istream>
@@ -9,6 +10,7 @@
 namespace openminecraft::specs::png
 {
 constexpr std::array<uint8_t, 8> header = {0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a};
+constexpr const char allocatorTag[] = "parser-png";
 
 enum OMPngColorType : uint8_t
 {
@@ -21,9 +23,8 @@ enum OMPngColorType : uint8_t
 
 struct OMPngChunk
 {
-    uint64_t length;
     char name[4];
-    void *data;
+    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> data;
     uint32_t crc;
 };
 
@@ -59,7 +60,7 @@ class OMPngFile
 
     void *dataBuffer;
     OMPngHead head;
-    std::vector<int> palette;
+    std::vector<int, mem::OMStlAllocator<allocatorTag, int>> palette;
 
     uint64_t crcTable[256];
     bool crcCalc = false;

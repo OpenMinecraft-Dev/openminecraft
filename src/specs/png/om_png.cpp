@@ -2,6 +2,7 @@
 #include "fmt/format.h"
 #include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "zlib.h"
 #include <cstdint>
 #include <cstring>
@@ -9,7 +10,6 @@
 #include <iostream>
 #include <istream>
 #include <memory>
-#include <ostream>
 #include <stdexcept>
 #include <vector>
 
@@ -35,13 +35,11 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
         istr->read(reinterpret_cast<char *>(&length), 4);
         length = binary::be32ToNative(length);
 
-        cnk.length = length;
+        cnk.data = {};
+        cnk.data.resize(length);
+
         istr->read(cnk.name, 4);
-
-        auto datac = mem::allocator::tracedMallocParser(length);
-        istr->read(reinterpret_cast<char *>(datac), length);
-        cnk.data = datac;
-
+        istr->read(reinterpret_cast<char *>(cnk.data.data()), length);
         istr->read(reinterpret_cast<char *>(&cnk.crc), 4);
         cnk.crc = binary::be32ToNative(cnk.crc);
 
@@ -50,10 +48,6 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
         auto res = crc(cnk);
         if (res != cnk.crc)
         {
-            for (auto c : chunks)
-            {
-                mem::allocator::tracedFreeParser(c.data);
-            }
             throw std::runtime_error(fmt::format("crc check failed at 0x{:x}, expected {:x}, actual {:x}",
                                                  static_cast<uint64_t>(istr->tellg()), cnk.crc, res));
         }
@@ -75,21 +69,21 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
     {
         if (!std::memcmp(chunk.name, "IDAT", 4))
         {
-            std::memcpy(tempB, chunk.data, chunk.length);
-            tempB += chunk.length;
+            std::memcpy(tempB, chunk.data.data(), chunk.data.size());
+            tempB += chunk.data.size();
         }
 
         if (!std::memcmp(chunk.name, "IHDR", 4))
         {
-            std::memcpy(&this->head, chunk.data, sizeof(OMPngHead));
+            std::memcpy(&this->head, chunk.data.data(), sizeof(OMPngHead));
             head.width = binary::be32ToNative(head.width);
             head.height = binary::be32ToNative(head.height);
         }
 
         if (!std::memcmp(chunk.name, "PLTE", 4))
         {
-            auto mm = reinterpret_cast<uint8_t *>(chunk.data);
-            for (int i = 0; i < chunk.length / 3; i++)
+            auto mm = chunk.data;
+            for (int i = 0; i < chunk.data.size() / 3; i++)
             {
                 palette.push_back((mm[i * 3] << 24) | (mm[i * 3 + 1] << 16) | (mm[i * 3 + 2] << 8) | 0xff);
             }
@@ -97,17 +91,14 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
 
         if (!std::memcmp(chunk.name, "tRNS", 4))
         {
-            auto mm = reinterpret_cast<uint8_t *>(chunk.data);
             int i = 0;
             for (auto &pp : palette)
             {
                 pp &= 0xffffff00;
-                pp |= mm[i];
+                pp |= chunk.data[i];
                 i++;
             }
         }
-
-        mem::allocator::tracedFreeParser(chunk.data);
     }
 
     z_stream strm = {0};
@@ -447,10 +438,10 @@ uint64_t OMPngFile::updateCrc(uint64_t crc, void *dd, int length)
 
 uint64_t OMPngFile::crc(OMPngChunk chunk)
 {
-    auto buf = mem::allocator::tracedMallocParser(chunk.length + 4);
+    auto buf = mem::allocator::tracedMallocParser(chunk.data.size() + 4);
     std::memcpy(buf, chunk.name, 4);
-    std::memcpy(reinterpret_cast<uint8_t *>(buf) + 4, chunk.data, chunk.length);
-    auto m = updateCrc(0xffffffffL, buf, chunk.length + 4) ^ 0xffffffffL;
+    std::memcpy(reinterpret_cast<uint8_t *>(buf) + 4, chunk.data.data(), chunk.data.size());
+    auto m = updateCrc(0xffffffffL, buf, chunk.data.size() + 4) ^ 0xffffffffL;
     mem::allocator::tracedFreeParser(buf);
     return m;
 }
