@@ -122,7 +122,7 @@ int boot(std::vector<std::string> args)
             logger->info("{}", *reinterpret_cast<int *>(33550336));
         }
         case "png"_hash: {
-            auto ist = std::make_shared<std::ifstream>("/home/coder2/avatars/Coder2.png");
+            auto ist = std::make_shared<std::ifstream>("/home/coder2/output.png", std::ios::binary);
             specs::png::OMPngFile pf(ist);
             logger->info("test!");
             break;
