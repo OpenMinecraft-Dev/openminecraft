@@ -8,16 +8,13 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
+#include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "tiny_obj_loader.h"
 
 #include <chrono>
 #include <glm/glm.hpp>
 #include <stdexcept>
-
-#define STB_IMAGE_IMPLEMENTATION
-
-#include <stb_image.h>
 
 #include "openminecraft/io/om_io_utils.hpp"
 
@@ -168,20 +165,12 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     tempUniformBuffer->updateData(&stru);
 
     {
-        int texWidth, texHeight, texChannels;
-
         auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/viking_room.png");
-        auto tex = io::readOnce(imgraw.get());
 
-        stbi_uc *pixels =
-            stbi_load_from_memory(tex.data(), tex.size(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-        if (!pixels)
-            throw std::runtime_error("failed to load texture image!");
+        specs::png::OMPngFile pngfile(imgraw);
 
-        textureImage = renderer->allocateTexture(texWidth, texHeight, Dim2, ColorRgba);
-        textureImage->updateData(pixels);
-
-        stbi_image_free(pixels);
+        textureImage = renderer->allocateTexture(pngfile.getWidth(), pngfile.getHeight(), Dim2, ColorRgba);
+        textureImage->updateData(pngfile.fetchData());
     }
 
     mainPipeline = renderer->createPipeline();

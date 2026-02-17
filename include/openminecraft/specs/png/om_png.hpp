@@ -44,6 +44,11 @@ class OMPngFile
     OMPngFile(std::shared_ptr<std::istream> istr);
     ~OMPngFile();
 
+    void *fetchData();
+    int getWidth();
+    int getHeight();
+
+  private:
     uint32_t getStride();
     int getBytesPerPixel();
 
@@ -52,7 +57,6 @@ class OMPngFile
     uint8_t getBufferC(int y, int x);
     uint8_t getPaethPred(int a, int b, int c);
 
-  private:
     void *dataBuffer;
     OMPngHead head;
     std::vector<int> palette;

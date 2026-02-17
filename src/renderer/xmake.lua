@@ -1,6 +1,6 @@
 target("openminecraft-renderer")
 set_kind("static")
 add_deps("openminecraft-fontproc")
-add_packages("shaderc", "glm", "fmt", "boost", "vulkan-hpp", "libsdl3", "stb", "tinyobjloader", "opengl-headers")
+add_packages("shaderc", "glm", "fmt", "boost", "vulkan-hpp", "libsdl3", "tinyobjloader", "opengl-headers")
 add_files("**.cpp")
 add_includedirs("../../include")

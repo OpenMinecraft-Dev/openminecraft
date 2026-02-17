@@ -16,45 +16,45 @@ includes("extlibs/vulkan.lua")
 --------------------------------------------------------------------------------
 
 if not is_plat("windows") then
-    add_ldflags("-rdynamic")
+	add_ldflags("-rdynamic")
 end
 
 -- Platform macros
 if not is_plat("windows", "mingw") then
-    add_defines("OM_PLATFORM_UNIX=")
+	add_defines("OM_PLATFORM_UNIX=")
 end
 if is_plat("windows", "mingw") then
-    add_defines("OM_PLATFORM_WINDOWS=")
+	add_defines("OM_PLATFORM_WINDOWS=")
 end
 if is_plat("linux") then
-    add_defines("OM_PLATFORM_LINUX=")
+	add_defines("OM_PLATFORM_LINUX=")
 end
 if is_plat("bsd") then
-    add_defines("OM_PLATFORM_BSD=")
+	add_defines("OM_PLATFORM_BSD=")
 end
 if is_plat("macosx") then
-    add_defines("OM_PLATFORM_MACOS=")
+	add_defines("OM_PLATFORM_MACOS=")
 end
 if is_plat("android") then
-    add_defines("OM_PLATFORM_ANDROID=")
+	add_defines("OM_PLATFORM_ANDROID=")
 end
 if is_plat("iphoneos") then
-    add_defines("OM_PLATFORM_IOS=")
+	add_defines("OM_PLATFORM_IOS=")
 end
 if is_plat("harmony") then
-    add_defines("OM_PLATFORM_HARMONY=")
+	add_defines("OM_PLATFORM_HARMONY=")
 end
 if not mobile() then
-    add_defines("OM_PLATFORM_DESKTOP=")
+	add_defines("OM_PLATFORM_DESKTOP=")
 end
 
 if apple() or is_plat("bsd") then
-    add_defines("BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED=")
+	add_defines("BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED=")
 end
 
 -- Vulkan dynamic loading
 if vulkandyn() then
-    add_defines("OM_VULKAN_DYNAMIC=")
+	add_defines("OM_VULKAN_DYNAMIC=")
 end
 
 --------------------------------------------------------------------------------
@@ -63,27 +63,26 @@ end
 
 -- Static vulkan loader
 if not mobile() then
-    if not is_plat("linux", "cross", "bsd", "macosx", "iphoneos", "visionos", "mingw") then
-        add_requires("vulkan-loader", { system = false })
-    end
+	if not is_plat("linux", "cross", "bsd", "macosx", "iphoneos", "visionos", "mingw") then
+		add_requires("vulkan-loader", { system = false })
+	end
 end
 
 -- MoltenVK for apple platforms
 if apple() then
-    add_requires("moltenvk", { configs = { shared = false } })
+	add_requires("moltenvk", { configs = { shared = false } })
 end
 
 add_requires(
-    "stb",
-    "vulkan-headers",
-    "glm",
-    "vulkan-hpp",
-    "shaderc",
-    "libsdl3",
-    "tinyobjloader",
-    "opengl-headers",
-    "bullet3",
-    { system = false }
+	"vulkan-headers",
+	"glm",
+	"vulkan-hpp",
+	"shaderc",
+	"libsdl3",
+	"tinyobjloader",
+	"opengl-headers",
+	"bullet3",
+	{ system = false }
 )
 add_requires("zlib", { system = false, debug = true })
 add_requires("boost", { system = false, configs = { stacktrace = true, asio = true } })
@@ -95,98 +94,97 @@ add_requires("harfbuzz", { system = false, configs = { freetype = false } })
 --------------------------------------------------------------------------------
 
 target("openminecraft-plat")
-    set_kind("static")
-    add_includedirs("include")
+set_kind("static")
+add_includedirs("include")
 
-    add_packages(
-        "harfbuzz",
-        "stb",
-        "vulkan-headers",
-        "glm",
-        "bullet3",
-        "vulkan-hpp",
-        "shaderc",
-        "fmt",
-        "boost",
-        "nlohmann_json",
-        "libsdl3",
-        { system = false }
-    )
+add_packages(
+	"harfbuzz",
+	"vulkan-headers",
+	"glm",
+	"bullet3",
+	"vulkan-hpp",
+	"shaderc",
+	"fmt",
+	"boost",
+	"nlohmann_json",
+	"libsdl3",
+	{ system = false }
+)
 
-    if is_plat("mingw") then
-        add_links("dbghelp")
-    end
+if is_plat("mingw") then
+	add_links("dbghelp")
+end
 
-    if not is_plat("windows", "mingw") then
-        add_files("plat/unix/**.cpp")
-    end
-    if is_plat("windows", "mingw") then
-        add_files("plat/windows/**.cpp")
-    end
-    if is_plat("linux") then
-        add_files("plat/linux/**.cpp")
-    end
-    if is_plat("bsd") then
-        add_files("plat/bsd/**.cpp")
-    end
-    if is_plat("macosx") then
-        add_files("plat/macos/**.cpp")
-    end
-    if is_plat("android") then
-        add_files("plat/android/**.cpp")
-    end
-    if is_plat("iphoneos") then
-        add_files("plat/ios/**.cpp")
-    end
-    if is_plat("harmony") then
-        add_files("plat/harmony/**.cpp")
-    end
-    if not mobile() then
-        add_files("plat/desktop/**.cpp")
-    end
+if not is_plat("windows", "mingw") then
+	add_files("plat/unix/**.cpp")
+end
+if is_plat("windows", "mingw") then
+	add_files("plat/windows/**.cpp")
+end
+if is_plat("linux") then
+	add_files("plat/linux/**.cpp")
+end
+if is_plat("bsd") then
+	add_files("plat/bsd/**.cpp")
+end
+if is_plat("macosx") then
+	add_files("plat/macos/**.cpp")
+end
+if is_plat("android") then
+	add_files("plat/android/**.cpp")
+end
+if is_plat("iphoneos") then
+	add_files("plat/ios/**.cpp")
+end
+if is_plat("harmony") then
+	add_files("plat/harmony/**.cpp")
+end
+if not mobile() then
+	add_files("plat/desktop/**.cpp")
+end
 
-    if is_arch("x86", "i386", "x86_64", "x64") then
-        if not is_plat("windows", "mingw") then
-            add_files("arch/x86/unix_**.S")
-        else
-            add_files("arch/x86/msvc_**.S")
-        end
-        add_files("arch/x86/**.cpp")
-    elseif is_arch("arm64-v8a", "arm64") then
-        if not is_plat("windows", "mingw") then
-            add_files("arch/aarch64/unix_**.S")
-        else
-            add_files("arch/aarch64/msvc_**.S")
-        end
-        add_files("arch/aarch64/**.cpp")
-    elseif is_arch("armeabi", "armv7k", "armeabi-v7a", "arm", "armv7s", "armv7") then
-        add_files("arch/arm/unix_**.S")
-        add_files("arch/arm/**.cpp")
-    elseif is_arch("loong64") then
-        add_files("arch/loongarch/unix_**.S")
-        add_files("arch/loongarch/**.cpp")
-    elseif is_arch("mips64", "mips64el", "mip64") then
-        add_files("arch/mips64/unix_**.S")
-        add_files("arch/mips64/**.cpp")
-    elseif is_arch("mips", "mipsel") then
-        add_files("arch/mips/unix_**.S")
-        add_files("arch/mips/**.cpp")
-    elseif is_arch("ppc") then
-        add_files("arch/ppc/unix_**.S")
-        add_files("arch/ppc/**.cpp")
-    elseif is_arch("ppc64") then
-        add_files("arch/ppc64/unix_**.S")
-        add_files("arch/ppc64/**.cpp")
-    elseif is_arch("riscv") then
-        add_files("arch/riscv/unix_**.S")
-        add_files("arch/riscv/**.cpp")
-    elseif is_arch("riscv64") then
-        add_files("arch/riscv64/unix_**.S")
-        add_files("arch/riscv64/**.cpp")
-    else
-        add_files("arch/fallback/unix_**.S")
-        add_files("arch/fallback/**.cpp")
-    end
+if is_arch("x86", "i386", "x86_64", "x64") then
+	if not is_plat("windows", "mingw") then
+		add_files("arch/x86/unix_**.S")
+	else
+		add_files("arch/x86/msvc_**.S")
+	end
+	add_files("arch/x86/**.cpp")
+elseif is_arch("arm64-v8a", "arm64") then
+	if not is_plat("windows", "mingw") then
+		add_files("arch/aarch64/unix_**.S")
+	else
+		add_files("arch/aarch64/msvc_**.S")
+	end
+	add_files("arch/aarch64/**.cpp")
+elseif is_arch("armeabi", "armv7k", "armeabi-v7a", "arm", "armv7s", "armv7") then
+	add_files("arch/arm/unix_**.S")
+	add_files("arch/arm/**.cpp")
+elseif is_arch("loong64") then
+	add_files("arch/loongarch/unix_**.S")
+	add_files("arch/loongarch/**.cpp")
+elseif is_arch("mips64", "mips64el", "mip64") then
+	add_files("arch/mips64/unix_**.S")
+	add_files("arch/mips64/**.cpp")
+elseif is_arch("mips", "mipsel") then
+	add_files("arch/mips/unix_**.S")
+	add_files("arch/mips/**.cpp")
+elseif is_arch("ppc") then
+	add_files("arch/ppc/unix_**.S")
+	add_files("arch/ppc/**.cpp")
+elseif is_arch("ppc64") then
+	add_files("arch/ppc64/unix_**.S")
+	add_files("arch/ppc64/**.cpp")
+elseif is_arch("riscv") then
+	add_files("arch/riscv/unix_**.S")
+	add_files("arch/riscv/**.cpp")
+elseif is_arch("riscv64") then
+	add_files("arch/riscv64/unix_**.S")
+	add_files("arch/riscv64/**.cpp")
+else
+	add_files("arch/fallback/unix_**.S")
+	add_files("arch/fallback/**.cpp")
+end
 
 --------------------------------------------------------------------------------
 -- Submodules
@@ -212,74 +210,73 @@ includes("tools/bundlemaker/xmake.lua")
 --------------------------------------------------------------------------------
 
 target("openminecraft")
-    if is_plat("android", "harmony") then
-        set_kind("shared")
-        add_rules("utils.symbols.export_all")
-    else
-        set_kind("binary")
-    end
+if is_plat("android", "harmony") then
+	set_kind("shared")
+	add_rules("utils.symbols.export_all")
+else
+	set_kind("binary")
+end
 
-    add_includedirs("include")
-    add_files("launcher/**.cpp")
+add_includedirs("include")
+add_files("launcher/**.cpp")
 
-    add_deps(
-        "openminecraft-log",
-        "openminecraft-vm",
-        "openminecraft-binary",
-        "openminecraft-mem",
-        "openminecraft-io",
-        "openminecraft-vfs",
-        "openminecraft-boot",
-        "openminecraft-util",
-        "openminecraft-i18n",
-        "openminecraft-renderer",
-        "openminecraft-plat",
-        "openminecraft-specs",
-        "openminecraft-fontproc"
-    )
+add_deps(
+	"openminecraft-log",
+	"openminecraft-vm",
+	"openminecraft-binary",
+	"openminecraft-mem",
+	"openminecraft-io",
+	"openminecraft-vfs",
+	"openminecraft-boot",
+	"openminecraft-util",
+	"openminecraft-i18n",
+	"openminecraft-renderer",
+	"openminecraft-plat",
+	"openminecraft-specs",
+	"openminecraft-fontproc"
+)
 
-    add_packages(
-        "harfbuzz",
-        "stb",
-        "vulkan-headers",
-        "glm",
-        "bullet3",
-        "vulkan-hpp",
-        "shaderc",
-        "fmt",
-        "boost",
-        "nlohmann_json",
-        "libsdl3",
-        { system = false }
-    )
+add_packages(
+	"harfbuzz",
+	"vulkan-headers",
+	"glm",
+	"bullet3",
+	"vulkan-hpp",
+	"shaderc",
+	"fmt",
+	"boost",
+	"nlohmann_json",
+	"libsdl3",
+	{ system = false }
+)
 
-    if not mobile() and not vulkandyn() and not apple() then
-        add_packages("vulkan-loader")
-    end
-    if apple() then
-        add_packages("moltenvk")
-        add_frameworks("CoreText", "CoreFoundation", "CoreGraphics")
-    end
+if not mobile() and not vulkandyn() and not apple() then
+	add_packages("vulkan-loader")
+end
+if apple() then
+	add_packages("moltenvk")
+	add_frameworks("CoreText", "CoreFoundation", "CoreGraphics")
+end
 
-    if is_plat("harmony") then
-        add_syslinks("vulkan")
-        add_links("vulkan")
-    end
+if is_plat("harmony") then
+	add_syslinks("vulkan")
+	add_links("vulkan")
+end
 
-    if is_plat("android") then
-        add_syslinks("GLESv2")
-    end
+if is_plat("android") then
+	add_syslinks("GLESv2")
+end
 
-    if is_plat("iphoneos") then
-        add_frameworks("OpenGLES")
-    end
+if is_plat("iphoneos") then
+	add_frameworks("OpenGLES")
+end
 
-    if is_plat("macosx") then
-        add_frameworks("OpenGL")
-    end
+if is_plat("macosx") then
+	add_frameworks("OpenGL")
+end
 
-    if is_plat("windows") then
-        add_links("opengl32", "dbghelp")
-    elseif is_plat("mingw") then
-        add_links("pthread", "opengl32", "dbghelp")
-    end
+if is_plat("windows") then
+	add_links("opengl32", "dbghelp")
+elseif is_plat("mingw") then
+	add_links("pthread", "opengl32", "dbghelp")
+end
