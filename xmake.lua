@@ -89,26 +89,7 @@ add_requires(
 add_requires("boost", { system = false, configs = { stacktrace = true, asio = true } })
 add_requires("fmt", { system = false, configs = { header_only = true } })
 add_requires("harfbuzz", { system = false, configs = { freetype = false } })
-
---------------------------------------------------------------------------------
--- Submodules
---------------------------------------------------------------------------------
-
-includes("src/log/xmake.lua")
-includes("src/vm/xmake.lua")
-includes("src/binary/xmake.lua")
-includes("src/mem/xmake.lua")
-includes("src/io/xmake.lua")
-includes("src/boot/xmake.lua")
-includes("src/vfs/xmake.lua")
-includes("src/util/xmake.lua")
-includes("src/i18n/xmake.lua")
-includes("src/renderer/xmake.lua")
-includes("src/specs/xmake.lua")
-includes("src/fontproc/xmake.lua")
-includes("tests/xmake.lua")
-includes("tools/bundlemaker/xmake.lua")
-
+
 --------------------------------------------------------------------------------
 -- openminecraft-plat (platform abstraction layer)
 --------------------------------------------------------------------------------
@@ -206,6 +187,25 @@ target("openminecraft-plat")
         add_files("arch/fallback/unix_**.S")
         add_files("arch/fallback/**.cpp")
     end
+
+--------------------------------------------------------------------------------
+-- Submodules
+--------------------------------------------------------------------------------
+
+includes("src/log/xmake.lua")
+includes("src/vm/xmake.lua")
+includes("src/binary/xmake.lua")
+includes("src/mem/xmake.lua")
+includes("src/io/xmake.lua")
+includes("src/boot/xmake.lua")
+includes("src/vfs/xmake.lua")
+includes("src/util/xmake.lua")
+includes("src/i18n/xmake.lua")
+includes("src/renderer/xmake.lua")
+includes("src/specs/xmake.lua")
+includes("src/fontproc/xmake.lua")
+includes("tests/xmake.lua")
+includes("tools/bundlemaker/xmake.lua")
 
 --------------------------------------------------------------------------------
 -- openminecraft (core target)
