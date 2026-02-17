@@ -1,6 +1,5 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_prealloc.hpp"
-#include "openminecraft/mem/om_mem_record.hpp"
 #include <cerrno>
 #include <cstring>
 #include <new>
@@ -55,15 +54,3 @@ void OMHeap::deactivate(void *p, uint64_t length)
     }
 }
 } // namespace openminecraft::mem
-
-namespace openminecraft::mem::castorice
-{
-size_t heapSize(void *p)
-{
-#if defined(OM_PLATFORM_IOS) || defined(OM_PLATFORM_MACOS)
-    return malloc_size(p);
-#else
-    return malloc_usable_size(p);
-#endif
-}
-} // namespace openminecraft::mem::castorice

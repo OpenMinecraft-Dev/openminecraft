@@ -1,8 +1,15 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 
 #include "openminecraft/log/om_log_common.hpp"
+#include <cstddef>
 #include <cstdio>
 #include <string>
+
+#if defined(OM_PLATFORM_IOS) || defined(OM_PLATFORM_MACOS)
+#include <malloc/malloc.h>
+#else
+#include <malloc.h>
+#endif
 
 namespace openminecraft::mem::castorice
 {
@@ -75,6 +82,21 @@ std::string toDataSize(uint64_t l)
     {
         return fmt::format("{:.{}f} TB", (double)l / 1024 / 1024 / 1024 / 1024, 2);
     }
+}
+
+size_t heapSize(void *p)
+{
+    if (!p)
+    {
+        return 0;
+    }
+#if defined(OM_PLATFORM_IOS) || defined(OM_PLATFORM_MACOS)
+    return malloc_size(p);
+#elif defined(OM_PLATFORM_WINDOWS)
+    return _msize(p);
+#else
+    return malloc_usable_size(p);
+#endif
 }
 
 void printres()

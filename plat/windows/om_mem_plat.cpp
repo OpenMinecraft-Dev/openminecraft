@@ -1,12 +1,12 @@
 #include "openminecraft/mem/om_mem_prealloc.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
-#include <windows.h>
 #include <errhandlingapi.h>
 #include <iostream>
 #include <malloc.h>
 #include <memoryapi.h>
 #include <new>
 #include <oleauto.h>
+#include <windows.h>
 #include <winnt.h>
 
 namespace openminecraft::mem
@@ -45,15 +45,3 @@ void OMHeap::deactivate(void *p, uint64_t length)
     }
 }
 } // namespace openminecraft::mem
-
-namespace openminecraft::mem::castorice
-{
-size_t heapSize(void *p)
-{
-    if (p == nullptr)
-    {
-        return 0;
-    }
-    return _msize(p);
-}
-} // namespace openminecraft::mem::castorice
