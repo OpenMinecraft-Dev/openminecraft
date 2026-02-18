@@ -9,6 +9,7 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
+#include <chrono>
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_FORCE_RADIANS
@@ -79,6 +80,10 @@ class OMTestRenderer : public OMRendererHandler
     std::shared_ptr<OMShader> vtxShader;
     std::shared_ptr<OMShader> frgShader;
     std::shared_ptr<OMShader> frgShader2;
+
+    std::chrono::high_resolution_clock::time_point tp;
+    bool timing = false;
+    int fps = 0;
 };
 } // namespace openminecraft::boot::test
 

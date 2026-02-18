@@ -183,6 +183,11 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
 
 void OMTestRenderer::beforeFrame()
 {
+    if (!timing)
+    {
+        tp = std::chrono::high_resolution_clock::now();
+        timing = true;
+    }
     UniformStructure ubo;
     ubo.model = glm::mat4(1.0f);
     ubo.view = camera->fetchViewMat();
@@ -234,6 +239,15 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
 
 void OMTestRenderer::afterFrame()
 {
+    auto duration =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - tp).count();
+    fps++;
+    if (duration > 500.0 * 1000 * 1000)
+    {
+        logger.info("{:.2f} fps (average ~500ms)", fps * 1000.0 * 1000 * 1000 / static_cast<double>(duration));
+        timing = false;
+        fps = 0;
+    }
 }
 
 void OMTestRenderer::submitTasks()
