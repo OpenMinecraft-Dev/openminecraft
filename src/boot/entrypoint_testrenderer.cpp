@@ -29,22 +29,19 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.frag.glsl");
         frgShader =
-            std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), "simple.frag.glsl", "main", Fragment)
-                ->convertTo(SPIRVBinary);
+            std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), "simple.frag.glsl", "main", Fragment);
     }
 
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple2.frag.glsl");
         frgShader2 =
-            std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), "simple2.frag.glsl", "main", Fragment)
-                ->convertTo(SPIRVBinary);
+            std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), "simple2.frag.glsl", "main", Fragment);
     }
 
     {
         auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.vert.glsl");
         vtxShader =
-            std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), "simple.vert.glsl", "main", Vertex)
-                ->convertTo(SPIRVBinary);
+            std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), "simple.vert.glsl", "main", Vertex);
     }
 
     basics::OMVertexFormat format;
@@ -182,8 +179,6 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     mainPipeline->vertexFormat(format);
     mainPipeline->build();
     mainPipeline->bindInput(0, tempUniformBuffer);
-
-    firstTime = false;
 }
 
 void OMTestRenderer::beforeFrame()
@@ -247,34 +242,45 @@ void OMTestRenderer::submitTasks()
     {
         delete tempTexture;
         delete tempDepth;
-        delete renderTarget;
-        delete pipeline;
     }
 
     auto ext = renderer->getDefaultRenderTarget()->fetchSize();
     tempTexture = renderer->allocateTexture(ext.x, ext.y, Dim2, ColorRgba);
     tempDepth = renderer->allocateTexture(ext.x, ext.y, Dim2, Depth);
-    renderTarget = renderer->createRenderTarget();
-    renderTarget->attachTarget(tempTexture);
-    renderTarget->attachTarget(tempDepth);
-    renderTarget->build();
 
-    pipeline = renderer->createPipeline();
-    pipeline->appendInput(UniformBuffer);
-    pipeline->appendInput(ImageSampler);
-    pipeline->bindOutput(renderTarget);
-    pipeline->attachShader(frgShader2);
-    pipeline->attachShader(vtxShader);
-    basics::OMVertexFormat format;
-    format.appendPart("position", basics::Vec3f);
-    format.appendPart("textureUV", basics::Vec2f);
-    format.nextGroup();
-    format.decideStruct();
-    format.debugState();
-    pipeline->vertexFormat(format);
-    pipeline->build();
-    pipeline->bindInput(0, uniformBuffer);
-    pipeline->bindInput(1, textureImage);
+    if (firstTime)
+    {
+        renderTarget = renderer->createRenderTarget();
+        renderTarget->attachTarget(tempTexture);
+        renderTarget->attachTarget(tempDepth);
+        renderTarget->build();
+    }
+    else
+    {
+        renderTarget->replaceTarget(0, tempTexture);
+        renderTarget->replaceTarget(1, tempDepth);
+        renderTarget->rebuild();
+    }
+
+    if (firstTime)
+    {
+        pipeline = renderer->createPipeline();
+        pipeline->appendInput(UniformBuffer);
+        pipeline->appendInput(ImageSampler);
+        pipeline->bindOutput(renderTarget);
+        pipeline->attachShader(frgShader2);
+        pipeline->attachShader(vtxShader);
+        basics::OMVertexFormat format;
+        format.appendPart("position", basics::Vec3f);
+        format.appendPart("textureUV", basics::Vec2f);
+        format.nextGroup();
+        format.decideStruct();
+        format.debugState();
+        pipeline->vertexFormat(format);
+        pipeline->build();
+        pipeline->bindInput(0, uniformBuffer);
+        pipeline->bindInput(1, textureImage);
+    }
 
     mainPipeline->bindInput(1, tempTexture);
 
@@ -300,6 +306,8 @@ void OMTestRenderer::submitTasks()
 
     logger.info("Task intermediate: {}", fmt::ptr(renderer->fetchTask("intermediate")));
     logger.info("Task main: {}", fmt::ptr(renderer->fetchTask("main")));
+
+    firstTime = false;
 }
 OMTestRenderer::~OMTestRenderer()
 {

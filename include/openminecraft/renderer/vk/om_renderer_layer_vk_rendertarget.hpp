@@ -28,6 +28,7 @@ class OMRendererRenderTargetVk : public common::OMRendererRenderTarget
     void replaceTarget(int idx, common::OMRendererTexture *texture) override;
     glm::vec2 fetchSize() override;
     void build() override;
+    void rebuild() override;
 
     ::vk::RenderPass renderPass;
 

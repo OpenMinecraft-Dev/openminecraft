@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "vulkan/vulkan.hpp"
 #include <algorithm>
+#include <iostream>
 #include <stdexcept>
 
 using namespace ::vk;
@@ -145,6 +146,10 @@ void OMRendererRenderTargetVk::build()
 void OMRendererRenderTargetVk::replaceTarget(int idx, common::OMRendererTexture *texture)
 {
     textures[idx] = texture;
+}
+
+void OMRendererRenderTargetVk::rebuild()
+{
     renderer->logicalDevice.destroyFramebuffer(block->framebuffer, renderer->allocator);
     buildFramebuffer();
 }
