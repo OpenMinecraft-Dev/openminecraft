@@ -50,6 +50,7 @@ class OMPngFile
     int getHeight();
 
   private:
+    void convertToStandardRGBA();
     uint32_t getStride();
     int getBytesPerPixel();
 
@@ -58,7 +59,7 @@ class OMPngFile
     uint8_t getBufferC(int y, int x);
     uint8_t getPaethPred(int a, int b, int c);
 
-    void *dataBuffer;
+    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> dataBuffer;
     OMPngHead head;
     std::vector<int, mem::OMStlAllocator<allocatorTag, int>> palette;
 

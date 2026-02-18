@@ -118,21 +118,20 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
 
     inflateEnd(&strm);
 
-    dataBuffer = mem::allocator::tracedMallocParser(head.height * getStride());
+    dataBuffer.resize(head.height * getStride());
 
-    auto stride = getStride();
     auto ccp = unzippedBuffer.data();
     for (int y = 0; y < head.height; y++)
     {
         auto fltType = *ccp;
         ccp++;
 
-        for (int x = 0; x < stride; x++)
+        for (int x = 0; x < getStride(); x++)
         {
             auto filtx = *ccp;
             ++ccp;
 
-#define CurrentByte reinterpret_cast<uint8_t *>(dataBuffer)[y * stride + x]
+#define CurrentByte dataBuffer[y * getStride() + x]
 
             switch (fltType)
             {
@@ -157,144 +156,130 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
         }
     }
 
-    // convert to standard RGBA
+    convertToStandardRGBA();
+}
+
+void OMPngFile::convertToStandardRGBA()
+{
+    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> result;
+    result.resize(head.width * head.height * 4);
+    auto source = dataBuffer.data();
+
+    switch (head.type)
     {
-        auto result = reinterpret_cast<uint8_t *>(mem::allocator::tracedMallocParser(head.width * head.height * 4));
-        auto source = reinterpret_cast<uint8_t *>(dataBuffer);
-
-        switch (head.type)
+    case RGBA: {
+        if (head.bitDepth == 8)
         {
-        case RGBA: {
-            if (head.bitDepth == 8)
-            {
-                mem::allocator::tracedFreeParser(result);
-                break;
-            }
-
-            for (int i = 0; i < head.width * head.height * 4; i++)
-            {
-                result[i] = source[2 * i];
-            }
-
-            mem::allocator::tracedFreeParser(dataBuffer);
-            dataBuffer = result;
             break;
         }
-        case RGBTriple: {
+
+        for (int i = 0; i < head.width * head.height * 4; i++)
+        {
+            result[i] = source[2 * i];
+        }
+
+        break;
+    }
+    case RGBTriple: {
+        for (int i = 0; i < head.width * head.height; i++)
+        {
+            result[i * 4] = source[i * 3 * (head.bitDepth / 8)];
+            result[i * 4 + 1] = source[(i * 3 + 1) * (head.bitDepth / 8)];
+            result[i * 4 + 2] = source[(i * 3 + 2) * (head.bitDepth / 8)];
+            result[i * 4 + 3] = 0xff;
+        }
+        break;
+    }
+    case GrayscaleAlpha: {
+        for (int i = 0; i < head.width * head.height; i++)
+        {
+            result[i * 4] = source[i * 2 * (head.bitDepth / 8)];
+            result[i * 4 + 1] = result[i * 4];
+            result[i * 4 + 2] = result[i * 4];
+            result[i * 4 + 3] = source[(i * 2 + 1) * (head.bitDepth / 8)];
+        }
+        break;
+    }
+    case Palette: {
+        if (head.bitDepth >= 8)
+        {
             for (int i = 0; i < head.width * head.height; i++)
             {
-                result[i * 4] = source[i * 3 * (head.bitDepth / 8)];
-                result[i * 4 + 1] = source[(i * 3 + 1) * (head.bitDepth / 8)];
-                result[i * 4 + 2] = source[(i * 3 + 2) * (head.bitDepth / 8)];
-                result[i * 4 + 3] = 0xff;
+                int code = palette[source[i * (head.bitDepth / 8)]];
+                result[i * 4] = (code >> 24) & 0xff;
+                result[i * 4 + 1] = (code >> 16) & 0xff;
+                result[i * 4 + 2] = (code >> 8) & 0xff;
+                result[i * 4 + 3] = code & 0xff;
             }
-            mem::allocator::tracedFreeParser(dataBuffer);
-            dataBuffer = result;
-            break;
         }
-        case GrayscaleAlpha: {
-            for (int i = 0; i < head.width * head.height; i++)
+        else
+        {
+            int rowBytes = getStride();
+            int pixelsPerByte = 8 / head.bitDepth;
+
+            for (int y = 0; y < head.height; y++)
             {
-                result[i * 4] = source[i * 2 * (head.bitDepth / 8)];
-                result[i * 4 + 1] = result[i * 4];
-                result[i * 4 + 2] = result[i * 4];
-                result[i * 4 + 3] = source[(i * 2 + 1) * (head.bitDepth / 8)];
-            }
-            mem::allocator::tracedFreeParser(dataBuffer);
-            dataBuffer = result;
-            break;
-        }
-        case Palette: {
-            if (head.bitDepth >= 8)
-            {
-                for (int i = 0; i < head.width * head.height; i++)
+                for (int x = 0; x < head.width; x++)
                 {
-                    int code = palette[source[i * (head.bitDepth / 8)]];
+                    int byteIdx = x / pixelsPerByte;
+                    int shift = (pixelsPerByte - 1 - (x % pixelsPerByte)) * head.bitDepth;
+
+                    uint8_t byte = source[y * rowBytes + byteIdx];
+                    uint8_t value = (byte >> shift) & ((1 << head.bitDepth) - 1);
+                    int code = palette[value];
+
+                    auto i = y * head.width + x;
                     result[i * 4] = (code >> 24) & 0xff;
                     result[i * 4 + 1] = (code >> 16) & 0xff;
                     result[i * 4 + 2] = (code >> 8) & 0xff;
                     result[i * 4 + 3] = code & 0xff;
                 }
-                mem::allocator::tracedFreeParser(dataBuffer);
-                dataBuffer = result;
             }
-            else
-            {
-                int rowBytes = getStride();
-                int pixelsPerByte = 8 / head.bitDepth;
-
-                for (int y = 0; y < head.height; y++)
-                {
-                    for (int x = 0; x < head.width; x++)
-                    {
-                        int byteIdx = x / pixelsPerByte;
-                        int shift = (pixelsPerByte - 1 - (x % pixelsPerByte)) * head.bitDepth;
-
-                        uint8_t byte = source[y * rowBytes + byteIdx];
-                        uint8_t value = (byte >> shift) & ((1 << head.bitDepth) - 1);
-                        int code = palette[value];
-
-                        auto i = y * head.width + x;
-                        result[i * 4] = (code >> 24) & 0xff;
-                        result[i * 4 + 1] = (code >> 16) & 0xff;
-                        result[i * 4 + 2] = (code >> 8) & 0xff;
-                        result[i * 4 + 3] = code & 0xff;
-                    }
-                }
-
-                mem::allocator::tracedFreeParser(dataBuffer);
-                dataBuffer = result;
-            }
-            break;
         }
-        case Grayscale: {
-            if (head.bitDepth >= 8)
+        break;
+    }
+    case Grayscale: {
+        if (head.bitDepth >= 8)
+        {
+            for (int i = 0; i < head.width * head.height; i++)
             {
-                for (int i = 0; i < head.width * head.height; i++)
+                result[i * 4] = source[i * (head.bitDepth / 8)];
+                result[i * 4 + 1] = result[i];
+                result[i * 4 + 2] = result[i];
+                result[i * 4 + 3] = 0xff;
+            }
+        }
+        else
+        {
+            int rowBytes = getStride();
+            int pixelsPerByte = 8 / head.bitDepth;
+
+            for (int y = 0; y < head.height; y++)
+            {
+                for (int x = 0; x < head.width; x++)
                 {
-                    result[i * 4] = source[i * (head.bitDepth / 8)];
+                    int byteIdx = x / pixelsPerByte;
+                    int shift = (pixelsPerByte - 1 - (x % pixelsPerByte)) * head.bitDepth;
+
+                    uint8_t byte = source[y * rowBytes + byteIdx];
+                    uint8_t value = (byte >> shift) & ((1 << head.bitDepth) - 1);
+
+                    auto i = y * head.width + x;
+                    result[i * 4] = (value * 255) / ((1 << head.bitDepth) - 1);
                     result[i * 4 + 1] = result[i];
                     result[i * 4 + 2] = result[i];
                     result[i * 4 + 3] = 0xff;
                 }
-                mem::allocator::tracedFreeParser(dataBuffer);
-                dataBuffer = result;
             }
-            else
-            {
-                int rowBytes = getStride();
-                int pixelsPerByte = 8 / head.bitDepth;
-
-                for (int y = 0; y < head.height; y++)
-                {
-                    for (int x = 0; x < head.width; x++)
-                    {
-                        int byteIdx = x / pixelsPerByte;
-                        int shift = (pixelsPerByte - 1 - (x % pixelsPerByte)) * head.bitDepth;
-
-                        uint8_t byte = source[y * rowBytes + byteIdx];
-                        uint8_t value = (byte >> shift) & ((1 << head.bitDepth) - 1);
-
-                        auto i = y * head.width + x;
-                        result[i * 4] = (value * 255) / ((1 << head.bitDepth) - 1);
-                        result[i * 4 + 1] = result[i];
-                        result[i * 4 + 2] = result[i];
-                        result[i * 4 + 3] = 0xff;
-                    }
-                }
-
-                mem::allocator::tracedFreeParser(dataBuffer);
-                dataBuffer = result;
-            }
-            break;
         }
-        default:
-            break;
-        }
+        break;
+    }
+    default:
+        throw std::runtime_error("unknown image type!");
     }
 
-    std::ofstream of("test2.bin");
-    of.write(reinterpret_cast<char *>(dataBuffer), head.width * head.height * 4);
+    dataBuffer.resize(result.size());
+    std::memcpy(dataBuffer.data(), result.data(), result.size());
 }
 
 uint8_t OMPngFile::getPaethPred(int a, int b, int c)
@@ -320,19 +305,16 @@ uint8_t OMPngFile::getPaethPred(int a, int b, int c)
 
 uint8_t OMPngFile::getBufferA(int y, int x)
 {
-    return x >= getBytesPerPixel() ? reinterpret_cast<uint8_t *>(dataBuffer)[y * getStride() + x - getBytesPerPixel()]
-                                   : 0;
+    return x >= getBytesPerPixel() ? dataBuffer[y * getStride() + x - getBytesPerPixel()] : 0;
 }
 
 uint8_t OMPngFile::getBufferB(int y, int x)
 {
-    return (y > 0) ? reinterpret_cast<uint8_t *>(dataBuffer)[(y - 1) * getStride() + x] : 0;
+    return (y > 0) ? dataBuffer[(y - 1) * getStride() + x] : 0;
 }
 uint8_t OMPngFile::getBufferC(int y, int x)
 {
-    return (x >= getBytesPerPixel() && y > 0)
-               ? reinterpret_cast<uint8_t *>(dataBuffer)[(y - 1) * getStride() + x - getBytesPerPixel()]
-               : 0;
+    return (x >= getBytesPerPixel() && y > 0) ? dataBuffer[(y - 1) * getStride() + x - getBytesPerPixel()] : 0;
 }
 
 uint32_t OMPngFile::getStride()
@@ -433,7 +415,7 @@ uint64_t OMPngFile::crc(OMPngChunk chunk)
 
 void *OMPngFile::fetchData()
 {
-    return dataBuffer;
+    return dataBuffer.data();
 }
 
 int OMPngFile::getWidth()
@@ -447,6 +429,5 @@ int OMPngFile::getHeight()
 
 OMPngFile::~OMPngFile()
 {
-    mem::allocator::tracedFreeParser(dataBuffer);
 }
 } // namespace openminecraft::specs::png
