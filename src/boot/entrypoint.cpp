@@ -8,6 +8,7 @@
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
+#include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
@@ -18,6 +19,7 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -88,6 +90,11 @@ int boot(std::vector<std::string> args)
 
             auto wnd2 = SDL_CreateWindow("OpenGL Test", 800, 800, SDL_WINDOW_OPENGL);
             auto renderer = new renderer::opengl::OMRendererOpenGL(a, wnd2);
+
+            auto buff = renderer->allocateBuffer(renderer::common::VertexData, 1024);
+            uint8_t b[1024];
+            buff->updateData(b);
+            delete buff;
 
             delete renderer;
             SDL_DestroyWindow(wnd2);

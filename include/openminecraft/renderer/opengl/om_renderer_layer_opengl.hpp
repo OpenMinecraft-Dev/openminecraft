@@ -18,6 +18,13 @@ struct OMRendererOpenGLFuncs
     PFNGLCOMPILESHADERPROC glCompileShader;
     PFNGLGETSHADERIVPROC glGetShaderiv;
     PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog;
+    PFNGLLINKPROGRAMPROC glLinkProgram;
+    PFNGLGETPROGRAMIVPROC glGetProgramiv;
+    PFNGLMAPBUFFERPROC glMapBuffer;
+    PFNGLUNMAPBUFFERPROC glUnmapBuffer;
+    PFNGLBUFFERDATAPROC glBufferData;
+    PFNGLBINDBUFFERPROC glBindBuffer;
+    PFNGLDELETEBUFFERSPROC glDeleteBuffers;
 };
 class OMRendererOpenGL : public OMRenderer
 {
@@ -46,11 +53,12 @@ class OMRendererOpenGL : public OMRenderer
     void render() override;
     void requestResize() override;
 
+    OMRendererOpenGLFuncs gl;
+
   private:
     void *glContext;
     log::OMLogger logger;
 
-    OMRendererOpenGLFuncs gl;
     void initGlFuncs();
 };
 } // namespace openminecraft::renderer::opengl

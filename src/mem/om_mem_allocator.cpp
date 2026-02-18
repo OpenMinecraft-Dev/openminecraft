@@ -39,7 +39,7 @@ namespace openminecraft::mem::allocator
 defmalr(SDL, "sdl");
 defmalr(GL, "opengl");
 defmalr(VMData, "vmdata");
-defmalr(Parser, "parser");
+defmalr(ZLib, "zlib");
 } // namespace openminecraft::mem::allocator
 
 using namespace openminecraft::mem::allocator;

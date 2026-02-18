@@ -2,6 +2,7 @@
 #include "GL/glcorearb.h"
 #include "SDL3/SDL_video.h"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include "openminecraft/renderer/opengl/om_renderer_layer_opengl_buffer.hpp"
 
 namespace openminecraft::renderer::opengl
 {
@@ -16,15 +17,6 @@ OMRendererOpenGL::OMRendererOpenGL(AppInfo info, void *window)
 
     this->initGlFuncs();
     logger.info("vendor: {}", reinterpret_cast<const char *>(gl.glGetString(GL_RENDERER)));
-
-    auto shd = gl.glCreateShader(GL_VERTEX_SHADER);
-    auto temp = "#version 330 core\nvoid main() {}";
-    gl.glShaderSource(shd, 1, &temp, nullptr);
-    gl.glCompileShader(shd);
-
-    GLint stats = 0;
-    gl.glGetShaderiv(shd, GL_COMPILE_STATUS, &stats);
-    logger.info("compile status: {}", stats);
 }
 
 template <typename T> inline T fetchGlFunc(const char *name)
@@ -43,6 +35,11 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glCompileShader = fetchGlFunc<PFNGLCOMPILESHADERPROC>("glCompileShader");
     gl.glGetShaderiv = fetchGlFunc<PFNGLGETSHADERIVPROC>("glGetShaderiv");
     gl.glGetShaderInfoLog = fetchGlFunc<PFNGLGETSHADERINFOLOGPROC>("glGetShaderInfoLog");
+    gl.glLinkProgram = fetchGlFunc<PFNGLLINKPROGRAMPROC>("glLinkProgram");
+    gl.glGetProgramiv = fetchGlFunc<PFNGLGETPROGRAMIVPROC>("glGetProgramiv");
+    gl.glBufferData = fetchGlFunc<PFNGLBUFFERDATAPROC>("glBufferData");
+    gl.glBindBuffer = fetchGlFunc<PFNGLBINDBUFFERPROC>("glBindBuffer");
+    gl.glDeleteBuffers = fetchGlFunc<PFNGLDELETEBUFFERSPROC>("glDeleteBuffers");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()
@@ -56,7 +53,7 @@ std::string OMRendererOpenGL::driver()
 }
 common::OMRendererBuffer *OMRendererOpenGL::allocateBuffer(common::OMBufferUsage usage, uint64_t length)
 {
-    return nullptr;
+    return new OMRendererBufferOpenGL(usage, length, this);
 }
 common::OMRendererTexture *OMRendererOpenGL::allocateTexture(uint64_t width, uint64_t height,
                                                              common::OMTextureType type,

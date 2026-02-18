@@ -2,6 +2,7 @@
 #include "fmt/format.h"
 #include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "zlib.h"
 #include <cstdint>
@@ -94,8 +95,8 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
     }
 
     z_stream strm = {0};
-    strm.zalloc = nullptr;
-    strm.zfree = nullptr;
+    strm.zalloc = [](void *, uInt n, uInt size) -> void * { return mem::allocator::tracedCallocZLib(n, size); };
+    strm.zfree = [](void *, void *d) { mem::allocator::tracedFreeZLib(d); };
     strm.opaque = nullptr;
 
     inflateInit(&strm);
