@@ -26,13 +26,13 @@ OMRendererBufferOpenGL::OMRendererBufferOpenGL(common::OMBufferUsage usage, uint
     : usage(usage), length(length), renderer(renderer), common::OMRendererBuffer(usage, length, renderer)
 {
     renderer->gl.glGenBuffers(1, &buffer);
-    mem::castorice::rec({mem::castorice::Allocation, nullptr, length, "opengl"});
+    mem::castorice::rec({mem::castorice::Allocation, nullptr, static_cast<size_t>(length), "opengl"});
 }
 
 OMRendererBufferOpenGL::~OMRendererBufferOpenGL()
 {
     renderer->gl.glDeleteBuffers(1, &buffer);
-    mem::castorice::rec({mem::castorice::Free, nullptr, length, "opengl"});
+    mem::castorice::rec({mem::castorice::Free, nullptr, static_cast<size_t>(length), "opengl"});
 }
 void OMRendererBufferOpenGL::updateData(void *src)
 {

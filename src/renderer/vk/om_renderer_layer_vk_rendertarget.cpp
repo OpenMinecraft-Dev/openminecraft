@@ -137,17 +137,29 @@ void OMRendererRenderTargetVk::build()
                                                               renderer->allocator);
 
         block = new OMRendererRenderTargetBlock;
-        std::vector<ImageView> attch;
-        for (auto tt : textures)
-        {
-            attch.push_back(reinterpret_cast<OMRendererTextureVk *>(tt)->imageView);
-        }
-
-        auto ext = fetchSize();
-        block->framebuffer = renderer->logicalDevice.createFramebuffer(
-            FramebufferCreateInfo({}, renderPass, attch, ext.x, ext.y, 1), renderer->allocator);
+        buildFramebuffer();
     }
     available = true;
+}
+
+void OMRendererRenderTargetVk::replaceTarget(int idx, common::OMRendererTexture *texture)
+{
+    textures[idx] = texture;
+    renderer->logicalDevice.destroyFramebuffer(block->framebuffer, renderer->allocator);
+    buildFramebuffer();
+}
+
+void OMRendererRenderTargetVk::buildFramebuffer()
+{
+    std::vector<ImageView> attch;
+    for (auto tt : textures)
+    {
+        attch.push_back(reinterpret_cast<OMRendererTextureVk *>(tt)->imageView);
+    }
+
+    auto ext = fetchSize();
+    block->framebuffer = renderer->logicalDevice.createFramebuffer(
+        FramebufferCreateInfo({}, renderPass, attch, ext.x, ext.y, 1), renderer->allocator);
 }
 
 } // namespace openminecraft::renderer::vk

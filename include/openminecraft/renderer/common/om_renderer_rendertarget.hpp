@@ -20,6 +20,7 @@ class OMRendererRenderTarget
     }
 
     virtual void attachTarget(OMRendererTexture *texture) = 0;
+    virtual void replaceTarget(int idx, OMRendererTexture *texture) = 0;
     virtual glm::vec2 fetchSize() = 0;
     virtual void build() = 0;
 };

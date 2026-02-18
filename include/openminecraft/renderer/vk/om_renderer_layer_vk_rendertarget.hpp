@@ -25,6 +25,7 @@ class OMRendererRenderTargetVk : public common::OMRendererRenderTarget
     ~OMRendererRenderTargetVk() override;
 
     void attachTarget(common::OMRendererTexture *texture) override;
+    void replaceTarget(int idx, common::OMRendererTexture *texture) override;
     glm::vec2 fetchSize() override;
     void build() override;
 
@@ -36,6 +37,8 @@ class OMRendererRenderTargetVk : public common::OMRendererRenderTarget
     OMRendererVk *renderer;
     std::vector<common::OMRendererTexture *> textures;
     bool available = false;
+
+    void buildFramebuffer();
 };
 } // namespace openminecraft::renderer::vk
 
