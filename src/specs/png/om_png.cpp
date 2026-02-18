@@ -26,7 +26,7 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
     }
 
     std::vector<OMPngChunk> chunks;
-    uint32_t actualLength = 0;
+    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> IDATdata;
     while (istr->good())
     {
         OMPngChunk cnk;
@@ -57,46 +57,38 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
             break;
         }
 
-        if (!std::memcmp(cnk.name, "IDAT", 4))
+        if (!std::memcmp(cnk.name, "IHDR", 4))
         {
-            actualLength += length;
-        }
-    }
-
-    dataBuffer = mem::allocator::tracedMallocParser(actualLength);
-    auto tempB = reinterpret_cast<uint8_t *>(dataBuffer);
-    for (auto &chunk : chunks)
-    {
-        if (!std::memcmp(chunk.name, "IDAT", 4))
-        {
-            std::memcpy(tempB, chunk.data.data(), chunk.data.size());
-            tempB += chunk.data.size();
-        }
-
-        if (!std::memcmp(chunk.name, "IHDR", 4))
-        {
-            std::memcpy(&this->head, chunk.data.data(), sizeof(OMPngHead));
+            std::memcpy(&this->head, cnk.data.data(), sizeof(OMPngHead));
             head.width = binary::be32ToNative(head.width);
             head.height = binary::be32ToNative(head.height);
         }
 
-        if (!std::memcmp(chunk.name, "PLTE", 4))
+        if (!std::memcmp(cnk.name, "PLTE", 4))
         {
-            auto mm = chunk.data;
-            for (int i = 0; i < chunk.data.size() / 3; i++)
+            auto mm = cnk.data;
+            for (int i = 0; i < cnk.data.size() / 3; i++)
             {
                 palette.push_back((mm[i * 3] << 24) | (mm[i * 3 + 1] << 16) | (mm[i * 3 + 2] << 8) | 0xff);
             }
         }
 
-        if (!std::memcmp(chunk.name, "tRNS", 4))
+        if (!std::memcmp(cnk.name, "tRNS", 4))
         {
             int i = 0;
             for (auto &pp : palette)
             {
                 pp &= 0xffffff00;
-                pp |= chunk.data[i];
+                pp |= cnk.data[i];
                 i++;
+            }
+        }
+
+        if (!std::memcmp(cnk.name, "IDAT", 4))
+        {
+            for (auto i : cnk.data)
+            {
+                IDATdata.push_back(i);
             }
         }
     }
@@ -108,31 +100,28 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
 
     inflateInit(&strm);
 
-    strm.next_in = reinterpret_cast<uint8_t *>(dataBuffer);
-    strm.avail_in = actualLength;
+    strm.next_in = IDATdata.data();
+    strm.avail_in = IDATdata.size();
 
-    auto maxLength = head.height * (1 + getStride());
-    auto unzippedBuffer = mem::allocator::tracedMallocParser(maxLength);
+    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> unzippedBuffer;
+    unzippedBuffer.resize(head.height * (1 + getStride()));
 
-    strm.next_out = reinterpret_cast<uint8_t *>(unzippedBuffer);
-    strm.avail_out = maxLength;
+    strm.next_out = unzippedBuffer.data();
+    strm.avail_out = unzippedBuffer.size();
 
     int r = inflate(&strm, Z_FINISH);
 
     if (r != Z_STREAM_END && r != Z_OK)
     {
-        mem::allocator::tracedFreeParser(unzippedBuffer);
-        mem::allocator::tracedFreeParser(dataBuffer);
         throw std::runtime_error(fmt::format("zlib inflate failed: {}", r));
     }
 
     inflateEnd(&strm);
 
-    mem::allocator::tracedFreeParser(dataBuffer);
     dataBuffer = mem::allocator::tracedMallocParser(head.height * getStride());
 
     auto stride = getStride();
-    auto ccp = reinterpret_cast<uint8_t *>(unzippedBuffer);
+    auto ccp = unzippedBuffer.data();
     for (int y = 0; y < head.height; y++)
     {
         auto fltType = *ccp;
@@ -163,13 +152,10 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
                 CurrentByte = filtx + getPaethPred(getBufferA(y, x), getBufferB(y, x), getBufferC(y, x));
                 break;
             default:
-                mem::allocator::tracedFreeParser(unzippedBuffer);
                 throw std::runtime_error("unknown filter!");
             }
         }
     }
-
-    mem::allocator::tracedFreeParser(unzippedBuffer);
 
     // convert to standard RGBA
     {
@@ -438,12 +424,11 @@ uint64_t OMPngFile::updateCrc(uint64_t crc, void *dd, int length)
 
 uint64_t OMPngFile::crc(OMPngChunk chunk)
 {
-    auto buf = mem::allocator::tracedMallocParser(chunk.data.size() + 4);
-    std::memcpy(buf, chunk.name, 4);
-    std::memcpy(reinterpret_cast<uint8_t *>(buf) + 4, chunk.data.data(), chunk.data.size());
-    auto m = updateCrc(0xffffffffL, buf, chunk.data.size() + 4) ^ 0xffffffffL;
-    mem::allocator::tracedFreeParser(buf);
-    return m;
+    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> buf;
+    buf.resize(chunk.data.size() + 4);
+    std::memcpy(buf.data(), chunk.name, 4);
+    std::memcpy(buf.data() + 4, chunk.data.data(), chunk.data.size());
+    return updateCrc(0xffffffffL, buf.data(), chunk.data.size() + 4) ^ 0xffffffffL;
 }
 
 void *OMPngFile::fetchData()

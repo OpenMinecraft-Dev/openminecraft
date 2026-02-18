@@ -69,7 +69,6 @@ void OMInterpreter::call(OMMethod *met, uint8_t *retAddr)
     auto nextframe = reinterpret_cast<OMFrame *>(static_cast<uint8_t *>(currentThread.stackPointer) - sizeof(OMFrame) +
                                                  sizeof(void *) + met->args * sizeof(void *));
     nextframe->method = met;
-
     // TODO: optimization
     for (int i = 0; i < met->maxLocals; i++)
     {
