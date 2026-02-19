@@ -97,7 +97,9 @@ int boot(std::vector<std::string> args)
             buff->updateData(b);
             delete buff;
 
-            auto tt = renderer->allocateTexture(128, 128, renderer::common::Dim2, renderer::common::ColorRgba);
+            int i;
+            auto tt = renderer->allocateTexture(2, 2, renderer::common::Dim2, renderer::common::Depth);
+            tt->updateData(&i);
             delete tt;
 
             delete renderer;

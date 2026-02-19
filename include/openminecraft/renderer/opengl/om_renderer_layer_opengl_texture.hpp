@@ -15,9 +15,9 @@ class OMRendererTextureOpenGL : public common::OMRendererTexture
     ~OMRendererTextureOpenGL() override;
 
     void updateData(void *) override;
+    GLuint texture;
 
   private:
-    GLuint texture;
     OMRendererOpenGLFuncs *gl;
 };
 } // namespace openminecraft::renderer::opengl

@@ -4,6 +4,7 @@
 #include "GL/glcorearb.h"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
+#include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 namespace openminecraft::renderer::opengl
 {
@@ -31,6 +32,16 @@ struct OMRendererOpenGLFuncs
     PFNGLTEXIMAGE2DPROC glTexImage2D;
     PFNGLTEXIMAGE3DPROC glTexImage3D;
     PFNGLDELETETEXTURESPROC glDeleteTextures;
+    PFNGLGENRENDERBUFFERSPROC glGenRenderBuffers;
+    PFNGLBINDRENDERBUFFERPROC glBindRenderbuffer;
+    PFNGLRENDERBUFFERSTORAGEPROC glRenderbufferStorage;
+    PFNGLDELETERENDERBUFFERSPROC glDeleteRenderbuffers;
+    PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
+    PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
+    PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D;
+    PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbuffer;
+    PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus;
+    PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
 };
 class OMRendererOpenGL : public OMRenderer
 {
@@ -60,6 +71,7 @@ class OMRendererOpenGL : public OMRenderer
     void requestResize() override;
 
     OMRendererOpenGLFuncs gl;
+    common::OMRendererRenderTarget *defaultTarget;
 
   private:
     void *glContext;
