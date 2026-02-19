@@ -9,6 +9,7 @@
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
+#include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
@@ -95,6 +96,9 @@ int boot(std::vector<std::string> args)
             uint8_t b[1024];
             buff->updateData(b);
             delete buff;
+
+            auto tt = renderer->allocateTexture(128, 128, renderer::common::Dim2, renderer::common::ColorRgba);
+            delete tt;
 
             delete renderer;
             SDL_DestroyWindow(wnd2);

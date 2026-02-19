@@ -3,6 +3,7 @@
 #include "SDL3/SDL_video.h"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_buffer.hpp"
+#include "openminecraft/renderer/opengl/om_renderer_layer_opengl_texture.hpp"
 
 namespace openminecraft::renderer::opengl
 {
@@ -16,7 +17,6 @@ OMRendererOpenGL::OMRendererOpenGL(AppInfo info, void *window)
     glContext = SDL_GL_CreateContext(reinterpret_cast<SDL_Window *>(window));
 
     this->initGlFuncs();
-    logger.info("vendor: {}", reinterpret_cast<const char *>(gl.glGetString(GL_RENDERER)));
 }
 
 template <typename T> inline T fetchGlFunc(const char *name)
@@ -40,6 +40,12 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glBufferData = fetchGlFunc<PFNGLBUFFERDATAPROC>("glBufferData");
     gl.glBindBuffer = fetchGlFunc<PFNGLBINDBUFFERPROC>("glBindBuffer");
     gl.glDeleteBuffers = fetchGlFunc<PFNGLDELETEBUFFERSPROC>("glDeleteBuffers");
+    gl.glGenTextures = fetchGlFunc<PFNGLGENTEXTURESPROC>("glGenTextures");
+    gl.glBindTexture = fetchGlFunc<PFNGLBINDTEXTUREPROC>("glBindTexture");
+    gl.glTexImage1D = fetchGlFunc<PFNGLTEXIMAGE1DPROC>("glTexImage1D");
+    gl.glTexImage2D = fetchGlFunc<PFNGLTEXIMAGE2DPROC>("glTexImage2D");
+    gl.glTexImage3D = fetchGlFunc<PFNGLTEXIMAGE3DPROC>("glTexImage3D");
+    gl.glDeleteTextures = fetchGlFunc<PFNGLDELETETEXTURESPROC>("glDeleteTextures");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()
@@ -59,7 +65,7 @@ common::OMRendererTexture *OMRendererOpenGL::allocateTexture(uint64_t width, uin
                                                              common::OMTextureType type,
                                                              common::OMTextureArrangement arr)
 {
-    return nullptr;
+    return new OMRendererTextureOpenGL(width, height, type, arr, this);
 }
 common::OMRendererRenderTarget *OMRendererOpenGL::createRenderTarget()
 {

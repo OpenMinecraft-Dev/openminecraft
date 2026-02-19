@@ -39,5 +39,6 @@ void OMRendererBufferOpenGL::updateData(void *src)
 
     renderer->gl.glBindBuffer(convertFrom(usage), buffer);
     renderer->gl.glBufferData(convertFrom(usage), length, src, GL_STATIC_DRAW);
+    renderer->gl.glBindBuffer(convertFrom(usage), 0);
 }
 } // namespace openminecraft::renderer::opengl

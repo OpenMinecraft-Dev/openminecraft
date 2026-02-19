@@ -1,0 +1,25 @@
+#ifndef OM_RENDERER_LAYER_OPENGL_TEXTURE_HPP
+#define OM_RENDERER_LAYER_OPENGL_TEXTURE_HPP
+
+#include "GL/glcorearb.h"
+#include "openminecraft/renderer/common/om_renderer_texture.hpp"
+#include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
+
+namespace openminecraft::renderer::opengl
+{
+class OMRendererTextureOpenGL : public common::OMRendererTexture
+{
+  public:
+    OMRendererTextureOpenGL(uint64_t width, uint64_t height, common::OMTextureType type,
+                            common::OMTextureArrangement arr, OMRendererOpenGL *renderer);
+    ~OMRendererTextureOpenGL() override;
+
+    void updateData(void *) override;
+
+  private:
+    GLuint texture;
+    OMRendererOpenGLFuncs *gl;
+};
+} // namespace openminecraft::renderer::opengl
+
+#endif

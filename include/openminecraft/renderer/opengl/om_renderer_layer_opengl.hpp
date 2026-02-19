@@ -25,6 +25,12 @@ struct OMRendererOpenGLFuncs
     PFNGLBUFFERDATAPROC glBufferData;
     PFNGLBINDBUFFERPROC glBindBuffer;
     PFNGLDELETEBUFFERSPROC glDeleteBuffers;
+    PFNGLGENTEXTURESPROC glGenTextures;
+    PFNGLBINDTEXTUREPROC glBindTexture;
+    PFNGLTEXIMAGE1DPROC glTexImage1D;
+    PFNGLTEXIMAGE2DPROC glTexImage2D;
+    PFNGLTEXIMAGE3DPROC glTexImage3D;
+    PFNGLDELETETEXTURESPROC glDeleteTextures;
 };
 class OMRendererOpenGL : public OMRenderer
 {
