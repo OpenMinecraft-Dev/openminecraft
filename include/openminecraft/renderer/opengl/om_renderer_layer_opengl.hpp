@@ -5,8 +5,10 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
+#include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <memory>
+#include <unordered_map>
 #include <vector>
 namespace openminecraft::renderer::opengl
 {
@@ -54,6 +56,16 @@ struct OMRendererOpenGLFuncs
     PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
     PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog;
     PFNGLDELETESHADERPROC glDeleteShader;
+    PFNGLVIEWPORTPROC glViewport;
+    PFNGLUSEPROGRAMPROC glUseProgram;
+    PFNGLACTIVETEXTUREPROC glActiveTexture;
+    PFNGLDRAWARRAYSPROC glDrawArrays;
+    PFNGLUNIFORMBLOCKBINDINGPROC glUniformBlockBinding;
+    PFNGLBINDBUFFERBASEPROC glBindBufferBase;
+    PFNGLDRAWELEMENTSPROC glDrawElements;
+    PFNGLCLEARPROC glClear;
+    PFNGLENABLEPROC glEnable;
+    PFNGLDISABLEPROC glDisable;
 };
 class OMRendererOpenGL : public OMRenderer
 {
@@ -92,6 +104,7 @@ class OMRendererOpenGL : public OMRenderer
     void initGlFuncs();
 
     std::vector<std::shared_ptr<common::OMRendererHandler>> handlers;
+    std::unordered_map<std::string, common::OMRendererTask *> tasks;
 };
 } // namespace openminecraft::renderer::opengl
 

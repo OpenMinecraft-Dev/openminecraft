@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_buffer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_rendertarget.hpp"
+#include "openminecraft/renderer/opengl/om_renderer_layer_opengl_task.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_texture.hpp"
 
 namespace openminecraft::renderer::opengl
@@ -71,6 +72,16 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glDeleteVertexArrays = fetchGlFunc<PFNGLDELETEVERTEXARRAYSPROC>("glDeleteVertexArrays");
     gl.glGetProgramInfoLog = fetchGlFunc<PFNGLGETPROGRAMINFOLOGPROC>("glGetProgramInfoLog");
     gl.glDeleteShader = fetchGlFunc<PFNGLDELETESHADERPROC>("glDeleteShader");
+    gl.glViewport = fetchGlFunc<PFNGLVIEWPORTPROC>("glViewport");
+    gl.glUseProgram = fetchGlFunc<PFNGLUSEPROGRAMPROC>("glUseProgram");
+    gl.glActiveTexture = fetchGlFunc<PFNGLACTIVETEXTUREPROC>("glActiveTexture");
+    gl.glDrawArrays = fetchGlFunc<PFNGLDRAWARRAYSPROC>("glDrawArrays");
+    gl.glUniformBlockBinding = fetchGlFunc<PFNGLUNIFORMBLOCKBINDINGPROC>("glUniformBlockBinding");
+    gl.glBindBufferBase = fetchGlFunc<PFNGLBINDBUFFERBASEPROC>("glBindBufferBase");
+    gl.glDrawElements = fetchGlFunc<PFNGLDRAWELEMENTSPROC>("glDrawElements");
+    gl.glClear = fetchGlFunc<PFNGLCLEARPROC>("glClear");
+    gl.glEnable = fetchGlFunc<PFNGLENABLEPROC>("glEnable");
+    gl.glDisable = fetchGlFunc<PFNGLDISABLEPROC>("glDisable");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()
@@ -106,7 +117,7 @@ common::OMRendererPipeline *OMRendererOpenGL::createPipeline()
 }
 common::OMRendererTask *OMRendererOpenGL::createTask()
 {
-    return nullptr;
+    return new OMRendererTaskOpenGL(this);
 }
 glm::vec2 OMRendererOpenGL::getExtent() const
 {
@@ -116,15 +127,21 @@ glm::vec2 OMRendererOpenGL::getExtent() const
 }
 void OMRendererOpenGL::registerTask(std::string id, common::OMRendererTask *task)
 {
+    tasks[id] = task;
 }
 
 common::OMRendererTask *OMRendererOpenGL::fetchTask(std::string id)
 {
-    return nullptr;
+    return tasks[id];
 }
 
 void OMRendererOpenGL::clearTasks()
 {
+    for (auto t : tasks)
+    {
+        delete t.second;
+    }
+    tasks.clear();
 }
 
 void OMRendererOpenGL::registerHandler(std::shared_ptr<common::OMRendererHandler> h)
@@ -146,9 +163,24 @@ void OMRendererOpenGL::baseInit()
 
 void OMRendererOpenGL::render()
 {
+    for (auto h : handlers)
+    {
+        h->beforeFrame();
+    }
+    for (auto tsks : tasks)
+    {
+        reinterpret_cast<OMRendererTaskOpenGL *>(tsks.second)->execute();
+    }
+    SDL_GL_SwapWindow(reinterpret_cast<SDL_Window *>(window));
+    for (auto h : handlers)
+    {
+        h->afterFrame();
+    }
 }
 
 void OMRendererOpenGL::requestResize()
 {
+    auto siz = getExtent();
+    gl.glViewport(0, 0, siz.x, siz.y);
 }
 } // namespace openminecraft::renderer::opengl

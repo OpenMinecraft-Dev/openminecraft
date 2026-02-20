@@ -86,24 +86,7 @@ int boot(std::vector<std::string> args)
             break;
         }
         case "gltest"_hash: {
-            renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
-                                   util::Version(1, 0, 0, 0), util::Version(3, 3, 0, 0)};
-
-            auto wnd2 = SDL_CreateWindow("OpenGL Test", 800, 800, SDL_WINDOW_OPENGL);
-            auto renderer = new renderer::opengl::OMRendererOpenGL(a, wnd2);
-
-            auto buff = renderer->allocateBuffer(renderer::common::VertexData, 1024);
-            uint8_t b[1024];
-            buff->updateData(b);
-            delete buff;
-
-            int i;
-            auto tt = renderer->allocateTexture(2, 2, renderer::common::Dim2, renderer::common::Depth);
-            tt->updateData(&i);
-            delete tt;
-
-            delete renderer;
-            SDL_DestroyWindow(wnd2);
+            openglRendererTest(); 
             break;
         }
         case "quit"_hash:

@@ -306,8 +306,6 @@ void OMTestRenderer::submitTasks()
     task->draw(vertexCount);
     task->finish();
 
-    renderer->registerTask("intermediate", task);
-
     auto task2 = renderer->createTask();
     task2->bindTarget(renderer->getDefaultRenderTarget());
     task2->bindPipeline(mainPipeline);
@@ -317,6 +315,7 @@ void OMTestRenderer::submitTasks()
     task2->finish();
 
     renderer->registerTask("main", task2);
+    renderer->registerTask("intermediate", task);
 
     logger.info("Task intermediate: {}", fmt::ptr(renderer->fetchTask("intermediate")));
     logger.info("Task main: {}", fmt::ptr(renderer->fetchTask("main")));

@@ -41,11 +41,13 @@ OMRendererTextureOpenGL::OMRendererTextureOpenGL(uint64_t width, uint64_t height
     if (arr == common::Depth)
     {
         gl->glGenRenderBuffers(1, &texture);
+        gl->glBindRenderbuffer(GL_RENDERBUFFER, texture);
         gl->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
     }
     else
     {
         gl->glGenTextures(1, &texture);
+        updateData(nullptr);
     }
 }
 OMRendererTextureOpenGL::~OMRendererTextureOpenGL()
@@ -65,6 +67,5 @@ void OMRendererTextureOpenGL::updateData(void *d)
     gl->glBindTexture(fromCommon(type), texture);
     gl->glTexImage2D(fromCommon(type), 0, fromCommon(arr), width, height, 0, fromCommon(arr), GL_UNSIGNED_BYTE, d);
     gl->glBindTexture(fromCommon(type), 0);
-    std::cout << gl->glGetError();
 }
 } // namespace openminecraft::renderer::opengl

@@ -21,9 +21,12 @@ class OMRendererRenderTargetOpenGL : public common::OMRendererRenderTarget
     glm::vec2 fetchSize() override;
     void build() override;
 
+    GLuint framebuffer;
+
   private:
     OMRendererOpenGLFuncs *gl;
-    GLuint framebuffer;
+    OMRendererOpenGL *glrenderer;
+
     std::vector<common::OMRendererTexture *> textures;
 };
 } // namespace openminecraft::renderer::opengl

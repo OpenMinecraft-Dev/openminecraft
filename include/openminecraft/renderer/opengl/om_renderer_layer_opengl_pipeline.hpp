@@ -25,15 +25,15 @@ class OMRendererPipelineOpenGL : public common::OMRendererPipeline
 
     void bindInput(int idx, common::OMRendererBuffer *buff) override;
     void bindInput(int idx, common::OMRendererTexture *texture) override;
+    common::OMRendererRenderTarget *target;
+    GLuint program = 0;
+    common::basics::OMVertexFormat format;
+    std::vector<void *> inputs;
+    std::vector<common::OMRendererPipelineInputType> inputTypes;
 
   private:
     OMRendererOpenGLFuncs *gl;
     std::vector<std::shared_ptr<common::OMShader>> preshaders;
-    GLuint program = 0;
-    common::basics::OMVertexFormat format;
-    common::OMRendererRenderTarget *target;
-    std::vector<void *> inputs;
-    std::vector<common::OMRendererPipelineInputType> inputTypes;
 };
 } // namespace openminecraft::renderer::opengl
 

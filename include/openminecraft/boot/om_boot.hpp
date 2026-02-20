@@ -14,6 +14,7 @@ void pixeltowerDynTest();
 void pixeltowerLoadTest();
 
 void vulkanRendererTest();
+void openglRendererTest();
 } // namespace openminecraft::boot
 
 #endif

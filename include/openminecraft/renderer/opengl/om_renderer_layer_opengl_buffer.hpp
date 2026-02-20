@@ -14,13 +14,14 @@ class OMRendererBufferOpenGL : public common::OMRendererBuffer
     ~OMRendererBufferOpenGL() override;
 
     void updateData(void *src) override;
+    void bind();
+    void unbind();
+    GLuint buffer;
 
   private:
     OMRendererOpenGL *renderer;
     uint64_t length;
     common::OMBufferUsage usage;
-
-    GLuint buffer;
 };
 
 } // namespace openminecraft::renderer::opengl

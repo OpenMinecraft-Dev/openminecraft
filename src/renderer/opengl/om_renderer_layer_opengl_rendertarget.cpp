@@ -10,7 +10,7 @@
 namespace openminecraft::renderer::opengl
 {
 OMRendererRenderTargetOpenGL::OMRendererRenderTargetOpenGL(OMRendererOpenGL *renderer)
-    : common::OMRendererRenderTarget(renderer)
+    : common::OMRendererRenderTarget(renderer), glrenderer(renderer)
 {
     this->gl = &renderer->gl;
 }
@@ -35,10 +35,15 @@ void OMRendererRenderTargetOpenGL::rebuild()
     if (framebuffer != 0)
     {
         gl->glDeleteFramebuffers(1, &framebuffer);
+        build();
     }
 }
 glm::vec2 OMRendererRenderTargetOpenGL::fetchSize()
 {
+    if (framebuffer == 0)
+    {
+        return glrenderer->getExtent();
+    }
     glm::vec2 result = {};
     for (auto p : textures)
     {
@@ -57,6 +62,7 @@ void OMRendererRenderTargetOpenGL::build()
     else
     {
         gl->glGenFramebuffers(1, &framebuffer);
+        gl->glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         for (auto tt : textures)
         {
             if (tt->arr == common::Depth)
