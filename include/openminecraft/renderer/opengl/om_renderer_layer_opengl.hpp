@@ -6,6 +6,8 @@
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include <memory>
+#include <vector>
 namespace openminecraft::renderer::opengl
 {
 struct OMRendererOpenGLFuncs
@@ -19,8 +21,11 @@ struct OMRendererOpenGLFuncs
     PFNGLCOMPILESHADERPROC glCompileShader;
     PFNGLGETSHADERIVPROC glGetShaderiv;
     PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog;
+    PFNGLATTACHSHADERPROC glAttachShader;
+    PFNGLCREATEPROGRAMPROC glCreateProgram;
     PFNGLLINKPROGRAMPROC glLinkProgram;
     PFNGLGETPROGRAMIVPROC glGetProgramiv;
+    PFNGLDELETEPROGRAMPROC glDeleteProgram;
     PFNGLMAPBUFFERPROC glMapBuffer;
     PFNGLUNMAPBUFFERPROC glUnmapBuffer;
     PFNGLBUFFERDATAPROC glBufferData;
@@ -42,6 +47,13 @@ struct OMRendererOpenGLFuncs
     PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbuffer;
     PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus;
     PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
+    PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
+    PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
+    PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
+    PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
+    PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
+    PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog;
+    PFNGLDELETESHADERPROC glDeleteShader;
 };
 class OMRendererOpenGL : public OMRenderer
 {
@@ -78,6 +90,8 @@ class OMRendererOpenGL : public OMRenderer
     log::OMLogger logger;
 
     void initGlFuncs();
+
+    std::vector<std::shared_ptr<common::OMRendererHandler>> handlers;
 };
 } // namespace openminecraft::renderer::opengl
 

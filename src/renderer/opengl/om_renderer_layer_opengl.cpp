@@ -3,6 +3,7 @@
 #include "SDL3/SDL_video.h"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_buffer.hpp"
+#include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_rendertarget.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_texture.hpp"
 
@@ -39,8 +40,11 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glCompileShader = fetchGlFunc<PFNGLCOMPILESHADERPROC>("glCompileShader");
     gl.glGetShaderiv = fetchGlFunc<PFNGLGETSHADERIVPROC>("glGetShaderiv");
     gl.glGetShaderInfoLog = fetchGlFunc<PFNGLGETSHADERINFOLOGPROC>("glGetShaderInfoLog");
+    gl.glAttachShader = fetchGlFunc<PFNGLATTACHSHADERPROC>("glAttachShader");
+    gl.glCreateProgram = fetchGlFunc<PFNGLCREATEPROGRAMPROC>("glCreateProgram");
     gl.glLinkProgram = fetchGlFunc<PFNGLLINKPROGRAMPROC>("glLinkProgram");
     gl.glGetProgramiv = fetchGlFunc<PFNGLGETPROGRAMIVPROC>("glGetProgramiv");
+    gl.glDeleteProgram = fetchGlFunc<PFNGLDELETEPROGRAMPROC>("glDeleteProgram");
     gl.glBufferData = fetchGlFunc<PFNGLBUFFERDATAPROC>("glBufferData");
     gl.glBindBuffer = fetchGlFunc<PFNGLBINDBUFFERPROC>("glBindBuffer");
     gl.glDeleteBuffers = fetchGlFunc<PFNGLDELETEBUFFERSPROC>("glDeleteBuffers");
@@ -60,6 +64,13 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glFramebufferRenderbuffer = fetchGlFunc<PFNGLFRAMEBUFFERRENDERBUFFERPROC>("glFramebufferRenderbuffer");
     gl.glCheckFramebufferStatus = fetchGlFunc<PFNGLCHECKFRAMEBUFFERSTATUSPROC>("glCheckFramebufferStatus");
     gl.glDeleteFramebuffers = fetchGlFunc<PFNGLDELETEFRAMEBUFFERSPROC>("glDeleteFramebuffers");
+    gl.glGenVertexArrays = fetchGlFunc<PFNGLGENVERTEXARRAYSPROC>("glGenVertexArrays");
+    gl.glBindVertexArray = fetchGlFunc<PFNGLBINDVERTEXARRAYPROC>("glBindVertexArray");
+    gl.glVertexAttribPointer = fetchGlFunc<PFNGLVERTEXATTRIBPOINTERPROC>("glVertexAttribPointer");
+    gl.glEnableVertexAttribArray = fetchGlFunc<PFNGLENABLEVERTEXATTRIBARRAYPROC>("glEnableVertexAttribArray");
+    gl.glDeleteVertexArrays = fetchGlFunc<PFNGLDELETEVERTEXARRAYSPROC>("glDeleteVertexArrays");
+    gl.glGetProgramInfoLog = fetchGlFunc<PFNGLGETPROGRAMINFOLOGPROC>("glGetProgramInfoLog");
+    gl.glDeleteShader = fetchGlFunc<PFNGLDELETESHADERPROC>("glDeleteShader");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()
@@ -91,7 +102,7 @@ common::OMRendererRenderTarget *OMRendererOpenGL::getDefaultRenderTarget()
 }
 common::OMRendererPipeline *OMRendererOpenGL::createPipeline()
 {
-    return nullptr;
+    return new OMRendererPipelineOpenGL(this);
 }
 common::OMRendererTask *OMRendererOpenGL::createTask()
 {
@@ -99,7 +110,9 @@ common::OMRendererTask *OMRendererOpenGL::createTask()
 }
 glm::vec2 OMRendererOpenGL::getExtent() const
 {
-    return {0.0f, 0.0f};
+    int w, h;
+    SDL_GetWindowSize(reinterpret_cast<SDL_Window *>(window), &w, &h);
+    return {w, h};
 }
 void OMRendererOpenGL::registerTask(std::string id, common::OMRendererTask *task)
 {
@@ -114,15 +127,21 @@ void OMRendererOpenGL::clearTasks()
 {
 }
 
-void OMRendererOpenGL::registerHandler(std::shared_ptr<common::OMRendererHandler>)
+void OMRendererOpenGL::registerHandler(std::shared_ptr<common::OMRendererHandler> h)
 {
+    handlers.push_back(h);
 }
 void OMRendererOpenGL::clearHandlers()
 {
+    handlers.clear();
 }
 
 void OMRendererOpenGL::baseInit()
 {
+    for (auto h : handlers)
+    {
+        h->submitTasks();
+    }
 }
 
 void OMRendererOpenGL::render()
