@@ -20,6 +20,7 @@ OMRendererTaskOpenGL::OMRendererTaskOpenGL(OMRendererOpenGL *renderer) : common:
 }
 OMRendererTaskOpenGL::~OMRendererTaskOpenGL()
 {
+    gl->glDeleteVertexArrays(1, &vertexArrayObject);
 }
 
 void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
@@ -81,7 +82,7 @@ void OMRendererTaskOpenGL::bindVertexBuffer(std::vector<common::OMRendererBuffer
         for (auto part : pp.parts)
         {
             auto p = fromCommon(std::get<common::basics::OMVertexPropType>(part));
-            gl->glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, pp.size,
+            gl->glVertexAttribPointer(index, p.first, p.second, GL_FALSE, pp.size,
                                       reinterpret_cast<void *>(std::get<int>(part)));
             gl->glEnableVertexAttribArray(index);
             index++;

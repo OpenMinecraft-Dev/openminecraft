@@ -63,6 +63,7 @@ void OMRendererRenderTargetOpenGL::build()
     {
         gl->glGenFramebuffers(1, &framebuffer);
         gl->glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        int i = 0;
         for (auto tt : textures)
         {
             if (tt->arr == common::Depth)
@@ -72,8 +73,9 @@ void OMRendererRenderTargetOpenGL::build()
             }
             else
             {
-                gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D,
                                            reinterpret_cast<OMRendererTextureOpenGL *>(tt)->texture, 0);
+                i++;
             }
         }
     }

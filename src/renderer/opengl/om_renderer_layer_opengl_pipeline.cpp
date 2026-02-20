@@ -65,8 +65,8 @@ void OMRendererPipelineOpenGL::build()
     {
         auto prog = gl->glCreateShader(fromCommon(pp->typebase));
         auto ss = reinterpret_cast<const GLchar *>(pp->data.data());
-        auto sl = pp->data.size();
-        gl->glShaderSource(prog, 1, &ss, reinterpret_cast<GLint *>(&sl));
+        auto sl = (GLint)pp->data.size();
+        gl->glShaderSource(prog, 1, &ss, &sl);
         gl->glCompileShader(prog);
 
         GLint status;

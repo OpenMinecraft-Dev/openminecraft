@@ -18,6 +18,7 @@ OMRendererOpenGL::OMRendererOpenGL(AppInfo info, void *window)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     glContext = SDL_GL_CreateContext(reinterpret_cast<SDL_Window *>(window));
+    SDL_GL_MakeCurrent(reinterpret_cast<SDL_Window *>(window), reinterpret_cast<SDL_GLContext>(glContext));
 
     this->initGlFuncs();
 
@@ -87,6 +88,13 @@ void OMRendererOpenGL::initGlFuncs()
 
 OMRendererOpenGL::~OMRendererOpenGL()
 {
+    for (auto tsk : tasks)
+    {
+        delete tsk.second;
+    }
+    tasks.clear();
+    handlers.clear();
+    delete defaultTarget;
     SDL_GL_DestroyContext(reinterpret_cast<SDL_GLContext>(glContext));
 }
 
