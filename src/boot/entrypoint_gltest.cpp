@@ -18,6 +18,8 @@ void openglRendererTest()
     auto renderer = new renderer::opengl::OMRendererOpenGL(a, wnd2);
     auto ll = std::make_shared<test::OMTestRenderer>(renderer);
 
+    SDL_GL_SetSwapInterval(0);
+
     renderer->registerHandler(ll);
     renderer->baseInit();
 
@@ -29,6 +31,11 @@ void openglRendererTest()
         if (e.type == SDL_EVENT_QUIT)
         {
             break;
+        }
+
+        if (e.type == SDL_EVENT_WINDOW_RESIZED)
+        {
+            renderer->requestResize();
         }
 
         renderer->render();

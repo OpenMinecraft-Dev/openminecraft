@@ -193,7 +193,7 @@ void OMTestRenderer::beforeFrame()
     ubo.view = camera->fetchViewMat();
     ubo.proj = camera->fetchProjMat();
     // vulkan only!
-    ubo.proj *= glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, -1.0f, 1.0f));
+    // ubo.proj *= glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, -1.0f, 1.0f));
 
     uniformBuffer->updateData(&ubo);
 }

@@ -183,5 +183,16 @@ void OMRendererOpenGL::requestResize()
 {
     auto siz = getExtent();
     gl.glViewport(0, 0, siz.x, siz.y);
+
+    for (auto tsk : tasks)
+    {
+        delete tsk.second;
+    }
+    tasks.clear();
+
+    for (auto h : handlers)
+    {
+        h->submitTasks();
+    }
 }
 } // namespace openminecraft::renderer::opengl
