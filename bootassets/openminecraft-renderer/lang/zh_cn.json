@@ -86,5 +86,7 @@
     "openminecraft.renderer.vk.err.pipeline.shader": "无法创建着色器模块: {}", 
     "openminecraft.renderer.vk.err.pipeline.desc": "无法更新描述符组: {}", 
     "openminecraft.renderer.vk.err.renderpass": "无法创建渲染通道: {}", 
-    "openminecraft.renderer.vk.err.task": "无法修改任务: {}"
+    "openminecraft.renderer.vk.err.task": "无法修改任务: {}", 
+    "openminecraft.renderer.vk.err.image.create": "无法创建图像: {}", 
+    "openminecraft.renderer.vk.err.image.update": "无法更新图像: {}"
 }

@@ -72,30 +72,38 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, common
                                          common::OMTextureArrangement arr, OMRendererVk *renderer)
     : OMRendererTexture(width, height, type, arr, reinterpret_cast<OMRenderer *>(renderer)), renderer(renderer)
 {
-    auto memprop = renderer->physicalDevice.getMemoryProperties();
-    format = fromCommonUsage(arr);
-    image = renderer->logicalDevice.createImage(
-        ImageCreateInfo({}, fromCommonType(type), format, Extent3D(width, height, 1), 1, 1, SampleCountFlagBits::e1,
-                        ImageTiling::eOptimal,
-                        (arr == common::Depth) ? ImageUsageFlagBits::eDepthStencilAttachment
-                                               : ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled |
-                                                     ImageUsageFlagBits::eColorAttachment,
-                        SharingMode::eExclusive, {}, ImageLayout::eUndefined),
-        renderer->allocator);
+    try
+    {
+        auto memprop = renderer->physicalDevice.getMemoryProperties();
+        format = fromCommonUsage(arr);
+        image = renderer->logicalDevice.createImage(
+            ImageCreateInfo({}, fromCommonType(type), format, Extent3D(width, height, 1), 1, 1, SampleCountFlagBits::e1,
+                            ImageTiling::eOptimal,
+                            (arr == common::Depth) ? ImageUsageFlagBits::eDepthStencilAttachment
+                                                   : ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled |
+                                                         ImageUsageFlagBits::eColorAttachment,
+                            SharingMode::eExclusive, {}, ImageLayout::eUndefined),
+            renderer->allocator);
 
-    auto req = renderer->logicalDevice.getImageMemoryRequirements(image);
-    imageMemory = renderer->logicalDevice.allocateMemory(
-        MemoryAllocateInfo(req.size, findMemoryType(req.memoryTypeBits, MemoryPropertyFlagBits::eDeviceLocal, memprop)),
-        renderer->allocator);
+        auto req = renderer->logicalDevice.getImageMemoryRequirements(image);
+        imageMemory = renderer->logicalDevice.allocateMemory(
+            MemoryAllocateInfo(req.size,
+                               findMemoryType(req.memoryTypeBits, MemoryPropertyFlagBits::eDeviceLocal, memprop)),
+            renderer->allocator);
 
-    renderer->logicalDevice.bindImageMemory(image, imageMemory, 0);
+        renderer->logicalDevice.bindImageMemory(image, imageMemory, 0);
 
-    imageView = renderer->logicalDevice.createImageView(
-        ImageViewCreateInfo(
-            {}, image, fromCommonType2(type), format, {},
-            ImageSubresourceRange(((arr == common::Depth) ? ImageAspectFlagBits::eDepth : ImageAspectFlagBits::eColor),
-                                  0, 1, 0, 1)),
-        renderer->allocator);
+        imageView = renderer->logicalDevice.createImageView(
+            ImageViewCreateInfo(
+                {}, image, fromCommonType2(type), format, {},
+                ImageSubresourceRange(
+                    ((arr == common::Depth) ? ImageAspectFlagBits::eDepth : ImageAspectFlagBits::eColor), 0, 1, 0, 1)),
+            renderer->allocator);
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.image.create"));
+    }
 }
 
 OMRendererTextureVk::~OMRendererTextureVk()
@@ -145,30 +153,37 @@ void OMRendererTextureVk::transitionImageLayout(CommandBuffer cmd, ImageLayout o
 
 void OMRendererTextureVk::updateData(void *p)
 {
-    auto stagBuffer =
-        renderer->allocateBuffer(common::Misc, width * height * ((this->arr == common::ColorRgb) ? 3 : 4));
-    stagBuffer->updateData(p);
+    try
+    {
+        auto stagBuffer =
+            renderer->allocateBuffer(common::Misc, width * height * ((this->arr == common::ColorRgb) ? 3 : 4));
+        stagBuffer->updateData(p);
 
-    auto cmdBuff = renderer->logicalDevice.allocateCommandBuffers(
-        CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
+        auto cmdBuff = renderer->logicalDevice.allocateCommandBuffers(
+            CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
 
-    cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
-    transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal);
-    cmdBuff.copyBufferToImage(
-        reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
-        BufferImageCopy(0, 0, 0,
-                        ImageSubresourceLayers((this->arr == common::Depth) ? ImageAspectFlagBits::eDepth
-                                                                            : ImageAspectFlagBits::eColor,
-                                               0, 0, 1),
-                        Offset3D(0, 0, 0), Extent3D(width, height, 1)));
-    transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal);
+        cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
+        transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal);
+        cmdBuff.copyBufferToImage(
+            reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
+            BufferImageCopy(0, 0, 0,
+                            ImageSubresourceLayers((this->arr == common::Depth) ? ImageAspectFlagBits::eDepth
+                                                                                : ImageAspectFlagBits::eColor,
+                                                   0, 0, 1),
+                            Offset3D(0, 0, 0), Extent3D(width, height, 1)));
+        transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal);
 
-    cmdBuff.end();
-    renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
-    renderer->queues.first.waitIdle();
+        cmdBuff.end();
+        renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
+        renderer->queues.first.waitIdle();
 
-    renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
+        renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
 
-    delete stagBuffer;
+        delete stagBuffer;
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.image.update"));
+    }
 }
 } // namespace openminecraft::renderer::vk
