@@ -38,5 +38,6 @@
     "openminecraft.renderer.vk.err.buffer.update": "Unable to update buffer: {}", 
     "openminecraft.renderer.vk.err.pipeline.shader": "Failed to create shader module: {}", 
     "openminecraft.renderer.vk.err.pipeline.desc": "Failed to update descriptor set: {}",
-    "openminecraft.renderer.vk.err.renderpass": "Failed to create render pass: {}"
+    "openminecraft.renderer.vk.err.renderpass": "Failed to create render pass: {}", 
+    "openminecraft.renderer.vk.err.task": "Failed to modify task: {}"
 }

@@ -85,5 +85,6 @@
     "openminecraft.renderer.vk.err.buffer.destroy": "无法销毁缓冲区: {}", 
     "openminecraft.renderer.vk.err.pipeline.shader": "无法创建着色器模块: {}", 
     "openminecraft.renderer.vk.err.pipeline.desc": "无法更新描述符组: {}", 
-    "openminecraft.renderer.vk.err.renderpass": "无法创建渲染通道: {}" 
+    "openminecraft.renderer.vk.err.renderpass": "无法创建渲染通道: {}", 
+    "openminecraft.renderer.vk.err.task": "无法修改任务: {}"
 }

@@ -2,11 +2,13 @@
 
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 #include "vulkan/vulkan.hpp"
 #include <iostream>
 
 using namespace ::vk;
+using namespace openminecraft::i18n::res;
 
 namespace openminecraft::renderer::vk
 {
@@ -98,9 +100,16 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, common
 
 OMRendererTextureVk::~OMRendererTextureVk()
 {
-    renderer->logicalDevice.destroyImageView(imageView, renderer->allocator);
-    renderer->logicalDevice.freeMemory(imageMemory, renderer->allocator);
-    renderer->logicalDevice.destroyImage(image, renderer->allocator);
+    try
+    {
+        renderer->logicalDevice.destroyImageView(imageView, renderer->allocator);
+        renderer->logicalDevice.freeMemory(imageMemory, renderer->allocator);
+        renderer->logicalDevice.destroyImage(image, renderer->allocator);
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.cleanup"));
+    }
 }
 
 void OMRendererTextureVk::transitionImageLayout(CommandBuffer cmd, ImageLayout oldLayout, ImageLayout newLayout)
