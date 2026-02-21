@@ -78,22 +78,29 @@ ShaderStageFlagBits OMRendererPipelineVk::convertTo(common::OMShaderType type)
 
 void OMRendererPipelineVk::attachShader(std::shared_ptr<common::OMShader> shader)
 {
-    auto fin = shader;
-    if (fin->type != common::OMShaderFileType::SPIRVBinary)
+    try
     {
-        fin = fin->convertTo(common::OMShaderFileType::SPIRVBinary);
-    }
-    if (fin == nullptr)
-    {
-        throw OMRendererException(translate("openminecraft.renderer.vk.err.shaderstat"));
-    }
-    compiledShaders.push_back(fin);
+        auto fin = shader;
+        if (fin->type != common::OMShaderFileType::SPIRVBinary)
+        {
+            fin = fin->convertTo(common::OMShaderFileType::SPIRVBinary);
+        }
+        if (fin == nullptr)
+        {
+            throw OMRendererException(translate("openminecraft.renderer.vk.err.shaderstat"));
+        }
+        compiledShaders.push_back(fin);
 
-    auto sm = renderer->logicalDevice.createShaderModule(
-        ShaderModuleCreateInfo({}, fin->data.size(), reinterpret_cast<const uint32_t *>(fin->data.data())),
-        renderer->allocator);
-    shaders.push_back(sm);
-    shaderCreateInfos.push_back({{}, convertTo(shader->typebase), sm, fin->entrypoint.c_str()});
+        auto sm = renderer->logicalDevice.createShaderModule(
+            ShaderModuleCreateInfo({}, fin->data.size(), reinterpret_cast<const uint32_t *>(fin->data.data())),
+            renderer->allocator);
+        shaders.push_back(sm);
+        shaderCreateInfos.push_back({{}, convertTo(shader->typebase), sm, fin->entrypoint.c_str()});
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.pipeline.shader"));
+    }
 }
 
 Format OMRendererPipelineVk::convertTo(common::basics::OMVertexPropType type)
@@ -164,28 +171,42 @@ void OMRendererPipelineVk::bindOutput(common::OMRendererRenderTarget *target)
 
 void OMRendererPipelineVk::bindInput(int idx, common::OMRendererBuffer *buff)
 {
-    std::vector c = {DescriptorBufferInfo(reinterpret_cast<OMRendererBufferVk *>(buff)->buffer, 0,
-                                          static_cast<DeviceSize>(buff->length))};
-    renderer->logicalDevice.updateDescriptorSets(
-        WriteDescriptorSet(descriptorSet, idx, 0, DescriptorType::eUniformBuffer, {}, c), nullptr);
+    try
+    {
+        std::vector c = {DescriptorBufferInfo(reinterpret_cast<OMRendererBufferVk *>(buff)->buffer, 0,
+                                              static_cast<DeviceSize>(buff->length))};
+        renderer->logicalDevice.updateDescriptorSets(
+            WriteDescriptorSet(descriptorSet, idx, 0, DescriptorType::eUniformBuffer, {}, c), nullptr);
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.pipeline.desc"));
+    }
 }
 void OMRendererPipelineVk::bindInput(int idx, common::OMRendererTexture *texture)
 {
-    auto prop = renderer->physicalDevice.getProperties();
-    auto fea = renderer->physicalDevice.getFeatures();
+    try
+    {
+        auto prop = renderer->physicalDevice.getProperties();
+        auto fea = renderer->physicalDevice.getFeatures();
 
-    auto textureSampler = renderer->logicalDevice.createSampler(
-        SamplerCreateInfo({}, Filter::eLinear, Filter::eLinear, SamplerMipmapMode::eLinear, SamplerAddressMode::eRepeat,
-                          SamplerAddressMode::eRepeat, SamplerAddressMode::eRepeat, 0.0f, fea.samplerAnisotropy,
-                          prop.limits.maxSamplerAnisotropy, false, CompareOp::eAlways, 0.0f, 0.0f,
-                          BorderColor::eIntOpaqueBlack, false),
-        renderer->allocator);
-    tempSamplers.push_back(textureSampler);
+        auto textureSampler = renderer->logicalDevice.createSampler(
+            SamplerCreateInfo({}, Filter::eLinear, Filter::eLinear, SamplerMipmapMode::eLinear,
+                              SamplerAddressMode::eRepeat, SamplerAddressMode::eRepeat, SamplerAddressMode::eRepeat,
+                              0.0f, fea.samplerAnisotropy, prop.limits.maxSamplerAnisotropy, false, CompareOp::eAlways,
+                              0.0f, 0.0f, BorderColor::eIntOpaqueBlack, false),
+            renderer->allocator);
+        tempSamplers.push_back(textureSampler);
 
-    auto cc = DescriptorImageInfo(textureSampler, reinterpret_cast<OMRendererTextureVk *>(texture)->imageView,
-                                  ImageLayout::eShaderReadOnlyOptimal);
-    renderer->logicalDevice.updateDescriptorSets(
-        WriteDescriptorSet(descriptorSet, idx, 0, DescriptorType::eCombinedImageSampler, cc, {}), nullptr);
+        auto cc = DescriptorImageInfo(textureSampler, reinterpret_cast<OMRendererTextureVk *>(texture)->imageView,
+                                      ImageLayout::eShaderReadOnlyOptimal);
+        renderer->logicalDevice.updateDescriptorSets(
+            WriteDescriptorSet(descriptorSet, idx, 0, DescriptorType::eCombinedImageSampler, cc, {}), nullptr);
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.pipeline.desc"));
+    }
 }
 
 void OMRendererPipelineVk::build()
@@ -195,17 +216,24 @@ void OMRendererPipelineVk::build()
         return;
     }
 
-    descriptorSetLayout = renderer->logicalDevice.createDescriptorSetLayout(
-        DescriptorSetLayoutCreateInfo({}, descriptorSetLayoutBindings), renderer->allocator);
+    try
+    {
+        descriptorSetLayout = renderer->logicalDevice.createDescriptorSetLayout(
+            DescriptorSetLayoutCreateInfo({}, descriptorSetLayoutBindings), renderer->allocator);
 
-    descriptorPool = renderer->logicalDevice.createDescriptorPool(
-        DescriptorPoolCreateInfo(DescriptorPoolCreateFlagBits::eFreeDescriptorSet, descriptorSetLayoutBindings.size(),
-                                 descriptorPoolSizes),
-        renderer->allocator);
-    descriptorSet = renderer->logicalDevice.allocateDescriptorSets({descriptorPool, 1, &descriptorSetLayout})[0];
+        descriptorPool = renderer->logicalDevice.createDescriptorPool(
+            DescriptorPoolCreateInfo(DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
+                                     descriptorSetLayoutBindings.size(), descriptorPoolSizes),
+            renderer->allocator);
+        descriptorSet = renderer->logicalDevice.allocateDescriptorSets({descriptorPool, 1, &descriptorSetLayout})[0];
 
-    pipelineLayout = renderer->logicalDevice.createPipelineLayout(PipelineLayoutCreateInfo({}, descriptorSetLayout),
-                                                                  renderer->allocator);
+        pipelineLayout = renderer->logicalDevice.createPipelineLayout(PipelineLayoutCreateInfo({}, descriptorSetLayout),
+                                                                      renderer->allocator);
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.pipeline.desc"));
+    }
 
     auto vertexInput = PipelineVertexInputStateCreateInfo({}, vertexInputBindingDesc, vertexInputAttrDesc);
     auto inputAssembly = PipelineInputAssemblyStateCreateInfo({}, PrimitiveTopology::eTriangleList, false);

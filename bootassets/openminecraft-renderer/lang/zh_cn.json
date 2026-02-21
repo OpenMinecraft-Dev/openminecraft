@@ -10,7 +10,7 @@
     "openminecraft.renderer.vk.sdl.err": "SDL 库加载错误: {}", 
     "openminecraft.renderer.vk.err.NotReady": "未准备", 
     "openminecraft.renderer.vk.err.Timeout": "已超时", 
-    "openminecraft.renderer.vk.err.EventSet": "事件组", 
+    "openminecraft.renderer.vk.err.EventSet": "事件设置", 
     "openminecraft.renderer.vk.err.EventReset": "事件重置", 
     "openminecraft.renderer.vk.err.Incomplete": "结果/输入不完整", 
     "openminecraft.renderer.vk.err.ErrorOutOfHostMemory": "内存耗尽",
@@ -82,5 +82,8 @@
     "openminecraft.renderer.vk.err.cleanup": "回收资源时发生错误: {}", 
     "openminecraft.renderer.vk.err.buffer": "无法创建缓冲区: {}", 
     "openminecraft.renderer.vk.err.buffer.update": "无法更新缓冲区: {}", 
-    "openminecraft.renderer.vk.err.buffer.destroy": "无法销毁缓冲区: {}"
+    "openminecraft.renderer.vk.err.buffer.destroy": "无法销毁缓冲区: {}", 
+    "openminecraft.renderer.vk.err.pipeline.shader": "无法创建着色器模块: {}", 
+    "openminecraft.renderer.vk.err.pipeline.desc": "无法更新描述符组: {}", 
+    "openminecraft.renderer.vk.err.renderpass": "无法创建渲染通道: {}" 
 }

@@ -11,6 +11,7 @@
 #include <stdexcept>
 
 using namespace ::vk;
+using namespace openminecraft::i18n::res;
 
 namespace openminecraft::renderer::vk
 {
@@ -21,14 +22,21 @@ OMRendererRenderTargetVk::OMRendererRenderTargetVk(OMRendererVk *renderer)
 
 OMRendererRenderTargetVk::~OMRendererRenderTargetVk()
 {
-    if (block)
+    try
     {
-        renderer->logicalDevice.destroyFramebuffer(block->framebuffer, renderer->allocator);
-        delete block;
+        if (block)
+        {
+            renderer->logicalDevice.destroyFramebuffer(block->framebuffer, renderer->allocator);
+            delete block;
+        }
+        if (available)
+        {
+            renderer->logicalDevice.destroyRenderPass(renderPass, renderer->allocator);
+        }
     }
-    if (available)
+    catch (SystemError &e)
     {
-        renderer->logicalDevice.destroyRenderPass(renderPass, renderer->allocator);
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.cleanup"));
     }
 }
 
@@ -60,89 +68,98 @@ void OMRendererRenderTargetVk::build()
     {
         return;
     }
-    // gino: no textures, render it to the screen (default properties)
-    if (textures.empty())
+
+    try
     {
-        auto attaches = std::vector{AttachmentReference(0, ImageLayout::eColorAttachmentOptimal)};
-        auto depthAtt = AttachmentReference(1, ImageLayout::eDepthStencilAttachmentOptimal);
+        // gino: no textures, render it to the screen (default properties)
+        if (textures.empty())
+        {
+            auto attaches = std::vector{AttachmentReference(0, ImageLayout::eColorAttachmentOptimal)};
+            auto depthAtt = AttachmentReference(1, ImageLayout::eDepthStencilAttachmentOptimal);
 
-        auto attachments = std::vector{
-            AttachmentDescription({}, renderer->swapchainManager->format.format, SampleCountFlagBits::e1,
-                                  AttachmentLoadOp::eClear, AttachmentStoreOp::eStore, AttachmentLoadOp::eDontCare,
-                                  AttachmentStoreOp::eDontCare, ImageLayout::eUndefined, ImageLayout::ePresentSrcKHR),
-            AttachmentDescription({}, Format::eD32Sfloat, SampleCountFlagBits::e1, AttachmentLoadOp::eClear,
-                                  AttachmentStoreOp::eDontCare, AttachmentLoadOp::eDontCare,
-                                  AttachmentStoreOp::eDontCare, ImageLayout::eUndefined,
-                                  ImageLayout::eDepthStencilAttachmentOptimal)};
-        auto subpasses =
-            std::vector{SubpassDescription({}, PipelineBindPoint::eGraphics, nullptr, attaches, {}, &depthAtt)};
-        auto depe = std::vector{SubpassDependency(
-            VK_SUBPASS_EXTERNAL, 0,
-            PipelineStageFlagBits::eColorAttachmentOutput | PipelineStageFlagBits::eEarlyFragmentTests,
-            PipelineStageFlagBits::eColorAttachmentOutput | PipelineStageFlagBits::eEarlyFragmentTests, {},
-            AccessFlagBits::eColorAttachmentRead | AccessFlagBits::eColorAttachmentWrite |
-                AccessFlagBits::eDepthStencilAttachmentWrite)};
+            auto attachments = std::vector{
+                AttachmentDescription({}, renderer->swapchainManager->format.format, SampleCountFlagBits::e1,
+                                      AttachmentLoadOp::eClear, AttachmentStoreOp::eStore, AttachmentLoadOp::eDontCare,
+                                      AttachmentStoreOp::eDontCare, ImageLayout::eUndefined,
+                                      ImageLayout::ePresentSrcKHR),
+                AttachmentDescription({}, Format::eD32Sfloat, SampleCountFlagBits::e1, AttachmentLoadOp::eClear,
+                                      AttachmentStoreOp::eDontCare, AttachmentLoadOp::eDontCare,
+                                      AttachmentStoreOp::eDontCare, ImageLayout::eUndefined,
+                                      ImageLayout::eDepthStencilAttachmentOptimal)};
+            auto subpasses =
+                std::vector{SubpassDescription({}, PipelineBindPoint::eGraphics, nullptr, attaches, {}, &depthAtt)};
+            auto depe = std::vector{SubpassDependency(
+                VK_SUBPASS_EXTERNAL, 0,
+                PipelineStageFlagBits::eColorAttachmentOutput | PipelineStageFlagBits::eEarlyFragmentTests,
+                PipelineStageFlagBits::eColorAttachmentOutput | PipelineStageFlagBits::eEarlyFragmentTests, {},
+                AccessFlagBits::eColorAttachmentRead | AccessFlagBits::eColorAttachmentWrite |
+                    AccessFlagBits::eDepthStencilAttachmentWrite)};
 
-        renderPass = renderer->logicalDevice.createRenderPass(RenderPassCreateInfo({}, attachments, subpasses, depe),
-                                                              renderer->allocator);
+            renderPass = renderer->logicalDevice.createRenderPass(
+                RenderPassCreateInfo({}, attachments, subpasses, depe), renderer->allocator);
+        }
+        else
+        {
+            std::vector<AttachmentReference> colorAttach, depthAttach = {};
+            std::vector<AttachmentDescription> attachDesc = {};
+            uint32_t a = 0;
+            for (auto tt : textures)
+            {
+                if (tt->arr == common::OMTextureArrangement::Depth)
+                {
+                    attachDesc.push_back({{},
+                                          reinterpret_cast<OMRendererTextureVk *>(tt)->format,
+                                          SampleCountFlagBits::e1,
+                                          AttachmentLoadOp::eClear,
+                                          AttachmentStoreOp::eDontCare,
+                                          AttachmentLoadOp::eDontCare,
+                                          AttachmentStoreOp::eDontCare,
+                                          ImageLayout::eUndefined,
+                                          ImageLayout::eDepthStencilAttachmentOptimal});
+                    depthAttach.push_back({a, ImageLayout::eDepthStencilAttachmentOptimal});
+                }
+                else
+                {
+                    attachDesc.push_back({{},
+                                          reinterpret_cast<OMRendererTextureVk *>(tt)->format,
+                                          SampleCountFlagBits::e1,
+                                          AttachmentLoadOp::eClear,
+                                          AttachmentStoreOp::eStore,
+                                          AttachmentLoadOp::eDontCare,
+                                          AttachmentStoreOp::eDontCare,
+                                          ImageLayout::eUndefined,
+                                          ImageLayout::eShaderReadOnlyOptimal});
+                    colorAttach.push_back({a, ImageLayout::eColorAttachmentOptimal});
+                }
+                a++;
+            }
+
+            if (depthAttach.size() > 1)
+            {
+                throw OMRendererException(i18n::res::translate("openminecraft.renderer.vk.err.fb.depth"));
+            }
+
+            auto subpasses = std::vector{SubpassDescription({}, PipelineBindPoint::eGraphics, nullptr, colorAttach, {},
+                                                            depthAttach.empty() ? nullptr : depthAttach.data())};
+            auto depe = std::vector{SubpassDependency(
+                VK_SUBPASS_EXTERNAL, 0,
+                PipelineStageFlagBits::eColorAttachmentOutput | PipelineStageFlagBits::eEarlyFragmentTests,
+                PipelineStageFlagBits::eColorAttachmentOutput | PipelineStageFlagBits::eEarlyFragmentTests, {},
+                AccessFlagBits::eColorAttachmentRead | AccessFlagBits::eColorAttachmentWrite |
+                    AccessFlagBits::eDepthStencilAttachmentWrite)};
+
+            renderPass = renderer->logicalDevice.createRenderPass(RenderPassCreateInfo({}, attachDesc, subpasses, depe),
+                                                                  renderer->allocator);
+
+            block = new OMRendererRenderTargetBlock;
+            buildFramebuffer();
+        }
+        available = true;
     }
-    else
+    catch (SystemError &e)
     {
-        std::vector<AttachmentReference> colorAttach, depthAttach = {};
-        std::vector<AttachmentDescription> attachDesc = {};
-        uint32_t a = 0;
-        for (auto tt : textures)
-        {
-            if (tt->arr == common::OMTextureArrangement::Depth)
-            {
-                attachDesc.push_back({{},
-                                      reinterpret_cast<OMRendererTextureVk *>(tt)->format,
-                                      SampleCountFlagBits::e1,
-                                      AttachmentLoadOp::eClear,
-                                      AttachmentStoreOp::eDontCare,
-                                      AttachmentLoadOp::eDontCare,
-                                      AttachmentStoreOp::eDontCare,
-                                      ImageLayout::eUndefined,
-                                      ImageLayout::eDepthStencilAttachmentOptimal});
-                depthAttach.push_back({a, ImageLayout::eDepthStencilAttachmentOptimal});
-            }
-            else
-            {
-                attachDesc.push_back({{},
-                                      reinterpret_cast<OMRendererTextureVk *>(tt)->format,
-                                      SampleCountFlagBits::e1,
-                                      AttachmentLoadOp::eClear,
-                                      AttachmentStoreOp::eStore,
-                                      AttachmentLoadOp::eDontCare,
-                                      AttachmentStoreOp::eDontCare,
-                                      ImageLayout::eUndefined,
-                                      ImageLayout::eShaderReadOnlyOptimal});
-                colorAttach.push_back({a, ImageLayout::eColorAttachmentOptimal});
-            }
-            a++;
-        }
-
-        if (depthAttach.size() > 1)
-        {
-            throw OMRendererException(i18n::res::translate("openminecraft.renderer.vk.err.fb.depth"));
-        }
-
-        auto subpasses = std::vector{SubpassDescription({}, PipelineBindPoint::eGraphics, nullptr, colorAttach, {},
-                                                        depthAttach.empty() ? nullptr : depthAttach.data())};
-        auto depe = std::vector{SubpassDependency(
-            VK_SUBPASS_EXTERNAL, 0,
-            PipelineStageFlagBits::eColorAttachmentOutput | PipelineStageFlagBits::eEarlyFragmentTests,
-            PipelineStageFlagBits::eColorAttachmentOutput | PipelineStageFlagBits::eEarlyFragmentTests, {},
-            AccessFlagBits::eColorAttachmentRead | AccessFlagBits::eColorAttachmentWrite |
-                AccessFlagBits::eDepthStencilAttachmentWrite)};
-
-        renderPass = renderer->logicalDevice.createRenderPass(RenderPassCreateInfo({}, attachDesc, subpasses, depe),
-                                                              renderer->allocator);
-
-        block = new OMRendererRenderTargetBlock;
-        buildFramebuffer();
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.renderpass"));
     }
-    available = true;
 }
 
 void OMRendererRenderTargetVk::replaceTarget(int idx, common::OMRendererTexture *texture)
