@@ -23,17 +23,24 @@ OMRendererPipelineVk::OMRendererPipelineVk(OMRendererVk *renderer)
 
 OMRendererPipelineVk::~OMRendererPipelineVk()
 {
-    if (available)
+    try
     {
-        for (auto smp : tempSamplers)
+        if (available)
         {
-            renderer->logicalDevice.destroySampler(smp, renderer->allocator);
+            for (auto smp : tempSamplers)
+            {
+                renderer->logicalDevice.destroySampler(smp, renderer->allocator);
+            }
+            renderer->logicalDevice.freeDescriptorSets(descriptorPool, descriptorSet);
+            renderer->logicalDevice.destroyDescriptorPool(descriptorPool, renderer->allocator);
+            renderer->logicalDevice.destroyDescriptorSetLayout(descriptorSetLayout, renderer->allocator);
+            renderer->logicalDevice.destroyPipeline(pipeline, renderer->allocator);
+            renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
         }
-        renderer->logicalDevice.freeDescriptorSets(descriptorPool, descriptorSet);
-        renderer->logicalDevice.destroyDescriptorPool(descriptorPool, renderer->allocator);
-        renderer->logicalDevice.destroyDescriptorSetLayout(descriptorSetLayout, renderer->allocator);
-        renderer->logicalDevice.destroyPipeline(pipeline, renderer->allocator);
-        renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.cleanup"));
     }
 }
 

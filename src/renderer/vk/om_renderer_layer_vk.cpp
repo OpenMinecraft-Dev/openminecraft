@@ -223,50 +223,57 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 
 void OMRendererVk::rebuildDefaults()
 {
-    for (auto &fb : defaultFramebuffers)
+    try
     {
-        logicalDevice.destroyFramebuffer(fb, allocator);
-    }
-    defaultFramebuffers.clear();
-    for (auto &cb : defaultCommandBuffers)
-    {
-        logicalDevice.freeCommandBuffers(tempCommandPool, cb);
-    }
-    defaultCommandBuffers.clear();
-
-    for (auto img : swapchainManager->swapchainImageViews)
-    {
-        std::vector ii = {img, reinterpret_cast<OMRendererTextureVk *>(defaultDepthBuffer)->imageView};
-        defaultFramebuffers.push_back(logicalDevice.createFramebuffer(
-            FramebufferCreateInfo({},
-                                  reinterpret_cast<OMRendererRenderTargetVk *>(getDefaultRenderTarget())->renderPass,
-                                  ii, swapchainManager->extent.width, swapchainManager->extent.height, 1),
-            allocator));
-    }
-    for (int i = 0; i < defaultFramebuffers.size(); i++)
-    {
-        auto commandBuffer = logicalDevice.allocateCommandBuffers(
-            CommandBufferAllocateInfo(tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
-
-        commandBuffer.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eSimultaneousUse));
-        std::vector test = {ClearValue({0.0f, 0.0f, 0.0f, 0.0f}), ClearValue({1.0f, 0})};
-        commandBuffer.beginRenderPass(
-            RenderPassBeginInfo(reinterpret_cast<OMRendererRenderTargetVk *>(getDefaultRenderTarget())->renderPass,
-                                defaultFramebuffers[i], Rect2D(Offset2D(0, 0), swapchainManager->extent), test),
-            SubpassContents::eSecondaryCommandBuffers);
-
-        for (auto tsk : tasks)
+        for (auto &fb : defaultFramebuffers)
         {
-            if (!reinterpret_cast<OMRendererTaskVk *>(tsk.second)->isOnDefault())
-            {
-                continue;
-            }
-            commandBuffer.executeCommands(reinterpret_cast<OMRendererTaskVk *>(tsk.second)->commandBuffer);
+            logicalDevice.destroyFramebuffer(fb, allocator);
         }
-        commandBuffer.endRenderPass();
-        commandBuffer.end();
+        defaultFramebuffers.clear();
+        for (auto &cb : defaultCommandBuffers)
+        {
+            logicalDevice.freeCommandBuffers(tempCommandPool, cb);
+        }
+        defaultCommandBuffers.clear();
 
-        defaultCommandBuffers.push_back(commandBuffer);
+        for (auto img : swapchainManager->swapchainImageViews)
+        {
+            std::vector ii = {img, reinterpret_cast<OMRendererTextureVk *>(defaultDepthBuffer)->imageView};
+            defaultFramebuffers.push_back(logicalDevice.createFramebuffer(
+                FramebufferCreateInfo(
+                    {}, reinterpret_cast<OMRendererRenderTargetVk *>(getDefaultRenderTarget())->renderPass, ii,
+                    swapchainManager->extent.width, swapchainManager->extent.height, 1),
+                allocator));
+        }
+        for (int i = 0; i < defaultFramebuffers.size(); i++)
+        {
+            auto commandBuffer = logicalDevice.allocateCommandBuffers(
+                CommandBufferAllocateInfo(tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
+
+            commandBuffer.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eSimultaneousUse));
+            std::vector test = {ClearValue({0.0f, 0.0f, 0.0f, 0.0f}), ClearValue({1.0f, 0})};
+            commandBuffer.beginRenderPass(
+                RenderPassBeginInfo(reinterpret_cast<OMRendererRenderTargetVk *>(getDefaultRenderTarget())->renderPass,
+                                    defaultFramebuffers[i], Rect2D(Offset2D(0, 0), swapchainManager->extent), test),
+                SubpassContents::eSecondaryCommandBuffers);
+
+            for (auto tsk : tasks)
+            {
+                if (!reinterpret_cast<OMRendererTaskVk *>(tsk.second)->isOnDefault())
+                {
+                    continue;
+                }
+                commandBuffer.executeCommands(reinterpret_cast<OMRendererTaskVk *>(tsk.second)->commandBuffer);
+            }
+            commandBuffer.endRenderPass();
+            commandBuffer.end();
+
+            defaultCommandBuffers.push_back(commandBuffer);
+        }
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.defaults"));
     }
 }
 
@@ -429,7 +436,14 @@ void OMRendererVk::render()
     }
 
 reb:
-    logicalDevice.waitIdle();
+    try
+    {
+        logicalDevice.waitIdle();
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.wait"));
+    }
     swapchainManager->destroy();
     swapchainManager->reinit();
 
@@ -458,9 +472,16 @@ void OMRendererVk::requestResize()
 
 swapchain::OMSwapchainCap OMRendererVk::getSwapchainCap()
 {
-    return swapchain::OMSwapchainCap{physicalDevice.getSurfaceCapabilitiesKHR(surface),
-                                     physicalDevice.getSurfaceFormatsKHR(surface),
-                                     physicalDevice.getSurfacePresentModesKHR(surface)};
+    try
+    {
+        return swapchain::OMSwapchainCap{physicalDevice.getSurfaceCapabilitiesKHR(surface),
+                                         physicalDevice.getSurfaceFormatsKHR(surface),
+                                         physicalDevice.getSurfacePresentModesKHR(surface)};
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.swapchaincap"));
+    }
 }
 
 OMResult<std::any, std::string> OMRendererVk::deviceQueueFetch()
@@ -593,7 +614,6 @@ OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std
         ApplicationInfo appInfo(info.appName.c_str(), info.appVer.toVKVersion(), info.engineName.c_str(),
                                 info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
         std::vector<const char *> l;
-        // l.push_back("VK_LAYER_LUNARG_api_dump");
         validationLayer->attach(&l);
         auto i = createInstance(InstanceCreateInfo{{}, &appInfo, l, exts, &validationLayer->createInfo}, allocator);
         logger->info(translate("openminecraft.renderer.vk.instance", info.appName, info.appVer.toString(),
@@ -690,41 +710,55 @@ void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAll
 }
 OMRendererVk::~OMRendererVk()
 {
-    logicalDevice.waitIdle();
-    for (auto sync : frameSyncs)
+    try
     {
-        logicalDevice.destroySemaphore(sync.imageAvailableSemaphore, allocator);
-        logicalDevice.destroyFence(sync.inFlightFence, allocator);
-    }
-    for (auto sep : frameRenderSemaphores)
-    {
-        logicalDevice.destroySemaphore(sep, allocator);
-    }
+        logicalDevice.waitIdle();
+        for (auto sync : frameSyncs)
+        {
+            logicalDevice.destroySemaphore(sync.imageAvailableSemaphore, allocator);
+            logicalDevice.destroyFence(sync.inFlightFence, allocator);
+        }
+        for (auto sep : frameRenderSemaphores)
+        {
+            logicalDevice.destroySemaphore(sep, allocator);
+        }
 
-    delete defaultDepthBuffer;
-    for (auto &fb : defaultFramebuffers)
-    {
-        logicalDevice.destroyFramebuffer(fb, allocator);
-    }
-    for (auto &cb : defaultCommandBuffers)
-    {
-        logicalDevice.freeCommandBuffers(tempCommandPool, cb);
-    }
-    this->clearTasks();
-    logicalDevice.destroyCommandPool(tempCommandPool, allocator);
-    delete defaultTarget;
-    handlers.clear();
+        delete defaultDepthBuffer;
+        for (auto &fb : defaultFramebuffers)
+        {
+            logicalDevice.destroyFramebuffer(fb, allocator);
+        }
+        for (auto &cb : defaultCommandBuffers)
+        {
+            logicalDevice.freeCommandBuffers(tempCommandPool, cb);
+        }
+        this->clearTasks();
+        logicalDevice.destroyCommandPool(tempCommandPool, allocator);
+        delete defaultTarget;
+        handlers.clear();
 
-    swapchainManager->destroy();
-    validationLayer->ifEnable([&]() { instance.destroyDebugReportCallbackEXT(reportCallback, &allocator); });
+        swapchainManager->destroy();
+        validationLayer->ifEnable([&]() { instance.destroyDebugReportCallbackEXT(reportCallback, &allocator); });
 
-    logicalDevice.destroy(allocator);
-    instance.destroySurfaceKHR(surface, allocator);
-    instance.destroy(allocator);
-    SDL_Vulkan_UnloadLibrary();
+        logicalDevice.destroy(allocator);
+        instance.destroySurfaceKHR(surface, allocator);
+        instance.destroy(allocator);
+        SDL_Vulkan_UnloadLibrary();
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.cleanup"));
+    }
 }
 std::string OMRendererVk::driver()
 {
-    return physicalDevice.getProperties().deviceName;
+    try
+    {
+        return physicalDevice.getProperties().deviceName;
+    }
+    catch (SystemError &e)
+    {
+        return "<unknown>";
+    }
 }
 } // namespace openminecraft::renderer::vk

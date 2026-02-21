@@ -75,5 +75,12 @@
     "openminecraft.renderer.vk.err.fb.depth": "深度缓冲区过多!",
     "openminecraft.renderer.vk.err.swapchain.images": "无法从交换链获取图像: {}", 
     "openminecraft.renderer.vk.err.swapchain.imageview": "无法创建 ImageView: {}",
-    "openminecraft.renderer.vk.err.image.layout": "不支持的图片布局转换"
+    "openminecraft.renderer.vk.err.image.layout": "不支持的图片布局转换", 
+    "openminecraft.renderer.vk.err.defaults": "渲染器重构失败: {}", 
+    "openminecraft.renderer.vk.err.wait": "等待设备: {}", 
+    "openminecraft.renderer.vk.err.swapchaincap": "无法获取交换链信息: {}", 
+    "openminecraft.renderer.vk.err.cleanup": "回收资源时发生错误: {}", 
+    "openminecraft.renderer.vk.err.buffer": "无法创建缓冲区: {}", 
+    "openminecraft.renderer.vk.err.buffer.update": "无法更新缓冲区: {}", 
+    "openminecraft.renderer.vk.err.buffer.destroy": "无法销毁缓冲区: {}"
 }

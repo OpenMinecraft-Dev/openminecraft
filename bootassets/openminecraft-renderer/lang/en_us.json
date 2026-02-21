@@ -29,5 +29,11 @@
     "openminecraft.renderer.vk.err.fb.depth": "Too many depth buffers!", 
     "openminecraft.renderer.vk.err.swapchain.images": "Failed to fetch images: {}", 
     "openminecraft.renderer.vk.err.swapchain.imageview": "Failed to create image view: {}", 
-    "openminecraft.renderer.vk.err.image.layout": "Unsupport image layout transition"
+    "openminecraft.renderer.vk.err.image.layout": "Unsupport image layout transition", 
+    "openminecraft.renderer.vk.err.defaults": "Rebuild renderer failed: {}", 
+    "openminecraft.renderer.vk.err.wait": "Wait for device: {}", 
+    "openminecraft.renderer.vk.err.swapchaincap": "Failed to fetch swapchain info: {}", 
+    "openminecraft.renderer.vk.err.cleanup": "Exception while cleanup: {}", 
+    "openminecraft.renderer.vk.err.buffer": "Unable to create buffer: {}", 
+    "openminecraft.renderer.vk.err.buffer.update": "Unable to update buffer: {}", 
 }

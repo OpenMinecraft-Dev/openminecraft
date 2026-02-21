@@ -36,7 +36,6 @@ static void setupI18nEnv()
 {
     i18n::res::registerModule("openminecraft-boot");
     i18n::res::registerModule("openminecraft-renderer");
-    i18n::res::registerModule("openminecraft-mem");
     i18n::res::pushResourceRoot("/bootassets");
     i18n::res::load();
 }

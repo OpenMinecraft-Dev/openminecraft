@@ -61,42 +61,64 @@ static BufferUsageFlagBits mapToUsageFlag(OMBufferUsage usage)
 
 void OMRendererBufferVk::initialize()
 {
-    auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
-    this->buffer = renderer->logicalDevice.createBuffer(
-        BufferCreateInfo({}, this->length, mapToUsageFlag(this->usage), SharingMode::eExclusive), renderer->allocator);
+    try
+    {
+        auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
+        this->buffer = renderer->logicalDevice.createBuffer(
+            BufferCreateInfo({}, this->length, mapToUsageFlag(this->usage), SharingMode::eExclusive),
+            renderer->allocator);
 
-    auto memprop = renderer->physicalDevice.getMemoryProperties();
+        auto memprop = renderer->physicalDevice.getMemoryProperties();
 
-    auto req = renderer->logicalDevice.getBufferMemoryRequirements(this->buffer);
-    this->bufferMemory = renderer->logicalDevice.allocateMemory(
-        MemoryAllocateInfo(req.size, findMemoryType(req.memoryTypeBits, defFlags(), memprop)), renderer->allocator);
-    renderer->logicalDevice.bindBufferMemory(this->buffer, this->bufferMemory, 0);
+        auto req = renderer->logicalDevice.getBufferMemoryRequirements(this->buffer);
+        this->bufferMemory = renderer->logicalDevice.allocateMemory(
+            MemoryAllocateInfo(req.size, findMemoryType(req.memoryTypeBits, defFlags(), memprop)), renderer->allocator);
+        renderer->logicalDevice.bindBufferMemory(this->buffer, this->bufferMemory, 0);
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.buffer"));
+    }
 }
 
 void OMRendererBufferVk::release() const
 {
-    auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
-
-    if (alwaysMapped)
+    try
     {
-        renderer->logicalDevice.unmapMemory(this->bufferMemory);
-    }
+        auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
 
-    renderer->logicalDevice.freeMemory(this->bufferMemory, renderer->allocator);
-    renderer->logicalDevice.destroyBuffer(this->buffer, renderer->allocator);
+        if (alwaysMapped)
+        {
+            renderer->logicalDevice.unmapMemory(this->bufferMemory);
+        }
+
+        renderer->logicalDevice.freeMemory(this->bufferMemory, renderer->allocator);
+        renderer->logicalDevice.destroyBuffer(this->buffer, renderer->allocator);
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.cleanup"));
+    }
 }
 
 void OMRendererBufferVk::updateData(void *src)
 {
-    auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
-    auto vtx = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
-    std::memcpy(vtx, src, this->length);
-
-    if (alwaysMapped)
+    try
     {
-        return;
-    }
+        auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
+        auto vtx = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
+        std::memcpy(vtx, src, this->length);
 
-    renderer->logicalDevice.unmapMemory(this->bufferMemory);
+        if (alwaysMapped)
+        {
+            return;
+        }
+
+        renderer->logicalDevice.unmapMemory(this->bufferMemory);
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.buffer.update"));
+    }
 }
 } // namespace openminecraft::renderer::vk
