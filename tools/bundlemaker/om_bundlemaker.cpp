@@ -177,12 +177,14 @@ int main(int argc, char **argv)
 
     for (auto const &l : filesa)
     {
-        std::ifstream ifs(l.full);
+        std::ifstream ifs(l.full, std::ios::binary);
         om.appendFile({static_cast<uint64_t>(time(nullptr)), 0, l.name, author}, ifs);
+        std::cout << "file append: " << l.name << std::endl;
     }
 
-    std::ofstream ofs(targetfile);
+    std::ofstream ofs(targetfile, std::ios::binary);
     om.saveBundle(ofs);
+    ofs.close();
 
     return 0;
 }

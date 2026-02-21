@@ -86,7 +86,7 @@ int boot(std::vector<std::string> args)
             break;
         }
         case "gltest"_hash: {
-            openglRendererTest(); 
+            openglRendererTest();
             break;
         }
         case "quit"_hash:

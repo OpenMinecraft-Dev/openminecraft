@@ -170,6 +170,14 @@ OMBundle::~OMBundle()
 // gino: we don't know how long the file is!
 void OMBundle::appendFile(OMBundleFileMetadata metadata, std::istream &stream)
 {
+    for (auto &ch : metadata.name)
+    {
+        if (ch == '\\')
+        {
+            ch = '/';
+        }
+    }
+
     stream.seekg(0, std::ios::end);
     auto length = stream.tellg();
     metadata.length = length;
