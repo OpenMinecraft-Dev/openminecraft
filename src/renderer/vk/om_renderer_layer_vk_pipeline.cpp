@@ -159,7 +159,7 @@ void OMRendererPipelineVk::bindInput(int idx, common::OMRendererBuffer *buff)
     std::vector c = {DescriptorBufferInfo(reinterpret_cast<OMRendererBufferVk *>(buff)->buffer, 0,
                                           static_cast<DeviceSize>(buff->length))};
     renderer->logicalDevice.updateDescriptorSets(
-        WriteDescriptorSet(descriptorSet, 0, 0, DescriptorType::eUniformBuffer, {}, c), nullptr);
+        WriteDescriptorSet(descriptorSet, idx, 0, DescriptorType::eUniformBuffer, {}, c), nullptr);
 }
 void OMRendererPipelineVk::bindInput(int idx, common::OMRendererTexture *texture)
 {
@@ -177,7 +177,7 @@ void OMRendererPipelineVk::bindInput(int idx, common::OMRendererTexture *texture
     auto cc = DescriptorImageInfo(textureSampler, reinterpret_cast<OMRendererTextureVk *>(texture)->imageView,
                                   ImageLayout::eShaderReadOnlyOptimal);
     renderer->logicalDevice.updateDescriptorSets(
-        WriteDescriptorSet(descriptorSet, 1, 0, DescriptorType::eCombinedImageSampler, cc, {}), nullptr);
+        WriteDescriptorSet(descriptorSet, idx, 0, DescriptorType::eCombinedImageSampler, cc, {}), nullptr);
 }
 
 void OMRendererPipelineVk::build()

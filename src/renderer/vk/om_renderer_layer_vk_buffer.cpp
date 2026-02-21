@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
+#include <stdexcept>
 
 using namespace vk;
 using namespace openminecraft::renderer::common;
@@ -29,7 +30,7 @@ static uint32_t findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properti
         }
     }
 
-    return 0;
+    throw std::runtime_error("memory type not found!");
 }
 
 static MemoryPropertyFlags defFlags()

@@ -1,4 +1,5 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_task.hpp"
+#include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_pipeline.hpp"
@@ -67,7 +68,21 @@ void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
         commandBuffer = renderer->logicalDevice.allocateCommandBuffers(
             {renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1})[0];
 
-        std::vector test = {ClearValue({0.0f, 0.0f, 0.0f, 0.0f}), ClearValue({1.0f, 0})};
+        auto rt = reinterpret_cast<OMRendererRenderTargetVk *>(target);
+
+        std::vector<ClearValue> test;
+        for (auto ii : rt->textures)
+        {
+            if (ii->arr == common::Depth)
+            {
+                test.push_back(ClearValue({1.0f, 0}));
+            }
+            else
+            {
+                test.push_back(ClearValue({0.0f, 0.0f, 0.0f, 0.0f}));
+            }
+        }
+
         commandBuffer.begin({CommandBufferUsageFlagBits::eSimultaneousUse});
         commandBuffer.beginRenderPass(
             RenderPassBeginInfo(reinterpret_cast<OMRendererRenderTargetVk *>(target)->renderPass,

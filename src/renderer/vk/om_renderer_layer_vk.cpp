@@ -622,7 +622,7 @@ OMResult<std::vector<const char *>, std::string> OMRendererVk::fetchRequiredExte
         unsigned int extcount = 0;
         const char *const *ext = SDL_Vulkan_GetInstanceExtensions(&extcount);
         logger->info(translate("openminecraft.renderer.vk.ext", extcount));
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < extcount; i++)
         {
             logger->info(ext[i]);
             exts.push_back(ext[i]);

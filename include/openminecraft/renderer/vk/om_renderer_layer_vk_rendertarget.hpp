@@ -34,9 +34,11 @@ class OMRendererRenderTargetVk : public common::OMRendererRenderTarget
 
     OMRendererRenderTargetBlock *block = nullptr;
 
+    std::vector<common::OMRendererTexture *> textures;
+
   private:
     OMRendererVk *renderer;
-    std::vector<common::OMRendererTexture *> textures;
+
     bool available = false;
 
     void buildFramebuffer();
