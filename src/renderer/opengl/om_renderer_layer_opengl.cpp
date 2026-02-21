@@ -21,6 +21,9 @@ OMRendererOpenGL::OMRendererOpenGL(AppInfo info, void *window)
     SDL_GL_MakeCurrent(reinterpret_cast<SDL_Window *>(window), reinterpret_cast<SDL_GLContext>(glContext));
 
     this->initGlFuncs();
+
+    defaultTarget = createRenderTarget();
+    defaultTarget->build();
 }
 
 template <typename T> inline T fetchGlFunc(const char *name)
@@ -161,12 +164,11 @@ void OMRendererOpenGL::clearHandlers()
 
 void OMRendererOpenGL::baseInit()
 {
+
     for (auto h : handlers)
     {
         h->submitTasks();
     }
-    defaultTarget = createRenderTarget();
-    defaultTarget->build();
 }
 
 void OMRendererOpenGL::render()
