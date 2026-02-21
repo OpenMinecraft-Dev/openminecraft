@@ -258,7 +258,7 @@ void OMTestRenderer::submitTasks()
         delete tempDepth;
     }
 
-    auto ext = renderer->getDefaultRenderTarget()->fetchSize();
+    auto ext = renderer->getExtent();
     tempTexture = renderer->allocateTexture(ext.x, ext.y, Dim2, ColorRgba);
     tempDepth = renderer->allocateTexture(ext.x, ext.y, Dim2, Depth);
 

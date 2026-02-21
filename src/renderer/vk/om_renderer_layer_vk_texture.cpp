@@ -1,5 +1,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 
+#include "openminecraft/i18n/om_i18n_res.hpp"
+#include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 #include "vulkan/vulkan.hpp"
 #include <iostream>
@@ -126,7 +128,7 @@ void OMRendererTextureVk::transitionImageLayout(CommandBuffer cmd, ImageLayout o
     }
     else
     {
-        throw std::invalid_argument("unsupported layout transition!");
+        throw OMRendererException(i18n::res::translate("openminecraft.renderer.vk.err.image.layout"));
     }
 
     cmd.pipelineBarrier(sourceStage, destinationStage, {}, nullptr, nullptr, barrier);

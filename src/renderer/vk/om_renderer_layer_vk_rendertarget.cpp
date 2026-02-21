@@ -1,6 +1,8 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
+#include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
+#include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "vulkan/vulkan.hpp"
@@ -122,7 +124,7 @@ void OMRendererRenderTargetVk::build()
 
         if (depthAttach.size() > 1)
         {
-            throw std::logic_error("too many depth buffers!");
+            throw OMRendererException(i18n::res::translate("openminecraft.renderer.vk.err.fb.depth"));
         }
 
         auto subpasses = std::vector{SubpassDescription({}, PipelineBindPoint::eGraphics, nullptr, colorAttach, {},

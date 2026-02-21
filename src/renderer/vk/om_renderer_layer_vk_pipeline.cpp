@@ -3,6 +3,7 @@
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
+#include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
@@ -77,7 +78,7 @@ void OMRendererPipelineVk::attachShader(std::shared_ptr<common::OMShader> shader
     }
     if (fin == nullptr)
     {
-        throw std::logic_error(translate("openminecraft.renderer.vk.err.shaderstat"));
+        throw OMRendererException(translate("openminecraft.renderer.vk.err.shaderstat"));
     }
     compiledShaders.push_back(fin);
 
@@ -230,7 +231,8 @@ void OMRendererPipelineVk::build()
         renderer->logicalDevice.destroyDescriptorPool(descriptorPool, renderer->allocator);
         renderer->logicalDevice.destroyDescriptorSetLayout(descriptorSetLayout, renderer->allocator);
         renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
-        throw SystemError(result.result);
+        throw OMRendererException(
+            VkErrorTranslate(SystemError(result.result), "openminecraft.renderer.vk.err.pipeline"));
     }
     pipeline = result.value;
 

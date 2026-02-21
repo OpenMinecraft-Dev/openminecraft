@@ -63,5 +63,17 @@
     "openminecraft.renderer.vk.err.devqueue": "逻辑设备队列: {}",
     "openminecraft.renderer.vk.err.swp": "交换链: {}",
     "openminecraft.renderer.vk.err.renderer": "渲染器: {}", 
-    "openminecraft.renderer.vk.err.shaderstat": "未知着色器！"
+    "openminecraft.renderer.vk.err.shaderstat": "未知着色器！", 
+    "openminecraft.renderer.vk.err.waitfence": "等待 Fence: {}", 
+    "openminecraft.renderer.vk.err.resetfence": "重置 Fence: {}",
+    "openminecraft.renderer.vk.err.nextimage": "无法获取下一张图像: {}", 
+    "openminecraft.renderer.vk.err.queuesubmit": "提交队列: {}", 
+    "openminecraft.renderer.vk.err.queuepresent": "显示队列: {}", 
+    "openminecraft.renderer.vk.err.dbg": "无法创建调试器: {}", 
+    "openminecraft.renderer.vk.err.memory.type": "不支持的内存类型", 
+    "openminecraft.renderer.vk.err.pipeline": "无法构建管线: {}",
+    "openminecraft.renderer.vk.err.fb.depth": "深度缓冲区过多!",
+    "openminecraft.renderer.vk.err.swapchain.images": "无法从交换链获取图像: {}", 
+    "openminecraft.renderer.vk.err.swapchain.imageview": "无法创建 ImageView: {}",
+    "openminecraft.renderer.vk.err.image.layout": "不支持的图片布局转换"
 }

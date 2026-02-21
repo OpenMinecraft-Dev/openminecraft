@@ -1,10 +1,13 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 
+#include "openminecraft/i18n/om_i18n_res.hpp"
+#include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include <stdexcept>
 
 using namespace vk;
 using namespace openminecraft::renderer::common;
+using namespace openminecraft::i18n::res;
 
 namespace openminecraft::renderer::vk
 {
@@ -30,7 +33,7 @@ static uint32_t findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properti
         }
     }
 
-    throw std::runtime_error("memory type not found!");
+    throw OMRendererException(translate("openminecraft.renderer.vk.err.memory.type"));
 }
 
 static MemoryPropertyFlags defFlags()

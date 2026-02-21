@@ -1,4 +1,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_swapchainmanager.hpp"
+#include "openminecraft/i18n/om_i18n_res.hpp"
+#include "openminecraft/renderer/om_renderer_exception.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
@@ -10,6 +13,7 @@
 #include <utility>
 
 using namespace ::vk;
+using namespace openminecraft::i18n::res;
 
 namespace openminecraft::renderer::vk::swapchain
 {
@@ -102,14 +106,16 @@ void OMSwapchainManager::reinit()
     auto target = device.getSwapchainImagesKHR(swapchain, &swapchainImageCount, nullptr);
     if (target != Result::eSuccess)
     {
-        throw SystemError(target);
+        throw OMRendererException(
+            VkErrorTranslate(SystemError(target), "openminecraft.renderer.vk.err.swapchain.images"));
     }
 
     std::vector<Image> images(swapchainImageCount);
     target = device.getSwapchainImagesKHR(swapchain, &swapchainImageCount, images.data());
     if (target != Result::eSuccess)
     {
-        throw SystemError(target);
+        throw OMRendererException(
+            VkErrorTranslate(SystemError(target), "openminecraft.renderer.vk.err.swapchain.images"));
     }
 
     swapchainImages = images;
@@ -125,7 +131,8 @@ void OMSwapchainManager::reinit()
         target = device.createImageView(&createInfo, &callbacks, &imgv);
         if (target != Result::eSuccess)
         {
-            throw SystemError(target);
+            throw OMRendererException(
+                VkErrorTranslate(SystemError(target), "openminecraft.renderer.vk.err.swapchain.imageview"));
         }
 
         swapchainImageViews.push_back(imgv);

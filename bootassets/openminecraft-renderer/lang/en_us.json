@@ -17,5 +17,17 @@
     "openminecraft.renderer.vk.err.devqueue": "Logical Device Queue: {}",
     "openminecraft.renderer.vk.err.swp": "Swapchain: {}",
     "openminecraft.renderer.vk.err.renderer": "Renderer: {}", 
-    "openminecraft.renderer.vk.err.shaderstat": "Unknown shader!"
+    "openminecraft.renderer.vk.err.shaderstat": "Unknown shader!", 
+    "openminecraft.renderer.vk.err.waitfence": "Wait for fences: {}",
+    "openminecraft.renderer.vk.err.resetfence": "Reset fences: {}",
+    "openminecraft.renderer.vk.err.nextimage": "Failed to fetch next image: {}", 
+    "openminecraft.renderer.vk.err.queuesubmit": "Queue submit: {}", 
+    "openminecraft.renderer.vk.err.queuepresent": "Queue present: {}", 
+    "openminecraft.renderer.vk.err.dbg": "Failed to create debugger: {}",
+    "openminecraft.renderer.vk.err.memory.type": "Unsupported memory type", 
+    "openminecraft.renderer.vk.err.pipeline": "Failed to construct pipeline: {}", 
+    "openminecraft.renderer.vk.err.fb.depth": "Too many depth buffers!", 
+    "openminecraft.renderer.vk.err.swapchain.images": "Failed to fetch images: {}", 
+    "openminecraft.renderer.vk.err.swapchain.imageview": "Failed to create image view: {}", 
+    "openminecraft.renderer.vk.err.image.layout": "Unsupport image layout transition"
 }

@@ -3,6 +3,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
+#include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_pipeline.hpp"
@@ -83,7 +84,7 @@ using namespace openminecraft::util;
 using openminecraft::i18n::res::translate;
 #define VkErrLogAndThrow(err, id)                                                                                      \
     logger->error(VkErrorTranslate(err, id));                                                                          \
-    throw std::runtime_error(VkErrorTranslate(err, id));
+    throw OMRendererException(VkErrorTranslate(err, id));
 namespace openminecraft::renderer::vk
 {
 #ifdef OM_VULKAN_DYNAMIC
@@ -119,7 +120,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         break;
     }
     case Err: {
-        throw std::runtime_error(extResult.unwrap_err());
+        throw OMRendererException(extResult.unwrap_err());
     }
     }
 
@@ -131,7 +132,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         break;
     }
     case Err: {
-        throw std::runtime_error(instanceResult.unwrap_err());
+        throw OMRendererException(instanceResult.unwrap_err());
     }
     }
 
@@ -142,7 +143,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         break;
     }
     case Err: {
-        throw std::runtime_error(sdlLoadingResult.unwrap_err());
+        throw OMRendererException(sdlLoadingResult.unwrap_err());
     }
     }
 
@@ -154,7 +155,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         break;
     }
     case Err: {
-        throw std::runtime_error(phydevResult.unwrap_err());
+        throw OMRendererException(phydevResult.unwrap_err());
     }
     }
 
@@ -166,7 +167,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         break;
     }
     case Err: {
-        throw std::runtime_error(deviceCreationResult.unwrap_err());
+        throw OMRendererException(deviceCreationResult.unwrap_err());
     }
     }
 
@@ -177,7 +178,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         break;
     }
     case Err: {
-        throw std::runtime_error(queuefetch.unwrap_err());
+        throw OMRendererException(queuefetch.unwrap_err());
     }
     }
 
@@ -188,7 +189,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     }
     catch (SystemError &e)
     {
-        throw std::runtime_error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.swp"));
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.swp"));
     }
 
     memProps = physicalDevice.getMemoryProperties();
@@ -216,7 +217,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     }
     catch (SystemError &e)
     {
-        throw std::runtime_error(VkErrorTranslate(e, "openminecraft.renderer.vk.err.renderer"));
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.renderer"));
     }
 }
 
@@ -355,7 +356,7 @@ void OMRendererVk::render()
                                                   std::numeric_limits<uint64_t>::max());
         if (result != Result::eSuccess)
         {
-            throw SystemError(result);
+            throw OMRendererException(VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.waitfence"));
         }
 
         auto [nxtRes, imageIndex] =
@@ -363,7 +364,7 @@ void OMRendererVk::render()
                                               frameSyncs[thisFrame].imageAvailableSemaphore, {});
         if (nxtRes != Result::eSuccess)
         {
-            throw SystemError(nxtRes);
+            throw OMRendererException(VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.nextimage"));
         }
 
         if (inflights.count(imageIndex) > 0)
@@ -372,7 +373,8 @@ void OMRendererVk::render()
                                                       std::numeric_limits<uint64_t>::max());
             if (result != Result::eSuccess)
             {
-                throw SystemError(result);
+                throw OMRendererException(
+                    VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.waitfence"));
             }
         }
         inflights[imageIndex] = frameSyncs[thisFrame];
@@ -380,7 +382,8 @@ void OMRendererVk::render()
         result = logicalDevice.resetFences(1, &frameSyncs[thisFrame].inFlightFence);
         if (result != Result::eSuccess)
         {
-            throw SystemError(result);
+            throw OMRendererException(
+                VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.resetfence"));
         }
 
         std::vector<CommandBuffer> cmdBuffers = {};
@@ -405,7 +408,8 @@ void OMRendererVk::render()
         result = queues.second.presentKHR(presentInfo);
         if (result != Result::eSuccess)
         {
-            throw SystemError(result);
+            throw OMRendererException(
+                VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.queuepresent"));
         }
 
         thisFrame = (thisFrame + 1) % framesInFlight;
@@ -421,7 +425,7 @@ void OMRendererVk::render()
         {
             goto reb;
         }
-        throw;
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.queuepresent"));
     }
 
 reb:
@@ -602,7 +606,7 @@ OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std
             auto r = i.createDebugReportCallbackEXT(&validationLayer->callbackInfo, &allocator, &reportCallback);
             if (r != Result::eSuccess)
             {
-                throw SystemError(r);
+                throw OMRendererException(VkErrorTranslate(SystemError(r), "openminecraft.renderer.vk.err.dbg"));
             }
         });
 

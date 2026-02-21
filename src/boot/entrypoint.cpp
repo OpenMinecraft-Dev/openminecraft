@@ -8,19 +8,13 @@
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
-#include "openminecraft/renderer/common/om_renderer_buffer.hpp"
-#include "openminecraft/renderer/common/om_renderer_texture.hpp"
-#include "openminecraft/renderer/om_renderer_layer.hpp"
-#include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
-#include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
-#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -54,13 +48,13 @@ int boot(std::vector<std::string> args)
 
     SDL_SetMemoryFunctions(mem::allocator::tracedMallocSDL, mem::allocator::tracedCallocSDL,
                            mem::allocator::tracedReallocSDL, mem::allocator::tracedFreeSDL);
+    setupI18nEnv();
+
     if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO))
     {
         logger->info("SDL Status: {}", SDL_GetError());
     }
 
-    logger->info("Setting up i18n environment...");
-    setupI18nEnv();
     logger->info(i18n::res::translate("openminecraft.boot.arg"));
     for (auto a : args)
     {
