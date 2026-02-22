@@ -12,7 +12,7 @@ namespace openminecraft::boot
 void openglRendererTest()
 {
     renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
-                           util::Version(1, 0, 0, 0), util::Version(3, 3, 0, 0)};
+                           util::Version(1, 0, 0, 0), util::Version(4, 1, 0, 0)};
 
     auto wnd2 = SDL_CreateWindow("OpenGL Test", 800, 800, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     auto renderer = new renderer::opengl::OMRendererOpenGL(a, wnd2);

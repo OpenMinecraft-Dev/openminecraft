@@ -67,6 +67,8 @@ struct OMRendererOpenGLFuncs
     PFNGLENABLEPROC glEnable;
     PFNGLDISABLEPROC glDisable;
     PFNGLTEXPARAMETERIPROC glTexParameteri;
+    PFNGLGETPROGRAMBINARYPROC glGetProgramBinary;
+    PFNGLPROGRAMBINARYPROC glProgramBinary;
 };
 class OMRendererOpenGL : public OMRenderer
 {

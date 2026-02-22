@@ -4,10 +4,13 @@
 #include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/fontproc/om_font.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
+#include "openminecraft/io/om_io_utils.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
+#include "openminecraft/renderer/common/om_renderer_shadercompiler.hpp"
+#include "openminecraft/renderer/common/shader/om_renderer_shadercompiler_shaderc.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
@@ -15,6 +18,7 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -24,10 +28,12 @@
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
+#include <thread>
 
 using namespace openminecraft;
 using namespace openminecraft::vm;
 using namespace openminecraft::binary::hash;
+using namespace openminecraft::renderer;
 using namespace std::chrono_literals;
 
 namespace openminecraft::boot
@@ -114,6 +120,22 @@ int boot(std::vector<std::string> args)
             auto ist = std::make_shared<std::ifstream>("/home/coder2/output.png", std::ios::binary);
             specs::png::OMPngFile pf(ist);
             logger->info("test!");
+            break;
+        }
+        case "shd"_hash: {
+            auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.vert.glsl");
+            auto comp = common::OMRendererShaderCompiler();
+            comp.install(std::make_shared<common::OMRendererShaderCompilerBackendShaderc>());
+            for (int i = 0; i < 1024 * 8; i++)
+            {
+                comp.addCompileTask(std::make_shared<common::OMShader>(common::GLSLSource, io::readOnce(target.get()),
+                                                                       "simple.vert.glsl", "main", common::Vertex));
+            }
+            while (true)
+            {
+                logger->info("{}", comp.getCompleteRatio());
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            }
             break;
         }
         default:

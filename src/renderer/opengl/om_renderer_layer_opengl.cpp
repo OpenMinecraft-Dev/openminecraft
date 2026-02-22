@@ -84,6 +84,8 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glEnable = fetchGlFunc<PFNGLENABLEPROC>("glEnable");
     gl.glDisable = fetchGlFunc<PFNGLDISABLEPROC>("glDisable");
     gl.glTexParameteri = fetchGlFunc<PFNGLTEXPARAMETERIPROC>("glTexParameteri");
+    gl.glProgramBinary = fetchGlFunc<PFNGLPROGRAMBINARYPROC>("glProgramBinary");
+    gl.glGetProgramBinary = fetchGlFunc<PFNGLGETPROGRAMBINARYPROC>("glGetProgramBinary");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()

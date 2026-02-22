@@ -12,7 +12,8 @@ enum OMShaderFileType
 {
     GLSLSource,
     HLSLSource,
-    SPIRVBinary
+    SPIRVBinary,
+    GLNative
 };
 
 enum OMShaderType

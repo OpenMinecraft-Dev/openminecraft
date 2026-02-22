@@ -1,25 +1,16 @@
+#include "openminecraft/renderer/common/shader/om_renderer_shadercompiler_shaderc.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
-
-#include "openminecraft/log/om_log_common.hpp"
-#include "shaderc/shaderc.h"
+#include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "shaderc/shaderc.hpp"
+#include <memory>
 #include <stdexcept>
 
 namespace openminecraft::renderer::common
 {
-log::OMLogger logger("SPIRV Compiler");
-
-std::shared_ptr<OMShader> OMShader::convertTo(OMShaderFileType type)
+std::shared_ptr<OMShader> OMRendererShaderCompilerBackendShaderc::compile(std::shared_ptr<OMShader> shader)
 {
-    auto compiler = std::make_unique<shaderc::Compiler>();
-    if (this->type == type || type == GLSLSource || type == HLSLSource || this->type == SPIRVBinary ||
-        this->type == GLNative)
-    {
-        return nullptr;
-    }
-
     shaderc_shader_kind k = {};
-    switch (this->typebase)
+    switch (shader->typebase)
     {
     case Vertex:
         k = shaderc_vertex_shader;
@@ -63,21 +54,21 @@ std::shared_ptr<OMShader> OMShader::convertTo(OMShaderFileType type)
 
     shaderc::CompileOptions opt;
 
-    opt.SetSourceLanguage(this->type == GLSLSource ? shaderc_source_language_glsl : shaderc_source_language_hlsl);
+    opt.SetSourceLanguage(shader->type == GLSLSource ? shaderc_source_language_glsl : shaderc_source_language_hlsl);
 
-    auto result = compiler->CompileGlslToSpv(reinterpret_cast<const char *>(this->data.data()), this->data.size(), k,
-                                             filename.c_str(), entrypoint.c_str(), opt);
+    auto result = compiler->CompileGlslToSpv(reinterpret_cast<const char *>(shader->data.data()), shader->data.size(),
+                                             k, shader->filename.c_str(), shader->entrypoint.c_str(), opt);
 
-    logger.info("complied shader {}", filename);
-    logger.info("{} errors, {} warnings", result.GetNumErrors(), result.GetNumWarnings());
+    // logger.info("complied shader {}", shader->filename);
+    // logger.info("{} errors, {} warnings", result.GetNumErrors(), result.GetNumWarnings());
     if (result.GetNumWarnings() != 0 && result.GetNumErrors() == 0)
     {
         logger.warn(result.GetErrorMessage());
     }
     if (result.GetCompilationStatus() != shaderc_compilation_status_success)
     {
-        throw std::logic_error(
-            fmt::format("Shader compliation failed for {}: \n{}", filename, result.GetErrorMessage()));
+        throw OMRendererException(
+            fmt::format("Shader compliation failed for {}: \n{}", shader->filename, result.GetErrorMessage()));
     }
 
     std::vector<uint8_t> data;
@@ -93,6 +84,7 @@ std::shared_ptr<OMShader> OMShader::convertTo(OMShaderFileType type)
         data.push_back(l4);
     }
 
-    return std::make_shared<OMShader>(SPIRVBinary, data, filename + ".spirv", entrypoint, this->typebase);
+    return std::make_shared<OMShader>(SPIRVBinary, data, shader->filename + ".spirv", shader->entrypoint,
+                                      shader->typebase);
 }
 } // namespace openminecraft::renderer::common
