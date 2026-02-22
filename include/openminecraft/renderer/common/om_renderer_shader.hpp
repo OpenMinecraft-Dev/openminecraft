@@ -1,5 +1,6 @@
 #ifndef OM_RENDERER_SHADER_HPP
 #define OM_RENDERER_SHADER_HPP
+#include "openminecraft/renderer/om_renderer_object.hpp"
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -30,7 +31,7 @@ enum OMShaderType
     Callable
 };
 
-class OMShader
+class OMShader : public OMRendererObject
 {
   public:
     OMShader() = default;
@@ -48,6 +49,11 @@ class OMShader
     std::string filename;
     std::string entrypoint;
     OMShaderType typebase;
+
+    OMRendererObjectType objType() override
+    {
+        return Shader;
+    }
 };
 }; // namespace openminecraft::renderer::common
 

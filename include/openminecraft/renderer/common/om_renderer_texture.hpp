@@ -1,6 +1,7 @@
 #ifndef OM_RENDERER_TEXTURE_HPP
 #define OM_RENDERER_TEXTURE_HPP
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/renderer/om_renderer_object.hpp"
 
 #include <cstdint>
 
@@ -24,7 +25,7 @@ enum OMTextureArrangement
     ColorRgb
 };
 
-class OMRendererTexture
+class OMRendererTexture : public OMRendererObject
 {
   public:
     OMRendererTexture(uint64_t width, uint64_t height, OMTextureType type, OMTextureArrangement arr,
@@ -35,6 +36,11 @@ class OMRendererTexture
     const OMTextureArrangement arr;
 
     virtual void updateData(void *p) = 0;
+
+    OMRendererObjectType objType() override
+    {
+        return Texture;
+    }
 
   protected:
     OMRenderer *renderer;

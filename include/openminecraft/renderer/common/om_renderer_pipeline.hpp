@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
+#include "openminecraft/renderer/om_renderer_object.hpp"
 #include <memory>
 namespace openminecraft::renderer
 {
@@ -20,7 +21,7 @@ enum OMRendererPipelineInputType
     ImageSampler,
     UniformBuffer
 };
-class OMRendererPipeline
+class OMRendererPipeline : public OMRendererObject
 {
   public:
     OMRendererPipeline(OMRenderer *renderer)
@@ -38,6 +39,11 @@ class OMRendererPipeline
 
     virtual void bindInput(int idx, common::OMRendererBuffer *buff) = 0;
     virtual void bindInput(int idx, common::OMRendererTexture *texture) = 0;
+
+    OMRendererObjectType objType() override
+    {
+        return Pipeline;
+    }
 };
 } // namespace openminecraft::renderer::common
 

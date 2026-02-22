@@ -1,7 +1,7 @@
 #ifndef OM_RENDERER_BUFFER_HPP
 #define OM_RENDERER_BUFFER_HPP
+#include "openminecraft/renderer/om_renderer_object.hpp"
 #include <fmt/format.h>
-#include <functional>
 #include <openminecraft/log/om_log_common.hpp>
 
 namespace openminecraft::renderer
@@ -20,7 +20,7 @@ enum OMBufferUsage
     Misc
 };
 
-class OMRendererBuffer
+class OMRendererBuffer : public OMRendererObject
 {
   public:
     OMRendererBuffer(OMBufferUsage usage, uint64_t length, OMRenderer *renderer);
@@ -30,6 +30,10 @@ class OMRendererBuffer
     bool alwaysMapped = false;
 
     virtual void updateData(void *src) = 0;
+    OMRendererObjectType objType() override
+    {
+        return DataBuffer;
+    }
 
   protected:
     OMRenderer *renderer;

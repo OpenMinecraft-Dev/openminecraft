@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
+#include "openminecraft/renderer/om_renderer_object.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include <memory>
 #include <vector>
@@ -28,7 +29,7 @@ class OMRendererPipelineOpenGL : public common::OMRendererPipeline
     common::OMRendererRenderTarget *target;
     GLuint program = 0;
     common::basics::OMVertexFormat format;
-    std::vector<void *> inputs;
+    std::vector<OMRendererObject *> inputs;
     std::vector<common::OMRendererPipelineInputType> inputTypes;
 
   private:

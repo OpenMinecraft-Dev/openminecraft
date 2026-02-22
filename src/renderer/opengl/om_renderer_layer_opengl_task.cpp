@@ -3,6 +3,7 @@
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
+#include "openminecraft/renderer/om_renderer_object.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_buffer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
@@ -116,15 +117,16 @@ void OMRendererTaskOpenGL::execute()
     gl->glBindVertexArray(vertexArrayObject);
     gl->glUseProgram(program);
 
-    for (int i = 0; i < pipeline->inputTypes.size(); i++)
+    for (int i = 0; i < pipeline->inputs.size(); i++)
     {
-        if (pipeline->inputTypes[i] == common::UniformBuffer)
+        auto obj = pipeline->inputs[i];
+        if (obj->objType() == DataBuffer)
         {
             gl->glBindBufferBase(GL_UNIFORM_BUFFER, i,
                                  reinterpret_cast<OMRendererBufferOpenGL *>(pipeline->inputs[i])->buffer);
         }
 
-        else if (pipeline->inputTypes[i] == common::ImageSampler)
+        else if (obj->objType() == Texture)
         {
             gl->glActiveTexture(GL_TEXTURE0 + i);
             gl->glBindTexture(GL_TEXTURE_2D, reinterpret_cast<OMRendererTextureOpenGL *>(pipeline->inputs[i])->texture);
