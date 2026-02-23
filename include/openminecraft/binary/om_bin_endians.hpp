@@ -30,6 +30,9 @@ namespace openminecraft::binary
 uint16_t be16ToNative(uint16_t data);
 uint32_t be32ToNative(uint32_t data);
 uint64_t be64ToNative(uint64_t data);
+uint16_t le16ToNative(uint16_t data);
+uint32_t le32ToNative(uint32_t data);
+uint64_t le64ToNative(uint64_t data);
 float befToNative(float data);
 double bedToNative(double data);
 

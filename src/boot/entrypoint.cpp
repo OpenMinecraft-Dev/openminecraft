@@ -11,7 +11,7 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/common/om_renderer_shadercompiler.hpp"
 #include "openminecraft/renderer/common/shader/om_renderer_shadercompiler_shaderc.hpp"
-#include "openminecraft/specs/png/om_png.hpp"
+#include "openminecraft/specs/bmp/om_bmp.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
@@ -116,9 +116,9 @@ int boot(std::vector<std::string> args)
         case "crash"_hash: {
             logger->info("{}", *reinterpret_cast<int *>(33550336));
         }
-        case "png"_hash: {
-            auto ist = std::make_shared<std::ifstream>("/home/coder2/output.png", std::ios::binary);
-            specs::png::OMPngFile pf(ist);
+        case "bmp"_hash: {
+            auto ist = std::make_shared<std::ifstream>("/home/coder2/this.bmp", std::ios::binary);
+            specs::bmp::OMBmpFile pf(ist);
             logger->info("test!");
             break;
         }
