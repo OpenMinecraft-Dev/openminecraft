@@ -43,8 +43,6 @@ class OMShader : public OMRendererObject
     }
     ~OMShader() = default;
 
-    std::shared_ptr<OMShader> convertTo(OMShaderFileType type);
-
     const std::vector<uint8_t> data;
     OMShaderFileType type;
     std::string filename;
