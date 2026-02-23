@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
+#include "openminecraft/renderer/common/om_renderer_shadercompiler.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include <exception>
@@ -53,6 +54,8 @@ class OMRenderer
 
     virtual void render() = 0;
     virtual void requestResize() = 0;
+
+    common::OMRendererShaderCompiler compiler;
 
   protected:
     void *window;

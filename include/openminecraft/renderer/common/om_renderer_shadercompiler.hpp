@@ -34,7 +34,7 @@ class OMRendererShaderCompiler
     void install(std::shared_ptr<OMRendererShaderCompilerBackend> backend);
 
     int addCompileTask(std::shared_ptr<OMShader> shader);
-    std::shared_ptr<OMShader> getResult(int index);
+    std::shared_ptr<OMShader> getResult(int id);
 
     float getCompleteRatio();
 

@@ -135,6 +135,11 @@ int boot(std::vector<std::string> args)
             {
                 logger->info("{}", comp.getCompleteRatio());
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+                if (comp.getCompleteRatio() >= 1.0f)
+                {
+                    break;
+                }
             }
             break;
         }

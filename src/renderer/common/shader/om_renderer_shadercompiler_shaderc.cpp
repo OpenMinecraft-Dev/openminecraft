@@ -59,8 +59,8 @@ std::shared_ptr<OMShader> OMRendererShaderCompilerBackendShaderc::compile(std::s
     auto result = compiler->CompileGlslToSpv(reinterpret_cast<const char *>(shader->data.data()), shader->data.size(),
                                              k, shader->filename.c_str(), shader->entrypoint.c_str(), opt);
 
-    // logger.info("complied shader {}", shader->filename);
-    // logger.info("{} errors, {} warnings", result.GetNumErrors(), result.GetNumWarnings());
+    logger.info("complied shader {}", shader->filename);
+    logger.info("{} errors, {} warnings", result.GetNumErrors(), result.GetNumWarnings());
     if (result.GetNumWarnings() != 0 && result.GetNumErrors() == 0)
     {
         logger.warn(result.GetErrorMessage());

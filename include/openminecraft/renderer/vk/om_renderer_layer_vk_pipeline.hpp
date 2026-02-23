@@ -73,7 +73,7 @@ class OMRendererPipelineVk : public common::OMRendererPipeline
 
     log::OMLogger logger;
 
-    std::vector<std::shared_ptr<common::OMShader>> compiledShaders;
+    std::vector<int> shaderIds;
 };
 } // namespace openminecraft::renderer::vk
 

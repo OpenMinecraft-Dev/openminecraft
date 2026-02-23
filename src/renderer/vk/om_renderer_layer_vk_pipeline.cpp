@@ -9,7 +9,9 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "vulkan/vulkan.hpp"
+#include <chrono>
 #include <stdexcept>
+#include <thread>
 
 using openminecraft::i18n::res::translate;
 using namespace ::vk;
@@ -83,13 +85,13 @@ void OMRendererPipelineVk::attachShader(std::shared_ptr<common::OMShader> shader
         auto fin = shader;
         if (fin->type != common::OMShaderFileType::SPIRVBinary)
         {
-            fin = fin->convertTo(common::OMShaderFileType::SPIRVBinary);
+            shaderIds.push_back(renderer->compiler.addCompileTask(fin));
+            return;
         }
         if (fin == nullptr)
         {
             throw OMRendererException(translate("openminecraft.renderer.vk.err.shaderstat"));
         }
-        compiledShaders.push_back(fin);
 
         auto sm = renderer->logicalDevice.createShaderModule(
             ShaderModuleCreateInfo({}, fin->data.size(), reinterpret_cast<const uint32_t *>(fin->data.data())),
@@ -215,6 +217,22 @@ void OMRendererPipelineVk::build()
     {
         return;
     }
+
+    for (auto id : shaderIds)
+    {
+        std::shared_ptr<common::OMShader> fin = nullptr;
+        while (!fin)
+        {
+            fin = renderer->compiler.getResult(id);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+        auto sm = renderer->logicalDevice.createShaderModule(
+            ShaderModuleCreateInfo({}, fin->data.size(), reinterpret_cast<const uint32_t *>(fin->data.data())),
+            renderer->allocator);
+        shaders.push_back(sm);
+        shaderCreateInfos.push_back({{}, convertTo(fin->typebase), sm, fin->entrypoint.c_str()});
+    }
+    shaderIds.clear();
 
     try
     {

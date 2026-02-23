@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/common/om_renderer_shadercompiler.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include <chrono>
+#include <memory>
 #include <thread>
 
 namespace openminecraft::renderer::common
@@ -21,6 +22,8 @@ OMRendererShaderCompiler::OMRendererShaderCompiler()
                 {
                     auto ll = shaderQueue.front();
                     shaderQueue.pop();
+
+                    std::shared_ptr<OMShader> target;
 
                     for (auto &comp : backends)
                     {
@@ -71,9 +74,9 @@ int OMRendererShaderCompiler::addCompileTask(std::shared_ptr<OMShader> shader)
     shaderQueue.push({shader, static_cast<int>(countTotal)});
     return countTotal;
 }
-std::shared_ptr<OMShader> OMRendererShaderCompiler::getResult(int index)
+std::shared_ptr<OMShader> OMRendererShaderCompiler::getResult(int source)
 {
-    return results[index];
+    return results[source];
 }
 
 float OMRendererShaderCompiler::getCompleteRatio()
