@@ -247,6 +247,7 @@ add_packages(
 	"boost",
 	"nlohmann_json",
 	"libsdl3",
+	"zlib",
 	{ system = false }
 )
 
