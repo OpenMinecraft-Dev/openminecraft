@@ -11,13 +11,18 @@
 #include <fstream>
 #include <iostream>
 #include <istream>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <vector>
 
 namespace openminecraft::specs::png
 {
-OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
+OMPngFile::OMPngFile()
+{
+}
+
+void OMPngFile::parse(std::shared_ptr<std::istream> istr)
 {
     std::array<uint8_t, 8> hd = {};
     istr->read(reinterpret_cast<char *>(hd.data()), 8);
@@ -35,6 +40,9 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
             unzippedBuffer.push_back(data[i]);
         }
     });
+
+    int y = 0;
+    dataBuffer.clear();
 
     while (istr->good())
     {
@@ -69,6 +77,7 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
             std::memcpy(&this->head, cnk.data.data(), sizeof(OMPngHead));
             head.width = binary::be32ToNative(head.width);
             head.height = binary::be32ToNative(head.height);
+            filterCache.resize(getStride());
         }
 
         if (!std::memcmp(cnk.name, "PLTE", 4))
@@ -94,169 +103,214 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
         if (!std::memcmp(cnk.name, "IDAT", 4))
         {
             inf.input(cnk.data.data(), cnk.data.size());
-        }
-    }
 
-    dataBuffer.resize(head.height * getStride());
-
-    auto ccp = unzippedBuffer.data();
-    for (int y = 0; y < head.height; y++)
-    {
-        auto fltType = *ccp;
-        ccp++;
-
-        for (int x = 0; x < getStride(); x++)
-        {
-            auto filtx = *ccp;
-            ++ccp;
-
-#define CurrentByte dataBuffer[y * getStride() + x]
-
-            switch (fltType)
+            while (unzippedBuffer.size() >= getStride() + 1)
             {
-            case 0:
-                CurrentByte = filtx;
-                break;
-            case 1:
-                CurrentByte = filtx + getBufferA(y, x);
-                break;
-            case 2:
-                CurrentByte = filtx + getBufferB(y, x);
-                break;
-            case 3:
-                CurrentByte = filtx + (getBufferA(y, x) + getBufferB(y, x)) / 2;
-                break;
-            case 4:
-                CurrentByte = filtx + getPaethPred(getBufferA(y, x), getBufferB(y, x), getBufferC(y, x));
-                break;
-            default:
-                throw std::runtime_error("unknown filter!");
+                int flttype = unzippedBuffer[0];
+                unzippedBuffer.erase(unzippedBuffer.begin());
+
+                std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> prefilter;
+                prefilter.assign(std::make_move_iterator(unzippedBuffer.begin()),
+                                 std::make_move_iterator(unzippedBuffer.begin() + getStride()));
+                unzippedBuffer.erase(unzippedBuffer.begin(), unzippedBuffer.begin() + getStride());
+
+                defilter(flttype, prefilter, y);
+                y++;
             }
         }
     }
-    convertToStandardRGBA();
 }
 
-void OMPngFile::convertToStandardRGBA()
+void OMPngFile::defilter(int type, std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &raw, int y)
 {
-    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> result;
-    result.resize(head.width * head.height * 4);
-    auto source = dataBuffer.data();
+    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> current;
 
-    switch (head.type)
+    int bpx = getBytesPerPixel();
+    auto getBufferA = [&](int x) { return x >= bpx ? current[x - bpx] : 0; };
+    auto getBufferB = [&](int x) { return y > 0 ? filterCache[x] : 0; };
+    auto getBufferC = [&](int x) { return (x >= bpx && y > 0) ? filterCache[x - bpx] : 0; };
+
+    for (int i = 0; i < raw.size(); i++)
     {
-    case RGBA: {
-        if (head.bitDepth == 8)
+        switch (type)
         {
-            return;
+        case 0:
+            current.push_back(raw[i]);
+            break;
+        case 1:
+            current.push_back(raw[i] + getBufferA(i));
+            break;
+        case 2:
+            current.push_back(raw[i] + getBufferB(i));
+            break;
+        case 3:
+            current.push_back(raw[i] + (getBufferA(i) + getBufferB(i)) / 2);
+            break;
+        case 4:
+            current.push_back(raw[i] + getPaethPred(getBufferA(i), getBufferB(i), getBufferC(i)));
+            break;
+        default:
+            throw std::runtime_error("unknown filter method!");
         }
+    }
 
-        for (int i = 0; i < head.width * head.height * 4; i++)
-        {
-            result[i] = source[2 * i];
-        }
+    filterCache.clear();
+    filterCache.assign(current.begin(), current.end());
 
-        break;
-    }
-    case RGBTriple: {
-        for (int i = 0; i < head.width * head.height; i++)
+    for (auto ch = current.begin(); ch != current.end();)
+    {
+        switch (head.type)
         {
-            result[i * 4] = source[i * 3 * (head.bitDepth / 8)];
-            result[i * 4 + 1] = source[(i * 3 + 1) * (head.bitDepth / 8)];
-            result[i * 4 + 2] = source[(i * 3 + 2) * (head.bitDepth / 8)];
-            result[i * 4 + 3] = 0xff;
-        }
-        break;
-    }
-    case GrayscaleAlpha: {
-        for (int i = 0; i < head.width * head.height; i++)
-        {
-            result[i * 4] = source[i * 2 * (head.bitDepth / 8)];
-            result[i * 4 + 1] = result[i * 4];
-            result[i * 4 + 2] = result[i * 4];
-            result[i * 4 + 3] = source[(i * 2 + 1) * (head.bitDepth / 8)];
-        }
-        break;
-    }
-    case Palette: {
-        if (head.bitDepth >= 8)
-        {
-            for (int i = 0; i < head.width * head.height; i++)
+        case RGBA:
+            if (head.bitDepth == 8)
             {
-                int code = palette[source[i * (head.bitDepth / 8)]];
-                result[i * 4] = (code >> 24) & 0xff;
-                result[i * 4 + 1] = (code >> 16) & 0xff;
-                result[i * 4 + 2] = (code >> 8) & 0xff;
-                result[i * 4 + 3] = code & 0xff;
+                dataBuffer.push_back(*ch); // R value
+                ++ch;
+                dataBuffer.push_back(*ch); // G value
+                ++ch;
+                dataBuffer.push_back(*ch); // B value
+                ++ch;
+                dataBuffer.push_back(*ch); // A value
+                ++ch;
             }
-        }
-        else
-        {
-            int rowBytes = getStride();
-            int pixelsPerByte = 8 / head.bitDepth;
-
-            for (int y = 0; y < head.height; y++)
+            else
             {
-                for (int x = 0; x < head.width; x++)
+                dataBuffer.push_back(*ch); // R value
+                ++ch;
+                ++ch;
+                dataBuffer.push_back(*ch); // G value
+                ++ch;
+                ++ch;
+                dataBuffer.push_back(*ch); // B value
+                ++ch;
+                ++ch;
+                dataBuffer.push_back(*ch); // A value
+                ++ch;
+                ++ch;
+            }
+            break;
+        case RGBTriple:
+            if (head.bitDepth == 8)
+            {
+                dataBuffer.push_back(*ch); // R value
+                ++ch;
+                dataBuffer.push_back(*ch); // G value
+                ++ch;
+                dataBuffer.push_back(*ch); // B value
+                ++ch;
+                dataBuffer.push_back(0xff); // A value
+            }
+            else
+            {
+                dataBuffer.push_back(*ch); // R value
+                ++ch;
+                ++ch;
+                dataBuffer.push_back(*ch); // G value
+                ++ch;
+                ++ch;
+                dataBuffer.push_back(*ch); // B value
+                ++ch;
+                ++ch;
+                dataBuffer.push_back(0xff); // A value
+            }
+            break;
+        case GrayscaleAlpha:
+            if (head.bitDepth == 8)
+            {
+                dataBuffer.push_back(*ch);
+                dataBuffer.push_back(*ch);
+                dataBuffer.push_back(*ch);
+                ++ch;
+                dataBuffer.push_back(*ch);
+                ++ch;
+            }
+            else
+            {
+                dataBuffer.push_back(*ch);
+                dataBuffer.push_back(*ch);
+                dataBuffer.push_back(*ch);
+                ++ch;
+                ++ch;
+                dataBuffer.push_back(*ch);
+                ++ch;
+                ++ch;
+            }
+            break;
+        case Palette:
+            if (head.bitDepth == 8)
+            {
+                int pal = palette[*ch];
+                ++ch;
+                dataBuffer.push_back((pal >> 24) & 0xff);
+                dataBuffer.push_back((pal >> 16) & 0xff);
+                dataBuffer.push_back((pal >> 8) & 0xff);
+                dataBuffer.push_back(0xff);
+            }
+            else
+            {
+                int pixelsPerByte = 8 / head.bitDepth;
+                int x = std::distance(current.begin(), ch);
+                int byteIdx = x / pixelsPerByte;
+                int shift = (pixelsPerByte - 1 - (x % pixelsPerByte)) * head.bitDepth;
+
+                uint8_t byte = *ch;
+                uint8_t value = (byte >> shift) & ((1 << head.bitDepth) - 1);
+                int pal = palette[value];
+
+                dataBuffer.push_back((pal >> 24) & 0xff);
+                dataBuffer.push_back((pal >> 16) & 0xff);
+                dataBuffer.push_back((pal >> 8) & 0xff);
+                dataBuffer.push_back(0xff);
+
+                if (shift == 0)
                 {
-                    int byteIdx = x / pixelsPerByte;
-                    int shift = (pixelsPerByte - 1 - (x % pixelsPerByte)) * head.bitDepth;
-
-                    uint8_t byte = source[y * rowBytes + byteIdx];
-                    uint8_t value = (byte >> shift) & ((1 << head.bitDepth) - 1);
-                    int code = palette[value];
-
-                    auto i = y * head.width + x;
-                    result[i * 4] = (code >> 24) & 0xff;
-                    result[i * 4 + 1] = (code >> 16) & 0xff;
-                    result[i * 4 + 2] = (code >> 8) & 0xff;
-                    result[i * 4 + 3] = code & 0xff;
+                    ++ch;
                 }
             }
-        }
-        break;
-    }
-    case Grayscale: {
-        if (head.bitDepth >= 8)
-        {
-            for (int i = 0; i < head.width * head.height; i++)
+            break;
+        case Grayscale:
+            if (head.bitDepth == 16)
             {
-                result[i * 4] = source[i * (head.bitDepth / 8)];
-                result[i * 4 + 1] = result[i];
-                result[i * 4 + 2] = result[i];
-                result[i * 4 + 3] = 0xff;
+                dataBuffer.push_back(*ch);  // R value
+                dataBuffer.push_back(*ch);  // G value
+                dataBuffer.push_back(*ch);  // B value
+                dataBuffer.push_back(0xff); // A value
+                ++ch;
+                ++ch;
             }
-        }
-        else
-        {
-            int rowBytes = getStride();
-            int pixelsPerByte = 8 / head.bitDepth;
-
-            for (int y = 0; y < head.height; y++)
+            else if (head.bitDepth == 8)
             {
-                for (int x = 0; x < head.width; x++)
+                dataBuffer.push_back(*ch);  // R value
+                dataBuffer.push_back(*ch);  // G value
+                dataBuffer.push_back(*ch);  // B value
+                dataBuffer.push_back(0xff); // A value
+                ++ch;
+            }
+            else
+            {
+                int pixelsPerByte = 8 / head.bitDepth;
+                int x = std::distance(current.begin(), ch);
+                int byteIdx = x / pixelsPerByte;
+                int shift = (pixelsPerByte - 1 - (x % pixelsPerByte)) * head.bitDepth;
+
+                uint8_t byte = *ch;
+                uint8_t value = (byte >> shift) & ((1 << head.bitDepth) - 1);
+
+                dataBuffer.push_back(value);
+                dataBuffer.push_back(value);
+                dataBuffer.push_back(value);
+                dataBuffer.push_back(0xff);
+
+                if (shift == 0)
                 {
-                    int byteIdx = x / pixelsPerByte;
-                    int shift = (pixelsPerByte - 1 - (x % pixelsPerByte)) * head.bitDepth;
-
-                    uint8_t byte = source[y * rowBytes + byteIdx];
-                    uint8_t value = (byte >> shift) & ((1 << head.bitDepth) - 1);
-
-                    auto i = y * head.width + x;
-                    result[i * 4] = (value * 255) / ((1 << head.bitDepth) - 1);
-                    result[i * 4 + 1] = result[i];
-                    result[i * 4 + 2] = result[i];
-                    result[i * 4 + 3] = 0xff;
+                    ++ch;
                 }
             }
+            break;
+        default:
+            break;
         }
-        break;
     }
-    default:
-        throw std::runtime_error("unknown image type!");
-    }
-    dataBuffer.resize(result.size());
-    std::memcpy(dataBuffer.data(), result.data(), result.size());
 }
 
 uint8_t OMPngFile::getPaethPred(int a, int b, int c)
@@ -278,20 +332,6 @@ uint8_t OMPngFile::getPaethPred(int a, int b, int c)
     {
         return c;
     }
-}
-
-uint8_t OMPngFile::getBufferA(int y, int x)
-{
-    return x >= getBytesPerPixel() ? dataBuffer[y * getStride() + x - getBytesPerPixel()] : 0;
-}
-
-uint8_t OMPngFile::getBufferB(int y, int x)
-{
-    return (y > 0) ? dataBuffer[(y - 1) * getStride() + x] : 0;
-}
-uint8_t OMPngFile::getBufferC(int y, int x)
-{
-    return (x >= getBytesPerPixel() && y > 0) ? dataBuffer[(y - 1) * getStride() + x - getBytesPerPixel()] : 0;
 }
 
 uint32_t OMPngFile::getStride()

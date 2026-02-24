@@ -11,7 +11,8 @@ add_packages(
 	"glm",
 	"harfbuzz",
 	"tinyobjloader",
-	"bullet3"
+	"bullet3",
+	"zlib"
 )
 add_deps(
 	"openminecraft-log",

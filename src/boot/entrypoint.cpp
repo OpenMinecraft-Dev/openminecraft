@@ -125,13 +125,10 @@ int boot(std::vector<std::string> args)
             break;
         }
         case "png"_hash: {
-            auto ist = std::make_shared<std::ifstream>("/home/coder2/avatars/MetsukiMio.png", std::ios::binary);
-            specs::png::OMPngFile pf(ist);
+            auto ist = std::make_shared<std::ifstream>("/home/coder2/new.png", std::ios::binary);
+            specs::png::OMPngFile pf;
+            pf.parse(ist);
             logger->info("test!");
-            std::ofstream oo("test2.bin", std::ios::binary);
-            oo.write(reinterpret_cast<char *>(pf.fetchData()), pf.getHeight() * pf.getWidth() * 4);
-            oo.close();
-            logger->info("{} {}", pf.getWidth(), pf.getHeight());
             break;
         }
         case "inflate"_hash: {

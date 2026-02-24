@@ -11,5 +11,5 @@ content = []
 for b in bb:
     content.append(b)
 
-plt.imshow(np.array(content).reshape((3804, 4096, 4)))
+plt.imshow(np.array(content).reshape((951, 1024, 4)))
 plt.show()

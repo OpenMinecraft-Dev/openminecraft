@@ -42,21 +42,22 @@ struct OMPngHead
 class OMPngFile
 {
   public:
-    OMPngFile(std::shared_ptr<std::istream> istr);
+    OMPngFile();
     ~OMPngFile();
 
     void *fetchData();
     int getWidth();
     int getHeight();
 
+    void parse(std::shared_ptr<std::istream> istr);
+
   private:
-    void convertToStandardRGBA();
+    void defilter(int type, std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &, int y);
+    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> filterCache;
+
     uint32_t getStride();
     int getBytesPerPixel();
 
-    uint8_t getBufferA(int y, int x);
-    uint8_t getBufferB(int y, int x);
-    uint8_t getBufferC(int y, int x);
     uint8_t getPaethPred(int a, int b, int c);
 
     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> dataBuffer;

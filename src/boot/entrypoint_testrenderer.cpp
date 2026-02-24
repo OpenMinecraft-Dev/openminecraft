@@ -164,7 +164,8 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     {
         auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/viking_room.png");
 
-        specs::png::OMPngFile pngfile(imgraw);
+        specs::png::OMPngFile pngfile;
+        pngfile.parse(imgraw);
 
         textureImage = renderer->allocateTexture(pngfile.getWidth(), pngfile.getHeight(), Dim2, ColorRgba);
         textureImage->updateData(pngfile.fetchData());
