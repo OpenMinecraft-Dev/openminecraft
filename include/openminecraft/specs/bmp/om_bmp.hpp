@@ -40,6 +40,7 @@ class OMBmpFile
 
   private:
     OMBmpFileHeader fileHeader;
+    OMBmpInfoHeader infoHeader;
     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> dataBuffer;
 };
 } // namespace openminecraft::specs::bmp

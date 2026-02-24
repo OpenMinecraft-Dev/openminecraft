@@ -21,7 +21,9 @@ OMBmpFile::OMBmpFile(std::shared_ptr<std::istream> input)
     fileHeader.offset = binary::le32ToNative(fileHeader.offset);
     fileHeader.size = binary::le32ToNative(fileHeader.size);
 
-    std::cout << sizeof(OMBmpInfoHeader) << std::endl;
+    uint32_t hdlen;
+    input->read(reinterpret_cast<char *>(&hdlen), sizeof(uint32_t));
+    input->read(reinterpret_cast<char *>(&infoHeader), sizeof(OMBmpInfoHeader));
 }
 OMBmpFile::~OMBmpFile()
 {

@@ -4,6 +4,7 @@
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
+#include "openminecraft/specs/zlib/om_zlib_inflate.hpp"
 #include "zlib.h"
 #include <cstdint>
 #include <cstring>
@@ -26,8 +27,15 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
         throw std::logic_error("Bad png header!");
     }
 
-    std::vector<OMPngChunk> chunks;
-    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> IDATdata;
+    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> unzippedBuffer = {};
+
+    zlib::OMZLibInflater inf([&](uint8_t *data, uint64_t len) {
+        for (uint64_t i = 0; i < len; i++)
+        {
+            unzippedBuffer.push_back(data[i]);
+        }
+    });
+
     while (istr->good())
     {
         OMPngChunk cnk;
@@ -43,8 +51,6 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
         istr->read(reinterpret_cast<char *>(cnk.data.data()), length);
         istr->read(reinterpret_cast<char *>(&cnk.crc), 4);
         cnk.crc = binary::be32ToNative(cnk.crc);
-
-        chunks.push_back(cnk);
 
         auto res = crc(cnk);
         if (res != cnk.crc)
@@ -87,37 +93,9 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
 
         if (!std::memcmp(cnk.name, "IDAT", 4))
         {
-            for (auto i : cnk.data)
-            {
-                IDATdata.push_back(i);
-            }
+            inf.input(cnk.data.data(), cnk.data.size());
         }
     }
-
-    z_stream strm = {0};
-    strm.zalloc = [](void *, uInt n, uInt size) -> void * { return mem::allocator::tracedCallocZLib(n, size); };
-    strm.zfree = [](void *, void *d) { mem::allocator::tracedFreeZLib(d); };
-    strm.opaque = nullptr;
-
-    inflateInit(&strm);
-
-    strm.next_in = IDATdata.data();
-    strm.avail_in = IDATdata.size();
-
-    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> unzippedBuffer;
-    unzippedBuffer.resize(head.height * (1 + getStride()));
-
-    strm.next_out = unzippedBuffer.data();
-    strm.avail_out = unzippedBuffer.size();
-
-    int r = inflate(&strm, Z_FINISH);
-
-    if (r != Z_STREAM_END && r != Z_OK)
-    {
-        throw std::runtime_error(fmt::format("zlib inflate failed: {}", r));
-    }
-
-    inflateEnd(&strm);
 
     dataBuffer.resize(head.height * getStride());
 
@@ -156,7 +134,6 @@ OMPngFile::OMPngFile(std::shared_ptr<std::istream> istr)
             }
         }
     }
-
     convertToStandardRGBA();
 }
 
@@ -171,7 +148,7 @@ void OMPngFile::convertToStandardRGBA()
     case RGBA: {
         if (head.bitDepth == 8)
         {
-            break;
+            return;
         }
 
         for (int i = 0; i < head.width * head.height * 4; i++)
@@ -278,7 +255,6 @@ void OMPngFile::convertToStandardRGBA()
     default:
         throw std::runtime_error("unknown image type!");
     }
-
     dataBuffer.resize(result.size());
     std::memcpy(dataBuffer.data(), result.data(), result.size());
 }

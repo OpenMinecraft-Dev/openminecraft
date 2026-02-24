@@ -12,6 +12,8 @@
 #include "openminecraft/renderer/common/om_renderer_shadercompiler.hpp"
 #include "openminecraft/renderer/common/shader/om_renderer_shadercompiler_shaderc.hpp"
 #include "openminecraft/specs/bmp/om_bmp.hpp"
+#include "openminecraft/specs/png/om_png.hpp"
+#include "openminecraft/specs/zlib/om_zlib_inflate.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
@@ -120,6 +122,33 @@ int boot(std::vector<std::string> args)
             auto ist = std::make_shared<std::ifstream>("/home/coder2/this.bmp", std::ios::binary);
             specs::bmp::OMBmpFile pf(ist);
             logger->info("test!");
+            break;
+        }
+        case "png"_hash: {
+            auto ist = std::make_shared<std::ifstream>("/home/coder2/avatars/MetsukiMio.png", std::ios::binary);
+            specs::png::OMPngFile pf(ist);
+            logger->info("test!");
+            std::ofstream oo("test2.bin", std::ios::binary);
+            oo.write(reinterpret_cast<char *>(pf.fetchData()), pf.getHeight() * pf.getWidth() * 4);
+            oo.close();
+            logger->info("{} {}", pf.getWidth(), pf.getHeight());
+            break;
+        }
+        case "inflate"_hash: {
+            specs::zlib::OMZLibInflater inf(
+                [&](uint8_t *data, uint64_t length) { logger->info("{}", std::string((char *)data, length)); });
+            auto ist = std::make_shared<std::ifstream>("/home/coder2/compressed", std::ios::binary);
+
+            uint8_t buff[64];
+            while (true)
+            {
+                auto ll = ist->readsome(reinterpret_cast<char *>(buff), 64);
+                if (ll == 0)
+                {
+                    break;
+                }
+                inf.input(buff, ll);
+            }
             break;
         }
         case "shd"_hash: {
