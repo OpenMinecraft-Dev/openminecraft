@@ -45,12 +45,15 @@ struct OMPngInterlaceInfo
     uint32_t offsety;
     uint32_t stridex;
     uint32_t stridey;
+
+    uint8_t areax;
+    uint8_t areay;
 };
 
-constexpr std::array<OMPngInterlaceInfo, 7> pngAdam7 = {OMPngInterlaceInfo{0, 0, 8, 8}, OMPngInterlaceInfo{4, 0, 8, 8},
-                                                        OMPngInterlaceInfo{0, 4, 4, 8}, OMPngInterlaceInfo{2, 0, 4, 4},
-                                                        OMPngInterlaceInfo{0, 2, 2, 4}, OMPngInterlaceInfo{1, 0, 2, 2},
-                                                        OMPngInterlaceInfo{0, 1, 1, 2}};
+constexpr std::array<OMPngInterlaceInfo, 7> pngAdam7 = {
+    OMPngInterlaceInfo{0, 0, 8, 8, 8, 8}, OMPngInterlaceInfo{4, 0, 8, 8, 4, 8}, OMPngInterlaceInfo{0, 4, 4, 8, 4, 4},
+    OMPngInterlaceInfo{2, 0, 4, 4, 2, 4}, OMPngInterlaceInfo{0, 2, 2, 4, 2, 2}, OMPngInterlaceInfo{1, 0, 2, 2, 1, 2},
+    OMPngInterlaceInfo{0, 1, 1, 2, 1, 1}};
 
 class OMPngFile
 {
@@ -67,7 +70,7 @@ class OMPngFile
   private:
     std::pair<uint32_t, uint32_t> getAdamPassSize(int pass);
     void defilterAdam(int type, std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &, int y, int pass);
-    void writeIntoBufferAdam(std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &, int pass);
+    void writeIntoBufferAdam(std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &, int pass, int y);
     void defilter(int type, std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &, int y);
     void writeIntoBuffer(std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &);
     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> filterCache;

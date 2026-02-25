@@ -131,7 +131,7 @@ int boot(std::vector<std::string> args)
             logger->info("test!");
 
             std::ofstream oo("test2.bin", std::ios::binary);
-            oo.write(reinterpret_cast<char *>(pf.fetchData()), 1024 * 951 * 3);
+            oo.write(reinterpret_cast<char *>(pf.fetchData()), 1024 * 951 * 4);
             oo.close();
             break;
         }
