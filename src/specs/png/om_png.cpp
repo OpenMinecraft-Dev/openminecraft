@@ -42,6 +42,7 @@ void OMPngFile::parse(std::shared_ptr<std::istream> istr)
     });
 
     int y = 0;
+    int pass = 0; // only used for interlacing
     dataBuffer.clear();
 
     while (istr->good())
@@ -78,6 +79,11 @@ void OMPngFile::parse(std::shared_ptr<std::istream> istr)
             head.width = binary::be32ToNative(head.width);
             head.height = binary::be32ToNative(head.height);
             filterCache.resize(getStride());
+
+            if (head.interlacing)
+            {
+                dataBuffer.resize(getStride() * head.height);
+            }
         }
 
         if (!std::memcmp(cnk.name, "PLTE", 4))
@@ -104,24 +110,81 @@ void OMPngFile::parse(std::shared_ptr<std::istream> istr)
         {
             inf.input(cnk.data.data(), cnk.data.size());
 
-            while (unzippedBuffer.size() >= getStride() + 1)
+            if (!head.interlacing)
             {
-                int flttype = unzippedBuffer[0];
-                unzippedBuffer.erase(unzippedBuffer.begin());
+                while (unzippedBuffer.size() >= getStride() + 1)
+                {
+                    int flttype = unzippedBuffer[0];
+                    unzippedBuffer.erase(unzippedBuffer.begin());
 
-                std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> prefilter;
-                prefilter.assign(std::make_move_iterator(unzippedBuffer.begin()),
-                                 std::make_move_iterator(unzippedBuffer.begin() + getStride()));
-                unzippedBuffer.erase(unzippedBuffer.begin(), unzippedBuffer.begin() + getStride());
+                    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> prefilter;
+                    prefilter.assign(std::make_move_iterator(unzippedBuffer.begin()),
+                                     std::make_move_iterator(unzippedBuffer.begin() + getStride()));
+                    unzippedBuffer.erase(unzippedBuffer.begin(), unzippedBuffer.begin() + getStride());
 
-                defilter(flttype, prefilter, y);
-                y++;
+                    defilter(flttype, prefilter, y);
+                    y++;
+                }
+            }
+            else
+            {
+                while (unzippedBuffer.size() >= getAdamStride(pass) + 1)
+                {
+                    auto passSize = getAdamPassSize(pass);
+                    int flttype = unzippedBuffer[0];
+                    unzippedBuffer.erase(unzippedBuffer.begin());
+                    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> prefilter;
+                    prefilter.assign(std::make_move_iterator(unzippedBuffer.begin()),
+                                     std::make_move_iterator(unzippedBuffer.begin() + getAdamStride(pass)));
+                    unzippedBuffer.erase(unzippedBuffer.begin(), unzippedBuffer.begin() + getAdamStride(pass));
+                    defilterAdam(flttype, prefilter, y, pass);
+                    y++;
+
+                    if (y == passSize.second)
+                    {
+                        y = 0;
+                        pass = std::min(6, pass + 1);
+                    }
+                }
             }
         }
     }
 }
 
-void OMPngFile::defilter(int type, std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &raw, int y)
+uint32_t OMPngFile::getAdamStride(int pass)
+{
+    auto wid = getAdamPassSize(pass).first;
+    switch (head.type)
+    {
+    default:
+    case RGBA:
+        return wid * 4 * head.bitDepth / 8;
+    case RGBTriple:
+        return wid * 3 * head.bitDepth / 8;
+    case GrayscaleAlpha:
+        return wid * 2 * head.bitDepth / 8;
+    case Palette:
+    case Grayscale: {
+        if (head.bitDepth >= 8)
+        {
+            return wid * head.bitDepth / 8;
+        }
+        else
+        {
+            auto bits = wid * head.bitDepth;
+            return bits + (8 - bits % 8) % 8;
+        }
+    }
+    }
+}
+std::pair<uint32_t, uint32_t> OMPngFile::getAdamPassSize(int pass)
+{
+    auto stat = pngAdam7[pass];
+    return std::make_pair(std::ceil((head.width - stat.offsetx) / static_cast<float>(stat.stridex)),
+                          std::ceil((head.height - stat.offsety) / static_cast<float>(stat.stridey)));
+}
+void OMPngFile::defilterAdam(int type, std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &raw, int y,
+                             int pass)
 {
     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> current;
 
@@ -157,6 +220,23 @@ void OMPngFile::defilter(int type, std::vector<uint8_t, mem::OMStlAllocator<allo
     filterCache.clear();
     filterCache.assign(current.begin(), current.end());
 
+    auto def = pngAdam7[pass];
+    for (int x = 0; x < current.size() / 3; x++)
+    {
+        int actualX = def.offsetx + x * def.stridex;
+        int actualY = def.offsety + y * def.stridey;
+
+        int pixelIndex = actualY * head.width + actualX;
+        dataBuffer[pixelIndex * 3] = current[x * 3];
+        dataBuffer[pixelIndex * 3 + 1] = current[x * 3 + 1];
+        dataBuffer[pixelIndex * 3 + 2] = current[x * 3 + 2];
+    }
+}
+void OMPngFile::writeIntoBufferAdam(std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &, int pass)
+{
+}
+void OMPngFile::writeIntoBuffer(std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &current)
+{
     for (auto ch = current.begin(); ch != current.end();)
     {
         switch (head.type)
@@ -311,6 +391,44 @@ void OMPngFile::defilter(int type, std::vector<uint8_t, mem::OMStlAllocator<allo
             break;
         }
     }
+}
+void OMPngFile::defilter(int type, std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &raw, int y)
+{
+    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> current;
+
+    int bpx = getBytesPerPixel();
+    auto getBufferA = [&](int x) { return x >= bpx ? current[x - bpx] : 0; };
+    auto getBufferB = [&](int x) { return y > 0 ? filterCache[x] : 0; };
+    auto getBufferC = [&](int x) { return (x >= bpx && y > 0) ? filterCache[x - bpx] : 0; };
+
+    for (int i = 0; i < raw.size(); i++)
+    {
+        switch (type)
+        {
+        case 0:
+            current.push_back(raw[i]);
+            break;
+        case 1:
+            current.push_back(raw[i] + getBufferA(i));
+            break;
+        case 2:
+            current.push_back(raw[i] + getBufferB(i));
+            break;
+        case 3:
+            current.push_back(raw[i] + (getBufferA(i) + getBufferB(i)) / 2);
+            break;
+        case 4:
+            current.push_back(raw[i] + getPaethPred(getBufferA(i), getBufferB(i), getBufferC(i)));
+            break;
+        default:
+            throw std::runtime_error("unknown filter method!");
+        }
+    }
+
+    filterCache.clear();
+    filterCache.assign(current.begin(), current.end());
+
+    writeIntoBuffer(current);
 }
 
 uint8_t OMPngFile::getPaethPred(int a, int b, int c)
