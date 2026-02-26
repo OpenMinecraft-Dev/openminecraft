@@ -78,8 +78,6 @@ class OMPngFile
     uint32_t getStride(int width);
     int getBytesPerPixel();
 
-    uint8_t getPaethPred(int a, int b, int c);
-
     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> dataBuffer;
     OMPngHead head;
     std::vector<int, mem::OMStlAllocator<allocatorTag, int>> palette;

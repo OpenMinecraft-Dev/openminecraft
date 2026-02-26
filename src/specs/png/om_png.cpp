@@ -92,6 +92,27 @@ static void writePixel(uint8_t *result, uint8_t *source, OMPngColorType type, ui
     }
 }
 
+static uint8_t getPaethPred(int a, int b, int c)
+{
+    auto p = a + b - c;
+    auto pa = std::abs(p - a);
+    auto pb = std::abs(p - b);
+    auto pc = std::abs(p - c);
+
+    if (pa <= pb && pa <= pc)
+    {
+        return a;
+    }
+    else if (pb <= pc)
+    {
+        return b;
+    }
+    else
+    {
+        return c;
+    }
+}
+
 void OMPngFile::parse(std::shared_ptr<std::istream> istr)
 {
     std::array<uint8_t, 8> hd = {};
@@ -353,27 +374,6 @@ void OMPngFile::defilter(int type, std::vector<uint8_t, mem::OMStlAllocator<allo
     filterCache.assign(current.begin(), current.end());
 
     writeIntoBuffer(current);
-}
-
-uint8_t OMPngFile::getPaethPred(int a, int b, int c)
-{
-    auto p = a + b - c;
-    auto pa = std::abs(p - a);
-    auto pb = std::abs(p - b);
-    auto pc = std::abs(p - c);
-
-    if (pa <= pb && pa <= pc)
-    {
-        return a;
-    }
-    else if (pb <= pc)
-    {
-        return b;
-    }
-    else
-    {
-        return c;
-    }
 }
 
 uint32_t OMPngFile::getStride(int width)
