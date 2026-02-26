@@ -403,11 +403,10 @@ int OMPngFile::getBytesPerPixel()
 
 uint64_t OMPngFile::crc(OMPngChunk chunk)
 {
-    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> buf;
-    buf.resize(chunk.data.size() + 4);
-    std::memcpy(buf.data(), chunk.name, 4);
-    std::memcpy(buf.data() + 4, chunk.data.data(), chunk.data.size());
-    return openminecraft::util::calcCrc(0xffffffffL, buf.data(), chunk.data.size() + 4) ^ 0xffffffffL;
+    uint32_t crc = 0xffffffff;
+    crc = openminecraft::util::calcCrc(crc, chunk.name, 4);
+    crc = openminecraft::util::calcCrc(crc, chunk.data.data(), chunk.data.size());
+    return crc ^ 0xffffffff;
 }
 
 void *OMPngFile::fetchData()
