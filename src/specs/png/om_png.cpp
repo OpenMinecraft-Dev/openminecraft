@@ -5,6 +5,7 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/specs/zlib/om_zlib_inflate.hpp"
+#include "openminecraft/util/om_util_crc.hpp"
 #include "zlib.h"
 #include <cstdint>
 #include <cstring>
@@ -400,53 +401,13 @@ int OMPngFile::getBytesPerPixel()
     }
 }
 
-void OMPngFile::makeCrcTable()
-{
-    uint64_t c;
-
-    for (int n = 0; n < 256; n++)
-    {
-        c = static_cast<uint64_t>(n);
-        for (int k = 0; k < 8; k++)
-        {
-            if (c & 1)
-            {
-                c = 0xedb88320 ^ (c >> 1);
-            }
-            else
-            {
-                c = c >> 1;
-            }
-        }
-        crcTable[n] = c;
-    }
-
-    crcCalc = true;
-}
-
-uint64_t OMPngFile::updateCrc(uint64_t crc, void *dd, int length)
-{
-    uint64_t c = crc;
-    if (!crcCalc)
-    {
-        makeCrcTable();
-    }
-
-    for (int n = 0; n < length; n++)
-    {
-        c = crcTable[(c ^ reinterpret_cast<uint8_t *>(dd)[n]) & 0xff] ^ (c >> 8);
-    }
-
-    return c;
-}
-
 uint64_t OMPngFile::crc(OMPngChunk chunk)
 {
     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> buf;
     buf.resize(chunk.data.size() + 4);
     std::memcpy(buf.data(), chunk.name, 4);
     std::memcpy(buf.data() + 4, chunk.data.data(), chunk.data.size());
-    return updateCrc(0xffffffffL, buf.data(), chunk.data.size() + 4) ^ 0xffffffffL;
+    return openminecraft::util::calcCrc(0xffffffffL, buf.data(), chunk.data.size() + 4) ^ 0xffffffffL;
 }
 
 void *OMPngFile::fetchData()

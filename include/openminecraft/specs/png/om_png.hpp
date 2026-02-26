@@ -82,11 +82,6 @@ class OMPngFile
     OMPngHead head;
     std::vector<int, mem::OMStlAllocator<allocatorTag, int>> palette;
 
-    uint64_t crcTable[256];
-    bool crcCalc = false;
-
-    void makeCrcTable();
-    uint64_t updateCrc(uint64_t crc, void *, int);
     uint64_t crc(OMPngChunk chunk);
 };
 } // namespace openminecraft::specs::png
