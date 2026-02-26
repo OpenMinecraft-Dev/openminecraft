@@ -22,6 +22,76 @@ OMPngFile::OMPngFile()
 {
 }
 
+static void writePixel(uint8_t *result, uint8_t *source, OMPngColorType type, uint8_t bitdepth, int x, int *palette)
+{
+    switch (type)
+    {
+    case RGBA:
+        result[0] = source[x * 4 * bitdepth / 8];
+        result[1] = source[(x * 4 + 1) * bitdepth / 8];
+        result[2] = source[(x * 4 + 2) * bitdepth / 8];
+        result[3] = source[(x * 4 + 3) * bitdepth / 8];
+        break;
+    case RGBTriple:
+        result[0] = source[x * 3 * bitdepth / 8];
+        result[1] = source[(x * 3 + 1) * bitdepth / 8];
+        result[2] = source[(x * 3 + 2) * bitdepth / 8];
+        result[3] = 0xff;
+        break;
+    case GrayscaleAlpha:
+        std::memset(result, source[x * 2 * bitdepth / 8], 3);
+        result[4] = source[(x * 2 + 1) * bitdepth / 8];
+        break;
+    case Palette:
+        if (bitdepth == 8)
+        {
+            int pal = palette[source[x]];
+            result[0] = (pal >> 24) & 0xff;
+            result[1] = (pal >> 16) & 0xff;
+            result[2] = (pal >> 8) & 0xff;
+            result[3] = pal & 0xff;
+        }
+        else
+        {
+            int pixelsPerByte = 8 / bitdepth;
+            int byteIdx = x / pixelsPerByte;
+            int shift = (pixelsPerByte - 1 - (x % pixelsPerByte)) * bitdepth;
+
+            uint8_t byte = source[byteIdx];
+            uint8_t value = (byte >> shift) & ((1 << bitdepth) - 1);
+            int pal = palette[value];
+
+            result[0] = (pal >> 24) & 0xff;
+            result[1] = (pal >> 16) & 0xff;
+            result[2] = (pal >> 8) & 0xff;
+            result[3] = pal & 0xff;
+        }
+        break;
+    case Grayscale:
+        if (bitdepth == 8)
+        {
+            std::memset(result, source[x * bitdepth / 8], 3);
+            result[4] = 0xff;
+        }
+        else
+        {
+            int pixelsPerByte = 8 / bitdepth;
+            int byteIdx = x / pixelsPerByte;
+            int shift = (pixelsPerByte - 1 - (x % pixelsPerByte)) * bitdepth;
+
+            uint8_t byte = source[byteIdx];
+            uint8_t value = (byte >> shift) & ((1 << bitdepth) - 1);
+            value = static_cast<uint8_t>((value * 255) / ((1 << bitdepth) - 1));
+
+            std::memset(result, value, 3);
+            result[4] = 0xff;
+        }
+        break;
+    default:
+        break;
+    }
+}
+
 void OMPngFile::parse(std::shared_ptr<std::istream> istr)
 {
     std::array<uint8_t, 8> hd = {};
@@ -254,240 +324,22 @@ void OMPngFile::writeIntoBufferAdam(std::vector<uint8_t, mem::OMStlAllocator<all
 
                 int pixelIndex = finalY * head.width + finalX;
 
-                switch (head.type)
-                {
-                case RGBA:
-                    dataBuffer[pixelIndex * 4] = current[x * 4 * head.bitDepth / 8];
-                    dataBuffer[pixelIndex * 4 + 1] = current[(x * 4 + 1) * head.bitDepth / 8];
-                    dataBuffer[pixelIndex * 4 + 2] = current[(x * 4 + 2) * head.bitDepth / 8];
-                    dataBuffer[pixelIndex * 4 + 3] = current[(x * 4 + 3) * head.bitDepth / 8];
-                    break;
-                case RGBTriple:
-                    dataBuffer[pixelIndex * 4] = current[x * 3 * head.bitDepth / 8];
-                    dataBuffer[pixelIndex * 4 + 1] = current[(x * 3 + 1) * head.bitDepth / 8];
-                    dataBuffer[pixelIndex * 4 + 2] = current[(x * 3 + 2) * head.bitDepth / 8];
-                    dataBuffer[pixelIndex * 4 + 3] = 0xff;
-                    break;
-                case GrayscaleAlpha:
-                    dataBuffer[pixelIndex * 4] = current[x * 2 * head.bitDepth / 8];
-                    dataBuffer[pixelIndex * 4 + 1] = dataBuffer[pixelIndex * 4];
-                    dataBuffer[pixelIndex * 4 + 2] = dataBuffer[pixelIndex * 4];
-                    dataBuffer[pixelIndex * 4 + 3] = current[(x * 2 + 1) * head.bitDepth / 8];
-                    break;
-                case Palette:
-                    if (head.bitDepth == 8)
-                    {
-                        int pal = palette[current[x]];
-                        dataBuffer[pixelIndex * 4] = (pal >> 24) & 0xff;
-                        dataBuffer[pixelIndex * 4 + 1] = (pal >> 16) & 0xff;
-                        dataBuffer[pixelIndex * 4 + 2] = (pal >> 8) & 0xff;
-                        dataBuffer[pixelIndex * 4 + 3] = pal & 0xff;
-                    }
-                    else
-                    {
-                        int pixelsPerByte = 8 / head.bitDepth;
-                        int byteIdx = x / pixelsPerByte;
-                        int shift = (pixelsPerByte - 1 - (x % pixelsPerByte)) * head.bitDepth;
-
-                        uint8_t byte = current[byteIdx];
-                        uint8_t value = (byte >> shift) & ((1 << head.bitDepth) - 1);
-                        int pal = palette[value];
-
-                        dataBuffer[pixelIndex * 4] = (pal >> 24) & 0xff;
-                        dataBuffer[pixelIndex * 4 + 1] = (pal >> 16) & 0xff;
-                        dataBuffer[pixelIndex * 4 + 2] = (pal >> 8) & 0xff;
-                        dataBuffer[pixelIndex * 4 + 3] = pal & 0xff;
-                    }
-                    break;
-                case Grayscale:
-                    if (head.bitDepth >= 8)
-                    {
-                        dataBuffer[pixelIndex * 4] = current[x * head.bitDepth / 8];
-                        dataBuffer[pixelIndex * 4 + 1] = dataBuffer[pixelIndex * 4];
-                        dataBuffer[pixelIndex * 4 + 2] = dataBuffer[pixelIndex * 4];
-                        dataBuffer[pixelIndex * 4 + 3] = 0xff;
-                    }
-                    else
-                    {
-                        int pixelsPerByte = 8 / head.bitDepth;
-                        int byteIdx = x / pixelsPerByte;
-                        int shift = (pixelsPerByte - 1 - (x % pixelsPerByte)) * head.bitDepth;
-
-                        uint8_t byte = current[byteIdx];
-                        uint8_t value = (byte >> shift) & ((1 << head.bitDepth) - 1);
-                        value = static_cast<uint8_t>((value * 255) / ((1 << head.bitDepth) - 1));
-
-                        dataBuffer[pixelIndex * 4] = value;
-                        dataBuffer[pixelIndex * 4 + 1] = value;
-                        dataBuffer[pixelIndex * 4 + 2] = value;
-                        dataBuffer[pixelIndex * 4 + 3] = 0xff;
-                    }
-                    break;
-                default:
-                    throw std::runtime_error("unsupported pixel format");
-                    break;
-                }
+                writePixel(dataBuffer.data() + pixelIndex * 4, current.data(), head.type, head.bitDepth, x,
+                           palette.data());
             }
         }
     }
 }
 void OMPngFile::writeIntoBuffer(std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &current)
 {
-    int x = 0;
-    for (auto ch = current.begin(); ch != current.end();)
+    for (int x = 0; x < head.width; x++)
     {
-        switch (head.type)
-        {
-        case RGBA:
-            if (head.bitDepth == 8)
-            {
-                dataBuffer.push_back(*ch); // R value
-                ++ch;
-                dataBuffer.push_back(*ch); // G value
-                ++ch;
-                dataBuffer.push_back(*ch); // B value
-                ++ch;
-                dataBuffer.push_back(*ch); // A value
-                ++ch;
-            }
-            else
-            {
-                dataBuffer.push_back(*ch); // R value
-                ++ch;
-                ++ch;
-                dataBuffer.push_back(*ch); // G value
-                ++ch;
-                ++ch;
-                dataBuffer.push_back(*ch); // B value
-                ++ch;
-                ++ch;
-                dataBuffer.push_back(*ch); // A value
-                ++ch;
-                ++ch;
-            }
-            break;
-        case RGBTriple:
-            if (head.bitDepth == 8)
-            {
-                dataBuffer.push_back(*ch); // R value
-                ++ch;
-                dataBuffer.push_back(*ch); // G value
-                ++ch;
-                dataBuffer.push_back(*ch); // B value
-                ++ch;
-                dataBuffer.push_back(0xff); // A value
-            }
-            else
-            {
-                dataBuffer.push_back(*ch); // R value
-                ++ch;
-                ++ch;
-                dataBuffer.push_back(*ch); // G value
-                ++ch;
-                ++ch;
-                dataBuffer.push_back(*ch); // B value
-                ++ch;
-                ++ch;
-                dataBuffer.push_back(0xff); // A value
-            }
-            break;
-        case GrayscaleAlpha:
-            if (head.bitDepth == 8)
-            {
-                dataBuffer.push_back(*ch);
-                dataBuffer.push_back(*ch);
-                dataBuffer.push_back(*ch);
-                ++ch;
-                dataBuffer.push_back(*ch);
-                ++ch;
-            }
-            else
-            {
-                dataBuffer.push_back(*ch);
-                dataBuffer.push_back(*ch);
-                dataBuffer.push_back(*ch);
-                ++ch;
-                ++ch;
-                dataBuffer.push_back(*ch);
-                ++ch;
-                ++ch;
-            }
-            break;
-        case Palette:
-            if (head.bitDepth == 8)
-            {
-                int pal = palette[*ch];
-                ++ch;
-                dataBuffer.push_back((pal >> 24) & 0xff);
-                dataBuffer.push_back((pal >> 16) & 0xff);
-                dataBuffer.push_back((pal >> 8) & 0xff);
-                dataBuffer.push_back(pal & 0xff);
-            }
-            else
-            {
-                int pixelsPerByte = 8 / head.bitDepth;
-                int byteIdx = x / pixelsPerByte;
-                int shift = (pixelsPerByte - 1 - (x % pixelsPerByte)) * head.bitDepth;
-
-                uint8_t byte = *ch;
-                uint8_t value = (byte >> shift) & ((1 << head.bitDepth) - 1);
-                int pal = palette[value];
-
-                dataBuffer.push_back((pal >> 24) & 0xff);
-                dataBuffer.push_back((pal >> 16) & 0xff);
-                dataBuffer.push_back((pal >> 8) & 0xff);
-                dataBuffer.push_back(pal & 0xff);
-
-                if (shift == 0)
-                {
-                    ++ch;
-                }
-            }
-            break;
-        case Grayscale:
-            if (head.bitDepth == 16)
-            {
-                dataBuffer.push_back(*ch);  // R value
-                dataBuffer.push_back(*ch);  // G value
-                dataBuffer.push_back(*ch);  // B value
-                dataBuffer.push_back(0xff); // A value
-                ++ch;
-                ++ch;
-            }
-            else if (head.bitDepth == 8)
-            {
-                dataBuffer.push_back(*ch);  // R value
-                dataBuffer.push_back(*ch);  // G value
-                dataBuffer.push_back(*ch);  // B value
-                dataBuffer.push_back(0xff); // A value
-                ++ch;
-            }
-            else
-            {
-                int pixelsPerByte = 8 / head.bitDepth;
-                int byteIdx = x / pixelsPerByte;
-                int shift = (pixelsPerByte - 1 - (x % pixelsPerByte)) * head.bitDepth;
-
-                uint8_t byte = *ch;
-                uint8_t value = (byte >> shift) & ((1 << head.bitDepth) - 1);
-                value = static_cast<uint8_t>((value * 255) / ((1 << head.bitDepth) - 1));
-
-                dataBuffer.push_back(value);
-                dataBuffer.push_back(value);
-                dataBuffer.push_back(value);
-                dataBuffer.push_back(0xff);
-
-                if (shift == 0)
-                {
-                    ++ch;
-                }
-            }
-            break;
-        default:
-            break;
-        }
-
-        x++;
+        uint8_t buffer[4];
+        writePixel(buffer, current.data(), head.type, head.bitDepth, x, palette.data());
+        dataBuffer.push_back(buffer[0]);
+        dataBuffer.push_back(buffer[1]);
+        dataBuffer.push_back(buffer[2]);
+        dataBuffer.push_back(buffer[3]);
     }
 }
 void OMPngFile::defilter(int type, std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &raw, int y)

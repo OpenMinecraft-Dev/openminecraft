@@ -118,7 +118,7 @@ void OMInterpreter::checkNotNull(const void *p)
     }
 
     // gino: check if this thread holds the ownership of the object, otherwise we need to wait until the lock is
-    // released;
+    // released
     auto oop = static_cast<OMOOPDesc *>(const_cast<void *>(p));
     while (std::find(currentThread.monitored.begin(), currentThread.monitored.end(), oop) ==
                currentThread.monitored.end() &&
