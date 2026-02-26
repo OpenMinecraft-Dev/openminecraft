@@ -15,6 +15,7 @@ layout(binding = 0) uniform UniformBufferObject {
 } ubo;
 
 #define MAX_KERNEL_RADIUS 10
+#define EPS 0.0001
 float gaussianWeight(float x, float y, float sigma) {
     float sigma2 = sigma * sigma;
     return exp(-(x * x + y * y) / (2.0 * sigma2));
@@ -23,8 +24,8 @@ float gaussianWeight(float x, float y, float sigma) {
 void main() {
     outColor = texture(texSampler, outTexCoord);
     
-    vec2 texSize = textureSize(texSampler, 0);
-    vec2 texelSize = 1.0 / texSize;
+    highp vec2 texSize = textureSize(texSampler, 0);
+    highp vec2 texelSize = 1.0 / texSize;
 
     int radius = int(ubo.kernelSize);
     if (radius <= 0) {
@@ -39,8 +40,9 @@ void main() {
         for (int x = -radius; x <= radius; x++) {
             float weight = gaussianWeight(float(x), float(y), ubo.sigma);
             
-            vec2 off = outTexCoord + vec2(x, y) * texelSize;
-            off = max(min(off, vec2(1.0)), vec2(0.0));
+            highp vec2 off = outTexCoord + vec2(x, y) * texelSize;
+            // gino: we had to do this otherwise wrong pixels will be fetched
+            off = clamp(off, vec2(0.0 + texelSize), vec2(1.0 - texelSize));
             vec4 sampleColor = texture(texSampler, off);
             
             result += sampleColor * weight;

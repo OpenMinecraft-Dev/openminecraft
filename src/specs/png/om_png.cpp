@@ -148,7 +148,6 @@ void OMPngFile::parse(std::shared_ptr<std::istream> istr)
             std::memcpy(&this->head, cnk.data.data(), sizeof(OMPngHead));
             head.width = binary::be32ToNative(head.width);
             head.height = binary::be32ToNative(head.height);
-            filterCache.resize(getStride());
 
             if (head.interlacing)
             {
@@ -186,15 +185,15 @@ void OMPngFile::parse(std::shared_ptr<std::istream> istr)
 
             if (!head.interlacing)
             {
-                while (unzippedBuffer.size() >= getStride() + 1)
+                while (unzippedBuffer.size() >= getStride(head.width) + 1)
                 {
                     int flttype = unzippedBuffer[0];
                     unzippedBuffer.erase(unzippedBuffer.begin());
 
                     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> prefilter;
                     prefilter.assign(std::make_move_iterator(unzippedBuffer.begin()),
-                                     std::make_move_iterator(unzippedBuffer.begin() + getStride()));
-                    unzippedBuffer.erase(unzippedBuffer.begin(), unzippedBuffer.begin() + getStride());
+                                     std::make_move_iterator(unzippedBuffer.begin() + getStride(head.width)));
+                    unzippedBuffer.erase(unzippedBuffer.begin(), unzippedBuffer.begin() + getStride(head.width));
 
                     defilter(flttype, prefilter, y);
                     y++;
@@ -202,15 +201,16 @@ void OMPngFile::parse(std::shared_ptr<std::istream> istr)
             }
             else
             {
-                while (unzippedBuffer.size() >= getAdamStride(pass) + 1)
+                auto passSize = getAdamPassSize(pass);
+                while (unzippedBuffer.size() >= getStride(passSize.first) + 1)
                 {
-                    auto passSize = getAdamPassSize(pass);
+
                     int flttype = unzippedBuffer[0];
                     unzippedBuffer.erase(unzippedBuffer.begin());
                     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> prefilter;
                     prefilter.assign(std::make_move_iterator(unzippedBuffer.begin()),
-                                     std::make_move_iterator(unzippedBuffer.begin() + getAdamStride(pass)));
-                    unzippedBuffer.erase(unzippedBuffer.begin(), unzippedBuffer.begin() + getAdamStride(pass));
+                                     std::make_move_iterator(unzippedBuffer.begin() + getStride(passSize.first)));
+                    unzippedBuffer.erase(unzippedBuffer.begin(), unzippedBuffer.begin() + getStride(passSize.first));
                     defilterAdam(flttype, prefilter, y, pass);
                     y++;
 
@@ -225,32 +225,6 @@ void OMPngFile::parse(std::shared_ptr<std::istream> istr)
     }
 }
 
-uint32_t OMPngFile::getAdamStride(int pass)
-{
-    auto wid = getAdamPassSize(pass).first;
-    switch (head.type)
-    {
-    default:
-    case RGBA:
-        return wid * 4 * head.bitDepth / 8;
-    case RGBTriple:
-        return wid * 3 * head.bitDepth / 8;
-    case GrayscaleAlpha:
-        return wid * 2 * head.bitDepth / 8;
-    case Palette:
-    case Grayscale: {
-        if (head.bitDepth >= 8)
-        {
-            return wid * head.bitDepth / 8;
-        }
-        else
-        {
-            auto bits = wid * head.bitDepth;
-            return bits + (8 - bits % 8) % 8;
-        }
-    }
-    }
-}
 std::pair<uint32_t, uint32_t> OMPngFile::getAdamPassSize(int pass)
 {
     auto stat = pngAdam7[pass];
@@ -402,26 +376,26 @@ uint8_t OMPngFile::getPaethPred(int a, int b, int c)
     }
 }
 
-uint32_t OMPngFile::getStride()
+uint32_t OMPngFile::getStride(int width)
 {
     switch (head.type)
     {
     default:
     case RGBA:
-        return head.width * 4 * head.bitDepth / 8;
+        return width * 4 * head.bitDepth / 8;
     case RGBTriple:
-        return head.width * 3 * head.bitDepth / 8;
+        return width * 3 * head.bitDepth / 8;
     case GrayscaleAlpha:
-        return head.width * 2 * head.bitDepth / 8;
+        return width * 2 * head.bitDepth / 8;
     case Palette:
     case Grayscale: {
         if (head.bitDepth >= 8)
         {
-            return head.width * head.bitDepth / 8;
+            return width * head.bitDepth / 8;
         }
         else
         {
-            auto bits = head.width * head.bitDepth;
+            auto bits = width * head.bitDepth;
             return bits + (8 - bits % 8) % 8;
         }
     }

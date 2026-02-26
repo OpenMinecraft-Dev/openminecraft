@@ -75,8 +75,7 @@ class OMPngFile
     void writeIntoBuffer(std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &);
     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> filterCache;
 
-    uint32_t getStride();
-    uint32_t getAdamStride(int pass);
+    uint32_t getStride(int width);
     int getBytesPerPixel();
 
     uint8_t getPaethPred(int a, int b, int c);
