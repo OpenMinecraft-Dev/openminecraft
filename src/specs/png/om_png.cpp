@@ -225,7 +225,6 @@ void OMPngFile::parse(std::shared_ptr<std::istream> istr)
                 auto passSize = getAdamPassSize(pass);
                 while (unzippedBuffer.size() >= getStride(passSize.first) + 1)
                 {
-
                     int flttype = unzippedBuffer[0];
                     unzippedBuffer.erase(unzippedBuffer.begin());
                     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> prefilter;
@@ -239,6 +238,7 @@ void OMPngFile::parse(std::shared_ptr<std::istream> istr)
                     {
                         y = 0;
                         pass = std::min(6, pass + 1);
+                        passSize = getAdamPassSize(pass);
                     }
                 }
             }
@@ -252,12 +252,11 @@ std::pair<uint32_t, uint32_t> OMPngFile::getAdamPassSize(int pass)
     return std::make_pair(std::ceil((head.width - stat.offsetx) / static_cast<float>(stat.stridex)),
                           std::ceil((head.height - stat.offsety) / static_cast<float>(stat.stridey)));
 }
-void OMPngFile::defilterAdam(int type, std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &raw, int y,
-                             int pass)
-{
-    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> current;
 
-    int bpx = getBytesPerPixel();
+static void defilterBase(std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &current, int type,
+                         std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &raw, int y, int bpx,
+                         std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &filterCache)
+{
     auto getBufferA = [&](int x) { return x >= bpx ? current[x - bpx] : 0; };
     auto getBufferB = [&](int x) { return y > 0 ? filterCache[x] : 0; };
     auto getBufferC = [&](int x) { return (x >= bpx && y > 0) ? filterCache[x - bpx] : 0; };
@@ -288,7 +287,15 @@ void OMPngFile::defilterAdam(int type, std::vector<uint8_t, mem::OMStlAllocator<
 
     filterCache.clear();
     filterCache.assign(current.begin(), current.end());
+}
 
+void OMPngFile::defilterAdam(int type, std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &raw, int y,
+                             int pass)
+{
+    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> current;
+
+    int bpx = getBytesPerPixel();
+    defilterBase(current, type, raw, y, bpx, filterCache);
     writeIntoBufferAdam(current, pass, y);
 }
 void OMPngFile::writeIntoBufferAdam(std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &current, int pass,
@@ -342,37 +349,7 @@ void OMPngFile::defilter(int type, std::vector<uint8_t, mem::OMStlAllocator<allo
     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> current;
 
     int bpx = getBytesPerPixel();
-    auto getBufferA = [&](int x) { return x >= bpx ? current[x - bpx] : 0; };
-    auto getBufferB = [&](int x) { return y > 0 ? filterCache[x] : 0; };
-    auto getBufferC = [&](int x) { return (x >= bpx && y > 0) ? filterCache[x - bpx] : 0; };
-
-    for (int i = 0; i < raw.size(); i++)
-    {
-        switch (type)
-        {
-        case 0:
-            current.push_back(raw[i]);
-            break;
-        case 1:
-            current.push_back(raw[i] + getBufferA(i));
-            break;
-        case 2:
-            current.push_back(raw[i] + getBufferB(i));
-            break;
-        case 3:
-            current.push_back(raw[i] + (getBufferA(i) + getBufferB(i)) / 2);
-            break;
-        case 4:
-            current.push_back(raw[i] + getPaethPred(getBufferA(i), getBufferB(i), getBufferC(i)));
-            break;
-        default:
-            throw std::runtime_error("unknown filter method!");
-        }
-    }
-
-    filterCache.clear();
-    filterCache.assign(current.begin(), current.end());
-
+    defilterBase(current, type, raw, y, bpx, filterCache);
     writeIntoBuffer(current);
 }
 

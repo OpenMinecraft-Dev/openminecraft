@@ -17,3 +17,4 @@ include/openminecraft/resource/bootassets.h
 *.ttf
 massif*
 *.dat
+*.bin
