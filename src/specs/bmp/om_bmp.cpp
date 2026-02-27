@@ -24,6 +24,8 @@ OMBmpFile::OMBmpFile(std::shared_ptr<std::istream> input)
     uint32_t hdlen;
     input->read(reinterpret_cast<char *>(&hdlen), sizeof(uint32_t));
     input->read(reinterpret_cast<char *>(&infoHeader), sizeof(OMBmpInfoHeader));
+
+    std::cout << fileHeader.offset << std::endl;
 }
 OMBmpFile::~OMBmpFile()
 {

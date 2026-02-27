@@ -13,13 +13,41 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 using namespace openminecraft;
 using namespace boost::asio;
 
 char *buf = new char[65536];
 
-int main()
+int readVarInt(ip::tcp::socket &socket)
+{
+    int value = 0;
+    int position = 0;
+
+    while (true)
+    {
+        uint8_t cb;
+        socket.read_some(buffer(&cb, 1));
+        value |= (cb & 0x7f) << position;
+
+        if ((cb & 0x80) == 0)
+        {
+            break;
+        }
+
+        position += 7;
+
+        if (position >= 32)
+        {
+            throw std::runtime_error("invalid VarInt");
+        }
+    }
+
+    return value;
+}
+
+int main(int argc, char **argv)
 {
     log::OMLogger logger("Network Test");
     logger.info("test!");
@@ -27,7 +55,7 @@ int main()
     io_context io;
     ip::tcp::socket socket(io);
     ip::tcp::resolver reso(io);
-    auto temp = reso.resolve("MinecraftOnline.com", "25565");
+    auto temp = reso.resolve(argv[1], argv[2]);
     connect(socket, temp);
 
     auto timestmp = (uint64_t)time(nullptr);
@@ -58,9 +86,17 @@ int main()
     {
         try
         {
-            auto l = socket.read_some(buffer(buf, 65536));
-            of.write(buf, l);
-            logger.info("read {} bytes!", l);
+            auto length = readVarInt(socket) - 1;
+            auto lcnst = length;
+            uint8_t id;
+            socket.read_some(buffer(&id, 1));
+            while (length > 0)
+            {
+                auto l = socket.read_some(buffer(buf, length));
+                of.write(buf, l);
+                length -= l;
+            }
+            logger.info("read packet 0x{:02x}, length {}", id, lcnst);
             of.flush();
         }
         catch (boost::wrapexcept<boost::system::system_error> &e)
