@@ -55,6 +55,11 @@ void OMJfifFile::parse(std::shared_ptr<std::istream> input)
             headerApp0.length = binary::be16ToNative(headerApp0.length);
             headerApp0.densityX = binary::be16ToNative(headerApp0.densityX);
             headerApp0.densityY = binary::be16ToNative(headerApp0.densityY);
+
+            thumbnail.resize(headerApp0.thumbnailX * headerApp0.thumbnailY);
+
+            input->read(reinterpret_cast<char *>(thumbnail.data()), thumbnail.size() * sizeof(OMJfifThumbnailPixel));
+
             state = None;
             break;
         }
