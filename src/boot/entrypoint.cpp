@@ -12,6 +12,7 @@
 #include "openminecraft/renderer/common/om_renderer_shadercompiler.hpp"
 #include "openminecraft/renderer/common/shader/om_renderer_shadercompiler_shaderc.hpp"
 #include "openminecraft/specs/bmp/om_bmp.hpp"
+#include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/specs/zlib/om_zlib_inflate.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
@@ -117,6 +118,12 @@ int boot(std::vector<std::string> args)
         }
         case "crash"_hash: {
             logger->info("{}", *reinterpret_cast<int *>(33550336));
+        }
+        case "jpg"_hash: {
+            auto ist = std::make_shared<std::ifstream>("/home/coder2/new.jpeg", std::ios::binary);
+            specs::jfif::OMJfifFile pf;
+            pf.parse(ist);
+            break;
         }
         case "bmp"_hash: {
             auto ist = std::make_shared<std::ifstream>("/home/coder2/this.bmp", std::ios::binary);
