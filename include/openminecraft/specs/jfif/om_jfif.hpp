@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <istream>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 namespace openminecraft::specs::jfif
 {
@@ -78,6 +79,12 @@ struct OMJfifHuffmanTable
 };
 #pragma pack()
 
+struct OMJfifHuffmanTableEntry
+{
+    uint8_t length;
+    uint8_t code;
+};
+
 class OMJfifFile
 {
   public:
@@ -93,6 +100,8 @@ class OMJfifFile
     OMJfifApp0Header headerApp0;
     OMJfifApp2Header headerApp2;
     OMJfifStartOfFrame headerStartOfFrame;
+
+    std::unordered_map<uint8_t, OMJfifHuffmanTableEntry> huffmanTable;
     std::vector<OMJfifComponentStat, mem::OMStlAllocator<allocatorTag, OMJfifComponentStat>> components;
     std::vector<OMJfifThumbnailPixel, mem::OMStlAllocator<allocatorTag, OMJfifThumbnailPixel>> thumbnail;
     std::vector<OMJfifQuantizationTable, mem::OMStlAllocator<allocatorTag, OMJfifQuantizationTable>> quantizationTable;

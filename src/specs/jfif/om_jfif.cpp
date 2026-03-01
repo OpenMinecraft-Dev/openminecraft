@@ -128,13 +128,24 @@ void OMJfifFile::parse(std::shared_ptr<std::istream> input)
             input->read(reinterpret_cast<char *>(&tb), sizeof(OMJfifHuffmanTable));
             tb.length = binary::be16ToNative(tb.length);
 
-            int cnt = 0;
+            std::unordered_map<uint8_t, uint8_t> counts;
             for (int i = 0; i < 16; i++)
             {
-                cnt += tb.counts[i];
+                counts[i] = tb.counts[i];
             }
-            logger.info("{} itts", cnt);
-            input->ignore(cnt);
+
+            for (int i = 0; i < 16;)
+            {
+                if (counts[i] == 0)
+                {
+                    i++;
+                    continue;
+                }
+                uint8_t ss;
+                input->read(reinterpret_cast<char *>(&ss), 1);
+                logger.info("{} {} l: 0x{:02x}", tb.info, i, ss);
+                counts[i]--;
+            }
             state = None;
             break;
         }
