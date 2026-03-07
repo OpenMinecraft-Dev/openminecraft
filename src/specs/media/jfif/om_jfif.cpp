@@ -1,5 +1,6 @@
 #include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
+#include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <istream>
@@ -16,6 +17,7 @@ OMJfifFile::OMJfifFile() : logger("OMJfifFile", this)
     processorMap[QuantizationTable] = [&](std::shared_ptr<std::istream> istr) { parseQuantizationTable(istr); };
     processorMap[StartOfFrame] = [&](std::shared_ptr<std::istream> istr) { parseStartOfFrame(istr); };
     processorMap[HuffmanTable] = [&](std::shared_ptr<std::istream> istr) { parseHuffmanTable(istr); };
+    processorMap[StartOfScan] = [&](std::shared_ptr<std::istream> istr) { parseStartOfScan(istr); };
 }
 OMJfifFile::~OMJfifFile()
 {
@@ -82,6 +84,27 @@ void OMJfifFile::parseHuffmanTable(std::shared_ptr<std::istream> istr)
         counts[i] = tb.counts[i];
     }
 
+    int maxlength = 0;
+
+    for (int i = 0; i < 16; i++)
+    {
+        if (counts[i])
+        {
+            maxlength = i + 1;
+        }
+    }
+
+    auto &htb = huffmanTable[tb.info];
+    htb.resize(std::pow(2, maxlength + 1));
+    htb[0] = true;
+
+    int currentIdx = 0;
+    auto leftNode = [&]() { currentIdx = currentIdx * 2 + 1; };
+    auto rightNode = [&]() { currentIdx = currentIdx * 2 + 2; };
+
+    int bitlength = 1;
+    int target = 0;
+
     for (int i = 0; i < 16;)
     {
         if (counts[i] == 0)
@@ -91,8 +114,49 @@ void OMJfifFile::parseHuffmanTable(std::shared_ptr<std::istream> istr)
         }
         uint8_t ss;
         istr->read(reinterpret_cast<char *>(&ss), 1);
-        logger.info("{} {} l: 0x{:02x}", tb.info, i + 1, ss);
+
+        logger.info("{} {:02x}", i + 1, ss);
+
+        if (bitlength < i + 1)
+        {
+            target <<= (i + 1 - bitlength);
+            bitlength = i + 1;
+        }
+
+        for (int bb = bitlength - 1; bb >= 0; bb--)
+        {
+            if ((target >> bb) & 1)
+            {
+                rightNode();
+            }
+            else
+            {
+                leftNode();
+            }
+
+            htb[currentIdx] = true;
+        }
+
+        htb[currentIdx] = ss;
+        currentIdx = 0;
+
+        target++;
         counts[i]--;
+    }
+}
+
+void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
+{
+    OMJfifStartOfScan sc;
+    istr->read(reinterpret_cast<char *>(&sc), sizeof(OMJfifStartOfScan));
+    sc.length = binary::be16ToNative(sc.length);
+
+    for (int i = 0; i < sc.components; i++)
+    {
+        OMJfifStartOfScanSelector sel;
+        istr->read(reinterpret_cast<char *>(&sel), sizeof(OMJfifStartOfScanSelector));
+
+        logger.info("{} {}", sel.selector, sel.table);
     }
 }
 

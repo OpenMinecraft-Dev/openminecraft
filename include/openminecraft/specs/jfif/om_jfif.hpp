@@ -8,6 +8,7 @@
 #include <istream>
 #include <memory>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 namespace openminecraft::specs::jfif
 {
@@ -65,7 +66,7 @@ struct OMJfifStartOfFrame
 struct OMJfifHuffmanTable
 {
     uint16_t length;
-    uint8_t info; // high 4 bit -> DC/AC, low 4 bit -> table id
+    uint8_t info; // high 4 bit -> DC(0)/AC(1), low 4 bit -> table id
     uint8_t counts[16];
 };
 #pragma pack()
@@ -74,6 +75,20 @@ struct OMJfifHuffmanTableEntry
 {
     uint8_t length;
     uint8_t code;
+};
+
+#pragma pack(1)
+struct OMJfifStartOfScan
+{
+    uint16_t length;
+    uint8_t components;
+};
+#pragma pack()
+
+struct OMJfifStartOfScanSelector
+{
+    uint8_t selector;
+    uint8_t table; // high 4 bits -> dc, low 4 bits -> ac
 };
 
 enum OMJfifSectionType : uint8_t
@@ -108,13 +123,14 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     void parseQuantizationTable(std::shared_ptr<std::istream>);
     void parseStartOfFrame(std::shared_ptr<std::istream>);
     void parseHuffmanTable(std::shared_ptr<std::istream>);
+    void parseStartOfScan(std::shared_ptr<std::istream>);
 
   private:
     OMJfifApp0Header headerApp0;
     OMJfifApp2Header headerApp2;
     OMJfifStartOfFrame headerStartOfFrame;
 
-    std::unordered_map<uint8_t, OMJfifHuffmanTableEntry> huffmanTable;
+    std::unordered_map<uint8_t, std::vector<std::variant<bool, uint8_t>>> huffmanTable;
     std::vector<OMJfifComponentStat, mem::OMStlAllocator<allocatorTag, OMJfifComponentStat>> components;
     std::vector<OMJfifThumbnailPixel, mem::OMStlAllocator<allocatorTag, OMJfifThumbnailPixel>> thumbnail;
     std::vector<OMJfifQuantizationTable, mem::OMStlAllocator<allocatorTag, OMJfifQuantizationTable>> quantizationTable;
