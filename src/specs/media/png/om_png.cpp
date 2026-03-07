@@ -1,6 +1,7 @@
 #include "openminecraft/specs/png/om_png.hpp"
 #include "fmt/format.h"
 #include "openminecraft/binary/om_bin_endians.hpp"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
@@ -17,10 +18,17 @@
 #include <stdexcept>
 #include <vector>
 
+using namespace openminecraft::binary::hash;
+
 namespace openminecraft::specs::png
 {
 OMPngFile::OMPngFile()
 {
+    processorMap[Header] = [&](std::shared_ptr<std::istream> istr) { parseIHDR(istr); };
+    processorMap[PaletteDefine] = [&](std::shared_ptr<std::istream> istr) { parsePTLE(istr); };
+    processorMap[PaletteTransparency] = [&](std::shared_ptr<std::istream> istr) { parseTRNS(istr); };
+    processorMap[ImageData] = [&](std::shared_ptr<std::istream> istr) { parseIDAT(istr); };
+    processorMap[ImageEnd] = [&](std::shared_ptr<std::istream> istr) {};
 }
 
 static void writePixel(uint8_t *result, uint8_t *source, OMPngColorType type, uint8_t bitdepth, int x, int *palette)
@@ -114,7 +122,7 @@ static uint8_t getPaethPred(int a, int b, int c)
     }
 }
 
-void OMPngFile::parse(std::shared_ptr<std::istream> istr)
+void OMPngFile::parseMagic(std::shared_ptr<std::istream> istr)
 {
     std::array<uint8_t, 8> hd = {};
     istr->read(reinterpret_cast<char *>(hd.data()), 8);
@@ -124,124 +132,140 @@ void OMPngFile::parse(std::shared_ptr<std::istream> istr)
         throw std::logic_error("Bad png header!");
     }
 
-    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> unzippedBuffer = {};
-
-    zlib::OMZLibInflater inf([&](uint8_t *data, uint64_t len) {
+    inflater = std::make_shared<zlib::OMZLibInflater>([&](uint8_t *data, uint64_t len) {
         for (uint64_t i = 0; i < len; i++)
         {
             unzippedBuffer.push_back(data[i]);
         }
     });
 
-    int y = 0;
-    int pass = 0; // only used for interlacing
+    y = 0;
+    pass = 0;
     dataBuffer.clear();
+}
+bool OMPngFile::parseBlockHeader(std::shared_ptr<std::istream> istr, OMPngChunkType *b)
+{
+    uint32_t length;
+    istr->read(reinterpret_cast<char *>(&length), 4);
+    length = binary::be32ToNative(length);
+    currentChunk.data = {};
+    currentChunk.data.resize(length);
 
-    while (istr->good())
+    istr->read(currentChunk.name, 4);
+    istr->read(reinterpret_cast<char *>(currentChunk.data.data()), length);
+    istr->read(reinterpret_cast<char *>(&currentChunk.crc), 4);
+    currentChunk.crc = binary::be32ToNative(currentChunk.crc);
+
+    auto res = crc(currentChunk);
+    if (res != currentChunk.crc)
     {
-        OMPngChunk cnk;
+        throw std::runtime_error(fmt::format("crc check failed at 0x{:x}, expected {:x}, actual {:x}",
+                                             static_cast<uint64_t>(istr->tellg()), currentChunk.crc, res));
+    }
 
-        uint32_t length;
-        istr->read(reinterpret_cast<char *>(&length), 4);
-        length = binary::be32ToNative(length);
+    char hdname[5];
+    std::memcpy(hdname, currentChunk.name, 4);
+    hdname[4] = '\0';
+    switch (hash_compile_time(hdname))
+    {
+    case "IEND"_hash:
+        *b = ImageEnd;
+        return false;
+        break;
+    case "IHDR"_hash:
+        *b = Header;
+        break;
+    case "PTLE"_hash:
+        *b = PaletteDefine;
+        break;
+    case "tRNS"_hash:
+        *b = PaletteTransparency;
+        break;
+    case "IDAT"_hash:
+        *b = ImageData;
+        break;
+    default:
+        *b = Unknown;
+        break;
+    }
 
-        cnk.data = {};
-        cnk.data.resize(length);
+    return true;
+}
 
-        istr->read(cnk.name, 4);
-        istr->read(reinterpret_cast<char *>(cnk.data.data()), length);
-        istr->read(reinterpret_cast<char *>(&cnk.crc), 4);
-        cnk.crc = binary::be32ToNative(cnk.crc);
+void OMPngFile::parseIHDR(std::shared_ptr<std::istream> istr)
+{
+    std::memcpy(&this->head, currentChunk.data.data(), sizeof(OMPngHead));
+    head.width = binary::be32ToNative(head.width);
+    head.height = binary::be32ToNative(head.height);
 
-        auto res = crc(cnk);
-        if (res != cnk.crc)
+    if (head.interlacing)
+    {
+        dataBuffer.resize(head.width * head.height * 4);
+    }
+    else
+    {
+        dataBuffer.reserve(head.width * head.height * 4);
+    }
+}
+
+void OMPngFile::parsePTLE(std::shared_ptr<std::istream> istr)
+{
+    auto mm = currentChunk.data;
+    for (int i = 0; i < currentChunk.data.size() / 3; i++)
+    {
+        palette.push_back((mm[i * 3] << 24) | (mm[i * 3 + 1] << 16) | (mm[i * 3 + 2] << 8) | 0xff);
+    }
+}
+
+void OMPngFile::parseTRNS(std::shared_ptr<std::istream> istr)
+{
+    int i = 0;
+    for (auto &pp : palette)
+    {
+        pp &= 0xffffff00;
+        pp |= currentChunk.data[i];
+        i++;
+    }
+}
+void OMPngFile::parseIDAT(std::shared_ptr<std::istream> istr)
+{
+    inflater->input(currentChunk.data.data(), currentChunk.data.size());
+
+    if (!head.interlacing)
+    {
+        while (unzippedBuffer.size() >= getStride(head.width) + 1)
         {
-            throw std::runtime_error(fmt::format("crc check failed at 0x{:x}, expected {:x}, actual {:x}",
-                                                 static_cast<uint64_t>(istr->tellg()), cnk.crc, res));
+            int flttype = unzippedBuffer[0];
+            unzippedBuffer.erase(unzippedBuffer.begin());
+
+            std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> prefilter;
+            prefilter.assign(std::make_move_iterator(unzippedBuffer.begin()),
+                             std::make_move_iterator(unzippedBuffer.begin() + getStride(head.width)));
+            unzippedBuffer.erase(unzippedBuffer.begin(), unzippedBuffer.begin() + getStride(head.width));
+
+            defilter(flttype, prefilter, y);
+            y++;
         }
-
-        if (!std::memcmp(cnk.name, "IEND", 4))
+    }
+    else
+    {
+        auto passSize = getAdamPassSize(pass);
+        while (unzippedBuffer.size() >= getStride(passSize.first) + 1)
         {
-            break;
-        }
+            int flttype = unzippedBuffer[0];
+            unzippedBuffer.erase(unzippedBuffer.begin());
+            std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> prefilter;
+            prefilter.assign(std::make_move_iterator(unzippedBuffer.begin()),
+                             std::make_move_iterator(unzippedBuffer.begin() + getStride(passSize.first)));
+            unzippedBuffer.erase(unzippedBuffer.begin(), unzippedBuffer.begin() + getStride(passSize.first));
+            defilterAdam(flttype, prefilter, y, pass);
+            y++;
 
-        if (!std::memcmp(cnk.name, "IHDR", 4))
-        {
-            std::memcpy(&this->head, cnk.data.data(), sizeof(OMPngHead));
-            head.width = binary::be32ToNative(head.width);
-            head.height = binary::be32ToNative(head.height);
-
-            if (head.interlacing)
+            if (y == passSize.second)
             {
-                dataBuffer.resize(head.width * head.height * 4);
-            }
-            else
-            {
-                dataBuffer.reserve(head.width * head.height * 4);
-            }
-        }
-
-        if (!std::memcmp(cnk.name, "PLTE", 4))
-        {
-            auto mm = cnk.data;
-            for (int i = 0; i < cnk.data.size() / 3; i++)
-            {
-                palette.push_back((mm[i * 3] << 24) | (mm[i * 3 + 1] << 16) | (mm[i * 3 + 2] << 8) | 0xff);
-            }
-        }
-
-        if (!std::memcmp(cnk.name, "tRNS", 4))
-        {
-            int i = 0;
-            for (auto &pp : palette)
-            {
-                pp &= 0xffffff00;
-                pp |= cnk.data[i];
-                i++;
-            }
-        }
-
-        if (!std::memcmp(cnk.name, "IDAT", 4))
-        {
-            inf.input(cnk.data.data(), cnk.data.size());
-
-            if (!head.interlacing)
-            {
-                while (unzippedBuffer.size() >= getStride(head.width) + 1)
-                {
-                    int flttype = unzippedBuffer[0];
-                    unzippedBuffer.erase(unzippedBuffer.begin());
-
-                    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> prefilter;
-                    prefilter.assign(std::make_move_iterator(unzippedBuffer.begin()),
-                                     std::make_move_iterator(unzippedBuffer.begin() + getStride(head.width)));
-                    unzippedBuffer.erase(unzippedBuffer.begin(), unzippedBuffer.begin() + getStride(head.width));
-
-                    defilter(flttype, prefilter, y);
-                    y++;
-                }
-            }
-            else
-            {
-                auto passSize = getAdamPassSize(pass);
-                while (unzippedBuffer.size() >= getStride(passSize.first) + 1)
-                {
-                    int flttype = unzippedBuffer[0];
-                    unzippedBuffer.erase(unzippedBuffer.begin());
-                    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> prefilter;
-                    prefilter.assign(std::make_move_iterator(unzippedBuffer.begin()),
-                                     std::make_move_iterator(unzippedBuffer.begin() + getStride(passSize.first)));
-                    unzippedBuffer.erase(unzippedBuffer.begin(), unzippedBuffer.begin() + getStride(passSize.first));
-                    defilterAdam(flttype, prefilter, y, pass);
-                    y++;
-
-                    if (y == passSize.second)
-                    {
-                        y = 0;
-                        pass = std::min(6, pass + 1);
-                        passSize = getAdamPassSize(pass);
-                    }
-                }
+                y = 0;
+                pass = std::min(6, pass + 1);
+                passSize = getAdamPassSize(pass);
             }
         }
     }

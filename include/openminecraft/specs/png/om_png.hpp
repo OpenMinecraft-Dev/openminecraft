@@ -2,6 +2,8 @@
 #define OM_PNG_HPP
 
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
+#include "openminecraft/specs/blocked/om_blocked_file.hpp"
+#include "openminecraft/specs/zlib/om_zlib_inflate.hpp"
 #include <array>
 #include <cstdint>
 #include <istream>
@@ -55,7 +57,17 @@ constexpr std::array<OMPngInterlaceInfo, 7> pngAdam7 = {
     OMPngInterlaceInfo{2, 0, 4, 4, 2, 4}, OMPngInterlaceInfo{0, 2, 2, 4, 2, 2}, OMPngInterlaceInfo{1, 0, 2, 2, 1, 2},
     OMPngInterlaceInfo{0, 1, 1, 2, 1, 1}};
 
-class OMPngFile
+enum OMPngChunkType
+{
+    Header,
+    PaletteDefine,
+    PaletteTransparency,
+    ImageData,
+    ImageEnd,
+    Unknown
+};
+
+class OMPngFile : public OMBlockedFile<OMPngChunkType>
 {
   public:
     OMPngFile();
@@ -65,7 +77,13 @@ class OMPngFile
     int getWidth();
     int getHeight();
 
-    void parse(std::shared_ptr<std::istream> istr);
+    void parseMagic(std::shared_ptr<std::istream>) override;
+    bool parseBlockHeader(std::shared_ptr<std::istream>, OMPngChunkType *) override;
+
+    void parseIHDR(std::shared_ptr<std::istream> istr);
+    void parsePTLE(std::shared_ptr<std::istream> istr);
+    void parseTRNS(std::shared_ptr<std::istream> istr);
+    void parseIDAT(std::shared_ptr<std::istream> istr);
 
   private:
     std::pair<uint32_t, uint32_t> getAdamPassSize(int pass);
@@ -78,7 +96,10 @@ class OMPngFile
     uint32_t getStride(int width);
     int getBytesPerPixel();
 
-    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> dataBuffer;
+    OMPngChunk currentChunk;
+    int y, pass;
+    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> dataBuffer, unzippedBuffer;
+    std::shared_ptr<zlib::OMZLibInflater> inflater;
     OMPngHead head;
     std::vector<int, mem::OMStlAllocator<allocatorTag, int>> palette;
 

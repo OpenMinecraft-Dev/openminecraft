@@ -120,7 +120,7 @@ int boot(std::vector<std::string> args)
             logger->info("{}", *reinterpret_cast<int *>(33550336));
         }
         case "jpg"_hash: {
-            auto ist = std::make_shared<std::ifstream>("/home/coder2/projects/formats/image/rgb.jpg", std::ios::binary);
+            auto ist = std::make_shared<std::ifstream>("/home/coder2/this.jpeg", std::ios::binary);
             specs::jfif::OMJfifFile pf;
             pf.parse(ist);
             break;

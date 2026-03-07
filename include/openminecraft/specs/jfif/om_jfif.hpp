@@ -3,6 +3,7 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
+#include "openminecraft/specs/blocked/om_blocked_file.hpp"
 #include <cstdint>
 #include <istream>
 #include <memory>
@@ -11,18 +12,6 @@
 namespace openminecraft::specs::jfif
 {
 constexpr const char allocatorTag[] = "parser_jfif";
-enum OMJfifState
-{
-    None,
-    TagBegin,
-    TagContentApp0,
-    TagContentApp2,
-    TagComment,
-    TagQuantizationTable,
-    TagStartOfFrame,
-    TagHuffmanTable
-};
-
 struct OMJfifThumbnailPixel
 {
     uint8_t r;
@@ -47,12 +36,14 @@ struct OMJfifApp2Header
     uint16_t length;
 };
 
+#pragma pack(1)
 struct OMJfifQuantizationTable
 {
     uint16_t length;
     uint8_t destination;
     uint8_t table[64];
 };
+#pragma pack()
 
 struct OMJfifComponentStat
 {
@@ -85,18 +76,40 @@ struct OMJfifHuffmanTableEntry
     uint8_t code;
 };
 
-class OMJfifFile
+enum OMJfifSectionType : uint8_t
+{
+    StartOfImage,
+    App0Header,
+    App2Header,
+    Comment,
+    QuantizationTable,
+    StartOfFrame,
+    HuffmanTable,
+    ImageData,
+    StartOfScan,
+    EndOfImage,
+    Unknown
+};
+
+class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
 {
   public:
     OMJfifFile();
     ~OMJfifFile();
 
-    void parse(std::shared_ptr<std::istream> input);
     static uint16_t readLen(std::shared_ptr<std::istream> input);
 
-  private:
-    OMJfifState state = None;
+    void parseMagic(std::shared_ptr<std::istream>) override;
+    bool parseBlockHeader(std::shared_ptr<std::istream>, OMJfifSectionType *) override;
 
+    void parseApp0Header(std::shared_ptr<std::istream>);
+    void parseApp2Header(std::shared_ptr<std::istream>);
+    void parseComment(std::shared_ptr<std::istream>);
+    void parseQuantizationTable(std::shared_ptr<std::istream>);
+    void parseStartOfFrame(std::shared_ptr<std::istream>);
+    void parseHuffmanTable(std::shared_ptr<std::istream>);
+
+  private:
     OMJfifApp0Header headerApp0;
     OMJfifApp2Header headerApp2;
     OMJfifStartOfFrame headerStartOfFrame;
