@@ -5,6 +5,8 @@
 #include <iostream>
 #include <istream>
 #include <memory>
+#include <stdexcept>
+#include <variant>
 
 namespace openminecraft::specs::jfif
 {
@@ -102,6 +104,7 @@ void OMJfifFile::parseHuffmanTable(std::shared_ptr<std::istream> istr)
         auto &htb = huffmanTable[tb.info];
         htb.resize(std::pow(2, maxlength + 1));
         htb[0] = true;
+        logger.info("Table #{:02x}", tb.info);
 
         int currentIdx = 0;
         auto leftNode = [&]() { currentIdx = currentIdx * 2 + 1; };
@@ -140,6 +143,7 @@ void OMJfifFile::parseHuffmanTable(std::shared_ptr<std::istream> istr)
                 htb[currentIdx] = true;
             }
 
+            logger.info("{:b} {} {:02x}", target, currentIdx, ss);
             htb[currentIdx] = ss;
             currentIdx = 0;
 
@@ -175,29 +179,71 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
     currentBlock = blockids.begin();
     blockDataPtr = blockData.begin();
 
-    for (auto &pp : huffmanTable)
-    {
-        logger.debug("{:02x}", pp.first);
-    }
-
     parseImageData(istr);
 }
 
 void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
 {
-pushBits:
-    uint8_t c = istr->peek();
-    if (c == 0xff)
-    {
-        return;
-    }
-    bitBuffer.push(c);
-    istr->ignore(1);
+    auto pshBit = [&]() -> bool {
+        uint8_t c = istr->peek();
+        if (c == 0xff)
+        {
+            return false;
+        }
+        bitBuffer.push(c);
+        istr->ignore(1);
+        return true;
+    };
+
     // bitBuffer.popValue(bitBuffer.bitsAvailable());
 
     bool isdc = blockDataPtr == blockData.begin();
     uint8_t htid = isdc ? (componentMapping[*currentBlock].first) : (componentMapping[*currentBlock].second | 0x10);
-    logger.info("{} {}", htid, huffmanTable.count(htid));
+    auto hufftb = huffmanTable[htid];
+    int cid = 0;
+    uint8_t tempCode = 0;
+
+parseBase:
+    while (bitBuffer.bitsAvailable() == 0)
+    {
+        if (!pshBit())
+        {
+            return;
+        }
+    }
+    cid = bitBuffer.popBit() ? (cid * 2 + 2) : (cid * 2 + 1);
+
+    if (bool *exists = std::get_if<bool>(&hufftb[cid]))
+    {
+        if (!*exists)
+        {
+            throw std::logic_error("bad code!");
+        }
+    }
+
+    if (uint8_t *cd = std::get_if<uint8_t>(&hufftb[cid]))
+    {
+        tempCode = *cd;
+        goto parseExt;
+    }
+
+    goto parseBase;
+parseExt:
+    logger.info("{:02x}", tempCode);
+    for (int i = 0; i < (tempCode >> 4); i++)
+    {
+        ++blockDataPtr;
+    }
+
+    while (bitBuffer.bitsAvailable() < (tempCode & 0xf))
+    {
+        if (!pshBit())
+        {
+            return;
+        }
+    }
+    logger.info("{}", bitBuffer.popValue(tempCode & 0xf));
+    __builtin_trap();
 }
 
 void OMJfifFile::parseMagic(std::shared_ptr<std::istream> istr)
