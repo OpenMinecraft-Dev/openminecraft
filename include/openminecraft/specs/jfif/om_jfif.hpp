@@ -4,6 +4,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/specs/blocked/om_blocked_file.hpp"
+#include "openminecraft/util/om_util_bitbuffer.hpp"
 #include <cstdint>
 #include <istream>
 #include <memory>
@@ -65,7 +66,6 @@ struct OMJfifStartOfFrame
 
 struct OMJfifHuffmanTable
 {
-    uint16_t length;
     uint8_t info; // high 4 bit -> DC(0)/AC(1), low 4 bit -> table id
     uint8_t counts[16];
 };
@@ -84,6 +84,11 @@ struct OMJfifStartOfScan
     uint8_t components;
 };
 #pragma pack()
+
+struct OMJfifStartOfScanRange
+{
+    uint8_t spectralBegin, spectralEnd, successive;
+};
 
 struct OMJfifStartOfScanSelector
 {
@@ -124,16 +129,28 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     void parseStartOfFrame(std::shared_ptr<std::istream>);
     void parseHuffmanTable(std::shared_ptr<std::istream>);
     void parseStartOfScan(std::shared_ptr<std::istream>);
+    void parseImageData(std::shared_ptr<std::istream>);
 
   private:
     OMJfifApp0Header headerApp0;
     OMJfifApp2Header headerApp2;
     OMJfifStartOfFrame headerStartOfFrame;
 
+    std::vector<int, mem::OMStlAllocator<allocatorTag, int>> blockids;
+    std::vector<int, mem::OMStlAllocator<allocatorTag, int>>::iterator currentBlock;
+
+    std::vector<int, mem::OMStlAllocator<allocatorTag, int>> blockData;
+    std::vector<int, mem::OMStlAllocator<allocatorTag, int>>::iterator blockDataPtr;
+
+    OMJfifStartOfScanRange range;
     std::unordered_map<uint8_t, std::vector<std::variant<bool, uint8_t>>> huffmanTable;
     std::vector<OMJfifComponentStat, mem::OMStlAllocator<allocatorTag, OMJfifComponentStat>> components;
+    std::unordered_map<int, std::pair<int, int>> componentMapping;
+
     std::vector<OMJfifThumbnailPixel, mem::OMStlAllocator<allocatorTag, OMJfifThumbnailPixel>> thumbnail;
     std::vector<OMJfifQuantizationTable, mem::OMStlAllocator<allocatorTag, OMJfifQuantizationTable>> quantizationTable;
+
+    util::OMBitBuffer bitBuffer;
 
     log::OMLogger logger;
 };

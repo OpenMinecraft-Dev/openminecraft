@@ -18,6 +18,7 @@ OMJfifFile::OMJfifFile() : logger("OMJfifFile", this)
     processorMap[StartOfFrame] = [&](std::shared_ptr<std::istream> istr) { parseStartOfFrame(istr); };
     processorMap[HuffmanTable] = [&](std::shared_ptr<std::istream> istr) { parseHuffmanTable(istr); };
     processorMap[StartOfScan] = [&](std::shared_ptr<std::istream> istr) { parseStartOfScan(istr); };
+    processorMap[ImageData] = [&](std::shared_ptr<std::istream> istr) { parseImageData(istr); };
 }
 OMJfifFile::~OMJfifFile()
 {
@@ -74,74 +75,77 @@ void OMJfifFile::parseStartOfFrame(std::shared_ptr<std::istream> istr)
 
 void OMJfifFile::parseHuffmanTable(std::shared_ptr<std::istream> istr)
 {
-    OMJfifHuffmanTable tb;
-    istr->read(reinterpret_cast<char *>(&tb), sizeof(OMJfifHuffmanTable));
-    tb.length = binary::be16ToNative(tb.length);
-
-    std::unordered_map<uint8_t, uint8_t> counts;
-    for (int i = 0; i < 16; i++)
+    uint16_t length;
+    istr->read(reinterpret_cast<char *>(&length), sizeof(uint16_t));
+    length = binary::be16ToNative(length);
+    while (istr->peek() != 0xff)
     {
-        counts[i] = tb.counts[i];
-    }
+        OMJfifHuffmanTable tb;
+        istr->read(reinterpret_cast<char *>(&tb), sizeof(OMJfifHuffmanTable));
 
-    int maxlength = 0;
-
-    for (int i = 0; i < 16; i++)
-    {
-        if (counts[i])
+        std::unordered_map<uint8_t, uint8_t> counts;
+        for (int i = 0; i < 16; i++)
         {
-            maxlength = i + 1;
-        }
-    }
-
-    auto &htb = huffmanTable[tb.info];
-    htb.resize(std::pow(2, maxlength + 1));
-    htb[0] = true;
-
-    int currentIdx = 0;
-    auto leftNode = [&]() { currentIdx = currentIdx * 2 + 1; };
-    auto rightNode = [&]() { currentIdx = currentIdx * 2 + 2; };
-
-    int bitlength = 1;
-    int target = 0;
-
-    for (int i = 0; i < 16;)
-    {
-        if (counts[i] == 0)
-        {
-            i++;
-            continue;
-        }
-        uint8_t ss;
-        istr->read(reinterpret_cast<char *>(&ss), 1);
-
-        logger.info("{} {:02x}", i + 1, ss);
-
-        if (bitlength < i + 1)
-        {
-            target <<= (i + 1 - bitlength);
-            bitlength = i + 1;
+            counts[i] = tb.counts[i];
         }
 
-        for (int bb = bitlength - 1; bb >= 0; bb--)
+        int maxlength = 0;
+
+        for (int i = 0; i < 16; i++)
         {
-            if ((target >> bb) & 1)
+            if (counts[i])
             {
-                rightNode();
+                maxlength = i + 1;
             }
-            else
+        }
+
+        auto &htb = huffmanTable[tb.info];
+        htb.resize(std::pow(2, maxlength + 1));
+        htb[0] = true;
+
+        int currentIdx = 0;
+        auto leftNode = [&]() { currentIdx = currentIdx * 2 + 1; };
+        auto rightNode = [&]() { currentIdx = currentIdx * 2 + 2; };
+
+        int bitlength = 1;
+        int target = 0;
+
+        for (int i = 0; i < 16;)
+        {
+            if (counts[i] == 0)
             {
-                leftNode();
+                i++;
+                continue;
+            }
+            uint8_t ss;
+            istr->read(reinterpret_cast<char *>(&ss), 1);
+
+            if (bitlength < i + 1)
+            {
+                target <<= (i + 1 - bitlength);
+                bitlength = i + 1;
             }
 
-            htb[currentIdx] = true;
+            for (int bb = bitlength - 1; bb >= 0; bb--)
+            {
+                if ((target >> bb) & 1)
+                {
+                    rightNode();
+                }
+                else
+                {
+                    leftNode();
+                }
+
+                htb[currentIdx] = true;
+            }
+
+            htb[currentIdx] = ss;
+            currentIdx = 0;
+
+            target++;
+            counts[i]--;
         }
-
-        htb[currentIdx] = ss;
-        currentIdx = 0;
-
-        target++;
-        counts[i]--;
     }
 }
 
@@ -156,12 +160,55 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
         OMJfifStartOfScanSelector sel;
         istr->read(reinterpret_cast<char *>(&sel), sizeof(OMJfifStartOfScanSelector));
 
-        logger.info("{} {}", sel.selector, sel.table);
+        componentMapping[sel.selector] = std::make_pair(sel.table >> 4, sel.table & 0xf | 0x10);
     }
+
+    istr->read(reinterpret_cast<char *>(&range), sizeof(OMJfifStartOfScanRange));
+
+    for (auto &p : components)
+    {
+        for (int i = 0; i < (p.factor >> 4 & 0xf) * (p.factor & 0xf); i++)
+        {
+            blockids.push_back(p.id);
+        }
+    }
+    currentBlock = blockids.begin();
+    blockDataPtr = blockData.begin();
+
+    for (auto &pp : huffmanTable)
+    {
+        logger.debug("{:02x}", pp.first);
+    }
+
+    parseImageData(istr);
+}
+
+void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
+{
+pushBits:
+    uint8_t c = istr->peek();
+    if (c == 0xff)
+    {
+        return;
+    }
+    bitBuffer.push(c);
+    istr->ignore(1);
+    // bitBuffer.popValue(bitBuffer.bitsAvailable());
+
+    bool isdc = blockDataPtr == blockData.begin();
+    uint8_t htid = isdc ? (componentMapping[*currentBlock].first) : (componentMapping[*currentBlock].second | 0x10);
+    logger.info("{} {}", htid, huffmanTable.count(htid));
 }
 
 void OMJfifFile::parseMagic(std::shared_ptr<std::istream> istr)
 {
+    blockids.clear();
+    huffmanTable.clear();
+    components.clear();
+    componentMapping.clear();
+    thumbnail.clear();
+    quantizationTable.clear();
+    bitBuffer.popValue(bitBuffer.bitsAvailable());
 }
 bool OMJfifFile::parseBlockHeader(std::shared_ptr<std::istream> istr, OMJfifSectionType *t)
 {
@@ -184,6 +231,7 @@ base:
     {
     case 0x00:
         *t = ImageData;
+        bitBuffer.push(0xff);
         break;
     case 0xd8:
         *t = StartOfImage;

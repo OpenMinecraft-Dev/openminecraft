@@ -15,6 +15,7 @@
 #include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/specs/zlib/om_zlib_inflate.hpp"
+#include "openminecraft/util/om_util_bitbuffer.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
@@ -178,6 +179,12 @@ int boot(std::vector<std::string> args)
                     break;
                 }
             }
+            break;
+        }
+        case "bin"_hash: {
+            util::OMBitBuffer buf;
+            buf.push(0b11001101);
+            logger->info("{}", buf.popValue(4));
             break;
         }
         default:
