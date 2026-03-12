@@ -21,14 +21,16 @@ class OMBitBuffer
     bool popBit()
     {
         bits--;
-        return (buffer >> bits) & 1;
+        bool l = (buffer >> bits) & 1;
+        buffer &= ((1 << bits) - 1);
+	return l;
     }
 
     uint32_t popValue(int8_t bits)
     {
         uint32_t result = buffer >> (this->bits - bits) & ((1 << bits) - 1);
-        buffer >>= (this->bits - bits);
         this->bits -= bits;
+	buffer &= ((1 << bits) - 1);
         return result;
     }
 
@@ -45,8 +47,9 @@ class OMBitBuffer
         return bits;
     }
 
-  private:
     uint32_t buffer = 0;
+
+  private:
     int8_t bits = 0;
 };
 }; // namespace openminecraft::util

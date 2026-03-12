@@ -111,6 +111,13 @@ enum OMJfifSectionType : uint8_t
     Unknown
 };
 
+struct OMJfifBlockStatus
+{
+    int id;
+    uint8_t dcTable;
+    uint8_t acTable;
+};
+
 class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
 {
   public:
@@ -136,16 +143,15 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     OMJfifApp2Header headerApp2;
     OMJfifStartOfFrame headerStartOfFrame;
 
-    std::vector<int, mem::OMStlAllocator<allocatorTag, int>> blockids;
-    std::vector<int, mem::OMStlAllocator<allocatorTag, int>>::iterator currentBlock;
+    std::vector<OMJfifBlockStatus, mem::OMStlAllocator<allocatorTag, OMJfifBlockStatus>> blockids;
+    std::vector<OMJfifBlockStatus, mem::OMStlAllocator<allocatorTag, OMJfifBlockStatus>>::iterator currentBlock;
 
     std::vector<int, mem::OMStlAllocator<allocatorTag, int>> blockData;
     std::vector<int, mem::OMStlAllocator<allocatorTag, int>>::iterator blockDataPtr;
 
     OMJfifStartOfScanRange range;
     std::unordered_map<uint8_t, std::vector<std::variant<bool, uint8_t>>> huffmanTable;
-    std::vector<OMJfifComponentStat, mem::OMStlAllocator<allocatorTag, OMJfifComponentStat>> components;
-    std::unordered_map<int, std::pair<int, int>> componentMapping;
+    std::unordered_map<uint8_t, OMJfifComponentStat> components;
 
     std::vector<OMJfifThumbnailPixel, mem::OMStlAllocator<allocatorTag, OMJfifThumbnailPixel>> thumbnail;
     std::vector<OMJfifQuantizationTable, mem::OMStlAllocator<allocatorTag, OMJfifQuantizationTable>> quantizationTable;
@@ -153,6 +159,8 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     util::OMBitBuffer bitBuffer;
 
     log::OMLogger logger;
+
+    bool insideImg = false;
 };
 }; // namespace openminecraft::specs::jfif
 

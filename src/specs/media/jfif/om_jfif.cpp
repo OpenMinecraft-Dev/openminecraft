@@ -71,7 +71,7 @@ void OMJfifFile::parseStartOfFrame(std::shared_ptr<std::istream> istr)
     {
         OMJfifComponentStat st;
         istr->read(reinterpret_cast<char *>(&st), sizeof(OMJfifComponentStat));
-        components.push_back(st);
+        components[st.id] = st;
     }
 }
 
@@ -164,21 +164,23 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
         OMJfifStartOfScanSelector sel;
         istr->read(reinterpret_cast<char *>(&sel), sizeof(OMJfifStartOfScanSelector));
 
-        componentMapping[sel.selector] = std::make_pair(sel.table >> 4, sel.table & 0xf | 0x10);
+        auto factor = components[sel.selector].factor;
+        for (int i = 0; i < (factor >> 4 & 0xf) * (factor & 0xf); i++)
+        {
+            blockids.push_back(
+                {sel.selector, static_cast<uint8_t>(sel.table >> 4), static_cast<uint8_t>(sel.table & 0xf | 0x10)});
+            logger.info("append block : {}", sel.selector);
+        }
     }
 
     istr->read(reinterpret_cast<char *>(&range), sizeof(OMJfifStartOfScanRange));
 
-    for (auto &p : components)
-    {
-        for (int i = 0; i < (p.factor >> 4 & 0xf) * (p.factor & 0xf); i++)
-        {
-            blockids.push_back(p.id);
-        }
-    }
     currentBlock = blockids.begin();
+
+    blockData.resize(64);
     blockDataPtr = blockData.begin();
 
+    insideImg = true;
     parseImageData(istr);
 }
 
@@ -186,64 +188,82 @@ void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
 {
     auto pshBit = [&]() -> bool {
         uint8_t c = istr->peek();
-        if (c == 0xff)
+        bitBuffer.push(c);
+        istr->ignore(1);
+        if (c == 0xff && istr->peek() != 0x00)
         {
             return false;
         }
-        bitBuffer.push(c);
-        istr->ignore(1);
         return true;
     };
 
-    // bitBuffer.popValue(bitBuffer.bitsAvailable());
+    auto requireBits = [&](int b) -> bool {
+        while (bitBuffer.bitsAvailable() < b)
+        {
+            if (!pshBit())
+            {
+                return false;
+            }
+        }
 
-    bool isdc = blockDataPtr == blockData.begin();
-    uint8_t htid = isdc ? (componentMapping[*currentBlock].first) : (componentMapping[*currentBlock].second | 0x10);
-    auto hufftb = huffmanTable[htid];
-    int cid = 0;
-    uint8_t tempCode = 0;
+        return true;
+    };
 
-parseBase:
-    while (bitBuffer.bitsAvailable() == 0)
+    auto logpos = [&]() {
+        int pp = bitBuffer.bitsAvailable();
+        size_t off = istr->tellg();
+        while (pp > 0)
+        {
+            pp -= 8;
+            off--;
+        }
+
+        logger.info("offset +{:02x}.{}", off, -pp);
+    };
+
+    auto huffTable = huffmanTable[blockDataPtr == blockData.begin() ? currentBlock->dcTable : currentBlock->acTable];
+    uint8_t code;
+    int branchidx = 0;
+    while (true)
     {
-        if (!pshBit())
+        if (!requireBits(1))
         {
             return;
         }
-    }
-    cid = bitBuffer.popBit() ? (cid * 2 + 2) : (cid * 2 + 1);
 
-    if (bool *exists = std::get_if<bool>(&hufftb[cid]))
-    {
-        if (!*exists)
+        if (bitBuffer.popBit())
         {
-            throw std::logic_error("bad code!");
+            branchidx = branchidx * 2 + 2;
+        }
+        else
+        {
+            branchidx = branchidx * 2 + 1;
+        }
+
+        if (const bool *b = std::get_if<bool>(&huffTable[branchidx]))
+        {
+            if (!*b)
+            {
+                logpos();
+                throw std::logic_error("bad code!");
+            }
+        }
+        else if (const uint8_t *c = std::get_if<uint8_t>(&huffTable[branchidx]))
+        {
+            code = *c;
+            goto readActual;
         }
     }
 
-    if (uint8_t *cd = std::get_if<uint8_t>(&hufftb[cid]))
+readActual:
+    if (!requireBits(code & 0xf))
     {
-        tempCode = *cd;
-        goto parseExt;
+        return;
     }
+    logger.info("{:02x} {}", code, bitBuffer.popValue(7));
+    logpos();
 
-    goto parseBase;
-parseExt:
-    logger.info("{:02x}", tempCode);
-    for (int i = 0; i < (tempCode >> 4); i++)
-    {
-        ++blockDataPtr;
-    }
-
-    while (bitBuffer.bitsAvailable() < (tempCode & 0xf))
-    {
-        if (!pshBit())
-        {
-            return;
-        }
-    }
-    logger.info("{}", bitBuffer.popValue(tempCode & 0xf));
-    __builtin_trap();
+    exit(-1);
 }
 
 void OMJfifFile::parseMagic(std::shared_ptr<std::istream> istr)
@@ -251,7 +271,6 @@ void OMJfifFile::parseMagic(std::shared_ptr<std::istream> istr)
     blockids.clear();
     huffmanTable.clear();
     components.clear();
-    componentMapping.clear();
     thumbnail.clear();
     quantizationTable.clear();
     bitBuffer.popValue(bitBuffer.bitsAvailable());
@@ -266,10 +285,13 @@ base:
         return false;
     }
 
-    istr->read(reinterpret_cast<char *>(&flag), 1);
-    if (flag != 0xff)
+    if (!insideImg)
     {
-        goto base;
+        istr->read(reinterpret_cast<char *>(&flag), 1);
+        if (flag != 0xff)
+        {
+            goto base;
+        }
     }
 
     istr->read(reinterpret_cast<char *>(&flag), 1);
