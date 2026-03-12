@@ -23,14 +23,14 @@ class OMBitBuffer
         bits--;
         bool l = (buffer >> bits) & 1;
         buffer &= ((1 << bits) - 1);
-	return l;
+        return l;
     }
 
     uint32_t popValue(int8_t bits)
     {
         uint32_t result = buffer >> (this->bits - bits) & ((1 << bits) - 1);
         this->bits -= bits;
-	buffer &= ((1 << bits) - 1);
+        buffer &= ((1 << this->bits) - 1);
         return result;
     }
 

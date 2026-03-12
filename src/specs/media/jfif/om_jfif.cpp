@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <iostream>
 #include <istream>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <variant>
@@ -186,6 +187,7 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
 void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
 {
+#define DEBUGBUF logger.debug("buffer: {:b} {}", bitBuffer.buffer, bitBuffer.bitsAvailable());
     auto pshBit = [&]() -> bool {
         uint8_t c = istr->peek();
         bitBuffer.push(c);
@@ -220,6 +222,9 @@ void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
 
         logger.info("offset +{:02x}.{}", off, -pp);
     };
+
+nextValue:
+    logpos();
 
     auto huffTable = huffmanTable[blockDataPtr == blockData.begin() ? currentBlock->dcTable : currentBlock->acTable];
     uint8_t code;
@@ -256,14 +261,46 @@ void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
     }
 
 readActual:
-    if (!requireBits(code & 0xf))
+    uint8_t datalen = blockDataPtr == blockData.begin() ? code : (code & 0xf);
+    if (!requireBits(datalen))
     {
         return;
     }
-    logger.info("{:02x} {}", code, bitBuffer.popValue(7));
-    logpos();
 
-    exit(-1);
+    if (blockDataPtr != blockData.begin())
+    {
+        for (int i = 0; i < (code >> 4); i++)
+        {
+            ++blockDataPtr;
+        }
+    }
+
+    auto tempval = (int64_t)bitBuffer.popValue(datalen);
+    if (datalen)
+    {
+        if ((tempval >> (datalen - 1)) == 0)
+        {
+            tempval -= (1 << datalen) - 1;
+        }
+    }
+    logger.info("data: {} +{} {}", blockDataPtr == blockData.begin() ? "DC" : "AC",
+                std::distance(blockData.begin(), blockDataPtr), tempval);
+
+    if ((code == 0x00 && blockDataPtr != blockData.begin()) || blockDataPtr == blockData.end())
+    {
+        blockDataPtr = blockData.begin();
+        ++currentBlock;
+        if (currentBlock == blockids.end())
+        {
+            currentBlock = blockids.begin();
+            exit(-1);
+        }
+    }
+    else
+    {
+        ++blockDataPtr;
+    }
+    goto nextValue;
 }
 
 void OMJfifFile::parseMagic(std::shared_ptr<std::istream> istr)
