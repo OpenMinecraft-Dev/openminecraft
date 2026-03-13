@@ -161,6 +161,8 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     log::OMLogger logger;
 
     bool insideImg = false;
+    int mcuid = 0;
+    int mcucounts = 0;
 };
 }; // namespace openminecraft::specs::jfif
 

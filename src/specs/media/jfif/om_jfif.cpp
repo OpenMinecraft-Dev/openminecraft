@@ -1,5 +1,6 @@
 #include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <iostream>
@@ -160,6 +161,7 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
     istr->read(reinterpret_cast<char *>(&sc), sizeof(OMJfifStartOfScan));
     sc.length = binary::be16ToNative(sc.length);
 
+    int mcuw = 0, mcuh = 0;
     for (int i = 0; i < sc.components; i++)
     {
         OMJfifStartOfScanSelector sel;
@@ -172,9 +174,24 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
                 {sel.selector, static_cast<uint8_t>(sel.table >> 4), static_cast<uint8_t>(sel.table & 0xf | 0x10)});
             logger.info("append block : {}", sel.selector);
         }
+
+        mcuw = std::max(mcuw, factor >> 4 & 0xf);
+        mcuh = std::max(mcuh, factor & 0xf);
     }
 
     istr->read(reinterpret_cast<char *>(&range), sizeof(OMJfifStartOfScanRange));
+
+    if (range.spectralEnd != 0x3f)
+    {
+        throw std::logic_error("not supported");
+    }
+
+    mcuw *= 8;
+    mcuh *= 8;
+    mcucounts = std::ceil(static_cast<float>(headerStartOfFrame.width) / mcuw) *
+                std::ceil(static_cast<float>(headerStartOfFrame.height) / mcuh);
+
+    logger.info("{} mcus", mcucounts);
 
     currentBlock = blockids.begin();
 
@@ -192,9 +209,16 @@ void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
         uint8_t c = istr->peek();
         bitBuffer.push(c);
         istr->ignore(1);
-        if (c == 0xff && istr->peek() != 0x00)
+        if (c == 0xff)
         {
-            return false;
+            if (istr->peek() != 0x00)
+            {
+                return false;
+            }
+            else
+            {
+                istr->ignore(1);
+            }
         }
         return true;
     };
@@ -224,8 +248,6 @@ void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
     };
 
 nextValue:
-    logpos();
-
     auto huffTable = huffmanTable[blockDataPtr == blockData.begin() ? currentBlock->dcTable : currentBlock->acTable];
     uint8_t code;
     int branchidx = 0;
@@ -283,17 +305,31 @@ readActual:
             tempval -= (1 << datalen) - 1;
         }
     }
-    logger.info("data: {} +{} {}", blockDataPtr == blockData.begin() ? "DC" : "AC",
-                std::distance(blockData.begin(), blockDataPtr), tempval);
+    *blockDataPtr = tempval;
 
     if ((code == 0x00 && blockDataPtr != blockData.begin()) || blockDataPtr == blockData.end())
     {
+        logger.info("{}", mcuid);
+        for (int y = 0; y < 8; y++)
+        {
+            auto pp = blockData.data() + (y * 8);
+            logger.info("{} {} {} {} {} {} {} {}", pp[0], pp[1], pp[2], pp[3], pp[4], pp[5], pp[6], pp[7]);
+        }
+        logpos();
+
+        blockData.clear();
+        blockData.resize(64);
         blockDataPtr = blockData.begin();
         ++currentBlock;
         if (currentBlock == blockids.end())
         {
             currentBlock = blockids.begin();
-            exit(-1);
+            ++mcuid;
+
+            if (mcuid >= mcucounts)
+            {
+                exit(-1);
+            }
         }
     }
     else
