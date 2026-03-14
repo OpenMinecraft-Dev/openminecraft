@@ -208,7 +208,8 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
     currentBlock = blockids.begin();
 
     blockData.resize(64);
-    blockDataPtr = blockData.begin();
+    blockDataIndex = 0;
+    // blockDataPtr = blockData.begin();
 
     insideImg = true;
     parseImageData(istr);
@@ -259,7 +260,7 @@ void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
     };
 
 nextValue:
-    auto huffTable = huffmanTable[blockDataPtr == blockData.begin() ? currentBlock->dcTable : currentBlock->acTable];
+    auto huffTable = huffmanTable[blockDataIndex == 0 ? currentBlock->dcTable : currentBlock->acTable];
     uint8_t code;
     int branchidx = 0;
     while (true)
@@ -294,17 +295,17 @@ nextValue:
     }
 
 readActual:
-    uint8_t datalen = blockDataPtr == blockData.begin() ? code : (code & 0xf);
+    uint8_t datalen = blockDataIndex == 0 ? code : (code & 0xf);
     if (!requireBits(datalen))
     {
         return;
     }
 
-    if (blockDataPtr != blockData.begin())
+    if (blockDataIndex != 0)
     {
         for (int i = 0; i < (code >> 4); i++)
         {
-            ++blockDataPtr;
+            ++blockDataIndex;
         }
     }
 
@@ -316,20 +317,20 @@ readActual:
             tempval -= (1 << datalen) - 1;
         }
     }
-    if (blockDataPtr == blockData.begin())
+    if (blockDataIndex == 0)
     {
         tempval += dcTemp[currentBlock->id];
         dcTemp[currentBlock->id] = tempval;
     }
-    *blockDataPtr = tempval;
+    blockData[blockDataIndex] = tempval;
 
-    if ((code == 0x00 && blockDataPtr != blockData.begin()) || std::distance(blockData.begin(), blockDataPtr) >= 63)
+    if ((code == 0x00 && blockDataIndex != 0) || blockDataIndex >= 63)
     {
         parseBlock();
 
         blockData.clear();
         blockData.resize(64);
-        blockDataPtr = blockData.begin();
+        blockDataIndex = 0;
         ++currentBlock;
         if (currentBlock == blockids.end())
         {
@@ -348,7 +349,7 @@ readActual:
     }
     else
     {
-        ++blockDataPtr;
+        ++blockDataIndex;
     }
     goto nextValue;
 }

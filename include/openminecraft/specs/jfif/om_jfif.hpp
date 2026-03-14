@@ -195,7 +195,7 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     std::vector<OMJfifBlockStatus, mem::OMStlAllocator<allocatorTag, OMJfifBlockStatus>>::iterator currentBlock;
 
     std::vector<int, mem::OMStlAllocator<allocatorTag, int>> blockData;
-    std::vector<int, mem::OMStlAllocator<allocatorTag, int>>::iterator blockDataPtr;
+    int blockDataIndex = 0;
 
     OMJfifStartOfScanRange range;
     std::unordered_map<uint8_t, std::vector<std::variant<bool, uint8_t>>> huffmanTable;
