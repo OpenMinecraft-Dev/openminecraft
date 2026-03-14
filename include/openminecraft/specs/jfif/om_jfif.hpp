@@ -5,12 +5,14 @@
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/specs/blocked/om_blocked_file.hpp"
 #include "openminecraft/util/om_util_bitbuffer.hpp"
+#include <array>
 #include <cstdint>
 #include <istream>
 #include <memory>
 #include <unordered_map>
 #include <variant>
 #include <vector>
+
 namespace openminecraft::specs::jfif
 {
 
@@ -174,11 +176,11 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     }
     int getWidth()
     {
-        return width;
+        return headerStartOfFrame.width;
     }
     int getHeight()
     {
-        return height;
+        return headerStartOfFrame.height;
     }
 
   private:
@@ -207,12 +209,15 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     log::OMLogger logger;
 
     bool insideImg = false;
-    int mcuid = 0;
-    int mcucounts = 0;
-    int mcuwidth, mcuheight;
-    int mcuxcount, mcuycount;
 
-    int width, height;
+    struct
+    {
+        int mcuid = 0;
+        int mcucounts = 0;
+        int mcuwidth, mcuheight;
+        int mcuxcount, mcuycount;
+    } mcuStatus;
+
     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> data;
 
     int blockx = 0, blocky = 0;

@@ -1,5 +1,6 @@
 #include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
+#include "openminecraft/specs/jfif/om_jfif_idct.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -78,10 +79,7 @@ void OMJfifFile::parseStartOfFrame(std::shared_ptr<std::istream> istr)
         components[st.id] = st;
     }
 
-    width = headerStartOfFrame.width;
-    height = headerStartOfFrame.height;
-    data.resize(width * height * 4);
-    std::memset(data.data(), 0xcc, width * height * 4);
+    data.resize(getWidth() * getHeight() * 4);
 }
 
 void OMJfifFile::parseHuffmanTable(std::shared_ptr<std::istream> istr)
@@ -198,14 +196,14 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     mcuw *= 8;
     mcuh *= 8;
-    mcuxcount = std::ceil(static_cast<float>(headerStartOfFrame.width) / mcuw);
-    mcuycount = std::ceil(static_cast<float>(headerStartOfFrame.height) / mcuh);
-    mcuwidth = mcuw;
-    mcuheight = mcuh;
+    mcuStatus.mcuxcount = std::ceil(static_cast<float>(headerStartOfFrame.width) / mcuw);
+    mcuStatus.mcuycount = std::ceil(static_cast<float>(headerStartOfFrame.height) / mcuh);
+    mcuStatus.mcuwidth = mcuw;
+    mcuStatus.mcuheight = mcuh;
 
-    mcucounts = mcuxcount * mcuycount;
+    mcuStatus.mcucounts = mcuStatus.mcuxcount * mcuStatus.mcuycount;
 
-    logger.info("{} mcus", mcucounts);
+    logger.info("{} mcus", mcuStatus.mcucounts);
 
     currentBlock = blockids.begin();
 
@@ -218,7 +216,6 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
 void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
 {
-#define DEBUGBUF logger.debug("buffer: {:b} {}", bitBuffer.buffer, bitBuffer.bitsAvailable());
     auto pshBit = [&]() -> bool {
         uint8_t c = istr->peek();
         bitBuffer.push(c);
@@ -337,11 +334,11 @@ readActual:
         if (currentBlock == blockids.end())
         {
             currentBlock = blockids.begin();
-            ++mcuid;
+            ++mcuStatus.mcuid;
             blockx = 0;
             blocky = 0;
 
-            if (mcuid >= mcucounts)
+            if (mcuStatus.mcuid >= mcuStatus.mcucounts)
             {
                 insideImg = false;
                 bitBuffer.popValue(bitBuffer.bitsAvailable());
@@ -356,78 +353,6 @@ readActual:
     goto nextValue;
 }
 
-static void idct_1d(const double in[8], double out[8])
-{
-    const double sqrt2 = 1.4142135623730951;
-    for (int i = 0; i < 8; ++i)
-    {
-        double sum = 0.0;
-        for (int k = 0; k < 8; ++k)
-        {
-            double c = (k == 0) ? 1.0 / sqrt2 : 1.0;
-            sum += c * in[k] * std::cos((2 * i + 1) * k * M_PI / 16.0);
-        }
-        out[i] = sum;
-    }
-}
-
-void jpeg_idct(const std::array<int, 64> &input, std::array<int, 64> &output)
-{
-    double F[8][8];
-    for (int i = 0; i < 8; ++i)
-    {
-        for (int j = 0; j < 8; ++j)
-        {
-            F[i][j] = static_cast<double>(input[i * 8 + j]);
-        }
-    }
-
-    double M[8][8];
-    for (int v = 0; v < 8; ++v)
-    {
-        double col[8];
-        for (int u = 0; u < 8; ++u)
-        {
-            col[u] = F[u][v];
-        }
-        double res[8];
-        idct_1d(col, res);
-        for (int x = 0; x < 8; ++x)
-        {
-            M[x][v] = res[x];
-        }
-    }
-
-    double f[8][8];
-    for (int x = 0; x < 8; ++x)
-    {
-        double row[8];
-        for (int v = 0; v < 8; ++v)
-        {
-            row[v] = M[x][v];
-        }
-        double res[8];
-        idct_1d(row, res);
-        for (int y = 0; y < 8; ++y)
-        {
-            f[x][y] = res[y];
-        }
-    }
-
-    const double scale = 0.25;
-    for (int i = 0; i < 8; ++i)
-    {
-        for (int j = 0; j < 8; ++j)
-        {
-            double val = f[i][j] * scale;
-            val += 128.0;
-            int ival = static_cast<int>(std::round(val));
-            ival = std::clamp(ival, 0, 255);
-            output[i * 8 + j] = ival;
-        }
-    }
-}
-
 void OMJfifFile::parseBlock()
 {
     std::array<int, 64> unzig;
@@ -439,27 +364,26 @@ void OMJfifFile::parseBlock()
 
     jpeg_idct(unzig, target);
 
-    int mcux = mcuid % mcuxcount;
-    int mcuy = mcuid / mcuxcount;
+    int mcux = mcuStatus.mcuid % mcuStatus.mcuxcount;
+    int mcuy = mcuStatus.mcuid / mcuStatus.mcuxcount;
 
-    // luminance
     if (currentBlock->id == 0x01)
     {
         for (int y = 0; y < 8; y++)
         {
-            int actualY = mcuy * mcuheight + blocky * 8 + y;
+            int actualY = mcuy * mcuStatus.mcuheight + blocky * 8 + y;
 
-            if (actualY >= height)
+            if (actualY >= getHeight())
                 break;
 
             for (int x = 0; x < 8; x++)
             {
-                int actualX = mcux * mcuwidth + blockx * 8 + x;
+                int actualX = mcux * mcuStatus.mcuwidth + blockx * 8 + x;
 
-                if (actualX >= width)
+                if (actualX >= getWidth())
                     break;
 
-                int pixid = actualY * width + actualX;
+                int pixid = actualY * getWidth() + actualX;
                 data[pixid * 4] = target[y * 8 + x];
                 data[pixid * 4 + 1] = data[pixid * 4];
                 data[pixid * 4 + 2] = data[pixid * 4];
@@ -467,7 +391,7 @@ void OMJfifFile::parseBlock()
             }
         }
         blockx++;
-        if (blockx >= mcuwidth / 8)
+        if (blockx >= mcuStatus.mcuwidth / 8)
         {
             blockx = 0;
             blocky++;
