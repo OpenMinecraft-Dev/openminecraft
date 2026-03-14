@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstdio>
 #include <iostream>
 #include <istream>
 #include <iterator>
@@ -23,6 +24,7 @@ OMJfifFile::OMJfifFile() : logger("OMJfifFile", this)
     processorMap[HuffmanTable] = [&](std::shared_ptr<std::istream> istr) { parseHuffmanTable(istr); };
     processorMap[StartOfScan] = [&](std::shared_ptr<std::istream> istr) { parseStartOfScan(istr); };
     processorMap[ImageData] = [&](std::shared_ptr<std::istream> istr) { parseImageData(istr); };
+    processorMap[EndOfImage] = [&](std::shared_ptr<std::istream> istr) { logger.info("End Of Image"); };
 }
 OMJfifFile::~OMJfifFile()
 {
@@ -75,6 +77,11 @@ void OMJfifFile::parseStartOfFrame(std::shared_ptr<std::istream> istr)
         istr->read(reinterpret_cast<char *>(&st), sizeof(OMJfifComponentStat));
         components[st.id] = st;
     }
+
+    width = headerStartOfFrame.width;
+    height = headerStartOfFrame.height;
+    data.resize(width * height * 4);
+    std::memset(data.data(), 0xcc, width * height * 4);
 }
 
 void OMJfifFile::parseHuffmanTable(std::shared_ptr<std::istream> istr)
@@ -162,6 +169,7 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
     sc.length = binary::be16ToNative(sc.length);
 
     int mcuw = 0, mcuh = 0;
+    dcTemp.clear();
     for (int i = 0; i < sc.components; i++)
     {
         OMJfifStartOfScanSelector sel;
@@ -170,13 +178,15 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
         auto factor = components[sel.selector].factor;
         for (int i = 0; i < (factor >> 4 & 0xf) * (factor & 0xf); i++)
         {
-            blockids.push_back(
-                {sel.selector, static_cast<uint8_t>(sel.table >> 4), static_cast<uint8_t>(sel.table & 0xf | 0x10)});
+            blockids.push_back({sel.selector, static_cast<uint8_t>(sel.table >> 4),
+                                static_cast<uint8_t>(sel.table & 0xf | 0x10), components[sel.selector].tableId});
             logger.info("append block : {}", sel.selector);
         }
 
         mcuw = std::max(mcuw, factor >> 4 & 0xf);
         mcuh = std::max(mcuh, factor & 0xf);
+
+        dcTemp[sel.selector] = 0;
     }
 
     istr->read(reinterpret_cast<char *>(&range), sizeof(OMJfifStartOfScanRange));
@@ -188,8 +198,12 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     mcuw *= 8;
     mcuh *= 8;
-    mcucounts = std::ceil(static_cast<float>(headerStartOfFrame.width) / mcuw) *
-                std::ceil(static_cast<float>(headerStartOfFrame.height) / mcuh);
+    mcuxcount = std::ceil(static_cast<float>(headerStartOfFrame.width) / mcuw);
+    mcuycount = std::ceil(static_cast<float>(headerStartOfFrame.height) / mcuh);
+    mcuwidth = mcuw;
+    mcuheight = mcuh;
+
+    mcucounts = mcuxcount * mcuycount;
 
     logger.info("{} mcus", mcucounts);
 
@@ -305,17 +319,16 @@ readActual:
             tempval -= (1 << datalen) - 1;
         }
     }
+    if (blockDataPtr == blockData.begin())
+    {
+        tempval += dcTemp[currentBlock->id];
+        dcTemp[currentBlock->id] = tempval;
+    }
     *blockDataPtr = tempval;
 
-    if ((code == 0x00 && blockDataPtr != blockData.begin()) || blockDataPtr == blockData.end())
+    if ((code == 0x00 && blockDataPtr != blockData.begin()) || std::distance(blockData.begin(), blockDataPtr) >= 63)
     {
-        logger.info("{}", mcuid);
-        for (int y = 0; y < 8; y++)
-        {
-            auto pp = blockData.data() + (y * 8);
-            logger.info("{} {} {} {} {} {} {} {}", pp[0], pp[1], pp[2], pp[3], pp[4], pp[5], pp[6], pp[7]);
-        }
-        logpos();
+        parseBlock();
 
         blockData.clear();
         blockData.resize(64);
@@ -325,10 +338,14 @@ readActual:
         {
             currentBlock = blockids.begin();
             ++mcuid;
+            blockx = 0;
+            blocky = 0;
 
             if (mcuid >= mcucounts)
             {
-                exit(-1);
+                insideImg = false;
+                bitBuffer.popValue(bitBuffer.bitsAvailable());
+                return;
             }
         }
     }
@@ -337,6 +354,125 @@ readActual:
         ++blockDataPtr;
     }
     goto nextValue;
+}
+
+static void idct_1d(const double in[8], double out[8])
+{
+    const double sqrt2 = 1.4142135623730951;
+    for (int i = 0; i < 8; ++i)
+    {
+        double sum = 0.0;
+        for (int k = 0; k < 8; ++k)
+        {
+            double c = (k == 0) ? 1.0 / sqrt2 : 1.0;
+            sum += c * in[k] * std::cos((2 * i + 1) * k * M_PI / 16.0);
+        }
+        out[i] = sum;
+    }
+}
+
+void jpeg_idct(const std::array<int, 64> &input, std::array<int, 64> &output)
+{
+    double F[8][8];
+    for (int i = 0; i < 8; ++i)
+    {
+        for (int j = 0; j < 8; ++j)
+        {
+            F[i][j] = static_cast<double>(input[i * 8 + j]);
+        }
+    }
+
+    double M[8][8];
+    for (int v = 0; v < 8; ++v)
+    {
+        double col[8];
+        for (int u = 0; u < 8; ++u)
+        {
+            col[u] = F[u][v];
+        }
+        double res[8];
+        idct_1d(col, res);
+        for (int x = 0; x < 8; ++x)
+        {
+            M[x][v] = res[x];
+        }
+    }
+
+    double f[8][8];
+    for (int x = 0; x < 8; ++x)
+    {
+        double row[8];
+        for (int v = 0; v < 8; ++v)
+        {
+            row[v] = M[x][v];
+        }
+        double res[8];
+        idct_1d(row, res);
+        for (int y = 0; y < 8; ++y)
+        {
+            f[x][y] = res[y];
+        }
+    }
+
+    const double scale = 0.25;
+    for (int i = 0; i < 8; ++i)
+    {
+        for (int j = 0; j < 8; ++j)
+        {
+            double val = f[i][j] * scale;
+            val += 128.0;
+            int ival = static_cast<int>(std::round(val));
+            ival = std::clamp(ival, 0, 255);
+            output[i * 8 + j] = ival;
+        }
+    }
+}
+
+void OMJfifFile::parseBlock()
+{
+    std::array<int, 64> unzig;
+    std::array<int, 64> target;
+    for (int i = 0; i < 64; i++)
+    {
+        unzig[i] = blockData[unzigzagMap[i]] * quantizationTable[currentBlock->quantizationTable].table[unzigzagMap[i]];
+    }
+
+    jpeg_idct(unzig, target);
+
+    int mcux = mcuid % mcuxcount;
+    int mcuy = mcuid / mcuxcount;
+
+    // luminance
+    if (currentBlock->id == 0x01)
+    {
+        for (int y = 0; y < 8; y++)
+        {
+            int actualY = mcuy * mcuheight + blocky * 8 + y;
+
+            if (actualY >= height)
+                break;
+
+            for (int x = 0; x < 8; x++)
+            {
+                int actualX = mcux * mcuwidth + blockx * 8 + x;
+
+                if (actualX >= width)
+                    break;
+
+                int pixid = actualY * width + actualX;
+                data[pixid * 4] = target[y * 8 + x];
+                data[pixid * 4 + 1] = data[pixid * 4];
+                data[pixid * 4 + 2] = data[pixid * 4];
+                data[pixid * 4 + 3] = 0xff;
+            }
+        }
+        blockx++;
+        if (blockx >= mcuwidth / 8)
+        {
+            blockx = 0;
+            blocky++;
+        }
+    }
 }
 
 void OMJfifFile::parseMagic(std::shared_ptr<std::istream> istr)
@@ -370,10 +506,6 @@ base:
     istr->read(reinterpret_cast<char *>(&flag), 1);
     switch (flag)
     {
-    case 0x00:
-        *t = ImageData;
-        bitBuffer.push(0xff);
-        break;
     case 0xd8:
         *t = StartOfImage;
         break;

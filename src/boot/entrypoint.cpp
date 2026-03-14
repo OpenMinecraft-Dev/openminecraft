@@ -124,22 +124,26 @@ int boot(std::vector<std::string> args)
             auto ist = std::make_shared<std::ifstream>("/home/coder2/this1.jpg", std::ios::binary);
             specs::jfif::OMJfifFile pf;
             pf.parse(ist);
+            std::ofstream oo("test2.bin", std::ios::binary);
+            oo.write(reinterpret_cast<char *>(pf.getData()), 3000 * 4567 * 4);
+            oo.close();
             break;
         }
         case "bmp"_hash: {
             auto ist = std::make_shared<std::ifstream>("/home/coder2/this.bmp", std::ios::binary);
             specs::bmp::OMBmpFile pf(ist);
             logger->info("test!");
+            
             break;
         }
         case "png"_hash: {
-            auto ist = std::make_shared<std::ifstream>("/home/coder2/interlaced.png", std::ios::binary);
+            auto ist = std::make_shared<std::ifstream>("/home/coder2/this1.png", std::ios::binary);
             specs::png::OMPngFile pf;
             pf.parse(ist);
             logger->info("test!");
 
             std::ofstream oo("test2.bin", std::ios::binary);
-            oo.write(reinterpret_cast<char *>(pf.fetchData()), 1024 * 951 * 4);
+            oo.write(reinterpret_cast<char *>(pf.fetchData()), 3000 * 4567 * 4);
             oo.close();
             break;
         }
