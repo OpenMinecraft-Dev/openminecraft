@@ -4,10 +4,10 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <math.h>
 
 namespace openminecraft::specs::jfif
 {
+constexpr float PI_CONSTANT = 3.14159265358979323846;
 static void idct_1d(const double in[8], double out[8])
 {
     const double sqrt2 = 1.4142135623730951;
@@ -17,7 +17,7 @@ static void idct_1d(const double in[8], double out[8])
         for (int k = 0; k < 8; ++k)
         {
             double c = (k == 0) ? 1.0 / sqrt2 : 1.0;
-            sum += c * in[k] * std::cos((2 * i + 1) * k * M_PI / 16.0);
+            sum += c * in[k] * std::cos((2 * i + 1) * k * PI_CONSTANT / 16.0);
         }
         out[i] = sum;
     }

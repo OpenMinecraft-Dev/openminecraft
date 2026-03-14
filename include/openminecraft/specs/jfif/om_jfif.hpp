@@ -148,6 +148,10 @@ struct OMJfifBlockStatus
     uint8_t dcTable;
     uint8_t acTable;
     uint8_t quantizationTable;
+
+    int blockId;
+    int scaleX;
+    int scaleY;
 };
 
 class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
@@ -219,8 +223,6 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     } mcuStatus;
 
     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> data;
-
-    int blockx = 0, blocky = 0;
 };
 }; // namespace openminecraft::specs::jfif
 

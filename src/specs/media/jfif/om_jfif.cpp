@@ -174,17 +174,23 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
         istr->read(reinterpret_cast<char *>(&sel), sizeof(OMJfifStartOfScanSelector));
 
         auto factor = components[sel.selector].factor;
-        for (int i = 0; i < (factor >> 4 & 0xf) * (factor & 0xf); i++)
+        for (int ii = 0; ii < (factor >> 4 & 0xf) * (factor & 0xf); ii++)
         {
             blockids.push_back({sel.selector, static_cast<uint8_t>(sel.table >> 4),
-                                static_cast<uint8_t>(sel.table & 0xf | 0x10), components[sel.selector].tableId});
-            logger.info("append block : {}", sel.selector);
+                                static_cast<uint8_t>(sel.table & 0xf | 0x10), components[sel.selector].tableId, ii,
+                                (factor >> 4 & 0xf), (factor & 0xf)});
         }
 
         mcuw = std::max(mcuw, factor >> 4 & 0xf);
         mcuh = std::max(mcuh, factor & 0xf);
 
         dcTemp[sel.selector] = 0;
+    }
+
+    for (auto &bid : blockids)
+    {
+        bid.scaleX = mcuw / bid.scaleX;
+        bid.scaleY = mcuh / bid.scaleY;
     }
 
     istr->read(reinterpret_cast<char *>(&range), sizeof(OMJfifStartOfScanRange));
@@ -196,12 +202,14 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     mcuw *= 8;
     mcuh *= 8;
+
     mcuStatus.mcuxcount = std::ceil(static_cast<float>(headerStartOfFrame.width) / mcuw);
     mcuStatus.mcuycount = std::ceil(static_cast<float>(headerStartOfFrame.height) / mcuh);
     mcuStatus.mcuwidth = mcuw;
     mcuStatus.mcuheight = mcuh;
 
     mcuStatus.mcucounts = mcuStatus.mcuxcount * mcuStatus.mcuycount;
+    mcuStatus.mcuid = 0;
 
     logger.info("{} mcus", mcuStatus.mcucounts);
 
@@ -209,7 +217,6 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     blockData.resize(64);
     blockDataIndex = 0;
-    // blockDataPtr = blockData.begin();
 
     insideImg = true;
     parseImageData(istr);
@@ -336,8 +343,6 @@ readActual:
         {
             currentBlock = blockids.begin();
             ++mcuStatus.mcuid;
-            blockx = 0;
-            blocky = 0;
 
             if (mcuStatus.mcuid >= mcuStatus.mcucounts)
             {
@@ -368,6 +373,9 @@ void OMJfifFile::parseBlock()
     int mcux = mcuStatus.mcuid % mcuStatus.mcuxcount;
     int mcuy = mcuStatus.mcuid / mcuStatus.mcuxcount;
 
+    int blockx = currentBlock->blockId % (mcuStatus.mcuwidth / 8);
+    int blocky = currentBlock->blockId / (mcuStatus.mcuwidth / 8);
+
     if (currentBlock->id == 0x01)
     {
         for (int y = 0; y < 8; y++)
@@ -390,12 +398,6 @@ void OMJfifFile::parseBlock()
                 data[pixid * 4 + 2] = data[pixid * 4];
                 data[pixid * 4 + 3] = 0xff;
             }
-        }
-        blockx++;
-        if (blockx >= mcuStatus.mcuwidth / 8)
-        {
-            blockx = 0;
-            blocky++;
         }
     }
 }
