@@ -174,11 +174,14 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
         istr->read(reinterpret_cast<char *>(&sel), sizeof(OMJfifStartOfScanSelector));
 
         auto factor = components[sel.selector].factor;
-        for (int ii = 0; ii < (factor >> 4 & 0xf) * (factor & 0xf); ii++)
+        for (int by = 0; by < (factor & 0xf); by++)
         {
-            blockids.push_back({sel.selector, static_cast<uint8_t>(sel.table >> 4),
-                                static_cast<uint8_t>(sel.table & 0xf | 0x10), components[sel.selector].tableId, ii,
-                                (factor >> 4 & 0xf), (factor & 0xf)});
+            for (int bx = 0; bx < (factor >> 4 & 0xf); bx++)
+            {
+                blockids.push_back({sel.selector, static_cast<uint8_t>(sel.table >> 4),
+                                    static_cast<uint8_t>(sel.table & 0xf | 0x10), components[sel.selector].tableId, bx,
+                                    by, (factor >> 4 & 0xf), (factor & 0xf)});
+            }
         }
 
         mcuw = std::max(mcuw, factor >> 4 & 0xf);
@@ -381,7 +384,7 @@ static void modPixel(uint8_t *data, uint8_t mod, uint8_t channelid)
         break;
     }
 
-    if ((data[3] & 0b100) == 0b100)
+    if ((data[3] & 0b111) == 0b111)
     {
         auto raw = yccToRgb * glm::vec3{data[0], data[1] - 128, data[2] - 128};
 
@@ -406,19 +409,16 @@ void OMJfifFile::parseBlock()
     int mcux = mcuStatus.mcuid % mcuStatus.mcuxcount;
     int mcuy = mcuStatus.mcuid / mcuStatus.mcuxcount;
 
-    int blockx = currentBlock->blockId % (mcuStatus.mcuwidth / 8);
-    int blocky = currentBlock->blockId / (mcuStatus.mcuwidth / 8);
-
     for (int y = 0; y < 8; y++)
     {
-        int actualY = mcuy * mcuStatus.mcuheight + (blocky * 8 + y) * currentBlock->scaleY;
+        int actualY = mcuy * mcuStatus.mcuheight + (currentBlock->blockY * 8 + y) * currentBlock->scaleY;
 
         if (actualY >= getHeight())
             break;
 
         for (int x = 0; x < 8; x++)
         {
-            int actualX = mcux * mcuStatus.mcuwidth + (blockx * 8 + x) * currentBlock->scaleX;
+            int actualX = mcux * mcuStatus.mcuwidth + (currentBlock->blockX * 8 + x) * currentBlock->scaleX;
 
             if (actualX >= getWidth())
                 break;

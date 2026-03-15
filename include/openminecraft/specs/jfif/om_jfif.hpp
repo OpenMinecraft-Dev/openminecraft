@@ -149,7 +149,8 @@ struct OMJfifBlockStatus
     uint8_t acTable;
     uint8_t quantizationTable;
 
-    int blockId;
+    int blockX;
+    int blockY;
     int scaleX;
     int scaleY;
 };
