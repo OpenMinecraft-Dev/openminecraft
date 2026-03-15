@@ -2,14 +2,14 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-ff = open("test2.bin", "rb")
-bb = ff.read()
-ff.close()
+from tqdm.rich import tqdm
 
 content = []
-for b in bb:
-    content.append(b)
+with open("test2.bin", "rb") as ff:
+    bb = ff.read()
+
+    for b in tqdm(range(len(bb))):
+        content.append(bb[b])
 
 plt.imshow(np.array(content).reshape((4567, 3000, 4)))
 plt.show()

@@ -363,9 +363,41 @@ readActual:
 
 glm::mat3 yccToRgb = glm::mat3(1.0f, 1.0f, 1.0f, 0.0f, -0.344136f, 1.772f, 1.402f, -0.714136f, 0.0f);
 
-static void modPixel(uint8_t *data, int pid, uint8_t mod, uint8_t channelid)
+static void modPixel(uint8_t *data, uint8_t mod, uint8_t channelid)
 {
-    glm::vec3 raw = {data[pid * 4], data[pid * 4 + 1], data[pid * 4 + 2]};
+    switch (channelid)
+    {
+    case 1:
+        data[0] = mod;
+        data[3] |= 0b1;
+        break;
+    case 2:
+        data[1] = mod;
+        data[3] |= 0b10;
+        break;
+    case 3:
+        data[2] = mod;
+        data[3] |= 0b100;
+        break;
+    default:
+        break;
+    }
+
+    if ((data[3] & 0b100) == 0b100)
+    {
+        /*int r = data[0] + ((1402 * (data[2] - 128)) >> 10);
+        int g = data[0] - ((344 * (data[1] - 128) + 714 * (data[2] - 128)) >> 10);
+        int b = data[0] + ((1772 * (data[1] - 128)) >> 10);*/
+
+        glm::vec3 raw = {data[0], data[1] - 128, data[2] - 128};
+        raw = yccToRgb * raw;
+
+        data[0] = std::clamp(raw.r, 0.0f, 255.0f);
+        data[1] = std::clamp(raw.g, 0.0f, 255.0f);
+        data[2] = std::clamp(raw.b, 0.0f, 255.0f);
+        data[3] = 0xff;
+    }
+    /*glm::vec3 raw = {data[pid * 4], data[pid * 4 + 1], data[pid * 4 + 2]};
     raw = glm::inverse(yccToRgb) * raw;
     raw += glm::vec3{0, 128, 128};
 
@@ -390,7 +422,7 @@ static void modPixel(uint8_t *data, int pid, uint8_t mod, uint8_t channelid)
     data[pid * 4] = std::clamp(raw.x, 0.0f, 255.0f);
     data[pid * 4 + 1] = std::clamp(raw.y, 0.0f, 255.0f);
     data[pid * 4 + 2] = std::clamp(raw.z, 0.0f, 255.0f);
-    data[pid * 4 + 3] = 0xff;
+    data[pid * 4 + 3] = 0xff;*/
 }
 
 void OMJfifFile::parseBlock()
@@ -427,7 +459,7 @@ void OMJfifFile::parseBlock()
                     break;
 
                 int pixid = actualY * getWidth() + actualX;
-                modPixel(data.data(), pixid, target[y * 8 + x], currentBlock->id);
+                modPixel(data.data() + pixid * 4, target[y * 8 + x], currentBlock->id);
             }
         }
     }
