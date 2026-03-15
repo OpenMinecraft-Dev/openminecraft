@@ -5,9 +5,11 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <glm/detail/qualifier.hpp>
+#include <glm/ext/vector_float3.hpp>
+#include <glm/glm.hpp>
 #include <iostream>
 #include <istream>
-#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <variant>
@@ -359,6 +361,38 @@ readActual:
     goto nextValue;
 }
 
+glm::mat3 yccToRgb = glm::mat3(1.0f, 1.0f, 1.0f, 0.0f, -0.344136f, 1.772f, 1.402f, -0.714136f, 0.0f);
+
+static void modPixel(uint8_t *data, int pid, uint8_t mod, uint8_t channelid)
+{
+    glm::vec3 raw = {data[pid * 4], data[pid * 4 + 1], data[pid * 4 + 2]};
+    raw = glm::inverse(yccToRgb) * raw;
+    raw += glm::vec3{0, 128, 128};
+
+    switch (channelid)
+    {
+    case 1:
+        raw.x = mod;
+        break;
+    case 2:
+        raw.y = mod;
+        break;
+    case 3:
+        raw.z = mod;
+        break;
+    default:
+        break;
+    }
+
+    raw -= glm::vec3{0, 128, 128};
+    raw = yccToRgb * raw;
+
+    data[pid * 4] = std::clamp(raw.x, 0.0f, 255.0f);
+    data[pid * 4 + 1] = std::clamp(raw.y, 0.0f, 255.0f);
+    data[pid * 4 + 2] = std::clamp(raw.z, 0.0f, 255.0f);
+    data[pid * 4 + 3] = 0xff;
+}
+
 void OMJfifFile::parseBlock()
 {
     std::array<int, 64> unzig;
@@ -376,7 +410,7 @@ void OMJfifFile::parseBlock()
     int blockx = currentBlock->blockId % (mcuStatus.mcuwidth / 8);
     int blocky = currentBlock->blockId / (mcuStatus.mcuwidth / 8);
 
-    if (currentBlock->id == 0x01)
+    if (true)
     {
         for (int y = 0; y < 8; y++)
         {
@@ -393,10 +427,7 @@ void OMJfifFile::parseBlock()
                     break;
 
                 int pixid = actualY * getWidth() + actualX;
-                data[pixid * 4] = target[y * 8 + x];
-                data[pixid * 4 + 1] = data[pixid * 4];
-                data[pixid * 4 + 2] = data[pixid * 4];
-                data[pixid * 4 + 3] = 0xff;
+                modPixel(data.data(), pixid, target[y * 8 + x], currentBlock->id);
             }
         }
     }
