@@ -113,7 +113,6 @@ void OMJfifFile::parseHuffmanTable(std::shared_ptr<std::istream> istr)
         auto &htb = huffmanTable[tb.info];
         htb.resize(std::pow(2, maxlength + 1));
         htb[0] = true;
-        logger.info("Table #{:02x}", tb.info);
 
         int currentIdx = 0;
         auto leftNode = [&]() { currentIdx = currentIdx * 2 + 1; };
@@ -152,7 +151,6 @@ void OMJfifFile::parseHuffmanTable(std::shared_ptr<std::istream> istr)
                 htb[currentIdx] = true;
             }
 
-            logger.info("{:b} {} {:02x}", target, currentIdx, ss);
             htb[currentIdx] = ss;
             currentIdx = 0;
 
@@ -186,6 +184,8 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
         mcuw = std::max(mcuw, factor >> 4 & 0xf);
         mcuh = std::max(mcuh, factor & 0xf);
 
+        logger.info("0x{:02x} {} {}", sel.selector, factor >> 4 & 0xf, factor & 0xf);
+
         dcTemp[sel.selector] = 0;
     }
 
@@ -217,7 +217,7 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     currentBlock = blockids.begin();
 
-    blockData.resize(64);
+    std::memset(blockData.data(), 0, 64 * sizeof(int));
     blockDataIndex = 0;
 
     insideImg = true;
@@ -312,14 +312,11 @@ readActual:
 
     if (blockDataIndex != 0)
     {
-        for (int i = 0; i < (code >> 4); i++)
-        {
-            ++blockDataIndex;
-        }
+        blockDataIndex += (code >> 4);
     }
 
     auto tempval = (int64_t)bitBuffer.popValue(datalen);
-    if (datalen)
+    if (datalen > 0)
     {
         if ((tempval >> (datalen - 1)) == 0)
         {
@@ -337,8 +334,8 @@ readActual:
     {
         parseBlock();
 
-        blockData.clear();
-        blockData.resize(64);
+        std::memset(blockData.data(), 0, 64 * sizeof(int));
+
         blockDataIndex = 0;
         ++currentBlock;
         if (currentBlock == blockids.end())
@@ -358,6 +355,7 @@ readActual:
     {
         ++blockDataIndex;
     }
+
     goto nextValue;
 }
 
@@ -385,44 +383,13 @@ static void modPixel(uint8_t *data, uint8_t mod, uint8_t channelid)
 
     if ((data[3] & 0b100) == 0b100)
     {
-        /*int r = data[0] + ((1402 * (data[2] - 128)) >> 10);
-        int g = data[0] - ((344 * (data[1] - 128) + 714 * (data[2] - 128)) >> 10);
-        int b = data[0] + ((1772 * (data[1] - 128)) >> 10);*/
-
-        glm::vec3 raw = {data[0], data[1] - 128, data[2] - 128};
-        raw = yccToRgb * raw;
+        auto raw = yccToRgb * glm::vec3{data[0], data[1] - 128, data[2] - 128};
 
         data[0] = std::clamp(raw.r, 0.0f, 255.0f);
         data[1] = std::clamp(raw.g, 0.0f, 255.0f);
         data[2] = std::clamp(raw.b, 0.0f, 255.0f);
         data[3] = 0xff;
     }
-    /*glm::vec3 raw = {data[pid * 4], data[pid * 4 + 1], data[pid * 4 + 2]};
-    raw = glm::inverse(yccToRgb) * raw;
-    raw += glm::vec3{0, 128, 128};
-
-    switch (channelid)
-    {
-    case 1:
-        raw.x = mod;
-        break;
-    case 2:
-        raw.y = mod;
-        break;
-    case 3:
-        raw.z = mod;
-        break;
-    default:
-        break;
-    }
-
-    raw -= glm::vec3{0, 128, 128};
-    raw = yccToRgb * raw;
-
-    data[pid * 4] = std::clamp(raw.x, 0.0f, 255.0f);
-    data[pid * 4 + 1] = std::clamp(raw.y, 0.0f, 255.0f);
-    data[pid * 4 + 2] = std::clamp(raw.z, 0.0f, 255.0f);
-    data[pid * 4 + 3] = 0xff;*/
 }
 
 void OMJfifFile::parseBlock()
@@ -442,24 +409,31 @@ void OMJfifFile::parseBlock()
     int blockx = currentBlock->blockId % (mcuStatus.mcuwidth / 8);
     int blocky = currentBlock->blockId / (mcuStatus.mcuwidth / 8);
 
-    if (true)
+    for (int y = 0; y < 8; y++)
     {
-        for (int y = 0; y < 8; y++)
-        {
-            int actualY = mcuy * mcuStatus.mcuheight + blocky * 8 + y;
+        int actualY = mcuy * mcuStatus.mcuheight + (blocky * 8 + y) * currentBlock->scaleY;
 
-            if (actualY >= getHeight())
+        if (actualY >= getHeight())
+            break;
+
+        for (int x = 0; x < 8; x++)
+        {
+            int actualX = mcux * mcuStatus.mcuwidth + (blockx * 8 + x) * currentBlock->scaleX;
+
+            if (actualX >= getWidth())
                 break;
 
-            for (int x = 0; x < 8; x++)
+            for (int dy = 0; dy < currentBlock->scaleY; dy++)
             {
-                int actualX = mcux * mcuStatus.mcuwidth + blockx * 8 + x;
-
-                if (actualX >= getWidth())
-                    break;
-
-                int pixid = actualY * getWidth() + actualX;
-                modPixel(data.data() + pixid * 4, target[y * 8 + x], currentBlock->id);
+                for (int dx = 0; dx < currentBlock->scaleX; dx++)
+                {
+                    int pixid = (actualY + dy) * getWidth() + actualX + dx;
+                    if (pixid * 4 >= data.size())
+                    {
+                        break;
+                    }
+                    modPixel(data.data() + pixid * 4, target[y * 8 + x], currentBlock->id);
+                }
             }
         }
     }
@@ -524,6 +498,7 @@ base:
         *t = EndOfImage;
         break;
     default:
+        logger.warn("{:02x} unknown!", flag);
         *t = Unknown;
         break;
     }

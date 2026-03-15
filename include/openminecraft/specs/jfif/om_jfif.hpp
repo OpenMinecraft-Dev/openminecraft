@@ -198,7 +198,7 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     std::vector<OMJfifBlockStatus, mem::OMStlAllocator<allocatorTag, OMJfifBlockStatus>> blockids;
     std::vector<OMJfifBlockStatus, mem::OMStlAllocator<allocatorTag, OMJfifBlockStatus>>::iterator currentBlock;
 
-    std::vector<int, mem::OMStlAllocator<allocatorTag, int>> blockData;
+    std::array<int, 64> blockData;
     int blockDataIndex = 0;
 
     OMJfifStartOfScanRange range;
