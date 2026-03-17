@@ -133,7 +133,7 @@ int boot(std::vector<std::string> args)
             auto ist = std::make_shared<std::ifstream>("/home/coder2/this.bmp", std::ios::binary);
             specs::bmp::OMBmpFile pf(ist);
             logger->info("test!");
-            
+
             break;
         }
         case "png"_hash: {

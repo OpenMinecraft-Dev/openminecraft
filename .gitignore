@@ -18,3 +18,4 @@ include/openminecraft/resource/bootassets.h
 massif*
 *.dat
 *.bin
+*.data

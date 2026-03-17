@@ -30,7 +30,8 @@ SurfaceFormatKHR OMSwapchainManager::chooseSurfaceFormat(OMSwapchainCap cap)
 {
     for (auto sf : cap.formats)
     {
-        if (sf.format == Format::eB8G8R8A8Srgb && sf.colorSpace == ColorSpaceKHR::eSrgbNonlinear)
+        if ((sf.format == Format::eB8G8R8A8Srgb || sf.format == Format::eR8G8B8A8Srgb) &&
+            sf.colorSpace == ColorSpaceKHR::eSrgbNonlinear)
         {
             return sf;
         }
