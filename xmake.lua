@@ -97,7 +97,19 @@ target("openminecraft-plat")
 set_kind("static")
 add_includedirs("include")
 
-add_packages("fmt", "boost", { system = false })
+add_packages(
+	"harfbuzz",
+	"vulkan-headers",
+	"glm",
+	"bullet3",
+	"vulkan-hpp",
+	"shaderc",
+	"fmt",
+	"boost",
+	"nlohmann_json",
+	"libsdl3",
+	{ system = false }
+)
 
 if is_plat("mingw") then
 	add_links("dbghelp")
@@ -191,7 +203,7 @@ includes("src/renderer/xmake.lua")
 includes("src/specs/xmake.lua")
 includes("src/fontproc/xmake.lua")
 includes("tests/xmake.lua")
-includes("tools/bundlemaker/xmake.lua")
+includes("tools/xmake.lua")
 
 --------------------------------------------------------------------------------
 -- openminecraft (core target)
