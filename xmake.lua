@@ -82,7 +82,7 @@ add_requires(
 	"tinyobjloader",
 	"opengl-headers",
 	"bullet3",
-	"zlib", 
+	"zlib",
 	{ system = false }
 )
 add_requires("boost", { system = false, configs = { stacktrace = true, asio = true } })
@@ -97,19 +97,7 @@ target("openminecraft-plat")
 set_kind("static")
 add_includedirs("include")
 
-add_packages(
-	"harfbuzz",
-	"vulkan-headers",
-	"glm",
-	"bullet3",
-	"vulkan-hpp",
-	"shaderc",
-	"fmt",
-	"boost",
-	"nlohmann_json",
-	"libsdl3",
-	{ system = false }
-)
+add_packages("fmt", "boost", { system = false })
 
 if is_plat("mingw") then
 	add_links("dbghelp")
