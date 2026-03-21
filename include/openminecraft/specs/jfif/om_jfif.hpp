@@ -64,7 +64,22 @@ struct OMJfifApp0Header
     uint8_t thumbnailX, thumbnailY;
 };
 
+struct OMJfifApp1Header
+{
+    uint16_t length;
+};
+
 struct OMJfifApp2Header
+{
+    uint16_t length;
+};
+
+struct OMJfifApp13Header
+{
+    uint16_t length;
+};
+
+struct OMJfifApp14Header
 {
     uint16_t length;
 };
@@ -72,7 +87,6 @@ struct OMJfifApp2Header
 #pragma pack(1)
 struct OMJfifQuantizationTable
 {
-    uint16_t length;
     uint8_t destination;
     uint8_t table[64];
 };
@@ -131,7 +145,10 @@ enum OMJfifSectionType : uint8_t
 {
     StartOfImage,
     App0Header,
+    App1Header,
     App2Header,
+    App13Header,
+    App14Header,
     Comment,
     QuantizationTable,
     StartOfFrame,
@@ -167,7 +184,10 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     bool parseBlockHeader(std::shared_ptr<std::istream>, OMJfifSectionType *) override;
 
     void parseApp0Header(std::shared_ptr<std::istream>);
+    void parseApp1Header(std::shared_ptr<std::istream>);
     void parseApp2Header(std::shared_ptr<std::istream>);
+    void parseApp13Header(std::shared_ptr<std::istream>);
+    void parseApp14Header(std::shared_ptr<std::istream>);
     void parseComment(std::shared_ptr<std::istream>);
     void parseQuantizationTable(std::shared_ptr<std::istream>);
     void parseStartOfFrame(std::shared_ptr<std::istream>);
@@ -192,7 +212,10 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     void parseBlock();
 
     OMJfifApp0Header headerApp0;
+    OMJfifApp1Header headerApp1;
     OMJfifApp2Header headerApp2;
+    OMJfifApp13Header headerApp13;
+    OMJfifApp14Header headerApp14;
     OMJfifStartOfFrame headerStartOfFrame;
 
     std::unordered_map<int, int> dcTemp;
@@ -212,8 +235,6 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     util::OMBitBuffer bitBuffer;
 
     log::OMLogger logger;
-
-    bool insideImg = false;
 
     struct
     {

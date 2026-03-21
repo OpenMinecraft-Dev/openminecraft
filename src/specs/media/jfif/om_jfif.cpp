@@ -20,7 +20,10 @@ OMJfifFile::OMJfifFile() : logger("OMJfifFile", this)
 {
     processorMap[StartOfImage] = [](std::shared_ptr<std::istream>) {};
     processorMap[App0Header] = [&](std::shared_ptr<std::istream> istr) { parseApp0Header(istr); };
+    processorMap[App1Header] = [&](std::shared_ptr<std::istream> istr) { parseApp1Header(istr); };
     processorMap[App2Header] = [&](std::shared_ptr<std::istream> istr) { parseApp2Header(istr); };
+    processorMap[App13Header] = [&](std::shared_ptr<std::istream> istr) { parseApp13Header(istr); };
+    processorMap[App14Header] = [&](std::shared_ptr<std::istream> istr) { parseApp14Header(istr); };
     processorMap[Comment] = [&](std::shared_ptr<std::istream> istr) { parseComment(istr); };
     processorMap[QuantizationTable] = [&](std::shared_ptr<std::istream> istr) { parseQuantizationTable(istr); };
     processorMap[StartOfFrame] = [&](std::shared_ptr<std::istream> istr) { parseStartOfFrame(istr); };
@@ -45,11 +48,32 @@ void OMJfifFile::parseApp0Header(std::shared_ptr<std::istream> istr)
     istr->read(reinterpret_cast<char *>(thumbnail.data()), thumbnail.size() * sizeof(OMJfifThumbnailPixel));
 }
 
+void OMJfifFile::parseApp1Header(std::shared_ptr<std::istream> istr)
+{
+    istr->read(reinterpret_cast<char *>(&headerApp1), sizeof(OMJfifApp1Header));
+    headerApp1.length = binary::be16ToNative(headerApp1.length);
+    istr->ignore(headerApp1.length - 2);
+}
+
 void OMJfifFile::parseApp2Header(std::shared_ptr<std::istream> istr)
 {
     istr->read(reinterpret_cast<char *>(&headerApp2), sizeof(OMJfifApp2Header));
     headerApp2.length = binary::be16ToNative(headerApp2.length);
     istr->ignore(headerApp2.length - 2);
+}
+
+void OMJfifFile::parseApp13Header(std::shared_ptr<std::istream> istr)
+{
+    istr->read(reinterpret_cast<char *>(&headerApp13), sizeof(OMJfifApp13Header));
+    headerApp13.length = binary::be16ToNative(headerApp13.length);
+    istr->ignore(headerApp13.length - 2);
+}
+
+void OMJfifFile::parseApp14Header(std::shared_ptr<std::istream> istr)
+{
+    istr->read(reinterpret_cast<char *>(&headerApp14), sizeof(OMJfifApp14Header));
+    headerApp14.length = binary::be16ToNative(headerApp14.length);
+    istr->ignore(headerApp14.length - 2);
 }
 
 void OMJfifFile::parseComment(std::shared_ptr<std::istream> istr)
@@ -63,9 +87,16 @@ void OMJfifFile::parseComment(std::shared_ptr<std::istream> istr)
 
 void OMJfifFile::parseQuantizationTable(std::shared_ptr<std::istream> istr)
 {
-    OMJfifQuantizationTable tb;
-    istr->read(reinterpret_cast<char *>(&tb), sizeof(OMJfifQuantizationTable));
-    quantizationTable.push_back(tb);
+    uint16_t tbl;
+    istr->read(reinterpret_cast<char *>(&tbl), sizeof(uint16_t));
+    tbl = binary::be16ToNative(tbl);
+
+    for (int i = 0; i < (tbl - 2) / sizeof(OMJfifQuantizationTable); i++)
+    {
+        OMJfifQuantizationTable tb;
+        istr->read(reinterpret_cast<char *>(&tb), sizeof(OMJfifQuantizationTable));
+        quantizationTable.push_back(tb);
+    }
 }
 
 void OMJfifFile::parseStartOfFrame(std::shared_ptr<std::istream> istr)
@@ -110,6 +141,8 @@ void OMJfifFile::parseHuffmanTable(std::shared_ptr<std::istream> istr)
             }
         }
 
+        logger.info("Table #{:02x}", tb.info);
+
         auto &htb = huffmanTable[tb.info];
         htb.resize(std::pow(2, maxlength + 1));
         htb[0] = true;
@@ -152,6 +185,7 @@ void OMJfifFile::parseHuffmanTable(std::shared_ptr<std::istream> istr)
             }
 
             htb[currentIdx] = ss;
+            logger.info("{} {:b} {:02x}", bitlength, target, ss);
             currentIdx = 0;
 
             target++;
@@ -168,6 +202,7 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     int mcuw = 0, mcuh = 0;
     dcTemp.clear();
+    blockids.clear();
     for (int i = 0; i < sc.components; i++)
     {
         OMJfifStartOfScanSelector sel;
@@ -187,7 +222,8 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
         mcuw = std::max(mcuw, factor >> 4 & 0xf);
         mcuh = std::max(mcuh, factor & 0xf);
 
-        logger.info("0x{:02x} {} {}", sel.selector, factor >> 4 & 0xf, factor & 0xf);
+        logger.info("0x{:02x} {} {} dc{} ac{}", sel.selector, factor >> 4 & 0xf, factor & 0xf, sel.table >> 4,
+                    sel.table & 0xf);
 
         dcTemp[sel.selector] = 0;
     }
@@ -200,10 +236,12 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     istr->read(reinterpret_cast<char *>(&range), sizeof(OMJfifStartOfScanRange));
 
-    if (range.spectralEnd != 0x3f)
+    if (range.successive != 0x00)
     {
         throw std::logic_error("not supported");
     }
+
+    logger.info("{} ~ {} freq", range.spectralBegin, range.spectralEnd);
 
     mcuw *= 8;
     mcuh *= 8;
@@ -216,14 +254,13 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
     mcuStatus.mcucounts = mcuStatus.mcuxcount * mcuStatus.mcuycount;
     mcuStatus.mcuid = 0;
 
-    logger.info("{} mcus", mcuStatus.mcucounts);
+    logger.info("{} mcus, {}x{} {}", mcuStatus.mcucounts, mcuStatus.mcuwidth, mcuStatus.mcuheight, blockids.size());
 
     currentBlock = blockids.begin();
 
     std::memset(blockData.data(), 0, 64 * sizeof(int));
-    blockDataIndex = 0;
+    blockDataIndex = range.spectralBegin;
 
-    insideImg = true;
     parseImageData(istr);
 }
 
@@ -237,6 +274,7 @@ void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
         {
             if (istr->peek() != 0x00)
             {
+                istr->seekg(-1, std::ios::cur);
                 return false;
             }
             else
@@ -244,6 +282,7 @@ void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
                 istr->ignore(1);
             }
         }
+
         return true;
     };
 
@@ -271,12 +310,16 @@ void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
         logger.info("offset +{:02x}.{}", off, -pp);
     };
 
+    auto logbuf = [&]() { logger.info("{:" + fmt::format("{}", bitBuffer.bitsAvailable()) + "b}", bitBuffer.buffer); };
+
 nextValue:
     auto huffTable = huffmanTable[blockDataIndex == 0 ? currentBlock->dcTable : currentBlock->acTable];
     uint8_t code;
     int branchidx = 0;
+    std::string id = "";
     while (true)
     {
+        logbuf();
         if (!requireBits(1))
         {
             return;
@@ -284,10 +327,12 @@ nextValue:
 
         if (bitBuffer.popBit())
         {
+            id += "1";
             branchidx = branchidx * 2 + 2;
         }
         else
         {
+            id += "0";
             branchidx = branchidx * 2 + 1;
         }
 
@@ -296,6 +341,7 @@ nextValue:
             if (!*b)
             {
                 logpos();
+                logger.error(id);
                 throw std::logic_error("bad code!");
             }
         }
@@ -333,13 +379,14 @@ readActual:
     }
     blockData[blockDataIndex] = tempval;
 
-    if ((code == 0x00 && blockDataIndex != 0) || blockDataIndex >= 63)
+    if ((code == 0x00 && blockDataIndex != 0) || blockDataIndex >= range.spectralEnd)
     {
-        parseBlock();
+        if (range.spectralBegin == 0x00)
+            parseBlock();
 
         std::memset(blockData.data(), 0, 64 * sizeof(int));
 
-        blockDataIndex = 0;
+        blockDataIndex = range.spectralBegin;
         ++currentBlock;
         if (currentBlock == blockids.end())
         {
@@ -348,7 +395,6 @@ readActual:
 
             if (mcuStatus.mcuid >= mcuStatus.mcucounts)
             {
-                insideImg = false;
                 bitBuffer.popValue(bitBuffer.bitsAvailable());
                 return;
             }
@@ -458,26 +504,35 @@ base:
         return false;
     }
 
-    if (!insideImg)
+    istr->read(reinterpret_cast<char *>(&flag), 1);
+    if (flag != 0xff)
     {
-        istr->read(reinterpret_cast<char *>(&flag), 1);
-        if (flag != 0xff)
-        {
-            goto base;
-        }
+        goto base;
     }
 
     istr->read(reinterpret_cast<char *>(&flag), 1);
     switch (flag)
     {
+    case 0x00:
+        *t = EndOfImage;
+        break;
     case 0xd8:
         *t = StartOfImage;
         break;
     case 0xe0:
         *t = App0Header;
         break;
+    case 0xe1:
+        *t = App1Header;
+        break;
     case 0xe2:
         *t = App2Header;
+        break;
+    case 0xed:
+        *t = App13Header;
+        break;
+    case 0xee:
+        *t = App14Header;
         break;
     case 0xfe:
         *t = Comment;
@@ -486,6 +541,7 @@ base:
         *t = QuantizationTable;
         break;
     case 0xc0:
+    case 0xc2:
         *t = StartOfFrame;
         break;
     case 0xc4:
@@ -500,6 +556,7 @@ base:
     default:
         logger.warn("{:02x} unknown!", flag);
         *t = Unknown;
+        throw 0;
         break;
     }
 
