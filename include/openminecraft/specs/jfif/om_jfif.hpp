@@ -9,6 +9,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <istream>
 #include <memory>
 #include <unordered_map>
@@ -206,7 +207,7 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
 
   private:
     void parseBlock();
-    uint8_t fetchCode(uint8_t tableid);
+    uint8_t fetchCode(uint8_t tableid, std::function<bool()> f);
 
     OMJfifApp0Header headerApp0;
     OMJfifApp1Header headerApp1;

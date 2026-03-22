@@ -281,12 +281,15 @@ void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
 {
     auto pshBit = [&]() -> bool {
         uint8_t c = istr->peek();
-        bitBuffer.push(c);
         istr->ignore(1);
+
         if (c == 0xff)
         {
             if (istr->peek() != 0x00)
             {
+                logger.warn("abnormal exit! {}/{}", mcuStatus.mcuid, mcuStatus.mcucounts);
+                logger.warn("{}", bitBuffer.bitsAvailable());
+                throw 0;
                 istr->seekg(-1, std::ios::cur);
                 return false;
             }
@@ -295,6 +298,8 @@ void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
                 istr->ignore(1);
             }
         }
+
+        bitBuffer.push(c);
 
         return true;
     };
@@ -324,15 +329,11 @@ void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
     };
 
 nextValue:
-    if (!requireBits(16))
-    {
-        return;
-    }
-
     uint8_t code;
     try
     {
-        code = fetchCode(blockDataIndex == 0 ? currentBlock->dcTable : currentBlock->acTable);
+        code = fetchCode(blockDataIndex == 0 ? currentBlock->dcTable : currentBlock->acTable,
+                         [&]() { return requireBits(1); });
     }
     catch (std::logic_error &e)
     {

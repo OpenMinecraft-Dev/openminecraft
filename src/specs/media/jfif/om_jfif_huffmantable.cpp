@@ -1,10 +1,11 @@
 #include "openminecraft/specs/jfif/om_jfif.hpp"
+#include <cmath>
 #include <cstdint>
 #include <stdexcept>
 
 namespace openminecraft::specs::jfif
 {
-uint8_t OMJfifFile::fetchCode(uint8_t tableid)
+uint8_t OMJfifFile::fetchCode(uint8_t tableid, std::function<bool()> f)
 {
     auto const &table = huffmanTable[tableid].first;
     auto const &symbols = huffmanTable[tableid].second;
@@ -31,6 +32,10 @@ uint8_t OMJfifFile::fetchCode(uint8_t tableid)
 
     while (bits_read < 16)
     {
+        if (!f())
+        {
+            throw std::logic_error("no more bits!");
+        }
         int bit = bitBuffer.popBit();
         code = (code << 1) | bit;
         bits_read++;
