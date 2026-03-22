@@ -288,8 +288,7 @@ void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
             if (istr->peek() != 0x00)
             {
                 logger.warn("abnormal exit! {}/{}", mcuStatus.mcuid, mcuStatus.mcucounts);
-                logger.warn("{}", bitBuffer.bitsAvailable());
-                throw 0;
+                // throw 0;
                 istr->seekg(-1, std::ios::cur);
                 return false;
             }
@@ -337,10 +336,10 @@ nextValue:
     }
     catch (std::logic_error &e)
     {
+        logpos();
         logger.warn("{}, skipping", e.what());
         return;
     }
-readActual:
     uint8_t datalen = blockDataIndex == 0 ? code : (code & 0xf);
     if (!requireBits(datalen))
     {
@@ -368,6 +367,11 @@ readActual:
             dcTemp[currentBlock->id] = tempval;
         }
         blockData[blockDataIndex] = tempval;
+    }
+    else
+    {
+        bitBuffer.popValue(datalen);
+        // throw std::logic_error("out of bounds!");
     }
 
     if ((code == 0x00 && blockDataIndex != 0) || blockDataIndex >= range.spectralEnd)
