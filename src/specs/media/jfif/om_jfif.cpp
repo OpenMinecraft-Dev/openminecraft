@@ -236,7 +236,7 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     istr->read(reinterpret_cast<char *>(&range), sizeof(OMJfifStartOfScanRange));
 
-    if (range.successive != 0x00)
+    if (range.spectralEnd != 0x3f)
     {
         throw std::logic_error("not supported");
     }
@@ -310,16 +310,12 @@ void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
         logger.info("offset +{:02x}.{}", off, -pp);
     };
 
-    auto logbuf = [&]() { logger.info("{:" + fmt::format("{}", bitBuffer.bitsAvailable()) + "b}", bitBuffer.buffer); };
-
 nextValue:
     auto huffTable = huffmanTable[blockDataIndex == 0 ? currentBlock->dcTable : currentBlock->acTable];
     uint8_t code;
     int branchidx = 0;
-    std::string id = "";
     while (true)
     {
-        logbuf();
         if (!requireBits(1))
         {
             return;
@@ -327,12 +323,10 @@ nextValue:
 
         if (bitBuffer.popBit())
         {
-            id += "1";
             branchidx = branchidx * 2 + 2;
         }
         else
         {
-            id += "0";
             branchidx = branchidx * 2 + 1;
         }
 
@@ -341,8 +335,8 @@ nextValue:
             if (!*b)
             {
                 logpos();
-                logger.error(id);
-                throw std::logic_error("bad code!");
+                // throw std::logic_error("bad code!");
+                return;
             }
         }
         else if (const uint8_t *c = std::get_if<uint8_t>(&huffTable[branchidx]))
@@ -381,8 +375,7 @@ readActual:
 
     if ((code == 0x00 && blockDataIndex != 0) || blockDataIndex >= range.spectralEnd)
     {
-        if (range.spectralBegin == 0x00)
-            parseBlock();
+        parseBlock();
 
         std::memset(blockData.data(), 0, 64 * sizeof(int));
 
@@ -412,6 +405,16 @@ glm::mat3 yccToRgb = glm::mat3(1.0f, 1.0f, 1.0f, 0.0f, -0.344136f, 1.772f, 1.402
 
 static void modPixel(uint8_t *data, uint8_t mod, uint8_t channelid)
 {
+    if ((data[3] & 0b111) == 0b111)
+    {
+        auto raw = (glm::inverse(yccToRgb) * glm::vec3{data[0], data[1], data[2]}) + glm::vec3{0, 128, 128};
+
+        data[0] = std::clamp(raw.r, 0.0f, 255.0f);
+        data[1] = std::clamp(raw.g, 0.0f, 255.0f);
+        data[2] = std::clamp(raw.b, 0.0f, 255.0f);
+        data[3] = 0xff;
+    }
+
     switch (channelid)
     {
     case 1:
@@ -514,7 +517,7 @@ base:
     switch (flag)
     {
     case 0x00:
-        *t = EndOfImage;
+        *t = Unknown;
         break;
     case 0xd8:
         *t = StartOfImage;

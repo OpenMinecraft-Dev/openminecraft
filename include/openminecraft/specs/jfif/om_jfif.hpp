@@ -6,6 +6,7 @@
 #include "openminecraft/specs/blocked/om_blocked_file.hpp"
 #include "openminecraft/util/om_util_bitbuffer.hpp"
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <istream>
 #include <memory>

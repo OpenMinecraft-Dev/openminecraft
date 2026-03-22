@@ -28,6 +28,10 @@ class OMBitBuffer
 
     uint32_t popValue(int8_t bits)
     {
+        if (!bits)
+        {
+            return 0;
+        }
         uint32_t result = buffer >> (this->bits - bits) & ((1 << bits) - 1);
         this->bits -= bits;
         buffer &= ((1 << this->bits) - 1);
