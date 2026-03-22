@@ -1,6 +1,7 @@
 #ifndef OM_JFIF_HPP
 #define OM_JFIF_HPP
 
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/specs/blocked/om_blocked_file.hpp"
@@ -117,12 +118,6 @@ struct OMJfifHuffmanTable
 };
 #pragma pack()
 
-struct OMJfifHuffmanTableEntry
-{
-    uint8_t length;
-    uint8_t code;
-};
-
 #pragma pack(1)
 struct OMJfifStartOfScan
 {
@@ -211,6 +206,7 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
 
   private:
     void parseBlock();
+    uint8_t fetchCode(uint8_t tableid);
 
     OMJfifApp0Header headerApp0;
     OMJfifApp1Header headerApp1;
@@ -224,10 +220,11 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     std::vector<OMJfifBlockStatus, mem::OMStlAllocator<allocatorTag, OMJfifBlockStatus>>::iterator currentBlock;
 
     std::array<int, 64> blockData;
+    std::unordered_map<binary::hash::hash_t, std::array<int, 64>> blockDataCache;
     int blockDataIndex = 0;
 
     OMJfifStartOfScanRange range;
-    std::unordered_map<uint8_t, std::vector<std::variant<bool, uint8_t>>> huffmanTable;
+    std::unordered_map<uint8_t, std::pair<OMJfifHuffmanTable, std::vector<uint8_t>>> huffmanTable;
     std::unordered_map<uint8_t, OMJfifComponentStat> components;
 
     std::vector<OMJfifThumbnailPixel, mem::OMStlAllocator<allocatorTag, OMJfifThumbnailPixel>> thumbnail;

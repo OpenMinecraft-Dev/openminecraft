@@ -1,5 +1,6 @@
 #include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/specs/jfif/om_jfif_idct.hpp"
 #include <algorithm>
 #include <cmath>
@@ -125,7 +126,19 @@ void OMJfifFile::parseHuffmanTable(std::shared_ptr<std::istream> istr)
         OMJfifHuffmanTable tb;
         istr->read(reinterpret_cast<char *>(&tb), sizeof(OMJfifHuffmanTable));
 
-        std::unordered_map<uint8_t, uint8_t> counts;
+        int totalcount = 0;
+        for (int a = 0; a < 16; a++)
+        {
+            totalcount += tb.counts[a];
+        }
+
+        std::vector<uint8_t> codes;
+        codes.resize(totalcount);
+        istr->read(reinterpret_cast<char *>(codes.data()), totalcount);
+
+        huffmanTable[tb.info] = std::make_pair(tb, codes);
+
+        /*std::unordered_map<uint8_t, uint8_t> counts;
         for (int i = 0; i < 16; i++)
         {
             counts[i] = tb.counts[i];
@@ -190,7 +203,7 @@ void OMJfifFile::parseHuffmanTable(std::shared_ptr<std::istream> istr)
 
             target++;
             counts[i]--;
-        }
+        }*/
     }
 }
 
@@ -236,7 +249,7 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     istr->read(reinterpret_cast<char *>(&range), sizeof(OMJfifStartOfScanRange));
 
-    if (range.spectralEnd != 0x3f)
+    if (range.successive != 0x00)
     {
         throw std::logic_error("not supported");
     }
@@ -311,41 +324,21 @@ void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
     };
 
 nextValue:
-    auto huffTable = huffmanTable[blockDataIndex == 0 ? currentBlock->dcTable : currentBlock->acTable];
-    uint8_t code;
-    int branchidx = 0;
-    while (true)
+    if (!requireBits(16))
     {
-        if (!requireBits(1))
-        {
-            return;
-        }
-
-        if (bitBuffer.popBit())
-        {
-            branchidx = branchidx * 2 + 2;
-        }
-        else
-        {
-            branchidx = branchidx * 2 + 1;
-        }
-
-        if (const bool *b = std::get_if<bool>(&huffTable[branchidx]))
-        {
-            if (!*b)
-            {
-                logpos();
-                // throw std::logic_error("bad code!");
-                return;
-            }
-        }
-        else if (const uint8_t *c = std::get_if<uint8_t>(&huffTable[branchidx]))
-        {
-            code = *c;
-            goto readActual;
-        }
+        return;
     }
 
+    uint8_t code;
+    try
+    {
+        code = fetchCode(blockDataIndex == 0 ? currentBlock->dcTable : currentBlock->acTable);
+    }
+    catch (std::logic_error &e)
+    {
+        logger.warn("{}, skipping", e.what());
+        return;
+    }
 readActual:
     uint8_t datalen = blockDataIndex == 0 ? code : (code & 0xf);
     if (!requireBits(datalen))
@@ -358,23 +351,35 @@ readActual:
         blockDataIndex += (code >> 4);
     }
 
-    auto tempval = (int64_t)bitBuffer.popValue(datalen);
-    if (datalen > 0)
+    if (blockDataIndex <= range.spectralEnd)
     {
-        if ((tempval >> (datalen - 1)) == 0)
+        auto tempval = (int64_t)bitBuffer.popValue(datalen);
+        if (datalen > 0)
         {
-            tempval -= (1 << datalen) - 1;
+            if ((tempval >> (datalen - 1)) == 0)
+            {
+                tempval -= (1 << datalen) - 1;
+            }
         }
+        if (blockDataIndex == 0)
+        {
+            tempval += dcTemp[currentBlock->id];
+            dcTemp[currentBlock->id] = tempval;
+        }
+        blockData[blockDataIndex] = tempval;
     }
-    if (blockDataIndex == 0)
-    {
-        tempval += dcTemp[currentBlock->id];
-        dcTemp[currentBlock->id] = tempval;
-    }
-    blockData[blockDataIndex] = tempval;
 
     if ((code == 0x00 && blockDataIndex != 0) || blockDataIndex >= range.spectralEnd)
     {
+        auto blockHash =
+            binary::hash::hash_compile_time(fmt::format("MCU#{}Channel{}BlkX{}BlkY{}", mcuStatus.mcuid,
+                                                        currentBlock->id, currentBlock->blockX, currentBlock->blockY)
+                                                .c_str());
+        if (blockDataCache.count(blockHash))
+        {
+            std::memcpy(blockData.data(), blockDataCache[blockHash].data(), sizeof(int) * range.spectralBegin);
+        }
+        blockDataCache[blockHash] = blockData;
         parseBlock();
 
         std::memset(blockData.data(), 0, 64 * sizeof(int));
