@@ -30,7 +30,7 @@ OMJfifFile::OMJfifFile() : logger("OMJfifFile", this)
     processorMap[StartOfFrame] = [&](std::shared_ptr<std::istream> istr) { parseStartOfFrame(istr); };
     processorMap[HuffmanTable] = [&](std::shared_ptr<std::istream> istr) { parseHuffmanTable(istr); };
     processorMap[StartOfScan] = [&](std::shared_ptr<std::istream> istr) { parseStartOfScan(istr); };
-    processorMap[ImageData] = [&](std::shared_ptr<std::istream> istr) { parseImageData(istr); };
+    // processorMap[ImageData] = [&](std::shared_ptr<std::istream> istr) { parseImageData(istr); };
     processorMap[EndOfImage] = [&](std::shared_ptr<std::istream> istr) { logger.info("End Of Image"); };
 }
 OMJfifFile::~OMJfifFile()
@@ -249,10 +249,10 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     istr->read(reinterpret_cast<char *>(&range), sizeof(OMJfifStartOfScanRange));
 
-    if (range.successive != 0x00)
+    /*if (range.spectralEnd != 0x3f || range.spectralBegin != 0x00)
     {
         throw std::logic_error("not supported");
-    }
+    }*/
 
     logger.info("{} ~ {} freq", range.spectralBegin, range.spectralEnd);
 
@@ -271,144 +271,25 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     currentBlock = blockids.begin();
 
-    std::memset(blockData.data(), 0, 64 * sizeof(int));
-    blockDataIndex = range.spectralBegin;
-
-    parseImageData(istr);
+    switch (imageType)
+    {
+    case Baseline:
+        parseRawBlocksBaseline(istr);
+        break;
+    default:
+        throw std::logic_error("not supported");
+    }
 }
 
-void OMJfifFile::parseImageData(std::shared_ptr<std::istream> istr)
+void OMJfifFile::bumpBlock()
 {
-    auto pshBit = [&]() -> bool {
-        uint8_t c = istr->peek();
-        istr->ignore(1);
-
-        if (c == 0xff)
-        {
-            if (istr->peek() != 0x00)
-            {
-                logger.warn("abnormal exit! {}/{}", mcuStatus.mcuid, mcuStatus.mcucounts);
-                // throw 0;
-                istr->seekg(-1, std::ios::cur);
-                return false;
-            }
-            else
-            {
-                istr->ignore(1);
-            }
-        }
-
-        bitBuffer.push(c);
-
-        return true;
-    };
-
-    auto requireBits = [&](int b) -> bool {
-        while (bitBuffer.bitsAvailable() < b)
-        {
-            if (!pshBit())
-            {
-                return false;
-            }
-        }
-
-        return true;
-    };
-
-    auto logpos = [&]() {
-        int pp = bitBuffer.bitsAvailable();
-        size_t off = istr->tellg();
-        while (pp > 0)
-        {
-            pp -= 8;
-            off--;
-        }
-
-        logger.info("offset +{:02x}.{}", off, -pp);
-    };
-
-nextValue:
-    uint8_t code;
-    try
+    blockDataIndex = range.spectralBegin;
+    ++currentBlock;
+    if (currentBlock == blockids.end())
     {
-        code = fetchCode(blockDataIndex == 0 ? currentBlock->dcTable : currentBlock->acTable,
-                         [&]() { return requireBits(1); });
+        currentBlock = blockids.begin();
+        ++mcuStatus.mcuid;
     }
-    catch (std::logic_error &e)
-    {
-        logpos();
-        logger.warn("{}, skipping", e.what());
-        return;
-    }
-    uint8_t datalen = blockDataIndex == 0 ? code : (code & 0xf);
-    if (!requireBits(datalen))
-    {
-        return;
-    }
-
-    if (blockDataIndex != 0)
-    {
-        blockDataIndex += (code >> 4);
-    }
-
-    if (blockDataIndex <= range.spectralEnd)
-    {
-        auto tempval = (int64_t)bitBuffer.popValue(datalen);
-        if (datalen > 0)
-        {
-            if ((tempval >> (datalen - 1)) == 0)
-            {
-                tempval -= (1 << datalen) - 1;
-            }
-        }
-        if (blockDataIndex == 0)
-        {
-            tempval += dcTemp[currentBlock->id];
-            dcTemp[currentBlock->id] = tempval;
-        }
-        blockData[blockDataIndex] = tempval;
-    }
-    else
-    {
-        bitBuffer.popValue(datalen);
-        // throw std::logic_error("out of bounds!");
-    }
-
-    if ((code == 0x00 && blockDataIndex != 0) || blockDataIndex >= range.spectralEnd)
-    {
-        auto blockHash =
-            binary::hash::hash_compile_time(fmt::format("MCU#{}Channel{}BlkX{}BlkY{}", mcuStatus.mcuid,
-                                                        currentBlock->id, currentBlock->blockX, currentBlock->blockY)
-                                                .c_str());
-        if (blockDataCache.count(blockHash))
-        {
-            std::memcpy(blockData.data(), blockDataCache[blockHash].data(), sizeof(int) * range.spectralBegin);
-        }
-        blockDataCache[blockHash] = blockData;
-        parseBlock();
-
-        std::memset(blockData.data(), 0, 64 * sizeof(int));
-
-        blockDataIndex = range.spectralBegin;
-        ++currentBlock;
-        if (currentBlock == blockids.end())
-        {
-            currentBlock = blockids.begin();
-            ++mcuStatus.mcuid;
-
-            if (mcuStatus.mcuid >= mcuStatus.mcucounts)
-            {
-                bitBuffer.popValue(bitBuffer.bitsAvailable());
-                return;
-            }
-        }
-    }
-    else
-    {
-        ++blockDataIndex;
-    }
-
-    goto nextValue;
 }
 
 glm::mat3 yccToRgb = glm::mat3(1.0f, 1.0f, 1.0f, 0.0f, -0.344136f, 1.772f, 1.402f, -0.714136f, 0.0f);
@@ -554,7 +435,15 @@ base:
         *t = QuantizationTable;
         break;
     case 0xc0:
+        imageType = Baseline;
+        *t = StartOfFrame;
+        break;
     case 0xc2:
+        imageType = Progressive;
+        *t = StartOfFrame;
+        break;
+    case 0xc3:
+        imageType = Lostless;
         *t = StartOfFrame;
         break;
     case 0xc4:

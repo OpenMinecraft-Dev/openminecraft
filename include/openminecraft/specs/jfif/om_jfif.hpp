@@ -13,6 +13,7 @@
 #include <istream>
 #include <memory>
 #include <unordered_map>
+#include <map>
 #include <variant>
 #include <vector>
 
@@ -150,7 +151,7 @@ enum OMJfifSectionType : uint8_t
     QuantizationTable,
     StartOfFrame,
     HuffmanTable,
-    ImageData,
+    // ImageData,
     StartOfScan,
     EndOfImage,
     Unknown
@@ -167,6 +168,13 @@ struct OMJfifBlockStatus
     int blockY;
     int scaleX;
     int scaleY;
+};
+
+enum OMJfifImageType
+{
+    Baseline,
+    Progressive,
+    Lostless
 };
 
 class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
@@ -190,7 +198,8 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     void parseStartOfFrame(std::shared_ptr<std::istream>);
     void parseHuffmanTable(std::shared_ptr<std::istream>);
     void parseStartOfScan(std::shared_ptr<std::istream>);
-    void parseImageData(std::shared_ptr<std::istream>);
+    void bumpBlock();
+    void parseRawBlocksBaseline(std::shared_ptr<std::istream>);
 
     uint8_t *getData()
     {
@@ -209,6 +218,10 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     void parseBlock();
     uint8_t fetchCode(uint8_t tableid, std::function<bool()> f);
 
+    bool bufferReqBits(std::shared_ptr<std::istream>, int b);
+    void bufferLogStatus(std::shared_ptr<std::istream>);
+    int64_t bufferReadExtra(std::shared_ptr<std::istream>, int b);
+
     OMJfifApp0Header headerApp0;
     OMJfifApp1Header headerApp1;
     OMJfifApp2Header headerApp2;
@@ -216,16 +229,17 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     OMJfifApp14Header headerApp14;
     OMJfifStartOfFrame headerStartOfFrame;
 
+    OMJfifImageType imageType = Baseline;
+
     std::unordered_map<int, int> dcTemp;
     std::vector<OMJfifBlockStatus, mem::OMStlAllocator<allocatorTag, OMJfifBlockStatus>> blockids;
     std::vector<OMJfifBlockStatus, mem::OMStlAllocator<allocatorTag, OMJfifBlockStatus>>::iterator currentBlock;
 
     std::array<int, 64> blockData;
-    std::unordered_map<binary::hash::hash_t, std::array<int, 64>> blockDataCache;
     int blockDataIndex = 0;
 
     OMJfifStartOfScanRange range;
-    std::unordered_map<uint8_t, std::pair<OMJfifHuffmanTable, std::vector<uint8_t>>> huffmanTable;
+    std::map<uint8_t, std::pair<OMJfifHuffmanTable, std::vector<uint8_t>>> huffmanTable;
     std::unordered_map<uint8_t, OMJfifComponentStat> components;
 
     std::vector<OMJfifThumbnailPixel, mem::OMStlAllocator<allocatorTag, OMJfifThumbnailPixel>> thumbnail;
