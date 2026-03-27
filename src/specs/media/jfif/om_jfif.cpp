@@ -105,12 +105,27 @@ void OMJfifFile::parseStartOfFrame(std::shared_ptr<std::istream> istr)
     headerStartOfFrame.length = binary::be16ToNative(headerStartOfFrame.length);
     headerStartOfFrame.width = binary::be16ToNative(headerStartOfFrame.width);
     headerStartOfFrame.height = binary::be16ToNative(headerStartOfFrame.height);
+    int mcuw = 0;
+    int mcuh = 0;
     for (int i = 0; i < headerStartOfFrame.components; i++)
     {
         OMJfifComponentStat st;
         istr->read(reinterpret_cast<char *>(&st), sizeof(OMJfifComponentStat));
         components[st.id] = st;
+
+        auto factor = st.factor;
+
+        mcuw = std::max(mcuw, factor >> 4 & 0xf);
+        mcuh = std::max(mcuh, factor & 0xf);
     }
+    mcuw *= 8;
+    mcuh *= 8;
+    mcuStatus.mcuxcount = std::ceil(static_cast<float>(headerStartOfFrame.width) / mcuw);
+    mcuStatus.mcuycount = std::ceil(static_cast<float>(headerStartOfFrame.height) / mcuh);
+    mcuStatus.mcuwidth = mcuw;
+    mcuStatus.mcuheight = mcuh;
+
+    mcuStatus.mcucounts = mcuStatus.mcuxcount * mcuStatus.mcuycount;
 
     data.resize(getWidth() * getHeight() * 4);
 }
@@ -145,7 +160,6 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
     istr->read(reinterpret_cast<char *>(&sc), sizeof(OMJfifStartOfScan));
     sc.length = binary::be16ToNative(sc.length);
 
-    int mcuw = 0, mcuh = 0;
     dcTemp.clear();
     blockids.clear();
     for (int i = 0; i < sc.components; i++)
@@ -164,9 +178,6 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
             }
         }
 
-        mcuw = std::max(mcuw, factor >> 4 & 0xf);
-        mcuh = std::max(mcuh, factor & 0xf);
-
         logger.info("0x{:02x} {} {} dc{} ac{}", sel.selector, factor >> 4 & 0xf, factor & 0xf, sel.table >> 4,
                     sel.table & 0xf);
 
@@ -175,28 +186,23 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     for (auto &bid : blockids)
     {
-        bid.scaleX = mcuw / bid.scaleX;
-        bid.scaleY = mcuh / bid.scaleY;
+        bid.scaleX = mcuStatus.mcuwidth / 8 / bid.scaleX;
+        bid.scaleY = mcuStatus.mcuheight / 8 / bid.scaleY;
     }
 
     istr->read(reinterpret_cast<char *>(&range), sizeof(OMJfifStartOfScanRange));
 
     logger.info("{} ~ {} freq", range.spectralBegin, range.spectralEnd);
 
-    mcuw *= 8;
-    mcuh *= 8;
-
-    mcuStatus.mcuxcount = std::ceil(static_cast<float>(headerStartOfFrame.width) / mcuw);
-    mcuStatus.mcuycount = std::ceil(static_cast<float>(headerStartOfFrame.height) / mcuh);
-    mcuStatus.mcuwidth = mcuw;
-    mcuStatus.mcuheight = mcuh;
-
-    mcuStatus.mcucounts = mcuStatus.mcuxcount * mcuStatus.mcuycount;
     mcuStatus.mcuid = 0;
 
     logger.info("{} mcus, {}x{} {}", mcuStatus.mcucounts, mcuStatus.mcuwidth, mcuStatus.mcuheight, blockids.size());
 
     currentBlock = blockids.begin();
+
+    if (currentBlock->id == 0x01 && range.successive == 0x21) {
+	    istr->ignore(1000000000);
+    }
 
     switch (imageType)
     {

@@ -5,13 +5,20 @@ namespace openminecraft::specs::jfif
 {
 void OMJfifFile::parseRawBlocksProgressive(std::shared_ptr<std::istream> istr)
 {
+    logger.error("{:02x}", range.successive);
     if (range.spectralBegin == 0)
     {
         parseRawBlocksProgressiveDC(istr);
     }
     else
     {
-        parseRawBlocksProgressiveAC(istr);
+        try
+        {
+            parseRawBlocksProgressiveAC(istr);
+        }
+        catch (std::logic_error &e)
+        {
+        }
     }
 }
 void OMJfifFile::parseRawBlocksProgressiveDC(std::shared_ptr<std::istream> istr)
@@ -25,6 +32,7 @@ void OMJfifFile::parseRawBlocksProgressiveDC(std::shared_ptr<std::istream> istr)
     while (mcuStatus.mcuid < mcuStatus.mcucounts)
     {
         std::memset(blockData.data(), 0x00, sizeof(int) * 64);
+        loadBlockCache();
         if ((range.successive >> 4) == 0)
         {
             auto dccode = fetchCode(currentBlock->dcTable, [&]() { return bufferReqBits(istr, 1); });
@@ -55,6 +63,7 @@ void OMJfifFile::parseRawBlocksProgressiveDC(std::shared_ptr<std::istream> istr)
 void OMJfifFile::parseRawBlocksProgressiveAC(std::shared_ptr<std::istream> istr)
 {
     eobRun = 0;
+    int shift = range.successive & 0xf;
     while (mcuStatus.mcuid < mcuStatus.mcucounts)
     {
         if ((range.successive >> 4) == 0)
@@ -94,7 +103,7 @@ void OMJfifFile::parseRawBlocksProgressiveAC(std::shared_ptr<std::istream> istr)
                 {
                     blockDataIndex += run;
                     bufferReqBits(istr, size);
-                    blockData[blockDataIndex] = bufferReadExtra(istr, size);
+                    blockData[blockDataIndex] = bufferReadExtra(istr, size) * (1 << shift);
                     ++blockDataIndex;
                 }
             }
