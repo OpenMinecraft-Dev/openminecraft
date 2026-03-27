@@ -8,8 +8,14 @@
 namespace openminecraft::specs::jfif
 {
 constexpr float PI_CONSTANT = 3.14159265358979323846;
+extern double idctMap[8][8];
+extern bool idctInited;
+void idctInit();
 static void idct_1d(const double in[8], double out[8])
 {
+    if (!idctInited) {
+        idctInit();
+    }
     const double sqrt2 = 1.4142135623730951;
     for (int i = 0; i < 8; ++i)
     {
@@ -17,7 +23,7 @@ static void idct_1d(const double in[8], double out[8])
         for (int k = 0; k < 8; ++k)
         {
             double c = (k == 0) ? 1.0 / sqrt2 : 1.0;
-            sum += c * in[k] * std::cos((2 * i + 1) * k * PI_CONSTANT / 16.0);
+	    sum += c * in[k] * idctMap[i][k];
         }
         out[i] = sum;
     }

@@ -137,73 +137,6 @@ void OMJfifFile::parseHuffmanTable(std::shared_ptr<std::istream> istr)
         istr->read(reinterpret_cast<char *>(codes.data()), totalcount);
 
         huffmanTable[tb.info] = std::make_pair(tb, codes);
-
-        /*std::unordered_map<uint8_t, uint8_t> counts;
-        for (int i = 0; i < 16; i++)
-        {
-            counts[i] = tb.counts[i];
-        }
-
-        int maxlength = 0;
-
-        for (int i = 0; i < 16; i++)
-        {
-            if (counts[i])
-            {
-                maxlength = i + 1;
-            }
-        }
-
-        logger.info("Table #{:02x}", tb.info);
-
-        auto &htb = huffmanTable[tb.info];
-        htb.resize(std::pow(2, maxlength + 1));
-        htb[0] = true;
-
-        int currentIdx = 0;
-        auto leftNode = [&]() { currentIdx = currentIdx * 2 + 1; };
-        auto rightNode = [&]() { currentIdx = currentIdx * 2 + 2; };
-
-        int bitlength = 1;
-        int target = 0;
-
-        for (int i = 0; i < 16;)
-        {
-            if (counts[i] == 0)
-            {
-                i++;
-                continue;
-            }
-            uint8_t ss;
-            istr->read(reinterpret_cast<char *>(&ss), 1);
-
-            if (bitlength < i + 1)
-            {
-                target <<= (i + 1 - bitlength);
-                bitlength = i + 1;
-            }
-
-            for (int bb = bitlength - 1; bb >= 0; bb--)
-            {
-                if ((target >> bb) & 1)
-                {
-                    rightNode();
-                }
-                else
-                {
-                    leftNode();
-                }
-
-                htb[currentIdx] = true;
-            }
-
-            htb[currentIdx] = ss;
-            logger.info("{} {:b} {:02x}", bitlength, target, ss);
-            currentIdx = 0;
-
-            target++;
-            counts[i]--;
-        }*/
     }
 }
 
@@ -249,11 +182,6 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     istr->read(reinterpret_cast<char *>(&range), sizeof(OMJfifStartOfScanRange));
 
-    /*if (range.spectralEnd != 0x3f || range.spectralBegin != 0x00)
-    {
-        throw std::logic_error("not supported");
-    }*/
-
     logger.info("{} ~ {} freq", range.spectralBegin, range.spectralEnd);
 
     mcuw *= 8;
@@ -275,6 +203,9 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
     {
     case Baseline:
         parseRawBlocksBaseline(istr);
+        break;
+    case Progressive:
+        parseRawBlocksProgressive(istr);
         break;
     default:
         throw std::logic_error("not supported");
@@ -303,7 +234,7 @@ static void modPixel(uint8_t *data, uint8_t mod, uint8_t channelid)
         data[0] = std::clamp(raw.r, 0.0f, 255.0f);
         data[1] = std::clamp(raw.g, 0.0f, 255.0f);
         data[2] = std::clamp(raw.b, 0.0f, 255.0f);
-        data[3] = 0xff;
+        data[3] = 0b111;
     }
 
     switch (channelid)
@@ -337,6 +268,16 @@ static void modPixel(uint8_t *data, uint8_t mod, uint8_t channelid)
 
 void OMJfifFile::parseBlock()
 {
+    auto hashstr = fmt::format("MCU#{}Cnl#{}Bx{}By{}", mcuStatus.mcuid, currentBlock->id, currentBlock->blockX,
+                               currentBlock->blockY);
+    auto blkhash = binary::hash::hash_compile_time(hashstr.c_str());
+
+    if (blockDataCache.count(blkhash))
+    {
+        std::memcpy(blockData.data(), blockDataCache[blkhash].data(), sizeof(int) * range.spectralBegin);
+    }
+    blockDataCache[blkhash] = blockData;
+
     std::array<int, 64> unzig;
     std::array<int, 64> target;
     for (int i = 0; i < 64; i++)
@@ -401,6 +342,7 @@ base:
     istr->read(reinterpret_cast<char *>(&flag), 1);
     if (flag != 0xff)
     {
+	throw std::logic_error("not 0xff!");
         goto base;
     }
 

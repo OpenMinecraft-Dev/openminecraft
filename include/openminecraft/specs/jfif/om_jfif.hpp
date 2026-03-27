@@ -200,6 +200,9 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     void parseStartOfScan(std::shared_ptr<std::istream>);
     void bumpBlock();
     void parseRawBlocksBaseline(std::shared_ptr<std::istream>);
+    void parseRawBlocksProgressive(std::shared_ptr<std::istream>);
+    void parseRawBlocksProgressiveDC(std::shared_ptr<std::istream>);
+    void parseRawBlocksProgressiveAC(std::shared_ptr<std::istream>);
 
     uint8_t *getData()
     {
@@ -236,6 +239,7 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     std::vector<OMJfifBlockStatus, mem::OMStlAllocator<allocatorTag, OMJfifBlockStatus>>::iterator currentBlock;
 
     std::array<int, 64> blockData;
+    std::unordered_map<binary::hash::hash_t, std::array<int, 64>> blockDataCache;
     int blockDataIndex = 0;
 
     OMJfifStartOfScanRange range;
@@ -248,6 +252,8 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     util::OMBitBuffer bitBuffer;
 
     log::OMLogger logger;
+
+    int eobRun = 0;
 
     struct
     {

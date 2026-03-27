@@ -21,7 +21,7 @@ void OMJfifFile::parseRawBlocksBaseline(std::shared_ptr<std::istream> istr)
         auto dcvalue = bufferReadExtra(istr, dccode) + dcTemp[currentBlock->id];
         dcTemp[currentBlock->id] = dcvalue;
         blockData[0] = dcvalue;
-	blockDataIndex++;
+        blockDataIndex++;
 
         while (blockDataIndex <= 63)
         {
@@ -52,7 +52,6 @@ void OMJfifFile::parseRawBlocksBaseline(std::shared_ptr<std::istream> istr)
         parseBlock();
         bumpBlock();
     }
-    bufferLogStatus(istr);
     bitBuffer.popValue(bitBuffer.bitsAvailable());
 }
 } // namespace openminecraft::specs::jfif
