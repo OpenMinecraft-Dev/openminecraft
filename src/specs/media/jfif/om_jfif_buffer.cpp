@@ -15,7 +15,6 @@ bool OMJfifFile::bufferReqBits(std::shared_ptr<std::istream> istr, int b)
             if (istr->peek() != 0x00)
             {
                 logger.warn("abnormal exit! {}/{}", mcuStatus.mcuid, mcuStatus.mcucounts);
-                // throw 0;
                 istr->seekg(-1, std::ios::cur);
                 return false;
             }

@@ -1,4 +1,5 @@
 #include "openminecraft/specs/jfif/om_jfif.hpp"
+#include <stdexcept>
 
 namespace openminecraft::specs::jfif
 {
@@ -46,32 +47,33 @@ void OMJfifFile::parseRawBlocksProgressiveDC(std::shared_ptr<std::istream> istr)
             }
         }
         parseBlock();
+        saveBlockCache();
         bumpBlock();
     }
+    bitBuffer.popValue(bitBuffer.bitsAvailable());
 }
 void OMJfifFile::parseRawBlocksProgressiveAC(std::shared_ptr<std::istream> istr)
 {
+    eobRun = 0;
     while (mcuStatus.mcuid < mcuStatus.mcucounts)
     {
-        std::memset(blockData.data(), 0x00, sizeof(int) * 64);
         if ((range.successive >> 4) == 0)
         {
-            int shift = range.successive & 0xf;
-	    blockDataIndex = range.spectralBegin;
-
             if (eobRun)
             {
-		--eobRun;
-		bumpBlock();
-		continue;
+                --eobRun;
+                bumpBlock();
+                continue;
             }
 
+            std::memset(blockData.data(), 0x00, sizeof(int) * 64);
+            loadBlockCache();
+            blockDataIndex = range.spectralBegin;
             while (blockDataIndex <= range.spectralEnd)
             {
                 auto accode = fetchCode(currentBlock->acTable, [&]() { return bufferReqBits(istr, 1); });
                 auto size = accode & 0xf;
                 auto run = accode >> 4;
-
                 if (size == 0)
                 {
                     if (run < 15)
@@ -80,12 +82,11 @@ void OMJfifFile::parseRawBlocksProgressiveAC(std::shared_ptr<std::istream> istr)
                         if (run)
                         {
                             bufferReqBits(istr, run);
-                            eobRun += bufferReadExtra(istr, run);
+                            eobRun += bitBuffer.popValue(run);
                         }
                         --eobRun;
-			parseBlock();
-			bumpBlock();
-			break;
+
+                        goto endBlock;
                     }
                     blockDataIndex += 16;
                 }
@@ -93,17 +94,22 @@ void OMJfifFile::parseRawBlocksProgressiveAC(std::shared_ptr<std::istream> istr)
                 {
                     blockDataIndex += run;
                     bufferReqBits(istr, size);
-                    blockData[blockDataIndex] = bufferReadExtra(istr, size) * (1 << shift);
-                    blockDataIndex++;
+                    blockData[blockDataIndex] = bufferReadExtra(istr, size);
+                    ++blockDataIndex;
                 }
             }
+
+        endBlock:
+            saveBlockCache();
             parseBlock();
             bumpBlock();
         }
         else
         {
+            throw std::logic_error("non zero successive not supported");
         }
     }
-    bufferLogStatus(istr);
+
+    bitBuffer.popValue(bitBuffer.bitsAvailable());
 }
 } // namespace openminecraft::specs::jfif

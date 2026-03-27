@@ -11,9 +11,9 @@
 #include <cstdint>
 #include <functional>
 #include <istream>
+#include <map>
 #include <memory>
 #include <unordered_map>
-#include <map>
 #include <variant>
 #include <vector>
 
@@ -199,6 +199,8 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     void parseHuffmanTable(std::shared_ptr<std::istream>);
     void parseStartOfScan(std::shared_ptr<std::istream>);
     void bumpBlock();
+    void loadBlockCache();
+    void saveBlockCache();
     void parseRawBlocksBaseline(std::shared_ptr<std::istream>);
     void parseRawBlocksProgressive(std::shared_ptr<std::istream>);
     void parseRawBlocksProgressiveDC(std::shared_ptr<std::istream>);

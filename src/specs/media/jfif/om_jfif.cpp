@@ -30,7 +30,6 @@ OMJfifFile::OMJfifFile() : logger("OMJfifFile", this)
     processorMap[StartOfFrame] = [&](std::shared_ptr<std::istream> istr) { parseStartOfFrame(istr); };
     processorMap[HuffmanTable] = [&](std::shared_ptr<std::istream> istr) { parseHuffmanTable(istr); };
     processorMap[StartOfScan] = [&](std::shared_ptr<std::istream> istr) { parseStartOfScan(istr); };
-    // processorMap[ImageData] = [&](std::shared_ptr<std::istream> istr) { parseImageData(istr); };
     processorMap[EndOfImage] = [&](std::shared_ptr<std::istream> istr) { logger.info("End Of Image"); };
 }
 OMJfifFile::~OMJfifFile()
@@ -266,7 +265,7 @@ static void modPixel(uint8_t *data, uint8_t mod, uint8_t channelid)
     }
 }
 
-void OMJfifFile::parseBlock()
+void OMJfifFile::loadBlockCache()
 {
     auto hashstr = fmt::format("MCU#{}Cnl#{}Bx{}By{}", mcuStatus.mcuid, currentBlock->id, currentBlock->blockX,
                                currentBlock->blockY);
@@ -276,8 +275,22 @@ void OMJfifFile::parseBlock()
     {
         std::memcpy(blockData.data(), blockDataCache[blkhash].data(), sizeof(int) * range.spectralBegin);
     }
-    blockDataCache[blkhash] = blockData;
+    else
+    {
+        std::memset(blockData.data(), 0x00, sizeof(int) * 64);
+    }
+}
 
+void OMJfifFile::saveBlockCache()
+{
+    auto hashstr = fmt::format("MCU#{}Cnl#{}Bx{}By{}", mcuStatus.mcuid, currentBlock->id, currentBlock->blockX,
+                               currentBlock->blockY);
+    auto blkhash = binary::hash::hash_compile_time(hashstr.c_str());
+    blockDataCache[blkhash] = blockData;
+}
+
+void OMJfifFile::parseBlock()
+{
     std::array<int, 64> unzig;
     std::array<int, 64> target;
     for (int i = 0; i < 64; i++)
@@ -342,7 +355,7 @@ base:
     istr->read(reinterpret_cast<char *>(&flag), 1);
     if (flag != 0xff)
     {
-	throw std::logic_error("not 0xff!");
+        // throw std::logic_error("not 0xff!");
         goto base;
     }
 
