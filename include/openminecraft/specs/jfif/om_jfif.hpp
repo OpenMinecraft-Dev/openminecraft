@@ -220,6 +220,7 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     }
 
   private:
+    void calcMcuSize();
     void parseBlock();
     uint8_t fetchCode(uint8_t tableid, std::function<bool()> f);
 
@@ -263,6 +264,8 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
         int mcucounts = 0;
         int mcuwidth, mcuheight;
         int mcuxcount, mcuycount;
+
+	int mcumaxwidth, mcumaxheight;
     } mcuStatus;
 
     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> data;

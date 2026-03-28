@@ -118,14 +118,11 @@ void OMJfifFile::parseStartOfFrame(std::shared_ptr<std::istream> istr)
         mcuw = std::max(mcuw, factor >> 4 & 0xf);
         mcuh = std::max(mcuh, factor & 0xf);
     }
-    mcuw *= 8;
-    mcuh *= 8;
-    mcuStatus.mcuxcount = std::ceil(static_cast<float>(headerStartOfFrame.width) / mcuw);
-    mcuStatus.mcuycount = std::ceil(static_cast<float>(headerStartOfFrame.height) / mcuh);
-    mcuStatus.mcuwidth = mcuw;
-    mcuStatus.mcuheight = mcuh;
-
-    mcuStatus.mcucounts = mcuStatus.mcuxcount * mcuStatus.mcuycount;
+    mcuStatus.mcumaxwidth = mcuw;
+    mcuStatus.mcumaxheight = mcuh;
+    mcuStatus.mcuwidth = mcuw * 8;
+    mcuStatus.mcuheight = mcuh * 8;
+    calcMcuSize();
 
     data.resize(getWidth() * getHeight() * 4);
 }
@@ -154,6 +151,13 @@ void OMJfifFile::parseHuffmanTable(std::shared_ptr<std::istream> istr)
     }
 }
 
+void OMJfifFile::calcMcuSize()
+{
+    mcuStatus.mcuxcount = std::ceil(static_cast<float>(headerStartOfFrame.width) / mcuStatus.mcuwidth);
+    mcuStatus.mcuycount = std::ceil(static_cast<float>(headerStartOfFrame.height) / mcuStatus.mcuheight);
+    mcuStatus.mcucounts = mcuStatus.mcuxcount * mcuStatus.mcuycount;
+}
+
 void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 {
     OMJfifStartOfScan sc;
@@ -162,38 +166,58 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     dcTemp.clear();
     blockids.clear();
-    for (int i = 0; i < sc.components; i++)
+    if (sc.components == 1)
     {
         OMJfifStartOfScanSelector sel;
         istr->read(reinterpret_cast<char *>(&sel), sizeof(OMJfifStartOfScanSelector));
 
-        auto factor = components[sel.selector].factor;
-        for (int by = 0; by < (factor & 0xf); by++)
-        {
-            for (int bx = 0; bx < (factor >> 4 & 0xf); bx++)
-            {
-                blockids.push_back({sel.selector, static_cast<uint8_t>(sel.table >> 4),
-                                    static_cast<uint8_t>(sel.table & 0xf | 0x10), components[sel.selector].tableId, bx,
-                                    by, (factor >> 4 & 0xf), (factor & 0xf)});
-            }
-        }
-
         dcTemp[sel.selector] = 0;
-    }
 
-    for (auto &bid : blockids)
+        auto factor = components[sel.selector].factor;
+
+        blockids.push_back({sel.selector, static_cast<uint8_t>(sel.table >> 4),
+                            static_cast<uint8_t>(sel.table & 0xf | 0x10), components[sel.selector].tableId, 0, 0,
+                            mcuStatus.mcumaxwidth / (factor >> 4 & 0xf), mcuStatus.mcumaxheight / (factor & 0xf)});
+        mcuStatus.mcuwidth = blockids[0].scaleX * 8;
+        mcuStatus.mcuheight = blockids[0].scaleY * 8;
+        calcMcuSize();
+    }
+    else
     {
-        bid.scaleX = mcuStatus.mcuwidth / 8 / bid.scaleX;
-        bid.scaleY = mcuStatus.mcuheight / 8 / bid.scaleY;
+        int mcuw = 0, mcuh = 0;
+        for (int i = 0; i < sc.components; i++)
+        {
+            OMJfifStartOfScanSelector sel;
+            istr->read(reinterpret_cast<char *>(&sel), sizeof(OMJfifStartOfScanSelector));
+
+            auto factor = components[sel.selector].factor;
+            for (int by = 0; by < (factor & 0xf); by++)
+            {
+                for (int bx = 0; bx < (factor >> 4 & 0xf); bx++)
+                {
+                    blockids.push_back({sel.selector, static_cast<uint8_t>(sel.table >> 4),
+                                        static_cast<uint8_t>(sel.table & 0xf | 0x10), components[sel.selector].tableId,
+                                        bx, by, (factor >> 4 & 0xf), (factor & 0xf)});
+                }
+            }
+
+            dcTemp[sel.selector] = 0;
+
+            mcuw = std::max(mcuw, factor >> 4 & 0xf);
+            mcuh = std::max(mcuh, factor & 0xf);
+        }
+        mcuStatus.mcuwidth = mcuw * 8;
+        mcuStatus.mcuheight = mcuh * 8;
+        calcMcuSize();
+
+        for (auto &bid : blockids)
+        {
+            bid.scaleX = mcuw / bid.scaleX;
+            bid.scaleY = mcuh / bid.scaleY;
+        }
     }
 
     istr->read(reinterpret_cast<char *>(&range), sizeof(OMJfifStartOfScanRange));
-
-    /*if (blockids[0].id == 0x01 && range.successive == 0x10)
-    {
-        istr->ignore(1000000000);
-        return;
-    }*/
 
     mcuStatus.mcuid = 0;
 
@@ -268,13 +292,14 @@ static void modPixel(uint8_t *data, uint8_t mod, uint8_t channelid)
 
 void OMJfifFile::loadBlockCache()
 {
-    auto hashstr = fmt::format("MCU#{}Cnl#{}Bx{}By{}", mcuStatus.mcuid, currentBlock->id, currentBlock->blockX,
-                               currentBlock->blockY);
+    int mcux = mcuStatus.mcuid % mcuStatus.mcuxcount;                                               int mcuy = mcuStatus.mcuid / mcuStatus.mcuxcount;
+    int actualY = mcuy * mcuStatus.mcuheight + (currentBlock->blockY * 8) * currentBlock->scaleY;
+    int actualX = mcux * mcuStatus.mcuwidth + (currentBlock->blockX * 8) * currentBlock->scaleX;
+    auto hashstr = fmt::format("Cnl#{}x{}y{}", currentBlock->id, actualX, actualY);
     auto blkhash = binary::hash::hash_compile_time(hashstr.c_str());
 
     if (blockDataCache.count(blkhash))
     {
-        // std::memcpy(blockData.data(), blockDataCache[blkhash].data(), sizeof(int) * range.spectralBegin);
         std::memcpy(blockData.data(), blockDataCache[blkhash].data(), sizeof(int) * 64);
     }
     else
@@ -285,8 +310,10 @@ void OMJfifFile::loadBlockCache()
 
 void OMJfifFile::saveBlockCache()
 {
-    auto hashstr = fmt::format("MCU#{}Cnl#{}Bx{}By{}", mcuStatus.mcuid, currentBlock->id, currentBlock->blockX,
-                               currentBlock->blockY);
+    int mcux = mcuStatus.mcuid % mcuStatus.mcuxcount;                                               int mcuy = mcuStatus.mcuid / mcuStatus.mcuxcount;
+    int actualY = mcuy * mcuStatus.mcuheight + (currentBlock->blockY * 8) * currentBlock->scaleY;
+    int actualX = mcux * mcuStatus.mcuwidth + (currentBlock->blockX * 8) * currentBlock->scaleX;
+    auto hashstr = fmt::format("Cnl#{}x{}y{}", currentBlock->id, actualX, actualY);
     auto blkhash = binary::hash::hash_compile_time(hashstr.c_str());
     blockDataCache[blkhash] = blockData;
 }
@@ -357,7 +384,6 @@ base:
     istr->read(reinterpret_cast<char *>(&flag), 1);
     if (flag != 0xff)
     {
-        // throw std::logic_error("not 0xff!");
         goto base;
     }
 
