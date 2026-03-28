@@ -16,5 +16,5 @@ with open("test2.bin", "rb") as ff:
 
 fig, ax = plt.subplots(figsize = (width / 100, height / 100))
 ax.imshow(np.array(content).reshape((height, width, 4)))
-plt.savefig("/storage/emulated/0/output.png")
-# plt.show()
+# plt.savefig("/storage/emulated/0/output.png")
+plt.show()

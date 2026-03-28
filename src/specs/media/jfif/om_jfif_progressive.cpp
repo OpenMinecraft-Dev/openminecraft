@@ -18,7 +18,7 @@ void OMJfifFile::parseRawBlocksProgressive(std::shared_ptr<std::istream> istr)
         }
         catch (std::logic_error &e)
         {
-            logger.error("{} {}", e.what(), bitBuffer.bitsAvailable());
+            logger.error("{}", e.what());
         }
     }
 }
@@ -50,6 +50,7 @@ void OMJfifFile::parseRawBlocksProgressiveDC(std::shared_ptr<std::istream> istr)
         }
         else
         {
+            bufferReqBits(istr, 1);
             if (bitBuffer.popBit())
             {
                 blockData[0] += (1 << succlow);
@@ -116,7 +117,110 @@ void OMJfifFile::parseRawBlocksProgressiveAC(std::shared_ptr<std::istream> istr)
         }
         else
         {
-	    throw std::logic_error("not supported");
+            auto bit = 1 << (range.successive & 0xf);
+
+            std::memset(blockData.data(), 0x00, sizeof(int) * 64);
+            loadBlockCache();
+
+            if (eobRun)
+            {
+                --eobRun;
+                for (int k = range.spectralBegin; k <= range.spectralEnd; ++k)
+                {
+                    int *p = &blockData[k];
+                    if (*p != 0)
+                    {
+                        bufferReqBits(istr, 1);
+                        if (bitBuffer.popBit())
+                            if ((*p & bit) == 0)
+                            {
+                                if (*p > 0)
+                                    *p += bit;
+                                else
+                                    *p -= bit;
+                            }
+                    }
+                }
+
+                parseBlock();
+                saveBlockCache();
+                bumpBlock();
+            }
+            else
+            {
+                blockDataIndex = range.spectralBegin;
+                do
+                {
+                    int r, s;
+                    auto rs = fetchCode(currentBlock->acTable, [&]() { return bufferReqBits(istr, 1); });
+                    s = rs & 15;
+                    r = rs >> 4;
+                    if (s == 0)
+                    {
+                        if (r < 15)
+                        {
+                            eobRun = (1 << r) - 1;
+                            if (r)
+                            {
+                                bufferReqBits(istr, r);
+                                eobRun += bitBuffer.popValue(r);
+                            }
+                            r = 64; // force end of block
+                        }
+                        else
+                        {
+                            // r=15 s=0 should write 16 0s, so we just do
+                            // a run of 15 0s and then write s (which is 0),
+                            // so we don't have to do anything special here
+                        }
+                    }
+                    else
+                    {
+                        if (s != 1)
+                        {
+                            throw std::logic_error("cur");
+                        }
+                        // sign bit
+                        bufferReqBits(istr, 1);
+                        if (bitBuffer.popBit())
+                            s = bit;
+                        else
+                            s = -bit;
+                    }
+
+                    // advance by r
+                    while (blockDataIndex <= range.spectralEnd)
+                    {
+                        auto *p = &blockData[blockDataIndex];
+                        blockDataIndex++;
+                        if (*p != 0)
+                        {
+                            bufferReqBits(istr, 1);
+                            if (bitBuffer.popBit())
+                                if ((*p & bit) == 0)
+                                {
+                                    if (*p > 0)
+                                        *p += bit;
+                                    else
+                                        *p -= bit;
+                                }
+                        }
+                        else
+                        {
+                            if (r == 0)
+                            {
+                                *p = (short)s;
+                                break;
+                            }
+                            --r;
+                        }
+                    }
+                } while (blockDataIndex <= range.spectralEnd);
+
+                parseBlock();
+                saveBlockCache();
+                bumpBlock();
+            }
         }
     }
 

@@ -189,10 +189,11 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     istr->read(reinterpret_cast<char *>(&range), sizeof(OMJfifStartOfScanRange));
 
-    if (blockids[0].id == 0x01 && range.successive == 0x10) {
+    /*if (blockids[0].id == 0x01 && range.successive == 0x10)
+    {
         istr->ignore(1000000000);
-	return;
-    }
+        return;
+    }*/
 
     mcuStatus.mcuid = 0;
 
@@ -273,7 +274,8 @@ void OMJfifFile::loadBlockCache()
 
     if (blockDataCache.count(blkhash))
     {
-        std::memcpy(blockData.data(), blockDataCache[blkhash].data(), sizeof(int) * range.spectralBegin);
+        // std::memcpy(blockData.data(), blockDataCache[blkhash].data(), sizeof(int) * range.spectralBegin);
+        std::memcpy(blockData.data(), blockDataCache[blkhash].data(), sizeof(int) * 64);
     }
     else
     {
