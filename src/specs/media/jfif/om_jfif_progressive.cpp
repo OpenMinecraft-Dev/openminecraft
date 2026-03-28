@@ -18,6 +18,7 @@ void OMJfifFile::parseRawBlocksProgressive(std::shared_ptr<std::istream> istr)
         }
         catch (std::logic_error &e)
         {
+            logger.error("{}", e.what());
         }
     }
 }
@@ -115,7 +116,7 @@ void OMJfifFile::parseRawBlocksProgressiveAC(std::shared_ptr<std::istream> istr)
         }
         else
         {
-            throw std::logic_error("non zero successive not supported");
+	    throw std::logic_error("not supported");
         }
     }
 

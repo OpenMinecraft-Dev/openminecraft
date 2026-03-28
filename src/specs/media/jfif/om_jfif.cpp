@@ -200,8 +200,10 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     currentBlock = blockids.begin();
 
-    if (currentBlock->id == 0x01 && range.successive == 0x21) {
-	    istr->ignore(1000000000);
+    if (currentBlock->id == 0x01 && range.successive == 0x10)
+    {
+        istr->ignore(1000000000);
+        return;
     }
 
     switch (imageType)
