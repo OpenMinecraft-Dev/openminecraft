@@ -178,9 +178,6 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
             }
         }
 
-        logger.info("0x{:02x} {} {} dc{} ac{}", sel.selector, factor >> 4 & 0xf, factor & 0xf, sel.table >> 4,
-                    sel.table & 0xf);
-
         dcTemp[sel.selector] = 0;
     }
 
@@ -192,19 +189,14 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
 
     istr->read(reinterpret_cast<char *>(&range), sizeof(OMJfifStartOfScanRange));
 
-    logger.info("{} ~ {} freq", range.spectralBegin, range.spectralEnd);
+    if (blockids[0].id == 0x01 && range.successive == 0x10) {
+        istr->ignore(1000000000);
+	return;
+    }
 
     mcuStatus.mcuid = 0;
 
-    logger.info("{} mcus, {}x{} {}", mcuStatus.mcucounts, mcuStatus.mcuwidth, mcuStatus.mcuheight, blockids.size());
-
     currentBlock = blockids.begin();
-
-    if (currentBlock->id == 0x01 && range.successive == 0x10)
-    {
-        istr->ignore(1000000000);
-        return;
-    }
 
     switch (imageType)
     {

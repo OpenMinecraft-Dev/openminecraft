@@ -5,7 +5,7 @@ namespace openminecraft::specs::jfif
 {
 void OMJfifFile::parseRawBlocksProgressive(std::shared_ptr<std::istream> istr)
 {
-    logger.error("{:02x}", range.successive);
+    bitBuffer.popValue(bitBuffer.bitsAvailable());
     if (range.spectralBegin == 0)
     {
         parseRawBlocksProgressiveDC(istr);
@@ -18,7 +18,7 @@ void OMJfifFile::parseRawBlocksProgressive(std::shared_ptr<std::istream> istr)
         }
         catch (std::logic_error &e)
         {
-            logger.error("{}", e.what());
+            logger.error("{} {}", e.what(), bitBuffer.bitsAvailable());
         }
     }
 }
