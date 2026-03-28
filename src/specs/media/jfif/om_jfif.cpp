@@ -30,7 +30,7 @@ OMJfifFile::OMJfifFile() : logger("OMJfifFile", this)
     processorMap[StartOfFrame] = [&](std::shared_ptr<std::istream> istr) { parseStartOfFrame(istr); };
     processorMap[HuffmanTable] = [&](std::shared_ptr<std::istream> istr) { parseHuffmanTable(istr); };
     processorMap[StartOfScan] = [&](std::shared_ptr<std::istream> istr) { parseStartOfScan(istr); };
-    processorMap[EndOfImage] = [&](std::shared_ptr<std::istream> istr) { logger.info("End Of Image"); };
+    processorMap[EndOfImage] = [&](std::shared_ptr<std::istream> istr) { blockDataCache.clear(); };
 }
 OMJfifFile::~OMJfifFile()
 {
