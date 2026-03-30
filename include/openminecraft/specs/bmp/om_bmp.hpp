@@ -19,12 +19,26 @@ struct OMBmpFileHeader
     uint32_t offset;
 };
 
+enum OMBmpFileCompressionType : uint32_t
+{
+    Rgb,
+    Rle4,
+    Rle8,
+    Bitfields,
+    Jpeg,
+    Png,
+    AlphaBitfields,
+    Cmyk,
+    CmykRle8,
+    CmykRle4
+};
+
 struct OMBmpInfoHeader
 {
     uint32_t width, height;
     uint16_t planes;
     uint16_t bitCount;
-    uint32_t compression;
+    OMBmpFileCompressionType compression;
     uint32_t sizeImage;
     uint32_t pixelsPerMeterX;
     uint32_t pixelsPerMeterY;

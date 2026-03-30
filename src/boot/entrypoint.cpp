@@ -121,7 +121,7 @@ int boot(std::vector<std::string> args)
             logger->info("{}", *reinterpret_cast<int *>(33550336));
         }
         case "jpg"_hash: {
-            auto ist = std::make_shared<std::ifstream>("../raw1.jpg", std::ios::binary);
+            auto ist = std::make_shared<std::ifstream>("/home/coder2/raw1.jpg", std::ios::binary);
             specs::jfif::OMJfifFile pf;
             pf.parse(ist);
             std::ofstream oo("test2.bin", std::ios::binary);
@@ -132,7 +132,6 @@ int boot(std::vector<std::string> args)
         case "bmp"_hash: {
             auto ist = std::make_shared<std::ifstream>("/home/coder2/this.bmp", std::ios::binary);
             specs::bmp::OMBmpFile pf(ist);
-            logger->info("test!");
 
             break;
         }

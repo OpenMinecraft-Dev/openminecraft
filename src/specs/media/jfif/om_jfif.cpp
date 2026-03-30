@@ -292,7 +292,8 @@ static void modPixel(uint8_t *data, uint8_t mod, uint8_t channelid)
 
 void OMJfifFile::loadBlockCache()
 {
-    int mcux = mcuStatus.mcuid % mcuStatus.mcuxcount;                                               int mcuy = mcuStatus.mcuid / mcuStatus.mcuxcount;
+    int mcux = mcuStatus.mcuid % mcuStatus.mcuxcount;
+    int mcuy = mcuStatus.mcuid / mcuStatus.mcuxcount;
     int actualY = mcuy * mcuStatus.mcuheight + (currentBlock->blockY * 8) * currentBlock->scaleY;
     int actualX = mcux * mcuStatus.mcuwidth + (currentBlock->blockX * 8) * currentBlock->scaleX;
     auto hashstr = fmt::format("Cnl#{}x{}y{}", currentBlock->id, actualX, actualY);
@@ -310,7 +311,8 @@ void OMJfifFile::loadBlockCache()
 
 void OMJfifFile::saveBlockCache()
 {
-    int mcux = mcuStatus.mcuid % mcuStatus.mcuxcount;                                               int mcuy = mcuStatus.mcuid / mcuStatus.mcuxcount;
+    int mcux = mcuStatus.mcuid % mcuStatus.mcuxcount;
+    int mcuy = mcuStatus.mcuid / mcuStatus.mcuxcount;
     int actualY = mcuy * mcuStatus.mcuheight + (currentBlock->blockY * 8) * currentBlock->scaleY;
     int actualX = mcux * mcuStatus.mcuwidth + (currentBlock->blockX * 8) * currentBlock->scaleX;
     auto hashstr = fmt::format("Cnl#{}x{}y{}", currentBlock->id, actualX, actualY);

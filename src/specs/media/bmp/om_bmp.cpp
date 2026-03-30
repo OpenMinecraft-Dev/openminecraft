@@ -25,7 +25,13 @@ OMBmpFile::OMBmpFile(std::shared_ptr<std::istream> input)
     input->read(reinterpret_cast<char *>(&hdlen), sizeof(uint32_t));
     input->read(reinterpret_cast<char *>(&infoHeader), sizeof(OMBmpInfoHeader));
 
+    if (infoHeader.compression != Rgb)
+    {
+        throw std::logic_error("not supported");
+    }
+
     std::cout << fileHeader.offset << std::endl;
+    std::cout << infoHeader.width << " " << infoHeader.height << std::endl;
 }
 OMBmpFile::~OMBmpFile()
 {
