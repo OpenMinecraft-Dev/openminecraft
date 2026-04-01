@@ -2,7 +2,7 @@
 #define OM_PNG_HPP
 
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
-#include "openminecraft/specs/blocked/om_blocked_file.hpp"
+#include "openminecraft/specs/abstracts/om_blocked_file.hpp"
 #include "openminecraft/specs/zlib/om_zlib_inflate.hpp"
 #include <array>
 #include <cstdint>

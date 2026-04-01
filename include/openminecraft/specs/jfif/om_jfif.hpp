@@ -4,7 +4,7 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
-#include "openminecraft/specs/blocked/om_blocked_file.hpp"
+#include "openminecraft/specs/abstracts/om_blocked_file.hpp"
 #include "openminecraft/util/om_util_bitbuffer.hpp"
 #include <array>
 #include <cstddef>
