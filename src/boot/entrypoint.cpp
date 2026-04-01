@@ -109,14 +109,6 @@ int boot(std::vector<std::string> args)
         case "dumpmem"_hash:
             mem::castorice::printres();
             break;
-        case "pt_buildcls"_hash: {
-            pixeltowerDynTest();
-            break;
-        }
-        case "ptinit"_hash: {
-            pixeltowerLoadTest();
-            break;
-        }
         case "crash"_hash: {
             logger->info("{}", *reinterpret_cast<int *>(33550336));
         }
