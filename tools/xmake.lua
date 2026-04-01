@@ -1,4 +1,3 @@
 includes("bundlemaker/xmake.lua")
-if not is_plat("windows", "iphoneos") then
-    includes("gitvis/xmake.lua")
-end
+includes("gitvis/xmake.lua")
+includes("elysiavis/xmake.lua")
