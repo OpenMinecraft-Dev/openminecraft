@@ -265,7 +265,7 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
         int mcuwidth, mcuheight;
         int mcuxcount, mcuycount;
 
-	int mcumaxwidth, mcumaxheight;
+        int mcumaxwidth, mcumaxheight;
     } mcuStatus;
 
     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> data;

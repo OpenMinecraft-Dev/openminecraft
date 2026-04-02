@@ -1,5 +1,6 @@
 target("openminecraft-mem")
 set_kind("static")
 add_packages("fmt", "boost")
+add_deps("openminecraft-log", "openminecraft-plat")
 add_files("**.cpp")
 add_includedirs("../../include")

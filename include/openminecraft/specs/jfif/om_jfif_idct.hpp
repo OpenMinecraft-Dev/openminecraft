@@ -14,7 +14,8 @@ extern bool idctInited;
 void idctInit();
 static void idct_1d(const double in[8], double out[8])
 {
-    if (!idctInited) {
+    if (!idctInited)
+    {
         idctInit();
     }
     const double sqrt2 = 1.4142135623730951;
@@ -24,7 +25,7 @@ static void idct_1d(const double in[8], double out[8])
         for (int k = 0; k < 8; ++k)
         {
             double c = (k == 0) ? 1.0 / sqrt2 : 1.0;
-	    sum += c * in[k] * idctMap[i][k];
+            sum += c * in[k] * idctMap[i][k];
         }
         out[i] = sum;
     }

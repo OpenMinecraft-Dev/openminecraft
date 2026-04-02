@@ -1,7 +1,5 @@
 #include <cstdlib>
 #include <iostream>
-#include <memory> // for allocator, __shared_ptr_access, shared_ptr
-#include <string> // for to_string, operator+
 
 #include "ftxui/component/animation.hpp"
 #include "ftxui/component/captured_mouse.hpp"     // for ftxui
@@ -16,27 +14,17 @@ using namespace ftxui;
 
 int main(int argc, const char *argv[])
 {
-    int counter = 0;
-    auto on_click = [&] { counter++; };
-
-    auto button_style = ButtonOption::Animated(Color::Default, Color::GrayDark, Color::Default, Color::White);
-
-    auto container = Container::Vertical({});
-    for (int i = 0; i < 30; ++i)
-    {
-        auto button = Button("按键 " + std::to_string(i), on_click, button_style);
-        container->Add(button);
-    }
-
+    auto container = Container::Horizontal({});
     auto renderer = Renderer(container, [&] {
         animation::RequestAnimationFrame();
         return vbox({
-                   hbox({text("计数:"), text(std::to_string(counter))}),
-                   separator(),
-                   gauge(static_cast<float>(counter) / 100),
-                   container->Render() | vscroll_indicator | frame | size(HEIGHT, LESS_THAN, 20),
-               }) |
-               border;
+	           hbox({
+                   text("abcd") | flex,
+		   separator(),
+		   text("abcd") | flex
+		   }) | border, 
+		   text("ab")
+               }) | border;
     });
 
     auto screen = ScreenInteractive::FitComponent();
@@ -44,7 +32,3 @@ int main(int argc, const char *argv[])
 
     return 0;
 }
-
-// Copyright 2022 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

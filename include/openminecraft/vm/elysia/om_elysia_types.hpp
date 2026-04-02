@@ -3,7 +3,8 @@
 
 #include <cstdint>
 
-namespace openminecraft::vm::elysia {
+namespace openminecraft::vm::elysia
+{
 typedef int8_t jbyte;
 typedef bool jboolean;
 typedef uint16_t jchar;
@@ -12,6 +13,6 @@ typedef int32_t jint;
 typedef int64_t jlong;
 typedef float jfloat;
 typedef double jdouble;
-}
+} // namespace openminecraft::vm::elysia
 
 #endif

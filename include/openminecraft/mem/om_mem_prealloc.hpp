@@ -32,6 +32,8 @@ class OMHeap
 
     void activate(void *p, uint64_t length);
     void deactivate(void *p, uint64_t length);
+
+    const char *id = "unnamed";
 };
 } // namespace openminecraft::mem
 
