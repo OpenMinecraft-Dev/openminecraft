@@ -25,6 +25,8 @@ class OMHeap
     void *block;
     void *heapTop;
 
+    const char *id = "unnamed";
+
   private:
     log::OMLogger logger;
     uint64_t minSize;
@@ -32,8 +34,6 @@ class OMHeap
 
     void activate(void *p, uint64_t length);
     void deactivate(void *p, uint64_t length);
-
-    const char *id = "unnamed";
 };
 } // namespace openminecraft::mem
 
