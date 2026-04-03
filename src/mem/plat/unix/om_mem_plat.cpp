@@ -3,6 +3,7 @@
 #include <cerrno>
 #include <cstring>
 #include <new>
+#include <unistd.h>
 #if defined(OM_PLATFORM_IOS) || defined(OM_PLATFORM_MACOS)
 #include <malloc/malloc.h>
 #else
@@ -32,9 +33,15 @@ OMHeap::~OMHeap()
 
 void OMHeap::activate(void *p, uint64_t length)
 {
+    if (madvise(p, length, MADV_WILLNEED) == -1)
+    {
+        logger.error("[unix-like] madvise fail ({})", strerror(errno));
+        throw std::bad_alloc();
+    }
+
     if (mprotect(p, length, PROT_READ | PROT_WRITE) == -1)
     {
-        logger.error("[unix-like] mprotect fail ({})", strerror(errno));
+        logger.error("[unix-like] mprotect fail ({}), pagesize = {}", strerror(errno), sysconf(_SC_PAGESIZE));
         throw std::bad_alloc();
     }
 }
