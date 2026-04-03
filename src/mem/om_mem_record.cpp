@@ -15,7 +15,7 @@ namespace openminecraft::mem::castorice
 {
 struct OMMemEntry
 {
-    const char *tag;
+    char *tag;
     uint64_t size;
 };
 int entryLength = 0;
@@ -55,7 +55,8 @@ begin:
     entryLength++;
     entries = entries ? reinterpret_cast<OMMemEntry *>(realloc(entries, sizeof(OMMemEntry) * entryLength))
                       : reinterpret_cast<OMMemEntry *>(calloc(entryLength, sizeof(OMMemEntry)));
-    entries[entryLength - 1].tag = i.tag;
+    entries[entryLength - 1].tag = reinterpret_cast<char *>(std::malloc(std::strlen(i.tag) + 1));
+    std::strcpy(entries[entryLength - 1].tag, i.tag);
     entries[entryLength - 1].size = 0;
     goto begin;
 }
@@ -99,16 +100,11 @@ size_t heapSize(void *p)
 #endif
 }
 
-void printres()
+void printres(std::function<void(std::string, std::string)> c)
 {
-    logger.info("Memory blocks");
-    logger.info("{} blocks recorded", blocks);
-    uint64_t data = 0;
-    for (int i = 0; i < entryLength; i++)
+    for (int id = 0; id < entryLength; id++)
     {
-        data += entries[i].size;
-        logger.info("{} => {}", entries[i].tag, toDataSize(entries[i].size));
+        c(entries[id].tag, toDataSize(entries[id].size));
     }
-    logger.info("* => {}", toDataSize(data));
 }
 } // namespace openminecraft::mem::castorice

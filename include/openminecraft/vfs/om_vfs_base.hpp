@@ -25,7 +25,6 @@ struct MountInfo
 extern std::unordered_map<std::string, std::function<std::shared_ptr<std::istream>(std::string)>> m;
 extern std::unordered_map<std::string, MountInfo> info;
 bool fsmountReal(std::string path, std::string mountpoint);
-bool fsmountAssets(std::string mountpoint);
 bool fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string mountpoint);
 bool fsumount(std::string mountpoint);
 std::shared_ptr<std::istream> fsfetch(std::string fullPath);

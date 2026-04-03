@@ -1,6 +1,9 @@
+includes("../../utils.lua")
+
 target("openminecraft-vm")
 set_kind("static")
 add_packages("fmt", "boost")
-add_deps("openminecraft-mem", "openminecraft-plat")
-add_files("**.cpp")
+add_deps("openminecraft-mem")
+add_files("**.cpp|arch/**|plat/**")
+addExtFiles()
 add_includedirs("../../include")

@@ -125,8 +125,6 @@ void vulkanRendererTest()
         hnd = nullptr;
         delete renderer;
         SDL_DestroyWindow(wnd);
-
-        mem::castorice::printres();
     }
     catch (std::runtime_error &e)
     {

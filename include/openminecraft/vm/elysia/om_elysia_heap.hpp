@@ -15,7 +15,7 @@ struct OMElysiaHeapBlock
 class OMElysiaHeap
 {
   public:
-    OMElysiaHeap(std::string name, uint64_t maxSize);
+    OMElysiaHeap(const char *name, uint64_t maxSize);
     ~OMElysiaHeap();
 
   private:

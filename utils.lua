@@ -10,6 +10,79 @@ function vulkandyn()
 	return is_plat("linux", "bsd", "android", "mingw")
 end
 
+function addExtFiles()
+	if not is_plat("windows", "mingw") then
+		add_files("plat/unix/**.cpp")
+	end
+	if is_plat("windows", "mingw") then
+		add_files("plat/windows/**.cpp")
+	end
+	if is_plat("linux") then
+		add_files("plat/linux/**.cpp")
+	end
+	if is_plat("bsd") then
+		add_files("plat/bsd/**.cpp")
+	end
+	if is_plat("macosx") then
+		add_files("plat/macos/**.cpp")
+	end
+	if is_plat("android") then
+		add_files("plat/android/**.cpp")
+	end
+	if is_plat("iphoneos") then
+		add_files("plat/ios/**.cpp")
+	end
+	if is_plat("harmony") then
+		add_files("plat/harmony/**.cpp")
+	end
+	if not mobile() then
+		add_files("plat/desktop/**.cpp")
+	end
+
+	if is_arch("x86", "i386", "x86_64", "x64") then
+		if not is_plat("windows", "mingw") then
+			add_files("arch/x86/unix_**.S")
+		else
+			add_files("arch/x86/msvc_**.S")
+		end
+		add_files("arch/x86/**.cpp")
+	elseif is_arch("arm64-v8a", "arm64") then
+		if not is_plat("windows", "mingw") then
+			add_files("arch/aarch64/unix_**.S")
+		else
+			add_files("arch/aarch64/msvc_**.S")
+		end
+		add_files("arch/aarch64/**.cpp")
+	elseif is_arch("armeabi", "armv7k", "armeabi-v7a", "arm", "armv7s", "armv7") then
+		add_files("arch/arm/unix_**.S")
+		add_files("arch/arm/**.cpp")
+	elseif is_arch("loong64") then
+		add_files("arch/loongarch/unix_**.S")
+		add_files("arch/loongarch/**.cpp")
+	elseif is_arch("mips64", "mips64el", "mip64") then
+		add_files("arch/mips64/unix_**.S")
+		add_files("arch/mips64/**.cpp")
+	elseif is_arch("mips", "mipsel") then
+		add_files("arch/mips/unix_**.S")
+		add_files("arch/mips/**.cpp")
+	elseif is_arch("ppc") then
+		add_files("arch/ppc/unix_**.S")
+		add_files("arch/ppc/**.cpp")
+	elseif is_arch("ppc64") then
+		add_files("arch/ppc64/unix_**.S")
+		add_files("arch/ppc64/**.cpp")
+	elseif is_arch("riscv") then
+		add_files("arch/riscv/unix_**.S")
+		add_files("arch/riscv/**.cpp")
+	elseif is_arch("riscv64") then
+		add_files("arch/riscv64/unix_**.S")
+		add_files("arch/riscv64/**.cpp")
+	else
+		add_files("arch/fallback/unix_**.S")
+		add_files("arch/fallback/**.cpp")
+	end
+end
+
 if is_plat("harmony") then
 	package("libsdl3")
 	set_homepage("https://www.libsdl.org/")

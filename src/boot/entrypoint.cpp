@@ -107,7 +107,7 @@ int boot(std::vector<std::string> args)
             logger->dumpStacktrace();
             break;
         case "dumpmem"_hash:
-            mem::castorice::printres();
+            mem::castorice::printres([&](std::string a, std::string b) { logger->debug("{} => {}", a, b); });
             break;
         case "crash"_hash: {
             logger->info("{}", *reinterpret_cast<int *>(33550336));
@@ -190,7 +190,6 @@ int boot(std::vector<std::string> args)
 
 progEnd:
     SDL_Quit();
-    mem::castorice::printres();
 
     return 0;
 }

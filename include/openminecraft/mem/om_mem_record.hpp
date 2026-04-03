@@ -1,8 +1,9 @@
 #ifndef OM_MEM_RECORD_HPP
 #define OM_MEM_RECORD_HPP
 
-#include <cstdint>
 #include <cstdlib>
+#include <functional>
+#include <string>
 #define OM_MEM_CPP 0
 #define OM_MEM_SDL 1
 #define OM_MEM_VULKAN 2
@@ -30,7 +31,7 @@ struct MemModifyInfo
 
 size_t heapSize(void *p);
 void rec(MemModifyInfo i);
-void printres();
+void printres(std::function<void(std::string, std::string)>);
 } // namespace openminecraft::mem::castorice
 
 #endif
