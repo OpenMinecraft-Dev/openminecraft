@@ -10,12 +10,14 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
     {
         auto ptr = metaspaceHeap.allocate(1024);
         auto ptr2 = metaspaceHeap.allocate(1024);
+	auto ptr3 = metaspaceHeap.allocate(1024);
         if (!ptr)
         {
             throw 0;
         }
         std::cout << ptr << std::endl;
         metaspaceHeap.deallocate(ptr, 1024);
+	metaspaceHeap.deallocate(ptr3, 1024);
     }
 }
 OMElysiaVirtualWorld::~OMElysiaVirtualWorld()
