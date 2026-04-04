@@ -3,8 +3,6 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 
-using namespace std::chrono_literals;
-
 namespace openminecraft::vm::elysia
 {
 OMElysiaVirtualWorld::OMElysiaVirtualWorld()
