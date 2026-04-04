@@ -1,24 +1,35 @@
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
-#include <iostream>
+#include "openminecraft/mem/om_mem_stl_allocator.hpp"
+#include "openminecraft/vm/elysia/om_elysia_klass.hpp"
+#include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
+
+using namespace std::chrono_literals;
 
 namespace openminecraft::vm::elysia
 {
 OMElysiaVirtualWorld::OMElysiaVirtualWorld()
-    : metaspaceHeap("elysia_metaspace", 1024 * 1024 * 16), mainHeap("elysia_main", 1024 * 1024 * 1024)
+    : metaspaceHeap("elysia_metaspace", 1024 * 1024 * 16), mainHeap("elysia_main", 1024 * 1024 * 1024),
+      logger("OMElysiaVirtualWorld", this)
 {
-    while (true)
+    klassLoader = mem::fast_shared<allocatorTag, OMElysiaKlassloader>(this);
+    // TODO: Stage #0 basic & primitive class defines
+    auto clsobj = klassLoader->constructInstanceClassShell("java/lang/Object");
+    auto clsstr = klassLoader->constructInstanceClassShell("java/lang/String");
+    clsstr->superClass = clsobj;
+    auto clscls = klassLoader->constructInstanceClassShell("java/lang/Class");
+    clscls->superClass = clsobj;
+
+    for (auto &s : {"char", "byte", "short", "int", "long", "float", "double", "boolean"})
     {
-        auto ptr = metaspaceHeap.allocate(1024);
-        auto ptr2 = metaspaceHeap.allocate(1024);
-	auto ptr3 = metaspaceHeap.allocate(1024);
-        if (!ptr)
-        {
-            throw 0;
-        }
-        std::cout << ptr << std::endl;
-        metaspaceHeap.deallocate(ptr, 1024);
-	metaspaceHeap.deallocate(ptr3, 1024);
+        auto c = klassLoader->constructPrimitiveClass(s);
+        auto carr = klassLoader->constructArrayClass(c);
+        carr->superClass = clsobj;
     }
+
+    klassLoader->constructPrimitiveClass("void");
+
+    // TODO: Stage #1 load classfiles (klassloader)
+    klassLoader->initClasses();
 }
 OMElysiaVirtualWorld::~OMElysiaVirtualWorld()
 {

@@ -17,6 +17,8 @@ class OMElysiaKlass
     OMElysiaKlass *superClass;
     OMElysiaKlassType type;
 
+    uint32_t accessFlag;
+
     jbyte *name;
 };
 

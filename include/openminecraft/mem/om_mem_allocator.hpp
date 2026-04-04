@@ -13,7 +13,7 @@ namespace openminecraft::mem::allocator
 {
 defmal(SDL);
 defmal(GL);
-defmal(VMData);
+defmal(Elysia);
 defmal(ZLib);
 } // namespace openminecraft::mem::allocator
 

@@ -38,7 +38,7 @@ namespace openminecraft::mem::allocator
 
 defmalr(SDL, "sdl");
 defmalr(GL, "opengl");
-defmalr(VMData, "vmdata");
+defmalr(Elysia, "elysia_internal");
 defmalr(ZLib, "zlib");
 } // namespace openminecraft::mem::allocator
 

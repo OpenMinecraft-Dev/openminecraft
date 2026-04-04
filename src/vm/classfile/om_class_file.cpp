@@ -1,6 +1,7 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/io/om_io_parser.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/encoding/om_encoding_utf.hpp"
 
@@ -17,9 +18,8 @@ using namespace openminecraft::util;
 
 namespace openminecraft::vm::classfile
 {
-OMClassFileParser::OMClassFileParser(std::istream *str) : io::OMParser(str)
+OMClassFileParser::OMClassFileParser(std::istream *str) : io::OMParser(str), logger("OMClassFileParser", this)
 {
-    this->logger = std::make_shared<log::OMLogger>("OMClassFileParser", this);
 }
 
 OMClassFileParser::~OMClassFileParser()
@@ -29,7 +29,7 @@ OMClassFileParser::~OMClassFileParser()
 
 util::OMResult<std::shared_ptr<OMClassFile>, err::OMValidationError> OMClassFileParser::parse()
 {
-    auto file = std::make_shared<OMClassFile>();
+    auto file = mem::fast_shared<allocatorTag, OMClassFile>();
     this->source->readbe32(file->magicNumber);
     if (file->magicNumber != 0xcafebabe)
     {
@@ -111,31 +111,31 @@ OMResult<std::shared_ptr<OMClassConstant>, err::OMValidationError> OMClassFilePa
     {
     case OMClassConstantType::Class: {
         this->source->readbe16(temp1);
-        result = std::make_shared<OMClassConstantClass>(temp1);
+        result = mem::fast_shared<allocatorTag, OMClassConstantClass>(temp1);
         break;
     }
     case OMClassConstantType::FieldRef: {
         this->source->readbe16(temp1);
         this->source->readbe16(temp2);
-        result = std::make_shared<OMClassConstantFieldRef>(temp1, temp2);
+        result = mem::fast_shared<allocatorTag, OMClassConstantFieldRef>(temp1, temp2);
         break;
     }
     case OMClassConstantType::MethodRef: {
         this->source->readbe16(temp1);
         this->source->readbe16(temp2);
-        result = std::make_shared<OMClassConstantMethodRef>(temp1, temp2);
+        result = mem::fast_shared<allocatorTag, OMClassConstantMethodRef>(temp1, temp2);
         break;
     }
     case OMClassConstantType::InterfaceMethodRef: {
         this->source->readbe16(temp1);
         this->source->readbe16(temp2);
-        result = std::make_shared<OMClassConstantInterfaceMethodRef>(temp1, temp2);
+        result = mem::fast_shared<allocatorTag, OMClassConstantInterfaceMethodRef>(temp1, temp2);
         break;
     }
     case OMClassConstantType::NameAndType: {
         this->source->readbe16(temp1);
         this->source->readbe16(temp2);
-        result = std::make_shared<OMClassConstantNameAndType>(temp1, temp2);
+        result = mem::fast_shared<allocatorTag, OMClassConstantNameAndType>(temp1, temp2);
         break;
     }
     case OMClassConstantType::Utf8: {
@@ -143,28 +143,28 @@ OMResult<std::shared_ptr<OMClassConstant>, err::OMValidationError> OMClassFilePa
         std::vector<uint8_t> temp(temp1);
         this->source->read((char *)temp.data(), temp1);
         auto comp = toStdUtf8(temp, temp1);
-        result = std::make_shared<OMClassConstantUtf8>(comp);
+        result = mem::fast_shared<allocatorTag, OMClassConstantUtf8>(comp);
         break;
     }
     case OMClassConstantType::String: {
         this->source->readbe16(temp1);
-        result = std::make_shared<OMClassConstantString>(temp1);
+        result = mem::fast_shared<allocatorTag, OMClassConstantString>(temp1);
         break;
     }
     case OMClassConstantType::Integer: {
         this->source->readbe32(temp5);
-        result = std::make_shared<OMClassConstantInteger>(*((int *)&temp5));
+        result = mem::fast_shared<allocatorTag, OMClassConstantInteger>(*((int *)&temp5));
         break;
     }
     case OMClassConstantType::Float: {
         this->source->readbe32(temp5);
-        result = std::make_shared<OMClassConstantFloat>(*((float *)&temp5));
+        result = mem::fast_shared<allocatorTag, OMClassConstantFloat>(*((float *)&temp5));
         break;
     }
     case OMClassConstantType::Long: {
         this->source->readbe32(temp5);
         this->source->readbe32(temp6);
-        result = std::make_shared<OMClassConstantLong>(((int64_t)temp5 << 32) + temp6);
+        result = mem::fast_shared<allocatorTag, OMClassConstantLong>(((int64_t)temp5 << 32) + temp6);
         (*idx)++;
         break;
     }
@@ -172,7 +172,7 @@ OMResult<std::shared_ptr<OMClassConstant>, err::OMValidationError> OMClassFilePa
         this->source->readbe32(temp5);
         this->source->readbe32(temp6);
         auto temp = ((int64_t)temp5 << 32) + temp6;
-        result = std::make_shared<OMClassConstantDouble>(*((double *)&temp));
+        result = mem::fast_shared<allocatorTag, OMClassConstantDouble>(*((double *)&temp));
         (*idx)++;
         break;
     }
@@ -180,34 +180,34 @@ OMResult<std::shared_ptr<OMClassConstant>, err::OMValidationError> OMClassFilePa
         uint8_t temp;
         this->source->read((char *)&temp, 1);
         this->source->readbe16(temp1);
-        result = std::make_shared<OMClassConstantMethodHandle>(temp, temp1);
+        result = mem::fast_shared<allocatorTag, OMClassConstantMethodHandle>(temp, temp1);
         break;
     }
     case OMClassConstantType::MethodType: {
         this->source->readbe16(temp1);
-        result = std::make_shared<OMClassConstantMethodType>(temp1);
+        result = mem::fast_shared<allocatorTag, OMClassConstantMethodType>(temp1);
         break;
     }
     case OMClassConstantType::Dynamic: {
         this->source->readbe16(temp1);
         this->source->readbe16(temp2);
-        result = std::make_shared<OMClassConstantDynamic>(temp1, temp2);
+        result = mem::fast_shared<allocatorTag, OMClassConstantDynamic>(temp1, temp2);
         break;
     }
     case OMClassConstantType::InvokeDynamic: {
         this->source->readbe16(temp1);
         this->source->readbe16(temp2);
-        result = std::make_shared<OMClassConstantInvokeDynamic>(temp1, temp2);
+        result = mem::fast_shared<allocatorTag, OMClassConstantInvokeDynamic>(temp1, temp2);
         break;
     }
     case OMClassConstantType::Module: {
         this->source->readbe16(temp1);
-        result = std::make_shared<OMClassConstantModule>(temp1);
+        result = mem::fast_shared<allocatorTag, OMClassConstantModule>(temp1);
         break;
     }
     case OMClassConstantType::Package: {
         this->source->readbe16(temp1);
-        result = std::make_shared<OMClassConstantPackage>(temp1);
+        result = mem::fast_shared<allocatorTag, OMClassConstantPackage>(temp1);
         break;
     }
     default: {
@@ -239,7 +239,7 @@ OMClassFileParser::ConstantMapping OMClassFileParser::buildConstantMapping(
 
 std::shared_ptr<OMClassFieldInfo> OMClassFileParser::parseField(const OMClassFileParser::ConstantMapping &m)
 {
-    auto field = std::make_shared<OMClassFieldInfo>();
+    auto field = mem::fast_shared<allocatorTag, OMClassFieldInfo>();
     this->source->readbe16(field->accessFlags);
     this->source->readbe16(field->nameIndex);
     this->source->readbe16(field->descIndex);
@@ -255,7 +255,7 @@ std::shared_ptr<OMClassFieldInfo> OMClassFileParser::parseField(const OMClassFil
 
 std::shared_ptr<OMClassMethodInfo> OMClassFileParser::parseMethod(const OMClassFileParser::ConstantMapping &m)
 {
-    auto method = std::make_shared<OMClassMethodInfo>();
+    auto method = mem::fast_shared<allocatorTag, OMClassMethodInfo>();
     this->source->readbe16(method->accessFlags);
     this->source->readbe16(method->nameIndex);
     this->source->readbe16(method->descIndex);
@@ -288,7 +288,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
     case "ConstantValue"_hash: {
         uint16_t cvi;
         this->source->readbe16(cvi);
-        attr = std::make_shared<OMClassAttrConstantValue>(cvi);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrConstantValue>(cvi);
         break;
     }
     case "Code"_hash: {
@@ -297,7 +297,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         this->source->readbe16(ms);
         this->source->readbe16(ml);
         this->source->readbe32(cl);
-        auto code = std::make_shared<std::vector<uint8_t>>(cl);
+        auto code = mem::fast_shared<allocatorTag, std::vector<uint8_t>>(cl);
         this->source->read((char *)code->data(), cl);
         this->source->readbe16(etl);
         std::vector<OMClassAttrCodeExcTable> et;
@@ -316,7 +316,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         {
             a.push_back(parseAttr(m));
         }
-        attr = std::make_shared<OMClassAttrCode>(ms, ml, cl, code, etl, et, ac, a);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrCode>(ms, ml, cl, code, etl, et, ac, a);
         break;
     }
     case "StackMapTable"_hash: {
@@ -334,7 +334,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         std::vector<std::shared_ptr<OMClassAttrVerifyStackMapFrame>> datas;
         for (uint16_t i = 0; i < noe; i++)
         {
-            auto fr = std::make_shared<OMClassAttrVerifyStackMapFrame>();
+            auto fr = mem::fast_shared<allocatorTag, OMClassAttrVerifyStackMapFrame>();
             this->source->read(reinterpret_cast<char *>(&fr->tag), 1);
             if (fr->tag < 64)
             {
@@ -389,7 +389,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
 
             datas.push_back(fr);
         }
-        attr = std::make_shared<OMClassAttrStackMapTable>(noe, datas);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrStackMapTable>(noe, datas);
         break;
     }
     case "Exceptions"_hash: {
@@ -402,7 +402,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             this->source->readbe16(d);
             excindex.push_back(d);
         }
-        attr = std::make_shared<OMClassAttrExceptions>(cnt, excindex);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrExceptions>(cnt, excindex);
         break;
     }
     case "InnerClasses"_hash: {
@@ -418,36 +418,36 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             this->source->readbe16(di.innerClassAccessFlags);
             d.push_back(di);
         }
-        attr = std::make_shared<OMClassAttrInnerClass>(numberOfClasses, d);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrInnerClass>(numberOfClasses, d);
         break;
     }
     case "EnclosingMethod"_hash: {
         uint16_t ci, mi;
         this->source->readbe16(ci);
         this->source->readbe16(mi);
-        attr = std::make_shared<OMClassAttrEnclosingMethod>(ci, mi);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrEnclosingMethod>(ci, mi);
         break;
     }
     case "Synthetic"_hash: {
-        attr = std::make_shared<OMClassAttrSynthetic>();
+        attr = mem::fast_shared<allocatorTag, OMClassAttrSynthetic>();
         break;
     }
     case "Signature"_hash: {
         uint16_t si;
         this->source->readbe16(si);
-        attr = std::make_shared<OMClassAttrSignature>(si);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrSignature>(si);
         break;
     }
     case "SourceFile"_hash: {
         uint16_t si;
         this->source->readbe16(si);
-        attr = std::make_shared<OMClassAttrSourceFile>(si);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrSourceFile>(si);
         break;
     }
     case "SourceDebugExtension"_hash: {
         std::vector<uint8_t> data(length);
         this->source->read((char *)data.data(), length);
-        attr = std::make_shared<OMClassAttrSourceDebugExtension>(data);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrSourceDebugExtension>(data);
         break;
     }
     case "LineNumberTable"_hash: {
@@ -460,7 +460,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             this->source->readbe16(b);
             lnt[a] = b;
         }
-        attr = std::make_shared<OMClassAttrLineNumberTable>(lntl, lnt);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrLineNumberTable>(lntl, lnt);
         break;
     }
     case "LocalVariableTable"_hash: {
@@ -477,7 +477,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             this->source->readbe16(data.index);
             d.push_back(data);
         }
-        attr = std::make_shared<OMClassAttrLocalVarTable>(l, d);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrLocalVarTable>(l, d);
         break;
     }
     case "LocalVariableTypeTable"_hash: {
@@ -494,11 +494,11 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             this->source->readbe16(data.index);
             d.push_back(data);
         }
-        attr = std::make_shared<OMClassAttrLocalVarTypeTable>(l, d);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrLocalVarTypeTable>(l, d);
         break;
     }
     case "Deprecated"_hash: {
-        attr = std::make_shared<OMClassAttrDeprecated>();
+        attr = mem::fast_shared<allocatorTag, OMClassAttrDeprecated>();
         break;
     }
     case "RuntimeVisibleAnnotations"_hash: {
@@ -509,7 +509,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         {
             d.push_back(parseAnnotation());
         }
-        attr = std::make_shared<OMClassAttrRuntimeVisibleAnnotations>(na, d);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrRuntimeVisibleAnnotations>(na, d);
         break;
     }
     case "RuntimeInvisibleAnnotations"_hash: {
@@ -520,7 +520,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         {
             d.push_back(parseAnnotation());
         }
-        attr = std::make_shared<OMClassAttrRuntimeInvisibleAnnotations>(na, d);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrRuntimeInvisibleAnnotations>(na, d);
         break;
     }
     case "RuntimeVisibleParameterAnnotations"_hash: {
@@ -538,7 +538,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             }
             d.push_back({ca, d0});
         }
-        attr = std::make_shared<OMClassAttrRuntimeVisibleParameterAnnotations>(n, d);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrRuntimeVisibleParameterAnnotations>(n, d);
         break;
     }
     case "RuntimeInvisibleParameterAnnotations"_hash: {
@@ -556,7 +556,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             }
             d.push_back({ca, d0});
         }
-        attr = std::make_shared<OMClassAttrRuntimeInvisibleParameterAnnotations>(n, d);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrRuntimeInvisibleParameterAnnotations>(n, d);
         break;
     }
     case "RuntimeVisibleTypeAnnotations"_hash: {
@@ -567,7 +567,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         {
             data.push_back(parseTypeAnnotation());
         }
-        attr = std::make_shared<OMClassAttrRuntimeVisibleTypeAnnotation>(n, data);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrRuntimeVisibleTypeAnnotation>(n, data);
         break;
     }
     case "RuntimeInvisibleTypeAnnotations"_hash: {
@@ -578,11 +578,11 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
         {
             data.push_back(parseTypeAnnotation());
         }
-        attr = std::make_shared<OMClassAttrRuntimeInvisibleTypeAnnotation>(n, data);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrRuntimeInvisibleTypeAnnotation>(n, data);
         break;
     }
     case "AnnotationDefault"_hash: {
-        attr = std::make_shared<OMClassAttrAnnotationDefault>(parseAnnotationValue());
+        attr = mem::fast_shared<allocatorTag, OMClassAttrAnnotationDefault>(parseAnnotationValue());
         break;
     }
     case "BootstrapMethods"_hash: {
@@ -603,7 +603,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             }
             data.push_back({ref, c, d});
         }
-        attr = std::make_shared<OMClassAttrBootMethods>(n, data);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrBootMethods>(n, data);
         break;
     }
     case "MethodParameters"_hash: {
@@ -617,7 +617,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             this->source->readbe16(b);
             d.push_back({a, b});
         }
-        attr = std::make_shared<OMClassAttrMethodParameters>(pc, d);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrMethodParameters>(pc, d);
         break;
     }
     case "Module"_hash: {
@@ -712,7 +712,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             }
         }
 
-        attr = std::make_shared<OMClassAttrModule>(mni, mf, mvi, rc, r, ec, e, oc, o, uc, u, pc, p);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrModule>(mni, mf, mvi, rc, r, ec, e, oc, o, uc, u, pc, p);
 
         break;
     }
@@ -726,19 +726,19 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             this->source->readbe16(d);
             data.push_back(d);
         }
-        attr = std::make_shared<OMClassAttrModulePackages>(pc, data);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrModulePackages>(pc, data);
         break;
     }
     case "ModuleMainClass"_hash: {
         uint16_t mci;
         this->source->readbe16(mci);
-        attr = std::make_shared<OMClassAttrModuleMainClass>(mci);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrModuleMainClass>(mci);
         break;
     }
     case "NestHost"_hash: {
         uint16_t d;
         this->source->readbe16(d);
-        attr = std::make_shared<OMClassAttrNestHost>(d);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrNestHost>(d);
         break;
     }
     case "NestMembers"_hash: {
@@ -751,7 +751,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             this->source->readbe16(d);
             data.push_back(d);
         }
-        attr = std::make_shared<OMClassAttrNestMembers>(noc, data);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrNestMembers>(noc, data);
         break;
     }
     case "Record"_hash: {
@@ -771,7 +771,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             }
             da.push_back({nib, di, ac, d});
         }
-        attr = std::make_shared<OMClassAttrRecord>(c, da);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrRecord>(c, da);
         break;
     }
     case "PermittedSubclasses"_hash: {
@@ -784,12 +784,12 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
             this->source->readbe16(d);
             data.push_back(d);
         }
-        attr = std::make_shared<OMClassAttrPermittedSubclasses>(noc, data);
+        attr = mem::fast_shared<allocatorTag, OMClassAttrPermittedSubclasses>(noc, data);
         break;
     }
     default:
         this->source->seekg(static_cast<int64_t>(this->source->tellg()) + length);
-        this->logger->warn("Unimplemented attr: {}", m[ni]->to<OMClassConstantUtf8>()->data);
+        logger.warn("Unimplemented attr: {}", m[ni]->to<OMClassConstantUtf8>()->data);
         break;
     }
 
@@ -798,7 +798,7 @@ std::shared_ptr<OMClassAttr> OMClassFileParser::parseAttr(OMClassFileParser::Con
 
 std::shared_ptr<OMClassRuntimeTypeAnnotation> OMClassFileParser::parseTypeAnnotation()
 {
-    auto result = std::make_shared<OMClassRuntimeTypeAnnotation>();
+    auto result = mem::fast_shared<allocatorTag, OMClassRuntimeTypeAnnotation>();
 
     this->source->read(reinterpret_cast<char *>(&result->targetType), 1);
 
@@ -901,7 +901,7 @@ std::shared_ptr<OMClassRuntimeTypeAnnotation> OMClassFileParser::parseTypeAnnota
 
 std::shared_ptr<OMClassAnnotation> OMClassFileParser::parseAnnotation()
 {
-    auto anno = std::make_shared<OMClassAnnotation>();
+    auto anno = mem::fast_shared<allocatorTag, OMClassAnnotation>();
     this->source->readbe16(anno->type);
     this->source->readbe16(anno->numPairs);
     anno->pairs = std::unordered_map<uint16_t, std::shared_ptr<OMClassAnnotationElemValue>>();
@@ -918,7 +918,7 @@ std::shared_ptr<OMClassAnnotation> OMClassFileParser::parseAnnotation()
 
 std::shared_ptr<OMClassAnnotationElemValue> OMClassFileParser::parseAnnotationValue()
 {
-    auto v = std::make_shared<OMClassAnnotationElemValue>();
+    auto v = mem::fast_shared<allocatorTag, OMClassAnnotationElemValue>();
     this->source->read((char *)&v->tag, 1);
     switch (v->tag)
     {

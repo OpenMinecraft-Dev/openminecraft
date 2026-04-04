@@ -3,6 +3,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include <cstddef>
 #include <cstdio>
+#include <mutex>
 #include <string>
 
 #if defined(OM_PLATFORM_IOS) || defined(OM_PLATFORM_MACOS)
@@ -22,9 +23,14 @@ int entryLength = 0;
 OMMemEntry *entries = nullptr;
 uint64_t blocks = 0;
 
+std::mutex mutex;
+
 log::OMLogger logger("Memory Record/Castorice");
 void rec(MemModifyInfo i)
 {
+    while (!mutex.try_lock())
+    {
+    }
 begin:
     for (int id = 0; id < entryLength; id++)
     {
@@ -47,6 +53,8 @@ begin:
                 entries[id].size += i.length;
                 blocks++;
             }
+
+            mutex.unlock();
 
             return;
         }

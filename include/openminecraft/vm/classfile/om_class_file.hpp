@@ -56,6 +56,8 @@ constexpr int JVM_Acc_Module = 0x8000;
 
 namespace openminecraft::vm::classfile
 {
+constexpr const char allocatorTag[] = "elysia_internal";
+
 enum class OMClassConstantType : uint8_t
 {
     Utf8 = 1,
@@ -896,7 +898,7 @@ class OMClassFileParser : public io::OMParser
     static ConstantMapping buildConstantMapping(const std::vector<std::shared_ptr<OMClassConstant>> &c);
 
   private:
-    std::shared_ptr<log::OMLogger> logger;
+    log::OMLogger logger;
 
     util::OMResult<std::shared_ptr<OMClassConstant>, err::OMValidationError> parseConstant(uint16_t *idx) const;
     std::shared_ptr<OMClassFieldInfo> parseField(const ConstantMapping &m);
