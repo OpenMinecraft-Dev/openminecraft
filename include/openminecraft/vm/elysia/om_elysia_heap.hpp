@@ -7,6 +7,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <cstring>
 
 namespace openminecraft::vm::elysia
 {
@@ -45,6 +46,22 @@ class OMElysiaHeap
     template <typename T> void deallocate(T *ptr)
     {
         deallocate(ptr, sizeof(T));
+    }
+
+    template <typename T> T *allocateArray(uint32_t length) {
+        return reinterpret_cast<T *>(allocate(sizeof(T) * length));
+    }
+    template <typename T> void deallocateArray(T* ptr, uint32_t length) {
+        deallocate(ptr, sizeof(T) * length);
+    }
+
+    char *allocateStr(std::string s) {
+        auto t = reinterpret_cast<char *>(allocate(s.size() + 1));
+	std::strcpy(t, s.c_str());
+	return t;
+    }
+    void deallocateStr(char *c) {
+        deallocate(c, std::strlen(c));
     }
 
   private:

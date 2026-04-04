@@ -102,7 +102,7 @@ Element buildElysiaHeapComp(OMElysiaHeap &heap)
         lengths[0].first--;
     }
 
-    return vbox({hbox({text(toDataSize(lengthUsed)) | color(Color::Green), separatorEmpty() | flex,
+    return vbox({hbox({text(toDataSize(lengthUsed)) | color(Color::Green), separatorEmpty() | flex, text(fmt::format("{}", heap.base())) | color(Color::Blue), separatorEmpty() | flex,
                        text(toDataSize(length)) | color(Color::GrayLight)}),
                  canvas(c)});
 }

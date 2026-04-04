@@ -2,6 +2,7 @@
 #define OM_ELYSIA_KLASS_HPP
 
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
+#include "openminecraft/vm/elysia/om_elysia_method.hpp"
 
 namespace openminecraft::vm::elysia
 {
@@ -20,6 +21,9 @@ class OMElysiaKlass
     uint32_t accessFlag;
 
     jbyte *name;
+
+    uint32_t methodCount = 0;
+    OMElysiaMethod *methods = nullptr;
 };
 
 class OMElysiaArrayKlass : public OMElysiaKlass
