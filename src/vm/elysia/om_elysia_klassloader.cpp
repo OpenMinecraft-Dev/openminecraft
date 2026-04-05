@@ -134,6 +134,23 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
             ->data;
     auto klass = loadedClasses[binary::hash::hash_compile_time(clsname.c_str())];
 
+    if (clsfile->superClass)
+    {
+        auto supclsname =
+            clsfile->mapping[clsfile->mapping[clsfile->superClass]->to<classfile::OMClassConstantClass>()->nameIndex]
+                ->to<classfile::OMClassConstantUtf8>()
+                ->data;
+
+        if (!loadedClasses.count(binary::hash::hash_compile_time(supclsname.c_str())))
+        {
+            auto sup = constructInstanceClassShell(supclsname);
+            std::ifstream istr(fmt::format("vmstd/out/{}.class", supclsname), std::ios::binary);
+            loadClass(&istr);
+
+            klass->superClass = sup;
+        }
+    }
+
     klass->accessFlag = clsfile->accessFlags;
 
     klass->methodCount = clsfile->methods.size();
