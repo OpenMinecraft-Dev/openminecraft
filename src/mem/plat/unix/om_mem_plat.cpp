@@ -1,6 +1,11 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_prealloc.hpp"
+#ifdef OM_PLATFORM_BSD
+#include <stdlib.h>
+#else
 #include <alloca.h>
+#endif
+
 #include <cerrno>
 #include <cstring>
 #include <new>
