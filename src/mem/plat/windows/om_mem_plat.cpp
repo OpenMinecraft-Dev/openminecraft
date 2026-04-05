@@ -45,8 +45,11 @@ void OMHeap::deactivate(void *p, uint64_t length)
     }
 }
 
+namespace allocator
+{
 void *stackAlloc(size_t l)
 {
     return _alloca(l);
+}
 }
 } // namespace openminecraft::mem

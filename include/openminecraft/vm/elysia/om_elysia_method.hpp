@@ -9,7 +9,7 @@ struct OMElysiaMethod
 {
     char *name;
     char *descriptor;
-    uint32_t accessFlag;
+    uint16_t accessFlag;
     uint32_t codeLength;
     uint8_t *code;
 };

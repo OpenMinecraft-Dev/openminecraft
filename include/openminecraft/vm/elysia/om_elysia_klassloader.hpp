@@ -20,11 +20,13 @@ class OMElysiaKlassloader
     OMElysiaArrayKlass *constructArrayClass(OMElysiaKlass *klass);
 
     void markKlass(OMElysiaKlass *klass);
-    void initClasses();
+    void initClass(OMElysiaKlass *klass);
+
+    void loadClass(std::istream *istr);
 
   private:
     void unloadClass(OMElysiaKlass *klass);
-    void loadClass(std::istream *istr);
+
     OMElysiaVirtualWorld *world;
     std::unordered_map<binary::hash::hash_t, OMElysiaKlass *> loadedClasses;
 

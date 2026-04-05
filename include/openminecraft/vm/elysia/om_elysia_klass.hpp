@@ -1,8 +1,13 @@
 #ifndef OM_ELYSIA_KLASS_HPP
 #define OM_ELYSIA_KLASS_HPP
 
+#include "openminecraft/vm/classfile/om_class_file.hpp"
+#include "openminecraft/vm/elysia/om_elysia_field.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
+#include <cstdint>
+#include <memory>
+#include <unordered_map>
 
 namespace openminecraft::vm::elysia
 {
@@ -17,13 +22,16 @@ class OMElysiaKlass
   public:
     OMElysiaKlass *superClass;
     OMElysiaKlassType type;
+    uint8_t ptrLength;
 
-    uint32_t accessFlag;
+    uint16_t accessFlag;
 
     jbyte *name;
 
     uint32_t methodCount = 0;
     OMElysiaMethod *methods = nullptr;
+
+    OMElysiaMethod *findMethod(char *name, char *desc);
 };
 
 class OMElysiaArrayKlass : public OMElysiaKlass
@@ -38,6 +46,19 @@ class OMElysiaInstanceKlass : public OMElysiaKlass
   public:
     uint32_t interfaceImplCount;
     OMElysiaKlass **interfaceImpls;
+
+    std::unordered_map<uint16_t, std::shared_ptr<classfile::OMClassConstant>> constantPoolRaw;
+
+    uint32_t fieldCount = 0;
+    OMElysiaField *fields = nullptr;
+    bool fieldOffsetInited = false;
+
+    uint32_t length = 0;
+    uint32_t staticLength = 0;
+
+    void *staticBlock = nullptr;
+
+    void initFieldOffsets();
 };
 
 class OMElysiaPrimitiveKlass : public OMElysiaKlass

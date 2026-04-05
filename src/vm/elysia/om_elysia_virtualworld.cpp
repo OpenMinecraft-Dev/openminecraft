@@ -1,7 +1,9 @@
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
+#include <fstream>
 
 namespace openminecraft::vm::elysia
 {
@@ -27,7 +29,12 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
     klassLoader->constructPrimitiveClass("void");
 
     // TODO: Stage #1 load classfiles (klassloader)
-    klassLoader->initClasses();
+    klassLoader->initClass(clsobj);
+    klassLoader->initClass(clsstr);
+    klassLoader->initClass(clscls);
+
+    std::ifstream iss("/bridge/projects/Test.class", std::ios::binary);
+    klassLoader->loadClass(&iss);
 }
 OMElysiaVirtualWorld::~OMElysiaVirtualWorld()
 {

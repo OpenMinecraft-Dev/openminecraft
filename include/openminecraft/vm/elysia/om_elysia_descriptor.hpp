@@ -53,7 +53,7 @@ static uint64_t fieldLength(char *s, uint64_t ptrLen)
     case 'F':
     case 'I':
         return 4;
-    case 'L':
+    case 'J':
     case 'D':
         return 8;
     default:
