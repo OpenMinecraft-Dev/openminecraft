@@ -24,6 +24,8 @@ class OMElysiaKlassloader
 
     void loadClass(std::istream *istr);
 
+    OMElysiaKlass *findClass(std::string s);
+
   private:
     void unloadClass(OMElysiaKlass *klass);
 

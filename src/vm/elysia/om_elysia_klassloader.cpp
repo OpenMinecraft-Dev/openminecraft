@@ -137,6 +137,11 @@ void OMElysiaKlassloader::unloadClass(OMElysiaKlass *klass)
     world->metaspaceHeap.deallocate(klass);
 }
 
+OMElysiaKlass *OMElysiaKlassloader::findClass(std::string s)
+{
+    return loadedClasses[binary::hash::hash_compile_time(s.c_str())];
+}
+
 void OMElysiaKlassloader::loadClass(std::istream *istr)
 {
     classfile::OMClassFileParser par(istr);

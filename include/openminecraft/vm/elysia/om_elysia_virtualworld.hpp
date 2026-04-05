@@ -3,9 +3,16 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/om_elysia_heap.hpp"
+#include <memory>
+
 namespace openminecraft::vm::elysia
 {
 class OMElysiaKlassloader;
+class OMElysiaOopManager;
+namespace executor
+{
+class OMElysiaExecutorZero;
+}
 
 class OMElysiaVirtualWorld
 {
@@ -16,8 +23,11 @@ class OMElysiaVirtualWorld
     OMElysiaHeap metaspaceHeap;
     OMElysiaHeap mainHeap;
 
-  private:
     std::shared_ptr<OMElysiaKlassloader> klassLoader;
+    std::shared_ptr<OMElysiaOopManager> oopManager;
+    std::shared_ptr<executor::OMElysiaExecutorZero> executor;
+
+  private:
     log::OMLogger logger;
 };
 } // namespace openminecraft::vm::elysia

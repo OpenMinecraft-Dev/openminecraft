@@ -13,6 +13,7 @@
 #include "ftxui/dom/elements.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/vm/elysia/om_elysia_heap.hpp"
+#include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 
 using namespace ftxui;
@@ -114,6 +115,28 @@ Element buildElysiaHeapComp2(OMElysiaVirtualWorld *world)
                                              window(text("Main"), buildElysiaHeapComp(world->mainHeap))}));
 }
 
+Element buildElysiaThreadCode(OMElysiaThread *thread)
+{
+    return text("");
+}
+
+Element buildElysiaThread(OMElysiaThread *thread)
+{
+    return window(text("Code"), text(fmt::format("{}", thread->zero.pc)));
+}
+
+Element buildElysiaThreadstate()
+{
+    std::vector<Element> elem;
+    for (auto &t : threadMap)
+    {
+        elem.push_back(window(text(fmt::format("Thread {}", reinterpret_cast<const void *>(&t.first))),
+                              buildElysiaThread(t.second)));
+    }
+
+    return window(text("Elysia Threads"), vbox(elem));
+}
+
 int main(int argc, const char *argv[])
 {
     auto wld = new OMElysiaVirtualWorld;
@@ -122,7 +145,8 @@ int main(int argc, const char *argv[])
     auto renderer = Renderer(container, [&] {
         animation::RequestAnimationFrame();
 
-        return vbox({buildMemComp(), window(text("ElysiaVM"), buildElysiaHeapComp2(wld))});
+        return vbox(
+            {buildMemComp(), window(text("ElysiaVM"), hbox({buildElysiaHeapComp2(wld), buildElysiaThreadstate()}))});
     });
 
     auto screen = ScreenInteractive::FitComponent();
