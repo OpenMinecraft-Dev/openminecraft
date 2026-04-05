@@ -35,8 +35,5 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     frame->method = m;
     frame->caller = threadContext.zero.frame;
     threadContext.zero.frame = frame;
-
-    std::cout << (void *)threadContext.zero.frame << std::endl;
-    throw 0;
 }
 } // namespace openminecraft::vm::elysia::executor
