@@ -82,14 +82,19 @@ void OMElysiaKlassloader::initClasses()
 
 void OMElysiaKlassloader::unloadClass(OMElysiaKlass *klass)
 {
-    if (klass->methods) {
-	for (int i = 0; i < klass->methodCount; i++) {
-	    auto &m = klass->methods[i];
-	    world->metaspaceHeap.deallocateStr(m.name);
-	    world->metaspaceHeap.deallocateStr(m.descriptor);
-	    if (m.code) { world->metaspaceHeap.deallocate(m.code, m.codeLength); }
-	}
-	world->metaspaceHeap.deallocateArray(klass->methods, klass->methodCount);
+    if (klass->methods)
+    {
+        for (int i = 0; i < klass->methodCount; i++)
+        {
+            auto &m = klass->methods[i];
+            world->metaspaceHeap.deallocateStr(m.name);
+            world->metaspaceHeap.deallocateStr(m.descriptor);
+            if (m.code)
+            {
+                world->metaspaceHeap.deallocate(m.code, m.codeLength);
+            }
+        }
+        world->metaspaceHeap.deallocateArray(klass->methods, klass->methodCount);
     }
     auto l = reinterpret_cast<char *>(klass->name);
     world->metaspaceHeap.deallocateStr(l);
@@ -116,12 +121,6 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
     auto clsfile = par.parse().unwrap();
 
     logger.debug("Class file: {}.{}", clsfile->major, clsfile->minor);
-    logger.debug("*** Methods ***");
-    for (auto &m : clsfile->methods)
-    {
-        logger.debug("{}{}", clsfile->mapping[m->nameIndex]->to<classfile::OMClassConstantUtf8>()->data,
-                     clsfile->mapping[m->descIndex]->to<classfile::OMClassConstantUtf8>()->data);
-    }
     logger.debug("*** Fields ***");
     for (auto &f : clsfile->fields)
     {
@@ -129,21 +128,39 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
                      clsfile->mapping[f->descIndex]->to<classfile::OMClassConstantUtf8>()->data);
     }
 
-    auto clsname = clsfile->mapping[clsfile->mapping[clsfile->thisClass]->to<classfile::OMClassConstantClass>()->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
+    auto clsname =
+        clsfile->mapping[clsfile->mapping[clsfile->thisClass]->to<classfile::OMClassConstantClass>()->nameIndex]
+            ->to<classfile::OMClassConstantUtf8>()
+            ->data;
     auto klass = loadedClasses[binary::hash::hash_compile_time(clsname.c_str())];
 
     klass->accessFlag = clsfile->accessFlags;
 
     klass->methodCount = clsfile->methods.size();
     klass->methods = world->metaspaceHeap.allocateArray<OMElysiaMethod>(klass->methodCount);
-    for (int i = 0; i < klass->methodCount; i++) {
+    for (int i = 0; i < klass->methodCount; i++)
+    {
         auto &m = klass->methods[i];
-	m.codeLength = 0;
-	m.code = nullptr;
+        m.codeLength = 0;
+        m.code = nullptr;
 
-	m.accessFlag = klass->methods[i].accessFlag;
-        m.name = world->metaspaceHeap.allocateStr(clsfile->mapping[clsfile->methods[i]->nameIndex]->to<classfile::OMClassConstantUtf8>()->data);
-	m.descriptor = world->metaspaceHeap.allocateStr(clsfile->mapping[clsfile->methods[i]->descIndex]->to<classfile::OMClassConstantUtf8>()->data);
+        m.accessFlag = klass->methods[i].accessFlag;
+        m.name = world->metaspaceHeap.allocateStr(
+            clsfile->mapping[clsfile->methods[i]->nameIndex]->to<classfile::OMClassConstantUtf8>()->data);
+        m.descriptor = world->metaspaceHeap.allocateStr(
+            clsfile->mapping[clsfile->methods[i]->descIndex]->to<classfile::OMClassConstantUtf8>()->data);
+
+        for (auto attr : clsfile->methods[i]->attrs)
+        {
+            if (attr->type() == classfile::OMClassAttrType::Code)
+            {
+                auto ll = attr->to<classfile::OMClassAttrCode>();
+                m.codeLength = ll->codeLength;
+                m.code = world->metaspaceHeap.allocateArray<uint8_t>(m.codeLength);
+                std::memcpy(m.code, ll->code->data(), ll->codeLength);
+                break;
+            }
+        }
     }
 }
 } // namespace openminecraft::vm::elysia

@@ -35,13 +35,19 @@ static OMElysiaHeapBlock *sortBlocks(OMElysiaHeapBlock *head)
     return second;
 }
 
-OMElysiaHeap::OMElysiaHeap(const char *id, uint64_t maxSize) : rawHeap(1024 * 4, maxSize), logger("OMElysiaHeap", this)
+OMElysiaHeap::OMElysiaHeap(const char *id, uint64_t maxSize)
+    : rawHeap(1024 * 4, maxSize), logger("OMElysiaHeap", this), maxSize(maxSize)
 {
     rawHeap.id = id;
     rawHeap.init();
 
     auto rawblk = mem::allocator::tracedCallocElysia(1, sizeof(OMElysiaHeapBlock));
     emptyBlocks = new (rawblk) OMElysiaHeapBlock{rawHeap.block, rawHeap.heapTop, nullptr};
+
+    if (enablePtrCompress())
+    {
+        allocate(8);
+    }
 }
 
 void *OMElysiaHeap::allocate(uint64_t objLen)

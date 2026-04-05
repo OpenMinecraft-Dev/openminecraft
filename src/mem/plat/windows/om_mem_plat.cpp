@@ -1,12 +1,12 @@
 #include "openminecraft/mem/om_mem_prealloc.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
-#include <windows.h>
 #include <errhandlingapi.h>
 #include <iostream>
 #include <malloc.h>
 #include <memoryapi.h>
 #include <new>
 #include <oleauto.h>
+#include <windows.h>
 #include <winnt.h>
 
 namespace openminecraft::mem
@@ -43,5 +43,10 @@ void OMHeap::deactivate(void *p, uint64_t length)
         logger.error("[windows] VirtualFree fail ({})", GetLastError());
         throw std::bad_alloc();
     }
+}
+
+void *stackAlloc(size_t l)
+{
+    return _alloca(l);
 }
 } // namespace openminecraft::mem

@@ -102,7 +102,8 @@ Element buildElysiaHeapComp(OMElysiaHeap &heap)
         lengths[0].first--;
     }
 
-    return vbox({hbox({text(toDataSize(lengthUsed)) | color(Color::Green), separatorEmpty() | flex, text(fmt::format("{}", heap.base())) | color(Color::Blue), separatorEmpty() | flex,
+    return vbox({hbox({text(toDataSize(lengthUsed)) | color(Color::Green), separatorEmpty() | flex,
+                       text(fmt::format("{}", heap.base())) | color(Color::Blue), separatorEmpty() | flex,
                        text(toDataSize(length)) | color(Color::GrayLight)}),
                  canvas(c)});
 }
@@ -124,7 +125,7 @@ int main(int argc, const char *argv[])
         return vbox({buildMemComp(), window(text("ElysiaVM"), buildElysiaHeapComp2(wld))});
     });
 
-    auto screen = ScreenInteractive::Fullscreen();
+    auto screen = ScreenInteractive::FitComponent();
     screen.Loop(renderer);
 
     delete wld;

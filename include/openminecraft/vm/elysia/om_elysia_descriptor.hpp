@@ -39,6 +39,27 @@ static std::string buildArray(char *s)
     }
     }
 }
+
+static uint64_t fieldLength(char *s, uint64_t ptrLen)
+{
+    switch (s[0])
+    {
+    case 'B':
+    case 'Z':
+        return 1;
+    case 'C':
+    case 'S':
+        return 2;
+    case 'F':
+    case 'I':
+        return 4;
+    case 'L':
+    case 'D':
+        return 8;
+    default:
+        return ptrLen;
+    }
+}
 } // namespace openminecraft::vm::elysia
 
 #endif

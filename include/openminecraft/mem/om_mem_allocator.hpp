@@ -1,6 +1,7 @@
 #ifndef OM_MEM_ALLOCATOR_HPP
 #define OM_MEM_ALLOCATOR_HPP
 
+#include <cstddef>
 #include <cstdlib>
 
 #define defmal(id)                                                                                                     \
@@ -15,6 +16,8 @@ defmal(SDL);
 defmal(GL);
 defmal(Elysia);
 defmal(ZLib);
+
+void *stackAlloc(size_t);
 } // namespace openminecraft::mem::allocator
 
 #endif

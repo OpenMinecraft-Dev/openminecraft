@@ -1,5 +1,6 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_prealloc.hpp"
+#include <alloca.h>
 #include <cerrno>
 #include <cstring>
 #include <new>
@@ -59,5 +60,10 @@ void OMHeap::deactivate(void *p, uint64_t length)
         logger.error("[unix-like] mprotect fail ({})", strerror(errno));
         throw std::bad_alloc();
     }
+}
+
+void *stackAlloc(size_t l)
+{
+    return alloca(l);
 }
 } // namespace openminecraft::mem

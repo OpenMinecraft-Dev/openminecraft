@@ -1,8 +1,8 @@
 #ifndef OM_ELYSIA_KLASS_HPP
 #define OM_ELYSIA_KLASS_HPP
 
-#include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
+#include "openminecraft/vm/elysia/om_elysia_types.hpp"
 
 namespace openminecraft::vm::elysia
 {
