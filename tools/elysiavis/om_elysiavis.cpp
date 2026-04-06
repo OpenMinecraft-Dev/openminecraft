@@ -145,13 +145,13 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
     code += 3;
 #define OpArgu8(name)                                                                                                  \
     j = code[1];                                                                                                       \
-    codelines.push_back({text(fmt::format("{:02x} {}", *code, code[1])) | color(Color::Green) | flex,                  \
+    codelines.push_back({text(fmt::format("{:02x} {:02x}", *code, code[1])) | color(Color::Green) | flex,                  \
                          text(fmt::format("{} {}", name, (int)j)) | color(Color::GrayLight) | flex});                  \
     code += 2;
 #define OpArgu8s8(name)                                                                                                \
     j = code[1];                                                                                                       \
     codelines.push_back(                                                                                               \
-        {text(fmt::format("{:02x} {} {}", *code, code[1], (int8_t)code[2])) | color(Color::Green) | flex,              \
+        {text(fmt::format("{:02x} {:02x} {:02x}", *code, code[1], code[2])) | color(Color::Green) | flex,              \
          text(fmt::format("{} {} {}", name, (int)j, (int8_t)code[2])) | color(Color::GrayLight) | flex});              \
     code += 3;
 #define OpArgv(name)                                                                                                   \
@@ -226,6 +226,17 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
 	    OpCaseN(d2i, f2d, d2l, d2f, OpArgv);
 	    OpCaseN(i2b, i2c, i2s, lcmp, OpArgv);
             OpCaseN(fcmpl, fcmpg, dcmpl, dcmpg, OpArgv);
+	    OpCaseN(ifeq, ifne, iflt, ifge, OpArgs16);
+	    OpCase(ifgt, OpArgs16);
+	    OpCase(ifle, OpArgs16);
+	    OpCaseN(if_icmpeq, if_icmpne, if_icmplt, if_icmpge, OpArgs16);
+	    OpCase(if_icmpgt, OpArgs16);
+	    OpCase(if_icmple, OpArgs16);
+	    OpCase(if_acmpeq, OpArgs16);
+	    OpCase(if_acmpne, OpArgs16);
+	    OpCase(goto, OpArgs16);
+	    OpCase(jsr, OpArgs16);
+	    OpCase(ret, OpArgu8);
         case op_getstatic:
             OpArgu16("getstatic");
             break;
@@ -237,9 +248,6 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
             break;
         case op_new:
             OpArgu16("new");
-            break;
-        case op_goto:
-            OpArgs16("goto");
             break;
         default:
             codelines.push_back({text(fmt::format("{:02x}", *code)) | color(Color::Green) | flex,
