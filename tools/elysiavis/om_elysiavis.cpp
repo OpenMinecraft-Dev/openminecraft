@@ -145,144 +145,87 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
     code += 3;
 #define OpArgu8(name)                                                                                                  \
     j = code[1];                                                                                                       \
-    codelines.push_back({text(fmt::format("{:02x} {:02x}", *code, code[1])) | color(Color::Green) | flex,              \
+    codelines.push_back({text(fmt::format("{:02x} {}", *code, code[1])) | color(Color::Green) | flex,                  \
                          text(fmt::format("{} {}", name, (int)j)) | color(Color::GrayLight) | flex});                  \
     code += 2;
+#define OpArgu8s8(name)                                                                                                \
+    j = code[1];                                                                                                       \
+    codelines.push_back(                                                                                               \
+        {text(fmt::format("{:02x} {} {}", *code, code[1], (int8_t)code[2])) | color(Color::Green) | flex,              \
+         text(fmt::format("{} {} {}", name, (int)j, (int8_t)code[2])) | color(Color::GrayLight) | flex});              \
+    code += 3;
 #define OpArgv(name)                                                                                                   \
     codelines.push_back({text(fmt::format("{:02x}", *code)) | color(Color::Green) | flex,                              \
                          text(name) | color(Color::GrayLight) | flex});                                                \
     ++code;
+#define OpCase(opname, optype)                                                                                         \
+    case op_##opname:                                                                                                  \
+        optype(#opname);                                                                                               \
+        break;
+#define OpCaseN(opname1, opname2, opname3, opname4, optype)                                                            \
+    OpCase(opname1, optype);                                                                                           \
+    OpCase(opname2, optype);                                                                                           \
+    OpCase(opname3, optype);                                                                                           \
+    OpCase(opname4, optype);
+
         switch (*code)
         {
-        case op_nop:
-            OpArgv("nop");
-            break;
-        case op_iconst_i(-1):
-            OpArgv("iconst_n1");
-            break;
-        case op_iconst_i(0):
-            OpArgv("iconst_0");
-            break;
-        case op_iconst_i(1):
-            OpArgv("iconst_1");
-            break;
-        case op_iconst_i(2):
-            OpArgv("iconst_2");
-            break;
-        case op_iconst_i(3):
-            OpArgv("iconst_3");
-            break;
-        case op_iconst_i(4):
-            OpArgv("iconst_4");
-            break;
-        case op_iconst_i(5):
-            OpArgv("iconst_5");
-            break;
-        case op_lconst_l(0):
-            OpArgv("lconst_0");
-            break;
-        case op_lconst_l(1):
-            OpArgv("lconst_1");
-            break;
-        case op_fconst_f(0):
-            OpArgv("fconst_0");
-            break;
-        case op_fconst_f(1):
-            OpArgv("fconst_1");
-            break;
-        case op_fconst_f(2):
-            OpArgv("fconst_2");
-            break;
-        case op_dconst_d(0):
-            OpArgv("dconst_0");
-            break;
-        case op_dconst_d(1):
-            OpArgv("dconst_1");
-            break;
-        case op_bipush:
-            OpArgu8("bipush");
-            break;
-        case op_sipush:
-            OpArgs16("sipush");
-            break;
-        case op_iload_n(0):
-            OpArgv("iload_0");
-            break;
-        case op_iload_n(1):
-            OpArgv("iload_1");
-            break;
-        case op_iload_n(2):
-            OpArgv("iload_2");
-            break;
-        case op_iload_n(3):
-            OpArgv("iload_3");
-            break;
-        case op_lload_n(0):
-            OpArgv("lload_0");
-            break;
-        case op_lload_n(1):
-            OpArgv("lload_1");
-            break;
-        case op_lload_n(2):
-            OpArgv("lload_2");
-            break;
-        case op_lload_n(3):
-            OpArgv("lload_3");
-            break;
-        case op_fload_n(0):
-            OpArgv("fload_0");
-            break;
-        case op_fload_n(1):
-            OpArgv("fload_1");
-            break;
-        case op_fload_n(2):
-            OpArgv("fload_2");
-            break;
-        case op_fload_n(3):
-            OpArgv("fload_3");
-            break;
-        case op_dload_n(0):
-            OpArgv("dload_0");
-            break;
-        case op_dload_n(1):
-            OpArgv("dload_1");
-            break;
-        case op_dload_n(2):
-            OpArgv("dload_2");
-            break;
-        case op_dload_n(3):
-            OpArgv("dload_3");
-            break;
-	case op_iaload:
-	    OpArgv("iaload");
-	    break;
-	case op_laload:
-	    OpArgv("laload");
-	    break;
-	case op_faload:
-	    OpArgv("faload");
-	    break;
-	case op_daload:
-	    OpArgv("daload");
-	    break;
-	case op_aaload:
-	    OpArgv("aaload");
-	    break;
-	case op_baload:
-	    OpArgv("baload");
-	    break;
-	case op_caload:
-	    OpArgv("caload");
-	    break;
-	case op_saload:
-	    OpArgv("saload");
-	    break;
-        case op_istore_n(1):
-            OpArgv("istore_1");
-            break;
-        case op_ldc:
-            OpArgu8("ldc");
-            break;
+            OpCase(nop, OpArgv);
+            OpCase(iconst_i(-1), OpArgv);
+            OpCase(iconst_i(0), OpArgv);
+            OpCase(iconst_i(1), OpArgv);
+            OpCase(iconst_i(2), OpArgv);
+            OpCase(iconst_i(3), OpArgv);
+            OpCase(iconst_i(4), OpArgv);
+            OpCase(iconst_i(5), OpArgv);
+            OpCase(lconst_l(0), OpArgv);
+            OpCase(lconst_l(1), OpArgv);
+            OpCase(fconst_f(0), OpArgv);
+            OpCase(fconst_f(1), OpArgv);
+            OpCase(fconst_f(2), OpArgv);
+            OpCase(dconst_d(0), OpArgv);
+            OpCase(dconst_d(1), OpArgv);
+            OpCase(bipush, OpArgu8);
+            OpCase(sipush, OpArgs16);
+            OpCase(ldc, OpArgu8);
+            OpCase(ldc_w, OpArgu16);
+            OpCase(ldc2_w, OpArgu16);
+            OpCaseN(iload, lload, fload, dload, OpArgu8);
+            OpCase(aload, OpArgu8);
+            OpCaseN(iload_n(0), iload_n(1), iload_n(2), iload_n(3), OpArgv);
+            OpCaseN(lload_n(0), lload_n(1), lload_n(2), lload_n(3), OpArgv);
+            OpCaseN(fload_n(0), fload_n(1), fload_n(2), fload_n(3), OpArgv);
+            OpCaseN(dload_n(0), dload_n(1), dload_n(2), dload_n(3), OpArgv);
+            OpCaseN(aload_n(0), aload_n(1), aload_n(2), aload_n(3), OpArgv);
+            OpCaseN(iaload, laload, faload, daload, OpArgv);
+            OpCaseN(aaload, baload, caload, saload, OpArgv);
+            OpCaseN(istore, lstore, fstore, dstore, OpArgu8);
+            OpCase(astore, OpArgu8);
+            OpCaseN(istore_n(0), istore_n(1), istore_n(2), istore_n(3), OpArgv);
+            OpCaseN(lstore_n(0), lstore_n(1), lstore_n(2), lstore_n(3), OpArgv);
+            OpCaseN(fstore_n(0), fstore_n(1), fstore_n(2), fstore_n(3), OpArgv);
+            OpCaseN(dstore_n(0), dstore_n(1), dstore_n(2), dstore_n(3), OpArgv);
+            OpCaseN(astore_n(0), astore_n(1), astore_n(2), astore_n(3), OpArgv);
+            OpCaseN(iastore, lastore, fastore, dastore, OpArgv);
+            OpCaseN(aastore, bastore, castore, sastore, OpArgv);
+            OpCaseN(pop, pop2, dup, dup_x1, OpArgv);
+            OpCaseN(dup_x2, dup2, dup2_x1, dup2_x2, OpArgv);
+            OpCase(swap, OpArgv);
+            OpCaseN(iadd, ladd, fadd, dadd, OpArgv);
+            OpCaseN(isub, lsub, fsub, dsub, OpArgv);
+            OpCaseN(imul, lmul, fmul, dmul, OpArgv);
+            OpCaseN(idiv, ldiv, fdiv, ddiv, OpArgv);
+            OpCaseN(irem, lrem, frem, drem, OpArgv);
+            OpCaseN(ineg, lneg, fneg, dneg, OpArgv);
+            OpCaseN(ishr, lshr, ishl, lshl, OpArgv);
+            OpCaseN(iushr, lushr, iand, land, OpArgv);
+            OpCaseN(ior, lor, ixor, lxor, OpArgv);
+	    OpCase(iinc, OpArgu8s8);
+	    OpCaseN(i2l, i2f, i2d, l2i, OpArgv);
+	    OpCaseN(l2f, l2d, f2i, f2l, OpArgv);
+	    OpCaseN(d2i, f2d, d2l, d2f, OpArgv);
+	    OpCaseN(i2b, i2c, i2s, lcmp, OpArgv);
+            OpCaseN(fcmpl, fcmpg, dcmpl, dcmpg, OpArgv);
         case op_getstatic:
             OpArgu16("getstatic");
             break;
@@ -294,9 +237,6 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
             break;
         case op_new:
             OpArgu16("new");
-            break;
-        case op_dup:
-            OpArgv("dup");
             break;
         case op_goto:
             OpArgs16("goto");
