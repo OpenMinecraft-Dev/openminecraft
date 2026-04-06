@@ -3,6 +3,7 @@
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include <cstdint>
 #include <thread>
 
@@ -29,15 +30,29 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     }
 
     tc->zero.pc = m->code;
-    tc->zero.stackPointer =
-        reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(tc->zero.stackPointer) - sizeof(OMElysiaJavaFrame));
-    auto frame = reinterpret_cast<OMElysiaJavaFrame *>(tc->zero.stackPointer);
+    auto frame = reinterpret_cast<OMElysiaJavaFrame *>(zeroStackAlloc(sizeof(OMElysiaJavaFrame)));
     frame->method = m;
-    frame->caller = tc->zero.frame;
+    frame->caller = (OMElysiaJavaFrame *)0x33550336;
     tc->zero.frame = frame;
 
     while (true)
     {
     }
+}
+
+void *zeroStackAlloc(uint64_t len)
+{
+    auto tc = thisThread.metadata;
+    tc->zero.stackPointer = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(tc->zero.stackPointer) - len);
+    return tc->zero.stackPointer;
+}
+
+void *zeroStackPop(uint64_t len)
+{
+    auto tc = thisThread.metadata;
+    auto result = tc->zero.stackPointer;
+    tc->zero.stackPointer = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(tc->zero
+.stackPointer) + len);
+    return result;
 }
 } // namespace openminecraft::vm::elysia::executor

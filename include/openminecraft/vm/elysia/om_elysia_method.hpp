@@ -5,8 +5,10 @@
 
 namespace openminecraft::vm::elysia
 {
+class OMElysiaKlass;
 struct OMElysiaMethod
 {
+    OMElysiaKlass *klass;
     char *name;
     char *descriptor;
     uint16_t accessFlag;

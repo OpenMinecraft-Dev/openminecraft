@@ -206,6 +206,7 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
     for (int i = 0; i < klass->methodCount; i++)
     {
         auto &m = klass->methods[i];
+	m.klass = klass;
         m.codeLength = 0;
         m.code = nullptr;
 
