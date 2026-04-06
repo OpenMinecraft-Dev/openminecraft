@@ -1,3 +1,4 @@
+#include <windows.h>
 #include "openminecraft/mem/om_mem_prealloc.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include <errhandlingapi.h>
@@ -6,7 +7,6 @@
 #include <memoryapi.h>
 #include <new>
 #include <oleauto.h>
-#include <windows.h>
 #include <winnt.h>
 
 namespace openminecraft::mem

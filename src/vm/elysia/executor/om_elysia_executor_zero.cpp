@@ -4,6 +4,7 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 #include <cstdint>
+#include <thread>
 
 namespace openminecraft::vm::elysia::executor
 {

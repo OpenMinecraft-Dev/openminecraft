@@ -149,6 +149,9 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
     ++code;
         switch (*code)
         {
+        case op_nop:
+            OpArgv("nop");
+            break;
         case op_istore_n(1):
             OpArgv("istore_1");
             break;
@@ -164,12 +167,12 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
         case op_invokespecial:
             OpArgu16("invokespecial");
             break;
-	case op_new:
-	    OpArgu16("new");
-	    break;
-	case op_dup:
-	    OpArgv("dup");
-	    break;
+        case op_new:
+            OpArgu16("new");
+            break;
+        case op_dup:
+            OpArgv("dup");
+            break;
         case op_goto:
             OpArgs16("goto");
             break;
