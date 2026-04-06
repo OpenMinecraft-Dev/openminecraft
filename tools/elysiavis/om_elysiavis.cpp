@@ -229,6 +229,54 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
         case op_lload_n(3):
             OpArgv("lload_3");
             break;
+        case op_fload_n(0):
+            OpArgv("fload_0");
+            break;
+        case op_fload_n(1):
+            OpArgv("fload_1");
+            break;
+        case op_fload_n(2):
+            OpArgv("fload_2");
+            break;
+        case op_fload_n(3):
+            OpArgv("fload_3");
+            break;
+        case op_dload_n(0):
+            OpArgv("dload_0");
+            break;
+        case op_dload_n(1):
+            OpArgv("dload_1");
+            break;
+        case op_dload_n(2):
+            OpArgv("dload_2");
+            break;
+        case op_dload_n(3):
+            OpArgv("dload_3");
+            break;
+	case op_iaload:
+	    OpArgv("iaload");
+	    break;
+	case op_laload:
+	    OpArgv("laload");
+	    break;
+	case op_faload:
+	    OpArgv("faload");
+	    break;
+	case op_daload:
+	    OpArgv("daload");
+	    break;
+	case op_aaload:
+	    OpArgv("aaload");
+	    break;
+	case op_baload:
+	    OpArgv("baload");
+	    break;
+	case op_caload:
+	    OpArgv("caload");
+	    break;
+	case op_saload:
+	    OpArgv("saload");
+	    break;
         case op_istore_n(1):
             OpArgv("istore_1");
             break;

@@ -24,9 +24,9 @@ static void zeroStackPushW(T data) {
     else {
         uint64_t d = *reinterpret_cast<uint64_t *>(&data);
         auto dhigh = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
-	*dhigh = reinterpret_cast<uint32_t>(d >> 32);
+	*dhigh = static_cast<uint32_t>(d >> 32);
         auto dlow = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
-        *dlow = reinterpret_cast<uint32_t>(d & 0xffffffff);
+        *dlow = static_cast<uint32_t>(d & 0xffffffff);
     }
 }
 
