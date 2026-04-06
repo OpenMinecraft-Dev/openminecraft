@@ -5,6 +5,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include <fstream>
+#include <thread>
 
 namespace openminecraft::vm::elysia
 {
@@ -36,12 +37,15 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
     klassLoader->initClass(clsstr);
     klassLoader->initClass(clscls);
 
-    std::ifstream iss("/bridge/projects/Test.class", std::ios::binary);
+    std::ifstream iss("../Test.class", std::ios::binary);
     klassLoader->loadClass(&iss);
 
-    auto mcls = klassLoader->findClass("openminecraft/Test");
-    auto md = mcls->findMethod("main", "[Ljava/lang/String;");
-    executor->execute(md);
+    auto tt = new std::thread([&]() {
+        auto mcls = klassLoader->findClass("openminecraft/Test");
+        auto md = mcls->findMethod("main", "[Ljava/lang/String;");
+        executor->execute(md);
+    });
+    // executor->execute(md);
 }
 OMElysiaVirtualWorld::~OMElysiaVirtualWorld()
 {

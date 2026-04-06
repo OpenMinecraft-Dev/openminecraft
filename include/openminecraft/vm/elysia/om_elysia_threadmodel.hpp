@@ -2,13 +2,17 @@
 #define OM_ELYSIA_THREADMODEL_HPP
 
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
+#include <atomic>
 #include <functional>
+#include <iostream>
+#include <map>
+#include <mutex>
 #include <thread>
-#include <unordered_map>
 namespace openminecraft::vm::elysia
 {
 class OMElysiaThread;
-extern std::unordered_map<std::thread::id, OMElysiaThread *> threadMap;
+extern std::map<std::thread::id, OMElysiaThread *> threadMap;
+extern std::mutex mapMutex;
 
 struct OMElysiaJavaFrame
 {
@@ -33,6 +37,8 @@ class OMElysiaThread
 
     OMElysiaThread()
     {
+        std::lock_guard lg(mapMutex);
+
         threadMap[std::this_thread::get_id()] = this;
     }
     ~OMElysiaThread()
@@ -42,7 +48,23 @@ class OMElysiaThread
     }
 };
 
-extern thread_local OMElysiaThread threadContext;
+class OMElysiaThreadMetadata
+{
+  public:
+    OMElysiaThread *metadata;
+
+    OMElysiaThreadMetadata()
+    {
+        metadata = new OMElysiaThread;
+    }
+
+    ~OMElysiaThreadMetadata()
+    {
+        delete metadata;
+    }
+};
+
+extern thread_local OMElysiaThreadMetadata thisThread;
 } // namespace openminecraft::vm::elysia
 
 #endif

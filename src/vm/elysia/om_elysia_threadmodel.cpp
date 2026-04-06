@@ -2,6 +2,7 @@
 
 namespace openminecraft::vm::elysia
 {
-thread_local OMElysiaThread threadContext;
-std::unordered_map<std::thread::id, OMElysiaThread *> threadMap;
+thread_local OMElysiaThreadMetadata thisThread;
+std::map<std::thread::id, OMElysiaThread *> threadMap;
+std::mutex mapMutex;
 } // namespace openminecraft::vm::elysia

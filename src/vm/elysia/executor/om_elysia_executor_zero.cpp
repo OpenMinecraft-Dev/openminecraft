@@ -16,24 +16,27 @@ OMElysiaExecutorZero::~OMElysiaExecutorZero()
 
 void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 {
-    if (!threadContext.threadInited)
+    auto tc = thisThread.metadata;
+    if (!tc->threadInited)
     {
-        threadContext.stackEnd = mem::allocator::tracedMallocElysia(1024 * 1024);
-        threadContext.stackStart = reinterpret_cast<uint8_t *>(threadContext.stackEnd) + 1024 * 1024;
-        threadContext.zero.stackPointer = threadContext.stackStart;
-        threadContext.threadInited = true;
+        tc->stackEnd = mem::allocator::tracedMallocElysia(1024 * 1024);
+        tc->stackStart = reinterpret_cast<uint8_t *>(tc->stackEnd) + 1024 * 1024;
+        tc->zero.stackPointer = tc->stackStart;
+        tc->threadInited = true;
 
-        threadContext.cleaner = [&]() { mem::allocator::tracedFreeElysia(threadContext.stackEnd); };
-
-        logger.info("Thread Init!");
+        tc->cleaner = [&]() { mem::allocator::tracedFreeElysia(tc->stackEnd); };
     }
 
-    threadContext.zero.pc = m->code;
-    threadContext.zero.stackPointer = reinterpret_cast<void *>(
-        reinterpret_cast<uintptr_t>(threadContext.zero.stackPointer) - sizeof(OMElysiaJavaFrame));
-    auto frame = reinterpret_cast<OMElysiaJavaFrame *>(threadContext.zero.stackPointer);
+    tc->zero.pc = m->code;
+    tc->zero.stackPointer =
+        reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(tc->zero.stackPointer) - sizeof(OMElysiaJavaFrame));
+    auto frame = reinterpret_cast<OMElysiaJavaFrame *>(tc->zero.stackPointer);
     frame->method = m;
-    frame->caller = threadContext.zero.frame;
-    threadContext.zero.frame = frame;
+    frame->caller = tc->zero.frame;
+    tc->zero.frame = frame;
+
+    while (true)
+    {
+    }
 }
 } // namespace openminecraft::vm::elysia::executor

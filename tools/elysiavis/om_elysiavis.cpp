@@ -12,6 +12,7 @@
 #include "ftxui/dom/canvas.hpp"
 #include "ftxui/dom/elements.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
+#include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/elysia/om_elysia_heap.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
@@ -115,18 +116,101 @@ Element buildElysiaHeapComp2(OMElysiaVirtualWorld *world)
                                              window(text("Main"), buildElysiaHeapComp(world->mainHeap))}));
 }
 
+Element buildElysiaThreadAssembly(OMElysiaThread *thread)
+{
+    std::vector<std::vector<Element>> codelines;
+
+    uint8_t *code = reinterpret_cast<uint8_t *>(thread->zero.pc);
+    uint16_t s;
+    int16_t ss;
+    uint8_t j;
+    while (code < thread->zero.frame->method->code + thread->zero.frame->method->codeLength)
+    {
+#define OpArgs16(name)                                                                                                 \
+    ss = static_cast<int16_t>(code[1]) << 8 | code[2];                                                                 \
+    codelines.push_back(                                                                                               \
+        {text(fmt::format("{:02x} {:02x} {:02x}", *code, code[1], code[2])) | color(Color::Green) | flex,              \
+         text(fmt::format("{} {}", name, ss)) | color(Color::GrayLight) | flex});                                      \
+    code += 3;
+#define OpArgu16(name)                                                                                                 \
+    s = static_cast<uint16_t>(code[1]) << 8 | code[2];                                                                 \
+    codelines.push_back(                                                                                               \
+        {text(fmt::format("{:02x} {:02x} {:02x}", *code, code[1], code[2])) | color(Color::Green) | flex,              \
+         text(fmt::format("{} #{}", name, s)) | color(Color::GrayLight) | flex});                                      \
+    code += 3;
+#define OpArgu8(name)                                                                                                  \
+    j = code[1];                                                                                                       \
+    codelines.push_back({text(fmt::format("{:02x} {:02x}", *code, code[1])) | color(Color::Green) | flex,              \
+                         text(fmt::format("{} #{}", name, (int)j)) | color(Color::GrayLight) | flex});                 \
+    code += 2;
+#define OpArgv(name)                                                                                                   \
+    codelines.push_back({text(fmt::format("{:02x}", *code)) | color(Color::Green) | flex,                              \
+                         text(name) | color(Color::GrayLight) | flex});                                                \
+    ++code;
+        switch (*code)
+        {
+        case op_istore_n(1):
+            OpArgv("istore_1");
+            break;
+        case op_ldc:
+            OpArgu8("ldc");
+            break;
+        case op_getstatic:
+            OpArgu16("getstatic");
+            break;
+        case op_invokevirtual:
+            OpArgu16("invokevirtual");
+            break;
+        case op_invokespecial:
+            OpArgu16("invokespecial");
+            break;
+	case op_new:
+	    OpArgu16("new");
+	    break;
+	case op_dup:
+	    OpArgv("dup");
+	    break;
+        case op_goto:
+            OpArgs16("goto");
+            break;
+        default:
+            codelines.push_back({text(fmt::format("{:02x}", *code)) | color(Color::Green) | flex});
+            ++code;
+            break;
+        }
+    }
+
+    codelines.push_back({text("*** End Of Method ***") | color(Color::Blue)});
+
+    return gridbox(codelines);
+}
+
 Element buildElysiaThreadCode(OMElysiaThread *thread)
 {
-    return text("");
+    if (thread->zero.pc && thread->zero.frame)
+    {
+        auto c = reinterpret_cast<uint8_t *>(thread->zero.pc);
+        auto tt = text(fmt::format("{}", thread->zero.pc));
+        return buildElysiaThreadAssembly(thread);
+    }
+    else
+    {
+        return text(fmt::format("(No code)"));
+    }
 }
 
 Element buildElysiaThread(OMElysiaThread *thread)
 {
-    return window(text("Code"), text(fmt::format("{}", thread->zero.pc)));
+    return window(text("Code"), buildElysiaThreadCode(thread));
 }
 
 Element buildElysiaThreadstate()
 {
+    std::lock_guard lg(mapMutex);
+    if (threadMap.empty())
+    {
+        return text(fmt::format("No threads"));
+    }
     std::vector<Element> elem;
     for (auto &t : threadMap)
     {
@@ -146,10 +230,10 @@ int main(int argc, const char *argv[])
         animation::RequestAnimationFrame();
 
         return vbox(
-            {buildMemComp(), window(text("ElysiaVM"), hbox({buildElysiaHeapComp2(wld), buildElysiaThreadstate()}))});
+            {buildMemComp(), window(text("ElysiaVM"), vbox({buildElysiaHeapComp2(wld), buildElysiaThreadstate()}))});
     });
 
-    auto screen = ScreenInteractive::FitComponent();
+    auto screen = ScreenInteractive::Fullscreen();
     screen.Loop(renderer);
 
     delete wld;
