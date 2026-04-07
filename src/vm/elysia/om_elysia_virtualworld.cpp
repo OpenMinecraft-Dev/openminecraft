@@ -16,12 +16,18 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
     klassLoader = mem::fast_shared<allocatorTag, OMElysiaKlassloader>(this);
     oopManager = mem::fast_shared<allocatorTag, OMElysiaOopManager>(this);
     executor = mem::fast_shared<allocatorTag, executor::OMElysiaExecutorZero>(this);
-    // TODO: Stage #0 basic & primitive class defines
-    auto clsobj = klassLoader->constructInstanceClassShell("java/lang/Object");
+    /*auto clsobj = klassLoader->constructInstanceClassShell("java/lang/Object");
     auto clsstr = klassLoader->constructInstanceClassShell("java/lang/String");
     clsstr->superClass = clsobj;
     auto clscls = klassLoader->constructInstanceClassShell("java/lang/Class");
-    clscls->superClass = clsobj;
+    clscls->superClass = clsobj;*/
+
+    klassLoader->loadClass("java/lang/Object");
+    klassLoader->loadClass("java/lang/String");
+    klassLoader->loadClass("java/lang/Class");
+    klassLoader->loadClass("java/lang/Throwable");
+
+    auto clsobj = klassLoader->findClass("java/lang/Object");
 
     for (auto &s : {"char", "byte", "short", "int", "long", "float", "double", "boolean"})
     {
@@ -32,10 +38,9 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
 
     klassLoader->constructPrimitiveClass("void");
 
-    // TODO: Stage #1 load classfiles (klassloader)
-    klassLoader->initClass(clsobj);
+    /*klassLoader->initClass(clsobj);
     klassLoader->initClass(clsstr);
-    klassLoader->initClass(clscls);
+    klassLoader->initClass(clscls);*/
 
     std::ifstream iss("../Test.class", std::ios::binary);
     klassLoader->loadClass(&iss);
@@ -45,7 +50,6 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
         auto md = mcls->findMethod("main", "[Ljava/lang/String;");
         executor->execute(md);
     });
-    // executor->execute(md);
 }
 OMElysiaVirtualWorld::~OMElysiaVirtualWorld()
 {

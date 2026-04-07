@@ -70,7 +70,7 @@ void OMElysiaKlassloader::markKlass(OMElysiaKlass *klass)
     loadedClasses[binary::hash::hash_compile_time(reinterpret_cast<char *>(klass->name))] = klass;
 }
 
-void OMElysiaKlassloader::initClass(OMElysiaKlass *c)
+/*void OMElysiaKlassloader::initClass(OMElysiaKlass *c)
 {
     if (c->type == InstanceKlass)
     {
@@ -78,7 +78,7 @@ void OMElysiaKlassloader::initClass(OMElysiaKlass *c)
 
         loadClass(&istr);
     }
-}
+}*/
 
 void OMElysiaKlassloader::unloadClass(OMElysiaKlass *klass)
 {
@@ -142,6 +142,12 @@ OMElysiaKlass *OMElysiaKlassloader::findClass(std::string s)
     return loadedClasses[binary::hash::hash_compile_time(s.c_str())];
 }
 
+void OMElysiaKlassloader::loadClass(std::string name)
+{
+    std::ifstream istr(fmt::format("vmstd/out/{}.class", name), std::ios::binary);
+    loadClass(&istr);
+}
+
 void OMElysiaKlassloader::loadClass(std::istream *istr)
 {
     classfile::OMClassFileParser par(istr);
@@ -175,10 +181,11 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
 
         if (!loadedClasses.count(binary::hash::hash_compile_time(supclsname.c_str())))
         {
-            auto sup = constructInstanceClassShell(supclsname);
-            initClass(sup);
+            // auto sup = constructInstanceClassShell(supclsname);
+            // initClass(sup);
+            loadClass(supclsname);
 
-            klass->superClass = sup;
+            klass->superClass = findClass(supclsname);
         }
     }
     if (!clsfile->interfaces.empty())
@@ -191,8 +198,9 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
             auto ithash = binary::hash::hash_compile_time(supclsname.c_str());
             if (!loadedClasses.count(ithash))
             {
-                auto sup = constructInstanceClassShell(supclsname);
-                initClass(sup);
+                // auto sup = constructInstanceClassShell(supclsname);
+                // initClass(sup);
+		loadClass(supclsname);
             }
         }
     }
@@ -247,6 +255,9 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
     {
         klass->staticBlock = world->metaspaceHeap.allocate(klass->staticLength);
         std::memset(klass->staticBlock, 0x00, klass->staticLength);
+    }
+    else {
+        klass->staticBlock = nullptr;
     }
 }
 } // namespace openminecraft::vm::elysia

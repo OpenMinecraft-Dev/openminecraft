@@ -237,18 +237,32 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
 	    OpCase(goto, OpArgs16);
 	    OpCase(jsr, OpArgs16);
 	    OpCase(ret, OpArgu8);
-        case op_getstatic:
-            OpArgu16("getstatic");
-            break;
-        case op_invokevirtual:
-            OpArgu16("invokevirtual");
-            break;
-        case op_invokespecial:
-            OpArgu16("invokespecial");
-            break;
-        case op_new:
-            OpArgu16("new");
-            break;
+	    // tableswitch
+	    // lookupswitch
+	    OpCaseN(ireturn, lreturn, freturn, dreturn, OpArgv);
+	    OpCase(areturn, OpArgv);
+	    OpCase(return, OpArgv);
+	    OpCaseN(getstatic, putstatic, getfield, putfield, OpArgu16);
+	    OpCaseN(invokespecial, invokevirtual, invokestatic, invokeinterface, OpArgu16);
+            case op_invokedynamic:
+                OpArgu16("invokedynamic");
+                code += 2;
+		break;
+            OpCase(new, OpArgu16);
+	    OpCase(newarray, OpArgu8);
+	    OpCase(anewarray, OpArgu16);
+	    OpCase(arraylength, OpArgv);
+	    OpCase(athrow, OpArgv);
+            OpCase(checkcast, OpArgu16);
+	    OpCase(instanceof, OpArgu16);
+	    OpCase(monitorenter, OpArgv);
+	    OpCase(monitorexit, OpArgv);
+	    // wide
+	    // multianewarray
+	    OpCase(ifnull, OpArgs16);
+	    OpCase(ifnonnull, OpArgs16);
+            // goto_w
+	    // jsr_w
         default:
             codelines.push_back({text(fmt::format("{:02x}", *code)) | color(Color::Green) | flex,
                                  text("<unknown operand>") | color(Color::GrayDark) | flex});

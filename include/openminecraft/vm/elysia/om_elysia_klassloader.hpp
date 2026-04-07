@@ -20,8 +20,9 @@ class OMElysiaKlassloader
     OMElysiaArrayKlass *constructArrayClass(OMElysiaKlass *klass);
 
     void markKlass(OMElysiaKlass *klass);
-    void initClass(OMElysiaKlass *klass);
+    // void initClass(OMElysiaKlass *klass);
 
+    void loadClass(std::string name);
     void loadClass(std::istream *istr);
 
     OMElysiaKlass *findClass(std::string s);
