@@ -70,16 +70,6 @@ void OMElysiaKlassloader::markKlass(OMElysiaKlass *klass)
     loadedClasses[binary::hash::hash_compile_time(reinterpret_cast<char *>(klass->name))] = klass;
 }
 
-/*void OMElysiaKlassloader::initClass(OMElysiaKlass *c)
-{
-    if (c->type == InstanceKlass)
-    {
-        std::ifstream istr(fmt::format("vmstd/out/{}.class", reinterpret_cast<char *>(c->name)), std::ios::binary);
-
-        loadClass(&istr);
-    }
-}*/
-
 void OMElysiaKlassloader::unloadClass(OMElysiaKlass *klass)
 {
     if (klass->methods)
@@ -181,8 +171,6 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
 
         if (!loadedClasses.count(binary::hash::hash_compile_time(supclsname.c_str())))
         {
-            // auto sup = constructInstanceClassShell(supclsname);
-            // initClass(sup);
             loadClass(supclsname);
 
             klass->superClass = findClass(supclsname);
@@ -190,6 +178,9 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
     }
     if (!clsfile->interfaces.empty())
     {
+        klass->interfaceImplCount = clsfile->interfaces.size();
+	klass->interfaceImpls = world->metaspaceHeap.allocateArray<OMElysiaKlass *>(klass->interfaceImplCount);
+	int i = 0;
         for (auto i : clsfile->interfaces)
         {
             auto supclsname = clsfile->mapping[clsfile->mapping[i]->to<classfile::OMClassConstantClass>()->nameIndex]
@@ -198,10 +189,11 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
             auto ithash = binary::hash::hash_compile_time(supclsname.c_str());
             if (!loadedClasses.count(ithash))
             {
-                // auto sup = constructInstanceClassShell(supclsname);
-                // initClass(sup);
 		loadClass(supclsname);
             }
+
+	    klass->interfaceImpls[i] = findClass(supclsname);
+	    i++;
         }
     }
 

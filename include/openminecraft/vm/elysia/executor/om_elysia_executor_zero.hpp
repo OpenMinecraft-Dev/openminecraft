@@ -4,6 +4,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 namespace openminecraft::vm::elysia::executor
 {
 void *zeroStackAlloc(uint64_t len);
@@ -57,6 +58,7 @@ enum ZeroOpStatus : uint8_t {
     OpEnd
 };
 typedef ZeroOpStatus (*ZeroOpExecutor)();
+extern ZeroOpExecutor zeroExec[0xff];
 
 class OMElysiaExecutorZero
 {

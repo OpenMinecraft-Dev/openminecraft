@@ -16,16 +16,29 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
     klassLoader = mem::fast_shared<allocatorTag, OMElysiaKlassloader>(this);
     oopManager = mem::fast_shared<allocatorTag, OMElysiaOopManager>(this);
     executor = mem::fast_shared<allocatorTag, executor::OMElysiaExecutorZero>(this);
-    /*auto clsobj = klassLoader->constructInstanceClassShell("java/lang/Object");
-    auto clsstr = klassLoader->constructInstanceClassShell("java/lang/String");
-    clsstr->superClass = clsobj;
-    auto clscls = klassLoader->constructInstanceClassShell("java/lang/Class");
-    clscls->superClass = clsobj;*/
 
-    klassLoader->loadClass("java/lang/Object");
-    klassLoader->loadClass("java/lang/String");
-    klassLoader->loadClass("java/lang/Class");
-    klassLoader->loadClass("java/lang/Throwable");
+    for (auto &s : {
+        "java/lang/Object",
+	"java/lang/String",
+	"java/lang/Class",
+	"java/lang/Throwable",
+	"java/lang/Thread",
+	"java/lang/System",
+	"java/lang/Byte",
+	"java/lang/Integer",
+	"java/lang/Short",
+	"java/lang/Long",
+	"java/lang/Float",
+	"java/lang/Double",
+	"java/lang/Boolean",
+	"java/lang/Character",
+	"java/lang/Void",
+	"java/lang/Runtime",
+	"java/lang/StringBuilder",
+	"java/lang/Process"
+    }) {
+        klassLoader->loadClass(s);
+    }
 
     auto clsobj = klassLoader->findClass("java/lang/Object");
 
@@ -37,10 +50,6 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
     }
 
     klassLoader->constructPrimitiveClass("void");
-
-    /*klassLoader->initClass(clsobj);
-    klassLoader->initClass(clsstr);
-    klassLoader->initClass(clscls);*/
 
     std::ifstream iss("../Test.class", std::ios::binary);
     klassLoader->loadClass(&iss);

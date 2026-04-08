@@ -121,9 +121,10 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
 {
     std::vector<std::vector<Element>> codelines;
     auto mm = thread->zero.frame->method;
-    codelines.push_back({text(fmt::format("{}", (void *)thread->zero.pc))});
-    codelines.push_back({text(fmt::format("{}", (char *)mm->klass->name)) | color(Color::GrayDark)});
-    codelines.push_back({text(fmt::format("{}{}", mm->name, mm->descriptor)) | color(Color::GrayDark)});
+
+    std::vector<Element> codetop;
+    codetop.push_back(text(fmt::format("{} + {}", (void *)mm->code, static_cast<uintptr_t>(thread->zero.pc - mm->code))));
+    codetop.push_back(text(fmt::format("{}.{}{}", (char *)mm->klass->name, mm->name, mm->descriptor)) | color(Color::GrayDark));
 
     uint8_t *code = reinterpret_cast<uint8_t *>(thread->zero.pc);
     uint16_t s;
@@ -171,6 +172,7 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
         switch (*code)
         {
             OpCase(nop, OpArgv);
+	    OpCase(aconst_null, OpArgv);
             OpCase(iconst_i(-1), OpArgv);
             OpCase(iconst_i(0), OpArgv);
             OpCase(iconst_i(1), OpArgv);
@@ -271,7 +273,7 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
         }
     }
 
-    return gridbox(codelines);
+    return vbox({vbox(codetop), gridbox(codelines)});
 }
 
 Element buildElysiaThreadCode(OMElysiaThread *thread)
@@ -279,7 +281,7 @@ Element buildElysiaThreadCode(OMElysiaThread *thread)
     if (thread->zero.pc && thread->zero.frame)
     {
         auto c = reinterpret_cast<uint8_t *>(thread->zero.pc);
-        auto tt = text(fmt::format("{}", thread->zero.pc));
+        auto tt = text(fmt::format("{}", fmt::ptr(thread->zero.pc)));
         return buildElysiaThreadAssembly(thread);
     }
     else

@@ -9,6 +9,19 @@
 
 namespace openminecraft::vm::elysia::executor
 {
+static ZeroOpStatus handler_nop() {
+    ++thisThread.metadata->zero.pc;
+    return OpSuccess;
+}
+
+static ZeroOpStatus handler_iconst_n1() {
+    ++thisThread.metadata->zero.pc;
+    zeroStackPush<jint>(-1);
+    return OpSuccess;
+}
+
+ZeroOpExecutor zeroExec[0xff] = { handler_nop, nullptr, handler_iconst_n1, nullptr };
+
 OMElysiaExecutorZero::OMElysiaExecutorZero(OMElysiaVirtualWorld *vw) : world(vw), logger("OMElysiaExecutorZero", this)
 {
 }
@@ -37,6 +50,10 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     while (true)
     {
+	auto handler = zeroExec[*reinterpret_cast<uint8_t *>(thisThread.metadata->zero.pc)];
+	if (handler) {
+	    handler();
+	}
     }
 }
 

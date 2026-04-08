@@ -28,7 +28,7 @@ class OMElysiaThread
     void *stackEnd;
     struct
     {
-        void *pc = nullptr;
+        uint8_t *pc = nullptr;
         void *stackPointer = nullptr;
         OMElysiaJavaFrame *frame = nullptr;
     } zero;
