@@ -1,29 +1,71 @@
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
+#include "ffi.h"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
-#include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
+#include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 #include <cstdint>
 #include <thread>
 
 namespace openminecraft::vm::elysia::executor
 {
-static ZeroOpStatus handler_nop() {
+static ZeroOpStatus handler_nop()
+{
     ++thisThread.metadata->zero.pc;
     return OpSuccess;
 }
 
-static ZeroOpStatus handler_iconst_n1() {
+static ZeroOpStatus handler_iconst_n1()
+{
     ++thisThread.metadata->zero.pc;
     zeroStackPush<jint>(-1);
     return OpSuccess;
 }
 
-ZeroOpExecutor zeroExec[0xff] = { handler_nop, nullptr, handler_iconst_n1, nullptr };
+ZeroOpExecutor zeroExec[0xff] = {handler_nop, nullptr, handler_iconst_n1, nullptr};
+
+static int add(int a, int b)
+{
+    return a + b;
+}
 
 OMElysiaExecutorZero::OMElysiaExecutorZero(OMElysiaVirtualWorld *vw) : world(vw), logger("OMElysiaExecutorZero", this)
 {
+    auto functionPtr = (void (*)())&add;
+    int argCount = 2;
+
+    ffi_type **ffiArgTypes = (ffi_type **)malloc(sizeof(ffi_type *) * argCount);
+    ffiArgTypes[0] = &ffi_type_sint;
+    ffiArgTypes[1] = &ffi_type_sint;
+
+    void **ffiArgs = (void **)malloc(sizeof(void *) * argCount);
+    void *ffiArgPtr = malloc(ffiArgTypes[0]->size);
+    int *argPtr = (int *)ffiArgPtr;
+    *argPtr = 5;
+    ffiArgs[0] = ffiArgPtr;
+
+    void *ffiArgPtr2 = (void **)malloc(ffiArgTypes[1]->size);
+    int *argPtr2 = (int *)ffiArgPtr2;
+    *argPtr2 = 3;
+    ffiArgs[1] = ffiArgPtr2;
+
+    ffi_cif cif;
+    ffi_type *returnFfiType = &ffi_type_sint;
+    ffi_status ffiPrepStatus = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, (unsigned int)argCount, returnFfiType, ffiArgTypes);
+
+    if (ffiPrepStatus == FFI_OK)
+    {
+        void *returnPtr = NULL;
+        if (returnFfiType->size)
+        {
+            returnPtr = malloc(returnFfiType->size);
+        }
+        ffi_call(&cif, functionPtr, returnPtr, ffiArgs);
+
+        int returnValue = *(int *)returnPtr;
+        logger.info("ret: {}", returnValue);
+    }
 }
 OMElysiaExecutorZero::~OMElysiaExecutorZero()
 {
@@ -50,10 +92,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     while (true)
     {
-	auto handler = zeroExec[*reinterpret_cast<uint8_t *>(thisThread.metadata->zero.pc)];
-	if (handler) {
-	    handler();
-	}
+        auto handler = zeroExec[*reinterpret_cast<uint8_t *>(thisThread.metadata->zero.pc)];
+        if (handler)
+        {
+            handler();
+        }
     }
 }
 
@@ -68,8 +111,7 @@ void *zeroStackPop(uint64_t len)
 {
     auto tc = thisThread.metadata;
     auto result = tc->zero.stackPointer;
-    tc->zero.stackPointer = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(tc->zero
-.stackPointer) + len);
+    tc->zero.stackPointer = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(tc->zero.stackPointer) + len);
     return result;
 }
 } // namespace openminecraft::vm::elysia::executor
