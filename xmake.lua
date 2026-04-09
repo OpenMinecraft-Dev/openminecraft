@@ -83,7 +83,7 @@ add_requires(
 	"opengl-headers",
 	"bullet3",
 	"zlib",
-        "libffi master",
+        "libffi",
 	{ system = false }
 )
 add_requires("boost", { system = false, configs = { stacktrace = true, asio = true } })
