@@ -223,6 +223,7 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
                 auto ll = attr->to<classfile::OMClassAttrCode>();
                 m.codeLength = ll->codeLength;
                 m.code = world->metaspaceHeap.allocateArray<uint8_t>(m.codeLength);
+		m.localLength = ll->maxLocals;
                 std::memcpy(m.code, ll->code->data(), ll->codeLength);
                 break;
             }

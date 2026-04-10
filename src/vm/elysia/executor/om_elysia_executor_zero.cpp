@@ -10,21 +10,6 @@
 
 namespace openminecraft::vm::elysia::executor
 {
-static ZeroOpStatus handler_nop()
-{
-    ++thisThread.metadata->zero.pc;
-    return OpSuccess;
-}
-
-static ZeroOpStatus handler_iconst_n1()
-{
-    ++thisThread.metadata->zero.pc;
-    zeroStackPush<jint>(-1);
-    return OpSuccess;
-}
-
-ZeroOpExecutor zeroExec[0xff] = {handler_nop, nullptr, handler_iconst_n1, nullptr};
-
 static int add(int a, int b)
 {
     return a + b;
@@ -40,15 +25,10 @@ OMElysiaExecutorZero::OMElysiaExecutorZero(OMElysiaVirtualWorld *vw) : world(vw)
     ffiArgTypes[1] = &ffi_type_sint;
 
     void **ffiArgs = (void **)malloc(sizeof(void *) * argCount);
-    void *ffiArgPtr = malloc(ffiArgTypes[0]->size);
-    int *argPtr = (int *)ffiArgPtr;
-    *argPtr = 5;
-    ffiArgs[0] = ffiArgPtr;
-
-    void *ffiArgPtr2 = (void **)malloc(ffiArgTypes[1]->size);
-    int *argPtr2 = (int *)ffiArgPtr2;
-    *argPtr2 = 3;
-    ffiArgs[1] = ffiArgPtr2;
+    int a1 = 5;
+    int a2 = 3;
+    ffiArgs[0] = &a1;
+    ffiArgs[1] = &a2;
 
     ffi_cif cif;
     ffi_type *returnFfiType = &ffi_type_sint;
@@ -86,16 +66,38 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     tc->zero.pc = m->code;
     auto frame = reinterpret_cast<OMElysiaJavaFrame *>(zeroStackAlloc(sizeof(OMElysiaJavaFrame)));
+    for (int i = 0; i < m->localLength; i++) {
+        zeroStackPush<jint>(0);
+    }
     frame->method = m;
     frame->caller = (OMElysiaJavaFrame *)0x33550336;
     tc->zero.frame = frame;
 
     while (true)
     {
-        auto handler = zeroExec[*reinterpret_cast<uint8_t *>(thisThread.metadata->zero.pc)];
-        if (handler)
+        switch (*reinterpret_cast<uint8_t *>(tc->zero.pc))
         {
-            handler();
+        case op_nop:
+            ++tc->zero.pc;
+            break;
+#define op_iconst(n)                                                                                                   \
+    case op_iconst_i(n):                                                                                               \
+        zeroStackPush<jint>(n);                                                                                        \
+        ++tc->zero.pc;                                                                                                 \
+        break;
+
+            op_iconst(-1);
+	    op_iconst(0);
+	    op_iconst(1);
+	    op_iconst(2);
+	    op_iconst(3);
+	    op_iconst(4);
+	    op_iconst(5);
+        default:
+            while (true)
+            {
+                continue;
+            }
         }
     }
 }

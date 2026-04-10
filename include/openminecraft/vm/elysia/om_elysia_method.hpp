@@ -12,6 +12,9 @@ struct OMElysiaMethod
     char *name;
     char *descriptor;
     uint16_t accessFlag;
+
+    uint32_t localLength;
+
     uint32_t codeLength;
     uint8_t *code;
 };

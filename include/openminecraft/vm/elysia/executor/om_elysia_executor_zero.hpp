@@ -51,15 +51,6 @@ static T zeroStackPopWGet() {
     }
 }
 
-enum ZeroOpStatus : uint8_t {
-    OpSuccess = 0,
-    OpFail,
-    OpInterrupt,
-    OpEnd
-};
-typedef ZeroOpStatus (*ZeroOpExecutor)();
-extern ZeroOpExecutor zeroExec[0xff];
-
 class OMElysiaExecutorZero
 {
   public:
