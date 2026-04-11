@@ -391,6 +391,7 @@ class OMElysiaThreadComponent : public ComponentBase
     }
     Element OnRender()
     {
+        DetachAllChildren();
         threadtabs.clear();
         threadContent.clear();
         for (auto &t : threadMap)
@@ -430,7 +431,7 @@ int main(int argc, const char *argv[])
     auto container = Container::Horizontal({menuToggle, menuContainer});
     auto renderer = Renderer(container, [&] {
         animation::RequestAnimationFrame();
-        return vbox({menuToggle->Render(), separator(), menuContainer->Render()}) | border;
+        return window(text("Elysia Visualizer"), vbox({menuToggle->Render(), separator(), menuContainer->Render()}));
     });
 
     auto screen = ScreenInteractive::TerminalOutput();
