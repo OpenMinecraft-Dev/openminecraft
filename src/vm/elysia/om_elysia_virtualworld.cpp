@@ -17,26 +17,11 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
     oopManager = mem::fast_shared<allocatorTag, OMElysiaOopManager>(this);
     executor = mem::fast_shared<allocatorTag, executor::OMElysiaExecutorZero>(this);
 
-    for (auto &s : {
-        "java/lang/Object",
-	"java/lang/String",
-	"java/lang/Class",
-	"java/lang/Throwable",
-	"java/lang/Thread",
-	"java/lang/System",
-	"java/lang/Byte",
-	"java/lang/Integer",
-	"java/lang/Short",
-	"java/lang/Long",
-	"java/lang/Float",
-	"java/lang/Double",
-	"java/lang/Boolean",
-	"java/lang/Character",
-	"java/lang/Void",
-	"java/lang/Runtime",
-	"java/lang/StringBuilder",
-	"java/lang/Process"
-    }) {
+    for (auto &s : {"java/lang/Object", "java/lang/String", "java/lang/Class", "java/lang/Throwable",
+                    "java/lang/Thread", "java/lang/System", "java/lang/Byte", "java/lang/Integer", "java/lang/Short",
+                    "java/lang/Long", "java/lang/Float", "java/lang/Double", "java/lang/Boolean", "java/lang/Character",
+                    "java/lang/Void", "java/lang/Runtime", "java/lang/StringBuilder", "java/lang/Process"})
+    {
         klassLoader->loadClass(s);
     }
 

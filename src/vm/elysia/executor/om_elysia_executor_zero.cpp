@@ -2,10 +2,10 @@
 #include "ffi.h"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
+#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
-#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include <cstdint>
 #include <thread>
 
@@ -82,10 +82,10 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         case op_nop:
             ++tc->zero.pc;
             break;
-	case op_aconst_null:
-	    ++tc->zero.pc;
-	    zeroStackPush<OMElysiaOop *>(nullptr);
-	    break;
+        case op_aconst_null:
+            ++tc->zero.pc;
+            zeroStackPush<OMElysiaOop *>(nullptr);
+            break;
 #define op_iconst(n)                                                                                                   \
     case op_iconst_i(n):                                                                                               \
         zeroStackPush<jint>(n);                                                                                        \
@@ -105,12 +105,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_iconst(3);
             op_iconst(4);
             op_iconst(5);
-	    op_lconst(0);
-	    op_lconst(1);
-	case op_istore_n(1):
-	    zeroStackSaveLocalPop<jint>(1);
-	    ++tc->zero.pc;
-	    break;
+            op_lconst(0);
+            op_lconst(1);
+        case op_istore_n(1):
+            zeroStackSaveLocalPop<jint>(1);
+            ++tc->zero.pc;
+            break;
         default:
             while (true)
             {

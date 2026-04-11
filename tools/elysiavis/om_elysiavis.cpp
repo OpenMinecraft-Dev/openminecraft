@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <vector>
 
 #include "fmt/format.h"
@@ -28,7 +29,7 @@ Element buildMemComp()
     printres([&](std::string a, std::string b) {
         memcomps.push_back(std::vector{text(a) | flex, text(b) | flex | color(Color::Green)});
     });
-    return window(text("Memory"), gridbox(memcomps));
+    return gridbox(memcomps);
 }
 
 std::string toDataSize(uint64_t l)
@@ -123,8 +124,10 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
     auto mm = thread->zero.frame->method;
 
     std::vector<Element> codetop;
-    codetop.push_back(text(fmt::format("{} + {}", (void *)mm->code, static_cast<uintptr_t>(thread->zero.pc - mm->code))));
-    codetop.push_back(text(fmt::format("{}.{}{}", (char *)mm->klass->name, mm->name, mm->descriptor)) | color(Color::GrayDark));
+    codetop.push_back(
+        text(fmt::format("{} + {}", (void *)mm->code, static_cast<uintptr_t>(thread->zero.pc - mm->code))));
+    codetop.push_back(text(fmt::format("{}.{}{}", (char *)mm->klass->name, mm->name, mm->descriptor)) |
+                      color(Color::GrayDark));
 
     uint8_t *code = reinterpret_cast<uint8_t *>(thread->zero.pc);
     uint16_t s;
@@ -146,7 +149,7 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
     code += 3;
 #define OpArgu8(name)                                                                                                  \
     j = code[1];                                                                                                       \
-    codelines.push_back({text(fmt::format("{:02x} {:02x}", *code, code[1])) | color(Color::Green) | flex,                  \
+    codelines.push_back({text(fmt::format("{:02x} {:02x}", *code, code[1])) | color(Color::Green) | flex,              \
                          text(fmt::format("{} {}", name, (int)j)) | color(Color::GrayLight) | flex});                  \
     code += 2;
 #define OpArgu8s8(name)                                                                                                \
@@ -172,7 +175,7 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
         switch (*code)
         {
             OpCase(nop, OpArgv);
-	    OpCase(aconst_null, OpArgv);
+            OpCase(aconst_null, OpArgv);
             OpCase(iconst_i(-1), OpArgv);
             OpCase(iconst_i(0), OpArgv);
             OpCase(iconst_i(1), OpArgv);
@@ -222,49 +225,49 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
             OpCaseN(ishr, lshr, ishl, lshl, OpArgv);
             OpCaseN(iushr, lushr, iand, land, OpArgv);
             OpCaseN(ior, lor, ixor, lxor, OpArgv);
-	    OpCase(iinc, OpArgu8s8);
-	    OpCaseN(i2l, i2f, i2d, l2i, OpArgv);
-	    OpCaseN(l2f, l2d, f2i, f2l, OpArgv);
-	    OpCaseN(d2i, f2d, d2l, d2f, OpArgv);
-	    OpCaseN(i2b, i2c, i2s, lcmp, OpArgv);
+            OpCase(iinc, OpArgu8s8);
+            OpCaseN(i2l, i2f, i2d, l2i, OpArgv);
+            OpCaseN(l2f, l2d, f2i, f2l, OpArgv);
+            OpCaseN(d2i, f2d, d2l, d2f, OpArgv);
+            OpCaseN(i2b, i2c, i2s, lcmp, OpArgv);
             OpCaseN(fcmpl, fcmpg, dcmpl, dcmpg, OpArgv);
-	    OpCaseN(ifeq, ifne, iflt, ifge, OpArgs16);
-	    OpCase(ifgt, OpArgs16);
-	    OpCase(ifle, OpArgs16);
-	    OpCaseN(if_icmpeq, if_icmpne, if_icmplt, if_icmpge, OpArgs16);
-	    OpCase(if_icmpgt, OpArgs16);
-	    OpCase(if_icmple, OpArgs16);
-	    OpCase(if_acmpeq, OpArgs16);
-	    OpCase(if_acmpne, OpArgs16);
-	    OpCase(goto, OpArgs16);
-	    OpCase(jsr, OpArgs16);
-	    OpCase(ret, OpArgu8);
-	    // tableswitch
-	    // lookupswitch
-	    OpCaseN(ireturn, lreturn, freturn, dreturn, OpArgv);
-	    OpCase(areturn, OpArgv);
-	    OpCase(return, OpArgv);
-	    OpCaseN(getstatic, putstatic, getfield, putfield, OpArgu16);
-	    OpCaseN(invokespecial, invokevirtual, invokestatic, invokeinterface, OpArgu16);
-            case op_invokedynamic:
-                OpArgu16("invokedynamic");
-                code += 2;
-		break;
+            OpCaseN(ifeq, ifne, iflt, ifge, OpArgs16);
+            OpCase(ifgt, OpArgs16);
+            OpCase(ifle, OpArgs16);
+            OpCaseN(if_icmpeq, if_icmpne, if_icmplt, if_icmpge, OpArgs16);
+            OpCase(if_icmpgt, OpArgs16);
+            OpCase(if_icmple, OpArgs16);
+            OpCase(if_acmpeq, OpArgs16);
+            OpCase(if_acmpne, OpArgs16);
+            OpCase(goto, OpArgs16);
+            OpCase(jsr, OpArgs16);
+            OpCase(ret, OpArgu8);
+            // tableswitch
+            // lookupswitch
+            OpCaseN(ireturn, lreturn, freturn, dreturn, OpArgv);
+            OpCase(areturn, OpArgv);
+            OpCase(return, OpArgv);
+            OpCaseN(getstatic, putstatic, getfield, putfield, OpArgu16);
+            OpCaseN(invokespecial, invokevirtual, invokestatic, invokeinterface, OpArgu16);
+        case op_invokedynamic:
+            OpArgu16("invokedynamic");
+            code += 2;
+            break;
             OpCase(new, OpArgu16);
-	    OpCase(newarray, OpArgu8);
-	    OpCase(anewarray, OpArgu16);
-	    OpCase(arraylength, OpArgv);
-	    OpCase(athrow, OpArgv);
+            OpCase(newarray, OpArgu8);
+            OpCase(anewarray, OpArgu16);
+            OpCase(arraylength, OpArgv);
+            OpCase(athrow, OpArgv);
             OpCase(checkcast, OpArgu16);
-	    OpCase(instanceof, OpArgu16);
-	    OpCase(monitorenter, OpArgv);
-	    OpCase(monitorexit, OpArgv);
-	    // wide
-	    // multianewarray
-	    OpCase(ifnull, OpArgs16);
-	    OpCase(ifnonnull, OpArgs16);
+            OpCase(instanceof, OpArgu16);
+            OpCase(monitorenter, OpArgv);
+            OpCase(monitorexit, OpArgv);
+            // wide
+            // multianewarray
+            OpCase(ifnull, OpArgs16);
+            OpCase(ifnonnull, OpArgs16);
             // goto_w
-	    // jsr_w
+        // jsr_w
         default:
             codelines.push_back({text(fmt::format("{:02x}", *code)) | color(Color::Green) | flex,
                                  text("<unknown operand>") | color(Color::GrayDark) | flex});
@@ -298,27 +301,32 @@ Element buildElysiaThreadStack(OMElysiaThread *thread)
     while (pp < thread->stackStart)
     {
         auto fptr = reinterpret_cast<uintptr_t>(frm);
-	auto cptr = reinterpret_cast<uintptr_t>(pp);
+        auto cptr = reinterpret_cast<uintptr_t>(pp);
 
-	auto clr = Color::Blue;
-	if (fptr > cptr) {
-	    if (fptr - cptr <= frm->method->localLength * sizeof(void *)) {
-	        clr = Color::White;
-	    }
-	}
-	else {
-	    if (cptr - fptr < sizeof(OMElysiaJavaFrame)) {
-	        clr = Color::Green;
-	    }
-            else {
-	        frm = frm->caller;
-		continue;
-	    }
-	}
+        auto clr = Color::Blue;
+        if (fptr > cptr)
+        {
+            if (fptr - cptr <= frm->method->localLength * sizeof(void *))
+            {
+                clr = Color::White;
+            }
+        }
+        else
+        {
+            if (cptr - fptr < sizeof(OMElysiaJavaFrame))
+            {
+                clr = Color::Green;
+            }
+            else
+            {
+                frm = frm->caller;
+                continue;
+            }
+        }
 
-        stk.push_back({separatorEmpty() | flex, text(fmt::format("{}", fmt::ptr(pp))), separatorEmpty() | flex,
-                       text(fmt::format("{:0" + fmt::format("{}", sizeof(void *) * 2) + "x}", (uintptr_t)*pp)) |
-                           color(clr)});
+        stk.push_back(
+            {separatorEmpty() | flex, text(fmt::format("{}", fmt::ptr(pp))), separatorEmpty() | flex,
+             text(fmt::format("{:0" + fmt::format("{}", sizeof(void *) * 2) + "x}", (uintptr_t)*pp)) | color(clr)});
         ++pp;
     }
     return gridbox(stk) | flex;
@@ -344,22 +352,88 @@ Element buildElysiaThreadstate()
                               buildElysiaThread(t.second)));
     }
 
-    return window(text("Elysia Threads"), vbox(elem));
+    return window(text("Elysia Threads"), hbox(elem));
 }
+
+class OMMemoryComponent : public ComponentBase
+{
+  public:
+    OMMemoryComponent()
+    {
+    }
+    Element OnRender()
+    {
+        return buildMemComp();
+    }
+};
+
+class OMElysiaThreadDataComponent : public ComponentBase
+{
+  public:
+    OMElysiaThreadDataComponent(OMElysiaThread *thread) : thread(thread)
+    {
+    }
+
+    Element OnRender()
+    {
+        return buildElysiaThread(thread);
+    }
+
+  private:
+    OMElysiaThread *thread;
+};
+
+class OMElysiaThreadComponent : public ComponentBase
+{
+  public:
+    OMElysiaThreadComponent()
+    {
+    }
+    Element OnRender()
+    {
+        threadtabs.clear();
+        threadContent.clear();
+        for (auto &t : threadMap)
+        {
+            threadtabs.push_back(fmt::format("Thread {}", reinterpret_cast<const void *>(&t.first)));
+            threadContent.push_back(std::make_shared<OMElysiaThreadDataComponent>(t.second));
+        }
+        menuToggle = Menu(&threadtabs, &tabsel);
+        menuContainer = Container::Tab(threadContent, &tabsel);
+        Add(menuToggle);
+        Add(menuContainer);
+        return hbox({menuToggle->Render(), separator(), menuContainer->Render()});
+    }
+
+  private:
+    int tabsel = 0;
+    std::vector<std::string> threadtabs;
+    std::vector<std::shared_ptr<ComponentBase>> threadContent;
+
+    Component menuToggle;
+    Component menuContainer;
+};
 
 int main(int argc, const char *argv[])
 {
     auto wld = new OMElysiaVirtualWorld;
 
-    auto container = Container::Horizontal({});
+    std::vector<std::string> tabnames = {"Memory", "ElysiaVM"};
+
+    auto memComp = std::make_shared<OMMemoryComponent>();
+    auto elyComp = std::make_shared<OMElysiaThreadComponent>();
+
+    int tabsel = 0;
+    auto menuToggle = Toggle(&tabnames, &tabsel);
+    auto menuContainer = Container::Tab({memComp, elyComp}, &tabsel);
+
+    auto container = Container::Horizontal({menuToggle, menuContainer});
     auto renderer = Renderer(container, [&] {
         animation::RequestAnimationFrame();
-
-        return vbox(
-            {buildMemComp(), window(text("ElysiaVM"), vbox({buildElysiaHeapComp2(wld), buildElysiaThreadstate()}))});
+        return vbox({menuToggle->Render(), separator(), menuContainer->Render()}) | border;
     });
 
-    auto screen = ScreenInteractive::FitComponent();
+    auto screen = ScreenInteractive::TerminalOutput();
     screen.Loop(renderer);
 
     delete wld;
