@@ -2,48 +2,53 @@
 #define OM_ELYSIA_EXECUTOR_ZERO_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/vm/elysia/om_elysia_method.hpp"
-#include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
-#include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
+#include "openminecraft/vm/elysia/om_elysia_method.hpp"
+#include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
+#include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 namespace openminecraft::vm::elysia::executor
 {
 void *zeroStackAlloc(uint64_t len);
 void *zeroStackPop(uint64_t len);
-template <typename T>
-static void zeroStackPush(T data) {
+template <typename T> static void zeroStackPush(T data)
+{
     auto d = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
     *d = *reinterpret_cast<uint32_t *>(&data);
 }
 
-template <typename T>
-static void zeroStackPushW(T data) {
-    if constexpr (sizeof(void *) == 8) {
+template <typename T> static void zeroStackPushW(T data)
+{
+    if constexpr (sizeof(void *) == 8)
+    {
         auto d = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
-	*d = *reinterpret_cast<uint64_t *>(&data);
-        zeroStackAlloc(sizeof(void *)); // gino: wide data need 2 slots, on 64 bit this means one actual slot and another padding slot
+        *d = *reinterpret_cast<uint64_t *>(&data);
+        zeroStackAlloc(sizeof(
+            void *)); // gino: wide data need 2 slots, on 64 bit this means one actual slot and another padding slot
     }
-    else {
+    else
+    {
         uint64_t d = *reinterpret_cast<uint64_t *>(&data);
         auto dhigh = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
-	*dhigh = static_cast<uint32_t>(d >> 32);
+        *dhigh = static_cast<uint32_t>(d >> 32);
         auto dlow = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
         *dlow = static_cast<uint32_t>(d & 0xffffffff);
     }
 }
 
-template <typename T>
-static T zeroStackPopGet() {
+template <typename T> static T zeroStackPopGet()
+{
     return *reinterpret_cast<T *>(zeroStackPop(sizeof(void *)));
 }
 
-template <typename T>
-static T zeroStackPopWGet() {
-    if constexpr (sizeof(void *) == 8) {
-	zeroStackPop(sizeof(void *)); // geopeila: padding slot
+template <typename T> static T zeroStackPopWGet()
+{
+    if constexpr (sizeof(void *) == 8)
+    {
+        zeroStackPop(sizeof(void *)); // geopeila: padding slot
         return *reinterpret_cast<T *>(zeroStackPop(sizeof(void *)));
     }
-    else {
+    else
+    {
         auto dlow = *reinterpret_cast<uint32_t *>(zeroStackPop(sizeof(void *)));
         auto dhigh = *reinterpret_cast<uint32_t *>(zeroStackPop(sizeof(void *)));
 
@@ -52,10 +57,22 @@ static T zeroStackPopWGet() {
     }
 }
 
-template <typename T>
-static void zeroStackSaveLocalPop(uint32_t l) {
+template <typename T> static void zeroStackSaveLocalPop(uint32_t l)
+{
     auto ll = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
     *reinterpret_cast<T *>(ll) = zeroStackPopGet<T>();
+}
+
+template <typename T> static void zeroStackSaveLocal(uint32_t l, T data)
+{
+    auto ll = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
+    *reinterpret_cast<T *>(ll) = data;
+}
+
+template <typename T> static T zeroStackLoadLocal(uint32_t l)
+{
+    auto ll = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
+    return *reinterpret_cast<T *>(ll);
 }
 
 class OMElysiaExecutorZero

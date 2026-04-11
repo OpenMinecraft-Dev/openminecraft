@@ -107,10 +107,39 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_iconst(5);
             op_lconst(0);
             op_lconst(1);
+        case op_bipush:
+            ++tc->zero.pc;
+            zeroStackPush<jint>(*tc->zero.pc);
+            ++tc->zero.pc;
+            break;
+        case op_iload_n(1):
+            zeroStackPush<jint>(zeroStackLoadLocal<jint>(1));
+            ++tc->zero.pc;
+            break;
         case op_istore_n(1):
             zeroStackSaveLocalPop<jint>(1);
             ++tc->zero.pc;
             break;
+        case op_iinc: {
+            ++tc->zero.pc;
+            auto slt = *tc->zero.pc;
+            jint data = zeroStackLoadLocal<jint>(slt);
+            ++tc->zero.pc;
+            data += *reinterpret_cast<int8_t *>(tc->zero.pc);
+            zeroStackSaveLocal(slt, data);
+            ++tc->zero.pc;
+            break;
+        }
+        case op_if_icmpne: {
+	    int16_t offset = static_cast<int16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
+            if (zeroStackPopGet<jint>() != zeroStackPopGet<jint>()) {
+	        tc->zero.pc += offset;
+	    }
+	    else {
+	        tc->zero.pc += 3;
+	    }
+            break;
+        }
         default:
             while (true)
             {

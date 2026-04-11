@@ -126,8 +126,9 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
     std::vector<Element> codetop;
     codetop.push_back(
         text(fmt::format("{} + {}", (void *)mm->code, static_cast<uintptr_t>(thread->zero.pc - mm->code))));
-    codetop.push_back(text(fmt::format("{}.{}{}", (char *)mm->klass->name, mm->name, mm->descriptor)) |
+    codetop.push_back(text(fmt::format("{}", (char *)mm->klass->name)) |
                       color(Color::GrayDark));
+    codetop.push_back(text(fmt::format("{}{}", mm->name, mm->descriptor)) | color(Color::GrayDark));
 
     uint8_t *code = reinterpret_cast<uint8_t *>(thread->zero.pc);
     uint16_t s;
@@ -419,14 +420,19 @@ int main(int argc, const char *argv[])
 {
     auto wld = new OMElysiaVirtualWorld;
 
-    std::vector<std::string> tabnames = {"Memory", "ElysiaVM"};
+    std::vector<std::string> tabnames = {"Memory", "ElysiaVM", "Elysia Heap"};
 
     auto memComp = std::make_shared<OMMemoryComponent>();
     auto elyComp = std::make_shared<OMElysiaThreadComponent>();
 
+    auto cc = Container::Vertical({});
+    auto elymemComp = Renderer(cc, [&] {
+        return hbox({window(text("Metaspace"), buildElysiaHeapComp(wld->metaspaceHeap)), window(text("main"), buildElysiaHeapComp(wld->mainHeap))});
+    });
+
     int tabsel = 0;
     auto menuToggle = Toggle(&tabnames, &tabsel);
-    auto menuContainer = Container::Tab({memComp, elyComp}, &tabsel);
+    auto menuContainer = Container::Tab({memComp, elyComp, elymemComp}, &tabsel);
 
     auto container = Container::Horizontal({menuToggle, menuContainer});
     auto renderer = Renderer(container, [&] {
