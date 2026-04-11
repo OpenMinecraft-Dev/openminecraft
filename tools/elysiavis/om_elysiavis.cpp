@@ -294,11 +294,31 @@ Element buildElysiaThreadStack(OMElysiaThread *thread)
 {
     std::vector<std::vector<Element>> stk;
     void **pp = reinterpret_cast<void **>(thread->zero.stackPointer);
+    auto frm = thread->zero.frame;
     while (pp < thread->stackStart)
     {
+        auto fptr = reinterpret_cast<uintptr_t>(frm);
+	auto cptr = reinterpret_cast<uintptr_t>(pp);
+
+	auto clr = Color::Blue;
+	if (fptr > cptr) {
+	    if (fptr - cptr <= frm->method->localLength * sizeof(void *)) {
+	        clr = Color::White;
+	    }
+	}
+	else {
+	    if (cptr - fptr < sizeof(OMElysiaJavaFrame)) {
+	        clr = Color::Green;
+	    }
+            else {
+	        frm = frm->caller;
+		continue;
+	    }
+	}
+
         stk.push_back({separatorEmpty() | flex, text(fmt::format("{}", fmt::ptr(pp))), separatorEmpty() | flex,
                        text(fmt::format("{:0" + fmt::format("{}", sizeof(void *) * 2) + "x}", (uintptr_t)*pp)) |
-                           color(Color::Blue)});
+                           color(clr)});
         ++pp;
     }
     return gridbox(stk) | flex;
@@ -339,7 +359,7 @@ int main(int argc, const char *argv[])
             {buildMemComp(), window(text("ElysiaVM"), vbox({buildElysiaHeapComp2(wld), buildElysiaThreadstate()}))});
     });
 
-    auto screen = ScreenInteractive::Fullscreen();
+    auto screen = ScreenInteractive::FitComponent();
     screen.Loop(renderer);
 
     delete wld;

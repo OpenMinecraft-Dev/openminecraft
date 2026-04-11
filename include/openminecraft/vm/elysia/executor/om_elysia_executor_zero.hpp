@@ -4,6 +4,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 namespace openminecraft::vm::elysia::executor
 {
@@ -49,6 +50,12 @@ static T zeroStackPopWGet() {
         auto d = static_cast<uint64_t>(dhigh) << 32 | dlow;
         return *reinterpret_cast<T *>(&d);
     }
+}
+
+template <typename T>
+static void zeroStackSaveLocalPop(uint32_t l) {
+    auto ll = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
+    *reinterpret_cast<T *>(ll) = zeroStackPopGet<T>();
 }
 
 class OMElysiaExecutorZero

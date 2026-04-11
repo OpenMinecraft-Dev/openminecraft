@@ -5,6 +5,7 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include <cstdint>
 #include <thread>
 
@@ -66,7 +67,8 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     tc->zero.pc = m->code;
     auto frame = reinterpret_cast<OMElysiaJavaFrame *>(zeroStackAlloc(sizeof(OMElysiaJavaFrame)));
-    for (int i = 0; i < m->localLength; i++) {
+    for (int i = 0; i < m->localLength; i++)
+    {
         zeroStackPush<jint>(0);
     }
     frame->method = m;
@@ -80,19 +82,35 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         case op_nop:
             ++tc->zero.pc;
             break;
+	case op_aconst_null:
+	    ++tc->zero.pc;
+	    zeroStackPush<OMElysiaOop *>(nullptr);
+	    break;
 #define op_iconst(n)                                                                                                   \
     case op_iconst_i(n):                                                                                               \
         zeroStackPush<jint>(n);                                                                                        \
         ++tc->zero.pc;                                                                                                 \
         break;
 
+#define op_lconst(n)                                                                                                   \
+    case op_lconst_l(n):                                                                                               \
+        zeroStackPushW<jlong>(n);                                                                                      \
+        ++tc->zero.pc;                                                                                                 \
+        break;
+
             op_iconst(-1);
-	    op_iconst(0);
-	    op_iconst(1);
-	    op_iconst(2);
-	    op_iconst(3);
-	    op_iconst(4);
-	    op_iconst(5);
+            op_iconst(0);
+            op_iconst(1);
+            op_iconst(2);
+            op_iconst(3);
+            op_iconst(4);
+            op_iconst(5);
+	    op_lconst(0);
+	    op_lconst(1);
+	case op_istore_n(1):
+	    zeroStackSaveLocalPop<jint>(1);
+	    ++tc->zero.pc;
+	    break;
         default:
             while (true)
             {
