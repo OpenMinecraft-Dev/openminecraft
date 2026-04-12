@@ -1,12 +1,16 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
+#include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include <cstring>
+#include <stdexcept>
+
+using namespace openminecraft::vm::classfile;
 
 namespace openminecraft::vm::elysia
 {
-OMElysiaMethod *OMElysiaKlass::findMethod(char *name, char *desc)
+OMElysiaMethod *OMElysiaKlass::findMethod(const char *name, const char *desc)
 {
     if (!methods || !methodCount)
     {
@@ -24,16 +28,60 @@ OMElysiaMethod *OMElysiaKlass::findMethod(char *name, char *desc)
     return nullptr;
 }
 
-OMElysiaField *OMElysiaInstanceKlass::findField(char *name, char *desc)
+void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id)
 {
-    if (!name || !desc) {
+    if (constantPool[id])
+    {
+        return constantPool[id];
+    }
+
+    auto item = constantPoolRaw[id];
+    switch (item->type())
+    {
+    case OMClassConstantType::MethodRef: {
+        auto mr = item->to<OMClassConstantMethodRef>();
+        auto clsname = constantPoolRaw[constantPoolRaw[mr->classIndex]->to<OMClassConstantClass>()->nameIndex]
+                           ->to<OMClassConstantUtf8>()
+                           ->data;
+        auto mdname =
+            constantPoolRaw[constantPoolRaw[mr->nameAndTypeIndex]->to<OMClassConstantNameAndType>()->nameIndex]
+                ->to<OMClassConstantUtf8>()
+                ->data;
+        auto mddesc =
+            constantPoolRaw[constantPoolRaw[mr->nameAndTypeIndex]->to<OMClassConstantNameAndType>()->descIndex]
+                ->to<OMClassConstantUtf8>()
+                ->data;
+
+        if (klassloader)
+        {
+            throw std::logic_error("not supported uplevel classloader!");
+        }
+
+        auto cls = nativeKlassloader->fetchOrLoadClass(clsname);
+        auto mthd = cls->findMethod(mdname.c_str(), mddesc.c_str());
+
+        constantPool[id] = mthd;
+        return mthd;
+    }
+    default:
+        throw 0;
+    }
+    return nullptr;
+}
+
+OMElysiaField *OMElysiaInstanceKlass::findField(const char *name, const char *desc)
+{
+    if (!name || !desc)
+    {
         return nullptr;
     }
 
-    for (int i = 0; i < fieldCount; i++) {
-        if (std::strcmp(fields[i].name, name) == 0 && std::strcmp(fields[i].desc, desc) == 0) {
-	    return &fields[i];
-	}
+    for (int i = 0; i < fieldCount; i++)
+    {
+        if (std::strcmp(fields[i].name, name) == 0 && std::strcmp(fields[i].desc, desc) == 0)
+        {
+            return &fields[i];
+        }
     }
 
     return nullptr;

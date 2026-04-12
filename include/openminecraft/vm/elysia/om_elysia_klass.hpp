@@ -11,6 +11,9 @@
 
 namespace openminecraft::vm::elysia
 {
+class OMElysiaOop;
+class OMElysiaKlassloader;
+
 enum OMElysiaKlassType
 {
     InstanceKlass,
@@ -20,6 +23,8 @@ enum OMElysiaKlassType
 class OMElysiaKlass
 {
   public:
+    OMElysiaKlassloader *nativeKlassloader = nullptr;
+
     OMElysiaKlass *superClass;
     OMElysiaKlassType type;
     uint8_t ptrLength;
@@ -28,10 +33,12 @@ class OMElysiaKlass
 
     jbyte *name;
 
+    OMElysiaOop *klassloader = nullptr;
+
     uint32_t methodCount = 0;
     OMElysiaMethod *methods = nullptr;
 
-    OMElysiaMethod *findMethod(char *name, char *desc);
+    OMElysiaMethod *findMethod(const char *name, const char *desc);
 };
 
 class OMElysiaArrayKlass : public OMElysiaKlass
@@ -64,7 +71,8 @@ class OMElysiaInstanceKlass : public OMElysiaKlass
 
     void initFieldOffsets();
 
-    OMElysiaField *findField(char *name, char *desc);
+    OMElysiaField *findField(const char *name, const char *desc);
+    void *constantPoolFetch(uint16_t id);
 };
 
 class OMElysiaPrimitiveKlass : public OMElysiaKlass

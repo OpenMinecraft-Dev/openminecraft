@@ -67,6 +67,7 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
 
 void OMElysiaKlassloader::markKlass(OMElysiaKlass *klass)
 {
+    klass->nativeKlassloader = this;
     loadedClasses[binary::hash::hash_compile_time(reinterpret_cast<char *>(klass->name))] = klass;
 }
 
@@ -118,7 +119,7 @@ void OMElysiaKlassloader::unloadClass(OMElysiaKlass *klass)
             world->metaspaceHeap.deallocate(ii->staticBlock, ii->staticLength);
         }
 
-	world->metaspaceHeap.deallocateArray(ii->constantPool, ii->constantPoolCount);
+        world->metaspaceHeap.deallocateArray(ii->constantPool, ii->constantPoolCount);
         break;
     }
     case PrimitiveKlass:
@@ -181,8 +182,8 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
     if (!clsfile->interfaces.empty())
     {
         klass->interfaceImplCount = clsfile->interfaces.size();
-	klass->interfaceImpls = world->metaspaceHeap.allocateArray<OMElysiaKlass *>(klass->interfaceImplCount);
-	int i = 0;
+        klass->interfaceImpls = world->metaspaceHeap.allocateArray<OMElysiaKlass *>(klass->interfaceImplCount);
+        int i = 0;
         for (auto i : clsfile->interfaces)
         {
             auto supclsname = clsfile->mapping[clsfile->mapping[i]->to<classfile::OMClassConstantClass>()->nameIndex]
@@ -191,17 +192,18 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
             auto ithash = binary::hash::hash_compile_time(supclsname.c_str());
             if (!loadedClasses.count(ithash))
             {
-		loadClass(supclsname);
+                loadClass(supclsname);
             }
 
-	    klass->interfaceImpls[i] = findClass(supclsname);
-	    i++;
+            klass->interfaceImpls[i] = findClass(supclsname);
+            i++;
         }
     }
 
     klass->constantPoolRaw = clsfile->mapping;
     int l = 0;
-    for (auto &pp : clsfile->mapping) {
+    for (auto &pp : clsfile->mapping)
+    {
         l = std::max(l, pp.first + 1);
     }
     klass->constantPoolCount = l;
@@ -214,11 +216,11 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
     for (int i = 0; i < klass->methodCount; i++)
     {
         auto &m = klass->methods[i];
-	m.klass = klass;
+        m.klass = klass;
         m.codeLength = 0;
         m.code = nullptr;
 
-        m.accessFlag = klass->methods[i].accessFlag;
+        m.accessFlag = clsfile->methods[i]->accessFlags;
         m.name = world->metaspaceHeap.allocateStr(
             clsfile->mapping[clsfile->methods[i]->nameIndex]->to<classfile::OMClassConstantUtf8>()->data);
         m.descriptor = world->metaspaceHeap.allocateStr(
@@ -231,7 +233,7 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
                 auto ll = attr->to<classfile::OMClassAttrCode>();
                 m.codeLength = ll->codeLength;
                 m.code = world->metaspaceHeap.allocateArray<uint8_t>(m.codeLength);
-		m.localLength = ll->maxLocals;
+                m.localLength = ll->maxLocals;
                 std::memcpy(m.code, ll->code->data(), ll->codeLength);
                 break;
             }
@@ -257,7 +259,8 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
         klass->staticBlock = world->metaspaceHeap.allocate(klass->staticLength);
         std::memset(klass->staticBlock, 0x00, klass->staticLength);
     }
-    else {
+    else
+    {
         klass->staticBlock = nullptr;
     }
 }

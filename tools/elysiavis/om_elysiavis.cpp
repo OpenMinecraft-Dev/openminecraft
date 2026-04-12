@@ -14,6 +14,7 @@
 #include "ftxui/dom/elements.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
+#include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_heap.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
@@ -126,8 +127,7 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
     std::vector<Element> codetop;
     codetop.push_back(
         text(fmt::format("{} + {}", (void *)mm->code, static_cast<uintptr_t>(thread->zero.pc - mm->code))));
-    codetop.push_back(text(fmt::format("{}", (char *)mm->klass->name)) |
-                      color(Color::GrayDark));
+    codetop.push_back(text(fmt::format("{}", (char *)mm->klass->name)) | color(Color::GrayDark));
     codetop.push_back(text(fmt::format("{}{}", mm->name, mm->descriptor)) | color(Color::GrayDark));
 
     uint8_t *code = reinterpret_cast<uint8_t *>(thread->zero.pc);
@@ -139,28 +139,30 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
 #define OpArgs16(name)                                                                                                 \
     ss = static_cast<int16_t>(code[1]) << 8 | code[2];                                                                 \
     codelines.push_back(                                                                                               \
-        {text(fmt::format("{:02x} {:02x} {:02x}", *code, code[1], code[2])) | color(Color::Green) | flex, separatorEmpty() | flex,             \
-         text(fmt::format("{} {}", name, ss)) | color(Color::GrayLight) | flex});                                      \
+        {text(fmt::format("{:02x} {:02x} {:02x}", *code, code[1], code[2])) | color(Color::Green) | flex,              \
+         separatorEmpty() | flex, text(fmt::format("{} {}", name, ss)) | color(Color::GrayLight) | flex});             \
     code += 3;
 #define OpArgu16(name)                                                                                                 \
     s = static_cast<uint16_t>(code[1]) << 8 | code[2];                                                                 \
     codelines.push_back(                                                                                               \
-        {text(fmt::format("{:02x} {:02x} {:02x}", *code, code[1], code[2])) | color(Color::Green) | flex, separatorEmpty() | flex,             \
-         text(fmt::format("{} {}", name, s)) | color(Color::GrayLight) | flex});                                       \
+        {text(fmt::format("{:02x} {:02x} {:02x}", *code, code[1], code[2])) | color(Color::Green) | flex,              \
+         separatorEmpty() | flex, text(fmt::format("{} {}", name, s)) | color(Color::GrayLight) | flex});              \
     code += 3;
 #define OpArgu8(name)                                                                                                  \
     j = code[1];                                                                                                       \
-    codelines.push_back({text(fmt::format("{:02x} {:02x}", *code, code[1])) | color(Color::Green) | flex, separatorEmpty() | flex,              \
+    codelines.push_back({text(fmt::format("{:02x} {:02x}", *code, code[1])) | color(Color::Green) | flex,              \
+                         separatorEmpty() | flex,                                                                      \
                          text(fmt::format("{} {}", name, (int)j)) | color(Color::GrayLight) | flex});                  \
     code += 2;
 #define OpArgu8s8(name)                                                                                                \
     j = code[1];                                                                                                       \
     codelines.push_back(                                                                                               \
-        {text(fmt::format("{:02x} {:02x} {:02x}", *code, code[1], code[2])) | color(Color::Green) | flex, separatorEmpty() | flex,             \
+        {text(fmt::format("{:02x} {:02x} {:02x}", *code, code[1], code[2])) | color(Color::Green) | flex,              \
+         separatorEmpty() | flex,                                                                                      \
          text(fmt::format("{} {} {}", name, (int)j, (int8_t)code[2])) | color(Color::GrayLight) | flex});              \
     code += 3;
 #define OpArgv(name)                                                                                                   \
-    codelines.push_back({text(fmt::format("{:02x}", *code)) | color(Color::Green) | flex, separatorEmpty() | flex,                             \
+    codelines.push_back({text(fmt::format("{:02x}", *code)) | color(Color::Green) | flex, separatorEmpty() | flex,     \
                          text(name) | color(Color::GrayLight) | flex});                                                \
     ++code;
 #define OpCase(opname, optype)                                                                                         \
@@ -270,8 +272,8 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
             // goto_w
         // jsr_w
         default:
-            codelines.push_back({text(fmt::format("{:02x}", *code)) | color(Color::Green) | flex, separatorEmpty() | flex, 
-                                 text("<unknown operand>") | color(Color::GrayDark) | flex});
+            codelines.push_back({text(fmt::format("{:02x}", *code)) | color(Color::Green) | flex,
+                                 separatorEmpty() | flex, text("<unknown operand>") | color(Color::GrayDark) | flex});
             ++code;
             break;
         }
@@ -301,6 +303,7 @@ Element buildElysiaThreadStack(OMElysiaThread *thread)
     auto frm = thread->zero.frame;
     while (pp < thread->stackStart)
     {
+        std::string ext = "";
         auto fptr = reinterpret_cast<uintptr_t>(frm);
         auto cptr = reinterpret_cast<uintptr_t>(pp);
 
@@ -325,8 +328,13 @@ Element buildElysiaThreadStack(OMElysiaThread *thread)
             }
         }
 
+        if (cptr == fptr)
+        {
+            ext = "*";
+        }
+
         stk.push_back(
-            {separatorEmpty() | flex, text(fmt::format("{}", fmt::ptr(pp))), separatorEmpty() | flex,
+            {text(ext), separatorEmpty() | flex, text(fmt::format("{}", fmt::ptr(pp))), separatorEmpty() | flex,
              text(fmt::format("{:0" + fmt::format("{}", sizeof(void *) * 2) + "x}", (uintptr_t)*pp)) | color(clr)});
         ++pp;
     }
@@ -404,7 +412,7 @@ class OMElysiaThreadComponent : public ComponentBase
         menuContainer = Container::Tab(threadContent, &tabsel);
         Add(menuToggle);
         Add(menuContainer);
-        return hbox({menuToggle->Render() | flex, separator(), menuContainer->Render()});
+        return hbox({menuToggle->Render(), separator(), menuContainer->Render()});
     }
 
   private:
@@ -427,7 +435,8 @@ int main(int argc, const char *argv[])
 
     auto cc = Container::Vertical({});
     auto elymemComp = Renderer(cc, [&] {
-        return hbox({window(text("Metaspace"), buildElysiaHeapComp(wld->metaspaceHeap)), window(text("main"), buildElysiaHeapComp(wld->mainHeap))});
+        return hbox({window(text("Metaspace"), buildElysiaHeapComp(wld->metaspaceHeap)),
+                     window(text("main"), buildElysiaHeapComp(wld->mainHeap))});
     });
 
     int tabsel = 0;
@@ -440,7 +449,7 @@ int main(int argc, const char *argv[])
         return window(text("Elysia Visualizer"), vbox({menuToggle->Render(), separator(), menuContainer->Render()}));
     });
 
-    auto screen = ScreenInteractive::Fullscreen();
+    auto screen = ScreenInteractive::TerminalOutput();
     screen.Loop(renderer);
 
     delete wld;

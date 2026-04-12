@@ -60,6 +60,45 @@ static uint64_t fieldLength(char *s, uint64_t ptrLen)
         return ptrLen;
     }
 }
+
+static uint64_t argSlots(char *s)
+{
+    uint64_t l = 0;
+    while (*s)
+    {
+        switch (*s)
+        {
+        case '(':
+            ++s;
+            break;
+        case 'L':
+            while (*s != ';')
+            {
+                ++s;
+            }
+            ++l;
+            break;
+        case 'J':
+        case 'D':
+            ++s;
+            l += 2;
+            break;
+        case 'B':
+        case 'Z':
+        case 'C':
+        case 'S':
+        case 'I':
+        case 'F':
+            ++s;
+            ++l;
+            break;
+        default:
+            ++s;
+            break;
+        }
+    }
+    return l;
+}
 } // namespace openminecraft::vm::elysia
 
 #endif

@@ -1,12 +1,16 @@
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "ffi.h"
 #include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/vm/bytecode/om_bytecodes.hpp"
+#include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
+#include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 #include <cstdint>
+#include <stdexcept>
 #include <thread>
 
 namespace openminecraft::vm::elysia::executor
@@ -45,7 +49,7 @@ OMElysiaExecutorZero::OMElysiaExecutorZero(OMElysiaVirtualWorld *vw) : world(vw)
         ffi_call(&cif, functionPtr, returnPtr, ffiArgs);
 
         int returnValue = *(int *)returnPtr;
-        logger.info("ret: {}", returnValue);
+        logger.info("ret: {} l{}", returnValue, argSlots("(Ljava/lang/System;DIIJZ)V"));
     }
 }
 OMElysiaExecutorZero::~OMElysiaExecutorZero()
@@ -64,8 +68,16 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
     frame->returnAddr = tc->zero.pc;
     frame->caller = tc->zero.frame;
     tc->zero.frame = frame;
-
     tc->zero.pc = m->code;
+}
+
+void OMElysiaExecutorZero::popFrame()
+{
+    auto tc = thisThread.metadata;
+    tc->zero.stackPointer =
+        reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(tc->zero.frame) + sizeof(OMElysiaJavaFrame));
+    tc->zero.pc = tc->zero.frame->returnAddr;
+    tc->zero.frame = tc->zero.frame->caller;
 }
 
 void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
@@ -90,6 +102,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     while (true)
     {
+        if (!tc->zero.frame->returnAddr)
+        {
+            break;
+        }
+
         switch (*reinterpret_cast<uint8_t *>(tc->zero.pc))
         {
         case op_nop:
@@ -154,6 +171,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                 tc->zero.pc += 3;
             }
             break;
+        }
+        case op_invokestatic: {
+            uint16_t id = static_cast<uint16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
+            auto ff = reinterpret_cast<OMElysiaInstanceKlass *>(tc->zero.frame->method->klass)->constantPoolFetch(id);
+            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff));
         }
         default:
             while (true)
