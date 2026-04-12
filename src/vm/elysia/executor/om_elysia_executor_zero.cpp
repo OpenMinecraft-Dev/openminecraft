@@ -62,9 +62,17 @@ OMElysiaExecutorZero::~OMElysiaExecutorZero()
 
 void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
 {
+    auto ll = argSlots(m->descriptor);
     auto tc = thisThread.metadata;
+
+    std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(tc->zero.stackPointer) - sizeof(OMElysiaJavaFrame)),
+                tc->zero.stackPointer, ll * sizeof(void *));
+    zeroStackPop(ll * sizeof(void *));
+
     auto frame = reinterpret_cast<OMElysiaJavaFrame *>(zeroStackAlloc(sizeof(OMElysiaJavaFrame)));
-    for (int i = 0; i < m->localLength; i++)
+    zeroStackAlloc(ll * sizeof(void *));
+
+    for (int i = ll; i < m->localLength; i++)
     {
         zeroStackPush<OMElysiaOop *>(nullptr);
     }
