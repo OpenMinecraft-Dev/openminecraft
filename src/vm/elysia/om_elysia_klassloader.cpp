@@ -23,7 +23,7 @@ OMElysiaInstanceKlass *OMElysiaKlassloader::constructInstanceClassShell(std::str
     auto klass = world->metaspaceHeap.allocate<OMElysiaInstanceKlass>();
     klass->accessFlag = JVM_Acc_Public;
     klass->superClass = nullptr;
-    klass->name = reinterpret_cast<jbyte *>(world->metaspaceHeap.allocateStr(s));
+    klass->name = world->metaspaceHeap.allocateStr(s);
     klass->type = InstanceKlass;
     klass->interfaceImplCount = 0;
     klass->interfaceImpls = nullptr;
@@ -37,7 +37,7 @@ OMElysiaPrimitiveKlass *OMElysiaKlassloader::constructPrimitiveClass(std::string
     auto klass = world->metaspaceHeap.allocate<OMElysiaPrimitiveKlass>();
     klass->accessFlag = JVM_Acc_Public;
     klass->superClass = nullptr;
-    klass->name = reinterpret_cast<jbyte *>(world->metaspaceHeap.allocateStr(s));
+    klass->name = world->metaspaceHeap.allocateStr(s);
     klass->type = PrimitiveKlass;
     klass->ptrLength = world->mainHeap.ptrLength();
 
@@ -51,7 +51,7 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
     auto klass = world->metaspaceHeap.allocate<OMElysiaArrayKlass>();
     klass->accessFlag = JVM_Acc_Public;
     klass->superClass = nullptr;
-    klass->name = reinterpret_cast<jbyte *>(world->metaspaceHeap.allocateStr(rawname));
+    klass->name = world->metaspaceHeap.allocateStr(rawname);
     klass->type = ArrayKlass;
     klass->lowerDim = k;
     klass->ptrLength = world->mainHeap.ptrLength();
@@ -200,10 +200,12 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
         }
     }
 
-    klass->constantPoolRaw = clsfile->mapping;
+    klass->constantPoolRaw =
+        std::make_shared<std::unordered_map<uint16_t, std::shared_ptr<classfile::OMClassConstant>>>();
     int l = 0;
     for (auto &pp : clsfile->mapping)
     {
+        (*klass->constantPoolRaw)[pp.first] = pp.second;
         l = std::max(l, pp.first + 1);
     }
     klass->constantPoolCount = l;

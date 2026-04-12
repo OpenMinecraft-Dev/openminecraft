@@ -25,8 +25,8 @@ class OMElysiaThread
 {
   public:
     bool threadInited = false;
-    void *stackStart;
-    void *stackEnd;
+    void *stackStart = nullptr;
+    void *stackEnd = nullptr;
     struct
     {
         uint8_t *pc = nullptr;
@@ -38,12 +38,18 @@ class OMElysiaThread
 
     OMElysiaThread()
     {
+    }
+
+    void registerThread()
+    {
         std::lock_guard lg(mapMutex);
 
         threadMap[std::this_thread::get_id()] = this;
     }
+
     ~OMElysiaThread()
     {
+        std::lock_guard lg(mapMutex);
         cleaner();
         threadMap.erase(std::this_thread::get_id());
     }

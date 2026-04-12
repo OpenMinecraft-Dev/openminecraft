@@ -1,7 +1,9 @@
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "ffi.h"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
+#include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
@@ -12,6 +14,8 @@
 #include <cstdint>
 #include <stdexcept>
 #include <thread>
+
+using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::elysia::executor
 {
@@ -49,7 +53,7 @@ OMElysiaExecutorZero::OMElysiaExecutorZero(OMElysiaVirtualWorld *vw) : world(vw)
         ffi_call(&cif, functionPtr, returnPtr, ffiArgs);
 
         int returnValue = *(int *)returnPtr;
-        logger.info("ret: {} l{}", returnValue, argSlots("(Ljava/lang/System;DIIJZ)V"));
+        logger.info("ret: {}", returnValue);
     }
 }
 OMElysiaExecutorZero::~OMElysiaExecutorZero()
@@ -69,6 +73,19 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
     frame->caller = tc->zero.frame;
     tc->zero.frame = frame;
     tc->zero.pc = m->code;
+
+    if (m->isNative())
+    {
+        switch (hash_compile_time(fmt::format("{}.{}", m->klass->name, m->name).c_str()))
+        {
+        case "java/lang/System.registerNatives"_hash:
+            impl::Java_java_lang_System_registerNatives();
+            popFrame();
+            break;
+        default:
+            throw 0;
+        }
+    }
 }
 
 void OMElysiaExecutorZero::popFrame()
@@ -88,25 +105,25 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         tc->stackEnd = mem::allocator::tracedMallocElysia(1024 * 1024);
         tc->stackStart = reinterpret_cast<uint8_t *>(tc->stackEnd) + 1024 * 1024;
         tc->zero.stackPointer = tc->stackStart;
-        tc->threadInited = true;
 
         tc->cleaner = [&]() { mem::allocator::tracedFreeElysia(tc->stackEnd); };
+        tc->threadInited = true;
+        tc->registerThread();
     }
 
     pushFrame(m);
 
     if (m->klass->type == InstanceKlass && !reinterpret_cast<OMElysiaInstanceKlass *>(m->klass)->clinitFinished)
     {
-        pushFrame(m->klass->findMethod("<clinit>", "()V"));
+        auto l = m->klass->findMethod("<clinit>", "()V");
+        if (l)
+        {
+            pushFrame(l);
+        }
     }
 
     while (true)
     {
-        if (!tc->zero.frame->returnAddr)
-        {
-            break;
-        }
-
         switch (*reinterpret_cast<uint8_t *>(tc->zero.pc))
         {
         case op_nop:
@@ -175,6 +192,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         case op_invokestatic: {
             uint16_t id = static_cast<uint16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
             auto ff = reinterpret_cast<OMElysiaInstanceKlass *>(tc->zero.frame->method->klass)->constantPoolFetch(id);
+            tc->zero.pc += 3;
             pushFrame(reinterpret_cast<OMElysiaMethod *>(ff));
         }
         default:

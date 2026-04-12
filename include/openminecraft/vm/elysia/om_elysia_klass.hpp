@@ -31,7 +31,7 @@ class OMElysiaKlass
 
     uint16_t accessFlag;
 
-    jbyte *name;
+    char *name;
 
     OMElysiaOop *klassloader = nullptr;
 
@@ -54,7 +54,7 @@ class OMElysiaInstanceKlass : public OMElysiaKlass
     uint32_t interfaceImplCount;
     OMElysiaKlass **interfaceImpls;
 
-    std::unordered_map<uint16_t, std::shared_ptr<classfile::OMClassConstant>> constantPoolRaw;
+    std::shared_ptr<std::unordered_map<uint16_t, std::shared_ptr<classfile::OMClassConstant>>> constantPoolRaw;
     uint32_t constantPoolCount = 0;
     void **constantPool = nullptr;
 

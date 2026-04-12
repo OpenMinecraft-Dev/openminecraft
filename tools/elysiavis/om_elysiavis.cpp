@@ -357,8 +357,11 @@ Element buildElysiaThreadstate()
     std::vector<Element> elem;
     for (auto &t : threadMap)
     {
-        elem.push_back(window(text(fmt::format("Thread {}", reinterpret_cast<const void *>(&t.first))),
-                              buildElysiaThread(t.second)));
+        if (t.second->threadInited)
+        {
+            elem.push_back(window(text(fmt::format("Thread {}", reinterpret_cast<const void *>(&t.first))),
+                                  buildElysiaThread(t.second)));
+        }
     }
 
     return window(text("Elysia Threads"), hbox(elem));

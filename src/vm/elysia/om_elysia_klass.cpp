@@ -35,20 +35,20 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id)
         return constantPool[id];
     }
 
-    auto item = constantPoolRaw[id];
+    auto item = constantPoolRaw->at(id);
     switch (item->type())
     {
     case OMClassConstantType::MethodRef: {
         auto mr = item->to<OMClassConstantMethodRef>();
-        auto clsname = constantPoolRaw[constantPoolRaw[mr->classIndex]->to<OMClassConstantClass>()->nameIndex]
+        auto clsname = constantPoolRaw->at(constantPoolRaw->at(mr->classIndex)->to<OMClassConstantClass>()->nameIndex)
                            ->to<OMClassConstantUtf8>()
                            ->data;
         auto mdname =
-            constantPoolRaw[constantPoolRaw[mr->nameAndTypeIndex]->to<OMClassConstantNameAndType>()->nameIndex]
+            constantPoolRaw->at(constantPoolRaw->at(mr->nameAndTypeIndex)->to<OMClassConstantNameAndType>()->nameIndex)
                 ->to<OMClassConstantUtf8>()
                 ->data;
         auto mddesc =
-            constantPoolRaw[constantPoolRaw[mr->nameAndTypeIndex]->to<OMClassConstantNameAndType>()->descIndex]
+            constantPoolRaw->at(constantPoolRaw->at(mr->nameAndTypeIndex)->to<OMClassConstantNameAndType>()->descIndex)
                 ->to<OMClassConstantUtf8>()
                 ->data;
 
