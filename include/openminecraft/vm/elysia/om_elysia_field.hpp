@@ -7,9 +7,11 @@
 namespace openminecraft::vm::elysia
 {
 constexpr uint32_t fieldOffsetUnknown = std::numeric_limits<uint32_t>::max();
+class OMElysiaInstanceKlass;
 class OMElysiaField
 {
   public:
+    OMElysiaInstanceKlass *klass;
     char *name;
     char *desc;
     uint16_t accessFlag;

@@ -117,6 +117,8 @@ void OMElysiaKlassloader::unloadClass(OMElysiaKlass *klass)
         {
             world->metaspaceHeap.deallocate(ii->staticBlock, ii->staticLength);
         }
+
+	world->metaspaceHeap.deallocateArray(ii->constantPool, ii->constantPoolCount);
         break;
     }
     case PrimitiveKlass:
@@ -198,6 +200,12 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
     }
 
     klass->constantPoolRaw = clsfile->mapping;
+    int l = 0;
+    for (auto &pp : clsfile->mapping) {
+        l = std::max(l, pp.first + 1);
+    }
+    klass->constantPoolCount = l;
+    klass->constantPool = world->metaspaceHeap.allocateArray<void *>(l);
 
     klass->accessFlag = clsfile->accessFlags;
 

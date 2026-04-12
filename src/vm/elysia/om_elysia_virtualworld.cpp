@@ -40,8 +40,8 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
     klassLoader->loadClass(&iss);
 
     auto tt = new std::thread([&]() {
-        auto mcls = klassLoader->findClass("openminecraft/Test");
-        auto md = mcls->findMethod("main", "[Ljava/lang/String;");
+        auto mcls = klassLoader->findClass("java/lang/System");
+        auto md = mcls->findMethod("initializeSystemClass", "()V");
         executor->execute(md);
     });
 }

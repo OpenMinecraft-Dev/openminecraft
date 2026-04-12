@@ -48,6 +48,10 @@ class OMElysiaInstanceKlass : public OMElysiaKlass
     OMElysiaKlass **interfaceImpls;
 
     std::unordered_map<uint16_t, std::shared_ptr<classfile::OMClassConstant>> constantPoolRaw;
+    uint32_t constantPoolCount = 0;
+    void **constantPool = nullptr;
+
+    bool clinitFinished = false;
 
     uint32_t fieldCount = 0;
     OMElysiaField *fields = nullptr;
@@ -59,6 +63,8 @@ class OMElysiaInstanceKlass : public OMElysiaKlass
     void *staticBlock = nullptr;
 
     void initFieldOffsets();
+
+    OMElysiaField *findField(char *name, char *desc);
 };
 
 class OMElysiaPrimitiveKlass : public OMElysiaKlass

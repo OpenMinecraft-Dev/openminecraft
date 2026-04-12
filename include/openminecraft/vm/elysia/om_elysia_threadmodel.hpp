@@ -17,6 +17,7 @@ extern std::mutex mapMutex;
 struct OMElysiaJavaFrame
 {
     OMElysiaMethod *method;
+    uint8_t *returnAddr;
     OMElysiaJavaFrame *caller;
 };
 

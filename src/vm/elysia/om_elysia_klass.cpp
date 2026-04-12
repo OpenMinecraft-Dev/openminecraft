@@ -15,10 +15,25 @@ OMElysiaMethod *OMElysiaKlass::findMethod(char *name, char *desc)
 
     for (int i = 0; i < methodCount; i++)
     {
-        if (std::strcmp(methods[i].name, name) == 0 && std::strcmp(methods[i].descriptor, desc))
+        if (std::strcmp(methods[i].name, name) == 0 && std::strcmp(methods[i].descriptor, desc) == 0)
         {
             return &methods[i];
         }
+    }
+
+    return nullptr;
+}
+
+OMElysiaField *OMElysiaInstanceKlass::findField(char *name, char *desc)
+{
+    if (!name || !desc) {
+        return nullptr;
+    }
+
+    for (int i = 0; i < fieldCount; i++) {
+        if (std::strcmp(fields[i].name, name) == 0 && std::strcmp(fields[i].desc, desc) == 0) {
+	    return &fields[i];
+	}
     }
 
     return nullptr;

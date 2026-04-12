@@ -52,6 +52,22 @@ OMElysiaExecutorZero::~OMElysiaExecutorZero()
 {
 }
 
+void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
+{
+    auto tc = thisThread.metadata;
+    auto frame = reinterpret_cast<OMElysiaJavaFrame *>(zeroStackAlloc(sizeof(OMElysiaJavaFrame)));
+    for (int i = 0; i < m->localLength; i++)
+    {
+        zeroStackPush<OMElysiaOop *>(nullptr);
+    }
+    frame->method = m;
+    frame->returnAddr = tc->zero.pc;
+    frame->caller = tc->zero.frame;
+    tc->zero.frame = frame;
+
+    tc->zero.pc = m->code;
+}
+
 void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 {
     auto tc = thisThread.metadata;
@@ -65,15 +81,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         tc->cleaner = [&]() { mem::allocator::tracedFreeElysia(tc->stackEnd); };
     }
 
-    tc->zero.pc = m->code;
-    auto frame = reinterpret_cast<OMElysiaJavaFrame *>(zeroStackAlloc(sizeof(OMElysiaJavaFrame)));
-    for (int i = 0; i < m->localLength; i++)
+    pushFrame(m);
+
+    if (m->klass->type == InstanceKlass && !reinterpret_cast<OMElysiaInstanceKlass *>(m->klass)->clinitFinished)
     {
-        zeroStackPush<jint>(0);
+        pushFrame(m->klass->findMethod("<clinit>", "()V"));
     }
-    frame->method = m;
-    frame->caller = (OMElysiaJavaFrame *)0x33550336;
-    tc->zero.frame = frame;
 
     while (true)
     {
@@ -131,13 +144,15 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
         case op_if_icmpne: {
-	    int16_t offset = static_cast<int16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
-            if (zeroStackPopGet<jint>() != zeroStackPopGet<jint>()) {
-	        tc->zero.pc += offset;
-	    }
-	    else {
-	        tc->zero.pc += 3;
-	    }
+            int16_t offset = static_cast<int16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
+            if (zeroStackPopGet<jint>() != zeroStackPopGet<jint>())
+            {
+                tc->zero.pc += offset;
+            }
+            else
+            {
+                tc->zero.pc += 3;
+            }
             break;
         }
         default:

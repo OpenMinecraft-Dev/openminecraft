@@ -82,6 +82,7 @@ class OMElysiaExecutorZero
     ~OMElysiaExecutorZero();
 
     void execute(OMElysiaMethod *m);
+    void pushFrame(OMElysiaMethod *m);
 
   private:
     OMElysiaVirtualWorld *world;
