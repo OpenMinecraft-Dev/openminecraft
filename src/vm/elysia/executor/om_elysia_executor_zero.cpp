@@ -60,9 +60,27 @@ OMElysiaExecutorZero::~OMElysiaExecutorZero()
 {
 }
 
+// Geopeila: Stack status when new function called
+// (x: operator stack, y: local variable, o: frame metadata)
+//
+//  (Pre)    (Copy)   (New)
+//
+//
+//          xxxxxxxx xxxxxxxx
+//          xxxxxxxx xxxxxxxx
+//          -------- oooooooo
+// xxxxxxxx xxxxxxxx oooooooo
+// xxxxxxxx xxxxxxxx oooooooo
+// yyyyyyyy yyyyyyyy yyyyyyyy
+// yyyyyyyy yyyyyyyy yyyyyyyy
+// yyyyyyyy yyyyyyyy yyyyyyyy
+// oooooooo oooooooo oooooooo
+// oooooooo oooooooo oooooooo
+// oooooooo oooooooo oooooooo
+// ........ ........ ........
 void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
 {
-    auto ll = argSlots(m->descriptor);
+    auto ll = argSlots(m->descriptor) + (m->isStatic() ? 0 : 1);
     auto tc = thisThread.metadata;
 
     std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(tc->zero.stackPointer) - sizeof(OMElysiaJavaFrame)),
