@@ -129,12 +129,14 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     if (!tc->threadInited)
     {
         tc->stackEnd = mem::allocator::tracedMallocElysia(1024 * 1024);
-        tc->stackStart = reinterpret_cast<uint8_t *>(tc->stackEnd) + 1024 * 1024;
+        tc->stackStart = reinterpret_cast<uint8_t *>(tc->stackEnd) + 1024 * 1024 - sizeof(void *);
         tc->zero.stackPointer = tc->stackStart;
 
         tc->cleaner = [&]() { mem::allocator::tracedFreeElysia(tc->stackEnd); };
         tc->threadInited = true;
         tc->registerThread();
+
+        logger.info("virtual stack: {}", (void *)tc->stackStart);
     }
 
     pushFrame(m);
