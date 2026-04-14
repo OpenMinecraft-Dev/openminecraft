@@ -83,8 +83,9 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
     auto ll = argSlots(m->descriptor) + (m->isStatic() ? 0 : 1);
     auto tc = thisThread.metadata;
 
-    std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(tc->zero.stackPointer) - sizeof(OMElysiaJavaFrame)),
-                tc->zero.stackPointer, ll * sizeof(void *));
+    std::memcpy(
+        reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(tc->zero.stackPointer) - sizeof(OMElysiaJavaFrame)),
+        tc->zero.stackPointer, ll * sizeof(void *));
     zeroStackPop(ll * sizeof(void *));
 
     auto frame = reinterpret_cast<OMElysiaJavaFrame *>(zeroStackAlloc(sizeof(OMElysiaJavaFrame)));
@@ -222,6 +223,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto ff = reinterpret_cast<OMElysiaInstanceKlass *>(tc->zero.frame->method->klass)->constantPoolFetch(id);
             tc->zero.pc += 3;
             pushFrame(reinterpret_cast<OMElysiaMethod *>(ff));
+            continue;
         }
         default:
             while (true)
