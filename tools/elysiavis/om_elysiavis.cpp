@@ -14,6 +14,7 @@
 #include "ftxui/dom/canvas.hpp"
 #include "ftxui/dom/elements.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
+#include "openminecraft/mem/om_mem_saferead.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
@@ -520,6 +521,17 @@ class OMElysiaKlassStatusComponent : public ComponentBase
 int main(int argc, const char *argv[])
 {
     auto wld = new OMElysiaVirtualWorld;
+
+    std::cout << "try access" << std::endl;
+    auto ll = openminecraft::mem::safeRead(0x0);
+    if (ll.has_value())
+    {
+        std::cout << (int)ll.value() << std::endl;
+    }
+    else
+    {
+        std::cout << "unable to access" << std::endl;
+    }
 
     std::vector<std::string> tabnames = {"Memory", "ElysiaVM", "Elysia Heap", "Elysia Klass"};
 

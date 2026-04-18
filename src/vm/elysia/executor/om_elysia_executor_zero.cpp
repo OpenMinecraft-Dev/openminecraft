@@ -218,6 +218,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             }
             break;
         }
+        case op_putstatic: {
+            uint16_t id = static_cast<uint16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
+            tc->zero.pc += 3;
+            goto unk;
+        }
         case op_invokestatic: {
             uint16_t id = static_cast<uint16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
             auto ff = reinterpret_cast<OMElysiaInstanceKlass *>(tc->zero.frame->method->klass)->constantPoolFetch(id);
@@ -226,6 +231,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             continue;
         }
         default:
+        unk:
             while (true)
             {
                 continue;
