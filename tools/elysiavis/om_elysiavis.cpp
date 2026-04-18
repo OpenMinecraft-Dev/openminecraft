@@ -17,6 +17,7 @@
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_heap.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
+#include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 
@@ -303,6 +304,8 @@ Element buildElysiaThreadStack(OMElysiaThread *thread)
     auto frm = thread->zero.frame;
     while (pp <= thread->stackStart)
     {
+        if (!frm)
+            break;
         std::string ext = "";
         auto fptr = reinterpret_cast<uintptr_t>(frm);
         auto cptr = reinterpret_cast<uintptr_t>(pp);
@@ -313,6 +316,7 @@ Element buildElysiaThreadStack(OMElysiaThread *thread)
             if (fptr - cptr <= frm->method->localLength * sizeof(void *))
             {
                 clr = Color::White;
+                ext = "+";
             }
         }
         else
@@ -427,14 +431,35 @@ class OMElysiaThreadComponent : public ComponentBase
     Component menuContainer;
 };
 
+class OMElysiaKlassStatusComponent : public ComponentBase
+{
+  public:
+    OMElysiaKlassStatusComponent(OMElysiaKlass *klass)
+    {
+	this->klass = klass;
+    }
+
+    Element OnRender()
+    {
+        return vbox({text(klass->name), text(fmt::format("{:04x}", klass->accessFlag))});
+    }
+  private:
+    OMElysiaKlass *klass;
+};
+
 int main(int argc, const char *argv[])
 {
     auto wld = new OMElysiaVirtualWorld;
 
-    std::vector<std::string> tabnames = {"Memory", "ElysiaVM", "Elysia Heap"};
+    std::vector<std::string> tabnames = {"Memory", "ElysiaVM", "Elysia Heap", "Elysia Klass"};
 
     auto memComp = std::make_shared<OMMemoryComponent>();
     auto elyComp = std::make_shared<OMElysiaThreadComponent>();
+    OMElysiaKlass *kls = nullptr;
+    while (!kls) {
+        kls = wld->klassLoader->findClass("java/lang/System");
+    }
+    auto kkComp = std::make_shared<OMElysiaKlassStatusComponent>(kls);
 
     auto cc = Container::Vertical({});
     auto elymemComp = Renderer(cc, [&] {
@@ -444,7 +469,7 @@ int main(int argc, const char *argv[])
 
     int tabsel = 0;
     auto menuToggle = Toggle(&tabnames, &tabsel);
-    auto menuContainer = Container::Tab({memComp, elyComp, elymemComp}, &tabsel);
+    auto menuContainer = Container::Tab({memComp, elyComp, elymemComp, kkComp}, &tabsel);
 
     auto container = Container::Horizontal({menuToggle, menuContainer});
     auto renderer = Renderer(container, [&] {
