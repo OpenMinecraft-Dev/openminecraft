@@ -63,6 +63,35 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id)
         constantPool[id] = mthd;
         return mthd;
     }
+    case OMClassConstantType::FieldRef: {
+        auto mr = item->to<OMClassConstantFieldRef>();
+        auto clsname = constantPoolRaw->at(constantPoolRaw->at(mr->classIndex)->to<OMClassConstantClass>()->nameIndex)
+                           ->to<OMClassConstantUtf8>()
+                           ->data;
+        auto mdname =
+            constantPoolRaw->at(constantPoolRaw->at(mr->nameAndTypeIndex)->to<OMClassConstantNameAndType>()->nameIndex)
+                ->to<OMClassConstantUtf8>()
+                ->data;
+        auto mddesc =
+            constantPoolRaw->at(constantPoolRaw->at(mr->nameAndTypeIndex)->to<OMClassConstantNameAndType>()->descIndex)
+                ->to<OMClassConstantUtf8>()
+                ->data;
+
+        if (klassloader)
+        {
+            throw std::logic_error("not supported uplevel classloader!");
+        }
+
+        for (int i = 0; i < fieldCount; i++)
+        {
+            if (std::strcmp(fields[i].name, mdname.c_str()) == 0 && std::strcmp(fields[i].desc, mddesc.c_str()) == 0)
+            {
+                constantPool[id] = &fields[i];
+                return &fields[i];
+            }
+            return nullptr;
+        }
+    }
     default:
         throw 0;
     }

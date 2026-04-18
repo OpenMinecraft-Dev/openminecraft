@@ -522,17 +522,6 @@ int main(int argc, const char *argv[])
 {
     auto wld = new OMElysiaVirtualWorld;
 
-    std::cout << "try access" << std::endl;
-    auto ll = openminecraft::mem::safeRead(0x0);
-    if (ll.has_value())
-    {
-        std::cout << (int)ll.value() << std::endl;
-    }
-    else
-    {
-        std::cout << "unable to access" << std::endl;
-    }
-
     std::vector<std::string> tabnames = {"Memory", "ElysiaVM", "Elysia Heap", "Elysia Klass"};
 
     auto memComp = std::make_shared<OMMemoryComponent>();
