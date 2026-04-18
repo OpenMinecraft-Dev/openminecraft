@@ -14,7 +14,11 @@ static jmp_buf env;
 
 static void crashHandler(int)
 {
+#ifdef OM_PLATFORM_BSD
+    siglongjmp(&env, 1);
+#else
     siglongjmp(env, 1);
+#endif
 }
 #endif
 
@@ -23,7 +27,11 @@ std::optional<uint8_t> safeRead(void *p)
 #ifdef OM_PLATFORM_UNIX
     signal(SIGSEGV, crashHandler);
     uint8_t v;
+#ifdef OM_PLATFORM_BSD
+    if (sigsetjmp(&env, 1) == 0)
+#else
     if (sigsetjmp(env, 1) == 0)
+#endif
     {
         v = *reinterpret_cast<uint8_t *>(p);
     }
