@@ -6,7 +6,7 @@
 
 namespace openminecraft::mem
 {
-static sigjmp_buf env;
+static jmp_buf env;
 
 static void crashHandler(int)
 {
