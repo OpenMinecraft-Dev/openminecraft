@@ -3,6 +3,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "fmt/format.h"
@@ -14,6 +15,7 @@
 #include "ftxui/dom/elements.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
+#include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_heap.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
@@ -431,20 +433,88 @@ class OMElysiaThreadComponent : public ComponentBase
     Component menuContainer;
 };
 
+Element buildAccFlg(uint16_t flag, bool isfield = false)
+{
+    std::vector<Element> accFlgs;
+
+#define ACC_CHECK(flg, name)                                                                                           \
+    if (flag & flg)                                                                                                    \
+    {                                                                                                                  \
+        accFlgs.push_back(text(name) | color(Color::Blue));                                                            \
+        accFlgs.push_back(separatorEmpty());                                                                           \
+    }
+
+    ACC_CHECK(JVM_Acc_Public, "public")
+    ACC_CHECK(JVM_Acc_Protected, "protect")
+    ACC_CHECK(JVM_Acc_Private, "private")
+    ACC_CHECK(JVM_Acc_Static, "static")
+    ACC_CHECK(JVM_Acc_Final, "final")
+    if (!isfield)
+    {
+        ACC_CHECK(JVM_Acc_Super, "super")
+    }
+    else
+    {
+        ACC_CHECK(JVM_Acc_Synchronized, "synchronized")
+    }
+    ACC_CHECK(JVM_Acc_Bridge, "bridge")
+    ACC_CHECK(JVM_Acc_Varargs, "varargs")
+    ACC_CHECK(JVM_Acc_Native, "native")
+    ACC_CHECK(JVM_Acc_Interface, "interface")
+    ACC_CHECK(JVM_Acc_Abstract, "abstract")
+    ACC_CHECK(JVM_Acc_Strict, "strict")
+    ACC_CHECK(JVM_Acc_Synthetic, "synthetic")
+    ACC_CHECK(JVM_Acc_Annotation, "annotation")
+    ACC_CHECK(JVM_Acc_Enum, "enum")
+    ACC_CHECK(JVM_Acc_Module, "module")
+
+    return hbox(accFlgs);
+}
+
 class OMElysiaKlassStatusComponent : public ComponentBase
 {
   public:
-    OMElysiaKlassStatusComponent(OMElysiaKlass *klass)
+    OMElysiaKlassStatusComponent(std::shared_ptr<OMElysiaKlassloader> klassloader)
     {
-	this->klass = klass;
+        this->klassloader = klassloader;
+
+        inputBase = Input(&klassname, "class name...");
+        Add(inputBase);
+    }
+
+    Element buildField(OMElysiaKlass *klass)
+    {
+        std::vector<Element> ee;
+        if (klass->type != OMElysiaKlassType::InstanceKlass)
+        {
+            return text("no fields");
+        }
+        auto ff = reinterpret_cast<OMElysiaInstanceKlass *>(klass)->fields;
+        for (int i = 0; i < reinterpret_cast<OMElysiaInstanceKlass *>(klass)->fieldCount; i++)
+        {
+            ee.push_back(hbox({buildAccFlg(ff[i].accessFlag, true), text(fmt::format("@0x{:x}", ff[i].offset)),
+                               separatorEmpty(), text(ff[i].name), text(":"), text(ff[i].desc)}));
+        }
+        return vbox(ee);
     }
 
     Element OnRender()
     {
-        return vbox({text(klass->name), text(fmt::format("{:04x}", klass->accessFlag))});
+        auto klass = klassloader->findClass(klassname);
+        if (klass)
+        {
+            return vbox({inputBase->Render(), vbox({buildAccFlg(klass->accessFlag), buildField(klass)})});
+        }
+        else
+        {
+            return vbox({inputBase->Render(), text("No such class")});
+        }
     }
+
   private:
-    OMElysiaKlass *klass;
+    std::string klassname = "java/lang/System";
+    std::shared_ptr<OMElysiaKlassloader> klassloader;
+    Component inputBase;
 };
 
 int main(int argc, const char *argv[])
@@ -455,11 +525,7 @@ int main(int argc, const char *argv[])
 
     auto memComp = std::make_shared<OMMemoryComponent>();
     auto elyComp = std::make_shared<OMElysiaThreadComponent>();
-    OMElysiaKlass *kls = nullptr;
-    while (!kls) {
-        kls = wld->klassLoader->findClass("java/lang/System");
-    }
-    auto kkComp = std::make_shared<OMElysiaKlassStatusComponent>(kls);
+    auto kkComp = std::make_shared<OMElysiaKlassStatusComponent>(wld->klassLoader);
 
     auto cc = Container::Vertical({});
     auto elymemComp = Renderer(cc, [&] {
