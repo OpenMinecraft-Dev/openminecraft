@@ -197,13 +197,22 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++tc->zero.pc;
             break;
         case op_iload_n(1):
-            zeroStackPush<jint>(zeroStackLoadLocal<jint>(1));
+            zeroStackPush(zeroStackLoadLocal<jint>(1));
+            ++tc->zero.pc;
+            break;
+        case op_aload_n(0):
+            zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(0));
             ++tc->zero.pc;
             break;
         case op_istore_n(1):
             zeroStackSaveLocalPop<jint>(1);
             ++tc->zero.pc;
             break;
+        case op_dup: {
+            zeroStackPush(zeroStackPeekGet<OMElysiaOop *>());
+            ++tc->zero.pc;
+            break;
+        }
         case op_iinc: {
             ++tc->zero.pc;
             auto slt = *tc->zero.pc;
@@ -241,11 +250,17 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             pushFrame(reinterpret_cast<OMElysiaMethod *>(ff));
             break;
         }
+        case op_invokespecial: {
+            auto ff = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArg16p0());
+            tc->zero.pc += 3;
+            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff));
+            break;
+        }
         case op_new: {
             auto c = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArg16p0());
             zeroStackPush(world->oopManager->allocateOop(reinterpret_cast<OMElysiaKlass *>(c)));
             tc->zero.pc += 3;
-	    goto unk;
+            break;
         }
         default:
         unk:

@@ -2,12 +2,9 @@
 #define OM_ELYSIA_EXECUTOR_ZERO_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/elysia/om_elysia_field.hpp"
-#include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
-#include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 #include <cstdint>
 namespace openminecraft::vm::elysia::executor
@@ -37,6 +34,11 @@ template <typename T> static void zeroStackPushW(T data)
         auto dlow = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
         *dlow = static_cast<uint32_t>(d & 0xffffffff);
     }
+}
+
+template <typename T> static T zeroStackPeekGet()
+{
+    return *reinterpret_cast<T *>(thisThread.metadata->zero.stackPointer);
 }
 
 template <typename T> static T zeroStackPopGet()

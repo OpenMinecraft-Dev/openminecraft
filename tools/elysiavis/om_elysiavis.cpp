@@ -283,6 +283,9 @@ Element buildElysiaThreadAssembly(OMElysiaThread *thread)
         }
     }
 
+    codelines.push_back({separatorEmpty() | yflex_grow});
+    codelines.insert(codelines.begin(), {separatorEmpty() | yflex_shrink});
+
     return vbox({vbox(codetop) | flex, gridbox(codelines) | flex});
 }
 
@@ -333,6 +336,11 @@ Element buildElysiaThreadStack(OMElysiaThread *thread)
                 frm = frm->caller;
                 continue;
             }
+        }
+
+        if (clr == Color::Blue)
+        {
+            ext = ">";
         }
 
         if (cptr == fptr)
