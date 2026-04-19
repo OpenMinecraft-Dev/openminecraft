@@ -16,7 +16,6 @@
 #include <stdexcept>
 #include <thread>
 
-using namespace std::chrono_literals;
 using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::elysia::executor
