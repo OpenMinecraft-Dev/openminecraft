@@ -14,6 +14,10 @@ namespace openminecraft::vm::elysia
 class OMElysiaOop;
 class OMElysiaKlassloader;
 
+class OMElysiaInstanceKlass;
+class OMElysiaPrimitiveKlass;
+class OMElysiaArrayKlass;
+
 enum OMElysiaKlassType
 {
     InstanceKlass,
@@ -39,6 +43,36 @@ class OMElysiaKlass
     OMElysiaMethod *methods = nullptr;
 
     OMElysiaMethod *findMethod(const char *name, const char *desc);
+
+    OMElysiaInstanceKlass *toInstance()
+    {
+        return reinterpret_cast<OMElysiaInstanceKlass *>(this);
+    }
+
+    bool isInstance()
+    {
+        return type == InstanceKlass;
+    }
+
+    OMElysiaPrimitiveKlass *toPrimitive()
+    {
+        return reinterpret_cast<OMElysiaPrimitiveKlass *>(this);
+    }
+
+    bool isPrimitive()
+    {
+        return type == PrimitiveKlass;
+    }
+
+    OMElysiaArrayKlass *toArray()
+    {
+        return reinterpret_cast<OMElysiaArrayKlass *>(this);
+    }
+
+    bool isArray()
+    {
+        return type == ArrayKlass;
+    }
 };
 
 class OMElysiaArrayKlass : public OMElysiaKlass

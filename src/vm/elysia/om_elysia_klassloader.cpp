@@ -46,7 +46,7 @@ OMElysiaPrimitiveKlass *OMElysiaKlassloader::constructPrimitiveClass(std::string
 }
 OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
 {
-    auto rawname = buildArray(reinterpret_cast<char *>(k->name));
+    auto rawname = buildArray(k->name);
 
     auto klass = world->metaspaceHeap.allocate<OMElysiaArrayKlass>();
     klass->accessFlag = JVM_Acc_Public;
@@ -56,9 +56,9 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
     klass->lowerDim = k;
     klass->ptrLength = world->mainHeap.ptrLength();
 
-    if (k->type == ArrayKlass)
+    if (k->isArray())
     {
-        reinterpret_cast<OMElysiaArrayKlass *>(k)->higherDim = klass;
+        k->toArray()->higherDim = klass;
     }
 
     markKlass(klass);
@@ -68,7 +68,7 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
 void OMElysiaKlassloader::markKlass(OMElysiaKlass *klass)
 {
     klass->nativeKlassloader = this;
-    loadedClasses[binary::hash::hash_compile_time(reinterpret_cast<char *>(klass->name))] = klass;
+    loadedClasses[binary::hash::hash_compile_time(klass->name)] = klass;
 }
 
 void OMElysiaKlassloader::unloadClass(OMElysiaKlass *klass)
@@ -89,9 +89,9 @@ void OMElysiaKlassloader::unloadClass(OMElysiaKlass *klass)
         world->metaspaceHeap.deallocateArray(klass->methods, klass->methodCount);
     }
 
-    if (klass->type == InstanceKlass && reinterpret_cast<OMElysiaInstanceKlass *>(klass)->fields)
+    if (klass->isInstance() && klass->toInstance()->fields)
     {
-        auto iklass = reinterpret_cast<OMElysiaInstanceKlass *>(klass);
+        auto iklass = klass->toInstance();
         for (int i = 0; i < iklass->fieldCount; i++)
         {
             auto &f = iklass->fields[i];
@@ -102,13 +102,12 @@ void OMElysiaKlassloader::unloadClass(OMElysiaKlass *klass)
         world->metaspaceHeap.deallocateArray(iklass->fields, iklass->fieldCount);
     }
 
-    auto l = reinterpret_cast<char *>(klass->name);
-    world->metaspaceHeap.deallocateStr(l);
+    world->metaspaceHeap.deallocateStr(klass->name);
     switch (klass->type)
     {
     case InstanceKlass: {
         world->metaspaceHeap.deallocate(klass, sizeof(OMElysiaInstanceKlass));
-        auto ii = reinterpret_cast<OMElysiaInstanceKlass *>(klass);
+        auto ii = klass->toInstance();
         if (ii->interfaceImpls)
         {
             world->metaspaceHeap.deallocate(ii->interfaceImpls, sizeof(void *) * ii->interfaceImplCount);
@@ -151,19 +150,18 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
             ->to<classfile::OMClassConstantUtf8>()
             ->data;
     logger.info("Class loading: {}", clsname);
-    auto klasskey = binary::hash::hash_compile_time(clsname.c_str());
-    if (!loadedClasses.count(klasskey))
+    if (!findClass(clsname))
     {
         constructInstanceClassShell(clsname);
     }
-    auto klassraw = loadedClasses[klasskey];
+    auto klassraw = findClass(clsname);
 
-    if (klassraw->type != InstanceKlass)
+    if (!klassraw->isInstance())
     {
         throw std::logic_error("not allowed!");
     }
 
-    auto klass = reinterpret_cast<OMElysiaInstanceKlass *>(klassraw);
+    auto klass = klassraw->toInstance();
 
     if (clsfile->superClass)
     {
@@ -252,6 +250,7 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
         f.desc = world->metaspaceHeap.allocateStr(
             clsfile->mapping[clsfile->fields[i]->descIndex]->to<classfile::OMClassConstantUtf8>()->data);
         f.accessFlag = clsfile->fields[i]->accessFlags;
+        f.klass = klass;
     }
 
     klass->initFieldOffsets();

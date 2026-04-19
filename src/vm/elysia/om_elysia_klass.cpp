@@ -4,6 +4,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
 
 using namespace openminecraft::vm::classfile;
@@ -63,6 +64,19 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id)
         constantPool[id] = mthd;
         return mthd;
     }
+    case OMClassConstantType::Class: {
+        auto mr = item->to<OMClassConstantClass>();
+        auto clsname = constantPoolRaw->at(mr->nameIndex)->to<OMClassConstantUtf8>()->data;
+
+        if (klassloader)
+        {
+            throw std::logic_error("not supported uplevel classloader!");
+        }
+
+        auto cls = nativeKlassloader->fetchOrLoadClass(clsname);
+        constantPool[id] = cls;
+        return cls;
+    }
     case OMClassConstantType::FieldRef: {
         auto mr = item->to<OMClassConstantFieldRef>();
         auto clsname = constantPoolRaw->at(constantPoolRaw->at(mr->classIndex)->to<OMClassConstantClass>()->nameIndex)
@@ -89,8 +103,9 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id)
                 constantPool[id] = &fields[i];
                 return &fields[i];
             }
-            return nullptr;
         }
+
+        return nullptr;
     }
     default:
         throw 0;
@@ -123,11 +138,10 @@ void OMElysiaInstanceKlass::initFieldOffsets()
         return;
     }
 
-    if (superClass && superClass->type == InstanceKlass &&
-        !reinterpret_cast<OMElysiaInstanceKlass *>(superClass)->fieldOffsetInited)
+    if (superClass && superClass->isInstance() && superClass->toInstance()->fieldOffsetInited)
     {
-        reinterpret_cast<OMElysiaInstanceKlass *>(superClass)->initFieldOffsets();
-        length = reinterpret_cast<OMElysiaInstanceKlass *>(superClass)->length;
+        superClass->toInstance()->initFieldOffsets();
+        length = superClass->toInstance()->length;
     }
     else
     {

@@ -5,6 +5,7 @@
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
+#include "openminecraft/vm/elysia/om_elysia_field.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
@@ -83,9 +84,8 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
     auto ll = argSlots(m->descriptor) + (m->isStatic() ? 0 : 1);
     auto tc = thisThread.metadata;
 
-    std::memcpy(
-        reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(tc->zero.stackPointer) - sizeof(OMElysiaJavaFrame)),
-        tc->zero.stackPointer, ll * sizeof(void *));
+    std::memcpy(reinterpret_cast<void *>(tc->zero.stackPointer - sizeof(OMElysiaJavaFrame)),
+                reinterpret_cast<void *>(tc->zero.stackPointer), ll * sizeof(void *));
     zeroStackPop(ll * sizeof(void *));
 
     auto frame = reinterpret_cast<OMElysiaJavaFrame *>(zeroStackAlloc(sizeof(OMElysiaJavaFrame)));
@@ -118,8 +118,14 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
 void OMElysiaExecutorZero::popFrame()
 {
     auto tc = thisThread.metadata;
-    tc->zero.stackPointer =
-        reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(tc->zero.frame) + sizeof(OMElysiaJavaFrame));
+
+    // gino: klass init succeed
+    if (std::strcmp(tc->zero.frame->method->name, "<clinit>") == 0)
+    {
+        tc->zero.frame->method->klass->toInstance()->clinitFinished = true;
+    }
+
+    tc->zero.stackPointer = reinterpret_cast<uintptr_t>(tc->zero.frame) + sizeof(OMElysiaJavaFrame);
     tc->zero.pc = tc->zero.frame->returnAddr;
     tc->zero.frame = tc->zero.frame->caller;
 }
@@ -129,11 +135,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     auto tc = thisThread.metadata;
     if (!tc->threadInited)
     {
-        tc->stackEnd = mem::allocator::tracedMallocElysia(1024 * 1024);
-        tc->stackStart = reinterpret_cast<uint8_t *>(tc->stackEnd) + 1024 * 1024 - sizeof(void *);
+        tc->stackEnd = reinterpret_cast<uintptr_t>(mem::allocator::tracedMallocElysia(1024 * 1024));
+        tc->stackStart = tc->stackEnd + 1024 * 1024 - sizeof(void *);
         tc->zero.stackPointer = tc->stackStart;
 
-        tc->cleaner = [&]() { mem::allocator::tracedFreeElysia(tc->stackEnd); };
+        tc->cleaner = [&]() { mem::allocator::tracedFreeElysia(reinterpret_cast<void *>(tc->stackEnd)); };
         tc->threadInited = true;
         tc->registerThread();
 
@@ -142,7 +148,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     pushFrame(m);
 
-    if (m->klass->type == InstanceKlass && !reinterpret_cast<OMElysiaInstanceKlass *>(m->klass)->clinitFinished)
+    if (m->klass->isInstance() && !m->klass->toInstance()->clinitFinished)
     {
         auto l = m->klass->findMethod("<clinit>", "()V");
         if (l)
@@ -151,9 +157,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
     }
 
+#define CURRENT_KLASS tc->zero.frame->method->klass->toInstance()
+
     while (true)
     {
-        switch (*reinterpret_cast<uint8_t *>(tc->zero.pc))
+        switch (*tc->zero.pc)
         {
         case op_nop:
             ++tc->zero.pc;
@@ -201,16 +209,15 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto slt = *tc->zero.pc;
             jint data = zeroStackLoadLocal<jint>(slt);
             ++tc->zero.pc;
-            data += *reinterpret_cast<int8_t *>(tc->zero.pc);
+            data += *tc->zero.pc;
             zeroStackSaveLocal(slt, data);
             ++tc->zero.pc;
             break;
         }
         case op_if_icmpne: {
-            int16_t offset = static_cast<int16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
             if (zeroStackPopGet<jint>() != zeroStackPopGet<jint>())
             {
-                tc->zero.pc += offset;
+                tc->zero.pc += zeroCodeFetchArg16p0();
             }
             else
             {
@@ -218,18 +225,26 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             }
             break;
         }
+        case op_return: {
+            popFrame();
+            break;
+        }
         case op_putstatic: {
-            uint16_t id = static_cast<uint16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
-            auto ff = reinterpret_cast<OMElysiaInstanceKlass *>(tc->zero.frame->method->klass)->constantPoolFetch(id);
+            auto fld = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArg16p0());
+            zeroStackPopToStatic(reinterpret_cast<OMElysiaField *>(fld));
             tc->zero.pc += 3;
-            goto unk;
+            break;
         }
         case op_invokestatic: {
-            uint16_t id = static_cast<uint16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
-            auto ff = reinterpret_cast<OMElysiaInstanceKlass *>(tc->zero.frame->method->klass)->constantPoolFetch(id);
+            auto ff = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArg16p0());
             tc->zero.pc += 3;
             pushFrame(reinterpret_cast<OMElysiaMethod *>(ff));
-            continue;
+            break;
+        }
+        case op_new: {
+            auto c = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArg16p0());
+            zeroStackPush(world->oopManager->allocateOop(reinterpret_cast<OMElysiaKlass *>(c)));
+            goto unk;
         }
         default:
         unk:
@@ -241,18 +256,40 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     }
 }
 
-void *zeroStackAlloc(uint64_t len)
+uintptr_t zeroStackAlloc(uint64_t len)
 {
     auto tc = thisThread.metadata;
-    tc->zero.stackPointer = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(tc->zero.stackPointer) - len);
+    tc->zero.stackPointer = tc->zero.stackPointer - len;
     return tc->zero.stackPointer;
 }
 
-void *zeroStackPop(uint64_t len)
+uintptr_t zeroStackPop(uint64_t len)
 {
     auto tc = thisThread.metadata;
     auto result = tc->zero.stackPointer;
-    tc->zero.stackPointer = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(tc->zero.stackPointer) + len);
+    tc->zero.stackPointer = tc->zero.stackPointer + len;
     return result;
+}
+
+uint16_t zeroCodeFetchArg16p0()
+{
+    auto tc = thisThread.metadata;
+    return static_cast<uint16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
+}
+
+void zeroStackPopToStatic(OMElysiaField *field)
+{
+    switch (*field->desc)
+    {
+    case 'J':
+    case 'D':
+        *reinterpret_cast<jlong *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =
+            zeroStackPopWGet<jlong>();
+        break;
+    default:
+        *reinterpret_cast<jint *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =
+            zeroStackPopGet<jint>();
+        break;
+    }
 }
 } // namespace openminecraft::vm::elysia::executor

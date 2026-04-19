@@ -305,7 +305,7 @@ Element buildElysiaThreadStack(OMElysiaThread *thread)
     std::vector<std::vector<Element>> stk;
     void **pp = reinterpret_cast<void **>(thread->zero.stackPointer);
     auto frm = thread->zero.frame;
-    while (pp <= thread->stackStart)
+    while (reinterpret_cast<uintptr_t>(pp) <= thread->stackStart)
     {
         if (!frm)
             break;

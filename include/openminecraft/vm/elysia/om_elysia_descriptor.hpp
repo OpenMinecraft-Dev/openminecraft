@@ -20,7 +20,7 @@ static std::string buildArray(char *s)
     case "int"_hash:
         return "[I";
     case "long"_hash:
-        return "[L";
+        return "[J";
     case "float"_hash:
         return "[F";
     case "double"_hash:

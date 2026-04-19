@@ -3,17 +3,21 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
+#include "openminecraft/vm/elysia/om_elysia_field.hpp"
+#include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
+#include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include <cstdint>
 namespace openminecraft::vm::elysia::executor
 {
-void *zeroStackAlloc(uint64_t len);
-void *zeroStackPop(uint64_t len);
+uintptr_t zeroStackAlloc(uint64_t len);
+uintptr_t zeroStackPop(uint64_t len);
 template <typename T> static void zeroStackPush(T data)
 {
     auto d = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
-    *d = *reinterpret_cast<uint32_t *>(&data);
+    *d = *reinterpret_cast<uintptr_t *>(&data);
 }
 
 template <typename T> static void zeroStackPushW(T data)
@@ -56,6 +60,9 @@ template <typename T> static T zeroStackPopWGet()
         return *reinterpret_cast<T *>(&d);
     }
 }
+
+void zeroStackPopToStatic(OMElysiaField *field);
+uint16_t zeroCodeFetchArg16p0();
 
 template <typename T> static void zeroStackSaveLocalPop(uint32_t l)
 {

@@ -25,12 +25,12 @@ class OMElysiaThread
 {
   public:
     bool threadInited = false;
-    void *stackStart = nullptr;
-    void *stackEnd = nullptr;
+    uintptr_t stackStart = 0;
+    uintptr_t stackEnd = 0;
     struct
     {
         uint8_t *pc = nullptr;
-        void *stackPointer = nullptr;
+        uintptr_t stackPointer = 0;
         OMElysiaJavaFrame *frame = nullptr;
     } zero;
 
