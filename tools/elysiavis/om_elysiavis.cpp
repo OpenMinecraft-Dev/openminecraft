@@ -322,6 +322,7 @@ Element buildElysiaThreadStack(OMElysiaThread *thread)
         {
             if (fptr - cptr <= frm->method->localLength * sizeof(void *))
             {
+                ext2 = fmt::format("Local #{}", (fptr - cptr) / sizeof(void *) - 1);
                 clr = Color::White;
                 ext = "+";
             }
@@ -545,7 +546,7 @@ int main(int argc, const char *argv[])
                      window(text("main"), buildElysiaHeapComp(wld->mainHeap))});
     });
 
-    int tabsel = 0;
+    int tabsel = 1;
     auto menuToggle = Toggle(&tabnames, &tabsel);
     auto menuContainer = Container::Tab({memComp, elyComp, elymemComp, kkComp}, &tabsel);
 

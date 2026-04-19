@@ -30,4 +30,9 @@ OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass)
     }
     return ll;
 }
+
+uintptr_t OMElysiaOopManager::oopAccessField(void *base, uint64_t offset)
+{
+    return reinterpret_cast<uintptr_t>(base) + oopHeaderLength() + offset;
+}
 } // namespace openminecraft::vm::elysia

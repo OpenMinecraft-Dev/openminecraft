@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include <thread>
 
+using namespace std::chrono_literals;
 using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::elysia::executor
@@ -182,6 +183,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         ++tc->zero.pc;                                                                                                 \
         break;
 
+#define op_fconst(n)                                                                                                   \
+    case op_fconst_f(n):                                                                                               \
+        zeroStackPush<jfloat>(n);                                                                                      \
+        ++tc->zero.pc;                                                                                                 \
+        break;
+
             op_iconst(-1);
             op_iconst(0);
             op_iconst(1);
@@ -191,6 +198,9 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_iconst(5);
             op_lconst(0);
             op_lconst(1);
+            op_fconst(0);
+            op_fconst(1);
+            op_fconst(2);
         case op_bipush:
             ++tc->zero.pc;
             zeroStackPush<jint>(*tc->zero.pc);
@@ -204,6 +214,10 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         case op_iload_n(1):
             zeroStackPush(zeroStackLoadLocal<jint>(1));
+            ++tc->zero.pc;
+            break;
+        case op_fload_n(2):
+            zeroStackPush(zeroStackLoadLocal<jfloat>(2));
             ++tc->zero.pc;
             break;
         case op_aload_n(0):
@@ -229,10 +243,21 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++tc->zero.pc;
             break;
         }
+        case op_ifge: {
+            if (zeroStackPopGet<jint>() >= 0)
+            {
+                tc->zero.pc += zeroCodeFetchArgs16p0();
+            }
+            else
+            {
+                tc->zero.pc += 3;
+            }
+            break;
+        }
         case op_if_icmpne: {
             if (zeroStackPopGet<jint>() != zeroStackPopGet<jint>())
             {
-                tc->zero.pc += zeroCodeFetchArg16p0();
+                tc->zero.pc += zeroCodeFetchArgs16p0();
             }
             else
             {
@@ -244,26 +269,32 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             popFrame();
             break;
         }
+        case op_putfield: {
+            auto fld = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
+            zeroStackPopToField(reinterpret_cast<OMElysiaField *>(fld), world->oopManager.get());
+            tc->zero.pc += 3;
+            break;
+        }
         case op_putstatic: {
-            auto fld = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArg16p0());
+            auto fld = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
             zeroStackPopToStatic(reinterpret_cast<OMElysiaField *>(fld));
             tc->zero.pc += 3;
             break;
         }
         case op_invokestatic: {
-            auto ff = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArg16p0());
+            auto ff = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
             tc->zero.pc += 3;
             pushFrame(reinterpret_cast<OMElysiaMethod *>(ff));
             break;
         }
         case op_invokespecial: {
-            auto ff = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArg16p0());
+            auto ff = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
             tc->zero.pc += 3;
             pushFrame(reinterpret_cast<OMElysiaMethod *>(ff));
             break;
         }
         case op_new: {
-            auto c = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArg16p0());
+            auto c = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
             zeroStackPush(world->oopManager->allocateOop(reinterpret_cast<OMElysiaKlass *>(c)));
             tc->zero.pc += 3;
             break;
@@ -293,10 +324,16 @@ uintptr_t zeroStackPop(uint64_t len)
     return result;
 }
 
-uint16_t zeroCodeFetchArg16p0()
+uint16_t zeroCodeFetchArgu16p0()
 {
     auto tc = thisThread.metadata;
     return static_cast<uint16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
+}
+
+int16_t zeroCodeFetchArgs16p0()
+{
+    auto tc = thisThread.metadata;
+    return static_cast<int16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
 }
 
 void zeroStackPopToStatic(OMElysiaField *field)
@@ -312,6 +349,24 @@ void zeroStackPopToStatic(OMElysiaField *field)
         *reinterpret_cast<jint *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =
             zeroStackPopGet<jint>();
         break;
+    }
+}
+
+void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop)
+{
+    switch (*field->desc)
+    {
+    case 'J':
+    case 'D': {
+        auto pp = zeroStackPopWGet<jlong>();
+        *reinterpret_cast<jlong *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)) = pp;
+        break;
+    }
+    default: {
+        auto pp = zeroStackPopGet<jint>();
+        *reinterpret_cast<jint *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)) = pp;
+        break;
+    }
     }
 }
 } // namespace openminecraft::vm::elysia::executor

@@ -14,7 +14,7 @@ uintptr_t zeroStackPop(uint64_t len);
 template <typename T> static void zeroStackPush(T data)
 {
     auto d = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
-    *d = *reinterpret_cast<uintptr_t *>(&data);
+    *d = (uintptr_t)data;
 }
 
 template <typename T> static void zeroStackPushW(T data)
@@ -64,7 +64,9 @@ template <typename T> static T zeroStackPopWGet()
 }
 
 void zeroStackPopToStatic(OMElysiaField *field);
-uint16_t zeroCodeFetchArg16p0();
+void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop);
+uint16_t zeroCodeFetchArgu16p0();
+int16_t zeroCodeFetchArgs16p0();
 
 template <typename T> static void zeroStackSaveLocalPop(uint32_t l)
 {

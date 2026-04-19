@@ -3,6 +3,7 @@
 
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include <cstdint>
 namespace openminecraft::vm::elysia
 {
 #pragma pack(1)
@@ -24,6 +25,7 @@ class OMElysiaOopManager
 
     uint64_t oopHeaderLength();
     OMElysiaOop *allocateOop(OMElysiaKlass *klass);
+    uintptr_t oopAccessField(void *base, uint64_t offset);
 
   private:
     OMElysiaVirtualWorld *world;
