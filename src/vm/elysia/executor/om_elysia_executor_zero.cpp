@@ -244,7 +244,8 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         case op_new: {
             auto c = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArg16p0());
             zeroStackPush(world->oopManager->allocateOop(reinterpret_cast<OMElysiaKlass *>(c)));
-            goto unk;
+            tc->zero.pc += 3;
+	    goto unk;
         }
         default:
         unk:
