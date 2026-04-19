@@ -313,6 +313,7 @@ Element buildElysiaThreadStack(OMElysiaThread *thread)
         if (!frm)
             break;
         std::string ext = "";
+        std::string ext2 = "";
         auto fptr = reinterpret_cast<uintptr_t>(frm);
         auto cptr = reinterpret_cast<uintptr_t>(pp);
 
@@ -346,11 +347,13 @@ Element buildElysiaThreadStack(OMElysiaThread *thread)
         if (cptr == fptr)
         {
             ext = "*";
+            ext2 = fmt::format("{}:{}{}", frm->method->klass->name, frm->method->name, frm->method->descriptor);
         }
 
         stk.push_back(
             {text(ext), separatorEmpty() | flex, text(fmt::format("{}", fmt::ptr(pp))), separatorEmpty() | flex,
-             text(fmt::format("{:0" + fmt::format("{}", sizeof(void *) * 2) + "x}", (uintptr_t)*pp)) | color(clr)});
+             text(fmt::format("{:0" + fmt::format("{}", sizeof(void *) * 2) + "x}", (uintptr_t)*pp)) | color(clr),
+             separatorEmpty() | flex, text(ext2) | color(Color::GrayDark)});
         ++pp;
     }
     return gridbox(stk) | flex;

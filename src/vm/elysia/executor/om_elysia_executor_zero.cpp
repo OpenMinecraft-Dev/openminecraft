@@ -196,6 +196,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackPush<jint>(*tc->zero.pc);
             ++tc->zero.pc;
             break;
+        case op_ldc: {
+            auto ff = CURRENT_KLASS->constantPoolFetch(tc->zero.pc[1]);
+            zeroStackPush(ff);
+            tc->zero.pc += 2;
+            break;
+        }
         case op_iload_n(1):
             zeroStackPush(zeroStackLoadLocal<jint>(1));
             ++tc->zero.pc;

@@ -3,6 +3,7 @@
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
+#include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
@@ -106,6 +107,13 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id)
         }
 
         return nullptr;
+    }
+    case OMClassConstantType::Float: {
+        auto d = item->to<OMClassConstantFloat>()->data;
+        uint32_t rd = *reinterpret_cast<uint32_t *>(&d);
+
+        constantPool[id] = reinterpret_cast<void *>(rd);
+        return constantPool[id];
     }
     default:
         throw 0;
