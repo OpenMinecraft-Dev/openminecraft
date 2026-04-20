@@ -12,6 +12,7 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include <cmath>
 #include <cstdint>
 #include <stdexcept>
 #include <thread>
@@ -253,6 +254,17 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             }
             break;
         }
+        case op_ifle: {
+            if (zeroStackPopGet<jint>() <= 0)
+            {
+                tc->zero.pc += zeroCodeFetchArgs16p0();
+            }
+            else
+            {
+                tc->zero.pc += 3;
+            }
+            break;
+        }
         case op_if_icmpne: {
             if (zeroStackPopGet<jint>() != zeroStackPopGet<jint>())
             {
@@ -262,6 +274,24 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             {
                 tc->zero.pc += 3;
             }
+            break;
+        }
+        case op_fcmpg: {
+            auto value2 = zeroStackPopGet<jfloat>();
+            auto value1 = zeroStackPopGet<jfloat>();
+            if (value1 == NAN || value2 == NAN || value1 > value2)
+            {
+                zeroStackPush<jint>(1);
+            }
+            else if (value1 < value2)
+            {
+                zeroStackPush<jint>(-1);
+            }
+            else
+            {
+                zeroStackPush<jint>(0);
+            }
+            ++tc->zero.pc;
             break;
         }
         case op_return: {
