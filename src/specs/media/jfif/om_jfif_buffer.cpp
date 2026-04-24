@@ -55,6 +55,10 @@ void OMJfifFile::bufferLogStatus(std::shared_ptr<std::istream> istr)
 
 int64_t OMJfifFile::bufferReadExtra(std::shared_ptr<std::istream> istr, int datalen)
 {
+    if (datalen == 0) {
+        return 0;
+    }
+
     auto tempval = (int64_t)bitBuffer.popValue(datalen);
     if ((tempval >> (datalen - 1)) == 0)
     {

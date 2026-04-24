@@ -113,7 +113,7 @@ int boot(std::vector<std::string> args)
             logger->info("{}", *reinterpret_cast<int *>(33550336));
         }
         case "jpg"_hash: {
-            auto ist = std::make_shared<std::ifstream>("/home/coder2/raw1.jpg", std::ios::binary);
+            auto ist = std::make_shared<std::ifstream>("../raw8.jpg", std::ios::binary);
             specs::jfif::OMJfifFile pf;
             pf.parse(ist);
             std::ofstream oo("test2.bin", std::ios::binary);
@@ -128,13 +128,13 @@ int boot(std::vector<std::string> args)
             break;
         }
         case "png"_hash: {
-            auto ist = std::make_shared<std::ifstream>("/home/coder2/this1.png", std::ios::binary);
+            auto ist = std::make_shared<std::ifstream>("../raw.png", std::ios::binary);
             specs::png::OMPngFile pf;
             pf.parse(ist);
             logger->info("test!");
 
             std::ofstream oo("test2.bin", std::ios::binary);
-            oo.write(reinterpret_cast<char *>(pf.fetchData()), 3000 * 4567 * 4);
+            oo.write(reinterpret_cast<char *>(pf.fetchData()), pf.getWidth() * pf.getHeight() * 4);
             oo.close();
             break;
         }
