@@ -135,7 +135,7 @@ jobs:
         id: generator
         name: Generate cache name
         with:
-          style: upperCase
+          style: lowerCase
           length: 3
 
       - name: Checkout repository
