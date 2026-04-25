@@ -1,6 +1,7 @@
 #include <windows.h>
 #include "openminecraft/mem/om_mem_prealloc.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
+#include "openminecraft/mem/om_mem_stackmem.hpp"
 #include <errhandlingapi.h>
 #include <iostream>
 #include <malloc.h>
@@ -8,6 +9,7 @@
 #include <new>
 #include <oleauto.h>
 #include <winnt.h>
+#include <winternl.h>
 
 namespace openminecraft::mem
 {
@@ -52,4 +54,40 @@ void *stackAlloc(size_t l)
     return _alloca(l);
 }
 } // namespace allocator
+
+namespace stack
+{
+uintptr_t fetchStackBase()
+{
+    MEMORY_BASIC_INFORMATION minfo;
+    uintptr_t base;
+    size_t size;
+
+    VirtualQuery(&minfo, &minfo, sizeof(minfo));
+    base = (uintptr_t)minfo.AllocationBase;
+    size = minfo.RegionSize;
+
+    while (true)
+    {
+        VirtualQuery(reinterpret_cast<void *>(base + size), &minfo, sizeof(minfo));
+        
+        if (base == (uintptr_t)minfo.AllocationBase)
+        {
+            size += minfo.RegionSize;
+        }
+        else
+        {
+            break;
+        }
+    }
+    return base + size;
+}
+uintptr_t fetchStackTop()
+{
+    MEMORY_BASIC_INFORMATION minfo;
+
+    VirtualQuery(&minfo, &minfo, sizeof(minfo));
+    return (uintptr_t)minfo.AllocationBase;
+}
+}; // namespace stack
 } // namespace openminecraft::mem

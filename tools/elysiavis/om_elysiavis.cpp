@@ -15,6 +15,7 @@
 #include "ftxui/dom/elements.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/mem/om_mem_saferead.hpp"
+#include "openminecraft/mem/om_mem_stackmem.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
@@ -532,6 +533,18 @@ class OMElysiaKlassStatusComponent : public ComponentBase
 
 int main(int argc, const char *argv[])
 {
+    std::cout << std::hex << openminecraft::mem::stack::fetchStackBase() << " "
+              << openminecraft::mem::stack::fetchStackTop() << std::endl;
+
+    uintptr_t cu = openminecraft::mem::stack::fetchStackBase();
+    uint64_t i = 0x33550336;
+    uintptr_t pp = (uintptr_t)&i;
+    while (pp < cu)
+    {
+        std::cout << fmt::format("{:016x}: {:016x}", pp, *reinterpret_cast<uint64_t *>(pp)) << std::endl;
+        pp += 8;
+    }
+
     auto wld = new OMElysiaVirtualWorld;
 
     std::vector<std::string> tabnames = {"Memory", "ElysiaVM", "Elysia Heap", "Elysia Klass"};
@@ -556,7 +569,7 @@ int main(int argc, const char *argv[])
         return window(text("Elysia Visualizer"), vbox({menuToggle->Render(), separator(), menuContainer->Render()}));
     });
 
-    auto screen = ScreenInteractive::TerminalOutput();
+    auto screen = ScreenInteractive::FitComponent();
     screen.Loop(renderer);
 
     delete wld;
