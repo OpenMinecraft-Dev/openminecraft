@@ -221,11 +221,16 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_iloadc(1);
             op_iloadc(2);
             op_iloadc(3);
+#define op_floadc(n)                                                                                                   \
+    case op_fload_n(n):                                                                                                \
+        zeroStackPush(zeroStackLoadLocal<jfloat>(n));                                                                  \
+        ++tc->zero.pc;                                                                                                 \
+        break;
+            op_floadc(0);
+            op_floadc(1);
+            op_floadc(2);
+            op_floadc(3);
 
-        case op_fload_n(2):
-            zeroStackPush(zeroStackLoadLocal<jfloat>(2));
-            ++tc->zero.pc;
-            break;
         case op_aload_n(0):
             zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(0));
             ++tc->zero.pc;
