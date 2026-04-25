@@ -164,7 +164,7 @@ jobs:
 
       - name: Restore xmake packages (UNIX)
         if: matrix.plat != 'windows'
-        id: cache
+        id: cache-unix
         uses: actions/cache/restore@v5
         with:
           path: ~/.xmake/packages
@@ -172,7 +172,7 @@ jobs:
 
       - name: Restore xmake packages (Windows)
         if: matrix.plat == 'windows'
-        id: cache
+        id: cache-windows
         uses: actions/cache/restore@v5
         with:
           path: C:/Users/runneradmin/AppData/Local/.xmake/packages
@@ -250,7 +250,7 @@ jobs:
         run: xmake f --toolchain=msvc -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
 
       - name: Clean cache
-        if: steps.cache.outputs.cache-hit == 'true'
+        if: steps.cache-unix.outputs.cache-hit == 'true' || steps.cache-windows.outputs.cache-hit == 'true'
         run: gh cache delete ${{ matrix.plat }}-${{ matrix.arch }}-pkg-${{ hashFiles('**.lua') }}
 
       - name: Save xmake packages (UNIX)
