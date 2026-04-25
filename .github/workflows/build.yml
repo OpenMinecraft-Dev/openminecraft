@@ -131,6 +131,10 @@ jobs:
       actions: write
       contents: read
     steps:
+      - uses: boonya/gh-action-name-generator@v1
+        id: generator
+        name: Generate cache name
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -168,7 +172,8 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: ~/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-${{ hashFiles('**.lua') }}
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-
+          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-
 
       - name: Restore xmake packages (Windows)
         if: matrix.plat == 'windows'
@@ -176,7 +181,8 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: C:/Users/runneradmin/AppData/Local/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-${{ hashFiles('**.lua') }}
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-
+          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-
 
       - name: Generate header
         run: |
@@ -249,23 +255,19 @@ jobs:
         if: matrix.plat == 'windows'
         run: xmake f --toolchain=msvc -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
 
-      - name: Clean cache
-        if: steps.cache-unix.outputs.cache-hit == 'true' || steps.cache-windows.outputs.cache-hit == 'true'
-        run: gh cache delete ${{ matrix.plat }}-${{ matrix.arch }}-pkg-${{ hashFiles('**.lua') }}
-
       - name: Save xmake packages (UNIX)
         if: matrix.plat != 'windows'
         uses: actions/cache/save@v5
         with:
           path: ~/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-${{ hashFiles('**.lua') }}
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-${{ steps.generator.outputs.name }}
 
       - name: Save xmake packages (Windows)
         if: matrix.plat == 'windows'
         uses: actions/cache/save@v5
         with:
           path: C:/Users/runneradmin/AppData/Local/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-${{ hashFiles('**.lua') }}
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-${{ steps.generator.outputs.name }}
 
       - name: Build
         run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }} openminecraft
