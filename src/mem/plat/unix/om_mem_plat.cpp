@@ -20,8 +20,11 @@
 
 #include <cstddef>
 #include <cstdint>
-#define _GNU_SOURCE
+
 #include <pthread.h>
+#ifdef OM_PLATFORM_BSD
+#include <pthread_np.h>
+#endif
 
 namespace openminecraft::mem
 {
@@ -89,13 +92,15 @@ uintptr_t fetchStackBase()
     size_t stackLength = pthread_get_stacksize_np(pthread_self());
 #elif defined(OM_PLATFORM_BSD)
     pthread_attr_t attr;
-    pthread_getattr_np(pthread_self(), &attr);
+    pthread_attr_get_np(pthread_self(), &attr);
 
     void *stackTop;
     size_t stackLength;
 
     pthread_attr_getstackaddr(&attr, &stackTop);
     pthread_attr_getstacksize(&attr, &stackLength);
+
+    pthread_attr_destroy(&attr);
 #else
     pthread_attr_t attr;
     pthread_getattr_np(pthread_self(), &attr);
@@ -114,10 +119,12 @@ uintptr_t fetchStackTop()
     void *stackTop = pthread_get_stackaddr_np(pthread_self());
 #elif defined(OM_PLATFORM_BSD)
     pthread_attr_t attr;
-    pthread_getattr_np(pthread_self(), &attr);
+    pthread_attr_get_np(pthread_self(), &attr);
 
     void *stackTop;
     pthread_attr_getstackaddr(&attr, &stackTop);
+
+    pthread_attr_destroy(&attr);
 #else
     pthread_attr_t attr;
     pthread_getattr_np(pthread_self(), &attr);
