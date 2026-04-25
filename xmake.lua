@@ -50,6 +50,7 @@ end
 
 if apple() or is_plat("bsd") then
 	add_defines("BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED=")
+	add_defines("OM_PLATFORM_BSDLIKE=")
 end
 
 -- Vulkan dynamic loading
@@ -83,7 +84,7 @@ add_requires(
 	"opengl-headers",
 	"bullet3",
 	"zlib",
-        "libffi",
+	"libffi",
 	{ system = false }
 )
 add_requires("boost", { system = false, configs = { stacktrace = true, asio = true } })

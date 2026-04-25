@@ -18,6 +18,10 @@
 
 #include <sys/mman.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <pthread.h>
+
 namespace openminecraft::mem
 {
 OMHeap::OMHeap(uint64_t minSize, uint64_t maxSize)
@@ -74,4 +78,42 @@ void *stackAlloc(size_t l)
     return alloca(l);
 }
 } // namespace allocator
+
+namespace stack
+{
+uintptr_t fetchStackBase()
+{
+#ifdef OM_PLATFORM_BSDLIKE
+    void *stackTop = pthread_get_stackaddr_np(pthread_self());
+    size_t stackLength = pthread_get_stacksize_np(pthread_self());
+#else
+    pthread_attr_t attr;
+    pthread_getattr_np(pthread_self(), &attr);
+
+    void *stackTop;
+    size_t stackLength;
+    pthread_attr_getstack(&attr, &stackTop, &stackLength);
+    pthread_attr_destroy(&attr);
+#endif
+
+    return reinterpret_cast<uintptr_t>(stackTop) + stackLength;
+}
+uintptr_t fetchStackTop()
+{
+#ifdef OM_PLATFORM_BSDLIKE
+    void *stackTop = pthread_get_stackaddr_np(pthread_self());
+#else
+    pthread_attr_t attr;
+    pthread_getattr_np(pthread_self(), &attr);
+
+    void *stackTop;
+    size_t stackLength;
+    pthread_attr_getstack(&attr, &stackTop, &stackLength);
+    pthread_attr_destroy(&attr);
+#endif
+
+    return reinterpret_cast<uintptr_t>(stackTop);
+}
+} // namespace stack
+
 } // namespace openminecraft::mem

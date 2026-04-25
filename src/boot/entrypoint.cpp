@@ -9,6 +9,7 @@
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
+#include "openminecraft/mem/om_mem_stackmem.hpp"
 #include "openminecraft/renderer/common/om_renderer_shadercompiler.hpp"
 #include "openminecraft/renderer/common/shader/om_renderer_shadercompiler_shaderc.hpp"
 #include "openminecraft/specs/bmp/om_bmp.hpp"

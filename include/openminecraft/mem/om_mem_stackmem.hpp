@@ -2,11 +2,10 @@
 #define OM_MEM_STACKMEM_HPP
 
 #include <cstdint>
-#include <thread>
 namespace openminecraft::mem::stack
 {
-uintptr_t fetchStackBase(std::thread thr);
-uintptr_t fetchStackTop(std::thread thr);
+uintptr_t fetchStackBase();
+uintptr_t fetchStackTop();
 }; // namespace openminecraft::mem::stack
 
 #endif
