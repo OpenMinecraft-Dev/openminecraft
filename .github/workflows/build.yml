@@ -134,6 +134,8 @@ jobs:
       - uses: boonya/gh-action-name-generator@v1
         id: generator
         name: Generate cache name
+        with:
+          style: lowerCase
 
       - name: Checkout repository
         uses: actions/checkout@v4
