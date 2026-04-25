@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#define _GNU_SOURCE
 #include <pthread.h>
 
 namespace openminecraft::mem

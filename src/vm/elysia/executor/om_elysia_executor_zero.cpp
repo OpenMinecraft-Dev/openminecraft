@@ -212,10 +212,16 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             tc->zero.pc += 2;
             break;
         }
-        case op_iload_n(1):
-            zeroStackPush(zeroStackLoadLocal<jint>(1));
-            ++tc->zero.pc;
-            break;
+#define op_iloadc(n)                                                                                                   \
+    case op_iload_n(n):                                                                                                \
+        zeroStackPush(zeroStackLoadLocal<jint>(n));                                                                    \
+        ++tc->zero.pc;                                                                                                 \
+        break;
+            op_iloadc(0);
+            op_iloadc(1);
+            op_iloadc(2);
+            op_iloadc(3);
+
         case op_fload_n(2):
             zeroStackPush(zeroStackLoadLocal<jfloat>(2));
             ++tc->zero.pc;
