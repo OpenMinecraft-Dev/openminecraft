@@ -115,7 +115,7 @@ uintptr_t fetchStackBase()
 }
 uintptr_t fetchStackTop()
 {
-#ifdef OM_PLATFORM_BSDLIKE
+#if defined(OM_PLATFORM_MACOS) || defined(OM_PLATFORM_IOS)
     void *stackTop = pthread_get_stackaddr_np(pthread_self());
 #elif defined(OM_PLATFORM_BSD)
     pthread_attr_t attr;
