@@ -26,23 +26,17 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     : renderer(renderer), logger("OMTestRenderer", this), OMRendererHandler(renderer)
 {
     camera = std::make_shared<basics::OMCamera>(renderer, m_cameraPos, m_yaw, m_pitch);
-    {
-        auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.frag.glsl");
-        frgShader =
-            std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), "simple.frag.glsl", "main", Fragment);
+
+#define shaderDef(name, filename, type)                                                                                \
+    {                                                                                                                  \
+        auto target = vfs::fsfetch(fmt::format("/bootassets/openminecraft-renderer/shaders/{}", filename));            \
+        name = std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), filename, "main", type);             \
     }
 
-    {
-        auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple2.frag.glsl");
-        frgShader2 =
-            std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), "simple2.frag.glsl", "main", Fragment);
-    }
-
-    {
-        auto target = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/simple.vert.glsl");
-        vtxShader =
-            std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), "simple.vert.glsl", "main", Vertex);
-    }
+    shaderDef(objectFrg, "objectbase.frag.glsl", Fragment);
+    shaderDef(objectVtx, "objectbase.vert.glsl", Vertex);
+    shaderDef(outputFrg, "output.frag.glsl", Fragment);
+    shaderDef(outputVtx, "output.vert.glsl", Vertex);
 
     basics::OMVertexFormat format;
     format.appendPart("position", basics::Vec3f);
@@ -85,11 +79,10 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
         auto ppo = f->buildBasicPolygon('@');
         delete f;
 
-        std::vector<VertexPart> vtxnew = {{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}}, {{0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-                                          {{1.0f, 0.0f, 1.0f}, {1.0f, 1.0f}}, {{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-                                          {{0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}}, {{0.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-                                          {{1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}, {{1.0f, 1.0f, 0.0f}, {1.0f, 0.0f}}};
-        std::vector<uint32_t> indices = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
+        float ratio = 1.377143f;
+
+        std::vector<VertexPart> vtxnew;
+        std::vector<uint32_t> indices;
 
         vtxnew.clear();
         indices.clear();
@@ -164,23 +157,23 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     {
         auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/viking_room.png");
 
-        specs::png::OMPngFile pngfile;
-        pngfile.parse(imgraw);
+        specs::png::OMPngFile img;
+        img.parse(imgraw);
 
-        textureImage = renderer->allocateTexture(pngfile.getWidth(), pngfile.getHeight(), Dim2, ColorRgba);
-        textureImage->updateData(pngfile.fetchData());
+        textureImage = renderer->allocateTexture(img.getWidth(), img.getHeight(), Dim2, ColorRgba);
+        textureImage->updateData(img.fetchData());
     }
 
     mainPipeline = renderer->createPipeline();
     mainPipeline->appendInput(UniformBuffer);
     mainPipeline->appendInput(ImageSampler);
     mainPipeline->bindOutput(renderer->getDefaultRenderTarget());
-    mainPipeline->attachShader(frgShader);
-    mainPipeline->attachShader(vtxShader);
+    mainPipeline->attachShader(outputFrg);
+    mainPipeline->attachShader(outputVtx);
     mainPipeline->vertexFormat(format);
     mainPipeline->build();
     mainPipeline->bindInput(0, tempUniformBuffer);
-}
+} // namespace openminecraft::boot::test
 
 void OMTestRenderer::beforeFrame()
 {
@@ -193,8 +186,6 @@ void OMTestRenderer::beforeFrame()
     ubo.model = glm::mat4(1.0f);
     ubo.view = camera->fetchViewMat();
     ubo.proj = camera->fetchProjMat();
-    // vulkan only!
-    ubo.proj *= glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, -1.0f, 1.0f));
 
     uniformBuffer->updateData(&ubo);
 }
@@ -283,8 +274,8 @@ void OMTestRenderer::submitTasks()
         pipeline->appendInput(UniformBuffer);
         pipeline->appendInput(ImageSampler);
         pipeline->bindOutput(renderTarget);
-        pipeline->attachShader(frgShader2);
-        pipeline->attachShader(vtxShader);
+        pipeline->attachShader(objectFrg);
+        pipeline->attachShader(objectVtx);
         basics::OMVertexFormat format;
         format.appendPart("position", basics::Vec3f);
         format.appendPart("textureUV", basics::Vec2f);

@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/common/shader/om_renderer_shadercompiler_shaderc.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
+#include "shaderc/shaderc.h"
 #include "shaderc/shaderc.hpp"
 #include <memory>
 #include <stdexcept>
@@ -55,6 +56,7 @@ std::shared_ptr<OMShader> OMRendererShaderCompilerBackendShaderc::compile(std::s
     shaderc::CompileOptions opt;
 
     opt.SetSourceLanguage(shader->type == GLSLSource ? shaderc_source_language_glsl : shaderc_source_language_hlsl);
+    opt.SetOptimizationLevel(shaderc_optimization_level_performance);
 
     auto result = compiler->CompileGlslToSpv(reinterpret_cast<const char *>(shader->data.data()), shader->data.size(),
                                              k, shader->filename.c_str(), shader->entrypoint.c_str(), opt);

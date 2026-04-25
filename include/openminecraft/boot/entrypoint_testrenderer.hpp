@@ -77,9 +77,10 @@ class OMTestRenderer : public OMRendererHandler
     float m_cameraMoveSpeed = 2.0f;
     float m_cameraRotateSpeed = 45.0f;
 
-    std::shared_ptr<OMShader> vtxShader;
-    std::shared_ptr<OMShader> frgShader;
-    std::shared_ptr<OMShader> frgShader2;
+    std::shared_ptr<OMShader> objectVtx;
+    std::shared_ptr<OMShader> objectFrg;
+    std::shared_ptr<OMShader> outputVtx;
+    std::shared_ptr<OMShader> outputFrg;
 
     std::chrono::high_resolution_clock::time_point tp;
     bool timing = false;

@@ -47,6 +47,7 @@ beg:
     case ' ':
     case '\n':
     case '\t':
+    case '\r':
         this->source->ignore(1);
         goto beg;
     case '0':

@@ -243,57 +243,86 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++tc->zero.pc;
             break;
         }
-        case op_ifge: {
-            if (zeroStackPopGet<jint>() >= 0)
-            {
-                tc->zero.pc += zeroCodeFetchArgs16p0();
-            }
-            else
-            {
-                tc->zero.pc += 3;
-            }
-            break;
-        }
-        case op_ifle: {
-            if (zeroStackPopGet<jint>() <= 0)
-            {
-                tc->zero.pc += zeroCodeFetchArgs16p0();
-            }
-            else
-            {
-                tc->zero.pc += 3;
-            }
-            break;
-        }
-        case op_if_icmpne: {
-            if (zeroStackPopGet<jint>() != zeroStackPopGet<jint>())
-            {
-                tc->zero.pc += zeroCodeFetchArgs16p0();
-            }
-            else
-            {
-                tc->zero.pc += 3;
-            }
-            break;
-        }
-        case op_fcmpg: {
-            auto value2 = zeroStackPopGet<jfloat>();
-            auto value1 = zeroStackPopGet<jfloat>();
-            if (value1 == NAN || value2 == NAN || value1 > value2)
-            {
-                zeroStackPush<jint>(1);
-            }
-            else if (value1 < value2)
-            {
-                zeroStackPush<jint>(-1);
-            }
-            else
-            {
-                zeroStackPush<jint>(0);
-            }
-            ++tc->zero.pc;
-            break;
-        }
+#define op_ifcmp(cond, op)                                                                                             \
+    case op_if##cond: {                                                                                                \
+        if (zeroStackPopGet<jint>() op 0)                                                                              \
+        {                                                                                                              \
+            tc->zero.pc += zeroCodeFetchArgs16p0();                                                                    \
+        }                                                                                                              \
+        else                                                                                                           \
+        {                                                                                                              \
+            tc->zero.pc += 3;                                                                                          \
+        }                                                                                                              \
+        break;                                                                                                         \
+    }
+            op_ifcmp(eq, ==);
+            op_ifcmp(ne, !=);
+            op_ifcmp(lt, <);
+            op_ifcmp(gt, >);
+            op_ifcmp(ge, >=);
+            op_ifcmp(le, <=);
+
+#define op_ificmp(cond, op)                                                                                            \
+    case op_if_icmp##cond: {                                                                                           \
+        if (zeroStackPopGet<jint>() op zeroStackPopGet<jint>())                                                        \
+        {                                                                                                              \
+            tc->zero.pc += zeroCodeFetchArgs16p0();                                                                    \
+        }                                                                                                              \
+        else                                                                                                           \
+        {                                                                                                              \
+            tc->zero.pc += 3;                                                                                          \
+        }                                                                                                              \
+        break;                                                                                                         \
+    }
+            op_ificmp(eq, ==);
+            op_ificmp(ne, !=);
+            op_ificmp(lt, <);
+            op_ificmp(gt, >);
+            op_ificmp(ge, >=);
+            op_ificmp(le, <=);
+
+#define op_fcmp(cond, opnan, op)                                                                                       \
+    case op_fcmp##cond: {                                                                                              \
+        auto value2 = zeroStackPopGet<jfloat>();                                                                       \
+        auto value1 = zeroStackPopGet<jfloat>();                                                                       \
+        if (value1 == NAN || value2 == NAN || value1 opnan value2)                                                     \
+        {                                                                                                              \
+            zeroStackPush<jint>(1);                                                                                    \
+        }                                                                                                              \
+        else if (value1 op value2)                                                                                     \
+        {                                                                                                              \
+            zeroStackPush<jint>(-1);                                                                                   \
+        }                                                                                                              \
+        else                                                                                                           \
+        {                                                                                                              \
+            zeroStackPush<jint>(0);                                                                                    \
+        }                                                                                                              \
+        ++tc->zero.pc;                                                                                                 \
+        break;                                                                                                         \
+    }
+            op_fcmp(g, >, <);
+            op_fcmp(l, <, >);
+#define op_dcmp(cond, opnan, op)                                                                                       \
+    case op_dcmp##cond: {                                                                                              \
+        auto value2 = zeroStackPopWGet<jdouble>();                                                                     \
+        auto value1 = zeroStackPopWGet<jdouble>();                                                                     \
+        if (value1 == NAN || value2 == NAN || value1 opnan value2)                                                     \
+        {                                                                                                              \
+            zeroStackPush<jint>(1);                                                                                    \
+        }                                                                                                              \
+        else if (value1 op value2)                                                                                     \
+        {                                                                                                              \
+            zeroStackPush<jint>(-1);                                                                                   \
+        }                                                                                                              \
+        else                                                                                                           \
+        {                                                                                                              \
+            zeroStackPush<jint>(0);                                                                                    \
+        }                                                                                                              \
+        ++tc->zero.pc;                                                                                                 \
+        break;                                                                                                         \
+    }
+            op_dcmp(g, >, <);
+            op_dcmp(l, <, >);
         case op_return: {
             popFrame();
             break;
