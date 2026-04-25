@@ -250,6 +250,7 @@ jobs:
         with:
           path: ~/.xmake/packages
           key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-${{ hashFiles('**.lua') }}
+          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-pkg
 
       - name: Save xmake packages (Windows)
         if: matrix.plat == 'windows'
@@ -257,6 +258,7 @@ jobs:
         with:
           path: C:/Users/runneradmin/AppData/Local/.xmake/packages
           key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-${{ hashFiles('**.lua') }}
+          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-pkg
 
       - name: Build
         run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }} openminecraft
