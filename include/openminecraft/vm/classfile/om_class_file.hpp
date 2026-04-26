@@ -2,11 +2,11 @@
 #define OM_CLASS_FILE_HPP
 
 #include <cstdint>
+#include <istream>
 #include <memory>
 #include <unordered_map>
 #include <vector>
 
-#include "openminecraft/io/om_io_parser.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/vm/err/om_validation_error.hpp"
@@ -887,7 +887,7 @@ struct OMClassFile
     std::unordered_map<uint16_t, std::shared_ptr<OMClassConstant>> mapping;
 };
 
-class OMClassFileParser : public io::OMParser
+class OMClassFileParser
 {
     using ConstantMapping = std::unordered_map<uint16_t, std::shared_ptr<OMClassConstant>>;
 
@@ -908,6 +908,8 @@ class OMClassFileParser : public io::OMParser
     std::shared_ptr<OMClassAnnotationElemValue> parseAnnotationValue();
     std::shared_ptr<OMClassRuntimeTypeAnnotation> parseTypeAnnotation();
     static std::string toStdUtf8(std::vector<uint8_t> data, int length);
+
+    std::istream *source;
 };
 } // namespace openminecraft::vm::classfile
 

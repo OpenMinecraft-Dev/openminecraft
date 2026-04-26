@@ -1,5 +1,4 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
-#include "openminecraft/io/om_io_parser.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/util/om_util_result.hpp"
@@ -18,13 +17,12 @@ using namespace openminecraft::util;
 
 namespace openminecraft::vm::classfile
 {
-OMClassFileParser::OMClassFileParser(std::istream *str) : io::OMParser(str), logger("OMClassFileParser", this)
+OMClassFileParser::OMClassFileParser(std::istream *str) : source(str), logger("OMClassFileParser", this)
 {
 }
 
 OMClassFileParser::~OMClassFileParser()
 {
-    io::OMParser::~OMParser();
 }
 
 util::OMResult<std::shared_ptr<OMClassFile>, err::OMValidationError> OMClassFileParser::parse()
