@@ -13,11 +13,9 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
-#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <stdexcept>
-#include <thread>
 
 using namespace openminecraft::binary::hash;
 
@@ -45,7 +43,7 @@ OMElysiaExecutorZero::OMElysiaExecutorZero(OMElysiaVirtualWorld *vw) : world(vw)
 
     ffi_cif cif;
     ffi_type *returnFfiType = &ffi_type_sint;
-    ffi_status ffiPrepStatus = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, (unsigned int)argCount, returnFfiType, ffiArgTypes);
+    ffi_status ffiPrepStatus = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, argCount, returnFfiType, ffiArgTypes);
 
     if (ffiPrepStatus == FFI_OK)
     {
@@ -109,7 +107,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
         switch (hash_compile_time(fmt::format("{}.{}", m->klass->name, m->name).c_str()))
         {
         case "java/lang/System.registerNatives"_hash:
-            impl::Java_java_lang_System_registerNatives();
+            impl::Java_java_lang_System_registerNatives(this->world);
             popFrame();
             break;
         default:
