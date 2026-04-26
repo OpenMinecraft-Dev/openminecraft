@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     for (int i = 0; i < argc; i++)
     {
         a.push_back(argv[i]);
-        logger.info(argv[i]);
+        logger.debug(argv[i]);
     }
     logger.info("Booting kernel...");
     openminecraft::vfs::fsmountBundle(

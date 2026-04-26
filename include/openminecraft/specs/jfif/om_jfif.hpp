@@ -5,6 +5,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/specs/abstracts/om_blocked_file.hpp"
+#include "openminecraft/specs/abstracts/om_image.hpp"
 #include "openminecraft/util/om_util_bitbuffer.hpp"
 #include <array>
 #include <cstddef>
@@ -177,13 +178,14 @@ enum OMJfifImageType
     Lostless
 };
 
-class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
+class OMJfifFile : public OMBlockedFile<OMJfifSectionType>, public OMImage
 {
   public:
     OMJfifFile();
     ~OMJfifFile();
 
-    static uint16_t readLen(std::shared_ptr<std::istream> input);
+  private:
+    uint16_t readLen(std::shared_ptr<std::istream> input);
 
     void parseMagic(std::shared_ptr<std::istream>) override;
     bool parseBlockHeader(std::shared_ptr<std::istream>, OMJfifSectionType *) override;
@@ -206,17 +208,23 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>
     void parseRawBlocksProgressiveDC(std::shared_ptr<std::istream>);
     void parseRawBlocksProgressiveAC(std::shared_ptr<std::istream>);
 
-    uint8_t *getData()
+  public:
+    void *fetchData() override
     {
         return data.data();
     }
-    int getWidth()
+    int getWidth() override
     {
         return headerStartOfFrame.width;
     }
-    int getHeight()
+    int getHeight() override
     {
         return headerStartOfFrame.height;
+    }
+
+    void parseBase(std::shared_ptr<std::istream> in) override
+    {
+        parse(in);
     }
 
   private:

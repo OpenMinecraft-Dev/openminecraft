@@ -3,6 +3,7 @@
 
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/specs/abstracts/om_blocked_file.hpp"
+#include "openminecraft/specs/abstracts/om_image.hpp"
 #include "openminecraft/specs/zlib/om_zlib_inflate.hpp"
 #include <array>
 #include <cstdint>
@@ -67,16 +68,22 @@ enum OMPngChunkType
     Unknown
 };
 
-class OMPngFile : public OMBlockedFile<OMPngChunkType>
+class OMPngFile : public OMBlockedFile<OMPngChunkType>, public OMImage
 {
   public:
     OMPngFile();
     ~OMPngFile();
 
-    void *fetchData();
-    int getWidth();
-    int getHeight();
+    void *fetchData() override;
+    int getWidth() override;
+    int getHeight() override;
 
+    void parseBase(std::shared_ptr<std::istream> in) override
+    {
+        parse(in);
+    }
+
+  private:
     void parseMagic(std::shared_ptr<std::istream>) override;
     bool parseBlockHeader(std::shared_ptr<std::istream>, OMPngChunkType *) override;
 
@@ -85,7 +92,6 @@ class OMPngFile : public OMBlockedFile<OMPngChunkType>
     void parseTRNS(std::shared_ptr<std::istream> istr);
     void parseIDAT(std::shared_ptr<std::istream> istr);
 
-  private:
     std::pair<uint32_t, uint32_t> getAdamPassSize(int pass);
     void defilterAdam(int type, std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &, int y, int pass);
     void writeIntoBufferAdam(std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &, int pass, int y);

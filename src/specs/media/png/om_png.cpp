@@ -2,15 +2,11 @@
 #include "fmt/format.h"
 #include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
-#include "openminecraft/mem/om_mem_allocator.hpp"
-#include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/specs/zlib/om_zlib_inflate.hpp"
 #include "openminecraft/util/om_util_crc.hpp"
-#include "zlib.h"
 #include <cstdint>
 #include <cstring>
-#include <fstream>
 #include <iostream>
 #include <istream>
 #include <iterator>
