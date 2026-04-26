@@ -16,6 +16,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <iostream>
 #include <thread>
 
 using namespace openminecraft::binary::hash;
@@ -260,6 +261,21 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++tc->zero.pc;
             break;
         }
+        case op_fmul: {
+            zeroStackPush(zeroStackPopGet<jfloat>() * zeroStackPopGet<jfloat>());
+            ++tc->zero.pc;
+            break;
+        }
+        case op_i2f: {
+            zeroStackPush(static_cast<jfloat>(zeroStackPopGet<jint>()));
+            ++tc->zero.pc;
+            break;
+        }
+        case op_f2i: {
+            zeroStackPush(static_cast<jint>(zeroStackPopGet<jfloat>()));
+            ++tc->zero.pc;
+            break;
+        }
 #define op_ifcmp(cond, op)                                                                                             \
     case op_if##cond: {                                                                                                \
         if (zeroStackPopGet<jint>() op 0)                                                                              \
@@ -340,12 +356,22 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     }
             op_dcmp(g, >, <);
             op_dcmp(l, <, >);
+        case op_goto: {
+            tc->zero.pc += zeroCodeFetchArgs16p0();
+            break;
+        }
         case op_return: {
             popFrame();
             break;
         }
         case op_ireturn: {
             auto pp = zeroStackPopGet<jint>();
+            popFrame();
+            zeroStackPush(pp);
+            break;
+        }
+        case op_freturn: {
+            auto pp = zeroStackPopGet<jfloat>();
             popFrame();
             zeroStackPush(pp);
             break;
@@ -416,6 +442,20 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                 world->oopManager->allocateArr(world->klassLoader->findClass(kn)->toArray(), zeroStackPopGet<jint>());
             zeroStackPush(arr);
             tc->zero.pc += 2;
+            break;
+        }
+        case op_anewarray: {
+            auto c = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
+            auto arrcls = buildArray(reinterpret_cast<OMElysiaKlass *>(c)->name);
+            auto klass = world->klassLoader->findClass(arrcls);
+            if (!klass)
+            {
+                world->klassLoader->constructArrayClass(reinterpret_cast<OMElysiaKlass *>(c));
+                klass = world->klassLoader->findClass(arrcls);
+            }
+            auto arr = world->oopManager->allocateArr(klass->toArray(), zeroStackPopGet<jint>());
+            zeroStackPush(arr);
+            tc->zero.pc += 3;
             break;
         }
         default:

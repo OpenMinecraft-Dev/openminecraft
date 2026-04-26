@@ -71,6 +71,8 @@ static uint64_t argSlots(char *s)
         case '(':
             ++s;
             break;
+        case ')':
+            return l;
         case 'L':
             while (*s != ';')
             {
