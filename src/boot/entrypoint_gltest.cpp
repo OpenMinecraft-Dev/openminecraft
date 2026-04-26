@@ -11,39 +11,126 @@ namespace openminecraft::boot
 {
 void openglRendererTest()
 {
-    renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
-                           util::Version(1, 0, 0, 0), util::Version(4, 1, 0, 0)};
-
-    auto wnd2 = SDL_CreateWindow("OpenGL Test", 800, 800, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-    auto renderer = new renderer::opengl::OMRendererOpenGL(a, wnd2);
-    auto ll = std::make_shared<test::OMTestRenderer>(renderer);
-
-    SDL_GL_SetSwapInterval(0);
-
-    renderer->registerHandler(ll);
-    renderer->baseInit();
-
-    while (true)
+    auto logger = std::make_shared<log::OMLogger>("Test OpenGL");
+    try
     {
-        SDL_Event e;
-        SDL_PollEvent(&e);
+        renderer::AppInfo a = {"OpenMinecraft", util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
+                               util::Version(1, 0, 0, 0), util::Version(3, 3, 0, 0)};
+        auto wnd = SDL_CreateWindow("OpenGL Test", 800, 800, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+        auto renderer = new renderer::opengl::OMRendererOpenGL(a, wnd);
 
-        if (e.type == SDL_EVENT_QUIT)
+        SDL_GL_SetSwapInterval(1);
+
+        auto hnd = std::make_shared<test::OMTestRenderer>(renderer);
+        renderer->registerHandler(hnd);
+
+        renderer->baseInit();
+
+        logger->info("driver: {}", renderer->driver());
+
+        bool wk = false, ak = false, sk = false, dk = false, spk = false, lshk = false;
+
+        while (true)
         {
-            break;
+            SDL_Event e;
+            SDL_PollEvent(&e);
+
+            if (e.type == SDL_EVENT_KEY_DOWN)
+            {
+                if (e.key.key == SDLK_W)
+                {
+                    wk = true;
+                }
+                else if (e.key.key == SDLK_A)
+                {
+                    ak = true;
+                }
+                else if (e.key.key == SDLK_S)
+                {
+                    sk = true;
+                }
+                else if (e.key.key == SDLK_D)
+                {
+                    dk = true;
+                }
+                else if (e.key.key == SDLK_LSHIFT)
+                {
+                    lshk = true;
+                }
+                else if (e.key.key == SDLK_SPACE)
+                {
+                    spk = true;
+                }
+                else if (e.key.key == SDLK_ESCAPE)
+                {
+                    SDL_SetWindowRelativeMouseMode(wnd, false);
+                }
+            }
+
+            if (e.type == SDL_EVENT_KEY_UP)
+            {
+                if (e.key.key == SDLK_W)
+                {
+                    wk = false;
+                }
+                else if (e.key.key == SDLK_A)
+                {
+                    ak = false;
+                }
+                else if (e.key.key == SDLK_S)
+                {
+                    sk = false;
+                }
+                else if (e.key.key == SDLK_D)
+                {
+                    dk = false;
+                }
+                else if (e.key.key == SDLK_LSHIFT)
+                {
+                    lshk = false;
+                }
+                else if (e.key.key == SDLK_SPACE)
+                {
+                    spk = false;
+                }
+            }
+
+            if (e.type == SDL_EVENT_WINDOW_RESIZED)
+            {
+                renderer->requestResize();
+            }
+
+            if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+            {
+                SDL_SetWindowRelativeMouseMode(wnd, true);
+            }
+
+            if (e.type == SDL_EVENT_MOUSE_MOTION && SDL_GetWindowRelativeMouseMode(wnd))
+            {
+                int ww, hh;
+                SDL_GetWindowSize(wnd, &ww, &hh);
+                hnd->mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
+            }
+
+            if (e.type == SDL_EVENT_QUIT)
+            {
+                break;
+            }
+
+            hnd->keyInput(wk, ak, sk, dk, lshk, spk);
+            renderer->render();
         }
 
-        if (e.type == SDL_EVENT_WINDOW_RESIZED)
-        {
-            renderer->requestResize();
-        }
-
-        renderer->render();
+        hnd = nullptr;
+        delete renderer;
+        SDL_DestroyWindow(wnd);
     }
-
-    ll = nullptr;
-
-    delete renderer;
-    SDL_DestroyWindow(wnd2);
+    catch (std::runtime_error &e)
+    {
+        if (!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "OpenGL Debugger", e.what(), nullptr))
+        {
+            logger->info("SDL Status: {}", SDL_GetError());
+        }
+    }
 }
 } // namespace openminecraft::boot

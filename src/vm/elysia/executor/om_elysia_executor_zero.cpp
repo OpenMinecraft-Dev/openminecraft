@@ -7,14 +7,15 @@
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_field.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
+#include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include <chrono>
 #include <cmath>
 #include <cstdint>
-#include <stdexcept>
 #include <thread>
 
 using namespace openminecraft::binary::hash;
@@ -343,15 +344,21 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             popFrame();
             break;
         }
+        case op_ireturn: {
+            auto pp = zeroStackPopGet<jint>();
+            popFrame();
+            zeroStackPush(pp);
+            break;
+        }
         case op_putfield: {
             auto fld = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
-            zeroStackPopToField(reinterpret_cast<OMElysiaField *>(fld), world->oopManager.get());
+            zeroStackPopToField(reinterpret_cast<OMElysiaField *>(fld), world->oopManager.get(), world);
             tc->zero.pc += 3;
             break;
         }
         case op_putstatic: {
             auto fld = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
-            zeroStackPopToStatic(reinterpret_cast<OMElysiaField *>(fld));
+            zeroStackPopToStatic(reinterpret_cast<OMElysiaField *>(fld), world);
             tc->zero.pc += 3;
             break;
         }
@@ -371,6 +378,44 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto c = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
             zeroStackPush(world->oopManager->allocateOop(reinterpret_cast<OMElysiaKlass *>(c)));
             tc->zero.pc += 3;
+            break;
+        }
+        case op_newarray: {
+            std::string kn;
+            switch (tc->zero.pc[1])
+            {
+            case 4:
+                kn = "[Z";
+                break;
+            case 5:
+                kn = "[C";
+                break;
+            case 6:
+                kn = "[F";
+                break;
+            case 7:
+                kn = "[D";
+                break;
+            case 8:
+                kn = "[B";
+                break;
+            case 9:
+                kn = "[S";
+                break;
+            case 10:
+                kn = "[I";
+                break;
+            case 11:
+                kn = "[J";
+                break;
+            default:
+                break;
+            }
+
+            auto arr =
+                world->oopManager->allocateArr(world->klassLoader->findClass(kn)->toArray(), zeroStackPopGet<jint>());
+            zeroStackPush(arr);
+            tc->zero.pc += 2;
             break;
         }
         default:
@@ -410,7 +455,7 @@ int16_t zeroCodeFetchArgs16p0()
     return static_cast<int16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
 }
 
-void zeroStackPopToStatic(OMElysiaField *field)
+void zeroStackPopToStatic(OMElysiaField *field, OMElysiaVirtualWorld *world)
 {
     switch (*field->desc)
     {
@@ -419,6 +464,21 @@ void zeroStackPopToStatic(OMElysiaField *field)
         *reinterpret_cast<jlong *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =
             zeroStackPopWGet<jlong>();
         break;
+    case 'L':
+    case '[': {
+        auto pp = zeroStackPopGet<OMElysiaOop *>();
+        if (world->mainHeap.enablePtrCompress())
+        {
+            *reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =
+                world->mainHeap.compress(pp);
+        }
+        else
+        {
+            *reinterpret_cast<OMElysiaOop **>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =
+                pp;
+        }
+        break;
+    }
     default:
         *reinterpret_cast<jint *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =
             zeroStackPopGet<jint>();
@@ -426,7 +486,7 @@ void zeroStackPopToStatic(OMElysiaField *field)
     }
 }
 
-void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop)
+void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysiaVirtualWorld *world)
 {
     switch (*field->desc)
     {
@@ -434,6 +494,21 @@ void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop)
     case 'D': {
         auto pp = zeroStackPopWGet<jlong>();
         *reinterpret_cast<jlong *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)) = pp;
+        break;
+    }
+    case 'L':
+    case '[': {
+        auto pp = zeroStackPopGet<OMElysiaOop *>();
+        if (world->mainHeap.enablePtrCompress())
+        {
+            *reinterpret_cast<uint32_t *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)) =
+                world->mainHeap.compress(pp);
+        }
+        else
+        {
+            *reinterpret_cast<OMElysiaOop **>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)) =
+                pp;
+        }
         break;
     }
     default: {

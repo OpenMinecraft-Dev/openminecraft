@@ -7,6 +7,7 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 #include <cstdint>
+#include <type_traits>
 namespace openminecraft::vm::elysia::executor
 {
 uintptr_t zeroStackAlloc(uint64_t len);
@@ -14,7 +15,14 @@ uintptr_t zeroStackPop(uint64_t len);
 template <typename T> static void zeroStackPush(T data)
 {
     auto d = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
-    *d = (uintptr_t)data;
+    if constexpr (std::is_pointer_v<T>)
+    {
+        *d = reinterpret_cast<uintptr_t>(data);
+    }
+    else
+    {
+        *d = *reinterpret_cast<uint32_t *>(&data);
+    }
 }
 
 template <typename T> static void zeroStackPushW(T data)
@@ -63,8 +71,8 @@ template <typename T> static T zeroStackPopWGet()
     }
 }
 
-void zeroStackPopToStatic(OMElysiaField *field);
-void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop);
+void zeroStackPopToStatic(OMElysiaField *field, OMElysiaVirtualWorld *world);
+void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysiaVirtualWorld *world);
 uint16_t zeroCodeFetchArgu16p0();
 int16_t zeroCodeFetchArgs16p0();
 

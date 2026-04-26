@@ -1,6 +1,9 @@
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 #include <cstring>
+
+using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::elysia
 {
@@ -13,7 +16,12 @@ OMElysiaOopManager::~OMElysiaOopManager()
 
 uint64_t OMElysiaOopManager::oopHeaderLength()
 {
-    return sizeof(uint32_t) + world->metaspaceHeap.ptrLength();
+    return world->metaspaceHeap.enablePtrCompress() ? sizeof(OMElysiaOopCompressed) : sizeof(OMElysiaOopUncompressed);
+}
+uint64_t OMElysiaOopManager::oopArrayHeaderLength()
+{
+    return world->metaspaceHeap.enablePtrCompress() ? sizeof(OMElysiaArrayOopCompressed)
+                                                    : sizeof(OMElysiaArrayOopUncompressed);
 }
 OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass)
 {
@@ -22,11 +30,11 @@ OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass)
     std::memset(ll, 0x00, oopHeaderLength() + reinterpret_cast<OMElysiaInstanceKlass *>(klass)->length);
     if (world->metaspaceHeap.enablePtrCompress())
     {
-        ll->compressed = world->metaspaceHeap.compress(klass);
+        reinterpret_cast<OMElysiaOopCompressed *>(ll)->klass = world->metaspaceHeap.compress(klass);
     }
     else
     {
-        ll->raw = klass;
+        reinterpret_cast<OMElysiaOopUncompressed *>(ll)->klass = klass;
     }
     return ll;
 }
@@ -34,5 +42,47 @@ OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass)
 uintptr_t OMElysiaOopManager::oopAccessField(void *base, uint64_t offset)
 {
     return reinterpret_cast<uintptr_t>(base) + oopHeaderLength() + offset;
+}
+
+OMElysiaArrayOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint length)
+{
+    int i = 0;
+    switch (hash_compile_time(klass->lowerDim->name))
+    {
+    case "byte"_hash:
+    case "boolean"_hash:
+        i = 1;
+        break;
+    case "char"_hash:
+    case "short"_hash:
+        i = 2;
+        break;
+    case "int"_hash:
+    case "float"_hash:
+        i = 4;
+        break;
+    case "long"_hash:
+    case "double"_hash:
+        i = 8;
+        break;
+    default:
+        i = klass->ptrLength;
+        break;
+    }
+
+    auto ll = reinterpret_cast<OMElysiaArrayOop *>(world->mainHeap.allocate(oopArrayHeaderLength() + i * length));
+    std::memset(ll, 0x00, oopArrayHeaderLength() + i * length);
+
+    ll->length = length;
+    if (world->metaspaceHeap.enablePtrCompress())
+    {
+        reinterpret_cast<OMElysiaArrayOopCompressed *>(ll)->klass = world->metaspaceHeap.compress(klass);
+    }
+    else
+    {
+        reinterpret_cast<OMElysiaArrayOopUncompressed *>(ll)->klass = klass;
+    }
+
+    return ll;
 }
 } // namespace openminecraft::vm::elysia

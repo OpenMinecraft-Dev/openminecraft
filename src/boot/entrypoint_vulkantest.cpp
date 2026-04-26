@@ -2,7 +2,6 @@
 #include "openminecraft/boot/entrypoint_testrenderer.hpp"
 #include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/common/om_renderer_shadercompiler.hpp"
 #include "openminecraft/renderer/common/shader/om_renderer_shadercompiler_shaderc.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
