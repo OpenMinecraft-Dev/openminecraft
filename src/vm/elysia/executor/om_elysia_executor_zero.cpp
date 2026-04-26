@@ -191,6 +191,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         ++tc->zero.pc;                                                                                                 \
         break;
 
+#define op_dconst(n)                                                                                                   \
+    case op_dconst_d(n):                                                                                               \
+        zeroStackPushW<jdouble>(n);                                                                                    \
+        ++tc->zero.pc;                                                                                                 \
+        break;
+
             op_iconst(-1);
             op_iconst(0);
             op_iconst(1);
@@ -203,10 +209,16 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_fconst(0);
             op_fconst(1);
             op_fconst(2);
+            op_dconst(0);
+            op_dconst(1);
         case op_bipush:
             ++tc->zero.pc;
             zeroStackPush<jint>(*tc->zero.pc);
             ++tc->zero.pc;
+            break;
+        case op_sipush:
+            zeroStackPush<jint>(zeroCodeFetchArgu16p0());
+            tc->zero.pc += 3;
             break;
         case op_ldc: {
             auto ff = CURRENT_KLASS->constantPoolFetch(tc->zero.pc[1]);
@@ -251,6 +263,70 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++tc->zero.pc;
             break;
         }
+
+#define op_calc(op, fetch, psh, oprt)                                                                                  \
+    case op_##op: {                                                                                                    \
+        auto value2 = fetch();                                                                                         \
+        auto value1 = fetch();                                                                                         \
+        psh(value1 oprt value2);                                                                                       \
+        ++tc->zero.pc;                                                                                                 \
+        break;                                                                                                         \
+    }
+            op_calc(iadd, zeroStackPopGet<jint>, zeroStackPush, +);
+            op_calc(ladd, zeroStackPopWGet<jlong>, zeroStackPushW, +);
+            op_calc(fadd, zeroStackPopGet<jfloat>, zeroStackPush, +);
+            op_calc(dadd, zeroStackPopWGet<jdouble>, zeroStackPushW, +);
+            op_calc(isub, zeroStackPopGet<jint>, zeroStackPush, -);
+            op_calc(lsub, zeroStackPopWGet<jlong>, zeroStackPushW, -);
+            op_calc(fsub, zeroStackPopGet<jfloat>, zeroStackPush, -);
+            op_calc(dsub, zeroStackPopWGet<jdouble>, zeroStackPushW, -);
+            op_calc(imul, zeroStackPopGet<jint>, zeroStackPush, *);
+            op_calc(lmul, zeroStackPopWGet<jlong>, zeroStackPushW, *);
+            op_calc(fmul, zeroStackPopGet<jfloat>, zeroStackPush, *);
+            op_calc(dmul, zeroStackPopWGet<jdouble>, zeroStackPushW, *);
+            op_calc(idiv, zeroStackPopGet<jint>, zeroStackPush, /);
+            op_calc(ldiv, zeroStackPopWGet<jlong>, zeroStackPushW, /);
+            op_calc(fdiv, zeroStackPopGet<jfloat>, zeroStackPush, /);
+            op_calc(ddiv, zeroStackPopWGet<jdouble>, zeroStackPushW, /);
+
+#define op_calcrem(op, fetch, psh)                                                                                     \
+    case op_##op: {                                                                                                    \
+        auto value2 = fetch();                                                                                         \
+        auto value1 = fetch();                                                                                         \
+        psh(value1 - (value1 / value2) * value2);                                                                      \
+        ++tc->zero.pc;                                                                                                 \
+        break;                                                                                                         \
+    }
+            op_calcrem(irem, zeroStackPopGet<jint>, zeroStackPush);
+            op_calcrem(lrem, zeroStackPopWGet<jlong>, zeroStackPushW);
+            op_calcrem(frem, zeroStackPopGet<jfloat>, zeroStackPush);
+            op_calcrem(drem, zeroStackPopWGet<jdouble>, zeroStackPushW);
+
+#define op_calcneg(op, fetch, psh)                                                                                     \
+    case op_##op: {                                                                                                    \
+        psh(-fetch());                                                                                                 \
+        ++tc->zero.pc;                                                                                                 \
+        break;                                                                                                         \
+    }
+            op_calcneg(ineg, zeroStackPopGet<jint>, zeroStackPush);
+            op_calcneg(lneg, zeroStackPopWGet<jlong>, zeroStackPushW);
+            op_calcneg(fneg, zeroStackPopGet<jfloat>, zeroStackPush);
+            op_calcneg(dneg, zeroStackPopWGet<jdouble>, zeroStackPushW);
+            op_calc(ishl, zeroStackPopGet<jint>, zeroStackPush, <<);
+            op_calc(lshl, zeroStackPopWGet<jlong>, zeroStackPushW, <<);
+            op_calc(ishr, zeroStackPopGet<jint>, zeroStackPush, >>);
+            op_calc(lshr, zeroStackPopWGet<jlong>, zeroStackPushW, >>);
+            // TODO: need to check bounds
+            op_calc(iushr, zeroStackPopGet<jint>, zeroStackPush, >>);
+            op_calc(lushr, zeroStackPopWGet<jlong>, zeroStackPushW, >>);
+
+            op_calc(iand, zeroStackPopGet<jint>, zeroStackPush, &);
+            op_calc(land, zeroStackPopWGet<jlong>, zeroStackPushW, &);
+            op_calc(ior, zeroStackPopGet<jint>, zeroStackPush, |);
+            op_calc(lor, zeroStackPopWGet<jlong>, zeroStackPushW, |);
+            op_calc(ixor, zeroStackPopGet<jint>, zeroStackPush, ^);
+            op_calc(lxor, zeroStackPopWGet<jlong>, zeroStackPushW, ^);
+
         case op_iinc: {
             ++tc->zero.pc;
             auto slt = *tc->zero.pc;
@@ -261,21 +337,27 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++tc->zero.pc;
             break;
         }
-        case op_fmul: {
-            zeroStackPush(zeroStackPopGet<jfloat>() * zeroStackPopGet<jfloat>());
-            ++tc->zero.pc;
-            break;
-        }
-        case op_i2f: {
-            zeroStackPush(static_cast<jfloat>(zeroStackPopGet<jint>()));
-            ++tc->zero.pc;
-            break;
-        }
-        case op_f2i: {
-            zeroStackPush(static_cast<jint>(zeroStackPopGet<jfloat>()));
-            ++tc->zero.pc;
-            break;
-        }
+#define op_conv(op, target, targettype, source, sourcetype)                                                            \
+    case op_##op: {                                                                                                    \
+        target(static_cast<targettype>(source<sourcetype>()));                                                         \
+        ++tc->zero.pc;                                                                                                 \
+        break;                                                                                                         \
+    }
+            op_conv(i2l, zeroStackPushW, jlong, zeroStackPopGet, jint);
+            op_conv(i2f, zeroStackPush, jfloat, zeroStackPopGet, jint);
+            op_conv(i2d, zeroStackPushW, jdouble, zeroStackPopGet, jint);
+            op_conv(l2i, zeroStackPush, jint, zeroStackPopWGet, jlong);
+            op_conv(l2f, zeroStackPush, jfloat, zeroStackPopWGet, jlong);
+            op_conv(l2d, zeroStackPushW, jdouble, zeroStackPopWGet, jlong);
+            op_conv(f2i, zeroStackPush, jint, zeroStackPopGet, jfloat);
+            op_conv(f2l, zeroStackPushW, jlong, zeroStackPopGet, jfloat);
+            op_conv(d2i, zeroStackPush, jint, zeroStackPopWGet, jdouble);
+            op_conv(f2d, zeroStackPushW, double, zeroStackPopGet, jfloat);
+            op_conv(d2l, zeroStackPushW, jlong, zeroStackPopWGet, jdouble);
+            op_conv(d2f, zeroStackPush, jfloat, zeroStackPopWGet, jdouble);
+            op_conv(i2b, zeroStackPush, jbyte, zeroStackPopGet, jint);
+            op_conv(i2c, zeroStackPush, jchar, zeroStackPopGet, jint);
+            op_conv(i2s, zeroStackPush, jshort, zeroStackPopGet, jint);
 #define op_ifcmp(cond, op)                                                                                             \
     case op_if##cond: {                                                                                                \
         if (zeroStackPopGet<jint>() op 0)                                                                              \
