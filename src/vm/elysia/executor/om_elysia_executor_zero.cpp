@@ -16,7 +16,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
-#include <iostream>
+#include <stdexcept>
 #include <thread>
 
 using namespace openminecraft::binary::hash;
@@ -113,7 +113,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
             popFrame();
             break;
         default:
-            throw 0;
+            throw std::logic_error("not implemented: " + fmt::format("{}.{}", m->klass->name, m->name));
         }
     }
 }
@@ -458,6 +458,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackPush(pp);
             break;
         }
+        case op_getstatic: {
+            auto fld = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
+            zeroStackPushFromStatic(reinterpret_cast<OMElysiaField *>(fld), world);
+            tc->zero.pc += 3;
+            break;
+        }
         case op_putfield: {
             auto fld = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
             zeroStackPopToField(reinterpret_cast<OMElysiaField *>(fld), world->oopManager.get(), world);
@@ -575,6 +581,36 @@ int16_t zeroCodeFetchArgs16p0()
 {
     auto tc = thisThread.metadata;
     return static_cast<int16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
+}
+
+void zeroStackPushFromStatic(OMElysiaField *field, OMElysiaVirtualWorld *world)
+{
+    switch (*field->desc)
+    {
+    case 'J':
+    case 'D':
+        zeroStackPushW(
+            *reinterpret_cast<jlong *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset));
+        break;
+    case 'L':
+    case '[': {
+        if (world->mainHeap.enablePtrCompress())
+        {
+            zeroStackPush(world->mainHeap.decompress(
+                *reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset)));
+        }
+        else
+        {
+            zeroStackPush(*reinterpret_cast<OMElysiaOop **>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) +
+                                                            field->offset));
+        }
+        break;
+    }
+    default:
+        zeroStackPush(
+            *reinterpret_cast<jint *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset));
+        break;
+    }
 }
 
 void zeroStackPopToStatic(OMElysiaField *field, OMElysiaVirtualWorld *world)
