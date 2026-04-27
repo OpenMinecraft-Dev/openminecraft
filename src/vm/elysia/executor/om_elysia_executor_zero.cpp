@@ -108,7 +108,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
         switch (hash_compile_time(fmt::format("{}.{}", m->klass->name, m->name).c_str()))
         {
         case "java/lang/System.registerNatives"_hash:
-            impl::Java_java_lang_System_registerNatives(this->world);
+            impl::Java_java_lang_System_registerNatives(&tc->interface, m->klass);
             popFrame();
             break;
         default:
@@ -141,6 +141,7 @@ void OMElysiaExecutorZero::threadInit()
         tc->stackStart = tc->stackEnd + 1024 * 1024 - sizeof(void *);
         tc->zero.stackPointer = tc->stackStart;
         tc->interface = reinterpret_cast<OMElysiaJNIEnv>(new OMElysiaJavaFrame);
+        tc->interface->world = world;
         initBaseInterface(tc->interface);
 
         tc->cleaner = [&]() {
@@ -174,6 +175,10 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     while (true)
     {
+        if (!tc->zero.pc)
+        {
+            break;
+        }
         switch (*tc->zero.pc)
         {
         case op_nop:
