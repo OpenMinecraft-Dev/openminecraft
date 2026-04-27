@@ -2,6 +2,7 @@
 #define OM_ELYSIA_KLASS_HPP
 
 #include "openminecraft/vm/classfile/om_class_file.hpp"
+#include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_field.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
@@ -41,6 +42,9 @@ class OMElysiaKlass
 
     uint32_t methodCount = 0;
     OMElysiaMethod *methods = nullptr;
+
+    uint32_t nativeMethodCount = 0;
+    OMElysiaNativeMethod *nativeMethods = nullptr;
 
     OMElysiaMethod *findMethod(const char *name, const char *desc);
 

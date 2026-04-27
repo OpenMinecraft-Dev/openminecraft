@@ -105,6 +105,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
 
     if (m->isNative())
     {
+        tc->zero.pc = nullptr;
         switch (hash_compile_time(fmt::format("{}.{}", m->klass->name, m->name).c_str()))
         {
         case "java/lang/System.registerNatives"_hash:
