@@ -105,6 +105,8 @@ class OMElysiaExecutorZero
     void pushFrame(OMElysiaMethod *m);
     void popFrame();
 
+    void threadInit();
+
   private:
     OMElysiaVirtualWorld *world;
     log::OMLogger logger;

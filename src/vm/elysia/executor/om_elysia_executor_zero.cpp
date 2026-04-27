@@ -4,6 +4,7 @@
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
+#include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_field.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
@@ -131,7 +132,7 @@ void OMElysiaExecutorZero::popFrame()
     tc->zero.frame = tc->zero.frame->caller;
 }
 
-void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
+void OMElysiaExecutorZero::threadInit()
 {
     auto tc = thisThread.metadata;
     if (!tc->threadInited)
@@ -139,13 +140,24 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         tc->stackEnd = reinterpret_cast<uintptr_t>(mem::allocator::tracedMallocElysia(1024 * 1024));
         tc->stackStart = tc->stackEnd + 1024 * 1024 - sizeof(void *);
         tc->zero.stackPointer = tc->stackStart;
+        tc->interface = reinterpret_cast<OMElysiaJNIEnv>(new OMElysiaJavaFrame);
+        initBaseInterface(tc->interface);
 
-        tc->cleaner = [&]() { mem::allocator::tracedFreeElysia(reinterpret_cast<void *>(tc->stackEnd)); };
+        tc->cleaner = [&]() {
+            mem::allocator::tracedFreeElysia(reinterpret_cast<void *>(tc->stackEnd));
+            delete tc->interface;
+        };
         tc->threadInited = true;
         tc->registerThread();
 
         logger.info("virtual stack: {}", (void *)tc->stackStart);
     }
+}
+
+void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
+{
+    auto tc = thisThread.metadata;
+    threadInit();
 
     pushFrame(m);
 
