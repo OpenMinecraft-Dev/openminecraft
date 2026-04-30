@@ -14,9 +14,11 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <stdexcept>
+#include <thread>
 #include <variant>
 #include <vector>
 
@@ -112,11 +114,9 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
         {
         case "java/lang/System.registerNatives"_hash:
             executeNative(m->descriptor, m->isStatic(), (void *)&impl::Java_java_lang_System_registerNatives);
-            popFrame();
             break;
         case "java/lang/System.initProperties"_hash:
             executeNative(m->descriptor, m->isStatic(), (void *)&impl::Java_java_lang_System_initProperties);
-            popFrame();
             break;
         default:
             throw std::logic_error("not implemented: " + fmt::format("{}.{}", m->klass->name, m->name));
@@ -245,6 +245,8 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     {
         throw std::logic_error("not supported yet!");
     }
+
+    popFrame();
 }
 
 void OMElysiaExecutorZero::popFrame()
@@ -287,6 +289,7 @@ void OMElysiaExecutorZero::threadInit()
     }
 }
 
+// TODO: fetch return data
 void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 {
     auto tc = thisThread.metadata;
@@ -307,6 +310,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     while (true)
     {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
         if (!tc->zero.pc)
         {
             break;

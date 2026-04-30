@@ -1,7 +1,7 @@
 #include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
-#include <stdexcept>
+#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 
 namespace openminecraft::vm::elysia::impl
 {
