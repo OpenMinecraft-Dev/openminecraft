@@ -61,6 +61,47 @@ static uint64_t fieldLength(char *s, uint64_t ptrLen)
     }
 }
 
+static uint64_t argSlotsPlain(char *s)
+{
+    uint64_t l = 0;
+    while (*s)
+    {
+        switch (*s)
+        {
+        case '(':
+            ++s;
+            break;
+        case ')':
+            return l;
+        case 'L':
+            while (*s != ';')
+            {
+                ++s;
+            }
+            ++l;
+            break;
+        case 'J':
+        case 'D':
+            ++s;
+            ++l;
+            break;
+        case 'B':
+        case 'Z':
+        case 'C':
+        case 'S':
+        case 'I':
+        case 'F':
+            ++s;
+            ++l;
+            break;
+        default:
+            ++s;
+            break;
+        }
+    }
+    return l;
+}
+
 static uint64_t argSlots(char *s)
 {
     uint64_t l = 0;

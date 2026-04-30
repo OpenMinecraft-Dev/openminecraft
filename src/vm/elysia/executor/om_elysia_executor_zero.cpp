@@ -17,6 +17,8 @@
 #include <cmath>
 #include <cstdint>
 #include <stdexcept>
+#include <variant>
+#include <vector>
 
 using namespace openminecraft::binary::hash;
 
@@ -109,12 +111,139 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
         switch (hash_compile_time(fmt::format("{}.{}", m->klass->name, m->name).c_str()))
         {
         case "java/lang/System.registerNatives"_hash:
-            impl::Java_java_lang_System_registerNatives(&tc->interface, m->klass);
+            executeNative(m->descriptor, m->isStatic(), (void *)&impl::Java_java_lang_System_registerNatives);
+            popFrame();
+            break;
+        case "java/lang/System.initProperties"_hash:
+            executeNative(m->descriptor, m->isStatic(), (void *)&impl::Java_java_lang_System_initProperties);
             popFrame();
             break;
         default:
             throw std::logic_error("not implemented: " + fmt::format("{}.{}", m->klass->name, m->name));
         }
+    }
+}
+
+void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *func)
+{
+    std::vector<std::variant<jint, jbyte, jboolean, jshort, jchar, jfloat, jlong, jdouble, OMElysiaOop *>> rawargs;
+    std::vector<ffi_type *> rawargtypes;
+    char *target = descriptor + 1; // The first arg type
+    auto argid = 0;
+
+    if (!isStatic)
+    {
+        rawargs.push_back(zeroStackLoadLocal<OMElysiaOop *>(argid));
+        rawargtypes.push_back(&ffi_type_pointer);
+        ++argid;
+    }
+
+    while (*target != ')')
+    {
+        switch (*target)
+        {
+        case 'Z':
+            rawargs.push_back(zeroStackLoadLocal<jboolean>(argid));
+            rawargtypes.push_back(&ffi_type_uint8);
+            ++argid;
+            ++target;
+            break;
+        case 'B':
+            rawargs.push_back(zeroStackLoadLocal<jbyte>(argid));
+            rawargtypes.push_back(&ffi_type_uint8);
+            ++argid;
+            ++target;
+            break;
+        case 'C':
+            rawargs.push_back(zeroStackLoadLocal<jchar>(argid));
+            rawargtypes.push_back(&ffi_type_uint16);
+            ++argid;
+            ++target;
+            break;
+        case 'S':
+            rawargs.push_back(zeroStackLoadLocal<jshort>(argid));
+            rawargtypes.push_back(&ffi_type_sint16);
+            ++argid;
+            ++target;
+            break;
+        case 'I':
+            rawargs.push_back(zeroStackLoadLocal<jint>(argid));
+            rawargtypes.push_back(&ffi_type_sint32);
+            ++argid;
+            ++target;
+            break;
+        case 'F':
+            rawargs.push_back(zeroStackLoadLocal<jfloat>(argid));
+            rawargtypes.push_back(&ffi_type_float);
+            ++argid;
+            ++target;
+            break;
+        case 'L':
+            rawargs.push_back(zeroStackLoadLocal<OMElysiaOop *>(argid));
+            rawargtypes.push_back(&ffi_type_pointer);
+            ++argid;
+            while (*target != ';')
+            {
+                ++target;
+            }
+            ++target;
+            break;
+        default:
+            throw std::logic_error("not supported yet!");
+        }
+    };
+
+    void **argPointers = reinterpret_cast<void **>(
+        mem::allocator::tracedMallocElysia(sizeof(void *) * (rawargs.size() + (isStatic ? 1 : 0))));
+
+    auto pp = &thisThread.metadata->interface;
+    argPointers[0] = &pp;
+    rawargtypes.insert(rawargtypes.begin(), &ffi_type_pointer);
+
+    int argbegin;
+    if (isStatic)
+    {
+        argPointers[1] = &thisThread.metadata->zero.frame->method->klass;
+        rawargtypes.insert(rawargtypes.begin(), &ffi_type_pointer);
+        argbegin = 2;
+    }
+    else
+    {
+        argbegin = 1;
+    }
+
+    for (int i = 0; i < rawargs.size(); i++)
+    {
+        auto &r = argPointers[argbegin + i];
+
+#define try_type(type)                                                                                                 \
+    if (auto *p = std::get_if<type>(&rawargs[i]))                                                                      \
+    {                                                                                                                  \
+        r = p;                                                                                                         \
+    }
+        try_type(jint);
+        try_type(jboolean);
+        try_type(jbyte);
+        try_type(jchar);
+        try_type(jshort);
+        try_type(jlong);
+        try_type(jdouble);
+        try_type(OMElysiaOop *);
+    }
+
+    ffi_cif cif;
+    ffi_status ffiPrepStatus =
+        ffi_prep_cif(&cif, FFI_DEFAULT_ABI, rawargtypes.size(), &ffi_type_void, rawargtypes.data());
+
+    if (ffiPrepStatus == FFI_OK)
+    {
+        ffi_call(&cif, (void (*)())func, nullptr, argPointers);
+    }
+
+    ++target;
+    if (*target != 'V')
+    {
+        throw std::logic_error("not supported yet!");
     }
 }
 
@@ -141,18 +270,20 @@ void OMElysiaExecutorZero::threadInit()
         tc->stackEnd = reinterpret_cast<uintptr_t>(mem::allocator::tracedMallocElysia(1024 * 1024));
         tc->stackStart = tc->stackEnd + 1024 * 1024 - sizeof(void *);
         tc->zero.stackPointer = tc->stackStart;
-        tc->interface = reinterpret_cast<OMElysiaJNIEnv>(new OMElysiaJavaFrame);
+        tc->interface =
+            reinterpret_cast<OMElysiaJNIEnv>(mem::allocator::tracedCallocElysia(1, sizeof(OMElysiaNativeInterface)));
         tc->interface->world = world;
         initBaseInterface(tc->interface);
 
         tc->cleaner = [&]() {
             mem::allocator::tracedFreeElysia(reinterpret_cast<void *>(tc->stackEnd));
-            delete tc->interface;
+            mem::allocator::tracedFreeElysia(tc->interface);
         };
         tc->threadInited = true;
         tc->registerThread();
 
         logger.info("virtual stack: {}", (void *)tc->stackStart);
+        logger.info("env: {}", (void *)&tc->interface);
     }
 }
 

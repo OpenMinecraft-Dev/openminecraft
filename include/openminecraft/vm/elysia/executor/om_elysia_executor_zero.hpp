@@ -102,6 +102,7 @@ class OMElysiaExecutorZero
     ~OMElysiaExecutorZero();
 
     void execute(OMElysiaMethod *m);
+    void executeNative(char *descriptor, bool isStatic, void *func);
     void pushFrame(OMElysiaMethod *m);
     void popFrame();
 
