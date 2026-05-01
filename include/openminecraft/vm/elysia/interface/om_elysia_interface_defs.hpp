@@ -2,7 +2,6 @@
 #define OM_ELYSIA_INTERFACE_DEFS_HPP
 
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
-#include <ffi.h>
 #include <stdarg.h>
 
 namespace openminecraft::vm::elysia

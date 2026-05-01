@@ -154,6 +154,10 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
     {
         constructInstanceClassShell(clsname);
     }
+    else
+    {
+        return;
+    }
     auto klassraw = findClass(clsname);
 
     if (!klassraw->isInstance())

@@ -60,24 +60,40 @@ void *operator new[](size_t size)
 
 void operator delete(void *p) noexcept
 {
+    if (!p)
+    {
+        return;
+    }
     rec({Free, p, heapSize(p), "cpp"});
     free(p);
 }
 
 void operator delete[](void *p) noexcept
 {
+    if (!p)
+    {
+        return;
+    }
     rec({Free, p, heapSize(p), "cpp"});
     free(p);
 }
 
 void operator delete(void *p, size_t l) noexcept
 {
+    if (!p)
+    {
+        return;
+    }
     rec({Free, p, heapSize(p), "cpp"});
     free(p);
 }
 
 void operator delete[](void *p, size_t l) noexcept
 {
+    if (!p)
+    {
+        return;
+    }
     rec({Free, p, heapSize(p), "cpp"});
     free(p);
 }

@@ -84,29 +84,6 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
             pushFrame(l);
         }
     }
-
-    /*if (m->isNative())
-    {
-        tc->zero.pc = nullptr;
-        switch (hash_compile_time(fmt::format("{}.{}", m->klass->name, m->name).c_str()))
-        {
-        case "java/lang/System.registerNatives"_hash:
-            executeNative(m->descriptor, m->isStatic(), (void *)&impl::Java_java_lang_System_registerNatives);
-            break;
-        case "java/lang/System.initProperties"_hash:
-            executeNative(m->descriptor, m->isStatic(), (void *)&impl::Java_java_lang_System_initProperties);
-            break;
-        case "java/lang/Object.registerNatives"_hash:
-            executeNative(m->descriptor, m->isStatic(), (void *)&impl::Java_java_lang_Object_registerNatives);
-            break;
-        default:
-            while (true)
-            {
-                continue;
-            }
-            throw std::logic_error("not implemented: " + fmt::format("{}.{}", m->klass->name, m->name));
-        }
-    }*/
 }
 
 void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *func)
@@ -331,6 +308,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         {
             tc->zero.pc = nullptr;
             auto mm = tc->zero.frame->method;
+            // TODO: use dynamic loading
             switch (hash_compile_time(fmt::format("{}.{}", mm->klass->name, mm->name).c_str()))
             {
             case "java/lang/System.registerNatives"_hash:
