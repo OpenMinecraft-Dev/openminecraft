@@ -12,8 +12,16 @@ void Java_java_lang_System_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *k
     (*env)->RegisterNatives(env, klass, mm, 1);
 }
 
-void Java_java_lang_System_initProperties(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaOop *properties)
+OMElysiaOop *Java_java_lang_System_initProperties(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaOop *properties)
 {
-    throw std::logic_error("not implemented!");
+    return properties;
+}
+
+void Java_java_lang_Object_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
+{
+}
+
+void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
+{
 }
 } // namespace openminecraft::vm::elysia::impl

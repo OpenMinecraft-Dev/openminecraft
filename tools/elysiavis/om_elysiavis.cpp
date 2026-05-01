@@ -506,6 +506,19 @@ class OMElysiaKlassStatusComponent : public ComponentBase
         auto ff = reinterpret_cast<OMElysiaInstanceKlass *>(klass)->fields;
         for (int i = 0; i < reinterpret_cast<OMElysiaInstanceKlass *>(klass)->fieldCount; i++)
         {
+            if (ff[i].accessFlag & JVM_Acc_Static)
+            {
+                ee.push_back(hbox({buildAccFlg(ff[i].accessFlag, true), text(fmt::format("@0x{:x}", ff[i].offset)),
+                                   separatorEmpty(), text(ff[i].name), text(":"), text(ff[i].desc)}));
+            }
+        }
+        for (int i = 0; i < reinterpret_cast<OMElysiaInstanceKlass *>(klass)->fieldCount; i++)
+        {
+            if (ff[i].accessFlag & JVM_Acc_Static)
+            {
+                continue;
+            }
+
             ee.push_back(hbox({buildAccFlg(ff[i].accessFlag, true), text(fmt::format("@0x{:x}", ff[i].offset)),
                                separatorEmpty(), text(ff[i].name), text(":"), text(ff[i].desc)}));
         }
@@ -569,7 +582,7 @@ int main(int argc, const char *argv[])
         return window(text("Elysia Visualizer"), vbox({menuToggle->Render(), separator(), menuContainer->Render()}));
     });
 
-    auto screen = ScreenInteractive::FitComponent();
+    auto screen = ScreenInteractive::TerminalOutput();
     screen.Loop(renderer);
 
     delete wld;

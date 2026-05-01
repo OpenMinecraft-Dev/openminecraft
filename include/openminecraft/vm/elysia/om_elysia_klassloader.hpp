@@ -38,6 +38,11 @@ class OMElysiaKlassloader
         return findClass(s);
     }
 
+    OMElysiaVirtualWorld *upper()
+    {
+        return world;
+    }
+
   private:
     void unloadClass(OMElysiaKlass *klass);
 

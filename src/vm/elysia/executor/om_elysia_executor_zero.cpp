@@ -17,6 +17,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <stdexcept>
 #include <thread>
 #include <variant>
@@ -26,42 +27,8 @@ using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::elysia::executor
 {
-static int add(int a, int b)
-{
-    return a + b;
-}
-
 OMElysiaExecutorZero::OMElysiaExecutorZero(OMElysiaVirtualWorld *vw) : world(vw), logger("OMElysiaExecutorZero", this)
 {
-    auto functionPtr = (void (*)())&add;
-    int argCount = 2;
-
-    ffi_type **ffiArgTypes = (ffi_type **)malloc(sizeof(ffi_type *) * argCount);
-    ffiArgTypes[0] = &ffi_type_sint;
-    ffiArgTypes[1] = &ffi_type_sint;
-
-    void **ffiArgs = (void **)malloc(sizeof(void *) * argCount);
-    int a1 = 5;
-    int a2 = 3;
-    ffiArgs[0] = &a1;
-    ffiArgs[1] = &a2;
-
-    ffi_cif cif;
-    ffi_type *returnFfiType = &ffi_type_sint;
-    ffi_status ffiPrepStatus = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, argCount, returnFfiType, ffiArgTypes);
-
-    if (ffiPrepStatus == FFI_OK)
-    {
-        void *returnPtr = NULL;
-        if (returnFfiType->size)
-        {
-            returnPtr = malloc(returnFfiType->size);
-        }
-        ffi_call(&cif, functionPtr, returnPtr, ffiArgs);
-
-        int returnValue = *(int *)returnPtr;
-        logger.info("ret: {}", returnValue);
-    }
 }
 OMElysiaExecutorZero::~OMElysiaExecutorZero()
 {
@@ -107,7 +74,18 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
     tc->zero.frame = frame;
     tc->zero.pc = m->code;
 
-    if (m->isNative())
+    // gino: runs class init func here!
+    if (m->klass->isInstance() && !m->klass->toInstance()->clinitFinished)
+    {
+        auto l = m->klass->findMethod("<clinit>", "()V");
+        m->klass->toInstance()->clinitFinished = true;
+        if (l)
+        {
+            pushFrame(l);
+        }
+    }
+
+    /*if (m->isNative())
     {
         tc->zero.pc = nullptr;
         switch (hash_compile_time(fmt::format("{}.{}", m->klass->name, m->name).c_str()))
@@ -118,10 +96,17 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
         case "java/lang/System.initProperties"_hash:
             executeNative(m->descriptor, m->isStatic(), (void *)&impl::Java_java_lang_System_initProperties);
             break;
+        case "java/lang/Object.registerNatives"_hash:
+            executeNative(m->descriptor, m->isStatic(), (void *)&impl::Java_java_lang_Object_registerNatives);
+            break;
         default:
+            while (true)
+            {
+                continue;
+            }
             throw std::logic_error("not implemented: " + fmt::format("{}.{}", m->klass->name, m->name));
         }
-    }
+    }*/
 }
 
 void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *func)
@@ -231,33 +216,73 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
         try_type(OMElysiaOop *);
     }
 
+    ++target;
+    ffi_type *retType;
+    switch (*target)
+    {
+    case 'V':
+        retType = &ffi_type_void;
+        break;
+    case 'I':
+    case 'S':
+    case 'C':
+    case 'B':
+    case 'Z':
+        retType = &ffi_type_sint32;
+        break;
+    case 'F':
+        retType = &ffi_type_float;
+        break;
+    case 'J':
+        retType = &ffi_type_sint64;
+        break;
+    case 'D':
+        retType = &ffi_type_double;
+        break;
+    default:
+        retType = &ffi_type_pointer;
+        break;
+    }
+
     ffi_cif cif;
-    ffi_status ffiPrepStatus =
-        ffi_prep_cif(&cif, FFI_DEFAULT_ABI, rawargtypes.size(), &ffi_type_void, rawargtypes.data());
+    ffi_status ffiPrepStatus = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, rawargtypes.size(), retType, rawargtypes.data());
+    void *retValue = mem::allocator::tracedCallocElysia(1, retType->size);
 
     if (ffiPrepStatus == FFI_OK)
     {
-        ffi_call(&cif, (void (*)())func, nullptr, argPointers);
-    }
-
-    ++target;
-    if (*target != 'V')
-    {
-        throw std::logic_error("not supported yet!");
+        ffi_call(&cif, (void (*)())func, retValue, argPointers);
     }
 
     popFrame();
+    switch (*target)
+    {
+    case 'V':
+        break;
+    case 'I':
+    case 'S':
+    case 'C':
+    case 'B':
+    case 'Z':
+        zeroStackPush(*reinterpret_cast<jint *>(retValue));
+        break;
+    case 'F':
+        zeroStackPush(*reinterpret_cast<jfloat *>(retValue));
+        break;
+    case 'J':
+        zeroStackPushW(*reinterpret_cast<jlong *>(retValue));
+        break;
+    case 'D':
+        zeroStackPushW(*reinterpret_cast<jdouble *>(retValue));
+        break;
+    default:
+        zeroStackPush(*reinterpret_cast<OMElysiaOop **>(retValue));
+        break;
+    }
 }
 
 void OMElysiaExecutorZero::popFrame()
 {
     auto tc = thisThread.metadata;
-
-    // gino: klass init succeed
-    if (std::strcmp(tc->zero.frame->method->name, "<clinit>") == 0)
-    {
-        tc->zero.frame->method->klass->toInstance()->clinitFinished = true;
-    }
 
     tc->zero.stackPointer = reinterpret_cast<uintptr_t>(tc->zero.frame) + sizeof(OMElysiaJavaFrame);
     tc->zero.pc = tc->zero.frame->returnAddr;
@@ -297,20 +322,34 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     pushFrame(m);
 
-    if (m->klass->isInstance() && !m->klass->toInstance()->clinitFinished)
-    {
-        auto l = m->klass->findMethod("<clinit>", "()V");
-        if (l)
-        {
-            pushFrame(l);
-        }
-    }
-
 #define CURRENT_KLASS tc->zero.frame->method->klass->toInstance()
 
     while (true)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        if (tc->zero.frame->method->isNative())
+        {
+            tc->zero.pc = nullptr;
+            auto mm = tc->zero.frame->method;
+            switch (hash_compile_time(fmt::format("{}.{}", mm->klass->name, mm->name).c_str()))
+            {
+            case "java/lang/System.registerNatives"_hash:
+                executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_System_registerNatives);
+                break;
+            case "java/lang/System.initProperties"_hash:
+                executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_System_initProperties);
+                break;
+            case "java/lang/Object.registerNatives"_hash:
+                executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Object_registerNatives);
+                break;
+            case "java/lang/Class.registerNatives"_hash:
+                executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Class_registerNatives);
+                break;
+            default:
+                throw std::logic_error("not implemented: " + fmt::format("{}.{}", mm->klass->name, mm->name));
+            }
+        }
+
         if (!tc->zero.pc)
         {
             break;
@@ -407,6 +446,20 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
         case op_istore_n(1):
             zeroStackSaveLocalPop<jint>(1);
+            ++tc->zero.pc;
+            break;
+
+        case op_castore: {
+            auto value = zeroStackPopGet<jchar>();
+            auto index = zeroStackPopGet<jint>();
+            auto arr = zeroStackPopGet<OMElysiaArrayOop *>();
+            world->oopManager->arrAccess<jchar>(arr)[index] = value;
+            ++tc->zero.pc;
+            break;
+        }
+
+        case op_pop:
+            zeroStackPopGet<jint>();
             ++tc->zero.pc;
             break;
         case op_dup: {

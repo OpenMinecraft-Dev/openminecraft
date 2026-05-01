@@ -3,9 +3,9 @@
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
+#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include <cstdint>
 #include <cstring>
-#include <iostream>
 #include <stdexcept>
 
 using namespace openminecraft::vm::classfile;
@@ -115,7 +115,37 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id)
         constantPool[id] = reinterpret_cast<void *>(rd);
         return constantPool[id];
     }
+    case OMClassConstantType::String: {
+        auto &target =
+            constantPoolRaw->at(item->to<OMClassConstantString>()->stringIndex)->to<OMClassConstantUtf8>()->data;
+        auto stringKlass = nativeKlassloader->findClass("java/lang/String")->toInstance();
+        auto charArrKlass = nativeKlassloader->findClass("[C")->toArray();
+
+        auto oopM = nativeKlassloader->upper()->oopManager;
+
+        auto arr = oopM->allocateArr(charArrKlass, target.size());
+        std::memcpy(oopM->arrAccess<jbyte>(arr), target.c_str(), target.size());
+
+        auto strWrp = oopM->allocateOop(stringKlass);
+        auto refAddr = oopM->oopAccessField(strWrp, 0);
+
+        if (nativeKlassloader->upper()->mainHeap.enablePtrCompress())
+        {
+            *reinterpret_cast<uint32_t *>(refAddr) = nativeKlassloader->upper()->mainHeap.compress(arr);
+        }
+        else
+        {
+            *reinterpret_cast<OMElysiaArrayOop **>(refAddr) = arr;
+        }
+
+        constantPool[id] = strWrp;
+        return constantPool[id];
+    }
     default:
+        while (true)
+        {
+            continue;
+        }
         throw 0;
     }
     return nullptr;

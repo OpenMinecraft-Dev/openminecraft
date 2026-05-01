@@ -170,12 +170,14 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
                 ->to<classfile::OMClassConstantUtf8>()
                 ->data;
 
-        if (!loadedClasses.count(binary::hash::hash_compile_time(supclsname.c_str())))
+        auto supk = findClass(supclsname);
+        if (!supk)
         {
             loadClass(supclsname);
-
-            klass->superClass = findClass(supclsname);
+            supk = findClass(supclsname);
         }
+
+        klass->superClass = findClass(supclsname);
     }
     if (!clsfile->interfaces.empty())
     {
@@ -225,6 +227,11 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
             clsfile->mapping[clsfile->methods[i]->nameIndex]->to<classfile::OMClassConstantUtf8>()->data);
         m.descriptor = world->metaspaceHeap.allocateStr(
             clsfile->mapping[clsfile->methods[i]->descIndex]->to<classfile::OMClassConstantUtf8>()->data);
+
+        if (m.isNative())
+        {
+            m.localLength = argSlots(m.descriptor) + (m.isStatic() ? 0 : 1);
+        }
 
         for (auto attr : clsfile->methods[i]->attrs)
         {
