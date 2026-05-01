@@ -277,7 +277,9 @@ jobs:
 
       - name: Build debug tools
         if: matrix.plat == 'windows'
-        run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }} openminecraft-elysiavis
+        run: |
+          xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }} openminecraft-elysiavis
+          xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft-elysiavis
 
       - name: Xmake Install
         run: xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft
