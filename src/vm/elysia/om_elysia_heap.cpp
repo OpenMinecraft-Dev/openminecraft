@@ -68,7 +68,7 @@ beginAlloc:
             mergeBlocks();
 
             blockMutex.unlock();
-	    std::memset(target, 0x00, objLen);
+            std::memset(target, 0x00, objLen);
             return target;
         }
         blk = blk->next;

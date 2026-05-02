@@ -21,8 +21,9 @@ void initBaseInterface(OMElysiaJNIEnv env)
         {
             auto newdata = (OMElysiaNativeMethod *)mem::allocator::tracedCallocElysia(
                 nMethods + clazz->nativeMethodCount, sizeof(OMElysiaNativeMethod));
-            std::memcpy(clazz->nativeMethods, methods, nMethods * sizeof(OMElysiaNativeMethod));
-            std::memcpy(&clazz->nativeMethods[nMethods], clazz->nativeMethods,
+	    
+	    std::memcpy(newdata, methods, nMethods * sizeof(OMElysiaNativeMethod));
+            std::memcpy(&newdata[nMethods], clazz->nativeMethods,
                         clazz->nativeMethodCount * sizeof(OMElysiaNativeMethod));
             mem::allocator::tracedFreeElysia(clazz->nativeMethods);
             clazz->nativeMethods = newdata;

@@ -55,7 +55,8 @@ void OMJfifFile::bufferLogStatus(std::shared_ptr<std::istream> istr)
 
 int64_t OMJfifFile::bufferReadExtra(std::shared_ptr<std::istream> istr, int datalen)
 {
-    if (datalen == 0) {
+    if (datalen == 0)
+    {
         return 0;
     }
 

@@ -187,7 +187,7 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
     {
         klass->interfaceImplCount = clsfile->interfaces.size();
         klass->interfaceImpls = world->metaspaceHeap.allocateArray<OMElysiaKlass *>(klass->interfaceImplCount);
-        int i = 0;
+        int ii = 0;
         for (auto i : clsfile->interfaces)
         {
             auto supclsname = clsfile->mapping[clsfile->mapping[i]->to<classfile::OMClassConstantClass>()->nameIndex]
@@ -199,8 +199,8 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
                 loadClass(supclsname);
             }
 
-            klass->interfaceImpls[i] = findClass(supclsname);
-            i++;
+            klass->interfaceImpls[ii] = findClass(supclsname);
+            ii++;
         }
     }
 

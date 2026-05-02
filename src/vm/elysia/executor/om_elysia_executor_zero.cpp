@@ -69,6 +69,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
     frame->method = m;
     frame->returnAddr = tc->zero.pc;
     frame->caller = tc->zero.frame;
+    frame->flag = 0;
     tc->zero.frame = frame;
     tc->zero.pc = m->code;
 
@@ -155,6 +156,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
         r = p;                                                                                                         \
     }
         try_type(jint);
+        try_type(jfloat);
         try_type(jboolean);
         try_type(jbyte);
         try_type(jchar);
@@ -269,6 +271,34 @@ void OMElysiaExecutorZero::threadInit()
     }
 }
 
+void OMElysiaExecutorZero::executeNativeLink()
+{
+    auto tc = thisThread.metadata;
+    auto mm = tc->zero.frame->method;
+    tc->zero.frame->flag = 0x1; // entry tag
+    // TODO: use dynamic loading
+    switch (hash_compile_time(fmt::format("{}.{}", mm->klass->name, mm->name).c_str()))
+    {
+    case "java/lang/System.registerNatives"_hash:
+        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_System_registerNatives);
+        break;
+    case "java/lang/System.initProperties"_hash:
+        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_System_initProperties);
+        break;
+    case "java/lang/Object.registerNatives"_hash:
+        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Object_registerNatives);
+        break;
+    case "java/lang/Class.registerNatives"_hash:
+        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Class_registerNatives);
+        break;
+    case "java/lang/Class.getPrimitiveClass"_hash:
+        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Class_getPrimitiveClass);
+        break;
+    default:
+        throw std::logic_error("not implemented: " + fmt::format("{}.{}", mm->klass->name, mm->name));
+    }
+}
+
 // TODO: fetch return data
 void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 {
@@ -281,37 +311,18 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     while (true)
     {
-        if (tc->zero.frame->method->isNative())
-        {
-            tc->zero.pc = nullptr;
-            auto mm = tc->zero.frame->method;
-            // TODO: use dynamic loading
-            switch (hash_compile_time(fmt::format("{}.{}", mm->klass->name, mm->name).c_str()))
-            {
-            case "java/lang/System.registerNatives"_hash:
-                executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_System_registerNatives);
-                break;
-            case "java/lang/System.initProperties"_hash:
-                executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_System_initProperties);
-                break;
-            case "java/lang/Object.registerNatives"_hash:
-                executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Object_registerNatives);
-                break;
-            case "java/lang/Class.registerNatives"_hash:
-                executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Class_registerNatives);
-                break;
-	    case "java/lang/Class.getPrimitiveClass"_hash:
-		executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Class_getPrimitiveClass);
-		break;
-            default:
-                throw std::logic_error("not implemented: " + fmt::format("{}.{}", mm->klass->name, mm->name));
-            }
-        }
-
-        if (!tc->zero.pc)
+        if (tc->zero.frame->flag != 0)
         {
             break;
         }
+
+        if (tc->zero.frame->method->isNative())
+        {
+            tc->zero.pc = nullptr;
+            executeNativeLink();
+            continue;
+        }
+
         switch (*tc->zero.pc)
         {
         case op_nop:
@@ -558,15 +569,19 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_ificmp(ge, >=);
             op_ificmp(le, <=);
 
-#define op_fcmp(cond, opnan, op)                                                                                       \
+#define op_fcmp(cond, n)                                                                                               \
     case op_fcmp##cond: {                                                                                              \
         auto value2 = zeroStackPopGet<jfloat>();                                                                       \
         auto value1 = zeroStackPopGet<jfloat>();                                                                       \
-        if (value1 == NAN || value2 == NAN || value1 opnan value2)                                                     \
+        if (std::isnan(value1) || std::isnan(value2))                                                                  \
+        {                                                                                                              \
+            zeroStackPush<jint>(n);                                                                                    \
+        }                                                                                                              \
+        else if (value1 > value2)                                                                                      \
         {                                                                                                              \
             zeroStackPush<jint>(1);                                                                                    \
         }                                                                                                              \
-        else if (value1 op value2)                                                                                     \
+        else if (value1 < value2)                                                                                      \
         {                                                                                                              \
             zeroStackPush<jint>(-1);                                                                                   \
         }                                                                                                              \
@@ -577,17 +592,21 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         ++tc->zero.pc;                                                                                                 \
         break;                                                                                                         \
     }
-            op_fcmp(g, >, <);
-            op_fcmp(l, <, >);
-#define op_dcmp(cond, opnan, op)                                                                                       \
+            op_fcmp(g, 1);
+            op_fcmp(l, -1);
+#define op_dcmp(cond, n)                                                                                               \
     case op_dcmp##cond: {                                                                                              \
         auto value2 = zeroStackPopWGet<jdouble>();                                                                     \
         auto value1 = zeroStackPopWGet<jdouble>();                                                                     \
-        if (value1 == NAN || value2 == NAN || value1 opnan value2)                                                     \
+        if (std::isnan(value1) || std::isnan(value2))                                                                  \
+        {                                                                                                              \
+            zeroStackPush<jint>(n);                                                                                    \
+        }                                                                                                              \
+        else if (value1 > value2)                                                                                      \
         {                                                                                                              \
             zeroStackPush<jint>(1);                                                                                    \
         }                                                                                                              \
-        else if (value1 op value2)                                                                                     \
+        else if (value1 < value2)                                                                                      \
         {                                                                                                              \
             zeroStackPush<jint>(-1);                                                                                   \
         }                                                                                                              \
@@ -598,8 +617,8 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         ++tc->zero.pc;                                                                                                 \
         break;                                                                                                         \
     }
-            op_dcmp(g, >, <);
-            op_dcmp(l, <, >);
+            op_dcmp(g, 1);
+            op_dcmp(l, -1);
         case op_goto: {
             tc->zero.pc += zeroCodeFetchArgs16p0();
             break;

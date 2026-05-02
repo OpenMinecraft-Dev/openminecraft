@@ -19,6 +19,7 @@ struct OMElysiaJavaFrame
 {
     OMElysiaMethod *method;
     uint8_t *returnAddr;
+    uintptr_t flag = 0x0;
     OMElysiaJavaFrame *caller;
 };
 
@@ -28,6 +29,7 @@ class OMElysiaThread
     bool threadInited = false;
     uintptr_t stackStart = 0;
     uintptr_t stackEnd = 0;
+
     OMElysiaJNIEnv interface;
     struct
     {

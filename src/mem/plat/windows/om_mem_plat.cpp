@@ -1,4 +1,3 @@
-#include <windows.h>
 #include "openminecraft/mem/om_mem_prealloc.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/mem/om_mem_stackmem.hpp"
@@ -8,6 +7,7 @@
 #include <memoryapi.h>
 #include <new>
 #include <oleauto.h>
+#include <windows.h>
 #include <winnt.h>
 #include <winternl.h>
 
@@ -70,7 +70,7 @@ uintptr_t fetchStackBase()
     while (true)
     {
         VirtualQuery(reinterpret_cast<void *>(base + size), &minfo, sizeof(minfo));
-        
+
         if (base == (uintptr_t)minfo.AllocationBase)
         {
             size += minfo.RegionSize;
