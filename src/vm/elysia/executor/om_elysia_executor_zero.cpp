@@ -90,7 +90,11 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
 {
     std::vector<std::variant<jint, jbyte, jboolean, jshort, jchar, jfloat, jlong, jdouble, OMElysiaOop *>> rawargs;
     std::vector<ffi_type *> rawargtypes;
-    char *target = descriptor + 1; // The first arg type
+
+    uint8_t argTypes[255];
+    int argCount;
+    uint8_t returnType;
+    argDescriptorParse(descriptor, argTypes, argCount, &returnType);
     auto argid = 0;
 
     if (!isStatic)
@@ -100,60 +104,29 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
         ++argid;
     }
 
-    while (*target != ')')
+    for (int i = 0; i < argCount; i++)
     {
-        switch (*target)
+        switch (argTypes[i])
         {
-        case 'Z':
-            rawargs.push_back(zeroStackLoadLocal<jboolean>(argid));
-            rawargtypes.push_back(&ffi_type_uint8);
-            ++argid;
-            ++target;
-            break;
-        case 'B':
-            rawargs.push_back(zeroStackLoadLocal<jbyte>(argid));
-            rawargtypes.push_back(&ffi_type_uint8);
-            ++argid;
-            ++target;
-            break;
-        case 'C':
-            rawargs.push_back(zeroStackLoadLocal<jchar>(argid));
-            rawargtypes.push_back(&ffi_type_uint16);
-            ++argid;
-            ++target;
-            break;
-        case 'S':
-            rawargs.push_back(zeroStackLoadLocal<jshort>(argid));
-            rawargtypes.push_back(&ffi_type_sint16);
-            ++argid;
-            ++target;
-            break;
-        case 'I':
-            rawargs.push_back(zeroStackLoadLocal<jint>(argid));
-            rawargtypes.push_back(&ffi_type_sint32);
-            ++argid;
-            ++target;
-            break;
-        case 'F':
-            rawargs.push_back(zeroStackLoadLocal<jfloat>(argid));
-            rawargtypes.push_back(&ffi_type_float);
-            ++argid;
-            ++target;
-            break;
-        case 'L':
-            rawargs.push_back(zeroStackLoadLocal<OMElysiaOop *>(argid));
-            rawargtypes.push_back(&ffi_type_pointer);
-            ++argid;
-            while (*target != ';')
-            {
-                ++target;
-            }
-            ++target;
-            break;
+
+#define ARGTYPE_CASE(id, type, ffitype)                                                                                \
+    case id:                                                                                                           \
+        rawargs.push_back(zeroStackLoadLocal<type>(argid));                                                            \
+        rawargtypes.push_back(ffitype);                                                                                \
+        ++argid;                                                                                                       \
+        break;
+
+            ARGTYPE_CASE(argTypeByte, jbyte, &ffi_type_uint8);
+            ARGTYPE_CASE(argTypeBoolean, jboolean, &ffi_type_uint8);
+            ARGTYPE_CASE(argTypeShort, jshort, &ffi_type_sint16);
+            ARGTYPE_CASE(argTypeChar, jchar, &ffi_type_uint16);
+            ARGTYPE_CASE(argTypeInt, jint, &ffi_type_sint32);
+            ARGTYPE_CASE(argTypeFloat, jfloat, &ffi_type_float);
+            ARGTYPE_CASE(argTypeReference, OMElysiaOop *, &ffi_type_pointer);
         default:
             throw std::logic_error("not supported yet!");
         }
-    };
+    }
 
     void **argPointers = reinterpret_cast<void **>(
         mem::allocator::tracedMallocElysia(sizeof(void *) * (rawargs.size() + (isStatic ? 1 : 0))));
@@ -193,31 +166,33 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
         try_type(OMElysiaOop *);
     }
 
-    ++target;
     ffi_type *retType;
-    switch (*target)
+    switch (returnType)
     {
-    case 'V':
+    case argTypeVoid:
         retType = &ffi_type_void;
         break;
-    case 'I':
-    case 'S':
-    case 'C':
-    case 'B':
-    case 'Z':
+    case argTypeReference:
+        retType = &ffi_type_pointer;
+        break;
+    case argTypeInt:
+    case argTypeShort:
+    case argTypeChar:
+    case argTypeBoolean:
+    case argTypeByte:
         retType = &ffi_type_sint32;
         break;
-    case 'F':
+    case argTypeFloat:
         retType = &ffi_type_float;
         break;
-    case 'J':
+    case argTypeLong:
         retType = &ffi_type_sint64;
         break;
-    case 'D':
+    case argTypeDouble:
         retType = &ffi_type_double;
         break;
     default:
-        retType = &ffi_type_pointer;
+        retType = &ffi_type_void;
         break;
     }
 
@@ -231,30 +206,35 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     }
 
     popFrame();
-    switch (*target)
+
+    switch (returnType)
     {
-    case 'V':
+    case argTypeVoid:
         break;
-    case 'I':
-    case 'S':
-    case 'C':
-    case 'B':
-    case 'Z':
+    case argTypeReference:
+        zeroStackPush(*reinterpret_cast<OMElysiaOop **>(retValue));
+        break;
+    case argTypeInt:
+    case argTypeShort:
+    case argTypeChar:
+    case argTypeBoolean:
+    case argTypeByte:
         zeroStackPush(*reinterpret_cast<jint *>(retValue));
         break;
-    case 'F':
+    case argTypeFloat:
         zeroStackPush(*reinterpret_cast<jfloat *>(retValue));
         break;
-    case 'J':
+    case argTypeLong:
         zeroStackPushW(*reinterpret_cast<jlong *>(retValue));
         break;
-    case 'D':
+    case argTypeDouble:
         zeroStackPushW(*reinterpret_cast<jdouble *>(retValue));
         break;
     default:
-        zeroStackPush(*reinterpret_cast<OMElysiaOop **>(retValue));
         break;
     }
+
+    mem::allocator::tracedFreeElysia(retValue);
 }
 
 void OMElysiaExecutorZero::popFrame()
@@ -303,7 +283,6 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     while (true)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         if (tc->zero.frame->method->isNative())
         {
             tc->zero.pc = nullptr;

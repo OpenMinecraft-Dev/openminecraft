@@ -234,7 +234,7 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
 
         if (m.isNative())
         {
-            m.localLength = argSlots(m.descriptor) + (m.isStatic() ? 0 : 1);
+            m.localLength = argSlots(m.descriptor);
         }
 
         for (auto attr : clsfile->methods[i]->attrs)

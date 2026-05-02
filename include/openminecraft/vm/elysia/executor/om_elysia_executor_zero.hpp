@@ -7,6 +7,7 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 #include <cstdint>
+#include <stdexcept>
 #include <type_traits>
 namespace openminecraft::vm::elysia::executor
 {
