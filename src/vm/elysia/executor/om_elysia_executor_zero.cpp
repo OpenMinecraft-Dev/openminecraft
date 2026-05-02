@@ -300,6 +300,9 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             case "java/lang/Class.registerNatives"_hash:
                 executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Class_registerNatives);
                 break;
+	    case "java/lang/Class.getPrimitiveClass"_hash:
+		executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Class_getPrimitiveClass);
+		break;
             default:
                 throw std::logic_error("not implemented: " + fmt::format("{}.{}", mm->klass->name, mm->name));
             }

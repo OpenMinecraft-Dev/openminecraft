@@ -24,4 +24,9 @@ void Java_java_lang_Object_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *k
 void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
 }
+
+OMElysiaOop *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaOop* name)
+{
+    throw std::logic_error("not implemented");
+}
 } // namespace openminecraft::vm::elysia::impl
