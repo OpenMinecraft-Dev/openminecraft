@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+#include <functional>
 #include <ostream>
 #include <string>
 
@@ -18,6 +19,9 @@ enum OMLogType : uint8_t
     Fatal
 };
 void logExternal(OMLogType l, std::string msg, std::string name, std::string thr);
+
+extern std::function<void(OMLogType l, std::string msg, std::string name, std::string thr)> logAgent;
+void registerLogAgent(std::function<void(OMLogType l, std::string msg, std::string name, std::string thr)>);
 
 class OMLogger
 {

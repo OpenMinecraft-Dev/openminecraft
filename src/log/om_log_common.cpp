@@ -95,6 +95,12 @@ void OMLogger::log(OMLogType type, std::string msg)
         }
     }
 
+    if (logAgent)
+    {
+        logAgent(type, msg, loggerName, multithread::acquireThreadName(std::this_thread::get_id()));
+        return;
+    }
+
     if (this->enableFormat)
     {
         auto now = time(nullptr);
@@ -145,5 +151,11 @@ multiLine:
         p = std::strtok(nullptr, "\n");
     }
     return;
+}
+
+std::function<void(OMLogType l, std::string msg, std::string name, std::string thr)> logAgent = nullptr;
+void registerLogAgent(std::function<void(OMLogType l, std::string msg, std::string name, std::string thr)> l)
+{
+    logAgent = l;
 }
 } // namespace openminecraft::log

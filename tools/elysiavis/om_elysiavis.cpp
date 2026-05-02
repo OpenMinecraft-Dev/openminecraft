@@ -2,16 +2,23 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include "fmt/format.h"
 #include "ftxui/component/animation.hpp"
 #include "ftxui/component/component.hpp"
 #include "ftxui/component/component_base.hpp"
+#include "ftxui/component/component_options.hpp"
 #include "ftxui/component/screen_interactive.hpp"
 #include "ftxui/dom/canvas.hpp"
 #include "ftxui/dom/elements.hpp"
+#include "ftxui/screen/color.hpp"
+#include "openminecraft/log/om_log_ansi.hpp"
+#include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/mem/om_mem_saferead.hpp"
 #include "openminecraft/mem/om_mem_stackmem.hpp"
@@ -543,6 +550,120 @@ class OMElysiaKlassStatusComponent : public ComponentBase
     Component inputBase;
 };
 
+std::vector<std::tuple<openminecraft::log::OMLogType, std::string, std::string, std::string>> logs;
+
+class OMLogComponent : public ComponentBase
+{
+  public:
+    OMLogComponent()
+    {
+    }
+
+    Element OnRender()
+    {
+        std::vector<std::vector<Element>> ee;
+        for (auto itt = logs.rbegin(); itt != logs.rend(); ++itt)
+        {
+            Color c;
+
+            switch (std::get<0>(*itt))
+            {
+            case openminecraft::log::Debug:
+                c = Color::Blue;
+                break;
+            case openminecraft::log::Info:
+                c = Color::Green;
+                break;
+            case openminecraft::log::Warn:
+                c = Color::Yellow;
+                break;
+            case openminecraft::log::Error:
+                c = Color::Red;
+                break;
+            case openminecraft::log::Fatal:
+                c = Color::DarkRed;
+                break;
+            default:
+                c = Color::GrayDark;
+                break;
+            }
+
+            ee.push_back({text(std::get<3>(*itt)) | color(Color::GrayDark), separator(),
+                          text(std::get<2>(*itt)) | color(c), separator(), text(std::get<1>(*itt))});
+        }
+
+        return gridbox(ee) | focusPositionRelative(0.0f, 1.0f) | flex;
+    }
+};
+
+class OMMemViewerComponent : public ComponentBase
+{
+  public:
+    OMMemViewerComponent()
+    {
+        inputBase = Input(&address, "memory address...");
+        Add(inputBase);
+    }
+    Element OnRender()
+    {
+        std::stringstream iss;
+        iss << address;
+        uintptr_t b = 0;
+        iss >> std::hex >> b;
+
+        std::vector<std::vector<Element>> values;
+        std::vector<Element> title = {text(""), separatorEmpty()};
+        std::string ss = "";
+        for (int i = 0; i < 16; i++)
+        {
+            title.push_back(text(fmt::format("{:02x}", i)) | color(Color::LightSkyBlue1));
+            title.push_back(separatorEmpty());
+        }
+        values.push_back(title);
+
+        for (int i = 0; i < 16; i++)
+        {
+            values.push_back({});
+            auto current = values.rbegin();
+            current->push_back(text(fmt::format("{}", reinterpret_cast<void *>(b + i * 16))));
+            current->push_back(separatorEmpty());
+            for (int j = 0; j < 16; j++)
+            {
+                auto offset = i * 16 + j;
+
+                auto r = openminecraft::mem::safeRead(reinterpret_cast<void *>(b + offset));
+                if (r.has_value())
+                {
+                    current->push_back(text(fmt::format("{:02x}", *r)));
+                    if (*r >= ' ' && *r < 0x80)
+                    {
+                        ss += *r;
+                    }
+                    else
+                    {
+                        ss += '.';
+                    }
+                }
+                else
+                {
+                    current->push_back(text("??") | color(Color::GrayDark));
+                    ss += '.';
+                }
+                current->push_back(separatorEmpty());
+            }
+
+            current->push_back(text(ss));
+            ss = "";
+        }
+
+        return vbox({inputBase->Render(), gridbox(values)});
+    }
+
+  private:
+    std::string address;
+    Component inputBase;
+};
+
 int main(int argc, const char *argv[])
 {
     std::cout << std::hex << openminecraft::mem::stack::fetchStackBase() << " "
@@ -557,14 +678,19 @@ int main(int argc, const char *argv[])
         pp += 8;
     }
 
+    openminecraft::log::multithread::registerCurrentThreadName("Bootstrap");
+    openminecraft::log::registerLogAgent([](openminecraft::log::OMLogType a, std::string b, std::string c,
+                                            std::string d) { logs.push_back(std::make_tuple(a, b, c, d)); });
+
     auto wld = new OMElysiaVirtualWorld;
 
-    std::vector<std::string> tabnames = {"Memory", "ElysiaVM", "Elysia Heap", "Elysia Klass"};
+    std::vector<std::string> tabnames = {"Memory", "ElysiaVM", "Elysia Heap", "Elysia Klass", "Logs", "MemViewer"};
 
     auto memComp = std::make_shared<OMMemoryComponent>();
     auto elyComp = std::make_shared<OMElysiaThreadComponent>();
     auto kkComp = std::make_shared<OMElysiaKlassStatusComponent>(wld->klassLoader);
-
+    auto logComp = std::make_shared<OMLogComponent>();
+    auto viewComp = std::make_shared<OMMemViewerComponent>();
     auto cc = Container::Vertical({});
     auto elymemComp = Renderer(cc, [&] {
         return hbox({window(text("Metaspace"), buildElysiaHeapComp(wld->metaspaceHeap)),
@@ -573,7 +699,7 @@ int main(int argc, const char *argv[])
 
     int tabsel = 1;
     auto menuToggle = Toggle(&tabnames, &tabsel);
-    auto menuContainer = Container::Tab({memComp, elyComp, elymemComp, kkComp}, &tabsel);
+    auto menuContainer = Container::Tab({memComp, elyComp, elymemComp, kkComp, logComp, viewComp}, &tabsel);
 
     auto container = Container::Horizontal({menuToggle, menuContainer});
     auto renderer = Renderer(container, [&] {

@@ -14,12 +14,10 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
-#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
-#include <thread>
 #include <variant>
 #include <vector>
 
