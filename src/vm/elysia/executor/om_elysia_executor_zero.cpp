@@ -14,10 +14,12 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include <thread>
 #include <variant>
 #include <vector>
 
@@ -55,17 +57,40 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
     auto ll = argSlots(m->descriptor) + (m->isStatic() ? 0 : 1);
     auto tc = thisThread.metadata;
 
-    std::memcpy(reinterpret_cast<void *>(tc->zero.stackPointer - sizeof(OMElysiaJavaFrame)),
-                reinterpret_cast<void *>(tc->zero.stackPointer), ll * sizeof(void *));
+    auto newlocal = reinterpret_cast<void *>(tc->zero.stackPointer - sizeof(OMElysiaJavaFrame));
+    std::memcpy(newlocal, reinterpret_cast<void *>(tc->zero.stackPointer), ll * sizeof(void *));
     zeroStackPop(ll * sizeof(void *));
 
     auto frame = reinterpret_cast<OMElysiaJavaFrame *>(zeroStackAlloc(sizeof(OMElysiaJavaFrame)));
     zeroStackAlloc(ll * sizeof(void *));
 
+    // function in vtable
+    if (!m->isStatic() && !m->isPrivate() && std::strcmp(m->name, "<init>"))
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+        auto oop = reinterpret_cast<void **>(frame)[-1];
+        auto klass = world->oopManager->oopGetKlass(oop);
+
+        if (klass->vtable && klass->vtableLength)
+        {
+            for (int i = 0; i < klass->vtableLength; i++)
+            {
+                if (std::strcmp(klass->vtable[i]->name, m->name) == 0 &&
+                    std::strcmp(klass->vtable[i]->descriptor, m->descriptor) == 0)
+                {
+                    m = klass->vtable[i];
+                    break;
+                }
+            }
+        }
+        logger.debug("try devering function, klass: {}", klass->name);
+    }
+
     for (int i = ll; i < m->localLength; i++)
     {
         zeroStackPush<OMElysiaOop *>(nullptr);
     }
+
     frame->method = m;
     frame->returnAddr = tc->zero.pc;
     frame->caller = tc->zero.frame;

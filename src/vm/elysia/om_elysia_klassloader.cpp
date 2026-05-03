@@ -232,8 +232,6 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
         {
             rawVtable.push_back(klass->superClass->vtable[i]);
         }
-
-        throw 0;
     }
 
     for (int i = 0; i < klass->methodCount; i++)

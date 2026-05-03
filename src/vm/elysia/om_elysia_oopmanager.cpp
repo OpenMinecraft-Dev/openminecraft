@@ -1,5 +1,6 @@
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
+#include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 #include <cstring>
 
@@ -37,6 +38,19 @@ OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass)
         reinterpret_cast<OMElysiaOopUncompressed *>(ll)->klass = klass;
     }
     return ll;
+}
+
+OMElysiaKlass *OMElysiaOopManager::oopGetKlass(void *base)
+{
+    if (world->metaspaceHeap.enablePtrCompress())
+    {
+        return reinterpret_cast<OMElysiaKlass *>(
+            world->metaspaceHeap.decompress(reinterpret_cast<OMElysiaOopCompressed *>(base)->klass));
+    }
+    else
+    {
+        return reinterpret_cast<OMElysiaOopUncompressed *>(base)->klass;
+    }
 }
 
 uintptr_t OMElysiaOopManager::oopAccessField(void *base, uint64_t offset)

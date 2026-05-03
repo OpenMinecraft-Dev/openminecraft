@@ -50,6 +50,7 @@ class OMElysiaOopManager
     uint64_t oopHeaderLength();
     uint64_t oopArrayHeaderLength();
     OMElysiaOop *allocateOop(OMElysiaKlass *klass);
+    OMElysiaKlass *oopGetKlass(void *base);
     uintptr_t oopAccessField(void *base, uint64_t offset);
 
     OMElysiaArrayOop *allocateArr(OMElysiaArrayKlass *klass, jint length);
