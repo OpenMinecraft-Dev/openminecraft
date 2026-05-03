@@ -89,7 +89,9 @@ beginAlloc:
     }
     else
     {
-        emptyBlocks = new OMElysiaHeapBlock;
+        auto rawblk = mem::allocator::tracedCallocElysia(1, sizeof(OMElysiaHeapBlock *));
+
+        emptyBlocks = new (rawblk) OMElysiaHeapBlock;
         emptyBlocks->block = oldtop;
         emptyBlocks->blockEnd = newtop;
         emptyBlocks->next = nullptr;

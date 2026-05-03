@@ -40,7 +40,7 @@ std::optional<uint8_t> safeRead(void *p)
     {
         return *reinterpret_cast<uint8_t *>(p);
     }
-    __except (EXCEPTION_EXECUTE_HANDLER)
+    __except ((GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION) ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
     {
         return std::nullopt;
     }
