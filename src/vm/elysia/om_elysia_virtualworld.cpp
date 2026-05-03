@@ -5,6 +5,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
+#include "openminecraft/log/om_log_threadname.hpp"
 #include <chrono>
 #include <fstream>
 #include <stdexcept>
@@ -44,6 +45,7 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
     klassLoader->loadClass(&iss);
 
     auto tt = new std::thread([&]() {
+        log::multithread::registerCurrentThreadName("Java Main");
         try
         {
             auto mcls = klassLoader->findClass("java/lang/System");
