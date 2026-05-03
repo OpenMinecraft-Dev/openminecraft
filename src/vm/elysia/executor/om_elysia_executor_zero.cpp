@@ -16,6 +16,7 @@
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 #include <chrono>
 #include <cmath>
+#include <cstdarg>
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
@@ -83,7 +84,6 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
                 }
             }
         }
-        logger.debug("try devering function, klass: {}", klass->name);
     }
 
     for (int i = ll; i < m->localLength; i++)
@@ -325,7 +325,124 @@ void OMElysiaExecutorZero::executeNativeLink()
     }
 }
 
-// TODO: fetch return data
+void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, const OMElysiaNativeValue *args)
+{
+    int i = 0;
+    if (!m->isStatic())
+    {
+        zeroStackPush(args[i].l);
+        ++i;
+    }
+
+    uint8_t argtypes[255];
+    int argcount;
+    uint8_t returntype;
+    argDescriptorParse(m->descriptor, argtypes, argcount, &returntype);
+
+    for (int i = 0; i < argcount; i++)
+    {
+        switch (argtypes[i])
+        {
+        case argTypeBoolean:
+            zeroStackPush<jboolean>(args[i].z);
+            ++i;
+            break;
+        case argTypeByte:
+            zeroStackPush<jbyte>(args[i].b);
+            ++i;
+            break;
+        case argTypeShort:
+            zeroStackPush<jshort>(args[i].s);
+            ++i;
+            break;
+        case argTypeChar:
+            zeroStackPush<jchar>(args[i].c);
+            ++i;
+            break;
+        case argTypeInt:
+            zeroStackPush<jint>(args[i].i);
+            ++i;
+            break;
+        case argTypeFloat:
+            zeroStackPush<jfloat>(args[i].f);
+            ++i;
+            break;
+        case argTypeLong:
+            zeroStackPushW<jlong>(args[i].j);
+            ++i;
+            break;
+        case argTypeDouble:
+            zeroStackPushW<jdouble>(args[i].d);
+            ++i;
+            break;
+        case argTypeReference:
+            zeroStackPush<OMElysiaOop *>(args[i].l->object);
+            ++i;
+            break;
+        default:
+            break;
+        }
+    }
+
+    execute(m);
+}
+
+void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, ...)
+{
+    va_list list;
+    va_start(list, m);
+
+    if (!m->isStatic())
+    {
+        zeroStackPush(va_arg(list, OMElysiaOop *));
+    }
+
+    uint8_t argtypes[255];
+    int argcount;
+    uint8_t returntype;
+    argDescriptorParse(m->descriptor, argtypes, argcount, &returntype);
+
+    for (int i = 0; i < argcount; i++)
+    {
+        switch (argtypes[i])
+        {
+        case argTypeBoolean:
+            zeroStackPush<jboolean>(va_arg(list, jint));
+            break;
+        case argTypeByte:
+            zeroStackPush<jbyte>(va_arg(list, jint));
+            break;
+        case argTypeShort:
+            zeroStackPush<jshort>(va_arg(list, jint));
+            break;
+        case argTypeChar:
+            zeroStackPush<jchar>(va_arg(list, jint));
+            break;
+        case argTypeInt:
+            zeroStackPush<jint>(va_arg(list, jint));
+            break;
+        case argTypeFloat:
+            zeroStackPush<jfloat>(va_arg(list, jdouble));
+            break;
+        case argTypeLong:
+            zeroStackPushW<jlong>(va_arg(list, jlong));
+            break;
+        case argTypeDouble:
+            zeroStackPushW<jdouble>(va_arg(list, jdouble));
+            break;
+        case argTypeReference:
+            zeroStackPush<OMElysiaOop *>(va_arg(list, OMElysiaOop *));
+            break;
+        default:
+            break;
+        }
+    }
+
+    va_end(list);
+
+    execute(m);
+}
+
 void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 {
     auto tc = thisThread.metadata;

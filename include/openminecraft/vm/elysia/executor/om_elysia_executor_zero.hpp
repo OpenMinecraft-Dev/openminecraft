@@ -2,12 +2,13 @@
 #define OM_ELYSIA_EXECUTOR_ZERO_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_field.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include <cstdarg>
 #include <cstdint>
-#include <stdexcept>
 #include <type_traits>
 namespace openminecraft::vm::elysia::executor
 {
@@ -101,6 +102,9 @@ class OMElysiaExecutorZero
   public:
     OMElysiaExecutorZero(OMElysiaVirtualWorld *vw);
     ~OMElysiaExecutorZero();
+
+    void callVoidFunction(OMElysiaMethod *m, const OMElysiaNativeValue *);
+    void callVoidFunction(OMElysiaMethod *m, ...);
 
     void execute(OMElysiaMethod *m);
     void executeNativeLink();

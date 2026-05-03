@@ -1,11 +1,11 @@
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 #include "boost/asio/execution/relationship.hpp"
+#include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
-#include "openminecraft/log/om_log_threadname.hpp"
 #include <chrono>
 #include <fstream>
 #include <stdexcept>
@@ -50,7 +50,7 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
         {
             auto mcls = klassLoader->findClass("java/lang/System");
             auto md = mcls->findMethod("initializeSystemClass", "()V");
-            executor->execute(md);
+            executor->callVoidFunction(md);
         }
         catch (std::logic_error &e)
         {

@@ -73,7 +73,7 @@ static uint64_t fieldLength(char *s, uint64_t ptrLen)
     }
 }
 
-static int argToSlot(uint8_t *out, int argCount)
+inline static int argToSlot(uint8_t *out, int argCount)
 {
     int l = 0;
     for (int i = 0; i < argCount; i++)
@@ -90,7 +90,7 @@ static int argToSlot(uint8_t *out, int argCount)
 
     return l;
 }
-static void argDescriptorParse(char *desc, uint8_t *out, int &argCount, uint8_t *returnType, int maxArgs = 255)
+inline static void argDescriptorParse(char *desc, uint8_t *out, int &argCount, uint8_t *returnType, int maxArgs = 255)
 {
     argCount = 0;
     bool inArg = false;

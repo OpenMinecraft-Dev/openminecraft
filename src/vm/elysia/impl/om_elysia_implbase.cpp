@@ -29,10 +29,6 @@ void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *kl
 
 OMElysiaOop *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaOop *name)
 {
-    // TODO: for test purpose only!
-    auto wld = (*env)->world;
-    auto func = wld->klassLoader->findClass("openminecraft/Test")->findMethod("test0", "()V");
-    wld->executor->execute(func);
     throw std::logic_error("not implemented");
 }
 } // namespace openminecraft::vm::elysia::impl
