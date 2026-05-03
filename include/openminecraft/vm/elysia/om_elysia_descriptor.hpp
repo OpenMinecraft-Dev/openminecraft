@@ -148,7 +148,7 @@ inline static void argDescriptorParse(char *desc, uint8_t *out, int &argCount, u
             inArg = false;
             break;
         case 'V':
-            if (inArg)
+            if (!inArg)
             {
                 *returnType = argTypeVoid;
             }

@@ -152,8 +152,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
         }
     }
 
-    void **argPointers = reinterpret_cast<void **>(
-        mem::allocator::tracedMallocElysia(sizeof(void *) * (rawargs.size() + (isStatic ? 1 : 0))));
+    void **argPointers = reinterpret_cast<void **>(zeroStackAlloc(sizeof(void *) * (rawargs.size() + (isStatic ? 1 : 0))));
 
     auto pp = &thisThread.metadata->interface;
     argPointers[0] = &pp;
@@ -223,7 +222,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
 
     ffi_cif cif;
     ffi_status ffiPrepStatus = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, rawargtypes.size(), retType, rawargtypes.data());
-    void *retValue = mem::allocator::tracedCallocElysia(1, retType->size);
+    void *retValue = reinterpret_cast<void *>(zeroStackAlloc(std::max(sizeof(void *), retType->size)));
 
     if (ffiPrepStatus == FFI_OK)
     {
@@ -258,9 +257,6 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     default:
         break;
     }
-
-    mem::allocator::tracedFreeElysia(retValue);
-    mem::allocator::tracedFreeElysia(argPointers);
 }
 
 void OMElysiaExecutorZero::popFrame()
