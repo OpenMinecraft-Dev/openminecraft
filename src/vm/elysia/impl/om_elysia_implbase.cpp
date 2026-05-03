@@ -1,16 +1,12 @@
 #include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
-#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
-#include <chrono>
-#include <thread>
 
 namespace openminecraft::vm::elysia::impl
 {
-log::OMLogger logger("Elysia Impl");
 void Java_java_lang_System_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
     OMElysiaNativeMethod mm[1] = {
@@ -36,7 +32,6 @@ OMElysiaOop *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env, OMElysi
     // TODO: for test purpose only!
     auto wld = (*env)->world;
     auto func = wld->klassLoader->findClass("openminecraft/Test")->findMethod("test0", "()V");
-    logger.info("find func: {}", (void *)func);
     wld->executor->execute(func);
     throw std::logic_error("not implemented");
 }

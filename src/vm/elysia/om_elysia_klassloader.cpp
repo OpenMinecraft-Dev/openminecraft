@@ -4,6 +4,7 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
+#include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 #include <cstring>
 #include <fstream>
@@ -73,6 +74,7 @@ void OMElysiaKlassloader::markKlass(OMElysiaKlass *klass)
 
 void OMElysiaKlassloader::unloadClass(OMElysiaKlass *klass)
 {
+    loadedClasses.erase(binary::hash::hash_compile_time(klass->name));
     if (klass->methods)
     {
         for (int i = 0; i < klass->methodCount; i++)
@@ -219,6 +221,21 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
 
     klass->methodCount = clsfile->methods.size();
     klass->methods = world->metaspaceHeap.allocateArray<OMElysiaMethod>(klass->methodCount);
+
+    klass->vtable = nullptr;
+    klass->vtableLength = 0;
+    std::vector<OMElysiaMethod *> rawVtable = {};
+    // geopeila: insert super class vtable
+    if (klass->superClass && klass->superClass->vtable && klass->superClass->vtableLength)
+    {
+        for (int i = 0; i < klass->superClass->vtableLength; i++)
+        {
+            rawVtable.push_back(klass->superClass->vtable[i]);
+        }
+
+        throw 0;
+    }
+
     for (int i = 0; i < klass->methodCount; i++)
     {
         auto &m = klass->methods[i];
@@ -236,18 +253,51 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
         {
             m.localLength = argSlots(m.descriptor);
         }
-
-        for (auto attr : clsfile->methods[i]->attrs)
+        else
         {
-            if (attr->type() == classfile::OMClassAttrType::Code)
+            for (auto attr : clsfile->methods[i]->attrs)
             {
-                auto ll = attr->to<classfile::OMClassAttrCode>();
-                m.codeLength = ll->codeLength;
-                m.code = world->metaspaceHeap.allocateArray<uint8_t>(m.codeLength);
-                m.localLength = ll->maxLocals;
-                std::memcpy(m.code, ll->code->data(), ll->codeLength);
-                break;
+                if (attr->type() == classfile::OMClassAttrType::Code)
+                {
+                    auto ll = attr->to<classfile::OMClassAttrCode>();
+                    m.codeLength = ll->codeLength;
+                    m.code = world->metaspaceHeap.allocateArray<uint8_t>(m.codeLength);
+                    m.localLength = ll->maxLocals;
+                    std::memcpy(m.code, ll->code->data(), ll->codeLength);
+                    break;
+                }
             }
+        }
+
+        if (!m.isStatic() && !m.isPrivate() && std::strcmp(m.name, "<init>"))
+        {
+            bool overwrite = false;
+            for (int i = 0; i < rawVtable.size(); i++)
+            {
+                auto currentMethod = rawVtable[i];
+                if (std::strcmp(currentMethod->name, m.name) == 0 &&
+                    std::strcmp(currentMethod->descriptor, m.descriptor) == 0)
+                {
+                    rawVtable[i] = &m;
+                    overwrite = true;
+                    break;
+                }
+            }
+
+            if (!overwrite)
+            {
+                rawVtable.push_back(&m);
+            }
+        }
+    }
+
+    klass->vtableLength = rawVtable.size();
+    if (klass->vtableLength)
+    {
+        klass->vtable = world->metaspaceHeap.allocateArray<OMElysiaMethod *>(klass->vtableLength);
+        for (int i = 0; i < klass->vtableLength; i++)
+        {
+            klass->vtable[i] = rawVtable[i];
         }
     }
 

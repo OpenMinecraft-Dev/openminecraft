@@ -42,6 +42,8 @@ class OMElysiaKlass
 
     uint32_t methodCount = 0;
     OMElysiaMethod *methods = nullptr;
+    uint32_t vtableLength = 0;
+    OMElysiaMethod **vtable = nullptr;
 
     uint32_t nativeMethodCount = 0;
     OMElysiaNativeMethod *nativeMethods = nullptr;

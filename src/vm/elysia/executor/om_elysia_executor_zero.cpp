@@ -235,6 +235,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     }
 
     mem::allocator::tracedFreeElysia(retValue);
+    mem::allocator::tracedFreeElysia(argPointers);
 }
 
 void OMElysiaExecutorZero::popFrame()
