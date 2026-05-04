@@ -2,6 +2,7 @@
 #include "openminecraft/io/json/om_io_token_json.hpp"
 #include "openminecraft/io/om_io_tokeniter_exception.hpp"
 #include <fmt/format.h>
+#include <iostream>
 #include <memory>
 
 namespace openminecraft::io::json
