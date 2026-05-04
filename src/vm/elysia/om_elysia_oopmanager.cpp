@@ -28,6 +28,7 @@ OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass)
 {
     auto ll = reinterpret_cast<OMElysiaOop *>(
         world->mainHeap.allocate(oopHeaderLength() + reinterpret_cast<OMElysiaInstanceKlass *>(klass)->length));
+    ll->markword &= markEden;
     std::memset(ll, 0x00, oopHeaderLength() + reinterpret_cast<OMElysiaInstanceKlass *>(klass)->length);
     if (world->metaspaceHeap.enablePtrCompress())
     {

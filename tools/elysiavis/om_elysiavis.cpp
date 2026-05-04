@@ -670,7 +670,7 @@ int main(int argc, const char *argv[])
               << openminecraft::mem::stack::fetchStackTop() << std::endl;
 
     uintptr_t cu = openminecraft::mem::stack::fetchStackBase();
-    uint64_t i = 0x33550336;
+    uint64_t i = 0x3355033600114514;
     uintptr_t pp = (uintptr_t)&i;
     while (pp < cu)
     {

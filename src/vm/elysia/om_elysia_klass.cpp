@@ -139,6 +139,8 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id)
         }
 
         constantPool[id] = strWrp;
+        arr->markword &= ~markEden;
+        strWrp->markword &= ~markEden;
         return constantPool[id];
     }
     default:

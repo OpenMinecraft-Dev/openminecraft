@@ -27,6 +27,7 @@ class OMElysiaVirtualWorld;
 struct OMElysiaNativeHandle
 {
     OMElysiaOop *object;
+    OMElysiaNativeHandle *next;
 };
 
 struct OMElysiaNativeMethod

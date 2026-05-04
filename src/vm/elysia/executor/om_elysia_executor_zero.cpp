@@ -68,7 +68,6 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
     // function in vtable
     if (!m->isStatic() && !m->isPrivate() && !m->isInit())
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1500));
         auto oop = reinterpret_cast<void **>(frame)[-1];
         auto klass = world->oopManager->oopGetKlass(oop);
 
@@ -111,6 +110,9 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
 
 void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *func)
 {
+    auto tc = thisThread.metadata;
+    tc->zero.frame->flag =
+        reinterpret_cast<uintptr_t>(mem::allocator::tracedCallocElysia(1, sizeof(OMElysiaNativeHandle)));
     std::vector<std::variant<jint, jbyte, jboolean, jshort, jchar, jfloat, jlong, jdouble, OMElysiaOop *>> rawargs;
     std::vector<ffi_type *> rawargtypes;
 
@@ -229,6 +231,14 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
         ffi_call(&cif, (void (*)())func, retValue, argPointers);
     }
 
+    OMElysiaNativeHandle *current = reinterpret_cast<OMElysiaNativeHandle *>(tc->zero.frame->flag);
+    while (current)
+    {
+        auto oldCurr = current->next;
+        mem::allocator::tracedFreeElysia(current);
+        current = oldCurr;
+    }
+    tc->zero.frame->flag = 0;
     popFrame();
 
     switch (returnType)
@@ -845,7 +855,9 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         case op_new: {
             auto c = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
-            zeroStackPush(world->oopManager->allocateOop(reinterpret_cast<OMElysiaKlass *>(c)));
+            auto oop = world->oopManager->allocateOop(reinterpret_cast<OMElysiaKlass *>(c));
+            zeroStackPush(oop);
+            oop->markword &= ~markEden;
             tc->zero.pc += 3;
             break;
         }
