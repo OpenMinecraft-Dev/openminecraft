@@ -19,7 +19,7 @@ struct OMElysiaJavaFrame
 {
     OMElysiaMethod *method;
     uint8_t *returnAddr;
-    uintptr_t flag = 0x0;
+    void *flag = 0x0;
     OMElysiaJavaFrame *caller;
 };
 

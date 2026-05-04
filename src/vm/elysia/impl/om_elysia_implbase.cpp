@@ -33,7 +33,8 @@ OMElysiaOop *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env, OMElysi
 {
     auto k = (*env)->FindClass(env, "java/lang/Class");
     auto field = (*env)->GetFieldID(env, k, "name", "Ljava/lang/String;");
-    logger.info("@{:x}", field->offset);
+    auto oop = (*env)->AllocObject(env, k);
+    logger.info("{} @+0x{:x}", (void *)oop, field->offset);
     throw std::logic_error("not implemented");
 }
 } // namespace openminecraft::vm::elysia::impl

@@ -103,9 +103,9 @@ class OMElysiaExecutorZero
     OMElysiaExecutorZero(OMElysiaVirtualWorld *vw);
     ~OMElysiaExecutorZero();
 
-#define DEF_FUNCCALL(retType, name) \
-    retType call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *); \
-    retType call##name##Function(OMElysiaMethod *m, va_list); \
+#define DEF_FUNCCALL(retType, name)                                                                                    \
+    retType call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *);                                      \
+    retType call##name##Function(OMElysiaMethod *m, va_list);                                                          \
     retType call##name##Function(OMElysiaMethod *m, ...);
 
     DEF_FUNCCALL(void, Void);
@@ -118,6 +118,8 @@ class OMElysiaExecutorZero
     DEF_FUNCCALL(jlong, Long);
     DEF_FUNCCALL(jdouble, Double);
     DEF_FUNCCALL(OMElysiaOop *, Object);
+
+    OMElysiaNativeHandle *recordLocalRef(OMElysiaOop *);
 
   protected:
     void execute(OMElysiaMethod *m);
