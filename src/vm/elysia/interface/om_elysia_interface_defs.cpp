@@ -47,10 +47,10 @@ static jint interfaceRegisterNatives(OMElysiaJNIEnv *env, OMElysiaKlass *clazz, 
 static OMElysiaKlass *interfaceFindClass(OMElysiaJNIEnv *env, const char *name)
 {
 beg:
-    auto klass = (*env)->world->klassLoader->findClass(std::string(name));
+    auto klass = env->internal->world->klassLoader->findClass(std::string(name));
     if (!klass)
     {
-        (*env)->world->klassLoader->loadClass(std::string(name));
+        env->internal->world->klassLoader->loadClass(std::string(name));
         goto beg;
     }
     else
@@ -60,7 +60,7 @@ beg:
 }
 static OMElysiaNativeHandle *interfaceAllocObject(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
-    return (*env)->world->executor->recordLocalRef((*env)->world->oopManager->allocateOop(klass));
+    return env->internal->world->executor->recordLocalRef(env->internal->world->oopManager->allocateOop(klass));
 };
 static OMElysiaKlass *interfaceGetSuperclass(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
@@ -72,12 +72,12 @@ static OMElysiaField *interfaceGetFieldID(OMElysiaJNIEnv *env, OMElysiaKlass *cl
 }
 void initBaseInterface(OMElysiaJNIEnv env)
 {
-    env->GetVersion = interfaceGetVersion;
-    env->RegisterNatives = interfaceRegisterNatives;
-    env->UnregisterNatives = interfaceUnregisterNatives;
-    env->FindClass = interfaceFindClass;
-    env->AllocObject = interfaceAllocObject;
-    env->GetSuperclass = interfaceGetSuperclass;
-    env->GetFieldID = interfaceGetFieldID;
+    env.internal->GetVersion = interfaceGetVersion;
+    env.internal->RegisterNatives = interfaceRegisterNatives;
+    env.internal->UnregisterNatives = interfaceUnregisterNatives;
+    env.internal->FindClass = interfaceFindClass;
+    env.internal->AllocObject = interfaceAllocObject;
+    env.internal->GetSuperclass = interfaceGetSuperclass;
+    env.internal->GetFieldID = interfaceGetFieldID;
 }
 } // namespace openminecraft::vm::elysia

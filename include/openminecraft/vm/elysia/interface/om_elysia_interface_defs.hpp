@@ -50,7 +50,11 @@ union OMElysiaNativeValue {
 };
 
 struct OMElysiaNativeInterface;
+#ifndef __cplusplus
 typedef OMElysiaNativeInterface *OMElysiaJNIEnv;
+#else
+struct OMElysiaJNIEnv;
+#endif
 
 void initBaseInterface(OMElysiaJNIEnv env);
 
@@ -447,6 +451,32 @@ struct OMElysiaNativeInterface
 
     jboolean (*IsVirtualThread)(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj);
 };
+
+#ifdef __cplusplus
+struct OMElysiaJNIEnv
+{
+    OMElysiaNativeInterface *internal;
+    OMElysiaKlass *FindClass(const char *name)
+    {
+        return internal->FindClass(this, name);
+    }
+
+    jint RegisterNatives(OMElysiaKlass *clazz, const OMElysiaNativeMethod *methods, jint nMethods)
+    {
+        return internal->RegisterNatives(this, clazz, methods, nMethods);
+    }
+
+    OMElysiaField *GetFieldID(OMElysiaKlass *clazz, const char *name, const char *sig)
+    {
+        return internal->GetFieldID(this, clazz, name, sig);
+    }
+
+    OMElysiaNativeHandle *AllocObject(OMElysiaKlass *clazz)
+    {
+        return internal->AllocObject(this, clazz);
+    }
+};
+#endif
 } // namespace openminecraft::vm::elysia
 
 #endif

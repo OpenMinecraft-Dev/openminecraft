@@ -125,14 +125,14 @@ void OMElysiaExecutorZero::threadInit()
         tc->stackEnd = reinterpret_cast<uintptr_t>(mem::allocator::tracedMallocElysia(1024 * 1024));
         tc->stackStart = tc->stackEnd + 1024 * 1024 - sizeof(void *);
         tc->zero.stackPointer = tc->stackStart;
-        tc->interface =
-            reinterpret_cast<OMElysiaJNIEnv>(mem::allocator::tracedCallocElysia(1, sizeof(OMElysiaNativeInterface)));
-        tc->interface->world = world;
+        tc->interface.internal = reinterpret_cast<OMElysiaNativeInterface *>(
+            mem::allocator::tracedCallocElysia(1, sizeof(OMElysiaNativeInterface)));
+        tc->interface.internal->world = world;
         initBaseInterface(tc->interface);
 
         tc->cleaner = [&]() {
             mem::allocator::tracedFreeElysia(reinterpret_cast<void *>(tc->stackEnd));
-            mem::allocator::tracedFreeElysia(tc->interface);
+            mem::allocator::tracedFreeElysia(tc->interface.internal);
         };
         tc->threadInited = true;
         tc->registerThread();
