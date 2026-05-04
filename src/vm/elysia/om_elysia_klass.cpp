@@ -117,6 +117,7 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id)
         return constantPool[id];
     }
     case OMClassConstantType::String: {
+        // TODO: extract to public apis
         auto &target =
             constantPoolRaw->at(item->to<OMClassConstantString>()->stringIndex)->to<OMClassConstantUtf8>()->data;
         auto stringKlass = nativeKlassloader->findClass("java/lang/String")->toInstance();
@@ -133,16 +134,7 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id)
         }
 
         auto strWrp = oopM->allocateOop(stringKlass);
-        auto refAddr = oopM->oopAccessField(strWrp, 0);
-
-        if (nativeKlassloader->upper()->mainHeap.enablePtrCompress())
-        {
-            *reinterpret_cast<uint32_t *>(refAddr) = nativeKlassloader->upper()->mainHeap.compress(arr);
-        }
-        else
-        {
-            *reinterpret_cast<OMElysiaArrayOop **>(refAddr) = arr;
-        }
+        oopM->oopAccessPointerField(strWrp, 0, arr);
 
         constantPool[id] = strWrp;
         arr->markword &= ~markEden;

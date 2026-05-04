@@ -54,6 +54,8 @@ class OMElysiaOopManager
     OMElysiaOop *allocateOop(OMElysiaKlass *klass);
     OMElysiaKlass *oopGetKlass(void *base);
     uintptr_t oopAccessField(void *base, uint64_t offset);
+    void oopAccessPointerField(void *base, uint64_t offset, void *ptrToWrite);
+    void *oopAccessPointerField(void *base, uint64_t offset);
 
     OMElysiaArrayOop *allocateArr(OMElysiaArrayKlass *klass, jint length);
 

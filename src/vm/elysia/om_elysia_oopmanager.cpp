@@ -54,6 +54,29 @@ OMElysiaKlass *OMElysiaOopManager::oopGetKlass(void *base)
     }
 }
 
+void OMElysiaOopManager::oopAccessPointerField(void *base, uint64_t offset, void *ptrToWrite)
+{
+    if (world->mainHeap.enablePtrCompress())
+    {
+        *reinterpret_cast<uint32_t *>(oopAccessField(base, offset)) = world->mainHeap.compress(ptrToWrite);
+    }
+    else
+    {
+        *reinterpret_cast<void **>(oopAccessField(base, offset)) = ptrToWrite;
+    }
+}
+void *OMElysiaOopManager::oopAccessPointerField(void *base, uint64_t offset)
+{
+    if (world->mainHeap.enablePtrCompress())
+    {
+        return world->mainHeap.decompress(*reinterpret_cast<uint32_t *>(oopAccessField(base, offset)));
+    }
+    else
+    {
+        return *reinterpret_cast<void **>(oopAccessField(base, offset));
+    }
+}
+
 uintptr_t OMElysiaOopManager::oopAccessField(void *base, uint64_t offset)
 {
     return reinterpret_cast<uintptr_t>(base) + oopHeaderLength() + offset;
@@ -87,6 +110,7 @@ OMElysiaArrayOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jin
 
     auto ll = reinterpret_cast<OMElysiaArrayOop *>(world->mainHeap.allocate(oopArrayHeaderLength() + i * length));
     std::memset(ll, 0x00, oopArrayHeaderLength() + i * length);
+    ll->markword &= markEden;
 
     ll->length = length;
     if (world->metaspaceHeap.enablePtrCompress())
