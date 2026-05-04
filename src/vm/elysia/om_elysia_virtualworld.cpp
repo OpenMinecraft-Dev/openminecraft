@@ -45,7 +45,7 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
     klassLoader->loadClass(&iss);
 
     auto tt = new std::thread([&]() {
-        log::multithread::registerCurrentThreadName("Java Main");
+        log::multithread::registerCurrentThreadName("main");
         try
         {
             auto mcls = klassLoader->findClass("java/lang/System");

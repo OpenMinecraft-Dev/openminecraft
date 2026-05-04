@@ -75,6 +75,10 @@ void OMElysiaKlassloader::markKlass(OMElysiaKlass *klass)
 void OMElysiaKlassloader::unloadClass(OMElysiaKlass *klass)
 {
     loadedClasses.erase(binary::hash::hash_compile_time(klass->name));
+    if (klass->vtable)
+    {
+        world->metaspaceHeap.deallocateArray(klass->vtable, klass->vtableLength);
+    }
     if (klass->methods)
     {
         for (int i = 0; i < klass->methodCount; i++)
@@ -267,14 +271,13 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
             }
         }
 
-        if (!m.isStatic() && !m.isPrivate() && std::strcmp(m.name, "<init>"))
+        if (!m.isStatic() && !m.isPrivate() && !m.isInit())
         {
             bool overwrite = false;
             for (int i = 0; i < rawVtable.size(); i++)
             {
                 auto currentMethod = rawVtable[i];
-                if (std::strcmp(currentMethod->name, m.name) == 0 &&
-                    std::strcmp(currentMethod->descriptor, m.descriptor) == 0)
+                if (currentMethod->isSame(&m))
                 {
                     rawVtable[i] = &m;
                     overwrite = true;

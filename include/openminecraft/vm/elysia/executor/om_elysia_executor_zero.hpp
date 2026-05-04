@@ -103,9 +103,23 @@ class OMElysiaExecutorZero
     OMElysiaExecutorZero(OMElysiaVirtualWorld *vw);
     ~OMElysiaExecutorZero();
 
-    void callVoidFunction(OMElysiaMethod *m, const OMElysiaNativeValue *);
-    void callVoidFunction(OMElysiaMethod *m, ...);
+#define DEF_FUNCCALL(retType, name) \
+    retType call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *); \
+    retType call##name##Function(OMElysiaMethod *m, va_list); \
+    retType call##name##Function(OMElysiaMethod *m, ...);
 
+    DEF_FUNCCALL(void, Void);
+    DEF_FUNCCALL(jbyte, Byte);
+    DEF_FUNCCALL(jboolean, Boolean);
+    DEF_FUNCCALL(jchar, Char);
+    DEF_FUNCCALL(jshort, Short);
+    DEF_FUNCCALL(jint, Int);
+    DEF_FUNCCALL(jfloat, Float);
+    DEF_FUNCCALL(jlong, Long);
+    DEF_FUNCCALL(jdouble, Double);
+    DEF_FUNCCALL(OMElysiaOop *, Object);
+
+  protected:
     void execute(OMElysiaMethod *m);
     void executeNativeLink();
     void executeNative(char *descriptor, bool isStatic, void *func);

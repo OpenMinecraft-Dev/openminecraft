@@ -66,7 +66,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
     zeroStackAlloc(ll * sizeof(void *));
 
     // function in vtable
-    if (!m->isStatic() && !m->isPrivate() && std::strcmp(m->name, "<init>"))
+    if (!m->isStatic() && !m->isPrivate() && !m->isInit())
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1500));
         auto oop = reinterpret_cast<void **>(frame)[-1];
@@ -76,8 +76,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
         {
             for (int i = 0; i < klass->vtableLength; i++)
             {
-                if (std::strcmp(klass->vtable[i]->name, m->name) == 0 &&
-                    std::strcmp(klass->vtable[i]->descriptor, m->descriptor) == 0)
+                if (klass->vtable[i]->isSame(m))
                 {
                     m = klass->vtable[i];
                     break;
@@ -152,7 +151,8 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
         }
     }
 
-    void **argPointers = reinterpret_cast<void **>(zeroStackAlloc(sizeof(void *) * (rawargs.size() + (isStatic ? 1 : 0))));
+    void **argPointers =
+        reinterpret_cast<void **>(zeroStackAlloc(sizeof(void *) * (rawargs.size() + (isStatic ? 1 : 0))));
 
     auto pp = &thisThread.metadata->interface;
     argPointers[0] = &pp;
@@ -383,11 +383,8 @@ void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, const OMElysiaNat
     execute(m);
 }
 
-void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, ...)
+void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, va_list list)
 {
-    va_list list;
-    va_start(list, m);
-
     if (!m->isStatic())
     {
         zeroStackPush(va_arg(list, OMElysiaOop *));
@@ -434,10 +431,46 @@ void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, ...)
         }
     }
 
-    va_end(list);
-
     execute(m);
 }
+
+void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, ...)
+{
+    va_list list;
+    va_start(list, m);
+    callVoidFunction(m, list);
+    va_end(list);
+}
+
+#define IMPL_FUNCCALL(retType, name, fetchFunc)                                                                        \
+    retType OMElysiaExecutorZero::call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *args)             \
+    {                                                                                                                  \
+        callVoidFunction(m, args);                                                                                     \
+        return fetchFunc<retType>();                                                                                   \
+    }                                                                                                                  \
+    retType OMElysiaExecutorZero::call##name##Function(OMElysiaMethod *m, va_list args)                                \
+    {                                                                                                                  \
+        callVoidFunction(m, args);                                                                                     \
+        return fetchFunc<retType>();                                                                                   \
+    }                                                                                                                  \
+    retType OMElysiaExecutorZero::call##name##Function(OMElysiaMethod *m, ...)                                         \
+    {                                                                                                                  \
+        va_list list;                                                                                                  \
+        va_start(list, m);                                                                                             \
+        callVoidFunction(m, list);                                                                                     \
+        va_end(list);                                                                                                  \
+        return fetchFunc<retType>();                                                                                   \
+    }
+
+IMPL_FUNCCALL(jbyte, Byte, zeroStackPopGet);
+IMPL_FUNCCALL(jboolean, Boolean, zeroStackPopGet);
+IMPL_FUNCCALL(jshort, Short, zeroStackPopGet);
+IMPL_FUNCCALL(jchar, Char, zeroStackPopGet);
+IMPL_FUNCCALL(jint, Int, zeroStackPopGet);
+IMPL_FUNCCALL(jfloat, Float, zeroStackPopGet);
+IMPL_FUNCCALL(jlong, Long, zeroStackPopWGet);
+IMPL_FUNCCALL(jdouble, Double, zeroStackPopWGet);
+IMPL_FUNCCALL(OMElysiaOop *, Object, zeroStackPopGet);
 
 void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 {
@@ -450,6 +483,8 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     while (true)
     {
+        // The function call is doing, but the native function has not returned yet
+        // geopeila: this mainly caused by calling the interpreter in native functions
         if (tc->zero.frame->flag != 0)
         {
             break;

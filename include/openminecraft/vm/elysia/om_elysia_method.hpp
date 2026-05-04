@@ -3,6 +3,7 @@
 
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include <cstdint>
+#include <cstring>
 
 namespace openminecraft::vm::elysia
 {
@@ -30,6 +31,16 @@ struct OMElysiaMethod
     attr(Private);
     attr(Native);
     attr(Abstract);
+
+    bool isInit()
+    {
+        return std::strcmp(name, "<init>") == 0;
+    }
+
+    bool isSame(OMElysiaMethod *method)
+    {
+        return std::strcmp(method->name, name) == 0 && std::strcmp(method->name, name) == 0;
+    }
 };
 } // namespace openminecraft::vm::elysia
 

@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <openminecraft/vm/classfile/om_class_file.hpp>
 
 namespace openminecraft::vm::elysia
 {
@@ -17,6 +18,18 @@ class OMElysiaField
     uint16_t accessFlag;
 
     uint32_t offset = fieldOffsetUnknown;
+
+#define attr(n)                                                                                                        \
+    bool is##n()                                                                                                       \
+    {                                                                                                                  \
+        return accessFlag & JVM_Acc_##n;                                                                               \
+    }
+    attr(Static);
+    attr(Public);
+    attr(Protected);
+    attr(Private);
+    attr(Native);
+    attr(Abstract);
 };
 } // namespace openminecraft::vm::elysia
 
