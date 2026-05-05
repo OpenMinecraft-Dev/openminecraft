@@ -220,7 +220,6 @@ void OMElysiaExecutorZero::executeNativeLink()
     case "java/lang/Class.registerNatives"_hash:
         executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Class_registerNatives);
         break;
-
     default:
         for (int i = 0; i < mm->klass->nativeMethodCount; i++)
         {

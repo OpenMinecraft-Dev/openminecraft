@@ -684,13 +684,17 @@ int main(int argc, const char *argv[])
 
     auto wld = new OMElysiaVirtualWorld;
 
-    std::vector<std::string> tabnames = {"Memory", "ElysiaVM", "Elysia Heap", "Elysia Klass", "Logs", "MemViewer"};
+    std::vector<std::string> tabnames = {"Memory", "ElysiaVM",  "Elysia Heap", "Elysia Klass",
+                                         "Logs",   "MemViewer", "Misc"};
+
+    std::function<void()> actualExit;
 
     auto memComp = std::make_shared<OMMemoryComponent>();
     auto elyComp = std::make_shared<OMElysiaThreadComponent>();
     auto kkComp = std::make_shared<OMElysiaKlassStatusComponent>(wld->klassLoader);
     auto logComp = std::make_shared<OMLogComponent>();
     auto viewComp = std::make_shared<OMMemViewerComponent>();
+    auto exitbutt = Button({}, [&]() { actualExit(); });
     auto cc = Container::Vertical({});
     auto elymemComp = Renderer(cc, [&] {
         return hbox({window(text("Metaspace"), buildElysiaHeapComp(wld->metaspaceHeap)),
@@ -699,7 +703,7 @@ int main(int argc, const char *argv[])
 
     int tabsel = 1;
     auto menuToggle = Toggle(&tabnames, &tabsel);
-    auto menuContainer = Container::Tab({memComp, elyComp, elymemComp, kkComp, logComp, viewComp}, &tabsel);
+    auto menuContainer = Container::Tab({memComp, elyComp, elymemComp, kkComp, logComp, viewComp, exitbutt}, &tabsel);
 
     auto container = Container::Horizontal({menuToggle, menuContainer});
     auto renderer = Renderer(container, [&] {
@@ -708,6 +712,7 @@ int main(int argc, const char *argv[])
     });
 
     auto screen = ScreenInteractive::TerminalOutput();
+    actualExit = [&]() { screen.Exit(); };
     screen.Loop(renderer);
 
     delete wld;

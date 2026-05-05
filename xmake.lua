@@ -6,6 +6,9 @@ add_rules("mode.releasedbg")
 add_rules("mode.minsizerel")
 add_rules("mode.debug")
 add_rules("mode.check")
+add_rules("mode.lsan")
+add_rules("mode.ubsan")
+add_rules("mode.asan")
 
 -- utils and custom libraries
 includes("utils.lua")
