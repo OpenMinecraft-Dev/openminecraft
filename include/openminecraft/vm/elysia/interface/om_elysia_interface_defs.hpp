@@ -475,6 +475,26 @@ struct OMElysiaJNIEnv
     {
         return internal->AllocObject(this, clazz);
     }
+
+    jint GetVersion()
+    {
+        return internal->GetVersion(this);
+    }
+
+    jint UnregisterNatives(OMElysiaKlass *clazz)
+    {
+        return internal->UnregisterNatives(this, clazz);
+    }
+
+    OMElysiaKlass *GetSuperclass(OMElysiaKlass *clazz)
+    {
+        return internal->GetSuperclass(this, clazz);
+    }
+
+    OMElysiaNativeHandle *NewCharArray(jsize len)
+    {
+        return internal->NewCharArray(this, len);
+    }
 };
 #endif
 } // namespace openminecraft::vm::elysia

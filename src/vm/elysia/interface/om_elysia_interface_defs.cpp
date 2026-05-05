@@ -70,6 +70,11 @@ static OMElysiaField *interfaceGetFieldID(OMElysiaJNIEnv *env, OMElysiaKlass *cl
 {
     return clazz->toInstance()->findField(name, desc);
 }
+static OMElysiaNativeHandle *interfaceNewCharArray(OMElysiaJNIEnv *env, jsize len)
+{
+    return env->internal->world->executor->recordLocalRef(env->internal->world->oopManager->allocateArr(
+        env->internal->world->klassLoader->findClass("[C")->toArray(), len));
+}
 void initBaseInterface(OMElysiaJNIEnv env)
 {
     env.internal->GetVersion = interfaceGetVersion;
@@ -79,5 +84,6 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->AllocObject = interfaceAllocObject;
     env.internal->GetSuperclass = interfaceGetSuperclass;
     env.internal->GetFieldID = interfaceGetFieldID;
+    env.internal->NewCharArray = interfaceNewCharArray;
 }
 } // namespace openminecraft::vm::elysia

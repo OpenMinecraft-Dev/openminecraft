@@ -708,6 +708,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                 world->oopManager->allocateArr(world->klassLoader->findClass(kn)->toArray(), zeroStackPopGet<jint>());
             zeroStackPush(arr);
             tc->zero.pc += 2;
+            arr->markword &= ~markEden;
             break;
         }
         case op_anewarray: {
@@ -722,6 +723,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto arr = world->oopManager->allocateArr(klass->toArray(), zeroStackPopGet<jint>());
             zeroStackPush(arr);
             tc->zero.pc += 3;
+            arr->markword &= ~markEden;
             break;
         }
         default:

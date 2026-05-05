@@ -14,31 +14,24 @@ struct OMElysiaOop
 {
     int markword;
 };
-struct OMElysiaOopUncompressed
+struct OMElysiaOopUncompressed : public OMElysiaOop
 {
-    int markword;
     OMElysiaKlass *klass;
 };
-struct OMElysiaOopCompressed
+struct OMElysiaOopCompressed : public OMElysiaOop
 {
-    int markword;
     uint32_t klass;
 };
-struct OMElysiaArrayOop
+struct OMElysiaArrayOop : public OMElysiaOop
 {
-    int markword;
     jint length;
 };
-struct OMElysiaArrayOopUncompressed
+struct OMElysiaArrayOopUncompressed : public OMElysiaArrayOop
 {
-    int markword;
-    jint length;
     OMElysiaKlass *klass;
 };
-struct OMElysiaArrayOopCompressed
+struct OMElysiaArrayOopCompressed : public OMElysiaArrayOop
 {
-    int markword;
-    jint length;
     uint32_t klass;
 };
 #pragma pack()
