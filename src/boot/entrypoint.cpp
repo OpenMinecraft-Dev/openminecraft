@@ -104,7 +104,7 @@ int boot(std::vector<std::string> args)
         logger->info(args[2]);
         auto ll = bld.build();
 
-        logger->info("object at {}", ll.get());
+        logger->info("object at {}", (void *)ll.get());
         break;
     }
     default:
