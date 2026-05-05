@@ -2,6 +2,7 @@
 #define OM_ELYSIA_METHOD
 
 #include "openminecraft/vm/classfile/om_class_file.hpp"
+#include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include <cstdint>
 #include <cstring>
 
@@ -39,7 +40,12 @@ struct OMElysiaMethod
 
     bool isSame(OMElysiaMethod *method)
     {
-        return std::strcmp(method->name, name) == 0 && std::strcmp(method->name, name) == 0;
+        return std::strcmp(method->name, name) == 0 && std::strcmp(method->descriptor, descriptor) == 0;
+    }
+
+    bool isSame(OMElysiaNativeMethod *method)
+    {
+        return std::strcmp(method->name, name) == 0 && std::strcmp(method->signature, descriptor) == 0;
     }
 };
 } // namespace openminecraft::vm::elysia

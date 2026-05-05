@@ -214,20 +214,23 @@ void OMElysiaExecutorZero::executeNativeLink()
     case "java/lang/System.registerNatives"_hash:
         executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_System_registerNatives);
         break;
-    case "java/lang/System.initProperties"_hash:
-        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_System_initProperties);
-        break;
     case "java/lang/Object.registerNatives"_hash:
         executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Object_registerNatives);
         break;
     case "java/lang/Class.registerNatives"_hash:
         executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Class_registerNatives);
         break;
-    case "java/lang/Class.getPrimitiveClass"_hash:
-        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Class_getPrimitiveClass);
-        break;
     default:
-        throw std::logic_error("not implemented: " + fmt::format("{}.{}", mm->klass->name, mm->name));
+        for (int i = 0; i < mm->klass->nativeMethodCount; i++)
+        {
+            auto &nm = mm->klass->nativeMethods[i];
+            if (mm->isSame(&nm))
+            {
+                executeNative(mm->descriptor, mm->isStatic(), nm.funcPtr);
+                return;
+            }
+        }
+        throw std::logic_error("not implemented: " + fmt::format("{}.{}{}", mm->klass->name, mm->name, mm->descriptor));
     }
 }
 } // namespace openminecraft::vm::elysia::executor

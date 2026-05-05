@@ -25,6 +25,9 @@ void Java_java_lang_Object_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *k
 
 void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
+    OMElysiaNativeMethod mm[] = {
+        {"getPrimitiveClass", "(Ljava/lang/String;)Ljava/lang/Class;", (void *)Java_java_lang_Class_getPrimitiveClass}};
+    env->RegisterNatives(klass, mm, 1);
 }
 
 OMElysiaOop *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaOop *name)
