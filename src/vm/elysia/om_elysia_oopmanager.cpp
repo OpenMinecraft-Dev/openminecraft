@@ -1,7 +1,9 @@
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
+#include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include "openminecraft/vm/encoding/om_encoding_utf.hpp"
 #include <cstring>
 
 using namespace openminecraft::binary::hash;
@@ -39,6 +41,29 @@ OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass)
         reinterpret_cast<OMElysiaOopUncompressed *>(ll)->klass = klass;
     }
     return ll;
+}
+
+OMElysiaOop *OMElysiaOopManager::allocateString(std::string &target)
+{
+    auto nativeKlassloader = world->klassLoader;
+    auto stringKlass = nativeKlassloader->findClass("java/lang/String")->toInstance();
+    auto charArrKlass = nativeKlassloader->findClass("[C")->toArray();
+
+    auto u16target = encoding::utf32ToUtf16(encoding::utf8ToUtf32(target));
+
+    auto oopM = nativeKlassloader->upper()->oopManager;
+
+    auto arr = oopM->allocateArr(charArrKlass, u16target.size());
+    for (int i = 0; i < u16target.size() / 2; i++)
+    {
+        oopM->arrAccess<jchar>(arr)[i] = static_cast<jchar>(u16target[i * 2]) << 8 | u16target[i * 2 + 1];
+    }
+
+    auto strWrp = oopM->allocateOop(stringKlass);
+    oopM->oopAccessPointerField(strWrp, 0, arr);
+
+    arr->markword &= ~markEden;
+    return strWrp;
 }
 
 OMElysiaKlass *OMElysiaOopManager::oopGetKlass(void *base)

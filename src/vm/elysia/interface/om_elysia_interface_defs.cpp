@@ -75,6 +75,11 @@ static OMElysiaNativeHandle *interfaceNewCharArray(OMElysiaJNIEnv *env, jsize le
     return env->internal->world->executor->recordLocalRef(env->internal->world->oopManager->allocateArr(
         env->internal->world->klassLoader->findClass("[C")->toArray(), len));
 }
+static OMElysiaNativeHandle *interfaceNewStringUTF(OMElysiaJNIEnv *env, const char *string)
+{
+    std::string ss(string);
+    return env->internal->world->executor->recordLocalRef(env->internal->world->oopManager->allocateString(ss));
+}
 void initBaseInterface(OMElysiaJNIEnv env)
 {
     env.internal->GetVersion = interfaceGetVersion;
@@ -85,5 +90,6 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->GetSuperclass = interfaceGetSuperclass;
     env.internal->GetFieldID = interfaceGetFieldID;
     env.internal->NewCharArray = interfaceNewCharArray;
+    env.internal->NewStringUTF = interfaceNewStringUTF;
 }
 } // namespace openminecraft::vm::elysia

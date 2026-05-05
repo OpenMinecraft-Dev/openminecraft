@@ -45,6 +45,7 @@ class OMElysiaOopManager
     uint64_t oopHeaderLength();
     uint64_t oopArrayHeaderLength();
     OMElysiaOop *allocateOop(OMElysiaKlass *klass);
+    OMElysiaOop *allocateString(std::string &target);
     OMElysiaKlass *oopGetKlass(void *base);
     uintptr_t oopAccessField(void *base, uint64_t offset);
     void oopAccessPointerField(void *base, uint64_t offset, void *ptrToWrite);

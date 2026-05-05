@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include <string>
 
 using namespace openminecraft::vm::classfile;
 
@@ -121,24 +122,9 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id)
         // TODO: extract to public apis
         auto &target =
             constantPoolRaw->at(item->to<OMClassConstantString>()->stringIndex)->to<OMClassConstantUtf8>()->data;
-        auto stringKlass = nativeKlassloader->findClass("java/lang/String")->toInstance();
-        auto charArrKlass = nativeKlassloader->findClass("[C")->toArray();
-
-        auto u16target = encoding::utf32ToUtf16(encoding::utf8ToUtf32(target));
-
-        auto oopM = nativeKlassloader->upper()->oopManager;
-
-        auto arr = oopM->allocateArr(charArrKlass, u16target.size());
-        for (int i = 0; i < u16target.size() / 2; i++)
-        {
-            oopM->arrAccess<jchar>(arr)[i] = static_cast<jchar>(u16target[i * 2]) << 8 | u16target[i * 2 + 1];
-        }
-
-        auto strWrp = oopM->allocateOop(stringKlass);
-        oopM->oopAccessPointerField(strWrp, 0, arr);
+        auto strWrp = nativeKlassloader->upper()->oopManager->allocateString(const_cast<std::string &>(target));
 
         constantPool[id] = strWrp;
-        arr->markword &= ~markEden;
         strWrp->markword &= ~markEden;
         return constantPool[id];
     }

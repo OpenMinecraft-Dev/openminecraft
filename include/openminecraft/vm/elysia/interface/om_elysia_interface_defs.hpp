@@ -495,6 +495,11 @@ struct OMElysiaJNIEnv
     {
         return internal->NewCharArray(this, len);
     }
+
+    OMElysiaNativeHandle *NewStringUTF(const char *string)
+    {
+        return internal->NewStringUTF(this, string);
+    }
 };
 #endif
 } // namespace openminecraft::vm::elysia
