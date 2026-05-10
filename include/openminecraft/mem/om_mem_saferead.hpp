@@ -1,11 +1,10 @@
 #ifndef OM_MEM_SAFEREAD_HPP
 #define OM_MEM_SAFEREAD_HPP
 
-#include <cstdint>
 #include <optional>
 namespace openminecraft::mem
 {
-std::optional<uint8_t> safeRead(void *p);
-}
+template <typename T> std::optional<T> safeRead(void *p);
+} // namespace openminecraft::mem
 
 #endif

@@ -602,7 +602,9 @@ class OMMemViewerComponent : public ComponentBase
     OMMemViewerComponent()
     {
         inputBase = Input(&address, "memory address...");
-        Add(inputBase);
+        structDefInput = Input(&structDef, "structure...");
+        inputs = Container::Vertical({inputBase, structDefInput});
+        Add(inputs);
     }
     Element OnRender()
     {
@@ -631,7 +633,7 @@ class OMMemViewerComponent : public ComponentBase
             {
                 auto offset = i * 16 + j;
 
-                auto r = openminecraft::mem::safeRead(reinterpret_cast<void *>(b + offset));
+                auto r = openminecraft::mem::safeRead<uint8_t>(reinterpret_cast<void *>(b + offset));
                 if (r.has_value())
                 {
                     current->push_back(text(fmt::format("{:02x}", *r)));
@@ -656,12 +658,49 @@ class OMMemViewerComponent : public ComponentBase
             ss = "";
         }
 
-        return vbox({inputBase->Render(), gridbox(values)});
+        std::vector<Element> stru;
+        stru.push_back(text("Struct data:"));
+        int i = 0;
+        uintptr_t baseptr = b;
+        for (auto ch : structDef)
+        {
+#define inaccess                                                                                                       \
+    else                                                                                                               \
+    {                                                                                                                  \
+        stru.push_back(text(fmt::format("#{} Inaccessible", i)));                                                      \
+    }
+
+            switch (ch)
+            {
+            case 'p': {
+                auto r = openminecraft::mem::safeRead<void *>(reinterpret_cast<void *>(baseptr));
+                if (r.has_value())
+                {
+                    stru.push_back(text(fmt::format("#{} {}", i, reinterpret_cast<void *>(*r))));
+                }
+                inaccess;
+
+                baseptr += sizeof(void *);
+                break;
+            }
+            default:
+                stru.push_back(text(fmt::format("#{} Unknown", i)));
+                break;
+            }
+
+            ++i;
+        }
+
+        return vbox({inputs->Render(), gridbox(values), vbox(stru)});
     }
 
   private:
     std::string address;
+    std::string structDef;
     Component inputBase;
+    Component structDefInput;
+
+    Component inputs;
 };
 
 int main(int argc, const char *argv[])
@@ -694,7 +733,7 @@ int main(int argc, const char *argv[])
     auto kkComp = std::make_shared<OMElysiaKlassStatusComponent>(wld->klassLoader);
     auto logComp = std::make_shared<OMLogComponent>();
     auto viewComp = std::make_shared<OMMemViewerComponent>();
-    auto exitbutt = Button({}, [&]() { actualExit(); });
+    auto exitbutt = Button("Exit", [&]() { actualExit(); });
     auto cc = Container::Vertical({});
     auto elymemComp = Renderer(cc, [&] {
         return hbox({window(text("Metaspace"), buildElysiaHeapComp(wld->metaspaceHeap)),

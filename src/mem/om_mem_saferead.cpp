@@ -18,14 +18,14 @@ static void crashHandler(int)
 }
 #endif
 
-std::optional<uint8_t> safeRead(void *p)
+template <typename T> std::optional<T> safeRead(void *p)
 {
 #ifdef OM_PLATFORM_UNIX
     signal(SIGSEGV, crashHandler);
-    uint8_t v;
+    T v;
     if (sigsetjmp(env, 1) == 0)
     {
-        v = *reinterpret_cast<uint8_t *>(p);
+        v = *reinterpret_cast<T *>(p);
     }
     else
     {
@@ -38,12 +38,19 @@ std::optional<uint8_t> safeRead(void *p)
 #else
     __try
     {
-        return *reinterpret_cast<uint8_t *>(p);
+        return *reinterpret_cast<T *>(p);
     }
-    __except ((GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION) ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
+    __except ((GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION) ? EXCEPTION_EXECUTE_HANDLER
+                                                                 : EXCEPTION_CONTINUE_SEARCH)
     {
         return std::nullopt;
     }
 #endif
 }
+
+template std::optional<void *> safeRead<void *>(void *);
+template std::optional<uintptr_t> safeRead<uintptr_t>(void *);
+template std::optional<uint8_t> safeRead<uint8_t>(void *);
+template std::optional<int8_t> safeRead<int8_t>(void *);
+template std::optional<uint16_t> safeRead<uint16_t>(void *);
 } // namespace openminecraft::mem
