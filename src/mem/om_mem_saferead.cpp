@@ -9,21 +9,22 @@
 
 namespace openminecraft::mem
 {
-#ifdef OM_PLATFORM_UNIX
+#if defined(OM_PLATFORM_UNIX) || defined(OM_PLATFORM_MINGW)
 static sigjmp_buf env;
 
 static void crashHandler(int)
 {
+    signal(SIGSEGV, SIG_IGN);
     siglongjmp(env, 1);
 }
 #endif
 
 template <typename T> std::optional<T> safeRead(void *p)
 {
-#ifdef OM_PLATFORM_UNIX
+#if defined(OM_PLATFORM_UNIX) || defined(OM_PLATFORM_MINGW)
     signal(SIGSEGV, crashHandler);
     T v;
-    if (sigsetjmp(env, 1) == 0)
+    if (!sigsetjmp(env, 1))
     {
         v = *reinterpret_cast<T *>(p);
     }

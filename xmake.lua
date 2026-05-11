@@ -13,6 +13,7 @@ add_rules("mode.asan")
 -- utils and custom libraries
 includes("utils.lua")
 includes("extlibs/vulkan.lua")
+includes("extlibs/harfbuzz.lua")
 
 --------------------------------------------------------------------------------
 -- Platform configs
@@ -28,6 +29,9 @@ if not is_plat("windows", "mingw") then
 end
 if is_plat("windows", "mingw") then
 	add_defines("OM_PLATFORM_WINDOWS=")
+end
+if is_plat("mingw") then
+	add_defines("OM_PLATFORM_MINGW=")
 end
 if is_plat("linux") then
 	add_defines("OM_PLATFORM_LINUX=")

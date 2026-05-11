@@ -29,6 +29,7 @@ OMElysiaInstanceKlass *OMElysiaKlassloader::constructInstanceClassShell(std::str
     klass->interfaceImplCount = 0;
     klass->interfaceImpls = nullptr;
     klass->ptrLength = world->mainHeap.ptrLength();
+    klass->mirror = nullptr;
 
     markKlass(klass);
     return klass;
@@ -41,6 +42,7 @@ OMElysiaPrimitiveKlass *OMElysiaKlassloader::constructPrimitiveClass(std::string
     klass->name = world->metaspaceHeap.allocateStr(s);
     klass->type = PrimitiveKlass;
     klass->ptrLength = world->mainHeap.ptrLength();
+    klass->mirror = nullptr;
 
     markKlass(klass);
     return klass;
@@ -56,6 +58,7 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
     klass->type = ArrayKlass;
     klass->lowerDim = k;
     klass->ptrLength = world->mainHeap.ptrLength();
+    klass->mirror = nullptr;
 
     if (k->isArray())
     {

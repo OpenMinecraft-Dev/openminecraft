@@ -39,6 +39,7 @@ class OMElysiaKlass
     char *name;
 
     OMElysiaOop *klassloader = nullptr;
+    OMElysiaOop *mirror = nullptr;
 
     uint32_t methodCount = 0;
     OMElysiaMethod *methods = nullptr;

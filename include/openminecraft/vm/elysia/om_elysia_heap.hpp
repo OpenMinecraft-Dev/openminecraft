@@ -70,7 +70,7 @@ class OMElysiaHeap
 
     bool enablePtrCompress()
     {
-        return sizeof(void *) == 8 && maxSize < 1024l * 1024 * 1024 * 32;
+        return sizeof(void *) == 8 && maxSize < 1024ll * 1024 * 1024 * 32;
     }
 
     uint64_t ptrLength()
