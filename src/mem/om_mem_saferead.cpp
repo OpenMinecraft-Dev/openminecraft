@@ -3,13 +3,13 @@
 #include <csignal>
 #include <cstdint>
 #include <optional>
-#ifdef OM_PLATFORM_WINDOWS
+#if defined(OM_PLATFORM_WINDOWS) || defined(OM_PLATFORM_MINGW)
 #include "windows.h"
 #endif
 
 namespace openminecraft::mem
 {
-#if defined(OM_PLATFORM_UNIX) || defined(OM_PLATFORM_MINGW)
+#if defined(OM_PLATFORM_UNIX)
 static sigjmp_buf env;
 
 static void crashHandler(int)
@@ -21,7 +21,7 @@ static void crashHandler(int)
 
 template <typename T> std::optional<T> safeRead(void *p)
 {
-#if defined(OM_PLATFORM_UNIX) || defined(OM_PLATFORM_MINGW)
+#if defined(OM_PLATFORM_UNIX)
     signal(SIGSEGV, crashHandler);
     T v;
     if (!sigsetjmp(env, 1))
@@ -37,7 +37,7 @@ template <typename T> std::optional<T> safeRead(void *p)
     signal(SIGSEGV, nullptr);
     return v;
 #else
-    __try
+    /*__try
     {
         return *reinterpret_cast<T *>(p);
     }
@@ -45,7 +45,15 @@ template <typename T> std::optional<T> safeRead(void *p)
                                                                  : EXCEPTION_CONTINUE_SEARCH)
     {
         return std::nullopt;
+    }*/
+    T v;
+    SIZE_T bytesRead = 0;
+    if (ReadProcessMemory(GetCurrentProcess(), p, &v, sizeof(T), &bytesRead) &&
+        bytesRead == sizeof(T))
+    {
+        return v;
     }
+    return std::nullopt;
 #endif
 }
 
