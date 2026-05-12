@@ -15,7 +15,14 @@ using openminecraft::i18n::res::translate;
 namespace openminecraft::renderer::vk::validation
 {
 log::OMLogger internal("Vulkan Validation");
-static int notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT t,
+
+#if defined(OM_PLATFORM_ANDROID) && defined(__arm__)
+#define FUNCDEC __attribute__((aapcs-vfp))
+#else
+#define FUNCDEC
+#endif
+
+static int FUNCDEC notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT t,
                   DebugUtilsMessengerCallbackDataEXT data, void *user)
 {
     // gino: some drivers provide bad message string
@@ -46,7 +53,7 @@ static int notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeF
 
     return VK_SUCCESS;
 }
-static VkBool32 notifyNew(DebugReportFlagBitsEXT flags, DebugReportObjectTypeEXT objectType, uint64_t object,
+static VkBool32 FUNCDEC notifyNew(DebugReportFlagBitsEXT flags, DebugReportObjectTypeEXT objectType, uint64_t object,
                           size_t location, int32_t messageCode, const char *pLayerPrefix, const char *pMessage,
                           void *pUserData)
 {

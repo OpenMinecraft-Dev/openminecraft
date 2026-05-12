@@ -39,6 +39,10 @@ OMElysiaOop *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env, OMElysi
     auto k2 = env->FindClass("float");
 
     logger.info("{} @+0x{:x} {} {}", (void *)oop, field->offset, (void *)name, (void *)k2);
+    while (true)
+    {
+        continue;
+    }
     throw std::logic_error("not implemented");
 }
 } // namespace openminecraft::vm::elysia::impl
