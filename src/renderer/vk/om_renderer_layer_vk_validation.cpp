@@ -16,13 +16,7 @@ namespace openminecraft::renderer::vk::validation
 {
 log::OMLogger internal("Vulkan Validation");
 
-#if defined(OM_PLATFORM_ANDROID) && defined(__arm__)
-#define FUNCDEC __attribute__((aapcs-vfp))
-#else
-#define FUNCDEC
-#endif
-
-static FUNCDEC int notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT t,
+static int notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT t,
                   DebugUtilsMessengerCallbackDataEXT data, void *user)
 {
     // gino: some drivers provide bad message string
@@ -53,7 +47,7 @@ static FUNCDEC int notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMess
 
     return VK_SUCCESS;
 }
-static FUNCDEC VkBool32 notifyNew(DebugReportFlagBitsEXT flags, DebugReportObjectTypeEXT objectType, uint64_t object,
+static VkBool32 notifyNew(DebugReportFlagBitsEXT flags, DebugReportObjectTypeEXT objectType, uint64_t object,
                           size_t location, int32_t messageCode, const char *pLayerPrefix, const char *pMessage,
                           void *pUserData)
 {
