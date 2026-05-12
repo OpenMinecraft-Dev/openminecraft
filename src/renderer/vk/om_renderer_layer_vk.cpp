@@ -751,7 +751,6 @@ OMRendererVk::~OMRendererVk()
     }
     catch (SystemError &e)
     {
-        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.cleanup"));
     }
 }
 std::string OMRendererVk::driver()

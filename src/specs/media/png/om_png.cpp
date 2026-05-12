@@ -45,7 +45,7 @@ static void writePixel(uint8_t *result, uint8_t *source, OMPngColorType type, ui
         break;
     case GrayscaleAlpha:
         std::memset(result, source[x * 2 * bitdepth / 8], 3);
-        result[4] = source[(x * 2 + 1) * bitdepth / 8];
+        result[3] = source[(x * 2 + 1) * bitdepth / 8];
         break;
     case Palette:
         if (bitdepth == 8)
@@ -76,7 +76,7 @@ static void writePixel(uint8_t *result, uint8_t *source, OMPngColorType type, ui
         if (bitdepth == 8)
         {
             std::memset(result, source[x * bitdepth / 8], 3);
-            result[4] = 0xff;
+            result[3] = 0xff;
         }
         else
         {
@@ -89,7 +89,7 @@ static void writePixel(uint8_t *result, uint8_t *source, OMPngColorType type, ui
             value = static_cast<uint8_t>((value * 255) / ((1 << bitdepth) - 1));
 
             std::memset(result, value, 3);
-            result[4] = 0xff;
+            result[3] = 0xff;
         }
         break;
     default:

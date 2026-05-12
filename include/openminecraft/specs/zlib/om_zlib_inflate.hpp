@@ -7,7 +7,7 @@
 #include <functional>
 namespace openminecraft::specs::zlib
 {
-constexpr const char allocatorTag[] = "zlib";
+inline constexpr const char allocatorTag[] = "zlib";
 
 class OMZLibInflater
 {

@@ -10,7 +10,7 @@ log::OMLogger logger("Elysia Impl Layer");
 void Java_java_lang_System_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
     OMElysiaNativeMethod mm[] = {
-        {"initProperties", "(Ljava/util/Properties;)V", (void *)Java_java_lang_System_initProperties}};
+        {const_cast<char *>("initProperties"), const_cast<char *>("(Ljava/util/Properties;)V"), reinterpret_cast<void *>(Java_java_lang_System_initProperties)}};
     env->RegisterNatives(klass, mm, 1);
 }
 
@@ -26,7 +26,7 @@ void Java_java_lang_Object_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *k
 void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
     OMElysiaNativeMethod mm[] = {
-        {"getPrimitiveClass", "(Ljava/lang/String;)Ljava/lang/Class;", (void *)Java_java_lang_Class_getPrimitiveClass}};
+        {const_cast<char *>("getPrimitiveClass"), const_cast<char *>("(Ljava/lang/String;)Ljava/lang/Class;"), reinterpret_cast<void *>(Java_java_lang_Class_getPrimitiveClass)}};
     env->RegisterNatives(klass, mm, 1);
 }
 

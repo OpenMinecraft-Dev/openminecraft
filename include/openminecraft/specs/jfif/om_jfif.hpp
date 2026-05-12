@@ -49,7 +49,7 @@ constexpr std::array<int, 64> unzigzagMap = {0,  1,  5,  6,  14, 15, 27, 28, 2, 
                                              10, 19, 23, 32, 39, 45, 52, 54, 20, 22, 33, 38, 46, 51, 55, 60,
                                              21, 34, 37, 47, 50, 56, 59, 61, 35, 36, 48, 49, 57, 58, 62, 63};
 
-constexpr const char allocatorTag[] = "parser_jfif";
+inline constexpr const char allocatorTag[] = "parser_jfif";
 struct OMJfifThumbnailPixel
 {
     uint8_t r;
