@@ -115,7 +115,7 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id)
         auto d = item->to<OMClassConstantFloat>()->data;
         uint32_t rd = *reinterpret_cast<uint32_t *>(&d);
 
-        constantPool[id] = reinterpret_cast<void *>(rd);
+        constantPool[id] = reinterpret_cast<void *>(static_cast<uintptr_t>(rd));
         return constantPool[id];
     }
     case OMClassConstantType::String: {
