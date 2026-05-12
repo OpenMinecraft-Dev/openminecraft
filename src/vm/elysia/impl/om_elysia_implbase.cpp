@@ -43,6 +43,5 @@ OMElysiaOop *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env, OMElysi
     {
         continue;
     }
-    throw std::logic_error("not implemented");
 }
 } // namespace openminecraft::vm::elysia::impl
