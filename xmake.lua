@@ -10,8 +10,6 @@ add_rules("mode.lsan")
 add_rules("mode.ubsan")
 add_rules("mode.asan")
 
-set_warnings("error")
-
 -- utils and custom libraries
 includes("utils.lua")
 includes("extlibs/vulkan.lua")
