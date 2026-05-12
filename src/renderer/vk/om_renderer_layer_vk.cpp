@@ -371,7 +371,11 @@ void OMRendererVk::render()
                                               frameSyncs[thisFrame].imageAvailableSemaphore, {});
         if (nxtRes != Result::eSuccess)
         {
-            throw OMRendererException(VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.nextimage"));
+            if (nxtRes == Result::eSuboptimalKHR || nxtRes == Result::eErrorOutOfDateKHR)
+	    {
+                goto reb;
+	    }
+	    throw OMRendererException(VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.nextimage"));
         }
 
         if (inflights.count(imageIndex) > 0)

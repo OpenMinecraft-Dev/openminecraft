@@ -34,7 +34,6 @@ OMRendererTaskVk::~OMRendererTaskVk()
     }
     catch (SystemError &e)
     {
-        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.task"));
     }
 }
 
