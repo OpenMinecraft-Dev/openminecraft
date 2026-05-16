@@ -16,6 +16,7 @@ extern "C"
 {
     void cpuinfo_x86(uint32_t op, int32_t *eax, int32_t *ebx, int32_t *ecx, int32_t *edx);
     uint64_t cpuinfo_aarch64();
+    void aarch64_tocpuname(uint64_t d, std::string *ss);
 }
 
 struct id_part
@@ -219,7 +220,7 @@ static const struct hw_impl hw_implementer[] = {
     {0x6d, ms_part, "Microsoft"},     {0x70, ft_part, "Phytium"},
     {0xc0, ampere_part, "Ampere"},    {-1, unknown_part, "unknown"},
 };
-static std::string aarch64_tocpuname(uint64_t d)
+void aarch64_tocpuname(uint64_t d, std::string *ss)
 {
     auto impl = d >> 24 & 0xff;
     auto part = d >> 4 & 0xfff;
@@ -251,7 +252,8 @@ static std::string aarch64_tocpuname(uint64_t d)
     {
         name = "Unknown";
     }
-    return fmt::format("{} {}", manu, name);
+
+    *ss = fmt::format("{} {}", manu, name);
 }
 
 namespace openminecraft::vm::os
@@ -347,7 +349,9 @@ std::string fetchCpuName()
     }
     return result;
 #elif defined(__aarch64__)
-    return aarch64_tocpuname(cpuinfo_aarch64());
+    std::string cpuname;
+    aarch64_tocpuname(cpuinfo_aarch64(), &cpuname);
+    return cpuname;
 #else
     auto st = fetchFromDevFs();
     return st == "" ? fmt::format("unknown {} cpu", n.machine) : st;
