@@ -1,5 +1,6 @@
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <cstdint>
+#include <fmt/format.h>
 #include <fstream>
 #include <pwd.h>
 #include <sstream>
