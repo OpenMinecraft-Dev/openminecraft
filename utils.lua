@@ -52,6 +52,10 @@ function is_plat_alias(plat)
 		return not mobile()
 	end
 
+	if plat == "ios" then
+		return is_plat("iphoneos")
+	end
+
 	return is_plat(plat)
 end
 
@@ -115,5 +119,15 @@ function addExtFiles(config)
 
 	for _, arch in ipairs(ARCHITECTURES) do
 		addExtFilesSub2("arch", arch, arch == "x86" or arch == "aarch64")
+	end
+
+	for _, plat in ipairs(PLATFORMS) do
+		for _, arch in ipairs(ARCHITECTURES) do
+			if is_arch_alias(arch) and is_plat_alias(plat) and config["platarch-" .. plat .. "-" .. arch] then
+				add_files("platarch/" .. plat .. "-" .. arch .. "/**.cpp")
+
+				print("Added subdirectory platarch-" .. plat .. "-" .. arch)
+			end
+		end
 	end
 end
