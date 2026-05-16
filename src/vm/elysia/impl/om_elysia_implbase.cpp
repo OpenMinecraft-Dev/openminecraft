@@ -3,14 +3,17 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
+#include <chrono>
+#include <stdexcept>
+#include <thread>
 
 namespace openminecraft::vm::elysia::impl
 {
 log::OMLogger logger("Elysia Impl Layer");
 void Java_java_lang_System_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
-    OMElysiaNativeMethod mm[] = {
-        {const_cast<char *>("initProperties"), const_cast<char *>("(Ljava/util/Properties;)V"), reinterpret_cast<void *>(Java_java_lang_System_initProperties)}};
+    OMElysiaNativeMethod mm[] = {{const_cast<char *>("initProperties"), const_cast<char *>("(Ljava/util/Properties;)V"),
+                                  reinterpret_cast<void *>(Java_java_lang_System_initProperties)}};
     env->RegisterNatives(klass, mm, 1);
 }
 
@@ -25,8 +28,9 @@ void Java_java_lang_Object_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *k
 
 void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
-    OMElysiaNativeMethod mm[] = {
-        {const_cast<char *>("getPrimitiveClass"), const_cast<char *>("(Ljava/lang/String;)Ljava/lang/Class;"), reinterpret_cast<void *>(Java_java_lang_Class_getPrimitiveClass)}};
+    OMElysiaNativeMethod mm[] = {{const_cast<char *>("getPrimitiveClass"),
+                                  const_cast<char *>("(Ljava/lang/String;)Ljava/lang/Class;"),
+                                  reinterpret_cast<void *>(Java_java_lang_Class_getPrimitiveClass)}};
     env->RegisterNatives(klass, mm, 1);
 }
 
@@ -41,7 +45,7 @@ OMElysiaOop *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env, OMElysi
     logger.info("{} @+0x{:x} {} {}", (void *)oop, field->offset, (void *)name, (void *)k2);
     while (true)
     {
-        continue;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
 } // namespace openminecraft::vm::elysia::impl
