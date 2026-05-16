@@ -38,8 +38,10 @@ function addExtFiles(config)
 	function addExtFilesSub2(cond, type, name, ismsvc)
 		if cond and config[type .. "-" .. name] then
 			if is_plat("windows", "mingw") and ismsvc then
+				print("Added subdirectory (msvc)")
 				add_files(type .. "/" .. name .. "/msvc_**.asm")
 			else
+				print("Added subdirectory (unix)")
 				add_files(type .. "/" .. name .. "/unix_**.S")
 			end
 			add_files(type .. "/" .. name .. "/**.cpp")
