@@ -1,8 +1,9 @@
-archplat_config = {}
-archplat_config["arch-x86"] = true
-archplat_config["arch-aarch64"] = true
-archplat_config["plat-unix"] = true
-archplat_config["plat-windows"] = true
+local config = {
+	["arch-x86"] = true,
+	["arch-aarch64"] = true,
+	["plat-unix"] = true,
+	["plat-windows"] = true,
+}
 
 includes("../../utils.lua")
 
@@ -11,5 +12,5 @@ set_kind("static")
 add_packages("fmt", "boost", "libffi")
 add_deps("openminecraft-mem", "openminecraft-log", "openminecraft-binary")
 add_files("**.cpp|arch/**|plat/**")
-addExtFiles(archplat_config)
+addExtFiles(config)
 add_includedirs("../../include")
