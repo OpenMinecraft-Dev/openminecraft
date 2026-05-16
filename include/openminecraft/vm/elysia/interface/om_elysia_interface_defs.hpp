@@ -500,6 +500,11 @@ struct OMElysiaJNIEnv
     {
         return internal->NewStringUTF(this, string);
     }
+
+    OMElysiaNativeHandle *GetObjectField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID)
+    {
+        return internal->GetObjectField(this, obj, fieldID);
+    }
 };
 #endif
 } // namespace openminecraft::vm::elysia

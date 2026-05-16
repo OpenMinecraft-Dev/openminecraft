@@ -10,7 +10,7 @@ using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::elysia
 {
-OMElysiaOopManager::OMElysiaOopManager(OMElysiaVirtualWorld *vw) : world(vw)
+OMElysiaOopManager::OMElysiaOopManager(OMElysiaVirtualWorld *vw) : world(vw), logger("OMElysiaOopManager", this)
 {
 }
 OMElysiaOopManager::~OMElysiaOopManager()
@@ -66,7 +66,7 @@ OMElysiaOop *OMElysiaOopManager::allocateString(std::string &target)
     return strWrp;
 }
 
-OMElysiaKlass *OMElysiaOopManager::oopGetKlass(void *base)
+OMElysiaKlass *OMElysiaOopManager::oopGetKlass(OMElysiaOop *base)
 {
     if (world->metaspaceHeap.enablePtrCompress())
     {
@@ -79,7 +79,7 @@ OMElysiaKlass *OMElysiaOopManager::oopGetKlass(void *base)
     }
 }
 
-void OMElysiaOopManager::oopAccessPointerField(void *base, uint64_t offset, void *ptrToWrite)
+void OMElysiaOopManager::oopAccessPointerField(OMElysiaOop *base, uint64_t offset, void *ptrToWrite)
 {
     if (world->mainHeap.enablePtrCompress())
     {
@@ -90,19 +90,20 @@ void OMElysiaOopManager::oopAccessPointerField(void *base, uint64_t offset, void
         *reinterpret_cast<void **>(oopAccessField(base, offset)) = ptrToWrite;
     }
 }
-void *OMElysiaOopManager::oopAccessPointerField(void *base, uint64_t offset)
+OMElysiaOop *OMElysiaOopManager::oopAccessPointerField(OMElysiaOop *base, uint64_t offset)
 {
     if (world->mainHeap.enablePtrCompress())
     {
-        return world->mainHeap.decompress(*reinterpret_cast<uint32_t *>(oopAccessField(base, offset)));
+        return reinterpret_cast<OMElysiaOop *>(
+            world->mainHeap.decompress(*reinterpret_cast<uint32_t *>(oopAccessField(base, offset))));
     }
     else
     {
-        return *reinterpret_cast<void **>(oopAccessField(base, offset));
+        return *reinterpret_cast<OMElysiaOop **>(oopAccessField(base, offset));
     }
 }
 
-uintptr_t OMElysiaOopManager::oopAccessField(void *base, uint64_t offset)
+uintptr_t OMElysiaOopManager::oopAccessField(OMElysiaOop *base, uint64_t offset)
 {
     return reinterpret_cast<uintptr_t>(base) + oopHeaderLength() + offset;
 }

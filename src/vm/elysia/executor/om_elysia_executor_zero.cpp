@@ -68,7 +68,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
     // function in vtable
     if (!m->isStatic() && !m->isPrivate() && !m->isInit())
     {
-        auto oop = reinterpret_cast<void **>(frame)[-1];
+        auto oop = reinterpret_cast<OMElysiaOop **>(frame)[-1];
         auto klass = world->oopManager->oopGetKlass(oop);
 
         if (klass->vtable && klass->vtableLength)

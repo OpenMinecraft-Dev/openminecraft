@@ -17,7 +17,8 @@ void Java_java_lang_System_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *k
     env->RegisterNatives(klass, mm, 1);
 }
 
-OMElysiaOop *Java_java_lang_System_initProperties(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaOop *properties)
+OMElysiaNativeHandle *Java_java_lang_System_initProperties(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
+                                                           OMElysiaNativeHandle *properties)
 {
     return properties;
 }
@@ -34,7 +35,8 @@ void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *kl
     env->RegisterNatives(klass, mm, 1);
 }
 
-OMElysiaOop *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaOop *name)
+OMElysiaNativeHandle *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
+                                                             OMElysiaNativeHandle *name)
 {
     auto k = env->FindClass("java/lang/Class");
     auto field = env->GetFieldID(k, "name", "Ljava/lang/String;");
@@ -43,6 +45,11 @@ OMElysiaOop *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env, OMElysi
     auto k2 = env->FindClass("float");
 
     logger.info("{} @+0x{:x} {} {}", (void *)oop, field->offset, (void *)name, (void *)k2);
+
+    auto kstr = env->FindClass("java/lang/String");
+    auto kfield = env->GetFieldID(kstr, "value", "[C");
+    logger.info("access field at {}", (void *)env->GetObjectField(name, kfield)->object);
+
     while (true)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));

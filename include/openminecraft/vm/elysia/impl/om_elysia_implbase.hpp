@@ -3,7 +3,6 @@
 
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
-#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 namespace openminecraft::vm::elysia
 {
 class OMElysiaVirtualWorld;
@@ -16,9 +15,10 @@ extern "C"
     void Java_java_lang_System_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass);
     void Java_java_lang_Object_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass);
     void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass);
-    OMElysiaOop *Java_java_lang_System_initProperties(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
-                                                      OMElysiaOop *properties);
-    OMElysiaOop *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaOop *name);
+    OMElysiaNativeHandle *Java_java_lang_System_initProperties(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
+                                                               OMElysiaNativeHandle *properties);
+    OMElysiaNativeHandle *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
+                                                                 OMElysiaNativeHandle *name);
 }
 }; // namespace openminecraft::vm::elysia::impl
 

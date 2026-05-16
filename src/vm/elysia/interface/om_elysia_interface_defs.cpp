@@ -1,4 +1,5 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "openminecraft/vm/elysia/om_elysia_field.hpp"
@@ -10,6 +11,7 @@
 
 namespace openminecraft::vm::elysia
 {
+static log::OMLogger logger("Elysia JNI Layer");
 static jint interfaceGetVersion(OMElysiaJNIEnv *)
 {
     return JNI_VERSION_1_8;
@@ -80,6 +82,12 @@ static OMElysiaNativeHandle *interfaceNewStringUTF(OMElysiaJNIEnv *env, const ch
     std::string ss(string);
     return env->internal->world->executor->recordLocalRef(env->internal->world->oopManager->allocateString(ss));
 }
+static OMElysiaNativeHandle *interfaceGetObjectField(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj,
+                                                     OMElysiaField *fieldID)
+{
+    auto world = env->internal->world;
+    return world->executor->recordLocalRef(world->oopManager->oopAccessPointerField(obj->object, fieldID->offset));
+}
 void initBaseInterface(OMElysiaJNIEnv env)
 {
     env.internal->GetVersion = interfaceGetVersion;
@@ -91,5 +99,6 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->GetFieldID = interfaceGetFieldID;
     env.internal->NewCharArray = interfaceNewCharArray;
     env.internal->NewStringUTF = interfaceNewStringUTF;
+    env.internal->GetObjectField = interfaceGetObjectField;
 }
 } // namespace openminecraft::vm::elysia

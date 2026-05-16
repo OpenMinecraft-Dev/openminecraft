@@ -1,4 +1,5 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"

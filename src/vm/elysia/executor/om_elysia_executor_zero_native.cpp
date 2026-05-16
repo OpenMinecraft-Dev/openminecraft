@@ -24,7 +24,7 @@ static void cleanupLocalRef()
         mem::allocator::tracedFreeElysia(current);
         current = oldCurr;
     }
-    tc->zero.frame->flag = 0;
+    tc->zero.frame->flag = nullptr;
 }
 OMElysiaNativeHandle *OMElysiaExecutorZero::recordLocalRef(OMElysiaOop *oop)
 {
@@ -45,6 +45,7 @@ OMElysiaNativeHandle *OMElysiaExecutorZero::recordLocalRef(OMElysiaOop *oop)
         newnode->next = oldnode;
         newnode->object = oop;
         tc->zero.frame->flag = newnode;
+        oldnode = newnode;
     }
 
     oop->markword &= ~markEden;
@@ -55,7 +56,8 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     auto tc = thisThread.metadata;
     tc->zero.frame->flag = mem::allocator::tracedCallocElysia(1, sizeof(OMElysiaNativeHandle));
 
-    std::vector<std::variant<jint, jbyte, jboolean, jshort, jchar, jfloat, jlong, jdouble, OMElysiaOop *>> rawargs;
+    std::vector<std::variant<jint, jbyte, jboolean, jshort, jchar, jfloat, jlong, jdouble, OMElysiaNativeHandle *>>
+        rawargs;
     std::vector<ffi_type *> rawargtypes;
 
     uint8_t argTypes[255];
@@ -66,7 +68,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
 
     if (!isStatic)
     {
-        rawargs.push_back(zeroStackLoadLocal<OMElysiaOop *>(argid));
+        rawargs.push_back(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
         rawargtypes.push_back(&ffi_type_pointer);
         ++argid;
     }
@@ -89,7 +91,11 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
             ARGTYPE_CASE(argTypeChar, jchar, &ffi_type_uint16);
             ARGTYPE_CASE(argTypeInt, jint, &ffi_type_sint32);
             ARGTYPE_CASE(argTypeFloat, jfloat, &ffi_type_float);
-            ARGTYPE_CASE(argTypeReference, OMElysiaOop *, &ffi_type_pointer);
+        case argTypeReference:
+            rawargs.push_back(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
+            rawargtypes.push_back(&ffi_type_pointer);
+            ++argid;
+            break;
         default:
             throw std::logic_error("not supported yet!");
         }
@@ -131,7 +137,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
         try_type(jshort);
         try_type(jlong);
         try_type(jdouble);
-        try_type(OMElysiaOop *);
+        try_type(OMElysiaNativeHandle *);
     }
 
     ffi_type *retType;
