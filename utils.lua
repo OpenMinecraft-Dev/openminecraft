@@ -15,7 +15,7 @@ function is_arch_alias(arch)
 		["x86"] = function()
 			return is_arch("x86", "i386", "x86_64", "x64", "amd64")
 		end,
-		["arm64"] = function()
+		["aarch64"] = function()
 			return is_arch("arm64-v8a", "arm64")
 		end,
 		["arm"] = function()
@@ -55,6 +55,30 @@ function is_plat_alias(plat)
 	return is_plat(plat)
 end
 
+PLATFORMS = {
+	"unix",
+	"windows",
+	"linux",
+	"bsd",
+	"macos",
+	"android",
+	"ios",
+	"harmony",
+	"desktop",
+}
+ARCHITECTURES = {
+	"x86",
+	"aarch64",
+	"arm",
+	"loongarch",
+	"mips",
+	"mips64",
+	"ppc",
+	"ppc64",
+	"riscv",
+	"riscv64",
+}
+
 -- platform-dependent & arch-dependent source config
 -- platform: plat-$(platform_name)
 -- arch: arch-$(arch_name)
@@ -70,15 +94,9 @@ function addExtFiles(config)
 		end
 	end
 
-	addExtFilesSub("plat", "unix")
-	addExtFilesSub("plat", "windows")
-	addExtFilesSub("plat", "linux")
-	addExtFilesSub("plat", "bsd")
-	addExtFilesSub("plat", "macos")
-	addExtFilesSub("plat", "android")
-	addExtFilesSub("plat", "ios")
-	addExtFilesSub("plat", "harmony")
-	addExtFilesSub("plat", "desktop")
+	for _, plat in ipairs(PLATFORMS) do
+		addExtFilesSub("plat", plat)
+	end
 
 	function addExtFilesSub2(type, name, ismsvc)
 		if is_arch_alias(name) and config[type .. "-" .. name] then
@@ -95,14 +113,7 @@ function addExtFiles(config)
 		end
 	end
 
-	addExtFilesSub2("arch", "x86", true)
-	addExtFilesSub2("arch", "aarch64", true)
-	addExtFilesSub2("arch", "arm", false)
-	addExtFilesSub2("arch", "loongarch", false)
-	addExtFilesSub2("arch", "mips64", false)
-	addExtFilesSub2("arch", "mips", false)
-	addExtFilesSub2("arch", "ppc", false)
-	addExtFilesSub2("arch", "ppc64", false)
-	addExtFilesSub2("arch", "riscv", false)
-	addExtFilesSub2("arch", "riscv64", false)
+	for _, arch in ipairs(ARCHITECTURES) do
+		addExtFilesSub2("arch", arch, arch == "x86" or arch == "aarch64")
+	end
 end
