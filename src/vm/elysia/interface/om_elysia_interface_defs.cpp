@@ -88,6 +88,11 @@ static OMElysiaNativeHandle *interfaceGetObjectField(OMElysiaJNIEnv *env, OMElys
     auto world = env->internal->world;
     return world->executor->recordLocalRef(world->oopManager->oopAccessPointerField(obj->object, fieldID->offset));
 }
+// TODO: copy impl!
+static jchar *interfaceGetCharArrayElements(OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jboolean *isCopy)
+{
+    return env->internal->world->oopManager->arrAccess<jchar>(reinterpret_cast<OMElysiaArrayOop *>(array->object));
+}
 void initBaseInterface(OMElysiaJNIEnv env)
 {
     env.internal->GetVersion = interfaceGetVersion;
@@ -100,5 +105,6 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->NewCharArray = interfaceNewCharArray;
     env.internal->NewStringUTF = interfaceNewStringUTF;
     env.internal->GetObjectField = interfaceGetObjectField;
+    env.internal->GetCharArrayElements = interfaceGetCharArrayElements;
 }
 } // namespace openminecraft::vm::elysia

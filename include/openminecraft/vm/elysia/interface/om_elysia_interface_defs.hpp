@@ -505,6 +505,11 @@ struct OMElysiaJNIEnv
     {
         return internal->GetObjectField(this, obj, fieldID);
     }
+
+    jchar *GetCharArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy)
+    {
+        return internal->GetCharArrayElements(this, array, isCopy);
+    }
 };
 #endif
 } // namespace openminecraft::vm::elysia

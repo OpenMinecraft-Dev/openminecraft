@@ -48,7 +48,7 @@ OMElysiaNativeHandle *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env
 
     auto kstr = env->FindClass("java/lang/String");
     auto kfield = env->GetFieldID(kstr, "value", "[C");
-    logger.info("access field at {}", (void *)env->GetObjectField(name, kfield)->object);
+    logger.info("access field at {}", (void *)env->GetCharArrayElements(env->GetObjectField(name, kfield), nullptr));
 
     while (true)
     {
