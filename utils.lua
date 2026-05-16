@@ -50,7 +50,7 @@ function addExtFiles(config)
 		end
 	end
 
-	addExtFilesSub2(is_arch("x86", "i386", "x86_64", "x86"), "arch", "x86", true)
+	addExtFilesSub2(is_arch("x86", "i386", "x86_64", "x86", "x64", "amd64"), "arch", "x86", true)
 	addExtFilesSub2(is_arch("arm64-v8a", "arm64"), "arch", "aarch64", true)
 	addExtFilesSub2(is_arch("armeabi", "armv7k", "armeabi-v7a", "arm", "armv7s", "armv7"), "arch", "arm", false)
 	addExtFilesSub2(is_arch("loong64"), "arch", "loongarch", false)
