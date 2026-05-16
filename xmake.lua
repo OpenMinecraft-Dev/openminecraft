@@ -14,8 +14,7 @@ add_rules("mode.asan")
 includes("utils.lua")
 includes("extlibs/vulkan.lua")
 includes("extlibs/harfbuzz.lua")
-
-set_warnings("all")
+includes("extlibs/sdl_port.lua")
 
 --------------------------------------------------------------------------------
 -- Platform configs
