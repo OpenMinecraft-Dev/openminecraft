@@ -15,6 +15,8 @@ includes("utils.lua")
 includes("extlibs/vulkan.lua")
 includes("extlibs/harfbuzz.lua")
 
+set_warnings("all")
+
 --------------------------------------------------------------------------------
 -- Platform configs
 --------------------------------------------------------------------------------

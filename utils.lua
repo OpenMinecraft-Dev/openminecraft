@@ -10,34 +10,30 @@ function vulkandyn()
 	return is_plat("linux", "bsd", "android", "mingw")
 end
 
-function addExtFiles()
-	if not is_plat("windows", "mingw") then
-		add_files("plat/unix/**.cpp")
+-- platform-dependent & arch-dependent source config
+-- platform: plat-$(platform_name)
+-- arch: arch-%(arch_name)
+function addExtFiles(config)
+	if config == nil then
+		return
 	end
-	if is_plat("windows", "mingw") then
-		add_files("plat/windows/**.cpp")
+
+	function addExtFilesSub(cond, type, name)
+		if cond and config[type .. "-" .. name] then
+			add_files(type .. "/" .. name .. "**.cpp")
+			print("Added subdirectory " .. type .. "/" .. name)
+		end
 	end
-	if is_plat("linux") then
-		add_files("plat/linux/**.cpp")
-	end
-	if is_plat("bsd") then
-		add_files("plat/bsd/**.cpp")
-	end
-	if is_plat("macosx") then
-		add_files("plat/macos/**.cpp")
-	end
-	if is_plat("android") then
-		add_files("plat/android/**.cpp")
-	end
-	if is_plat("iphoneos") then
-		add_files("plat/ios/**.cpp")
-	end
-	if is_plat("harmony") then
-		add_files("plat/harmony/**.cpp")
-	end
-	if not mobile() then
-		add_files("plat/desktop/**.cpp")
-	end
+
+	addExtFilesSub(not is_plat("windows", "mingw"), "plat", "unix")
+	addExtFilesSub(is_plat("windows", "mingw"), "plat", "windows")
+	addExtFilesSub(is_plat("linux"), "plat", "linux")
+	addExtFilesSub(is_plat("bsd"), "plat", "bsd")
+	addExtFilesSub(is_plat("macosx"), "plat", "macos")
+	addExtFilesSub(is_plat("android"), "plat", "android")
+	addExtFilesSub(is_plat("iphoneos"), "plat", "iphoneos")
+	addExtFilesSub(is_plat("harmony"), "plat", "harmony")
+	addExtFilesSub(not mobile(), "plat", "desktop")
 
 	if is_arch("x86", "i386", "x86_64", "x64") then
 		if not is_plat("windows", "mingw") then
