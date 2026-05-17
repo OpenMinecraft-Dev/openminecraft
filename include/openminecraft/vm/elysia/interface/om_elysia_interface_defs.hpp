@@ -510,6 +510,16 @@ struct OMElysiaJNIEnv
     {
         return internal->GetCharArrayElements(this, array, isCopy);
     }
+
+    const char *GetStringUTFChars(OMElysiaNativeHandle *str, jboolean *isCopy)
+    {
+        return internal->GetStringUTFChars(this, str, isCopy);
+    }
+
+    void ReleaseStringUTFChars(OMElysiaNativeHandle *str, const char *chars)
+    {
+        return internal->ReleaseStringUTFChars(this, str, chars);
+    }
 };
 #endif
 } // namespace openminecraft::vm::elysia

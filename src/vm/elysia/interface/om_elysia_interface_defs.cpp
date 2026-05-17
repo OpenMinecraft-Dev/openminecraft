@@ -8,6 +8,7 @@
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include "openminecraft/vm/encoding/om_encoding_utf.hpp"
 #include <cstring>
 
 namespace openminecraft::vm::elysia
@@ -132,6 +133,32 @@ static jchar *interfaceGetCharArrayElements(OMElysiaJNIEnv *env, OMElysiaNativeH
     return fetchResult;
 }
 
+const char *interfaceGetStringUTFChars(OMElysiaJNIEnv *env, OMElysiaNativeHandle *str, jboolean *isCopy)
+{
+    auto kstr = env->FindClass("java/lang/String");
+    auto kfield = env->GetFieldID(kstr, "value", "[C");
+
+    auto arrdata = env->GetObjectField(str, kfield);
+    auto data = env->GetCharArrayElements(arrdata, nullptr);
+    if (isCopy)
+    {
+        *isCopy = true;
+    }
+
+    enterInterface;
+    auto s = encoding::utf16ToUtf8New(data, reinterpret_cast<OMElysiaArrayOop *>(arrdata->object)->length);
+    auto result = reinterpret_cast<char *>(mem::allocator::tracedMallocElysia(s.size() + 1));
+    std::memcpy(result, s.c_str(), s.size());
+    result[s.size()] = '\0';
+    exitInterface;
+    return result;
+}
+
+void interfaceReleaseStringUTFChars(OMElysiaJNIEnv *env, OMElysiaNativeHandle *str, const char *chars)
+{
+    mem::allocator::tracedFreeElysia((void *)(chars));
+}
+
 void initBaseInterface(OMElysiaJNIEnv env)
 {
     env.internal->GetVersion = interfaceGetVersion;
@@ -145,5 +172,7 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->NewStringUTF = interfaceNewStringUTF;
     env.internal->GetObjectField = interfaceGetObjectField;
     env.internal->GetCharArrayElements = interfaceGetCharArrayElements;
+    env.internal->GetStringUTFChars = interfaceGetStringUTFChars;
+    env.internal->ReleaseStringUTFChars = interfaceReleaseStringUTFChars;
 }
 } // namespace openminecraft::vm::elysia

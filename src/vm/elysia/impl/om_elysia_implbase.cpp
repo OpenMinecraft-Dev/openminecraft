@@ -40,13 +40,11 @@ OMElysiaNativeHandle *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env
     auto field = env->GetFieldID(k, "name", "Ljava/lang/String;");
     auto oop = env->AllocObject(k);
 
-    auto k2 = env->FindClass("float");
+    auto nn = env->GetStringUTFChars(name, nullptr);
+    auto k2 = env->FindClass(nn);
+    env->ReleaseStringUTFChars(name, nn);
 
-    logger.info("{} @+0x{:x}", (void *)oop, field->offset);
-
-    auto kstr = env->FindClass("java/lang/String");
-    auto kfield = env->GetFieldID(kstr, "value", "[C");
-    logger.info("access field at {}", (void *)env->GetCharArrayElements(env->GetObjectField(name, kfield), nullptr));
+    logger.info("{} @+0x{:x} {}", (void *)oop, field->offset, (void *)k2);
 
     throw std::logic_error("not implemented");
 }

@@ -4,48 +4,93 @@
 
 #include <cstdint>
 #include <cstring>
+#include <tuple>
 
 namespace openminecraft::vm::encoding
 {
-std::tuple<elysia::jchar *, elysia::jsize> utf8ToUtf16New(std::string str)
+std::tuple<elysia::jchar *, elysia::jsize> utf8ToUtf16New(std::string &str)
 {
     std::vector<elysia::jchar> data;
-    for (auto itt = str.begin(); itt < str.end(); ++itt)
-    {
-        if ((*itt & 0b10000000) == 0)
-        {
-            data.push_back(static_cast<elysia::jchar>(*itt));
-        }
-        else if ((*itt >> 5) == 0b110)
-        {
-            elysia::jchar a = (*itt & 0b00011111) << 6;
-            ++itt;
-            a += (static_cast<uint8_t>(*itt) & 0b00111111);
-            data.push_back(a);
-        }
-        else if ((*itt >> 4) == 0b1110)
-        {
-            elysia::jchar a = (*itt & 0b00001111) << 12;
-            ++itt;
-            a += (static_cast<uint8_t>(*itt) & 0b00111111) << 6;
-            ++itt;
-            a += (static_cast<uint8_t>(*itt) & 0b00111111);
-            data.push_back(a);
-        }
-        else if ((*itt >> 3) == 0b11110)
-        {
-            int a = (*itt & 0b00000111) << 18;
-            ++itt;
-            a += (static_cast<uint8_t>(*itt) & 0b00111111) << 12;
-            ++itt;
-            a += (static_cast<uint8_t>(*itt) & 0b00111111) << 6;
-            ++itt;
-            a += (static_cast<uint8_t>(*itt) & 0b00111111);
+    const auto end = str.end();
 
-            data.push_back(static_cast<elysia::jchar>(0b11011000 | ((a >> 18) & 0b11) | (a >> 10) & 0b11111111));
-            data.push_back(static_cast<elysia::jchar>(0b11011100 | ((a >> 8) & 0b11) | a & 0b11111111));
+    for (auto it = str.begin(); it != end; ++it)
+    {
+        uint8_t byte = static_cast<uint8_t>(*it);
+
+        if ((byte & 0x80) == 0)
+        {
+            data.push_back(byte);
+            continue;
+        }
+
+        int extra = 0;
+        uint32_t codepoint = 0;
+        uint8_t mask = 0;
+
+        if ((byte >> 5) == 0b110)
+        {
+            extra = 1;
+            mask = 0x1F;
+            codepoint = byte & mask;
+        }
+        else if ((byte >> 4) == 0b1110)
+        {
+            extra = 2;
+            mask = 0x0F;
+            codepoint = byte & mask;
+        }
+        else if ((byte >> 3) == 0b11110)
+        {
+            extra = 3;
+            mask = 0x07;
+            codepoint = byte & mask;
+        }
+        else
+        {
+            continue;
+        }
+
+        if (std::distance(it, end) <= extra)
+            break;
+
+        bool valid = true;
+        for (int i = 0; i < extra; ++i)
+        {
+            ++it;
+            uint8_t next = static_cast<uint8_t>(*it);
+            if ((next & 0xC0) != 0x80)
+            {
+                valid = false;
+                break;
+            }
+            codepoint = (codepoint << 6) | (next & 0x3F);
+        }
+        if (!valid)
+            continue;
+
+        if (extra == 1 && codepoint < 0x80)
+            continue;
+        if (extra == 2 && codepoint < 0x800)
+            continue;
+        if (extra == 3 && codepoint < 0x10000)
+            continue;
+        if (codepoint >= 0xD800 && codepoint <= 0xDFFF)
+            continue;
+        if (codepoint > 0x10FFFF)
+            continue;
+
+        if (codepoint <= 0xFFFF)
+        {
+            data.push_back(static_cast<elysia::jchar>(codepoint));
+        }
+        else
+        {
+            uint32_t u = codepoint - 0x10000;
+            data.push_back(static_cast<elysia::jchar>(0xD800 | (u >> 10)));
+            data.push_back(static_cast<elysia::jchar>(0xDC00 | (u & 0x3FF)));
         }
     }
+
     elysia::jchar *datar =
         reinterpret_cast<elysia::jchar *>(mem::allocator::tracedMallocElysia(sizeof(elysia::jchar) * data.size()));
     std::memcpy(datar, data.data(), data.size() * sizeof(elysia::jchar));
@@ -53,7 +98,57 @@ std::tuple<elysia::jchar *, elysia::jsize> utf8ToUtf16New(std::string str)
 }
 std::string utf16ToUtf8New(elysia::jchar *arr, elysia::jsize length)
 {
-    return "";
+    std::string result;
+    for (elysia::jsize i = 0; i < length; ++i)
+    {
+        uint32_t codepoint = arr[i];
+
+        if ((arr[i] & 0xFC00) == 0xD800 && i + 1 < length)
+        {
+            uint16_t low = arr[i + 1];
+            if ((low & 0xFC00) == 0xDC00)
+            {
+                codepoint = 0x10000 + (((arr[i] & 0x3FF) << 10) | (low & 0x3FF));
+                ++i;
+            }
+            else
+            {
+                continue;
+            }
+        }
+        else if ((arr[i] & 0xFC00) == 0xDC00)
+        {
+            continue;
+        }
+
+        if (codepoint <= 0x7F)
+        {
+            result += static_cast<char>(codepoint);
+        }
+        else if (codepoint <= 0x7FF)
+        {
+            result += static_cast<char>(0xC0 | (codepoint >> 6));
+            result += static_cast<char>(0x80 | (codepoint & 0x3F));
+        }
+        else if (codepoint <= 0xFFFF)
+        {
+            result += static_cast<char>(0xE0 | (codepoint >> 12));
+            result += static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F));
+            result += static_cast<char>(0x80 | (codepoint & 0x3F));
+        }
+        else if (codepoint <= 0x10FFFF)
+        {
+            result += static_cast<char>(0xF0 | (codepoint >> 18));
+            result += static_cast<char>(0x80 | ((codepoint >> 12) & 0x3F));
+            result += static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F));
+            result += static_cast<char>(0x80 | (codepoint & 0x3F));
+        }
+        else
+        {
+            result += "\xef\xbf\xbd";
+        }
+    }
+    return result;
 }
 
 std::string utf32ToUtf8(std::vector<int> cps)
@@ -86,46 +181,5 @@ std::string utf32ToUtf8(std::vector<int> cps)
     }
     auto ss = std::string(s.begin(), s.end());
     return ss;
-}
-std::vector<int> utf16ToUtf32(std::vector<uint8_t> d)
-{
-    std::vector<int> res;
-    for (auto itt = d.begin(); itt != d.end(); ++itt)
-    {
-        if ((*itt >> 2) == 0b110110)
-        {
-            ++itt;
-            ++itt;
-            if ((*itt >> 2) == 0b110111)
-            {
-                --itt;
-                --itt;
-
-                int i = (*itt & 0b11) << 18;
-                ++itt;
-                i |= *itt << 10;
-                ++itt;
-                i |= (*itt & 0b11) << 8;
-                ++itt;
-                i |= *itt;
-                res.push_back(i);
-            }
-            else
-            {
-                --itt;
-                --itt;
-                goto normal;
-            }
-        }
-        else
-        {
-        normal:
-            int i = *itt << 8;
-            ++itt;
-            i |= *itt;
-            res.push_back(i);
-        }
-    }
-    return res;
 }
 } // namespace openminecraft::vm::encoding
