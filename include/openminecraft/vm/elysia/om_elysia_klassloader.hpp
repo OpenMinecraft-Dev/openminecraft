@@ -47,8 +47,6 @@ class OMElysiaKlassloader
     }
 
   private:
-    void unloadClass(OMElysiaKlass *klass);
-
     OMElysiaVirtualWorld *world;
     std::unordered_map<binary::hash::hash_t, OMElysiaKlass *> loadedClasses;
 

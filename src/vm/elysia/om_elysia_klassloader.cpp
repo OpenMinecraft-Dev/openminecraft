@@ -76,69 +76,6 @@ void OMElysiaKlassloader::markKlass(OMElysiaKlass *klass)
     loadedClasses[binary::hash::hash_compile_time(klass->name)] = klass;
 }
 
-void OMElysiaKlassloader::unloadClass(OMElysiaKlass *klass)
-{
-    loadedClasses.erase(binary::hash::hash_compile_time(klass->name));
-    if (klass->vtable)
-    {
-        world->metaspaceHeap.deallocateArray(klass->vtable, klass->vtableLength);
-    }
-    if (klass->methods)
-    {
-        for (int i = 0; i < klass->methodCount; i++)
-        {
-            auto &m = klass->methods[i];
-            world->metaspaceHeap.deallocateStr(m.name);
-            world->metaspaceHeap.deallocateStr(m.descriptor);
-            if (m.code)
-            {
-                world->metaspaceHeap.deallocate(m.code, m.codeLength);
-            }
-        }
-
-        world->metaspaceHeap.deallocateArray(klass->methods, klass->methodCount);
-    }
-
-    if (klass->isInstance() && klass->toInstance()->fields)
-    {
-        auto iklass = klass->toInstance();
-        for (int i = 0; i < iklass->fieldCount; i++)
-        {
-            auto &f = iklass->fields[i];
-            world->metaspaceHeap.deallocateStr(f.name);
-            world->metaspaceHeap.deallocateStr(f.desc);
-        }
-
-        world->metaspaceHeap.deallocateArray(iklass->fields, iklass->fieldCount);
-    }
-
-    world->metaspaceHeap.deallocateStr(klass->name);
-    switch (klass->type)
-    {
-    case InstanceKlass: {
-        world->metaspaceHeap.deallocate(klass, sizeof(OMElysiaInstanceKlass));
-        auto ii = klass->toInstance();
-        if (ii->interfaceImpls)
-        {
-            world->metaspaceHeap.deallocate(ii->interfaceImpls, sizeof(void *) * ii->interfaceImplCount);
-        }
-
-        if (ii->staticBlock)
-        {
-            world->metaspaceHeap.deallocate(ii->staticBlock, ii->staticLength);
-        }
-
-        world->metaspaceHeap.deallocateArray(ii->constantPool, ii->constantPoolCount);
-        break;
-    }
-    case PrimitiveKlass:
-    default:
-        break;
-    }
-
-    world->metaspaceHeap.deallocate(klass);
-}
-
 OMElysiaKlass *OMElysiaKlassloader::findClass(std::string s)
 {
     return loadedClasses[binary::hash::hash_compile_time(s.c_str())];
