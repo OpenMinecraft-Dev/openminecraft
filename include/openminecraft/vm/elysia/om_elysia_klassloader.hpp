@@ -21,8 +21,9 @@ class OMElysiaKlassloader
 
     void markKlass(OMElysiaKlass *klass);
 
-    void loadClass(std::string name);
-    void loadClass(std::istream *istr);
+    void loadClassWithoutMirror(std::string name);
+    void loadClassWithoutMirror(std::istream *istr);
+    void fixClassMirror(OMElysiaKlass *klass);
 
     OMElysiaKlass *findClass(std::string s);
 
@@ -31,10 +32,11 @@ class OMElysiaKlassloader
         auto l = findClass(s);
         if (l)
         {
+            fixClassMirror(l);
             return l;
         }
 
-        loadClass(s);
+        loadClassWithoutMirror(s);
         return findClass(s);
     }
 

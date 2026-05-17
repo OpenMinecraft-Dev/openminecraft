@@ -518,7 +518,12 @@ struct OMElysiaJNIEnv
 
     void ReleaseStringUTFChars(OMElysiaNativeHandle *str, const char *chars)
     {
-        return internal->ReleaseStringUTFChars(this, str, chars);
+        internal->ReleaseStringUTFChars(this, str, chars);
+    }
+
+    void SetObjectField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID, OMElysiaNativeHandle *val)
+    {
+        internal->SetObjectField(this, obj, fieldID, val);
     }
 };
 #endif

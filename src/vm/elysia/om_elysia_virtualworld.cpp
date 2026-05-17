@@ -21,13 +21,14 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
     oopManager = mem::fast_shared<allocatorTag, OMElysiaOopManager>(this);
     executor = mem::fast_shared<allocatorTag, executor::OMElysiaExecutorZero>(this);
 
-    for (auto &s :
-         {"java/lang/Object", "java/lang/String", "java/lang/Class", "java/lang/Throwable", "java/lang/Thread",
-          "java/lang/System", "java/lang/Byte", "java/lang/Integer", "java/lang/Short", "java/lang/Long",
-          "java/lang/Float", "java/lang/Double", "java/lang/Boolean", "java/lang/Character", "java/lang/Void",
-          "java/lang/Runtime", "java/lang/StringBuilder", "java/lang/Process", "sun/misc/Launcher"})
+    auto klasses = {"java/lang/Object",        "java/lang/String",    "java/lang/Class",  "java/lang/Throwable",
+                    "java/lang/Thread",        "java/lang/System",    "java/lang/Byte",   "java/lang/Integer",
+                    "java/lang/Short",         "java/lang/Long",      "java/lang/Float",  "java/lang/Double",
+                    "java/lang/Boolean",       "java/lang/Character", "java/lang/Void",   "java/lang/Runtime",
+                    "java/lang/StringBuilder", "java/lang/Process",   "sun/misc/Launcher"};
+    for (auto &s : klasses)
     {
-        klassLoader->loadClass(s);
+        klassLoader->loadClassWithoutMirror(s);
     }
 
     auto clsobj = klassLoader->findClass("java/lang/Object");
@@ -41,8 +42,13 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
 
     klassLoader->constructPrimitiveClass("void");
 
-    std::ifstream iss("../Test.class", std::ios::binary);
-    klassLoader->loadClass(&iss);
+    for (auto &s : klasses)
+    {
+        klassLoader->fixClassMirror(klassLoader->findClass(s));
+    }
+
+    /*std::ifstream iss("../Test.class", std::ios::binary);
+    klassLoader->loadClassWithoutMirror(&iss);*/
 
     auto tt = new std::thread([&]() {
         log::multithread::registerCurrentThreadName("main");

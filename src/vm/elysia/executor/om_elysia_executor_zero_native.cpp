@@ -187,9 +187,15 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     {
     case argTypeVoid:
         break;
-    case argTypeReference:
-        zeroStackPush(*reinterpret_cast<OMElysiaOop **>(retValue));
+    case argTypeReference: {
+        auto vv = *reinterpret_cast<OMElysiaNativeHandle **>(retValue);
+        zeroStackPush(vv->object);
+        if (vv->next == vv)
+        {
+            mem::allocator::tracedFreeElysia(vv);
+        }
         break;
+    }
     case argTypeInt:
     case argTypeShort:
     case argTypeChar:

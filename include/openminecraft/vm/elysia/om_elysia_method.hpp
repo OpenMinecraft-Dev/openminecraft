@@ -38,6 +38,11 @@ struct OMElysiaMethod
         return std::strcmp(name, "<init>") == 0;
     }
 
+    bool isClinit()
+    {
+        return std::strcmp(name, "<clinit>") == 0;
+    }
+
     bool isSame(OMElysiaMethod *method)
     {
         return std::strcmp(method->name, name) == 0 && std::strcmp(method->descriptor, descriptor) == 0;

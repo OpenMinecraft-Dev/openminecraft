@@ -34,7 +34,7 @@ OMElysiaMethod *OMElysiaKlass::findMethod(const char *name, const char *desc)
     return nullptr;
 }
 
-void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id)
+void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id, bool flg)
 {
     if (constantPool[id])
     {
@@ -79,6 +79,10 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id)
         }
 
         auto cls = nativeKlassloader->fetchOrLoadClass(clsname);
+        if (flg)
+        {
+            throw std::logic_error("not found!");
+        }
         constantPool[id] = cls;
         return cls;
     }

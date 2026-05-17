@@ -5,6 +5,7 @@
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
+#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 #include <cstring>
 #include <fstream>
@@ -143,13 +144,32 @@ OMElysiaKlass *OMElysiaKlassloader::findClass(std::string s)
     return loadedClasses[binary::hash::hash_compile_time(s.c_str())];
 }
 
-void OMElysiaKlassloader::loadClass(std::string name)
+void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
 {
-    std::ifstream istr(fmt::format("vmstd/out/{}.class", name), std::ios::binary);
-    loadClass(&istr);
+    if (klass->mirror)
+    {
+        return;
+    }
+
+    auto kls = findClass("java/lang/Class");
+    auto oop = world->oopManager->allocateOop(kls);
+    auto field = kls->toInstance()->findField("name", "Ljava/lang/String;");
+
+    auto k = std::string(klass->name);
+    auto strobj = world->oopManager->allocateString(k);
+
+    world->oopManager->oopAccessPointerField(oop, field->offset, strobj);
+
+    klass->mirror = oop;
 }
 
-void OMElysiaKlassloader::loadClass(std::istream *istr)
+void OMElysiaKlassloader::loadClassWithoutMirror(std::string name)
+{
+    std::ifstream istr(fmt::format("vmstd/out/{}.class", name), std::ios::binary);
+    loadClassWithoutMirror(&istr);
+}
+
+void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
 {
     classfile::OMClassFileParser par(istr);
     auto clsfile = par.parse().unwrap();
@@ -186,7 +206,7 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
         auto supk = findClass(supclsname);
         if (!supk)
         {
-            loadClass(supclsname);
+            loadClassWithoutMirror(supclsname);
             supk = findClass(supclsname);
         }
 
@@ -205,7 +225,7 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
             auto ithash = binary::hash::hash_compile_time(supclsname.c_str());
             if (!loadedClasses.count(ithash))
             {
-                loadClass(supclsname);
+                loadClassWithoutMirror(supclsname);
             }
 
             klass->interfaceImpls[ii] = findClass(supclsname);
@@ -329,5 +349,7 @@ void OMElysiaKlassloader::loadClass(std::istream *istr)
     {
         klass->staticBlock = nullptr;
     }
+
+    // TODO: mirror creation!
 }
 } // namespace openminecraft::vm::elysia

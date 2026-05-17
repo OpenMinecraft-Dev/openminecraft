@@ -382,7 +382,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             tc->zero.pc += 3;
             break;
         case op_ldc: {
-            auto ff = CURRENT_KLASS->constantPoolFetch(tc->zero.pc[1]);
+            auto ff = CURRENT_KLASS->constantPoolFetch(tc->zero.pc[1], true);
             zeroStackPush(ff);
             tc->zero.pc += 2;
             break;
@@ -659,13 +659,9 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             tc->zero.pc += 3;
             break;
         }
+        case op_invokespecial:
+        case op_invokevirtual:
         case op_invokestatic: {
-            auto ff = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
-            tc->zero.pc += 3;
-            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff));
-            break;
-        }
-        case op_invokespecial: {
             auto ff = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
             tc->zero.pc += 3;
             pushFrame(reinterpret_cast<OMElysiaMethod *>(ff));

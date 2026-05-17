@@ -64,18 +64,9 @@ static jint interfaceRegisterNatives(OMElysiaJNIEnv *env, OMElysiaKlass *clazz, 
 static OMElysiaKlass *interfaceFindClass(OMElysiaJNIEnv *env, const char *name)
 {
     enterInterface;
-beg:
-    auto klass = env->internal->world->klassLoader->findClass(std::string(name));
-    if (!klass)
-    {
-        env->internal->world->klassLoader->loadClass(std::string(name));
-        goto beg;
-    }
-    else
-    {
-        exitInterface;
-        return klass;
-    }
+    recordResult(env->internal->world->klassLoader->fetchOrLoadClass(std::string(name)));
+    exitInterface;
+    return fetchResult;
 }
 static OMElysiaNativeHandle *interfaceAllocObject(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
@@ -133,7 +124,7 @@ static jchar *interfaceGetCharArrayElements(OMElysiaJNIEnv *env, OMElysiaNativeH
     return fetchResult;
 }
 
-const char *interfaceGetStringUTFChars(OMElysiaJNIEnv *env, OMElysiaNativeHandle *str, jboolean *isCopy)
+static const char *interfaceGetStringUTFChars(OMElysiaJNIEnv *env, OMElysiaNativeHandle *str, jboolean *isCopy)
 {
     auto kstr = env->FindClass("java/lang/String");
     auto kfield = env->GetFieldID(kstr, "value", "[C");
@@ -154,9 +145,17 @@ const char *interfaceGetStringUTFChars(OMElysiaJNIEnv *env, OMElysiaNativeHandle
     return result;
 }
 
-void interfaceReleaseStringUTFChars(OMElysiaJNIEnv *env, OMElysiaNativeHandle *str, const char *chars)
+static void interfaceReleaseStringUTFChars(OMElysiaJNIEnv *env, OMElysiaNativeHandle *str, const char *chars)
 {
     mem::allocator::tracedFreeElysia((void *)(chars));
+}
+
+static void interfaceSetObjectField(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID,
+                                    OMElysiaNativeHandle *val)
+{
+    enterInterface;
+    env->internal->world->oopManager->oopAccessPointerField(obj->object, fieldID->offset, val->object);
+    exitInterface;
 }
 
 void initBaseInterface(OMElysiaJNIEnv env)
@@ -174,5 +173,6 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->GetCharArrayElements = interfaceGetCharArrayElements;
     env.internal->GetStringUTFChars = interfaceGetStringUTFChars;
     env.internal->ReleaseStringUTFChars = interfaceReleaseStringUTFChars;
+    env.internal->SetObjectField = interfaceSetObjectField;
 }
 } // namespace openminecraft::vm::elysia
