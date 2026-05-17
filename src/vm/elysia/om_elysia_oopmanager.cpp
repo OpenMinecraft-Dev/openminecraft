@@ -1,7 +1,9 @@
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
+#include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
+#include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 #include "openminecraft/vm/encoding/om_encoding_utf.hpp"
 #include <cstring>
@@ -48,15 +50,12 @@ OMElysiaOop *OMElysiaOopManager::allocateString(std::string &target)
     auto stringKlass = nativeKlassloader->findClass("java/lang/String")->toInstance();
     auto charArrKlass = nativeKlassloader->findClass("[C")->toArray();
 
-    auto u16target = encoding::utf32ToUtf16(encoding::utf8ToUtf32(target));
+    auto u16target = encoding::utf8ToUtf16New(target);
 
     auto oopM = nativeKlassloader->upper()->oopManager;
 
-    auto arr = oopM->allocateArr(charArrKlass, u16target.size());
-    for (int i = 0; i < u16target.size() / 2; i++)
-    {
-        oopM->arrAccess<jchar>(arr)[i] = static_cast<jchar>(u16target[i * 2]) << 8 | u16target[i * 2 + 1];
-    }
+    auto arr = oopM->allocateArr(charArrKlass, std::get<jsize>(u16target));
+    std::memcpy(oopM->arrAccess<jchar>(arr), std::get<jchar *>(u16target), std::get<jsize>(u16target) * sizeof(jchar));
 
     auto strWrp = oopM->allocateOop(stringKlass);
     oopM->oopAccessPointerField(strWrp, 0, arr);

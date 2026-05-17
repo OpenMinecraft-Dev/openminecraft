@@ -42,7 +42,7 @@ OMElysiaNativeHandle *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env
 
     auto k2 = env->FindClass("float");
 
-    logger.info("{} @+0x{:x} {} {}", (void *)oop, field->offset, (void *)name, (void *)k2);
+    logger.info("{} @+0x{:x}", (void *)oop, field->offset);
 
     auto kstr = env->FindClass("java/lang/String");
     auto kfield = env->GetFieldID(kstr, "value", "[C");
