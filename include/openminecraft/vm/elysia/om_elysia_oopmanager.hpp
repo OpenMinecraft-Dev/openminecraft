@@ -8,8 +8,6 @@
 #include <cstdint>
 namespace openminecraft::vm::elysia
 {
-constexpr int markEden = 0x1;
-
 #pragma pack(1)
 struct OMElysiaOop
 {

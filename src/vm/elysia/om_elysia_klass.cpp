@@ -126,7 +126,6 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id)
         auto strWrp = nativeKlassloader->upper()->oopManager->allocateString(const_cast<std::string &>(target));
 
         constantPool[id] = strWrp;
-        strWrp->markword &= ~markEden;
         return constantPool[id];
     }
     default:

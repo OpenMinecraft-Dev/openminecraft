@@ -139,6 +139,8 @@ void OMElysiaExecutorZero::threadInit()
 
         logger.info("virtual stack: {}", (void *)tc->stackStart);
         logger.info("env: {}", (void *)&tc->interface);
+
+        thisThread.switchState(InsideVM);
     }
 }
 
@@ -318,6 +320,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             continue;
         }
 
+        thisThread.switchState(InsideJava);
         switch (*tc->zero.pc)
         {
         case op_nop:
@@ -668,7 +671,6 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto c = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
             auto oop = world->oopManager->allocateOop(reinterpret_cast<OMElysiaKlass *>(c));
             zeroStackPush(oop);
-            oop->markword &= ~markEden;
             tc->zero.pc += 3;
             break;
         }
@@ -708,7 +710,6 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                 world->oopManager->allocateArr(world->klassLoader->findClass(kn)->toArray(), zeroStackPopGet<jint>());
             zeroStackPush(arr);
             tc->zero.pc += 2;
-            arr->markword &= ~markEden;
             break;
         }
         case op_anewarray: {
@@ -723,7 +724,6 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto arr = world->oopManager->allocateArr(klass->toArray(), zeroStackPopGet<jint>());
             zeroStackPush(arr);
             tc->zero.pc += 3;
-            arr->markword &= ~markEden;
             break;
         }
         default:

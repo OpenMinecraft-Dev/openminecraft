@@ -367,10 +367,32 @@ Element buildElysiaThreadStack(OMElysiaThread *thread)
     return gridbox(stk) | flex;
 }
 
+std::string toThreadState(OMElysiaThreadState st)
+{
+    switch (st)
+    {
+    case openminecraft::vm::elysia::Initialized:
+        return "Initialized";
+    case openminecraft::vm::elysia::InsideJava:
+        return "InsideJava";
+    case openminecraft::vm::elysia::InsideNative:
+        return "InsideNative";
+    case openminecraft::vm::elysia::InsideVM:
+        return "InsideVM";
+    case openminecraft::vm::elysia::Halt:
+        return "Halt";
+    case openminecraft::vm::elysia::Suspend:
+        return "Suspend";
+    default:
+        return "???";
+    }
+}
+
 Element buildElysiaThread(OMElysiaThread *thread)
 {
-    return hbox(
-        {window(text("Code"), buildElysiaThreadCode(thread)), window(text("Stack"), buildElysiaThreadStack(thread))});
+    return vbox({text(fmt::format("Thread State: {}", toThreadState(thread->state))),
+                 hbox({window(text("Code"), buildElysiaThreadCode(thread)),
+                       window(text("Stack"), buildElysiaThreadStack(thread))})});
 }
 
 Element buildElysiaThreadstate()

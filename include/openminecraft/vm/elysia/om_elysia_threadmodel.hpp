@@ -23,10 +23,21 @@ struct OMElysiaJavaFrame
     OMElysiaJavaFrame *caller;
 };
 
+enum OMElysiaThreadState
+{
+    Initialized,
+    InsideVM,
+    InsideJava,
+    InsideNative,
+    Suspend,
+    Halt
+};
+
 class OMElysiaThread
 {
   public:
     bool threadInited = false;
+    OMElysiaThreadState state = Initialized;
     uintptr_t stackStart = 0;
     uintptr_t stackEnd = 0;
 
@@ -67,6 +78,11 @@ class OMElysiaThreadMetadata
     OMElysiaThreadMetadata()
     {
         metadata = new OMElysiaThread;
+    }
+
+    void switchState(OMElysiaThreadState state)
+    {
+        metadata->state = state;
     }
 
     ~OMElysiaThreadMetadata()

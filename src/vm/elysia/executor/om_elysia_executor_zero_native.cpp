@@ -48,7 +48,6 @@ OMElysiaNativeHandle *OMElysiaExecutorZero::recordLocalRef(OMElysiaOop *oop)
         oldnode = newnode;
     }
 
-    oop->markword &= ~markEden;
     return oldnode;
 }
 void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *func)
@@ -176,7 +175,9 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
 
     if (ffiPrepStatus == FFI_OK)
     {
+        thisThread.switchState(InsideNative);
         ffi_call(&cif, reinterpret_cast<void (*)()>(func), retValue, argPointers);
+        thisThread.switchState(InsideVM);
     }
 
     cleanupLocalRef();
@@ -212,6 +213,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
 
 void OMElysiaExecutorZero::executeNativeLink()
 {
+    thisThread.switchState(InsideVM);
     auto tc = thisThread.metadata;
     auto mm = tc->zero.frame->method;
     // TODO: use dynamic loading

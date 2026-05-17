@@ -93,6 +93,7 @@ static jchar *interfaceGetCharArrayElements(OMElysiaJNIEnv *env, OMElysiaNativeH
 {
     return env->internal->world->oopManager->arrAccess<jchar>(reinterpret_cast<OMElysiaArrayOop *>(array->object));
 }
+
 void initBaseInterface(OMElysiaJNIEnv env)
 {
     env.internal->GetVersion = interfaceGetVersion;
