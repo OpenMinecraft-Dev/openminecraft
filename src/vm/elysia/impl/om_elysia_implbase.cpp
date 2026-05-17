@@ -3,9 +3,7 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
-#include <chrono>
 #include <stdexcept>
-#include <thread>
 
 namespace openminecraft::vm::elysia::impl
 {
@@ -50,9 +48,6 @@ OMElysiaNativeHandle *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env
     auto kfield = env->GetFieldID(kstr, "value", "[C");
     logger.info("access field at {}", (void *)env->GetCharArrayElements(env->GetObjectField(name, kfield), nullptr));
 
-    while (true)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
+    throw std::logic_error("not implemented");
 }
 } // namespace openminecraft::vm::elysia::impl

@@ -1,11 +1,20 @@
 #include "openminecraft/vm/encoding/om_encoding_utf.hpp"
+#include "openminecraft/vm/elysia/om_elysia_types.hpp"
 
 #include <cstdint>
-#include <cstring>
-#include <iostream>
 
 namespace openminecraft::vm::encoding
 {
+elysia::jchar *utf8ToUtf16New(std::string str)
+{
+    std::vector<elysia::jchar> data;
+    for (auto itt = str.begin(); itt < str.end(); ++itt)
+    {
+    }
+    return nullptr;
+}
+std::string utf16ToUtf8New(elysia::jchar *arr, elysia::jsize length);
+
 std::vector<int> utf8ToUtf32(std::string n)
 {
     std::vector<int> target;

@@ -204,6 +204,8 @@ void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, const OMElysiaNat
     }
 
     execute(m);
+
+    thisThread.switchState(InsideVM);
 }
 
 void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, va_list list)
@@ -255,6 +257,8 @@ void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, va_list list)
     }
 
     execute(m);
+
+    thisThread.switchState(InsideVM);
 }
 
 void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, ...)
