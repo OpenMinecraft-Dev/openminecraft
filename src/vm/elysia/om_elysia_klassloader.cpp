@@ -220,6 +220,8 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
 
         klass->superClass = findClass(supclsname);
     }
+
+    std::vector<OMElysiaMethod *> rawVtable = {};
     if (!clsfile->interfaces.empty())
     {
         klass->interfaceImplCount = clsfile->interfaces.size();
@@ -237,6 +239,16 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
             }
 
             klass->interfaceImpls[ii] = findClass(supclsname);
+
+            auto kk = klass->interfaceImpls[ii];
+            if (kk->vtable && kk->vtableLength)
+            {
+                for (int i = 0; i < kk->vtableLength; i++)
+                {
+                    rawVtable.push_back(kk->vtable[i]);
+                }
+            }
+
             ii++;
         }
     }
@@ -259,7 +271,6 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
 
     klass->vtable = nullptr;
     klass->vtableLength = 0;
-    std::vector<OMElysiaMethod *> rawVtable = {};
     // geopeila: insert super class vtable
     if (klass->superClass && klass->superClass->vtable && klass->superClass->vtableLength)
     {
@@ -322,6 +333,9 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
             }
         }
     }
+
+    std::sort(rawVtable.begin(), rawVtable.end());
+    rawVtable.erase(std::unique(rawVtable.begin(), rawVtable.end()), rawVtable.end());
 
     klass->vtableLength = rawVtable.size();
     if (klass->vtableLength)
