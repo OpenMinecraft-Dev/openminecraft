@@ -39,20 +39,6 @@ OMElysiaNativeHandle *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env
 {
     auto nn = env->GetStringUTFChars(name, nullptr);
     auto k2 = env->FindClass(nn);
-
-    if (!k2->mirror)
-    {
-        auto k = env->FindClass("java/lang/Class");
-        auto field = env->GetFieldID(k, "name", "Ljava/lang/String;");
-        auto oop = env->AllocObject(k);
-
-        auto newstr = env->NewStringUTF(nn);
-        env->SetObjectField(oop, field, newstr);
-        env->ReleaseStringUTFChars(name, nn);
-        k2->mirror = oop->object;
-        return oop;
-    }
-
     env->ReleaseStringUTFChars(name, nn);
     auto ff =
         reinterpret_cast<OMElysiaNativeHandle *>(mem::allocator::tracedMallocElysia(sizeof(OMElysiaNativeHandle)));
