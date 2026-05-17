@@ -420,6 +420,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++tc->zero.pc;
             break;
 
+        case op_astore_n(1):
+            zeroStackSaveLocalPop<OMElysiaOop *>(1);
+            ++tc->zero.pc;
+            break;
+
         case op_castore: {
             auto value = zeroStackPopGet<jchar>();
             auto index = zeroStackPopGet<jint>();
@@ -736,6 +741,17 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto arr = world->oopManager->allocateArr(klass->toArray(), zeroStackPopGet<jint>());
             zeroStackPush(arr);
             tc->zero.pc += 3;
+            break;
+        }
+        case op_ifnonnull: {
+            if (zeroStackPopGet<OMElysiaOop *>())
+            {
+                tc->zero.pc += zeroCodeFetchArgs16p0();
+            }
+            else
+            {
+                tc->zero.pc += 3;
+            }
             break;
         }
         default:
