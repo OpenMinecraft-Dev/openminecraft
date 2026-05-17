@@ -38,7 +38,14 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id, bool flg)
 {
     if (constantPool[id])
     {
-        return constantPool[id];
+        if (!flg)
+        {
+            return constantPool[id];
+        }
+        else
+        {
+            return reinterpret_cast<OMElysiaKlass *>(constantPool[id])->mirror;
+        }
     }
 
     auto item = constantPoolRaw->at(id);
@@ -79,12 +86,8 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id, bool flg)
         }
 
         auto cls = nativeKlassloader->fetchOrLoadClass(clsname);
-        if (flg)
-        {
-            throw std::logic_error("not found!");
-        }
         constantPool[id] = cls;
-        return cls;
+        return flg ? reinterpret_cast<void *>(cls->mirror) : cls;
     }
     case OMClassConstantType::FieldRef: {
         auto mr = item->to<OMClassConstantFieldRef>();

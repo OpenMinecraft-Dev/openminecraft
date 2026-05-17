@@ -357,7 +357,5 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
     {
         klass->staticBlock = nullptr;
     }
-
-    // TODO: mirror creation!
 }
 } // namespace openminecraft::vm::elysia
