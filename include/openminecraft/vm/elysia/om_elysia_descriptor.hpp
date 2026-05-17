@@ -96,7 +96,16 @@ inline static void argDescriptorParse(char *desc, uint8_t *out, int &argCount, u
     bool inArg = false;
 #define checkArg                                                                                                       \
     if (inArg)                                                                                                         \
-        ++argCount;
+    {                                                                                                                  \
+        ++argCount;                                                                                                    \
+    }
+
+#define precheck(type)                                                                                                 \
+    if (!inArg)                                                                                                        \
+    {                                                                                                                  \
+        *returnType = type;                                                                                            \
+    }
+
     while (*desc)
     {
         switch (*desc)
@@ -105,38 +114,55 @@ inline static void argDescriptorParse(char *desc, uint8_t *out, int &argCount, u
             inArg = true;
             break;
         case 'Z':
+            precheck(argTypeBoolean);
             out[argCount] = argTypeBoolean;
             checkArg;
             break;
         case 'B':
+            precheck(argTypeByte);
             out[argCount] = argTypeByte;
             checkArg;
             break;
         case 'C':
+            precheck(argTypeChar);
             out[argCount] = argTypeChar;
             checkArg;
             break;
         case 'S':
+            precheck(argTypeShort);
             out[argCount] = argTypeShort;
             checkArg;
             break;
         case 'I':
+            precheck(argTypeInt);
             out[argCount] = argTypeInt;
             checkArg;
             break;
         case 'F':
+            precheck(argTypeFloat);
             out[argCount] = argTypeFloat;
             checkArg;
             break;
         case 'J':
+            precheck(argTypeLong);
             out[argCount] = argTypeLong;
             checkArg;
             break;
         case 'D':
+            precheck(argTypeDouble);
             out[argCount] = argTypeDouble;
             checkArg;
             break;
         case 'L':
+            if (!inArg)
+            {
+                *returnType = argTypeReference;
+                while (*desc != ';')
+                {
+                    ++desc;
+                }
+                break;
+            }
             out[argCount] = argTypeReference;
             checkArg;
             while (*desc != ';')

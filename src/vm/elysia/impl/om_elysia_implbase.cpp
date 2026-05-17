@@ -55,4 +55,9 @@ void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *kl
          reinterpret_cast<void *>(Java_java_lang_Class_desiredAssertionStatus0)}};
     env->RegisterNatives(klass, mm, 2);
 }
+
+jint Java_java_lang_Float_floatToRawIntBits(OMElysiaJNIEnv *env, OMElysiaKlass *klass, jfloat f)
+{
+    return *reinterpret_cast<jint *>(&f);
+}
 } // namespace openminecraft::vm::elysia::impl

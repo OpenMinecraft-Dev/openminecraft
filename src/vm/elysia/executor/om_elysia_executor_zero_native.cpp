@@ -7,7 +7,9 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
+#include <chrono>
 #include <ffi.h>
+#include <thread>
 #include <variant>
 
 using namespace openminecraft::binary::hash;
@@ -181,14 +183,15 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     }
 
     cleanupLocalRef();
-    popFrame();
 
     switch (returnType)
     {
     case argTypeVoid:
+        popFrame();
         break;
     case argTypeReference: {
         auto vv = *reinterpret_cast<OMElysiaNativeHandle **>(retValue);
+        popFrame();
         zeroStackPush(vv->object);
         if (vv->next == vv)
         {
@@ -200,19 +203,32 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     case argTypeShort:
     case argTypeChar:
     case argTypeBoolean:
-    case argTypeByte:
-        zeroStackPush(*reinterpret_cast<jint *>(retValue));
+    case argTypeByte: {
+        auto data = *reinterpret_cast<jint *>(retValue);
+        popFrame();
+        zeroStackPush(data);
         break;
-    case argTypeFloat:
-        zeroStackPush(*reinterpret_cast<jfloat *>(retValue));
+    }
+    case argTypeFloat: {
+        auto data = *reinterpret_cast<jfloat *>(retValue);
+        popFrame();
+        zeroStackPush(data);
         break;
-    case argTypeLong:
-        zeroStackPushW(*reinterpret_cast<jlong *>(retValue));
+    }
+    case argTypeLong: {
+        auto data = *reinterpret_cast<jlong *>(retValue);
+        popFrame();
+        zeroStackPushW(data);
         break;
-    case argTypeDouble:
-        zeroStackPushW(*reinterpret_cast<jdouble *>(retValue));
+    }
+    case argTypeDouble: {
+        auto data = *reinterpret_cast<jdouble *>(retValue);
+        popFrame();
+        zeroStackPushW(data);
         break;
+    }
     default:
+        popFrame();
         break;
     }
 }
@@ -233,6 +249,9 @@ void OMElysiaExecutorZero::executeNativeLink()
         break;
     case "java/lang/Class.registerNatives"_hash:
         executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Class_registerNatives);
+        break;
+    case "java/lang/Float.floatToRawIntBits"_hash:
+        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Float_floatToRawIntBits);
         break;
     default:
         for (int i = 0; i < mm->klass->nativeMethodCount; i++)
