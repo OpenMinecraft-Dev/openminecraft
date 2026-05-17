@@ -743,6 +743,17 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             tc->zero.pc += 3;
             break;
         }
+        case op_ifnull: {
+            if (!zeroStackPopGet<OMElysiaOop *>())
+            {
+                tc->zero.pc += zeroCodeFetchArgs16p0();
+            }
+            else
+            {
+                tc->zero.pc += 3;
+            }
+            break;
+        }
         case op_ifnonnull: {
             if (zeroStackPopGet<OMElysiaOop *>())
             {
