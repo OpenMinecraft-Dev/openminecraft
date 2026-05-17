@@ -24,6 +24,7 @@ class OMElysiaKlassloader
     void loadClassWithoutMirror(std::string name);
     void loadClassWithoutMirror(std::istream *istr);
     void fixClassMirror(OMElysiaKlass *klass);
+    void fixAllClasses();
 
     OMElysiaKlass *findClass(std::string s);
 

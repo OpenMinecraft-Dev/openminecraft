@@ -41,11 +41,7 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
     }
 
     klassLoader->constructPrimitiveClass("void");
-
-    for (auto &s : klasses)
-    {
-        klassLoader->fixClassMirror(klassLoader->findClass(s));
-    }
+    klassLoader->fixAllClasses();
 
     /*std::ifstream iss("../Test.class", std::ios::binary);
     klassLoader->loadClassWithoutMirror(&iss);*/

@@ -169,6 +169,14 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::string name)
     loadClassWithoutMirror(&istr);
 }
 
+void OMElysiaKlassloader::fixAllClasses()
+{
+    for (auto &p : loadedClasses)
+    {
+        fixClassMirror(p.second);
+    }
+}
+
 void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
 {
     classfile::OMClassFileParser par(istr);
