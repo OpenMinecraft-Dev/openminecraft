@@ -641,6 +641,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackPush(pp);
             break;
         }
+        case op_areturn: {
+            auto pp = zeroStackPopGet<OMElysiaOop *>();
+            popFrame();
+            zeroStackPush(pp);
+            break;
+        }
         case op_getstatic: {
             auto fld = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
             zeroStackPushFromStatic(reinterpret_cast<OMElysiaField *>(fld), world);
@@ -656,6 +662,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         case op_putstatic: {
             auto fld = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
             zeroStackPopToStatic(reinterpret_cast<OMElysiaField *>(fld), world);
+            tc->zero.pc += 3;
+            break;
+        }
+        case op_getfield: {
+            auto fld = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
+            zeroStackPushFromField(reinterpret_cast<OMElysiaField *>(fld), world->oopManager.get(), world);
             tc->zero.pc += 3;
             break;
         }
@@ -820,6 +832,35 @@ void zeroStackPopToStatic(OMElysiaField *field, OMElysiaVirtualWorld *world)
     default:
         *reinterpret_cast<jint *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =
             zeroStackPopGet<jint>();
+        break;
+    }
+}
+
+void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysiaVirtualWorld *world)
+{
+    switch (*field->desc)
+    {
+    case 'J':
+    case 'D':
+        zeroStackPushW(
+            *reinterpret_cast<jlong *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)));
+        break;
+    case 'L':
+    case '[': {
+        if (world->mainHeap.enablePtrCompress())
+        {
+            zeroStackPush(world->mainHeap.decompress(
+                *reinterpret_cast<uint32_t *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset))));
+        }
+        else
+        {
+            zeroStackPush(*reinterpret_cast<OMElysiaOop **>(
+                oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)));
+        }
+        break;
+    }
+    default:
+        zeroStackPush(*reinterpret_cast<jint *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)));
         break;
     }
 }
