@@ -34,9 +34,47 @@ OMElysiaMethod *OMElysiaKlass::findMethod(const char *name, const char *desc)
     return nullptr;
 }
 
+uint64_t OMElysiaInstanceKlass::constantPoolFetchW(uint16_t id)
+{
+    if (constantPoolState[id] && constantPoolState[id + 1])
+    {
+        auto low = reinterpret_cast<uint64_t>(constantPool[id]);
+        auto high = reinterpret_cast<uint64_t>(constantPool[id + 1]);
+
+        return high << 32 | low;
+    }
+
+    auto item = constantPoolRaw->at(id);
+    switch (item->type())
+    {
+    case OMClassConstantType::Long: {
+        auto data = item->to<OMClassConstantLong>()->data;
+        constantPool[id] = reinterpret_cast<void *>(data & 0xffffffff);
+        constantPool[id + 1] = reinterpret_cast<void *>(data >> 32);
+        break;
+    }
+    case OMClassConstantType::Double: {
+        auto datar = item->to<OMClassConstantDouble>()->data;
+        auto data = *reinterpret_cast<uint64_t *>(&datar);
+        constantPool[id] = reinterpret_cast<void *>(data & 0xffffffff);
+        constantPool[id + 1] = reinterpret_cast<void *>(data >> 32);
+        break;
+    }
+    default: {
+        while (true)
+        {
+            continue;
+        }
+        throw 0;
+    }
+    }
+
+    return 0;
+}
+
 void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id, bool flg)
 {
-    if (constantPool[id])
+    if (constantPoolState[id])
     {
         if (!flg)
         {
@@ -74,6 +112,7 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id, bool flg)
         auto mthd = cls->findMethod(mdname.c_str(), mddesc.c_str());
 
         constantPool[id] = mthd;
+        constantPoolState[id] = true;
         return mthd;
     }
     case OMClassConstantType::Class: {
@@ -87,6 +126,7 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id, bool flg)
 
         auto cls = nativeKlassloader->fetchOrLoadClass(clsname);
         constantPool[id] = cls;
+        constantPoolState[id] = true;
         return flg ? reinterpret_cast<void *>(cls->mirror) : cls;
     }
     case OMClassConstantType::FieldRef: {
@@ -113,6 +153,7 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id, bool flg)
             if (std::strcmp(fields[i].name, mdname.c_str()) == 0 && std::strcmp(fields[i].desc, mddesc.c_str()) == 0)
             {
                 constantPool[id] = &fields[i];
+                constantPoolState[id] = true;
                 return &fields[i];
             }
         }
@@ -124,6 +165,7 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id, bool flg)
         uint32_t rd = *reinterpret_cast<uint32_t *>(&d);
 
         constantPool[id] = reinterpret_cast<void *>(static_cast<uintptr_t>(rd));
+        constantPoolState[id] = true;
         return constantPool[id];
     }
     case OMClassConstantType::String: {
@@ -133,6 +175,7 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id, bool flg)
         auto strWrp = nativeKlassloader->upper()->oopManager->allocateString(const_cast<std::string &>(target));
 
         constantPool[id] = strWrp;
+        constantPoolState[id] = true;
         return constantPool[id];
     }
     default:

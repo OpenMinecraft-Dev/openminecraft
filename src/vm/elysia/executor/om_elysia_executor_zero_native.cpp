@@ -253,6 +253,9 @@ void OMElysiaExecutorZero::executeNativeLink()
     case "java/lang/Float.floatToRawIntBits"_hash:
         executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Float_floatToRawIntBits);
         break;
+    case "java/lang/Double.doubleToRawLongBits"_hash:
+        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_jang_lang_Double_doubleToRawLongBits);
+        break;
     default:
         for (int i = 0; i < mm->klass->nativeMethodCount; i++)
         {

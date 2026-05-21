@@ -60,4 +60,9 @@ jint Java_java_lang_Float_floatToRawIntBits(OMElysiaJNIEnv *env, OMElysiaKlass *
 {
     return *reinterpret_cast<jint *>(&f);
 }
+
+jlong Java_jang_lang_Double_doubleToRawLongBits(OMElysiaJNIEnv *env, OMElysiaKlass *klass, jdouble d)
+{
+    return *reinterpret_cast<jlong *>(&d);
+}
 } // namespace openminecraft::vm::elysia::impl

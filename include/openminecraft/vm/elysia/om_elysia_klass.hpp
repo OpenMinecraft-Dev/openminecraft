@@ -98,6 +98,7 @@ class OMElysiaInstanceKlass : public OMElysiaKlass
     std::shared_ptr<std::unordered_map<uint16_t, std::shared_ptr<classfile::OMClassConstant>>> constantPoolRaw;
     uint32_t constantPoolCount = 0;
     void **constantPool = nullptr;
+    bool *constantPoolState = nullptr;
 
     bool clinitFinished = false;
 
@@ -114,6 +115,7 @@ class OMElysiaInstanceKlass : public OMElysiaKlass
 
     OMElysiaField *findField(const char *name, const char *desc);
     void *constantPoolFetch(uint16_t id, bool flg = false);
+    uint64_t constantPoolFetchW(uint16_t id);
 };
 
 class OMElysiaPrimitiveKlass : public OMElysiaKlass

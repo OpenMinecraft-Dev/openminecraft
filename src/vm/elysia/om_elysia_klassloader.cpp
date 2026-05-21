@@ -200,6 +200,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
     }
     klass->constantPoolCount = l;
     klass->constantPool = world->metaspaceHeap.allocateArray<void *>(l);
+    klass->constantPoolState = world->metaspaceHeap.allocateArray<bool>(l);
 
     klass->accessFlag = clsfile->accessFlags;
 
