@@ -80,6 +80,8 @@ class OMElysiaKlass
     {
         return type == ArrayKlass;
     }
+
+    bool inherits(OMElysiaKlass *);
 };
 
 class OMElysiaArrayKlass : public OMElysiaKlass

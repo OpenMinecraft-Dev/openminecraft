@@ -378,7 +378,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++tc->zero.pc;
             break;
         case op_sipush:
-            zeroStackPush<jint>(zeroCodeFetchArgu16p0());
+            zeroStackPush<jint>(zeroCodeFetchArgs16p0());
             tc->zero.pc += 3;
             break;
         case op_ldc: {
@@ -474,6 +474,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_calc(fdiv, zeroStackPopGet<jfloat>, zeroStackPush, /);
             op_calc(ddiv, zeroStackPopWGet<jdouble>, zeroStackPushW, /);
 
+            // TODO: need to be fixed!
 #define op_calcrem(op, fetch, psh)                                                                                     \
     case op_##op: {                                                                                                    \
         auto value2 = fetch();                                                                                         \
@@ -498,13 +499,17 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_calcneg(fneg, zeroStackPopGet<jfloat>, zeroStackPush);
             op_calcneg(dneg, zeroStackPopWGet<jdouble>, zeroStackPushW);
             op_calc(ishl, zeroStackPopGet<jint>, zeroStackPush, <<);
-            op_calc(lshl, zeroStackPopWGet<jlong>, zeroStackPushW, <<);
+        case op_lshl: {
+            auto value2 = zeroStackPopGet<jint>();
+            auto value1 = zeroStackPopWGet<jlong>();
+            zeroStackPushW(value1 << value2);
+            ++tc->zero.pc;
+            break;
+        }
             op_calc(ishr, zeroStackPopGet<jint>, zeroStackPush, >>);
             op_calc(lshr, zeroStackPopWGet<jlong>, zeroStackPushW, >>);
-            // TODO: need to check bounds
             op_calc(iushr, zeroStackPopGet<jint>, zeroStackPush, >>);
             op_calc(lushr, zeroStackPopWGet<jlong>, zeroStackPushW, >>);
-
             op_calc(iand, zeroStackPopGet<jint>, zeroStackPush, &);
             op_calc(land, zeroStackPopWGet<jlong>, zeroStackPushW, &);
             op_calc(ior, zeroStackPopGet<jint>, zeroStackPush, |);
@@ -564,7 +569,9 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
 #define op_ificmp(cond, op)                                                                                            \
     case op_if_icmp##cond: {                                                                                           \
-        if (zeroStackPopGet<jint>() op zeroStackPopGet<jint>())                                                        \
+        auto value2 = zeroStackPopGet<jint>();                                                                         \
+        auto value1 = zeroStackPopGet<jint>();                                                                         \
+        if (value1 op value2)                                                                                          \
         {                                                                                                              \
             tc->zero.pc += zeroCodeFetchArgs16p0();                                                                    \
         }                                                                                                              \
@@ -745,6 +752,20 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             }
             auto arr = world->oopManager->allocateArr(klass->toArray(), zeroStackPopGet<jint>());
             zeroStackPush(arr);
+            tc->zero.pc += 3;
+            break;
+        }
+        case op_instanceof: {
+            auto obj = zeroStackPopGet<OMElysiaOop *>();
+            if (!obj)
+            {
+                zeroStackPush<jint>(0);
+            }
+            else
+            {
+                auto c = reinterpret_cast<OMElysiaKlass *>(CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0()));
+                zeroStackPush<jint>(world->oopManager->oopGetKlass(obj)->inherits(c) ? 1 : 0);
+            }
             tc->zero.pc += 3;
             break;
         }

@@ -23,9 +23,11 @@ float gaussianWeight(float x, float y, float sigma) {
 
 void main() {
     outColor = texture(texSampler, outTexCoord);
+
+    precision highp float;
     
-    highp vec2 texSize = textureSize(texSampler, 0);
-    highp vec2 texelSize = 1.0 / texSize;
+    vec2 texSize = textureSize(texSampler, 0);
+    vec2 texelSize = 1.0 / texSize;
 
     int radius = int(ubo.kernelSize);
     if (radius <= 0) {
@@ -40,7 +42,7 @@ void main() {
         for (int x = -radius; x <= radius; x++) {
             float weight = gaussianWeight(float(x), float(y), ubo.sigma);
             
-            highp vec2 off = outTexCoord + vec2(x, y) * texelSize;
+            vec2 off = outTexCoord + vec2(x, y) * texelSize;
             // gino: we had to do this otherwise wrong pixels will be fetched
             off = clamp(off, vec2(0.0 + texelSize), vec2(1.0 - texelSize));
             vec4 sampleColor = texture(texSampler, off);

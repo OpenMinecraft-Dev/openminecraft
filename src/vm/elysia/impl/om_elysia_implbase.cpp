@@ -65,4 +65,9 @@ jlong Java_jang_lang_Double_doubleToRawLongBits(OMElysiaJNIEnv *env, OMElysiaKla
 {
     return *reinterpret_cast<jlong *>(&d);
 }
+
+jdouble Java_java_lang_Double_longBitsToDouble(OMElysiaJNIEnv *env, OMElysiaKlass *klass, jlong l)
+{
+    return *reinterpret_cast<jdouble *>(&l);
+}
 } // namespace openminecraft::vm::elysia::impl

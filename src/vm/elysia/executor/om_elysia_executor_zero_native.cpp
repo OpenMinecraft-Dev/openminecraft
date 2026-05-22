@@ -97,6 +97,16 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
             rawargtypes.push_back(&ffi_type_pointer);
             ++argid;
             break;
+        case argTypeLong:
+            rawargs.push_back(zeroStackLoadLocalW<jlong>(argid));
+            rawargtypes.push_back(&ffi_type_sint64);
+            argid += 2;
+            break;
+        case argTypeDouble:
+            rawargs.push_back(zeroStackLoadLocalW<jlong>(argid));
+            rawargtypes.push_back(&ffi_type_double);
+            argid += 2;
+            break;
         default:
             throw std::logic_error("not supported yet!");
         }
@@ -255,6 +265,9 @@ void OMElysiaExecutorZero::executeNativeLink()
         break;
     case "java/lang/Double.doubleToRawLongBits"_hash:
         executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_jang_lang_Double_doubleToRawLongBits);
+        break;
+    case "java/lang/Double.longBitsToDouble"_hash:
+        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Double_longBitsToDouble);
         break;
     default:
         for (int i = 0; i < mm->klass->nativeMethodCount; i++)

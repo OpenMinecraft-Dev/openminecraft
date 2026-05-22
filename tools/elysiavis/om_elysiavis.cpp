@@ -527,28 +527,36 @@ class OMElysiaKlassStatusComponent : public ComponentBase
     Element buildField(OMElysiaKlass *klass)
     {
         std::vector<Element> ee;
-        if (klass->type != OMElysiaKlassType::InstanceKlass)
-        {
-            return text("no fields");
-        }
         auto ff = reinterpret_cast<OMElysiaInstanceKlass *>(klass)->fields;
-        for (int i = 0; i < reinterpret_cast<OMElysiaInstanceKlass *>(klass)->fieldCount; i++)
+        ee.push_back(hbox({text("extends ") | color(Color::Blue),
+                           text(fmt::format("{}", klass->superClass ? klass->superClass->name : "<none>"))}));
+        if (klass->isInstance())
         {
-            if (ff[i].accessFlag & JVM_Acc_Static)
+            auto it = klass->toInstance();
+            for (int i = 0; i < it->interfaceImplCount; i++)
             {
+                ee.push_back(hbox(
+                    {text("implements ") | color(Color::Blue), text(fmt::format("{}", it->interfaceImpls[i]->name))}));
+            }
+
+            for (int i = 0; i < reinterpret_cast<OMElysiaInstanceKlass *>(klass)->fieldCount; i++)
+            {
+                if (ff[i].accessFlag & JVM_Acc_Static)
+                {
+                    ee.push_back(hbox({buildAccFlg(ff[i].accessFlag, true), text(fmt::format("@0x{:x}", ff[i].offset)),
+                                       separatorEmpty(), text(ff[i].name), text(":"), text(ff[i].desc)}));
+                }
+            }
+            for (int i = 0; i < reinterpret_cast<OMElysiaInstanceKlass *>(klass)->fieldCount; i++)
+            {
+                if (ff[i].accessFlag & JVM_Acc_Static)
+                {
+                    continue;
+                }
+
                 ee.push_back(hbox({buildAccFlg(ff[i].accessFlag, true), text(fmt::format("@0x{:x}", ff[i].offset)),
                                    separatorEmpty(), text(ff[i].name), text(":"), text(ff[i].desc)}));
             }
-        }
-        for (int i = 0; i < reinterpret_cast<OMElysiaInstanceKlass *>(klass)->fieldCount; i++)
-        {
-            if (ff[i].accessFlag & JVM_Acc_Static)
-            {
-                continue;
-            }
-
-            ee.push_back(hbox({buildAccFlg(ff[i].accessFlag, true), text(fmt::format("@0x{:x}", ff[i].offset)),
-                               separatorEmpty(), text(ff[i].name), text(":"), text(ff[i].desc)}));
         }
         return vbox(ee);
     }

@@ -98,6 +98,22 @@ template <typename T> static T zeroStackLoadLocal(uint32_t l)
     return *reinterpret_cast<T *>(ll);
 }
 
+template <typename T> static T zeroStackLoadLocalW(uint32_t l)
+{
+    if constexpr (sizeof(void *) == 8)
+    {
+        return zeroStackLoadLocal<T>(l);
+    }
+    else
+    {
+        auto highd = static_cast<uint64_t>(zeroStackLoadLocal<uint32_t>(l));
+        auto lowd = static_cast<uint64_t>(zeroStackLoadLocal<uint32_t>(l + 1));
+
+        auto ll = highd << 32 | lowd;
+        return *reinterpret_cast<T *>(&ll);
+    }
+}
+
 class OMElysiaExecutorZero
 {
   public:

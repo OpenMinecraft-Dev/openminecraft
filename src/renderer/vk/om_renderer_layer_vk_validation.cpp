@@ -19,11 +19,10 @@ log::OMLogger internal("Vulkan Validation");
 static int notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT t,
                   DebugUtilsMessengerCallbackDataEXT data, void *user)
 {
-    // gino: some drivers provide bad message string
-    /*if (((uintptr_t)data.pMessage) % sizeof(void *) != 0 || data.messageIdNumber == 0)
+    if (!data.pMessage)
     {
         return VK_SUCCESS;
-    }*/
+    }
 
     switch (s)
     {

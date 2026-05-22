@@ -16,6 +16,40 @@ using namespace openminecraft::vm::classfile;
 
 namespace openminecraft::vm::elysia
 {
+bool OMElysiaKlass::inherits(OMElysiaKlass *klass)
+{
+    if (this == klass)
+    {
+        return true;
+    }
+
+    if (this->superClass && this->superClass->inherits(klass))
+    {
+        return true;
+    }
+
+    if (this->isInstance())
+    {
+        auto inst = this->toInstance();
+        for (int i = 0; i < inst->interfaceImplCount; i++)
+        {
+            if (inst->interfaceImpls[i]->inherits(klass))
+            {
+                return true;
+            }
+        }
+    }
+
+    if (this->isArray() && klass->isArray())
+    {
+        if (this->toArray()->lowerDim->inherits(klass->toArray()->lowerDim))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
 OMElysiaMethod *OMElysiaKlass::findMethod(const char *name, const char *desc)
 {
     if (!methods || !methodCount)
@@ -51,14 +85,14 @@ uint64_t OMElysiaInstanceKlass::constantPoolFetchW(uint16_t id)
         auto data = item->to<OMClassConstantLong>()->data;
         constantPool[id] = reinterpret_cast<void *>(data & 0xffffffff);
         constantPool[id + 1] = reinterpret_cast<void *>(data >> 32);
-        break;
+        return *reinterpret_cast<uint64_t *>(&data);
     }
     case OMClassConstantType::Double: {
         auto datar = item->to<OMClassConstantDouble>()->data;
         auto data = *reinterpret_cast<uint64_t *>(&datar);
         constantPool[id] = reinterpret_cast<void *>(data & 0xffffffff);
         constantPool[id + 1] = reinterpret_cast<void *>(data >> 32);
-        break;
+        return data;
     }
     default: {
         while (true)
