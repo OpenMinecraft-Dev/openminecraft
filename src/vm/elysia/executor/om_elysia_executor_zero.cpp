@@ -485,8 +485,20 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     }
             op_calcrem(irem, zeroStackPopGet<jint>, zeroStackPush);
             op_calcrem(lrem, zeroStackPopWGet<jlong>, zeroStackPushW);
-            op_calcrem(frem, zeroStackPopGet<jfloat>, zeroStackPush);
-            op_calcrem(drem, zeroStackPopWGet<jdouble>, zeroStackPushW);
+        case op_frem: {
+            auto value2 = zeroStackPopGet<jfloat>();
+            auto value1 = zeroStackPopGet<jfloat>();
+            zeroStackPush(std::fmod(value1, value2));
+            ++tc->zero.pc;
+            break;
+        }
+        case op_drem: {
+            auto value2 = zeroStackPopWGet<jdouble>();
+            auto value1 = zeroStackPopWGet<jdouble>();
+            zeroStackPushW(std::fmod(value1, value2));
+            ++tc->zero.pc;
+            break;
+        }
 
 #define op_calcneg(op, fetch, psh)                                                                                     \
     case op_##op: {                                                                                                    \
@@ -507,9 +519,21 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
             op_calc(ishr, zeroStackPopGet<jint>, zeroStackPush, >>);
-            op_calc(lshr, zeroStackPopWGet<jlong>, zeroStackPushW, >>);
-            op_calc(iushr, zeroStackPopGet<jint>, zeroStackPush, >>);
-            op_calc(lushr, zeroStackPopWGet<jlong>, zeroStackPushW, >>);
+        case op_lshr: {
+            auto value2 = zeroStackPopGet<jint>();
+            auto value1 = zeroStackPopWGet<jlong>();
+            zeroStackPushW(value1 >> value2);
+            ++tc->zero.pc;
+            break;
+        }
+            op_calc(iushr, zeroStackPopGet<uint32_t>, zeroStackPush, >>);
+        case op_lushr: {
+            auto value2 = zeroStackPopGet<jint>();
+            auto value1 = zeroStackPopWGet<uint64_t>();
+            zeroStackPushW(value1 >> value2);
+            ++tc->zero.pc;
+            break;
+        }
             op_calc(iand, zeroStackPopGet<jint>, zeroStackPush, &);
             op_calc(land, zeroStackPopWGet<jlong>, zeroStackPushW, &);
             op_calc(ior, zeroStackPopGet<jint>, zeroStackPush, |);
@@ -656,6 +680,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto pp = zeroStackPopGet<jfloat>();
             popFrame();
             zeroStackPush(pp);
+            break;
+        }
+        case op_dreturn: {
+            auto pp = zeroStackPopWGet<jdouble>();
+            popFrame();
+            zeroStackPushW(pp);
             break;
         }
         case op_areturn: {
