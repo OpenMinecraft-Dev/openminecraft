@@ -170,7 +170,7 @@ void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, const OMElysiaNat
     uint8_t returntype;
     argDescriptorParse(m->descriptor, argtypes, argcount, &returntype);
 
-    for (int i = 0; i < argcount; i++)
+    for (; i < argcount; i++)
     {
         switch (argtypes[i])
         {

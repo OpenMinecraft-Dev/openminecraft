@@ -102,7 +102,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
             argid += 2;
             break;
         case argTypeDouble:
-            rawargs.push_back(zeroStackLoadLocalW<jlong>(argid));
+            rawargs.push_back(zeroStackLoadLocalW<jdouble>(argid));
             rawargtypes.push_back(&ffi_type_double);
             argid += 2;
             break;
@@ -122,7 +122,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     if (isStatic)
     {
         argPointers[1] = &thisThread.metadata->zero.frame->method->klass;
-        rawargtypes.insert(rawargtypes.begin(), &ffi_type_pointer);
+        rawargtypes.insert(rawargtypes.begin() + 1, &ffi_type_pointer);
         argbegin = 2;
     }
     else
