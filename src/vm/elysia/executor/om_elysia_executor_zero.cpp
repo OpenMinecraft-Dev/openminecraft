@@ -19,6 +19,7 @@
 #include <cstdarg>
 #include <cstdint>
 #include <cstring>
+#include <ratio>
 #include <stdexcept>
 #include <thread>
 #include <variant>
@@ -55,6 +56,10 @@ OMElysiaExecutorZero::~OMElysiaExecutorZero()
 // ........ ........ ........
 void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
 {
+    if (!m)
+    {
+        throw std::logic_error("function is null!");
+    }
     auto ll = argSlots(m->descriptor) + (m->isStatic() ? 0 : 1);
     auto tc = thisThread.metadata;
 
@@ -78,12 +83,15 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
                 if (klass->vtable[i]->isSame(m))
                 {
                     m = klass->vtable[i];
-                    break;
+                    goto nextStg;
                 }
             }
         }
+
+        throw std::logic_error("vtable not found!");
     }
 
+nextStg:
     for (int i = ll; i < m->localLength; i++)
     {
         zeroStackPush<OMElysiaOop *>(nullptr);
@@ -325,6 +333,10 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
 
         thisThread.switchState(InsideJava);
+        if (!tc->zero.pc)
+        {
+            throw std::logic_error("nullptr!");
+        }
         switch (*tc->zero.pc)
         {
         case op_nop:
@@ -726,6 +738,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             pushFrame(reinterpret_cast<OMElysiaMethod *>(ff));
             break;
         }
+        case op_invokeinterface: {
+            auto ff = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
+            tc->zero.pc += 5;
+            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff));
+            break;
+        }
         case op_new: {
             auto c = CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0());
             auto oop = world->oopManager->allocateOop(reinterpret_cast<OMElysiaKlass *>(c));
@@ -785,6 +803,27 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             tc->zero.pc += 3;
             break;
         }
+        case op_checkcast: {
+            auto obj = zeroStackPopGet<OMElysiaOop *>();
+            if (!obj)
+            {
+                zeroStackPush(obj);
+            }
+            else
+            {
+                auto c = reinterpret_cast<OMElysiaKlass *>(CURRENT_KLASS->constantPoolFetch(zeroCodeFetchArgu16p0()));
+                if (world->oopManager->oopGetKlass(obj)->inherits(c))
+                {
+                    zeroStackPush(obj);
+                }
+                else
+                {
+                    throw std::logic_error("Java exception: ClassCastException, not implemented");
+                }
+            }
+            tc->zero.pc += 3;
+            break;
+        }
         case op_instanceof: {
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             if (!obj)
@@ -823,10 +862,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         default:
         unk:
-            while (true)
-            {
-                continue;
-            }
+            throw std::logic_error("unknown operand!");
         }
     }
 }

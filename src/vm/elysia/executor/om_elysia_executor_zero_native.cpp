@@ -269,6 +269,9 @@ void OMElysiaExecutorZero::executeNativeLink()
     case "java/lang/Double.longBitsToDouble"_hash:
         executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Double_longBitsToDouble);
         break;
+    case "sun/misc/VM.initialize"_hash:
+        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_sun_misc_VM_initialize);
+        break;
     default:
         for (int i = 0; i < mm->klass->nativeMethodCount; i++)
         {

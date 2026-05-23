@@ -110,7 +110,7 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id, bool flg)
 {
     if (constantPoolState[id])
     {
-        if (!flg)
+        if (!flg || constantPoolRaw->at(id)->type() != OMClassConstantType::Class)
         {
             return constantPool[id];
         }
@@ -123,6 +123,7 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id, bool flg)
     auto item = constantPoolRaw->at(id);
     switch (item->type())
     {
+    case OMClassConstantType::InterfaceMethodRef:
     case OMClassConstantType::MethodRef: {
         auto mr = item->to<OMClassConstantMethodRef>();
         auto clsname = constantPoolRaw->at(constantPoolRaw->at(mr->classIndex)->to<OMClassConstantClass>()->nameIndex)
@@ -143,7 +144,20 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id, bool flg)
         }
 
         auto cls = nativeKlassloader->fetchOrLoadClass(clsname);
-        auto mthd = cls->findMethod(mdname.c_str(), mddesc.c_str());
+        OMElysiaMethod *mthd = nullptr;
+        while (!mthd)
+        {
+            mthd = cls->findMethod(mdname.c_str(), mddesc.c_str());
+
+            if (cls->superClass)
+            {
+                cls = cls->superClass;
+            }
+            else
+            {
+                break;
+            }
+        }
 
         constantPool[id] = mthd;
         constantPoolState[id] = true;
@@ -213,11 +227,7 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id, bool flg)
         return constantPool[id];
     }
     default:
-        while (true)
-        {
-            continue;
-        }
-        throw 0;
+        throw std::logic_error("unknown constant type!");
     }
     return nullptr;
 }

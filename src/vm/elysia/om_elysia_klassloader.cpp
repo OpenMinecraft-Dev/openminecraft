@@ -259,6 +259,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
                 auto currentMethod = rawVtable[i];
                 if (currentMethod->isSame(&m))
                 {
+                    logger.debug("overwrite {}{}", m.name, m.descriptor);
                     rawVtable[i] = &m;
                     overwrite = true;
                     break;

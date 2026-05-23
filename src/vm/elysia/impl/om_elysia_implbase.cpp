@@ -10,6 +10,10 @@ namespace openminecraft::vm::elysia::impl
 {
 log::OMLogger logger("Elysia Impl Layer");
 
+void Java_sun_misc_VM_initialize(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
+{
+}
+
 OMElysiaNativeHandle *Java_java_lang_System_initProperties(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
                                                            OMElysiaNativeHandle *properties)
 {
@@ -18,7 +22,8 @@ OMElysiaNativeHandle *Java_java_lang_System_initProperties(OMElysiaJNIEnv *env, 
 
 void Java_java_lang_System_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
-    OMElysiaNativeMethod mm[] = {{const_cast<char *>("initProperties"), const_cast<char *>("(Ljava/util/Properties;)V"),
+    OMElysiaNativeMethod mm[] = {{const_cast<char *>("initProperties"),
+                                  const_cast<char *>("(Ljava/util/Properties;)Ljava/util/Properties;"),
                                   reinterpret_cast<void *>(Java_java_lang_System_initProperties)}};
     env->RegisterNatives(klass, mm, 1);
 }
