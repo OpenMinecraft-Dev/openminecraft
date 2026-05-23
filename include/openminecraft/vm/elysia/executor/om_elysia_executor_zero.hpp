@@ -23,7 +23,10 @@ template <typename T> static void zeroStackPush(T data)
     }
     else
     {
-        *d = *reinterpret_cast<uint32_t *>(&data);
+        *d = 0;
+        std::memcpy(d, &data, sizeof(T));
+
+        // *d = *reinterpret_cast<uint32_t *>(&data);
     }
 }
 

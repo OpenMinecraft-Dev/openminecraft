@@ -1,9 +1,11 @@
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <tuple>
 #include <vector>
 
@@ -750,7 +752,6 @@ int main(int argc, const char *argv[])
     openminecraft::log::multithread::registerCurrentThreadName("Bootstrap");
     openminecraft::log::registerLogAgent([](openminecraft::log::OMLogType a, std::string b, std::string c,
                                             std::string d) { logs.push_back(std::make_tuple(a, b, c, d)); });
-
     auto wld = new OMElysiaVirtualWorld;
 
     std::vector<std::string> tabnames = {"Memory", "ElysiaVM",  "Elysia Heap", "Elysia Klass",

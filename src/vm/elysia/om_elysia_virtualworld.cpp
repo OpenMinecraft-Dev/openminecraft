@@ -1,15 +1,15 @@
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
-#include "boost/asio/execution/relationship.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
+#include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
-#include <chrono>
-#include <fstream>
 #include <stdexcept>
 #include <thread>
+
+using namespace openminecraft::vm::elysia::impl;
 
 namespace openminecraft::vm::elysia
 {
@@ -43,8 +43,14 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
     klassLoader->constructPrimitiveClass("void");
     klassLoader->fixAllClasses();
 
-    /*std::ifstream iss("../Test.class", std::ios::binary);
-    klassLoader->loadClassWithoutMirror(&iss);*/
+    registerNative(Java_java_lang_System_registerNatives);
+    registerNative(Java_java_lang_Object_registerNatives);
+    registerNative(Java_java_lang_Class_registerNatives);
+    registerNative(Java_java_lang_Float_floatToRawIntBits);
+    registerNative(Java_java_lang_Double_longBitsToDouble);
+    registerNative(Java_java_lang_Double_doubleToRawLongBits);
+    registerNative(Java_sun_misc_VM_initialize);
+    registerNative(Java_java_io_FileDescriptor_initIDs);
 
     auto tt = new std::thread([&]() {
         log::multithread::registerCurrentThreadName("main");
@@ -59,7 +65,7 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
             logger.error("Elysia VM throwed an exception: {}", e.what());
             while (true)
             {
-                continue;
+	    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             }
         }
     });

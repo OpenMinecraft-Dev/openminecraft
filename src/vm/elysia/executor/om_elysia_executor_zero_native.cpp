@@ -1,3 +1,4 @@
+#include "fmt/format.h"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
@@ -7,9 +8,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
-#include <chrono>
 #include <ffi.h>
-#include <thread>
 #include <variant>
 
 using namespace openminecraft::binary::hash;
@@ -248,41 +247,32 @@ void OMElysiaExecutorZero::executeNativeLink()
     thisThread.switchState(InsideVM);
     auto tc = thisThread.metadata;
     auto mm = tc->zero.frame->method;
-    // TODO: use dynamic loading
-    switch (hash_compile_time(fmt::format("{}.{}", mm->klass->name, mm->name).c_str()))
+
+    for (int i = 0; i < mm->klass->nativeMethodCount; i++)
     {
-    case "java/lang/System.registerNatives"_hash:
-        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_System_registerNatives);
-        break;
-    case "java/lang/Object.registerNatives"_hash:
-        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Object_registerNatives);
-        break;
-    case "java/lang/Class.registerNatives"_hash:
-        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Class_registerNatives);
-        break;
-    case "java/lang/Float.floatToRawIntBits"_hash:
-        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Float_floatToRawIntBits);
-        break;
-    case "java/lang/Double.doubleToRawLongBits"_hash:
-        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_jang_lang_Double_doubleToRawLongBits);
-        break;
-    case "java/lang/Double.longBitsToDouble"_hash:
-        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_java_lang_Double_longBitsToDouble);
-        break;
-    case "sun/misc/VM.initialize"_hash:
-        executeNative(mm->descriptor, mm->isStatic(), (void *)&impl::Java_sun_misc_VM_initialize);
-        break;
-    default:
-        for (int i = 0; i < mm->klass->nativeMethodCount; i++)
+        auto &nm = mm->klass->nativeMethods[i];
+        if (mm->isSame(&nm))
         {
-            auto &nm = mm->klass->nativeMethods[i];
-            if (mm->isSame(&nm))
-            {
-                executeNative(mm->descriptor, mm->isStatic(), nm.funcPtr);
-                return;
-            }
+            executeNative(mm->descriptor, mm->isStatic(), nm.funcPtr);
+            return;
         }
-        throw std::logic_error("not implemented: " + fmt::format("{}.{}{}", mm->klass->name, mm->name, mm->descriptor));
     }
+
+    auto ffm = fmt::format("Java_{}_{}", mm->klass->name, mm->name);
+    for (auto &c : ffm)
+    {
+        if (c == '/')
+        {
+            c = '_';
+        }
+    }
+
+    if (world->nativeFuncMap.count(ffm))
+    {
+        executeNative(mm->descriptor, mm->isStatic(), world->nativeFuncMap[ffm]);
+        return;
+    }
+
+    throw std::logic_error("not implemented: " + fmt::format("{}.{}{}", mm->klass->name, mm->name, mm->descriptor));
 }
 } // namespace openminecraft::vm::elysia::executor

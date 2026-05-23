@@ -322,7 +322,6 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     while (true)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         // The function call is doing, but the native function has not returned yet
         // geopeila: this mainly caused by calling the interpreter in native functions
         if (tc->zero.frame->flag != nullptr)
@@ -544,7 +543,6 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_calc(fdiv, zeroStackPopGet<jfloat>, zeroStackPush, /);
             op_calc(ddiv, zeroStackPopWGet<jdouble>, zeroStackPushW, /);
 
-            // TODO: need to be fixed!
 #define op_calcrem(op, fetch, psh)                                                                                     \
     case op_##op: {                                                                                                    \
         auto value2 = fetch();                                                                                         \
@@ -776,7 +774,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
         case op_getstatic: {
-            bool init;
+            bool init = false;
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(), init);
             if (init)
             {
@@ -794,7 +792,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
         case op_putstatic: {
-            bool init;
+            bool init = false;
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(), init);
             if (init)
             {
@@ -987,11 +985,18 @@ void zeroStackPushFromStatic(OMElysiaField *field, OMElysiaVirtualWorld *world)
 {
     switch (*field->desc)
     {
-    case 'J':
-    case 'D':
-        zeroStackPushW(
-            *reinterpret_cast<jlong *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset));
+#define accessReadS(f, type, set)                                                                                      \
+    case f:                                                                                                            \
+        set(*reinterpret_cast<type *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset));        \
         break;
+        accessReadS('Z', jboolean, zeroStackPush);
+        accessReadS('C', jchar, zeroStackPush);
+        accessReadS('S', jshort, zeroStackPush);
+        accessReadS('B', jbyte, zeroStackPush);
+        accessReadS('I', jint, zeroStackPush);
+        accessReadS('F', jfloat, zeroStackPush);
+        accessReadS('J', jlong, zeroStackPushW);
+        accessReadS('D', jdouble, zeroStackPushW);
     case 'L':
     case '[': {
         if (world->mainHeap.enablePtrCompress())
@@ -1017,11 +1022,20 @@ void zeroStackPopToStatic(OMElysiaField *field, OMElysiaVirtualWorld *world)
 {
     switch (*field->desc)
     {
-    case 'J':
-    case 'D':
-        *reinterpret_cast<jlong *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =
-            zeroStackPopWGet<jlong>();
+#define accessWriteS(f, type, get)                                                                                     \
+    case f:                                                                                                            \
+        *reinterpret_cast<type *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =            \
+            get<type>();                                                                                               \
         break;
+
+        accessWriteS('Z', jboolean, zeroStackPopGet);
+        accessWriteS('B', jbyte, zeroStackPopGet);
+        accessWriteS('C', jchar, zeroStackPopGet);
+        accessWriteS('S', jshort, zeroStackPopGet);
+        accessWriteS('I', jint, zeroStackPopGet);
+        accessWriteS('F', jfloat, zeroStackPopGet);
+        accessWriteS('J', jlong, zeroStackPopWGet);
+        accessWriteS('D', jdouble, zeroStackPopWGet);
     case 'L':
     case '[': {
         auto pp = zeroStackPopGet<OMElysiaOop *>();
@@ -1048,11 +1062,19 @@ void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMEly
 {
     switch (*field->desc)
     {
-    case 'J':
-    case 'D':
-        zeroStackPushW(
-            *reinterpret_cast<jlong *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)));
+#define accessRead(f, type, set)                                                                                       \
+    case f:                                                                                                            \
+        set(*reinterpret_cast<type *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)));          \
         break;
+
+        accessRead('Z', jboolean, zeroStackPush);
+        accessRead('B', jbyte, zeroStackPush);
+        accessRead('C', jchar, zeroStackPush);
+        accessRead('S', jshort, zeroStackPush);
+        accessRead('I', jint, zeroStackPush);
+        accessRead('F', jfloat, zeroStackPush);
+        accessRead('J', jlong, zeroStackPushW);
+        accessRead('D', jdouble, zeroStackPushW);
     case 'L':
     case '[': {
         if (world->mainHeap.enablePtrCompress())
@@ -1077,12 +1099,20 @@ void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysia
 {
     switch (*field->desc)
     {
-    case 'J':
-    case 'D': {
-        auto pp = zeroStackPopWGet<jlong>();
-        *reinterpret_cast<jlong *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)) = pp;
-        break;
+#define accessWrite(f, type, get)                                                                                      \
+    case f: {                                                                                                          \
+        auto pp = get<type>();                                                                                         \
+        *reinterpret_cast<type *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)) = pp;          \
+        break;                                                                                                         \
     }
+        accessWrite('Z', jboolean, zeroStackPopGet);
+        accessWrite('C', jchar, zeroStackPopGet);
+        accessWrite('S', jshort, zeroStackPopGet);
+        accessWrite('B', jbyte, zeroStackPopGet);
+        accessWrite('I', jint, zeroStackPopGet);
+        accessWrite('F', jfloat, zeroStackPopGet);
+        accessWrite('J', jlong, zeroStackPopWGet);
+        accessWrite('D', jdouble, zeroStackPopWGet);
     case 'L':
     case '[': {
         auto pp = zeroStackPopGet<OMElysiaOop *>();

@@ -4,6 +4,8 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/om_elysia_heap.hpp"
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 namespace openminecraft::vm::elysia
 {
@@ -13,6 +15,8 @@ namespace executor
 {
 class OMElysiaExecutorZero;
 }
+
+#define registerNative(n) nativeFuncMap[#n] = reinterpret_cast<void *>(&n);
 
 class OMElysiaVirtualWorld
 {
@@ -26,6 +30,8 @@ class OMElysiaVirtualWorld
     std::shared_ptr<OMElysiaKlassloader> klassLoader;
     std::shared_ptr<OMElysiaOopManager> oopManager;
     std::shared_ptr<executor::OMElysiaExecutorZero> executor;
+
+    std::unordered_map<std::string, void *> nativeFuncMap;
 
   private:
     log::OMLogger logger;
