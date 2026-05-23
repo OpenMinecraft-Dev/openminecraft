@@ -52,6 +52,7 @@ class OMElysiaOopManager
     void oopAccessPointerField(OMElysiaOop *base, uint64_t offset, void *ptrToWrite);
     OMElysiaOop *oopAccessPointerField(OMElysiaOop *base, uint64_t offset);
 
+    jint arrLength(OMElysiaOop *base);
     OMElysiaArrayOop *allocateArr(OMElysiaArrayKlass *klass, jint length);
 
     template <typename T> T *arrAccess(OMElysiaArrayOop *oop)

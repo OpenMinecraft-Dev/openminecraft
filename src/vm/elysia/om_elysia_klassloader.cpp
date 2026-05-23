@@ -10,7 +10,9 @@
 #include <cstring>
 #include <fstream>
 #include <istream>
+#include <map>
 #include <stdexcept>
+#include <unordered_map>
 
 namespace openminecraft::vm::elysia
 {
@@ -158,7 +160,8 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
         klass->superClass = findClass(supclsname);
     }
 
-    std::vector<OMElysiaMethod *> rawVtable = {};
+    // std::vector<OMElysiaMethod *> rawVtable = {};
+    std::unordered_map<std::string, OMElysiaMethod *> rawVtable;
     if (!clsfile->interfaces.empty())
     {
         klass->interfaceImplCount = clsfile->interfaces.size();
@@ -182,7 +185,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
             {
                 for (int i = 0; i < kk->vtableLength; i++)
                 {
-                    rawVtable.push_back(kk->vtable[i]);
+                    rawVtable[fmt::format("{}{}", kk->vtable[i]->name, kk->vtable[i]->descriptor)] = kk->vtable[i];
                 }
             }
 
@@ -214,7 +217,8 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
     {
         for (int i = 0; i < klass->superClass->vtableLength; i++)
         {
-            rawVtable.push_back(klass->superClass->vtable[i]);
+            auto mm = klass->superClass->vtable[i];
+            rawVtable[fmt::format("{}{}", mm->name, mm->descriptor)] = mm;
         }
     }
 
@@ -253,13 +257,13 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
 
         if (!m.isStatic() && !m.isPrivate() && !m.isInit())
         {
-            bool overwrite = false;
+            rawVtable[fmt::format("{}{}", m.name, m.descriptor)] = &m;
+            /*bool overwrite = false;
             for (int i = 0; i < rawVtable.size(); i++)
             {
                 auto currentMethod = rawVtable[i];
                 if (currentMethod->isSame(&m))
                 {
-                    logger.debug("overwrite {}{}", m.name, m.descriptor);
                     rawVtable[i] = &m;
                     overwrite = true;
                     break;
@@ -269,20 +273,26 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
             if (!overwrite)
             {
                 rawVtable.push_back(&m);
-            }
+            }*/
         }
     }
 
-    std::sort(rawVtable.begin(), rawVtable.end());
-    rawVtable.erase(std::unique(rawVtable.begin(), rawVtable.end()), rawVtable.end());
+    /*std::sort(rawVtable.begin(), rawVtable.end());
+    rawVtable.erase(std::unique(rawVtable.begin(), rawVtable.end()), rawVtable.end());*/
 
     klass->vtableLength = rawVtable.size();
     if (klass->vtableLength)
     {
         klass->vtable = world->metaspaceHeap.allocateArray<OMElysiaMethod *>(klass->vtableLength);
-        for (int i = 0; i < klass->vtableLength; i++)
+        /*for (int i = 0; i < klass->vtableLength; i++)
         {
-            klass->vtable[i] = rawVtable[i];
+            klass->vtable[i] = ;
+        }*/
+        int i = 0;
+        for (auto [a, b] : rawVtable)
+        {
+            klass->vtable[i] = b;
+            ++i;
         }
     }
 

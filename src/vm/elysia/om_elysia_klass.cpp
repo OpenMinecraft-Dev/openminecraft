@@ -68,7 +68,7 @@ OMElysiaMethod *OMElysiaKlass::findMethod(const char *name, const char *desc)
     return nullptr;
 }
 
-uint64_t OMElysiaInstanceKlass::constantPoolFetchW(uint16_t id)
+uint64_t OMElysiaInstanceKlass::constantPoolFetchNormalW(uint16_t id)
 {
     if (constantPoolState[id] && constantPoolState[id + 1])
     {
@@ -95,18 +95,64 @@ uint64_t OMElysiaInstanceKlass::constantPoolFetchW(uint16_t id)
         return data;
     }
     default: {
-        while (true)
-        {
-            continue;
-        }
-        throw 0;
+        throw std::logic_error("unknown constant type!");
     }
     }
 
     return 0;
 }
 
-void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id, bool flg)
+void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id, bool &needInit)
+{
+    if (constantPoolState[id])
+    {
+        return constantPool[id];
+    }
+
+    auto item = constantPoolRaw->at(id);
+    auto mr = item->to<OMClassConstantFieldRef>();
+    auto clsname = constantPoolRaw->at(constantPoolRaw->at(mr->classIndex)->to<OMClassConstantClass>()->nameIndex)
+                       ->to<OMClassConstantUtf8>()
+                       ->data;
+    auto mdname =
+        constantPoolRaw->at(constantPoolRaw->at(mr->nameAndTypeIndex)->to<OMClassConstantNameAndType>()->nameIndex)
+            ->to<OMClassConstantUtf8>()
+            ->data;
+    auto mddesc =
+        constantPoolRaw->at(constantPoolRaw->at(mr->nameAndTypeIndex)->to<OMClassConstantNameAndType>()->descIndex)
+            ->to<OMClassConstantUtf8>()
+            ->data;
+
+    if (klassloader)
+    {
+        throw std::logic_error("not supported uplevel classloader!");
+    }
+
+    auto kk = nativeKlassloader->fetchOrLoadClass(clsname);
+
+    if (!kk->toInstance()->clinitFinished)
+    {
+        needInit = true;
+        return kk->findMethod("<clinit>", "()V");
+    }
+
+    for (int i = 0; i < fieldCount; i++)
+    {
+        if (std::strcmp(kk->toInstance()->fields[i].name, mdname.c_str()) == 0 &&
+            std::strcmp(kk->toInstance()->fields[i].desc, mddesc.c_str()) == 0)
+        {
+            constantPool[id] = &kk->toInstance()->fields[i];
+            constantPoolState[id] = true;
+            needInit = false;
+            return &kk->toInstance()->fields[i];
+        }
+    }
+
+    needInit = false;
+    return nullptr;
+}
+
+void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
 {
     if (constantPoolState[id])
     {
@@ -196,17 +242,33 @@ void *OMElysiaInstanceKlass::constantPoolFetch(uint16_t id, bool flg)
             throw std::logic_error("not supported uplevel classloader!");
         }
 
+        auto kk = nativeKlassloader->fetchOrLoadClass(clsname);
+
+        if (!kk->toInstance()->clinitFinished)
+        {
+            return nullptr;
+        }
+
         for (int i = 0; i < fieldCount; i++)
         {
-            if (std::strcmp(fields[i].name, mdname.c_str()) == 0 && std::strcmp(fields[i].desc, mddesc.c_str()) == 0)
+            if (std::strcmp(kk->toInstance()->fields[i].name, mdname.c_str()) == 0 &&
+                std::strcmp(kk->toInstance()->fields[i].desc, mddesc.c_str()) == 0)
             {
-                constantPool[id] = &fields[i];
+                constantPool[id] = &kk->toInstance()->fields[i];
                 constantPoolState[id] = true;
-                return &fields[i];
+                return &kk->toInstance()->fields[i];
             }
         }
 
         return nullptr;
+    }
+    case OMClassConstantType::Integer: {
+        auto d = item->to<OMClassConstantFloat>()->data;
+        uint32_t rd = *reinterpret_cast<uint32_t *>(&d);
+
+        constantPool[id] = reinterpret_cast<void *>(static_cast<uintptr_t>(rd));
+        constantPoolState[id] = true;
+        return constantPool[id];
     }
     case OMClassConstantType::Float: {
         auto d = item->to<OMClassConstantFloat>()->data;

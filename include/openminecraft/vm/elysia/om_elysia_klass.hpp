@@ -116,8 +116,10 @@ class OMElysiaInstanceKlass : public OMElysiaKlass
     void initFieldOffsets();
 
     OMElysiaField *findField(const char *name, const char *desc);
-    void *constantPoolFetch(uint16_t id, bool flg = false);
-    uint64_t constantPoolFetchW(uint16_t id);
+
+    void *constantPoolFetchField(uint16_t id, bool &needInit);
+    void *constantPoolFetchNormal(uint16_t id, bool flg = false);
+    uint64_t constantPoolFetchNormalW(uint16_t id);
 };
 
 class OMElysiaPrimitiveKlass : public OMElysiaKlass

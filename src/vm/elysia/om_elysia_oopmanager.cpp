@@ -105,6 +105,11 @@ uintptr_t OMElysiaOopManager::oopAccessField(OMElysiaOop *base, uint64_t offset)
     return reinterpret_cast<uintptr_t>(base) + oopHeaderLength() + offset;
 }
 
+jint OMElysiaOopManager::arrLength(OMElysiaOop *base)
+{
+    return reinterpret_cast<OMElysiaArrayOop *>(base)->length;
+}
+
 OMElysiaArrayOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint length)
 {
     int i = 0;
