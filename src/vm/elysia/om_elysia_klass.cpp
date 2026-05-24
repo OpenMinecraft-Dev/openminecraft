@@ -133,6 +133,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id, bool &needInit)
     if (!kk->toInstance()->clinitFinished)
     {
         needInit = true;
+	kk->toInstance()->clinitFinished = true;
         return kk->findMethod("<clinit>", "()V");
     }
 
