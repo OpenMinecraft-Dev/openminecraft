@@ -8,7 +8,6 @@ env:
   ANDROID_NDK_VERSION: r27c
   OHOS_SDK_VERSION: 5.0.0-Release
   CROSS_TOOL_VERSION: toolchain-20260214-6
-
 jobs:
   build:
     strategy:
@@ -19,17 +18,14 @@ jobs:
             plat: windows
             arch: x64
             loaderarch: amd64
-
           - os: windows-latest
             plat: windows
             arch: x86
             loaderarch: x86
-
           - os: windows-latest
             plat: windows
             arch: arm64
             loaderarch: arm64
-
           # - os: ubuntu-22.04
           #   plat: harmony
           #   arch: arm64-v8a
@@ -44,92 +40,74 @@ jobs:
           #   plat: harmony
           #   arch: x86_64
           #   loaderarch: amd64
-
           - os: ubuntu-22.04
             plat: android
             arch: arm64-v8a
             loaderarch: arm64
-
           - os: ubuntu-22.04
             plat: android
             arch: armeabi-v7a
             loaderarch: arm32
-
           - os: ubuntu-22.04
             plat: android
             arch: x86_64
             loaderarch: amd64
-
           - os: ubuntu-22.04
             plat: linux
             arch: x64
             loaderarch: amd64
-
           - os: ubuntu-24.04-arm
             plat: linux
             arch: arm64
             loaderarch: arm64
-
           - os: ubuntu-latest
             plat: linux-cross
             arch: loong64
             loaderarch: loong64
-
           - os: ubuntu-latest
             plat: linux-cross
             arch: riscv64
             loaderarch: riscv64
-
           - os: ubuntu-latest
             plat: linux-cross
             arch: s390x
             loaderarch: s390x
-
           - os: ubuntu-latest
             plat: linux-cross
             arch: ppc64
             loaderarch: ppc64
-
           - os: macos-latest
             plat: macos
             arch: arm64
             loaderarch: arm64
-
           - os: macos-15-intel
             plat: macos
             arch: x64
             loaderarch: amd64
-
           - os: macos-latest
             plat: ios
             arch: arm64
             loaderarch: arm64
-
           - os: ubuntu-latest
             plat: freebsd
             arch: x86_64
             loaderarch: amd64
-
           - os: ubuntu-latest
             plat: freebsd
             arch: arm64
             loaderarch: arm64
-
           - os: ubuntu-latest
             plat: freebsd
             arch: riscv64
             loaderarch: riscv64
-
           - os: ubuntu-latest
             plat: freebsd
             arch: ppc64
             loaderarch: ppc64
-
           - os: ubuntu-latest
             plat: openbsd
             arch: x86_64
             loaderarch: amd64
-
     name: Build ${{ matrix.plat }}-${{ matrix.loaderarch }}
     runs-on: ${{ matrix.os }}
     permissions:
@@ -142,13 +120,11 @@ jobs:
         with:
           style: lowerCase
           length: 3
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: 'true'
-
       - name: macos test
         if: matrix.plat == 'macos'
         run: |
@@ -157,11 +133,9 @@ jobs:
           codesign -s - -f --entitlements jit.entitlements jit
           lldb -o r -o exit ./jit
           rm jit
-
       - name: Install xmake
         if: matrix.plat != 'freebsd'
         uses: xmake-io/github-action-setup-xmake@v1
-
       - name: Install xmake from source
         if: matrix.plat == 'freebsd'
         run: |
@@ -170,10 +144,8 @@ jobs:
           git submodule update --recursive --init
           ./scripts/get.sh __local__
           source ~/.xmake/profile
-
       - name: Setup Python packages
         run: pip install wheel
-
       - name: Restore xmake packages (UNIX)
         if: matrix.plat != 'windows'
         id: cache-unix
@@ -182,7 +154,6 @@ jobs:
           path: ~/.xmake/packages
           key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-
           restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-
-
       - name: Restore xmake packages (Windows)
         if: matrix.plat == 'windows'
         id: cache-windows
@@ -191,7 +162,6 @@ jobs:
           path: C:/Users/runneradmin/AppData/Local/.xmake/packages
           key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-
           restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-
-
       - name: Generate header
         run: |
           xmake f -yc ${{ env.XMAKE_ARGS }}
@@ -199,43 +169,35 @@ jobs:
           xmake run -y -w . openminecraft-bundlemaker -a Cyrene -c -t res.bundle -P bootassets
           xxd -i res.bundle > include/openminecraft/resource/bootassets.h
           rm res.bundle
-
       - name: Setup OpenHarmony SDK
         if: matrix.plat == 'harmony'
         run: |
           wget https://repo.huaweicloud.com/openharmony/os/${{ env.OHOS_SDK_VERSION }}/ohos-sdk-windows_linux-public.tar.gz
           tar -zxvf ohos-sdk-windows_linux-public.tar.gz
           unzip linux/native*.zip
-
       - name: Setup Android NDK
         if: matrix.plat == 'android'
         run: |
           wget https://dl.google.com/android/repository/android-ndk-${{ env.ANDROID_NDK_VERSION }}-linux.zip
           unzip android-ndk-${{ env.ANDROID_NDK_VERSION }}-linux.zip
-
       - name: Configure MacOS
         if: matrix.plat == 'macos'
         run: xmake f -m ${{ env.MODE }} --cxx="clang++" -yc ${{ env.XMAKE_ARGS }}
-
       - name: Configure IOS
         if: matrix.plat == 'ios'
         run: xmake f -p iphoneos -m ${{ env.MODE }} --cc="clang" -yc ${{ env.XMAKE_ARGS }}
-          
       - name: Configure OpenHarmony
         if: matrix.plat == 'harmony'
         run: xmake f -p harmony -a ${{ matrix.arch }} --sdk=${{ github.workspace }}/native -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
-
       - name: Configure Android
         if: matrix.plat == 'android'
         run: xmake f -p android -a ${{ matrix.arch }} --ndk=${{ github.workspace }}/android-ndk-${{ env.ANDROID_NDK_VERSION }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }} --cxxflags="-fPIC"
-
       - name: Configure Linux
         if: ${{ matrix.plat == 'linux' }}
         run: |
           sudo apt update
           sudo apt install libgl1-mesa-dev
           xmake f -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
-
       - name: Configure Linux Cross
         if: ${{ matrix.plat == 'linux-cross' }}
         run: |
@@ -258,53 +220,43 @@ jobs:
           rm llvm-toolchain-freebsd-${{ matrix.arch }}.tar.xz
 
           xmake f --toolchain=llvm --sdk=${{ github.workspace }}/toolchain -a ${{ matrix.arch }} -m ${{ env.MODE }} -p bsd --target_os=FreeBSD -yc ${{ env.XMAKE_ARGS }}
-
       - name: Configure OpenBSD Cross
         if: ${{ matrix.plat == 'openbsd' }}
-        run: |                                                                                                     sudo apt update
+        run: |
+          sudo apt update
           sudo apt install clang llvm
-          wget https://github.com/OpenMinecraft-Dev/cross-toolchain-sysroot/releases/download/${{ env.CRO
-SS_TOOL_VERSION }}/llvm-toolchain-openbsd-${{ matrix.arch }}.tar.xz
+          wget https://github.com/OpenMinecraft-Dev/cross-toolchain-sysroot/releases/download/${{ env.CROSS_TOOL_VERSION }}/llvm-toolchain-openbsd-${{ matrix.arch }}.tar.xz
           mkdir toolchain
           tar -xJf llvm-toolchain-openbsd-${{ matrix.arch }}.tar.xz -C ./toolchain/
           rm llvm-toolchain-openbsd-${{ matrix.arch }}.tar.xz
 
-          xmake f --toolchain=llvm --sdk=${{ github.workspace }}/toolchain -a ${{ matrix.arch }} -m ${{ e
-nv.MODE }} -p bsd --target_os=OpenBSD -yc ${{ env.XMAKE_ARGS }}
-
+          xmake f --toolchain=llvm --sdk=${{ github.workspace }}/toolchain -a ${{ matrix.arch }} -m ${{ env.MODE }} -p bsd --target_os=OpenBSD -yc ${{ env.XMAKE_ARGS }}
       - name: Configure Windows
         if: matrix.plat == 'windows'
         run: xmake f --toolchain=msvc -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
-
       - name: Save xmake packages (UNIX)
         if: matrix.plat != 'windows'
         uses: actions/cache/save@v5
         with:
           path: ~/.xmake/packages
           key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-${{ steps.generator.outputs.name }}
-
       - name: Save xmake packages (Windows)
         if: matrix.plat == 'windows'
         uses: actions/cache/save@v5
         with:
           path: C:/Users/runneradmin/AppData/Local/.xmake/packages
           key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-${{ steps.generator.outputs.name }}
-
       - name: Build
         run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }} openminecraft
-
       - name: Build debug tools
         if: matrix.plat == 'windows'
         run: |
           xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }} openminecraft-elysiavis
           xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft-elysiavis
-
       - name: Xmake Install
         run: xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft
-
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: target-${{ matrix.plat }}-${{ matrix.loaderarch }}
           path: prod/
- 
