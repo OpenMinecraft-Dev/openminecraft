@@ -19,11 +19,8 @@
 #include <cstdarg>
 #include <cstdint>
 #include <cstring>
-#include <ratio>
 #include <stdexcept>
 #include <thread>
-#include <variant>
-#include <vector>
 
 using namespace openminecraft::binary::hash;
 
@@ -64,7 +61,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
     auto tc = thisThread.metadata;
 
     auto newlocal = reinterpret_cast<void *>(tc->zero.stackPointer - sizeof(OMElysiaJavaFrame));
-    std::memcpy(newlocal, reinterpret_cast<void *>(tc->zero.stackPointer), ll * sizeof(void *));
+    std::memmove(newlocal, reinterpret_cast<void *>(tc->zero.stackPointer), ll * sizeof(void *));
     zeroStackPop(ll * sizeof(void *));
 
     auto frame = reinterpret_cast<OMElysiaJavaFrame *>(zeroStackAlloc(sizeof(OMElysiaJavaFrame)));

@@ -191,8 +191,6 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
         thisThread.switchState(InsideVM);
     }
 
-    cleanupLocalRef();
-
     switch (returnType)
     {
     case argTypeVoid:
@@ -240,6 +238,8 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
         popFrame();
         break;
     }
+
+    cleanupLocalRef();
 }
 
 void OMElysiaExecutorZero::executeNativeLink()

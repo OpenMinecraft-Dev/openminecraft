@@ -1,5 +1,6 @@
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -740,18 +741,22 @@ int main(int argc, const char *argv[])
     std::cout << std::hex << openminecraft::mem::stack::fetchStackBase() << " "
               << openminecraft::mem::stack::fetchStackTop() << std::endl;
 
-    uintptr_t cu = openminecraft::mem::stack::fetchStackBase();
+    auto enableSlientmode = std::getenv("OM_SLIENT");
+    bool enableSlient = enableSlientmode && std::strcmp(enableSlientmode, "y") == 0;
+
+    /*uintptr_t cu = openminecraft::mem::stack::fetchStackBase();
     uint64_t i = 0x3355033600114514;
     uintptr_t pp = (uintptr_t)&i;
     while (pp < cu)
     {
-        std::cout << fmt::format("{:016x}: {:016x}", pp, *reinterpret_cast<uint64_t *>(pp)) << std::endl;
-        pp += 8;
-    }
+        std::cout << fmt::format("{:016x}: {:016x}", pp, *reinterpret_cast<uint64_t *>(pp)) <<
+    std::endl; pp += 8;
+    }*/
 
     openminecraft::log::multithread::registerCurrentThreadName("Bootstrap");
-    openminecraft::log::registerLogAgent([](openminecraft::log::OMLogType a, std::string b, std::string c,
-                                            std::string d) { logs.push_back(std::make_tuple(a, b, c, d)); });
+    if (!enableSlient)
+        openminecraft::log::registerLogAgent([](openminecraft::log::OMLogType a, std::string b, std::string c,
+                                                std::string d) { logs.push_back(std::make_tuple(a, b, c, d)); });
     auto wld = new OMElysiaVirtualWorld;
 
     std::vector<std::string> tabnames = {"Memory", "ElysiaVM",  "Elysia Heap", "Elysia Klass",
@@ -783,7 +788,17 @@ int main(int argc, const char *argv[])
 
     auto screen = ScreenInteractive::TerminalOutput();
     actualExit = [&]() { screen.Exit(); };
-    screen.Loop(renderer);
+    if (!enableSlient)
+    {
+        screen.Loop(renderer);
+    }
+    else
+    {
+        while (true)
+        {
+            std::this_thread::sleep_for(std::chrono::seconds(10000));
+        }
+    }
 
     delete wld;
 
