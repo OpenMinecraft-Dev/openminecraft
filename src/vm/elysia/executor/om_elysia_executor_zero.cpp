@@ -115,7 +115,7 @@ nextStg:
         m->klass->toInstance()->clinitFinished = true;
         if (l)
         {
-            callVoidFunction(l);
+            pushFrame(l);
         }
     }
 }
