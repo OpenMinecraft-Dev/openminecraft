@@ -7,7 +7,7 @@ env:
   XMAKE_ARGS: -v
   ANDROID_NDK_VERSION: r27c
   OHOS_SDK_VERSION: 5.0.0-Release
-  CROSS_TOOL_VERSION: toolchain-20260214-6
+  CROSS_TOOL_VERSION: toolchain-20260524-1
 jobs:
   build:
     strategy:
@@ -229,7 +229,6 @@ jobs:
           mkdir toolchain
           tar -xJf llvm-toolchain-openbsd-${{ matrix.arch }}.tar.xz -C ./toolchain/
           rm llvm-toolchain-openbsd-${{ matrix.arch }}.tar.xz
-          rm toolchain/usr/lib/libc++abi.a
 
           xmake f --toolchain=llvm --sdk=${{ github.workspace }}/toolchain -a ${{ matrix.arch }} -m ${{ env.MODE }} -p bsd --target_os=OpenBSD -yc ${{ env.XMAKE_ARGS }}
       - name: Configure Windows
