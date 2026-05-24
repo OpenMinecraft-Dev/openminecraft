@@ -68,10 +68,10 @@ jobs:
             plat: linux-cross
             arch: riscv64
             loaderarch: riscv64
-          - os: ubuntu-latest
-            plat: linux-cross
-            arch: s390x
-            loaderarch: s390x
+          # - os: ubuntu-latest
+          #   plat: linux-cross
+          #   arch: s390x
+          #   loaderarch: s390x
           - os: ubuntu-latest
             plat: linux-cross
             arch: ppc64
@@ -229,6 +229,7 @@ jobs:
           mkdir toolchain
           tar -xJf llvm-toolchain-openbsd-${{ matrix.arch }}.tar.xz -C ./toolchain/
           rm llvm-toolchain-openbsd-${{ matrix.arch }}.tar.xz
+          rm toolchain/usr/lib/libc++abi.a
 
           xmake f --toolchain=llvm --sdk=${{ github.workspace }}/toolchain -a ${{ matrix.arch }} -m ${{ env.MODE }} -p bsd --target_os=OpenBSD -yc ${{ env.XMAKE_ARGS }}
       - name: Configure Windows
