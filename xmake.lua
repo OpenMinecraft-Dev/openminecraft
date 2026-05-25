@@ -6,7 +6,7 @@ add_rules("mode.releasedbg")
 add_rules("mode.minsizerel")
 add_rules("mode.debug")
 
-set_policy("build.sanitizer.address", true)
+set_policy("build.sanitizer.address", false)
 set_policy("build.sanitizer.memory", false)
 set_policy("build.sanitizer.leak", false)
 set_policy("build.sanitizer.undefined", false)
