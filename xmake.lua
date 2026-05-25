@@ -5,10 +5,13 @@ add_rules("mode.release")
 add_rules("mode.releasedbg")
 add_rules("mode.minsizerel")
 add_rules("mode.debug")
-add_rules("mode.check")
-add_rules("mode.lsan")
-add_rules("mode.ubsan")
-add_rules("mode.asan")
+
+set_policy("build.sanitizer.address", true)
+set_policy("build.sanitizer.memory", false)
+set_policy("build.sanitizer.leak", false)
+set_policy("build.sanitizer.undefined", false)
+
+set_policy("build.optimization.lto", false)
 
 -- utils and custom libraries
 includes("utils.lua")

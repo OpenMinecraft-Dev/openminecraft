@@ -30,8 +30,16 @@ void Java_java_lang_System_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *k
     env->RegisterNatives(klass, mm, 1);
 }
 
+static jint Java_java_lang_Object_hashCode(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+{
+    return static_cast<jint>(reinterpret_cast<uintptr_t>(hnd->object));
+}
+
 void Java_java_lang_Object_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
+    OMElysiaNativeMethod mm[] = {{const_cast<char *>("hashCode"), const_cast<char *>("()I"),
+                                  reinterpret_cast<void *>(Java_java_lang_Object_hashCode)}};
+    env->RegisterNatives(klass, mm, 1);
 }
 
 OMElysiaNativeHandle *Java_java_lang_Class_getPrimitiveClass(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
@@ -76,5 +84,9 @@ jlong Java_java_lang_Double_doubleToRawLongBits(OMElysiaJNIEnv *env, OMElysiaKla
 jdouble Java_java_lang_Double_longBitsToDouble(OMElysiaJNIEnv *env, OMElysiaKlass *klass, jlong l)
 {
     return *reinterpret_cast<jdouble *>(&l);
+}
+
+void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
+{
 }
 } // namespace openminecraft::vm::elysia::impl

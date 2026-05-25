@@ -354,8 +354,9 @@ struct OMClassAttrVerifySameFrameExt
     uint8_t tag;
     uint16_t offset;
 };
-struct OMClassAttrVerifyAppendFrame
+class OMClassAttrVerifyAppendFrame
 {
+  public:
     uint8_t tag;
     uint16_t offset;
     std::shared_ptr<std::vector<OMClassAttrVerifyTypeInfo>> locals;

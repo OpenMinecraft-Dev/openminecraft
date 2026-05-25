@@ -113,8 +113,7 @@ static OMElysiaNativeHandle *interfaceGetObjectField(OMElysiaJNIEnv *env, OMElys
 static jchar *interfaceGetCharArrayElements(OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jboolean *isCopy)
 {
     enterInterface;
-    recordResult(
-        env->internal->world->oopManager->arrAccess<jchar>(reinterpret_cast<OMElysiaArrayOop *>(array->object)));
+    recordResult(env->internal->world->oopManager->arrAccess<jchar>(array->object));
     if (isCopy)
     {
         *isCopy = false;
@@ -137,7 +136,8 @@ static const char *interfaceGetStringUTFChars(OMElysiaJNIEnv *env, OMElysiaNativ
     }
 
     enterInterface;
-    auto s = encoding::utf16ToUtf8New(data, reinterpret_cast<OMElysiaArrayOop *>(arrdata->object)->length);
+    auto len = env->internal->world->oopManager->arrLength(arrdata->object);
+    auto s = encoding::utf16ToUtf8New(data, len);
     auto result = reinterpret_cast<char *>(mem::allocator::tracedMallocElysia(s.size() + 1));
     std::memcpy(result, s.c_str(), s.size());
     result[s.size()] = '\0';

@@ -23,17 +23,13 @@ struct OMElysiaOopCompressed : public OMElysiaOop
 {
     uint32_t klass;
 };
-struct OMElysiaArrayOop : public OMElysiaOop
+struct OMElysiaArrayOopUncompressed : public OMElysiaOopUncompressed
 {
     jint length;
 };
-struct OMElysiaArrayOopUncompressed : public OMElysiaArrayOop
+struct OMElysiaArrayOopCompressed : public OMElysiaOopCompressed
 {
-    OMElysiaKlass *klass;
-};
-struct OMElysiaArrayOopCompressed : public OMElysiaArrayOop
-{
-    uint32_t klass;
+    jint length;
 };
 #pragma pack()
 
@@ -53,9 +49,9 @@ class OMElysiaOopManager
     OMElysiaOop *oopAccessPointerField(OMElysiaOop *base, uint64_t offset);
 
     jint arrLength(OMElysiaOop *base);
-    OMElysiaArrayOop *allocateArr(OMElysiaArrayKlass *klass, jint length);
+    OMElysiaOop *allocateArr(OMElysiaArrayKlass *klass, jint length);
 
-    template <typename T> T *arrAccess(OMElysiaArrayOop *oop)
+    template <typename T> T *arrAccess(OMElysiaOop *oop)
     {
         return reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(oop) + oopArrayHeaderLength());
     }

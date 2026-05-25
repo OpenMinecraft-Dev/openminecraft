@@ -22,6 +22,8 @@ extern "C"
 
     void Java_sun_misc_VM_initialize(OMElysiaJNIEnv *env, OMElysiaKlass *klass);
     void Java_java_io_FileDescriptor_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass);
+
+    void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass);
 }
 }; // namespace openminecraft::vm::elysia::impl
 

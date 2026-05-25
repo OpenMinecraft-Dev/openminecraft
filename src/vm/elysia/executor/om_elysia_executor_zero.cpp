@@ -139,7 +139,8 @@ void OMElysiaExecutorZero::threadInit()
         tc->interface.internal->world = world;
         initBaseInterface(tc->interface);
 
-        tc->cleaner = [&]() {
+        tc->cleaner = []() {
+            auto tc = thisThread.metadata;
             mem::allocator::tracedFreeElysia(reinterpret_cast<void *>(tc->stackEnd));
             mem::allocator::tracedFreeElysia(tc->interface.internal);
         };
@@ -313,15 +314,16 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     auto tc = thisThread.metadata;
     threadInit();
 
+    auto cachedStackTop = tc->zero.stackPointer;
+
     pushFrame(m);
 
 #define CURRENT_KLASS tc->zero.frame->method->klass->toInstance()
 
     while (true)
     {
-        // The function call is doing, but the native function has not returned yet
-        // geopeila: this mainly caused by calling the interpreter in native functions
-        if (tc->zero.frame->flag != nullptr)
+        // geopeila: the calling method's frame is popped, so we need to exit the interpreter loop
+        if (tc->zero.stackPointer >= cachedStackTop)
         {
             break;
         }
@@ -445,14 +447,14 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
         case op_caload: {
             auto idx = zeroStackPopGet<jint>();
-            auto obj = zeroStackPopGet<OMElysiaArrayOop *>();
+            auto obj = zeroStackPopGet<OMElysiaOop *>();
             zeroStackPush(world->oopManager->arrAccess<jchar>(obj)[idx]);
             ++tc->zero.pc;
             break;
         }
         case op_aaload: {
             auto idx = zeroStackPopGet<jint>();
-            auto obj = zeroStackPopGet<OMElysiaArrayOop *>();
+            auto obj = zeroStackPopGet<OMElysiaOop *>();
             zeroStackPush(world->oopManager->arrAccess<OMElysiaOop>(obj)[idx]);
             ++tc->zero.pc;
             break;
@@ -491,7 +493,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         case op_castore: {
             auto value = zeroStackPopGet<jchar>();
             auto index = zeroStackPopGet<jint>();
-            auto arr = zeroStackPopGet<OMElysiaArrayOop *>();
+            auto arr = zeroStackPopGet<OMElysiaOop *>();
             world->oopManager->arrAccess<jchar>(arr)[index] = value;
             ++tc->zero.pc;
             break;
@@ -499,7 +501,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         case op_aastore: {
             auto value = zeroStackPopGet<OMElysiaOop *>();
             auto index = zeroStackPopGet<jint>();
-            auto arr = zeroStackPopGet<OMElysiaArrayOop *>();
+            auto arr = zeroStackPopGet<OMElysiaOop *>();
             world->oopManager->arrAccess<OMElysiaOop *>(arr)[index] = value;
             ++tc->zero.pc;
             break;

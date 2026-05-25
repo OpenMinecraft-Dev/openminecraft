@@ -9,6 +9,7 @@
 #include "openminecraft/vm/encoding/om_encoding_utf.hpp"
 #include <cstdint>
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -133,7 +134,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id, bool &needInit)
     if (!kk->toInstance()->clinitFinished)
     {
         needInit = true;
-	kk->toInstance()->clinitFinished = true;
+        kk->toInstance()->clinitFinished = true;
         return kk->findMethod("<clinit>", "()V");
     }
 

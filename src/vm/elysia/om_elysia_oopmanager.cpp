@@ -107,10 +107,17 @@ uintptr_t OMElysiaOopManager::oopAccessField(OMElysiaOop *base, uint64_t offset)
 
 jint OMElysiaOopManager::arrLength(OMElysiaOop *base)
 {
-    return reinterpret_cast<OMElysiaArrayOop *>(base)->length;
+    if (world->metaspaceHeap.enablePtrCompress())
+    {
+        return reinterpret_cast<OMElysiaArrayOopCompressed *>(base)->length;
+    }
+    else
+    {
+        return reinterpret_cast<OMElysiaArrayOopUncompressed *>(base)->length;
+    }
 }
 
-OMElysiaArrayOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint length)
+OMElysiaOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint length)
 {
     int i = 0;
     switch (hash_compile_time(klass->lowerDim->name))
@@ -136,17 +143,18 @@ OMElysiaArrayOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jin
         break;
     }
 
-    auto ll = reinterpret_cast<OMElysiaArrayOop *>(world->mainHeap.allocate(oopArrayHeaderLength() + i * length));
+    auto ll = reinterpret_cast<OMElysiaOop *>(world->mainHeap.allocate(oopArrayHeaderLength() + i * length));
     std::memset(ll, 0x00, oopArrayHeaderLength() + i * length);
 
-    ll->length = length;
     if (world->metaspaceHeap.enablePtrCompress())
     {
         reinterpret_cast<OMElysiaArrayOopCompressed *>(ll)->klass = world->metaspaceHeap.compress(klass);
+        reinterpret_cast<OMElysiaArrayOopCompressed *>(ll)->length = length;
     }
     else
     {
         reinterpret_cast<OMElysiaArrayOopUncompressed *>(ll)->klass = klass;
+        reinterpret_cast<OMElysiaArrayOopCompressed *>(ll)->length = length;
     }
 
     return ll;

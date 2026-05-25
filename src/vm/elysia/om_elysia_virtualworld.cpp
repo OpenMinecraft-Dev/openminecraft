@@ -6,10 +6,13 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
+#include <atomic>
 #include <stdexcept>
 #include <thread>
 
 using namespace openminecraft::vm::elysia::impl;
+
+std::atomic<bool> needStop = false;
 
 namespace openminecraft::vm::elysia
 {
@@ -51,8 +54,9 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
     registerNative(Java_java_lang_Double_doubleToRawLongBits);
     registerNative(Java_sun_misc_VM_initialize);
     registerNative(Java_java_io_FileDescriptor_initIDs);
+    registerNative(Java_sun_misc_Unsafe_registerNatives);
 
-    auto tt = new std::thread([&]() {
+    mainThread = new std::thread([&]() {
         log::multithread::registerCurrentThreadName("main");
         try
         {
@@ -63,14 +67,17 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
         catch (std::logic_error &e)
         {
             logger.error("Elysia VM throwed an exception: {}", e.what());
-            while (true)
+            while (true && !needStop)
             {
-	    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             }
         }
     });
 }
 OMElysiaVirtualWorld::~OMElysiaVirtualWorld()
 {
+    needStop = true;
+    mainThread->join();
+    delete mainThread;
 }
 } // namespace openminecraft::vm::elysia

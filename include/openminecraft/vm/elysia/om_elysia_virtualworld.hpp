@@ -5,6 +5,7 @@
 #include "openminecraft/vm/elysia/om_elysia_heap.hpp"
 #include <memory>
 #include <string>
+#include <thread>
 #include <unordered_map>
 
 namespace openminecraft::vm::elysia
@@ -35,6 +36,8 @@ class OMElysiaVirtualWorld
 
   private:
     log::OMLogger logger;
+
+    std::thread *mainThread;
 };
 } // namespace openminecraft::vm::elysia
 
