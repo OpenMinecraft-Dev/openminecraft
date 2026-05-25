@@ -775,7 +775,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(), init);
             if (init)
             {
-                callVoidFunction(reinterpret_cast<OMElysiaMethod *>(fld));
+                pushFrame(reinterpret_cast<OMElysiaMethod *>(fld));
                 break;
             }
             zeroStackPushFromStatic(reinterpret_cast<OMElysiaField *>(fld), world);
@@ -793,7 +793,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(), init);
             if (init)
             {
-                callVoidFunction(reinterpret_cast<OMElysiaMethod *>(fld));
+                pushFrame(reinterpret_cast<OMElysiaMethod *>(fld));
                 break;
             }
             zeroStackPopToStatic(reinterpret_cast<OMElysiaField *>(fld), world);
