@@ -133,6 +133,8 @@ jobs:
       - name: Install xmake
         if: matrix.plat != 'freebsd'
         uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: latest
       - name: Install xmake from source
         if: matrix.plat == 'freebsd'
         run: |
