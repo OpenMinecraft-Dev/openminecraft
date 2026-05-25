@@ -948,7 +948,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         default:
         unk:
-            throw std::logic_error("unknown operand!");
+            throw std::logic_error(fmt::format("unknown operand! (operand 0x{:02x})", *tc->zero.pc));
         }
     }
 }
