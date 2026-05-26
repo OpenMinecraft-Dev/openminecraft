@@ -151,16 +151,16 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: ~/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-
-          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
+          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
       - name: Restore xmake packages (Windows)
         if: matrix.plat == 'windows'
         id: cache-windows
         uses: actions/cache/restore@v5
         with:
           path: C:/Users/runneradmin/AppData/Local/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-
-          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
+          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
       - name: Generate header
         run: |
           xmake f -yc ${{ env.XMAKE_ARGS }}
@@ -228,13 +228,13 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: ~/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-${{ steps.generator.outputs.name }}
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-${{ steps.generator.outputs.name }}
       - name: Save xmake packages (Windows)
         if: matrix.plat == 'windows'
         uses: actions/cache/save@v5
         with:
           path: C:/Users/runneradmin/AppData/Local/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-${{ steps.generator.outputs.name }}
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-${{ steps.generator.outputs.name }}
       - name: Build
         run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }} openminecraft
       - name: Build debug tools
