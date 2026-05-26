@@ -1,5 +1,6 @@
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "ffi.h"
+#include "fmt/base.h"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
@@ -23,6 +24,7 @@
 #include <thread>
 
 using namespace openminecraft::binary::hash;
+using namespace std::chrono_literals;
 
 namespace openminecraft::vm::elysia::executor
 {
@@ -510,6 +512,16 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         case op_dup: {
             zeroStackPush(zeroStackPeekGet<OMElysiaOop *>());
+            ++tc->zero.pc;
+            break;
+        }
+        case op_dup_x1: {
+            auto value1 = zeroStackPopGet<OMElysiaOop *>();
+            auto value2 = zeroStackPopGet<OMElysiaOop *>();
+
+            zeroStackPush(value1);
+            zeroStackPush(value2);
+            zeroStackPush(value1);
             ++tc->zero.pc;
             break;
         }
