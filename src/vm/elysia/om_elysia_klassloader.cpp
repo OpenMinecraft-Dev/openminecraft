@@ -160,7 +160,6 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
         klass->superClass = findClass(supclsname);
     }
 
-    // std::vector<OMElysiaMethod *> rawVtable = {};
     std::unordered_map<std::string, OMElysiaMethod *> rawVtable;
     if (!clsfile->interfaces.empty())
     {
@@ -237,7 +236,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
 
         if (m.isNative())
         {
-            m.localLength = argSlots(m.descriptor);
+            m.localLength = argSlots(m.descriptor) + (m.isStatic() ? 0 : 1);
         }
         else
         {
@@ -258,36 +257,13 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
         if (!m.isStatic() && !m.isPrivate() && !m.isInit())
         {
             rawVtable[fmt::format("{}{}", m.name, m.descriptor)] = &m;
-            /*bool overwrite = false;
-            for (int i = 0; i < rawVtable.size(); i++)
-            {
-                auto currentMethod = rawVtable[i];
-                if (currentMethod->isSame(&m))
-                {
-                    rawVtable[i] = &m;
-                    overwrite = true;
-                    break;
-                }
-            }
-
-            if (!overwrite)
-            {
-                rawVtable.push_back(&m);
-            }*/
         }
     }
-
-    /*std::sort(rawVtable.begin(), rawVtable.end());
-    rawVtable.erase(std::unique(rawVtable.begin(), rawVtable.end()), rawVtable.end());*/
 
     klass->vtableLength = rawVtable.size();
     if (klass->vtableLength)
     {
         klass->vtable = world->metaspaceHeap.allocateArray<OMElysiaMethod *>(klass->vtableLength);
-        /*for (int i = 0; i < klass->vtableLength; i++)
-        {
-            klass->vtable[i] = ;
-        }*/
         int i = 0;
         for (auto [a, b] : rawVtable)
         {
