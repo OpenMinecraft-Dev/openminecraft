@@ -90,6 +90,7 @@ jdouble Java_java_lang_Double_longBitsToDouble(OMElysiaJNIEnv *env, OMElysiaKlas
 static jint Java_sun_misc_Unsafe_arrayBaseOffset(OMElysiaJNIEnv *env, OMElysiaNativeHandle hnd,
                                                  OMElysiaNativeHandle klass)
 {
+    logger.debug("{} {}", (void *)hnd.object, (void *)klass.object);
     throw std::logic_error("not implemented!");
 }
 
