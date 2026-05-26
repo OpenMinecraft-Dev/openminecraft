@@ -147,9 +147,6 @@ void OMElysiaExecutorZero::threadInit()
         tc->threadInited = true;
         tc->registerThread();
 
-        logger.info("virtual stack: {}", (void *)tc->stackStart);
-        logger.info("env: {}", (void *)&tc->interface);
-
         thisThread.switchState(InsideVM);
     }
 }
