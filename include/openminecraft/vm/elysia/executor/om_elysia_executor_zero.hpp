@@ -145,6 +145,7 @@ class OMElysiaExecutorZero
     void execute(OMElysiaMethod *m);
     void executeNativeLink();
     void executeNative(char *descriptor, bool isStatic, void *func);
+    void executeNativeNew(char *descriptor, bool isStatic, void *func);
     void pushFrame(OMElysiaMethod *m, bool needVtable);
     void popFrame();
 

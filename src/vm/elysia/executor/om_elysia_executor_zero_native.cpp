@@ -51,8 +51,80 @@ OMElysiaNativeHandle *OMElysiaExecutorZero::recordLocalRef(OMElysiaOop *oop)
 
     return oldnode;
 }
+
+void OMElysiaExecutorZero::executeNativeNew(char *descriptor, bool isStatic, void *func)
+{
+    auto tc = thisThread.metadata;
+    tc->zero.frame->flag = mem::allocator::tracedCallocElysia(1, sizeof(OMElysiaNativeHandle));
+
+    std::vector<std::variant<jint, jbyte, jboolean, jshort, jchar, jfloat, jlong, jdouble, OMElysiaNativeHandle *,
+                             OMElysiaJNIEnv *, OMElysiaKlass *>>
+        rawargs;
+
+    // geopelia: arg #0, jnienv
+    rawargs.push_back(&tc->interface);
+
+    uint8_t argTypes[255];
+    int argCount;
+    uint8_t returnType;
+    argDescriptorParse(descriptor, argTypes, argCount, &returnType);
+    auto argid = 0;
+
+    // geopelia: arg #1, instance oop (non-static) or klass (static)
+    if (!isStatic)
+    {
+        rawargs.push_back(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
+        ++argid;
+    }
+    else
+    {
+        rawargs.push_back(thisThread.metadata->zero.frame->method->klass);
+    }
+
+    // geopelia: arg #2 and so on, fetch from the stack (if exists)
+    for (int i = 0; i < argCount; i++)
+    {
+        switch (argTypes[i])
+        {
+
+#define ARGTYPE_CASE0(id, type)                                                                                        \
+    case id:                                                                                                           \
+        rawargs.push_back(zeroStackLoadLocal<type>(argid));                                                            \
+        ++argid;                                                                                                       \
+        break;
+
+            ARGTYPE_CASE0(argTypeByte, jbyte);
+            ARGTYPE_CASE0(argTypeBoolean, jboolean);
+            ARGTYPE_CASE0(argTypeShort, jshort);
+            ARGTYPE_CASE0(argTypeChar, jchar);
+            ARGTYPE_CASE0(argTypeInt, jint);
+            ARGTYPE_CASE0(argTypeFloat, jfloat);
+        case argTypeReference:
+            rawargs.push_back(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
+            ++argid;
+            break;
+        case argTypeLong:
+            rawargs.push_back(zeroStackLoadLocalW<jlong>(argid));
+            argid += 2;
+            break;
+        case argTypeDouble:
+            rawargs.push_back(zeroStackLoadLocalW<jdouble>(argid));
+            argid += 2;
+            break;
+        default:
+            throw std::logic_error("not supported yet!");
+        }
+    }
+
+    for (auto &t : rawargs)
+    {
+        logger.debug("arg size {}", t.index());
+    }
+}
+
 void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *func)
 {
+    executeNativeNew(descriptor, isStatic, func);
     auto tc = thisThread.metadata;
     tc->zero.frame->flag = mem::allocator::tracedCallocElysia(1, sizeof(OMElysiaNativeHandle));
 
