@@ -53,7 +53,7 @@ OMElysiaExecutorZero::~OMElysiaExecutorZero()
 // oooooooo oooooooo oooooooo
 // oooooooo oooooooo oooooooo
 // ........ ........ ........
-void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
+void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m, bool needVtable)
 {
     if (!m)
     {
@@ -70,7 +70,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m)
     zeroStackAlloc(ll * sizeof(void *));
 
     // function in vtable
-    if (!m->isStatic() && !m->isPrivate() && !m->isInit())
+    if (!m->isStatic() && !m->isPrivate() && !m->isInit() && needVtable)
     {
         auto oop = reinterpret_cast<OMElysiaOop **>(frame)[-1];
         if (!oop)
@@ -114,7 +114,7 @@ nextStg:
         m->klass->toInstance()->clinitFinished = true;
         if (l)
         {
-            pushFrame(l);
+            pushFrame(l, false);
         }
     }
 }
@@ -315,7 +315,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     auto cachedStackTop = tc->zero.stackPointer;
 
-    pushFrame(m);
+    pushFrame(m, false);
 
 #define CURRENT_KLASS tc->zero.frame->method->klass->toInstance()
 
@@ -786,7 +786,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(), init);
             if (init)
             {
-                pushFrame(reinterpret_cast<OMElysiaMethod *>(fld));
+                pushFrame(reinterpret_cast<OMElysiaMethod *>(fld), false);
                 break;
             }
             zeroStackPushFromStatic(reinterpret_cast<OMElysiaField *>(fld), world);
@@ -804,7 +804,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(), init);
             if (init)
             {
-                pushFrame(reinterpret_cast<OMElysiaMethod *>(fld));
+                pushFrame(reinterpret_cast<OMElysiaMethod *>(fld), false);
                 break;
             }
             zeroStackPopToStatic(reinterpret_cast<OMElysiaField *>(fld), world);
@@ -818,17 +818,22 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
         case op_invokespecial:
-        case op_invokevirtual:
         case op_invokestatic: {
             auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
             tc->zero.pc += 3;
-            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff));
+            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), false);
+            break;
+        }
+        case op_invokevirtual: {
+            auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
+            tc->zero.pc += 3;
+            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), true);
             break;
         }
         case op_invokeinterface: {
             auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
             tc->zero.pc += 5;
-            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff));
+            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), true);
             break;
         }
         case op_new: {
