@@ -52,7 +52,7 @@ OMElysiaNativeHandle *OMElysiaExecutorZero::recordLocalRef(OMElysiaOop *oop)
     return oldnode;
 }
 
-void OMElysiaExecutorZero::executeNativeNew(char *descriptor, bool isStatic, void *func)
+void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *func)
 {
     auto tc = thisThread.metadata;
     tc->zero.frame->flag = mem::allocator::tracedCallocElysia(1, sizeof(OMElysiaNativeHandle));
@@ -116,110 +116,29 @@ void OMElysiaExecutorZero::executeNativeNew(char *descriptor, bool isStatic, voi
         }
     }
 
-    for (auto &t : rawargs)
-    {
-        logger.debug("arg size {}", t.index());
-    }
-}
-
-void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *func)
-{
-    executeNativeNew(descriptor, isStatic, func);
-    auto tc = thisThread.metadata;
-    tc->zero.frame->flag = mem::allocator::tracedCallocElysia(1, sizeof(OMElysiaNativeHandle));
-
-    std::vector<std::variant<jint, jbyte, jboolean, jshort, jchar, jfloat, jlong, jdouble, OMElysiaNativeHandle *>>
-        rawargs;
+    void **argPointers = reinterpret_cast<void **>(zeroStackAlloc(sizeof(void *) * rawargs.size()));
     std::vector<ffi_type *> rawargtypes;
-
-    uint8_t argTypes[255];
-    int argCount;
-    uint8_t returnType;
-    argDescriptorParse(descriptor, argTypes, argCount, &returnType);
-    auto argid = 0;
-
-    if (!isStatic)
-    {
-        rawargs.push_back(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
-        rawargtypes.push_back(&ffi_type_pointer);
-        ++argid;
-    }
-
-    for (int i = 0; i < argCount; i++)
-    {
-        switch (argTypes[i])
-        {
-
-#define ARGTYPE_CASE(id, type, ffitype)                                                                                \
-    case id:                                                                                                           \
-        rawargs.push_back(zeroStackLoadLocal<type>(argid));                                                            \
-        rawargtypes.push_back(ffitype);                                                                                \
-        ++argid;                                                                                                       \
-        break;
-
-            ARGTYPE_CASE(argTypeByte, jbyte, &ffi_type_uint8);
-            ARGTYPE_CASE(argTypeBoolean, jboolean, &ffi_type_uint8);
-            ARGTYPE_CASE(argTypeShort, jshort, &ffi_type_sint16);
-            ARGTYPE_CASE(argTypeChar, jchar, &ffi_type_uint16);
-            ARGTYPE_CASE(argTypeInt, jint, &ffi_type_sint32);
-            ARGTYPE_CASE(argTypeFloat, jfloat, &ffi_type_float);
-        case argTypeReference:
-            rawargs.push_back(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
-            rawargtypes.push_back(&ffi_type_pointer);
-            ++argid;
-            break;
-        case argTypeLong:
-            rawargs.push_back(zeroStackLoadLocalW<jlong>(argid));
-            rawargtypes.push_back(&ffi_type_sint64);
-            argid += 2;
-            break;
-        case argTypeDouble:
-            rawargs.push_back(zeroStackLoadLocalW<jdouble>(argid));
-            rawargtypes.push_back(&ffi_type_double);
-            argid += 2;
-            break;
-        default:
-            throw std::logic_error("not supported yet!");
-        }
-    }
-
-    void **argPointers =
-        reinterpret_cast<void **>(zeroStackAlloc(sizeof(void *) * (rawargs.size() + (isStatic ? 1 : 0))));
-
-    auto pp = &thisThread.metadata->interface;
-    argPointers[0] = &pp;
-    rawargtypes.insert(rawargtypes.begin(), &ffi_type_pointer);
-
-    int argbegin;
-    if (isStatic)
-    {
-        argPointers[1] = &thisThread.metadata->zero.frame->method->klass;
-        rawargtypes.insert(rawargtypes.begin() + 1, &ffi_type_pointer);
-        argbegin = 2;
-    }
-    else
-    {
-        argbegin = 1;
-    }
+    rawargtypes.reserve(rawargs.size());
 
     for (int i = 0; i < rawargs.size(); i++)
     {
-        auto &r = argPointers[argbegin + i];
-
-#define try_type(type)                                                                                                 \
+#define PUSHARG(ffitype, type)                                                                                         \
     if (auto *p = std::get_if<type>(&rawargs[i]))                                                                      \
     {                                                                                                                  \
-        r = p;                                                                                                         \
+        argPointers[i] = p;                                                                                            \
+        rawargtypes.push_back(&ffitype);                                                                               \
     }
-        try_type(jint);
-        try_type(jfloat);
-        try_type(jboolean);
-        try_type(jbyte);
-        try_type(jchar);
-        try_type(jshort);
-        try_type(jlong);
-        try_type(jdouble);
-        try_type(OMElysiaNativeHandle *);
+        PUSHARG(ffi_type_sint8, jbyte);
+        PUSHARG(ffi_type_uint8, jboolean);
+        PUSHARG(ffi_type_sint16, jshort);
+        PUSHARG(ffi_type_uint16, jchar);
+        PUSHARG(ffi_type_sint32, jint);
+        PUSHARG(ffi_type_float, jfloat);
+        PUSHARG(ffi_type_sint64, jlong);
+        PUSHARG(ffi_type_double, jdouble);
+        PUSHARG(ffi_type_pointer, OMElysiaNativeHandle *);
+        PUSHARG(ffi_type_pointer, OMElysiaKlass *);
+        PUSHARG(ffi_type_pointer, OMElysiaJNIEnv *);
     }
 
     ffi_type *retType;
@@ -254,7 +173,9 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
 
     ffi_cif cif;
     ffi_status ffiPrepStatus = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, rawargtypes.size(), retType, rawargtypes.data());
-    void *retValue = reinterpret_cast<void *>(zeroStackAlloc(std::max(sizeof(void *), retType->size)));
+    auto retSiz = std::max(sizeof(void *), retType->size);
+    void *retValue = reinterpret_cast<void *>(zeroStackAlloc(retSiz));
+    std::memset(retValue, 0x00, retSiz);
 
     if (ffiPrepStatus == FFI_OK)
     {
@@ -278,11 +199,31 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
         }
         break;
     }
-    case argTypeInt:
-    case argTypeShort:
-    case argTypeChar:
-    case argTypeBoolean:
+    case argTypeChar: {
+        auto data = *reinterpret_cast<jchar *>(retValue);
+        popFrame();
+        zeroStackPush(data);
+        break;
+    }
+    case argTypeBoolean: {
+        auto data = *reinterpret_cast<jboolean *>(retValue);
+        popFrame();
+        zeroStackPush(data);
+        break;
+    }
     case argTypeByte: {
+        auto data = *reinterpret_cast<jbyte *>(retValue);
+        popFrame();
+        zeroStackPush(data);
+        break;
+    }
+    case argTypeShort: {
+        auto data = *reinterpret_cast<jshort *>(retValue);
+        popFrame();
+        zeroStackPush(data);
+        break;
+    }
+    case argTypeInt: {
         auto data = *reinterpret_cast<jint *>(retValue);
         popFrame();
         zeroStackPush(data);
