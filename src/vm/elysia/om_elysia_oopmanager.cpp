@@ -117,6 +117,29 @@ jint OMElysiaOopManager::arrLength(OMElysiaOop *base)
     }
 }
 
+OMElysiaOop *OMElysiaOopManager::arrAccessPtr(OMElysiaOop *oop, jint index)
+{
+    if (world->metaspaceHeap.enablePtrCompress())
+    {
+        return reinterpret_cast<OMElysiaOop *>(world->mainHeap.decompress(arrAccess<uint32_t>(oop)[index]));
+    }
+    else
+    {
+        return arrAccess<OMElysiaOop *>(oop)[index];
+    }
+}
+void OMElysiaOopManager::arrAccessPtr(OMElysiaOop *oop, jint index, OMElysiaOop *data)
+{
+    if (world->metaspaceHeap.enablePtrCompress())
+    {
+        arrAccess<uint32_t>(oop)[index] = world->mainHeap.compress(data);
+    }
+    else
+    {
+        arrAccess<OMElysiaOop *>(oop)[index] = data;
+    }
+}
+
 OMElysiaOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint length)
 {
     int i = 0;

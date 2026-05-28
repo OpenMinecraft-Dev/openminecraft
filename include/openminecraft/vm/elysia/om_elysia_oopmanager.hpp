@@ -51,6 +51,9 @@ class OMElysiaOopManager
     jint arrLength(OMElysiaOop *base);
     OMElysiaOop *allocateArr(OMElysiaArrayKlass *klass, jint length);
 
+    OMElysiaOop *arrAccessPtr(OMElysiaOop *oop, jint index);
+    void arrAccessPtr(OMElysiaOop *oop, jint index, OMElysiaOop *data);
+
     template <typename T> T *arrAccess(OMElysiaOop *oop)
     {
         return reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(oop) + oopArrayHeaderLength());

@@ -56,7 +56,8 @@ template <typename T> static T zeroStackPeekGet()
 
 template <typename T> static T zeroStackPopGet()
 {
-    return *reinterpret_cast<T *>(zeroStackPop(sizeof(void *)));
+    T pp = *reinterpret_cast<T *>(zeroStackPop(sizeof(void *)));
+    return pp;
 }
 
 template <typename T> static T zeroStackPopWGet()

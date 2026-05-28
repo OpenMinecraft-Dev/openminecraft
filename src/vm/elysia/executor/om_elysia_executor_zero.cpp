@@ -454,7 +454,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         case op_aaload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
-            zeroStackPush(world->oopManager->arrAccess<OMElysiaOop>(obj)[idx]);
+	    zeroStackPush(world->oopManager->arrAccessPtr(obj, idx));
             ++tc->zero.pc;
             break;
         }
@@ -501,7 +501,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto value = zeroStackPopGet<OMElysiaOop *>();
             auto index = zeroStackPopGet<jint>();
             auto arr = zeroStackPopGet<OMElysiaOop *>();
-            world->oopManager->arrAccess<OMElysiaOop *>(arr)[index] = value;
+	    world->oopManager->arrAccessPtr(arr, index, value);
             ++tc->zero.pc;
             break;
         }
@@ -794,7 +794,9 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
         case op_putfield: {
-            auto fld = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
+	    bool init = false;
+            auto fld = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(), init);
+	    if (init)                                                                         {                                                                                     pushFrame(reinterpret_cast<OMElysiaMethod *>(fld), false);                        break;                                                                        }
             zeroStackPopToField(reinterpret_cast<OMElysiaField *>(fld), world->oopManager.get(), world);
             tc->zero.pc += 3;
             break;
@@ -812,7 +814,9 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
         case op_getfield: {
-            auto fld = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
+            bool init = false;
+            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(), init);
+	    if (init)                                                                         {                                                                                     pushFrame(reinterpret_cast<OMElysiaMethod *>(fld), false);                        break;                                                                        }
             zeroStackPushFromField(reinterpret_cast<OMElysiaField *>(fld), world->oopManager.get(), world);
             tc->zero.pc += 3;
             break;
