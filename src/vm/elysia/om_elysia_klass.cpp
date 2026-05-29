@@ -136,9 +136,10 @@ void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id, bool &needInit)
         needInit = true;
         kk->toInstance()->clinitFinished = true;
         auto mm = kk->findMethod("<clinit>", "()V");
-	if (mm) {
-	    return mm;
-	}
+        if (mm)
+        {
+            return mm;
+        }
     }
 
     for (int i = 0; i < fieldCount; i++)
@@ -268,7 +269,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
         return nullptr;
     }
     case OMClassConstantType::Integer: {
-        auto d = item->to<OMClassConstantFloat>()->data;
+        auto d = item->to<OMClassConstantInteger>()->data;
         uint32_t rd = *reinterpret_cast<uint32_t *>(&d);
 
         constantPool[id] = reinterpret_cast<void *>(static_cast<uintptr_t>(rd));
