@@ -3,8 +3,8 @@
 #include <string>
 
 #include "fmt/base.h"
+#include "fmt/color.h"
 #include "openminecraft/binary/om_bin_hash.hpp"
-#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_saferead.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
@@ -24,7 +24,7 @@ int main(int argc, const char *argv[])
 
         switch (hash_compile_time(command.c_str()))
         {
-        case "readmem"_hash: {
+        case "read"_hash: {
             std::string address;
             std::cin >> address;
             void *addr = nullptr;
@@ -34,17 +34,25 @@ int main(int argc, const char *argv[])
             }
             catch (std::invalid_argument &e)
             {
-                fmt::println("@unknown");
+                fmt::print(fmt::fg(fmt::color::alice_blue), "@unknown");
+                fmt::println("");
+                break;
             }
-            auto result = openminecraft::mem::safeRead<uint8_t>(addr);
-            if (result.has_value())
-            {
-                fmt::println("@{} = 0x{:02x}", addr, result.value());
-            }
-            else
-            {
-                fmt::println("@{} = unaccessible", addr);
-            }
+#define readT(k, type, n, tt)                                                                                          \
+    auto k = openminecraft::mem::safeRead<type>(addr);                                                                 \
+    fmt::print(fmt::fg(fmt::color::alice_blue), "@({}){}", n, addr);                                                   \
+    if (k.has_value())                                                                                                 \
+    {                                                                                                                  \
+        fmt::println(" = 0x{:0" + fmt::format("{}", sizeof(type) * 2) + "x}", static_cast<tt>(k.value()));             \
+    }                                                                                                                  \
+    else                                                                                                               \
+    {                                                                                                                  \
+        fmt::println(" = unaccessible");                                                                               \
+    }
+            readT(u8v, int8_t, "u8", uint8_t);
+            readT(u16v, int16_t, "u16", uint16_t);
+            readT(u32v, int32_t, "u32", uint32_t);
+            readT(u64v, int64_t, "u64", uint64_t);
             break;
         }
         }

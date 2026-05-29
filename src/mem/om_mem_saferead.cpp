@@ -48,8 +48,7 @@ template <typename T> std::optional<T> safeRead(void *p)
     }*/
     T v;
     SIZE_T bytesRead = 0;
-    if (ReadProcessMemory(GetCurrentProcess(), p, &v, sizeof(T), &bytesRead) &&
-        bytesRead == sizeof(T))
+    if (ReadProcessMemory(GetCurrentProcess(), p, &v, sizeof(T), &bytesRead) && bytesRead == sizeof(T))
     {
         return v;
     }
@@ -59,7 +58,8 @@ template <typename T> std::optional<T> safeRead(void *p)
 
 template std::optional<void *> safeRead<void *>(void *);
 template std::optional<uintptr_t> safeRead<uintptr_t>(void *);
-template std::optional<uint8_t> safeRead<uint8_t>(void *);
 template std::optional<int8_t> safeRead<int8_t>(void *);
-template std::optional<uint16_t> safeRead<uint16_t>(void *);
+template std::optional<int16_t> safeRead<int16_t>(void *);
+template std::optional<int32_t> safeRead<int32_t>(void *);
+template std::optional<int64_t> safeRead<int64_t>(void *);
 } // namespace openminecraft::mem
