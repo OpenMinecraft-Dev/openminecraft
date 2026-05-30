@@ -109,6 +109,11 @@ class OMElysiaHeap
         return reinterpret_cast<void *>((static_cast<uintptr_t>(p) << 3) + reinterpret_cast<uintptr_t>(rawHeap.block));
     }
 
+    bool valid(void *ptr)
+    {
+        return reinterpret_cast<uintptr_t>(ptr) - reinterpret_cast<uintptr_t>(rawHeap.block) < maxSize;
+    }
+
   private:
     log::OMLogger logger;
 

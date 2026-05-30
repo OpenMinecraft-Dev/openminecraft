@@ -9,12 +9,47 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_saferead.hpp"
+#include "openminecraft/vm/elysia/om_elysia_klass.hpp"
+#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 
 using namespace openminecraft::vm::elysia;
 using namespace openminecraft::binary::hash;
 
-void readMem()
+template <typename T> void printOopFieldContent(T *t)
+{
+    fmt::print(fmt::fg(fmt::color::green), "{}", *t);
+}
+
+void printOopFields(OMElysiaVirtualWorld *world, OMElysiaOop *oop, OMElysiaInstanceKlass *klass)
+{
+    for (int i = 0; i < klass->fieldCount; i++)
+    {
+        auto &field = klass->fields[i];
+        if (field.isStatic())
+        {
+            continue;
+        }
+        fmt::print(fmt::fg(fmt::color::alice_blue), "@+0x{:x} ", field.offset);
+        fmt::print(fmt::fg(fmt::color::white_smoke), "{}", field.name);
+        fmt::print(":");
+        fmt::print(fmt::fg(fmt::color::slate_blue), "{}", field.desc);
+        fmt::print(" - ");
+
+        switch (hash_compile_time(field.desc))
+        {
+        case "I"_hash:
+            printOopFieldContent(reinterpret_cast<jint *>(world->oopManager->oopAccessField(oop, field.offset)));
+            break;
+        default:
+            break;
+        }
+
+        fmt::println("");
+    }
+}
+
+void readMem(OMElysiaVirtualWorld *world)
 {
     std::string type, address;
     std::cin >> type >> address;
@@ -48,6 +83,37 @@ void readMem()
         readT(u16v, int16_t, "u16", uint16_t);
         readT(u32v, int32_t, "u32", uint32_t);
         readT(u64v, int64_t, "u64", uint64_t);
+        break;
+    }
+    case "oop"_hash: {
+        if (!world->mainHeap.valid(addr))
+        {
+            fmt::print(fmt::fg(fmt::color::red), "invalid oop");
+            fmt::println("");
+            break;
+        }
+        auto klass = world->oopManager->oopGetKlass(reinterpret_cast<OMElysiaOop *>(addr));
+        fmt::print(fmt::fg(fmt::color::alice_blue), "@{} ", addr);
+        if (world->metaspaceHeap.valid(klass))
+        {
+            fmt::print("is an oop of klass {}", klass->name);
+            fmt::print(fmt::fg(fmt::color::yellow_green), " ({})", klass->isArray() ? "array" : "instance");
+            fmt::println("");
+
+            if (klass->isInstance())
+            {
+                auto instanceKlass = klass->toInstance();
+                fmt::print("object length ");
+                fmt::print(fmt::fg(fmt::color::alice_blue), "{}", instanceKlass->length);
+                fmt::println("");
+                fmt::println("fields: ");
+                printOopFields(world, reinterpret_cast<OMElysiaOop *>(addr), instanceKlass);
+            }
+        }
+        else
+        {
+            fmt::println("is invalid");
+        }
         break;
     }
     case "dump"_hash: {
@@ -130,7 +196,7 @@ int main(int argc, const char *argv[])
             std::exit(0);
         }
         case "read"_hash: {
-            readMem();
+            readMem(wld);
             break;
         }
         default: {
