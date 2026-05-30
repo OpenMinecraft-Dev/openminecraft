@@ -151,6 +151,19 @@ void readMem(OMElysiaVirtualWorld *world)
                 fmt::print("Array of length ");
                 fmt::print(fmt::fg(fmt::color::alice_blue), "{}", arrl);
                 fmt::println("");
+
+		for (int i = 0; i < std::min(arrl, 8); i++)
+		{
+		    fmt::print(fmt::fg(fmt::color::yellow), "[{}] ", i);
+		    fmt::print("= ");
+		    printOopFieldContent(&world->oopManager->arrAccess<jchar>(reinterpret_cast<OMElysiaOop *>(addr))[i]);
+		    fmt::println("");
+		}
+
+		if (arrl > 8)
+		{
+		    fmt::println("...");
+		}
             }
         }
         else
