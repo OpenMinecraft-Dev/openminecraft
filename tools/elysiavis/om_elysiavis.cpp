@@ -152,18 +152,51 @@ void readMem(OMElysiaVirtualWorld *world)
                 fmt::print(fmt::fg(fmt::color::alice_blue), "{}", arrl);
                 fmt::println("");
 
-		for (int i = 0; i < std::min(arrl, 8); i++)
-		{
-		    fmt::print(fmt::fg(fmt::color::yellow), "[{}] ", i);
-		    fmt::print("= ");
-		    printOopFieldContent(&world->oopManager->arrAccess<jchar>(reinterpret_cast<OMElysiaOop *>(addr))[i]);
-		    fmt::println("");
-		}
+                for (int i = 0; i < std::min(arrl, 8); i++)
+                {
+                    fmt::print(fmt::fg(fmt::color::yellow), "[{}] ", i);
+                    fmt::print("= ");
+                    switch (klass->name[1])
+                    {
+#define CASEAP(n, type)                                                                                                \
+    case n:                                                                                                            \
+        printOopFieldContent(&world->oopManager->arrAccess<type>(reinterpret_cast<OMElysiaOop *>(addr))[i]);           \
+        break;
+                        CASEAP('Z', jboolean);
+                        CASEAP('B', jbyte);
+                        CASEAP('S', jshort);
+                        CASEAP('C', jchar);
+                        CASEAP('I', jint);
+                        CASEAP('F', jfloat);
+                        CASEAP('J', jlong);
+                        CASEAP('D', jdouble);
+                    case 'L':
+                    case '[': {
+                        if (world->mainHeap.enablePtrCompress())
+                        {
+                            auto ptrr =
+                                world->oopManager->arrAccess<uint32_t>(reinterpret_cast<OMElysiaOop *>(addr))[i];
+                            fmt::print(fmt::fg(fmt::color::alice_blue), "@{} ({:08x})",
+                                       world->mainHeap.decompress(ptrr), ptrr);
+                        }
+                        else
+                        {
+                            printOopFieldContent(
+                                &world->oopManager->arrAccess<void *>(reinterpret_cast<OMElysiaOop *>(addr))[i]);
+                        }
+                        break;
+                    }
+                    default:
+                        fmt::print(fmt::fg(fmt::color::red), "invalid");
+                        break;
+                    }
+                    fmt::println("");
+                }
 
-		if (arrl > 8)
-		{
-		    fmt::println("...");
-		}
+                if (arrl > 8)
+                {
+                    fmt::println("...");
+                }
             }
         }
         else
