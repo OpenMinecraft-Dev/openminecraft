@@ -11,6 +11,7 @@
 #include "openminecraft/mem/om_mem_saferead.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
+#include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 
 using namespace openminecraft::vm::elysia;
@@ -18,7 +19,18 @@ using namespace openminecraft::binary::hash;
 
 template <typename T> void printOopFieldContent(T *t)
 {
-    fmt::print(fmt::fg(fmt::color::green), "{}", *t);
+    if constexpr (std::is_same_v<T, jbyte>)
+    {
+        fmt::print(fmt::fg(fmt::color::green), "{}", static_cast<jint>(*t));
+    }
+    else if constexpr (std::is_same_v<T, jboolean>)
+    {
+        fmt::print(fmt::fg(fmt::color::green), "{}", *t ? "true" : "false");
+    }
+    else
+    {
+        fmt::print(fmt::fg(fmt::color::green), "{}", *t);
+    }
 }
 
 void printOopFields(OMElysiaVirtualWorld *world, OMElysiaOop *oop, OMElysiaInstanceKlass *klass)
@@ -38,9 +50,20 @@ void printOopFields(OMElysiaVirtualWorld *world, OMElysiaOop *oop, OMElysiaInsta
 
         switch (*field.desc)
         {
-        case 'I':
-            printOopFieldContent(reinterpret_cast<jint *>(world->oopManager->oopAccessField(oop, field.offset)));
-            break;
+#define CASEP(n, type)                                                                                                 \
+    case n:                                                                                                            \
+        printOopFieldContent(reinterpret_cast<type *>(world->oopManager->oopAccessField(oop, field.offset)));          \
+        break;
+
+            CASEP('Z', jboolean);
+            CASEP('B', jbyte);
+            CASEP('C', jchar);
+            CASEP('S', jshort);
+            CASEP('F', jfloat);
+            CASEP('I', jint);
+            CASEP('J', jlong);
+            CASEP('D', jdouble);
+
         case 'L':
         case '[': {
             if (world->mainHeap.enablePtrCompress())
@@ -121,6 +144,13 @@ void readMem(OMElysiaVirtualWorld *world)
                 fmt::println("");
                 fmt::println("fields: ");
                 printOopFields(world, reinterpret_cast<OMElysiaOop *>(addr), instanceKlass);
+            }
+            else
+            {
+                auto arrl = world->oopManager->arrLength(reinterpret_cast<OMElysiaOop *>(addr));
+                fmt::print("Array of length ");
+                fmt::print(fmt::fg(fmt::color::alice_blue), "{}", arrl);
+                fmt::println("");
             }
         }
         else
