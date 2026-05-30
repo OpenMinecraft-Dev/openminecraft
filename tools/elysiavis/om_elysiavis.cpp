@@ -36,11 +36,24 @@ void printOopFields(OMElysiaVirtualWorld *world, OMElysiaOop *oop, OMElysiaInsta
         fmt::print(fmt::fg(fmt::color::slate_blue), "{}", field.desc);
         fmt::print(" - ");
 
-        switch (hash_compile_time(field.desc))
+        switch (*field.desc)
         {
-        case "I"_hash:
+        case 'I':
             printOopFieldContent(reinterpret_cast<jint *>(world->oopManager->oopAccessField(oop, field.offset)));
             break;
+        case 'L':
+        case '[': {
+            if (world->mainHeap.enablePtrCompress())
+            {
+                auto ptrr = *reinterpret_cast<uint32_t *>(world->oopManager->oopAccessField(oop, field.offset));
+                fmt::print(fmt::fg(fmt::color::alice_blue), "@{} ({:08x})", world->mainHeap.decompress(ptrr), ptrr);
+            }
+            else
+            {
+                printOopFieldContent(reinterpret_cast<void **>(world->oopManager->oopAccessField(oop, field.offset)));
+            }
+            break;
+        }
         default:
             break;
         }
