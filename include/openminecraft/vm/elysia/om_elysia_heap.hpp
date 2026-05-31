@@ -117,8 +117,8 @@ class OMElysiaHeap
   private:
     log::OMLogger logger;
 
+  public:
     mem::OMHeap rawHeap;
-
     OMElysiaHeapBlock *emptyBlocks;
     std::mutex blockMutex;
 

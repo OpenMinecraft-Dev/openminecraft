@@ -85,6 +85,10 @@ void printOopFields(OMElysiaVirtualWorld *world, OMElysiaOop *oop, OMElysiaInsta
     }
 }
 
+void printOop(OMElysiaVirtualWorld *world, void *addr)
+{
+}
+
 void readMem(OMElysiaVirtualWorld *world)
 {
     std::string type, address;
@@ -269,6 +273,13 @@ void readMem(OMElysiaVirtualWorld *world)
     }
 }
 
+void search(OMElysiaVirtualWorld *world)
+{
+    auto base = world->mainHeap.rawHeap.block;
+    fmt::print(fmt::fg(fmt::color::alice_blue), "@{}", base);
+    fmt::println("");
+}
+
 int main(int argc, const char *argv[])
 {
     openminecraft::log::multithread::registerCurrentThreadName("Bootstrap");
@@ -286,6 +297,10 @@ int main(int argc, const char *argv[])
         }
         case "read"_hash: {
             readMem(wld);
+            break;
+        }
+        case "search"_hash: {
+            search(wld);
             break;
         }
         default: {
