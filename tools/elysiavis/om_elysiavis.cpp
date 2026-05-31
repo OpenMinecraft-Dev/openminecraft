@@ -1,8 +1,11 @@
 #include <array>
 #include <cstdint>
 #include <iostream>
+#include <mutex>
 #include <stdexcept>
 #include <string>
+#include <thread>
+#include <unordered_map>
 #include <vector>
 
 #include "fmt/base.h"
@@ -10,11 +13,13 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_saferead.hpp"
+#include "openminecraft/vm/elysia/om_elysia_heap.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
 
+using namespace std::chrono_literals;
 using namespace openminecraft::vm::elysia;
 using namespace openminecraft::binary::hash;
 
@@ -34,7 +39,7 @@ template <typename T> void printOopFieldContent(T *t)
     }
 }
 
-void printOopFields(OMElysiaVirtualWorld *world, OMElysiaOop *oop, OMElysiaInstanceKlass *klass)
+void printOopFields(OMElysium *elysium, OMElysiaOop *oop, OMElysiaInstanceKlass *klass)
 {
     for (int i = 0; i < klass->fieldCount; i++)
     {
@@ -53,7 +58,7 @@ void printOopFields(OMElysiaVirtualWorld *world, OMElysiaOop *oop, OMElysiaInsta
         {
 #define CASEP(n, type)                                                                                                 \
     case n:                                                                                                            \
-        printOopFieldContent(reinterpret_cast<type *>(world->oopManager->oopAccessField(oop, field.offset)));          \
+        printOopFieldContent(reinterpret_cast<type *>(elysium->oopManager->oopAccessField(oop, field.offset)));        \
         break;
 
             CASEP('Z', jboolean);
@@ -67,14 +72,14 @@ void printOopFields(OMElysiaVirtualWorld *world, OMElysiaOop *oop, OMElysiaInsta
 
         case 'L':
         case '[': {
-            if (world->mainHeap.enablePtrCompress())
+            if (elysium->mainHeap.enablePtrCompress())
             {
-                auto ptrr = *reinterpret_cast<uint32_t *>(world->oopManager->oopAccessField(oop, field.offset));
-                fmt::print(fmt::fg(fmt::color::alice_blue), "@{} ({:08x})", world->mainHeap.decompress(ptrr), ptrr);
+                auto ptrr = *reinterpret_cast<uint32_t *>(elysium->oopManager->oopAccessField(oop, field.offset));
+                fmt::print(fmt::fg(fmt::color::alice_blue), "@{} ({:08x})", elysium->mainHeap.decompress(ptrr), ptrr);
             }
             else
             {
-                printOopFieldContent(reinterpret_cast<void **>(world->oopManager->oopAccessField(oop, field.offset)));
+                printOopFieldContent(reinterpret_cast<void **>(elysium->oopManager->oopAccessField(oop, field.offset)));
             }
             break;
         }
@@ -86,7 +91,7 @@ void printOopFields(OMElysiaVirtualWorld *world, OMElysiaOop *oop, OMElysiaInsta
     }
 }
 
-void printOop(OMElysiaVirtualWorld *world, void *addr, bool simple = false)
+void printOop(OMElysium *world, void *addr, bool simple = false)
 {
     if (!world->mainHeap.valid(addr))
     {
@@ -175,7 +180,7 @@ void printOop(OMElysiaVirtualWorld *world, void *addr, bool simple = false)
     }
 }
 
-void readMem(OMElysiaVirtualWorld *world)
+void readMem(OMElysium *elysium)
 {
     std::string type, address;
     std::cin >> type >> address;
@@ -212,7 +217,7 @@ void readMem(OMElysiaVirtualWorld *world)
         break;
     }
     case "oop"_hash: {
-        printOop(world, addr);
+        printOop(elysium, addr);
         break;
     }
     case "dump"_hash: {
@@ -279,13 +284,16 @@ void readMem(OMElysiaVirtualWorld *world)
     }
 }
 
-void search(OMElysiaVirtualWorld *world)
+void search(OMElysium *elysium)
 {
-    auto base = reinterpret_cast<OMElysiaOop *>(world->mainHeap.rawHeap.block);
+    uint64_t objs = 0;
+    auto base = reinterpret_cast<OMElysiaOop *>(elysium->mainHeap.rawHeap.block);
+
+    std::lock_guard guard(elysium->mainHeap.blockMutex);
 
 begin:
-    OMElysiaKlass *klass = world->oopManager->oopGetKlass(base);
-    if (world->metaspaceHeap.valid(klass))
+    OMElysiaKlass *klass = elysium->oopManager->oopGetKlass(base);
+    if (elysium->metaspaceHeap.valid(klass))
     {
         goto print;
     }
@@ -293,17 +301,27 @@ begin:
     goto begin;
 
 print:
-    printOop(world, base, true);
-    base = reinterpret_cast<OMElysiaOop *>(reinterpret_cast<uintptr_t>(base) + world->oopManager->oopLength(base));
+    objs++;
+    printOop(elysium, base, true);
+    base = reinterpret_cast<OMElysiaOop *>(reinterpret_cast<uintptr_t>(base) + elysium->oopManager->oopLength(base));
 
-    auto node = world->mainHeap.emptyBlocks;
+    if (base >= elysium->mainHeap.rawHeap.heapTop)
+    {
+        fmt::print(fmt::fg(fmt::color::bisque), "{}", objs);
+        fmt::println(" objects");
+        return;
+    }
+
+    auto node = elysium->mainHeap.emptyBlocks;
     while (node)
     {
         if (base >= node->block && base < node->blockEnd)
         {
             base = reinterpret_cast<OMElysiaOop *>(node->blockEnd);
-            if (!world->mainHeap.valid(base))
+            if (!elysium->mainHeap.valid(base))
             {
+                fmt::print(fmt::fg(fmt::color::bisque), "{}", objs);
+                fmt::println(" objects");
                 return;
             }
             break;
@@ -317,7 +335,7 @@ print:
 int main(int argc, const char *argv[])
 {
     openminecraft::log::multithread::registerCurrentThreadName("Bootstrap");
-    auto wld = new OMElysiaVirtualWorld;
+    auto elysium = new OMElysium;
 
     while (true)
     {
@@ -330,11 +348,45 @@ int main(int argc, const char *argv[])
             std::exit(0);
         }
         case "read"_hash: {
-            readMem(wld);
+            readMem(elysium);
             break;
         }
         case "search"_hash: {
-            search(wld);
+            search(elysium);
+            break;
+        }
+        case "heaptest"_hash: {
+            auto heap = new OMElysiaHeap("external_test", 1024 * 1024);
+            std::mutex test;
+            std::unordered_map<std::thread::id, int> thrs;
+            for (int i = 0; i < 36; i++)
+            {
+                auto thr = new std::thread([&]() {
+                    while (true)
+                    {
+                        auto l = (uint64_t *)heap->allocate(8);
+                        heap->deallocate(l);
+                        {
+                            std::lock_guard guard(test);
+                            thrs[std::this_thread::get_id()]++;
+                        }
+                    }
+                });
+            }
+
+            while (true)
+            {
+                std::this_thread::sleep_for(50ms);
+                {
+                    std::lock_guard guard(test);
+                    for (auto &t : thrs)
+                    {
+                        std::cout << std::hex << t.first << ": " << std::dec << t.second << "times" << std::endl;
+                    }
+                    std::cout << "----------------" << std::endl;
+                }
+            }
+
             break;
         }
         default: {
@@ -345,7 +397,7 @@ int main(int argc, const char *argv[])
         }
     }
 
-    delete wld;
+    delete elysium;
 
     return 0;
 }

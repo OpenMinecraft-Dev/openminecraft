@@ -19,11 +19,11 @@ class OMElysiaExecutorZero;
 
 #define registerNative(n) nativeFuncMap[#n] = reinterpret_cast<void *>(&n);
 
-class OMElysiaVirtualWorld
+class OMElysium
 {
   public:
-    OMElysiaVirtualWorld();
-    ~OMElysiaVirtualWorld();
+    OMElysium();
+    ~OMElysium();
 
     OMElysiaHeap metaspaceHeap;
     OMElysiaHeap mainHeap;

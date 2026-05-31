@@ -1,7 +1,6 @@
 #include "openminecraft/vm/elysia/om_elysia_heap.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include <cstdint>
-#include <iostream>
 #include <mutex>
 
 namespace openminecraft::vm::elysia
@@ -53,9 +52,7 @@ OMElysiaHeap::OMElysiaHeap(const char *id, uint64_t maxSize)
 void *OMElysiaHeap::allocate(uint64_t objLen)
 {
     objLen = align(objLen);
-    while (!blockMutex.try_lock())
-    {
-    }
+    std::lock_guard guard(blockMutex);
 beginAlloc:
     auto blk = emptyBlocks;
     while (blk)
@@ -67,7 +64,6 @@ beginAlloc:
             blk->block = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(blk->block) + objLen);
             mergeBlocks();
 
-            blockMutex.unlock();
             std::memset(target, 0x00, objLen);
             return target;
         }
