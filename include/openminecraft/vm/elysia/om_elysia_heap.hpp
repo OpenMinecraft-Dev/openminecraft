@@ -111,7 +111,7 @@ class OMElysiaHeap
 
     bool valid(void *ptr)
     {
-        return reinterpret_cast<uintptr_t>(ptr) - reinterpret_cast<uintptr_t>(rawHeap.block) < maxSize;
+        return rawHeap.vaild(ptr);
     }
 
   private:

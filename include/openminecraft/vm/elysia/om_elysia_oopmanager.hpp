@@ -59,6 +59,8 @@ class OMElysiaOopManager
         return reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(oop) + oopArrayHeaderLength());
     }
 
+    uint64_t oopLength(OMElysiaOop *oop);
+
   private:
     OMElysiaVirtualWorld *world;
     log::OMLogger logger;

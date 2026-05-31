@@ -1,4 +1,5 @@
 #include <array>
+#include <cstdint>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -85,8 +86,93 @@ void printOopFields(OMElysiaVirtualWorld *world, OMElysiaOop *oop, OMElysiaInsta
     }
 }
 
-void printOop(OMElysiaVirtualWorld *world, void *addr)
+void printOop(OMElysiaVirtualWorld *world, void *addr, bool simple = false)
 {
+    if (!world->mainHeap.valid(addr))
+    {
+        fmt::print(fmt::fg(fmt::color::red), "invalid oop");
+        fmt::println("");
+        return;
+    }
+    auto klass = world->oopManager->oopGetKlass(reinterpret_cast<OMElysiaOop *>(addr));
+    fmt::print(fmt::fg(fmt::color::alice_blue), "@{} ", addr);
+    if (world->metaspaceHeap.valid(klass))
+    {
+        fmt::print("is an oop of klass {}", klass->name);
+        fmt::print(fmt::fg(fmt::color::yellow_green), " ({})", klass->isArray() ? "array" : "instance");
+        fmt::println("");
+
+        if (simple)
+        {
+            return;
+        }
+
+        if (klass->isInstance())
+        {
+            auto instanceKlass = klass->toInstance();
+            fmt::print("object length ");
+            fmt::print(fmt::fg(fmt::color::alice_blue), "{}", instanceKlass->length);
+            fmt::println("");
+            fmt::println("fields: ");
+            printOopFields(world, reinterpret_cast<OMElysiaOop *>(addr), instanceKlass);
+        }
+        else
+        {
+            auto arrl = world->oopManager->arrLength(reinterpret_cast<OMElysiaOop *>(addr));
+            fmt::print("Array of length ");
+            fmt::print(fmt::fg(fmt::color::alice_blue), "{}", arrl);
+            fmt::println("");
+
+            for (int i = 0; i < std::min(arrl, 8); i++)
+            {
+                fmt::print(fmt::fg(fmt::color::yellow), "[{}] ", i);
+                fmt::print("= ");
+                switch (klass->name[1])
+                {
+#define CASEAP(n, type)                                                                                                \
+    case n:                                                                                                            \
+        printOopFieldContent(&world->oopManager->arrAccess<type>(reinterpret_cast<OMElysiaOop *>(addr))[i]);           \
+        break;
+                    CASEAP('Z', jboolean);
+                    CASEAP('B', jbyte);
+                    CASEAP('S', jshort);
+                    CASEAP('C', jchar);
+                    CASEAP('I', jint);
+                    CASEAP('F', jfloat);
+                    CASEAP('J', jlong);
+                    CASEAP('D', jdouble);
+                case 'L':
+                case '[': {
+                    if (world->mainHeap.enablePtrCompress())
+                    {
+                        auto ptrr = world->oopManager->arrAccess<uint32_t>(reinterpret_cast<OMElysiaOop *>(addr))[i];
+                        fmt::print(fmt::fg(fmt::color::alice_blue), "@{} ({:08x})", world->mainHeap.decompress(ptrr),
+                                   ptrr);
+                    }
+                    else
+                    {
+                        printOopFieldContent(
+                            &world->oopManager->arrAccess<void *>(reinterpret_cast<OMElysiaOop *>(addr))[i]);
+                    }
+                    break;
+                }
+                default:
+                    fmt::print(fmt::fg(fmt::color::red), "invalid");
+                    break;
+                }
+                fmt::println("");
+            }
+
+            if (arrl > 8)
+            {
+                fmt::println("...");
+            }
+        }
+    }
+    else
+    {
+        fmt::println("is invalid");
+    }
 }
 
 void readMem(OMElysiaVirtualWorld *world)
@@ -126,87 +212,7 @@ void readMem(OMElysiaVirtualWorld *world)
         break;
     }
     case "oop"_hash: {
-        if (!world->mainHeap.valid(addr))
-        {
-            fmt::print(fmt::fg(fmt::color::red), "invalid oop");
-            fmt::println("");
-            break;
-        }
-        auto klass = world->oopManager->oopGetKlass(reinterpret_cast<OMElysiaOop *>(addr));
-        fmt::print(fmt::fg(fmt::color::alice_blue), "@{} ", addr);
-        if (world->metaspaceHeap.valid(klass))
-        {
-            fmt::print("is an oop of klass {}", klass->name);
-            fmt::print(fmt::fg(fmt::color::yellow_green), " ({})", klass->isArray() ? "array" : "instance");
-            fmt::println("");
-
-            if (klass->isInstance())
-            {
-                auto instanceKlass = klass->toInstance();
-                fmt::print("object length ");
-                fmt::print(fmt::fg(fmt::color::alice_blue), "{}", instanceKlass->length);
-                fmt::println("");
-                fmt::println("fields: ");
-                printOopFields(world, reinterpret_cast<OMElysiaOop *>(addr), instanceKlass);
-            }
-            else
-            {
-                auto arrl = world->oopManager->arrLength(reinterpret_cast<OMElysiaOop *>(addr));
-                fmt::print("Array of length ");
-                fmt::print(fmt::fg(fmt::color::alice_blue), "{}", arrl);
-                fmt::println("");
-
-                for (int i = 0; i < std::min(arrl, 8); i++)
-                {
-                    fmt::print(fmt::fg(fmt::color::yellow), "[{}] ", i);
-                    fmt::print("= ");
-                    switch (klass->name[1])
-                    {
-#define CASEAP(n, type)                                                                                                \
-    case n:                                                                                                            \
-        printOopFieldContent(&world->oopManager->arrAccess<type>(reinterpret_cast<OMElysiaOop *>(addr))[i]);           \
-        break;
-                        CASEAP('Z', jboolean);
-                        CASEAP('B', jbyte);
-                        CASEAP('S', jshort);
-                        CASEAP('C', jchar);
-                        CASEAP('I', jint);
-                        CASEAP('F', jfloat);
-                        CASEAP('J', jlong);
-                        CASEAP('D', jdouble);
-                    case 'L':
-                    case '[': {
-                        if (world->mainHeap.enablePtrCompress())
-                        {
-                            auto ptrr =
-                                world->oopManager->arrAccess<uint32_t>(reinterpret_cast<OMElysiaOop *>(addr))[i];
-                            fmt::print(fmt::fg(fmt::color::alice_blue), "@{} ({:08x})",
-                                       world->mainHeap.decompress(ptrr), ptrr);
-                        }
-                        else
-                        {
-                            printOopFieldContent(
-                                &world->oopManager->arrAccess<void *>(reinterpret_cast<OMElysiaOop *>(addr))[i]);
-                        }
-                        break;
-                    }
-                    default:
-                        fmt::print(fmt::fg(fmt::color::red), "invalid");
-                        break;
-                    }
-                    fmt::println("");
-                }
-
-                if (arrl > 8)
-                {
-                    fmt::println("...");
-                }
-            }
-        }
-        else
-        {
-            fmt::println("is invalid");
-        }
+        printOop(world, addr);
         break;
     }
     case "dump"_hash: {
@@ -276,14 +282,36 @@ void readMem(OMElysiaVirtualWorld *world)
 void search(OMElysiaVirtualWorld *world)
 {
     auto base = reinterpret_cast<OMElysiaOop *>(world->mainHeap.rawHeap.block);
-    fmt::print(fmt::fg(fmt::color::alice_blue), "@{}", fmt::ptr(base));
-    OMElysiaKlass *klass = nullptr;
-    while (!world->metaspaceHeap.valid(klass)) {
-        klass = world->oopManager->oopGetKlass(base);
-	base = reinterpret_cast<OMElysiaOop *>(reinterpret_cast<uintptr_t>(base) + 8);
+
+begin:
+    OMElysiaKlass *klass = world->oopManager->oopGetKlass(base);
+    if (world->metaspaceHeap.valid(klass))
+    {
+        goto print;
+    }
+    base = reinterpret_cast<OMElysiaOop *>(reinterpret_cast<uintptr_t>(base) + 8);
+    goto begin;
+
+print:
+    printOop(world, base, true);
+    base = reinterpret_cast<OMElysiaOop *>(reinterpret_cast<uintptr_t>(base) + world->oopManager->oopLength(base));
+
+    auto node = world->mainHeap.emptyBlocks;
+    while (node)
+    {
+        if (base >= node->block && base < node->blockEnd)
+        {
+            base = reinterpret_cast<OMElysiaOop *>(node->blockEnd);
+            if (!world->mainHeap.valid(base))
+            {
+                return;
+            }
+            break;
+        }
+        node = node->next;
     }
 
-    fmt::println(" - {}", klass->name);
+    goto begin;
 }
 
 int main(int argc, const char *argv[])

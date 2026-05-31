@@ -182,4 +182,41 @@ OMElysiaOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint len
 
     return ll;
 }
+
+uint64_t OMElysiaOopManager::oopLength(OMElysiaOop *oop)
+{
+    auto klass = oopGetKlass(oop);
+    if (klass->isInstance())
+    {
+        return world->mainHeap.align(oopHeaderLength() + klass->toInstance()->length);
+    }
+    else
+    {
+        int i = 0;
+        switch (hash_compile_time(klass->toArray()->lowerDim->name))
+        {
+        case "byte"_hash:
+        case "boolean"_hash:
+            i = 1;
+            break;
+        case "char"_hash:
+        case "short"_hash:
+            i = 2;
+            break;
+        case "int"_hash:
+        case "float"_hash:
+            i = 4;
+            break;
+        case "long"_hash:
+        case "double"_hash:
+            i = 8;
+            break;
+        default:
+            i = klass->ptrLength;
+            break;
+        }
+
+        return world->mainHeap.align(oopArrayHeaderLength() + arrLength(oop) * i);
+    }
+}
 } // namespace openminecraft::vm::elysia
