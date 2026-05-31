@@ -275,9 +275,15 @@ void readMem(OMElysiaVirtualWorld *world)
 
 void search(OMElysiaVirtualWorld *world)
 {
-    auto base = world->mainHeap.rawHeap.block;
-    fmt::print(fmt::fg(fmt::color::alice_blue), "@{}", base);
-    fmt::println("");
+    auto base = reinterpret_cast<OMElysiaOop *>(world->mainHeap.rawHeap.block);
+    fmt::print(fmt::fg(fmt::color::alice_blue), "@{}", fmt::ptr(base));
+    OMElysiaKlass *klass = nullptr;
+    while (!world->metaspaceHeap.valid(klass)) {
+        klass = world->oopManager->oopGetKlass(base);
+	base = reinterpret_cast<OMElysiaOop *>(reinterpret_cast<uintptr_t>(base) + 8);
+    }
+
+    fmt::println(" - {}", klass->name);
 }
 
 int main(int argc, const char *argv[])
