@@ -5,7 +5,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 namespace openminecraft::vm::elysia
 {
-class OMElysiaVirtualWorld;
+class OMElysium;
 };
 
 namespace openminecraft::vm::elysia::impl

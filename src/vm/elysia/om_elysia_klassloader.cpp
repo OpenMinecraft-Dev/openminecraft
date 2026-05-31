@@ -10,13 +10,12 @@
 #include <cstring>
 #include <fstream>
 #include <istream>
-#include <map>
 #include <stdexcept>
 #include <unordered_map>
 
 namespace openminecraft::vm::elysia
 {
-OMElysiaKlassloader::OMElysiaKlassloader(OMElysiaVirtualWorld *vw) : world(vw), logger("OMElysiaKlassloader", this)
+OMElysiaKlassloader::OMElysiaKlassloader(OMElysium *elysium) : elysium(elysium), logger("OMElysiaKlassloader", this)
 {
 }
 OMElysiaKlassloader::~OMElysiaKlassloader()
@@ -24,14 +23,14 @@ OMElysiaKlassloader::~OMElysiaKlassloader()
 }
 OMElysiaInstanceKlass *OMElysiaKlassloader::constructInstanceClassShell(std::string s)
 {
-    auto klass = world->metaspaceHeap.allocate<OMElysiaInstanceKlass>();
+    auto klass = elysium->metaspaceHeap.allocate<OMElysiaInstanceKlass>();
     klass->accessFlag = JVM_Acc_Public;
     klass->superClass = nullptr;
-    klass->name = world->metaspaceHeap.allocateStr(s);
+    klass->name = elysium->metaspaceHeap.allocateStr(s);
     klass->type = InstanceKlass;
     klass->interfaceImplCount = 0;
     klass->interfaceImpls = nullptr;
-    klass->ptrLength = world->mainHeap.ptrLength();
+    klass->ptrLength = elysium->mainHeap.ptrLength();
     klass->mirror = nullptr;
 
     markKlass(klass);
@@ -39,12 +38,12 @@ OMElysiaInstanceKlass *OMElysiaKlassloader::constructInstanceClassShell(std::str
 }
 OMElysiaPrimitiveKlass *OMElysiaKlassloader::constructPrimitiveClass(std::string s)
 {
-    auto klass = world->metaspaceHeap.allocate<OMElysiaPrimitiveKlass>();
+    auto klass = elysium->metaspaceHeap.allocate<OMElysiaPrimitiveKlass>();
     klass->accessFlag = JVM_Acc_Public;
     klass->superClass = nullptr;
-    klass->name = world->metaspaceHeap.allocateStr(s);
+    klass->name = elysium->metaspaceHeap.allocateStr(s);
     klass->type = PrimitiveKlass;
-    klass->ptrLength = world->mainHeap.ptrLength();
+    klass->ptrLength = elysium->mainHeap.ptrLength();
     klass->mirror = nullptr;
 
     markKlass(klass);
@@ -54,13 +53,13 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
 {
     auto rawname = buildArray(k->name);
 
-    auto klass = world->metaspaceHeap.allocate<OMElysiaArrayKlass>();
+    auto klass = elysium->metaspaceHeap.allocate<OMElysiaArrayKlass>();
     klass->accessFlag = JVM_Acc_Public;
     klass->superClass = nullptr;
-    klass->name = world->metaspaceHeap.allocateStr(rawname);
+    klass->name = elysium->metaspaceHeap.allocateStr(rawname);
     klass->type = ArrayKlass;
     klass->lowerDim = k;
-    klass->ptrLength = world->mainHeap.ptrLength();
+    klass->ptrLength = elysium->mainHeap.ptrLength();
     klass->mirror = nullptr;
 
     if (k->isArray())
@@ -91,13 +90,13 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
     }
 
     auto kls = findClass("java/lang/Class");
-    auto oop = world->oopManager->allocateOop(kls);
+    auto oop = elysium->oopManager->allocateOop(kls);
     auto field = kls->toInstance()->findField("name", "Ljava/lang/String;");
 
     auto k = std::string(klass->name);
-    auto strobj = world->oopManager->allocateString(k);
+    auto strobj = elysium->oopManager->allocateString(k);
 
-    world->oopManager->oopAccessPointerField(oop, field->offset, strobj);
+    elysium->oopManager->oopAccessPointerField(oop, field->offset, strobj);
 
     klass->mirror = oop;
 }
@@ -164,7 +163,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
     if (!clsfile->interfaces.empty())
     {
         klass->interfaceImplCount = clsfile->interfaces.size();
-        klass->interfaceImpls = world->metaspaceHeap.allocateArray<OMElysiaKlass *>(klass->interfaceImplCount);
+        klass->interfaceImpls = elysium->metaspaceHeap.allocateArray<OMElysiaKlass *>(klass->interfaceImplCount);
         int ii = 0;
         for (auto i : clsfile->interfaces)
         {
@@ -201,13 +200,13 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
         l = std::max(l, pp.first + 1);
     }
     klass->constantPoolCount = l;
-    klass->constantPool = world->metaspaceHeap.allocateArray<void *>(l);
-    klass->constantPoolState = world->metaspaceHeap.allocateArray<bool>(l);
+    klass->constantPool = elysium->metaspaceHeap.allocateArray<void *>(l);
+    klass->constantPoolState = elysium->metaspaceHeap.allocateArray<bool>(l);
 
     klass->accessFlag = clsfile->accessFlags;
 
     klass->methodCount = clsfile->methods.size();
-    klass->methods = world->metaspaceHeap.allocateArray<OMElysiaMethod>(klass->methodCount);
+    klass->methods = elysium->metaspaceHeap.allocateArray<OMElysiaMethod>(klass->methodCount);
 
     klass->vtable = nullptr;
     klass->vtableLength = 0;
@@ -229,9 +228,9 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
         m.code = nullptr;
 
         m.accessFlag = clsfile->methods[i]->accessFlags;
-        m.name = world->metaspaceHeap.allocateStr(
+        m.name = elysium->metaspaceHeap.allocateStr(
             clsfile->mapping[clsfile->methods[i]->nameIndex]->to<classfile::OMClassConstantUtf8>()->data);
-        m.descriptor = world->metaspaceHeap.allocateStr(
+        m.descriptor = elysium->metaspaceHeap.allocateStr(
             clsfile->mapping[clsfile->methods[i]->descIndex]->to<classfile::OMClassConstantUtf8>()->data);
 
         if (m.isNative())
@@ -246,7 +245,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
                 {
                     auto ll = attr->to<classfile::OMClassAttrCode>();
                     m.codeLength = ll->codeLength;
-                    m.code = world->metaspaceHeap.allocateArray<uint8_t>(m.codeLength);
+                    m.code = elysium->metaspaceHeap.allocateArray<uint8_t>(m.codeLength);
                     m.localLength = ll->maxLocals;
                     std::memcpy(m.code, ll->code->data(), ll->codeLength);
                     break;
@@ -263,7 +262,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
     klass->vtableLength = rawVtable.size();
     if (klass->vtableLength)
     {
-        klass->vtable = world->metaspaceHeap.allocateArray<OMElysiaMethod *>(klass->vtableLength);
+        klass->vtable = elysium->metaspaceHeap.allocateArray<OMElysiaMethod *>(klass->vtableLength);
         int i = 0;
         for (auto [a, b] : rawVtable)
         {
@@ -273,13 +272,13 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
     }
 
     klass->fieldCount = clsfile->fields.size();
-    klass->fields = world->metaspaceHeap.allocateArray<OMElysiaField>(klass->fieldCount);
+    klass->fields = elysium->metaspaceHeap.allocateArray<OMElysiaField>(klass->fieldCount);
     for (int i = 0; i < klass->fieldCount; i++)
     {
         auto &f = klass->fields[i];
-        f.name = world->metaspaceHeap.allocateStr(
+        f.name = elysium->metaspaceHeap.allocateStr(
             clsfile->mapping[clsfile->fields[i]->nameIndex]->to<classfile::OMClassConstantUtf8>()->data);
-        f.desc = world->metaspaceHeap.allocateStr(
+        f.desc = elysium->metaspaceHeap.allocateStr(
             clsfile->mapping[clsfile->fields[i]->descIndex]->to<classfile::OMClassConstantUtf8>()->data);
         f.accessFlag = clsfile->fields[i]->accessFlags;
         f.klass = klass;
@@ -289,7 +288,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
 
     if (klass->staticLength)
     {
-        klass->staticBlock = world->metaspaceHeap.allocate(klass->staticLength);
+        klass->staticBlock = elysium->metaspaceHeap.allocate(klass->staticLength);
         std::memset(klass->staticBlock, 0x00, klass->staticLength);
     }
     else

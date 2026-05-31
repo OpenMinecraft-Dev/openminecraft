@@ -36,7 +36,7 @@ struct OMElysiaArrayOopCompressed : public OMElysiaOopCompressed
 class OMElysiaOopManager
 {
   public:
-    OMElysiaOopManager(OMElysiaVirtualWorld *world);
+    OMElysiaOopManager(OMElysium *elysium);
     ~OMElysiaOopManager();
 
     uint64_t oopHeaderLength();
@@ -62,7 +62,7 @@ class OMElysiaOopManager
     uint64_t oopLength(OMElysiaOop *oop);
 
   private:
-    OMElysiaVirtualWorld *world;
+    OMElysium *elysium;
     log::OMLogger logger;
 };
 } // namespace openminecraft::vm::elysia

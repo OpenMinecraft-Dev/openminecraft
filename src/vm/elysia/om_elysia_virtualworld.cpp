@@ -16,9 +16,9 @@ std::atomic<bool> needStop = false;
 
 namespace openminecraft::vm::elysia
 {
-OMElysiaVirtualWorld::OMElysiaVirtualWorld()
+OMElysium::OMElysium()
     : metaspaceHeap("elysia_metaspace", 1024 * 1024 * 16), mainHeap("elysia_main", 1024 * 1024 * 1024),
-      logger("OMElysiaVirtualWorld", this)
+      logger("OMElysium", this)
 {
     klassLoader = mem::fast_shared<allocatorTag, OMElysiaKlassloader>(this);
     oopManager = mem::fast_shared<allocatorTag, OMElysiaOopManager>(this);
@@ -74,7 +74,7 @@ OMElysiaVirtualWorld::OMElysiaVirtualWorld()
         }
     });
 }
-OMElysiaVirtualWorld::~OMElysiaVirtualWorld()
+OMElysium::~OMElysium()
 {
     needStop = true;
     mainThread->join();

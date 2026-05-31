@@ -12,7 +12,7 @@ using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::elysia
 {
-OMElysiaOopManager::OMElysiaOopManager(OMElysiaVirtualWorld *vw) : world(vw), logger("OMElysiaOopManager", this)
+OMElysiaOopManager::OMElysiaOopManager(OMElysium *elysium) : elysium(elysium), logger("OMElysiaOopManager", this)
 {
 }
 OMElysiaOopManager::~OMElysiaOopManager()
@@ -21,21 +21,21 @@ OMElysiaOopManager::~OMElysiaOopManager()
 
 uint64_t OMElysiaOopManager::oopHeaderLength()
 {
-    return world->metaspaceHeap.enablePtrCompress() ? sizeof(OMElysiaOopCompressed) : sizeof(OMElysiaOopUncompressed);
+    return elysium->metaspaceHeap.enablePtrCompress() ? sizeof(OMElysiaOopCompressed) : sizeof(OMElysiaOopUncompressed);
 }
 uint64_t OMElysiaOopManager::oopArrayHeaderLength()
 {
-    return world->metaspaceHeap.enablePtrCompress() ? sizeof(OMElysiaArrayOopCompressed)
-                                                    : sizeof(OMElysiaArrayOopUncompressed);
+    return elysium->metaspaceHeap.enablePtrCompress() ? sizeof(OMElysiaArrayOopCompressed)
+                                                      : sizeof(OMElysiaArrayOopUncompressed);
 }
 OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass)
 {
     auto ll = reinterpret_cast<OMElysiaOop *>(
-        world->mainHeap.allocate(oopHeaderLength() + reinterpret_cast<OMElysiaInstanceKlass *>(klass)->length));
+        elysium->mainHeap.allocate(oopHeaderLength() + reinterpret_cast<OMElysiaInstanceKlass *>(klass)->length));
     std::memset(ll, 0x00, oopHeaderLength() + reinterpret_cast<OMElysiaInstanceKlass *>(klass)->length);
-    if (world->metaspaceHeap.enablePtrCompress())
+    if (elysium->metaspaceHeap.enablePtrCompress())
     {
-        reinterpret_cast<OMElysiaOopCompressed *>(ll)->klass = world->metaspaceHeap.compress(klass);
+        reinterpret_cast<OMElysiaOopCompressed *>(ll)->klass = elysium->metaspaceHeap.compress(klass);
     }
     else
     {
@@ -46,7 +46,7 @@ OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass)
 
 OMElysiaOop *OMElysiaOopManager::allocateString(std::string &target)
 {
-    auto nativeKlassloader = world->klassLoader;
+    auto nativeKlassloader = elysium->klassLoader;
     auto stringKlass = nativeKlassloader->findClass("java/lang/String")->toInstance();
     auto charArrKlass = nativeKlassloader->findClass("[C")->toArray();
 
@@ -65,10 +65,10 @@ OMElysiaOop *OMElysiaOopManager::allocateString(std::string &target)
 
 OMElysiaKlass *OMElysiaOopManager::oopGetKlass(OMElysiaOop *base)
 {
-    if (world->metaspaceHeap.enablePtrCompress())
+    if (elysium->metaspaceHeap.enablePtrCompress())
     {
         return reinterpret_cast<OMElysiaKlass *>(
-            world->metaspaceHeap.decompress(reinterpret_cast<OMElysiaOopCompressed *>(base)->klass));
+            elysium->metaspaceHeap.decompress(reinterpret_cast<OMElysiaOopCompressed *>(base)->klass));
     }
     else
     {
@@ -78,9 +78,9 @@ OMElysiaKlass *OMElysiaOopManager::oopGetKlass(OMElysiaOop *base)
 
 void OMElysiaOopManager::oopAccessPointerField(OMElysiaOop *base, uint64_t offset, void *ptrToWrite)
 {
-    if (world->mainHeap.enablePtrCompress())
+    if (elysium->mainHeap.enablePtrCompress())
     {
-        *reinterpret_cast<uint32_t *>(oopAccessField(base, offset)) = world->mainHeap.compress(ptrToWrite);
+        *reinterpret_cast<uint32_t *>(oopAccessField(base, offset)) = elysium->mainHeap.compress(ptrToWrite);
     }
     else
     {
@@ -89,10 +89,10 @@ void OMElysiaOopManager::oopAccessPointerField(OMElysiaOop *base, uint64_t offse
 }
 OMElysiaOop *OMElysiaOopManager::oopAccessPointerField(OMElysiaOop *base, uint64_t offset)
 {
-    if (world->mainHeap.enablePtrCompress())
+    if (elysium->mainHeap.enablePtrCompress())
     {
         return reinterpret_cast<OMElysiaOop *>(
-            world->mainHeap.decompress(*reinterpret_cast<uint32_t *>(oopAccessField(base, offset))));
+            elysium->mainHeap.decompress(*reinterpret_cast<uint32_t *>(oopAccessField(base, offset))));
     }
     else
     {
@@ -107,7 +107,7 @@ uintptr_t OMElysiaOopManager::oopAccessField(OMElysiaOop *base, uint64_t offset)
 
 jint OMElysiaOopManager::arrLength(OMElysiaOop *base)
 {
-    if (world->metaspaceHeap.enablePtrCompress())
+    if (elysium->metaspaceHeap.enablePtrCompress())
     {
         return reinterpret_cast<OMElysiaArrayOopCompressed *>(base)->length;
     }
@@ -119,9 +119,9 @@ jint OMElysiaOopManager::arrLength(OMElysiaOop *base)
 
 OMElysiaOop *OMElysiaOopManager::arrAccessPtr(OMElysiaOop *oop, jint index)
 {
-    if (world->metaspaceHeap.enablePtrCompress())
+    if (elysium->metaspaceHeap.enablePtrCompress())
     {
-        return reinterpret_cast<OMElysiaOop *>(world->mainHeap.decompress(arrAccess<uint32_t>(oop)[index]));
+        return reinterpret_cast<OMElysiaOop *>(elysium->mainHeap.decompress(arrAccess<uint32_t>(oop)[index]));
     }
     else
     {
@@ -130,9 +130,9 @@ OMElysiaOop *OMElysiaOopManager::arrAccessPtr(OMElysiaOop *oop, jint index)
 }
 void OMElysiaOopManager::arrAccessPtr(OMElysiaOop *oop, jint index, OMElysiaOop *data)
 {
-    if (world->metaspaceHeap.enablePtrCompress())
+    if (elysium->metaspaceHeap.enablePtrCompress())
     {
-        arrAccess<uint32_t>(oop)[index] = world->mainHeap.compress(data);
+        arrAccess<uint32_t>(oop)[index] = elysium->mainHeap.compress(data);
     }
     else
     {
@@ -166,12 +166,12 @@ OMElysiaOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint len
         break;
     }
 
-    auto ll = reinterpret_cast<OMElysiaOop *>(world->mainHeap.allocate(oopArrayHeaderLength() + i * length));
+    auto ll = reinterpret_cast<OMElysiaOop *>(elysium->mainHeap.allocate(oopArrayHeaderLength() + i * length));
     std::memset(ll, 0x00, oopArrayHeaderLength() + i * length);
 
-    if (world->metaspaceHeap.enablePtrCompress())
+    if (elysium->metaspaceHeap.enablePtrCompress())
     {
-        reinterpret_cast<OMElysiaArrayOopCompressed *>(ll)->klass = world->metaspaceHeap.compress(klass);
+        reinterpret_cast<OMElysiaArrayOopCompressed *>(ll)->klass = elysium->metaspaceHeap.compress(klass);
         reinterpret_cast<OMElysiaArrayOopCompressed *>(ll)->length = length;
     }
     else
@@ -188,7 +188,7 @@ uint64_t OMElysiaOopManager::oopLength(OMElysiaOop *oop)
     auto klass = oopGetKlass(oop);
     if (klass->isInstance())
     {
-        return world->mainHeap.align(oopHeaderLength() + klass->toInstance()->length);
+        return elysium->mainHeap.align(oopHeaderLength() + klass->toInstance()->length);
     }
     else
     {
@@ -216,7 +216,7 @@ uint64_t OMElysiaOopManager::oopLength(OMElysiaOop *oop)
             break;
         }
 
-        return world->mainHeap.align(oopArrayHeaderLength() + arrLength(oop) * i);
+        return elysium->mainHeap.align(oopArrayHeaderLength() + arrLength(oop) * i);
     }
 }
 } // namespace openminecraft::vm::elysia

@@ -22,7 +22,7 @@ class OMElysiaKlass;
 class OMElysiaOop;
 class OMElysiaMethod;
 class OMElysiaField;
-class OMElysiaVirtualWorld;
+class OMElysium;
 
 struct OMElysiaNativeHandle
 {
@@ -60,7 +60,7 @@ void initBaseInterface(OMElysiaJNIEnv env);
 
 struct OMElysiaNativeInterface
 {
-    OMElysiaVirtualWorld *world;
+    OMElysium *world;
     void *reserve1;
     void *reserve2;
     void *reserve3;

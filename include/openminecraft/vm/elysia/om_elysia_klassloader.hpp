@@ -12,7 +12,7 @@ namespace openminecraft::vm::elysia
 class OMElysiaKlassloader
 {
   public:
-    OMElysiaKlassloader(OMElysiaVirtualWorld *vw);
+    OMElysiaKlassloader(OMElysium *vw);
     ~OMElysiaKlassloader();
 
     OMElysiaInstanceKlass *constructInstanceClassShell(std::string s);
@@ -41,13 +41,13 @@ class OMElysiaKlassloader
         return findClass(s);
     }
 
-    OMElysiaVirtualWorld *upper()
+    OMElysium *upper()
     {
-        return world;
+        return elysium;
     }
 
   private:
-    OMElysiaVirtualWorld *world;
+    OMElysium *elysium;
     std::unordered_map<binary::hash::hash_t, OMElysiaKlass *> loadedClasses;
 
     log::OMLogger logger;

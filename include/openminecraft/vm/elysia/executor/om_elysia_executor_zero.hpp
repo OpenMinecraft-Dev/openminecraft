@@ -77,10 +77,10 @@ template <typename T> static T zeroStackPopWGet()
     }
 }
 
-void zeroStackPopToStatic(OMElysiaField *field, OMElysiaVirtualWorld *world);
-void zeroStackPushFromStatic(OMElysiaField *field, OMElysiaVirtualWorld *world);
-void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysiaVirtualWorld *world);
-void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysiaVirtualWorld *world);
+void zeroStackPopToStatic(OMElysiaField *field, OMElysium *world);
+void zeroStackPushFromStatic(OMElysiaField *field, OMElysium *world);
+void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
+void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
 uint16_t zeroCodeFetchArgu16p0();
 int16_t zeroCodeFetchArgs16p0();
 
@@ -121,7 +121,7 @@ template <typename T> static T zeroStackLoadLocalW(uint32_t l)
 class OMElysiaExecutorZero
 {
   public:
-    OMElysiaExecutorZero(OMElysiaVirtualWorld *vw);
+    OMElysiaExecutorZero(OMElysium *vw);
     ~OMElysiaExecutorZero();
 
 #define DEF_FUNCCALL(retType, name)                                                                                    \
@@ -152,7 +152,7 @@ class OMElysiaExecutorZero
     void threadInit();
 
   private:
-    OMElysiaVirtualWorld *world;
+    OMElysium *world;
     log::OMLogger logger;
 };
 } // namespace openminecraft::vm::elysia::executor

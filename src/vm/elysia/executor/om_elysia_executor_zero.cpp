@@ -28,7 +28,7 @@ using namespace std::chrono_literals;
 
 namespace openminecraft::vm::elysia::executor
 {
-OMElysiaExecutorZero::OMElysiaExecutorZero(OMElysiaVirtualWorld *vw) : world(vw), logger("OMElysiaExecutorZero", this)
+OMElysiaExecutorZero::OMElysiaExecutorZero(OMElysium *vw) : world(vw), logger("OMElysiaExecutorZero", this)
 {
 }
 OMElysiaExecutorZero::~OMElysiaExecutorZero()
@@ -998,7 +998,7 @@ int16_t zeroCodeFetchArgs16p0()
     return static_cast<int16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
 }
 
-void zeroStackPushFromStatic(OMElysiaField *field, OMElysiaVirtualWorld *world)
+void zeroStackPushFromStatic(OMElysiaField *field, OMElysium *world)
 {
     switch (*field->desc)
     {
@@ -1035,7 +1035,7 @@ void zeroStackPushFromStatic(OMElysiaField *field, OMElysiaVirtualWorld *world)
     }
 }
 
-void zeroStackPopToStatic(OMElysiaField *field, OMElysiaVirtualWorld *world)
+void zeroStackPopToStatic(OMElysiaField *field, OMElysium *world)
 {
     switch (*field->desc)
     {
@@ -1075,7 +1075,7 @@ void zeroStackPopToStatic(OMElysiaField *field, OMElysiaVirtualWorld *world)
     }
 }
 
-void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysiaVirtualWorld *world)
+void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world)
 {
     switch (*field->desc)
     {
@@ -1112,7 +1112,7 @@ void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMEly
     }
 }
 
-void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysiaVirtualWorld *world)
+void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world)
 {
     switch (*field->desc)
     {
