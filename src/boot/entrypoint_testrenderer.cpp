@@ -76,7 +76,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
 
         auto iff = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
         auto f = new fontproc::OMFont(*iff.get());
-        auto ppo = f->buildBasicPolygon('@');
+        auto ppo = f->buildBasicPolygon(0x2299);
         delete f;
 
         float ratio = 1.377143f;
