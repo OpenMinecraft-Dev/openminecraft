@@ -14,7 +14,7 @@
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
-#include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <chrono>
 #include <cmath>
 #include <cstdarg>

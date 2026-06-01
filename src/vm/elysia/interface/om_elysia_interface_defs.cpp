@@ -7,7 +7,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
-#include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include "openminecraft/vm/elysia/om_elysium.hpp"
 #include "openminecraft/vm/encoding/om_encoding_utf.hpp"
 #include <cstring>
 

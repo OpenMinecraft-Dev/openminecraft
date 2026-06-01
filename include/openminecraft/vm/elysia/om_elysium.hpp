@@ -1,5 +1,5 @@
-#ifndef OM_ELYSIA_VIRTUALWORLD_HPP
-#define OM_ELYSIA_VIRTUALWORLD_HPP
+#ifndef OM_ELYSIUM_HPP
+#define OM_ELYSIUM_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/om_elysia_heap.hpp"

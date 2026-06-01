@@ -4,7 +4,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
-#include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <cstdint>
 namespace openminecraft::vm::elysia
 {

@@ -17,8 +17,9 @@
 #include "openminecraft/vm/elysia/om_elysia_heap.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
+#include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
-#include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include "openminecraft/vm/elysia/om_elysium.hpp"
 
 using namespace std::chrono_literals;
 using namespace openminecraft::vm::elysia;
@@ -318,6 +319,8 @@ print:
     {
         if (base >= node->block && base < node->blockEnd)
         {
+            fmt::print(fmt::fg(fmt::color::dark_gray), "{} ~ {} (free)", node->block, node->blockEnd);
+            fmt::println("");
             base = reinterpret_cast<OMElysiaOop *>(node->blockEnd);
             if (!elysium->mainHeap.valid(base))
             {
@@ -331,6 +334,37 @@ print:
     }
 
     goto begin;
+}
+
+void printStackStatus()
+{
+    for (auto &th : threadMap)
+    {
+        fmt::println("status for thread {}", reinterpret_cast<const void *>(&th.first));
+        fmt::print("stack base at ");
+        fmt::print(fmt::fg(fmt::color::alice_blue), "@0x{:x}", th.second->stackStart);
+        fmt::println("");
+        fmt::print("stack top at ");
+        fmt::print(fmt::fg(fmt::color::alice_blue), "@0x{:x}", th.second->stackEnd);
+        fmt::println("");
+    }
+}
+
+void printElysium(OMElysium *elysium)
+{
+    std::string type;
+    std::cin >> type;
+
+    switch (hash_compile_time(type.c_str()))
+    {
+    case "stack"_hash:
+        printStackStatus();
+        break;
+    default:
+        fmt::print(fmt::fg(fmt::color::red), "invalid type");
+        fmt::println("");
+        break;
+    }
 }
 
 int main(int argc, const char *argv[])
@@ -354,6 +388,10 @@ int main(int argc, const char *argv[])
         }
         case "search"_hash: {
             search(elysium);
+            break;
+        }
+        case "elysium"_hash: {
+            printElysium(elysium);
             break;
         }
         case "heaptest"_hash: {

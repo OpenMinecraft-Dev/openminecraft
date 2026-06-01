@@ -1,4 +1,4 @@
-#include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include "openminecraft/vm/elysia/om_elysium.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"

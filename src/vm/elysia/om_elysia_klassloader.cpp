@@ -6,7 +6,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
-#include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <cstring>
 #include <fstream>
 #include <istream>

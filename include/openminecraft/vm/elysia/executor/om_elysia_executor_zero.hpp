@@ -6,7 +6,7 @@
 #include "openminecraft/vm/elysia/om_elysia_field.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
-#include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <cstdarg>
 #include <cstdint>
 #include <type_traits>

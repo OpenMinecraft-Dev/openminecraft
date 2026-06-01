@@ -4,7 +4,7 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
-#include "openminecraft/vm/elysia/om_elysia_virtualworld.hpp"
+#include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <istream>
 #include <unordered_map>
 namespace openminecraft::vm::elysia
