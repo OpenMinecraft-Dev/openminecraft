@@ -25,8 +25,6 @@ template <typename T> static void zeroStackPush(T data)
     {
         *d = 0;
         std::memcpy(d, &data, sizeof(T));
-
-        // *d = *reinterpret_cast<uint32_t *>(&data);
     }
 }
 
@@ -42,9 +40,9 @@ template <typename T> static void zeroStackPushW(T data)
     else
     {
         uint64_t d = *reinterpret_cast<uint64_t *>(&data);
+        auto dlow = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
         auto dhigh = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
         *dhigh = static_cast<uint32_t>(d >> 32);
-        auto dlow = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
         *dlow = static_cast<uint32_t>(d & 0xffffffff);
     }
 }
@@ -69,8 +67,8 @@ template <typename T> static T zeroStackPopWGet()
     }
     else
     {
-        auto dlow = *reinterpret_cast<uint32_t *>(zeroStackPop(sizeof(void *)));
         auto dhigh = *reinterpret_cast<uint32_t *>(zeroStackPop(sizeof(void *)));
+        auto dlow = *reinterpret_cast<uint32_t *>(zeroStackPop(sizeof(void *)));
 
         auto d = static_cast<uint64_t>(dhigh) << 32 | dlow;
         return *reinterpret_cast<T *>(&d);
@@ -110,11 +108,11 @@ template <typename T> static T zeroStackLoadLocalW(uint32_t l)
     }
     else
     {
-        auto highd = static_cast<uint64_t>(zeroStackLoadLocal<uint32_t>(l));
-        auto lowd = static_cast<uint64_t>(zeroStackLoadLocal<uint32_t>(l + 1));
+        auto dlow = static_cast<uint64_t>(zeroStackLoadLocal<uint32_t>(l));
+        auto dhigh = static_cast<uint64_t>(zeroStackLoadLocal<uint32_t>(l + 1));
 
-        auto ll = highd << 32 | lowd;
-        return *reinterpret_cast<T *>(&ll);
+        auto d = dhigh << 32 | dlow;
+        return *reinterpret_cast<T *>(&d);
     }
 }
 

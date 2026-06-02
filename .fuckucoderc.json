@@ -1,0 +1,31 @@
+{
+  "exclude": [],
+  "include": [
+    "**/*"
+  ],
+  "concurrency": 2,
+  "verbose": false,
+  "output": {
+    "format": "console",
+    "top": 10,
+    "maxIssues": 5,
+    "showDetails": true
+  },
+  "metrics": {
+    "weights": {
+      "complexity": 0.32,
+      "duplication": 0.2,
+      "size": 0.18,
+      "structure": 0.12,
+      "error": 0.08,
+      "documentation": 0.05,
+      "naming": 0.05
+    }
+  },
+  "ai": {
+    "enabled": false
+  },
+  "i18n": {
+    "locale": "zh"
+  }
+}
