@@ -3,12 +3,12 @@
   "include": [
     "**/*"
   ],
-  "concurrency": 2,
-  "verbose": false,
+  "concurrency": 8,
+  "verbose": true,
   "output": {
     "format": "console",
-    "top": 10,
-    "maxIssues": 5,
+    "top": 50,
+    "maxIssues": 50,
     "showDetails": true
   },
   "metrics": {
