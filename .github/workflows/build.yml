@@ -118,7 +118,7 @@ jobs:
           style: lowerCase
           length: 3
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           submodules: 'true'
@@ -245,7 +245,8 @@ jobs:
       - name: Xmake Install
         run: xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: target-${{ matrix.plat }}-${{ matrix.loaderarch }}
           path: prod/
+          compression-level: 9
