@@ -52,6 +52,23 @@ static std::string buildArray(char *s)
     }
 }
 
+static bool isArray(std::string s)
+{
+    return s[0] == '[';
+}
+
+static std::string decompArray(std::string s)
+{
+    if (s[1] == 'L')
+    {
+        return s.substr(2, s.length() - 3);
+    }
+    else
+    {
+        return s.substr(1);
+    }
+}
+
 static uint64_t fieldLength(char *s, uint64_t ptrLen)
 {
     switch (s[0])
