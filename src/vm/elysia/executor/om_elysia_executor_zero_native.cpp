@@ -280,9 +280,9 @@ void OMElysiaExecutorZero::executeNativeLink()
         }
     }
 
-    if (world->nativeFuncMap.count(ffm))
+    if (elysium->nativeFuncMap.count(ffm))
     {
-        executeNative(mm->descriptor, mm->isStatic(), world->nativeFuncMap[ffm]);
+        executeNative(mm->descriptor, mm->isStatic(), elysium->nativeFuncMap[ffm]);
         return;
     }
 

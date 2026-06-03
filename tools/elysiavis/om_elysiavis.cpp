@@ -360,6 +360,13 @@ void printElysium(OMElysium *elysium)
     case "stack"_hash:
         printStackStatus();
         break;
+    case "search"_hash:
+        search(elysium);
+        break;
+    case "read"_hash: {
+        readMem(elysium);
+        break;
+    }
     default:
         fmt::print(fmt::fg(fmt::color::red), "invalid type");
         fmt::println("");
@@ -380,15 +387,9 @@ int main(int argc, const char *argv[])
         switch (hash_compile_time(command.c_str()))
         {
         case "exit"_hash: {
-            std::exit(0);
-        }
-        case "read"_hash: {
-            readMem(elysium);
-            break;
-        }
-        case "search"_hash: {
-            search(elysium);
-            break;
+            int i = 0;
+            std::cin >> i;
+            std::exit(i);
         }
         case "elysium"_hash: {
             printElysium(elysium);

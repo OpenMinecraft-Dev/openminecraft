@@ -150,7 +150,7 @@ class OMElysiaExecutorZero
     void threadInit();
 
   private:
-    OMElysium *world;
+    OMElysium *elysium;
     log::OMLogger logger;
 };
 } // namespace openminecraft::vm::elysia::executor

@@ -12,6 +12,7 @@
 #include <istream>
 #include <stdexcept>
 #include <unordered_map>
+#include <variant>
 
 namespace openminecraft::vm::elysia
 {
@@ -103,6 +104,16 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
 
 void OMElysiaKlassloader::loadClassWithoutMirror(std::string name)
 {
+    if (name[0] == '[')
+    {
+        auto actualName = name.substr(name[1] == 'L' ? 2 : 1,
+                                      (name[name.length() - 1] == ';' ? name.length() - 3 : std::variant_npos));
+        auto k = fetchOrLoadClass(actualName);
+        auto arrk = constructArrayClass(k);
+        fixClassMirror(arrk);
+        return;
+    }
+
     std::ifstream istr(fmt::format("vmstd/out/{}.class", name), std::ios::binary);
     loadClassWithoutMirror(&istr);
 }
@@ -118,7 +129,13 @@ void OMElysiaKlassloader::fixAllClasses()
 void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
 {
     classfile::OMClassFileParser par(istr);
-    auto clsfile = par.parse().unwrap();
+    auto clsfileres = par.parse();
+    auto clsfile = clsfileres.unwrap();
+
+    if (clsfile == nullptr)
+    {
+        throw std::logic_error(clsfileres.unwrap_err().what());
+    }
 
     auto clsname =
         clsfile->mapping[clsfile->mapping[clsfile->thisClass]->to<classfile::OMClassConstantClass>()->nameIndex]

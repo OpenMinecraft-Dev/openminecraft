@@ -60,7 +60,7 @@ void initBaseInterface(OMElysiaJNIEnv env);
 
 struct OMElysiaNativeInterface
 {
-    OMElysium *world;
+    OMElysium *elysium;
     void *reserve1;
     void *reserve2;
     void *reserve3;

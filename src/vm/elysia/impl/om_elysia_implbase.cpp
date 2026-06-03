@@ -3,6 +3,8 @@
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
+#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
+#include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <stdexcept>
 
 namespace openminecraft::vm::elysia::impl
@@ -90,8 +92,7 @@ jdouble Java_java_lang_Double_longBitsToDouble(OMElysiaJNIEnv *env, OMElysiaKlas
 static jint Java_sun_misc_Unsafe_arrayBaseOffset(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd,
                                                  OMElysiaNativeHandle *klass)
 {
-    logger.debug("{} {}", (void *)hnd->object, (void *)klass->object);
-    throw std::logic_error("not implemented!");
+    return static_cast<jint>(env->internal->elysium->oopManager->oopArrayHeaderLength());
 }
 
 void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)

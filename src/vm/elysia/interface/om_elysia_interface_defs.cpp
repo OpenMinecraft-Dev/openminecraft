@@ -64,14 +64,15 @@ static jint interfaceRegisterNatives(OMElysiaJNIEnv *env, OMElysiaKlass *clazz, 
 static OMElysiaKlass *interfaceFindClass(OMElysiaJNIEnv *env, const char *name)
 {
     enterInterface;
-    recordResult(env->internal->world->klassLoader->fetchOrLoadClass(std::string(name)));
+    recordResult(env->internal->elysium->klassLoader->fetchOrLoadClass(std::string(name)));
     exitInterface;
     return fetchResult;
 }
 static OMElysiaNativeHandle *interfaceAllocObject(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
     enterInterface;
-    recordResult(env->internal->world->executor->recordLocalRef(env->internal->world->oopManager->allocateOop(klass)));
+    recordResult(
+        env->internal->elysium->executor->recordLocalRef(env->internal->elysium->oopManager->allocateOop(klass)));
     exitInterface;
     return fetchResult;
 };
@@ -86,8 +87,8 @@ static OMElysiaField *interfaceGetFieldID(OMElysiaJNIEnv *env, OMElysiaKlass *cl
 static OMElysiaNativeHandle *interfaceNewCharArray(OMElysiaJNIEnv *env, jsize len)
 {
     enterInterface;
-    recordResult(env->internal->world->executor->recordLocalRef(env->internal->world->oopManager->allocateArr(
-        env->internal->world->klassLoader->findClass("[C")->toArray(), len)));
+    recordResult(env->internal->elysium->executor->recordLocalRef(env->internal->elysium->oopManager->allocateArr(
+        env->internal->elysium->klassLoader->findClass("[C")->toArray(), len)));
     exitInterface;
     return fetchResult;
 }
@@ -95,17 +96,17 @@ static OMElysiaNativeHandle *interfaceNewStringUTF(OMElysiaJNIEnv *env, const ch
 {
     enterInterface;
     std::string ss(string);
-    recordResult(env->internal->world->executor->recordLocalRef(env->internal->world->oopManager->allocateString(ss)));
+    recordResult(
+        env->internal->elysium->executor->recordLocalRef(env->internal->elysium->oopManager->allocateString(ss)));
     exitInterface;
     return fetchResult;
 }
 static OMElysiaNativeHandle *interfaceGetObjectField(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj,
                                                      OMElysiaField *fieldID)
 {
-    auto world = env->internal->world;
+    auto elys = env->internal->elysium;
     enterInterface;
-    recordResult(
-        world->executor->recordLocalRef(world->oopManager->oopAccessPointerField(obj->object, fieldID->offset)));
+    recordResult(elys->executor->recordLocalRef(elys->oopManager->oopAccessPointerField(obj->object, fieldID->offset)));
     exitInterface;
     return fetchResult;
 }
@@ -113,7 +114,7 @@ static OMElysiaNativeHandle *interfaceGetObjectField(OMElysiaJNIEnv *env, OMElys
 static jchar *interfaceGetCharArrayElements(OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jboolean *isCopy)
 {
     enterInterface;
-    recordResult(env->internal->world->oopManager->arrAccess<jchar>(array->object));
+    recordResult(env->internal->elysium->oopManager->arrAccess<jchar>(array->object));
     if (isCopy)
     {
         *isCopy = false;
@@ -136,7 +137,7 @@ static const char *interfaceGetStringUTFChars(OMElysiaJNIEnv *env, OMElysiaNativ
     }
 
     enterInterface;
-    auto len = env->internal->world->oopManager->arrLength(arrdata->object);
+    auto len = env->internal->elysium->oopManager->arrLength(arrdata->object);
     auto s = encoding::utf16ToUtf8New(data, len);
     auto result = reinterpret_cast<char *>(mem::allocator::tracedMallocElysia(s.size() + 1));
     std::memcpy(result, s.c_str(), s.size());
@@ -154,7 +155,7 @@ static void interfaceSetObjectField(OMElysiaJNIEnv *env, OMElysiaNativeHandle *o
                                     OMElysiaNativeHandle *val)
 {
     enterInterface;
-    env->internal->world->oopManager->oopAccessPointerField(obj->object, fieldID->offset, val->object);
+    env->internal->elysium->oopManager->oopAccessPointerField(obj->object, fieldID->offset, val->object);
     exitInterface;
 }
 
