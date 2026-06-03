@@ -69,7 +69,7 @@ static std::string decompArray(std::string s)
     }
 }
 
-static uint64_t fieldLength(char *s, uint64_t ptrLen)
+static uint64_t descriptorLength(char *s, uint64_t ptrLen)
 {
     switch (s[0])
     {

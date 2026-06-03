@@ -140,9 +140,9 @@ void OMElysiaOopManager::arrAccessPtr(OMElysiaOop *oop, jint index, OMElysiaOop 
     }
 }
 
-OMElysiaOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint length)
+static jint arrayKlassItemLength(OMElysiaArrayKlass *klass)
 {
-    int i = 0;
+    jint i = 0;
     switch (hash_compile_time(klass->lowerDim->name))
     {
     case "byte"_hash:
@@ -152,19 +152,19 @@ OMElysiaOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint len
     case "char"_hash:
     case "short"_hash:
         i = 2;
-        break;
-    case "int"_hash:
+        break;                                                                                               case "int"_hash:
     case "float"_hash:
-        i = 4;
+        i = 4;                                                                                                   break;
+    case "long"_hash:                                                                                        case "double"_hash:                                                                                          i = 8;
         break;
-    case "long"_hash:
-    case "double"_hash:
-        i = 8;
-        break;
-    default:
-        i = klass->ptrLength;
-        break;
-    }
+    default:                                                                                                     i = klass->ptrLength;
+        break;                                                                                               }
+    return i;
+}
+
+OMElysiaOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint length)
+{
+    int i = arrayKlassItemLength(klass);
 
     auto ll = reinterpret_cast<OMElysiaOop *>(elysium->mainHeap.allocate(oopArrayHeaderLength() + i * length));
     std::memset(ll, 0x00, oopArrayHeaderLength() + i * length);
@@ -192,31 +192,7 @@ uint64_t OMElysiaOopManager::oopLength(OMElysiaOop *oop)
     }
     else
     {
-        int i = 0;
-        switch (hash_compile_time(klass->toArray()->lowerDim->name))
-        {
-        case "byte"_hash:
-        case "boolean"_hash:
-            i = 1;
-            break;
-        case "char"_hash:
-        case "short"_hash:
-            i = 2;
-            break;
-        case "int"_hash:
-        case "float"_hash:
-            i = 4;
-            break;
-        case "long"_hash:
-        case "double"_hash:
-            i = 8;
-            break;
-        default:
-            i = klass->ptrLength;
-            break;
-        }
-
-        return elysium->mainHeap.align(oopArrayHeaderLength() + arrLength(oop) * i);
+        return elysium->mainHeap.align(oopArrayHeaderLength() + arrLength(oop) * arrayKlassItemLength(klass->toArray()));
     }
 }
 } // namespace openminecraft::vm::elysia
