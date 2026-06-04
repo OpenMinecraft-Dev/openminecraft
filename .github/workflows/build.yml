@@ -111,19 +111,16 @@ jobs:
       actions: write
       contents: read
     steps:
-      # - uses: boonya/gh-action-name-generator@v1
-      #   id: generator
-      #   name: Generate cache name
-      #   with:
-      #     style: lowerCase
-      #     length: 3
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           submodules: 'true'
       - name: Generate cache name
-        run: echo "CACHENAME=$(./misc/simple_name_gen.py)" >> $GITHUB_ENV
+        run: |
+          CACHENAME=$(./misc/simple_name_gen.py)
+          echo $CACHENAME
+          echo "CACHENAME=$CACHENAME" >> $GITHUB_ENV
       - name: macos test
         if: matrix.plat == 'macos'
         run: |
