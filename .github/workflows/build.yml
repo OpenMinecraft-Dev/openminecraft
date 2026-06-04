@@ -116,11 +116,17 @@ jobs:
         with:
           fetch-depth: 0
           submodules: 'true'
-      - name: Generate cache name
+      - name: Generate cache name (UNIX)
+        if: matrix.plat != 'windows'
         run: |
-          CACHENAME=$(./misc/simple_name_gen.py)
+          CACHENAME=$(python ./misc/simple_name_gen.py)
           echo $CACHENAME
           echo "CACHENAME=$CACHENAME" >> $GITHUB_ENV
+      - name: Generate cache name (Windows)
+        if: matrix.plat == 'windows'
+        run: |
+          $CACHENAME = python ./misc/simple_name_gen.py
+          echo "CACHENAME=$CACHENAME" | Out-File -FilePath $env:GITHUB_ENV -Append
       - name: macos test
         if: matrix.plat == 'macos'
         run: |
