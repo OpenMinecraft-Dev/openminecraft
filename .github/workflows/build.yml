@@ -111,17 +111,19 @@ jobs:
       actions: write
       contents: read
     steps:
-      - uses: boonya/gh-action-name-generator@v1
-        id: generator
-        name: Generate cache name
-        with:
-          style: lowerCase
-          length: 3
+      # - uses: boonya/gh-action-name-generator@v1
+      #   id: generator
+      #   name: Generate cache name
+      #   with:
+      #     style: lowerCase
+      #     length: 3
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           submodules: 'true'
+      - name: Generate cache name
+        run: echo "CACHENAME=$(./misc/simple_name_gen.py)" >> $GITHUB_ENV
       - name: macos test
         if: matrix.plat == 'macos'
         run: |
@@ -184,13 +186,17 @@ jobs:
         run: xmake f -m ${{ env.MODE }} --cxx="clang++" -yc ${{ env.XMAKE_ARGS }}
       - name: Configure IOS
         if: matrix.plat == 'ios'
-        run: xmake f -p iphoneos -m ${{ env.MODE }} --cc="clang" -yc ${{ env.XMAKE_ARGS }}
+        run: xmake f -p iphoneos -m ${{ env.MODE }} --cc="clang" -yc ${{ env.XMAKE_ARGS
+          }}
       - name: Configure OpenHarmony
         if: matrix.plat == 'harmony'
-        run: xmake f -p harmony -a ${{ matrix.arch }} --sdk=${{ github.workspace }}/native -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+        run: xmake f -p harmony -a ${{ matrix.arch }} --sdk=${{ github.workspace
+          }}/native -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
       - name: Configure Android
         if: matrix.plat == 'android'
-        run: xmake f -p android -a ${{ matrix.arch }} --ndk=${{ github.workspace }}/android-ndk-${{ env.ANDROID_NDK_VERSION }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }} --cxxflags="-fPIC"
+        run: xmake f -p android -a ${{ matrix.arch }} --ndk=${{ github.workspace
+          }}/android-ndk-${{ env.ANDROID_NDK_VERSION }} -m ${{ env.MODE }} -yc
+          ${{ env.XMAKE_ARGS }} --cxxflags="-fPIC"
       - name: Configure Linux
         if: ${{ matrix.plat == 'linux' }}
         run: |
@@ -222,19 +228,20 @@ jobs:
 
       - name: Configure Windows
         if: matrix.plat == 'windows'
-        run: xmake f --toolchain=msvc -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+        run: xmake f --toolchain=msvc -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{
+          env.XMAKE_ARGS }}
       - name: Save xmake packages (UNIX)
         if: matrix.plat != 'windows'
         uses: actions/cache/save@v5
         with:
           path: ~/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-${{ steps.generator.outputs.name }}
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-${{ env.CACHENAME }}
       - name: Save xmake packages (Windows)
         if: matrix.plat == 'windows'
         uses: actions/cache/save@v5
         with:
           path: C:/Users/runneradmin/AppData/Local/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-${{ steps.generator.outputs.name }}
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-${{ env.CACHENAME }}
       - name: Build
         run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }} openminecraft
       - name: Build debug tools
