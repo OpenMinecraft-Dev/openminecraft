@@ -257,6 +257,6 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: target-${{ matrix.plat }}-${{ matrix.loaderarch }}
+          name: target-${{ matrix.plat }}-${{ matrix.loaderarch }}-${{ env.CACHENAME }}
           path: prod/
           compression-level: 9
