@@ -23,7 +23,7 @@ struct OMElysiaHeapBlock
 class OMElysiaHeap
 {
   public:
-    OMElysiaHeap(const char *name, uint64_t maxSize);
+    OMElysiaHeap(const char *name, uint64_t maxSize, float expandFactor);
     ~OMElysiaHeap();
 
     void *allocate(uint64_t length);
@@ -123,6 +123,8 @@ class OMElysiaHeap
     std::mutex blockMutex;
 
     uint64_t maxSize;
+
+    float expandFactor;
 };
 } // namespace openminecraft::vm::elysia
 

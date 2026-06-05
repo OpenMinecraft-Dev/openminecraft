@@ -17,7 +17,7 @@ std::atomic<bool> needStop = false;
 namespace openminecraft::vm::elysia
 {
 OMElysium::OMElysium()
-    : metaspaceHeap("elysia_metaspace", 1024 * 1024 * 16), mainHeap("elysia_main", 1024 * 1024 * 1024),
+    : metaspaceHeap("elysia_metaspace", 1024 * 1024 * 16, 0.2), mainHeap("elysia_main", 1024 * 1024 * 1024, 0.25),
       logger("OMElysium", this)
 {
     klassLoader = mem::fast_shared<allocatorTag, OMElysiaKlassloader>(this);

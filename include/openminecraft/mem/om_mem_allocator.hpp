@@ -2,6 +2,7 @@
 #define OM_MEM_ALLOCATOR_HPP
 
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 
 #define defmal(id)                                                                                                     \
@@ -18,6 +19,7 @@ defmal(Elysia);
 defmal(ZLib);
 
 void *stackAlloc(size_t);
+uint64_t pageSize();
 } // namespace openminecraft::mem::allocator
 
 #endif

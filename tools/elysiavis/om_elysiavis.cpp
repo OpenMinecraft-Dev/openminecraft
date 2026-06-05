@@ -396,7 +396,7 @@ int main(int argc, const char *argv[])
             break;
         }
         case "heaptest"_hash: {
-            auto heap = new OMElysiaHeap("external_test", 1024 * 1024);
+            auto heap = new OMElysiaHeap("external_test", 1024 * 1024, 0.5);
             std::mutex test;
             std::unordered_map<std::thread::id, int> thrs;
             for (int i = 0; i < 36; i++)

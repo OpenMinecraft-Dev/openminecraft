@@ -34,8 +34,9 @@ static OMElysiaHeapBlock *sortBlocks(OMElysiaHeapBlock *head)
     return second;
 }
 
-OMElysiaHeap::OMElysiaHeap(const char *id, uint64_t maxSize)
-    : rawHeap(1024 * 4, maxSize), logger("OMElysiaHeap", this), maxSize(maxSize)
+OMElysiaHeap::OMElysiaHeap(const char *id, uint64_t maxSize, float expandFactor)
+    : rawHeap(mem::allocator::pageSize(), maxSize), logger("OMElysiaHeap", this), maxSize(maxSize),
+      expandFactor(expandFactor)
 {
     rawHeap.id = id;
     rawHeap.init();
@@ -58,7 +59,7 @@ beginAlloc:
     while (blk)
     {
         auto length = reinterpret_cast<uintptr_t>(blk->blockEnd) - reinterpret_cast<uintptr_t>(blk->block);
-        if (length >= objLen)
+        if (length > objLen)
         {
             auto target = blk->block;
             blk->block = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(blk->block) + objLen);
@@ -71,7 +72,12 @@ beginAlloc:
     }
 
     auto oldtop = rawHeap.heapTop;
-    auto newtop = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(rawHeap.heapTop) + 1024 * 1024);
+    auto append = static_cast<uint64_t>(rawHeap.currentSizeAllocated() * expandFactor);
+    append = (append % mem::allocator::pageSize())
+                 ? (append + (mem::allocator::pageSize() - append % mem::allocator::pageSize()))
+                 : append;
+    logger.debug("expand for more {} bytes", append);
+    auto newtop = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(rawHeap.heapTop) + append);
     rawHeap.expand(newtop);
 
     if (emptyBlocks)

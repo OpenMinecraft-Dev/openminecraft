@@ -53,6 +53,13 @@ void *stackAlloc(size_t l)
 {
     return _alloca(l);
 }
+uint64_t pageSize()
+{
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+
+    return static_cast<uint64_t>(si.dwPageSize);
+}
 } // namespace allocator
 
 namespace stack

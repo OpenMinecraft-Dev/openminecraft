@@ -81,6 +81,11 @@ void *stackAlloc(size_t l)
 {
     return alloca(l);
 }
+
+uint64_t pageSize()
+{
+    return sysconf(_SC_PAGESIZE);
+}
 } // namespace allocator
 
 namespace stack
