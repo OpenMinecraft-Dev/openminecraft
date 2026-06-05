@@ -152,13 +152,19 @@ static jint arrayKlassItemLength(OMElysiaArrayKlass *klass)
     case "char"_hash:
     case "short"_hash:
         i = 2;
-        break;                                                                                               case "int"_hash:
-    case "float"_hash:
-        i = 4;                                                                                                   break;
-    case "long"_hash:                                                                                        case "double"_hash:                                                                                          i = 8;
         break;
-    default:                                                                                                     i = klass->ptrLength;
-        break;                                                                                               }
+    case "int"_hash:
+    case "float"_hash:
+        i = 4;
+        break;
+    case "long"_hash:
+    case "double"_hash:
+        i = 8;
+        break;
+    default:
+        i = klass->ptrLength;
+        break;
+    }
     return i;
 }
 
@@ -192,7 +198,8 @@ uint64_t OMElysiaOopManager::oopLength(OMElysiaOop *oop)
     }
     else
     {
-        return elysium->mainHeap.align(oopArrayHeaderLength() + arrLength(oop) * arrayKlassItemLength(klass->toArray()));
+        return elysium->mainHeap.align(oopArrayHeaderLength() +
+                                       arrLength(oop) * arrayKlassItemLength(klass->toArray()));
     }
 }
 } // namespace openminecraft::vm::elysia

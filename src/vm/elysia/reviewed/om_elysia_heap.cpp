@@ -72,10 +72,8 @@ beginAlloc:
     }
 
     auto oldtop = rawHeap.heapTop;
-    auto append = static_cast<uint64_t>(rawHeap.currentSizeAllocated() * expandFactor);
-    append = (append % mem::allocator::pageSize())
-                 ? (append + (mem::allocator::pageSize() - append % mem::allocator::pageSize()))
-                 : append;
+    auto append =
+        align(static_cast<uint64_t>(rawHeap.currentSizeAllocated() * expandFactor), mem::allocator::pageSize());
     logger.debug("expand for more {} bytes", append);
     auto newtop = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(rawHeap.heapTop) + append);
     rawHeap.expand(newtop);

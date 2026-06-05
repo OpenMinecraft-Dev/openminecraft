@@ -285,7 +285,6 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
         return constantPool[id];
     }
     case OMClassConstantType::String: {
-        // TODO: extract to public apis
         auto &target =
             constantPoolRaw->at(item->to<OMClassConstantString>()->stringIndex)->to<OMClassConstantUtf8>()->data;
         auto strWrp = nativeKlassloader->upper()->oopManager->allocateString(const_cast<std::string &>(target));

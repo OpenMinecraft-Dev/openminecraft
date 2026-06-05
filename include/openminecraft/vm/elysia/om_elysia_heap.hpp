@@ -34,9 +34,9 @@ class OMElysiaHeap
     {
         return rawHeap.block;
     }
-    uint64_t align(uint64_t size)
+    uint64_t align(uint64_t size, uint64_t alignsize = 8)
     {
-        return (size % 8) ? (size + (8 - size % 8)) : size;
+        return (size % alignsize) ? (size + (alignsize - size % alignsize)) : size;
     }
 
     template <typename T> T *allocate()
