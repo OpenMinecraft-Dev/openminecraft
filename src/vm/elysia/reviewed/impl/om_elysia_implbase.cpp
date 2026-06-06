@@ -99,11 +99,20 @@ static jint Java_sun_misc_Unsafe_arrayBaseOffset(OMElysiaJNIEnv *env, OMElysiaNa
     return static_cast<jint>(env->internal->elysium->oopManager->oopArrayHeaderLength());
 }
 
+static jint Java_sun_misc_Unsafe_arrayIndexScale(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd,
+                                                 OMElysiaNativeHandle *klass)
+{
+    logger.debug("{}", (void *)klass->object);
+    throw std::logic_error("not impl");
+}
+
 void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
     OMElysiaNativeMethod mm[] = {{const_cast<char *>("arrayBaseOffset"), const_cast<char *>("(Ljava/lang/Class;)I"),
-                                  reinterpret_cast<void *>(Java_sun_misc_Unsafe_arrayBaseOffset)}};
-    env->RegisterNatives(klass, mm, 1);
+                                  reinterpret_cast<void *>(Java_sun_misc_Unsafe_arrayBaseOffset)},
+                                 {const_cast<char *>("arrayIndexScale"), const_cast<char *>("(Ljava/lang/Class;)I"),
+                                  reinterpret_cast<void *>(Java_sun_misc_Unsafe_arrayIndexScale)}};
+    env->RegisterNatives(klass, mm, 2);
 }
 
 void Java_java_io_FileInputStream_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
