@@ -192,17 +192,18 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     case argTypeReference: {
         auto vv = *reinterpret_cast<OMElysiaNativeHandle **>(retValue);
         popFrame();
-	if (vv) {
+        if (vv)
+        {
             zeroStackPush(vv->object);
             if (vv->next == vv)
             {
                 mem::allocator::tracedFreeElysia(vv);
             }
-	}
-	else
-	{
-	    zeroStackPush<OMElysiaOop *>(nullptr);
-	}
+        }
+        else
+        {
+            zeroStackPush<OMElysiaOop *>(nullptr);
+        }
         break;
     }
     case argTypeChar: {

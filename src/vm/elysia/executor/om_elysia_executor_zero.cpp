@@ -980,9 +980,6 @@ int16_t zeroCodeFetchArgs16p0()
 
 void zeroStackPushFromStatic(OMElysiaField *field, OMElysium *world)
 {
-    if (!field) {
-        throw std::logic_error("null field");
-    }
     switch (*field->desc)
     {
 #define accessReadS(f, type, set)                                                                                      \
