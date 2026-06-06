@@ -347,6 +347,52 @@ void printStackStatus()
         fmt::print("stack top at ");
         fmt::print(fmt::fg(fmt::color::alice_blue), "@0x{:x}", th.second->stackEnd);
         fmt::println("");
+
+        switch (th.second->state)
+        {
+#define cse(name)                                                                                                      \
+    case name:                                                                                                         \
+        fmt::print(fmt::fg(fmt::color::dark_gray), #name);                                                             \
+        fmt::println("");                                                                                              \
+        break;
+            cse(Halt);
+            cse(Initialized);
+            cse(InsideVM);
+            cse(InsideNative);
+            cse(InsideJava);
+            cse(Suspend);
+        }
+        fmt::print(fmt::fg(fmt::color::light_blue), "stack trace:");
+        fmt::println("");
+        if (th.second->zero.frame)
+        {
+            auto frm = th.second->zero.frame;
+            auto ptr = th.second->zero.pc;
+            int i = 0;
+            while (frm)
+            {
+                if (frm->method->isNative())
+                {
+                    fmt::print(fmt::fg(fmt::color::dark_gray), "Native");
+                }
+                fmt::print(fmt::fg(frm->method->isNative() ? fmt::color::light_green : fmt::color::light_sky_blue),
+                           "\t#{} {}.{}{} + {}", i, frm->method->klass->name, frm->method->name,
+                           frm->method->descriptor,
+                           reinterpret_cast<uintptr_t>(ptr) - reinterpret_cast<uintptr_t>(frm->method->code));
+                ptr = frm->returnAddr;
+                frm = frm->caller;
+                ++i;
+
+                fmt::println("");
+            }
+        }
+        else
+        {
+            fmt::print(fmt::fg(fmt::color::dark_gray), "\t(no frames)");
+            fmt::println("");
+        }
+
+        fmt::println("---------------------------------------------");
     }
 }
 
