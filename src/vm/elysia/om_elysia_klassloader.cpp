@@ -347,14 +347,31 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
 
     klass->fieldCount = clsfile->fields.size();
     klass->fields = elysium->metaspaceHeap.allocateArray<OMElysiaField>(klass->fieldCount);
+    if (std::strcmp(klass->name, "java/lang/Class") == 0)
+    {
+        klass->fieldCount++;
+    }
     for (int i = 0; i < klass->fieldCount; i++)
     {
+        if (i >= clsfile->fields.size())
+        {
+            break;
+        }
         auto &f = klass->fields[i];
         f.name = elysium->metaspaceHeap.allocateStr(
             clsfile->mapping[clsfile->fields[i]->nameIndex]->to<classfile::OMClassConstantUtf8>()->data);
         f.desc = elysium->metaspaceHeap.allocateStr(
             clsfile->mapping[clsfile->fields[i]->descIndex]->to<classfile::OMClassConstantUtf8>()->data);
         f.accessFlag = clsfile->fields[i]->accessFlags;
+        f.klass = klass;
+    }
+
+    if (std::strcmp(klass->name, "java/lang/Class") == 0)
+    {
+        auto &f = klass->fields[klass->fieldCount - 1];
+        f.name = elysium->metaspaceHeap.allocateStr("<ptr>");
+        f.desc = elysium->metaspaceHeap.allocateStr("J");
+        f.accessFlag = JVM_Acc_Final | JVM_Acc_Private;
         f.klass = klass;
     }
 
