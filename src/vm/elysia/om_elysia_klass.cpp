@@ -126,7 +126,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id)
 
     auto kk = klassloader->fetchOrLoadClass(clsname);
 
-    for (int i = 0; i < fieldCount; i++)
+    for (int i = 0; i < kk->toInstance()->fieldCount; i++)
     {
         if (std::strcmp(kk->toInstance()->fields[i].name, mdname.c_str()) == 0 &&
             std::strcmp(kk->toInstance()->fields[i].desc, mddesc.c_str()) == 0)
@@ -221,9 +221,6 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
         {
             return nullptr;
         }
-
-        log::OMLogger logger("temp");
-        logger.debug("field {}.{}{}", name, mdname, mddesc);
 
         for (int i = 0; i < fieldCount; i++)
         {

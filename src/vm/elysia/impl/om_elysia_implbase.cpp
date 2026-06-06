@@ -175,7 +175,9 @@ OMElysiaNativeHandle *Java_java_security_AccessController_doPrivileged(OMElysiaJ
                                                                        OMElysiaNativeHandle *action)
 {
     auto klas = env->FindClass("java/security/PrivilegedExceptionAction");
-    logger.warn("{}", fmt::ptr(klas));
-    throw std::logic_error("not implemented");
+    auto mthd = env->GetMethodID(klas, "run", "()Ljava/lang/Object;");
+    OMElysiaNativeValue v[0] = {};
+    return env->CallObjectMethodA(action, mthd, v);
+    // throw std::logic_error("not implemented");
 }
 } // namespace openminecraft::vm::elysia::impl

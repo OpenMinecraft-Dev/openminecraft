@@ -69,7 +69,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m, bool needVtable)
     zeroStackAlloc(ll * sizeof(void *));
 
     // function in vtable
-    if (!m->isStatic() && !m->isPrivate() && !m->isInit() && needVtable)
+    if ((!m->isStatic() && !m->isPrivate() && !m->isInit() && needVtable) || m->isAbstract())
     {
         auto oop = reinterpret_cast<OMElysiaOop **>(frame)[-1];
         if (!oop)
@@ -146,7 +146,7 @@ void OMElysiaExecutorZero::callVoidFunctionA(OMElysiaMethod *m, const OMElysiaNa
     int i = 0;
     if (!m->isStatic())
     {
-        zeroStackPush(args[i].l);
+        zeroStackPush(args[i].l->object);
         ++i;
     }
 
@@ -209,7 +209,7 @@ void OMElysiaExecutorZero::callVoidFunctionV(OMElysiaMethod *m, va_list list)
 {
     if (!m->isStatic())
     {
-        zeroStackPush(va_arg(list, OMElysiaOop *));
+        zeroStackPush(va_arg(list, OMElysiaNativeHandle *)->object);
     }
 
     uint8_t argtypes[255];
@@ -246,7 +246,7 @@ void OMElysiaExecutorZero::callVoidFunctionV(OMElysiaMethod *m, va_list list)
             zeroStackPushW<jdouble>(va_arg(list, jdouble));
             break;
         case argTypeReference:
-            zeroStackPush<OMElysiaOop *>(va_arg(list, OMElysiaOop *));
+            zeroStackPush<OMElysiaOop *>(va_arg(list, OMElysiaNativeHandle *)->object);
             break;
         default:
             break;
@@ -980,6 +980,9 @@ int16_t zeroCodeFetchArgs16p0()
 
 void zeroStackPushFromStatic(OMElysiaField *field, OMElysium *world)
 {
+    if (!field) {
+        throw std::logic_error("null field");
+    }
     switch (*field->desc)
     {
 #define accessReadS(f, type, set)                                                                                      \

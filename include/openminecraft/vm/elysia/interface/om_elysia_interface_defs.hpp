@@ -525,6 +525,16 @@ struct OMElysiaJNIEnv
     {
         internal->SetObjectField(this, obj, fieldID, val);
     }
+
+    OMElysiaNativeHandle *CallObjectMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    {
+        return internal->CallObjectMethodA(this, obj, methodID, args);
+    }
+
+    OMElysiaMethod *GetMethodID(OMElysiaKlass *clazz, const char *name, const char *sig)
+    {
+        return internal->GetMethodID(this, clazz, name, sig);
+    }
 };
 #endif
 } // namespace openminecraft::vm::elysia

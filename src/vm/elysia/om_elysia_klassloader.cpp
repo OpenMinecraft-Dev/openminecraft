@@ -181,8 +181,6 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
         clsfile->mapping[clsfile->mapping[clsfile->thisClass]->to<classfile::OMClassConstantClass>()->nameIndex]
             ->to<classfile::OMClassConstantUtf8>()
             ->data;
-    logger.info("Class loading: {}, classloader {}", clsname,
-                klassloader ? fmt::format("{}", reinterpret_cast<void *>(klassloader)) : "(Bootstrap)");
     if (!findClass(clsname))
     {
         constructInstanceClassShell(clsname);

@@ -177,6 +177,11 @@ static OMElysiaNativeHandle *interfaceCallObjectMethodA(OMElysiaJNIEnv *env, OME
     return fetchResult;
 }
 
+OMElysiaMethod *interfaceGetMethodID(OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const char *name, const char *sig)
+{
+    return clazz->findMethod(name, sig);
+}
+
 void initBaseInterface(OMElysiaJNIEnv env)
 {
     env.internal->GetVersion = interfaceGetVersion;
@@ -195,5 +200,6 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->SetObjectField = interfaceSetObjectField;
 
     env.internal->CallObjectMethodA = interfaceCallObjectMethodA;
+    env.internal->GetMethodID = interfaceGetMethodID;
 }
 } // namespace openminecraft::vm::elysia
