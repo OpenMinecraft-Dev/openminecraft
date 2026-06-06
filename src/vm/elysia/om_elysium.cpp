@@ -37,6 +37,7 @@ OMElysium::OMElysium()
     registerNative(Java_sun_misc_Unsafe_registerNatives);
     registerNative(Java_sun_reflect_Reflection_getCallerClass);
     registerNative(Java_java_io_FileOutputStream_initIDs);
+    registerNative(Java_java_security_AccessController_doPrivileged);
 
     auto klasses = {"java/lang/Object",        "java/lang/String",    "java/lang/Class",  "java/lang/Throwable",
                     "java/lang/Thread",        "java/lang/System",    "java/lang/Byte",   "java/lang/Integer",

@@ -201,6 +201,15 @@ inline static void argDescriptorParse(char *desc, uint8_t *out, int &argCount, u
     }
 }
 
+static uint64_t argCount(char *s)
+{
+    uint8_t argTypes[255];
+    int argCount;
+    uint8_t returnType;
+    argDescriptorParse(s, argTypes, argCount, &returnType);
+    return argCount;
+}
+
 static uint64_t argSlots(char *s)
 {
     uint8_t argTypes[255];

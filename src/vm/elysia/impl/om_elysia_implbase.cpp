@@ -170,4 +170,12 @@ void Java_java_io_FileInputStream_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *kl
 void Java_java_io_FileOutputStream_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
 }
+
+OMElysiaNativeHandle *Java_java_security_AccessController_doPrivileged(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
+                                                                       OMElysiaNativeHandle *action)
+{
+    auto klas = env->FindClass("java/security/PrivilegedExceptionAction");
+    logger.warn("{}", fmt::ptr(klas));
+    throw std::logic_error("not implemented");
+}
 } // namespace openminecraft::vm::elysia::impl

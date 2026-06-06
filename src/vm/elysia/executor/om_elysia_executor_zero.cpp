@@ -141,7 +141,7 @@ void OMElysiaExecutorZero::threadInit()
     }
 }
 
-void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, const OMElysiaNativeValue *args)
+void OMElysiaExecutorZero::callVoidFunctionA(OMElysiaMethod *m, const OMElysiaNativeValue *args)
 {
     int i = 0;
     if (!m->isStatic())
@@ -205,7 +205,7 @@ void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, const OMElysiaNat
     thisThread.switchState(InsideVM);
 }
 
-void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, va_list list)
+void OMElysiaExecutorZero::callVoidFunctionV(OMElysiaMethod *m, va_list list)
 {
     if (!m->isStatic())
     {
@@ -262,19 +262,19 @@ void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, ...)
 {
     va_list list;
     va_start(list, m);
-    callVoidFunction(m, list);
+    callVoidFunctionV(m, list);
     va_end(list);
 }
 
 #define IMPL_FUNCCALL(retType, name, fetchFunc)                                                                        \
-    retType OMElysiaExecutorZero::call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *args)             \
+    retType OMElysiaExecutorZero::call##name##FunctionA(OMElysiaMethod *m, const OMElysiaNativeValue *args)            \
     {                                                                                                                  \
-        callVoidFunction(m, args);                                                                                     \
+        callVoidFunctionA(m, args);                                                                                    \
         return fetchFunc<retType>();                                                                                   \
     }                                                                                                                  \
-    retType OMElysiaExecutorZero::call##name##Function(OMElysiaMethod *m, va_list args)                                \
+    retType OMElysiaExecutorZero::call##name##FunctionV(OMElysiaMethod *m, va_list args)                               \
     {                                                                                                                  \
-        callVoidFunction(m, args);                                                                                     \
+        callVoidFunctionV(m, args);                                                                                    \
         return fetchFunc<retType>();                                                                                   \
     }                                                                                                                  \
     retType OMElysiaExecutorZero::call##name##Function(OMElysiaMethod *m, ...)                                         \

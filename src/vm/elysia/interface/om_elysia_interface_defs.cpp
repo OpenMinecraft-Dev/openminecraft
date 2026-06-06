@@ -2,6 +2,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
+#include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_field.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
@@ -9,6 +10,7 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include "openminecraft/vm/encoding/om_encoding_utf.hpp"
+#include <cstdarg>
 #include <cstring>
 
 namespace openminecraft::vm::elysia
@@ -159,6 +161,22 @@ static void interfaceSetObjectField(OMElysiaJNIEnv *env, OMElysiaNativeHandle *o
     exitInterface;
 }
 
+static OMElysiaNativeHandle *interfaceCallObjectMethodA(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj,
+                                                        OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+{
+    enterInterface;
+    auto ar = argCount(methodID->descriptor);
+    auto argsCombined = reinterpret_cast<OMElysiaNativeValue *>(
+        mem::allocator::tracedCallocElysia(ar + 1, sizeof(OMElysiaNativeValue)));
+    argsCombined[0].l = obj;
+    std::memcpy(&argsCombined[1], args, ar);
+    recordResult(env->internal->elysium->executor->recordLocalRef(
+        env->internal->elysium->executor->callObjectFunctionA(methodID, argsCombined)));
+    mem::allocator::tracedFreeElysia(argsCombined);
+    exitInterface;
+    return fetchResult;
+}
+
 void initBaseInterface(OMElysiaJNIEnv env)
 {
     env.internal->GetVersion = interfaceGetVersion;
@@ -175,5 +193,7 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->GetStringUTFChars = interfaceGetStringUTFChars;
     env.internal->ReleaseStringUTFChars = interfaceReleaseStringUTFChars;
     env.internal->SetObjectField = interfaceSetObjectField;
+
+    env.internal->CallObjectMethodA = interfaceCallObjectMethodA;
 }
 } // namespace openminecraft::vm::elysia
