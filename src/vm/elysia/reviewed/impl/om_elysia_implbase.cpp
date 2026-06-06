@@ -105,4 +105,8 @@ void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *kl
                                   reinterpret_cast<void *>(Java_sun_misc_Unsafe_arrayBaseOffset)}};
     env->RegisterNatives(klass, mm, 1);
 }
+
+void Java_java_io_FileInputStream_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
+{
+}
 } // namespace openminecraft::vm::elysia::impl

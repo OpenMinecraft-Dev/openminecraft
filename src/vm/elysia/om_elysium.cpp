@@ -33,6 +33,7 @@ OMElysium::OMElysium()
     registerNative(Java_java_lang_Double_doubleToRawLongBits);
     registerNative(Java_sun_misc_VM_initialize);
     registerNative(Java_java_io_FileDescriptor_initIDs);
+    registerNative(Java_java_io_FileInputStream_initIDs);
     registerNative(Java_sun_misc_Unsafe_registerNatives);
 
     auto klasses = {"java/lang/Object",        "java/lang/String",    "java/lang/Class",  "java/lang/Throwable",

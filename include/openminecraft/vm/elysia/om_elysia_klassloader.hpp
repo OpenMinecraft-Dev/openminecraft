@@ -39,7 +39,9 @@ class OMElysiaKlassloader
         }
 
         loadClassWithoutMirror(s);
-        return findClass(s);
+        auto ll = findClass(s);
+        fixClassMirror(ll);
+        return ll;
     }
 
     OMElysium *upper()

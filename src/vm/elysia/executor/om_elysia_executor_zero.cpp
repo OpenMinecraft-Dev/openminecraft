@@ -105,17 +105,6 @@ nextStg:
     frame->flag = 0;
     tc->zero.frame = frame;
     tc->zero.pc = m->code;
-
-    // gino: runs class init func here!
-    /*if (m->klass->isInstance() && !m->klass->toInstance()->clinitFinished)
-    {
-        auto l = m->klass->findMethod("<clinit>", "()V");
-        m->klass->toInstance()->clinitFinished = true;
-        if (l)
-        {
-            pushFrame(l, false);
-        }
-    }*/
 }
 
 void OMElysiaExecutorZero::popFrame()
@@ -488,6 +477,14 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
 
+        case op_iastore: {
+            auto value = zeroStackPopGet<jint>();
+            auto index = zeroStackPopGet<jint>();
+            auto arr = zeroStackPopGet<OMElysiaOop *>();
+            elysium->oopManager->arrAccess<jint>(arr)[index] = value;
+            ++tc->zero.pc;
+            break;
+        }
         case op_castore: {
             auto value = zeroStackPopGet<jchar>();
             auto index = zeroStackPopGet<jint>();
