@@ -28,7 +28,7 @@ enum OMElysiaKlassType
 class OMElysiaKlass
 {
   public:
-    OMElysiaKlassloader *nativeKlassloader = nullptr;
+    OMElysiaKlassloader *klassloader = nullptr;
 
     OMElysiaKlass *superClass;
     OMElysiaKlassType type;
@@ -38,7 +38,6 @@ class OMElysiaKlass
 
     char *name;
 
-    OMElysiaOop *klassloader = nullptr;
     OMElysiaOop *mirror = nullptr;
 
     uint32_t methodCount = 0;
@@ -89,6 +88,8 @@ class OMElysiaArrayKlass : public OMElysiaKlass
   public:
     OMElysiaKlass *lowerDim;
     OMElysiaKlass *higherDim;
+
+    uint32_t itemLength;
 };
 
 class OMElysiaInstanceKlass : public OMElysiaKlass
@@ -117,7 +118,7 @@ class OMElysiaInstanceKlass : public OMElysiaKlass
 
     OMElysiaField *findField(const char *name, const char *desc);
 
-    void *constantPoolFetchField(uint16_t id, bool &needInit);
+    void *constantPoolFetchField(uint16_t id);
     void *constantPoolFetchNormal(uint16_t id, bool flg = false);
     uint64_t constantPoolFetchNormalW(uint16_t id);
 };

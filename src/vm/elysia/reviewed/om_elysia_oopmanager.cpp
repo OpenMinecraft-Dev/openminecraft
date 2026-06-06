@@ -170,10 +170,9 @@ static jint arrayKlassItemLength(OMElysiaArrayKlass *klass)
 
 OMElysiaOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint length)
 {
-    int i = arrayKlassItemLength(klass);
-
-    auto ll = reinterpret_cast<OMElysiaOop *>(elysium->mainHeap.allocate(oopArrayHeaderLength() + i * length));
-    std::memset(ll, 0x00, oopArrayHeaderLength() + i * length);
+    auto ll = reinterpret_cast<OMElysiaOop *>(
+        elysium->mainHeap.allocate(oopArrayHeaderLength() + klass->itemLength * length));
+    std::memset(ll, 0x00, oopArrayHeaderLength() + klass->itemLength * length);
 
     if (elysium->metaspaceHeap.enablePtrCompress())
     {

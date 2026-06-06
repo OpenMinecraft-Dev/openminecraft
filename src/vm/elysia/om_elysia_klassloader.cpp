@@ -2,6 +2,7 @@
 #include "fmt/format.h"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
+#include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
@@ -12,6 +13,8 @@
 #include <istream>
 #include <stdexcept>
 #include <unordered_map>
+
+using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::elysia
 {
@@ -62,6 +65,31 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
     klass->ptrLength = elysium->mainHeap.ptrLength();
     klass->mirror = nullptr;
 
+    jint i = 0;
+    switch (hash_compile_time(k->name))
+    {
+    case "byte"_hash:
+    case "boolean"_hash:
+        i = 1;
+        break;
+    case "char"_hash:
+    case "short"_hash:
+        i = 2;
+        break;
+    case "int"_hash:
+    case "float"_hash:
+        i = 4;
+        break;
+    case "long"_hash:
+    case "double"_hash:
+        i = 8;
+        break;
+    default:
+        i = klass->ptrLength;
+        break;
+    }
+    klass->itemLength = i;
+
     if (k->isArray())
     {
         k->toArray()->higherDim = klass;
@@ -73,7 +101,7 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
 
 void OMElysiaKlassloader::markKlass(OMElysiaKlass *klass)
 {
-    klass->nativeKlassloader = this;
+    klass->klassloader = this;
     loadedClasses[binary::hash::hash_compile_time(klass->name)] = klass;
 }
 
@@ -89,7 +117,7 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
         return;
     }
 
-    auto kls = findClass("java/lang/Class");
+    auto kls = elysium->klassLoader->findClass("java/lang/Class");
     auto oop = elysium->oopManager->allocateOop(kls);
     auto field = kls->toInstance()->findField("name", "Ljava/lang/String;");
 
@@ -99,9 +127,22 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
     elysium->oopManager->oopAccessPointerField(oop, field->offset, strobj);
 
     klass->mirror = oop;
+
+    if (klass->isInstance())
+    {
+        auto m = klass->findMethod("<clinit>", "()V");
+
+        if (!m)
+        {
+            klass->toInstance()->clinitFinished = true;
+            return;
+        }
+
+        elysium->executor->callVoidFunction(m);
+    }
 }
 
-void OMElysiaKlassloader::loadClassWithoutMirror(std::string name)
+void OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
 {
     if (isArray(name))
     {
@@ -112,7 +153,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::string name)
     }
 
     std::ifstream istr(fmt::format("vmstd/out/{}.class", name), std::ios::binary);
-    loadClassWithoutMirror(&istr);
+    loadClassWithoutMirror(&istr, special);
 }
 
 void OMElysiaKlassloader::fixAllClasses()
@@ -123,7 +164,7 @@ void OMElysiaKlassloader::fixAllClasses()
     }
 }
 
-void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
+void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool special)
 {
     classfile::OMClassFileParser par(istr);
     auto clsfileres = par.parse();
@@ -138,7 +179,8 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
         clsfile->mapping[clsfile->mapping[clsfile->thisClass]->to<classfile::OMClassConstantClass>()->nameIndex]
             ->to<classfile::OMClassConstantUtf8>()
             ->data;
-    logger.info("Class loading: {}", clsname);
+    logger.info("Class loading: {}, classloader {}", clsname,
+                klassloader ? fmt::format("{}", reinterpret_cast<void *>(klassloader)) : "(Bootstrap)");
     if (!findClass(clsname))
     {
         constructInstanceClassShell(clsname);
@@ -166,8 +208,15 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
         auto supk = findClass(supclsname);
         if (!supk)
         {
-            loadClassWithoutMirror(supclsname);
-            supk = findClass(supclsname);
+            if (special)
+            {
+                loadClassWithoutMirror(supclsname);
+                supk = findClass(supclsname);
+            }
+            else
+            {
+                supk = fetchOrLoadClass(supclsname);
+            }
         }
 
         klass->superClass = findClass(supclsname);
@@ -184,13 +233,22 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
             auto supclsname = clsfile->mapping[clsfile->mapping[i]->to<classfile::OMClassConstantClass>()->nameIndex]
                                   ->to<classfile::OMClassConstantUtf8>()
                                   ->data;
-            auto ithash = binary::hash::hash_compile_time(supclsname.c_str());
-            if (!loadedClasses.count(ithash))
+            if (!findClass(supclsname))
             {
-                loadClassWithoutMirror(supclsname);
+                if (special)
+                {
+                    loadClassWithoutMirror(supclsname);
+                    klass->interfaceImpls[ii] = findClass(supclsname);
+                }
+                else
+                {
+                    klass->interfaceImpls[ii] = fetchOrLoadClass(supclsname);
+                }
             }
-
-            klass->interfaceImpls[ii] = findClass(supclsname);
+            else
+            {
+                klass->interfaceImpls[ii] = findClass(supclsname);
+            }
 
             auto kk = klass->interfaceImpls[ii];
             if (kk->vtable && kk->vtableLength)
@@ -309,5 +367,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr)
     {
         klass->staticBlock = nullptr;
     }
+
+    klass->clinitFinished = false;
 }
 } // namespace openminecraft::vm::elysia

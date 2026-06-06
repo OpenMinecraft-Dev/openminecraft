@@ -25,6 +25,10 @@ OMElysiaNativeHandle *Java_java_lang_System_initProperties(OMElysiaJNIEnv *env, 
     return properties;
 }
 
+void Java_java_lang_Thread_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
+{
+}
+
 void Java_java_lang_System_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
     OMElysiaNativeMethod mm[] = {{const_cast<char *>("initProperties"),

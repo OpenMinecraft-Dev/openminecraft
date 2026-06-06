@@ -24,6 +24,17 @@ OMElysium::OMElysium()
     oopManager = mem::fast_shared<allocatorTag, OMElysiaOopManager>(this);
     executor = mem::fast_shared<allocatorTag, executor::OMElysiaExecutorZero>(this);
 
+    registerNative(Java_java_lang_System_registerNatives);
+    registerNative(Java_java_lang_Object_registerNatives);
+    registerNative(Java_java_lang_Class_registerNatives);
+    registerNative(Java_java_lang_Thread_registerNatives);
+    registerNative(Java_java_lang_Float_floatToRawIntBits);
+    registerNative(Java_java_lang_Double_longBitsToDouble);
+    registerNative(Java_java_lang_Double_doubleToRawLongBits);
+    registerNative(Java_sun_misc_VM_initialize);
+    registerNative(Java_java_io_FileDescriptor_initIDs);
+    registerNative(Java_sun_misc_Unsafe_registerNatives);
+
     auto klasses = {"java/lang/Object",        "java/lang/String",    "java/lang/Class",  "java/lang/Throwable",
                     "java/lang/Thread",        "java/lang/System",    "java/lang/Byte",   "java/lang/Integer",
                     "java/lang/Short",         "java/lang/Long",      "java/lang/Float",  "java/lang/Double",
@@ -31,7 +42,7 @@ OMElysium::OMElysium()
                     "java/lang/StringBuilder", "java/lang/Process",   "sun/misc/Launcher"};
     for (auto &s : klasses)
     {
-        klassLoader->loadClassWithoutMirror(s);
+        klassLoader->loadClassWithoutMirror(s, true);
     }
 
     auto clsobj = klassLoader->findClass("java/lang/Object");
@@ -45,16 +56,6 @@ OMElysium::OMElysium()
 
     klassLoader->constructPrimitiveClass("void");
     klassLoader->fixAllClasses();
-
-    registerNative(Java_java_lang_System_registerNatives);
-    registerNative(Java_java_lang_Object_registerNatives);
-    registerNative(Java_java_lang_Class_registerNatives);
-    registerNative(Java_java_lang_Float_floatToRawIntBits);
-    registerNative(Java_java_lang_Double_longBitsToDouble);
-    registerNative(Java_java_lang_Double_doubleToRawLongBits);
-    registerNative(Java_sun_misc_VM_initialize);
-    registerNative(Java_java_io_FileDescriptor_initIDs);
-    registerNative(Java_sun_misc_Unsafe_registerNatives);
 
     mainThread = new std::thread([&]() {
         log::multithread::registerCurrentThreadName("main");

@@ -4,6 +4,7 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
+#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <istream>
 #include <unordered_map>
@@ -21,8 +22,8 @@ class OMElysiaKlassloader
 
     void markKlass(OMElysiaKlass *klass);
 
-    void loadClassWithoutMirror(std::string name);
-    void loadClassWithoutMirror(std::istream *istr);
+    void loadClassWithoutMirror(std::string name, bool special = false);
+    void loadClassWithoutMirror(std::istream *istr, bool special = false);
     void fixClassMirror(OMElysiaKlass *klass);
     void fixAllClasses();
 
@@ -45,6 +46,9 @@ class OMElysiaKlassloader
     {
         return elysium;
     }
+
+    OMElysiaOop *klassloader = nullptr;
+    std::shared_ptr<OMElysiaKlassloader> next = nullptr;
 
   private:
     OMElysium *elysium;

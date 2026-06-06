@@ -107,7 +107,7 @@ nextStg:
     tc->zero.pc = m->code;
 
     // gino: runs class init func here!
-    if (m->klass->isInstance() && !m->klass->toInstance()->clinitFinished)
+    /*if (m->klass->isInstance() && !m->klass->toInstance()->clinitFinished)
     {
         auto l = m->klass->findMethod("<clinit>", "()V");
         m->klass->toInstance()->clinitFinished = true;
@@ -115,7 +115,7 @@ nextStg:
         {
             pushFrame(l, false);
         }
-    }
+    }*/
 }
 
 void OMElysiaExecutorZero::popFrame()
@@ -781,49 +781,25 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
         case op_getstatic: {
-            bool init = false;
-            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(), init);
-            if (init)
-            {
-                pushFrame(reinterpret_cast<OMElysiaMethod *>(fld), false);
-                break;
-            }
+            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0());
             zeroStackPushFromStatic(reinterpret_cast<OMElysiaField *>(fld), elysium);
             tc->zero.pc += 3;
             break;
         }
         case op_putfield: {
-            bool init = false;
-            auto fld = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(), init);
-            if (init)
-            {
-                pushFrame(reinterpret_cast<OMElysiaMethod *>(fld), false);
-                break;
-            }
+            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0());
             zeroStackPopToField(reinterpret_cast<OMElysiaField *>(fld), elysium->oopManager.get(), elysium);
             tc->zero.pc += 3;
             break;
         }
         case op_putstatic: {
-            bool init = false;
-            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(), init);
-            if (init)
-            {
-                pushFrame(reinterpret_cast<OMElysiaMethod *>(fld), false);
-                break;
-            }
+            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0());
             zeroStackPopToStatic(reinterpret_cast<OMElysiaField *>(fld), elysium);
             tc->zero.pc += 3;
             break;
         }
         case op_getfield: {
-            bool init = false;
-            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(), init);
-            if (init)
-            {
-                pushFrame(reinterpret_cast<OMElysiaMethod *>(fld), false);
-                break;
-            }
+            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0());
             zeroStackPushFromField(reinterpret_cast<OMElysiaField *>(fld), elysium->oopManager.get(), elysium);
             tc->zero.pc += 3;
             break;

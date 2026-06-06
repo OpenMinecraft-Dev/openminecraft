@@ -103,7 +103,7 @@ uint64_t OMElysiaInstanceKlass::constantPoolFetchNormalW(uint16_t id)
     return 0;
 }
 
-void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id, bool &needInit)
+void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id)
 {
     if (constantPoolState[id])
     {
@@ -124,23 +124,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id, bool &needInit)
             ->to<OMClassConstantUtf8>()
             ->data;
 
-    if (klassloader)
-    {
-        throw std::logic_error("not supported uplevel classloader!");
-    }
-
-    auto kk = nativeKlassloader->fetchOrLoadClass(clsname);
-
-    if (!kk->toInstance()->clinitFinished)
-    {
-        needInit = true;
-        kk->toInstance()->clinitFinished = true;
-        auto mm = kk->findMethod("<clinit>", "()V");
-        if (mm)
-        {
-            return mm;
-        }
-    }
+    auto kk = klassloader->fetchOrLoadClass(clsname);
 
     for (int i = 0; i < fieldCount; i++)
     {
@@ -149,12 +133,10 @@ void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id, bool &needInit)
         {
             constantPool[id] = &kk->toInstance()->fields[i];
             constantPoolState[id] = true;
-            needInit = false;
             return &kk->toInstance()->fields[i];
         }
     }
 
-    needInit = false;
     return nullptr;
 }
 
@@ -190,12 +172,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
                 ->to<OMClassConstantUtf8>()
                 ->data;
 
-        if (klassloader)
-        {
-            throw std::logic_error("not supported uplevel classloader!");
-        }
-
-        auto cls = nativeKlassloader->fetchOrLoadClass(clsname);
+        auto cls = klassloader->fetchOrLoadClass(clsname);
         OMElysiaMethod *mthd = nullptr;
         while (!mthd)
         {
@@ -219,12 +196,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
         auto mr = item->to<OMClassConstantClass>();
         auto clsname = constantPoolRaw->at(mr->nameIndex)->to<OMClassConstantUtf8>()->data;
 
-        if (klassloader)
-        {
-            throw std::logic_error("not supported uplevel classloader!");
-        }
-
-        auto cls = nativeKlassloader->fetchOrLoadClass(clsname);
+        auto cls = klassloader->fetchOrLoadClass(clsname);
         constantPool[id] = cls;
         constantPoolState[id] = true;
         return flg ? reinterpret_cast<void *>(cls->mirror) : cls;
@@ -243,17 +215,15 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
                 ->to<OMClassConstantUtf8>()
                 ->data;
 
-        if (klassloader)
-        {
-            throw std::logic_error("not supported uplevel classloader!");
-        }
-
-        auto kk = nativeKlassloader->fetchOrLoadClass(clsname);
+        auto kk = klassloader->fetchOrLoadClass(clsname);
 
         if (!kk->toInstance()->clinitFinished)
         {
             return nullptr;
         }
+
+        log::OMLogger logger("temp");
+        logger.debug("field {}.{}{}", name, mdname, mddesc);
 
         for (int i = 0; i < fieldCount; i++)
         {
@@ -287,7 +257,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
     case OMClassConstantType::String: {
         auto &target =
             constantPoolRaw->at(item->to<OMClassConstantString>()->stringIndex)->to<OMClassConstantUtf8>()->data;
-        auto strWrp = nativeKlassloader->upper()->oopManager->allocateString(const_cast<std::string &>(target));
+        auto strWrp = klassloader->upper()->oopManager->allocateString(const_cast<std::string &>(target));
 
         constantPool[id] = strWrp;
         constantPoolState[id] = true;
