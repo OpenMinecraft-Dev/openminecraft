@@ -169,7 +169,7 @@ static OMElysiaNativeHandle *interfaceCallObjectMethodA(OMElysiaJNIEnv *env, OME
     auto argsCombined = reinterpret_cast<OMElysiaNativeValue *>(
         mem::allocator::tracedCallocElysia(ar + 1, sizeof(OMElysiaNativeValue)));
     argsCombined[0].l = obj;
-    std::memcpy(&argsCombined[1], args, ar);
+    std::memcpy(&argsCombined[1], args, ar * sizeof(OMElysiaNativeValue));
     recordResult(env->internal->elysium->executor->recordLocalRef(
         env->internal->elysium->executor->callObjectFunctionA(methodID, argsCombined)));
     mem::allocator::tracedFreeElysia(argsCombined);
@@ -177,9 +177,31 @@ static OMElysiaNativeHandle *interfaceCallObjectMethodA(OMElysiaJNIEnv *env, OME
     return fetchResult;
 }
 
+static void interfaceCallVoidMethodA(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaMethod *methodID,
+                                     const OMElysiaNativeValue *args)
+{
+    enterInterface;
+    auto ar = argCount(methodID->descriptor);
+    auto argsCombined = reinterpret_cast<OMElysiaNativeValue *>(
+        mem::allocator::tracedCallocElysia(ar + 1, sizeof(OMElysiaNativeValue)));
+    argsCombined[0].l = obj;
+    std::memcpy(&argsCombined[1], args, ar * sizeof(OMElysiaNativeValue));
+    env->internal->elysium->executor->callVoidFunctionA(methodID, argsCombined);
+    mem::allocator::tracedFreeElysia(argsCombined);
+    exitInterface;
+}
+
 OMElysiaMethod *interfaceGetMethodID(OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const char *name, const char *sig)
 {
     return clazz->findMethod(name, sig);
+}
+
+static OMElysiaNativeHandle *interfaceNewObjectA(OMElysiaJNIEnv *env, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                                 const OMElysiaNativeValue *args)
+{
+    auto obj = env->AllocObject(clazz);
+    env->CallVoidMethodA(obj, methodID, args);
+    return obj;
 }
 
 void initBaseInterface(OMElysiaJNIEnv env)
@@ -200,6 +222,8 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->SetObjectField = interfaceSetObjectField;
 
     env.internal->CallObjectMethodA = interfaceCallObjectMethodA;
+    env.internal->CallVoidMethodA = interfaceCallVoidMethodA;
+    env.internal->NewObjectA = interfaceNewObjectA;
     env.internal->GetMethodID = interfaceGetMethodID;
 }
 } // namespace openminecraft::vm::elysia

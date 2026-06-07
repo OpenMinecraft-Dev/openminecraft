@@ -9,7 +9,7 @@
 
 namespace openminecraft::vm::encoding
 {
-std::tuple<elysia::jchar *, elysia::jsize> utf8ToUtf16New(std::string &str)
+std::tuple<elysia::jchar *, elysia::jsize> utf8ToUtf16New(std::string str)
 {
     std::vector<elysia::jchar> data;
     data.reserve(1);

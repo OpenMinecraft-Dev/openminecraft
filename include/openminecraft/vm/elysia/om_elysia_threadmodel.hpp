@@ -12,6 +12,7 @@
 namespace openminecraft::vm::elysia
 {
 class OMElysiaThread;
+struct OMElysiaNativeHandle;
 extern std::map<std::thread::id, OMElysiaThread *> threadMap;
 extern std::mutex mapMutex;
 
@@ -19,7 +20,7 @@ struct OMElysiaJavaFrame
 {
     OMElysiaMethod *method;
     uint8_t *returnAddr;
-    void *flag = nullptr;
+    OMElysiaNativeHandle *objectRefs = nullptr;
     OMElysiaJavaFrame *caller;
 };
 

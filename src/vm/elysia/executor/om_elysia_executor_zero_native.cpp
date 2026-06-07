@@ -15,17 +15,27 @@ using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::elysia::executor
 {
+OMElysiaNativeHandle *globalRefs = nullptr;
 static void cleanupLocalRef()
 {
     auto tc = thisThread.metadata;
-    OMElysiaNativeHandle *current = reinterpret_cast<OMElysiaNativeHandle *>(tc->zero.frame->flag);
+    OMElysiaNativeHandle *current =
+        reinterpret_cast<OMElysiaNativeHandle *>(tc->zero.frame ? tc->zero.frame->objectRefs : globalRefs);
     while (current)
     {
         auto oldCurr = current->next;
         mem::allocator::tracedFreeElysia(current);
         current = oldCurr;
     }
-    tc->zero.frame->flag = nullptr;
+
+    if (tc->zero.frame)
+    {
+        tc->zero.frame->objectRefs = nullptr;
+    }
+    else
+    {
+        globalRefs = nullptr;
+    }
 }
 OMElysiaNativeHandle *OMElysiaExecutorZero::recordLocalRef(OMElysiaOop *oop)
 {
@@ -34,20 +44,21 @@ OMElysiaNativeHandle *OMElysiaExecutorZero::recordLocalRef(OMElysiaOop *oop)
         return nullptr;
     }
     auto tc = thisThread.metadata;
-    auto oldnode = reinterpret_cast<OMElysiaNativeHandle *>(tc->zero.frame->flag);
-    if (!oldnode->object)
+
+    auto oldnode = reinterpret_cast<OMElysiaNativeHandle *>(tc->zero.frame ? tc->zero.frame->objectRefs : globalRefs);
+    auto newnode =
+        reinterpret_cast<OMElysiaNativeHandle *>(mem::allocator::tracedCallocElysia(1, sizeof(OMElysiaNativeHandle)));
+    newnode->next = oldnode;
+    newnode->object = oop;
+    if (tc->zero.frame)
     {
-        oldnode->object = oop;
+        tc->zero.frame->objectRefs = newnode;
     }
     else
     {
-        auto newnode = reinterpret_cast<OMElysiaNativeHandle *>(
-            mem::allocator::tracedCallocElysia(1, sizeof(OMElysiaNativeHandle)));
-        newnode->next = oldnode;
-        newnode->object = oop;
-        tc->zero.frame->flag = newnode;
-        oldnode = newnode;
+        globalRefs = newnode;
     }
+    oldnode = newnode;
 
     return oldnode;
 }
@@ -55,8 +66,6 @@ OMElysiaNativeHandle *OMElysiaExecutorZero::recordLocalRef(OMElysiaOop *oop)
 void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *func)
 {
     auto tc = thisThread.metadata;
-    tc->zero.frame->flag = mem::allocator::tracedCallocElysia(1, sizeof(OMElysiaNativeHandle));
-
     std::vector<std::variant<jint, jbyte, jboolean, jshort, jchar, jfloat, jlong, jdouble, OMElysiaNativeHandle *,
                              OMElysiaJNIEnv *, OMElysiaKlass *>>
         rawargs;

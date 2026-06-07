@@ -94,9 +94,10 @@ template <typename T> static void zeroStackSaveLocal(uint32_t l, T data)
     *reinterpret_cast<T *>(ll) = data;
 }
 
-template <typename T> static T zeroStackLoadLocal(uint32_t l)
+template <typename T>
+static T zeroStackLoadLocal(uint32_t l, OMElysiaJavaFrame *frame = thisThread.metadata->zero.frame)
 {
-    auto ll = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
+    auto ll = reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *);
     return *reinterpret_cast<T *>(ll);
 }
 

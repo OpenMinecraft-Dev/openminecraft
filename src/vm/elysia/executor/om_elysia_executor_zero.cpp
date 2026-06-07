@@ -20,6 +20,7 @@
 #include <cstdarg>
 #include <cstdint>
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
 
 using namespace openminecraft::binary::hash;
@@ -102,9 +103,15 @@ nextStg:
     frame->method = m;
     frame->returnAddr = tc->zero.pc;
     frame->caller = tc->zero.frame;
-    frame->flag = 0;
+    frame->objectRefs = nullptr;
     tc->zero.frame = frame;
     tc->zero.pc = m->code;
+
+    logger.warn("{}.{}{}", m->klass->name, m->name, m->descriptor);
+    for (int i = 0; i < m->localLength; i++)
+    {
+        logger.warn("{} {}", i, zeroStackLoadLocal<void *>(i));
+    }
 }
 
 void OMElysiaExecutorZero::popFrame()
@@ -148,7 +155,7 @@ void OMElysiaExecutorZero::callVoidFunctionA(OMElysiaMethod *m, const OMElysiaNa
     int i = 0;
     if (!m->isStatic())
     {
-        zeroStackPush(args[i].l->object);
+        zeroStackPush(args[i].l ? args[i].l->object : nullptr);
         ++i;
     }
 
@@ -194,7 +201,7 @@ void OMElysiaExecutorZero::callVoidFunctionA(OMElysiaMethod *m, const OMElysiaNa
             ++i;
             break;
         case argTypeReference:
-            zeroStackPush<OMElysiaOop *>(args[i].l->object);
+            zeroStackPush<OMElysiaOop *>(args[i].l ? args[i].l->object : nullptr);
             ++i;
             break;
         default:
@@ -211,7 +218,8 @@ void OMElysiaExecutorZero::callVoidFunctionV(OMElysiaMethod *m, va_list list)
 {
     if (!m->isStatic())
     {
-        zeroStackPush(va_arg(list, OMElysiaNativeHandle *)->object);
+        auto v = va_arg(list, OMElysiaNativeHandle *);
+        zeroStackPush(v ? v->object : nullptr);
     }
 
     uint8_t argtypes[255];
@@ -247,9 +255,11 @@ void OMElysiaExecutorZero::callVoidFunctionV(OMElysiaMethod *m, va_list list)
         case argTypeDouble:
             zeroStackPushW<jdouble>(va_arg(list, jdouble));
             break;
-        case argTypeReference:
-            zeroStackPush<OMElysiaOop *>(va_arg(list, OMElysiaNativeHandle *)->object);
+        case argTypeReference: {
+            auto v = va_arg(list, OMElysiaNativeHandle *);
+            zeroStackPush<OMElysiaOop *>(v ? v->object : nullptr);
             break;
+        }
         default:
             break;
         }
@@ -1101,7 +1111,8 @@ void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysiu
 #define accessWrite(f, type, get)                                                                                      \
     case f: {                                                                                                          \
         auto pp = get<type>();                                                                                         \
-        *reinterpret_cast<type *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)) = pp;          \
+        auto obj = zeroStackPopGet<OMElysiaOop *>();                                                                   \
+        *reinterpret_cast<type *>(oop->oopAccessField(obj, field->offset)) = pp;                                       \
         break;                                                                                                         \
     }
         accessWrite('Z', jboolean, zeroStackPopGet);

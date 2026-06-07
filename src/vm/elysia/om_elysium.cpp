@@ -3,6 +3,7 @@
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
+#include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
@@ -94,7 +95,22 @@ void OMElysium::setupThreadObject()
     if (!threadObjects.systemGroup)
     {
         auto tg = tc->interface.FindClass("java/lang/ThreadGroup");
-        auto mthd = tc->interface.GetMethodID(tg, "<init>", "(Ljava/lang/String;)V");
+        auto mthd = tc->interface.GetMethodID(tg, "<init>", "()V");
+
+        auto obj = tc->interface.NewObjectA(tg, mthd, nullptr);
+        threadObjects.systemGroup = obj->object;
+    }
+
+    if (!threadObjects.mainGroup)
+    {
+        auto tg = tc->interface.FindClass("java/lang/ThreadGroup");
+        auto mthd = tc->interface.GetMethodID(tg, "<init>", "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
+
+        OMElysiaNativeValue values[2];
+        values[0].l = executor->recordLocalRef(threadObjects.systemGroup);
+        values[1].l = tc->interface.NewStringUTF("main");
+        auto obj = tc->interface.NewObjectA(tg, mthd, values);
+        threadObjects.mainGroup = obj->object;
     }
 }
 } // namespace openminecraft::vm::elysia

@@ -6,7 +6,7 @@
 
 namespace openminecraft::vm::encoding
 {
-std::tuple<elysia::jchar *, elysia::jsize> utf8ToUtf16New(std::string &str);
+std::tuple<elysia::jchar *, elysia::jsize> utf8ToUtf16New(std::string str);
 std::string utf16ToUtf8New(elysia::jchar *arr, elysia::jsize length);
 std::string utf32ToUtf8(std::vector<int> cps);
 } // namespace openminecraft::vm::encoding

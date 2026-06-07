@@ -44,7 +44,7 @@ OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass)
     return ll;
 }
 
-OMElysiaOop *OMElysiaOopManager::allocateString(std::string &target)
+OMElysiaOop *OMElysiaOopManager::allocateString(std::string target)
 {
     auto nativeKlassloader = elysium->klassLoader;
     auto stringKlass = nativeKlassloader->findClass("java/lang/String")->toInstance();
