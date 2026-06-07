@@ -93,6 +93,8 @@ void OMElysium::setupThreadObject()
     auto tc = thisThread.metadata;
     if (!threadObjects.systemGroup)
     {
+        auto tg = tc->interface.FindClass("java/lang/ThreadGroup");
+        auto mthd = tc->interface.GetMethodID(tg, "<init>", "(Ljava/lang/String;)V");
     }
 }
 } // namespace openminecraft::vm::elysia
