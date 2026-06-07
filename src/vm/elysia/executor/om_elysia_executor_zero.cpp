@@ -137,6 +137,8 @@ void OMElysiaExecutorZero::threadInit()
         tc->threadInited = true;
         tc->registerThread();
 
+        elysium->setupThreadObject();
+
         thisThread.switchState(InsideVM);
     }
 }

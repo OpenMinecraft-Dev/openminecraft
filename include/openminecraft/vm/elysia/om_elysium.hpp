@@ -12,6 +12,7 @@ namespace openminecraft::vm::elysia
 {
 class OMElysiaKlassloader;
 class OMElysiaOopManager;
+struct OMElysiaOop;
 namespace executor
 {
 class OMElysiaExecutorZero;
@@ -25,6 +26,8 @@ class OMElysium
     OMElysium();
     ~OMElysium();
 
+    void setupThreadObject();
+
     OMElysiaHeap metaspaceHeap;
     OMElysiaHeap mainHeap;
 
@@ -33,6 +36,12 @@ class OMElysium
     std::shared_ptr<executor::OMElysiaExecutorZero> executor;
 
     std::unordered_map<std::string, void *> nativeFuncMap;
+
+    struct
+    {
+        OMElysiaOop *systemGroup = nullptr;
+        OMElysiaOop *mainGroup = nullptr;
+    } threadObjects;
 
   private:
     log::OMLogger logger;

@@ -6,6 +6,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
+#include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include <atomic>
 #include <stdexcept>
 #include <thread>
@@ -39,11 +40,11 @@ OMElysium::OMElysium()
     registerNative(Java_java_io_FileOutputStream_initIDs);
     registerNative(Java_java_security_AccessController_doPrivileged);
 
-    auto klasses = {"java/lang/Object",        "java/lang/String",    "java/lang/Class",  "java/lang/Throwable",
-                    "java/lang/Thread",        "java/lang/System",    "java/lang/Byte",   "java/lang/Integer",
-                    "java/lang/Short",         "java/lang/Long",      "java/lang/Float",  "java/lang/Double",
-                    "java/lang/Boolean",       "java/lang/Character", "java/lang/Void",   "java/lang/Runtime",
-                    "java/lang/StringBuilder", "java/lang/Process",   "sun/misc/Launcher"};
+    auto klasses = {"java/lang/Object",        "java/lang/String",    "java/lang/Class",   "java/lang/Throwable",
+                    "java/lang/Thread",        "java/lang/System",    "java/lang/Byte",    "java/lang/Integer",
+                    "java/lang/Short",         "java/lang/Long",      "java/lang/Float",   "java/lang/Double",
+                    "java/lang/Boolean",       "java/lang/Character", "java/lang/Void",    "java/lang/Runtime",
+                    "java/lang/StringBuilder", "java/lang/Process",   "sun/misc/Launcher", "java/lang/ThreadGroup"};
     for (auto &s : klasses)
     {
         klassLoader->loadClassWithoutMirror(s, true);
@@ -84,5 +85,14 @@ OMElysium::~OMElysium()
     needStop = true;
     mainThread->join();
     delete mainThread;
+}
+
+// TODO: finish
+void OMElysium::setupThreadObject()
+{
+    auto tc = thisThread.metadata;
+    if (!threadObjects.systemGroup)
+    {
+    }
 }
 } // namespace openminecraft::vm::elysia
