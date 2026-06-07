@@ -64,6 +64,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m, bool needVtable)
 
     auto newlocal = reinterpret_cast<void *>(tc->zero.stackPointer - sizeof(OMElysiaJavaFrame));
     std::memmove(newlocal, reinterpret_cast<void *>(tc->zero.stackPointer), ll * sizeof(void *));
+
     zeroStackPop(ll * sizeof(void *));
 
     auto frame = reinterpret_cast<OMElysiaJavaFrame *>(zeroStackAlloc(sizeof(OMElysiaJavaFrame)));
@@ -107,11 +108,11 @@ nextStg:
     tc->zero.frame = frame;
     tc->zero.pc = m->code;
 
-    logger.warn("{}.{}{}", m->klass->name, m->name, m->descriptor);
+    /*logger.warn("{}.{}{}", m->klass->name, m->name, m->descriptor);
     for (int i = 0; i < m->localLength; i++)
     {
         logger.warn("{} {}", i, zeroStackLoadLocal<void *>(i));
-    }
+    }*/
 }
 
 void OMElysiaExecutorZero::popFrame()
@@ -164,48 +165,41 @@ void OMElysiaExecutorZero::callVoidFunctionA(OMElysiaMethod *m, const OMElysiaNa
     uint8_t returntype;
     argDescriptorParse(m->descriptor, argtypes, argcount, &returntype);
 
-    for (; i < argcount; i++)
+    auto pos = i;
+
+    for (; i < argcount + pos; i++)
     {
-        switch (argtypes[i])
+        switch (argtypes[i - pos])
         {
         case argTypeBoolean:
             zeroStackPush<jboolean>(args[i].z);
-            ++i;
-            break;
+            continue;
         case argTypeByte:
             zeroStackPush<jbyte>(args[i].b);
-            ++i;
-            break;
+            continue;
         case argTypeShort:
             zeroStackPush<jshort>(args[i].s);
-            ++i;
-            break;
+            continue;
         case argTypeChar:
             zeroStackPush<jchar>(args[i].c);
-            ++i;
-            break;
+            continue;
         case argTypeInt:
             zeroStackPush<jint>(args[i].i);
-            ++i;
-            break;
+            continue;
         case argTypeFloat:
             zeroStackPush<jfloat>(args[i].f);
-            ++i;
-            break;
+            continue;
         case argTypeLong:
             zeroStackPushW<jlong>(args[i].j);
-            ++i;
-            break;
+            continue;
         case argTypeDouble:
             zeroStackPushW<jdouble>(args[i].d);
-            ++i;
-            break;
+            continue;
         case argTypeReference:
             zeroStackPush<OMElysiaOop *>(args[i].l ? args[i].l->object : nullptr);
-            ++i;
-            break;
+            continue;
         default:
-            break;
+            throw std::logic_error("unknown arg type");
         }
     }
 
@@ -954,6 +948,13 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             {
                 tc->zero.pc += 3;
             }
+            break;
+        }
+        case op_monitorexit:
+        case op_monitorenter: {
+            zeroStackPopGet<OMElysiaOop *>();
+            ++tc->zero.pc;
+            logger.warn("object monitoring not actually imolemented!");
             break;
         }
         default:
