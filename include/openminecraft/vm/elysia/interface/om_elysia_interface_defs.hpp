@@ -535,6 +535,11 @@ struct OMElysiaJNIEnv
     {
         return internal->GetMethodID(this, clazz, name, sig);
     }
+
+    jboolean IsVirtualThread(OMElysiaNativeHandle *obj)
+{
+    return internal->IsVirtualThread(this, obj);
+}
 };
 #endif
 } // namespace openminecraft::vm::elysia

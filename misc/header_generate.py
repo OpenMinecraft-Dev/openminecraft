@@ -43,7 +43,23 @@ def process(s):
     type, n, args = parse_function_pointer(s)
     argst = parse_parameters(args)
     argst.pop(0)
-    print(type, n, argst)
+    if argst and argst[-1][0] == "...":
+        print("template <typename... Ts>")
+    print(f"{type} {n}({", ".join([f"{"Ts... args" if type == "..." else type}{name}" for (type, name) in argst])})")
+    print("{")
+    if type == "void":
+        print("    ", end="")
+    else:
+        print("    return ", end="")
+    aa = ["this"]
+    for a in argst:
+        if a[0] == "...":
+            aa.append("std::forward<Ts>(args)...")
+        else:
+            aa.append(a[1])
+    print(f"internal->{n}({", ".join(aa)});")
+    print("}")
+    # print(type, n, argst)
 
 s = ""
 while True:
