@@ -45,7 +45,7 @@ OMElysium::OMElysium()
                     "java/lang/Thread",        "java/lang/System",    "java/lang/Byte",    "java/lang/Integer",
                     "java/lang/Short",         "java/lang/Long",      "java/lang/Float",   "java/lang/Double",
                     "java/lang/Boolean",       "java/lang/Character", "java/lang/Void",    "java/lang/Runtime",
-                    "java/lang/StringBuilder", "java/lang/Process",   "sun/misc/Launcher", "java/lang/ThreadGroup"};
+                    "java/lang/StringBuilder", "java/lang/Process", "java/lang/ThreadGroup"};
     for (auto &s : klasses)
     {
         klassLoader->loadClassWithoutMirror(s, true);
