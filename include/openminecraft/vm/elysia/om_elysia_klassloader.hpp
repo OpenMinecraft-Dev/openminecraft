@@ -7,7 +7,7 @@
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <istream>
-#include <unordered_map>
+#include <map>
 namespace openminecraft::vm::elysia
 {
 class OMElysiaKlassloader
@@ -54,7 +54,7 @@ class OMElysiaKlassloader
 
   private:
     OMElysium *elysium;
-    std::unordered_map<binary::hash::hash_t, OMElysiaKlass *> loadedClasses;
+    std::map<binary::hash::hash_t, OMElysiaKlass *> loadedClasses;
 
     log::OMLogger logger;
 };
