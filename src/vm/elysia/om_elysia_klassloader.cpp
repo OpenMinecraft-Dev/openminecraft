@@ -20,6 +20,7 @@ namespace openminecraft::vm::elysia
 {
 OMElysiaKlassloader::OMElysiaKlassloader(OMElysium *elysium) : elysium(elysium), logger("OMElysiaKlassloader", this)
 {
+    loadedClasses = std::make_shared<std::map<binary::hash::hash_t, OMElysiaKlass *>>();
 }
 OMElysiaKlassloader::~OMElysiaKlassloader()
 {
@@ -102,12 +103,12 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
 void OMElysiaKlassloader::markKlass(OMElysiaKlass *klass)
 {
     klass->klassloader = this;
-    loadedClasses[binary::hash::hash_compile_time(klass->name)] = klass;
+    (*loadedClasses)[binary::hash::hash_compile_time(klass->name)] = klass;
 }
 
 OMElysiaKlass *OMElysiaKlassloader::findClass(std::string s)
 {
-    return loadedClasses[binary::hash::hash_compile_time(s.c_str())];
+    return (*loadedClasses)[binary::hash::hash_compile_time(s.c_str())];
 }
 
 void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
@@ -160,7 +161,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
 
 void OMElysiaKlassloader::fixAllClasses()
 {
-    for (auto &p : loadedClasses)
+    for (auto &p : *loadedClasses)
     {
         fixClassMirror(p.second);
     }

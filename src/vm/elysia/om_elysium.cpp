@@ -41,32 +41,30 @@ OMElysium::OMElysium()
     registerNative(Java_java_io_FileOutputStream_initIDs);
     registerNative(Java_java_security_AccessController_doPrivileged);
 
-    auto klasses = {"java/lang/Object",        "java/lang/String",    "java/lang/Class",   "java/lang/Throwable",
-                    "java/lang/Thread",        "java/lang/System",    "java/lang/Byte",    "java/lang/Integer",
-                    "java/lang/Short",         "java/lang/Long",      "java/lang/Float",   "java/lang/Double",
-                    "java/lang/Boolean",       "java/lang/Character", "java/lang/Void",    "java/lang/Runtime",
-                    "java/lang/StringBuilder", "java/lang/Process", "java/lang/ThreadGroup"};
-    for (auto &s : klasses)
-    {
-        klassLoader->loadClassWithoutMirror(s, true);
-    }
-
-    auto clsobj = klassLoader->findClass("java/lang/Object");
-
-    for (auto &s : {"char", "byte", "short", "int", "long", "float", "double", "boolean"})
-    {
-        auto c = klassLoader->constructPrimitiveClass(s);
-        auto carr = klassLoader->constructArrayClass(c);
-        carr->superClass = clsobj;
-    }
-
-    klassLoader->constructPrimitiveClass("void");
-    klassLoader->fixAllClasses();
-
     mainThread = new std::thread([&]() {
         log::multithread::registerCurrentThreadName("main");
         try
         {
+            auto klasses = {
+                "java/lang/Object",        "java/lang/String",    "java/lang/Class",      "java/lang/Throwable",
+                "java/lang/Thread",        "java/lang/System",    "java/lang/Byte",       "java/lang/Integer",
+                "java/lang/Short",         "java/lang/Long",      "java/lang/Float",      "java/lang/Double",
+                "java/lang/Boolean",       "java/lang/Character", "java/lang/Void",       "java/lang/Runtime",
+                "java/lang/StringBuilder", "java/lang/Process",   "java/lang/ThreadGroup"};
+            for (auto &s : klasses)
+            {
+                klassLoader->loadClassWithoutMirror(s, true);
+            }
+            auto clsobj = klassLoader->findClass("java/lang/Object");
+            for (auto &s : {"char", "byte", "short", "int", "long", "float", "double", "boolean"})
+            {
+                auto c = klassLoader->constructPrimitiveClass(s);
+                auto carr = klassLoader->constructArrayClass(c);
+                carr->superClass = clsobj;
+            }
+            klassLoader->constructPrimitiveClass("void");
+            klassLoader->fixAllClasses();
+
             auto mcls = klassLoader->findClass("java/lang/System");
             auto md = mcls->findMethod("initializeSystemClass", "()V");
             executor->callVoidFunction(md);

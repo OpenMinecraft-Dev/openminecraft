@@ -54,7 +54,7 @@ class OMElysiaKlassloader
 
   private:
     OMElysium *elysium;
-    std::map<binary::hash::hash_t, OMElysiaKlass *> loadedClasses;
+    std::shared_ptr<std::map<binary::hash::hash_t, OMElysiaKlass *>> loadedClasses;
 
     log::OMLogger logger;
 };
