@@ -54,7 +54,7 @@ void printOopFields(OMElysium *elysium, OMElysiaOop *oop, OMElysiaInstanceKlass 
             continue;
         }
         fmt::print(fmt::fg(addrColor), "@+0x{:x} ", field.offset);
-        fmt::print(fmt::fg(fmt::color::white_smoke), "{}", field.name);
+        fmt::print("{}", field.name);
         fmt::print(":");
         fmt::print(fmt::fg(fmt::color::slate_blue), "{}", field.desc);
         fmt::print(" - ");
@@ -248,7 +248,14 @@ void readMem(OMElysium *elysium)
             {
                 if (v.has_value())
                 {
-                    fmt::print(fmt::fg(v.value() ? fmt::color::white_smoke : hintColor), "{:02x}\t", v.value());
+                    if (v.value())
+                    {
+                        fmt::print("{:02x}\t", v.value());
+                    }
+                    else
+                    {
+                        fmt::print(fmt::fg(hintColor), "{:02x}\t", v.value());
+                    }
                 }
                 else
                 {
@@ -262,11 +269,18 @@ void readMem(OMElysium *elysium)
                 {
                     if (v.value() >= 0x20 && v.value() < 0x7f)
                     {
-                        fmt::print(fmt::fg(fmt::color::white_smoke), "{}", static_cast<char>(v.value()));
+                        fmt::print("{}", static_cast<char>(v.value()));
                     }
                     else
                     {
-                        fmt::print(fmt::fg(v.value() ? fmt::color::white_smoke : hintColor), ".");
+                        if (v.value())
+                        {
+                            fmt::print(".");
+                        }
+                        else
+                        {
+                            fmt::print(fmt::fg(hintColor), ".");
+                        }
                     }
                 }
                 else

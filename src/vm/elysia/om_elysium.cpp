@@ -109,6 +109,8 @@ void OMElysium::setupThreadObject()
         values[1].l = tc->interface.NewStringUTF("main");
         auto obj = tc->interface.NewObjectA(tg, mthd, values);
         threadObjects.mainGroup = obj->object;
+
+        logger.debug("{}", (void *)obj->object);
     }
 }
 } // namespace openminecraft::vm::elysia
