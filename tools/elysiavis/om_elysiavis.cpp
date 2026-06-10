@@ -27,20 +27,22 @@ using namespace openminecraft::binary::hash;
 
 constexpr auto addrColor = fmt::color::slate_blue;
 constexpr auto hintColor = fmt::color::gray;
+constexpr auto valueColor = fmt::color::green;
+constexpr auto errorColor = fmt::color::red;
 
 template <typename T> void printOopFieldContent(T *t)
 {
     if constexpr (std::is_same_v<T, jbyte>)
     {
-        fmt::print(fmt::fg(fmt::color::green), "{}", static_cast<jint>(*t));
+        fmt::print(fmt::fg(valueColor), "{}", static_cast<jint>(*t));
     }
     else if constexpr (std::is_same_v<T, jboolean>)
     {
-        fmt::print(fmt::fg(fmt::color::green), "{}", *t ? "true" : "false");
+        fmt::print(fmt::fg(valueColor), "{}", *t ? "true" : "false");
     }
     else
     {
-        fmt::print(fmt::fg(fmt::color::green), "{}", *t);
+        fmt::print(fmt::fg(valueColor), "{}", *t);
     }
 }
 
@@ -56,7 +58,7 @@ void printOopFields(OMElysium *elysium, OMElysiaOop *oop, OMElysiaInstanceKlass 
         fmt::print(fmt::fg(addrColor), "@+0x{:x} ", field.offset);
         fmt::print("{}", field.name);
         fmt::print(":");
-        fmt::print(fmt::fg(fmt::color::slate_blue), "{}", field.desc);
+        fmt::print(fmt::fg(hintColor), "{}", field.desc);
         fmt::print(" - ");
 
         switch (*field.desc)
@@ -100,7 +102,7 @@ void printOop(OMElysium *world, void *addr, bool simple = false)
 {
     if (!world->mainHeap.valid(addr))
     {
-        fmt::print(fmt::fg(fmt::color::red), "invalid oop");
+        fmt::print(fmt::fg(errorColor), "invalid oop");
         fmt::println("");
         return;
     }
@@ -109,7 +111,7 @@ void printOop(OMElysium *world, void *addr, bool simple = false)
     if (world->metaspaceHeap.valid(klass))
     {
         fmt::print("is an oop of klass {}", klass->name);
-        fmt::print(fmt::fg(fmt::color::yellow_green), " ({})", klass->isArray() ? "array" : "instance");
+        fmt::print(fmt::fg(valueColor), " ({})", klass->isArray() ? "array" : "instance");
         fmt::println("");
 
         if (simple)
@@ -121,7 +123,7 @@ void printOop(OMElysium *world, void *addr, bool simple = false)
         {
             auto instanceKlass = klass->toInstance();
             fmt::print("object length ");
-            fmt::print(fmt::fg(fmt::color::alice_blue), "{}", instanceKlass->length);
+            fmt::print(fmt::fg(addrColor), "{}", instanceKlass->length);
             fmt::println("");
             fmt::println("fields: ");
             printOopFields(world, reinterpret_cast<OMElysiaOop *>(addr), instanceKlass);
@@ -130,12 +132,12 @@ void printOop(OMElysium *world, void *addr, bool simple = false)
         {
             auto arrl = world->oopManager->arrLength(reinterpret_cast<OMElysiaOop *>(addr));
             fmt::print("Array of length ");
-            fmt::print(fmt::fg(fmt::color::alice_blue), "{}", arrl);
+            fmt::print(fmt::fg(addrColor), "{}", arrl);
             fmt::println("");
 
             for (int i = 0; i < std::min(arrl, 8); i++)
             {
-                fmt::print(fmt::fg(fmt::color::yellow), "[{}] ", i);
+                fmt::print(fmt::fg(hintColor), "[{}] ", i);
                 fmt::print("= ");
                 switch (klass->name[1])
                 {
@@ -166,7 +168,7 @@ void printOop(OMElysium *world, void *addr, bool simple = false)
                     break;
                 }
                 default:
-                    fmt::print(fmt::fg(fmt::color::red), "invalid");
+                    fmt::print(fmt::fg(errorColor), "invalid");
                     break;
                 }
                 fmt::println("");
@@ -259,7 +261,7 @@ void readMem(OMElysium *elysium)
                 }
                 else
                 {
-                    fmt::print(fmt::fg(fmt::color::red), "??\t");
+                    fmt::print(fmt::fg(errorColor), "??\t");
                 }
             }
             fmt::print("\t");
@@ -285,7 +287,7 @@ void readMem(OMElysium *elysium)
                 }
                 else
                 {
-                    fmt::print(fmt::fg(fmt::color::red), ".");
+                    fmt::print(fmt::fg(errorColor), ".");
                 }
             }
             fmt::println("");
@@ -295,7 +297,7 @@ void readMem(OMElysium *elysium)
         break;
     }
     default:
-        fmt::print(fmt::fg(fmt::color::red), "Unknown command");
+        fmt::print(fmt::fg(errorColor), "Unknown command");
         fmt::println("");
         break;
     }
@@ -324,7 +326,7 @@ print:
 
     if (base >= elysium->mainHeap.rawHeap.heapTop)
     {
-        fmt::print(fmt::fg(fmt::color::bisque), "{}", objs);
+        fmt::print(fmt::fg(addrColor), "{}", objs);
         fmt::println(" objects");
         return;
     }
@@ -339,7 +341,7 @@ print:
             base = reinterpret_cast<OMElysiaOop *>(node->blockEnd);
             if (!elysium->mainHeap.valid(base))
             {
-                fmt::print(fmt::fg(fmt::color::bisque), "{}", objs);
+                fmt::print(fmt::fg(addrColor), "{}", objs);
                 fmt::println(" objects");
                 return;
             }
@@ -390,7 +392,7 @@ void printStackStatus()
                 {
                     fmt::print(fmt::fg(hintColor), "Native");
                 }
-                fmt::print(fmt::fg(frm->method->isNative() ? fmt::color::green : fmt::color::sky_blue),
+                fmt::print(fmt::fg(frm->method->isNative() ? valueColor : addrColor),
                            "\t#{} {}.{}{} + {}", i, frm->method->klass->name, frm->method->name,
                            frm->method->descriptor,
                            reinterpret_cast<uintptr_t>(ptr) - reinterpret_cast<uintptr_t>(frm->method->code));
@@ -429,7 +431,7 @@ void printElysium(OMElysium *elysium)
         break;
     }
     default:
-        fmt::print(fmt::fg(fmt::color::red), "invalid type");
+        fmt::print(fmt::fg(errorColor), "invalid type");
         fmt::println("");
         break;
     }
@@ -491,7 +493,7 @@ int main(int argc, const char *argv[])
             break;
         }
         default: {
-            fmt::print(fmt::fg(fmt::color::red), "Unknown command");
+            fmt::print(fmt::fg(errorColor), "Unknown command");
             fmt::println("");
             break;
         }
