@@ -25,6 +25,9 @@ using namespace std::chrono_literals;
 using namespace openminecraft::vm::elysia;
 using namespace openminecraft::binary::hash;
 
+constexpr auto addrColor = fmt::color::slate_blue;
+constexpr auto hintColor = fmt::color::gray;
+
 template <typename T> void printOopFieldContent(T *t)
 {
     if constexpr (std::is_same_v<T, jbyte>)
@@ -50,7 +53,7 @@ void printOopFields(OMElysium *elysium, OMElysiaOop *oop, OMElysiaInstanceKlass 
         {
             continue;
         }
-        fmt::print(fmt::fg(fmt::color::alice_blue), "@+0x{:x} ", field.offset);
+        fmt::print(fmt::fg(addrColor), "@+0x{:x} ", field.offset);
         fmt::print(fmt::fg(fmt::color::white_smoke), "{}", field.name);
         fmt::print(":");
         fmt::print(fmt::fg(fmt::color::slate_blue), "{}", field.desc);
@@ -77,7 +80,7 @@ void printOopFields(OMElysium *elysium, OMElysiaOop *oop, OMElysiaInstanceKlass 
             if (elysium->mainHeap.enablePtrCompress())
             {
                 auto ptrr = *reinterpret_cast<uint32_t *>(elysium->oopManager->oopAccessField(oop, field.offset));
-                fmt::print(fmt::fg(fmt::color::alice_blue), "@{} ({:08x})", elysium->mainHeap.decompress(ptrr), ptrr);
+                fmt::print(fmt::fg(addrColor), "@{} ({:08x})", elysium->mainHeap.decompress(ptrr), ptrr);
             }
             else
             {
@@ -102,7 +105,7 @@ void printOop(OMElysium *world, void *addr, bool simple = false)
         return;
     }
     auto klass = world->oopManager->oopGetKlass(reinterpret_cast<OMElysiaOop *>(addr));
-    fmt::print(fmt::fg(fmt::color::alice_blue), "@{} ", addr);
+    fmt::print(fmt::fg(addrColor), "@{} ", addr);
     if (world->metaspaceHeap.valid(klass))
     {
         fmt::print("is an oop of klass {}", klass->name);
@@ -153,8 +156,7 @@ void printOop(OMElysium *world, void *addr, bool simple = false)
                     if (world->mainHeap.enablePtrCompress())
                     {
                         auto ptrr = world->oopManager->arrAccess<uint32_t>(reinterpret_cast<OMElysiaOop *>(addr))[i];
-                        fmt::print(fmt::fg(fmt::color::alice_blue), "@{} ({:08x})", world->mainHeap.decompress(ptrr),
-                                   ptrr);
+                        fmt::print(fmt::fg(addrColor), "@{} ({:08x})", world->mainHeap.decompress(ptrr), ptrr);
                     }
                     else
                     {
@@ -193,7 +195,7 @@ void readMem(OMElysium *elysium)
     }
     catch (std::invalid_argument &e)
     {
-        fmt::print(fmt::fg(fmt::color::alice_blue), "@unknown");
+        fmt::print(fmt::fg(addrColor), "@unknown");
         fmt::println("");
         return;
     }
@@ -203,7 +205,7 @@ void readMem(OMElysium *elysium)
     case "norm"_hash: {
 #define readT(k, type, n, tt)                                                                                          \
     auto k = openminecraft::mem::safeRead<type>(addr);                                                                 \
-    fmt::print(fmt::fg(fmt::color::alice_blue), "@({}){}", n, addr);                                                   \
+    fmt::print(fmt::fg(addrColor), "@({}){}", n, addr);                                                                \
     if (k.has_value())                                                                                                 \
     {                                                                                                                  \
         fmt::println(" = 0x{:0" + fmt::format("{}", sizeof(type) * 2) + "x}", static_cast<tt>(k.value()));             \
@@ -241,13 +243,12 @@ void readMem(OMElysium *elysium)
 
         for (auto &memline : memdmps)
         {
-            fmt::print(fmt::fg(fmt::color::alice_blue), "@{}\t", addr);
+            fmt::print(fmt::fg(addrColor), "@{}\t", addr);
             for (auto &v : memline)
             {
                 if (v.has_value())
                 {
-                    fmt::print(fmt::fg(v.value() ? fmt::color::white_smoke : fmt::color::dark_gray), "{:02x}\t",
-                               v.value());
+                    fmt::print(fmt::fg(v.value() ? fmt::color::white_smoke : hintColor), "{:02x}\t", v.value());
                 }
                 else
                 {
@@ -265,7 +266,7 @@ void readMem(OMElysium *elysium)
                     }
                     else
                     {
-                        fmt::print(fmt::fg(v.value() ? fmt::color::white_smoke : fmt::color::dark_gray), ".");
+                        fmt::print(fmt::fg(v.value() ? fmt::color::white_smoke : hintColor), ".");
                     }
                 }
                 else
@@ -319,7 +320,7 @@ print:
     {
         if (base >= node->block && base < node->blockEnd)
         {
-            fmt::print(fmt::fg(fmt::color::dark_gray), "{} ~ {} (free)", node->block, node->blockEnd);
+            fmt::print(fmt::fg(hintColor), "{} ~ {} (free)", node->block, node->blockEnd);
             fmt::println("");
             base = reinterpret_cast<OMElysiaOop *>(node->blockEnd);
             if (!elysium->mainHeap.valid(base))
@@ -342,17 +343,17 @@ void printStackStatus()
     {
         fmt::println("status for thread {}", reinterpret_cast<const void *>(&th.first));
         fmt::print("stack base at ");
-        fmt::print(fmt::fg(fmt::color::alice_blue), "@0x{:x}", th.second->stackStart);
+        fmt::print(fmt::fg(addrColor), "@0x{:x}", th.second->stackStart);
         fmt::println("");
         fmt::print("stack top at ");
-        fmt::print(fmt::fg(fmt::color::alice_blue), "@0x{:x}", th.second->stackEnd);
+        fmt::print(fmt::fg(addrColor), "@0x{:x}", th.second->stackEnd);
         fmt::println("");
 
         switch (th.second->state)
         {
 #define cse(name)                                                                                                      \
     case name:                                                                                                         \
-        fmt::print(fmt::fg(fmt::color::dark_gray), #name);                                                             \
+        fmt::print(fmt::fg(hintColor), #name);                                                                         \
         fmt::println("");                                                                                              \
         break;
             cse(Halt);
@@ -362,7 +363,7 @@ void printStackStatus()
             cse(InsideJava);
             cse(Suspend);
         }
-        fmt::print(fmt::fg(fmt::color::light_blue), "stack trace:");
+        fmt::print(fmt::fg(addrColor), "stack trace:");
         fmt::println("");
         if (th.second->zero.frame)
         {
@@ -373,9 +374,9 @@ void printStackStatus()
             {
                 if (frm->method->isNative())
                 {
-                    fmt::print(fmt::fg(fmt::color::dark_gray), "Native");
+                    fmt::print(fmt::fg(hintColor), "Native");
                 }
-                fmt::print(fmt::fg(frm->method->isNative() ? fmt::color::light_green : fmt::color::light_sky_blue),
+                fmt::print(fmt::fg(frm->method->isNative() ? fmt::color::green : fmt::color::sky_blue),
                            "\t#{} {}.{}{} + {}", i, frm->method->klass->name, frm->method->name,
                            frm->method->descriptor,
                            reinterpret_cast<uintptr_t>(ptr) - reinterpret_cast<uintptr_t>(frm->method->code));
@@ -388,7 +389,7 @@ void printStackStatus()
         }
         else
         {
-            fmt::print(fmt::fg(fmt::color::dark_gray), "\t(no frames)");
+            fmt::print(fmt::fg(hintColor), "\t(no frames)");
             fmt::println("");
         }
 

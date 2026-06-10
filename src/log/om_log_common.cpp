@@ -134,7 +134,7 @@ void OMLogger::log(OMLogType type, std::string msg)
         }
         *this->target << multithread::acquireThreadName(std::this_thread::get_id()) << "] ";
 
-        *this->target << OMLogAnsiCyan << "(" << this->loggerName << ") " << OMLogAnsiReset;
+        *this->target << OMLogAnsiBlackLight << "(" << this->loggerName << ") " << OMLogAnsiReset;
         *this->target << msg << std::endl;
     }
     else
