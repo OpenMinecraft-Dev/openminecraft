@@ -201,40 +201,6 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
         constantPoolState[id] = true;
         return flg ? reinterpret_cast<void *>(cls->mirror) : cls;
     }
-    case OMClassConstantType::FieldRef: {
-        auto mr = item->to<OMClassConstantFieldRef>();
-        auto clsname = constantPoolRaw->at(constantPoolRaw->at(mr->classIndex)->to<OMClassConstantClass>()->nameIndex)
-                           ->to<OMClassConstantUtf8>()
-                           ->data;
-        auto mdname =
-            constantPoolRaw->at(constantPoolRaw->at(mr->nameAndTypeIndex)->to<OMClassConstantNameAndType>()->nameIndex)
-                ->to<OMClassConstantUtf8>()
-                ->data;
-        auto mddesc =
-            constantPoolRaw->at(constantPoolRaw->at(mr->nameAndTypeIndex)->to<OMClassConstantNameAndType>()->descIndex)
-                ->to<OMClassConstantUtf8>()
-                ->data;
-
-        auto kk = klassloader->fetchOrLoadClass(clsname);
-
-        if (!kk->toInstance()->clinitFinished)
-        {
-            return nullptr;
-        }
-
-        for (int i = 0; i < fieldCount; i++)
-        {
-            if (std::strcmp(kk->toInstance()->fields[i].name, mdname.c_str()) == 0 &&
-                std::strcmp(kk->toInstance()->fields[i].desc, mddesc.c_str()) == 0)
-            {
-                constantPool[id] = &kk->toInstance()->fields[i];
-                constantPoolState[id] = true;
-                return &kk->toInstance()->fields[i];
-            }
-        }
-
-        return nullptr;
-    }
     case OMClassConstantType::Integer: {
         auto d = item->to<OMClassConstantInteger>()->data;
         uint32_t rd = *reinterpret_cast<uint32_t *>(&d);
