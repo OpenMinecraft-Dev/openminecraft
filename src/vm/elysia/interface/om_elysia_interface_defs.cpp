@@ -207,12 +207,20 @@ static OMElysiaNativeHandle *interfaceNewObjectA(OMElysiaJNIEnv *env, OMElysiaKl
 void initBaseInterface(OMElysiaJNIEnv env)
 {
     env.internal->GetVersion = interfaceGetVersion;
-    env.internal->RegisterNatives = interfaceRegisterNatives;
-    env.internal->UnregisterNatives = interfaceUnregisterNatives;
+
     env.internal->FindClass = interfaceFindClass;
     env.internal->AllocObject = interfaceAllocObject;
-    env.internal->GetSuperclass = interfaceGetSuperclass;
+
+    env.internal->GetMethodID = interfaceGetMethodID;
+    env.internal->CallObjectMethodA = interfaceCallObjectMethodA;
+    env.internal->CallVoidMethodA = interfaceCallVoidMethodA;
+    env.internal->NewObjectA = interfaceNewObjectA;
+
     env.internal->GetFieldID = interfaceGetFieldID;
+
+    env.internal->RegisterNatives = interfaceRegisterNatives;
+    env.internal->UnregisterNatives = interfaceUnregisterNatives;
+    env.internal->GetSuperclass = interfaceGetSuperclass;
     env.internal->NewCharArray = interfaceNewCharArray;
     env.internal->NewStringUTF = interfaceNewStringUTF;
     env.internal->GetObjectField = interfaceGetObjectField;
@@ -220,10 +228,5 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->GetStringUTFChars = interfaceGetStringUTFChars;
     env.internal->ReleaseStringUTFChars = interfaceReleaseStringUTFChars;
     env.internal->SetObjectField = interfaceSetObjectField;
-
-    env.internal->CallObjectMethodA = interfaceCallObjectMethodA;
-    env.internal->CallVoidMethodA = interfaceCallVoidMethodA;
-    env.internal->NewObjectA = interfaceNewObjectA;
-    env.internal->GetMethodID = interfaceGetMethodID;
 }
 } // namespace openminecraft::vm::elysia
