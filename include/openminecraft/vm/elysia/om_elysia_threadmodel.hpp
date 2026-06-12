@@ -29,7 +29,6 @@ enum OMElysiaThreadState
 {
     Initialized,
     InsideVM,
-    InsideVMTransition,
     InsideJava,
     InsideNative,
     Suspend,
@@ -45,8 +44,6 @@ inline std::string threadStateToString(OMElysiaThreadState state)
         return "Initialized";
     case InsideVM:
         return "InsideVM";
-    case InsideVMTransition:
-        return "InsideVMTransition";
     case InsideJava:
         return "InsideJava";
     case InsideNative:
@@ -114,20 +111,6 @@ class OMElysiaThreadMetadata
         log::OMLogger logger("temp");
         logger.debug("{} => {}", threadStateToString(metadata->state), threadStateToString(state));
         metadata->state = state;
-    }
-
-    void enterVM()
-    {
-        switchState(InsideVMTransition);
-        // TODO: future state check
-        switchState(InsideVM);
-    }
-
-    void enterJava()
-    {
-        switchState(InsideVMTransition);
-        // TODO: future state check
-        switchState(InsideJava);
     }
 
     ~OMElysiaThreadMetadata()

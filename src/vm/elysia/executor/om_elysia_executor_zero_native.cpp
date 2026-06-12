@@ -6,6 +6,7 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
+#include "openminecraft/vm/elysia/om_elysia_meta.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include <ffi.h>
@@ -188,9 +189,8 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
 
     if (ffiPrepStatus == FFI_OK)
     {
-        thisThread.switchState(InsideNative);
-        ffi_call(&cif, reinterpret_cast<void (*)()>(func), retValue, argPointers);
-        thisThread.enterVM();
+        execWithState(InsideNative,
+                      [&]() { ffi_call(&cif, reinterpret_cast<void (*)()>(func), retValue, argPointers); });
     }
 
     switch (returnType)
@@ -273,7 +273,6 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
 
 void OMElysiaExecutorZero::executeNativeLink()
 {
-    thisThread.enterVM();
     auto tc = thisThread.metadata;
     auto mm = tc->zero.frame->method;
 

@@ -10,6 +10,7 @@
 #include "openminecraft/vm/elysia/om_elysia_field.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
+#include "openminecraft/vm/elysia/om_elysia_meta.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
@@ -145,9 +146,7 @@ void OMElysiaExecutorZero::threadInit()
         tc->threadInited = true;
         tc->registerThread();
 
-        elysium->setupThreadObject();
-
-        thisThread.enterVM();
+        execWithState(InsideVM, [&]() { elysium->setupThreadObject(); });
     }
 }
 
@@ -203,9 +202,7 @@ void OMElysiaExecutorZero::callVoidFunctionA(OMElysiaMethod *m, const OMElysiaNa
         }
     }
 
-    execute(m);
-
-    thisThread.enterVM();
+    execWithState(InsideVM, [&]() { execute(m); });
 }
 
 void OMElysiaExecutorZero::callVoidFunctionV(OMElysiaMethod *m, va_list list)
@@ -259,9 +256,7 @@ void OMElysiaExecutorZero::callVoidFunctionV(OMElysiaMethod *m, va_list list)
         }
     }
 
-    execute(m);
-
-    thisThread.enterVM();
+    execWithState(InsideVM, [&]() { execute(m); });
 }
 
 void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, ...)
@@ -324,11 +319,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         if (tc->zero.frame->method->isNative())
         {
             tc->zero.pc = nullptr;
-            executeNativeLink();
+            execWithState(InsideVM, [&]() { executeNativeLink(); });
             continue;
         }
 
-        thisThread.enterJava();
+        thisThread.switchState(InsideJava);
         if (!tc->zero.pc)
         {
             throw std::logic_error("nullptr!");
