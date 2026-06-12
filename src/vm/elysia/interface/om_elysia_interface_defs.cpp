@@ -209,6 +209,7 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->GetVersion = interfaceGetVersion;
 
     env.internal->FindClass = interfaceFindClass;
+    env.internal->GetSuperclass = interfaceGetSuperclass;
     env.internal->AllocObject = interfaceAllocObject;
 
     env.internal->GetMethodID = interfaceGetMethodID;
@@ -217,16 +218,17 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->NewObjectA = interfaceNewObjectA;
 
     env.internal->GetFieldID = interfaceGetFieldID;
+    env.internal->GetObjectField = interfaceGetObjectField;
+    env.internal->SetObjectField = interfaceSetObjectField;
+
+    env.internal->NewStringUTF = interfaceNewStringUTF;
+    env.internal->GetStringUTFChars = interfaceGetStringUTFChars;
+    env.internal->ReleaseStringUTFChars = interfaceReleaseStringUTFChars;
+
+    env.internal->NewCharArray = interfaceNewCharArray;
+    env.internal->GetCharArrayElements = interfaceGetCharArrayElements;
 
     env.internal->RegisterNatives = interfaceRegisterNatives;
     env.internal->UnregisterNatives = interfaceUnregisterNatives;
-    env.internal->GetSuperclass = interfaceGetSuperclass;
-    env.internal->NewCharArray = interfaceNewCharArray;
-    env.internal->NewStringUTF = interfaceNewStringUTF;
-    env.internal->GetObjectField = interfaceGetObjectField;
-    env.internal->GetCharArrayElements = interfaceGetCharArrayElements;
-    env.internal->GetStringUTFChars = interfaceGetStringUTFChars;
-    env.internal->ReleaseStringUTFChars = interfaceReleaseStringUTFChars;
-    env.internal->SetObjectField = interfaceSetObjectField;
 }
 } // namespace openminecraft::vm::elysia

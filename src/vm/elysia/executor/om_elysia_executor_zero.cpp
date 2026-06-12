@@ -390,8 +390,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             tc->zero.pc += 3;
             break;
         case op_ldc: {
-            auto ff = CURRENT_KLASS->constantPoolFetchNormal(tc->zero.pc[1], true);
-            zeroStackPush(ff);
+            zeroStackPush(CURRENT_KLASS->constantPoolFetchNormal(tc->zero.pc[1], true));
             tc->zero.pc += 2;
             break;
         }
@@ -865,7 +864,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                 break;
             }
 
-            auto arr = elysium->oopManager->allocateArr(elysium->klassLoader->findClass(kn)->toArray(),
+            auto arr = elysium->oopManager->allocateArr(CURRENT_KLASS->klassloader->findClass(kn)->toArray(),
                                                         zeroStackPopGet<jint>());
             zeroStackPush(arr);
             tc->zero.pc += 2;
@@ -873,13 +872,8 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         case op_anewarray: {
             auto c = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
-            auto arrcls = buildArray(reinterpret_cast<OMElysiaKlass *>(c)->name);
-            auto klass = elysium->klassLoader->findClass(arrcls);
-            if (!klass)
-            {
-                elysium->klassLoader->constructArrayClass(reinterpret_cast<OMElysiaKlass *>(c));
-                klass = elysium->klassLoader->findClass(arrcls);
-            }
+            auto klass =
+                CURRENT_KLASS->klassloader->fetchOrLoadClass(buildArray(reinterpret_cast<OMElysiaKlass *>(c)->name));
             auto arr = elysium->oopManager->allocateArr(klass->toArray(), zeroStackPopGet<jint>());
             zeroStackPush(arr);
             tc->zero.pc += 3;

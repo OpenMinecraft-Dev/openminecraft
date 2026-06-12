@@ -1,6 +1,7 @@
 #ifndef OM_ELYSIA_THREADMODEL_HPP
 #define OM_ELYSIA_THREADMODEL_HPP
 
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include <atomic>
@@ -33,6 +34,26 @@ enum OMElysiaThreadState
     Suspend,
     Halt
 };
+
+inline std::string threadStateToString(OMElysiaThreadState state)
+{
+    switch (state)
+    {
+    default:
+    case Initialized:
+        return "Initialized";
+    case InsideVM:
+        return "InsideVM";
+    case InsideJava:
+        return "InsideJava";
+    case InsideNative:
+        return "InsideNative";
+    case Suspend:
+        return "Suspend";
+    case Halt:
+        return "Halt";
+    }
+}
 
 class OMElysiaThread
 {
@@ -83,6 +104,12 @@ class OMElysiaThreadMetadata
 
     void switchState(OMElysiaThreadState state)
     {
+        if (metadata->state == state)
+        {
+            return;
+        }
+        log::OMLogger logger("temp");
+        logger.debug("{} => {}", threadStateToString(metadata->state), threadStateToString(state));
         metadata->state = state;
     }
 
