@@ -3,6 +3,7 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
+#include "openminecraft/vm/elysia/om_elysia_meta.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
@@ -124,7 +125,8 @@ void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id)
             ->to<OMClassConstantUtf8>()
             ->data;
 
-    auto kk = klassloader->fetchOrLoadClass(clsname);
+    OMElysiaKlass *kk;
+    execWithState(InsideVM, [&]() { kk = klassloader->fetchOrLoadClass(clsname); });
 
     for (int i = 0; i < kk->toInstance()->fieldCount; i++)
     {
@@ -172,7 +174,9 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
                 ->to<OMClassConstantUtf8>()
                 ->data;
 
-        auto cls = klassloader->fetchOrLoadClass(clsname);
+        OMElysiaKlass *cls;
+        execWithState(InsideVM, [&]() { cls = klassloader->fetchOrLoadClass(clsname); });
+
         OMElysiaMethod *mthd = nullptr;
         while (!mthd)
         {
@@ -196,7 +200,9 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
         auto mr = item->to<OMClassConstantClass>();
         auto clsname = constantPoolRaw->at(mr->nameIndex)->to<OMClassConstantUtf8>()->data;
 
-        auto cls = klassloader->fetchOrLoadClass(clsname);
+        OMElysiaKlass *cls;
+        execWithState(InsideVM, [&]() { cls = klassloader->fetchOrLoadClass(clsname); });
+
         constantPool[id] = cls;
         constantPoolState[id] = true;
         return flg ? reinterpret_cast<void *>(cls->mirror) : cls;

@@ -867,8 +867,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         case op_anewarray: {
             auto c = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
-            auto klass =
-                CURRENT_KLASS->klassloader->fetchOrLoadClass(buildArray(reinterpret_cast<OMElysiaKlass *>(c)->name));
+            OMElysiaKlass *klass;
+            execWithState(InsideVM, [&]() {
+                klass = CURRENT_KLASS->klassloader->fetchOrLoadClass(
+                    buildArray(reinterpret_cast<OMElysiaKlass *>(c)->name));
+            });
             auto arr = elysium->oopManager->allocateArr(klass->toArray(), zeroStackPopGet<jint>());
             zeroStackPush(arr);
             tc->zero.pc += 3;
