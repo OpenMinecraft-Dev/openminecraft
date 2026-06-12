@@ -190,7 +190,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     {
         thisThread.switchState(InsideNative);
         ffi_call(&cif, reinterpret_cast<void (*)()>(func), retValue, argPointers);
-        thisThread.switchState(InsideVM);
+        thisThread.enterVM();
     }
 
     switch (returnType)
@@ -273,7 +273,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
 
 void OMElysiaExecutorZero::executeNativeLink()
 {
-    thisThread.switchState(InsideVM);
+    thisThread.enterVM();
     auto tc = thisThread.metadata;
     auto mm = tc->zero.frame->method;
 

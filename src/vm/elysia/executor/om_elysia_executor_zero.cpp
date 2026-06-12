@@ -147,7 +147,7 @@ void OMElysiaExecutorZero::threadInit()
 
         elysium->setupThreadObject();
 
-        thisThread.switchState(InsideVM);
+        thisThread.enterVM();
     }
 }
 
@@ -205,7 +205,7 @@ void OMElysiaExecutorZero::callVoidFunctionA(OMElysiaMethod *m, const OMElysiaNa
 
     execute(m);
 
-    thisThread.switchState(InsideVM);
+    thisThread.enterVM();
 }
 
 void OMElysiaExecutorZero::callVoidFunctionV(OMElysiaMethod *m, va_list list)
@@ -261,7 +261,7 @@ void OMElysiaExecutorZero::callVoidFunctionV(OMElysiaMethod *m, va_list list)
 
     execute(m);
 
-    thisThread.switchState(InsideVM);
+    thisThread.enterVM();
 }
 
 void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, ...)
@@ -328,7 +328,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             continue;
         }
 
-        thisThread.switchState(InsideJava);
+        thisThread.enterJava();
         if (!tc->zero.pc)
         {
             throw std::logic_error("nullptr!");

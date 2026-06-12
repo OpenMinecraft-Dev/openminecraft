@@ -19,7 +19,7 @@ static log::OMLogger logger("Elysia JNI Layer");
 
 #define enterInterface                                                                                                 \
     auto lastState = thisThread.metadata->state;                                                                       \
-    thisThread.switchState(InsideVM);
+    thisThread.enterVM();
 
 #define exitInterface thisThread.switchState(lastState);
 #define recordResult(op) auto result = op;
