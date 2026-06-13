@@ -15,8 +15,7 @@
 
 namespace openminecraft::vm::elysia
 {
-static OMElysiaNativeHandle *interfaceCallObjectMethodA(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj,
-                                                        OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+static OMElysiaNativeHandle *interfaceCallObjectMethodA(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
 {
     OMElysiaNativeHandle *hnd;
     execWithState(InsideVM, [&]() {
