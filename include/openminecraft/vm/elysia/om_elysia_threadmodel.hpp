@@ -108,8 +108,6 @@ class OMElysiaThreadMetadata
         {
             return;
         }
-        log::OMLogger logger("temp");
-        logger.debug("{} => {}", threadStateToString(metadata->state), threadStateToString(state));
         metadata->state = state;
     }
 
