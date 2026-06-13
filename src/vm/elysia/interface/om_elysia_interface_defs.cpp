@@ -24,8 +24,8 @@ static OMElysiaNativeHandle *interfaceCallObjectMethodA(OMElysiaJNIEnv *env, OME
             mem::allocator::tracedCallocElysia(ar + 1, sizeof(OMElysiaNativeValue)));
         argsCombined[0].l = obj;
         std::memcpy(&argsCombined[1], args, ar * sizeof(OMElysiaNativeValue));
-        hnd = env->internal->elysium->executor->recordLocalRef(
-            env->internal->elysium->executor->callObjectFunction(methodID, argsCombined));
+        hnd = env->internal->elysium->executor->recordLocalRef(env->internal->elysium->executor->callObjectFunction(
+            methodID, const_cast<const OMElysiaNativeValue *>(argsCombined)));
         mem::allocator::tracedFreeElysia(argsCombined);
     });
     return hnd;

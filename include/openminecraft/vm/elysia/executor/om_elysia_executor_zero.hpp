@@ -120,11 +120,11 @@ template <typename T> static T zeroStackLoadLocalW(uint32_t l)
 class OMElysiaExecutorZero
 {
   public:
-    OMElysiaExecutorZero(OMElysium *vw);
+    OMElysiaExecutorZero(OMElysium *elysium);
     ~OMElysiaExecutorZero();
 
-#define DEF_FUNCCALL(retType, name)                                                                                    \
-    retType call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *); 
+/*#define DEF_FUNCCALL(retType, name)                                                                                    \
+    retType call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *args);
 
     DEF_FUNCCALL(void, Void);
     DEF_FUNCCALL(jbyte, Byte);
@@ -135,7 +135,25 @@ class OMElysiaExecutorZero
     DEF_FUNCCALL(jfloat, Float);
     DEF_FUNCCALL(jlong, Long);
     DEF_FUNCCALL(jdouble, Double);
-    DEF_FUNCCALL(OMElysiaOop *, Object);
+    DEF_FUNCCALL(OMElysiaOop *, Object);*/
+
+    void callVoidFunction(OMElysiaMethod *m, const OMElysiaNativeValue *args);
+
+    #define IMPL_FUNCCALL(retType, name, fetchFunc)                                                                        \
+    retType OMElysiaExecutorZero::call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *args)             \
+    {                                                                                                                  \
+        callVoidFunction(m, args);                                                                                     \
+        return fetchFunc<retType>();                                                                                   \
+    }
+    IMPL_FUNCCALL(jbyte, Byte, zeroStackPopGet);
+    IMPL_FUNCCALL(jboolean, Boolean, zeroStackPopGet);
+    IMPL_FUNCCALL(jshort, Short, zeroStackPopGet);
+    IMPL_FUNCCALL(jchar, Char, zeroStackPopGet);
+    IMPL_FUNCCALL(jint, Int, zeroStackPopGet);
+    IMPL_FUNCCALL(jfloat, Float, zeroStackPopGet);
+    IMPL_FUNCCALL(jlong, Long, zeroStackPopWGet);
+    IMPL_FUNCCALL(jdouble, Double, zeroStackPopWGet);
+    IMPL_FUNCCALL(OMElysiaOop *, Object, zeroStackPopGet);
 
     OMElysiaNativeHandle *recordLocalRef(OMElysiaOop *);
 

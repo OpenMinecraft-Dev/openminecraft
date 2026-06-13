@@ -59,19 +59,5 @@ void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, const OMElysiaNat
     execWithState(InsideVM, [&]() { execute(m); });
 }
 
-#define IMPL_FUNCCALL(retType, name, fetchFunc)                                                                        \
-    retType OMElysiaExecutorZero::call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *args)             \
-    {                                                                                                                  \
-        callVoidFunction(m, args);                                                                                     \
-        return fetchFunc<retType>();                                                                                   \
-    }
-IMPL_FUNCCALL(jbyte, Byte, zeroStackPopGet);
-IMPL_FUNCCALL(jboolean, Boolean, zeroStackPopGet);
-IMPL_FUNCCALL(jshort, Short, zeroStackPopGet);
-IMPL_FUNCCALL(jchar, Char, zeroStackPopGet);
-IMPL_FUNCCALL(jint, Int, zeroStackPopGet);
-IMPL_FUNCCALL(jfloat, Float, zeroStackPopGet);
-IMPL_FUNCCALL(jlong, Long, zeroStackPopWGet);
-IMPL_FUNCCALL(jdouble, Double, zeroStackPopWGet);
-IMPL_FUNCCALL(OMElysiaOop *, Object, zeroStackPopGet);
+
 }; // namespace openminecraft::vm::elysia::executor
