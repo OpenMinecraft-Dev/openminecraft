@@ -122,12 +122,14 @@ jobs:
           CACHENAME=$(python ./misc/simple_name_gen.py)
           echo $CACHENAME
           echo "CACHENAME=$CACHENAME" >> $GITHUB_ENV
+          echo "CACHEPATH=~/.xmake/packages" >> $GITHUB_ENV
       - name: Generate cache name (Windows)
         if: matrix.plat == 'windows'
         run: |
           $CACHENAME = python ./misc/simple_name_gen.py
           echo "CACHENAME=$CACHENAME" | Out-File -FilePath $env:GITHUB_ENV -Append
-      - name: macos test
+          echo "CACHEPATH=C:/Users/runneradmin/AppData/Local/.xmake/packages" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: MacOS JIT Test
         if: matrix.plat == 'macos'
         run: |
           /usr/libexec/PlistBuddy -c "Add :com.apple.security.cs.allow-jit bool true" jit.entitlements
@@ -150,20 +152,11 @@ jobs:
           source ~/.xmake/profile
       - name: Setup Python packages
         run: pip install wheel
-      - name: Restore xmake packages (UNIX)
-        if: matrix.plat != 'windows'
-        id: cache-unix
+      - name: Restore xmake packages
+        id: cache-main
         uses: actions/cache/restore@v5
         with:
-          path: ~/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
-          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
-      - name: Restore xmake packages (Windows)
-        if: matrix.plat == 'windows'
-        id: cache-windows
-        uses: actions/cache/restore@v5
-        with:
-          path: C:/Users/runneradmin/AppData/Local/.xmake/packages
+          path: ${{ env.CACHEPATH }}
           key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
           restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
       - name: Generate header
@@ -233,17 +226,10 @@ jobs:
         if: matrix.plat == 'windows'
         run: xmake f --toolchain=msvc -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{
           env.XMAKE_ARGS }}
-      - name: Save xmake packages (UNIX)
-        if: matrix.plat != 'windows'
+      - name: Save xmake packages
         uses: actions/cache/save@v5
         with:
-          path: ~/.xmake/packages
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-${{ env.CACHENAME }}
-      - name: Save xmake packages (Windows)
-        if: matrix.plat == 'windows'
-        uses: actions/cache/save@v5
-        with:
-          path: C:/Users/runneradmin/AppData/Local/.xmake/packages
+          path: ${{ env.CACHEPATH }}
           key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-${{ env.CACHENAME }}
       - name: Build
         run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }} openminecraft
