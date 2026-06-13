@@ -109,8 +109,11 @@ void OMElysium::setupThreadObject()
         values[1].l = tc->interface.NewStringUTF("main");
         auto obj = tc->interface.NewObjectA(tg, mthd, values);
         threadObjects.mainGroup = obj->object;
-
-        logger.debug("{}", (void *)obj->object);
     }
+
+    auto thrcls = tc->interface.FindClass("java/lang/Thread");
+    auto throbj = tc->interface.AllocObject(thrcls);
+    auto fid = tc->interface.GetFieldID(thrcls, "eetop", "J");
+    tc->interface.SetLongField(throbj, fid, 1234);
 }
 } // namespace openminecraft::vm::elysia

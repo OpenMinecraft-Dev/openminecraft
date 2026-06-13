@@ -1,0 +1,188 @@
+#include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
+#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
+
+namespace openminecraft::vm::elysia::executor
+{
+uintptr_t zeroStackAlloc(uint64_t len)
+{
+    auto tc = thisThread.metadata;
+    tc->zero.stackPointer = tc->zero.stackPointer - len;
+    return tc->zero.stackPointer;
+}
+
+uintptr_t zeroStackPop(uint64_t len)
+{
+    auto tc = thisThread.metadata;
+    auto result = tc->zero.stackPointer;
+    tc->zero.stackPointer = tc->zero.stackPointer + len;
+    return result;
+}
+
+uint16_t zeroCodeFetchArgu16p0()
+{
+    auto tc = thisThread.metadata;
+    return static_cast<uint16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
+}
+
+int16_t zeroCodeFetchArgs16p0()
+{
+    auto tc = thisThread.metadata;
+    return static_cast<int16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
+}
+
+void zeroStackPushFromStatic(OMElysiaField *field, OMElysium *world)
+{
+    switch (*field->desc)
+    {
+#define accessReadS(f, type, set)                                                                                      \
+    case f:                                                                                                            \
+        set(*reinterpret_cast<type *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset));        \
+        break;
+        accessReadS('Z', jboolean, zeroStackPush);
+        accessReadS('C', jchar, zeroStackPush);
+        accessReadS('S', jshort, zeroStackPush);
+        accessReadS('B', jbyte, zeroStackPush);
+        accessReadS('I', jint, zeroStackPush);
+        accessReadS('F', jfloat, zeroStackPush);
+        accessReadS('J', jlong, zeroStackPushW);
+        accessReadS('D', jdouble, zeroStackPushW);
+    case 'L':
+    case '[': {
+        if (world->mainHeap.enablePtrCompress())
+        {
+            zeroStackPush(world->mainHeap.decompress(
+                *reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset)));
+        }
+        else
+        {
+            zeroStackPush(*reinterpret_cast<OMElysiaOop **>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) +
+                                                            field->offset));
+        }
+        break;
+    }
+    default:
+        zeroStackPush(
+            *reinterpret_cast<jint *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset));
+        break;
+    }
+}
+
+void zeroStackPopToStatic(OMElysiaField *field, OMElysium *world)
+{
+    switch (*field->desc)
+    {
+#define accessWriteS(f, type, get)                                                                                     \
+    case f:                                                                                                            \
+        *reinterpret_cast<type *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =            \
+            get<type>();                                                                                               \
+        break;
+
+        accessWriteS('Z', jboolean, zeroStackPopGet);
+        accessWriteS('B', jbyte, zeroStackPopGet);
+        accessWriteS('C', jchar, zeroStackPopGet);
+        accessWriteS('S', jshort, zeroStackPopGet);
+        accessWriteS('I', jint, zeroStackPopGet);
+        accessWriteS('F', jfloat, zeroStackPopGet);
+        accessWriteS('J', jlong, zeroStackPopWGet);
+        accessWriteS('D', jdouble, zeroStackPopWGet);
+    case 'L':
+    case '[': {
+        auto pp = zeroStackPopGet<OMElysiaOop *>();
+        if (world->mainHeap.enablePtrCompress())
+        {
+            *reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =
+                world->mainHeap.compress(pp);
+        }
+        else
+        {
+            *reinterpret_cast<OMElysiaOop **>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =
+                pp;
+        }
+        break;
+    }
+    default:
+        *reinterpret_cast<jint *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =
+            zeroStackPopGet<jint>();
+        break;
+    }
+}
+
+void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world)
+{
+    switch (*field->desc)
+    {
+#define accessRead(f, type, set)                                                                                       \
+    case f:                                                                                                            \
+        set(*reinterpret_cast<type *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)));          \
+        break;
+
+        accessRead('Z', jboolean, zeroStackPush);
+        accessRead('B', jbyte, zeroStackPush);
+        accessRead('C', jchar, zeroStackPush);
+        accessRead('S', jshort, zeroStackPush);
+        accessRead('I', jint, zeroStackPush);
+        accessRead('F', jfloat, zeroStackPush);
+        accessRead('J', jlong, zeroStackPushW);
+        accessRead('D', jdouble, zeroStackPushW);
+    case 'L':
+    case '[': {
+        if (world->mainHeap.enablePtrCompress())
+        {
+            zeroStackPush(world->mainHeap.decompress(
+                *reinterpret_cast<uint32_t *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset))));
+        }
+        else
+        {
+            zeroStackPush(*reinterpret_cast<OMElysiaOop **>(
+                oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)));
+        }
+        break;
+    }
+    default:
+        zeroStackPush(*reinterpret_cast<jint *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)));
+        break;
+    }
+}
+
+void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world)
+{
+    switch (*field->desc)
+    {
+#define accessWrite(f, type, get)                                                                                      \
+    case f: {                                                                                                          \
+        auto pp = get<type>();                                                                                         \
+        auto obj = zeroStackPopGet<OMElysiaOop *>();                                                                   \
+        *reinterpret_cast<type *>(oop->oopAccessField(obj, field->offset)) = pp;                                       \
+        break;                                                                                                         \
+    }
+        accessWrite('Z', jboolean, zeroStackPopGet);
+        accessWrite('C', jchar, zeroStackPopGet);
+        accessWrite('S', jshort, zeroStackPopGet);
+        accessWrite('B', jbyte, zeroStackPopGet);
+        accessWrite('I', jint, zeroStackPopGet);
+        accessWrite('F', jfloat, zeroStackPopGet);
+        accessWrite('J', jlong, zeroStackPopWGet);
+        accessWrite('D', jdouble, zeroStackPopWGet);
+    case 'L':
+    case '[': {
+        auto pp = zeroStackPopGet<OMElysiaOop *>();
+        if (world->mainHeap.enablePtrCompress())
+        {
+            *reinterpret_cast<uint32_t *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)) =
+                world->mainHeap.compress(pp);
+        }
+        else
+        {
+            *reinterpret_cast<OMElysiaOop **>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)) =
+                pp;
+        }
+        break;
+    }
+    default: {
+        auto pp = zeroStackPopGet<jint>();
+        *reinterpret_cast<jint *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)) = pp;
+        break;
+    }
+    }
+}
+}; // namespace openminecraft::vm::elysia::executor
