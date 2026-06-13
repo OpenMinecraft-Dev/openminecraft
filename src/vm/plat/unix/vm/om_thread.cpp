@@ -4,10 +4,6 @@
 
 namespace openminecraft::vm::os
 {
-uintptr_t fetchCurrentThread()
-{
-    return static_cast<uintptr_t>(pthread_self());
-}
 void threadSetName(std::string name)
 {
 #if defined(OM_PLATFORM_MACOS) || defined(OM_PLATFORM_IOS)

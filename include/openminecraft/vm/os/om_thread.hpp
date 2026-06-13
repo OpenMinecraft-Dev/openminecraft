@@ -6,7 +6,6 @@
 
 namespace openminecraft::vm::os
 {
-uintptr_t fetchCurrentThread();
 void threadSetName(std::string);
 std::string threadGetName(uintptr_t);
 } // namespace openminecraft::vm::os
