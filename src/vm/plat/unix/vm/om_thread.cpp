@@ -6,7 +6,7 @@ namespace openminecraft::vm::os
 {
 uintptr_t fetchCurrentThread()
 {
-    return reinterpret_cast<uintptr_t>(pthread_self());
+    return static_cast<uintptr_t>(pthread_self());
 }
 void threadSetName(std::string name)
 {
