@@ -16,8 +16,8 @@ std::string threadGetName()
 {
     char name[64];
     std::memset(name, 0x00, 64);
-#if defined(OM_PLATFORM_MACOS) || defined(OM_PLATFORM_IOS)
-    pthread_getname_np(name, 64);
+#if defined(OM_PLATFORM_ANDROID)
+    // not implemented
 #else
     pthread_getname_np(pthread_self(), name, 64);
 #endif
