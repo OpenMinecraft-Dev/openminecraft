@@ -140,7 +140,7 @@ class OMElysiaExecutorZero
     void callVoidFunction(OMElysiaMethod *m, const OMElysiaNativeValue *args);
 
     #define IMPL_FUNCCALL(retType, name, fetchFunc)                                                                        \
-    retType OMElysiaExecutorZero::call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *args)             \
+    retType call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *args)             \
     {                                                                                                                  \
         callVoidFunction(m, args);                                                                                     \
         return fetchFunc<retType>();                                                                                   \
