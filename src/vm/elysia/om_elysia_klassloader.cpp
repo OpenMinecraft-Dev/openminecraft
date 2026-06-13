@@ -141,7 +141,7 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
             return;
         }
 
-        elysium->executor->callVoidFunction(m);
+        elysium->executor->callVoidFunction(m, nullptr);
     }
 }
 

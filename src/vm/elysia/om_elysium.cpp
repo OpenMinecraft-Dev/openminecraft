@@ -67,7 +67,7 @@ OMElysium::OMElysium()
 
             auto mcls = klassLoader->findClass("java/lang/System");
             auto md = mcls->findMethod("initializeSystemClass", "()V");
-            executor->callVoidFunction(md);
+            executor->callVoidFunction(md, nullptr);
         }
         catch (std::logic_error &e)
         {

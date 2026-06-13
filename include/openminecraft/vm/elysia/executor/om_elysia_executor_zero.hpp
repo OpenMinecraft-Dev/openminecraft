@@ -124,8 +124,7 @@ class OMElysiaExecutorZero
     ~OMElysiaExecutorZero();
 
 #define DEF_FUNCCALL(retType, name)                                                                                    \
-    retType call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *); \
-    retType call##name##Function(OMElysiaMethod *m) { return call##name##Function(m, nullptr); }
+    retType call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *); 
 
     DEF_FUNCCALL(void, Void);
     DEF_FUNCCALL(jbyte, Byte);
