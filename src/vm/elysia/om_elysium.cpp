@@ -8,6 +8,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
+#include "openminecraft/vm/os/om_thread.hpp"
 #include <atomic>
 #include <stdexcept>
 #include <thread>
@@ -42,6 +43,7 @@ OMElysium::OMElysium()
     registerNative(Java_java_security_AccessController_doPrivileged);
 
     mainThread = new std::thread([&]() {
+        os::threadSetName("main");
         log::multithread::registerCurrentThreadName("main");
         try
         {
@@ -114,6 +116,11 @@ void OMElysium::setupThreadObject()
     auto thrcls = tc->interface.FindClass("java/lang/Thread");
     auto throbj = tc->interface.AllocObject(thrcls);
     auto fid = tc->interface.GetFieldID(thrcls, "eetop", "J");
-    tc->interface.SetLongField(throbj, fid, 1234);
+    tc->interface.SetLongField(throbj, fid, static_cast<jlong>(reinterpret_cast<uintptr_t>(thisThread.metadata)));
+
+    auto thrname = tc->interface.NewStringUTF(os::threadGetName().c_str());
+    tc->interface.SetObjectField(throbj, tc->interface.GetFieldID(thrcls, "name", "Ljava/lang/String;"), thrname);
+
+    thisThread.metadata->threadObject = throbj->object;
 }
 } // namespace openminecraft::vm::elysia

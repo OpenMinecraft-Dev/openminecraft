@@ -34,11 +34,27 @@ template <typename T> void printOopFieldContent(T *t)
 {
     if constexpr (std::is_same_v<T, jbyte>)
     {
-        fmt::print(fmt::fg(valueColor), "{}", static_cast<jint>(*t));
+        fmt::print(fmt::fg(valueColor), "{:02x}", static_cast<jint>(*t));
     }
     else if constexpr (std::is_same_v<T, jboolean>)
     {
         fmt::print(fmt::fg(valueColor), "{}", *t ? "true" : "false");
+    }
+    else if constexpr (std::is_same_v<T, jchar>)
+    {
+        fmt::print(fmt::fg(valueColor), "{} ({})", *t, static_cast<char>(*t));
+    }
+    else if constexpr (std::is_same_v<T, jshort>)
+    {
+        fmt::print(fmt::fg(valueColor), "{} ({:04x})", *t, *t);
+    }
+    else if constexpr (std::is_same_v<T, jint>)
+    {
+        fmt::print(fmt::fg(valueColor), "{} ({:08x})", *t, *t);
+    }
+    else if constexpr (std::is_same_v<T, jlong>)
+    {
+        fmt::print(fmt::fg(valueColor), "{} ({:016x})", *t, *t);
     }
     else
     {
@@ -392,9 +408,8 @@ void printStackStatus()
                 {
                     fmt::print(fmt::fg(hintColor), "Native");
                 }
-                fmt::print(fmt::fg(frm->method->isNative() ? valueColor : addrColor),
-                           "\t#{} {}.{}{} + {}", i, frm->method->klass->name, frm->method->name,
-                           frm->method->descriptor,
+                fmt::print(fmt::fg(frm->method->isNative() ? valueColor : addrColor), "\t#{} {}.{}{} + {}", i,
+                           frm->method->klass->name, frm->method->name, frm->method->descriptor,
                            reinterpret_cast<uintptr_t>(ptr) - reinterpret_cast<uintptr_t>(frm->method->code));
                 ptr = frm->returnAddr;
                 frm = frm->caller;

@@ -7,7 +7,7 @@
 namespace openminecraft::vm::os
 {
 void threadSetName(std::string);
-std::string threadGetName(uintptr_t);
+std::string threadGetName();
 } // namespace openminecraft::vm::os
 
 #endif

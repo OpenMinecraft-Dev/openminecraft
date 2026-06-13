@@ -1,5 +1,5 @@
 #include "openminecraft/vm/os/om_thread.hpp"
-#include <cstdint>
+#include <cstring>
 #include <pthread.h>
 
 namespace openminecraft::vm::os
@@ -14,6 +14,13 @@ void threadSetName(std::string name)
 }
 std::string threadGetName()
 {
-    return "";
+    char name[64];
+    std::memset(name, 0x00, 64);
+#if defined(OM_PLATFORM_MACOS) || defined(OM_PLATFORM_IOS)
+    pthread_getname_np(name, 64);
+#else
+    pthread_getname_np(pthread_self(), name, 64);
+#endif
+    return std::string(name);
 }
 } // namespace openminecraft::vm::os

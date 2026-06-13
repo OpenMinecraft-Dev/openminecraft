@@ -4,6 +4,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
+#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include <atomic>
 #include <functional>
 #include <iostream>
@@ -70,6 +71,7 @@ class OMElysiaThread
         uintptr_t stackPointer = 0;
         OMElysiaJavaFrame *frame = nullptr;
     } zero;
+    OMElysiaOop *threadObject;
 
     std::function<void()> cleaner = []() {};
 
