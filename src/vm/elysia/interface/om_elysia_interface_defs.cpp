@@ -15,6 +15,23 @@
 
 namespace openminecraft::vm::elysia
 {
+static OMElysiaNativeHandle *interfaceCallObjectMethodA(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj,
+                                                        OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+{
+    OMElysiaNativeHandle *hnd;
+    execWithState(InsideVM, [&]() {
+        auto ar = argCount(methodID->descriptor);
+        auto argsCombined = reinterpret_cast<OMElysiaNativeValue *>(
+            mem::allocator::tracedCallocElysia(ar + 1, sizeof(OMElysiaNativeValue)));
+        argsCombined[0].l = obj;
+        std::memcpy(&argsCombined[1], args, ar * sizeof(OMElysiaNativeValue));
+        hnd = env->internal->elysium->executor->recordLocalRef(
+            env->internal->elysium->executor->callObjectFunction(methodID, argsCombined));
+        mem::allocator::tracedFreeElysia(argsCombined);
+    });
+    return hnd;
+};
+
 void initBaseInterface(OMElysiaJNIEnv env)
 {
     env.internal->GetVersion = [](OMElysiaJNIEnv *) { return JNI_VERSION_1_8; };
@@ -46,21 +63,8 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->GetMethodID = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const char *name, const char *sig) {
         return clazz->findMethod(name, sig);
     };
-    env.internal->CallObjectMethodA = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaMethod *methodID,
-                                         const OMElysiaNativeValue *args) {
-        OMElysiaNativeHandle *hnd;
-        execWithState(InsideVM, [&]() {
-            auto ar = argCount(methodID->descriptor);
-            auto argsCombined = reinterpret_cast<OMElysiaNativeValue *>(
-                mem::allocator::tracedCallocElysia(ar + 1, sizeof(OMElysiaNativeValue)));
-            argsCombined[0].l = obj;
-            std::memcpy(&argsCombined[1], args, ar * sizeof(OMElysiaNativeValue));
-            hnd = env->internal->elysium->executor->recordLocalRef(
-                env->internal->elysium->executor->callObjectFunction(methodID, argsCombined));
-            mem::allocator::tracedFreeElysia(argsCombined);
-        });
-        return hnd;
-    };
+    env.internal->CallObjectMethodA = interfaceCallObjectMethodA;
+
     env.internal->CallVoidMethodA = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaMethod *methodID,
                                        const OMElysiaNativeValue *args) {
         execWithState(InsideVM, [&]() {
