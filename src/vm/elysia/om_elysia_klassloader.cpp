@@ -129,6 +129,9 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
 
     elysium->oopManager->oopAccessPointerField(oop, field->offset, strobj);
 
+    auto field2 = kls->toInstance()->findField("classLoader", "Ljava/lang/ClassLoader;");
+    elysium->oopManager->oopAccessPointerField(oop, field2->offset, this->klassloader);
+
     klass->mirror = oop;
 
     if (klass->isInstance())

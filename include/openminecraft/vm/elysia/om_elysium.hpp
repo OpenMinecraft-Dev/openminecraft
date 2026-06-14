@@ -13,6 +13,7 @@ namespace openminecraft::vm::elysia
 class OMElysiaKlassloader;
 class OMElysiaOopManager;
 struct OMElysiaOop;
+struct OMElysiaNativeHandle;
 namespace executor
 {
 class OMElysiaExecutorZero;
@@ -39,8 +40,8 @@ class OMElysium
 
     struct
     {
-        OMElysiaOop *systemGroup = nullptr;
-        OMElysiaOop *mainGroup = nullptr;
+        OMElysiaNativeHandle *systemGroup = nullptr;
+        OMElysiaNativeHandle *mainGroup = nullptr;
     } threadObjects;
 
   private:

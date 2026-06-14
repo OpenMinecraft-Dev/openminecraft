@@ -71,7 +71,7 @@ class OMElysiaThread
         uintptr_t stackPointer = 0;
         OMElysiaJavaFrame *frame = nullptr;
     } zero;
-    OMElysiaOop *threadObject;
+    OMElysiaNativeHandle *threadObject;
 
     std::function<void()> cleaner = []() {};
 

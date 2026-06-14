@@ -41,6 +41,7 @@ OMElysium::OMElysium()
     registerNative(Java_sun_reflect_Reflection_getCallerClass);
     registerNative(Java_java_io_FileOutputStream_initIDs);
     registerNative(Java_java_security_AccessController_doPrivileged);
+    registerNative(Java_java_lang_Thread_currentThread);
 
     mainThread = new std::thread([&]() {
         os::threadSetName("main");
@@ -98,7 +99,7 @@ void OMElysium::setupThreadObject()
         auto mthd = tc->interface.GetMethodID(tg, "<init>", "()V");
 
         auto obj = tc->interface.NewObjectA(tg, mthd, nullptr);
-        threadObjects.systemGroup = obj->object;
+        threadObjects.systemGroup = obj;
     }
 
     if (!threadObjects.mainGroup)
@@ -107,10 +108,10 @@ void OMElysium::setupThreadObject()
         auto mthd = tc->interface.GetMethodID(tg, "<init>", "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
 
         OMElysiaNativeValue values[2];
-        values[0].l = executor->recordLocalRef(threadObjects.systemGroup);
+        values[0].l = threadObjects.systemGroup;
         values[1].l = tc->interface.NewStringUTF("main");
         auto obj = tc->interface.NewObjectA(tg, mthd, values);
-        threadObjects.mainGroup = obj->object;
+        threadObjects.mainGroup = obj;
     }
 
     auto thrcls = tc->interface.FindClass("java/lang/Thread");
@@ -121,6 +122,6 @@ void OMElysium::setupThreadObject()
     auto thrname = tc->interface.NewStringUTF(os::threadGetName().c_str());
     tc->interface.SetObjectField(throbj, tc->interface.GetFieldID(thrcls, "name", "Ljava/lang/String;"), thrname);
 
-    thisThread.metadata->threadObject = throbj->object;
+    thisThread.metadata->threadObject = throbj;
 }
 } // namespace openminecraft::vm::elysia
