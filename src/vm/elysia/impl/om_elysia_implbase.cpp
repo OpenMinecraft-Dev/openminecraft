@@ -57,4 +57,9 @@ OMElysiaNativeHandle *Java_java_security_AccessController_doPrivileged(OMElysiaJ
     auto mthd = env->GetMethodID(klas, "run", "()Ljava/lang/Object;");
     return env->CallObjectMethodA(action, mthd, nullptr);
 }
+
+OMElysiaNativeHandle *Java_java_security_AccessController_getStackAccessControlContext(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
+{
+    return nullptr;
+}
 } // namespace openminecraft::vm::elysia::impl

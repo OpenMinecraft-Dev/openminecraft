@@ -64,6 +64,11 @@ template <typename T> void printOopFieldContent(T *t)
 
 void printOopFields(OMElysium *elysium, OMElysiaOop *oop, OMElysiaInstanceKlass *klass)
 {
+    if (klass->superClass) {
+        printOopFields(elysium, oop, klass->superClass->toInstance());
+    }
+    fmt::print(fmt::fg(hintColor), "{}", klass->name);
+    fmt::println("");
     for (int i = 0; i < klass->fieldCount; i++)
     {
         auto &field = klass->fields[i];

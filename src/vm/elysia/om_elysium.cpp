@@ -42,6 +42,7 @@ OMElysium::OMElysium()
     registerNative(Java_java_io_FileOutputStream_initIDs);
     registerNative(Java_java_security_AccessController_doPrivileged);
     registerNative(Java_java_lang_Thread_currentThread);
+    registerNative(Java_java_security_AccessController_getStackAccessControlContext);
 
     mainThread = new std::thread([&]() {
         os::threadSetName("main");

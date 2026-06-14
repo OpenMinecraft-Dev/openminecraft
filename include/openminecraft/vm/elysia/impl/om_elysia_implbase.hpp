@@ -32,6 +32,7 @@ extern "C"
 
     OMElysiaNativeHandle *Java_java_security_AccessController_doPrivileged(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
                                                                            OMElysiaNativeHandle *action);
+    OMElysiaNativeHandle *Java_java_security_AccessController_getStackAccessControlContext(OMElysiaJNIEnv *env, OMElysiaKlass *klass);
 }
 }; // namespace openminecraft::vm::elysia::impl
 
