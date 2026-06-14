@@ -4,6 +4,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <iostream>
+#include <stdexcept>
 
 namespace openminecraft::vm::elysia::impl
 {
@@ -29,9 +30,10 @@ extern "C"
         return true;
     }
 
-    OMElysiaNativeHandle *Java_java_lang_forName0(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *name,
-                                                  jboolean b, OMElysiaNativeHandle *klassloader,
-                                                  OMElysiaNativeHandle *loadcls)
+    OMElysiaNativeHandle *Java_java_lang_Class_forName0(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
+                                                        OMElysiaNativeHandle *name, jboolean b,
+                                                        OMElysiaNativeHandle *klassloader,
+                                                        OMElysiaNativeHandle *loadcls)
     {
         auto elysium = env->internal->elysium;
         auto kld = elysium->klassLoader;
@@ -53,6 +55,12 @@ extern "C"
         throw std::logic_error("klassloader not found");
     }
 
+    OMElysiaNativeHandle *Java_java_lang_Class_getDeclaredFields0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass,
+                                                                  bool bl)
+    {
+        throw std::logic_error("not implemented");
+    }
+
     void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         OMElysiaNativeMethod mm[] = {
@@ -62,8 +70,10 @@ extern "C"
              reinterpret_cast<void *>(Java_java_lang_Class_desiredAssertionStatus0)},
             {const_cast<char *>("forName0"),
              const_cast<char *>("(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;"),
-             reinterpret_cast<void *>(Java_java_lang_forName0)}};
-        env->RegisterNatives(klass, mm, 3);
+             reinterpret_cast<void *>(Java_java_lang_Class_forName0)},
+            {const_cast<char *>("getDeclaredFields0"), const_cast<char *>("(Z)[Ljava/lang/reflect/Field;"),
+             reinterpret_cast<void *>(Java_java_lang_Class_getDeclaredFields0)}};
+        env->RegisterNatives(klass, mm, 4);
     }
 }
 } // namespace openminecraft::vm::elysia::impl

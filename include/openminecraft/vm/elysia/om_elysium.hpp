@@ -28,6 +28,7 @@ class OMElysium
     ~OMElysium();
 
     void setupThreadObject();
+    void startThread(OMElysiaNativeHandle *thread);
 
     OMElysiaHeap metaspaceHeap;
     OMElysiaHeap mainHeap;
@@ -37,6 +38,8 @@ class OMElysium
     std::shared_ptr<executor::OMElysiaExecutorZero> executor;
 
     std::unordered_map<std::string, void *> nativeFuncMap;
+
+    std::vector<std::shared_ptr<std::thread>> threads;
 
     struct
     {

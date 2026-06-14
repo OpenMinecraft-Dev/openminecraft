@@ -8,6 +8,7 @@
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 
 namespace openminecraft::vm::elysia
@@ -47,6 +48,8 @@ class OMElysiaKlass
 
     uint32_t nativeMethodCount = 0;
     OMElysiaNativeMethod *nativeMethods = nullptr;
+
+    std::mutex klassMutex;
 
     OMElysiaMethod *findMethod(const char *name, const char *desc);
 

@@ -115,6 +115,11 @@ void OMElysiaExecutorZero::popFrame()
 {
     auto tc = thisThread.metadata;
 
+    if (tc->zero.frame->method->isClinit())
+    {
+        tc->zero.frame->method->klass->klassMutex.unlock();
+    }
+
     tc->zero.stackPointer = reinterpret_cast<uintptr_t>(tc->zero.frame) + sizeof(OMElysiaJavaFrame);
     tc->zero.pc = tc->zero.frame->returnAddr;
     tc->zero.frame = tc->zero.frame->caller;
@@ -148,7 +153,6 @@ void OMElysiaExecutorZero::threadInit()
 void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 {
     auto tc = thisThread.metadata;
-    threadInit();
 
     auto cachedStackTop = tc->zero.stackPointer;
 

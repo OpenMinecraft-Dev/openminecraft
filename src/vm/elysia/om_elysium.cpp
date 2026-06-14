@@ -89,7 +89,24 @@ OMElysium::~OMElysium()
     delete mainThread;
 }
 
-// TODO: finish
+void OMElysium::startThread(OMElysiaNativeHandle *thread)
+{
+    auto tc = thisThread.metadata;
+    auto thrcls = tc->interface.FindClass("java/lang/Thread");
+    auto thrmthd = tc->interface.GetMethodID(thrcls, "run", "()V");
+    tc->interface.SetIntField(thread, tc->interface.GetFieldID(thrcls, "threadStatus", "I"), 1);
+
+    auto thr = std::make_shared<std::thread>([thread, thrcls, thrmthd, this]() {
+        OMElysiaNativeValue values[1];
+        values[0].l = thread;
+        this->executor->callVoidFunction(thrmthd, values);
+
+        auto tc = thisThread.metadata;
+        tc->interface.SetIntField(thread, tc->interface.GetFieldID(thrcls, "threadStatus", "I"), 5);
+    });
+    threads.push_back(thr);
+}
+
 void OMElysium::setupThreadObject()
 {
     auto tc = thisThread.metadata;

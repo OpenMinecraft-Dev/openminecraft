@@ -6,6 +6,7 @@ namespace openminecraft::vm::elysia::executor
 {
 void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, const OMElysiaNativeValue *args)
 {
+    threadInit();
     int i = 0;
     if (!m->isStatic())
     {
@@ -58,6 +59,5 @@ void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, const OMElysiaNat
 
     execWithState(InsideVM, [&]() { execute(m); });
 }
-
 
 }; // namespace openminecraft::vm::elysia::executor

@@ -134,7 +134,7 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
 
     klass->mirror = oop;
 
-    if (klass->isInstance())
+    if (klass->isInstance() && !klass->toInstance()->clinitFinished)
     {
         auto m = klass->findMethod("<clinit>", "()V");
 
@@ -144,6 +144,7 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
             return;
         }
 
+        klass->klassMutex.lock();
         elysium->executor->callVoidFunction(m, nullptr);
     }
 }

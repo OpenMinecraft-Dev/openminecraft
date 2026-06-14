@@ -21,6 +21,11 @@ extern "C"
         return pthr && pthr->threadInited;
     }
 
+    void Java_java_lang_Thread_start0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *thread)
+    {
+        env->internal->elysium->startThread(thread);
+    }
+
     void Java_java_lang_Thread_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         OMElysiaNativeMethod mm[] = {{const_cast<char *>("currentThread"), const_cast<char *>("()Ljava/lang/Thread;"),
@@ -28,8 +33,10 @@ extern "C"
                                      {const_cast<char *>("setPriority0"), const_cast<char *>("(I)V"),
                                       reinterpret_cast<void *>(Java_java_lang_Thread_setPriority0)},
                                      {const_cast<char *>("isAlive"), const_cast<char *>("()Z"),
-                                      reinterpret_cast<void *>(Java_java_lang_Thread_isAlive)}};
-        env->RegisterNatives(klass, mm, 3);
+                                      reinterpret_cast<void *>(Java_java_lang_Thread_isAlive)},
+                                     {const_cast<char *>("start0"), const_cast<char *>("()V"),
+                                      reinterpret_cast<void *>(Java_java_lang_Thread_start0)}};
+        env->RegisterNatives(klass, mm, 4);
     }
 }
 } // namespace openminecraft::vm::elysia::impl
