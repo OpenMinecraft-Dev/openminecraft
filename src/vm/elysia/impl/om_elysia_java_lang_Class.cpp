@@ -1,5 +1,6 @@
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
+#include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
@@ -35,8 +36,7 @@ extern "C"
                                                         OMElysiaNativeHandle *klassloader,
                                                         OMElysiaNativeHandle *loadcls)
     {
-        auto elysium = env->internal->elysium;
-        auto kld = elysium->klassLoader;
+        auto kld = klass->klassloader;
         while (kld)
         {
             if (kld->klassloader == (klassloader ? klassloader->object : nullptr))
@@ -50,7 +50,7 @@ extern "C"
                 ff->object = kls->mirror;
                 return ff;
             }
-            kld = kld->next;
+            kld = kld->next.get();
         }
         throw std::logic_error("klassloader not found");
     }
@@ -58,6 +58,13 @@ extern "C"
     OMElysiaNativeHandle *Java_java_lang_Class_getDeclaredFields0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass,
                                                                   bool bl)
     {
+        auto kls = env->FindClass("java/lang/Class");
+        auto v = ((OMElysiaKlass *)(env->GetLongField(klass, env->GetFieldID(kls, "<ptr>", "J"))))->toInstance();
+        for (int i = 0; i < v->fieldCount; i++)
+        {
+            auto kl = fieldDescToType(v->fields[i].desc);
+            env->FindClass(kl.c_str());
+        }
         throw std::logic_error("not implemented");
     }
 

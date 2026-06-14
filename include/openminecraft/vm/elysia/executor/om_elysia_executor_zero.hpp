@@ -163,7 +163,7 @@ class OMElysiaExecutorZero
     void execute(OMElysiaMethod *m);
     void executeNativeLink();
     void executeNative(char *descriptor, bool isStatic, void *func);
-    void pushFrame(OMElysiaMethod *m, bool needVtable);
+    void pushFrame(OMElysiaMethod *m, uint8_t *retAddr, bool needVtable);
     void popFrame();
 
     void threadInit();

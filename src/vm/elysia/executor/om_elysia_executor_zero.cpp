@@ -1,7 +1,5 @@
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
-#include "ffi.h"
 #include "fmt/base.h"
-#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/bytecode/om_bytecodes.hpp"
 #include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
@@ -16,12 +14,9 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
-#include <chrono>
 #include <cmath>
-#include <cstdarg>
 #include <cstdint>
 #include <cstring>
-#include <iostream>
 #include <mutex>
 #include <stdexcept>
 
@@ -55,7 +50,7 @@ OMElysiaExecutorZero::~OMElysiaExecutorZero()
 // oooooooo oooooooo oooooooo
 // oooooooo oooooooo oooooooo
 // ........ ........ ........
-void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m, bool needVtable)
+void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m, uint8_t *retAddr, bool needVtable)
 {
     if (!m)
     {
@@ -104,7 +99,7 @@ nextStg:
     }
 
     frame->method = m;
-    frame->returnAddr = tc->zero.pc;
+    frame->returnAddr = retAddr;
     frame->caller = tc->zero.frame;
     frame->objectRefs = nullptr;
     tc->zero.frame = frame;
@@ -156,7 +151,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     auto cachedStackTop = tc->zero.stackPointer;
 
-    pushFrame(m, false);
+    pushFrame(m, tc->zero.pc, false);
 
 #define CURRENT_KLASS tc->zero.frame->method->klass->toInstance()
 
@@ -678,20 +673,17 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         case op_invokespecial:
         case op_invokestatic: {
             auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
-            tc->zero.pc += 3;
-            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), false);
+            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), tc->zero.pc + 3, false);
             break;
         }
         case op_invokevirtual: {
             auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
-            tc->zero.pc += 3;
-            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), true);
+            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), tc->zero.pc + 3, true);
             break;
         }
         case op_invokeinterface: {
             auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
-            tc->zero.pc += 5;
-            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), true);
+            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), tc->zero.pc + 5, true);
             break;
         }
         case op_new: {

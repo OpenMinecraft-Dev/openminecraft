@@ -13,6 +13,7 @@
 #include <istream>
 #include <stdexcept>
 #include <unordered_map>
+#include <vector>
 
 using namespace openminecraft::binary::hash;
 
@@ -118,6 +119,7 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
         return;
     }
 
+    klass->klassMutex.lock();
     logger.debug("klass fixing for {}", klass->name);
 
     auto kls = elysium->klassLoader->findClass("java/lang/Class");
@@ -132,6 +134,9 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
     auto field2 = kls->toInstance()->findField("classLoader", "Ljava/lang/ClassLoader;");
     elysium->oopManager->oopAccessPointerField(oop, field2->offset, this->klassloader);
 
+    auto field3 = kls->toInstance()->findField("<ptr>", "J");
+    *reinterpret_cast<jlong *>(elysium->oopManager->oopAccessField(oop, field3->offset)) = (jlong)klass;
+
     klass->mirror = oop;
 
     if (klass->isInstance() && !klass->toInstance()->clinitFinished)
@@ -144,9 +149,11 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
             return;
         }
 
+        klass->klassMutex.unlock();
         klass->klassMutex.lock();
         elysium->executor->callVoidFunction(m, nullptr);
     }
+    klass->klassMutex.unlock();
 }
 
 void OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
@@ -202,6 +209,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
     }
 
     auto klass = klassraw->toInstance();
+    klass->klassMutex.lock();
 
     if (clsfile->superClass)
     {
@@ -348,9 +356,16 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
         }
     }
 
-    klass->fieldCount = clsfile->fields.size();
+    std::vector<OMElysiaField> extraFields;
+    if (std::strcmp(klass->name, "java/lang/Class") == 0)
+    {
+        extraFields.push_back({klass, elysium->metaspaceHeap.allocateStr("<ptr>"),
+                               elysium->metaspaceHeap.allocateStr("J"), JVM_Acc_Private | JVM_Acc_Final});
+    }
+
+    klass->fieldCount = clsfile->fields.size() + extraFields.size();
     klass->fields = elysium->metaspaceHeap.allocateArray<OMElysiaField>(klass->fieldCount);
-    for (int i = 0; i < klass->fieldCount; i++)
+    for (int i = 0; i < clsfile->fields.size(); i++)
     {
         auto &f = klass->fields[i];
         f.name = elysium->metaspaceHeap.allocateStr(
@@ -359,6 +374,14 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
             clsfile->mapping[clsfile->fields[i]->descIndex]->to<classfile::OMClassConstantUtf8>()->data);
         f.accessFlag = clsfile->fields[i]->accessFlags;
         f.klass = klass;
+    }
+    for (int i = 0; i < extraFields.size(); i++)
+    {
+        auto &f = klass->fields[i + clsfile->fields.size()];
+        f.name = extraFields[i].name;
+        f.desc = extraFields[i].desc;
+        f.accessFlag = extraFields[i].accessFlag;
+        f.klass = extraFields[i].klass;
     }
 
     klass->initFieldOffsets();
@@ -374,5 +397,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
     }
 
     klass->clinitFinished = false;
+
+    klass->klassMutex.unlock();
 }
 } // namespace openminecraft::vm::elysia

@@ -42,12 +42,20 @@ OMElysium::OMElysium()
     registerNative(Java_java_io_FileOutputStream_initIDs);
     registerNative(Java_java_security_AccessController_doPrivileged);
     registerNative(Java_java_security_AccessController_getStackAccessControlContext);
+    registerNative(Java_java_lang_ClassLoader_registerNatives);
 
     mainThread = new std::thread([&]() {
         log::multithread::registerCurrentThreadName("main");
         thisThread.metadata->threadName = "main";
         try
         {
+            auto prim = {"char", "byte", "short", "int", "long", "float", "double", "boolean"};
+
+            for (auto &s : prim)
+            {
+                auto c = klassLoader->constructPrimitiveClass(s);
+            }
+
             auto klasses = {
                 "java/lang/Object",        "java/lang/String",    "java/lang/Class",      "java/lang/Throwable",
                 "java/lang/Thread",        "java/lang/System",    "java/lang/Byte",       "java/lang/Integer",
@@ -59,10 +67,9 @@ OMElysium::OMElysium()
                 klassLoader->loadClassWithoutMirror(s, true);
             }
             auto clsobj = klassLoader->findClass("java/lang/Object");
-            for (auto &s : {"char", "byte", "short", "int", "long", "float", "double", "boolean"})
+            for (auto &s : prim)
             {
-                auto c = klassLoader->constructPrimitiveClass(s);
-                auto carr = klassLoader->constructArrayClass(c);
+                auto carr = klassLoader->constructArrayClass(klassLoader->findClass(s));
                 carr->superClass = clsobj;
             }
             klassLoader->constructPrimitiveClass("void");

@@ -18,10 +18,42 @@ constexpr uint8_t argTypeDouble = 0x7;
 constexpr uint8_t argTypeReference = 0x8;
 constexpr uint8_t argTypeVoid = 0x9;
 
+static std::string fieldDescToType(char *name)
+{
+    using namespace openminecraft::binary::hash;
+    switch (hash_compile_time(name))
+    {
+    case "B"_hash:
+        return "byte";
+    case "C"_hash:
+        return "char";
+    case "S"_hash:
+        return "short";
+    case "I"_hash:
+        return "int";
+    case "J"_hash:
+        return "long";
+    case "F"_hash:
+        return "float";
+    case "D"_hash:
+        return "double";
+    case "Z"_hash:
+        return "boolean";
+    }
+
+    if (*name == 'L')
+    {
+        auto n = std::string(name);
+        return n.substr(1, n.length() - 2);
+    }
+
+    return std::string(name);
+}
+
 static std::string buildArray(char *s)
 {
     using namespace openminecraft::binary::hash;
-    switch (binary::hash::hash_compile_time(s))
+    switch (hash_compile_time(s))
     {
     case "byte"_hash:
         return "[B";
@@ -59,12 +91,27 @@ static bool isArray(std::string s)
 
 static std::string decompArray(std::string s)
 {
-    if (s[1] == 'L')
+    switch (s[1])
     {
+    case 'Z':
+        return "boolean";
+    case 'B':
+        return "byte";
+    case 'C':
+        return "char";
+    case 'S':
+        return "short";
+    case 'I':
+        return "int";
+    case 'F':
+        return "float";
+    case 'J':
+        return "long";
+    case 'D':
+        return "double";
+    case 'L':
         return s.substr(2, s.length() - 3);
-    }
-    else
-    {
+    default:
         return s.substr(1);
     }
 }

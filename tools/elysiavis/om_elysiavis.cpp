@@ -14,6 +14,7 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_saferead.hpp"
+#include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_heap.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
@@ -64,7 +65,8 @@ template <typename T> void printOopFieldContent(T *t)
 
 void printOopFields(OMElysium *elysium, OMElysiaOop *oop, OMElysiaInstanceKlass *klass)
 {
-    if (klass->superClass) {
+    if (klass->superClass)
+    {
         printOopFields(elysium, oop, klass->superClass->toInstance());
     }
     fmt::print(fmt::fg(hintColor), "{}", klass->name);
