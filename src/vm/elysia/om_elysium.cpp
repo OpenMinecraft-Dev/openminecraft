@@ -121,6 +121,7 @@ void OMElysium::setupThreadObject()
 
     auto thrname = tc->interface.NewStringUTF(os::threadGetName().c_str());
     tc->interface.SetObjectField(throbj, tc->interface.GetFieldID(thrcls, "name", "Ljava/lang/String;"), thrname);
+    tc->interface.SetObjectField(throbj, tc->interface.GetFieldID(thrcls, "group", "Ljava/lang/ThreadGroup;"), threadObjects.mainGroup);
 
     thisThread.metadata->threadObject = throbj;
 }

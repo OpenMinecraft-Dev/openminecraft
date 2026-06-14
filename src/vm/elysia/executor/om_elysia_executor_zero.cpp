@@ -264,6 +264,10 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_floadc(1);
             op_floadc(2);
             op_floadc(3);
+	case op_lload: {
+	    zeroStackPushW(zeroStackLoadLocalW<jlong>(tc->zero.pc[1]));
+            tc->zero.pc += 2;                                                                 break;	       
+        }
 #define op_aloadc(n)                                                                                                   \
     case op_aload_n(n):                                                                                                \
         zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(n));                                                           \
