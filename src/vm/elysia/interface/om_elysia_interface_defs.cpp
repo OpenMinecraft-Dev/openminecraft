@@ -15,7 +15,8 @@
 
 namespace openminecraft::vm::elysia
 {
-static OMElysiaNativeHandle *interfaceCallObjectMethodA(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+static OMElysiaNativeHandle *interfaceCallObjectMethodA(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj,
+                                                        OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
 {
     OMElysiaNativeHandle *hnd;
     execWithState(InsideVM, [&]() {
@@ -35,6 +36,7 @@ void initBaseInterface(OMElysiaJNIEnv env)
 {
     env.internal->GetVersion = [](OMElysiaJNIEnv *) { return JNI_VERSION_1_8; };
 
+    // TODO: use current klass loader
     env.internal->FindClass = [](OMElysiaJNIEnv *env, const char *name) {
         OMElysiaKlass *klass;
         execWithState(InsideVM,
@@ -88,11 +90,23 @@ void initBaseInterface(OMElysiaJNIEnv env)
         });
         return hnd;
     };
+    env.internal->GetLongField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID) {
+        auto elys = env->internal->elysium;
+        jlong val;
+        execWithState(InsideVM, [&]() {
+            val = *reinterpret_cast<jlong *>(elys->oopManager->oopAccessField(obj->object, fieldID->offset));
+        });
+        return val;
+    };
     env.internal->SetObjectField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID,
                                       OMElysiaNativeHandle *val) {
         execWithState(InsideVM, [&]() {
             env->internal->elysium->oopManager->oopAccessPointerField(obj->object, fieldID->offset, val->object);
         });
+    };
+    env.internal->SetIntField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID, jint val) {
+        auto ptr = env->internal->elysium->oopManager->oopAccessField(obj->object, fieldID->offset);
+        *reinterpret_cast<jint *>(ptr) = val;
     };
     env.internal->SetLongField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID, jlong val) {
         auto ptr = env->internal->elysium->oopManager->oopAccessField(obj->object, fieldID->offset);

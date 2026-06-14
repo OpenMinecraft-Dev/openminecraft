@@ -20,3 +20,4 @@ massif*
 *.bin
 *.data
 *.jar
+vmstd

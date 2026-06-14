@@ -9,7 +9,9 @@
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <cstdarg>
 #include <cstdint>
+#include <mutex>
 #include <type_traits>
+#include <unordered_map>
 namespace openminecraft::vm::elysia::executor
 {
 uintptr_t zeroStackAlloc(uint64_t len);
@@ -123,24 +125,24 @@ class OMElysiaExecutorZero
     OMElysiaExecutorZero(OMElysium *elysium);
     ~OMElysiaExecutorZero();
 
-/*#define DEF_FUNCCALL(retType, name)                                                                                    \
-    retType call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *args);
+    /*#define DEF_FUNCCALL(retType, name) \ retType call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue
+       *args);
 
-    DEF_FUNCCALL(void, Void);
-    DEF_FUNCCALL(jbyte, Byte);
-    DEF_FUNCCALL(jboolean, Boolean);
-    DEF_FUNCCALL(jchar, Char);
-    DEF_FUNCCALL(jshort, Short);
-    DEF_FUNCCALL(jint, Int);
-    DEF_FUNCCALL(jfloat, Float);
-    DEF_FUNCCALL(jlong, Long);
-    DEF_FUNCCALL(jdouble, Double);
-    DEF_FUNCCALL(OMElysiaOop *, Object);*/
+        DEF_FUNCCALL(void, Void);
+        DEF_FUNCCALL(jbyte, Byte);
+        DEF_FUNCCALL(jboolean, Boolean);
+        DEF_FUNCCALL(jchar, Char);
+        DEF_FUNCCALL(jshort, Short);
+        DEF_FUNCCALL(jint, Int);
+        DEF_FUNCCALL(jfloat, Float);
+        DEF_FUNCCALL(jlong, Long);
+        DEF_FUNCCALL(jdouble, Double);
+        DEF_FUNCCALL(OMElysiaOop *, Object);*/
 
     void callVoidFunction(OMElysiaMethod *m, const OMElysiaNativeValue *args);
 
-    #define IMPL_FUNCCALL(retType, name, fetchFunc)                                                                        \
-    retType call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *args)             \
+#define IMPL_FUNCCALL(retType, name, fetchFunc)                                                                        \
+    retType call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *args)                                   \
     {                                                                                                                  \
         callVoidFunction(m, args);                                                                                     \
         return fetchFunc<retType>();                                                                                   \
@@ -165,6 +167,9 @@ class OMElysiaExecutorZero
     void popFrame();
 
     void threadInit();
+
+    std::mutex objectMonitorsMutex;
+    std::unordered_map<OMElysiaOop *, std::shared_ptr<std::mutex>> objectMonitors;
 
   private:
     OMElysium *elysium;

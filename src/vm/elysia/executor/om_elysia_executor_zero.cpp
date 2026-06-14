@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <mutex>
 #include <stdexcept>
 
 using namespace openminecraft::binary::hash;
@@ -264,9 +265,10 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_floadc(1);
             op_floadc(2);
             op_floadc(3);
-	case op_lload: {
-	    zeroStackPushW(zeroStackLoadLocalW<jlong>(tc->zero.pc[1]));
-            tc->zero.pc += 2;                                                                 break;	       
+        case op_lload: {
+            zeroStackPushW(zeroStackLoadLocalW<jlong>(tc->zero.pc[1]));
+            tc->zero.pc += 2;
+            break;
         }
 #define op_aloadc(n)                                                                                                   \
     case op_aload_n(n):                                                                                                \
@@ -366,6 +368,17 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto value1 = zeroStackPopGet<OMElysiaOop *>();
             auto value2 = zeroStackPopGet<OMElysiaOop *>();
 
+            zeroStackPush(value1);
+            zeroStackPush(value2);
+            zeroStackPush(value1);
+            ++tc->zero.pc;
+            break;
+        }
+        case op_dup2: {
+            auto value1 = zeroStackPopGet<OMElysiaOop *>();
+            auto value2 = zeroStackPopGet<OMElysiaOop *>();
+
+            zeroStackPush(value2);
             zeroStackPush(value1);
             zeroStackPush(value2);
             zeroStackPush(value1);
@@ -610,6 +623,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackPush(pp);
             break;
         }
+        case op_lreturn: {
+            auto pp = zeroStackPopWGet<jlong>();
+            popFrame();
+            zeroStackPushW(pp);
+            break;
+        }
         case op_freturn: {
             auto pp = zeroStackPopGet<jfloat>();
             popFrame();
@@ -793,11 +812,23 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             }
             break;
         }
-        case op_monitorexit:
-        case op_monitorenter: {
-            zeroStackPopGet<OMElysiaOop *>();
+        case op_monitorexit: {
+            std::lock_guard guard(objectMonitorsMutex);
+            auto obj = zeroStackPopGet<OMElysiaOop *>();
+            objectMonitors[obj]->unlock();
+            objectMonitors.erase(obj);
             ++tc->zero.pc;
-            logger.warn("object monitoring not actually implemented!");
+            break;
+        }
+        case op_monitorenter: {
+            std::lock_guard guard(objectMonitorsMutex);
+            auto obj = zeroStackPopGet<OMElysiaOop *>();
+            if (!objectMonitors.count(obj))
+            {
+                objectMonitors[obj] = std::make_shared<std::mutex>();
+            }
+            objectMonitors[obj]->lock();
+            ++tc->zero.pc;
             break;
         }
         default:

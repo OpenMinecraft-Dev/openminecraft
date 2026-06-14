@@ -2,6 +2,10 @@
 #include <cstring>
 #include <pthread.h>
 
+#ifdef OM_PLATFORM_ANDROID
+#include <sys/prctl.h>
+#endif
+
 namespace openminecraft::vm::os
 {
 void threadSetName(std::string name)
@@ -17,7 +21,7 @@ std::string threadGetName()
     char name[64];
     std::memset(name, 0x00, 64);
 #if defined(OM_PLATFORM_ANDROID)
-    // not implemented
+    prctl(PR_GET_NAME, name);
 #else
     pthread_getname_np(pthread_self(), name, 64);
 #endif

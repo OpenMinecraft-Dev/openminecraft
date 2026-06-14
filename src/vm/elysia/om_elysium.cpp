@@ -41,12 +41,11 @@ OMElysium::OMElysium()
     registerNative(Java_sun_reflect_Reflection_getCallerClass);
     registerNative(Java_java_io_FileOutputStream_initIDs);
     registerNative(Java_java_security_AccessController_doPrivileged);
-    registerNative(Java_java_lang_Thread_currentThread);
     registerNative(Java_java_security_AccessController_getStackAccessControlContext);
 
     mainThread = new std::thread([&]() {
-        os::threadSetName("main");
         log::multithread::registerCurrentThreadName("main");
+        thisThread.metadata->threadName = "main";
         try
         {
             auto klasses = {
@@ -115,15 +114,20 @@ void OMElysium::setupThreadObject()
         threadObjects.mainGroup = obj;
     }
 
-    auto thrcls = tc->interface.FindClass("java/lang/Thread");
-    auto throbj = tc->interface.AllocObject(thrcls);
-    auto fid = tc->interface.GetFieldID(thrcls, "eetop", "J");
-    tc->interface.SetLongField(throbj, fid, static_cast<jlong>(reinterpret_cast<uintptr_t>(thisThread.metadata)));
+    if (!thisThread.metadata->threadObject)
+    {
+        auto thrcls = tc->interface.FindClass("java/lang/Thread");
+        auto throbj = tc->interface.AllocObject(thrcls);
+        tc->interface.SetLongField(throbj, tc->interface.GetFieldID(thrcls, "eetop", "J"),
+                                   static_cast<jlong>(reinterpret_cast<uintptr_t>(thisThread.metadata)));
+        tc->interface.SetIntField(throbj, tc->interface.GetFieldID(thrcls, "priority", "I"), 5);
+        tc->interface.SetObjectField(throbj, tc->interface.GetFieldID(thrcls, "name", "Ljava/lang/String;"),
+                                     tc->interface.NewStringUTF(thisThread.metadata->threadName.c_str()));
+        tc->interface.SetObjectField(throbj, tc->interface.GetFieldID(thrcls, "group", "Ljava/lang/ThreadGroup;"),
+                                     threadObjects.mainGroup);
+        tc->interface.SetIntField(throbj, tc->interface.GetFieldID(thrcls, "threadStatus", "I"), 1); // thread runnable
 
-    auto thrname = tc->interface.NewStringUTF(os::threadGetName().c_str());
-    tc->interface.SetObjectField(throbj, tc->interface.GetFieldID(thrcls, "name", "Ljava/lang/String;"), thrname);
-    tc->interface.SetObjectField(throbj, tc->interface.GetFieldID(thrcls, "group", "Ljava/lang/ThreadGroup;"), threadObjects.mainGroup);
-
-    thisThread.metadata->threadObject = throbj;
+        thisThread.metadata->threadObject = throbj;
+    }
 }
 } // namespace openminecraft::vm::elysia

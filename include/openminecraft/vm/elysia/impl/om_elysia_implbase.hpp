@@ -16,7 +16,6 @@ extern "C"
     void Java_java_lang_Object_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass);
     void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass);
     void Java_java_lang_Thread_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass);
-    OMElysiaNativeHandle *Java_java_lang_Thread_currentThread(OMElysiaJNIEnv *env, OMElysiaKlass *klass);
 
     jint Java_java_lang_Float_floatToRawIntBits(OMElysiaJNIEnv *env, OMElysiaKlass *klass, jfloat f);
     jlong Java_java_lang_Double_doubleToRawLongBits(OMElysiaJNIEnv *env, OMElysiaKlass *klass, jdouble d);
@@ -32,7 +31,8 @@ extern "C"
 
     OMElysiaNativeHandle *Java_java_security_AccessController_doPrivileged(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
                                                                            OMElysiaNativeHandle *action);
-    OMElysiaNativeHandle *Java_java_security_AccessController_getStackAccessControlContext(OMElysiaJNIEnv *env, OMElysiaKlass *klass);
+    OMElysiaNativeHandle *Java_java_security_AccessController_getStackAccessControlContext(OMElysiaJNIEnv *env,
+                                                                                           OMElysiaKlass *klass);
 }
 }; // namespace openminecraft::vm::elysia::impl
 
