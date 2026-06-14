@@ -7,6 +7,7 @@
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include "openminecraft/vm/encoding/om_encoding_utf.hpp"
 #include <cstring>
+#include <iostream>
 
 using namespace openminecraft::binary::hash;
 

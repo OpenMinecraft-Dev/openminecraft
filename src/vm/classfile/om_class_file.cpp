@@ -974,10 +974,7 @@ std::string OMClassFileParser::toStdUtf8(std::vector<uint8_t> data, int length)
         if (data[p] >> 5 == 0b110 && data[p + 1] >> 6 == 0b10)
         {
             auto d = ((data[p] & 0x1f) << 6) + (data[p + 1] & 0x3f);
-            if (d != 0)
-            {
-                target.push_back(d);
-            }
+            target.push_back(d);
             p += 2;
             continue;
         }
