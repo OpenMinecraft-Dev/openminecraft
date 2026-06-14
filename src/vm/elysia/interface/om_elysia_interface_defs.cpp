@@ -61,6 +61,10 @@ void initBaseInterface(OMElysiaJNIEnv env)
         return obj;
     };
 
+    env.internal->GetObjectClass = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) {
+        return env->internal->elysium->oopManager->oopGetKlass(hnd->object);
+    };
+
     env.internal->GetMethodID = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const char *name, const char *sig) {
         return clazz->findMethod(name, sig);
     };

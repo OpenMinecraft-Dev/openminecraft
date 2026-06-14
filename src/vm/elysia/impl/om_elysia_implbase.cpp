@@ -58,7 +58,8 @@ OMElysiaNativeHandle *Java_java_security_AccessController_doPrivileged(OMElysiaJ
     return env->CallObjectMethodA(action, mthd, nullptr);
 }
 
-OMElysiaNativeHandle *Java_java_security_AccessController_getStackAccessControlContext(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
+OMElysiaNativeHandle *Java_java_security_AccessController_getStackAccessControlContext(OMElysiaJNIEnv *env,
+                                                                                       OMElysiaKlass *klass)
 {
     return nullptr;
 }
