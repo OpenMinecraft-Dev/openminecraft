@@ -128,15 +128,18 @@ void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id)
     OMElysiaKlass *kk;
     execWithState(InsideVM, [&]() { kk = klassloader->fetchOrLoadClass(clsname); });
 
-    for (int i = 0; i < kk->toInstance()->fieldCount; i++)
-    {
-        if (std::strcmp(kk->toInstance()->fields[i].name, mdname.c_str()) == 0 &&
-            std::strcmp(kk->toInstance()->fields[i].desc, mddesc.c_str()) == 0)
+    while (kk) {
+        for (int i = 0; i < kk->toInstance()->fieldCount; i++)
         {
-            constantPool[id] = &kk->toInstance()->fields[i];
-            constantPoolState[id] = true;
-            return &kk->toInstance()->fields[i];
+            if (std::strcmp(kk->toInstance()->fields[i].name, mdname.c_str()) == 0 &&
+                std::strcmp(kk->toInstance()->fields[i].desc, mddesc.c_str()) == 0)
+            {
+                constantPool[id] = &kk->toInstance()->fields[i];
+                constantPoolState[id] = true;
+                return &kk->toInstance()->fields[i];
+            }
         }
+        kk = kk->superClass;
     }
 
     return nullptr;
