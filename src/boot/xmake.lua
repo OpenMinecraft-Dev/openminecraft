@@ -11,7 +11,7 @@ add_packages(
 	"glm",
 	"harfbuzz",
 	"tinyobjloader",
-	"bullet3",
+	"joltphysics",
 	"zlib"
 )
 add_deps(

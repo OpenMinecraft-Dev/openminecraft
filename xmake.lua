@@ -93,9 +93,9 @@ add_requires(
 	"libsdl3",
 	"tinyobjloader",
 	"opengl-headers",
-	"bullet3",
 	"zlib",
 	"libffi",
+	"joltphysics",
 	{ system = false }
 )
 add_requires("boost", { system = false, configs = { stacktrace = true, asio = true } })
@@ -155,7 +155,7 @@ add_packages(
 	"harfbuzz",
 	"vulkan-headers",
 	"glm",
-	"bullet3",
+	"joltphysics",
 	"vulkan-hpp",
 	"shaderc",
 	"fmt",
