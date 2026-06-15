@@ -16,7 +16,7 @@ set_policy("build.optimization.lto", false)
 -- utils and custom libraries
 includes("utils.lua")
 includes("extlibs/vulkan.lua")
-includes("extlibs/harfbuzz.lua")
+-- includes("extlibs/harfbuzz.lua")
 includes("extlibs/sdl_port.lua")
 
 --------------------------------------------------------------------------------
