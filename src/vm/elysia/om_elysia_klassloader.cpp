@@ -119,7 +119,6 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
         return;
     }
 
-    klass->klassMutex.lock();
     logger.debug("klass fixing for {}", klass->name);
 
     auto kls = elysium->klassLoader->findClass("java/lang/Class");
@@ -149,11 +148,9 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
             return;
         }
 
-        klass->klassMutex.unlock();
         klass->klassMutex.lock();
         elysium->executor->callVoidFunction(m, nullptr);
     }
-    klass->klassMutex.unlock();
 }
 
 void OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
