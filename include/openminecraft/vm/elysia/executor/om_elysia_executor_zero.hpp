@@ -83,6 +83,7 @@ void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysiu
 void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
 uint16_t zeroCodeFetchArgu16p0();
 int16_t zeroCodeFetchArgs16p0();
+int32_t zeroCodeFetchArgs32Align(int offset);
 
 template <typename T> static void zeroStackSaveLocalPop(uint32_t l)
 {

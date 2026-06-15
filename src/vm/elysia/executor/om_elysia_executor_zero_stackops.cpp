@@ -30,6 +30,15 @@ int16_t zeroCodeFetchArgs16p0()
     return static_cast<int16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
 }
 
+int32_t zeroCodeFetchArgs32Align(int offset) {
+    auto tc = thisThread.metadata;
+    auto pp = tc->zero.pc + 1;
+    while (reinterpret_cast<uintptr_t>(pp) % 4) {
+        ++pp;
+    }
+    return static_cast<int32_t>(pp[offset * 4] << 24) | static_cast<int32_t>(pp[offset * 4 + 1] << 16) | static_cast<int32_t>(pp[offset * 4 + 2] << 8) | pp[offset * 4 + 3];
+}
+
 void zeroStackPushFromStatic(OMElysiaField *field, OMElysium *world)
 {
     switch (*field->desc)

@@ -618,6 +618,14 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             tc->zero.pc += zeroCodeFetchArgs16p0();
             break;
         }
+        case op_lookupswitch: {
+	    logger.warn("{}", zeroCodeFetchArgs32Align(0));
+	    logger.warn("{}", zeroCodeFetchArgs32Align(1));
+	    for (int i = 0; i < zeroCodeFetchArgs32Align(1); i++) {
+	        logger.warn("{} -> {}", zeroCodeFetchArgs32Align(2 + i * 2), zeroCodeFetchArgs32Align(2 + i * 2 + 1));
+	    }
+            goto unk;
+        }
         case op_return: {
             popFrame();
             break;
