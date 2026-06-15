@@ -1,6 +1,7 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/vm/atomic/om_atomic.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_field.hpp"
@@ -62,7 +63,7 @@ void initBaseInterface(OMElysiaJNIEnv env)
     };
 
     env.internal->GetObjectClass = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) {
-        return env->internal->elysium->oopManager->oopGetKlass(hnd->object);
+        return env->internal->elysium->oopManager->oopGetKlass(handleFetch(hnd));
     };
 
     env.internal->GetMethodID = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const char *name, const char *sig) {
@@ -90,7 +91,8 @@ void initBaseInterface(OMElysiaJNIEnv env)
         auto elys = env->internal->elysium;
         OMElysiaNativeHandle *hnd;
         execWithState(InsideVM, [&]() {
-            hnd = elys->executor->recordLocalRef(elys->oopManager->oopAccessPointerField(obj->object, fieldID->offset));
+            hnd = elys->executor->recordLocalRef(
+                elys->oopManager->oopAccessPointerField(handleFetch(obj), fieldID->offset));
         });
         return hnd;
     };
@@ -98,22 +100,23 @@ void initBaseInterface(OMElysiaJNIEnv env)
         auto elys = env->internal->elysium;
         jlong val;
         execWithState(InsideVM, [&]() {
-            val = *reinterpret_cast<jlong *>(elys->oopManager->oopAccessField(obj->object, fieldID->offset));
+            val = *reinterpret_cast<jlong *>(elys->oopManager->oopAccessField(handleFetch(obj), fieldID->offset));
         });
         return val;
     };
     env.internal->SetObjectField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID,
                                       OMElysiaNativeHandle *val) {
         execWithState(InsideVM, [&]() {
-            env->internal->elysium->oopManager->oopAccessPointerField(obj->object, fieldID->offset, val->object);
+            env->internal->elysium->oopManager->oopAccessPointerField(handleFetch(obj), fieldID->offset,
+                                                                      handleFetch(val));
         });
     };
     env.internal->SetIntField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID, jint val) {
-        auto ptr = env->internal->elysium->oopManager->oopAccessField(obj->object, fieldID->offset);
+        auto ptr = env->internal->elysium->oopManager->oopAccessField(handleFetch(obj), fieldID->offset);
         *reinterpret_cast<jint *>(ptr) = val;
     };
     env.internal->SetLongField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID, jlong val) {
-        auto ptr = env->internal->elysium->oopManager->oopAccessField(obj->object, fieldID->offset);
+        auto ptr = env->internal->elysium->oopManager->oopAccessField(handleFetch(obj), fieldID->offset);
         *reinterpret_cast<jlong *>(ptr) = val;
     };
 
@@ -139,7 +142,7 @@ void initBaseInterface(OMElysiaJNIEnv env)
 
         char *result;
         execWithState(InsideVM, [&]() {
-            auto len = env->internal->elysium->oopManager->arrLength(arrdata->object);
+            auto len = env->internal->elysium->oopManager->arrLength(handleFetch(arrdata));
             auto s = encoding::utf16ToUtf8New(data, len);
             result = reinterpret_cast<char *>(mem::allocator::tracedMallocElysia(s.size() + 1));
             std::memcpy(result, s.c_str(), s.size());
@@ -163,12 +166,13 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->GetCharArrayElements = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jboolean *isCopy) {
         jchar *result;
         execWithState(InsideVM, [&]() {
-            result = env->internal->elysium->oopManager->arrAccess<jchar>(array->object);
+            result = env->internal->elysium->oopManager->arrAccess<jchar>(handleFetch(array));
             if (isCopy)
             {
                 *isCopy = false;
             }
-            array->object->markword |= markFixed;
+            atomic::atomic_store(&handleFetch(array)->markword,
+                                 atomic::atomic_load(&handleFetch(array)->markword) | markFixed);
         });
         return result;
     };

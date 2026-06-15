@@ -16,8 +16,8 @@ extern "C"
                                          jint srcPos, OMElysiaNativeHandle *dst, jint dstPos, jint length)
     {
         auto kk = env->GetObjectClass(src)->toArray()->itemLength;
-        auto srcraw = env->internal->elysium->oopManager->arrAccess<uint8_t>(src->object);
-        auto dstraw = env->internal->elysium->oopManager->arrAccess<uint8_t>(dst->object);
+        auto srcraw = env->internal->elysium->oopManager->arrAccess<uint8_t>(handleFetch(src));
+        auto dstraw = env->internal->elysium->oopManager->arrAccess<uint8_t>(handleFetch(dst));
         std::memmove(&dstraw[kk * dstPos], &srcraw[kk * srcPos], kk * length);
     }
 

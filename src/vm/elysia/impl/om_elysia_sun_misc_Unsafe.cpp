@@ -1,6 +1,8 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
+#include "openminecraft/vm/atomic/om_atomic.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
+#include <atomic>
 
 namespace openminecraft::vm::elysia::impl
 {
@@ -53,6 +55,25 @@ extern "C"
         return sizeof(void *);
     }
 
+    static jboolean Java_sun_misc_Unsafe_compareAndSwapObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd,
+                                                              OMElysiaNativeHandle *o, jlong offset,
+                                                              OMElysiaNativeHandle *expected, OMElysiaNativeHandle *x)
+    {
+        if (env->internal->elysium->mainHeap.enablePtrCompress())
+        {
+            auto target = env->internal->elysium->oopManager->oopAccessField(handleFetch(o), offset);
+            auto exp = env->internal->elysium->mainHeap.compress(handleFetch(expected));
+            return atomic::atomic_cas(reinterpret_cast<uint32_t *>(target), exp,
+                                      env->internal->elysium->mainHeap.compress(handleFetch(x)));
+        }
+        else
+        {
+            auto target = env->internal->elysium->oopManager->oopAccessField(handleFetch(o), offset);
+            auto exp = handleFetch(expected);
+            return atomic::atomic_cas(reinterpret_cast<OMElysiaOop **>(target), exp, handleFetch(x));
+        }
+    }
+
     void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         OMElysiaNativeMethod mm[] = {{const_cast<char *>("arrayBaseOffset"), const_cast<char *>("(Ljava/lang/Class;)I"),
@@ -60,8 +81,11 @@ extern "C"
                                      {const_cast<char *>("arrayIndexScale"), const_cast<char *>("(Ljava/lang/Class;)I"),
                                       reinterpret_cast<void *>(Java_sun_misc_Unsafe_arrayIndexScale)},
                                      {const_cast<char *>("addressSize"), const_cast<char *>("()I"),
-                                      reinterpret_cast<void *>(Java_sun_misc_Unsafe_addressSize)}};
-        env->RegisterNatives(klass, mm, 3);
+                                      reinterpret_cast<void *>(Java_sun_misc_Unsafe_addressSize)},
+                                     {const_cast<char *>("compareAndSwapObject"),
+                                      const_cast<char *>("(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"),
+                                      reinterpret_cast<void *>(Java_sun_misc_Unsafe_compareAndSwapObject)}};
+        env->RegisterNatives(klass, mm, 4);
     }
 }
 } // namespace openminecraft::vm::elysia::impl

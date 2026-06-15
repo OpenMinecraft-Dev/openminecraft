@@ -31,6 +31,11 @@ struct OMElysiaNativeHandle
     OMElysiaNativeHandle *next;
 };
 
+static OMElysiaOop *handleFetch(OMElysiaNativeHandle *hnd)
+{
+    return hnd ? hnd->object : nullptr;
+}
+
 struct OMElysiaNativeMethod
 {
     char *name;

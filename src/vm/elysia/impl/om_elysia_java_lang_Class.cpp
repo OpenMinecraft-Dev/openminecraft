@@ -4,7 +4,6 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
-#include <iostream>
 #include <stdexcept>
 
 namespace openminecraft::vm::elysia::impl
@@ -39,7 +38,7 @@ extern "C"
         auto kld = klass->klassloader;
         while (kld)
         {
-            if (kld->klassloader == (klassloader ? klassloader->object : nullptr))
+            if (kld->klassloader == handleFetch(klassloader))
             {
                 auto nn = env->GetStringUTFChars(name, nullptr);
                 auto kls = kld->fetchOrLoadClass(std::string(nn));

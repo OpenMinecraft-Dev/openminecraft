@@ -6,7 +6,7 @@ extern "C"
 {
     static jint Java_java_lang_Object_hashCode(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
     {
-        return static_cast<jint>(reinterpret_cast<uintptr_t>(hnd->object));
+        return static_cast<jint>(reinterpret_cast<uintptr_t>(handleFetch(hnd)));
     }
 
     void Java_java_lang_Object_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
