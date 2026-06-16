@@ -10,6 +10,7 @@
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <cstring>
 #include <fstream>
+#include <iostream>
 #include <istream>
 #include <stdexcept>
 #include <unordered_map>

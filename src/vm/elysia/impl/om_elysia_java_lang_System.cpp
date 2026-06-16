@@ -9,6 +9,13 @@ extern "C"
     OMElysiaNativeHandle *Java_java_lang_System_initProperties(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
                                                                OMElysiaNativeHandle *properties)
     {
+        auto kk = env->FindClass("java/util/Hashtable");
+        auto kkm = env->GetMethodID(kk, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+
+        OMElysiaNativeValue args[2];
+        args[0].l = env->NewStringUTF("file.encoding");
+        args[1].l = env->NewStringUTF("UTF_8");
+        env->CallObjectMethodA(properties, kkm, args);
         return properties;
     }
 

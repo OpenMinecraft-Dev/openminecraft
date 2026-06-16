@@ -4,7 +4,11 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include <atomic>
+#include <chrono>
+#include <cstdint>
+#include <iostream>
 #include <stdexcept>
+#include <thread>
 
 namespace openminecraft::vm::elysia::impl
 {
@@ -91,21 +95,40 @@ extern "C"
         return env->internal->elysium->oopManager->oopHeaderLength() + ff->offset;
     }
 
+    static jint Java_sun_misc_Unsafe_getIntVolatile(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
+                                                    OMElysiaNativeHandle *obj, jlong n)
+    {
+        return *reinterpret_cast<volatile jint *>(
+            env->internal->elysium->oopManager->oopAccessField(handleFetch(obj), n));
+    }
+
+    static bool Java_sun_misc_Unsafe_compareAndSwapInt(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
+                                                       OMElysiaNativeHandle *o, jlong offset, jint expected, jint x)
+    {
+        return atomic::atomic_cas(
+            reinterpret_cast<jint *>(env->internal->elysium->oopManager->oopAccessField(handleFetch(o), offset)),
+            expected, x);
+    }
+
     void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
-        OMElysiaNativeMethod mm[] = {{const_cast<char *>("arrayBaseOffset"), const_cast<char *>("(Ljava/lang/Class;)I"),
-                                      reinterpret_cast<void *>(Java_sun_misc_Unsafe_arrayBaseOffset)},
-                                     {const_cast<char *>("arrayIndexScale"), const_cast<char *>("(Ljava/lang/Class;)I"),
-                                      reinterpret_cast<void *>(Java_sun_misc_Unsafe_arrayIndexScale)},
-                                     {const_cast<char *>("addressSize"), const_cast<char *>("()I"),
-                                      reinterpret_cast<void *>(Java_sun_misc_Unsafe_addressSize)},
-                                     {const_cast<char *>("compareAndSwapObject"),
-                                      const_cast<char *>("(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"),
-                                      reinterpret_cast<void *>(Java_sun_misc_Unsafe_compareAndSwapObject)},
-                                     {const_cast<char *>("objectFieldOffset"),
-                                      const_cast<char *>("(Ljava/lang/reflect/Field;)J"),
-                                      reinterpret_cast<void *>(Java_sun_misc_Unsafe_objectFieldOffset)}};
-        env->RegisterNatives(klass, mm, 5);
+        OMElysiaNativeMethod mm[] = {
+            {const_cast<char *>("arrayBaseOffset"), const_cast<char *>("(Ljava/lang/Class;)I"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_arrayBaseOffset)},
+            {const_cast<char *>("arrayIndexScale"), const_cast<char *>("(Ljava/lang/Class;)I"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_arrayIndexScale)},
+            {const_cast<char *>("addressSize"), const_cast<char *>("()I"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_addressSize)},
+            {const_cast<char *>("compareAndSwapObject"),
+             const_cast<char *>("(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_compareAndSwapObject)},
+            {const_cast<char *>("objectFieldOffset"), const_cast<char *>("(Ljava/lang/reflect/Field;)J"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_objectFieldOffset)},
+            {const_cast<char *>("getIntVolatile"), const_cast<char *>("(Ljava/lang/Object;J)I"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_getIntVolatile)},
+            {const_cast<char *>("compareAndSwapInt"), const_cast<char *>("(Ljava/lang/Object;JII)Z"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_compareAndSwapInt)}};
+        env->RegisterNatives(klass, mm, 7);
     }
 }
 } // namespace openminecraft::vm::elysia::impl
