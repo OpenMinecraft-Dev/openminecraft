@@ -32,14 +32,15 @@ jdouble Java_java_lang_Double_longBitsToDouble(OMElysiaJNIEnv *env, OMElysiaKlas
     return *reinterpret_cast<jdouble *>(&l);
 }
 
+// TODO: make this portable for future executors
 OMElysiaNativeHandle *Java_sun_reflect_Reflection_getCallerClass(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
+    if (!thisThread.metadata->zero.frame->caller)
+    {
+        return nullptr;
+    }
     auto internal = thisThread.metadata->zero.frame->caller->method->klass->mirror;
-    auto ff =
-        reinterpret_cast<OMElysiaNativeHandle *>(mem::allocator::tracedMallocElysia(sizeof(OMElysiaNativeHandle)));
-    ff->next = ff;
-    ff->object = internal;
-    return ff;
+    return createTempHandle(internal);
 }
 
 void Java_java_io_FileInputStream_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)

@@ -4,6 +4,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
+#include <iostream>
 #include <stdexcept>
 
 namespace openminecraft::vm::elysia::impl
@@ -16,16 +17,11 @@ extern "C"
         auto nn = env->GetStringUTFChars(name, nullptr);
         auto k2 = env->FindClass(nn);
         env->ReleaseStringUTFChars(name, nn);
-        auto ff =
-            reinterpret_cast<OMElysiaNativeHandle *>(mem::allocator::tracedMallocElysia(sizeof(OMElysiaNativeHandle)));
-        ff->next = ff;
-        ff->object = k2->mirror;
-        return ff;
+        return createTempHandle(k2->mirror);
     }
 
-    // TODO: check class stat
     jboolean Java_java_lang_Class_desiredAssertionStatus0(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
-                                                          OMElysiaNativeHandle *)
+                                                          OMElysiaNativeHandle *klasshnd)
     {
         return true;
     }
@@ -43,11 +39,7 @@ extern "C"
                 auto nn = env->GetStringUTFChars(name, nullptr);
                 auto kls = kld->fetchOrLoadClass(std::string(nn));
                 env->ReleaseStringUTFChars(name, nn);
-                auto ff = reinterpret_cast<OMElysiaNativeHandle *>(
-                    mem::allocator::tracedMallocElysia(sizeof(OMElysiaNativeHandle)));
-                ff->next = ff;
-                ff->object = kls->mirror;
-                return ff;
+                return createTempHandle(kls->mirror);
             }
             kld = kld->next.get();
         }
@@ -59,10 +51,15 @@ extern "C"
     {
         auto kls = env->FindClass("java/lang/Class");
         auto v = ((OMElysiaKlass *)(env->GetLongField(klass, env->GetFieldID(kls, "<ptr>", "J"))))->toInstance();
+        auto fldkls = env->FindClass("java/lang/reflect/Field");
         for (int i = 0; i < v->fieldCount; i++)
         {
             auto kl = fieldDescToType(v->fields[i].desc);
-            env->FindClass(kl.c_str());
+            auto kls = env->FindClass(kl.c_str());
+
+            std::cout << v->fields[i].name << ":" << kls->name << std::endl;
+
+            auto fldobj = env->AllocObject(fldkls);
         }
         throw std::logic_error("not implemented");
     }

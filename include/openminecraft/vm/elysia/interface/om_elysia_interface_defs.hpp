@@ -1,6 +1,7 @@
 #ifndef OM_ELYSIA_INTERFACE_DEFS_HPP
 #define OM_ELYSIA_INTERFACE_DEFS_HPP
 
+#include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include <stdarg.h>
 #include <utility>
@@ -34,6 +35,15 @@ struct OMElysiaNativeHandle
 static OMElysiaOop *handleFetch(OMElysiaNativeHandle *hnd)
 {
     return hnd ? hnd->object : nullptr;
+}
+
+static OMElysiaNativeHandle *createTempHandle(OMElysiaOop *oop)
+{
+    auto hnd =
+        reinterpret_cast<OMElysiaNativeHandle *>(mem::allocator::tracedMallocElysia(sizeof(OMElysiaNativeHandle)));
+    hnd->next = hnd;
+    hnd->object = oop;
+    return hnd;
 }
 
 struct OMElysiaNativeMethod
