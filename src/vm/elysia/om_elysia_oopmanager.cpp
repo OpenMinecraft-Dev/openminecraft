@@ -108,6 +108,31 @@ OMElysiaOop *OMElysiaOopManager::oopAccessPointerField(OMElysiaOop *base, uint64
     }
 }
 
+OMElysiaOop *OMElysiaOopManager::oopAccessPointerStaticField(OMElysiaKlass *kls, uint64_t offset)
+{
+    if (elysium->mainHeap.enablePtrCompress())
+    {
+        return reinterpret_cast<OMElysiaOop *>(elysium->mainHeap.decompress(
+            *reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(kls->toInstance()->staticBlock) + offset)));
+    }
+    else
+    {
+        return *reinterpret_cast<OMElysiaOop **>(reinterpret_cast<uintptr_t>(kls->toInstance()->staticBlock) + offset);
+    }
+}
+void OMElysiaOopManager::oopAccessPointerStaticField(OMElysiaKlass *kls, uint64_t offset, void *ptrToWrite)
+{
+    if (elysium->mainHeap.enablePtrCompress())
+    {
+        *reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(kls->toInstance()->staticBlock) + offset) =
+            elysium->mainHeap.compress(ptrToWrite);
+    }
+    else
+    {
+        *reinterpret_cast<void **>(reinterpret_cast<uintptr_t>(kls->toInstance()->staticBlock) + offset) = ptrToWrite;
+    }
+}
+
 uintptr_t OMElysiaOopManager::oopAccessField(OMElysiaOop *base, uint64_t offset)
 {
     return reinterpret_cast<uintptr_t>(base) + oopHeaderLength() + offset;

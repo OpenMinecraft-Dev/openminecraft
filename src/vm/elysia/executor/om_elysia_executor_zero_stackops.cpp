@@ -30,16 +30,19 @@ int16_t zeroCodeFetchArgs16p0()
     return static_cast<int16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
 }
 
-int32_t zeroCodeFetchArgs32Align(int offset) {
+int32_t zeroCodeFetchArgs32Align(int offset)
+{
     auto tc = thisThread.metadata;
     auto pp = tc->zero.pc + 1;
-    while (reinterpret_cast<uintptr_t>(pp) % 4) {
+    while (reinterpret_cast<uintptr_t>(pp) % 4)
+    {
         ++pp;
     }
-    return static_cast<int32_t>(pp[offset * 4] << 24) | static_cast<int32_t>(pp[offset * 4 + 1] << 16) | static_cast<int32_t>(pp[offset * 4 + 2] << 8) | pp[offset * 4 + 3];
+    return static_cast<int32_t>(pp[offset * 4] << 24) | static_cast<int32_t>(pp[offset * 4 + 1] << 16) |
+           static_cast<int32_t>(pp[offset * 4 + 2] << 8) | pp[offset * 4 + 3];
 }
 
-void zeroStackPushFromStatic(OMElysiaField *field, OMElysium *world)
+void zeroStackPushFromStatic(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world)
 {
     switch (*field->desc)
     {
@@ -57,16 +60,7 @@ void zeroStackPushFromStatic(OMElysiaField *field, OMElysium *world)
         accessReadS('D', jdouble, zeroStackPushW);
     case 'L':
     case '[': {
-        if (world->mainHeap.enablePtrCompress())
-        {
-            zeroStackPush(world->mainHeap.decompress(
-                *reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset)));
-        }
-        else
-        {
-            zeroStackPush(*reinterpret_cast<OMElysiaOop **>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) +
-                                                            field->offset));
-        }
+        zeroStackPush(oop->oopAccessPointerStaticField(field->klass, field->offset));
         break;
     }
     default:
@@ -76,7 +70,7 @@ void zeroStackPushFromStatic(OMElysiaField *field, OMElysium *world)
     }
 }
 
-void zeroStackPopToStatic(OMElysiaField *field, OMElysium *world)
+void zeroStackPopToStatic(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world)
 {
     switch (*field->desc)
     {
@@ -97,16 +91,7 @@ void zeroStackPopToStatic(OMElysiaField *field, OMElysium *world)
     case 'L':
     case '[': {
         auto pp = zeroStackPopGet<OMElysiaOop *>();
-        if (world->mainHeap.enablePtrCompress())
-        {
-            *reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =
-                world->mainHeap.compress(pp);
-        }
-        else
-        {
-            *reinterpret_cast<OMElysiaOop **>(reinterpret_cast<uintptr_t>(field->klass->staticBlock) + field->offset) =
-                pp;
-        }
+        oop->oopAccessPointerStaticField(field->klass, field->offset, pp);
         break;
     }
     default:
@@ -135,16 +120,7 @@ void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMEly
         accessRead('D', jdouble, zeroStackPushW);
     case 'L':
     case '[': {
-        if (world->mainHeap.enablePtrCompress())
-        {
-            zeroStackPush(world->mainHeap.decompress(
-                *reinterpret_cast<uint32_t *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset))));
-        }
-        else
-        {
-            zeroStackPush(*reinterpret_cast<OMElysiaOop **>(
-                oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)));
-        }
+        zeroStackPush(oop->oopAccessPointerField(zeroStackPopGet<OMElysiaOop *>(), field->offset));
         break;
     }
     default:
@@ -175,16 +151,7 @@ void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysiu
     case 'L':
     case '[': {
         auto pp = zeroStackPopGet<OMElysiaOop *>();
-        if (world->mainHeap.enablePtrCompress())
-        {
-            *reinterpret_cast<uint32_t *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)) =
-                world->mainHeap.compress(pp);
-        }
-        else
-        {
-            *reinterpret_cast<OMElysiaOop **>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)) =
-                pp;
-        }
+        oop->oopAccessPointerField(zeroStackPopGet<OMElysiaOop *>(), field->offset, pp);
         break;
     }
     default: {

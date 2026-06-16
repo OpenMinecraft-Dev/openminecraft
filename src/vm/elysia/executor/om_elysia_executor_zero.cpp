@@ -236,6 +236,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             tc->zero.pc += 2;
             break;
         }
+        case op_ldc_w: {
+            zeroStackPush(CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(), true));
+            tc->zero.pc += 3;
+            break;
+        }
         case op_ldc2_w: {
             zeroStackPushW(CURRENT_KLASS->constantPoolFetchNormalW(zeroCodeFetchArgu16p0()));
             tc->zero.pc += 3;
@@ -255,6 +260,19 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             tc->zero.pc += 2;
             break;
         }
+#define op_lloadc(n)                                                                                                   \
+    case op_lload_n(n):                                                                                                \
+        zeroStackPushW(zeroStackLoadLocal<jlong>(n));                                                                  \
+        ++tc->zero.pc;                                                                                                 \
+        break;
+            op_lloadc(0);
+            op_lloadc(1);
+            op_lloadc(2);
+        case op_lload: {
+            zeroStackPushW(zeroStackLoadLocalW<jlong>(tc->zero.pc[1]));
+            tc->zero.pc += 2;
+            break;
+        }
 #define op_floadc(n)                                                                                                   \
     case op_fload_n(n):                                                                                                \
         zeroStackPush(zeroStackLoadLocal<jfloat>(n));                                                                  \
@@ -264,11 +282,6 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_floadc(1);
             op_floadc(2);
             op_floadc(3);
-        case op_lload: {
-            zeroStackPushW(zeroStackLoadLocalW<jlong>(tc->zero.pc[1]));
-            tc->zero.pc += 2;
-            break;
-        }
 #define op_aloadc(n)                                                                                                   \
     case op_aload_n(n):                                                                                                \
         zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(n));                                                           \
@@ -678,7 +691,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         case op_getstatic: {
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0());
-            zeroStackPushFromStatic(reinterpret_cast<OMElysiaField *>(fld), elysium);
+            zeroStackPushFromStatic(reinterpret_cast<OMElysiaField *>(fld), elysium->oopManager.get(), elysium);
             tc->zero.pc += 3;
             break;
         }
@@ -690,7 +703,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         case op_putstatic: {
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0());
-            zeroStackPopToStatic(reinterpret_cast<OMElysiaField *>(fld), elysium);
+            zeroStackPopToStatic(reinterpret_cast<OMElysiaField *>(fld), elysium->oopManager.get(), elysium);
             tc->zero.pc += 3;
             break;
         }

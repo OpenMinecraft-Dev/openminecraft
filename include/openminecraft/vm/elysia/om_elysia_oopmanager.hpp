@@ -46,6 +46,8 @@ class OMElysiaOopManager
     OMElysiaKlass *oopGetKlass(OMElysiaOop *base);
     uintptr_t oopAccessField(OMElysiaOop *base, uint64_t offset);
     void oopAccessPointerField(OMElysiaOop *base, uint64_t offset, void *ptrToWrite);
+    OMElysiaOop *oopAccessPointerStaticField(OMElysiaKlass *kls, uint64_t offset);
+    void oopAccessPointerStaticField(OMElysiaKlass *kls, uint64_t offset, void *ptrToWrite);
     OMElysiaOop *oopAccessPointerField(OMElysiaOop *base, uint64_t offset);
 
     jint arrLength(OMElysiaOop *base);

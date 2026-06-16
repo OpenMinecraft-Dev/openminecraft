@@ -117,6 +117,13 @@ void initBaseInterface(OMElysiaJNIEnv env)
         *reinterpret_cast<jlong *>(ptr) = val;
     };
 
+    env.internal->SetStaticObjectField = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, OMElysiaField *fieldID,
+                                            OMElysiaNativeHandle *value) {
+        execWithState(InsideVM, [&]() {
+            env->internal->elysium->oopManager->oopAccessPointerStaticField(clazz, fieldID->offset, handleFetch(value));
+        });
+    };
+
     env.internal->NewStringUTF = [](OMElysiaJNIEnv *env, const char *string) {
         std::string ss(string);
         OMElysiaNativeHandle *hnd;

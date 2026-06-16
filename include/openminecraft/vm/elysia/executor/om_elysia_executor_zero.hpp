@@ -77,8 +77,8 @@ template <typename T> static T zeroStackPopWGet()
     }
 }
 
-void zeroStackPopToStatic(OMElysiaField *field, OMElysium *world);
-void zeroStackPushFromStatic(OMElysiaField *field, OMElysium *world);
+void zeroStackPopToStatic(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
+void zeroStackPushFromStatic(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
 void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
 void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
 uint16_t zeroCodeFetchArgu16p0();
