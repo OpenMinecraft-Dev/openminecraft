@@ -1,6 +1,7 @@
 #ifndef OM_ELYSIUM_HPP
 #define OM_ELYSIUM_HPP
 
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/om_elysia_heap.hpp"
 #include <memory>
@@ -46,6 +47,8 @@ class OMElysium
         OMElysiaNativeHandle *systemGroup = nullptr;
         OMElysiaNativeHandle *mainGroup = nullptr;
     } threadObjects;
+
+    std::unordered_map<binary::hash::hash_t, OMElysiaOop *> stringPool;
 
   private:
     log::OMLogger logger;

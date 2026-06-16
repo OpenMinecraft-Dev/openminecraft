@@ -1,8 +1,10 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/atomic/om_atomic.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include <atomic>
+#include <stdexcept>
 
 namespace openminecraft::vm::elysia::impl
 {
@@ -74,6 +76,21 @@ extern "C"
         }
     }
 
+    static jlong Java_sun_misc_Unsafe_objectFieldOffset(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
+                                                        OMElysiaNativeHandle *field)
+    {
+        auto fldkls = env->FindClass("java/lang/reflect/Field");
+        auto namestr = env->GetObjectField(field, env->GetFieldID(fldkls, "name", "Ljava/lang/String;"));
+        auto kls = env->GetObjectField(field, env->GetFieldID(fldkls, "clazz", "Ljava/lang/Class;"));
+        auto nnstr = env->GetStringUTFChars(namestr, nullptr);
+        auto ik =
+            (OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J"));
+        auto ff = ik->toInstance()->findField(nnstr, nullptr);
+        env->ReleaseStringUTFChars(namestr, nnstr);
+
+        return env->internal->elysium->oopManager->oopHeaderLength() + ff->offset;
+    }
+
     void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         OMElysiaNativeMethod mm[] = {{const_cast<char *>("arrayBaseOffset"), const_cast<char *>("(Ljava/lang/Class;)I"),
@@ -84,8 +101,11 @@ extern "C"
                                       reinterpret_cast<void *>(Java_sun_misc_Unsafe_addressSize)},
                                      {const_cast<char *>("compareAndSwapObject"),
                                       const_cast<char *>("(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"),
-                                      reinterpret_cast<void *>(Java_sun_misc_Unsafe_compareAndSwapObject)}};
-        env->RegisterNatives(klass, mm, 4);
+                                      reinterpret_cast<void *>(Java_sun_misc_Unsafe_compareAndSwapObject)},
+                                     {const_cast<char *>("objectFieldOffset"),
+                                      const_cast<char *>("(Ljava/lang/reflect/Field;)J"),
+                                      reinterpret_cast<void *>(Java_sun_misc_Unsafe_objectFieldOffset)}};
+        env->RegisterNatives(klass, mm, 5);
     }
 }
 } // namespace openminecraft::vm::elysia::impl

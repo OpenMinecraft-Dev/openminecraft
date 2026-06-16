@@ -619,16 +619,18 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
         case op_lookupswitch: {
-	    auto val = zeroStackPopGet<jint>();
-	    for (int i = 0; i < zeroCodeFetchArgs32Align(1); i++) {
-                if (zeroCodeFetchArgs32Align(2 + i * 2) == val) {
-		    tc->zero.pc += zeroCodeFetchArgs32Align(2 + i * 2 + 1);
-		    goto lkend;
-		}
-	    }
-	    tc->zero.pc += zeroCodeFetchArgs32Align(0);
-lkend:
-	    break;
+            auto val = zeroStackPopGet<jint>();
+            for (int i = 0; i < zeroCodeFetchArgs32Align(1); i++)
+            {
+                if (zeroCodeFetchArgs32Align(2 + i * 2) == val)
+                {
+                    tc->zero.pc += zeroCodeFetchArgs32Align(2 + i * 2 + 1);
+                    goto lkend;
+                }
+            }
+            tc->zero.pc += zeroCodeFetchArgs32Align(0);
+        lkend:
+            break;
         }
         case op_return: {
             popFrame();

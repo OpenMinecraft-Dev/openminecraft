@@ -47,6 +47,11 @@ OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass)
 
 OMElysiaOop *OMElysiaOopManager::allocateString(std::string target)
 {
+    auto hsh = hash_compile_time(target.c_str());
+    if (elysium->stringPool.count(hsh))
+    {
+        return elysium->stringPool[hsh];
+    }
     auto nativeKlassloader = elysium->klassLoader;
     auto stringKlass = nativeKlassloader->findClass("java/lang/String")->toInstance();
     auto charArrKlass = nativeKlassloader->findClass("[C")->toArray();
@@ -60,6 +65,8 @@ OMElysiaOop *OMElysiaOopManager::allocateString(std::string target)
 
     auto strWrp = oopM->allocateOop(stringKlass);
     oopM->oopAccessPointerField(strWrp, 0, arr);
+
+    elysium->stringPool[hsh] = strWrp;
 
     return strWrp;
 }

@@ -1,4 +1,5 @@
 #include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
@@ -8,6 +9,14 @@
 namespace openminecraft::vm::elysia::impl
 {
 log::OMLogger logger("Elysia Impl Layer");
+
+OMElysiaNativeHandle *Java_java_lang_String_intern(OMElysiaJNIEnv *env, OMElysiaNativeHandle *str)
+{
+    auto chr = env->GetStringUTFChars(str, nullptr);
+    env->internal->elysium->stringPool[binary::hash::hash_compile_time(chr)] = handleFetch(str);
+    env->ReleaseStringUTFChars(str, nullptr);
+    return str;
+}
 
 void Java_java_io_FileDescriptor_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {

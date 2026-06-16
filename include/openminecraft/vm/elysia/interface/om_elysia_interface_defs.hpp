@@ -32,10 +32,7 @@ struct OMElysiaNativeHandle
     OMElysiaNativeHandle *next;
 };
 
-static OMElysiaOop *handleFetch(OMElysiaNativeHandle *hnd)
-{
-    return hnd ? hnd->object : nullptr;
-}
+#define handleFetch(h) (h ? h->object : nullptr)
 
 static OMElysiaNativeHandle *createTempHandle(OMElysiaOop *oop)
 {

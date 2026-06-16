@@ -128,7 +128,8 @@ void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id)
     OMElysiaKlass *kk;
     execWithState(InsideVM, [&]() { kk = klassloader->fetchOrLoadClass(clsname); });
 
-    while (kk) {
+    while (kk)
+    {
         for (int i = 0; i < kk->toInstance()->fieldCount; i++)
         {
             if (std::strcmp(kk->toInstance()->fields[i].name, mdname.c_str()) == 0 &&
@@ -243,14 +244,14 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
 
 OMElysiaField *OMElysiaInstanceKlass::findField(const char *name, const char *desc)
 {
-    if (!name || !desc)
+    if (!name)
     {
         return nullptr;
     }
 
     for (int i = 0; i < fieldCount; i++)
     {
-        if (std::strcmp(fields[i].name, name) == 0 && std::strcmp(fields[i].desc, desc) == 0)
+        if (std::strcmp(fields[i].name, name) == 0 && (desc == nullptr || std::strcmp(fields[i].desc, desc) == 0))
         {
             return &fields[i];
         }

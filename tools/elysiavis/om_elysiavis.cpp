@@ -69,7 +69,7 @@ void printOopFields(OMElysium *elysium, OMElysiaOop *oop, OMElysiaInstanceKlass 
     {
         printOopFields(elysium, oop, klass->superClass->toInstance());
     }
-    fmt::print(fmt::fg(hintColor), "{}", klass->name);
+    fmt::print(fmt::fg(hintColor), "=> {}", klass->name);
     fmt::println("");
     for (int i = 0; i < klass->fieldCount; i++)
     {
