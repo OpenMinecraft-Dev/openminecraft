@@ -17,6 +17,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <iostream>
 #include <mutex>
 #include <stdexcept>
 
@@ -483,13 +484,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_calc(lxor, zeroStackPopWGet<jlong>, zeroStackPushW, ^);
 
         case op_iinc: {
-            ++tc->zero.pc;
-            auto slt = *tc->zero.pc;
+            auto slt = tc->zero.pc[1];
             jint data = zeroStackLoadLocal<jint>(slt);
-            ++tc->zero.pc;
-            data += *tc->zero.pc;
+            data += static_cast<int8_t>(tc->zero.pc[2]);
             zeroStackSaveLocal(slt, data);
-            ++tc->zero.pc;
+            tc->zero.pc += 3;
             break;
         }
 #define op_conv(op, target, targettype, source, sourcetype)                                                            \
@@ -603,6 +602,17 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     }
             op_dcmp(g, 1);
             op_dcmp(l, -1);
+        case op_if_acmpeq: {
+            if (zeroStackPopGet<OMElysiaOop *>() == zeroStackPopGet<OMElysiaOop *>())
+            {
+                tc->zero.pc += zeroCodeFetchArgs16p0();
+            }
+            else
+            {
+                tc->zero.pc += 3;
+            }
+            break;
+        }
         case op_if_acmpne: {
             if (zeroStackPopGet<OMElysiaOop *>() != zeroStackPopGet<OMElysiaOop *>())
             {

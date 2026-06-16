@@ -52,6 +52,12 @@ OMElysiaNativeHandle *Java_sun_reflect_Reflection_getCallerClass(OMElysiaJNIEnv 
     return createTempHandle(internal);
 }
 
+jint Java_sun_reflect_Reflection_getClassAccessFlags(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *kls)
+{
+    return ((OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")))
+        ->accessFlag;
+}
+
 void Java_java_io_FileInputStream_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
 }

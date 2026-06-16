@@ -74,6 +74,23 @@ extern "C"
         return result;
     }
 
+    jboolean Java_java_lang_Class_isPrimitive(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls)
+    {
+        return ((OMElysiaKlass *)env->GetLongField(kls,
+                                                   env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")))
+            ->isPrimitive();
+    }
+
+    jboolean Java_java_lang_Class_isAssignableFrom(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls,
+                                                   OMElysiaNativeHandle *klsother)
+    {
+        auto kk =
+            ((OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        auto kkother = ((OMElysiaKlass *)env->GetLongField(
+            klsother, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        return kkother->inherits(kk);
+    }
+
     void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         OMElysiaNativeMethod mm[] = {
@@ -85,8 +102,12 @@ extern "C"
              const_cast<char *>("(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;"),
              reinterpret_cast<void *>(Java_java_lang_Class_forName0)},
             {const_cast<char *>("getDeclaredFields0"), const_cast<char *>("(Z)[Ljava/lang/reflect/Field;"),
-             reinterpret_cast<void *>(Java_java_lang_Class_getDeclaredFields0)}};
-        env->RegisterNatives(klass, mm, 4);
+             reinterpret_cast<void *>(Java_java_lang_Class_getDeclaredFields0)},
+            {const_cast<char *>("isPrimitive"), const_cast<char *>("()Z"),
+             reinterpret_cast<void *>(Java_java_lang_Class_isPrimitive)},
+            {const_cast<char *>("isAssignableFrom"), const_cast<char *>("(Ljava/lang/Class;)Z"),
+             reinterpret_cast<void *>(Java_java_lang_Class_isAssignableFrom)}};
+        env->RegisterNatives(klass, mm, 6);
     }
 }
 } // namespace openminecraft::vm::elysia::impl
