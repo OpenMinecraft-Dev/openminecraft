@@ -3,6 +3,7 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
+#include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
@@ -175,8 +176,14 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
     std::ifstream istr(fmt::format("vmstd/out/{}.class", name), std::ios::binary);
     if (!istr.good())
     {
-        auto kls = elysium->oopManager->allocateOop(fetchOrLoadClass("java/lang/ClassNotFoundException"));
-        elysium->throwException(kls);
+        auto kls = fetchOrLoadClass("java/lang/ClassNotFoundException");
+        auto inm = kls->findMethod("<init>", "(Ljava/lang/String;)V");
+        auto oop = elysium->oopManager->allocateOop(kls);
+        OMElysiaNativeValue args[2];
+        args[0].l = elysium->executor->recordLocalRef(oop);
+        args[1].l = elysium->executor->recordLocalRef(elysium->oopManager->allocateString(name));
+        elysium->executor->callVoidFunction(inm, args);
+        elysium->throwException(oop);
         return;
     }
     loadClassWithoutMirror(&istr, special);

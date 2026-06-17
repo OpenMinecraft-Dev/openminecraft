@@ -171,6 +171,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             continue;
         }
 
+        if (tc->haveException)
+        {
+            throw std::logic_error("executor exception!");
+        }
+
         thisThread.switchState(InsideJava);
         if (!tc->zero.pc)
         {

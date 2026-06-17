@@ -29,6 +29,12 @@ void initBaseInterface(OMElysiaJNIEnv env)
         return klass;
     };
     env.internal->GetSuperclass = [](OMElysiaJNIEnv *env, OMElysiaKlass *klass) { return klass->superClass; };
+
+    env.internal->ExceptionCheck = [](OMElysiaJNIEnv *env) { return thisThread.metadata->haveException; };
+    env.internal->ExceptionOccurred = [](OMElysiaJNIEnv *env) {
+        return env->internal->elysium->executor->recordLocalRef(thisThread.metadata->currentException);
+    };
+
     env.internal->AllocObject = [](OMElysiaJNIEnv *env, OMElysiaKlass *klass) {
         OMElysiaNativeHandle *hnd;
         execWithState(InsideVM, [&]() {

@@ -44,8 +44,10 @@ extern "C"
                 auto nn = env->GetStringUTFChars(name, nullptr);
                 auto kls = kld->fetchOrLoadClass(std::string(nn));
                 env->ReleaseStringUTFChars(name, nn);
-                while (!kls)
+
+                if (env->ExceptionCheck())
                 {
+                    return nullptr;
                 }
                 return createTempHandle(kls->mirror);
             }
