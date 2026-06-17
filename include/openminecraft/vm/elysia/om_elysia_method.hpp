@@ -9,6 +9,13 @@
 namespace openminecraft::vm::elysia
 {
 class OMElysiaKlass;
+struct OMElysiaMethodExcTable
+{
+    uint8_t *begin;
+    uint8_t *end;
+    uint8_t *handler;
+    OMElysiaKlass *type;
+};
 struct OMElysiaMethod
 {
     OMElysiaKlass *klass;
@@ -20,6 +27,9 @@ struct OMElysiaMethod
 
     uint32_t codeLength;
     uint8_t *code;
+
+    uint32_t excTableLength;
+    OMElysiaMethodExcTable *excTable;
 
 #define attr(n)                                                                                                        \
     bool is##n()                                                                                                       \

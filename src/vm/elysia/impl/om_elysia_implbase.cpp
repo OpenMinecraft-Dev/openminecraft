@@ -10,6 +10,12 @@ namespace openminecraft::vm::elysia::impl
 {
 log::OMLogger logger("Elysia Impl Layer");
 
+OMElysiaNativeHandle *Java_java_lang_Throwable_fillInStackTrace(OMElysiaJNIEnv *env, OMElysiaNativeHandle *thr,
+                                                                int dummy)
+{
+    return thr;
+}
+
 OMElysiaNativeHandle *Java_java_lang_String_intern(OMElysiaJNIEnv *env, OMElysiaNativeHandle *str)
 {
     auto chr = env->GetStringUTFChars(str, nullptr);

@@ -352,6 +352,45 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
                     m.code = elysium->metaspaceHeap.allocateArray<uint8_t>(m.codeLength);
                     m.localLength = ll->maxLocals;
                     std::memcpy(m.code, ll->code->data(), ll->codeLength);
+
+                    m.excTableLength = ll->excTableLength;
+                    m.excTable = elysium->metaspaceHeap.allocateArray<OMElysiaMethodExcTable>(m.excTableLength);
+
+                    for (int i = 0; i < ll->excTableLength; i++)
+                    {
+                        m.excTable[i].begin =
+                            reinterpret_cast<uint8_t *>(reinterpret_cast<uintptr_t>(m.code) + ll->excTable[i].startPc);
+                        m.excTable[i].end =
+                            reinterpret_cast<uint8_t *>(reinterpret_cast<uintptr_t>(m.code) + ll->excTable[i].endPc);
+                        m.excTable[i].handler = reinterpret_cast<uint8_t *>(reinterpret_cast<uintptr_t>(m.code) +
+                                                                            ll->excTable[i].handlerPc);
+
+                        if (ll->excTable[i].catchType)
+                        {
+                            auto klsname = clsfile
+                                               ->mapping[clsfile
+                                                             ->mapping[ll->excTable[i].catchType]
+
+                                                             ->to<classfile::OMClassConstantClass>()
+                                                             ->nameIndex]
+                                               ->to<classfile::OMClassConstantUtf8>()
+                                               ->data;
+                            if (special)
+                            {
+                                loadClassWithoutMirror(klsname, special);
+                                m.excTable[i].type = findClass(klsname);
+                            }
+                            else
+                            {
+                                m.excTable[i].type = fetchOrLoadClass(klsname);
+                            }
+                        }
+                        else
+                        {
+                            m.excTable[i].type = nullptr;
+                        }
+                    }
+
                     break;
                 }
             }

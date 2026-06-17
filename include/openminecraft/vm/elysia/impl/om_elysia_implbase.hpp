@@ -37,6 +37,9 @@ extern "C"
                                                                            OMElysiaNativeHandle *action);
     OMElysiaNativeHandle *Java_java_security_AccessController_getStackAccessControlContext(OMElysiaJNIEnv *env,
                                                                                            OMElysiaKlass *klass);
+
+    OMElysiaNativeHandle *Java_java_lang_Throwable_fillInStackTrace(OMElysiaJNIEnv *env, OMElysiaNativeHandle *thr,
+                                                                    int dummy);
 }
 }; // namespace openminecraft::vm::elysia::impl
 
