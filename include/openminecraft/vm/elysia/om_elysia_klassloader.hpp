@@ -40,7 +40,10 @@ class OMElysiaKlassloader
 
         loadClassWithoutMirror(s);
         auto ll = findClass(s);
-        fixClassMirror(ll);
+        if (ll)
+        {
+            fixClassMirror(ll);
+        }
         return ll;
     }
 

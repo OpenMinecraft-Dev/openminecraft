@@ -44,6 +44,9 @@ extern "C"
                 auto nn = env->GetStringUTFChars(name, nullptr);
                 auto kls = kld->fetchOrLoadClass(std::string(nn));
                 env->ReleaseStringUTFChars(name, nn);
+                while (!kls)
+                {
+                }
                 return createTempHandle(kls->mirror);
             }
             kld = kld->next.get();

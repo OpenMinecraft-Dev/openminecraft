@@ -156,4 +156,10 @@ void OMElysium::setupThreadObject()
         thisThread.metadata->threadObject = throbj;
     }
 }
+
+void OMElysium::throwException(OMElysiaOop *oop)
+{
+    thisThread.metadata->currentException = oop;
+    thisThread.metadata->haveException = true;
+}
 } // namespace openminecraft::vm::elysia

@@ -175,7 +175,9 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
     std::ifstream istr(fmt::format("vmstd/out/{}.class", name), std::ios::binary);
     if (!istr.good())
     {
-        throw std::logic_error("java exception: ClassNotFoundException");
+        auto kls = elysium->oopManager->allocateOop(fetchOrLoadClass("java/lang/ClassNotFoundException"));
+        elysium->throwException(kls);
+        return;
     }
     loadClassWithoutMirror(&istr, special);
 }

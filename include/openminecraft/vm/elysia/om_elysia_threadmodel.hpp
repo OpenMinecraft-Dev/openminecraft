@@ -75,6 +75,7 @@ class OMElysiaThread
     std::string threadName = "";
 
     OMElysiaOop *currentException = nullptr;
+    bool haveException = false;
 
     std::function<void()> cleaner = []() {};
 

@@ -31,6 +31,8 @@ class OMElysium
     void setupThreadObject();
     void startThread(OMElysiaNativeHandle *thread);
 
+    void throwException(OMElysiaOop *);
+
     OMElysiaHeap metaspaceHeap;
     OMElysiaHeap mainHeap;
 
