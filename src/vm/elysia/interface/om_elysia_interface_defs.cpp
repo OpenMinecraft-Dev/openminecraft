@@ -23,8 +23,9 @@ void initBaseInterface(OMElysiaJNIEnv env)
     // TODO: use current klass loader
     env.internal->FindClass = [](OMElysiaJNIEnv *env, const char *name) {
         OMElysiaKlass *klass;
-        execWithState(InsideVM,
-                      [&]() { klass = env->internal->elysium->klassLoader->fetchOrLoadClass(std::string(name)); });
+        execWithState(InsideVM, [&]() {
+            klass = env->internal->elysium->executor->currentKlassloader()->fetchOrLoadClass(std::string(name));
+        });
         return klass;
     };
     env.internal->GetSuperclass = [](OMElysiaJNIEnv *env, OMElysiaKlass *klass) { return klass->superClass; };
@@ -162,8 +163,11 @@ void initBaseInterface(OMElysiaJNIEnv env)
                                       OMElysiaNativeHandle *init) {
         OMElysiaNativeHandle *hnd;
         execWithState(InsideVM, [&]() {
-            hnd = env->internal->elysium->executor->recordLocalRef(env->internal->elysium->oopManager->allocateArr(
-                env->internal->elysium->klassLoader->fetchOrLoadClass(buildArray(klass->name))->toArray(), len));
+            hnd = env->internal->elysium->executor->recordLocalRef(
+                env->internal->elysium->oopManager->allocateArr(env->internal->elysium->executor->currentKlassloader()
+                                                                    ->fetchOrLoadClass(buildArray(klass->name))
+                                                                    ->toArray(),
+                                                                len));
             for (int i = 0; i < len; i++)
             {
                 env->internal->elysium->oopManager->arrAccessPtr(hnd->object, i, handleFetch(init));

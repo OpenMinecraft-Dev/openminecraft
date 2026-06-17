@@ -115,42 +115,50 @@ OMElysiaKlass *OMElysiaKlassloader::findClass(std::string s)
 
 void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
 {
-    if (klass->mirror)
     {
-        return;
-    }
-
-    logger.debug("klass fixing for {}", klass->name);
-
-    auto kls = elysium->klassLoader->findClass("java/lang/Class");
-    auto oop = elysium->oopManager->allocateOop(kls);
-    auto field = kls->toInstance()->findField("name", "Ljava/lang/String;");
-
-    auto k = std::string(klass->name);
-    auto strobj = elysium->oopManager->allocateString(k);
-
-    elysium->oopManager->oopAccessPointerField(oop, field->offset, strobj);
-
-    auto field2 = kls->toInstance()->findField("classLoader", "Ljava/lang/ClassLoader;");
-    elysium->oopManager->oopAccessPointerField(oop, field2->offset, this->klassloader);
-
-    auto field3 = kls->toInstance()->findField("<ptr>", "J");
-    *reinterpret_cast<jlong *>(elysium->oopManager->oopAccessField(oop, field3->offset)) = (jlong)klass;
-
-    klass->mirror = oop;
-
-    if (klass->isInstance() && !klass->toInstance()->clinitFinished)
-    {
-        auto m = klass->findMethod("<clinit>", "()V");
-
-        if (!m)
+        if (klass->mirror)
         {
-            klass->toInstance()->clinitFinished = true;
             return;
         }
 
         klass->klassMutex.lock();
-        elysium->executor->callVoidFunction(m, nullptr);
+
+        logger.debug("klass fixing for {}", klass->name);
+
+        auto kls = elysium->klassLoader->findClass("java/lang/Class");
+        auto oop = elysium->oopManager->allocateOop(kls);
+        auto field = kls->toInstance()->findField("name", "Ljava/lang/String;");
+
+        auto k = std::string(klass->name);
+        auto strobj = elysium->oopManager->allocateString(k);
+
+        elysium->oopManager->oopAccessPointerField(oop, field->offset, strobj);
+
+        auto field2 = kls->toInstance()->findField("classLoader", "Ljava/lang/ClassLoader;");
+        elysium->oopManager->oopAccessPointerField(oop, field2->offset, this->klassloader);
+
+        auto field3 = kls->toInstance()->findField("<ptr>", "J");
+        *reinterpret_cast<jlong *>(elysium->oopManager->oopAccessField(oop, field3->offset)) = (jlong)klass;
+
+        klass->mirror = oop;
+        klass->klassMutex.unlock();
+    }
+
+    {
+        klass->klassMutex.lock();
+        if (klass->isInstance() && !klass->toInstance()->clinitFinished)
+        {
+            auto m = klass->findMethod("<clinit>", "()V");
+
+            if (!m)
+            {
+                klass->toInstance()->clinitFinished = true;
+                return;
+            }
+
+            elysium->executor->callVoidFunction(m, nullptr);
+        }
+        klass->klassMutex.unlock();
     }
 }
 
@@ -165,6 +173,10 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
     }
 
     std::ifstream istr(fmt::format("vmstd/out/{}.class", name), std::ios::binary);
+    if (!istr.good())
+    {
+        throw std::logic_error("java exception: ClassNotFoundException");
+    }
     loadClassWithoutMirror(&istr, special);
 }
 

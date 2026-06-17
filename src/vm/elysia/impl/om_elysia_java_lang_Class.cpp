@@ -37,6 +37,10 @@ extern "C"
         {
             if (kld->klassloader == handleFetch(klassloader))
             {
+                if (kld->klassloader)
+                {
+                    throw std::logic_error("need to call klassloader!");
+                }
                 auto nn = env->GetStringUTFChars(name, nullptr);
                 auto kls = kld->fetchOrLoadClass(std::string(nn));
                 env->ReleaseStringUTFChars(name, nn);

@@ -4,6 +4,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_field.hpp"
+#include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
@@ -159,6 +160,7 @@ class OMElysiaExecutorZero
     IMPL_FUNCCALL(OMElysiaOop *, Object, zeroStackPopGet);
 
     OMElysiaNativeHandle *recordLocalRef(OMElysiaOop *);
+    OMElysiaKlassloader *currentKlassloader();
 
   protected:
     void execute(OMElysiaMethod *m);

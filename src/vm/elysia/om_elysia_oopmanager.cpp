@@ -52,19 +52,16 @@ OMElysiaOop *OMElysiaOopManager::allocateString(std::string target)
     {
         return elysium->stringPool[hsh];
     }
-    auto nativeKlassloader = elysium->klassLoader;
-    auto stringKlass = nativeKlassloader->findClass("java/lang/String")->toInstance();
-    auto charArrKlass = nativeKlassloader->findClass("[C")->toArray();
+    auto stringKlass = elysium->klassLoader->findClass("java/lang/String")->toInstance();
+    auto charArrKlass = elysium->klassLoader->findClass("[C")->toArray();
 
     auto u16target = encoding::utf8ToUtf16New(target);
 
-    auto oopM = nativeKlassloader->upper()->oopManager;
+    auto arr = allocateArr(charArrKlass, std::get<jsize>(u16target));
+    std::memcpy(arrAccess<jchar>(arr), std::get<jchar *>(u16target), std::get<jsize>(u16target) * sizeof(jchar));
 
-    auto arr = oopM->allocateArr(charArrKlass, std::get<jsize>(u16target));
-    std::memcpy(oopM->arrAccess<jchar>(arr), std::get<jchar *>(u16target), std::get<jsize>(u16target) * sizeof(jchar));
-
-    auto strWrp = oopM->allocateOop(stringKlass);
-    oopM->oopAccessPointerField(strWrp, 0, arr);
+    auto strWrp = allocateOop(stringKlass);
+    oopAccessPointerField(strWrp, 0, arr);
 
     elysium->stringPool[hsh] = strWrp;
 

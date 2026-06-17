@@ -74,6 +74,8 @@ class OMElysiaThread
     OMElysiaNativeHandle *threadObject = nullptr;
     std::string threadName = "";
 
+    OMElysiaOop *currentException = nullptr;
+
     std::function<void()> cleaner = []() {};
 
     OMElysiaThread()

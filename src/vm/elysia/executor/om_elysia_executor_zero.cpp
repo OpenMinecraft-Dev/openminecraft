@@ -106,14 +106,15 @@ nextStg:
     tc->zero.pc = m->code;
 }
 
+OMElysiaKlassloader *OMElysiaExecutorZero::currentKlassloader()
+{
+    return thisThread.metadata->zero.frame ? thisThread.metadata->zero.frame->method->klass->klassloader
+                                           : elysium->klassLoader.get();
+}
+
 void OMElysiaExecutorZero::popFrame()
 {
     auto tc = thisThread.metadata;
-
-    if (tc->zero.frame->method->isClinit())
-    {
-        tc->zero.frame->method->klass->klassMutex.unlock();
-    }
 
     tc->zero.stackPointer = reinterpret_cast<uintptr_t>(tc->zero.frame) + sizeof(OMElysiaJavaFrame);
     tc->zero.pc = tc->zero.frame->returnAddr;
