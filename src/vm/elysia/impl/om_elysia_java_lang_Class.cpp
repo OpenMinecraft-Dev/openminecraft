@@ -1,4 +1,5 @@
 #include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
@@ -42,7 +43,15 @@ extern "C"
                     throw std::logic_error("need to call klassloader!");
                 }
                 auto nn = env->GetStringUTFChars(name, nullptr);
-                auto kls = kld->fetchOrLoadClass(std::string(nn));
+                std::string ss(nn);
+                for (auto &ch : ss)
+                {
+                    if (ch == '.')
+                    {
+                        ch = '/';
+                    }
+                }
+                auto kls = kld->fetchOrLoadClass(ss);
                 env->ReleaseStringUTFChars(name, nn);
 
                 if (env->ExceptionCheck())
@@ -90,6 +99,13 @@ extern "C"
             ->isPrimitive();
     }
 
+    jboolean Java_java_lang_Class_isInterface(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls)
+    {
+        auto k =
+            ((OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        return k->isInstance() && (k->toInstance()->accessFlag & JVM_Acc_Interface);
+    }
+
     jboolean Java_java_lang_Class_isAssignableFrom(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls,
                                                    OMElysiaNativeHandle *klsother)
     {
@@ -114,9 +130,11 @@ extern "C"
              reinterpret_cast<void *>(Java_java_lang_Class_getDeclaredFields0)},
             {const_cast<char *>("isPrimitive"), const_cast<char *>("()Z"),
              reinterpret_cast<void *>(Java_java_lang_Class_isPrimitive)},
+            {const_cast<char *>("isInterface"), const_cast<char *>("()Z"),
+             reinterpret_cast<void *>(Java_java_lang_Class_isInterface)},
             {const_cast<char *>("isAssignableFrom"), const_cast<char *>("(Ljava/lang/Class;)Z"),
              reinterpret_cast<void *>(Java_java_lang_Class_isAssignableFrom)}};
-        env->RegisterNatives(klass, mm, 6);
+        env->RegisterNatives(klass, mm, 7);
     }
 }
 } // namespace openminecraft::vm::elysia::impl

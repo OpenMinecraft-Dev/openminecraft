@@ -158,10 +158,30 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     while (true)
     {
+    loop_begin:
         // geopeila: the calling method's frame is popped, so we need to exit the interpreter loop
         if (tc->zero.stackPointer >= cachedStackTop)
         {
             break;
+        }
+
+        if (tc->haveException)
+        {
+            auto frm = tc->zero.frame;
+            for (int i = 0; i < frm->method->excTableLength; i++)
+            {
+                if (tc->zero.pc >= frm->method->excTable[i].begin && tc->zero.pc <= frm->method->excTable[i].end &&
+                    elysium->oopManager->oopGetKlass(tc->currentException)->inherits(frm->method->excTable[i].type))
+                {
+                    tc->zero.pc = frm->method->excTable[i].handler;
+                    zeroStackPush(tc->currentException);
+                    tc->haveException = false;
+                    tc->currentException = nullptr;
+                    goto loop_begin;
+                }
+            }
+            popFrame();
+            continue;
         }
 
         if (tc->zero.frame->method->isNative())
@@ -169,11 +189,6 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             tc->zero.pc = nullptr;
             execWithState(InsideVM, [&]() { executeNativeLink(); });
             continue;
-        }
-
-        if (tc->haveException)
-        {
-            throw std::logic_error("executor exception!");
         }
 
         thisThread.switchState(InsideJava);
