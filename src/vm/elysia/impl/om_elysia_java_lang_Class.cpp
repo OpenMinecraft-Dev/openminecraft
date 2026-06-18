@@ -74,6 +74,10 @@ extern "C"
         auto result = env->NewObjectArray(v->fieldCount, fldkls, nullptr);
         for (int i = 0; i < v->fieldCount; i++)
         {
+            if (bl && (v->fields[i].accessFlag & JVM_Acc_Public) == 0)
+            {
+                continue;
+            }
             auto kl = fieldDescToType(v->fields[i].desc);
             auto kls = env->FindClass(kl.c_str());
 
@@ -116,6 +120,21 @@ extern "C"
         return kkother->inherits(kk);
     }
 
+    OMElysiaNativeHandle *Java_java_lang_Class_getDeclaredConstructors0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls,
+                                                                        bool bl)
+    {
+        auto kk =
+            ((OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        for (int i = 0; i < kk->methodCount; i++)
+        {
+            if (kk->methods[i].isInit())
+            {
+                std::cout << kk->methods[i].name << std::endl;
+            }
+        }
+        throw std::logic_error("fail");
+    }
+
     void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         OMElysiaNativeMethod mm[] = {
@@ -133,8 +152,10 @@ extern "C"
             {const_cast<char *>("isInterface"), const_cast<char *>("()Z"),
              reinterpret_cast<void *>(Java_java_lang_Class_isInterface)},
             {const_cast<char *>("isAssignableFrom"), const_cast<char *>("(Ljava/lang/Class;)Z"),
-             reinterpret_cast<void *>(Java_java_lang_Class_isAssignableFrom)}};
-        env->RegisterNatives(klass, mm, 7);
+             reinterpret_cast<void *>(Java_java_lang_Class_isAssignableFrom)},
+            {const_cast<char *>("getDeclaredConstructors0"), const_cast<char *>("(Z)[Ljava/lang/reflect/Constructor;"),
+             reinterpret_cast<void *>(Java_java_lang_Class_getDeclaredConstructors0)}};
+        env->RegisterNatives(klass, mm, 8);
     }
 }
 } // namespace openminecraft::vm::elysia::impl
