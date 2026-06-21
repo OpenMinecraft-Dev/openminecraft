@@ -345,6 +345,35 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
         {
             for (auto attr : clsfile->methods[i]->attrs)
             {
+                if (attr->type() == classfile::OMClassAttrType::Exceptions)
+                {
+                    auto att = attr->to<classfile::OMClassAttrExceptions>();
+
+                    m.exceptionsLength = att->numberOfExceptions;
+                    if (att->numberOfExceptions)
+                    {
+                        m.exceptions = elysium->metaspaceHeap.allocateArray<OMElysiaKlass *>(m.exceptionsLength);
+                    }
+
+                    for (int i = 0; i < m.exceptionsLength; i++)
+                    {
+                        auto klsname = clsfile
+                                           ->mapping[clsfile->mapping[att->exceptionIndexTable[i]]
+                                                         ->to<classfile::OMClassConstantClass>()
+                                                         ->nameIndex]
+                                           ->to<classfile::OMClassConstantUtf8>()
+                                           ->data;
+                        if (special)
+                        {
+                            loadClassWithoutMirror(klsname, special);
+                            m.exceptions[i] = findClass(klsname);
+                        }
+                        else
+                        {
+                            m.exceptions[i] = fetchOrLoadClass(klsname);
+                        }
+                    }
+                }
                 if (attr->type() == classfile::OMClassAttrType::Code)
                 {
                     auto ll = attr->to<classfile::OMClassAttrCode>();

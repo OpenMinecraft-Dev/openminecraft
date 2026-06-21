@@ -31,6 +31,9 @@ struct OMElysiaMethod
     uint32_t excTableLength;
     OMElysiaMethodExcTable *excTable;
 
+    uint32_t exceptionsLength;
+    OMElysiaKlass **exceptions;
+
 #define attr(n)                                                                                                        \
     bool is##n()                                                                                                       \
     {                                                                                                                  \

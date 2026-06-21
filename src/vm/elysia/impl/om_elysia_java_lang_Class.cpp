@@ -125,11 +125,30 @@ extern "C"
     {
         auto kk =
             ((OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        auto ctkk = env->FindClass("java/lang/reflect/Constructor");
         for (int i = 0; i < kk->methodCount; i++)
         {
             if (kk->methods[i].isInit())
             {
                 std::cout << kk->methods[i].name << std::endl;
+                auto kns = env->AllocObject(ctkk);
+
+                env->SetObjectField(kns, env->GetFieldID(ctkk, "clazz", "Ljava/lang/Class;"),
+                                    env->internal->elysium->executor->recordLocalRef(kk->mirror));
+                env->SetIntField(kns, env->GetFieldID(ctkk, "slot", "I"), i);
+                env->SetIntField(kns, env->GetFieldID(ctkk, "modifiers", "I"), kk->methods[i].accessFlag);
+                env->SetObjectField(kns, env->GetFieldID(ctkk, "signature", "Ljava/lang/String;"),
+                                    env->NewStringUTF(kk->methods[i].descriptor));
+
+                auto excarr =
+                    env->NewObjectArray(kk->methods[i].exceptionsLength, env->FindClass("java/lang/Class"), nullptr);
+                for (int j = 0; j < kk->methods[i].exceptionsLength; j++)
+                {
+                    env->SetObjectArrayElement(
+                        excarr, j,
+                        env->internal->elysium->executor->recordLocalRef(kk->methods[i].exceptions[j]->mirror));
+                }
+                env->SetObjectField(kns, env->GetFieldID(ctkk, "exceptionTypes", "[Ljava/lang/Class;"), excarr);
             }
         }
         throw std::logic_error("fail");
