@@ -77,7 +77,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     uint8_t argTypes[255];
     int argCount;
     uint8_t returnType;
-    argDescriptorParse(descriptor, argTypes, argCount, &returnType);
+    descriptorTypes(descriptor, argTypes, argCount, &returnType);
     auto argid = 0;
 
     // geopelia: arg #1, instance oop (non-static) or klass (static)
@@ -110,6 +110,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
             ARGTYPE_CASE0(argTypeInt, jint);
             ARGTYPE_CASE0(argTypeFloat, jfloat);
         case argTypeReference:
+        case argTypeArray:
             rawargs.push_back(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
             ++argid;
             break;
@@ -158,6 +159,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
         retType = &ffi_type_void;
         break;
     case argTypeReference:
+    case argTypeArray:
         retType = &ffi_type_pointer;
         break;
     case argTypeInt:
@@ -198,6 +200,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     case argTypeVoid:
         popFrame();
         break;
+    case argTypeArray:
     case argTypeReference: {
         auto vv = *reinterpret_cast<OMElysiaNativeHandle **>(retValue);
         popFrame();

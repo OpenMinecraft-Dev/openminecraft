@@ -830,7 +830,8 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                 }
                 else
                 {
-                    throw std::logic_error("Java exception: ClassCastException, not implemented");
+                    throw std::logic_error(fmt::format("Java exception: ClassCastException, not implemented {} <=> {}",
+                                                       c->name, elysium->oopManager->oopGetKlass(obj)->name));
                 }
             }
             tc->zero.pc += 3;

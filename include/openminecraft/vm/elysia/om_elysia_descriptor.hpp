@@ -122,11 +122,11 @@ inline static std::pair<std::vector<OMElysiaSignaturePart>, OMElysiaSignaturePar
         case '(':
             insideArgs = true;
             ++sig;
-            break;
+            continue;
         case ')':
             insideArgs = false;
             ++sig;
-            break;
+            continue;
         case 'B':
         case 'C':
         case 'S':
@@ -316,143 +316,40 @@ static uint64_t descriptorLength(char *s, uint64_t ptrLen)
     }
 }
 
-inline static int argToSlot(uint8_t *out, int argCount)
+inline static void descriptorTypes(char *desc, uint8_t *out, int &argCount, uint8_t *returnType, int maxArgs = 255)
 {
-    int l = 0;
-    for (int i = 0; i < argCount; i++)
+    auto result = parseSignature(desc);
+
+    *returnType = result.second.type;
+
+    for (int i = 0; i < result.first.size(); i++)
     {
-        if (out[i] == argTypeLong || out[i] == argTypeDouble)
-        {
-            l += 2;
-        }
-        else
-        {
-            ++l;
-        }
+        out[i] = result.first[i].type;
     }
-
-    return l;
-}
-
-inline static void argDescriptorParse(char *desc, uint8_t *out, int &argCount, uint8_t *returnType, int maxArgs = 255)
-{
-    /*auto result = parseSignature(desc);
-    returnType = result.second.type == argTypeArray ? argTypeReference : result.second.type;
     argCount = result.first.size();
-
-    for (int i = 0; i < argCount; i++)
-    {
-        out[i] = result.first[i].type == argTypeArray ? argTypeReference : result.first[i].type;
-    }*/
-
-    argCount = 0;
-    bool inArg = false;
-#define checkArg                                                                                                       \
-    if (inArg)                                                                                                         \
-    {                                                                                                                  \
-        ++argCount;                                                                                                    \
-    }
-
-#define precheck(type)                                                                                                 \
-    if (!inArg)                                                                                                        \
-    {                                                                                                                  \
-        *returnType = type;                                                                                            \
-    }
-
-    while (*desc)
-    {
-        switch (*desc)
-        {
-        case '(':
-            inArg = true;
-            break;
-        case 'Z':
-            precheck(argTypeBoolean);
-            out[argCount] = argTypeBoolean;
-            checkArg;
-            break;
-        case 'B':
-            precheck(argTypeByte);
-            out[argCount] = argTypeByte;
-            checkArg;
-            break;
-        case 'C':
-            precheck(argTypeChar);
-            out[argCount] = argTypeChar;
-            checkArg;
-            break;
-        case 'S':
-            precheck(argTypeShort);
-            out[argCount] = argTypeShort;
-            checkArg;
-            break;
-        case 'I':
-            precheck(argTypeInt);
-            out[argCount] = argTypeInt;
-            checkArg;
-            break;
-        case 'F':
-            precheck(argTypeFloat);
-            out[argCount] = argTypeFloat;
-            checkArg;
-            break;
-        case 'J':
-            precheck(argTypeLong);
-            out[argCount] = argTypeLong;
-            checkArg;
-            break;
-        case 'D':
-            precheck(argTypeDouble);
-            out[argCount] = argTypeDouble;
-            checkArg;
-            break;
-        case 'L':
-            if (!inArg)
-            {
-                *returnType = argTypeReference;
-                while (*desc != ';')
-                {
-                    ++desc;
-                }
-                break;
-            }
-            out[argCount] = argTypeReference;
-            checkArg;
-            while (*desc != ';')
-            {
-                ++desc;
-            }
-            break;
-        case ')':
-            inArg = false;
-            break;
-        case 'V':
-            if (!inArg)
-            {
-                *returnType = argTypeVoid;
-            }
-            break;
-        }
-        ++desc;
-    }
 }
 
 static uint64_t argCount(char *s)
 {
-    uint8_t argTypes[255];
-    int argCount;
-    uint8_t returnType;
-    argDescriptorParse(s, argTypes, argCount, &returnType);
-    return argCount;
+    return parseSignature(s).first.size();
 }
 
 static uint64_t argSlots(char *s)
 {
-    uint8_t argTypes[255];
-    int argCount;
-    uint8_t returnType;
-    argDescriptorParse(s, argTypes, argCount, &returnType);
-    return argToSlot(argTypes, argCount);
+    auto result = parseSignature(s);
+    int argCount = 0;
+    for (auto &p : result.first)
+    {
+        if (p.type == argTypeLong || p.type == argTypeDouble)
+        {
+            argCount += 2;
+        }
+        else
+        {
+            ++argCount;
+        }
+    }
+    return argCount;
 }
 } // namespace openminecraft::vm::elysia
 

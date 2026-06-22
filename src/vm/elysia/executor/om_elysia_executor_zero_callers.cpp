@@ -17,7 +17,7 @@ void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, const OMElysiaNat
     uint8_t argtypes[255];
     int argcount;
     uint8_t returntype;
-    argDescriptorParse(m->descriptor, argtypes, argcount, &returntype);
+    descriptorTypes(m->descriptor, argtypes, argcount, &returntype);
 
     auto pos = i;
 
@@ -50,6 +50,7 @@ void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, const OMElysiaNat
             zeroStackPushW<jdouble>(args[i].d);
             continue;
         case argTypeReference:
+        case argTypeArray:
             zeroStackPush<OMElysiaOop *>(args[i].l ? args[i].l->object : nullptr);
             continue;
         default:
