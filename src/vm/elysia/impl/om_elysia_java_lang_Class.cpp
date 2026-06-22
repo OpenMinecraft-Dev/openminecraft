@@ -151,7 +151,15 @@ extern "C"
                 }
                 env->SetObjectField(kns, env->GetFieldID(ctkk, "exceptionTypes", "[Ljava/lang/Class;"), excarr);
 
-                throw std::logic_error("not implemented");
+                auto result = parseSignature(kk->methods[i].descriptor);
+                auto argTypearr = env->NewObjectArray(result.first.size(), env->FindClass("java/lang/Class"), nullptr);
+                for (int j = 0; j < result.first.size(); j++)
+                {
+                    env->SetObjectArrayElement(argTypearr, j,
+                                               env->internal->elysium->executor->recordLocalRef(
+                                                   env->FindClass(signatureToType(result.first[i]).c_str())->mirror));
+                }
+                env->SetObjectField(kns, env->GetFieldID(ctkk, "parameterTypes", "[Ljava/lang/Class;"), argTypearr);
 
                 hnds.push_back(kns);
             }
