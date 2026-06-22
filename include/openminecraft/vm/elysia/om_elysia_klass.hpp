@@ -86,15 +86,6 @@ class OMElysiaKlass
     bool inherits(OMElysiaKlass *);
 };
 
-class OMElysiaArrayKlass : public OMElysiaKlass
-{
-  public:
-    OMElysiaKlass *lowerDim;
-    OMElysiaKlass *higherDim;
-
-    uint32_t itemLength;
-};
-
 class OMElysiaInstanceKlass : public OMElysiaKlass
 {
   public:
@@ -124,6 +115,15 @@ class OMElysiaInstanceKlass : public OMElysiaKlass
     void *constantPoolFetchField(uint16_t id);
     void *constantPoolFetchNormal(uint16_t id, bool flg = false);
     uint64_t constantPoolFetchNormalW(uint16_t id);
+};
+
+class OMElysiaArrayKlass : public OMElysiaInstanceKlass
+{
+  public:
+    OMElysiaKlass *lowerDim;
+    OMElysiaKlass *higherDim;
+
+    uint32_t itemLength;
 };
 
 class OMElysiaPrimitiveKlass : public OMElysiaKlass

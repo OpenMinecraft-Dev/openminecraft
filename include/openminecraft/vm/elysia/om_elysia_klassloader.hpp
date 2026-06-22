@@ -22,6 +22,7 @@ class OMElysiaKlassloader
 
     void markKlass(OMElysiaKlass *klass);
 
+    void fillVtable(OMElysiaInstanceKlass *klass);
     void loadClassWithoutMirror(std::string name, bool special = false);
     void loadClassWithoutMirror(std::istream *istr, bool special = false);
     void fixClassMirror(OMElysiaKlass *klass);

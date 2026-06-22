@@ -76,6 +76,8 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
     klass->methods->klass = klass;
     klass->methods->accessFlag = JVM_Acc_Public | JVM_Acc_Final | JVM_Acc_Native;
 
+    fillVtable(klass);
+
     jint i = 0;
     switch (hash_compile_time(k->name))
     {
@@ -204,6 +206,59 @@ void OMElysiaKlassloader::fixAllClasses()
     }
 }
 
+void OMElysiaKlassloader::fillVtable(OMElysiaInstanceKlass *klass)
+{
+    std::unordered_map<std::string, OMElysiaMethod *> rawVtable;
+
+    if (klass->interfaceImplCount)
+    {
+        for (int ii = 0; ii < klass->interfaceImplCount; ii++)
+        {
+            auto kk = klass->interfaceImpls[ii];
+            if (kk->vtable && kk->vtableLength)
+            {
+                for (int i = 0; i < kk->vtableLength; i++)
+                {
+                    rawVtable[fmt::format("{}{}", kk->vtable[i]->name, kk->vtable[i]->descriptor)] = kk->vtable[i];
+                }
+            }
+        }
+    }
+
+    klass->vtable = nullptr;
+    klass->vtableLength = 0;
+    // geopeila: insert super class vtable
+    if (klass->superClass && klass->superClass->vtable && klass->superClass->vtableLength)
+    {
+        for (int i = 0; i < klass->superClass->vtableLength; i++)
+        {
+            auto mm = klass->superClass->vtable[i];
+            rawVtable[fmt::format("{}{}", mm->name, mm->descriptor)] = mm;
+        }
+    }
+
+    for (int i = 0; i < klass->methodCount; i++)
+    {
+        auto &m = klass->methods[i];
+        if (!m.isStatic() && !m.isPrivate() && !m.isInit())
+        {
+            rawVtable[fmt::format("{}{}", m.name, m.descriptor)] = &m;
+        }
+    }
+
+    klass->vtableLength = rawVtable.size();
+    if (klass->vtableLength)
+    {
+        klass->vtable = elysium->metaspaceHeap.allocateArray<OMElysiaMethod *>(klass->vtableLength);
+        int i = 0;
+        for (auto &[a, b] : rawVtable)
+        {
+            klass->vtable[i] = b;
+            ++i;
+        }
+    }
+}
+
 void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool special)
 {
     classfile::OMClassFileParser par(istr);
@@ -261,7 +316,6 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
         klass->superClass = findClass(supclsname);
     }
 
-    std::unordered_map<std::string, OMElysiaMethod *> rawVtable;
     if (!clsfile->interfaces.empty())
     {
         klass->interfaceImplCount = clsfile->interfaces.size();
@@ -289,15 +343,6 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
                 klass->interfaceImpls[ii] = findClass(supclsname);
             }
 
-            auto kk = klass->interfaceImpls[ii];
-            if (kk->vtable && kk->vtableLength)
-            {
-                for (int i = 0; i < kk->vtableLength; i++)
-                {
-                    rawVtable[fmt::format("{}{}", kk->vtable[i]->name, kk->vtable[i]->descriptor)] = kk->vtable[i];
-                }
-            }
-
             ii++;
         }
     }
@@ -318,18 +363,6 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
 
     klass->methodCount = clsfile->methods.size();
     klass->methods = elysium->metaspaceHeap.allocateArray<OMElysiaMethod>(klass->methodCount);
-
-    klass->vtable = nullptr;
-    klass->vtableLength = 0;
-    // geopeila: insert super class vtable
-    if (klass->superClass && klass->superClass->vtable && klass->superClass->vtableLength)
-    {
-        for (int i = 0; i < klass->superClass->vtableLength; i++)
-        {
-            auto mm = klass->superClass->vtable[i];
-            rawVtable[fmt::format("{}{}", mm->name, mm->descriptor)] = mm;
-        }
-    }
 
     for (int i = 0; i < klass->methodCount; i++)
     {
@@ -431,24 +464,9 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
                 }
             }
         }
-
-        if (!m.isStatic() && !m.isPrivate() && !m.isInit())
-        {
-            rawVtable[fmt::format("{}{}", m.name, m.descriptor)] = &m;
-        }
     }
 
-    klass->vtableLength = rawVtable.size();
-    if (klass->vtableLength)
-    {
-        klass->vtable = elysium->metaspaceHeap.allocateArray<OMElysiaMethod *>(klass->vtableLength);
-        int i = 0;
-        for (auto [a, b] : rawVtable)
-        {
-            klass->vtable[i] = b;
-            ++i;
-        }
-    }
+    fillVtable(klass);
 
     std::vector<OMElysiaField> extraFields;
     if (std::strcmp(klass->name, "java/lang/Class") == 0)
