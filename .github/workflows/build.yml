@@ -68,10 +68,10 @@ jobs:
             plat: linux-cross
             arch: riscv64
             loaderarch: riscv64
-          # - os: ubuntu-latest
-          #   plat: linux-cross
-          #   arch: s390x
-          #   loaderarch: s390x
+          - os: ubuntu-latest
+            plat: linux-cross
+            arch: s390x
+            loaderarch: s390x
           - os: ubuntu-latest
             plat: linux-cross
             arch: ppc64
