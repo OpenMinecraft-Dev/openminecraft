@@ -19,6 +19,10 @@ includes("extlibs/vulkan.lua")
 includes("extlibs/joltphysics.lua")
 includes("extlibs/sdl_port.lua")
 
+if is_plat("linux") and is_arch("riscv64") then
+        includes("extlibs/libffi.lua")
+end
+
 --------------------------------------------------------------------------------
 -- Platform configs
 --------------------------------------------------------------------------------
