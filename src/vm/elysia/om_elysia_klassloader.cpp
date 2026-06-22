@@ -56,6 +56,23 @@ OMElysiaPrimitiveKlass *OMElysiaKlassloader::constructPrimitiveClass(std::string
     markKlass(klass);
     return klass;
 }
+
+static OMElysiaNativeHandle *arrayClone(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+{
+    auto kls = env->GetObjectClass(hnd)->toArray()->lowerDim;
+    if (kls->isPrimitive())
+    {
+        throw std::logic_error("fail");
+    }
+
+    auto arr = env->NewObjectArray(env->GetArrayLength(hnd), kls, nullptr);
+    for (int i = 0; i < env->GetArrayLength(hnd); i++)
+    {
+        env->SetObjectArrayElement(arr, i, env->GetObjectArrayElement(hnd, i));
+    }
+    return arr;
+}
+
 OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
 {
     auto rawname = buildArray(k->name);
@@ -75,6 +92,12 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
     klass->methods->descriptor = elysium->metaspaceHeap.allocateStr("()Ljava/lang/Object;");
     klass->methods->klass = klass;
     klass->methods->accessFlag = JVM_Acc_Public | JVM_Acc_Final | JVM_Acc_Native;
+    klass->nativeMethodCount = 1;
+    klass->nativeMethods = elysium->metaspaceHeap.allocateArray<OMElysiaNativeMethod>(1);
+
+    klass->nativeMethods[0].name = const_cast<char *>("clone");
+    klass->nativeMethods[0].signature = const_cast<char *>("()Ljava/lang/Object;");
+    klass->nativeMethods[0].funcPtr = (void *)arrayClone;
 
     fillVtable(klass);
 

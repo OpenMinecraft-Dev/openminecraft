@@ -174,6 +174,21 @@ extern "C"
         return ctarr;
     }
 
+    jint Java_java_lang_Class_getModifiers(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    {
+        return ((OMElysiaKlass *)env->GetLongField(hnd,
+                                                   env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")))
+            ->accessFlag;
+    }
+
+    OMElysiaNativeHandle *Java_java_lang_Class_getSuperclass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    {
+        auto ls =
+            ((OMElysiaKlass *)env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")))
+                ->superClass;
+        return createTempHandle(ls ? ls->mirror : nullptr);
+    }
+
     void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         OMElysiaNativeMethod mm[] = {
@@ -193,8 +208,13 @@ extern "C"
             {const_cast<char *>("isAssignableFrom"), const_cast<char *>("(Ljava/lang/Class;)Z"),
              reinterpret_cast<void *>(Java_java_lang_Class_isAssignableFrom)},
             {const_cast<char *>("getDeclaredConstructors0"), const_cast<char *>("(Z)[Ljava/lang/reflect/Constructor;"),
-             reinterpret_cast<void *>(Java_java_lang_Class_getDeclaredConstructors0)}};
-        env->RegisterNatives(klass, mm, 8);
-    }
+             reinterpret_cast<void *>(Java_java_lang_Class_getDeclaredConstructors0)},
+            {const_cast<char *>("getModifiers"), const_cast<char *>("()I"),
+             reinterpret_cast<void *>(Java_java_lang_Class_getModifiers)},
+            {const_cast<char *>("getSuperclass"), const_cast<char *>("()Ljava/lang/Class;"),
+             reinterpret_cast<void *>(Java_java_lang_Class_getSuperclass)}};
+
+        env->RegisterNatives(klass, mm, 10);
+    } // namespace openminecraft::vm::elysia::impl
 }
 } // namespace openminecraft::vm::elysia::impl

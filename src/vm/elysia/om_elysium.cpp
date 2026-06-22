@@ -81,6 +81,8 @@ OMElysium::OMElysium()
             auto mcls = klassLoader->findClass("java/lang/System");
             auto md = mcls->findMethod("initializeSystemClass", "()V");
             executor->callVoidFunction(md, nullptr);
+
+            logger.info("vm init finished");
         }
         catch (std::logic_error &e)
         {

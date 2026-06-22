@@ -165,6 +165,10 @@ void initBaseInterface(OMElysiaJNIEnv env)
         mem::allocator::tracedFreeElysia(const_cast<char *>(chars));
     };
 
+    env.internal->GetArrayLength = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) {
+        return env->internal->elysium->oopManager->arrLength(handleFetch(hnd));
+    };
+
     env.internal->NewObjectArray = [](OMElysiaJNIEnv *env, jsize len, OMElysiaKlass *klass,
                                       OMElysiaNativeHandle *init) {
         OMElysiaNativeHandle *hnd;
@@ -180,6 +184,10 @@ void initBaseInterface(OMElysiaJNIEnv env)
             }
         });
         return hnd;
+    };
+    env.internal->GetObjectArrayElement = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jsize index) {
+        return env->internal->elysium->executor->recordLocalRef(
+            env->internal->elysium->oopManager->arrAccessPtr(handleFetch(array), index));
     };
     env.internal->SetObjectArrayElement = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jsize index,
                                              OMElysiaNativeHandle *val) {
