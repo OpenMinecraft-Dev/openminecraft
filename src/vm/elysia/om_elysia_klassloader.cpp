@@ -69,6 +69,13 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
     klass->ptrLength = elysium->mainHeap.ptrLength();
     klass->mirror = nullptr;
 
+    klass->methodCount = 1;
+    klass->methods = elysium->metaspaceHeap.allocateArray<OMElysiaMethod>(1);
+    klass->methods->name = elysium->metaspaceHeap.allocateStr("clone");
+    klass->methods->descriptor = elysium->metaspaceHeap.allocateStr("()Ljava/lang/Object;");
+    klass->methods->klass = klass;
+    klass->methods->accessFlag = JVM_Acc_Public | JVM_Acc_Final | JVM_Acc_Native;
+
     jint i = 0;
     switch (hash_compile_time(k->name))
     {

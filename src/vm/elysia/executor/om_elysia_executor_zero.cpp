@@ -54,6 +54,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m, uint8_t *retAddr, bool n
 {
     if (!m)
     {
+        logger.dumpStacktrace();
         throw std::logic_error("function is null!");
     }
     auto ll = argSlots(m->descriptor) + (m->isStatic() ? 0 : 1);

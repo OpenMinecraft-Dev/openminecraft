@@ -8,6 +8,7 @@
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
 namespace openminecraft::vm::elysia::impl
 {
@@ -126,11 +127,11 @@ extern "C"
         auto kk =
             ((OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
         auto ctkk = env->FindClass("java/lang/reflect/Constructor");
+        std::vector<OMElysiaNativeHandle *> hnds;
         for (int i = 0; i < kk->methodCount; i++)
         {
             if (kk->methods[i].isInit())
             {
-                std::cout << kk->methods[i].name << std::endl;
                 auto kns = env->AllocObject(ctkk);
 
                 env->SetObjectField(kns, env->GetFieldID(ctkk, "clazz", "Ljava/lang/Class;"),
@@ -149,9 +150,20 @@ extern "C"
                         env->internal->elysium->executor->recordLocalRef(kk->methods[i].exceptions[j]->mirror));
                 }
                 env->SetObjectField(kns, env->GetFieldID(ctkk, "exceptionTypes", "[Ljava/lang/Class;"), excarr);
+
+                // TODO: arg types
+
+                hnds.push_back(kns);
             }
         }
-        throw std::logic_error("fail");
+
+        auto ctarr = env->NewObjectArray(hnds.size(), ctkk, nullptr);
+        for (int i = 0; i < hnds.size(); i++)
+        {
+            env->SetObjectArrayElement(ctarr, i, hnds[i]);
+        }
+
+        return ctarr;
     }
 
     void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
