@@ -3,7 +3,13 @@
 
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include <cstdint>
+#include <iostream>
+#include <memory>
+#include <ostream>
+#include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace openminecraft::vm::elysia
 {
@@ -16,38 +22,257 @@ constexpr uint8_t argTypeFloat = 0x5;
 constexpr uint8_t argTypeLong = 0x6;
 constexpr uint8_t argTypeDouble = 0x7;
 constexpr uint8_t argTypeReference = 0x8;
-constexpr uint8_t argTypeVoid = 0x9;
+constexpr uint8_t argTypeArray = 0x9;
+constexpr uint8_t argTypeVoid = 0xa;
 
-static std::string fieldDescToType(char *name)
+struct OMElysiaSignaturePart
 {
-    using namespace openminecraft::binary::hash;
-    switch (hash_compile_time(name))
+    uint8_t type;
+    int layerCount = 0;
+    std::shared_ptr<OMElysiaSignaturePart> subpart;
+    std::string content;
+
+    void print()
     {
-    case "B"_hash:
-        return "byte";
-    case "C"_hash:
-        return "char";
-    case "S"_hash:
-        return "short";
-    case "I"_hash:
-        return "int";
-    case "J"_hash:
-        return "long";
-    case "F"_hash:
-        return "float";
-    case "D"_hash:
-        return "double";
-    case "Z"_hash:
+        switch (type)
+        {
+        case argTypeByte:
+            std::cout << "byte" << std::endl;
+            break;
+        case argTypeBoolean:
+            std::cout << "boolean" << std::endl;
+            break;
+        case argTypeChar:
+            std::cout << "char" << std::endl;
+            break;
+        case argTypeShort:
+            std::cout << "short" << std::endl;
+            break;
+        case argTypeInt:
+            std::cout << "int" << std::endl;
+            break;
+        case argTypeFloat:
+            std::cout << "float" << std::endl;
+            break;
+        case argTypeLong:
+            std::cout << "long" << std::endl;
+            break;
+        case argTypeDouble:
+            std::cout << "double" << std::endl;
+            break;
+        case argTypeVoid:
+            std::cout << "primitive type" << std::endl;
+            break;
+        case argTypeReference:
+            std::cout << "ref of " << content << std::endl;
+            break;
+        case argTypeArray:
+            std::cout << "array of depth " << layerCount << ", type ";
+            subpart->print();
+            break;
+        }
+    }
+};
+
+inline static void parseSignaturePart(std::string sig, OMElysiaSignaturePart *part)
+{
+    auto str = sig.c_str();
+    parseSignaturePart(str, part);
+}
+inline static void parseSignaturePart(const char *&sig, OMElysiaSignaturePart *part)
+{
+    switch (*sig)
+    {
+    case 'B':
+        part->type = argTypeByte;
+        ++sig;
+        break;
+    case 'C':
+        part->type = argTypeChar;
+        ++sig;
+        break;
+    case 'S':
+        part->type = argTypeShort;
+        ++sig;
+        break;
+    case 'Z':
+        part->type = argTypeBoolean;
+        ++sig;
+        break;
+    case 'F':
+        part->type = argTypeFloat;
+        ++sig;
+        break;
+    case 'I':
+        part->type = argTypeInt;
+        ++sig;
+        break;
+    case 'D':
+        part->type = argTypeDouble;
+        ++sig;
+        break;
+    case 'J':
+        part->type = argTypeLong;
+        ++sig;
+        break;
+    case '[':
+        part->type = argTypeArray;
+        do
+        {
+            part->layerCount++;
+            ++sig;
+        } while (*sig == '[');
+        part->subpart = std::make_shared<OMElysiaSignaturePart>();
+        parseSignaturePart(sig, part->subpart.get());
+        break;
+    case 'L': {
+        part->type = argTypeReference;
+        std::string s = "";
+        ++sig;
+        while (*sig != ';')
+        {
+            s += *sig;
+            ++sig;
+        }
+        ++sig;
+        part->content = s;
+        break;
+    }
+    }
+}
+
+inline static std::pair<std::vector<OMElysiaSignaturePart>, OMElysiaSignaturePart> parseSignature(const char *sig)
+{
+    bool insideArgs = false;
+
+    OMElysiaSignaturePart retValue;
+    std::vector<OMElysiaSignaturePart> argTypes;
+
+    while (true)
+    {
+        OMElysiaSignaturePart part = {};
+        OMElysiaSignaturePart &target = insideArgs ? part : retValue;
+
+        switch (*sig)
+        {
+        case '(':
+            insideArgs = true;
+            ++sig;
+            break;
+        case ')':
+            insideArgs = false;
+            ++sig;
+            break;
+        case 'B':
+        case 'C':
+        case 'S':
+        case 'Z':
+        case 'F':
+        case 'I':
+        case 'D':
+        case 'J':
+        case '[':
+        case 'L':
+            parseSignaturePart(sig, &target);
+            break;
+        case '\0':
+            goto retRes;
+        default:
+            throw std::logic_error("invalid signature!");
+        }
+
+        if (insideArgs)
+        {
+            argTypes.push_back(part);
+        }
+    }
+
+retRes:
+    return std::make_pair(argTypes, retValue);
+}
+
+inline static std::string signatureToRaw(OMElysiaSignaturePart &part)
+{
+    switch (part.type)
+    {
+    case argTypeBoolean:
+        return "Z";
+    case argTypeByte:
+        return "B";
+    case argTypeShort:
+        return "S";
+    case argTypeChar:
+        return "C";
+    case argTypeFloat:
+        return "F";
+    case argTypeInt:
+        return "I";
+    case argTypeDouble:
+        return "D";
+    case argTypeLong:
+        return "J";
+    case argTypeReference:
+        return "L" + part.content + ";";
+    case argTypeVoid:
+        return "V";
+    case argTypeArray: {
+        std::string s = "";
+        for (int i = 0; i < part.layerCount; i++)
+        {
+            s += "[";
+        }
+        s += signatureToRaw(*part.subpart.get());
+        return s;
+    }
+    default:
+        return "";
+    }
+}
+
+inline static std::string signatureToType(OMElysiaSignaturePart &part)
+{
+    switch (part.type)
+    {
+    case argTypeBoolean:
         return "boolean";
+    case argTypeByte:
+        return "byte";
+    case argTypeShort:
+        return "short";
+    case argTypeChar:
+        return "char";
+    case argTypeFloat:
+        return "float";
+    case argTypeInt:
+        return "int";
+    case argTypeDouble:
+        return "double";
+    case argTypeLong:
+        return "long";
+    case argTypeReference:
+        return part.content;
+    case argTypeVoid:
+        return "void";
+    case argTypeArray: {
+        std::string s = "";
+        for (int i = 0; i < part.layerCount; i++)
+        {
+            s += "[";
+        }
+        s += signatureToRaw(*part.subpart.get());
+        return s;
     }
-
-    if (*name == 'L')
-    {
-        auto n = std::string(name);
-        return n.substr(1, n.length() - 2);
+    default:
+        return "";
     }
+}
 
-    return std::string(name);
+static std::string fieldDescToType(const char *name)
+{
+    OMElysiaSignaturePart part;
+    parseSignaturePart(name, &part);
+
+    return signatureToType(part);
 }
 
 static std::string buildArray(char *s)
@@ -154,6 +379,37 @@ inline static int argToSlot(uint8_t *out, int argCount)
 
     return l;
 }
+
+inline static std::vector<std::string> argDescriptorParse(char *desc)
+{
+    std::vector<std::string> st;
+    ++desc;
+    while (*desc)
+    {
+        if (*desc == ')')
+            break;
+
+        st.push_back(fieldDescToType(desc));
+
+        if (*desc == 'L')
+        {
+            while (*desc != ';')
+            {
+                ++desc;
+            }
+        }
+
+        ++desc;
+    }
+
+    for (auto &l : st)
+    {
+        std::cout << l << std::endl;
+    }
+
+    return st;
+}
+
 inline static void argDescriptorParse(char *desc, uint8_t *out, int &argCount, uint8_t *returnType, int maxArgs = 255)
 {
     argCount = 0;
