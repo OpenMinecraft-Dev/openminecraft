@@ -151,7 +151,7 @@ extern "C"
                 }
                 env->SetObjectField(kns, env->GetFieldID(ctkk, "exceptionTypes", "[Ljava/lang/Class;"), excarr);
 
-                // TODO: arg types
+                throw std::logic_error("not implemented");
 
                 hnds.push_back(kns);
             }
