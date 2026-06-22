@@ -31,54 +31,8 @@ struct OMElysiaSignaturePart
     int layerCount = 0;
     std::shared_ptr<OMElysiaSignaturePart> subpart;
     std::string content;
-
-    void print()
-    {
-        switch (type)
-        {
-        case argTypeByte:
-            std::cout << "byte" << std::endl;
-            break;
-        case argTypeBoolean:
-            std::cout << "boolean" << std::endl;
-            break;
-        case argTypeChar:
-            std::cout << "char" << std::endl;
-            break;
-        case argTypeShort:
-            std::cout << "short" << std::endl;
-            break;
-        case argTypeInt:
-            std::cout << "int" << std::endl;
-            break;
-        case argTypeFloat:
-            std::cout << "float" << std::endl;
-            break;
-        case argTypeLong:
-            std::cout << "long" << std::endl;
-            break;
-        case argTypeDouble:
-            std::cout << "double" << std::endl;
-            break;
-        case argTypeVoid:
-            std::cout << "primitive type" << std::endl;
-            break;
-        case argTypeReference:
-            std::cout << "ref of " << content << std::endl;
-            break;
-        case argTypeArray:
-            std::cout << "array of depth " << layerCount << ", type ";
-            subpart->print();
-            break;
-        }
-    }
 };
 
-inline static void parseSignaturePart(std::string sig, OMElysiaSignaturePart *part)
-{
-    auto str = sig.c_str();
-    parseSignaturePart(str, part);
-}
 inline static void parseSignaturePart(const char *&sig, OMElysiaSignaturePart *part)
 {
     switch (*sig)
@@ -115,6 +69,10 @@ inline static void parseSignaturePart(const char *&sig, OMElysiaSignaturePart *p
         part->type = argTypeLong;
         ++sig;
         break;
+    case 'V':
+        part->type = argTypeVoid;
+        ++sig;
+        break;
     case '[':
         part->type = argTypeArray;
         do
@@ -139,6 +97,12 @@ inline static void parseSignaturePart(const char *&sig, OMElysiaSignaturePart *p
         break;
     }
     }
+}
+
+inline static void parseSignaturePart(std::string sig, OMElysiaSignaturePart *part)
+{
+    auto str = sig.c_str();
+    parseSignaturePart(str, part);
 }
 
 inline static std::pair<std::vector<OMElysiaSignaturePart>, OMElysiaSignaturePart> parseSignature(const char *sig)
@@ -171,6 +135,7 @@ inline static std::pair<std::vector<OMElysiaSignaturePart>, OMElysiaSignaturePar
         case 'I':
         case 'D':
         case 'J':
+        case 'V':
         case '[':
         case 'L':
             parseSignaturePart(sig, &target);
@@ -316,28 +281,17 @@ static bool isArray(std::string s)
 
 static std::string decompArray(std::string s)
 {
-    switch (s[1])
+    OMElysiaSignaturePart part;
+    parseSignaturePart(s, &part);
+
+    if (part.layerCount <= 1)
     {
-    case 'Z':
-        return "boolean";
-    case 'B':
-        return "byte";
-    case 'C':
-        return "char";
-    case 'S':
-        return "short";
-    case 'I':
-        return "int";
-    case 'F':
-        return "float";
-    case 'J':
-        return "long";
-    case 'D':
-        return "double";
-    case 'L':
-        return s.substr(2, s.length() - 3);
-    default:
-        return s.substr(1);
+        return signatureToType(*part.subpart.get());
+    }
+    else
+    {
+        part.layerCount--;
+        return signatureToType(part);
     }
 }
 
@@ -380,38 +334,17 @@ inline static int argToSlot(uint8_t *out, int argCount)
     return l;
 }
 
-inline static std::vector<std::string> argDescriptorParse(char *desc)
-{
-    std::vector<std::string> st;
-    ++desc;
-    while (*desc)
-    {
-        if (*desc == ')')
-            break;
-
-        st.push_back(fieldDescToType(desc));
-
-        if (*desc == 'L')
-        {
-            while (*desc != ';')
-            {
-                ++desc;
-            }
-        }
-
-        ++desc;
-    }
-
-    for (auto &l : st)
-    {
-        std::cout << l << std::endl;
-    }
-
-    return st;
-}
-
 inline static void argDescriptorParse(char *desc, uint8_t *out, int &argCount, uint8_t *returnType, int maxArgs = 255)
 {
+    /*auto result = parseSignature(desc);
+    returnType = result.second.type == argTypeArray ? argTypeReference : result.second.type;
+    argCount = result.first.size();
+
+    for (int i = 0; i < argCount; i++)
+    {
+        out[i] = result.first[i].type == argTypeArray ? argTypeReference : result.first[i].type;
+    }*/
+
     argCount = 0;
     bool inArg = false;
 #define checkArg                                                                                                       \

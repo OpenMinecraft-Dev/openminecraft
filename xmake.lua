@@ -94,7 +94,7 @@ add_requires(
 	"tinyobjloader",
 	"opengl-headers",
 	"zlib",
-	"libffi",
+	"libffi <3.6.0", -- in order to fix the linking problem
 	"joltphysics",
 	{ system = false }
 )
