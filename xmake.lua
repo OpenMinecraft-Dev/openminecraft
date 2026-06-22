@@ -159,7 +159,7 @@ add_packages(
 	"harfbuzz",
 	"vulkan-headers",
 	"glm",
-	"joltphysics",
+	"bullet3",
 	"vulkan-hpp",
 	"shaderc",
 	"fmt",
