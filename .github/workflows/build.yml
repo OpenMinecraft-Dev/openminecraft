@@ -157,8 +157,8 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: ${{ env.CACHEPATH }}
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-
-          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
+          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
       - name: Generate header
         run: |
           xmake f -yc ${{ env.XMAKE_ARGS }}
@@ -230,7 +230,7 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: ${{ env.CACHEPATH }}
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkg-${{ env.CACHENAME }}
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-${{ env.CACHENAME }}
       - name: Build
         run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{
           env.XMAKE_ARGS }} openminecraft
