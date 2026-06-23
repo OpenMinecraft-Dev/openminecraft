@@ -156,8 +156,6 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
 
         klass->klassMutex.lock();
 
-        logger.debug("klass fixing for {}", klass->name);
-
         auto kls = elysium->klassLoader->findClass("java/lang/Class");
         auto oop = elysium->oopManager->allocateOop(kls);
         auto field = kls->toInstance()->findField("name", "Ljava/lang/String;");
