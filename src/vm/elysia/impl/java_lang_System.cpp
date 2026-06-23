@@ -30,7 +30,7 @@ extern "C"
         env->CallObjectMethodA(properties, kkm, args);
 
         args[0].l = env->NewStringUTF("java.home");
-        args[1].l = env->NewStringUTF(std::filesystem::current_path().c_str());
+        args[1].l = env->NewStringUTF(std::filesystem::current_path().string().c_str());
         env->CallObjectMethodA(properties, kkm, args);
 
         return properties;

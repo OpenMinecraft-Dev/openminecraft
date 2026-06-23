@@ -88,6 +88,12 @@ OMElysium::OMElysium()
             auto md = mcls->findMethod("initializeSystemClass", "()V");
             executor->callVoidFunction(md, nullptr);
 
+            auto l = klassLoader->fetchOrLoadClass("openminecraft/Test");
+            auto mm = l->findMethod("main", "([Ljava/lang/String;)V");
+            OMElysiaNativeValue vv[1];
+            vv[0].l = nullptr;
+            executor->callVoidFunction(mm, vv);
+
             logger.info("vm init finished");
         }
         catch (std::logic_error &e)
