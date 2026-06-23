@@ -129,10 +129,6 @@ jobs:
           $CACHENAME = python ./misc/simple_name_gen.py
           echo "CACHENAME=$CACHENAME" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "CACHEPATH=C:/Users/runneradmin/AppData/Local/.xmake/packages" | Out-File -FilePath $env:GITHUB_ENV -Append
-      - name: Remove libffi cache
-        if: matrix.plat == 'linux-cross' && (matrix.arch == 'riscv64' || matrix.arch == 's390x')
-        run: |
-          rm -r ${{ env.CACHEPATH }}/l/libffi
       - name: MacOS JIT Test
         if: matrix.plat == 'macos'
         run: |
@@ -163,6 +159,10 @@ jobs:
           path: ${{ env.CACHEPATH }}
           key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
           restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
+      - name: Remove libffi cache (temporary)
+        if: matrix.plat == 'linux-cross' && (matrix.arch == 'riscv64' || matrix.arch == 's390x')
+        run: |
+          rm -r ${{ env.CACHEPATH }}/l/libffi
       - name: Generate header
         run: |
           xmake f -yc ${{ env.XMAKE_ARGS }}
