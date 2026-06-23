@@ -14,6 +14,6 @@ package("libffi")
         return {
             includedirs = path.join(sysroot, "usr/include"),
             linkdirs = path.join(sysroot, "usr/lib", mapping[arch]),
-            links = ":libffi.so"
+            links = "ffi"
         }
     end)
