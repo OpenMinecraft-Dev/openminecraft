@@ -925,17 +925,14 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             std::lock_guard guard(objectMonitorsMutex);
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             objectMonitors[obj]->unlock();
-            objectMonitors.erase(obj);
+            // objectMonitors.erase(obj);
             ++tc->zero.pc;
             break;
         }
         case op_monitorenter: {
             std::lock_guard guard(objectMonitorsMutex);
             auto obj = zeroStackPopGet<OMElysiaOop *>();
-            if (!objectMonitors.count(obj))
-            {
-                objectMonitors[obj] = std::make_shared<std::mutex>();
-            }
+            objectMonitors[obj] = std::make_shared<std::recursive_mutex>();
             objectMonitors[obj]->lock();
             ++tc->zero.pc;
             break;

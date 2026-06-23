@@ -22,7 +22,7 @@ extern "C"
         env->CallObjectMethodA(properties, kkm, args);
 
         args[0].l = env->NewStringUTF("file.separator");
-        args[1].l = env->NewStringUTF(fmt::format("{}", std::filesystem::path::preferred_separator).c_str());
+        args[1].l = env->NewStringUTF(fmt::format("{}", (char)std::filesystem::path::preferred_separator).c_str());
         env->CallObjectMethodA(properties, kkm, args);
 
         args[0].l = env->NewStringUTF("path.separator");

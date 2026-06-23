@@ -38,7 +38,7 @@ jint Java_sun_misc_Signal_findSignal(OMElysiaJNIEnv *env, OMElysiaKlass *, OMEly
 
 jlong Java_sun_misc_Signal_handle0(OMElysiaJNIEnv *env, OMElysiaKlass *, jint sig, jlong handler)
 {
-    return (jlong)signal(sig, (sighandler_t)handler);
+    return (jlong)signal(sig, (__sighandler_t)handler);
 }
 
 void Java_java_lang_ClassLoader$NativeLibrary_load(OMElysiaJNIEnv *env, OMElysiaNativeHandle *lib,

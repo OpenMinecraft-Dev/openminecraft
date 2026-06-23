@@ -11,6 +11,7 @@
 #include <cstdarg>
 #include <cstdint>
 #include <mutex>
+#include <thread>
 #include <type_traits>
 #include <unordered_map>
 namespace openminecraft::vm::elysia::executor
@@ -178,7 +179,7 @@ class OMElysiaExecutorZero
     void threadInit();
 
     std::mutex objectMonitorsMutex;
-    std::unordered_map<OMElysiaOop *, std::shared_ptr<std::mutex>> objectMonitors;
+    std::unordered_map<OMElysiaOop *, std::shared_ptr<std::recursive_mutex>> objectMonitors;
 
   private:
     OMElysium *elysium;
