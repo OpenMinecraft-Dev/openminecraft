@@ -152,16 +152,13 @@ jobs:
           source ~/.xmake/profile
       - name: Setup Python packages
         run: pip install wheel
-      - name: Restore xmake packages
+      - name: Restore xmake packages (bootstrap)
         id: cache-main
         uses: actions/cache/restore@v5
         with:
           path: ${{ env.CACHEPATH }}
           key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
           restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
-      - name: Remove libffi in cache
-        if: matrix.plat == 'linux-cross' && matrix.arch == 'ppc64'
-        run: rm -r ${{ env.CACHEPATH }}/l/libffi
       - name: Generate header
         run: |
           xmake f -yc ${{ env.XMAKE_ARGS }}
@@ -169,6 +166,20 @@ jobs:
           xmake run -y -w . openminecraft-bundlemaker -a Cyrene -c -t res.bundle -P bootassets
           xxd -i res.bundle > include/openminecraft/resource/bootassets.h
           rm res.bundle
+      - name: Save xmake packages (bootstrap)
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ env.CACHEPATH }}
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-${{ env.CACHENAME }}
+      - name: Clear xmake cache
+        run: rm -r ${{ env.CACHEPATH }}
+      - name: Restore xmake packages (Core)
+        id: cache-main
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ env.CACHEPATH }}
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-corepkgs-
+          restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-corepkgs-
       - name: Setup OpenHarmony SDK
         if: matrix.plat == 'harmony'
         run: |
@@ -185,8 +196,7 @@ jobs:
         run: xmake f -m ${{ env.MODE }} --cxx="clang++" -yc ${{ env.XMAKE_ARGS }}
       - name: Configure IOS
         if: matrix.plat == 'ios'
-        run: xmake f -p iphoneos -m ${{ env.MODE }} --cc="clang" -yc ${{ env.XMAKE_ARGS
-          }}
+        run: xmake f -p iphoneos -m ${{ env.MODE }} --cc="clang" -yc ${{ env.XMAKE_ARGS }}
       - name: Configure OpenHarmony
         if: matrix.plat == 'harmony'
         run: xmake f -p harmony -a ${{ matrix.arch }} --sdk=${{ github.workspace
@@ -229,11 +239,11 @@ jobs:
         if: matrix.plat == 'windows'
         run: xmake f --toolchain=msvc -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{
           env.XMAKE_ARGS }}
-      - name: Save xmake packages
+      - name: Save xmake packages (Core)
         uses: actions/cache/save@v5
         with:
           path: ${{ env.CACHEPATH }}
-          key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-${{ env.CACHENAME }}
+          key: ${{ matrix.plat }}-${{ matrix.arch }}-corepkgs-${{ env.CACHENAME }}
       - name: Build
         run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{
           env.XMAKE_ARGS }} openminecraft
