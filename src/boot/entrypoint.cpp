@@ -61,7 +61,7 @@ int boot(std::vector<std::string> args)
     }
 
     logger->info("hardware / software status");
-    logger->info("CPU Name: {}", os::fetchCpuName());
+    // logger->info("CPU Name: {}", os::fetchCpuName());
     logger->info("System: {}, version {}", os::fetchSystemName(), os::fetchSystemVersion());
     logger->info("User: {} / {}", os::fetchUsername(), os::fetchLoginUser());
     logger->info("Total memory: {} bytes", os::fetchMemoryTotal());
