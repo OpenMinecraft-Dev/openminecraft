@@ -16,9 +16,9 @@ set_policy("build.optimization.lto", false)
 -- utils and custom libraries
 includes("utils.lua")
 includes("extlibs/vulkan.lua")
-includes("extlibs/joltphysics.lua")
 includes("extlibs/sdl_port.lua")
 
+-- fix libffi compile exception
 if is_plat("linux") and is_arch("riscv64", "ppc64", "s390x") then
 	includes("extlibs/libffi.lua")
 end
@@ -98,7 +98,7 @@ add_requires(
 	"tinyobjloader",
 	"opengl-headers",
 	"zlib",
-	"joltphysics",
+	"bullet3",
 	"libffi",
 	{ system = false }
 )
