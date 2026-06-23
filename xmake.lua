@@ -19,8 +19,8 @@ includes("extlibs/vulkan.lua")
 includes("extlibs/joltphysics.lua")
 includes("extlibs/sdl_port.lua")
 
-if is_plat("linux") and is_arch("riscv64") then
-        includes("extlibs/libffi.lua")
+if is_plat("linux") and is_arch("riscv64", "ppc64", "s390x") then
+	includes("extlibs/libffi.lua")
 end
 
 --------------------------------------------------------------------------------
