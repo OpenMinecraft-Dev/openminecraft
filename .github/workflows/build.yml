@@ -7,7 +7,7 @@ env:
   XMAKE_ARGS: -v
   ANDROID_NDK_VERSION: r27c
   OHOS_SDK_VERSION: 5.0.0-Release
-  CROSS_TOOL_VERSION: toolchain-20260622-1
+  CROSS_TOOL_VERSION: toolchain-20260623-2
 jobs:
   build:
     strategy:
@@ -194,7 +194,8 @@ jobs:
         run: xmake f -m ${{ env.MODE }} --cxx="clang++" -yc ${{ env.XMAKE_ARGS }}
       - name: Configure IOS
         if: matrix.plat == 'ios'
-        run: xmake f -p iphoneos -m ${{ env.MODE }} --cc="clang" -yc ${{ env.XMAKE_ARGS }}
+        run: xmake f -p iphoneos -m ${{ env.MODE }} --cc="clang" -yc ${{ env.XMAKE_ARGS
+          }}
       - name: Configure OpenHarmony
         if: matrix.plat == 'harmony'
         run: xmake f -p harmony -a ${{ matrix.arch }} --sdk=${{ github.workspace

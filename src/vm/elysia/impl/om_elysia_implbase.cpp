@@ -5,8 +5,6 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include <atomic>
-#include <csignal>
-#include <stdexcept>
 
 namespace openminecraft::vm::elysia::impl
 {
@@ -60,8 +58,8 @@ void Java_java_io_UnixFileSystem_initIDs()
 
 jboolean Java_java_util_concurrent_atomic_AtomicLong_VMSupportsCS8(OMElysiaJNIEnv *env, OMElysiaKlass *)
 {
-    std::atomic_ulong ll;
-    return ll.is_lock_free();
+    std::atomic_uint64_t l;
+    return l.is_lock_free();
 }
 
 OMElysiaNativeHandle *Java_java_lang_Throwable_fillInStackTrace(OMElysiaJNIEnv *env, OMElysiaNativeHandle *thr,
