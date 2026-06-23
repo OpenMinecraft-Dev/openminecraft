@@ -132,7 +132,7 @@ jobs:
       - name: Remove libffi cache
         if: matrix.plat == 'linux-cross' && (matrix.arch == 'riscv64' || matrix.arch == 's390x')
         run: |
-          rm -r ${{ env.CACHEPATH }}/packages/l/libffi
+          rm -r ${{ env.CACHEPATH }}/l/libffi
       - name: MacOS JIT Test
         if: matrix.plat == 'macos'
         run: |
