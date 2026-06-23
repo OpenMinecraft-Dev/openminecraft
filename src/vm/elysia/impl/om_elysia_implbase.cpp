@@ -1,14 +1,65 @@
 #include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
+#include <atomic>
+#include <csignal>
+#include <stdexcept>
 
 namespace openminecraft::vm::elysia::impl
 {
 log::OMLogger logger("Elysia Impl Layer");
+
+jint Java_sun_misc_Signal_findSignal(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *name)
+{
+    using namespace openminecraft::binary::hash;
+    jint result = 0;
+    auto nn = env->GetStringUTFChars(name, nullptr);
+    switch (hash_compile_time(nn))
+    {
+    case "HUP"_hash:
+        result = SIGHUP;
+        break;
+    case "INT"_hash:
+        result = SIGINT;
+        break;
+    case "TERM"_hash:
+        result = SIGTERM;
+        break;
+    default:
+        throw std::logic_error(nn);
+    }
+    env->ReleaseStringUTFChars(name, nn);
+
+    return result;
+}
+
+jlong Java_sun_misc_Signal_handle0(OMElysiaJNIEnv *env, OMElysiaKlass *, jint sig, jlong handler)
+{
+    return (jlong)signal(sig, (sighandler_t)handler);
+}
+
+void Java_java_lang_ClassLoader$NativeLibrary_load(OMElysiaJNIEnv *env, OMElysiaNativeHandle *lib,
+                                                   OMElysiaNativeHandle *name, jboolean)
+{
+    auto nn = env->GetStringUTFChars(name, nullptr);
+    logger.warn("request to load library {}, while elysium doesn't support library loading!", nn);
+    env->ReleaseStringUTFChars(name, nn);
+
+    auto kl = env->FindClass("java/lang/ClassLoader$NativeLibrary");
+    env->SetBooleanField(lib, env->GetFieldID(kl, "loaded", "Z"), true);
+}
+void Java_java_io_UnixFileSystem_initIDs()
+{
+}
+
+jboolean Java_java_util_concurrent_atomic_AtomicLong_VMSupportsCS8(OMElysiaJNIEnv *env, OMElysiaKlass *)
+{
+    std::atomic_ulong ll;
+    return ll.is_lock_free();
+}
 
 OMElysiaNativeHandle *Java_java_lang_Throwable_fillInStackTrace(OMElysiaJNIEnv *env, OMElysiaNativeHandle *thr,
                                                                 int dummy)

@@ -44,6 +44,12 @@ extern "C"
                                                                                       OMElysiaKlass *,
                                                                                       OMElysiaNativeHandle *constructor,
                                                                                       OMElysiaNativeHandle *args);
+    jboolean Java_java_util_concurrent_atomic_AtomicLong_VMSupportsCS8(OMElysiaJNIEnv *env, OMElysiaKlass *);
+    void Java_java_io_UnixFileSystem_initIDs();
+    void Java_java_lang_ClassLoader$NativeLibrary_load(OMElysiaJNIEnv *env, OMElysiaNativeHandle *,
+                                                       OMElysiaNativeHandle *name, jboolean);
+    jint Java_sun_misc_Signal_findSignal(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *name);
+    jlong Java_sun_misc_Signal_handle0(OMElysiaJNIEnv *env, OMElysiaKlass *, jint sig, jlong handler);
 }
 }; // namespace openminecraft::vm::elysia::impl
 

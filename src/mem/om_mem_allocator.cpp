@@ -40,6 +40,7 @@ defmalr(SDL, "sdl");
 defmalr(GL, "opengl");
 defmalr(Elysia, "elysia_internal");
 defmalr(ZLib, "zlib");
+defmalr(ElysiaExternal, "elysia_external");
 } // namespace openminecraft::mem::allocator
 
 using namespace openminecraft::mem::allocator;

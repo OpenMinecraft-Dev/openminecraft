@@ -115,6 +115,11 @@ void initBaseInterface(OMElysiaJNIEnv env)
                                                                       handleFetch(val));
         });
     };
+    env.internal->SetBooleanField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID,
+                                       jboolean val) {
+        auto ptr = env->internal->elysium->oopManager->oopAccessField(handleFetch(obj), fieldID->offset);
+        *reinterpret_cast<jboolean *>(ptr) = val;
+    };
     env.internal->SetIntField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID, jint val) {
         auto ptr = env->internal->elysium->oopManager->oopAccessField(handleFetch(obj), fieldID->offset);
         *reinterpret_cast<jint *>(ptr) = val;

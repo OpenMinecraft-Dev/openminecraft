@@ -47,6 +47,11 @@ OMElysium::OMElysium()
     registerNative(Java_sun_reflect_Reflection_getClassAccessFlags);
     registerNative(Java_java_lang_Throwable_fillInStackTrace);
     registerNative(Java_sun_reflect_NativeConstructorAccessorImpl_newInstance0);
+    registerNative(Java_java_util_concurrent_atomic_AtomicLong_VMSupportsCS8);
+    registerNative(Java_java_io_UnixFileSystem_initIDs);
+    registerNative(Java_java_lang_ClassLoader$NativeLibrary_load);
+    registerNative(Java_sun_misc_Signal_findSignal);
+    registerNative(Java_sun_misc_Signal_handle0);
 
     mainThread = new std::thread([&]() {
         log::multithread::registerCurrentThreadName("main");

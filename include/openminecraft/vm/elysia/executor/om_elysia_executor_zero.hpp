@@ -86,6 +86,26 @@ uint16_t zeroCodeFetchArgu16p0();
 int16_t zeroCodeFetchArgs16p0();
 int32_t zeroCodeFetchArgs32Align(int offset);
 
+template <typename T> static void zeroStackSaveLocalPopW(uint32_t l)
+{
+    if constexpr (sizeof(void *) == 8)
+    {
+        auto ll = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
+        *reinterpret_cast<T *>(ll) = zeroStackPopWGet<T>();
+    }
+    else
+    {
+        auto value = zeroStackPopWGet<T>();
+        auto vv = *reinterpret_cast<uint64_t *>(&value);
+
+        auto dlow = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
+        auto dhigh = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1 + 1) * sizeof(void *);
+
+        *reinterpret_cast<uint32_t *>(dlow) = static_cast<uint32_t>(vv & 0xffffffff);
+        *reinterpret_cast<uint32_t *>(dhigh) = static_cast<uint32_t>(vv >> 32);
+    }
+}
+
 template <typename T> static void zeroStackSaveLocalPop(uint32_t l)
 {
     auto ll = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
@@ -126,20 +146,6 @@ class OMElysiaExecutorZero
   public:
     OMElysiaExecutorZero(OMElysium *elysium);
     ~OMElysiaExecutorZero();
-
-    /*#define DEF_FUNCCALL(retType, name) \ retType call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue
-       *args);
-
-        DEF_FUNCCALL(void, Void);
-        DEF_FUNCCALL(jbyte, Byte);
-        DEF_FUNCCALL(jboolean, Boolean);
-        DEF_FUNCCALL(jchar, Char);
-        DEF_FUNCCALL(jshort, Short);
-        DEF_FUNCCALL(jint, Int);
-        DEF_FUNCCALL(jfloat, Float);
-        DEF_FUNCCALL(jlong, Long);
-        DEF_FUNCCALL(jdouble, Double);
-        DEF_FUNCCALL(OMElysiaOop *, Object);*/
 
     void callVoidFunction(OMElysiaMethod *m, const OMElysiaNativeValue *args);
 

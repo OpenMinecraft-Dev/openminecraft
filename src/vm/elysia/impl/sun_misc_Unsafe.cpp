@@ -1,7 +1,9 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/atomic/om_atomic.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
+#include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include <atomic>
 #include <chrono>
@@ -65,16 +67,15 @@ extern "C"
                                                               OMElysiaNativeHandle *o, jlong offset,
                                                               OMElysiaNativeHandle *expected, OMElysiaNativeHandle *x)
     {
+        auto target = reinterpret_cast<uintptr_t>(handleFetch(o)) + offset;
         if (env->internal->elysium->mainHeap.enablePtrCompress())
         {
-            auto target = env->internal->elysium->oopManager->oopAccessField(handleFetch(o), offset);
             auto exp = env->internal->elysium->mainHeap.compress(handleFetch(expected));
             return atomic::atomic_cas(reinterpret_cast<uint32_t *>(target), exp,
                                       env->internal->elysium->mainHeap.compress(handleFetch(x)));
         }
         else
         {
-            auto target = env->internal->elysium->oopManager->oopAccessField(handleFetch(o), offset);
             auto exp = handleFetch(expected);
             return atomic::atomic_cas(reinterpret_cast<OMElysiaOop **>(target), exp, handleFetch(x));
         }
@@ -92,7 +93,8 @@ extern "C"
         auto ff = ik->toInstance()->findField(nnstr, nullptr);
         env->ReleaseStringUTFChars(namestr, nnstr);
 
-        return env->internal->elysium->oopManager->oopHeaderLength() + ff->offset;
+        return env->internal->elysium->oopManager->oopAccessField(handleFetch(instance), ff->offset) -
+               reinterpret_cast<uintptr_t>(handleFetch(instance));
     }
 
     static jint Java_sun_misc_Unsafe_getIntVolatile(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
@@ -105,9 +107,28 @@ extern "C"
     static bool Java_sun_misc_Unsafe_compareAndSwapInt(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
                                                        OMElysiaNativeHandle *o, jlong offset, jint expected, jint x)
     {
-        return atomic::atomic_cas(
-            reinterpret_cast<jint *>(env->internal->elysium->oopManager->oopAccessField(handleFetch(o), offset)),
-            expected, x);
+        return atomic::atomic_cas(reinterpret_cast<jint *>(reinterpret_cast<uintptr_t>(handleFetch(o)) + offset),
+                                  expected, x);
+    }
+
+    static jlong Java_sun_misc_Unsafe_allocateMemory(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong l)
+    {
+        return (jlong)mem::allocator::tracedMallocElysiaExternal(l);
+    }
+
+    static void Java_sun_misc_Unsafe_putLong(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr, jlong v)
+    {
+        *(jlong *)addr = v;
+    }
+
+    static jbyte Java_sun_misc_Unsafe_getByte(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr)
+    {
+        return *(jbyte *)addr;
+    }
+
+    static void Java_sun_misc_Unsafe_freeMemory(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr)
+    {
+        mem::allocator::tracedFreeElysiaExternal((void *)addr);
     }
 
     void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
@@ -127,8 +148,16 @@ extern "C"
             {const_cast<char *>("getIntVolatile"), const_cast<char *>("(Ljava/lang/Object;J)I"),
              reinterpret_cast<void *>(Java_sun_misc_Unsafe_getIntVolatile)},
             {const_cast<char *>("compareAndSwapInt"), const_cast<char *>("(Ljava/lang/Object;JII)Z"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_compareAndSwapInt)}};
-        env->RegisterNatives(klass, mm, 7);
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_compareAndSwapInt)},
+            {const_cast<char *>("allocateMemory"), const_cast<char *>("(J)J"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_allocateMemory)},
+            {const_cast<char *>("putLong"), const_cast<char *>("(JJ)V"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_putLong)},
+            {const_cast<char *>("getByte"), const_cast<char *>("(J)B"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_getByte)},
+            {const_cast<char *>("freeMemory"), const_cast<char *>("(J)V"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_freeMemory)}};
+        env->RegisterNatives(klass, mm, 11);
     }
 }
 } // namespace openminecraft::vm::elysia::impl

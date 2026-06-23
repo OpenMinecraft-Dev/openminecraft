@@ -318,7 +318,13 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             tc->zero.pc += 2;
             break;
         }
-
+        case op_baload: {
+            auto idx = zeroStackPopGet<jint>();
+            auto obj = zeroStackPopGet<OMElysiaOop *>();
+            zeroStackPush(elysium->oopManager->arrAccess<jboolean>(obj)[idx]);
+            ++tc->zero.pc;
+            break;
+        }
         case op_caload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
@@ -356,6 +362,21 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
 
+#define op_lstorec(n)                                                                                                  \
+    case op_lstore_n(n):                                                                                               \
+        zeroStackSaveLocalPopW<jlong>(n);                                                                              \
+        ++tc->zero.pc;                                                                                                 \
+        break;
+            op_lstorec(0);
+            op_lstorec(1);
+            op_lstorec(2);
+            op_lstorec(3);
+        case op_lstore: {
+            zeroStackSaveLocalPopW<jlong>(tc->zero.pc[1]);
+            tc->zero.pc += 2;
+            break;
+        }
+
 #define op_astorec(n)                                                                                                  \
     case op_astore_n(n):                                                                                               \
         zeroStackSaveLocalPop<OMElysiaOop *>(n);                                                                       \
@@ -376,6 +397,14 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto index = zeroStackPopGet<jint>();
             auto arr = zeroStackPopGet<OMElysiaOop *>();
             elysium->oopManager->arrAccess<jint>(arr)[index] = value;
+            ++tc->zero.pc;
+            break;
+        }
+        case op_bastore: {
+            auto value = zeroStackPopGet<jboolean>();
+            auto index = zeroStackPopGet<jint>();
+            auto arr = zeroStackPopGet<OMElysiaOop *>();
+            elysium->oopManager->arrAccess<jboolean>(arr)[index] = value;
             ++tc->zero.pc;
             break;
         }
@@ -587,6 +616,24 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_ificmp(ge, >=);
             op_ificmp(le, <=);
 
+        case op_lcmp: {
+            auto value2 = zeroStackPopWGet<jlong>();
+            auto value1 = zeroStackPopWGet<jlong>();
+            if (value1 > value2)
+            {
+                zeroStackPush<jint>(1);
+            }
+            else if (value1 == value2)
+            {
+                zeroStackPush<jint>(0);
+            }
+            else
+            {
+                zeroStackPush<jint>(-1);
+            }
+            ++tc->zero.pc;
+            break;
+        }
 #define op_fcmp(cond, n)                                                                                               \
     case op_fcmp##cond: {                                                                                              \
         auto value2 = zeroStackPopGet<jfloat>();                                                                       \
