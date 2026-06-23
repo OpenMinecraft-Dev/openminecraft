@@ -40,6 +40,10 @@ extern "C"
 
     OMElysiaNativeHandle *Java_java_lang_Throwable_fillInStackTrace(OMElysiaJNIEnv *env, OMElysiaNativeHandle *thr,
                                                                     int dummy);
+    OMElysiaNativeHandle *Java_sun_reflect_NativeConstructorAccessorImpl_newInstance0(OMElysiaJNIEnv *env,
+                                                                                      OMElysiaKlass *,
+                                                                                      OMElysiaNativeHandle *constructor,
+                                                                                      OMElysiaNativeHandle *args);
 }
 }; // namespace openminecraft::vm::elysia::impl
 
