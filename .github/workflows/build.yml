@@ -244,18 +244,9 @@ jobs:
           path: ${{ env.CACHEPATH }}
           key: ${{ matrix.plat }}-${{ matrix.arch }}-corepkgs-${{ env.CACHENAME }}
       - name: Build
-        run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{
-          env.XMAKE_ARGS }} openminecraft
-      - name: Build debug tools
-        if: matrix.plat == 'windows'
-        run: |
-          xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }} openminecraft-elysiavis
-          xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft-elysiavis
+        run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }} openminecraft
       - name: Xmake Install
         run: xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft
-      - name: Test Vulkan MacOS
-        if: matrix.plat == 'macos'
-        run: xmake run -w . openminecraft vktest
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7
         with:
