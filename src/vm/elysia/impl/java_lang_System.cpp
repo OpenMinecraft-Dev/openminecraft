@@ -1,10 +1,12 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
-#include <cmath>
 #include <filesystem>
-#include <iostream>
-#include <stdexcept>
+#ifdef OM_PLATFORM_WINDOWS
+#include <direct.h>
+#else
+#include <unistd.h>
+#endif
 
 namespace openminecraft::vm::elysia::impl
 {
@@ -31,6 +33,24 @@ extern "C"
 
         args[0].l = env->NewStringUTF("java.home");
         args[1].l = env->NewStringUTF(std::filesystem::current_path().string().c_str());
+        env->CallObjectMethodA(properties, kkm, args);
+
+        args[0].l = env->NewStringUTF("line.separator");
+        args[1].l = env->NewStringUTF("\n");
+        env->CallObjectMethodA(properties, kkm, args);
+
+        char userdir[1024];
+#ifdef OM_PLATFORM_WINDOWS
+        (void)_getcwd(userdir, 1024);
+#else
+        getcwd(userdir, 1024);
+#endif
+        args[0].l = env->NewStringUTF("user.dir");
+        args[1].l = env->NewStringUTF(userdir);
+        env->CallObjectMethodA(properties, kkm, args);
+
+        args[0].l = env->NewStringUTF("sun.jnu.encoding");
+        args[1].l = env->NewStringUTF("UTF_8");
         env->CallObjectMethodA(properties, kkm, args);
 
         return properties;

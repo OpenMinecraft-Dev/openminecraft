@@ -76,10 +76,6 @@ OMElysiaNativeHandle *Java_java_lang_String_intern(OMElysiaJNIEnv *env, OMElysia
     return str;
 }
 
-void Java_java_io_FileDescriptor_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
-{
-}
-
 void Java_sun_misc_VM_initialize(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
 }
@@ -117,10 +113,6 @@ jint Java_sun_reflect_Reflection_getClassAccessFlags(OMElysiaJNIEnv *env, OMElys
 }
 
 void Java_java_io_FileInputStream_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
-{
-}
-
-void Java_java_io_FileOutputStream_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
 }
 

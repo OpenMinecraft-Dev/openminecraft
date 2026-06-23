@@ -216,6 +216,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
         args[1].l = elysium->executor->recordLocalRef(elysium->oopManager->allocateString(name));
         elysium->executor->callVoidFunction(inm, args);
         elysium->throwException(oop);
+        logger.warn("class {} not found!", name);
         return;
     }
     loadClassWithoutMirror(&istr, special);

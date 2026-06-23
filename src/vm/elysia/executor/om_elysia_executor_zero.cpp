@@ -304,6 +304,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_floadc(1);
             op_floadc(2);
             op_floadc(3);
+        case op_fload: {
+            zeroStackPush(zeroStackLoadLocal<jfloat>(tc->zero.pc[1]));
+            tc->zero.pc += 2;
+            break;
+        }
 #define op_aloadc(n)                                                                                                   \
     case op_aload_n(n):                                                                                                \
         zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(n));                                                           \
@@ -373,6 +378,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_lstorec(3);
         case op_lstore: {
             zeroStackSaveLocalPopW<jlong>(tc->zero.pc[1]);
+            tc->zero.pc += 2;
+            break;
+        }
+
+        case op_fstore: {
+            zeroStackSaveLocalPop<jfloat>(tc->zero.pc[1]);
             tc->zero.pc += 2;
             break;
         }
@@ -861,6 +872,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++tc->zero.pc;
             break;
         }
+        /*case op_athrow: {
+            elysium->throwException(zeroStackPopGet<OMElysiaOop *>());
+            ++tc->zero.pc;
+            break;
+        }*/
         case op_checkcast: {
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             if (!obj)

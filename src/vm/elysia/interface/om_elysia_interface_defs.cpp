@@ -100,6 +100,14 @@ void initBaseInterface(OMElysiaJNIEnv env)
         });
         return hnd;
     };
+    env.internal->GetIntField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID) {
+        auto elys = env->internal->elysium;
+        jint val;
+        execWithState(InsideVM, [&]() {
+            val = *reinterpret_cast<jint *>(elys->oopManager->oopAccessField(handleFetch(obj), fieldID->offset));
+        });
+        return val;
+    };
     env.internal->GetLongField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID) {
         auto elys = env->internal->elysium;
         jlong val;
@@ -206,6 +214,21 @@ void initBaseInterface(OMElysiaJNIEnv env)
         });
         return hnd;
     };
+
+    env.internal->GetByteArrayElements = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jboolean *isCopy) {
+        jbyte *result;
+        execWithState(InsideVM, [&]() {
+            result = env->internal->elysium->oopManager->arrAccess<jbyte>(handleFetch(array));
+            if (isCopy)
+            {
+                *isCopy = false;
+            }
+            atomic::atomic_store(&handleFetch(array)->markword,
+                                 atomic::atomic_load(&handleFetch(array)->markword) | markFixed);
+        });
+        return result;
+    };
+
     // TODO: copy impl!
     env.internal->GetCharArrayElements = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jboolean *isCopy) {
         jchar *result;
@@ -219,6 +242,12 @@ void initBaseInterface(OMElysiaJNIEnv env)
                                  atomic::atomic_load(&handleFetch(array)->markword) | markFixed);
         });
         return result;
+    };
+    env.internal->ReleaseByteArrayElements = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *arr, jbyte *arrn, jint i) {
+        execWithState(InsideVM, [&]() {
+            atomic::atomic_store(&handleFetch(arr)->markword,
+                                 atomic::atomic_load(&handleFetch(arr)->markword) & ~markFixed);
+        });
     };
 
     env.internal->RegisterNatives = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const OMElysiaNativeMethod *methods,

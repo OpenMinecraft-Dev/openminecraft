@@ -88,6 +88,7 @@ OMElysium::OMElysium()
             auto mcls = klassLoader->findClass("java/lang/System");
             auto md = mcls->findMethod("initializeSystemClass", "()V");
             executor->callVoidFunction(md, nullptr);
+            logger.info("vm init finished");
 
             auto l = klassLoader->fetchOrLoadClass("openminecraft/Test");
             auto mm = l->findMethod("main", "([Ljava/lang/String;)V");
@@ -95,7 +96,7 @@ OMElysium::OMElysium()
             vv[0].l = nullptr;
             executor->callVoidFunction(mm, vv);
 
-            logger.info("vm init finished");
+            logger.info("main func ended");
         }
         catch (std::logic_error &e)
         {
