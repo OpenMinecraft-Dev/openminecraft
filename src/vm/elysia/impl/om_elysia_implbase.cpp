@@ -12,9 +12,10 @@ namespace openminecraft::vm::elysia::impl
 {
 log::OMLogger logger("Elysia Impl Layer");
 
+// TODO: stub implementation
 jint Java_sun_misc_Signal_findSignal(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *name)
 {
-    using namespace openminecraft::binary::hash;
+    /*using namespace openminecraft::binary::hash;
     jint result = 0;
     auto nn = env->GetStringUTFChars(name, nullptr);
     switch (hash_compile_time(nn))
@@ -33,12 +34,14 @@ jint Java_sun_misc_Signal_findSignal(OMElysiaJNIEnv *env, OMElysiaKlass *, OMEly
     }
     env->ReleaseStringUTFChars(name, nn);
 
-    return result;
+    return result;*/
+    return 0;
 }
 
 jlong Java_sun_misc_Signal_handle0(OMElysiaJNIEnv *env, OMElysiaKlass *, jint sig, jlong handler)
 {
-    return (jlong)signal(sig, (__sighandler_t)handler);
+    // return (jlong)signal(sig, (__sighandler_t)handler);
+    return 0;
 }
 
 void Java_java_lang_ClassLoader$NativeLibrary_load(OMElysiaJNIEnv *env, OMElysiaNativeHandle *lib,
