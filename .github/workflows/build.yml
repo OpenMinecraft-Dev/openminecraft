@@ -254,7 +254,7 @@ jobs:
       - name: Xmake Install
         run: xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft
       - name: Test Vulkan MacOS
-        if: matrix.plat == "macos"
+        if: matrix.plat == 'macos'
         run: xmake run -w . openminecraft vktest
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7
