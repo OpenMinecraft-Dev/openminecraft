@@ -153,7 +153,6 @@ jobs:
       - name: Setup Python packages
         run: pip install wheel
       - name: Restore xmake packages (bootstrap)
-        id: cache-main
         uses: actions/cache/restore@v5
         with:
           path: ${{ env.CACHEPATH }}
@@ -174,7 +173,6 @@ jobs:
       - name: Clear xmake cache
         run: rm -r ${{ env.CACHEPATH }}
       - name: Restore xmake packages (Core)
-        id: cache-main
         uses: actions/cache/restore@v5
         with:
           path: ${{ env.CACHEPATH }}
