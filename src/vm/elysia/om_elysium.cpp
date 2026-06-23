@@ -6,9 +6,9 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
+#include "openminecraft/vm/elysia/om_elysia_monitormanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
-#include "openminecraft/vm/os/om_thread.hpp"
 #include <atomic>
 #include <stdexcept>
 #include <thread>
@@ -23,6 +23,7 @@ OMElysium::OMElysium()
     : metaspaceHeap("elysia_metaspace", 1024 * 1024 * 16, 0.2), mainHeap("elysia_main", 1024 * 1024 * 1024, 0.25),
       logger("OMElysium", this)
 {
+    monitorManager = mem::fast_shared<allocatorTag, OMElysiaMonitorManager>();
     klassLoader = mem::fast_shared<allocatorTag, OMElysiaKlassloader>(this);
     oopManager = mem::fast_shared<allocatorTag, OMElysiaOopManager>(this);
     executor = mem::fast_shared<allocatorTag, executor::OMElysiaExecutorZero>(this);

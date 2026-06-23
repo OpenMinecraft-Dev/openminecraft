@@ -4,6 +4,7 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/om_elysia_heap.hpp"
+#include "openminecraft/vm/elysia/om_elysia_monitormanager.hpp"
 #include <memory>
 #include <string>
 #include <thread>
@@ -36,6 +37,7 @@ class OMElysium
     OMElysiaHeap metaspaceHeap;
     OMElysiaHeap mainHeap;
 
+    std::shared_ptr<OMElysiaMonitorManager> monitorManager;
     std::shared_ptr<OMElysiaKlassloader> klassLoader;
     std::shared_ptr<OMElysiaOopManager> oopManager;
     std::shared_ptr<executor::OMElysiaExecutorZero> executor;
