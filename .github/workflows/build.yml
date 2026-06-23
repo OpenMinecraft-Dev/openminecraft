@@ -159,6 +159,9 @@ jobs:
           path: ${{ env.CACHEPATH }}
           key: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
           restore-keys: ${{ matrix.plat }}-${{ matrix.arch }}-pkgs-
+      - name: Remove libffi in cache
+        if: matrix.plat == 'linux-cross' && matrix.arch == 'ppc64'
+        run: rm -r ${{ env.CACHEPATH }}/l/libffi
       - name: Generate header
         run: |
           xmake f -yc ${{ env.XMAKE_ARGS }}
