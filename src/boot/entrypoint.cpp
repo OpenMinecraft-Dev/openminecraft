@@ -10,7 +10,6 @@
 #include "openminecraft/specs/abstracts/om_image.hpp"
 #include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
-#include "openminecraft/specs/zip/om_zip.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
@@ -106,11 +105,6 @@ int boot(std::vector<std::string> args)
         auto ll = bld.build();
 
         logger->info("object at {}", (void *)ll.get());
-        break;
-    }
-    case "zip"_hash: {
-        auto ii = std::make_shared<std::ifstream>(args[2], std::ios::binary);
-        specs::zip::OMZip zip(ii);
         break;
     }
     default:

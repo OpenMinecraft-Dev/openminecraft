@@ -66,7 +66,6 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m, uint8_t *retAddr, bool n
     zeroStackPop(ll * sizeof(void *));
 
     auto frame = reinterpret_cast<OMElysiaJavaFrame *>(zeroStackAlloc(sizeof(OMElysiaJavaFrame)));
-    zeroStackAlloc(ll * sizeof(void *));
 
     // function in vtable
     if ((!m->isStatic() && !m->isPrivate() && !m->isInit() && needVtable) || m->isAbstract())
@@ -94,10 +93,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m, uint8_t *retAddr, bool n
     }
 
 nextStg:
-    for (int i = ll; i < m->localLength; i++)
-    {
-        zeroStackPush<OMElysiaOop *>(nullptr);
-    }
+    zeroStackAlloc(m->localLength * sizeof(void *));
 
     frame->method = m;
     frame->returnAddr = retAddr;
@@ -166,6 +162,8 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
 
+        
+
         if (tc->haveException)
         {
             auto frm = tc->zero.frame;
@@ -197,6 +195,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         {
             throw std::logic_error("nullptr!");
         }
+
         switch (*tc->zero.pc)
         {
         case op_nop:
@@ -284,7 +283,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
 #define op_lloadc(n)                                                                                                   \
     case op_lload_n(n):                                                                                                \
-        zeroStackPushW(zeroStackLoadLocal<jlong>(n));                                                                  \
+        zeroStackPushW(zeroStackLoadLocalW<jlong>(n));                                                                 \
         ++tc->zero.pc;                                                                                                 \
         break;
             op_lloadc(0);
@@ -531,27 +530,45 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_calcneg(lneg, zeroStackPopWGet<jlong>, zeroStackPushW);
             op_calcneg(fneg, zeroStackPopGet<jfloat>, zeroStackPush);
             op_calcneg(dneg, zeroStackPopWGet<jdouble>, zeroStackPushW);
-            op_calc(ishl, zeroStackPopGet<jint>, zeroStackPush, <<);
+        case op_ishl: {
+            auto value2 = zeroStackPopGet<jint>();
+            auto value1 = zeroStackPopGet<jint>();
+            zeroStackPush(value1 << (value2 & 0x1f));
+            ++tc->zero.pc;
+            break;
+        }
+        case op_ishr: {
+            auto value2 = zeroStackPopGet<jint>();
+            auto value1 = zeroStackPopGet<jint>();
+            zeroStackPush(value1 >> (value2 & 0x1f));
+            ++tc->zero.pc;
+            break;
+        }
+        case op_iushr: {
+            auto value2 = zeroStackPopGet<jint>();
+            auto value1 = zeroStackPopGet<uint32_t>();
+            zeroStackPush(value1 >> (value2 & 0x1f));
+            ++tc->zero.pc;
+            break;
+        }
         case op_lshl: {
             auto value2 = zeroStackPopGet<jint>();
             auto value1 = zeroStackPopWGet<jlong>();
-            zeroStackPushW(value1 << value2);
+            zeroStackPushW(value1 << (value2 & 0x3f));
             ++tc->zero.pc;
             break;
         }
-            op_calc(ishr, zeroStackPopGet<jint>, zeroStackPush, >>);
         case op_lshr: {
             auto value2 = zeroStackPopGet<jint>();
             auto value1 = zeroStackPopWGet<jlong>();
-            zeroStackPushW(value1 >> value2);
+            zeroStackPushW(value1 >> (value2 & 0x3f));
             ++tc->zero.pc;
             break;
         }
-            op_calc(iushr, zeroStackPopGet<uint32_t>, zeroStackPush, >>);
         case op_lushr: {
             auto value2 = zeroStackPopGet<jint>();
             auto value1 = zeroStackPopWGet<uint64_t>();
-            zeroStackPushW(value1 >> value2);
+            zeroStackPushW(value1 >> (value2 & 0x3f));
             ++tc->zero.pc;
             break;
         }
@@ -585,7 +602,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_conv(f2i, zeroStackPush, jint, zeroStackPopGet, jfloat);
             op_conv(f2l, zeroStackPushW, jlong, zeroStackPopGet, jfloat);
             op_conv(d2i, zeroStackPush, jint, zeroStackPopWGet, jdouble);
-            op_conv(f2d, zeroStackPushW, double, zeroStackPopGet, jfloat);
+            op_conv(f2d, zeroStackPushW, jdouble, zeroStackPopGet, jfloat);
             op_conv(d2l, zeroStackPushW, jlong, zeroStackPopWGet, jdouble);
             op_conv(d2f, zeroStackPush, jfloat, zeroStackPopWGet, jdouble);
             op_conv(i2b, zeroStackPush, jbyte, zeroStackPopGet, jint);

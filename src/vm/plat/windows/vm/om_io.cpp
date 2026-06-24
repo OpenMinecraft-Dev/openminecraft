@@ -21,4 +21,11 @@ namespace openminecraft::vm::os
 			ptr += written;
 		}
 	}
+
+	int read(uint64_t fd, uint8_t* src, int off, int len)
+	{
+        HANDLE h = (HANDLE)fd;
+        DWORD rd = 0;
+        return ReadFile(h, src + off, len, &rd, nullptr) ? rd : -1;
+	}
 }

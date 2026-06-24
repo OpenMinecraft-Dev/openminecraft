@@ -7,4 +7,9 @@ void write(uint64_t fd, uint8_t *src, int off, int len, bool append)
 {
     ::write(static_cast<int>(fd), src + off, len);
 }
+
+int read(uint64_t fd, uint8_t *src, int off, int len)
+{
+    return ::read(static_cast<int>(fd), src + off, len);
+}
 } // namespace openminecraft::vm::os

@@ -10,8 +10,7 @@ extern "C"
     jlong Java_java_io_FileDescriptor_set(OMElysiaJNIEnv *env, OMElysiaKlass *klass, jint i)
     {
 #ifdef OM_PLATFORM_WINDOWS
-        HANDLE h = (HANDLE)_get_osfhandle(i);
-        return (jlong)h;
+        return (jlong)_get_osfhandle(i);
 #else
         return (jlong)i;
 #endif

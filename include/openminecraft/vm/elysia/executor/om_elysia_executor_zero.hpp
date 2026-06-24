@@ -32,25 +32,6 @@ template <typename T> static void zeroStackPush(T data)
     }
 }
 
-template <typename T> static void zeroStackPushW(T data)
-{
-    if constexpr (sizeof(void *) == 8)
-    {
-        auto d = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
-        *d = *reinterpret_cast<uint64_t *>(&data);
-        zeroStackAlloc(sizeof(
-            void *)); // gino: wide data need 2 slots, on 64 bit this means one actual slot and another padding slot
-    }
-    else
-    {
-        uint64_t d = *reinterpret_cast<uint64_t *>(&data);
-        auto dlow = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
-        auto dhigh = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
-        *dhigh = static_cast<uint32_t>(d >> 32);
-        *dlow = static_cast<uint32_t>(d & 0xffffffff);
-    }
-}
-
 template <typename T> static T zeroStackPeekGet()
 {
     return *reinterpret_cast<T *>(thisThread.metadata->zero.stackPointer);
@@ -62,23 +43,6 @@ template <typename T> static T zeroStackPopGet()
     return pp;
 }
 
-template <typename T> static T zeroStackPopWGet()
-{
-    if constexpr (sizeof(void *) == 8)
-    {
-        zeroStackPop(sizeof(void *)); // geopeila: padding slot
-        return *reinterpret_cast<T *>(zeroStackPop(sizeof(void *)));
-    }
-    else
-    {
-        auto dhigh = *reinterpret_cast<uint32_t *>(zeroStackPop(sizeof(void *)));
-        auto dlow = *reinterpret_cast<uint32_t *>(zeroStackPop(sizeof(void *)));
-
-        auto d = static_cast<uint64_t>(dhigh) << 32 | dlow;
-        return *reinterpret_cast<T *>(&d);
-    }
-}
-
 void zeroStackPopToStatic(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
 void zeroStackPushFromStatic(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
 void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
@@ -86,26 +50,6 @@ void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMEly
 uint16_t zeroCodeFetchArgu16p0();
 int16_t zeroCodeFetchArgs16p0();
 int32_t zeroCodeFetchArgs32Align(int offset);
-
-template <typename T> static void zeroStackSaveLocalPopW(uint32_t l)
-{
-    if constexpr (sizeof(void *) == 8)
-    {
-        auto ll = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
-        *reinterpret_cast<T *>(ll) = zeroStackPopWGet<T>();
-    }
-    else
-    {
-        auto value = zeroStackPopWGet<T>();
-        auto vv = *reinterpret_cast<uint64_t *>(&value);
-
-        auto dlow = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
-        auto dhigh = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1 + 1) * sizeof(void *);
-
-        *reinterpret_cast<uint32_t *>(dlow) = static_cast<uint32_t>(vv & 0xffffffff);
-        *reinterpret_cast<uint32_t *>(dhigh) = static_cast<uint32_t>(vv >> 32);
-    }
-}
 
 template <typename T> static void zeroStackSaveLocalPop(uint32_t l)
 {
@@ -126,6 +70,42 @@ static T zeroStackLoadLocal(uint32_t l, OMElysiaJavaFrame *frame = thisThread.me
     return *reinterpret_cast<T *>(ll);
 }
 
+template <typename T> static void zeroStackPushW(T data)
+{
+    if constexpr (sizeof(void *) == 8)
+    {
+        auto d = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
+        *d = *reinterpret_cast<uint64_t *>(&data);
+        // gino: wide data need 2 slots, on 64 bit this means one actual slot and another padding slot
+        zeroStackAlloc(sizeof(void *));
+    }
+    else
+    {
+        uint64_t d = *reinterpret_cast<uint64_t *>(&data);
+        auto dlow = reinterpret_cast<uint32_t *>(zeroStackAlloc(sizeof(void *)));
+        auto dhigh = reinterpret_cast<uint32_t *>(zeroStackAlloc(sizeof(void *)));
+        *dhigh = static_cast<uint32_t>(d >> 32);
+        *dlow = static_cast<uint32_t>(d & 0xffffffff);
+    }
+}
+
+template <typename T> static T zeroStackPopWGet()
+{
+    if constexpr (sizeof(void *) == 8)
+    {
+        zeroStackPop(sizeof(void *)); // geopeila: padding slot
+        return *reinterpret_cast<T *>(zeroStackPop(sizeof(void *)));
+    }
+    else
+    {
+        auto dhigh = *reinterpret_cast<uint32_t *>(zeroStackPop(sizeof(void *)));
+        auto dlow = *reinterpret_cast<uint32_t *>(zeroStackPop(sizeof(void *)));
+
+        auto d = static_cast<uint64_t>(dhigh) << 32 | dlow;
+        return *reinterpret_cast<T *>(&d);
+    }
+}
+
 template <typename T> static T zeroStackLoadLocalW(uint32_t l)
 {
     if constexpr (sizeof(void *) == 8)
@@ -139,6 +119,26 @@ template <typename T> static T zeroStackLoadLocalW(uint32_t l)
 
         auto d = dhigh << 32 | dlow;
         return *reinterpret_cast<T *>(&d);
+    }
+}
+
+template <typename T> static void zeroStackSaveLocalPopW(uint32_t l)
+{
+    if constexpr (sizeof(void *) == 8)
+    {
+        auto ll = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
+        *reinterpret_cast<T *>(ll) = zeroStackPopWGet<T>();
+    }
+    else
+    {
+        auto value = zeroStackPopWGet<T>();
+        auto vv = *reinterpret_cast<uint64_t *>(&value);
+
+        auto dlow = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
+        auto dhigh = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1 + 1) * sizeof(void *);
+
+        *reinterpret_cast<uint32_t *>(dlow) = static_cast<uint32_t>(vv & 0xffffffff);
+        *reinterpret_cast<uint32_t *>(dhigh) = static_cast<uint32_t>(vv >> 32);
     }
 }
 
