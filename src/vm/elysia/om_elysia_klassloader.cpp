@@ -79,7 +79,7 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
 
     auto klass = elysium->metaspaceHeap.allocate<OMElysiaArrayKlass>();
     klass->accessFlag = JVM_Acc_Public;
-    klass->superClass = nullptr;
+    klass->superClass = findClass("java/lang/Object");
     klass->name = elysium->metaspaceHeap.allocateStr(rawname);
     klass->type = ArrayKlass;
     klass->lowerDim = k;

@@ -100,8 +100,7 @@ extern "C"
     static jint Java_sun_misc_Unsafe_getIntVolatile(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
                                                     OMElysiaNativeHandle *obj, jlong n)
     {
-        return *reinterpret_cast<volatile jint *>(
-            env->internal->elysium->oopManager->oopAccessField(handleFetch(obj), n));
+        return *reinterpret_cast<volatile jint *>(reinterpret_cast<uintptr_t>(handleFetch(obj) + n));
     }
 
     static bool Java_sun_misc_Unsafe_compareAndSwapInt(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
@@ -135,7 +134,16 @@ extern "C"
                                                                         OMElysiaNativeHandle *instance,
                                                                         OMElysiaNativeHandle *obj, jlong offset)
     {
-        return createTempHandle(env->internal->elysium->oopManager->oopAccessPointerField(handleFetch(obj), offset));
+        if (env->internal->elysium->mainHeap.enablePtrCompress())
+        {
+            return createTempHandle(reinterpret_cast<OMElysiaOop *>(env->internal->elysium->mainHeap.decompress(
+                *reinterpret_cast<volatile uint32_t *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset))));
+        }
+        else
+        {
+            return createTempHandle(
+                *reinterpret_cast<OMElysiaOop *volatile *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset));
+        }
     }
 
     static bool Java_sun_misc_Unsafe_compareAndSwapLong(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
