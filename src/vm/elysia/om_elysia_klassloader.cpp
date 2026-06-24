@@ -161,6 +161,13 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
         auto field = kls->toInstance()->findField("name", "Ljava/lang/String;");
 
         auto k = std::string(klass->name);
+        /*for (auto &ch : k)
+        {
+            if (ch == '/')
+            {
+                ch = '.';
+            }
+        }*/
         auto strobj = elysium->oopManager->allocateString(k);
 
         elysium->oopManager->oopAccessPointerField(oop, field->offset, strobj);
@@ -366,6 +373,45 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
             }
 
             ii++;
+        }
+    }
+
+    for (auto &att : clsfile->attrs)
+    {
+        if (att->type() == classfile::OMClassAttrType::EnclosingMethod)
+        {
+            auto fl = att->to<classfile::OMClassAttrEnclosingMethod>();
+            auto kn =
+                clsfile->mapping[clsfile->mapping[fl->classIndex]->to<classfile::OMClassConstantClass>()->nameIndex]
+                    ->to<classfile::OMClassConstantUtf8>()
+                    ->data;
+            OMElysiaKlass *enclosingKlass;
+            if (!findClass(kn))
+            {
+                if (special)
+                {
+                    loadClassWithoutMirror(kn, special);
+                    enclosingKlass = findClass(kn);
+                }
+                else
+                {
+                    enclosingKlass = fetchOrLoadClass(kn);
+                }
+            }
+            else
+            {
+                enclosingKlass = findClass(kn);
+            }
+
+            klass->enclosingKlass = enclosingKlass;
+            if (!fl->methodIndex)
+            {
+                break;
+            }
+            auto nmt = clsfile->mapping[fl->methodIndex]->to<classfile::OMClassConstantNameAndType>();
+            auto mname = clsfile->mapping[nmt->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
+            auto mdesc = clsfile->mapping[nmt->descIndex]->to<classfile::OMClassConstantUtf8>()->data;
+            klass->enclosingMethod = enclosingKlass->findMethod(mname.c_str(), mdesc.c_str());
         }
     }
 

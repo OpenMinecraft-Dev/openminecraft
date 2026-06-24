@@ -740,6 +740,22 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             tc->zero.pc += zeroCodeFetchArgs16p0();
             break;
         }
+        case op_tableswitch: {
+            auto def = zeroCodeFetchArgs32Align(0);
+            auto low = zeroCodeFetchArgs32Align(1);
+            auto high = zeroCodeFetchArgs32Align(2);
+            auto ll = zeroStackPopGet<jint>();
+            if (ll > high || ll < low)
+            {
+                tc->zero.pc += def;
+            }
+            else
+            {
+                auto off = zeroCodeFetchArgs32Align(3 + (ll - low));
+                tc->zero.pc += off;
+            }
+            break;
+        }
         case op_lookupswitch: {
             auto val = zeroStackPopGet<jint>();
             for (int i = 0; i < zeroCodeFetchArgs32Align(1); i++)

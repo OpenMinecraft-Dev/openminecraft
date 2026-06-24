@@ -203,6 +203,27 @@ extern "C"
         return kls->isArray() ? createTempHandle(kls->toArray()->lowerDim->mirror) : nullptr;
     }
 
+    OMElysiaNativeHandle *Java_java_lang_Class_getEnclosingMethod0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    {
+        auto kls =
+            ((OMElysiaKlass *)env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        if (!kls->toInstance()->enclosingMethod)
+        {
+            return nullptr;
+        }
+        auto mthd = kls->toInstance()->enclosingMethod;
+        std::cout << kls->name << mthd->name << mthd->descriptor << std::endl;
+        throw std::logic_error("not implemented!");
+    }
+
+    OMElysiaNativeHandle *Java_java_lang_Class_getDeclaringClass0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    {
+        auto kls =
+            ((OMElysiaKlass *)env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        return kls->toInstance()->enclosingKlass ? createTempHandle(kls->toInstance()->enclosingKlass->mirror)
+                                                 : nullptr;
+    }
+
     void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         OMElysiaNativeMethod mm[] = {
@@ -230,9 +251,13 @@ extern "C"
             {const_cast<char *>("isArray"), const_cast<char *>("()Z"),
              reinterpret_cast<void *>(Java_java_lang_Class_isArray)},
             {const_cast<char *>("getComponentType"), const_cast<char *>("()Ljava/lang/Class;"),
-             reinterpret_cast<void *>(Java_java_lang_Class_getComponentType)}};
+             reinterpret_cast<void *>(Java_java_lang_Class_getComponentType)},
+            {const_cast<char *>("getEnclosingMethod0"), const_cast<char *>("()[Ljava/lang/Object;"),
+             reinterpret_cast<void *>(Java_java_lang_Class_getEnclosingMethod0)},
+            {const_cast<char *>("getDeclaringClass0"), const_cast<char *>("()Ljava/lang/Class;"),
+             reinterpret_cast<void *>(Java_java_lang_Class_getDeclaringClass0)}};
 
-        env->RegisterNatives(klass, mm, 12);
+        env->RegisterNatives(klass, mm, 14);
     } // namespace openminecraft::vm::elysia::impl
 }
 } // namespace openminecraft::vm::elysia::impl

@@ -99,6 +99,9 @@ class OMElysiaInstanceKlass : public OMElysiaKlass
 
     bool clinitFinished = false;
 
+    OMElysiaKlass *enclosingKlass = nullptr;
+    OMElysiaMethod *enclosingMethod = nullptr;
+
     uint32_t fieldCount = 0;
     OMElysiaField *fields = nullptr;
     bool fieldOffsetInited = false;
