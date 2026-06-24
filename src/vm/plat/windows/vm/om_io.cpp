@@ -6,21 +6,7 @@ namespace openminecraft::vm::os
 {
 	void write(uint64_t fd, uint8_t* src, int off, int len, bool append)
 	{
-        HANDLE h;
-		switch (fd) {
-        case 0:
-			h = GetStdHandle(STD_INPUT_HANDLE);
-			break;
-        case 1:
-			h = GetStdHandle(STD_OUTPUT_HANDLE);
-            break;
-        case 2:
-			h = GetStdHandle(STD_ERROR_HANDLE);
-			break;
-        default:
-            h = (HANDLE)fd;
-            break;
-		}
+        HANDLE h = (HANDLE)fd;
 
 		auto ptr = src + off;
         while (len > 0)

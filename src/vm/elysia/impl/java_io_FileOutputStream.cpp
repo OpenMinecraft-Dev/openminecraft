@@ -9,9 +9,16 @@ extern "C"
     void Java_java_io_FileOutputStream_writeBytes(OMElysiaJNIEnv *env, OMElysiaNativeHandle *stream,
                                                   OMElysiaNativeHandle *data, jint off, jint len, jboolean append)
     {
+#ifdef OM_PLATFORM_WINDOWS
+        auto fdobj = env->GetObjectField(
+            stream, env->GetFieldID(env->FindClass("java/io/FileOutputStream"), "fd", "Ljava/io/FileDescriptor;"));
+        auto actualfd =
+            env->GetLongField(fdobj, env->GetFieldID(env->FindClass("java/io/FileDescriptor"), "handle", "J"));
+#else
         auto fdobj = env->GetObjectField(
             stream, env->GetFieldID(env->FindClass("java/io/FileOutputStream"), "fd", "Ljava/io/FileDescriptor;"));
         auto actualfd = env->GetIntField(fdobj, env->GetFieldID(env->FindClass("java/io/FileDescriptor"), "fd", "I"));
+#endif
 
         auto a = env->GetByteArrayElements(data, nullptr);
         os::write(actualfd, (uint8_t *)a, off, len, append);

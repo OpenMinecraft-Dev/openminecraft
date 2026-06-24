@@ -53,6 +53,10 @@ OMElysium::OMElysium()
     registerNative(Java_java_lang_ClassLoader$NativeLibrary_load);
     registerNative(Java_sun_misc_Signal_findSignal);
     registerNative(Java_sun_misc_Signal_handle0);
+#ifdef OM_PLATFORM_WINDOWS
+    registerNative(Java_java_io_WinNTFileSystem_initIDs);
+    registerNative(Java_sun_io_Win32ErrorMode_setErrorMode);
+#endif
 
     mainThread = new std::thread([&]() {
         log::multithread::registerCurrentThreadName("main");

@@ -5,10 +5,26 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include <atomic>
+#ifdef OM_PLATFORM_WINDOWS
+#include <windows.h>
+#endif
 
 namespace openminecraft::vm::elysia::impl
 {
 log::OMLogger logger("Elysia Impl Layer");
+
+#ifdef OM_PLATFORM_WINDOWS
+void Java_java_io_WinNTFileSystem_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *)
+{
+}
+
+jlong Java_sun_io_Win32ErrorMode_setErrorMode(OMElysiaJNIEnv *env, OMElysiaKlass *cls, jlong mode)
+{
+    UINT uMode = (UINT)mode;
+    UINT oldMode = SetErrorMode(uMode);
+    return (jlong)oldMode;
+}
+#endif
 
 // TODO: stub implementation
 jint Java_sun_misc_Signal_findSignal(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *name)

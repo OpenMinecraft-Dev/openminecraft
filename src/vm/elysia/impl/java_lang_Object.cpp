@@ -1,6 +1,6 @@
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
-#include <iostream>
 
 namespace openminecraft::vm::elysia::impl
 {
@@ -18,7 +18,8 @@ extern "C"
 
     static void Java_java_lang_Object_notifyAll(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
     {
-        std::cout << "notifyAll not implemented!" << std::endl;
+        log::OMLogger logger("java.lang.Object", handleFetch(hnd));
+        logger.warn("notifyAll not implemented!");
     }
 
     void Java_java_lang_Object_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)

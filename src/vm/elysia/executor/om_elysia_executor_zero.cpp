@@ -290,6 +290,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_lloadc(0);
             op_lloadc(1);
             op_lloadc(2);
+            op_lloadc(3);
         case op_lload: {
             zeroStackPushW(zeroStackLoadLocalW<jlong>(tc->zero.pc[1]));
             tc->zero.pc += 2;
@@ -435,9 +436,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++tc->zero.pc;
             break;
         }
-
         case op_pop:
             zeroStackPopGet<jint>();
+            ++tc->zero.pc;
+            break;
+        case op_pop2:
+            zeroStackPopWGet<jlong>();
             ++tc->zero.pc;
             break;
         case op_dup: {
@@ -873,9 +877,8 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
         /*case op_athrow: {
-            elysium->throwException(zeroStackPopGet<OMElysiaOop *>());
-            ++tc->zero.pc;
-            break;
+            logger.debug("{}", zeroStackLoadLocal<void *>(0));
+            goto unk;
         }*/
         case op_checkcast: {
             auto obj = zeroStackPopGet<OMElysiaOop *>();

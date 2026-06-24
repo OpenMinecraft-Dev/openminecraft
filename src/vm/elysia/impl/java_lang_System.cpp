@@ -1,7 +1,9 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
+#include "openminecraft/vm/os/om_hardware.hpp"
 #include <filesystem>
+#include <unordered_map>
 #ifdef OM_PLATFORM_WINDOWS
 #include <direct.h>
 #else
@@ -18,40 +20,36 @@ extern "C"
         auto kk = env->FindClass("java/util/Hashtable");
         auto kkm = env->GetMethodID(kk, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
-        OMElysiaNativeValue args[2];
-        args[0].l = env->NewStringUTF("file.encoding");
-        args[1].l = env->NewStringUTF("UTF_8");
-        env->CallObjectMethodA(properties, kkm, args);
-
-        args[0].l = env->NewStringUTF("file.separator");
-        args[1].l = env->NewStringUTF(fmt::format("{}", (char)std::filesystem::path::preferred_separator).c_str());
-        env->CallObjectMethodA(properties, kkm, args);
-
-        args[0].l = env->NewStringUTF("path.separator");
-        args[1].l = env->NewStringUTF(std::filesystem::path::preferred_separator == '\\' ? ";" : ":");
-        env->CallObjectMethodA(properties, kkm, args);
-
-        args[0].l = env->NewStringUTF("java.home");
-        args[1].l = env->NewStringUTF(std::filesystem::current_path().string().c_str());
-        env->CallObjectMethodA(properties, kkm, args);
-
-        args[0].l = env->NewStringUTF("line.separator");
-        args[1].l = env->NewStringUTF("\n");
-        env->CallObjectMethodA(properties, kkm, args);
-
         char userdir[1024];
 #ifdef OM_PLATFORM_WINDOWS
         (void)_getcwd(userdir, 1024);
 #else
         getcwd(userdir, 1024);
 #endif
-        args[0].l = env->NewStringUTF("user.dir");
-        args[1].l = env->NewStringUTF(userdir);
-        env->CallObjectMethodA(properties, kkm, args);
 
-        args[0].l = env->NewStringUTF("sun.jnu.encoding");
-        args[1].l = env->NewStringUTF("UTF_8");
-        env->CallObjectMethodA(properties, kkm, args);
+        std::unordered_map<std::string, std::string> propMap = {
+            {"file.encoding", "UTF_8"},
+            {"file.separator", fmt::format("{}", (char)std::filesystem::path::preferred_separator)},
+#ifdef OM_PLATFORM_WINDOWS
+            {"path.separator", ";"},
+            {"sun.jnu.encoding", "GBK"},
+#else
+            {"path.separator", ":"},
+            {"sun.jnu.encoding", "UTF_8"},
+#endif
+            {"java.home", std::filesystem::current_path().string()},
+            {"line.separator", "\n"},
+            {"user.dir", userdir},
+            {"os.version", "10.0"}, // TODO: fake versions
+        };
+
+        for (auto &pp : propMap)
+        {
+            OMElysiaNativeValue args[2];
+            args[0].l = env->NewStringUTF(pp.first.c_str());
+            args[1].l = env->NewStringUTF(pp.second.c_str());
+            env->CallObjectMethodA(properties, kkm, args);
+        }
 
         return properties;
     }
