@@ -18,7 +18,7 @@ extern "C"
 
     static void Java_java_lang_Object_notifyAll(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
     {
-        log::OMLogger logger("java.lang.Object", handleFetch(hnd));
+        log::OMLogger logger("java/lang/Object", handleFetch(hnd));
         logger.warn("notifyAll not implemented!");
     }
 

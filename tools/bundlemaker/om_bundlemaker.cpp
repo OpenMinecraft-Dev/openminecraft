@@ -115,42 +115,7 @@ int main(int argc, char **argv)
         std::cout << "Contents of " << targetfile << ": " << std::endl;
         for (const auto &[metadata, content] : om.files)
         {
-            auto c = static_cast<time_t>(metadata.timestamp);
-            auto tstr = ctime(&c);
-            auto tstrmod = tstr;
-            while (*tstrmod != '\0')
-            {
-                if (*tstrmod == '\n')
-                {
-                    *tstrmod = '\0';
-                }
-                tstrmod++;
-            }
-
-            std::stringstream ss;
-            ss << std::setprecision(2);
-            if (metadata.length < 1024)
-            {
-                ss << metadata.length << "B\t\t";
-            }
-            else if (metadata.length < 1024 * 1024)
-            {
-                ss << std::fixed << static_cast<double>(metadata.length) / 1024 << "kB\t";
-            }
-            else if (metadata.length < 1024 * 1024 * 1024)
-            {
-                ss << std::fixed << static_cast<double>(metadata.length) / 1024 / 1024 << "mB\t";
-            }
-            else if (metadata.length < 1024ll * 1024 * 1024 * 1024)
-            {
-                ss << std::fixed << static_cast<double>(metadata.length) / 1024 / 1024 / 1024 << "gB\t";
-            }
-            else
-            {
-                ss << std::fixed << static_cast<double>(metadata.length) / 1024 / 1024 / 1024 / 1024 << "tB\t";
-            }
-
-            fmt::print("{:<10}{:<40}{:<50}{:<60}\n", metadata.owner, tstr, ss.str(), metadata.name);
+            std::cout << fmt::format("{}", metadata) << std::endl;
         }
 
         return 0;

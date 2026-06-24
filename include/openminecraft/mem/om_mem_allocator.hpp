@@ -18,6 +18,7 @@ defmal(GL);
 defmal(Elysia);
 defmal(ZLib);
 defmal(ElysiaExternal);
+defmal(Specs);
 
 void *stackAlloc(size_t);
 uint64_t pageSize();

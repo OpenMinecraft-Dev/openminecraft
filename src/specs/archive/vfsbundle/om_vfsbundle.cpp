@@ -1,7 +1,9 @@
 #include "openminecraft/specs/vfsbundle/om_vfsbundle.hpp"
 
 #include "openminecraft/binary/om_bin_endians.hpp"
+#include "openminecraft/mem/om_mem_allocator.hpp"
 
+#include <iostream>
 #include <memory>
 
 namespace openminecraft::specs::vfsbundle
@@ -162,7 +164,7 @@ OMBundle::~OMBundle()
     {
         for (auto itt : files)
         {
-            delete[] itt.second;
+            mem::allocator::tracedFreeSpecs(itt.second);
         }
     }
 }
@@ -182,7 +184,7 @@ void OMBundle::appendFile(OMBundleFileMetadata metadata, std::istream &stream)
     auto length = stream.tellg();
     metadata.length = length;
     stream.seekg(0, std::ios::beg);
-    auto result = new uint8_t[metadata.length];
+    auto result = reinterpret_cast<uint8_t *>(mem::allocator::tracedCallocSpecs(1, metadata.length));
     stream.read(reinterpret_cast<char *>(result), static_cast<std::streamsize>(metadata.length));
 
     files.emplace_back(metadata, result);
