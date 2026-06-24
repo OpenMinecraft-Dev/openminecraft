@@ -4,6 +4,7 @@
 #include <fmt/format.h>
 #include <iostream>
 #include <memory>
+#include <cstring>
 
 namespace openminecraft::io::json
 {
