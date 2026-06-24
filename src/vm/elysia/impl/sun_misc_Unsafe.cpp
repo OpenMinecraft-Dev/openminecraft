@@ -131,6 +131,20 @@ extern "C"
         mem::allocator::tracedFreeElysiaExternal((void *)addr);
     }
 
+    static OMElysiaNativeHandle *Java_sun_misc_Unsafe_getObjectVolatile(OMElysiaJNIEnv *env,
+                                                                        OMElysiaNativeHandle *instance,
+                                                                        OMElysiaNativeHandle *obj, jlong offset)
+    {
+        return createTempHandle(env->internal->elysium->oopManager->oopAccessPointerField(handleFetch(obj), offset));
+    }
+
+    static bool Java_sun_misc_Unsafe_compareAndSwapLong(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
+                                                        OMElysiaNativeHandle *o, jlong offset, jlong expected, jlong x)
+    {
+        return atomic::atomic_cas(reinterpret_cast<jlong *>(reinterpret_cast<uintptr_t>(handleFetch(o)) + offset),
+                                  expected, x);
+    }
+
     void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         OMElysiaNativeMethod mm[] = {
@@ -156,8 +170,12 @@ extern "C"
             {const_cast<char *>("getByte"), const_cast<char *>("(J)B"),
              reinterpret_cast<void *>(Java_sun_misc_Unsafe_getByte)},
             {const_cast<char *>("freeMemory"), const_cast<char *>("(J)V"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_freeMemory)}};
-        env->RegisterNatives(klass, mm, 11);
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_freeMemory)},
+            {const_cast<char *>("getObjectVolatile"), const_cast<char *>("(Ljava/lang/Object;J)Ljava/lang/Object;"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_getObjectVolatile)},
+            {const_cast<char *>("compareAndSwapLong"), const_cast<char *>("(Ljava/lang/Object;JJJ)Z"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_compareAndSwapLong)}};
+        env->RegisterNatives(klass, mm, 13);
     }
 }
 } // namespace openminecraft::vm::elysia::impl

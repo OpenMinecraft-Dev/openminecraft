@@ -12,6 +12,7 @@ std::string fetchSystemName();
 std::string fetchSystemVersion();
 
 uint64_t fetchMemoryTotal();
+uint64_t fetchAvailableProcessors();
 } // namespace openminecraft::vm::os
 
 #endif

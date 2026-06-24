@@ -186,6 +186,11 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
         {
             mthd = cls->findMethod(mdname.c_str(), mddesc.c_str());
 
+            for (int i = 0; i < cls->toInstance()->interfaceImplCount && !mthd; i++)
+            {
+                mthd = cls->toInstance()->interfaceImpls[i]->findMethod(mdname.c_str(), mddesc.c_str());
+            }
+
             if (cls->superClass)
             {
                 cls = cls->superClass;

@@ -81,7 +81,7 @@ void OMLogger::dumpStacktrace()
         }
         error("#{} {} @ {}", id, frame.address(),
               frame.name() == "" ? "???"
-                                 : frame.name().substr(0, 75).append(frame.name().length() >= 75 ? " ..." : ""));
+                                 : frame.name().substr(0, 75).append(frame.name().length() >= 100 ? " ..." : ""));
     }
 }
 

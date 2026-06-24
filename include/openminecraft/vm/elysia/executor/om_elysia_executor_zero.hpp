@@ -8,18 +8,29 @@
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
-#include <cstdarg>
 #include <cstdint>
-#include <mutex>
-#include <thread>
 #include <type_traits>
-#include <unordered_map>
 namespace openminecraft::vm::elysia::executor
 {
 uintptr_t zeroStackAlloc(uint64_t len);
 uintptr_t zeroStackPop(uint64_t len);
+
+template <typename T> constexpr void assertType1()
+{
+    static_assert(std::is_same_v<T, jboolean> || std::is_same_v<T, jbyte> || std::is_same_v<T, jshort> ||
+                      std::is_same_v<T, jchar> || std::is_same_v<T, jfloat> || std::is_same_v<T, jint> ||
+                      std::is_same_v<T, OMElysiaOop *> || std::is_same_v<T, uint32_t> || std::is_same_v<T, void *>,
+                  "only internal types are supported!");
+}
+template <typename T> constexpr void assertType2()
+{
+    static_assert(std::is_same_v<T, jlong> || std::is_same_v<T, jdouble> || std::is_same_v<T, uint64_t>,
+                  "only internal types are supported!");
+}
+
 template <typename T> static void zeroStackPush(T data)
 {
+    assertType1<T>();
     auto d = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
     if constexpr (std::is_pointer_v<T>)
     {
@@ -32,17 +43,6 @@ template <typename T> static void zeroStackPush(T data)
     }
 }
 
-template <typename T> static T zeroStackPeekGet()
-{
-    return *reinterpret_cast<T *>(thisThread.metadata->zero.stackPointer);
-}
-
-template <typename T> static T zeroStackPopGet()
-{
-    T pp = *reinterpret_cast<T *>(zeroStackPop(sizeof(void *)));
-    return pp;
-}
-
 void zeroStackPopToStatic(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
 void zeroStackPushFromStatic(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
 void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
@@ -51,14 +51,29 @@ uint16_t zeroCodeFetchArgu16p0();
 int16_t zeroCodeFetchArgs16p0();
 int32_t zeroCodeFetchArgs32Align(int offset);
 
+template <typename T> static T zeroStackPopGet()
+{
+    assertType1<T>();
+    T pp = *reinterpret_cast<T *>(zeroStackPop(sizeof(void *)));
+    return pp;
+}
+
+template <typename T> static T zeroStackPeekGet()
+{
+    assertType1<T>();
+    return *reinterpret_cast<T *>(thisThread.metadata->zero.stackPointer);
+}
+
 template <typename T> static void zeroStackSaveLocalPop(uint32_t l)
 {
+    assertType1<T>();
     auto ll = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
     *reinterpret_cast<T *>(ll) = zeroStackPopGet<T>();
 }
 
 template <typename T> static void zeroStackSaveLocal(uint32_t l, T data)
 {
+    assertType1<T>();
     auto ll = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
     *reinterpret_cast<T *>(ll) = data;
 }
@@ -66,12 +81,14 @@ template <typename T> static void zeroStackSaveLocal(uint32_t l, T data)
 template <typename T>
 static T zeroStackLoadLocal(uint32_t l, OMElysiaJavaFrame *frame = thisThread.metadata->zero.frame)
 {
+    assertType1<T>();
     auto ll = reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *);
     return *reinterpret_cast<T *>(ll);
 }
 
 template <typename T> static void zeroStackPushW(T data)
 {
+    assertType2<T>();
     if constexpr (sizeof(void *) == 8)
     {
         auto d = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
@@ -91,6 +108,7 @@ template <typename T> static void zeroStackPushW(T data)
 
 template <typename T> static T zeroStackPopWGet()
 {
+    assertType2<T>();
     if constexpr (sizeof(void *) == 8)
     {
         zeroStackPop(sizeof(void *)); // geopeila: padding slot
@@ -108,9 +126,11 @@ template <typename T> static T zeroStackPopWGet()
 
 template <typename T> static T zeroStackLoadLocalW(uint32_t l)
 {
+    assertType2<T>();
     if constexpr (sizeof(void *) == 8)
     {
-        return zeroStackLoadLocal<T>(l);
+        return *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) -
+                                      (l + 1) * sizeof(void *));
     }
     else
     {
@@ -124,6 +144,7 @@ template <typename T> static T zeroStackLoadLocalW(uint32_t l)
 
 template <typename T> static void zeroStackSaveLocalPopW(uint32_t l)
 {
+    assertType2<T>();
     if constexpr (sizeof(void *) == 8)
     {
         auto ll = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);

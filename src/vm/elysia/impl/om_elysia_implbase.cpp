@@ -4,6 +4,7 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
+#include "openminecraft/vm/os/om_hardware.hpp"
 #include <atomic>
 #ifdef OM_PLATFORM_WINDOWS
 #include <windows.h>
@@ -12,6 +13,11 @@
 namespace openminecraft::vm::elysia::impl
 {
 log::OMLogger logger("Elysia Impl Layer");
+
+jint Java_java_lang_Runtime_availableProcessors(OMElysiaJNIEnv* env, OMElysiaNativeHandle* instance)
+{
+    return os::fetchAvailableProcessors();
+}
 
 #ifdef OM_PLATFORM_WINDOWS
 void Java_java_io_WinNTFileSystem_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *)

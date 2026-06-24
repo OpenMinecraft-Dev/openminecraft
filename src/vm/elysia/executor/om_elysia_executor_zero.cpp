@@ -162,8 +162,6 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
 
-        
-
         if (tc->haveException)
         {
             auto frm = tc->zero.frame;

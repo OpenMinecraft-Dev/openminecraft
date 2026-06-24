@@ -161,4 +161,8 @@ uint64_t fetchMemoryTotal()
 {
     return sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGESIZE);
 }
+uint64_t fetchAvailableProcessors()
+{
+    return sysconf(_SC_NPROCESSORS_ONLN);
+}
 } // namespace openminecraft::vm::os

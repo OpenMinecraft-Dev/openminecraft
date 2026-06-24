@@ -167,7 +167,7 @@ uint64_t fetchMemoryTotal()
     return status.dwTotalPhys;
 }
 
-int fetchCPUCores()
+uint64_t fetchAvailableProcessors()
 {
     SYSTEM_INFO si;
     memset(&si, 0, sizeof(SYSTEM_INFO));

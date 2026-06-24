@@ -189,6 +189,20 @@ extern "C"
         return createTempHandle(ls ? ls->mirror : nullptr);
     }
 
+    jboolean Java_java_lang_Class_isArray(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    {
+        auto kls =
+            ((OMElysiaKlass *)env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        return kls->isArray();
+    }
+
+    OMElysiaNativeHandle *Java_java_lang_Class_getComponentType(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    {
+        auto kls =
+            ((OMElysiaKlass *)env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        return kls->isArray() ? createTempHandle(kls->toArray()->lowerDim->mirror) : nullptr;
+    }
+
     void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         OMElysiaNativeMethod mm[] = {
@@ -212,9 +226,13 @@ extern "C"
             {const_cast<char *>("getModifiers"), const_cast<char *>("()I"),
              reinterpret_cast<void *>(Java_java_lang_Class_getModifiers)},
             {const_cast<char *>("getSuperclass"), const_cast<char *>("()Ljava/lang/Class;"),
-             reinterpret_cast<void *>(Java_java_lang_Class_getSuperclass)}};
+             reinterpret_cast<void *>(Java_java_lang_Class_getSuperclass)},
+            {const_cast<char *>("isArray"), const_cast<char *>("()Z"),
+             reinterpret_cast<void *>(Java_java_lang_Class_isArray)},
+            {const_cast<char *>("getComponentType"), const_cast<char *>("()Ljava/lang/Class;"),
+             reinterpret_cast<void *>(Java_java_lang_Class_getComponentType)}};
 
-        env->RegisterNatives(klass, mm, 10);
+        env->RegisterNatives(klass, mm, 12);
     } // namespace openminecraft::vm::elysia::impl
 }
 } // namespace openminecraft::vm::elysia::impl
