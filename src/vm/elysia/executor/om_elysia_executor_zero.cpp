@@ -776,14 +776,6 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         case op_ireturn: {
             auto pp = zeroStackPopGet<jint>();
-            if (std::strcmp(thisThread.metadata->zero.frame->method->name, "isSameClassPackage") == 0)
-            {
-                logger.warn("{} {} {}", pp, (void *)zeroStackLoadLocal<OMElysiaOop *>(1),
-                            (void *)zeroStackLoadLocal<OMElysiaOop *>(3));
-                // TODO: I don't know why this check failed
-                pp = true;
-            }
-
             popFrame();
             zeroStackPush(pp);
             break;
@@ -915,10 +907,17 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++tc->zero.pc;
             break;
         }
-        /*case op_athrow: {
-            logger.debug("{}", zeroStackLoadLocal<void *>(0));
-            goto unk;
-        }*/
+        case op_athrow: {
+            auto t = zeroStackPopGet<OMElysiaOop *>();
+            elysium->throwException(t);
+            if (std::strcmp(
+                    CURRENT_KLASS->name,
+                    "java/util/concurrent/atomic/AtomicReferenceFieldUpdater$AtomicReferenceFieldUpdaterImpl") == 0)
+            {
+                logger.warn("{} {:x}", (void *)zeroStackLoadLocal<OMElysiaOop *>(5), zeroStackLoadLocal<jint>(7));
+            }
+            break;
+        }
         case op_checkcast: {
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             if (!obj)

@@ -14,7 +14,7 @@ namespace openminecraft::vm::elysia::impl
 {
 log::OMLogger logger("Elysia Impl Layer");
 
-jint Java_java_lang_Runtime_availableProcessors(OMElysiaJNIEnv* env, OMElysiaNativeHandle* instance)
+jint Java_java_lang_Runtime_availableProcessors(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance)
 {
     return os::fetchAvailableProcessors();
 }
@@ -120,11 +120,11 @@ jdouble Java_java_lang_Double_longBitsToDouble(OMElysiaJNIEnv *env, OMElysiaKlas
 // TODO: make this portable for future executors
 OMElysiaNativeHandle *Java_sun_reflect_Reflection_getCallerClass(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
-    if (!thisThread.metadata->zero.frame->caller)
+    if (!thisThread.metadata->zero.frame->caller || !thisThread.metadata->zero.frame->caller->caller)
     {
         return nullptr;
     }
-    auto internal = thisThread.metadata->zero.frame->caller->method->klass->mirror;
+    auto internal = thisThread.metadata->zero.frame->caller->caller->method->klass->mirror;
     return createTempHandle(internal);
 }
 
