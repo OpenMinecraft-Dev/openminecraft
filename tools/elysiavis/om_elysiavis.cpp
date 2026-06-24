@@ -158,7 +158,7 @@ void printOop(OMElysium *world, void *addr, bool simple = false)
             fmt::print(fmt::fg(addrColor), "{}", arrl);
             fmt::println("");
 
-            for (int i = 0; i < std::min(arrl, 8); i++)
+            for (int i = 0; i < std::min(arrl, 16); i++)
             {
                 fmt::print(fmt::fg(hintColor), "[{}] ", i);
                 fmt::print("= ");
