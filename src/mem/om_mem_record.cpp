@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <mutex>
 #include <string>
+#include <cstring>
 
 #if defined(OM_PLATFORM_IOS) || defined(OM_PLATFORM_MACOS)
 #include <malloc/malloc.h>
