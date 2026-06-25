@@ -26,8 +26,8 @@ extern "C"
     }
     void Java_java_io_FileOutputStream_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
-        OMElysiaNativeMethod mm[1] = {{const_cast<char *>("writeBytes"), const_cast<char *>("([BIIZ)V"),
-                                       reinterpret_cast<void *>(Java_java_io_FileOutputStream_writeBytes)}};
+        OMElysiaNativeMethod mm[] = {{const_cast<char *>("writeBytes"), const_cast<char *>("([BIIZ)V"),
+                                      reinterpret_cast<void *>(Java_java_io_FileOutputStream_writeBytes)}};
         env->RegisterNatives(klass, mm, 1);
     }
 }

@@ -17,8 +17,8 @@ extern "C"
     }
     void Java_java_io_FileDescriptor_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
-        OMElysiaNativeMethod mm[1] = {{const_cast<char *>("set"), const_cast<char *>("(I)J"),
-                                       reinterpret_cast<void *>(Java_java_io_FileDescriptor_set)}};
+        OMElysiaNativeMethod mm[] = {{const_cast<char *>("set"), const_cast<char *>("(I)J"),
+                                      reinterpret_cast<void *>(Java_java_io_FileDescriptor_set)}};
         env->RegisterNatives(klass, mm, 1);
     }
 }

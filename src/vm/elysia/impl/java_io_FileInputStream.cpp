@@ -2,6 +2,7 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/os/om_io.hpp"
+#include <stdexcept>
 
 namespace openminecraft::vm::elysia::impl
 {
@@ -26,11 +27,17 @@ extern "C"
         env->ReleaseByteArrayElements(data, a, 0);
         return l;
     }
+    jint Java_java_io_FileInputStream_available0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *stream)
+    {
+        throw std::logic_error("not implemented!");
+    }
     void Java_java_io_FileInputStream_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
-        OMElysiaNativeMethod mm[1] = {{const_cast<char *>("readBytes"), const_cast<char *>("([BII)I"),
-                                       reinterpret_cast<void *>(Java_java_io_FileInputStream_readBytes)}};
-        env->RegisterNatives(klass, mm, 1);
+        OMElysiaNativeMethod mm[] = {{const_cast<char *>("readBytes"), const_cast<char *>("([BII)I"),
+                                      reinterpret_cast<void *>(Java_java_io_FileInputStream_readBytes)},
+                                     {const_cast<char *>("available0"), const_cast<char *>("()I"),
+                                      reinterpret_cast<void *>(Java_java_io_FileInputStream_available0)}};
+        env->RegisterNatives(klass, mm, 2);
     }
 }
 } // namespace openminecraft::vm::elysia::impl
