@@ -6,9 +6,6 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <atomic>
-#ifdef OM_PLATFORM_WINDOWS
-#include <windows.h>
-#endif
 
 namespace openminecraft::vm::elysia::impl
 {
