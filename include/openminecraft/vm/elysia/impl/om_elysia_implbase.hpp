@@ -45,17 +45,15 @@ extern "C"
                                                                                       OMElysiaNativeHandle *constructor,
                                                                                       OMElysiaNativeHandle *args);
     jboolean Java_java_util_concurrent_atomic_AtomicLong_VMSupportsCS8(OMElysiaJNIEnv *env, OMElysiaKlass *);
-    void Java_java_io_UnixFileSystem_initIDs();
     void Java_java_lang_ClassLoader$NativeLibrary_load(OMElysiaJNIEnv *env, OMElysiaNativeHandle *,
                                                        OMElysiaNativeHandle *name, jboolean);
     jint Java_sun_misc_Signal_findSignal(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *name);
     jlong Java_sun_misc_Signal_handle0(OMElysiaJNIEnv *env, OMElysiaKlass *, jint sig, jlong handler);
 
     jint Java_java_lang_Runtime_availableProcessors(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance);
-#ifdef OM_PLATFORM_WINDOWS
-    void Java_java_io_WinNTFileSystem_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *);
-    jlong Java_sun_io_Win32ErrorMode_setErrorMode(OMElysiaJNIEnv *env, OMElysiaKlass *cls, jlong mode);
-#endif
+
+    OMElysiaNativeHandle *Java_sun_misc_URLClassPath_getLookupCacheURLs(OMElysiaJNIEnv *env, OMElysiaNativeHandle *ucp,
+                                                                        OMElysiaNativeHandle *klassloader);
 
     void registerPlatform(OMElysium *);
 }

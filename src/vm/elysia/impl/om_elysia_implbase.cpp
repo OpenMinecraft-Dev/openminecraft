@@ -14,23 +14,16 @@ namespace openminecraft::vm::elysia::impl
 {
 log::OMLogger logger("Elysia Impl Layer");
 
+OMElysiaNativeHandle *Java_sun_misc_URLClassPath_getLookupCacheURLs(OMElysiaJNIEnv *env, OMElysiaNativeHandle *ucp,
+                                                                    OMElysiaNativeHandle *klassloader)
+{
+    return nullptr;
+}
+
 jint Java_java_lang_Runtime_availableProcessors(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance)
 {
     return os::fetchAvailableProcessors();
 }
-
-#ifdef OM_PLATFORM_WINDOWS
-void Java_java_io_WinNTFileSystem_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *)
-{
-}
-
-jlong Java_sun_io_Win32ErrorMode_setErrorMode(OMElysiaJNIEnv *env, OMElysiaKlass *cls, jlong mode)
-{
-    UINT uMode = (UINT)mode;
-    UINT oldMode = SetErrorMode(uMode);
-    return (jlong)oldMode;
-}
-#endif
 
 // TODO: stub implementation
 jint Java_sun_misc_Signal_findSignal(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *name)
@@ -73,9 +66,6 @@ void Java_java_lang_ClassLoader$NativeLibrary_load(OMElysiaJNIEnv *env, OMElysia
 
     auto kl = env->FindClass("java/lang/ClassLoader$NativeLibrary");
     env->SetBooleanField(lib, env->GetFieldID(kl, "loaded", "Z"), true);
-}
-void Java_java_io_UnixFileSystem_initIDs()
-{
 }
 
 jboolean Java_java_util_concurrent_atomic_AtomicLong_VMSupportsCS8(OMElysiaJNIEnv *env, OMElysiaKlass *)

@@ -31,6 +31,7 @@ class OMElysium
 
     void setupThreadObject();
     void startThread(OMElysiaNativeHandle *thread);
+    void registerPlatformNative();
 
     void throwException(OMElysiaOop *);
 

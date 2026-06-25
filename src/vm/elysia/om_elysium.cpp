@@ -49,15 +49,12 @@ OMElysium::OMElysium()
     registerNative(Java_java_lang_Throwable_fillInStackTrace);
     registerNative(Java_sun_reflect_NativeConstructorAccessorImpl_newInstance0);
     registerNative(Java_java_util_concurrent_atomic_AtomicLong_VMSupportsCS8);
-    registerNative(Java_java_io_UnixFileSystem_initIDs);
     registerNative(Java_java_lang_ClassLoader$NativeLibrary_load);
     registerNative(Java_sun_misc_Signal_findSignal);
     registerNative(Java_sun_misc_Signal_handle0);
     registerNative(Java_java_lang_Runtime_availableProcessors);
-#ifdef OM_PLATFORM_WINDOWS
-    registerNative(Java_java_io_WinNTFileSystem_initIDs);
-    registerNative(Java_sun_io_Win32ErrorMode_setErrorMode);
-#endif
+    registerNative(Java_sun_misc_URLClassPath_getLookupCacheURLs);
+    registerPlatformNative();
 
     mainThread = new std::thread([&]() {
         log::multithread::registerCurrentThreadName("main");

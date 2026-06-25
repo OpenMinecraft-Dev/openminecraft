@@ -910,12 +910,6 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         case op_athrow: {
             auto t = zeroStackPopGet<OMElysiaOop *>();
             elysium->throwException(t);
-            if (std::strcmp(
-                    CURRENT_KLASS->name,
-                    "java/util/concurrent/atomic/AtomicReferenceFieldUpdater$AtomicReferenceFieldUpdaterImpl") == 0)
-            {
-                logger.warn("{} {:x}", (void *)zeroStackLoadLocal<OMElysiaOop *>(5), zeroStackLoadLocal<jint>(7));
-            }
             break;
         }
         case op_checkcast: {
