@@ -3,7 +3,6 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/os/om_io.hpp"
-#include <stdexcept>
 
 namespace openminecraft::vm::elysia::impl
 {
@@ -22,7 +21,10 @@ extern "C"
     }
     jint Java_java_io_FileInputStream_available0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *stream)
     {
-        throw std::logic_error("not implemented!");
+        auto fdobj = env->GetObjectField(
+            stream, env->GetFieldID(env->FindClass("java/io/FileOutputStream"), "fd", "Ljava/io/FileDescriptor;"));
+
+        return os::available(getNativeFd(env, fdobj));
     }
     void Java_java_io_FileInputStream_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {

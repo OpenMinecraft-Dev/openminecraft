@@ -14,6 +14,7 @@ jlong Java_sun_io_Win32ErrorMode_setErrorMode(OMElysiaJNIEnv *env, OMElysiaKlass
     UINT oldMode = SetErrorMode(uMode);
     return (jlong)oldMode;
 }
+
 void OMElysium::registerPlatformNative()
 {
     registerNative(Java_java_io_WinNTFileSystem_initIDs);
