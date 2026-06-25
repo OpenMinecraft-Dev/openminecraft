@@ -20,7 +20,6 @@ void initBaseInterface(OMElysiaJNIEnv env)
 {
     env.internal->GetVersion = [](OMElysiaJNIEnv *) { return JNI_VERSION_1_8; };
 
-    // TODO: use current klass loader
     env.internal->FindClass = [](OMElysiaJNIEnv *env, const char *name) {
         OMElysiaKlass *klass;
         execWithState(InsideVM, [&]() {
