@@ -467,6 +467,19 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++tc->zero.pc;
             break;
         }
+        case op_dup2_x1: {
+            auto value1 = zeroStackPopGet<OMElysiaOop *>();
+            auto value2 = zeroStackPopGet<OMElysiaOop *>();
+            auto value3 = zeroStackPopGet<OMElysiaOop *>();
+
+            zeroStackPush(value2);
+            zeroStackPush(value1);
+            zeroStackPush(value3);
+            zeroStackPush(value2);
+            zeroStackPush(value1);
+            ++tc->zero.pc;
+            break;
+        }
 
 #define op_calc(op, fetch, psh, oprt)                                                                                  \
     case op_##op: {                                                                                                    \

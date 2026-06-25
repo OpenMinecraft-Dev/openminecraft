@@ -109,7 +109,18 @@ OMElysium::OMElysium()
             executor->callVoidFunction(mm, vv);
 
             logger.info("main func ended");
+
+            if (thisThread.metadata->haveException)
+            {
+                auto env = thisThread.metadata->interface;
+                auto l = env.GetFieldID(env.FindClass("java/lang/Throwable"), "detailMessage", "Ljava/lang/String;");
+
+                auto str = env.GetObjectField(createTempHandle(thisThread.metadata->currentException), l);
+
+                logger.error("{}", env.GetStringUTFChars(str, nullptr));
+            }
         }
+
         catch (std::logic_error &e)
         {
             logger.error("Elysia VM throwed an exception: {}", e.what());
