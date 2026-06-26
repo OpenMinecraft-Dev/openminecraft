@@ -10,23 +10,23 @@ namespace openminecraft::vm::elysia::impl
 {
 extern "C"
 {
-    static jint Java_java_lang_Object_hashCode(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    static jint hashCode(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
     {
         return static_cast<jint>(reinterpret_cast<uintptr_t>(handleFetch(hnd)));
     }
 
-    static OMElysiaNativeHandle *Java_java_lang_Object_getClass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    static OMElysiaNativeHandle *getClass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
     {
         return createTempHandle(env->GetObjectClass(hnd)->mirror);
     }
 
-    static void Java_java_lang_Object_notifyAll(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    static void notifyAll(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
     {
         log::OMLogger logger("java/lang/Object", handleFetch(hnd));
         logger.warn("notifyAll not implemented!");
     }
 
-    static OMElysiaNativeHandle *Java_java_lang_Object_clone(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    static OMElysiaNativeHandle *clone(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
     {
         auto klass = env->GetObjectClass(hnd);
         auto vv = env->AllocObject(klass);
@@ -39,10 +39,10 @@ extern "C"
     {
         interface::registerNativeFuncs(env, klass,
                                        {
-                                           {"hashCode", "()I", Java_java_lang_Object_hashCode},
-                                           {"getClass", "()Ljava/lang/Class;", Java_java_lang_Object_getClass},
-                                           {"notifyAll", "()V", Java_java_lang_Object_notifyAll},
-                                           {"clone", "()Ljava/lang/Object;", Java_java_lang_Object_clone},
+                                           {"hashCode", "()I", hashCode},
+                                           {"getClass", "()Ljava/lang/Class;", getClass},
+                                           {"notifyAll", "()V", notifyAll},
+                                           {"clone", "()Ljava/lang/Object;", clone},
                                        });
     }
 }

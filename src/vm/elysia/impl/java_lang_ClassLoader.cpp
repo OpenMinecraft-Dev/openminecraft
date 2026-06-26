@@ -10,14 +10,12 @@ namespace openminecraft::vm::elysia::impl
 {
 extern "C"
 {
-    OMElysiaNativeHandle *Java_java_lang_ClassLoader_findBuiltinLib(OMElysiaJNIEnv *env, OMElysiaKlass *,
-                                                                    OMElysiaNativeHandle *name)
+    static OMElysiaNativeHandle *findBuiltinLib(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *name)
     {
         return name;
     }
-    OMElysiaNativeHandle *Java_java_lang_ClassLoader_findLoadedClass0(OMElysiaJNIEnv *env,
-                                                                      OMElysiaNativeHandle *classloader,
-                                                                      OMElysiaNativeHandle *name)
+    static OMElysiaNativeHandle *findLoadedClass0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *classloader,
+                                                  OMElysiaNativeHandle *name)
     {
         auto ptr =
             env->GetLongField(classloader, env->GetFieldID(env->FindClass("java/lang/ClassLoader"), "<ptr>", "J"));
@@ -28,8 +26,8 @@ extern "C"
         }
         throw std::logic_error("not implemented");
     }
-    OMElysiaNativeHandle *Java_java_lang_ClassLoader_findBootstrapClass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *cld,
-                                                                        OMElysiaNativeHandle *name)
+    static OMElysiaNativeHandle *findBootstrapClass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *cld,
+                                                    OMElysiaNativeHandle *name)
     {
         auto nn = env->GetStringUTFChars(name, nullptr);
         auto kls = env->internal->elysium->klassLoader->findClass(nn);
@@ -41,11 +39,9 @@ extern "C"
         interface::registerNativeFuncs(
             env, klass,
             {
-                {"findBuiltinLib", "(Ljava/lang/String;)Ljava/lang/String;", Java_java_lang_ClassLoader_findBuiltinLib},
-                {"findLoadedClass0", "(Ljava/lang/String;)Ljava/lang/Class;",
-                 Java_java_lang_ClassLoader_findLoadedClass0},
-                {"findBootstrapClass", "(Ljava/lang/String;)Ljava/lang/Class;",
-                 Java_java_lang_ClassLoader_findBootstrapClass},
+                {"findBuiltinLib", "(Ljava/lang/String;)Ljava/lang/String;", findBuiltinLib},
+                {"findLoadedClass0", "(Ljava/lang/String;)Ljava/lang/Class;", findLoadedClass0},
+                {"findBootstrapClass", "(Ljava/lang/String;)Ljava/lang/Class;", findBootstrapClass},
             });
     }
 }

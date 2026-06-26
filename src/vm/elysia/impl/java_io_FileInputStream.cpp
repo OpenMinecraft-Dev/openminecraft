@@ -9,8 +9,8 @@ namespace openminecraft::vm::elysia::impl
 {
 extern "C"
 {
-    jint Java_java_io_FileInputStream_readBytes(OMElysiaJNIEnv *env, OMElysiaNativeHandle *stream,
-                                                OMElysiaNativeHandle *data, jint off, jint len)
+    static jint readBytes(OMElysiaJNIEnv *env, OMElysiaNativeHandle *stream, OMElysiaNativeHandle *data, jint off,
+                          jint len)
     {
         auto fdobj = env->GetObjectField(
             stream, env->GetFieldID(env->FindClass("java/io/FileOutputStream"), "fd", "Ljava/io/FileDescriptor;"));
@@ -20,7 +20,7 @@ extern "C"
         env->ReleaseByteArrayElements(data, a, 0);
         return l;
     }
-    jint Java_java_io_FileInputStream_available0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *stream)
+    static jint available0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *stream)
     {
         auto fdobj = env->GetObjectField(
             stream, env->GetFieldID(env->FindClass("java/io/FileOutputStream"), "fd", "Ljava/io/FileDescriptor;"));
@@ -31,8 +31,8 @@ extern "C"
     {
         interface::registerNativeFuncs(env, klass,
                                        {
-                                           {"readBytes", "([BII)I", Java_java_io_FileInputStream_readBytes},
-                                           {"available0", "()I", Java_java_io_FileInputStream_available0},
+                                           {"readBytes", "([BII)I", readBytes},
+                                           {"available0", "()I", available0},
                                        });
     }
 }

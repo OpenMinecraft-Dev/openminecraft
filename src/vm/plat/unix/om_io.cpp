@@ -24,4 +24,9 @@ int available(uint64_t fd)
 
     return n;
 }
+
+uint64_t convertHandle(int hnd)
+{
+    return hnd;
+}
 } // namespace openminecraft::vm::os

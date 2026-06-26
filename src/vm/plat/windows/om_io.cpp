@@ -1,5 +1,6 @@
 #include "openminecraft/vm/os/om_io.hpp"
 #include <cstdint>
+#include <io.h>
 #include <iostream>
 #include <windows.h>
 
@@ -61,6 +62,11 @@ int available(uint64_t fd)
     {
         return 0;
     }
-    return 10000;
+    return 0;
+}
+
+uint64_t convertHandle(int hnd)
+{
+    return (uint64_t)_get_osfhandle(hnd);
 }
 } // namespace openminecraft::vm::os

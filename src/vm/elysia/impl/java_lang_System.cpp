@@ -15,8 +15,8 @@ namespace openminecraft::vm::elysia::impl
 {
 extern "C"
 {
-    OMElysiaNativeHandle *Java_java_lang_System_initProperties(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
-                                                               OMElysiaNativeHandle *properties)
+    static OMElysiaNativeHandle *initProperties(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
+                                                OMElysiaNativeHandle *properties)
     {
         auto kk = env->FindClass("java/util/Hashtable");
         auto kkm = env->GetMethodID(kk, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
@@ -55,8 +55,8 @@ extern "C"
         return properties;
     }
 
-    void Java_java_lang_System_arraycopy(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *src,
-                                         jint srcPos, OMElysiaNativeHandle *dst, jint dstPos, jint length)
+    static void arraycopy(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *src, jint srcPos,
+                          OMElysiaNativeHandle *dst, jint dstPos, jint length)
     {
         auto kk = env->GetObjectClass(src)->toArray()->itemLength;
         auto srcraw = env->internal->elysium->oopManager->arrAccess<uint8_t>(handleFetch(src));
@@ -64,34 +64,33 @@ extern "C"
         std::memmove(&dstraw[kk * dstPos], &srcraw[kk * srcPos], kk * length);
     }
 
-    void Java_java_lang_System_setIn0(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *in)
+    static void setIn0(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *in)
     {
         env->SetStaticObjectField(klass, env->GetFieldID(klass, "in", "Ljava/io/InputStream;"), in);
     }
 
-    void Java_java_lang_System_setOut0(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *out)
+    static void setOut0(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *out)
     {
         env->SetStaticObjectField(klass, env->GetFieldID(klass, "out", "Ljava/io/PrintStream;"), out);
     }
 
-    void Java_java_lang_System_setErr0(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *out)
+    static void setErr0(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *out)
     {
         env->SetStaticObjectField(klass, env->GetFieldID(klass, "err", "Ljava/io/PrintStream;"), out);
     }
 
-    OMElysiaNativeHandle *Java_java_lang_System_mapLibraryName(OMElysiaJNIEnv *env, OMElysiaKlass *,
-                                                               OMElysiaNativeHandle *name)
+    static OMElysiaNativeHandle *mapLibraryName(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *name)
     {
         return name;
     }
 
-    jlong Java_java_lang_System_nanoTime(OMElysiaJNIEnv *env, OMElysiaKlass *)
+    static jlong nanoTime(OMElysiaJNIEnv *env, OMElysiaKlass *)
     {
         auto now = std::chrono::steady_clock::now().time_since_epoch();
         return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
     }
 
-    jlong Java_java_lang_System_currentTimeMillis(OMElysiaJNIEnv *env, OMElysiaKlass *)
+    static jlong currentTimeMillis(OMElysiaJNIEnv *env, OMElysiaKlass *)
     {
         auto now = std::chrono::system_clock::now().time_since_epoch();
         return std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
@@ -102,15 +101,14 @@ extern "C"
         interface::registerNativeFuncs(
             env, klass,
             {
-                {"initProperties", "(Ljava/util/Properties;)Ljava/util/Properties;",
-                 Java_java_lang_System_initProperties},
-                {"arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V", Java_java_lang_System_arraycopy},
-                {"setIn0", "(Ljava/io/InputStream;)V", Java_java_lang_System_setIn0},
-                {"setOut0", "(Ljava/io/PrintStream;)V", Java_java_lang_System_setOut0},
-                {"setErr0", "(Ljava/io/PrintStream;)V", Java_java_lang_System_setErr0},
-                {"mapLibraryName", "(Ljava/lang/String;)Ljava/lang/String;", Java_java_lang_System_mapLibraryName},
-                {"nanoTime", "()J", Java_java_lang_System_nanoTime},
-                {"currentTimeMillis", "()J", Java_java_lang_System_currentTimeMillis},
+                {"initProperties", "(Ljava/util/Properties;)Ljava/util/Properties;", initProperties},
+                {"arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V", arraycopy},
+                {"setIn0", "(Ljava/io/InputStream;)V", setIn0},
+                {"setOut0", "(Ljava/io/PrintStream;)V", setOut0},
+                {"setErr0", "(Ljava/io/PrintStream;)V", setErr0},
+                {"mapLibraryName", "(Ljava/lang/String;)Ljava/lang/String;", mapLibraryName},
+                {"nanoTime", "()J", nanoTime},
+                {"currentTimeMillis", "()J", currentTimeMillis},
             });
     }
 }

@@ -25,7 +25,7 @@ struct OMElysiaNativeMethodWrapper
     }
 };
 
-inline void registerNativeFuncs(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
+static void registerNativeFuncs(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
                                 std::initializer_list<OMElysiaNativeMethodWrapper> funcs)
 {
     auto cnt = funcs.size();

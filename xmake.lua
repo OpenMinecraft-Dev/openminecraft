@@ -27,7 +27,7 @@ end
 -- Platform configs
 --------------------------------------------------------------------------------
 
-if not is_plat("windows") then
+if not is_plat("windows", "mingw") then
 	add_ldflags("-rdynamic")
 end
 

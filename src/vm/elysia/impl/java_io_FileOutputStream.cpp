@@ -8,8 +8,8 @@ namespace openminecraft::vm::elysia::impl
 {
 extern "C"
 {
-    void Java_java_io_FileOutputStream_writeBytes(OMElysiaJNIEnv *env, OMElysiaNativeHandle *stream,
-                                                  OMElysiaNativeHandle *data, jint off, jint len, jboolean append)
+    static void writeBytes(OMElysiaJNIEnv *env, OMElysiaNativeHandle *stream, OMElysiaNativeHandle *data, jint off,
+                           jint len, jboolean append)
     {
         auto fdobj = env->GetObjectField(
             stream, env->GetFieldID(env->FindClass("java/io/FileOutputStream"), "fd", "Ljava/io/FileDescriptor;"));
@@ -20,8 +20,7 @@ extern "C"
     }
     void Java_java_io_FileOutputStream_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
-        interface::registerNativeFuncs(env, klass,
-                                       {{"writeBytes", "([BIIZ)V", Java_java_io_FileOutputStream_writeBytes}});
+        interface::registerNativeFuncs(env, klass, {{"writeBytes", "([BIIZ)V", writeBytes}});
     }
 }
 } // namespace openminecraft::vm::elysia::impl
