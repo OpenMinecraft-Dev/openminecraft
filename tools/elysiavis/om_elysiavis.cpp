@@ -455,6 +455,7 @@ void printElysium(OMElysium *elysium)
         break;
     }
     case "links"_hash: {
+        int a = 0, b = 0;
         for (auto &[name, klass] : *elysium->klassLoader->loadedClasses)
         {
             if (!klass || !klass->isInstance())
@@ -502,15 +503,21 @@ void printElysium(OMElysium *elysium)
                     fmt::print(fmt::fg(addrColor), "@{} => ", funcptr);
                     fmt::print(fmt::fg(valueColor), "{}.{}{}", klass->name, mthd.name, mthd.descriptor);
                     fmt::println("");
+                    ++a;
                     continue;
 
                 fail:
                     fmt::print(fmt::fg(addrColor), "@{} => ", funcptr);
                     fmt::print(fmt::fg(hintColor), "{}.{}{}", klass->name, mthd.name, mthd.descriptor);
                     fmt::println("");
+                    ++b;
                 }
             }
         }
+        fmt::print(fmt::fg(valueColor), "{}", a);
+        fmt::print(" methods linked, ");
+        fmt::print(fmt::fg(hintColor), "{}", b);
+        fmt::println(" methods link not satisfied");
         break;
     }
     default:
