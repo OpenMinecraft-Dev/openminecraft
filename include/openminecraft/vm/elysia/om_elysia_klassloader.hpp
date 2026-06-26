@@ -56,9 +56,10 @@ class OMElysiaKlassloader
     OMElysiaOop *klassloader = nullptr;
     std::shared_ptr<OMElysiaKlassloader> next = nullptr;
 
+    std::shared_ptr<std::map<binary::hash::hash_t, OMElysiaKlass *>> loadedClasses;
+
   private:
     OMElysium *elysium;
-    std::shared_ptr<std::map<binary::hash::hash_t, OMElysiaKlass *>> loadedClasses;
 
     log::OMLogger logger;
 };

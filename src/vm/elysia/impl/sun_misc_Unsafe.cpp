@@ -3,6 +3,7 @@
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/atomic/om_atomic.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
+#include "openminecraft/vm/elysia/interface/om_elysia_interface_utils.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include <atomic>
@@ -185,45 +186,30 @@ extern "C"
 
     void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
-        OMElysiaNativeMethod mm[] = {
-            {const_cast<char *>("arrayBaseOffset"), const_cast<char *>("(Ljava/lang/Class;)I"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_arrayBaseOffset)},
-            {const_cast<char *>("arrayIndexScale"), const_cast<char *>("(Ljava/lang/Class;)I"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_arrayIndexScale)},
-            {const_cast<char *>("addressSize"), const_cast<char *>("()I"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_addressSize)},
-            {const_cast<char *>("compareAndSwapObject"),
-             const_cast<char *>("(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_compareAndSwapObject)},
-            {const_cast<char *>("objectFieldOffset"), const_cast<char *>("(Ljava/lang/reflect/Field;)J"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_objectFieldOffset)},
-            {const_cast<char *>("getIntVolatile"), const_cast<char *>("(Ljava/lang/Object;J)I"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_getIntVolatile)},
-            {const_cast<char *>("compareAndSwapInt"), const_cast<char *>("(Ljava/lang/Object;JII)Z"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_compareAndSwapInt)},
-            {const_cast<char *>("allocateMemory"), const_cast<char *>("(J)J"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_allocateMemory)},
-            {const_cast<char *>("putLong"), const_cast<char *>("(JJ)V"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_putLong)},
-            {const_cast<char *>("getByte"), const_cast<char *>("(J)B"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_getByte)},
-            {const_cast<char *>("freeMemory"), const_cast<char *>("(J)V"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_freeMemory)},
-            {const_cast<char *>("getObjectVolatile"), const_cast<char *>("(Ljava/lang/Object;J)Ljava/lang/Object;"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_getObjectVolatile)},
-            {const_cast<char *>("compareAndSwapLong"), const_cast<char *>("(Ljava/lang/Object;JJJ)Z"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_compareAndSwapLong)},
-            {const_cast<char *>("getInt"), const_cast<char *>("(Ljava/lang/Object;J)I"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_getInt)},
-            {const_cast<char *>("getLong"), const_cast<char *>("(Ljava/lang/Object;J)J"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_getLong$obj)},
-            {const_cast<char *>("putLong"), const_cast<char *>("(Ljava/lang/Object;JJ)V"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_putLong$obj)},
-            {const_cast<char *>("getLongVolatile"), const_cast<char *>("(Ljava/lang/Object;J)J"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_getLongVolatile)},
-            {const_cast<char *>("putInt"), const_cast<char *>("(Ljava/lang/Object;JI)V"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_putInt$obj)}};
-        env->RegisterNatives(klass, mm, 18);
+        interface::registerNativeFuncs(
+            env, klass,
+            {
+                {"arrayBaseOffset", "(Ljava/lang/Class;)I", Java_sun_misc_Unsafe_arrayBaseOffset},
+                {"arrayIndexScale", "(Ljava/lang/Class;)I", Java_sun_misc_Unsafe_arrayIndexScale},
+                {"addressSize", "()I", Java_sun_misc_Unsafe_addressSize},
+                {"compareAndSwapObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z",
+                 Java_sun_misc_Unsafe_compareAndSwapObject},
+                {"objectFieldOffset", "(Ljava/lang/reflect/Field;)J", Java_sun_misc_Unsafe_objectFieldOffset},
+                {"getIntVolatile", "(Ljava/lang/Object;J)I", Java_sun_misc_Unsafe_getIntVolatile},
+                {"compareAndSwapInt", "(Ljava/lang/Object;JII)Z", Java_sun_misc_Unsafe_compareAndSwapInt},
+                {"allocateMemory", "(J)J", Java_sun_misc_Unsafe_allocateMemory},
+                {"putLong", "(JJ)V", Java_sun_misc_Unsafe_putLong},
+                {"getByte", "(J)B", Java_sun_misc_Unsafe_getByte},
+                {"freeMemory", "(J)V", Java_sun_misc_Unsafe_freeMemory},
+                {"getObjectVolatile", "(Ljava/lang/Object;J)Ljava/lang/Object;",
+                 Java_sun_misc_Unsafe_getObjectVolatile},
+                {"compareAndSwapLong", "(Ljava/lang/Object;JJJ)Z", Java_sun_misc_Unsafe_compareAndSwapLong},
+                {"getInt", "(Ljava/lang/Object;J)I", Java_sun_misc_Unsafe_getInt},
+                {"getLong", "(Ljava/lang/Object;J)J", Java_sun_misc_Unsafe_getLong$obj},
+                {"putLong", "(Ljava/lang/Object;JJ)V", Java_sun_misc_Unsafe_putLong$obj},
+                {"getLongVolatile", "(Ljava/lang/Object;J)J", Java_sun_misc_Unsafe_getLongVolatile},
+                {"putInt", "(Ljava/lang/Object;JI)V", Java_sun_misc_Unsafe_putInt$obj},
+            });
     }
 }
 } // namespace openminecraft::vm::elysia::impl

@@ -1,4 +1,5 @@
 #include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
+#include "openminecraft/vm/elysia/interface/om_elysia_interface_utils.hpp"
 #ifdef OM_PLATFORM_WINDOWS
 #include <windows.h>
 #endif
@@ -17,9 +18,7 @@ extern "C"
     }
     void Java_java_io_FileDescriptor_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
-        OMElysiaNativeMethod mm[] = {{const_cast<char *>("set"), const_cast<char *>("(I)J"),
-                                      reinterpret_cast<void *>(Java_java_io_FileDescriptor_set)}};
-        env->RegisterNatives(klass, mm, 1);
+        interface::registerNativeFuncs(env, klass, {{"set", "(I)J", Java_java_io_FileDescriptor_set}});
     }
 }
 } // namespace openminecraft::vm::elysia::impl

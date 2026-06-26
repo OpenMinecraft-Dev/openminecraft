@@ -2,6 +2,7 @@
 #include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
+#include "openminecraft/vm/elysia/interface/om_elysia_interface_utils.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
@@ -226,38 +227,26 @@ extern "C"
 
     void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
-        OMElysiaNativeMethod mm[] = {
-            {const_cast<char *>("getPrimitiveClass"), const_cast<char *>("(Ljava/lang/String;)Ljava/lang/Class;"),
-             reinterpret_cast<void *>(Java_java_lang_Class_getPrimitiveClass)},
-            {const_cast<char *>("desiredAssertionStatus0"), const_cast<char *>("(Ljava/lang/Class;)Z"),
-             reinterpret_cast<void *>(Java_java_lang_Class_desiredAssertionStatus0)},
-            {const_cast<char *>("forName0"),
-             const_cast<char *>("(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;"),
-             reinterpret_cast<void *>(Java_java_lang_Class_forName0)},
-            {const_cast<char *>("getDeclaredFields0"), const_cast<char *>("(Z)[Ljava/lang/reflect/Field;"),
-             reinterpret_cast<void *>(Java_java_lang_Class_getDeclaredFields0)},
-            {const_cast<char *>("isPrimitive"), const_cast<char *>("()Z"),
-             reinterpret_cast<void *>(Java_java_lang_Class_isPrimitive)},
-            {const_cast<char *>("isInterface"), const_cast<char *>("()Z"),
-             reinterpret_cast<void *>(Java_java_lang_Class_isInterface)},
-            {const_cast<char *>("isAssignableFrom"), const_cast<char *>("(Ljava/lang/Class;)Z"),
-             reinterpret_cast<void *>(Java_java_lang_Class_isAssignableFrom)},
-            {const_cast<char *>("getDeclaredConstructors0"), const_cast<char *>("(Z)[Ljava/lang/reflect/Constructor;"),
-             reinterpret_cast<void *>(Java_java_lang_Class_getDeclaredConstructors0)},
-            {const_cast<char *>("getModifiers"), const_cast<char *>("()I"),
-             reinterpret_cast<void *>(Java_java_lang_Class_getModifiers)},
-            {const_cast<char *>("getSuperclass"), const_cast<char *>("()Ljava/lang/Class;"),
-             reinterpret_cast<void *>(Java_java_lang_Class_getSuperclass)},
-            {const_cast<char *>("isArray"), const_cast<char *>("()Z"),
-             reinterpret_cast<void *>(Java_java_lang_Class_isArray)},
-            {const_cast<char *>("getComponentType"), const_cast<char *>("()Ljava/lang/Class;"),
-             reinterpret_cast<void *>(Java_java_lang_Class_getComponentType)},
-            {const_cast<char *>("getEnclosingMethod0"), const_cast<char *>("()[Ljava/lang/Object;"),
-             reinterpret_cast<void *>(Java_java_lang_Class_getEnclosingMethod0)},
-            {const_cast<char *>("getDeclaringClass0"), const_cast<char *>("()Ljava/lang/Class;"),
-             reinterpret_cast<void *>(Java_java_lang_Class_getDeclaringClass0)}};
-
-        env->RegisterNatives(klass, mm, 14);
+        interface::registerNativeFuncs(
+            env, klass,
+            {
+                {"getPrimitiveClass", "(Ljava/lang/String;)Ljava/lang/Class;", Java_java_lang_Class_getPrimitiveClass},
+                {"desiredAssertionStatus0", "(Ljava/lang/Class;)Z", Java_java_lang_Class_desiredAssertionStatus0},
+                {"forName0", "(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;",
+                 Java_java_lang_Class_forName0},
+                {"getDeclaredFields0", "(Z)[Ljava/lang/reflect/Field;", Java_java_lang_Class_getDeclaredFields0},
+                {"isPrimitive", "()Z", Java_java_lang_Class_isPrimitive},
+                {"isInterface", "()Z", Java_java_lang_Class_isInterface},
+                {"isAssignableFrom", "(Ljava/lang/Class;)Z", Java_java_lang_Class_isAssignableFrom},
+                {"getDeclaredConstructors0", "(Z)[Ljava/lang/reflect/Constructor;",
+                 Java_java_lang_Class_getDeclaredConstructors0},
+                {"getModifiers", "()I", Java_java_lang_Class_getModifiers},
+                {"getSuperclass", "()Ljava/lang/Class;", Java_java_lang_Class_getSuperclass},
+                {"isArray", "()Z", Java_java_lang_Class_isArray},
+                {"getComponentType", "()Ljava/lang/Class;", Java_java_lang_Class_getComponentType},
+                {"getEnclosingMethod0", "()[Ljava/lang/Object;", Java_java_lang_Class_getEnclosingMethod0},
+                {"getDeclaringClass0", "()Ljava/lang/Class;", Java_java_lang_Class_getDeclaringClass0},
+            });
     } // namespace openminecraft::vm::elysia::impl
 }
 } // namespace openminecraft::vm::elysia::impl

@@ -1,5 +1,6 @@
 #include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
+#include "openminecraft/vm/elysia/interface/om_elysia_interface_utils.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
@@ -37,14 +38,15 @@ extern "C"
     }
     void Java_java_lang_ClassLoader_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
-        OMElysiaNativeMethod mm[] = {
-            {const_cast<char *>("findBuiltinLib"), const_cast<char *>("(Ljava/lang/String;)Ljava/lang/String;"),
-             reinterpret_cast<void *>(Java_java_lang_ClassLoader_findBuiltinLib)},
-            {const_cast<char *>("findLoadedClass0"), const_cast<char *>("(Ljava/lang/String;)Ljava/lang/Class;"),
-             reinterpret_cast<void *>(Java_java_lang_ClassLoader_findLoadedClass0)},
-            {const_cast<char *>("findBootstrapClass"), const_cast<char *>("(Ljava/lang/String;)Ljava/lang/Class;"),
-             reinterpret_cast<void *>(Java_java_lang_ClassLoader_findBootstrapClass)}};
-        env->RegisterNatives(klass, mm, 3);
+        interface::registerNativeFuncs(
+            env, klass,
+            {
+                {"findBuiltinLib", "(Ljava/lang/String;)Ljava/lang/String;", Java_java_lang_ClassLoader_findBuiltinLib},
+                {"findLoadedClass0", "(Ljava/lang/String;)Ljava/lang/Class;",
+                 Java_java_lang_ClassLoader_findLoadedClass0},
+                {"findBootstrapClass", "(Ljava/lang/String;)Ljava/lang/Class;",
+                 Java_java_lang_ClassLoader_findBootstrapClass},
+            });
     }
 }
 } // namespace openminecraft::vm::elysia::impl

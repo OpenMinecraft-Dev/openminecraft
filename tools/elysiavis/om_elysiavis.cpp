@@ -14,9 +14,11 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_saferead.hpp"
+#include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_heap.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
+#include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
@@ -450,6 +452,65 @@ void printElysium(OMElysium *elysium)
         break;
     case "read"_hash: {
         readMem(elysium);
+        break;
+    }
+    case "links"_hash: {
+        for (auto &[name, klass] : *elysium->klassLoader->loadedClasses)
+        {
+            if (!klass || !klass->isInstance())
+            {
+                continue;
+            }
+
+            auto inskls = klass->toInstance();
+            for (int m = 0; m < inskls->methodCount; ++m)
+            {
+                auto &mthd = inskls->methods[m];
+
+                if (mthd.accessFlag & JVM_Acc_Native)
+                {
+                    void *funcptr = nullptr;
+                    auto mm = fmt::format("Java_{}_{}", klass->name, mthd.name);
+                    for (auto &ch : mm)
+                    {
+                        if (ch == '/')
+                        {
+                            ch = '_';
+                        }
+                    }
+                    if (elysium->nativeFuncMap.count(mm))
+                    {
+                        funcptr = elysium->nativeFuncMap[mm];
+                        goto success;
+                    }
+
+                    if (!klass->nativeMethodCount || !klass->nativeMethods)
+                    {
+                        goto fail;
+                    }
+
+                    for (int j = 0; j < klass->nativeMethodCount; ++j)
+                    {
+                        if (mthd.isSame(klass->nativeMethods + j))
+                        {
+                            funcptr = klass->nativeMethods[j].funcPtr;
+                            goto success;
+                        }
+                    }
+                    goto fail;
+                success:
+                    fmt::print(fmt::fg(addrColor), "@{} => ", funcptr);
+                    fmt::print(fmt::fg(valueColor), "{}.{}{}", klass->name, mthd.name, mthd.descriptor);
+                    fmt::println("");
+                    continue;
+
+                fail:
+                    fmt::print(fmt::fg(addrColor), "@{} => ", funcptr);
+                    fmt::print(fmt::fg(hintColor), "{}.{}{}", klass->name, mthd.name, mthd.descriptor);
+                    fmt::println("");
+                }
+            }
+        }
         break;
     }
     default:

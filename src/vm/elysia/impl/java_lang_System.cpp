@@ -1,4 +1,5 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
+#include "openminecraft/vm/elysia/interface/om_elysia_interface_utils.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
@@ -98,24 +99,19 @@ extern "C"
 
     void Java_java_lang_System_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
-        OMElysiaNativeMethod mm[] = {
-            {const_cast<char *>("initProperties"), const_cast<char *>("(Ljava/util/Properties;)Ljava/util/Properties;"),
-             reinterpret_cast<void *>(Java_java_lang_System_initProperties)},
-            {const_cast<char *>("arraycopy"), const_cast<char *>("(Ljava/lang/Object;ILjava/lang/Object;II)V"),
-             reinterpret_cast<void *>(Java_java_lang_System_arraycopy)},
-            {const_cast<char *>("setIn0"), const_cast<char *>("(Ljava/io/InputStream;)V"),
-             reinterpret_cast<void *>(Java_java_lang_System_setIn0)},
-            {const_cast<char *>("setOut0"), const_cast<char *>("(Ljava/io/PrintStream;)V"),
-             reinterpret_cast<void *>(Java_java_lang_System_setOut0)},
-            {const_cast<char *>("setErr0"), const_cast<char *>("(Ljava/io/PrintStream;)V"),
-             reinterpret_cast<void *>(Java_java_lang_System_setErr0)},
-            {const_cast<char *>("mapLibraryName"), const_cast<char *>("(Ljava/lang/String;)Ljava/lang/String;"),
-             reinterpret_cast<void *>(Java_java_lang_System_mapLibraryName)},
-            {const_cast<char *>("nanoTime"), const_cast<char *>("()J"),
-             reinterpret_cast<void *>(Java_java_lang_System_nanoTime)},
-            {const_cast<char *>("currentTimeMillis"), const_cast<char *>("()J"),
-             reinterpret_cast<void *>(Java_java_lang_System_currentTimeMillis)}};
-        env->RegisterNatives(klass, mm, 8);
+        interface::registerNativeFuncs(
+            env, klass,
+            {
+                {"initProperties", "(Ljava/util/Properties;)Ljava/util/Properties;",
+                 Java_java_lang_System_initProperties},
+                {"arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V", Java_java_lang_System_arraycopy},
+                {"setIn0", "(Ljava/io/InputStream;)V", Java_java_lang_System_setIn0},
+                {"setOut0", "(Ljava/io/PrintStream;)V", Java_java_lang_System_setOut0},
+                {"setErr0", "(Ljava/io/PrintStream;)V", Java_java_lang_System_setErr0},
+                {"mapLibraryName", "(Ljava/lang/String;)Ljava/lang/String;", Java_java_lang_System_mapLibraryName},
+                {"nanoTime", "()J", Java_java_lang_System_nanoTime},
+                {"currentTimeMillis", "()J", Java_java_lang_System_currentTimeMillis},
+            });
     }
 }
 } // namespace openminecraft::vm::elysia::impl

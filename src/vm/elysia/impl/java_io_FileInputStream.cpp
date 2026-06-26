@@ -1,6 +1,7 @@
 #include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
 #include "openminecraft/vm/elysia/impl/om_elysia_implplat.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
+#include "openminecraft/vm/elysia/interface/om_elysia_interface_utils.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/os/om_io.hpp"
 
@@ -28,11 +29,11 @@ extern "C"
     }
     void Java_java_io_FileInputStream_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
-        OMElysiaNativeMethod mm[] = {{const_cast<char *>("readBytes"), const_cast<char *>("([BII)I"),
-                                      reinterpret_cast<void *>(Java_java_io_FileInputStream_readBytes)},
-                                     {const_cast<char *>("available0"), const_cast<char *>("()I"),
-                                      reinterpret_cast<void *>(Java_java_io_FileInputStream_available0)}};
-        env->RegisterNatives(klass, mm, 2);
+        interface::registerNativeFuncs(env, klass,
+                                       {
+                                           {"readBytes", "([BII)I", Java_java_io_FileInputStream_readBytes},
+                                           {"available0", "()I", Java_java_io_FileInputStream_available0},
+                                       });
     }
 }
 } // namespace openminecraft::vm::elysia::impl

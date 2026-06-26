@@ -1,5 +1,6 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
+#include "openminecraft/vm/elysia/interface/om_elysia_interface_utils.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
@@ -36,15 +37,13 @@ extern "C"
 
     void Java_java_lang_Object_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
-        OMElysiaNativeMethod mm[] = {{const_cast<char *>("hashCode"), const_cast<char *>("()I"),
-                                      reinterpret_cast<void *>(Java_java_lang_Object_hashCode)},
-                                     {const_cast<char *>("getClass"), const_cast<char *>("()Ljava/lang/Class;"),
-                                      reinterpret_cast<void *>(Java_java_lang_Object_getClass)},
-                                     {const_cast<char *>("notifyAll"), const_cast<char *>("()V"),
-                                      reinterpret_cast<void *>(Java_java_lang_Object_notifyAll)},
-                                     {const_cast<char *>("clone"), const_cast<char *>("()Ljava/lang/Object;"),
-                                      reinterpret_cast<void *>(Java_java_lang_Object_clone)}};
-        env->RegisterNatives(klass, mm, 4);
+        interface::registerNativeFuncs(env, klass,
+                                       {
+                                           {"hashCode", "()I", Java_java_lang_Object_hashCode},
+                                           {"getClass", "()Ljava/lang/Class;", Java_java_lang_Object_getClass},
+                                           {"notifyAll", "()V", Java_java_lang_Object_notifyAll},
+                                           {"clone", "()Ljava/lang/Object;", Java_java_lang_Object_clone},
+                                       });
     }
 }
 } // namespace openminecraft::vm::elysia::impl
