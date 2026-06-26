@@ -10,6 +10,7 @@
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include <ffi.h>
+#include <iostream>
 #include <variant>
 
 using namespace openminecraft::binary::hash;

@@ -100,7 +100,19 @@ extern "C"
     static jint Java_sun_misc_Unsafe_getIntVolatile(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
                                                     OMElysiaNativeHandle *obj, jlong n)
     {
-        return *reinterpret_cast<volatile jint *>(reinterpret_cast<uintptr_t>(handleFetch(obj) + n));
+        return *reinterpret_cast<volatile jint *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + n);
+    }
+
+    static jlong Java_sun_misc_Unsafe_getLongVolatile(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
+                                                      OMElysiaNativeHandle *obj, jlong n)
+    {
+        return *reinterpret_cast<volatile jlong *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + n);
+    }
+
+    static jint Java_sun_misc_Unsafe_getInt(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
+                                            OMElysiaNativeHandle *obj, jlong n)
+    {
+        return *reinterpret_cast<jint *>(reinterpret_cast<uintptr_t>(obj) + n);
     }
 
     static bool Java_sun_misc_Unsafe_compareAndSwapInt(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
@@ -113,6 +125,11 @@ extern "C"
     static jlong Java_sun_misc_Unsafe_allocateMemory(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong l)
     {
         return (jlong)mem::allocator::tracedMallocElysiaExternal(l);
+    }
+
+    static jlong Java_sun_misc_Unsafe_getLong(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr)
+    {
+        return *(jlong *)addr;
     }
 
     static void Java_sun_misc_Unsafe_putLong(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr, jlong v)
@@ -153,6 +170,18 @@ extern "C"
                                   expected, x);
     }
 
+    static void Java_sun_misc_Unsafe_putLong$obj(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
+                                                 OMElysiaNativeHandle *o, jlong offset, jlong v)
+    {
+        *reinterpret_cast<jlong *>(reinterpret_cast<uintptr_t>(handleFetch(o)) + offset) = v;
+    }
+
+    static void Java_sun_misc_Unsafe_putInt$obj(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
+                                                OMElysiaNativeHandle *o, jlong offset, jint v)
+    {
+        *reinterpret_cast<jint *>(reinterpret_cast<uintptr_t>(handleFetch(o)) + offset) = v;
+    }
+
     void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         OMElysiaNativeMethod mm[] = {
@@ -182,8 +211,18 @@ extern "C"
             {const_cast<char *>("getObjectVolatile"), const_cast<char *>("(Ljava/lang/Object;J)Ljava/lang/Object;"),
              reinterpret_cast<void *>(Java_sun_misc_Unsafe_getObjectVolatile)},
             {const_cast<char *>("compareAndSwapLong"), const_cast<char *>("(Ljava/lang/Object;JJJ)Z"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_compareAndSwapLong)}};
-        env->RegisterNatives(klass, mm, 13);
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_compareAndSwapLong)},
+            {const_cast<char *>("getInt"), const_cast<char *>("(Ljava/lang/Object;J)I"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_getInt)},
+            {const_cast<char *>("getLong"), const_cast<char *>("(Ljava/lang/Object;J)J"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_getLong)},
+            {const_cast<char *>("putLong"), const_cast<char *>("(Ljava/lang/Object;JJ)V"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_putLong$obj)},
+            {const_cast<char *>("getLongVolatile"), const_cast<char *>("(Ljava/lang/Object;J)J"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_getLongVolatile)},
+            {const_cast<char *>("putInt"), const_cast<char *>("(Ljava/lang/Object;JI)V"),
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_putInt$obj)}};
+        env->RegisterNatives(klass, mm, 18);
     }
 }
 } // namespace openminecraft::vm::elysia::impl

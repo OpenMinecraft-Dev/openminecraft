@@ -307,6 +307,20 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             tc->zero.pc += 2;
             break;
         }
+#define op_dloadc(n)                                                                                                   \
+    case op_dload_n(n):                                                                                                \
+        zeroStackPushW(zeroStackLoadLocalW<jdouble>(n));                                                               \
+        ++tc->zero.pc;                                                                                                 \
+        break;
+            op_dloadc(0);
+            op_dloadc(1);
+            op_dloadc(2);
+            op_dloadc(3);
+        case op_dload: {
+            zeroStackPushW(zeroStackLoadLocalW<jdouble>(tc->zero.pc[1]));
+            tc->zero.pc += 2;
+            break;
+        }
 #define op_aloadc(n)                                                                                                   \
     case op_aload_n(n):                                                                                                \
         zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(n));                                                           \
@@ -386,6 +400,21 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
 
+#define op_dstorec(n)                                                                                                  \
+    case op_dstore_n(n):                                                                                               \
+        zeroStackSaveLocalPopW<jdouble>(n);                                                                            \
+        ++tc->zero.pc;                                                                                                 \
+        break;
+            op_dstorec(0);
+            op_dstorec(1);
+            op_dstorec(2);
+            op_dstorec(3);
+        case op_dstore: {
+            zeroStackSaveLocalPopW<jdouble>(tc->zero.pc[1]);
+            tc->zero.pc += 2;
+            break;
+        }
+
 #define op_astorec(n)                                                                                                  \
     case op_astore_n(n):                                                                                               \
         zeroStackSaveLocalPop<OMElysiaOop *>(n);                                                                       \
@@ -401,6 +430,14 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             break;
         }
 
+        case op_lastore: {
+            auto value = zeroStackPopWGet<jlong>();
+            auto index = zeroStackPopGet<jint>();
+            auto arr = zeroStackPopGet<OMElysiaOop *>();
+            elysium->oopManager->arrAccess<jlong>(arr)[index] = value;
+            ++tc->zero.pc;
+            break;
+        }
         case op_iastore: {
             auto value = zeroStackPopGet<jint>();
             auto index = zeroStackPopGet<jint>();
