@@ -127,9 +127,10 @@ extern "C"
         return (jlong)mem::allocator::tracedMallocElysiaExternal(l);
     }
 
-    static jlong Java_sun_misc_Unsafe_getLong(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr)
+    static jlong Java_sun_misc_Unsafe_getLong$obj(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
+                                                  OMElysiaNativeHandle *o, jlong off)
     {
-        return *(jlong *)addr;
+        return *reinterpret_cast<jlong *>(reinterpret_cast<uintptr_t>(handleFetch(o)) + off);
     }
 
     static void Java_sun_misc_Unsafe_putLong(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr, jlong v)
@@ -215,7 +216,7 @@ extern "C"
             {const_cast<char *>("getInt"), const_cast<char *>("(Ljava/lang/Object;J)I"),
              reinterpret_cast<void *>(Java_sun_misc_Unsafe_getInt)},
             {const_cast<char *>("getLong"), const_cast<char *>("(Ljava/lang/Object;J)J"),
-             reinterpret_cast<void *>(Java_sun_misc_Unsafe_getLong)},
+             reinterpret_cast<void *>(Java_sun_misc_Unsafe_getLong$obj)},
             {const_cast<char *>("putLong"), const_cast<char *>("(Ljava/lang/Object;JJ)V"),
              reinterpret_cast<void *>(Java_sun_misc_Unsafe_putLong$obj)},
             {const_cast<char *>("getLongVolatile"), const_cast<char *>("(Ljava/lang/Object;J)J"),

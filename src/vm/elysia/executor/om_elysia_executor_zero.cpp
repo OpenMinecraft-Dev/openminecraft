@@ -429,7 +429,6 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             tc->zero.pc += 2;
             break;
         }
-
         case op_lastore: {
             auto value = zeroStackPopWGet<jlong>();
             auto index = zeroStackPopGet<jint>();
