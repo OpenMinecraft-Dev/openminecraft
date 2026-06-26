@@ -90,6 +90,12 @@ extern "C"
         return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
     }
 
+    jlong Java_java_lang_System_currentTimeMillis(OMElysiaJNIEnv *env, OMElysiaKlass *)
+    {
+        auto now = std::chrono::system_clock::now().time_since_epoch();
+        return std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+    }
+
     void Java_java_lang_System_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         OMElysiaNativeMethod mm[] = {
@@ -106,8 +112,10 @@ extern "C"
             {const_cast<char *>("mapLibraryName"), const_cast<char *>("(Ljava/lang/String;)Ljava/lang/String;"),
              reinterpret_cast<void *>(Java_java_lang_System_mapLibraryName)},
             {const_cast<char *>("nanoTime"), const_cast<char *>("()J"),
-             reinterpret_cast<void *>(Java_java_lang_System_nanoTime)}};
-        env->RegisterNatives(klass, mm, 7);
+             reinterpret_cast<void *>(Java_java_lang_System_nanoTime)},
+            {const_cast<char *>("currentTimeMillis"), const_cast<char *>("()J"),
+             reinterpret_cast<void *>(Java_java_lang_System_currentTimeMillis)}};
+        env->RegisterNatives(klass, mm, 8);
     }
 }
 } // namespace openminecraft::vm::elysia::impl

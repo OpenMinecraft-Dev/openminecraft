@@ -102,7 +102,7 @@ OMElysium::OMElysium()
                 logger.error("{}", env.GetStringUTFChars(str, nullptr));
             }
 
-            auto l = klassLoader->fetchOrLoadClass("openminecraft/Test");
+            auto l = klassLoader->fetchOrLoadClass("dev/openminecraft/MainKt");
             auto mm = l->findMethod("main", "([Ljava/lang/String;)V");
             OMElysiaNativeValue vv[1];
             vv[0].l = nullptr;

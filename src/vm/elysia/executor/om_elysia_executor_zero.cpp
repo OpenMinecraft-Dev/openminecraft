@@ -480,6 +480,14 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++tc->zero.pc;
             break;
         }
+        case op_swap: {
+            auto value1 = zeroStackPopGet<OMElysiaOop *>();
+            auto value2 = zeroStackPopGet<OMElysiaOop *>();
+            zeroStackPush(value1);
+            zeroStackPush(value2);
+            ++tc->zero.pc;
+            break;
+        }
 
 #define op_calc(op, fetch, psh, oprt)                                                                                  \
     case op_##op: {                                                                                                    \
