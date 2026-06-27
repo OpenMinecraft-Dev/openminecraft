@@ -347,7 +347,16 @@ begin:
 print:
     objs++;
     printOop(elysium, base, true);
-    base = reinterpret_cast<OMElysiaOop *>(reinterpret_cast<uintptr_t>(base) + elysium->oopManager->oopLength(base));
+    uint64_t extra = 0;
+    if (std::strcmp(elysium->oopManager->oopGetKlass(base)->name, "java/lang/Class") == 0)
+    {
+        auto off =
+            elysium->klassLoader->fetchOrLoadClass("java/lang/Class")->toInstance()->findField("<ptr>", "J")->offset;
+        auto ptt = elysium->oopManager->oopAccessField(base, off);
+        extra = ((OMElysiaKlass *)*reinterpret_cast<jlong *>(ptt))->toInstance()->staticLength;
+    }
+    base = reinterpret_cast<OMElysiaOop *>(reinterpret_cast<uintptr_t>(base) +
+                                           elysium->mainHeap.align(elysium->oopManager->oopLength(base) + extra));
 
     if (base >= elysium->mainHeap.rawHeap.heapTop)
     {

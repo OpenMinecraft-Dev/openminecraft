@@ -184,7 +184,7 @@ static void putVolatileObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instanc
 template <typename V>
 static V getObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *obj, jlong n)
 {
-    return *reinterpret_cast<V *>(reinterpret_cast<uintptr_t>(obj) + n);
+    return *reinterpret_cast<V *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + n);
 }
 
 static OMElysiaNativeHandle *getObjectObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
