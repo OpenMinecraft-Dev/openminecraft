@@ -125,8 +125,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id)
             ->to<OMClassConstantUtf8>()
             ->data;
 
-    OMElysiaKlass *kk;
-    execWithState(InsideVM, [&]() { kk = klassloader->fetchOrLoadClass(clsname); });
+    auto kk = execWithState(InsideVM, [&]() { return klassloader->fetchOrLoadClass(clsname); });
 
     while (kk)
     {
@@ -178,8 +177,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
                 ->to<OMClassConstantUtf8>()
                 ->data;
 
-        OMElysiaKlass *cls;
-        execWithState(InsideVM, [&]() { cls = klassloader->fetchOrLoadClass(clsname); });
+        auto cls = execWithState(InsideVM, [&]() { return klassloader->fetchOrLoadClass(clsname); });
 
         OMElysiaMethod *mthd = nullptr;
         while (!mthd)
@@ -209,8 +207,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
         auto mr = item->to<OMClassConstantClass>();
         auto clsname = constantPoolRaw->at(mr->nameIndex)->to<OMClassConstantUtf8>()->data;
 
-        OMElysiaKlass *cls;
-        execWithState(InsideVM, [&]() { cls = klassloader->fetchOrLoadClass(clsname); });
+        auto cls = execWithState(InsideVM, [&]() { return klassloader->fetchOrLoadClass(clsname); });
 
         constantPool[id] = cls;
         constantPoolState[id] = true;

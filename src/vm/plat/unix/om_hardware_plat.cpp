@@ -1,5 +1,6 @@
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <cstdint>
+#include <cstdlib>
 #include <fmt/format.h>
 #include <fstream>
 #include <pwd.h>
@@ -164,5 +165,13 @@ uint64_t fetchMemoryTotal()
 uint64_t fetchAvailableProcessors()
 {
     return sysconf(_SC_NPROCESSORS_ONLN);
+}
+int fetchLoadAverage(double *buf, int siz)
+{
+    return ::getloadavg(buf, siz);
+}
+uint64_t fetchPageSize()
+{
+    return sysconf(_SC_PAGE_SIZE);
 }
 } // namespace openminecraft::vm::os

@@ -1,5 +1,4 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
-#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/atomic/om_atomic.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
@@ -18,12 +17,10 @@ namespace openminecraft::vm::elysia
 {
 template <typename T> static T getFieldImpl(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID)
 {
-    auto elys = env->internal->elysium;
-    T val;
-    execWithState(InsideVM, [&]() {
-        val = *reinterpret_cast<T *>(elys->oopManager->oopAccessField(handleFetch(obj), fieldID->offset));
+    return execWithState(InsideVM, [&]() {
+        return *reinterpret_cast<T *>(
+            env->internal->elysium->oopManager->oopAccessField(handleFetch(obj), fieldID->offset));
     });
-    return val;
 }
 
 template <typename T>
@@ -108,15 +105,18 @@ void initBaseInterface(OMElysiaJNIEnv env)
         return clazz->toInstance()->findField(name, desc);
     };
     env.internal->GetObjectField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID) {
-        auto elys = env->internal->elysium;
-        OMElysiaNativeHandle *hnd;
-        execWithState(InsideVM, [&]() {
-            hnd = elys->executor->recordLocalRef(
-                elys->oopManager->oopAccessPointerField(handleFetch(obj), fieldID->offset));
+        return execWithState(InsideVM, [&]() {
+            return env->internal->elysium->executor->recordLocalRef(
+                env->internal->elysium->oopManager->oopAccessPointerField(handleFetch(obj), fieldID->offset));
         });
-        return hnd;
     };
+    env.internal->GetByteField = getFieldImpl<jbyte>;
+    env.internal->GetBooleanField = getFieldImpl<jboolean>;
+    env.internal->GetCharField = getFieldImpl<jchar>;
+    env.internal->GetShortField = getFieldImpl<jshort>;
+    env.internal->GetFloatField = getFieldImpl<jfloat>;
     env.internal->GetIntField = getFieldImpl<jint>;
+    env.internal->GetDoubleField = getFieldImpl<jdouble>;
     env.internal->GetLongField = getFieldImpl<jlong>;
     env.internal->SetObjectField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID,
                                       OMElysiaNativeHandle *val) {
@@ -125,8 +125,13 @@ void initBaseInterface(OMElysiaJNIEnv env)
                                                                       handleFetch(val));
         });
     };
+    env.internal->SetByteField = setFieldImpl<jbyte>;
     env.internal->SetBooleanField = setFieldImpl<jboolean>;
+    env.internal->SetCharField = setFieldImpl<jchar>;
+    env.internal->SetShortField = setFieldImpl<jshort>;
+    env.internal->SetFloatField = setFieldImpl<jfloat>;
     env.internal->SetIntField = setFieldImpl<jint>;
+    env.internal->SetDoubleField = setFieldImpl<jdouble>;
     env.internal->SetLongField = setFieldImpl<jlong>;
     env.internal->SetStaticObjectField = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, OMElysiaField *fieldID,
                                             OMElysiaNativeHandle *value) {
@@ -137,12 +142,10 @@ void initBaseInterface(OMElysiaJNIEnv env)
 
     env.internal->NewStringUTF = [](OMElysiaJNIEnv *env, const char *string) {
         std::string ss(string);
-        OMElysiaNativeHandle *hnd;
-        execWithState(InsideVM, [&]() {
-            hnd = env->internal->elysium->executor->recordLocalRef(
+        return execWithState(InsideVM, [&]() {
+            return env->internal->elysium->executor->recordLocalRef(
                 env->internal->elysium->oopManager->allocateString(ss));
         });
-        return hnd;
     };
     env.internal->GetStringUTFChars = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *str, jboolean *isCopy) {
         auto kstr = env->FindClass("java/lang/String");
@@ -155,15 +158,14 @@ void initBaseInterface(OMElysiaJNIEnv env)
             *isCopy = true;
         }
 
-        char *result;
-        execWithState(InsideVM, [&]() {
+        return execWithState(InsideVM, [&]() {
             auto len = env->internal->elysium->oopManager->arrLength(handleFetch(arrdata));
             auto s = encoding::utf16ToUtf8New(data, len);
-            result = reinterpret_cast<char *>(mem::allocator::tracedMallocElysia(s.size() + 1));
+            auto result = reinterpret_cast<char *>(mem::allocator::tracedMallocElysia(s.size() + 1));
             std::memcpy(result, s.c_str(), s.size());
             result[s.size()] = '\0';
+            return reinterpret_cast<const char *>(result);
         });
-        return reinterpret_cast<const char *>(result);
     };
     env.internal->ReleaseStringUTFChars = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *str, const char *chars) {
         mem::allocator::tracedFreeElysia(const_cast<char *>(chars));
@@ -175,19 +177,19 @@ void initBaseInterface(OMElysiaJNIEnv env)
 
     env.internal->NewObjectArray = [](OMElysiaJNIEnv *env, jsize len, OMElysiaKlass *klass,
                                       OMElysiaNativeHandle *init) {
-        OMElysiaNativeHandle *hnd;
-        execWithState(InsideVM, [&]() {
-            hnd = env->internal->elysium->executor->recordLocalRef(
+        return execWithState(InsideVM, [&]() {
+            auto hnd = env->internal->elysium->executor->recordLocalRef(
                 env->internal->elysium->oopManager->allocateArr(env->internal->elysium->executor->currentKlassloader()
                                                                     ->fetchOrLoadClass(buildArray(klass->name))
                                                                     ->toArray(),
                                                                 len));
             for (int i = 0; i < len; i++)
             {
-                env->internal->elysium->oopManager->arrAccessPtr(hnd->object, i, handleFetch(init));
+                env->internal->elysium->oopManager->arrAccessPtr(handleFetch(hnd), i, handleFetch(init));
             }
+
+            return hnd;
         });
-        return hnd;
     };
     env.internal->GetObjectArrayElement = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jsize index) {
         return env->internal->elysium->executor->recordLocalRef(
@@ -198,41 +200,37 @@ void initBaseInterface(OMElysiaJNIEnv env)
         env->internal->elysium->oopManager->arrAccessPtr(handleFetch(array), index, handleFetch(val));
     };
     env.internal->NewCharArray = [](OMElysiaJNIEnv *env, jsize len) {
-        OMElysiaNativeHandle *hnd;
-        execWithState(InsideVM, [&]() {
-            hnd = env->internal->elysium->executor->recordLocalRef(env->internal->elysium->oopManager->allocateArr(
+        return execWithState(InsideVM, [&]() {
+            return env->internal->elysium->executor->recordLocalRef(env->internal->elysium->oopManager->allocateArr(
                 env->internal->elysium->klassLoader->findClass("[C")->toArray(), len));
         });
-        return hnd;
     };
 
     env.internal->GetByteArrayElements = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jboolean *isCopy) {
-        jbyte *result;
-        execWithState(InsideVM, [&]() {
-            result = env->internal->elysium->oopManager->arrAccess<jbyte>(handleFetch(array));
+        return execWithState(InsideVM, [&]() {
+            auto result = env->internal->elysium->oopManager->arrAccess<jbyte>(handleFetch(array));
             if (isCopy)
             {
                 *isCopy = false;
             }
             atomic::atomic_store(&handleFetch(array)->markword,
                                  atomic::atomic_load(&handleFetch(array)->markword) | markFixed);
+            return result;
         });
-        return result;
     };
 
     // TODO: copy impl!
     env.internal->GetCharArrayElements = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jboolean *isCopy) {
-        jchar *result;
-        execWithState(InsideVM, [&]() {
-            result = env->internal->elysium->oopManager->arrAccess<jchar>(handleFetch(array));
+        return execWithState(InsideVM, [&]() {
+            auto result = env->internal->elysium->oopManager->arrAccess<jchar>(handleFetch(array));
             if (isCopy)
             {
                 *isCopy = false;
             }
             atomic::atomic_store(&handleFetch(array)->markword,
                                  atomic::atomic_load(&handleFetch(array)->markword) | markFixed);
+            return result;
         });
-        return result;
     };
     env.internal->ReleaseByteArrayElements = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *arr, jbyte *arrn, jint i) {
         execWithState(InsideVM, [&]() {

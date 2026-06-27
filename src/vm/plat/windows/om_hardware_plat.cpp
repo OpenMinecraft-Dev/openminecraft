@@ -1,6 +1,7 @@
 #include "fmt/format.h"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include "windows.h"
+#include <sysinfoapi.h>
 
 namespace openminecraft::vm::os
 {
@@ -204,5 +205,16 @@ std::string fetchCPUArch()
     default:
         return "amd64";
     }
+}
+int fetchLoadAverage(double *buf, int siz)
+{
+    return -1;
+}
+uint64_t fetchPageSize()
+{
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+
+    return si.dwPageSize;
 }
 } // namespace openminecraft::vm::os

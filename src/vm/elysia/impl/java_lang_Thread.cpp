@@ -1,6 +1,10 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_utils.hpp"
+#include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
+#include <chrono>
+#include <iostream>
+#include <thread>
 
 namespace openminecraft::vm::elysia::impl
 {
@@ -27,6 +31,16 @@ extern "C"
         env->internal->elysium->startThread(thread);
     }
 
+    static void setNativeName(OMElysiaJNIEnv *env, OMElysiaNativeHandle *thread, OMElysiaNativeHandle *name)
+    {
+        std::cout << "Dummy implementation!" << std::endl;
+    }
+
+    static void sleep(OMElysiaJNIEnv *env, OMElysiaKlass *, jlong s)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(s));
+    }
+
     void Java_java_lang_Thread_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         interface::registerNativeFuncs(env, klass,
@@ -35,6 +49,7 @@ extern "C"
                                            {"setPriority0", "(I)V", setPriority0},
                                            {"isAlive", "()Z", isAlive},
                                            {"start0", "()V", start0},
+                                           {"setNativeName", "(Ljava/lang/String;)V", setNativeName},
                                        });
     }
 }

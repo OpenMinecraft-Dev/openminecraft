@@ -13,6 +13,9 @@ std::string fetchSystemVersion();
 
 uint64_t fetchMemoryTotal();
 uint64_t fetchAvailableProcessors();
+
+int fetchLoadAverage(double *, int);
+uint64_t fetchPageSize();
 } // namespace openminecraft::vm::os
 
 #endif

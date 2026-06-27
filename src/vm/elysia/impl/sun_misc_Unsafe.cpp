@@ -6,6 +6,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
+#include "openminecraft/vm/os/om_hardware.hpp"
 #include <cstdint>
 #include <cstring>
 
@@ -275,6 +276,11 @@ static void throwException(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, 
     env->Throw(throwable);
 }
 
+static jint pageSize(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance)
+{
+    return os::fetchPageSize();
+}
+
 extern "C"
 {
     void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
@@ -356,6 +362,7 @@ extern "C"
                 {"monitorExit", "(Ljava/lang/Object;)V", monitorExit},
                 {"tryMonitorEnter", "(Ljava/lang/Object;)Z", tryMonitorEnter},
                 {"throwException", "(Ljava/lang/Throwable;)V", throwException},
+                {"pageSize", "()I", pageSize},
             });
     }
 }
