@@ -1,6 +1,10 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include <pthread.h>
 
+#ifdef OM_PLATFORM_ANDROID
+int pthread_getname_np(pthread_t, char *, int);
+#endif
+
 namespace openminecraft::vm::elysia
 {
 std::string OMElysiaThread::getName()
