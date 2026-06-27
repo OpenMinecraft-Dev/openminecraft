@@ -29,6 +29,10 @@ void initBaseInterface(OMElysiaJNIEnv env)
     };
     env.internal->GetSuperclass = [](OMElysiaJNIEnv *env, OMElysiaKlass *klass) { return klass->superClass; };
 
+    env.internal->Throw = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *t) {
+        env->internal->elysium->throwException(handleFetch(t));
+        return 0;
+    };
     env.internal->ExceptionCheck = [](OMElysiaJNIEnv *env) { return thisThread.metadata->haveException; };
     env.internal->ExceptionOccurred = [](OMElysiaJNIEnv *env) {
         return env->internal->elysium->executor->recordLocalRef(thisThread.metadata->currentException);
@@ -280,6 +284,14 @@ void initBaseInterface(OMElysiaJNIEnv env)
             mem::allocator::tracedFreeElysia(clazz->nativeMethods);
             clazz->nativeMethods = nullptr;
         });
+        return 0;
+    };
+    env.internal->MonitorEnter = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) {
+        env->internal->elysium->monitorManager->mutexFetch(handleFetch(hnd));
+        return 0;
+    };
+    env.internal->MonitorExit = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) {
+        env->internal->elysium->monitorManager->mutexRelease(handleFetch(hnd));
         return 0;
     };
 }

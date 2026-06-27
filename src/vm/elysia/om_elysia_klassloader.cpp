@@ -86,6 +86,8 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
     klass->lowerDim = k;
     klass->ptrLength = elysium->mainHeap.ptrLength();
     klass->mirror = nullptr;
+    klass->length = 0;
+    klass->staticLength = 0;
 
     klass->methodCount = 1;
     klass->methods = elysium->metaspaceHeap.allocateArray<OMElysiaMethod>(1);
@@ -158,7 +160,7 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
         klass->klassMutex.lock();
 
         auto kls = elysium->klassLoader->findClass("java/lang/Class");
-        auto oop = elysium->oopManager->allocateOop(kls);
+        auto oop = elysium->oopManager->allocateOop(kls, klass->isInstance() ? klass->toInstance()->staticLength : 0);
         auto field = kls->toInstance()->findField("name", "Ljava/lang/String;");
 
         auto k = std::string(klass->name);
@@ -178,6 +180,13 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
 
         auto field3 = kls->toInstance()->findField("<ptr>", "J");
         *reinterpret_cast<jlong *>(elysium->oopManager->oopAccessField(oop, field3->offset)) = (jlong)klass;
+
+        if (klass->isInstance())
+        {
+            auto field4 = kls->toInstance()->findField("<static_block>", "V");
+            klass->toInstance()->staticBlock =
+                reinterpret_cast<void *>(elysium->oopManager->oopAccessField(oop, field4->offset));
+        }
 
         klass->mirror = oop;
         klass->klassMutex.unlock();
@@ -574,7 +583,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
 
     klass->initFieldOffsets();
 
-    if (klass->staticLength)
+    /*if (klass->staticLength)
     {
         klass->staticBlock = elysium->metaspaceHeap.allocate(klass->staticLength);
         std::memset(klass->staticBlock, 0x00, klass->staticLength);
@@ -582,7 +591,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
     else
     {
         klass->staticBlock = nullptr;
-    }
+    }*/
 
     klass->clinitFinished = false;
 

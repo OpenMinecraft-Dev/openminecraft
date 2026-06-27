@@ -13,6 +13,17 @@ OMElysiaMonitorManager::~OMElysiaMonitorManager()
 {
 }
 
+bool OMElysiaMonitorManager::mutexTryFetch(OMElysiaOop *oop)
+{
+    std::lock_guard guard(objectMutex);
+    if (!objects.count(oop))
+    {
+        objects[oop] = std::make_pair(0, std::make_shared<std::recursive_mutex>());
+    }
+
+    ++objects[oop].first;
+    return objects[oop].second->try_lock();
+}
 void OMElysiaMonitorManager::mutexFetch(OMElysiaOop *oop)
 {
     std::lock_guard guard(objectMutex);

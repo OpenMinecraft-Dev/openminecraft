@@ -80,7 +80,21 @@ static jlong staticFieldOffset(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instan
     auto ff = ik->toInstance()->findField(nnstr, nullptr);
     env->ReleaseStringUTFChars(namestr, nnstr);
 
-    return ff->offset;
+    return reinterpret_cast<uintptr_t>(ik->toInstance()->staticBlock) + ff->offset - reinterpret_cast<uintptr_t>(kls);
+}
+
+static OMElysiaNativeHandle *staticFieldBase(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
+                                             OMElysiaNativeHandle *field)
+{
+    auto fldkls = env->FindClass("java/lang/reflect/Field");
+    auto namestr = env->GetObjectField(field, env->GetFieldID(fldkls, "name", "Ljava/lang/String;"));
+    auto kls = env->GetObjectField(field, env->GetFieldID(fldkls, "clazz", "Ljava/lang/Class;"));
+    auto nnstr = env->GetStringUTFChars(namestr, nullptr);
+    auto ik = (OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J"));
+    auto kkinstance = ik->mirror;
+    env->ReleaseStringUTFChars(namestr, nnstr);
+
+    return createTempHandle(kkinstance);
 }
 
 static jlong allocateMemory(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong l)
@@ -216,7 +230,7 @@ static bool compareAndSwap(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, 
     return atomic::atomic_cas(reinterpret_cast<V *>(reinterpret_cast<uintptr_t>(handleFetch(o)) + offset), expected, x);
 }
 
-static jboolean compareAndSwapObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd, OMElysiaNativeHandle *o,
+static jboolean compareAndSwapObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *o,
                                      jlong offset, OMElysiaNativeHandle *expected, OMElysiaNativeHandle *x)
 {
     auto target = reinterpret_cast<uintptr_t>(handleFetch(o)) + offset;
@@ -233,6 +247,34 @@ static jboolean compareAndSwapObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *
     }
 }
 
+static OMElysiaNativeHandle *allocateInstance(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
+                                              OMElysiaNativeHandle *klass)
+{
+    auto ik =
+        (OMElysiaKlass *)env->GetLongField(klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J"));
+    return env->AllocObject(ik);
+}
+
+static void monitorEnter(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *obj)
+{
+    env->MonitorEnter(obj);
+}
+
+static void monitorExit(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *obj)
+{
+    env->MonitorExit(obj);
+}
+
+static jboolean tryMonitorEnter(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *obj)
+{
+    return env->internal->elysium->monitorManager->mutexTryFetch(handleFetch(obj));
+}
+
+static void throwException(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *throwable)
+{
+    env->Throw(throwable);
+}
+
 extern "C"
 {
     void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
@@ -245,6 +287,7 @@ extern "C"
                 {"addressSize", "()I", addressSize},
                 {"objectFieldOffset", "(Ljava/lang/reflect/Field;)J", objectFieldOffset},
                 {"staticFieldOffset", "(Ljava/lang/reflect/Field;)J", staticFieldOffset},
+                {"staticFieldBase", "(Ljava/lang/reflect/Field;)Ljava/lang/Object;", staticFieldBase},
                 {"getByteVolatile", "(Ljava/lang/Object;J)B", getVolatile<jbyte>},
                 {"putByteVolatile", "(Ljava/lang/Object;JB)V", putVolatile<jbyte>},
                 {"getCharVolatile", "(Ljava/lang/Object;J)C", getVolatile<jchar>},
@@ -308,6 +351,11 @@ extern "C"
                 {"freeMemory", "(J)V", freeMemory},
                 {"setMemory", "(Ljava/lang/Object;JJB)V", setMemory},
                 {"copyMemory", "(Ljava/lang/Object;JLjava/lang/Object;JJ)V", copyMemory},
+                {"allocateInstance", "(Ljava/lang/Class;)Ljava/lang/Object;", allocateInstance},
+                {"monitorEnter", "(Ljava/lang/Object;)V", monitorEnter},
+                {"monitorExit", "(Ljava/lang/Object;)V", monitorExit},
+                {"tryMonitorEnter", "(Ljava/lang/Object;)Z", tryMonitorEnter},
+                {"throwException", "(Ljava/lang/Throwable;)V", throwException},
             });
     }
 }

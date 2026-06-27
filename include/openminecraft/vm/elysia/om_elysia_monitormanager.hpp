@@ -14,6 +14,7 @@ class OMElysiaMonitorManager
     OMElysiaMonitorManager();
     ~OMElysiaMonitorManager();
 
+    bool mutexTryFetch(OMElysiaOop *oop);
     void mutexFetch(OMElysiaOop *oop);
     void mutexRelease(OMElysiaOop *oop);
 
