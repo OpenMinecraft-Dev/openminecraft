@@ -16,16 +16,31 @@
 
 namespace openminecraft::vm::elysia
 {
+template <typename T> static T getFieldImpl(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID)
+{
+    auto elys = env->internal->elysium;
+    T val;
+    execWithState(InsideVM, [&]() {
+        val = *reinterpret_cast<T *>(elys->oopManager->oopAccessField(handleFetch(obj), fieldID->offset));
+    });
+    return val;
+}
+
+template <typename T>
+static void setFieldImpl(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID, T val)
+{
+    auto ptr = env->internal->elysium->oopManager->oopAccessField(handleFetch(obj), fieldID->offset);
+    *reinterpret_cast<T *>(ptr) = val;
+};
+
 void initBaseInterface(OMElysiaJNIEnv env)
 {
     env.internal->GetVersion = [](OMElysiaJNIEnv *) { return JNI_VERSION_1_8; };
 
     env.internal->FindClass = [](OMElysiaJNIEnv *env, const char *name) {
-        OMElysiaKlass *klass;
-        execWithState(InsideVM, [&]() {
-            klass = env->internal->elysium->executor->currentKlassloader()->fetchOrLoadClass(std::string(name));
+        return execWithState(InsideVM, [&]() {
+            return env->internal->elysium->executor->currentKlassloader()->fetchOrLoadClass(std::string(name));
         });
-        return klass;
     };
     env.internal->GetSuperclass = [](OMElysiaJNIEnv *env, OMElysiaKlass *klass) { return klass->superClass; };
 
@@ -39,12 +54,10 @@ void initBaseInterface(OMElysiaJNIEnv env)
     };
 
     env.internal->AllocObject = [](OMElysiaJNIEnv *env, OMElysiaKlass *klass) {
-        OMElysiaNativeHandle *hnd;
-        execWithState(InsideVM, [&]() {
-            hnd = env->internal->elysium->executor->recordLocalRef(
+        return execWithState(InsideVM, [&]() {
+            return env->internal->elysium->executor->recordLocalRef(
                 env->internal->elysium->oopManager->allocateOop(klass));
         });
-        return hnd;
     };
     ;
 
@@ -64,18 +77,18 @@ void initBaseInterface(OMElysiaJNIEnv env)
     };
     env.internal->CallObjectMethodA = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaMethod *methodID,
                                          const OMElysiaNativeValue *args) {
-        OMElysiaNativeHandle *hnd;
-        execWithState(InsideVM, [&]() {
+        return execWithState(InsideVM, [&]() {
             auto ar = argCount(methodID->descriptor);
             auto argsCombined = reinterpret_cast<OMElysiaNativeValue *>(
                 mem::allocator::tracedCallocElysia(ar + 1, sizeof(OMElysiaNativeValue)));
             argsCombined[0].l = obj;
             std::memcpy(&argsCombined[1], args, ar * sizeof(OMElysiaNativeValue));
-            hnd = env->internal->elysium->executor->recordLocalRef(env->internal->elysium->executor->callObjectFunction(
-                methodID, const_cast<const OMElysiaNativeValue *>(argsCombined)));
+            auto hnd =
+                env->internal->elysium->executor->recordLocalRef(env->internal->elysium->executor->callObjectFunction(
+                    methodID, const_cast<const OMElysiaNativeValue *>(argsCombined)));
             mem::allocator::tracedFreeElysia(argsCombined);
+            return hnd;
         });
-        return hnd;
     };
 
     env.internal->CallVoidMethodA = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaMethod *methodID,
@@ -103,22 +116,8 @@ void initBaseInterface(OMElysiaJNIEnv env)
         });
         return hnd;
     };
-    env.internal->GetIntField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID) {
-        auto elys = env->internal->elysium;
-        jint val;
-        execWithState(InsideVM, [&]() {
-            val = *reinterpret_cast<jint *>(elys->oopManager->oopAccessField(handleFetch(obj), fieldID->offset));
-        });
-        return val;
-    };
-    env.internal->GetLongField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID) {
-        auto elys = env->internal->elysium;
-        jlong val;
-        execWithState(InsideVM, [&]() {
-            val = *reinterpret_cast<jlong *>(elys->oopManager->oopAccessField(handleFetch(obj), fieldID->offset));
-        });
-        return val;
-    };
+    env.internal->GetIntField = getFieldImpl<jint>;
+    env.internal->GetLongField = getFieldImpl<jlong>;
     env.internal->SetObjectField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID,
                                       OMElysiaNativeHandle *val) {
         execWithState(InsideVM, [&]() {
@@ -126,20 +125,9 @@ void initBaseInterface(OMElysiaJNIEnv env)
                                                                       handleFetch(val));
         });
     };
-    env.internal->SetBooleanField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID,
-                                       jboolean val) {
-        auto ptr = env->internal->elysium->oopManager->oopAccessField(handleFetch(obj), fieldID->offset);
-        *reinterpret_cast<jboolean *>(ptr) = val;
-    };
-    env.internal->SetIntField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID, jint val) {
-        auto ptr = env->internal->elysium->oopManager->oopAccessField(handleFetch(obj), fieldID->offset);
-        *reinterpret_cast<jint *>(ptr) = val;
-    };
-    env.internal->SetLongField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID, jlong val) {
-        auto ptr = env->internal->elysium->oopManager->oopAccessField(handleFetch(obj), fieldID->offset);
-        *reinterpret_cast<jlong *>(ptr) = val;
-    };
-
+    env.internal->SetBooleanField = setFieldImpl<jboolean>;
+    env.internal->SetIntField = setFieldImpl<jint>;
+    env.internal->SetLongField = setFieldImpl<jlong>;
     env.internal->SetStaticObjectField = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, OMElysiaField *fieldID,
                                             OMElysiaNativeHandle *value) {
         execWithState(InsideVM, [&]() {

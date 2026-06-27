@@ -5,12 +5,27 @@
 
 namespace openminecraft::vm::elysia
 {
-template <typename Func> void execWithState(OMElysiaThreadState state, Func &&func)
+class StateGuard
 {
-    auto currentState = thisThread.metadata->state;
-    thisThread.switchState(state);
-    func();
-    thisThread.switchState(currentState);
+  public:
+    StateGuard(OMElysiaThreadState state)
+    {
+        st = thisThread.metadata->state;
+        thisThread.switchState(state);
+    }
+    ~StateGuard()
+    {
+        thisThread.switchState(st);
+    }
+
+  private:
+    OMElysiaThreadState st;
+};
+template <typename Func>
+auto execWithState(OMElysiaThreadState state, Func &&func) -> decltype(std::forward<Func>(func)())
+{
+    StateGuard g(state);
+    return func();
 }
 } // namespace openminecraft::vm::elysia
 
