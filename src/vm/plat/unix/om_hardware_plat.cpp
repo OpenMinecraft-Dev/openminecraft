@@ -167,7 +167,11 @@ uint64_t fetchAvailableProcessors()
 }
 int fetchLoadAverage(double *buf, int siz)
 {
+#ifndef OM_PLATFORM_ANDROID
     return getloadavg(buf, siz);
+#else
+    return -1;
+#endif
 }
 uint64_t fetchPageSize()
 {
