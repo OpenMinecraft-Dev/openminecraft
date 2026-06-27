@@ -7,6 +7,7 @@
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include <cstdint>
+#include <cstring>
 
 namespace openminecraft::vm::elysia::impl
 {
@@ -69,9 +70,45 @@ static jlong objectFieldOffset(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instan
            reinterpret_cast<uintptr_t>(handleFetch(instance));
 }
 
+static jlong staticFieldOffset(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *field)
+{
+    auto fldkls = env->FindClass("java/lang/reflect/Field");
+    auto namestr = env->GetObjectField(field, env->GetFieldID(fldkls, "name", "Ljava/lang/String;"));
+    auto kls = env->GetObjectField(field, env->GetFieldID(fldkls, "clazz", "Ljava/lang/Class;"));
+    auto nnstr = env->GetStringUTFChars(namestr, nullptr);
+    auto ik = (OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J"));
+    auto ff = ik->toInstance()->findField(nnstr, nullptr);
+    env->ReleaseStringUTFChars(namestr, nnstr);
+
+    return ff->offset;
+}
+
 static jlong allocateMemory(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong l)
 {
     return (jlong)mem::allocator::tracedMallocElysiaExternal(l);
+}
+
+static jlong reallocateMemory(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong l, jlong siz)
+{
+    return (jlong)mem::allocator::tracedReallocElysia((void *)l, (size_t)siz);
+}
+
+static void freeMemory(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr)
+{
+    mem::allocator::tracedFreeElysiaExternal((void *)addr);
+}
+
+static void setMemory(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *obj, jlong offset,
+                      jlong bytes, jbyte value)
+{
+    std::memset(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset), value, bytes);
+}
+
+static void copyMemory(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *objsrc, jlong offsrc,
+                       OMElysiaNativeHandle *objdst, jlong offdst, jlong siz)
+{
+    std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(handleFetch(objdst)) + offdst),
+                reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(handleFetch(objsrc)) + offsrc), siz);
 }
 
 template <typename V> static void putDirect(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr, V v)
@@ -82,6 +119,16 @@ template <typename V> static V getDirect(OMElysiaJNIEnv *env, OMElysiaNativeHand
 {
     return *(V *)addr;
 }
+
+static void putAddr(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr, jlong v)
+{
+    *(uintptr_t *)addr = (uintptr_t)v;
+}
+static jlong getAddr(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr)
+{
+    return (jlong) * (uintptr_t *)addr;
+}
+
 template <typename V>
 static V getVolatile(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *obj, jlong offset)
 {
@@ -107,16 +154,38 @@ static void putVolatile(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OME
 {
     *reinterpret_cast<volatile V *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset) = v;
 }
-
-static void freeMemory(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr)
+static void putVolatileObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *obj,
+                              jlong offset, OMElysiaNativeHandle *v)
 {
-    mem::allocator::tracedFreeElysiaExternal((void *)addr);
+    if (env->internal->elysium->mainHeap.enablePtrCompress())
+    {
+        *reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset) =
+            env->internal->elysium->mainHeap.compress(handleFetch(v));
+    }
+    else
+    {
+        *reinterpret_cast<OMElysiaOop **>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset) = handleFetch(v);
+    }
 }
-
 template <typename V>
 static V getObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *obj, jlong n)
 {
     return *reinterpret_cast<V *>(reinterpret_cast<uintptr_t>(obj) + n);
+}
+
+static OMElysiaNativeHandle *getObjectObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
+                                             OMElysiaNativeHandle *obj, jlong offset)
+{
+    if (env->internal->elysium->mainHeap.enablePtrCompress())
+    {
+        return createTempHandle(reinterpret_cast<OMElysiaOop *>(env->internal->elysium->mainHeap.decompress(
+            *reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset))));
+    }
+    else
+    {
+        return createTempHandle(
+            *reinterpret_cast<OMElysiaOop **>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset));
+    }
 }
 
 template <typename V>
@@ -124,6 +193,20 @@ static void putObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMEly
                       V v)
 {
     *reinterpret_cast<V *>(reinterpret_cast<uintptr_t>(handleFetch(object)) + offset) = v;
+}
+
+static void putObjectObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *obj,
+                            jlong offset, OMElysiaNativeHandle *v)
+{
+    if (env->internal->elysium->mainHeap.enablePtrCompress())
+    {
+        *reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset) =
+            env->internal->elysium->mainHeap.compress(handleFetch(v));
+    }
+    else
+    {
+        *reinterpret_cast<OMElysiaOop **>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset) = handleFetch(v);
+    }
 }
 
 template <typename V>
@@ -161,6 +244,7 @@ extern "C"
                 {"arrayIndexScale", "(Ljava/lang/Class;)I", arrayIndexScale},
                 {"addressSize", "()I", addressSize},
                 {"objectFieldOffset", "(Ljava/lang/reflect/Field;)J", objectFieldOffset},
+                {"staticFieldOffset", "(Ljava/lang/reflect/Field;)J", staticFieldOffset},
                 {"getByteVolatile", "(Ljava/lang/Object;J)B", getVolatile<jbyte>},
                 {"putByteVolatile", "(Ljava/lang/Object;JB)V", putVolatile<jbyte>},
                 {"getCharVolatile", "(Ljava/lang/Object;J)C", getVolatile<jchar>},
@@ -178,6 +262,7 @@ extern "C"
                 {"getLongVolatile", "(Ljava/lang/Object;J)J", getVolatile<jlong>},
                 {"putLongVolatile", "(Ljava/lang/Object;JJ)V", putVolatile<jlong>},
                 {"getObjectVolatile", "(Ljava/lang/Object;J)Ljava/lang/Object;", getVolatileObject},
+                {"putObjectVolatile", "(Ljava/lang/Object;JLjava/lang/Object;)V", putVolatileObject},
                 {"compareAndSwapInt", "(Ljava/lang/Object;JII)Z", compareAndSwap<jint>},
                 {"compareAndSwapLong", "(Ljava/lang/Object;JJJ)Z", compareAndSwap<jlong>},
                 {"compareAndSwapObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z",
@@ -198,12 +283,31 @@ extern "C"
                 {"putDouble", "(JD)V", putDirect<jdouble>},
                 {"getLong", "(J)J", getDirect<jlong>},
                 {"putLong", "(JJ)V", putDirect<jlong>},
+                {"getAddress", "(J)J", getAddr},
+                {"putAddress", "(JJ)V", putAddr},
+                {"getByte", "(Ljava/lang/Object;J)B", getObject<jbyte>},
+                {"putByte", "(Ljava/lang/Object;JB)V", putObject<jbyte>},
+                {"getChar", "(Ljava/lang/Object;J)C", getObject<jchar>},
+                {"putChar", "(Ljava/lang/Object;JC)V", putObject<jchar>},
+                {"getBoolean", "(Ljava/lang/Object;J)Z", getObject<jboolean>},
+                {"putBoolean", "(Ljava/lang/Object;JZ)V", putObject<jboolean>},
+                {"getShort", "(Ljava/lang/Object;J)S", getObject<jshort>},
+                {"putShort", "(Ljava/lang/Object;JS)V", putObject<jshort>},
+                {"getFloat", "(Ljava/lang/Object;J)F", getObject<jfloat>},
+                {"putFloat", "(Ljava/lang/Object;JF)V", putObject<jfloat>},
                 {"getInt", "(Ljava/lang/Object;J)I", getObject<jint>},
                 {"putInt", "(Ljava/lang/Object;JI)V", putObject<jint>},
+                {"getDouble", "(Ljava/lang/Object;J)D", getObject<jdouble>},
+                {"putDouble", "(Ljava/lang/Object;JD)V", putObject<jdouble>},
                 {"getLong", "(Ljava/lang/Object;J)J", getObject<jlong>},
                 {"putLong", "(Ljava/lang/Object;JJ)V", putObject<jlong>},
+                {"getObject", "(Ljava/lang/Object;J)Ljava/lang/Object;", getObjectObject},
+                {"putObject", "(Ljava/lang/Object;JLjava/lang/Object;)V", putObjectObject},
                 {"allocateMemory", "(J)J", allocateMemory},
+                {"reallocateMemory", "(JJ)J", reallocateMemory},
                 {"freeMemory", "(J)V", freeMemory},
+                {"setMemory", "(Ljava/lang/Object;JJB)V", setMemory},
+                {"copyMemory", "(Ljava/lang/Object;JLjava/lang/Object;JJ)V", copyMemory},
             });
     }
 }

@@ -134,4 +134,9 @@ OMElysiaNativeHandle *Java_java_security_AccessController_getStackAccessControlC
 {
     return nullptr;
 }
+
+jfloat Java_java_lang_Float_intBitsToFloat(OMElysiaJNIEnv *env, OMElysiaKlass *, jint i)
+{
+    return *reinterpret_cast<jfloat *>(&i);
+}
 } // namespace openminecraft::vm::elysia::impl
