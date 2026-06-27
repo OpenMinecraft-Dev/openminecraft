@@ -55,6 +55,84 @@ static jint addressSize(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
     return sizeof(void *);
 }
 
+static jlong objectFieldOffset(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *field)
+{
+    auto fldkls = env->FindClass("java/lang/reflect/Field");
+    auto namestr = env->GetObjectField(field, env->GetFieldID(fldkls, "name", "Ljava/lang/String;"));
+    auto kls = env->GetObjectField(field, env->GetFieldID(fldkls, "clazz", "Ljava/lang/Class;"));
+    auto nnstr = env->GetStringUTFChars(namestr, nullptr);
+    auto ik = (OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J"));
+    auto ff = ik->toInstance()->findField(nnstr, nullptr);
+    env->ReleaseStringUTFChars(namestr, nnstr);
+
+    return env->internal->elysium->oopManager->oopAccessField(handleFetch(instance), ff->offset) -
+           reinterpret_cast<uintptr_t>(handleFetch(instance));
+}
+
+static jlong allocateMemory(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong l)
+{
+    return (jlong)mem::allocator::tracedMallocElysiaExternal(l);
+}
+
+template <typename V> static void putDirect(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr, V v)
+{
+    *(V *)addr = v;
+}
+template <typename V> static V getDirect(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr)
+{
+    return *(V *)addr;
+}
+template <typename V>
+static V getVolatile(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *obj, jlong offset)
+{
+    return *reinterpret_cast<volatile V *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset);
+}
+static OMElysiaNativeHandle *getVolatileObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
+                                               OMElysiaNativeHandle *obj, jlong offset)
+{
+    if (env->internal->elysium->mainHeap.enablePtrCompress())
+    {
+        return createTempHandle(reinterpret_cast<OMElysiaOop *>(env->internal->elysium->mainHeap.decompress(
+            *reinterpret_cast<volatile uint32_t *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset))));
+    }
+    else
+    {
+        return createTempHandle(
+            *reinterpret_cast<OMElysiaOop *volatile *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset));
+    }
+}
+template <typename V>
+static void putVolatile(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *obj, jlong offset,
+                        V v)
+{
+    *reinterpret_cast<volatile V *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset) = v;
+}
+
+static void freeMemory(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr)
+{
+    mem::allocator::tracedFreeElysiaExternal((void *)addr);
+}
+
+template <typename V>
+static V getObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *obj, jlong n)
+{
+    return *reinterpret_cast<V *>(reinterpret_cast<uintptr_t>(obj) + n);
+}
+
+template <typename V>
+static void putObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *object, jlong offset,
+                      V v)
+{
+    *reinterpret_cast<V *>(reinterpret_cast<uintptr_t>(handleFetch(object)) + offset) = v;
+}
+
+template <typename V>
+static bool compareAndSwap(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *o, jlong offset,
+                           V expected, V x)
+{
+    return atomic::atomic_cas(reinterpret_cast<V *>(reinterpret_cast<uintptr_t>(handleFetch(o)) + offset), expected, x);
+}
+
 static jboolean compareAndSwapObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd, OMElysiaNativeHandle *o,
                                      jlong offset, OMElysiaNativeHandle *expected, OMElysiaNativeHandle *x)
 {
@@ -72,99 +150,6 @@ static jboolean compareAndSwapObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *
     }
 }
 
-static jlong objectFieldOffset(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *field)
-{
-    auto fldkls = env->FindClass("java/lang/reflect/Field");
-    auto namestr = env->GetObjectField(field, env->GetFieldID(fldkls, "name", "Ljava/lang/String;"));
-    auto kls = env->GetObjectField(field, env->GetFieldID(fldkls, "clazz", "Ljava/lang/Class;"));
-    auto nnstr = env->GetStringUTFChars(namestr, nullptr);
-    auto ik = (OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J"));
-    auto ff = ik->toInstance()->findField(nnstr, nullptr);
-    env->ReleaseStringUTFChars(namestr, nnstr);
-
-    return env->internal->elysium->oopManager->oopAccessField(handleFetch(instance), ff->offset) -
-           reinterpret_cast<uintptr_t>(handleFetch(instance));
-}
-
-#define getVolatile(name, type)                                                                                        \
-    static type get##name##Volatile(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *obj,    \
-                                    jlong n)                                                                           \
-    {                                                                                                                  \
-        return *reinterpret_cast<volatile type *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + n);                  \
-    }
-getVolatile(Int, jint);
-getVolatile(Long, long);
-
-static jint getInt$obj(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *obj, jlong n)
-{
-    return *reinterpret_cast<jint *>(reinterpret_cast<uintptr_t>(obj) + n);
-}
-
-static bool compareAndSwapInt(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *o,
-                              jlong offset, jint expected, jint x)
-{
-    return atomic::atomic_cas(reinterpret_cast<jint *>(reinterpret_cast<uintptr_t>(handleFetch(o)) + offset), expected,
-                              x);
-}
-
-static jlong allocateMemory(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong l)
-{
-    return (jlong)mem::allocator::tracedMallocElysiaExternal(l);
-}
-
-static jlong getLong$obj(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *o, jlong off)
-{
-    return *reinterpret_cast<jlong *>(reinterpret_cast<uintptr_t>(handleFetch(o)) + off);
-}
-
-template <typename V> static void putDirect(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr, V v)
-{
-    *(V *)addr = v;
-}
-template <typename V> static V getDirect(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr)
-{
-    return *(V *)addr;
-}
-
-static void freeMemory(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, jlong addr)
-{
-    mem::allocator::tracedFreeElysiaExternal((void *)addr);
-}
-
-static OMElysiaNativeHandle *getObjectVolatile(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
-                                               OMElysiaNativeHandle *obj, jlong offset)
-{
-    if (env->internal->elysium->mainHeap.enablePtrCompress())
-    {
-        return createTempHandle(reinterpret_cast<OMElysiaOop *>(env->internal->elysium->mainHeap.decompress(
-            *reinterpret_cast<volatile uint32_t *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset))));
-    }
-    else
-    {
-        return createTempHandle(
-            *reinterpret_cast<OMElysiaOop *volatile *>(reinterpret_cast<uintptr_t>(handleFetch(obj)) + offset));
-    }
-}
-
-static bool compareAndSwapLong(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *o,
-                               jlong offset, jlong expected, jlong x)
-{
-    return atomic::atomic_cas(reinterpret_cast<jlong *>(reinterpret_cast<uintptr_t>(handleFetch(o)) + offset), expected,
-                              x);
-}
-
-static void putLong$obj(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *o, jlong offset,
-                        jlong v)
-{
-    *reinterpret_cast<jlong *>(reinterpret_cast<uintptr_t>(handleFetch(o)) + offset) = v;
-}
-
-static void putInt$obj(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *o, jlong offset,
-                       jint v)
-{
-    *reinterpret_cast<jint *>(reinterpret_cast<uintptr_t>(handleFetch(o)) + offset) = v;
-}
-
 extern "C"
 {
     void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
@@ -176,11 +161,25 @@ extern "C"
                 {"arrayIndexScale", "(Ljava/lang/Class;)I", arrayIndexScale},
                 {"addressSize", "()I", addressSize},
                 {"objectFieldOffset", "(Ljava/lang/reflect/Field;)J", objectFieldOffset},
-                {"getIntVolatile", "(Ljava/lang/Object;J)I", getIntVolatile},
-                {"getLongVolatile", "(Ljava/lang/Object;J)J", getLongVolatile},
-                {"getObjectVolatile", "(Ljava/lang/Object;J)Ljava/lang/Object;", getObjectVolatile},
-                {"compareAndSwapInt", "(Ljava/lang/Object;JII)Z", compareAndSwapInt},
-                {"compareAndSwapLong", "(Ljava/lang/Object;JJJ)Z", compareAndSwapLong},
+                {"getByteVolatile", "(Ljava/lang/Object;J)B", getVolatile<jbyte>},
+                {"putByteVolatile", "(Ljava/lang/Object;JB)V", putVolatile<jbyte>},
+                {"getCharVolatile", "(Ljava/lang/Object;J)C", getVolatile<jchar>},
+                {"putCharVolatile", "(Ljava/lang/Object;JC)V", putVolatile<jchar>},
+                {"getBooleanVolatile", "(Ljava/lang/Object;J)Z", getVolatile<jboolean>},
+                {"putBooleanVolatile", "(Ljava/lang/Object;JZ)V", putVolatile<jboolean>},
+                {"getShortVolatile", "(Ljava/lang/Object;J)S", getVolatile<jshort>},
+                {"putShortVolatile", "(Ljava/lang/Object;JS)V", putVolatile<jshort>},
+                {"getFloatVolatile", "(Ljava/lang/Object;J)F", getVolatile<jfloat>},
+                {"putFloatVolatile", "(Ljava/lang/Object;JF)V", putVolatile<jfloat>},
+                {"getIntVolatile", "(Ljava/lang/Object;J)I", getVolatile<jint>},
+                {"putIntVolatile", "(Ljava/lang/Object;JI)V", putVolatile<jint>},
+                {"getDoubleVolatile", "(Ljava/lang/Object;J)D", getVolatile<jdouble>},
+                {"putDoubleVolatile", "(Ljava/lang/Object;JD)V", putVolatile<jdouble>},
+                {"getLongVolatile", "(Ljava/lang/Object;J)J", getVolatile<jlong>},
+                {"putLongVolatile", "(Ljava/lang/Object;JJ)V", putVolatile<jlong>},
+                {"getObjectVolatile", "(Ljava/lang/Object;J)Ljava/lang/Object;", getVolatileObject},
+                {"compareAndSwapInt", "(Ljava/lang/Object;JII)Z", compareAndSwap<jint>},
+                {"compareAndSwapLong", "(Ljava/lang/Object;JJJ)Z", compareAndSwap<jlong>},
                 {"compareAndSwapObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z",
                  compareAndSwapObject},
                 {"getByte", "(J)B", getDirect<jbyte>},
@@ -199,10 +198,10 @@ extern "C"
                 {"putDouble", "(JD)V", putDirect<jdouble>},
                 {"getLong", "(J)J", getDirect<jlong>},
                 {"putLong", "(JJ)V", putDirect<jlong>},
-                {"getInt", "(Ljava/lang/Object;J)I", getInt$obj},
-                {"putInt", "(Ljava/lang/Object;JI)V", putInt$obj},
-                {"getLong", "(Ljava/lang/Object;J)J", getLong$obj},
-                {"putLong", "(Ljava/lang/Object;JJ)V", putLong$obj},
+                {"getInt", "(Ljava/lang/Object;J)I", getObject<jint>},
+                {"putInt", "(Ljava/lang/Object;JI)V", putObject<jint>},
+                {"getLong", "(Ljava/lang/Object;J)J", getObject<jlong>},
+                {"putLong", "(Ljava/lang/Object;JJ)V", putObject<jlong>},
                 {"allocateMemory", "(J)J", allocateMemory},
                 {"freeMemory", "(J)V", freeMemory},
             });
