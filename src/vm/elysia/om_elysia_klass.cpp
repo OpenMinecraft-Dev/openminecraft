@@ -290,14 +290,18 @@ void OMElysiaInstanceKlass::initFieldOffsets()
         bool isStatic = f.accessFlag & JVM_Acc_Static;
         auto fieldlength = descriptorLength(f.desc, ptrLength);
 
-        if (isStatic)
+        if (fieldlength)
         {
-            staticLength = (staticLength % fieldlength) ? (staticLength + (fieldlength - staticLength % fieldlength))
-                                                        : staticLength;
-        }
-        else
-        {
-            length = (length % fieldlength) ? (length + (fieldlength - length % fieldlength)) : length;
+            if (isStatic)
+            {
+                staticLength = (staticLength % fieldlength)
+                                   ? (staticLength + (fieldlength - staticLength % fieldlength))
+                                   : staticLength;
+            }
+            else
+            {
+                length = (length % fieldlength) ? (length + (fieldlength - length % fieldlength)) : length;
+            }
         }
 
         f.offset = isStatic ? staticLength : length;

@@ -29,11 +29,11 @@ uint64_t OMElysiaOopManager::oopArrayHeaderLength()
     return elysium->metaspaceHeap.enablePtrCompress() ? sizeof(OMElysiaArrayOopCompressed)
                                                       : sizeof(OMElysiaArrayOopUncompressed);
 }
-OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass)
+OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass, uint64_t length)
 {
-    auto ll = reinterpret_cast<OMElysiaOop *>(
-        elysium->mainHeap.allocate(oopHeaderLength() + reinterpret_cast<OMElysiaInstanceKlass *>(klass)->length));
-    std::memset(ll, 0x00, oopHeaderLength() + reinterpret_cast<OMElysiaInstanceKlass *>(klass)->length);
+    auto ll = reinterpret_cast<OMElysiaOop *>(elysium->mainHeap.allocate(
+        oopHeaderLength() + reinterpret_cast<OMElysiaInstanceKlass *>(klass)->length + length));
+    std::memset(ll, 0x00, oopHeaderLength() + reinterpret_cast<OMElysiaInstanceKlass *>(klass)->length + length);
     if (elysium->metaspaceHeap.enablePtrCompress())
     {
         reinterpret_cast<OMElysiaOopCompressed *>(ll)->klass = elysium->metaspaceHeap.compress(klass);

@@ -9,6 +9,7 @@
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
+#include <codecvt>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -540,7 +541,14 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
     if (std::strcmp(klass->name, "java/lang/Class") == 0 || std::strcmp(klass->name, "java/lang/ClassLoader") == 0)
     {
         extraFields.push_back({klass, elysium->metaspaceHeap.allocateStr("<ptr>"),
-                               elysium->metaspaceHeap.allocateStr("J"), JVM_Acc_Private | JVM_Acc_Final});
+                               elysium->metaspaceHeap.allocateStr("J"),
+                               JVM_Acc_Private | JVM_Acc_Final | JVM_Acc_Bridge});
+    }
+    if (std::strcmp(klass->name, "java/lang/Class") == 0)
+    {
+        extraFields.push_back({klass, elysium->metaspaceHeap.allocateStr("<static_block>"),
+                               elysium->metaspaceHeap.allocateStr("V"),
+                               JVM_Acc_Private | JVM_Acc_Final | JVM_Acc_Bridge});
     }
 
     klass->fieldCount = clsfile->fields.size() + extraFields.size();

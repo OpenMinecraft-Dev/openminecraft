@@ -299,6 +299,8 @@ static uint64_t descriptorLength(char *s, uint64_t ptrLen)
 {
     switch (s[0])
     {
+    case 'V':
+        return 0;
     case 'B':
     case 'Z':
         return 1;
