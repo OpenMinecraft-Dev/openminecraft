@@ -5,10 +5,13 @@ namespace openminecraft::vm::elysia
 {
 std::string OMElysiaThread::getName()
 {
-    return "";
+    char name[1024];
+    pthread_getname_np((pthread_t)nativeHandle, name, 1024);
+    return name;
 }
-void OMElysiaThread::setName(std::string)
+void OMElysiaThread::setName(std::string n)
 {
+    pthread_setname_np((pthread_t)nativeHandle, n.c_str());
 }
 void OMElysiaThread::initInternals()
 {
