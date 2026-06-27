@@ -79,6 +79,8 @@ class OMElysiaThread
 
     std::function<void()> cleaner = []() {};
 
+    void *nativeHandle;
+
     OMElysiaThread()
     {
     }
@@ -96,6 +98,10 @@ class OMElysiaThread
         cleaner();
         threadMap.erase(std::this_thread::get_id());
     }
+
+    std::string getName();
+    void setName(std::string);
+    void initInternals();
 };
 
 class OMElysiaThreadMetadata
