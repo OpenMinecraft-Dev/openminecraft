@@ -16,7 +16,7 @@ jobs:
         include:
           - os: windows-latest
             plat: windows
-            arch: x86_64
+            arch: amd64
             loaderarch: amd64
           - os: windows-latest
             plat: windows
@@ -26,6 +26,10 @@ jobs:
             plat: windows
             arch: arm64
             loaderarch: arm64
+          - os: ubuntu-latest
+            plat: mingw
+            arch: x86_64
+            loaderarch: amd64
           # - os: ubuntu-22.04
           #   plat: harmony
           #   arch: arm64-v8a
@@ -238,13 +242,19 @@ jobs:
         if: matrix.plat == 'windows'
         run: xmake f --toolchain=msvc -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{
           env.XMAKE_ARGS }}
+      - name: Configure mingw
+        if: matrix.plat == 'mingw'
+        run: |
+          sudo apt install gcc-mingw-w64 g++-mingw-w64 binutils-mingw-w64 mingw-w64-common mingw-w64-i686-dev mingw-w64-x86-64-dev
+          xmake f -p mingw -a ${{ matrix.arch }} --toolchain=mingw --sdk=/usr/x86_64-w64-mingw32 --ldflags="-static" -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
       - name: Save xmake packages (Core)
         uses: actions/cache/save@v5
         with:
           path: ${{ env.CACHEPATH }}
           key: ${{ matrix.plat }}-${{ matrix.arch }}-corepkgs-${{ env.CACHENAME }}
       - name: Build
-        run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{ env.XMAKE_ARGS }} openminecraft
+        run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{
+          env.XMAKE_ARGS }} openminecraft
       - name: Xmake Install
         run: xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft
       - name: Upload Artifacts
