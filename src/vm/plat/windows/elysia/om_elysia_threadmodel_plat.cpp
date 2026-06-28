@@ -1,6 +1,6 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
-#include <libloaderapi.h>
 #include <windows.h>
+#include <libloaderapi.h>
 #include <winnls.h>
 
 namespace openminecraft::vm::elysia
