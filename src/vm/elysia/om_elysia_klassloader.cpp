@@ -163,18 +163,6 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
         auto oop = elysium->oopManager->allocateOop(kls, klass->isInstance() ? klass->toInstance()->staticLength : 0);
         auto field = kls->toInstance()->findField("name", "Ljava/lang/String;");
 
-        auto k = std::string(klass->name);
-        for (auto &ch : k)
-        {
-            if (ch == '/')
-            {
-                ch = '.';
-            }
-        }
-        auto strobj = elysium->oopManager->allocateString(k);
-
-        elysium->oopManager->oopAccessPointerField(oop, field->offset, strobj);
-
         auto field2 = kls->toInstance()->findField("classLoader", "Ljava/lang/ClassLoader;");
         elysium->oopManager->oopAccessPointerField(oop, field2->offset, this->klassloader);
 

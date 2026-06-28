@@ -30,6 +30,28 @@ static void setFieldImpl(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysi
     *reinterpret_cast<T *>(ptr) = val;
 };
 
+template <typename T> static T *getArrayElements(OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jboolean *isCopy)
+{
+    return execWithState(InsideVM, [&]() {
+        auto result = env->internal->elysium->oopManager->arrAccess<T>(handleFetch(array));
+        if (isCopy)
+        {
+            *isCopy = false;
+        }
+        atomic::atomic_store(&handleFetch(array)->markword,
+                             atomic::atomic_load(&handleFetch(array)->markword) | markFixed);
+        return result;
+    });
+}
+
+template <typename T> static void releaseArrayElements(OMElysiaJNIEnv *env, OMElysiaNativeHandle *arr, T *arrn, jint i)
+{
+    execWithState(InsideVM, [&]() {
+        atomic::atomic_store(&handleFetch(arr)->markword,
+                             atomic::atomic_load(&handleFetch(arr)->markword) & ~markFixed);
+    });
+};
+
 void initBaseInterface(OMElysiaJNIEnv env)
 {
     env.internal->GetVersion = [](OMElysiaJNIEnv *) { return JNI_VERSION_1_8; };
@@ -206,38 +228,24 @@ void initBaseInterface(OMElysiaJNIEnv env)
         });
     };
 
-    env.internal->GetByteArrayElements = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jboolean *isCopy) {
-        return execWithState(InsideVM, [&]() {
-            auto result = env->internal->elysium->oopManager->arrAccess<jbyte>(handleFetch(array));
-            if (isCopy)
-            {
-                *isCopy = false;
-            }
-            atomic::atomic_store(&handleFetch(array)->markword,
-                                 atomic::atomic_load(&handleFetch(array)->markword) | markFixed);
-            return result;
-        });
-    };
-
     // TODO: copy impl!
-    env.internal->GetCharArrayElements = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jboolean *isCopy) {
-        return execWithState(InsideVM, [&]() {
-            auto result = env->internal->elysium->oopManager->arrAccess<jchar>(handleFetch(array));
-            if (isCopy)
-            {
-                *isCopy = false;
-            }
-            atomic::atomic_store(&handleFetch(array)->markword,
-                                 atomic::atomic_load(&handleFetch(array)->markword) | markFixed);
-            return result;
-        });
-    };
-    env.internal->ReleaseByteArrayElements = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *arr, jbyte *arrn, jint i) {
-        execWithState(InsideVM, [&]() {
-            atomic::atomic_store(&handleFetch(arr)->markword,
-                                 atomic::atomic_load(&handleFetch(arr)->markword) & ~markFixed);
-        });
-    };
+    env.internal->GetBooleanArrayElements = getArrayElements;
+    env.internal->GetByteArrayElements = getArrayElements;
+    env.internal->GetCharArrayElements = getArrayElements;
+    env.internal->GetShortArrayElements = getArrayElements;
+    env.internal->GetFloatArrayElements = getArrayElements;
+    env.internal->GetIntArrayElements = getArrayElements;
+    env.internal->GetDoubleArrayElements = getArrayElements;
+    env.internal->GetLongArrayElements = getArrayElements;
+
+    env.internal->ReleaseBooleanArrayElements = releaseArrayElements;
+    env.internal->ReleaseByteArrayElements = releaseArrayElements;
+    env.internal->ReleaseCharArrayElements = releaseArrayElements;
+    env.internal->ReleaseShortArrayElements = releaseArrayElements;
+    env.internal->ReleaseFloatArrayElements = releaseArrayElements;
+    env.internal->ReleaseIntArrayElements = releaseArrayElements;
+    env.internal->ReleaseDoubleArrayElements = releaseArrayElements;
+    env.internal->ReleaseLongArrayElements = releaseArrayElements;
 
     env.internal->RegisterNatives = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const OMElysiaNativeMethod *methods,
                                        jint nMethods) {

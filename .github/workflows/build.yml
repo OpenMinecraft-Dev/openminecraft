@@ -16,7 +16,7 @@ jobs:
         include:
           - os: windows-latest
             plat: windows
-            arch: x64
+            arch: x86_64
             loaderarch: amd64
           - os: windows-latest
             plat: windows
@@ -54,7 +54,7 @@ jobs:
             loaderarch: amd64
           - os: ubuntu-22.04
             plat: linux
-            arch: x64
+            arch: x86_64
             loaderarch: amd64
           - os: ubuntu-24.04-arm
             plat: linux
@@ -82,7 +82,7 @@ jobs:
             loaderarch: arm64
           - os: macos-15-intel
             plat: macos
-            arch: x64
+            arch: x86_64
             loaderarch: amd64
           - os: macos-latest
             plat: ios

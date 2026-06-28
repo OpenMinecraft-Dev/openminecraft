@@ -112,6 +112,7 @@ class OMElysiaThreadMetadata
     OMElysiaThreadMetadata()
     {
         metadata = new OMElysiaThread;
+        metadata->initInternals();
     }
 
     void switchState(OMElysiaThreadState state)

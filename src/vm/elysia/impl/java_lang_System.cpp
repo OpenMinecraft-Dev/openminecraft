@@ -42,6 +42,7 @@ extern "C"
             {"line.separator", "\n"},
             {"user.dir", userdir},
             {"os.version", "10.0"}, // TODO: fake versions
+            {"os.arch", OM_ARCH},
         };
 
         for (auto &pp : propMap)

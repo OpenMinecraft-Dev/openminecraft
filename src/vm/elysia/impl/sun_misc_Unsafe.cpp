@@ -21,12 +21,10 @@ static jint arrayIndexScale(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd, OMEl
 {
     using namespace binary::hash;
 
-    auto klassKlass = env->FindClass("java/lang/Class");
-    auto field = env->GetFieldID(klassKlass, "name", "Ljava/lang/String;");
-    auto namestring = env->GetObjectField(klass, field);
-    auto clsname = env->GetStringUTFChars(namestring, nullptr);
+    auto kls =
+        ((OMElysiaKlass *)env->GetLongField(klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
     jint i = 0;
-    switch (hash_compile_time(clsname))
+    switch (hash_compile_time(kls->name))
     {
     case "[Z"_hash:
     case "[B"_hash:
@@ -48,7 +46,6 @@ static jint arrayIndexScale(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd, OMEl
         i = env->internal->elysium->mainHeap.ptrLength();
         break;
     }
-    env->ReleaseStringUTFChars(namestring, clsname);
     return i;
 }
 
@@ -281,6 +278,14 @@ static jint pageSize(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance)
     return os::fetchPageSize();
 }
 
+static jint getLoadAverage(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *arr, jint len)
+{
+    auto l = env->GetDoubleArrayElements(arr, nullptr);
+    auto result = os::fetchLoadAverage(l, len);
+    env->ReleaseDoubleArrayElements(arr, l, 0);
+    return result;
+}
+
 extern "C"
 {
     void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
@@ -363,6 +368,7 @@ extern "C"
                 {"tryMonitorEnter", "(Ljava/lang/Object;)Z", tryMonitorEnter},
                 {"throwException", "(Ljava/lang/Throwable;)V", throwException},
                 {"pageSize", "()I", pageSize},
+                {"getLoadAverage", "([DI)I", getLoadAverage},
             });
     }
 }

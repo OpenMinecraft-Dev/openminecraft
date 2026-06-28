@@ -10,6 +10,7 @@
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include <atomic>
+#include <iostream>
 #include <stdexcept>
 #include <thread>
 
@@ -59,7 +60,7 @@ OMElysium::OMElysium()
 
     mainThread = new std::thread([&]() {
         log::multithread::registerCurrentThreadName("main");
-        thisThread.metadata->threadName = "main";
+        thisThread.metadata->setName("name");
         try
         {
             auto prim = {"char", "byte", "short", "int", "long", "float", "double", "boolean"};
@@ -145,8 +146,13 @@ void OMElysium::startThread(OMElysiaNativeHandle *thread)
     auto thrcls = tc->interface.FindClass("java/lang/Thread");
     auto thrmthd = tc->interface.GetMethodID(thrcls, "run", "()V");
     tc->interface.SetIntField(thread, tc->interface.GetFieldID(thrcls, "threadStatus", "I"), 1);
+    auto thrn = tc->interface.GetObjectField(thread, tc->interface.GetFieldID(thrcls, "name", "Ljava/lang/String;"));
+    auto nn = tc->interface.GetStringUTFChars(thrn, nullptr);
+    auto ll = std::string(nn);
+    tc->interface.ReleaseStringUTFChars(thrn, nn);
 
-    auto thr = std::make_shared<std::thread>([thread, thrcls, thrmthd, this]() {
+    auto thr = std::make_shared<std::thread>([thread, thrcls, thrmthd, ll, this]() {
+        thisThread.metadata->setName(ll);
         OMElysiaNativeValue values[1];
         values[0].l = thread;
         this->executor->callVoidFunction(thrmthd, values);
