@@ -16,7 +16,7 @@ jobs:
         include:
           - os: windows-latest
             plat: windows
-            arch: amd64
+            arch: x64
             loaderarch: amd64
           - os: windows-latest
             plat: windows
