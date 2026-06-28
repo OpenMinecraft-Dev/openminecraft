@@ -43,7 +43,9 @@ extern "C"
             {"user.dir", userdir},
             {"os.version", "10.0"}, // TODO: fake versions
             {"os.arch", OM_ARCH},
-        };
+            {"java.vm.name", "Elysia VM"},
+            {"java.vm.version", "0.0.1-ea"},
+            {"java.vm.info", "zero interpreter"}};
 
         for (auto &pp : propMap)
         {

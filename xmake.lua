@@ -32,7 +32,9 @@ if not is_plat("windows", "mingw") then
 end
 
 -- Platform macros
-add_defines('OM_ARCH="' .. get_config("arch") .. '"')
+if get_config("arch") ~= nil then
+	add_defines('OM_ARCH="' .. get_config("arch") .. '"')
+end
 if not is_plat("windows", "mingw") then
 	add_defines("OM_PLATFORM_UNIX=")
 end
