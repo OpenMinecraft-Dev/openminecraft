@@ -3,11 +3,11 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include <cstddef>
 #include <cstdio>
+#include <cstring>
 #include <mutex>
 #include <string>
-#include <cstring>
 
-#if defined(OM_PLATFORM_IOS) || defined(OM_PLATFORM_MACOS)
+#ifdef OM_PLATFORM_APPLE
 #include <malloc/malloc.h>
 #else
 #include <malloc.h>
@@ -100,7 +100,7 @@ size_t heapSize(void *p)
     {
         return 0;
     }
-#if defined(OM_PLATFORM_IOS) || defined(OM_PLATFORM_MACOS)
+#ifdef OM_PLATFORM_APPLE
     return malloc_size(p);
 #elif defined(OM_PLATFORM_WINDOWS)
     return _msize(p);

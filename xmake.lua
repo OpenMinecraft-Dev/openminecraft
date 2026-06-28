@@ -68,6 +68,10 @@ if apple() or is_plat("bsd") then
 	add_defines("OM_PLATFORM_BSDLIKE=")
 end
 
+if apple() then
+	add_defines("OM_PLATFORM_APPLE=")
+end
+
 -- Vulkan dynamic loading
 if vulkandyn() then
 	add_defines("OM_VULKAN_DYNAMIC=")

@@ -10,7 +10,7 @@
 #include <cstring>
 #include <new>
 #include <unistd.h>
-#if defined(OM_PLATFORM_IOS) || defined(OM_PLATFORM_MACOS)
+#ifdef OM_PLATFORM_APPLE
 #include <malloc/malloc.h>
 #else
 #include <malloc.h>
@@ -92,7 +92,7 @@ namespace stack
 {
 uintptr_t fetchStackBase()
 {
-#if defined(OM_PLATFORM_MACOS) || defined(OM_PLATFORM_IOS)
+#ifdef OM_PLATFORM_APPLE
     void *stackTop = pthread_get_stackaddr_np(pthread_self());
     size_t stackLength = pthread_get_stacksize_np(pthread_self());
 #elif defined(OM_PLATFORM_BSD)
@@ -120,7 +120,7 @@ uintptr_t fetchStackBase()
 }
 uintptr_t fetchStackTop()
 {
-#if defined(OM_PLATFORM_MACOS) || defined(OM_PLATFORM_IOS)
+#ifdef OM_PLATFORM_APPLE
     void *stackTop = pthread_get_stackaddr_np(pthread_self());
 #elif defined(OM_PLATFORM_BSD)
     pthread_attr_t attr;
