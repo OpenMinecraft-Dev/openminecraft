@@ -356,6 +356,13 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++tc->zero.pc;
             break;
         }
+        case op_laload: {
+            auto idx = zeroStackPopGet<jint>();
+            auto obj = zeroStackPopGet<OMElysiaOop *>();
+            zeroStackPushW(elysium->oopManager->arrAccess<jlong>(obj)[idx]);
+            ++tc->zero.pc;
+            break;
+        }
         case op_aaload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();

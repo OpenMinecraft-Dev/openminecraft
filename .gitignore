@@ -22,3 +22,4 @@ massif*
 *.data
 *.jar
 vmstd
+*.txt
