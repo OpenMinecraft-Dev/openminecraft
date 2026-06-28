@@ -50,6 +50,7 @@ extern "C"
                                            {"isAlive", "()Z", isAlive},
                                            {"start0", "()V", start0},
                                            {"setNativeName", "(Ljava/lang/String;)V", setNativeName},
+                                           {"sleep", "(J)V", sleep},
                                        });
     }
 }

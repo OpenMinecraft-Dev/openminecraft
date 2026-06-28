@@ -6,6 +6,7 @@
 namespace openminecraft::vm::elysia::impl
 {
 uint64_t getNativeFd(OMElysiaJNIEnv *env, OMElysiaNativeHandle *fd);
-}
+void setNativeFd(OMElysiaJNIEnv *env, OMElysiaNativeHandle *fd, uint64_t n);
+} // namespace openminecraft::vm::elysia::impl
 
 #endif
