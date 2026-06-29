@@ -146,6 +146,7 @@ void OMElysiaExecutorZero::threadInit()
 void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 {
     auto tc = thisThread.metadata;
+    auto oopManager = elysium->oopManager.get();
 
     auto cachedStackTop = tc->zero.stackPointer;
 
@@ -168,7 +169,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             for (int i = 0; i < frm->method->excTableLength; i++)
             {
                 if (tc->zero.pc >= frm->method->excTable[i].begin && tc->zero.pc <= frm->method->excTable[i].end &&
-                    elysium->oopManager->oopGetKlass(tc->currentException)->inherits(frm->method->excTable[i].type))
+                    oopManager->oopGetKlass(tc->currentException)->inherits(frm->method->excTable[i].type))
                 {
                     tc->zero.pc = frm->method->excTable[i].handler;
                     zeroStackPush(tc->currentException);
@@ -330,35 +331,35 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         case op_baload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
-            zeroStackPush(elysium->oopManager->arrAccess<jboolean>(obj)[idx]);
+            zeroStackPush(oopManager->arrAccess<jboolean>(obj)[idx]);
             ++tc->zero.pc;
             continue;
         }
         case op_caload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
-            zeroStackPush(elysium->oopManager->arrAccess<jchar>(obj)[idx]);
+            zeroStackPush(oopManager->arrAccess<jchar>(obj)[idx]);
             ++tc->zero.pc;
             continue;
         }
         case op_iaload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
-            zeroStackPush(elysium->oopManager->arrAccess<jint>(obj)[idx]);
+            zeroStackPush(oopManager->arrAccess<jint>(obj)[idx]);
             ++tc->zero.pc;
             continue;
         }
         case op_laload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
-            zeroStackPushW(elysium->oopManager->arrAccess<jlong>(obj)[idx]);
+            zeroStackPushW(oopManager->arrAccess<jlong>(obj)[idx]);
             ++tc->zero.pc;
             continue;
         }
         case op_aaload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
-            zeroStackPush(elysium->oopManager->arrAccessPtr(obj, idx));
+            zeroStackPush(oopManager->arrAccessPtr(obj, idx));
             ++tc->zero.pc;
             continue;
         }
@@ -426,7 +427,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto value = zeroStackPopWGet<jlong>();
             auto index = zeroStackPopGet<jint>();
             auto arr = zeroStackPopGet<OMElysiaOop *>();
-            elysium->oopManager->arrAccess<jlong>(arr)[index] = value;
+            oopManager->arrAccess<jlong>(arr)[index] = value;
             ++tc->zero.pc;
             continue;
         }
@@ -434,7 +435,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto value = zeroStackPopGet<jint>();
             auto index = zeroStackPopGet<jint>();
             auto arr = zeroStackPopGet<OMElysiaOop *>();
-            elysium->oopManager->arrAccess<jint>(arr)[index] = value;
+            oopManager->arrAccess<jint>(arr)[index] = value;
             ++tc->zero.pc;
             continue;
         }
@@ -442,7 +443,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto value = zeroStackPopGet<jboolean>();
             auto index = zeroStackPopGet<jint>();
             auto arr = zeroStackPopGet<OMElysiaOop *>();
-            elysium->oopManager->arrAccess<jboolean>(arr)[index] = value;
+            oopManager->arrAccess<jboolean>(arr)[index] = value;
             ++tc->zero.pc;
             continue;
         }
@@ -450,7 +451,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto value = zeroStackPopGet<jchar>();
             auto index = zeroStackPopGet<jint>();
             auto arr = zeroStackPopGet<OMElysiaOop *>();
-            elysium->oopManager->arrAccess<jchar>(arr)[index] = value;
+            oopManager->arrAccess<jchar>(arr)[index] = value;
             ++tc->zero.pc;
             continue;
         }
@@ -458,7 +459,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto value = zeroStackPopGet<OMElysiaOop *>();
             auto index = zeroStackPopGet<jint>();
             auto arr = zeroStackPopGet<OMElysiaOop *>();
-            elysium->oopManager->arrAccessPtr(arr, index, value);
+            oopManager->arrAccessPtr(arr, index, value);
             ++tc->zero.pc;
             continue;
         }
@@ -855,25 +856,25 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         case op_getstatic: {
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0());
-            zeroStackPushFromStatic(reinterpret_cast<OMElysiaField *>(fld), elysium->oopManager.get(), elysium);
+            zeroStackPushFromStatic(reinterpret_cast<OMElysiaField *>(fld), oopManager, elysium);
             tc->zero.pc += 3;
             continue;
         }
         case op_putfield: {
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0());
-            zeroStackPopToField(reinterpret_cast<OMElysiaField *>(fld), elysium->oopManager.get(), elysium);
+            zeroStackPopToField(reinterpret_cast<OMElysiaField *>(fld), oopManager, elysium);
             tc->zero.pc += 3;
             continue;
         }
         case op_putstatic: {
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0());
-            zeroStackPopToStatic(reinterpret_cast<OMElysiaField *>(fld), elysium->oopManager.get(), elysium);
+            zeroStackPopToStatic(reinterpret_cast<OMElysiaField *>(fld), oopManager, elysium);
             tc->zero.pc += 3;
             continue;
         }
         case op_getfield: {
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0());
-            zeroStackPushFromField(reinterpret_cast<OMElysiaField *>(fld), elysium->oopManager.get(), elysium);
+            zeroStackPushFromField(reinterpret_cast<OMElysiaField *>(fld), oopManager, elysium);
             tc->zero.pc += 3;
             continue;
         }
@@ -895,7 +896,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         case op_new: {
             auto c = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
-            auto oop = elysium->oopManager->allocateOop(reinterpret_cast<OMElysiaKlass *>(c));
+            auto oop = oopManager->allocateOop(reinterpret_cast<OMElysiaKlass *>(c));
             zeroStackPush(oop);
             tc->zero.pc += 3;
             continue;
@@ -932,8 +933,8 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                 break;
             }
 
-            auto arr = elysium->oopManager->allocateArr(CURRENT_KLASS->klassloader->findClass(kn)->toArray(),
-                                                        zeroStackPopGet<jint>());
+            auto arr =
+                oopManager->allocateArr(CURRENT_KLASS->klassloader->findClass(kn)->toArray(), zeroStackPopGet<jint>());
             zeroStackPush(arr);
             tc->zero.pc += 2;
             continue;
@@ -944,13 +945,13 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                 return CURRENT_KLASS->klassloader->fetchOrLoadClass(
                     buildArray(reinterpret_cast<OMElysiaKlass *>(c)->name));
             });
-            auto arr = elysium->oopManager->allocateArr(klass->toArray(), zeroStackPopGet<jint>());
+            auto arr = oopManager->allocateArr(klass->toArray(), zeroStackPopGet<jint>());
             zeroStackPush(arr);
             tc->zero.pc += 3;
             continue;
         }
         case op_arraylength: {
-            auto length = elysium->oopManager->arrLength(zeroStackPopGet<OMElysiaOop *>());
+            auto length = oopManager->arrLength(zeroStackPopGet<OMElysiaOop *>());
             zeroStackPush(length);
             ++tc->zero.pc;
             continue;
@@ -970,14 +971,14 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             {
                 auto c =
                     reinterpret_cast<OMElysiaKlass *>(CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0()));
-                if (elysium->oopManager->oopGetKlass(obj)->inherits(c))
+                if (oopManager->oopGetKlass(obj)->inherits(c))
                 {
                     zeroStackPush(obj);
                 }
                 else
                 {
                     throw std::logic_error(fmt::format("Java exception: ClassCastException, not implemented {} <=> {}",
-                                                       c->name, elysium->oopManager->oopGetKlass(obj)->name));
+                                                       c->name, oopManager->oopGetKlass(obj)->name));
                 }
             }
             tc->zero.pc += 3;
@@ -993,7 +994,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             {
                 auto c =
                     reinterpret_cast<OMElysiaKlass *>(CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0()));
-                zeroStackPush<jint>(elysium->oopManager->oopGetKlass(obj)->inherits(c) ? 1 : 0);
+                zeroStackPush<jint>(oopManager->oopGetKlass(obj)->inherits(c) ? 1 : 0);
             }
             tc->zero.pc += 3;
             continue;
