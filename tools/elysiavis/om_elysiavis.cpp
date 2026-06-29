@@ -418,7 +418,6 @@ void printStackStatus()
         if (th.second->zero.frame)
         {
             auto frm = th.second->zero.frame;
-            auto ptr = th.second->zero.pc;
             int i = 0;
             while (frm)
             {
@@ -426,10 +425,8 @@ void printStackStatus()
                 {
                     fmt::print(fmt::fg(hintColor), "Native");
                 }
-                fmt::print(fmt::fg(frm->method->isNative() ? valueColor : addrColor), "\t#{} {}.{}{} + {}", i,
-                           frm->method->klass->name, frm->method->name, frm->method->descriptor,
-                           reinterpret_cast<uintptr_t>(ptr) - reinterpret_cast<uintptr_t>(frm->method->code));
-                ptr = frm->returnAddr;
+                fmt::print(fmt::fg(frm->method->isNative() ? valueColor : addrColor), "\t#{} {}.{}{}", i,
+                           frm->method->klass->name, frm->method->name, frm->method->descriptor);
                 frm = frm->caller;
                 ++i;
 

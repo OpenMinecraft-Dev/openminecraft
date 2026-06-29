@@ -28,7 +28,7 @@ template <typename T> constexpr void assertType2()
                   "only internal types are supported!");
 }
 
-template <typename T> static void zeroStackPush(T data)
+template <typename T> static inline void zeroStackPush(T data)
 {
     assertType1<T>();
     auto d = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
@@ -51,48 +51,45 @@ uint16_t zeroCodeFetchArgu16p0(uint8_t *);
 int16_t zeroCodeFetchArgs16p0(uint8_t *);
 int32_t zeroCodeFetchArgs32Align(uint8_t *, int offset);
 
-template <typename T> static T zeroStackPopGet()
+template <typename T> static inline T zeroStackPopGet()
 {
     assertType1<T>();
-    T pp = *reinterpret_cast<T *>(zeroStackPop(sizeof(void *)));
-    return pp;
+    return *reinterpret_cast<T *>(zeroStackPop(sizeof(void *)));
 }
 
-template <typename T> static T zeroStackPeekGet()
+template <typename T> static inline T zeroStackPeekGet()
 {
     assertType1<T>();
     return *reinterpret_cast<T *>(thisThread.metadata->zero.stackPointer);
 }
 
-template <typename T> static void zeroStackSaveLocalPop(uint32_t l)
+template <typename T> static inline void zeroStackSaveLocalPop(uint32_t l)
 {
     assertType1<T>();
-    auto ll = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
-    *reinterpret_cast<T *>(ll) = zeroStackPopGet<T>();
+    *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *)) =
+        zeroStackPopGet<T>();
 }
 
-template <typename T> static void zeroStackSaveLocal(uint32_t l, T data)
+template <typename T> static inline void zeroStackSaveLocal(uint32_t l, T data)
 {
     assertType1<T>();
-    auto ll = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
-    *reinterpret_cast<T *>(ll) = data;
+    *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *)) =
+        data;
 }
 
 template <typename T>
-static T zeroStackLoadLocal(uint32_t l, OMElysiaJavaFrame *frame = thisThread.metadata->zero.frame)
+static inline T zeroStackLoadLocal(uint32_t l, OMElysiaJavaFrame *frame = thisThread.metadata->zero.frame)
 {
     assertType1<T>();
-    auto ll = reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *);
-    return *reinterpret_cast<T *>(ll);
+    return *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *));
 }
 
-template <typename T> static void zeroStackPushW(T data)
+template <typename T> static inline void zeroStackPushW(T data)
 {
     assertType2<T>();
     if constexpr (sizeof(void *) == 8)
     {
-        auto d = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
-        *d = *reinterpret_cast<uint64_t *>(&data);
+        *reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *))) = *reinterpret_cast<uint64_t *>(&data);
         // gino: wide data need 2 slots, on 64 bit this means one actual slot and another padding slot
         zeroStackAlloc(sizeof(void *));
     }
@@ -106,7 +103,7 @@ template <typename T> static void zeroStackPushW(T data)
     }
 }
 
-template <typename T> static T zeroStackPopWGet()
+template <typename T> static inline T zeroStackPopWGet()
 {
     assertType2<T>();
     if constexpr (sizeof(void *) == 8)
@@ -124,7 +121,7 @@ template <typename T> static T zeroStackPopWGet()
     }
 }
 
-template <typename T> static T zeroStackLoadLocalW(uint32_t l)
+template <typename T> static inline T zeroStackLoadLocalW(uint32_t l)
 {
     assertType2<T>();
     if constexpr (sizeof(void *) == 8)
@@ -142,13 +139,13 @@ template <typename T> static T zeroStackLoadLocalW(uint32_t l)
     }
 }
 
-template <typename T> static void zeroStackSaveLocalPopW(uint32_t l)
+template <typename T> static inline void zeroStackSaveLocalPopW(uint32_t l)
 {
     assertType2<T>();
     if constexpr (sizeof(void *) == 8)
     {
-        auto ll = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
-        *reinterpret_cast<T *>(ll) = zeroStackPopWGet<T>();
+        *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) -
+                               (l + 1) * sizeof(void *)) = zeroStackPopWGet<T>();
     }
     else
     {

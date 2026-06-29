@@ -150,7 +150,8 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     auto cachedStackTop = tc->zero.stackPointer;
 
-    pushFrame(m, tc->zero.pc, false, &tc->zero.pc);
+    uint8_t *pc = nullptr;
+    pushFrame(m, pc, false, &pc);
 
 #define CURRENT_KLASS tc->zero.frame->method->klass->toInstance()
 
@@ -172,65 +173,65 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             }
             for (int i = 0; i < frm->method->excTableLength; i++)
             {
-                if (tc->zero.pc >= frm->method->excTable[i].begin && tc->zero.pc <= frm->method->excTable[i].end &&
+                if (pc >= frm->method->excTable[i].begin && pc <= frm->method->excTable[i].end &&
                     oopManager->oopGetKlass(tc->currentException)->inherits(frm->method->excTable[i].type))
                 {
-                    tc->zero.pc = frm->method->excTable[i].handler;
+                    pc = frm->method->excTable[i].handler;
                     zeroStackPush(tc->currentException);
                     tc->haveException = false;
                     tc->currentException = nullptr;
                     goto loop_begin;
                 }
             }
-            popFrame(&tc->zero.pc);
+            popFrame(&pc);
             continue;
         }
 
         if (tc->zero.frame->method->isNative())
         {
-            tc->zero.pc = nullptr;
-            execWithState(InsideVM, [&]() { executeNativeLink(&tc->zero.pc); });
+            pc = nullptr;
+            execWithState(InsideVM, [&]() { executeNativeLink(&pc); });
             continue;
         }
 
         thisThread.switchState(InsideJava);
-        if (!tc->zero.pc)
+        if (!pc)
         {
             throw std::logic_error("nullptr!");
         }
 
     exec:
-        switch (*tc->zero.pc)
+        switch (*pc)
         {
         case op_nop:
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         case op_aconst_null:
-            ++tc->zero.pc;
+            ++pc;
             zeroStackPush<OMElysiaOop *>(nullptr);
             goto exec;
 #define op_iconst(n)                                                                                                   \
     case op_iconst_i(n):                                                                                               \
         zeroStackPush<jint>(n);                                                                                        \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;
 
 #define op_lconst(n)                                                                                                   \
     case op_lconst_l(n):                                                                                               \
         zeroStackPushW<jlong>(n);                                                                                      \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;
 
 #define op_fconst(n)                                                                                                   \
     case op_fconst_f(n):                                                                                               \
         zeroStackPush<jfloat>(n);                                                                                      \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;
 
 #define op_dconst(n)                                                                                                   \
     case op_dconst_d(n):                                                                                               \
         zeroStackPushW<jdouble>(n);                                                                                    \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;
 
             op_iconst(-1);
@@ -248,192 +249,192 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_dconst(0);
             op_dconst(1);
         case op_bipush:
-            ++tc->zero.pc;
-            zeroStackPush<jint>(static_cast<int8_t>(*tc->zero.pc));
-            ++tc->zero.pc;
+            ++pc;
+            zeroStackPush<jint>(static_cast<int8_t>(*pc));
+            ++pc;
             goto exec;
         case op_sipush:
-            zeroStackPush<jint>(zeroCodeFetchArgs16p0(tc->zero.pc));
-            tc->zero.pc += 3;
+            zeroStackPush<jint>(zeroCodeFetchArgs16p0(pc));
+            pc += 3;
             goto exec;
         case op_ldc:
-            zeroStackPush(CURRENT_KLASS->constantPoolFetchNormal(tc->zero.pc[1], true));
-            tc->zero.pc += 2;
+            zeroStackPush(CURRENT_KLASS->constantPoolFetchNormal(pc[1], true));
+            pc += 2;
             goto exec;
         case op_ldc_w:
-            zeroStackPush(CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(tc->zero.pc), true));
-            tc->zero.pc += 3;
+            zeroStackPush(CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc), true));
+            pc += 3;
             goto exec;
         case op_ldc2_w:
-            zeroStackPushW(CURRENT_KLASS->constantPoolFetchNormalW(zeroCodeFetchArgu16p0(tc->zero.pc)));
-            tc->zero.pc += 3;
+            zeroStackPushW(CURRENT_KLASS->constantPoolFetchNormalW(zeroCodeFetchArgu16p0(pc)));
+            pc += 3;
             goto exec;
 #define op_iloadc(n)                                                                                                   \
     case op_iload_n(n):                                                                                                \
         zeroStackPush(zeroStackLoadLocal<jint>(n));                                                                    \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;
             op_iloadc(0);
             op_iloadc(1);
             op_iloadc(2);
             op_iloadc(3);
         case op_iload:
-            zeroStackPush(zeroStackLoadLocal<jint>(tc->zero.pc[1]));
-            tc->zero.pc += 2;
+            zeroStackPush(zeroStackLoadLocal<jint>(pc[1]));
+            pc += 2;
             goto exec;
 #define op_lloadc(n)                                                                                                   \
     case op_lload_n(n):                                                                                                \
         zeroStackPushW(zeroStackLoadLocalW<jlong>(n));                                                                 \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;
             op_lloadc(0);
             op_lloadc(1);
             op_lloadc(2);
             op_lloadc(3);
         case op_lload:
-            zeroStackPushW(zeroStackLoadLocalW<jlong>(tc->zero.pc[1]));
-            tc->zero.pc += 2;
+            zeroStackPushW(zeroStackLoadLocalW<jlong>(pc[1]));
+            pc += 2;
             goto exec;
 #define op_floadc(n)                                                                                                   \
     case op_fload_n(n):                                                                                                \
         zeroStackPush(zeroStackLoadLocal<jfloat>(n));                                                                  \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;
             op_floadc(0);
             op_floadc(1);
             op_floadc(2);
             op_floadc(3);
         case op_fload:
-            zeroStackPush(zeroStackLoadLocal<jfloat>(tc->zero.pc[1]));
-            tc->zero.pc += 2;
+            zeroStackPush(zeroStackLoadLocal<jfloat>(pc[1]));
+            pc += 2;
             goto exec;
 #define op_dloadc(n)                                                                                                   \
     case op_dload_n(n):                                                                                                \
         zeroStackPushW(zeroStackLoadLocalW<jdouble>(n));                                                               \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;
             op_dloadc(0);
             op_dloadc(1);
             op_dloadc(2);
             op_dloadc(3);
         case op_dload:
-            zeroStackPushW(zeroStackLoadLocalW<jdouble>(tc->zero.pc[1]));
-            tc->zero.pc += 2;
+            zeroStackPushW(zeroStackLoadLocalW<jdouble>(pc[1]));
+            pc += 2;
             goto exec;
 #define op_aloadc(n)                                                                                                   \
     case op_aload_n(n):                                                                                                \
         zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(n));                                                           \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;
             op_aloadc(0);
             op_aloadc(1);
             op_aloadc(2);
             op_aloadc(3);
         case op_aload:
-            zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(tc->zero.pc[1]));
-            tc->zero.pc += 2;
+            zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(pc[1]));
+            pc += 2;
             goto exec;
         case op_baload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             zeroStackPush(oopManager->arrAccess<jboolean>(obj)[idx]);
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_caload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             zeroStackPush(oopManager->arrAccess<jchar>(obj)[idx]);
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_iaload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             zeroStackPush(oopManager->arrAccess<jint>(obj)[idx]);
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_laload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             zeroStackPushW(oopManager->arrAccess<jlong>(obj)[idx]);
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_aaload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             zeroStackPush(oopManager->arrAccessPtr(obj, idx));
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
 
 #define op_istorec(n)                                                                                                  \
     case op_istore_n(n):                                                                                               \
         zeroStackSaveLocalPop<jint>(n);                                                                                \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;
             op_istorec(0);
             op_istorec(1);
             op_istorec(2);
             op_istorec(3);
         case op_istore:
-            zeroStackSaveLocalPop<jint>(tc->zero.pc[1]);
-            tc->zero.pc += 2;
+            zeroStackSaveLocalPop<jint>(pc[1]);
+            pc += 2;
             goto exec;
 
 #define op_lstorec(n)                                                                                                  \
     case op_lstore_n(n):                                                                                               \
         zeroStackSaveLocalPopW<jlong>(n);                                                                              \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;
             op_lstorec(0);
             op_lstorec(1);
             op_lstorec(2);
             op_lstorec(3);
         case op_lstore:
-            zeroStackSaveLocalPopW<jlong>(tc->zero.pc[1]);
-            tc->zero.pc += 2;
+            zeroStackSaveLocalPopW<jlong>(pc[1]);
+            pc += 2;
             goto exec;
         case op_fstore:
-            zeroStackSaveLocalPop<jfloat>(tc->zero.pc[1]);
-            tc->zero.pc += 2;
+            zeroStackSaveLocalPop<jfloat>(pc[1]);
+            pc += 2;
             goto exec;
 
 #define op_dstorec(n)                                                                                                  \
     case op_dstore_n(n):                                                                                               \
         zeroStackSaveLocalPopW<jdouble>(n);                                                                            \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;
             op_dstorec(0);
             op_dstorec(1);
             op_dstorec(2);
             op_dstorec(3);
         case op_dstore:
-            zeroStackSaveLocalPopW<jdouble>(tc->zero.pc[1]);
-            tc->zero.pc += 2;
+            zeroStackSaveLocalPopW<jdouble>(pc[1]);
+            pc += 2;
             goto exec;
 
 #define op_astorec(n)                                                                                                  \
     case op_astore_n(n):                                                                                               \
         zeroStackSaveLocalPop<OMElysiaOop *>(n);                                                                       \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;
             op_astorec(0);
             op_astorec(1);
             op_astorec(2);
             op_astorec(3);
         case op_astore:
-            zeroStackSaveLocalPop<OMElysiaOop *>(tc->zero.pc[1]);
-            tc->zero.pc += 2;
+            zeroStackSaveLocalPop<OMElysiaOop *>(pc[1]);
+            pc += 2;
             goto exec;
         case op_lastore: {
             auto value = zeroStackPopWGet<jlong>();
             auto index = zeroStackPopGet<jint>();
             auto arr = zeroStackPopGet<OMElysiaOop *>();
             oopManager->arrAccess<jlong>(arr)[index] = value;
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_iastore: {
@@ -441,7 +442,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto index = zeroStackPopGet<jint>();
             auto arr = zeroStackPopGet<OMElysiaOop *>();
             oopManager->arrAccess<jint>(arr)[index] = value;
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_bastore: {
@@ -449,7 +450,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto index = zeroStackPopGet<jint>();
             auto arr = zeroStackPopGet<OMElysiaOop *>();
             oopManager->arrAccess<jboolean>(arr)[index] = value;
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_castore: {
@@ -457,7 +458,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto index = zeroStackPopGet<jint>();
             auto arr = zeroStackPopGet<OMElysiaOop *>();
             oopManager->arrAccess<jchar>(arr)[index] = value;
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_aastore: {
@@ -465,20 +466,20 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto index = zeroStackPopGet<jint>();
             auto arr = zeroStackPopGet<OMElysiaOop *>();
             oopManager->arrAccessPtr(arr, index, value);
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_pop:
             zeroStackPopGet<jint>();
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         case op_pop2:
             zeroStackPopWGet<jlong>();
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         case op_dup:
             zeroStackPush(zeroStackPeekGet<OMElysiaOop *>());
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         case op_dup_x1: {
             auto value1 = zeroStackPopGet<OMElysiaOop *>();
@@ -487,7 +488,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackPush(value1);
             zeroStackPush(value2);
             zeroStackPush(value1);
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_dup2: {
@@ -498,7 +499,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackPush(value1);
             zeroStackPush(value2);
             zeroStackPush(value1);
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_dup2_x1: {
@@ -511,7 +512,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackPush(value3);
             zeroStackPush(value2);
             zeroStackPush(value1);
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_swap: {
@@ -519,7 +520,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto value2 = zeroStackPopGet<OMElysiaOop *>();
             zeroStackPush(value1);
             zeroStackPush(value2);
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
 
@@ -528,7 +529,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         auto value2 = fetch();                                                                                         \
         auto value1 = fetch();                                                                                         \
         psh(value1 oprt value2);                                                                                       \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;                                                                                                     \
     }
             op_calc(iadd, zeroStackPopGet<jint>, zeroStackPush, +);
@@ -551,7 +552,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                 throw std::logic_error("divide by zero!");
             }
             zeroStackPush(value1 / value2);
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_ldiv: {
@@ -562,7 +563,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                 throw std::logic_error("divide by zero!");
             }
             zeroStackPushW(value1 / value2);
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
             op_calc(fdiv, zeroStackPopGet<jfloat>, zeroStackPush, /);
@@ -577,7 +578,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             throw std::logic_error("divide by zero!");                                                                 \
         }                                                                                                              \
         psh(value1 - (value1 / value2) * value2);                                                                      \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;                                                                                                     \
     }
             op_calcrem(irem, zeroStackPopGet<jint>, zeroStackPush);
@@ -587,21 +588,21 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto value2 = zeroStackPopGet<jfloat>();
             auto value1 = zeroStackPopGet<jfloat>();
             zeroStackPush(std::fmod(value1, value2));
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_drem: {
             auto value2 = zeroStackPopWGet<jdouble>();
             auto value1 = zeroStackPopWGet<jdouble>();
             zeroStackPushW(std::fmod(value1, value2));
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
 
 #define op_calcneg(op, fetch, psh)                                                                                     \
     case op_##op: {                                                                                                    \
         psh(-fetch());                                                                                                 \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;                                                                                                     \
     }
             op_calcneg(ineg, zeroStackPopGet<jint>, zeroStackPush);
@@ -612,42 +613,42 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto value2 = zeroStackPopGet<jint>();
             auto value1 = zeroStackPopGet<jint>();
             zeroStackPush(value1 << (value2 & 0x1f));
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_ishr: {
             auto value2 = zeroStackPopGet<jint>();
             auto value1 = zeroStackPopGet<jint>();
             zeroStackPush(value1 >> (value2 & 0x1f));
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_iushr: {
             auto value2 = zeroStackPopGet<jint>();
             auto value1 = zeroStackPopGet<uint32_t>();
             zeroStackPush(value1 >> (value2 & 0x1f));
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_lshl: {
             auto value2 = zeroStackPopGet<jint>();
             auto value1 = zeroStackPopWGet<jlong>();
             zeroStackPushW(value1 << (value2 & 0x3f));
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_lshr: {
             auto value2 = zeroStackPopGet<jint>();
             auto value1 = zeroStackPopWGet<jlong>();
             zeroStackPushW(value1 >> (value2 & 0x3f));
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_lushr: {
             auto value2 = zeroStackPopGet<jint>();
             auto value1 = zeroStackPopWGet<uint64_t>();
             zeroStackPushW(value1 >> (value2 & 0x3f));
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
             op_calc(iand, zeroStackPopGet<jint>, zeroStackPush, &);
@@ -658,17 +659,17 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_calc(lxor, zeroStackPopWGet<jlong>, zeroStackPushW, ^);
 
         case op_iinc: {
-            auto slt = tc->zero.pc[1];
+            auto slt = pc[1];
             jint data = zeroStackLoadLocal<jint>(slt);
-            data += static_cast<int8_t>(tc->zero.pc[2]);
+            data += static_cast<int8_t>(pc[2]);
             zeroStackSaveLocal(slt, data);
-            tc->zero.pc += 3;
+            pc += 3;
             goto exec;
         }
 #define op_conv(op, target, targettype, source, sourcetype)                                                            \
     case op_##op: {                                                                                                    \
         target(static_cast<targettype>(source<sourcetype>()));                                                         \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;                                                                                                     \
     }
             op_conv(i2l, zeroStackPushW, jlong, zeroStackPopGet, jint);
@@ -690,11 +691,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     case op_if##cond: {                                                                                                \
         if (zeroStackPopGet<jint>() op 0)                                                                              \
         {                                                                                                              \
-            tc->zero.pc += zeroCodeFetchArgs16p0(tc->zero.pc);                                                         \
+            pc += zeroCodeFetchArgs16p0(pc);                                                                           \
         }                                                                                                              \
         else                                                                                                           \
         {                                                                                                              \
-            tc->zero.pc += 3;                                                                                          \
+            pc += 3;                                                                                                   \
         }                                                                                                              \
         goto exec;                                                                                                     \
     }
@@ -711,11 +712,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         auto value1 = zeroStackPopGet<jint>();                                                                         \
         if (value1 op value2)                                                                                          \
         {                                                                                                              \
-            tc->zero.pc += zeroCodeFetchArgs16p0(tc->zero.pc);                                                         \
+            pc += zeroCodeFetchArgs16p0(pc);                                                                           \
         }                                                                                                              \
         else                                                                                                           \
         {                                                                                                              \
-            tc->zero.pc += 3;                                                                                          \
+            pc += 3;                                                                                                   \
         }                                                                                                              \
         goto exec;                                                                                                     \
     }
@@ -741,7 +742,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             {
                 zeroStackPush<jint>(-1);
             }
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
 #define op_fcmp(cond, n)                                                                                               \
@@ -764,7 +765,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         {                                                                                                              \
             zeroStackPush<jint>(0);                                                                                    \
         }                                                                                                              \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;                                                                                                     \
     }
             op_fcmp(g, 1);
@@ -789,7 +790,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         {                                                                                                              \
             zeroStackPush<jint>(0);                                                                                    \
         }                                                                                                              \
-        ++tc->zero.pc;                                                                                                 \
+        ++pc;                                                                                                          \
         goto exec;                                                                                                     \
     }
             op_dcmp(g, 1);
@@ -797,143 +798,143 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         case op_if_acmpeq: {
             if (zeroStackPopGet<OMElysiaOop *>() == zeroStackPopGet<OMElysiaOop *>())
             {
-                tc->zero.pc += zeroCodeFetchArgs16p0(tc->zero.pc);
+                pc += zeroCodeFetchArgs16p0(pc);
             }
             else
             {
-                tc->zero.pc += 3;
+                pc += 3;
             }
             goto exec;
         }
         case op_if_acmpne: {
             if (zeroStackPopGet<OMElysiaOop *>() != zeroStackPopGet<OMElysiaOop *>())
             {
-                tc->zero.pc += zeroCodeFetchArgs16p0(tc->zero.pc);
+                pc += zeroCodeFetchArgs16p0(pc);
             }
             else
             {
-                tc->zero.pc += 3;
+                pc += 3;
             }
             goto exec;
         }
         case op_goto: {
-            tc->zero.pc += zeroCodeFetchArgs16p0(tc->zero.pc);
+            pc += zeroCodeFetchArgs16p0(pc);
             goto exec;
         }
         case op_tableswitch: {
-            auto def = zeroCodeFetchArgs32Align(tc->zero.pc, 0);
-            auto low = zeroCodeFetchArgs32Align(tc->zero.pc, 1);
-            auto high = zeroCodeFetchArgs32Align(tc->zero.pc, 2);
+            auto def = zeroCodeFetchArgs32Align(pc, 0);
+            auto low = zeroCodeFetchArgs32Align(pc, 1);
+            auto high = zeroCodeFetchArgs32Align(pc, 2);
             auto ll = zeroStackPopGet<jint>();
             if (ll > high || ll < low)
             {
-                tc->zero.pc += def;
+                pc += def;
             }
             else
             {
-                auto off = zeroCodeFetchArgs32Align(tc->zero.pc, 3 + (ll - low));
-                tc->zero.pc += off;
+                auto off = zeroCodeFetchArgs32Align(pc, 3 + (ll - low));
+                pc += off;
             }
             goto exec;
         }
         case op_lookupswitch: {
             auto val = zeroStackPopGet<jint>();
-            for (int i = 0; i < zeroCodeFetchArgs32Align(tc->zero.pc, 1); i++)
+            for (int i = 0; i < zeroCodeFetchArgs32Align(pc, 1); i++)
             {
-                if (zeroCodeFetchArgs32Align(tc->zero.pc, 2 + i * 2) == val)
+                if (zeroCodeFetchArgs32Align(pc, 2 + i * 2) == val)
                 {
-                    tc->zero.pc += zeroCodeFetchArgs32Align(tc->zero.pc, 2 + i * 2 + 1);
+                    pc += zeroCodeFetchArgs32Align(pc, 2 + i * 2 + 1);
                     goto lkend;
                 }
             }
-            tc->zero.pc += zeroCodeFetchArgs32Align(tc->zero.pc, 0);
+            pc += zeroCodeFetchArgs32Align(pc, 0);
         lkend:
             goto exec;
         }
         case op_return: {
-            popFrame(&tc->zero.pc);
+            popFrame(&pc);
             continue;
         }
         case op_ireturn: {
             auto pp = zeroStackPopGet<jint>();
-            popFrame(&tc->zero.pc);
+            popFrame(&pc);
             zeroStackPush(pp);
             continue;
         }
         case op_lreturn: {
             auto pp = zeroStackPopWGet<jlong>();
-            popFrame(&tc->zero.pc);
+            popFrame(&pc);
             zeroStackPushW(pp);
             continue;
         }
         case op_freturn: {
             auto pp = zeroStackPopGet<jfloat>();
-            popFrame(&tc->zero.pc);
+            popFrame(&pc);
             zeroStackPush(pp);
             continue;
         }
         case op_dreturn: {
             auto pp = zeroStackPopWGet<jdouble>();
-            popFrame(&tc->zero.pc);
+            popFrame(&pc);
             zeroStackPushW(pp);
             continue;
         }
         case op_areturn: {
             auto pp = zeroStackPopGet<OMElysiaOop *>();
-            popFrame(&tc->zero.pc);
+            popFrame(&pc);
             zeroStackPush(pp);
             continue;
         }
         case op_getstatic: {
-            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(tc->zero.pc));
+            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(pc));
             zeroStackPushFromStatic(reinterpret_cast<OMElysiaField *>(fld), oopManager, elysium);
-            tc->zero.pc += 3;
+            pc += 3;
             goto exec;
         }
         case op_putfield: {
-            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(tc->zero.pc));
+            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(pc));
             zeroStackPopToField(reinterpret_cast<OMElysiaField *>(fld), oopManager, elysium);
-            tc->zero.pc += 3;
+            pc += 3;
             goto exec;
         }
         case op_putstatic: {
-            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(tc->zero.pc));
+            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(pc));
             zeroStackPopToStatic(reinterpret_cast<OMElysiaField *>(fld), oopManager, elysium);
-            tc->zero.pc += 3;
+            pc += 3;
             goto exec;
         }
         case op_getfield: {
-            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(tc->zero.pc));
+            auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0(pc));
             zeroStackPushFromField(reinterpret_cast<OMElysiaField *>(fld), oopManager, elysium);
-            tc->zero.pc += 3;
+            pc += 3;
             goto exec;
         }
         case op_invokespecial:
         case op_invokestatic: {
-            auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(tc->zero.pc));
-            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), tc->zero.pc + 3, false, &tc->zero.pc);
+            auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
+            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), pc + 3, false, &pc);
             continue;
         }
         case op_invokevirtual: {
-            auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(tc->zero.pc));
-            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), tc->zero.pc + 3, true, &tc->zero.pc);
+            auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
+            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), pc + 3, true, &pc);
             continue;
         }
         case op_invokeinterface: {
-            auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(tc->zero.pc));
-            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), tc->zero.pc + 5, true, &tc->zero.pc);
+            auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
+            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), pc + 5, true, &pc);
             continue;
         }
         case op_new: {
-            auto c = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(tc->zero.pc));
+            auto c = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
             auto oop = oopManager->allocateOop(reinterpret_cast<OMElysiaKlass *>(c));
             zeroStackPush(oop);
-            tc->zero.pc += 3;
+            pc += 3;
             goto exec;
         }
         case op_newarray: {
             std::string kn;
-            switch (tc->zero.pc[1])
+            switch (pc[1])
             {
             case 4:
                 kn = "[Z";
@@ -966,24 +967,24 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto arr =
                 oopManager->allocateArr(CURRENT_KLASS->klassloader->findClass(kn)->toArray(), zeroStackPopGet<jint>());
             zeroStackPush(arr);
-            tc->zero.pc += 2;
+            pc += 2;
             goto exec;
         }
         case op_anewarray: {
-            auto c = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(tc->zero.pc));
+            auto c = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
             auto klass = execWithState(InsideVM, [&]() {
                 return CURRENT_KLASS->klassloader->fetchOrLoadClass(
                     buildArray(reinterpret_cast<OMElysiaKlass *>(c)->name));
             });
             auto arr = oopManager->allocateArr(klass->toArray(), zeroStackPopGet<jint>());
             zeroStackPush(arr);
-            tc->zero.pc += 3;
+            pc += 3;
             goto exec;
         }
         case op_arraylength: {
             auto length = oopManager->arrLength(zeroStackPopGet<OMElysiaOop *>());
             zeroStackPush(length);
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_athrow: {
@@ -1000,7 +1001,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             else
             {
                 auto c = reinterpret_cast<OMElysiaKlass *>(
-                    CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(tc->zero.pc)));
+                    CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc)));
                 if (oopManager->oopGetKlass(obj)->inherits(c))
                 {
                     zeroStackPush(obj);
@@ -1011,7 +1012,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                                                        c->name, oopManager->oopGetKlass(obj)->name));
                 }
             }
-            tc->zero.pc += 3;
+            pc += 3;
             goto exec;
         }
         case op_instanceof: {
@@ -1023,49 +1024,49 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             else
             {
                 auto c = reinterpret_cast<OMElysiaKlass *>(
-                    CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(tc->zero.pc)));
+                    CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc)));
                 zeroStackPush<jint>(oopManager->oopGetKlass(obj)->inherits(c) ? 1 : 0);
             }
-            tc->zero.pc += 3;
+            pc += 3;
             goto exec;
         }
         case op_ifnull: {
             if (!zeroStackPopGet<OMElysiaOop *>())
             {
-                tc->zero.pc += zeroCodeFetchArgs16p0(tc->zero.pc);
+                pc += zeroCodeFetchArgs16p0(pc);
             }
             else
             {
-                tc->zero.pc += 3;
+                pc += 3;
             }
             goto exec;
         }
         case op_ifnonnull: {
             if (zeroStackPopGet<OMElysiaOop *>())
             {
-                tc->zero.pc += zeroCodeFetchArgs16p0(tc->zero.pc);
+                pc += zeroCodeFetchArgs16p0(pc);
             }
             else
             {
-                tc->zero.pc += 3;
+                pc += 3;
             }
             goto exec;
         }
         case op_monitorexit: {
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             elysium->monitorManager->mutexRelease(obj);
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         case op_monitorenter: {
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             elysium->monitorManager->mutexFetch(obj);
-            ++tc->zero.pc;
+            ++pc;
             goto exec;
         }
         default:
         unk:
-            throw std::logic_error(fmt::format("unknown operand! (operand 0x{:02x})", *tc->zero.pc));
+            throw std::logic_error(fmt::format("unknown operand! (operand 0x{:02x})", *pc));
         }
     }
 }

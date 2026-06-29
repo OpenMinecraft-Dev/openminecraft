@@ -11,7 +11,7 @@ set_policy("build.sanitizer.memory", false)
 set_policy("build.sanitizer.leak", false)
 set_policy("build.sanitizer.undefined", false)
 
-set_policy("build.optimization.lto", false)
+set_policy("build.optimization.lto", true)
 
 -- utils and custom libraries
 includes("utils.lua")
