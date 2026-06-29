@@ -47,9 +47,9 @@ void zeroStackPopToStatic(OMElysiaField *field, OMElysiaOopManager *oop, OMElysi
 void zeroStackPushFromStatic(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
 void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
 void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
-uint16_t zeroCodeFetchArgu16p0();
-int16_t zeroCodeFetchArgs16p0();
-int32_t zeroCodeFetchArgs32Align(int offset);
+uint16_t zeroCodeFetchArgu16p0(uint8_t *);
+int16_t zeroCodeFetchArgs16p0(uint8_t *);
+int32_t zeroCodeFetchArgs32Align(uint8_t *, int offset);
 
 template <typename T> static T zeroStackPopGet()
 {
@@ -192,10 +192,10 @@ class OMElysiaExecutorZero
 
   protected:
     void execute(OMElysiaMethod *m);
-    void executeNativeLink();
-    void executeNative(char *descriptor, bool isStatic, void *func);
-    void pushFrame(OMElysiaMethod *m, uint8_t *retAddr, bool needVtable);
-    void popFrame();
+    void executeNativeLink(uint8_t **realpc);
+    void executeNative(char *descriptor, bool isStatic, void *func, uint8_t **realpc);
+    void pushFrame(OMElysiaMethod *m, uint8_t *retAddr, bool needVtable, uint8_t **realpc);
+    void popFrame(uint8_t **realpc);
 
     void threadInit();
 

@@ -1,5 +1,6 @@
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
+#include <cstdint>
 
 namespace openminecraft::vm::elysia::executor
 {
@@ -18,22 +19,22 @@ uintptr_t zeroStackPop(uint64_t len)
     return result;
 }
 
-uint16_t zeroCodeFetchArgu16p0()
+uint16_t zeroCodeFetchArgu16p0(uint8_t *pc)
 {
     auto tc = thisThread.metadata;
-    return static_cast<uint16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
+    return static_cast<uint16_t>(pc[1] << 8) | pc[2];
 }
 
-int16_t zeroCodeFetchArgs16p0()
+int16_t zeroCodeFetchArgs16p0(uint8_t *pc)
 {
     auto tc = thisThread.metadata;
-    return static_cast<int16_t>(tc->zero.pc[1] << 8) | tc->zero.pc[2];
+    return static_cast<int16_t>(pc[1] << 8) | pc[2];
 }
 
-int32_t zeroCodeFetchArgs32Align(int offset)
+int32_t zeroCodeFetchArgs32Align(uint8_t *pc, int offset)
 {
     auto tc = thisThread.metadata;
-    auto pp = tc->zero.pc + 1;
+    auto pp = pc + 1;
     while (reinterpret_cast<uintptr_t>(pp) % 4)
     {
         ++pp;

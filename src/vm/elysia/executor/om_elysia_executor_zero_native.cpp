@@ -9,6 +9,7 @@
 #include "openminecraft/vm/elysia/om_elysia_meta.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
+#include <cstdint>
 #include <ffi.h>
 #include <iostream>
 #include <variant>
@@ -65,7 +66,7 @@ OMElysiaNativeHandle *OMElysiaExecutorZero::recordLocalRef(OMElysiaOop *oop)
     return oldnode;
 }
 
-void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *func)
+void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *func, uint8_t **realpc)
 {
     auto tc = thisThread.metadata;
     std::vector<std::variant<jint, jbyte, jboolean, jshort, jchar, jfloat, jlong, jdouble, OMElysiaNativeHandle *,
@@ -199,12 +200,12 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     switch (returnType)
     {
     case argTypeVoid:
-        popFrame();
+        popFrame(realpc);
         break;
     case argTypeArray:
     case argTypeReference: {
         auto vv = *reinterpret_cast<OMElysiaNativeHandle **>(retValue);
-        popFrame();
+        popFrame(realpc);
         zeroStackPush(handleFetch(vv));
         if (vv)
         {
@@ -217,61 +218,61 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     }
     case argTypeChar: {
         auto data = *reinterpret_cast<jchar *>(retValue);
-        popFrame();
+        popFrame(realpc);
         zeroStackPush(data);
         break;
     }
     case argTypeBoolean: {
         auto data = *reinterpret_cast<jboolean *>(retValue);
-        popFrame();
+        popFrame(realpc);
         zeroStackPush(data);
         break;
     }
     case argTypeByte: {
         auto data = *reinterpret_cast<jbyte *>(retValue);
-        popFrame();
+        popFrame(realpc);
         zeroStackPush(data);
         break;
     }
     case argTypeShort: {
         auto data = *reinterpret_cast<jshort *>(retValue);
-        popFrame();
+        popFrame(realpc);
         zeroStackPush(data);
         break;
     }
     case argTypeInt: {
         auto data = *reinterpret_cast<jint *>(retValue);
-        popFrame();
+        popFrame(realpc);
         zeroStackPush(data);
         break;
     }
     case argTypeFloat: {
         auto data = *reinterpret_cast<jfloat *>(retValue);
-        popFrame();
+        popFrame(realpc);
         zeroStackPush(data);
         break;
     }
     case argTypeLong: {
         auto data = *reinterpret_cast<jlong *>(retValue);
-        popFrame();
+        popFrame(realpc);
         zeroStackPushW(data);
         break;
     }
     case argTypeDouble: {
         auto data = *reinterpret_cast<jdouble *>(retValue);
-        popFrame();
+        popFrame(realpc);
         zeroStackPushW(data);
         break;
     }
     default:
-        popFrame();
+        popFrame(realpc);
         break;
     }
 
     cleanupLocalRef();
 }
 
-void OMElysiaExecutorZero::executeNativeLink()
+void OMElysiaExecutorZero::executeNativeLink(uint8_t **realpc)
 {
     auto tc = thisThread.metadata;
     auto mm = tc->zero.frame->method;
@@ -281,7 +282,7 @@ void OMElysiaExecutorZero::executeNativeLink()
         auto &nm = mm->klass->nativeMethods[i];
         if (mm->isSame(&nm))
         {
-            executeNative(mm->descriptor, mm->isStatic(), nm.funcPtr);
+            executeNative(mm->descriptor, mm->isStatic(), nm.funcPtr, realpc);
             return;
         }
     }
@@ -297,7 +298,7 @@ void OMElysiaExecutorZero::executeNativeLink()
 
     if (elysium->nativeFuncMap.count(ffm))
     {
-        executeNative(mm->descriptor, mm->isStatic(), elysium->nativeFuncMap[ffm]);
+        executeNative(mm->descriptor, mm->isStatic(), elysium->nativeFuncMap[ffm], realpc);
         return;
     }
 
