@@ -244,7 +244,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_dconst(1);
         case op_bipush:
             ++tc->zero.pc;
-            zeroStackPush<jint>(*tc->zero.pc);
+            zeroStackPush<jint>(static_cast<int8_t>(*tc->zero.pc));
             ++tc->zero.pc;
             continue;
         case op_sipush:
@@ -538,8 +538,28 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_calc(lmul, zeroStackPopWGet<jlong>, zeroStackPushW, *);
             op_calc(fmul, zeroStackPopGet<jfloat>, zeroStackPush, *);
             op_calc(dmul, zeroStackPopWGet<jdouble>, zeroStackPushW, *);
-            op_calc(idiv, zeroStackPopGet<jint>, zeroStackPush, /);
-            op_calc(ldiv, zeroStackPopWGet<jlong>, zeroStackPushW, /);
+        case op_idiv: {
+            auto value2 = zeroStackPopGet<jint>();
+            auto value1 = zeroStackPopGet<jint>();
+            if (value2 == 0)
+            {
+                throw std::logic_error("divide by zero!");
+            }
+            zeroStackPush(value1 / value2);
+            ++tc->zero.pc;
+            continue;
+        }
+        case op_ldiv: {
+            auto value2 = zeroStackPopWGet<jlong>();
+            auto value1 = zeroStackPopWGet<jlong>();
+            if (value2 == 0)
+            {
+                throw std::logic_error("divide by zero!");
+            }
+            zeroStackPushW(value1 / value2);
+            ++tc->zero.pc;
+            continue;
+        }
             op_calc(fdiv, zeroStackPopGet<jfloat>, zeroStackPush, /);
             op_calc(ddiv, zeroStackPopWGet<jdouble>, zeroStackPushW, /);
 
@@ -547,6 +567,10 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     case op_##op: {                                                                                                    \
         auto value2 = fetch();                                                                                         \
         auto value1 = fetch();                                                                                         \
+        if (value2 == 0)                                                                                               \
+        {                                                                                                              \
+            throw std::logic_error("divide by zero!");                                                                 \
+        }                                                                                                              \
         psh(value1 - (value1 / value2) * value2);                                                                      \
         ++tc->zero.pc;                                                                                                 \
         continue;                                                                                                      \
@@ -554,6 +578,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_calcrem(irem, zeroStackPopGet<jint>, zeroStackPush);
             op_calcrem(lrem, zeroStackPopWGet<jlong>, zeroStackPushW);
         case op_frem: {
+
             auto value2 = zeroStackPopGet<jfloat>();
             auto value1 = zeroStackPopGet<jfloat>();
             zeroStackPush(std::fmod(value1, value2));
