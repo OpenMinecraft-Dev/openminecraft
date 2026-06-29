@@ -198,7 +198,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         {
         case op_nop:
             ++tc->zero.pc;
-            break;
+            continue;
         case op_aconst_null:
             ++tc->zero.pc;
             zeroStackPush<OMElysiaOop *>(nullptr);
@@ -207,25 +207,25 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     case op_iconst_i(n):                                                                                               \
         zeroStackPush<jint>(n);                                                                                        \
         ++tc->zero.pc;                                                                                                 \
-        break;
+        continue;
 
 #define op_lconst(n)                                                                                                   \
     case op_lconst_l(n):                                                                                               \
         zeroStackPushW<jlong>(n);                                                                                      \
         ++tc->zero.pc;                                                                                                 \
-        break;
+        continue;
 
 #define op_fconst(n)                                                                                                   \
     case op_fconst_f(n):                                                                                               \
         zeroStackPush<jfloat>(n);                                                                                      \
         ++tc->zero.pc;                                                                                                 \
-        break;
+        continue;
 
 #define op_dconst(n)                                                                                                   \
     case op_dconst_d(n):                                                                                               \
         zeroStackPushW<jdouble>(n);                                                                                    \
         ++tc->zero.pc;                                                                                                 \
-        break;
+        continue;
 
             op_iconst(-1);
             op_iconst(0);
@@ -245,204 +245,190 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++tc->zero.pc;
             zeroStackPush<jint>(*tc->zero.pc);
             ++tc->zero.pc;
-            break;
+            continue;
         case op_sipush:
             zeroStackPush<jint>(zeroCodeFetchArgs16p0());
             tc->zero.pc += 3;
-            break;
-        case op_ldc: {
+            continue;
+        case op_ldc:
             zeroStackPush(CURRENT_KLASS->constantPoolFetchNormal(tc->zero.pc[1], true));
             tc->zero.pc += 2;
-            break;
-        }
-        case op_ldc_w: {
+            continue;
+        case op_ldc_w:
             zeroStackPush(CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(), true));
             tc->zero.pc += 3;
-            break;
-        }
-        case op_ldc2_w: {
+            continue;
+        case op_ldc2_w:
             zeroStackPushW(CURRENT_KLASS->constantPoolFetchNormalW(zeroCodeFetchArgu16p0()));
             tc->zero.pc += 3;
-            break;
-        }
+            continue;
 #define op_iloadc(n)                                                                                                   \
     case op_iload_n(n):                                                                                                \
         zeroStackPush(zeroStackLoadLocal<jint>(n));                                                                    \
         ++tc->zero.pc;                                                                                                 \
-        break;
+        continue;
             op_iloadc(0);
             op_iloadc(1);
             op_iloadc(2);
             op_iloadc(3);
-        case op_iload: {
+        case op_iload:
             zeroStackPush(zeroStackLoadLocal<jint>(tc->zero.pc[1]));
             tc->zero.pc += 2;
-            break;
-        }
+            continue;
 #define op_lloadc(n)                                                                                                   \
     case op_lload_n(n):                                                                                                \
         zeroStackPushW(zeroStackLoadLocalW<jlong>(n));                                                                 \
         ++tc->zero.pc;                                                                                                 \
-        break;
+        continue;
             op_lloadc(0);
             op_lloadc(1);
             op_lloadc(2);
             op_lloadc(3);
-        case op_lload: {
+        case op_lload:
             zeroStackPushW(zeroStackLoadLocalW<jlong>(tc->zero.pc[1]));
             tc->zero.pc += 2;
-            break;
-        }
+            continue;
 #define op_floadc(n)                                                                                                   \
     case op_fload_n(n):                                                                                                \
         zeroStackPush(zeroStackLoadLocal<jfloat>(n));                                                                  \
         ++tc->zero.pc;                                                                                                 \
-        break;
+        continue;
             op_floadc(0);
             op_floadc(1);
             op_floadc(2);
             op_floadc(3);
-        case op_fload: {
+        case op_fload:
             zeroStackPush(zeroStackLoadLocal<jfloat>(tc->zero.pc[1]));
             tc->zero.pc += 2;
-            break;
-        }
+            continue;
 #define op_dloadc(n)                                                                                                   \
     case op_dload_n(n):                                                                                                \
         zeroStackPushW(zeroStackLoadLocalW<jdouble>(n));                                                               \
         ++tc->zero.pc;                                                                                                 \
-        break;
+        continue;
             op_dloadc(0);
             op_dloadc(1);
             op_dloadc(2);
             op_dloadc(3);
-        case op_dload: {
+        case op_dload:
             zeroStackPushW(zeroStackLoadLocalW<jdouble>(tc->zero.pc[1]));
             tc->zero.pc += 2;
-            break;
-        }
+            continue;
 #define op_aloadc(n)                                                                                                   \
     case op_aload_n(n):                                                                                                \
         zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(n));                                                           \
         ++tc->zero.pc;                                                                                                 \
-        break;
+        continue;
             op_aloadc(0);
             op_aloadc(1);
             op_aloadc(2);
             op_aloadc(3);
-        case op_aload: {
+        case op_aload:
             zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(tc->zero.pc[1]));
             tc->zero.pc += 2;
-            break;
-        }
+            continue;
         case op_baload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             zeroStackPush(elysium->oopManager->arrAccess<jboolean>(obj)[idx]);
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_caload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             zeroStackPush(elysium->oopManager->arrAccess<jchar>(obj)[idx]);
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_iaload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             zeroStackPush(elysium->oopManager->arrAccess<jint>(obj)[idx]);
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_laload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             zeroStackPushW(elysium->oopManager->arrAccess<jlong>(obj)[idx]);
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_aaload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             zeroStackPush(elysium->oopManager->arrAccessPtr(obj, idx));
             ++tc->zero.pc;
-            break;
+            continue;
         }
 
 #define op_istorec(n)                                                                                                  \
     case op_istore_n(n):                                                                                               \
         zeroStackSaveLocalPop<jint>(n);                                                                                \
         ++tc->zero.pc;                                                                                                 \
-        break;
+        continue;
             op_istorec(0);
             op_istorec(1);
             op_istorec(2);
             op_istorec(3);
-        case op_istore: {
+        case op_istore:
             zeroStackSaveLocalPop<jint>(tc->zero.pc[1]);
             tc->zero.pc += 2;
-            break;
-        }
+            continue;
 
 #define op_lstorec(n)                                                                                                  \
     case op_lstore_n(n):                                                                                               \
         zeroStackSaveLocalPopW<jlong>(n);                                                                              \
         ++tc->zero.pc;                                                                                                 \
-        break;
+        continue;
             op_lstorec(0);
             op_lstorec(1);
             op_lstorec(2);
             op_lstorec(3);
-        case op_lstore: {
+        case op_lstore:
             zeroStackSaveLocalPopW<jlong>(tc->zero.pc[1]);
             tc->zero.pc += 2;
-            break;
-        }
-
-        case op_fstore: {
+            continue;
+        case op_fstore:
             zeroStackSaveLocalPop<jfloat>(tc->zero.pc[1]);
             tc->zero.pc += 2;
-            break;
-        }
+            continue;
 
 #define op_dstorec(n)                                                                                                  \
     case op_dstore_n(n):                                                                                               \
         zeroStackSaveLocalPopW<jdouble>(n);                                                                            \
         ++tc->zero.pc;                                                                                                 \
-        break;
+        continue;
             op_dstorec(0);
             op_dstorec(1);
             op_dstorec(2);
             op_dstorec(3);
-        case op_dstore: {
+        case op_dstore:
             zeroStackSaveLocalPopW<jdouble>(tc->zero.pc[1]);
             tc->zero.pc += 2;
-            break;
-        }
+            continue;
 
 #define op_astorec(n)                                                                                                  \
     case op_astore_n(n):                                                                                               \
         zeroStackSaveLocalPop<OMElysiaOop *>(n);                                                                       \
         ++tc->zero.pc;                                                                                                 \
-        break;
+        continue;
             op_astorec(0);
             op_astorec(1);
             op_astorec(2);
             op_astorec(3);
-        case op_astore: {
+        case op_astore:
             zeroStackSaveLocalPop<OMElysiaOop *>(tc->zero.pc[1]);
             tc->zero.pc += 2;
-            break;
-        }
+            continue;
         case op_lastore: {
             auto value = zeroStackPopWGet<jlong>();
             auto index = zeroStackPopGet<jint>();
             auto arr = zeroStackPopGet<OMElysiaOop *>();
             elysium->oopManager->arrAccess<jlong>(arr)[index] = value;
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_iastore: {
             auto value = zeroStackPopGet<jint>();
@@ -450,7 +436,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto arr = zeroStackPopGet<OMElysiaOop *>();
             elysium->oopManager->arrAccess<jint>(arr)[index] = value;
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_bastore: {
             auto value = zeroStackPopGet<jboolean>();
@@ -458,7 +444,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto arr = zeroStackPopGet<OMElysiaOop *>();
             elysium->oopManager->arrAccess<jboolean>(arr)[index] = value;
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_castore: {
             auto value = zeroStackPopGet<jchar>();
@@ -466,7 +452,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto arr = zeroStackPopGet<OMElysiaOop *>();
             elysium->oopManager->arrAccess<jchar>(arr)[index] = value;
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_aastore: {
             auto value = zeroStackPopGet<OMElysiaOop *>();
@@ -474,21 +460,20 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto arr = zeroStackPopGet<OMElysiaOop *>();
             elysium->oopManager->arrAccessPtr(arr, index, value);
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_pop:
             zeroStackPopGet<jint>();
             ++tc->zero.pc;
-            break;
+            continue;
         case op_pop2:
             zeroStackPopWGet<jlong>();
             ++tc->zero.pc;
-            break;
-        case op_dup: {
+            continue;
+        case op_dup:
             zeroStackPush(zeroStackPeekGet<OMElysiaOop *>());
             ++tc->zero.pc;
-            break;
-        }
+            continue;
         case op_dup_x1: {
             auto value1 = zeroStackPopGet<OMElysiaOop *>();
             auto value2 = zeroStackPopGet<OMElysiaOop *>();
@@ -497,7 +482,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackPush(value2);
             zeroStackPush(value1);
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_dup2: {
             auto value1 = zeroStackPopGet<OMElysiaOop *>();
@@ -508,7 +493,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackPush(value2);
             zeroStackPush(value1);
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_dup2_x1: {
             auto value1 = zeroStackPopGet<OMElysiaOop *>();
@@ -521,7 +506,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackPush(value2);
             zeroStackPush(value1);
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_swap: {
             auto value1 = zeroStackPopGet<OMElysiaOop *>();
@@ -529,7 +514,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackPush(value1);
             zeroStackPush(value2);
             ++tc->zero.pc;
-            break;
+            continue;
         }
 
 #define op_calc(op, fetch, psh, oprt)                                                                                  \
@@ -538,7 +523,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         auto value1 = fetch();                                                                                         \
         psh(value1 oprt value2);                                                                                       \
         ++tc->zero.pc;                                                                                                 \
-        break;                                                                                                         \
+        continue;                                                                                                      \
     }
             op_calc(iadd, zeroStackPopGet<jint>, zeroStackPush, +);
             op_calc(ladd, zeroStackPopWGet<jlong>, zeroStackPushW, +);
@@ -563,7 +548,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         auto value1 = fetch();                                                                                         \
         psh(value1 - (value1 / value2) * value2);                                                                      \
         ++tc->zero.pc;                                                                                                 \
-        break;                                                                                                         \
+        continue;                                                                                                      \
     }
             op_calcrem(irem, zeroStackPopGet<jint>, zeroStackPush);
             op_calcrem(lrem, zeroStackPopWGet<jlong>, zeroStackPushW);
@@ -572,21 +557,21 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto value1 = zeroStackPopGet<jfloat>();
             zeroStackPush(std::fmod(value1, value2));
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_drem: {
             auto value2 = zeroStackPopWGet<jdouble>();
             auto value1 = zeroStackPopWGet<jdouble>();
             zeroStackPushW(std::fmod(value1, value2));
             ++tc->zero.pc;
-            break;
+            continue;
         }
 
 #define op_calcneg(op, fetch, psh)                                                                                     \
     case op_##op: {                                                                                                    \
         psh(-fetch());                                                                                                 \
         ++tc->zero.pc;                                                                                                 \
-        break;                                                                                                         \
+        continue;                                                                                                      \
     }
             op_calcneg(ineg, zeroStackPopGet<jint>, zeroStackPush);
             op_calcneg(lneg, zeroStackPopWGet<jlong>, zeroStackPushW);
@@ -597,42 +582,42 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto value1 = zeroStackPopGet<jint>();
             zeroStackPush(value1 << (value2 & 0x1f));
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_ishr: {
             auto value2 = zeroStackPopGet<jint>();
             auto value1 = zeroStackPopGet<jint>();
             zeroStackPush(value1 >> (value2 & 0x1f));
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_iushr: {
             auto value2 = zeroStackPopGet<jint>();
             auto value1 = zeroStackPopGet<uint32_t>();
             zeroStackPush(value1 >> (value2 & 0x1f));
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_lshl: {
             auto value2 = zeroStackPopGet<jint>();
             auto value1 = zeroStackPopWGet<jlong>();
             zeroStackPushW(value1 << (value2 & 0x3f));
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_lshr: {
             auto value2 = zeroStackPopGet<jint>();
             auto value1 = zeroStackPopWGet<jlong>();
             zeroStackPushW(value1 >> (value2 & 0x3f));
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_lushr: {
             auto value2 = zeroStackPopGet<jint>();
             auto value1 = zeroStackPopWGet<uint64_t>();
             zeroStackPushW(value1 >> (value2 & 0x3f));
             ++tc->zero.pc;
-            break;
+            continue;
         }
             op_calc(iand, zeroStackPopGet<jint>, zeroStackPush, &);
             op_calc(land, zeroStackPopWGet<jlong>, zeroStackPushW, &);
@@ -647,13 +632,13 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             data += static_cast<int8_t>(tc->zero.pc[2]);
             zeroStackSaveLocal(slt, data);
             tc->zero.pc += 3;
-            break;
+            continue;
         }
 #define op_conv(op, target, targettype, source, sourcetype)                                                            \
     case op_##op: {                                                                                                    \
         target(static_cast<targettype>(source<sourcetype>()));                                                         \
         ++tc->zero.pc;                                                                                                 \
-        break;                                                                                                         \
+        continue;                                                                                                      \
     }
             op_conv(i2l, zeroStackPushW, jlong, zeroStackPopGet, jint);
             op_conv(i2f, zeroStackPush, jfloat, zeroStackPopGet, jint);
@@ -680,7 +665,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         {                                                                                                              \
             tc->zero.pc += 3;                                                                                          \
         }                                                                                                              \
-        break;                                                                                                         \
+        continue;                                                                                                      \
     }
             op_ifcmp(eq, ==);
             op_ifcmp(ne, !=);
@@ -701,7 +686,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         {                                                                                                              \
             tc->zero.pc += 3;                                                                                          \
         }                                                                                                              \
-        break;                                                                                                         \
+        continue;                                                                                                      \
     }
             op_ificmp(eq, ==);
             op_ificmp(ne, !=);
@@ -726,7 +711,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                 zeroStackPush<jint>(-1);
             }
             ++tc->zero.pc;
-            break;
+            continue;
         }
 #define op_fcmp(cond, n)                                                                                               \
     case op_fcmp##cond: {                                                                                              \
@@ -749,7 +734,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackPush<jint>(0);                                                                                    \
         }                                                                                                              \
         ++tc->zero.pc;                                                                                                 \
-        break;                                                                                                         \
+        continue;                                                                                                      \
     }
             op_fcmp(g, 1);
             op_fcmp(l, -1);
@@ -774,7 +759,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackPush<jint>(0);                                                                                    \
         }                                                                                                              \
         ++tc->zero.pc;                                                                                                 \
-        break;                                                                                                         \
+        continue;                                                                                                      \
     }
             op_dcmp(g, 1);
             op_dcmp(l, -1);
@@ -787,7 +772,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             {
                 tc->zero.pc += 3;
             }
-            break;
+            continue;
         }
         case op_if_acmpne: {
             if (zeroStackPopGet<OMElysiaOop *>() != zeroStackPopGet<OMElysiaOop *>())
@@ -798,11 +783,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             {
                 tc->zero.pc += 3;
             }
-            break;
+            continue;
         }
         case op_goto: {
             tc->zero.pc += zeroCodeFetchArgs16p0();
-            break;
+            continue;
         }
         case op_tableswitch: {
             auto def = zeroCodeFetchArgs32Align(0);
@@ -818,7 +803,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                 auto off = zeroCodeFetchArgs32Align(3 + (ll - low));
                 tc->zero.pc += off;
             }
-            break;
+            continue;
         }
         case op_lookupswitch: {
             auto val = zeroStackPopGet<jint>();
@@ -832,88 +817,88 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             }
             tc->zero.pc += zeroCodeFetchArgs32Align(0);
         lkend:
-            break;
+            continue;
         }
         case op_return: {
             popFrame();
-            break;
+            continue;
         }
         case op_ireturn: {
             auto pp = zeroStackPopGet<jint>();
             popFrame();
             zeroStackPush(pp);
-            break;
+            continue;
         }
         case op_lreturn: {
             auto pp = zeroStackPopWGet<jlong>();
             popFrame();
             zeroStackPushW(pp);
-            break;
+            continue;
         }
         case op_freturn: {
             auto pp = zeroStackPopGet<jfloat>();
             popFrame();
             zeroStackPush(pp);
-            break;
+            continue;
         }
         case op_dreturn: {
             auto pp = zeroStackPopWGet<jdouble>();
             popFrame();
             zeroStackPushW(pp);
-            break;
+            continue;
         }
         case op_areturn: {
             auto pp = zeroStackPopGet<OMElysiaOop *>();
             popFrame();
             zeroStackPush(pp);
-            break;
+            continue;
         }
         case op_getstatic: {
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0());
             zeroStackPushFromStatic(reinterpret_cast<OMElysiaField *>(fld), elysium->oopManager.get(), elysium);
             tc->zero.pc += 3;
-            break;
+            continue;
         }
         case op_putfield: {
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0());
             zeroStackPopToField(reinterpret_cast<OMElysiaField *>(fld), elysium->oopManager.get(), elysium);
             tc->zero.pc += 3;
-            break;
+            continue;
         }
         case op_putstatic: {
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0());
             zeroStackPopToStatic(reinterpret_cast<OMElysiaField *>(fld), elysium->oopManager.get(), elysium);
             tc->zero.pc += 3;
-            break;
+            continue;
         }
         case op_getfield: {
             auto fld = CURRENT_KLASS->constantPoolFetchField(zeroCodeFetchArgu16p0());
             zeroStackPushFromField(reinterpret_cast<OMElysiaField *>(fld), elysium->oopManager.get(), elysium);
             tc->zero.pc += 3;
-            break;
+            continue;
         }
         case op_invokespecial:
         case op_invokestatic: {
             auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
             pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), tc->zero.pc + 3, false);
-            break;
+            continue;
         }
         case op_invokevirtual: {
             auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
             pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), tc->zero.pc + 3, true);
-            break;
+            continue;
         }
         case op_invokeinterface: {
             auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
             pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), tc->zero.pc + 5, true);
-            break;
+            continue;
         }
         case op_new: {
             auto c = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
             auto oop = elysium->oopManager->allocateOop(reinterpret_cast<OMElysiaKlass *>(c));
             zeroStackPush(oop);
             tc->zero.pc += 3;
-            break;
+            continue;
         }
         case op_newarray: {
             std::string kn;
@@ -951,30 +936,29 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                                                         zeroStackPopGet<jint>());
             zeroStackPush(arr);
             tc->zero.pc += 2;
-            break;
+            continue;
         }
         case op_anewarray: {
             auto c = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0());
-            OMElysiaKlass *klass;
-            execWithState(InsideVM, [&]() {
-                klass = CURRENT_KLASS->klassloader->fetchOrLoadClass(
+            auto klass = execWithState(InsideVM, [&]() {
+                return CURRENT_KLASS->klassloader->fetchOrLoadClass(
                     buildArray(reinterpret_cast<OMElysiaKlass *>(c)->name));
             });
             auto arr = elysium->oopManager->allocateArr(klass->toArray(), zeroStackPopGet<jint>());
             zeroStackPush(arr);
             tc->zero.pc += 3;
-            break;
+            continue;
         }
         case op_arraylength: {
             auto length = elysium->oopManager->arrLength(zeroStackPopGet<OMElysiaOop *>());
             zeroStackPush(length);
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_athrow: {
             auto t = zeroStackPopGet<OMElysiaOop *>();
             elysium->throwException(t);
-            break;
+            continue;
         }
         case op_checkcast: {
             auto obj = zeroStackPopGet<OMElysiaOop *>();
@@ -997,7 +981,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                 }
             }
             tc->zero.pc += 3;
-            break;
+            continue;
         }
         case op_instanceof: {
             auto obj = zeroStackPopGet<OMElysiaOop *>();
@@ -1012,7 +996,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                 zeroStackPush<jint>(elysium->oopManager->oopGetKlass(obj)->inherits(c) ? 1 : 0);
             }
             tc->zero.pc += 3;
-            break;
+            continue;
         }
         case op_ifnull: {
             if (!zeroStackPopGet<OMElysiaOop *>())
@@ -1023,7 +1007,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             {
                 tc->zero.pc += 3;
             }
-            break;
+            continue;
         }
         case op_ifnonnull: {
             if (zeroStackPopGet<OMElysiaOop *>())
@@ -1034,19 +1018,19 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             {
                 tc->zero.pc += 3;
             }
-            break;
+            continue;
         }
         case op_monitorexit: {
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             elysium->monitorManager->mutexRelease(obj);
             ++tc->zero.pc;
-            break;
+            continue;
         }
         case op_monitorenter: {
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             elysium->monitorManager->mutexFetch(obj);
             ++tc->zero.pc;
-            break;
+            continue;
         }
         default:
         unk:
