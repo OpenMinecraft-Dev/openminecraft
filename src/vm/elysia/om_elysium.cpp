@@ -60,7 +60,7 @@ OMElysium::OMElysium()
 
     mainThread = new std::thread([&]() {
         log::multithread::registerCurrentThreadName("main");
-        thisThread.metadata->setName("name");
+        thisThread.metadata->setName("main");
         try
         {
             auto prim = {"char", "byte", "short", "int", "long", "float", "double", "boolean"};
