@@ -1,5 +1,6 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/util/om_util_encoding_utf.hpp"
 #include "openminecraft/vm/atomic/om_atomic.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
@@ -10,7 +11,6 @@
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
-#include "openminecraft/vm/encoding/om_encoding_utf.hpp"
 #include <cstring>
 
 namespace openminecraft::vm::elysia
@@ -182,7 +182,7 @@ void initBaseInterface(OMElysiaJNIEnv env)
 
         return execWithState(InsideVM, [&]() {
             auto len = env->internal->elysium->oopManager->arrLength(handleFetch(arrdata));
-            auto s = encoding::utf16ToUtf8New(data, len);
+            auto s = util::encoding::utf16ToUtf8New(data, len);
             auto result = reinterpret_cast<char *>(mem::allocator::tracedMallocElysia(s.size() + 1));
             std::memcpy(result, s.c_str(), s.size());
             result[s.size()] = '\0';

@@ -1,11 +1,11 @@
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
+#include "openminecraft/util/om_util_encoding_utf.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
-#include "openminecraft/vm/encoding/om_encoding_utf.hpp"
 #include <cstring>
 #include <iostream>
 
@@ -55,10 +55,11 @@ OMElysiaOop *OMElysiaOopManager::allocateString(std::string target)
     auto stringKlass = elysium->klassLoader->findClass("java/lang/String")->toInstance();
     auto charArrKlass = elysium->klassLoader->findClass("[C")->toArray();
 
-    auto u16target = encoding::utf8ToUtf16New(target);
+    auto u16target = util::encoding::utf8ToUtf16New(target);
 
     auto arr = allocateArr(charArrKlass, std::get<jsize>(u16target));
     std::memcpy(arrAccess<jchar>(arr), std::get<jchar *>(u16target), std::get<jsize>(u16target) * sizeof(jchar));
+    free(std::get<jchar *>(u16target));
 
     auto strWrp = allocateOop(stringKlass);
     oopAccessPointerField(strWrp, 0, arr);

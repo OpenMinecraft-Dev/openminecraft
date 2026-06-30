@@ -1,8 +1,8 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
+#include "openminecraft/util/om_util_encoding_utf.hpp"
 #include "openminecraft/util/om_util_result.hpp"
-#include "openminecraft/vm/encoding/om_encoding_utf.hpp"
 
 #include <cstdint>
 #include <fmt/format.h>

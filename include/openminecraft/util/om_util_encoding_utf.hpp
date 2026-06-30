@@ -1,17 +1,15 @@
-#include "openminecraft/vm/encoding/om_encoding_utf.hpp"
-#include "openminecraft/mem/om_mem_allocator.hpp"
-#include "openminecraft/vm/elysia/om_elysia_types.hpp"
-
+#ifndef OM_ENCODING_UTF_HPP
+#define OM_ENCODING_UTF_HPP
 #include <cstdint>
 #include <cstring>
-#include <iostream>
-#include <tuple>
+#include <string>
+#include <vector>
 
-namespace openminecraft::vm::encoding
+namespace openminecraft::util::encoding
 {
-std::tuple<elysia::jchar *, elysia::jsize> utf8ToUtf16New(std::string str)
+inline static std::tuple<uint16_t *, int> utf8ToUtf16New(std::string str)
 {
-    std::vector<elysia::jchar> data;
+    std::vector<uint16_t> data;
     data.reserve(1);
     const auto end = str.end();
 
@@ -83,25 +81,24 @@ std::tuple<elysia::jchar *, elysia::jsize> utf8ToUtf16New(std::string str)
 
         if (codepoint <= 0xFFFF)
         {
-            data.push_back(static_cast<elysia::jchar>(codepoint));
+            data.push_back(static_cast<uint16_t>(codepoint));
         }
         else
         {
             uint32_t u = codepoint - 0x10000;
-            data.push_back(static_cast<elysia::jchar>(0xD800 | (u >> 10)));
-            data.push_back(static_cast<elysia::jchar>(0xDC00 | (u & 0x3FF)));
+            data.push_back(static_cast<uint16_t>(0xD800 | (u >> 10)));
+            data.push_back(static_cast<uint16_t>(0xDC00 | (u & 0x3FF)));
         }
     }
 
-    elysia::jchar *datar =
-        reinterpret_cast<elysia::jchar *>(mem::allocator::tracedMallocElysia(sizeof(elysia::jchar) * data.size()));
-    std::memcpy(datar, data.data(), data.size() * sizeof(elysia::jchar));
+    uint16_t *datar = reinterpret_cast<uint16_t *>(malloc(sizeof(uint16_t) * data.size()));
+    std::memcpy(datar, data.data(), data.size() * sizeof(uint16_t));
     return std::make_tuple(datar, data.size());
 }
-std::string utf16ToUtf8New(elysia::jchar *arr, elysia::jsize length)
+inline static std::string utf16ToUtf8New(uint16_t *arr, int length)
 {
     std::string result;
-    for (elysia::jsize i = 0; i < length; ++i)
+    for (int i = 0; i < length; ++i)
     {
         uint32_t codepoint = arr[i];
 
@@ -153,7 +150,7 @@ std::string utf16ToUtf8New(elysia::jchar *arr, elysia::jsize length)
     return result;
 }
 
-std::string utf32ToUtf8(std::vector<int> cps)
+inline static std::string utf32ToUtf8(std::vector<int> cps)
 {
     std::vector<uint8_t> s;
     for (auto i : cps)
@@ -184,4 +181,6 @@ std::string utf32ToUtf8(std::vector<int> cps)
     auto ss = std::string(s.begin(), s.end());
     return ss;
 }
-} // namespace openminecraft::vm::encoding
+} // namespace openminecraft::util::encoding
+
+#endif

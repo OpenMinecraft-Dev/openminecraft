@@ -8,6 +8,7 @@
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/specs/abstracts/om_image.hpp"
+#include "openminecraft/specs/classfile/om_classfile.hpp"
 #include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
@@ -105,6 +106,12 @@ int boot(std::vector<std::string> args)
         auto ll = bld.build();
 
         logger->info("object at {}", (void *)ll.get());
+        break;
+    }
+    case "class"_hash: {
+        auto ll = new specs::classfile::OMClassFile();
+        ll->load(std::make_shared<std::ifstream>(args[2], std::ios::binary));
+        logger->debug("{}", ll->header.majorVersion);
         break;
     }
     default:
