@@ -1,7 +1,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "fmt/format.h"
 #include "openminecraft/binary/om_bin_hash.hpp"
-#include "openminecraft/vm/classfile/om_class_file.hpp"
+#include "openminecraft/specs/classfile/om_classfile.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
@@ -14,6 +14,7 @@
 #include <fstream>
 #include <iostream>
 #include <istream>
+#include <memory>
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
@@ -208,8 +209,8 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
         return;
     }
 
-    std::ifstream istr(fmt::format("vmstd/out/{}.class", name), std::ios::binary);
-    if (!istr.good())
+    auto istr = std::make_shared<std::ifstream>(fmt::format("vmstd/out/{}.class", name), std::ios::binary);
+    if (!istr->good())
     {
         auto kls = fetchOrLoadClass("java/lang/ClassNotFoundException");
         auto inm = kls->findMethod("<init>", "(Ljava/lang/String;)V");
@@ -222,7 +223,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
         logger.warn("class {} not found!", name);
         return;
     }
-    loadClassWithoutMirror(&istr, special);
+    loadClassWithoutMirror(istr, special);
 }
 
 void OMElysiaKlassloader::fixAllClasses()
@@ -286,21 +287,23 @@ void OMElysiaKlassloader::fillVtable(OMElysiaInstanceKlass *klass)
     }
 }
 
-void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool special)
+void OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> istr, bool special)
 {
-    classfile::OMClassFileParser par(istr);
-    auto clsfileres = par.parse();
-    auto clsfile = clsfileres.unwrap();
-
-    if (clsfile == nullptr)
+    auto clsfile = std::make_shared<specs::classfile::OMClassFile>();
+    clsfile->load(istr);
+    /*if (clsfile == nullptr)
     {
         throw std::logic_error(clsfileres.unwrap_err().what());
-    }
+    }*/
 
     auto clsname =
+        clsfile->constants.data->at(clsfile->constants.data->at(clsfile->basic.thisClass).classinfo.nameIndex)
+            .valueString;
+
+    /*auto clsname =
         clsfile->mapping[clsfile->mapping[clsfile->thisClass]->to<classfile::OMClassConstantClass>()->nameIndex]
             ->to<classfile::OMClassConstantUtf8>()
-            ->data;
+            ->data;*/
     if (!findClass(clsname))
     {
         constructInstanceClassShell(clsname);
@@ -319,12 +322,11 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
     auto klass = klassraw->toInstance();
     klass->klassMutex.lock();
 
-    if (clsfile->superClass)
+    if (clsfile->basic.superClass)
     {
         auto supclsname =
-            clsfile->mapping[clsfile->mapping[clsfile->superClass]->to<classfile::OMClassConstantClass>()->nameIndex]
-                ->to<classfile::OMClassConstantUtf8>()
-                ->data;
+            clsfile->constants.data->at(clsfile->constants.data->at(clsfile->basic.superClass).classinfo.nameIndex)
+                .valueString;
 
         auto supk = findClass(supclsname);
         if (!supk)
@@ -343,16 +345,16 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
         klass->superClass = findClass(supclsname);
     }
 
-    if (!clsfile->interfaces.empty())
+    if (!clsfile->interfaces.data->empty())
     {
-        klass->interfaceImplCount = clsfile->interfaces.size();
+        klass->interfaceImplCount = clsfile->interfaces.length;
         klass->interfaceImpls = elysium->metaspaceHeap.allocateArray<OMElysiaKlass *>(klass->interfaceImplCount);
-        int ii = 0;
-        for (auto i : clsfile->interfaces)
+        for (int ii = 0; ii < klass->interfaceImplCount; ++ii)
         {
-            auto supclsname = clsfile->mapping[clsfile->mapping[i]->to<classfile::OMClassConstantClass>()->nameIndex]
-                                  ->to<classfile::OMClassConstantUtf8>()
-                                  ->data;
+            auto supclsname =
+                clsfile->constants.data
+                    ->at(clsfile->constants.data->at(clsfile->interfaces.data->at(ii)).classinfo.nameIndex)
+                    .valueString;
             if (!findClass(supclsname))
             {
                 if (special)
@@ -369,20 +371,16 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
             {
                 klass->interfaceImpls[ii] = findClass(supclsname);
             }
-
-            ii++;
         }
     }
 
-    for (auto &att : clsfile->attrs)
+    for (auto &att : *clsfile->attributes.data)
     {
-        if (att->type() == classfile::OMClassAttrType::EnclosingMethod)
+        if (std::strcmp(clsfile->constants.data->at(att.nameIndex).valueString.c_str(), "EnclosingMethod") == 0)
         {
-            auto fl = att->to<classfile::OMClassAttrEnclosingMethod>();
-            auto kn =
-                clsfile->mapping[clsfile->mapping[fl->classIndex]->to<classfile::OMClassConstantClass>()->nameIndex]
-                    ->to<classfile::OMClassConstantUtf8>()
-                    ->data;
+            auto kn = clsfile->constants.data
+                          ->at(clsfile->constants.data->at(att.enclosingMethod.classIndex).classinfo.nameIndex)
+                          .valueString;
             OMElysiaKlass *enclosingKlass;
             if (!findClass(kn))
             {
@@ -402,32 +400,39 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
             }
 
             klass->enclosingKlass = enclosingKlass;
-            if (!fl->methodIndex)
+            if (!att.enclosingMethod.methodIndex)
             {
                 break;
             }
-            auto nmt = clsfile->mapping[fl->methodIndex]->to<classfile::OMClassConstantNameAndType>();
-            auto mname = clsfile->mapping[nmt->nameIndex]->to<classfile::OMClassConstantUtf8>()->data;
-            auto mdesc = clsfile->mapping[nmt->descIndex]->to<classfile::OMClassConstantUtf8>()->data;
+            auto &nmt = clsfile->constants.data->at(att.enclosingMethod.methodIndex);
+            auto mname = clsfile->constants.data->at(nmt.nameAndType.nameIndex).valueString;
+            auto mdesc = clsfile->constants.data->at(nmt.nameAndType.descriptorIndex).valueString;
             klass->enclosingMethod = enclosingKlass->findMethod(mname.c_str(), mdesc.c_str());
         }
     }
 
-    klass->constantPoolRaw =
+    klass->constantPoolRaw.resize(clsfile->constants.data->size());
+    for (int i = 0; i < clsfile->constants.data->size(); ++i)
+    {
+        klass->constantPoolRaw[i] = clsfile->constants.data->at(i);
+    }
+
+    /*klass->constantPoolRaw =
         std::make_shared<std::unordered_map<uint16_t, std::shared_ptr<classfile::OMClassConstant>>>();
     int l = 0;
     for (auto &pp : clsfile->mapping)
     {
         (*klass->constantPoolRaw)[pp.first] = pp.second;
         l = std::max(l, pp.first + 1);
-    }
-    klass->constantPoolCount = l;
+    }*/
+    auto l = clsfile->constants.length;
+    klass->constantPoolCount = clsfile->constants.length;
     klass->constantPool = elysium->metaspaceHeap.allocateArray<void *>(l);
     klass->constantPoolState = elysium->metaspaceHeap.allocateArray<bool>(l);
 
-    klass->accessFlag = clsfile->accessFlags;
+    klass->accessFlag = clsfile->basic.accessFlags;
 
-    klass->methodCount = clsfile->methods.size();
+    klass->methodCount = clsfile->methods.length;
     klass->methods = elysium->metaspaceHeap.allocateArray<OMElysiaMethod>(klass->methodCount);
 
     for (int i = 0; i < klass->methodCount; i++)
@@ -437,11 +442,11 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
         m.codeLength = 0;
         m.code = nullptr;
 
-        m.accessFlag = clsfile->methods[i]->accessFlags;
+        m.accessFlag = clsfile->methods.data->at(i).accessFlags;
         m.name = elysium->metaspaceHeap.allocateStr(
-            clsfile->mapping[clsfile->methods[i]->nameIndex]->to<classfile::OMClassConstantUtf8>()->data);
+            clsfile->constants.data->at(clsfile->methods.data->at(i).nameIndex).valueString);
         m.descriptor = elysium->metaspaceHeap.allocateStr(
-            clsfile->mapping[clsfile->methods[i]->descIndex]->to<classfile::OMClassConstantUtf8>()->data);
+            clsfile->constants.data->at(clsfile->methods.data->at(i).descriptorIndex).valueString);
 
         if (m.isNative())
         {
@@ -449,26 +454,22 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
         }
         else
         {
-            for (auto attr : clsfile->methods[i]->attrs)
+            for (auto &attr : *clsfile->methods.data->at(i).attributes)
             {
-                if (attr->type() == classfile::OMClassAttrType::Exceptions)
+                if (std::strcmp(clsfile->constants.data->at(attr.nameIndex).valueString.c_str(), "Exceptions") == 0)
                 {
-                    auto att = attr->to<classfile::OMClassAttrExceptions>();
-
-                    m.exceptionsLength = att->numberOfExceptions;
-                    if (att->numberOfExceptions)
+                    m.exceptionsLength = attr.exceptions.count;
+                    if (m.exceptionsLength)
                     {
                         m.exceptions = elysium->metaspaceHeap.allocateArray<OMElysiaKlass *>(m.exceptionsLength);
                     }
 
                     for (int i = 0; i < m.exceptionsLength; i++)
                     {
-                        auto klsname = clsfile
-                                           ->mapping[clsfile->mapping[att->exceptionIndexTable[i]]
-                                                         ->to<classfile::OMClassConstantClass>()
-                                                         ->nameIndex]
-                                           ->to<classfile::OMClassConstantUtf8>()
-                                           ->data;
+                        auto klsname =
+                            clsfile->constants.data
+                                ->at(clsfile->constants.data->at(attr.exceptions.index[i]).classinfo.nameIndex)
+                                .valueString;
                         if (special)
                         {
                             loadClassWithoutMirror(klsname, special);
@@ -480,36 +481,31 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
                         }
                     }
                 }
-                if (attr->type() == classfile::OMClassAttrType::Code)
+                if (std::strcmp(clsfile->constants.data->at(attr.nameIndex).valueString.c_str(), "Code") == 0)
                 {
-                    auto ll = attr->to<classfile::OMClassAttrCode>();
-                    m.codeLength = ll->codeLength;
+                    m.codeLength = attr.code.codeLength;
                     m.code = elysium->metaspaceHeap.allocateArray<uint8_t>(m.codeLength);
-                    m.localLength = ll->maxLocals;
-                    std::memcpy(m.code, ll->code->data(), ll->codeLength);
+                    m.localLength = attr.code.maxLocal;
+                    std::memcpy(m.code, attr.code.code, m.codeLength);
 
-                    m.excTableLength = ll->excTableLength;
+                    m.excTableLength = attr.code.exceptionTableLength;
                     m.excTable = elysium->metaspaceHeap.allocateArray<OMElysiaMethodExcTable>(m.excTableLength);
 
-                    for (int i = 0; i < ll->excTableLength; i++)
+                    for (int i = 0; i < m.excTableLength; i++)
                     {
-                        m.excTable[i].begin =
-                            reinterpret_cast<uint8_t *>(reinterpret_cast<uintptr_t>(m.code) + ll->excTable[i].startPc);
-                        m.excTable[i].end =
-                            reinterpret_cast<uint8_t *>(reinterpret_cast<uintptr_t>(m.code) + ll->excTable[i].endPc);
+                        m.excTable[i].begin = reinterpret_cast<uint8_t *>(reinterpret_cast<uintptr_t>(m.code) +
+                                                                          attr.code.exceptionTable[i].start);
+                        m.excTable[i].end = reinterpret_cast<uint8_t *>(reinterpret_cast<uintptr_t>(m.code) +
+                                                                        attr.code.exceptionTable[i].end);
                         m.excTable[i].handler = reinterpret_cast<uint8_t *>(reinterpret_cast<uintptr_t>(m.code) +
-                                                                            ll->excTable[i].handlerPc);
+                                                                            attr.code.exceptionTable[i].handler);
 
-                        if (ll->excTable[i].catchType)
+                        if (attr.code.exceptionTable[i].type)
                         {
-                            auto klsname = clsfile
-                                               ->mapping[clsfile
-                                                             ->mapping[ll->excTable[i].catchType]
-
-                                                             ->to<classfile::OMClassConstantClass>()
-                                                             ->nameIndex]
-                                               ->to<classfile::OMClassConstantUtf8>()
-                                               ->data;
+                            auto klsname = clsfile->constants.data
+                                               ->at(clsfile->constants.data->at(attr.code.exceptionTable[i].type)
+                                                        .classinfo.nameIndex)
+                                               .valueString;
                             if (special)
                             {
                                 loadClassWithoutMirror(klsname, special);
@@ -548,21 +544,22 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
                                JVM_Acc_Private | JVM_Acc_Final | JVM_Acc_Bridge});
     }
 
-    klass->fieldCount = clsfile->fields.size() + extraFields.size();
+    klass->fieldCount = clsfile->fields.length + extraFields.size();
     klass->fields = elysium->metaspaceHeap.allocateArray<OMElysiaField>(klass->fieldCount);
-    for (int i = 0; i < clsfile->fields.size(); i++)
+    for (int i = 0; i < clsfile->fields.length; i++)
     {
         auto &f = klass->fields[i];
         f.name = elysium->metaspaceHeap.allocateStr(
-            clsfile->mapping[clsfile->fields[i]->nameIndex]->to<classfile::OMClassConstantUtf8>()->data);
+            clsfile->constants.data->at(clsfile->fields.data->at(i).nameIndex).valueString);
         f.desc = elysium->metaspaceHeap.allocateStr(
-            clsfile->mapping[clsfile->fields[i]->descIndex]->to<classfile::OMClassConstantUtf8>()->data);
-        f.accessFlag = clsfile->fields[i]->accessFlags;
+            clsfile->constants.data->at(clsfile->fields.data->at(i).descriptorIndex).valueString);
+
+        f.accessFlag = clsfile->fields.data->at(i).accessFlags;
         f.klass = klass;
     }
     for (int i = 0; i < extraFields.size(); i++)
     {
-        auto &f = klass->fields[i + clsfile->fields.size()];
+        auto &f = klass->fields[i + clsfile->fields.length];
         f.name = extraFields[i].name;
         f.desc = extraFields[i].desc;
         f.accessFlag = extraFields[i].accessFlag;
@@ -570,16 +567,6 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::istream *istr, bool specia
     }
 
     klass->initFieldOffsets();
-
-    /*if (klass->staticLength)
-    {
-        klass->staticBlock = elysium->metaspaceHeap.allocate(klass->staticLength);
-        std::memset(klass->staticBlock, 0x00, klass->staticLength);
-    }
-    else
-    {
-        klass->staticBlock = nullptr;
-    }*/
 
     klass->clinitFinished = false;
 

@@ -1,5 +1,5 @@
 #include "openminecraft/mem/om_mem_allocator.hpp"
-#include "openminecraft/vm/classfile/om_class_file.hpp"
+#include "openminecraft/specs/classfile/om_classfile.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_utils.hpp"
@@ -9,6 +9,7 @@
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace openminecraft::vm::elysia::impl

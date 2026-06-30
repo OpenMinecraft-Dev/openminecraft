@@ -2,6 +2,7 @@
 #define OM_ENCODING_UTF_HPP
 #include <cstdint>
 #include <cstring>
+#include <iostream>
 #include <string>
 #include <tuple>
 #include <vector>

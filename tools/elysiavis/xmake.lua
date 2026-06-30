@@ -1,6 +1,6 @@
 target("openminecraft-elysiavis")
 set_kind("binary")
 add_files("**.cpp")
-add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-mem")
+add_deps("openminecraft-log", "openminecraft-vm", "openminecraft-mem", "openminecraft-specs")
 add_packages("fmt")
 add_includedirs("../../include")

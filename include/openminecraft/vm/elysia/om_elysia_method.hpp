@@ -1,7 +1,7 @@
 #ifndef OM_ELYSIA_METHOD
 #define OM_ELYSIA_METHOD
 
-#include "openminecraft/vm/classfile/om_class_file.hpp"
+#include "openminecraft/specs/classfile/om_classfile.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include <cstdint>
 #include <cstring>

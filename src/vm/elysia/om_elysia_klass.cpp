@@ -1,7 +1,6 @@
-#include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/specs/classfile/om_classfile.hpp"
 #include "openminecraft/util/om_util_encoding_utf.hpp"
-#include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_meta.hpp"
@@ -13,8 +12,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
-
-using namespace openminecraft::vm::classfile;
 
 namespace openminecraft::vm::elysia
 {
@@ -80,17 +77,17 @@ uint64_t OMElysiaInstanceKlass::constantPoolFetchNormalW(uint16_t id)
         return high << 32 | low;
     }
 
-    auto item = constantPoolRaw->at(id);
-    switch (item->type())
+    auto &item = constantPoolRaw[id];
+    switch (item.type)
     {
-    case OMClassConstantType::Long: {
-        auto data = item->to<OMClassConstantLong>()->data;
+    case specs::classfile::Long: {
+        auto data = item.valueLong;
         constantPool[id] = reinterpret_cast<void *>(data & 0xffffffff);
         constantPool[id + 1] = reinterpret_cast<void *>(data >> 32);
         return *reinterpret_cast<uint64_t *>(&data);
     }
-    case OMClassConstantType::Double: {
-        auto datar = item->to<OMClassConstantDouble>()->data;
+    case specs::classfile::Double: {
+        auto datar = item.valueDouble;
         auto data = *reinterpret_cast<uint64_t *>(&datar);
         constantPool[id] = reinterpret_cast<void *>(data & 0xffffffff);
         constantPool[id + 1] = reinterpret_cast<void *>(data >> 32);
@@ -111,19 +108,10 @@ void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id)
         return constantPool[id];
     }
 
-    auto item = constantPoolRaw->at(id);
-    auto mr = item->to<OMClassConstantFieldRef>();
-    auto clsname = constantPoolRaw->at(constantPoolRaw->at(mr->classIndex)->to<OMClassConstantClass>()->nameIndex)
-                       ->to<OMClassConstantUtf8>()
-                       ->data;
-    auto mdname =
-        constantPoolRaw->at(constantPoolRaw->at(mr->nameAndTypeIndex)->to<OMClassConstantNameAndType>()->nameIndex)
-            ->to<OMClassConstantUtf8>()
-            ->data;
-    auto mddesc =
-        constantPoolRaw->at(constantPoolRaw->at(mr->nameAndTypeIndex)->to<OMClassConstantNameAndType>()->descIndex)
-            ->to<OMClassConstantUtf8>()
-            ->data;
+    auto &item = constantPoolRaw[id];
+    auto clsname = constantPoolRaw[constantPoolRaw[item.ref.classIndex].classinfo.nameIndex].valueString;
+    auto mdname = constantPoolRaw[constantPoolRaw[item.ref.nameAndTypeIndex].nameAndType.nameIndex].valueString;
+    auto mddesc = constantPoolRaw[constantPoolRaw[item.ref.nameAndTypeIndex].nameAndType.descriptorIndex].valueString;
 
     auto kk = execWithState(InsideVM, [&]() { return klassloader->fetchOrLoadClass(clsname); });
 
@@ -149,7 +137,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
 {
     if (constantPoolState[id])
     {
-        if (!flg || constantPoolRaw->at(id)->type() != OMClassConstantType::Class)
+        if (!flg || constantPoolRaw[id].type != specs::classfile::Class)
         {
             return constantPool[id];
         }
@@ -159,23 +147,15 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
         }
     }
 
-    auto item = constantPoolRaw->at(id);
-    switch (item->type())
+    auto &item = constantPoolRaw[id];
+    switch (item.type)
     {
-    case OMClassConstantType::InterfaceMethodRef:
-    case OMClassConstantType::MethodRef: {
-        auto mr = item->to<OMClassConstantMethodRef>();
-        auto clsname = constantPoolRaw->at(constantPoolRaw->at(mr->classIndex)->to<OMClassConstantClass>()->nameIndex)
-                           ->to<OMClassConstantUtf8>()
-                           ->data;
-        auto mdname =
-            constantPoolRaw->at(constantPoolRaw->at(mr->nameAndTypeIndex)->to<OMClassConstantNameAndType>()->nameIndex)
-                ->to<OMClassConstantUtf8>()
-                ->data;
+    case specs::classfile::InterfaceMethodRef:
+    case specs::classfile::MethodRef: {
+        auto clsname = constantPoolRaw[constantPoolRaw[item.ref.classIndex].classinfo.nameIndex].valueString;
+        auto mdname = constantPoolRaw[constantPoolRaw[item.ref.nameAndTypeIndex].nameAndType.nameIndex].valueString;
         auto mddesc =
-            constantPoolRaw->at(constantPoolRaw->at(mr->nameAndTypeIndex)->to<OMClassConstantNameAndType>()->descIndex)
-                ->to<OMClassConstantUtf8>()
-                ->data;
+            constantPoolRaw[constantPoolRaw[item.ref.nameAndTypeIndex].nameAndType.descriptorIndex].valueString;
 
         auto cls = execWithState(InsideVM, [&]() { return klassloader->fetchOrLoadClass(clsname); });
 
@@ -203,9 +183,8 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
         constantPoolState[id] = true;
         return mthd;
     }
-    case OMClassConstantType::Class: {
-        auto mr = item->to<OMClassConstantClass>();
-        auto clsname = constantPoolRaw->at(mr->nameIndex)->to<OMClassConstantUtf8>()->data;
+    case specs::classfile::Class: {
+        auto clsname = constantPoolRaw[item.classinfo.nameIndex].valueString;
 
         auto cls = execWithState(InsideVM, [&]() { return klassloader->fetchOrLoadClass(clsname); });
 
@@ -213,26 +192,25 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
         constantPoolState[id] = true;
         return flg ? reinterpret_cast<void *>(cls->mirror) : cls;
     }
-    case OMClassConstantType::Integer: {
-        auto d = item->to<OMClassConstantInteger>()->data;
+    case specs::classfile::Integer: {
+        auto d = item.valueInteger;
         uint32_t rd = *reinterpret_cast<uint32_t *>(&d);
 
         constantPool[id] = reinterpret_cast<void *>(static_cast<uintptr_t>(rd));
         constantPoolState[id] = true;
         return constantPool[id];
     }
-    case OMClassConstantType::Float: {
-        auto d = item->to<OMClassConstantFloat>()->data;
+    case specs::classfile::Float: {
+        auto d = item.valueFloat;
         uint32_t rd = *reinterpret_cast<uint32_t *>(&d);
 
         constantPool[id] = reinterpret_cast<void *>(static_cast<uintptr_t>(rd));
         constantPoolState[id] = true;
         return constantPool[id];
     }
-    case OMClassConstantType::String: {
-        auto &target =
-            constantPoolRaw->at(item->to<OMClassConstantString>()->stringIndex)->to<OMClassConstantUtf8>()->data;
-        auto strWrp = klassloader->upper()->oopManager->allocateString(const_cast<std::string &>(target));
+    case specs::classfile::String: {
+        auto strWrp =
+            klassloader->upper()->oopManager->allocateString(constantPoolRaw[item.stringRef.stringIndex].valueString);
 
         constantPool[id] = strWrp;
         constantPoolState[id] = true;

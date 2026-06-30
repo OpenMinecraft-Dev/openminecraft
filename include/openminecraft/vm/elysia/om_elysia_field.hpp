@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <limits>
-#include <openminecraft/vm/classfile/om_class_file.hpp>
+#include <openminecraft/specs/classfile/om_classfile.hpp>
 
 namespace openminecraft::vm::elysia
 {

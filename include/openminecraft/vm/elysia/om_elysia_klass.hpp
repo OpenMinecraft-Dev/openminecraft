@@ -1,7 +1,7 @@
 #ifndef OM_ELYSIA_KLASS_HPP
 #define OM_ELYSIA_KLASS_HPP
 
-#include "openminecraft/vm/classfile/om_class_file.hpp"
+#include "openminecraft/specs/classfile/om_classfile.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_field.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
@@ -92,7 +92,7 @@ class OMElysiaInstanceKlass : public OMElysiaKlass
     uint32_t interfaceImplCount;
     OMElysiaKlass **interfaceImpls;
 
-    std::shared_ptr<std::unordered_map<uint16_t, std::shared_ptr<classfile::OMClassConstant>>> constantPoolRaw;
+    std::vector<specs::classfile::OMClassFileConstant> constantPoolRaw;
     uint32_t constantPoolCount = 0;
     void **constantPool = nullptr;
     bool *constantPoolState = nullptr;

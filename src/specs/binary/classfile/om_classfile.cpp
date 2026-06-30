@@ -112,7 +112,7 @@ void OMClassFile::loadAttr(MemoryReader &reader, OMClassAttribute &a)
     a.nameIndex = reader.readu16();
     a.length = reader.readu32();
     auto name = constants.data->at(a.nameIndex).valueString;
-    switch (binary::hash::hash_compile_time(name))
+    switch (binary::hash::hash_compile_time(name.c_str()))
     {
     case "ConstantValue"_hash: {
         a.constantValueIndex = reader.readu16();
@@ -326,9 +326,7 @@ void OMClassFile::loadConstant(MemoryReader &reader, OMClassFileConstant &c)
         auto result = toStdUtf8(reader.raw(), l);
         reader.skip(l);
 
-        c.valueString = (char *)std::malloc(l + 1);
-        std::strcpy(c.valueString, result.c_str());
-        c.valueString[l] = '\0';
+        c.valueString = result;
 
         break;
     }
