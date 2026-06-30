@@ -89,7 +89,7 @@ inline static void parseSignaturePart(const char *&sig, OMElysiaSignaturePart *p
         ++sig;
         while (*sig != ';')
         {
-            s += *sig;
+            s.push_back(*sig);
             ++sig;
         }
         ++sig;
