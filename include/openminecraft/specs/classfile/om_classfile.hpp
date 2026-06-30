@@ -3,13 +3,64 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include <cstdint>
+#include <cstring>
 #include <istream>
 #include <memory>
-#include <string>
 namespace openminecraft::specs::classfile
 {
+class MemoryReader
+{
+    const uint8_t *data;
+    const uint8_t *pos;
+    const uint8_t *end;
+
+  public:
+    MemoryReader(const std::vector<uint8_t> &buffer) : data(buffer.data()), pos(data), end(data + buffer.size())
+    {
+    }
+
+    const uint8_t *raw()
+    {
+        return pos;
+    }
+
+    uint8_t readu8()
+    {
+        return *pos++;
+    }
+    uint16_t readu16()
+    {
+        uint16_t v = (pos[0] << 8) | pos[1];
+        pos += 2;
+        return v;
+    }
+    uint32_t readu32()
+    {
+        uint32_t v = (pos[0] << 24) | (pos[1] << 16) | (pos[2] << 8) | pos[3];
+        pos += 4;
+        return v;
+    }
+    uint64_t readu64()
+    {
+        uint64_t v = readu32();
+        v <<= 32;
+        v |= readu32();
+        return v;
+    }
+    void skip(size_t n)
+    {
+        pos += n;
+    }
+
+    void readn(void *target, int n)
+    {
+        std::memcpy(target, pos, n);
+        pos += n;
+    }
+};
+
 constexpr const char allocatorTag[] = "parser_classfile";
-constexpr uint8_t headerMagic[] = {0xca, 0xfe, 0xba, 0xbe};
+constexpr uint32_t headerMagic = 0xcafebabe;
 
 constexpr int JVM_VERSION_1_1 = 45;
 constexpr int JVM_VERSION_1_2 = 46;
@@ -159,6 +210,11 @@ struct OMClassAttribute
             uint16_t count;
             uint16_t *index;
         } exceptions;
+        struct
+        {
+            uint16_t classIndex;
+            uint16_t methodIndex;
+        } enclosingMethod;
     };
 };
 
@@ -186,7 +242,7 @@ class OMClassFile
 #pragma pack(1)
     struct
     {
-        uint8_t magic[4];
+        uint32_t magic;
         uint16_t minorVersion;
         uint16_t majorVersion;
     } header;
@@ -232,10 +288,10 @@ class OMClassFile
     OMClassFile();
     ~OMClassFile();
     void load(std::shared_ptr<std::istream> istr);
-    void loadConstant(std::shared_ptr<std::istream> istr, OMClassFileConstant &c);
-    void loadField(std::shared_ptr<std::istream> istr, OMClassField &f);
-    void loadMethod(std::shared_ptr<std::istream> istr, OMClassMethod &m);
-    void loadAttr(std::shared_ptr<std::istream> istr, OMClassAttribute &a);
+    void loadConstant(MemoryReader &reader, OMClassFileConstant &c);
+    void loadField(MemoryReader &reader, OMClassField &f);
+    void loadMethod(MemoryReader &reader, OMClassMethod &m);
+    void loadAttr(MemoryReader &reader, OMClassAttribute &a);
 
   private:
     log::OMLogger logger;

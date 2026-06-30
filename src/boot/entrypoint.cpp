@@ -11,6 +11,7 @@
 #include "openminecraft/specs/classfile/om_classfile.hpp"
 #include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
+#include "openminecraft/vm/classfile/om_class_file.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
@@ -109,9 +110,11 @@ int boot(std::vector<std::string> args)
         break;
     }
     case "class"_hash: {
-        auto ll = new specs::classfile::OMClassFile();
-        ll->load(std::make_shared<std::ifstream>(args[2], std::ios::binary));
-        logger->debug("{}", ll->header.majorVersion);
+        for (int i = 0; i < 3000; ++i)
+        {
+            auto ll = new specs::classfile::OMClassFile();
+            ll->load(std::make_shared<std::ifstream>(args[2], std::ios::binary));
+        }
         break;
     }
     default:

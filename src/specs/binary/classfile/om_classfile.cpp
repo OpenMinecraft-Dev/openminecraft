@@ -4,6 +4,7 @@
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/util/om_util_encoding_utf.hpp"
 #include <cstdint>
+#include <iostream>
 #include <istream>
 #include <memory>
 #include <stdexcept>
@@ -20,25 +21,34 @@ OMClassFile::~OMClassFile()
 
 void OMClassFile::load(std::shared_ptr<std::istream> istr)
 {
-    istr->read(reinterpret_cast<char *>(&header), sizeof(header));
-    header.minorVersion = binary::be16ToNative(header.minorVersion);
-    header.majorVersion = binary::be16ToNative(header.majorVersion);
+    istr->seekg(0, std::ios::end);
+    auto l = istr->tellg();
+    istr->seekg(0, std::ios::beg);
 
-    if (std::memcmp(header.magic, headerMagic, 4))
+    std::vector<uint8_t> data;
+    data.resize(l);
+    istr->read((char *)data.data(), l);
+
+    MemoryReader reader(data);
+
+    header.magic = reader.readu32();
+    header.minorVersion = reader.readu16();
+    header.majorVersion = reader.readu16();
+
+    if (header.magic != headerMagic)
     {
         throw std::logic_error("invaild header");
     }
 
     {
-        istr->read(reinterpret_cast<char *>(&constants.length), 2);
-        constants.length = binary::be16ToNative(constants.length);
+        constants.length = reader.readu16();
 
         constants.data = std::make_shared<std::vector<OMClassFileConstant>>();
         constants.data->resize(constants.length);
         auto c = constants.data->data();
         for (int i = 1; i < constants.length; ++i)
         {
-            loadConstant(istr, c[i]);
+            loadConstant(reader, c[i]);
             if (c[i].type == Long || c[i].type == Double)
             {
                 ++i;
@@ -46,177 +56,156 @@ void OMClassFile::load(std::shared_ptr<std::istream> istr)
         }
     }
 
-    istr->read(reinterpret_cast<char *>(&basic), sizeof(basic));
-    basic.accessFlags = binary::be16ToNative(basic.accessFlags);
-    basic.thisClass = binary::be16ToNative(basic.thisClass);
-    basic.superClass = binary::be16ToNative(basic.superClass);
+    basic.accessFlags = reader.readu16();
+    basic.thisClass = reader.readu16();
+    basic.superClass = reader.readu16();
 
     {
-        istr->read(reinterpret_cast<char *>(&interfaces.length), 2);
-        interfaces.length = binary::be16ToNative(interfaces.length);
+        interfaces.length = reader.readu16();
 
         interfaces.data = std::make_shared<std::vector<uint16_t>>();
         interfaces.data->resize(interfaces.length);
 
-        istr->read(reinterpret_cast<char *>(interfaces.data->data()), 2 * interfaces.length);
         for (int i = 0; i < interfaces.length; ++i)
         {
-            interfaces.data->at(i) = binary::be16ToNative(interfaces.data->at(i));
+            interfaces.data->at(i) = reader.readu16();
         }
     }
 
     {
-        istr->read(reinterpret_cast<char *>(&fields.length), 2);
-        fields.length = binary::be16ToNative(fields.length);
+        fields.length = reader.readu16();
         fields.data = std::make_shared<std::vector<OMClassField>>();
         fields.data->resize(fields.length);
 
         for (int i = 0; i < fields.length; ++i)
         {
-            loadField(istr, fields.data->at(i));
+            loadField(reader, fields.data->at(i));
         }
     }
 
     {
-        istr->read(reinterpret_cast<char *>(&methods.length), 2);
-        methods.length = binary::be16ToNative(methods.length);
+        methods.length = reader.readu16();
         methods.data = std::make_shared<std::vector<OMClassMethod>>();
         methods.data->resize(methods.length);
 
         for (int i = 0; i < methods.length; ++i)
         {
-            loadMethod(istr, methods.data->at(i));
+            loadMethod(reader, methods.data->at(i));
         }
     }
 
     {
-        istr->read(reinterpret_cast<char *>(&attributes.length), 2);
-        attributes.length = binary::be16ToNative(attributes.length);
+        attributes.length = reader.readu16();
         attributes.data = std::make_shared<std::vector<OMClassAttribute>>();
         attributes.data->resize(attributes.length);
 
         for (int i = 0; i < attributes.length; ++i)
         {
-            loadAttr(istr, attributes.data->at(i));
+            loadAttr(reader, attributes.data->at(i));
         }
     }
 }
 
-void OMClassFile::loadAttr(std::shared_ptr<std::istream> istr, OMClassAttribute &a)
+void OMClassFile::loadAttr(MemoryReader &reader, OMClassAttribute &a)
 {
     using namespace binary::hash;
-    istr->read(reinterpret_cast<char *>(&a.nameIndex), 2);
-    a.nameIndex = binary::be16ToNative(a.nameIndex);
-    istr->read(reinterpret_cast<char *>(&a.length), 4);
-    a.length = binary::be32ToNative(a.length);
+    a.nameIndex = reader.readu16();
+    a.length = reader.readu32();
     auto name = constants.data->at(a.nameIndex).valueString;
     switch (binary::hash::hash_compile_time(name))
     {
     case "ConstantValue"_hash: {
-        istr->read(reinterpret_cast<char *>(&a.constantValueIndex), 2);
-        a.constantValueIndex = binary::be16ToNative(a.constantValueIndex);
+        a.constantValueIndex = reader.readu16();
         break;
     }
     case "Signature"_hash: {
-        istr->read(reinterpret_cast<char *>(&a.signatureIndex), 2);
-        a.signatureIndex = binary::be16ToNative(a.signatureIndex);
+        a.signatureIndex = reader.readu16();
         break;
     }
     case "Code"_hash: {
-        istr->read(reinterpret_cast<char *>(&a.code.maxStack), 2);
-        a.code.maxStack = binary::be16ToNative(a.code.maxStack);
-        istr->read(reinterpret_cast<char *>(&a.code.maxLocal), 2);
-        a.code.maxLocal = binary::be16ToNative(a.code.maxLocal);
-        istr->read(reinterpret_cast<char *>(&a.code.codeLength), 4);
-        a.code.codeLength = binary::be32ToNative(a.code.codeLength);
-        a.code.code = (uint8_t *)mem::allocator::tracedMallocSpecs(a.code.codeLength);
-        istr->read((char *)a.code.code, a.code.codeLength);
-        istr->read(reinterpret_cast<char *>(&a.code.exceptionTableLength), 2);
-        a.code.exceptionTableLength = binary::be16ToNative(a.code.exceptionTableLength);
+        a.code.maxStack = reader.readu16();
+        a.code.maxLocal = reader.readu16();
+        a.code.codeLength = reader.readu32();
+        a.code.code = (uint8_t *)std::malloc(a.code.codeLength);
+        reader.readn(a.code.code, a.code.codeLength);
+        a.code.exceptionTableLength = reader.readu16();
 
-        a.code.exceptionTable = (OMClassExceptionTableEntry *)mem::allocator::tracedCallocSpecs(
-            a.code.exceptionTableLength, sizeof(OMClassExceptionTableEntry));
+        a.code.exceptionTable =
+            (OMClassExceptionTableEntry *)std::malloc(a.code.exceptionTableLength * sizeof(OMClassExceptionTableEntry));
         for (int i = 0; i < a.code.exceptionTableLength; ++i)
         {
-            istr->read(reinterpret_cast<char *>(&a.code.exceptionTable[i]), sizeof(OMClassExceptionTableEntry));
-            a.code.exceptionTable[i].start = binary::be16ToNative(a.code.exceptionTable[i].start);
-            a.code.exceptionTable[i].end = binary::be16ToNative(a.code.exceptionTable[i].end);
-            a.code.exceptionTable[i].handler = binary::be16ToNative(a.code.exceptionTable[i].handler);
-            a.code.exceptionTable[i].type = binary::be16ToNative(a.code.exceptionTable[i].type);
+            a.code.exceptionTable[i].start = reader.readu16();
+            a.code.exceptionTable[i].end = reader.readu16();
+            a.code.exceptionTable[i].handler = reader.readu16();
+            a.code.exceptionTable[i].type = reader.readu16();
         }
 
-        istr->read(reinterpret_cast<char *>(&a.code.attrCount), 2);
-        a.code.attrCount = binary::be16ToNative(a.code.attrCount);
-        a.code.attrs =
-            (OMClassAttribute *)mem::allocator::tracedCallocSpecs(a.code.attrCount, sizeof(OMClassAttribute));
+        a.code.attrCount = reader.readu16();
+        a.code.attrs = (OMClassAttribute *)malloc(a.code.attrCount * sizeof(OMClassAttribute));
         for (int i = 0; i < a.code.attrCount; ++i)
         {
-            loadAttr(istr, a.code.attrs[i]);
+            loadAttr(reader, a.code.attrs[i]);
         }
         break;
     }
         // TODO: StackMapTable
     case "Exceptions"_hash: {
-        istr->read(reinterpret_cast<char *>(&a.exceptions.count), 2);
-        a.exceptions.count = binary::be16ToNative(a.exceptions.count);
+        a.exceptions.count = reader.readu16();
 
-        a.exceptions.index = (uint16_t *)mem::allocator::tracedMallocSpecs(2 * a.exceptions.count);
-        istr->read(reinterpret_cast<char *>(a.exceptions.index), 2 * a.exceptions.count);
+        a.exceptions.index = (uint16_t *)std::malloc(2 * a.exceptions.count);
         for (int i = 0; i < a.exceptions.count; ++i)
         {
-            a.exceptions.index[i] = binary::be16ToNative(a.exceptions.index[i]);
+            a.exceptions.index[i] = reader.readu16();
         }
         break;
     }
+    case "EnclosingMethod"_hash: {
+        a.enclosingMethod.classIndex = reader.readu16();
+        a.enclosingMethod.methodIndex = reader.readu16();
+        break;
+    }
     default: {
-        logger.warn("skip {}", name);
-        istr->seekg(a.length, std::ios::cur);
+        // logger.warn("skip {}", name);
+        reader.skip(a.length);
     }
     }
 }
-void OMClassFile::loadMethod(std::shared_ptr<std::istream> istr, OMClassMethod &m)
+void OMClassFile::loadMethod(MemoryReader &reader, OMClassMethod &m)
 {
-    istr->read(reinterpret_cast<char *>(&m.accessFlags), 2);
-    m.accessFlags = binary::be16ToNative(m.accessFlags);
-    istr->read(reinterpret_cast<char *>(&m.nameIndex), 2);
-    m.nameIndex = binary::be16ToNative(m.nameIndex);
-    istr->read(reinterpret_cast<char *>(&m.descriptorIndex), 2);
-    m.descriptorIndex = binary::be16ToNative(m.descriptorIndex);
-    istr->read(reinterpret_cast<char *>(&m.attributesCount), 2);
-    m.attributesCount = binary::be16ToNative(m.attributesCount);
+    m.accessFlags = reader.readu16();
+    m.nameIndex = reader.readu16();
+    m.descriptorIndex = reader.readu16();
+    m.attributesCount = reader.readu16();
 
     m.attributes = std::make_shared<std::vector<OMClassAttribute>>();
     m.attributes->resize(m.attributesCount);
     for (int i = 0; i < m.attributesCount; ++i)
     {
-        loadAttr(istr, m.attributes->at(i));
+        loadAttr(reader, m.attributes->at(i));
     }
 }
 
-void OMClassFile::loadField(std::shared_ptr<std::istream> istr, OMClassField &f)
+void OMClassFile::loadField(MemoryReader &reader, OMClassField &m)
 {
-    istr->read(reinterpret_cast<char *>(&f.accessFlags), 2);
-    f.accessFlags = binary::be16ToNative(f.accessFlags);
-    istr->read(reinterpret_cast<char *>(&f.nameIndex), 2);
-    f.nameIndex = binary::be16ToNative(f.nameIndex);
-    istr->read(reinterpret_cast<char *>(&f.descriptorIndex), 2);
-    f.descriptorIndex = binary::be16ToNative(f.descriptorIndex);
-    istr->read(reinterpret_cast<char *>(&f.attributesCount), 2);
-    f.attributesCount = binary::be16ToNative(f.attributesCount);
+    m.accessFlags = reader.readu16();
+    m.nameIndex = reader.readu16();
+    m.descriptorIndex = reader.readu16();
+    m.attributesCount = reader.readu16();
 
-    f.attributes = std::make_shared<std::vector<OMClassAttribute>>();
-    f.attributes->resize(f.attributesCount);
-    for (int i = 0; i < f.attributesCount; ++i)
+    m.attributes = std::make_shared<std::vector<OMClassAttribute>>();
+    m.attributes->resize(m.attributesCount);
+    for (int i = 0; i < m.attributesCount; ++i)
     {
-        loadAttr(istr, f.attributes->at(i));
+        loadAttr(reader, m.attributes->at(i));
     }
 }
 
-static inline std::string toStdUtf8(uint8_t *data, int length)
+/*static inline std::string toStdUtf8(const uint8_t *data, int length)
 {
     int p = 0;
 
     std::vector<int> target;
+    target.reserve(length);
     while (p < length)
     {
         if (data[p] >> 7 == 0)
@@ -252,87 +241,146 @@ static inline std::string toStdUtf8(uint8_t *data, int length)
     }
 
     return util::encoding::utf32ToUtf8(target);
+}*/
+
+static inline std::string toStdUtf8(const uint8_t *data, int length)
+{
+    std::string result;
+    result.reserve(length);
+    int p = 0;
+
+    while (p < length)
+    {
+        uint8_t c = data[p];
+
+        if (c < 0x80)
+        {
+            if (c == 0x00)
+            {
+                result.push_back('\0');
+            }
+            else
+            {
+                result.push_back(c);
+            }
+            p++;
+        }
+        else if (c == 0xC0 && p + 1 < length && data[p + 1] == 0x80)
+        {
+            result.push_back('\0');
+            p += 2;
+        }
+        else if (c < 0xE0 && p + 1 < length)
+        {
+            result.push_back(c);
+            result.push_back(data[p + 1]);
+            p += 2;
+        }
+        else if (c < 0xF0 && p + 2 < length)
+        {
+            if (c == 0xED && (data[p + 1] & 0xF0) == 0xA0 && p + 5 < length && data[p + 3] == 0xED &&
+                (data[p + 4] & 0xF0) == 0xB0)
+            {
+                uint32_t high = ((data[p + 1] & 0x0F) << 6) | (data[p + 2] & 0x3F);
+                uint32_t low = ((data[p + 4] & 0x0F) << 6) | (data[p + 5] & 0x3F);
+                uint32_t cp = 0x10000 + (high << 10) + low;
+                result.push_back(0xF0 | (cp >> 18));
+                result.push_back(0x80 | ((cp >> 12) & 0x3F));
+                result.push_back(0x80 | ((cp >> 6) & 0x3F));
+                result.push_back(0x80 | (cp & 0x3F));
+                p += 6;
+            }
+            else
+            {
+                result.push_back(c);
+                result.push_back(data[p + 1]);
+                result.push_back(data[p + 2]);
+                p += 3;
+            }
+        }
+        else if (c < 0xF8 && p + 3 < length)
+        {
+            result.push_back(c);
+            result.push_back(data[p + 1]);
+            result.push_back(data[p + 2]);
+            result.push_back(data[p + 3]);
+            p += 4;
+        }
+        else
+        {
+            p++;
+        }
+    }
+
+    return result;
 }
 
-void OMClassFile::loadConstant(std::shared_ptr<std::istream> istr, OMClassFileConstant &c)
+void OMClassFile::loadConstant(MemoryReader &reader, OMClassFileConstant &c)
 {
-    istr->read(reinterpret_cast<char *>(&c.type), 1);
+    c.type = (OMClassFileConstantType)reader.readu8();
     switch (c.type)
     {
     case Utf8: {
-        uint16_t l;
-        istr->read(reinterpret_cast<char *>(&l), 2);
-        l = binary::be16ToNative(l);
-        auto arr = new char[l];
-        istr->read(arr, l);
-        auto result = toStdUtf8((uint8_t *)arr, l);
-        delete[] arr;
+        auto l = reader.readu16();
 
-        c.valueString = (char *)mem::allocator::tracedCallocSpecs(1, l + 1);
+        auto result = toStdUtf8(reader.raw(), l);
+        reader.skip(l);
+
+        c.valueString = (char *)std::malloc(l + 1);
         std::strcpy(c.valueString, result.c_str());
+        c.valueString[l] = '\0';
 
         break;
     }
     case Integer: {
-        istr->read(reinterpret_cast<char *>(&c.valueInteger), 4);
-        c.valueInteger = binary::be32ToNative(c.valueInteger);
+        c.valueInteger = reader.readu32();
         break;
     }
     case Long: {
-        istr->read(reinterpret_cast<char *>(&c.valueLong), 8);
-        c.valueLong = binary::be64ToNative(c.valueLong);
+        c.valueLong = reader.readu64();
         break;
     }
     case Class: {
-        istr->read(reinterpret_cast<char *>(&c.classinfo.nameIndex), 2);
-        c.classinfo.nameIndex = binary::be16ToNative(c.classinfo.nameIndex);
+        c.classinfo.nameIndex = reader.readu16();
         break;
     }
     case String: {
-        istr->read(reinterpret_cast<char *>(&c.stringRef.stringIndex), 2);
-        c.stringRef.stringIndex = binary::be16ToNative(c.stringRef.stringIndex);
+        c.stringRef.stringIndex = reader.readu16();
         break;
     }
     case MethodRef:
     case FieldRef:
     case InterfaceMethodRef: {
-        istr->read(reinterpret_cast<char *>(&c.ref), sizeof(c.ref));
-        c.ref.classIndex = binary::be16ToNative(c.ref.classIndex);
-        c.ref.nameAndTypeIndex = binary::be16ToNative(c.ref.nameAndTypeIndex);
+        c.ref.classIndex = reader.readu16();
+        c.ref.nameAndTypeIndex = reader.readu16();
         break;
     }
     case NameAndType: {
-        istr->read(reinterpret_cast<char *>(&c.nameAndType), sizeof(c.nameAndType));
-        c.nameAndType.nameIndex = binary::be16ToNative(c.nameAndType.nameIndex);
-        c.nameAndType.descriptorIndex = binary::be16ToNative(c.nameAndType.descriptorIndex);
+        c.nameAndType.nameIndex = reader.readu16();
+        c.nameAndType.descriptorIndex = reader.readu16();
         break;
     }
     case MethodHandle: {
-        istr->read(reinterpret_cast<char *>(&c.methodHandle.refKind), 1);
-        istr->read(reinterpret_cast<char *>(&c.methodHandle.refIndex), 2);
-        c.methodHandle.refIndex = binary::be16ToNative(c.methodHandle.refIndex);
+        c.methodHandle.refKind = reader.readu8();
+        c.methodHandle.refIndex = reader.readu16();
         break;
     }
     case MethodType: {
-        istr->read(reinterpret_cast<char *>(&c.methodType.descriptorIndex), 2);
-        c.methodType.descriptorIndex = binary::be16ToNative(c.methodType.descriptorIndex);
+        c.methodType.descriptorIndex = reader.readu16();
         break;
     }
     case InvokeDynamic:
     case Dynamic: {
-        istr->read(reinterpret_cast<char *>(&c.dynamic), sizeof(c.dynamic));
-        c.dynamic.bootstrapIndex = binary::be16ToNative(c.dynamic.bootstrapIndex);
-        c.dynamic.nameAndTypeIndex = binary::be16ToNative(c.dynamic.nameAndTypeIndex);
+        c.dynamic.bootstrapIndex = reader.readu16();
+        c.dynamic.nameAndTypeIndex = reader.readu16();
         break;
     }
     case Module: {
-        istr->read(reinterpret_cast<char *>(&c.module.nameIndex), 2);
-        c.module.nameIndex = binary::be16ToNative(c.module.nameIndex);
+        c.module.nameIndex = reader.readu16();
         break;
     }
     case Package: {
-        istr->read(reinterpret_cast<char *>(&c.package.nameIndex), 2);
-        c.package.nameIndex = binary::be16ToNative(c.package.nameIndex);
+        c.package.nameIndex = reader.readu16();
         break;
     }
     default: {
