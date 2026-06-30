@@ -126,6 +126,14 @@ struct OMClassFileConstant
     };
 };
 
+struct OMClassExceptionTableEntry
+{
+    uint16_t start;
+    uint16_t end;
+    uint16_t handler;
+    uint16_t type;
+};
+
 struct OMClassAttribute
 {
     uint16_t nameIndex;
@@ -133,6 +141,24 @@ struct OMClassAttribute
     union {
         uint16_t constantValueIndex;
         uint16_t signatureIndex;
+        struct
+        {
+            uint16_t maxStack;
+            uint16_t maxLocal;
+            uint32_t codeLength;
+            uint8_t *code;
+
+            uint16_t exceptionTableLength;
+            OMClassExceptionTableEntry *exceptionTable;
+
+            uint16_t attrCount;
+            OMClassAttribute *attrs;
+        } code;
+        struct
+        {
+            uint16_t count;
+            uint16_t *index;
+        } exceptions;
     };
 };
 
@@ -142,7 +168,7 @@ struct OMClassField
     uint16_t nameIndex;
     uint16_t descriptorIndex;
     uint16_t attributesCount;
-    std::shared_ptr<OMClassAttribute[]> attributes;
+    std::shared_ptr<std::vector<OMClassAttribute>> attributes = nullptr;
 };
 
 struct OMClassMethod
@@ -151,7 +177,7 @@ struct OMClassMethod
     uint16_t nameIndex;
     uint16_t descriptorIndex;
     uint16_t attributesCount;
-    std::shared_ptr<OMClassAttribute[]> attributes;
+    std::shared_ptr<std::vector<OMClassAttribute>> attributes = nullptr;
 };
 
 class OMClassFile
@@ -169,7 +195,7 @@ class OMClassFile
     struct
     {
         uint16_t length;
-        std::shared_ptr<OMClassFileConstant[]> data;
+        std::shared_ptr<std::vector<OMClassFileConstant>> data = nullptr;
     } constants;
 
     struct
@@ -182,26 +208,33 @@ class OMClassFile
     struct
     {
         uint16_t length;
-        std::shared_ptr<uint16_t[]> data;
+        std::shared_ptr<std::vector<uint16_t>> data = nullptr;
     } interfaces;
 
     struct
     {
         uint16_t length;
-        std::shared_ptr<OMClassField[]> data;
+        std::shared_ptr<std::vector<OMClassField>> data = nullptr;
     } fields;
 
     struct
     {
         uint16_t length;
-        std::shared_ptr<OMClassMethod[]> data;
+        std::shared_ptr<std::vector<OMClassMethod>> data = nullptr;
     } methods;
+
+    struct
+    {
+        uint16_t length;
+        std::shared_ptr<std::vector<OMClassAttribute>> data = nullptr;
+    } attributes;
 
     OMClassFile();
     ~OMClassFile();
     void load(std::shared_ptr<std::istream> istr);
     void loadConstant(std::shared_ptr<std::istream> istr, OMClassFileConstant &c);
     void loadField(std::shared_ptr<std::istream> istr, OMClassField &f);
+    void loadMethod(std::shared_ptr<std::istream> istr, OMClassMethod &m);
     void loadAttr(std::shared_ptr<std::istream> istr, OMClassAttribute &a);
 
   private:

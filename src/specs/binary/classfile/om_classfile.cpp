@@ -33,9 +33,9 @@ void OMClassFile::load(std::shared_ptr<std::istream> istr)
         istr->read(reinterpret_cast<char *>(&constants.length), 2);
         constants.length = binary::be16ToNative(constants.length);
 
-        constants.data = std::shared_ptr<OMClassFileConstant[]>(new OMClassFileConstant[constants.length],
-                                                                [](OMClassFileConstant *p) { delete[] p; });
-        auto c = constants.data.get();
+        constants.data = std::make_shared<std::vector<OMClassFileConstant>>();
+        constants.data->resize(constants.length);
+        auto c = constants.data->data();
         for (int i = 1; i < constants.length; ++i)
         {
             loadConstant(istr, c[i]);
@@ -55,24 +55,49 @@ void OMClassFile::load(std::shared_ptr<std::istream> istr)
         istr->read(reinterpret_cast<char *>(&interfaces.length), 2);
         interfaces.length = binary::be16ToNative(interfaces.length);
 
-        interfaces.data = std::shared_ptr<uint16_t[]>(new uint16_t[interfaces.length], [](uint16_t *p) { delete[] p; });
+        interfaces.data = std::make_shared<std::vector<uint16_t>>();
+        interfaces.data->resize(interfaces.length);
 
-        istr->read(reinterpret_cast<char *>(interfaces.data.get()), 2 * interfaces.length);
+        istr->read(reinterpret_cast<char *>(interfaces.data->data()), 2 * interfaces.length);
         for (int i = 0; i < interfaces.length; ++i)
         {
-            interfaces.data[i] = binary::be16ToNative(interfaces.data[i]);
+            interfaces.data->at(i) = binary::be16ToNative(interfaces.data->at(i));
         }
     }
 
     {
         istr->read(reinterpret_cast<char *>(&fields.length), 2);
         fields.length = binary::be16ToNative(fields.length);
-        fields.data =
-            std::shared_ptr<OMClassField[]>(new OMClassField[fields.length], [](OMClassField *p) { delete[] p; });
+        fields.data = std::make_shared<std::vector<OMClassField>>();
+        fields.data->resize(fields.length);
 
         for (int i = 0; i < fields.length; ++i)
         {
-            loadField(istr, fields.data[i]);
+            loadField(istr, fields.data->at(i));
+        }
+    }
+
+    {
+        istr->read(reinterpret_cast<char *>(&methods.length), 2);
+        methods.length = binary::be16ToNative(methods.length);
+        methods.data = std::make_shared<std::vector<OMClassMethod>>();
+        methods.data->resize(methods.length);
+
+        for (int i = 0; i < methods.length; ++i)
+        {
+            loadMethod(istr, methods.data->at(i));
+        }
+    }
+
+    {
+        istr->read(reinterpret_cast<char *>(&attributes.length), 2);
+        attributes.length = binary::be16ToNative(attributes.length);
+        attributes.data = std::make_shared<std::vector<OMClassAttribute>>();
+        attributes.data->resize(attributes.length);
+
+        for (int i = 0; i < attributes.length; ++i)
+        {
+            loadAttr(istr, attributes.data->at(i));
         }
     }
 }
@@ -84,7 +109,7 @@ void OMClassFile::loadAttr(std::shared_ptr<std::istream> istr, OMClassAttribute 
     a.nameIndex = binary::be16ToNative(a.nameIndex);
     istr->read(reinterpret_cast<char *>(&a.length), 4);
     a.length = binary::be32ToNative(a.length);
-    auto name = constants.data[a.nameIndex].valueString;
+    auto name = constants.data->at(a.nameIndex).valueString;
     switch (binary::hash::hash_compile_time(name))
     {
     case "ConstantValue"_hash: {
@@ -97,10 +122,74 @@ void OMClassFile::loadAttr(std::shared_ptr<std::istream> istr, OMClassAttribute 
         a.signatureIndex = binary::be16ToNative(a.signatureIndex);
         break;
     }
+    case "Code"_hash: {
+        istr->read(reinterpret_cast<char *>(&a.code.maxStack), 2);
+        a.code.maxStack = binary::be16ToNative(a.code.maxStack);
+        istr->read(reinterpret_cast<char *>(&a.code.maxLocal), 2);
+        a.code.maxLocal = binary::be16ToNative(a.code.maxLocal);
+        istr->read(reinterpret_cast<char *>(&a.code.codeLength), 4);
+        a.code.codeLength = binary::be32ToNative(a.code.codeLength);
+        a.code.code = (uint8_t *)mem::allocator::tracedMallocSpecs(a.code.codeLength);
+        istr->read((char *)a.code.code, a.code.codeLength);
+        istr->read(reinterpret_cast<char *>(&a.code.exceptionTableLength), 2);
+        a.code.exceptionTableLength = binary::be16ToNative(a.code.exceptionTableLength);
+
+        a.code.exceptionTable = (OMClassExceptionTableEntry *)mem::allocator::tracedCallocSpecs(
+            a.code.exceptionTableLength, sizeof(OMClassExceptionTableEntry));
+        for (int i = 0; i < a.code.exceptionTableLength; ++i)
+        {
+            istr->read(reinterpret_cast<char *>(&a.code.exceptionTable[i]), sizeof(OMClassExceptionTableEntry));
+            a.code.exceptionTable[i].start = binary::be16ToNative(a.code.exceptionTable[i].start);
+            a.code.exceptionTable[i].end = binary::be16ToNative(a.code.exceptionTable[i].end);
+            a.code.exceptionTable[i].handler = binary::be16ToNative(a.code.exceptionTable[i].handler);
+            a.code.exceptionTable[i].type = binary::be16ToNative(a.code.exceptionTable[i].type);
+        }
+
+        istr->read(reinterpret_cast<char *>(&a.code.attrCount), 2);
+        a.code.attrCount = binary::be16ToNative(a.code.attrCount);
+        a.code.attrs =
+            (OMClassAttribute *)mem::allocator::tracedCallocSpecs(a.code.attrCount, sizeof(OMClassAttribute));
+        for (int i = 0; i < a.code.attrCount; ++i)
+        {
+            loadAttr(istr, a.code.attrs[i]);
+        }
+        break;
+    }
+        // TODO: StackMapTable
+    case "Exceptions"_hash: {
+        istr->read(reinterpret_cast<char *>(&a.exceptions.count), 2);
+        a.exceptions.count = binary::be16ToNative(a.exceptions.count);
+
+        a.exceptions.index = (uint16_t *)mem::allocator::tracedMallocSpecs(2 * a.exceptions.count);
+        istr->read(reinterpret_cast<char *>(a.exceptions.index), 2 * a.exceptions.count);
+        for (int i = 0; i < a.exceptions.count; ++i)
+        {
+            a.exceptions.index[i] = binary::be16ToNative(a.exceptions.index[i]);
+        }
+        break;
+    }
     default: {
         logger.warn("skip {}", name);
         istr->seekg(a.length, std::ios::cur);
     }
+    }
+}
+void OMClassFile::loadMethod(std::shared_ptr<std::istream> istr, OMClassMethod &m)
+{
+    istr->read(reinterpret_cast<char *>(&m.accessFlags), 2);
+    m.accessFlags = binary::be16ToNative(m.accessFlags);
+    istr->read(reinterpret_cast<char *>(&m.nameIndex), 2);
+    m.nameIndex = binary::be16ToNative(m.nameIndex);
+    istr->read(reinterpret_cast<char *>(&m.descriptorIndex), 2);
+    m.descriptorIndex = binary::be16ToNative(m.descriptorIndex);
+    istr->read(reinterpret_cast<char *>(&m.attributesCount), 2);
+    m.attributesCount = binary::be16ToNative(m.attributesCount);
+
+    m.attributes = std::make_shared<std::vector<OMClassAttribute>>();
+    m.attributes->resize(m.attributesCount);
+    for (int i = 0; i < m.attributesCount; ++i)
+    {
+        loadAttr(istr, m.attributes->at(i));
     }
 }
 
@@ -115,11 +204,11 @@ void OMClassFile::loadField(std::shared_ptr<std::istream> istr, OMClassField &f)
     istr->read(reinterpret_cast<char *>(&f.attributesCount), 2);
     f.attributesCount = binary::be16ToNative(f.attributesCount);
 
-    f.attributes = std::shared_ptr<OMClassAttribute[]>(new OMClassAttribute[f.attributesCount],
-                                                       [](OMClassAttribute *p) { delete[] p; });
+    f.attributes = std::make_shared<std::vector<OMClassAttribute>>();
+    f.attributes->resize(f.attributesCount);
     for (int i = 0; i < f.attributesCount; ++i)
     {
-        loadAttr(istr, f.attributes[i]);
+        loadAttr(istr, f.attributes->at(i));
     }
 }
 
@@ -179,8 +268,8 @@ void OMClassFile::loadConstant(std::shared_ptr<std::istream> istr, OMClassFileCo
         auto result = toStdUtf8((uint8_t *)arr, l);
         delete[] arr;
 
-        c.valueString = (char *)mem::allocator::tracedCallocSpecs(l + 1, 1);
-        std::strcpy(c.valueString, result.data());
+        c.valueString = (char *)mem::allocator::tracedCallocSpecs(1, l + 1);
+        std::strcpy(c.valueString, result.c_str());
 
         break;
     }
