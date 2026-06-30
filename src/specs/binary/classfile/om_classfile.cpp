@@ -332,10 +332,12 @@ void OMClassFile::loadConstant(MemoryReader &reader, OMClassFileConstant &c)
 
         break;
     }
+    case Float:
     case Integer: {
         c.valueInteger = reader.readu32();
         break;
     }
+    case Double:
     case Long: {
         c.valueLong = reader.readu64();
         break;
