@@ -1,5 +1,6 @@
 #include "openminecraft/specs/classfile/om_classfile.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
+#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/util/om_util_encoding_utf.hpp"
 #include <cstdint>
@@ -78,9 +79,11 @@ void OMClassFile::load(std::shared_ptr<std::istream> istr)
 
 void OMClassFile::loadAttr(std::shared_ptr<std::istream> istr, OMClassAttribute &a)
 {
+    using namespace binary::hash;
     istr->read(reinterpret_cast<char *>(&a.nameIndex), 2);
     a.nameIndex = binary::be16ToNative(a.nameIndex);
-    logger.warn("{}", constants.data[a.nameIndex].valueString);
+    auto name = constants.data[a.nameIndex].valueString;
+    switch (binary::hash::hash_compile_time(name)) {}
     throw 0;
 }
 

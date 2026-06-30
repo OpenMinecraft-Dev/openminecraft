@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstring>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace openminecraft::util::encoding
