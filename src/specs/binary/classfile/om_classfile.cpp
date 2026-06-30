@@ -24,8 +24,6 @@ void OMClassFile::load(std::shared_ptr<std::istream> istr)
     header.minorVersion = binary::be16ToNative(header.minorVersion);
     header.majorVersion = binary::be16ToNative(header.majorVersion);
 
-    auto d = [](auto p) { delete[] p; };
-
     if (std::memcmp(header.magic, headerMagic, 4))
     {
         throw std::logic_error("invaild header");
@@ -35,7 +33,8 @@ void OMClassFile::load(std::shared_ptr<std::istream> istr)
         istr->read(reinterpret_cast<char *>(&constants.length), 2);
         constants.length = binary::be16ToNative(constants.length);
 
-        constants.data = std::shared_ptr<OMClassFileConstant[]>(new OMClassFileConstant[constants.length], d);
+        constants.data = std::shared_ptr<OMClassFileConstant[]>(new OMClassFileConstant[constants.length],
+                                                                [](OMClassFileConstant *p) { delete[] p; });
         auto c = constants.data.get();
         for (int i = 1; i < constants.length; ++i)
         {
@@ -56,7 +55,7 @@ void OMClassFile::load(std::shared_ptr<std::istream> istr)
         istr->read(reinterpret_cast<char *>(&interfaces.length), 2);
         interfaces.length = binary::be16ToNative(interfaces.length);
 
-        interfaces.data = std::shared_ptr<uint16_t[]>(new uint16_t[interfaces.length], d);
+        interfaces.data = std::shared_ptr<uint16_t[]>(new uint16_t[interfaces.length], [](uint16_t *p) { delete[] p; });
 
         istr->read(reinterpret_cast<char *>(interfaces.data.get()), 2 * interfaces.length);
         for (int i = 0; i < interfaces.length; ++i)
@@ -68,7 +67,8 @@ void OMClassFile::load(std::shared_ptr<std::istream> istr)
     {
         istr->read(reinterpret_cast<char *>(&fields.length), 2);
         fields.length = binary::be16ToNative(fields.length);
-        fields.data = std::shared_ptr<OMClassField[]>(new OMClassField[fields.length], d);
+        fields.data =
+            std::shared_ptr<OMClassField[]>(new OMClassField[fields.length], [](OMClassField *p) { delete[] p; });
 
         for (int i = 0; i < fields.length; ++i)
         {
@@ -82,15 +82,30 @@ void OMClassFile::loadAttr(std::shared_ptr<std::istream> istr, OMClassAttribute 
     using namespace binary::hash;
     istr->read(reinterpret_cast<char *>(&a.nameIndex), 2);
     a.nameIndex = binary::be16ToNative(a.nameIndex);
+    istr->read(reinterpret_cast<char *>(&a.length), 4);
+    a.length = binary::be32ToNative(a.length);
     auto name = constants.data[a.nameIndex].valueString;
-    switch (binary::hash::hash_compile_time(name)) {}
-    throw 0;
+    switch (binary::hash::hash_compile_time(name))
+    {
+    case "ConstantValue"_hash: {
+        istr->read(reinterpret_cast<char *>(&a.constantValueIndex), 2);
+        a.constantValueIndex = binary::be16ToNative(a.constantValueIndex);
+        break;
+    }
+    case "Signature"_hash: {
+        istr->read(reinterpret_cast<char *>(&a.signatureIndex), 2);
+        a.signatureIndex = binary::be16ToNative(a.signatureIndex);
+        break;
+    }
+    default: {
+        logger.warn("skip {}", name);
+        istr->seekg(a.length, std::ios::cur);
+    }
+    }
 }
 
 void OMClassFile::loadField(std::shared_ptr<std::istream> istr, OMClassField &f)
 {
-    auto d = [](auto p) { delete[] p; };
-
     istr->read(reinterpret_cast<char *>(&f.accessFlags), 2);
     f.accessFlags = binary::be16ToNative(f.accessFlags);
     istr->read(reinterpret_cast<char *>(&f.nameIndex), 2);
@@ -100,7 +115,8 @@ void OMClassFile::loadField(std::shared_ptr<std::istream> istr, OMClassField &f)
     istr->read(reinterpret_cast<char *>(&f.attributesCount), 2);
     f.attributesCount = binary::be16ToNative(f.attributesCount);
 
-    f.attributes = std::shared_ptr<OMClassAttribute[]>(new OMClassAttribute[f.attributesCount], d);
+    f.attributes = std::shared_ptr<OMClassAttribute[]>(new OMClassAttribute[f.attributesCount],
+                                                       [](OMClassAttribute *p) { delete[] p; });
     for (int i = 0; i < f.attributesCount; ++i)
     {
         loadAttr(istr, f.attributes[i]);

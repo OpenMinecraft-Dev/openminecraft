@@ -130,9 +130,22 @@ struct OMClassAttribute
 {
     uint16_t nameIndex;
     uint32_t length;
+    union {
+        uint16_t constantValueIndex;
+        uint16_t signatureIndex;
+    };
 };
 
 struct OMClassField
+{
+    uint16_t accessFlags;
+    uint16_t nameIndex;
+    uint16_t descriptorIndex;
+    uint16_t attributesCount;
+    std::shared_ptr<OMClassAttribute[]> attributes;
+};
+
+struct OMClassMethod
 {
     uint16_t accessFlags;
     uint16_t nameIndex;
@@ -177,6 +190,12 @@ class OMClassFile
         uint16_t length;
         std::shared_ptr<OMClassField[]> data;
     } fields;
+
+    struct
+    {
+        uint16_t length;
+        std::shared_ptr<OMClassMethod[]> data;
+    } methods;
 
     OMClassFile();
     ~OMClassFile();
