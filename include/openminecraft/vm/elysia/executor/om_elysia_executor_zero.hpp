@@ -115,6 +115,12 @@ template <typename T> static inline T zeroStackLoadLocal(uint32_t l, OMElysiaJav
     return *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *));
 }
 
+template <typename T> static inline T *zeroStackLoadLocalRef(uint32_t l, OMElysiaJavaFrame *frame)
+{
+    assertType1<T>();
+    return reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *));
+}
+
 template <typename T> static inline void zeroStackPushW(T data)
 {
     assertType2<T>();

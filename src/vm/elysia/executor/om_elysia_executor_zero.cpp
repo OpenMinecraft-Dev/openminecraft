@@ -18,7 +18,6 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <ios>
 #include <stdexcept>
 
 using namespace openminecraft::binary::hash;
@@ -664,10 +663,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_calc(lxor, zeroStackPopWGet<jlong>, zeroStackPushW, ^);
 
         case op_iinc: {
-            auto slt = pc[1];
-            jint data = zeroStackLoadLocal<jint>(slt, currentFrame);
-            data += static_cast<int8_t>(pc[2]);
-            zeroStackSaveLocal(slt, data, currentFrame);
+            *zeroStackLoadLocalRef<jint>(pc[1], currentFrame) += static_cast<int8_t>(pc[2]);
             pc += 3;
             goto exec;
         }
