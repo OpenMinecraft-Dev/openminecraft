@@ -10,8 +10,6 @@
 cpuinfo_x86:
     // save context in stack
     push %rbx
-    push %rbp
-    push %rsp
 
     movl %edi, %eax           // store arg op (edi) to eax
 
@@ -24,8 +22,6 @@ cpuinfo_x86:
     movl %edx, (%r8)          // store register edx to arg *edx (r8)
 
     // restore context
-    pop %rsp
-    pop %rbp
     pop %rbx
 
     // function return
