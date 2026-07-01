@@ -14,9 +14,11 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
+#include "optimizations.hpp"
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <ios>
 #include <stdexcept>
 
 using namespace openminecraft::binary::hash;
@@ -142,6 +144,7 @@ void OMElysiaExecutorZero::threadInit()
     }
 }
 
+HOT_FUNC
 void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 {
     auto tc = thisThread.metadata;
@@ -150,6 +153,8 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     auto cachedStackTop = tc->zero.stackPointer;
 
     uint8_t *pc = nullptr;
+    OMElysiaJavaFrame *currentFrame = nullptr;
+#define updateFrame currentFrame = tc->zero.frame;
     pushFrame(m, pc, false, &pc);
 
 #define CURRENT_KLASS tc->zero.frame->method->klass->toInstance()
@@ -157,6 +162,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     while (true)
     {
     loop_begin:
+        updateFrame;
         // geopeila: the calling method's frame is popped, so we need to exit the interpreter loop
         if (tc->zero.stackPointer >= cachedStackTop)
         {
@@ -189,7 +195,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         if (tc->zero.frame->method->isNative())
         {
             pc = nullptr;
-            execWithState(InsideVM, [&]() { executeNativeLink(&pc); });
+            execWithState(InsideVM, [&]() { executeNativeLink(&pc, currentFrame); });
             continue;
         }
 
@@ -270,7 +276,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             goto exec;
 #define op_iloadc(n)                                                                                                   \
     case op_iload_n(n):                                                                                                \
-        zeroStackPush(zeroStackLoadLocal<jint>(n));                                                                    \
+        zeroStackPush(zeroStackLoadLocal<jint>(n, currentFrame));                                                      \
         ++pc;                                                                                                          \
         goto exec;
             op_iloadc(0);
@@ -278,12 +284,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_iloadc(2);
             op_iloadc(3);
         case op_iload:
-            zeroStackPush(zeroStackLoadLocal<jint>(pc[1]));
+            zeroStackPush(zeroStackLoadLocal<jint>(pc[1], currentFrame));
             pc += 2;
             goto exec;
 #define op_lloadc(n)                                                                                                   \
     case op_lload_n(n):                                                                                                \
-        zeroStackPushW(zeroStackLoadLocalW<jlong>(n));                                                                 \
+        zeroStackPushW(zeroStackLoadLocalW<jlong>(n, currentFrame));                                                   \
         ++pc;                                                                                                          \
         goto exec;
             op_lloadc(0);
@@ -291,12 +297,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_lloadc(2);
             op_lloadc(3);
         case op_lload:
-            zeroStackPushW(zeroStackLoadLocalW<jlong>(pc[1]));
+            zeroStackPushW(zeroStackLoadLocalW<jlong>(pc[1], currentFrame));
             pc += 2;
             goto exec;
 #define op_floadc(n)                                                                                                   \
     case op_fload_n(n):                                                                                                \
-        zeroStackPush(zeroStackLoadLocal<jfloat>(n));                                                                  \
+        zeroStackPush(zeroStackLoadLocal<jfloat>(n, currentFrame));                                                    \
         ++pc;                                                                                                          \
         goto exec;
             op_floadc(0);
@@ -304,12 +310,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_floadc(2);
             op_floadc(3);
         case op_fload:
-            zeroStackPush(zeroStackLoadLocal<jfloat>(pc[1]));
+            zeroStackPush(zeroStackLoadLocal<jfloat>(pc[1], currentFrame));
             pc += 2;
             goto exec;
 #define op_dloadc(n)                                                                                                   \
     case op_dload_n(n):                                                                                                \
-        zeroStackPushW(zeroStackLoadLocalW<jdouble>(n));                                                               \
+        zeroStackPushW(zeroStackLoadLocalW<jdouble>(n, currentFrame));                                                 \
         ++pc;                                                                                                          \
         goto exec;
             op_dloadc(0);
@@ -317,12 +323,12 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_dloadc(2);
             op_dloadc(3);
         case op_dload:
-            zeroStackPushW(zeroStackLoadLocalW<jdouble>(pc[1]));
+            zeroStackPushW(zeroStackLoadLocalW<jdouble>(pc[1], currentFrame));
             pc += 2;
             goto exec;
 #define op_aloadc(n)                                                                                                   \
     case op_aload_n(n):                                                                                                \
-        zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(n));                                                           \
+        zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(n, currentFrame));                                             \
         ++pc;                                                                                                          \
         goto exec;
             op_aloadc(0);
@@ -330,7 +336,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_aloadc(2);
             op_aloadc(3);
         case op_aload:
-            zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(pc[1]));
+            zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(pc[1], currentFrame));
             pc += 2;
             goto exec;
         case op_baload: {
@@ -371,7 +377,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
 #define op_istorec(n)                                                                                                  \
     case op_istore_n(n):                                                                                               \
-        zeroStackSaveLocalPop<jint>(n);                                                                                \
+        zeroStackSaveLocalPop<jint>(n, currentFrame);                                                                  \
         ++pc;                                                                                                          \
         goto exec;
             op_istorec(0);
@@ -379,13 +385,13 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_istorec(2);
             op_istorec(3);
         case op_istore:
-            zeroStackSaveLocalPop<jint>(pc[1]);
+            zeroStackSaveLocalPop<jint>(pc[1], currentFrame);
             pc += 2;
             goto exec;
 
 #define op_lstorec(n)                                                                                                  \
     case op_lstore_n(n):                                                                                               \
-        zeroStackSaveLocalPopW<jlong>(n);                                                                              \
+        zeroStackSaveLocalPopW<jlong>(n, currentFrame);                                                                \
         ++pc;                                                                                                          \
         goto exec;
             op_lstorec(0);
@@ -393,17 +399,17 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_lstorec(2);
             op_lstorec(3);
         case op_lstore:
-            zeroStackSaveLocalPopW<jlong>(pc[1]);
+            zeroStackSaveLocalPopW<jlong>(pc[1], currentFrame);
             pc += 2;
             goto exec;
         case op_fstore:
-            zeroStackSaveLocalPop<jfloat>(pc[1]);
+            zeroStackSaveLocalPop<jfloat>(pc[1], currentFrame);
             pc += 2;
             goto exec;
 
 #define op_dstorec(n)                                                                                                  \
     case op_dstore_n(n):                                                                                               \
-        zeroStackSaveLocalPopW<jdouble>(n);                                                                            \
+        zeroStackSaveLocalPopW<jdouble>(n, currentFrame);                                                              \
         ++pc;                                                                                                          \
         goto exec;
             op_dstorec(0);
@@ -411,13 +417,13 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_dstorec(2);
             op_dstorec(3);
         case op_dstore:
-            zeroStackSaveLocalPopW<jdouble>(pc[1]);
+            zeroStackSaveLocalPopW<jdouble>(pc[1], currentFrame);
             pc += 2;
             goto exec;
 
 #define op_astorec(n)                                                                                                  \
     case op_astore_n(n):                                                                                               \
-        zeroStackSaveLocalPop<OMElysiaOop *>(n);                                                                       \
+        zeroStackSaveLocalPop<OMElysiaOop *>(n, currentFrame);                                                         \
         ++pc;                                                                                                          \
         goto exec;
             op_astorec(0);
@@ -425,7 +431,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_astorec(2);
             op_astorec(3);
         case op_astore:
-            zeroStackSaveLocalPop<OMElysiaOop *>(pc[1]);
+            zeroStackSaveLocalPop<OMElysiaOop *>(pc[1], currentFrame);
             pc += 2;
             goto exec;
         case op_lastore: {
@@ -659,9 +665,9 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
         case op_iinc: {
             auto slt = pc[1];
-            jint data = zeroStackLoadLocal<jint>(slt);
+            jint data = zeroStackLoadLocal<jint>(slt, currentFrame);
             data += static_cast<int8_t>(pc[2]);
-            zeroStackSaveLocal(slt, data);
+            zeroStackSaveLocal(slt, data, currentFrame);
             pc += 3;
             goto exec;
         }
@@ -852,36 +858,42 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         case op_return: {
             popFrame(&pc);
+            updateFrame;
             continue;
         }
         case op_ireturn: {
             auto pp = zeroStackPopGet<jint>();
             popFrame(&pc);
             zeroStackPush(pp);
+            updateFrame;
             continue;
         }
         case op_lreturn: {
             auto pp = zeroStackPopWGet<jlong>();
             popFrame(&pc);
             zeroStackPushW(pp);
+            updateFrame;
             continue;
         }
         case op_freturn: {
             auto pp = zeroStackPopGet<jfloat>();
             popFrame(&pc);
             zeroStackPush(pp);
+            updateFrame;
             continue;
         }
         case op_dreturn: {
             auto pp = zeroStackPopWGet<jdouble>();
             popFrame(&pc);
             zeroStackPushW(pp);
+            updateFrame;
             continue;
         }
         case op_areturn: {
             auto pp = zeroStackPopGet<OMElysiaOop *>();
             popFrame(&pc);
             zeroStackPush(pp);
+            updateFrame;
             continue;
         }
         case op_getstatic: {
@@ -912,16 +924,19 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         case op_invokestatic: {
             auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
             pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), pc + 3, false, &pc);
+            updateFrame;
             continue;
         }
         case op_invokevirtual: {
             auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
             pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), pc + 3, true, &pc);
+            updateFrame;
             continue;
         }
         case op_invokeinterface: {
             auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
             pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), pc + 5, true, &pc);
+            updateFrame;
             continue;
         }
         case op_new: {

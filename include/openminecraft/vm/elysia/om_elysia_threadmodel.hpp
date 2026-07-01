@@ -67,7 +67,6 @@ class OMElysiaThread
     OMElysiaJNIEnv interface;
     struct
     {
-        // uint8_t *pc = nullptr;
         uintptr_t stackPointer = 0;
         OMElysiaJavaFrame *frame = nullptr;
     } zero;

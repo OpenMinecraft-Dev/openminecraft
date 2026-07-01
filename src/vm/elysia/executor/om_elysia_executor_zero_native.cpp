@@ -64,7 +64,8 @@ OMElysiaNativeHandle *OMElysiaExecutorZero::recordLocalRef(OMElysiaOop *oop)
     return oldnode;
 }
 
-void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void *func, uint8_t **realpc)
+void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void *func, uint8_t **realpc,
+                                         OMElysiaJavaFrame *frame)
 {
     auto tc = thisThread.metadata;
     std::variant<jint, jbyte, jboolean, jshort, jchar, jfloat, jlong, jdouble, OMElysiaNativeHandle *, OMElysiaJNIEnv *,
@@ -88,12 +89,12 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
     // geopelia: arg #1, instance oop (non-static) or klass (static)
     if (!isStatic)
     {
-        appendArg(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
+        appendArg(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid, frame)));
         ++argid;
     }
     else
     {
-        appendArg(thisThread.metadata->zero.frame->method->klass);
+        appendArg(m->klass);
     }
 
     // geopelia: arg #2 and so on, fetch from the stack (if exists)
@@ -104,7 +105,7 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
 
 #define ARGTYPE_CASE0(id, type)                                                                                        \
     case id:                                                                                                           \
-        appendArg(zeroStackLoadLocal<type>(argid));                                                                    \
+        appendArg(zeroStackLoadLocal<type>(argid, frame));                                                             \
         ++argid;                                                                                                       \
         break;
 
@@ -116,15 +117,15 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
             ARGTYPE_CASE0(argTypeFloat, jfloat);
         case argTypeReference:
         case argTypeArray:
-            appendArg(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
+            appendArg(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid, frame)));
             ++argid;
             break;
         case argTypeLong:
-            appendArg(zeroStackLoadLocalW<jlong>(argid));
+            appendArg(zeroStackLoadLocalW<jlong>(argid, frame));
             argid += 2;
             break;
         case argTypeDouble:
-            appendArg(zeroStackLoadLocalW<jdouble>(argid));
+            appendArg(zeroStackLoadLocalW<jdouble>(argid, frame));
             argid += 2;
             break;
         default:
@@ -275,7 +276,7 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
     cleanupLocalRef();
 }
 
-void OMElysiaExecutorZero::executeNativeLink(uint8_t **realpc)
+void OMElysiaExecutorZero::executeNativeLink(uint8_t **realpc, OMElysiaJavaFrame *frame)
 {
     auto tc = thisThread.metadata;
     auto mm = tc->zero.frame->method;
@@ -285,7 +286,7 @@ void OMElysiaExecutorZero::executeNativeLink(uint8_t **realpc)
         auto &nm = mm->klass->nativeMethods[i];
         if (mm->isSame(&nm))
         {
-            executeNative(mm, mm->isStatic(), nm.funcPtr, realpc);
+            executeNative(mm, mm->isStatic(), nm.funcPtr, realpc, frame);
             return;
         }
     }
@@ -301,7 +302,7 @@ void OMElysiaExecutorZero::executeNativeLink(uint8_t **realpc)
 
     if (elysium->nativeFuncMap.count(ffm))
     {
-        executeNative(mm, mm->isStatic(), elysium->nativeFuncMap[ffm], realpc);
+        executeNative(mm, mm->isStatic(), elysium->nativeFuncMap[ffm], realpc, frame);
         return;
     }
 

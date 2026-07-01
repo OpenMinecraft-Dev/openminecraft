@@ -97,22 +97,19 @@ template <typename T> static inline T zeroStackPeekGet()
     return *reinterpret_cast<T *>(thisThread.metadata->zero.stackPointer);
 }
 
-template <typename T> static inline void zeroStackSaveLocalPop(uint32_t l)
+template <typename T> static inline void zeroStackSaveLocalPop(uint32_t l, OMElysiaJavaFrame *frame)
 {
     assertType1<T>();
-    *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *)) =
-        zeroStackPopGet<T>();
+    *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *)) = zeroStackPopGet<T>();
 }
 
-template <typename T> static inline void zeroStackSaveLocal(uint32_t l, T data)
+template <typename T> static inline void zeroStackSaveLocal(uint32_t l, T data, OMElysiaJavaFrame *frame)
 {
     assertType1<T>();
-    *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *)) =
-        data;
+    *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *)) = data;
 }
 
-template <typename T>
-static inline T zeroStackLoadLocal(uint32_t l, OMElysiaJavaFrame *frame = thisThread.metadata->zero.frame)
+template <typename T> static inline T zeroStackLoadLocal(uint32_t l, OMElysiaJavaFrame *frame)
 {
     assertType1<T>();
     return *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *));
@@ -155,39 +152,37 @@ template <typename T> static inline T zeroStackPopWGet()
     }
 }
 
-template <typename T> static inline T zeroStackLoadLocalW(uint32_t l)
+template <typename T> static inline T zeroStackLoadLocalW(uint32_t l, OMElysiaJavaFrame *frame)
 {
     assertType2<T>();
     if constexpr (sizeof(void *) == 8)
     {
-        return *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) -
-                                      (l + 1) * sizeof(void *));
+        return *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *));
     }
     else
     {
-        auto dlow = static_cast<uint64_t>(zeroStackLoadLocal<uint32_t>(l));
-        auto dhigh = static_cast<uint64_t>(zeroStackLoadLocal<uint32_t>(l + 1));
+        auto dlow = static_cast<uint64_t>(zeroStackLoadLocal<uint32_t>(l, frame));
+        auto dhigh = static_cast<uint64_t>(zeroStackLoadLocal<uint32_t>(l + 1, frame));
 
         auto d = dhigh << 32 | dlow;
         return *reinterpret_cast<T *>(&d);
     }
 }
 
-template <typename T> static inline void zeroStackSaveLocalPopW(uint32_t l)
+template <typename T> static inline void zeroStackSaveLocalPopW(uint32_t l, OMElysiaJavaFrame *frame)
 {
     assertType2<T>();
     if constexpr (sizeof(void *) == 8)
     {
-        *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) -
-                               (l + 1) * sizeof(void *)) = zeroStackPopWGet<T>();
+        *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *)) = zeroStackPopWGet<T>();
     }
     else
     {
         auto value = zeroStackPopWGet<T>();
         auto vv = *reinterpret_cast<uint64_t *>(&value);
 
-        auto dlow = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1) * sizeof(void *);
-        auto dhigh = reinterpret_cast<uintptr_t>(thisThread.metadata->zero.frame) - (l + 1 + 1) * sizeof(void *);
+        auto dlow = reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *);
+        auto dhigh = reinterpret_cast<uintptr_t>(frame) - (l + 1 + 1) * sizeof(void *);
 
         *reinterpret_cast<uint32_t *>(dlow) = static_cast<uint32_t>(vv & 0xffffffff);
         *reinterpret_cast<uint32_t *>(dhigh) = static_cast<uint32_t>(vv >> 32);
@@ -223,8 +218,8 @@ class OMElysiaExecutorZero
 
   protected:
     void execute(OMElysiaMethod *m);
-    void executeNativeLink(uint8_t **realpc);
-    void executeNative(OMElysiaMethod *m, bool isStatic, void *func, uint8_t **realpc);
+    void executeNativeLink(uint8_t **realpc, OMElysiaJavaFrame *frame);
+    void executeNative(OMElysiaMethod *m, bool isStatic, void *func, uint8_t **realpc, OMElysiaJavaFrame *frame);
     void pushFrame(OMElysiaMethod *m, uint8_t *retAddr, bool needVtable, uint8_t **realpc);
     void popFrame(uint8_t **realpc);
 
