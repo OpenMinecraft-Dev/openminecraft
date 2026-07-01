@@ -7,15 +7,15 @@ namespace openminecraft::vm::elysia::executor
 uintptr_t zeroStackAlloc(uint64_t len)
 {
     auto tc = thisThread.metadata;
-    tc->zero.stackPointer = tc->zero.stackPointer - len;
-    return tc->zero.stackPointer;
+    auto v = tc->zero.stackPointer -= len;
+    return v;
 }
 
 uintptr_t zeroStackPop(uint64_t len)
 {
     auto tc = thisThread.metadata;
     auto result = tc->zero.stackPointer;
-    tc->zero.stackPointer = tc->zero.stackPointer + len;
+    tc->zero.stackPointer += len;
     return result;
 }
 

@@ -66,7 +66,7 @@ OMElysiaNativeHandle *OMElysiaExecutorZero::recordLocalRef(OMElysiaOop *oop)
     return oldnode;
 }
 
-void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *func, uint8_t **realpc)
+void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void *func, uint8_t **realpc)
 {
     auto tc = thisThread.metadata;
     std::vector<std::variant<jint, jbyte, jboolean, jshort, jchar, jfloat, jlong, jdouble, OMElysiaNativeHandle *,
@@ -74,23 +74,23 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
         rawargs;
 
     // geopelia: arg #0, jnienv
-    rawargs.push_back(&tc->interface);
+    rawargs.emplace_back(&tc->interface);
 
     uint8_t argTypes[255];
     int argCount;
     uint8_t returnType;
-    descriptorTypes(descriptor, argTypes, argCount, &returnType);
+    descriptorTypes(m->cachedDescriptor, argTypes, argCount, &returnType);
     auto argid = 0;
 
     // geopelia: arg #1, instance oop (non-static) or klass (static)
     if (!isStatic)
     {
-        rawargs.push_back(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
+        rawargs.emplace_back(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
         ++argid;
     }
     else
     {
-        rawargs.push_back(thisThread.metadata->zero.frame->method->klass);
+        rawargs.emplace_back(thisThread.metadata->zero.frame->method->klass);
     }
 
     // geopelia: arg #2 and so on, fetch from the stack (if exists)
@@ -101,7 +101,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
 
 #define ARGTYPE_CASE0(id, type)                                                                                        \
     case id:                                                                                                           \
-        rawargs.push_back(zeroStackLoadLocal<type>(argid));                                                            \
+        rawargs.emplace_back(zeroStackLoadLocal<type>(argid));                                                         \
         ++argid;                                                                                                       \
         break;
 
@@ -113,15 +113,15 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
             ARGTYPE_CASE0(argTypeFloat, jfloat);
         case argTypeReference:
         case argTypeArray:
-            rawargs.push_back(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
+            rawargs.emplace_back(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
             ++argid;
             break;
         case argTypeLong:
-            rawargs.push_back(zeroStackLoadLocalW<jlong>(argid));
+            rawargs.emplace_back(zeroStackLoadLocalW<jlong>(argid));
             argid += 2;
             break;
         case argTypeDouble:
-            rawargs.push_back(zeroStackLoadLocalW<jdouble>(argid));
+            rawargs.emplace_back(zeroStackLoadLocalW<jdouble>(argid));
             argid += 2;
             break;
         default:
@@ -139,7 +139,7 @@ void OMElysiaExecutorZero::executeNative(char *descriptor, bool isStatic, void *
     if (auto *p = std::get_if<type>(&rawargs[i]))                                                                      \
     {                                                                                                                  \
         argPointers[i] = p;                                                                                            \
-        rawargtypes.push_back(&ffitype);                                                                               \
+        rawargtypes.emplace_back(&ffitype);                                                                            \
     }
         PUSHARG(ffi_type_sint8, jbyte);
         PUSHARG(ffi_type_uint8, jboolean);
@@ -282,7 +282,7 @@ void OMElysiaExecutorZero::executeNativeLink(uint8_t **realpc)
         auto &nm = mm->klass->nativeMethods[i];
         if (mm->isSame(&nm))
         {
-            executeNative(mm->descriptor, mm->isStatic(), nm.funcPtr, realpc);
+            executeNative(mm, mm->isStatic(), nm.funcPtr, realpc);
             return;
         }
     }
@@ -298,7 +298,7 @@ void OMElysiaExecutorZero::executeNativeLink(uint8_t **realpc)
 
     if (elysium->nativeFuncMap.count(ffm))
     {
-        executeNative(mm->descriptor, mm->isStatic(), elysium->nativeFuncMap[ffm], realpc);
+        executeNative(mm, mm->isStatic(), elysium->nativeFuncMap[ffm], realpc);
         return;
     }
 

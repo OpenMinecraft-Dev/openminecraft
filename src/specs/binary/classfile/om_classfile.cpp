@@ -200,49 +200,6 @@ void OMClassFile::loadField(MemoryReader &reader, OMClassField &m)
     }
 }
 
-/*static inline std::string toStdUtf8(const uint8_t *data, int length)
-{
-    int p = 0;
-
-    std::vector<int> target;
-    target.reserve(length);
-    while (p < length)
-    {
-        if (data[p] >> 7 == 0)
-        {
-            target.push_back(data[p]);
-            p += 1;
-            continue;
-        }
-
-        if (data[p] >> 5 == 0b110 && data[p + 1] >> 6 == 0b10)
-        {
-            auto d = ((data[p] & 0x1f) << 6) + (data[p + 1] & 0x3f);
-            target.push_back(d);
-            p += 2;
-            continue;
-        }
-
-        if (data[p] >> 4 == 0b1110 && data[p + 1] >> 6 == 0b10 && data[p + 2] >> 6 == 0b10)
-        {
-            target.push_back(((data[p] & 0xf) << 12) + ((data[p + 1] & 0x3f) << 6) + (data[p + 2] & 0x3f));
-            p += 3;
-            continue;
-        }
-
-        if (data[p] == 0b11101101 && data[p + 1] >> 4 == 0b1010 && data[p + 2] >> 6 == 0b10 &&
-            data[p + 3] == 0b11101101 && data[p + 4] >> 4 == 0b1011 && data[p + 5] >> 6 == 0b10)
-        {
-            target.push_back(0x10000 + ((data[p + 1] & 0x0f) << 16) + ((data[p + 2] & 0x3f) << 10) +
-                             ((data[p + 4] & 0x0f) << 6) + (data[p + 5] & 0x3f));
-            p += 6;
-            continue;
-        }
-    }
-
-    return util::encoding::utf32ToUtf8(target);
-}*/
-
 static inline std::string toStdUtf8(const uint8_t *data, int length)
 {
     std::string result;

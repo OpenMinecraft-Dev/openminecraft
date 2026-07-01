@@ -95,6 +95,10 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
     klass->methods->name = elysium->metaspaceHeap.allocateStr("clone");
     klass->methods->descriptor = elysium->metaspaceHeap.allocateStr("()Ljava/lang/Object;");
     klass->methods->klass = klass;
+    klass->methods->argSlots = 1;
+    klass->methods->cachedDescriptor =
+        std::make_shared<std::pair<std::vector<OMElysiaSignaturePart>, OMElysiaSignaturePart>>(
+            std::move(parseSignature(klass->methods->descriptor)));
     klass->methods->accessFlag = JVM_Acc_Public | JVM_Acc_Final | JVM_Acc_Native;
     klass->nativeMethodCount = 1;
     klass->nativeMethods = elysium->metaspaceHeap.allocateArray<OMElysiaNativeMethod>(1);
@@ -291,19 +295,10 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> i
 {
     auto clsfile = std::make_shared<specs::classfile::OMClassFile>();
     clsfile->load(istr);
-    /*if (clsfile == nullptr)
-    {
-        throw std::logic_error(clsfileres.unwrap_err().what());
-    }*/
-
     auto clsname =
         clsfile->constants.data->at(clsfile->constants.data->at(clsfile->basic.thisClass).classinfo.nameIndex)
             .valueString;
 
-    /*auto clsname =
-        clsfile->mapping[clsfile->mapping[clsfile->thisClass]->to<classfile::OMClassConstantClass>()->nameIndex]
-            ->to<classfile::OMClassConstantUtf8>()
-            ->data;*/
     if (!findClass(clsname))
     {
         constructInstanceClassShell(clsname);
@@ -417,14 +412,6 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> i
         klass->constantPoolRaw[i] = clsfile->constants.data->at(i);
     }
 
-    /*klass->constantPoolRaw =
-        std::make_shared<std::unordered_map<uint16_t, std::shared_ptr<classfile::OMClassConstant>>>();
-    int l = 0;
-    for (auto &pp : clsfile->mapping)
-    {
-        (*klass->constantPoolRaw)[pp.first] = pp.second;
-        l = std::max(l, pp.first + 1);
-    }*/
     auto l = clsfile->constants.length;
     klass->constantPoolCount = clsfile->constants.length;
     klass->constantPool = elysium->metaspaceHeap.allocateArray<void *>(l);
@@ -447,6 +434,9 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> i
             clsfile->constants.data->at(clsfile->methods.data->at(i).nameIndex).valueString);
         m.descriptor = elysium->metaspaceHeap.allocateStr(
             clsfile->constants.data->at(clsfile->methods.data->at(i).descriptorIndex).valueString);
+        m.argSlots = argSlots(m.descriptor) + (m.isStatic() ? 0 : 1);
+        m.cachedDescriptor = std::make_shared<std::pair<std::vector<OMElysiaSignaturePart>, OMElysiaSignaturePart>>(
+            std::move(parseSignature(m.descriptor)));
 
         if (m.isNative())
         {

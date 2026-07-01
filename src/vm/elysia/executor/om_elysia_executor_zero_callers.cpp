@@ -17,7 +17,7 @@ void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, const OMElysiaNat
     uint8_t argtypes[255];
     int argcount;
     uint8_t returntype;
-    descriptorTypes(m->descriptor, argtypes, argcount, &returntype);
+    descriptorTypes(m->cachedDescriptor, argtypes, argcount, &returntype);
 
     auto pos = i;
 

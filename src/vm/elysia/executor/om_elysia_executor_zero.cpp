@@ -17,8 +17,6 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <iostream>
-#include <mutex>
 #include <stdexcept>
 
 using namespace openminecraft::binary::hash;
@@ -57,7 +55,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m, uint8_t *retAddr, bool n
         logger.dumpStacktrace();
         throw std::logic_error("function is null!");
     }
-    auto ll = argSlots(m->descriptor) + (m->isStatic() ? 0 : 1);
+    auto ll = m->argSlots;
     auto tc = thisThread.metadata;
 
     auto newlocal = reinterpret_cast<void *>(tc->zero.stackPointer - sizeof(OMElysiaJavaFrame));
@@ -111,11 +109,12 @@ OMElysiaKlassloader *OMElysiaExecutorZero::currentKlassloader()
 
 void OMElysiaExecutorZero::popFrame(uint8_t **realpc)
 {
-    auto tc = thisThread.metadata;
+    auto &tczero = thisThread.metadata->zero;
+    auto &frm = tczero.frame;
 
-    tc->zero.stackPointer = reinterpret_cast<uintptr_t>(tc->zero.frame) + sizeof(OMElysiaJavaFrame);
-    *realpc = tc->zero.frame->returnAddr;
-    tc->zero.frame = tc->zero.frame->caller;
+    tczero.stackPointer = reinterpret_cast<uintptr_t>(frm) + sizeof(OMElysiaJavaFrame);
+    *realpc = tczero.frame->returnAddr;
+    frm = frm->caller;
 }
 
 void OMElysiaExecutorZero::threadInit()

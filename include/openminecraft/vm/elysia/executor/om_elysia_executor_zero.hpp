@@ -190,7 +190,7 @@ class OMElysiaExecutorZero
   protected:
     void execute(OMElysiaMethod *m);
     void executeNativeLink(uint8_t **realpc);
-    void executeNative(char *descriptor, bool isStatic, void *func, uint8_t **realpc);
+    void executeNative(OMElysiaMethod *m, bool isStatic, void *func, uint8_t **realpc);
     void pushFrame(OMElysiaMethod *m, uint8_t *retAddr, bool needVtable, uint8_t **realpc);
     void popFrame(uint8_t **realpc);
 

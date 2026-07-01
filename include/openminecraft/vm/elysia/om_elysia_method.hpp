@@ -3,6 +3,7 @@
 
 #include "openminecraft/specs/classfile/om_classfile.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
+#include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include <cstdint>
 #include <cstring>
 
@@ -24,6 +25,8 @@ struct OMElysiaMethod
     uint16_t accessFlag;
 
     uint32_t localLength;
+    uint32_t argSlots;
+    std::shared_ptr<std::pair<std::vector<OMElysiaSignaturePart>, OMElysiaSignaturePart>> cachedDescriptor = nullptr;
 
     uint32_t codeLength;
     uint8_t *code;

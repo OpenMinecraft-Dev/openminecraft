@@ -61,11 +61,6 @@ OMElysiaOop *OMElysiaOopManager::allocateString(std::string target)
     std::memcpy(arrAccess<jchar>(arr), std::get<jchar *>(u16target), std::get<jsize>(u16target) * sizeof(jchar));
     free(std::get<jchar *>(u16target));
 
-    if (std::get<jsize>(u16target) > 500)
-    {
-        logger.warn("{}", std::get<jsize>(u16target));
-    }
-
     auto strWrp = allocateOop(stringKlass);
     oopAccessPointerField(strWrp, 0, arr);
 

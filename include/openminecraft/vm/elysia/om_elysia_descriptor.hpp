@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <iostream>
 #include <memory>
-#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -85,15 +84,14 @@ inline static void parseSignaturePart(const char *&sig, OMElysiaSignaturePart *p
         break;
     case 'L': {
         part->type = argTypeReference;
-        std::string s = "";
-        ++sig;
+        part->content = "";
+        const char *start = ++sig;
         while (*sig != ';')
         {
-            s.push_back(*sig);
             ++sig;
         }
+        part->content.assign(start, sig);
         ++sig;
-        part->content = s;
         break;
     }
     }
@@ -148,12 +146,12 @@ inline static std::pair<std::vector<OMElysiaSignaturePart>, OMElysiaSignaturePar
 
         if (insideArgs)
         {
-            argTypes.push_back(part);
+            argTypes.emplace_back(part);
         }
     }
 
 retRes:
-    return std::make_pair(argTypes, retValue);
+    return {argTypes, retValue};
 }
 
 inline static std::string signatureToRaw(OMElysiaSignaturePart &part)
@@ -318,17 +316,17 @@ static uint64_t descriptorLength(char *s, uint64_t ptrLen)
     }
 }
 
-inline static void descriptorTypes(char *desc, uint8_t *out, int &argCount, uint8_t *returnType, int maxArgs = 255)
+inline static void descriptorTypes(
+    std::shared_ptr<std::pair<std::vector<OMElysiaSignaturePart>, OMElysiaSignaturePart>> d, uint8_t *out,
+    int &argCount, uint8_t *returnType, int maxArgs = 255)
 {
-    auto result = parseSignature(desc);
+    *returnType = d->second.type;
 
-    *returnType = result.second.type;
-
-    for (int i = 0; i < result.first.size(); i++)
+    for (int i = 0; i < d->first.size(); i++)
     {
-        out[i] = result.first[i].type;
+        out[i] = d->first[i].type;
     }
-    argCount = result.first.size();
+    argCount = d->first.size();
 }
 
 static uint64_t argCount(char *s)
