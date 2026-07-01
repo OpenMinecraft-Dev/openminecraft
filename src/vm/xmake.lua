@@ -1,5 +1,6 @@
 local config = {
 	["arch-x86"] = true,
+	["arch-x86_64"] = true,
 	["arch-aarch64"] = true,
 	["plat-unix"] = true,
 	["plat-windows"] = true,

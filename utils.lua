@@ -13,7 +13,10 @@ end
 function is_arch_alias(arch)
 	local matchmap = {
 		["x86"] = function()
-			return is_arch("x86", "i386", "x86_64", "x64", "amd64")
+			return is_arch("x86", "i386")
+		end,
+		["x86_64"] = function()
+			return is_arch("x86_64", "x64", "amd64")
 		end,
 		["aarch64"] = function()
 			return is_arch("arm64-v8a", "arm64")
@@ -72,6 +75,7 @@ PLATFORMS = {
 }
 ARCHITECTURES = {
 	"x86",
+	"x86_64",
 	"aarch64",
 	"arm",
 	"loongarch",
