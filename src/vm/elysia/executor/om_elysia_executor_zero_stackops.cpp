@@ -4,45 +4,6 @@
 
 namespace openminecraft::vm::elysia::executor
 {
-uintptr_t zeroStackAlloc(uint64_t len)
-{
-    auto tc = thisThread.metadata;
-    auto v = tc->zero.stackPointer -= len;
-    return v;
-}
-
-uintptr_t zeroStackPop(uint64_t len)
-{
-    auto tc = thisThread.metadata;
-    auto result = tc->zero.stackPointer;
-    tc->zero.stackPointer += len;
-    return result;
-}
-
-uint16_t zeroCodeFetchArgu16p0(uint8_t *pc)
-{
-    auto tc = thisThread.metadata;
-    return static_cast<uint16_t>(pc[1] << 8) | pc[2];
-}
-
-int16_t zeroCodeFetchArgs16p0(uint8_t *pc)
-{
-    auto tc = thisThread.metadata;
-    return static_cast<int16_t>(pc[1] << 8) | pc[2];
-}
-
-int32_t zeroCodeFetchArgs32Align(uint8_t *pc, int offset)
-{
-    auto tc = thisThread.metadata;
-    auto pp = pc + 1;
-    while (reinterpret_cast<uintptr_t>(pp) % 4)
-    {
-        ++pp;
-    }
-    return static_cast<int32_t>(pp[offset * 4] << 24) | static_cast<int32_t>(pp[offset * 4 + 1] << 16) |
-           static_cast<int32_t>(pp[offset * 4 + 2] << 8) | pp[offset * 4 + 3];
-}
-
 void zeroStackPushFromStatic(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world)
 {
     switch (*field->desc)

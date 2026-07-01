@@ -1,5 +1,4 @@
 #include "fmt/format.h"
-#include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
@@ -11,7 +10,6 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include <cstdint>
 #include <ffi.h>
-#include <iostream>
 #include <variant>
 
 using namespace openminecraft::binary::hash;
@@ -69,12 +67,17 @@ OMElysiaNativeHandle *OMElysiaExecutorZero::recordLocalRef(OMElysiaOop *oop)
 void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void *func, uint8_t **realpc)
 {
     auto tc = thisThread.metadata;
-    std::vector<std::variant<jint, jbyte, jboolean, jshort, jchar, jfloat, jlong, jdouble, OMElysiaNativeHandle *,
-                             OMElysiaJNIEnv *, OMElysiaKlass *>>
-        rawargs;
+    std::variant<jint, jbyte, jboolean, jshort, jchar, jfloat, jlong, jdouble, OMElysiaNativeHandle *, OMElysiaJNIEnv *,
+                 OMElysiaKlass *>
+        rawargs[258];
+    int rawargsize = 0;
+#define appendArg(n)                                                                                                   \
+    rawargs[rawargsize] = n;                                                                                           \
+    ++rawargsize;
 
     // geopelia: arg #0, jnienv
-    rawargs.emplace_back(&tc->interface);
+    appendArg(&tc->interface);
+    // rawargs.emplace_back(&tc->interface);
 
     uint8_t argTypes[255];
     int argCount;
@@ -85,12 +88,12 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
     // geopelia: arg #1, instance oop (non-static) or klass (static)
     if (!isStatic)
     {
-        rawargs.emplace_back(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
+        appendArg(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
         ++argid;
     }
     else
     {
-        rawargs.emplace_back(thisThread.metadata->zero.frame->method->klass);
+        appendArg(thisThread.metadata->zero.frame->method->klass);
     }
 
     // geopelia: arg #2 and so on, fetch from the stack (if exists)
@@ -101,7 +104,7 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
 
 #define ARGTYPE_CASE0(id, type)                                                                                        \
     case id:                                                                                                           \
-        rawargs.emplace_back(zeroStackLoadLocal<type>(argid));                                                         \
+        appendArg(zeroStackLoadLocal<type>(argid));                                                                    \
         ++argid;                                                                                                       \
         break;
 
@@ -113,15 +116,15 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
             ARGTYPE_CASE0(argTypeFloat, jfloat);
         case argTypeReference:
         case argTypeArray:
-            rawargs.emplace_back(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
+            appendArg(recordLocalRef(zeroStackLoadLocal<OMElysiaOop *>(argid)));
             ++argid;
             break;
         case argTypeLong:
-            rawargs.emplace_back(zeroStackLoadLocalW<jlong>(argid));
+            appendArg(zeroStackLoadLocalW<jlong>(argid));
             argid += 2;
             break;
         case argTypeDouble:
-            rawargs.emplace_back(zeroStackLoadLocalW<jdouble>(argid));
+            appendArg(zeroStackLoadLocalW<jdouble>(argid));
             argid += 2;
             break;
         default:
@@ -129,11 +132,11 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
         }
     }
 
-    void **argPointers = reinterpret_cast<void **>(zeroStackAlloc(sizeof(void *) * rawargs.size()));
+    void **argPointers = reinterpret_cast<void **>(zeroStackAlloc(sizeof(void *) * rawargsize));
     std::vector<ffi_type *> rawargtypes;
-    rawargtypes.reserve(rawargs.size());
+    rawargtypes.reserve(rawargsize);
 
-    for (int i = 0; i < rawargs.size(); i++)
+    for (int i = 0; i < rawargsize; i++)
     {
 #define PUSHARG(ffitype, type)                                                                                         \
     if (auto *p = std::get_if<type>(&rawargs[i]))                                                                      \

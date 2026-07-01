@@ -12,8 +12,19 @@
 #include <type_traits>
 namespace openminecraft::vm::elysia::executor
 {
-uintptr_t zeroStackAlloc(uint64_t len);
-uintptr_t zeroStackPop(uint64_t len);
+static inline uintptr_t zeroStackAlloc(uint64_t len)
+{
+    auto tc = thisThread.metadata;
+    auto v = tc->zero.stackPointer -= len;
+    return v;
+}
+static inline uintptr_t zeroStackPop(uint64_t len)
+{
+    auto tc = thisThread.metadata;
+    auto result = tc->zero.stackPointer;
+    tc->zero.stackPointer += len;
+    return result;
+}
 
 template <typename T> constexpr void assertType1()
 {
@@ -60,10 +71,20 @@ void zeroStackPopToStatic(OMElysiaField *field, OMElysiaOopManager *oop, OMElysi
 void zeroStackPushFromStatic(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
 void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
 void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysium *world);
-uint16_t zeroCodeFetchArgu16p0(uint8_t *);
-int16_t zeroCodeFetchArgs16p0(uint8_t *);
-int32_t zeroCodeFetchArgs32Align(uint8_t *, int offset);
 
+#define zeroCodeFetchArgu16p0(pc) (static_cast<uint16_t>(pc[1] << 8) | pc[2])
+#define zeroCodeFetchArgs16p0(pc) (static_cast<int16_t>(pc[1] << 8) | pc[2])
+
+static inline int32_t zeroCodeFetchArgs32Align(uint8_t *pc, int offset)
+{
+    auto pp = pc + 1;
+    while (reinterpret_cast<uintptr_t>(pp) % 4)
+    {
+        ++pp;
+    }
+    return static_cast<int32_t>(pp[offset * 4] << 24) | static_cast<int32_t>(pp[offset * 4 + 1] << 16) |
+           static_cast<int32_t>(pp[offset * 4 + 2] << 8) | pp[offset * 4 + 3];
+}
 template <typename T> static inline T zeroStackPopGet()
 {
     assertType1<T>();
