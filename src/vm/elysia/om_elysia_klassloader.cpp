@@ -440,7 +440,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> i
 
         if (m.isNative())
         {
-            m.localLength = argSlots(m.descriptor) + (m.isStatic() ? 0 : 1);
+            m.localLength = m.argSlots;
         }
         else
         {

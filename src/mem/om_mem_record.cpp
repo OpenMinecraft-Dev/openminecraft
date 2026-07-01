@@ -27,7 +27,7 @@ uint64_t blocks = 0;
 std::mutex mutex;
 
 log::OMLogger logger("Memory Record/Castorice");
-void rec(MemModifyInfo i)
+void rec(MemModifyInfo &&i)
 {
     while (!mutex.try_lock())
     {

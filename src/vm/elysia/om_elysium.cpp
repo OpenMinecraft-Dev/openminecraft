@@ -10,7 +10,6 @@
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include <atomic>
-#include <iostream>
 #include <stdexcept>
 #include <thread>
 
@@ -21,7 +20,7 @@ std::atomic<bool> needStop = false;
 namespace openminecraft::vm::elysia
 {
 OMElysium::OMElysium()
-    : metaspaceHeap("elysia_metaspace", 1024 * 1024 * 16, 0.2), mainHeap("elysia_main", 1024 * 1024 * 1024, 0.25),
+    : metaspaceHeap("elysia_metaspace", 1024 * 1024 * 16, 0.75), mainHeap("elysia_main", 1024 * 1024 * 1024, 0.75),
       logger("OMElysium", this)
 {
     monitorManager = mem::fast_shared<allocatorTag, OMElysiaMonitorManager>();

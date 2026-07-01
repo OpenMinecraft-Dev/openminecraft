@@ -32,9 +32,22 @@ template <typename T> static inline void zeroStackPush(T data)
 {
     assertType1<T>();
     auto d = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
+    *d = 0;
     if constexpr (std::is_pointer_v<T>)
     {
         *d = reinterpret_cast<uintptr_t>(data);
+    }
+    else if constexpr (sizeof(T) == 4)
+    {
+        *reinterpret_cast<jint *>(d) = *reinterpret_cast<jint *>(&data);
+    }
+    else if constexpr (sizeof(T) == 2)
+    {
+        *reinterpret_cast<jshort *>(d) = *reinterpret_cast<jshort *>(&data);
+    }
+    else if constexpr (sizeof(T) == 1)
+    {
+        *reinterpret_cast<jbyte *>(d) = *reinterpret_cast<jbyte *>(&data);
     }
     else
     {
