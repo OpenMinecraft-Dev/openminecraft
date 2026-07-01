@@ -122,7 +122,7 @@ function addExtFiles(config)
 	end
 
 	for _, arch in ipairs(ARCHITECTURES) do
-		addExtFilesSub2("arch", arch, arch == "x86" or arch == "aarch64")
+		addExtFilesSub2("arch", arch, arch == "x86" or arch == "x86_64" or arch == "aarch64")
 	end
 
 	for _, plat in ipairs(PLATFORMS) do
