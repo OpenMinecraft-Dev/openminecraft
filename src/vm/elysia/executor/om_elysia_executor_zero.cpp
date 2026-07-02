@@ -535,7 +535,13 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++pc;
             goto exec;
         }
-
+#define op_calcinplace(op, fetch, fetchref, oprt)                                                                      \
+    case op_##op: {                                                                                                    \
+        auto value2 = fetch();                                                                                         \
+        *fetchref() oprt value2;                                                                                       \
+        ++pc;                                                                                                          \
+        goto exec;                                                                                                     \
+    }
 #define op_calc(op, fetch, psh, oprt)                                                                                  \
     case op_##op: {                                                                                                    \
         auto value2 = fetch();                                                                                         \
@@ -544,26 +550,25 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         ++pc;                                                                                                          \
         goto exec;                                                                                                     \
     }
-            op_calc(iadd, zeroStackPopGet<jint>, zeroStackPush, +);
+            op_calcinplace(iadd, zeroStackPopGet<jint>, zeroStackPeekGetRef<jint>, +=);
             op_calc(ladd, zeroStackPopWGet<jlong>, zeroStackPushW, +);
-            op_calc(fadd, zeroStackPopGet<jfloat>, zeroStackPush, +);
+            op_calcinplace(fadd, zeroStackPopGet<jfloat>, zeroStackPeekGetRef<jfloat>, +=);
             op_calc(dadd, zeroStackPopWGet<jdouble>, zeroStackPushW, +);
-            op_calc(isub, zeroStackPopGet<jint>, zeroStackPush, -);
+            op_calcinplace(isub, zeroStackPopGet<jint>, zeroStackPeekGetRef<jint>, -=);
             op_calc(lsub, zeroStackPopWGet<jlong>, zeroStackPushW, -);
-            op_calc(fsub, zeroStackPopGet<jfloat>, zeroStackPush, -);
+            op_calcinplace(fsub, zeroStackPopGet<jfloat>, zeroStackPeekGetRef<jfloat>, -=);
             op_calc(dsub, zeroStackPopWGet<jdouble>, zeroStackPushW, -);
-            op_calc(imul, zeroStackPopGet<jint>, zeroStackPush, *);
+            op_calcinplace(imul, zeroStackPopGet<jint>, zeroStackPeekGetRef<jint>, *=);
             op_calc(lmul, zeroStackPopWGet<jlong>, zeroStackPushW, *);
-            op_calc(fmul, zeroStackPopGet<jfloat>, zeroStackPush, *);
+            op_calcinplace(fmul, zeroStackPopGet<jfloat>, zeroStackPeekGetRef<jfloat>, *=);
             op_calc(dmul, zeroStackPopWGet<jdouble>, zeroStackPushW, *);
         case op_idiv: {
             auto value2 = zeroStackPopGet<jint>();
-            auto value1 = zeroStackPopGet<jint>();
             if (value2 == 0)
             {
                 throw std::logic_error("divide by zero!");
             }
-            zeroStackPush(value1 / value2);
+            *zeroStackPeekGetRef<jint>() /= value2;
             ++pc;
             goto exec;
         }
@@ -578,7 +583,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++pc;
             goto exec;
         }
-            op_calc(fdiv, zeroStackPopGet<jfloat>, zeroStackPush, /);
+            op_calcinplace(fdiv, zeroStackPopGet<jfloat>, zeroStackPeekGetRef<jfloat>, /=);
             op_calc(ddiv, zeroStackPopWGet<jdouble>, zeroStackPushW, /);
 
 #define op_calcrem(op, fetch, psh)                                                                                     \
@@ -596,7 +601,6 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_calcrem(irem, zeroStackPopGet<jint>, zeroStackPush);
             op_calcrem(lrem, zeroStackPopWGet<jlong>, zeroStackPushW);
         case op_frem: {
-
             auto value2 = zeroStackPopGet<jfloat>();
             auto value1 = zeroStackPopGet<jfloat>();
             zeroStackPush(std::fmod(value1, value2));
@@ -623,22 +627,19 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             op_calcneg(dneg, zeroStackPopWGet<jdouble>, zeroStackPushW);
         case op_ishl: {
             auto value2 = zeroStackPopGet<jint>();
-            auto value1 = zeroStackPopGet<jint>();
-            zeroStackPush(value1 << (value2 & 0x1f));
+            *zeroStackPeekGetRef<jint>() <<= (value2 & 0x1f);
             ++pc;
             goto exec;
         }
         case op_ishr: {
             auto value2 = zeroStackPopGet<jint>();
-            auto value1 = zeroStackPopGet<jint>();
-            zeroStackPush(value1 >> (value2 & 0x1f));
+            *zeroStackPeekGetRef<jint>() >>= (value2 & 0x1f);
             ++pc;
             goto exec;
         }
         case op_iushr: {
             auto value2 = zeroStackPopGet<jint>();
-            auto value1 = zeroStackPopGet<uint32_t>();
-            zeroStackPush(value1 >> (value2 & 0x1f));
+            *zeroStackPeekGetRef<uint32_t>() >>= (value2 & 0x1f);
             ++pc;
             goto exec;
         }
@@ -663,11 +664,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++pc;
             goto exec;
         }
-            op_calc(iand, zeroStackPopGet<jint>, zeroStackPush, &);
+            op_calcinplace(iand, zeroStackPopGet<jint>, zeroStackPeekGetRef<jint>, &=);
             op_calc(land, zeroStackPopWGet<jlong>, zeroStackPushW, &);
-            op_calc(ior, zeroStackPopGet<jint>, zeroStackPush, |);
+            op_calcinplace(ior, zeroStackPopGet<jint>, zeroStackPeekGetRef<jint>, |=);
             op_calc(lor, zeroStackPopWGet<jlong>, zeroStackPushW, |);
-            op_calc(ixor, zeroStackPopGet<jint>, zeroStackPush, ^);
+            op_calcinplace(ixor, zeroStackPopGet<jint>, zeroStackPeekGetRef<jint>, ^=);
             op_calc(lxor, zeroStackPopWGet<jlong>, zeroStackPushW, ^);
 
         case op_iinc: {

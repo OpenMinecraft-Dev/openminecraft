@@ -97,6 +97,12 @@ template <typename T> static inline T zeroStackPeekGet()
     return *reinterpret_cast<T *>(thisThread.metadata->zero.stackPointer);
 }
 
+template <typename T> static inline T *zeroStackPeekGetRef()
+{
+    assertType1<T>();
+    return reinterpret_cast<T *>(thisThread.metadata->zero.stackPointer);
+}
+
 template <typename T> static inline void zeroStackSaveLocalPop(uint32_t l, OMElysiaJavaFrame *frame)
 {
     assertType1<T>();
