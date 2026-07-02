@@ -75,6 +75,7 @@ void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMEly
 
 #define zeroCodeFetchArgu16p0(pc) (static_cast<uint16_t>(pc[1] << 8) | pc[2])
 #define zeroCodeFetchArgs16p0(pc) (static_cast<int16_t>(pc[1] << 8) | pc[2])
+#define zeroCodeFetchArgs16p1(pc) (static_cast<int16_t>(pc[3] << 8) | pc[4])
 #define zeroCodeFetchArgs32p0(pc)                                                                                      \
     (static_cast<int32_t>(pc[1] << 24) | static_cast<int32_t>(pc[2] << 16) | static_cast<int32_t>(pc[3] << 8) | pc[4])
 

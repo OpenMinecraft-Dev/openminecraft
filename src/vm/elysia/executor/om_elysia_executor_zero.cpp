@@ -1088,7 +1088,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             goto exec;
         }
         case op_ret: {
-            pc = zeroStackLoadLocal<uint8_t *>(zeroCodeFetchArgu16p0(pc), currentFrame);
+            pc = zeroStackLoadLocal<uint8_t *>(pc[1], currentFrame);
             goto exec;
         }
         case op_goto_w: {
@@ -1099,6 +1099,57 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackPush(pc + 5);
             pc += zeroCodeFetchArgs32p0(pc);
             goto exec;
+        }
+        case op_wide: {
+            switch (pc[1])
+            {
+            case op_iload: {
+                zeroStackPush(zeroStackLoadLocal<jint>(zeroCodeFetchArgu16p0(pc), currentFrame));
+                pc += 4;
+            }
+            case op_istore: {
+                zeroStackSaveLocalPop<jint>(zeroCodeFetchArgu16p0(pc), currentFrame);
+                pc += 4;
+                goto exec;
+            }
+            case op_lload: {
+                zeroStackPushW(zeroStackLoadLocalW<jlong>(zeroCodeFetchArgu16p0(pc), currentFrame));
+                pc += 4;
+            }
+            case op_lstore: {
+                zeroStackSaveLocalPopW<jlong>(zeroCodeFetchArgu16p0(pc), currentFrame);
+                pc += 4;
+                goto exec;
+            }
+            case op_fload: {
+                zeroStackPush(zeroStackLoadLocal<jfloat>(zeroCodeFetchArgu16p0(pc), currentFrame));
+                pc += 4;
+            }
+            case op_fstore: {
+                zeroStackSaveLocalPop<jfloat>(zeroCodeFetchArgu16p0(pc), currentFrame);
+                pc += 4;
+                goto exec;
+            }
+            case op_dload: {
+                zeroStackPushW(zeroStackLoadLocalW<jdouble>(zeroCodeFetchArgu16p0(pc), currentFrame));
+                pc += 4;
+            }
+            case op_dstore: {
+                zeroStackSaveLocalPopW<jdouble>(zeroCodeFetchArgu16p0(pc), currentFrame);
+                pc += 4;
+                goto exec;
+            }
+            case op_ret: {
+                pc = zeroStackLoadLocal<uint8_t *>(zeroCodeFetchArgu16p0(pc), currentFrame);
+                goto exec;
+            }
+            case op_iinc: {
+                *zeroStackLoadLocalRef<jint>(zeroCodeFetchArgu16p0(pc), currentFrame) = zeroCodeFetchArgs16p1(pc);
+                pc += 6;
+                goto exec;
+            }
+            }
+            goto unk;
         }
         default:
         unk:

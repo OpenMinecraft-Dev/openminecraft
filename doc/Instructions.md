@@ -205,7 +205,7 @@
 | 0xc1 | instanceof | Y | X |
 | 0xc2 | monitorenter | Y | X |
 | 0xc3 | monitorexit | Y | X |
-| 0xc4 | wide | X | X |
+| 0xc4 | wide | Y | X |
 | 0xc5 | multianewarray | X | X |
 | 0xc6 | ifnull | Y | X |
 | 0xc7 | ifnonnull | Y | X |
