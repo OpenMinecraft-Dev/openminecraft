@@ -338,34 +338,18 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackPush(zeroStackLoadLocal<OMElysiaOop *>(pc[1], currentFrame));
             pc += 2;
             goto exec;
-        case op_baload: {
-            auto idx = zeroStackPopGet<jint>();
-            auto obj = zeroStackPopGet<OMElysiaOop *>();
-            zeroStackPush(oopManager->arrAccess<jboolean>(obj)[idx]);
-            ++pc;
-            goto exec;
-        }
-        case op_caload: {
-            auto idx = zeroStackPopGet<jint>();
-            auto obj = zeroStackPopGet<OMElysiaOop *>();
-            zeroStackPush(oopManager->arrAccess<jchar>(obj)[idx]);
-            ++pc;
-            goto exec;
-        }
-        case op_iaload: {
-            auto idx = zeroStackPopGet<jint>();
-            auto obj = zeroStackPopGet<OMElysiaOop *>();
-            zeroStackPush(oopManager->arrAccess<jint>(obj)[idx]);
-            ++pc;
-            goto exec;
-        }
-        case op_laload: {
-            auto idx = zeroStackPopGet<jint>();
-            auto obj = zeroStackPopGet<OMElysiaOop *>();
-            zeroStackPushW(oopManager->arrAccess<jlong>(obj)[idx]);
-            ++pc;
-            goto exec;
-        }
+#define xaload(op, type, store)                                                                                        \
+    case op: {                                                                                                         \
+        auto idx = zeroStackPopGet<jint>();                                                                            \
+        auto obj = zeroStackPopGet<OMElysiaOop *>();                                                                   \
+        store(oopManager->arrAccess<type>(obj)[idx]);                                                                  \
+        ++pc;                                                                                                          \
+        goto exec;                                                                                                     \
+    }
+            xaload(op_iaload, jint, zeroStackPush);
+            xaload(op_laload, jlong, zeroStackPushW);
+            xaload(op_faload, jfloat, zeroStackPush);
+            xaload(op_daload, jdouble, zeroStackPushW);
         case op_aaload: {
             auto idx = zeroStackPopGet<jint>();
             auto obj = zeroStackPopGet<OMElysiaOop *>();
@@ -373,6 +357,9 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++pc;
             goto exec;
         }
+            xaload(op_baload, jboolean, zeroStackPush);
+            xaload(op_caload, jchar, zeroStackPush);
+            xaload(op_saload, jshort, zeroStackPush);
 
 #define op_istorec(n)                                                                                                  \
     case op_istore_n(n):                                                                                               \
@@ -401,6 +388,16 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackSaveLocalPopW<jlong>(pc[1], currentFrame);
             pc += 2;
             goto exec;
+
+#define op_fstorec(n)                                                                                                  \
+    case op_fstore_n(n):                                                                                               \
+        zeroStackSaveLocalPop<jfloat>(n, currentFrame);                                                                \
+        ++pc;                                                                                                          \
+        goto exec;
+            op_fstorec(0);
+            op_fstorec(1);
+            op_fstorec(2);
+            op_fstorec(3);
         case op_fstore:
             zeroStackSaveLocalPop<jfloat>(pc[1], currentFrame);
             pc += 2;
@@ -433,38 +430,20 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             zeroStackSaveLocalPop<OMElysiaOop *>(pc[1], currentFrame);
             pc += 2;
             goto exec;
-        case op_lastore: {
-            auto value = zeroStackPopWGet<jlong>();
-            auto index = zeroStackPopGet<jint>();
-            auto arr = zeroStackPopGet<OMElysiaOop *>();
-            oopManager->arrAccess<jlong>(arr)[index] = value;
-            ++pc;
-            goto exec;
-        }
-        case op_iastore: {
-            auto value = zeroStackPopGet<jint>();
-            auto index = zeroStackPopGet<jint>();
-            auto arr = zeroStackPopGet<OMElysiaOop *>();
-            oopManager->arrAccess<jint>(arr)[index] = value;
-            ++pc;
-            goto exec;
-        }
-        case op_bastore: {
-            auto value = zeroStackPopGet<jboolean>();
-            auto index = zeroStackPopGet<jint>();
-            auto arr = zeroStackPopGet<OMElysiaOop *>();
-            oopManager->arrAccess<jboolean>(arr)[index] = value;
-            ++pc;
-            goto exec;
-        }
-        case op_castore: {
-            auto value = zeroStackPopGet<jchar>();
-            auto index = zeroStackPopGet<jint>();
-            auto arr = zeroStackPopGet<OMElysiaOop *>();
-            oopManager->arrAccess<jchar>(arr)[index] = value;
-            ++pc;
-            goto exec;
-        }
+
+#define xastore(op, type, load)                                                                                        \
+    case op: {                                                                                                         \
+        auto value = load<type>();                                                                                     \
+        auto index = zeroStackPopGet<jint>();                                                                          \
+        auto arr = zeroStackPopGet<OMElysiaOop *>();                                                                   \
+        oopManager->arrAccess<type>(arr)[index] = value;                                                               \
+        ++pc;                                                                                                          \
+        goto exec;                                                                                                     \
+    }
+            xastore(op_iastore, jint, zeroStackPopGet);
+            xastore(op_lastore, jlong, zeroStackPopWGet);
+            xastore(op_fastore, jfloat, zeroStackPopGet);
+            xastore(op_dastore, jdouble, zeroStackPopWGet);
         case op_aastore: {
             auto value = zeroStackPopGet<OMElysiaOop *>();
             auto index = zeroStackPopGet<jint>();
@@ -473,6 +452,9 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++pc;
             goto exec;
         }
+            xastore(op_bastore, jboolean, zeroStackPopGet);
+            xastore(op_castore, jchar, zeroStackPopGet);
+            xastore(op_sastore, jshort, zeroStackPopGet);
         case op_pop:
             zeroStackPopGet<jint>();
             ++pc;
@@ -490,6 +472,17 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto value2 = zeroStackPopGet<OMElysiaOop *>();
 
             zeroStackPush(value1);
+            zeroStackPush(value2);
+            zeroStackPush(value1);
+            ++pc;
+            goto exec;
+        }
+        case op_dup_x2: {
+            auto value1 = zeroStackPopGet<OMElysiaOop *>();
+            auto value2 = zeroStackPopGet<OMElysiaOop *>();
+            auto value3 = zeroStackPopGet<OMElysiaOop *>();
+            zeroStackPush(value1);
+            zeroStackPush(value3);
             zeroStackPush(value2);
             zeroStackPush(value1);
             ++pc;
@@ -513,6 +506,21 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
             zeroStackPush(value2);
             zeroStackPush(value1);
+            zeroStackPush(value3);
+            zeroStackPush(value2);
+            zeroStackPush(value1);
+            ++pc;
+            goto exec;
+        }
+        case op_dup2_x2: {
+            auto value1 = zeroStackPopGet<OMElysiaOop *>();
+            auto value2 = zeroStackPopGet<OMElysiaOop *>();
+            auto value3 = zeroStackPopGet<OMElysiaOop *>();
+            auto value4 = zeroStackPopGet<OMElysiaOop *>();
+
+            zeroStackPush(value2);
+            zeroStackPush(value1);
+            zeroStackPush(value4);
             zeroStackPush(value3);
             zeroStackPush(value2);
             zeroStackPush(value1);
