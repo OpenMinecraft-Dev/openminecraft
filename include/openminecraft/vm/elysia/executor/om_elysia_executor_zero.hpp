@@ -30,7 +30,8 @@ template <typename T> constexpr void assertType1()
 {
     static_assert(std::is_same_v<T, jboolean> || std::is_same_v<T, jbyte> || std::is_same_v<T, jshort> ||
                       std::is_same_v<T, jchar> || std::is_same_v<T, jfloat> || std::is_same_v<T, jint> ||
-                      std::is_same_v<T, OMElysiaOop *> || std::is_same_v<T, uint32_t> || std::is_same_v<T, void *>,
+                      std::is_same_v<T, OMElysiaOop *> || std::is_same_v<T, uint32_t> || std::is_same_v<T, void *> ||
+                      std::is_same_v<T, uint8_t *>,
                   "only internal types are supported!");
 }
 template <typename T> constexpr void assertType2()
@@ -74,6 +75,8 @@ void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMEly
 
 #define zeroCodeFetchArgu16p0(pc) (static_cast<uint16_t>(pc[1] << 8) | pc[2])
 #define zeroCodeFetchArgs16p0(pc) (static_cast<int16_t>(pc[1] << 8) | pc[2])
+#define zeroCodeFetchArgs32p0(pc)                                                                                      \
+    (static_cast<int32_t>(pc[1] << 24) | static_cast<int32_t>(pc[2] << 16) | static_cast<int32_t>(pc[3] << 8) | pc[4])
 
 static inline int32_t zeroCodeFetchArgs32Align(uint8_t *pc, int offset)
 {

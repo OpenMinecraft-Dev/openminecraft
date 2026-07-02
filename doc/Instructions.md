@@ -177,8 +177,8 @@
 | 0xa5 | if_acmpeq | Y | X |
 | 0xa6 | if_acmpne | Y | X |
 | 0xa7 | goto | Y | X |
-| 0xa8 | jsr | X | X |
-| 0xa9 | ret | X | X |
+| 0xa8 | jsr | Y | X |
+| 0xa9 | ret | Y | X |
 | 0xaa | tableswitch | Y | X |
 | 0xab | lookupswitch | Y | X |
 | 0xac | ireturn | Y | X |
@@ -209,5 +209,5 @@
 | 0xc5 | multianewarray | X | X |
 | 0xc6 | ifnull | Y | X |
 | 0xc7 | ifnonnull | Y | X |
-| 0xc8 | goto_w | X | X |
-| 0xc9 | jsr_w | X | X |
+| 0xc8 | goto_w | Y | X |
+| 0xc9 | jsr_w | Y | X |

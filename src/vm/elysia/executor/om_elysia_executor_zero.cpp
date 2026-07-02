@@ -831,6 +831,15 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             pc += zeroCodeFetchArgs16p0(pc);
             goto exec;
         }
+        case op_jsr: {
+            zeroStackPush(pc + 3);
+            pc += zeroCodeFetchArgs16p0(pc);
+            goto exec;
+        }
+        case op_ret: {
+            pc = zeroStackLoadLocal<uint8_t *>(zeroCodeFetchArgu16p0(pc), currentFrame);
+            goto exec;
+        }
         case op_tableswitch: {
             auto def = zeroCodeFetchArgs32Align(pc, 0);
             auto low = zeroCodeFetchArgs32Align(pc, 1);
@@ -1081,6 +1090,15 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto obj = zeroStackPopGet<OMElysiaOop *>();
             elysium->monitorManager->mutexFetch(obj);
             ++pc;
+            goto exec;
+        }
+        case op_goto_w: {
+            pc += zeroCodeFetchArgs32p0(pc);
+            goto exec;
+        }
+        case op_jsr_w: {
+            zeroStackPush(pc + 5);
+            pc += zeroCodeFetchArgs32p0(pc);
             goto exec;
         }
         default:
