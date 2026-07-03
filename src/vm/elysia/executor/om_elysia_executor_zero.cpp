@@ -152,16 +152,16 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     auto cachedStackTop = tc->zero.stackPointer;
 
-    uint8_t *pc = nullptr;
+    uint8_t *pc = tc->zero.pc ? *tc->zero.pc : nullptr;
     OMElysiaJavaFrame *currentFrame = nullptr;
 #define updateFrame currentFrame = tc->zero.frame;
     pushFrame(m, pc, false, &pc);
 
-#define CURRENT_KLASS tc->zero.frame->method->klass->toInstance()
-
+#define CURRENT_KLASS currentFrame->method->klass->toInstance()
     while (true)
     {
     loop_begin:
+        tc->zero.pc = &pc;
         updateFrame;
         // geopeila: the calling method's frame is popped, so we need to exit the interpreter loop
         if (tc->zero.stackPointer >= cachedStackTop)
@@ -944,6 +944,10 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), pc + 5, true, &pc);
             updateFrame;
             continue;
+        }
+        case op_invokedynamic: {
+            CURRENT_KLASS->constantPoolFetchDynamic(zeroCodeFetchArgu16p0(pc));
+            goto unk;
         }
         case op_new: {
             auto c = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));

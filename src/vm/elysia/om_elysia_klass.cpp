@@ -133,6 +133,28 @@ void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id)
     return nullptr;
 }
 
+void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
+{
+    if (constantPoolState[id])
+    {
+        return constantPool[id];
+    }
+
+    auto &item = constantPoolRaw[id];
+    auto &bm = bootstrapMethods[item.dynamic.bootstrapIndex];
+
+    auto &methodref = constantPoolRaw[bm.bootstrapMethodRef].methodHandle;
+    std::cout << methodref.refIndex << " " << std::endl;
+    auto elysium = klassloader->elysium;
+    auto kl = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandles$Lookup")->toInstance();
+    auto lookup = elysium->oopManager->allocateOop(kl);
+    elysium->oopManager->oopAccessPointerField(lookup, kl->findField("lookupClass", "Ljava/lang/Class;")->offset,
+                                               this->mirror);
+    std::cout << kl << std::endl;
+
+    throw std::logic_error("not implemented!");
+}
+
 void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
 {
     if (constantPoolState[id])

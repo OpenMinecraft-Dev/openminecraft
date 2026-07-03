@@ -203,7 +203,7 @@ extern "C"
     {
         auto kls =
             ((OMElysiaKlass *)env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
-        if (!kls->toInstance()->enclosingMethod)
+        if (!kls->isInstance() || !kls->toInstance()->enclosingMethod)
         {
             return nullptr;
         }
@@ -216,6 +216,10 @@ extern "C"
     {
         auto kls =
             ((OMElysiaKlass *)env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        if (!kls->isInstance())
+        {
+            return nullptr;
+        }
         return kls->toInstance()->enclosingKlass ? createTempHandle(kls->toInstance()->enclosingKlass->mirror)
                                                  : nullptr;
     }

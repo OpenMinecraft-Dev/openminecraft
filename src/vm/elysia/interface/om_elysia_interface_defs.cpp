@@ -52,6 +52,18 @@ template <typename T> static void releaseArrayElements(OMElysiaJNIEnv *env, OMEl
     });
 };
 
+static inline void unlinkMethods(OMElysiaKlass *klass)
+{
+    for (int i = 0; i < klass->methodCount; ++i)
+    {
+        auto &m = klass->methods[i];
+        if (m.isNative())
+        {
+            m.code = nullptr;
+        }
+    }
+}
+
 void initBaseInterface(OMElysiaJNIEnv env)
 {
     env.internal->GetVersion = [](OMElysiaJNIEnv *) { return JNI_VERSION_1_8; };
@@ -269,6 +281,7 @@ void initBaseInterface(OMElysiaJNIEnv env)
                 clazz->nativeMethods = newdata;
                 clazz->nativeMethodCount += nMethods;
             }
+            unlinkMethods(clazz);
         });
         return 0;
     };
@@ -277,6 +290,7 @@ void initBaseInterface(OMElysiaJNIEnv env)
             clazz->nativeMethodCount = 0;
             mem::allocator::tracedFreeElysia(clazz->nativeMethods);
             clazz->nativeMethods = nullptr;
+            unlinkMethods(clazz);
         });
         return 0;
     };

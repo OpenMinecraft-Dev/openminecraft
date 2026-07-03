@@ -49,6 +49,9 @@ class OMElysiaKlass
     uint32_t nativeMethodCount = 0;
     OMElysiaNativeMethod *nativeMethods = nullptr;
 
+    uint32_t bootstrapMethodCount = 0;
+    specs::classfile::OMClassBootstrapMethodEntry *bootstrapMethods = nullptr;
+
     std::mutex klassMutex;
 
     OMElysiaMethod *findMethod(const char *name, const char *desc);
@@ -117,6 +120,7 @@ class OMElysiaInstanceKlass : public OMElysiaKlass
 
     void *constantPoolFetchField(uint16_t id);
     void *constantPoolFetchNormal(uint16_t id, bool flg = false);
+    void *constantPoolFetchDynamic(uint16_t id);
     uint64_t constantPoolFetchNormalW(uint16_t id);
 };
 

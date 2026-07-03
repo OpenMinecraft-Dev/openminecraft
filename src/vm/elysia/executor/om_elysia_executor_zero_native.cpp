@@ -134,72 +134,89 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
     }
 
     void **argPointers = reinterpret_cast<void **>(zeroStackAlloc(sizeof(void *) * rawargsize));
-    std::vector<ffi_type *> rawargtypes;
-    rawargtypes.reserve(rawargsize);
-
     for (int i = 0; i < rawargsize; i++)
     {
-#define PUSHARG(ffitype, type)                                                                                         \
+#define PUSHARG(type)                                                                                                  \
     if (auto *p = std::get_if<type>(&rawargs[i]))                                                                      \
     {                                                                                                                  \
         argPointers[i] = p;                                                                                            \
-        rawargtypes.emplace_back(&ffitype);                                                                            \
     }
-        PUSHARG(ffi_type_sint8, jbyte);
-        PUSHARG(ffi_type_uint8, jboolean);
-        PUSHARG(ffi_type_sint16, jshort);
-        PUSHARG(ffi_type_uint16, jchar);
-        PUSHARG(ffi_type_sint32, jint);
-        PUSHARG(ffi_type_float, jfloat);
-        PUSHARG(ffi_type_sint64, jlong);
-        PUSHARG(ffi_type_double, jdouble);
-        PUSHARG(ffi_type_pointer, OMElysiaNativeHandle *);
-        PUSHARG(ffi_type_pointer, OMElysiaKlass *);
-        PUSHARG(ffi_type_pointer, OMElysiaJNIEnv *);
+        PUSHARG(jbyte);
+        PUSHARG(jboolean);
+        PUSHARG(jshort);
+        PUSHARG(jchar);
+        PUSHARG(jint);
+        PUSHARG(jfloat);
+        PUSHARG(jlong);
+        PUSHARG(jdouble);
+        PUSHARG(OMElysiaNativeHandle *);
+        PUSHARG(OMElysiaKlass *);
+        PUSHARG(OMElysiaJNIEnv *);
     }
 
-    ffi_type *retType;
-    switch (returnType)
+    if (!m->cifprepared)
     {
-    case argTypeVoid:
-        retType = &ffi_type_void;
-        break;
-    case argTypeReference:
-    case argTypeArray:
-        retType = &ffi_type_pointer;
-        break;
-    case argTypeInt:
-    case argTypeShort:
-    case argTypeChar:
-    case argTypeBoolean:
-    case argTypeByte:
-        retType = &ffi_type_sint32;
-        break;
-    case argTypeFloat:
-        retType = &ffi_type_float;
-        break;
-    case argTypeLong:
-        retType = &ffi_type_sint64;
-        break;
-    case argTypeDouble:
-        retType = &ffi_type_double;
-        break;
-    default:
-        retType = &ffi_type_void;
-        break;
+        m->nativeArgTypes = (ffi_type **)mem::allocator::tracedMallocElysiaExternal(sizeof(void *) * rawargsize);
+
+        for (int i = 0; i < rawargsize; i++)
+        {
+#define PUSHARG2(ffitype, type)                                                                                        \
+    if (auto *p = std::get_if<type>(&rawargs[i]))                                                                      \
+    {                                                                                                                  \
+        m->nativeArgTypes[i] = &ffitype;                                                                               \
+    }
+            PUSHARG2(ffi_type_sint8, jbyte);
+            PUSHARG2(ffi_type_uint8, jboolean);
+            PUSHARG2(ffi_type_sint16, jshort);
+            PUSHARG2(ffi_type_uint16, jchar);
+            PUSHARG2(ffi_type_sint32, jint);
+            PUSHARG2(ffi_type_float, jfloat);
+            PUSHARG2(ffi_type_sint64, jlong);
+            PUSHARG2(ffi_type_double, jdouble);
+            PUSHARG2(ffi_type_pointer, OMElysiaNativeHandle *);
+            PUSHARG2(ffi_type_pointer, OMElysiaKlass *);
+            PUSHARG2(ffi_type_pointer, OMElysiaJNIEnv *);
+        }
+
+        // ffi_type *retType;
+        switch (returnType)
+        {
+        case argTypeVoid:
+            m->nativeReturnType = &ffi_type_void;
+            break;
+        case argTypeReference:
+        case argTypeArray:
+            m->nativeReturnType = &ffi_type_pointer;
+            break;
+        case argTypeInt:
+        case argTypeShort:
+        case argTypeChar:
+        case argTypeBoolean:
+        case argTypeByte:
+            m->nativeReturnType = &ffi_type_sint32;
+            break;
+        case argTypeFloat:
+            m->nativeReturnType = &ffi_type_float;
+            break;
+        case argTypeLong:
+            m->nativeReturnType = &ffi_type_sint64;
+            break;
+        case argTypeDouble:
+            m->nativeReturnType = &ffi_type_double;
+            break;
+        default:
+            m->nativeReturnType = &ffi_type_void;
+            break;
+        }
+        ffi_prep_cif(&m->cif, FFI_DEFAULT_ABI, rawargsize, m->nativeReturnType, m->nativeArgTypes);
+        m->cifprepared = true;
     }
 
-    ffi_cif cif;
-    ffi_status ffiPrepStatus = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, rawargtypes.size(), retType, rawargtypes.data());
-    auto retSiz = std::max(sizeof(void *), retType->size);
-    void *retValue = reinterpret_cast<void *>(zeroStackAlloc(retSiz));
-    std::memset(retValue, 0x00, retSiz);
+    uint64_t retValueReal = 0;
+    void *retValue = &retValueReal;
 
-    if (ffiPrepStatus == FFI_OK)
-    {
-        execWithState(InsideNative,
-                      [&]() { ffi_call(&cif, reinterpret_cast<void (*)()>(func), retValue, argPointers); });
-    }
+    execWithState(InsideNative,
+                  [&]() { ffi_call(&m->cif, reinterpret_cast<void (*)()>(func), retValue, argPointers); });
 
     switch (returnType)
     {
@@ -281,11 +298,18 @@ void OMElysiaExecutorZero::executeNativeLink(uint8_t **realpc, OMElysiaJavaFrame
     auto tc = thisThread.metadata;
     auto mm = tc->zero.frame->method;
 
+    if (mm->code)
+    {
+        executeNative(mm, mm->isStatic(), mm->code, realpc, frame);
+        return;
+    }
+
     for (int i = 0; i < mm->klass->nativeMethodCount; i++)
     {
         auto &nm = mm->klass->nativeMethods[i];
         if (mm->isSame(&nm))
         {
+            mm->code = reinterpret_cast<uint8_t *>(nm.funcPtr);
             executeNative(mm, mm->isStatic(), nm.funcPtr, realpc, frame);
             return;
         }
@@ -302,6 +326,7 @@ void OMElysiaExecutorZero::executeNativeLink(uint8_t **realpc, OMElysiaJavaFrame
 
     if (elysium->nativeFuncMap.count(ffm))
     {
+        mm->code = reinterpret_cast<uint8_t *>(elysium->nativeFuncMap[ffm]);
         executeNative(mm, mm->isStatic(), elysium->nativeFuncMap[ffm], realpc, frame);
         return;
     }

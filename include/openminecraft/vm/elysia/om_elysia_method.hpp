@@ -6,6 +6,7 @@
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include <cstdint>
 #include <cstring>
+#include <ffi.h>
 
 namespace openminecraft::vm::elysia
 {
@@ -30,6 +31,10 @@ struct OMElysiaMethod
 
     uint32_t codeLength;
     uint8_t *code;
+    bool cifprepared;
+    ffi_type *nativeReturnType;
+    ffi_type **nativeArgTypes;
+    ffi_cif cif;
 
     uint32_t excTableLength;
     OMElysiaMethodExcTable *excTable;

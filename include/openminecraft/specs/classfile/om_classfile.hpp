@@ -126,6 +126,18 @@ enum OMClassFileConstantType : uint8_t
     Module = 19,        // Requires Java 9+
     Package = 20        // Requires Java 9+
 };
+enum OMClassRefKind : uint8_t
+{
+    RefGetField = 1,
+    RefGetStatic = 2,
+    RefSetField = 3,
+    RefSetStatic = 4,
+    RefInvokeVirtual = 5,
+    RefInvokeStatic = 6,
+    RefInvokeSepcial = 7,
+    RefNewInvokeSpecial = 8,
+    RefInvokeInterface = 9
+};
 struct OMClassFileConstant
 {
     OMClassFileConstantType type;
@@ -155,7 +167,7 @@ struct OMClassFileConstant
         } nameAndType;
         struct
         {
-            uint8_t refKind;
+            OMClassRefKind refKind;
             uint16_t refIndex;
         } methodHandle;
         struct
@@ -184,6 +196,12 @@ struct OMClassExceptionTableEntry
     uint16_t end;
     uint16_t handler;
     uint16_t type;
+};
+
+struct OMClassBootstrapMethodEntry
+{
+    uint16_t bootstrapMethodRef, numBootstrapArguments;
+    uint16_t *bootstrapArguments;
 };
 
 struct OMClassAttribute
@@ -216,6 +234,11 @@ struct OMClassAttribute
             uint16_t classIndex;
             uint16_t methodIndex;
         } enclosingMethod;
+        struct
+        {
+            uint16_t numBootstrapMethods;
+            OMClassBootstrapMethodEntry *bootstrapMethods;
+        } bootstrapMethod;
     };
 };
 

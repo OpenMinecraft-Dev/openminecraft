@@ -1,8 +1,5 @@
 #include "openminecraft/specs/classfile/om_classfile.hpp"
-#include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
-#include "openminecraft/mem/om_mem_allocator.hpp"
-#include "openminecraft/util/om_util_encoding_utf.hpp"
 #include <cstdint>
 #include <iostream>
 #include <istream>
@@ -164,6 +161,24 @@ void OMClassFile::loadAttr(MemoryReader &reader, OMClassAttribute &a)
         a.enclosingMethod.methodIndex = reader.readu16();
         break;
     }
+    case "BootstrapMethods"_hash: {
+        a.bootstrapMethod.numBootstrapMethods = reader.readu16();
+        a.bootstrapMethod.bootstrapMethods = (OMClassBootstrapMethodEntry *)malloc(
+            a.bootstrapMethod.numBootstrapMethods * sizeof(OMClassBootstrapMethodEntry));
+        for (int i = 0; i < a.bootstrapMethod.numBootstrapMethods; ++i)
+        {
+            auto &mm = a.bootstrapMethod.bootstrapMethods[i];
+            mm.bootstrapMethodRef = reader.readu16();
+            mm.numBootstrapArguments = reader.readu16();
+            mm.bootstrapArguments = (uint16_t *)malloc(2 * mm.numBootstrapArguments);
+
+            for (int j = 0; j < mm.numBootstrapArguments; ++j)
+            {
+                mm.bootstrapArguments[j] = reader.readu16();
+            }
+        }
+        break;
+    }
     default: {
         // logger.warn("skip {}", name);
         reader.skip(a.length);
@@ -318,7 +333,7 @@ void OMClassFile::loadConstant(MemoryReader &reader, OMClassFileConstant &c)
         break;
     }
     case MethodHandle: {
-        c.methodHandle.refKind = reader.readu8();
+        c.methodHandle.refKind = static_cast<OMClassRefKind>(reader.readu8());
         c.methodHandle.refIndex = reader.readu16();
         break;
     }

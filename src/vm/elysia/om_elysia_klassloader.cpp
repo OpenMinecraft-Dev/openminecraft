@@ -167,7 +167,6 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
 
         auto kls = elysium->klassLoader->findClass("java/lang/Class");
         auto oop = elysium->oopManager->allocateOop(kls, klass->isInstance() ? klass->toInstance()->staticLength : 0);
-        auto field = kls->toInstance()->findField("name", "Ljava/lang/String;");
 
         auto field2 = kls->toInstance()->findField("classLoader", "Ljava/lang/ClassLoader;");
         elysium->oopManager->oopAccessPointerField(oop, field2->offset, this->klassloader);
@@ -340,6 +339,16 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> i
         klass->superClass = findClass(supclsname);
     }
 
+    for (int i = 0; i < clsfile->attributes.length; ++i)
+    {
+        if (clsfile->constants.data->at(clsfile->attributes.data->at(i).nameIndex).valueString == "BootstrapMethods")
+        {
+            auto &bm = clsfile->attributes.data->at(i).bootstrapMethod;
+            klass->bootstrapMethodCount = bm.numBootstrapMethods;
+            klass->bootstrapMethods = bm.bootstrapMethods;
+        }
+    }
+
     if (!clsfile->interfaces.data->empty())
     {
         klass->interfaceImplCount = clsfile->interfaces.length;
@@ -402,6 +411,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> i
             auto &nmt = clsfile->constants.data->at(att.enclosingMethod.methodIndex);
             auto mname = clsfile->constants.data->at(nmt.nameAndType.nameIndex).valueString;
             auto mdesc = clsfile->constants.data->at(nmt.nameAndType.descriptorIndex).valueString;
+
             klass->enclosingMethod = enclosingKlass->findMethod(mname.c_str(), mdesc.c_str());
         }
     }
@@ -441,6 +451,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> i
         if (m.isNative())
         {
             m.localLength = m.argSlots;
+            m.cifprepared = false;
         }
         else
         {

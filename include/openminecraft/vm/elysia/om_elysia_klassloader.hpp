@@ -58,9 +58,9 @@ class OMElysiaKlassloader
 
     std::shared_ptr<std::map<binary::hash::hash_t, OMElysiaKlass *>> loadedClasses;
 
-  private:
     OMElysium *elysium;
 
+  private:
     log::OMLogger logger;
 };
 } // namespace openminecraft::vm::elysia

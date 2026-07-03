@@ -12,7 +12,7 @@ if is_plat("harmony") then
 		add_extsources("brew::sdl3")
 	end
 
-	set_sourcedir("/home/coder2/harmonydev/SDL_port")
+	add_urls("https://github.com/OpenMinecraft-Dev/SDL")
 
 	add_deps("cmake", "egl-headers", "opengl-headers")
 
