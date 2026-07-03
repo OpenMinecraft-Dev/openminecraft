@@ -6,7 +6,7 @@ env:
   MODE: debug
   XMAKE_ARGS: -v
   ANDROID_NDK_VERSION: r27c
-  OHOS_SDK_VERSION: 5.0.0-Release
+  OHOS_SDK_VERSION: 6.1-Release
   CROSS_TOOL_VERSION: toolchain-20260623-3
 jobs:
   build:
@@ -30,20 +30,18 @@ jobs:
             plat: mingw
             arch: x86_64
             loaderarch: amd64
-          # - os: ubuntu-22.04
-          #   plat: harmony
-          #   arch: arm64-v8a
-          #   loaderarch: arm64
-
-          # - os: ubuntu-22.04
-          #   plat: harmony
-          #   arch: armeabi-v7a
-          #   loaderarch: arm32
-
-          # - os: ubuntu-22.04
-          #   plat: harmony
-          #   arch: x86_64
-          #   loaderarch: amd64
+          - os: ubuntu-22.04
+            plat: harmony
+            arch: arm64-v8a
+            loaderarch: arm64
+          - os: ubuntu-22.04
+            plat: harmony
+            arch: armeabi-v7a
+            loaderarch: arm32
+          - os: ubuntu-22.04
+            plat: harmony
+            arch: x86_64
+            loaderarch: amd64
           - os: ubuntu-22.04
             plat: android
             arch: arm64-v8a
@@ -202,8 +200,9 @@ jobs:
           }}
       - name: Configure OpenHarmony
         if: matrix.plat == 'harmony'
-        run: xmake f -p harmony -a ${{ matrix.arch }} --sdk=${{ github.workspace
-          }}/native -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+        run: xmake f -p harmony -a ${{ matrix.arch }} --toolchain=hdk --sdk=${{
+          github.workspace }}/native --cxflags="-fPIC" --cflags="-fPIC" -m ${{
+          env.MODE }} -yc ${{ env.XMAKE_ARGS }}
       - name: Configure Android
         if: matrix.plat == 'android'
         run: xmake f -p android -a ${{ matrix.arch }} --ndk=${{ github.workspace

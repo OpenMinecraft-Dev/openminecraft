@@ -23,6 +23,10 @@ if is_plat("linux") and is_arch("riscv64", "ppc64", "s390x") then
 	includes("extlibs/libffi.lua")
 end
 
+if is_plat("harmony") then
+	includes("extlibs/libffi_port.lua")
+end
+
 --------------------------------------------------------------------------------
 -- Platform configs
 --------------------------------------------------------------------------------

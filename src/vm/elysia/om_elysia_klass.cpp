@@ -1,11 +1,8 @@
-#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/specs/classfile/om_classfile.hpp"
-#include "openminecraft/util/om_util_encoding_utf.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_meta.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
-#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include <cstdint>
 #include <cstring>

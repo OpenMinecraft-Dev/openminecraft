@@ -4,6 +4,7 @@
 #include "openminecraft/io/json/om_io_ast_json.hpp"
 #include "openminecraft/io/json/om_io_tokeniter_json.hpp"
 #include <memory>
+#include <string>
 namespace openminecraft::io::json
 {
 struct OMJsonAstContext

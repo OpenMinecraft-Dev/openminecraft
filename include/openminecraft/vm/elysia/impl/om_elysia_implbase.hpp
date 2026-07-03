@@ -55,6 +55,8 @@ extern "C"
     OMElysiaNativeHandle *Java_sun_misc_URLClassPath_getLookupCacheURLs(OMElysiaJNIEnv *env, OMElysiaNativeHandle *ucp,
                                                                         OMElysiaNativeHandle *klassloader);
     jfloat Java_java_lang_Float_intBitsToFloat(OMElysiaJNIEnv *env, OMElysiaKlass *, jint i);
+    OMElysiaNativeHandle *Java_java_lang_reflect_Array_newArray(OMElysiaJNIEnv *env, OMElysiaKlass *,
+                                                                OMElysiaNativeHandle *klass, jint length);
 
     void registerPlatform(OMElysium *);
 }

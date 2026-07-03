@@ -55,6 +55,7 @@ OMElysium::OMElysium()
     registerNative(Java_java_lang_Runtime_availableProcessors);
     registerNative(Java_sun_misc_URLClassPath_getLookupCacheURLs);
     registerNative(Java_java_lang_Float_intBitsToFloat);
+    registerNative(Java_java_lang_reflect_Array_newArray);
     registerPlatformNative();
 
     mainThread = new std::thread([&]() {

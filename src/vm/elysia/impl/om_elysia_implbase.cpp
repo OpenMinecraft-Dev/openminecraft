@@ -2,6 +2,7 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
+#include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
@@ -10,6 +11,15 @@
 namespace openminecraft::vm::elysia::impl
 {
 log::OMLogger logger("Elysia Impl Layer");
+
+OMElysiaNativeHandle *Java_java_lang_reflect_Array_newArray(OMElysiaJNIEnv *env, OMElysiaKlass *,
+                                                            OMElysiaNativeHandle *klass, jint length)
+{
+    auto kls =
+        ((OMElysiaKlass *)env->GetLongField(klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+    auto arrcls = env->FindClass(buildArray(kls->name).c_str());
+    return createTempHandle(env->internal->elysium->oopManager->allocateArr(arrcls->toArray(), length));
+}
 
 OMElysiaNativeHandle *Java_sun_misc_URLClassPath_getLookupCacheURLs(OMElysiaJNIEnv *env, OMElysiaNativeHandle *ucp,
                                                                     OMElysiaNativeHandle *klassloader)

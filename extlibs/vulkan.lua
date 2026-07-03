@@ -41,17 +41,17 @@ on_install(
 		end
 		io.replace("CMakeLists.txt", "-Werror", "", { plain = true })
 		io.replace("CMakeLists.txt", "/WX", "", { plain = true })
-		import("package.tools.cmake").build(package, { buildir = "build" })
+		-- import("package.tools.cmake").build(package, { buildir = "build" })
 		if arch_prev and plat_prev then
 			package:plat_set(plat_prev)
 			package:arch_set(arch_prev)
 		end
 		os.mkdir("build")
-		if is_host("windows") then
-			os.cp(path.join("**", "VulkanHppGenerator.exe"), "build")
-		else
-			os.cp(path.join("**", "VulkanHppGenerator"), "build")
-		end
+		-- if is_host("windows") then
+		-- os.cp(path.join("**", "VulkanHppGenerator.exe"), "build")
+		-- else
+		-- os.cp(path.join("**", "VulkanHppGenerator"), "build")
+		-- end
 		-- os.runv(path.join("build", "VulkanHppGenerator"))
 		if not package:config("modules") then
 			os.cp("Vulkan-Headers/include", package:installdir())
