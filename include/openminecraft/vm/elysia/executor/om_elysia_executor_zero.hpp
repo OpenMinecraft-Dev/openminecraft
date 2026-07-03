@@ -8,16 +8,19 @@
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
+#include "optimizations.hpp"
 #include <cstdint>
 #include <type_traits>
 namespace openminecraft::vm::elysia::executor
 {
+HOT_FUNC
 static inline uintptr_t zeroStackAlloc(uint64_t len)
 {
     auto tc = thisThread.metadata;
     auto v = tc->zero.stackPointer -= len;
     return v;
 }
+HOT_FUNC
 static inline uintptr_t zeroStackPop(uint64_t len)
 {
     auto tc = thisThread.metadata;

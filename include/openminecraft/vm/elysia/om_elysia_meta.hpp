@@ -2,6 +2,7 @@
 #define OM_ELYSIA_META_HPP
 
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
+#include "optimizations.hpp"
 
 namespace openminecraft::vm::elysia
 {
@@ -22,7 +23,7 @@ class StateGuard
     OMElysiaThreadState st;
 };
 template <typename Func>
-auto execWithState(OMElysiaThreadState state, Func &&func) -> decltype(std::forward<Func>(func)())
+HOT_FUNC auto execWithState(OMElysiaThreadState state, Func &&func) -> decltype(std::forward<Func>(func)())
 {
     StateGuard g(state);
     return func();

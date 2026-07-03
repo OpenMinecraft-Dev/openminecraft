@@ -9,6 +9,7 @@
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
+#include "optimizations.hpp"
 #include <codecvt>
 #include <cstring>
 #include <fstream>
@@ -290,7 +291,6 @@ void OMElysiaKlassloader::fillVtable(OMElysiaInstanceKlass *klass)
         }
     }
 }
-
 void OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> istr, bool special)
 {
     auto clsfile = std::make_shared<specs::classfile::OMClassFile>();

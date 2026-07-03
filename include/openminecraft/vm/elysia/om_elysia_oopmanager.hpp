@@ -52,6 +52,7 @@ class OMElysiaOopManager
 
     jint arrLength(OMElysiaOop *base);
     OMElysiaOop *allocateArr(OMElysiaArrayKlass *klass, jint length);
+    OMElysiaOop *allocateMultiArr(OMElysiaArrayKlass *klass, jint dim, jint *lengths);
 
     OMElysiaOop *arrAccessPtr(OMElysiaOop *oop, jint index);
     void arrAccessPtr(OMElysiaOop *oop, jint index, OMElysiaOop *data);

@@ -206,7 +206,7 @@
 | 0xc2 | monitorenter | Y | X |
 | 0xc3 | monitorexit | Y | X |
 | 0xc4 | wide | Y | X |
-| 0xc5 | multianewarray | X | X |
+| 0xc5 | multianewarray | Y | X |
 | 0xc6 | ifnull | Y | X |
 | 0xc7 | ifnonnull | Y | X |
 | 0xc8 | goto_w | Y | X |

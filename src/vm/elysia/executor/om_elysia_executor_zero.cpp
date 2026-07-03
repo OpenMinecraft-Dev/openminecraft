@@ -49,6 +49,7 @@ OMElysiaExecutorZero::~OMElysiaExecutorZero()
 // oooooooo oooooooo oooooooo
 // oooooooo oooooooo oooooooo
 // ........ ........ ........
+HOT_FUNC
 void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m, uint8_t *retAddr, bool needVtable, uint8_t **realpc)
 {
     if (!m)
@@ -143,6 +144,7 @@ void OMElysiaExecutorZero::threadInit()
     }
 }
 
+HOT_FUNC
 void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 {
     auto tc = thisThread.metadata;
@@ -1149,7 +1151,23 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
                 goto exec;
             }
             }
-            goto unk;
+            goto exec;
+        }
+        case op_multianewarray: {
+            auto kls = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
+            std::vector<jint> sizes;
+            sizes.resize(pc[3]);
+
+            for (int i = pc[3] - 1; i >= 0; --i)
+            {
+                sizes[i] = zeroStackPopGet<jint>();
+            }
+
+            zeroStackPush(
+                oopManager->allocateMultiArr(reinterpret_cast<OMElysiaArrayKlass *>(kls), pc[3], sizes.data()));
+
+            pc += 4;
+            goto exec;
         }
         default:
         unk:

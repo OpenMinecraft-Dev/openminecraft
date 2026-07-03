@@ -6,6 +6,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
+#include "optimizations.hpp"
 #include <cstring>
 #include <iostream>
 
@@ -217,6 +218,21 @@ OMElysiaOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint len
     }
 
     return ll;
+}
+
+OMElysiaOop *OMElysiaOopManager::allocateMultiArr(OMElysiaArrayKlass *klass, jint dim, jint *lengths)
+{
+    if (dim <= 1)
+    {
+        return allocateArr(klass, *lengths);
+    }
+    auto oop = allocateArr(klass, *lengths);
+    for (int i = 0; i < *lengths; ++i)
+    {
+        auto sub = allocateMultiArr(klass->lowerDim->toArray(), dim - 1, lengths + 1);
+        arrAccessPtr(oop, i, sub);
+    }
+    return oop;
 }
 
 uint64_t OMElysiaOopManager::oopLength(OMElysiaOop *oop)

@@ -20,8 +20,8 @@ std::atomic<bool> needStop = false;
 namespace openminecraft::vm::elysia
 {
 OMElysium::OMElysium()
-    : metaspaceHeap("elysia_metaspace", 1024 * 1024 * 16, 0.75), mainHeap("elysia_main", 1024 * 1024 * 1024, 0.75),
-      logger("OMElysium", this)
+    : metaspaceHeap("elysia_metaspace", 1024 * 1024 * 16, 0.75),
+      mainHeap("elysia_main", 1024ll * 1024 * 1024 * 2, 0.75), logger("OMElysium", this)
 {
     monitorManager = mem::fast_shared<allocatorTag, OMElysiaMonitorManager>();
     klassLoader = mem::fast_shared<allocatorTag, OMElysiaKlassloader>(this);
