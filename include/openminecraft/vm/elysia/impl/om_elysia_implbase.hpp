@@ -57,6 +57,7 @@ extern "C"
     jfloat Java_java_lang_Float_intBitsToFloat(OMElysiaJNIEnv *env, OMElysiaKlass *, jint i);
     OMElysiaNativeHandle *Java_java_lang_reflect_Array_newArray(OMElysiaJNIEnv *env, OMElysiaKlass *,
                                                                 OMElysiaNativeHandle *klass, jint length);
+    void Java_java_lang_invoke_MethodHandleNatives_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass);
 
     void registerPlatform(OMElysium *);
 }
