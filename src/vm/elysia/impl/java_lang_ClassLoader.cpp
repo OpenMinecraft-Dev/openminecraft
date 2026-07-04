@@ -4,6 +4,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
+#include <cstring>
 #include <stdexcept>
 
 namespace openminecraft::vm::elysia::impl
@@ -30,7 +31,15 @@ extern "C"
                                                     OMElysiaNativeHandle *name)
     {
         auto nn = env->GetStringUTFChars(name, nullptr);
-        auto kls = env->internal->elysium->klassLoader->findClass(nn);
+        std::string c = nn;
+        for (auto &ch : c)
+        {
+            if (ch == '.')
+            {
+                ch = '/';
+            }
+        }
+        auto kls = env->internal->elysium->klassLoader->fetchOrLoadClass(c);
         env->ReleaseStringUTFChars(name, nn);
         return kls ? createTempHandle(kls->mirror) : nullptr;
     }

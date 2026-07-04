@@ -294,6 +294,18 @@ static jint getLoadAverage(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, 
     return result;
 }
 
+static jboolean shouldBeInitialized(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *klass)
+{
+    auto kls =
+        ((OMElysiaKlass *)env->GetLongField(klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+    if (kls->isPrimitive())
+    {
+        return false;
+    }
+
+    return !kls->toInstance()->clinitFinished;
+}
+
 extern "C"
 {
     void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
@@ -377,6 +389,7 @@ extern "C"
                 {"throwException", "(Ljava/lang/Throwable;)V", throwException},
                 {"pageSize", "()I", pageSize},
                 {"getLoadAverage", "([DI)I", getLoadAverage},
+                {"shouldBeInitialized", "(Ljava/lang/Class;)Z", shouldBeInitialized},
             });
     }
 }

@@ -51,12 +51,14 @@ extern "C"
             for (int i = 0; i < mn; ++i)
             {
                 auto mth = env->GetObjectArrayElement(ml, i);
+                auto mthflags =
+                    env->GetIntField(mth, interface::field(env, "java/lang/reflect/Method", "modifiers", "I"));
                 auto mname = env->GetObjectField(
                     mth, interface::field(env, "java/lang/reflect/Method", "name", "Ljava/lang/String;"));
 
                 bool equ;
                 auto mmn = env->GetStringUTFChars(mname, nullptr);
-                equ = std::strcmp(mmname, mmn) == 0;
+                equ = (std::strcmp(mmname, mmn) == 0);
                 env->ReleaseStringUTFChars(mname, mmn);
 
                 if (!equ)
@@ -75,6 +77,8 @@ extern "C"
                 auto mptypes = env->GetObjectField(
                     mth, interface::field(env, "java/lang/reflect/Method", "parameterTypes", "[Ljava/lang/Class;"));
                 int length = env->GetArrayLength(mptypes);
+                // TODO: skip & need varargs check
+                goto success;
                 if (length != env->GetArrayLength(ptypes))
                 {
                     continue;
@@ -91,9 +95,12 @@ extern "C"
                     }
                 }
 
+            success:
                 env->SetObjectField(
                     memberName,
                     interface::field(env, "java/lang/invoke/MemberName", "resolution", "Ljava/lang/Object;"), mth);
+                env->SetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"),
+                                 flags | mthflags);
                 env->ReleaseStringUTFChars(nm, mmname);
                 return memberName;
             end:
@@ -101,6 +108,9 @@ extern "C"
             }
         }
 
+        logger.debug("{}", mmname);
+        auto cl = (OMElysiaKlass *)env->GetLongField(k, interface::field(env, "java/lang/Class", "<ptr>", "J"));
+        logger.debug("{}", cl->name);
         env->ReleaseStringUTFChars(nm, mmname);
 
         throw std::logic_error("fail");
@@ -124,6 +134,13 @@ extern "C"
         env->SetObjectArrayElement(result, 1, memberName);
         return result;
     }
+
+    static void init(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *memberName,
+                     OMElysiaNativeHandle *obj)
+    {
+        logger.warn("{}", (void *)obj->object);
+        throw std::logic_error("not implemented");
+    }
     void Java_java_lang_invoke_MethodHandleNatives_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         interface::registerNativeFuncs(
@@ -133,6 +150,7 @@ extern "C"
                 {"getNamedCon", "(I[Ljava/lang/Object;)I", getNamedCon},
                 {"resolve", "(Ljava/lang/invoke/MemberName;Ljava/lang/Class;)Ljava/lang/invoke/MemberName;", resolve},
                 {"getMemberVMInfo", "(Ljava/lang/invoke/MemberName;)Ljava/lang/Object;", getMemberVMInfo},
+                {"init", "(Ljava/lang/invoke/MemberName;Ljava/lang/Object;)V", init},
             });
     }
 }
