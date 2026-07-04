@@ -532,7 +532,10 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> i
     fillVtable(klass);
 
     std::vector<OMElysiaField> extraFields;
-    if (std::strcmp(klass->name, "java/lang/Class") == 0 || std::strcmp(klass->name, "java/lang/ClassLoader") == 0)
+    if (std::strcmp(klass->name, "java/lang/Class") == 0 || std::strcmp(klass->name, "java/lang/ClassLoader") == 0 ||
+        std::strcmp(klass->name, "java/lang/reflect/Method") == 0 ||
+        std::strcmp(klass->name, "java/lang/reflect/Field") == 0 ||
+        std::strcmp(klass->name, "java/lang/reflect/Constructor") == 0)
     {
         extraFields.push_back({klass, elysium->metaspaceHeap.allocateStr("<ptr>"),
                                elysium->metaspaceHeap.allocateStr("J"),

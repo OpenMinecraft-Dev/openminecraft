@@ -147,8 +147,14 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
     auto lookup = elysium->oopManager->allocateOop(kl);
     elysium->oopManager->oopAccessPointerField(lookup, kl->findField("lookupClass", "Ljava/lang/Class;")->offset,
                                                this->mirror);
+    *reinterpret_cast<jint *>(elysium->oopManager->oopAccessField(lookup, kl->findField("allowedModes", "I")->offset)) =
+        JVM_Acc_Private | JVM_Acc_Public | JVM_Acc_Protected | JVM_Acc_Static;
     std::cout << kl << std::endl;
 
+    while (true)
+    {
+        continue;
+    }
     throw std::logic_error("not implemented!");
 }
 

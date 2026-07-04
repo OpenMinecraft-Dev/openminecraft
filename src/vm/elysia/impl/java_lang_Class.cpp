@@ -1,4 +1,3 @@
-#include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/specs/classfile/om_classfile.hpp"
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
@@ -65,7 +64,7 @@ extern "C"
         throw std::logic_error("klassloader not found");
     }
 
-    static OMElysiaNativeHandle *getDeclaredFields0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass, bool bl)
+    static OMElysiaNativeHandle *getDeclaredFields0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass, bool publicOnly)
     {
         auto kls = env->FindClass("java/lang/Class");
         auto v = ((OMElysiaKlass *)(env->GetLongField(klass, env->GetFieldID(kls, "<ptr>", "J"))))->toInstance();
@@ -73,7 +72,7 @@ extern "C"
         auto result = env->NewObjectArray(v->fieldCount, fldkls, nullptr);
         for (int i = 0; i < v->fieldCount; i++)
         {
-            if (bl && (v->fields[i].accessFlag & JVM_Acc_Public) == 0)
+            if (publicOnly && (v->fields[i].accessFlag & JVM_Acc_Public) == 0)
             {
                 continue;
             }
@@ -81,6 +80,8 @@ extern "C"
             auto kls = env->FindClass(kl.c_str());
 
             auto fldobj = env->AllocObject(fldkls);
+            env->SetLongField(fldobj, env->GetFieldID(env->FindClass("java/lang/reflect/Field"), "<ptr>", "J"),
+                              (jlong)&v->fields[i]);
             env->SetObjectField(fldobj, env->GetFieldID(fldkls, "clazz", "Ljava/lang/Class;"),
                                 env->internal->elysium->executor->recordLocalRef(v->mirror));
             env->SetObjectField(fldobj, env->GetFieldID(fldkls, "name", "Ljava/lang/String;"),
@@ -118,7 +119,8 @@ extern "C"
         return kkother->inherits(kk);
     }
 
-    static OMElysiaNativeHandle *getDeclaredConstructors0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls, bool bl)
+    static OMElysiaNativeHandle *getDeclaredConstructors0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls,
+                                                          bool publicOnly)
     {
         auto kk =
             ((OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
@@ -128,8 +130,14 @@ extern "C"
         {
             if (kk->methods[i].isInit())
             {
+                if (publicOnly && (kk->methods[i].accessFlag & JVM_Acc_Public) == 0)
+                {
+                    continue;
+                }
                 auto kns = env->AllocObject(ctkk);
 
+                env->SetLongField(kns, env->GetFieldID(env->FindClass("java/lang/reflect/Constructor"), "<ptr>", "J"),
+                                  (jlong)&kk->methods[i]);
                 env->SetObjectField(kns, env->GetFieldID(ctkk, "clazz", "Ljava/lang/Class;"),
                                     env->internal->elysium->executor->recordLocalRef(kk->mirror));
                 env->SetIntField(kns, env->GetFieldID(ctkk, "slot", "I"), i);
@@ -153,7 +161,7 @@ extern "C"
                 {
                     env->SetObjectArrayElement(argTypearr, j,
                                                env->internal->elysium->executor->recordLocalRef(
-                                                   env->FindClass(signatureToType(result.first[i]).c_str())->mirror));
+                                                   env->FindClass(signatureToType(result.first[j]).c_str())->mirror));
                 }
                 env->SetObjectField(kns, env->GetFieldID(ctkk, "parameterTypes", "[Ljava/lang/Class;"), argTypearr);
 
@@ -241,6 +249,72 @@ extern "C"
         return env->NewStringUTF(vv.c_str());
     }
 
+    static OMElysiaNativeHandle *getDeclaredMethods0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass,
+                                                     jboolean publicOnly)
+    {
+        auto kls = ((OMElysiaKlass *)env->GetLongField(
+            klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        auto mthk = env->FindClass("java/lang/reflect/Method");
+
+        auto kk = kls->toInstance();
+        std::vector<OMElysiaNativeHandle *> hnds;
+        for (int i = 0; i < kk->methodCount; i++)
+        {
+            if (!kk->methods[i].isInit() && !kk->methods->isClinit())
+            {
+                if (publicOnly && (kk->methods[i].accessFlag & JVM_Acc_Public) == 0)
+                {
+                    continue;
+                }
+                auto kns = env->AllocObject(mthk);
+
+                env->SetLongField(kns, env->GetFieldID(env->FindClass("java/lang/reflect/Constructor"), "<ptr>", "J"),
+                                  (jlong)&kk->methods[i]);
+                env->SetObjectField(kns, env->GetFieldID(mthk, "clazz", "Ljava/lang/Class;"),
+                                    env->internal->elysium->executor->recordLocalRef(kk->mirror));
+                env->SetObjectField(kns, env->GetFieldID(mthk, "name", "Ljava/lang/String;"),
+                                    env->NewStringUTF(kk->methods[i].name));
+                env->SetIntField(kns, env->GetFieldID(mthk, "slot", "I"), i);
+                env->SetIntField(kns, env->GetFieldID(mthk, "modifiers", "I"), kk->methods[i].accessFlag);
+                env->SetObjectField(kns, env->GetFieldID(mthk, "signature", "Ljava/lang/String;"),
+                                    env->NewStringUTF(kk->methods[i].descriptor));
+
+                auto excarr =
+                    env->NewObjectArray(kk->methods[i].exceptionsLength, env->FindClass("java/lang/Class"), nullptr);
+                for (int j = 0; j < kk->methods[i].exceptionsLength; j++)
+                {
+                    env->SetObjectArrayElement(
+                        excarr, j,
+                        env->internal->elysium->executor->recordLocalRef(kk->methods[i].exceptions[j]->mirror));
+                }
+                env->SetObjectField(kns, env->GetFieldID(mthk, "exceptionTypes", "[Ljava/lang/Class;"), excarr);
+
+                auto result = parseSignature(kk->methods[i].descriptor);
+                auto argTypearr = env->NewObjectArray(result.first.size(), env->FindClass("java/lang/Class"), nullptr);
+                for (int j = 0; j < result.first.size(); j++)
+                {
+                    env->SetObjectArrayElement(argTypearr, j,
+                                               env->internal->elysium->executor->recordLocalRef(
+                                                   env->FindClass(signatureToType(result.first[j]).c_str())->mirror));
+                }
+                env->SetObjectField(kns, env->GetFieldID(mthk, "parameterTypes", "[Ljava/lang/Class;"), argTypearr);
+
+                env->SetObjectField(kns, env->GetFieldID(mthk, "returnType", "Ljava/lang/Class;"),
+                                    env->internal->elysium->executor->recordLocalRef(
+                                        env->FindClass(signatureToType(result.second).c_str())->mirror));
+                hnds.push_back(kns);
+            }
+        }
+
+        auto ctarr = env->NewObjectArray(hnds.size(), mthk, nullptr);
+        for (int i = 0; i < hnds.size(); i++)
+        {
+            env->SetObjectArrayElement(ctarr, i, hnds[i]);
+        }
+
+        return ctarr;
+    }
+
     void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         interface::registerNativeFuncs(
@@ -262,6 +336,7 @@ extern "C"
                 {"getEnclosingMethod0", "()[Ljava/lang/Object;", getEnclosingMethod0},
                 {"getDeclaringClass0", "()Ljava/lang/Class;", getDeclaringClass0},
                 {"getName0", "()Ljava/lang/String;", getName0},
+                {"getDeclaredMethods0", "(Z)[Ljava/lang/reflect/Method;", getDeclaredMethods0},
             });
     } // namespace openminecraft::vm::elysia::impl
 }
