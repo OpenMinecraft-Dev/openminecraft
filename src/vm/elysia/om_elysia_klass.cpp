@@ -123,6 +123,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id)
             {
                 constantPool[id] = &kk->toInstance()->fields[i];
                 constantPoolState[id] = true;
+
                 return &kk->toInstance()->fields[i];
             }
         }

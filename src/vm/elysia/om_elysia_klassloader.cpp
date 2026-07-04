@@ -16,6 +16,7 @@
 #include <iostream>
 #include <istream>
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
@@ -185,23 +186,23 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
         klass->klassMutex.unlock();
     }
 
+    ensureClassInit(klass);
+}
+
+void OMElysiaKlassloader::ensureClassInit(OMElysiaKlass *klass)
+{
+    std::lock_guard guard(klass->klassMutex);
+    if (klass->isInstance() && !klass->toInstance()->clinitFinished)
     {
-        klass->klassMutex.lock();
+        klass->toInstance()->clinitFinished = true;
+        auto m = klass->findMethod("<clinit>", "()V");
 
-        if (klass->isInstance() && !klass->toInstance()->clinitFinished)
+        if (!m)
         {
-            auto m = klass->findMethod("<clinit>", "()V");
-
-            if (!m)
-            {
-                klass->toInstance()->clinitFinished = true;
-                return;
-            }
-
-            elysium->executor->callVoidFunction(m, nullptr);
-            klass->toInstance()->clinitFinished = true;
+            return;
         }
-        klass->klassMutex.unlock();
+
+        elysium->executor->callVoidFunction(m, nullptr);
     }
 }
 

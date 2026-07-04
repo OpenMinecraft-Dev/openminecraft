@@ -45,6 +45,7 @@ class OMElysiaKlassloader
 
         return l;
     }
+    void ensureClassInit(OMElysiaKlass *);
 
     OMElysium *upper()
     {

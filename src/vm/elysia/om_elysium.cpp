@@ -90,7 +90,7 @@ OMElysium::OMElysium()
             klassLoader->constructPrimitiveClass("void");
             klassLoader->fixAllClasses();
 
-            auto mcls = klassLoader->findClass("java/lang/System");
+            auto mcls = klassLoader->fetchOrLoadClass("java/lang/System");
             auto md = mcls->findMethod("initializeSystemClass", "()V");
             executor->callVoidFunction(md, nullptr);
             logger.info("vm init finished");
