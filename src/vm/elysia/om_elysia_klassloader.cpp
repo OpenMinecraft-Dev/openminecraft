@@ -187,6 +187,7 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
 
     {
         klass->klassMutex.lock();
+
         if (klass->isInstance() && !klass->toInstance()->clinitFinished)
         {
             auto m = klass->findMethod("<clinit>", "()V");
@@ -198,6 +199,7 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
             }
 
             elysium->executor->callVoidFunction(m, nullptr);
+            klass->toInstance()->clinitFinished = true;
         }
         klass->klassMutex.unlock();
     }

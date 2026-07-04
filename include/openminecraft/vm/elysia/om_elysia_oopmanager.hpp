@@ -6,9 +6,11 @@
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <cstdint>
+#include <limits>
+#include <random>
 namespace openminecraft::vm::elysia
 {
-constexpr int markFixed = 0x1;
+constexpr int markFixed = 0x80000000;
 
 #pragma pack(1)
 struct OMElysiaOop
@@ -67,6 +69,9 @@ class OMElysiaOopManager
   private:
     OMElysium *elysium;
     log::OMLogger logger;
+
+    std::mt19937 generator;
+    std::uniform_int_distribution<int> dis;
 };
 } // namespace openminecraft::vm::elysia
 

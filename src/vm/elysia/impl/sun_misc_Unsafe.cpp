@@ -7,8 +7,11 @@
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
+#include <chrono>
 #include <cstdint>
 #include <cstring>
+#include <iostream>
+#include <thread>
 
 namespace openminecraft::vm::elysia::impl
 {
@@ -231,6 +234,11 @@ static bool compareAndSwap(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, 
 static jboolean compareAndSwapObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *o,
                                      jlong offset, OMElysiaNativeHandle *expected, OMElysiaNativeHandle *x)
 {
+    while (!offset)
+    {
+        std::cout << "fail" << std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(1000000));
+    }
     auto target = reinterpret_cast<uintptr_t>(handleFetch(o)) + offset;
     if (env->internal->elysium->mainHeap.enablePtrCompress())
     {

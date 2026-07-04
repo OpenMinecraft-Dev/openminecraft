@@ -10,6 +10,7 @@
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include "optimizations.hpp"
 #include <cstdint>
+#include <iostream>
 #include <type_traits>
 namespace openminecraft::vm::elysia::executor
 {
@@ -31,8 +32,14 @@ static inline uintptr_t zeroStackPop(uint64_t len)
 
 template <typename T> constexpr void assertType1()
 {
-    static_assert(std::is_same_v<T, jboolean> || std::is_same_v<T, jbyte> || std::is_same_v<T, jshort> ||
-                      std::is_same_v<T, jchar> || std::is_same_v<T, jfloat> || std::is_same_v<T, jint> ||
+    static_assert(std::is_same_v<T, jfloat> || std::is_same_v<T, jint> || std::is_same_v<T, OMElysiaOop *> ||
+                      std::is_same_v<T, uint32_t> || std::is_same_v<T, void *> || std::is_same_v<T, uint8_t *>,
+                  "only internal types are supported!");
+}
+template <typename T> constexpr void assertType1Wide()
+{
+    static_assert(std::is_same_v<T, jshort> || std::is_same_v<T, jchar> || std::is_same_v<T, jbyte> ||
+                      std::is_same_v<T, jboolean> || std::is_same_v<T, jfloat> || std::is_same_v<T, jint> ||
                       std::is_same_v<T, OMElysiaOop *> || std::is_same_v<T, uint32_t> || std::is_same_v<T, void *> ||
                       std::is_same_v<T, uint8_t *>,
                   "only internal types are supported!");
@@ -45,29 +52,23 @@ template <typename T> constexpr void assertType2()
 
 template <typename T> static inline void zeroStackPush(T data)
 {
-    assertType1<T>();
-    auto d = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
-    *d = 0;
-    if constexpr (std::is_pointer_v<T>)
+    if constexpr (std::is_same_v<T, jshort> || std::is_same_v<T, jchar> || std::is_same_v<T, jbyte> ||
+                  std::is_same_v<T, jboolean>)
     {
-        *d = reinterpret_cast<uintptr_t>(data);
-    }
-    else if constexpr (sizeof(T) == 4)
-    {
-        *reinterpret_cast<jint *>(d) = *reinterpret_cast<jint *>(&data);
-    }
-    else if constexpr (sizeof(T) == 2)
-    {
-        *reinterpret_cast<jshort *>(d) = *reinterpret_cast<jshort *>(&data);
-    }
-    else if constexpr (sizeof(T) == 1)
-    {
-        *reinterpret_cast<jbyte *>(d) = *reinterpret_cast<jbyte *>(&data);
+        zeroStackPush(static_cast<jint>(data));
     }
     else
     {
-        *d = 0;
-        std::memcpy(d, &data, sizeof(T));
+        assertType1<T>();
+        auto d = reinterpret_cast<uintptr_t *>(zeroStackAlloc(sizeof(void *)));
+        if constexpr (std::is_pointer_v<T>)
+        {
+            *d = reinterpret_cast<uintptr_t>(data);
+        }
+        else
+        {
+            *reinterpret_cast<jint *>(d) = *reinterpret_cast<jint *>(&data);
+        }
     }
 }
 
@@ -94,8 +95,16 @@ static inline int32_t zeroCodeFetchArgs32Align(uint8_t *pc, int offset)
 }
 template <typename T> static inline T zeroStackPopGet()
 {
-    assertType1<T>();
-    return *reinterpret_cast<T *>(zeroStackPop(sizeof(void *)));
+    if constexpr (std::is_same_v<T, jshort> || std::is_same_v<T, jchar> || std::is_same_v<T, jbyte> ||
+                  std::is_same_v<T, jboolean>)
+    {
+        return *reinterpret_cast<T *>(zeroStackPop(sizeof(void *)));
+    }
+    else
+    {
+        assertType1<T>();
+        return *reinterpret_cast<T *>(zeroStackPop(sizeof(void *)));
+    }
 }
 
 template <typename T> static inline T zeroStackPeekGet()
@@ -112,25 +121,25 @@ template <typename T> static inline T *zeroStackPeekGetRef()
 
 template <typename T> static inline void zeroStackSaveLocalPop(uint32_t l, OMElysiaJavaFrame *frame)
 {
-    assertType1<T>();
+    assertType1Wide<T>();
     *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *)) = zeroStackPopGet<T>();
 }
 
 template <typename T> static inline void zeroStackSaveLocal(uint32_t l, T data, OMElysiaJavaFrame *frame)
 {
-    assertType1<T>();
+    assertType1Wide<T>();
     *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *)) = data;
 }
 
 template <typename T> static inline T zeroStackLoadLocal(uint32_t l, OMElysiaJavaFrame *frame)
 {
-    assertType1<T>();
+    assertType1Wide<T>();
     return *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *));
 }
 
 template <typename T> static inline T *zeroStackLoadLocalRef(uint32_t l, OMElysiaJavaFrame *frame)
 {
-    assertType1<T>();
+    assertType1Wide<T>();
     return reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *));
 }
 

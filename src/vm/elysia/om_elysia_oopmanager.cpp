@@ -6,15 +6,16 @@
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
-#include "optimizations.hpp"
 #include <cstring>
 #include <iostream>
+#include <limits>
 
 using namespace openminecraft::binary::hash;
 
 namespace openminecraft::vm::elysia
 {
-OMElysiaOopManager::OMElysiaOopManager(OMElysium *elysium) : elysium(elysium), logger("OMElysiaOopManager", this)
+OMElysiaOopManager::OMElysiaOopManager(OMElysium *elysium)
+    : elysium(elysium), logger("OMElysiaOopManager", this), generator(), dis(0, std::numeric_limits<int>::max())
 {
 }
 OMElysiaOopManager::~OMElysiaOopManager()
@@ -43,6 +44,8 @@ OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass, uint64_t leng
     {
         reinterpret_cast<OMElysiaOopUncompressed *>(ll)->klass = klass;
     }
+
+    ll->markword = dis(generator);
     return ll;
 }
 
@@ -216,6 +219,8 @@ OMElysiaOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint len
         reinterpret_cast<OMElysiaArrayOopUncompressed *>(ll)->klass = klass;
         reinterpret_cast<OMElysiaArrayOopCompressed *>(ll)->length = length;
     }
+
+    ll->markword = dis(generator);
 
     return ll;
 }

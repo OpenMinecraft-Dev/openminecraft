@@ -18,6 +18,8 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <ios>
+#include <iostream>
 #include <stdexcept>
 
 using namespace openminecraft::binary::hash;
@@ -57,6 +59,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m, uint8_t *retAddr, bool n
         logger.dumpStacktrace();
         throw std::logic_error("function is null!");
     }
+
     auto ll = m->argSlots;
     auto tc = thisThread.metadata;
 
@@ -152,7 +155,9 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
     auto cachedStackTop = tc->zero.stackPointer;
 
+    uint8_t **superpc = tc->zero.pc;
     uint8_t *pc = tc->zero.pc ? *tc->zero.pc : nullptr;
+    tc->zero.pc = &pc;
     OMElysiaJavaFrame *currentFrame = nullptr;
 #define updateFrame currentFrame = tc->zero.frame;
     pushFrame(m, pc, false, &pc);
@@ -161,12 +166,13 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     while (true)
     {
     loop_begin:
-        tc->zero.pc = &pc;
         updateFrame;
+
         // geopeila: the calling method's frame is popped, so we need to exit the interpreter loop
         if (tc->zero.stackPointer >= cachedStackTop)
         {
-            break;
+            tc->zero.pc = superpc;
+            return;
         }
 
         if (tc->haveException)
@@ -174,6 +180,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto frm = tc->zero.frame;
             if (frm->method->isNative())
             {
+                tc->zero.pc = superpc;
                 return;
             }
             for (int i = 0; i < frm->method->excTableLength; i++)
@@ -194,7 +201,6 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
         if (tc->zero.frame->method->isNative())
         {
-            pc = nullptr;
             execWithState(InsideVM, [&]() { executeNativeLink(&pc, currentFrame); });
             continue;
         }
@@ -358,7 +364,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             ++pc;
             goto exec;
         }
-            xaload(op_baload, jboolean, zeroStackPush);
+            xaload(op_baload, jbyte, zeroStackPush);
             xaload(op_caload, jchar, zeroStackPush);
             xaload(op_saload, jshort, zeroStackPush);
 
@@ -1174,8 +1180,13 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             goto exec;
         }
         default:
-        unk:
-            throw std::logic_error(fmt::format("unknown operand! (operand 0x{:02x})", *pc));
+        unk: {
+            logger.warn("unknown operand 0x{:02x}!", *pc);
+            while (true)
+            {
+                continue;
+            }
+        }
         }
     }
 }

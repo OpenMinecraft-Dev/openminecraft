@@ -1,4 +1,6 @@
 #include "openminecraft/specs/classfile/om_classfile.hpp"
+#include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
+#include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_meta.hpp"
@@ -141,7 +143,6 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
     auto &bm = bootstrapMethods[item.dynamic.bootstrapIndex];
 
     auto &methodref = constantPoolRaw[bm.bootstrapMethodRef].methodHandle;
-    std::cout << methodref.refIndex << " " << std::endl;
     auto elysium = klassloader->elysium;
     auto kl = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandles$Lookup")->toInstance();
     auto lookup = elysium->oopManager->allocateOop(kl);
@@ -149,7 +150,20 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
                                                this->mirror);
     *reinterpret_cast<jint *>(elysium->oopManager->oopAccessField(lookup, kl->findField("allowedModes", "I")->offset)) =
         JVM_Acc_Private | JVM_Acc_Public | JVM_Acc_Protected | JVM_Acc_Static;
-    std::cout << kl << std::endl;
+
+    auto nt = constantPoolRaw[item.dynamic.nameAndTypeIndex].nameAndType;
+    auto invokedName = elysium->oopManager->allocateString(constantPoolRaw[nt.nameIndex].valueString);
+
+    auto bdfunc = klassloader->fetchOrLoadClass("java/lang/invoke/MethodType")
+                      ->findMethod("fromMethodDescriptorString",
+                                   "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/invoke/MethodType;");
+    OMElysiaNativeValue vv[2];
+    vv[0].l = elysium->executor->recordLocalRef(
+        elysium->oopManager->allocateString(constantPoolRaw[nt.descriptorIndex].valueString));
+    vv[1].l = elysium->executor->recordLocalRef(klassloader->klassloader);
+    auto res = elysium->executor->callObjectFunction(bdfunc, vv);
+
+    std::cout << thisThread.metadata->currentException << std::endl;
 
     while (true)
     {

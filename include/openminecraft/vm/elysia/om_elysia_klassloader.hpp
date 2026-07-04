@@ -29,23 +29,21 @@ class OMElysiaKlassloader
     void fixAllClasses();
 
     OMElysiaKlass *findClass(std::string s);
-
     OMElysiaKlass *fetchOrLoadClass(std::string s)
     {
         auto l = findClass(s);
+        if (!l)
+        {
+            loadClassWithoutMirror(s);
+            l = findClass(s);
+        }
+
         if (l)
         {
             fixClassMirror(l);
-            return l;
         }
 
-        loadClassWithoutMirror(s);
-        auto ll = findClass(s);
-        if (ll)
-        {
-            fixClassMirror(ll);
-        }
-        return ll;
+        return l;
     }
 
     OMElysium *upper()

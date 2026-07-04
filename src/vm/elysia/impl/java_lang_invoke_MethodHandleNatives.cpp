@@ -109,14 +109,11 @@ extern "C"
     {
         jlong idx = -1;
         auto flg = env->GetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"));
-        auto nm = env->GetObjectField(
-            memberName, interface::field(env, "java/lang/invoke/MemberName", "name", "Ljava/lang/String;"));
-        auto nn = env->GetStringUTFChars(nm, nullptr);
-        if ((flg & JVM_Acc_Static) == 0 && (flg & JVM_Acc_Private) == 0 && std::strcmp(nn, "<init>"))
+        auto refkind = (flg >> 24) & 0xf;
+        if (refkind == specs::classfile::RefInvokeVirtual || refkind == specs::classfile::RefInvokeInterface)
         {
             idx = 0;
         }
-        env->ReleaseStringUTFChars(nm, nn);
 
         auto result = env->NewObjectArray(2, env->FindClass("java/lang/Object"), nullptr);
         OMElysiaNativeValue vv[1] = {};
