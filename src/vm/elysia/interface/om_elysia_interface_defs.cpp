@@ -86,6 +86,7 @@ void initBaseInterface(OMElysiaJNIEnv env)
 
     env.internal->AllocObject = [](OMElysiaJNIEnv *env, OMElysiaKlass *klass) {
         return execWithState(InsideVM, [&]() {
+            env->internal->elysium->executor->currentKlassloader()->ensureClassInit(klass);
             return env->internal->elysium->executor->recordLocalRef(
                 env->internal->elysium->oopManager->allocateOop(klass));
         });
@@ -212,6 +213,7 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->NewObjectArray = [](OMElysiaJNIEnv *env, jsize len, OMElysiaKlass *klass,
                                       OMElysiaNativeHandle *init) {
         return execWithState(InsideVM, [&]() {
+            env->internal->elysium->executor->currentKlassloader()->ensureClassInit(klass);
             auto hnd = env->internal->elysium->executor->recordLocalRef(
                 env->internal->elysium->oopManager->allocateArr(env->internal->elysium->executor->currentKlassloader()
                                                                     ->fetchOrLoadClass(buildArray(klass->name))

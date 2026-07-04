@@ -124,6 +124,8 @@ void *OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id)
                 constantPool[id] = &kk->toInstance()->fields[i];
                 constantPoolState[id] = true;
 
+                klassloader->ensureClassInit(kk);
+
                 return &kk->toInstance()->fields[i];
             }
         }
@@ -145,7 +147,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
 
     auto &methodref = constantPoolRaw[bm.bootstrapMethodRef].methodHandle;
     auto elysium = klassloader->elysium;
-    auto kl = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandles$Lookup")->toInstance();
+    auto kl = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandles$Lookup", true)->toInstance();
     auto lookup = elysium->oopManager->allocateOop(kl);
     elysium->oopManager->oopAccessPointerField(lookup, kl->findField("lookupClass", "Ljava/lang/Class;")->offset,
                                                this->mirror);
@@ -155,7 +157,16 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
     auto nt = constantPoolRaw[item.dynamic.nameAndTypeIndex].nameAndType;
     auto invokedName = elysium->oopManager->allocateString(constantPoolRaw[nt.nameIndex].valueString);
 
-    auto bdfunc = klassloader->fetchOrLoadClass("java/lang/invoke/MethodType")
+    {
+        auto r = parseSignature(constantPoolRaw[nt.descriptorIndex].valueString.c_str());
+        elysium->klassLoader->fetchOrLoadClass(signatureToType(r.second), true);
+        for (auto &p : r.first)
+        {
+            elysium->klassLoader->fetchOrLoadClass(signatureToType(p), true);
+        }
+    }
+
+    auto bdfunc = klassloader->fetchOrLoadClass("java/lang/invoke/MethodType", true)
                       ->findMethod("fromMethodDescriptorString",
                                    "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/invoke/MethodType;");
     OMElysiaNativeValue vv[2];
@@ -164,7 +175,10 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
     vv[1].l = elysium->executor->recordLocalRef(klassloader->klassloader);
     auto res = elysium->executor->callObjectFunction(bdfunc, vv);
 
-    std::cout << thisThread.metadata->currentException << std::endl;
+    if (thisThread.metadata->haveException)
+    {
+        return nullptr;
+    }
 
     while (true)
     {
@@ -198,6 +212,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
             constantPoolRaw[constantPoolRaw[item.ref.nameAndTypeIndex].nameAndType.descriptorIndex].valueString;
 
         auto cls = execWithState(InsideVM, [&]() { return klassloader->fetchOrLoadClass(clsname); });
+        auto rcls = cls;
 
         OMElysiaMethod *mthd = nullptr;
         while (!mthd)
@@ -219,6 +234,8 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
             }
         }
 
+        klassloader->ensureClassInit(rcls);
+
         constantPool[id] = mthd;
         constantPoolState[id] = true;
         return mthd;
@@ -230,6 +247,10 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
 
         constantPool[id] = cls;
         constantPoolState[id] = true;
+        if (!flg)
+        {
+            klassloader->ensureClassInit(cls);
+        }
         return flg ? reinterpret_cast<void *>(cls->mirror) : cls;
     }
     case specs::classfile::Integer: {

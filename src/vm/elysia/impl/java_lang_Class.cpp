@@ -50,7 +50,7 @@ extern "C"
                         ch = '/';
                     }
                 }
-                auto kls = kld->fetchOrLoadClass(ss);
+                auto kls = kld->fetchOrLoadClass(ss, true);
                 env->ReleaseStringUTFChars(name, nn);
 
                 if (env->ExceptionCheck())

@@ -77,6 +77,8 @@ class OMElysiaThread
     OMElysiaOop *currentException = nullptr;
     bool haveException = false;
 
+    bool special = false;
+
     std::function<void()> cleaner = []() {};
 
     void *nativeHandle;

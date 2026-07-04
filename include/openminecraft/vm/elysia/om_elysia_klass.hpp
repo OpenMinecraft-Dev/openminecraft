@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <thread>
 #include <unordered_map>
 
 namespace openminecraft::vm::elysia
@@ -52,7 +53,7 @@ class OMElysiaKlass
     uint32_t bootstrapMethodCount = 0;
     specs::classfile::OMClassBootstrapMethodEntry *bootstrapMethods = nullptr;
 
-    std::recursive_mutex klassMutex;
+    std::unique_ptr<std::recursive_mutex> klassMutex;
 
     OMElysiaMethod *findMethod(const char *name, const char *desc);
 

@@ -29,7 +29,7 @@ class OMElysiaKlassloader
     void fixAllClasses();
 
     OMElysiaKlass *findClass(std::string s);
-    OMElysiaKlass *fetchOrLoadClass(std::string s)
+    OMElysiaKlass *fetchOrLoadClass(std::string s, bool needInit = false)
     {
         auto l = findClass(s);
         if (!l)
@@ -41,6 +41,10 @@ class OMElysiaKlassloader
         if (l)
         {
             fixClassMirror(l);
+            if (needInit)
+            {
+                ensureClassInit(l);
+            }
         }
 
         return l;

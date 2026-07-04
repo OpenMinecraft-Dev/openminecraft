@@ -62,6 +62,7 @@ OMElysium::OMElysium()
     mainThread = new std::thread([&]() {
         log::multithread::registerCurrentThreadName("main");
         thisThread.metadata->setName("main");
+        thisThread.metadata->special = true;
         try
         {
             auto prim = {"char", "byte", "short", "int", "long", "float", "double", "boolean"};
@@ -90,6 +91,14 @@ OMElysium::OMElysium()
             klassLoader->constructPrimitiveClass("void");
             klassLoader->fixAllClasses();
 
+            for (auto &s : {"java/lang/Object", "java/lang/Class", "java/lang/String", "java/lang/System",
+                            "java/lang/Thread", "java/lang/ThreadGroup"})
+            {
+                klassLoader->ensureClassInit(klassLoader->findClass(s));
+            }
+
+            setupThreadObject();
+
             auto mcls = klassLoader->fetchOrLoadClass("java/lang/System");
             auto md = mcls->findMethod("initializeSystemClass", "()V");
             executor->callVoidFunction(md, nullptr);
@@ -105,7 +114,7 @@ OMElysium::OMElysium()
                 logger.error("{}", env.GetStringUTFChars(str, nullptr));
             }
 
-            auto l = klassLoader->fetchOrLoadClass("dev/openminecraft/MainKt");
+            auto l = klassLoader->fetchOrLoadClass("dev/openminecraft/MainKt", true);
             auto mm = l->findMethod("main", "([Ljava/lang/String;)V");
             OMElysiaNativeValue vv[1];
             vv[0].l = nullptr;

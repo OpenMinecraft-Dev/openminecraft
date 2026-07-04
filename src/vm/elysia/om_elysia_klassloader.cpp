@@ -148,6 +148,7 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
 void OMElysiaKlassloader::markKlass(OMElysiaKlass *klass)
 {
     klass->klassloader = this;
+    klass->klassMutex = std::make_unique<std::recursive_mutex>();
     (*loadedClasses)[binary::hash::hash_compile_time(klass->name)] = klass;
 }
 
@@ -164,7 +165,7 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
             return;
         }
 
-        klass->klassMutex.lock();
+        klass->klassMutex->lock();
 
         auto kls = elysium->klassLoader->findClass("java/lang/Class");
         auto oop = elysium->oopManager->allocateOop(kls, klass->isInstance() ? klass->toInstance()->staticLength : 0);
@@ -183,15 +184,13 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
         }
 
         klass->mirror = oop;
-        klass->klassMutex.unlock();
+        klass->klassMutex->unlock();
     }
-
-    ensureClassInit(klass);
 }
 
 void OMElysiaKlassloader::ensureClassInit(OMElysiaKlass *klass)
 {
-    std::lock_guard guard(klass->klassMutex);
+    klass->klassMutex->lock();
     if (klass->isInstance() && !klass->toInstance()->clinitFinished)
     {
         klass->toInstance()->clinitFinished = true;
@@ -199,11 +198,14 @@ void OMElysiaKlassloader::ensureClassInit(OMElysiaKlass *klass)
 
         if (!m)
         {
-            return;
+            goto endf;
         }
 
         elysium->executor->callVoidFunction(m, nullptr);
     }
+endf:
+    klass->klassMutex->unlock();
+    return;
 }
 
 void OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
@@ -317,7 +319,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> i
     }
 
     auto klass = klassraw->toInstance();
-    klass->klassMutex.lock();
+    klass->klassMutex->lock();
 
     if (clsfile->basic.superClass)
     {
@@ -577,6 +579,6 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> i
 
     klass->clinitFinished = false;
 
-    klass->klassMutex.unlock();
+    klass->klassMutex->unlock();
 }
 } // namespace openminecraft::vm::elysia

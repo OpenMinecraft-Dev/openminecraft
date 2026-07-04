@@ -143,7 +143,10 @@ void OMElysiaExecutorZero::threadInit()
         tc->threadInited = true;
         tc->registerThread();
 
-        execWithState(InsideVM, [&]() { elysium->setupThreadObject(); });
+        if (!tc->special)
+        {
+            elysium->setupThreadObject();
+        }
     }
 }
 
@@ -953,6 +956,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         case op_invokedynamic: {
             CURRENT_KLASS->constantPoolFetchDynamic(zeroCodeFetchArgu16p0(pc));
+            continue;
             goto unk;
         }
         case op_new: {
@@ -1004,7 +1008,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto c = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
             auto klass = execWithState(InsideVM, [&]() {
                 return CURRENT_KLASS->klassloader->fetchOrLoadClass(
-                    buildArray(reinterpret_cast<OMElysiaKlass *>(c)->name));
+                    buildArray(reinterpret_cast<OMElysiaKlass *>(c)->name), true);
             });
             auto arr = oopManager->allocateArr(klass->toArray(), zeroStackPopGet<jint>());
             zeroStackPush(arr);
