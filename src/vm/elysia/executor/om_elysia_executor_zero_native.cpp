@@ -232,7 +232,7 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
         {
             if (vv->next == vv)
             {
-                mem::allocator::tracedFreeElysia(vv);
+                free(vv);
             }
         }
         break;

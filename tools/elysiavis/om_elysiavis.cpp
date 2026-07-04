@@ -352,7 +352,13 @@ print:
         auto off =
             elysium->klassLoader->fetchOrLoadClass("java/lang/Class")->toInstance()->findField("<ptr>", "J")->offset;
         auto ptt = elysium->oopManager->oopAccessField(base, off);
-        extra = ((OMElysiaKlass *)*reinterpret_cast<jlong *>(ptt))->toInstance()->staticLength;
+        auto klass = ((OMElysiaKlass *)*reinterpret_cast<jlong *>(ptt));
+        if (klass->isInstance())
+        {
+            extra = klass->toInstance()->staticLength;
+            fmt::print(fmt::fg(hintColor), "(static block for {}, {} bytes)", klass->name, extra);
+            fmt::println("");
+        }
     }
     base = reinterpret_cast<OMElysiaOop *>(reinterpret_cast<uintptr_t>(base) +
                                            elysium->mainHeap.align(elysium->oopManager->oopLength(base) + extra));

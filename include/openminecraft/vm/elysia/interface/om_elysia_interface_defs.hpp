@@ -36,8 +36,7 @@ struct OMElysiaNativeHandle
 
 static OMElysiaNativeHandle *createTempHandle(OMElysiaOop *oop)
 {
-    auto hnd =
-        reinterpret_cast<OMElysiaNativeHandle *>(mem::allocator::tracedMallocElysia(sizeof(OMElysiaNativeHandle)));
+    auto hnd = reinterpret_cast<OMElysiaNativeHandle *>(malloc(sizeof(OMElysiaNativeHandle)));
     hnd->next = hnd;
     hnd->object = oop;
     return hnd;

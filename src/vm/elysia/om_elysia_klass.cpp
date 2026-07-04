@@ -147,12 +147,17 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
 
     auto &methodref = constantPoolRaw[bm.bootstrapMethodRef].methodHandle;
     auto elysium = klassloader->elysium;
-    auto kl = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandles$Lookup", true)->toInstance();
-    auto lookup = elysium->oopManager->allocateOop(kl);
-    elysium->oopManager->oopAccessPointerField(lookup, kl->findField("lookupClass", "Ljava/lang/Class;")->offset,
-                                               this->mirror);
-    *reinterpret_cast<jint *>(elysium->oopManager->oopAccessField(lookup, kl->findField("allowedModes", "I")->offset)) =
-        JVM_Acc_Private | JVM_Acc_Public | JVM_Acc_Protected | JVM_Acc_Static;
+
+    OMElysiaOop *lookup;
+    {
+        auto kl = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandles$Lookup", true)->toInstance();
+        lookup = elysium->oopManager->allocateOop(kl);
+        elysium->oopManager->oopAccessPointerField(lookup, kl->findField("lookupClass", "Ljava/lang/Class;")->offset,
+                                                   this->mirror);
+        *reinterpret_cast<jint *>(
+            elysium->oopManager->oopAccessField(lookup, kl->findField("allowedModes", "I")->offset)) =
+            JVM_Acc_Private | JVM_Acc_Public | JVM_Acc_Protected | JVM_Acc_Static;
+    }
 
     auto nt = constantPoolRaw[item.dynamic.nameAndTypeIndex].nameAndType;
     auto invokedName = elysium->oopManager->allocateString(constantPoolRaw[nt.nameIndex].valueString);
@@ -166,14 +171,40 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
         }
     }
 
-    auto bdfunc = klassloader->fetchOrLoadClass("java/lang/invoke/MethodType", true)
-                      ->findMethod("fromMethodDescriptorString",
-                                   "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/invoke/MethodType;");
-    OMElysiaNativeValue vv[2];
-    vv[0].l = elysium->executor->recordLocalRef(
-        elysium->oopManager->allocateString(constantPoolRaw[nt.descriptorIndex].valueString));
-    vv[1].l = elysium->executor->recordLocalRef(klassloader->klassloader);
-    auto res = elysium->executor->callObjectFunction(bdfunc, vv);
+    auto buildTypeFor = [&](std::string dd) {
+        auto result = parseSignature(dd.c_str());
+        auto retType = klassloader->fetchOrLoadClass(signatureToType(result.second), true);
+
+        auto parTypes = elysium->oopManager->allocateArr(
+            elysium->klassLoader->fetchOrLoadClass("[Ljava/lang/Class;", true)->toArray(), result.first.size());
+        int i = 0;
+        for (auto &p : result.first)
+        {
+            elysium->oopManager->arrAccessPtr(parTypes, i,
+                                              klassloader->fetchOrLoadClass(signatureToType(p), true)->mirror);
+            ++i;
+        }
+
+        auto tpe = elysium->oopManager->allocateOop(
+            elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodType", true));
+        OMElysiaNativeValue vv[4];
+        vv[0].l = elysium->executor->recordLocalRef(tpe);
+        vv[1].l = elysium->executor->recordLocalRef(retType->mirror);
+        vv[2].l = elysium->executor->recordLocalRef(parTypes);
+        vv[3].z = true;
+        elysium->executor->callObjectFunction(
+            elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodType", true)
+                ->findMethod("<init>", "(Ljava/lang/Class;[Ljava/lang/Class;Z)V"),
+            vv);
+
+        return tpe;
+    };
+    auto invokedType = buildTypeFor(constantPoolRaw[nt.descriptorIndex].valueString);
+
+    for (int i = 0; i < bm.numBootstrapArguments; ++i)
+    {
+        std::cout << bm.bootstrapArguments[i] << std::endl;
+    }
 
     if (thisThread.metadata->haveException)
     {
