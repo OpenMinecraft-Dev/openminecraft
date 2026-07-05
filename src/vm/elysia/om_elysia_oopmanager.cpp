@@ -154,6 +154,7 @@ jint OMElysiaOopManager::arrLength(OMElysiaOop *base)
 
 OMElysiaOop *OMElysiaOopManager::arrAccessPtr(OMElysiaOop *oop, jint index)
 {
+    while (!oop) {}
     if (elysium->metaspaceHeap.enablePtrCompress())
     {
         return reinterpret_cast<OMElysiaOop *>(elysium->mainHeap.decompress(arrAccess<uint32_t>(oop)[index]));

@@ -319,7 +319,7 @@ static OMElysiaNativeHandle *defineAnonymousClass(OMElysiaJNIEnv *env, OMElysiaN
     auto barr = env->GetByteArrayElements(bytearr, nullptr);
     auto kls = env->internal->elysium->klassLoader->loadClassWithoutMirror(
         std::make_shared<std::istringstream>(std::string((char *)barr, env->GetArrayLength(bytearr))), false,
-        fmt::format("{}$$Lambda/{}", k->name, (void *)handleFetch(cpPatches)));
+        fmt::format("{}/{}", k->name, (void *)handleFetch(cpPatches)));
     env->ReleaseByteArrayElements(bytearr, barr, 0);
     env->internal->elysium->klassLoader->fixClassMirror(kls);
     return createTempHandle(kls->mirror);

@@ -114,6 +114,8 @@ OMElysium::OMElysium()
                 logger.error("{}", env.GetStringUTFChars(str, nullptr));
             }
 
+            klassLoader->fetchOrLoadClass("java/lang/invoke/LambdaForm", true);
+
             auto l = klassLoader->fetchOrLoadClass("dev/openminecraft/MainKt", true);
             auto mm = l->findMethod("main", "([Ljava/lang/String;)V");
             OMElysiaNativeValue vv[1];

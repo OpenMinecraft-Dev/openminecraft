@@ -5,11 +5,17 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_utils.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
+#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
+#include "openminecraft/vm/elysia/om_elysium.hpp"
+#include <cstring>
 #include <stdexcept>
 
 namespace openminecraft::vm::elysia::impl
 {
 extern log::OMLogger logger;
+constexpr int MN_Method = 0x10000;
+constexpr int MN_Constructor = 0x20000;
+constexpr int MN_Field = 0x40000;
 extern "C"
 {
     static jint getConstant(OMElysiaJNIEnv *env, OMElysiaKlass *, jint constant)
@@ -20,20 +26,57 @@ extern "C"
     {
         return 0;
     }
-    static OMElysiaNativeHandle *resolve(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *memberName,
-                                         OMElysiaNativeHandle *resolver)
+
+    static bool resolveField(OMElysiaJNIEnv *env, OMElysiaNativeHandle *memberName, int flags)
     {
-        int flags = env->GetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"));
         auto type = env->GetObjectField(
             memberName, interface::field(env, "java/lang/invoke/MemberName", "type", "Ljava/lang/Object;"));
         auto nm = env->GetObjectField(
             memberName, interface::field(env, "java/lang/invoke/MemberName", "name", "Ljava/lang/String;"));
         auto k = env->GetObjectField(
             memberName, interface::field(env, "java/lang/invoke/MemberName", "clazz", "Ljava/lang/Class;"));
-        if ((flags & 0x10000) == 0)
+
+        auto ffname = env->GetStringUTFChars(nm, nullptr);
         {
-            throw std::logic_error("not a method!");
+            auto fl = env->CallObjectMethodA(
+                k, interface::method(env, "java/lang/Class", "getDeclaredFields", "()[Ljava/lang/reflect/Field;"),
+                nullptr);
+            for (int i = 0; i < env->GetArrayLength(fl); ++i)
+            {
+                auto ff = env->GetObjectArrayElement(fl, i);
+                auto fn = env->GetObjectField(
+                    ff, interface::field(env, "java/lang/reflect/Field", "name", "Ljava/lang/String;"));
+                auto fnn = env->GetStringUTFChars(fn, nullptr);
+                bool equ = std::strcmp(fnn, ffname) == 0;
+                env->ReleaseStringUTFChars(fn, fnn);
+
+                if (!equ)
+                {
+                    continue;
+                }
+
+                int fflags = env->GetIntField(ff, interface::field(env, "java/lang/reflect/Field", "modifiers", "I"));
+                env->SetObjectField(
+                    memberName,
+                    interface::field(env, "java/lang/invoke/MemberName", "resolution", "Ljava/lang/Object;"), ff);
+                env->SetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"),
+                                 flags | (fflags & 0xf));
+                env->ReleaseStringUTFChars(nm, ffname);
+                return true;
+            }
         }
+        env->ReleaseStringUTFChars(nm, ffname);
+        return false;
+    }
+
+    static bool resolveMethod(OMElysiaJNIEnv *env, OMElysiaNativeHandle *memberName, int flags)
+    {
+        auto type = env->GetObjectField(
+            memberName, interface::field(env, "java/lang/invoke/MemberName", "type", "Ljava/lang/Object;"));
+        auto nm = env->GetObjectField(
+            memberName, interface::field(env, "java/lang/invoke/MemberName", "name", "Ljava/lang/String;"));
+        auto k = env->GetObjectField(
+            memberName, interface::field(env, "java/lang/invoke/MemberName", "clazz", "Ljava/lang/Class;"));
 
         auto mmname = env->GetStringUTFChars(nm, nullptr);
         {
@@ -98,9 +141,9 @@ extern "C"
                     memberName,
                     interface::field(env, "java/lang/invoke/MemberName", "resolution", "Ljava/lang/Object;"), mth);
                 env->SetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"),
-                                 flags | mthflags);
+                                 flags | (mthflags & 0xf));
                 env->ReleaseStringUTFChars(nm, mmname);
-                return memberName;
+                return true;
             end:
                 continue;
             }
@@ -108,14 +151,42 @@ extern "C"
         logger.warn("{}", mmname);
         env->ReleaseStringUTFChars(nm, mmname);
 
-        throw std::logic_error("fail");
+        return false;
+    }
+
+    static OMElysiaNativeHandle *resolve(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *memberName,
+                                         OMElysiaNativeHandle *resolver)
+    {
+        int flags = env->GetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"));
+        if (flags & MN_Method)
+        {
+            if (!resolveMethod(env, memberName, flags))
+            {
+                throw std::logic_error("resolve method fail!");
+            }
+        }
+        else if (flags & MN_Field)
+        {
+            if (!resolveField(env, memberName, flags))
+            {
+                throw std::logic_error("resolve field fail!");
+            }
+        }
+        else
+        {
+            throw std::logic_error("not a method!");
+        }
+
+        return memberName;
     }
     OMElysiaNativeHandle *getMemberVMInfo(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *memberName)
     {
         jlong idx = -1;
         auto flg = env->GetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"));
         auto refkind = (flg >> 24) & 0xf;
-        if (refkind == specs::classfile::RefInvokeVirtual || refkind == specs::classfile::RefInvokeInterface)
+        if (refkind == specs::classfile::RefInvokeVirtual || refkind == specs::classfile::RefInvokeInterface ||
+            refkind == specs::classfile::RefGetField || refkind == specs::classfile::RefSetField ||
+            refkind == specs::classfile::RefGetStatic || refkind == specs::classfile::RefSetStatic)
         {
             idx = 0;
         }
@@ -126,7 +197,17 @@ extern "C"
         env->SetObjectArrayElement(result, 0,
                                    env->NewObjectA(env->FindClass("java/lang/Long"),
                                                    interface::method(env, "java/lang/Long", "<init>", "(J)V"), vv));
-        env->SetObjectArrayElement(result, 1, memberName);
+        if (refkind == specs::classfile::RefGetField || refkind == specs::classfile::RefSetField ||
+            refkind == specs::classfile::RefGetStatic || refkind == specs::classfile::RefSetStatic)
+        {
+            auto l = env->GetObjectField(
+                memberName, interface::field(env, "java/lang/invoke/MemberName", "clazz", "Ljava/lang/Class;"));
+            env->SetObjectArrayElement(result, 1, l);
+        }
+        else
+        {
+            env->SetObjectArrayElement(result, 1, memberName);
+        }
         return result;
     }
 
@@ -187,6 +268,20 @@ extern "C"
         env->SetObjectField(memberName,
                             interface::field(env, "java/lang/invoke/MemberName", "type", "Ljava/lang/Object;"), mt);
     }
+
+    static jlong objectFieldOffset(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *memberName)
+    {
+        auto nm = env->GetObjectField(
+            memberName, interface::field(env, "java/lang/invoke/MemberName", "name", "Ljava/lang/String;"));
+        auto k = env->GetObjectField(
+            memberName, interface::field(env, "java/lang/invoke/MemberName", "clazz", "Ljava/lang/Class;"));
+        auto kk = (OMElysiaKlass *)env->GetLongField(k, interface::field(env, "java/lang/Class", "<ptr>", "J"));
+        auto nn = env->GetStringUTFChars(nm, nullptr);
+        auto off = kk->toInstance()->findField(nn, nullptr)->offset;
+        env->ReleaseStringUTFChars(nm, nn);
+
+        return off + env->internal->elysium->oopManager->oopHeaderLength();
+    }
     void Java_java_lang_invoke_MethodHandleNatives_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         interface::registerNativeFuncs(
@@ -197,6 +292,7 @@ extern "C"
                 {"resolve", "(Ljava/lang/invoke/MemberName;Ljava/lang/Class;)Ljava/lang/invoke/MemberName;", resolve},
                 {"getMemberVMInfo", "(Ljava/lang/invoke/MemberName;)Ljava/lang/Object;", getMemberVMInfo},
                 {"init", "(Ljava/lang/invoke/MemberName;Ljava/lang/Object;)V", init},
+                {"objectFieldOffset", "(Ljava/lang/invoke/MemberName;)J", objectFieldOffset},
             });
     }
 }

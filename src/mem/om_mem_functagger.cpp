@@ -8,6 +8,5 @@ log::OMLogger logger("FuncTagger");
 void tagFunc(void *&func, std::string id)
 {
     tags[func] = id;
-    logger.info("tagged func {} with id {}", func, id);
 }
 } // namespace openminecraft::mem::tagger
