@@ -5,12 +5,14 @@
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_meta.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
+#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace openminecraft::vm::elysia
 {
@@ -148,6 +150,8 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
     auto &methodref = constantPoolRaw[bm.bootstrapMethodRef].methodHandle;
     auto elysium = klassloader->elysium;
 
+    std::vector<OMElysiaOop *> target;
+
     OMElysiaOop *lookup;
     {
         auto kl = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandles$Lookup", true)->toInstance();
@@ -183,10 +187,31 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
     };
     auto invokedType = buildTypeFor(constantPoolRaw[nt.descriptorIndex].valueString);
 
+    target.push_back(lookup);
+    target.push_back(invokedName);
+    target.push_back(invokedType);
+
     for (int i = 0; i < bm.numBootstrapArguments; ++i)
     {
-        std::cout << bm.bootstrapArguments[i] << std::endl;
+        auto oop = constantPoolFetchNormal(bm.bootstrapArguments[i]);
+        target.push_back((OMElysiaOop *)oop);
     }
+
+    auto hnd = constantPoolFetchNormal(bm.bootstrapMethodRef);
+    auto m = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandle", true)
+                 ->findMethod("invoke", "([Ljava/lang/Object;)Ljava/lang/Object;");
+    auto arg = elysium->oopManager->allocateArr(
+        elysium->klassLoader->fetchOrLoadClass("[Ljava/lang/Object;", true)->toArray(), target.size());
+    for (int i = 0; i < target.size(); ++i)
+    {
+        elysium->oopManager->arrAccessPtr(arg, i, target[i]);
+    }
+    OMElysiaNativeValue vv[2];
+    vv[0].l = createTempHandle(reinterpret_cast<OMElysiaOop *>(hnd));
+    vv[1].l = createTempHandle(arg);
+    std::cout << hnd << std::endl;
+    auto callsite = elysium->executor->callObjectFunction(m, vv);
+    std::cout << callsite << std::endl;
 
     if (thisThread.metadata->haveException)
     {
@@ -287,6 +312,74 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
             klassloader->upper()->oopManager->allocateString(constantPoolRaw[item.stringRef.stringIndex].valueString);
 
         constantPool[id] = strWrp;
+        constantPoolState[id] = true;
+        return constantPool[id];
+    }
+    case specs::classfile::MethodType: {
+        auto &elysium = klassloader->elysium;
+        OMElysiaNativeValue vv[2];
+        vv[0].l = elysium->executor->recordLocalRef(
+            elysium->oopManager->allocateString(constantPoolRaw[item.methodType.descriptorIndex].valueString));
+        vv[1].l = elysium->executor->recordLocalRef(klassloader->klassloader);
+        auto oop = elysium->executor->callObjectFunction(
+            elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodType", true)
+                ->findMethod("fromMethodDescriptorString",
+                             "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/invoke/MethodType;"),
+            vv);
+        constantPool[id] = oop;
+        constantPoolState[id] = true;
+        return constantPool[id];
+    }
+    case specs::classfile::MethodHandle: {
+        auto &elysium = klassloader->elysium;
+
+        OMElysiaOop *lookup;
+        {
+            auto kl =
+                elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandles$Lookup", true)->toInstance();
+            lookup = elysium->oopManager->allocateOop(kl);
+            elysium->oopManager->oopAccessPointerField(
+                lookup, kl->findField("lookupClass", "Ljava/lang/Class;")->offset, this->mirror);
+            *reinterpret_cast<jint *>(
+                elysium->oopManager->oopAccessField(lookup, kl->findField("allowedModes", "I")->offset)) =
+                JVM_Acc_Private | JVM_Acc_Public | JVM_Acc_Protected | JVM_Acc_Static;
+        }
+
+        auto ref = (OMElysiaMethod *)constantPoolFetchNormal(item.methodHandle.refIndex);
+
+        OMElysiaNativeValue vv[5];
+        vv[0].l = elysium->executor->recordLocalRef(elysium->oopManager->allocateString(ref->descriptor));
+        vv[1].l = elysium->executor->recordLocalRef(klassloader->klassloader);
+        auto type = elysium->executor->callObjectFunction(
+            elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodType", true)
+                ->findMethod("fromMethodDescriptorString",
+                             "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/invoke/MethodType;"),
+            vv);
+
+        vv[0].l = createTempHandle(lookup);
+        vv[1].b = item.methodHandle.refKind;
+        vv[2].l = createTempHandle(ref->klass->mirror);
+        vv[3].l = createTempHandle(elysium->oopManager->allocateString(ref->name));
+        vv[4].l = createTempHandle(type);
+        auto mn = elysium->executor->callObjectFunction(
+            elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandles$Lookup", true)
+                ->findMethod("resolveOrFail", "(BLjava/lang/Class;Ljava/lang/String;Ljava/lang/invoke/"
+                                              "MethodType;)Ljava/lang/invoke/MemberName;"),
+            vv);
+
+        vv[0].l = createTempHandle(lookup);
+        vv[1].b = item.methodHandle.refKind;
+        vv[2].l = createTempHandle(ref->klass->mirror);
+        vv[3].l = createTempHandle(mn);
+        vv[4].l = createTempHandle(mirror);
+
+        auto hnd = elysium->executor->callObjectFunction(
+            elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandles$Lookup", true)
+                ->findMethod("getDirectMethod", "(BLjava/lang/Class;Ljava/lang/invoke/MemberName;Ljava/lang/"
+                                                "Class;)Ljava/lang/invoke/MethodHandle;"),
+            vv);
+
+        constantPool[id] = hnd;
         constantPoolState[id] = true;
         return constantPool[id];
     }

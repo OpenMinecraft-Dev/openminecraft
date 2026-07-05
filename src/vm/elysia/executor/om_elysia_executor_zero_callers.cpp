@@ -51,7 +51,14 @@ void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, const OMElysiaNat
             continue;
         case argTypeReference:
         case argTypeArray:
-            zeroStackPush<OMElysiaOop *>(args[i].l ? args[i].l->object : nullptr);
+            zeroStackPush<OMElysiaOop *>(handleFetch(args[i].l));
+            if (args[i].l)
+            {
+                if (args[i].l->next == args[i].l)
+                {
+                    free(args[i].l);
+                }
+            }
             continue;
         default:
             throw std::logic_error("unknown arg type");

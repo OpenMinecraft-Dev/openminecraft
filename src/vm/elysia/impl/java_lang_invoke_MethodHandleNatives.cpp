@@ -56,9 +56,6 @@ extern "C"
                 }
 
                 int fflags = env->GetIntField(ff, interface::field(env, "java/lang/reflect/Field", "modifiers", "I"));
-                env->SetObjectField(
-                    memberName,
-                    interface::field(env, "java/lang/invoke/MemberName", "resolution", "Ljava/lang/Object;"), ff);
                 env->SetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"),
                                  flags | (fflags & 0xf));
                 env->ReleaseStringUTFChars(nm, ffname);
@@ -137,9 +134,6 @@ extern "C"
                 }*/
 
             success:
-                env->SetObjectField(
-                    memberName,
-                    interface::field(env, "java/lang/invoke/MemberName", "resolution", "Ljava/lang/Object;"), mth);
                 env->SetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"),
                                  flags | (mthflags & 0xf));
                 env->ReleaseStringUTFChars(nm, mmname);
@@ -282,6 +276,55 @@ extern "C"
 
         return off + env->internal->elysium->oopManager->oopHeaderLength();
     }
+
+    static jint getMembers(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *klass,
+                           OMElysiaNativeHandle *matchName, OMElysiaNativeHandle *matchSig, int matchFlags,
+                           OMElysiaNativeHandle *caller, int skip, OMElysiaNativeHandle *results)
+    {
+        if ((matchFlags & MN_Method) == 0)
+        {
+            throw std::logic_error("not implemented!");
+        }
+
+        auto fl = env->CallObjectMethodA(
+            klass, interface::method(env, "java/lang/Class", "getDeclaredMethods", "()[Ljava/lang/reflect/Method;"),
+            nullptr);
+        if (matchName || matchSig)
+        {
+            throw std::logic_error("not implemented!");
+        }
+
+        int l = 0;
+        for (int i = 0; i < env->GetArrayLength(fl); ++i)
+        {
+            if (l >= env->GetArrayLength(results))
+            {
+                break;
+            }
+            auto m = env->GetObjectArrayElement(fl, i);
+            skip--;
+            if (skip <= 0)
+            {
+                OMElysiaNativeValue vv[2];
+                vv[0].l = m;
+                vv[1].z = false;
+                env->SetObjectArrayElement(
+                    results, l,
+                    env->NewObjectA(env->FindClass("java/lang/invoke/MemberName"),
+                                    interface::method(env, "java/lang/invoke/MemberName", "<init>",
+                                                      "(Ljava/lang/reflect/Method;Z)V"),
+                                    vv));
+                ++l;
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        return l;
+    }
+
     void Java_java_lang_invoke_MethodHandleNatives_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         interface::registerNativeFuncs(
@@ -293,6 +336,10 @@ extern "C"
                 {"getMemberVMInfo", "(Ljava/lang/invoke/MemberName;)Ljava/lang/Object;", getMemberVMInfo},
                 {"init", "(Ljava/lang/invoke/MemberName;Ljava/lang/Object;)V", init},
                 {"objectFieldOffset", "(Ljava/lang/invoke/MemberName;)J", objectFieldOffset},
+                {"getMembers",
+                 "(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Class;I[Ljava/lang/invoke/"
+                 "MemberName;)I",
+                 getMembers},
             });
     }
 }
