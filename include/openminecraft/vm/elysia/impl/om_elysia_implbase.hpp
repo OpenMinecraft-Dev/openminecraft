@@ -59,6 +59,9 @@ extern "C"
                                                                 OMElysiaNativeHandle *klass, jint length);
     void Java_java_lang_invoke_MethodHandleNatives_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass);
 
+    OMElysiaNativeHandle *Java_java_lang_invoke_MethodHandle_invoke(OMElysiaJNIEnv *env, OMElysiaNativeHandle *handle,
+                                                                    OMElysiaNativeHandle *args);
+
     void registerPlatform(OMElysium *);
 }
 }; // namespace openminecraft::vm::elysia::impl

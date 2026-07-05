@@ -1023,10 +1023,6 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         case op_athrow: {
             auto t = zeroStackPopGet<OMElysiaOop *>();
             elysium->throwException(t);
-            while (true)
-            {
-                continue;
-            }
             continue;
         }
         case op_checkcast: {
