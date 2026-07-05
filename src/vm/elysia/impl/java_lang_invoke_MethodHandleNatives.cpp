@@ -29,39 +29,31 @@ extern "C"
 
     static bool resolveField(OMElysiaJNIEnv *env, OMElysiaNativeHandle *memberName, int flags)
     {
-        auto type = env->GetObjectField(
-            memberName, interface::field(env, "java/lang/invoke/MemberName", "type", "Ljava/lang/Object;"));
         auto nm = env->GetObjectField(
             memberName, interface::field(env, "java/lang/invoke/MemberName", "name", "Ljava/lang/String;"));
         auto k = env->GetObjectField(
             memberName, interface::field(env, "java/lang/invoke/MemberName", "clazz", "Ljava/lang/Class;"));
 
+        auto kk = ((OMElysiaKlass *)env->GetLongField(k, interface::field(env, "java/lang/Class", "<ptr>", "J")))
+                      ->toInstance();
+
         auto ffname = env->GetStringUTFChars(nm, nullptr);
         {
-            auto fl = env->CallObjectMethodA(
-                k, interface::method(env, "java/lang/Class", "getDeclaredFields", "()[Ljava/lang/reflect/Field;"),
-                nullptr);
-            for (int i = 0; i < env->GetArrayLength(fl); ++i)
+            for (int i = 0; i < kk->fieldCount; ++i)
             {
-                auto ff = env->GetObjectArrayElement(fl, i);
-                auto fn = env->GetObjectField(
-                    ff, interface::field(env, "java/lang/reflect/Field", "name", "Ljava/lang/String;"));
-                auto fnn = env->GetStringUTFChars(fn, nullptr);
-                bool equ = std::strcmp(fnn, ffname) == 0;
-                env->ReleaseStringUTFChars(fn, fnn);
-
-                if (!equ)
+                auto &f = kk->fields[i];
+                if (std::strcmp(ffname, f.name))
                 {
                     continue;
                 }
 
-                int fflags = env->GetIntField(ff, interface::field(env, "java/lang/reflect/Field", "modifiers", "I"));
                 env->SetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"),
-                                 flags | (fflags & 0xf));
+                                 flags | (f.accessFlag & 0xf));
                 env->ReleaseStringUTFChars(nm, ffname);
                 return true;
             }
         }
+
         env->ReleaseStringUTFChars(nm, ffname);
         return false;
     }
@@ -75,74 +67,28 @@ extern "C"
         auto k = env->GetObjectField(
             memberName, interface::field(env, "java/lang/invoke/MemberName", "clazz", "Ljava/lang/Class;"));
 
+        auto kk = ((OMElysiaKlass *)env->GetLongField(k, interface::field(env, "java/lang/Class", "<ptr>", "J")))
+                      ->toInstance();
+
         auto mmname = env->GetStringUTFChars(nm, nullptr);
+        logger.info("{} {}", mmname, kk->name);
         {
-            auto rettype = env->GetObjectField(
-                type, interface::field(env, "java/lang/invoke/MethodType", "rtype", "Ljava/lang/Class;"));
-            auto ptypes = env->GetObjectField(
-                type, interface::field(env, "java/lang/invoke/MethodType", "ptypes", "[Ljava/lang/Class;"));
-
-            auto ml = env->CallObjectMethodA(
-                k, interface::method(env, "java/lang/Class", "getDeclaredMethods", "()[Ljava/lang/reflect/Method;"),
-                nullptr);
-
-            auto mn = env->GetArrayLength(ml);
-            for (int i = 0; i < mn; ++i)
+            for (int i = 0; i < kk->methodCount; ++i)
             {
-                auto mth = env->GetObjectArrayElement(ml, i);
-                auto mthflags =
-                    env->GetIntField(mth, interface::field(env, "java/lang/reflect/Method", "modifiers", "I"));
-                auto mname = env->GetObjectField(
-                    mth, interface::field(env, "java/lang/reflect/Method", "name", "Ljava/lang/String;"));
+                auto &m = kk->methods[i];
 
-                bool equ;
-                auto mmn = env->GetStringUTFChars(mname, nullptr);
-                equ = (std::strcmp(mmname, mmn) == 0);
-                env->ReleaseStringUTFChars(mname, mmn);
-
-                if (!equ)
+                if (std::strcmp(m.name, mmname))
                 {
                     continue;
                 }
 
-                // TODO: skipped!
-                /*auto mrettype = env->GetObjectField(
-                    mth, interface::field(env, "java/lang/reflect/Method", "returnType", "Ljava/lang/Class;"));
-
-                if (handleFetch(mrettype) != handleFetch(rettype))
-                {
-                    continue;
-                }
-
-                auto mptypes = env->GetObjectField(
-                    mth, interface::field(env, "java/lang/reflect/Method", "parameterTypes", "[Ljava/lang/Class;"));
-                int length = env->GetArrayLength(mptypes);
-                if (length != env->GetArrayLength(ptypes))
-                {
-                    continue;
-                }
-
-                for (int i = 0; i < length; ++i)
-                {
-                    auto t1 = env->GetObjectArrayElement(mptypes, i);
-                    auto t2 = env->GetObjectArrayElement(ptypes, i);
-
-                    if (handleFetch(t1) != handleFetch(t2))
-                    {
-                        goto end;
-                    }
-                }*/
-
-            success:
                 env->SetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"),
-                                 flags | (mthflags & 0xf));
+                                 flags | (m.accessFlag & 0xf));
                 env->ReleaseStringUTFChars(nm, mmname);
                 return true;
-            end:
-                continue;
             }
         }
-        logger.warn("{}", mmname);
+        logger.warn("{} {}", mmname, kk->name);
         env->ReleaseStringUTFChars(nm, mmname);
 
         return false;
@@ -216,7 +162,6 @@ extern "C"
 
         auto kls =
             env->GetObjectField(obj, interface::field(env, "java/lang/reflect/Method", "clazz", "Ljava/lang/Class;"));
-
         env->SetObjectField(memberName,
                             interface::field(env, "java/lang/invoke/MemberName", "clazz", "Ljava/lang/Class;"), kls);
         env->SetObjectField(
