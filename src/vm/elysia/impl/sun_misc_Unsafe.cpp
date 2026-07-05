@@ -239,11 +239,6 @@ static bool compareAndSwap(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, 
 static jboolean compareAndSwapObject(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *o,
                                      jlong offset, OMElysiaNativeHandle *expected, OMElysiaNativeHandle *x)
 {
-    while (!offset)
-    {
-        std::cout << "fail" << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(1000000));
-    }
     auto target = reinterpret_cast<uintptr_t>(handleFetch(o)) + offset;
     if (env->internal->elysium->mainHeap.enablePtrCompress())
     {
@@ -319,7 +314,7 @@ static OMElysiaNativeHandle *defineAnonymousClass(OMElysiaJNIEnv *env, OMElysiaN
     auto barr = env->GetByteArrayElements(bytearr, nullptr);
     auto kls = env->internal->elysium->klassLoader->loadClassWithoutMirror(
         std::make_shared<std::istringstream>(std::string((char *)barr, env->GetArrayLength(bytearr))), false,
-        fmt::format("{}/{}", k->name, (void *)handleFetch(cpPatches)));
+        fmt::format("{}$$Lambda/{}", k->name, (void *)handleFetch(cpPatches)));
     env->ReleaseByteArrayElements(bytearr, barr, 0);
     env->internal->elysium->klassLoader->fixClassMirror(kls);
     return createTempHandle(kls->mirror);

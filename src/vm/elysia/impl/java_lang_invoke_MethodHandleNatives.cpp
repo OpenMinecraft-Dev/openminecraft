@@ -48,7 +48,7 @@ extern "C"
                 }
 
                 env->SetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"),
-                                 flags | (f.accessFlag & 0xf));
+                                 flags | (f.accessFlag & 0xffff));
                 env->ReleaseStringUTFChars(nm, ffname);
                 return true;
             }
@@ -71,7 +71,6 @@ extern "C"
                       ->toInstance();
 
         auto mmname = env->GetStringUTFChars(nm, nullptr);
-        logger.info("{} {}", mmname, kk->name);
         {
             for (int i = 0; i < kk->methodCount; ++i)
             {
@@ -83,12 +82,11 @@ extern "C"
                 }
 
                 env->SetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"),
-                                 flags | (m.accessFlag & 0xf));
+                                 flags | (m.accessFlag & 0xffff));
                 env->ReleaseStringUTFChars(nm, mmname);
                 return true;
             }
         }
-        logger.warn("{} {}", mmname, kk->name);
         env->ReleaseStringUTFChars(nm, mmname);
 
         return false;
