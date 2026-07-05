@@ -23,8 +23,9 @@ class OMElysiaKlassloader
     void markKlass(OMElysiaKlass *klass);
 
     void fillVtable(OMElysiaInstanceKlass *klass);
-    void loadClassWithoutMirror(std::string name, bool special = false);
-    void loadClassWithoutMirror(std::shared_ptr<std::istream> istr, bool special = false);
+    OMElysiaKlass *loadClassWithoutMirror(std::string name, bool special = false);
+    OMElysiaKlass *loadClassWithoutMirror(std::shared_ptr<std::istream> istr, bool special = false,
+                                          std::string repname = "");
     void fixClassMirror(OMElysiaKlass *klass);
     void fixAllClasses();
 

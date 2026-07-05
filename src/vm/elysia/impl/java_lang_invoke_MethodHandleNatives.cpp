@@ -47,7 +47,6 @@ extern "C"
                 nullptr);
 
             auto mn = env->GetArrayLength(ml);
-
             for (int i = 0; i < mn; ++i)
             {
                 auto mth = env->GetObjectArrayElement(ml, i);
@@ -66,7 +65,8 @@ extern "C"
                     continue;
                 }
 
-                auto mrettype = env->GetObjectField(
+                // TODO: skipped!
+                /*auto mrettype = env->GetObjectField(
                     mth, interface::field(env, "java/lang/reflect/Method", "returnType", "Ljava/lang/Class;"));
 
                 if (handleFetch(mrettype) != handleFetch(rettype))
@@ -77,8 +77,6 @@ extern "C"
                 auto mptypes = env->GetObjectField(
                     mth, interface::field(env, "java/lang/reflect/Method", "parameterTypes", "[Ljava/lang/Class;"));
                 int length = env->GetArrayLength(mptypes);
-                // TODO: skip & need varargs check
-                goto success;
                 if (length != env->GetArrayLength(ptypes))
                 {
                     continue;
@@ -93,7 +91,7 @@ extern "C"
                     {
                         goto end;
                     }
-                }
+                }*/
 
             success:
                 env->SetObjectField(
@@ -107,7 +105,7 @@ extern "C"
                 continue;
             }
         }
-
+        logger.warn("{}", mmname);
         env->ReleaseStringUTFChars(nm, mmname);
 
         throw std::logic_error("fail");

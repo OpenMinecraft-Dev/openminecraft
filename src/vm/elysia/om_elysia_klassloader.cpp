@@ -208,14 +208,14 @@ endf:
     return;
 }
 
-void OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
+OMElysiaKlass *OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
 {
     if (isArray(name))
     {
         auto k = fetchOrLoadClass(decompArray(name));
         auto arrk = constructArrayClass(k);
         fixClassMirror(arrk);
-        return;
+        return arrk;
     }
 
     auto istr = std::make_shared<std::ifstream>(fmt::format("vmstd/out/{}.class", name), std::ios::binary);
@@ -230,9 +230,9 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
         elysium->executor->callVoidFunction(inm, args);
         elysium->throwException(oop);
         logger.warn("class {} not found!", name);
-        return;
+        return nullptr;
     }
-    loadClassWithoutMirror(istr, special);
+    return loadClassWithoutMirror(istr, special);
 }
 
 void OMElysiaKlassloader::fixAllClasses()
@@ -295,13 +295,18 @@ void OMElysiaKlassloader::fillVtable(OMElysiaInstanceKlass *klass)
         }
     }
 }
-void OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> istr, bool special)
+OMElysiaKlass *OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> istr, bool special,
+                                                           std::string repname)
 {
     auto clsfile = std::make_shared<specs::classfile::OMClassFile>();
     clsfile->load(istr);
     auto clsname =
         clsfile->constants.data->at(clsfile->constants.data->at(clsfile->basic.thisClass).classinfo.nameIndex)
             .valueString;
+    if (repname.size() > 0)
+    {
+        clsname = repname;
+    }
 
     if (!findClass(clsname))
     {
@@ -309,7 +314,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> i
     }
     else
     {
-        return;
+        return findClass(clsname);
     }
     auto klassraw = findClass(clsname);
 
@@ -580,5 +585,7 @@ void OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> i
     klass->clinitFinished = false;
 
     klass->klassMutex->unlock();
+
+    return klass;
 }
 } // namespace openminecraft::vm::elysia

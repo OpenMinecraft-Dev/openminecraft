@@ -1,16 +1,21 @@
+#include "fmt/format.h"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/atomic/om_atomic.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_utils.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
+#include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <chrono>
 #include <cstdint>
 #include <cstring>
+#include <fstream>
 #include <iostream>
+#include <sstream>
+#include <stdexcept>
 #include <thread>
 
 namespace openminecraft::vm::elysia::impl
@@ -306,6 +311,27 @@ static jboolean shouldBeInitialized(OMElysiaJNIEnv *env, OMElysiaNativeHandle *i
     return !kls->toInstance()->clinitFinished;
 }
 
+static OMElysiaNativeHandle *defineAnonymousClass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
+                                                  OMElysiaNativeHandle *host, OMElysiaNativeHandle *bytearr,
+                                                  OMElysiaNativeHandle *cpPatches)
+{
+    auto k = (OMElysiaKlass *)env->GetLongField(host, interface::field(env, "java/lang/Class", "<ptr>", "J"));
+    auto barr = env->GetByteArrayElements(bytearr, nullptr);
+    auto kls = env->internal->elysium->klassLoader->loadClassWithoutMirror(
+        std::make_shared<std::istringstream>(std::string((char *)barr, env->GetArrayLength(bytearr))), false,
+        fmt::format("{}$$Lambda/{}", k->name, (void *)handleFetch(cpPatches)));
+    env->ReleaseByteArrayElements(bytearr, barr, 0);
+    env->internal->elysium->klassLoader->fixClassMirror(kls);
+    return createTempHandle(kls->mirror);
+}
+
+static void ensureClassInitialized(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *klass)
+{
+    auto kls =
+        ((OMElysiaKlass *)env->GetLongField(klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+    env->internal->elysium->klassLoader->ensureClassInit(kls);
+}
+
 extern "C"
 {
     void Java_sun_misc_Unsafe_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
@@ -390,6 +416,9 @@ extern "C"
                 {"pageSize", "()I", pageSize},
                 {"getLoadAverage", "([DI)I", getLoadAverage},
                 {"shouldBeInitialized", "(Ljava/lang/Class;)Z", shouldBeInitialized},
+                {"defineAnonymousClass", "(Ljava/lang/Class;[B[Ljava/lang/Object;)Ljava/lang/Class;",
+                 defineAnonymousClass},
+                {"ensureClassInitialized", "(Ljava/lang/Class;)V", ensureClassInitialized},
             });
     }
 }
