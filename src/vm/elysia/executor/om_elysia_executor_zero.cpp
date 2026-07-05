@@ -1016,14 +1016,17 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             goto exec;
         }
         case op_arraylength: {
-            auto length = oopManager->arrLength(zeroStackPopGet<OMElysiaOop *>());
-            zeroStackPush(length);
+            zeroStackPush(oopManager->arrLength(zeroStackPopGet<OMElysiaOop *>()));
             ++pc;
             goto exec;
         }
         case op_athrow: {
             auto t = zeroStackPopGet<OMElysiaOop *>();
             elysium->throwException(t);
+            while (true)
+            {
+                continue;
+            }
             continue;
         }
         case op_checkcast: {

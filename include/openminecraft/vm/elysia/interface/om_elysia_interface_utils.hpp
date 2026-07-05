@@ -54,6 +54,11 @@ static inline OMElysiaMethod *method(OMElysiaJNIEnv *env, std::string cname, std
 {
     return env->GetMethodID(env->FindClass(cname.c_str()), mname.c_str(), mdesc.c_str());
 }
+static inline OMElysiaMethod *staticMethod(OMElysiaJNIEnv *env, std::string cname, std::string mname, std::string mdesc)
+{
+    return env->GetStaticMethodID(env->FindClass(cname.c_str()), mname.c_str(), mdesc.c_str());
+}
+
 } // namespace openminecraft::vm::elysia::interface
 
 #endif

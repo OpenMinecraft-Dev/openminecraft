@@ -217,7 +217,7 @@ OMElysiaOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint len
     else
     {
         reinterpret_cast<OMElysiaArrayOopUncompressed *>(ll)->klass = klass;
-        reinterpret_cast<OMElysiaArrayOopCompressed *>(ll)->length = length;
+        reinterpret_cast<OMElysiaArrayOopUncompressed *>(ll)->length = length;
     }
 
     ll->markword = dis(generator);

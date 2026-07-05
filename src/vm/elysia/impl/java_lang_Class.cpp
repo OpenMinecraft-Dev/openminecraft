@@ -268,8 +268,7 @@ extern "C"
                 }
                 auto kns = env->AllocObject(mthk);
 
-                env->SetLongField(kns, env->GetFieldID(env->FindClass("java/lang/reflect/Constructor"), "<ptr>", "J"),
-                                  (jlong)&kk->methods[i]);
+                env->SetLongField(kns, env->GetFieldID(mthk, "<ptr>", "J"), (jlong)&kk->methods[i]);
                 env->SetObjectField(kns, env->GetFieldID(mthk, "clazz", "Ljava/lang/Class;"),
                                     env->internal->elysium->executor->recordLocalRef(kk->mirror));
                 env->SetObjectField(kns, env->GetFieldID(mthk, "name", "Ljava/lang/String;"),

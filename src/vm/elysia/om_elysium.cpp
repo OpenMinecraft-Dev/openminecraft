@@ -127,6 +127,7 @@ OMElysium::OMElysium()
                 auto env = thisThread.metadata->interface;
                 auto l = env.GetFieldID(env.FindClass("java/lang/Throwable"), "detailMessage", "Ljava/lang/String;");
 
+                logger.warn("{}", env.GetObjectClass(createTempHandle(thisThread.metadata->currentException))->name);
                 auto str = env.GetObjectField(createTempHandle(thisThread.metadata->currentException), l);
 
                 logger.error("{}", env.GetStringUTFChars(str, nullptr));

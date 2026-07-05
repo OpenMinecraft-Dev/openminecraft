@@ -107,6 +107,9 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->GetMethodID = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const char *name, const char *sig) {
         return clazz->findMethod(name, sig);
     };
+    env.internal->GetStaticMethodID = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const char *name, const char *sig) {
+        return clazz->findMethod(name, sig);
+    };
     env.internal->CallObjectMethodA = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaMethod *methodID,
                                          const OMElysiaNativeValue *args) {
         return execWithState(InsideVM, [&]() {
@@ -120,6 +123,13 @@ void initBaseInterface(OMElysiaJNIEnv env)
                     methodID, const_cast<const OMElysiaNativeValue *>(argsCombined)));
             mem::allocator::tracedFreeElysia(argsCombined);
             return hnd;
+        });
+    };
+    env.internal->CallStaticObjectMethodA = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                               const OMElysiaNativeValue *args) {
+        return execWithState(InsideVM, [&]() {
+            return env->internal->elysium->executor->recordLocalRef(
+                env->internal->elysium->executor->callObjectFunction(methodID, args));
         });
     };
 

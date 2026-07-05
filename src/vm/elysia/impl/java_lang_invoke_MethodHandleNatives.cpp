@@ -108,9 +108,6 @@ extern "C"
             }
         }
 
-        logger.debug("{}", mmname);
-        auto cl = (OMElysiaKlass *)env->GetLongField(k, interface::field(env, "java/lang/Class", "<ptr>", "J"));
-        logger.debug("{}", cl->name);
         env->ReleaseStringUTFChars(nm, mmname);
 
         throw std::logic_error("fail");
@@ -138,8 +135,59 @@ extern "C"
     static void init(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *memberName,
                      OMElysiaNativeHandle *obj)
     {
-        logger.warn("{}", (void *)obj->object);
-        throw std::logic_error("not implemented");
+        auto ll = env->GetObjectClass(obj);
+        if (std::strcmp("java/lang/reflect/Method", ll->name))
+        {
+            throw std::logic_error("not implemented");
+        }
+
+        auto kls =
+            env->GetObjectField(obj, interface::field(env, "java/lang/reflect/Method", "clazz", "Ljava/lang/Class;"));
+
+        env->SetObjectField(memberName,
+                            interface::field(env, "java/lang/invoke/MemberName", "clazz", "Ljava/lang/Class;"), kls);
+        env->SetObjectField(
+            memberName, interface::field(env, "java/lang/invoke/MemberName", "name", "Ljava/lang/String;"),
+            env->GetObjectField(obj, interface::field(env, "java/lang/reflect/Method", "name", "Ljava/lang/String;")));
+
+        auto flg = env->GetIntField(obj, interface::field(env, "java/lang/reflect/Method", "modifiers", "I"));
+        if (flg & JVM_Acc_Static)
+        {
+            flg |= (static_cast<int>(specs::classfile::RefInvokeStatic) << 24);
+        }
+        else if (flg & JVM_Acc_Private)
+        {
+            flg |= (static_cast<int>(specs::classfile::RefInvokeSepcial) << 24);
+        }
+        else if ((((OMElysiaKlass *)env->GetLongField(kls, interface::field(env, "java/lang/Class", "<ptr>", "J")))
+                      ->accessFlag &
+                  JVM_Acc_Interface) &&
+                 (flg & JVM_Acc_Abstract))
+        {
+            flg |= (static_cast<int>(specs::classfile::RefInvokeInterface) << 24);
+        }
+        else
+        {
+            flg |= (static_cast<int>(specs::classfile::RefInvokeVirtual) << 24);
+        }
+        env->SetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"), flg | 0x10000);
+
+        auto rettype = env->GetObjectField(
+            obj, interface::field(env, "java/lang/reflect/Method", "returnType", "Ljava/lang/Class;"));
+        auto partypes = env->GetObjectField(
+            obj, interface::field(env, "java/lang/reflect/Method", "parameterTypes", "[Ljava/lang/Class;"));
+
+        OMElysiaNativeValue vv[3];
+        vv[0].l = rettype;
+        vv[1].l = partypes;
+        vv[2].z = false;
+        auto mt = env->CallStaticObjectMethodA(
+            env->FindClass("java/lang/invoke/MethodType"),
+            interface::staticMethod(env, "java/lang/invoke/MethodType", "makeImpl",
+                                    "(Ljava/lang/Class;[Ljava/lang/Class;Z)Ljava/lang/invoke/MethodType;"),
+            vv);
+        env->SetObjectField(memberName,
+                            interface::field(env, "java/lang/invoke/MemberName", "type", "Ljava/lang/Object;"), mt);
     }
     void Java_java_lang_invoke_MethodHandleNatives_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
