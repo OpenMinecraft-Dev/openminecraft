@@ -116,7 +116,6 @@ OMElysium::OMElysium()
             }
 
             klassLoader->fetchOrLoadClass("java/lang/invoke/LambdaForm", true);
-            klassLoader->fetchOrLoadClass("java/lang/invoke/CallSite", true);
 
             auto l = klassLoader->fetchOrLoadClass("dev/openminecraft/MainKt", true);
             auto mm = l->findMethod("main", "([Ljava/lang/String;)V");

@@ -3,7 +3,6 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_utils.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
-#include <stdexcept>
 
 namespace openminecraft::vm::elysia::impl
 {

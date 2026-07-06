@@ -47,7 +47,8 @@ extern "C"
                     continue;
                 }
 
-		env->SetLongField(memberName, interface::field(env, "java/lang/invoke/MemberName", "<ptr>", "J"), (jlong)&kk->fields[i]);
+                env->SetLongField(memberName, interface::field(env, "java/lang/invoke/MemberName", "<ptr>", "J"),
+                                  (jlong)&kk->fields[i]);
                 env->SetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"),
                                  flags | (f.accessFlag & 0xffff));
                 env->ReleaseStringUTFChars(nm, ffname);
@@ -82,7 +83,8 @@ extern "C"
                     continue;
                 }
 
-		env->SetLongField(memberName, interface::field(env, "java/lang/invoke/MemberName", "<ptr>", "J"), (jlong)&kk->methods[i]);
+                env->SetLongField(memberName, interface::field(env, "java/lang/invoke/MemberName", "<ptr>", "J"),
+                                  (jlong)&kk->methods[i]);
                 env->SetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"),
                                  flags | (m.accessFlag & 0xffff));
                 env->ReleaseStringUTFChars(nm, mmname);

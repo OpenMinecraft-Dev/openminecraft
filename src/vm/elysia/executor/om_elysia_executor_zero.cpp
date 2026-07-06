@@ -1212,7 +1212,7 @@ OMElysiaIntrinsicRoutine OMElysiaExecutorZero::findRoutine(std::string klass, st
                                 ->findField("<ptr>", "J")
                                 ->offset;
             auto mthd = (OMElysiaMethod *)*(jlong *)elysium->oopManager->oopAccessField(mn, fieldoff);
-            elysium->executor->pushFrame(mthd, *pc + (**pc == op_invokedynamic ? 5 : 3), remap, pc);
+            elysium->executor->pushFrame(mthd, *pc + (**pc == op_invokeinterface ? 5 : 3), remap, pc);
         };
     }
     return nullptr;
