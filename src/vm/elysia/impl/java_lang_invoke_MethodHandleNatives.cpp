@@ -3,6 +3,7 @@
 #include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_utils.hpp"
+#include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
@@ -83,6 +84,24 @@ extern "C"
                     continue;
                 }
 
+                auto pp = parseSignature(m.descriptor);
+
+                auto ptypes = env->GetObjectField(
+                    type, interface::field(env, "java/lang/invoke/MethodType", "ptypes", "[Ljava/lang/Class;"));
+                if (std::strcmp("java/lang/invoke/MethodHandle", kk->name) == 0 &&
+                    (std::strcmp("linkToStatic", mmname) == 0 || std::strcmp("linkToVirtual", mmname) == 0 ||
+                     std::strcmp("linkToSpecial", mmname) == 0 || std::strcmp("linkToInterface", mmname) == 0 ||
+                     std::strcmp("invokeBasic", mmname) == 0))
+                {
+                    goto success;
+                }
+
+                if (pp.first.size() != env->GetArrayLength(ptypes))
+                {
+                    continue;
+                }
+
+            success:
                 env->SetLongField(memberName, interface::field(env, "java/lang/invoke/MemberName", "<ptr>", "J"),
                                   (jlong)&kk->methods[i]);
                 env->SetIntField(memberName, interface::field(env, "java/lang/invoke/MemberName", "flags", "I"),
