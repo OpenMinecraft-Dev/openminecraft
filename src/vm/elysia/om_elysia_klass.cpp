@@ -187,9 +187,9 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
     };
     auto invokedType = buildTypeFor(constantPoolRaw[nt.descriptorIndex].valueString);
 
-    target.push_back(lookup);
-    target.push_back(invokedName);
-    target.push_back(invokedType);
+    // target.push_back(lookup);
+    // target.push_back(invokedName);
+    // target.push_back(invokedType);
 
     for (int i = 0; i < bm.numBootstrapArguments; ++i)
     {
@@ -197,19 +197,23 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
         target.push_back((OMElysiaOop *)oop);
     }
 
-    auto hnd = constantPoolFetchNormal(bm.bootstrapMethodRef);
-    auto m = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandle", true)
-                 ->findMethod("invoke", "([Ljava/lang/Object;)Ljava/lang/Object;");
     auto arg = elysium->oopManager->allocateArr(
-        elysium->klassLoader->fetchOrLoadClass("[Ljava/lang/Object;", true)->toArray(), target.size());
-    for (int i = 0; i < target.size(); ++i)
-    {
-        elysium->oopManager->arrAccessPtr(arg, i, target[i]);
-    }
-    OMElysiaNativeValue vv[2];
-    vv[0].l = createTempHandle(reinterpret_cast<OMElysiaOop *>(hnd));
-    vv[1].l = createTempHandle(arg);
-    auto callsite = elysium->executor->callObjectFunction(m, vv);
+        elysium->klassLoader->fetchOrLoadClass("[Ljava/lang/Object;", true)->toArray(), target.size());                                                                   for (int i = 0; i < target.size(); ++i)                                            {                                                                                      elysium->oopManager->arrAccessPtr(arg, i, target[i]);                          }
+
+    auto hnd = constantPoolFetchNormal(bm.bootstrapMethodRef);
+
+    auto result = elysium->oopManager->allocateArr(                                           elysium->klassLoader->fetchOrLoadClass("[Ljava/lang/Object;", true)->toArray(), 1);
+
+    auto mm = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandleNatives", true)->findMethod("linkCallSite", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/invoke/MemberName;");
+    OMElysiaNativeValue vv[6];
+    vv[0].l = createTempHandle(this->mirror);
+    vv[1].l = createTempHandle(reinterpret_cast<OMElysiaOop *>(hnd));
+    vv[2].l = createTempHandle(invokedName);
+    vv[3].l = createTempHandle(invokedType);
+    vv[4].l = createTempHandle(arg);
+    vv[5].l = createTempHandle(result);
+    auto mn = elysium->executor->callObjectFunction(mm, vv);
+    std::cout << mn << std::endl;
 
     if (thisThread.metadata->haveException)
     {
@@ -249,6 +253,8 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
 
         auto cls = execWithState(InsideVM, [&]() { return klassloader->fetchOrLoadClass(clsname); });
         auto rcls = cls;
+
+	std::cout << clsname << "." << mdname << mddesc << std::endl;
 
         OMElysiaMethod *mthd = nullptr;
         while (!mthd)
