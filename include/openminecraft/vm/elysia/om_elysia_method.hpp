@@ -10,6 +10,8 @@
 
 namespace openminecraft::vm::elysia
 {
+class OMElysium;
+typedef void (*OMElysiaIntrinsicRoutine)(OMElysium *, uint8_t **);
 class OMElysiaKlass;
 struct OMElysiaMethodExcTable
 {
@@ -41,6 +43,9 @@ struct OMElysiaMethod
 
     uint32_t exceptionsLength;
     OMElysiaKlass **exceptions;
+
+    bool intrinsic;
+    OMElysiaIntrinsicRoutine intrinsicRoutine;
 
 #define attr(n)                                                                                                        \
     bool is##n()                                                                                                       \

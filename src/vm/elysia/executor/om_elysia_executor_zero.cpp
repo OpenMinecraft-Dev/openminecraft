@@ -60,6 +60,12 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m, uint8_t *retAddr, bool n
         throw std::logic_error("function is null!");
     }
 
+    if (m->intrinsic)
+    {
+        m->intrinsicRoutine(elysium, realpc);
+        return;
+    }
+
     auto ll = m->argSlots;
     auto tc = thisThread.metadata;
 
@@ -1192,5 +1198,23 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         }
     }
+}
+
+OMElysiaIntrinsicRoutine OMElysiaExecutorZero::findRoutine(std::string klass, std::string name)
+{
+    if (klass == "java/lang/invoke/MethodHandle" && name == "linkToStatic")
+    {
+        return [](OMElysium *elysium, uint8_t **pc) {
+            auto mn = zeroStackPopGet<OMElysiaOop *>();
+            auto remap = **pc == op_invokevirtual || **pc == op_invokeinterface;
+            auto fieldoff = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MemberName", true)
+                                ->toInstance()
+                                ->findField("<ptr>", "J")
+                                ->offset;
+            auto mthd = (OMElysiaMethod *)*(jlong *)elysium->oopManager->oopAccessField(mn, fieldoff);
+            elysium->executor->pushFrame(mthd, *pc + (**pc == op_invokedynamic ? 5 : 3), remap, pc);
+        };
+    }
+    return nullptr;
 }
 } // namespace openminecraft::vm::elysia::executor

@@ -1,5 +1,6 @@
 #include "fmt/format.h"
 #include "openminecraft/binary/om_bin_hash.hpp"
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/atomic/om_atomic.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
@@ -20,6 +21,7 @@
 
 namespace openminecraft::vm::elysia::impl
 {
+extern log::OMLogger logger;
 static jint arrayBaseOffset(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd, OMElysiaNativeHandle *klass)
 {
     return static_cast<jint>(env->internal->elysium->oopManager->oopArrayHeaderLength());
@@ -315,6 +317,7 @@ static OMElysiaNativeHandle *defineAnonymousClass(OMElysiaJNIEnv *env, OMElysiaN
     auto kls = env->internal->elysium->klassLoader->loadClassWithoutMirror(
         std::make_shared<std::istringstream>(std::string((char *)barr, env->GetArrayLength(bytearr))), false,
         fmt::format("{}/{}", k->name, (void *)handleFetch(cpPatches)));
+
     /*std::ofstream of(fmt::format("{}.class", (void *)handleFetch(cpPatches)), std::ios::binary);
     of.write((char *)barr, env->GetArrayLength(bytearr));
     of.close();*/

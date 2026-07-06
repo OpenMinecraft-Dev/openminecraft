@@ -315,9 +315,14 @@ extern "C"
     }
 
     // TODO: impl
-    OMElysiaNativeHandle *getDeclaredClasses0(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
+    OMElysiaNativeHandle *getDeclaredClasses0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass)
     {
         return env->NewObjectArray(0, env->FindClass("java/lang/Class"), nullptr);
+    }
+
+    OMElysiaNativeHandle *getProtectionDomain0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass)
+    {
+        return nullptr;
     }
 
     void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
@@ -343,6 +348,7 @@ extern "C"
                 {"getName0", "()Ljava/lang/String;", getName0},
                 {"getDeclaredMethods0", "(Z)[Ljava/lang/reflect/Method;", getDeclaredMethods0},
                 {"getDeclaredClasses0", "()[Ljava/lang/Class;", getDeclaredClasses0},
+                {"getProtectionDomain0", "()Ljava/security/ProtectionDomain;", getProtectionDomain0},
             });
     } // namespace openminecraft::vm::elysia::impl
 }

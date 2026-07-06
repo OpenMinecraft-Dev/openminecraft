@@ -243,6 +243,7 @@ class OMElysiaExecutorZero
 
     OMElysiaNativeHandle *recordLocalRef(OMElysiaOop *);
     OMElysiaKlassloader *currentKlassloader();
+    OMElysiaIntrinsicRoutine findRoutine(std::string klass, std::string name);
 
   protected:
     void execute(OMElysiaMethod *m);

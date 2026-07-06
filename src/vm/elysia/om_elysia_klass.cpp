@@ -270,6 +270,17 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
             }
         }
 
+        if (!mthd)
+        {
+            auto ins = klassloader->elysium->executor->findRoutine(clsname, mdname);
+            if (ins)
+            {
+                mthd = klassloader->elysium->metaspaceHeap.allocate<OMElysiaMethod>();
+                mthd->intrinsic = true;
+                mthd->intrinsicRoutine = ins;
+            }
+        }
+
         klassloader->ensureClassInit(rcls);
 
         constantPool[id] = mthd;
