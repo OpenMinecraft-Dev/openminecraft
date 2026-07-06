@@ -21,7 +21,7 @@ extern "C"
         auto name = env->GetObjectField(
             vmentry, interface::field(env, "java/lang/invoke/MemberName", "name", "Ljava/lang/String;"));
 	auto method = (OMElysiaMethod *)env->GetLongField(vmentry, interface::field(env, "java/lang/invoke/MemberName", "<ptr>", "J"));
-	logger.info("{} {} {}", (void *)method, method->name, method->descriptor);
+	logger.info("{} {} {} {}", (void *)method, method->name, method->descriptor, env->GetArrayLength(args));
         logger.warn(
             "{} {}",
             ((OMElysiaKlass *)env->GetLongField(clazz, interface::field(env, "java/lang/Class", "<ptr>", "J")))->name, (void *)handleFetch(vmentry));
