@@ -305,7 +305,6 @@ OMElysiaKlass *OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::
             .valueString;
     if (repname.size() > 0)
     {
-        logger.warn("rename {} -> {}", clsname, repname);
         clsname = repname;
     }
 
@@ -546,7 +545,8 @@ OMElysiaKlass *OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::
     if (std::strcmp(klass->name, "java/lang/Class") == 0 || std::strcmp(klass->name, "java/lang/ClassLoader") == 0 ||
         std::strcmp(klass->name, "java/lang/reflect/Method") == 0 ||
         std::strcmp(klass->name, "java/lang/reflect/Field") == 0 ||
-        std::strcmp(klass->name, "java/lang/reflect/Constructor") == 0)
+        std::strcmp(klass->name, "java/lang/reflect/Constructor") == 0 ||
+	std::strcmp(klass->name, "java/lang/invoke/MemberName") == 0)
     {
         extraFields.push_back({klass, elysium->metaspaceHeap.allocateStr("<ptr>"),
                                elysium->metaspaceHeap.allocateStr("J"),

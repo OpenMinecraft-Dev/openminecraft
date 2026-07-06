@@ -20,9 +20,11 @@ extern "C"
             vmentry, interface::field(env, "java/lang/invoke/MemberName", "clazz", "Ljava/lang/Class;"));
         auto name = env->GetObjectField(
             vmentry, interface::field(env, "java/lang/invoke/MemberName", "name", "Ljava/lang/String;"));
+	auto method = (OMElysiaMethod *)env->GetLongField(vmentry, interface::field(env, "java/lang/invoke/MemberName", "<ptr>", "J"));
+	logger.info("{} {} {}", (void *)method, method->name, method->descriptor);
         logger.warn(
-            "{}",
-            ((OMElysiaKlass *)env->GetLongField(clazz, interface::field(env, "java/lang/Class", "<ptr>", "J")))->name);
+            "{} {}",
+            ((OMElysiaKlass *)env->GetLongField(clazz, interface::field(env, "java/lang/Class", "<ptr>", "J")))->name, (void *)handleFetch(vmentry));
         throw std::logic_error("fail");
     }
 }

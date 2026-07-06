@@ -209,9 +209,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
     OMElysiaNativeValue vv[2];
     vv[0].l = createTempHandle(reinterpret_cast<OMElysiaOop *>(hnd));
     vv[1].l = createTempHandle(arg);
-    std::cout << hnd << std::endl;
     auto callsite = elysium->executor->callObjectFunction(m, vv);
-    std::cout << callsite << std::endl;
 
     if (thisThread.metadata->haveException)
     {
