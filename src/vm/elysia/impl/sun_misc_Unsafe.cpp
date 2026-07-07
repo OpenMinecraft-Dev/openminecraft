@@ -319,11 +319,13 @@ static OMElysiaNativeHandle *defineAnonymousClass(OMElysiaJNIEnv *env, OMElysiaN
     auto kls = env->internal->elysium->klassLoader->loadClassWithoutMirror(
         std::make_shared<std::istringstream>(std::string((char *)barr, env->GetArrayLength(bytearr))), false,
         fmt::format("/{:016x}", ++id));
-    /*std::ofstream of(fmt::format("{}.class", (void *)handleFetch(cpPatches)), std::ios::binary);
-    of.write((char *)barr, env->GetArrayLength(bytearr));
-    of.close();*/
     env->ReleaseByteArrayElements(bytearr, barr, 0);
     env->internal->elysium->klassLoader->fixClassMirror(kls);
+
+    // gino: some hacks
+    auto klsins = kls->toInstance();
+    klsins->constantPoolRaw[klsins->constantPoolRaw[klsins->thisClass].classinfo.nameIndex].valueString = kls->name;
+
     return createTempHandle(kls->mirror);
 }
 

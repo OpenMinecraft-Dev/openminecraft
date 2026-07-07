@@ -438,6 +438,7 @@ OMElysiaKlass *OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::
     klass->constantPoolState = elysium->metaspaceHeap.allocateArray<bool>(l);
 
     klass->accessFlag = clsfile->basic.accessFlags;
+    klass->thisClass = clsfile->basic.thisClass;
 
     klass->methodCount = clsfile->methods.length;
     klass->methods = elysium->metaspaceHeap.allocateArray<OMElysiaMethod>(klass->methodCount);
@@ -546,7 +547,7 @@ OMElysiaKlass *OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::
         std::strcmp(klass->name, "java/lang/reflect/Method") == 0 ||
         std::strcmp(klass->name, "java/lang/reflect/Field") == 0 ||
         std::strcmp(klass->name, "java/lang/reflect/Constructor") == 0 ||
-	std::strcmp(klass->name, "java/lang/invoke/MemberName") == 0)
+        std::strcmp(klass->name, "java/lang/invoke/MemberName") == 0)
     {
         extraFields.push_back({klass, elysium->metaspaceHeap.allocateStr("<ptr>"),
                                elysium->metaspaceHeap.allocateStr("J"),

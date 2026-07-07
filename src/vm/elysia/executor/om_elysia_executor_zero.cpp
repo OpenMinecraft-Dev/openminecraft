@@ -18,8 +18,6 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <ios>
-#include <iostream>
 #include <stdexcept>
 
 using namespace openminecraft::binary::hash;
@@ -221,7 +219,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
 
     exec:
-	switch (*pc)
+        switch (*pc)
         {
         case op_nop:
             ++pc;
@@ -962,9 +960,9 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         case op_invokedynamic: {
             auto m = (OMElysiaKlassDynamic *)CURRENT_KLASS->constantPoolFetchDynamic(zeroCodeFetchArgu16p0(pc));
-	    zeroStackPush(m->handle);
-	    pushFrame(m->target, pc + 5, false, &pc);
-	    updateFrame;
+            zeroStackPush(m->handle);
+            pushFrame(m->target, pc + 5, false, &pc);
+            updateFrame;
             continue;
         }
         case op_new: {

@@ -198,13 +198,21 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
     }
 
     auto arg = elysium->oopManager->allocateArr(
-        elysium->klassLoader->fetchOrLoadClass("[Ljava/lang/Object;", true)->toArray(), target.size());                                                                   for (int i = 0; i < target.size(); ++i)                                            {                                                                                      elysium->oopManager->arrAccessPtr(arg, i, target[i]);                          }
+        elysium->klassLoader->fetchOrLoadClass("[Ljava/lang/Object;", true)->toArray(), target.size());
+    for (int i = 0; i < target.size(); ++i)
+    {
+        elysium->oopManager->arrAccessPtr(arg, i, target[i]);
+    }
 
     auto hnd = constantPoolFetchNormal(bm.bootstrapMethodRef);
 
-    auto result = elysium->oopManager->allocateArr(                                           elysium->klassLoader->fetchOrLoadClass("[Ljava/lang/Object;", true)->toArray(), 1);
+    auto result = elysium->oopManager->allocateArr(
+        elysium->klassLoader->fetchOrLoadClass("[Ljava/lang/Object;", true)->toArray(), 1);
 
-    auto mm = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandleNatives", true)->findMethod("linkCallSite", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/invoke/MemberName;");
+    auto mm =
+        elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandleNatives", true)
+            ->findMethod("linkCallSite", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/"
+                                         "Object;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/invoke/MemberName;");
     OMElysiaNativeValue vv[6];
     vv[0].l = createTempHandle(this->mirror);
     vv[1].l = createTempHandle(reinterpret_cast<OMElysiaOop *>(hnd));
@@ -213,7 +221,11 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
     vv[4].l = createTempHandle(arg);
     vv[5].l = createTempHandle(result);
     auto mn = elysium->executor->callObjectFunction(mm, vv);
-    auto fieldoff = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MemberName", true)                                                                                               ->toInstance()                                                                     ->findField("<ptr>", "J")                                                          ->offset;                                                      auto mthd = (OMElysiaMethod *)*(jlong *)elysium->oopManager->oopAccessField(mn, fieldoff);
+    auto fieldoff = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MemberName", true)
+                        ->toInstance()
+                        ->findField("<ptr>", "J")
+                        ->offset;
+    auto mthd = (OMElysiaMethod *)*(jlong *)elysium->oopManager->oopAccessField(mn, fieldoff);
 
     auto mthh = elysium->oopManager->arrAccessPtr(result, 0);
 
@@ -221,7 +233,9 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
     stt->target = mthd;
     stt->handle = mthh;
 
-    constantPool[id] = stt;                                                            constantPoolState[id] = true;                                                      return stt;
+    constantPool[id] = stt;
+    constantPoolState[id] = true;
+    return stt;
 }
 
 void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
@@ -279,8 +293,8 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
                 mthd = klassloader->elysium->metaspaceHeap.allocate<OMElysiaMethod>();
                 mthd->intrinsic = true;
                 mthd->intrinsicRoutine = ins;
-		mthd->name = klassloader->elysium->metaspaceHeap.allocateStr(mdname);
-		mthd->descriptor = klassloader->elysium->metaspaceHeap.allocateStr(mddesc);
+                mthd->name = klassloader->elysium->metaspaceHeap.allocateStr(mdname);
+                mthd->descriptor = klassloader->elysium->metaspaceHeap.allocateStr(mddesc);
                 mthd->argSlots = argSlots(mthd->descriptor);
             }
         }
@@ -298,7 +312,13 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
 
         constantPool[id] = cls;
         constantPoolState[id] = true;
-	if (cls == nullptr) { while (true) {continue;} }
+        if (cls == nullptr)
+        {
+            while (true)
+            {
+                continue;
+            }
+        }
         if (!flg)
         {
             klassloader->ensureClassInit(cls);

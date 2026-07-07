@@ -43,6 +43,7 @@ class OMElysiaKlass
     uint8_t ptrLength;
 
     uint16_t accessFlag;
+    uint16_t thisClass;
 
     char *name;
 

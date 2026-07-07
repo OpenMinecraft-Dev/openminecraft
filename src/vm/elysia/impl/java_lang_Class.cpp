@@ -244,6 +244,11 @@ extern "C"
             {
                 ch = '.';
             }
+
+            if (ch == '$')
+            {
+                break;
+            }
         }
 
         return env->NewStringUTF(vv.c_str());
@@ -325,6 +330,14 @@ extern "C"
         return nullptr;
     }
 
+    jboolean isInstance(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass, OMElysiaNativeHandle *instance)
+    {
+        auto kls = ((OMElysiaKlass *)env->GetLongField(
+            klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+
+        return env->GetObjectClass(instance)->inherits(kls);
+    }
+
     void Java_java_lang_Class_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
     {
         interface::registerNativeFuncs(
@@ -349,6 +362,7 @@ extern "C"
                 {"getDeclaredMethods0", "(Z)[Ljava/lang/reflect/Method;", getDeclaredMethods0},
                 {"getDeclaredClasses0", "()[Ljava/lang/Class;", getDeclaredClasses0},
                 {"getProtectionDomain0", "()Ljava/security/ProtectionDomain;", getProtectionDomain0},
+                {"isInstance", "(Ljava/lang/Object;)Z", isInstance},
             });
     } // namespace openminecraft::vm::elysia::impl
 }
