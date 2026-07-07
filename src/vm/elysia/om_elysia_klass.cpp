@@ -254,8 +254,6 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
         auto cls = execWithState(InsideVM, [&]() { return klassloader->fetchOrLoadClass(clsname); });
         auto rcls = cls;
 
-	std::cout << clsname << "." << mdname << mddesc << std::endl;
-
         OMElysiaMethod *mthd = nullptr;
         while (!mthd)
         {
@@ -284,6 +282,9 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
                 mthd = klassloader->elysium->metaspaceHeap.allocate<OMElysiaMethod>();
                 mthd->intrinsic = true;
                 mthd->intrinsicRoutine = ins;
+		mthd->name = klassloader->elysium->metaspaceHeap.allocateStr(mdname);
+		mthd->descriptor = klassloader->elysium->metaspaceHeap.allocateStr(mddesc);
+                mthd->argSlots = argSlots(mthd->descriptor);
             }
         }
 

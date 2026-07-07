@@ -11,7 +11,7 @@
 namespace openminecraft::vm::elysia
 {
 class OMElysium;
-typedef void (*OMElysiaIntrinsicRoutine)(OMElysium *, uint8_t **);
+typedef void (*OMElysiaIntrinsicRoutine)(OMElysium *, uint8_t **, int);
 class OMElysiaKlass;
 struct OMElysiaMethodExcTable
 {

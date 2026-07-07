@@ -62,7 +62,7 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m, uint8_t *retAddr, bool n
 
     if (m->intrinsic)
     {
-        m->intrinsicRoutine(elysium, realpc);
+        m->intrinsicRoutine(elysium, realpc, m->argSlots);
         return;
     }
 
@@ -1204,7 +1204,7 @@ OMElysiaIntrinsicRoutine OMElysiaExecutorZero::findRoutine(std::string klass, st
 {
     if (klass == "java/lang/invoke/MethodHandle" && name == "linkToStatic")
     {
-        return [](OMElysium *elysium, uint8_t **pc) {
+        return [](OMElysium *elysium, uint8_t **pc, int) {
             auto mn = zeroStackPopGet<OMElysiaOop *>();
             auto remap = **pc == op_invokevirtual || **pc == op_invokeinterface;
             auto fieldoff = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MemberName", true)
@@ -1212,6 +1212,34 @@ OMElysiaIntrinsicRoutine OMElysiaExecutorZero::findRoutine(std::string klass, st
                                 ->findField("<ptr>", "J")
                                 ->offset;
             auto mthd = (OMElysiaMethod *)*(jlong *)elysium->oopManager->oopAccessField(mn, fieldoff);
+            elysium->executor->pushFrame(mthd, *pc + (**pc == op_invokeinterface ? 5 : 3), remap, pc);
+        };
+    }
+
+    if (klass == "java/lang/invoke/MethodHandle" && (name == "invoke" || name == "invokeBasic"))
+    {
+        return [](OMElysium *elysium, uint8_t **pc, int a) {
+            auto hnd = *(OMElysiaOop **)(thisThread.metadata->zero.stackPointer + a * sizeof(void *));
+            {
+                auto ff = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandle", true)
+                              ->toInstance()
+                              ->findField("form", "Ljava/lang/invoke/LambdaForm;")
+                              ->offset;
+                hnd = elysium->oopManager->oopAccessPointerField(hnd, ff);
+            }
+            {
+                auto ff = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/LambdaForm", true)
+                              ->toInstance()
+                              ->findField("vmentry", "Ljava/lang/invoke/MemberName;")
+                              ->offset;
+                hnd = elysium->oopManager->oopAccessPointerField(hnd, ff);
+            }
+            auto remap = **pc == op_invokevirtual || **pc == op_invokeinterface;
+            auto fieldoff = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MemberName", true)
+                                ->toInstance()
+                                ->findField("<ptr>", "J")
+                                ->offset;
+            auto mthd = (OMElysiaMethod *)*(jlong *)elysium->oopManager->oopAccessField(hnd, fieldoff);
             elysium->executor->pushFrame(mthd, *pc + (**pc == op_invokeinterface ? 5 : 3), remap, pc);
         };
     }
