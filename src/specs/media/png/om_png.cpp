@@ -270,8 +270,9 @@ void OMPngFile::parseIDAT(std::shared_ptr<std::istream> istr)
 std::pair<uint32_t, uint32_t> OMPngFile::getAdamPassSize(int pass)
 {
     auto stat = pngAdam7[pass];
-    return std::make_pair(static_cast<uint32_t>(std::ceil((head.width - stat.offsetx) / static_cast<float>(stat.stridex))),
-                          static_cast<uint32_t>(std::ceil((head.height - stat.offsety) / static_cast<float>(stat.stridey))));
+    return std::make_pair(
+        static_cast<uint32_t>(std::ceil((head.width - stat.offsetx) / static_cast<float>(stat.stridex))),
+        static_cast<uint32_t>(std::ceil((head.height - stat.offsety) / static_cast<float>(stat.stridey))));
 }
 
 static void defilterBase(std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &current, int type,

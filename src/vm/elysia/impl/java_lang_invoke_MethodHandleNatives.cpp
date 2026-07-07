@@ -123,10 +123,14 @@ extern "C"
         {
             if (!resolveMethod(env, memberName, flags))
             {
-                auto ref = env->CallObjectMethodA(memberName, interface::method(env, "java/lang/invoke/MemberName", "toString", "()Ljava/lang/String;"), nullptr);
-		OMElysiaNativeValue vv[1];
-		vv[0].l = ref;
-		env->Throw(env->NewObjectA(env->FindClass("java/lang/NoSuchMethodException"), interface::method(env, "java/lang/NoSuchMethodException", "<init>", "(Ljava/lang/String;)V"), vv));
+                auto ref = env->CallObjectMethodA(
+                    memberName,
+                    interface::method(env, "java/lang/invoke/MemberName", "toString", "()Ljava/lang/String;"), nullptr);
+                OMElysiaNativeValue vv[1];
+                vv[0].l = ref;
+                env->Throw(env->NewObjectA(
+                    env->FindClass("java/lang/NoSuchMethodException"),
+                    interface::method(env, "java/lang/NoSuchMethodException", "<init>", "(Ljava/lang/String;)V"), vv));
 
                 // throw std::logic_error("resolve method fail!");
             }

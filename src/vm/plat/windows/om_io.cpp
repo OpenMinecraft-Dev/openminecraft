@@ -70,11 +70,12 @@ uint64_t convertHandle(int hnd)
     return (uint64_t)_get_osfhandle(hnd);
 }
 
-uint64_t open(const char* path, bool append)
+uint64_t open(const char *path, bool append)
 {
     DWORD access = GENERIC_READ | GENERIC_WRITE;
     DWORD creationDisposition = append ? OPEN_ALWAYS : CREATE_ALWAYS;
-    HANDLE h = CreateFileA(path, access, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, creationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE h = CreateFileA(path, access, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, creationDisposition,
+                           FILE_ATTRIBUTE_NORMAL, NULL);
     if (h == INVALID_HANDLE_VALUE)
     {
         std::cout << "CreateFileA failed with error: " << GetLastError() << std::endl;
