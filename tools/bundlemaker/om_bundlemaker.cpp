@@ -20,7 +20,7 @@ struct file_path
     std::string name;
 };
 
-static void appendFile(std::vector<file_path> &pth, std::string base, std::string rt)
+static void appendFile(std::vector<file_path> &pth, const std::string& base, const std::string& rt)
 {
     if (std::filesystem::is_directory(base))
     {
@@ -56,16 +56,16 @@ int main(int argc, char **argv)
 {
     if (argc < 3)
     {
-        std::cout << "Usage: " << std::filesystem::path(argv[0]).filename().string() << usagetext << std::endl;
+        std::cout << "Usage: " << std::filesystem::path(argv[0]).filename().string() << usagetext << '\n';
         return 1;
     }
 
     bool isread = true;
-    auto author = "Cyrene";
-    std::string targetfile = "";
+    const auto *author = "Cyrene";
+    std::string targetfile;
     std::vector<std::string> filelist = {};
 
-    int opt;
+    int opt = 0;
     int option_index = 0;
     const char *optstring = "h:a:t:P:cr";
     static option long_options[] = {{"read", no_argument, nullptr, 'r'},
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
         switch (opt)
         {
         case 'h':
-            std::cout << "Usage: " << std::filesystem::path(argv[0]).filename().string() << usagetext << std::endl;
+            std::cout << "Usage: " << std::filesystem::path(argv[0]).filename().string() << usagetext << '\n';
             return 0;
         case 'r':
             isread = true;
@@ -107,15 +107,15 @@ int main(int argc, char **argv)
         auto ins = std::make_shared<std::ifstream>(targetfile);
         if (!ins->good())
         {
-            std::cerr << "Cannot read file " << targetfile << std::endl;
+            std::cerr << "Cannot read file " << targetfile << '\n';
             return 1;
         }
 
         OMBundle om(ins);
-        std::cout << "Contents of " << targetfile << ": " << std::endl;
+        std::cout << "Contents of " << targetfile << ": " << '\n';
         for (const auto &[metadata, content] : om.files)
         {
-            std::cout << fmt::format("{}", metadata) << std::endl;
+            std::cout << fmt::format("{}", metadata) << '\n';
         }
 
         return 0;
@@ -124,7 +124,7 @@ int main(int argc, char **argv)
     OMBundle om;
     if (filelist.empty())
     {
-        std::cerr << "no files added!" << std::endl;
+        std::cerr << "no files added!" << '\n';
         return 1;
     }
 
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
     {
         if (!std::filesystem::exists(file))
         {
-            std::cerr << "file does not exist: " << file << std::endl;
+            std::cerr << "file does not exist: " << file << '\n';
             continue;
         }
 
@@ -144,7 +144,7 @@ int main(int argc, char **argv)
     {
         std::ifstream ifs(l.full, std::ios::binary);
         om.appendFile({static_cast<uint64_t>(time(nullptr)), 0, l.name, author}, ifs);
-        std::cout << "file append: " << l.name << std::endl;
+        std::cout << "file append: " << l.name << '\n';
     }
 
     std::ofstream ofs(targetfile, std::ios::binary);

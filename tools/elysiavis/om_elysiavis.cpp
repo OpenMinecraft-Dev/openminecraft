@@ -66,7 +66,7 @@ template <typename T> void printOopFieldContent(T *t)
 
 void printOopFields(OMElysium *elysium, OMElysiaOop *oop, OMElysiaInstanceKlass *klass)
 {
-    if (klass->superClass)
+    if (klass->superClass != nullptr)
     {
         printOopFields(elysium, oop, klass->superClass->toInstance());
     }
@@ -130,7 +130,7 @@ void printOop(OMElysium *world, void *addr, bool simple = false)
         fmt::println("");
         return;
     }
-    auto klass = world->oopManager->oopGetKlass(reinterpret_cast<OMElysiaOop *>(addr));
+    auto *klass = world->oopManager->oopGetKlass(reinterpret_cast<OMElysiaOop *>(addr));
     fmt::print(fmt::fg(addrColor), "@{} ", addr);
     if (world->metaspaceHeap.valid(klass))
     {
@@ -145,7 +145,7 @@ void printOop(OMElysium *world, void *addr, bool simple = false)
 
         if (klass->isInstance())
         {
-            auto instanceKlass = klass->toInstance();
+            auto *instanceKlass = klass->toInstance();
             fmt::print("object length ");
             fmt::print(fmt::fg(addrColor), "{}", instanceKlass->length);
             fmt::println("");
@@ -212,7 +212,8 @@ void printOop(OMElysium *world, void *addr, bool simple = false)
 
 void readMem(OMElysium *elysium)
 {
-    std::string type, address;
+    std::string type;
+    std::string address;
     std::cin >> type >> address;
     void *addr = nullptr;
     try
@@ -230,11 +231,11 @@ void readMem(OMElysium *elysium)
     {
     case "norm"_hash: {
 #define readT(k, type, n, tt)                                                                                          \
-    auto k = openminecraft::mem::safeRead<type>(addr);                                                                 \
+    auto (k) = openminecraft::mem::safeRead<type>(addr);                                                                 \
     fmt::print(fmt::fg(addrColor), "@({}){}", n, addr);                                                                \
-    if (k.has_value())                                                                                                 \
+    if ((k).has_value())                                                                                                 \
     {                                                                                                                  \
-        fmt::println(" = 0x{:0" + fmt::format("{}", sizeof(type) * 2) + "x}", static_cast<tt>(k.value()));             \
+        fmt::println(" = 0x{:0" + fmt::format("{}", sizeof(type) * 2) + "x}", static_cast<tt>((k).value()));             \
     }                                                                                                                  \
     else                                                                                                               \
     {                                                                                                                  \
@@ -251,7 +252,7 @@ void readMem(OMElysium *elysium)
         break;
     }
     case "dump"_hash: {
-        uint64_t bytes;
+        uint64_t bytes = 0;
         std::cin >> bytes;
 
         std::vector<std::array<std::optional<uint8_t>, 16>> memdmps;
@@ -274,7 +275,7 @@ void readMem(OMElysium *elysium)
             {
                 if (v.has_value())
                 {
-                    if (v.value())
+                    if (v.value() != 0u)
                     {
                         fmt::print("{:02x}\t", v.value());
                     }
@@ -299,7 +300,7 @@ void readMem(OMElysium *elysium)
                     }
                     else
                     {
-                        if (v.value())
+                        if (v.value() != 0u)
                         {
                             fmt::print(".");
                         }
@@ -330,9 +331,9 @@ void readMem(OMElysium *elysium)
 void search(OMElysium *elysium)
 {
     uint64_t objs = 0;
-    auto base = reinterpret_cast<OMElysiaOop *>(elysium->mainHeap.rawHeap.block);
+    auto *base = reinterpret_cast<OMElysiaOop *>(elysium->mainHeap.rawHeap.block);
 
-    std::lock_guard guard(elysium->mainHeap.blockMutex);
+    std::scoped_lock guard(elysium->mainHeap.blockMutex);
 
 begin:
     OMElysiaKlass *klass = elysium->oopManager->oopGetKlass(base);
@@ -352,7 +353,7 @@ print:
         auto off =
             elysium->klassLoader->fetchOrLoadClass("java/lang/Class")->toInstance()->findField("<ptr>", "J")->offset;
         auto ptt = elysium->oopManager->oopAccessField(base, off);
-        auto klass = ((OMElysiaKlass *)*reinterpret_cast<jlong *>(ptt));
+        auto *klass = ((OMElysiaKlass *)*reinterpret_cast<jlong *>(ptt));
         if (klass->isInstance())
         {
             extra = klass->toInstance()->staticLength;
@@ -370,8 +371,8 @@ print:
         return;
     }
 
-    auto node = elysium->mainHeap.emptyBlocks;
-    while (node)
+    auto *node = elysium->mainHeap.emptyBlocks;
+    while (node != nullptr)
     {
         if (base >= node->block && base < node->blockEnd)
         {
@@ -420,12 +421,12 @@ void printStackStatus()
         }
         fmt::print(fmt::fg(addrColor), "stack trace:");
         fmt::println("");
-        if (th.second->zero.frame)
+        if (th.second->zero.frame != nullptr)
         {
-            auto frm = th.second->zero.frame;
+            auto *frm = th.second->zero.frame;
             int i = 0;
             uint8_t *pc = *th.second->zero.pc;
-            while (frm)
+            while (frm != nullptr)
             {
                 if (frm->method->isNative())
                 {
@@ -473,20 +474,21 @@ void printElysium(OMElysium *elysium)
         break;
     }
     case "links"_hash: {
-        int a = 0, b = 0;
+        int a = 0;
+        int b = 0;
         for (auto &[name, klass] : *elysium->klassLoader->loadedClasses)
         {
-            if (!klass || !klass->isInstance())
+            if ((klass == nullptr) || !klass->isInstance())
             {
                 continue;
             }
 
-            auto inskls = klass->toInstance();
+            auto *inskls = klass->toInstance();
             for (int m = 0; m < inskls->methodCount; ++m)
             {
                 auto &mthd = inskls->methods[m];
 
-                if (mthd.accessFlag & JVM_Acc_Native)
+                if ((mthd.accessFlag & JVM_Acc_Native) != 0)
                 {
                     void *funcptr = nullptr;
                     auto mm = fmt::format("Java_{}_{}", klass->name, mthd.name);
@@ -497,13 +499,13 @@ void printElysium(OMElysium *elysium)
                             ch = '_';
                         }
                     }
-                    if (elysium->nativeFuncMap.count(mm))
+                    if (elysium->nativeFuncMap.count(mm) != 0u)
                     {
                         funcptr = elysium->nativeFuncMap[mm];
                         goto success;
                     }
 
-                    if (!klass->nativeMethodCount || !klass->nativeMethods)
+                    if ((klass->nativeMethodCount == 0u) || (klass->nativeMethods == nullptr))
                     {
                         goto fail;
                     }
@@ -548,7 +550,7 @@ void printElysium(OMElysium *elysium)
 int main(int argc, const char *argv[])
 {
     openminecraft::log::multithread::registerCurrentThreadName("Bootstrap");
-    auto elysium = new OMElysium;
+    auto *elysium = new OMElysium;
 
     while (true)
     {
@@ -567,18 +569,18 @@ int main(int argc, const char *argv[])
             break;
         }
         case "heaptest"_hash: {
-            auto heap = new OMElysiaHeap("external_test", 1024 * 1024, 0.5);
+            auto *heap = new OMElysiaHeap("external_test", 1024 * 1024, 0.5);
             std::mutex test;
             std::unordered_map<std::thread::id, int> thrs;
             for (int i = 0; i < 36; i++)
             {
-                auto thr = new std::thread([&]() {
+                auto *thr = new std::thread([&]() {
                     while (true)
                     {
-                        auto l = (uint64_t *)heap->allocate(8);
+                        auto *l = static_cast<uint64_t *>(heap->allocate(8));
                         heap->deallocate(l);
                         {
-                            std::lock_guard guard(test);
+                            std::scoped_lock guard(test);
                             thrs[std::this_thread::get_id()]++;
                         }
                     }
@@ -589,12 +591,12 @@ int main(int argc, const char *argv[])
             {
                 std::this_thread::sleep_for(50ms);
                 {
-                    std::lock_guard guard(test);
+                    std::scoped_lock guard(test);
                     for (auto &t : thrs)
                     {
-                        std::cout << std::hex << t.first << ": " << std::dec << t.second << "times" << std::endl;
+                        std::cout << std::hex << t.first << ": " << std::dec << t.second << "times" << '\n';
                     }
-                    std::cout << "----------------" << std::endl;
+                    std::cout << "----------------" << '\n';
                 }
             }
 

@@ -27,7 +27,7 @@ int readVarInt(ip::tcp::socket &socket)
 
     while (true)
     {
-        uint8_t cb;
+        uint8_t cb = 0;
         socket.read_some(buffer(&cb, 1));
         value |= (cb & 0x7f) << position;
 
@@ -58,24 +58,24 @@ int main(int argc, char **argv)
     auto temp = reso.resolve(argv[1], argv[2]);
     connect(socket, temp);
 
-    auto timestmp = (uint64_t)time(nullptr);
+    auto timestmp = static_cast<uint64_t>(time(nullptr));
 
     std::ostringstream payld;
     // packet 1: Handshake
-    payld << (char)16;
-    payld << (char)0x00;
-    payld << (char)0b10000101 << (char)0b00000110;
-    payld << (char)9;
+    payld << static_cast<char>(16);
+    payld << static_cast<char>(0x00);
+    payld << static_cast<char>(0b10000101) << static_cast<char>(0b00000110);
+    payld << static_cast<char>(9);
     payld.write("localhost", 9);
-    payld << (char)0b10000001 << (char)0b00111100;
-    payld << (char)1;
+    payld << static_cast<char>(0b10000001) << static_cast<char>(0b00111100);
+    payld << static_cast<char>(1);
     // packet 2: Fetch metadata
-    payld << (char)1;
-    payld << (char)0x00;
+    payld << static_cast<char>(1);
+    payld << static_cast<char>(0x00);
     // packet 3: ping request
-    payld << (char)9;
-    payld << (char)0x01;
-    payld.write((char *)&timestmp, sizeof(uint64_t));
+    payld << static_cast<char>(9);
+    payld << static_cast<char>(0x01);
+    payld.write(reinterpret_cast<char *>(&timestmp), sizeof(uint64_t));
 
     write(socket, buffer(payld.str().c_str(), payld.str().size()));
     logger.info("connected to the Minecraft server!");
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
         {
             auto length = readVarInt(socket) - 1;
             auto lcnst = length;
-            uint8_t id;
+            uint8_t id = 0;
             socket.read_some(buffer(&id, 1));
             while (length > 0)
             {
