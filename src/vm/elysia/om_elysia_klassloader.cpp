@@ -305,7 +305,7 @@ OMElysiaKlass *OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::
             .valueString;
     if (repname.size() > 0)
     {
-        clsname = repname;
+        clsname += repname;
     }
 
     if (!findClass(clsname))

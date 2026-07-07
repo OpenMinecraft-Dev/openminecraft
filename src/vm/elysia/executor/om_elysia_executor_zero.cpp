@@ -221,7 +221,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
 
     exec:
-        switch (*pc)
+	switch (*pc)
         {
         case op_nop:
             ++pc;
@@ -961,9 +961,11 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             continue;
         }
         case op_invokedynamic: {
-            CURRENT_KLASS->constantPoolFetchDynamic(zeroCodeFetchArgu16p0(pc));
+            auto m = (OMElysiaKlassDynamic *)CURRENT_KLASS->constantPoolFetchDynamic(zeroCodeFetchArgu16p0(pc));
+	    zeroStackPush(m->handle);
+	    pushFrame(m->target, pc + 5, false, &pc);
+	    updateFrame;
             continue;
-            goto unk;
         }
         case op_new: {
             auto c = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));

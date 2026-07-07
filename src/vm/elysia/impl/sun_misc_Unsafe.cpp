@@ -308,6 +308,8 @@ static jboolean shouldBeInitialized(OMElysiaJNIEnv *env, OMElysiaNativeHandle *i
     return !kls->toInstance()->clinitFinished;
 }
 
+static uint64_t id = 0x0;
+
 static OMElysiaNativeHandle *defineAnonymousClass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
                                                   OMElysiaNativeHandle *host, OMElysiaNativeHandle *bytearr,
                                                   OMElysiaNativeHandle *cpPatches)
@@ -316,8 +318,7 @@ static OMElysiaNativeHandle *defineAnonymousClass(OMElysiaJNIEnv *env, OMElysiaN
     auto barr = env->GetByteArrayElements(bytearr, nullptr);
     auto kls = env->internal->elysium->klassLoader->loadClassWithoutMirror(
         std::make_shared<std::istringstream>(std::string((char *)barr, env->GetArrayLength(bytearr))), false,
-        fmt::format("{}/{}", k->name, (void *)handleFetch(cpPatches)));
-
+        fmt::format("/{:016x}", ++id));
     /*std::ofstream of(fmt::format("{}.class", (void *)handleFetch(cpPatches)), std::ios::binary);
     of.write((char *)barr, env->GetArrayLength(bytearr));
     of.close();*/

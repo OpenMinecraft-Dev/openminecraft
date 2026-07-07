@@ -213,18 +213,15 @@ void *OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id)
     vv[4].l = createTempHandle(arg);
     vv[5].l = createTempHandle(result);
     auto mn = elysium->executor->callObjectFunction(mm, vv);
-    std::cout << mn << std::endl;
+    auto fieldoff = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MemberName", true)                                                                                               ->toInstance()                                                                     ->findField("<ptr>", "J")                                                          ->offset;                                                      auto mthd = (OMElysiaMethod *)*(jlong *)elysium->oopManager->oopAccessField(mn, fieldoff);
 
-    if (thisThread.metadata->haveException)
-    {
-        return nullptr;
-    }
+    auto mthh = elysium->oopManager->arrAccessPtr(result, 0);
 
-    while (true)
-    {
-        continue;
-    }
-    throw std::logic_error("not implemented!");
+    auto stt = elysium->metaspaceHeap.allocate<OMElysiaKlassDynamic>();
+    stt->target = mthd;
+    stt->handle = mthh;
+
+    constantPool[id] = stt;                                                            constantPoolState[id] = true;                                                      return stt;
 }
 
 void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
@@ -301,6 +298,7 @@ void *OMElysiaInstanceKlass::constantPoolFetchNormal(uint16_t id, bool flg)
 
         constantPool[id] = cls;
         constantPoolState[id] = true;
+	if (cls == nullptr) { while (true) {continue;} }
         if (!flg)
         {
             klassloader->ensureClassInit(cls);

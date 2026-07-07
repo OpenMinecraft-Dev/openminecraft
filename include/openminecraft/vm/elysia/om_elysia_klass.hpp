@@ -21,6 +21,12 @@ class OMElysiaInstanceKlass;
 class OMElysiaPrimitiveKlass;
 class OMElysiaArrayKlass;
 
+struct OMElysiaKlassDynamic
+{
+    OMElysiaMethod *target;
+    OMElysiaOop *handle;
+};
+
 enum OMElysiaKlassType
 {
     InstanceKlass,
