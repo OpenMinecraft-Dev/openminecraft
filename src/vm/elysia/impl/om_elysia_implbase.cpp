@@ -12,6 +12,11 @@ namespace openminecraft::vm::elysia::impl
 {
 log::OMLogger logger("Elysia Impl Layer");
 
+jint Java_java_lang_reflect_Array_getLength(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *array)
+{
+    return env->GetArrayLength(array);
+}
+
 OMElysiaNativeHandle *Java_java_lang_reflect_Array_newArray(OMElysiaJNIEnv *env, OMElysiaKlass *,
                                                             OMElysiaNativeHandle *klass, jint length)
 {

@@ -57,6 +57,7 @@ OMElysium::OMElysium()
     registerNative(Java_java_lang_Float_intBitsToFloat);
     registerNative(Java_java_lang_reflect_Array_newArray);
     registerNative(Java_java_lang_invoke_MethodHandleNatives_registerNatives);
+    registerNative(Java_java_lang_reflect_Array_getLength);
     registerPlatformNative();
 
     mainThread = new std::thread([&]() {
