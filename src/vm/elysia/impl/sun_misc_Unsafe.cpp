@@ -15,6 +15,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <random>
 #include <sstream>
 #include <stdexcept>
 #include <thread>
@@ -308,8 +309,6 @@ static jboolean shouldBeInitialized(OMElysiaJNIEnv *env, OMElysiaNativeHandle *i
     return !kls->toInstance()->clinitFinished;
 }
 
-static uint64_t id = 0x0;
-
 static OMElysiaNativeHandle *defineAnonymousClass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance,
                                                   OMElysiaNativeHandle *host, OMElysiaNativeHandle *bytearr,
                                                   OMElysiaNativeHandle *cpPatches)
@@ -318,7 +317,7 @@ static OMElysiaNativeHandle *defineAnonymousClass(OMElysiaJNIEnv *env, OMElysiaN
     auto barr = env->GetByteArrayElements(bytearr, nullptr);
     auto kls = env->internal->elysium->klassLoader->loadClassWithoutMirror(
         std::make_shared<std::istringstream>(std::string((char *)barr, env->GetArrayLength(bytearr))), false,
-        fmt::format("/{:016x}", ++id));
+        fmt::format("/{}", (void *)handleFetch(bytearr)));
     env->ReleaseByteArrayElements(bytearr, barr, 0);
     env->internal->elysium->klassLoader->fixClassMirror(kls);
 
