@@ -10,19 +10,18 @@
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include "optimizations.hpp"
 #include <cstdint>
-#include <iostream>
 #include <type_traits>
 namespace openminecraft::vm::elysia::executor
 {
 HOT_FUNC
-static inline uintptr_t zeroStackAlloc(uint64_t len)
+static inline auto zeroStackAlloc(uint64_t len) -> uintptr_t
 {
     auto tc = thisThread.metadata;
     auto v = tc->zero.stackPointer -= len;
     return v;
 }
 HOT_FUNC
-static inline uintptr_t zeroStackPop(uint64_t len)
+static inline auto zeroStackPop(uint64_t len) -> uintptr_t
 {
     auto tc = thisThread.metadata;
     auto result = tc->zero.stackPointer;
@@ -83,7 +82,7 @@ void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMEly
 #define zeroCodeFetchArgs32p0(pc)                                                                                      \
     (static_cast<int32_t>(pc[1] << 24) | static_cast<int32_t>(pc[2] << 16) | static_cast<int32_t>(pc[3] << 8) | pc[4])
 
-static inline int32_t zeroCodeFetchArgs32Align(uint8_t *pc, int offset)
+static inline auto zeroCodeFetchArgs32Align(uint8_t *pc, int offset) -> int32_t
 {
     auto pp = pc + 1;
     while (reinterpret_cast<uintptr_t>(pp) % 4)
@@ -93,7 +92,7 @@ static inline int32_t zeroCodeFetchArgs32Align(uint8_t *pc, int offset)
     return static_cast<int32_t>(pp[offset * 4] << 24) | static_cast<int32_t>(pp[offset * 4 + 1] << 16) |
            static_cast<int32_t>(pp[offset * 4 + 2] << 8) | pp[offset * 4 + 3];
 }
-template <typename T> static inline T zeroStackPopGet()
+template <typename T> static inline auto zeroStackPopGet() -> T
 {
     if constexpr (std::is_same_v<T, jshort> || std::is_same_v<T, jchar> || std::is_same_v<T, jbyte> ||
                   std::is_same_v<T, jboolean>)
@@ -107,13 +106,13 @@ template <typename T> static inline T zeroStackPopGet()
     }
 }
 
-template <typename T> static inline T zeroStackPeekGet()
+template <typename T> static inline auto zeroStackPeekGet() -> T
 {
     assertType1<T>();
     return *reinterpret_cast<T *>(thisThread.metadata->zero.stackPointer);
 }
 
-template <typename T> static inline T *zeroStackPeekGetRef()
+template <typename T> static inline auto zeroStackPeekGetRef() -> T *
 {
     assertType1<T>();
     return reinterpret_cast<T *>(thisThread.metadata->zero.stackPointer);
@@ -131,13 +130,13 @@ template <typename T> static inline void zeroStackSaveLocal(uint32_t l, T data, 
     *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *)) = data;
 }
 
-template <typename T> static inline T zeroStackLoadLocal(uint32_t l, OMElysiaJavaFrame *frame)
+template <typename T> static inline auto zeroStackLoadLocal(uint32_t l, OMElysiaJavaFrame *frame) -> T
 {
     assertType1Wide<T>();
     return *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *));
 }
 
-template <typename T> static inline T *zeroStackLoadLocalRef(uint32_t l, OMElysiaJavaFrame *frame)
+template <typename T> static inline auto zeroStackLoadLocalRef(uint32_t l, OMElysiaJavaFrame *frame) -> T *
 {
     assertType1Wide<T>();
     return reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *));
@@ -162,7 +161,7 @@ template <typename T> static inline void zeroStackPushW(T data)
     }
 }
 
-template <typename T> static inline T zeroStackPopWGet()
+template <typename T> static inline auto zeroStackPopWGet() -> T
 {
     assertType2<T>();
     if constexpr (sizeof(void *) == 8)
@@ -180,7 +179,7 @@ template <typename T> static inline T zeroStackPopWGet()
     }
 }
 
-template <typename T> static inline T zeroStackLoadLocalW(uint32_t l, OMElysiaJavaFrame *frame)
+template <typename T> static inline auto zeroStackLoadLocalW(uint32_t l, OMElysiaJavaFrame *frame) -> T
 {
     assertType2<T>();
     if constexpr (sizeof(void *) == 8)
@@ -226,7 +225,7 @@ class OMElysiaExecutorZero
     void callVoidFunction(OMElysiaMethod *m, const OMElysiaNativeValue *args);
 
 #define IMPL_FUNCCALL(retType, name, fetchFunc)                                                                        \
-    retType call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *args)                                   \
+    auto call##name##Function(OMElysiaMethod *m, const OMElysiaNativeValue *args) -> retType                           \
     {                                                                                                                  \
         callVoidFunction(m, args);                                                                                     \
         return fetchFunc<retType>();                                                                                   \
@@ -241,9 +240,9 @@ class OMElysiaExecutorZero
     IMPL_FUNCCALL(jdouble, Double, zeroStackPopWGet);
     IMPL_FUNCCALL(OMElysiaOop *, Object, zeroStackPopGet);
 
-    OMElysiaNativeHandle *recordLocalRef(OMElysiaOop *);
-    OMElysiaKlassloader *currentKlassloader();
-    OMElysiaIntrinsicRoutine findRoutine(std::string klass, std::string name);
+    auto recordLocalRef(OMElysiaOop *) -> OMElysiaNativeHandle *;
+    auto currentKlassloader() -> OMElysiaKlassloader *;
+    auto findRoutine(std::string klass, std::string name) -> OMElysiaIntrinsicRoutine;
 
   protected:
     void execute(OMElysiaMethod *m);

@@ -11,7 +11,7 @@
 namespace openminecraft::vm::elysia
 {
 class OMElysium;
-typedef void (*OMElysiaIntrinsicRoutine)(OMElysium *, uint8_t **, int);
+using OMElysiaIntrinsicRoutine = void (*)(OMElysium *, uint8_t **, int);
 class OMElysiaKlass;
 struct OMElysiaMethodExcTable
 {
@@ -48,7 +48,7 @@ struct OMElysiaMethod
     OMElysiaIntrinsicRoutine intrinsicRoutine;
 
 #define attr(n)                                                                                                        \
-    bool is##n()                                                                                                       \
+    inline auto is##n() -> bool                                                                                        \
     {                                                                                                                  \
         return accessFlag & JVM_Acc_##n;                                                                               \
     }
@@ -59,22 +59,22 @@ struct OMElysiaMethod
     attr(Native);
     attr(Abstract);
 
-    bool isInit()
+    auto isInit() -> bool
     {
         return std::strcmp(name, "<init>") == 0;
     }
 
-    bool isClinit()
+    auto isClinit() -> bool
     {
         return std::strcmp(name, "<clinit>") == 0;
     }
 
-    bool isSame(OMElysiaMethod *method)
+    auto isSame(OMElysiaMethod *method) -> bool
     {
         return std::strcmp(method->name, name) == 0 && std::strcmp(method->descriptor, descriptor) == 0;
     }
 
-    bool isSame(OMElysiaNativeMethod *method)
+    auto isSame(OMElysiaNativeMethod *method) -> bool
     {
         return std::strcmp(method->name, name) == 0 && std::strcmp(method->signature, descriptor) == 0;
     }

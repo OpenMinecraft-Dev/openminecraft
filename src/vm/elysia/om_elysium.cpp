@@ -9,6 +9,7 @@
 #include "openminecraft/vm/elysia/om_elysia_monitormanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
+#include <array>
 #include <atomic>
 #include <stdexcept>
 #include <thread>
@@ -60,7 +61,7 @@ OMElysium::OMElysium()
     registerNative(Java_java_lang_reflect_Array_getLength);
     registerPlatformNative();
 
-    mainThread = new std::thread([&]() {
+    mainThread = new std::thread([&]() -> void {
         log::multithread::registerCurrentThreadName("main");
         thisThread.metadata->setName("main");
         thisThread.metadata->special = true;
@@ -119,9 +120,9 @@ OMElysium::OMElysium()
 
             auto l = klassLoader->fetchOrLoadClass("dev/openminecraft/MainKt", true);
             auto mm = l->findMethod("main", "([Ljava/lang/String;)V");
-            OMElysiaNativeValue vv[1];
+            std::array<OMElysiaNativeValue, 1> vv;
             vv[0].l = nullptr;
-            executor->callVoidFunction(mm, vv);
+            executor->callVoidFunction(mm, vv.data());
 
             logger.info("main func ended");
 
@@ -165,11 +166,11 @@ void OMElysium::startThread(OMElysiaNativeHandle *thread)
     auto ll = std::string(nn);
     tc->interface.ReleaseStringUTFChars(thrn, nn);
 
-    auto thr = std::make_shared<std::thread>([thread, thrcls, thrmthd, ll, this]() {
+    auto thr = std::make_shared<std::thread>([thread, thrcls, thrmthd, ll, this]() -> void {
         thisThread.metadata->setName(ll);
-        OMElysiaNativeValue values[1];
+        std::array<OMElysiaNativeValue, 1> values;
         values[0].l = thread;
-        this->executor->callVoidFunction(thrmthd, values);
+        this->executor->callVoidFunction(thrmthd, values.data());
 
         auto tc = thisThread.metadata;
         tc->interface.SetIntField(thread, tc->interface.GetFieldID(thrcls, "threadStatus", "I"), 5);
@@ -194,10 +195,10 @@ void OMElysium::setupThreadObject()
         auto tg = tc->interface.FindClass("java/lang/ThreadGroup");
         auto mthd = tc->interface.GetMethodID(tg, "<init>", "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
 
-        OMElysiaNativeValue values[2];
+        std::array<OMElysiaNativeValue, 2> values;
         values[0].l = threadObjects.systemGroup;
         values[1].l = tc->interface.NewStringUTF("main");
-        auto obj = tc->interface.NewObjectA(tg, mthd, values);
+        auto obj = tc->interface.NewObjectA(tg, mthd, values.data());
         threadObjects.mainGroup = obj;
     }
 

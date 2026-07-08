@@ -1,6 +1,7 @@
 #include "openminecraft/vm/elysia/executor/om_elysia_executor_zero.hpp"
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_meta.hpp"
+#include <array>
 
 namespace openminecraft::vm::elysia::executor
 {
@@ -14,10 +15,10 @@ void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, const OMElysiaNat
         ++i;
     }
 
-    uint8_t argtypes[255];
+    std::array<uint8_t, 255> argtypes;
     int argcount;
     uint8_t returntype;
-    descriptorTypes(m->cachedDescriptor, argtypes, argcount, &returntype);
+    descriptorTypes(m->cachedDescriptor, argtypes.data(), argcount, &returntype);
 
     auto pos = i;
 
@@ -65,7 +66,7 @@ void OMElysiaExecutorZero::callVoidFunction(OMElysiaMethod *m, const OMElysiaNat
         }
     }
 
-    execWithState(InsideVM, [&]() { execute(m); });
+    execWithState(InsideVM, [&]() -> void { execute(m); });
 }
 
 }; // namespace openminecraft::vm::elysia::executor

@@ -9,18 +9,18 @@ namespace openminecraft::vm::elysia::impl
 {
 extern "C"
 {
-    static jint readBytes(OMElysiaJNIEnv *env, OMElysiaNativeHandle *stream, OMElysiaNativeHandle *data, jint off,
-                          jint len)
+    static auto readBytes(OMElysiaJNIEnv *env, OMElysiaNativeHandle *stream, OMElysiaNativeHandle *data, jint off,
+                          jint len) -> jint
     {
         auto fdobj = env->GetObjectField(
             stream, env->GetFieldID(env->FindClass("java/io/FileOutputStream"), "fd", "Ljava/io/FileDescriptor;"));
 
         auto a = env->GetByteArrayElements(data, nullptr);
-        int l = os::read(getNativeFd(env, fdobj), (uint8_t *)a, off, len);
+        int l = os::read(getNativeFd(env, fdobj), reinterpret_cast<uint8_t *>(a), off, len);
         env->ReleaseByteArrayElements(data, a, 0);
         return l;
     }
-    static jint available0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *stream)
+    static auto available0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *stream) -> jint
     {
         auto fdobj = env->GetObjectField(
             stream, env->GetFieldID(env->FindClass("java/io/FileOutputStream"), "fd", "Ljava/io/FileDescriptor;"));

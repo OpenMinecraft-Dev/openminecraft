@@ -6,7 +6,7 @@ namespace openminecraft::vm::elysia::impl
 {
 extern "C"
 {
-    static jlong set(OMElysiaJNIEnv *env, OMElysiaKlass *klass, jint i)
+    static auto set(OMElysiaJNIEnv *env, OMElysiaKlass *klass, jint i) -> jlong
     {
         return os::convertHandle(i);
     }

@@ -1,13 +1,10 @@
 #ifndef OM_ELYSIA_THREADMODEL_HPP
 #define OM_ELYSIA_THREADMODEL_HPP
 
-#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
-#include <atomic>
 #include <functional>
-#include <iostream>
 #include <map>
 #include <mutex>
 #include <thread>
@@ -36,7 +33,7 @@ enum OMElysiaThreadState
     Halt
 };
 
-inline std::string threadStateToString(OMElysiaThreadState state)
+inline auto threadStateToString(OMElysiaThreadState state) -> std::string
 {
     switch (state)
     {
@@ -79,13 +76,11 @@ class OMElysiaThread
 
     bool special = false;
 
-    std::function<void()> cleaner = []() {};
+    std::function<void()> cleaner = []() -> void {};
 
     void *nativeHandle;
 
-    OMElysiaThread()
-    {
-    }
+    OMElysiaThread() = default;
 
     void registerThread()
     {
@@ -101,7 +96,7 @@ class OMElysiaThread
         threadMap.erase(std::this_thread::get_id());
     }
 
-    std::string getName();
+    auto getName() -> std::string;
     void setName(std::string);
     void initInternals();
 };

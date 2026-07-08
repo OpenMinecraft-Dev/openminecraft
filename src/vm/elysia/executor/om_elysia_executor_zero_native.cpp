@@ -8,6 +8,7 @@
 #include "openminecraft/vm/elysia/om_elysia_meta.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
+#include <array>
 #include <cstdint>
 #include <ffi.h>
 #include <variant>
@@ -20,8 +21,7 @@ OMElysiaNativeHandle *globalRefs = nullptr;
 static void cleanupLocalRef()
 {
     auto tc = thisThread.metadata;
-    OMElysiaNativeHandle *current =
-        reinterpret_cast<OMElysiaNativeHandle *>(tc->zero.frame ? tc->zero.frame->objectRefs : globalRefs);
+    auto *current = reinterpret_cast<OMElysiaNativeHandle *>(tc->zero.frame ? tc->zero.frame->objectRefs : globalRefs);
     while (current)
     {
         auto oldCurr = current->next;
@@ -38,7 +38,7 @@ static void cleanupLocalRef()
         globalRefs = nullptr;
     }
 }
-OMElysiaNativeHandle *OMElysiaExecutorZero::recordLocalRef(OMElysiaOop *oop)
+auto OMElysiaExecutorZero::recordLocalRef(OMElysiaOop *oop) -> OMElysiaNativeHandle *
 {
     if (!oop)
     {
@@ -68,9 +68,10 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
                                          OMElysiaJavaFrame *frame)
 {
     auto tc = thisThread.metadata;
-    std::variant<jint, jbyte, jboolean, jshort, jchar, jfloat, jlong, jdouble, OMElysiaNativeHandle *, OMElysiaJNIEnv *,
-                 OMElysiaKlass *>
-        rawargs[258];
+    std::array<std::variant<jint, jbyte, jboolean, jshort, jchar, jfloat, jlong, jdouble, OMElysiaNativeHandle *,
+                            OMElysiaJNIEnv *, OMElysiaKlass *>,
+               258>
+        rawargs;
     int rawargsize = 0;
 #define appendArg(n)                                                                                                   \
     rawargs[rawargsize] = n;                                                                                           \
@@ -80,10 +81,10 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
     appendArg(&tc->interface);
     // rawargs.emplace_back(&tc->interface);
 
-    uint8_t argTypes[255];
+    std::array<uint8_t, 255> argTypes;
     int argCount;
     uint8_t returnType;
-    descriptorTypes(m->cachedDescriptor, argTypes, argCount, &returnType);
+    descriptorTypes(m->cachedDescriptor, argTypes.data(), argCount, &returnType);
     auto argid = 0;
 
     // geopelia: arg #1, instance oop (non-static) or klass (static)
@@ -156,7 +157,8 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
 
     if (!m->cifprepared)
     {
-        m->nativeArgTypes = (ffi_type **)mem::allocator::tracedMallocElysiaExternal(sizeof(void *) * rawargsize);
+        m->nativeArgTypes =
+            reinterpret_cast<ffi_type **>(mem::allocator::tracedMallocElysiaExternal(sizeof(void *) * rawargsize));
 
         for (int i = 0; i < rawargsize; i++)
         {
@@ -216,7 +218,7 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
     void *retValue = &retValueReal;
 
     execWithState(InsideNative,
-                  [&]() { ffi_call(&m->cif, reinterpret_cast<void (*)()>(func), retValue, argPointers); });
+                  [&]() -> void { ffi_call(&m->cif, reinterpret_cast<void (*)()>(func), retValue, argPointers); });
 
     switch (returnType)
     {

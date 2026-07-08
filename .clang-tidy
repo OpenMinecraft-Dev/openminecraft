@@ -1,14 +1,7 @@
 Checks: '
   -*,
-  bugprone-*,
   modernize-*,
-  performance-*,
-  readability-*,
-  cppcoreguidelines-*,
-  -modernize-use-trailing-return-type,
-  -readability-magic-numbers,
-  -cppcoreguidelines-avoid-magic-numbers,
-  -readability-identifier-length,
+  cppcoreguidelines-pro-type-cstyle-cast
 '
 ExtraArgs:
   - '-Iinclude'

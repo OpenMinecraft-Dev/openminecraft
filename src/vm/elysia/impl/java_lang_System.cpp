@@ -3,6 +3,7 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
+#include <array>
 #include <filesystem>
 #include <unordered_map>
 #ifdef OM_PLATFORM_WINDOWS
@@ -15,17 +16,17 @@ namespace openminecraft::vm::elysia::impl
 {
 extern "C"
 {
-    static OMElysiaNativeHandle *initProperties(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
-                                                OMElysiaNativeHandle *properties)
+    static auto initProperties(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *properties)
+        -> OMElysiaNativeHandle *
     {
         auto kk = env->FindClass("java/util/Hashtable");
         auto kkm = env->GetMethodID(kk, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
-        char userdir[1024];
+        std::array<char, 1024> userdir;
 #ifdef OM_PLATFORM_WINDOWS
-        (void)_getcwd(userdir, 1024);
+        (void)_getcwd(userdir.data(), 1024);
 #else
-        getcwd(userdir, 1024);
+        getcwd(userdir.data(), 1024);
 #endif
 
         std::unordered_map<std::string, std::string> propMap = {
@@ -40,7 +41,7 @@ extern "C"
 #endif
             {"java.home", std::filesystem::current_path().string()},
             {"line.separator", "\n"},
-            {"user.dir", userdir},
+            {"user.dir", userdir.data()},
             {"os.version", "10.0"}, // TODO: fake versions
             {"os.arch", OM_ARCH},
             {"java.vm.name", "Elysia VM"},
@@ -49,10 +50,10 @@ extern "C"
 
         for (auto &pp : propMap)
         {
-            OMElysiaNativeValue args[2];
+            std::array<OMElysiaNativeValue, 2> args;
             args[0].l = env->NewStringUTF(pp.first.c_str());
             args[1].l = env->NewStringUTF(pp.second.c_str());
-            env->CallObjectMethodA(properties, kkm, args);
+            env->CallObjectMethodA(properties, kkm, args.data());
         }
 
         return properties;
@@ -82,18 +83,19 @@ extern "C"
         env->SetStaticObjectField(klass, env->GetFieldID(klass, "err", "Ljava/io/PrintStream;"), out);
     }
 
-    static OMElysiaNativeHandle *mapLibraryName(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *name)
+    static auto mapLibraryName(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *name)
+        -> OMElysiaNativeHandle *
     {
         return name;
     }
 
-    static jlong nanoTime(OMElysiaJNIEnv *env, OMElysiaKlass *)
+    static auto nanoTime(OMElysiaJNIEnv *env, OMElysiaKlass *) -> jlong
     {
         auto now = std::chrono::steady_clock::now().time_since_epoch();
         return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
     }
 
-    static jlong currentTimeMillis(OMElysiaJNIEnv *env, OMElysiaKlass *)
+    static auto currentTimeMillis(OMElysiaJNIEnv *env, OMElysiaKlass *) -> jlong
     {
         auto now = std::chrono::system_clock::now().time_since_epoch();
         return std::chrono::duration_cast<std::chrono::milliseconds>(now).count();

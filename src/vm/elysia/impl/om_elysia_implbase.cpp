@@ -12,13 +12,14 @@ namespace openminecraft::vm::elysia::impl
 {
 log::OMLogger logger("Elysia Impl Layer");
 
-jint Java_java_lang_reflect_Array_getLength(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *array)
+auto Java_java_lang_reflect_Array_getLength(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *array)
+    -> jint
 {
     return env->GetArrayLength(array);
 }
 
-OMElysiaNativeHandle *Java_java_lang_reflect_Array_newArray(OMElysiaJNIEnv *env, OMElysiaKlass *,
-                                                            OMElysiaNativeHandle *klass, jint length)
+auto Java_java_lang_reflect_Array_newArray(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *klass,
+                                           jint length) -> OMElysiaNativeHandle *
 {
     auto kls =
         ((OMElysiaKlass *)env->GetLongField(klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
@@ -26,19 +27,19 @@ OMElysiaNativeHandle *Java_java_lang_reflect_Array_newArray(OMElysiaJNIEnv *env,
     return createTempHandle(env->internal->elysium->oopManager->allocateArr(arrcls->toArray(), length));
 }
 
-OMElysiaNativeHandle *Java_sun_misc_URLClassPath_getLookupCacheURLs(OMElysiaJNIEnv *env, OMElysiaNativeHandle *ucp,
-                                                                    OMElysiaNativeHandle *klassloader)
+auto Java_sun_misc_URLClassPath_getLookupCacheURLs(OMElysiaJNIEnv *env, OMElysiaNativeHandle *ucp,
+                                                   OMElysiaNativeHandle *klassloader) -> OMElysiaNativeHandle *
 {
     return nullptr;
 }
 
-jint Java_java_lang_Runtime_availableProcessors(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance)
+auto Java_java_lang_Runtime_availableProcessors(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance) -> jint
 {
     return os::fetchAvailableProcessors();
 }
 
 // TODO: stub implementation
-jint Java_sun_misc_Signal_findSignal(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *name)
+auto Java_sun_misc_Signal_findSignal(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *name) -> jint
 {
     /*using namespace openminecraft::binary::hash;
     jint result = 0;
@@ -63,7 +64,7 @@ jint Java_sun_misc_Signal_findSignal(OMElysiaJNIEnv *env, OMElysiaKlass *, OMEly
     return 0;
 }
 
-jlong Java_sun_misc_Signal_handle0(OMElysiaJNIEnv *env, OMElysiaKlass *, jint sig, jlong handler)
+auto Java_sun_misc_Signal_handle0(OMElysiaJNIEnv *env, OMElysiaKlass *, jint sig, jlong handler) -> jlong
 {
     // return (jlong)signal(sig, (__sighandler_t)handler);
     return 0;
@@ -80,19 +81,19 @@ void Java_java_lang_ClassLoader$NativeLibrary_load(OMElysiaJNIEnv *env, OMElysia
     env->SetBooleanField(lib, env->GetFieldID(kl, "loaded", "Z"), true);
 }
 
-jboolean Java_java_util_concurrent_atomic_AtomicLong_VMSupportsCS8(OMElysiaJNIEnv *env, OMElysiaKlass *)
+auto Java_java_util_concurrent_atomic_AtomicLong_VMSupportsCS8(OMElysiaJNIEnv *env, OMElysiaKlass *) -> jboolean
 {
     std::atomic_uint64_t l;
     return l.is_lock_free();
 }
 
-OMElysiaNativeHandle *Java_java_lang_Throwable_fillInStackTrace(OMElysiaJNIEnv *env, OMElysiaNativeHandle *thr,
-                                                                int dummy)
+auto Java_java_lang_Throwable_fillInStackTrace(OMElysiaJNIEnv *env, OMElysiaNativeHandle *thr, int dummy)
+    -> OMElysiaNativeHandle *
 {
     return thr;
 }
 
-OMElysiaNativeHandle *Java_java_lang_String_intern(OMElysiaJNIEnv *env, OMElysiaNativeHandle *str)
+auto Java_java_lang_String_intern(OMElysiaJNIEnv *env, OMElysiaNativeHandle *str) -> OMElysiaNativeHandle *
 {
     auto chr = env->GetStringUTFChars(str, nullptr);
     env->internal->elysium->stringPool[binary::hash::hash_compile_time(chr)] = handleFetch(str);
@@ -104,23 +105,23 @@ void Java_sun_misc_VM_initialize(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
 }
 
-jint Java_java_lang_Float_floatToRawIntBits(OMElysiaJNIEnv *env, OMElysiaKlass *klass, jfloat f)
+auto Java_java_lang_Float_floatToRawIntBits(OMElysiaJNIEnv *env, OMElysiaKlass *klass, jfloat f) -> jint
 {
     return *reinterpret_cast<jint *>(&f);
 }
 
-jlong Java_java_lang_Double_doubleToRawLongBits(OMElysiaJNIEnv *env, OMElysiaKlass *klass, jdouble d)
+auto Java_java_lang_Double_doubleToRawLongBits(OMElysiaJNIEnv *env, OMElysiaKlass *klass, jdouble d) -> jlong
 {
     return *reinterpret_cast<jlong *>(&d);
 }
 
-jdouble Java_java_lang_Double_longBitsToDouble(OMElysiaJNIEnv *env, OMElysiaKlass *klass, jlong l)
+auto Java_java_lang_Double_longBitsToDouble(OMElysiaJNIEnv *env, OMElysiaKlass *klass, jlong l) -> jdouble
 {
     return *reinterpret_cast<jdouble *>(&l);
 }
 
 // TODO: make this portable for future executors
-OMElysiaNativeHandle *Java_sun_reflect_Reflection_getCallerClass(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
+auto Java_sun_reflect_Reflection_getCallerClass(OMElysiaJNIEnv *env, OMElysiaKlass *klass) -> OMElysiaNativeHandle *
 {
     if (!thisThread.metadata->zero.frame->caller || !thisThread.metadata->zero.frame->caller->caller)
     {
@@ -130,27 +131,29 @@ OMElysiaNativeHandle *Java_sun_reflect_Reflection_getCallerClass(OMElysiaJNIEnv 
     return createTempHandle(internal);
 }
 
-jint Java_sun_reflect_Reflection_getClassAccessFlags(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *kls)
+auto Java_sun_reflect_Reflection_getClassAccessFlags(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *kls)
+    -> jint
 {
-    return ((OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")))
+    return reinterpret_cast<OMElysiaKlass *>(
+               env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")))
         ->accessFlag;
 }
 
-OMElysiaNativeHandle *Java_java_security_AccessController_doPrivileged(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
-                                                                       OMElysiaNativeHandle *action)
+auto Java_java_security_AccessController_doPrivileged(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
+                                                      OMElysiaNativeHandle *action) -> OMElysiaNativeHandle *
 {
     auto klas = env->FindClass("java/security/PrivilegedExceptionAction");
     auto mthd = env->GetMethodID(klas, "run", "()Ljava/lang/Object;");
     return env->CallObjectMethodA(action, mthd, nullptr);
 }
 
-OMElysiaNativeHandle *Java_java_security_AccessController_getStackAccessControlContext(OMElysiaJNIEnv *env,
-                                                                                       OMElysiaKlass *klass)
+auto Java_java_security_AccessController_getStackAccessControlContext(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
+    -> OMElysiaNativeHandle *
 {
     return nullptr;
 }
 
-jfloat Java_java_lang_Float_intBitsToFloat(OMElysiaJNIEnv *env, OMElysiaKlass *, jint i)
+auto Java_java_lang_Float_intBitsToFloat(OMElysiaJNIEnv *env, OMElysiaKlass *, jint i) -> jfloat
 {
     return *reinterpret_cast<jfloat *>(&i);
 }

@@ -34,27 +34,30 @@ static inline void registerNativeFuncs(OMElysiaJNIEnv *env, OMElysiaKlass *klass
         mem::allocator::tracedMallocElysia(cnt * sizeof(OMElysiaNativeMethod)));
 
     int i = 0;
-    for (auto itt = funcs.begin(); itt != funcs.end(); ++itt)
+    for (const auto &func : funcs)
     {
-        funcstarget[i].name = const_cast<char *>(itt->name);
-        funcstarget[i].signature = const_cast<char *>(itt->signature);
-        funcstarget[i].funcPtr = itt->func;
+        funcstarget[i].name = const_cast<char *>(func.name);
+        funcstarget[i].signature = const_cast<char *>(func.signature);
+        funcstarget[i].funcPtr = func.func;
         ++i;
     }
     env->RegisterNatives(klass, funcstarget, cnt);
     mem::allocator::tracedFreeElysia(funcstarget);
 }
 
-static inline OMElysiaField *field(OMElysiaJNIEnv *env, std::string cname, std::string fname, std::string fdesc)
+static inline auto field(OMElysiaJNIEnv *env, std::string cname, std::string fname, std::string fdesc)
+    -> OMElysiaField *
 {
     return env->GetFieldID(env->FindClass(cname.c_str()), fname.c_str(), fdesc.c_str());
 }
 
-static inline OMElysiaMethod *method(OMElysiaJNIEnv *env, std::string cname, std::string mname, std::string mdesc)
+static inline auto method(OMElysiaJNIEnv *env, std::string cname, std::string mname, std::string mdesc)
+    -> OMElysiaMethod *
 {
     return env->GetMethodID(env->FindClass(cname.c_str()), mname.c_str(), mdesc.c_str());
 }
-static inline OMElysiaMethod *staticMethod(OMElysiaJNIEnv *env, std::string cname, std::string mname, std::string mdesc)
+static inline auto staticMethod(OMElysiaJNIEnv *env, std::string cname, std::string mname, std::string mdesc)
+    -> OMElysiaMethod *
 {
     return env->GetStaticMethodID(env->FindClass(cname.c_str()), mname.c_str(), mdesc.c_str());
 }

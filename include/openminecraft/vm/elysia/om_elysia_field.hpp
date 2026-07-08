@@ -19,17 +19,15 @@ class OMElysiaField
 
     uint32_t offset = fieldOffsetUnknown;
 
-#define attr(n)                                                                                                        \
-    bool is##n()                                                                                                       \
+#define attrf(n)                                                                                                       \
+    inline auto is##n() -> bool                                                                                        \
     {                                                                                                                  \
         return accessFlag & JVM_Acc_##n;                                                                               \
     }
-    attr(Static);
-    attr(Public);
-    attr(Protected);
-    attr(Private);
-    attr(Native);
-    attr(Abstract);
+    attrf(Static);
+    attrf(Public);
+    attrf(Protected);
+    attrf(Private);
 };
 } // namespace openminecraft::vm::elysia
 

@@ -5,7 +5,7 @@
 #include <cstdint>
 namespace openminecraft::vm::elysia::impl
 {
-uint64_t getNativeFd(OMElysiaJNIEnv *env, OMElysiaNativeHandle *fd);
+auto getNativeFd(OMElysiaJNIEnv *env, OMElysiaNativeHandle *fd) -> uint64_t;
 void setNativeFd(OMElysiaJNIEnv *env, OMElysiaNativeHandle *fd, uint64_t n);
 } // namespace openminecraft::vm::elysia::impl
 

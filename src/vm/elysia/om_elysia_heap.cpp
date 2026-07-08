@@ -5,7 +5,7 @@
 
 namespace openminecraft::vm::elysia
 {
-static OMElysiaHeapBlock *sortBlocks(OMElysiaHeapBlock *head)
+static auto sortBlocks(OMElysiaHeapBlock *head) -> OMElysiaHeapBlock *
 {
     if (!head || !head->next)
     {
@@ -50,7 +50,7 @@ OMElysiaHeap::OMElysiaHeap(const char *id, uint64_t maxSize, float expandFactor)
     }
 }
 
-void *OMElysiaHeap::allocate(uint64_t objLen)
+auto OMElysiaHeap::allocate(uint64_t objLen) -> void *
 {
     objLen = align(objLen);
     std::lock_guard guard(blockMutex);

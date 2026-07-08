@@ -3,7 +3,6 @@
 
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include <cstdint>
-#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -103,7 +102,8 @@ inline static void parseSignaturePart(std::string sig, OMElysiaSignaturePart *pa
     parseSignaturePart(str, part);
 }
 
-inline static std::pair<std::vector<OMElysiaSignaturePart>, OMElysiaSignaturePart> parseSignature(const char *sig)
+inline static auto parseSignature(const char *sig)
+    -> std::pair<std::vector<OMElysiaSignaturePart>, OMElysiaSignaturePart>
 {
     bool insideArgs = false;
 
@@ -154,7 +154,7 @@ retRes:
     return {argTypes, retValue};
 }
 
-inline static std::string signatureToRaw(OMElysiaSignaturePart &part)
+inline static auto signatureToRaw(OMElysiaSignaturePart &part) -> std::string
 {
     switch (part.type)
     {
@@ -192,7 +192,7 @@ inline static std::string signatureToRaw(OMElysiaSignaturePart &part)
     }
 }
 
-inline static std::string signatureToType(OMElysiaSignaturePart &part)
+inline static auto signatureToType(OMElysiaSignaturePart &part) -> std::string
 {
     switch (part.type)
     {
@@ -230,7 +230,7 @@ inline static std::string signatureToType(OMElysiaSignaturePart &part)
     }
 }
 
-static std::string fieldDescToType(const char *name)
+static inline auto fieldDescToType(const char *name) -> std::string
 {
     OMElysiaSignaturePart part;
     parseSignaturePart(name, &part);
@@ -238,7 +238,7 @@ static std::string fieldDescToType(const char *name)
     return signatureToType(part);
 }
 
-static std::string buildArray(char *s)
+static inline auto buildArray(char *s) -> std::string
 {
     using namespace openminecraft::binary::hash;
     switch (hash_compile_time(s))
@@ -272,12 +272,12 @@ static std::string buildArray(char *s)
     }
 }
 
-static bool isArray(std::string s)
+static inline auto isArray(std::string s) -> bool
 {
     return s[0] == '[';
 }
 
-static std::string decompArray(std::string s)
+static inline auto decompArray(std::string s) -> std::string
 {
     OMElysiaSignaturePart part;
     parseSignaturePart(s, &part);
@@ -293,7 +293,7 @@ static std::string decompArray(std::string s)
     }
 }
 
-static uint64_t descriptorLength(char *s, uint64_t ptrLen)
+static inline auto descriptorLength(char *s, uint64_t ptrLen) -> uint64_t
 {
     switch (s[0])
     {
@@ -329,12 +329,12 @@ inline static void descriptorTypes(
     argCount = d->first.size();
 }
 
-static uint64_t argCount(char *s)
+static inline auto argCount(char *s) -> uint64_t
 {
     return parseSignature(s).first.size();
 }
 
-static uint64_t argSlots(char *s)
+static inline auto argSlots(char *s) -> uint64_t
 {
     auto result = parseSignature(s);
     int argCount = 0;

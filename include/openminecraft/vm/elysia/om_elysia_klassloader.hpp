@@ -16,21 +16,21 @@ class OMElysiaKlassloader
     OMElysiaKlassloader(OMElysium *vw);
     ~OMElysiaKlassloader();
 
-    OMElysiaInstanceKlass *constructInstanceClassShell(std::string s);
-    OMElysiaPrimitiveKlass *constructPrimitiveClass(std::string s);
-    OMElysiaArrayKlass *constructArrayClass(OMElysiaKlass *klass);
+    auto constructInstanceClassShell(std::string s) -> OMElysiaInstanceKlass *;
+    auto constructPrimitiveClass(std::string s) -> OMElysiaPrimitiveKlass *;
+    auto constructArrayClass(OMElysiaKlass *klass) -> OMElysiaArrayKlass *;
 
     void markKlass(OMElysiaKlass *klass);
 
     void fillVtable(OMElysiaInstanceKlass *klass);
-    OMElysiaKlass *loadClassWithoutMirror(std::string name, bool special = false);
-    OMElysiaKlass *loadClassWithoutMirror(std::shared_ptr<std::istream> istr, bool special = false,
-                                          std::string repname = "");
+    auto loadClassWithoutMirror(std::string name, bool special = false) -> OMElysiaKlass *;
+    auto loadClassWithoutMirror(std::shared_ptr<std::istream> istr, bool special = false, std::string repname = "")
+        -> OMElysiaKlass *;
     void fixClassMirror(OMElysiaKlass *klass);
     void fixAllClasses();
 
-    OMElysiaKlass *findClass(std::string s);
-    OMElysiaKlass *fetchOrLoadClass(std::string s, bool needInit = false)
+    auto findClass(std::string s) -> OMElysiaKlass *;
+    inline auto fetchOrLoadClass(std::string s, bool needInit = false) -> OMElysiaKlass *
     {
         auto l = findClass(s);
         if (!l)
@@ -52,7 +52,7 @@ class OMElysiaKlassloader
     }
     void ensureClassInit(OMElysiaKlass *);
 
-    OMElysium *upper()
+    inline auto upper() -> OMElysium *
     {
         return elysium;
     }

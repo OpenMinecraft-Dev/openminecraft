@@ -4,19 +4,19 @@
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klassloader.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
-#include <cstring>
 #include <stdexcept>
 
 namespace openminecraft::vm::elysia::impl
 {
 extern "C"
 {
-    static OMElysiaNativeHandle *findBuiltinLib(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *name)
+    static auto findBuiltinLib(OMElysiaJNIEnv *env, OMElysiaKlass *, OMElysiaNativeHandle *name)
+        -> OMElysiaNativeHandle *
     {
         return name;
     }
-    static OMElysiaNativeHandle *findLoadedClass0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *classloader,
-                                                  OMElysiaNativeHandle *name)
+    static auto findLoadedClass0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *classloader, OMElysiaNativeHandle *name)
+        -> OMElysiaNativeHandle *
     {
         auto ptr =
             env->GetLongField(classloader, env->GetFieldID(env->FindClass("java/lang/ClassLoader"), "<ptr>", "J"));
@@ -27,8 +27,8 @@ extern "C"
         }
         throw std::logic_error("not implemented");
     }
-    static OMElysiaNativeHandle *findBootstrapClass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *cld,
-                                                    OMElysiaNativeHandle *name)
+    static auto findBootstrapClass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *cld, OMElysiaNativeHandle *name)
+        -> OMElysiaNativeHandle *
     {
         auto nn = env->GetStringUTFChars(name, nullptr);
         std::string c = nn;

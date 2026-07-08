@@ -10,7 +10,7 @@ namespace openminecraft::vm::elysia::impl
 {
 extern "C"
 {
-    static OMElysiaNativeHandle *currentThread(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
+    static auto currentThread(OMElysiaJNIEnv *env, OMElysiaKlass *klass) -> OMElysiaNativeHandle *
     {
         return thisThread.metadata->threadObject;
     }
@@ -19,10 +19,11 @@ extern "C"
     {
     }
 
-    static jboolean isAlive(OMElysiaJNIEnv *env, OMElysiaNativeHandle *thread)
+    static auto isAlive(OMElysiaJNIEnv *env, OMElysiaNativeHandle *thread) -> jboolean
     {
         auto thrcls = env->FindClass("java/lang/Thread");
-        auto pthr = (OMElysiaThread *)env->GetLongField(thread, env->GetFieldID(thrcls, "eetop", "J"));
+        auto pthr =
+            reinterpret_cast<OMElysiaThread *>(env->GetLongField(thread, env->GetFieldID(thrcls, "eetop", "J")));
         return pthr && pthr->threadInited;
     }
 

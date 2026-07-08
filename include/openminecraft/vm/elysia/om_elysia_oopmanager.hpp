@@ -6,7 +6,6 @@
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <cstdint>
-#include <limits>
 #include <random>
 namespace openminecraft::vm::elysia
 {
@@ -41,30 +40,30 @@ class OMElysiaOopManager
     OMElysiaOopManager(OMElysium *elysium);
     ~OMElysiaOopManager();
 
-    uint64_t oopHeaderLength();
-    uint64_t oopArrayHeaderLength();
-    OMElysiaOop *allocateOop(OMElysiaKlass *klass, uint64_t extraLength = 0);
-    OMElysiaOop *allocateString(std::string target);
-    OMElysiaKlass *oopGetKlass(OMElysiaOop *base);
-    uintptr_t oopAccessField(OMElysiaOop *base, uint64_t offset);
+    auto oopHeaderLength() -> uint64_t;
+    auto oopArrayHeaderLength() -> uint64_t;
+    auto allocateOop(OMElysiaKlass *klass, uint64_t extraLength = 0) -> OMElysiaOop *;
+    auto allocateString(std::string target) -> OMElysiaOop *;
+    auto oopGetKlass(OMElysiaOop *base) -> OMElysiaKlass *;
+    auto oopAccessField(OMElysiaOop *base, uint64_t offset) -> uintptr_t;
     void oopAccessPointerField(OMElysiaOop *base, uint64_t offset, void *ptrToWrite);
-    OMElysiaOop *oopAccessPointerStaticField(OMElysiaKlass *kls, uint64_t offset);
+    auto oopAccessPointerStaticField(OMElysiaKlass *kls, uint64_t offset) -> OMElysiaOop *;
     void oopAccessPointerStaticField(OMElysiaKlass *kls, uint64_t offset, void *ptrToWrite);
-    OMElysiaOop *oopAccessPointerField(OMElysiaOop *base, uint64_t offset);
+    auto oopAccessPointerField(OMElysiaOop *base, uint64_t offset) -> OMElysiaOop *;
 
-    jint arrLength(OMElysiaOop *base);
-    OMElysiaOop *allocateArr(OMElysiaArrayKlass *klass, jint length);
-    OMElysiaOop *allocateMultiArr(OMElysiaArrayKlass *klass, jint dim, jint *lengths);
+    auto arrLength(OMElysiaOop *base) -> jint;
+    auto allocateArr(OMElysiaArrayKlass *klass, jint length) -> OMElysiaOop *;
+    auto allocateMultiArr(OMElysiaArrayKlass *klass, jint dim, jint *lengths) -> OMElysiaOop *;
 
-    OMElysiaOop *arrAccessPtr(OMElysiaOop *oop, jint index);
+    auto arrAccessPtr(OMElysiaOop *oop, jint index) -> OMElysiaOop *;
     void arrAccessPtr(OMElysiaOop *oop, jint index, OMElysiaOop *data);
 
-    template <typename T> T *arrAccess(OMElysiaOop *oop)
+    template <typename T> inline auto arrAccess(OMElysiaOop *oop) -> T *
     {
         return reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(oop) + oopArrayHeaderLength());
     }
 
-    uint64_t oopLength(OMElysiaOop *oop);
+    auto oopLength(OMElysiaOop *oop) -> uint64_t;
 
   private:
     OMElysium *elysium;

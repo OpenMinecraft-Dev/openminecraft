@@ -1,9 +1,9 @@
 #ifndef OM_ELYSIA_INTERFACE_DEFS_HPP
 #define OM_ELYSIA_INTERFACE_DEFS_HPP
 
-#include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
-#include <stdarg.h>
+#include <cstdlib>
+#include <cstdarg>
 #include <utility>
 
 namespace openminecraft::vm::elysia
@@ -19,7 +19,7 @@ namespace openminecraft::vm::elysia
 #define JNI_VERSION_20 0x00140000
 #define JNI_VERSION_21 0x00150000
 
-typedef jint jsize;
+using jsize = jint;
 class OMElysiaKlass;
 class OMElysiaOop;
 class OMElysiaMethod;
@@ -34,7 +34,7 @@ struct OMElysiaNativeHandle
 
 #define handleFetch(h) (h ? h->object : nullptr)
 
-static OMElysiaNativeHandle *createTempHandle(OMElysiaOop *oop)
+static auto createTempHandle(OMElysiaOop *oop) -> OMElysiaNativeHandle *
 {
     auto hnd = reinterpret_cast<OMElysiaNativeHandle *>(malloc(sizeof(OMElysiaNativeHandle)));
     hnd->next = hnd;
@@ -468,51 +468,51 @@ struct OMElysiaNativeInterface
 struct OMElysiaJNIEnv
 {
     OMElysiaNativeInterface *internal;
-    jint GetVersion()
+    auto GetVersion() -> jint
     {
         return internal->GetVersion(this);
     }
-    OMElysiaKlass *DefineClass(const char *name, OMElysiaNativeHandle *loader, const jbyte *buf)
+    auto DefineClass(const char *name, OMElysiaNativeHandle *loader, const jbyte *buf) -> OMElysiaKlass *
     {
         return internal->DefineClass(this, name, loader, buf);
     }
-    OMElysiaKlass *FindClass(const char *name)
+    auto FindClass(const char *name) -> OMElysiaKlass *
     {
         return internal->FindClass(this, name);
     }
-    OMElysiaMethod *FromReflectedMethod(OMElysiaNativeHandle *method)
+    auto FromReflectedMethod(OMElysiaNativeHandle *method) -> OMElysiaMethod *
     {
         return internal->FromReflectedMethod(this, method);
     }
-    OMElysiaField *FromReflectedField(OMElysiaNativeHandle *field)
+    auto FromReflectedField(OMElysiaNativeHandle *field) -> OMElysiaField *
     {
         return internal->FromReflectedField(this, field);
     }
-    OMElysiaOop *ToReflectedMethod(OMElysiaKlass *klass, OMElysiaMethod *method, jboolean isStatic)
+    auto ToReflectedMethod(OMElysiaKlass *klass, OMElysiaMethod *method, jboolean isStatic) -> OMElysiaOop *
     {
         return internal->ToReflectedMethod(this, klass, method, isStatic);
     }
-    OMElysiaKlass *GetSuperclass(OMElysiaKlass *klass)
+    auto GetSuperclass(OMElysiaKlass *klass) -> OMElysiaKlass *
     {
         return internal->GetSuperclass(this, klass);
     }
-    jboolean IsAssignableFrom(OMElysiaKlass *sub, OMElysiaKlass *sup)
+    auto IsAssignableFrom(OMElysiaKlass *sub, OMElysiaKlass *sup) -> jboolean
     {
         return internal->IsAssignableFrom(this, sub, sup);
     }
-    OMElysiaNativeHandle *ToReflectedField(OMElysiaKlass *klass, OMElysiaField *field, jboolean isStatic)
+    auto ToReflectedField(OMElysiaKlass *klass, OMElysiaField *field, jboolean isStatic) -> OMElysiaNativeHandle *
     {
         return internal->ToReflectedField(this, klass, field, isStatic);
     }
-    jint Throw(OMElysiaNativeHandle *obj)
+    auto Throw(OMElysiaNativeHandle *obj) -> jint
     {
         return internal->Throw(this, obj);
     }
-    jint ThrowNew(OMElysiaKlass *clazz, const char *msg)
+    auto ThrowNew(OMElysiaKlass *clazz, const char *msg) -> jint
     {
         return internal->ThrowNew(this, clazz, msg);
     }
-    OMElysiaNativeHandle *ExceptionOccurred()
+    auto ExceptionOccurred() -> OMElysiaNativeHandle *
     {
         return internal->ExceptionOccurred(this);
     }
@@ -528,15 +528,15 @@ struct OMElysiaJNIEnv
     {
         internal->FatalError(this, msg);
     }
-    jint PushLocalFrame(jint capacity)
+    auto PushLocalFrame(jint capacity) -> jint
     {
         return internal->PushLocalFrame(this, capacity);
     }
-    OMElysiaNativeHandle *PopLocalFrame(OMElysiaNativeHandle *result)
+    auto PopLocalFrame(OMElysiaNativeHandle *result) -> OMElysiaNativeHandle *
     {
         return internal->PopLocalFrame(this, result);
     }
-    OMElysiaNativeHandle *NewGlobalRef(OMElysiaNativeHandle *lobj)
+    auto NewGlobalRef(OMElysiaNativeHandle *lobj) -> OMElysiaNativeHandle *
     {
         return internal->NewGlobalRef(this, lobj);
     }
@@ -548,155 +548,167 @@ struct OMElysiaJNIEnv
     {
         internal->DeleteLocalRef(this, obj);
     }
-    jboolean IsSameObject(OMElysiaNativeHandle *obj1, OMElysiaNativeHandle *obj2)
+    auto IsSameObject(OMElysiaNativeHandle *obj1, OMElysiaNativeHandle *obj2) -> jboolean
     {
         return internal->IsSameObject(this, obj1, obj2);
     }
-    OMElysiaNativeHandle *NewLocalRef(OMElysiaNativeHandle *ref)
+    auto NewLocalRef(OMElysiaNativeHandle *ref) -> OMElysiaNativeHandle *
     {
         return internal->NewLocalRef(this, ref);
     }
-    jint EnsureLocalCapacity(jint capacity)
+    auto EnsureLocalCapacity(jint capacity) -> jint
     {
         return internal->EnsureLocalCapacity(this, capacity);
     }
-    OMElysiaNativeHandle *AllocObject(OMElysiaKlass *clazz)
+    auto AllocObject(OMElysiaKlass *clazz) -> OMElysiaNativeHandle *
     {
         return internal->AllocObject(this, clazz);
     }
     template <typename... Ts>
-    OMElysiaNativeHandle *NewObject(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args)
+    auto NewObject(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args) -> OMElysiaNativeHandle *
     {
         return internal->NewObject(this, clazz, methodID, std::forward<Ts>(args)...);
     }
-    OMElysiaNativeHandle *NewObjectV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args)
+    auto NewObjectV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args) -> OMElysiaNativeHandle *
     {
         return internal->NewObjectV(this, clazz, methodID, args);
     }
-    OMElysiaNativeHandle *NewObjectA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto NewObjectA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+        -> OMElysiaNativeHandle *
     {
         return internal->NewObjectA(this, clazz, methodID, args);
     }
-    OMElysiaKlass *GetObjectClass(OMElysiaNativeHandle *obj)
+    auto GetObjectClass(OMElysiaNativeHandle *obj) -> OMElysiaKlass *
     {
         return internal->GetObjectClass(this, obj);
     }
-    jboolean IsInstanceOf(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz)
+    auto IsInstanceOf(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz) -> jboolean
     {
         return internal->IsInstanceOf(this, obj, clazz);
     }
-    OMElysiaMethod *GetMethodID(OMElysiaKlass *clazz, const char *name, const char *sig)
+    auto GetMethodID(OMElysiaKlass *clazz, const char *name, const char *sig) -> OMElysiaMethod *
     {
         return internal->GetMethodID(this, clazz, name, sig);
     }
     template <typename... Ts>
-    OMElysiaNativeHandle *CallObjectMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args)
+    auto CallObjectMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args) -> OMElysiaNativeHandle *
     {
         return internal->CallObjectMethod(this, obj, methodID, std::forward<Ts>(args)...);
     }
-    OMElysiaNativeHandle *CallObjectMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args)
+    auto CallObjectMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args) -> OMElysiaNativeHandle *
     {
         return internal->CallObjectMethodV(this, obj, methodID, args);
     }
-    OMElysiaNativeHandle *CallObjectMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID,
-                                            const OMElysiaNativeValue *args)
+    auto CallObjectMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+        -> OMElysiaNativeHandle *
     {
         return internal->CallObjectMethodA(this, obj, methodID, args);
     }
     template <typename... Ts>
-    jboolean CallBooleanMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args)
+    auto CallBooleanMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args) -> jboolean
     {
         return internal->CallBooleanMethod(this, obj, methodID, std::forward<Ts>(args)...);
     }
-    jboolean CallBooleanMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args)
+    auto CallBooleanMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args) -> jboolean
     {
         return internal->CallBooleanMethodV(this, obj, methodID, args);
     }
-    jboolean CallBooleanMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallBooleanMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+        -> jboolean
     {
         return internal->CallBooleanMethodA(this, obj, methodID, args);
     }
-    template <typename... Ts> jbyte CallByteMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args)
+    template <typename... Ts>
+    auto CallByteMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args) -> jbyte
     {
         return internal->CallByteMethod(this, obj, methodID, std::forward<Ts>(args)...);
     }
-    jbyte CallByteMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args)
+    auto CallByteMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args) -> jbyte
     {
         return internal->CallByteMethodV(this, obj, methodID, args);
     }
-    jbyte CallByteMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallByteMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args) -> jbyte
     {
         return internal->CallByteMethodA(this, obj, methodID, args);
     }
-    template <typename... Ts> jchar CallCharMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args)
+    template <typename... Ts>
+    auto CallCharMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args) -> jchar
     {
         return internal->CallCharMethod(this, obj, methodID, std::forward<Ts>(args)...);
     }
-    jchar CallCharMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args)
+    auto CallCharMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args) -> jchar
     {
         return internal->CallCharMethodV(this, obj, methodID, args);
     }
-    jchar CallCharMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallCharMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args) -> jchar
     {
         return internal->CallCharMethodA(this, obj, methodID, args);
     }
-    template <typename... Ts> jshort CallShortMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args)
+    template <typename... Ts>
+    auto CallShortMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args) -> jshort
     {
         return internal->CallShortMethod(this, obj, methodID, std::forward<Ts>(args)...);
     }
-    jshort CallShortMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args)
+    auto CallShortMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args) -> jshort
     {
         return internal->CallShortMethodV(this, obj, methodID, args);
     }
-    jshort CallShortMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallShortMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+        -> jshort
     {
         return internal->CallShortMethodA(this, obj, methodID, args);
     }
-    template <typename... Ts> jint CallIntMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args)
+    template <typename... Ts>
+    auto CallIntMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args) -> jint
     {
         return internal->CallIntMethod(this, obj, methodID, std::forward<Ts>(args)...);
     }
-    jint CallIntMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args)
+    auto CallIntMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args) -> jint
     {
         return internal->CallIntMethodV(this, obj, methodID, args);
     }
-    jint CallIntMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallIntMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args) -> jint
     {
         return internal->CallIntMethodA(this, obj, methodID, args);
     }
-    template <typename... Ts> jlong CallLongMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args)
+    template <typename... Ts>
+    auto CallLongMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args) -> jlong
     {
         return internal->CallLongMethod(this, obj, methodID, std::forward<Ts>(args)...);
     }
-    jlong CallLongMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args)
+    auto CallLongMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args) -> jlong
     {
         return internal->CallLongMethodV(this, obj, methodID, args);
     }
-    jlong CallLongMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallLongMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args) -> jlong
     {
         return internal->CallLongMethodA(this, obj, methodID, args);
     }
-    template <typename... Ts> jfloat CallFloatMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args)
+    template <typename... Ts>
+    auto CallFloatMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args) -> jfloat
     {
         return internal->CallFloatMethod(this, obj, methodID, std::forward<Ts>(args)...);
     }
-    jfloat CallFloatMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args)
+    auto CallFloatMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args) -> jfloat
     {
         return internal->CallFloatMethodV(this, obj, methodID, args);
     }
-    jfloat CallFloatMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallFloatMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+        -> jfloat
     {
         return internal->CallFloatMethodA(this, obj, methodID, args);
     }
-    template <typename... Ts> jdouble CallDoubleMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args)
+    template <typename... Ts>
+    auto CallDoubleMethod(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, Ts... args) -> jdouble
     {
         return internal->CallDoubleMethod(this, obj, methodID, std::forward<Ts>(args)...);
     }
-    jdouble CallDoubleMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args)
+    auto CallDoubleMethodV(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, va_list args) -> jdouble
     {
         return internal->CallDoubleMethodV(this, obj, methodID, args);
     }
-    jdouble CallDoubleMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallDoubleMethodA(OMElysiaNativeHandle *obj, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+        -> jdouble
     {
         return internal->CallDoubleMethodA(this, obj, methodID, args);
     }
@@ -713,145 +725,146 @@ struct OMElysiaJNIEnv
         internal->CallVoidMethodA(this, obj, methodID, args);
     }
     template <typename... Ts>
-    OMElysiaNativeHandle *CallNonvirtualObjectMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz,
-                                                     OMElysiaMethod *methodID, Ts... args)
+    auto CallNonvirtualObjectMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                    Ts... args) -> OMElysiaNativeHandle *
     {
         return internal->CallNonvirtualObjectMethod(this, obj, clazz, methodID, std::forward<Ts>(args)...);
     }
-    OMElysiaNativeHandle *CallNonvirtualObjectMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz,
-                                                      OMElysiaMethod *methodID, va_list args)
+    auto CallNonvirtualObjectMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                     va_list args) -> OMElysiaNativeHandle *
     {
         return internal->CallNonvirtualObjectMethodV(this, obj, clazz, methodID, args);
     }
-    OMElysiaNativeHandle *CallNonvirtualObjectMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz,
-                                                      OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallNonvirtualObjectMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                     const OMElysiaNativeValue *args) -> OMElysiaNativeHandle *
     {
         return internal->CallNonvirtualObjectMethodA(this, obj, clazz, methodID, args);
     }
     template <typename... Ts>
-    jboolean CallNonvirtualBooleanMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                         Ts... args)
+    auto CallNonvirtualBooleanMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                     Ts... args) -> jboolean
     {
         return internal->CallNonvirtualBooleanMethod(this, obj, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jboolean CallNonvirtualBooleanMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                          va_list args)
+    auto CallNonvirtualBooleanMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                      va_list args) -> jboolean
     {
         return internal->CallNonvirtualBooleanMethodV(this, obj, clazz, methodID, args);
     }
-    jboolean CallNonvirtualBooleanMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                          const OMElysiaNativeValue *args)
+    auto CallNonvirtualBooleanMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                      const OMElysiaNativeValue *args) -> jboolean
     {
         return internal->CallNonvirtualBooleanMethodA(this, obj, clazz, methodID, args);
     }
     template <typename... Ts>
-    jbyte CallNonvirtualByteMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                   Ts... args)
+    auto CallNonvirtualByteMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args)
+        -> jbyte
     {
         return internal->CallNonvirtualByteMethod(this, obj, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jbyte CallNonvirtualByteMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                    va_list args)
+    auto CallNonvirtualByteMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                   va_list args) -> jbyte
     {
         return internal->CallNonvirtualByteMethodV(this, obj, clazz, methodID, args);
     }
-    jbyte CallNonvirtualByteMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                    const OMElysiaNativeValue *args)
+    auto CallNonvirtualByteMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                   const OMElysiaNativeValue *args) -> jbyte
     {
         return internal->CallNonvirtualByteMethodA(this, obj, clazz, methodID, args);
     }
     template <typename... Ts>
-    jchar CallNonvirtualCharMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                   Ts... args)
+    auto CallNonvirtualCharMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args)
+        -> jchar
     {
         return internal->CallNonvirtualCharMethod(this, obj, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jchar CallNonvirtualCharMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                    va_list args)
+    auto CallNonvirtualCharMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                   va_list args) -> jchar
     {
         return internal->CallNonvirtualCharMethodV(this, obj, clazz, methodID, args);
     }
-    jchar CallNonvirtualCharMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                    const OMElysiaNativeValue *args)
+    auto CallNonvirtualCharMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                   const OMElysiaNativeValue *args) -> jchar
     {
         return internal->CallNonvirtualCharMethodA(this, obj, clazz, methodID, args);
     }
     template <typename... Ts>
-    jshort CallNonvirtualShortMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                     Ts... args)
+    auto CallNonvirtualShortMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                   Ts... args) -> jshort
     {
         return internal->CallNonvirtualShortMethod(this, obj, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jshort CallNonvirtualShortMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                      va_list args)
+    auto CallNonvirtualShortMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                    va_list args) -> jshort
     {
         return internal->CallNonvirtualShortMethodV(this, obj, clazz, methodID, args);
     }
-    jshort CallNonvirtualShortMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                      const OMElysiaNativeValue *args)
+    auto CallNonvirtualShortMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                    const OMElysiaNativeValue *args) -> jshort
     {
         return internal->CallNonvirtualShortMethodA(this, obj, clazz, methodID, args);
     }
     template <typename... Ts>
-    jint CallNonvirtualIntMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args)
+    auto CallNonvirtualIntMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args)
+        -> jint
     {
         return internal->CallNonvirtualIntMethod(this, obj, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jint CallNonvirtualIntMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                  va_list args)
+    auto CallNonvirtualIntMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                  va_list args) -> jint
     {
         return internal->CallNonvirtualIntMethodV(this, obj, clazz, methodID, args);
     }
-    jint CallNonvirtualIntMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                  const OMElysiaNativeValue *args)
+    auto CallNonvirtualIntMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                  const OMElysiaNativeValue *args) -> jint
     {
         return internal->CallNonvirtualIntMethodA(this, obj, clazz, methodID, args);
     }
     template <typename... Ts>
-    jlong CallNonvirtualLongMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                   Ts... args)
+    auto CallNonvirtualLongMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args)
+        -> jlong
     {
         return internal->CallNonvirtualLongMethod(this, obj, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jlong CallNonvirtualLongMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                    va_list args)
+    auto CallNonvirtualLongMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                   va_list args) -> jlong
     {
         return internal->CallNonvirtualLongMethodV(this, obj, clazz, methodID, args);
     }
-    jlong CallNonvirtualLongMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                    const OMElysiaNativeValue *args)
+    auto CallNonvirtualLongMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                   const OMElysiaNativeValue *args) -> jlong
     {
         return internal->CallNonvirtualLongMethodA(this, obj, clazz, methodID, args);
     }
     template <typename... Ts>
-    jfloat CallNonvirtualFloatMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                     Ts... args)
+    auto CallNonvirtualFloatMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                   Ts... args) -> jfloat
     {
         return internal->CallNonvirtualFloatMethod(this, obj, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jfloat CallNonvirtualFloatMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                      va_list args)
+    auto CallNonvirtualFloatMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                    va_list args) -> jfloat
     {
         return internal->CallNonvirtualFloatMethodV(this, obj, clazz, methodID, args);
     }
-    jfloat CallNonvirtualFloatMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                      const OMElysiaNativeValue *args)
+    auto CallNonvirtualFloatMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                    const OMElysiaNativeValue *args) -> jfloat
     {
         return internal->CallNonvirtualFloatMethodA(this, obj, clazz, methodID, args);
     }
     template <typename... Ts>
-    jdouble CallNonvirtualDoubleMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                       Ts... args)
+    auto CallNonvirtualDoubleMethod(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                    Ts... args) -> jdouble
     {
         return internal->CallNonvirtualDoubleMethod(this, obj, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jdouble CallNonvirtualDoubleMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                        va_list args)
+    auto CallNonvirtualDoubleMethodV(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                     va_list args) -> jdouble
     {
         return internal->CallNonvirtualDoubleMethodV(this, obj, clazz, methodID, args);
     }
-    jdouble CallNonvirtualDoubleMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                        const OMElysiaNativeValue *args)
+    auto CallNonvirtualDoubleMethodA(OMElysiaNativeHandle *obj, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
+                                     const OMElysiaNativeValue *args) -> jdouble
     {
         return internal->CallNonvirtualDoubleMethodA(this, obj, clazz, methodID, args);
     }
@@ -870,43 +883,43 @@ struct OMElysiaJNIEnv
     {
         internal->CallNonvirtualVoidMethodA(this, obj, clazz, methodID, args);
     }
-    OMElysiaField *GetFieldID(OMElysiaKlass *clazz, const char *name, const char *sig)
+    auto GetFieldID(OMElysiaKlass *clazz, const char *name, const char *sig) -> OMElysiaField *
     {
         return internal->GetFieldID(this, clazz, name, sig);
     }
-    OMElysiaNativeHandle *GetObjectField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID)
+    auto GetObjectField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID) -> OMElysiaNativeHandle *
     {
         return internal->GetObjectField(this, obj, fieldID);
     }
-    jboolean GetBooleanField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID)
+    auto GetBooleanField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID) -> jboolean
     {
         return internal->GetBooleanField(this, obj, fieldID);
     }
-    jbyte GetByteField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID)
+    auto GetByteField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID) -> jbyte
     {
         return internal->GetByteField(this, obj, fieldID);
     }
-    jchar GetCharField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID)
+    auto GetCharField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID) -> jchar
     {
         return internal->GetCharField(this, obj, fieldID);
     }
-    jshort GetShortField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID)
+    auto GetShortField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID) -> jshort
     {
         return internal->GetShortField(this, obj, fieldID);
     }
-    jint GetIntField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID)
+    auto GetIntField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID) -> jint
     {
         return internal->GetIntField(this, obj, fieldID);
     }
-    jlong GetLongField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID)
+    auto GetLongField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID) -> jlong
     {
         return internal->GetLongField(this, obj, fieldID);
     }
-    jfloat GetFloatField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID)
+    auto GetFloatField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID) -> jfloat
     {
         return internal->GetFloatField(this, obj, fieldID);
     }
-    jdouble GetDoubleField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID)
+    auto GetDoubleField(OMElysiaNativeHandle *obj, OMElysiaField *fieldID) -> jdouble
     {
         return internal->GetDoubleField(this, obj, fieldID);
     }
@@ -946,118 +959,129 @@ struct OMElysiaJNIEnv
     {
         internal->SetDoubleField(this, obj, fieldID, val);
     }
-    OMElysiaMethod *GetStaticMethodID(OMElysiaKlass *clazz, const char *name, const char *sig)
+    auto GetStaticMethodID(OMElysiaKlass *clazz, const char *name, const char *sig) -> OMElysiaMethod *
     {
         return internal->GetStaticMethodID(this, clazz, name, sig);
     }
     template <typename... Ts>
-    OMElysiaNativeHandle *CallStaticObjectMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args)
+    auto CallStaticObjectMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args) -> OMElysiaNativeHandle *
     {
         return internal->CallStaticObjectMethod(this, clazz, methodID, std::forward<Ts>(args)...);
     }
-    OMElysiaNativeHandle *CallStaticObjectMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args)
+    auto CallStaticObjectMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args) -> OMElysiaNativeHandle *
     {
         return internal->CallStaticObjectMethodV(this, clazz, methodID, args);
     }
-    OMElysiaNativeHandle *CallStaticObjectMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                                  const OMElysiaNativeValue *args)
+    auto CallStaticObjectMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+        -> OMElysiaNativeHandle *
     {
         return internal->CallStaticObjectMethodA(this, clazz, methodID, args);
     }
     template <typename... Ts>
-    jboolean CallStaticBooleanMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args)
+    auto CallStaticBooleanMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args) -> jboolean
     {
         return internal->CallStaticBooleanMethod(this, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jboolean CallStaticBooleanMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args)
+    auto CallStaticBooleanMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args) -> jboolean
     {
         return internal->CallStaticBooleanMethodV(this, clazz, methodID, args);
     }
-    jboolean CallStaticBooleanMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallStaticBooleanMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+        -> jboolean
     {
         return internal->CallStaticBooleanMethodA(this, clazz, methodID, args);
     }
-    template <typename... Ts> jbyte CallStaticByteMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args)
+    template <typename... Ts>
+    auto CallStaticByteMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args) -> jbyte
     {
         return internal->CallStaticByteMethod(this, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jbyte CallStaticByteMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args)
+    auto CallStaticByteMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args) -> jbyte
     {
         return internal->CallStaticByteMethodV(this, clazz, methodID, args);
     }
-    jbyte CallStaticByteMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallStaticByteMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args) -> jbyte
     {
         return internal->CallStaticByteMethodA(this, clazz, methodID, args);
     }
-    template <typename... Ts> jchar CallStaticCharMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args)
+    template <typename... Ts>
+    auto CallStaticCharMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args) -> jchar
     {
         return internal->CallStaticCharMethod(this, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jchar CallStaticCharMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args)
+    auto CallStaticCharMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args) -> jchar
     {
         return internal->CallStaticCharMethodV(this, clazz, methodID, args);
     }
-    jchar CallStaticCharMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallStaticCharMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args) -> jchar
     {
         return internal->CallStaticCharMethodA(this, clazz, methodID, args);
     }
-    template <typename... Ts> jshort CallStaticShortMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args)
+    template <typename... Ts>
+    auto CallStaticShortMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args) -> jshort
     {
         return internal->CallStaticShortMethod(this, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jshort CallStaticShortMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args)
+    auto CallStaticShortMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args) -> jshort
     {
         return internal->CallStaticShortMethodV(this, clazz, methodID, args);
     }
-    jshort CallStaticShortMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallStaticShortMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+        -> jshort
     {
         return internal->CallStaticShortMethodA(this, clazz, methodID, args);
     }
-    template <typename... Ts> jint CallStaticIntMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args)
+    template <typename... Ts>
+    auto CallStaticIntMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args) -> jint
     {
         return internal->CallStaticIntMethod(this, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jint CallStaticIntMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args)
+    auto CallStaticIntMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args) -> jint
     {
         return internal->CallStaticIntMethodV(this, clazz, methodID, args);
     }
-    jint CallStaticIntMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallStaticIntMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args) -> jint
     {
         return internal->CallStaticIntMethodA(this, clazz, methodID, args);
     }
-    template <typename... Ts> jlong CallStaticLongMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args)
+    template <typename... Ts>
+    auto CallStaticLongMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args) -> jlong
     {
         return internal->CallStaticLongMethod(this, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jlong CallStaticLongMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args)
+    auto CallStaticLongMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args) -> jlong
     {
         return internal->CallStaticLongMethodV(this, clazz, methodID, args);
     }
-    jlong CallStaticLongMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallStaticLongMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args) -> jlong
     {
         return internal->CallStaticLongMethodA(this, clazz, methodID, args);
     }
-    template <typename... Ts> jfloat CallStaticFloatMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args)
+    template <typename... Ts>
+    auto CallStaticFloatMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args) -> jfloat
     {
         return internal->CallStaticFloatMethod(this, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jfloat CallStaticFloatMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args)
+    auto CallStaticFloatMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args) -> jfloat
     {
         return internal->CallStaticFloatMethodV(this, clazz, methodID, args);
     }
-    jfloat CallStaticFloatMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallStaticFloatMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+        -> jfloat
     {
         return internal->CallStaticFloatMethodA(this, clazz, methodID, args);
     }
-    template <typename... Ts> jdouble CallStaticDoubleMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args)
+    template <typename... Ts>
+    auto CallStaticDoubleMethod(OMElysiaKlass *clazz, OMElysiaMethod *methodID, Ts... args) -> jdouble
     {
         return internal->CallStaticDoubleMethod(this, clazz, methodID, std::forward<Ts>(args)...);
     }
-    jdouble CallStaticDoubleMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args)
+    auto CallStaticDoubleMethodV(OMElysiaKlass *clazz, OMElysiaMethod *methodID, va_list args) -> jdouble
     {
         return internal->CallStaticDoubleMethodV(this, clazz, methodID, args);
     }
-    jdouble CallStaticDoubleMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+    auto CallStaticDoubleMethodA(OMElysiaKlass *clazz, OMElysiaMethod *methodID, const OMElysiaNativeValue *args)
+        -> jdouble
     {
         return internal->CallStaticDoubleMethodA(this, clazz, methodID, args);
     }
@@ -1073,43 +1097,43 @@ struct OMElysiaJNIEnv
     {
         internal->CallStaticVoidMethodA(this, cls, methodID, args);
     }
-    OMElysiaField *GetStaticFieldID(OMElysiaKlass *clazz, const char *name, const char *sig)
+    auto GetStaticFieldID(OMElysiaKlass *clazz, const char *name, const char *sig) -> OMElysiaField *
     {
         return internal->GetStaticFieldID(this, clazz, name, sig);
     }
-    OMElysiaNativeHandle *GetStaticObjectField(OMElysiaKlass *clazz, OMElysiaField *fieldID)
+    auto GetStaticObjectField(OMElysiaKlass *clazz, OMElysiaField *fieldID) -> OMElysiaNativeHandle *
     {
         return internal->GetStaticObjectField(this, clazz, fieldID);
     }
-    jboolean GetStaticBooleanField(OMElysiaKlass *clazz, OMElysiaField *fieldID)
+    auto GetStaticBooleanField(OMElysiaKlass *clazz, OMElysiaField *fieldID) -> jboolean
     {
         return internal->GetStaticBooleanField(this, clazz, fieldID);
     }
-    jbyte GetStaticByteField(OMElysiaKlass *clazz, OMElysiaField *fieldID)
+    auto GetStaticByteField(OMElysiaKlass *clazz, OMElysiaField *fieldID) -> jbyte
     {
         return internal->GetStaticByteField(this, clazz, fieldID);
     }
-    jchar GetStaticCharField(OMElysiaKlass *clazz, OMElysiaField *fieldID)
+    auto GetStaticCharField(OMElysiaKlass *clazz, OMElysiaField *fieldID) -> jchar
     {
         return internal->GetStaticCharField(this, clazz, fieldID);
     }
-    jshort GetStaticShortField(OMElysiaKlass *clazz, OMElysiaField *fieldID)
+    auto GetStaticShortField(OMElysiaKlass *clazz, OMElysiaField *fieldID) -> jshort
     {
         return internal->GetStaticShortField(this, clazz, fieldID);
     }
-    jint GetStaticIntField(OMElysiaKlass *clazz, OMElysiaField *fieldID)
+    auto GetStaticIntField(OMElysiaKlass *clazz, OMElysiaField *fieldID) -> jint
     {
         return internal->GetStaticIntField(this, clazz, fieldID);
     }
-    jlong GetStaticLongField(OMElysiaKlass *clazz, OMElysiaField *fieldID)
+    auto GetStaticLongField(OMElysiaKlass *clazz, OMElysiaField *fieldID) -> jlong
     {
         return internal->GetStaticLongField(this, clazz, fieldID);
     }
-    jfloat GetStaticFloatField(OMElysiaKlass *clazz, OMElysiaField *fieldID)
+    auto GetStaticFloatField(OMElysiaKlass *clazz, OMElysiaField *fieldID) -> jfloat
     {
         return internal->GetStaticFloatField(this, clazz, fieldID);
     }
-    jdouble GetStaticDoubleField(OMElysiaKlass *clazz, OMElysiaField *fieldID)
+    auto GetStaticDoubleField(OMElysiaKlass *clazz, OMElysiaField *fieldID) -> jdouble
     {
         return internal->GetStaticDoubleField(this, clazz, fieldID);
     }
@@ -1149,15 +1173,15 @@ struct OMElysiaJNIEnv
     {
         internal->SetStaticDoubleField(this, clazz, fieldID, value);
     }
-    OMElysiaNativeHandle *NewString(const jchar *unicode, jsize len)
+    auto NewString(const jchar *unicode, jsize len) -> OMElysiaNativeHandle *
     {
         return internal->NewString(this, unicode, len);
     }
-    jsize GetStringLength(OMElysiaNativeHandle *str)
+    auto GetStringLength(OMElysiaNativeHandle *str) -> jsize
     {
         return internal->GetStringLength(this, str);
     }
-    const jchar *GetStringChars(OMElysiaNativeHandle *str, jboolean *isCopy)
+    auto GetStringChars(OMElysiaNativeHandle *str, jboolean *isCopy) -> const jchar *
     {
         return internal->GetStringChars(this, str, isCopy);
     }
@@ -1165,15 +1189,15 @@ struct OMElysiaJNIEnv
     {
         internal->ReleaseStringChars(this, str, chars);
     }
-    OMElysiaNativeHandle *NewStringUTF(const char *utf)
+    auto NewStringUTF(const char *utf) -> OMElysiaNativeHandle *
     {
         return internal->NewStringUTF(this, utf);
     }
-    jsize GetStringUTFLength(OMElysiaNativeHandle *str)
+    auto GetStringUTFLength(OMElysiaNativeHandle *str) -> jsize
     {
         return internal->GetStringUTFLength(this, str);
     }
-    const char *GetStringUTFChars(OMElysiaNativeHandle *str, jboolean *isCopy)
+    auto GetStringUTFChars(OMElysiaNativeHandle *str, jboolean *isCopy) -> const char *
     {
         return internal->GetStringUTFChars(this, str, isCopy);
     }
@@ -1181,15 +1205,15 @@ struct OMElysiaJNIEnv
     {
         internal->ReleaseStringUTFChars(this, str, chars);
     }
-    jsize GetArrayLength(OMElysiaNativeHandle *array)
+    auto GetArrayLength(OMElysiaNativeHandle *array) -> jsize
     {
         return internal->GetArrayLength(this, array);
     }
-    OMElysiaNativeHandle *NewObjectArray(jsize len, OMElysiaKlass *clazz, OMElysiaNativeHandle *init)
+    auto NewObjectArray(jsize len, OMElysiaKlass *clazz, OMElysiaNativeHandle *init) -> OMElysiaNativeHandle *
     {
         return internal->NewObjectArray(this, len, clazz, init);
     }
-    OMElysiaNativeHandle *GetObjectArrayElement(OMElysiaNativeHandle *array, jsize index)
+    auto GetObjectArrayElement(OMElysiaNativeHandle *array, jsize index) -> OMElysiaNativeHandle *
     {
         return internal->GetObjectArrayElement(this, array, index);
     }
@@ -1197,67 +1221,67 @@ struct OMElysiaJNIEnv
     {
         internal->SetObjectArrayElement(this, array, index, val);
     }
-    OMElysiaNativeHandle *NewBooleanArray(jsize len)
+    auto NewBooleanArray(jsize len) -> OMElysiaNativeHandle *
     {
         return internal->NewBooleanArray(this, len);
     }
-    OMElysiaNativeHandle *NewByteArray(jsize len)
+    auto NewByteArray(jsize len) -> OMElysiaNativeHandle *
     {
         return internal->NewByteArray(this, len);
     }
-    OMElysiaNativeHandle *NewCharArray(jsize len)
+    auto NewCharArray(jsize len) -> OMElysiaNativeHandle *
     {
         return internal->NewCharArray(this, len);
     }
-    OMElysiaNativeHandle *NewShortArray(jsize len)
+    auto NewShortArray(jsize len) -> OMElysiaNativeHandle *
     {
         return internal->NewShortArray(this, len);
     }
-    OMElysiaNativeHandle *NewIntArray(jsize len)
+    auto NewIntArray(jsize len) -> OMElysiaNativeHandle *
     {
         return internal->NewIntArray(this, len);
     }
-    OMElysiaNativeHandle *NewLongArray(jsize len)
+    auto NewLongArray(jsize len) -> OMElysiaNativeHandle *
     {
         return internal->NewLongArray(this, len);
     }
-    OMElysiaNativeHandle *NewFloatArray(jsize len)
+    auto NewFloatArray(jsize len) -> OMElysiaNativeHandle *
     {
         return internal->NewFloatArray(this, len);
     }
-    OMElysiaNativeHandle *NewDoubleArray(jsize len)
+    auto NewDoubleArray(jsize len) -> OMElysiaNativeHandle *
     {
         return internal->NewDoubleArray(this, len);
     }
-    jboolean *GetBooleanArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy)
+    auto GetBooleanArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy) -> jboolean *
     {
         return internal->GetBooleanArrayElements(this, array, isCopy);
     }
-    jbyte *GetByteArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy)
+    auto GetByteArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy) -> jbyte *
     {
         return internal->GetByteArrayElements(this, array, isCopy);
     }
-    jchar *GetCharArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy)
+    auto GetCharArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy) -> jchar *
     {
         return internal->GetCharArrayElements(this, array, isCopy);
     }
-    jshort *GetShortArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy)
+    auto GetShortArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy) -> jshort *
     {
         return internal->GetShortArrayElements(this, array, isCopy);
     }
-    jint *GetIntArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy)
+    auto GetIntArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy) -> jint *
     {
         return internal->GetIntArrayElements(this, array, isCopy);
     }
-    jlong *GetLongArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy)
+    auto GetLongArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy) -> jlong *
     {
         return internal->GetLongArrayElements(this, array, isCopy);
     }
-    jfloat *GetFloatArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy)
+    auto GetFloatArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy) -> jfloat *
     {
         return internal->GetFloatArrayElements(this, array, isCopy);
     }
-    jdouble *GetDoubleArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy)
+    auto GetDoubleArrayElements(OMElysiaNativeHandle *array, jboolean *isCopy) -> jdouble *
     {
         return internal->GetDoubleArrayElements(this, array, isCopy);
     }
@@ -1357,23 +1381,23 @@ struct OMElysiaJNIEnv
     {
         internal->SetDoubleArrayRegion(this, array, start, len, buf);
     }
-    jint RegisterNatives(OMElysiaKlass *clazz, const OMElysiaNativeMethod *methods, jint nMethods)
+    auto RegisterNatives(OMElysiaKlass *clazz, const OMElysiaNativeMethod *methods, jint nMethods) -> jint
     {
         return internal->RegisterNatives(this, clazz, methods, nMethods);
     }
-    jint UnregisterNatives(OMElysiaKlass *clazz)
+    auto UnregisterNatives(OMElysiaKlass *clazz) -> jint
     {
         return internal->UnregisterNatives(this, clazz);
     }
-    jint MonitorEnter(OMElysiaNativeHandle *obj)
+    auto MonitorEnter(OMElysiaNativeHandle *obj) -> jint
     {
         return internal->MonitorEnter(this, obj);
     }
-    jint MonitorExit(OMElysiaNativeHandle *obj)
+    auto MonitorExit(OMElysiaNativeHandle *obj) -> jint
     {
         return internal->MonitorExit(this, obj);
     }
-    jint GetJavaVM(void **vm)
+    auto GetJavaVM(void **vm) -> jint
     {
         return internal->GetJavaVM(this, vm);
     }
@@ -1385,7 +1409,7 @@ struct OMElysiaJNIEnv
     {
         internal->GetStringUTFRegion(this, str, start, len, buf);
     }
-    void *GetPrimitiveArrayCritical(OMElysiaNativeHandle *array, jboolean *isCopy)
+    auto GetPrimitiveArrayCritical(OMElysiaNativeHandle *array, jboolean *isCopy) -> void *
     {
         return internal->GetPrimitiveArrayCritical(this, array, isCopy);
     }
@@ -1393,7 +1417,7 @@ struct OMElysiaJNIEnv
     {
         internal->ReleasePrimitiveArrayCritical(this, array, carray, mode);
     }
-    const jchar *GetStringCritical(OMElysiaNativeHandle *string, jboolean *isCopy)
+    auto GetStringCritical(OMElysiaNativeHandle *string, jboolean *isCopy) -> const jchar *
     {
         return internal->GetStringCritical(this, string, isCopy);
     }
@@ -1401,7 +1425,7 @@ struct OMElysiaJNIEnv
     {
         internal->ReleaseStringCritical(this, string, cstring);
     }
-    OMElysiaNativeHandle *NewWeakGlobalRef(OMElysiaNativeHandle *obj)
+    auto NewWeakGlobalRef(OMElysiaNativeHandle *obj) -> OMElysiaNativeHandle *
     {
         return internal->NewWeakGlobalRef(this, obj);
     }
@@ -1409,31 +1433,31 @@ struct OMElysiaJNIEnv
     {
         internal->DeleteWeakGlobalRef(this, ref);
     }
-    jboolean ExceptionCheck()
+    auto ExceptionCheck() -> jboolean
     {
         return internal->ExceptionCheck(this);
     }
-    OMElysiaNativeHandle *NewDirectByteBuffer(void *address, jlong capacity)
+    auto NewDirectByteBuffer(void *address, jlong capacity) -> OMElysiaNativeHandle *
     {
         return internal->NewDirectByteBuffer(this, address, capacity);
     }
-    void *GetDirectBufferAddress(OMElysiaNativeHandle *buf)
+    auto GetDirectBufferAddress(OMElysiaNativeHandle *buf) -> void *
     {
         return internal->GetDirectBufferAddress(this, buf);
     }
-    jlong GetDirectBufferCapacity(OMElysiaNativeHandle *buf)
+    auto GetDirectBufferCapacity(OMElysiaNativeHandle *buf) -> jlong
     {
         return internal->GetDirectBufferCapacity(this, buf);
     }
-    jint GetObjectRefType(OMElysiaNativeHandle *obj)
+    auto GetObjectRefType(OMElysiaNativeHandle *obj) -> jint
     {
         return internal->GetObjectRefType(this, obj);
     }
-    OMElysiaNativeHandle *GetModule(OMElysiaKlass *clazz)
+    auto GetModule(OMElysiaKlass *clazz) -> OMElysiaNativeHandle *
     {
         return internal->GetModule(this, clazz);
     }
-    jboolean IsVirtualThread(OMElysiaNativeHandle *obj)
+    auto IsVirtualThread(OMElysiaNativeHandle *obj) -> jboolean
     {
         return internal->IsVirtualThread(this, obj);
     }

@@ -15,8 +15,8 @@ namespace openminecraft::vm::elysia::impl
 {
 extern "C"
 {
-    static OMElysiaNativeHandle *getPrimitiveClass(OMElysiaJNIEnv *env, OMElysiaKlass *klass,
-                                                   OMElysiaNativeHandle *name)
+    static auto getPrimitiveClass(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *name)
+        -> OMElysiaNativeHandle *
     {
         auto nn = env->GetStringUTFChars(name, nullptr);
         auto k2 = env->FindClass(nn);
@@ -24,13 +24,14 @@ extern "C"
         return createTempHandle(k2->mirror);
     }
 
-    static jboolean desiredAssertionStatus0(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *klasshnd)
+    static auto desiredAssertionStatus0(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *klasshnd)
+        -> jboolean
     {
         return true;
     }
 
-    static OMElysiaNativeHandle *forName0(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *name,
-                                          jboolean b, OMElysiaNativeHandle *klassloader, OMElysiaNativeHandle *loadcls)
+    static auto forName0(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *name, jboolean b,
+                         OMElysiaNativeHandle *klassloader, OMElysiaNativeHandle *loadcls) -> OMElysiaNativeHandle *
     {
         auto kld = klass->klassloader;
         while (kld)
@@ -64,10 +65,12 @@ extern "C"
         throw std::logic_error("klassloader not found");
     }
 
-    static OMElysiaNativeHandle *getDeclaredFields0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass, bool publicOnly)
+    static auto getDeclaredFields0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass, bool publicOnly)
+        -> OMElysiaNativeHandle *
     {
         auto kls = env->FindClass("java/lang/Class");
-        auto v = ((OMElysiaKlass *)(env->GetLongField(klass, env->GetFieldID(kls, "<ptr>", "J"))))->toInstance();
+        auto v = reinterpret_cast<OMElysiaKlass *>(env->GetLongField(klass, env->GetFieldID(kls, "<ptr>", "J")))
+                     ->toInstance();
         auto fldkls = env->FindClass("java/lang/reflect/Field");
         auto result = env->NewObjectArray(v->fieldCount, fldkls, nullptr);
         for (int i = 0; i < v->fieldCount; i++)
@@ -81,7 +84,7 @@ extern "C"
 
             auto fldobj = env->AllocObject(fldkls);
             env->SetLongField(fldobj, env->GetFieldID(env->FindClass("java/lang/reflect/Field"), "<ptr>", "J"),
-                              (jlong)&v->fields[i]);
+                              reinterpret_cast<jlong>(&v->fields[i]));
             env->SetObjectField(fldobj, env->GetFieldID(fldkls, "clazz", "Ljava/lang/Class;"),
                                 env->internal->elysium->executor->recordLocalRef(v->mirror));
             env->SetObjectField(fldobj, env->GetFieldID(fldkls, "name", "Ljava/lang/String;"),
@@ -96,34 +99,35 @@ extern "C"
         return result;
     }
 
-    static jboolean isPrimitive(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls)
+    static auto isPrimitive(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls) -> jboolean
     {
-        return ((OMElysiaKlass *)env->GetLongField(kls,
-                                                   env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")))
+        return reinterpret_cast<OMElysiaKlass *>(
+                   env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")))
             ->isPrimitive();
     }
 
-    static jboolean isInterface(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls)
+    static auto isInterface(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls) -> jboolean
     {
-        auto k =
-            ((OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        auto k = reinterpret_cast<OMElysiaKlass *>(
+            env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
         return k->isInstance() && (k->toInstance()->accessFlag & JVM_Acc_Interface);
     }
 
-    static jboolean isAssignableFrom(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls, OMElysiaNativeHandle *klsother)
+    static auto isAssignableFrom(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls, OMElysiaNativeHandle *klsother)
+        -> jboolean
     {
-        auto kk =
-            ((OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
-        auto kkother = ((OMElysiaKlass *)env->GetLongField(
-            klsother, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        auto kk = reinterpret_cast<OMElysiaKlass *>(
+            env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        auto kkother = reinterpret_cast<OMElysiaKlass *>(
+            env->GetLongField(klsother, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
         return kkother->inherits(kk);
     }
 
-    static OMElysiaNativeHandle *getDeclaredConstructors0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls,
-                                                          bool publicOnly)
+    static auto getDeclaredConstructors0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls, bool publicOnly)
+        -> OMElysiaNativeHandle *
     {
-        auto kk =
-            ((OMElysiaKlass *)env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        auto kk = reinterpret_cast<OMElysiaKlass *>(
+            env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
         auto ctkk = env->FindClass("java/lang/reflect/Constructor");
         std::vector<OMElysiaNativeHandle *> hnds;
         for (int i = 0; i < kk->methodCount; i++)
@@ -137,7 +141,7 @@ extern "C"
                 auto kns = env->AllocObject(ctkk);
 
                 env->SetLongField(kns, env->GetFieldID(env->FindClass("java/lang/reflect/Constructor"), "<ptr>", "J"),
-                                  (jlong)&kk->methods[i]);
+                                  reinterpret_cast<jlong>(&kk->methods[i]));
                 env->SetObjectField(kns, env->GetFieldID(ctkk, "clazz", "Ljava/lang/Class;"),
                                     env->internal->elysium->executor->recordLocalRef(kk->mirror));
                 env->SetIntField(kns, env->GetFieldID(ctkk, "slot", "I"), i);
@@ -178,39 +182,39 @@ extern "C"
         return ctarr;
     }
 
-    static jint getModifiers(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    static auto getModifiers(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) -> jint
     {
-        return ((OMElysiaKlass *)env->GetLongField(hnd,
-                                                   env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")))
+        return reinterpret_cast<OMElysiaKlass *>(
+                   env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")))
             ->accessFlag;
     }
 
-    static OMElysiaNativeHandle *getSuperclass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    static auto getSuperclass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) -> OMElysiaNativeHandle *
     {
-        auto ls =
-            ((OMElysiaKlass *)env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")))
-                ->superClass;
+        auto ls = reinterpret_cast<OMElysiaKlass *>(
+                      env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")))
+                      ->superClass;
         return createTempHandle(ls ? ls->mirror : nullptr);
     }
 
-    static jboolean isArray(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    static auto isArray(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) -> jboolean
     {
-        auto kls =
-            ((OMElysiaKlass *)env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        auto kls = reinterpret_cast<OMElysiaKlass *>(
+            env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
         return kls->isArray();
     }
 
-    static OMElysiaNativeHandle *getComponentType(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    static auto getComponentType(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) -> OMElysiaNativeHandle *
     {
-        auto kls =
-            ((OMElysiaKlass *)env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        auto kls = reinterpret_cast<OMElysiaKlass *>(
+            env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
         return kls->isArray() ? createTempHandle(kls->toArray()->lowerDim->mirror) : nullptr;
     }
 
-    static OMElysiaNativeHandle *getEnclosingMethod0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    static auto getEnclosingMethod0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) -> OMElysiaNativeHandle *
     {
-        auto kls =
-            ((OMElysiaKlass *)env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        auto kls = reinterpret_cast<OMElysiaKlass *>(
+            env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
         if (!kls->isInstance() || !kls->toInstance()->enclosingMethod)
         {
             return nullptr;
@@ -220,10 +224,10 @@ extern "C"
         throw std::logic_error("not implemented!");
     }
 
-    static OMElysiaNativeHandle *getDeclaringClass0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    static auto getDeclaringClass0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) -> OMElysiaNativeHandle *
     {
-        auto kls =
-            ((OMElysiaKlass *)env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        auto kls = reinterpret_cast<OMElysiaKlass *>(
+            env->GetLongField(hnd, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
         if (!kls->isInstance())
         {
             return nullptr;
@@ -232,10 +236,10 @@ extern "C"
                                                  : nullptr;
     }
 
-    static OMElysiaNativeHandle *getName0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass)
+    static auto getName0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass) -> OMElysiaNativeHandle *
     {
-        auto kls = ((OMElysiaKlass *)env->GetLongField(
-            klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        auto kls = reinterpret_cast<OMElysiaKlass *>(
+            env->GetLongField(klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
 
         auto vv = std::string(kls->name);
         for (auto &ch : vv)
@@ -254,11 +258,11 @@ extern "C"
         return env->NewStringUTF(vv.c_str());
     }
 
-    static OMElysiaNativeHandle *getDeclaredMethods0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass,
-                                                     jboolean publicOnly)
+    static auto getDeclaredMethods0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass, jboolean publicOnly)
+        -> OMElysiaNativeHandle *
     {
-        auto kls = ((OMElysiaKlass *)env->GetLongField(
-            klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        auto kls = reinterpret_cast<OMElysiaKlass *>(
+            env->GetLongField(klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
         auto mthk = env->FindClass("java/lang/reflect/Method");
 
         auto kk = kls->toInstance();
@@ -273,7 +277,7 @@ extern "C"
                 }
                 auto kns = env->AllocObject(mthk);
 
-                env->SetLongField(kns, env->GetFieldID(mthk, "<ptr>", "J"), (jlong)&kk->methods[i]);
+                env->SetLongField(kns, env->GetFieldID(mthk, "<ptr>", "J"), reinterpret_cast<jlong>(&kk->methods[i]));
                 env->SetObjectField(kns, env->GetFieldID(mthk, "clazz", "Ljava/lang/Class;"),
                                     env->internal->elysium->executor->recordLocalRef(kk->mirror));
                 env->SetObjectField(kns, env->GetFieldID(mthk, "name", "Ljava/lang/String;"),
@@ -320,20 +324,20 @@ extern "C"
     }
 
     // TODO: impl
-    OMElysiaNativeHandle *getDeclaredClasses0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass)
+    auto getDeclaredClasses0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass) -> OMElysiaNativeHandle *
     {
         return env->NewObjectArray(0, env->FindClass("java/lang/Class"), nullptr);
     }
 
-    OMElysiaNativeHandle *getProtectionDomain0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass)
+    auto getProtectionDomain0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass) -> OMElysiaNativeHandle *
     {
         return nullptr;
     }
 
-    jboolean isInstance(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass, OMElysiaNativeHandle *instance)
+    auto isInstance(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass, OMElysiaNativeHandle *instance) -> jboolean
     {
-        auto kls = ((OMElysiaKlass *)env->GetLongField(
-            klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
+        auto kls = reinterpret_cast<OMElysiaKlass *>(
+            env->GetLongField(klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
 
         return env->GetObjectClass(instance)->inherits(kls);
     }

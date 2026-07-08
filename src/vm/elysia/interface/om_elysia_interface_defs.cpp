@@ -15,9 +15,10 @@
 
 namespace openminecraft::vm::elysia
 {
-template <typename T> static T getFieldImpl(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID)
+template <typename T>
+static auto getFieldImpl(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID) -> T
 {
-    return execWithState(InsideVM, [&]() {
+    return execWithState(InsideVM, [&]() -> auto {
         return *reinterpret_cast<T *>(
             env->internal->elysium->oopManager->oopAccessField(handleFetch(obj), fieldID->offset));
     });
@@ -30,9 +31,10 @@ static void setFieldImpl(OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysi
     *reinterpret_cast<T *>(ptr) = val;
 };
 
-template <typename T> static T *getArrayElements(OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jboolean *isCopy)
+template <typename T>
+static auto getArrayElements(OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jboolean *isCopy) -> T *
 {
-    return execWithState(InsideVM, [&]() {
+    return execWithState(InsideVM, [&]() -> auto {
         auto result = env->internal->elysium->oopManager->arrAccess<T>(handleFetch(array));
         if (isCopy)
         {
@@ -46,7 +48,7 @@ template <typename T> static T *getArrayElements(OMElysiaJNIEnv *env, OMElysiaNa
 
 template <typename T> static void releaseArrayElements(OMElysiaJNIEnv *env, OMElysiaNativeHandle *arr, T *arrn, jint i)
 {
-    execWithState(InsideVM, [&]() {
+    execWithState(InsideVM, [&]() -> auto {
         atomic::atomic_store(&handleFetch(arr)->markword,
                              atomic::atomic_load(&handleFetch(arr)->markword) & ~markFixed);
     });
@@ -66,26 +68,28 @@ static inline void unlinkMethods(OMElysiaKlass *klass)
 
 void initBaseInterface(OMElysiaJNIEnv env)
 {
-    env.internal->GetVersion = [](OMElysiaJNIEnv *) { return JNI_VERSION_1_8; };
+    env.internal->GetVersion = [](OMElysiaJNIEnv *) -> int { return JNI_VERSION_1_8; };
 
-    env.internal->FindClass = [](OMElysiaJNIEnv *env, const char *name) {
-        return execWithState(InsideVM, [&]() {
+    env.internal->FindClass = [](OMElysiaJNIEnv *env, const char *name) -> OMElysiaKlass * {
+        return execWithState(InsideVM, [&]() -> OMElysiaKlass * {
             return env->internal->elysium->executor->currentKlassloader()->fetchOrLoadClass(std::string(name));
         });
     };
-    env.internal->GetSuperclass = [](OMElysiaJNIEnv *env, OMElysiaKlass *klass) { return klass->superClass; };
+    env.internal->GetSuperclass = [](OMElysiaJNIEnv *env, OMElysiaKlass *klass) -> OMElysiaKlass * {
+        return klass->superClass;
+    };
 
-    env.internal->Throw = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *t) {
+    env.internal->Throw = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *t) -> int {
         env->internal->elysium->throwException(handleFetch(t));
         return 0;
     };
-    env.internal->ExceptionCheck = [](OMElysiaJNIEnv *env) { return thisThread.metadata->haveException; };
-    env.internal->ExceptionOccurred = [](OMElysiaJNIEnv *env) {
+    env.internal->ExceptionCheck = [](OMElysiaJNIEnv *env) -> bool { return thisThread.metadata->haveException; };
+    env.internal->ExceptionOccurred = [](OMElysiaJNIEnv *env) -> OMElysiaNativeHandle * {
         return env->internal->elysium->executor->recordLocalRef(thisThread.metadata->currentException);
     };
 
-    env.internal->AllocObject = [](OMElysiaJNIEnv *env, OMElysiaKlass *klass) {
-        return execWithState(InsideVM, [&]() {
+    env.internal->AllocObject = [](OMElysiaJNIEnv *env, OMElysiaKlass *klass) -> OMElysiaNativeHandle * {
+        return execWithState(InsideVM, [&]() -> OMElysiaNativeHandle * {
             env->internal->elysium->executor->currentKlassloader()->ensureClassInit(klass);
             return env->internal->elysium->executor->recordLocalRef(
                 env->internal->elysium->oopManager->allocateOop(klass));
@@ -94,25 +98,23 @@ void initBaseInterface(OMElysiaJNIEnv env)
     ;
 
     env.internal->NewObjectA = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                  const OMElysiaNativeValue *args) {
+                                  const OMElysiaNativeValue *args) -> OMElysiaNativeHandle * {
         auto obj = env->AllocObject(clazz);
         env->CallVoidMethodA(obj, methodID, args);
         return obj;
     };
 
-    env.internal->GetObjectClass = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) {
+    env.internal->GetObjectClass = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) -> OMElysiaKlass * {
         return env->internal->elysium->oopManager->oopGetKlass(handleFetch(hnd));
     };
 
-    env.internal->GetMethodID = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const char *name, const char *sig) {
-        return clazz->findMethod(name, sig);
-    };
-    env.internal->GetStaticMethodID = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const char *name, const char *sig) {
-        return clazz->findMethod(name, sig);
-    };
+    env.internal->GetMethodID = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const char *name,
+                                   const char *sig) -> OMElysiaMethod * { return clazz->findMethod(name, sig); };
+    env.internal->GetStaticMethodID = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const char *name,
+                                         const char *sig) -> OMElysiaMethod * { return clazz->findMethod(name, sig); };
     env.internal->CallObjectMethodA = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaMethod *methodID,
-                                         const OMElysiaNativeValue *args) {
-        return execWithState(InsideVM, [&]() {
+                                         const OMElysiaNativeValue *args) -> OMElysiaNativeHandle * {
+        return execWithState(InsideVM, [&]() -> OMElysiaNativeHandle * {
             auto ar = argCount(methodID->descriptor);
             auto argsCombined = reinterpret_cast<OMElysiaNativeValue *>(
                 mem::allocator::tracedCallocElysia(ar + 1, sizeof(OMElysiaNativeValue)));
@@ -126,16 +128,16 @@ void initBaseInterface(OMElysiaJNIEnv env)
         });
     };
     env.internal->CallStaticObjectMethodA = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, OMElysiaMethod *methodID,
-                                               const OMElysiaNativeValue *args) {
-        return execWithState(InsideVM, [&]() {
+                                               const OMElysiaNativeValue *args) -> OMElysiaNativeHandle * {
+        return execWithState(InsideVM, [&]() -> OMElysiaNativeHandle * {
             return env->internal->elysium->executor->recordLocalRef(
                 env->internal->elysium->executor->callObjectFunction(methodID, args));
         });
     };
 
     env.internal->CallVoidMethodA = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaMethod *methodID,
-                                       const OMElysiaNativeValue *args) {
-        execWithState(InsideVM, [&]() {
+                                       const OMElysiaNativeValue *args) -> auto {
+        execWithState(InsideVM, [&]() -> void {
             auto ar = argCount(methodID->descriptor);
             auto argsCombined = reinterpret_cast<OMElysiaNativeValue *>(
                 mem::allocator::tracedCallocElysia(ar + 1, sizeof(OMElysiaNativeValue)));
@@ -146,11 +148,13 @@ void initBaseInterface(OMElysiaJNIEnv env)
         });
     };
 
-    env.internal->GetFieldID = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const char *name, const char *desc) {
+    env.internal->GetFieldID = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const char *name,
+                                  const char *desc) -> OMElysiaField * {
         return clazz->toInstance()->findField(name, desc);
     };
-    env.internal->GetObjectField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID) {
-        return execWithState(InsideVM, [&]() {
+    env.internal->GetObjectField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj,
+                                      OMElysiaField *fieldID) -> OMElysiaNativeHandle * {
+        return execWithState(InsideVM, [&]() -> OMElysiaNativeHandle * {
             return env->internal->elysium->executor->recordLocalRef(
                 env->internal->elysium->oopManager->oopAccessPointerField(handleFetch(obj), fieldID->offset));
         });
@@ -164,8 +168,8 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->GetDoubleField = getFieldImpl<jdouble>;
     env.internal->GetLongField = getFieldImpl<jlong>;
     env.internal->SetObjectField = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *obj, OMElysiaField *fieldID,
-                                      OMElysiaNativeHandle *val) {
-        execWithState(InsideVM, [&]() {
+                                      OMElysiaNativeHandle *val) -> void {
+        execWithState(InsideVM, [&]() -> void {
             env->internal->elysium->oopManager->oopAccessPointerField(handleFetch(obj), fieldID->offset,
                                                                       handleFetch(val));
         });
@@ -179,20 +183,21 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->SetDoubleField = setFieldImpl<jdouble>;
     env.internal->SetLongField = setFieldImpl<jlong>;
     env.internal->SetStaticObjectField = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, OMElysiaField *fieldID,
-                                            OMElysiaNativeHandle *value) {
-        execWithState(InsideVM, [&]() {
+                                            OMElysiaNativeHandle *value) -> void {
+        execWithState(InsideVM, [&]() -> void {
             env->internal->elysium->oopManager->oopAccessPointerStaticField(clazz, fieldID->offset, handleFetch(value));
         });
     };
 
-    env.internal->NewStringUTF = [](OMElysiaJNIEnv *env, const char *string) {
+    env.internal->NewStringUTF = [](OMElysiaJNIEnv *env, const char *string) -> OMElysiaNativeHandle * {
         std::string ss(string);
-        return execWithState(InsideVM, [&]() {
+        return execWithState(InsideVM, [&]() -> OMElysiaNativeHandle * {
             return env->internal->elysium->executor->recordLocalRef(
                 env->internal->elysium->oopManager->allocateString(ss));
         });
     };
-    env.internal->GetStringUTFChars = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *str, jboolean *isCopy) {
+    env.internal->GetStringUTFChars = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *str,
+                                         jboolean *isCopy) -> const char * {
         auto kstr = env->FindClass("java/lang/String");
         auto kfield = env->GetFieldID(kstr, "value", "[C");
 
@@ -203,7 +208,7 @@ void initBaseInterface(OMElysiaJNIEnv env)
             *isCopy = true;
         }
 
-        return execWithState(InsideVM, [&]() {
+        return execWithState(InsideVM, [&]() -> const char * {
             auto len = env->internal->elysium->oopManager->arrLength(handleFetch(arrdata));
             auto s = util::encoding::utf16ToUtf8New(data, len);
             auto result = reinterpret_cast<char *>(mem::allocator::tracedMallocElysia(s.size() + 1));
@@ -212,17 +217,18 @@ void initBaseInterface(OMElysiaJNIEnv env)
             return reinterpret_cast<const char *>(result);
         });
     };
-    env.internal->ReleaseStringUTFChars = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *str, const char *chars) {
+    env.internal->ReleaseStringUTFChars = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *str,
+                                             const char *chars) -> void {
         mem::allocator::tracedFreeElysia(const_cast<char *>(chars));
     };
 
-    env.internal->GetArrayLength = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) {
+    env.internal->GetArrayLength = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) -> jint {
         return env->internal->elysium->oopManager->arrLength(handleFetch(hnd));
     };
 
     env.internal->NewObjectArray = [](OMElysiaJNIEnv *env, jsize len, OMElysiaKlass *klass,
-                                      OMElysiaNativeHandle *init) {
-        return execWithState(InsideVM, [&]() {
+                                      OMElysiaNativeHandle *init) -> OMElysiaNativeHandle * {
+        return execWithState(InsideVM, [&]() -> OMElysiaNativeHandle * {
             env->internal->elysium->executor->currentKlassloader()->ensureClassInit(klass);
             auto hnd = env->internal->elysium->executor->recordLocalRef(
                 env->internal->elysium->oopManager->allocateArr(env->internal->elysium->executor->currentKlassloader()
@@ -237,16 +243,17 @@ void initBaseInterface(OMElysiaJNIEnv env)
             return hnd;
         });
     };
-    env.internal->GetObjectArrayElement = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jsize index) {
+    env.internal->GetObjectArrayElement = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *array,
+                                             jsize index) -> OMElysiaNativeHandle * {
         return env->internal->elysium->executor->recordLocalRef(
             env->internal->elysium->oopManager->arrAccessPtr(handleFetch(array), index));
     };
     env.internal->SetObjectArrayElement = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *array, jsize index,
-                                             OMElysiaNativeHandle *val) {
+                                             OMElysiaNativeHandle *val) -> void {
         env->internal->elysium->oopManager->arrAccessPtr(handleFetch(array), index, handleFetch(val));
     };
-    env.internal->NewCharArray = [](OMElysiaJNIEnv *env, jsize len) {
-        return execWithState(InsideVM, [&]() {
+    env.internal->NewCharArray = [](OMElysiaJNIEnv *env, jsize len) -> OMElysiaNativeHandle * {
+        return execWithState(InsideVM, [&]() -> OMElysiaNativeHandle * {
             return env->internal->elysium->executor->recordLocalRef(env->internal->elysium->oopManager->allocateArr(
                 env->internal->elysium->klassLoader->findClass("[C")->toArray(), len));
         });
@@ -272,19 +279,19 @@ void initBaseInterface(OMElysiaJNIEnv env)
     env.internal->ReleaseLongArrayElements = releaseArrayElements;
 
     env.internal->RegisterNatives = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz, const OMElysiaNativeMethod *methods,
-                                       jint nMethods) {
-        execWithState(InsideVM, [&]() {
+                                       jint nMethods) -> int {
+        execWithState(InsideVM, [&]() -> void {
             if (!clazz->nativeMethods)
             {
-                clazz->nativeMethods =
-                    (OMElysiaNativeMethod *)mem::allocator::tracedCallocElysia(nMethods, sizeof(OMElysiaNativeMethod));
+                clazz->nativeMethods = reinterpret_cast<OMElysiaNativeMethod *>(
+                    mem::allocator::tracedCallocElysia(nMethods, sizeof(OMElysiaNativeMethod)));
                 clazz->nativeMethodCount = nMethods;
                 std::memcpy(clazz->nativeMethods, methods, nMethods * sizeof(OMElysiaNativeMethod));
             }
             else
             {
-                auto newdata = (OMElysiaNativeMethod *)mem::allocator::tracedCallocElysia(
-                    nMethods + clazz->nativeMethodCount, sizeof(OMElysiaNativeMethod));
+                auto newdata = reinterpret_cast<OMElysiaNativeMethod *>(mem::allocator::tracedCallocElysia(
+                    nMethods + clazz->nativeMethodCount, sizeof(OMElysiaNativeMethod)));
 
                 std::memcpy(newdata, methods, nMethods * sizeof(OMElysiaNativeMethod));
                 std::memcpy(&newdata[nMethods], clazz->nativeMethods,
@@ -297,8 +304,8 @@ void initBaseInterface(OMElysiaJNIEnv env)
         });
         return 0;
     };
-    env.internal->UnregisterNatives = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz) {
-        execWithState(InsideVM, [&]() {
+    env.internal->UnregisterNatives = [](OMElysiaJNIEnv *env, OMElysiaKlass *clazz) -> int {
+        execWithState(InsideVM, [&]() -> void {
             clazz->nativeMethodCount = 0;
             mem::allocator::tracedFreeElysia(clazz->nativeMethods);
             clazz->nativeMethods = nullptr;
@@ -306,11 +313,11 @@ void initBaseInterface(OMElysiaJNIEnv env)
         });
         return 0;
     };
-    env.internal->MonitorEnter = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) {
+    env.internal->MonitorEnter = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) -> int {
         env->internal->elysium->monitorManager->mutexFetch(handleFetch(hnd));
         return 0;
     };
-    env.internal->MonitorExit = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) {
+    env.internal->MonitorExit = [](OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) -> int {
         env->internal->elysium->monitorManager->mutexRelease(handleFetch(hnd));
         return 0;
     };

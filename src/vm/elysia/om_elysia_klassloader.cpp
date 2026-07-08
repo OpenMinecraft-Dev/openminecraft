@@ -7,10 +7,8 @@
 #include "openminecraft/vm/elysia/om_elysia_descriptor.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
-#include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
-#include "optimizations.hpp"
-#include <codecvt>
+#include <array>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -29,10 +27,8 @@ OMElysiaKlassloader::OMElysiaKlassloader(OMElysium *elysium) : elysium(elysium),
 {
     loadedClasses = std::make_shared<std::map<binary::hash::hash_t, OMElysiaKlass *>>();
 }
-OMElysiaKlassloader::~OMElysiaKlassloader()
-{
-}
-OMElysiaInstanceKlass *OMElysiaKlassloader::constructInstanceClassShell(std::string s)
+OMElysiaKlassloader::~OMElysiaKlassloader() = default;
+auto OMElysiaKlassloader::constructInstanceClassShell(std::string s) -> OMElysiaInstanceKlass *
 {
     auto klass = elysium->metaspaceHeap.allocate<OMElysiaInstanceKlass>();
     klass->accessFlag = JVM_Acc_Public;
@@ -47,7 +43,7 @@ OMElysiaInstanceKlass *OMElysiaKlassloader::constructInstanceClassShell(std::str
     markKlass(klass);
     return klass;
 }
-OMElysiaPrimitiveKlass *OMElysiaKlassloader::constructPrimitiveClass(std::string s)
+auto OMElysiaKlassloader::constructPrimitiveClass(std::string s) -> OMElysiaPrimitiveKlass *
 {
     auto klass = elysium->metaspaceHeap.allocate<OMElysiaPrimitiveKlass>();
     klass->accessFlag = JVM_Acc_Public;
@@ -61,7 +57,7 @@ OMElysiaPrimitiveKlass *OMElysiaKlassloader::constructPrimitiveClass(std::string
     return klass;
 }
 
-static OMElysiaNativeHandle *arrayClone(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+static auto arrayClone(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) -> OMElysiaNativeHandle *
 {
     auto kls = env->GetObjectClass(hnd)->toArray()->lowerDim;
     if (kls->isPrimitive())
@@ -77,7 +73,7 @@ static OMElysiaNativeHandle *arrayClone(OMElysiaJNIEnv *env, OMElysiaNativeHandl
     return arr;
 }
 
-OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
+auto OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k) -> OMElysiaArrayKlass *
 {
     auto rawname = buildArray(k->name);
 
@@ -107,7 +103,7 @@ OMElysiaArrayKlass *OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k)
 
     klass->nativeMethods[0].name = const_cast<char *>("clone");
     klass->nativeMethods[0].signature = const_cast<char *>("()Ljava/lang/Object;");
-    klass->nativeMethods[0].funcPtr = (void *)arrayClone;
+    klass->nativeMethods[0].funcPtr = reinterpret_cast<void *>(arrayClone);
 
     fillVtable(klass);
 
@@ -152,7 +148,7 @@ void OMElysiaKlassloader::markKlass(OMElysiaKlass *klass)
     (*loadedClasses)[binary::hash::hash_compile_time(klass->name)] = klass;
 }
 
-OMElysiaKlass *OMElysiaKlassloader::findClass(std::string s)
+auto OMElysiaKlassloader::findClass(std::string s) -> OMElysiaKlass *
 {
     return (*loadedClasses)[binary::hash::hash_compile_time(s.c_str())];
 }
@@ -174,7 +170,8 @@ void OMElysiaKlassloader::fixClassMirror(OMElysiaKlass *klass)
         elysium->oopManager->oopAccessPointerField(oop, field2->offset, this->klassloader);
 
         auto field3 = kls->toInstance()->findField("<ptr>", "J");
-        *reinterpret_cast<jlong *>(elysium->oopManager->oopAccessField(oop, field3->offset)) = (jlong)klass;
+        *reinterpret_cast<jlong *>(elysium->oopManager->oopAccessField(oop, field3->offset)) =
+            reinterpret_cast<jlong>(klass);
 
         if (klass->isInstance())
         {
@@ -208,7 +205,7 @@ endf:
     return;
 }
 
-OMElysiaKlass *OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
+auto OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special) -> OMElysiaKlass *
 {
     if (isArray(name))
     {
@@ -224,10 +221,10 @@ OMElysiaKlass *OMElysiaKlassloader::loadClassWithoutMirror(std::string name, boo
         auto kls = fetchOrLoadClass("java/lang/ClassNotFoundException");
         auto inm = kls->findMethod("<init>", "(Ljava/lang/String;)V");
         auto oop = elysium->oopManager->allocateOop(kls);
-        OMElysiaNativeValue args[2];
+        std::array<OMElysiaNativeValue, 2> args;
         args[0].l = elysium->executor->recordLocalRef(oop);
         args[1].l = elysium->executor->recordLocalRef(elysium->oopManager->allocateString(name));
-        elysium->executor->callVoidFunction(inm, args);
+        elysium->executor->callVoidFunction(inm, args.data());
         elysium->throwException(oop);
         logger.warn("class {} not found!", name);
         return nullptr;
@@ -295,8 +292,8 @@ void OMElysiaKlassloader::fillVtable(OMElysiaInstanceKlass *klass)
         }
     }
 }
-OMElysiaKlass *OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> istr, bool special,
-                                                           std::string repname)
+auto OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> istr, bool special, std::string repname)
+    -> OMElysiaKlass *
 {
     auto clsfile = std::make_shared<specs::classfile::OMClassFile>();
     clsfile->load(istr);

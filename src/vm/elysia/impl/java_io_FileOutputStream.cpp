@@ -15,7 +15,7 @@ extern "C"
             stream, env->GetFieldID(env->FindClass("java/io/FileOutputStream"), "fd", "Ljava/io/FileDescriptor;"));
 
         auto a = env->GetByteArrayElements(data, nullptr);
-        os::write(getNativeFd(env, fdobj), (uint8_t *)a, off, len, append);
+        os::write(getNativeFd(env, fdobj), reinterpret_cast<uint8_t *>(a), off, len, append);
         env->ReleaseByteArrayElements(data, a, 0);
     }
     static void open0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *stream, OMElysiaNativeHandle *path, jboolean append)

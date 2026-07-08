@@ -27,9 +27,7 @@ namespace openminecraft::vm::elysia::executor
 OMElysiaExecutorZero::OMElysiaExecutorZero(OMElysium *elysium) : elysium(elysium), logger("OMElysiaExecutorZero", this)
 {
 }
-OMElysiaExecutorZero::~OMElysiaExecutorZero()
-{
-}
+OMElysiaExecutorZero::~OMElysiaExecutorZero() = default;
 
 // Geopeila: Stack status when new function called
 // (x: operator stack, y: local variable, o: frame metadata)
@@ -110,7 +108,7 @@ nextStg:
     *realpc = m->code;
 }
 
-OMElysiaKlassloader *OMElysiaExecutorZero::currentKlassloader()
+auto OMElysiaExecutorZero::currentKlassloader() -> OMElysiaKlassloader *
 {
     return thisThread.metadata->zero.frame ? thisThread.metadata->zero.frame->method->klass->klassloader
                                            : elysium->klassLoader.get();
@@ -139,7 +137,7 @@ void OMElysiaExecutorZero::threadInit()
         tc->interface.internal->elysium = elysium;
         initBaseInterface(tc->interface);
 
-        tc->cleaner = []() {
+        tc->cleaner = []() -> void {
             auto tc = thisThread.metadata;
             mem::allocator::tracedFreeElysia(reinterpret_cast<void *>(tc->stackEnd));
             mem::allocator::tracedFreeElysia(tc->interface.internal);
@@ -208,7 +206,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
 
         if (tc->zero.frame->method->isNative())
         {
-            execWithState(InsideVM, [&]() { executeNativeLink(&pc, currentFrame); });
+            execWithState(InsideVM, [&]() -> void { executeNativeLink(&pc, currentFrame); });
             continue;
         }
 
@@ -959,7 +957,8 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             continue;
         }
         case op_invokedynamic: {
-            auto m = (OMElysiaKlassDynamic *)CURRENT_KLASS->constantPoolFetchDynamic(zeroCodeFetchArgu16p0(pc));
+            auto m = reinterpret_cast<OMElysiaKlassDynamic *>(
+                CURRENT_KLASS->constantPoolFetchDynamic(zeroCodeFetchArgu16p0(pc)));
             zeroStackPush(m->handle);
             pushFrame(m->target, pc + 5, false, &pc);
             updateFrame;
@@ -1012,7 +1011,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         case op_anewarray: {
             auto c = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
-            auto klass = execWithState(InsideVM, [&]() {
+            auto klass = execWithState(InsideVM, [&]() -> OMElysiaKlass * {
                 return CURRENT_KLASS->klassloader->fetchOrLoadClass(
                     buildArray(reinterpret_cast<OMElysiaKlass *>(c)->name), true);
             });
@@ -1200,26 +1199,27 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
     }
 }
 
-OMElysiaIntrinsicRoutine OMElysiaExecutorZero::findRoutine(std::string klass, std::string name)
+auto OMElysiaExecutorZero::findRoutine(std::string klass, std::string name) -> OMElysiaIntrinsicRoutine
 {
     if (klass == "java/lang/invoke/MethodHandle" && name == "linkToStatic")
     {
-        return [](OMElysium *elysium, uint8_t **pc, int) {
+        return [](OMElysium *elysium, uint8_t **pc, int) -> void {
             auto mn = zeroStackPopGet<OMElysiaOop *>();
             auto remap = **pc == op_invokevirtual || **pc == op_invokeinterface;
             auto fieldoff = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MemberName", true)
                                 ->toInstance()
                                 ->findField("<ptr>", "J")
                                 ->offset;
-            auto mthd = (OMElysiaMethod *)*(jlong *)elysium->oopManager->oopAccessField(mn, fieldoff);
+            auto mthd = reinterpret_cast<OMElysiaMethod *>(
+                *reinterpret_cast<jlong *>(elysium->oopManager->oopAccessField(mn, fieldoff)));
             elysium->executor->pushFrame(mthd, *pc + (**pc == op_invokeinterface ? 5 : 3), remap, pc);
         };
     }
 
     if (klass == "java/lang/invoke/MethodHandle" && (name == "invoke" || name == "invokeBasic"))
     {
-        return [](OMElysium *elysium, uint8_t **pc, int a) {
-            auto hnd = *(OMElysiaOop **)(thisThread.metadata->zero.stackPointer + a * sizeof(void *));
+        return [](OMElysium *elysium, uint8_t **pc, int a) -> void {
+            auto hnd = *reinterpret_cast<OMElysiaOop **>(thisThread.metadata->zero.stackPointer + a * sizeof(void *));
             {
                 auto ff = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandle", true)
                               ->toInstance()
@@ -1239,7 +1239,8 @@ OMElysiaIntrinsicRoutine OMElysiaExecutorZero::findRoutine(std::string klass, st
                                 ->toInstance()
                                 ->findField("<ptr>", "J")
                                 ->offset;
-            auto mthd = (OMElysiaMethod *)*(jlong *)elysium->oopManager->oopAccessField(hnd, fieldoff);
+            auto mthd = reinterpret_cast<OMElysiaMethod *>(
+                *reinterpret_cast<jlong *>(elysium->oopManager->oopAccessField(hnd, fieldoff)));
             elysium->executor->pushFrame(mthd, *pc + (**pc == op_invokeinterface ? 5 : 3), remap, pc);
         };
     }

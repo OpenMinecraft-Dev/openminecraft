@@ -5,12 +5,9 @@
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"
 #include "openminecraft/vm/elysia/om_elysia_field.hpp"
 #include "openminecraft/vm/elysia/om_elysia_method.hpp"
-#include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include <cstdint>
 #include <memory>
 #include <mutex>
-#include <thread>
-#include <unordered_map>
 
 namespace openminecraft::vm::elysia
 {
@@ -62,39 +59,39 @@ class OMElysiaKlass
 
     std::unique_ptr<std::recursive_mutex> klassMutex;
 
-    OMElysiaMethod *findMethod(const char *name, const char *desc);
+    auto findMethod(const char *name, const char *desc) -> OMElysiaMethod *;
 
-    OMElysiaInstanceKlass *toInstance()
+    inline auto toInstance() -> OMElysiaInstanceKlass *
     {
         return reinterpret_cast<OMElysiaInstanceKlass *>(this);
     }
 
-    bool isInstance()
+    inline auto isInstance() -> bool
     {
         return type == InstanceKlass;
     }
 
-    OMElysiaPrimitiveKlass *toPrimitive()
+    inline auto toPrimitive() -> OMElysiaPrimitiveKlass *
     {
         return reinterpret_cast<OMElysiaPrimitiveKlass *>(this);
     }
 
-    bool isPrimitive()
+    inline auto isPrimitive() -> bool
     {
         return type == PrimitiveKlass;
     }
 
-    OMElysiaArrayKlass *toArray()
+    inline auto toArray() -> OMElysiaArrayKlass *
     {
         return reinterpret_cast<OMElysiaArrayKlass *>(this);
     }
 
-    bool isArray()
+    inline auto isArray() -> bool
     {
         return type == ArrayKlass;
     }
 
-    bool inherits(OMElysiaKlass *);
+    auto inherits(OMElysiaKlass *) -> bool;
 };
 
 class OMElysiaInstanceKlass : public OMElysiaKlass
@@ -124,12 +121,12 @@ class OMElysiaInstanceKlass : public OMElysiaKlass
 
     void initFieldOffsets();
 
-    OMElysiaField *findField(const char *name, const char *desc);
+    auto findField(const char *name, const char *desc) -> OMElysiaField *;
 
-    void *constantPoolFetchField(uint16_t id);
-    void *constantPoolFetchNormal(uint16_t id, bool flg = false);
-    void *constantPoolFetchDynamic(uint16_t id);
-    uint64_t constantPoolFetchNormalW(uint16_t id);
+    auto constantPoolFetchField(uint16_t id) -> void *;
+    auto constantPoolFetchNormal(uint16_t id, bool flg = false) -> void *;
+    auto constantPoolFetchDynamic(uint16_t id) -> void *;
+    auto constantPoolFetchNormalW(uint16_t id) -> uint64_t;
 };
 
 class OMElysiaArrayKlass : public OMElysiaInstanceKlass

@@ -23,7 +23,7 @@ class StateGuard
     OMElysiaThreadState st;
 };
 template <typename Func>
-HOT_FUNC auto execWithState(OMElysiaThreadState state, Func &&func) -> decltype(std::forward<Func>(func)())
+HOT_FUNC inline auto execWithState(OMElysiaThreadState state, Func &&func) -> decltype(std::forward<Func>(func)())
 {
     StateGuard g(state);
     return func();

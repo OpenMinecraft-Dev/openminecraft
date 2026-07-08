@@ -10,12 +10,12 @@ namespace openminecraft::vm::elysia::impl
 {
 extern "C"
 {
-    static jint hashCode(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    static auto hashCode(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) -> jint
     {
         return static_cast<jint>(reinterpret_cast<uintptr_t>(handleFetch(hnd)));
     }
 
-    static OMElysiaNativeHandle *getClass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    static auto getClass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) -> OMElysiaNativeHandle *
     {
         return createTempHandle(env->GetObjectClass(hnd)->mirror);
     }
@@ -26,7 +26,7 @@ extern "C"
         logger.warn("notifyAll not implemented!");
     }
 
-    static OMElysiaNativeHandle *clone(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd)
+    static auto clone(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) -> OMElysiaNativeHandle *
     {
         auto klass = env->GetObjectClass(hnd);
         auto vv = env->AllocObject(klass);

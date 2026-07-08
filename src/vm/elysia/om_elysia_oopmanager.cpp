@@ -7,7 +7,6 @@
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <cstring>
-#include <iostream>
 #include <limits>
 
 using namespace openminecraft::binary::hash;
@@ -18,20 +17,18 @@ OMElysiaOopManager::OMElysiaOopManager(OMElysium *elysium)
     : elysium(elysium), logger("OMElysiaOopManager", this), generator(), dis(0, std::numeric_limits<int>::max())
 {
 }
-OMElysiaOopManager::~OMElysiaOopManager()
-{
-}
+OMElysiaOopManager::~OMElysiaOopManager() = default;
 
-uint64_t OMElysiaOopManager::oopHeaderLength()
+auto OMElysiaOopManager::oopHeaderLength() -> uint64_t
 {
     return elysium->metaspaceHeap.enablePtrCompress() ? sizeof(OMElysiaOopCompressed) : sizeof(OMElysiaOopUncompressed);
 }
-uint64_t OMElysiaOopManager::oopArrayHeaderLength()
+auto OMElysiaOopManager::oopArrayHeaderLength() -> uint64_t
 {
     return elysium->metaspaceHeap.enablePtrCompress() ? sizeof(OMElysiaArrayOopCompressed)
                                                       : sizeof(OMElysiaArrayOopUncompressed);
 }
-OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass, uint64_t length)
+auto OMElysiaOopManager::allocateOop(OMElysiaKlass *klass, uint64_t length) -> OMElysiaOop *
 {
     auto ll = reinterpret_cast<OMElysiaOop *>(elysium->mainHeap.allocate(
         oopHeaderLength() + reinterpret_cast<OMElysiaInstanceKlass *>(klass)->length + length));
@@ -49,7 +46,7 @@ OMElysiaOop *OMElysiaOopManager::allocateOop(OMElysiaKlass *klass, uint64_t leng
     return ll;
 }
 
-OMElysiaOop *OMElysiaOopManager::allocateString(std::string target)
+auto OMElysiaOopManager::allocateString(std::string target) -> OMElysiaOop *
 {
     auto hsh = hash_compile_time(target.c_str());
     if (elysium->stringPool.count(hsh))
@@ -73,7 +70,7 @@ OMElysiaOop *OMElysiaOopManager::allocateString(std::string target)
     return strWrp;
 }
 
-OMElysiaKlass *OMElysiaOopManager::oopGetKlass(OMElysiaOop *base)
+auto OMElysiaOopManager::oopGetKlass(OMElysiaOop *base) -> OMElysiaKlass *
 {
     if (elysium->metaspaceHeap.enablePtrCompress())
     {
@@ -97,7 +94,7 @@ void OMElysiaOopManager::oopAccessPointerField(OMElysiaOop *base, uint64_t offse
         *reinterpret_cast<void **>(oopAccessField(base, offset)) = ptrToWrite;
     }
 }
-OMElysiaOop *OMElysiaOopManager::oopAccessPointerField(OMElysiaOop *base, uint64_t offset)
+auto OMElysiaOopManager::oopAccessPointerField(OMElysiaOop *base, uint64_t offset) -> OMElysiaOop *
 {
     if (elysium->mainHeap.enablePtrCompress())
     {
@@ -110,7 +107,7 @@ OMElysiaOop *OMElysiaOopManager::oopAccessPointerField(OMElysiaOop *base, uint64
     }
 }
 
-OMElysiaOop *OMElysiaOopManager::oopAccessPointerStaticField(OMElysiaKlass *kls, uint64_t offset)
+auto OMElysiaOopManager::oopAccessPointerStaticField(OMElysiaKlass *kls, uint64_t offset) -> OMElysiaOop *
 {
     if (elysium->mainHeap.enablePtrCompress())
     {
@@ -135,12 +132,12 @@ void OMElysiaOopManager::oopAccessPointerStaticField(OMElysiaKlass *kls, uint64_
     }
 }
 
-uintptr_t OMElysiaOopManager::oopAccessField(OMElysiaOop *base, uint64_t offset)
+auto OMElysiaOopManager::oopAccessField(OMElysiaOop *base, uint64_t offset) -> uintptr_t
 {
     return reinterpret_cast<uintptr_t>(base) + oopHeaderLength() + offset;
 }
 
-jint OMElysiaOopManager::arrLength(OMElysiaOop *base)
+auto OMElysiaOopManager::arrLength(OMElysiaOop *base) -> jint
 {
     if (elysium->metaspaceHeap.enablePtrCompress())
     {
@@ -152,7 +149,7 @@ jint OMElysiaOopManager::arrLength(OMElysiaOop *base)
     }
 }
 
-OMElysiaOop *OMElysiaOopManager::arrAccessPtr(OMElysiaOop *oop, jint index)
+auto OMElysiaOopManager::arrAccessPtr(OMElysiaOop *oop, jint index) -> OMElysiaOop *
 {
     while (!oop)
     {
@@ -178,7 +175,7 @@ void OMElysiaOopManager::arrAccessPtr(OMElysiaOop *oop, jint index, OMElysiaOop 
     }
 }
 
-static jint arrayKlassItemLength(OMElysiaArrayKlass *klass)
+static auto arrayKlassItemLength(OMElysiaArrayKlass *klass) -> jint
 {
     jint i = 0;
     switch (hash_compile_time(klass->lowerDim->name))
@@ -206,7 +203,7 @@ static jint arrayKlassItemLength(OMElysiaArrayKlass *klass)
     return i;
 }
 
-OMElysiaOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint length)
+auto OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint length) -> OMElysiaOop *
 {
     auto ll = reinterpret_cast<OMElysiaOop *>(
         elysium->mainHeap.allocate(oopArrayHeaderLength() + klass->itemLength * length));
@@ -228,7 +225,7 @@ OMElysiaOop *OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint len
     return ll;
 }
 
-OMElysiaOop *OMElysiaOopManager::allocateMultiArr(OMElysiaArrayKlass *klass, jint dim, jint *lengths)
+auto OMElysiaOopManager::allocateMultiArr(OMElysiaArrayKlass *klass, jint dim, jint *lengths) -> OMElysiaOop *
 {
     if (dim <= 1)
     {
@@ -243,7 +240,7 @@ OMElysiaOop *OMElysiaOopManager::allocateMultiArr(OMElysiaArrayKlass *klass, jin
     return oop;
 }
 
-uint64_t OMElysiaOopManager::oopLength(OMElysiaOop *oop)
+auto OMElysiaOopManager::oopLength(OMElysiaOop *oop) -> uint64_t
 {
     auto klass = oopGetKlass(oop);
     if (klass->isInstance())

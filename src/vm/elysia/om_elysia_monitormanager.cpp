@@ -6,14 +6,10 @@
 
 namespace openminecraft::vm::elysia
 {
-OMElysiaMonitorManager::OMElysiaMonitorManager()
-{
-}
-OMElysiaMonitorManager::~OMElysiaMonitorManager()
-{
-}
+OMElysiaMonitorManager::OMElysiaMonitorManager() = default;
+OMElysiaMonitorManager::~OMElysiaMonitorManager() = default;
 
-bool OMElysiaMonitorManager::mutexTryFetch(OMElysiaOop *oop)
+auto OMElysiaMonitorManager::mutexTryFetch(OMElysiaOop *oop) -> bool
 {
     std::lock_guard guard(objectMutex);
     if (!objects.count(oop))

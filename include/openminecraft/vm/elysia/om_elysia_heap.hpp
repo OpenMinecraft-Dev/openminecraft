@@ -26,38 +26,38 @@ class OMElysiaHeap
     OMElysiaHeap(const char *name, uint64_t maxSize, float expandFactor);
     ~OMElysiaHeap();
 
-    void *allocate(uint64_t length);
+    auto allocate(uint64_t length) -> void *;
     void deallocate(void *ptr, uint64_t length);
     void mergeBlocks();
     void iterBlocks(std::function<void(OMElysiaHeapBlock *)>);
-    void *base()
+    auto base() -> void *
     {
         return rawHeap.block;
     }
-    uint64_t align(uint64_t size, uint64_t alignsize = 8)
+    auto align(uint64_t size, uint64_t alignsize = 8) -> uint64_t
     {
         return (size % alignsize) ? (size + (alignsize - size % alignsize)) : size;
     }
 
-    template <typename T> T *allocate()
+    template <typename T> inline auto allocate() -> T *
     {
         return reinterpret_cast<T *>(allocate(sizeof(T)));
     }
-    template <typename T> void deallocate(T *ptr)
+    template <typename T> inline void deallocate(T *ptr)
     {
         deallocate(ptr, sizeof(T));
     }
 
-    template <typename T> T *allocateArray(uint32_t length)
+    template <typename T> inline auto allocateArray(uint32_t length) -> T *
     {
         return reinterpret_cast<T *>(allocate(sizeof(T) * length));
     }
-    template <typename T> void deallocateArray(T *ptr, uint32_t length)
+    template <typename T> inline void deallocateArray(T *ptr, uint32_t length)
     {
         deallocate(ptr, sizeof(T) * length);
     }
 
-    char *allocateStr(std::string s)
+    inline auto allocateStr(std::string s) -> char *
     {
         auto t = reinterpret_cast<char *>(allocate(s.size() + 1));
         std::strcpy(t, s.c_str());
@@ -68,17 +68,17 @@ class OMElysiaHeap
         deallocate(c, std::strlen(c));
     }
 
-    bool enablePtrCompress()
+    inline auto enablePtrCompress() -> bool
     {
         return sizeof(void *) == 8 && maxSize < 1024ll * 1024 * 1024 * 32;
     }
 
-    uint64_t ptrLength()
+    inline auto ptrLength() -> uint64_t
     {
         return enablePtrCompress() ? 4 : sizeof(void *);
     }
 
-    uint32_t compress(void *p)
+    inline auto compress(void *p) -> uint32_t
     {
         if (!enablePtrCompress())
         {
@@ -94,7 +94,7 @@ class OMElysiaHeap
                                      3);
     }
 
-    void *decompress(uint32_t p)
+    inline auto decompress(uint32_t p) -> void *
     {
         if (!enablePtrCompress())
         {
@@ -109,7 +109,7 @@ class OMElysiaHeap
         return reinterpret_cast<void *>((static_cast<uintptr_t>(p) << 3) + reinterpret_cast<uintptr_t>(rawHeap.block));
     }
 
-    bool valid(void *ptr)
+    auto valid(void *ptr) -> bool
     {
         return rawHeap.vaild(ptr);
     }

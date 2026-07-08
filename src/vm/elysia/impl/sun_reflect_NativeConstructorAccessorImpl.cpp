@@ -1,15 +1,14 @@
 #include "openminecraft/vm/elysia/impl/om_elysia_implbase.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
-#include <iostream>
 
 namespace openminecraft::vm::elysia::impl
 {
 extern "C"
 {
-    OMElysiaNativeHandle *Java_sun_reflect_NativeConstructorAccessorImpl_newInstance0(OMElysiaJNIEnv *env,
-                                                                                      OMElysiaKlass *,
-                                                                                      OMElysiaNativeHandle *constructor,
-                                                                                      OMElysiaNativeHandle *args)
+    auto Java_sun_reflect_NativeConstructorAccessorImpl_newInstance0(OMElysiaJNIEnv *env, OMElysiaKlass *,
+                                                                     OMElysiaNativeHandle *constructor,
+                                                                     OMElysiaNativeHandle *args)
+        -> OMElysiaNativeHandle *
     {
         auto cst = env->FindClass("java/lang/reflect/Constructor");
         auto nm = env->GetObjectField(constructor, env->GetFieldID(cst, "signature", "Ljava/lang/String;"));

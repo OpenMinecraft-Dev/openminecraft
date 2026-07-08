@@ -5,14 +5,14 @@
 
 namespace openminecraft::vm::elysia
 {
-typedef int8_t jbyte;
-typedef bool jboolean;
-typedef uint16_t jchar;
-typedef int16_t jshort;
-typedef int32_t jint;
-typedef int64_t jlong;
-typedef float jfloat;
-typedef double jdouble;
+using jbyte = int8_t;
+using jboolean = bool;
+using jchar = uint16_t;
+using jshort = int16_t;
+using jint = int32_t;
+using jlong = int64_t;
+using jfloat = float;
+using jdouble = double;
 } // namespace openminecraft::vm::elysia
 
 #endif
