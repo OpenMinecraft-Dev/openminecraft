@@ -9,7 +9,7 @@
 
 namespace openminecraft::i18n::locale
 {
-std::string defaultLocale()
+auto defaultLocale() -> std::string
 {
     int c;
     SDL_Locale **d = SDL_GetPreferredLocales(&c);
@@ -26,7 +26,7 @@ std::string defaultLocale()
     }
 }
 
-std::vector<std::string> available()
+auto available() -> std::vector<std::string>
 {
     return {"zh_cn", "en_us", "ja_jp"};
 }

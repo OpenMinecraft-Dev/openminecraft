@@ -15,9 +15,9 @@ class OMHeap
     void expand(void *target);
     void shrink(void *target);
 
-    uint64_t currentSizeAllocated();
+    auto currentSizeAllocated() -> uint64_t;
 
-    bool vaild(void *p)
+    inline auto vaild(void *p) -> bool
     {
         return p >= block && p < heapTop;
     }

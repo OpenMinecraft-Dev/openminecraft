@@ -13,10 +13,10 @@ namespace openminecraft::renderer::common
 class OMRendererShaderCompilerBackend
 {
   public:
-    virtual std::shared_ptr<OMShader> compile(std::shared_ptr<OMShader> shader) = 0;
+    virtual auto compile(std::shared_ptr<OMShader> shader) -> std::shared_ptr<OMShader> = 0;
 
-    virtual bool accept(OMShaderFileType ftype) = 0;
-    virtual OMShaderFileType outputType() = 0;
+    virtual auto accept(OMShaderFileType ftype) -> bool = 0;
+    virtual auto outputType() -> OMShaderFileType = 0;
 };
 
 struct OMRendererShaderState
@@ -33,10 +33,10 @@ class OMRendererShaderCompiler
 
     void install(std::shared_ptr<OMRendererShaderCompilerBackend> backend);
 
-    int addCompileTask(std::shared_ptr<OMShader> shader);
-    std::shared_ptr<OMShader> getResult(int id);
+    auto addCompileTask(std::shared_ptr<OMShader> shader) -> int;
+    auto getResult(int id) -> std::shared_ptr<OMShader>;
 
-    float getCompleteRatio();
+    auto getCompleteRatio() -> float;
 
   private:
     std::vector<std::shared_ptr<OMRendererShaderCompilerBackend>> backends;

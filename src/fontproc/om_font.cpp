@@ -58,7 +58,7 @@ static void acceptOutlineClosePath(hb_draw_funcs_t *, void *drawdata, hb_draw_st
 
 hb_draw_funcs_t *drawfuncs = nullptr;
 
-std::shared_ptr<OMTriangleList> OMFont::buildBasicPolygon(int charcode)
+auto OMFont::buildBasicPolygon(int charcode) -> std::shared_ptr<OMTriangleList>
 {
     util::OMTicker<std::string> ticker;
     ticker.tickStart();
@@ -88,9 +88,10 @@ std::shared_ptr<OMTriangleList> OMFont::buildBasicPolygon(int charcode)
     hb_font_get_scale(font, &xsc, &ysc);
 
     auto rawpoly = outline.buildPolygons(8, xsc, ysc);
-    std::sort(rawpoly.begin(), rawpoly.end(), [](std::shared_ptr<OMFontPolygon> p1, std::shared_ptr<OMFontPolygon> p2) {
-        return p1->area() > p2->area();
-    });
+    std::sort(rawpoly.begin(), rawpoly.end(),
+              [](std::shared_ptr<OMFontPolygon> p1, std::shared_ptr<OMFontPolygon> p2) -> bool {
+                  return p1->area() > p2->area();
+              });
     ticker.recordEvent("glyph_polygons");
 
     std::unordered_map<int, int> parents;
@@ -154,7 +155,7 @@ std::shared_ptr<OMTriangleList> OMFont::buildBasicPolygon(int charcode)
     return mem::fast_shared<allocatorId, OMTriangleList>(listbase);
 }
 
-std::shared_ptr<OMFontGlyph> OMFont::buildGlyph(int charcode)
+auto OMFont::buildGlyph(int charcode) -> std::shared_ptr<OMFontGlyph>
 {
     auto ots = buildBasicPolygon(charcode);
 

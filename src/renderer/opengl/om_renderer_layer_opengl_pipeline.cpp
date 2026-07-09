@@ -2,7 +2,6 @@
 #include "GL/glcorearb.h"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include <fmt/format.h>
-#include <iostream>
 #include <stdexcept>
 #include <vector>
 
@@ -38,7 +37,7 @@ void OMRendererPipelineOpenGL::bindOutput(common::OMRendererRenderTarget *target
     this->target = target;
 }
 
-static GLenum fromCommon(common::OMShaderType type)
+static auto fromCommon(common::OMShaderType type) -> GLenum
 {
     switch (type)
     {

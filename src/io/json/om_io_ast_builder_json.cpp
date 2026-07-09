@@ -1,7 +1,6 @@
 #include "openminecraft/io/json/om_io_ast_builder_json.hpp"
 #include "openminecraft/io/json/om_io_ast_json.hpp"
 #include "openminecraft/io/json/om_io_token_json.hpp"
-#include <cmath>
 #include <fmt/format.h>
 #include <stack>
 #include <stdexcept>
@@ -9,7 +8,7 @@
 
 namespace openminecraft::io::json
 {
-std::shared_ptr<OMJsonNode> OMJsonAstBuilder::build()
+auto OMJsonAstBuilder::build() -> std::shared_ptr<OMJsonNode>
 {
     std::stack<OMJsonAstContext> contexts;
     std::shared_ptr<OMJsonNode> root;
@@ -31,7 +30,7 @@ std::shared_ptr<OMJsonNode> OMJsonAstBuilder::build()
             {
                 root = container;
                 root_set = true;
-                contexts.push(OMJsonAstContext(container));
+                contexts.emplace(container);
             }
             else if (!contexts.empty())
             {
@@ -39,13 +38,13 @@ std::shared_ptr<OMJsonNode> OMJsonAstBuilder::build()
                 if (context.container->type() == Array)
                 {
                     context.container->getArray().push_back(container);
-                    contexts.push(OMJsonAstContext(container));
+                    contexts.emplace(container);
                 }
                 else if (context.waiting_for_value)
                 {
                     context.waiting_for_value = false;
                     context.container->getMap()[context.key] = container;
-                    contexts.push(OMJsonAstContext(container));
+                    contexts.emplace(container);
                 }
             }
             break;
@@ -64,7 +63,7 @@ std::shared_ptr<OMJsonNode> OMJsonAstBuilder::build()
             {
                 root = container;
                 root_set = true;
-                contexts.push(OMJsonAstContext(container));
+                contexts.emplace(container);
             }
             else if (!contexts.empty())
             {
@@ -72,13 +71,13 @@ std::shared_ptr<OMJsonNode> OMJsonAstBuilder::build()
                 if (context.container->type() == Array)
                 {
                     context.container->getArray().push_back(container);
-                    contexts.push(OMJsonAstContext(container));
+                    contexts.emplace(container);
                 }
                 else if (context.waiting_for_value)
                 {
                     context.waiting_for_value = false;
                     context.container->getMap()[context.key] = container;
-                    contexts.push(OMJsonAstContext(container));
+                    contexts.emplace(container);
                 }
             }
             break;

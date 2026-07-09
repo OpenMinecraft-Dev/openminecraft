@@ -4,11 +4,10 @@
 #include "shaderc/shaderc.h"
 #include "shaderc/shaderc.hpp"
 #include <memory>
-#include <stdexcept>
 
 namespace openminecraft::renderer::common
 {
-std::shared_ptr<OMShader> OMRendererShaderCompilerBackendShaderc::compile(std::shared_ptr<OMShader> shader)
+auto OMRendererShaderCompilerBackendShaderc::compile(std::shared_ptr<OMShader> shader) -> std::shared_ptr<OMShader>
 {
     shaderc_shader_kind k = {};
     switch (shader->typebase)
@@ -74,12 +73,12 @@ std::shared_ptr<OMShader> OMRendererShaderCompilerBackendShaderc::compile(std::s
     }
 
     std::vector<uint8_t> data;
-    for (auto itt = result.begin(); itt != result.end(); ++itt)
+    for (unsigned int itt : result)
     {
-        uint8_t l1 = *itt;
-        uint8_t l2 = *itt >> 8;
-        uint8_t l3 = *itt >> 16;
-        uint8_t l4 = *itt >> 24;
+        uint8_t l1 = itt;
+        uint8_t l2 = itt >> 8;
+        uint8_t l3 = itt >> 16;
+        uint8_t l4 = itt >> 24;
         data.push_back(l1);
         data.push_back(l2);
         data.push_back(l3);

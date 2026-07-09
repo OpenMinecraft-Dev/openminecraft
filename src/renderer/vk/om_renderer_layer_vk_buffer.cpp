@@ -3,7 +3,6 @@
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
-#include <stdexcept>
 
 using namespace vk;
 using namespace openminecraft::renderer::common;
@@ -22,8 +21,8 @@ OMRendererBufferVk::~OMRendererBufferVk()
     this->release();
 }
 
-static uint32_t findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properties,
-                               const PhysicalDeviceMemoryProperties &memProperties)
+static auto findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properties,
+                           const PhysicalDeviceMemoryProperties &memProperties) -> uint32_t
 {
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; ++i)
     {
@@ -36,13 +35,13 @@ static uint32_t findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properti
     throw OMRendererException(translate("openminecraft.renderer.vk.err.memory.type"));
 }
 
-static MemoryPropertyFlags defFlags()
+static auto defFlags() -> MemoryPropertyFlags
 {
     return MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent;
     ;
 }
 
-static BufferUsageFlagBits mapToUsageFlag(OMBufferUsage usage)
+static auto mapToUsageFlag(OMBufferUsage usage) -> BufferUsageFlagBits
 {
     switch (usage)
     {

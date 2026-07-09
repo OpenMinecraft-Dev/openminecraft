@@ -37,7 +37,7 @@ class OMRendererTexture : public OMRendererObject
 
     virtual void updateData(void *p) = 0;
 
-    OMRendererObjectType objType() override
+    inline auto objType() -> OMRendererObjectType override
     {
         return Texture;
     }

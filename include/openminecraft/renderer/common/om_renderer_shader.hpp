@@ -2,8 +2,8 @@
 #define OM_RENDERER_SHADER_HPP
 #include "openminecraft/renderer/om_renderer_object.hpp"
 #include <cstdint>
-#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace openminecraft::renderer::common
@@ -38,7 +38,8 @@ class OMShader : public OMRendererObject
     OMShader() = default;
     OMShader(OMShaderFileType type, std::vector<uint8_t> data, std::string filename, std::string entrypoint,
              OMShaderType typebase)
-        : type(type), data(data), entrypoint(entrypoint), filename(filename), typebase(typebase)
+        : type(type), data(std::move(data)), entrypoint(std::move(entrypoint)), filename(std::move(filename)),
+          typebase(typebase)
     {
     }
     ~OMShader() = default;
@@ -49,7 +50,7 @@ class OMShader : public OMRendererObject
     std::string entrypoint;
     OMShaderType typebase;
 
-    OMRendererObjectType objType() override
+    inline auto objType() -> OMRendererObjectType override
     {
         return Shader;
     }

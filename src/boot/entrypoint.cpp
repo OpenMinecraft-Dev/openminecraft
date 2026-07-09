@@ -41,7 +41,7 @@ static void setupI18nEnv()
     i18n::res::load();
 }
 
-int boot(std::vector<std::string> args)
+auto boot(std::vector<std::string> args) -> int
 {
     log::multithread::registerCurrentThreadName("engineMain");
     auto logger = std::make_unique<log::OMLogger>("boot");
@@ -92,7 +92,7 @@ int boot(std::vector<std::string> args)
 
         img->parseBase(std::make_shared<std::ifstream>(in, std::ios::binary));
         std::ofstream of(out, std::ios::binary);
-        of.write((char *)img->fetchData(), img->getWidth() * img->getHeight() * 4);
+        of.write(reinterpret_cast<char *>(img->fetchData()), img->getWidth() * img->getHeight() * 4);
         of.close();
 
         delete img;

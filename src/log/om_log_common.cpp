@@ -1,5 +1,4 @@
 #include "boost/stacktrace/detail/location_from_symbol.hpp"
-#include "boost/stacktrace/frame.hpp"
 #include "boost/stacktrace/stacktrace.hpp"
 #include "openminecraft/log/om_log_ansi.hpp"
 #include "openminecraft/log/om_log_plat.hpp"
@@ -32,9 +31,7 @@ OMLogger::OMLogger(std::string name, void *obj) : OMLogger(fmt::format("{} @ {}"
 {
 }
 
-OMLogger::~OMLogger()
-{
-}
+OMLogger::~OMLogger() = default;
 
 void OMLogger::debug(std::string msg)
 {
@@ -144,7 +141,7 @@ void OMLogger::log(OMLogType type, std::string msg)
     return;
 
 multiLine:
-    char *p = std::strtok((char *)msg.c_str(), "\n");
+    char *p = std::strtok(const_cast<char *>(msg.c_str()), "\n");
     while (p)
     {
         log(type, std::string(p));

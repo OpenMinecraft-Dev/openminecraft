@@ -16,8 +16,8 @@ namespace openminecraft::renderer::vk::validation
 {
 log::OMLogger internal("Vulkan Validation");
 
-static int notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT t,
-                  DebugUtilsMessengerCallbackDataEXT data, void *user)
+static auto notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT t,
+                   DebugUtilsMessengerCallbackDataEXT data, void *user) -> int
 {
     if (!data.pMessage)
     {
@@ -46,9 +46,9 @@ static int notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeF
 
     return VK_SUCCESS;
 }
-static VkBool32 notifyNew(DebugReportFlagBitsEXT flags, DebugReportObjectTypeEXT objectType, uint64_t object,
-                          size_t location, int32_t messageCode, const char *pLayerPrefix, const char *pMessage,
-                          void *pUserData)
+static auto notifyNew(DebugReportFlagBitsEXT flags, DebugReportObjectTypeEXT objectType, uint64_t object,
+                      size_t location, int32_t messageCode, const char *pLayerPrefix, const char *pMessage,
+                      void *pUserData) -> VkBool32
 {
     switch (flags)
     {
@@ -119,7 +119,5 @@ void OMRendererVkValidation::ifEnable(std::function<void()> func)
         func();
     }
 }
-OMRendererVkValidation::~OMRendererVkValidation()
-{
-}
+OMRendererVkValidation::~OMRendererVkValidation() = default;
 } // namespace openminecraft::renderer::vk::validation

@@ -6,7 +6,7 @@
 
 namespace openminecraft::boot
 {
-int boot(std::vector<std::string> args);
+auto boot(std::vector<std::string> args) -> int;
 
 void pixeltowerDynTest();
 void pixeltowerLoadTest();

@@ -1,11 +1,10 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_texture.hpp"
 #include "GL/glcorearb.h"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
-#include <iostream>
 
 namespace openminecraft::renderer::opengl
 {
-static GLenum fromCommon(common::OMTextureType t)
+static auto fromCommon(common::OMTextureType t) -> GLenum
 {
     switch (t)
     {
@@ -19,7 +18,7 @@ static GLenum fromCommon(common::OMTextureType t)
     }
 }
 
-static GLenum fromCommon(common::OMTextureArrangement arr)
+static auto fromCommon(common::OMTextureArrangement arr) -> GLenum
 {
     switch (arr)
     {

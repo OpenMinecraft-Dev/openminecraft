@@ -19,7 +19,7 @@ class OMRendererTaskVk : public common::OMRendererTask
     void draw(uint64_t vertexCount) override;
     void finish() override;
 
-    bool isOnDefault();
+    auto isOnDefault() -> bool;
 
     ::vk::CommandBuffer commandBuffer;
 

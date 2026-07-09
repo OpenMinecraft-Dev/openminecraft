@@ -70,7 +70,7 @@ begin:
     goto begin;
 }
 
-std::string toDataSize(uint64_t l)
+auto toDataSize(uint64_t l) -> std::string
 {
     if (l < 1024)
     {
@@ -94,7 +94,7 @@ std::string toDataSize(uint64_t l)
     }
 }
 
-size_t heapSize(void *p)
+auto heapSize(void *p) -> size_t
 {
     if (!p)
     {

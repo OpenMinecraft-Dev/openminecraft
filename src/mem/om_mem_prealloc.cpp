@@ -13,20 +13,22 @@ void OMHeap::init()
     }
     expand(static_cast<uint8_t *>(block) + minSize);
 }
-uint64_t OMHeap::currentSizeAllocated()
+auto OMHeap::currentSizeAllocated() -> uint64_t
 {
-    return (size_t)heapTop - (size_t)block;
+    return reinterpret_cast<uintptr_t>(heapTop) - reinterpret_cast<uintptr_t>(block);
 }
 void OMHeap::expand(void *target)
 {
-    if (target < block || target <= heapTop || ((size_t)target - (size_t)block) > maxSize)
+    if (target < block || target <= heapTop ||
+        (reinterpret_cast<uintptr_t>(target) - reinterpret_cast<uintptr_t>(block)) > maxSize)
     {
         logger.error("target is not valid!");
         throw std::bad_alloc();
     }
 
-    activate(heapTop, (size_t)target - (size_t)heapTop);
-    mem::castorice::rec({castorice::Allocation, heapTop, (size_t)target - (size_t)heapTop, id});
+    activate(heapTop, reinterpret_cast<uintptr_t>(target) - reinterpret_cast<uintptr_t>(heapTop));
+    mem::castorice::rec({castorice::Allocation, heapTop,
+                         reinterpret_cast<uintptr_t>(target) - reinterpret_cast<uintptr_t>(heapTop), id});
     heapTop = target;
 }
 void OMHeap::shrink(void *target)
@@ -37,8 +39,9 @@ void OMHeap::shrink(void *target)
         throw std::bad_alloc();
     }
 
-    deactivate(target, (size_t)heapTop - (size_t)target);
-    mem::castorice::rec({castorice::Free, target, (size_t)heapTop - (size_t)target, id});
+    deactivate(target, reinterpret_cast<uintptr_t>(heapTop) - reinterpret_cast<uintptr_t>(target));
+    mem::castorice::rec(
+        {castorice::Free, target, reinterpret_cast<uintptr_t>(heapTop) - reinterpret_cast<uintptr_t>(target), id});
     heapTop = target;
 }
 } // namespace openminecraft::mem

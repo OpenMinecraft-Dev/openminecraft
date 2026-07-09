@@ -1,23 +1,21 @@
 #ifndef OM_IO_TOKENITER_EXCEPTION_HPP
 #define OM_IO_TOKENITER_EXCEPTION_HPP
 
-#include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace openminecraft::io
 {
 class OMTokenIterException : public std::exception
 {
   public:
-    OMTokenIterException(std::string s) : msg(s)
+    OMTokenIterException(std::string s) : msg(std::move(s))
     {
     }
 
-    ~OMTokenIterException() override
-    {
-    }
+    ~OMTokenIterException() override = default;
 
-    const char *what() const noexcept override
+    [[nodiscard]] auto what() const noexcept -> const char * override
     {
         return msg.c_str();
     }

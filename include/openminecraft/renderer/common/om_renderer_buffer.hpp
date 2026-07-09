@@ -30,7 +30,7 @@ class OMRendererBuffer : public OMRendererObject
     bool alwaysMapped = false;
 
     virtual void updateData(void *src) = 0;
-    OMRendererObjectType objType() override
+    auto objType() -> OMRendererObjectType override
     {
         return DataBuffer;
     }

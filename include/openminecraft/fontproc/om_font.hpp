@@ -16,8 +16,8 @@ class OMFont
     OMFont(std::istream &istr);
     ~OMFont();
 
-    std::shared_ptr<OMTriangleList> buildBasicPolygon(int charcode);
-    std::shared_ptr<OMFontGlyph> buildGlyph(int charcode);
+    auto buildBasicPolygon(int charcode) -> std::shared_ptr<OMTriangleList>;
+    auto buildGlyph(int charcode) -> std::shared_ptr<OMFontGlyph>;
 
   private:
     void *hbFont;

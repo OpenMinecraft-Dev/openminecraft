@@ -10,7 +10,7 @@ OMRendererShaderCompiler::OMRendererShaderCompiler()
 {
     for (int i = 0; i < 12; i++)
     {
-        compilerPool.push_back(std::thread([&]() {
+        compilerPool.emplace_back([&]() -> void {
             while (available)
             {
                 while (!queueLock.try_lock())
@@ -51,7 +51,7 @@ OMRendererShaderCompiler::OMRendererShaderCompiler()
 
                 queueLock.unlock();
             }
-        }));
+        });
     }
 }
 OMRendererShaderCompiler::~OMRendererShaderCompiler()
@@ -68,18 +68,18 @@ void OMRendererShaderCompiler::install(std::shared_ptr<OMRendererShaderCompilerB
     backends.push_back(backend);
 }
 
-int OMRendererShaderCompiler::addCompileTask(std::shared_ptr<OMShader> shader)
+auto OMRendererShaderCompiler::addCompileTask(std::shared_ptr<OMShader> shader) -> int
 {
     countTotal++;
     shaderQueue.push({shader, static_cast<int>(countTotal)});
     return countTotal;
 }
-std::shared_ptr<OMShader> OMRendererShaderCompiler::getResult(int source)
+auto OMRendererShaderCompiler::getResult(int source) -> std::shared_ptr<OMShader>
 {
     return results[source];
 }
 
-float OMRendererShaderCompiler::getCompleteRatio()
+auto OMRendererShaderCompiler::getCompleteRatio() -> float
 {
     return static_cast<float>(countFinished) / countTotal;
 }

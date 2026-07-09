@@ -6,8 +6,8 @@
 
 namespace openminecraft::i18n::locale
 {
-std::string defaultLocale();
-std::vector<std::string> available();
+auto defaultLocale() -> std::string;
+auto available() -> std::vector<std::string>;
 } // namespace openminecraft::i18n::locale
 
 #endif

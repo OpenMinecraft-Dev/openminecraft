@@ -18,7 +18,7 @@ void registerThreadName(std::string name, std::thread::id thrid)
     threadNameMap.insert(std::pair<std::thread::id, std::string>(thrid, name));
 }
 
-std::string acquireThreadName(std::thread::id thrid)
+auto acquireThreadName(std::thread::id thrid) -> std::string
 {
     if (threadNameMap.find(thrid) != threadNameMap.end())
     {

@@ -1,4 +1,3 @@
-#include "SDL3/SDL.h"
 #include "SDL3/SDL_events.h"
 #include "SDL3/SDL_video.h"
 #include "openminecraft/boot/entrypoint_testrenderer.hpp"
@@ -6,6 +5,7 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include <memory>
+#include "SDL3/SDL.h"
 
 namespace openminecraft::boot
 {

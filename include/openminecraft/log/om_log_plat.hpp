@@ -5,8 +5,8 @@
 
 namespace openminecraft::log
 {
-std::ostream &getPlatformLoggingStream();
-bool enableFormatting();
+auto getPlatformLoggingStream() -> std::ostream &;
+auto enableFormatting() -> bool;
 } // namespace openminecraft::log
 
 #endif

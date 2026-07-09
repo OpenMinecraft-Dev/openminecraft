@@ -39,8 +39,8 @@ class OMVertexFormat
     void appendPart(std::string, OMVertexPropType);
     void debugState();
     void decideStruct();
-    static int typeSize(OMVertexPropType);
-    static int typeAlign(OMVertexPropType);
+    static auto typeSize(OMVertexPropType) -> int;
+    static auto typeAlign(OMVertexPropType) -> int;
 
     void setInstance();
     void nextGroup();

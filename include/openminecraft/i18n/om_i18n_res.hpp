@@ -2,7 +2,6 @@
 #define OM_I18N_RES_HPP
 
 #include "fmt/format.h"
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -19,8 +18,8 @@ void registerModule(std::string name);
 void removeModule(std::string name);
 void load();
 void updateLocale(std::string loc);
-std::string translate(std::string key);
-template <typename... T> std::string translate(std::string key, T... args)
+auto translate(std::string key) -> std::string;
+template <typename... T> auto translate(std::string key, T... args) -> std::string
 {
     return fmt::format(translate(key), args...);
 }

@@ -10,7 +10,6 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "vulkan/vulkan.hpp"
 #include <chrono>
-#include <stdexcept>
 #include <thread>
 
 using openminecraft::i18n::res::translate;
@@ -45,7 +44,7 @@ OMRendererPipelineVk::~OMRendererPipelineVk()
     }
 }
 
-ShaderStageFlagBits OMRendererPipelineVk::convertTo(common::OMShaderType type)
+auto OMRendererPipelineVk::convertTo(common::OMShaderType type) -> ShaderStageFlagBits
 {
     switch (type)
     {
@@ -104,7 +103,7 @@ void OMRendererPipelineVk::attachShader(std::shared_ptr<common::OMShader> shader
     }
 }
 
-Format OMRendererPipelineVk::convertTo(common::basics::OMVertexPropType type)
+auto OMRendererPipelineVk::convertTo(common::basics::OMVertexPropType type) -> Format
 {
     switch (type)
     {
@@ -139,9 +138,8 @@ Format OMRendererPipelineVk::convertTo(common::basics::OMVertexPropType type)
 void OMRendererPipelineVk::appendInput(common::OMRendererPipelineInputType type)
 {
     auto typ = (type == common::ImageSampler ? DescriptorType::eCombinedImageSampler : DescriptorType::eUniformBuffer);
-    descriptorSetLayoutBindings.push_back(
-        DescriptorSetLayoutBinding(static_cast<uint32_t>(layoutBinding), typ, 1, ShaderStageFlagBits::eAll));
-    descriptorPoolSizes.push_back({typ, 1});
+    descriptorSetLayoutBindings.emplace_back(static_cast<uint32_t>(layoutBinding), typ, 1, ShaderStageFlagBits::eAll);
+    descriptorPoolSizes.emplace_back(typ, 1);
     layoutBinding++;
 }
 
@@ -152,14 +150,14 @@ void OMRendererPipelineVk::vertexFormat(common::basics::OMVertexFormat format)
 
     for (auto &p : format.parts)
     {
-        vertexInputBindingDesc.push_back({static_cast<uint32_t>(p.binding), static_cast<uint32_t>(p.size),
-                                          p.isInstance ? VertexInputRate::eInstance : VertexInputRate::eVertex});
+        vertexInputBindingDesc.emplace_back(static_cast<uint32_t>(p.binding), static_cast<uint32_t>(p.size),
+                                            p.isInstance ? VertexInputRate::eInstance : VertexInputRate::eVertex);
         uint32_t loc = 0;
         for (auto &pp : p.parts)
         {
-            vertexInputAttrDesc.push_back({loc, static_cast<uint32_t>(p.binding),
-                                           convertTo(std::get<common::basics::OMVertexPropType>(pp)),
-                                           static_cast<uint32_t>(std::get<int>(pp))});
+            vertexInputAttrDesc.emplace_back(loc, static_cast<uint32_t>(p.binding),
+                                             convertTo(std::get<common::basics::OMVertexPropType>(pp)),
+                                             static_cast<uint32_t>(std::get<int>(pp)));
             loc++;
         }
     }

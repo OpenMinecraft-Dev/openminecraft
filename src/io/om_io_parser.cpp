@@ -5,10 +5,8 @@ namespace openminecraft::io
 OMParser::OMParser(std::istream *stream) : source(stream)
 {
 }
-OMParser::~OMParser()
-{
-}
-bool OMParser::check()
+OMParser::~OMParser() = default;
+auto OMParser::check() -> bool
 {
     return source->good();
 }

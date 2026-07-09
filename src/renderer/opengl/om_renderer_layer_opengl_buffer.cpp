@@ -6,7 +6,7 @@
 
 namespace openminecraft::renderer::opengl
 {
-static GLenum convertFrom(common::OMBufferUsage u)
+static auto convertFrom(common::OMBufferUsage u) -> GLenum
 {
     switch (u)
     {

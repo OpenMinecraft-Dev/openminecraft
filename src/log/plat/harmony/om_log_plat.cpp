@@ -4,12 +4,12 @@
 
 namespace openminecraft::log
 {
-std::ostream &getPlatformLoggingStream()
+auto getPlatformLoggingStream() -> std::ostream &
 {
     return std::cout;
 }
 
-bool enableFormatting()
+auto enableFormatting() -> bool
 {
     return true;
 }

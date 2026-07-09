@@ -1,6 +1,8 @@
 #ifndef OM_FONT_GLYPH_HPP
 #define OM_FONT_GLYPH_HPP
 
+#include <utility>
+
 #include "glm/glm.hpp"
 #include "openminecraft/fontproc/om_font_triangle_list.hpp"
 
@@ -10,7 +12,7 @@ class OMFontGlyph
 {
   public:
     OMFontGlyph(std::shared_ptr<OMTriangleList> triangleList, glm::vec4 extent)
-        : triangleList(triangleList), extent(extent)
+        : triangleList(std::move(triangleList)), extent(extent)
     {
     }
 

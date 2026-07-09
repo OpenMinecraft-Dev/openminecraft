@@ -17,14 +17,14 @@ class OMRendererShaderCompilerBackendShaderc : public OMRendererShaderCompilerBa
     }
     ~OMRendererShaderCompilerBackendShaderc() = default;
 
-    std::shared_ptr<OMShader> compile(std::shared_ptr<OMShader> shader) override;
+    auto compile(std::shared_ptr<OMShader> shader) -> std::shared_ptr<OMShader> override;
 
-    OMShaderFileType outputType() override
+    auto outputType() -> OMShaderFileType override
     {
         return common::SPIRVBinary;
     }
 
-    bool accept(OMShaderFileType ftype) override
+    auto accept(OMShaderFileType ftype) -> bool override
     {
         return ftype == common::GLSLSource || ftype == common::HLSLSource;
     }

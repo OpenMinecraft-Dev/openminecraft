@@ -27,9 +27,7 @@ class OMRendererPipeline : public OMRendererObject
     OMRendererPipeline(OMRenderer *renderer)
     {
     }
-    virtual ~OMRendererPipeline()
-    {
-    }
+    virtual ~OMRendererPipeline() = default;
 
     virtual void appendInput(OMRendererPipelineInputType) = 0;
     virtual void attachShader(std::shared_ptr<OMShader> shader) = 0;
@@ -40,7 +38,7 @@ class OMRendererPipeline : public OMRendererObject
     virtual void bindInput(int idx, common::OMRendererBuffer *buff) = 0;
     virtual void bindInput(int idx, common::OMRendererTexture *texture) = 0;
 
-    OMRendererObjectType objType() override
+    inline auto objType() -> OMRendererObjectType override
     {
         return Pipeline;
     }

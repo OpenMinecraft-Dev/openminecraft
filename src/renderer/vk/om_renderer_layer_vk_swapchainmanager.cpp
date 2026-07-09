@@ -26,7 +26,7 @@ OMSwapchainManager::OMSwapchainManager(SurfaceKHR surface, std::function<OMSwapc
     OMSwapchainManager::reinit();
 }
 
-SurfaceFormatKHR OMSwapchainManager::chooseSurfaceFormat(OMSwapchainCap cap)
+auto OMSwapchainManager::chooseSurfaceFormat(OMSwapchainCap cap) -> SurfaceFormatKHR
 {
     for (auto sf : cap.formats)
     {
@@ -40,7 +40,7 @@ SurfaceFormatKHR OMSwapchainManager::chooseSurfaceFormat(OMSwapchainCap cap)
     return cap.formats[0];
 }
 
-Extent2D OMSwapchainManager::chooseExtent(const OMSwapchainCap &cap)
+auto OMSwapchainManager::chooseExtent(const OMSwapchainCap &cap) -> Extent2D
 {
     if (cap.capabilities.currentExtent.width != -1)
     {
@@ -56,7 +56,7 @@ Extent2D OMSwapchainManager::chooseExtent(const OMSwapchainCap &cap)
                                std::max(static_cast<uint32_t>(h), cap.capabilities.minImageExtent.height))};
 }
 
-PresentModeKHR OMSwapchainManager::choosePresentMode(const OMSwapchainCap &cap)
+auto OMSwapchainManager::choosePresentMode(const OMSwapchainCap &cap) -> PresentModeKHR
 {
     for (auto pm : cap.presentModes)
     {

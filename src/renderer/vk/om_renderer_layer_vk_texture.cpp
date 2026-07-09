@@ -5,15 +5,14 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 #include "vulkan/vulkan.hpp"
-#include <iostream>
 
 using namespace ::vk;
 using namespace openminecraft::i18n::res;
 
 namespace openminecraft::renderer::vk
 {
-static uint32_t findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properties,
-                               const PhysicalDeviceMemoryProperties &memProperties)
+static auto findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properties,
+                           const PhysicalDeviceMemoryProperties &memProperties) -> uint32_t
 {
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; ++i)
     {
@@ -26,7 +25,7 @@ static uint32_t findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properti
     return 0;
 }
 
-static ImageType fromCommonType(common::OMTextureType type)
+static auto fromCommonType(common::OMTextureType type) -> ImageType
 {
     switch (type)
     {
@@ -40,7 +39,7 @@ static ImageType fromCommonType(common::OMTextureType type)
     }
 }
 
-static ImageViewType fromCommonType2(common::OMTextureType type)
+static auto fromCommonType2(common::OMTextureType type) -> ImageViewType
 {
     switch (type)
     {
@@ -54,7 +53,7 @@ static ImageViewType fromCommonType2(common::OMTextureType type)
     }
 }
 
-static Format fromCommonUsage(common::OMTextureArrangement arr)
+static auto fromCommonUsage(common::OMTextureArrangement arr) -> Format
 {
     switch (arr)
     {

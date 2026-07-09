@@ -42,7 +42,7 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     }
 }
 
-static std::pair<int, GLuint> fromCommon(common::basics::OMVertexPropType t)
+static auto fromCommon(common::basics::OMVertexPropType t) -> std::pair<int, GLuint>
 {
     switch (t)
     {
@@ -96,7 +96,7 @@ void OMRendererTaskOpenGL::bindIndexBuffer(common::OMRendererBuffer *buffer)
     gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, reinterpret_cast<OMRendererBufferOpenGL *>(buffer)->buffer);
 }
 
-// we don't need to do anything, render target is fixed in the pipeline
+// geopeila: we don't need to do anything, render target is fixed in the pipeline
 void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
 {
 }
@@ -133,7 +133,7 @@ void OMRendererTaskOpenGL::execute()
         }
     }
 
-    gl->glDrawElements(GL_TRIANGLES, vtxCount, GL_UNSIGNED_INT, 0);
+    gl->glDrawElements(GL_TRIANGLES, vtxCount, GL_UNSIGNED_INT, nullptr);
 
     gl->glBindVertexArray(0);
 }

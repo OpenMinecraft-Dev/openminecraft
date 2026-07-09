@@ -1,6 +1,7 @@
 #include "openminecraft/io/json/om_io_tokeniter_json.hpp"
 #include "openminecraft/io/json/om_io_token_json.hpp"
 #include "openminecraft/io/om_io_tokeniter_exception.hpp"
+#include <array>
 #include <fmt/format.h>
 #include <iostream>
 #include <memory>
@@ -8,7 +9,7 @@
 
 namespace openminecraft::io::json
 {
-std::shared_ptr<OMJsonToken> OMJsonTokenIter::next()
+auto OMJsonTokenIter::next() -> std::shared_ptr<OMJsonToken>
 {
 beg:
     switch (this->source->peek())
@@ -82,29 +83,29 @@ beg:
     }
     case 't':
     case 'n': {
-        char b[5];
-        this->source->read(b, 4);
+        std::array<char, 5> b;
+        this->source->read(b.data(), 4);
         b[4] = '\0';
-        if (std::strcmp(b, "true") == 0 || std::strcmp(b, "false"))
+        if (std::strcmp(b.data(), "true") == 0 || std::strcmp(b.data(), "false"))
         {
-            return std::make_shared<OMJsonToken>(ConstantLiteral, b);
+            return std::make_shared<OMJsonToken>(ConstantLiteral, b.data());
         }
         else
         {
-            throw OMTokenIterException(fmt::format("json: unknown bad constant {}", b));
+            throw OMTokenIterException(fmt::format("json: unknown bad constant {}", b.data()));
         }
     }
     case 'f': {
-        char b[6];
-        this->source->read(b, 5);
+        std::array<char, 5> b;
+        this->source->read(b.data(), 5);
         b[5] = '\0';
-        if (std::strcmp(b, "false") == 0)
+        if (std::strcmp(b.data(), "false") == 0)
         {
-            return std::make_shared<OMJsonToken>(ConstantLiteral, b);
+            return std::make_shared<OMJsonToken>(ConstantLiteral, b.data());
         }
         else
         {
-            throw OMTokenIterException(fmt::format("json: unknown bad constant {}", b));
+            throw OMTokenIterException(fmt::format("json: unknown bad constant {}", b.data()));
         }
     }
     case '}':
@@ -123,7 +124,7 @@ beg:
     throw OMTokenIterException(fmt::format("json: unknown token {}", static_cast<char>(this->source->peek())));
 }
 
-bool OMJsonTokenIter::end()
+auto OMJsonTokenIter::end() -> bool
 {
     return !this->check();
 }

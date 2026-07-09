@@ -74,20 +74,20 @@ class OMRendererOpenGL : public OMRenderer
 {
   public:
     OMRendererOpenGL(AppInfo info, void *window);
-    ~OMRendererOpenGL();
+    ~OMRendererOpenGL() override;
 
-    std::string driver() override;
-    common::OMRendererBuffer *allocateBuffer(common::OMBufferUsage usage, uint64_t length) override;
-    common::OMRendererTexture *allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type,
-                                               common::OMTextureArrangement arr) override;
-    common::OMRendererRenderTarget *createRenderTarget() override;
-    common::OMRendererRenderTarget *getDefaultRenderTarget() override;
-    common::OMRendererPipeline *createPipeline() override;
-    common::OMRendererTask *createTask() override;
+    auto driver() -> std::string override;
+    auto allocateBuffer(common::OMBufferUsage usage, uint64_t length) -> common::OMRendererBuffer * override;
+    auto allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type, common::OMTextureArrangement arr)
+        -> common::OMRendererTexture * override;
+    auto createRenderTarget() -> common::OMRendererRenderTarget * override;
+    auto getDefaultRenderTarget() -> common::OMRendererRenderTarget * override;
+    auto createPipeline() -> common::OMRendererPipeline * override;
+    auto createTask() -> common::OMRendererTask * override;
     void registerTask(std::string id, common::OMRendererTask *task) override;
-    common::OMRendererTask *fetchTask(std::string id) override;
+    auto fetchTask(std::string id) -> common::OMRendererTask * override;
     void clearTasks() override;
-    glm::vec2 getExtent() const override;
+    auto getExtent() const -> glm::vec2 override;
 
     void registerHandler(std::shared_ptr<common::OMRendererHandler>) override;
     void clearHandlers() override;

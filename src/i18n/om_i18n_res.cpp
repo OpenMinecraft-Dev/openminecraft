@@ -105,7 +105,7 @@ void load()
     }
 }
 
-std::string translate(std::string key)
+auto translate(std::string key) -> std::string
 {
     auto data = translates[locale][key];
     if (!data.empty())

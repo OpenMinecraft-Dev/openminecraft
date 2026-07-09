@@ -29,7 +29,7 @@ struct MemModifyInfo
     const char *tag;
 };
 
-size_t heapSize(void *p);
+auto heapSize(void *p) -> size_t;
 void rec(MemModifyInfo &&i);
 void printres(std::function<void(std::string, std::string)>);
 } // namespace openminecraft::mem::castorice

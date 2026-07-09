@@ -16,17 +16,15 @@ class OMRendererRenderTarget : public OMRendererObject
     OMRendererRenderTarget(OMRenderer *renderer)
     {
     }
-    virtual ~OMRendererRenderTarget()
-    {
-    }
+    virtual ~OMRendererRenderTarget() = default;
 
     virtual void attachTarget(OMRendererTexture *texture) = 0;
     virtual void replaceTarget(int idx, OMRendererTexture *texture) = 0;
     virtual void rebuild() = 0;
-    virtual glm::vec2 fetchSize() = 0;
+    virtual auto fetchSize() -> glm::vec2 = 0;
     virtual void build() = 0;
 
-    OMRendererObjectType objType() override
+    inline auto objType() -> OMRendererObjectType override
     {
         return RenderTarget;
     }

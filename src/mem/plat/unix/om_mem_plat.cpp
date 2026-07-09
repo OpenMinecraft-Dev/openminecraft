@@ -77,12 +77,12 @@ void OMHeap::deactivate(void *p, uint64_t length)
 
 namespace allocator
 {
-void *stackAlloc(size_t l)
+auto stackAlloc(size_t l) -> void *
 {
     return alloca(l);
 }
 
-uint64_t pageSize()
+auto pageSize() -> uint64_t
 {
     return sysconf(_SC_PAGESIZE);
 }
@@ -90,7 +90,7 @@ uint64_t pageSize()
 
 namespace stack
 {
-uintptr_t fetchStackBase()
+auto fetchStackBase() -> uintptr_t
 {
 #ifdef OM_PLATFORM_APPLE
     void *stackTop = pthread_get_stackaddr_np(pthread_self());
@@ -118,7 +118,7 @@ uintptr_t fetchStackBase()
 
     return reinterpret_cast<uintptr_t>(stackTop) + stackLength;
 }
-uintptr_t fetchStackTop()
+auto fetchStackTop() -> uintptr_t
 {
 #ifdef OM_PLATFORM_APPLE
     void *stackTop = pthread_get_stackaddr_np(pthread_self());

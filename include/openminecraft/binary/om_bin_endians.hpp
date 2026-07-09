@@ -27,19 +27,19 @@ namespace openminecraft::binary
     read((char *)&target, sizeof(double));                                                                             \
     bed(target)
 
-uint16_t be16ToNative(uint16_t data);
-uint32_t be32ToNative(uint32_t data);
-uint64_t be64ToNative(uint64_t data);
-uint16_t le16ToNative(uint16_t data);
-uint32_t le32ToNative(uint32_t data);
-uint64_t le64ToNative(uint64_t data);
-float befToNative(float data);
-double bedToNative(double data);
+auto be16ToNative(uint16_t data) -> uint16_t;
+auto be32ToNative(uint32_t data) -> uint32_t;
+auto be64ToNative(uint64_t data) -> uint64_t;
+auto le16ToNative(uint16_t data) -> uint16_t;
+auto le32ToNative(uint32_t data) -> uint32_t;
+auto le64ToNative(uint64_t data) -> uint64_t;
+auto befToNative(float data) -> float;
+auto bedToNative(double data) -> double;
 
-int16_t be16SignedToNative(uint8_t d1, uint8_t d2);
-int32_t be32SignedToNative(uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4);
+auto be16SignedToNative(uint8_t d1, uint8_t d2) -> int16_t;
+auto be32SignedToNative(uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4) -> int32_t;
 
-bool checkNativeLe();
+auto checkNativeLe() -> bool;
 } // namespace openminecraft::binary
 
 #endif

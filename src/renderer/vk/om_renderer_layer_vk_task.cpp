@@ -37,7 +37,7 @@ OMRendererTaskVk::~OMRendererTaskVk()
     }
 }
 
-bool OMRendererTaskVk::isOnDefault()
+auto OMRendererTaskVk::isOnDefault() -> bool
 {
     return isDefault;
 }

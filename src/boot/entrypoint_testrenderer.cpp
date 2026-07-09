@@ -56,7 +56,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
             {
             }
 
-            bool operator<(const VertexPart &other) const
+            auto operator<(const VertexPart &other) const -> bool
             {
                 return std::memcmp(&other, this, sizeof(VertexPart)) < 0;
             }
@@ -136,11 +136,11 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
         mainVtxBuffer = renderer->allocateBuffer(VertexData, 4 * (3 + 2) * sizeof(float));
         mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
 
-        float vtxs[] = {-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f,  0.0f, 0.0f, 1.0f,
-                        1.0f,  1.0f,  0.0f, 1.0f, 1.0f, 1.0f,  -1.0f, 0.0f, 1.0f, 0.0f};
-        uint32_t vtxi[] = {0, 1, 2, 2, 3, 0};
-        mainVtxBuffer->updateData(vtxs);
-        mainIdxBuffer->updateData(vtxi);
+        std::array<float, 20> vtxs = {-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f,  0.0f, 0.0f, 1.0f,
+                                      1.0f,  1.0f,  0.0f, 1.0f, 1.0f, 1.0f,  -1.0f, 0.0f, 1.0f, 0.0f};
+        std::array<uint32_t, 6> vtxi = {0, 1, 2, 2, 3, 0};
+        mainVtxBuffer->updateData(vtxs.data());
+        mainIdxBuffer->updateData(vtxi.data());
     }
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));

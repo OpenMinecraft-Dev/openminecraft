@@ -14,8 +14,8 @@ class OMJsonTokenIter : public OMTokenIter<OMJsonToken>
     }
     ~OMJsonTokenIter() = default;
 
-    std::shared_ptr<OMJsonToken> next() override;
-    bool end() override;
+    auto next() -> std::shared_ptr<OMJsonToken> override;
+    auto end() -> bool override;
 };
 } // namespace openminecraft::io::json
 

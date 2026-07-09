@@ -4,7 +4,7 @@
 #include <optional>
 namespace openminecraft::mem
 {
-template <typename T> std::optional<T> safeRead(void *p);
+template <typename T> auto safeRead(void *p) -> std::optional<T>;
 } // namespace openminecraft::mem
 
 #endif

@@ -24,7 +24,7 @@ template <const char *G, typename T> class OMStlAllocator
     {
     }
 
-    T *allocate(std::size_t n)
+    auto allocate(std::size_t n) -> T *
     {
         auto r = static_cast<T *>(calloc(sizeof(T), n));
         castorice::rec({castorice::Allocation, r, n, G});
@@ -41,7 +41,7 @@ template <const char *G, typename T> class OMStlAllocator
     std::string id;
 };
 
-template <const char *G, typename T, typename... Args> std::shared_ptr<T> fast_shared(Args &&...args)
+template <const char *G, typename T, typename... Args> auto fast_shared(Args &&...args) -> std::shared_ptr<T>
 {
     return std::allocate_shared<T>(OMStlAllocator<G, T>(), args...);
 }

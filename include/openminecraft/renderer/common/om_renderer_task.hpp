@@ -19,9 +19,7 @@ class OMRendererTask : public OMRendererObject
     {
     }
 
-    virtual ~OMRendererTask()
-    {
-    }
+    virtual ~OMRendererTask() = default;
 
     virtual void bindPipeline(OMRendererPipeline *pipeline) = 0;
     virtual void bindVertexBuffer(std::vector<OMRendererBuffer *> buffer) = 0;
@@ -30,7 +28,7 @@ class OMRendererTask : public OMRendererObject
     virtual void draw(uint64_t vertexCount) = 0;
     virtual void finish() = 0;
 
-    OMRendererObjectType objType() override
+    inline auto objType() -> OMRendererObjectType override
     {
         return Task;
     }

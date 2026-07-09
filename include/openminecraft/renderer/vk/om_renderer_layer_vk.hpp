@@ -30,8 +30,8 @@
                              (uint32_t)err.code().value()))
 namespace openminecraft::renderer::vk
 {
-void *vkAlloc(void *, size_t size, size_t align, VkSystemAllocationScope s);
-void *vkRealloc(void *, void *o, size_t size, size_t align, VkSystemAllocationScope s);
+auto vkAlloc(void *, size_t size, size_t align, VkSystemAllocationScope s) -> void *;
+auto vkRealloc(void *, void *o, size_t size, size_t align, VkSystemAllocationScope s) -> void *;
 void vkFree(void *, void *p);
 void vkInternalAlloc(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s);
 void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s);
@@ -46,28 +46,29 @@ class OMRendererVk : public OMRenderer
 {
   public:
     OMRendererVk(AppInfo info, std::function<int(std::vector<std::string>)> dev, void *window);
-    ~OMRendererVk();
+    ~OMRendererVk() override;
 
-    util::OMResult<std::vector<const char *>, std::string> fetchRequiredExtensions();
-    util::OMResult<::vk::Instance, std::string> instanceCreation(AppInfo info, std::vector<const char *> exts);
-    util::OMResult<::vk::PhysicalDevice, std::string> deviceSelection(std::function<int(std::vector<std::string>)> dev);
-    util::OMResult<std::any, std::string> sdlVulkanLoading();
-    util::OMResult<::vk::Device, std::string> deviceCreation();
-    util::OMResult<std::any, std::string> deviceQueueFetch();
-    swapchain::OMSwapchainCap getSwapchainCap();
+    auto fetchRequiredExtensions() -> util::OMResult<std::vector<const char *>, std::string>;
+    auto instanceCreation(AppInfo info, std::vector<const char *> exts) -> util::OMResult<::vk::Instance, std::string>;
+    auto deviceSelection(std::function<int(std::vector<std::string>)> dev)
+        -> util::OMResult<::vk::PhysicalDevice, std::string>;
+    auto sdlVulkanLoading() -> util::OMResult<std::any, std::string>;
+    auto deviceCreation() -> util::OMResult<::vk::Device, std::string>;
+    auto deviceQueueFetch() -> util::OMResult<std::any, std::string>;
+    auto getSwapchainCap() -> swapchain::OMSwapchainCap;
 
-    std::string driver() override;
-    common::OMRendererBuffer *allocateBuffer(common::OMBufferUsage usage, uint64_t length) override;
-    common::OMRendererTexture *allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type,
-                                               common::OMTextureArrangement arr) override;
-    common::OMRendererRenderTarget *createRenderTarget() override;
-    common::OMRendererRenderTarget *getDefaultRenderTarget() override;
-    common::OMRendererPipeline *createPipeline() override;
-    common::OMRendererTask *createTask() override;
+    auto driver() -> std::string override;
+    auto allocateBuffer(common::OMBufferUsage usage, uint64_t length) -> common::OMRendererBuffer * override;
+    auto allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type, common::OMTextureArrangement arr)
+        -> common::OMRendererTexture * override;
+    auto createRenderTarget() -> common::OMRendererRenderTarget * override;
+    auto getDefaultRenderTarget() -> common::OMRendererRenderTarget * override;
+    auto createPipeline() -> common::OMRendererPipeline * override;
+    auto createTask() -> common::OMRendererTask * override;
     void registerTask(std::string id, common::OMRendererTask *task) override;
-    common::OMRendererTask *fetchTask(std::string id) override;
+    auto fetchTask(std::string id) -> common::OMRendererTask * override;
     void clearTasks() override;
-    glm::vec2 getExtent() const override;
+    auto getExtent() const -> glm::vec2 override;
 
     void registerHandler(std::shared_ptr<common::OMRendererHandler> handler) override;
     void clearHandlers() override;

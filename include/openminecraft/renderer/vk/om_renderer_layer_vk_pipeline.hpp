@@ -33,20 +33,20 @@ class OMRendererPipelineVk : public common::OMRendererPipeline
     void bindInput(int idx, common::OMRendererTexture *texture) override;
 
     void build() override;
-    static ::vk::Format convertTo(common::basics::OMVertexPropType);
-    static ::vk::ShaderStageFlagBits convertTo(common::OMShaderType);
+    static auto convertTo(common::basics::OMVertexPropType) -> ::vk::Format;
+    static auto convertTo(common::OMShaderType) -> ::vk::ShaderStageFlagBits;
 
-    ::vk::Pipeline getPipeline()
+    auto getPipeline() -> ::vk::Pipeline
     {
         return pipeline;
     };
 
-    ::vk::PipelineLayout getPipelineLayout()
+    auto getPipelineLayout() -> ::vk::PipelineLayout
     {
         return pipelineLayout;
     }
 
-    ::vk::DescriptorSet getDescSet()
+    auto getDescSet() -> ::vk::DescriptorSet
     {
         return descriptorSet;
     }

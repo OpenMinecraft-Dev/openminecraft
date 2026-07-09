@@ -7,8 +7,6 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "vulkan/vulkan.hpp"
 #include <algorithm>
-#include <iostream>
-#include <stdexcept>
 
 using namespace ::vk;
 using namespace openminecraft::i18n::res;
@@ -44,7 +42,7 @@ void OMRendererRenderTargetVk::attachTarget(common::OMRendererTexture *texture)
     textures.push_back(texture);
 }
 
-glm::vec2 OMRendererRenderTargetVk::fetchSize()
+auto OMRendererRenderTargetVk::fetchSize() -> glm::vec2
 {
     if (textures.empty())
     {
@@ -115,7 +113,7 @@ void OMRendererRenderTargetVk::build()
                                           AttachmentStoreOp::eDontCare,
                                           ImageLayout::eUndefined,
                                           ImageLayout::eDepthStencilAttachmentOptimal});
-                    depthAttach.push_back({a, ImageLayout::eDepthStencilAttachmentOptimal});
+                    depthAttach.emplace_back(a, ImageLayout::eDepthStencilAttachmentOptimal);
                 }
                 else
                 {
@@ -128,7 +126,7 @@ void OMRendererRenderTargetVk::build()
                                           AttachmentStoreOp::eDontCare,
                                           ImageLayout::eUndefined,
                                           ImageLayout::eShaderReadOnlyOptimal});
-                    colorAttach.push_back({a, ImageLayout::eColorAttachmentOptimal});
+                    colorAttach.emplace_back(a, ImageLayout::eColorAttachmentOptimal);
                 }
                 a++;
             }

@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace openminecraft::io::json
@@ -23,48 +24,48 @@ enum OMJsonNodeType
 class OMJsonNode
 {
   public:
-    virtual OMJsonNodeType type() = 0;
-    virtual std::vector<std::shared_ptr<OMJsonNode>> &getArray() = 0;
-    virtual std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> &getMap() = 0;
-    virtual double getNumberFloating() = 0;
-    virtual int64_t getNumber() = 0;
-    virtual bool getBoolean() = 0;
-    virtual std::string getString() = 0;
+    virtual auto type() -> OMJsonNodeType = 0;
+    virtual auto getArray() -> std::vector<std::shared_ptr<OMJsonNode>> & = 0;
+    virtual auto getMap() -> std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> & = 0;
+    virtual auto getNumberFloating() -> double = 0;
+    virtual auto getNumber() -> int64_t = 0;
+    virtual auto getBoolean() -> bool = 0;
+    virtual auto getString() -> std::string = 0;
 };
 
 class OMJsonNodeString : public OMJsonNode
 {
   public:
-    OMJsonNodeString(std::string value) : value(value)
+    OMJsonNodeString(std::string value) : value(std::move(value))
     {
     }
 
-    OMJsonNodeType type() override
+    auto type() -> OMJsonNodeType override
     {
         return String;
     }
 
-    std::vector<std::shared_ptr<OMJsonNode>> &getArray() override
+    auto getArray() -> std::vector<std::shared_ptr<OMJsonNode>> & override
     {
         throw std::logic_error("this is a json string!");
     }
-    std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> &getMap() override
+    auto getMap() -> std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> & override
     {
         throw std::logic_error("this is a json string!");
     }
-    double getNumberFloating() override
+    auto getNumberFloating() -> double override
     {
         throw std::logic_error("this is a json string!");
     }
-    int64_t getNumber() override
+    auto getNumber() -> int64_t override
     {
         throw std::logic_error("this is a json string!");
     }
-    bool getBoolean() override
+    auto getBoolean() -> bool override
     {
         throw std::logic_error("this is a json string!");
     }
-    std::string getString() override
+    auto getString() -> std::string override
     {
         return value;
     }
@@ -76,36 +77,36 @@ class OMJsonNodeString : public OMJsonNode
 class OMJsonNodeObject : public OMJsonNode
 {
   public:
-    OMJsonNodeObject(std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> v) : data(v)
+    OMJsonNodeObject(std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> v) : data(std::move(v))
     {
     }
 
-    OMJsonNodeType type() override
+    auto type() -> OMJsonNodeType override
     {
         return Object;
     }
 
-    std::vector<std::shared_ptr<OMJsonNode>> &getArray() override
+    auto getArray() -> std::vector<std::shared_ptr<OMJsonNode>> & override
     {
         throw std::logic_error("this is a json object!");
     }
-    std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> &getMap() override
+    auto getMap() -> std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> & override
     {
         return data;
     }
-    double getNumberFloating() override
+    auto getNumberFloating() -> double override
     {
         throw std::logic_error("this is a json object!");
     }
-    int64_t getNumber() override
+    auto getNumber() -> int64_t override
     {
         throw std::logic_error("this is a json object!");
     }
-    bool getBoolean() override
+    auto getBoolean() -> bool override
     {
         throw std::logic_error("this is a json object!");
     }
-    std::string getString() override
+    auto getString() -> std::string override
     {
         throw std::logic_error("this is a json object!");
     }
@@ -117,36 +118,36 @@ class OMJsonNodeObject : public OMJsonNode
 class OMJsonNodeArray : public OMJsonNode
 {
   public:
-    OMJsonNodeArray(std::vector<std::shared_ptr<OMJsonNode>> arr) : arr(arr)
+    OMJsonNodeArray(std::vector<std::shared_ptr<OMJsonNode>> arr) : arr(std::move(arr))
     {
     }
 
-    OMJsonNodeType type() override
+    auto type() -> OMJsonNodeType override
     {
         return Array;
     }
 
-    std::vector<std::shared_ptr<OMJsonNode>> &getArray() override
+    auto getArray() -> std::vector<std::shared_ptr<OMJsonNode>> & override
     {
         return arr;
     }
-    std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> &getMap() override
+    auto getMap() -> std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> & override
     {
         throw std::logic_error("this is a json array!");
     }
-    double getNumberFloating() override
+    auto getNumberFloating() -> double override
     {
         throw std::logic_error("this is a json array!");
     }
-    int64_t getNumber() override
+    auto getNumber() -> int64_t override
     {
         throw std::logic_error("this is a json array!");
     }
-    bool getBoolean() override
+    auto getBoolean() -> bool override
     {
         throw std::logic_error("this is a json array!");
     }
-    std::string getString() override
+    auto getString() -> std::string override
     {
         throw std::logic_error("this is a json array!");
     }
@@ -166,32 +167,32 @@ class OMJsonNodeNumber : public OMJsonNode
     {
     }
 
-    OMJsonNodeType type() override
+    auto type() -> OMJsonNodeType override
     {
         return Number;
     }
 
-    std::vector<std::shared_ptr<OMJsonNode>> &getArray() override
+    auto getArray() -> std::vector<std::shared_ptr<OMJsonNode>> & override
     {
         throw std::logic_error("this is a json number!");
     }
-    std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> &getMap() override
+    auto getMap() -> std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> & override
     {
         throw std::logic_error("this is a json number!");
     }
-    double getNumberFloating() override
+    auto getNumberFloating() -> double override
     {
         return dvalue;
     }
-    int64_t getNumber() override
+    auto getNumber() -> int64_t override
     {
         return ivalue;
     }
-    bool getBoolean() override
+    auto getBoolean() -> bool override
     {
         throw std::logic_error("this is a json number!");
     }
-    std::string getString() override
+    auto getString() -> std::string override
     {
         throw std::logic_error("this is a json number!");
     }
@@ -208,32 +209,32 @@ class OMJsonNodePrimitive : public OMJsonNode
     {
     }
 
-    OMJsonNodeType type() override
+    auto type() -> OMJsonNodeType override
     {
         return Primitive;
     }
 
-    std::vector<std::shared_ptr<OMJsonNode>> &getArray() override
+    auto getArray() -> std::vector<std::shared_ptr<OMJsonNode>> & override
     {
         throw std::logic_error("this is a json primitive!");
     }
-    std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> &getMap() override
+    auto getMap() -> std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> & override
     {
         throw std::logic_error("this is a json primitive!");
     }
-    double getNumberFloating() override
+    auto getNumberFloating() -> double override
     {
         throw std::logic_error("this is a json primitive!");
     }
-    int64_t getNumber() override
+    auto getNumber() -> int64_t override
     {
         throw std::logic_error("this is a json primitive!");
     }
-    bool getBoolean() override
+    auto getBoolean() -> bool override
     {
         return value;
     }
-    std::string getString() override
+    auto getString() -> std::string override
     {
         throw std::logic_error("this is a json primitive!");
     }
@@ -245,36 +246,34 @@ class OMJsonNodePrimitive : public OMJsonNode
 class OMJsonNodeNull : public OMJsonNode
 {
   public:
-    OMJsonNodeNull()
-    {
-    }
+    OMJsonNodeNull() = default;
 
-    OMJsonNodeType type() override
+    auto type() -> OMJsonNodeType override
     {
         return Null;
     }
 
-    std::vector<std::shared_ptr<OMJsonNode>> &getArray() override
+    auto getArray() -> std::vector<std::shared_ptr<OMJsonNode>> & override
     {
         throw std::logic_error("this is a json null!");
     }
-    std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> &getMap() override
+    auto getMap() -> std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> & override
     {
         throw std::logic_error("this is a json null!");
     }
-    double getNumberFloating() override
+    auto getNumberFloating() -> double override
     {
         throw std::logic_error("this is a json null!");
     }
-    int64_t getNumber() override
+    auto getNumber() -> int64_t override
     {
         throw std::logic_error("this is a json null!");
     }
-    bool getBoolean() override
+    auto getBoolean() -> bool override
     {
         throw std::logic_error("this is a json null!");
     }
-    std::string getString() override
+    auto getString() -> std::string override
     {
         throw std::logic_error("this is a json null!");
     }

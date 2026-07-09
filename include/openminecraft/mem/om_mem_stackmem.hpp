@@ -4,8 +4,8 @@
 #include <cstdint>
 namespace openminecraft::mem::stack
 {
-uintptr_t fetchStackBase();
-uintptr_t fetchStackTop();
+auto fetchStackBase() -> uintptr_t;
+auto fetchStackTop() -> uintptr_t;
 }; // namespace openminecraft::mem::stack
 
 #endif

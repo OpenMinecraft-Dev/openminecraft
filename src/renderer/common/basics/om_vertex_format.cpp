@@ -1,20 +1,15 @@
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
-#include "glm/glm.hpp"
-#include <cstdint>
-#include <tuple>
 
 namespace openminecraft::renderer::common::basics
 {
 OMVertexFormat::OMVertexFormat() : logger("OMVertexFormat", this)
 {
 }
-OMVertexFormat::~OMVertexFormat()
-{
-}
+OMVertexFormat::~OMVertexFormat() = default;
 
 void OMVertexFormat::appendPart(std::string id, OMVertexPropType type)
 {
-    currentGroup.parts.push_back(std::make_tuple(id, type, 0));
+    currentGroup.parts.emplace_back(id, type, 0);
 }
 
 void OMVertexFormat::decideStruct()
@@ -63,7 +58,7 @@ void OMVertexFormat::nextGroup()
     currentGroup.binding = binding;
 }
 
-int OMVertexFormat::typeAlign(OMVertexPropType type)
+auto OMVertexFormat::typeAlign(OMVertexPropType type) -> int
 {
     switch (type)
     {
@@ -85,7 +80,7 @@ int OMVertexFormat::typeAlign(OMVertexPropType type)
     }
 }
 
-int OMVertexFormat::typeSize(OMVertexPropType type)
+auto OMVertexFormat::typeSize(OMVertexPropType type) -> int
 {
     switch (type)
     {

@@ -2,19 +2,19 @@
 
 namespace openminecraft::binary
 {
-uint16_t be16ToNative(uint16_t data)
+auto be16ToNative(uint16_t data) -> uint16_t
 {
     return checkNativeLe() ? ((data & 0x00ff) << 8) | ((data & 0xff00) >> 8) : data;
 }
 
-uint32_t be32ToNative(uint32_t data)
+auto be32ToNative(uint32_t data) -> uint32_t
 {
     return checkNativeLe() ? ((data & 0x000000ff) << 24) | ((data & 0x0000ff00) << 8) | ((data & 0x00ff0000) >> 8) |
                                  ((data & 0xff000000) >> 24)
                            : data;
 }
 
-uint64_t be64ToNative(uint64_t data)
+auto be64ToNative(uint64_t data) -> uint64_t
 {
     return checkNativeLe() ? ((data & 0x00000000000000ff) << 56) | ((data & 0x000000000000ff00) << 40) |
                                  ((data & 0x0000000000ff0000) << 24) | ((data & 0x00000000ff000000) << 8) |
@@ -22,19 +22,19 @@ uint64_t be64ToNative(uint64_t data)
                                  ((data & 0x00ff000000000000) >> 40) | ((data & 0xff00000000000000) >> 56)
                            : data;
 }
-uint16_t le16ToNative(uint16_t data)
+auto le16ToNative(uint16_t data) -> uint16_t
 {
     return !checkNativeLe() ? ((data & 0x00ff) << 8) | ((data & 0xff00) >> 8) : data;
 }
 
-uint32_t le32ToNative(uint32_t data)
+auto le32ToNative(uint32_t data) -> uint32_t
 {
     return !checkNativeLe() ? ((data & 0x000000ff) << 24) | ((data & 0x0000ff00) << 8) | ((data & 0x00ff0000) >> 8) |
                                   ((data & 0xff000000) >> 24)
                             : data;
 }
 
-uint64_t le64ToNative(uint64_t data)
+auto le64ToNative(uint64_t data) -> uint64_t
 {
     return !checkNativeLe() ? ((data & 0x00000000000000ff) << 56) | ((data & 0x000000000000ff00) << 40) |
                                   ((data & 0x0000000000ff0000) << 24) | ((data & 0x00000000ff000000) << 8) |
@@ -43,7 +43,7 @@ uint64_t le64ToNative(uint64_t data)
                             : data;
 }
 
-float befToNative(float data)
+auto befToNative(float data) -> float
 {
     union {
         uint32_t idata;
@@ -56,17 +56,17 @@ float befToNative(float data)
     return d.fdata;
 }
 
-int16_t be16SignedToNative(uint8_t d1, uint8_t d2)
+auto be16SignedToNative(uint8_t d1, uint8_t d2) -> int16_t
 {
     return (int16_t)(((int8_t)d1) << 8 | ((int8_t)d2));
 }
 
-int32_t be32SignedToNative(uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4)
+auto be32SignedToNative(uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4) -> int32_t
 {
     return (int16_t)(((int8_t)d1) << 24 | ((int8_t)d2) << 16 | ((int8_t)d3) << 8 | ((uint8_t)d4));
 }
 
-double bedToNative(double data)
+auto bedToNative(double data) -> double
 {
     union {
         uint64_t ldata;
@@ -79,7 +79,7 @@ double bedToNative(double data)
     return d.ddata;
 }
 
-bool checkNativeLe()
+auto checkNativeLe() -> bool
 {
     union {
         uint16_t full;

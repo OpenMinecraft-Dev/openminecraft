@@ -2,7 +2,6 @@
 #define OM_IO_TOKENITER_HPP
 
 #include "openminecraft/io/om_io_parser.hpp"
-#include "openminecraft/io/om_io_token.hpp"
 #include <memory>
 
 namespace openminecraft::io
@@ -17,8 +16,8 @@ template <typename T> class OMTokenIter : public OMParser
     }
     ~OMTokenIter() = default;
 
-    virtual std::shared_ptr<T> next() = 0;
-    virtual bool end() = 0;
+    virtual auto next() -> std::shared_ptr<T> = 0;
+    virtual auto end() -> bool = 0;
 };
 } // namespace openminecraft::io
 

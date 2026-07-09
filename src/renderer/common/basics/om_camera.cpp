@@ -2,7 +2,6 @@
 #include "glm/ext/matrix_clip_space.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include <chrono>
 #include <glm/ext/matrix_transform.hpp>
 
 namespace openminecraft::renderer::common::basics
@@ -12,7 +11,7 @@ OMCamera::OMCamera(OMRenderer *renderer, glm::vec3 location, float yaw, float pi
 {
 }
 
-glm::mat4 OMCamera::fetchViewMat()
+auto OMCamera::fetchViewMat() -> glm::mat4
 {
     glm::vec3 front;
     front.x = std::cos(glm::radians(yaw)) * std::cos(glm::radians(pitch));
@@ -22,7 +21,7 @@ glm::mat4 OMCamera::fetchViewMat()
     return glm::lookAt(location, location + front, {0.0f, 1.0f, 0.0f});
 }
 
-glm::mat4 OMCamera::fetchProjMat()
+auto OMCamera::fetchProjMat() -> glm::mat4
 {
     auto extent = renderer->getExtent();
     return glm::perspective(glm::radians(70.0f), extent.x / extent.y, 0.01f, 5.0f);

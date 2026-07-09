@@ -8,19 +8,19 @@ using namespace openminecraft::mem::castorice;
 namespace openminecraft::mem::allocator
 {
 #define defmalr(id, tag)                                                                                               \
-    void *tracedMalloc##id(size_t length)                                                                              \
+    auto tracedMalloc##id(size_t length) -> void *                                                                     \
     {                                                                                                                  \
         void *p = malloc(length);                                                                                      \
         rec({Allocation, p, heapSize(p), tag});                                                                        \
         return p;                                                                                                      \
     }                                                                                                                  \
-    void *tracedCalloc##id(size_t count, size_t ilength)                                                               \
+    auto tracedCalloc##id(size_t count, size_t ilength) -> void *                                                      \
     {                                                                                                                  \
         void *p = calloc(count, ilength);                                                                              \
         rec({Allocation, p, heapSize(p), tag});                                                                        \
         return p;                                                                                                      \
     }                                                                                                                  \
-    void *tracedRealloc##id(void *p, size_t length)                                                                    \
+    auto tracedRealloc##id(void *p, size_t length) -> void *                                                           \
     {                                                                                                                  \
         if (p == nullptr)                                                                                              \
             return tracedMalloc##id(length);                                                                           \
@@ -46,14 +46,14 @@ defmalr(Specs, "specs");
 
 using namespace openminecraft::mem::allocator;
 
-void *operator new(size_t size)
+auto operator new(size_t size) -> void *
 {
     void *p = malloc(size);
     rec({Allocation, p, heapSize(p), "cpp"});
     return p;
 }
 
-void *operator new[](size_t size)
+auto operator new[](size_t size) -> void *
 {
     void *p = malloc(size);
     rec({Allocation, p, heapSize(p), "cpp"});

@@ -1,23 +1,21 @@
 #ifndef OM_RENDERER_EXCEPTION
 #define OM_RENDERER_EXCEPTION
 
-#include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace openminecraft::renderer
 {
 class OMRendererException : public std::exception
 {
   public:
-    OMRendererException(std::string s) : msg(s)
+    OMRendererException(std::string s) : msg(std::move(s))
     {
     }
 
-    ~OMRendererException() override
-    {
-    }
+    ~OMRendererException() override = default;
 
-    const char *what() const noexcept override
+    [[nodiscard]] auto what() const noexcept -> const char * override
     {
         return msg.c_str();
     }

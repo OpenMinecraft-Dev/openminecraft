@@ -5,6 +5,7 @@
 #include "openminecraft/io/json/om_io_tokeniter_json.hpp"
 #include <memory>
 #include <string>
+#include <utility>
 namespace openminecraft::io::json
 {
 struct OMJsonAstContext
@@ -13,7 +14,7 @@ struct OMJsonAstContext
     std::string key;
     bool waiting_for_value = false;
 
-    OMJsonAstContext(std::shared_ptr<OMJsonNode> container) : container(container)
+    OMJsonAstContext(std::shared_ptr<OMJsonNode> container) : container(std::move(container))
     {
     }
 };
@@ -21,12 +22,12 @@ struct OMJsonAstContext
 class OMJsonAstBuilder
 {
   public:
-    OMJsonAstBuilder(std::shared_ptr<OMJsonTokenIter> iter) : iter(iter)
+    OMJsonAstBuilder(std::shared_ptr<OMJsonTokenIter> iter) : iter(std::move(iter))
     {
     }
     ~OMJsonAstBuilder() = default;
 
-    std::shared_ptr<OMJsonNode> build();
+    auto build() -> std::shared_ptr<OMJsonNode>;
 
   private:
     std::shared_ptr<OMJsonTokenIter> iter;

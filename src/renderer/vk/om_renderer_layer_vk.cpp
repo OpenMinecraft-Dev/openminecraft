@@ -21,7 +21,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <system_error>
 #include <utility>
@@ -96,16 +95,15 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     logger = std::make_shared<log::OMLogger>("OMRendererVk", this);
 
     allocator = {nullptr,
-                 (PFN_AllocationFunction)vkAlloc,
-                 (PFN_ReallocationFunction)vkRealloc,
-                 (PFN_FreeFunction)vkFree,
-                 (PFN_InternalAllocationNotification)vkInternalAlloc,
-                 (PFN_InternalFreeNotification)vkInternalFree};
+                 reinterpret_cast<PFN_AllocationFunction>(vkAlloc),
+                 reinterpret_cast<PFN_ReallocationFunction>(vkRealloc),
+                 reinterpret_cast<PFN_FreeFunction>(vkFree),
+                 reinterpret_cast<PFN_InternalAllocationNotification>(vkInternalAlloc),
+                 reinterpret_cast<PFN_InternalFreeNotification>(vkInternalFree)};
 
     {
 #ifdef OM_VULKAN_DYNAMIC
-        PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr =
-            loader.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
+        auto vkGetInstanceProcAddr = loader.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
         VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
 #endif
     }
@@ -185,7 +183,8 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     try
     {
         swapchainManager = std::make_shared<swapchain::OMSwapchainManager>(
-            surface, [&]() { return getSwapchainCap(); }, queueFamilyIndex, logicalDevice, allocator, window);
+            surface, [&]() -> swapchain::OMSwapchainCap { return getSwapchainCap(); }, queueFamilyIndex, logicalDevice,
+            allocator, window);
     }
     catch (SystemError &e)
     {
@@ -245,7 +244,7 @@ void OMRendererVk::rebuildDefaults()
                     swapchainManager->extent.width, swapchainManager->extent.height, 1),
                 allocator));
         }
-        for (int i = 0; i < defaultFramebuffers.size(); i++)
+        for (auto defaultFramebuffer : defaultFramebuffers)
         {
             auto commandBuffer = logicalDevice.allocateCommandBuffers(
                 CommandBufferAllocateInfo(tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
@@ -254,7 +253,7 @@ void OMRendererVk::rebuildDefaults()
             std::vector test = {ClearValue({0.0f, 0.0f, 0.0f, 0.0f}), ClearValue({1.0f, 0})};
             commandBuffer.beginRenderPass(
                 RenderPassBeginInfo(reinterpret_cast<OMRendererRenderTargetVk *>(getDefaultRenderTarget())->renderPass,
-                                    defaultFramebuffers[i], Rect2D(Offset2D(0, 0), swapchainManager->extent), test),
+                                    defaultFramebuffer, Rect2D(Offset2D(0, 0), swapchainManager->extent), test),
                 SubpassContents::eSecondaryCommandBuffers);
 
             for (auto tsk : tasks)
@@ -300,7 +299,7 @@ void OMRendererVk::registerTask(std::string id, common::OMRendererTask *task)
     tasks[id] = task;
 }
 
-common::OMRendererTask *OMRendererVk::fetchTask(std::string id)
+auto OMRendererVk::fetchTask(std::string id) -> common::OMRendererTask *
 {
     return tasks[id];
 }
@@ -314,35 +313,35 @@ void OMRendererVk::clearTasks()
     tasks.clear();
 }
 
-common::OMRendererTask *OMRendererVk::createTask()
+auto OMRendererVk::createTask() -> common::OMRendererTask *
 {
     return new OMRendererTaskVk(this);
 }
 
-common::OMRendererPipeline *OMRendererVk::createPipeline()
+auto OMRendererVk::createPipeline() -> common::OMRendererPipeline *
 {
     return new OMRendererPipelineVk(this);
 }
 
-common::OMRendererBuffer *OMRendererVk::allocateBuffer(common::OMBufferUsage usage, uint64_t length)
+auto OMRendererVk::allocateBuffer(common::OMBufferUsage usage, uint64_t length) -> common::OMRendererBuffer *
 {
     return new OMRendererBufferVk(usage, length, this);
 }
 
-common::OMRendererTexture *OMRendererVk::allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type,
-                                                         common::OMTextureArrangement arr)
+auto OMRendererVk::allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type,
+                                   common::OMTextureArrangement arr) -> common::OMRendererTexture *
 {
     return new OMRendererTextureVk(width, height, type, arr, this);
 }
-common::OMRendererRenderTarget *OMRendererVk::createRenderTarget()
+auto OMRendererVk::createRenderTarget() -> common::OMRendererRenderTarget *
 {
     return new OMRendererRenderTargetVk(this);
 }
-common::OMRendererRenderTarget *OMRendererVk::getDefaultRenderTarget()
+auto OMRendererVk::getDefaultRenderTarget() -> common::OMRendererRenderTarget *
 {
     return this->defaultTarget;
 }
-glm::vec2 OMRendererVk::getExtent() const
+auto OMRendererVk::getExtent() const -> glm::vec2
 {
     return {static_cast<float>(swapchainManager->extent.width), static_cast<float>(swapchainManager->extent.height)};
 }
@@ -474,7 +473,7 @@ void OMRendererVk::requestResize()
     this->needRebuild = true;
 }
 
-swapchain::OMSwapchainCap OMRendererVk::getSwapchainCap()
+auto OMRendererVk::getSwapchainCap() -> swapchain::OMSwapchainCap
 {
     try
     {
@@ -488,7 +487,7 @@ swapchain::OMSwapchainCap OMRendererVk::getSwapchainCap()
     }
 }
 
-OMResult<std::any, std::string> OMRendererVk::deviceQueueFetch()
+auto OMRendererVk::deviceQueueFetch() -> OMResult<std::any, std::string>
 {
     try
     {
@@ -504,7 +503,7 @@ OMResult<std::any, std::string> OMRendererVk::deviceQueueFetch()
     return OMResult<std::any, std::string>::ok(0);
 }
 
-OMResult<Device, std::string> OMRendererVk::deviceCreation()
+auto OMRendererVk::deviceCreation() -> OMResult<Device, std::string>
 {
     try
     {
@@ -528,7 +527,7 @@ OMResult<Device, std::string> OMRendererVk::deviceCreation()
     }
 }
 
-OMResult<std::any, std::string> OMRendererVk::sdlVulkanLoading()
+auto OMRendererVk::sdlVulkanLoading() -> OMResult<std::any, std::string>
 {
 #define errRet(a)                                                                                                      \
     logger->error("{}", a);                                                                                            \
@@ -554,7 +553,8 @@ OMResult<std::any, std::string> OMRendererVk::sdlVulkanLoading()
 
     return OMResult<std::any, std::string>::ok(nullptr);
 }
-OMResult<PhysicalDevice, std::string> OMRendererVk::deviceSelection(std::function<int(std::vector<std::string>)> dev)
+auto OMRendererVk::deviceSelection(std::function<int(std::vector<std::string>)> dev)
+    -> OMResult<PhysicalDevice, std::string>
 {
     try
     {
@@ -572,7 +572,7 @@ OMResult<PhysicalDevice, std::string> OMRendererVk::deviceSelection(std::functio
             {
                 devtarget = pdev;
             }
-            d.push_back(n.data());
+            d.emplace_back(n.data());
             id++;
         }
 
@@ -611,7 +611,7 @@ OMResult<PhysicalDevice, std::string> OMRendererVk::deviceSelection(std::functio
         return OMResult<PhysicalDevice, std::string>::err(VkErrorTranslate(e, "openminecraft.renderer.vk.err.phydev"));
     }
 }
-OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std::vector<const char *> exts)
+auto OMRendererVk::instanceCreation(AppInfo info, std::vector<const char *> exts) -> OMResult<Instance, std::string>
 {
     try
     {
@@ -626,7 +626,7 @@ OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std
         VULKAN_HPP_DEFAULT_DISPATCHER.init(i);
 #endif
 
-        validationLayer->ifEnable([&]() {
+        validationLayer->ifEnable([&]() -> void {
             auto r = i.createDebugReportCallbackEXT(&validationLayer->callbackInfo, &allocator, &reportCallback);
             if (r != Result::eSuccess)
             {
@@ -642,7 +642,7 @@ OMResult<Instance, std::string> OMRendererVk::instanceCreation(AppInfo info, std
         return OMResult<Instance, std::string>::err(VkErrorTranslate(e, "openminecraft.renderer.vk.err.instance"));
     }
 }
-OMResult<std::vector<const char *>, std::string> OMRendererVk::fetchRequiredExtensions()
+auto OMRendererVk::fetchRequiredExtensions() -> OMResult<std::vector<const char *>, std::string>
 {
     try
     {
@@ -674,13 +674,13 @@ OMResult<std::vector<const char *>, std::string> OMRendererVk::fetchRequiredExte
             VkErrorTranslate(e, "openminecraft.renderer.vk.err.preinstance"));
     }
 }
-void *vkAlloc(void *, size_t size, size_t align, VkSystemAllocationScope s)
+auto vkAlloc(void *, size_t size, size_t align, VkSystemAllocationScope s) -> void *
 {
     void *p = malloc((size / align + 1) * align);
     mem::castorice::rec({mem::castorice::Allocation, p, mem::castorice::heapSize(p), "vulkan"});
     return p;
 }
-void *vkRealloc(void *, void *o, size_t size, size_t align, VkSystemAllocationScope s)
+auto vkRealloc(void *, void *o, size_t size, size_t align, VkSystemAllocationScope s) -> void *
 {
     void *p;
     auto newsize = (size / align + 1) * align;
@@ -742,7 +742,8 @@ OMRendererVk::~OMRendererVk()
         handlers.clear();
 
         swapchainManager->destroy();
-        validationLayer->ifEnable([&]() { instance.destroyDebugReportCallbackEXT(reportCallback, &allocator); });
+        validationLayer->ifEnable(
+            [&]() -> void { instance.destroyDebugReportCallbackEXT(reportCallback, &allocator); });
 
         logicalDevice.destroy(allocator);
         instance.destroySurfaceKHR(surface, allocator);
@@ -753,7 +754,7 @@ OMRendererVk::~OMRendererVk()
     {
     }
 }
-std::string OMRendererVk::driver()
+auto OMRendererVk::driver() -> std::string
 {
     try
     {

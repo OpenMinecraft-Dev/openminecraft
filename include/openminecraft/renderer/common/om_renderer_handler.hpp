@@ -11,15 +11,13 @@ class OMRendererHandler : public OMRendererObject
     OMRendererHandler(OMRenderer *renderer)
     {
     }
-    virtual ~OMRendererHandler()
-    {
-    }
+    virtual ~OMRendererHandler() = default;
 
     virtual void beforeFrame() = 0;
     virtual void afterFrame() = 0;
     virtual void submitTasks() = 0;
 
-    OMRendererObjectType objType() override
+    inline auto objType() -> OMRendererObjectType override
     {
         return Handler;
     }

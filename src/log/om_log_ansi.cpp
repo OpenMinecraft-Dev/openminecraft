@@ -3,7 +3,7 @@
 
 namespace openminecraft::log::ansi
 {
-std::string toAnsi(int code)
+auto toAnsi(int code) -> std::string
 {
 #ifdef OM_PLATFORM_DESKTOP
     std::string t = "\033[";

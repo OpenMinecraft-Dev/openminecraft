@@ -6,9 +6,9 @@
 #include <cstdlib>
 
 #define defmal(id)                                                                                                     \
-    void *tracedMalloc##id(size_t length);                                                                             \
-    void *tracedCalloc##id(size_t count, size_t ilength);                                                              \
-    void *tracedRealloc##id(void *p, size_t length);                                                                   \
+    auto tracedMalloc##id(size_t length) -> void *;                                                                    \
+    auto tracedCalloc##id(size_t count, size_t ilength) -> void *;                                                     \
+    auto tracedRealloc##id(void *p, size_t length) -> void *;                                                          \
     void tracedFree##id(void *p);
 
 namespace openminecraft::mem::allocator
@@ -20,8 +20,8 @@ defmal(ZLib);
 defmal(ElysiaExternal);
 defmal(Specs);
 
-void *stackAlloc(size_t);
-uint64_t pageSize();
+auto stackAlloc(size_t) -> void *;
+auto pageSize() -> uint64_t;
 } // namespace openminecraft::mem::allocator
 
 #endif

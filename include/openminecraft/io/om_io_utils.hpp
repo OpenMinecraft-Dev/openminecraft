@@ -6,7 +6,7 @@
 
 namespace openminecraft::io
 {
-static std::vector<uint8_t> readOnce(std::istream *f)
+static auto readOnce(std::istream *f) -> std::vector<uint8_t>
 {
     f->seekg(0, std::ios::end);
     auto length = f->tellg();

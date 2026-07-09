@@ -20,7 +20,7 @@ enum OMRendererObjectType
 class OMRendererObject
 {
   public:
-    virtual OMRendererObjectType objType() = 0;
+    virtual auto objType() -> OMRendererObjectType = 0;
 };
 } // namespace openminecraft::renderer
 

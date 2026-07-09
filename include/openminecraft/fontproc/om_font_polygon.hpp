@@ -17,7 +17,7 @@ class OMFontPolygon
         vertices.push_back(vec);
     }
 
-    double area()
+    auto area() -> double
     {
         double area = 0;
         for (int i = 0; i < vertices.size(); i++)
@@ -30,7 +30,7 @@ class OMFontPolygon
         return std::fabs(area) / 2;
     }
 
-    bool isPointInside(glm::vec2 point)
+    auto isPointInside(glm::vec2 point) -> bool
     {
         int count = 0;
         for (int i = 0; i < vertices.size(); i++)
@@ -46,7 +46,7 @@ class OMFontPolygon
         return count % 2 == 1;
     }
 
-    bool isPolyInside(std::shared_ptr<OMFontPolygon> p)
+    auto isPolyInside(std::shared_ptr<OMFontPolygon> p) -> bool
     {
         for (auto pp : p->vertices)
         {

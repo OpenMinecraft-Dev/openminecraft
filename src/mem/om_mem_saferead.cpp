@@ -19,7 +19,7 @@ static void crashHandler(int)
 }
 #endif
 
-template <typename T> std::optional<T> safeRead(void *p)
+template <typename T> auto safeRead(void *p) -> std::optional<T>
 {
 #if defined(OM_PLATFORM_UNIX)
     signal(SIGSEGV, crashHandler);

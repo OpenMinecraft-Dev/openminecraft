@@ -26,7 +26,7 @@ OMRendererOpenGL::OMRendererOpenGL(AppInfo info, void *window)
     defaultTarget->build();
 }
 
-template <typename T> inline T fetchGlFunc(const char *name)
+template <typename T> inline auto fetchGlFunc(const char *name) -> T
 {
     return (T)(SDL_GL_GetProcAddress(name));
 }
@@ -100,37 +100,36 @@ OMRendererOpenGL::~OMRendererOpenGL()
     SDL_GL_DestroyContext(reinterpret_cast<SDL_GLContext>(glContext));
 }
 
-std::string OMRendererOpenGL::driver()
+auto OMRendererOpenGL::driver() -> std::string
 {
     return reinterpret_cast<const char *>(gl.glGetString(GL_RENDERER));
 }
-common::OMRendererBuffer *OMRendererOpenGL::allocateBuffer(common::OMBufferUsage usage, uint64_t length)
+auto OMRendererOpenGL::allocateBuffer(common::OMBufferUsage usage, uint64_t length) -> common::OMRendererBuffer *
 {
     return new OMRendererBufferOpenGL(usage, length, this);
 }
-common::OMRendererTexture *OMRendererOpenGL::allocateTexture(uint64_t width, uint64_t height,
-                                                             common::OMTextureType type,
-                                                             common::OMTextureArrangement arr)
+auto OMRendererOpenGL::allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type,
+                                       common::OMTextureArrangement arr) -> common::OMRendererTexture *
 {
     return new OMRendererTextureOpenGL(width, height, type, arr, this);
 }
-common::OMRendererRenderTarget *OMRendererOpenGL::createRenderTarget()
+auto OMRendererOpenGL::createRenderTarget() -> common::OMRendererRenderTarget *
 {
     return new OMRendererRenderTargetOpenGL(this);
 }
-common::OMRendererRenderTarget *OMRendererOpenGL::getDefaultRenderTarget()
+auto OMRendererOpenGL::getDefaultRenderTarget() -> common::OMRendererRenderTarget *
 {
     return defaultTarget;
 }
-common::OMRendererPipeline *OMRendererOpenGL::createPipeline()
+auto OMRendererOpenGL::createPipeline() -> common::OMRendererPipeline *
 {
     return new OMRendererPipelineOpenGL(this);
 }
-common::OMRendererTask *OMRendererOpenGL::createTask()
+auto OMRendererOpenGL::createTask() -> common::OMRendererTask *
 {
     return new OMRendererTaskOpenGL(this);
 }
-glm::vec2 OMRendererOpenGL::getExtent() const
+auto OMRendererOpenGL::getExtent() const -> glm::vec2
 {
     int w, h;
     SDL_GetWindowSize(reinterpret_cast<SDL_Window *>(window), &w, &h);
@@ -141,7 +140,7 @@ void OMRendererOpenGL::registerTask(std::string id, common::OMRendererTask *task
     tasks[id] = task;
 }
 
-common::OMRendererTask *OMRendererOpenGL::fetchTask(std::string id)
+auto OMRendererOpenGL::fetchTask(std::string id) -> common::OMRendererTask *
 {
     return tasks[id];
 }

@@ -31,12 +31,8 @@ struct OMFontOutlineOperation
 class OMFontOutline
 {
   public:
-    OMFontOutline()
-    {
-    }
-    ~OMFontOutline()
-    {
-    }
+    OMFontOutline() = default;
+    ~OMFontOutline() = default;
 
     void moveTo(glm::vec2 vec)
     {
@@ -65,7 +61,7 @@ class OMFontOutline
 
     std::vector<OMFontOutlineOperation> operations;
 
-    std::vector<std::shared_ptr<OMFontPolygon>> buildPolygons(int prec, int xsc, int ysc)
+    auto buildPolygons(int prec, int xsc, int ysc) -> std::vector<std::shared_ptr<OMFontPolygon>>
     {
         std::vector<std::shared_ptr<OMFontPolygon>> polygons;
         auto poly = mem::fast_shared<allocatorId, OMFontPolygon>();

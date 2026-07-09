@@ -22,8 +22,8 @@ class OMCamera
   public:
     OMCamera(OMRenderer *renderer, glm::vec3 location, float yaw, float pitch);
     ~OMCamera() = default;
-    glm::mat4 fetchViewMat();
-    glm::mat4 fetchProjMat();
+    auto fetchViewMat() -> glm::mat4;
+    auto fetchProjMat() -> glm::mat4;
     void modYaw(float delta);
     void modPitch(float delta);
 

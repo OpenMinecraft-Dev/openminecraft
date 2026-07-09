@@ -38,7 +38,7 @@ void OMRendererRenderTargetOpenGL::rebuild()
         build();
     }
 }
-glm::vec2 OMRendererRenderTargetOpenGL::fetchSize()
+auto OMRendererRenderTargetOpenGL::fetchSize() -> glm::vec2
 {
     if (framebuffer == 0)
     {

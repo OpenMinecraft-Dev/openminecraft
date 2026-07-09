@@ -8,8 +8,6 @@ OMRendererTexture::OMRendererTexture(uint64_t width, uint64_t height, OMTextureT
 {
 }
 
-OMRendererTexture::~OMRendererTexture()
-{
-}
+OMRendererTexture::~OMRendererTexture() = default;
 
 } // namespace openminecraft::renderer::common
