@@ -24,10 +24,10 @@ struct MountInfo
 };
 extern std::unordered_map<std::string, std::function<std::shared_ptr<std::istream>(std::string)>> m;
 extern std::unordered_map<std::string, MountInfo> info;
-bool fsmountReal(std::string path, std::string mountpoint);
-bool fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string mountpoint);
-bool fsumount(std::string mountpoint);
-std::shared_ptr<std::istream> fsfetch(std::string fullPath);
+auto fsmountReal(std::string path, std::string mountpoint) -> bool;
+auto fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string mountpoint) -> bool;
+auto fsumount(std::string mountpoint) -> bool;
+auto fsfetch(std::string fullPath) -> std::shared_ptr<std::istream>;
 } // namespace openminecraft::vfs
 
 #endif

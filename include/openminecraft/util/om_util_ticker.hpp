@@ -12,9 +12,7 @@ namespace openminecraft::util
 template <typename E> class OMTicker
 {
   public:
-    OMTicker()
-    {
-    }
+    OMTicker() = default;
     ~OMTicker() = default;
 
     void recordEvent(E event)
@@ -27,7 +25,7 @@ template <typename E> class OMTicker
         begin = std::chrono::high_resolution_clock::now();
     }
 
-    template <typename D> std::vector<std::pair<E, uint64_t>> fetchEvents()
+    template <typename D> auto fetchEvents() -> std::vector<std::pair<E, uint64_t>>
     {
         std::vector<std::pair<E, uint64_t>> target;
         for (auto &p : eventMap)
@@ -36,7 +34,7 @@ template <typename E> class OMTicker
         }
 
         std::sort(target.begin(), target.end(),
-                  [](std::pair<E, uint64_t> &p1, std::pair<E, uint64_t> &p2) { return p1.second < p2.second; });
+                  [](std::pair<E, uint64_t> &p1, std::pair<E, uint64_t> &p2) -> auto { return p1.second < p2.second; });
 
         return target;
     }

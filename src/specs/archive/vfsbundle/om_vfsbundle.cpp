@@ -8,7 +8,9 @@
 
 namespace openminecraft::specs::vfsbundle
 {
-bool operator!=(const std::array<char, 6> &hd, const std::array<uint8_t, 6> &rhs)
+using std::string;
+
+auto operator!=(const std::array<char, 6> &hd, const std::array<uint8_t, 6> &rhs) -> bool
 {
     for (int i = 0; i < 6; i++)
     {
@@ -21,7 +23,7 @@ bool operator!=(const std::array<char, 6> &hd, const std::array<uint8_t, 6> &rhs
     return false;
 }
 
-constexpr auto rdbe64 = [](std::shared_ptr<std::istream> stream) {
+constexpr auto rdbe64 = [](std::shared_ptr<std::istream> stream) -> uint64_t {
     uint64_t result = 0;
     for (int i = 0; i < 8; i++)
     {
@@ -34,7 +36,7 @@ constexpr auto rdbe64 = [](std::shared_ptr<std::istream> stream) {
 
     return result;
 };
-constexpr auto rdbe64p = [](char *&p) {
+constexpr auto rdbe64p = [](char *&p) -> uint64_t {
     uint64_t result = 0;
     for (int i = 0; i < 8; i++)
     {
@@ -48,7 +50,7 @@ constexpr auto rdbe64p = [](char *&p) {
     return result;
 };
 
-constexpr auto rdstring = [](std::shared_ptr<std::istream> stream) {
+constexpr auto rdstring = [](std::shared_ptr<std::istream> stream) -> std::string {
     std::vector<char> chs;
     while (true)
     {
@@ -62,7 +64,7 @@ constexpr auto rdstring = [](std::shared_ptr<std::istream> stream) {
         chs.push_back(c);
     }
 
-    return std::string(chs.begin(), chs.end());
+    return string(chs.begin(), chs.end());
 };
 
 OMBundle::OMBundle() : logger("OMBundle", this)
@@ -234,7 +236,7 @@ void OMBundle::saveBundle(std::ostream &stream)
     }
 }
 
-OMBundleFileMetadata OMBundle::fetchMetadata(std::shared_ptr<std::istream> stream)
+auto OMBundle::fetchMetadata(std::shared_ptr<std::istream> stream) -> OMBundleFileMetadata
 {
     return {rdbe64(stream), rdbe64(stream), rdstring(stream), rdstring(stream)};
 }

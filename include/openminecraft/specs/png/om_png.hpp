@@ -26,7 +26,7 @@ enum OMPngColorType : uint8_t
 
 struct OMPngChunk
 {
-    char name[4];
+    std::array<char, 4> name;
     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> data;
     uint32_t crc;
 };
@@ -72,11 +72,11 @@ class OMPngFile : public OMBlockedFile<OMPngChunkType>, public OMImage
 {
   public:
     OMPngFile();
-    ~OMPngFile();
+    ~OMPngFile() override;
 
-    void *fetchData() override;
-    int getWidth() override;
-    int getHeight() override;
+    auto fetchData() -> void * override;
+    auto getWidth() -> int override;
+    auto getHeight() -> int override;
 
     void parseBase(std::shared_ptr<std::istream> in) override
     {
@@ -85,22 +85,22 @@ class OMPngFile : public OMBlockedFile<OMPngChunkType>, public OMImage
 
   private:
     void parseMagic(std::shared_ptr<std::istream>) override;
-    bool parseBlockHeader(std::shared_ptr<std::istream>, OMPngChunkType *) override;
+    auto parseBlockHeader(std::shared_ptr<std::istream>, OMPngChunkType *) -> bool override;
 
     void parseIHDR(std::shared_ptr<std::istream> istr);
     void parsePTLE(std::shared_ptr<std::istream> istr);
     void parseTRNS(std::shared_ptr<std::istream> istr);
     void parseIDAT(std::shared_ptr<std::istream> istr);
 
-    std::pair<uint32_t, uint32_t> getAdamPassSize(int pass);
+    auto getAdamPassSize(int pass) -> std::pair<uint32_t, uint32_t>;
     void defilterAdam(int type, std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &, int y, int pass);
     void writeIntoBufferAdam(std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &, int pass, int y);
     void defilter(int type, std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &, int y);
     void writeIntoBuffer(std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &);
     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> filterCache;
 
-    uint32_t getStride(int width);
-    int getBytesPerPixel();
+    auto getStride(int width) -> uint32_t;
+    auto getBytesPerPixel() -> int;
 
     OMPngChunk currentChunk;
     int y, pass;
@@ -109,7 +109,7 @@ class OMPngFile : public OMBlockedFile<OMPngChunkType>, public OMImage
     OMPngHead head;
     std::vector<int, mem::OMStlAllocator<allocatorTag, int>> palette;
 
-    uint64_t crc(OMPngChunk chunk);
+    auto crc(OMPngChunk chunk) -> uint64_t;
 };
 } // namespace openminecraft::specs::png
 

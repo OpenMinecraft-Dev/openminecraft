@@ -5,6 +5,7 @@
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 #include "openminecraft/specs/zlib/om_zlib_inflate.hpp"
 #include "openminecraft/util/om_util_crc.hpp"
+#include <array>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
@@ -20,11 +21,11 @@ namespace openminecraft::specs::png
 {
 OMPngFile::OMPngFile()
 {
-    processorMap[Header] = [&](std::shared_ptr<std::istream> istr) { parseIHDR(istr); };
-    processorMap[PaletteDefine] = [&](std::shared_ptr<std::istream> istr) { parsePTLE(istr); };
-    processorMap[PaletteTransparency] = [&](std::shared_ptr<std::istream> istr) { parseTRNS(istr); };
-    processorMap[ImageData] = [&](std::shared_ptr<std::istream> istr) { parseIDAT(istr); };
-    processorMap[ImageEnd] = [&](std::shared_ptr<std::istream> istr) {};
+    processorMap[Header] = [&](std::shared_ptr<std::istream> istr) -> void { parseIHDR(istr); };
+    processorMap[PaletteDefine] = [&](std::shared_ptr<std::istream> istr) -> void { parsePTLE(istr); };
+    processorMap[PaletteTransparency] = [&](std::shared_ptr<std::istream> istr) -> void { parseTRNS(istr); };
+    processorMap[ImageData] = [&](std::shared_ptr<std::istream> istr) -> void { parseIDAT(istr); };
+    processorMap[ImageEnd] = [&](std::shared_ptr<std::istream> istr) -> void {};
 }
 
 static void writePixel(uint8_t *result, uint8_t *source, OMPngColorType type, uint8_t bitdepth, int x, int *palette)
@@ -97,7 +98,7 @@ static void writePixel(uint8_t *result, uint8_t *source, OMPngColorType type, ui
     }
 }
 
-static uint8_t getPaethPred(int a, int b, int c)
+static auto getPaethPred(int a, int b, int c) -> uint8_t
 {
     auto p = a + b - c;
     auto pa = std::abs(p - a);
@@ -128,7 +129,7 @@ void OMPngFile::parseMagic(std::shared_ptr<std::istream> istr)
         throw std::logic_error("Bad png header!");
     }
 
-    inflater = std::make_shared<zlib::OMZLibInflater>([&](uint8_t *data, uint64_t len) {
+    inflater = std::make_shared<zlib::OMZLibInflater>([&](uint8_t *data, uint64_t len) -> void {
         for (uint64_t i = 0; i < len; i++)
         {
             unzippedBuffer.push_back(data[i]);
@@ -139,7 +140,7 @@ void OMPngFile::parseMagic(std::shared_ptr<std::istream> istr)
     pass = 0;
     dataBuffer.clear();
 }
-bool OMPngFile::parseBlockHeader(std::shared_ptr<std::istream> istr, OMPngChunkType *b)
+auto OMPngFile::parseBlockHeader(std::shared_ptr<std::istream> istr, OMPngChunkType *b) -> bool
 {
     uint32_t length;
     istr->read(reinterpret_cast<char *>(&length), 4);
@@ -147,7 +148,7 @@ bool OMPngFile::parseBlockHeader(std::shared_ptr<std::istream> istr, OMPngChunkT
     currentChunk.data = {};
     currentChunk.data.resize(length);
 
-    istr->read(currentChunk.name, 4);
+    istr->read(currentChunk.name.data(), 4);
     istr->read(reinterpret_cast<char *>(currentChunk.data.data()), length);
     istr->read(reinterpret_cast<char *>(&currentChunk.crc), 4);
     currentChunk.crc = binary::be32ToNative(currentChunk.crc);
@@ -159,10 +160,10 @@ bool OMPngFile::parseBlockHeader(std::shared_ptr<std::istream> istr, OMPngChunkT
                                              static_cast<uint64_t>(istr->tellg()), currentChunk.crc, res));
     }
 
-    char hdname[5];
-    std::memcpy(hdname, currentChunk.name, 4);
+    std::array<char, 5> hdname;
+    std::memcpy(hdname.data(), currentChunk.name.data(), 4);
     hdname[4] = '\0';
-    switch (hash_compile_time(hdname))
+    switch (hash_compile_time(hdname.data()))
     {
     case "IEND"_hash:
         *b = ImageEnd;
@@ -267,7 +268,7 @@ void OMPngFile::parseIDAT(std::shared_ptr<std::istream> istr)
     }
 }
 
-std::pair<uint32_t, uint32_t> OMPngFile::getAdamPassSize(int pass)
+auto OMPngFile::getAdamPassSize(int pass) -> std::pair<uint32_t, uint32_t>
 {
     auto stat = pngAdam7[pass];
     return std::make_pair(
@@ -279,9 +280,9 @@ static void defilterBase(std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, 
                          std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &raw, int y, int bpx,
                          std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> &filterCache)
 {
-    auto getBufferA = [&](int x) { return x >= bpx ? current[x - bpx] : 0; };
-    auto getBufferB = [&](int x) { return y > 0 ? filterCache[x] : 0; };
-    auto getBufferC = [&](int x) { return (x >= bpx && y > 0) ? filterCache[x - bpx] : 0; };
+    auto getBufferA = [&](int x) -> int { return x >= bpx ? current[x - bpx] : 0; };
+    auto getBufferB = [&](int x) -> int { return y > 0 ? filterCache[x] : 0; };
+    auto getBufferC = [&](int x) -> int { return (x >= bpx && y > 0) ? filterCache[x - bpx] : 0; };
 
     for (int i = 0; i < raw.size(); i++)
     {
@@ -358,8 +359,8 @@ void OMPngFile::writeIntoBuffer(std::vector<uint8_t, mem::OMStlAllocator<allocat
 {
     for (int x = 0; x < head.width; x++)
     {
-        uint8_t buffer[4];
-        writePixel(buffer, current.data(), head.type, head.bitDepth, x, palette.data());
+        std::array<uint8_t, 4> buffer;
+        writePixel(buffer.data(), current.data(), head.type, head.bitDepth, x, palette.data());
         dataBuffer.push_back(buffer[0]);
         dataBuffer.push_back(buffer[1]);
         dataBuffer.push_back(buffer[2]);
@@ -375,7 +376,7 @@ void OMPngFile::defilter(int type, std::vector<uint8_t, mem::OMStlAllocator<allo
     writeIntoBuffer(current);
 }
 
-uint32_t OMPngFile::getStride(int width)
+auto OMPngFile::getStride(int width) -> uint32_t
 {
     switch (head.type)
     {
@@ -401,7 +402,7 @@ uint32_t OMPngFile::getStride(int width)
     }
 }
 
-int OMPngFile::getBytesPerPixel()
+auto OMPngFile::getBytesPerPixel() -> int
 {
     if (head.bitDepth < 8)
     {
@@ -422,29 +423,27 @@ int OMPngFile::getBytesPerPixel()
     }
 }
 
-uint64_t OMPngFile::crc(OMPngChunk chunk)
+auto OMPngFile::crc(OMPngChunk chunk) -> uint64_t
 {
     uint32_t crc = 0xffffffff;
-    crc = openminecraft::util::calcCrc(crc, chunk.name, 4);
+    crc = openminecraft::util::calcCrc(crc, chunk.name.data(), 4);
     crc = openminecraft::util::calcCrc(crc, chunk.data.data(), chunk.data.size());
     return crc ^ 0xffffffff;
 }
 
-void *OMPngFile::fetchData()
+auto OMPngFile::fetchData() -> void *
 {
     return dataBuffer.data();
 }
 
-int OMPngFile::getWidth()
+auto OMPngFile::getWidth() -> int
 {
     return head.width;
 }
-int OMPngFile::getHeight()
+auto OMPngFile::getHeight() -> int
 {
     return head.height;
 }
 
-OMPngFile::~OMPngFile()
-{
-}
+OMPngFile::~OMPngFile() = default;
 } // namespace openminecraft::specs::png

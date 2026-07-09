@@ -1,17 +1,16 @@
 #include "openminecraft/specs/jfif/om_jfif.hpp"
-#include <cmath>
+#include <array>
 #include <cstdint>
 #include <stdexcept>
 
 namespace openminecraft::specs::jfif
 {
-uint8_t OMJfifFile::fetchCode(uint8_t tableid, std::function<bool()> f)
+auto OMJfifFile::fetchCode(uint8_t tableid, std::function<bool()> f) -> uint8_t
 {
     auto const &table = huffmanTable[tableid].first;
     auto const &symbols = huffmanTable[tableid].second;
 
-    uint32_t first_code[17] = {0};
-    uint32_t start_index[17] = {0};
+    std::array<uint32_t, 17> first_code, start_index = {0};
     int total_symbols = 0;
     for (int len = 1; len <= 16; ++len)
     {

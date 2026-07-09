@@ -2,14 +2,13 @@
 #define OM_ENCODING_UTF_HPP
 #include <cstdint>
 #include <cstring>
-#include <iostream>
 #include <string>
 #include <tuple>
 #include <vector>
 
 namespace openminecraft::util::encoding
 {
-inline static std::tuple<uint16_t *, int> utf8ToUtf16New(std::string str)
+inline static auto utf8ToUtf16New(std::string str) -> std::tuple<uint16_t *, int>
 {
     std::vector<uint16_t> data;
     data.reserve(1);
@@ -17,7 +16,7 @@ inline static std::tuple<uint16_t *, int> utf8ToUtf16New(std::string str)
 
     for (auto it = str.begin(); it != end; ++it)
     {
-        uint8_t byte = static_cast<uint8_t>(*it);
+        auto byte = static_cast<uint8_t>(*it);
 
         if ((byte & 0x80) == 0)
         {
@@ -59,7 +58,7 @@ inline static std::tuple<uint16_t *, int> utf8ToUtf16New(std::string str)
         for (int i = 0; i < extra; ++i)
         {
             ++it;
-            uint8_t next = static_cast<uint8_t>(*it);
+            auto next = static_cast<uint8_t>(*it);
             if ((next & 0xC0) != 0x80)
             {
                 valid = false;
@@ -93,11 +92,11 @@ inline static std::tuple<uint16_t *, int> utf8ToUtf16New(std::string str)
         }
     }
 
-    uint16_t *datar = reinterpret_cast<uint16_t *>(malloc(sizeof(uint16_t) * data.size()));
+    auto *datar = reinterpret_cast<uint16_t *>(malloc(sizeof(uint16_t) * data.size()));
     std::memcpy(datar, data.data(), data.size() * sizeof(uint16_t));
     return std::make_tuple(datar, data.size());
 }
-inline static std::string utf16ToUtf8New(uint16_t *arr, int length)
+inline static auto utf16ToUtf8New(uint16_t *arr, int length) -> std::string
 {
     std::string result;
     for (int i = 0; i < length; ++i)
@@ -152,7 +151,7 @@ inline static std::string utf16ToUtf8New(uint16_t *arr, int length)
     return result;
 }
 
-inline static std::string utf32ToUtf8(std::vector<int> cps)
+inline static auto utf32ToUtf8(std::vector<int> cps) -> std::string
 {
     std::vector<uint8_t> s;
     for (auto i : cps)

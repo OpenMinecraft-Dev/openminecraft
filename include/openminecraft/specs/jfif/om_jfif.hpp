@@ -8,14 +8,12 @@
 #include "openminecraft/specs/abstracts/om_image.hpp"
 #include "openminecraft/util/om_util_bitbuffer.hpp"
 #include <array>
-#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <istream>
 #include <map>
 #include <memory>
 #include <unordered_map>
-#include <variant>
 #include <vector>
 
 namespace openminecraft::specs::jfif
@@ -60,7 +58,7 @@ struct OMJfifThumbnailPixel
 struct OMJfifApp0Header
 {
     uint16_t length;
-    char ident[5];
+    std::array<char, 5> ident;
     uint8_t versionMajor;
     uint8_t versionMinor;
     uint8_t unit;
@@ -93,7 +91,7 @@ struct OMJfifApp14Header
 struct OMJfifQuantizationTable
 {
     uint8_t destination;
-    uint8_t table[64];
+    std::array<uint8_t, 64> table;
 };
 #pragma pack()
 
@@ -117,7 +115,7 @@ struct OMJfifStartOfFrame
 struct OMJfifHuffmanTable
 {
     uint8_t info; // high 4 bit -> DC(0)/AC(1), low 4 bit -> table id
-    uint8_t counts[16];
+    std::array<uint8_t, 16> counts;
 };
 #pragma pack()
 
@@ -182,13 +180,13 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>, public OMImage
 {
   public:
     OMJfifFile();
-    ~OMJfifFile();
+    ~OMJfifFile() override;
 
   private:
-    uint16_t readLen(std::shared_ptr<std::istream> input);
+    auto readLen(std::shared_ptr<std::istream> input) -> uint16_t;
 
     void parseMagic(std::shared_ptr<std::istream>) override;
-    bool parseBlockHeader(std::shared_ptr<std::istream>, OMJfifSectionType *) override;
+    auto parseBlockHeader(std::shared_ptr<std::istream>, OMJfifSectionType *) -> bool override;
 
     void parseApp0Header(std::shared_ptr<std::istream>);
     void parseApp1Header(std::shared_ptr<std::istream>);
@@ -209,15 +207,15 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>, public OMImage
     void parseRawBlocksProgressiveAC(std::shared_ptr<std::istream>);
 
   public:
-    void *fetchData() override
+    auto fetchData() -> void * override
     {
         return data.data();
     }
-    int getWidth() override
+    auto getWidth() -> int override
     {
         return headerStartOfFrame.width;
     }
-    int getHeight() override
+    auto getHeight() -> int override
     {
         return headerStartOfFrame.height;
     }
@@ -230,11 +228,11 @@ class OMJfifFile : public OMBlockedFile<OMJfifSectionType>, public OMImage
   private:
     void calcMcuSize();
     void parseBlock();
-    uint8_t fetchCode(uint8_t tableid, std::function<bool()> f);
+    auto fetchCode(uint8_t tableid, std::function<bool()> f) -> uint8_t;
 
-    bool bufferReqBits(std::shared_ptr<std::istream>, int b);
+    auto bufferReqBits(std::shared_ptr<std::istream>, int b) -> bool;
     void bufferLogStatus(std::shared_ptr<std::istream>);
-    int64_t bufferReadExtra(std::shared_ptr<std::istream>, int b);
+    auto bufferReadExtra(std::shared_ptr<std::istream>, int b) -> int64_t;
 
     OMJfifApp0Header headerApp0;
     OMJfifApp1Header headerApp1;

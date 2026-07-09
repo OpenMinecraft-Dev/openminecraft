@@ -63,28 +63,28 @@ class MemoryReader
     {
     }
 
-    const uint8_t *raw()
+    auto raw() -> const uint8_t *
     {
         return pos;
     }
 
-    uint8_t readu8()
+    auto readu8() -> uint8_t
     {
         return *pos++;
     }
-    uint16_t readu16()
+    auto readu16() -> uint16_t
     {
         uint16_t v = (pos[0] << 8) | pos[1];
         pos += 2;
         return v;
     }
-    uint32_t readu32()
+    auto readu32() -> uint32_t
     {
         uint32_t v = (pos[0] << 24) | (pos[1] << 16) | (pos[2] << 8) | pos[3];
         pos += 4;
         return v;
     }
-    uint64_t readu64()
+    auto readu64() -> uint64_t
     {
         uint64_t v = readu32();
         v <<= 32;
@@ -310,7 +310,10 @@ class OMClassFile
     } attributes;
 
     OMClassFile();
-    ~OMClassFile();
+    ~OMClassFile()
+    {
+    }
+
     void load(std::shared_ptr<std::istream> istr);
     void loadConstant(MemoryReader &reader, OMClassFileConstant &c);
     void loadField(MemoryReader &reader, OMClassField &f);

@@ -15,11 +15,11 @@ namespace openminecraft::vfs
 std::unordered_map<std::string, std::function<std::shared_ptr<std::istream>(std::string)>> m;
 std::unordered_map<std::string, MountInfo> info;
 log::OMLogger logger("vfs");
-bool mountinvaild(std::string mp)
+auto mountinvaild(std::string mp) -> bool
 {
     return mp.empty() || mp[0] != '/' || mp == "/" || mp[mp.length() - 1] == '/';
 }
-bool fsmountReal(std::string path, std::string mountpoint)
+auto fsmountReal(std::string path, std::string mountpoint) -> bool
 {
     if (!std::filesystem::exists(path))
     {
@@ -37,7 +37,7 @@ bool fsmountReal(std::string path, std::string mountpoint)
     logger.info("real:{} -> virt:{}", path, mountpoint);
     return true;
 }
-bool fsumount(std::string mountpoint)
+auto fsumount(std::string mountpoint) -> bool
 {
     if (m.count(mountpoint))
     {
@@ -49,7 +49,7 @@ bool fsumount(std::string mountpoint)
 
     return false;
 }
-bool fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string mountpoint)
+auto fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string mountpoint) -> bool
 {
     if (mountinvaild(mountpoint))
     {
@@ -70,7 +70,7 @@ bool fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string
     logger.info("bundle -> virt:{}", mountpoint);
     return false;
 }
-std::string compressPath(std::string vp)
+auto compressPath(std::string vp) -> std::string
 {
     std::vector<std::string> pathsegs;
     std::vector<int> slash;
@@ -114,7 +114,7 @@ std::string compressPath(std::string vp)
 
     return target;
 }
-std::shared_ptr<std::istream> fsfetch(std::string fullPath)
+auto fsfetch(std::string fullPath) -> std::shared_ptr<std::istream>
 {
     auto pth = compressPath(fullPath);
     for (auto p : m)
@@ -124,6 +124,6 @@ std::shared_ptr<std::istream> fsfetch(std::string fullPath)
             return p.second(pth.substr(p.first.length() + 1, pth.length()));
         }
     }
-    return std::shared_ptr<std::istream>(nullptr);
+    return {nullptr};
 }
 } // namespace openminecraft::vfs

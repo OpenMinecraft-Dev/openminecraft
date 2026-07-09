@@ -18,7 +18,7 @@ class OMBitBuffer
         bits += 8;
     }
 
-    bool popBit()
+    auto popBit() -> bool
     {
         bits--;
         bool l = (buffer >> bits) & 1;
@@ -26,7 +26,7 @@ class OMBitBuffer
         return l;
     }
 
-    uint32_t popValue(int8_t bits)
+    auto popValue(int8_t bits) -> uint32_t
     {
         if (!bits)
         {
@@ -46,7 +46,7 @@ class OMBitBuffer
         }
     }
 
-    int8_t bitsAvailable()
+    auto bitsAvailable() -> int8_t
     {
         return bits;
     }

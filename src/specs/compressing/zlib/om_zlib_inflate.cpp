@@ -1,16 +1,18 @@
 #include "openminecraft/specs/zlib/om_zlib_inflate.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "zlib.h"
+#include <array>
 #include <cstring>
-#include <iostream>
 #include <stdexcept>
+#include <utility>
 
 namespace openminecraft::specs::zlib
 {
-OMZLibInflater::OMZLibInflater(std::function<void(uint8_t *, uint64_t)> dataAcceptor) : dataAcceptor(dataAcceptor)
+OMZLibInflater::OMZLibInflater(std::function<void(uint8_t *, uint64_t)> dataAcceptor)
+    : dataAcceptor(std::move(dataAcceptor))
 {
     strm.zalloc = [](void *, uInt n, uInt size) -> void * { return mem::allocator::tracedCallocZLib(n, size); };
-    strm.zfree = [](void *, void *d) { mem::allocator::tracedFreeZLib(d); };
+    strm.zfree = [](void *, void *d) -> void { mem::allocator::tracedFreeZLib(d); };
     strm.opaque = nullptr;
 
     inflateInit(&strm);
@@ -28,14 +30,14 @@ void OMZLibInflater::input(uint8_t *src, uint64_t length)
     strm.avail_in = buffer.size();
 
 begin:
-    uint8_t outBuff[1024];
-    memset(outBuff, 0, 1024);
-    strm.next_out = outBuff;
+    std::array<uint8_t, 1024> outBuff;
+    memset(outBuff.data(), 0, 1024);
+    strm.next_out = outBuff.data();
     strm.avail_out = 1024;
 
     auto status = inflate(&strm, Z_NO_FLUSH);
 
-    dataAcceptor(outBuff, 1024 - strm.avail_out);
+    dataAcceptor(outBuff.data(), 1024 - strm.avail_out);
 
     if (status == Z_BUF_ERROR || strm.avail_in > 0)
     {

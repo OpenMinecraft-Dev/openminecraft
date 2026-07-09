@@ -4,12 +4,12 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <iostream>
 
 namespace openminecraft::specs::jfif
 {
 constexpr float PI_CONSTANT = 3.14159265358979323846;
-extern double idctMap[8][8];
+// extern double idctMap[8][8];
+extern std::array<std::array<double, 8>, 8> idctMap;
 extern bool idctInited;
 void idctInit();
 static void idct_1d(const double in[8], double out[8])

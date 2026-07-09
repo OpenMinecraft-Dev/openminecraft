@@ -12,34 +12,32 @@ enum OMResultType
 template <typename R, typename E> class OMResult
 {
   public:
-    static OMResult ok(R result)
+    static auto ok(R result) -> OMResult
     {
         OMResult r(Ok);
         r.result = result;
         return r;
     }
 
-    static OMResult err(E error)
+    static auto err(E error) -> OMResult
     {
         OMResult r(Err);
         r.error = error;
         return r;
     }
 
-    R unwrap()
+    auto unwrap() -> R
     {
         return result;
     }
-    E unwrap_err()
+    auto unwrap_err() -> E
     {
         return error;
     }
 
     const OMResultType type;
 
-    ~OMResult()
-    {
-    }
+    ~OMResult() = default;
 
   private:
     OMResult(OMResultType t) : type(t)

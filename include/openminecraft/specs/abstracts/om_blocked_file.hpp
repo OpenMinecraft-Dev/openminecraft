@@ -8,7 +8,7 @@
 #include <unordered_map>
 namespace openminecraft::specs
 {
-typedef std::function<void()> OMBlockHeaderHandler;
+using OMBlockHeaderHandler = std::function<void()>;
 template <typename T> class OMBlockedFile
 {
   public:
@@ -34,7 +34,7 @@ template <typename T> class OMBlockedFile
         }
     }
     virtual void parseMagic(std::shared_ptr<std::istream>) = 0;
-    virtual bool parseBlockHeader(std::shared_ptr<std::istream>, T *) = 0;
+    virtual auto parseBlockHeader(std::shared_ptr<std::istream>, T *) -> bool = 0;
     void parseBlockContent(std::shared_ptr<std::istream> istr, T type)
     {
         for (auto &p : processorMap)

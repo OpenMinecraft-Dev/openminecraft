@@ -3,7 +3,7 @@
 
 namespace openminecraft::specs::jfif
 {
-double idctMap[8][8];
+std::array<std::array<double, 8>, 8> idctMap;
 bool idctInited = false;
 
 void idctInit()

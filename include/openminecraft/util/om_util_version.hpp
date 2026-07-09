@@ -14,10 +14,10 @@ class Version
     Version(uint32_t vkver);
     ~Version();
 
-    std::string toString();
+    auto toString() -> std::string;
 
-    int toVKVersion();
-    int toVKApiVersion();
+    auto toVKVersion() -> int;
+    auto toVKApiVersion() -> int;
 
     const uint16_t majorver;
     const uint16_t minorver;

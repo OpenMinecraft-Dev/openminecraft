@@ -10,12 +10,12 @@ void write(uint64_t fd, uint8_t *src, int off, int len, bool append)
     ::write(static_cast<int>(fd), src + off, len);
 }
 
-int read(uint64_t fd, uint8_t *src, int off, int len)
+auto read(uint64_t fd, uint8_t *src, int off, int len) -> int
 {
     return ::read(static_cast<int>(fd), src + off, len);
 }
 
-int available(uint64_t fd)
+auto available(uint64_t fd) -> int
 {
     int n = 0;
     if (ioctl(fd, FIONREAD, &n) < 0)
@@ -26,12 +26,12 @@ int available(uint64_t fd)
     return n;
 }
 
-uint64_t convertHandle(int hnd)
+auto convertHandle(int hnd) -> uint64_t
 {
     return hnd;
 }
 
-uint64_t open(const char *path, bool append)
+auto open(const char *path, bool append) -> uint64_t
 {
     return ::open(path, O_WRONLY | O_CREAT | (append ? O_APPEND : O_TRUNC));
 }

@@ -2,7 +2,7 @@
 
 namespace openminecraft::vm::elysia::impl
 {
-uint64_t getNativeFd(OMElysiaJNIEnv *env, OMElysiaNativeHandle *fdobj)
+auto getNativeFd(OMElysiaJNIEnv *env, OMElysiaNativeHandle *fdobj) -> uint64_t
 {
     return static_cast<uint64_t>(
         env->GetIntField(fdobj, env->GetFieldID(env->FindClass("java/io/FileDescriptor"), "fd", "I")));

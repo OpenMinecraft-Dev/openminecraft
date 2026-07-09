@@ -36,7 +36,7 @@ void OMJfifFile::parseRawBlocksProgressiveDC(std::shared_ptr<std::istream> istr)
         loadBlockCache();
         if ((range.successive >> 4) == 0)
         {
-            auto dccode = fetchCode(currentBlock->dcTable, [&]() { return bufferReqBits(istr, 1); });
+            auto dccode = fetchCode(currentBlock->dcTable, [&]() -> bool { return bufferReqBits(istr, 1); });
             if (dccode >> 4)
             {
                 throw std::logic_error("Can't read both AC and DC");
@@ -82,7 +82,7 @@ void OMJfifFile::parseRawBlocksProgressiveAC(std::shared_ptr<std::istream> istr)
             blockDataIndex = range.spectralBegin;
             while (blockDataIndex <= range.spectralEnd)
             {
-                auto accode = fetchCode(currentBlock->acTable, [&]() { return bufferReqBits(istr, 1); });
+                auto accode = fetchCode(currentBlock->acTable, [&]() -> bool { return bufferReqBits(istr, 1); });
                 auto size = accode & 0xf;
                 auto run = accode >> 4;
                 if (size == 0)
@@ -152,7 +152,7 @@ void OMJfifFile::parseRawBlocksProgressiveAC(std::shared_ptr<std::istream> istr)
                 do
                 {
                     int r, s;
-                    auto rs = fetchCode(currentBlock->acTable, [&]() { return bufferReqBits(istr, 1); });
+                    auto rs = fetchCode(currentBlock->acTable, [&]() -> bool { return bufferReqBits(istr, 1); });
                     s = rs & 15;
                     r = rs >> 4;
                     if (s == 0)

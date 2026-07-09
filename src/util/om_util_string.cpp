@@ -4,7 +4,7 @@
 namespace openminecraft::util::string
 {
 log::OMLogger logger("test");
-std::string uniToString(std::vector<int> arr)
+auto uniToString(std::vector<int> arr) -> std::string
 {
     std::vector<char> data;
     for (auto i : arr)
@@ -35,7 +35,7 @@ std::string uniToString(std::vector<int> arr)
     data.push_back('\0');
     return data.data();
 }
-int utf8Next(std::shared_ptr<std::istream> s)
+auto utf8Next(std::shared_ptr<std::istream> s) -> int
 {
     int target = 0;
     char def = s->get();

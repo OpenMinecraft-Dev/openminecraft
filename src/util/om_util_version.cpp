@@ -16,18 +16,16 @@ Version::Version(uint32_t vkver)
     : majorver(VK_VERSION_MAJOR(vkver)), minorver(VK_VERSION_MINOR(vkver)), patch1(VK_VERSION_PATCH(vkver)), patch2(0)
 {
 }
-Version::~Version()
-{
-}
-std::string Version::toString()
+Version::~Version() = default;
+auto Version::toString() -> std::string
 {
     return fmt::format("{}.{}.{}.{}", majorver, minorver, patch1, patch2);
 }
-int Version::toVKVersion()
+auto Version::toVKVersion() -> int
 {
     return VK_MAKE_VERSION(majorver, minorver, patch1);
 }
-int Version::toVKApiVersion()
+auto Version::toVKApiVersion() -> int
 {
     return VK_MAKE_API_VERSION(majorver, minorver, patch1, patch2);
 }

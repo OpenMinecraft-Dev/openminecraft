@@ -1,10 +1,10 @@
 #include "openminecraft/vm/os/om_hardware.hpp"
+#include <array>
 #include <cstdint>
 #include <fmt/format.h>
 #include <fstream>
 #include <pwd.h>
 #include <sstream>
-#include <stdlib.h>
 #include <string>
 #include <sys/resource.h>
 #include <sys/utsname.h>
@@ -15,13 +15,15 @@
 extern "C"
 {
     void cpuinfo_x86(uint32_t op, int32_t *eax, int32_t *ebx, int32_t *ecx, int32_t *edx);
-    uint64_t cpuinfo_aarch64();
+    auto cpuinfo_aarch64() -> uint64_t;
     void aarch64_tocpuname(uint64_t d, std::string *ss);
 }
 
 namespace openminecraft::vm::os
 {
-static std::unordered_map<std::string, std::string> fetchConfig()
+using std::string;
+
+static auto fetchConfig() -> std::unordered_map<std::string, std::string>
 {
     std::ifstream f("/etc/os-release");
     std::string staging;
@@ -64,7 +66,7 @@ static std::unordered_map<std::string, std::string> fetchConfig()
 
     return result;
 }
-static std::string fetchFromDevFs()
+static auto fetchFromDevFs() -> std::string
 {
     std::ifstream f("/proc/cpuinfo");
     std::string staging;
@@ -90,18 +92,18 @@ static std::string fetchFromDevFs()
     }
     return "";
 }
-std::string fetchCpuName()
+auto fetchCpuName() -> std::string
 {
     utsname n{};
     uname(&n);
 #if defined(__x86_64__) || defined(__x86__)
-    char model[64] = {0};
-    int32_t *d = (int32_t *)model;
+    std::array<char, 64> model;
+    auto *d = reinterpret_cast<int32_t *>(model.data());
     cpuinfo_x86(0x80000002, &d[0], &d[1], &d[2], &d[3]);
     cpuinfo_x86(0x80000003, &d[4], &d[5], &d[6], &d[7]);
     cpuinfo_x86(0x80000004, &d[8], &d[9], &d[10], &d[11]);
     model[48] = '\0';
-    auto st = std::string(model);
+    auto st = std::string(model.data());
     std::string result;
     for (auto ch : st)
     {
@@ -120,22 +122,22 @@ std::string fetchCpuName()
     return st == "" ? fmt::format("unknown {} cpu", n.machine) : st;
 #endif
 }
-std::string fetchUsername()
+auto fetchUsername() -> std::string
 {
-    return std::string(getpwuid(getuid())->pw_name);
+    return getpwuid(getuid())->pw_name;
 }
-std::string fetchLoginUser()
+auto fetchLoginUser() -> std::string
 {
     if (getlogin())
     {
-        return std::string(getlogin());
+        return getlogin();
     }
     else
     {
         return "unknown";
     }
 }
-std::string fetchSystemName()
+auto fetchSystemName() -> std::string
 {
     auto f = fetchConfig();
     if (f["name"].size())
@@ -144,9 +146,9 @@ std::string fetchSystemName()
     }
     struct utsname n;
     uname(&n);
-    return std::string(n.sysname);
+    return n.sysname;
 }
-std::string fetchSystemVersion()
+auto fetchSystemVersion() -> std::string
 {
     auto f = fetchConfig();
     if (f["version"].size())
@@ -155,17 +157,17 @@ std::string fetchSystemVersion()
     }
     struct utsname n;
     uname(&n);
-    return std::string(n.release);
+    return n.release;
 }
-uint64_t fetchMemoryTotal()
+auto fetchMemoryTotal() -> uint64_t
 {
     return sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGESIZE);
 }
-uint64_t fetchAvailableProcessors()
+auto fetchAvailableProcessors() -> uint64_t
 {
     return sysconf(_SC_NPROCESSORS_ONLN);
 }
-int fetchLoadAverage(double *buf, int siz)
+auto fetchLoadAverage(double *buf, int siz) -> int
 {
 #ifndef OM_PLATFORM_ANDROID
     return getloadavg(buf, siz);
@@ -173,7 +175,7 @@ int fetchLoadAverage(double *buf, int siz)
     return -1;
 #endif
 }
-uint64_t fetchPageSize()
+auto fetchPageSize() -> uint64_t
 {
     return sysconf(_SC_PAGE_SIZE);
 }

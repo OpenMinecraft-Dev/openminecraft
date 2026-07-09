@@ -12,10 +12,6 @@ OMClassFile::OMClassFile() : logger("OMClassFile", this)
 {
 }
 
-OMClassFile::~OMClassFile()
-{
-}
-
 void OMClassFile::load(std::shared_ptr<std::istream> istr)
 {
     istr->seekg(0, std::ios::end);
@@ -24,7 +20,7 @@ void OMClassFile::load(std::shared_ptr<std::istream> istr)
 
     std::vector<uint8_t> data;
     data.resize(l);
-    istr->read((char *)data.data(), l);
+    istr->read(reinterpret_cast<char *>(data.data()), l);
 
     MemoryReader reader(data);
 
@@ -123,12 +119,12 @@ void OMClassFile::loadAttr(MemoryReader &reader, OMClassAttribute &a)
         a.code.maxStack = reader.readu16();
         a.code.maxLocal = reader.readu16();
         a.code.codeLength = reader.readu32();
-        a.code.code = (uint8_t *)std::malloc(a.code.codeLength);
+        a.code.code = reinterpret_cast<uint8_t *>(std::malloc(a.code.codeLength));
         reader.readn(a.code.code, a.code.codeLength);
         a.code.exceptionTableLength = reader.readu16();
 
-        a.code.exceptionTable =
-            (OMClassExceptionTableEntry *)std::malloc(a.code.exceptionTableLength * sizeof(OMClassExceptionTableEntry));
+        a.code.exceptionTable = reinterpret_cast<OMClassExceptionTableEntry *>(
+            std::malloc(a.code.exceptionTableLength * sizeof(OMClassExceptionTableEntry)));
         for (int i = 0; i < a.code.exceptionTableLength; ++i)
         {
             a.code.exceptionTable[i].start = reader.readu16();
@@ -138,18 +134,17 @@ void OMClassFile::loadAttr(MemoryReader &reader, OMClassAttribute &a)
         }
 
         a.code.attrCount = reader.readu16();
-        a.code.attrs = (OMClassAttribute *)malloc(a.code.attrCount * sizeof(OMClassAttribute));
+        a.code.attrs = reinterpret_cast<OMClassAttribute *>(malloc(a.code.attrCount * sizeof(OMClassAttribute)));
         for (int i = 0; i < a.code.attrCount; ++i)
         {
             loadAttr(reader, a.code.attrs[i]);
         }
         break;
     }
-        // TODO: StackMapTable
     case "Exceptions"_hash: {
         a.exceptions.count = reader.readu16();
 
-        a.exceptions.index = (uint16_t *)std::malloc(2 * a.exceptions.count);
+        a.exceptions.index = reinterpret_cast<uint16_t *>(std::malloc(2 * a.exceptions.count));
         for (int i = 0; i < a.exceptions.count; ++i)
         {
             a.exceptions.index[i] = reader.readu16();
@@ -163,14 +158,14 @@ void OMClassFile::loadAttr(MemoryReader &reader, OMClassAttribute &a)
     }
     case "BootstrapMethods"_hash: {
         a.bootstrapMethod.numBootstrapMethods = reader.readu16();
-        a.bootstrapMethod.bootstrapMethods = (OMClassBootstrapMethodEntry *)malloc(
-            a.bootstrapMethod.numBootstrapMethods * sizeof(OMClassBootstrapMethodEntry));
+        a.bootstrapMethod.bootstrapMethods = reinterpret_cast<OMClassBootstrapMethodEntry *>(
+            malloc(a.bootstrapMethod.numBootstrapMethods * sizeof(OMClassBootstrapMethodEntry)));
         for (int i = 0; i < a.bootstrapMethod.numBootstrapMethods; ++i)
         {
             auto &mm = a.bootstrapMethod.bootstrapMethods[i];
             mm.bootstrapMethodRef = reader.readu16();
             mm.numBootstrapArguments = reader.readu16();
-            mm.bootstrapArguments = (uint16_t *)malloc(2 * mm.numBootstrapArguments);
+            mm.bootstrapArguments = reinterpret_cast<uint16_t *>(malloc(2 * mm.numBootstrapArguments));
 
             for (int j = 0; j < mm.numBootstrapArguments; ++j)
             {
@@ -215,7 +210,7 @@ void OMClassFile::loadField(MemoryReader &reader, OMClassField &m)
     }
 }
 
-static inline std::string toStdUtf8(const uint8_t *data, int length)
+static inline auto toStdUtf8(const uint8_t *data, int length) -> std::string
 {
     std::string result;
     result.reserve(length);

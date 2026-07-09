@@ -6,7 +6,7 @@ namespace openminecraft::vm::err
 OMRuntimeError::OMRuntimeError(void *errInstance) : errInstance(errInstance)
 {
 }
-const char *OMRuntimeError::what() const throw()
+auto OMRuntimeError::what() const noexcept -> const char *
 {
     auto i = new std::string(fmt::format("runtime error thrown with instance {}", errInstance));
     return i->c_str();

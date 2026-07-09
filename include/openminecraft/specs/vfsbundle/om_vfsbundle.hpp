@@ -44,7 +44,7 @@ class OMBundle
   private:
     log::OMLogger logger;
 
-    OMBundleFileMetadata fetchMetadata(std::shared_ptr<std::istream> stream);
+    auto fetchMetadata(std::shared_ptr<std::istream> stream) -> OMBundleFileMetadata;
     bool writable = false;
 };
 } // namespace openminecraft::specs::vfsbundle

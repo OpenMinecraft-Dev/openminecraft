@@ -8,8 +8,8 @@ namespace openminecraft::vm::elysia
 void Java_java_io_UnixFileSystem_initIDs(OMElysiaJNIEnv *env, OMElysiaKlass *klass)
 {
 }
-jint Java_java_io_UnixFileSystem_getBooleanAttributes0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *fs,
-                                                       OMElysiaNativeHandle *file)
+auto Java_java_io_UnixFileSystem_getBooleanAttributes0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *fs,
+                                                       OMElysiaNativeHandle *file) -> jint
 {
     auto flcls = env->FindClass("java/io/File");
     auto pathstr = env->GetObjectField(file, env->GetFieldID(flcls, "path", "Ljava/lang/String;"));

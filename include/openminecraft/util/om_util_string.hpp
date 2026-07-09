@@ -6,8 +6,8 @@
 #include <vector>
 namespace openminecraft::util::string
 {
-int utf8Next(std::shared_ptr<std::istream> s);
-std::string uniToString(std::vector<int> arr);
+auto utf8Next(std::shared_ptr<std::istream> s) -> int;
+auto uniToString(std::vector<int> arr) -> std::string;
 } // namespace openminecraft::util::string
 
 #endif

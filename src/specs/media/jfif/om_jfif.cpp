@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <cstdio>
 #include <glm/detail/qualifier.hpp>
 #include <glm/ext/vector_float3.hpp>
 #include <glm/glm.hpp>
@@ -13,28 +12,25 @@
 #include <istream>
 #include <memory>
 #include <stdexcept>
-#include <variant>
 
 namespace openminecraft::specs::jfif
 {
 OMJfifFile::OMJfifFile() : logger("OMJfifFile", this)
 {
-    processorMap[StartOfImage] = [](std::shared_ptr<std::istream>) {};
-    processorMap[App0Header] = [&](std::shared_ptr<std::istream> istr) { parseApp0Header(istr); };
-    processorMap[App1Header] = [&](std::shared_ptr<std::istream> istr) { parseApp1Header(istr); };
-    processorMap[App2Header] = [&](std::shared_ptr<std::istream> istr) { parseApp2Header(istr); };
-    processorMap[App13Header] = [&](std::shared_ptr<std::istream> istr) { parseApp13Header(istr); };
-    processorMap[App14Header] = [&](std::shared_ptr<std::istream> istr) { parseApp14Header(istr); };
-    processorMap[Comment] = [&](std::shared_ptr<std::istream> istr) { parseComment(istr); };
-    processorMap[QuantizationTable] = [&](std::shared_ptr<std::istream> istr) { parseQuantizationTable(istr); };
-    processorMap[StartOfFrame] = [&](std::shared_ptr<std::istream> istr) { parseStartOfFrame(istr); };
-    processorMap[HuffmanTable] = [&](std::shared_ptr<std::istream> istr) { parseHuffmanTable(istr); };
-    processorMap[StartOfScan] = [&](std::shared_ptr<std::istream> istr) { parseStartOfScan(istr); };
-    processorMap[EndOfImage] = [&](std::shared_ptr<std::istream> istr) { blockDataCache.clear(); };
+    processorMap[StartOfImage] = [](std::shared_ptr<std::istream>) -> void {};
+    processorMap[App0Header] = [&](std::shared_ptr<std::istream> istr) -> void { parseApp0Header(istr); };
+    processorMap[App1Header] = [&](std::shared_ptr<std::istream> istr) -> void { parseApp1Header(istr); };
+    processorMap[App2Header] = [&](std::shared_ptr<std::istream> istr) -> void { parseApp2Header(istr); };
+    processorMap[App13Header] = [&](std::shared_ptr<std::istream> istr) -> void { parseApp13Header(istr); };
+    processorMap[App14Header] = [&](std::shared_ptr<std::istream> istr) -> void { parseApp14Header(istr); };
+    processorMap[Comment] = [&](std::shared_ptr<std::istream> istr) -> void { parseComment(istr); };
+    processorMap[QuantizationTable] = [&](std::shared_ptr<std::istream> istr) -> void { parseQuantizationTable(istr); };
+    processorMap[StartOfFrame] = [&](std::shared_ptr<std::istream> istr) -> void { parseStartOfFrame(istr); };
+    processorMap[HuffmanTable] = [&](std::shared_ptr<std::istream> istr) -> void { parseHuffmanTable(istr); };
+    processorMap[StartOfScan] = [&](std::shared_ptr<std::istream> istr) -> void { parseStartOfScan(istr); };
+    processorMap[EndOfImage] = [&](std::shared_ptr<std::istream> istr) -> void { blockDataCache.clear(); };
 }
-OMJfifFile::~OMJfifFile()
-{
-}
+OMJfifFile::~OMJfifFile() = default;
 
 void OMJfifFile::parseApp0Header(std::shared_ptr<std::istream> istr)
 {
@@ -373,7 +369,7 @@ void OMJfifFile::parseMagic(std::shared_ptr<std::istream> istr)
     quantizationTable.clear();
     bitBuffer.popValue(bitBuffer.bitsAvailable());
 }
-bool OMJfifFile::parseBlockHeader(std::shared_ptr<std::istream> istr, OMJfifSectionType *t)
+auto OMJfifFile::parseBlockHeader(std::shared_ptr<std::istream> istr, OMJfifSectionType *t) -> bool
 {
     uint8_t flag;
 base:
@@ -450,7 +446,7 @@ base:
     return true;
 }
 
-uint16_t OMJfifFile::readLen(std::shared_ptr<std::istream> input)
+auto OMJfifFile::readLen(std::shared_ptr<std::istream> input) -> uint16_t
 {
     uint16_t l;
     input->read(reinterpret_cast<char *>(&l), 2);

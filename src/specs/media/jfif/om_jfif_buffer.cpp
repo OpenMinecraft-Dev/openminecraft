@@ -4,7 +4,7 @@
 
 namespace openminecraft::specs::jfif
 {
-bool OMJfifFile::bufferReqBits(std::shared_ptr<std::istream> istr, int b)
+auto OMJfifFile::bufferReqBits(std::shared_ptr<std::istream> istr, int b) -> bool
 {
     auto pshBit = [&]() -> bool {
         uint8_t c = istr->peek();
@@ -53,7 +53,7 @@ void OMJfifFile::bufferLogStatus(std::shared_ptr<std::istream> istr)
     logger.info("offset +{:02x}.{}", off, -pp);
 }
 
-int64_t OMJfifFile::bufferReadExtra(std::shared_ptr<std::istream> istr, int datalen)
+auto OMJfifFile::bufferReadExtra(std::shared_ptr<std::istream> istr, int datalen) -> int64_t
 {
     if (datalen == 0)
     {
