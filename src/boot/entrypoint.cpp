@@ -11,6 +11,7 @@
 #include "openminecraft/specs/classfile/om_classfile.hpp"
 #include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
+#include "openminecraft/specs/zip/om_zip.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
@@ -106,6 +107,11 @@ auto boot(std::vector<std::string> args) -> int
         auto ll = bld.build();
 
         logger->info("object at {}", (void *)ll.get());
+        break;
+    }
+    case "zip"_hash: {
+        specs::zip::OMZip zip;
+        zip.parse(std::make_shared<std::ifstream>(args[2], std::ios::binary));
         break;
     }
     case "class"_hash: {

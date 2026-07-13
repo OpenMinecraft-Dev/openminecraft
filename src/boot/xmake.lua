@@ -17,7 +17,6 @@ add_packages(
 add_deps(
 	"openminecraft-log",
 	"openminecraft-vm",
-	"openminecraft-binary",
 	"openminecraft-mem",
 	"openminecraft-vfs",
 	"openminecraft-io",
