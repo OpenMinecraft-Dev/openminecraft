@@ -52,6 +52,12 @@ void OMZip::parseCentralDirectory(std::shared_ptr<std::istream> istr, OMZipCentr
     d.data.internalFileAttributes = binary::le16ToNative(d.data.internalFileAttributes);
     d.data.externalFileAttributes = binary::le32ToNative(d.data.externalFileAttributes);
     d.data.localHeaderOffset = binary::le32ToNative(d.data.localHeaderOffset);
+
+    d.name.resize(d.data.fileNameLength);
+    istr->read(const_cast<char *>(d.name.data()), d.data.fileNameLength);
+    istr->seekg(d.data.extraFieldLength, std::ios::cur);
+
+    std::cout << d.name << std::endl;
 }
 
 void OMZip::parse(std::shared_ptr<std::istream> istr)
@@ -78,7 +84,10 @@ void OMZip::parse(std::shared_ptr<std::istream> istr)
     istr->seekg(centralDir.centralDirectoryOffset, std::ios::beg);
 
     OMZipCentralDirectoryWrap wrp;
-    parseCentralDirectory(istr, wrp);
+    for (int i = 0; i < centralDir.entries; ++i)
+    {
+        parseCentralDirectory(istr, wrp);
+    }
 
     std::cout << std::hex << istr->tellg() << std::endl;
 }
