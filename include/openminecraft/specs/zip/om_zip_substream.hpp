@@ -53,7 +53,7 @@ class OMZipSubStreamBuf : public std::streambuf
         }
 
         ourBuf_[0] = ch;
-        setg(ourBuf_.begin(), ourBuf_.begin(), ourBuf_.begin() + 1);
+        setg(&ourBuf_[0], &ourBuf_[0], &ourBuf_[1]);
         absolutePos_ = static_cast<uint64_t>(absolutePos_) + 1;
         return traits_type::to_int_type(ch);
     }
@@ -103,7 +103,7 @@ class OMZipSubStreamBuf : public std::streambuf
     std::streamsize length_;
     std::streampos absolutePos_;
     std::streampos savedPos_;
-    std::array<char, 1> ourBuf_;
+    std::array<char, 2> ourBuf_;
 };
 
 class OMZipSubStream : public std::istream
