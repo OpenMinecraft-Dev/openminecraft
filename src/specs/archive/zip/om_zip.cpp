@@ -1,5 +1,7 @@
 #include "openminecraft/specs/zip/om_zip.hpp"
 #include "openminecraft/binary/om_bin_endians.hpp"
+#include "openminecraft/specs/zip/om_zip_substream.hpp"
+#include "openminecraft/specs/zlib/om_zlib_inflaterstream.hpp"
 #include <array>
 #include <cstdint>
 #include <initializer_list>
@@ -80,6 +82,7 @@ void OMZip::parseCentralDirectory(std::shared_ptr<std::istream> istr, OMZipCentr
 
 void OMZip::parse(std::shared_ptr<std::istream> istr)
 {
+    lastStream = istr;
     istr->seekg(-65536, std::ios::end);
 
     auto eocd = findHeader(eocdHeader, istr);
@@ -109,7 +112,7 @@ void OMZip::parse(std::shared_ptr<std::istream> istr)
     }
 }
 
-auto OMZip::findFile(std::string &s) -> OMZipCentralDirectoryWrap *
+auto OMZip::findFile(std::string s) -> OMZipCentralDirectoryWrap *
 {
     for (auto &e : entries)
     {
@@ -122,8 +125,21 @@ auto OMZip::findFile(std::string &s) -> OMZipCentralDirectoryWrap *
     return nullptr;
 }
 
-auto OMZip::read() -> std::shared_ptr<std::ostream>
+auto OMZip::read(OMZipCentralDirectoryWrap *wrap) -> std::shared_ptr<std::istream>
 {
-    return nullptr;
+    switch (wrap->file.compressionMethod)
+    {
+    case None:
+        return std::make_shared<OMZipSubStream>(*lastStream, (std::streamsize)wrap->offset,
+                                                (std::streampos)wrap->data.compressedSize);
+    case Deflate: {
+        return std::make_shared<zlib::OMZlibInflaterStream>(
+            std::make_shared<OMZipSubStream>(*lastStream, (std::streamsize)wrap->offset,
+                                             (std::streampos)wrap->data.compressedSize),
+            -15);
+    }
+    default:
+        throw std::logic_error("not supported!");
+    }
 }
 } // namespace openminecraft::specs::zip

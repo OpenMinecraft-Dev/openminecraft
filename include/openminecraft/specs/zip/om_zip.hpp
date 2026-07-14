@@ -126,6 +126,7 @@ class OMZip
     OMZipEndOfCentralDirectory centralDir;
     std::string centralDirComment;
     std::vector<OMZipCentralDirectoryWrap> entries;
+    std::shared_ptr<std::istream> lastStream;
 
   public:
     OMZip();
@@ -133,8 +134,8 @@ class OMZip
 
     void parse(std::shared_ptr<std::istream> istr);
     void parseCentralDirectory(std::shared_ptr<std::istream> istr, OMZipCentralDirectoryWrap &d);
-    auto findFile(std::string &) -> OMZipCentralDirectoryWrap *;
-    auto read() -> std::shared_ptr<std::ostream>;
+    auto findFile(std::string) -> OMZipCentralDirectoryWrap *;
+    auto read(OMZipCentralDirectoryWrap *wrap) -> std::shared_ptr<std::istream>;
 };
 } // namespace openminecraft::specs::zip
 

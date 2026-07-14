@@ -12,10 +12,12 @@
 #include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/specs/zip/om_zip.hpp"
+#include "openminecraft/specs/zlib/om_zlib_inflaterstream.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
+#include <array>
 #include <boost/stacktrace/stacktrace.hpp>
 #include <fstream>
 #include <iostream>
@@ -112,6 +114,11 @@ auto boot(std::vector<std::string> args) -> int
     case "zip"_hash: {
         specs::zip::OMZip zip;
         zip.parse(std::make_shared<std::ifstream>(args[2], std::ios::binary));
+        auto l = zip.findFile("META-INF/MANIFEST.MF");
+        auto f = zip.read(l);
+        std::string s;
+        *f >> s;
+        std::cout << s << std::endl;
         break;
     }
     case "class"_hash: {
