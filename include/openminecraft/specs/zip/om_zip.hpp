@@ -6,6 +6,9 @@
 #include <memory>
 #include <cstdint>
 #include <chrono>
+#include <ostream>
+#include <string>
+#include <vector>
 namespace openminecraft::specs::zip
 {
 inline constexpr const char allocatorTag[] = "parser_zip";
@@ -113,6 +116,7 @@ struct OMZipCentralDirectoryWrap
     OMZipCentralDirectory data;
     OMZipLocalFileHeader file;
     std::string name;
+    uint64_t offset;
 };
 #pragma pack()
 
@@ -121,6 +125,7 @@ class OMZip
   private:
     OMZipEndOfCentralDirectory centralDir;
     std::string centralDirComment;
+    std::vector<OMZipCentralDirectoryWrap> entries;
 
   public:
     OMZip();
@@ -128,6 +133,8 @@ class OMZip
 
     void parse(std::shared_ptr<std::istream> istr);
     void parseCentralDirectory(std::shared_ptr<std::istream> istr, OMZipCentralDirectoryWrap &d);
+    auto findFile(std::string &) -> OMZipCentralDirectoryWrap *;
+    auto read() -> std::shared_ptr<std::ostream>;
 };
 } // namespace openminecraft::specs::zip
 

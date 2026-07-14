@@ -74,11 +74,8 @@ void OMZip::parseCentralDirectory(std::shared_ptr<std::istream> istr, OMZipCentr
     hd.fileNameLength = binary::le16ToNative(hd.fileNameLength);
     hd.extraFieldLength = binary::le16ToNative(hd.extraFieldLength);
     istr->seekg(hd.fileNameLength + hd.extraFieldLength, std::ios::cur);
-    // TODO: data begins!
-
+    d.offset = static_cast<uint64_t>(istr->tellg());
     istr->seekg(c, std::ios::beg);
-
-    std::cout << d.name << " @ +" << std::hex << d.data.localHeaderOffset << std::endl;
 }
 
 void OMZip::parse(std::shared_ptr<std::istream> istr)
@@ -104,10 +101,29 @@ void OMZip::parse(std::shared_ptr<std::istream> istr)
 
     istr->seekg(centralDir.centralDirectoryOffset, std::ios::beg);
 
-    OMZipCentralDirectoryWrap wrp;
+    entries.resize(centralDir.entries);
     for (int i = 0; i < centralDir.entries; ++i)
     {
-        parseCentralDirectory(istr, wrp);
+        parseCentralDirectory(istr, entries[i]);
+        std::cout << entries[i].name << std::endl;
     }
+}
+
+auto OMZip::findFile(std::string &s) -> OMZipCentralDirectoryWrap *
+{
+    for (auto &e : entries)
+    {
+        if (e.name == s)
+        {
+            return &e;
+        }
+    }
+
+    return nullptr;
+}
+
+auto OMZip::read() -> std::shared_ptr<std::ostream>
+{
+    return nullptr;
 }
 } // namespace openminecraft::specs::zip
