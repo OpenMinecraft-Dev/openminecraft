@@ -1,10 +1,12 @@
 #ifndef OM_ZLIB_INFLATERSTREAM_HPP
 #define OM_ZLIB_INFLATERSTREAM_HPP
 
+#include <ios>
 #include <iostream>
 #include <memory>
 #include <streambuf>
 #include <istream>
+#include <utility>
 #include <vector>
 #include <stdexcept>
 #include <zlib.h>
@@ -14,9 +16,9 @@ namespace openminecraft::specs::zlib
 class OMZlibInflateStreamBuf : public std::streambuf
 {
   public:
-    OMZlibInflateStreamBuf(std::istream &src, int windowBits = 15, std::size_t inBufSize = 4096,
+    OMZlibInflateStreamBuf(std::shared_ptr<std::istream> src, int windowBits = 15, std::size_t inBufSize = 4096,
                            std::size_t outBufSize = 4096)
-        : src_(src), inBuf_(inBufSize), outBuf_(outBufSize)
+        : src_(std::move(src)), inBuf_(inBufSize), outBuf_(outBufSize)
     {
         strm_.zalloc = Z_NULL;
         strm_.zfree = Z_NULL;
@@ -56,8 +58,8 @@ class OMZlibInflateStreamBuf : public std::streambuf
         {
             if (strm_.avail_in == 0)
             {
-                src_.read(inBuf_.data(), inBuf_.size());
-                std::streamsize n = src_.gcount();
+                src_->read(inBuf_.data(), inBuf_.size());
+                std::streamsize n = src_->gcount();
                 if (n == 0)
                 {
                     eof_ = true;
@@ -94,7 +96,7 @@ class OMZlibInflateStreamBuf : public std::streambuf
     }
 
   private:
-    std::istream &src_;
+    std::shared_ptr<std::istream> src_;
     z_stream strm_;
     std::vector<char> inBuf_;
     std::vector<char> outBuf_;
@@ -106,7 +108,7 @@ class OMZlibInflaterStream : public std::istream
   public:
     OMZlibInflaterStream(std::shared_ptr<std::istream> src, int windowBits = 15, std::size_t inBufSize = 4096,
                          std::size_t outBufSize = 4096)
-        : std::istream(&buf_), buf_(*src, windowBits, inBufSize, outBufSize)
+        : std::istream(&buf_), buf_(src, windowBits, inBufSize, outBufSize)
     {
     }
 
