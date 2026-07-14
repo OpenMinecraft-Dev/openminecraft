@@ -16,6 +16,7 @@ class OMZLibInflater
     ~OMZLibInflater();
 
     void input(uint8_t *src, uint64_t length);
+    void finish();
 
   private:
     std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> buffer;

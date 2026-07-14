@@ -49,4 +49,31 @@ begin:
     }
     throw std::runtime_error("zlib inflate failed");
 }
+
+void OMZLibInflater::finish()
+{
+    strm.next_in = nullptr;
+    strm.avail_in = 0;
+
+    while (true)
+    {
+        std::array<uint8_t, 1024> outBuff;
+        strm.next_out = outBuff.data();
+        strm.avail_out = outBuff.size();
+
+        auto status = inflate(&strm, Z_FINISH);
+        std::size_t produced = 1024 - strm.avail_out;
+        if (produced > 0)
+        {
+            dataAcceptor(outBuff.data(), produced);
+        }
+
+        if (status == Z_STREAM_END)
+            break;
+        if (status != Z_OK && status != Z_BUF_ERROR)
+        {
+            throw std::runtime_error("zlib inflate finish failed");
+        }
+    }
+}
 } // namespace openminecraft::specs::zlib
