@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <initializer_list>
+#include <ios>
 #include <iostream>
 #include <istream>
 #include <memory>
@@ -39,7 +40,7 @@ void OMZip::parseCentralDirectory(std::shared_ptr<std::istream> istr, OMZipCentr
     d.data.versionMade = binary::le16ToNative(d.data.versionMade);
     d.data.versionExtract = binary::le16ToNative(d.data.versionExtract);
     d.data.flags = binary::le16ToNative(d.data.flags);
-    d.data.compressionMethod = binary::le16ToNative(d.data.compressionMethod);
+    d.data.compressionMethod = static_cast<OMZipCompressionMethod>(binary::le16ToNative(d.data.compressionMethod));
     d.data.lastModifyTime = binary::le16ToNative(d.data.lastModifyTime);
     d.data.lastModifyDate = binary::le16ToNative(d.data.lastModifyDate);
     d.data.crc32 = binary::le32ToNative(d.data.crc32);
@@ -57,7 +58,27 @@ void OMZip::parseCentralDirectory(std::shared_ptr<std::istream> istr, OMZipCentr
     istr->read(const_cast<char *>(d.name.data()), d.data.fileNameLength);
     istr->seekg(d.data.extraFieldLength, std::ios::cur);
 
-    std::cout << d.name << std::endl;
+    auto c = istr->tellg();
+    istr->seekg(d.data.localHeaderOffset, std::ios::beg);
+
+    auto &hd = d.file;
+    istr->read(reinterpret_cast<char *>(&hd), sizeof(hd));
+    hd.version = binary::le16ToNative(hd.version);
+    hd.flags = binary::le16ToNative(hd.flags);
+    hd.compressionMethod = static_cast<OMZipCompressionMethod>(binary::le16ToNative(hd.compressionMethod));
+    hd.lastModifyTime = binary::le16ToNative(hd.lastModifyTime);
+    hd.lastModifyDate = binary::le16ToNative(hd.lastModifyDate);
+    hd.crc32 = binary::le32ToNative(hd.crc32);
+    hd.compressedSize = binary::le32ToNative(hd.compressedSize);
+    hd.uncompressedSize = binary::le32ToNative(hd.uncompressedSize);
+    hd.fileNameLength = binary::le16ToNative(hd.fileNameLength);
+    hd.extraFieldLength = binary::le16ToNative(hd.extraFieldLength);
+    istr->seekg(hd.fileNameLength + hd.extraFieldLength, std::ios::cur);
+    // TODO: data begins!
+
+    istr->seekg(c, std::ios::beg);
+
+    std::cout << d.name << " @ +" << std::hex << d.data.localHeaderOffset << std::endl;
 }
 
 void OMZip::parse(std::shared_ptr<std::istream> istr)
@@ -88,7 +109,5 @@ void OMZip::parse(std::shared_ptr<std::istream> istr)
     {
         parseCentralDirectory(istr, wrp);
     }
-
-    std::cout << std::hex << istr->tellg() << std::endl;
 }
 } // namespace openminecraft::specs::zip

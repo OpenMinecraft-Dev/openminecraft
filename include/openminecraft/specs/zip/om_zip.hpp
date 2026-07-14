@@ -6,7 +6,6 @@
 #include <memory>
 #include <cstdint>
 #include <chrono>
-#include <vector>
 namespace openminecraft::specs::zip
 {
 inline constexpr const char allocatorTag[] = "parser_zip";
@@ -17,7 +16,7 @@ constexpr auto eocdHeader = {'P', 'K', '\x05', '\x06'};
 using DosDate = uint16_t;
 using DosTime = uint16_t;
 
-static inline std::tm ParseDosDateTime(DosTime dosTime, DosDate dosDate)
+static inline auto ParseDosDateTime(DosTime dosTime, DosDate dosDate) -> std::tm
 {
     std::tm t = {};
     t.tm_sec = (dosTime & 0x1F) * 2;
@@ -30,12 +29,39 @@ static inline std::tm ParseDosDateTime(DosTime dosTime, DosDate dosDate)
     return t;
 }
 
-static inline std::chrono::system_clock::time_point DosToTimePoint(DosTime dosTime, DosDate dosDate)
+static inline auto DosToTimePoint(DosTime dosTime, DosDate dosDate) -> std::chrono::system_clock::time_point
 {
     std::tm t = ParseDosDateTime(dosTime, dosDate);
     std::time_t tt = std::mktime(&t); // 将本地时间转换为 time_t
     return std::chrono::system_clock::from_time_t(tt);
 }
+
+enum OMZipCompressionMethod : uint16_t
+{
+    None = 0,
+    Shrunk = 1,
+    Factor1 = 2,
+    Factor2 = 3,
+    Factor3 = 4,
+    Factor4 = 5,
+    Implode = 6,
+    Deflate = 8,
+    Deflate64 = 9,
+    PKWare = 10,
+    BZIP2 = 12,
+    LZMA = 14,
+    CMPSC = 16,
+    IBMTERSE = 18,
+    LZ77 = 19,
+    _ZSTD = 20,
+    ZSTD = 93,
+    MP3 = 94,
+    XZ = 95,
+    JPEG = 96,
+    WavPack = 97,
+    PPMd = 98,
+    AE_x = 99
+};
 
 #pragma pack(1)
 struct OMZipEndOfCentralDirectory
@@ -52,7 +78,7 @@ struct OMZipCentralDirectory
     std::array<char, 4> header;
     uint16_t versionMade, versionExtract;
     uint16_t flags;
-    uint16_t compressionMethod;
+    OMZipCompressionMethod compressionMethod;
     DosTime lastModifyTime;
     DosDate lastModifyDate;
     uint32_t crc32;
@@ -67,9 +93,25 @@ struct OMZipCentralDirectory
     uint32_t localHeaderOffset;
 };
 
+struct OMZipLocalFileHeader
+{
+    std::array<char, 4> header;
+    uint16_t version;
+    uint16_t flags;
+    OMZipCompressionMethod compressionMethod;
+    DosTime lastModifyTime;
+    DosDate lastModifyDate;
+    uint32_t crc32;
+    uint32_t compressedSize;
+    uint32_t uncompressedSize;
+    uint16_t fileNameLength;
+    uint16_t extraFieldLength;
+};
+
 struct OMZipCentralDirectoryWrap
 {
     OMZipCentralDirectory data;
+    OMZipLocalFileHeader file;
     std::string name;
 };
 #pragma pack()
