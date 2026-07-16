@@ -227,14 +227,11 @@ auto OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
         }
         bcp = std::make_shared<specs::zip::OMZip>();
         bcp->parse(std::make_shared<std::ifstream>(path, std::ios::binary));
+	auto hnd = bcp->findFile(name + ".class");
+        if (hnd)
+        {                                                                       istr = bcp->read(hnd);                                          }
     }
 end:
-    auto hnd = bcp->findFile(name + ".class");
-    if (hnd)
-    {
-        istr = bcp->read(hnd);
-    }
-
     if (!istr)
     {
         istr = std::make_shared<std::ifstream>(fmt::format("vmstd/out/{}.class", name), std::ios::binary);
