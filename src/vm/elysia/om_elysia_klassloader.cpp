@@ -10,7 +10,9 @@
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <array>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
+#include <ios>
 #include <iostream>
 #include <istream>
 #include <memory>
@@ -215,7 +217,30 @@ auto OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
         return arrk;
     }
 
-    auto istr = std::make_shared<std::ifstream>(fmt::format("vmstd/out/{}.class", name), std::ios::binary);
+    std::shared_ptr<std::istream> istr = nullptr;
+    if (!bcp)
+    {
+        if (!std::filesystem::exists(
+                std::filesystem::path("/home/coder2/Downloads/jdk8u482-b08-jre/lib/rt_compressed.jar")))
+        {
+            goto end;
+        }
+        bcp = std::make_shared<specs::zip::OMZip>();
+        bcp->parse(std::make_shared<std::ifstream>("/home/coder2/Downloads/jdk8u482-b08-jre/lib/rt_compressed.jar",
+                                                   std::ios::binary));
+    }
+end:
+    auto hnd = bcp->findFile(name + ".class");
+    if (hnd)
+    {
+        istr = bcp->read(hnd);
+    }
+
+    if (!istr)
+    {
+        istr = std::make_shared<std::ifstream>(fmt::format("vmstd/out/{}.class", name), std::ios::binary);
+    }
+
     if (!istr->good())
     {
         auto kls = fetchOrLoadClass("java/lang/ClassNotFoundException");
@@ -229,6 +254,7 @@ auto OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
         logger.warn("class {} not found!", name);
         return nullptr;
     }
+
     return loadClassWithoutMirror(istr, special);
 }
 

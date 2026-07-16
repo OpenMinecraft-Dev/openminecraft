@@ -3,11 +3,13 @@
 
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/specs/zip/om_zip.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"
 #include "openminecraft/vm/elysia/om_elysia_oopmanager.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include <istream>
 #include <map>
+#include <memory>
 namespace openminecraft::vm::elysia
 {
 class OMElysiaKlassloader
@@ -66,6 +68,7 @@ class OMElysiaKlassloader
 
   private:
     log::OMLogger logger;
+    std::shared_ptr<specs::zip::OMZip> bcp;
 };
 } // namespace openminecraft::vm::elysia
 

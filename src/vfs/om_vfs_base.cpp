@@ -1,12 +1,12 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/util/om_util_memstream.hpp"
 #include <filesystem>
 #include <fstream>
 #include <ios>
 #include <iostream>
 #include <istream>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 
@@ -60,8 +60,7 @@ auto fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string
         {
             if (i.first.name == proc)
             {
-                return std::make_shared<std::istringstream>(
-                    std::string(reinterpret_cast<char *>(i.second), i.first.length));
+                return std::make_shared<util::OMMemoryStream>(reinterpret_cast<const char *>(i.second), i.first.length);
             }
         }
         return nullptr;

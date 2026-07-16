@@ -1,5 +1,6 @@
 #include "openminecraft/specs/classfile/om_classfile.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
+#include "openminecraft/util/om_util_memreader.hpp"
 #include <cstdint>
 #include <iostream>
 #include <istream>
@@ -14,15 +15,15 @@ OMClassFile::OMClassFile() : logger("OMClassFile", this)
 
 void OMClassFile::load(std::shared_ptr<std::istream> istr)
 {
-    istr->seekg(0, std::ios::end);
-    auto l = istr->tellg();
-    istr->seekg(0, std::ios::beg);
-
     std::vector<uint8_t> data;
-    data.resize(l);
-    istr->read(reinterpret_cast<char *>(data.data()), l);
+    std::vector<char> buffer(4096);
+    while (istr->read(buffer.data(), buffer.size()) || istr->gcount() > 0)
+    {
+        data.reserve(data.size() + istr->gcount());
+        data.insert(data.end(), buffer.begin(), buffer.begin() + istr->gcount());
+    }
 
-    MemoryReader reader(data);
+    util::OMMemoryReader reader(data);
 
     header.magic = reader.readu32();
     header.minorVersion = reader.readu16();
@@ -99,7 +100,7 @@ void OMClassFile::load(std::shared_ptr<std::istream> istr)
     }
 }
 
-void OMClassFile::loadAttr(MemoryReader &reader, OMClassAttribute &a)
+void OMClassFile::loadAttr(util::OMMemoryReader &reader, OMClassAttribute &a)
 {
     using namespace binary::hash;
     a.nameIndex = reader.readu16();
@@ -180,7 +181,7 @@ void OMClassFile::loadAttr(MemoryReader &reader, OMClassAttribute &a)
     }
     }
 }
-void OMClassFile::loadMethod(MemoryReader &reader, OMClassMethod &m)
+void OMClassFile::loadMethod(util::OMMemoryReader &reader, OMClassMethod &m)
 {
     m.accessFlags = reader.readu16();
     m.nameIndex = reader.readu16();
@@ -195,7 +196,7 @@ void OMClassFile::loadMethod(MemoryReader &reader, OMClassMethod &m)
     }
 }
 
-void OMClassFile::loadField(MemoryReader &reader, OMClassField &m)
+void OMClassFile::loadField(util::OMMemoryReader &reader, OMClassField &m)
 {
     m.accessFlags = reader.readu16();
     m.nameIndex = reader.readu16();
@@ -282,7 +283,7 @@ static inline auto toStdUtf8(const uint8_t *data, int length) -> std::string
     return result;
 }
 
-void OMClassFile::loadConstant(MemoryReader &reader, OMClassFileConstant &c)
+void OMClassFile::loadConstant(util::OMMemoryReader &reader, OMClassFileConstant &c)
 {
     c.type = (OMClassFileConstantType)reader.readu8();
     switch (c.type)

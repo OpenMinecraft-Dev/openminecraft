@@ -2,8 +2,8 @@
 #define OM_CLASSFILE_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/util/om_util_memreader.hpp"
 #include <cstdint>
-#include <cstring>
 #include <istream>
 #include <memory>
 
@@ -52,57 +52,6 @@ constexpr int JVM_Acc_Module = 0x8000;
 
 namespace openminecraft::specs::classfile
 {
-class MemoryReader
-{
-    const uint8_t *data;
-    const uint8_t *pos;
-    const uint8_t *end;
-
-  public:
-    MemoryReader(const std::vector<uint8_t> &buffer) : data(buffer.data()), pos(data), end(data + buffer.size())
-    {
-    }
-
-    auto raw() -> const uint8_t *
-    {
-        return pos;
-    }
-
-    auto readu8() -> uint8_t
-    {
-        return *pos++;
-    }
-    auto readu16() -> uint16_t
-    {
-        uint16_t v = (pos[0] << 8) | pos[1];
-        pos += 2;
-        return v;
-    }
-    auto readu32() -> uint32_t
-    {
-        uint32_t v = (pos[0] << 24) | (pos[1] << 16) | (pos[2] << 8) | pos[3];
-        pos += 4;
-        return v;
-    }
-    auto readu64() -> uint64_t
-    {
-        uint64_t v = readu32();
-        v <<= 32;
-        v |= readu32();
-        return v;
-    }
-    void skip(size_t n)
-    {
-        pos += n;
-    }
-
-    void readn(void *target, int n)
-    {
-        std::memcpy(target, pos, n);
-        pos += n;
-    }
-};
-
 constexpr const char allocatorTag[] = "parser_classfile";
 constexpr uint32_t headerMagic = 0xcafebabe;
 
@@ -310,15 +259,13 @@ class OMClassFile
     } attributes;
 
     OMClassFile();
-    ~OMClassFile()
-    {
-    }
+    ~OMClassFile() = default;
 
     void load(std::shared_ptr<std::istream> istr);
-    void loadConstant(MemoryReader &reader, OMClassFileConstant &c);
-    void loadField(MemoryReader &reader, OMClassField &f);
-    void loadMethod(MemoryReader &reader, OMClassMethod &m);
-    void loadAttr(MemoryReader &reader, OMClassAttribute &a);
+    void loadConstant(util::OMMemoryReader &reader, OMClassFileConstant &c);
+    void loadField(util::OMMemoryReader &reader, OMClassField &f);
+    void loadMethod(util::OMMemoryReader &reader, OMClassMethod &m);
+    void loadAttr(util::OMMemoryReader &reader, OMClassAttribute &a);
 
   private:
     log::OMLogger logger;

@@ -11,6 +11,7 @@
 #include "openminecraft/vm/elysia/om_elysia_threadmodel.hpp"
 #include <array>
 #include <atomic>
+#include <new>
 #include <stdexcept>
 #include <thread>
 

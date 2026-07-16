@@ -108,7 +108,7 @@ void OMZip::parse(std::shared_ptr<std::istream> istr)
     for (int i = 0; i < centralDir.entries; ++i)
     {
         parseCentralDirectory(istr, entries[i]);
-        std::cout << entries[i].name << std::endl;
+        // std::cout << entries[i].name << std::endl;
     }
 }
 

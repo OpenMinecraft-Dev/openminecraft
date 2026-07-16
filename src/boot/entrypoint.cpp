@@ -114,11 +114,6 @@ auto boot(std::vector<std::string> args) -> int
     case "zip"_hash: {
         specs::zip::OMZip zip;
         zip.parse(std::make_shared<std::ifstream>(args[2], std::ios::binary));
-        auto l = zip.findFile("META-INF/MANIFEST.MF");
-        auto f = zip.read(l);
-        std::string s;
-        *f >> s;
-        std::cout << s << std::endl;
         break;
     }
     case "class"_hash: {
