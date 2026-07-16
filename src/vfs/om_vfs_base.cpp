@@ -1,5 +1,6 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/specs/zip/om_zip.hpp"
 #include "openminecraft/util/om_util_memstream.hpp"
 #include <filesystem>
 #include <fstream>
@@ -67,6 +68,27 @@ auto fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string
     };
     vfs::info[mountpoint] = {Bundle, info};
     logger.info("bundle -> virt:{}", mountpoint);
+    return false;
+}
+auto fsmountZipArchive(const char *src, std::size_t length, std::string mountpoint) -> bool
+{
+    if (mountinvaild(mountpoint))
+    {
+        return false;
+    }
+
+    auto pp = std::make_shared<specs::zip::OMZip>();
+    pp->parse(std::make_shared<util::OMMemoryStream>(src, length));
+    m[mountpoint] = [pp](std::string proc) -> std::shared_ptr<std::istream> {
+        auto handle = pp->findFile(proc);
+        if (!handle)
+        {
+            return nullptr;
+        }
+        return pp->read(handle);
+    };
+    vfs::info[mountpoint] = {Zip, pp};
+    logger.info("zip -> virt:{}", mountpoint);
     return false;
 }
 auto compressPath(std::string vp) -> std::string

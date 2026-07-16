@@ -30,15 +30,12 @@ static auto notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageType
     case DebugUtilsMessageSeverityFlagBitsEXT::eVerbose:
         internal.debug("{}", data.pMessage);
         break;
-
     case DebugUtilsMessageSeverityFlagBitsEXT::eInfo:
         internal.info("{}", data.pMessage);
         break;
-
     case DebugUtilsMessageSeverityFlagBitsEXT::eWarning:
         internal.warn("{}", data.pMessage);
         break;
-
     case DebugUtilsMessageSeverityFlagBitsEXT::eError:
         internal.error("{}", data.pMessage);
         break;

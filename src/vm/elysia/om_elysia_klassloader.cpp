@@ -220,14 +220,13 @@ auto OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
     std::shared_ptr<std::istream> istr = nullptr;
     if (!bcp)
     {
-        if (!std::filesystem::exists(
-                std::filesystem::path("/home/coder2/Downloads/jdk8u482-b08-jre/lib/rt_compressed.jar")))
+        constexpr auto path = "/home/coder2/Downloads/jdk8u482-b08-jre/lib/rt_compressed.jar";
+        if (!std::filesystem::exists(std::filesystem::path(path)))
         {
             goto end;
         }
         bcp = std::make_shared<specs::zip::OMZip>();
-        bcp->parse(std::make_shared<std::ifstream>("/home/coder2/Downloads/jdk8u482-b08-jre/lib/rt_compressed.jar",
-                                                   std::ios::binary));
+        bcp->parse(std::make_shared<std::ifstream>(path, std::ios::binary));
     }
 end:
     auto hnd = bcp->findFile(name + ".class");
