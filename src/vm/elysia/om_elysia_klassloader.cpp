@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
+#include "openminecraft/vfs/om_vfs_base.hpp"
 
 using namespace openminecraft::binary::hash;
 
@@ -28,6 +29,12 @@ namespace openminecraft::vm::elysia
 OMElysiaKlassloader::OMElysiaKlassloader(OMElysium *elysium) : elysium(elysium), logger("OMElysiaKlassloader", this)
 {
     loadedClasses = std::make_shared<std::map<binary::hash::hash_t, OMElysiaKlass *>>();
+
+    constexpr auto path = "/home/coder2/Downloads/jdk8u482-b08-jre/lib/rt_compressed.jar";
+    if (std::filesystem::exists(std::filesystem::path(path)))
+    {
+        vfs::fsmountZipArchive(std::make_shared<std::ifstream>(path, std::ios::binary), "/jvm");
+    }
 }
 OMElysiaKlassloader::~OMElysiaKlassloader() = default;
 auto OMElysiaKlassloader::constructInstanceClassShell(std::string s) -> OMElysiaInstanceKlass *
@@ -217,21 +224,7 @@ auto OMElysiaKlassloader::loadClassWithoutMirror(std::string name, bool special)
         return arrk;
     }
 
-    std::shared_ptr<std::istream> istr = nullptr;
-    if (!bcp)
-    {
-        constexpr auto path = "/home/coder2/Downloads/jdk8u482-b08-jre/lib/rt_compressed.jar";
-        if (!std::filesystem::exists(std::filesystem::path(path)))
-        {
-            goto end;
-        }
-        bcp = std::make_shared<specs::zip::OMZip>();
-        bcp->parse(std::make_shared<std::ifstream>(path, std::ios::binary));
-	auto hnd = bcp->findFile(name + ".class");
-        if (hnd)
-        {                                                                       istr = bcp->read(hnd);                                          }
-    }
-end:
+    std::shared_ptr<std::istream> istr = vfs::fsfetch(fmt::format("/jvm/{}.class", name));
     if (!istr)
     {
         istr = std::make_shared<std::ifstream>(fmt::format("vmstd/out/{}.class", name), std::ios::binary);

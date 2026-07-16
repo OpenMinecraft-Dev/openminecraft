@@ -2,6 +2,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/specs/zip/om_zip.hpp"
 #include "openminecraft/util/om_util_memstream.hpp"
+#include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <ios>
@@ -72,13 +73,17 @@ auto fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string
 }
 auto fsmountZipArchive(const char *src, std::size_t length, std::string mountpoint) -> bool
 {
+    return fsmountZipArchive(std::make_shared<util::OMMemoryStream>(src, length), mountpoint);
+}
+auto fsmountZipArchive(std::shared_ptr<std::istream> istr, std::string mountpoint) -> bool
+{
     if (mountinvaild(mountpoint))
     {
         return false;
     }
 
     auto pp = std::make_shared<specs::zip::OMZip>();
-    pp->parse(std::make_shared<util::OMMemoryStream>(src, length));
+    pp->parse(istr);
     m[mountpoint] = [pp](std::string proc) -> std::shared_ptr<std::istream> {
         auto handle = pp->findFile(proc);
         if (!handle)

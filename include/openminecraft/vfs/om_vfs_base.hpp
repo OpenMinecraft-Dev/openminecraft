@@ -34,6 +34,7 @@ extern std::unordered_map<std::string, MountInfo> info;
 auto fsmountReal(std::string path, std::string mountpoint) -> bool;
 auto fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string mountpoint) -> bool;
 auto fsmountZipArchive(const char *src, std::size_t length, std::string mountpoint) -> bool;
+auto fsmountZipArchive(std::shared_ptr<std::istream> istr, std::string mountpoint) -> bool;
 auto fsumount(std::string mountpoint) -> bool;
 auto fsfetch(std::string fullPath) -> std::shared_ptr<std::istream>;
 } // namespace openminecraft::vfs
