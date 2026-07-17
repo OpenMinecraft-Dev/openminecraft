@@ -30,6 +30,12 @@ struct UniformStructure
     float sigma;
 };
 
+struct VertexStruct
+{
+    glm::vec3 pos;
+    glm::vec2 uv;
+};
+
 class OMTestRenderer : public OMRendererHandler
 {
   public:

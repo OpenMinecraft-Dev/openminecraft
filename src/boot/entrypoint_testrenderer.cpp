@@ -46,22 +46,6 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     format.debugState();
 
     {
-        class VertexPart
-        {
-            glm::vec3 pos;
-            glm::vec2 textureUV;
-
-          public:
-            VertexPart(glm::vec3 p, glm::vec2 uv) : pos(p), textureUV(uv)
-            {
-            }
-
-            auto operator<(const VertexPart &other) const -> bool
-            {
-                return std::memcmp(&other, this, sizeof(VertexPart)) < 0;
-            }
-        };
-
         auto strr = vfs::fsfetch("/bootassets/openminecraft-renderer/models/viking_room.obj");
 
         auto iff = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
@@ -69,9 +53,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
         auto ppo = f->buildBasicPolygon(0x2299);
         delete f;
 
-        float ratio = 1.377143f;
-
-        std::vector<VertexPart> vtxnew;
+        std::vector<VertexStruct> vtxnew;
         std::vector<uint32_t> indices;
 
         vtxnew.clear();
@@ -87,7 +69,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
             indices.push_back(i);
         }
 
-        auto siz = vtxnew.size() * sizeof(VertexPart);
+        auto siz = vtxnew.size() * sizeof(VertexStruct);
 
         vertexBuffer = renderer->allocateBuffer(VertexData, siz);
         vertexBuffer->updateData(vtxnew.data());
@@ -100,11 +82,16 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     }
 
     {
-        mainVtxBuffer = renderer->allocateBuffer(VertexData, 4 * (3 + 2) * sizeof(float));
+        mainVtxBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(VertexStruct));
         mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
 
-        std::array<float, 20> vtxs = {-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f,  0.0f, 0.0f, 1.0f,
-                                      1.0f,  1.0f,  0.0f, 1.0f, 1.0f, 1.0f,  -1.0f, 0.0f, 1.0f, 0.0f};
+        VertexStruct ss = {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}};
+        std::array<VertexStruct, 4> vtxs = {{
+            {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}},
+            {{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+            {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
+            {{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f}},
+        }};
         std::array<uint32_t, 6> vtxi = {0, 1, 2, 2, 3, 0};
         mainVtxBuffer->updateData(vtxs.data());
         mainIdxBuffer->updateData(vtxi.data());
@@ -117,7 +104,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     stru.model = glm::mat4(1.0f);
     stru.proj = glm::mat4(1.0f);
     stru.view = glm::mat4(1.0f);
-    stru.kernelSize = 9;
+    stru.kernelSize = 1;
     stru.sigma = 3;
     tempUniformBuffer->updateData(&stru);
 
