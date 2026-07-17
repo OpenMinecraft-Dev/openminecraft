@@ -84,9 +84,9 @@ beg:
     case 't':
     case 'n': {
         std::array<char, 5> b;
+	b[4] = '\0';
         this->source->read(b.data(), 4);
-        b[4] = '\0';
-        if (std::strcmp(b.data(), "true") == 0 || std::strcmp(b.data(), "false"))
+        if (std::strncmp(b.data(), "true", 4) == 0 || std::strncmp(b.data(), "null", 4) == 0)
         {
             return std::make_shared<OMJsonToken>(ConstantLiteral, b.data());
         }
@@ -96,10 +96,10 @@ beg:
         }
     }
     case 'f': {
-        std::array<char, 5> b;
+        std::array<char, 6> b;
+	b[5] = '\0';
         this->source->read(b.data(), 5);
-        b[5] = '\0';
-        if (std::strcmp(b.data(), "false") == 0)
+        if (std::strncmp(b.data(), "false", 5) == 0)
         {
             return std::make_shared<OMJsonToken>(ConstantLiteral, b.data());
         }
