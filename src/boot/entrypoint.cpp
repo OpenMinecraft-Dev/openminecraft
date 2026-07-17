@@ -65,7 +65,7 @@ auto boot(std::vector<std::string> args) -> int
     }
 
     logger->info("hardware / software status");
-    // logger->info("CPU Name: {}", os::fetchCpuName());
+    logger->info("CPU Name: {}", os::fetchCpuName());
     logger->info("System: {}, version {}", os::fetchSystemName(), os::fetchSystemVersion());
     logger->info("User: {} / {}", os::fetchUsername(), os::fetchLoginUser());
     logger->info("Total memory: {} bytes", os::fetchMemoryTotal());
@@ -122,10 +122,6 @@ auto boot(std::vector<std::string> args) -> int
             auto ll = new specs::classfile::OMClassFile();
             ll->load(std::make_shared<std::ifstream>(args[2], std::ios::binary));
         }
-        break;
-    }
-    case "cpu"_hash: {
-        logger->info("{}", os::fetchCpuName());
         break;
     }
     default:
