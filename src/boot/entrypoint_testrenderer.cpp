@@ -1,6 +1,7 @@
 #include "openminecraft/boot/entrypoint_testrenderer.hpp"
 
 #include "SDL3/SDL_video.h"
+#include "glm/ext/matrix_float4x4.hpp"
 #include "openminecraft/fontproc/om_font.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
@@ -100,12 +101,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));
 
     tempUniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));
-    UniformStructure stru = {};
-    stru.model = glm::mat4(1.0f);
-    stru.proj = glm::mat4(1.0f);
-    stru.view = glm::mat4(1.0f);
-    stru.kernelSize = 1;
-    stru.sigma = 3;
+    UniformStructure stru = {glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), 1, 3};
     tempUniformBuffer->updateData(&stru);
 
     {
