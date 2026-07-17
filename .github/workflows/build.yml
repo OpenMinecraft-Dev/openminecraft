@@ -248,6 +248,9 @@ jobs:
       - name: Build
         run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{
           env.XMAKE_ARGS }} openminecraft
+      - name: Test Cpu
+        if: matrix.plat == 'macos'
+        run: xmake run openminecraft cpu
       - name: Xmake Install
         run: xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft
       - name: Upload Artifacts

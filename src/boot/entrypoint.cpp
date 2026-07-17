@@ -124,6 +124,10 @@ auto boot(std::vector<std::string> args) -> int
         }
         break;
     }
+    case "cpu"_hash: {
+        logger->info("{}", os::fetchCpuName());
+        break;
+    }
     default:
         return 1;
     }

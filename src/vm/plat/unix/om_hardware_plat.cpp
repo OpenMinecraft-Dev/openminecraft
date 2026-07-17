@@ -8,6 +8,9 @@
 #include <string>
 #include <sys/resource.h>
 #include <sys/utsname.h>
+#if defined(OM_PLATFORM_MACOS) || defined(OM_PLATFORM_IOS)
+#include <sys/sysctl.h>
+#endif
 #include <unistd.h>
 #include <unordered_map>
 #include <variant>
@@ -96,7 +99,15 @@ auto fetchCpuName() -> std::string
 {
     utsname n{};
     uname(&n);
-#if defined(__x86_64__) || defined(__x86__)
+#if (defined(OM_PLATFORM_IOS) || defined(OM_PLATFORM_MACOS)) && defined(__aarch64__)
+    char cpu_brand[128];
+    size_t len = sizeof(cpu_brand);
+    if (sysctlbyname("machdep.cpu.brand_string", &cpu_brand, &len, NULL, 0) == 0)
+    {
+        return cpu_brand;
+    }
+    return "unknown apple silicon cpu";
+#elif defined(__x86_64__) || defined(__x86__)
     std::array<char, 64> model;
     auto *d = reinterpret_cast<int32_t *>(model.data());
     cpuinfo_x86(0x80000002, &d[0], &d[1], &d[2], &d[3]);
