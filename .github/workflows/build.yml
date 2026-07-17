@@ -94,10 +94,10 @@ jobs:
             plat: freebsd
             arch: arm64
             loaderarch: arm64
-          - os: ubuntu-latest
-            plat: freebsd
-            arch: riscv64
-            loaderarch: riscv64
+          #- os: ubuntu-latest
+          #  plat: freebsd
+          #  arch: riscv64
+          #  loaderarch: riscv64
           - os: ubuntu-latest
             plat: freebsd
             arch: ppc64
@@ -139,7 +139,7 @@ jobs:
         if: matrix.plat != 'freebsd'
         uses: xmake-io/github-action-setup-xmake@v1
         with:
-          xmake-version: 3.0.8
+          xmake-version: branch@binutils
       - name: Install xmake from source
         if: matrix.plat == 'freebsd'
         run: |
