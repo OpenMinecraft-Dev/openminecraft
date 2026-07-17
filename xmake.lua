@@ -140,6 +140,15 @@ includes("tools/xmake.lua")
 --------------------------------------------------------------------------------
 
 target("openminecraft")
+if is_plat("android", "harmony") then
+       set_kind("shared")
+       add_rules("utils.symbols.export_all")
+else
+       set_kind("binary")
+end
+
+add_includedirs("include")
+add_files("launcher/**.cpp")
 if true then
 	add_rules("utils.bin2obj", { extensions = { ".bundle" } })
 	add_files("boot.bundle", { zeroend = false })
