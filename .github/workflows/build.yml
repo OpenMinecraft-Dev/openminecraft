@@ -60,7 +60,7 @@ jobs:
             loaderarch: arm64
           - os: ubuntu-latest
             plat: linux-cross
-            arch: loongarch64
+            arch: loong64
             loaderarch: loong64
           - os: ubuntu-latest
             plat: linux-cross
@@ -213,10 +213,10 @@ jobs:
         run: |
           sudo apt update
           sudo apt install clang llvm
-          wget https://github.com/OpenMinecraft-Dev/cross-toolchain-sysroot/releases/download/${{ env.CROSS_TOOL_VERSION }}/llvm-toolchain-linux-debian-${{ matrix.loaderarch }}.tar.xz
+          wget https://github.com/OpenMinecraft-Dev/cross-toolchain-sysroot/releases/download/${{ env.CROSS_TOOL_VERSION }}/llvm-toolchain-linux-debian-${{ matrix.arch }}.tar.xz
           mkdir toolchain
-          tar -xJf llvm-toolchain-linux-debian-${{ matrix.loaderarch }}.tar.xz -C ./toolchain/
-          rm llvm-toolchain-linux-debian-${{ matrix.loaderarch }}.tar.xz
+          tar -xJf llvm-toolchain-linux-debian-${{ matrix.arch }}.tar.xz -C ./toolchain/
+          rm llvm-toolchain-linux-debian-${{ matrix.arch }}.tar.xz
 
           xmake f --toolchain=llvm --sdk=${{ github.workspace }}/toolchain -a ${{ matrix.arch }} -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
       - name: Configure FreeBSD Cross
