@@ -151,7 +151,7 @@ end
 add_includedirs("include")
 add_files("launcher/**.cpp")
 add_rules("utils.bin2obj", { extensions = { ".bundle" } })
-add_files("boot.bundle", { zeroend = true })
+add_files("boot.bundle", { zeroend = false })
 
 add_deps(
 	"openminecraft-log",

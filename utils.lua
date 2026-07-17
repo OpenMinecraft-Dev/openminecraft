@@ -25,7 +25,7 @@ function is_arch_alias(arch)
 			return is_arch("armeabi", "armv7k", "armeabi-v7a", "arm", "armv7s", "armv7")
 		end,
 		["loongarch"] = function()
-			return is_arch("loong64")
+			return is_arch("loong64", "loongarch64")
 		end,
 		["mips64"] = function()
 			return is_arch("mips64", "mips64el", "mip64")

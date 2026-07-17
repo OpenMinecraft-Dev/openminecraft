@@ -60,7 +60,7 @@ jobs:
             loaderarch: arm64
           - os: ubuntu-latest
             plat: linux-cross
-            arch: loong64
+            arch: loongarch64
             loaderarch: loong64
           - os: ubuntu-latest
             plat: linux-cross
