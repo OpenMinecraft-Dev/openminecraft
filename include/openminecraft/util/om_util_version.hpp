@@ -12,6 +12,9 @@ class Version
     Version(uint16_t major, uint16_t minor, uint16_t patch1, uint16_t patch2);
     Version(uint16_t major, uint16_t minor, uint16_t patch1);
     Version(uint32_t vkver);
+    Version() : majorver(0), minorver(0), patch1(0), patch2(0)
+    {
+    }
     ~Version();
 
     auto toString() -> std::string;

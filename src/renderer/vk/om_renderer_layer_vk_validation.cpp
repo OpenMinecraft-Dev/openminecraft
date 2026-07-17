@@ -3,6 +3,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
+#include <cstdio>
 #include <vector>
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1

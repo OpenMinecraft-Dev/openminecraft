@@ -335,7 +335,7 @@ OMTestRenderer::~OMTestRenderer()
 }
 static bool wk = false, ak = false, sk = false, dk = false, spk = false, lshk = false;
 
-void OMTestRenderer::eventLoop(void *wnd)
+void OMTestRenderer::eventLoop(void *wnd, bool *ar)
 {
     SDL_Event e;
     SDL_PollEvent(&e);
@@ -414,7 +414,12 @@ void OMTestRenderer::eventLoop(void *wnd)
 
     if (e.type == SDL_EVENT_QUIT)
     {
-        std::exit(0);
+        ar[0] = true;
+    }
+
+    if (e.type == SDL_EVENT_WINDOW_RESIZED)
+    {
+        ar[1] = true;
     }
 
     keyInput(wk, ak, sk, dk, lshk, spk);

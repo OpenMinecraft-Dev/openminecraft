@@ -58,7 +58,7 @@ class OMTestRenderer : public OMRendererHandler
 
     void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp);
     void mouseOffset(float dx, float dy);
-    void eventLoop(void *win);
+    void eventLoop(void *win, bool *);
     std::shared_ptr<basics::OMCamera> camera;
 
     log::OMLogger logger;

@@ -7,17 +7,16 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/renderer/om_renderer_window.hpp"
 #include "openminecraft/specs/abstracts/om_image.hpp"
 #include "openminecraft/specs/classfile/om_classfile.hpp"
 #include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/specs/zip/om_zip.hpp"
-#include "openminecraft/specs/zlib/om_zlib_inflaterstream.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
-#include <array>
 #include <boost/stacktrace/stacktrace.hpp>
 #include <fstream>
 #include <iostream>
@@ -72,11 +71,8 @@ auto boot(std::vector<std::string> args) -> int
 
     switch (hash_compile_time(args[1].c_str()))
     {
-    case "vktest"_hash:
-        vulkanRendererTest();
-        break;
-    case "gltest"_hash:
-        openglRendererTest();
+    case "3dtest"_hash:
+        rendererTest(args[2] == "gl" ? renderer::OpenGL : renderer::Vulkan);
         break;
     case "pic"_hash: {
         auto in = args[2];
