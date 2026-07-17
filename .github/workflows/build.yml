@@ -60,7 +60,7 @@ jobs:
             loaderarch: arm64
           - os: ubuntu-latest
             plat: linux-cross
-            arch: loong64
+            arch: loongarch64
             loaderarch: loong64
           - os: ubuntu-latest
             plat: linux-cross
@@ -213,7 +213,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install clang llvm
-          wget https://github.com/OpenMinecraft-Dev/cross-toolchain-sysroot/releases/download/${{ env.CROSS_TOOL_VERSION }}/llvm-toolchain-linux-debian-${{ matrix.arch }}.tar.xz
+          wget https://github.com/OpenMinecraft-Dev/cross-toolchain-sysroot/releases/download/${{ env.CROSS_TOOL_VERSION }}/llvm-toolchain-linux-debian-${{ matrix.loaderarch }}.tar.xz
           mkdir toolchain
           tar -xJf llvm-toolchain-linux-debian-${{ matrix.arch }}.tar.xz -C ./toolchain/
           rm llvm-toolchain-linux-debian-${{ matrix.arch }}.tar.xz
