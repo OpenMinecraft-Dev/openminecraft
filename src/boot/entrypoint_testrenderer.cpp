@@ -11,11 +11,9 @@
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
-#include "tiny_obj_loader.h"
 
 #include <chrono>
 #include <glm/glm.hpp>
-#include <stdexcept>
 
 #include "openminecraft/io/om_io_utils.hpp"
 #include "SDL3/SDL_events.h"
@@ -64,17 +62,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
             }
         };
 
-        tinyobj::attrib_t attrib;
-        std::vector<tinyobj::shape_t> shapes;
-        std::vector<tinyobj::material_t> materials;
-        std::string warn, err;
-
         auto strr = vfs::fsfetch("/bootassets/openminecraft-renderer/models/viking_room.obj");
-
-        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, strr.get()))
-        {
-            throw std::runtime_error("Warn: " + warn + "\nError: " + err);
-        }
 
         auto iff = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
         auto f = new fontproc::OMFont(*iff.get());
@@ -98,29 +86,6 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
         {
             indices.push_back(i);
         }
-
-        /*std::map<VertexPart, uint32_t> uniqueVertices;
-
-        for (const auto &shape : shapes)
-        {
-            for (const auto &index : shape.mesh.indices)
-            {
-                VertexPart prt = {{
-                                      attrib.vertices[3 * index.vertex_index + 0],
-                                      attrib.vertices[3 * index.vertex_index + 2],
-                                      attrib.vertices[3 * index.vertex_index + 1],
-                                  },
-                                  {attrib.texcoords[2 * index.texcoord_index + 0],
-                                   1.0f - attrib.texcoords[2 * index.texcoord_index + 1]}};
-
-                if (!uniqueVertices.count(prt))
-                {
-                    uniqueVertices[prt] = static_cast<uint32_t>(vtxnew.size());
-                    vtxnew.push_back(prt);
-                }
-                indices.push_back(uniqueVertices[prt]);
-            }
-        }*/
 
         auto siz = vtxnew.size() * sizeof(VertexPart);
 
