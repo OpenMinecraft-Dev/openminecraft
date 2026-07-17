@@ -1,5 +1,6 @@
 #include "openminecraft/boot/entrypoint_testrenderer.hpp"
 
+#include "SDL3/SDL_video.h"
 #include "openminecraft/fontproc/om_font.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
@@ -17,6 +18,7 @@
 #include <stdexcept>
 
 #include "openminecraft/io/om_io_utils.hpp"
+#include "SDL3/SDL_events.h"
 
 using namespace openminecraft::renderer::common;
 
@@ -330,6 +332,92 @@ OMTestRenderer::~OMTestRenderer()
     delete tempTexture;
     delete tempDepth;
     delete renderTarget;
+}
+static bool wk = false, ak = false, sk = false, dk = false, spk = false, lshk = false;
+
+void OMTestRenderer::eventLoop(void *wnd)
+{
+    SDL_Event e;
+    SDL_PollEvent(&e);
+
+    if (e.type == SDL_EVENT_KEY_DOWN)
+    {
+        if (e.key.key == SDLK_W)
+        {
+            wk = true;
+        }
+        else if (e.key.key == SDLK_A)
+        {
+            ak = true;
+        }
+        else if (e.key.key == SDLK_S)
+        {
+            sk = true;
+        }
+        else if (e.key.key == SDLK_D)
+        {
+            dk = true;
+        }
+        else if (e.key.key == SDLK_LSHIFT)
+        {
+            lshk = true;
+        }
+        else if (e.key.key == SDLK_SPACE)
+        {
+            spk = true;
+        }
+        else if (e.key.key == SDLK_ESCAPE)
+        {
+            SDL_SetWindowRelativeMouseMode((SDL_Window *)wnd, false);
+        }
+    }
+
+    if (e.type == SDL_EVENT_KEY_UP)
+    {
+        if (e.key.key == SDLK_W)
+        {
+            wk = false;
+        }
+        else if (e.key.key == SDLK_A)
+        {
+            ak = false;
+        }
+        else if (e.key.key == SDLK_S)
+        {
+            sk = false;
+        }
+        else if (e.key.key == SDLK_D)
+        {
+            dk = false;
+        }
+        else if (e.key.key == SDLK_LSHIFT)
+        {
+            lshk = false;
+        }
+        else if (e.key.key == SDLK_SPACE)
+        {
+            spk = false;
+        }
+    }
+
+    if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+    {
+        SDL_SetWindowRelativeMouseMode((SDL_Window *)wnd, true);
+    }
+
+    if (e.type == SDL_EVENT_MOUSE_MOTION && SDL_GetWindowRelativeMouseMode((SDL_Window *)wnd))
+    {
+        int ww, hh;
+        SDL_GetWindowSize((SDL_Window *)wnd, &ww, &hh);
+        mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
+    }
+
+    if (e.type == SDL_EVENT_QUIT)
+    {
+        std::exit(0);
+    }
+
+    keyInput(wk, ak, sk, dk, lshk, spk);
 }
 
 } // namespace openminecraft::boot::test

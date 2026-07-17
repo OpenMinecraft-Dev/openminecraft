@@ -7,6 +7,7 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include <memory>
+#include <thread>
 
 namespace openminecraft::boot
 {
@@ -28,96 +29,23 @@ void vulkanRendererTest()
 
         logger->info("driver: {}", renderer->driver());
 
-        bool wk = false, ak = false, sk = false, dk = false, spk = false, lshk = false;
+        std::thread t([&]() -> void {
+            while (true)
+            {
+                hnd->eventLoop(wnd);
+            }
+        });
 
         while (true)
         {
             SDL_Event e;
             SDL_PollEvent(&e);
 
-            if (e.type == SDL_EVENT_KEY_DOWN)
-            {
-                if (e.key.key == SDLK_W)
-                {
-                    wk = true;
-                }
-                else if (e.key.key == SDLK_A)
-                {
-                    ak = true;
-                }
-                else if (e.key.key == SDLK_S)
-                {
-                    sk = true;
-                }
-                else if (e.key.key == SDLK_D)
-                {
-                    dk = true;
-                }
-                else if (e.key.key == SDLK_LSHIFT)
-                {
-                    lshk = true;
-                }
-                else if (e.key.key == SDLK_SPACE)
-                {
-                    spk = true;
-                }
-                else if (e.key.key == SDLK_ESCAPE)
-                {
-                    SDL_SetWindowRelativeMouseMode(wnd, false);
-                }
-            }
-
-            if (e.type == SDL_EVENT_KEY_UP)
-            {
-                if (e.key.key == SDLK_W)
-                {
-                    wk = false;
-                }
-                else if (e.key.key == SDLK_A)
-                {
-                    ak = false;
-                }
-                else if (e.key.key == SDLK_S)
-                {
-                    sk = false;
-                }
-                else if (e.key.key == SDLK_D)
-                {
-                    dk = false;
-                }
-                else if (e.key.key == SDLK_LSHIFT)
-                {
-                    lshk = false;
-                }
-                else if (e.key.key == SDLK_SPACE)
-                {
-                    spk = false;
-                }
-            }
-
             if (e.type == SDL_EVENT_WINDOW_RESIZED)
             {
                 renderer->requestResize();
             }
 
-            if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
-            {
-                SDL_SetWindowRelativeMouseMode(wnd, true);
-            }
-
-            if (e.type == SDL_EVENT_MOUSE_MOTION && SDL_GetWindowRelativeMouseMode(wnd))
-            {
-                int ww, hh;
-                SDL_GetWindowSize(wnd, &ww, &hh);
-                hnd->mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
-            }
-
-            if (e.type == SDL_EVENT_QUIT)
-            {
-                break;
-            }
-
-            hnd->keyInput(wk, ak, sk, dk, lshk, spk);
             renderer->render();
         }
 
