@@ -123,7 +123,6 @@ add_requires("harfbuzz", { system = false, configs = { freetype = false } })
 
 includes("src/log/xmake.lua")
 includes("src/vm/xmake.lua")
-includes("src/binary/xmake.lua")
 includes("src/mem/xmake.lua")
 includes("src/io/xmake.lua")
 includes("src/boot/xmake.lua")
@@ -150,8 +149,13 @@ end
 
 add_includedirs("include")
 add_files("launcher/**.cpp")
-add_rules("utils.bin2obj", { extensions = { ".bundle" } })
-add_files("boot.bundle", { zeroend = false })
+
+if not is_plat("linux", "bsd") then
+	add_rules("utils.bin2obj", { extensions = { ".bundle" } })
+	add_files("boot.bundle", { zeroend = false })
+else
+	add_files("launcher/**.S")
+end
 
 add_deps(
 	"openminecraft-log",
