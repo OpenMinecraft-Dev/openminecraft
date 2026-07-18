@@ -1,6 +1,5 @@
 #include "boost/asio.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-#include <array>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/impl/read.hpp>
 #include <boost/asio/impl/write.hpp>
@@ -8,14 +7,11 @@
 #include <boost/system/detail/error_code.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/throw_exception.hpp>
-#include <cstddef>
 #include <cstdint>
 #include <ctime>
 #include <fstream>
-#include <iostream>
 #include <sstream>
 #include <stdexcept>
-#include <resolv.h>
 
 using namespace openminecraft;
 using namespace boost::asio;
@@ -53,11 +49,6 @@ auto main(int argc, char **argv) -> int
 {
     log::OMLogger logger("Network Test");
     logger.info("test!");
-
-#ifdef OM_PLATFORM_UNIX
-    std::array<unsigned char, NS_PACKETSZ> buf2;
-    res_query("_minecraft._tcp.awa.kjmc.top", ns_c_in, ns_t_srv, buf2.data(), buf2.size());
-#endif
 
     io_context io;
     ip::tcp::socket socket(io);
