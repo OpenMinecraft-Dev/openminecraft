@@ -6,6 +6,18 @@ set_urls("https://github.com/c-ares/c-ares.git")
 
 add_deps("cmake")
 
+on_load(function(package)
+	if package:is_plat("bsd") then
+		package:add("links", "pthread")
+	end
+
+	if package:config("shared") then
+		package:add("defines", "CARES_SHARED")
+	else
+		package:add("defines", "CARES_STATICLIB")
+	end
+end)
+
 on_install(function(package)
 	local configs = {}
 	table.insert(configs, "-DCARES_STATIC=ON")
