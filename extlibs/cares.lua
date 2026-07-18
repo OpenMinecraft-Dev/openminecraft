@@ -11,6 +11,10 @@ on_load(function(package)
 		package:add("syslinks", "pthread")
 	end
 
+ if package:is_plat("mingw") then
+  package:add("syslinks", "ws2_32", "iphlpapi", "advapi32")
+ end
+
 	if package:config("shared") then
 		package:add("defines", "CARES_SHARED")
 	else
