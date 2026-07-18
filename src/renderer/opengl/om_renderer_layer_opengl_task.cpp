@@ -28,7 +28,6 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
 {
     auto glpipe = reinterpret_cast<OMRendererPipelineOpenGL *>(pipeline);
     this->program = glpipe->program;
-    this->framebuffer = reinterpret_cast<OMRendererRenderTargetOpenGL *>(glpipe->target)->framebuffer;
     vtxFormat = glpipe->format;
     this->pipeline = glpipe;
 
@@ -95,10 +94,9 @@ void OMRendererTaskOpenGL::bindIndexBuffer(common::OMRendererBuffer *buffer)
 {
     gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, reinterpret_cast<OMRendererBufferOpenGL *>(buffer)->buffer);
 }
-
-// geopeila: we don't need to do anything, render target is fixed in the pipeline
 void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
 {
+    this->framebuffer = reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer;
 }
 void OMRendererTaskOpenGL::draw(uint64_t vertexCount)
 {
@@ -114,8 +112,6 @@ void OMRendererTaskOpenGL::execute()
     gl->glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     gl->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     gl->glDisable(GL_CULL_FACE);
-    gl->glBindVertexArray(vertexArrayObject);
-    gl->glUseProgram(program);
 
     for (int i = 0; i < pipeline->inputs.size(); i++)
     {
@@ -132,6 +128,9 @@ void OMRendererTaskOpenGL::execute()
             gl->glBindTexture(GL_TEXTURE_2D, reinterpret_cast<OMRendererTextureOpenGL *>(pipeline->inputs[i])->texture);
         }
     }
+
+    gl->glBindVertexArray(vertexArrayObject);
+    gl->glUseProgram(program);
 
     gl->glDrawElements(GL_TRIANGLES, vtxCount, GL_UNSIGNED_INT, nullptr);
 

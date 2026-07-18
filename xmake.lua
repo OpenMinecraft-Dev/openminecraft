@@ -106,13 +106,13 @@ add_requires(
 	"glm",
 	"vulkan-hpp",
 	"shaderc",
-	"libsdl3",
 	"tinyobjloader",
 	"opengl-headers",
 	"zlib",
 	"bullet3",
 	"libffi",
 	"c-ares",
+	"libsdl3",
 	{ system = false }
 )
 add_requires("boost", { system = false, configs = { stacktrace = true, asio = true } })

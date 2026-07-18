@@ -8,6 +8,22 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
 namespace openminecraft::renderer::opengl
 {
+enum OMRendererOpType
+{
+    BindFramebuffer,
+    Clear,
+    Disable,
+    BindVertexArray,
+    BindBufferBase,
+    ActiveTexture,
+    BindTexture,
+    UseProgram
+};
+struct OMRendererTaskOp
+{
+    OMRendererOpType type;
+    GLuint id;
+};
 class OMRendererTaskOpenGL : public common::OMRendererTask
 {
   public:
