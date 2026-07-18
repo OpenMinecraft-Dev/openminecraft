@@ -94,10 +94,11 @@ jobs:
             plat: freebsd
             arch: arm64
             loaderarch: arm64
-          - os: ubuntu-latest
-            plat: freebsd
-            arch: riscv64
-            loaderarch: riscv64
+          # wait for the upstream fix
+          # - os: ubuntu-latest
+          #   plat: freebsd
+          #   arch: riscv64
+          #   loaderarch: riscv64
           - os: ubuntu-latest
             plat: freebsd
             arch: ppc64
