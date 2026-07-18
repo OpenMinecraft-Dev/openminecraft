@@ -1,5 +1,6 @@
 #include "boost/asio.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include <array>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/impl/read.hpp>
 #include <boost/asio/impl/write.hpp>
@@ -14,13 +15,14 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <resolv.h>
 
 using namespace openminecraft;
 using namespace boost::asio;
 
 char *buf = new char[65536];
 
-int readVarInt(ip::tcp::socket &socket)
+auto readVarInt(ip::tcp::socket &socket) -> int
 {
     int value = 0;
     int position = 0;
@@ -47,10 +49,15 @@ int readVarInt(ip::tcp::socket &socket)
     return value;
 }
 
-int main(int argc, char **argv)
+auto main(int argc, char **argv) -> int
 {
     log::OMLogger logger("Network Test");
     logger.info("test!");
+
+#ifdef OM_PLATFORM_UNIX
+    std::array<unsigned char, NS_PACKETSZ> buf2;
+    res_query("_minecraft._tcp.awa.kjmc.top", ns_c_in, ns_t_srv, buf2.data(), buf2.size());
+#endif
 
     io_context io;
     ip::tcp::socket socket(io);
