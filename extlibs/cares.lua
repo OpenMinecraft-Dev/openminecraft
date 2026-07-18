@@ -8,7 +8,7 @@ add_deps("cmake")
 
 on_load(function(package)
 	if package:is_plat("bsd") then
-		package:add("links", "pthread")
+		package:add("syslinks", "pthread")
 	end
 
 	if package:config("shared") then
