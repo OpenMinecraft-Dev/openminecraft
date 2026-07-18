@@ -26,10 +26,10 @@ jobs:
             plat: windows
             arch: arm64
             loaderarch: arm64
-          - os: ubuntu-latest
-            plat: mingw
-            arch: x86_64
-            loaderarch: amd64
+          # - os: ubuntu-latest
+          #   plat: mingw
+          #   arch: x86_64
+          #   loaderarch: amd64
           - os: ubuntu-22.04
             plat: harmony
             arch: arm64-v8a
@@ -139,7 +139,7 @@ jobs:
         if: matrix.plat != 'freebsd'
         uses: xmake-io/github-action-setup-xmake@v1
         with:
-          xmake-version: branch@binutils
+          xmake-version: branch@dev
       - name: Install xmake from source
         if: matrix.plat == 'freebsd'
         run: |
