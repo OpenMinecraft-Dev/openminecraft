@@ -12,7 +12,8 @@ add_packages(
 	"harfbuzz",
 	"tinyobjloader",
 	"bullet3",
-	"zlib"
+	"zlib",
+	"c-ares"
 )
 add_deps(
 	"openminecraft-log",

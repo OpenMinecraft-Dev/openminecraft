@@ -12,6 +12,7 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include "ares.h"
 
 using namespace openminecraft;
 using namespace boost::asio;
@@ -49,6 +50,22 @@ auto main(int argc, char **argv) -> int
 {
     log::OMLogger logger("Network Test");
     logger.info("test!");
+
+    ares_channel channel;
+    if (ares_init_options(&channel, nullptr, 0x0) != ARES_SUCCESS)
+    {
+        throw std::logic_error("fail");
+    }
+
+    uint16_t arg;
+    ares_query(
+        channel, "_minecraft._tcp.awa.kjmc.top", ARES_CLASS_IN, ARES_REC_TYPE_SRV,
+        [](void *arg, int status, int timeouts, unsigned char *abuf, int alen) -> void {
+            log::OMLogger logger("Network Test");
+
+            logger.warn("{} {}", status, alen);
+        },
+        &arg);
 
     io_context io;
     ip::tcp::socket socket(io);

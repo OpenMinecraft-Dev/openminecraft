@@ -17,6 +17,7 @@ set_policy("build.optimization.lto", false)
 includes("utils.lua")
 includes("extlibs/vulkan.lua")
 includes("extlibs/sdl_port.lua")
+includes("extlibs/cares.lua")
 
 -- fix libffi compile exception
 if is_plat("linux") and is_arch("riscv64", "ppc64", "s390x") then
@@ -111,6 +112,7 @@ add_requires(
 	"zlib",
 	"bullet3",
 	"libffi",
+	"c-ares",
 	{ system = false }
 )
 add_requires("boost", { system = false, configs = { stacktrace = true, asio = true } })
@@ -141,10 +143,10 @@ includes("tools/xmake.lua")
 
 target("openminecraft")
 if is_plat("android", "harmony") then
-       set_kind("shared")
-       add_rules("utils.symbols.export_all")
+	set_kind("shared")
+	add_rules("utils.symbols.export_all")
 else
-       set_kind("binary")
+	set_kind("binary")
 end
 
 add_includedirs("include")
@@ -178,6 +180,7 @@ add_packages(
 	"nlohmann_json",
 	"libsdl3",
 	"zlib",
+	"c-ares",
 	{ system = false }
 )
 
