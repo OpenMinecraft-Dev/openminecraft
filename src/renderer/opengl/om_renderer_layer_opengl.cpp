@@ -135,37 +135,9 @@ auto OMRendererOpenGL::getExtent() const -> glm::vec2
     SDL_GetWindowSize(reinterpret_cast<SDL_Window *>(window), &w, &h);
     return {w, h};
 }
-void OMRendererOpenGL::registerTask(std::string id, common::OMRendererTask *task)
-{
-    tasks[id] = task;
-}
-
-auto OMRendererOpenGL::fetchTask(std::string id) -> common::OMRendererTask *
-{
-    return tasks[id];
-}
-
-void OMRendererOpenGL::clearTasks()
-{
-    for (auto t : tasks)
-    {
-        delete t.second;
-    }
-    tasks.clear();
-}
-
-void OMRendererOpenGL::registerHandler(std::shared_ptr<common::OMRendererHandler> h)
-{
-    handlers.push_back(h);
-}
-void OMRendererOpenGL::clearHandlers()
-{
-    handlers.clear();
-}
 
 void OMRendererOpenGL::baseInit()
 {
-
     for (auto h : handlers)
     {
         h->submitTasks();

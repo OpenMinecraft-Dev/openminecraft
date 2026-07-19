@@ -65,13 +65,7 @@ class OMRendererVk : public OMRenderer
     auto getDefaultRenderTarget() -> common::OMRendererRenderTarget * override;
     auto createPipeline() -> common::OMRendererPipeline * override;
     auto createTask() -> common::OMRendererTask * override;
-    void registerTask(std::string id, common::OMRendererTask *task) override;
-    auto fetchTask(std::string id) -> common::OMRendererTask * override;
-    void clearTasks() override;
     auto getExtent() const -> glm::vec2 override;
-
-    void registerHandler(std::shared_ptr<common::OMRendererHandler> handler) override;
-    void clearHandlers() override;
 
     void baseInit() override;
 
@@ -80,14 +74,11 @@ class OMRendererVk : public OMRenderer
 
     std::shared_ptr<validation::OMRendererVkValidation> validationLayer;
     std::shared_ptr<swapchain::OMSwapchainManager> swapchainManager;
-    std::vector<std::shared_ptr<common::OMRendererHandler>> handlers;
 
     common::OMRendererRenderTarget *defaultTarget;
     common::OMRendererTexture *defaultDepthBuffer;
     std::vector<::vk::Framebuffer> defaultFramebuffers;
     std::vector<::vk::CommandBuffer> defaultCommandBuffers;
-
-    std::unordered_map<std::string, common::OMRendererTask *> tasks;
 
     ::vk::AllocationCallbacks allocator;
     ::vk::Instance instance;

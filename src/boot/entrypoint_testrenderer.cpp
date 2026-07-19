@@ -249,6 +249,7 @@ void OMTestRenderer::submitTasks()
     task->finish();
 
     auto task2 = renderer->createTask();
+    task2->dependOn(task);
     task2->bindTarget(renderer->getDefaultRenderTarget());
     task2->bindPipeline(mainPipeline);
     task2->bindVertexBuffer({mainVtxBuffer});

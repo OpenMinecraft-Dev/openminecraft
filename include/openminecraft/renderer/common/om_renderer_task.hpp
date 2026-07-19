@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/om_renderer_object.hpp"
+#include <vector>
 namespace openminecraft::renderer
 {
 class OMRenderer;
@@ -32,6 +33,35 @@ class OMRendererTask : public OMRendererObject
     {
         return Task;
     }
+
+    inline auto dependOn(OMRendererTask *task)
+    {
+        dependTasks.push_back(task);
+        task->relied = true;
+    }
+
+    inline auto isTopTask() -> bool
+    {
+        return dependTasks.empty();
+    }
+
+    inline auto executable() -> bool
+    {
+        for (auto t : dependTasks)
+        {
+            if (!t->solved)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    bool solved = false;
+
+    bool relied = false;
+
+  private:
+    std::vector<OMRendererTask *> dependTasks;
 };
 } // namespace openminecraft::renderer::common
 

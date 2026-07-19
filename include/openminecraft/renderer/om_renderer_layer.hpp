@@ -9,7 +9,10 @@
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include <glm/glm.hpp>
+#include <iostream>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace openminecraft::renderer::common
 {
@@ -40,12 +43,31 @@ class OMRenderer
     virtual auto getDefaultRenderTarget() -> common::OMRendererRenderTarget * = 0;
     virtual auto createPipeline() -> common::OMRendererPipeline * = 0;
     virtual auto createTask() -> common::OMRendererTask * = 0;
-    virtual void registerTask(std::string id, common::OMRendererTask *task) = 0;
-    virtual auto fetchTask(std::string id) -> common::OMRendererTask * = 0;
-    virtual void clearTasks() = 0;
+    inline void registerTask(std::string id, common::OMRendererTask *task)
+    {
+        tasks[id] = task;
+    }
+    inline auto fetchTask(std::string id) -> common::OMRendererTask *
+    {
+        return tasks[id];
+    }
+    inline void clearTasks()
+    {
+        for (auto &p : tasks)
+        {
+            delete p.second;
+        }
+        tasks.clear();
+    }
 
-    virtual void registerHandler(std::shared_ptr<common::OMRendererHandler> handler) = 0;
-    virtual void clearHandlers() = 0;
+    inline void registerHandler(std::shared_ptr<common::OMRendererHandler> handler)
+    {
+        handlers.push_back(handler);
+    }
+    inline void clearHandlers()
+    {
+        handlers.clear();
+    }
 
     virtual void baseInit() = 0;
 
@@ -58,6 +80,8 @@ class OMRenderer
 
   protected:
     void *window;
+    std::unordered_map<std::string, common::OMRendererTask *> tasks;
+    std::vector<std::shared_ptr<common::OMRendererHandler>> handlers;
 
   private:
     const AppInfo info;

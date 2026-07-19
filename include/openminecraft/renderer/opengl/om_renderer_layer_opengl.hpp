@@ -84,13 +84,7 @@ class OMRendererOpenGL : public OMRenderer
     auto getDefaultRenderTarget() -> common::OMRendererRenderTarget * override;
     auto createPipeline() -> common::OMRendererPipeline * override;
     auto createTask() -> common::OMRendererTask * override;
-    void registerTask(std::string id, common::OMRendererTask *task) override;
-    auto fetchTask(std::string id) -> common::OMRendererTask * override;
-    void clearTasks() override;
     auto getExtent() const -> glm::vec2 override;
-
-    void registerHandler(std::shared_ptr<common::OMRendererHandler>) override;
-    void clearHandlers() override;
 
     void baseInit() override;
 
@@ -105,9 +99,6 @@ class OMRendererOpenGL : public OMRenderer
     log::OMLogger logger;
 
     void initGlFuncs();
-
-    std::vector<std::shared_ptr<common::OMRendererHandler>> handlers;
-    std::unordered_map<std::string, common::OMRendererTask *> tasks;
 };
 } // namespace openminecraft::renderer::opengl
 

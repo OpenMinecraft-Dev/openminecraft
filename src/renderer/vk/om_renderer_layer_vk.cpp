@@ -21,6 +21,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <system_error>
 #include <utility>
@@ -262,6 +263,10 @@ void OMRendererVk::rebuildDefaults()
                 {
                     continue;
                 }
+                if (tsk.second->relied)
+                {
+                    throw std::logic_error("not supported non-final task on the main buffer!");
+                }
                 commandBuffer.executeCommands(reinterpret_cast<OMRendererTaskVk *>(tsk.second)->commandBuffer);
             }
             commandBuffer.endRenderPass();
@@ -283,34 +288,6 @@ void OMRendererVk::baseInit()
         h->submitTasks();
     }
     rebuildDefaults();
-}
-
-void OMRendererVk::registerHandler(std::shared_ptr<common::OMRendererHandler> handler)
-{
-    handlers.push_back(handler);
-}
-void OMRendererVk::clearHandlers()
-{
-    handlers.clear();
-}
-
-void OMRendererVk::registerTask(std::string id, common::OMRendererTask *task)
-{
-    tasks[id] = task;
-}
-
-auto OMRendererVk::fetchTask(std::string id) -> common::OMRendererTask *
-{
-    return tasks[id];
-}
-
-void OMRendererVk::clearTasks()
-{
-    for (auto &p : tasks)
-    {
-        delete p.second;
-    }
-    tasks.clear();
 }
 
 auto OMRendererVk::createTask() -> common::OMRendererTask *
