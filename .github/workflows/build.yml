@@ -172,8 +172,8 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: ${{ env.CACHEPATH }}
-          key: ${{ matrix.plat }}-${{ matrix.loaderarch }}-corepkg-
-          restore-keys: ${{ matrix.plat }}-${{ matrix.loaderarch }}-corepkg-
+          key: ${{ matrix.plat }}-${{ matrix.loaderarch }}-corepkgs-
+          restore-keys: ${{ matrix.plat }}-${{ matrix.loaderarch }}-corepkgs-
       - name: Setup OpenHarmony SDK
         if: matrix.plat == 'harmony'
         run: |
@@ -244,7 +244,7 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: ${{ env.CACHEPATH }}
-          key: ${{ matrix.plat }}-${{ matrix.loaderarch }}-corepkg-${{ env.CACHENAME }}
+          key: ${{ matrix.plat }}-${{ matrix.loaderarch }}-corepkgs-${{ env.CACHENAME }}
       - name: Build
         run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{
           env.XMAKE_ARGS }} openminecraft
