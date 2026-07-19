@@ -7,8 +7,12 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
 #include <array>
+#include <vector>
 namespace openminecraft::renderer::opengl
 {
+static const std::array<std::string, 9> opnames = {"BindFramebuffer", "Clear",          "Disable",
+                                                   "BindVertexArray", "BindBufferBase", "ActiveTexture",
+                                                   "BindTexture",     "UseProgram",     "DrawElements"};
 enum OMRendererOpType
 {
     BindFramebuffer,
@@ -18,12 +22,28 @@ enum OMRendererOpType
     BindBufferBase,
     ActiveTexture,
     BindTexture,
-    UseProgram
+    UseProgram,
+    DrawElements
+};
+union OMRendererOpenGLArg {
+    GLuint i;
+    void *p;
+
+    OMRendererOpenGLArg(void *p)
+    {
+        this->p = p;
+    }
+
+    OMRendererOpenGLArg(GLuint i)
+    {
+        this->i = i;
+    }
 };
 struct OMRendererTaskOp
 {
     OMRendererOpType type;
     std::array<GLuint, 8> args;
+    std::array<void *, 2> ptrArgs;
 };
 class OMRendererTaskOpenGL : public common::OMRendererTask
 {
@@ -49,6 +69,8 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     GLuint framebuffer;
     common::basics::OMVertexFormat vtxFormat;
     uint64_t vtxCount;
+
+    std::vector<OMRendererTaskOp> ops;
 };
 } // namespace openminecraft::renderer::opengl
 

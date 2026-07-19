@@ -9,6 +9,7 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_rendertarget.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_texture.hpp"
+#include <iostream>
 #include <utility>
 
 namespace openminecraft::renderer::opengl
@@ -37,6 +38,20 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
         {
             gl->glUniformBlockBinding(this->program,
                                       reinterpret_cast<OMRendererBufferOpenGL *>(glpipe->inputs[i])->buffer, i);
+        }
+
+        auto obj = glpipe->inputs[i];
+        if (obj->objType() == DataBuffer)
+        {
+            ops.push_back({BindBufferBase,
+                           {GL_UNIFORM_BUFFER, static_cast<GLuint>(i),
+                            reinterpret_cast<OMRendererBufferOpenGL *>(glpipe->inputs[i])->buffer}});
+        }
+        else if (obj->objType() == Texture)
+        {
+            ops.push_back({ActiveTexture, static_cast<GLuint>(GL_TEXTURE0 + i)});
+            ops.push_back(
+                {BindTexture, GL_TEXTURE_2D, reinterpret_cast<OMRendererTextureOpenGL *>(glpipe->inputs[i])->texture});
         }
     }
 }
@@ -97,43 +112,59 @@ void OMRendererTaskOpenGL::bindIndexBuffer(common::OMRendererBuffer *buffer)
 void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
 {
     this->framebuffer = reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer;
+    ops.push_back(
+        {BindFramebuffer, GL_FRAMEBUFFER, reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer});
+    ops.push_back({Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
+    ops.push_back({Disable, GL_CULL_FACE});
 }
 void OMRendererTaskOpenGL::draw(uint64_t vertexCount)
 {
     this->vtxCount = vertexCount;
+    ops.push_back({BindVertexArray, vertexArrayObject});
+    ops.push_back({UseProgram, program});
+    ops.push_back({DrawElements, {GL_TRIANGLES, static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT}, {nullptr}});
+    ops.push_back({BindVertexArray, 0});
 }
 void OMRendererTaskOpenGL::finish()
 {
     gl->glBindVertexArray(0);
 }
 
+int a = 0;
 void OMRendererTaskOpenGL::execute()
 {
-    gl->glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    gl->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    gl->glDisable(GL_CULL_FACE);
-
-    for (int i = 0; i < pipeline->inputs.size(); i++)
+    for (auto &op : ops)
     {
-        auto obj = pipeline->inputs[i];
-        if (obj->objType() == DataBuffer)
+        switch (op.type)
         {
-            gl->glBindBufferBase(GL_UNIFORM_BUFFER, i,
-                                 reinterpret_cast<OMRendererBufferOpenGL *>(pipeline->inputs[i])->buffer);
-        }
-
-        else if (obj->objType() == Texture)
-        {
-            gl->glActiveTexture(GL_TEXTURE0 + i);
-            gl->glBindTexture(GL_TEXTURE_2D, reinterpret_cast<OMRendererTextureOpenGL *>(pipeline->inputs[i])->texture);
+        case BindFramebuffer:
+            gl->glBindFramebuffer(op.args[0], op.args[1]);
+            break;
+        case Clear:
+            gl->glClear(op.args[0]);
+            break;
+        case Disable:
+            gl->glDisable(op.args[0]);
+            break;
+        case BindBufferBase:
+            gl->glBindBufferBase(op.args[0], op.args[1], op.args[2]);
+            break;
+        case ActiveTexture:
+            gl->glActiveTexture(op.args[0]);
+            break;
+        case BindTexture:
+            gl->glBindTexture(op.args[0], op.args[1]);
+            break;
+        case BindVertexArray:
+            gl->glBindVertexArray(op.args[0]);
+            break;
+        case UseProgram:
+            gl->glUseProgram(op.args[0]);
+            break;
+        case DrawElements:
+            gl->glDrawElements(op.args[0], op.args[1], op.args[2], op.ptrArgs[0]);
+            break;
         }
     }
-
-    gl->glBindVertexArray(vertexArrayObject);
-    gl->glUseProgram(program);
-
-    gl->glDrawElements(GL_TRIANGLES, vtxCount, GL_UNSIGNED_INT, nullptr);
-
-    gl->glBindVertexArray(0);
 }
 } // namespace openminecraft::renderer::opengl
