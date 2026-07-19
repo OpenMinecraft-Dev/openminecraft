@@ -7,7 +7,7 @@ env:
   XMAKE_ARGS: -v
   ANDROID_NDK_VERSION: r27c
   OHOS_SDK_VERSION: 6.1-Release
-  CROSS_TOOL_VERSION: toolchain-20260623-3
+  CROSS_TOOL_VERSION: toolchain-20260719-1
 jobs:
   build:
     strategy:

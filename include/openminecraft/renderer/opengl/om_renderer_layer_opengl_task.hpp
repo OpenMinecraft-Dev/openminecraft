@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
+#include <array>
 namespace openminecraft::renderer::opengl
 {
 enum OMRendererOpType
@@ -22,7 +23,7 @@ enum OMRendererOpType
 struct OMRendererTaskOp
 {
     OMRendererOpType type;
-    GLuint id;
+    std::array<GLuint, 8> args;
 };
 class OMRendererTaskOpenGL : public common::OMRendererTask
 {
