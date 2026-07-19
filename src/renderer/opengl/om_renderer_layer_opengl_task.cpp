@@ -9,7 +9,6 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_rendertarget.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_texture.hpp"
-#include <iostream>
 #include <utility>
 
 namespace openminecraft::renderer::opengl

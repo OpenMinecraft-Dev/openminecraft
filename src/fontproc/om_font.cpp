@@ -60,8 +60,6 @@ hb_draw_funcs_t *drawfuncs = nullptr;
 
 auto OMFont::buildBasicPolygon(int charcode) -> std::shared_ptr<OMTriangleList>
 {
-    util::OMTicker<std::string> ticker;
-    ticker.tickStart();
     if (!drawfuncs)
     {
         drawfuncs = hb_draw_funcs_create();
@@ -71,8 +69,6 @@ auto OMFont::buildBasicPolygon(int charcode) -> std::shared_ptr<OMTriangleList>
         hb_draw_funcs_set_quadratic_to_func(drawfuncs, acceptOutlineQuadraticTo, nullptr, nullptr);
         hb_draw_funcs_set_cubic_to_func(drawfuncs, acceptOutlineCubicTo, nullptr, nullptr);
         hb_draw_funcs_set_close_path_func(drawfuncs, acceptOutlineClosePath, nullptr, nullptr);
-
-        ticker.recordEvent("glyph_draw_funcs");
     }
 
     auto font = static_cast<hb_font_t *>(hbFont);
@@ -83,7 +79,6 @@ auto OMFont::buildBasicPolygon(int charcode) -> std::shared_ptr<OMTriangleList>
     OMFontOutline outline;
 
     hb_font_draw_glyph(font, gly, drawfuncs, &outline);
-    ticker.recordEvent("glyph_hb_font_draw_glyph");
     int xsc, ysc;
     hb_font_get_scale(font, &xsc, &ysc);
 
@@ -92,7 +87,6 @@ auto OMFont::buildBasicPolygon(int charcode) -> std::shared_ptr<OMTriangleList>
               [](std::shared_ptr<OMFontPolygon> p1, std::shared_ptr<OMFontPolygon> p2) -> bool {
                   return p1->area() > p2->area();
               });
-    ticker.recordEvent("glyph_polygons");
 
     std::unordered_map<int, int> parents;
     for (int i = 0; i < rawpoly.size(); i++)
@@ -109,7 +103,6 @@ auto OMFont::buildBasicPolygon(int charcode) -> std::shared_ptr<OMTriangleList>
 
         parents[i] = parent;
     }
-    ticker.recordEvent("glyph_polygon_tree");
 
     std::vector<int, mem::OMStlAllocator<allocatorId, int>> filledPoly;
     for (int pi = 0; pi < rawpoly.size(); pi++)
@@ -128,7 +121,6 @@ auto OMFont::buildBasicPolygon(int charcode) -> std::shared_ptr<OMTriangleList>
             filledPoly.push_back(pi);
         }
     }
-    ticker.recordEvent("glyph_determine_poly_fill");
 
     std::vector<std::shared_ptr<OMTriangleList>> listbase;
     for (auto polyid : filledPoly)
@@ -143,13 +135,6 @@ auto OMFont::buildBasicPolygon(int charcode) -> std::shared_ptr<OMTriangleList>
         }
 
         listbase.push_back(mem::fast_shared<allocatorId, OMTriangleList>(rawpoly[polyid], polys));
-    }
-    ticker.recordEvent("glyph_triangulation");
-
-    logger.info("Glyph build process: ");
-    for (auto &pp : ticker.fetchEvents<std::chrono::microseconds>())
-    {
-        logger.info("{}: ~{} us", pp.first, pp.second);
     }
 
     return mem::fast_shared<allocatorId, OMTriangleList>(listbase);

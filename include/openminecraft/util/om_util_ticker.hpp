@@ -3,44 +3,51 @@
 
 #include <algorithm>
 #include <chrono>
+#include <stack>
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 namespace openminecraft::util
 {
-template <typename E> class OMTicker
+struct OMTickerEvent
+{
+    std::string id;
+    bool pop;
+};
+class OMTicker
 {
   public:
     OMTicker() = default;
     ~OMTicker() = default;
 
-    void recordEvent(E event)
+    inline void begin()
     {
-        eventMap[event] = std::chrono::high_resolution_clock::now();
-    }
-
-    void tickStart()
-    {
-        begin = std::chrono::high_resolution_clock::now();
-    }
-
-    template <typename D> auto fetchEvents() -> std::vector<std::pair<E, uint64_t>>
-    {
-        std::vector<std::pair<E, uint64_t>> target;
-        for (auto &p : eventMap)
+        ticks.clear();
+        while (!items.empty())
         {
-            target.push_back(std::make_pair(p.first, std::chrono::duration_cast<D>(p.second - begin).count()));
+            items.pop();
         }
-
-        std::sort(target.begin(), target.end(),
-                  [](std::pair<E, uint64_t> &p1, std::pair<E, uint64_t> &p2) -> auto { return p1.second < p2.second; });
-
-        return target;
     }
 
-    std::chrono::high_resolution_clock::time_point begin;
-    std::unordered_map<E, std::chrono::high_resolution_clock::time_point> eventMap;
+    void push(std::string id)
+    {
+        items.push(id);
+        ticks.emplace_back(OMTickerEvent{id, false}, std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                                         std::chrono::steady_clock::now().time_since_epoch())
+                                                         .count());
+    }
+    void pop()
+    {
+        ticks.emplace_back(OMTickerEvent{items.top(), true}, std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                                                 std::chrono::steady_clock::now().time_since_epoch())
+                                                                 .count());
+        items.pop();
+    }
+
+    std::stack<std::string> items;
+    std::vector<std::pair<OMTickerEvent, uint64_t>> ticks;
 };
 } // namespace openminecraft::util
 

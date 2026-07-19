@@ -13,6 +13,7 @@
 #include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/specs/zip/om_zip.hpp"
+#include "openminecraft/util/om_util_ticker.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
@@ -48,13 +49,32 @@ auto boot(std::vector<std::string> args) -> int
     log::multithread::registerCurrentThreadName("engineMain");
     auto logger = std::make_unique<log::OMLogger>("boot");
 
+    util::OMTicker ticker;
+    ticker.begin();
+
+    ticker.push("base_init");
+
+    ticker.push("sdl_mem");
     SDL_SetMemoryFunctions(mem::allocator::tracedMallocSDL, mem::allocator::tracedCallocSDL,
                            mem::allocator::tracedReallocSDL, mem::allocator::tracedFreeSDL);
-    setupI18nEnv();
+    ticker.pop();
 
+    ticker.push("i18n");
+    setupI18nEnv();
+    ticker.pop();
+
+    ticker.push("sdl_main");
     if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO))
     {
         logger->info("SDL Status: {}", SDL_GetError());
+    }
+    ticker.pop();
+
+    ticker.pop();
+
+    for (auto &p : ticker.ticks)
+    {
+        logger->debug("{}{} -> {} ns", p.first.pop ? "-" : "+", p.first.id, p.second);
     }
 
     logger->info(i18n::res::translate("openminecraft.boot.arg"));
