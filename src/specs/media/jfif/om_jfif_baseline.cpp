@@ -15,7 +15,6 @@ void OMJfifFile::parseRawBlocksBaseline(std::shared_ptr<std::istream> istr)
         blockDataIndex = 0;
         std::memset(blockData.data(), 0x00, sizeof(int) * 64);
 
-        // TODO: DC decode & cache
         auto dccode = fetchCode(currentBlock->dcTable, [&]() -> bool { return bufferReqBits(istr, 1); });
         bufferReqBits(istr, dccode);
         auto dcvalue = bufferReadExtra(istr, dccode) + dcTemp[currentBlock->id];
@@ -25,7 +24,6 @@ void OMJfifFile::parseRawBlocksBaseline(std::shared_ptr<std::istream> istr)
 
         while (blockDataIndex <= 63)
         {
-            // TODO: AC decode
             auto accode = fetchCode(currentBlock->acTable, [&]() -> bool { return bufferReqBits(istr, 1); });
             uint8_t run = accode >> 4;
             uint8_t siz = accode & 0xf;

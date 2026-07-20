@@ -33,13 +33,12 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
         auto target = vfs::fsfetch(fmt::format("/bootassets/openminecraft-renderer/shaders/{}", filename));            \
         name = std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), filename, "main", type);             \
     }
-
+    // INFO: basic shaders for renderer
     shaderDef(objectFrg, "objectbase.frag.glsl", Fragment);
     shaderDef(objectVtx, "objectbase.vert.glsl", Vertex);
     shaderDef(outputFrg, "output.frag.glsl", Fragment);
     shaderDef(outputVtx, "output.vert.glsl", Vertex);
 
-    basics::OMVertexFormat format;
     format.appendPart("position", basics::Vec3f);
     format.appendPart("textureUV", basics::Vec2f);
     format.nextGroup();
@@ -47,33 +46,28 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     format.debugState();
 
     {
-        auto strr = vfs::fsfetch("/bootassets/openminecraft-renderer/models/viking_room.obj");
+        auto rawfile = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
+        auto font = new fontproc::OMFont(*rawfile.get());
+        auto glyph = font->buildBasicPolygon(0x2299);
+        delete font;
 
-        auto iff = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
-        auto f = new fontproc::OMFont(*iff.get());
-        auto ppo = f->buildBasicPolygon(0x2299);
-        delete f;
-
-        std::vector<VertexStruct> vtxnew;
+        std::vector<VertexStruct> vertices;
         std::vector<uint32_t> indices;
 
-        vtxnew.clear();
-        indices.clear();
-
-        for (auto &v : ppo->vertices)
+        for (auto &v : glyph->vertices)
         {
-            vtxnew.push_back({{v.x, v.y, 0.0f}, {v.x, v.y}});
+            vertices.push_back({{v.x, v.y, 0.0f}, {v.x, v.y}});
         }
 
-        for (auto i : ppo->indices)
+        for (auto i : glyph->indices)
         {
             indices.push_back(i);
         }
 
-        auto siz = vtxnew.size() * sizeof(VertexStruct);
+        auto siz = vertices.size() * sizeof(VertexStruct);
 
         vertexBuffer = renderer->allocateBuffer(VertexData, siz);
-        vertexBuffer->updateData(vtxnew.data());
+        vertexBuffer->updateData(vertices.data());
 
         siz = indices.size() * sizeof(uint32_t);
         indexBuffer = renderer->allocateBuffer(VertexIndex, siz);
@@ -86,7 +80,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
         mainVtxBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(VertexStruct));
         mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
 
-        VertexStruct ss = {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}};
+        // INFO: 4 vertices and 6 vertex indices to render a texture to the screen
         std::array<VertexStruct, 4> vtxs = {{
             {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}},
             {{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
@@ -114,16 +108,17 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
         textureImage->updateData(img.fetchData());
     }
 
-    mainPipeline = renderer->createPipeline();
-    mainPipeline->appendInput(UniformBuffer);
-    mainPipeline->appendInput(ImageSampler);
-    mainPipeline->bindOutput(renderer->getDefaultRenderTarget());
-    mainPipeline->attachShader(outputFrg);
-    mainPipeline->attachShader(outputVtx);
-    mainPipeline->vertexFormat(format);
-    mainPipeline->build();
+    // INFO: core pipeline creation
+    mainPipeline = renderer->createPipeline()
+                       ->input(UniformBuffer)
+                       ->input(ImageSampler)
+                       ->output(renderer->getDefaultRenderTarget())
+                       ->shader(outputFrg)
+                       ->shader(outputVtx)
+                       ->format(format)
+                       ->buildN();
     mainPipeline->bindInput(0, tempUniformBuffer);
-} // namespace openminecraft::boot::test
+}
 
 void OMTestRenderer::beforeFrame()
 {
@@ -220,20 +215,14 @@ void OMTestRenderer::submitTasks()
 
     if (firstTime)
     {
-        pipeline = renderer->createPipeline();
-        pipeline->appendInput(UniformBuffer);
-        pipeline->appendInput(ImageSampler);
-        pipeline->bindOutput(renderTarget);
-        pipeline->attachShader(objectFrg);
-        pipeline->attachShader(objectVtx);
-        basics::OMVertexFormat format;
-        format.appendPart("position", basics::Vec3f);
-        format.appendPart("textureUV", basics::Vec2f);
-        format.nextGroup();
-        format.decideStruct();
-        format.debugState();
-        pipeline->vertexFormat(format);
-        pipeline->build();
+        pipeline = renderer->createPipeline()
+                       ->input(UniformBuffer)
+                       ->input(ImageSampler)
+                       ->output(renderTarget)
+                       ->shader(objectFrg)
+                       ->shader(objectVtx)
+                       ->format(format)
+                       ->buildN();
         pipeline->bindInput(0, uniformBuffer);
         pipeline->bindInput(1, textureImage);
     }

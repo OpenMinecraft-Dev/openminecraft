@@ -113,6 +113,7 @@ add_requires(
 	"libffi",
 	"c-ares",
 	"libsdl3",
+	"yoga",
 	{ system = false }
 )
 add_requires("boost", { system = false, configs = { stacktrace = true, asio = true } })
@@ -181,6 +182,7 @@ add_packages(
 	"libsdl3",
 	"zlib",
 	"c-ares",
+	"yoga",
 	{ system = false }
 )
 

@@ -30,10 +30,35 @@ class OMRendererPipeline : public OMRendererObject
     virtual ~OMRendererPipeline() = default;
 
     virtual void appendInput(OMRendererPipelineInputType) = 0;
+    inline auto input(OMRendererPipelineInputType in) -> OMRendererPipeline *
+    {
+        appendInput(in);
+        return this;
+    }
     virtual void attachShader(std::shared_ptr<OMShader> shader) = 0;
+    inline auto shader(std::shared_ptr<OMShader> shader) -> OMRendererPipeline *
+    {
+        attachShader(shader);
+        return this;
+    }
     virtual void vertexFormat(basics::OMVertexFormat format) = 0;
+    inline auto format(basics::OMVertexFormat format) -> OMRendererPipeline *
+    {
+        vertexFormat(format);
+        return this;
+    }
     virtual void bindOutput(OMRendererRenderTarget *target) = 0;
+    inline auto output(OMRendererRenderTarget *target) -> OMRendererPipeline *
+    {
+        bindOutput(target);
+        return this;
+    }
     virtual void build() = 0;
+    inline auto buildN() -> OMRendererPipeline *
+    {
+        build();
+        return this;
+    }
 
     virtual void bindInput(int idx, common::OMRendererBuffer *buff) = 0;
     virtual void bindInput(int idx, common::OMRendererTexture *texture) = 0;

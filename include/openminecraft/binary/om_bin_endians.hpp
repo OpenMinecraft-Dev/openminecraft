@@ -27,6 +27,7 @@ namespace openminecraft::binary
     read((char *)&target, sizeof(double));                                                                             \
     bed(target)
 
+// TODO: function used to check if the platform uses Little Endian or Big Endian
 static inline auto checkNativeLe() -> bool
 {
     union {
@@ -37,6 +38,8 @@ static inline auto checkNativeLe() -> bool
     d.full = 0x1234;
     return d.base == 0x34;
 }
+
+// TODO: assumes the input number is Big Endian
 static inline auto be16ToNative(uint16_t data) -> uint16_t
 {
     return checkNativeLe() ? ((data & 0x00ff) << 8) | ((data & 0xff00) >> 8) : data;
@@ -57,6 +60,7 @@ static inline auto be64ToNative(uint64_t data) -> uint64_t
                                  ((data & 0x00ff000000000000) >> 40) | ((data & 0xff00000000000000) >> 56)
                            : data;
 }
+// TODO: assumes the input number is Little Endian
 static inline auto le16ToNative(uint16_t data) -> uint16_t
 {
     return !checkNativeLe() ? ((data & 0x00ff) << 8) | ((data & 0xff00) >> 8) : data;
@@ -77,7 +81,7 @@ static inline auto le64ToNative(uint64_t data) -> uint64_t
                                   ((data & 0x00ff000000000000) >> 40) | ((data & 0xff00000000000000) >> 56)
                             : data;
 }
-
+// TODO: assumes the input number is Big Endian (as integers)
 static inline auto befToNative(float data) -> float
 {
     union {

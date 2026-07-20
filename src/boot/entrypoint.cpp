@@ -36,6 +36,7 @@ using namespace openminecraft::binary::hash;
 
 namespace openminecraft::boot
 {
+// INFO: i18n environment initialization
 static void setupI18nEnv()
 {
     i18n::res::registerModule("openminecraft-boot");
@@ -44,6 +45,7 @@ static void setupI18nEnv()
     i18n::res::load();
 }
 
+// INFO: main function
 auto boot(std::vector<std::string> args) -> int
 {
     log::multithread::registerCurrentThreadName("engineMain");
@@ -72,9 +74,9 @@ auto boot(std::vector<std::string> args) -> int
 
     ticker.pop();
 
-    for (auto &p : ticker.ticks)
+    for (auto &event : ticker.ticks)
     {
-        logger->debug("{}{} -> {} ns", p.first.pop ? "-" : "+", p.first.id, p.second);
+        logger->debug("{}{} -> {} ns", event.first.pop ? "-" : "+", event.first.id, event.second);
     }
 
     logger->info(i18n::res::translate("openminecraft.boot.arg"));
@@ -83,6 +85,7 @@ auto boot(std::vector<std::string> args) -> int
         logger->info(a);
     }
 
+    // INFO: hardware information
     logger->info("hardware / software status");
     logger->info("CPU Name: {}", os::fetchCpuName());
     logger->info("System: {}, version {}", os::fetchSystemName(), os::fetchSystemVersion());
@@ -122,22 +125,9 @@ auto boot(std::vector<std::string> args) -> int
         auto ii = std::make_shared<std::istringstream>(args[2]);
         json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(ii));
         logger->info(args[2]);
-        auto ll = bld.build();
+        auto obj = bld.build();
 
-        logger->info("object at {}", (void *)ll.get());
-        break;
-    }
-    case "zip"_hash: {
-        specs::zip::OMZip zip;
-        zip.parse(std::make_shared<std::ifstream>(args[2], std::ios::binary));
-        break;
-    }
-    case "class"_hash: {
-        for (int i = 0; i < 3000; ++i)
-        {
-            auto ll = new specs::classfile::OMClassFile();
-            ll->load(std::make_shared<std::ifstream>(args[2], std::ios::binary));
-        }
+        logger->info("object at {}", reinterpret_cast<void *>(obj.get()));
         break;
     }
     default:

@@ -3,6 +3,7 @@
 #include "glm/fwd.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
+#include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
@@ -19,8 +20,13 @@
 
 using namespace openminecraft::renderer::common;
 
+// INFO: The renderer test definition, behaves like a renderer handler (and it should be)
 namespace openminecraft::boot::test
 {
+// INFO: The uniform buffer data structure used for the renderer
+// INFO: model, view, proj for object rendering
+// INFO: kernelSize, sigma for post-processing
+// TODO: separate the two parts
 struct UniformStructure
 {
     glm::mat4 model;
@@ -29,7 +35,7 @@ struct UniformStructure
     float kernelSize;
     float sigma;
 };
-
+// INFO: simple vertex structure
 struct VertexStruct
 {
     glm::vec3 pos;
@@ -42,30 +48,31 @@ class OMTestRenderer : public OMRendererHandler
     OMTestRenderer(renderer::OMRenderer *renderer);
     ~OMTestRenderer() override;
 
+    // INFO: count frames per second, submit and create tasks, etc.
     void submitTasks() override;
     void beforeFrame() override;
     void afterFrame() override;
 
+    // INFO: these are the resource handles used for rendering
     OMRendererBuffer *vertexBuffer;
     OMRendererBuffer *indexBuffer;
     OMRendererBuffer *uniformBuffer;
     OMRendererBuffer *tempUniformBuffer;
     OMRendererTexture *textureImage;
     OMRendererPipeline *pipeline;
-
     OMRendererBuffer *mainVtxBuffer;
     OMRendererBuffer *mainIdxBuffer;
-
     OMRendererPipeline *mainPipeline;
-
     OMRendererTexture *tempTexture;
     OMRendererTexture *tempDepth;
     OMRendererRenderTarget *renderTarget;
 
+    // INFO: event handling, runs on a different thread
     void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp);
     void mouseOffset(float dx, float dy);
     void eventLoop(void *win, bool *);
     std::shared_ptr<basics::OMCamera> camera;
+    basics::OMVertexFormat format;
 
     log::OMLogger logger;
 
