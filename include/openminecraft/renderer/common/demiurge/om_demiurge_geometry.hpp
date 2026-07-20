@@ -3,6 +3,19 @@
 
 namespace openminecraft::renderer::common::demiurge
 {
+struct OMDemiurgeRect
+{
+    float x, y, width, height;
+};
+struct OMDemiurgeEdgeInsets
+{
+    float top, bottom, left, right;
+};
+enum OMDemiurgePosition
+{
+    Relative,
+    Absolute
+};
 struct OMDemiurgeSize
 {
     enum Unit
@@ -14,22 +27,22 @@ struct OMDemiurgeSize
 
     float value = 0;
 
-    inline auto pixels(float px) -> OMDemiurgeSize
+    inline static auto pixels(float px) -> OMDemiurgeSize
     {
         return {Pixel, px};
     }
 
-    inline auto percent(float pct) -> OMDemiurgeSize
+    inline static auto percent(float pct) -> OMDemiurgeSize
     {
         return {Percent, pct};
     }
 
-    inline auto fit() -> OMDemiurgeSize
+    inline static auto fit() -> OMDemiurgeSize
     {
         return {Fit, 0};
     }
 
-    inline auto fill() -> OMDemiurgeSize
+    inline static auto fill() -> OMDemiurgeSize
     {
         return {Percent, 1.0f};
     }
