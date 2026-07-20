@@ -20,6 +20,7 @@
 #include <SDL3/SDL_vulkan.h>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <system_error>
@@ -275,6 +276,22 @@ void OMRendererVk::rebuildDefaults()
                 // defaultCommandBuffers.push_back(commandBuffer);
             }
         }
+
+        for (auto &sync : frameSyncs)
+        {
+            while (sync.pipelineSemaphores.size() != tasks.size())
+            {
+                if (sync.pipelineSemaphores.size() < tasks.size())
+                {
+                    sync.pipelineSemaphores.push_back(logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator));
+                }
+                else
+                {
+                    logicalDevice.destroySemaphore(*sync.pipelineSemaphores.rbegin(), allocator);
+                    sync.pipelineSemaphores.pop_back();
+                }
+            }
+        }
     }
     catch (SystemError &e)
     {
@@ -374,6 +391,13 @@ void OMRendererVk::render()
             throw OMRendererException(
                 VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.resetfence"));
         }
+
+        for (int i = 0; i < layeredTasks.size(); ++i)
+        {
+            std::cout << "wait " << i << std::endl;
+            std::cout << "signal " << i + 1 << std::endl;
+        }
+        std::cout << frameSyncs[thisFrame].pipelineSemaphores.size() << " seps" << std::endl;
 
         std::vector<CommandBuffer> cmdBuffers = {};
         for (auto tsk : tasks)
