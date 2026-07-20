@@ -394,33 +394,33 @@ void OMRendererVk::render()
 
         for (int i = 0; i < layeredTasks.size(); ++i)
         {
-            std::cout << "wait " << i << std::endl;
-            std::cout << "signal " << i + 1 << std::endl;
-        }
-        std::cout << frameSyncs[thisFrame].pipelineSemaphores.size() << " seps" << std::endl;
+            auto &waitSep = frameSyncs[thisFrame].pipelineSemaphores[i];
+            auto &dstSep = i + 1 < frameSyncs[thisFrame].pipelineSemaphores.size()
+                               ? frameSyncs[thisFrame].pipelineSemaphores[i + 1]
+                               : frameRenderSemaphores[imageIndex];
 
-        std::vector<CommandBuffer> cmdBuffers = {};
-        for (auto tsk : tasks)
-        {
-            auto tt = reinterpret_cast<OMRendererTaskVk *>(tsk.second);
-            if (!tt->isOnDefault())
+            std::vector<CommandBuffer> cmdBuffers = {};
+            for (auto tsk : layeredTasks[i])
             {
-                cmdBuffers.push_back(tt->commandBuffer);
+                auto tt = reinterpret_cast<OMRendererTaskVk *>(tsk);
+                if (!tt->isOnDefault())
+                {
+                    cmdBuffers.push_back(tt->commandBuffer);
+                }
+                else
+                {
+                    cmdBuffers.push_back(defaultCommandBuffers[tt][imageIndex]);
+                }
             }
-            else
-            {
-                cmdBuffers.push_back(defaultCommandBuffers[tt][imageIndex]);
-            }
+
+            const PipelineStageFlags msk = PipelineStageFlagBits::eColorAttachmentOutput;
+            SubmitInfo submitInfo(1, &waitSep, &msk, cmdBuffers.size(), cmdBuffers.data(), 1, &dstSep);
+
+            queues.first.submit(submitInfo,
+                                i == layeredTasks.size() - 1 ? frameSyncs[thisFrame].inFlightFence : nullptr);
         }
 
-        auto frmSep = frameRenderSemaphores[imageIndex];
-        const PipelineStageFlags msk = PipelineStageFlagBits::eColorAttachmentOutput;
-        SubmitInfo submitInfo(1, &frameSyncs[thisFrame].pipelineSemaphores[0], &msk, cmdBuffers.size(),
-                              cmdBuffers.data(), 1, &frmSep);
-
-        queues.first.submit(submitInfo, frameSyncs[thisFrame].inFlightFence);
-
-        PresentInfoKHR presentInfo(1, &frmSep, 1, &swapchainManager->swapchain, &imageIndex);
+        PresentInfoKHR presentInfo(1, &frameRenderSemaphores[imageIndex], 1, &swapchainManager->swapchain, &imageIndex);
 
         result = queues.second.presentKHR(presentInfo);
         if (result != Result::eSuccess)
