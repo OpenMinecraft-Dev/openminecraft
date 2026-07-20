@@ -21,7 +21,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <system_error>
 #include <utility>
@@ -206,8 +205,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         for (int i = 0; i < framesInFlight; i++)
         {
             frameSyncs.push_back(
-                {{logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator),
-                  logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator)},
+                {{logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator)},
                  logicalDevice.createFence(FenceCreateInfo(FenceCreateFlagBits::eSignaled), allocator)});
         }
 
@@ -325,7 +323,7 @@ void OMRendererVk::render()
 {
     if (needRebuild)
     {
-        goto reb;
+        goto rebuild;
     }
     try
     {
@@ -342,12 +340,12 @@ void OMRendererVk::render()
 
         auto [nxtRes, imageIndex] =
             logicalDevice.acquireNextImageKHR(swapchainManager->swapchain, std::numeric_limits<uint64_t>::max(),
-                                              frameSyncs[thisFrame].pipelineSemaphores[0], {});
+                                              frameSyncs[thisFrame].imageAvailable(), {});
         if (nxtRes != Result::eSuccess)
         {
             if (nxtRes == Result::eSuboptimalKHR || nxtRes == Result::eErrorOutOfDateKHR)
             {
-                goto reb;
+                goto rebuild;
             }
             throw OMRendererException(VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.nextimage"));
         }
@@ -382,13 +380,14 @@ void OMRendererVk::render()
         }
         cmdBuffers.push_back(defaultCommandBuffers[imageIndex]);
 
+        auto frmSep = frameRenderSemaphores[imageIndex];
         const PipelineStageFlags msk = PipelineStageFlagBits::eColorAttachmentOutput;
         SubmitInfo submitInfo(1, &frameSyncs[thisFrame].pipelineSemaphores[0], &msk, cmdBuffers.size(),
-                              cmdBuffers.data(), 1, &frameRenderSemaphores[imageIndex]);
+                              cmdBuffers.data(), 1, &frmSep);
 
         queues.first.submit(submitInfo, frameSyncs[thisFrame].inFlightFence);
 
-        PresentInfoKHR presentInfo(1, &frameRenderSemaphores[imageIndex], 1, &swapchainManager->swapchain, &imageIndex);
+        PresentInfoKHR presentInfo(1, &frmSep, 1, &swapchainManager->swapchain, &imageIndex);
 
         result = queues.second.presentKHR(presentInfo);
         if (result != Result::eSuccess)
@@ -408,12 +407,12 @@ void OMRendererVk::render()
     {
         if (e.code().value() == VK_SUBOPTIMAL_KHR || e.code().value() == VK_ERROR_OUT_OF_DATE_KHR)
         {
-            goto reb;
+            goto rebuild;
         }
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.queuepresent"));
     }
 
-reb:
+rebuild:
     try
     {
         logicalDevice.waitIdle();

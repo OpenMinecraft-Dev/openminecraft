@@ -40,6 +40,11 @@ struct FrameSync
 {
     std::vector<::vk::Semaphore> pipelineSemaphores;
     ::vk::Fence inFlightFence;
+
+    inline auto imageAvailable() -> ::vk::Semaphore
+    {
+        return pipelineSemaphores[0];
+    }
 };
 
 class OMRendererVk : public OMRenderer
