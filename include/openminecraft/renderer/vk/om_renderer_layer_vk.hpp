@@ -83,7 +83,7 @@ class OMRendererVk : public OMRenderer
     common::OMRendererRenderTarget *defaultTarget;
     common::OMRendererTexture *defaultDepthBuffer;
     std::vector<::vk::Framebuffer> defaultFramebuffers;
-    std::vector<::vk::CommandBuffer> defaultCommandBuffers;
+    std::unordered_map<common::OMRendererTask *, std::vector<::vk::CommandBuffer>> defaultCommandBuffers;
 
     ::vk::AllocationCallbacks allocator;
     ::vk::Instance instance;

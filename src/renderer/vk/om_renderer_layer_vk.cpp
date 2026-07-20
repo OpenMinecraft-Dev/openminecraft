@@ -231,7 +231,10 @@ void OMRendererVk::rebuildDefaults()
         defaultFramebuffers.clear();
         for (auto &cb : defaultCommandBuffers)
         {
-            logicalDevice.freeCommandBuffers(tempCommandPool, cb);
+            for (auto &cbn : cb.second)
+            {
+                logicalDevice.freeCommandBuffers(tempCommandPool, cbn);
+            }
         }
         defaultCommandBuffers.clear();
 
@@ -244,30 +247,33 @@ void OMRendererVk::rebuildDefaults()
                     swapchainManager->extent.width, swapchainManager->extent.height, 1),
                 allocator));
         }
-        for (auto defaultFramebuffer : defaultFramebuffers)
+
+        for (auto task : tasks)
         {
-            auto commandBuffer = logicalDevice.allocateCommandBuffers(
-                CommandBufferAllocateInfo(tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
-
-            commandBuffer.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eSimultaneousUse));
-            std::vector test = {ClearValue({0.0f, 0.0f, 0.0f, 0.0f}), ClearValue({1.0f, 0})};
-            commandBuffer.beginRenderPass(
-                RenderPassBeginInfo(reinterpret_cast<OMRendererRenderTargetVk *>(getDefaultRenderTarget())->renderPass,
-                                    defaultFramebuffer, Rect2D(Offset2D(0, 0), swapchainManager->extent), test),
-                SubpassContents::eSecondaryCommandBuffers);
-
-            for (auto tsk : tasks)
+            if (!reinterpret_cast<OMRendererTaskVk *>(task.second)->isOnDefault())
             {
-                if (!reinterpret_cast<OMRendererTaskVk *>(tsk.second)->isOnDefault())
-                {
-                    continue;
-                }
-                commandBuffer.executeCommands(reinterpret_cast<OMRendererTaskVk *>(tsk.second)->commandBuffer);
+                continue;
             }
-            commandBuffer.endRenderPass();
-            commandBuffer.end();
+            for (auto defaultFramebuffer : defaultFramebuffers)
+            {
+                auto commandBuffer = logicalDevice.allocateCommandBuffers(
+                    CommandBufferAllocateInfo(tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
 
-            defaultCommandBuffers.push_back(commandBuffer);
+                commandBuffer.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eSimultaneousUse));
+                std::vector test = {ClearValue({0.0f, 0.0f, 0.0f, 0.0f}), ClearValue({1.0f, 0})};
+                commandBuffer.beginRenderPass(
+                    RenderPassBeginInfo(
+                        reinterpret_cast<OMRendererRenderTargetVk *>(getDefaultRenderTarget())->renderPass,
+                        defaultFramebuffer, Rect2D(Offset2D(0, 0), swapchainManager->extent), test),
+                    SubpassContents::eSecondaryCommandBuffers);
+
+                commandBuffer.executeCommands(reinterpret_cast<OMRendererTaskVk *>(task.second)->commandBuffer);
+                commandBuffer.endRenderPass();
+                commandBuffer.end();
+
+                defaultCommandBuffers[task.second].push_back(commandBuffer);
+                // defaultCommandBuffers.push_back(commandBuffer);
+            }
         }
     }
     catch (SystemError &e)
@@ -377,8 +383,11 @@ void OMRendererVk::render()
             {
                 cmdBuffers.push_back(tt->commandBuffer);
             }
+            else
+            {
+                cmdBuffers.push_back(defaultCommandBuffers[tt][imageIndex]);
+            }
         }
-        cmdBuffers.push_back(defaultCommandBuffers[imageIndex]);
 
         auto frmSep = frameRenderSemaphores[imageIndex];
         const PipelineStageFlags msk = PipelineStageFlagBits::eColorAttachmentOutput;
@@ -712,7 +721,10 @@ OMRendererVk::~OMRendererVk()
         }
         for (auto &cb : defaultCommandBuffers)
         {
-            logicalDevice.freeCommandBuffers(tempCommandPool, cb);
+            for (auto &cbn : cb.second)
+            {
+                logicalDevice.freeCommandBuffers(tempCommandPool, cbn);
+            }
         }
         this->clearTasks();
         logicalDevice.destroyCommandPool(tempCommandPool, allocator);
