@@ -276,6 +276,17 @@ void OMRendererVk::rebuildDefaults()
                 // defaultCommandBuffers.push_back(commandBuffer);
             }
         }
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.defaults"));
+    }
+}
+
+void OMRendererVk::updateSyncObjects()
+{
+    try
+    {
 
         for (auto &sync : frameSyncs)
         {
@@ -306,6 +317,7 @@ void OMRendererVk::baseInit()
         h->submitTasks();
     }
     buildTaskGraph();
+    updateSyncObjects();
     rebuildDefaults();
 }
 
@@ -354,16 +366,15 @@ void OMRendererVk::render()
         {
             r->beforeFrame();
         }
-        auto result = logicalDevice.waitForFences(1, &frameSyncs[thisFrame].inFlightFence, true,
-                                                  std::numeric_limits<uint64_t>::max());
+        auto &sync = frameSyncs[thisFrame];
+        auto result = logicalDevice.waitForFences(1, &sync.inFlightFence, true, std::numeric_limits<uint64_t>::max());
         if (result != Result::eSuccess)
         {
             throw OMRendererException(VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.waitfence"));
         }
 
-        auto [nxtRes, imageIndex] =
-            logicalDevice.acquireNextImageKHR(swapchainManager->swapchain, std::numeric_limits<uint64_t>::max(),
-                                              frameSyncs[thisFrame].imageAvailable(), {});
+        auto [nxtRes, imageIndex] = logicalDevice.acquireNextImageKHR(
+            swapchainManager->swapchain, std::numeric_limits<uint64_t>::max(), sync.imageAvailable(), {});
         if (nxtRes != Result::eSuccess)
         {
             if (nxtRes == Result::eSuboptimalKHR || nxtRes == Result::eErrorOutOfDateKHR)
@@ -383,23 +394,23 @@ void OMRendererVk::render()
                     VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.waitfence"));
             }
         }
-        inflights[imageIndex] = frameSyncs[thisFrame];
+        inflights[imageIndex] = sync;
 
-        result = logicalDevice.resetFences(1, &frameSyncs[thisFrame].inFlightFence);
+        result = logicalDevice.resetFences(1, &sync.inFlightFence);
         if (result != Result::eSuccess)
         {
             throw OMRendererException(
                 VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.resetfence"));
         }
 
+        std::vector<CommandBuffer> cmdBuffers = {};
         for (int i = 0; i < layeredTasks.size(); ++i)
         {
-            auto &waitSep = frameSyncs[thisFrame].pipelineSemaphores[i];
-            auto &dstSep = i + 1 < frameSyncs[thisFrame].pipelineSemaphores.size()
-                               ? frameSyncs[thisFrame].pipelineSemaphores[i + 1]
-                               : frameRenderSemaphores[imageIndex];
+            auto &waitSep = sync.pipelineSemaphores[i];
+            auto &dstSep = i + 1 < sync.pipelineSemaphores.size() ? sync.pipelineSemaphores[i + 1]
+                                                                  : frameRenderSemaphores[imageIndex];
 
-            std::vector<CommandBuffer> cmdBuffers = {};
+            cmdBuffers.clear();
             for (auto tsk : layeredTasks[i])
             {
                 auto tt = reinterpret_cast<OMRendererTaskVk *>(tsk);
@@ -407,7 +418,7 @@ void OMRendererVk::render()
                 {
                     cmdBuffers.push_back(tt->commandBuffer);
                 }
-                else
+                else if (defaultCommandBuffers.count(tt))
                 {
                     cmdBuffers.push_back(defaultCommandBuffers[tt][imageIndex]);
                 }
@@ -416,8 +427,7 @@ void OMRendererVk::render()
             const PipelineStageFlags msk = PipelineStageFlagBits::eColorAttachmentOutput;
             SubmitInfo submitInfo(1, &waitSep, &msk, cmdBuffers.size(), cmdBuffers.data(), 1, &dstSep);
 
-            queues.first.submit(submitInfo,
-                                i == layeredTasks.size() - 1 ? frameSyncs[thisFrame].inFlightFence : nullptr);
+            queues.first.submit(submitInfo, i == layeredTasks.size() - 1 ? sync.inFlightFence : nullptr);
         }
 
         PresentInfoKHR presentInfo(1, &frameRenderSemaphores[imageIndex], 1, &swapchainManager->swapchain, &imageIndex);
@@ -467,6 +477,7 @@ rebuild:
         r->submitTasks();
     }
     buildTaskGraph();
+    updateSyncObjects();
     rebuildDefaults();
     needRebuild = false;
 

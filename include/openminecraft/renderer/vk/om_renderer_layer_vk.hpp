@@ -107,6 +107,7 @@ class OMRendererVk : public OMRenderer
 
   private:
     void rebuildDefaults();
+    void updateSyncObjects();
 
     std::shared_ptr<log::OMLogger> logger;
     ::vk::PhysicalDeviceMemoryProperties memProps;
