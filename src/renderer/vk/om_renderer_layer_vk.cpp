@@ -206,7 +206,8 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         for (int i = 0; i < framesInFlight; i++)
         {
             frameSyncs.push_back(
-                {logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator),
+                {{logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator),
+                  logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator)},
                  logicalDevice.createFence(FenceCreateInfo(FenceCreateFlagBits::eSignaled), allocator)});
         }
 
@@ -341,7 +342,7 @@ void OMRendererVk::render()
 
         auto [nxtRes, imageIndex] =
             logicalDevice.acquireNextImageKHR(swapchainManager->swapchain, std::numeric_limits<uint64_t>::max(),
-                                              frameSyncs[thisFrame].imageAvailableSemaphore, {});
+                                              frameSyncs[thisFrame].pipelineSemaphores[0], {});
         if (nxtRes != Result::eSuccess)
         {
             if (nxtRes == Result::eSuboptimalKHR || nxtRes == Result::eErrorOutOfDateKHR)
@@ -382,7 +383,7 @@ void OMRendererVk::render()
         cmdBuffers.push_back(defaultCommandBuffers[imageIndex]);
 
         const PipelineStageFlags msk = PipelineStageFlagBits::eColorAttachmentOutput;
-        SubmitInfo submitInfo(1, &frameSyncs[thisFrame].imageAvailableSemaphore, &msk, cmdBuffers.size(),
+        SubmitInfo submitInfo(1, &frameSyncs[thisFrame].pipelineSemaphores[0], &msk, cmdBuffers.size(),
                               cmdBuffers.data(), 1, &frameRenderSemaphores[imageIndex]);
 
         queues.first.submit(submitInfo, frameSyncs[thisFrame].inFlightFence);
@@ -694,7 +695,10 @@ OMRendererVk::~OMRendererVk()
         logicalDevice.waitIdle();
         for (auto sync : frameSyncs)
         {
-            logicalDevice.destroySemaphore(sync.imageAvailableSemaphore, allocator);
+            for (auto s : sync.pipelineSemaphores)
+            {
+                logicalDevice.destroySemaphore(s, allocator);
+            }
             logicalDevice.destroyFence(sync.inFlightFence, allocator);
         }
         for (auto sep : frameRenderSemaphores)

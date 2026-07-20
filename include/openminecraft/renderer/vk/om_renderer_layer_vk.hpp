@@ -38,7 +38,7 @@ void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAll
 
 struct FrameSync
 {
-    ::vk::Semaphore imageAvailableSemaphore;
+    std::vector<::vk::Semaphore> pipelineSemaphores;
     ::vk::Fence inFlightFence;
 };
 
