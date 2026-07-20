@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/om_renderer_object.hpp"
+#include <cstdint>
 #include <vector>
 namespace openminecraft::renderer
 {
@@ -23,21 +24,51 @@ class OMRendererTask : public OMRendererObject
     virtual ~OMRendererTask() = default;
 
     virtual void bindPipeline(OMRendererPipeline *pipeline) = 0;
+    inline auto pipeline(OMRendererPipeline *pipeline) -> OMRendererTask *
+    {
+        bindPipeline(pipeline);
+        return this;
+    }
     virtual void bindVertexBuffer(std::vector<OMRendererBuffer *> buffer) = 0;
+    inline auto vertexBuffer(std::vector<OMRendererBuffer *> buffer) -> OMRendererTask *
+    {
+        bindVertexBuffer(buffer);
+        return this;
+    }
     virtual void bindIndexBuffer(OMRendererBuffer *buffer) = 0;
+    inline auto indexBuffer(OMRendererBuffer *buffer) -> OMRendererTask *
+    {
+        bindIndexBuffer(buffer);
+        return this;
+    }
     virtual void bindTarget(OMRendererRenderTarget *target) = 0;
+    inline auto target(OMRendererRenderTarget *target) -> OMRendererTask *
+    {
+        bindTarget(target);
+        return this;
+    }
     virtual void draw(uint64_t vertexCount) = 0;
+    inline auto drawN(uint64_t vertexCount) -> OMRendererTask *
+    {
+        draw(vertexCount);
+        return this;
+    }
     virtual void finish() = 0;
+    inline auto finishN() -> OMRendererTask *
+    {
+        finish();
+        return this;
+    }
 
     inline auto objType() -> OMRendererObjectType override
     {
         return Task;
     }
 
-    inline auto dependOn(OMRendererTask *task)
+    inline auto dependOn(OMRendererTask *task) -> OMRendererTask *
     {
         dependTasks.push_back(task);
-        task->relied = true;
+        return this;
     }
 
     inline auto isTopTask() -> bool
@@ -57,8 +88,6 @@ class OMRendererTask : public OMRendererObject
         return true;
     }
     bool solved = false;
-
-    bool relied = false;
 
   private:
     std::vector<OMRendererTask *> dependTasks;

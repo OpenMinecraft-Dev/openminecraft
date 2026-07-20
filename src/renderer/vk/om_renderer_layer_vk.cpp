@@ -263,10 +263,6 @@ void OMRendererVk::rebuildDefaults()
                 {
                     continue;
                 }
-                if (tsk.second->relied)
-                {
-                    throw std::logic_error("not supported non-final task on the main buffer!");
-                }
                 commandBuffer.executeCommands(reinterpret_cast<OMRendererTaskVk *>(tsk.second)->commandBuffer);
             }
             commandBuffer.endRenderPass();
@@ -287,6 +283,7 @@ void OMRendererVk::baseInit()
     {
         h->submitTasks();
     }
+    buildTaskGraph();
     rebuildDefaults();
 }
 
@@ -436,6 +433,7 @@ reb:
     {
         r->submitTasks();
     }
+    buildTaskGraph();
     rebuildDefaults();
     needRebuild = false;
 

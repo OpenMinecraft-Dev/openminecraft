@@ -9,7 +9,6 @@
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include <glm/glm.hpp>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -77,6 +76,45 @@ class OMRenderer
     virtual void requestResize() = 0;
 
     common::OMRendererShaderCompiler compiler;
+
+    void buildTaskGraph()
+    {
+        layeredTasks.clear();
+
+        std::vector<common::OMRendererTask *> temp;
+        for (auto &p : tasks)
+        {
+            temp.push_back(p.second);
+            p.second->solved = false;
+        }
+
+        while (true)
+        {
+            std::vector<common::OMRendererTask *> layerTask = {};
+            for (auto it = temp.begin(); it < temp.end(); ++it)
+            {
+                if ((*it)->executable())
+                {
+                    layerTask.emplace_back(*it);
+                    (*it)->solved = true;
+                    it = temp.erase(it);
+                }
+            }
+            layeredTasks.insert(layeredTasks.end(), layerTask);
+
+            if (temp.empty())
+            {
+                break;
+            }
+
+            if (layerTask.empty())
+            {
+                throw std::logic_error("circular dependency!");
+            }
+        }
+    }
+
+    std::vector<std::vector<common::OMRendererTask *>> layeredTasks;
 
   protected:
     void *window;

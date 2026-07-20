@@ -240,23 +240,22 @@ void OMTestRenderer::submitTasks()
 
     mainPipeline->bindInput(1, tempTexture);
 
-    auto task = renderer->createTask();
-    task->bindTarget(renderTarget);
-    task->bindPipeline(pipeline);
-    task->bindVertexBuffer({vertexBuffer});
-    task->bindIndexBuffer(indexBuffer);
-    task->draw(vertexCount);
-    task->finish();
+    auto task = renderer->createTask()
+                    ->target(renderTarget)
+                    ->pipeline(pipeline)
+                    ->vertexBuffer({vertexBuffer})
+                    ->indexBuffer(indexBuffer)
+                    ->drawN(vertexCount)
+                    ->finishN();
 
-    auto task2 = renderer->createTask();
-    task2->dependOn(task);
-    task2->bindTarget(renderer->getDefaultRenderTarget());
-    task2->bindPipeline(mainPipeline);
-    task2->bindVertexBuffer({mainVtxBuffer});
-    task2->bindIndexBuffer(mainIdxBuffer);
-    task2->draw(6);
-    task2->finish();
-
+    auto task2 = renderer->createTask()
+                     ->dependOn(task)
+                     ->target(renderer->getDefaultRenderTarget())
+                     ->pipeline(mainPipeline)
+                     ->vertexBuffer({mainVtxBuffer})
+                     ->indexBuffer(mainIdxBuffer)
+                     ->drawN(6)
+                     ->finishN();
     renderer->registerTask("main", task2);
     renderer->registerTask("intermediate", task);
 

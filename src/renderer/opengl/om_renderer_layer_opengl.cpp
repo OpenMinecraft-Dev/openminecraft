@@ -142,6 +142,7 @@ void OMRendererOpenGL::baseInit()
     {
         h->submitTasks();
     }
+    buildTaskGraph();
 }
 
 void OMRendererOpenGL::render()
@@ -150,9 +151,12 @@ void OMRendererOpenGL::render()
     {
         h->beforeFrame();
     }
-    for (auto tsks : tasks)
+    for (auto &tsklist : layeredTasks)
     {
-        reinterpret_cast<OMRendererTaskOpenGL *>(tsks.second)->execute();
+        for (auto tsk : tsklist)
+        {
+            reinterpret_cast<OMRendererTaskOpenGL *>(tsk)->execute();
+        }
     }
     SDL_GL_SwapWindow(reinterpret_cast<SDL_Window *>(window));
     for (auto h : handlers)
@@ -176,5 +180,6 @@ void OMRendererOpenGL::requestResize()
     {
         h->submitTasks();
     }
+    buildTaskGraph();
 }
 } // namespace openminecraft::renderer::opengl
