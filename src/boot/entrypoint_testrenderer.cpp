@@ -250,9 +250,6 @@ void OMTestRenderer::submitTasks()
     renderer->registerTask("main", task2);
     renderer->registerTask("intermediate", task);
 
-    logger.info("Task intermediate: {}", fmt::ptr(renderer->fetchTask("intermediate")));
-    logger.info("Task main: {}", fmt::ptr(renderer->fetchTask("main")));
-
     firstTime = false;
 }
 OMTestRenderer::~OMTestRenderer()

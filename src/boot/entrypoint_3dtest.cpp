@@ -30,15 +30,16 @@ void rendererTest(renderer::OMBackend backend)
 
         // INFO: states[0] represents application status, states[1] represents if the window resized
         std::array<bool, 2> states = {false, false};
-        std::thread t([&]() -> void {
+        /*std::thread t([&]() -> void {
             while (!states[0])
             {
                 hnd->eventLoop(*win, states.data());
             }
-        });
+        });*/
 
         while (!states[0])
         {
+            hnd->eventLoop(*win, states.data());
             if (states[1])
             {
                 win()->requestResize();
@@ -48,7 +49,7 @@ void rendererTest(renderer::OMBackend backend)
             win()->render();
         }
 
-        t.join();
+        // t.join();
         hnd = nullptr;
         hnd2 = nullptr;
     }
