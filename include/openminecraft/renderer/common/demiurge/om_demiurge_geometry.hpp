@@ -28,6 +28,16 @@ enum OMDemiurgeAlignment
     BottomCenter,
     BottomRight
 };
+enum OMDemiurgeDirection
+{
+    Row,
+    Column
+};
+enum OMDemiurgeWrap
+{
+    Wrap,
+    NoWrap
+};
 struct OMDemiurgeSize
 {
     enum Unit

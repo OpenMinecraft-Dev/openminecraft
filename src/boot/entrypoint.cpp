@@ -139,16 +139,14 @@ auto boot(std::vector<std::string> args) -> int
         std::uniform_real_distribution<float> distr(40.0, 100.0);
 
         using namespace openminecraft::renderer::common::demiurge;
-        auto root = std::make_shared<OMDemiurgeNode>();
-        root->syncStyle();
+        auto root = std::make_shared<OMDemiurgeNode>()->flexDirection(Row)->flexWrap(Wrap);
         std::vector<std::shared_ptr<OMDemiurgeNode>> chds;
         for (int i = 0; i < 150; ++i)
         {
             auto chd1 = std::make_shared<OMDemiurgeNode>()
                             ->width(OMDemiurgeSize::percent(0.25))
-                            ->height(OMDemiurgeSize::pixels(distr(eng)));
-            chd1->style.border = {10, 10, 10, 10};
-            chd1->syncStyle();
+                            ->height(OMDemiurgeSize::pixels(distr(eng)))
+                            ->border({10, 10, 10, 10});
             root->mount(chd1);
             chds.push_back(chd1);
         }
