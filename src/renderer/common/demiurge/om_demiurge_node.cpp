@@ -48,10 +48,10 @@ void OMDemiurgeNode::syncStyle()
     YGNodeStyleSetMaxWidth(yogaNode, style.maxWidth);
     YGNodeStyleSetMaxHeight(yogaNode, style.maxHeight);
 
-#define ygsync(ygname, myname) YGNodeStyleSet##ygname(yogaNode, YGEdgeTop, style.myname.top);
-    ygsync(Padding, padding);
-    ygsync(Margin, margin);
-    ygsync(Border, border);
+#define ygsync(ygname, myname, ygside, myside) YGNodeStyleSet##ygname(yogaNode, YGEdge##ygside, style.myname.myside);
+    ygsync(Padding, padding, Top, top);
+    ygsync(Margin, margin, Top, top);
+    ygsync(Border, border, Top, top);
 }
 void OMDemiurgeNode::layout()
 {

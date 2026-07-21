@@ -1,5 +1,0 @@
-target("openminecraft-ext-yoga")
-set_languages("c++20")
-set_kind("static")
-add_files("yoga/**.cpp")
-add_includedirs("../include")
