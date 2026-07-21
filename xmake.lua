@@ -182,6 +182,7 @@ add_packages(
 	"libsdl3",
 	"zlib",
 	"c-ares",
+	"yoga",
 	{ system = false }
 )
 

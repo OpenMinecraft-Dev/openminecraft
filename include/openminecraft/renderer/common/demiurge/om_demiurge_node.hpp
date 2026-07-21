@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
-#include "yoga/Yoga.h"
+#include <yoga/Yoga.h>
 
 namespace openminecraft::renderer::common::demiurge
 {
