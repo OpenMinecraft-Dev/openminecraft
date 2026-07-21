@@ -32,19 +32,23 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     format.decideStruct();
     format.debugState();
 
-    mainVtxBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(ColoredVertex));
-    mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
+    mainVtxBuffer = renderer->allocateBuffer(VertexData, 2 * 4 * sizeof(ColoredVertex));
+    mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 2 * 6 * sizeof(uint32_t));
 
     // INFO: 4 vertices and 6 vertex indices to render a texture to the screen
     glm::vec4 colr1 = {0.17254901960784313, 0.17254901960784313, 0.20392156862745098, 1};
     glm::vec4 colr2 = {0, 0.8313725490196079, 1, 1};
-    std::array<ColoredVertex, 4> vtxs = {{
+    std::array<ColoredVertex, 8> vtxs = {{
         {{-1.0f, -1.0f, 0.0f}, colr1},
         {{-1.0f, 1.0f, 0.0f}, colr1},
-        {{1.0f, 1.0f, 0.0f}, colr1},
-        {{1.0f, -1.0f, 0.0f}, colr1},
+        {{0.0f, 1.0f, 0.0f}, colr1},
+        {{0.0f, -1.0f, 0.0f}, colr1},
+        {{1.0f, -1.0f, 0.0f}, colr2},
+        {{1.0f, 1.0f, 0.0f}, colr2},
+        {{0.0f, 1.0f, 0.0f}, colr2},
+        {{0.0f, -1.0f, 0.0f}, colr2},
     }};
-    std::array<uint32_t, 6> vtxi = {0, 1, 2, 2, 3, 0};
+    std::array<uint32_t, 12> vtxi = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
     mainVtxBuffer->updateData(vtxs.data());
     mainIdxBuffer->updateData(vtxi.data());
 
@@ -72,7 +76,7 @@ void OMDemiurgeRendererHandler::submitTasks()
                     ->pipeline(uiPipeline)
                     ->vertexBuffer({mainVtxBuffer})
                     ->indexBuffer(mainIdxBuffer)
-                    ->drawN(6)
+                    ->drawN(12)
                     ->finishN();
     renderer->registerTask("demiurgeui_test", task);
 }
