@@ -50,8 +50,17 @@ void OMDemiurgeNode::syncStyle()
 
 #define ygsync(ygname, myname, ygside, myside) YGNodeStyleSet##ygname(yogaNode, YGEdge##ygside, style.myname.myside);
     ygsync(Padding, padding, Top, top);
+    ygsync(Padding, padding, Bottom, bottom);
+    ygsync(Padding, padding, Left, left);
+    ygsync(Padding, padding, Right, right);
     ygsync(Margin, margin, Top, top);
+    ygsync(Margin, margin, Bottom, bottom);
+    ygsync(Margin, margin, Left, left);
+    ygsync(Margin, margin, Right, right);
     ygsync(Border, border, Top, top);
+    ygsync(Border, border, Bottom, bottom);
+    ygsync(Border, border, Left, left);
+    ygsync(Border, border, Right, right);
 }
 void OMDemiurgeNode::layout()
 {

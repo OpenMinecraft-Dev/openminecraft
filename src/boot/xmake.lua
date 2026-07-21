@@ -13,7 +13,8 @@ add_packages(
 	"tinyobjloader",
 	"bullet3",
 	"zlib",
-	"c-ares"
+	"c-ares",
+	"yoga"
 )
 add_deps(
 	"openminecraft-log",
