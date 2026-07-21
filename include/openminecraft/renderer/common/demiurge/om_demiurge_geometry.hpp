@@ -18,6 +18,7 @@ enum OMDemiurgePosition
 };
 enum OMDemiurgeAlignment
 {
+    None,
     TopLeft,
     TopCenter,
     TopRight,

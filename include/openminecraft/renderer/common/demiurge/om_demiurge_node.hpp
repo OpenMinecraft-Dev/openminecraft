@@ -40,6 +40,11 @@ static void setSizeToYoga(YGNodeRef node, OMDemiurgeSize size, bool isWidth)
 static void applyAlignment(YGNodeRef node, OMDemiurgeAlignment alignment,
                            YGFlexDirection parentDirection = YGFlexDirectionColumn)
 {
+    if (alignment == None)
+    {
+        YGNodeStyleSetAlignSelf(node, YGAlignAuto);
+        return;
+    }
     YGAlign horiz = YGAlignFlexStart;
     YGAlign vert = YGAlignFlexStart;
 
@@ -80,6 +85,8 @@ static void applyAlignment(YGNodeRef node, OMDemiurgeAlignment alignment,
     case BottomRight:
         horiz = YGAlignFlexEnd;
         vert = YGAlignFlexEnd;
+        break;
+    case None:
         break;
     }
 
@@ -139,14 +146,41 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
 
         OMDemiurgeEdgeInsets margin = {}, padding = {}, border = {};
         OMDemiurgePosition position = Relative;
-        OMDemiurgeAlignment alignment = TopLeft;
+        OMDemiurgeAlignment alignment = None;
 
         float offsetx = 0;
         float offsety = 0;
 
         OMDemiurgeDirection flexDirection;
         OMDemiurgeWrap flexWrap;
+
+        float flexGrow;
+        float flexShrink;
+
+        // TODO: JustifyContent, AlignItems, AlignContent
+        OMDemiurgeSize flexGap;
     } style;
+    inline auto flexRatio(float grow, float shrink) -> std::shared_ptr<OMDemiurgeNode>
+    {
+        style.flexGrow = grow;
+        style.flexShrink = shrink;
+        YGNodeStyleSetFlexGrow(yogaNode, grow);
+        YGNodeStyleSetFlexShrink(yogaNode, shrink);
+        return shared_from_this();
+    }
+    inline auto flexGap(OMDemiurgeSize g) -> std::shared_ptr<OMDemiurgeNode>
+    {
+        style.flexGap = g;
+        if (g.unit == OMDemiurgeSize::Percent)
+        {
+            YGNodeStyleSetGapPercent(yogaNode, YGGutterAll, g.value * 100.0f);
+        }
+        else
+        {
+            YGNodeStyleSetGap(yogaNode, YGGutterAll, g.value);
+        }
+        return shared_from_this();
+    }
     inline auto flexWrap(OMDemiurgeWrap w) -> std::shared_ptr<OMDemiurgeNode>
     {
         style.flexWrap = w;
