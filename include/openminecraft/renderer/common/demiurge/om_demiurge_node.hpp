@@ -2,6 +2,8 @@
 #define OM_DEMIURGE_NODE_HPP
 
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
+#include "yoga/YGNode.h"
+#include "yoga/YGNodeLayout.h"
 #include <algorithm>
 #include <memory>
 #include <vector>
@@ -14,8 +16,8 @@ class OMDemiurgeNode
   public:
     struct Style
     {
-        OMDemiurgeSize width{OMDemiurgeSize::fill()};
-        OMDemiurgeSize height{OMDemiurgeSize::fill()};
+        OMDemiurgeSize width{OMDemiurgeSize::fit()};
+        OMDemiurgeSize height{OMDemiurgeSize::fit()};
         float minWidth = 0;
         float maxWidth = 1e308;
         float minHeight = 0;
@@ -34,24 +36,33 @@ class OMDemiurgeNode
     OMDemiurgeNode();
     ~OMDemiurgeNode();
 
-    void mount(std::shared_ptr<OMDemiurgeNode> child)
+    inline void mount(std::shared_ptr<OMDemiurgeNode> child)
     {
         child->parent = this;
         children.push_back(child);
+
+        YGNodeInsertChild(yogaNode, child->yogaNode, children.size() - 1);
     }
 
-    void umount(std::shared_ptr<OMDemiurgeNode> child)
+    inline void umount(std::shared_ptr<OMDemiurgeNode> child)
     {
         auto f = std::find(children.begin(), children.end(), child);
         if (f != children.end())
         {
+            YGNodeRemoveChild(yogaNode, child->yogaNode);
             child->parent = nullptr;
             children.erase(f);
         }
     }
 
     void syncStyle();
-    void layout();
+    void layout(float width, float height);
+
+    inline auto boundary() -> OMDemiurgeRect
+    {
+        return {YGNodeLayoutGetLeft(yogaNode), YGNodeLayoutGetTop(yogaNode), YGNodeLayoutGetWidth(yogaNode),
+                YGNodeLayoutGetHeight(yogaNode)};
+    }
 
   private:
     YGNodeRef yogaNode;

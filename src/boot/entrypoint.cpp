@@ -137,9 +137,15 @@ auto boot(std::vector<std::string> args) -> int
         root->style.width = OMDemiurgeSize::pixels(800);
         root->style.height = OMDemiurgeSize::pixels(600);
         auto chd1 = std::make_shared<OMDemiurgeNode>();
+        chd1->style.border = {10, 10, 10, 10};
+        chd1->style.alignment = Center;
+        chd1->syncStyle();
         root->mount(chd1);
 
-        root->layout();
+        root->layout(800, 600);
+
+        auto ll = chd1->boundary();
+        logger->warn("{} {} {} {}", ll.x, ll.y, ll.width, ll.height);
         break;
     }
     default:
