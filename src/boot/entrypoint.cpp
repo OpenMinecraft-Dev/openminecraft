@@ -21,6 +21,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <random>
 #include <sstream>
 #include <string>
 
@@ -29,6 +30,7 @@
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
+#include <vector>
 
 using namespace openminecraft;
 using namespace openminecraft::io;
@@ -132,20 +134,31 @@ auto boot(std::vector<std::string> args) -> int
         break;
     }
     case "layout"_hash: {
+        std::random_device rd;
+        std::default_random_engine eng(rd());
+        std::uniform_real_distribution<float> distr(40.0, 100.0);
+
         using namespace openminecraft::renderer::common::demiurge;
         auto root = std::make_shared<OMDemiurgeNode>();
-        root->style.width = OMDemiurgeSize::pixels(800);
-        root->style.height = OMDemiurgeSize::pixels(600);
-        auto chd1 = std::make_shared<OMDemiurgeNode>();
-        chd1->style.border = {10, 10, 10, 10};
-        chd1->style.alignment = Center;
-        chd1->syncStyle();
-        root->mount(chd1);
-
+        root->syncStyle();
+        std::vector<std::shared_ptr<OMDemiurgeNode>> chds;
+        for (int i = 0; i < 150; ++i)
+        {
+            auto chd1 = std::make_shared<OMDemiurgeNode>()
+                            ->width(OMDemiurgeSize::percent(0.25))
+                            ->height(OMDemiurgeSize::pixels(distr(eng)));
+            chd1->style.border = {10, 10, 10, 10};
+            chd1->syncStyle();
+            root->mount(chd1);
+            chds.push_back(chd1);
+        }
         root->layout(800, 600);
 
-        auto ll = chd1->boundary();
-        logger->warn("{} {} {} {}", ll.x, ll.y, ll.width, ll.height);
+        for (auto n : chds)
+        {
+            auto ll = n->boundary();
+            logger->warn("{} {} {} {}", ll.x, ll.y, ll.width, ll.height);
+        }
         break;
     }
     default:

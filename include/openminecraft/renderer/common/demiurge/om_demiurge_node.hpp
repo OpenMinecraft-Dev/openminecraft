@@ -11,7 +11,31 @@
 
 namespace openminecraft::renderer::common::demiurge
 {
-class OMDemiurgeNode
+static void setSizeToYoga(YGNodeRef node, OMDemiurgeSize size, bool isWidth)
+{
+    switch (size.unit)
+    {
+    case OMDemiurgeSize::Pixel:
+        if (isWidth)
+            YGNodeStyleSetWidth(node, size.value);
+        else
+            YGNodeStyleSetHeight(node, size.value);
+        break;
+    case OMDemiurgeSize::Percent:
+        if (isWidth)
+            YGNodeStyleSetWidthPercent(node, size.value * 100.0f);
+        else
+            YGNodeStyleSetHeightPercent(node, size.value * 100.0f);
+        break;
+    case OMDemiurgeSize::Fit:
+        if (isWidth)
+            YGNodeStyleSetWidthAuto(node);
+        else
+            YGNodeStyleSetHeightAuto(node);
+        break;
+    }
+}
+class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
 {
   public:
     struct Style
@@ -27,11 +51,22 @@ class OMDemiurgeNode
         OMDemiurgePosition position = Relative;
         OMDemiurgeAlignment alignment = TopLeft;
 
-        auto fixed() -> bool
-        {
-            return width.unit == OMDemiurgeSize::Pixel && height.unit == OMDemiurgeSize::Pixel;
-        }
+        float offsetx = 0;
+        float offsety = 0;
     } style;
+
+    inline auto width(OMDemiurgeSize size) -> std::shared_ptr<OMDemiurgeNode>
+    {
+        style.width = size;
+        setSizeToYoga(yogaNode, size, true);
+        return shared_from_this();
+    }
+    inline auto height(OMDemiurgeSize size) -> std::shared_ptr<OMDemiurgeNode>
+    {
+        style.height = size;
+        setSizeToYoga(yogaNode, size, false);
+        return shared_from_this();
+    }
 
     OMDemiurgeNode();
     ~OMDemiurgeNode();
@@ -57,7 +92,6 @@ class OMDemiurgeNode
 
     void syncStyle();
     void layout(float width, float height);
-
     inline auto boundary() -> OMDemiurgeRect
     {
         return {YGNodeLayoutGetLeft(yogaNode), YGNodeLayoutGetTop(yogaNode), YGNodeLayoutGetWidth(yogaNode),

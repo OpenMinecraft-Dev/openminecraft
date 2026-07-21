@@ -5,36 +5,14 @@
 
 namespace openminecraft::renderer::common::demiurge
 {
-static void setSizeToYoga(YGNodeRef node, OMDemiurgeSize size, bool isWidth)
-{
-    switch (size.unit)
-    {
-    case OMDemiurgeSize::Pixel:
-        if (isWidth)
-            YGNodeStyleSetWidth(node, size.value);
-        else
-            YGNodeStyleSetHeight(node, size.value);
-        break;
-    case OMDemiurgeSize::Percent:
-        if (isWidth)
-            YGNodeStyleSetWidthPercent(node, size.value * 100.0f);
-        else
-            YGNodeStyleSetHeightPercent(node, size.value * 100.0f);
-        break;
-    case OMDemiurgeSize::Fit:
-        if (isWidth)
-            YGNodeStyleSetWidthAuto(node);
-        else
-            YGNodeStyleSetHeightAuto(node);
-        break;
-    }
-}
 OMDemiurgeNode::OMDemiurgeNode()
 {
     yogaNode = YGNodeNew();
     YGNodeStyleSetFlexDirection(yogaNode, YGFlexDirectionColumn);
     YGNodeStyleSetWidthPercent(yogaNode, 100);
     YGNodeStyleSetHeightPercent(yogaNode, 100);
+
+    syncStyle();
 }
 OMDemiurgeNode::~OMDemiurgeNode()
 {
@@ -91,9 +69,7 @@ static void applyAlignment(YGNodeRef node, OMDemiurgeAlignment alignment,
 
     if (isColumn)
     {
-        // 交叉轴水平 → alignSelf
         YGNodeStyleSetAlignSelf(node, horiz);
-        // 主轴垂直 → margin auto
         if (vert == YGAlignCenter)
         {
             YGNodeStyleSetMarginAuto(node, YGEdgeTop);
@@ -102,7 +78,7 @@ static void applyAlignment(YGNodeRef node, OMDemiurgeAlignment alignment,
         else if (vert == YGAlignFlexEnd)
         {
             YGNodeStyleSetMarginAuto(node, YGEdgeTop);
-            YGNodeStyleSetMargin(node, YGEdgeBottom, 0); // 清除 auto
+            YGNodeStyleSetMargin(node, YGEdgeBottom, 0);
         }
         else
         {
@@ -112,7 +88,6 @@ static void applyAlignment(YGNodeRef node, OMDemiurgeAlignment alignment,
     }
     else
     {
-        // 父容器为 Row：主轴水平 → margin auto，交叉轴垂直 → alignSelf
         YGNodeStyleSetAlignSelf(node, vert);
         if (horiz == YGAlignCenter)
         {
@@ -158,6 +133,12 @@ void OMDemiurgeNode::syncStyle()
     YGNodeStyleSetPositionType(yogaNode, style.position == Absolute ? YGPositionTypeAbsolute : YGPositionTypeRelative);
 
     applyAlignment(yogaNode, style.alignment);
+
+    YGNodeStyleSetPosition(yogaNode, YGEdgeTop, style.offsety);
+    YGNodeStyleSetPosition(yogaNode, YGEdgeLeft, style.offsetx);
+
+    YGNodeStyleSetFlexDirection(yogaNode, YGFlexDirectionRow);
+    YGNodeStyleSetFlexWrap(yogaNode, YGWrapWrap);
 }
 void OMDemiurgeNode::layout(float width, float height)
 {
