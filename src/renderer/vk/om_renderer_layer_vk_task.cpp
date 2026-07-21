@@ -90,6 +90,9 @@ void OMRendererTaskVk::bindIndexBuffer(common::OMRendererBuffer *buffer)
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.task"));
     }
 }
+void OMRendererTaskVk::clear()
+{
+}
 void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
 {
     try

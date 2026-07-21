@@ -18,6 +18,7 @@ class OMRendererTaskVk : public common::OMRendererTask
     void bindTarget(common::OMRendererRenderTarget *target) override;
     void draw(uint64_t vertexCount) override;
     void finish() override;
+    void clear() override;
 
     auto isOnDefault() -> bool;
 

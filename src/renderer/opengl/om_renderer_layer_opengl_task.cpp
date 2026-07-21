@@ -108,13 +108,17 @@ void OMRendererTaskOpenGL::bindIndexBuffer(common::OMRendererBuffer *buffer)
 {
     gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, reinterpret_cast<OMRendererBufferOpenGL *>(buffer)->buffer);
 }
+void OMRendererTaskOpenGL::clear()
+{
+    ops.push_back({Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
+}
 void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
 {
     this->framebuffer = reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer;
     ops.push_back(
         {BindFramebuffer, GL_FRAMEBUFFER, reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer});
-    ops.push_back({Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
     ops.push_back({Disable, GL_CULL_FACE});
+    ops.push_back({Enable, GL_FRAMEBUFFER_SRGB});
 }
 void OMRendererTaskOpenGL::draw(uint64_t vertexCount)
 {
@@ -144,6 +148,9 @@ void OMRendererTaskOpenGL::execute()
             break;
         case Disable:
             gl->glDisable(op.args[0]);
+            break;
+        case Enable:
+            gl->glEnable(op.args[0]);
             break;
         case BindBufferBase:
             gl->glBindBufferBase(op.args[0], op.args[1], op.args[2]);

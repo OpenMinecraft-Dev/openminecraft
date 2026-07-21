@@ -18,6 +18,7 @@ enum OMRendererOpType
     BindFramebuffer,
     Clear,
     Disable,
+    Enable,
     BindVertexArray,
     BindBufferBase,
     ActiveTexture,
@@ -57,6 +58,7 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     void bindTarget(common::OMRendererRenderTarget *target) override;
     void draw(uint64_t vertexCount) override;
     void finish() override;
+    void clear() override;
 
     void execute();
 

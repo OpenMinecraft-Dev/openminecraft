@@ -36,11 +36,13 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
 
     // INFO: 4 vertices and 6 vertex indices to render a texture to the screen
+    glm::vec4 colr1 = {0.17254901960784313, 0.17254901960784313, 0.20392156862745098, 1};
+    glm::vec4 colr2 = {0, 0.8313725490196079, 1, 1};
     std::array<ColoredVertex, 4> vtxs = {{
-        {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 0.5f, 1.0f}},
-        {{-1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.5f, 1.0f}},
-        {{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.5f, 1.0f}},
-        {{1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 0.5f, 1.0f}},
+        {{-1.0f, -1.0f, 0.0f}, colr1},
+        {{-1.0f, 1.0f, 0.0f}, colr1},
+        {{1.0f, 1.0f, 0.0f}, colr1},
+        {{1.0f, -1.0f, 0.0f}, colr1},
     }};
     std::array<uint32_t, 6> vtxi = {0, 1, 2, 2, 3, 0};
     mainVtxBuffer->updateData(vtxs.data());
@@ -64,7 +66,9 @@ OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
 void OMDemiurgeRendererHandler::submitTasks()
 {
     auto task = renderer->createTask()
+                    ->dependOn(renderer->fetchTask("main"))
                     ->target(renderer->getDefaultRenderTarget())
+                    ->clearN()
                     ->pipeline(uiPipeline)
                     ->vertexBuffer({mainVtxBuffer})
                     ->indexBuffer(mainIdxBuffer)
