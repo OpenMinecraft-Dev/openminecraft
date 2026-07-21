@@ -28,7 +28,21 @@ static auto fromCommon(common::OMTextureArrangement arr) -> GLenum
     default:
         return GL_RGBA;
     case common::Depth:
-        return GL_DEPTH24_STENCIL8;
+        return GL_DEPTH_COMPONENT32F;
+    }
+}
+
+static auto fromCommonI(common::OMTextureArrangement arr) -> GLenum
+{
+    switch (arr)
+    {
+    case common::ColorRgb:
+        return GL_SRGB8;
+    case common::ColorRgba:
+    default:
+        return GL_SRGB8_ALPHA8;
+    case common::Depth:
+        return GL_DEPTH_COMPONENT32F;
     }
 }
 
@@ -69,7 +83,7 @@ OMRendererTextureOpenGL::~OMRendererTextureOpenGL()
 void OMRendererTextureOpenGL::updateData(void *d)
 {
     gl->glBindTexture(fromCommon(type), texture);
-    gl->glTexImage2D(fromCommon(type), 0, fromCommon(arr), width, height, 0, fromCommon(arr), GL_UNSIGNED_BYTE, d);
+    gl->glTexImage2D(fromCommon(type), 0, fromCommonI(arr), width, height, 0, fromCommon(arr), GL_UNSIGNED_BYTE, d);
     gl->glBindTexture(fromCommon(type), 0);
 }
 } // namespace openminecraft::renderer::opengl
