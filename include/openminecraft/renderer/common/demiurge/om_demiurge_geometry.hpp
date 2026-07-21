@@ -16,6 +16,18 @@ enum OMDemiurgePosition
     Relative,
     Absolute
 };
+enum OMDemiurgeAlignment
+{
+    TopLeft,
+    TopCenter,
+    TopRight,
+    CenterLeft,
+    Center,
+    CenterRight,
+    BottomLeft,
+    BottomCenter,
+    BottomRight
+};
 struct OMDemiurgeSize
 {
     enum Unit

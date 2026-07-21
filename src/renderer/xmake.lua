@@ -1,6 +1,6 @@
 target("openminecraft-renderer")
 set_kind("static")
-add_deps("openminecraft-mem")
+add_deps("openminecraft-mem", "openminecraft-ext-yoga")
 add_packages("shaderc", "glm", "fmt", "boost", "vulkan-hpp", "libsdl3", "tinyobjloader", "opengl-headers", "yoga")
 add_files("**.cpp")
 add_includedirs("../../include")

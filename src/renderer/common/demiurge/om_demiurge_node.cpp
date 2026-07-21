@@ -4,4 +4,7 @@ namespace openminecraft::renderer::common::demiurge
 {
 OMDemiurgeNode::OMDemiurgeNode() = default;
 OMDemiurgeNode::~OMDemiurgeNode() = default;
+void OMDemiurgeNode::layout()
+{
+}
 } // namespace openminecraft::renderer::common::demiurge

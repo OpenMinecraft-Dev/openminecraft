@@ -7,12 +7,11 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/om_renderer_window.hpp"
 #include "openminecraft/specs/abstracts/om_image.hpp"
-#include "openminecraft/specs/classfile/om_classfile.hpp"
 #include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
-#include "openminecraft/specs/zip/om_zip.hpp"
 #include "openminecraft/util/om_util_ticker.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
@@ -24,6 +23,8 @@
 #include <memory>
 #include <sstream>
 #include <string>
+
+#include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
@@ -128,6 +129,17 @@ auto boot(std::vector<std::string> args) -> int
         auto obj = bld.build();
 
         logger->info("object at {}", reinterpret_cast<void *>(obj.get()));
+        break;
+    }
+    case "layout"_hash: {
+        using namespace openminecraft::renderer::common::demiurge;
+        auto root = std::make_shared<OMDemiurgeNode>();
+        root->style.width = OMDemiurgeSize::pixels(800);
+        root->style.height = OMDemiurgeSize::pixels(600);
+        auto chd1 = std::make_shared<OMDemiurgeNode>();
+        root->mount(chd1);
+
+        root->layout();
         break;
     }
     default:
