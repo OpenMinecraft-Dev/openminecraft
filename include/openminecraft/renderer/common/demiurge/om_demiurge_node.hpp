@@ -37,101 +37,6 @@ static void setSizeToYoga(YGNodeRef node, OMDemiurgeSize size, bool isWidth)
     }
 }
 
-static void applyAlignment(YGNodeRef node, OMDemiurgeAlignment alignment,
-                           YGFlexDirection parentDirection = YGFlexDirectionColumn)
-{
-    if (alignment == None)
-    {
-        YGNodeStyleSetAlignSelf(node, YGAlignAuto);
-        return;
-    }
-    YGAlign horiz = YGAlignFlexStart;
-    YGAlign vert = YGAlignFlexStart;
-
-    switch (alignment)
-    {
-    case TopLeft:
-        horiz = YGAlignFlexStart;
-        vert = YGAlignFlexStart;
-        break;
-    case TopCenter:
-        horiz = YGAlignCenter;
-        vert = YGAlignFlexStart;
-        break;
-    case TopRight:
-        horiz = YGAlignFlexEnd;
-        vert = YGAlignFlexStart;
-        break;
-    case CenterLeft:
-        horiz = YGAlignFlexStart;
-        vert = YGAlignCenter;
-        break;
-    case Center:
-        horiz = YGAlignCenter;
-        vert = YGAlignCenter;
-        break;
-    case CenterRight:
-        horiz = YGAlignFlexEnd;
-        vert = YGAlignCenter;
-        break;
-    case BottomLeft:
-        horiz = YGAlignFlexStart;
-        vert = YGAlignFlexEnd;
-        break;
-    case BottomCenter:
-        horiz = YGAlignCenter;
-        vert = YGAlignFlexEnd;
-        break;
-    case BottomRight:
-        horiz = YGAlignFlexEnd;
-        vert = YGAlignFlexEnd;
-        break;
-    case None:
-        break;
-    }
-
-    bool isColumn = (parentDirection == YGFlexDirectionColumn || parentDirection == YGFlexDirectionColumnReverse);
-
-    if (isColumn)
-    {
-        YGNodeStyleSetAlignSelf(node, horiz);
-        if (vert == YGAlignCenter)
-        {
-            YGNodeStyleSetMarginAuto(node, YGEdgeTop);
-            YGNodeStyleSetMarginAuto(node, YGEdgeBottom);
-        }
-        else if (vert == YGAlignFlexEnd)
-        {
-            YGNodeStyleSetMarginAuto(node, YGEdgeTop);
-            YGNodeStyleSetMargin(node, YGEdgeBottom, 0);
-        }
-        else
-        {
-            YGNodeStyleSetMargin(node, YGEdgeTop, 0);
-            YGNodeStyleSetMargin(node, YGEdgeBottom, 0);
-        }
-    }
-    else
-    {
-        YGNodeStyleSetAlignSelf(node, vert);
-        if (horiz == YGAlignCenter)
-        {
-            YGNodeStyleSetMarginAuto(node, YGEdgeLeft);
-            YGNodeStyleSetMarginAuto(node, YGEdgeRight);
-        }
-        else if (horiz == YGAlignFlexEnd)
-        {
-            YGNodeStyleSetMarginAuto(node, YGEdgeLeft);
-            YGNodeStyleSetMargin(node, YGEdgeRight, 0);
-        }
-        else
-        {
-            YGNodeStyleSetMargin(node, YGEdgeLeft, 0);
-            YGNodeStyleSetMargin(node, YGEdgeRight, 0);
-        }
-    }
-}
-
 class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
 {
   public:
@@ -144,9 +49,10 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         float minHeight = 0;
         float maxHeight = 1e308;
 
-        OMDemiurgeEdgeInsets margin = {}, padding = {}, border = {};
+        OMDemiurgeSize marginTop = {}, marginBottom = {}, marginLeft = {}, marginRight = {};
+
+        OMDemiurgeEdgeInsets padding = {}, border = {};
         OMDemiurgePosition position = Relative;
-        OMDemiurgeAlignment alignment = None;
 
         float offsetx = 0;
         float offsety = 0;
@@ -157,9 +63,55 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         float flexGrow;
         float flexShrink;
 
-        // TODO: JustifyContent, AlignItems, AlignContent
+        OMDemiurgeAlign alignItems;
+        OMDemiurgeAlign alignContent;
+        OMDemiurgeAlign justifyContent;
         OMDemiurgeSize flexGap;
+        OMDemiurgeSize flexBasis;
+
+        OMDemiurgeAlign alignSelf;
     } style;
+    inline auto alignItems(OMDemiurgeAlign a) -> std::shared_ptr<OMDemiurgeNode>
+    {
+        style.alignItems = a;
+        YGNodeStyleSetAlignItems(yogaNode, toYGAlign(a));
+        return shared_from_this();
+    }
+    inline auto alignContent(OMDemiurgeAlign a) -> std::shared_ptr<OMDemiurgeNode>
+    {
+        style.alignContent = a;
+        YGNodeStyleSetAlignContent(yogaNode, toYGAlign(a));
+        return shared_from_this();
+    }
+    inline auto justifyContent(OMDemiurgeAlign a) -> std::shared_ptr<OMDemiurgeNode>
+    {
+        style.justifyContent = a;
+        YGNodeStyleSetJustifyContent(yogaNode, toYGJustify(a));
+        return shared_from_this();
+    }
+    inline auto alignSelf(OMDemiurgeAlign a) -> std::shared_ptr<OMDemiurgeNode>
+    {
+        style.alignSelf = a;
+        YGNodeStyleSetAlignSelf(yogaNode, toYGAlign(a));
+        return shared_from_this();
+    }
+    inline auto flexBasis(OMDemiurgeSize s) -> std::shared_ptr<OMDemiurgeNode>
+    {
+        style.flexBasis = s;
+        switch (s.unit)
+        {
+        case OMDemiurgeSize::Pixel:
+            YGNodeStyleSetFlexBasis(yogaNode, s.value);
+            break;
+        case OMDemiurgeSize::Percent:
+            YGNodeStyleSetFlexBasisPercent(yogaNode, s.value * 100.0f);
+            break;
+        default:
+            YGNodeStyleSetFlexBasisAuto(yogaNode);
+            break;
+        }
+        return shared_from_this();
+    }
     inline auto flexRatio(float grow, float shrink) -> std::shared_ptr<OMDemiurgeNode>
     {
         style.flexGrow = grow;
@@ -184,28 +136,19 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     inline auto flexWrap(OMDemiurgeWrap w) -> std::shared_ptr<OMDemiurgeNode>
     {
         style.flexWrap = w;
-        YGNodeStyleSetFlexWrap(yogaNode, w == Wrap ? YGWrapWrap : YGWrapNoWrap);
-
+        YGNodeStyleSetFlexWrap(yogaNode, toYGWrap(w));
         return shared_from_this();
     }
     inline auto flexDirection(OMDemiurgeDirection d) -> std::shared_ptr<OMDemiurgeNode>
     {
         style.flexDirection = d;
-        YGNodeStyleSetFlexDirection(yogaNode, d == Row ? YGFlexDirectionRow : YGFlexDirectionColumn);
-
+        YGNodeStyleSetFlexDirection(yogaNode, toYGDirection(d));
         return shared_from_this();
     }
     inline auto position(OMDemiurgePosition p) -> std::shared_ptr<OMDemiurgeNode>
     {
         style.position = p;
         YGNodeStyleSetPositionType(yogaNode, p == Absolute ? YGPositionTypeAbsolute : YGPositionTypeRelative);
-
-        return shared_from_this();
-    }
-    inline auto alignment(OMDemiurgeAlignment a) -> std::shared_ptr<OMDemiurgeNode>
-    {
-        style.alignment = a;
-        applyAlignment(yogaNode, a);
 
         return shared_from_this();
     }
@@ -230,7 +173,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     }
     inline auto padding(OMDemiurgeEdgeInsets insets) -> std::shared_ptr<OMDemiurgeNode>
     {
-        style.margin = insets;
+        style.padding = insets;
         YGNodeStyleSetPadding(yogaNode, YGEdgeTop, insets.top);
         YGNodeStyleSetPadding(yogaNode, YGEdgeBottom, insets.bottom);
         YGNodeStyleSetPadding(yogaNode, YGEdgeLeft, insets.left);
@@ -238,13 +181,32 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
 
         return shared_from_this();
     }
-    inline auto margin(OMDemiurgeEdgeInsets insets) -> std::shared_ptr<OMDemiurgeNode>
+    inline auto margin(OMDemiurgeSize top, OMDemiurgeSize bottom, OMDemiurgeSize left, OMDemiurgeSize right)
+        -> std::shared_ptr<OMDemiurgeNode>
     {
-        style.margin = insets;
-        YGNodeStyleSetMargin(yogaNode, YGEdgeTop, insets.top);
-        YGNodeStyleSetMargin(yogaNode, YGEdgeBottom, insets.bottom);
-        YGNodeStyleSetMargin(yogaNode, YGEdgeLeft, insets.left);
-        YGNodeStyleSetMargin(yogaNode, YGEdgeRight, insets.right);
+        style.marginTop = top;
+        style.marginBottom = bottom;
+        style.marginLeft = left;
+        style.marginRight = right;
+
+#define update(source, type)                                                                                           \
+    switch (source.unit)                                                                                               \
+    {                                                                                                                  \
+    case OMDemiurgeSize::Pixel:                                                                                        \
+        YGNodeStyleSetMargin(yogaNode, YGEdge##type, source.value);                                                    \
+        break;                                                                                                         \
+    case OMDemiurgeSize::Percent:                                                                                      \
+        YGNodeStyleSetMarginPercent(yogaNode, YGEdge##type, source.value * 100.0f);                                    \
+        break;                                                                                                         \
+    default:                                                                                                           \
+        YGNodeStyleSetMarginAuto(yogaNode, YGEdge##type);                                                              \
+        break;                                                                                                         \
+    }
+
+        update(top, Top);
+        update(bottom, Bottom);
+        update(left, Left);
+        update(right, Right);
 
         return shared_from_this();
     }

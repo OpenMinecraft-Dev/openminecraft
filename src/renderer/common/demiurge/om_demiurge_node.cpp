@@ -1,14 +1,11 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "yoga/YGNode.h"
-#include "yoga/YGNodeStyle.h"
 
 namespace openminecraft::renderer::common::demiurge
 {
 OMDemiurgeNode::OMDemiurgeNode()
 {
     yogaNode = YGNodeNew();
-    YGNodeStyleSetAlignContent(yogaNode, YGAlignStretch);
-    YGNodeStyleSetJustifyContent(yogaNode, YGJustifySpaceAround);
 }
 OMDemiurgeNode::~OMDemiurgeNode()
 {
