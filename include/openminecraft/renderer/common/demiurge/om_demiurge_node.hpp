@@ -3,9 +3,9 @@
 
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include <algorithm>
-#include <limits>
 #include <memory>
 #include <vector>
+#include "yoga/Yoga.h"
 
 namespace openminecraft::renderer::common::demiurge
 {
@@ -17,9 +17,9 @@ class OMDemiurgeNode
         OMDemiurgeSize width{OMDemiurgeSize::fill()};
         OMDemiurgeSize height{OMDemiurgeSize::fill()};
         float minWidth = 0;
-        float maxWidth = std::numeric_limits<float>::max();
+        float maxWidth = 1e308;
         float minHeight = 0;
-        float maxHeight = std::numeric_limits<float>::max();
+        float maxHeight = 1e308;
 
         OMDemiurgeEdgeInsets margin = {}, padding = {}, border = {};
         OMDemiurgePosition position = Relative;
@@ -50,10 +50,11 @@ class OMDemiurgeNode
         }
     }
 
+    void syncStyle();
     void layout();
 
   private:
-    // YGNodeRef yogaNode;
+    YGNodeRef yogaNode;
     OMDemiurgeNode *parent = nullptr;
     std::vector<std::shared_ptr<OMDemiurgeNode>> children;
 };

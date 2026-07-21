@@ -5,9 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#include "event.h"
 #include <atomic>
 #include <memory>
+#include "yoga/event/event.h"
+#include <functional>
 
 namespace facebook::yoga {
 
