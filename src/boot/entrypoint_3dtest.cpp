@@ -4,6 +4,7 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/om_renderer_window.hpp"
 #include "openminecraft/util/om_util_version.hpp"
+#include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
 #include <array>
 #include <memory>
 #include <thread>
@@ -20,7 +21,9 @@ void rendererTest(renderer::OMBackend backend)
         renderer::OMWindow win({util::Version(3, 3, 0, 0), util::Version(1, 2, 0, 0)}, conf);
 
         auto hnd = std::make_shared<test::OMTestRenderer>(win());
+        auto hnd2 = std::make_shared<renderer::common::demiurge::OMDemiurgeRendererHandler>(win());
         win()->registerHandler(hnd);
+        win()->registerHandler(hnd2);
         win()->baseInit();
 
         logger->info("driver: {}", win()->driver());
@@ -47,6 +50,7 @@ void rendererTest(renderer::OMBackend backend)
 
         t.join();
         hnd = nullptr;
+        hnd2 = nullptr;
     }
     catch (std::runtime_error &e)
     {

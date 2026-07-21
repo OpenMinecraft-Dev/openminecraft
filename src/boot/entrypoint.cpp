@@ -157,6 +157,15 @@ auto boot(std::vector<std::string> args) -> int
             auto ll = n->boundary();
             logger->warn("{} {} {} {}", ll.x, ll.y, ll.width, ll.height);
         }
+        logger->debug("----------------------");
+        root->flexWrap(NoWrap);
+        root->layout(800, 600);
+
+        for (auto n : chds)
+        {
+            auto ll = n->boundary();
+            logger->warn("{} {} {} {}", ll.x, ll.y, ll.width, ll.height);
+        }
         break;
     }
     default:

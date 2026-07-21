@@ -32,8 +32,12 @@ OMRendererPipelineVk::~OMRendererPipelineVk()
             {
                 renderer->logicalDevice.destroySampler(smp, renderer->allocator);
             }
-            renderer->logicalDevice.freeDescriptorSets(descriptorPool, descriptorSet);
-            renderer->logicalDevice.destroyDescriptorPool(descriptorPool, renderer->allocator);
+
+            if (descriptorPool || descriptorSet)
+            {
+                renderer->logicalDevice.freeDescriptorSets(descriptorPool, descriptorSet);
+                renderer->logicalDevice.destroyDescriptorPool(descriptorPool, renderer->allocator);
+            }
             renderer->logicalDevice.destroyDescriptorSetLayout(descriptorSetLayout, renderer->allocator);
             renderer->logicalDevice.destroyPipeline(pipeline, renderer->allocator);
             renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
@@ -236,11 +240,15 @@ void OMRendererPipelineVk::build()
         descriptorSetLayout = renderer->logicalDevice.createDescriptorSetLayout(
             DescriptorSetLayoutCreateInfo({}, descriptorSetLayoutBindings), renderer->allocator);
 
-        descriptorPool = renderer->logicalDevice.createDescriptorPool(
-            DescriptorPoolCreateInfo(DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
-                                     descriptorSetLayoutBindings.size(), descriptorPoolSizes),
-            renderer->allocator);
-        descriptorSet = renderer->logicalDevice.allocateDescriptorSets({descriptorPool, 1, &descriptorSetLayout})[0];
+        if (descriptorSetLayoutBindings.size() > 0)
+        {
+            descriptorPool = renderer->logicalDevice.createDescriptorPool(
+                DescriptorPoolCreateInfo(DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
+                                         descriptorSetLayoutBindings.size(), descriptorPoolSizes),
+                renderer->allocator);
+            descriptorSet =
+                renderer->logicalDevice.allocateDescriptorSets({descriptorPool, 1, &descriptorSetLayout})[0];
+        }
 
         pipelineLayout = renderer->logicalDevice.createPipelineLayout(PipelineLayoutCreateInfo({}, descriptorSetLayout),
                                                                       renderer->allocator);
@@ -277,8 +285,11 @@ void OMRendererPipelineVk::build()
         renderer->allocator);
     if (result.result != Result::eSuccess)
     {
-        renderer->logicalDevice.freeDescriptorSets(descriptorPool, descriptorSet);
-        renderer->logicalDevice.destroyDescriptorPool(descriptorPool, renderer->allocator);
+        if (descriptorPool || descriptorSet)
+        {
+            renderer->logicalDevice.freeDescriptorSets(descriptorPool, descriptorSet);
+            renderer->logicalDevice.destroyDescriptorPool(descriptorPool, renderer->allocator);
+        }
         renderer->logicalDevice.destroyDescriptorSetLayout(descriptorSetLayout, renderer->allocator);
         renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
         throw OMRendererException(

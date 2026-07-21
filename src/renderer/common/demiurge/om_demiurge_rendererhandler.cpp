@@ -1,0 +1,81 @@
+#include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
+#include "glm/glm.hpp"
+#include "openminecraft/renderer/om_renderer_layer.hpp"
+#include <iostream>
+#include <memory>
+#include "openminecraft/vfs/om_vfs_base.hpp"
+#include "openminecraft/io/om_io_utils.hpp"
+
+namespace openminecraft::renderer::common::demiurge
+{
+struct ColoredVertex
+{
+    glm::vec3 pos;
+    glm::vec4 color;
+};
+OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
+    : renderer(renderer), OMRendererHandler(renderer)
+{
+    node = std::make_shared<OMDemiurgeNode>();
+
+#define shaderDef(name, filename, type)                                                                                \
+    {                                                                                                                  \
+        auto target = vfs::fsfetch(fmt::format("/bootassets/openminecraft-renderer/shaders/{}", filename));            \
+        name = std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), filename, "main", type);             \
+    }
+    shaderDef(vtxShader, "plainbase.vert.glsl", Vertex);
+    shaderDef(frgShader, "plainbase.frag.glsl", Fragment);
+
+    format.appendPart("position", basics::Vec3f);
+    format.appendPart("color", basics::Vec4f);
+    format.nextGroup();
+    format.decideStruct();
+    format.debugState();
+
+    mainVtxBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(ColoredVertex));
+    mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
+
+    // INFO: 4 vertices and 6 vertex indices to render a texture to the screen
+    std::array<ColoredVertex, 4> vtxs = {{
+        {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 0.5f, 1.0f}},
+        {{-1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.5f, 1.0f}},
+        {{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.5f, 1.0f}},
+        {{1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 0.5f, 1.0f}},
+    }};
+    std::array<uint32_t, 6> vtxi = {0, 1, 2, 2, 3, 0};
+    mainVtxBuffer->updateData(vtxs.data());
+    mainIdxBuffer->updateData(vtxi.data());
+
+    uiPipeline = renderer->createPipeline()
+                     ->output(renderer->getDefaultRenderTarget())
+                     ->shader(frgShader)
+                     ->shader(vtxShader)
+                     ->format(format)
+                     ->buildN();
+}
+
+OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
+{
+    delete uiPipeline;
+    delete mainVtxBuffer;
+    delete mainIdxBuffer;
+}
+
+void OMDemiurgeRendererHandler::submitTasks()
+{
+    auto task = renderer->createTask()
+                    ->target(renderer->getDefaultRenderTarget())
+                    ->pipeline(uiPipeline)
+                    ->vertexBuffer({mainVtxBuffer})
+                    ->indexBuffer(mainIdxBuffer)
+                    ->drawN(6)
+                    ->finishN();
+    renderer->registerTask("demiurgeui_test", task);
+}
+void OMDemiurgeRendererHandler::beforeFrame()
+{
+}
+void OMDemiurgeRendererHandler::afterFrame()
+{
+}
+} // namespace openminecraft::renderer::common::demiurge

@@ -49,9 +49,12 @@ void OMRendererTaskVk::bindPipeline(common::OMRendererPipeline *pipeline)
     {
         commandBuffer.bindPipeline(PipelineBindPoint::eGraphics,
                                    reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getPipeline());
-        commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics,
-                                         reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getPipelineLayout(), 0,
-                                         reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getDescSet(), nullptr);
+        if (reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getDescSet())
+        {
+            commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics,
+                                             reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getPipelineLayout(), 0,
+                                             reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getDescSet(), nullptr);
+        }
     }
     catch (SystemError &e)
     {
