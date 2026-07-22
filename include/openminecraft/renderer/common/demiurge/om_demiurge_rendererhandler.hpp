@@ -8,6 +8,7 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include <vector>
 namespace openminecraft::renderer::common::demiurge
 {
 class OMDemiurgeRendererHandler : public OMRendererHandler
@@ -21,15 +22,15 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     void afterFrame() override;
 
     std::shared_ptr<OMDemiurgeNode> node;
+    std::vector<std::shared_ptr<OMDemiurgeNode>> chds;
 
     std::shared_ptr<OMShader> vtxShader, frgShader;
     OMRendererPipeline *uiPipeline;
-    OMRendererBuffer *mainVtxBuffer;
-    OMRendererBuffer *mainIdxBuffer;
+    OMRendererBuffer *uniformBuffer;
+    OMRenderer *renderer;
 
   private:
     basics::OMVertexFormat format;
-    OMRenderer *renderer;
 };
 } // namespace openminecraft::renderer::common::demiurge
 

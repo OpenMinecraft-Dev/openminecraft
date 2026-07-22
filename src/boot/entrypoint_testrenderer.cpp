@@ -56,7 +56,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
 
         for (auto &v : glyph->vertices)
         {
-            vertices.push_back({{v.x, v.y, 0.0f}, {v.x, v.y}});
+            vertices.push_back(VertexStruct{{v.x, v.y, 0.0f}, {v.x, v.y}});
         }
 
         for (auto i : glyph->indices)
@@ -74,9 +74,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
         indexBuffer->updateData(indices.data());
 
         vertexCount = indices.size();
-    }
 
-    {
         mainVtxBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(VertexStruct));
         mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
 

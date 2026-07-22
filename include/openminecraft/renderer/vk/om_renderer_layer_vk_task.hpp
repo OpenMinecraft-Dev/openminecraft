@@ -27,6 +27,7 @@ class OMRendererTaskVk : public common::OMRendererTask
   private:
     OMRendererVk *renderer;
     bool isDefault = false;
+    bool begin = false;
 };
 }; // namespace openminecraft::renderer::vk
 

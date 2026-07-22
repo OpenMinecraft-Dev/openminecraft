@@ -2,6 +2,8 @@
 #define OM_DEMIURGE_NODE_HPP
 
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
+#include "openminecraft/renderer/common/om_renderer_task.hpp"
+#include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "yoga/YGNode.h"
 #include "yoga/YGNodeLayout.h"
 #include "yoga/YGNodeStyle.h"
@@ -12,6 +14,7 @@
 
 namespace openminecraft::renderer::common::demiurge
 {
+class OMDemiurgeRendererHandler;
 static void setSizeToYoga(YGNodeRef node, OMDemiurgeSize size, bool isWidth)
 {
     switch (size.unit)
@@ -256,7 +259,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     OMDemiurgeNode();
     ~OMDemiurgeNode();
 
-    inline void mount(std::shared_ptr<OMDemiurgeNode> child)
+    virtual void mount(std::shared_ptr<OMDemiurgeNode> child)
     {
         child->parent = this;
         children.push_back(child);
@@ -264,7 +267,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         YGNodeInsertChild(yogaNode, child->yogaNode, children.size() - 1);
     }
 
-    inline void umount(std::shared_ptr<OMDemiurgeNode> child)
+    virtual void umount(std::shared_ptr<OMDemiurgeNode> child)
     {
         auto f = std::find(children.begin(), children.end(), child);
         if (f != children.end())
@@ -282,6 +285,8 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         return {YGNodeLayoutGetLeft(yogaNode), YGNodeLayoutGetTop(yogaNode), YGNodeLayoutGetWidth(yogaNode),
                 YGNodeLayoutGetHeight(yogaNode)};
     }
+
+    virtual auto render(OMRendererTask *, OMDemiurgeRendererHandler *) -> void = 0;
 
   private:
     YGNodeRef yogaNode;

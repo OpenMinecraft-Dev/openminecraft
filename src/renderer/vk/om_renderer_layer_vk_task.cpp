@@ -105,8 +105,14 @@ void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
         if (isDefault)
         {
             auto ii = CommandBufferInheritanceInfo(reinterpret_cast<OMRendererRenderTargetVk *>(target)->renderPass);
-            commandBuffer.begin(
-                {CommandBufferUsageFlagBits::eSimultaneousUse | CommandBufferUsageFlagBits::eRenderPassContinue, &ii});
+
+            if (!begin)
+            {
+                commandBuffer.begin(
+                    {CommandBufferUsageFlagBits::eSimultaneousUse | CommandBufferUsageFlagBits::eRenderPassContinue,
+                     &ii});
+                begin = true;
+            }
         }
         else
         {
@@ -129,7 +135,11 @@ void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
                 }
             }
 
-            commandBuffer.begin({CommandBufferUsageFlagBits::eSimultaneousUse});
+            if (!begin)
+            {
+                commandBuffer.begin({CommandBufferUsageFlagBits::eSimultaneousUse});
+                begin = true;
+            }
             commandBuffer.beginRenderPass(
                 RenderPassBeginInfo(reinterpret_cast<OMRendererRenderTargetVk *>(target)->renderPass,
                                     reinterpret_cast<OMRendererRenderTargetVk *>(target)->block->framebuffer,
@@ -164,6 +174,7 @@ void OMRendererTaskVk::finish()
             commandBuffer.endRenderPass();
         }
         commandBuffer.end();
+        begin = false;
     }
     catch (SystemError &e)
     {

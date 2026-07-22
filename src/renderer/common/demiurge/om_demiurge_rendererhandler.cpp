@@ -1,23 +1,36 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
+#include "boost/asio/async_result.hpp"
 #include "glm/glm.hpp"
+#include "openminecraft/renderer/common/demiurge/element/om_demiurge_rect.hpp"
+#include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
+#include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include <iostream>
 #include <memory>
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
 
 namespace openminecraft::renderer::common::demiurge
 {
-struct ColoredVertex
+struct SimpleUniform
 {
-    glm::vec3 pos;
-    glm::vec4 color;
+    float width;
+    float height;
 };
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     : renderer(renderer), OMRendererHandler(renderer)
 {
-    node = std::make_shared<OMDemiurgeNode>();
+    node = std::make_shared<element::OMDemiurgeRectElement>()
+               ->flexWrap(OMDemiurgeWrap::Wrap)
+               ->flexDirection(OMDemiurgeDirection::Row);
+    for (int i = 0; i < 4; ++i)
+    {
+        auto d = std::make_shared<element::OMDemiurgeRectElement>()
+                     ->width(OMDemiurgeSize::percent(0.5))
+                     ->height(OMDemiurgeSize::percent(0.5));
+        chds.push_back(d);
+        node->mount(d);
+    }
 
 #define shaderDef(name, filename, type)                                                                                \
     {                                                                                                                  \
@@ -33,53 +46,37 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     format.decideStruct();
     format.debugState();
 
-    mainVtxBuffer = renderer->allocateBuffer(VertexData, 2 * 4 * sizeof(ColoredVertex));
-    mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 2 * 6 * sizeof(uint32_t));
-
-    auto colr1 = genLinear(0x2c2c34ff);
-    auto colr2 = genLinear(0x00d4ffff);
-    // colr1 = genLinear(0xbfff00ff);
-    // colr2 = genLinear(0x222222ff);
-    std::array<ColoredVertex, 8> vtxs = {{
-        {{-1.0f, -1.0f, 0.0f}, colr1},
-        {{-1.0f, 1.0f, 0.0f}, colr1},
-        {{0.0f, 1.0f, 0.0f}, colr1},
-        {{0.0f, -1.0f, 0.0f}, colr1},
-        {{1.0f, -1.0f, 0.0f}, colr2},
-        {{1.0f, 1.0f, 0.0f}, colr2},
-        {{0.0f, 1.0f, 0.0f}, colr2},
-        {{0.0f, -1.0f, 0.0f}, colr2},
-    }};
-    std::array<uint32_t, 12> vtxi = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
-    mainVtxBuffer->updateData(vtxs.data());
-    mainIdxBuffer->updateData(vtxi.data());
+    uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
 
     uiPipeline = renderer->createPipeline()
+                     ->input(UniformBuffer)
                      ->output(renderer->getDefaultRenderTarget())
                      ->shader(frgShader)
                      ->shader(vtxShader)
                      ->format(format)
                      ->buildN();
+    uiPipeline->bindInput(0, uniformBuffer);
 }
-
 OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
 {
+    delete uniformBuffer;
     delete uiPipeline;
-    delete mainVtxBuffer;
-    delete mainIdxBuffer;
 }
 
 void OMDemiurgeRendererHandler::submitTasks()
 {
+    auto ext = renderer->getExtent();
+    node->layout(ext.x, ext.y);
+    SimpleUniform u{ext.x, ext.y};
+    uniformBuffer->updateData(&u);
+
     auto task = renderer->createTask()
                     ->dependOn(renderer->fetchTask("main"))
                     ->target(renderer->getDefaultRenderTarget())
-                    ->pipeline(uiPipeline)
-                    ->vertexBuffer({mainVtxBuffer})
-                    ->indexBuffer(mainIdxBuffer)
-                    ->drawN(12)
-                    ->finishN();
-    renderer->registerTask("demiurgeui_test", task);
+                    ->clearN();
+    node->render(task, this);
+    task->finishN();
+    // renderer->registerTask("demiurgeui_test", task);
 }
 void OMDemiurgeRendererHandler::beforeFrame()
 {

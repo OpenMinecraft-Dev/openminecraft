@@ -133,41 +133,6 @@ auto boot(std::vector<std::string> args) -> int
         logger->info("object at {}", reinterpret_cast<void *>(obj.get()));
         break;
     }
-    case "layout"_hash: {
-        std::random_device rd;
-        std::default_random_engine eng(rd());
-        std::uniform_real_distribution<float> distr(40.0, 100.0);
-
-        using namespace openminecraft::renderer::common::demiurge;
-        auto root = std::make_shared<OMDemiurgeNode>()->flexDirection(Row)->flexWrap(Wrap);
-        std::vector<std::shared_ptr<OMDemiurgeNode>> chds;
-        for (int i = 0; i < 150; ++i)
-        {
-            auto chd1 = std::make_shared<OMDemiurgeNode>()
-                            ->width(OMDemiurgeSize::percent(0.25))
-                            ->height(OMDemiurgeSize::pixels(distr(eng)))
-                            ->border({10, 10, 10, 10});
-            root->mount(chd1);
-            chds.push_back(chd1);
-        }
-        root->layout(800, 600);
-
-        for (auto n : chds)
-        {
-            auto ll = n->boundary();
-            logger->warn("{} {} {} {}", ll.x, ll.y, ll.width, ll.height);
-        }
-        logger->debug("----------------------");
-        root->flexWrap(NoWrap);
-        root->layout(800, 600);
-
-        for (auto n : chds)
-        {
-            auto ll = n->boundary();
-            logger->warn("{} {} {} {}", ll.x, ll.y, ll.width, ll.height);
-        }
-        break;
-    }
     default:
         return 1;
     }
