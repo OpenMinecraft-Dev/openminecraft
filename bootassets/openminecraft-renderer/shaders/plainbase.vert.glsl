@@ -8,5 +8,8 @@ layout(location = 0) out vec4 outColor;
 
 void main() {
     gl_Position = vec4(inPosition, 1.0);
+#ifdef VULKAN
+    gl_Position.y = -gl_Position.y;
+#endif
     outColor = inColor;
 }

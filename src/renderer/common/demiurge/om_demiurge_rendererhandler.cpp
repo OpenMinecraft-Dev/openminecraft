@@ -1,6 +1,8 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
 #include "glm/glm.hpp"
+#include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include <iostream>
 #include <memory>
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
@@ -34,9 +36,12 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     mainVtxBuffer = renderer->allocateBuffer(VertexData, 2 * 4 * sizeof(ColoredVertex));
     mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 2 * 6 * sizeof(uint32_t));
 
-    // INFO: 4 vertices and 6 vertex indices to render a texture to the screen
-    glm::vec4 colr1 = {glm::pow({0.17254901960784313, 0.17254901960784313, 0.20392156862745098}, glm::vec3(2.2)), 1};
-    glm::vec4 colr2 = {glm::pow({0, 0.8313725490196079, 1}, glm::vec3(2.2)), 1};
+    // auto colr1 = srgbToLinear({0.17254901960784313, 0.17254901960784313, 0.20392156862745098, 1});
+    // auto colr2 = srgbToLinear({0, 0.8313725490196079, 1, 1});
+    auto colr1 = genLinear(0x2c2c34ff);
+    auto colr2 = genLinear(0x00d4ffff);
+    // colr1 = genLinear(0xbfff00ff);
+    // colr2 = genLinear(0x222222ff);
     std::array<ColoredVertex, 8> vtxs = {{
         {{-1.0f, -1.0f, 0.0f}, colr1},
         {{-1.0f, 1.0f, 0.0f}, colr1},
