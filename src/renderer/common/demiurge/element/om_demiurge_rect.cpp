@@ -4,6 +4,7 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
+#include <any>
 #include <array>
 
 namespace openminecraft::renderer::common::demiurge::element
@@ -15,6 +16,7 @@ OMDemiurgeRectElement::~OMDemiurgeRectElement()
     {
         delete indexBuffer;
         delete vertexBuffer;
+        delete instanceBuffer;
     }
 }
 
@@ -28,51 +30,38 @@ static int l = 0;
 
 void OMDemiurgeRectElement::render(OMRendererTask *task, OMDemiurgeRendererHandler *handler, float depth)
 {
-    // auto c = colors[l];
     auto c = genLinear(std::any_cast<int>(styles["color"]));
-    l = (l + 1) % colors.size();
     auto bound = boundary();
-    std::array<float, 4 * 7> vtx = {
+    std::array<float, 4 * 3> vtx = {
         bound.x,
         bound.y,
         depth,
-        c.r,
-        c.g,
-        c.b,
-        c.a,
         bound.x + bound.width,
         bound.y,
         depth,
-        c.r,
-        c.g,
-        c.b,
-        c.a,
         bound.x + bound.width,
         bound.y + bound.height,
         depth,
-        c.r,
-        c.g,
-        c.b,
-        c.a,
         bound.x,
         bound.y + bound.height,
         depth,
-        c.r,
-        c.g,
-        c.b,
-        c.a,
     };
     std::array<uint32_t, 6> idx = {0, 1, 2, 2, 3, 0};
     if (!indexBuffer || !vertexBuffer)
     {
         indexBuffer = handler->renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
-        vertexBuffer = handler->renderer->allocateBuffer(VertexData, 7 * 4 * sizeof(float));
+        vertexBuffer = handler->renderer->allocateBuffer(VertexData, 3 * 4 * sizeof(float));
+        instanceBuffer = handler->renderer->allocateBuffer(InstanceData, sizeof(glm::vec4));
     }
 
     indexBuffer->updateData(&idx);
     vertexBuffer->updateData(&vtx);
+    instanceBuffer->updateData(&c);
 
-    task->pipeline(handler->uiPipeline)->vertexBuffer({vertexBuffer})->indexBuffer(indexBuffer)->drawN(6);
+    task->pipeline(handler->uiPipeline)
+        ->vertexBuffer({vertexBuffer, instanceBuffer})
+        ->indexBuffer(indexBuffer)
+        ->drawInstanceN(6, 1);
 
     for (auto c : children)
     {

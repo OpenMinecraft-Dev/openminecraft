@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
 #include "boost/asio/async_result.hpp"
 #include "glm/glm.hpp"
+#include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
@@ -44,7 +45,9 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     shaderDef(frgShader, "plainbase.frag.glsl", Fragment);
 
     format.appendPart("position", basics::Vec3f);
-    format.appendPart("color", basics::Vec4f);
+    format.nextGroup();
+    format.setInstance();
+    format.appendPart("rect_color", basics::Vec4f);
     format.nextGroup();
     format.decideStruct();
     format.debugState();

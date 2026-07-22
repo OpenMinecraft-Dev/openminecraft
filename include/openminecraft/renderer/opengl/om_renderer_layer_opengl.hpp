@@ -70,6 +70,7 @@ struct OMRendererOpenGLFuncs
     PFNGLGETPROGRAMBINARYPROC glGetProgramBinary;
     PFNGLPROGRAMBINARYPROC glProgramBinary;
     PFNGLDRAWELEMENTSINSTANCEDPROC glDrawElementsInstanced;
+    PFNGLVERTEXATTRIBDIVISORPROC glVertexAttribDivisor;
 };
 class OMRendererOpenGL : public OMRenderer
 {

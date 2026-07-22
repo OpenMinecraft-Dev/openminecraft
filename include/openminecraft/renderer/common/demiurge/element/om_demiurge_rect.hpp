@@ -16,6 +16,7 @@ class OMDemiurgeRectElement : public OMDemiurgeNode
   private:
     OMRendererBuffer *vertexBuffer = nullptr;
     OMRendererBuffer *indexBuffer = nullptr;
+    OMRendererBuffer *instanceBuffer = nullptr;
 };
 } // namespace openminecraft::renderer::common::demiurge::element
 

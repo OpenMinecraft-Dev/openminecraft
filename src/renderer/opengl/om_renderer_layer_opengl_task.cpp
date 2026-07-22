@@ -10,6 +10,7 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_rendertarget.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_texture.hpp"
 #include <cstdint>
+#include <iostream>
 #include <utility>
 
 namespace openminecraft::renderer::opengl
@@ -93,9 +94,9 @@ static auto fromCommon(common::basics::OMVertexPropType t) -> std::pair<int, GLu
 
 void OMRendererTaskOpenGL::bindVertexBuffer(std::vector<common::OMRendererBuffer *> buffer)
 {
+    int index = 0;
     for (auto pp : vtxFormat.parts)
     {
-        int index = 0;
         reinterpret_cast<OMRendererBufferOpenGL *>(buffer[pp.binding])->bind();
         for (auto part : pp.parts)
         {
@@ -103,6 +104,10 @@ void OMRendererTaskOpenGL::bindVertexBuffer(std::vector<common::OMRendererBuffer
             gl->glVertexAttribPointer(index, p.first, p.second, GL_FALSE, pp.size,
                                       reinterpret_cast<void *>(std::get<int>(part)));
             gl->glEnableVertexAttribArray(index);
+            if (pp.isInstance)
+            {
+                gl->glVertexAttribDivisor(index, 1);
+            }
             index++;
         }
         reinterpret_cast<OMRendererBufferOpenGL *>(buffer[pp.binding])->unbind();

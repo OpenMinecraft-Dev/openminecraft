@@ -152,11 +152,11 @@ void OMRendererPipelineVk::vertexFormat(common::basics::OMVertexFormat format)
     vertexInputAttrDesc.clear();
     vertexInputBindingDesc.clear();
 
+    uint32_t loc = 0;
     for (auto &p : format.parts)
     {
         vertexInputBindingDesc.emplace_back(static_cast<uint32_t>(p.binding), static_cast<uint32_t>(p.size),
                                             p.isInstance ? VertexInputRate::eInstance : VertexInputRate::eVertex);
-        uint32_t loc = 0;
         for (auto &pp : p.parts)
         {
             vertexInputAttrDesc.emplace_back(loc, static_cast<uint32_t>(p.binding),
