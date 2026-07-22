@@ -1,10 +1,8 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
-#include "boost/asio/async_result.hpp"
 #include "glm/glm.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
-#include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <memory>
@@ -41,8 +39,8 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         auto target = vfs::fsfetch(fmt::format("/bootassets/openminecraft-renderer/shaders/{}", filename));            \
         name = std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), filename, "main", type);             \
     }
-    shaderDef(vtxShader, "plainbase.vert.glsl", Vertex);
-    shaderDef(frgShader, "plainbase.frag.glsl", Fragment);
+    shaderDef(vtxShader, "demiurge/rect.vert.glsl", Vertex);
+    shaderDef(frgShader, "demiurge/rect.frag.glsl", Fragment);
 
     format.appendPart("position", basics::Vec3f);
     format.nextGroup();
