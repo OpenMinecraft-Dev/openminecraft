@@ -86,6 +86,7 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glTexParameteri = fetchGlFunc<PFNGLTEXPARAMETERIPROC>("glTexParameteri");
     gl.glProgramBinary = fetchGlFunc<PFNGLPROGRAMBINARYPROC>("glProgramBinary");
     gl.glGetProgramBinary = fetchGlFunc<PFNGLGETPROGRAMBINARYPROC>("glGetProgramBinary");
+    gl.glDrawElementsInstanced = fetchGlFunc<PFNGLDRAWELEMENTSINSTANCEDPROC>("glDrawElementsInstannced");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()

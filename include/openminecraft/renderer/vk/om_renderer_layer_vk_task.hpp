@@ -17,6 +17,7 @@ class OMRendererTaskVk : public common::OMRendererTask
     void bindIndexBuffer(common::OMRendererBuffer *buffer) override;
     void bindTarget(common::OMRendererRenderTarget *target) override;
     void draw(uint64_t vertexCount) override;
+    void drawInstance(uint64_t vertexCount, uint64_t instanceCount) override;
     void finish() override;
     void clear() override;
 

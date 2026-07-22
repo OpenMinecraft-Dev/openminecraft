@@ -11,7 +11,7 @@ class OMDemiurgeRectElement : public OMDemiurgeNode
     OMDemiurgeRectElement();
     virtual ~OMDemiurgeRectElement();
 
-    auto render(OMRendererTask *, OMDemiurgeRendererHandler *) -> void override;
+    auto render(OMRendererTask *, OMDemiurgeRendererHandler *, float depth) -> void override;
 
   private:
     OMRendererBuffer *vertexBuffer = nullptr;

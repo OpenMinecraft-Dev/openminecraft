@@ -7,6 +7,7 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
 #include <array>
+#include <cstdint>
 #include <vector>
 namespace openminecraft::renderer::opengl
 {
@@ -24,7 +25,8 @@ enum OMRendererOpType
     ActiveTexture,
     BindTexture,
     UseProgram,
-    DrawElements
+    DrawElements,
+    DrawElementsInstanced
 };
 union OMRendererOpenGLArg {
     GLuint i;
@@ -57,6 +59,7 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     void bindIndexBuffer(common::OMRendererBuffer *buffer) override;
     void bindTarget(common::OMRendererRenderTarget *target) override;
     void draw(uint64_t vertexCount) override;
+    void drawInstance(uint64_t vertexCount, uint64_t instanceCount) override;
     void finish() override;
     void clear() override;
 
@@ -65,12 +68,12 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
   private:
     OMRendererOpenGLFuncs *gl;
     OMRendererPipelineOpenGL *pipeline;
-    GLuint vertexArrayObject;
+    // GLuint vertexArrayObject;
+    std::vector<GLuint> vaos;
 
     GLuint program;
     GLuint framebuffer;
     common::basics::OMVertexFormat vtxFormat;
-    uint64_t vtxCount;
 
     std::vector<OMRendererTaskOp> ops;
 };

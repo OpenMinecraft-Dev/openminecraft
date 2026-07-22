@@ -8,7 +8,10 @@
 #include "yoga/YGNodeLayout.h"
 #include "yoga/YGNodeStyle.h"
 #include <algorithm>
+#include <any>
 #include <memory>
+#include <string>
+#include <unordered_map>
 #include <vector>
 #include <yoga/Yoga.h>
 
@@ -286,9 +289,16 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
                 YGNodeLayoutGetHeight(yogaNode)};
     }
 
-    virtual auto render(OMRendererTask *, OMDemiurgeRendererHandler *) -> void = 0;
+    virtual auto render(OMRendererTask *, OMDemiurgeRendererHandler *, float depth) -> void = 0;
 
-  private:
+    inline auto setStyle(std::string s, std::any a) -> std::shared_ptr<OMDemiurgeNode>
+    {
+        styles[s] = a;
+        return shared_from_this();
+    }
+
+  protected:
+    std::unordered_map<std::string, std::any> styles;
     YGNodeRef yogaNode;
     OMDemiurgeNode *parent = nullptr;
     std::vector<std::shared_ptr<OMDemiurgeNode>> children;

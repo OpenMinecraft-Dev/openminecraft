@@ -22,13 +22,16 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
 {
     node = std::make_shared<element::OMDemiurgeRectElement>()
                ->flexWrap(OMDemiurgeWrap::Wrap)
-               ->flexDirection(OMDemiurgeDirection::Row);
+               ->flexDirection(OMDemiurgeDirection::Row)
+               ->setStyle("color", 0x2c2c34ff);
     for (int i = 0; i < 4; ++i)
     {
         auto d = std::make_shared<element::OMDemiurgeRectElement>()
-                     ->width(OMDemiurgeSize::percent(0.5))
-                     ->height(OMDemiurgeSize::percent(0.5));
-        chds.push_back(d);
+                     ->width(OMDemiurgeSize::percent(0.45))
+                     ->height(OMDemiurgeSize::percent(0.45))
+                     ->margin(OMDemiurgeSize::percent(0.025), OMDemiurgeSize::percent(0.025),
+                              OMDemiurgeSize::percent(0.025), OMDemiurgeSize::percent(0.025))
+                     ->setStyle("color", 0x00d4ffff);
         node->mount(d);
     }
 
@@ -74,9 +77,9 @@ void OMDemiurgeRendererHandler::submitTasks()
                     ->dependOn(renderer->fetchTask("main"))
                     ->target(renderer->getDefaultRenderTarget())
                     ->clearN();
-    node->render(task, this);
+    node->render(task, this, 0.9f);
     task->finishN();
-    // renderer->registerTask("demiurgeui_test", task);
+    renderer->registerTask("demiurgeui_test", task);
 }
 void OMDemiurgeRendererHandler::beforeFrame()
 {

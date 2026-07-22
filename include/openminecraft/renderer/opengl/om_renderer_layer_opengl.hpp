@@ -69,6 +69,7 @@ struct OMRendererOpenGLFuncs
     PFNGLTEXPARAMETERIPROC glTexParameteri;
     PFNGLGETPROGRAMBINARYPROC glGetProgramBinary;
     PFNGLPROGRAMBINARYPROC glProgramBinary;
+    PFNGLDRAWELEMENTSINSTANCEDPROC glDrawElementsInstanced;
 };
 class OMRendererOpenGL : public OMRenderer
 {

@@ -9,6 +9,7 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_rendertarget.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_texture.hpp"
+#include <cstdint>
 #include <utility>
 
 namespace openminecraft::renderer::opengl
@@ -16,12 +17,10 @@ namespace openminecraft::renderer::opengl
 OMRendererTaskOpenGL::OMRendererTaskOpenGL(OMRendererOpenGL *renderer) : common::OMRendererTask(renderer)
 {
     this->gl = &renderer->gl;
-    gl->glGenVertexArrays(1, &vertexArrayObject);
-    gl->glBindVertexArray(vertexArrayObject);
 }
 OMRendererTaskOpenGL::~OMRendererTaskOpenGL()
 {
-    gl->glDeleteVertexArrays(1, &vertexArrayObject);
+    gl->glDeleteVertexArrays(vaos.size(), vaos.data());
 }
 
 void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
@@ -30,6 +29,11 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     this->program = glpipe->program;
     vtxFormat = glpipe->format;
     this->pipeline = glpipe;
+
+    GLuint vao;
+    gl->glGenVertexArrays(1, &vao);
+    gl->glBindVertexArray(vao);
+    vaos.push_back(vao);
 
     for (int i = 0; i < glpipe->inputTypes.size(); i++)
     {
@@ -89,9 +93,9 @@ static auto fromCommon(common::basics::OMVertexPropType t) -> std::pair<int, GLu
 
 void OMRendererTaskOpenGL::bindVertexBuffer(std::vector<common::OMRendererBuffer *> buffer)
 {
-    int index = 0;
     for (auto pp : vtxFormat.parts)
     {
+        int index = 0;
         reinterpret_cast<OMRendererBufferOpenGL *>(buffer[pp.binding])->bind();
         for (auto part : pp.parts)
         {
@@ -122,11 +126,22 @@ void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
 }
 void OMRendererTaskOpenGL::draw(uint64_t vertexCount)
 {
-    this->vtxCount = vertexCount;
-    ops.push_back({BindVertexArray, vertexArrayObject});
+    ops.push_back({BindVertexArray, vaos.back()});
     ops.push_back({UseProgram, program});
     ops.push_back({DrawElements, {GL_TRIANGLES, static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT}, {nullptr}});
     ops.push_back({BindVertexArray, 0});
+    gl->glBindVertexArray(0);
+}
+void OMRendererTaskOpenGL::drawInstance(uint64_t vertexCount, uint64_t instanceCount)
+{
+    ops.push_back({BindVertexArray, vaos.back()});
+    ops.push_back({UseProgram, program});
+    ops.push_back(
+        {DrawElementsInstanced,
+         {GL_TRIANGLES, static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT, static_cast<GLuint>(instanceCount)},
+         {nullptr}});
+    ops.push_back({BindVertexArray, 0});
+    gl->glBindVertexArray(0);
 }
 void OMRendererTaskOpenGL::finish()
 {
@@ -169,6 +184,9 @@ void OMRendererTaskOpenGL::execute()
             break;
         case DrawElements:
             gl->glDrawElements(op.args[0], op.args[1], op.args[2], op.ptrArgs[0]);
+            break;
+        case DrawElementsInstanced:
+            gl->glDrawElementsInstanced(op.args[0], op.args[1], op.args[2], op.ptrArgs[0], op.args[3]);
             break;
         }
     }
