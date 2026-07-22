@@ -241,7 +241,6 @@ void OMTestRenderer::submitTasks()
     auto task2 = renderer->createTask()
                      ->dependOn(task)
                      ->target(renderer->getDefaultRenderTarget())
-                     ->clearN()
                      ->pipeline(mainPipeline)
                      ->vertexBuffer({mainVtxBuffer})
                      ->indexBuffer(mainIdxBuffer)
@@ -274,91 +273,88 @@ static bool wk = false, ak = false, sk = false, dk = false, spk = false, lshk = 
 void OMTestRenderer::eventLoop(void *wnd, bool *ar)
 {
     SDL_Event e;
-    SDL_PollEvent(&e);
-
-    if (e.type == SDL_EVENT_KEY_DOWN)
+    while (SDL_PollEvent(&e))
     {
-        if (e.key.key == SDLK_W)
+        switch (e.type)
         {
-            wk = true;
+        case SDL_EVENT_KEY_DOWN:
+            if (e.key.key == SDLK_W)
+            {
+                wk = true;
+            }
+            else if (e.key.key == SDLK_A)
+            {
+                ak = true;
+            }
+            else if (e.key.key == SDLK_S)
+            {
+                sk = true;
+            }
+            else if (e.key.key == SDLK_D)
+            {
+                dk = true;
+            }
+            else if (e.key.key == SDLK_LSHIFT)
+            {
+                lshk = true;
+            }
+            else if (e.key.key == SDLK_SPACE)
+            {
+                spk = true;
+            }
+            else if (e.key.key == SDLK_ESCAPE)
+            {
+                SDL_SetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(wnd), false);
+            }
+            break;
+        case SDL_EVENT_KEY_UP:
+            if (e.key.key == SDLK_W)
+            {
+                wk = false;
+            }
+            else if (e.key.key == SDLK_A)
+            {
+                ak = false;
+            }
+            else if (e.key.key == SDLK_S)
+            {
+                sk = false;
+            }
+            else if (e.key.key == SDLK_D)
+            {
+                dk = false;
+            }
+            else if (e.key.key == SDLK_LSHIFT)
+            {
+                lshk = false;
+            }
+            else if (e.key.key == SDLK_SPACE)
+            {
+                spk = false;
+            }
+            break;
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            SDL_SetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(wnd), true);
+            break;
+        case SDL_EVENT_MOUSE_MOTION: {
+            if (SDL_GetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(wnd)))
+            {
+                int ww, hh;
+                SDL_GetWindowSize(reinterpret_cast<SDL_Window *>(wnd), &ww, &hh);
+                mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
+            }
+            break;
         }
-        else if (e.key.key == SDLK_A)
-        {
-            ak = true;
+        case SDL_EVENT_QUIT:
+            ar[0] = true;
+            return;
+        case SDL_EVENT_WINDOW_RESIZED:
+            ar[1] = true;
+            break;
         }
-        else if (e.key.key == SDLK_S)
-        {
-            sk = true;
-        }
-        else if (e.key.key == SDLK_D)
-        {
-            dk = true;
-        }
-        else if (e.key.key == SDLK_LSHIFT)
-        {
-            lshk = true;
-        }
-        else if (e.key.key == SDLK_SPACE)
-        {
-            spk = true;
-        }
-        else if (e.key.key == SDLK_ESCAPE)
-        {
-            SDL_SetWindowRelativeMouseMode((SDL_Window *)wnd, false);
-        }
-    }
 
-    if (e.type == SDL_EVENT_KEY_UP)
-    {
-        if (e.key.key == SDLK_W)
-        {
-            wk = false;
-        }
-        else if (e.key.key == SDLK_A)
-        {
-            ak = false;
-        }
-        else if (e.key.key == SDLK_S)
-        {
-            sk = false;
-        }
-        else if (e.key.key == SDLK_D)
-        {
-            dk = false;
-        }
-        else if (e.key.key == SDLK_LSHIFT)
-        {
-            lshk = false;
-        }
-        else if (e.key.key == SDLK_SPACE)
-        {
-            spk = false;
-        }
+        keyInput(wk, ak, sk, dk, lshk, spk);
     }
-
-    if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
-    {
-        SDL_SetWindowRelativeMouseMode((SDL_Window *)wnd, true);
-    }
-
-    if (e.type == SDL_EVENT_MOUSE_MOTION && SDL_GetWindowRelativeMouseMode((SDL_Window *)wnd))
-    {
-        int ww, hh;
-        SDL_GetWindowSize((SDL_Window *)wnd, &ww, &hh);
-        mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
-    }
-
-    if (e.type == SDL_EVENT_QUIT)
-    {
-        ar[0] = true;
-    }
-
-    if (e.type == SDL_EVENT_WINDOW_RESIZED)
-    {
-        ar[1] = true;
-    }
-
-    keyInput(wk, ak, sk, dk, lshk, spk);
 }
 
 } // namespace openminecraft::boot::test

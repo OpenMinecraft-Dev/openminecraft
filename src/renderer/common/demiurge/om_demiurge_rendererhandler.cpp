@@ -36,8 +36,6 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     mainVtxBuffer = renderer->allocateBuffer(VertexData, 2 * 4 * sizeof(ColoredVertex));
     mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 2 * 6 * sizeof(uint32_t));
 
-    // auto colr1 = srgbToLinear({0.17254901960784313, 0.17254901960784313, 0.20392156862745098, 1});
-    // auto colr2 = srgbToLinear({0, 0.8313725490196079, 1, 1});
     auto colr1 = genLinear(0x2c2c34ff);
     auto colr2 = genLinear(0x00d4ffff);
     // colr1 = genLinear(0xbfff00ff);
@@ -76,7 +74,6 @@ void OMDemiurgeRendererHandler::submitTasks()
     auto task = renderer->createTask()
                     ->dependOn(renderer->fetchTask("main"))
                     ->target(renderer->getDefaultRenderTarget())
-                    ->clearN()
                     ->pipeline(uiPipeline)
                     ->vertexBuffer({mainVtxBuffer})
                     ->indexBuffer(mainIdxBuffer)

@@ -7,7 +7,7 @@ namespace openminecraft::renderer::common::demiurge
 {
 inline auto srgbToLinear(glm::vec4 c) -> glm::vec4
 {
-    auto s2l = [](float v) {
+    auto s2l = [](float v) -> float {
         if (v <= 0.04045f)
             return v / 12.92f;
         else
@@ -23,7 +23,7 @@ inline auto genLinear(uint8_t r, uint8_t g, uint8_t b, uint8_t a) -> glm::vec4
 
 inline auto genLinear(uint32_t rgba) -> glm::vec4
 {
-    return genLinear((rgba >> 24) & 0xFF, (rgba >> 16) & 0xFF, (rgba >> 8) & 0xFF, rgba & 0xFF);
+    return genLinear((rgba >> 24) & 0xff, (rgba >> 16) & 0xff, (rgba >> 8) & 0xff, rgba & 0xff);
 }
 } // namespace openminecraft::renderer::common::demiurge
 
