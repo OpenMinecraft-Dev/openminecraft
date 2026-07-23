@@ -12,6 +12,14 @@
 #include <vector>
 namespace openminecraft::renderer::common::demiurge
 {
+struct OMDemiurgeIndirect
+{
+    uint32_t indexCount;
+    uint32_t instanceCount;
+    uint32_t firstIndex;
+    int32_t vertexOffset;
+    uint32_t firstInstance;
+};
 class OMDemiurgeRendererHandler : public OMRendererHandler
 {
   public:
@@ -31,6 +39,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     {
         OMRendererBuffer *quadBuffer;
         OMRendererBuffer *quadIndex;
+        OMRendererBuffer *indirectBuffer;
         OMRendererBuffer *instanceBuffer = nullptr;
 
         std::vector<element::OMDemiurgeElementRect> rects = {};

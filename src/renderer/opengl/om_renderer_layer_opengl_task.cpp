@@ -117,6 +117,20 @@ void OMRendererTaskOpenGL::bindIndexBuffer(common::OMRendererBuffer *buffer)
 {
     gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, reinterpret_cast<OMRendererBufferOpenGL *>(buffer)->buffer);
 }
+void OMRendererTaskOpenGL::bindIndirectBuffer(common::OMRendererBuffer *buffer)
+{
+    gl->glBindBuffer(GL_DRAW_INDIRECT_BUFFER, reinterpret_cast<OMRendererBufferOpenGL *>(buffer)->buffer);
+}
+void OMRendererTaskOpenGL::drawIndirect(uint64_t begin, uint64_t count)
+{
+    ops.push_back({BindVertexArray, vaos.back()});
+    ops.push_back({UseProgram, program});
+    ops.push_back({MultiDrawElementsIndirect,
+                   {GL_TRIANGLES, GL_UNSIGNED_INT, static_cast<GLuint>(count), 5 * sizeof(uint32_t)},
+                   {reinterpret_cast<void *>(begin * 5 * sizeof(uint32_t))}});
+    ops.push_back({BindVertexArray, 0});
+    gl->glBindVertexArray(0);
+}
 void OMRendererTaskOpenGL::clear()
 {
     ops.push_back({Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
@@ -192,6 +206,9 @@ void OMRendererTaskOpenGL::execute()
             break;
         case DrawElementsInstanced:
             gl->glDrawElementsInstanced(op.args[0], op.args[1], op.args[2], op.ptrArgs[0], op.args[3]);
+            break;
+        case MultiDrawElementsIndirect:
+            gl->glMultiDrawElementsIndirect(op.args[0], op.args[1], op.ptrArgs[0], op.args[2], op.args[3]);
             break;
         }
     }

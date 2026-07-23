@@ -17,6 +17,7 @@ enum OMBufferUsage
     VertexData,
     InstanceData,
     Uniform,
+    Indirect,
     Misc
 };
 

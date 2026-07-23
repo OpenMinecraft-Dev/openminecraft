@@ -17,6 +17,8 @@ static auto convertFrom(common::OMBufferUsage u) -> GLenum
         return GL_ELEMENT_ARRAY_BUFFER;
     case common::Uniform:
         return GL_UNIFORM_BUFFER;
+    case common::Indirect:
+        return GL_DRAW_INDIRECT_BUFFER;
     default:
         return GL_COPY_WRITE_BUFFER;
     }

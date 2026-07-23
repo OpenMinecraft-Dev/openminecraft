@@ -35,7 +35,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
             {"minHeight", 20.0f},
             {"height", 50_percent},
             {"flexShrink", 0.0f},
-            {"flexGrow", 0.0f},
+            {"flexGrow", 1.0f},
         });
         node->mount(d);
     }
@@ -63,6 +63,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         std::array<glm::vec2, 4>{{{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}}}.data());
     rect.quadIndex = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
     rect.quadIndex->updateData(std::array<uint32_t, 6>{{0, 1, 2, 2, 3, 0}}.data());
+    rect.indirectBuffer = renderer->allocateBuffer(Indirect, sizeof(OMDemiurgeIndirect));
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
 
@@ -77,6 +78,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
 }
 OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
 {
+    delete rect.indirectBuffer;
     delete rect.instanceBuffer;
     delete rect.quadBuffer;
     delete rect.quadIndex;
@@ -87,6 +89,7 @@ OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
 void OMDemiurgeRendererHandler::submitTasks()
 {
     auto ext = renderer->getExtent();
+
     node->layout(ext.x, ext.y);
     node->submit(this, 0.9f);
 
@@ -102,6 +105,9 @@ void OMDemiurgeRendererHandler::submitTasks()
     }
     rect.instanceBuffer->updateData(rect.rects.data());
 
+    OMDemiurgeIndirect i{6, static_cast<uint32_t>(rect.rects.size()), 0, 0, 0};
+    rect.indirectBuffer->updateData(&i);
+
     SimpleUniform u{ext.x, ext.y};
     uniformBuffer->updateData(&u);
 
@@ -112,7 +118,8 @@ void OMDemiurgeRendererHandler::submitTasks()
                     ->pipeline(rect.pipeline)
                     ->vertexBuffer({rect.quadBuffer, rect.instanceBuffer})
                     ->indexBuffer(rect.quadIndex)
-                    ->drawInstanceN(6, rect.rects.size())
+                    ->indirectBuffer(rect.indirectBuffer)
+                    ->drawIndirectN(0, 1)
                     ->finishN();
     renderer->registerTask("demiurgeui_test", task);
 }

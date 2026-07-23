@@ -1,5 +1,6 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_task.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
+#include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
@@ -8,6 +9,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_enums.hpp"
+#include <cstdint>
 #include <vulkan/vulkan.hpp>
 
 using namespace ::vk;
@@ -84,6 +86,23 @@ void OMRendererTaskVk::bindIndexBuffer(common::OMRendererBuffer *buffer)
     try
     {
         commandBuffer.bindIndexBuffer(reinterpret_cast<OMRendererBufferVk *>(buffer)->buffer, 0, IndexType::eUint32);
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.task"));
+    }
+}
+void OMRendererTaskVk::bindIndirectBuffer(common::OMRendererBuffer *buffer)
+{
+    indirectBuffer = buffer;
+}
+void OMRendererTaskVk::drawIndirect(uint64_t begin, uint64_t count)
+{
+    try
+    {
+        commandBuffer.drawIndexedIndirect(reinterpret_cast<OMRendererBufferVk *>(indirectBuffer)->buffer,
+                                          static_cast<DeviceSize>(begin * 5 * sizeof(uint32_t)), count,
+                                          5 * sizeof(uint32_t));
     }
     catch (SystemError &e)
     {

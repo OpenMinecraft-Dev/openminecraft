@@ -1,8 +1,10 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 
 #include "openminecraft/i18n/om_i18n_res.hpp"
+#include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
+#include "vulkan/vulkan_enums.hpp"
 
 using namespace vk;
 using namespace openminecraft::renderer::common;
@@ -55,6 +57,8 @@ static auto mapToUsageFlag(OMBufferUsage usage) -> BufferUsageFlagBits
         return BufferUsageFlagBits::eTransferSrc;
     case Uniform:
         return BufferUsageFlagBits::eUniformBuffer;
+    case Indirect:
+        return BufferUsageFlagBits::eIndirectBuffer;
     }
 }
 

@@ -1,7 +1,6 @@
 #ifndef OM_RENDERER_LAYER_OPENGL_TASK_HPP
 #define OM_RENDERER_LAYER_OPENGL_TASK_HPP
 
-#include "GL/glcorearb.h"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
@@ -26,7 +25,8 @@ enum OMRendererOpType
     BindTexture,
     UseProgram,
     DrawElements,
-    DrawElementsInstanced
+    DrawElementsInstanced,
+    MultiDrawElementsIndirect
 };
 union OMRendererOpenGLArg {
     GLuint i;
@@ -57,9 +57,11 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     void bindPipeline(common::OMRendererPipeline *pipeline) override;
     void bindVertexBuffer(std::vector<common::OMRendererBuffer *> buffer) override;
     void bindIndexBuffer(common::OMRendererBuffer *buffer) override;
+    void bindIndirectBuffer(common::OMRendererBuffer *buffer) override;
     void bindTarget(common::OMRendererRenderTarget *target) override;
     void draw(uint64_t vertexCount) override;
     void drawInstance(uint64_t vertexCount, uint64_t instanceCount) override;
+    void drawIndirect(uint64_t begin, uint64_t count) override;
     void finish() override;
     void clear() override;
 

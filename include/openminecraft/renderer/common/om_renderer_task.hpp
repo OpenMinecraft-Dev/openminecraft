@@ -41,6 +41,12 @@ class OMRendererTask : public OMRendererObject
         bindIndexBuffer(buffer);
         return this;
     }
+    virtual void bindIndirectBuffer(OMRendererBuffer *buffer) = 0;
+    inline auto indirectBuffer(OMRendererBuffer *buffer) -> OMRendererTask *
+    {
+        bindIndirectBuffer(buffer);
+        return this;
+    }
     virtual void bindTarget(OMRendererRenderTarget *target) = 0;
     inline auto target(OMRendererRenderTarget *target) -> OMRendererTask *
     {
@@ -57,6 +63,12 @@ class OMRendererTask : public OMRendererObject
     inline auto drawInstanceN(uint64_t vertexCount, uint64_t instanceCount) -> OMRendererTask *
     {
         drawInstance(vertexCount, instanceCount);
+        return this;
+    }
+    virtual void drawIndirect(uint64_t begin, uint64_t count) = 0;
+    inline auto drawIndirectN(uint64_t begin, uint64_t count) -> OMRendererTask *
+    {
+        drawIndirect(begin, count);
         return this;
     }
     virtual void finish() = 0;

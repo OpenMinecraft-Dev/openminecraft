@@ -71,6 +71,7 @@ struct OMRendererOpenGLFuncs
     PFNGLPROGRAMBINARYPROC glProgramBinary;
     PFNGLDRAWELEMENTSINSTANCEDPROC glDrawElementsInstanced;
     PFNGLVERTEXATTRIBDIVISORPROC glVertexAttribDivisor;
+    PFNGLMULTIDRAWELEMENTSINDIRECTPROC glMultiDrawElementsIndirect;
 };
 class OMRendererOpenGL : public OMRenderer
 {
