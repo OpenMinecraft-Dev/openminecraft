@@ -90,10 +90,7 @@ void OMDemiurgeRendererHandler::submitTasks()
 {
     auto ext = renderer->getExtent();
 
-    node->layout(ext.x, ext.y);
-    node->submit(this, 0.9f);
-
-    auto tgt = sizeof(element::OMDemiurgeElementRect) * rect.rects.size();
+    auto tgt = sizeof(element::OMDemiurgeElementRect) * (rect.rects.size() + 1);
     if (!rect.instanceBuffer || rect.instanceBuffer->length < tgt)
     {
         if (rect.instanceBuffer)
@@ -103,10 +100,6 @@ void OMDemiurgeRendererHandler::submitTasks()
 
         rect.instanceBuffer = renderer->allocateBuffer(InstanceData, tgt);
     }
-    rect.instanceBuffer->updateData(rect.rects.data());
-
-    OMDemiurgeIndirect i{6, static_cast<uint32_t>(rect.rects.size()), 0, 0, 0};
-    rect.indirectBuffer->updateData(&i);
 
     SimpleUniform u{ext.x, ext.y};
     uniformBuffer->updateData(&u);
@@ -121,10 +114,22 @@ void OMDemiurgeRendererHandler::submitTasks()
                     ->indirectBuffer(rect.indirectBuffer)
                     ->drawIndirectN(0, 1)
                     ->finishN();
-    renderer->registerTask("demiurgeui_test", task);
+    renderer->registerTask("demiurgeui_core", task);
 }
 void OMDemiurgeRendererHandler::beforeFrame()
 {
+    auto tgt = sizeof(element::OMDemiurgeElementRect) * rect.rects.size();
+    if (!rect.instanceBuffer || rect.instanceBuffer->length < tgt)
+    {
+        renderer->requestResize();
+    }
+    auto ext = renderer->getExtent();
+
+    node->layout(ext.x, ext.y);
+    node->submit(this, 0.9f);
+    rect.instanceBuffer->updateData(rect.rects.data());
+    OMDemiurgeIndirect i{6, static_cast<uint32_t>(rect.rects.size()), 0, 0, 0};
+    rect.indirectBuffer->updateData(&i);
 }
 void OMDemiurgeRendererHandler::afterFrame()
 {

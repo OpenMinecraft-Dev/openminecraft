@@ -119,7 +119,7 @@ void OMRendererTaskOpenGL::bindIndexBuffer(common::OMRendererBuffer *buffer)
 }
 void OMRendererTaskOpenGL::bindIndirectBuffer(common::OMRendererBuffer *buffer)
 {
-    gl->glBindBuffer(GL_DRAW_INDIRECT_BUFFER, reinterpret_cast<OMRendererBufferOpenGL *>(buffer)->buffer);
+    ops.push_back({BindBuffer, GL_DRAW_INDIRECT_BUFFER, reinterpret_cast<OMRendererBufferOpenGL *>(buffer)->buffer});
 }
 void OMRendererTaskOpenGL::drawIndirect(uint64_t begin, uint64_t count)
 {
@@ -209,6 +209,9 @@ void OMRendererTaskOpenGL::execute()
             break;
         case MultiDrawElementsIndirect:
             gl->glMultiDrawElementsIndirect(op.args[0], op.args[1], op.ptrArgs[0], op.args[2], op.args[3]);
+            break;
+        case BindBuffer:
+            gl->glBindBuffer(op.args[0], op.args[1]);
             break;
         }
     }

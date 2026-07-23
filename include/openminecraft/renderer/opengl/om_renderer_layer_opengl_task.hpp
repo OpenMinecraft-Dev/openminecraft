@@ -26,7 +26,8 @@ enum OMRendererOpType
     UseProgram,
     DrawElements,
     DrawElementsInstanced,
-    MultiDrawElementsIndirect
+    MultiDrawElementsIndirect,
+    BindBuffer
 };
 union OMRendererOpenGLArg {
     GLuint i;
