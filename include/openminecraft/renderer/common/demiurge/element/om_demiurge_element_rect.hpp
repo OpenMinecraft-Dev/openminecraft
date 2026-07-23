@@ -6,9 +6,9 @@ namespace openminecraft::renderer::common::demiurge::element
 {
 struct OMDemiurgeElementRect
 {
-    float depth;
     glm::vec4 position;
     glm::vec4 color;
+    float depth;
 };
 } // namespace openminecraft::renderer::common::demiurge::element
 

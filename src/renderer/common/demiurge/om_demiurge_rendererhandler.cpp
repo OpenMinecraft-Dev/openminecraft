@@ -7,7 +7,6 @@
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include <iostream>
 #include <memory>
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
@@ -52,9 +51,9 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     rect.format.appendPart("position", basics::Vec2f);
     rect.format.nextGroup();
     rect.format.setInstance();
-    rect.format.appendPart("rect_depth", basics::Float);
     rect.format.appendPart("rect_pos", basics::Vec4f);
     rect.format.appendPart("rect_color", basics::Vec4f);
+    rect.format.appendPart("rect_depth", basics::Float);
     rect.format.nextGroup();
     rect.format.decideStruct();
     rect.format.debugState();
