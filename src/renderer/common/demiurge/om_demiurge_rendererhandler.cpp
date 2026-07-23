@@ -1,7 +1,6 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
-#include "glm/glm.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
-#include "openminecraft/renderer/common/demiurge/element/om_demiurge_rect.hpp"
+#include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
@@ -19,18 +18,22 @@ struct SimpleUniform
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     : renderer(renderer), OMRendererHandler(renderer)
 {
-    node = std::make_shared<element::OMDemiurgeRectElement>()
-               ->flexWrap(OMDemiurgeWrap::Wrap)
-               ->flexDirection(OMDemiurgeDirection::Row)
-               ->setStyle("color", 0x2c2c34ff);
+    node = std::make_shared<node::OMDemiurgeRectNode>()->style({
+        {"color", 0x2c2c34ff},
+        {"flexGap", 10_px},
+        {"flexWrap", Wrap},
+        {"flexDirection", Row},
+    });
     for (int i = 0; i < 4; ++i)
     {
-        auto d = std::make_shared<element::OMDemiurgeRectElement>()
-                     ->width(OMDemiurgeSize::percent(0.45))
-                     ->height(OMDemiurgeSize::percent(0.45))
-                     ->margin(OMDemiurgeSize::percent(0.025), OMDemiurgeSize::percent(0.025),
-                              OMDemiurgeSize::percent(0.025), OMDemiurgeSize::percent(0.025))
-                     ->setStyle("color", 0x00d4ffff);
+        auto d = std::make_shared<node::OMDemiurgeRectNode>()->style({
+            {"color", 0x00d4ffff},
+            {"minWidth", 20.0f},
+            {"minHeight", 20.0f},
+            {"height", 50_percent},
+            {"flexShrink", 0.0f},
+            {"flexGrow", 0.0f},
+        });
         node->mount(d);
     }
 

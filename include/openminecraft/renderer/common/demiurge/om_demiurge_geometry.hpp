@@ -129,26 +129,34 @@ struct OMDemiurgeSize
 
     float value = 0;
 
-    inline static auto pixels(float px) -> OMDemiurgeSize
+    constexpr inline static auto pixels(float px) -> OMDemiurgeSize
     {
         return {Pixel, px};
     }
 
-    inline static auto percent(float pct) -> OMDemiurgeSize
+    constexpr inline static auto percent(float pct) -> OMDemiurgeSize
     {
         return {Percent, pct};
     }
 
-    inline static auto fit() -> OMDemiurgeSize
+    constexpr inline static auto fit() -> OMDemiurgeSize
     {
         return {Fit, 0};
     }
 
-    inline static auto fill() -> OMDemiurgeSize
+    constexpr inline static auto fill() -> OMDemiurgeSize
     {
         return {Percent, 1.0f};
     }
 };
+constexpr auto operator""_percent(unsigned long long s) -> OMDemiurgeSize
+{
+    return OMDemiurgeSize::percent(static_cast<float>(s) / 100.0f);
+}
+constexpr auto operator""_px(unsigned long long s) -> OMDemiurgeSize
+{
+    return OMDemiurgeSize::pixels(static_cast<float>(s));
+}
 } // namespace openminecraft::renderer::common::demiurge
 
 #endif

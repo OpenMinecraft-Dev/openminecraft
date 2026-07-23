@@ -3,13 +3,13 @@
 
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
-namespace openminecraft::renderer::common::demiurge::element
+namespace openminecraft::renderer::common::demiurge::node
 {
-class OMDemiurgeRectElement : public OMDemiurgeNode
+class OMDemiurgeRectNode : public OMDemiurgeNode
 {
   public:
-    OMDemiurgeRectElement();
-    virtual ~OMDemiurgeRectElement();
+    OMDemiurgeRectNode();
+    virtual ~OMDemiurgeRectNode();
 
     auto render(OMRendererTask *, OMDemiurgeRendererHandler *, float depth) -> void override;
 
@@ -18,6 +18,6 @@ class OMDemiurgeRectElement : public OMDemiurgeNode
     OMRendererBuffer *indexBuffer = nullptr;
     OMRendererBuffer *instanceBuffer = nullptr;
 };
-} // namespace openminecraft::renderer::common::demiurge::element
+} // namespace openminecraft::renderer::common::demiurge::node
 
 #endif

@@ -1,16 +1,15 @@
-#include "openminecraft/renderer/common/demiurge/element/om_demiurge_rect.hpp"
+#include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "glm/ext/vector_float4.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
-#include <any>
 #include <array>
 
-namespace openminecraft::renderer::common::demiurge::element
+namespace openminecraft::renderer::common::demiurge::node
 {
-OMDemiurgeRectElement::OMDemiurgeRectElement() = default;
-OMDemiurgeRectElement::~OMDemiurgeRectElement()
+OMDemiurgeRectNode::OMDemiurgeRectNode() = default;
+OMDemiurgeRectNode::~OMDemiurgeRectNode()
 {
     if (indexBuffer || vertexBuffer)
     {
@@ -28,9 +27,9 @@ static std::vector<glm::vec4> colors = {
 };
 static int l = 0;
 
-void OMDemiurgeRectElement::render(OMRendererTask *task, OMDemiurgeRendererHandler *handler, float depth)
+void OMDemiurgeRectNode::render(OMRendererTask *task, OMDemiurgeRendererHandler *handler, float depth)
 {
-    auto c = genLinear(std::any_cast<int>(styles["color"]));
+    auto c = genLinear(stylesStorage.get<int>("color"));
     auto bound = boundary();
     std::array<float, 4 * 3> vtx = {
         bound.x,
@@ -68,4 +67,4 @@ void OMDemiurgeRectElement::render(OMRendererTask *task, OMDemiurgeRendererHandl
         c->render(task, handler, depth - 0.001f);
     }
 }
-} // namespace openminecraft::renderer::common::demiurge::element
+} // namespace openminecraft::renderer::common::demiurge::node
