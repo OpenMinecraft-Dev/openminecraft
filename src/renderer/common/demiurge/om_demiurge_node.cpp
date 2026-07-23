@@ -5,6 +5,7 @@
 #include "yoga/YGNodeStyle.h"
 #include <any>
 #include <array>
+#include <iostream>
 
 namespace openminecraft::renderer::common::demiurge
 {
@@ -17,7 +18,7 @@ OMDemiurgeNode::~OMDemiurgeNode()
     YGNodeFree(yogaNode);
 }
 
-auto OMDemiurgeNode::syncLayout()
+auto OMDemiurgeNode::syncLayout() -> void
 {
     if (stylesStorage.isModified())
     {
@@ -167,7 +168,6 @@ auto OMDemiurgeNode::syncLayout()
             }
             }
         }
-        stylesStorage.solve();
     }
 }
 
@@ -179,5 +179,15 @@ void OMDemiurgeNode::layout(float width, float height)
         f->syncLayout();
     }
     YGNodeCalculateLayout(yogaNode, width, height, YGDirectionLTR);
+    syncBoundary();
+    for (auto f : children)
+    {
+        f->syncBoundary();
+    }
+}
+
+auto OMDemiurgeNode::syncBoundary() -> void
+{
+    stylesStorage.put("layoutBound", boundary());
 }
 } // namespace openminecraft::renderer::common::demiurge

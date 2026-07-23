@@ -2,7 +2,9 @@
 #extension GL_ARB_separate_shader_objects : enable
 
 layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec4 inColor;
+layout(location = 1) in float depth;
+layout(location = 2) in vec4 pos;
+layout(location = 3) in vec4 inColor;
 
 layout(location = 0) out vec4 outColor;
 
@@ -12,7 +14,13 @@ layout(binding = 0) uniform UniformBufferObject {
 } ubo;
 
 void main() {
-    gl_Position = vec4(vec3(inPosition.x / ubo.width * 2 - 1, 1 - inPosition.y / ubo.height * 2, inPosition.z), 1.0);
+    vec2 screenPos = pos.xy + inPosition.xy * pos.zw;
+
+    float ndcX = (screenPos.x / ubo.width) * 2.0 - 1.0;
+    float ndcY = 1.0 - (screenPos.y / ubo.height) * 2.0;
+    
+    gl_Position = vec4(ndcX, ndcY, depth, 1.0);
+outColor = inColor;
 #ifdef VULKAN
     gl_Position.y = -gl_Position.y;
 #endif

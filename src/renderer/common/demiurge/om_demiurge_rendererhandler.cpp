@@ -1,9 +1,13 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
+#include "glm/ext/vector_float2.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
+#include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
+#include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include <iostream>
 #include <memory>
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
@@ -42,47 +46,75 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         auto target = vfs::fsfetch(fmt::format("/bootassets/openminecraft-renderer/shaders/{}", filename));            \
         name = std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), filename, "main", type);             \
     }
-    shaderDef(vtxShader, "demiurge/rect.vert.glsl", Vertex);
-    shaderDef(frgShader, "demiurge/rect.frag.glsl", Fragment);
+    shaderDef(rect.vtxShader, "demiurge/rect.vert.glsl", Vertex);
+    shaderDef(rect.frgShader, "demiurge/rect.frag.glsl", Fragment);
 
-    format.appendPart("position", basics::Vec3f);
-    format.nextGroup();
-    format.setInstance();
-    format.appendPart("rect_color", basics::Vec4f);
-    format.nextGroup();
-    format.decideStruct();
-    format.debugState();
+    rect.format.appendPart("position", basics::Vec2f);
+    rect.format.nextGroup();
+    rect.format.setInstance();
+    rect.format.appendPart("rect_depth", basics::Float);
+    rect.format.appendPart("rect_pos", basics::Vec4f);
+    rect.format.appendPart("rect_color", basics::Vec4f);
+    rect.format.nextGroup();
+    rect.format.decideStruct();
+    rect.format.debugState();
+
+    rect.quadBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(glm::vec2));
+    rect.quadBuffer->updateData(
+        std::array<glm::vec2, 4>{{{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}}}.data());
+    rect.quadIndex = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
+    rect.quadIndex->updateData(std::array<uint32_t, 6>{{0, 1, 2, 2, 3, 0}}.data());
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
 
-    uiPipeline = renderer->createPipeline()
-                     ->input(UniformBuffer)
-                     ->output(renderer->getDefaultRenderTarget())
-                     ->shader(frgShader)
-                     ->shader(vtxShader)
-                     ->format(format)
-                     ->buildN();
-    uiPipeline->bindInput(0, uniformBuffer);
+    rect.pipeline = renderer->createPipeline()
+                        ->input(UniformBuffer)
+                        ->output(renderer->getDefaultRenderTarget())
+                        ->shader(rect.frgShader)
+                        ->shader(rect.vtxShader)
+                        ->format(rect.format)
+                        ->buildN();
+    rect.pipeline->bindInput(0, uniformBuffer);
 }
 OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
 {
+    delete rect.instanceBuffer;
+    delete rect.quadBuffer;
+    delete rect.quadIndex;
     delete uniformBuffer;
-    delete uiPipeline;
+    delete rect.pipeline;
 }
 
 void OMDemiurgeRendererHandler::submitTasks()
 {
     auto ext = renderer->getExtent();
     node->layout(ext.x, ext.y);
+    node->submit(this, 0.9f);
+
+    auto tgt = sizeof(element::OMDemiurgeElementRect) * rect.rects.size();
+    if (!rect.instanceBuffer || rect.instanceBuffer->length < tgt)
+    {
+        if (rect.instanceBuffer)
+        {
+            delete rect.instanceBuffer;
+        }
+
+        rect.instanceBuffer = renderer->allocateBuffer(InstanceData, tgt);
+    }
+    rect.instanceBuffer->updateData(rect.rects.data());
+
     SimpleUniform u{ext.x, ext.y};
     uniformBuffer->updateData(&u);
 
     auto task = renderer->createTask()
                     ->dependOn(renderer->fetchTask("main"))
                     ->target(renderer->getDefaultRenderTarget())
-                    ->clearN();
-    node->render(task, this, 0.9f);
-    task->finishN();
+                    ->clearN()
+                    ->pipeline(rect.pipeline)
+                    ->vertexBuffer({rect.quadBuffer, rect.instanceBuffer})
+                    ->indexBuffer(rect.quadIndex)
+                    ->drawInstanceN(6, rect.rects.size())
+                    ->finishN();
     renderer->registerTask("demiurgeui_test", task);
 }
 void OMDemiurgeRendererHandler::beforeFrame()
