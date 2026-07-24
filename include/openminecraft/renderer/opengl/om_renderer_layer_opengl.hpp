@@ -3,13 +3,9 @@
 
 #include "GL/glcorearb.h"
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include <memory>
-#include <unordered_map>
-#include <vector>
 namespace openminecraft::renderer::opengl
 {
 struct OMRendererOpenGLFuncs
@@ -100,6 +96,7 @@ class OMRendererOpenGL : public OMRenderer
   private:
     void *glContext;
     log::OMLogger logger;
+    bool needResize = true;
 
     void initGlFuncs();
 };

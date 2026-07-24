@@ -7,6 +7,7 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_rendertarget.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_task.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_texture.hpp"
+#include "openminecraft/renderer/common/om_renderer_handler.hpp"
 
 namespace openminecraft::renderer::opengl
 {
@@ -150,6 +151,24 @@ void OMRendererOpenGL::baseInit()
 
 void OMRendererOpenGL::render()
 {
+    if (needResize)
+    {
+        auto siz = getExtent();
+        gl.glViewport(0, 0, siz.x, siz.y);
+
+        for (auto tsk : tasks)
+        {
+            delete tsk.second;
+        }
+        tasks.clear();
+
+        for (auto h : handlers)
+        {
+            h->submitTasks();
+        }
+        buildTaskGraph();
+        needResize = false;
+    }
     for (auto h : handlers)
     {
         h->beforeFrame();
@@ -170,19 +189,6 @@ void OMRendererOpenGL::render()
 
 void OMRendererOpenGL::requestResize()
 {
-    auto siz = getExtent();
-    gl.glViewport(0, 0, siz.x, siz.y);
-
-    for (auto tsk : tasks)
-    {
-        delete tsk.second;
-    }
-    tasks.clear();
-
-    for (auto h : handlers)
-    {
-        h->submitTasks();
-    }
-    buildTaskGraph();
+    needResize = true;
 }
 } // namespace openminecraft::renderer::opengl

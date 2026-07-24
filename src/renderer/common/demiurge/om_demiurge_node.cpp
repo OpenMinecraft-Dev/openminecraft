@@ -171,23 +171,41 @@ auto OMDemiurgeNode::syncLayout() -> void
     }
 }
 
-void OMDemiurgeNode::layout(float width, float height)
+auto OMDemiurgeNode::syncLayoutAll() -> void
 {
     syncLayout();
     for (auto f : children)
     {
-        f->syncLayout();
+        f->syncLayoutAll();
     }
+}
+
+void OMDemiurgeNode::layout(float width, float height)
+{
+    syncLayoutAll();
     YGNodeCalculateLayout(yogaNode, width, height, YGDirectionLTR);
     syncBoundary();
-    for (auto f : children)
-    {
-        f->syncBoundary();
-    }
 }
 
 auto OMDemiurgeNode::syncBoundary() -> void
 {
-    stylesStorage.put("layoutBound", boundary());
+    auto b = boundary();
+    try
+    {
+        auto bo = stylesStorage.get<OMDemiurgeRect>("layoutBound");
+        if (b.x == bo.x && b.y == bo.y && b.width == bo.width && b.height == bo.height)
+        {
+            return;
+        }
+    }
+    catch (std::bad_any_cast &e)
+    {
+    }
+    stylesStorage.put("layoutBound", b);
+
+    for (auto f : children)
+    {
+        f->syncBoundary();
+    }
 }
 } // namespace openminecraft::renderer::common::demiurge

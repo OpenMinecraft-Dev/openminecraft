@@ -39,6 +39,7 @@ static auto notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageType
         break;
     case DebugUtilsMessageSeverityFlagBitsEXT::eError:
         internal.error("{}", data.pMessage);
+        internal.dumpStacktrace();
         break;
     }
 
@@ -63,6 +64,7 @@ static auto notifyNew(DebugReportFlagBitsEXT flags, DebugReportObjectTypeEXT obj
         break;
     case DebugReportFlagBitsEXT::eError:
         internal.error("{}", pMessage);
+        internal.dumpStacktrace();
         break;
     }
     return false;

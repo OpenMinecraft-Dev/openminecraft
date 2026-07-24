@@ -2,6 +2,7 @@
 #define OM_DEMIURGE_STYLES_HPP
 
 #include <any>
+#include <iostream>
 #include <string>
 #include <unordered_map>
 namespace openminecraft::renderer::common::demiurge

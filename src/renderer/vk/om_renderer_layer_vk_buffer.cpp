@@ -95,8 +95,8 @@ void OMRendererBufferVk::release() const
             renderer->logicalDevice.unmapMemory(this->bufferMemory);
         }
 
-        renderer->logicalDevice.freeMemory(this->bufferMemory, renderer->allocator);
         renderer->logicalDevice.destroyBuffer(this->buffer, renderer->allocator);
+        renderer->logicalDevice.freeMemory(this->bufferMemory, renderer->allocator);
     }
     catch (SystemError &e)
     {

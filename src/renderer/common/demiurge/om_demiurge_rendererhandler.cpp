@@ -7,6 +7,7 @@
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include <iostream>
 #include <memory>
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
@@ -64,6 +65,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     rect.quadIndex = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
     rect.quadIndex->updateData(std::array<uint32_t, 6>{{0, 1, 2, 2, 3, 0}}.data());
     rect.indirectBuffer = renderer->allocateBuffer(Indirect, sizeof(OMDemiurgeIndirect));
+    rect.instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
 
@@ -89,20 +91,16 @@ OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
 void OMDemiurgeRendererHandler::submitTasks()
 {
     auto ext = renderer->getExtent();
-
-    auto tgt = sizeof(element::OMDemiurgeElementRect) * (rect.rects.size() + 1);
-    if (!rect.instanceBuffer || rect.instanceBuffer->length < tgt)
-    {
-        if (rect.instanceBuffer)
-        {
-            delete rect.instanceBuffer;
-        }
-
-        rect.instanceBuffer = renderer->allocateBuffer(InstanceData, tgt);
-    }
-
     SimpleUniform u{ext.x, ext.y};
     uniformBuffer->updateData(&u);
+
+    auto tgt = sizeof(element::OMDemiurgeElementRect) * rect.rects.size();
+
+    if (!rect.instanceBuffer || rect.instanceBuffer->length < tgt)
+    {
+        delete rect.instanceBuffer;
+        rect.instanceBuffer = renderer->allocateBuffer(InstanceData, tgt);
+    }
 
     auto task = renderer->createTask()
                     ->dependOn(renderer->fetchTask("main"))
@@ -115,13 +113,18 @@ void OMDemiurgeRendererHandler::submitTasks()
                     ->drawIndirectN(0, 1)
                     ->finishN();
     renderer->registerTask("demiurgeui_core", task);
+
+    srand(time(nullptr));
 }
 void OMDemiurgeRendererHandler::beforeFrame()
 {
     auto tgt = sizeof(element::OMDemiurgeElementRect) * rect.rects.size();
+
     if (!rect.instanceBuffer || rect.instanceBuffer->length < tgt)
     {
+        // INFO: (fake) resize due to the instance buffer recreation
         renderer->requestResize();
+        return;
     }
     auto ext = renderer->getExtent();
 

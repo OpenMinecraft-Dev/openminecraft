@@ -66,6 +66,9 @@ template <> struct fmt::formatter<openminecraft::renderer::common::OMBufferUsage
         case openminecraft::renderer::common::OMBufferUsage::Uniform:
             s = "Uniform";
             break;
+        case openminecraft::renderer::common::OMBufferUsage::Indirect:
+            s = "Indirect";
+            break;
         default:
             s = "<Invalid>";
             break;
