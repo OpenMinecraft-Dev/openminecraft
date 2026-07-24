@@ -7,7 +7,6 @@
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include <iostream>
 #include <memory>
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
@@ -32,8 +31,8 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     {
         auto d = std::make_shared<node::OMDemiurgeRectNode>()->style({
             {"color", 0x00d4ffff},
-            {"minWidth", 20.0f},
-            {"minHeight", 20.0f},
+            {"minWidth", 100.0f},
+            {"minHeight", 100.0f},
             {"height", 50_percent},
             {"flexShrink", 0.0f},
             {"flexGrow", 1.0f},
@@ -130,7 +129,10 @@ void OMDemiurgeRendererHandler::beforeFrame()
 
     node->layout(ext.x, ext.y);
     node->submit(this, 0.9f);
+
     rect.instanceBuffer->updateData(rect.rects.data());
+    rect.solve();
+
     OMDemiurgeIndirect i{6, static_cast<uint32_t>(rect.rects.size()), 0, 0, 0};
     rect.indirectBuffer->updateData(&i);
 }

@@ -43,6 +43,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
         OMRendererBuffer *instanceBuffer = nullptr;
 
         std::vector<element::OMDemiurgeElementRect> rects = {};
+        std::vector<bool> dirty = {};
 
         OMRendererPipeline *pipeline;
         std::shared_ptr<OMShader> vtxShader, frgShader;
@@ -51,12 +52,19 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
         auto request() -> int
         {
             rects.emplace_back(element::OMDemiurgeElementRect{});
+            dirty.resize(rects.size());
             return rects.size() - 1;
         }
 
         auto temporary(int i) -> element::OMDemiurgeElementRect *
         {
+            dirty[i] = true;
             return &rects[i];
+        }
+
+        auto solve() -> void
+        {
+            dirty.assign(dirty.size(), false);
         }
     } rect;
 };
