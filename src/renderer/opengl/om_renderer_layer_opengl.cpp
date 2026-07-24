@@ -13,8 +13,8 @@
 namespace openminecraft::renderer::opengl
 {
 static log::OMLogger logger("OpenGL Debug");
-void debugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message,
-                   const void *userParam)
+void APIENTRY debugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
+                            const GLchar *message, const void *userParam)
 {
     switch (severity)
     {
