@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "GL/glcorearb.h"
 #include "SDL3/SDL_video.h"
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_buffer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
@@ -11,6 +12,28 @@
 
 namespace openminecraft::renderer::opengl
 {
+static log::OMLogger logger("OpenGL Debug");
+void debugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message,
+                   const void *userParam)
+{
+    switch (severity)
+    {
+    default:
+    case GL_DEBUG_SEVERITY_NOTIFICATION:
+        logger.debug("{}", message);
+        break;
+    case GL_DEBUG_SEVERITY_LOW:
+        logger.info("{}", message);
+        break;
+    case GL_DEBUG_SEVERITY_MEDIUM:
+        logger.warn("{}", message);
+        break;
+    case GL_DEBUG_SEVERITY_HIGH:
+        logger.error("{}", message);
+        break;
+    }
+}
+
 OMRendererOpenGL::OMRendererOpenGL(AppInfo info, void *window)
     : OMRenderer(info, window), logger("OMRendererOpenGL", this)
 {
@@ -25,6 +48,13 @@ OMRendererOpenGL::OMRendererOpenGL(AppInfo info, void *window)
 
     defaultTarget = createRenderTarget();
     defaultTarget->build();
+
+    gl.glEnable(GL_DEBUG_OUTPUT);
+    gl.glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+    gl.glDebugMessageCallback(debugCallback, nullptr);
+
+    gl.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 }
 
 template <typename T> inline auto fetchGlFunc(const char *name) -> T
@@ -91,6 +121,8 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glVertexAttribDivisor = fetchGlFunc<PFNGLVERTEXATTRIBDIVISORPROC>("glVertexAttribDivisor");
     gl.glMultiDrawElementsIndirect = fetchGlFunc<PFNGLMULTIDRAWELEMENTSINDIRECTPROC>("glMultiDrawElementsIndirect");
     gl.glBufferSubData = fetchGlFunc<PFNGLBUFFERSUBDATAPROC>("glBufferSubData");
+    gl.glDebugMessageCallback = fetchGlFunc<PFNGLDEBUGMESSAGECALLBACKPROC>("glDebugMessageCallback");
+    gl.glDebugMessageControl = fetchGlFunc<PFNGLDEBUGMESSAGECONTROLPROC>("glDebugMessageControl");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()

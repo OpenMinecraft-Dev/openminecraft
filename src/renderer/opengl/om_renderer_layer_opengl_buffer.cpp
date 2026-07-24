@@ -29,6 +29,8 @@ OMRendererBufferOpenGL::OMRendererBufferOpenGL(common::OMBufferUsage usage, uint
 {
     renderer->gl.glGenBuffers(1, &buffer);
     mem::castorice::rec({mem::castorice::Allocation, nullptr, static_cast<size_t>(length), "opengl"});
+
+    updateData(nullptr);
 }
 
 OMRendererBufferOpenGL::~OMRendererBufferOpenGL()
@@ -39,7 +41,9 @@ OMRendererBufferOpenGL::~OMRendererBufferOpenGL()
 void OMRendererBufferOpenGL::updateData(void *src)
 {
     renderer->gl.glBindBuffer(convertFrom(usage), buffer);
-    renderer->gl.glBufferData(convertFrom(usage), length, src, GL_STATIC_DRAW);
+    renderer->gl.glBufferData(convertFrom(usage), length, src,
+                              (usage == common::VertexData || usage == common::VertexIndex) ? GL_STATIC_DRAW
+                                                                                            : GL_DYNAMIC_DRAW);
     renderer->gl.glBindBuffer(convertFrom(usage), 0);
 }
 void OMRendererBufferOpenGL::updateDataPart(void *src, uint64_t offset, uint64_t length)

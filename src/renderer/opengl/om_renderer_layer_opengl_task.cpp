@@ -38,12 +38,6 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
 
     for (int i = 0; i < glpipe->inputTypes.size(); i++)
     {
-        if (glpipe->inputTypes[i] == common::UniformBuffer)
-        {
-            gl->glUniformBlockBinding(this->program,
-                                      reinterpret_cast<OMRendererBufferOpenGL *>(glpipe->inputs[i])->buffer, i);
-        }
-
         auto obj = glpipe->inputs[i];
         if (obj->objType() == DataBuffer)
         {

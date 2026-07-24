@@ -113,11 +113,14 @@ void OMDemiurgeRendererHandler::submitTasks()
                     ->drawIndirectN(0, 1)
                     ->finishN();
     renderer->registerTask("demiurgeui_core", task);
-
-    srand(time(nullptr));
 }
 void OMDemiurgeRendererHandler::beforeFrame()
 {
+    auto ext = renderer->getExtent();
+
+    node->layout(ext.x, ext.y);
+    node->submit(this, 0.9f);
+
     auto tgt = sizeof(element::OMDemiurgeElementRect) * rect.rects.size();
 
     if (!rect.instanceBuffer || rect.instanceBuffer->length < tgt)
@@ -126,20 +129,33 @@ void OMDemiurgeRendererHandler::beforeFrame()
         renderer->requestResize();
         return;
     }
-    auto ext = renderer->getExtent();
-
-    node->layout(ext.x, ext.y);
-    node->submit(this, 0.9f);
 
     if (std::find(rect.dirty.begin(), rect.dirty.end(), true) != rect.dirty.end())
     {
-        rect.instanceBuffer->updateData(rect.rects.data());
+        bool in_dirty = false;
+        int start = 0;
+        for (int i = 0; i <= rect.dirty.size(); ++i)
+        {
+            bool is_dirty = (i < rect.dirty.size()) && rect.dirty[i];
+            if (!in_dirty && is_dirty)
+            {
+                start = i;
+                in_dirty = true;
+            }
+            else if (in_dirty && !is_dirty)
+            {
+                rect.instanceBuffer->updateDataPart(&rect.rects[start], start * sizeof(element::OMDemiurgeElementRect),
+                                                    (i - start) * sizeof(element::OMDemiurgeElementRect));
+                in_dirty = false;
+            }
+        }
+        rect.solve();
     }
-    rect.solve();
 
     OMDemiurgeIndirect i{6, static_cast<uint32_t>(rect.rects.size()), 0, 0, 0};
     rect.indirectBuffer->updateData(&i);
 }
+
 void OMDemiurgeRendererHandler::afterFrame()
 {
 }
