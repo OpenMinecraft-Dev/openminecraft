@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "vulkan/vulkan_enums.hpp"
+#include <iostream>
 
 using namespace vk;
 using namespace openminecraft::renderer::common;
@@ -111,6 +112,27 @@ void OMRendererBufferVk::updateData(void *src)
         auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
         auto vtx = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
         std::memcpy(vtx, src, this->length);
+
+        if (alwaysMapped)
+        {
+            return;
+        }
+
+        renderer->logicalDevice.unmapMemory(this->bufferMemory);
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.buffer.update"));
+    }
+}
+
+void OMRendererBufferVk::updateDataPart(void *src, uint64_t offset, uint64_t length)
+{
+    try
+    {
+        auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
+        auto vtx = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
+        std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(vtx) + offset), src, length);
 
         if (alwaysMapped)
         {

@@ -7,6 +7,7 @@
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include <iostream>
 #include <memory>
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
@@ -130,7 +131,10 @@ void OMDemiurgeRendererHandler::beforeFrame()
     node->layout(ext.x, ext.y);
     node->submit(this, 0.9f);
 
-    rect.instanceBuffer->updateData(rect.rects.data());
+    if (std::find(rect.dirty.begin(), rect.dirty.end(), true) != rect.dirty.end())
+    {
+        rect.instanceBuffer->updateData(rect.rects.data());
+    }
     rect.solve();
 
     OMDemiurgeIndirect i{6, static_cast<uint32_t>(rect.rects.size()), 0, 0, 0};

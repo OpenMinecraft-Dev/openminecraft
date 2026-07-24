@@ -90,6 +90,7 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glDrawElementsInstanced = fetchGlFunc<PFNGLDRAWELEMENTSINSTANCEDPROC>("glDrawElementsInstanced");
     gl.glVertexAttribDivisor = fetchGlFunc<PFNGLVERTEXATTRIBDIVISORPROC>("glVertexAttribDivisor");
     gl.glMultiDrawElementsIndirect = fetchGlFunc<PFNGLMULTIDRAWELEMENTSINDIRECTPROC>("glMultiDrawElementsIndirect");
+    gl.glBufferSubData = fetchGlFunc<PFNGLBUFFERSUBDATAPROC>("glBufferSubData");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()

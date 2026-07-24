@@ -18,6 +18,7 @@ class OMRendererBufferVk : public common::OMRendererBuffer
     ~OMRendererBufferVk() override;
 
     void updateData(void *src) override;
+    void updateDataPart(void *src, uint64_t offset, uint64_t length) override;
 
     ::vk::Buffer buffer;
     ::vk::DeviceMemory bufferMemory;
