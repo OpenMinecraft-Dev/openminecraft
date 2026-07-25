@@ -7,7 +7,6 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
-#include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/om_renderer_window.hpp"
 #include "openminecraft/specs/abstracts/om_image.hpp"
 #include "openminecraft/specs/jfif/om_jfif.hpp"
@@ -21,11 +20,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <random>
-#include <sstream>
 #include <string>
-
-#include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
@@ -42,9 +37,12 @@ namespace openminecraft::boot
 // INFO: i18n environment initialization
 static void setupI18nEnv()
 {
+    log::OMLogger l("I18N");
     i18n::res::registerModule("openminecraft-boot");
     i18n::res::registerModule("openminecraft-renderer");
+    l.debug("root pushed");
     i18n::res::pushResourceRoot("/bootassets");
+    l.debug("loading");
     i18n::res::load();
 }
 
