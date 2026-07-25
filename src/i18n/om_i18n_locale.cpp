@@ -19,10 +19,17 @@ auto defaultLocale() -> std::string
     }
     else
     {
-        auto dd = fmt::format("{}_{}", d[0]->language, d[0]->country);
-        std::transform(dd.begin(), dd.end(), dd.begin(), ::tolower);
-        mem::allocator::tracedFreeSDL(d);
-        return dd;
+        if (d[0]->language && d[0]->country)
+        {
+            auto dd = fmt::format("{}_{}", d[0]->language, d[0]->country);
+            std::transform(dd.begin(), dd.end(), dd.begin(), ::tolower);
+            mem::allocator::tracedFreeSDL(d);
+            return dd;
+        }
+        else
+        {
+            return "en_us";
+        }
     }
 }
 

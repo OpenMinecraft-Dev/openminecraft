@@ -35,12 +35,9 @@ namespace openminecraft::boot
 // INFO: i18n environment initialization
 static void setupI18nEnv()
 {
-    log::OMLogger l("I18N");
     i18n::res::registerModule("openminecraft-boot");
     i18n::res::registerModule("openminecraft-renderer");
-    l.debug("root pushed");
     i18n::res::pushResourceRoot("/bootassets");
-    l.debug("loading");
     i18n::res::load();
 }
 
