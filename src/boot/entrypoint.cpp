@@ -3,7 +3,6 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
-#include "openminecraft/io/json/om_io_ast_builder_json.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
@@ -28,7 +27,6 @@
 #include <vector>
 
 using namespace openminecraft;
-using namespace openminecraft::io;
 using namespace openminecraft::vm;
 using namespace openminecraft::binary::hash;
 
@@ -120,15 +118,6 @@ auto boot(std::vector<std::string> args) -> int
 
         delete img;
 
-        break;
-    }
-    case "json"_hash: {
-        auto ii = std::make_shared<std::istringstream>(args[2]);
-        json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(ii));
-        logger->info(args[2]);
-        auto obj = bld.build();
-
-        logger->info("object at {}", reinterpret_cast<void *>(obj.get()));
         break;
     }
     default:

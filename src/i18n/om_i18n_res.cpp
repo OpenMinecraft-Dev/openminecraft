@@ -52,6 +52,7 @@ void load()
         {
             for (auto rt : base)
             {
+                logger.info("checking");
                 auto p = fmt::format("{}/{}/lang/lang.json", rt, mod);
 
                 auto ff = vfs::fsfetch(p);
