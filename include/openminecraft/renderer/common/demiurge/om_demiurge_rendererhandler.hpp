@@ -21,6 +21,53 @@ struct OMDemiurgeIndirect
     int32_t vertexOffset;
     uint32_t firstInstance;
 };
+
+class OMDemiurgeRectChannel
+{
+  public:
+    OMDemiurgeRectChannel(OMRenderer *renderer) : renderer(renderer)
+    {
+    }
+    ~OMDemiurgeRectChannel() = default;
+
+    void init(OMRendererBuffer *uniform);
+    void submitTask(OMRendererTask *task);
+    void update();
+    void destroy();
+
+    inline auto request() -> int
+    {
+        rects.emplace_back(element::OMDemiurgeElementRect{});
+        dirty.resize(rects.size());
+        return rects.size() - 1;
+    }
+
+    inline auto temporary(int i) -> element::OMDemiurgeElementRect *
+    {
+        dirty[i] = true;
+        return &rects[i];
+    }
+
+    inline auto solve() -> void
+    {
+        dirty.assign(dirty.size(), false);
+    }
+
+  private:
+    OMRenderer *renderer;
+    OMRendererBuffer *quadBuffer;
+    OMRendererBuffer *quadIndex;
+    OMRendererBuffer *indirectBuffer;
+    OMRendererBuffer *instanceBuffer = nullptr;
+
+    std::vector<element::OMDemiurgeElementRect> rects = {};
+    std::vector<bool> dirty = {};
+
+    OMRendererPipeline *pipeline;
+    std::shared_ptr<OMShader> vtxShader, frgShader;
+    basics::OMVertexFormat format;
+};
+
 class OMDemiurgeRendererHandler : public OMRendererHandler
 {
   public:
@@ -36,7 +83,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     OMRendererBuffer *uniformBuffer;
     OMRenderer *renderer;
 
-    struct
+    /*struct
     {
         OMRendererBuffer *quadBuffer;
         OMRendererBuffer *quadIndex;
@@ -72,8 +119,11 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     void rectPipelineInit();
     void rectPipelineTask(OMRendererTask *task);
     void rectPipelineUpdate();
-    void rectPipelineDestroy();
+    void rectPipelineDestroy();*/
+
+    OMDemiurgeRectChannel rect;
 };
+
 } // namespace openminecraft::renderer::common::demiurge
 
 #endif

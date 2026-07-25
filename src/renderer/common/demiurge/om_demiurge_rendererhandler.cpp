@@ -20,7 +20,7 @@ struct SimpleUniform
     float height;
 };
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
-    : renderer(renderer), OMRendererHandler(renderer)
+    : renderer(renderer), OMRendererHandler(renderer), rect(renderer)
 {
     node = std::make_shared<node::OMDemiurgeRectNode>()->style({
         {"color", 0x2c2c34ff},
@@ -43,75 +43,74 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
 
-    rectPipelineInit();
+    rect.init(uniformBuffer);
 }
 
-void OMDemiurgeRendererHandler::rectPipelineInit()
+void OMDemiurgeRectChannel::init(OMRendererBuffer *uniformBuffer)
 {
 #define shaderDef(name, filename, type)                                                                                \
     {                                                                                                                  \
         auto target = vfs::fsfetch(fmt::format("/bootassets/openminecraft-renderer/shaders/{}", filename));            \
         name = std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), filename, "main", type);             \
     }
-    shaderDef(rect.vtxShader, "demiurge/rect.vert.glsl", Vertex);
-    shaderDef(rect.frgShader, "demiurge/rect.frag.glsl", Fragment);
+    shaderDef(vtxShader, "demiurge/rect.vert.glsl", Vertex);
+    shaderDef(frgShader, "demiurge/rect.frag.glsl", Fragment);
 
-    rect.format.appendPart("position", basics::Vec2f);
-    rect.format.nextGroup();
-    rect.format.setInstance();
-    rect.format.appendPart("rect_pos", basics::Vec4f);
-    rect.format.appendPart("rect_color", basics::Vec4f);
-    rect.format.appendPart("rect_depth", basics::Float);
-    rect.format.nextGroup();
-    rect.format.decideStruct();
-    rect.format.debugState();
+    format.appendPart("position", basics::Vec2f);
+    format.nextGroup();
+    format.setInstance();
+    format.appendPart("rect_pos", basics::Vec4f);
+    format.appendPart("rect_color", basics::Vec4f);
+    format.appendPart("rect_depth", basics::Float);
+    format.nextGroup();
+    format.decideStruct();
+    format.debugState();
 
-    rect.quadBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(glm::vec2));
-    rect.quadBuffer->updateData(
-        std::array<glm::vec2, 4>{{{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}}}.data());
-    rect.quadIndex = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
-    rect.quadIndex->updateData(std::array<uint32_t, 6>{{0, 1, 2, 2, 3, 0}}.data());
-    rect.indirectBuffer = renderer->allocateBuffer(Indirect, sizeof(OMDemiurgeIndirect));
-    rect.instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
+    quadBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(glm::vec2));
+    quadBuffer->updateData(std::array<glm::vec2, 4>{{{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}}}.data());
+    quadIndex = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
+    quadIndex->updateData(std::array<uint32_t, 6>{{0, 1, 2, 2, 3, 0}}.data());
+    indirectBuffer = renderer->allocateBuffer(Indirect, sizeof(OMDemiurgeIndirect));
+    instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
 
-    rect.pipeline = renderer->createPipeline()
-                        ->input(UniformBuffer)
-                        ->output(renderer->getDefaultRenderTarget())
-                        ->shader(rect.frgShader)
-                        ->shader(rect.vtxShader)
-                        ->format(rect.format)
-                        ->buildN();
-    rect.pipeline->bindInput(0, uniformBuffer);
+    pipeline = renderer->createPipeline()
+                   ->input(UniformBuffer)
+                   ->output(renderer->getDefaultRenderTarget())
+                   ->shader(frgShader)
+                   ->shader(vtxShader)
+                   ->format(format)
+                   ->buildN();
+    pipeline->bindInput(0, uniformBuffer);
 }
 
 OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
 {
-    rectPipelineDestroy();
+    rect.destroy();
     delete uniformBuffer;
 }
 
-void OMDemiurgeRendererHandler::rectPipelineDestroy()
+void OMDemiurgeRectChannel::destroy()
 {
-    delete rect.indirectBuffer;
-    delete rect.instanceBuffer;
-    delete rect.quadBuffer;
-    delete rect.quadIndex;
-    delete rect.pipeline;
+    delete indirectBuffer;
+    delete instanceBuffer;
+    delete quadBuffer;
+    delete quadIndex;
+    delete pipeline;
 }
 
-void OMDemiurgeRendererHandler::rectPipelineTask(OMRendererTask *task)
+void OMDemiurgeRectChannel::submitTask(OMRendererTask *task)
 {
-    auto tgt = sizeof(element::OMDemiurgeElementRect) * rect.rects.size();
+    auto tgt = sizeof(element::OMDemiurgeElementRect) * rects.size();
 
-    if (!rect.instanceBuffer || rect.instanceBuffer->length < tgt)
+    if (!instanceBuffer || instanceBuffer->length < tgt)
     {
-        delete rect.instanceBuffer;
-        rect.instanceBuffer = renderer->allocateBuffer(InstanceData, tgt);
+        delete instanceBuffer;
+        instanceBuffer = renderer->allocateBuffer(InstanceData, tgt);
     }
-    task->pipeline(rect.pipeline)
-        ->vertexBuffer({rect.quadBuffer, rect.instanceBuffer})
-        ->indexBuffer(rect.quadIndex)
-        ->indirectBuffer(rect.indirectBuffer)
+    task->pipeline(pipeline)
+        ->vertexBuffer({quadBuffer, instanceBuffer})
+        ->indexBuffer(quadIndex)
+        ->indirectBuffer(indirectBuffer)
         ->drawIndirect(0, 1);
 }
 
@@ -125,30 +124,30 @@ void OMDemiurgeRendererHandler::submitTasks()
                     ->dependOn(renderer->fetchTask("main"))
                     ->target(renderer->getDefaultRenderTarget())
                     ->clearN();
-    rectPipelineTask(task);
+    rect.submitTask(task);
     task->finish();
 
     renderer->registerTask("demiurgeui_core", task);
 }
 
-void OMDemiurgeRendererHandler::rectPipelineUpdate()
+void OMDemiurgeRectChannel::update()
 {
-    auto tgt = sizeof(element::OMDemiurgeElementRect) * rect.rects.size();
+    auto tgt = sizeof(element::OMDemiurgeElementRect) * rects.size();
 
-    if (!rect.instanceBuffer || rect.instanceBuffer->length < tgt)
+    if (!instanceBuffer || instanceBuffer->length < tgt)
     {
         // INFO: (fake) resize due to the instance buffer recreation
         renderer->requestResize();
         return;
     }
 
-    if (std::find(rect.dirty.begin(), rect.dirty.end(), true) != rect.dirty.end())
+    if (std::find(dirty.begin(), dirty.end(), true) != dirty.end())
     {
         bool in_dirty = false;
         int start = 0;
-        for (int i = 0; i <= rect.dirty.size(); ++i)
+        for (int i = 0; i <= dirty.size(); ++i)
         {
-            bool is_dirty = (i < rect.dirty.size()) && rect.dirty[i];
+            bool is_dirty = (i < dirty.size()) && dirty[i];
             if (!in_dirty && is_dirty)
             {
                 start = i;
@@ -156,16 +155,16 @@ void OMDemiurgeRendererHandler::rectPipelineUpdate()
             }
             else if (in_dirty && !is_dirty)
             {
-                rect.instanceBuffer->updateDataPart(&rect.rects[start], start * sizeof(element::OMDemiurgeElementRect),
-                                                    (i - start) * sizeof(element::OMDemiurgeElementRect));
+                instanceBuffer->updateDataPart(&rects[start], start * sizeof(element::OMDemiurgeElementRect),
+                                               (i - start) * sizeof(element::OMDemiurgeElementRect));
                 in_dirty = false;
             }
         }
-        rect.solve();
+        solve();
     }
 
-    OMDemiurgeIndirect i{6, static_cast<uint32_t>(rect.rects.size()), 0, 0, 0};
-    rect.indirectBuffer->updateData(&i);
+    OMDemiurgeIndirect i{6, static_cast<uint32_t>(rects.size()), 0, 0, 0};
+    indirectBuffer->updateData(&i);
 }
 
 void OMDemiurgeRendererHandler::beforeFrame()
@@ -175,7 +174,7 @@ void OMDemiurgeRendererHandler::beforeFrame()
     node->layout(ext.x, ext.y);
     node->submit(this, 0.9f);
 
-    rectPipelineUpdate();
+    rect.update();
 }
 
 void OMDemiurgeRendererHandler::afterFrame()
