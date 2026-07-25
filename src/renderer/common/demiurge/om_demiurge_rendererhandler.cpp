@@ -41,6 +41,13 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         node->mount(d);
     }
 
+    uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
+
+    rectPipelineInit();
+}
+
+void OMDemiurgeRendererHandler::rectPipelineInit()
+{
 #define shaderDef(name, filename, type)                                                                                \
     {                                                                                                                  \
         auto target = vfs::fsfetch(fmt::format("/bootassets/openminecraft-renderer/shaders/{}", filename));            \
@@ -67,8 +74,6 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     rect.indirectBuffer = renderer->allocateBuffer(Indirect, sizeof(OMDemiurgeIndirect));
     rect.instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
 
-    uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
-
     rect.pipeline = renderer->createPipeline()
                         ->input(UniformBuffer)
                         ->output(renderer->getDefaultRenderTarget())
@@ -78,6 +83,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
                         ->buildN();
     rect.pipeline->bindInput(0, uniformBuffer);
 }
+
 OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
 {
     delete rect.indirectBuffer;
@@ -88,12 +94,8 @@ OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
     delete rect.pipeline;
 }
 
-void OMDemiurgeRendererHandler::submitTasks()
+void OMDemiurgeRendererHandler::rectPipelineTask(OMRendererTask *task)
 {
-    auto ext = renderer->getExtent();
-    SimpleUniform u{ext.x, ext.y};
-    uniformBuffer->updateData(&u);
-
     auto tgt = sizeof(element::OMDemiurgeElementRect) * rect.rects.size();
 
     if (!rect.instanceBuffer || rect.instanceBuffer->length < tgt)
@@ -101,26 +103,31 @@ void OMDemiurgeRendererHandler::submitTasks()
         delete rect.instanceBuffer;
         rect.instanceBuffer = renderer->allocateBuffer(InstanceData, tgt);
     }
+    task->pipeline(rect.pipeline)
+        ->vertexBuffer({rect.quadBuffer, rect.instanceBuffer})
+        ->indexBuffer(rect.quadIndex)
+        ->indirectBuffer(rect.indirectBuffer)
+        ->drawIndirect(0, 1);
+}
+
+void OMDemiurgeRendererHandler::submitTasks()
+{
+    auto ext = renderer->getExtent();
+    SimpleUniform u{ext.x, ext.y};
+    uniformBuffer->updateData(&u);
 
     auto task = renderer->createTask()
                     ->dependOn(renderer->fetchTask("main"))
                     ->target(renderer->getDefaultRenderTarget())
-                    ->clearN()
-                    ->pipeline(rect.pipeline)
-                    ->vertexBuffer({rect.quadBuffer, rect.instanceBuffer})
-                    ->indexBuffer(rect.quadIndex)
-                    ->indirectBuffer(rect.indirectBuffer)
-                    ->drawIndirectN(0, 1)
-                    ->finishN();
+                    ->clearN();
+    rectPipelineTask(task);
+    task->finish();
+
     renderer->registerTask("demiurgeui_core", task);
 }
-void OMDemiurgeRendererHandler::beforeFrame()
+
+void OMDemiurgeRendererHandler::rectPipelineUpdate()
 {
-    auto ext = renderer->getExtent();
-
-    node->layout(ext.x, ext.y);
-    node->submit(this, 0.9f);
-
     auto tgt = sizeof(element::OMDemiurgeElementRect) * rect.rects.size();
 
     if (!rect.instanceBuffer || rect.instanceBuffer->length < tgt)
@@ -154,6 +161,16 @@ void OMDemiurgeRendererHandler::beforeFrame()
 
     OMDemiurgeIndirect i{6, static_cast<uint32_t>(rect.rects.size()), 0, 0, 0};
     rect.indirectBuffer->updateData(&i);
+}
+
+void OMDemiurgeRendererHandler::beforeFrame()
+{
+    auto ext = renderer->getExtent();
+
+    node->layout(ext.x, ext.y);
+    node->submit(this, 0.9f);
+
+    rectPipelineUpdate();
 }
 
 void OMDemiurgeRendererHandler::afterFrame()

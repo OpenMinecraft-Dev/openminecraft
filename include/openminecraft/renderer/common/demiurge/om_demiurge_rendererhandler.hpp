@@ -8,6 +8,7 @@
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
+#include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <vector>
 namespace openminecraft::renderer::common::demiurge
@@ -67,6 +68,10 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
             dirty.assign(dirty.size(), false);
         }
     } rect;
+
+    void rectPipelineInit();
+    void rectPipelineTask(OMRendererTask *task);
+    void rectPipelineUpdate();
 };
 } // namespace openminecraft::renderer::common::demiurge
 
