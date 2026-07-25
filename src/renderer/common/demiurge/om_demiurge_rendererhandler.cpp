@@ -7,7 +7,6 @@
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include <iostream>
 #include <memory>
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
@@ -22,14 +21,12 @@ struct SimpleUniform
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     : renderer(renderer), OMRendererHandler(renderer), rect(renderer)
 {
-    std::cout << 4 << std::endl;
     node = std::make_shared<node::OMDemiurgeRectNode>()->style({
         {"color", 0x2c2c34ff},
         {"flexGap", 10_px},
         {"flexWrap", Wrap},
         {"flexDirection", Row},
     });
-    std::cout << 4 << std::endl;
     for (int i = 0; i < 4; ++i)
     {
         auto d = std::make_shared<node::OMDemiurgeRectNode>()->style({
@@ -42,11 +39,8 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         });
         node->mount(d);
     }
-    std::cout << 4 << std::endl;
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
-    std::cout << 4 << std::endl;
     rect.init(uniformBuffer);
-    std::cout << 4 << std::endl;
 }
 
 void OMDemiurgeRectChannel::init(OMRendererBuffer *uniformBuffer)

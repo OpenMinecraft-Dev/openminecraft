@@ -108,9 +108,6 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
 
     // INFO: core pipeline creation
 
-    logger.warn("1");
-    logger.warn("{} {} {}", (void *)renderer->getDefaultRenderTarget(), (void *)outputFrg.get(),
-                (void *)outputVtx.get());
     mainPipeline = renderer->createPipeline()
                        ->input(UniformBuffer)
                        ->input(ImageSampler)
@@ -119,9 +116,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
                        ->shader(outputVtx)
                        ->format(format)
                        ->buildN();
-    logger.warn("2");
     mainPipeline->bindInput(0, tempUniformBuffer);
-    logger.warn("3");
 }
 
 void OMTestRenderer::beforeFrame()
