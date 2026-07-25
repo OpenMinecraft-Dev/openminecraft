@@ -2,6 +2,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
+#include <csignal>
 
 extern "C"
 {
@@ -11,9 +12,16 @@ extern "C"
 
 auto logger = openminecraft::log::OMLogger("launcher");
 
+void sighnd(int)
+{
+    logger.dumpStacktrace();
+}
+
 auto main(int argc, char **argv) -> int
 {
     openminecraft::log::multithread::registerCurrentThreadName("launcher");
+
+    signal(SIGSEGV, sighnd);
 
     std::vector<std::string> a;
     logger.info("Args:");
