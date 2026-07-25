@@ -86,11 +86,16 @@ void OMDemiurgeRendererHandler::rectPipelineInit()
 
 OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
 {
+    rectPipelineDestroy();
+    delete uniformBuffer;
+}
+
+void OMDemiurgeRendererHandler::rectPipelineDestroy()
+{
     delete rect.indirectBuffer;
     delete rect.instanceBuffer;
     delete rect.quadBuffer;
     delete rect.quadIndex;
-    delete uniformBuffer;
     delete rect.pipeline;
 }
 

@@ -72,6 +72,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     void rectPipelineInit();
     void rectPipelineTask(OMRendererTask *task);
     void rectPipelineUpdate();
+    void rectPipelineDestroy();
 };
 } // namespace openminecraft::renderer::common::demiurge
 
