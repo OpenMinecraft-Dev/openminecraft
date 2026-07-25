@@ -1,6 +1,8 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
 #include <cstdio>
@@ -25,6 +27,7 @@ static auto notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageType
         return VK_SUCCESS;
     }
 
+    internal.debug("{}", (void *)data.pMessageIdName);
     switch (s)
     {
     default:
@@ -84,14 +87,6 @@ OMRendererVkValidation::OMRendererVkValidation(std::vector<LayerProperties> prop
     return;
 baseinit:
     enabled = true;
-    createInfo = {{},
-                  DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | DebugUtilsMessageSeverityFlagBitsEXT::eInfo |
-                      DebugUtilsMessageSeverityFlagBitsEXT::eWarning | DebugUtilsMessageSeverityFlagBitsEXT::eError,
-                  DebugUtilsMessageTypeFlagBitsEXT::eGeneral | DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
-                      DebugUtilsMessageTypeFlagBitsEXT::eValidation,
-                  PFN_DebugUtilsMessengerCallbackEXT(notify),
-                  nullptr,
-                  nullptr};
     callbackInfo = {DebugReportFlagBitsEXT::eDebug | DebugReportFlagBitsEXT::eInformation |
                         DebugReportFlagBitsEXT::eWarning | DebugReportFlagBitsEXT::ePerformanceWarning |
                         DebugReportFlagBitsEXT::eError,

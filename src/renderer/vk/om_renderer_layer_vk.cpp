@@ -20,7 +20,6 @@
 #include <SDL3/SDL_vulkan.h>
 #include <cstdlib>
 #include <cstring>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <system_error>
@@ -638,7 +637,7 @@ auto OMRendererVk::instanceCreation(AppInfo info, std::vector<const char *> exts
                                 info.engineVer.toVKVersion(), info.minApiVersion.toVKApiVersion());
         std::vector<const char *> l;
         validationLayer->attach(&l);
-        auto i = createInstance(InstanceCreateInfo{{}, &appInfo, l, exts, &validationLayer->createInfo}, allocator);
+        auto i = createInstance(InstanceCreateInfo{{}, &appInfo, l, exts, nullptr}, allocator);
         logger->info(translate("openminecraft.renderer.vk.instance", info.appName, info.appVer.toString(),
                                info.engineName, info.engineVer.toString(), info.minApiVersion.toString()));
 #ifdef OM_VULKAN_DYNAMIC

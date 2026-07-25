@@ -17,7 +17,6 @@ class OMRendererVkValidation
     ~OMRendererVkValidation();
 
     void attachInstance(::vk::InstanceCreateInfo i);
-    ::vk::DebugUtilsMessengerCreateInfoEXT createInfo;
     ::vk::DebugReportCallbackCreateInfoEXT callbackInfo;
     void attach(std::vector<const char *> *data);
     void attachExts(std::vector<const char *> *data);
