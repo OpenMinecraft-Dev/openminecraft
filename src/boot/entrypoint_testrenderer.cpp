@@ -109,6 +109,8 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     // INFO: core pipeline creation
 
     logger.warn("1");
+    logger.warn("{} {} {}", (void *)renderer->getDefaultRenderTarget(), (void *)outputFrg.get(),
+                (void *)outputVtx.get());
     mainPipeline = renderer->createPipeline()
                        ->input(UniformBuffer)
                        ->input(ImageSampler)
