@@ -107,6 +107,8 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     }
 
     // INFO: core pipeline creation
+
+    logger.warn("1");
     mainPipeline = renderer->createPipeline()
                        ->input(UniformBuffer)
                        ->input(ImageSampler)
@@ -115,7 +117,9 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
                        ->shader(outputVtx)
                        ->format(format)
                        ->buildN();
+    logger.warn("2");
     mainPipeline->bindInput(0, tempUniformBuffer);
+    logger.warn("3");
 }
 
 void OMTestRenderer::beforeFrame()

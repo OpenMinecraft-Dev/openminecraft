@@ -83,44 +83,6 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     OMRendererBuffer *uniformBuffer;
     OMRenderer *renderer;
 
-    /*struct
-    {
-        OMRendererBuffer *quadBuffer;
-        OMRendererBuffer *quadIndex;
-        OMRendererBuffer *indirectBuffer;
-        OMRendererBuffer *instanceBuffer = nullptr;
-
-        std::vector<element::OMDemiurgeElementRect> rects = {};
-        std::vector<bool> dirty = {};
-
-        OMRendererPipeline *pipeline;
-        std::shared_ptr<OMShader> vtxShader, frgShader;
-        basics::OMVertexFormat format;
-
-        auto request() -> int
-        {
-            rects.emplace_back(element::OMDemiurgeElementRect{});
-            dirty.resize(rects.size());
-            return rects.size() - 1;
-        }
-
-        auto temporary(int i) -> element::OMDemiurgeElementRect *
-        {
-            dirty[i] = true;
-            return &rects[i];
-        }
-
-        auto solve() -> void
-        {
-            dirty.assign(dirty.size(), false);
-        }
-    } rect;
-
-    void rectPipelineInit();
-    void rectPipelineTask(OMRendererTask *task);
-    void rectPipelineUpdate();
-    void rectPipelineDestroy();*/
-
     OMDemiurgeRectChannel rect;
 };
 
