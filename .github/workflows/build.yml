@@ -161,6 +161,7 @@ jobs:
           xmake f -yc ${{ env.XMAKE_ARGS }}
           xmake -y -v -b openminecraft-bundlemaker
           xmake run -y -w . openminecraft-bundlemaker -a Cyrene -c -t boot.bundle -P bootassets
+          xmake run -w . openminecraft-bundlemaker -r -t boot.bundle
       - name: Save xmake packages (bootstrap)
         uses: actions/cache/save@v5
         with:
