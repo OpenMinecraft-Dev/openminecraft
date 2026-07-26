@@ -1,4 +1,5 @@
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_rect_channel.hpp"
+#include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
 
@@ -36,9 +37,9 @@ void OMDemiurgeRectChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRend
                    ->shader(frgShader)
                    ->shader(vtxShader)
                    ->format(format)
-                   ->blendFunc({One, One, One, One})
+                   ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
                    ->blend(true)
-                   ->depth(true, true)
+                   ->depth(false, false)
                    ->buildN();
     pipeline->bindInput(0, uniformBuffer);
 }
