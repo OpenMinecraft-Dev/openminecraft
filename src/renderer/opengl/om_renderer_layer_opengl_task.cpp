@@ -52,6 +52,10 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
                 {BindTexture, GL_TEXTURE_2D, reinterpret_cast<OMRendererTextureOpenGL *>(glpipe->inputs[i])->texture});
         }
     }
+
+    ops.push_back({Enable, GL_DEPTH_TEST});
+    ops.push_back({Enable, GL_BLEND});
+    ops.push_back({BlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA});
 }
 
 static auto fromCommon(common::basics::OMVertexPropType t) -> std::pair<int, GLuint>
@@ -206,6 +210,9 @@ void OMRendererTaskOpenGL::execute()
             break;
         case BindBuffer:
             gl->glBindBuffer(op.args[0], op.args[1]);
+            break;
+        case BlendFunc:
+            gl->glBlendFunc(op.args[0], op.args[1]);
             break;
         }
     }

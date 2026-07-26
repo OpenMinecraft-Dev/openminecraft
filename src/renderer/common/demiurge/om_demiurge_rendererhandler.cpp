@@ -1,4 +1,5 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
+#include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_roundedrect_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
@@ -14,7 +15,7 @@ struct SimpleUniform
     float height;
 };
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
-    : renderer(renderer), OMRendererHandler(renderer), rect(renderer)
+    : renderer(renderer), OMRendererHandler(renderer), rect(renderer), roundedRect(renderer)
 {
     node = std::make_shared<node::OMDemiurgeRectNode>()->style({
         {"color", 0x2c2c34ff},
@@ -35,12 +36,15 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         node->mount(d);
     }
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
+
     rect.init(uniformBuffer);
+    roundedRect.init(uniformBuffer);
 }
 
 OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
 {
     rect.destroy();
+    roundedRect.destroy();
     delete uniformBuffer;
 }
 
@@ -55,6 +59,7 @@ void OMDemiurgeRendererHandler::submitTasks()
                     ->target(renderer->getDefaultRenderTarget())
                     ->clearN();
     rect.submitTask(task);
+    roundedRect.submitTask(task);
     task->finish();
 
     renderer->registerTask("demiurgeui_core", task);
@@ -68,6 +73,7 @@ void OMDemiurgeRendererHandler::beforeFrame()
     node->submit(this, 0.9f);
 
     rect.update();
+    roundedRect.update();
 }
 
 void OMDemiurgeRendererHandler::afterFrame()

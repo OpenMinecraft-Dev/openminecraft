@@ -14,14 +14,16 @@ auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, float depth)
     {
         if (rectId == -1)
         {
-            rectId = handler->rect.request();
+            rectId = handler->roundedRect.request();
         }
 
         auto pp = stylesStorage.get<OMDemiurgeRect>("layoutBound");
-        auto t = handler->rect.temporary(rectId);
+        auto t = handler->roundedRect.temporary(rectId);
         t->color = genLinear(stylesStorage.get<int>("color"));
         t->position = {pp.x, pp.y, pp.width, pp.height};
         t->depth = depth;
+        t->factor = 1.0f;
+        t->radius = {0, 0, 0, 0};
 
         stylesStorage.solve();
     }

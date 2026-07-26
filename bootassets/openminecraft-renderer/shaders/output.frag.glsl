@@ -5,7 +5,7 @@
 layout(location = 0) in vec2 outTexCoord;
 layout(location = 0) out vec4 outColor;
 
-layout(binding = 1) uniform sampler2D texSampler;
+layout(binding = 1) uniform sampler2D inTexture;
 
 layout(binding = 0) uniform UniformBufferObject {
     mat4 model;
@@ -23,11 +23,11 @@ float gaussianWeight(float x, float y, float sigma) {
 }
 
 void main() {
-    outColor = texture(texSampler, outTexCoord);
+    outColor = texture(inTexture, outTexCoord);
 
     precision highp float;
     
-    vec2 texSize = textureSize(texSampler, 0);
+    vec2 texSize = textureSize(inTexture, 0);
     vec2 texelSize = 1.0 / texSize;
 
     int radius = int(ubo.kernelSize);
@@ -46,7 +46,7 @@ void main() {
             vec2 off = outTexCoord + vec2(x, y) * texelSize;
             // gino: we had to do this otherwise wrong pixels will be fetched
             off = clamp(off, vec2(0.0 + texelSize), vec2(1.0 - texelSize));
-            vec4 sampleColor = texture(texSampler, off);
+            vec4 sampleColor = texture(inTexture, off);
             
             result += sampleColor * weight;
             weightSum += weight;

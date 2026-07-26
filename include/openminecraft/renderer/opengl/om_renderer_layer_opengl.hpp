@@ -71,6 +71,7 @@ struct OMRendererOpenGLFuncs
     PFNGLBUFFERSUBDATAPROC glBufferSubData;
     PFNGLDEBUGMESSAGECALLBACKPROC glDebugMessageCallback;
     PFNGLDEBUGMESSAGECONTROLPROC glDebugMessageControl;
+    PFNGLBLENDFUNCPROC glBlendFunc;
 };
 class OMRendererOpenGL : public OMRenderer
 {

@@ -2,6 +2,7 @@
 #define OM_DEMIURGE_RENDERERHANDLER_HPP
 
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_rect_channel.hpp"
+#include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_roundedrect_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
@@ -35,6 +36,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     OMRenderer *renderer;
 
     element::OMDemiurgeRectChannel rect;
+    element::OMDemiurgeRoundedRectChannel roundedRect;
 };
 
 } // namespace openminecraft::renderer::common::demiurge

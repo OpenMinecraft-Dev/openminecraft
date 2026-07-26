@@ -126,6 +126,7 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glBufferSubData = fetchGlFunc<PFNGLBUFFERSUBDATAPROC>("glBufferSubData");
     gl.glDebugMessageCallback = fetchGlFunc<PFNGLDEBUGMESSAGECALLBACKPROC>("glDebugMessageCallback");
     gl.glDebugMessageControl = fetchGlFunc<PFNGLDEBUGMESSAGECONTROLPROC>("glDebugMessageControl");
+    gl.glBlendFunc = fetchGlFunc<PFNGLBLENDFUNCPROC>("glBlendFunc");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()

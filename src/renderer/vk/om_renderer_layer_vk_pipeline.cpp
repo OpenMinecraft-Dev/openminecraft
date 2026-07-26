@@ -9,6 +9,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "vulkan/vulkan.hpp"
+#include "vulkan/vulkan_enums.hpp"
 #include <chrono>
 #include <thread>
 
@@ -264,10 +265,13 @@ void OMRendererPipelineVk::build()
         {}, false, false, PolygonMode::eFill, CullModeFlagBits::eNone, FrontFace::eCounterClockwise, true, 0, 0, 0, 1);
     auto multisample = PipelineMultisampleStateCreateInfo({}, SampleCountFlagBits::e1, false);
     auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
-    std::vector attc = {PipelineColorBlendAttachmentState(false, {}, {}, {}, {}, {}, {},
+    std::vector attc = {PipelineColorBlendAttachmentState(true, BlendFactor::eSrcAlpha, BlendFactor::eOneMinusSrcAlpha,
+                                                          BlendOp::eAdd, BlendFactor::eOne, BlendFactor::eZero,
+                                                          BlendOp::eAdd,
                                                           ColorComponentFlagBits::eA | ColorComponentFlagBits::eR |
                                                               ColorComponentFlagBits::eG | ColorComponentFlagBits::eB)};
-    auto colorblend = PipelineColorBlendStateCreateInfo({}, true, LogicOp::eCopy, attc, std::array{0.f, 0.f, 0.f, 0.f});
+    auto colorblend =
+        PipelineColorBlendStateCreateInfo({}, false, LogicOp::eNoOp, attc, std::array{0.f, 0.f, 0.f, 0.f});
     auto depthStencil =
         PipelineDepthStencilStateCreateInfo({}, true, true, CompareOp::eLess, true, true, {}, {}, 0.0f, 1.0f);
     std::vector<DynamicState> states = {DynamicState::eScissor, DynamicState::eViewport};

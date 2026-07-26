@@ -5,9 +5,14 @@
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec4 inRectPos;
 layout(location = 2) in vec4 inRectColor;
-layout(location = 3) in float inRectDepth;
+layout(location = 3) in vec4 inRectRadius;
+layout(location = 4) in float inRectFactor;
+layout(location = 5) in float inRectDepth;
 
 layout(location = 0) out vec4 outColor;
+layout(location = 1) out vec2 outPosition;
+layout(location = 2) out vec4 outRadius;
+layout(location = 3) out vec4 outRectPosition;
 
 layout(binding = 0) uniform UniformBufferObject {
     float width;
@@ -25,4 +30,7 @@ void main() {
     gl_Position.y = -gl_Position.y;
 #endif
     outColor = inRectColor;
+    outPosition = screenPos;
+    outRadius = inRectRadius;
+    outRectPosition = inRectPos;
 }
