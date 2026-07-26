@@ -5,7 +5,7 @@
 
 namespace openminecraft::renderer::common::demiurge::element
 {
-void OMDemiurgeRectChannel::init(OMRendererBuffer *uniformBuffer)
+void OMDemiurgeRectChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRenderTarget *target)
 {
 #define shaderDef(name, filename, type)                                                                                \
     {                                                                                                                  \
@@ -34,10 +34,13 @@ void OMDemiurgeRectChannel::init(OMRendererBuffer *uniformBuffer)
 
     pipeline = renderer->createPipeline()
                    ->input(UniformBuffer)
-                   ->output(renderer->getDefaultRenderTarget())
+                   ->output(target)
                    ->shader(frgShader)
                    ->shader(vtxShader)
                    ->format(format)
+                   ->blendFunc({One, One, One, One})
+                   ->blend(true)
+                   ->depth(false, false)
                    ->buildN();
     pipeline->bindInput(0, uniformBuffer);
 }

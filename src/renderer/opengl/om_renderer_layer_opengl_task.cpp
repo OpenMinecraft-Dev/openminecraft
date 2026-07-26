@@ -10,7 +10,6 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_rendertarget.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_texture.hpp"
 #include <cstdint>
-#include <iostream>
 #include <utility>
 
 namespace openminecraft::renderer::opengl
@@ -22,6 +21,22 @@ OMRendererTaskOpenGL::OMRendererTaskOpenGL(OMRendererOpenGL *renderer) : common:
 OMRendererTaskOpenGL::~OMRendererTaskOpenGL()
 {
     gl->glDeleteVertexArrays(vaos.size(), vaos.data());
+}
+
+static auto convert(common::OMRendererPipelineBlendType t) -> GLenum
+{
+    switch (t)
+    {
+    default:
+    case common::One:
+        return GL_ONE;
+    case common::Zero:
+        return GL_ZERO;
+    case common::Alpha:
+        return GL_ALPHA;
+    case common::OneMinusAlpha:
+        return GL_ONE_MINUS_SRC_ALPHA;
+    }
 }
 
 void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
@@ -53,9 +68,13 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
         }
     }
 
-    ops.push_back({Enable, GL_DEPTH_TEST});
-    ops.push_back({Enable, GL_BLEND});
-    ops.push_back({BlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA});
+    auto s = glpipe->blendState;
+    ops.push_back({glpipe->enableDepthTest ? Enable : Disable, GL_DEPTH_TEST});
+    ops.push_back({DepthMask, glpipe->enableDepthWrite});
+    ops.push_back({DepthFunc, GL_LESS});
+    ops.push_back({glpipe->enableBlend ? Enable : Disable, GL_BLEND});
+    ops.push_back(
+        {BlendFuncSeparate, convert(s.srcColor), convert(s.dstColor), convert(s.srcAlpha), convert(s.dstAlpha)});
 }
 
 static auto fromCommon(common::basics::OMVertexPropType t) -> std::pair<int, GLuint>
@@ -213,6 +232,15 @@ void OMRendererTaskOpenGL::execute()
             break;
         case BlendFunc:
             gl->glBlendFunc(op.args[0], op.args[1]);
+            break;
+        case DepthFunc:
+            gl->glDepthFunc(op.args[0]);
+            break;
+        case BlendFuncSeparate:
+            gl->glBlendFuncSeparate(op.args[0], op.args[1], op.args[2], op.args[3]);
+            break;
+        case DepthMask:
+            gl->glDepthMask(op.args[0]);
             break;
         }
     }

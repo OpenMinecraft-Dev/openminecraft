@@ -21,6 +21,17 @@ enum OMRendererPipelineInputType
     ImageSampler,
     UniformBuffer
 };
+enum OMRendererPipelineBlendType
+{
+    One,
+    Zero,
+    Alpha,
+    OneMinusAlpha
+};
+struct OMReedererPipelineBlendState
+{
+    OMRendererPipelineBlendType srcColor, dstColor, srcAlpha, dstAlpha;
+};
 class OMRendererPipeline : public OMRendererObject
 {
   public:
@@ -60,6 +71,25 @@ class OMRendererPipeline : public OMRendererObject
         return this;
     }
 
+    virtual void setBlendFunc(OMReedererPipelineBlendState state) = 0;
+    inline auto blendFunc(OMReedererPipelineBlendState state) -> OMRendererPipeline *
+    {
+        setBlendFunc(state);
+        return this;
+    }
+
+    inline auto blend(bool enable) -> OMRendererPipeline *
+    {
+        enableBlend = enable;
+        return this;
+    }
+    inline auto depth(bool test, bool write) -> OMRendererPipeline *
+    {
+        enableDepthTest = test;
+        enableDepthWrite = write;
+        return this;
+    }
+
     virtual void bindInput(int idx, common::OMRendererBuffer *buff) = 0;
     virtual void bindInput(int idx, common::OMRendererTexture *texture) = 0;
 
@@ -67,6 +97,10 @@ class OMRendererPipeline : public OMRendererObject
     {
         return Pipeline;
     }
+
+    bool enableBlend = false;
+    bool enableDepthTest = false;
+    bool enableDepthWrite = false;
 };
 } // namespace openminecraft::renderer::common
 

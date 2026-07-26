@@ -2,6 +2,7 @@
 #define OM_DEMIURGE_ELEMENT_CHANNEL_HPP
 
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
+#include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include <functional>
 #include <vector>
@@ -13,7 +14,7 @@ template <typename T> class OMDemiurgeChannel
     OMDemiurgeChannel() = default;
     ~OMDemiurgeChannel() = default;
 
-    virtual void init(OMRendererBuffer *uniform) = 0;
+    virtual void init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) = 0;
     virtual void submitTask(OMRendererTask *task) = 0;
     virtual void update() = 0;
     virtual void destroy() = 0;

@@ -23,6 +23,7 @@ class OMRendererPipelineOpenGL : public common::OMRendererPipeline
     void vertexFormat(common::basics::OMVertexFormat format) override;
     void bindOutput(common::OMRendererRenderTarget *target) override;
     void build() override;
+    void setBlendFunc(common::OMReedererPipelineBlendState state) override;
 
     void bindInput(int idx, common::OMRendererBuffer *buff) override;
     void bindInput(int idx, common::OMRendererTexture *texture) override;
@@ -31,6 +32,7 @@ class OMRendererPipelineOpenGL : public common::OMRendererPipeline
     common::basics::OMVertexFormat format;
     std::vector<OMRendererObject *> inputs;
     std::vector<common::OMRendererPipelineInputType> inputTypes;
+    common::OMReedererPipelineBlendState blendState;
 
   private:
     OMRendererOpenGLFuncs *gl;

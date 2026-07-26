@@ -15,7 +15,7 @@ class OMDemiurgeRectChannel : public OMDemiurgeChannel<OMDemiurgeElementRect>
     }
     ~OMDemiurgeRectChannel() = default;
 
-    void init(OMRendererBuffer *uniform) override;
+    void init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) override;
     void submitTask(OMRendererTask *task) override;
     void update() override;
     void destroy() override;

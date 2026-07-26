@@ -213,6 +213,22 @@ void OMRendererPipelineVk::bindInput(int idx, common::OMRendererTexture *texture
     }
 }
 
+static auto convert(common::OMRendererPipelineBlendType t) -> BlendFactor
+{
+    switch (t)
+    {
+    default:
+    case common::One:
+        return BlendFactor::eOne;
+    case common::Zero:
+        return BlendFactor::eZero;
+    case common::Alpha:
+        return BlendFactor::eSrcAlpha;
+    case common::OneMinusAlpha:
+        return BlendFactor::eOneMinusSrcAlpha;
+    }
+}
+
 void OMRendererPipelineVk::build()
 {
     if (available)
@@ -265,15 +281,15 @@ void OMRendererPipelineVk::build()
         {}, false, false, PolygonMode::eFill, CullModeFlagBits::eNone, FrontFace::eCounterClockwise, true, 0, 0, 0, 1);
     auto multisample = PipelineMultisampleStateCreateInfo({}, SampleCountFlagBits::e1, false);
     auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
-    std::vector attc = {PipelineColorBlendAttachmentState(true, BlendFactor::eSrcAlpha, BlendFactor::eOneMinusSrcAlpha,
-                                                          BlendOp::eAdd, BlendFactor::eOne, BlendFactor::eZero,
-                                                          BlendOp::eAdd,
-                                                          ColorComponentFlagBits::eA | ColorComponentFlagBits::eR |
-                                                              ColorComponentFlagBits::eG | ColorComponentFlagBits::eB)};
+    std::vector attc = {PipelineColorBlendAttachmentState(
+        enableBlend, convert(blendState.srcColor), convert(blendState.dstColor), BlendOp::eAdd,
+        convert(blendState.srcAlpha), convert(blendState.dstAlpha), BlendOp::eAdd,
+        ColorComponentFlagBits::eA | ColorComponentFlagBits::eR | ColorComponentFlagBits::eG |
+            ColorComponentFlagBits::eB)};
     auto colorblend =
         PipelineColorBlendStateCreateInfo({}, false, LogicOp::eNoOp, attc, std::array{0.f, 0.f, 0.f, 0.f});
-    auto depthStencil =
-        PipelineDepthStencilStateCreateInfo({}, true, true, CompareOp::eLess, true, true, {}, {}, 0.0f, 1.0f);
+    auto depthStencil = PipelineDepthStencilStateCreateInfo({}, enableDepthTest, enableDepthWrite, CompareOp::eLess,
+                                                            true, true, {}, {}, 0.0f, 1.0f);
     std::vector<DynamicState> states = {DynamicState::eScissor, DynamicState::eViewport};
     auto dynamicState = PipelineDynamicStateCreateInfo({}, states);
 
@@ -305,6 +321,11 @@ void OMRendererPipelineVk::build()
     {
         renderer->logicalDevice.destroyShaderModule(sd, renderer->allocator);
     }
+}
+
+void OMRendererPipelineVk::setBlendFunc(common::OMReedererPipelineBlendState state)
+{
+    this->blendState = state;
 }
 
 } // namespace openminecraft::renderer::vk

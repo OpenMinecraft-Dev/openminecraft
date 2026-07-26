@@ -15,6 +15,7 @@ auto logger = openminecraft::log::OMLogger("launcher");
 void sighnd(int)
 {
     logger.dumpStacktrace();
+    exit(-1);
 }
 
 auto main(int argc, char **argv) -> int

@@ -7,7 +7,9 @@
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
+#include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
+#include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 namespace openminecraft::renderer::common::demiurge
 {
@@ -34,6 +36,9 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     OMRendererBuffer *uniformBuffer;
     OMRenderer *renderer;
+    OMRendererTexture *composeColor = nullptr;
+    OMRendererTexture *composeDepth = nullptr;
+    OMRendererRenderTarget *composeTarget = nullptr;
 
     element::OMDemiurgeRectChannel rect;
     element::OMDemiurgeRoundedRectChannel roundedRect;

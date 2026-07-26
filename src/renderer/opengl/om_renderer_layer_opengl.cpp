@@ -127,6 +127,9 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glDebugMessageCallback = fetchGlFunc<PFNGLDEBUGMESSAGECALLBACKPROC>("glDebugMessageCallback");
     gl.glDebugMessageControl = fetchGlFunc<PFNGLDEBUGMESSAGECONTROLPROC>("glDebugMessageControl");
     gl.glBlendFunc = fetchGlFunc<PFNGLBLENDFUNCPROC>("glBlendFunc");
+    gl.glDepthFunc = fetchGlFunc<PFNGLDEPTHFUNCPROC>("glDepthFunc");
+    gl.glBlendFuncSeparate = fetchGlFunc<PFNGLBLENDFUNCSEPARATEPROC>("glBlendFuncSeparate");
+    gl.glDepthMask = fetchGlFunc<PFNGLDEPTHMASKPROC>("glDepthMask");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()

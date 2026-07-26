@@ -115,6 +115,9 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
                        ->shader(outputFrg)
                        ->shader(outputVtx)
                        ->format(format)
+                       ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+                       ->blend(true)
+                       ->depth(true, true)
                        ->buildN();
     mainPipeline->bindInput(0, tempUniformBuffer);
 }
@@ -221,6 +224,9 @@ void OMTestRenderer::submitTasks()
                        ->shader(objectFrg)
                        ->shader(objectVtx)
                        ->format(format)
+                       ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+                       ->blend(true)
+                       ->depth(true, true)
                        ->buildN();
         pipeline->bindInput(0, uniformBuffer);
         pipeline->bindInput(1, textureImage);
@@ -230,8 +236,8 @@ void OMTestRenderer::submitTasks()
 
     auto task = renderer->createTask()
                     ->target(renderTarget)
-                    ->clearN()
                     ->pipeline(pipeline)
+                    ->clearN()
                     ->vertexBuffer({vertexBuffer})
                     ->indexBuffer(indexBuffer)
                     ->drawN(vertexCount)
@@ -241,6 +247,7 @@ void OMTestRenderer::submitTasks()
                      ->dependOn(task)
                      ->target(renderer->getDefaultRenderTarget())
                      ->pipeline(mainPipeline)
+                     ->clearN()
                      ->vertexBuffer({mainVtxBuffer})
                      ->indexBuffer(mainIdxBuffer)
                      ->drawN(6)

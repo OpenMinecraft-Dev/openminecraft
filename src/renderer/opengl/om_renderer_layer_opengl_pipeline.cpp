@@ -105,6 +105,11 @@ void OMRendererPipelineOpenGL::build()
     program = programbase;
 }
 
+void OMRendererPipelineOpenGL::setBlendFunc(common::OMReedererPipelineBlendState state)
+{
+    this->blendState = state;
+}
+
 void OMRendererPipelineOpenGL::bindInput(int idx, common::OMRendererBuffer *buff)
 {
     inputs[idx] = buff;

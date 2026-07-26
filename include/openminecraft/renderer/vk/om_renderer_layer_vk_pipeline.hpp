@@ -33,6 +33,7 @@ class OMRendererPipelineVk : public common::OMRendererPipeline
     void bindInput(int idx, common::OMRendererTexture *texture) override;
 
     void build() override;
+    void setBlendFunc(common::OMReedererPipelineBlendState state) override;
     static auto convertTo(common::basics::OMVertexPropType) -> ::vk::Format;
     static auto convertTo(common::OMShaderType) -> ::vk::ShaderStageFlagBits;
 
@@ -74,6 +75,8 @@ class OMRendererPipelineVk : public common::OMRendererPipeline
     log::OMLogger logger;
 
     std::vector<int> shaderIds;
+
+    common::OMReedererPipelineBlendState blendState;
 };
 } // namespace openminecraft::renderer::vk
 

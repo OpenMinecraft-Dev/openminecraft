@@ -4,6 +4,7 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
+#include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <memory>
 
@@ -17,6 +18,7 @@ struct SimpleUniform
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     : renderer(renderer), OMRendererHandler(renderer), rect(renderer), roundedRect(renderer)
 {
+    // 0x2c2c34ff 0x00d4ffff
     node = std::make_shared<node::OMDemiurgeRectNode>()->style({
         {"color", 0x2c2c34ff},
         {"flexGap", 10_px},
@@ -36,9 +38,6 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         node->mount(d);
     }
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
-
-    rect.init(uniformBuffer);
-    roundedRect.init(uniformBuffer);
 }
 
 OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
@@ -46,6 +45,10 @@ OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
     rect.destroy();
     roundedRect.destroy();
     delete uniformBuffer;
+
+    delete composeTarget;
+    delete composeColor;
+    delete composeDepth;
 }
 
 void OMDemiurgeRendererHandler::submitTasks()
@@ -54,15 +57,40 @@ void OMDemiurgeRendererHandler::submitTasks()
     SimpleUniform u{ext.x, ext.y};
     uniformBuffer->updateData(&u);
 
-    auto task = renderer->createTask()
-                    ->dependOn(renderer->fetchTask("main"))
-                    ->target(renderer->getDefaultRenderTarget())
-                    ->clearN();
+    {
+        if (composeTarget)
+        {
+            delete composeColor;
+            delete composeDepth;
+        }
+
+        composeColor = renderer->allocateTexture(ext.x, ext.y, Dim2, ColorRgba);
+        composeDepth = renderer->allocateTexture(ext.x, ext.y, Dim2, Depth);
+
+        if (!composeTarget)
+        {
+            composeTarget = renderer->createRenderTarget();
+            composeTarget->attachTarget(composeColor);
+            composeTarget->attachTarget(composeDepth);
+            composeTarget->build();
+
+            rect.init(uniformBuffer, composeTarget);
+            roundedRect.init(uniformBuffer, composeTarget);
+        }
+        else
+        {
+            composeTarget->replaceTarget(0, composeColor);
+            composeTarget->replaceTarget(1, composeDepth);
+            composeTarget->rebuild();
+        }
+    }
+
+    auto task = renderer->createTask()->dependOn(renderer->fetchTask("main"))->target(composeTarget)->clearN();
     rect.submitTask(task);
     roundedRect.submitTask(task);
     task->finish();
 
-    renderer->registerTask("demiurgeui_core", task);
+    renderer->registerTask("demiurgeui_compose", task);
 }
 
 void OMDemiurgeRendererHandler::beforeFrame()

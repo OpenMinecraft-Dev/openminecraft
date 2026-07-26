@@ -3,10 +3,11 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
+#include <cstdint>
 
 namespace openminecraft::renderer::common::demiurge::element
 {
-void OMDemiurgeRoundedRectChannel::init(OMRendererBuffer *uniformBuffer)
+void OMDemiurgeRoundedRectChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRenderTarget *target)
 {
 #define shaderDef(name, filename, type)                                                                                \
     {                                                                                                                  \
@@ -32,15 +33,18 @@ void OMDemiurgeRoundedRectChannel::init(OMRendererBuffer *uniformBuffer)
     quadBuffer->updateData(std::array<glm::vec2, 4>{{{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}}}.data());
     quadIndex = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
     quadIndex->updateData(std::array<uint32_t, 6>{{0, 1, 2, 2, 3, 0}}.data());
-    indirectBuffer = renderer->allocateBuffer(Indirect, sizeof(OMDemiurgeIndirect));
+    indirectBuffer = renderer->allocateBuffer(Indirect, sizeof(OMDemiurgeIndirect) * 2);
     instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
 
     pipeline = renderer->createPipeline()
                    ->input(UniformBuffer)
-                   ->output(renderer->getDefaultRenderTarget())
+                   ->output(target)
                    ->shader(frgShader)
                    ->shader(vtxShader)
                    ->format(format)
+                   ->blendFunc({One, One, One, One})
+                   ->blend(true)
+                   ->depth(false, false)
                    ->buildN();
     pipeline->bindInput(0, uniformBuffer);
 }
@@ -65,7 +69,7 @@ void OMDemiurgeRoundedRectChannel::submitTask(OMRendererTask *task)
         ->vertexBuffer({quadBuffer, instanceBuffer})
         ->indexBuffer(quadIndex)
         ->indirectBuffer(indirectBuffer)
-        ->drawIndirect(0, 1);
+        ->drawIndirect(0, 2);
 }
 
 void OMDemiurgeRoundedRectChannel::update()
@@ -84,7 +88,11 @@ void OMDemiurgeRoundedRectChannel::update()
 
     if (lastCount != objects.size())
     {
-        OMDemiurgeIndirect i{6, static_cast<uint32_t>(objects.size()), 0, 0, 0};
+        // OMDemiurgeIndirect i{6, static_cast<uint32_t>(objects.size()), 0, 0, 0};
+        std::array<OMDemiurgeIndirect, 2> i = {{
+            {6, (uint32_t)objects.size() - 1, 0, 0, 1},
+            {6, 1, 0, 0, 0},
+        }};
         indirectBuffer->updateData(&i);
         lastCount = objects.size();
     }
