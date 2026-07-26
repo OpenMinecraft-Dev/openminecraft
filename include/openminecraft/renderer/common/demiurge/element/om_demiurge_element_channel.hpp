@@ -15,7 +15,7 @@ template <typename T> class OMDemiurgeChannel
     ~OMDemiurgeChannel() = default;
 
     virtual void init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) = 0;
-    virtual void submitTask(OMRendererTask *task) = 0;
+    virtual void submitTask(OMRendererTask *task, float upper, float lower) = 0;
     virtual void update() = 0;
     virtual void destroy() = 0;
 

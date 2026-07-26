@@ -33,7 +33,7 @@ static auto convert(common::OMRendererPipelineBlendType t) -> GLenum
     case common::Zero:
         return GL_ZERO;
     case common::Alpha:
-        return GL_ALPHA;
+        return GL_SRC_ALPHA;
     case common::OneMinusAlpha:
         return GL_ONE_MINUS_SRC_ALPHA;
     }

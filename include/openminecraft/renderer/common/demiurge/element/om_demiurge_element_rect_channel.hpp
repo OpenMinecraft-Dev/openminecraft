@@ -16,7 +16,7 @@ class OMDemiurgeRectChannel : public OMDemiurgeChannel<OMDemiurgeElementRect>
     ~OMDemiurgeRectChannel() = default;
 
     void init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) override;
-    void submitTask(OMRendererTask *task) override;
+    void submitTask(OMRendererTask *task, float upper, float lower) override;
     void update() override;
     void destroy() override;
 
@@ -24,7 +24,6 @@ class OMDemiurgeRectChannel : public OMDemiurgeChannel<OMDemiurgeElementRect>
     OMRenderer *renderer;
     OMRendererBuffer *quadBuffer;
     OMRendererBuffer *quadIndex;
-    OMRendererBuffer *indirectBuffer;
     OMRendererBuffer *instanceBuffer = nullptr;
 
     OMRendererPipeline *pipeline;

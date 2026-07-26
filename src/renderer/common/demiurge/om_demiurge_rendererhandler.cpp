@@ -60,9 +60,11 @@ void OMDemiurgeRendererHandler::submitTasks()
                     ->dependOn(renderer->fetchTask("main"))
                     ->target(renderer->getDefaultRenderTarget())
                     ->clearN();
-    // TODO: element sort by the depth property!
-    rect.submitTask(task);
-    roundedRect.submitTask(task);
+    for (float layer = bottomDepth; layer >= topDepth; layer -= 0.01f)
+    {
+        rect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
+        roundedRect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
+    }
     task->finish();
 
     renderer->registerTask("demiurgeui_compose", task);
@@ -73,7 +75,7 @@ void OMDemiurgeRendererHandler::beforeFrame()
     auto ext = renderer->getExtent();
 
     node->layout(ext.x, ext.y);
-    node->submit(this, 0.9f);
+    node->submit(this, bottomDepth);
 
     rect.update();
     roundedRect.update();

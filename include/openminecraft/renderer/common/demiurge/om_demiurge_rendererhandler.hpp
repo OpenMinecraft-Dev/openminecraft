@@ -13,6 +13,10 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 namespace openminecraft::renderer::common::demiurge
 {
+constexpr float bottomDepth = 0.99f;
+constexpr float topDepth = 0.01f;
+constexpr float layerHalfWidth = 0.005f;
+
 struct OMDemiurgeIndirect
 {
     uint32_t indexCount;

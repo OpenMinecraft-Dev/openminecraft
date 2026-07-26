@@ -20,7 +20,7 @@ void main() {
     vec2 halfSize   = inRectPosition.zw / 2.0;
     vec2 localPos   = inPosition - rectCenter;
 
-    float alpha = rrectSdf(localPos, halfSize, 100.0, 0.0, 2.0);
+    float alpha = rrectSdf(localPos, halfSize, 30.0, 0.0, 2.0);
 
     outColor = inColor * alpha;
 }

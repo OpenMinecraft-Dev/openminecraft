@@ -30,7 +30,7 @@ auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, float depth)
 
     for (auto c : children)
     {
-        c->submit(handler, depth - 0.01f);
+        c->submit(handler, depth - layerHalfWidth * 2);
     }
 }
 } // namespace openminecraft::renderer::common::demiurge::node

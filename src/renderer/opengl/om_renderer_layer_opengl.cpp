@@ -130,6 +130,8 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glDepthFunc = fetchGlFunc<PFNGLDEPTHFUNCPROC>("glDepthFunc");
     gl.glBlendFuncSeparate = fetchGlFunc<PFNGLBLENDFUNCSEPARATEPROC>("glBlendFuncSeparate");
     gl.glDepthMask = fetchGlFunc<PFNGLDEPTHMASKPROC>("glDepthMask");
+    gl.glDrawElementsInstancedBaseInstance =
+        fetchGlFunc<PFNGLDRAWELEMENTSINSTANCEDBASEINSTANCEPROC>("glDrawElementsInstancedBaseInstance");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()
