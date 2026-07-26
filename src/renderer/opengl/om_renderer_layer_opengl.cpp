@@ -49,12 +49,15 @@ OMRendererOpenGL::OMRendererOpenGL(AppInfo info, void *window)
     defaultTarget = createRenderTarget();
     defaultTarget->build();
 
-    gl.glEnable(GL_DEBUG_OUTPUT);
-    gl.glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    if (false)
+    {
+        gl.glEnable(GL_DEBUG_OUTPUT);
+        gl.glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
-    gl.glDebugMessageCallback(debugCallback, nullptr);
+        gl.glDebugMessageCallback(debugCallback, nullptr);
 
-    gl.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+        gl.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    }
 }
 
 template <typename T> inline auto fetchGlFunc(const char *name) -> T

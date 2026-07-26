@@ -219,7 +219,6 @@ void OMRendererPipelineVk::build()
         return;
     }
 
-    logger.debug("1");
     for (auto id : shaderIds)
     {
         std::shared_ptr<common::OMShader> fin = nullptr;
@@ -228,13 +227,11 @@ void OMRendererPipelineVk::build()
             fin = renderer->compiler.getResult(id);
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
-        logger.debug("1");
         auto sm = renderer->logicalDevice.createShaderModule(
             ShaderModuleCreateInfo({}, fin->data.size(), reinterpret_cast<const uint32_t *>(fin->data.data())),
             renderer->allocator);
         shaders.push_back(sm);
         shaderCreateInfos.push_back({{}, convertTo(fin->typebase), sm, fin->entrypoint.c_str()});
-        logger.debug("1");
     }
     shaderIds.clear();
 
