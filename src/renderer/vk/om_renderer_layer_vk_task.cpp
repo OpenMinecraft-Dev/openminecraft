@@ -195,6 +195,17 @@ void OMRendererTaskVk::drawInstance(uint64_t vertexCount, uint64_t instanceCount
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.task"));
     }
 }
+void OMRendererTaskVk::drawInstance(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance)
+{
+    try
+    {
+        commandBuffer.drawIndexed(vertexCount, instanceCount, 0, 0, firstInstance);
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.task"));
+    }
+}
 void OMRendererTaskVk::finish()
 {
     try

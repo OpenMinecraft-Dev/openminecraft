@@ -36,9 +36,6 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     OMRendererBuffer *uniformBuffer;
     OMRenderer *renderer;
-    OMRendererTexture *composeColor = nullptr;
-    OMRendererTexture *composeDepth = nullptr;
-    OMRendererRenderTarget *composeTarget = nullptr;
 
     element::OMDemiurgeRectChannel rect;
     element::OMDemiurgeRoundedRectChannel roundedRect;

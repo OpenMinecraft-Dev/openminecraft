@@ -179,6 +179,17 @@ void OMRendererTaskOpenGL::drawInstance(uint64_t vertexCount, uint64_t instanceC
     ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
 }
+void OMRendererTaskOpenGL::drawInstance(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance)
+{
+    ops.push_back({BindVertexArray, vaos.back()});
+    ops.push_back({UseProgram, program});
+    ops.push_back({DrawElementsInstancedBaseInstance,
+                   {GL_TRIANGLES, static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT, static_cast<GLuint>(instanceCount),
+                    static_cast<GLuint>(firstInstance)},
+                   {nullptr}});
+    ops.push_back({BindVertexArray, 0});
+    gl->glBindVertexArray(0);
+}
 void OMRendererTaskOpenGL::finish()
 {
     gl->glBindVertexArray(0);
@@ -223,6 +234,10 @@ void OMRendererTaskOpenGL::execute()
             break;
         case DrawElementsInstanced:
             gl->glDrawElementsInstanced(op.args[0], op.args[1], op.args[2], op.ptrArgs[0], op.args[3]);
+            break;
+        case DrawElementsInstancedBaseInstance:
+            gl->glDrawElementsInstancedBaseInstance(op.args[0], op.args[1], op.args[2], op.ptrArgs[0], op.args[3],
+                                                    op.args[4]);
             break;
         case MultiDrawElementsIndirect:
             gl->glMultiDrawElementsIndirect(op.args[0], op.args[1], op.ptrArgs[0], op.args[2], op.args[3]);

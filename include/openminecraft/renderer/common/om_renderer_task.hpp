@@ -65,6 +65,12 @@ class OMRendererTask : public OMRendererObject
         drawInstance(vertexCount, instanceCount);
         return this;
     }
+    virtual void drawInstance(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance) = 0;
+    inline auto drawInstanceN(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance) -> OMRendererTask *
+    {
+        drawInstance(vertexCount, instanceCount, firstInstance);
+        return this;
+    }
     virtual void drawIndirect(uint64_t begin, uint64_t count) = 0;
     inline auto drawIndirectN(uint64_t begin, uint64_t count) -> OMRendererTask *
     {

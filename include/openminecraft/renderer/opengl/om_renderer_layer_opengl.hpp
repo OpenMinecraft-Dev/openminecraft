@@ -75,6 +75,7 @@ struct OMRendererOpenGLFuncs
     PFNGLDEPTHFUNCPROC glDepthFunc;
     PFNGLBLENDFUNCSEPARATEPROC glBlendFuncSeparate;
     PFNGLDEPTHMASKPROC glDepthMask;
+    PFNGLDRAWELEMENTSINSTANCEDBASEINSTANCEPROC glDrawElementsInstancedBaseInstance;
 };
 class OMRendererOpenGL : public OMRenderer
 {

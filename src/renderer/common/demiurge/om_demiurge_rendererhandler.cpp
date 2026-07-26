@@ -38,6 +38,9 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         node->mount(d);
     }
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
+
+    rect.init(uniformBuffer, renderer->getDefaultRenderTarget());
+    roundedRect.init(uniformBuffer, renderer->getDefaultRenderTarget());
 }
 
 OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
@@ -45,10 +48,6 @@ OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
     rect.destroy();
     roundedRect.destroy();
     delete uniformBuffer;
-
-    delete composeTarget;
-    delete composeColor;
-    delete composeDepth;
 }
 
 void OMDemiurgeRendererHandler::submitTasks()
@@ -57,35 +56,11 @@ void OMDemiurgeRendererHandler::submitTasks()
     SimpleUniform u{ext.x, ext.y};
     uniformBuffer->updateData(&u);
 
-    {
-        if (composeTarget)
-        {
-            delete composeColor;
-            delete composeDepth;
-        }
-
-        composeColor = renderer->allocateTexture(ext.x, ext.y, Dim2, ColorRgba);
-        composeDepth = renderer->allocateTexture(ext.x, ext.y, Dim2, Depth);
-
-        if (!composeTarget)
-        {
-            composeTarget = renderer->createRenderTarget();
-            composeTarget->attachTarget(composeColor);
-            composeTarget->attachTarget(composeDepth);
-            composeTarget->build();
-
-            rect.init(uniformBuffer, composeTarget);
-            roundedRect.init(uniformBuffer, composeTarget);
-        }
-        else
-        {
-            composeTarget->replaceTarget(0, composeColor);
-            composeTarget->replaceTarget(1, composeDepth);
-            composeTarget->rebuild();
-        }
-    }
-
-    auto task = renderer->createTask()->dependOn(renderer->fetchTask("main"))->target(composeTarget)->clearN();
+    auto task = renderer->createTask()
+                    ->dependOn(renderer->fetchTask("main"))
+                    ->target(renderer->getDefaultRenderTarget())
+                    ->clearN();
+    // TODO: element sort by the depth property!
     rect.submitTask(task);
     roundedRect.submitTask(task);
     task->finish();

@@ -40,7 +40,7 @@ void OMDemiurgeRectChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRend
                    ->format(format)
                    ->blendFunc({One, One, One, One})
                    ->blend(true)
-                   ->depth(false, false)
+                   ->depth(true, true)
                    ->buildN();
     pipeline->bindInput(0, uniformBuffer);
 }
