@@ -432,6 +432,10 @@ void OMRendererVk::render()
         PresentInfoKHR presentInfo(1, &frameRenderSemaphores[imageIndex], 1, &swapchainManager->swapchain, &imageIndex);
 
         result = queues.second.presentKHR(presentInfo);
+        if (result == Result::eSuboptimalKHR || result == Result::eErrorOutOfDateKHR)
+        {
+            goto rebuild;
+        }
         if (result != Result::eSuccess)
         {
             throw OMRendererException(

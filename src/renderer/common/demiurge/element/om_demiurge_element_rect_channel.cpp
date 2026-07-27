@@ -52,20 +52,25 @@ void OMDemiurgeRectChannel::destroy()
     delete pipeline;
 }
 
-void OMDemiurgeRectChannel::submitTask(OMRendererTask *task, float upper, float lower)
+void OMDemiurgeRectChannel::submitTask(OMRendererTask *task, float upper, float lower,
+                                       OMDemiurgeAbstractChannel *&currentChannel)
 {
     if (instanceBuffer->length < bufferSize())
     {
         delete instanceBuffer;
         instanceBuffer = renderer->allocateBuffer(InstanceData, bufferSize());
     }
-    task->pipeline(pipeline)->vertexBuffer({quadBuffer, instanceBuffer})->indexBuffer(quadIndex);
 
     int i = 0;
     for (auto &rect : objects)
     {
         if (rect.depth > lower && rect.depth < upper)
         {
+            if (currentChannel != this)
+            {
+                task->pipeline(pipeline)->vertexBuffer({quadBuffer, instanceBuffer})->indexBuffer(quadIndex);
+                currentChannel = this;
+            }
             task->drawInstance(6, 1, i);
         }
         ++i;

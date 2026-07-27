@@ -1,5 +1,6 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
 #include "glm/ext/vector_float4.hpp"
+#include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_roundedrect_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
@@ -63,10 +64,12 @@ void OMDemiurgeRendererHandler::submitTasks()
                     ->dependOn(renderer->fetchTask("main"))
                     ->target(renderer->getDefaultRenderTarget())
                     ->clearN();
+
+    element::OMDemiurgeAbstractChannel *channel = nullptr;
     for (float layer = bottomDepth; layer >= topDepth; layer -= 0.01f)
     {
-        rect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
-        roundedRect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
+        rect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
+        roundedRect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
     }
     task->finish();
 
