@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
+#include <array>
 namespace openminecraft::renderer::common::demiurge::element
 {
 template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
