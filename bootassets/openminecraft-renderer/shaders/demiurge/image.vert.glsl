@@ -14,6 +14,7 @@ layout(location = 1) out vec2 outPosition;
 layout(location = 2) out vec4 outRadius;
 layout(location = 3) out vec4 outRectPosition;
 layout(location = 4) out float outFactor;
+layout(location = 5) out vec2 outUv;
 
 layout(binding = 0) uniform UniformBufferObject {
     float width;
@@ -35,4 +36,5 @@ void main() {
     outRadius = inRectRadius;
     outRectPosition = inRectPos;
     outFactor = inRectFactor;
+    outUv = inPosition;
 }

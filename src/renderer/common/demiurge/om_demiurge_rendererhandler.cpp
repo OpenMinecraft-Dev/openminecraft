@@ -2,12 +2,15 @@
 #include "glm/ext/vector_float4.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_roundedrect_channel.hpp"
+#include "openminecraft/renderer/common/demiurge/node/om_demiurge_image.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include "openminecraft/specs/png/om_png.hpp"
+#include "openminecraft/vfs/om_vfs_base.hpp"
 #include <memory>
 #include <array>
 
@@ -18,13 +21,23 @@ struct SimpleUniform
     float width;
     float height;
 };
-constexpr std::array<int, 3> a = {0x00d4ffff, (int)0xbfff00ff, (int)0xff4500ff};
+constexpr std::array<int, 3> a = {0x00d4ffaa, (int)0xbfff00aa, (int)0xff4500aa};
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
-    : renderer(renderer), OMRendererHandler(renderer), rect(renderer), roundedRect(renderer),
+    : renderer(renderer), OMRendererHandler(renderer), rect(renderer), roundedRect(renderer), image(renderer),
       logger("OMDemiurgeRendererHandler", this)
 {
-    node = std::make_shared<node::OMDemiurgeRectNode>()->style({
-        {"color", 0x2c2c34ff},
+    {
+        auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/viking_room.png");
+
+        specs::png::OMPngFile img;
+        img.parse(imgraw);
+
+        texture = renderer->allocateTexture(img.getWidth(), img.getHeight(), Dim2, ColorRgba);
+        texture->updateData(img.fetchData());
+    }
+
+    node = std::make_shared<node::OMDemiurgeImageNode>(texture)->style({
+        {"color", (int)0xffffffff},
         {"flexGap", 10_px},
         {"flexWrap", Wrap},
         {"flexDirection", Row},
@@ -62,13 +75,16 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
 
     rect.init(uniformBuffer, renderer->getDefaultRenderTarget());
     roundedRect.init(uniformBuffer, renderer->getDefaultRenderTarget());
+    image.init(uniformBuffer, renderer->getDefaultRenderTarget());
 }
 
 OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
 {
     rect.destroy();
     roundedRect.destroy();
+    image.destroy();
     delete uniformBuffer;
+    delete texture;
 }
 
 void OMDemiurgeRendererHandler::submitTasks()
@@ -88,6 +104,7 @@ void OMDemiurgeRendererHandler::submitTasks()
     {
         rect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
         roundedRect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
+        image.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
     }
     task->finish();
 
@@ -103,6 +120,7 @@ void OMDemiurgeRendererHandler::beforeFrame()
 
     rect.update();
     roundedRect.update();
+    image.update();
 }
 
 void OMDemiurgeRendererHandler::afterFrame()

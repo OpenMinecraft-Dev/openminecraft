@@ -57,9 +57,14 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
     }
     inline auto remove(int i) -> void
     {
+        onRemove(i);
         objects[i] = T{};
         dirty[i] = true;
         removed.emplace_back(i);
+    }
+
+    virtual auto onRemove(int i) -> void
+    {
     }
 
     inline auto dirtyIter(std::function<void(int begin, int length)> f) -> void

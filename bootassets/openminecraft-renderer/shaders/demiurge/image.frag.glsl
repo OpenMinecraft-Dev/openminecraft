@@ -7,8 +7,11 @@ layout(location = 1) in vec2 inPosition;
 layout(location = 2) in vec4 inRadius;
 layout(location = 3) in vec4 inRectPosition;
 layout(location = 4) in float inFactor;
+layout(location = 5) in vec2 inUv;
 
 layout(location = 0) out vec4 outColor;
+
+layout(binding = 1) uniform sampler2D inTexture;
 
 int selectQuadrant(vec2 p) {
     ivec2 mask = ivec2(step(0.0, p));
@@ -30,5 +33,5 @@ void main() {
 
     float alpha = rrectSdf(localPos, halfSize, inRadius.x, 0.0, inFactor);
 
-    outColor = inColor * alpha;
+    outColor = inColor * alpha * texture(inTexture, inUv);
 }
