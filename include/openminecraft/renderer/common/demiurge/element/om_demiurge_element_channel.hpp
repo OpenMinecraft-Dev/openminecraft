@@ -8,16 +8,27 @@
 #include <vector>
 namespace openminecraft::renderer::common::demiurge::element
 {
-template <typename T> class OMDemiurgeChannel
+class OMDemiurgeAbstractChannel
 {
   public:
-    OMDemiurgeChannel() = default;
-    ~OMDemiurgeChannel() = default;
+    OMDemiurgeAbstractChannel() = default;
+    ~OMDemiurgeAbstractChannel() = default;
 
     virtual void init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) = 0;
     virtual void submitTask(OMRendererTask *task, float upper, float lower) = 0;
     virtual void update() = 0;
     virtual void destroy() = 0;
+};
+template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
+{
+  public:
+    OMDemiurgeChannel() = default;
+    ~OMDemiurgeChannel() = default;
+
+    void init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) override = 0;
+    void submitTask(OMRendererTask *task, float upper, float lower) override = 0;
+    void update() override = 0;
+    void destroy() override = 0;
 
     inline auto request() -> int
     {

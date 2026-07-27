@@ -13,6 +13,7 @@ layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec2 outPosition;
 layout(location = 2) out vec4 outRadius;
 layout(location = 3) out vec4 outRectPosition;
+layout(location = 4) out float outFactor;
 
 layout(binding = 0) uniform UniformBufferObject {
     float width;
@@ -33,4 +34,5 @@ void main() {
     outPosition = screenPos;
     outRadius = inRectRadius;
     outRectPosition = inRectPos;
+    outFactor = inRectFactor;
 }

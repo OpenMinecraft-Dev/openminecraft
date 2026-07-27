@@ -19,11 +19,11 @@ auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, float depth)
 
         auto pp = stylesStorage.get<OMDemiurgeRect>("layoutBound");
         auto t = handler->roundedRect.temporary(rectId);
-        t->color = genLinear(stylesStorage.get<int>("color"));
+        t->color = genLinear(stylesStorage.get<int>("color", 0));
         t->position = {pp.x, pp.y, pp.width, pp.height};
         t->depth = depth;
-        t->factor = 1.0f;
-        t->radius = {0, 0, 0, 0};
+        t->factor = stylesStorage.get<float>("factor", 1.0f);
+        t->radius = stylesStorage.get<glm::vec4>("radius", {0, 0, 0, 0});
 
         stylesStorage.solve();
     }

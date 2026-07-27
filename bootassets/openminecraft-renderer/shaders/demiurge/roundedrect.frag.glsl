@@ -6,13 +6,20 @@ layout(location = 0) in vec4 inColor;
 layout(location = 1) in vec2 inPosition;
 layout(location = 2) in vec4 inRadius;
 layout(location = 3) in vec4 inRectPosition;
+layout(location = 4) in float inFactor;
 
 layout(location = 0) out vec4 outColor;
 
-float rrectSdf(vec2 p, vec2 halfSize, float radius, float t, float sme) {
-    vec2 q = abs(p) - halfSize + radius;
-    float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - radius;
-    return 1.0 - smoothstep(t, t + sme, d);
+int selectQuadrant(vec2 p) {
+    ivec2 mask = ivec2(step(0.0, p));
+    return mask.y << 1 | ((1 - mask.x) ^ mask.y);
+}
+
+float rrectSdf(vec2 p, vec2 halfSize, float radius, float thickness, float smoothEdge) {
+    radius = inRadius[selectQuadrant(p)];
+    vec2 centerDis = abs(p) - halfSize + radius;
+    float edgeDis = length(max(centerDis, 0.0)) + min(max(centerDis.x, centerDis.y), 0.0) - radius;
+    return 1.0 - smoothstep(thickness, thickness + smoothEdge, edgeDis);
 }
 
 void main() {
@@ -20,7 +27,7 @@ void main() {
     vec2 halfSize   = inRectPosition.zw / 2.0;
     vec2 localPos   = inPosition - rectCenter;
 
-    float alpha = rrectSdf(localPos, halfSize, 30.0, 0.0, 2.0);
+    float alpha = rrectSdf(localPos, halfSize, inRadius.x, 0.0, inFactor);
 
     outColor = inColor * alpha;
 }

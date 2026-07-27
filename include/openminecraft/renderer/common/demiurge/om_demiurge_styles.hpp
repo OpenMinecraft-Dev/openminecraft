@@ -45,9 +45,21 @@ class OMDemiurgeStyles
         styles[s] = t;
         modified = true;
     }
-    template <typename T> auto get(std::string s) -> T
+    template <typename T> inline auto get(std::string s) -> T
     {
         return std::any_cast<T>(styles[s]);
+    }
+
+    template <typename T> inline auto get(std::string s, T def) -> T
+    {
+        if (styles[s].type() == typeid(T))
+        {
+            return get<T>(s);
+        }
+        else
+        {
+            return def;
+        }
     }
 
     auto isModified() -> bool

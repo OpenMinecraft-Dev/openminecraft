@@ -5,6 +5,7 @@
 #include "openminecraft/io/om_io_utils.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
 #include <cstdint>
+#include <iostream>
 
 namespace openminecraft::renderer::common::demiurge::element
 {

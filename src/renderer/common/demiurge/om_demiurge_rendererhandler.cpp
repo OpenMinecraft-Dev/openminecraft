@@ -1,4 +1,5 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
+#include "glm/ext/vector_float4.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_roundedrect_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
@@ -16,7 +17,8 @@ struct SimpleUniform
     float height;
 };
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
-    : renderer(renderer), OMRendererHandler(renderer), rect(renderer), roundedRect(renderer)
+    : renderer(renderer), OMRendererHandler(renderer), rect(renderer), roundedRect(renderer),
+      logger("OMDemiurgeRendererHandler", this)
 {
     // 0x2c2c34ff 0x00d4ffff
     node = std::make_shared<node::OMDemiurgeRectNode>()->style({
@@ -34,6 +36,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
             {"height", 50_percent},
             {"flexShrink", 0.0f},
             {"flexGrow", 1.0f},
+            {"radius", glm::vec4(30, 30, 30, 30)},
         });
         node->mount(d);
     }
