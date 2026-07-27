@@ -2,6 +2,7 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
+#include <iostream>
 
 namespace openminecraft::renderer::common::demiurge::node
 {
@@ -10,13 +11,16 @@ OMDemiurgeRectNode::~OMDemiurgeRectNode() = default;
 
 auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
 {
+    if (rectId == -1)
+    {
+        rectId = handler->roundedRect.request();
+        this->handler = handler;
+        std::cout << "alloc " << rectId << std::endl;
+        goto update;
+    }
     if (stylesStorage.isModified())
     {
-        if (rectId == -1)
-        {
-            rectId = handler->roundedRect.request();
-        }
-
+    update:
         auto pp = stylesStorage.get<OMDemiurgeRect>("layoutBound");
         auto t = handler->roundedRect.temporary(rectId);
         t->color = genLinear(stylesStorage.get<int>("color", 0));
@@ -31,6 +35,22 @@ auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, float depth)
     for (auto c : children)
     {
         c->submit(handler, depth - layerHalfWidth * 2);
+    }
+}
+
+auto OMDemiurgeRectNode::remove() -> void
+{
+    if (rectId != -1)
+    {
+        std::cout << "remove " << rectId << std::endl;
+        handler->roundedRect.remove(rectId);
+        rectId = -1;
+        handler = nullptr;
+    }
+
+    for (auto c : children)
+    {
+        c->remove();
     }
 }
 } // namespace openminecraft::renderer::common::demiurge::node

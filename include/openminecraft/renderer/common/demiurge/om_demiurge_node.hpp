@@ -3,7 +3,6 @@
 
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_styles.hpp"
-#include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "yoga/YGNode.h"
 #include "yoga/YGNodeLayout.h"
 #include "yoga/YGNodeStyle.h"
@@ -56,7 +55,6 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         children.push_back(child);
 
         YGNodeInsertChild(yogaNode, child->yogaNode, children.size() - 1);
-        stylesStorage.markDirty();
     }
 
     virtual void umount(std::shared_ptr<OMDemiurgeNode> child)
@@ -68,8 +66,6 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
 
             child->parent = nullptr;
             children.erase(f);
-
-            stylesStorage.markDirty();
         }
     }
 
@@ -81,6 +77,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     }
 
     virtual auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void = 0;
+    virtual auto remove() -> void = 0;
     auto syncLayout() -> void;
     auto syncLayoutAll() -> void;
     auto syncBoundary(float x, float y) -> void;

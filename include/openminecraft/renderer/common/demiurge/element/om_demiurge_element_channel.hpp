@@ -49,6 +49,11 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
     {
         dirty.assign(dirty.size(), false);
     }
+    inline auto remove(int i) -> void
+    {
+        objects[i] = T{};
+        dirty[i] = true;
+    }
 
     inline auto dirtyIter(std::function<void(int begin, int length)> f) -> void
     {

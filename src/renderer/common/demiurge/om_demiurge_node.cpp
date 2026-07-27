@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
+#include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "yoga/YGNode.h"
 #include "yoga/YGNodeStyle.h"
 #include <any>
@@ -197,14 +198,16 @@ auto OMDemiurgeNode::syncBoundary(float x, float y) -> void
         auto bo = stylesStorage.get<OMDemiurgeRect>("layoutBound");
         if (b.x == bo.x && b.y == bo.y && b.width == bo.width && b.height == bo.height)
         {
-            return;
+            goto updateChildren;
         }
     }
     catch (std::bad_any_cast &e)
     {
     }
+
     stylesStorage.put("layoutBound", b);
 
+updateChildren:
     for (auto f : children)
     {
         f->syncBoundary(b.x, b.y);

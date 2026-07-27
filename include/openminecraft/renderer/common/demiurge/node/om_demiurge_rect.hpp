@@ -11,9 +11,11 @@ class OMDemiurgeRectNode : public OMDemiurgeNode
     virtual ~OMDemiurgeRectNode();
 
     auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
+    auto remove() -> void override;
 
   private:
     int rectId = -1;
+    OMDemiurgeRendererHandler *handler = nullptr;
 };
 } // namespace openminecraft::renderer::common::demiurge::node
 

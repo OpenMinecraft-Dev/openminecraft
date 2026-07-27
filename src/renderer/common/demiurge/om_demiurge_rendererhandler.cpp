@@ -8,7 +8,6 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include <iostream>
 #include <memory>
 
 namespace openminecraft::renderer::common::demiurge
@@ -18,13 +17,13 @@ struct SimpleUniform
     float width;
     float height;
 };
-int a[] = {0x00d4ffff, (int)0xbfff00ff, (int)0xff4500ff};
+constexpr std::array<int, 3> a = {0x00d4ffff, (int)0xbfff00ff, (int)0xff4500ff};
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     : renderer(renderer), OMRendererHandler(renderer), rect(renderer), roundedRect(renderer),
       logger("OMDemiurgeRendererHandler", this)
 {
     node = std::make_shared<node::OMDemiurgeRectNode>()->style({
-        {"color", 0x2c2c34ff},
+        {"color", 0x2c2cffff},
         {"flexGap", 10_px},
         {"flexWrap", Wrap},
         {"flexDirection", Row},
@@ -73,6 +72,7 @@ OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
 
 void OMDemiurgeRendererHandler::submitTasks()
 {
+    srand(time(nullptr));
     auto ext = renderer->getExtent();
     SimpleUniform u{ext.x, ext.y};
     uniformBuffer->updateData(&u);
@@ -118,7 +118,5 @@ void OMDemiurgeRendererHandler::afterFrame()
     }
 
     um = !um;
-
-    std::cout << (um ? "mount" : "umount") << std::endl;
 }
 } // namespace openminecraft::renderer::common::demiurge
