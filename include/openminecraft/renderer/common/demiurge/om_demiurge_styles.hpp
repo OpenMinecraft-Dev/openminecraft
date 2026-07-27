@@ -70,6 +70,10 @@ class OMDemiurgeStyles
     {
         modified = false;
     }
+    auto markDirty()
+    {
+        modified = true;
+    }
 
   private:
     bool modified = true;

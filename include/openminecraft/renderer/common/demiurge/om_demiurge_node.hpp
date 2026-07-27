@@ -56,6 +56,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         children.push_back(child);
 
         YGNodeInsertChild(yogaNode, child->yogaNode, children.size() - 1);
+        stylesStorage.markDirty();
     }
 
     virtual void umount(std::shared_ptr<OMDemiurgeNode> child)
@@ -67,6 +68,8 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
 
             child->parent = nullptr;
             children.erase(f);
+
+            stylesStorage.markDirty();
         }
     }
 
@@ -80,7 +83,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     virtual auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void = 0;
     auto syncLayout() -> void;
     auto syncLayoutAll() -> void;
-    auto syncBoundary() -> void;
+    auto syncBoundary(float x, float y) -> void;
 
     inline auto style(std::string s, std::any a) -> std::shared_ptr<OMDemiurgeNode>
     {

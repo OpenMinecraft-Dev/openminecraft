@@ -21,7 +21,7 @@ layout(binding = 0) uniform UniformBufferObject {
 } ubo;
 
 void main() {
-    vec2 screenPos = inRectPos.xy + inPosition.xy * inRectPos.zw;
+    vec2 screenPos = inRectPos.xy - vec2(10) + inPosition.xy * (inRectPos.zw + vec2(20));
 
     float ndcX = (screenPos.x / ubo.width) * 2.0 - 1.0;
     float ndcY = 1.0 - (screenPos.y / ubo.height) * 2.0;

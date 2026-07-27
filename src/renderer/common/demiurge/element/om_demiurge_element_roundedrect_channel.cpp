@@ -43,7 +43,7 @@ void OMDemiurgeRoundedRectChannel::init(OMRendererBuffer *uniformBuffer, OMRende
                    ->shader(frgShader)
                    ->shader(vtxShader)
                    ->format(format)
-                   ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+                   ->blendFunc({Alpha, OneMinusAlpha, One, OneMinusAlpha})
                    ->blend(true)
                    ->depth(false, false)
                    ->buildN();
@@ -67,19 +67,26 @@ void OMDemiurgeRoundedRectChannel::submitTask(OMRendererTask *task, float upper,
         instanceBuffer = renderer->allocateBuffer(InstanceData, bufferSize());
     }
 
-    int i = 0;
-    for (auto &rect : objects)
+    bool inDraw = false;
+    int start = 0;
+    for (int i = 0; i <= objects.size(); ++i)
     {
-        if (rect.depth > lower && rect.depth < upper)
+        bool isDraw = (i < objects.size()) && objects[i].depth > lower && objects[i].depth < upper;
+        if (!inDraw && isDraw)
+        {
+            start = i;
+            inDraw = true;
+        }
+        else if (inDraw && !isDraw)
         {
             if (currentChannel != this)
             {
                 task->pipeline(pipeline)->vertexBuffer({quadBuffer, instanceBuffer})->indexBuffer(quadIndex);
                 currentChannel = this;
             }
-            task->drawInstance(6, 1, i);
+            task->drawInstance(6, i - start, start);
+            inDraw = false;
         }
-        ++i;
     }
 }
 

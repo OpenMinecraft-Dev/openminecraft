@@ -184,12 +184,14 @@ void OMDemiurgeNode::layout(float width, float height)
 {
     syncLayoutAll();
     YGNodeCalculateLayout(yogaNode, width, height, YGDirectionLTR);
-    syncBoundary();
+    syncBoundary(0, 0);
 }
 
-auto OMDemiurgeNode::syncBoundary() -> void
+auto OMDemiurgeNode::syncBoundary(float x, float y) -> void
 {
     auto b = boundary();
+    b.x += x;
+    b.y += y;
     try
     {
         auto bo = stylesStorage.get<OMDemiurgeRect>("layoutBound");
@@ -205,7 +207,7 @@ auto OMDemiurgeNode::syncBoundary() -> void
 
     for (auto f : children)
     {
-        f->syncBoundary();
+        f->syncBoundary(b.x, b.y);
     }
 }
 } // namespace openminecraft::renderer::common::demiurge

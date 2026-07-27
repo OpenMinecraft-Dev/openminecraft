@@ -37,7 +37,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     void beforeFrame() override;
     void afterFrame() override;
 
-    std::shared_ptr<OMDemiurgeNode> node;
+    std::shared_ptr<OMDemiurgeNode> node, target;
 
     OMRendererBuffer *uniformBuffer;
     OMRenderer *renderer;

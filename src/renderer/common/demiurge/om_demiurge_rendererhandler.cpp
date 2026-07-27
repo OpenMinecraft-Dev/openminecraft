@@ -8,6 +8,7 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include <iostream>
 #include <memory>
 
 namespace openminecraft::renderer::common::demiurge
@@ -17,30 +18,46 @@ struct SimpleUniform
     float width;
     float height;
 };
+int a[] = {0x00d4ffff, (int)0xbfff00ff, (int)0xff4500ff};
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     : renderer(renderer), OMRendererHandler(renderer), rect(renderer), roundedRect(renderer),
       logger("OMDemiurgeRendererHandler", this)
 {
-    // 0x2c2c34ff 0x00d4ffff
     node = std::make_shared<node::OMDemiurgeRectNode>()->style({
         {"color", 0x2c2c34ff},
         {"flexGap", 10_px},
         {"flexWrap", Wrap},
         {"flexDirection", Row},
     });
-    for (int i = 0; i < 4; ++i)
+
+    for (int i = 0; i < 3; ++i)
     {
         auto d = std::make_shared<node::OMDemiurgeRectNode>()->style({
-            {"color", 0x00d4ffff},
+            {"color", 0},
             {"minWidth", 100.0f},
             {"minHeight", 100.0f},
-            {"height", 50_percent},
+            {"height", 100_percent},
             {"flexShrink", 0.0f},
             {"flexGrow", 1.0f},
             {"radius", glm::vec4(30, 30, 30, 30)},
+            {"flexGap", 10_px},
         });
+
+        for (int j = 0; j < 6; ++j)
+        {
+            auto d2 = std::make_shared<node::OMDemiurgeRectNode>()->style({
+                {"color", a[i]},
+                {"minWidth", 1.0f},
+                {"minHeight", 1.0f},
+                {"flexGrow", 1.0f},
+                {"radius", glm::vec4(30, 30, 30, 30)},
+            });
+            d->mount(d2);
+        }
         node->mount(d);
+        target = d;
     }
+
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
 
     rect.init(uniformBuffer, renderer->getDefaultRenderTarget());
@@ -87,7 +104,21 @@ void OMDemiurgeRendererHandler::beforeFrame()
     roundedRect.update();
 }
 
+bool um = true;
+
 void OMDemiurgeRendererHandler::afterFrame()
 {
+    if (um)
+    {
+        node->umount(target);
+    }
+    else
+    {
+        node->mount(target);
+    }
+
+    um = !um;
+
+    std::cout << (um ? "mount" : "umount") << std::endl;
 }
 } // namespace openminecraft::renderer::common::demiurge
