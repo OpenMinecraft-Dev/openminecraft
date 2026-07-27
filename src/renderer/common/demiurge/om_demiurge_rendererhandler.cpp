@@ -9,6 +9,7 @@
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <memory>
+#include <array>
 
 namespace openminecraft::renderer::common::demiurge
 {
