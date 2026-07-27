@@ -34,6 +34,12 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
 
     inline auto request() -> int
     {
+        if (!removed.empty())
+        {
+            auto i = removed.back();
+            removed.pop_back();
+            return i;
+        }
         objects.emplace_back(T{});
         dirty.resize(objects.size());
         return objects.size() - 1;
@@ -53,6 +59,7 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
     {
         objects[i] = T{};
         dirty[i] = true;
+        removed.emplace_back(i);
     }
 
     inline auto dirtyIter(std::function<void(int begin, int length)> f) -> void
@@ -85,6 +92,7 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
     }
 
   protected:
+    std::vector<int> removed;
     std::vector<T> objects;
     std::vector<bool> dirty;
     int lastCount = -1;

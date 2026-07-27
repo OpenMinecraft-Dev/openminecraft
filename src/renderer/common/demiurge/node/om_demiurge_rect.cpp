@@ -2,7 +2,6 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
-#include <iostream>
 
 namespace openminecraft::renderer::common::demiurge::node
 {
@@ -15,7 +14,6 @@ auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, float depth)
     {
         rectId = handler->roundedRect.request();
         this->handler = handler;
-        std::cout << "alloc " << rectId << std::endl;
         goto update;
     }
     if (stylesStorage.isModified())
@@ -42,7 +40,6 @@ auto OMDemiurgeRectNode::remove() -> void
 {
     if (rectId != -1)
     {
-        std::cout << "remove " << rectId << std::endl;
         handler->roundedRect.remove(rectId);
         rectId = -1;
         handler = nullptr;

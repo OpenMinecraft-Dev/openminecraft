@@ -63,6 +63,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         if (f != children.end())
         {
             YGNodeRemoveChild(yogaNode, child->yogaNode);
+            child->remove();
 
             child->parent = nullptr;
             children.erase(f);

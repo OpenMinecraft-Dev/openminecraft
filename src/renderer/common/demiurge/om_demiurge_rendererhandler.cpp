@@ -23,7 +23,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
       logger("OMDemiurgeRendererHandler", this)
 {
     node = std::make_shared<node::OMDemiurgeRectNode>()->style({
-        {"color", 0x2c2cffff},
+        {"color", 0x2c2c34ff},
         {"flexGap", 10_px},
         {"flexWrap", Wrap},
         {"flexDirection", Row},
@@ -104,19 +104,7 @@ void OMDemiurgeRendererHandler::beforeFrame()
     roundedRect.update();
 }
 
-bool um = true;
-
 void OMDemiurgeRendererHandler::afterFrame()
 {
-    if (um)
-    {
-        node->umount(target);
-    }
-    else
-    {
-        node->mount(target);
-    }
-
-    um = !um;
 }
 } // namespace openminecraft::renderer::common::demiurge
