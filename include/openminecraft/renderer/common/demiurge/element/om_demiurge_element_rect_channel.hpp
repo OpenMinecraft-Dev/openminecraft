@@ -1,35 +1,21 @@
 #ifndef OM_DEMIURGE_ELEMENT_RECT_CHANNEL_HPP
 #define OM_DEMIURGE_ELEMENT_RECT_CHANNEL_HPP
 
-#include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
+#include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_quad_channel.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_rect.hpp"
 
 namespace openminecraft::renderer::common::demiurge::element
 {
-class OMDemiurgeRectChannel : public OMDemiurgeChannel<OMDemiurgeElementRect>
+class OMDemiurgeRectChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementRect>
 {
   public:
-    OMDemiurgeRectChannel(OMRenderer *renderer) : renderer(renderer)
+    OMDemiurgeRectChannel(OMRenderer *renderer) : OMDemiurgeQuadChannel(renderer)
     {
     }
     ~OMDemiurgeRectChannel() = default;
 
     void init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) override;
-    void submitTask(OMRendererTask *task, float upper, float lower,
-                    OMDemiurgeAbstractChannel *&currentChannel) override;
-    void update() override;
-    void destroy() override;
-
-  private:
-    OMRenderer *renderer;
-    OMRendererBuffer *quadBuffer;
-    OMRendererBuffer *quadIndex;
-    OMRendererBuffer *instanceBuffer = nullptr;
-
-    OMRendererPipeline *pipeline;
-    std::shared_ptr<OMShader> vtxShader, frgShader;
-    basics::OMVertexFormat format;
 };
 } // namespace openminecraft::renderer::common::demiurge::element
 

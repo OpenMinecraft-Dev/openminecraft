@@ -1,11 +1,9 @@
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_roundedrect_channel.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
+#include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_quad_channel.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
-#include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
-#include <cstdint>
-#include <iostream>
 
 namespace openminecraft::renderer::common::demiurge::element
 {
@@ -31,78 +29,6 @@ void OMDemiurgeRoundedRectChannel::init(OMRendererBuffer *uniformBuffer, OMRende
     format.decideStruct();
     format.debugState();
 
-    quadBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(glm::vec2));
-    quadBuffer->updateData(std::array<glm::vec2, 4>{{{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}}}.data());
-    quadIndex = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
-    quadIndex->updateData(std::array<uint32_t, 6>{{0, 1, 2, 2, 3, 0}}.data());
-    instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
-
-    pipeline = renderer->createPipeline()
-                   ->input(UniformBuffer)
-                   ->output(target)
-                   ->shader(frgShader)
-                   ->shader(vtxShader)
-                   ->format(format)
-                   ->blendFunc({Alpha, OneMinusAlpha, One, OneMinusAlpha})
-                   ->blend(true)
-                   ->depth(false, false)
-                   ->buildN();
-    pipeline->bindInput(0, uniformBuffer);
-}
-
-void OMDemiurgeRoundedRectChannel::destroy()
-{
-    delete instanceBuffer;
-    delete quadBuffer;
-    delete quadIndex;
-    delete pipeline;
-}
-
-void OMDemiurgeRoundedRectChannel::submitTask(OMRendererTask *task, float upper, float lower,
-                                              OMDemiurgeAbstractChannel *&currentChannel)
-{
-    if (instanceBuffer->length < bufferSize())
-    {
-        delete instanceBuffer;
-        instanceBuffer = renderer->allocateBuffer(InstanceData, bufferSize());
-    }
-
-    bool inDraw = false;
-    int start = 0;
-    for (int i = 0; i <= objects.size(); ++i)
-    {
-        bool isDraw = (i < objects.size()) && objects[i].depth > lower && objects[i].depth < upper;
-        if (!inDraw && isDraw)
-        {
-            start = i;
-            inDraw = true;
-        }
-        else if (inDraw && !isDraw)
-        {
-            if (currentChannel != this)
-            {
-                task->pipeline(pipeline)->vertexBuffer({quadBuffer, instanceBuffer})->indexBuffer(quadIndex);
-                currentChannel = this;
-            }
-            task->drawInstance(6, i - start, start);
-            inDraw = false;
-        }
-    }
-}
-
-void OMDemiurgeRoundedRectChannel::update()
-{
-    if (instanceBuffer->length < bufferSize() || lastCount != objects.size())
-    {
-        lastCount = objects.size();
-        // INFO: (fake) resize due to the instance buffer recreation
-        renderer->requestResize();
-        return;
-    }
-
-    dirtyIter([&](int begin, int length) -> void {
-        instanceBuffer->updateDataPart(&objects[begin], begin * sizeof(element::OMDemiurgeElementRoundedRect),
-                                       length * sizeof(element::OMDemiurgeElementRoundedRect));
-    });
+    OMDemiurgeQuadChannel::init(uniformBuffer, target);
 }
 } // namespace openminecraft::renderer::common::demiurge::element
