@@ -2,6 +2,7 @@
 #include "glm/ext/vector_float4.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_roundedrect_channel.hpp"
+#include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_image.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
@@ -45,14 +46,12 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
 
     for (int i = 0; i < 3; ++i)
     {
-        auto d = std::make_shared<node::OMDemiurgeRectNode>()->style({
-            {"color", 0},
+        auto d = std::make_shared<node::OMDemiurgeContainerNode>()->style({
             {"minWidth", 100.0f},
             {"minHeight", 100.0f},
             {"height", 100_percent},
             {"flexShrink", 0.0f},
             {"flexGrow", 1.0f},
-            {"radius", glm::vec4(30, 30, 30, 30)},
             {"flexGap", 10_px},
         });
 
