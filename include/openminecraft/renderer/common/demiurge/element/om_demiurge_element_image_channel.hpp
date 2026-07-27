@@ -33,6 +33,11 @@ class OMDemiurgeImageChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementIma
         }
     }
 
+    auto onRemove(int i) -> void override
+    {
+        textures.erase(i);
+    }
+
     OMRendererBuffer *uniform;
     OMRendererRenderTarget *target;
     std::unordered_map<int, OMRendererTexture *> textures;
