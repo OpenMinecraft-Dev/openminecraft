@@ -23,7 +23,7 @@ void OMDemiurgeImageChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRen
     format.appendPart("image_rrect_radius", basics::Vec4f);
     format.appendPart("image_rrect_factor", basics::Float);
     format.appendPart("image_rrect_depth", basics::Float);
-    format.appendPart("image_fillmode", basics::Integer);
+    format.appendPart("image_fillmode", basics::Float);
     format.nextGroup();
     format.decideStruct();
     format.debugState();

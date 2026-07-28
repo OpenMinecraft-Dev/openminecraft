@@ -8,7 +8,7 @@ layout(location = 2) in vec4 inRadius;
 layout(location = 3) in vec4 inRectPosition;
 layout(location = 4) in float inFactor;
 layout(location = 5) in vec2 inUv;
-layout(location = 6) flat in int inFillType;
+layout(location = 6) flat in float inFillType;
 
 layout(location = 0) out vec4 outColor;
 
@@ -34,5 +34,21 @@ void main() {
 
     float alpha = rrectSdf(localPos, halfSize, inRadius.x, 0.0, inFactor);
 
-    outColor = inColor * alpha * texture(inTexture, inUv);
+    vec2 imageSize = vec2(textureSize(inTexture, 0));
+    vec2 rectSize  = inRectPosition.zw;
+    vec2 uv;
+
+    if (int(inFillType) == 0) {
+        uv = inUv;
+    }
+    else {
+        float scale = int(inFillType) == 1 ? min(rectSize.x / imageSize.x, rectSize.y / imageSize.y)
+                                       : max(rectSize.x / imageSize.x, rectSize.y / imageSize.y);
+        vec2 scaledImgSize = imageSize * scale;
+        uv = (inPosition - inRectPosition.xy - inRectPosition.zw / 2.0) / scaledImgSize + 0.5;
+        if (int(inFillType) == 1 && (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0))
+            alpha = 0.0;
+    }
+
+    outColor = inColor * alpha * texture(inTexture, uv);
 }

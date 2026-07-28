@@ -12,7 +12,7 @@ struct OMDemiurgeElementImage
     glm::vec4 radius;
     float factor;
     float depth;
-    uint32_t fillMode;
+    float fillMode;
 };
 
 template <> inline auto objectGetDepth<OMDemiurgeElementImage>(OMDemiurgeElementImage &obj) -> float

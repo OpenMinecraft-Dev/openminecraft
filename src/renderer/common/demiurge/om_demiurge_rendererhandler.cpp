@@ -22,7 +22,7 @@ struct SimpleUniform
     float width;
     float height;
 };
-constexpr std::array<int, 3> a = {0x00d4ffaa, (int)0xbfff00aa, (int)0xff4500aa};
+constexpr std::array<int, 3> a = {0x00d4ff11, (int)0xbfff0011, (int)0xff450011};
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     : renderer(renderer), OMRendererHandler(renderer), rect(renderer), roundedRect(renderer), image(renderer),
       logger("OMDemiurgeRendererHandler", this)

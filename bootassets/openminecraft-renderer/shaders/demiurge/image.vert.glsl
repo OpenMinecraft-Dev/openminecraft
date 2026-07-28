@@ -8,7 +8,7 @@ layout(location = 2) in vec4 inRectColor;
 layout(location = 3) in vec4 inRectRadius;
 layout(location = 4) in float inRectFactor;
 layout(location = 5) in float inRectDepth;
-layout(location = 6) in int inFillType;
+layout(location = 6) in float inFillType;
 
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec2 outPosition;
@@ -16,7 +16,7 @@ layout(location = 2) out vec4 outRadius;
 layout(location = 3) out vec4 outRectPosition;
 layout(location = 4) out float outFactor;
 layout(location = 5) out vec2 outUv;
-layout(location = 6) flat out int outFillType;
+layout(location = 6) flat out float outFillType;
 
 layout(binding = 0) uniform UniformBufferObject {
     float width;

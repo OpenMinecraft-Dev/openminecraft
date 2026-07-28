@@ -8,8 +8,6 @@
 #include "openminecraft/fontproc/om_font_triangle_list.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
-#include "openminecraft/util/om_util_ticker.hpp"
-#include <chrono>
 #include <memory>
 #include <unordered_map>
 #include <vector>
