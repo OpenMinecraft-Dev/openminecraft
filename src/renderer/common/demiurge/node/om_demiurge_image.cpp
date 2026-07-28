@@ -16,7 +16,7 @@ auto OMDemiurgeImageNode::submit(OMDemiurgeRendererHandler *handler, float depth
 {
     if (imageId == -1)
     {
-        imageId = handler->image.request();
+        imageId = handler->image.request(depth);
         this->handler = handler;
         handler->image.textures[imageId] = texture;
         goto update;

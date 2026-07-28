@@ -1,4 +1,5 @@
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_image_channel.hpp"
+#include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
 
@@ -17,11 +18,12 @@ void OMDemiurgeImageChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRen
     format.appendPart("position", basics::Vec2f);
     format.nextGroup();
     format.setInstance();
-    format.appendPart("rect_pos", basics::Vec4f);
-    format.appendPart("rect_color", basics::Vec4f);
-    format.appendPart("rect_radius", basics::Vec4f);
-    format.appendPart("rect_factor", basics::Float);
-    format.appendPart("rect_depth", basics::Float);
+    format.appendPart("image_rrect_pos", basics::Vec4f);
+    format.appendPart("image_rrect_color", basics::Vec4f);
+    format.appendPart("image_rrect_radius", basics::Vec4f);
+    format.appendPart("image_rrect_factor", basics::Float);
+    format.appendPart("image_rrect_depth", basics::Float);
+    format.appendPart("image_fillmode", basics::Integer);
     format.nextGroup();
     format.decideStruct();
     format.debugState();

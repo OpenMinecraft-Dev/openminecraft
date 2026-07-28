@@ -8,6 +8,7 @@ layout(location = 2) in vec4 inRadius;
 layout(location = 3) in vec4 inRectPosition;
 layout(location = 4) in float inFactor;
 layout(location = 5) in vec2 inUv;
+layout(location = 6) flat in int inFillType;
 
 layout(location = 0) out vec4 outColor;
 

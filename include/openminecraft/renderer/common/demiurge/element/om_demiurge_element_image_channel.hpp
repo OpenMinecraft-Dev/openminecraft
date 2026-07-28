@@ -36,6 +36,7 @@ class OMDemiurgeImageChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementIma
     auto onRemove(int i) -> void override
     {
         textures.erase(i);
+        renderer->requestResize();
     }
 
     OMRendererBuffer *uniform;

@@ -20,11 +20,11 @@ void OMDemiurgeRoundedRectChannel::init(OMRendererBuffer *uniformBuffer, OMRende
     format.appendPart("position", basics::Vec2f);
     format.nextGroup();
     format.setInstance();
-    format.appendPart("rect_pos", basics::Vec4f);
-    format.appendPart("rect_color", basics::Vec4f);
-    format.appendPart("rect_radius", basics::Vec4f);
-    format.appendPart("rect_factor", basics::Float);
-    format.appendPart("rect_depth", basics::Float);
+    format.appendPart("rrect_pos", basics::Vec4f);
+    format.appendPart("rrect_color", basics::Vec4f);
+    format.appendPart("rrect_radius", basics::Vec4f);
+    format.appendPart("rrect_factor", basics::Float);
+    format.appendPart("rrect_depth", basics::Float);
     format.nextGroup();
     format.decideStruct();
     format.debugState();

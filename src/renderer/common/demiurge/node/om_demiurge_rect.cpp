@@ -12,7 +12,7 @@ auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, float depth)
 {
     if (rectId == -1)
     {
-        rectId = handler->roundedRect.request();
+        rectId = handler->roundedRect.request(depth);
         this->handler = handler;
         goto update;
     }

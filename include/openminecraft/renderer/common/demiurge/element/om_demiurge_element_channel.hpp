@@ -8,6 +8,9 @@
 #include <vector>
 namespace openminecraft::renderer::common::demiurge::element
 {
+template <typename T> auto objectGetDepth(T &obj) -> float;
+template <typename T> auto objectSetDepth(T &obj, float) -> void;
+
 class OMDemiurgeAbstractChannel
 {
   public:
@@ -32,13 +35,19 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
     void update() override = 0;
     void destroy() override = 0;
 
-    inline auto request() -> int
+    inline auto request(float depth) -> int
     {
         if (!removed.empty())
         {
-            auto i = removed.back();
-            removed.pop_back();
-            return i;
+            for (auto it = removed.begin(); it != removed.end(); ++it)
+            {
+                if (objectGetDepth(objects[*it]) == depth)
+                {
+                    auto i = *it;
+                    removed.erase(it);
+                    return i;
+                }
+            }
         }
         objects.emplace_back(T{});
         dirty.resize(objects.size());
@@ -57,8 +66,10 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
     }
     inline auto remove(int i) -> void
     {
+        auto depth = objectGetDepth<T>(objects[i]);
         onRemove(i);
         objects[i] = T{};
+        objectSetDepth(objects[i], depth);
         dirty[i] = true;
         removed.emplace_back(i);
     }
