@@ -31,7 +31,8 @@ auto OMDemiurgeImageNode::submit(OMDemiurgeRendererHandler *handler, float depth
         t->depth = depth;
         t->factor = stylesStorage.get<float>("factor", 2.0f);
         t->radius = stylesStorage.get<glm::vec4>("radius", {0, 0, 0, 0});
-        t->fillMode = 2.0f;
+        t->fillMode = static_cast<float>(
+            stylesStorage.get<node::OMDemiurgeImageFillType>("fill", node::OMDemiurgeImageFillType::Cover));
 
         stylesStorage.solve();
     }

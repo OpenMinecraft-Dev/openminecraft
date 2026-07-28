@@ -5,6 +5,12 @@
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 namespace openminecraft::renderer::common::demiurge::node
 {
+enum OMDemiurgeImageFillType
+{
+    Fill,
+    Contain,
+    Cover
+};
 class OMDemiurgeImageNode : public OMDemiurgeNode
 {
   public:

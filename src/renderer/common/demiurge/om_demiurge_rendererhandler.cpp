@@ -42,6 +42,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         {"flexGap", 10_px},
         {"flexWrap", Wrap},
         {"flexDirection", Row},
+        {"fill", node::OMDemiurgeImageFillType::Contain},
     });
 
     for (int i = 0; i < 3; ++i)
