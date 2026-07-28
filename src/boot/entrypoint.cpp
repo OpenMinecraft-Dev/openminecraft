@@ -2,6 +2,7 @@
 
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/boot/om_boot.hpp"
+#include "openminecraft/fontproc/om_font.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
@@ -115,6 +116,20 @@ auto boot(std::vector<std::string> args) -> int
 
         delete img;
 
+        break;
+    }
+    case "font"_hash: {
+        std::ifstream istr(args[2], std::ios::binary);
+        fontproc::OMFont f(istr);
+        f.shape(args[3]);
+        break;
+    }
+    case "glyph"_hash: {
+        std::ifstream istr(args[2], std::ios::binary);
+        fontproc::OMFont f(istr);
+        auto test = f.buildGlyph(std::stoi(args[3], nullptr, 16), false);
+        logger->info("{} {} {} {}", test->extent.x, test->extent.y, test->extent.z, test->extent.w);
+        logger->info("{} triangles", test->triangleList->indices.size() / 3);
         break;
     }
     default:

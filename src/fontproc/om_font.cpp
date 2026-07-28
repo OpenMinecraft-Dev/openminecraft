@@ -56,7 +56,7 @@ static void acceptOutlineClosePath(hb_draw_funcs_t *, void *drawdata, hb_draw_st
 
 hb_draw_funcs_t *drawfuncs = nullptr;
 
-auto OMFont::buildBasicPolygon(int charcode) -> std::shared_ptr<OMTriangleList>
+auto OMFont::buildBasicPolygon(int charcode, bool uni) -> std::shared_ptr<OMTriangleList>
 {
     if (!drawfuncs)
     {
@@ -71,8 +71,11 @@ auto OMFont::buildBasicPolygon(int charcode) -> std::shared_ptr<OMTriangleList>
 
     auto font = static_cast<hb_font_t *>(hbFont);
 
-    hb_codepoint_t gly;
-    hb_font_get_nominal_glyph(font, charcode, &gly);
+    hb_codepoint_t gly = charcode;
+    if (uni)
+    {
+        hb_font_get_nominal_glyph(font, charcode, &gly);
+    }
 
     OMFontOutline outline;
 
@@ -138,17 +141,20 @@ auto OMFont::buildBasicPolygon(int charcode) -> std::shared_ptr<OMTriangleList>
     return mem::fast_shared<allocatorId, OMTriangleList>(listbase);
 }
 
-auto OMFont::buildGlyph(int charcode) -> std::shared_ptr<OMFontGlyph>
+auto OMFont::buildGlyph(int charcode, bool uni) -> std::shared_ptr<OMFontGlyph>
 {
-    auto ots = buildBasicPolygon(charcode);
+    auto ots = buildBasicPolygon(charcode, uni);
 
     auto font = static_cast<hb_font_t *>(hbFont);
 
     int xsc, ysc;
     hb_font_get_scale(font, &xsc, &ysc);
 
-    hb_codepoint_t gly;
-    hb_font_get_nominal_glyph(font, charcode, &gly);
+    hb_codepoint_t gly = charcode;
+    if (uni)
+    {
+        hb_font_get_nominal_glyph(font, charcode, &gly);
+    }
 
     hb_glyph_extents_t extents;
     hb_font_get_glyph_extents(font, gly, &extents);
@@ -157,6 +163,31 @@ auto OMFont::buildGlyph(int charcode) -> std::shared_ptr<OMFontGlyph>
         static_cast<float>(extents.x_bearing) / xsc, static_cast<float>(extents.x_bearing + extents.width) / xsc,
         static_cast<float>(extents.y_bearing + extents.height) / ysc, static_cast<float>(extents.y_bearing) / ysc};
     return mem::fast_shared<allocatorId, OMFontGlyph>(ots, siz);
+}
+
+auto OMFont::shape(std::string s) -> void
+{
+    auto buf = hb_buffer_create();
+    hb_buffer_add_utf8(buf, s.c_str(), -1, 0, -1);
+    hb_buffer_guess_segment_properties(buf);
+
+    hb_shape(static_cast<hb_font_t *>(hbFont), buf, nullptr, 0);
+
+    uint32_t glyphs;
+    auto glyphInfo = hb_buffer_get_glyph_infos(buf, &glyphs);
+    auto glyphPos = hb_buffer_get_glyph_positions(buf, &glyphs);
+
+    for (int i = 0; i < glyphs; ++i)
+    {
+        logger.info("Cluster {} glyphid 0x{:x}", glyphInfo[i].cluster, glyphInfo[i].codepoint);
+        logger.info("Offset + Advance = {} {} {} {}", glyphPos[i].x_offset, glyphPos[i].y_offset, glyphPos[i].x_advance,
+                    glyphPos[i].y_advance);
+    }
+
+    int xsc, ysc;
+    hb_font_get_scale(static_cast<hb_font_t *>(hbFont), &xsc, &ysc);
+
+    logger.info("scale: {} {}", xsc, ysc);
 }
 
 OMFont::~OMFont()
