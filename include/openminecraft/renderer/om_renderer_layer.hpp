@@ -58,6 +58,9 @@ class OMRenderer
         }
         tasks.clear();
     }
+    virtual auto taskRecreate(std::string id) -> void
+    {
+    }
 
     inline void registerHandler(std::shared_ptr<common::OMRendererHandler> handler)
     {

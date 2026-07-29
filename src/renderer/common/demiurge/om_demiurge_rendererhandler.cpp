@@ -24,7 +24,8 @@ struct SimpleUniform
 };
 constexpr std::array<int, 3> a = {0x00d4ffaa, (int)0xbfff00aa, (int)0xff4500aa};
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
-    : renderer(renderer), OMRendererHandler(renderer), rect(renderer), roundedRect(renderer), image(renderer),
+    : renderer(renderer), OMRendererHandler(renderer), rect(renderer, [&]() -> void { recordTask(); }),
+      roundedRect(renderer, [&]() -> void { recordTask(); }), image(renderer, [&]() -> void { recordTask(); }),
       logger("OMDemiurgeRendererHandler", this)
 {
     {
@@ -94,10 +95,14 @@ void OMDemiurgeRendererHandler::submitTasks()
     SimpleUniform u{ext.x, ext.y};
     uniformBuffer->updateData(&u);
 
-    auto task = renderer->createTask()
-                    ->dependOn(renderer->fetchTask("main"))
-                    ->target(renderer->getDefaultRenderTarget())
-                    ->clearN();
+    this->task = renderer->createTask();
+    renderer->registerTask("demiurgeui_compose", task);
+    recordTask(true);
+}
+
+void OMDemiurgeRendererHandler::recordTask(bool resize)
+{
+    task->dependOn(renderer->fetchTask("main"))->target(renderer->getDefaultRenderTarget())->clearN();
 
     element::OMDemiurgeAbstractChannel *channel = nullptr;
     for (float layer = bottomDepth; layer >= topDepth; layer -= 0.01f)
@@ -107,8 +112,10 @@ void OMDemiurgeRendererHandler::submitTasks()
         image.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
     }
     task->finish();
-
-    renderer->registerTask("demiurgeui_compose", task);
+    if (!resize)
+    {
+        renderer->taskRecreate("demiurgeui_compose");
+    }
 }
 
 void OMDemiurgeRendererHandler::beforeFrame()

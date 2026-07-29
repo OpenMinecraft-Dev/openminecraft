@@ -4,13 +4,14 @@
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_quad_channel.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_rect.hpp"
+#include <functional>
 
 namespace openminecraft::renderer::common::demiurge::element
 {
 class OMDemiurgeRectChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementRect>
 {
   public:
-    OMDemiurgeRectChannel(OMRenderer *renderer) : OMDemiurgeQuadChannel(renderer)
+    OMDemiurgeRectChannel(OMRenderer *renderer, std::function<void()> f) : OMDemiurgeQuadChannel(renderer, f)
     {
     }
     ~OMDemiurgeRectChannel() = default;

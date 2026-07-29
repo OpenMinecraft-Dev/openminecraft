@@ -38,6 +38,8 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     void beforeFrame() override;
     void afterFrame() override;
 
+    void recordTask(bool resize = false);
+
     std::shared_ptr<OMDemiurgeNode> node, target;
 
     OMRendererBuffer *uniformBuffer;
@@ -46,6 +48,8 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     element::OMDemiurgeRectChannel rect;
     element::OMDemiurgeRoundedRectChannel roundedRect;
     element::OMDemiurgeImageChannel image;
+
+    OMRendererTask *task = nullptr;
 
   private:
     OMRendererTexture *texture;

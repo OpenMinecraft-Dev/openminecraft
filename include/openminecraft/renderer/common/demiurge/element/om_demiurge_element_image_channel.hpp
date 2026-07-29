@@ -8,13 +8,14 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include <functional>
 #include <unordered_map>
 namespace openminecraft::renderer::common::demiurge::element
 {
 class OMDemiurgeImageChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementImage>
 {
   public:
-    OMDemiurgeImageChannel(OMRenderer *renderer) : OMDemiurgeQuadChannel(renderer)
+    OMDemiurgeImageChannel(OMRenderer *renderer, std::function<void()> r) : OMDemiurgeQuadChannel(renderer, r)
     {
     }
     ~OMDemiurgeImageChannel() = default;
@@ -36,7 +37,7 @@ class OMDemiurgeImageChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementIma
     auto onRemove(int i) -> void override
     {
         textures.erase(i);
-        renderer->requestResize();
+        recreation();
     }
 
     OMRendererBuffer *uniform;

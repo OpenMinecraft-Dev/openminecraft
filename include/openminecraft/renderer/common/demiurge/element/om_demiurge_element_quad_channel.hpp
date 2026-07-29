@@ -6,12 +6,15 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include <array>
+#include <functional>
+#include <utility>
 namespace openminecraft::renderer::common::demiurge::element
 {
 template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
 {
   public:
-    OMDemiurgeQuadChannel(OMRenderer *renderer) : renderer(renderer)
+    OMDemiurgeQuadChannel(OMRenderer *renderer, std::function<void()> recreate)
+        : renderer(renderer), recreation(std::move(recreate))
     {
     }
     ~OMDemiurgeQuadChannel() = default;
@@ -84,8 +87,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
         if (instanceBuffer->length < this->bufferSize() || this->lastCount != this->objects.size())
         {
             this->lastCount = this->objects.size();
-            // INFO: (fake) resize due to the instance buffer recreation
-            renderer->requestResize();
+            recreation();
             return;
         }
 
@@ -96,6 +98,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
 
   protected:
     OMRenderer *renderer;
+    std::function<void()> recreation;
     basics::OMVertexFormat format;
 
     OMRendererBuffer *quadBuffer;

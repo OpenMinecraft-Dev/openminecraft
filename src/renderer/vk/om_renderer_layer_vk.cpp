@@ -273,13 +273,41 @@ void OMRendererVk::rebuildDefaults()
                 commandBuffer.end();
 
                 defaultCommandBuffers[task.second].push_back(commandBuffer);
-                // defaultCommandBuffers.push_back(commandBuffer);
             }
         }
     }
     catch (SystemError &e)
     {
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.defaults"));
+    }
+}
+
+auto OMRendererVk::taskRecreate(std::string id) -> void
+{
+    auto task = fetchTask(id);
+    if (task && reinterpret_cast<OMRendererTaskVk *>(task)->isOnDefault())
+    {
+        int i = 0;
+        for (auto defaultFramebuffer : defaultFramebuffers)
+        {
+            if (i >= defaultCommandBuffers[task].size())
+            {
+                break;
+            }
+            auto commandBuffer = defaultCommandBuffers[task][i];
+            commandBuffer.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eSimultaneousUse));
+            std::vector test = {ClearValue({0.0f, 0.0f, 0.0f, 0.0f}), ClearValue({1.0f, 0})};
+            commandBuffer.beginRenderPass(
+                RenderPassBeginInfo(reinterpret_cast<OMRendererRenderTargetVk *>(getDefaultRenderTarget())->renderPass,
+                                    defaultFramebuffer, Rect2D(Offset2D(0, 0), swapchainManager->extent), test),
+                SubpassContents::eSecondaryCommandBuffers);
+
+            commandBuffer.executeCommands(reinterpret_cast<OMRendererTaskVk *>(task)->commandBuffer);
+            commandBuffer.endRenderPass();
+            commandBuffer.end();
+
+            ++i;
+        }
     }
 }
 
