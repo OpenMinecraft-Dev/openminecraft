@@ -132,6 +132,7 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glDepthMask = fetchGlFunc<PFNGLDEPTHMASKPROC>("glDepthMask");
     gl.glDrawElementsInstancedBaseInstance =
         fetchGlFunc<PFNGLDRAWELEMENTSINSTANCEDBASEINSTANCEPROC>("glDrawElementsInstancedBaseInstance");
+    gl.glTexSubImage2D = fetchGlFunc<PFNGLTEXSUBIMAGE2DPROC>("glTexSubImage2D");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()

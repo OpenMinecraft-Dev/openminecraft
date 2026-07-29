@@ -76,6 +76,7 @@ struct OMRendererOpenGLFuncs
     PFNGLBLENDFUNCSEPARATEPROC glBlendFuncSeparate;
     PFNGLDEPTHMASKPROC glDepthMask;
     PFNGLDRAWELEMENTSINSTANCEDBASEINSTANCEPROC glDrawElementsInstancedBaseInstance;
+    PFNGLTEXSUBIMAGE2DPROC glTexSubImage2D;
 };
 class OMRendererOpenGL : public OMRenderer
 {

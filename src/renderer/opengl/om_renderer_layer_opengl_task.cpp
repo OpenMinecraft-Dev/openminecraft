@@ -1,9 +1,9 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_task.hpp"
 #include "GL/glcorearb.h"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
+#include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
-#include "openminecraft/renderer/om_renderer_object.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_buffer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
@@ -54,17 +54,24 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     for (int i = 0; i < glpipe->inputTypes.size(); i++)
     {
         auto obj = glpipe->inputs[i];
-        if (obj->objType() == DataBuffer)
+        switch (glpipe->inputTypes[i])
         {
-            ops.push_back({BindBufferBase,
-                           {GL_UNIFORM_BUFFER, static_cast<GLuint>(i),
-                            reinterpret_cast<OMRendererBufferOpenGL *>(glpipe->inputs[i])->buffer}});
-        }
-        else if (obj->objType() == Texture)
-        {
+        case common::ImageSampler:
             ops.push_back({ActiveTexture, static_cast<GLuint>(GL_TEXTURE0 + i)});
             ops.push_back(
                 {BindTexture, GL_TEXTURE_2D, reinterpret_cast<OMRendererTextureOpenGL *>(glpipe->inputs[i])->texture});
+
+            break;
+        case common::UniformBuffer:
+            ops.push_back({BindBufferBase,
+                           {GL_UNIFORM_BUFFER, static_cast<GLuint>(i),
+                            reinterpret_cast<OMRendererBufferOpenGL *>(glpipe->inputs[i])->buffer}});
+            break;
+        case common::ShaderStorageBuffer:
+            ops.push_back({BindBufferBase,
+                           {GL_SHADER_STORAGE_BUFFER, static_cast<GLuint>(i),
+                            reinterpret_cast<OMRendererBufferOpenGL *>(glpipe->inputs[i])->buffer}});
+            break;
         }
     }
 

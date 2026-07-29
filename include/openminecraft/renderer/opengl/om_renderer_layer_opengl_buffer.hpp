@@ -22,6 +22,8 @@ class OMRendererBufferOpenGL : public common::OMRendererBuffer
   private:
     OMRendererOpenGL *renderer;
     uint64_t length;
+
+  public:
     common::OMBufferUsage usage;
 };
 

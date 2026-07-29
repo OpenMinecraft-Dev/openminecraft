@@ -19,7 +19,8 @@ class OMRendererRenderTarget;
 enum OMRendererPipelineInputType
 {
     ImageSampler,
-    UniformBuffer
+    UniformBuffer,
+    ShaderStorageBuffer
 };
 enum OMRendererPipelineBlendType
 {

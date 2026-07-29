@@ -1,5 +1,7 @@
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_image_channel.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
+#include "openminecraft/renderer/common/om_renderer_buffer.hpp"
+#include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
 

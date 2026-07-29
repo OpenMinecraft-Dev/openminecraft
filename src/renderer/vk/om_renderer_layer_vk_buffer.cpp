@@ -60,6 +60,8 @@ static auto mapToUsageFlag(OMBufferUsage usage) -> BufferUsageFlagBits
         return BufferUsageFlagBits::eUniformBuffer;
     case Indirect:
         return BufferUsageFlagBits::eIndirectBuffer;
+    case ShaderStorage:
+        return BufferUsageFlagBits::eStorageBuffer;
     }
 }
 

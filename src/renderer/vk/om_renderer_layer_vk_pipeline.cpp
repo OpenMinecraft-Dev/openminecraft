@@ -142,7 +142,19 @@ auto OMRendererPipelineVk::convertTo(common::basics::OMVertexPropType type) -> F
 
 void OMRendererPipelineVk::appendInput(common::OMRendererPipelineInputType type)
 {
-    auto typ = (type == common::ImageSampler ? DescriptorType::eCombinedImageSampler : DescriptorType::eUniformBuffer);
+    DescriptorType typ;
+    switch (type)
+    {
+    case common::ImageSampler:
+        typ = DescriptorType::eCombinedImageSampler;
+        break;
+    case common::UniformBuffer:
+        typ = DescriptorType::eUniformBuffer;
+        break;
+    case common::ShaderStorageBuffer:
+        typ = DescriptorType::eStorageBuffer;
+        break;
+    }
     descriptorSetLayoutBindings.emplace_back(static_cast<uint32_t>(layoutBinding), typ, 1, ShaderStageFlagBits::eAll);
     descriptorPoolSizes.emplace_back(typ, 1);
     layoutBinding++;
@@ -180,7 +192,7 @@ void OMRendererPipelineVk::bindInput(int idx, common::OMRendererBuffer *buff)
         std::vector c = {DescriptorBufferInfo(reinterpret_cast<OMRendererBufferVk *>(buff)->buffer, 0,
                                               static_cast<DeviceSize>(buff->length))};
         renderer->logicalDevice.updateDescriptorSets(
-            WriteDescriptorSet(descriptorSet, idx, 0, DescriptorType::eUniformBuffer, {}, c), nullptr);
+            WriteDescriptorSet(descriptorSet, idx, 0, descriptorSetLayoutBindings[idx].descriptorType, {}, c), nullptr);
     }
     catch (SystemError &e)
     {
