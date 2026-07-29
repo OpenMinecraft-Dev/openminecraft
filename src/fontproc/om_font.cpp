@@ -1,6 +1,4 @@
 #include "openminecraft/fontproc/om_font.hpp"
-#include "fmt/ranges.h"
-#include "glm/glm.hpp"
 #include "harfbuzz/hb.h"
 #include "openminecraft/fontproc/om_font_glyph.hpp"
 #include "openminecraft/fontproc/om_font_outline.hpp"
@@ -8,6 +6,7 @@
 #include "openminecraft/fontproc/om_font_triangle_list.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
+#include <iostream>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -180,8 +179,8 @@ auto OMFont::shape(std::string s) -> void
     for (int i = 0; i < glyphs; ++i)
     {
         logger.info("Cluster {} glyphid 0x{:x}", glyphInfo[i].cluster, glyphInfo[i].codepoint);
-        logger.info("Offset + Advance = {} {} {} {}", glyphPos[i].x_offset, glyphPos[i].y_offset, glyphPos[i].x_advance,
-                    glyphPos[i].y_advance);
+        logger.info("Offset + Advance = [{},{}] [{},{}]", glyphPos[i].x_offset, glyphPos[i].y_offset,
+                    glyphPos[i].x_advance, glyphPos[i].y_advance);
     }
 
     int xsc, ysc;

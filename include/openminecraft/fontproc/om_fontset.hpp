@@ -14,7 +14,7 @@ class OMFontSet
 
     auto shape(std::string s) -> void;
 
-    std::vector<OMFont> fontList;
+    std::vector<std::shared_ptr<OMFont>> fontList;
 };
 } // namespace openminecraft::fontproc
 

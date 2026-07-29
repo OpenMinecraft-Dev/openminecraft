@@ -195,7 +195,8 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 
     try
     {
-        tempCommandPool = logicalDevice.createCommandPool(CommandPoolCreateInfo({}, queueFamilyIndex.first), allocator);
+        tempCommandPool = logicalDevice.createCommandPool(
+            CommandPoolCreateInfo(CommandPoolCreateFlagBits::eResetCommandBuffer, queueFamilyIndex.first), allocator);
 
         defaultTarget = this->createRenderTarget();
         defaultTarget->build();
