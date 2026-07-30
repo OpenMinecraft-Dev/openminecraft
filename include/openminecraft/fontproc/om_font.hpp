@@ -18,6 +18,7 @@ class OMFont
 
     auto scale() -> glm::vec2;
     auto buildOutline(int charcode, bool uni = true) -> OMFontOutline;
+    auto fetchBox(int charcode, bool uni = true) -> glm::vec4;
     auto buildBasicPolygon(int charcode, bool uni = true) -> std::shared_ptr<OMTriangleList>;
     auto buildGlyph(int charcode, bool uni = true) -> std::shared_ptr<OMFontGlyph>;
     auto shape(std::string s) -> void;

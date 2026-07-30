@@ -184,6 +184,25 @@ auto OMFont::buildGlyph(int charcode, bool uni) -> std::shared_ptr<OMFontGlyph>
     return mem::fast_shared<allocatorId, OMFontGlyph>(ots, siz);
 }
 
+auto OMFont::fetchBox(int charcode, bool uni) -> glm::vec4
+{
+    auto font = static_cast<hb_font_t *>(hbFont);
+    int xsc, ysc;
+    hb_font_get_scale(font, &xsc, &ysc);
+
+    hb_codepoint_t gly = charcode;
+    if (uni)
+    {
+        hb_font_get_nominal_glyph(font, charcode, &gly);
+    }
+
+    hb_glyph_extents_t extents;
+    hb_font_get_glyph_extents(font, gly, &extents);
+
+    return {static_cast<float>(extents.x_bearing) / xsc, static_cast<float>(extents.x_bearing + extents.width) / xsc,
+            static_cast<float>(extents.y_bearing + extents.height) / ysc, static_cast<float>(extents.y_bearing) / ysc};
+}
+
 auto OMFont::shape(std::string s) -> void
 {
     auto buf = hb_buffer_create();

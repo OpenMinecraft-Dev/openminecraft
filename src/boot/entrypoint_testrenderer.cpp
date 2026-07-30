@@ -75,7 +75,8 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
         auto font = new fontproc::OMFont(*rawfile.get());
         // auto glyph = font->buildBasicPolygon(0x2299);
         // U+2299
-        auto outline = font->buildOutline('@');
+        int charcode = '@';
+        auto outline = font->buildOutline(charcode);
         auto ext = font->scale();
 
         int vtxCount = 0;
@@ -110,8 +111,13 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
 
             curr = ot.target / ext;
         }
+        auto bbox = font->fetchBox(charcode);
         delete font;
 
+        finalData.push_back(bbox.x);
+        finalData.push_back(bbox.y);
+        finalData.push_back(bbox.z);
+        finalData.push_back(bbox.w);
         finalData.push_back(curves.size());
         for (auto c : curves)
         {

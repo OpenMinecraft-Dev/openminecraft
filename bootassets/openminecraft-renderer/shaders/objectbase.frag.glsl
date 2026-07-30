@@ -12,20 +12,24 @@ layout(std430, binding = 2) readonly buffer GlyphData {
     float d[];
 } inGlyph;
 
+vec4 glyphFetchBBox() {
+    return vec4(inGlyph.d[0], inGlyph.d[1], inGlyph.d[2], inGlyph.d[3]);
+}
+
 int glyphFetchCount() {
-    return int(inGlyph.d[0]);
+    return int(inGlyph.d[0 + 4]);
 }
 
 int glyphFetchCurves(int id) {
-    return int(inGlyph.d[id + 1]);
+    return int(inGlyph.d[id + 1 + 4]);
 }
 
 vec2 glyphFetchStartPoint(int count, int id) {
-    return vec2(inGlyph.d[count + 1 + id * 2], inGlyph.d[count + 1 + id * 2 + 1]);
+    return vec2(inGlyph.d[count + 1 + 4 + id * 2], inGlyph.d[count + 1 + 4 + id * 2 + 1]);
 }
 
 vec4 glyphFetchCurve(int count, int id) {
-    return vec4(inGlyph.d[count * 3 + 1 + id * 4], inGlyph.d[count * 3 + 1 + id * 4 + 1], inGlyph.d[count * 3 + 1 + id * 4 + 2], inGlyph.d[count * 3 + 1 + id * 4 + 3]);
+    return vec4(inGlyph.d[count * 3 + 1 + 4 + id * 4], inGlyph.d[count * 3 + 1 + 4 + id * 4 + 1], inGlyph.d[count * 3 + 1 + 4 + id * 4 + 2], inGlyph.d[count * 3 + 1 + 4 + id * 4 + 3]);
 }
 
 float distanceToQuadraticBezier(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
@@ -35,7 +39,7 @@ float distanceToQuadraticBezier(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
 
     float t = clamp(dot(p - p0, p2 - p0) / max(dot(p2 - p0, p2 - p0), 1e-6), 0.0, 1.0);
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 3; i++) {
         vec2 pt = (1.0 - t) * (1.0 - t) * p0 + 2.0 * (1.0 - t) * t * p1 + t * t * p2;
         vec2 derivative = 2.0 * (1.0 - t) * (p1 - p0) + 2.0 * t * (p2 - p1);
         float f = dot(pt - p, derivative);
@@ -116,6 +120,11 @@ int intersectLineY(float rayY, vec2 a, vec2 b, out float t) {
 void main() {
     // outColor = texture(inTexture, outTexCoord);
     outColor = vec4(1.0);
+
+    vec4 bbox = glyphFetchBBox();
+    if (outTexCoord.x < bbox.x || outTexCoord.x > bbox.y || outTexCoord.y < bbox.z || outTexCoord.y > bbox.w) {
+        discard;
+    }
 
     int curves = glyphFetchCount();
     int curveid = 0;
