@@ -132,8 +132,12 @@ auto boot(std::vector<std::string> args) -> int
         std::ifstream istr(args[2], std::ios::binary);
         fontproc::OMFont f(istr);
         auto test = f.buildOutline(std::stoi(args[3], nullptr, 16), false);
+        auto scale = f.scale();
         for (auto &op : test.operations)
         {
+            op.target /= scale;
+            op.control1 /= scale;
+            op.control2 /= scale;
             switch (op.type)
             {
             case fontproc::Move:

@@ -2,7 +2,9 @@
 
 #include "SDL3/SDL_video.h"
 #include "glm/ext/matrix_float4x4.hpp"
+#include "glm/ext/vector_float2.hpp"
 #include "openminecraft/fontproc/om_font.hpp"
+#include "openminecraft/fontproc/om_font_outline.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
@@ -14,7 +16,9 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 
 #include <chrono>
+#include <cmath>
 #include <glm/glm.hpp>
+#include <vector>
 
 #include "openminecraft/io/om_io_utils.hpp"
 #include "SDL3/SDL_events.h"
@@ -23,6 +27,20 @@ using namespace openminecraft::renderer::common;
 
 namespace openminecraft::boot::test
 {
+static auto approximateCubicToQuadratic(glm::vec2 P0, glm::vec2 P1, glm::vec2 P2, glm::vec2 P3) -> glm::vec2
+{
+    glm::vec2 d1 = P1 - P0;
+    glm::vec2 d2 = P3 - P2;
+    float det = d1.x * d2.y - d1.y * d2.x;
+    if (fabs(det) < 1e-6)
+    {
+        return (P1 + P2) * glm::vec2(0.5);
+    }
+    glm::vec2 diff = P3 - P0;
+    float s = (diff.x * d2.y - diff.y * d2.x) / det;
+
+    return P0 + s * d1;
+}
 OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     : renderer(renderer), logger("OMTestRenderer", this), OMRendererHandler(renderer)
 {
@@ -46,15 +64,79 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     format.debugState();
 
     {
+        std::vector<glm::vec2> bufferData = {};
+        std::vector<glm::vec2> beginPoints = {};
+        std::vector<int> curves = {};
+        std::vector<float> finalData = {};
+        glyphStorage = renderer->allocateBuffer(ShaderStorage, 1024 * sizeof(float));
+
         auto rawfile = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
         auto font = new fontproc::OMFont(*rawfile.get());
-        auto glyph = font->buildBasicPolygon(0x2299);
+        // auto glyph = font->buildBasicPolygon(0x2299);
+        // U+2299
+        auto outline = font->buildOutline('A');
+        auto ext = font->scale();
+
+        int vtxCount = 0;
+        glm::vec2 curr = {};
+        for (auto &ot : outline.operations)
+        {
+            switch (ot.type)
+            {
+            case fontproc::Move:
+                beginPoints.emplace_back(ot.target / ext);
+                break;
+            case fontproc::Line:
+                bufferData.emplace_back(ot.target / ext);
+                bufferData.emplace_back(INFINITY, INFINITY);
+                ++vtxCount;
+                break;
+            case fontproc::Cubic:
+                bufferData.emplace_back(ot.target / ext);
+                bufferData.emplace_back(approximateCubicToQuadratic(curr, ot.control1, ot.control2, ot.target) / ext);
+                ++vtxCount;
+                break;
+            case fontproc::Quadratic:
+                bufferData.emplace_back(ot.target / ext);
+                bufferData.emplace_back(ot.control1 / ext);
+                ++vtxCount;
+                break;
+            case fontproc::Close:
+                curves.push_back(vtxCount);
+                vtxCount = 0;
+                break;
+            }
+
+            curr = ot.target / ext;
+        }
         delete font;
 
-        std::vector<VertexStruct> vertices;
-        std::vector<uint32_t> indices;
+        finalData.push_back(curves.size());
+        for (auto c : curves)
+        {
+            finalData.push_back(c);
+        }
+        for (auto p : beginPoints)
+        {
+            finalData.push_back(p.x);
+            finalData.push_back(p.y);
+        }
+        for (auto cc : bufferData)
+        {
+            finalData.push_back(cc.x);
+            finalData.push_back(cc.y);
+        }
+        glyphStorage->updateDataPart(finalData.data(), 0, sizeof(float) * finalData.size());
 
-        for (auto &v : glyph->vertices)
+        std::vector<VertexStruct> vertices = {
+            {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+            {{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+            {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
+            {{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+        };
+        std::vector<uint32_t> indices = {0, 1, 2, 2, 3, 0};
+
+        /*for (auto &v : glyph->vertices)
         {
             vertices.push_back(VertexStruct{{v.x, v.y, 0.0f}, {v.x, v.y}});
         }
@@ -62,7 +144,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
         for (auto i : glyph->indices)
         {
             indices.push_back(i);
-        }
+        }*/
 
         auto siz = vertices.size() * sizeof(VertexStruct);
 
@@ -120,7 +202,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
                        ->depth(true, true)
                        ->buildN();
     mainPipeline->bindInput(0, tempUniformBuffer);
-}
+} // namespace openminecraft::boot::test
 
 void OMTestRenderer::beforeFrame()
 {
@@ -220,6 +302,7 @@ void OMTestRenderer::submitTasks()
         pipeline = renderer->createPipeline()
                        ->input(UniformBuffer)
                        ->input(ImageSampler)
+                       ->input(ShaderStorageBuffer)
                        ->output(renderTarget)
                        ->shader(objectFrg)
                        ->shader(objectVtx)
@@ -230,6 +313,7 @@ void OMTestRenderer::submitTasks()
                        ->buildN();
         pipeline->bindInput(0, uniformBuffer);
         pipeline->bindInput(1, textureImage);
+        pipeline->bindInput(2, glyphStorage);
     }
 
     mainPipeline->bindInput(1, tempTexture);
@@ -266,6 +350,8 @@ OMTestRenderer::~OMTestRenderer()
     delete tempUniformBuffer;
     delete vertexBuffer;
     delete indexBuffer;
+
+    delete glyphStorage;
 
     delete mainIdxBuffer;
     delete mainVtxBuffer;

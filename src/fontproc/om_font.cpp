@@ -56,6 +56,15 @@ static void acceptOutlineClosePath(hb_draw_funcs_t *, void *drawdata, hb_draw_st
 
 hb_draw_funcs_t *drawfuncs = nullptr;
 
+auto OMFont::scale() -> glm::vec2
+{
+    auto font = static_cast<hb_font_t *>(hbFont);
+
+    int xsc, ysc;
+    hb_font_get_scale(font, &xsc, &ysc);
+
+    return {xsc, ysc};
+}
 auto OMFont::buildOutline(int charcode, bool uni) -> OMFontOutline
 {
     if (!drawfuncs)
@@ -80,18 +89,6 @@ auto OMFont::buildOutline(int charcode, bool uni) -> OMFontOutline
     OMFontOutline outline;
 
     hb_font_draw_glyph(font, gly, drawfuncs, &outline);
-
-    int xsc, ysc;
-    hb_font_get_scale(font, &xsc, &ysc);
-
-    glm::vec2 sc = {xsc, ysc};
-
-    for (auto &l : outline.operations)
-    {
-        l.target /= sc;
-        l.control1 /= sc;
-        l.control2 /= sc;
-    }
 
     return outline;
 }

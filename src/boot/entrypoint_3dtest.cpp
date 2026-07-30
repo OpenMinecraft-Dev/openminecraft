@@ -20,9 +20,9 @@ void rendererTest(renderer::OMBackend backend)
         renderer::OMWindow win({util::Version(4, 3, 0, 0), util::Version(1, 2, 0, 0)}, conf);
 
         auto hnd = std::make_shared<test::OMTestRenderer>(win());
-        auto hnd2 = std::make_shared<renderer::common::demiurge::OMDemiurgeRendererHandler>(win());
+        // auto hnd2 = std::make_shared<renderer::common::demiurge::OMDemiurgeRendererHandler>(win());
         win()->registerHandler(hnd);
-        win()->registerHandler(hnd2);
+        // win()->registerHandler(hnd2);
         win()->baseInit();
 
         logger->info("driver: {}", win()->driver());
@@ -41,9 +41,8 @@ void rendererTest(renderer::OMBackend backend)
             win()->render();
         }
 
-        // t.join();
         hnd = nullptr;
-        hnd2 = nullptr;
+        // hnd2 = nullptr;
     }
     catch (std::runtime_error &e)
     {

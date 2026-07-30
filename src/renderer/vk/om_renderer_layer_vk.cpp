@@ -484,6 +484,7 @@ void OMRendererVk::render()
         {
             goto rebuild;
         }
+
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.queuepresent"));
     }
 
