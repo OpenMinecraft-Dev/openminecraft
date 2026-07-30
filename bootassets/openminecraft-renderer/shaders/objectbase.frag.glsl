@@ -2,6 +2,8 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
+precision highp float;
+
 layout(location = 0) in vec2 outTexCoord;
 layout(location = 0) out vec4 outColor;
 
@@ -60,7 +62,56 @@ float distanceToLineSegment(vec2 p, vec2 a, vec2 b) {
     return length(p - closest);
 }
 
-#define INFINITY (1.0 / 0.0)
+int intersectQuadraticY(float rayY, vec2 p0, vec2 p1, vec2 p2, out float t1, out float t2) {
+    float a = p0.y - 2.0 * p1.y + p2.y;
+    float b = 2.0 * (p1.y - p0.y);
+    float c = p0.y - rayY;
+    t1 = t2 = -1.0;
+
+    if (abs(a) < 1e-6) {
+        if (abs(b) < 1e-6) return 0;
+        float t = -c / b;
+        if (t >= 0.0 && t <= 1.0) { t1 = t; return 1; }
+        return 0;
+    }
+
+    float disc = b * b - 4.0 * a * c;
+    if (disc < 0.0) return 0;
+
+    float sqrtD = sqrt(disc);
+    float inv2a = 0.5 / a;
+    float r1 = (-b - sqrtD) * inv2a;
+    float r2 = (-b + sqrtD) * inv2a;
+
+    if (r1 > r2) { float tmp = r1; r1 = r2; r2 = tmp; }
+
+    int count = 0;
+    if (r1 >= 0.0 && r1 <= 1.0) { t1 = r1; count = 1; }
+    if (r2 >= 0.0 && r2 <= 1.0 && (count == 0 || r2 - r1 > 1e-6)) {
+        if (count == 0) t1 = r2;
+        else t2 = r2;
+        count++;
+    }
+    return count;
+}
+
+float evalQuadraticX(float t, vec2 p0, vec2 p1, vec2 p2) {
+    return (1.0 - t) * (1.0 - t) * p0.x + 2.0 * (1.0 - t) * t * p1.x + t * t * p2.x;
+}
+
+float derivativeQuadraticY(float t, vec2 p0, vec2 p1, vec2 p2) {
+    return 2.0 * (1.0 - t) * (p1.y - p0.y) + 2.0 * t * (p2.y - p1.y);
+}
+
+int intersectLineY(float rayY, vec2 a, vec2 b, out float t) {
+    t = -1.0;
+    if (abs(b.y - a.y) < 1e-6) {
+        return 0;
+    }
+    t = (rayY - a.y) / (b.y - a.y);
+    if (t > 0.0 && t <= 1.0) return 1;
+    return 0;
+}
 
 void main() {
     // outColor = texture(inTexture, outTexCoord);
@@ -70,6 +121,7 @@ void main() {
     int curveid = 0;
     vec2 currentPos = vec2(0.0);
     float dis = 100.0f;
+    int winding = 0;
     for (int i = 0; i < curves; ++i) {
         int numCurves = glyphFetchCurves(i);
         currentPos = glyphFetchStartPoint(curves, i);
@@ -77,17 +129,48 @@ void main() {
             vec4 cvState = glyphFetchCurve(curves, curveid);
             vec2 target = cvState.xy;
             vec2 control = cvState.zw;
-            if (control.x == INFINITY) {
+
+            bool isLine = isinf(control.x);
+
+            if (isLine) {
                 dis = min(dis, distanceToLineSegment(outTexCoord, currentPos, target));
             }
             else {
                 dis = min(dis, distanceToQuadraticBezier(outTexCoord, currentPos, control, target));
             }
+
+            if (isLine) {
+                float tLine;
+                if (intersectLineY(outTexCoord.y, currentPos, target, tLine) > 0) {
+                    float x = currentPos.x + tLine * (target.x - currentPos.x);
+                    if (x < outTexCoord.x) {
+                        float dydt = target.y - currentPos.y;
+                        winding += (dydt > 0.0) ? 1 : -1;
+                    }
+                }
+            } else {
+                float t1, t2;
+                int hits = intersectQuadraticY(outTexCoord.y, currentPos, control, target, t1, t2);
+                for (int h = 0; h < hits; h++) {
+                    float t = (h == 0) ? t1 : t2;
+                    float x = evalQuadraticX(t, currentPos, control, target);
+                    if (x < outTexCoord.x) {
+                        float dydt = derivativeQuadraticY(t, currentPos, control, target);
+                        if (abs(dydt) > 1e-12) {
+                            winding += (dydt > 0.0) ? 1 : -1;
+                        }
+                    }
+                }
+            }
+
             currentPos = target;
             ++curveid;
         }
     }
 
-    float viewDist = clamp(dis * 5.0, 0.0, 1.0);
-    outColor = mix(vec4(0,0,0,1), vec4(1,1,1,1), viewDist);
+    if (winding == 0) {
+        dis = -dis;
+    }
+
+    outColor *= (smoothstep(0.0, 0.01, dis));
 }

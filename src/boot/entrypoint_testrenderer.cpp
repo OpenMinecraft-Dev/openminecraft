@@ -41,6 +41,7 @@ static auto approximateCubicToQuadratic(glm::vec2 P0, glm::vec2 P1, glm::vec2 P2
 
     return P0 + s * d1;
 }
+
 OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     : renderer(renderer), logger("OMTestRenderer", this), OMRendererHandler(renderer)
 {
@@ -74,7 +75,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
         auto font = new fontproc::OMFont(*rawfile.get());
         // auto glyph = font->buildBasicPolygon(0x2299);
         // U+2299
-        auto outline = font->buildOutline('A');
+        auto outline = font->buildOutline('@');
         auto ext = font->scale();
 
         int vtxCount = 0;
@@ -104,7 +105,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
             case fontproc::Close:
                 curves.push_back(vtxCount);
                 vtxCount = 0;
-                break;
+                continue;
             }
 
             curr = ot.target / ext;
@@ -129,22 +130,12 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
         glyphStorage->updateDataPart(finalData.data(), 0, sizeof(float) * finalData.size());
 
         std::vector<VertexStruct> vertices = {
-            {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-            {{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
-            {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
-            {{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{0.0f, 0.0f, 0.0f}, {-0.2f, -0.2f}},
+            {{0.0f, 0.1f, 0.0f}, {-0.2f, 1.0f}},
+            {{0.1f, 0.1f, 0.0f}, {1.0f, 1.0f}},
+            {{0.1f, 0.0f, 0.0f}, {1.0f, -0.2f}},
         };
         std::vector<uint32_t> indices = {0, 1, 2, 2, 3, 0};
-
-        /*for (auto &v : glyph->vertices)
-        {
-            vertices.push_back(VertexStruct{{v.x, v.y, 0.0f}, {v.x, v.y}});
-        }
-
-        for (auto i : glyph->indices)
-        {
-            indices.push_back(i);
-        }*/
 
         auto siz = vertices.size() * sizeof(VertexStruct);
 
