@@ -216,7 +216,7 @@ auto OMFont::shape(std::string s) -> std::vector<OMFontShapeResult>
     {
         result.emplace_back(OMFontShapeResult{glyphInfo[i].codepoint, glyphInfo[i].cluster, glyphPos[i].x_offset / ss.x,
                                               glyphPos[i].y_offset / ss.y, glyphPos[i].x_advance / ss.x,
-                                              glyphPos[i].y_advance / ss.y});
+                                              glyphPos[i].y_advance / ss.y, this});
     }
 
     return result;

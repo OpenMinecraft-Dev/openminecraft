@@ -12,6 +12,7 @@ namespace openminecraft::fontproc
 {
 constexpr const char allocatorId[] = "font_processor";
 class OMFontOutline;
+class OMFont;
 struct OMFontShapeResult
 {
     uint32_t glyphId, cluster;
@@ -19,6 +20,7 @@ struct OMFontShapeResult
     float offsety;
     float advancex;
     float advancey;
+    OMFont *font;
 };
 class OMFont
 {
