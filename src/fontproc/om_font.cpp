@@ -99,10 +99,9 @@ auto OMFont::buildBasicPolygon(int charcode, bool uni) -> std::shared_ptr<OMTria
 
     auto font = static_cast<hb_font_t *>(hbFont);
 
-    int xsc, ysc;
-    hb_font_get_scale(font, &xsc, &ysc);
+    auto s = scale();
 
-    auto rawpoly = outline.buildPolygons(8, xsc, ysc);
+    auto rawpoly = outline.buildPolygons(8, s.x, s.y);
     std::sort(rawpoly.begin(), rawpoly.end(),
               [](std::shared_ptr<OMFontPolygon> p1, std::shared_ptr<OMFontPolygon> p2) -> bool {
                   return p1->area() > p2->area();
@@ -166,8 +165,7 @@ auto OMFont::buildGlyph(int charcode, bool uni) -> std::shared_ptr<OMFontGlyph>
 
     auto font = static_cast<hb_font_t *>(hbFont);
 
-    int xsc, ysc;
-    hb_font_get_scale(font, &xsc, &ysc);
+    auto s = scale();
 
     hb_codepoint_t gly = charcode;
     if (uni)
@@ -178,17 +176,13 @@ auto OMFont::buildGlyph(int charcode, bool uni) -> std::shared_ptr<OMFontGlyph>
     hb_glyph_extents_t extents;
     hb_font_get_glyph_extents(font, gly, &extents);
 
-    glm::vec4 siz = {
-        static_cast<float>(extents.x_bearing) / xsc, static_cast<float>(extents.x_bearing + extents.width) / xsc,
-        static_cast<float>(extents.y_bearing + extents.height) / ysc, static_cast<float>(extents.y_bearing) / ysc};
-    return mem::fast_shared<allocatorId, OMFontGlyph>(ots, siz);
+    return mem::fast_shared<allocatorId, OMFontGlyph>(ots, fetchBox(charcode, uni));
 }
 
 auto OMFont::fetchBox(int charcode, bool uni) -> glm::vec4
 {
     auto font = static_cast<hb_font_t *>(hbFont);
-    int xsc, ysc;
-    hb_font_get_scale(font, &xsc, &ysc);
+    auto s = scale();
 
     hb_codepoint_t gly = charcode;
     if (uni)
@@ -199,11 +193,11 @@ auto OMFont::fetchBox(int charcode, bool uni) -> glm::vec4
     hb_glyph_extents_t extents;
     hb_font_get_glyph_extents(font, gly, &extents);
 
-    return {static_cast<float>(extents.x_bearing) / xsc, static_cast<float>(extents.x_bearing + extents.width) / xsc,
-            static_cast<float>(extents.y_bearing + extents.height) / ysc, static_cast<float>(extents.y_bearing) / ysc};
+    return {static_cast<float>(extents.x_bearing) / s.x, static_cast<float>(extents.x_bearing + extents.width) / s.x,
+            static_cast<float>(extents.y_bearing + extents.height) / s.y, static_cast<float>(extents.y_bearing) / s.y};
 }
 
-auto OMFont::shape(std::string s) -> void
+auto OMFont::shape(std::string s) -> std::vector<OMFontShapeResult>
 {
     auto buf = hb_buffer_create();
     hb_buffer_add_utf8(buf, s.c_str(), -1, 0, -1);
@@ -214,18 +208,18 @@ auto OMFont::shape(std::string s) -> void
     uint32_t glyphs;
     auto glyphInfo = hb_buffer_get_glyph_infos(buf, &glyphs);
     auto glyphPos = hb_buffer_get_glyph_positions(buf, &glyphs);
+    std::vector<OMFontShapeResult> result = {};
+
+    auto ss = scale();
 
     for (int i = 0; i < glyphs; ++i)
     {
-        logger.info("Cluster {} glyphid 0x{:x}", glyphInfo[i].cluster, glyphInfo[i].codepoint);
-        logger.info("Offset + Advance = [{},{}] [{},{}]", glyphPos[i].x_offset, glyphPos[i].y_offset,
-                    glyphPos[i].x_advance, glyphPos[i].y_advance);
+        result.emplace_back(OMFontShapeResult{glyphInfo[i].codepoint, glyphInfo[i].cluster, glyphPos[i].x_offset / ss.x,
+                                              glyphPos[i].y_offset / ss.y, glyphPos[i].x_advance / ss.x,
+                                              glyphPos[i].y_advance / ss.y});
     }
 
-    int xsc, ysc;
-    hb_font_get_scale(static_cast<hb_font_t *>(hbFont), &xsc, &ysc);
-
-    logger.info("scale: {} {}", xsc, ysc);
+    return result;
 }
 
 OMFont::~OMFont()

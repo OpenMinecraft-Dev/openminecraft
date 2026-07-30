@@ -6,7 +6,13 @@ void OMFontSet::shape(std::string s)
 {
     for (auto f : fontList)
     {
-        f->shape(s);
+        logger.info("shaping with font {}", (void *)f.get());
+        auto r = f->shape(s);
+        for (auto &c : r)
+        {
+            logger.info("Cluster {} glyphid 0x{:x} + offset({}, {}) / advance({}, {})", c.cluster, c.glyphId, c.offsetx,
+                        c.offsety, c.advancex, c.advancey);
+        }
     }
 }
 } // namespace openminecraft::fontproc

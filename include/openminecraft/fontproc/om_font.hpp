@@ -3,13 +3,23 @@
 #include "glm/ext/vector_float2.hpp"
 #include "openminecraft/fontproc/om_font_glyph.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include <cstdint>
 #include <iosfwd>
 #include <memory>
+#include <vector>
 
 namespace openminecraft::fontproc
 {
 constexpr const char allocatorId[] = "font_processor";
 class OMFontOutline;
+struct OMFontShapeResult
+{
+    uint32_t glyphId, cluster;
+    float offsetx;
+    float offsety;
+    float advancex;
+    float advancey;
+};
 class OMFont
 {
   public:
@@ -21,7 +31,7 @@ class OMFont
     auto fetchBox(int charcode, bool uni = true) -> glm::vec4;
     auto buildBasicPolygon(int charcode, bool uni = true) -> std::shared_ptr<OMTriangleList>;
     auto buildGlyph(int charcode, bool uni = true) -> std::shared_ptr<OMFontGlyph>;
-    auto shape(std::string s) -> void;
+    auto shape(std::string s) -> std::vector<OMFontShapeResult>;
 
   private:
     void *hbFont;
