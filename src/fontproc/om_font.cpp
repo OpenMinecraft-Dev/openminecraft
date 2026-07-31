@@ -224,12 +224,12 @@ auto OMFont::shape(std::string s, bool &isRTL) -> std::vector<OMFontShapeResult>
     return result;
 }
 
-auto OMFont::metrics() -> glm::vec4
+auto OMFont::metrics(bool rtl) -> glm::vec4
 {
     auto font = static_cast<hb_font_t *>(hbFont);
     auto s = scale();
     hb_font_extents_t extents;
-    hb_font_get_extents_for_direction(font, HB_DIRECTION_LTR, &extents);
+    hb_font_get_extents_for_direction(font, rtl ? HB_DIRECTION_RTL : HB_DIRECTION_LTR, &extents);
 
     return {float(extents.ascender) / s.y, float(extents.descender) / s.y, float(extents.line_gap) / s.y, 0.0f};
 }

@@ -1,10 +1,12 @@
 #ifndef OM_DEMIURGE_RENDERERHANDLER_HPP
 #define OM_DEMIURGE_RENDERERHANDLER_HPP
 
+#include "openminecraft/fontproc/om_fontset.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_image_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_rect_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_roundedrect_channel.hpp"
+#include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_textsdf_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
@@ -13,6 +15,8 @@
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include <memory>
+#include <unordered_map>
 namespace openminecraft::renderer::common::demiurge
 {
 constexpr float bottomDepth = 0.99f;
@@ -49,11 +53,17 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     element::OMDemiurgeRoundedRectChannel roundedRect;
     element::OMDemiurgeImageChannel image;
 
+    auto fetchFontChannel(fontproc::OMFontSet *) -> std::shared_ptr<element::OMDemiurgeTextSdfChannel>;
+
     OMRendererTask *task = nullptr;
 
   private:
+    std::unordered_map<fontproc::OMFontSet *, std::shared_ptr<element::OMDemiurgeTextSdfChannel>> fonts;
+
     OMRendererTexture *texture;
     log::OMLogger logger;
+
+    std::shared_ptr<fontproc::OMFontSet> fontset;
 };
 
 } // namespace openminecraft::renderer::common::demiurge

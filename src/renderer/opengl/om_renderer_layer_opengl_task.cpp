@@ -125,8 +125,16 @@ void OMRendererTaskOpenGL::bindVertexBuffer(std::vector<common::OMRendererBuffer
         for (auto part : pp.parts)
         {
             auto p = fromCommon(std::get<common::basics::OMVertexPropType>(part));
-            gl->glVertexAttribPointer(index, p.first, p.second, GL_FALSE, pp.size,
-                                      reinterpret_cast<void *>(std::get<int>(part)));
+            if (std::get<GLuint>(p) == GL_INT)
+            {
+                gl->glVertexAttribIPointer(index, p.first, p.second, pp.size,
+                                           reinterpret_cast<void *>(std::get<int>(part)));
+            }
+            else
+            {
+                gl->glVertexAttribPointer(index, p.first, p.second, GL_FALSE, pp.size,
+                                          reinterpret_cast<void *>(std::get<int>(part)));
+            }
             gl->glEnableVertexAttribArray(index);
             if (pp.isInstance)
             {

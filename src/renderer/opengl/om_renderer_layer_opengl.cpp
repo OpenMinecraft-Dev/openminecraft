@@ -103,6 +103,7 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glGenVertexArrays = fetchGlFunc<PFNGLGENVERTEXARRAYSPROC>("glGenVertexArrays");
     gl.glBindVertexArray = fetchGlFunc<PFNGLBINDVERTEXARRAYPROC>("glBindVertexArray");
     gl.glVertexAttribPointer = fetchGlFunc<PFNGLVERTEXATTRIBPOINTERPROC>("glVertexAttribPointer");
+    gl.glVertexAttribIPointer = fetchGlFunc<PFNGLVERTEXATTRIBIPOINTERPROC>("glVertexAttribIPointer");
     gl.glEnableVertexAttribArray = fetchGlFunc<PFNGLENABLEVERTEXATTRIBARRAYPROC>("glEnableVertexAttribArray");
     gl.glDeleteVertexArrays = fetchGlFunc<PFNGLDELETEVERTEXARRAYSPROC>("glDeleteVertexArrays");
     gl.glGetProgramInfoLog = fetchGlFunc<PFNGLGETPROGRAMINFOLOGPROC>("glGetProgramInfoLog");

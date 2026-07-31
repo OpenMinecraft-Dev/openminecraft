@@ -167,7 +167,8 @@ auto boot(std::vector<std::string> args) -> int
                 break;
             }
         }
-        logger->info("{} SVG Operations", test.operations.size());
+        auto s = f.fetchBox(std::stoi(args[3], nullptr, 16), false);
+        logger->info("{} SVG Operations {} x {}", test.operations.size(), s.y - s.x, s.w - s.z);
         break;
     }
     default:
