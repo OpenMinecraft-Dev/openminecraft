@@ -59,30 +59,30 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     shaderDef(outputFrg, "output.frag.glsl", Fragment);
     shaderDef(outputVtx, "output.vert.glsl", Vertex);
 
-    format.appendPart("position", basics::Vec3f);
-    format.appendPart("textureUV", basics::Vec2f);
-    format.nextGroup();
-    format.decideStruct();
-    format.debugState();
+    format.appendPart("position", basics::Vec3f)
+        ->appendPart("textureUV", basics::Vec2f)
+        ->nextGroup()
+        ->decideStruct()
+        ->debugState();
 
     {
         glyphStorage = renderer->allocateBuffer(ShaderStorage, 1024 * sizeof(float));
 
-        auto rawfile = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
+        auto rawfile = vfs::fsfetch("/bootassets/openminecraft-boot/font/MapleMono-NF-Regular.ttf");
 
         fontproc::OMFontSet set;
         set.fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile.get()));
 
-        auto s = set.shape("G");
-        // logger.debug("{}", s[0].glyphId);
-        auto finalData = set.genOutline(s[0].font, s[0].glyphId);
+        auto s = set.shape("<");
+        auto finalData = set.genOutline(s[0]);
+        logger.debug("{} bytes for glyph", sizeof(float) * finalData.size());
         glyphStorage->updateDataPart(finalData.data(), 0, sizeof(float) * finalData.size());
 
         std::vector<VertexStruct> vertices = {
-            {{0.0f, 0.0f, 0.0f}, {-0.2f, -0.2f}},
-            {{0.0f, 0.1f, 0.0f}, {-0.2f, 1.0f}},
-            {{0.1f, 0.1f, 0.0f}, {1.0f, 1.0f}},
-            {{0.1f, 0.0f, 0.0f}, {1.0f, -0.2f}},
+            {{0.0f, 0.0f, 0.0f}, {-0.5f, -0.5f}},
+            {{0.0f, 1.0f, 0.0f}, {-0.5f, 1.5f}},
+            {{1.0f, 1.0f, 0.0f}, {1.5f, 1.5f}},
+            {{1.0f, 0.0f, 0.0f}, {1.5f, -0.5f}},
         };
         std::vector<uint32_t> indices = {0, 1, 2, 2, 3, 0};
 

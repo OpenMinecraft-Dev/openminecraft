@@ -15,15 +15,15 @@ void OMDemiurgeRectChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRend
     shaderDef(vtxShader, "demiurge/rect.vert.glsl", Vertex);
     shaderDef(frgShader, "demiurge/rect.frag.glsl", Fragment);
 
-    format.appendPart("position", basics::Vec2f);
-    format.nextGroup();
-    format.setInstance();
-    format.appendPart("rect_pos", basics::Vec4f);
-    format.appendPart("rect_color", basics::Vec4f);
-    format.appendPart("rect_depth", basics::Float);
-    format.nextGroup();
-    format.decideStruct();
-    format.debugState();
+    format.appendPart("position", basics::Vec2f)
+        ->nextGroup()
+        ->setInstance()
+        ->appendPart("rect_pos", basics::Vec4f)
+        ->appendPart("rect_color", basics::Vec4f)
+        ->appendPart("rect_depth", basics::Float)
+        ->nextGroup()
+        ->decideStruct()
+        ->debugState();
 
     OMDemiurgeQuadChannel::init(uniformBuffer, target);
 }

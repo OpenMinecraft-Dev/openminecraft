@@ -21,6 +21,7 @@ struct OMFontShapeResult
     float advancex;
     float advancey;
     OMFont *font;
+    uint32_t fontId;
 };
 class OMFont
 {

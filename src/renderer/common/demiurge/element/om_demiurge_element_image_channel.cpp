@@ -17,18 +17,18 @@ void OMDemiurgeImageChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRen
     shaderDef(vtxShader, "demiurge/image.vert.glsl", Vertex);
     shaderDef(frgShader, "demiurge/image.frag.glsl", Fragment);
 
-    format.appendPart("position", basics::Vec2f);
-    format.nextGroup();
-    format.setInstance();
-    format.appendPart("image_rrect_pos", basics::Vec4f);
-    format.appendPart("image_rrect_color", basics::Vec4f);
-    format.appendPart("image_rrect_radius", basics::Vec4f);
-    format.appendPart("image_rrect_factor", basics::Float);
-    format.appendPart("image_rrect_depth", basics::Float);
-    format.appendPart("image_fillmode", basics::Float);
-    format.nextGroup();
-    format.decideStruct();
-    format.debugState();
+    format.appendPart("position", basics::Vec2f)
+        ->nextGroup()
+        ->setInstance()
+        ->appendPart("image_rrect_pos", basics::Vec4f)
+        ->appendPart("image_rrect_color", basics::Vec4f)
+        ->appendPart("image_rrect_radius", basics::Vec4f)
+        ->appendPart("image_rrect_factor", basics::Float)
+        ->appendPart("image_rrect_depth", basics::Float)
+        ->appendPart("image_fillmode", basics::Float)
+        ->nextGroup()
+        ->decideStruct()
+        ->debugState();
 
     quadBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(glm::vec2));
     quadBuffer->updateData(std::array<glm::vec2, 4>{{{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}}}.data());

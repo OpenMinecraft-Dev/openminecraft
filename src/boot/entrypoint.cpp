@@ -121,14 +121,14 @@ auto boot(std::vector<std::string> args) -> int
         break;
     }
     case "font"_hash: {
-        std::ifstream istr(args[2], std::ios::binary);
-        auto f = std::make_shared<fontproc::OMFont>(istr);
-        std::ifstream istr2(args[3], std::ios::binary);
-        auto f2 = std::make_shared<fontproc::OMFont>(istr2);
         fontproc::OMFontSet fset;
-        fset.fontList.push_back(f);
-        fset.fontList.push_back(f2);
-        fset.shape(args[4]);
+        auto target = args[2];
+        for (int i = 3; i < args.size(); ++i)
+        {
+            std::ifstream istr(args[i], std::ios::binary);
+            fset.fontList.push_back(std::make_shared<fontproc::OMFont>(istr));
+        }
+        fset.shape(target);
         break;
     }
     case "glyph"_hash: {

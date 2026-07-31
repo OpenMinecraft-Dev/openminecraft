@@ -1,4 +1,5 @@
 #include "openminecraft/fontproc/om_fontset.hpp"
+#include "glm/ext/vector_float2.hpp"
 #include "openminecraft/fontproc/om_font.hpp"
 #include "openminecraft/fontproc/om_font_outline.hpp"
 #include <vector>
@@ -6,9 +7,10 @@
 
 namespace openminecraft::fontproc
 {
-auto OMFontSet::shape(std::string s) -> std::vector<OMFontShapeResult>
+auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
 {
     std::vector<OMFontShapeResult> glyphs = {};
+    int id = 0;
     for (auto f : fontList)
     {
         logger.info("shaping with font {}", (void *)f.get());
@@ -24,16 +26,25 @@ auto OMFontSet::shape(std::string s) -> std::vector<OMFontShapeResult>
             if (glyphs[i].glyphId == 0x0 && r[i].glyphId != 0x0)
             {
                 glyphs[i] = r[i];
+                glyphs[i].fontId = id;
             }
         }
+        ++id;
     }
 
-    for (auto &c : glyphs)
+    std::vector<OMFontSetShapeResult> result = {};
+    glm::vec2 penpos = {0.0, 0.0};
+
+    for (auto &g : glyphs)
     {
-        logger.info("{} Cluster {} glyphid 0x{:x} + offset({}, {}) / advance({}, {})", (void *)c.font, c.cluster,
-                    c.glyphId, c.offsetx, c.offsety, c.advancex, c.advancey);
+        result.emplace_back(
+            OMFontSetShapeResult{g.font, g.fontId, g.glyphId, penpos + glm::vec2{g.offsetx, g.offsety}});
+        logger.info("#{} glyphid 0x{:x} @ ({}, {})", g.fontId, g.glyphId, result.rbegin()->position.x,
+                    result.rbegin()->position.y);
+        penpos += glm::vec2{g.advancex, g.advancey};
     }
-    return glyphs;
+
+    return result;
 }
 
 static auto approximateCubicToQuadratic(glm::vec2 P0, glm::vec2 P1, glm::vec2 P2, glm::vec2 P3) -> glm::vec2
@@ -51,15 +62,15 @@ static auto approximateCubicToQuadratic(glm::vec2 P0, glm::vec2 P1, glm::vec2 P2
     return P0 + s * d1;
 }
 
-auto OMFontSet::genOutline(OMFont *fnt, int glyphId) -> std::vector<float>
+auto OMFontSet::genOutline(OMFontSetShapeResult r) -> std::vector<float>
 {
     std::vector<glm::vec2> bufferData = {};
     std::vector<glm::vec2> beginPoints = {};
     std::vector<int> curves = {};
     std::vector<float> finalData = {};
 
-    auto outline = fnt->buildOutline(glyphId, false);
-    auto ext = fnt->scale();
+    auto outline = r.font->buildOutline(r.glyphId, false);
+    auto ext = r.font->scale();
 
     int vtxCount = 0;
     glm::vec2 curr = {};
@@ -93,8 +104,7 @@ auto OMFontSet::genOutline(OMFont *fnt, int glyphId) -> std::vector<float>
 
         curr = ot.target / ext;
     }
-    auto bbox = fnt->fetchBox(glyphId);
-
+    auto bbox = r.font->fetchBox(r.glyphId, false);
     finalData.push_back(bbox.x);
     finalData.push_back(bbox.y);
     finalData.push_back(bbox.z);

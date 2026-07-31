@@ -7,12 +7,13 @@ OMVertexFormat::OMVertexFormat() : logger("OMVertexFormat", this)
 }
 OMVertexFormat::~OMVertexFormat() = default;
 
-void OMVertexFormat::appendPart(std::string id, OMVertexPropType type)
+auto OMVertexFormat::appendPart(std::string id, OMVertexPropType type) -> OMVertexFormat *
 {
     currentGroup.parts.emplace_back(id, type, 0);
+    return this;
 }
 
-void OMVertexFormat::decideStruct()
+auto OMVertexFormat::decideStruct() -> OMVertexFormat *
 {
     for (auto &part : parts)
     {
@@ -30,9 +31,10 @@ void OMVertexFormat::decideStruct()
         }
         part.size = offset;
     }
+    return this;
 }
 
-void OMVertexFormat::debugState()
+auto OMVertexFormat::debugState() -> OMVertexFormat *
 {
     for (auto &p : parts)
     {
@@ -43,19 +45,22 @@ void OMVertexFormat::debugState()
                         std::get<int>(o));
         }
     }
+    return this;
 }
 
-void OMVertexFormat::setInstance()
+auto OMVertexFormat::setInstance() -> OMVertexFormat *
 {
     currentGroup.isInstance = true;
+    return this;
 }
 
-void OMVertexFormat::nextGroup()
+auto OMVertexFormat::nextGroup() -> OMVertexFormat *
 {
     parts.push_back(currentGroup);
     currentGroup = OMVertexFormatGroup();
     binding++;
     currentGroup.binding = binding;
+    return this;
 }
 
 auto OMVertexFormat::typeAlign(OMVertexPropType type) -> int

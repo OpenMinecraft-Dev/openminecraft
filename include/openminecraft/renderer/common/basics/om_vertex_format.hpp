@@ -36,14 +36,14 @@ class OMVertexFormat
     OMVertexFormat();
     ~OMVertexFormat();
 
-    void appendPart(std::string, OMVertexPropType);
-    void debugState();
-    void decideStruct();
+    auto appendPart(std::string, OMVertexPropType) -> OMVertexFormat *;
+    auto debugState() -> OMVertexFormat *;
+    auto decideStruct() -> OMVertexFormat *;
     static auto typeSize(OMVertexPropType) -> int;
     static auto typeAlign(OMVertexPropType) -> int;
 
-    void setInstance();
-    void nextGroup();
+    auto setInstance() -> OMVertexFormat *;
+    auto nextGroup() -> OMVertexFormat *;
 
     std::vector<OMVertexFormatGroup> parts;
     OMVertexFormatGroup currentGroup;

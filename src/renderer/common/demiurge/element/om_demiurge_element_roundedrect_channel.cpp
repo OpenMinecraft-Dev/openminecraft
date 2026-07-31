@@ -17,17 +17,17 @@ void OMDemiurgeRoundedRectChannel::init(OMRendererBuffer *uniformBuffer, OMRende
     shaderDef(vtxShader, "demiurge/roundedrect.vert.glsl", Vertex);
     shaderDef(frgShader, "demiurge/roundedrect.frag.glsl", Fragment);
 
-    format.appendPart("position", basics::Vec2f);
-    format.nextGroup();
-    format.setInstance();
-    format.appendPart("rrect_pos", basics::Vec4f);
-    format.appendPart("rrect_color", basics::Vec4f);
-    format.appendPart("rrect_radius", basics::Vec4f);
-    format.appendPart("rrect_factor", basics::Float);
-    format.appendPart("rrect_depth", basics::Float);
-    format.nextGroup();
-    format.decideStruct();
-    format.debugState();
+    format.appendPart("position", basics::Vec2f)
+        ->nextGroup()
+        ->setInstance()
+        ->appendPart("rrect_pos", basics::Vec4f)
+        ->appendPart("rrect_color", basics::Vec4f)
+        ->appendPart("rrect_radius", basics::Vec4f)
+        ->appendPart("rrect_factor", basics::Float)
+        ->appendPart("rrect_depth", basics::Float)
+        ->nextGroup()
+        ->decideStruct()
+        ->debugState();
 
     OMDemiurgeQuadChannel::init(uniformBuffer, target);
 }
