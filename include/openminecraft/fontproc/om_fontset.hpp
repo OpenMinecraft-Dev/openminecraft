@@ -14,6 +14,7 @@ struct OMFontSetShapeResult
     uint32_t fontId;
     uint32_t glyphId;
     glm::vec2 position;
+    glm::vec2 size;
 };
 class OMFontSet
 {
@@ -25,6 +26,7 @@ class OMFontSet
 
     auto shape(std::string s) -> std::vector<OMFontSetShapeResult>;
     auto genOutline(OMFontSetShapeResult) -> std::vector<float>;
+    auto bound(std::string s) -> glm::vec2;
 
     std::vector<std::shared_ptr<OMFont>> fontList;
 

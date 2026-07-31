@@ -35,6 +35,7 @@ class OMFont
     auto buildBasicPolygon(int charcode, bool uni = true) -> std::shared_ptr<OMTriangleList>;
     auto buildGlyph(int charcode, bool uni = true) -> std::shared_ptr<OMFontGlyph>;
     auto shape(std::string s) -> std::vector<OMFontShapeResult>;
+    auto metrics() -> glm::vec4;
 
   private:
     void *hbFont;

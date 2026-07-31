@@ -1,5 +1,6 @@
 #include "openminecraft/fontproc/om_font.hpp"
 #include "glm/ext/vector_float2.hpp"
+#include "glm/ext/vector_float4.hpp"
 #include "harfbuzz/hb.h"
 #include "openminecraft/fontproc/om_font_glyph.hpp"
 #include "openminecraft/fontproc/om_font_outline.hpp"
@@ -220,6 +221,16 @@ auto OMFont::shape(std::string s) -> std::vector<OMFontShapeResult>
     }
 
     return result;
+}
+
+auto OMFont::metrics() -> glm::vec4
+{
+    auto font = static_cast<hb_font_t *>(hbFont);
+    auto s = scale();
+    hb_font_extents_t extents;
+    hb_font_get_extents_for_direction(font, HB_DIRECTION_LTR, &extents);
+
+    return {float(extents.ascender) / s.y, float(extents.descender) / s.y, float(extents.line_gap) / s.y, 0.0f};
 }
 
 OMFont::~OMFont()

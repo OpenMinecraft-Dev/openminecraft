@@ -13,7 +13,6 @@ auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
     int id = 0;
     for (auto f : fontList)
     {
-        logger.info("shaping with font {}", (void *)f.get());
         auto r = f->shape(s);
 
         if (glyphs.size() < r.size())
@@ -32,16 +31,32 @@ auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
         ++id;
     }
 
-    std::vector<OMFontSetShapeResult> result = {};
-    glm::vec2 penpos = {0.0, 0.0};
+    std::vector<OMFontSetShapeResult> result;
+    glm::vec2 penpos(0.0f);
 
+    float miny = 0.0f;
     for (auto &g : glyphs)
     {
-        result.emplace_back(
-            OMFontSetShapeResult{g.font, g.fontId, g.glyphId, penpos + glm::vec2{g.offsetx, g.offsety}});
-        logger.info("#{} glyphid 0x{:x} @ ({}, {})", g.fontId, g.glyphId, result.rbegin()->position.x,
-                    result.rbegin()->position.y);
-        penpos += glm::vec2{g.advancex, g.advancey};
+        auto bbox = g.font->fetchBox(g.glyphId, false);
+        float left = bbox.x;
+        float right = bbox.y;
+        float top = bbox.z;
+        float bottom = bbox.w;
+
+        float x = penpos.x + g.offsetx + left;
+        float y = -(penpos.y + g.offsety + top);
+        float w = right - left;
+        float h = bottom - top;
+
+        miny = std::min(miny, y);
+        result.emplace_back(OMFontSetShapeResult{g.font, g.fontId, g.glyphId, glm::vec2(x, y), glm::vec2(w, h)});
+
+        penpos += glm::vec2(g.advancex, g.advancey);
+    }
+
+    for (auto &r : result)
+    {
+        r.position.y -= miny;
     }
 
     return result;
@@ -60,6 +75,21 @@ static auto approximateCubicToQuadratic(glm::vec2 P0, glm::vec2 P1, glm::vec2 P2
     float s = (diff.x * d2.y - diff.y * d2.x) / det;
 
     return P0 + s * d1;
+}
+
+auto OMFontSet::bound(std::string s) -> glm::vec2
+{
+    auto shaped = shape(s);
+    if (shaped.empty())
+        return glm::vec2(0.0f);
+
+    glm::vec2 maxb(0.0f);
+    for (auto &g : shaped)
+    {
+        maxb = glm::max(maxb, g.position + g.size);
+    }
+
+    return {maxb.x - shaped[0].position.x, maxb.y};
 }
 
 auto OMFontSet::genOutline(OMFontSetShapeResult r) -> std::vector<float>

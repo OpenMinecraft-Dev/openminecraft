@@ -128,7 +128,13 @@ auto boot(std::vector<std::string> args) -> int
             std::ifstream istr(args[i], std::ios::binary);
             fset.fontList.push_back(std::make_shared<fontproc::OMFont>(istr));
         }
-        fset.shape(target);
+        auto result = fset.shape(target);
+        for (auto &r : result)
+        {
+            logger->info("#{} 0x{:x} {},{} {},{}", r.fontId, r.glyphId, r.position.x, r.position.y, r.size.x, r.size.y);
+        }
+        auto bb = fset.bound(target);
+        logger->debug("text extent {} {}", bb.x, bb.y);
         break;
     }
     case "glyph"_hash: {
