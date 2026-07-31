@@ -15,7 +15,8 @@ class OMFontSet
     }
     ~OMFontSet() = default;
 
-    auto shape(std::string s) -> void;
+    auto shape(std::string s) -> std::vector<OMFontShapeResult>;
+    auto genOutline(OMFont *, int) -> std::vector<float>;
 
     std::vector<std::shared_ptr<OMFont>> fontList;
 

@@ -4,7 +4,7 @@
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/vector_float2.hpp"
 #include "openminecraft/fontproc/om_font.hpp"
-#include "openminecraft/fontproc/om_font_outline.hpp"
+#include "openminecraft/fontproc/om_fontset.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
@@ -18,6 +18,7 @@
 #include <chrono>
 #include <cmath>
 #include <glm/glm.hpp>
+#include <memory>
 #include <vector>
 
 #include "openminecraft/io/om_io_utils.hpp"
@@ -65,74 +66,16 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     format.debugState();
 
     {
-        std::vector<glm::vec2> bufferData = {};
-        std::vector<glm::vec2> beginPoints = {};
-        std::vector<int> curves = {};
-        std::vector<float> finalData = {};
         glyphStorage = renderer->allocateBuffer(ShaderStorage, 1024 * sizeof(float));
 
         auto rawfile = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
-        auto font = new fontproc::OMFont(*rawfile.get());
-        // auto glyph = font->buildBasicPolygon(0x2299);
-        // U+2299
-        int charcode = '@';
-        auto outline = font->buildOutline(charcode);
-        auto ext = font->scale();
 
-        int vtxCount = 0;
-        glm::vec2 curr = {};
-        for (auto &ot : outline.operations)
-        {
-            switch (ot.type)
-            {
-            case fontproc::Move:
-                beginPoints.emplace_back(ot.target / ext);
-                break;
-            case fontproc::Line:
-                bufferData.emplace_back(ot.target / ext);
-                bufferData.emplace_back(INFINITY, INFINITY);
-                ++vtxCount;
-                break;
-            case fontproc::Cubic:
-                bufferData.emplace_back(ot.target / ext);
-                bufferData.emplace_back(approximateCubicToQuadratic(curr, ot.control1, ot.control2, ot.target) / ext);
-                ++vtxCount;
-                break;
-            case fontproc::Quadratic:
-                bufferData.emplace_back(ot.target / ext);
-                bufferData.emplace_back(ot.control1 / ext);
-                ++vtxCount;
-                break;
-            case fontproc::Close:
-                curves.push_back(vtxCount);
-                vtxCount = 0;
-                continue;
-            }
+        fontproc::OMFontSet set;
+        set.fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile.get()));
 
-            curr = ot.target / ext;
-        }
-        auto bbox = font->fetchBox(charcode);
-        delete font;
-
-        finalData.push_back(bbox.x);
-        finalData.push_back(bbox.y);
-        finalData.push_back(bbox.z);
-        finalData.push_back(bbox.w);
-        finalData.push_back(curves.size());
-        for (auto c : curves)
-        {
-            finalData.push_back(c);
-        }
-        for (auto p : beginPoints)
-        {
-            finalData.push_back(p.x);
-            finalData.push_back(p.y);
-        }
-        for (auto cc : bufferData)
-        {
-            finalData.push_back(cc.x);
-            finalData.push_back(cc.y);
-        }
+        auto s = set.shape("G");
+        // logger.debug("{}", s[0].glyphId);
+        auto finalData = set.genOutline(s[0].font, s[0].glyphId);
         glyphStorage->updateDataPart(finalData.data(), 0, sizeof(float) * finalData.size());
 
         std::vector<VertexStruct> vertices = {
