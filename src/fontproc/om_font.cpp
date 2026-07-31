@@ -190,7 +190,6 @@ auto OMFont::fetchBox(int charcode, bool uni) -> glm::vec4
     {
         hb_font_get_nominal_glyph(font, charcode, &gly);
     }
-
     hb_glyph_extents_t extents;
     hb_font_get_glyph_extents(font, gly, &extents);
 

@@ -35,15 +35,6 @@ auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
 
     std::vector<OMFontSetShapeResult> result;
 
-    float totalWidth = 0.0f;
-    if (rtl)
-    {
-        for (auto &g : glyphs)
-        {
-            totalWidth += g.advancex;
-        }
-    }
-
     glm::vec2 penpos(0.0f);
     for (auto &g : glyphs)
     {
@@ -54,8 +45,8 @@ auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
         float bottom = bbox.w;
 
         auto mes = g.font->metrics(rtl);
-        float x = penpos.x + g.offsetx;
-        float y = penpos.y + g.offsety - bottom - mes.y + mes.x;
+        float x = penpos.x + g.offsetx + left;
+        float y = penpos.y + g.offsety - bottom + mes.x - mes.y;
         float w = right - left;
         float h = bottom - top;
 

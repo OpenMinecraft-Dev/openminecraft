@@ -1,3 +1,4 @@
+#include <iostream>
 #include <utility>
 
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
@@ -47,13 +48,13 @@ auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, float dep
             t->position = {
                 pp.x + s[i].position.x * th,
                 pp.y + s[i].position.y * th,
-                s[i].size.x,
-                s[i].size.y,
+                s[i].size.x * th,
+                s[i].size.y * th,
             };
             t->height = th;
             t->depth = depth;
             t->factor = stylesStorage.get<float>("factor", 2.0f);
-            t->glyphIndex = 1;
+            t->glyphIndex = ch->storeGlyph(s[i]);
         }
 
         stylesStorage.solve();

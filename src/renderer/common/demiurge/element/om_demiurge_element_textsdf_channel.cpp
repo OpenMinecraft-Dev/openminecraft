@@ -7,8 +7,35 @@
 
 namespace openminecraft::renderer::common::demiurge::element
 {
-void OMDemiurgeTextSdfChannel::bakeGlyph(fontproc::OMFontSetShapeResult r)
+auto OMDemiurgeTextSdfChannel::storeGlyph(fontproc::OMFontSetShapeResult r) -> int
 {
+    auto gid = static_cast<uint64_t>(r.fontId) << 32 | r.glyphId;
+    if (glyphOffsets.count(gid))
+    {
+        return glyphOffsets[gid];
+    }
+
+    auto gdata = fontSet->genOutline(r);
+    auto offset = glyphData.size();
+    glyphData.insert(glyphData.end(), gdata.begin(), gdata.end());
+
+    // TODO: update data!
+    if (glyphBuffer->length < glyphData.size() * sizeof(float))
+    {
+        delete glyphBuffer;
+        glyphBuffer = renderer->allocateBuffer(ShaderStorage, 2 * glyphData.size() * sizeof(float));
+        pipeline->bindInput(1, glyphBuffer);
+        glyphBuffer->updateDataPart(glyphData.data(), 0, glyphData.size() * sizeof(float));
+        recreation();
+    }
+    else
+    {
+        glyphBuffer->updateDataPart(&glyphData[offset], offset * sizeof(float), gdata.size() * sizeof(float));
+    }
+
+    glyphOffsets[gid] = offset;
+
+    return offset;
 }
 void OMDemiurgeTextSdfChannel::init(OMRendererBuffer *uniform, OMRendererRenderTarget *target)
 {

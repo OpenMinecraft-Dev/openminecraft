@@ -26,7 +26,7 @@ class OMDemiurgeTextSdfChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementT
         OMDemiurgeQuadChannel::destroy();
     }
 
-    void bakeGlyph(fontproc::OMFontSetShapeResult);
+    auto storeGlyph(fontproc::OMFontSetShapeResult) -> int;
 
   private:
     fontproc::OMFontSet *fontSet;

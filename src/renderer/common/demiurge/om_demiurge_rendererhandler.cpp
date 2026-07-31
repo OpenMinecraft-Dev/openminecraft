@@ -13,6 +13,7 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
+#include <fstream>
 #include <memory>
 #include <array>
 
@@ -42,6 +43,10 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     fontset = std::make_shared<fontproc::OMFontSet>();
     auto rawfile = vfs::fsfetch("/bootassets/openminecraft-boot/font/MapleMono-NF-Regular.ttf");
     fontset->fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile.get()));
+    auto rawfile2 = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
+    fontset->fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile2.get()));
+    auto rawfile3 = vfs::fsfetch("/bootassets/openminecraft-boot/font/NotoSansArabic.ttf");
+    fontset->fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile3.get()));
 
     node = std::make_shared<node::OMDemiurgeImageNode>(texture)->style({
         {"color", (int)0xffffffff},
@@ -70,8 +75,8 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
                               {"minWidth", 1.0f},
                               {"minHeight", 1.0f},
                               {"flexGrow", 1.0f},
-                              {"text", std::string("The quick brown fox jumps over the lazy dog.-> <- && ===")},
-                              {"textheight", 24},
+                              {"text", std::string("The quick brown fox jumps over the lazy dog. -> <- && === 测试")},
+                              {"textheight", 36},
                           });
             d->mount(d2);
         }
