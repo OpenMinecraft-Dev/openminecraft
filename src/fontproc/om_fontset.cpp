@@ -2,6 +2,7 @@
 #include "glm/ext/vector_float2.hpp"
 #include "openminecraft/fontproc/om_font.hpp"
 #include "openminecraft/fontproc/om_font_outline.hpp"
+#include <cmath>
 #include <vector>
 #include <glm/glm.hpp>
 
@@ -11,9 +12,10 @@ auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
 {
     std::vector<OMFontShapeResult> glyphs = {};
     int id = 0;
+    bool rtl = false;
     for (auto f : fontList)
     {
-        auto r = f->shape(s);
+        auto r = f->shape(s, rtl);
 
         if (glyphs.size() < r.size())
         {
@@ -32,7 +34,17 @@ auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
     }
 
     std::vector<OMFontSetShapeResult> result;
-    glm::vec2 penpos(0.0f);
+
+    float totalWidth = 0.0f;
+    if (rtl)
+    {
+        for (auto &g : glyphs)
+        {
+            totalWidth += g.advancex;
+        }
+    }
+
+    glm::vec2 penpos(rtl ? totalWidth : 0.0f, 0.0f);
 
     float miny = 0.0f;
     for (auto &g : glyphs)
@@ -44,6 +56,10 @@ auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
         float bottom = bbox.w;
 
         float x = penpos.x + g.offsetx + left;
+        if (rtl)
+        {
+            x -= (right - left);
+        }
         float y = -(penpos.y + g.offsety + top);
         float w = right - left;
         float h = bottom - top;
@@ -51,7 +67,15 @@ auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
         miny = std::min(miny, y);
         result.emplace_back(OMFontSetShapeResult{g.font, g.fontId, g.glyphId, glm::vec2(x, y), glm::vec2(w, h)});
 
-        penpos += glm::vec2(g.advancex, g.advancey);
+        if (rtl)
+        {
+            penpos.x -= g.advancex;
+        }
+        else
+        {
+            penpos.x += g.advancex;
+        }
+        penpos.y += g.advancey;
     }
 
     for (auto &r : result)
@@ -84,6 +108,7 @@ auto OMFontSet::bound(std::string s) -> glm::vec2
         return glm::vec2(0.0f);
 
     glm::vec2 maxb(0.0f);
+    float minx = INFINITY;
     for (auto &g : shaped)
     {
         maxb = glm::max(maxb, g.position + g.size);

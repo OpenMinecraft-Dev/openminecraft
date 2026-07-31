@@ -198,11 +198,12 @@ auto OMFont::fetchBox(int charcode, bool uni) -> glm::vec4
             static_cast<float>(extents.y_bearing + extents.height) / s.y, static_cast<float>(extents.y_bearing) / s.y};
 }
 
-auto OMFont::shape(std::string s) -> std::vector<OMFontShapeResult>
+auto OMFont::shape(std::string s, bool &isRTL) -> std::vector<OMFontShapeResult>
 {
     auto buf = hb_buffer_create();
     hb_buffer_add_utf8(buf, s.c_str(), -1, 0, -1);
     hb_buffer_guess_segment_properties(buf);
+    isRTL = hb_buffer_get_direction(buf) == HB_DIRECTION_RTL;
 
     hb_shape(static_cast<hb_font_t *>(hbFont), buf, nullptr, 0);
 
