@@ -11,7 +11,7 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include "openminecraft/specs/png/om_png.hpp"
+#include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include <memory>
 #include <array>
@@ -31,13 +31,13 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
       logger("OMDemiurgeRendererHandler", this)
 {
     {
-        auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/viking_room.png");
+        auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/summer_1am.jpg");
 
-        specs::png::OMPngFile img;
+        specs::jfif::OMJfifFile img;
         img.parse(imgraw);
 
         texture = renderer->allocateTexture(img.getWidth(), img.getHeight(), Dim2, ColorRgba);
-        // texture->updateData(img.fetchData());
+        texture->updateData(img.fetchData());
     }
 
     fontset = std::make_shared<fontproc::OMFontSet>();
@@ -173,12 +173,25 @@ void OMDemiurgeRendererHandler::beforeFrame()
 
 void OMDemiurgeRendererHandler::afterFrame()
 {
-    for (auto n : textNodes)
+    ++fps;
+
+    if (tp == std::chrono::steady_clock::time_point{})
     {
-        auto tpe = std::chrono::steady_clock::now();
-        auto cc = std::chrono::duration_cast<std::chrono::nanoseconds>(tpe - tp);
-        n->style("text", fmt::format("FPS: {}", 1e9 / static_cast<double>(cc.count())));
+        tp = std::chrono::steady_clock::now();
+        return;
     }
-    tp = std::chrono::steady_clock::now();
+
+    auto tpe = std::chrono::steady_clock::now();
+    auto cc = std::chrono::duration_cast<std::chrono::nanoseconds>(tpe - tp);
+    if (cc.count() > 1e8)
+    {
+        for (auto n : textNodes)
+        {
+            n->style("text", fmt::format("FPS: {}", (float)fps / cc.count() * 1e9));
+        }
+
+        tp = std::chrono::steady_clock::now();
+        fps = 0;
+    }
 }
 } // namespace openminecraft::renderer::common::demiurge

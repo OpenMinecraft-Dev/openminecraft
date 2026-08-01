@@ -5,6 +5,7 @@
 layout(location = 0) in vec4 inColor;
 layout(location = 1) in vec2 texCoord;
 layout(location = 2) flat in int inTextGlyphId;
+layout(location = 3) in float inTextFactor;
 
 layout(location = 0) out vec4 outColor;
 
@@ -16,7 +17,7 @@ layout(std430, binding = 1) readonly buffer GlyphData {
 const float INF = 1.0 / 0.0;
 const float EPSILON = 1e-6;
 const float DERIVATIVE_THRESHOLD = 1e-12;
-const float SMOOTH_WIDTH = 0.01;
+const float SMOOTH_WIDTH = 0.04;
 const int ITERATION = 3;
 
 // ---- Glyph data accessors ----
@@ -200,5 +201,5 @@ void main() {
     // Determine inside/outside
     minDist = minDist * (2.0 * step(0.5, abs(float(winding))) - 1.0);
 
-    outColor = inColor * smoothstep(0.0, SMOOTH_WIDTH, minDist);
+    outColor = inColor * smoothstep(-inTextFactor, 0.0, minDist);
 }

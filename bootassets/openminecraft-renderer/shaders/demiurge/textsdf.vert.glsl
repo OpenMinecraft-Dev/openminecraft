@@ -13,6 +13,7 @@ layout(location = 6) in int inTextGlyphId;
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec2 outTextUv;
 layout(location = 2) flat out int outTextGlyphId;
+layout(location = 3) out float outTextFactor;
 
 layout(binding = 0) uniform UniformBufferObject {
     float width;
@@ -42,4 +43,5 @@ void main() {
     vec4 bb = getBBox();
     outTextUv = bb.xz + vec2(inPosition.x, 1 - inPosition.y) * (bb.yw - bb.xz);
     outTextGlyphId = inTextGlyphId;
+    outTextFactor = inTextFactor;
 }

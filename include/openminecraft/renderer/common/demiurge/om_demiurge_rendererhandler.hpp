@@ -67,6 +67,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     std::shared_ptr<fontproc::OMFontSet> fontset;
 
     std::vector<std::shared_ptr<OMDemiurgeNode>> textNodes;
+    int fps = 0;
 };
 
 } // namespace openminecraft::renderer::common::demiurge
