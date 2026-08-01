@@ -29,7 +29,7 @@ struct OMWindowConfig
 class OMWindow
 {
   public:
-    OMWindow(OMVersionRequirement requirement, OMWindowConfig config);
+    OMWindow(OMVersionRequirement requirement, OMWindowConfig config, std::string shaderPath);
     ~OMWindow();
 
     auto operator()() -> OMRenderer *

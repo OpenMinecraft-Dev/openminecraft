@@ -89,8 +89,9 @@ namespace openminecraft::renderer::vk
 #ifdef OM_VULKAN_DYNAMIC
 detail::DynamicLoader loader;
 #endif
-OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::string>)> dev, void *window)
-    : OMRenderer(info, window)
+OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::string>)> dev, void *window,
+                           std::string shaderPath)
+    : OMRenderer(info, window, shaderPath)
 {
     logger = std::make_shared<log::OMLogger>("OMRendererVk", this);
 

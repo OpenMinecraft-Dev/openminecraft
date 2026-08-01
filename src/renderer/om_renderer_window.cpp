@@ -7,7 +7,7 @@
 
 namespace openminecraft::renderer
 {
-OMWindow::OMWindow(OMVersionRequirement requirement, OMWindowConfig config)
+OMWindow::OMWindow(OMVersionRequirement requirement, OMWindowConfig config, std::string shaderPath)
 {
     renderer::AppInfo a = {config.initialTitle, util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
                            util::Version(1, 0, 0, 0), requirement[config.backend]};
@@ -31,12 +31,12 @@ OMWindow::OMWindow(OMVersionRequirement requirement, OMWindowConfig config)
     switch (config.backend)
     {
     case Vulkan: {
-        renderer = new vk::OMRendererVk(a, [](std::vector<std::string>) -> int { return 0; }, window);
+        renderer = new vk::OMRendererVk(a, [](std::vector<std::string>) -> int { return 0; }, window, shaderPath);
         renderer->compiler.install(std::make_shared<renderer::common::OMRendererShaderCompilerBackendShaderc>());
         break;
     }
     case OpenGL: {
-        renderer = new opengl::OMRendererOpenGL(a, window);
+        renderer = new opengl::OMRendererOpenGL(a, window, shaderPath);
         SDL_GL_SetSwapInterval(config.vsync);
         break;
     }

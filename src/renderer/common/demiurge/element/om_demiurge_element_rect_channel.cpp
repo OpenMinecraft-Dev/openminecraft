@@ -1,19 +1,13 @@
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_rect_channel.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
-#include "openminecraft/vfs/om_vfs_base.hpp"
-#include "openminecraft/io/om_io_utils.hpp"
+#include "openminecraft/renderer/common/om_renderer_shader.hpp"
 
 namespace openminecraft::renderer::common::demiurge::element
 {
 void OMDemiurgeRectChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRenderTarget *target)
 {
-#define shaderDef(name, filename, type)                                                                                \
-    {                                                                                                                  \
-        auto target = vfs::fsfetch(fmt::format("/bootassets/openminecraft-renderer/shaders/{}", filename));            \
-        name = std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), filename, "main", type);             \
-    }
-    shaderDef(vtxShader, "demiurge/rect.vert.glsl", Vertex);
-    shaderDef(frgShader, "demiurge/rect.frag.glsl", Fragment);
+    vtxShader = renderer->shaderManager.preprocess("demiurge/rect.vert.glsl", Vertex, GLSLSource);
+    frgShader = renderer->shaderManager.preprocess("demiurge/rect.frag.glsl", Fragment, GLSLSource);
 
     format.appendPart("position", basics::Vec2f)
         ->nextGroup()

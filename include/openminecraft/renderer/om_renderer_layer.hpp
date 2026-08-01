@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_shadercompiler.hpp"
+#include "openminecraft/renderer/common/om_renderer_shadermanager.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include <glm/glm.hpp>
@@ -31,7 +32,7 @@ struct AppInfo
 class OMRenderer
 {
   public:
-    OMRenderer(AppInfo info, void *window);
+    OMRenderer(AppInfo info, void *window, std::string shaderPath);
     virtual ~OMRenderer() = default;
 
     virtual auto driver() -> std::string = 0;
@@ -118,6 +119,7 @@ class OMRenderer
     }
 
     std::vector<std::vector<common::OMRendererTask *>> layeredTasks;
+    common::OMRendererShaderManager shaderManager;
 
   protected:
     void *window;

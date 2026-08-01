@@ -34,8 +34,8 @@ void APIENTRY debugCallback(GLenum source, GLenum type, GLuint id, GLenum severi
     }
 }
 
-OMRendererOpenGL::OMRendererOpenGL(AppInfo info, void *window)
-    : OMRenderer(info, window), logger("OMRendererOpenGL", this)
+OMRendererOpenGL::OMRendererOpenGL(AppInfo info, void *window, std::string shaderPath)
+    : OMRenderer(info, window, shaderPath), logger("OMRendererOpenGL", this)
 {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, info.minApiVersion.majorver);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, info.minApiVersion.minorver);

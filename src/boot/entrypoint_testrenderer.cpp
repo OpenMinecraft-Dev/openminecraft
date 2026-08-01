@@ -2,7 +2,6 @@
 
 #include "SDL3/SDL_video.h"
 #include "glm/ext/matrix_float4x4.hpp"
-#include "glm/ext/vector_float2.hpp"
 #include "openminecraft/fontproc/om_font.hpp"
 #include "openminecraft/fontproc/om_fontset.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
@@ -16,48 +15,26 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 
 #include <chrono>
-#include <cmath>
 #include <glm/glm.hpp>
 #include <memory>
 #include <vector>
 
-#include "openminecraft/io/om_io_utils.hpp"
 #include "SDL3/SDL_events.h"
 
 using namespace openminecraft::renderer::common;
 
 namespace openminecraft::boot::test
 {
-static auto approximateCubicToQuadratic(glm::vec2 P0, glm::vec2 P1, glm::vec2 P2, glm::vec2 P3) -> glm::vec2
-{
-    glm::vec2 d1 = P1 - P0;
-    glm::vec2 d2 = P3 - P2;
-    float det = d1.x * d2.y - d1.y * d2.x;
-    if (fabs(det) < 1e-6)
-    {
-        return (P1 + P2) * glm::vec2(0.5);
-    }
-    glm::vec2 diff = P3 - P0;
-    float s = (diff.x * d2.y - diff.y * d2.x) / det;
-
-    return P0 + s * d1;
-}
-
 OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     : renderer(renderer), logger("OMTestRenderer", this), OMRendererHandler(renderer)
 {
     camera = std::make_shared<basics::OMCamera>(renderer, m_cameraPos, m_yaw, m_pitch);
 
-#define shaderDef(name, filename, type)                                                                                \
-    {                                                                                                                  \
-        auto target = vfs::fsfetch(fmt::format("/bootassets/openminecraft-renderer/shaders/{}", filename));            \
-        name = std::make_shared<OMShader>(GLSLSource, io::readOnce(target.get()), filename, "main", type);             \
-    }
     // INFO: basic shaders for renderer
-    shaderDef(objectFrg, "objectbase.frag.glsl", Fragment);
-    shaderDef(objectVtx, "objectbase.vert.glsl", Vertex);
-    shaderDef(outputFrg, "output.frag.glsl", Fragment);
-    shaderDef(outputVtx, "output.vert.glsl", Vertex);
+    objectFrg = renderer->shaderManager.preprocess("objectbase.frag.glsl", Fragment, GLSLSource);
+    objectVtx = renderer->shaderManager.preprocess("objectbase.vert.glsl", Vertex, GLSLSource);
+    outputFrg = renderer->shaderManager.preprocess("output.frag.glsl", Fragment, GLSLSource);
+    outputVtx = renderer->shaderManager.preprocess("output.vert.glsl", Vertex, GLSLSource);
 
     format.appendPart("position", basics::Vec3f)
         ->appendPart("textureUV", basics::Vec2f)

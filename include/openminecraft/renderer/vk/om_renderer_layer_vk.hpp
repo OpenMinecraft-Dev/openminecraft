@@ -50,7 +50,7 @@ struct FrameSync
 class OMRendererVk : public OMRenderer
 {
   public:
-    OMRendererVk(AppInfo info, std::function<int(std::vector<std::string>)> dev, void *window);
+    OMRendererVk(AppInfo info, std::function<int(std::vector<std::string>)> dev, void *window, std::string shaderPath);
     ~OMRendererVk() override;
 
     auto fetchRequiredExtensions() -> util::OMResult<std::vector<const char *>, std::string>;

@@ -82,7 +82,7 @@ struct OMRendererOpenGLFuncs
 class OMRendererOpenGL : public OMRenderer
 {
   public:
-    OMRendererOpenGL(AppInfo info, void *window);
+    OMRendererOpenGL(AppInfo info, void *window, std::string shaderPath);
     ~OMRendererOpenGL() override;
 
     auto driver() -> std::string override;

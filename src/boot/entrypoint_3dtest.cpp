@@ -17,7 +17,8 @@ void rendererTest(renderer::OMBackend backend)
     {
         renderer::OMWindowConfig conf = {backend, false};
         // INFO: requires at least OpenGL 4.3 Core Profile or Vulkan 1.2
-        renderer::OMWindow win({util::Version(4, 3, 0, 0), util::Version(1, 2, 0, 0)}, conf);
+        renderer::OMWindow win({util::Version(4, 3, 0, 0), util::Version(1, 2, 0, 0)}, conf,
+                               "/bootassets/openminecraft-renderer/shaders");
 
         auto hnd = std::make_shared<test::OMTestRenderer>(win());
         auto hnd2 = std::make_shared<renderer::common::demiurge::OMDemiurgeRendererHandler>(win());
