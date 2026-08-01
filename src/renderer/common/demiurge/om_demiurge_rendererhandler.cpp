@@ -13,9 +13,9 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
-#include <fstream>
 #include <memory>
 #include <array>
+#include <chrono>
 
 namespace openminecraft::renderer::common::demiurge
 {
@@ -78,6 +78,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
                               {"text", std::string("The quick brown fox jumps over the lazy dog. -> <- && === 测试")},
                               {"textheight", 36},
                           });
+            textNodes.push_back(d2);
             d->mount(d2);
         }
         node->mount(d);
@@ -152,6 +153,8 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
     }
 }
 
+static std::chrono::steady_clock::time_point tp = {};
+
 void OMDemiurgeRendererHandler::beforeFrame()
 {
     auto ext = renderer->getExtent();
@@ -170,5 +173,12 @@ void OMDemiurgeRendererHandler::beforeFrame()
 
 void OMDemiurgeRendererHandler::afterFrame()
 {
+    for (auto n : textNodes)
+    {
+        auto tpe = std::chrono::steady_clock::now();
+        auto cc = std::chrono::duration_cast<std::chrono::nanoseconds>(tpe - tp);
+        n->style("text", fmt::format("FPS: {}", 1e9 / static_cast<double>(cc.count())));
+    }
+    tp = std::chrono::steady_clock::now();
 }
 } // namespace openminecraft::renderer::common::demiurge

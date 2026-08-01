@@ -51,17 +51,20 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
         }
         objects.emplace_back(T{});
         dirty.resize(objects.size());
+        hasDirty = true;
         return objects.size() - 1;
     }
 
     inline auto temporary(int i) -> T *
     {
         dirty[i] = true;
+        hasDirty = true;
         return &objects[i];
     }
 
     inline auto solve() -> void
     {
+        hasDirty = false;
         dirty.assign(dirty.size(), false);
     }
     inline auto remove(int i) -> void
@@ -71,6 +74,7 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
         objects[i] = T{};
         objectSetDepth(objects[i], depth);
         dirty[i] = true;
+        hasDirty = true;
         removed.emplace_back(i);
     }
 
@@ -80,7 +84,7 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
 
     inline auto dirtyIter(std::function<void(int begin, int length)> f) -> void
     {
-        if (std::find(dirty.begin(), dirty.end(), true) != dirty.end())
+        if (hasDirty)
         {
             bool in_dirty = false;
             int start = 0;
@@ -111,6 +115,7 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
     std::vector<int> removed;
     std::vector<T> objects;
     std::vector<bool> dirty;
+    bool hasDirty = true;
     int lastCount = -1;
 };
 } // namespace openminecraft::renderer::common::demiurge::element

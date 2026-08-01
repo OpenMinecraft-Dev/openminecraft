@@ -17,6 +17,7 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <memory>
 #include <unordered_map>
+#include <vector>
 namespace openminecraft::renderer::common::demiurge
 {
 constexpr float bottomDepth = 0.99f;
@@ -64,6 +65,8 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     log::OMLogger logger;
 
     std::shared_ptr<fontproc::OMFontSet> fontset;
+
+    std::vector<std::shared_ptr<OMDemiurgeNode>> textNodes;
 };
 
 } // namespace openminecraft::renderer::common::demiurge
