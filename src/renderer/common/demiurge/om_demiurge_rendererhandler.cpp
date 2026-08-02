@@ -17,10 +17,10 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
-#include <cmath>
 #include <memory>
 #include <array>
 #include <chrono>
+#include <numbers>
 
 namespace openminecraft::renderer::common::demiurge
 {
@@ -71,7 +71,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     });
     auto d21 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                    ->style({
-                       {"color", a[0]},
+                       {"color", (int)0xffffffff},
                        {"minWidth", 1.0f},
                        {"minHeight", 1.0f},
                        {"flexGrow", 1.0f},
@@ -80,7 +80,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
                    });
     auto d2 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                   ->style({
-                      {"color", a[0]},
+                      {"color", (int)0xffffffff},
                       {"minWidth", 1.0f},
                       {"minHeight", 1.0f},
                       {"flexGrow", 1.0f},
@@ -237,13 +237,13 @@ void OMDemiurgeRendererHandler::afterFrame()
         fps = 0;
     }
 
-    if (angle > M_PI * 2)
+    if (angle > 3.1415926 * 2)
     {
         angle = 0.0f;
     }
     angle += 0.0001f;
 
-    sectorNode->style("beginAngle", static_cast<float>(angle - M_PI / 6));
+    sectorNode->style("beginAngle", static_cast<float>(angle - 3.1415926 / 6));
     sectorNode->style("endAngle", angle);
 }
 } // namespace openminecraft::renderer::common::demiurge

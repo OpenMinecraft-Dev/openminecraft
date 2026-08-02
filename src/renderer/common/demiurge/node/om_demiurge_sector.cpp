@@ -28,7 +28,7 @@ auto OMDemiurgeSectorNode::submit(OMDemiurgeRendererHandler *handler, float dept
         t->factor = stylesStorage.get<float>("factor", 2.0f);
         t->radius = stylesStorage.get<float>("radius", 10);
         t->beginAngle = stylesStorage.get<float>("beginAngle", 0.0f);
-        t->endAngle = stylesStorage.get<float>("endAngle", M_PI / 2);
+        t->endAngle = stylesStorage.get<float>("endAngle", 3.1415926 / 2);
 
         stylesStorage.solve();
     }
