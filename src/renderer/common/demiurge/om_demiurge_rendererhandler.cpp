@@ -17,6 +17,7 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
+#include <cmath>
 #include <memory>
 #include <array>
 #include <chrono>
@@ -28,7 +29,7 @@ struct SimpleUniform
     float width;
     float height;
 };
-constexpr std::array<int, 3> a = {0x00d4ffaa, (int)0xbfff00aa, (int)0xff4500aa};
+constexpr std::array<int, 3> a = {0x00d4ffaa, (int)0xbfff00ff, (int)0xff4500ff};
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     : renderer(renderer), OMRendererHandler(renderer), rect(renderer, [&]() -> void { recordTask(); }),
       roundedRect(renderer, [&]() -> void { recordTask(); }), image(renderer, [&]() -> void { recordTask(); }),
@@ -57,7 +58,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         {"flexGap", 10_px},
         {"flexWrap", Wrap},
         {"flexDirection", Column},
-        {"fill", node::OMDemiurgeImageFillType::Contain},
+        {"fill", node::OMDemiurgeImageFillType::Cover},
     });
 
     auto d = std::make_shared<node::OMDemiurgeContainerNode>()->style({
@@ -65,10 +66,18 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         {"minHeight", 100.0f},
         {"flexShrink", 0.0f},
         {"flexGrow", 0.0f},
-        {"flexGap", 10_px},
+        {"flexDirection", Column},
         {"width", 100_percent},
     });
-
+    auto d21 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                   ->style({
+                       {"color", a[0]},
+                       {"minWidth", 1.0f},
+                       {"minHeight", 1.0f},
+                       {"flexGrow", 1.0f},
+                       {"text", "OpenMinecraft Debug Screen"},
+                       {"textheight", 24},
+                   });
     auto d2 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                   ->style({
                       {"color", a[0]},
@@ -76,25 +85,45 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
                       {"minHeight", 1.0f},
                       {"flexGrow", 1.0f},
                       {"text", "The quick brown fox jumps over the lazy dog. -> <- && === 测试"},
-                      {"textheight", 36},
+                      {"textheight", 24},
                   });
     fpsTextNode = d2;
+    d->mount(d21);
     d->mount(d2);
     node->mount(d);
 
-    auto d3 = std::make_shared<node::OMDemiurgeRectNode>()->style({
-        {"color", a[1]},
+    auto pd = std::make_shared<node::OMDemiurgeRectNode>()->style({
         {"flexShrink", 0.0f},
         {"flexGrow", 1.0f},
+        {"width", 100_percent},
+        {"color", 0x222222ff},
         {"radius", glm::vec4(25.0f)},
     });
-    node->mount(d3);
+
     auto d4 = std::make_shared<node::OMDemiurgeSectorNode>()->style({
         {"color", a[2]},
-        {"flexShrink", 0.0f},
-        {"flexGrow", 1.0f},
+        {"position", OMDemiurgePosition::Absolute},
+        {"width", 100_percent},
+        {"height", 100_percent},
     });
-    node->mount(d4);
+    auto d5 = std::make_shared<node::OMDemiurgeSectorNode>()->style({
+        {"color", a[1]},
+        {"position", OMDemiurgePosition::Absolute},
+        {"width", 100_percent},
+        {"height", 100_percent},
+        {"beginAngle", 2.0f},
+        {"endAngle", 3.0f},
+    });
+    pd->mount(d5);
+    auto d6 = std::make_shared<node::OMDemiurgeSectorNode>()->style({
+        {"color", a[0]},
+        {"position", OMDemiurgePosition::Absolute},
+        {"width", 100_percent},
+        {"height", 100_percent},
+    });
+    pd->mount(d6);
+    pd->mount(d4);
+    node->mount(pd);
     sectorNode = d4;
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
@@ -212,7 +241,7 @@ void OMDemiurgeRendererHandler::afterFrame()
     {
         angle = 0.0f;
     }
-    angle += 0.01f;
+    angle += 0.0001f;
 
     sectorNode->style("beginAngle", static_cast<float>(angle - M_PI / 6));
     sectorNode->style("endAngle", angle);
