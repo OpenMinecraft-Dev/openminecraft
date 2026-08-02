@@ -66,6 +66,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         {"flexShrink", 0.0f},
         {"flexGrow", 0.0f},
         {"flexGap", 10_px},
+        {"width", 100_percent},
     });
 
     auto d2 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
