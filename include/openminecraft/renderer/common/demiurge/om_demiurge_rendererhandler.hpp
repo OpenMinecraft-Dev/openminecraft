@@ -45,7 +45,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     void recordTask(bool resize = false);
 
-    std::shared_ptr<OMDemiurgeNode> node, target;
+    std::shared_ptr<OMDemiurgeNode> node;
 
     OMRendererBuffer *uniformBuffer;
     OMRenderer *renderer;

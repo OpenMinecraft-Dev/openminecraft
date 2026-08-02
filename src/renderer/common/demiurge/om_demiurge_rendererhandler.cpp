@@ -1,17 +1,19 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
+#include "glm/ext/vector_float4.hpp"
 #include "openminecraft/fontproc/om_fontset.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_roundedrect_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_textsdf_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_image.hpp"
+#include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include "openminecraft/specs/jfif/om_jfif.hpp"
+#include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include <memory>
 #include <array>
@@ -31,9 +33,9 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
       logger("OMDemiurgeRendererHandler", this)
 {
     {
-        auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/summer_1am.jpg");
+        auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/summer_1am.png");
 
-        specs::jfif::OMJfifFile img;
+        specs::png::OMPngFile img;
         img.parse(imgraw);
 
         texture = renderer->allocateTexture(img.getWidth(), img.getHeight(), Dim2, ColorRgba);
@@ -52,35 +54,45 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         {"color", (int)0xffffffff},
         {"flexGap", 10_px},
         {"flexWrap", Wrap},
-        {"flexDirection", Row},
+        {"flexDirection", Column},
         {"fill", node::OMDemiurgeImageFillType::Contain},
     });
 
-    for (int i = 0; i < 1; ++i)
-    {
-        auto d = std::make_shared<node::OMDemiurgeContainerNode>()->style({
-            {"minWidth", 100.0f},
-            {"minHeight", 100.0f},
-            {"height", 100_percent},
-            {"flexShrink", 0.0f},
-            {"flexGrow", 1.0f},
-            {"flexGap", 10_px},
-        });
+    auto d = std::make_shared<node::OMDemiurgeContainerNode>()->style({
+        {"minWidth", 100.0f},
+        {"minHeight", 100.0f},
+        {"flexShrink", 0.0f},
+        {"flexGrow", 0.0f},
+        {"flexGap", 10_px},
+    });
 
-        auto d2 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                      ->style({
-                          {"color", a[i]},
-                          {"minWidth", 1.0f},
-                          {"minHeight", 1.0f},
-                          {"flexGrow", 1.0f},
-                          {"text", std::string("The quick brown fox jumps over the lazy dog. -> <- && === 测试")},
-                          {"textheight", 36},
-                      });
-        fpsTextNode = d2;
-        d->mount(d2);
-        node->mount(d);
-        target = d;
-    }
+    auto d2 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                  ->style({
+                      {"color", a[0]},
+                      {"minWidth", 1.0f},
+                      {"minHeight", 1.0f},
+                      {"flexGrow", 1.0f},
+                      {"text", std::string("The quick brown fox jumps over the lazy dog. -> <- && === 测试")},
+                      {"textheight", 36},
+                  });
+    fpsTextNode = d2;
+    d->mount(d2);
+    node->mount(d);
+
+    auto d3 = std::make_shared<node::OMDemiurgeRectNode>()->style({
+        {"color", a[1]},
+        {"flexShrink", 0.0f},
+        {"flexGrow", 1.0f},
+        {"radius", glm::vec4(25.0f)},
+    });
+    node->mount(d3);
+    auto d4 = std::make_shared<node::OMDemiurgeRectNode>()->style({
+        {"color", a[2]},
+        {"flexShrink", 0.0f},
+        {"flexGrow", 1.0f},
+        {"radius", glm::vec4(25.0f)},
+    });
+    node->mount(d4);
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
 
