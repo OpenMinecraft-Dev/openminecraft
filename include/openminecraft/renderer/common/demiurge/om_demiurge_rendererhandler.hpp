@@ -45,7 +45,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     void recordTask(bool resize = false);
 
-    std::shared_ptr<OMDemiurgeNode> node;
+    std::shared_ptr<OMDemiurgeNode> node, sectorNode;
 
     OMRendererBuffer *uniformBuffer;
     OMRenderer *renderer;
@@ -69,6 +69,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     std::shared_ptr<OMDemiurgeNode> fpsTextNode;
     int fps = 0;
+    float angle = 0.0f;
 };
 
 } // namespace openminecraft::renderer::common::demiurge

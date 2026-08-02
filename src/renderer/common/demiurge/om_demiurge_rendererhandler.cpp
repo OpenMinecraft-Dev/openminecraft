@@ -95,6 +95,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         {"flexGrow", 1.0f},
     });
     node->mount(d4);
+    sectorNode = d4;
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
 
@@ -206,5 +207,14 @@ void OMDemiurgeRendererHandler::afterFrame()
         tp = std::chrono::steady_clock::now();
         fps = 0;
     }
+
+    if (angle > M_PI * 2)
+    {
+        angle = 0.0f;
+    }
+    angle += 0.01f;
+
+    sectorNode->style("beginAngle", static_cast<float>(angle - M_PI / 6));
+    sectorNode->style("endAngle", angle);
 }
 } // namespace openminecraft::renderer::common::demiurge
