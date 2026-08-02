@@ -1,5 +1,6 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
 #include "glm/ext/vector_float4.hpp"
+#include "openminecraft/renderer/common/demiurge/node/om_demiurge_sector.hpp"
 #include "openminecraft/fontproc/om_fontset.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_roundedrect_channel.hpp"
@@ -7,6 +8,7 @@
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_image.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
+#include "openminecraft/renderer/common/demiurge/node/om_demiurge_sector.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
@@ -30,7 +32,7 @@ constexpr std::array<int, 3> a = {0x00d4ffaa, (int)0xbfff00aa, (int)0xff4500aa};
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     : renderer(renderer), OMRendererHandler(renderer), rect(renderer, [&]() -> void { recordTask(); }),
       roundedRect(renderer, [&]() -> void { recordTask(); }), image(renderer, [&]() -> void { recordTask(); }),
-      logger("OMDemiurgeRendererHandler", this)
+      sector(renderer, [&]() -> void { recordTask(); }), logger("OMDemiurgeRendererHandler", this)
 {
     {
         auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/summer_1am.png");
@@ -72,7 +74,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
                       {"minWidth", 1.0f},
                       {"minHeight", 1.0f},
                       {"flexGrow", 1.0f},
-                      {"text", std::string("The quick brown fox jumps over the lazy dog. -> <- && === 测试")},
+                      {"text", "The quick brown fox jumps over the lazy dog. -> <- && === 测试"},
                       {"textheight", 36},
                   });
     fpsTextNode = d2;
@@ -86,11 +88,10 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         {"radius", glm::vec4(25.0f)},
     });
     node->mount(d3);
-    auto d4 = std::make_shared<node::OMDemiurgeRectNode>()->style({
+    auto d4 = std::make_shared<node::OMDemiurgeSectorNode>()->style({
         {"color", a[2]},
         {"flexShrink", 0.0f},
         {"flexGrow", 1.0f},
-        {"radius", glm::vec4(25.0f)},
     });
     node->mount(d4);
 
@@ -99,6 +100,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     rect.init(uniformBuffer, renderer->getDefaultRenderTarget());
     roundedRect.init(uniformBuffer, renderer->getDefaultRenderTarget());
     image.init(uniformBuffer, renderer->getDefaultRenderTarget());
+    sector.init(uniformBuffer, renderer->getDefaultRenderTarget());
 }
 
 OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
@@ -106,6 +108,7 @@ OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
     rect.destroy();
     roundedRect.destroy();
     image.destroy();
+    sector.destroy();
     for (auto &p : fonts)
     {
         p.second->destroy();
@@ -150,6 +153,7 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
         rect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
         roundedRect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
         image.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
+        sector.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
         for (auto &p : fonts)
         {
             p.second->submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
@@ -174,6 +178,7 @@ void OMDemiurgeRendererHandler::beforeFrame()
     rect.update();
     roundedRect.update();
     image.update();
+    sector.update();
     for (auto &p : fonts)
     {
         p.second->update();

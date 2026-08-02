@@ -4,6 +4,7 @@
 #include <any>
 #include <iostream>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 namespace openminecraft::renderer::common::demiurge
 {
@@ -52,6 +53,14 @@ class OMDemiurgeStyles
 
     template <typename T> inline auto get(std::string s, T def) -> T
     {
+        if constexpr (std::is_same_v<T, std::string>)
+        {
+            if (styles[s].type() == typeid(const char *))
+            {
+                return get<const char *>(s);
+            }
+        }
+
         if (styles[s].type() == typeid(T))
         {
             return get<T>(s);

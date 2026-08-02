@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_image_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_rect_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_roundedrect_channel.hpp"
+#include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_sector_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_textsdf_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
@@ -17,7 +18,6 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <memory>
 #include <unordered_map>
-#include <vector>
 namespace openminecraft::renderer::common::demiurge
 {
 constexpr float bottomDepth = 0.99f;
@@ -53,6 +53,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     element::OMDemiurgeRectChannel rect;
     element::OMDemiurgeRoundedRectChannel roundedRect;
     element::OMDemiurgeImageChannel image;
+    element::OMDemiurgeSectorChannel sector;
 
     auto fetchFontChannel(fontproc::OMFontSet *) -> std::shared_ptr<element::OMDemiurgeTextSdfChannel>;
 

@@ -19,6 +19,7 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -135,6 +136,11 @@ auto boot(std::vector<std::string> args) -> int
         }
         auto bb = fset.bound(target);
         logger->debug("text extent {} {}", bb.x, bb.y);
+        break;
+    }
+    case "angle"_hash: {
+        logger->debug("{} {} {} {}", std::atan2(1.0f, 1.0f), std::atan2(1.0f, -1.0f), std::atan2(-1.0f, -1.0f),
+                      std::atan2(-1.0f, 1.0f));
         break;
     }
     case "glyph"_hash: {
