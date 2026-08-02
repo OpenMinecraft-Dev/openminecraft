@@ -3,8 +3,8 @@
 
 #include "basics/geometry.glsl"
 
-float rrectSdf(vec2 p, vec2 halfSize, vec4 radii, float thickness, float smoothEdge) {
-    float radius = radii[selectQuadrant(p)];
+float sdf_rrect(vec2 p, vec2 halfSize, vec4 radii, float thickness, float smoothEdge) {
+    float radius = radii[geom_selectQuadrant(p)];
     radius = min(radius, min(halfSize.x, halfSize.y));
     vec2 centerDis = abs(p) - halfSize + radius;
     float edgeDis = length(max(centerDis, 0.0)) + min(max(centerDis.x, centerDis.y), 0.0) - radius;

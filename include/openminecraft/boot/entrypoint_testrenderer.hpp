@@ -66,7 +66,6 @@ class OMTestRenderer : public OMRendererHandler
     OMRendererTexture *tempTexture;
     OMRendererTexture *tempDepth;
     OMRendererRenderTarget *renderTarget;
-    OMRendererBuffer *glyphStorage;
 
     // INFO: event handling, runs on a different thread
     void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp);

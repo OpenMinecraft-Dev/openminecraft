@@ -1,6 +1,7 @@
-#version 410 core
+#version 450 core
 #extension GL_ARB_separate_shader_objects : enable
-#extension GL_ARB_shading_language_420pack : enable
+
+#include "basics/geometry.glsl"
 
 layout(location = 0) in vec2 inPosition;
 layout(location = 1) in vec4 inRectPos;
@@ -17,10 +18,7 @@ layout(binding = 0) uniform UniformBufferObject {
 void main() {
     vec2 screenPos = inRectPos.xy + inPosition.xy * inRectPos.zw;
 
-    float ndcX = (screenPos.x / ubo.width) * 2.0 - 1.0;
-    float ndcY = 1.0 - (screenPos.y / ubo.height) * 2.0;
-    
-    gl_Position = vec4(ndcX, ndcY, inRectDepth, 1.0);
+    gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), inRectDepth, 1.0);
 #ifdef VULKAN
     gl_Position.y = -gl_Position.y;
 #endif

@@ -1,6 +1,5 @@
 #version 450 core
 #extension GL_ARB_separate_shader_objects : enable
-#extension GL_ARB_shading_language_420pack : enable
 
 layout(location = 0) in vec4 inColor;
 layout(location = 1) in vec2 texCoord;
@@ -12,13 +11,6 @@ layout(location = 0) out vec4 outColor;
 layout(std430, binding = 1) readonly buffer GlyphData {
     float data[];
 } glyphBuffer;
-
-// ---- Constants ----
-const float INF = 1.0 / 0.0;
-const float EPSILON = 1e-6;
-const float DERIVATIVE_THRESHOLD = 1e-12;
-const float SMOOTH_WIDTH = 0.04;
-const int ITERATION = 3;
 
 // ---- Glyph data accessors ----
 // (offsets adjusted for leading bbox: [0..3] = bbox)
@@ -51,8 +43,10 @@ vec4 getCurve(int outlineCount, int curveGlobalIndex) {
                 glyphBuffer.data[offset + 2], glyphBuffer.data[offset + 3]);
 }
 
+#include "basics/sdf/sdf_text.glsl"
+
 // ---- Geometry helpers ----
-float distanceToLineSegment(vec2 p, vec2 a, vec2 b) {
+/*float distanceToLineSegment(vec2 p, vec2 a, vec2 b) {
     vec2 ab = b - a;
     vec2 ap = p - a;
     float len2 = dot(ab, ab);
@@ -60,7 +54,7 @@ float distanceToLineSegment(vec2 p, vec2 a, vec2 b) {
         return length(ap);
     float t = clamp(dot(ap, ab) / len2, 0.0, 1.0);
     return length(p - (a + t * ab));
-}
+}*/
 
 float distanceToQuadraticBezier(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
     vec2 a = p1 - p0;
@@ -161,7 +155,7 @@ void main() {
 
             // Update minimum distance
             if (isLine) {
-                minDist = min(minDist, distanceToLineSegment(texCoord, currentPos, target));
+                minDist = min(minDist, sdf_distanceToLineSegment(texCoord, currentPos, target));
             } else {
                 minDist = min(minDist, distanceToQuadraticBezier(texCoord, currentPos, control, target));
             }

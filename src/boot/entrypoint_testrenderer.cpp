@@ -2,8 +2,6 @@
 
 #include "SDL3/SDL_video.h"
 #include "glm/ext/matrix_float4x4.hpp"
-#include "openminecraft/fontproc/om_font.hpp"
-#include "openminecraft/fontproc/om_fontset.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
@@ -31,10 +29,10 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     camera = std::make_shared<basics::OMCamera>(renderer, m_cameraPos, m_yaw, m_pitch);
 
     // INFO: basic shaders for renderer
-    objectFrg = renderer->shaderManager.preprocess("objectbase.frag.glsl", Fragment, GLSLSource);
-    objectVtx = renderer->shaderManager.preprocess("objectbase.vert.glsl", Vertex, GLSLSource);
-    outputFrg = renderer->shaderManager.preprocess("output.frag.glsl", Fragment, GLSLSource);
-    outputVtx = renderer->shaderManager.preprocess("output.vert.glsl", Vertex, GLSLSource);
+    objectFrg = renderer->shaderManager.preprocess("core/objectbase.frag.glsl", Fragment, GLSLSource);
+    objectVtx = renderer->shaderManager.preprocess("core/objectbase.vert.glsl", Vertex, GLSLSource);
+    outputFrg = renderer->shaderManager.preprocess("core/output.frag.glsl", Fragment, GLSLSource);
+    outputVtx = renderer->shaderManager.preprocess("core/output.vert.glsl", Vertex, GLSLSource);
 
     format.appendPart("position", basics::Vec3f)
         ->appendPart("textureUV", basics::Vec2f)
@@ -43,23 +41,11 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
         ->debugState();
 
     {
-        glyphStorage = renderer->allocateBuffer(ShaderStorage, 1024 * sizeof(float));
-
-        auto rawfile = vfs::fsfetch("/bootassets/openminecraft-boot/font/MapleMono-NF-Regular.ttf");
-
-        fontproc::OMFontSet set;
-        set.fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile.get()));
-
-        auto s = set.shape("<");
-        auto finalData = set.genOutline(s[0]);
-        logger.debug("{} bytes for glyph", sizeof(float) * finalData.size());
-        glyphStorage->updateDataPart(finalData.data(), 0, sizeof(float) * finalData.size());
-
         std::vector<VertexStruct> vertices = {
-            {{0.0f, 0.0f, 0.0f}, {-0.5f, -0.5f}},
-            {{0.0f, 1.0f, 0.0f}, {-0.5f, 1.5f}},
-            {{1.0f, 1.0f, 0.0f}, {1.5f, 1.5f}},
-            {{1.0f, 0.0f, 0.0f}, {1.5f, -0.5f}},
+            {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+            {{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+            {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
+            {{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
         };
         std::vector<uint32_t> indices = {0, 1, 2, 2, 3, 0};
 
@@ -177,15 +163,6 @@ void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
 
 void OMTestRenderer::afterFrame()
 {
-    auto duration =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - tp).count();
-    fps++;
-    if (duration > 500.0 * 1000 * 1000)
-    {
-        logger.info("{:.2f} fps (average ~500ms)", fps * 1000.0 * 1000 * 1000 / static_cast<double>(duration));
-        timing = false;
-        fps = 0;
-    }
 }
 
 void OMTestRenderer::submitTasks()
@@ -219,7 +196,6 @@ void OMTestRenderer::submitTasks()
         pipeline = renderer->createPipeline()
                        ->input(UniformBuffer)
                        ->input(ImageSampler)
-                       ->input(ShaderStorageBuffer)
                        ->output(renderTarget)
                        ->shader(objectFrg)
                        ->shader(objectVtx)
@@ -230,7 +206,6 @@ void OMTestRenderer::submitTasks()
                        ->buildN();
         pipeline->bindInput(0, uniformBuffer);
         pipeline->bindInput(1, textureImage);
-        pipeline->bindInput(2, glyphStorage);
     }
 
     mainPipeline->bindInput(1, tempTexture);
@@ -267,8 +242,6 @@ OMTestRenderer::~OMTestRenderer()
     delete tempUniformBuffer;
     delete vertexBuffer;
     delete indexBuffer;
-
-    delete glyphStorage;
 
     delete mainIdxBuffer;
     delete mainVtxBuffer;

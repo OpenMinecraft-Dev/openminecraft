@@ -1,8 +1,7 @@
 #version 450 core
 #extension GL_ARB_separate_shader_objects : enable
-#extension GL_ARB_shading_language_420pack : enable
 
-#include "basics/sdf_rrect.glsl"
+#include "basics/sdf/sdf_rrect.glsl"
 
 layout(location = 0) in vec4 inColor;
 layout(location = 1) in vec2 inPosition;
@@ -21,11 +20,11 @@ layout(binding = 1) uniform sampler2D inTexture;
 #define FILLTYPE_COVER 2
 
 void main() {
-    vec2 rectCenter = rectCenter(inRectPosition);
+    vec2 rectCenter = geom_rectCenterPos(inRectPosition);
     vec2 halfSize   = inRectPosition.zw / 2.0;
     vec2 localPos   = inPosition - rectCenter;
 
-    float alpha = rrectSdf(localPos, halfSize, inRadius, 0.0, inFactor);
+    float alpha = sdf_rrect(localPos, halfSize, inRadius, 0.0, inFactor);
 
     vec2 imageSize = vec2(textureSize(inTexture, 0));
     vec2 rectSize  = inRectPosition.zw;
