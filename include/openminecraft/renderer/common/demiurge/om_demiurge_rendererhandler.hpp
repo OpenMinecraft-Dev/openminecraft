@@ -66,7 +66,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     std::shared_ptr<fontproc::OMFontSet> fontset;
 
-    std::vector<std::shared_ptr<OMDemiurgeNode>> textNodes;
+    std::shared_ptr<OMDemiurgeNode> fpsTextNode;
     int fps = 0;
 };
 

@@ -67,20 +67,17 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
             {"flexGap", 10_px},
         });
 
-        for (int j = 0; j < 6; ++j)
-        {
-            auto d2 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                          ->style({
-                              {"color", a[i]},
-                              {"minWidth", 1.0f},
-                              {"minHeight", 1.0f},
-                              {"flexGrow", 1.0f},
-                              {"text", std::string("The quick brown fox jumps over the lazy dog. -> <- && === 测试")},
-                              {"textheight", 36},
-                          });
-            textNodes.push_back(d2);
-            d->mount(d2);
-        }
+        auto d2 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                      ->style({
+                          {"color", a[i]},
+                          {"minWidth", 1.0f},
+                          {"minHeight", 1.0f},
+                          {"flexGrow", 1.0f},
+                          {"text", std::string("The quick brown fox jumps over the lazy dog. -> <- && === 测试")},
+                          {"textheight", 36},
+                      });
+        fpsTextNode = d2;
+        d->mount(d2);
         node->mount(d);
         target = d;
     }
@@ -185,10 +182,8 @@ void OMDemiurgeRendererHandler::afterFrame()
     auto cc = std::chrono::duration_cast<std::chrono::nanoseconds>(tpe - tp);
     if (cc.count() > 1e8)
     {
-        for (auto n : textNodes)
-        {
-            n->style("text", fmt::format("FPS: {}", (float)fps / cc.count() * 1e9));
-        }
+        fpsTextNode->style("text",
+                           fmt::format("FPS: {}", static_cast<int>(static_cast<float>(fps) / cc.count() * 1e9)));
 
         tp = std::chrono::steady_clock::now();
         fps = 0;
