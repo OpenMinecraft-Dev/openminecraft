@@ -8,6 +8,7 @@
 #include "openminecraft/renderer/common/om_renderer_shadercompiler.hpp"
 #include "openminecraft/renderer/common/om_renderer_shadermanager.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
+#include "openminecraft/util/om_util_ticker.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include <glm/glm.hpp>
 #include <stdexcept>
@@ -76,7 +77,7 @@ class OMRenderer
 
     virtual auto getExtent() const -> glm::vec2 = 0;
 
-    virtual void render() = 0;
+    virtual void render(util::OMTicker &) = 0;
     virtual void requestResize() = 0;
 
     common::OMRendererShaderCompiler compiler;

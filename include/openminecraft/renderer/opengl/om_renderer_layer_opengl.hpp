@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include "openminecraft/util/om_util_ticker.hpp"
 namespace openminecraft::renderer::opengl
 {
 struct OMRendererOpenGLFuncs
@@ -97,7 +98,7 @@ class OMRendererOpenGL : public OMRenderer
 
     void baseInit() override;
 
-    void render() override;
+    void render(util::OMTicker &) override;
     void requestResize() override;
 
     OMRendererOpenGLFuncs gl;

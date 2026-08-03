@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "GL/glcorearb.h"
 #include "SDL3/SDL_video.h"
+#include "fmt/format.h"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_buffer.hpp"
@@ -9,6 +10,7 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_task.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_texture.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
+#include "openminecraft/util/om_util_ticker.hpp"
 
 namespace openminecraft::renderer::opengl
 {
@@ -193,10 +195,12 @@ void OMRendererOpenGL::baseInit()
     buildTaskGraph();
 }
 
-void OMRendererOpenGL::render()
+void OMRendererOpenGL::render(util::OMTicker &t)
 {
+    t.push("gl_render");
     if (needResize)
     {
+        t.push("gl_resize");
         auto siz = getExtent();
         gl.glViewport(0, 0, siz.x, siz.y);
 
@@ -206,29 +210,50 @@ void OMRendererOpenGL::render()
         }
         tasks.clear();
 
+        t.push("gl_tasksubmit");
         for (auto h : handlers)
         {
             h->submitTasks();
         }
         buildTaskGraph();
+        t.pop();
+
         needResize = false;
+        t.pop();
     }
+    t.push("gl_pretasks");
     for (auto h : handlers)
     {
         h->beforeFrame();
     }
+    t.pop();
+
+    t.push("gl_tasks");
+    int i = 0;
     for (auto &tsklist : layeredTasks)
     {
+        t.push(fmt::format("gl_task_layer{}", i));
         for (auto tsk : tsklist)
         {
             reinterpret_cast<OMRendererTaskOpenGL *>(tsk)->execute();
         }
+        t.pop();
+        ++i;
     }
+    t.pop();
+
+    t.push("gl_swap");
     SDL_GL_SwapWindow(reinterpret_cast<SDL_Window *>(window));
+    t.pop();
+
+    t.push("gl_aftertasks");
     for (auto h : handlers)
     {
         h->afterFrame();
     }
+    t.pop();
+
+    t.pop();
 }
 
 void OMRendererOpenGL::requestResize()

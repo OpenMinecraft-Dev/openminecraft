@@ -3,6 +3,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/om_renderer_window.hpp"
+#include "openminecraft/util/om_util_ticker.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
 #include <array>
@@ -30,8 +31,11 @@ void rendererTest(renderer::OMBackend backend)
 
         // INFO: states[0] represents application status, states[1] represents if the window resized
         std::array<bool, 2> states = {false, false};
+        util::OMTicker ticker;
         while (!states[0])
         {
+            ticker.begin();
+
             hnd->eventLoop(*win, states.data());
             if (states[1])
             {
@@ -39,7 +43,13 @@ void rendererTest(renderer::OMBackend backend)
                 states[1] = false;
             }
 
-            win()->render();
+            win()->render(ticker);
+
+            for (auto &t : ticker.ticks)
+            {
+                logger->debug("{} {}: {} ns", t.first.pop ? "-" : "+", t.first.id, t.second);
+            }
+            logger->debug("------------------");
         }
 
         hnd = nullptr;

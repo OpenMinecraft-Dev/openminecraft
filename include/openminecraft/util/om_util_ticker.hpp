@@ -1,11 +1,9 @@
 #ifndef OM_UTIL_TICKER_HPP
 #define OM_UTIL_TICKER_HPP
 
-#include <algorithm>
 #include <chrono>
 #include <stack>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 

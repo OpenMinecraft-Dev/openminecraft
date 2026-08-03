@@ -9,6 +9,7 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include "openminecraft/util/om_util_result.hpp"
+#include "openminecraft/util/om_util_ticker.hpp"
 #include "vulkan/vulkan_handles.hpp"
 #include <any>
 #include <functional>
@@ -75,7 +76,7 @@ class OMRendererVk : public OMRenderer
 
     void baseInit() override;
 
-    void render() override;
+    void render(util::OMTicker &) override;
     void requestResize() override;
 
     std::shared_ptr<validation::OMRendererVkValidation> validationLayer;

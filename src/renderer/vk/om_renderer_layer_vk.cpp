@@ -12,6 +12,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include "openminecraft/util/om_util_result.hpp"
+#include "openminecraft/util/om_util_ticker.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
@@ -383,8 +384,9 @@ auto OMRendererVk::getExtent() const -> glm::vec2
     return {static_cast<float>(swapchainManager->extent.width), static_cast<float>(swapchainManager->extent.height)};
 }
 
-void OMRendererVk::render()
+void OMRendererVk::render(OMTicker &t)
 {
+    t.push("vk_render");
     if (needRebuild)
     {
         goto rebuild;
@@ -477,6 +479,7 @@ void OMRendererVk::render()
         {
             r->afterFrame();
         }
+        t.pop();
         return;
     }
     catch (SystemError &e)

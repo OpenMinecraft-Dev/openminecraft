@@ -19,7 +19,6 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
-#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -54,34 +53,13 @@ auto boot(std::vector<std::string> args) -> int
     log::multithread::registerCurrentThreadName("engineMain");
     auto logger = std::make_unique<log::OMLogger>("boot");
 
-    util::OMTicker ticker;
-    ticker.begin();
-
-    ticker.push("base_init");
-
-    ticker.push("sdl_mem");
     SDL_SetMemoryFunctions(mem::allocator::tracedMallocSDL, mem::allocator::tracedCallocSDL,
                            mem::allocator::tracedReallocSDL, mem::allocator::tracedFreeSDL);
-    ticker.pop();
-
-    ticker.push("i18n");
     setupI18nEnv();
-    ticker.pop();
-
-    ticker.push("sdl_main");
     if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO))
     {
         logger->info("SDL Status: {}", SDL_GetError());
     }
-    ticker.pop();
-
-    ticker.pop();
-
-    for (auto &event : ticker.ticks)
-    {
-        logger->debug("{}{} -> {} ns", event.first.pop ? "-" : "+", event.first.id, event.second);
-    }
-
     logger->info(i18n::res::translate("openminecraft.boot.arg"));
     for (auto a : args)
     {
