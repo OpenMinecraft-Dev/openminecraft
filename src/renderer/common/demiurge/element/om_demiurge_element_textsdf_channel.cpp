@@ -47,7 +47,6 @@ void OMDemiurgeTextSdfChannel::init(OMRendererBuffer *uniform, OMRendererRenderT
         ->appendPart("textsdf_pos", basics::Vec4f)
         ->appendPart("textsdf_color", basics::Vec4f)
         ->appendPart("textsdf_depth", basics::Float)
-        ->appendPart("textsdf_height", basics::Float)
         ->appendPart("textsdf_factor", basics::Float)
         ->appendPart("textsdf_glyphIndex", basics::Integer)
         ->nextGroup()

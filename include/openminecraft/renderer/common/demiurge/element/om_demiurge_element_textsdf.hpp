@@ -10,7 +10,6 @@ struct OMDemiurgeElementTextSdf
     glm::vec4 position;
     glm::vec4 color;
     float depth;
-    float height;
     float factor;
     uint32_t glyphIndex;
 };

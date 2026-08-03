@@ -7,9 +7,8 @@ layout(location = 0) in vec2 inPosition;
 layout(location = 1) in vec4 inTextPos;
 layout(location = 2) in vec4 inTextColor;
 layout(location = 3) in float inTextDepth;
-layout(location = 4) in float inTextHeight;
-layout(location = 5) in float inTextFactor;
-layout(location = 6) in int inTextGlyphId;
+layout(location = 4) in float inTextFactor;
+layout(location = 5) in int inTextGlyphId;
 
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec2 outTextUv;

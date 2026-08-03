@@ -8,18 +8,16 @@ layout(location = 0) in vec2 inPosition;
 layout(location = 1) in vec4 inSectorPos;
 layout(location = 2) in vec4 inSectorColor;
 layout(location = 3) in vec4 inSectorRotation;
-layout(location = 4) in float inSectorRadius;
-layout(location = 5) in float inSectorBeginAngle;
-layout(location = 6) in float inSectorEndAngle;
-layout(location = 7) in float inSectorFactor;
-layout(location = 8) in float inSectorDepth;
+layout(location = 4) in float inSectorBeginAngle;
+layout(location = 5) in float inSectorEndAngle;
+layout(location = 6) in float inSectorFactor;
+layout(location = 7) in float inSectorDepth;
 
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec2 outPosition;
 layout(location = 2) out vec4 outSectorPosition;
-layout(location = 3) out float outSectorRadius;
-layout(location = 4) out vec2 outSectorAngle;
-layout(location = 5) out float outSectorFactor;
+layout(location = 3) out vec2 outSectorAngle;
+layout(location = 4) out float outSectorFactor;
 
 layout(binding = 0) uniform UniformBufferObject {
     float width;
@@ -38,7 +36,6 @@ void main() {
     outColor = inSectorColor;
     outPosition = screenPos;
     outSectorPosition = inSectorPos;
-    outSectorRadius = inSectorRadius;
     outSectorAngle = vec2(inSectorBeginAngle, inSectorEndAngle);
     outSectorFactor = inSectorFactor;
 }

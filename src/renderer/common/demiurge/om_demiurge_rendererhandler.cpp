@@ -105,7 +105,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         {"position", OMDemiurgePosition::Absolute},
         {"width", 100_percent},
         {"height", 100_percent},
-        {"rotationPivot", glm::vec3(0.0f, -4.0f, 1.0f)},
+        {"rotationPivot", glm::vec3(0.0f, -2.0f, 1.0f)},
     });
     auto d5 = std::make_shared<node::OMDemiurgeSectorNode>()->style({
         {"color", a[1]},
@@ -114,7 +114,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         {"height", 100_percent},
         {"beginAngle", 2.0f},
         {"endAngle", 3.0f},
-        {"rotationPivot", glm::vec3(0.0f, -4.0f, 1.0f)},
+        {"rotationPivot", glm::vec3(0.0f, -2.0f, 1.0f)},
     });
     pd->mount(d5);
     auto d6 = std::make_shared<node::OMDemiurgeSectorNode>()->style({
@@ -122,7 +122,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         {"position", OMDemiurgePosition::Absolute},
         {"width", 100_percent},
         {"height", 100_percent},
-        {"rotationPivot", glm::vec3(0.0f, -4.0f, 1.0f)},
+        {"rotationPivot", glm::vec3(0.0f, -2.0f, 1.0f)},
     });
     pd->mount(d6);
     pd->mount(d4);

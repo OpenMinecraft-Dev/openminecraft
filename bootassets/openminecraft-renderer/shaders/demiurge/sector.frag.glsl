@@ -6,9 +6,8 @@
 layout(location = 0) in vec4 inColor;
 layout(location = 1) in vec2 inPosition;
 layout(location = 2) in vec4 inSectorPosition;
-layout(location = 3) in float inSectorRadius;
-layout(location = 4) in vec2 inSectorAngle;
-layout(location = 5) in float inSectorFactor;
+layout(location = 3) in vec2 inSectorAngle;
+layout(location = 4) in float inSectorFactor;
 
 layout(location = 0) out vec4 outColor;
 

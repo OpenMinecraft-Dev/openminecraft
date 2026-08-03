@@ -14,7 +14,6 @@ void OMDemiurgeSectorChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRe
         ->appendPart("sector_pos", basics::Vec4f)
         ->appendPart("sector_color", basics::Vec4f)
         ->appendPart("sector_rotation", basics::Vec4f)
-        ->appendPart("sector_radius", basics::Float)
         ->appendPart("sector_beginangle", basics::Float)
         ->appendPart("sector_endangle", basics::Float)
         ->appendPart("sector_factor", basics::Float)
