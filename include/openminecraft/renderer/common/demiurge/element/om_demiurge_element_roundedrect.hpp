@@ -2,6 +2,7 @@
 #define OM_DEMIURGE_ELEMENT_ROUNDEDRECT_HPP
 
 #include "glm/ext/vector_float4.hpp"
+#include "glm/gtc/quaternion.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
 namespace openminecraft::renderer::common::demiurge::element
 {
@@ -10,6 +11,7 @@ struct OMDemiurgeElementRoundedRect
     glm::vec4 position;
     glm::vec4 color;
     glm::vec4 radius;
+    glm::quat rotation;
     float factor;
     float depth;
 };

@@ -2,6 +2,8 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/quaternion.hpp"
 
 namespace openminecraft::renderer::common::demiurge::node
 {
@@ -26,6 +28,15 @@ auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, float depth)
         t->depth = depth;
         t->factor = stylesStorage.get<float>("factor", 2.0f);
         t->radius = stylesStorage.get<glm::vec4>("radius", {0, 0, 0, 0});
+
+        glm::vec3 defaultNormal = glm::vec3(0.0f, 0.0f, 1.0f);
+        glm::vec3 targetNormal = glm::normalize(stylesStorage.get<glm::vec3>("rotationPivot", {0.0f, 0.0f, 1.0f}));
+        auto selfRotation = stylesStorage.get<float>("rotation", 0.0f);
+
+        glm::quat q1 = glm::rotation(defaultNormal, targetNormal);
+        glm::quat q2 = glm::angleAxis(selfRotation, targetNormal);
+
+        t->rotation = q2 * q1;
 
         stylesStorage.solve();
     }

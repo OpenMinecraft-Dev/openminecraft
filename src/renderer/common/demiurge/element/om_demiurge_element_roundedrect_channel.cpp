@@ -17,6 +17,7 @@ void OMDemiurgeRoundedRectChannel::init(OMRendererBuffer *uniformBuffer, OMRende
         ->appendPart("rrect_pos", basics::Vec4f)
         ->appendPart("rrect_color", basics::Vec4f)
         ->appendPart("rrect_radius", basics::Vec4f)
+        ->appendPart("rrect_rotation", basics::Vec4f)
         ->appendPart("rrect_factor", basics::Float)
         ->appendPart("rrect_depth", basics::Float)
         ->nextGroup()

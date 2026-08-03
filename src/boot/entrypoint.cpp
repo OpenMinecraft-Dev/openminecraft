@@ -29,6 +29,9 @@
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
 #include <vector>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 using namespace openminecraft;
 using namespace openminecraft::vm;
@@ -139,8 +142,14 @@ auto boot(std::vector<std::string> args) -> int
         break;
     }
     case "angle"_hash: {
-        logger->debug("{} {} {} {}", std::atan2(1.0f, 1.0f), std::atan2(1.0f, -1.0f), std::atan2(-1.0f, -1.0f),
-                      std::atan2(-1.0f, 1.0f));
+        glm::vec3 defaultNormal = glm::vec3(0.0f, 0.0f, 1.0f);
+        glm::vec3 targetNormal = glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f));
+        float selfRotation = glm::radians(22.0f);
+
+        glm::quat q1 = glm::rotation(defaultNormal, targetNormal);
+        glm::quat q2 = glm::angleAxis(selfRotation, targetNormal);
+        glm::quat q = q2 * q1;
+        logger->debug("{}, {}, {}, {}", q.x, q.y, q.z, q.w);
         break;
     }
     case "glyph"_hash: {

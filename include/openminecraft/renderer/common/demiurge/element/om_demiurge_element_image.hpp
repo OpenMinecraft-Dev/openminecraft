@@ -3,6 +3,8 @@
 
 #include "glm/ext/vector_float4.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
+#include "glm/gtc/quaternion.hpp"
+
 namespace openminecraft::renderer::common::demiurge::element
 {
 struct OMDemiurgeElementImage
@@ -10,6 +12,7 @@ struct OMDemiurgeElementImage
     glm::vec4 position;
     glm::vec4 color;
     glm::vec4 radius;
+    glm::quat rotation;
     float factor;
     float depth;
     float fillMode;

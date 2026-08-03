@@ -1,5 +1,6 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
 #include "glm/ext/vector_float4.hpp"
+#include "glm/fwd.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_sector.hpp"
 #include "openminecraft/fontproc/om_fontset.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
@@ -20,7 +21,6 @@
 #include <memory>
 #include <array>
 #include <chrono>
-#include <numbers>
 
 namespace openminecraft::renderer::common::demiurge
 {
@@ -29,7 +29,7 @@ struct SimpleUniform
     float width;
     float height;
 };
-constexpr std::array<int, 3> a = {0x00d4ffaa, (int)0xbfff00ff, (int)0xff4500ff};
+constexpr std::array<int, 3> a = {0x00d4ffff, (int)0xbfff00ff, (int)0xff4500ff};
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     : renderer(renderer), OMRendererHandler(renderer), rect(renderer, [&]() -> void { recordTask(); }),
       roundedRect(renderer, [&]() -> void { recordTask(); }), image(renderer, [&]() -> void { recordTask(); }),
@@ -101,10 +101,11 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     });
 
     auto d4 = std::make_shared<node::OMDemiurgeSectorNode>()->style({
-        {"color", a[2]},
+        {"color", a[0]},
         {"position", OMDemiurgePosition::Absolute},
         {"width", 100_percent},
         {"height", 100_percent},
+        {"rotationPivot", glm::vec3(0.0f, -4.0f, 1.0f)},
     });
     auto d5 = std::make_shared<node::OMDemiurgeSectorNode>()->style({
         {"color", a[1]},
@@ -113,18 +114,21 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
         {"height", 100_percent},
         {"beginAngle", 2.0f},
         {"endAngle", 3.0f},
+        {"rotationPivot", glm::vec3(0.0f, -4.0f, 1.0f)},
     });
     pd->mount(d5);
     auto d6 = std::make_shared<node::OMDemiurgeSectorNode>()->style({
-        {"color", a[0]},
+        {"color", a[2]},
         {"position", OMDemiurgePosition::Absolute},
         {"width", 100_percent},
         {"height", 100_percent},
+        {"rotationPivot", glm::vec3(0.0f, -4.0f, 1.0f)},
     });
     pd->mount(d6);
     pd->mount(d4);
     node->mount(pd);
     sectorNode = d4;
+    rectNode = pd;
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
 
