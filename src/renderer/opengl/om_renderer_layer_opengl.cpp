@@ -246,7 +246,7 @@ void OMRendererOpenGL::render(util::OMTicker &t)
     SDL_GL_SwapWindow(reinterpret_cast<SDL_Window *>(window));
     t.pop();
 
-    t.push("gl_aftertasks");
+    t.push("gl_posttasks");
     for (auto h : handlers)
     {
         h->afterFrame();

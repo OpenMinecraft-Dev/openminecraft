@@ -393,17 +393,23 @@ void OMRendererVk::render(OMTicker &t)
     }
     try
     {
+        t.push("vk_pretasks");
         for (auto r : handlers)
         {
             r->beforeFrame();
         }
+        t.pop();
+
+        t.push("vk_waitframe");
         auto &sync = frameSyncs[thisFrame];
         auto result = logicalDevice.waitForFences(1, &sync.inFlightFence, true, std::numeric_limits<uint64_t>::max());
         if (result != Result::eSuccess)
         {
             throw OMRendererException(VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.waitfence"));
         }
+        t.pop();
 
+        t.push("vk_acquireimage");
         auto [nxtRes, imageIndex] = logicalDevice.acquireNextImageKHR(
             swapchainManager->swapchain, std::numeric_limits<uint64_t>::max(), sync.imageAvailable(), {});
         if (nxtRes != Result::eSuccess)
@@ -433,10 +439,12 @@ void OMRendererVk::render(OMTicker &t)
             throw OMRendererException(
                 VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.resetfence"));
         }
+        t.pop();
 
         std::vector<CommandBuffer> cmdBuffers = {};
         for (int i = 0; i < layeredTasks.size(); ++i)
         {
+            t.push(fmt::format("vk_task_layer{}", i));
             auto &waitSep = sync.pipelineSemaphores[i];
             auto &dstSep = i + 1 < sync.pipelineSemaphores.size() ? sync.pipelineSemaphores[i + 1]
                                                                   : frameRenderSemaphores[imageIndex];
@@ -447,11 +455,11 @@ void OMRendererVk::render(OMTicker &t)
                 auto tt = reinterpret_cast<OMRendererTaskVk *>(tsk);
                 if (!tt->isOnDefault())
                 {
-                    cmdBuffers.push_back(tt->commandBuffer);
+                    cmdBuffers.emplace_back(tt->commandBuffer);
                 }
                 else if (defaultCommandBuffers.count(tt))
                 {
-                    cmdBuffers.push_back(defaultCommandBuffers[tt][imageIndex]);
+                    cmdBuffers.emplace_back(defaultCommandBuffers[tt][imageIndex]);
                 }
             }
 
@@ -459,10 +467,12 @@ void OMRendererVk::render(OMTicker &t)
             SubmitInfo submitInfo(1, &waitSep, &msk, cmdBuffers.size(), cmdBuffers.data(), 1, &dstSep);
 
             queues.first.submit(submitInfo, i == layeredTasks.size() - 1 ? sync.inFlightFence : nullptr);
+            t.pop();
         }
 
+        t.push("vk_present");
         PresentInfoKHR presentInfo(1, &frameRenderSemaphores[imageIndex], 1, &swapchainManager->swapchain, &imageIndex);
-
+        t.pop();
         result = queues.second.presentKHR(presentInfo);
         if (result == Result::eSuboptimalKHR || result == Result::eErrorOutOfDateKHR)
         {
@@ -475,10 +485,13 @@ void OMRendererVk::render(OMTicker &t)
         }
 
         thisFrame = (thisFrame + 1) % framesInFlight;
+        t.push("vk_posttasks");
         for (auto r : handlers)
         {
             r->afterFrame();
         }
+        t.pop();
+
         t.pop();
         return;
     }
@@ -501,27 +514,39 @@ rebuild:
     {
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.wait"));
     }
+    t.push("vk_swapchain");
     swapchainManager->destroy();
     swapchainManager->reinit();
 
     delete defaultDepthBuffer;
     defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height,
                                                common::Dim2, common::Depth);
+    t.pop();
 
     this->clearTasks();
+    t.push("vk_tasksubmits");
     for (auto r : handlers)
     {
         r->submitTasks();
     }
     buildTaskGraph();
+    t.pop();
+
+    t.push("vk_syncobjects");
     updateSyncObjects();
+    t.pop();
+
+    t.push("vk_defaults");
     rebuildDefaults();
+    t.pop();
     needRebuild = false;
 
+    t.push("vk_posttasks");
     for (auto r : handlers)
     {
         r->afterFrame();
     }
+    t.pop();
 }
 
 void OMRendererVk::requestResize()
