@@ -38,7 +38,7 @@ struct OMDemiurgeIndirect
 class OMDemiurgeRendererHandler : public OMRendererHandler
 {
   public:
-    OMDemiurgeRendererHandler(OMRenderer *renderer);
+    OMDemiurgeRendererHandler(OMRenderer *renderer, std::shared_ptr<OMDemiurgeNode>);
     ~OMDemiurgeRendererHandler() override;
 
     void submitTasks() override;
@@ -47,9 +47,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     void recordTask(bool resize = false);
 
-    void updateState(util::OMTicker &);
-
-    std::shared_ptr<OMDemiurgeNode> node, graphNode, textNode, fpsTextNode;
+    std::shared_ptr<OMDemiurgeNode> node;
 
     OMRendererTexture *middleTexture = nullptr;
     OMRendererTexture *middleDepth = nullptr;
@@ -66,18 +64,10 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     OMRendererTask *task = nullptr;
 
-    std::vector<std::shared_ptr<OMDemiurgeNode>> sectorNodes = {};
-    std::vector<std::shared_ptr<OMDemiurgeNode>> textNodes = {};
-
   private:
     std::unordered_map<fontproc::OMFontSet *, std::shared_ptr<element::OMDemiurgeTextSdfChannel>> fonts = {};
 
-    OMRendererTexture *texture;
     log::OMLogger logger;
-
-    std::shared_ptr<fontproc::OMFontSet> fontset;
-
-    int fps = 0;
 };
 
 } // namespace openminecraft::renderer::common::demiurge

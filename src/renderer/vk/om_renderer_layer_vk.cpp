@@ -318,12 +318,11 @@ void OMRendererVk::updateSyncObjects()
 {
     try
     {
-
         for (auto &sync : frameSyncs)
         {
-            while (sync.pipelineSemaphores.size() != tasks.size())
+            while (sync.pipelineSemaphores.size() != layeredTasks.size())
             {
-                if (sync.pipelineSemaphores.size() < tasks.size())
+                if (sync.pipelineSemaphores.size() < layeredTasks.size())
                 {
                     sync.pipelineSemaphores.push_back(logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator));
                 }

@@ -109,9 +109,6 @@ void OMRendererTaskVk::drawIndirect(uint64_t begin, uint64_t count)
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.task"));
     }
 }
-void OMRendererTaskVk::clear()
-{
-}
 void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
 {
     try

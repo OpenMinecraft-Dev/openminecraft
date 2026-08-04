@@ -83,12 +83,6 @@ class OMRendererTask : public OMRendererObject
         finish();
         return this;
     }
-    virtual void clear() = 0;
-    inline auto clearN() -> OMRendererTask *
-    {
-        clear();
-        return this;
-    }
 
     inline auto objType() -> OMRendererObjectType override
     {

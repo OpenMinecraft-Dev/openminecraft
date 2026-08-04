@@ -70,7 +70,6 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     void drawInstance(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance) override;
     void drawIndirect(uint64_t begin, uint64_t count) override;
     void finish() override;
-    void clear() override;
 
     void execute();
 

@@ -82,6 +82,7 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     ops.push_back({glpipe->enableBlend ? Enable : Disable, GL_BLEND});
     ops.push_back(
         {BlendFuncSeparate, convert(s.srcColor), convert(s.dstColor), convert(s.srcAlpha), convert(s.dstAlpha)});
+    ops.push_back({Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
 }
 
 static auto fromCommon(common::basics::OMVertexPropType t) -> std::pair<int, GLuint>
@@ -162,10 +163,6 @@ void OMRendererTaskOpenGL::drawIndirect(uint64_t begin, uint64_t count)
                    {reinterpret_cast<void *>(begin * 5 * sizeof(uint32_t))}});
     ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
-}
-void OMRendererTaskOpenGL::clear()
-{
-    ops.push_back({Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
 }
 void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
 {
