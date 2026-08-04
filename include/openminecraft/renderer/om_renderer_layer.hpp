@@ -76,6 +76,7 @@ class OMRenderer
     virtual void baseInit() = 0;
 
     virtual auto getExtent() const -> glm::vec2 = 0;
+    virtual auto getLogicalExtent() const -> glm::vec2 = 0;
 
     virtual void render(util::OMTicker &) = 0;
     virtual void requestResize() = 0;

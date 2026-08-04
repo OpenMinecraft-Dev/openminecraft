@@ -383,6 +383,12 @@ auto OMRendererVk::getExtent() const -> glm::vec2
 {
     return {static_cast<float>(swapchainManager->extent.width), static_cast<float>(swapchainManager->extent.height)};
 }
+auto OMRendererVk::getLogicalExtent() const -> glm::vec2
+{
+    int w, h;
+    SDL_GetWindowSize(reinterpret_cast<SDL_Window *>(window), &w, &h);
+    return {w, h};
+}
 
 void OMRendererVk::render(OMTicker &t)
 {

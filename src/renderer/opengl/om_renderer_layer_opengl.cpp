@@ -185,6 +185,12 @@ auto OMRendererOpenGL::getExtent() const -> glm::vec2
     SDL_GetWindowSizeInPixels(reinterpret_cast<SDL_Window *>(window), &w, &h);
     return {w, h};
 }
+auto OMRendererOpenGL::getLogicalExtent() const -> glm::vec2
+{
+    int w, h;
+    SDL_GetWindowSize(reinterpret_cast<SDL_Window *>(window), &w, &h);
+    return {w, h};
+}
 
 void OMRendererOpenGL::baseInit()
 {

@@ -72,6 +72,7 @@ class OMRendererVk : public OMRenderer
     auto createPipeline() -> common::OMRendererPipeline * override;
     auto createTask() -> common::OMRendererTask * override;
     auto getExtent() const -> glm::vec2 override;
+    auto getLogicalExtent() const -> glm::vec2 override;
     auto taskRecreate(std::string id) -> void override;
 
     void baseInit() override;

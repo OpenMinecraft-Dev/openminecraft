@@ -179,7 +179,7 @@ auto OMDemiurgeRendererHandler::fetchFontChannel(fontproc::OMFontSet *s)
 void OMDemiurgeRendererHandler::submitTasks()
 {
     srand(time(nullptr));
-    auto ext = renderer->getExtent();
+    auto ext = renderer->getLogicalExtent();
     SimpleUniform u{ext.x, ext.y};
     uniformBuffer->updateData(&u);
 
@@ -215,7 +215,7 @@ static std::chrono::steady_clock::time_point tp = {};
 
 void OMDemiurgeRendererHandler::beforeFrame()
 {
-    auto ext = renderer->getExtent();
+    auto ext = renderer->getLogicalExtent();
 
     node->layout(ext.x, ext.y);
     node->submit(this, bottomDepth);
