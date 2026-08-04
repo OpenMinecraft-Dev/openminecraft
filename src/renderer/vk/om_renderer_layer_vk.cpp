@@ -422,11 +422,11 @@ void OMRendererVk::render(OMTicker &t)
         {
             if (nxtRes == Result::eSuboptimalKHR || nxtRes == Result::eErrorOutOfDateKHR)
             {
+                t.pop();
                 goto rebuild;
             }
-            throw OMRendererException(VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.nextimage"));
+            throw OMRendererException(VkErrorTranslate(SystemError(nxtRes), "openminecraft.renderer.vk.err.nextimage"));
         }
-
         if (inflights.count(imageIndex) > 0)
         {
             auto result = logicalDevice.waitForFences(1, &inflights[imageIndex].inFlightFence, true,

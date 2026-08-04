@@ -11,6 +11,7 @@
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include <chrono>
+#include <functional>
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_FORCE_RADIANS
@@ -45,7 +46,7 @@ struct VertexStruct
 class OMTestRenderer : public OMRendererHandler
 {
   public:
-    OMTestRenderer(renderer::OMRenderer *renderer);
+    OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMRendererTexture *()> t);
     ~OMTestRenderer() override;
 
     // INFO: count frames per second, submit and create tasks, etc.
@@ -63,9 +64,12 @@ class OMTestRenderer : public OMRendererHandler
     OMRendererBuffer *mainVtxBuffer;
     OMRendererBuffer *mainIdxBuffer;
     OMRendererPipeline *mainPipeline;
+    OMRendererPipeline *mainPipeline2;
     OMRendererTexture *tempTexture;
     OMRendererTexture *tempDepth;
     OMRendererRenderTarget *renderTarget;
+
+    std::function<OMRendererTexture *()> overlay;
 
     // INFO: event handling, runs on a different thread
     void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp);

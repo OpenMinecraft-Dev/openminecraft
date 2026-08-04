@@ -13,6 +13,7 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 
 #include <chrono>
+#include <functional>
 #include <glm/glm.hpp>
 #include <memory>
 #include <vector>
@@ -23,9 +24,10 @@ using namespace openminecraft::renderer::common;
 
 namespace openminecraft::boot::test
 {
-OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
+OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMRendererTexture *()> overlay)
     : renderer(renderer), logger("OMTestRenderer", this), OMRendererHandler(renderer)
 {
+    this->overlay = overlay;
     camera = std::make_shared<basics::OMCamera>(renderer, m_cameraPos, m_yaw, m_pitch);
 
     // INFO: basic shaders for renderer
@@ -102,9 +104,21 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
                        ->format(format)
                        ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
                        ->blend(true)
-                       ->depth(true, true)
+                       ->depth(false, false)
                        ->buildN();
     mainPipeline->bindInput(0, tempUniformBuffer);
+    mainPipeline2 = renderer->createPipeline()
+                        ->input(UniformBuffer)
+                        ->input(ImageSampler)
+                        ->output(renderer->getDefaultRenderTarget())
+                        ->shader(outputFrg)
+                        ->shader(outputVtx)
+                        ->format(format)
+                        ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+                        ->blend(true)
+                        ->depth(false, false)
+                        ->buildN();
+    mainPipeline2->bindInput(0, tempUniformBuffer);
 } // namespace openminecraft::boot::test
 
 void OMTestRenderer::beforeFrame()
@@ -209,6 +223,7 @@ void OMTestRenderer::submitTasks()
     }
 
     mainPipeline->bindInput(1, tempTexture);
+    mainPipeline2->bindInput(1, overlay());
 
     auto task = renderer->createTask()
                     ->target(renderTarget)
@@ -220,8 +235,13 @@ void OMTestRenderer::submitTasks()
 
     auto task2 = renderer->createTask()
                      ->dependOn(task)
+                     ->dependOn(renderer->fetchTask("demiurgeui_compose"))
                      ->target(renderer->getDefaultRenderTarget())
                      ->pipeline(mainPipeline)
+                     ->vertexBuffer({mainVtxBuffer})
+                     ->indexBuffer(mainIdxBuffer)
+                     ->drawN(6)
+                     ->pipeline(mainPipeline2)
                      ->vertexBuffer({mainVtxBuffer})
                      ->indexBuffer(mainIdxBuffer)
                      ->drawN(6)
@@ -234,6 +254,7 @@ void OMTestRenderer::submitTasks()
 OMTestRenderer::~OMTestRenderer()
 {
     delete mainPipeline;
+    delete mainPipeline2;
     delete pipeline;
     delete textureImage;
     delete uniformBuffer;

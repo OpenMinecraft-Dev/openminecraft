@@ -225,11 +225,11 @@ void rendererTest(renderer::OMBackend backend)
         // INFO: requires at least OpenGL 4.3 Core Profile or Vulkan 1.2
         OMWindow win({util::Version(4, 3, 0, 0), util::Version(1, 2, 0, 0)}, conf,
                      "/bootassets/openminecraft-renderer/shaders");
-
-        auto hnd = std::make_shared<test::OMTestRenderer>(win());
         auto hnd2 = std::make_shared<OMNodeRendererHandler>(win());
-        win()->registerHandler(hnd);
+        auto hnd = std::make_shared<test::OMTestRenderer>(
+            win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTexture; });
         win()->registerHandler(hnd2);
+        win()->registerHandler(hnd);
         win()->baseInit();
 
         logger->info("driver: {}", win()->driver());
@@ -237,7 +237,7 @@ void rendererTest(renderer::OMBackend backend)
         // INFO: states[0] represents application status, states[1] represents if the window resized
         std::array<bool, 2> states = {false, false};
         util::OMTicker ticker;
-
+        int i = 0;
         while (!states[0])
         {
             ticker.begin();
@@ -251,7 +251,11 @@ void rendererTest(renderer::OMBackend backend)
 
             win()->render(ticker);
 
-            hnd2->updateState(ticker);
+            if (++i > 10)
+            {
+                hnd2->updateState(ticker);
+                i = 0;
+            }
         }
 
         hnd = nullptr;
