@@ -112,10 +112,19 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
 
-    rect.init(uniformBuffer, renderer->getDefaultRenderTarget());
-    roundedRect.init(uniformBuffer, renderer->getDefaultRenderTarget());
-    image.init(uniformBuffer, renderer->getDefaultRenderTarget());
-    sector.init(uniformBuffer, renderer->getDefaultRenderTarget());
+    auto ext = renderer->getExtent();
+    middleTexture = renderer->allocateTexture(ext.x, ext.y, Dim2, ColorRgba);
+    middleDepth = renderer->allocateTexture(ext.x, ext.y, Dim2, Depth);
+
+    middleRenderTarget = renderer->createRenderTarget();
+    middleRenderTarget->attachTarget(middleTexture);
+    middleRenderTarget->attachTarget(middleDepth);
+    middleRenderTarget->build();
+
+    rect.init(uniformBuffer, middleRenderTarget);
+    roundedRect.init(uniformBuffer, middleRenderTarget);
+    image.init(uniformBuffer, middleRenderTarget);
+    sector.init(uniformBuffer, middleRenderTarget);
 
     srand(time(nullptr));
 }
@@ -132,6 +141,10 @@ OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
     }
     delete uniformBuffer;
     delete texture;
+
+    delete middleTexture;
+    delete middleDepth;
+    delete middleRenderTarget;
 }
 
 auto OMDemiurgeRendererHandler::updateState(util::OMTicker &t) -> void
@@ -214,13 +227,26 @@ auto OMDemiurgeRendererHandler::fetchFontChannel(fontproc::OMFontSet *s)
     }
 
     auto c = std::make_shared<element::OMDemiurgeTextSdfChannel>(this->renderer, [&]() -> void { recordTask(); }, s);
-    c->init(uniformBuffer, renderer->getDefaultRenderTarget());
+    c->init(uniformBuffer, middleRenderTarget);
     fonts[s] = c;
     return c;
 }
 
 void OMDemiurgeRendererHandler::submitTasks()
 {
+    {
+        delete middleDepth;
+        delete middleTexture;
+
+        auto ext = renderer->getExtent();
+        middleTexture = renderer->allocateTexture(ext.x, ext.y, Dim2, ColorRgba);
+        middleDepth = renderer->allocateTexture(ext.x, ext.y, Dim2, Depth);
+
+        middleRenderTarget->replaceTarget(0, middleTexture);
+        middleRenderTarget->replaceTarget(1, middleDepth);
+        middleRenderTarget->rebuild();
+    }
+
     srand(time(nullptr));
     auto ext = renderer->getLogicalExtent();
     SimpleUniform u{ext.x, ext.y};
@@ -233,7 +259,7 @@ void OMDemiurgeRendererHandler::submitTasks()
 
 void OMDemiurgeRendererHandler::recordTask(bool resize)
 {
-    task->dependOn(renderer->fetchTask("main"))->target(renderer->getDefaultRenderTarget())->clearN();
+    task->dependOn(renderer->fetchTask("main"))->target(middleRenderTarget)->clearN();
 
     element::OMDemiurgeAbstractChannel *channel = nullptr;
     for (float layer = bottomDepth; layer >= topDepth; layer -= 0.01f)

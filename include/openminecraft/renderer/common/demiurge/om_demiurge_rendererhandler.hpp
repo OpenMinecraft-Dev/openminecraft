@@ -51,6 +51,9 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     std::shared_ptr<OMDemiurgeNode> node, graphNode, textNode, fpsTextNode;
 
+    OMRendererTexture *middleTexture = nullptr;
+    OMRendererTexture *middleDepth = nullptr;
+    OMRendererRenderTarget *middleRenderTarget = nullptr;
     OMRendererBuffer *uniformBuffer;
     OMRenderer *renderer;
 
