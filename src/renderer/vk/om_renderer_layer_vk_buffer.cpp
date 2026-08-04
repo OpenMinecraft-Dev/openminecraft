@@ -21,6 +21,7 @@ OMRendererBufferVk::OMRendererBufferVk(OMBufferUsage usage, uint64_t length, OMR
 
 OMRendererBufferVk::~OMRendererBufferVk()
 {
+    reinterpret_cast<OMRendererVk *>(renderer)->logicalDevice.waitIdle();
     this->release();
 }
 

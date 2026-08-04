@@ -56,6 +56,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
         {
             delete instanceBuffer;
             instanceBuffer = renderer->allocateBuffer(InstanceData, this->bufferSize());
+            instanceBuffer->updateData(this->objects.data());
         }
 
         bool inDraw = false;

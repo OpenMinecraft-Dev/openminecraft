@@ -104,6 +104,11 @@ class OMRenderer
                     layerTask.emplace_back(*it);
                     (*it)->solved = true;
                     it = temp.erase(it);
+
+                    if (it == temp.end())
+                    {
+                        break;
+                    }
                 }
             }
             layeredTasks.insert(layeredTasks.end(), layerTask);

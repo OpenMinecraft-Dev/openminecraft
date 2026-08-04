@@ -49,12 +49,20 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     OMDemiurgeNode();
     ~OMDemiurgeNode();
 
-    virtual void mount(std::shared_ptr<OMDemiurgeNode> child)
+    virtual auto store(std::shared_ptr<OMDemiurgeNode> &target) -> std::shared_ptr<OMDemiurgeNode>
+    {
+        target = shared_from_this();
+        return shared_from_this();
+    }
+
+    virtual auto mount(std::shared_ptr<OMDemiurgeNode> child) -> std::shared_ptr<OMDemiurgeNode>
     {
         child->parent = this;
         children.push_back(child);
 
         YGNodeInsertChild(yogaNode, child->yogaNode, children.size() - 1);
+
+        return shared_from_this();
     }
 
     virtual void umount(std::shared_ptr<OMDemiurgeNode> child)

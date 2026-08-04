@@ -16,8 +16,10 @@
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include "openminecraft/util/om_util_ticker.hpp"
 #include <memory>
 #include <unordered_map>
+#include <vector>
 namespace openminecraft::renderer::common::demiurge
 {
 constexpr float bottomDepth = 0.99f;
@@ -45,7 +47,9 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     void recordTask(bool resize = false);
 
-    std::shared_ptr<OMDemiurgeNode> node, sectorNode, rectNode;
+    void updateState(util::OMTicker &);
+
+    std::shared_ptr<OMDemiurgeNode> node, graphNode, textNode, fpsTextNode;
 
     OMRendererBuffer *uniformBuffer;
     OMRenderer *renderer;
@@ -59,17 +63,18 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     OMRendererTask *task = nullptr;
 
+    std::vector<std::shared_ptr<OMDemiurgeNode>> sectorNodes = {};
+    std::vector<std::shared_ptr<OMDemiurgeNode>> textNodes = {};
+
   private:
-    std::unordered_map<fontproc::OMFontSet *, std::shared_ptr<element::OMDemiurgeTextSdfChannel>> fonts;
+    std::unordered_map<fontproc::OMFontSet *, std::shared_ptr<element::OMDemiurgeTextSdfChannel>> fonts = {};
 
     OMRendererTexture *texture;
     log::OMLogger logger;
 
     std::shared_ptr<fontproc::OMFontSet> fontset;
 
-    std::shared_ptr<OMDemiurgeNode> fpsTextNode;
     int fps = 0;
-    float angle = 0.0f;
 };
 
 } // namespace openminecraft::renderer::common::demiurge

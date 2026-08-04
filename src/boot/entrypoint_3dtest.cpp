@@ -32,6 +32,7 @@ void rendererTest(renderer::OMBackend backend)
         // INFO: states[0] represents application status, states[1] represents if the window resized
         std::array<bool, 2> states = {false, false};
         util::OMTicker ticker;
+
         while (!states[0])
         {
             ticker.begin();
@@ -44,6 +45,8 @@ void rendererTest(renderer::OMBackend backend)
             }
 
             win()->render(ticker);
+
+            hnd2->updateState(ticker);
         }
 
         hnd = nullptr;

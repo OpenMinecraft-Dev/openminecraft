@@ -18,9 +18,15 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
+#include <cstdint>
+#include <cstdlib>
+#include <map>
 #include <memory>
 #include <array>
 #include <chrono>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace openminecraft::renderer::common::demiurge
 {
@@ -53,92 +59,51 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     auto rawfile3 = vfs::fsfetch("/bootassets/openminecraft-boot/font/NotoSansArabic.ttf");
     fontset->fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile3.get()));
 
-    node = std::make_shared<node::OMDemiurgeImageNode>(texture)->style({
-        {"color", (int)0xffffffff},
-        {"flexGap", 10_px},
-        {"flexWrap", Wrap},
-        {"flexDirection", Column},
-        {"fill", node::OMDemiurgeImageFillType::Cover},
-    });
-
-    auto d = std::make_shared<node::OMDemiurgeContainerNode>()->style({
-        {"flexShrink", 0.0f},
-        {"flexGrow", 0.0f},
-        {"flexDirection", Column},
-        {"width", 100_percent},
-    });
-    auto d21 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                   ->style({
-                       {"color", (int)0xffffffff},
-                       {"flexGrow", 1.0f},
-                       {"text", "OpenMinecraft Debug Screen"},
-                       {"textheight", 24},
-                   });
-    auto d2 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                  ->style({
-                      {"color", (int)0xffffffff},
-                      {"flexGrow", 1.0f},
-                      {"text", "The quick brown fox jumps over the lazy dog. -> <- && === 测试"},
-                      {"textheight", 24},
-                  });
-    fpsTextNode = d2;
-    d->mount(d21);
-    d->mount(d2);
-    node->mount(d);
-
-    auto pd = std::make_shared<node::OMDemiurgeContainerNode>()->style({
-        {"flexShrink", 0.0f},
-        {"flexGrow", 1.0f},
-    });
-    auto pdd = std::make_shared<node::OMDemiurgeRectNode>()->style({
-        {"flexShrink", 0.0f},
-        {"flexGrow", 1.0f},
-        {"width", 100_percent},
-        {"color", 0x222222ff},
-        {"radius", glm::vec4(25.0f)},
-    });
-
-    auto d4 = std::make_shared<node::OMDemiurgeSectorNode>()->style({
-        {"color", a[0]},
-        {"position", OMDemiurgePosition::Absolute},
-        {"width", 100_percent},
-        {"height", 100_percent},
-        {"rotationPivot", glm::vec3(0.0f, -2.0f, 1.0f)},
-    });
-    auto d5 = std::make_shared<node::OMDemiurgeSectorNode>()->style({
-        {"color", a[1]},
-        {"position", OMDemiurgePosition::Absolute},
-        {"width", 100_percent},
-        {"height", 100_percent},
-        {"beginAngle", 2.0f},
-        {"endAngle", 3.0f},
-        {"rotationPivot", glm::vec3(0.0f, -2.0f, 1.0f)},
-    });
-    pd->mount(d5);
-    auto d6 = std::make_shared<node::OMDemiurgeSectorNode>()->style({
-        {"color", a[2]},
-        {"position", OMDemiurgePosition::Absolute},
-        {"width", 100_percent},
-        {"height", 100_percent},
-        {"rotationPivot", glm::vec3(0.0f, -2.0f, 1.0f)},
-    });
-    pd->mount(d6);
-    pd->mount(d4);
-
-    pdd->mount(pd);
-
-    auto dp = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                  ->style({
-                      {"color", a[0]},
-                      {"flexGrow", 0.0f},
-                      {"text", "Time!"},
-                      {"textheight", 24},
-                  });
-
-    pdd->mount(dp);
-    node->mount(pdd);
-    sectorNode = d4;
-    rectNode = pd;
+    node = std::make_shared<node::OMDemiurgeImageNode>(texture)
+               ->style({
+                   {"color", (int)0xffffffff},
+                   {"flexGap", 10_px},
+                   {"flexWrap", Wrap},
+                   {"flexDirection", Column},
+                   {"fill", node::OMDemiurgeImageFillType::Cover},
+               })
+               ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
+                           ->style({
+                               {"flexShrink", 0.0f},
+                               {"flexGrow", 0.0f},
+                               {"flexDirection", Column},
+                               {"width", 100_percent},
+                           })
+                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                       ->style({
+                                           {"color", (int)0xffffffff},
+                                           {"flexGrow", 1.0f},
+                                           {"text", "OpenMinecraft Debug Screen"},
+                                           {"textheight", 24},
+                                       }))
+                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                       ->style({
+                                           {"color", (int)0xffffffff},
+                                           {"flexGrow", 1.0f},
+                                           {"text", ""},
+                                           {"textheight", 24},
+                                       })
+                                       ->store(fpsTextNode)))
+               ->mount(std::make_shared<node::OMDemiurgeRectNode>()
+                           ->style({
+                               {"flexShrink", 0.0f},
+                               {"flexGrow", 1.0f},
+                               {"width", 100_percent},
+                               {"color", 0x222222ff},
+                               {"radius", glm::vec4(25.0f)},
+                           })
+                           ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
+                                       ->style({
+                                           {"flexShrink", 0.0f},
+                                           {"flexGrow", 1.0f},
+                                       })
+                                       ->store(graphNode))
+                           ->store(textNode));
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
 
@@ -146,6 +111,8 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     roundedRect.init(uniformBuffer, renderer->getDefaultRenderTarget());
     image.init(uniformBuffer, renderer->getDefaultRenderTarget());
     sector.init(uniformBuffer, renderer->getDefaultRenderTarget());
+
+    srand(time(nullptr));
 }
 
 OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
@@ -160,6 +127,76 @@ OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
     }
     delete uniformBuffer;
     delete texture;
+}
+
+auto OMDemiurgeRendererHandler::updateState(util::OMTicker &t) -> void
+{
+    std::map<std::string, uint64_t> results;
+    uint64_t total = 0;
+    for (auto &e : t.ticks)
+    {
+        if (e.first.depth != 1)
+        {
+            continue;
+        }
+
+        if (e.first.pop)
+        {
+            results[e.first.id] = e.second - results[e.first.id];
+            total += results[e.first.id];
+        }
+        else
+        {
+            results[e.first.id] = e.second;
+        }
+    }
+
+    int i = 0;
+    while (sectorNodes.size() != results.size())
+    {
+        if (sectorNodes.size() > results.size())
+        {
+            graphNode->umount(sectorNodes.back());
+            textNode->umount(textNodes.back());
+            sectorNodes.pop_back();
+            textNodes.pop_back();
+        }
+        else
+        {
+            auto idx = (i++) % 3;
+            auto n = std::make_shared<node::OMDemiurgeSectorNode>()->style({
+                {"color", a[idx]},
+                {"position", OMDemiurgePosition::Absolute},
+                {"width", 100_percent},
+                {"height", 100_percent},
+                {"rotationPivot", glm::vec3(0.0f, -2.0f, 1.0f)},
+            });
+            graphNode->mount(n);
+            sectorNodes.emplace_back(n);
+
+            auto n2 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                          ->style({
+                              {"color", a[idx]},
+                              {"flexGrow", 0.0f},
+                              {"textheight", 24},
+                          });
+            textNode->mount(n2);
+            textNodes.emplace_back(n2);
+        }
+    }
+
+    float curang = 0.0f;
+    i = 0;
+    for (auto &p : results)
+    {
+        sectorNodes[i]->style("beginAngle", curang);
+        auto fct = (double)p.second / (double)total;
+        curang += 3.1415926f * 2 * fct;
+        sectorNodes[i]->style("endAngle", curang);
+        textNodes[i]->style("text", fmt::format("{}: {:.2f} ms / {:.2f} %", p.first,
+                                                static_cast<float>(p.second) / 1000 / 1000, fct * 100));
+        ++i;
+    }
 }
 
 auto OMDemiurgeRendererHandler::fetchFontChannel(fontproc::OMFontSet *s)
@@ -250,14 +287,5 @@ void OMDemiurgeRendererHandler::afterFrame()
         tp = std::chrono::steady_clock::now();
         fps = 0;
     }
-
-    if (angle > 3.1415926 * 2)
-    {
-        angle = 0.0f;
-    }
-    angle += 0.0001f;
-
-    sectorNode->style("beginAngle", static_cast<float>(angle - 3.1415926 / 6));
-    sectorNode->style("endAngle", angle);
 }
 } // namespace openminecraft::renderer::common::demiurge

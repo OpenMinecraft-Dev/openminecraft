@@ -22,7 +22,7 @@ auto OMDemiurgeTextSdfChannel::storeGlyph(fontproc::OMFontSetShapeResult r) -> i
     if (glyphBuffer->length < glyphData.size() * sizeof(float))
     {
         delete glyphBuffer;
-        glyphBuffer = renderer->allocateBuffer(ShaderStorage, 2 * glyphData.size() * sizeof(float));
+        glyphBuffer = renderer->allocateBuffer(ShaderStorage, 8 * glyphData.size() * sizeof(float));
         pipeline->bindInput(1, glyphBuffer);
         glyphBuffer->updateDataPart(glyphData.data(), 0, glyphData.size() * sizeof(float));
         recreation();

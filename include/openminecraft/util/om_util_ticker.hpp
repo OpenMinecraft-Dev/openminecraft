@@ -13,6 +13,7 @@ struct OMTickerEvent
 {
     std::string id;
     bool pop;
+    int depth;
 };
 class OMTicker
 {
@@ -32,15 +33,17 @@ class OMTicker
     void push(std::string id)
     {
         items.push(id);
-        ticks.emplace_back(OMTickerEvent{id, false}, std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                                         std::chrono::steady_clock::now().time_since_epoch())
-                                                         .count());
+        ticks.emplace_back(
+            OMTickerEvent{id, false, static_cast<int>(items.size() - 1)},
+            std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch())
+                .count());
     }
     void pop()
     {
-        ticks.emplace_back(OMTickerEvent{items.top(), true}, std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                                                 std::chrono::steady_clock::now().time_since_epoch())
-                                                                 .count());
+        ticks.emplace_back(
+            OMTickerEvent{items.top(), true, static_cast<int>(items.size() - 1)},
+            std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch())
+                .count());
         items.pop();
     }
 

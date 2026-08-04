@@ -27,6 +27,7 @@ auto OMDemiurgeTextSdfNode::syncLayout() -> void
 
 auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
 {
+    this->handler = handler;
     if (stylesStorage.isModified())
     {
         auto pp = stylesStorage.get<OMDemiurgeRect>("layoutBound");

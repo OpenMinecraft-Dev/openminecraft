@@ -75,7 +75,6 @@ OMRendererVkValidation::OMRendererVkValidation(std::vector<LayerProperties> prop
 {
     logger = std::make_shared<log::OMLogger>("OMRendererVkValidation", this);
     enabled = false;
-    return;
     for (auto p : props)
     {
         if (std::string(p.layerName.data()) == "VK_LAYER_KHRONOS_validation")

@@ -121,6 +121,7 @@ void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
             isDefault = true;
         }
         auto ext = target->fetchSize();
+        renderer->logicalDevice.waitIdle();
         if (isDefault)
         {
             auto ii = CommandBufferInheritanceInfo(reinterpret_cast<OMRendererRenderTargetVk *>(target)->renderPass);

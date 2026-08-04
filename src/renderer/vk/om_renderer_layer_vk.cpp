@@ -286,6 +286,7 @@ void OMRendererVk::rebuildDefaults()
 
 auto OMRendererVk::taskRecreate(std::string id) -> void
 {
+    logicalDevice.waitIdle();
     auto task = fetchTask(id);
     if (task && reinterpret_cast<OMRendererTaskVk *>(task)->isOnDefault())
     {
