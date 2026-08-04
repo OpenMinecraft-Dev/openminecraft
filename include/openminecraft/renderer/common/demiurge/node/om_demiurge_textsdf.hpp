@@ -13,6 +13,7 @@ class OMDemiurgeTextSdfNode : public OMDemiurgeNode
 
     auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
     auto remove() -> void override;
+    auto syncLayout() -> void override;
 
   private:
     std::vector<int> glyphIds = {};

@@ -8,6 +8,7 @@
 namespace openminecraft::renderer
 {
 OMWindow::OMWindow(OMVersionRequirement requirement, OMWindowConfig config, std::string shaderPath)
+    : logger("OMWindow", this)
 {
     renderer::AppInfo a = {config.initialTitle, util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
                            util::Version(1, 0, 0, 0), requirement[config.backend]};
@@ -15,11 +16,11 @@ OMWindow::OMWindow(OMVersionRequirement requirement, OMWindowConfig config, std:
     switch (config.backend)
     {
     case Vulkan: {
-        additionalFlags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE;
+        additionalFlags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
         break;
     }
     case OpenGL: {
-        additionalFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
+        additionalFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
         break;
     }
     default:

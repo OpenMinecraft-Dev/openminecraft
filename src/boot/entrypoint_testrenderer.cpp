@@ -322,7 +322,7 @@ void OMTestRenderer::eventLoop(void *wnd, bool *ar)
             if (SDL_GetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(wnd)))
             {
                 int ww, hh;
-                SDL_GetWindowSize(reinterpret_cast<SDL_Window *>(wnd), &ww, &hh);
+                SDL_GetWindowSizeInPixels(reinterpret_cast<SDL_Window *>(wnd), &ww, &hh);
                 mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
             }
             break;

@@ -44,12 +44,6 @@ void rendererTest(renderer::OMBackend backend)
             }
 
             win()->render(ticker);
-
-            /*for (auto &t : ticker.ticks)
-            {
-                logger->debug("{} {}: {} ns", t.first.pop ? "-" : "+", t.first.id, t.second);
-            }
-            logger->debug("------------------");*/
         }
 
         hnd = nullptr;

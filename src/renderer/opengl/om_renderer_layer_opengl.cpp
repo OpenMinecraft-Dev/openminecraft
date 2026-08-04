@@ -182,7 +182,7 @@ auto OMRendererOpenGL::createTask() -> common::OMRendererTask *
 auto OMRendererOpenGL::getExtent() const -> glm::vec2
 {
     int w, h;
-    SDL_GetWindowSize(reinterpret_cast<SDL_Window *>(window), &w, &h);
+    SDL_GetWindowSizeInPixels(reinterpret_cast<SDL_Window *>(window), &w, &h);
     return {w, h};
 }
 

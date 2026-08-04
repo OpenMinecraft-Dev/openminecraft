@@ -2,6 +2,7 @@
 #define OM_RENDERER_WINDOW_HPP
 
 #include "SDL3/SDL_video.h"
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include <array>
@@ -46,6 +47,8 @@ class OMWindow
     OMWindowConfig config;
     OMRenderer *renderer;
     SDL_Window *window;
+
+    log::OMLogger logger;
 };
 } // namespace openminecraft::renderer
 

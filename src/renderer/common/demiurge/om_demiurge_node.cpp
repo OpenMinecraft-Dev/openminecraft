@@ -6,7 +6,6 @@
 #include "yoga/YGNodeStyle.h"
 #include <any>
 #include <array>
-#include <iostream>
 
 namespace openminecraft::renderer::common::demiurge
 {

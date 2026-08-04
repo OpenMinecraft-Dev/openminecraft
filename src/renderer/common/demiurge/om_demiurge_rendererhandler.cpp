@@ -62,8 +62,6 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     });
 
     auto d = std::make_shared<node::OMDemiurgeContainerNode>()->style({
-        {"minWidth", 100.0f},
-        {"minHeight", 100.0f},
         {"flexShrink", 0.0f},
         {"flexGrow", 0.0f},
         {"flexDirection", Column},
@@ -72,8 +70,6 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     auto d21 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                    ->style({
                        {"color", (int)0xffffffff},
-                       {"minWidth", 1.0f},
-                       {"minHeight", 1.0f},
                        {"flexGrow", 1.0f},
                        {"text", "OpenMinecraft Debug Screen"},
                        {"textheight", 24},
@@ -81,8 +77,6 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     auto d2 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                   ->style({
                       {"color", (int)0xffffffff},
-                      {"minWidth", 1.0f},
-                      {"minHeight", 1.0f},
                       {"flexGrow", 1.0f},
                       {"text", "The quick brown fox jumps over the lazy dog. -> <- && === 测试"},
                       {"textheight", 24},
@@ -92,7 +86,11 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     d->mount(d2);
     node->mount(d);
 
-    auto pd = std::make_shared<node::OMDemiurgeRectNode>()->style({
+    auto pd = std::make_shared<node::OMDemiurgeContainerNode>()->style({
+        {"flexShrink", 0.0f},
+        {"flexGrow", 1.0f},
+    });
+    auto pdd = std::make_shared<node::OMDemiurgeRectNode>()->style({
         {"flexShrink", 0.0f},
         {"flexGrow", 1.0f},
         {"width", 100_percent},
@@ -126,7 +124,19 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     });
     pd->mount(d6);
     pd->mount(d4);
-    node->mount(pd);
+
+    pdd->mount(pd);
+
+    auto dp = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                  ->style({
+                      {"color", a[0]},
+                      {"flexGrow", 0.0f},
+                      {"text", "Time!"},
+                      {"textheight", 24},
+                  });
+
+    pdd->mount(dp);
+    node->mount(pdd);
     sectorNode = d4;
     rectNode = pd;
 

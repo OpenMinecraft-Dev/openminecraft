@@ -48,7 +48,7 @@ auto OMSwapchainManager::chooseExtent(const OMSwapchainCap &cap) -> Extent2D
     }
 
     int w = 0, h = 0;
-    SDL_GetWindowSize(static_cast<SDL_Window *>(window), &w, &h);
+    SDL_GetWindowSizeInPixels(static_cast<SDL_Window *>(window), &w, &h);
 
     return VkExtent2D{std::min(cap.capabilities.maxImageExtent.width,
                                std::max(static_cast<uint32_t>(w), cap.capabilities.minImageExtent.width)),

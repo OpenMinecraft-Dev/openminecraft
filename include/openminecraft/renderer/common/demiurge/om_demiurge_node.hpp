@@ -79,7 +79,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
 
     virtual auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void = 0;
     virtual auto remove() -> void = 0;
-    auto syncLayout() -> void;
+    virtual auto syncLayout() -> void;
     auto syncLayoutAll() -> void;
     auto syncBoundary(float x, float y) -> void;
 

@@ -1,4 +1,3 @@
-#include <iostream>
 #include <utility>
 
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
@@ -12,6 +11,19 @@ OMDemiurgeTextSdfNode::OMDemiurgeTextSdfNode(fontproc::OMFontSet *f) : set(std::
 {
 }
 OMDemiurgeTextSdfNode::~OMDemiurgeTextSdfNode() = default;
+
+auto OMDemiurgeTextSdfNode::syncLayout() -> void
+{
+    if (stylesStorage.isModified())
+    {
+        auto b = set->bound(stylesStorage.get<std::string>("text", ""));
+        auto th = stylesStorage.get<int>("textheight", 12);
+
+        stylesStorage.put("minWidth", b.x * th);
+        stylesStorage.put("minHeight", b.y * th);
+    }
+    OMDemiurgeNode::syncLayout();
+}
 
 auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
 {
