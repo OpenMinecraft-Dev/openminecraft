@@ -36,6 +36,11 @@ struct SimpleUniform
     float height;
 };
 constexpr std::array<int, 3> a = {0x00d4ffff, (int)0xbfff00ff, (int)0xff4500ff};
+constexpr std::array<int, 16> DebugColors = {
+    (int)0xF9FFFFFF, (int)0xF9801DFF, (int)0xC74EBDFF, 0x3AB3DAFF, (int)0xFED83DFF, (int)0x80C71FFF,
+    (int)0xF38BAAFF, 0x474F52FF,      (int)0x9D9D97FF, 0x169C9CFF, (int)0x8932B8FF, 0x3C44AAFF,
+    (int)0x835432FF, 0x5E7C16FF,      (int)0xB02E26FF, 0x1D1D21FF,
+};
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
     : renderer(renderer), OMRendererHandler(renderer), rect(renderer, [&]() -> void { recordTask(); }),
       roundedRect(renderer, [&]() -> void { recordTask(); }), image(renderer, [&]() -> void { recordTask(); }),
@@ -151,7 +156,6 @@ auto OMDemiurgeRendererHandler::updateState(util::OMTicker &t) -> void
         }
     }
 
-    int i = 0;
     while (sectorNodes.size() != results.size())
     {
         if (sectorNodes.size() > results.size())
@@ -163,9 +167,7 @@ auto OMDemiurgeRendererHandler::updateState(util::OMTicker &t) -> void
         }
         else
         {
-            auto idx = (i++) % 3;
             auto n = std::make_shared<node::OMDemiurgeSectorNode>()->style({
-                {"color", a[idx]},
                 {"position", OMDemiurgePosition::Absolute},
                 {"width", 100_percent},
                 {"height", 100_percent},
@@ -176,7 +178,6 @@ auto OMDemiurgeRendererHandler::updateState(util::OMTicker &t) -> void
 
             auto n2 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                           ->style({
-                              {"color", a[idx]},
                               {"flexGrow", 0.0f},
                               {"textheight", 24},
                           });
@@ -185,16 +186,21 @@ auto OMDemiurgeRendererHandler::updateState(util::OMTicker &t) -> void
         }
     }
 
-    float curang = 0.0f;
-    i = 0;
-    for (auto &p : results)
+    float curang = glm::radians(90.0f);
+    int i = 0;
+    std::vector<std::pair<std::string, uint64_t>> vec(results.begin(), results.end());
+
+    std::sort(vec.begin(), vec.end(), [](const auto &a, const auto &b) -> auto { return a.second > b.second; });
+    for (auto &p : vec)
     {
-        sectorNodes[i]->style("beginAngle", curang);
+        sectorNodes[i]->style("beginAngle", curang)->style("color", DebugColors[i % 16]);
         auto fct = (double)p.second / (double)total;
-        curang += 3.1415926f * 2 * fct;
+        curang += glm::radians(360.0f) * fct;
         sectorNodes[i]->style("endAngle", curang);
-        textNodes[i]->style("text", fmt::format("{}: {:.2f} ms / {:.2f} %", p.first,
-                                                static_cast<float>(p.second) / 1000 / 1000, fct * 100));
+        textNodes[i]
+            ->style("text",
+                    fmt::format("{}: {:.2f} us / {:.2f} %", p.first, static_cast<float>(p.second) / 1000, fct * 100))
+            ->style("color", DebugColors[i % 16]);
         ++i;
     }
 }

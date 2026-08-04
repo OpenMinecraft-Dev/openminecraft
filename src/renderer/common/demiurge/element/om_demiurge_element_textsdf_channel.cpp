@@ -18,7 +18,6 @@ auto OMDemiurgeTextSdfChannel::storeGlyph(fontproc::OMFontSetShapeResult r) -> i
     auto offset = glyphData.size();
     glyphData.insert(glyphData.end(), gdata.begin(), gdata.end());
 
-    // TODO: update data!
     if (glyphBuffer->length < glyphData.size() * sizeof(float))
     {
         delete glyphBuffer;

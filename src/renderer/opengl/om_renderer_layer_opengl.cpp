@@ -234,7 +234,6 @@ void OMRendererOpenGL::render(util::OMTicker &t)
     }
     t.pop();
 
-    t.push("gl_tasks");
     int i = 0;
     for (auto &tsklist : layeredTasks)
     {
@@ -246,7 +245,6 @@ void OMRendererOpenGL::render(util::OMTicker &t)
         t.pop();
         ++i;
     }
-    t.pop();
 
     t.push("gl_swap");
     SDL_GL_SwapWindow(reinterpret_cast<SDL_Window *>(window));
