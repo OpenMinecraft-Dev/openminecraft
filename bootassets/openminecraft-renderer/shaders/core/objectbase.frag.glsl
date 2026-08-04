@@ -7,5 +7,5 @@ layout(location = 0) out vec4 outColor;
 layout(binding = 1) uniform sampler2D inTexture;
 
 void main() {
-    outColor = texture(inTexture, inTexCoord);
+    outColor = texture(inTexture, inTexCoord) * 1000;
 }

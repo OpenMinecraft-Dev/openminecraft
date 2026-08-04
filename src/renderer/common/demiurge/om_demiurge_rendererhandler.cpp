@@ -71,6 +71,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer)
                    {"flexWrap", Wrap},
                    {"flexDirection", Column},
                    {"fill", node::OMDemiurgeImageFillType::Cover},
+                   {"radius", glm::vec4(25.0f)},
                })
                ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                            ->style({

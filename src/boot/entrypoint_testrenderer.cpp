@@ -31,8 +31,8 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer)
     // INFO: basic shaders for renderer
     objectFrg = renderer->shaderManager.preprocess("core/objectbase.frag.glsl", Fragment, GLSLSource);
     objectVtx = renderer->shaderManager.preprocess("core/objectbase.vert.glsl", Vertex, GLSLSource);
-    outputFrg = renderer->shaderManager.preprocess("core/output.frag.glsl", Fragment, GLSLSource);
-    outputVtx = renderer->shaderManager.preprocess("core/output.vert.glsl", Vertex, GLSLSource);
+    outputFrg = renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource);
+    outputVtx = renderer->shaderManager.preprocess("core/bilt.vert.glsl", Vertex, GLSLSource);
 
     format.appendPart("position", basics::Vec3f)
         ->appendPart("textureUV", basics::Vec2f)
