@@ -2,9 +2,11 @@
 #include "SDL3/SDL_keycode.h"
 #include "SDL3/SDL_messagebox.h"
 #include "SDL3/SDL_mouse.h"
+#include "glm/ext/vector_float3.hpp"
 #include "openminecraft/boot/entrypoint_testrenderer.hpp"
 #include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_image.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
@@ -22,6 +24,8 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include <array>
 #include <chrono>
+#include <functional>
+#include <iostream>
 #include <memory>
 #include <map>
 
@@ -67,7 +71,7 @@ class OMNodeRendererHandler : public OMRendererHandler
                        {"fill", node::OMDemiurgeImageFillType::Cover},
                        {"radius", glm::vec4(25.0f)},
                        {"width", 35_percent},
-                       {"height", 35_percent},
+                       {"height", 50_percent},
                    })
                    ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                                ->style({
@@ -90,7 +94,15 @@ class OMNodeRendererHandler : public OMRendererHandler
                                                {"text", ""},
                                                {"textheight", 18},
                                            })
-                                           ->store(fpsTextNode)))
+                                           ->store(fpsTextNode))
+                               ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                           ->style({
+                                               {"color", (int)0xffffffff},
+                                               {"flexGrow", 1.0f},
+                                               {"text", ""},
+                                               {"textheight", 18},
+                                           })
+                                           ->store(posTextNode)))
                    ->mount(std::make_shared<node::OMDemiurgeRectNode>()
                                ->style({
                                    {"flexShrink", 0.0f},
@@ -214,9 +226,13 @@ class OMNodeRendererHandler : public OMRendererHandler
             tp = std::chrono::steady_clock::now();
             fps = 0;
         }
+
+        auto m = camera->getPos();
+        posTextNode->style("text", fmt::format("{:.2f}, {:.2f}, {:.2f}, Yaw {:.2f}, Pitch {:.2f}", m.x, m.y, m.z,
+                                               camera->getYaw(), camera->getPitch()));
     }
 
-    std::shared_ptr<OMDemiurgeNode> node, graphNode, textNode, fpsTextNode;
+    std::shared_ptr<OMDemiurgeNode> node, graphNode, textNode, fpsTextNode, posTextNode;
     OMRendererTexture *texture;
     std::shared_ptr<OMDemiurgeRendererHandler> internal;
     std::shared_ptr<fontproc::OMFontSet> fontset;
@@ -225,6 +241,7 @@ class OMNodeRendererHandler : public OMRendererHandler
     int fps = 0;
     std::chrono::steady_clock::time_point tp = {};
     OMRenderer *renderer;
+    basics::OMCamera *camera;
 };
 
 void rendererTest(renderer::OMBackend backend)
@@ -242,6 +259,7 @@ void rendererTest(renderer::OMBackend backend)
         auto hnd2 = std::make_shared<OMNodeRendererHandler>(win());
         auto hnd = std::make_shared<test::OMTestRenderer>(
             win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTexture; }, bus);
+        hnd2->camera = hnd->camera.get();
         win()->registerHandler(hnd2);
         win()->registerHandler(hnd);
         win()->baseInit();

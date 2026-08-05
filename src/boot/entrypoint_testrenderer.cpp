@@ -28,7 +28,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     : renderer(renderer), logger("OMTestRenderer", this), OMRendererHandler(renderer)
 {
     this->overlay = overlay;
-    camera = std::make_shared<basics::OMCamera>(renderer, m_cameraPos, m_yaw, m_pitch);
+    camera = std::make_shared<basics::OMCamera>(renderer, glm::vec3{2.0f, 2.0f, 2.0f}, -135.0f, -35.0f);
 
     // INFO: basic shaders for renderer
     objectFrg = renderer->shaderManager.preprocess("core/objectbase.frag.glsl", Fragment, GLSLSource);
@@ -83,7 +83,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));
 
-    std::array<float, 2> b = {32.0f, 32.0f};
+    std::array<float, 2> b = {12.0f, 32.0f};
     tempUniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));
     UniformStructure stru = {glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), b[0], b[1]};
     tempUniformBuffer->updateData(&stru);

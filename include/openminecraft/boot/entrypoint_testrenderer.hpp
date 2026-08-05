@@ -86,10 +86,6 @@ class OMTestRenderer : public OMRendererHandler
     int vertexCount = 0;
     renderer::OMRenderer *renderer;
 
-    glm::vec3 m_cameraPos{2.f, 2.0f, 2.f};
-    glm::vec3 m_cameraUp{0.0f, 1.0f, 0.0f};
-    float m_pitch = -35.0f;
-    float m_yaw = -135.0f;
     float m_cameraMoveSpeed = 2.0f;
     float m_cameraRotateSpeed = 45.0f;
 

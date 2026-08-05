@@ -29,6 +29,19 @@ class OMCamera
 
     void moveCamera(OMCameraMovement mv, float d);
 
+    auto getPos() -> glm::vec3
+    {
+        return location;
+    }
+    auto getYaw() -> float
+    {
+        return yaw;
+    }
+    auto getPitch() -> float
+    {
+        return pitch;
+    }
+
   private:
     const OMRenderer *renderer;
     log::OMLogger logger;
