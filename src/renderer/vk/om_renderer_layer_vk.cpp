@@ -430,6 +430,9 @@ void OMRendererVk::render(OMTicker &t)
             }
             throw OMRendererException(VkErrorTranslate(SystemError(nxtRes), "openminecraft.renderer.vk.err.nextimage"));
         }
+        t.pop();
+
+        t.push("vk_inflight_sync");
         if (inflights.count(imageIndex) > 0)
         {
             auto result = logicalDevice.waitForFences(1, &inflights[imageIndex].inFlightFence, true,

@@ -58,14 +58,16 @@ class OMNodeRendererHandler : public OMRendererHandler
         fontset->fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile2.get()));
         auto rawfile3 = vfs::fsfetch("/bootassets/openminecraft-boot/font/NotoSansArabic.ttf");
         fontset->fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile3.get()));
-        node = std::make_shared<node::OMDemiurgeImageNode>(texture)
+        node = std::make_shared<node::OMDemiurgeRectNode>()
                    ->style({
-                       {"color", (int)0xffffff00},
+                       {"color", (int)0x23232344},
                        {"flexGap", 10_px},
                        {"flexWrap", Wrap},
                        {"flexDirection", Column},
                        {"fill", node::OMDemiurgeImageFillType::Cover},
                        {"radius", glm::vec4(25.0f)},
+                       {"width", 25_percent},
+                       {"height", 35_percent},
                    })
                    ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                                ->style({
@@ -78,22 +80,15 @@ class OMNodeRendererHandler : public OMRendererHandler
                                            ->style({
                                                {"color", (int)0xffffffff},
                                                {"flexGrow", 1.0f},
-                                               {"text", "OpenMinecraft Debug Screen"},
-                                               {"textheight", 24},
-                                           }))
-                               ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                                           ->style({
-                                               {"color", (int)0xffffffff},
-                                               {"flexGrow", 1.0f},
-                                               {"text", renderer->driver()},
-                                               {"textheight", 24},
+                                               {"text", "OpenMinecraft Demo"},
+                                               {"textheight", 18},
                                            }))
                                ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                            ->style({
                                                {"color", (int)0xffffffff},
                                                {"flexGrow", 1.0f},
                                                {"text", ""},
-                                               {"textheight", 24},
+                                               {"textheight", 18},
                                            })
                                            ->store(fpsTextNode)))
                    ->mount(std::make_shared<node::OMDemiurgeRectNode>()
@@ -166,7 +161,7 @@ class OMNodeRendererHandler : public OMRendererHandler
                 auto n2 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                               ->style({
                                   {"flexGrow", 0.0f},
-                                  {"textheight", 24},
+                                  {"textheight", 12},
                               });
                 textNode->mount(n2);
                 textNodes.emplace_back(n2);
@@ -213,11 +208,8 @@ class OMNodeRendererHandler : public OMRendererHandler
         auto cc = std::chrono::duration_cast<std::chrono::nanoseconds>(tpe - tp);
         if (cc.count() > 1e8)
         {
-            auto actual = renderer->getExtent();
-            auto real = renderer->getLogicalExtent();
-            fpsTextNode->style("text", fmt::format("FPS: {}, Resolution {}x{} / {}x{}",
-                                                   static_cast<int>(static_cast<float>(fps) / cc.count() * 1e9),
-                                                   actual.x, actual.y, real.x, real.y));
+            fpsTextNode->style("text",
+                               fmt::format("FPS: {}", static_cast<int>(static_cast<float>(fps) / cc.count() * 1e9)));
 
             tp = std::chrono::steady_clock::now();
             fps = 0;

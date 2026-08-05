@@ -103,7 +103,7 @@ class OMRendererVk : public OMRenderer
     std::vector<::vk::Semaphore> frameRenderSemaphores;
     std::map<uint32_t, FrameSync> inflights;
 
-    int framesInFlight = 3;
+    int framesInFlight = 8;
     int thisFrame = 0;
 
     bool needRebuild = false;
