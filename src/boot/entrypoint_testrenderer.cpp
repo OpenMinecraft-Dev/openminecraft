@@ -225,29 +225,28 @@ void OMTestRenderer::submitTasks()
     mainPipeline->bindInput(1, tempTexture);
     mainPipeline2->bindInput(1, overlay());
 
+    auto pretask = renderer->createTask()
+                       ->target(renderTarget)
+                       ->pipeline(pipeline)
+                       ->vertexBuffer({vertexBuffer})
+                       ->indexBuffer(indexBuffer)
+                       ->drawN(vertexCount)
+                       ->finishN();
     auto task = renderer->createTask()
-                    ->target(renderTarget)
-                    ->pipeline(pipeline)
-                    ->vertexBuffer({vertexBuffer})
-                    ->indexBuffer(indexBuffer)
-                    ->drawN(vertexCount)
+                    ->dependOn(pretask)
+                    ->dependOn(renderer->fetchTask("demiurgeui_compose"))
+                    ->target(renderer->getDefaultRenderTarget())
+                    ->pipeline(mainPipeline)
+                    ->vertexBuffer({mainVtxBuffer})
+                    ->indexBuffer(mainIdxBuffer)
+                    ->drawN(6)
+                    ->pipeline(mainPipeline2)
+                    ->vertexBuffer({mainVtxBuffer})
+                    ->indexBuffer(mainIdxBuffer)
+                    ->drawN(6)
                     ->finishN();
-
-    auto task2 = renderer->createTask()
-                     ->dependOn(task)
-                     ->dependOn(renderer->fetchTask("demiurgeui_compose"))
-                     ->target(renderer->getDefaultRenderTarget())
-                     ->pipeline(mainPipeline)
-                     ->vertexBuffer({mainVtxBuffer})
-                     ->indexBuffer(mainIdxBuffer)
-                     ->drawN(6)
-                     ->pipeline(mainPipeline2)
-                     ->vertexBuffer({mainVtxBuffer})
-                     ->indexBuffer(mainIdxBuffer)
-                     ->drawN(6)
-                     ->finishN();
-    renderer->registerTask("main", task2);
-    renderer->registerTask("intermediate", task);
+    renderer->registerTask("main", task);
+    renderer->registerTask("pretask", pretask);
 
     firstTime = false;
 }

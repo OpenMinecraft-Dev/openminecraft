@@ -136,6 +136,8 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glDrawElementsInstancedBaseInstance =
         fetchGlFunc<PFNGLDRAWELEMENTSINSTANCEDBASEINSTANCEPROC>("glDrawElementsInstancedBaseInstance");
     gl.glTexSubImage2D = fetchGlFunc<PFNGLTEXSUBIMAGE2DPROC>("glTexSubImage2D");
+    gl.glClearDepth = fetchGlFunc<PFNGLCLEARDEPTHPROC>("glClearDepth");
+    gl.glClearBufferfv = fetchGlFunc<PFNGLCLEARBUFFERFVPROC>("glClearBufferfv");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()

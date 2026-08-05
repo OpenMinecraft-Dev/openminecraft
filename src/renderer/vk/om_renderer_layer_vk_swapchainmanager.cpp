@@ -60,7 +60,7 @@ auto OMSwapchainManager::choosePresentMode(const OMSwapchainCap &cap) -> Present
 {
     for (auto pm : cap.presentModes)
     {
-        if (pm == PresentModeKHR::eMailbox || pm == PresentModeKHR::eImmediate)
+        if (pm == PresentModeKHR::eImmediate)
         {
             return pm;
         }

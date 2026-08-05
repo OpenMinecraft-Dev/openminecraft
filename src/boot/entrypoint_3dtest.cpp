@@ -53,7 +53,7 @@ class OMNodeRendererHandler : public OMRendererHandler
         fontset->fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile3.get()));
         node = std::make_shared<node::OMDemiurgeImageNode>(texture)
                    ->style({
-                       {"color", (int)0xffffffff},
+                       {"color", (int)0xffffff00},
                        {"flexGap", 10_px},
                        {"flexWrap", Wrap},
                        {"flexDirection", Column},
@@ -87,7 +87,7 @@ class OMNodeRendererHandler : public OMRendererHandler
                                    {"flexShrink", 0.0f},
                                    {"flexGrow", 1.0f},
                                    {"width", 100_percent},
-                                   {"color", 0x222222ff},
+                                   {"color", 0x22222200},
                                    {"radius", glm::vec4(25.0f)},
                                })
                                ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
@@ -237,7 +237,6 @@ void rendererTest(renderer::OMBackend backend)
         // INFO: states[0] represents application status, states[1] represents if the window resized
         std::array<bool, 2> states = {false, false};
         util::OMTicker ticker;
-        int i = 0;
         while (!states[0])
         {
             ticker.begin();
@@ -251,11 +250,7 @@ void rendererTest(renderer::OMBackend backend)
 
             win()->render(ticker);
 
-            if (++i > 10)
-            {
-                hnd2->updateState(ticker);
-                i = 0;
-            }
+            hnd2->updateState(ticker);
         }
 
         hnd = nullptr;

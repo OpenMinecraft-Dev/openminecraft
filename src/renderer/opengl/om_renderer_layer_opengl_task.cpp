@@ -82,7 +82,13 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     ops.push_back({glpipe->enableBlend ? Enable : Disable, GL_BLEND});
     ops.push_back(
         {BlendFuncSeparate, convert(s.srcColor), convert(s.dstColor), convert(s.srcAlpha), convert(s.dstAlpha)});
-    ops.push_back({Clear, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
+
+    if (!isCleared)
+    {
+        ops.push_back({ClearDepth, 1});
+        ops.push_back({Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
+        isCleared = true;
+    }
 }
 
 static auto fromCommon(common::basics::OMVertexPropType t) -> std::pair<int, GLuint>
@@ -172,11 +178,8 @@ void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
         {BindFramebuffer, GL_FRAMEBUFFER, reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer});
     ops.push_back({Disable, GL_CULL_FACE});
     ops.push_back({Enable, GL_FRAMEBUFFER_SRGB});
-
-    if (this->framebuffer == 0)
-    {
-        ops.push_back({Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
-    }
+    ops.push_back({Enable, GL_DEPTH_TEST});
+    isCleared = false;
 }
 void OMRendererTaskOpenGL::draw(uint64_t vertexCount)
 {
@@ -275,6 +278,14 @@ void OMRendererTaskOpenGL::execute()
         case DepthMask:
             gl->glDepthMask(op.args[0]);
             break;
+        case ClearDepth:
+            gl->glClearDepth(static_cast<float>(op.args[0]));
+            break;
+        case ClearBufferfv: {
+            auto v = static_cast<float>(op.args[0]);
+            gl->glClearBufferfv(GL_DEPTH, 1, &v);
+            break;
+        }
         }
     }
 }

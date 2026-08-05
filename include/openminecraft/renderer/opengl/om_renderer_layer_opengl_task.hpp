@@ -17,6 +17,8 @@ enum OMRendererOpType
 {
     BindFramebuffer,
     Clear,
+    ClearDepth,
+    ClearBufferfv,
     Disable,
     Enable,
     BindVertexArray,
@@ -84,6 +86,7 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     common::basics::OMVertexFormat vtxFormat;
 
     std::vector<OMRendererTaskOp> ops;
+    bool isCleared = false;
 };
 } // namespace openminecraft::renderer::opengl
 
