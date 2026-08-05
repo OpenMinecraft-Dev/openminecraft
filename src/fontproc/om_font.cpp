@@ -220,6 +220,8 @@ auto OMFont::shape(std::string s, bool &isRTL) -> std::vector<OMFontShapeResult>
                                               glyphPos[i].y_advance / ss.y, this});
     }
 
+    hb_buffer_destroy(buf);
+
     return result;
 }
 
