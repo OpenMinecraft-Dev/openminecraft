@@ -161,7 +161,7 @@ class OMNodeRendererHandler : public OMRendererHandler
                 auto n2 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                               ->style({
                                   {"flexGrow", 0.0f},
-                                  {"textheight", 12},
+                                  {"textheight", 14},
                               });
                 textNode->mount(n2);
                 textNodes.emplace_back(n2);

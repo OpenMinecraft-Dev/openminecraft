@@ -11,6 +11,7 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include <chrono>
 #include <functional>
 
@@ -61,14 +62,15 @@ class OMTestRenderer : public OMRendererHandler
     OMRendererBuffer *uniformBuffer;
     OMRendererBuffer *tempUniformBuffer;
     OMRendererTexture *textureImage;
-    OMRendererPipeline *pipeline;
+    OMRendererPipeline *pipeline = nullptr;
     OMRendererBuffer *mainVtxBuffer;
     OMRendererBuffer *mainIdxBuffer;
     OMRendererPipeline *mainPipeline;
     OMRendererPipeline *mainPipeline2;
-    OMRendererTexture *tempTexture;
-    OMRendererTexture *tempDepth;
-    OMRendererRenderTarget *renderTarget;
+    OMRendererPipeline *mainPipeline3 = nullptr;
+    wrap::OMRendererTempTarget *tempTarget;
+    wrap::OMRendererTempTarget *blurTemp;
+    OMRendererBuffer *blurArgs;
 
     std::function<OMRendererTexture *()> overlay;
 
@@ -81,7 +83,6 @@ class OMTestRenderer : public OMRendererHandler
     log::OMLogger logger;
 
   private:
-    bool firstTime = true;
     int vertexCount = 0;
     renderer::OMRenderer *renderer;
 
@@ -94,8 +95,8 @@ class OMTestRenderer : public OMRendererHandler
 
     std::shared_ptr<OMShader> objectVtx;
     std::shared_ptr<OMShader> objectFrg;
-    std::shared_ptr<OMShader> outputVtx, outputVtx2;
-    std::shared_ptr<OMShader> outputFrg, outputFrg2;
+    std::shared_ptr<OMShader> outputVtx, outputVtx2, outputVtx3;
+    std::shared_ptr<OMShader> outputFrg, outputFrg2, outputFrg3;
 
     std::chrono::high_resolution_clock::time_point tp;
     bool timing = false;

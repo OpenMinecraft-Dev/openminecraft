@@ -4,13 +4,9 @@
 layout(location = 0) in vec2 outTexCoord;
 layout(location = 0) out vec4 outColor;
 
-layout(binding = 1) uniform sampler2D inTextureFg;
-layout(binding = 2) uniform sampler2D inTexture;
+layout(binding = 1) uniform sampler2D inTexture;
 
 layout(binding = 0) uniform UniformBufferObject {
-    mat4 model;
-    mat4 view;
-    mat4 proj;
     float kernelSize;
     float sigma;
 } ubo;
@@ -23,11 +19,6 @@ float gaussianWeight(float x, float y, float sigma) {
 }
 
 void main() {
-    vec4 fg = texture(inTextureFg, outTexCoord);
-    if (fg.a < 0.01) {
-        discard;
-    }
-
     precision highp float;
     
     vec2 texSize = textureSize(inTexture, 0);
@@ -43,9 +34,9 @@ void main() {
     float weightSum = 0.0;
     
     for (int x = -radius; x <= radius; x++) {
-        float weight = gaussianWeight(float(x), 0, ubo.sigma);
+        float weight = gaussianWeight(0, float(x), ubo.sigma);
             
-        vec2 off = outTexCoord + vec2(x, 0) * texelSize;
+        vec2 off = outTexCoord + vec2(0, x) * texelSize;
             // gino: we had to do this otherwise wrong pixels will be fetched
         off = clamp(off, vec2(0.0 + texelSize), vec2(1.0 - texelSize));
         vec4 sampleColor = texture(inTexture, off);
@@ -59,12 +50,10 @@ void main() {
     vec4 result = vec4(0.0);
     int count = 0;
     for (int x = -radius; x <= radius; x++) {
-        vec2 offset = vec2(float(x), 0) * texelSize;
+        vec2 offset = vec2(0, float(x)) * texelSize;
         result += texture(inTexture, outTexCoord + offset);
         count++;
     }
     vec4 o = result / float(count);
-
-    outColor = fg.a * fg + (1 - fg.a) * o;
-    outColor.a = 1.0f;
+    outColor = o;
 }

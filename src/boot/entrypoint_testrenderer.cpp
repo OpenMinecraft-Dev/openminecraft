@@ -1,6 +1,5 @@
 #include "openminecraft/boot/entrypoint_testrenderer.hpp"
 
-#include "SDL3/SDL_video.h"
 #include "glm/ext/matrix_float4x4.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
@@ -10,6 +9,7 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 
@@ -17,6 +17,7 @@
 #include <functional>
 #include <glm/glm.hpp>
 #include <memory>
+#include <sys/uio.h>
 #include <vector>
 
 using namespace openminecraft::renderer::common;
@@ -37,6 +38,8 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     outputVtx = renderer->shaderManager.preprocess("core/bilt.vert.glsl", Vertex, GLSLSource);
     outputFrg2 = renderer->shaderManager.preprocess("core/biltgaussian.frag.glsl", Fragment, GLSLSource);
     outputVtx2 = renderer->shaderManager.preprocess("core/biltgaussian.vert.glsl", Vertex, GLSLSource);
+    outputFrg3 = renderer->shaderManager.preprocess("core/effects/boxblurp1.frag.glsl", Fragment, GLSLSource);
+    outputVtx3 = renderer->shaderManager.preprocess("core/effects/boxblurp1.vert.glsl", Vertex, GLSLSource);
 
     format.appendPart("position", basics::Vec3f)
         ->appendPart("textureUV", basics::Vec2f)
@@ -81,9 +84,12 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));
 
+    std::array<float, 2> b = {32.0f, 32.0f};
     tempUniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));
-    UniformStructure stru = {glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), 16, 30};
+    UniformStructure stru = {glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), b[0], b[1]};
     tempUniformBuffer->updateData(&stru);
+    blurArgs = renderer->allocateBuffer(Uniform, sizeof(float) * 2);
+    blurArgs->updateData(b.data());
 
     {
         auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/viking_room.png");
@@ -122,6 +128,9 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
                         ->depth(false, false)
                         ->buildN();
     mainPipeline2->bindInput(0, tempUniformBuffer);
+
+    tempTarget = new wrap::OMRendererTempTarget(renderer);
+    blurTemp = new wrap::OMRendererTempTarget(renderer);
 }
 
 void OMTestRenderer::beforeFrame()
@@ -184,36 +193,16 @@ void OMTestRenderer::afterFrame()
 
 void OMTestRenderer::submitTasks()
 {
-    if (!firstTime)
-    {
-        delete tempTexture;
-        delete tempDepth;
-    }
-
     auto ext = renderer->getExtent();
-    tempTexture = renderer->allocateTexture(ext.x, ext.y, Dim2, ColorRgba);
-    tempDepth = renderer->allocateTexture(ext.x, ext.y, Dim2, Depth);
+    tempTarget->construct(ext);
+    blurTemp->construct(ext);
 
-    if (firstTime)
-    {
-        renderTarget = renderer->createRenderTarget();
-        renderTarget->attachTarget(tempTexture);
-        renderTarget->attachTarget(tempDepth);
-        renderTarget->build();
-    }
-    else
-    {
-        renderTarget->replaceTarget(0, tempTexture);
-        renderTarget->replaceTarget(1, tempDepth);
-        renderTarget->rebuild();
-    }
-
-    if (firstTime)
+    if (!pipeline)
     {
         pipeline = renderer->createPipeline()
                        ->input(UniformBuffer)
                        ->input(ImageSampler)
-                       ->output(renderTarget)
+                       ->output(tempTarget->target)
                        ->shader(objectFrg)
                        ->shader(objectVtx)
                        ->format(format)
@@ -225,19 +214,45 @@ void OMTestRenderer::submitTasks()
         pipeline->bindInput(1, textureImage);
     }
 
-    mainPipeline->bindInput(1, tempTexture);
+    if (!mainPipeline3)
+    {
+        mainPipeline3 = renderer->createPipeline()
+                            ->input(UniformBuffer)
+                            ->input(ImageSampler)
+                            ->output(blurTemp->target)
+                            ->shader(outputFrg3)
+                            ->shader(outputVtx3)
+                            ->format(format)
+                            ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+                            ->blend(true)
+                            ->depth(false, false)
+                            ->buildN();
+        mainPipeline3->bindInput(0, blurArgs);
+    }
+
+    mainPipeline->bindInput(1, tempTarget->colorTexture);
     mainPipeline2->bindInput(1, overlay());
-    mainPipeline2->bindInput(2, tempTexture);
+    mainPipeline2->bindInput(2, blurTemp->colorTexture);
+    mainPipeline3->bindInput(1, tempTarget->colorTexture);
 
     auto pretask = renderer->createTask()
-                       ->target(renderTarget)
+                       ->target(tempTarget->target)
                        ->pipeline(pipeline)
                        ->vertexBuffer({vertexBuffer})
                        ->indexBuffer(indexBuffer)
                        ->drawN(vertexCount)
                        ->finishN();
+    auto taskimm = renderer->createTask()
+                       ->dependOn(pretask)
+                       ->target(blurTemp->target)
+                       ->pipeline(mainPipeline3)
+                       ->vertexBuffer({mainVtxBuffer})
+                       ->indexBuffer(mainIdxBuffer)
+                       ->drawN(6)
+                       ->finishN();
     auto task = renderer->createTask()
                     ->dependOn(pretask)
+                    ->dependOn(taskimm)
                     ->dependOn(renderer->fetchTask("demiurgeui_compose"))
                     ->target(renderer->getDefaultRenderTarget())
                     ->pipeline(mainPipeline)
@@ -251,25 +266,25 @@ void OMTestRenderer::submitTasks()
                     ->finishN();
     renderer->registerTask("main", task);
     renderer->registerTask("pretask", pretask);
-
-    firstTime = false;
+    renderer->registerTask("middletask", taskimm);
 }
 OMTestRenderer::~OMTestRenderer()
 {
     delete mainPipeline;
     delete mainPipeline2;
+    delete mainPipeline3;
     delete pipeline;
     delete textureImage;
     delete uniformBuffer;
     delete tempUniformBuffer;
+    delete blurArgs;
     delete vertexBuffer;
     delete indexBuffer;
 
     delete mainIdxBuffer;
     delete mainVtxBuffer;
 
-    delete tempTexture;
-    delete tempDepth;
-    delete renderTarget;
+    delete tempTarget;
+    delete blurTemp;
 }
 } // namespace openminecraft::boot::test
