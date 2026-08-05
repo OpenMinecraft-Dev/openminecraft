@@ -1,3 +1,4 @@
+#include "SDL3/SDL_messagebox.h"
 #include "openminecraft/boot/entrypoint_testrenderer.hpp"
 #include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/log/om_log_common.hpp"
@@ -7,6 +8,7 @@
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_sector.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
+#include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/om_renderer_window.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
@@ -34,6 +36,7 @@ class OMNodeRendererHandler : public OMRendererHandler
   public:
     OMNodeRendererHandler(OMRenderer *renderer) : OMRendererHandler(renderer)
     {
+        this->renderer = renderer;
         {
             auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/summer_1am.png");
 
@@ -198,8 +201,11 @@ class OMNodeRendererHandler : public OMRendererHandler
         auto cc = std::chrono::duration_cast<std::chrono::nanoseconds>(tpe - tp);
         if (cc.count() > 1e8)
         {
-            fpsTextNode->style("text",
-                               fmt::format("FPS: {}", static_cast<int>(static_cast<float>(fps) / cc.count() * 1e9)));
+            auto actual = renderer->getExtent();
+            auto real = renderer->getLogicalExtent();
+            fpsTextNode->style("text", fmt::format("FPS: {}, Resolution {}x{} / {}x{}",
+                                                   static_cast<int>(static_cast<float>(fps) / cc.count() * 1e9),
+                                                   actual.x, actual.y, real.x, real.y));
 
             tp = std::chrono::steady_clock::now();
             fps = 0;
@@ -214,6 +220,7 @@ class OMNodeRendererHandler : public OMRendererHandler
     std::vector<std::shared_ptr<OMDemiurgeNode>> textNodes = {};
     int fps = 0;
     std::chrono::steady_clock::time_point tp = {};
+    OMRenderer *renderer;
 };
 
 void rendererTest(renderer::OMBackend backend)
@@ -255,6 +262,10 @@ void rendererTest(renderer::OMBackend backend)
 
         hnd = nullptr;
         hnd2 = nullptr;
+    }
+    catch (OMRendererException &e)
+    {
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "OpenMinecraft Fail", e.what(), nullptr);
     }
     catch (std::runtime_error &e)
     {

@@ -32,6 +32,7 @@ class OMSwapchainManager : public util::OMReinitable
 
     void reinit() override;
     void destroy();
+    ::vk::SurfaceKHR surface;
 
     ::vk::SurfaceFormatKHR format;
     ::vk::Extent2D extent;
@@ -41,7 +42,6 @@ class OMSwapchainManager : public util::OMReinitable
   private:
     std::pair<uint32_t, uint32_t> families;
     std::function<OMSwapchainCap()> fetch;
-    ::vk::SurfaceKHR surface;
     ::vk::Device device;
     ::vk::AllocationCallbacks callbacks;
     void *window;

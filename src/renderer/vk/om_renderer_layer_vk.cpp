@@ -392,6 +392,7 @@ auto OMRendererVk::getLogicalExtent() const -> glm::vec2
 
 void OMRendererVk::render(OMTicker &t)
 {
+    Result lastError;
     t.push("vk_render");
     if (needRebuild)
     {
@@ -420,8 +421,10 @@ void OMRendererVk::render(OMTicker &t)
             swapchainManager->swapchain, std::numeric_limits<uint64_t>::max(), sync.imageAvailable(), {});
         if (nxtRes != Result::eSuccess)
         {
-            if (nxtRes == Result::eSuboptimalKHR || nxtRes == Result::eErrorOutOfDateKHR)
+            if (nxtRes == Result::eSuboptimalKHR || nxtRes == Result::eErrorOutOfDateKHR ||
+                nxtRes == Result::eErrorSurfaceLostKHR)
             {
+                lastError = nxtRes;
                 t.pop();
                 goto rebuild;
             }
@@ -480,8 +483,10 @@ void OMRendererVk::render(OMTicker &t)
         PresentInfoKHR presentInfo(1, &frameRenderSemaphores[imageIndex], 1, &swapchainManager->swapchain, &imageIndex);
         t.pop();
         result = queues.second.presentKHR(presentInfo);
-        if (result == Result::eSuboptimalKHR || result == Result::eErrorOutOfDateKHR)
+        if (result == Result::eSuboptimalKHR || result == Result::eErrorOutOfDateKHR ||
+            result == Result::eErrorSurfaceLostKHR)
         {
+            lastError = result;
             goto rebuild;
         }
         if (result != Result::eSuccess)
@@ -503,8 +508,10 @@ void OMRendererVk::render(OMTicker &t)
     }
     catch (SystemError &e)
     {
-        if (e.code().value() == VK_SUBOPTIMAL_KHR || e.code().value() == VK_ERROR_OUT_OF_DATE_KHR)
+        if (e.code().value() == VK_SUBOPTIMAL_KHR || e.code().value() == VK_ERROR_OUT_OF_DATE_KHR ||
+            e.code().value() == VK_ERROR_SURFACE_LOST_KHR)
         {
+            lastError = Result(e.code().value());
             goto rebuild;
         }
 
@@ -520,6 +527,16 @@ rebuild:
     {
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.wait"));
     }
+
+    if (lastError == Result::eErrorSurfaceLostKHR)
+    {
+        VkSurfaceKHR sf;
+        SDL_Vulkan_CreateSurface(static_cast<SDL_Window *>(window), instance,
+                                 reinterpret_cast<VkAllocationCallbacks *>(&allocator), &sf);
+        surface = SurfaceKHR(sf);
+        swapchainManager->surface = surface;
+    }
+
     t.push("vk_swapchain");
     swapchainManager->destroy();
     swapchainManager->reinit();

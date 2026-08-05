@@ -2,6 +2,7 @@
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
+#include "vulkan/vulkan_enums.hpp"
 
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
@@ -60,7 +61,7 @@ auto OMSwapchainManager::choosePresentMode(const OMSwapchainCap &cap) -> Present
 {
     for (auto pm : cap.presentModes)
     {
-        if (pm == PresentModeKHR::eImmediate)
+        if (pm == PresentModeKHR::eImmediate || pm == PresentModeKHR::eMailbox)
         {
             return pm;
         }
