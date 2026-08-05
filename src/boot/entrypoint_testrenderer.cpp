@@ -17,7 +17,6 @@
 #include <functional>
 #include <glm/glm.hpp>
 #include <memory>
-#include <sys/uio.h>
 #include <vector>
 
 using namespace openminecraft::renderer::common;
