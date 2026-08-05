@@ -19,8 +19,5 @@ void main() {
     vec2 screenPos = inRectPos.xy + inPosition.xy * inRectPos.zw;
 
     gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), inRectDepth, 1.0);
-#ifdef VULKAN
-    gl_Position.y = -gl_Position.y;
-#endif
     outColor = inRectColor;
 }

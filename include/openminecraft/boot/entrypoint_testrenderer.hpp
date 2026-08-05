@@ -94,8 +94,8 @@ class OMTestRenderer : public OMRendererHandler
 
     std::shared_ptr<OMShader> objectVtx;
     std::shared_ptr<OMShader> objectFrg;
-    std::shared_ptr<OMShader> outputVtx;
-    std::shared_ptr<OMShader> outputFrg;
+    std::shared_ptr<OMShader> outputVtx, outputVtx2;
+    std::shared_ptr<OMShader> outputFrg, outputFrg2;
 
     std::chrono::high_resolution_clock::time_point tp;
     bool timing = false;

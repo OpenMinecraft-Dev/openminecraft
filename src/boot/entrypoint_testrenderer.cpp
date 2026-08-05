@@ -19,8 +19,6 @@
 #include <memory>
 #include <vector>
 
-#include "SDL3/SDL_events.h"
-
 using namespace openminecraft::renderer::common;
 
 namespace openminecraft::boot::test
@@ -37,6 +35,8 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     objectVtx = renderer->shaderManager.preprocess("core/objectbase.vert.glsl", Vertex, GLSLSource);
     outputFrg = renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource);
     outputVtx = renderer->shaderManager.preprocess("core/bilt.vert.glsl", Vertex, GLSLSource);
+    outputFrg2 = renderer->shaderManager.preprocess("core/biltgaussian.frag.glsl", Fragment, GLSLSource);
+    outputVtx2 = renderer->shaderManager.preprocess("core/biltgaussian.vert.glsl", Vertex, GLSLSource);
 
     format.appendPart("position", basics::Vec3f)
         ->appendPart("textureUV", basics::Vec2f)
@@ -82,7 +82,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));
 
     tempUniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));
-    UniformStructure stru = {glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), 1, 3};
+    UniformStructure stru = {glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), 16, 30};
     tempUniformBuffer->updateData(&stru);
 
     {
@@ -112,16 +112,17 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     mainPipeline2 = renderer->createPipeline()
                         ->input(UniformBuffer)
                         ->input(ImageSampler)
+                        ->input(ImageSampler)
                         ->output(renderer->getDefaultRenderTarget())
-                        ->shader(outputFrg)
-                        ->shader(outputVtx)
+                        ->shader(outputFrg2)
+                        ->shader(outputVtx2)
                         ->format(format)
                         ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
                         ->blend(true)
                         ->depth(false, false)
                         ->buildN();
     mainPipeline2->bindInput(0, tempUniformBuffer);
-} // namespace openminecraft::boot::test
+}
 
 void OMTestRenderer::beforeFrame()
 {
@@ -226,6 +227,7 @@ void OMTestRenderer::submitTasks()
 
     mainPipeline->bindInput(1, tempTexture);
     mainPipeline2->bindInput(1, overlay());
+    mainPipeline2->bindInput(2, tempTexture);
 
     auto pretask = renderer->createTask()
                        ->target(renderTarget)

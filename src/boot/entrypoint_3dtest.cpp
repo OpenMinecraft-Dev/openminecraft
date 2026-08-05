@@ -60,13 +60,13 @@ class OMNodeRendererHandler : public OMRendererHandler
         fontset->fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile3.get()));
         node = std::make_shared<node::OMDemiurgeRectNode>()
                    ->style({
-                       {"color", (int)0x23232344},
+                       {"color", (int)0x23232399},
                        {"flexGap", 10_px},
                        {"flexWrap", Wrap},
                        {"flexDirection", Column},
                        {"fill", node::OMDemiurgeImageFillType::Cover},
                        {"radius", glm::vec4(25.0f)},
-                       {"width", 25_percent},
+                       {"width", 35_percent},
                        {"height", 35_percent},
                    })
                    ->mount(std::make_shared<node::OMDemiurgeContainerNode>()

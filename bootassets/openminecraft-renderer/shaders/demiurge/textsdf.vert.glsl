@@ -33,9 +33,6 @@ void main() {
     vec2 screenPos = inTextPos.xy + inPosition.xy * inTextPos.zw;
 
     gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), inTextDepth, 1.0);
-#ifdef VULKAN
-    gl_Position.y = -gl_Position.y;
-#endif
     outColor = inTextColor;
     vec4 bb = getBBox();
     outTextUv = bb.xz + vec2(inPosition.x, 1 - inPosition.y) * (bb.yw - bb.xz);

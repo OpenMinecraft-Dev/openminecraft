@@ -32,9 +32,6 @@ void main() {
     vec3 localPos = vec3(screenPos - rectCenter, 0.0);
 
     gl_Position = vec4(geom_toNdc(rectCenter + rotation_quat(inRectRotation, localPos).xy, ubo.width, ubo.height), inRectDepth, 1.0);
-#ifdef VULKAN
-    gl_Position.y = -gl_Position.y;
-#endif
     outColor = inRectColor;
     outPosition = screenPos;
     outRadius = inRectRadius;
