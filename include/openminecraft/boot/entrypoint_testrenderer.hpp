@@ -4,6 +4,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
+#include "openminecraft/renderer/common/event/om_eventbus.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
@@ -46,7 +47,7 @@ struct VertexStruct
 class OMTestRenderer : public OMRendererHandler
 {
   public:
-    OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMRendererTexture *()> t);
+    OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMRendererTexture *()> t, event::OMEventBusSDL &bus);
     ~OMTestRenderer() override;
 
     // INFO: count frames per second, submit and create tasks, etc.
@@ -74,7 +75,6 @@ class OMTestRenderer : public OMRendererHandler
     // INFO: event handling, runs on a different thread
     void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp);
     void mouseOffset(float dx, float dy);
-    void eventLoop(void *win, bool *);
     std::shared_ptr<basics::OMCamera> camera;
     basics::OMVertexFormat format;
 

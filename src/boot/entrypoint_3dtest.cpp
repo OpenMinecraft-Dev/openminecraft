@@ -1,4 +1,7 @@
+#include "SDL3/SDL_events.h"
+#include "SDL3/SDL_keycode.h"
 #include "SDL3/SDL_messagebox.h"
+#include "SDL3/SDL_mouse.h"
 #include "openminecraft/boot/entrypoint_testrenderer.hpp"
 #include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/log/om_log_common.hpp"
@@ -7,6 +10,7 @@
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_sector.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
+#include "openminecraft/renderer/common/event/om_eventbus.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
@@ -75,6 +79,13 @@ class OMNodeRendererHandler : public OMRendererHandler
                                                {"color", (int)0xffffffff},
                                                {"flexGrow", 1.0f},
                                                {"text", "OpenMinecraft Debug Screen"},
+                                               {"textheight", 24},
+                                           }))
+                               ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                           ->style({
+                                               {"color", (int)0xffffffff},
+                                               {"flexGrow", 1.0f},
+                                               {"text", renderer->driver()},
                                                {"textheight", 24},
                                            }))
                                ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
@@ -169,14 +180,15 @@ class OMNodeRendererHandler : public OMRendererHandler
         std::sort(vec.begin(), vec.end(), [](const auto &a, const auto &b) -> auto { return a.second > b.second; });
         for (auto &p : vec)
         {
-            sectorNodes[i]->style("beginAngle", curang)->style("color", DebugColors[i % 16]);
+            auto c = DebugColors[(i + 3) % 16];
+            sectorNodes[i]->style("beginAngle", curang)->style("color", c);
             auto fct = (double)p.second / (double)total;
             curang += glm::radians(360.0f) * fct;
             sectorNodes[i]->style("endAngle", curang);
             textNodes[i]
                 ->style("text", fmt::format("{}: {:.2f} us / {:.2f} %", p.first, static_cast<float>(p.second) / 1000,
                                             fct * 100))
-                ->style("color", DebugColors[i % 16]);
+                ->style("color", c);
             ++i;
         }
     }
@@ -232,28 +244,97 @@ void rendererTest(renderer::OMBackend backend)
         // INFO: requires at least OpenGL 4.3 Core Profile or Vulkan 1.2
         OMWindow win({util::Version(4, 3, 0, 0), util::Version(1, 2, 0, 0)}, conf,
                      "/bootassets/openminecraft-renderer/shaders");
+
+        event::OMEventBusSDL bus;
+
         auto hnd2 = std::make_shared<OMNodeRendererHandler>(win());
         auto hnd = std::make_shared<test::OMTestRenderer>(
-            win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTexture; });
+            win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTexture; }, bus);
         win()->registerHandler(hnd2);
         win()->registerHandler(hnd);
         win()->baseInit();
 
-        logger->info("driver: {}", win()->driver());
+        bool isRunning = true;
+        std::array<bool, 6> keystates = {false, false, false, false, false, false};
+        bus.append(SDL_EVENT_WINDOW_RESIZED, [&](SDL_Event &) -> void { win()->requestResize(); });
+        bus.append(SDL_EVENT_QUIT, [&](SDL_Event &) -> void { isRunning = false; });
+        bus.append(SDL_EVENT_KEY_DOWN, [&](SDL_Event &e) -> void {
+            if (e.key.repeat)
+            {
+                return;
+            }
 
-        // INFO: states[0] represents application status, states[1] represents if the window resized
-        std::array<bool, 2> states = {false, false};
+            switch (e.key.key)
+            {
+            case SDLK_ESCAPE:
+                SDL_SetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win), false);
+                break;
+            case SDLK_W:
+                keystates[0] = true;
+                break;
+            case SDLK_A:
+                keystates[1] = true;
+                break;
+            case SDLK_S:
+                keystates[2] = true;
+                break;
+            case SDLK_D:
+                keystates[3] = true;
+                break;
+            case SDLK_LSHIFT:
+                keystates[4] = true;
+                break;
+            case SDLK_SPACE:
+                keystates[5] = true;
+                break;
+            }
+        });
+        bus.append(SDL_EVENT_KEY_UP, [&](SDL_Event &e) -> void {
+            switch (e.key.key)
+            {
+            case SDLK_W:
+                keystates[0] = false;
+                break;
+            case SDLK_A:
+                keystates[1] = false;
+                break;
+            case SDLK_S:
+                keystates[2] = false;
+                break;
+            case SDLK_D:
+                keystates[3] = false;
+                break;
+            case SDLK_LSHIFT:
+                keystates[4] = false;
+                break;
+            case SDLK_SPACE:
+                keystates[5] = false;
+                break;
+            }
+        });
+        bus.append(SDL_EVENT_MOUSE_BUTTON_DOWN, [&](SDL_Event &e) -> void {
+            SDL_SetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win), true);
+        });
+        bus.append(SDL_EVENT_MOUSE_MOTION, [&](SDL_Event &e) -> void {
+            if (SDL_GetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win)))
+            {
+                int ww, hh;
+                SDL_GetWindowSizeInPixels(reinterpret_cast<SDL_Window *>(*win), &ww, &hh);
+                hnd->mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
+            }
+        });
+
         util::OMTicker ticker;
-        while (!states[0])
+        while (isRunning)
         {
             ticker.begin();
 
-            hnd->eventLoop(*win, states.data());
-            if (states[1])
+            SDL_Event e;
+            while (SDL_PollEvent(&e))
             {
-                win()->requestResize();
-                states[1] = false;
+                bus.handle(static_cast<SDL_EventType>(e.type), e);
             }
+            hnd->keyInput(keystates[0], keystates[1], keystates[2], keystates[3], keystates[4], keystates[5]);
 
             win()->render(ticker);
 

@@ -4,6 +4,7 @@
 #include "glm/ext/matrix_float4x4.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
+#include "openminecraft/renderer/common/event/om_eventbus.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
@@ -24,7 +25,8 @@ using namespace openminecraft::renderer::common;
 
 namespace openminecraft::boot::test
 {
-OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMRendererTexture *()> overlay)
+OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMRendererTexture *()> overlay,
+                               event::OMEventBusSDL &bus)
     : renderer(renderer), logger("OMTestRenderer", this), OMRendererHandler(renderer)
 {
     this->overlay = overlay;
@@ -268,93 +270,4 @@ OMTestRenderer::~OMTestRenderer()
     delete tempDepth;
     delete renderTarget;
 }
-static bool wk = false, ak = false, sk = false, dk = false, spk = false, lshk = false;
-
-void OMTestRenderer::eventLoop(void *wnd, bool *ar)
-{
-    SDL_Event e;
-    while (SDL_PollEvent(&e))
-    {
-        switch (e.type)
-        {
-        case SDL_EVENT_KEY_DOWN:
-            if (e.key.key == SDLK_W)
-            {
-                wk = true;
-            }
-            else if (e.key.key == SDLK_A)
-            {
-                ak = true;
-            }
-            else if (e.key.key == SDLK_S)
-            {
-                sk = true;
-            }
-            else if (e.key.key == SDLK_D)
-            {
-                dk = true;
-            }
-            else if (e.key.key == SDLK_LSHIFT)
-            {
-                lshk = true;
-            }
-            else if (e.key.key == SDLK_SPACE)
-            {
-                spk = true;
-            }
-            else if (e.key.key == SDLK_ESCAPE)
-            {
-                SDL_SetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(wnd), false);
-            }
-            break;
-        case SDL_EVENT_KEY_UP:
-            if (e.key.key == SDLK_W)
-            {
-                wk = false;
-            }
-            else if (e.key.key == SDLK_A)
-            {
-                ak = false;
-            }
-            else if (e.key.key == SDLK_S)
-            {
-                sk = false;
-            }
-            else if (e.key.key == SDLK_D)
-            {
-                dk = false;
-            }
-            else if (e.key.key == SDLK_LSHIFT)
-            {
-                lshk = false;
-            }
-            else if (e.key.key == SDLK_SPACE)
-            {
-                spk = false;
-            }
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_DOWN:
-            SDL_SetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(wnd), true);
-            break;
-        case SDL_EVENT_MOUSE_MOTION: {
-            if (SDL_GetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(wnd)))
-            {
-                int ww, hh;
-                SDL_GetWindowSizeInPixels(reinterpret_cast<SDL_Window *>(wnd), &ww, &hh);
-                mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
-            }
-            break;
-        }
-        case SDL_EVENT_QUIT:
-            ar[0] = true;
-            return;
-        case SDL_EVENT_WINDOW_RESIZED:
-            ar[1] = true;
-            break;
-        }
-
-        keyInput(wk, ak, sk, dk, lshk, spk);
-    }
-}
-
 } // namespace openminecraft::boot::test

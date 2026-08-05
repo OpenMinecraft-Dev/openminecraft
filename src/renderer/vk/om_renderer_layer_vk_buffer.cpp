@@ -81,6 +81,11 @@ void OMRendererBufferVk::initialize()
         this->bufferMemory = renderer->logicalDevice.allocateMemory(
             MemoryAllocateInfo(req.size, findMemoryType(req.memoryTypeBits, defFlags(), memprop)), renderer->allocator);
         renderer->logicalDevice.bindBufferMemory(this->buffer, this->bufferMemory, 0);
+
+        if (alwaysMapped)
+        {
+            data = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
+        }
     }
     catch (SystemError &e)
     {
@@ -113,15 +118,17 @@ void OMRendererBufferVk::updateData(void *src)
     try
     {
         auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
-        auto vtx = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
-        std::memcpy(vtx, src, this->length);
 
         if (alwaysMapped)
         {
-            return;
+            std::memcpy(data, src, this->length);
         }
-
-        renderer->logicalDevice.unmapMemory(this->bufferMemory);
+        else
+        {
+            auto vtx = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
+            std::memcpy(vtx, src, this->length);
+            renderer->logicalDevice.unmapMemory(this->bufferMemory);
+        }
     }
     catch (SystemError &e)
     {
@@ -134,15 +141,16 @@ void OMRendererBufferVk::updateDataPart(void *src, uint64_t offset, uint64_t len
     try
     {
         auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
-        auto vtx = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
-        std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(vtx) + offset), src, length);
-
         if (alwaysMapped)
         {
-            return;
+            std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(data) + offset), src, length);
         }
-
-        renderer->logicalDevice.unmapMemory(this->bufferMemory);
+        else
+        {
+            auto vtx = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
+            std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(vtx) + offset), src, length);
+            renderer->logicalDevice.unmapMemory(this->bufferMemory);
+        }
     }
     catch (SystemError &e)
     {

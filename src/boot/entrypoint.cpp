@@ -72,9 +72,6 @@ auto boot(std::vector<std::string> args) -> int
     logger->info("System: {}, version {}", os::fetchSystemName(), os::fetchSystemVersion());
     logger->info("User: {} / {}", os::fetchUsername(), os::fetchLoginUser());
     logger->info("Total memory: {} bytes", os::fetchMemoryTotal());
-    args.resize(3);
-    args[1] = "3dtest";
-    args[2] = "vk";
 
     switch (hash_compile_time(args[1].c_str()))
     {
