@@ -2,6 +2,8 @@
 
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"
+#include "glm/ext/vector_float3.hpp"
+#include "glm/geometric.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/event/om_eventbus.hpp"
@@ -44,6 +46,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
 
     format.appendPart("position", basics::Vec3f)
         ->appendPart("textureUV", basics::Vec2f)
+        ->appendPart("normal", basics::Vec3f)
         ->nextGroup()
         ->decideStruct()
         ->debugState();
@@ -91,6 +94,10 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
                         v.uv.x = 0.0f;
                         v.uv.y = 0.0f;
                     }
+
+                    v.normal.x = attrib.normals[3 * index.normal_index + 0];
+                    v.normal.y = attrib.normals[3 * index.normal_index + 1];
+                    v.normal.z = attrib.normals[3 * index.normal_index + 2];
 
                     auto it = uniqueVertices.find(v);
                     if (it != uniqueVertices.end())
@@ -214,6 +221,8 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     blurp2Pipeline->bindInput(0, blurArgs);
 }
 
+static float ang = 0.0f;
+
 void OMTestRenderer::beforeFrame()
 {
     if (!timing)
@@ -225,8 +234,12 @@ void OMTestRenderer::beforeFrame()
     ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     ubo.view = camera->fetchViewMat();
     ubo.proj = camera->fetchProjMat();
+    ubo.lightDirection = glm::normalize(glm::vec3(-std::cos(ang), -std::sin(ang), 0.0));
+    ubo.lightColor = glm::vec3(1.0);
+    ubo.ambientColor = glm::vec3(0.05);
 
     uniformBuffer->updateData(&ubo);
+    ang += 0.001f;
 }
 
 void OMTestRenderer::mouseOffset(float dx, float dy)

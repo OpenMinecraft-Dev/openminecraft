@@ -1,5 +1,6 @@
 #ifndef OM_RENDERER_LAYER_VK_TESTRENDERER
 #define OM_RENDERER_LAYER_VK_TESTRENDERER
+#include "glm/ext/vector_float3.hpp"
 #include "glm/fwd.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
@@ -28,20 +29,29 @@ namespace openminecraft::boot::test
 {
 // INFO: The uniform buffer data structure used for the renderer
 // INFO: model, view, proj for object rendering
+#pragma pack(1)
 struct UniformStructure
 {
     glm::mat4 model;
     glm::mat4 view;
     glm::mat4 proj;
+    glm::vec3 lightDirection;
+    float _pad1;
+    glm::vec3 lightColor;
+    float _pad2;
+    glm::vec3 ambientColor;
+    float _pad3;
 };
+#pragma pack()
 // INFO: simple vertex structure
 struct VertexStruct
 {
     glm::vec3 pos;
     glm::vec2 uv;
+    glm::vec3 normal;
     auto operator==(const VertexStruct &other) const -> bool
     {
-        return pos == other.pos && uv == other.uv;
+        return pos == other.pos && uv == other.uv & normal == other.normal;
     }
 };
 
@@ -54,7 +64,10 @@ struct VertexHash
         size_t h3 = std::hash<float>{}(v.pos.z);
         size_t h4 = std::hash<float>{}(v.uv.x);
         size_t h5 = std::hash<float>{}(v.uv.y);
-        return (((h1 * 31 + h2) * 31 + h3) * 31 + h4) * 31 + h5;
+        size_t h6 = std::hash<float>{}(v.normal.x);
+        size_t h7 = std::hash<float>{}(v.normal.y);
+        size_t h8 = std::hash<float>{}(v.normal.z);
+        return ((((((h1 * 31 + h2) * 31 + h3) * 31 + h4) * 31 + h5) * 31 + h6) * 31 + h7) * 31 + h8;
     }
 };
 
