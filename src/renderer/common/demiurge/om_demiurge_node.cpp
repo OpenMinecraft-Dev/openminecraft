@@ -101,7 +101,7 @@ auto OMDemiurgeNode::syncLayout() -> void
                     YGNodeStyleSetPosition(yogaNode, edge, s.value);
                     break;
                 case OMDemiurgeSize::Percent:
-                    YGNodeStyleSetPositionPercent(yogaNode, edge, s.value / 100.0f);
+                    YGNodeStyleSetPositionPercent(yogaNode, edge, s.value * 100.0f);
                     break;
                 case OMDemiurgeSize::Fit:
                     YGNodeStyleSetPositionAuto(yogaNode, edge);

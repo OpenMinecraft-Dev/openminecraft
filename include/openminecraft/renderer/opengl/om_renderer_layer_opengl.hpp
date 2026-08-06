@@ -81,6 +81,9 @@ struct OMRendererOpenGLFuncs
     PFNGLTEXSUBIMAGE2DPROC glTexSubImage2D;
     PFNGLCLEARDEPTHPROC glClearDepth;
     PFNGLCLEARBUFFERFVPROC glClearBufferfv;
+    PFNGLGETUNIFORMBLOCKINDEXPROC glGetUniformBlockIndex;
+    PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
+    PFNGLUNIFORM1IPROC glUniform1i;
 };
 class OMRendererOpenGL : public OMRenderer
 {

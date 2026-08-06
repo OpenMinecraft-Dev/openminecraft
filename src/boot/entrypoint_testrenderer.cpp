@@ -1,6 +1,7 @@
 #include "openminecraft/boot/entrypoint_testrenderer.hpp"
 
 #include "glm/ext/matrix_float4x4.hpp"
+#include "glm/ext/matrix_transform.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/event/om_eventbus.hpp"
@@ -18,6 +19,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <vector>
+#include "tiny_obj_loader.h"
 
 using namespace openminecraft::renderer::common;
 
@@ -35,10 +37,10 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     objectVtx = renderer->shaderManager.preprocess("core/objectbase.vert.glsl", Vertex, GLSLSource);
     outputFrg = renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource);
     outputVtx = renderer->shaderManager.preprocess("core/bilt.vert.glsl", Vertex, GLSLSource);
-    outputFrg2 = renderer->shaderManager.preprocess("core/effects/boxblurp2.frag.glsl", Fragment, GLSLSource);
-    outputVtx2 = renderer->shaderManager.preprocess("core/effects/boxblurp2.vert.glsl", Vertex, GLSLSource);
-    outputFrg3 = renderer->shaderManager.preprocess("core/effects/boxblurp1.frag.glsl", Fragment, GLSLSource);
-    outputVtx3 = renderer->shaderManager.preprocess("core/effects/boxblurp1.vert.glsl", Vertex, GLSLSource);
+    outputBlurp2Frg = renderer->shaderManager.preprocess("core/effects/boxblurp2.frag.glsl", Fragment, GLSLSource);
+    outputBlurp2Vtx = renderer->shaderManager.preprocess("core/effects/boxblurp2.vert.glsl", Vertex, GLSLSource);
+    outputBlurp1Frg = renderer->shaderManager.preprocess("core/effects/boxblurp1.frag.glsl", Fragment, GLSLSource);
+    outputBlurp1Vtx = renderer->shaderManager.preprocess("core/effects/boxblurp1.vert.glsl", Vertex, GLSLSource);
 
     format.appendPart("position", basics::Vec3f)
         ->appendPart("textureUV", basics::Vec2f)
@@ -47,13 +49,64 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
         ->debugState();
 
     {
-        std::vector<VertexStruct> vertices = {
+        /*std::vector<VertexStruct> vertices = {
             {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
             {{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
             {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
             {{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
         };
-        std::vector<uint32_t> indices = {0, 1, 2, 2, 3, 0};
+        std::vector<uint32_t> indices = {0, 1, 2, 2, 3, 0};*/
+        std::vector<VertexStruct> vertices = {};
+        std::vector<uint32_t> indices = {};
+
+        {
+            tinyobj::attrib_t attrib;
+            std::vector<tinyobj::shape_t> shapes;
+            std::vector<tinyobj::material_t> materials;
+            std::string warn, err;
+
+            bool success =
+                tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
+                                 vfs::fsfetch("/bootassets/openminecraft-renderer/models/viking_room.obj").get());
+
+            std::unordered_map<VertexStruct, uint32_t, VertexHash> uniqueVertices;
+
+            for (const auto &shape : shapes)
+            {
+                for (const auto &index : shape.mesh.indices)
+                {
+                    VertexStruct v;
+
+                    v.pos.x = attrib.vertices[3 * index.vertex_index + 0];
+                    v.pos.y = attrib.vertices[3 * index.vertex_index + 1];
+                    v.pos.z = attrib.vertices[3 * index.vertex_index + 2];
+
+                    if (index.texcoord_index >= 0)
+                    {
+                        v.uv.x = attrib.texcoords[2 * index.texcoord_index + 0];
+                        v.uv.y = attrib.texcoords[2 * index.texcoord_index + 1];
+                    }
+                    else
+                    {
+                        v.uv.x = 0.0f;
+                        v.uv.y = 0.0f;
+                    }
+
+                    auto it = uniqueVertices.find(v);
+                    if (it != uniqueVertices.end())
+                    {
+                        indices.push_back(it->second);
+                    }
+                    else
+                    {
+                        auto newIndex = static_cast<uint32_t>(vertices.size());
+                        vertices.push_back(v);
+                        uniqueVertices[v] = newIndex;
+                        indices.push_back(newIndex);
+                    }
+                }
+            }
+        }
 
         auto siz = vertices.size() * sizeof(VertexStruct);
 
@@ -85,7 +138,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
 
     std::array<float, 2> b = {12.0f, 32.0f};
     tempUniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));
-    UniformStructure stru = {glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), b[0], b[1]};
+    UniformStructure stru = {glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f)};
     tempUniformBuffer->updateData(&stru);
     blurArgs = renderer->allocateBuffer(Uniform, sizeof(float) * 2);
     blurArgs->updateData(b.data());
@@ -103,7 +156,6 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     // INFO: core pipeline creation
 
     mainPipeline = renderer->createPipeline()
-                       ->input(UniformBuffer)
                        ->input(ImageSampler)
                        ->output(renderer->getDefaultRenderTarget())
                        ->shader(outputFrg)
@@ -113,23 +165,53 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
                        ->blend(true)
                        ->depth(false, false)
                        ->buildN();
-    mainPipeline->bindInput(0, tempUniformBuffer);
-    mainPipeline2 = renderer->createPipeline()
-                        ->input(UniformBuffer)
-                        ->input(ImageSampler)
-                        ->input(ImageSampler)
-                        ->output(renderer->getDefaultRenderTarget())
-                        ->shader(outputFrg2)
-                        ->shader(outputVtx2)
-                        ->format(format)
-                        ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
-                        ->blend(true)
-                        ->depth(false, false)
-                        ->buildN();
-    mainPipeline2->bindInput(0, tempUniformBuffer);
 
     tempTarget = new wrap::OMRendererTempTarget(renderer);
     blurTemp = new wrap::OMRendererTempTarget(renderer);
+
+    auto ext = renderer->getExtent();
+    tempTarget->construct(ext);
+    blurTemp->construct(ext);
+
+    pipeline = renderer->createPipeline()
+                   ->input(UniformBuffer)
+                   ->input(ImageSampler)
+                   ->output(tempTarget->target)
+                   ->shader(objectFrg)
+                   ->shader(objectVtx)
+                   ->format(format)
+                   ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+                   ->blend(true)
+                   ->depth(true, true)
+                   ->buildN();
+    pipeline->bindInput(0, uniformBuffer);
+    pipeline->bindInput(1, textureImage);
+
+    blurp1Pipeline = renderer->createPipeline()
+                         ->input(UniformBuffer)
+                         ->input(ImageSampler)
+                         ->output(blurTemp->target)
+                         ->shader(outputBlurp1Frg)
+                         ->shader(outputBlurp1Vtx)
+                         ->format(format)
+                         ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+                         ->blend(true)
+                         ->depth(false, false)
+                         ->buildN();
+    blurp1Pipeline->bindInput(0, blurArgs);
+    blurp2Pipeline = renderer->createPipeline()
+                         ->input(UniformBuffer)
+                         ->input(ImageSampler)
+                         ->input(ImageSampler)
+                         ->output(renderer->getDefaultRenderTarget())
+                         ->shader(outputBlurp2Frg)
+                         ->shader(outputBlurp2Vtx)
+                         ->format(format)
+                         ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+                         ->blend(true)
+                         ->depth(false, false)
+                         ->buildN();
+    blurp2Pipeline->bindInput(0, blurArgs);
 }
 
 void OMTestRenderer::beforeFrame()
@@ -140,7 +222,7 @@ void OMTestRenderer::beforeFrame()
         timing = true;
     }
     UniformStructure ubo;
-    ubo.model = glm::mat4(1.0f);
+    ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     ubo.view = camera->fetchViewMat();
     ubo.proj = camera->fetchProjMat();
 
@@ -196,43 +278,10 @@ void OMTestRenderer::submitTasks()
     tempTarget->construct(ext);
     blurTemp->construct(ext);
 
-    if (!pipeline)
-    {
-        pipeline = renderer->createPipeline()
-                       ->input(UniformBuffer)
-                       ->input(ImageSampler)
-                       ->output(tempTarget->target)
-                       ->shader(objectFrg)
-                       ->shader(objectVtx)
-                       ->format(format)
-                       ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
-                       ->blend(true)
-                       ->depth(true, true)
-                       ->buildN();
-        pipeline->bindInput(0, uniformBuffer);
-        pipeline->bindInput(1, textureImage);
-    }
-
-    if (!mainPipeline3)
-    {
-        mainPipeline3 = renderer->createPipeline()
-                            ->input(UniformBuffer)
-                            ->input(ImageSampler)
-                            ->output(blurTemp->target)
-                            ->shader(outputFrg3)
-                            ->shader(outputVtx3)
-                            ->format(format)
-                            ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
-                            ->blend(true)
-                            ->depth(false, false)
-                            ->buildN();
-        mainPipeline3->bindInput(0, blurArgs);
-    }
-
-    mainPipeline->bindInput(1, tempTarget->colorTexture);
-    mainPipeline2->bindInput(1, overlay());
-    mainPipeline2->bindInput(2, blurTemp->colorTexture);
-    mainPipeline3->bindInput(1, tempTarget->colorTexture);
+    mainPipeline->bindInput(0, tempTarget->colorTexture);
+    blurp2Pipeline->bindInput(1, overlay());
+    blurp2Pipeline->bindInput(2, blurTemp->colorTexture);
+    blurp1Pipeline->bindInput(1, tempTarget->colorTexture);
 
     auto pretask = renderer->createTask()
                        ->target(tempTarget->target)
@@ -244,7 +293,7 @@ void OMTestRenderer::submitTasks()
     auto taskimm = renderer->createTask()
                        ->dependOn(pretask)
                        ->target(blurTemp->target)
-                       ->pipeline(mainPipeline3)
+                       ->pipeline(blurp1Pipeline)
                        ->vertexBuffer({mainVtxBuffer})
                        ->indexBuffer(mainIdxBuffer)
                        ->drawN(6)
@@ -258,7 +307,7 @@ void OMTestRenderer::submitTasks()
                     ->vertexBuffer({mainVtxBuffer})
                     ->indexBuffer(mainIdxBuffer)
                     ->drawN(6)
-                    ->pipeline(mainPipeline2)
+                    ->pipeline(blurp2Pipeline)
                     ->vertexBuffer({mainVtxBuffer})
                     ->indexBuffer(mainIdxBuffer)
                     ->drawN(6)
@@ -270,8 +319,8 @@ void OMTestRenderer::submitTasks()
 OMTestRenderer::~OMTestRenderer()
 {
     delete mainPipeline;
-    delete mainPipeline2;
-    delete mainPipeline3;
+    delete blurp2Pipeline;
+    delete blurp1Pipeline;
     delete pipeline;
     delete textureImage;
     delete uniformBuffer;

@@ -138,6 +138,9 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glTexSubImage2D = fetchGlFunc<PFNGLTEXSUBIMAGE2DPROC>("glTexSubImage2D");
     gl.glClearDepth = fetchGlFunc<PFNGLCLEARDEPTHPROC>("glClearDepth");
     gl.glClearBufferfv = fetchGlFunc<PFNGLCLEARBUFFERFVPROC>("glClearBufferfv");
+    gl.glGetUniformBlockIndex = fetchGlFunc<PFNGLGETUNIFORMBLOCKINDEXPROC>("glGetUniformBlockIndex");
+    gl.glGetUniformLocation = fetchGlFunc<PFNGLGETUNIFORMLOCATIONPROC>("glGetUniformLocation");
+    gl.glUniform1i = fetchGlFunc<PFNGLUNIFORM1IPROC>("glUniform1i");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()

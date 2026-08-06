@@ -68,8 +68,8 @@ class OMNodeRendererHandler : public OMRendererHandler
                        {"flexWrap", Wrap},
                        {"flexDirection", Column},
                        {"fill", node::OMDemiurgeImageFillType::Cover},
-                       {"radius", glm::vec4(25.0f)},
-                       {"width", 35_percent},
+                       {"radius", glm::vec4(0.0f, 0.0f, 0.0f, 25.0f)},
+                       {"width", 40_percent},
                        {"height", 50_percent},
                    })
                    ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
@@ -101,7 +101,15 @@ class OMNodeRendererHandler : public OMRendererHandler
                                                {"text", ""},
                                                {"textheight", 18},
                                            })
-                                           ->store(posTextNode)))
+                                           ->store(posTextNode))
+                               ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                           ->style({
+                                               {"color", (int)0xffffffff},
+                                               {"flexGrow", 1.0f},
+                                               {"text", ""},
+                                               {"textheight", 18},
+                                           })
+                                           ->store(povTextNode)))
                    ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                                ->style({
                                    {"flexShrink", 0.0f},
@@ -225,11 +233,11 @@ class OMNodeRendererHandler : public OMRendererHandler
         }
 
         auto m = camera->getPos();
-        posTextNode->style("text", fmt::format("{:.2f}, {:.2f}, {:.2f}, Yaw {:.2f}, Pitch {:.2f}", m.x, m.y, m.z,
-                                               camera->getYaw(), camera->getPitch()));
+        posTextNode->style("text", fmt::format("{:.2f} {:.2f} {:.2f}", m.x, m.y, m.z));
+        povTextNode->style("text", fmt::format("Yaw {:.2f} Pitch {:.2f}", camera->getYaw(), camera->getPitch()));
     }
 
-    std::shared_ptr<OMDemiurgeNode> node, graphNode, textNode, fpsTextNode, posTextNode;
+    std::shared_ptr<OMDemiurgeNode> node, graphNode, textNode, fpsTextNode, posTextNode, povTextNode;
     OMRendererTexture *texture;
     std::shared_ptr<OMDemiurgeRendererHandler> internal;
     std::shared_ptr<fontproc::OMFontSet> fontset;

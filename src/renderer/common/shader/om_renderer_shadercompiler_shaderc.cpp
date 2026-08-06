@@ -56,6 +56,8 @@ auto OMRendererShaderCompilerBackendShaderc::compile(std::shared_ptr<OMShader> s
 
     opt.SetSourceLanguage(shader->type == GLSLSource ? shaderc_source_language_glsl : shaderc_source_language_hlsl);
     opt.SetOptimizationLevel(shaderc_optimization_level_performance);
+    opt.SetAutoBindUniforms(true);
+    opt.SetAutoSampledTextures(true);
 
     auto result = compiler->CompileGlslToSpv(reinterpret_cast<const char *>(shader->data.data()), shader->data.size(),
                                              k, shader->filename.c_str(), shader->entrypoint.c_str(), opt);

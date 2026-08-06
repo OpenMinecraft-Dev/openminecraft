@@ -28,21 +28,34 @@ namespace openminecraft::boot::test
 {
 // INFO: The uniform buffer data structure used for the renderer
 // INFO: model, view, proj for object rendering
-// INFO: kernelSize, sigma for post-processing
-// TODO: separate the two parts
 struct UniformStructure
 {
     glm::mat4 model;
     glm::mat4 view;
     glm::mat4 proj;
-    float kernelSize;
-    float sigma;
 };
 // INFO: simple vertex structure
 struct VertexStruct
 {
     glm::vec3 pos;
     glm::vec2 uv;
+    auto operator==(const VertexStruct &other) const -> bool
+    {
+        return pos == other.pos && uv == other.uv;
+    }
+};
+
+struct VertexHash
+{
+    auto operator()(const VertexStruct &v) const -> std::size_t
+    {
+        size_t h1 = std::hash<float>{}(v.pos.x);
+        size_t h2 = std::hash<float>{}(v.pos.y);
+        size_t h3 = std::hash<float>{}(v.pos.z);
+        size_t h4 = std::hash<float>{}(v.uv.x);
+        size_t h5 = std::hash<float>{}(v.uv.y);
+        return (((h1 * 31 + h2) * 31 + h3) * 31 + h4) * 31 + h5;
+    }
 };
 
 class OMTestRenderer : public OMRendererHandler
@@ -66,8 +79,8 @@ class OMTestRenderer : public OMRendererHandler
     OMRendererBuffer *mainVtxBuffer;
     OMRendererBuffer *mainIdxBuffer;
     OMRendererPipeline *mainPipeline;
-    OMRendererPipeline *mainPipeline2;
-    OMRendererPipeline *mainPipeline3 = nullptr;
+    OMRendererPipeline *blurp2Pipeline;
+    OMRendererPipeline *blurp1Pipeline;
     wrap::OMRendererTempTarget *tempTarget;
     wrap::OMRendererTempTarget *blurTemp;
     OMRendererBuffer *blurArgs;
@@ -91,8 +104,8 @@ class OMTestRenderer : public OMRendererHandler
 
     std::shared_ptr<OMShader> objectVtx;
     std::shared_ptr<OMShader> objectFrg;
-    std::shared_ptr<OMShader> outputVtx, outputVtx2, outputVtx3;
-    std::shared_ptr<OMShader> outputFrg, outputFrg2, outputFrg3;
+    std::shared_ptr<OMShader> outputVtx, outputBlurp2Vtx, outputBlurp1Vtx;
+    std::shared_ptr<OMShader> outputFrg, outputBlurp2Frg, outputBlurp1Frg;
 
     std::chrono::high_resolution_clock::time_point tp;
     bool timing = false;

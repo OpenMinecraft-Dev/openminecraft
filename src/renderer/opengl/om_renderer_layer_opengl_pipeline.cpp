@@ -1,5 +1,6 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
 #include "GL/glcorearb.h"
+#include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include <fmt/format.h>
 #include <stdexcept>
@@ -17,6 +18,12 @@ OMRendererPipelineOpenGL::~OMRendererPipelineOpenGL()
     {
         gl->glDeleteProgram(program);
     }
+}
+
+void OMRendererPipelineOpenGL::bindInputName(int idx, std::string name)
+{
+    inputNames.resize(idx + 1);
+    inputNames[idx] = name;
 }
 
 void OMRendererPipelineOpenGL::appendInput(common::OMRendererPipelineInputType t)

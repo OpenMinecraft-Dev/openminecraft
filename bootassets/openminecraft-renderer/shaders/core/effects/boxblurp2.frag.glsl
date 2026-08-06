@@ -4,16 +4,12 @@
 layout(location = 0) in vec2 outTexCoord;
 layout(location = 0) out vec4 outColor;
 
-layout(binding = 1) uniform sampler2D inTextureFg;
-layout(binding = 2) uniform sampler2D inTexture;
-
 layout(binding = 0) uniform UniformBufferObject {
-    mat4 model;
-    mat4 view;
-    mat4 proj;
     float kernelSize;
     float sigma;
 } ubo;
+layout(binding = 1) uniform sampler2D inTextureFg;
+layout(binding = 2) uniform sampler2D inTexture;
 
 #define MAX_KERNEL_RADIUS 16384
 #define EPS 0.0001
