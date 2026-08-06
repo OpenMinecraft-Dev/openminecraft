@@ -12,6 +12,7 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_boxblur.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include <chrono>
 #include <functional>
@@ -92,11 +93,9 @@ class OMTestRenderer : public OMRendererHandler
     OMRendererBuffer *mainVtxBuffer;
     OMRendererBuffer *mainIdxBuffer;
     OMRendererPipeline *mainPipeline;
-    OMRendererPipeline *blurp2Pipeline;
-    OMRendererPipeline *blurp1Pipeline;
     wrap::OMRendererTempTarget *tempTarget;
-    wrap::OMRendererTempTarget *blurTemp;
-    OMRendererBuffer *blurArgs;
+
+    std::shared_ptr<wrap::OMRendererBoxBlurHandler> blurHandler;
 
     std::function<OMRendererTexture *()> overlay;
 
@@ -117,8 +116,8 @@ class OMTestRenderer : public OMRendererHandler
 
     std::shared_ptr<OMShader> objectVtx;
     std::shared_ptr<OMShader> objectFrg;
-    std::shared_ptr<OMShader> outputVtx, outputBlurp2Vtx, outputBlurp1Vtx;
-    std::shared_ptr<OMShader> outputFrg, outputBlurp2Frg, outputBlurp1Frg;
+    std::shared_ptr<OMShader> outputVtx;
+    std::shared_ptr<OMShader> outputFrg;
 
     std::chrono::high_resolution_clock::time_point tp;
     bool timing = false;
