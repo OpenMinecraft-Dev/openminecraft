@@ -25,7 +25,6 @@
 #include <array>
 #include <chrono>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <map>
 
@@ -103,13 +102,11 @@ class OMNodeRendererHandler : public OMRendererHandler
                                                {"textheight", 18},
                                            })
                                            ->store(posTextNode)))
-                   ->mount(std::make_shared<node::OMDemiurgeRectNode>()
+                   ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                                ->style({
                                    {"flexShrink", 0.0f},
                                    {"flexGrow", 1.0f},
                                    {"width", 100_percent},
-                                   {"color", 0x22222200},
-                                   {"radius", glm::vec4(25.0f)},
                                })
                                ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                                            ->style({
