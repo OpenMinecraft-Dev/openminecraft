@@ -351,9 +351,11 @@ void OMRendererVk::baseInit()
     rebuildDefaults();
 }
 
-auto OMRendererVk::createTask() -> common::OMRendererTask *
+auto OMRendererVk::createTask(std::string name) -> common::OMRendererTask *
 {
-    return new OMRendererTaskVk(this);
+    auto task = new OMRendererTaskVk(this);
+    registerTask(name, task);
+    return task;
 }
 
 auto OMRendererVk::createPipeline() -> common::OMRendererPipeline *

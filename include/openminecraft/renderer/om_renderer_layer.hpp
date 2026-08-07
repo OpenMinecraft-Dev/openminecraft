@@ -43,11 +43,15 @@ class OMRenderer
     virtual auto createRenderTarget() -> common::OMRendererRenderTarget * = 0;
     virtual auto getDefaultRenderTarget() -> common::OMRendererRenderTarget * = 0;
     virtual auto createPipeline() -> common::OMRendererPipeline * = 0;
-    virtual auto createTask() -> common::OMRendererTask * = 0;
+    virtual auto createTask(std::string name) -> common::OMRendererTask * = 0;
+
+  protected:
     inline void registerTask(std::string id, common::OMRendererTask *task)
     {
         tasks[id] = task;
     }
+
+  public:
     inline auto fetchTask(std::string id) -> common::OMRendererTask *
     {
         return tasks[id];

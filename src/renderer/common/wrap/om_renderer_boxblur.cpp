@@ -7,6 +7,7 @@
 
 namespace openminecraft::renderer::common::wrap
 {
+static int boxblurIndex = 0;
 OMRendererBoxBlurHandler::OMRendererBoxBlurHandler(OMRenderer *renderer) : OMRendererHandler(renderer)
 {
     this->renderer = renderer;
@@ -78,7 +79,7 @@ OMRendererBoxBlurHandler::~OMRendererBoxBlurHandler()
 }
 auto OMRendererBoxBlurHandler::firstLayerTask(OMRendererTask *pre) -> OMRendererTask *
 {
-    return renderer->createTask()
+    return renderer->createTask(fmt::format("boxblur_{}", ++boxblurIndex))
         ->dependOn(pre)
         ->target(blurTemp->target)
         ->pipeline(blurp1Pipeline)
@@ -95,6 +96,11 @@ auto OMRendererBoxBlurHandler::secondLayerTask(OMRendererTask *task) -> OMRender
 void OMRendererBoxBlurHandler::update(OMRendererBoxBlurArg a)
 {
     blurArgs->updateData(&a);
+}
+
+auto OMRendererBoxBlurHandler::execute(OMRendererTask *task) -> OMRendererTask *
+{
+    return secondLayerTask(task->dependOn(firstLayerTask(task)));
 }
 
 void OMRendererBoxBlurHandler::beforeFrame()

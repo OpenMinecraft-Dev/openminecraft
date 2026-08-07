@@ -180,9 +180,11 @@ auto OMRendererOpenGL::createPipeline() -> common::OMRendererPipeline *
 {
     return new OMRendererPipelineOpenGL(this);
 }
-auto OMRendererOpenGL::createTask() -> common::OMRendererTask *
+auto OMRendererOpenGL::createTask(std::string name) -> common::OMRendererTask *
 {
-    return new OMRendererTaskOpenGL(this);
+    auto task = new OMRendererTaskOpenGL(this);
+    registerTask(name, task);
+    return task;
 }
 auto OMRendererOpenGL::getExtent() const -> glm::vec2
 {

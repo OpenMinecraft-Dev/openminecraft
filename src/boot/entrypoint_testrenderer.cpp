@@ -66,10 +66,6 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));
 
-    tempUniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));
-    UniformStructure stru = {glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f)};
-    tempUniformBuffer->updateData(&stru);
-
     auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/viking_room.png");
 
     specs::png::OMPngFile img;
@@ -125,8 +121,7 @@ void OMTestRenderer::beforeFrame()
     }
     UniformStructure ubo;
     ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    ubo.view = camera->fetchViewMat();
-    ubo.proj = camera->fetchProjMat();
+    ubo.viewProj = camera->fetchProjMat() * camera->fetchViewMat();
     ubo.lightDirection = glm::normalize(glm::vec3(-std::cos(ang), -std::sin(ang), 0.0));
     ubo.lightColor = glm::vec3(1.0);
     ubo.ambientColor = glm::vec3(0.05);
@@ -185,28 +180,24 @@ void OMTestRenderer::submitTasks()
     mainPipeline->bindInput(0, tempTarget->colorTexture);
     blurHandler->bind(overlay(), tempTarget->colorTexture);
 
-    auto pretask = renderer->createTask()
-                       ->target(tempTarget->target)
-                       ->pipeline(pipeline)
-                       ->vertexBuffer({objModel->vertexData})
-                       ->indexBuffer(objModel->vertexIndex)
-                       ->drawN(objModel->vertexCount)
-                       ->finishN();
-    auto taskimm = blurHandler->firstLayerTask(pretask);
-    auto task = blurHandler
-                    ->secondLayerTask(renderer->createTask()
-                                          ->dependOn(pretask)
-                                          ->dependOn(taskimm)
-                                          ->dependOn(renderer->fetchTask("demiurgeui_compose"))
-                                          ->target(renderer->getDefaultRenderTarget())
-                                          ->pipeline(mainPipeline)
-                                          ->vertexBuffer({mainVtxBuffer})
-                                          ->indexBuffer(mainIdxBuffer)
-                                          ->drawN(6))
-                    ->finishN();
-    renderer->registerTask("main", task);
-    renderer->registerTask("pretask", pretask);
-    renderer->registerTask("middletask", taskimm);
+    auto scene = renderer->createTask("scene")
+                     ->target(tempTarget->target)
+                     ->pipeline(pipeline)
+                     ->vertexBuffer({objModel->vertexData})
+                     ->indexBuffer(objModel->vertexIndex)
+                     ->drawN(objModel->vertexCount)
+                     ->finishN();
+    blurHandler
+        ->secondLayerTask(renderer->createTask("main")
+                              ->dependOn(scene)
+                              ->dependOn(blurHandler->firstLayerTask(scene))
+                              ->dependOn(renderer->fetchTask("demiurgeui_compose"))
+                              ->target(renderer->getDefaultRenderTarget())
+                              ->pipeline(mainPipeline)
+                              ->vertexBuffer({mainVtxBuffer})
+                              ->indexBuffer(mainIdxBuffer)
+                              ->drawN(6))
+        ->finishN();
 }
 OMTestRenderer::~OMTestRenderer()
 {
@@ -214,9 +205,6 @@ OMTestRenderer::~OMTestRenderer()
     delete pipeline;
     delete textureImage;
     delete uniformBuffer;
-    delete tempUniformBuffer;
-    // delete vertexBuffer;
-    // delete indexBuffer;
     delete objModel;
 
     delete mainIdxBuffer;

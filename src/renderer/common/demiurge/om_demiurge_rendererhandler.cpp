@@ -9,7 +9,6 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <cstdlib>
 #include <memory>
-#include <chrono>
 #include <string>
 #include <unordered_map>
 
@@ -98,8 +97,7 @@ void OMDemiurgeRendererHandler::submitTasks()
     SimpleUniform u{ext.x, ext.y};
     uniformBuffer->updateData(&u);
 
-    this->task = renderer->createTask();
-    renderer->registerTask("demiurgeui_compose", task);
+    this->task = renderer->createTask("demiurgeui_compose");
     recordTask(true);
 }
 
@@ -125,8 +123,6 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
         renderer->taskRecreate("demiurgeui_compose");
     }
 }
-
-static std::chrono::steady_clock::time_point tp = {};
 
 void OMDemiurgeRendererHandler::beforeFrame()
 {

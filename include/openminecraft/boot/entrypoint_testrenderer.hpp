@@ -35,8 +35,7 @@ namespace openminecraft::boot::test
 struct UniformStructure
 {
     glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
+    glm::mat4 viewProj;
     glm::vec3 lightDirection;
     float _pad1;
     glm::vec3 lightColor;
@@ -61,7 +60,6 @@ class OMTestRenderer : public OMRendererHandler
 
     // INFO: these are the resource handles used for rendering
     OMRendererBuffer *uniformBuffer;
-    OMRendererBuffer *tempUniformBuffer;
     OMRendererTexture *textureImage;
     OMRendererPipeline *pipeline = nullptr;
     OMRendererBuffer *mainVtxBuffer;
@@ -74,7 +72,6 @@ class OMTestRenderer : public OMRendererHandler
 
     std::function<OMRendererTexture *()> overlay;
 
-    // INFO: event handling, runs on a different thread
     void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp);
     void mouseOffset(float dx, float dy);
     std::shared_ptr<basics::OMCamera> camera;

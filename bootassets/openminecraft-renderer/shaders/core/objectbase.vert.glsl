@@ -10,15 +10,14 @@ layout(location = 1) out vec3 outNormal;
 
 layout(binding = 0) uniform UniformBufferObject {
     mat4 model;
-    mat4 view;
-    mat4 proj;
+    mat4 viewProj;
     vec3 lightDirection;
     vec3 lightColor;
     vec3 ambientColor;
 } ubo;
 
 void main() {
-    gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
+    gl_Position = ubo.viewProj * ubo.model * vec4(inPosition, 1.0);
     outTexCoord = inTexCoord;
     outNormal = (ubo.model * vec4(inNormal, 1.0)).xyz;
 }
