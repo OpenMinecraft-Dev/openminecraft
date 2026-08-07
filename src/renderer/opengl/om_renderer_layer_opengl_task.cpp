@@ -131,6 +131,38 @@ static auto fromCommon(common::basics::OMVertexPropType t) -> std::pair<int, GLu
     }
 }
 
+void OMRendererTaskOpenGL::bindVertexBufferInstanced(std::vector<common::OMRendererBuffer *> buffer, int off)
+{
+    int index = 0;
+    for (auto pp : vtxFormat.parts)
+    {
+        reinterpret_cast<OMRendererBufferOpenGL *>(buffer[pp.binding])->bind();
+        for (auto part : pp.parts)
+        {
+            auto offset = pp.isInstance ? off * pp.size : 0;
+
+            auto p = fromCommon(std::get<common::basics::OMVertexPropType>(part));
+            if (std::get<GLuint>(p) == GL_INT)
+            {
+                gl->glVertexAttribIPointer(index, p.first, p.second, pp.size,
+                                           reinterpret_cast<void *>(std::get<int>(part) + offset));
+            }
+            else
+            {
+                gl->glVertexAttribPointer(index, p.first, p.second, GL_FALSE, pp.size,
+                                          reinterpret_cast<void *>(std::get<int>(part) + offset));
+            }
+            gl->glEnableVertexAttribArray(index);
+            if (pp.isInstance)
+            {
+                gl->glVertexAttribDivisor(index, 1);
+            }
+            index++;
+        }
+        reinterpret_cast<OMRendererBufferOpenGL *>(buffer[pp.binding])->unbind();
+    }
+}
+
 void OMRendererTaskOpenGL::bindVertexBuffer(std::vector<common::OMRendererBuffer *> buffer)
 {
     int index = 0;
@@ -212,10 +244,11 @@ void OMRendererTaskOpenGL::drawInstance(uint64_t vertexCount, uint64_t instanceC
 {
     ops.push_back({BindVertexArray, vaos.back()});
     ops.push_back({UseProgram, program});
-    ops.push_back({DrawElementsInstancedBaseInstance,
-                   {GL_TRIANGLES, static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT, static_cast<GLuint>(instanceCount),
-                    static_cast<GLuint>(firstInstance)},
-                   {nullptr}});
+    ops.push_back(
+        {DrawElementsInstanced,
+         {GL_TRIANGLES, static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT, static_cast<GLuint>(instanceCount)},
+         {nullptr}});
+
     ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
 }

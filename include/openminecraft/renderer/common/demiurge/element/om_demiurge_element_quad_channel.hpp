@@ -74,7 +74,9 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
             {
                 if (currentChannel != this)
                 {
-                    task->pipeline(pipeline)->vertexBuffer({quadBuffer, instanceBuffer})->indexBuffer(quadIndex);
+                    task->pipeline(pipeline)
+                        ->vertexBufferInstanced({quadBuffer, instanceBuffer}, start)
+                        ->indexBuffer(quadIndex);
                     currentChannel = this;
                 }
                 task->drawInstance(6, i - start, start);

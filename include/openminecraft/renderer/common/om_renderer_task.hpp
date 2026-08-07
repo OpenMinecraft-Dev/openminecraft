@@ -56,6 +56,15 @@ class OMRendererTask : public OMRendererObject
         bindVertexBuffer(buffer);
         return this;
     }
+    virtual void bindVertexBufferInstanced(std::vector<common::OMRendererBuffer *> buffer, int off)
+    {
+        bindVertexBuffer(buffer);
+    }
+    inline auto vertexBufferInstanced(std::vector<common::OMRendererBuffer *> buffer, int off) -> OMRendererTask *
+    {
+        bindVertexBufferInstanced(buffer, off);
+        return this;
+    }
     virtual void bindIndexBuffer(OMRendererBuffer *buffer) = 0;
     inline auto indexBuffer(OMRendererBuffer *buffer) -> OMRendererTask *
     {

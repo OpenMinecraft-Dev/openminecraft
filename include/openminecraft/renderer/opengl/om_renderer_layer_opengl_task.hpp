@@ -66,6 +66,7 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
 
     void bindPipeline(common::OMRendererPipeline *pipeline) override;
     void bindVertexBuffer(std::vector<common::OMRendererBuffer *> buffer) override;
+    void bindVertexBufferInstanced(std::vector<common::OMRendererBuffer *> buffer, int off) override;
     void bindIndexBuffer(common::OMRendererBuffer *buffer) override;
     void bindIndirectBuffer(common::OMRendererBuffer *buffer) override;
     void bindTarget(common::OMRendererRenderTarget *target) override;
