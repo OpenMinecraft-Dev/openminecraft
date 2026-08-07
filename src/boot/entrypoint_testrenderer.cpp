@@ -116,15 +116,17 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
 
         vertexCount = indices.size();
 
+        using VertexStruct = basics::OMVertex<glm::vec3, glm::vec2, glm::vec3>;
+
         mainVtxBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(VertexStruct));
         mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
 
         // INFO: 4 vertices and 6 vertex indices to render a texture to the screen
         std::array<VertexStruct, 4> vtxs = {{
-            {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}},
-            {{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
-            {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
-            {{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f}},
+            {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}, glm::vec3()},
+            {{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}, glm::vec3()},
+            {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}, glm::vec3()},
+            {{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f}, glm::vec3()},
         }};
         std::array<uint32_t, 6> vtxi = {0, 1, 2, 2, 3, 0};
         mainVtxBuffer->updateData(vtxs.data());
