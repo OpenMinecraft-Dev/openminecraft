@@ -7,6 +7,7 @@
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/event/om_eventbus.hpp"
+#include "openminecraft/renderer/common/model/om_renderer_model_obj.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
@@ -43,95 +44,25 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
 
     format.appendPart("position", basics::Vec3f)
         ->appendPart("textureUV", basics::Vec2f)
-        ->appendPart("normal", basics::Vec3f)
         ->nextGroup()
         ->decideStruct()
         ->debugState();
 
-    {
-        std::vector<VertexStruct> vertices = {};
-        std::vector<uint32_t> indices = {};
+    objModel = new model::OMRendererModelObj(
+        renderer, vfs::fsfetch("/bootassets/openminecraft-renderer/models/viking_room.obj").get());
 
+    mainVtxBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(VertexStruct));
+    mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
+
+    // INFO: 4 vertices and 6 vertex indices to render a texture to the screen
+    mainVtxBuffer->updateData(std::array<VertexStruct, 4>{
         {
-            tinyobj::attrib_t attrib;
-            std::vector<tinyobj::shape_t> shapes;
-            std::vector<tinyobj::material_t> materials;
-            std::string warn, err;
-
-            bool success =
-                tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
-                                 vfs::fsfetch("/bootassets/openminecraft-renderer/models/viking_room.obj").get());
-
-            std::unordered_map<VertexStruct, uint32_t, VertexHash> uniqueVertices;
-
-            for (const auto &shape : shapes)
-            {
-                for (const auto &index : shape.mesh.indices)
-                {
-                    VertexStruct v;
-
-                    v.pos.x = attrib.vertices[3 * index.vertex_index + 0];
-                    v.pos.y = attrib.vertices[3 * index.vertex_index + 1];
-                    v.pos.z = attrib.vertices[3 * index.vertex_index + 2];
-
-                    if (index.texcoord_index >= 0)
-                    {
-                        v.uv.x = attrib.texcoords[2 * index.texcoord_index + 0];
-                        v.uv.y = attrib.texcoords[2 * index.texcoord_index + 1];
-                    }
-                    else
-                    {
-                        v.uv.x = 0.0f;
-                        v.uv.y = 0.0f;
-                    }
-
-                    v.normal.x = attrib.normals[3 * index.normal_index + 0];
-                    v.normal.y = attrib.normals[3 * index.normal_index + 1];
-                    v.normal.z = attrib.normals[3 * index.normal_index + 2];
-
-                    auto it = uniqueVertices.find(v);
-                    if (it != uniqueVertices.end())
-                    {
-                        indices.push_back(it->second);
-                    }
-                    else
-                    {
-                        auto newIndex = static_cast<uint32_t>(vertices.size());
-                        vertices.push_back(v);
-                        uniqueVertices[v] = newIndex;
-                        indices.push_back(newIndex);
-                    }
-                }
-            }
-        }
-
-        auto siz = vertices.size() * sizeof(VertexStruct);
-
-        vertexBuffer = renderer->allocateBuffer(VertexData, siz);
-        vertexBuffer->updateData(vertices.data());
-
-        siz = indices.size() * sizeof(uint32_t);
-        indexBuffer = renderer->allocateBuffer(VertexIndex, siz);
-        indexBuffer->updateData(indices.data());
-
-        vertexCount = indices.size();
-
-        using VertexStruct = basics::OMVertex<glm::vec3, glm::vec2, glm::vec3>;
-
-        mainVtxBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(VertexStruct));
-        mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
-
-        // INFO: 4 vertices and 6 vertex indices to render a texture to the screen
-        std::array<VertexStruct, 4> vtxs = {{
-            {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}, glm::vec3()},
-            {{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}, glm::vec3()},
-            {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}, glm::vec3()},
-            {{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f}, glm::vec3()},
-        }};
-        std::array<uint32_t, 6> vtxi = {0, 1, 2, 2, 3, 0};
-        mainVtxBuffer->updateData(vtxs.data());
-        mainIdxBuffer->updateData(vtxi.data());
-    }
+            {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}},
+            {{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+            {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
+            {{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f}},
+        }}.data());
+    mainIdxBuffer->updateData(std::array{0u, 1u, 2u, 2u, 3u, 0u}.data());
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));
 
@@ -139,15 +70,13 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     UniformStructure stru = {glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f)};
     tempUniformBuffer->updateData(&stru);
 
-    {
-        auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/viking_room.png");
+    auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/viking_room.png");
 
-        specs::png::OMPngFile img;
-        img.parse(imgraw);
+    specs::png::OMPngFile img;
+    img.parse(imgraw);
 
-        textureImage = renderer->allocateTexture(img.getWidth(), img.getHeight(), Dim2, ColorRgba);
-        textureImage->updateData(img.fetchData());
-    }
+    textureImage = renderer->allocateTexture(img.getWidth(), img.getHeight(), Dim2, ColorRgba);
+    textureImage->updateData(img.fetchData());
 
     // INFO: core pipeline creation
     mainPipeline = renderer->createPipeline()
@@ -176,7 +105,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
                    ->output(tempTarget->target)
                    ->shader(objectFrg)
                    ->shader(objectVtx)
-                   ->format(format)
+                   ->format(objModel->format)
                    ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
                    ->blend(true)
                    ->depth(true, true)
@@ -259,9 +188,9 @@ void OMTestRenderer::submitTasks()
     auto pretask = renderer->createTask()
                        ->target(tempTarget->target)
                        ->pipeline(pipeline)
-                       ->vertexBuffer({vertexBuffer})
-                       ->indexBuffer(indexBuffer)
-                       ->drawN(vertexCount)
+                       ->vertexBuffer({objModel->vertexData})
+                       ->indexBuffer(objModel->vertexIndex)
+                       ->drawN(objModel->vertexCount)
                        ->finishN();
     auto taskimm = blurHandler->firstLayerTask(pretask);
     auto task = blurHandler
@@ -286,8 +215,9 @@ OMTestRenderer::~OMTestRenderer()
     delete textureImage;
     delete uniformBuffer;
     delete tempUniformBuffer;
-    delete vertexBuffer;
-    delete indexBuffer;
+    // delete vertexBuffer;
+    // delete indexBuffer;
+    delete objModel;
 
     delete mainIdxBuffer;
     delete mainVtxBuffer;

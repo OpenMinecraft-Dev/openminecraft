@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/event/om_eventbus.hpp"
+#include "openminecraft/renderer/common/model/om_renderer_model_obj.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
@@ -45,32 +46,7 @@ struct UniformStructure
 };
 #pragma pack()
 // INFO: simple vertex structure
-struct VertexStruct
-{
-    glm::vec3 pos;
-    glm::vec2 uv;
-    glm::vec3 normal;
-    auto operator==(const VertexStruct &other) const -> bool
-    {
-        return pos == other.pos && uv == other.uv & normal == other.normal;
-    }
-};
-
-struct VertexHash
-{
-    auto operator()(const VertexStruct &v) const -> std::size_t
-    {
-        size_t h1 = std::hash<float>{}(v.pos.x);
-        size_t h2 = std::hash<float>{}(v.pos.y);
-        size_t h3 = std::hash<float>{}(v.pos.z);
-        size_t h4 = std::hash<float>{}(v.uv.x);
-        size_t h5 = std::hash<float>{}(v.uv.y);
-        size_t h6 = std::hash<float>{}(v.normal.x);
-        size_t h7 = std::hash<float>{}(v.normal.y);
-        size_t h8 = std::hash<float>{}(v.normal.z);
-        return ((((((h1 * 31 + h2) * 31 + h3) * 31 + h4) * 31 + h5) * 31 + h6) * 31 + h7) * 31 + h8;
-    }
-};
+using VertexStruct = basics::OMVertex<glm::vec3, glm::vec2>;
 
 class OMTestRenderer : public OMRendererHandler
 {
@@ -84,8 +60,6 @@ class OMTestRenderer : public OMRendererHandler
     void afterFrame() override;
 
     // INFO: these are the resource handles used for rendering
-    OMRendererBuffer *vertexBuffer;
-    OMRendererBuffer *indexBuffer;
     OMRendererBuffer *uniformBuffer;
     OMRendererBuffer *tempUniformBuffer;
     OMRendererTexture *textureImage;
@@ -94,6 +68,7 @@ class OMTestRenderer : public OMRendererHandler
     OMRendererBuffer *mainIdxBuffer;
     OMRendererPipeline *mainPipeline;
     wrap::OMRendererTempTarget *tempTarget;
+    model::OMRendererModelObj *objModel;
 
     std::shared_ptr<wrap::OMRendererBoxBlurHandler> blurHandler;
 
@@ -108,7 +83,6 @@ class OMTestRenderer : public OMRendererHandler
     log::OMLogger logger;
 
   private:
-    int vertexCount = 0;
     renderer::OMRenderer *renderer;
 
     float m_cameraMoveSpeed = 2.0f;

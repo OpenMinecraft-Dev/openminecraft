@@ -4,8 +4,31 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include <string>
 #include <vector>
+#include <glm/glm.hpp>
+
+namespace std
+{
+template <glm::length_t L, typename T, glm::qualifier Q> struct hash<glm::vec<L, T, Q>>
+{
+    auto operator()(const glm::vec<L, T, Q> &v) const noexcept -> std::size_t
+    {
+        std::size_t seed = 0;
+        for (glm::length_t i = 0; i < L; ++i)
+        {
+            seed ^= std::hash<T>{}(v[i]) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        }
+        return seed;
+    }
+};
+} // namespace std
+
 namespace openminecraft::renderer::common::basics
 {
+template <typename T> static inline void hash_combine(std::size_t &seed, const T &val)
+{
+    seed ^= std::hash<T>{}(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
 template <typename... Ts> class OMVertex;
 
 template <size_t I, typename T> struct OMVertexAttribute
@@ -49,10 +72,23 @@ struct OMVertexImpl<std::index_sequence<Is...>, Ts...> : OMVertexAttribute<Is, T
         return {sizeof(Ts)...};
     }
 
+    [[nodiscard]] auto hash() const -> std::size_t
+    {
+        std::size_t seed = 0;
+        (..., hash_combine(seed, get<Is>()));
+        return seed;
+    }
+
+    auto operator==(const OMVertexImpl &other) const -> bool
+    {
+        return (... && (get<Is>() == other.get<Is>()));
+    }
+
   private:
     template <size_t... Js> void assign(std::index_sequence<Js...>, Ts... vals)
     {
-        (void)(int[]){(static_cast<OMVertexAttribute<Js, Ts> &>(*this).value = vals, 0)...};
+        auto dummy = {(static_cast<OMVertexAttribute<Js, Ts> &>(*this).value = vals, 0)...};
+        (void)dummy;
     }
 
     template <size_t... Js>
@@ -116,5 +152,16 @@ class OMVertexFormat
     log::OMLogger logger;
 };
 } // namespace openminecraft::renderer::common::basics
+
+namespace std
+{
+template <typename... Ts> struct hash<openminecraft::renderer::common::basics::OMVertex<Ts...>>
+{
+    auto operator()(const openminecraft::renderer::common::basics::OMVertex<Ts...> &v) const noexcept -> std::size_t
+    {
+        return v.hash();
+    }
+};
+} // namespace std
 
 #endif
