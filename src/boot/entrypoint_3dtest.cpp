@@ -260,11 +260,12 @@ void rendererTest(renderer::OMBackend backend)
                      "/bootassets/openminecraft-renderer/shaders");
 
         event::OMEventBusSDL bus;
+        auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{2.0f, 2.0f, 2.0f}, -135.0f, -35.0f);
 
         auto hnd2 = std::make_shared<OMNodeRendererHandler>(win());
         auto hnd = std::make_shared<test::OMTestRenderer>(
-            win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTexture; }, bus);
-        hnd2->camera = hnd->camera.get();
+            win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTexture; }, bus, camera);
+        hnd2->camera = camera.get();
         win()->registerHandler(hnd2);
         win()->registerHandler(hnd);
         win()->baseInit();
@@ -333,9 +334,8 @@ void rendererTest(renderer::OMBackend backend)
         bus.append(SDL_EVENT_MOUSE_MOTION, [&](SDL_Event &e) -> void {
             if (SDL_GetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win)))
             {
-                int ww, hh;
-                SDL_GetWindowSizeInPixels(reinterpret_cast<SDL_Window *>(*win), &ww, &hh);
-                hnd->mouseOffset(e.motion.xrel / ww, e.motion.yrel / hh);
+                camera->modPitch(-e.motion.yrel * 0.15);
+                camera->modYaw(e.motion.xrel * 0.15);
             }
         });
 

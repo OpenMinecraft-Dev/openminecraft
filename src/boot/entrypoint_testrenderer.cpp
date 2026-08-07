@@ -30,8 +30,8 @@ using namespace openminecraft::renderer::common;
 namespace openminecraft::boot::test
 {
 OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMRendererTexture *()> overlay,
-                               event::OMEventBusSDL &bus)
-    : renderer(renderer), logger("OMTestRenderer", this), OMRendererHandler(renderer)
+                               event::OMEventBusSDL &bus, std::shared_ptr<basics::OMCamera> camera)
+    : renderer(renderer), logger("OMTestRenderer", this), OMRendererHandler(renderer), camera(camera)
 {
     this->overlay = overlay;
     camera = std::make_shared<basics::OMCamera>(renderer, glm::vec3{2.0f, 2.0f, 2.0f}, -135.0f, -35.0f);
@@ -105,6 +105,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
                    ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
                    ->blend(true)
                    ->depth(true, true)
+                   ->depthReverseZ(true)
                    ->buildN();
     pipeline->bindInput(0, uniformBuffer);
     pipeline->bindInput(1, textureImage);
@@ -128,12 +129,6 @@ void OMTestRenderer::beforeFrame()
 
     uniformBuffer->updateData(&ubo);
     ang += 0.001f;
-}
-
-void OMTestRenderer::mouseOffset(float dx, float dy)
-{
-    camera->modPitch(-dy * m_cameraRotateSpeed);
-    camera->modYaw(dx * m_cameraRotateSpeed);
 }
 
 void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
@@ -181,6 +176,8 @@ void OMTestRenderer::submitTasks()
     blurHandler->bind(overlay(), tempTarget->colorTexture);
 
     auto scene = renderer->createTask("scene")
+                     ->clearColor({1.0f, 1.0f, 1.0f, 1.0f})
+                     ->clearDepth(0.0f)
                      ->target(tempTarget->target)
                      ->pipeline(pipeline)
                      ->vertexBuffer({objModel->vertexData})

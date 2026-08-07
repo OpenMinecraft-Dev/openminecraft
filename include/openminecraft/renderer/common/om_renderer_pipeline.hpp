@@ -90,6 +90,11 @@ class OMRendererPipeline : public OMRendererObject
         enableDepthWrite = write;
         return this;
     }
+    inline auto depthReverseZ(bool reverse) -> OMRendererPipeline *
+    {
+        enableReverseZ = reverse;
+        return this;
+    }
 
     virtual void bindInput(int idx, common::OMRendererBuffer *buff) = 0;
     virtual void bindInput(int idx, common::OMRendererTexture *texture) = 0;
@@ -108,6 +113,7 @@ class OMRendererPipeline : public OMRendererObject
     bool enableBlend = false;
     bool enableDepthTest = false;
     bool enableDepthWrite = false;
+    bool enableReverseZ = false;
 };
 } // namespace openminecraft::renderer::common
 

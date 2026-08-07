@@ -43,7 +43,7 @@ class OMCamera
     }
 
   private:
-    const OMRenderer *renderer;
+    OMRenderer *renderer;
     log::OMLogger logger;
 
     glm::vec3 location;

@@ -78,14 +78,22 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     auto s = glpipe->blendState;
     ops.push_back({glpipe->enableDepthTest ? Enable : Disable, GL_DEPTH_TEST});
     ops.push_back({DepthMask, glpipe->enableDepthWrite});
-    ops.push_back({DepthFunc, GL_LESS});
+    if (glpipe->enableReverseZ)
+    {
+        ops.push_back({DepthFunc, GL_GREATER});
+    }
+    else
+    {
+        ops.push_back({DepthFunc, GL_LESS});
+    }
     ops.push_back({glpipe->enableBlend ? Enable : Disable, GL_BLEND});
     ops.push_back(
         {BlendFuncSeparate, convert(s.srcColor), convert(s.dstColor), convert(s.srcAlpha), convert(s.dstAlpha)});
 
     if (!isCleared)
     {
-        ops.push_back({ClearDepth, 1});
+        ops.push_back({ClearDepth, {}, {}, depthClear});
+        ops.push_back({ClearColor, {}, {}, colorClear.r, colorClear.g, colorClear.b, colorClear.a});
         ops.push_back({Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
         isCleared = true;
     }
@@ -279,11 +287,13 @@ void OMRendererTaskOpenGL::execute()
             gl->glDepthMask(op.args[0]);
             break;
         case ClearDepth:
-            gl->glClearDepth(static_cast<float>(op.args[0]));
+            gl->glClearDepth(op.floatArgs[0]);
             break;
-        case ClearBufferfv: {
-            auto v = static_cast<float>(op.args[0]);
-            gl->glClearBufferfv(GL_DEPTH, 1, &v);
+        case ClearBufferfv:
+            gl->glClearBufferfv(GL_DEPTH, 1, &op.floatArgs[0]);
+            break;
+        case ClearColor: {
+            gl->glClearColor(op.floatArgs[0], op.floatArgs[1], op.floatArgs[2], op.floatArgs[3]);
             break;
         }
         }

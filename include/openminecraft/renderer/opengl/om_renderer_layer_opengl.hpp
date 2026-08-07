@@ -84,6 +84,7 @@ struct OMRendererOpenGLFuncs
     PFNGLGETUNIFORMBLOCKINDEXPROC glGetUniformBlockIndex;
     PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
     PFNGLUNIFORM1IPROC glUniform1i;
+    PFNGLCLEARCOLORPROC glClearColor;
 };
 class OMRendererOpenGL : public OMRenderer
 {

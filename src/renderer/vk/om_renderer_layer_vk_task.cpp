@@ -47,6 +47,7 @@ auto OMRendererTaskVk::isOnDefault() -> bool
 
 void OMRendererTaskVk::bindPipeline(common::OMRendererPipeline *pipeline)
 {
+    pipe = pipeline;
     try
     {
         commandBuffer.bindPipeline(PipelineBindPoint::eGraphics,
@@ -144,11 +145,11 @@ void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
             {
                 if (ii->arr == common::Depth)
                 {
-                    test.push_back(ClearValue({1.0f, 0}));
+                    test.push_back(ClearValue({depthClear, 0}));
                 }
                 else
                 {
-                    test.push_back(ClearValue({0.0f, 0.0f, 0.0f, 0.0f}));
+                    test.push_back(ClearValue({colorClear.r, colorClear.g, colorClear.b, colorClear.a}));
                 }
             }
 

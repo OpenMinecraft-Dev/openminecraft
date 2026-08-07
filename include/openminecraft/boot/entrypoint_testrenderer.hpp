@@ -50,7 +50,8 @@ using VertexStruct = basics::OMVertex<glm::vec3, glm::vec2>;
 class OMTestRenderer : public OMRendererHandler
 {
   public:
-    OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMRendererTexture *()> t, event::OMEventBusSDL &bus);
+    OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMRendererTexture *()> t, event::OMEventBusSDL &bus,
+                   std::shared_ptr<basics::OMCamera> camera);
     ~OMTestRenderer() override;
 
     // INFO: count frames per second, submit and create tasks, etc.
@@ -73,7 +74,6 @@ class OMTestRenderer : public OMRendererHandler
     std::function<OMRendererTexture *()> overlay;
 
     void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp);
-    void mouseOffset(float dx, float dy);
     std::shared_ptr<basics::OMCamera> camera;
     basics::OMVertexFormat format;
 
@@ -82,8 +82,7 @@ class OMTestRenderer : public OMRendererHandler
   private:
     renderer::OMRenderer *renderer;
 
-    float m_cameraMoveSpeed = 2.0f;
-    float m_cameraRotateSpeed = 45.0f;
+    float m_cameraMoveSpeed = 3.4f;
 
     std::shared_ptr<OMShader> objectVtx;
     std::shared_ptr<OMShader> objectFrg;

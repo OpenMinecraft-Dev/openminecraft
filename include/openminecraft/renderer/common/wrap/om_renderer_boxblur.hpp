@@ -36,7 +36,6 @@ class OMRendererBoxBlurHandler : public OMRendererHandler
 
     auto firstLayerTask(OMRendererTask *) -> OMRendererTask *;
     auto secondLayerTask(OMRendererTask *) -> OMRendererTask *;
-    auto execute(OMRendererTask *) -> OMRendererTask *;
     void bind(OMRendererTexture *uplayer, OMRendererTexture *bottomLayer);
 
     OMRendererPipeline *blurp1Pipeline, *blurp2Pipeline;

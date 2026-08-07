@@ -34,7 +34,8 @@ enum OMRendererOpType
     DepthFunc,
     BlendFuncSeparate,
     DepthMask,
-    DrawElementsInstancedBaseInstance
+    DrawElementsInstancedBaseInstance,
+    ClearColor
 };
 union OMRendererOpenGLArg {
     GLuint i;
@@ -55,6 +56,7 @@ struct OMRendererTaskOp
     OMRendererOpType type;
     std::array<GLuint, 8> args;
     std::array<void *, 2> ptrArgs;
+    std::array<GLfloat, 8> floatArgs;
 };
 class OMRendererTaskOpenGL : public common::OMRendererTask
 {

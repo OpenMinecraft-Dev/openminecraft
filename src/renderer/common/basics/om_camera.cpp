@@ -1,3 +1,4 @@
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "openminecraft/log/om_log_common.hpp"
@@ -24,7 +25,7 @@ auto OMCamera::fetchViewMat() -> glm::mat4
 auto OMCamera::fetchProjMat() -> glm::mat4
 {
     auto extent = renderer->getExtent();
-    return glm::perspective(glm::radians(70.0f), extent.x / extent.y, 0.01f, 5.0f);
+    return glm::perspective(glm::radians(70.0f), extent.x / extent.y, 1000.0f, 0.05f);
 }
 
 void OMCamera::modYaw(float d)

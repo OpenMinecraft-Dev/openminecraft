@@ -98,11 +98,6 @@ void OMRendererBoxBlurHandler::update(OMRendererBoxBlurArg a)
     blurArgs->updateData(&a);
 }
 
-auto OMRendererBoxBlurHandler::execute(OMRendererTask *task) -> OMRendererTask *
-{
-    return secondLayerTask(task->dependOn(firstLayerTask(task)));
-}
-
 void OMRendererBoxBlurHandler::beforeFrame()
 {
 }

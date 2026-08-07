@@ -1,11 +1,13 @@
 #ifndef OM_RENDERER_TASK
 #define OM_RENDERER_TASK
 
+#include "glm/ext/vector_float4.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/om_renderer_object.hpp"
 #include <cstdint>
+#include <netdb.h>
 #include <vector>
 namespace openminecraft::renderer
 {
@@ -22,6 +24,26 @@ class OMRendererTask : public OMRendererObject
     }
 
     virtual ~OMRendererTask() = default;
+
+    inline void setClearColor(glm::vec4 c)
+    {
+        colorClear = c;
+    }
+    inline auto clearColor(glm::vec4 color) -> OMRendererTask *
+    {
+        setClearColor(color);
+        return this;
+    }
+
+    inline void setClearDepth(float d)
+    {
+        depthClear = d;
+    }
+    inline auto clearDepth(float depth) -> OMRendererTask *
+    {
+        setClearDepth(depth);
+        return this;
+    }
 
     virtual void bindPipeline(OMRendererPipeline *pipeline) = 0;
     inline auto pipeline(OMRendererPipeline *pipeline) -> OMRendererTask *
@@ -112,6 +134,10 @@ class OMRendererTask : public OMRendererObject
         return true;
     }
     bool solved = false;
+
+  protected:
+    glm::vec4 colorClear = {0.0f, 0.0f, 0.0f, 0.0f};
+    float depthClear = 1.0f;
 
   private:
     std::vector<OMRendererTask *> dependTasks;

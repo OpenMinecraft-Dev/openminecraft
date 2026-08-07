@@ -2,6 +2,7 @@
 #define OM_RENDERER_LAYER_VK_TASK_HPP
 
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
+#include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include <cstdint>
@@ -34,6 +35,7 @@ class OMRendererTaskVk : public common::OMRendererTask
     OMRendererVk *renderer;
     bool isDefault = false;
     bool begin = false;
+    common::OMRendererPipeline *pipe;
 };
 }; // namespace openminecraft::renderer::vk
 
