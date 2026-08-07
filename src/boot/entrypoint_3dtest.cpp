@@ -55,12 +55,10 @@ class OMNodeRendererHandler : public OMRendererHandler
         }
 
         fontset = std::make_shared<fontproc::OMFontSet>();
-        auto rawfile = vfs::fsfetch("/bootassets/openminecraft-boot/font/MapleMono-NF-Regular.ttf");
-        fontset->fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile.get()));
+        
         auto rawfile2 = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
         fontset->fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile2.get()));
-        auto rawfile3 = vfs::fsfetch("/bootassets/openminecraft-boot/font/NotoSansArabic.ttf");
-        fontset->fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile3.get()));
+        
         node = std::make_shared<node::OMDemiurgeRectNode>()
                    ->style({
                        {"color", (int)0x23232399},
