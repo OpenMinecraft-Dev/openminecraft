@@ -176,7 +176,7 @@ void OMTestRenderer::submitTasks()
     blurHandler->bind(overlay(), tempTarget->colorTexture);
 
     auto scene = renderer->createTask("scene")
-                     ->clearColor({1.0f, 1.0f, 1.0f, 1.0f})
+                     ->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
                      ->clearDepth(0.0f)
                      ->target(tempTarget->target)
                      ->pipeline(pipeline)

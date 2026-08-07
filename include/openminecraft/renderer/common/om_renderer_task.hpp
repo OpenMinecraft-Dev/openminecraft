@@ -7,7 +7,6 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/om_renderer_object.hpp"
 #include <cstdint>
-#include <netdb.h>
 #include <vector>
 namespace openminecraft::renderer
 {
