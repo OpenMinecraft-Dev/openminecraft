@@ -164,11 +164,46 @@ void OMRendererTextureVk::updateData(void *p)
         transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal);
         cmdBuff.copyBufferToImage(
             reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
-            BufferImageCopy(0, 0, 0,
+            BufferImageCopy(0, width, height,
                             ImageSubresourceLayers((this->arr == common::Depth) ? ImageAspectFlagBits::eDepth
                                                                                 : ImageAspectFlagBits::eColor,
                                                    0, 0, 1),
                             Offset3D(0, 0, 0), Extent3D(width, height, 1)));
+        transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal);
+
+        cmdBuff.end();
+        renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
+        renderer->queues.first.waitIdle();
+
+        renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
+
+        delete stagBuffer;
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.image.update"));
+    }
+}
+
+void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h)
+{
+    try
+    {
+        auto stagBuffer = renderer->allocateBuffer(common::Misc, w * h * ((this->arr == common::ColorRgb) ? 3 : 4));
+        stagBuffer->updateData(p);
+
+        auto cmdBuff = renderer->logicalDevice.allocateCommandBuffers(
+            CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
+
+        cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
+        transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal);
+        cmdBuff.copyBufferToImage(
+            reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
+            BufferImageCopy(0, w, h,
+                            ImageSubresourceLayers((this->arr == common::Depth) ? ImageAspectFlagBits::eDepth
+                                                                                : ImageAspectFlagBits::eColor,
+                                                   0, 0, 1),
+                            Offset3D(x, y, 0), Extent3D(w, h, 1)));
         transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal);
 
         cmdBuff.end();

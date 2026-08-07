@@ -36,6 +36,7 @@ class OMRendererTexture : public OMRendererObject
     const OMTextureArrangement arr;
 
     virtual void updateData(void *p) = 0;
+    virtual void updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h) = 0;
 
     inline auto objType() -> OMRendererObjectType override
     {

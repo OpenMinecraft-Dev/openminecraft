@@ -86,4 +86,11 @@ void OMRendererTextureOpenGL::updateData(void *d)
     gl->glTexImage2D(fromCommon(type), 0, fromCommonI(arr), width, height, 0, fromCommon(arr), GL_UNSIGNED_BYTE, d);
     gl->glBindTexture(fromCommon(type), 0);
 }
+
+void OMRendererTextureOpenGL::updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h)
+{
+    gl->glBindTexture(fromCommon(type), texture);
+    gl->glTexSubImage2D(fromCommon(type), 0, x, y, w, h, fromCommon(arr), GL_UNSIGNED_BYTE, p);
+    gl->glBindTexture(fromCommon(type), 0);
+}
 } // namespace openminecraft::renderer::opengl
