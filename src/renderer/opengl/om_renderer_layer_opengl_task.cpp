@@ -62,6 +62,12 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
                 {BindTexture, GL_TEXTURE_2D, reinterpret_cast<OMRendererTextureOpenGL *>(glpipe->inputs[i])->texture});
 
             break;
+        case common::UniformTexelBuffer:
+            ops.push_back({ActiveTexture, static_cast<GLuint>(GL_TEXTURE0 + i)});
+            ops.push_back(
+                {BindTexture, GL_TEXTURE_2D, reinterpret_cast<OMRendererBufferOpenGL *>(glpipe->inputs[i])->texel});
+
+            break;
         case common::UniformBuffer:
             ops.push_back({BindBufferBase,
                            {GL_UNIFORM_BUFFER, static_cast<GLuint>(i),

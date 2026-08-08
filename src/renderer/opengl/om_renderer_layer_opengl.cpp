@@ -144,6 +144,7 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glClearColor = fetchGlFunc<PFNGLCLEARCOLORPROC>("glClearColor");
     gl.glGetProgramResourceIndex = fetchGlFunc<PFNGLGETPROGRAMRESOURCEINDEXPROC>("glGetProgramResourceIndex");
     gl.glShaderStorageBlockBinding = fetchGlFunc<PFNGLSHADERSTORAGEBLOCKBINDINGPROC>("glShaderStorageBlockBinding");
+    gl.glTexBuffer = fetchGlFunc<PFNGLTEXBUFFERPROC>("glTexBuffer");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()

@@ -116,6 +116,7 @@ void OMRendererPipelineOpenGL::build()
         switch (inputTypes[i])
         {
         case common::ImageSampler:
+        case common::UniformTexelBuffer:
             gl->glUseProgram(program);
             gl->glUniform1i(gl->glGetUniformLocation(program, inputNames[i].c_str()), i);
             break;

@@ -74,6 +74,7 @@ class OMRendererPipelineVk : public common::OMRendererPipeline
     bool available = false;
 
     std::vector<::vk::Sampler> tempSamplers;
+    std::vector<::vk::BufferView> tempBufferViews;
 
     log::OMLogger logger;
 

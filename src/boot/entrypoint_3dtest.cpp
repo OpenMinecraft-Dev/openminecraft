@@ -13,6 +13,7 @@
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_sector.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
 #include "openminecraft/renderer/common/event/om_eventbus.hpp"
+#include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"

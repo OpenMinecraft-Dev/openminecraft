@@ -5,7 +5,6 @@
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "vulkan/vulkan_enums.hpp"
-#include <iostream>
 
 using namespace vk;
 using namespace openminecraft::renderer::common;
@@ -63,6 +62,8 @@ static auto mapToUsageFlag(OMBufferUsage usage) -> BufferUsageFlagBits
         return BufferUsageFlagBits::eIndirectBuffer;
     case ShaderStorage:
         return BufferUsageFlagBits::eStorageBuffer;
+    case UniformTexel:
+        return BufferUsageFlagBits::eUniformTexelBuffer;
     }
 }
 

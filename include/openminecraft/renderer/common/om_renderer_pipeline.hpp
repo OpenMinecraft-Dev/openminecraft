@@ -20,7 +20,8 @@ enum OMRendererPipelineInputType
 {
     ImageSampler,
     UniformBuffer,
-    ShaderStorageBuffer
+    ShaderStorageBuffer,
+    UniformTexelBuffer
 };
 enum OMRendererPipelineBlendType
 {

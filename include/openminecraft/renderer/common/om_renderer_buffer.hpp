@@ -19,6 +19,7 @@ enum OMBufferUsage
     Uniform,
     Indirect,
     ShaderStorage,
+    UniformTexel,
     Misc
 };
 
@@ -74,6 +75,9 @@ template <> struct fmt::formatter<openminecraft::renderer::common::OMBufferUsage
             break;
         case openminecraft::renderer::common::OMBufferUsage::ShaderStorage:
             s = "ShaderStorage";
+            break;
+        case openminecraft::renderer::common::OMBufferUsage::UniformTexel:
+            s = "UniformTexel";
             break;
         default:
             s = "<Invalid>";

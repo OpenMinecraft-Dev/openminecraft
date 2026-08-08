@@ -87,6 +87,7 @@ struct OMRendererOpenGLFuncs
     PFNGLCLEARCOLORPROC glClearColor;
     PFNGLGETPROGRAMRESOURCEINDEXPROC glGetProgramResourceIndex;
     PFNGLSHADERSTORAGEBLOCKBINDINGPROC glShaderStorageBlockBinding;
+    PFNGLTEXBUFFERPROC glTexBuffer;
 };
 class OMRendererOpenGL : public OMRenderer
 {

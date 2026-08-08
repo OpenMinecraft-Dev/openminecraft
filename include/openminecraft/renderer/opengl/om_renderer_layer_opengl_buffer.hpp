@@ -18,6 +18,7 @@ class OMRendererBufferOpenGL : public common::OMRendererBuffer
     void bind();
     void unbind();
     GLuint buffer;
+    GLuint texel;
 
   private:
     OMRendererOpenGL *renderer;

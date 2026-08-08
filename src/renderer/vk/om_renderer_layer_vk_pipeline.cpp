@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_pipeline.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
+#include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
@@ -10,6 +11,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan_structs.hpp"
 #include <chrono>
 #include <thread>
 
@@ -32,6 +34,11 @@ OMRendererPipelineVk::~OMRendererPipelineVk()
             for (auto smp : tempSamplers)
             {
                 renderer->logicalDevice.destroySampler(smp, renderer->allocator);
+            }
+
+            for (auto m : tempBufferViews)
+            {
+                renderer->logicalDevice.destroyBufferView(m, renderer->allocator);
             }
 
             if (descriptorPool || descriptorSet)
@@ -154,6 +161,9 @@ void OMRendererPipelineVk::appendInput(common::OMRendererPipelineInputType type)
     case common::ShaderStorageBuffer:
         typ = DescriptorType::eStorageBuffer;
         break;
+    case common::UniformTexelBuffer:
+        typ = DescriptorType::eUniformTexelBuffer;
+        break;
     }
     descriptorSetLayoutBindings.emplace_back(static_cast<uint32_t>(layoutBinding), typ, 1, ShaderStageFlagBits::eAll);
     descriptorPoolSizes.emplace_back(typ, 1);
@@ -189,6 +199,18 @@ void OMRendererPipelineVk::bindInput(int idx, common::OMRendererBuffer *buff)
 {
     try
     {
+        if (buff->usage == common::UniformTexel)
+        {
+            auto bv = renderer->logicalDevice.createBufferView(
+                BufferViewCreateInfo({}, reinterpret_cast<OMRendererBufferVk *>(buff)->buffer, Format::eR32Sfloat, 0,
+                                     static_cast<DeviceSize>(buff->length)));
+            tempBufferViews.push_back(bv);
+            renderer->logicalDevice.updateDescriptorSets(
+                WriteDescriptorSet(descriptorSet, idx, 0, descriptorSetLayoutBindings[idx].descriptorType, {}, {},
+                                   {bv}),
+                nullptr);
+            return;
+        }
         std::vector c = {DescriptorBufferInfo(reinterpret_cast<OMRendererBufferVk *>(buff)->buffer, 0,
                                               static_cast<DeviceSize>(buff->length))};
         renderer->logicalDevice.updateDescriptorSets(
