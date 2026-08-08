@@ -231,9 +231,10 @@ void OMRendererPipelineVk::bindInput(int idx, common::OMRendererTexture *texture
 
         auto textureSampler = renderer->logicalDevice.createSampler(
             SamplerCreateInfo({}, Filter::eLinear, Filter::eLinear, SamplerMipmapMode::eLinear,
-                              SamplerAddressMode::eRepeat, SamplerAddressMode::eRepeat, SamplerAddressMode::eRepeat,
-                              0.0f, fea.samplerAnisotropy, prop.limits.maxSamplerAnisotropy, false, CompareOp::eAlways,
-                              0.0f, 0.0f, BorderColor::eIntOpaqueBlack, false),
+                              SamplerAddressMode::eClampToEdge, SamplerAddressMode::eClampToEdge,
+                              SamplerAddressMode::eClampToEdge, 0.0f, fea.samplerAnisotropy,
+                              prop.limits.maxSamplerAnisotropy, false, CompareOp::eAlways, 0.0f, 0.0f,
+                              BorderColor::eIntOpaqueBlack, false),
             renderer->allocator);
         tempSamplers.push_back(textureSampler);
 

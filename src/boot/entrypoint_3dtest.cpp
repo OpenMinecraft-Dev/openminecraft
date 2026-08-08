@@ -98,14 +98,7 @@ class OMNodeRendererHandler : public OMRendererHandler
                                                {"text", ""},
                                                {"textheight", 18},
                                            })
-                                           ->store(povTextNode))
-                               ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                                           ->style({
-                                               {"color", (int)0xffffffff},
-                                               {"flexGrow", 1.0f},
-                                               {"text", renderer->driver()},
-                                               {"textheight", 18},
-                                           })))
+                                           ->store(povTextNode)))
                    ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                                ->style({
                                    {"flexShrink", 0.0f},
@@ -243,6 +236,7 @@ class OMNodeRendererHandler : public OMRendererHandler
     basics::OMCamera *camera;
 };
 
+bool isRunning = true;
 void rendererTest(renderer::OMBackend backend)
 {
     auto logger = std::make_shared<log::OMLogger>("Test Renderer");
@@ -264,7 +258,6 @@ void rendererTest(renderer::OMBackend backend)
         win()->registerHandler(hnd);
         win()->baseInit();
 
-        bool isRunning = true;
         std::array<bool, 6> keystates = {false, false, false, false, false, false};
         bus.append(SDL_EVENT_WINDOW_RESIZED, [&](SDL_Event &) -> void { win()->requestResize(); });
         bus.append(SDL_EVENT_QUIT, [&](SDL_Event &) -> void { isRunning = false; });
@@ -331,6 +324,10 @@ void rendererTest(renderer::OMBackend backend)
                 camera->modPitch(-e.motion.yrel * 0.15);
                 camera->modYaw(e.motion.xrel * 0.15);
             }
+        });
+        bus.append(SDL_EVENT_FINGER_MOTION, [&](SDL_Event &e) -> void {
+            camera->modPitch(-e.tfinger.dy * 0.5f * 100.0f);
+            camera->modYaw(e.tfinger.dx * 0.5f * 100.0f);
         });
 
         util::OMTicker ticker;
