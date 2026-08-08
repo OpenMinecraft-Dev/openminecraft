@@ -5,8 +5,8 @@ layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inTexCoord;
 layout(location = 2) in vec3 inNormal;
 
-layout(location = 0) out vec2 outTexCoord;
-layout(location = 1) out vec3 outNormal;
+layout(location = 0) out vec2 objTexCoord;
+layout(location = 1) out vec3 objNormal;
 
 uniform ObjectInfo {
     mat4 model;
@@ -18,6 +18,6 @@ uniform ObjectInfo {
 
 void main() {
     gl_Position = ubo.viewProj * ubo.model * vec4(inPosition, 1.0);
-    outTexCoord = inTexCoord;
-    outNormal = (ubo.model * vec4(inNormal, 1.0)).xyz;
+    objTexCoord = inTexCoord;
+    objNormal = (ubo.model * vec4(inNormal, 1.0)).xyz;
 }

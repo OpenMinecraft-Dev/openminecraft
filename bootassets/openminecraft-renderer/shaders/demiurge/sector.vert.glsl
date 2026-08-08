@@ -13,11 +13,11 @@ layout(location = 5) in float inSectorEndAngle;
 layout(location = 6) in float inSectorFactor;
 layout(location = 7) in float inSectorDepth;
 
-layout(location = 0) out vec4 outColor;
-layout(location = 1) out vec2 outPosition;
-layout(location = 2) out vec4 outSectorPosition;
-layout(location = 3) out vec2 outSectorAngle;
-layout(location = 4) out float outSectorFactor;
+layout(location = 0) out vec4 secColor;
+layout(location = 1) out vec2 secPosition;
+layout(location = 2) out vec4 secSectorPosition;
+layout(location = 3) out vec2 secSectorAngle;
+layout(location = 4) out float secSectorFactor;
 
 uniform ScreenData {
     float width;
@@ -30,9 +30,9 @@ void main() {
     vec3 localPos = vec3(screenPos - rectCenter, 0.0);
 
     gl_Position = vec4(geom_toNdc(rectCenter + rotation_quat(inSectorRotation, localPos).xy, ubo.width, ubo.height), inSectorDepth, 1.0);
-    outColor = inSectorColor;
-    outPosition = screenPos;
-    outSectorPosition = inSectorPos;
-    outSectorAngle = vec2(inSectorBeginAngle, inSectorEndAngle);
-    outSectorFactor = inSectorFactor;
+    secColor = inSectorColor;
+    secPosition = screenPos;
+    secSectorPosition = inSectorPos;
+    secSectorAngle = vec2(inSectorBeginAngle, inSectorEndAngle);
+    secSectorFactor = inSectorFactor;
 }

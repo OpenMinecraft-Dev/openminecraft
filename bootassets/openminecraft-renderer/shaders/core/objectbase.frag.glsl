@@ -1,8 +1,8 @@
 #version 330 core
 #extension GL_ARB_separate_shader_objects : enable
 
-layout(location = 0) in vec2 inTexCoord;
-layout(location = 1) in vec3 inNormal;
+layout(location = 0) in vec2 objTexCoord;
+layout(location = 1) in vec3 objNormal;
 layout(location = 0) out vec4 outColor;
 
 uniform ObjectInfo {
@@ -15,10 +15,10 @@ uniform ObjectInfo {
 uniform sampler2D inTexture;
 
 void main() {
-    float diff = max(dot(inNormal, ubo.lightDirection), 0.0);
+    float diff = max(dot(objNormal, ubo.lightDirection), 0.0);
     vec3 diffuse = diff * ubo.lightColor;
 
-    vec4 texColor = texture(inTexture, inTexCoord);
+    vec4 texColor = texture(inTexture, objTexCoord);
     vec3 result = (ubo.ambientColor + diffuse) * texColor.rgb;
 
     outColor = vec4(result, texColor.a);

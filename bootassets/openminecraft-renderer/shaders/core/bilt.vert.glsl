@@ -4,12 +4,12 @@
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inTexCoord;
 
-layout(location = 0) out vec2 outTexCoord;
+layout(location = 0) out vec2 objTexCoord;
 
 void main() {
     gl_Position = vec4(inPosition, 1.0);
 #ifdef VULKAN
     gl_Position.y = -gl_Position.y;
 #endif
-    outTexCoord = inTexCoord;
+    objTexCoord = inTexCoord;
 }

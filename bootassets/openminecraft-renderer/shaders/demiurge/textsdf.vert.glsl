@@ -11,10 +11,10 @@ layout(location = 3) in float inTextDepth;
 layout(location = 4) in float inTextFactor;
 layout(location = 5) in int inTextGlyphId;
 
-layout(location = 0) out vec4 outColor;
-layout(location = 1) out vec2 outTextUv;
-layout(location = 2) flat out int outTextGlyphId;
-layout(location = 3) out float outTextFactor;
+layout(location = 0) out vec4 textColor;
+layout(location = 1) out vec2 textUv;
+layout(location = 2) flat out int textGlyphId;
+layout(location = 3) out float textFactor;
 
 uniform ScreenData {
     float width;
@@ -31,9 +31,9 @@ void main() {
     vec2 screenPos = inTextPos.xy + inPosition.xy * inTextPos.zw;
 
     gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), inTextDepth, 1.0);
-    outColor = inTextColor;
+    textColor = inTextColor;
     vec4 bb = getBBox();
-    outTextUv = bb.xz + vec2(inPosition.x, 1 - inPosition.y) * (bb.yw - bb.xz);
-    outTextGlyphId = inTextGlyphId;
-    outTextFactor = inTextFactor;
+    textUv = bb.xz + vec2(inPosition.x, 1 - inPosition.y) * (bb.yw - bb.xz);
+    textGlyphId = inTextGlyphId;
+    textFactor = inTextFactor;
 }
