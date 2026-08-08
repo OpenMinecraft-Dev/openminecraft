@@ -57,7 +57,9 @@ auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, float upper, float
             {
                 pipelines[i] = renderer->createPipeline()
                                    ->input(UniformBuffer)
+                                   ->inputName("ScreenData")
                                    ->input(ImageSampler)
+                                   ->inputName("inTexture")
                                    ->output(target)
                                    ->shader(frgShader)
                                    ->shader(vtxShader)

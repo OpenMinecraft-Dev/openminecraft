@@ -31,7 +31,7 @@ class OMRendererPipelineVk : public common::OMRendererPipeline
 
     void bindInput(int idx, common::OMRendererBuffer *buff) override;
     void bindInput(int idx, common::OMRendererTexture *texture) override;
-    void bindInputName(int idx, std::string name) override
+    void bindInputName(std::string name) override
     {
     }
 

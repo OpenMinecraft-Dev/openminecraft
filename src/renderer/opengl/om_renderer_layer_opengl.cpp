@@ -142,6 +142,8 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glGetUniformLocation = fetchGlFunc<PFNGLGETUNIFORMLOCATIONPROC>("glGetUniformLocation");
     gl.glUniform1i = fetchGlFunc<PFNGLUNIFORM1IPROC>("glUniform1i");
     gl.glClearColor = fetchGlFunc<PFNGLCLEARCOLORPROC>("glClearColor");
+    gl.glGetProgramResourceIndex = fetchGlFunc<PFNGLGETPROGRAMRESOURCEINDEXPROC>("glGetProgramResourceIndex");
+    gl.glShaderStorageBlockBinding = fetchGlFunc<PFNGLSHADERSTORAGEBLOCKBINDINGPROC>("glShaderStorageBlockBinding");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()

@@ -30,7 +30,9 @@ OMRendererBoxBlurHandler::OMRendererBoxBlurHandler(OMRenderer *renderer) : OMRen
 
     blurp1Pipeline = renderer->createPipeline()
                          ->input(UniformBuffer)
+                         ->inputName("BlurArgs")
                          ->input(ImageSampler)
+                         ->inputName("inTexture")
                          ->output(blurTemp->target)
                          ->shader(outputBlurp1Frg)
                          ->shader(outputBlurp1Vtx)
@@ -42,8 +44,11 @@ OMRendererBoxBlurHandler::OMRendererBoxBlurHandler(OMRenderer *renderer) : OMRen
     blurp1Pipeline->bindInput(0, blurArgs);
     blurp2Pipeline = renderer->createPipeline()
                          ->input(UniformBuffer)
+                         ->inputName("BlurArgs")
                          ->input(ImageSampler)
+                         ->inputName("inTextureFg")
                          ->input(ImageSampler)
+                         ->inputName("inTexture")
                          ->output(renderer->getDefaultRenderTarget())
                          ->shader(outputBlurp2Frg)
                          ->shader(outputBlurp2Vtx)

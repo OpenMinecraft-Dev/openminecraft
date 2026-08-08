@@ -17,7 +17,6 @@
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/om_renderer_window.hpp"
-#include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/util/om_util_ticker.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
@@ -44,21 +43,12 @@ class OMNodeRendererHandler : public OMRendererHandler
     OMNodeRendererHandler(OMRenderer *renderer) : OMRendererHandler(renderer)
     {
         this->renderer = renderer;
-        {
-            auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/summer_1am.png");
-
-            specs::png::OMPngFile img;
-            img.parse(imgraw);
-
-            texture = renderer->allocateTexture(img.getWidth(), img.getHeight(), Dim2, ColorRgba);
-            texture->updateData(img.fetchData());
-        }
 
         fontset = std::make_shared<fontproc::OMFontSet>();
-        
+
         auto rawfile2 = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
         fontset->fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile2.get()));
-        
+
         node = std::make_shared<node::OMDemiurgeRectNode>()
                    ->style({
                        {"color", (int)0x23232399},
@@ -128,7 +118,6 @@ class OMNodeRendererHandler : public OMRendererHandler
     ~OMNodeRendererHandler() override
     {
         internal = nullptr;
-        delete texture;
     }
 
     auto updateState(util::OMTicker &t) -> void
@@ -236,7 +225,6 @@ class OMNodeRendererHandler : public OMRendererHandler
     }
 
     std::shared_ptr<OMDemiurgeNode> node, graphNode, textNode, fpsTextNode, posTextNode, povTextNode;
-    OMRendererTexture *texture;
     std::shared_ptr<OMDemiurgeRendererHandler> internal;
     std::shared_ptr<fontproc::OMFontSet> fontset;
     std::vector<std::shared_ptr<OMDemiurgeNode>> sectorNodes = {};

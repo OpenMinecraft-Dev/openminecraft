@@ -62,7 +62,9 @@ void OMDemiurgeTextSdfChannel::init(OMRendererBuffer *uniform, OMRendererRenderT
 
     pipeline = renderer->createPipeline()
                    ->input(UniformBuffer)
+                   ->inputName("ScreenData")
                    ->input(ShaderStorageBuffer)
+                   ->inputName("GlyphData")
                    ->output(target)
                    ->shader(frgShader)
                    ->shader(vtxShader)

@@ -98,10 +98,10 @@ class OMRendererPipeline : public OMRendererObject
 
     virtual void bindInput(int idx, common::OMRendererBuffer *buff) = 0;
     virtual void bindInput(int idx, common::OMRendererTexture *texture) = 0;
-    virtual void bindInputName(int idx, std::string name) = 0;
-    inline auto inputName(int idx, std::string name) -> OMRendererPipeline *
+    virtual void bindInputName(std::string name) = 0;
+    inline auto inputName(std::string name) -> OMRendererPipeline *
     {
-        bindInputName(idx, name);
+        bindInputName(name);
         return this;
     }
 

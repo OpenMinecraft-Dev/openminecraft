@@ -3,6 +3,7 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include <fmt/format.h>
+#include <iostream>
 #include <stdexcept>
 #include <vector>
 
@@ -20,10 +21,9 @@ OMRendererPipelineOpenGL::~OMRendererPipelineOpenGL()
     }
 }
 
-void OMRendererPipelineOpenGL::bindInputName(int idx, std::string name)
+void OMRendererPipelineOpenGL::bindInputName(std::string name)
 {
-    inputNames.resize(idx + 1);
-    inputNames[idx] = name;
+    inputNames.push_back(name);
 }
 
 void OMRendererPipelineOpenGL::appendInput(common::OMRendererPipelineInputType t)
@@ -110,6 +110,24 @@ void OMRendererPipelineOpenGL::build()
     }
 
     program = programbase;
+
+    for (int i = 0; i < inputNames.size(); ++i)
+    {
+        switch (inputTypes[i])
+        {
+        case common::ImageSampler:
+            gl->glUseProgram(program);
+            gl->glUniform1i(gl->glGetUniformLocation(program, inputNames[i].c_str()), i);
+            break;
+        case common::ShaderStorageBuffer:
+            gl->glShaderStorageBlockBinding(
+                program, gl->glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, inputNames[i].c_str()), i);
+            break;
+        case common::UniformBuffer:
+            gl->glUniformBlockBinding(program, gl->glGetUniformBlockIndex(program, inputNames[i].c_str()), i);
+            break;
+        }
+    }
 }
 
 void OMRendererPipelineOpenGL::setBlendFunc(common::OMReedererPipelineBlendState state)

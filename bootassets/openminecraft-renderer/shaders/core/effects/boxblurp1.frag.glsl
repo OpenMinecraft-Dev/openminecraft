@@ -1,15 +1,14 @@
-#version 450 core
+#version 330 core
 #extension GL_ARB_separate_shader_objects : enable
 
 layout(location = 0) in vec2 outTexCoord;
 layout(location = 0) out vec4 outColor;
 
-layout(binding = 1) uniform sampler2D inTexture;
-
-layout(binding = 0) uniform UniformBufferObject {
+uniform BlurArgs {
     float kernelSize;
     float sigma;
 } ubo;
+uniform sampler2D inTexture;
 
 #define MAX_KERNEL_RADIUS 16384
 #define EPS 0.0001

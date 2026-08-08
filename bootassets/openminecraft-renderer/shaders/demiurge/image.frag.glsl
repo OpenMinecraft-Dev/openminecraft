@@ -1,4 +1,4 @@
-#version 450 core
+#version 330 core
 #extension GL_ARB_separate_shader_objects : enable
 
 #include "basics/sdf/sdf_rrect.glsl"
@@ -13,7 +13,11 @@ layout(location = 6) flat in float inFillType;
 
 layout(location = 0) out vec4 outColor;
 
-layout(binding = 1) uniform sampler2D inTexture;
+uniform ScreenData {
+    float width;
+    float height;
+} ubo;
+uniform sampler2D inTexture;
 
 #define FILLTYPE_FIT 0
 #define FILLTYPE_CONTAIN 1

@@ -8,6 +8,10 @@ layout(location = 3) in float inTextFactor;
 
 layout(location = 0) out vec4 outColor;
 
+uniform ScreenData {
+    float width;
+    float height;
+} ubo;
 layout(std430, binding = 1) readonly buffer GlyphData {
     float data[];
 } glyphBuffer;

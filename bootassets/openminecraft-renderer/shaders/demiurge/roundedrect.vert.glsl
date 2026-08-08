@@ -1,4 +1,4 @@
-#version 450 core
+#version 330 core
 #extension GL_ARB_separate_shader_objects : enable
 
 #include "basics/geometry.glsl"
@@ -18,7 +18,7 @@ layout(location = 2) out vec4 outRadius;
 layout(location = 3) out vec4 outRectPosition;
 layout(location = 4) out float outFactor;
 
-layout(binding = 0) uniform UniformBufferObject {
+uniform ScreenData {
     float width;
     float height;
 } ubo;

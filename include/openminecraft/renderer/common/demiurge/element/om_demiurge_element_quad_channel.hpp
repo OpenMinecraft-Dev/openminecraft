@@ -38,6 +38,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
 
         pipeline = renderer->createPipeline()
                        ->input(UniformBuffer)
+                       ->inputName("ScreenData")
                        ->output(target)
                        ->shader(frgShader)
                        ->shader(vtxShader)

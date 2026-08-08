@@ -77,6 +77,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     // INFO: core pipeline creation
     mainPipeline = renderer->createPipeline()
                        ->input(ImageSampler)
+                       ->inputName("inTexture")
                        ->output(renderer->getDefaultRenderTarget())
                        ->shader(outputFrg)
                        ->shader(outputVtx)
@@ -97,7 +98,9 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
 
     pipeline = renderer->createPipeline()
                    ->input(UniformBuffer)
+                   ->inputName("ObjectInfo")
                    ->input(ImageSampler)
+                   ->inputName("inTexture")
                    ->output(tempTarget->target)
                    ->shader(objectFrg)
                    ->shader(objectVtx)

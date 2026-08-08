@@ -15,11 +15,10 @@ layout(location = 1) out vec2 outTextUv;
 layout(location = 2) flat out int outTextGlyphId;
 layout(location = 3) out float outTextFactor;
 
-layout(binding = 0) uniform UniformBufferObject {
+uniform ScreenData {
     float width;
     float height;
 } ubo;
-
 layout(std430, binding = 1) readonly buffer GlyphData {
     float data[];
 } glyphBuffer;
