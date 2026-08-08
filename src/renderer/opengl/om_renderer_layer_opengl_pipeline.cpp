@@ -3,13 +3,13 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include <fmt/format.h>
-#include <iostream>
 #include <stdexcept>
 #include <vector>
 
 namespace openminecraft::renderer::opengl
 {
-OMRendererPipelineOpenGL::OMRendererPipelineOpenGL(OMRendererOpenGL *renderer) : common::OMRendererPipeline(renderer)
+OMRendererPipelineOpenGL::OMRendererPipelineOpenGL(OMRendererOpenGL *renderer)
+    : common::OMRendererPipeline(renderer), logger("OMRendererPipelineOpenGL", this)
 {
     this->gl = &renderer->gl;
 }
@@ -72,6 +72,7 @@ void OMRendererPipelineOpenGL::build()
         auto prog = gl->glCreateShader(fromCommon(pp->typebase));
         auto ss = reinterpret_cast<const GLchar *>(pp->data.data());
         auto sl = (GLint)pp->data.size();
+        logger.info("compling {}", pp->filename);
         gl->glShaderSource(prog, 1, &ss, &sl);
         gl->glCompileShader(prog);
 
@@ -91,6 +92,7 @@ void OMRendererPipelineOpenGL::build()
         subprogs.push_back(prog);
     }
 
+    logger.info("linking");
     gl->glLinkProgram(programbase);
 
     GLint status;

@@ -1,6 +1,7 @@
 #ifndef OM_RENDERER_LAYER_OPENGL_PIPELINE_HPP
 #define OM_RENDERER_LAYER_OPENGL_PIPELINE_HPP
 
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
@@ -40,6 +41,7 @@ class OMRendererPipelineOpenGL : public common::OMRendererPipeline
   private:
     OMRendererOpenGLFuncs *gl;
     std::vector<std::shared_ptr<common::OMShader>> preshaders;
+    log::OMLogger logger;
 };
 } // namespace openminecraft::renderer::opengl
 
