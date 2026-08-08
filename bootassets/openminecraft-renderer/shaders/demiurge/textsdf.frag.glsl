@@ -1,5 +1,7 @@
-#version 450 core
+#version 330 core
 #extension GL_ARB_separate_shader_objects : enable
+
+#include "basics/texelbuf.glsl"
 
 layout(location = 0) in vec4 inColor;
 layout(location = 1) in vec2 texCoord;
@@ -12,29 +14,26 @@ uniform ScreenData {
     float width;
     float height;
 } ubo;
-layout(std430, binding = 1) readonly buffer GlyphData {
-    float data[];
-} glyphBuffer;
+uniform samplerBuffer GlyphData;
 
 // ---- Glyph data accessors ----
 // (offsets adjusted for leading bbox: [0..3] = bbox)
 vec4 getBBox() {
-    return vec4(glyphBuffer.data[0 + inTextGlyphId], glyphBuffer.data[1 + inTextGlyphId],
-                glyphBuffer.data[2 + inTextGlyphId], glyphBuffer.data[3 + inTextGlyphId]);
+    return vec4(texelFetchF(GlyphData, 0 + inTextGlyphId), texelFetchF(GlyphData, 1 + inTextGlyphId), texelFetchF(GlyphData, 2 + inTextGlyphId), texelFetchF(GlyphData, 3 + inTextGlyphId));
 }
 
 int getOutlineCount() {
-    return int(glyphBuffer.data[4 + inTextGlyphId]);
+    return int(texelFetchF(GlyphData, 4 + inTextGlyphId));
 }
 
 int getCurveCount(int outlineIndex) {
-    return int(glyphBuffer.data[outlineIndex + 5 + inTextGlyphId]);
+    return int(texelFetchF(GlyphData, outlineIndex + 5 + inTextGlyphId));
 }
 
 vec2 getStartPoint(int outlineCount, int outlineIndex) {
     int base = outlineCount + 5 + inTextGlyphId;
-    return vec2(glyphBuffer.data[base + outlineIndex * 2],
-                glyphBuffer.data[base + outlineIndex * 2 + 1]);
+    return vec2(texelFetchF(GlyphData, base + outlineIndex * 2),
+                texelFetchF(GlyphData, base + outlineIndex * 2 + 1));
 }
 
 vec4 getCurve(int outlineCount, int curveGlobalIndex) {
@@ -42,14 +41,14 @@ vec4 getCurve(int outlineCount, int curveGlobalIndex) {
     //               [startPoints(2*outlineCount)] [curves(4*globalCurveCount)]
     // Total header size = 4 + 1 + outlineCount + 2*outlineCount = 5 + 3*outlineCount
     int headerFloats = 5 + 3 * outlineCount;
-    int offset = headerFloats + curveGlobalIndex * 4 + inTextGlyphId;
-    return vec4(glyphBuffer.data[offset], glyphBuffer.data[offset + 1],
-                glyphBuffer.data[offset + 2], glyphBuffer.data[offset + 3]);
+    int o = headerFloats + curveGlobalIndex * 4 + inTextGlyphId;
+    return vec4(texelFetchF(GlyphData, o), texelFetchF(GlyphData, o + 1), texelFetchF(GlyphData, o + 2), texelFetchF(GlyphData, o + 3));
 }
 
 #include "basics/sdf/sdf_text.glsl"
 
 void main() {
+    float dummy = ubo.width + ubo.height;
     vec4 bbox = getBBox();
     if (texCoord.x < bbox.x || texCoord.x > bbox.y || texCoord.y < bbox.z || texCoord.y > bbox.w) {
         discard;

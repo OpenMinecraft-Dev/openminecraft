@@ -3,6 +3,7 @@
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "shaderc/shaderc.h"
 #include "shaderc/shaderc.hpp"
+#include <fstream>
 #include <memory>
 
 namespace openminecraft::renderer::common
@@ -58,6 +59,7 @@ auto OMRendererShaderCompilerBackendShaderc::compile(std::shared_ptr<OMShader> s
     opt.SetOptimizationLevel(shaderc_optimization_level_performance);
     opt.SetAutoBindUniforms(true);
     opt.SetAutoSampledTextures(true);
+    opt.SetPreserveBindings(true);
 
     auto result = compiler->CompileGlslToSpv(reinterpret_cast<const char *>(shader->data.data()), shader->data.size(),
                                              k, shader->filename.c_str(), shader->entrypoint.c_str(), opt);

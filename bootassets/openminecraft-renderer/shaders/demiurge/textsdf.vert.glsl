@@ -1,7 +1,8 @@
-#version 450 core
+#version 330 core
 #extension GL_ARB_separate_shader_objects : enable
 
 #include "basics/geometry.glsl"
+#include "basics/texelbuf.glsl"
 
 layout(location = 0) in vec2 inPosition;
 layout(location = 1) in vec4 inTextPos;
@@ -19,13 +20,11 @@ uniform ScreenData {
     float width;
     float height;
 } ubo;
-layout(std430, binding = 1) readonly buffer GlyphData {
-    float data[];
-} glyphBuffer;
+uniform samplerBuffer GlyphData;
 
 vec4 getBBox() {
-    return vec4(glyphBuffer.data[0 + inTextGlyphId], glyphBuffer.data[1 + inTextGlyphId],
-                glyphBuffer.data[2 + inTextGlyphId], glyphBuffer.data[3 + inTextGlyphId]);
+
+    return vec4(texelFetchF(GlyphData, 0 + inTextGlyphId), texelFetchF(GlyphData, 1 + inTextGlyphId), texelFetchF(GlyphData, 2 + inTextGlyphId), texelFetchF(GlyphData, 3 + inTextGlyphId));
 }
 
 void main() {

@@ -21,7 +21,7 @@ auto OMDemiurgeTextSdfChannel::storeGlyph(fontproc::OMFontSetShapeResult r) -> i
     if (glyphBuffer->length < glyphData.size() * sizeof(float))
     {
         delete glyphBuffer;
-        glyphBuffer = renderer->allocateBuffer(ShaderStorage, 8 * glyphData.size() * sizeof(float));
+        glyphBuffer = renderer->allocateBuffer(UniformTexel, 8 * glyphData.size() * sizeof(float));
         pipeline->bindInput(1, glyphBuffer);
         glyphBuffer->updateDataPart(glyphData.data(), 0, glyphData.size() * sizeof(float));
         recreation();
@@ -58,12 +58,12 @@ void OMDemiurgeTextSdfChannel::init(OMRendererBuffer *uniform, OMRendererRenderT
     quadIndex->updateData(std::array<uint32_t, 6>{{0, 1, 2, 2, 3, 0}}.data());
     instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
 
-    glyphBuffer = renderer->allocateBuffer(ShaderStorage, 1024 * sizeof(float));
+    glyphBuffer = renderer->allocateBuffer(UniformTexel, 1024 * sizeof(float));
 
     pipeline = renderer->createPipeline()
                    ->input(UniformBuffer)
                    ->inputName("ScreenData")
-                   ->input(ShaderStorageBuffer)
+                   ->input(UniformTexelBuffer)
                    ->inputName("GlyphData")
                    ->output(target)
                    ->shader(frgShader)

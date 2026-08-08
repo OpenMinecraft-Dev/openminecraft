@@ -5,8 +5,6 @@
 #include <cstdint>
 #include <memory>
 #include <regex>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 namespace openminecraft::renderer::common

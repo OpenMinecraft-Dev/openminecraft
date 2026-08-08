@@ -203,7 +203,8 @@ void OMRendererPipelineVk::bindInput(int idx, common::OMRendererBuffer *buff)
         {
             auto bv = renderer->logicalDevice.createBufferView(
                 BufferViewCreateInfo({}, reinterpret_cast<OMRendererBufferVk *>(buff)->buffer, Format::eR32Sfloat, 0,
-                                     static_cast<DeviceSize>(buff->length)));
+                                     static_cast<DeviceSize>(buff->length)),
+                renderer->allocator);
             tempBufferViews.push_back(bv);
             renderer->logicalDevice.updateDescriptorSets(
                 WriteDescriptorSet(descriptorSet, idx, 0, descriptorSetLayoutBindings[idx].descriptorType, {}, {},

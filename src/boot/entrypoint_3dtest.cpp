@@ -98,7 +98,14 @@ class OMNodeRendererHandler : public OMRendererHandler
                                                {"text", ""},
                                                {"textheight", 18},
                                            })
-                                           ->store(povTextNode)))
+                                           ->store(povTextNode))
+                               ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                           ->style({
+                                               {"color", (int)0xffffffff},
+                                               {"flexGrow", 1.0f},
+                                               {"text", renderer->driver()},
+                                               {"textheight", 18},
+                                           })))
                    ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                                ->style({
                                    {"flexShrink", 0.0f},
@@ -242,8 +249,8 @@ void rendererTest(renderer::OMBackend backend)
     try
     {
         OMWindowConfig conf = {backend, false};
-        // INFO: requires at least OpenGL 4.3 Core Profile or Vulkan 1.2
-        OMWindow win({util::Version(4, 3, 0, 0), util::Version(1, 2, 0, 0)}, conf,
+        // INFO: requires at least OpenGL 3.3 Core Profile or Vulkan 1.2
+        OMWindow win({util::Version(3, 3, 0, 0), util::Version(1, 2, 0, 0)}, conf,
                      "/bootassets/openminecraft-renderer/shaders");
 
         event::OMEventBusSDL bus;
