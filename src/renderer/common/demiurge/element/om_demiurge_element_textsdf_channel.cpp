@@ -37,20 +37,19 @@ auto OMDemiurgeTextSdfChannel::storeGlyph(fontproc::OMFontSetShapeResult r) -> i
 }
 void OMDemiurgeTextSdfChannel::init(OMRendererBuffer *uniform, OMRendererRenderTarget *target)
 {
-    vtxShader = renderer->shaderManager.preprocess("demiurge/textsdf.vert.glsl", Vertex, GLSLSource);
-    frgShader = renderer->shaderManager.preprocess("demiurge/textsdf.frag.glsl", Fragment, GLSLSource);
-
-    format.appendPart("position", basics::Vec2f)
+    format.appendPart("inPosition", basics::Vec2f)
         ->nextGroup()
         ->setInstance()
-        ->appendPart("textsdf_pos", basics::Vec4f)
-        ->appendPart("textsdf_color", basics::Vec4f)
-        ->appendPart("textsdf_depth", basics::Float)
-        ->appendPart("textsdf_factor", basics::Float)
-        ->appendPart("textsdf_glyphIndex", basics::Integer)
+        ->appendPart("inTextPos", basics::Vec4f)
+        ->appendPart("inTextColor", basics::Vec4f)
+        ->appendPart("inTextDepth", basics::Float)
+        ->appendPart("inTextFactor", basics::Float)
+        ->appendPart("inTextGlyphId", basics::Integer)
         ->nextGroup()
-        ->decideStruct()
-        ->debugState();
+        ->decideStruct();
+
+    vtxShader = renderer->shaderManager.preprocess("demiurge/textsdf.vert.glsl", Vertex, GLSLSource, format);
+    frgShader = renderer->shaderManager.preprocess("demiurge/textsdf.frag.glsl", Fragment, GLSLSource, format);
 
     quadBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(glm::vec2));
     quadBuffer->updateData(std::array<glm::vec2, 4>{{{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}}}.data());

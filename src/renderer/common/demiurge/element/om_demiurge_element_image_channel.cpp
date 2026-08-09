@@ -8,22 +8,21 @@ namespace openminecraft::renderer::common::demiurge::element
 {
 void OMDemiurgeImageChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRenderTarget *target)
 {
-    vtxShader = renderer->shaderManager.preprocess("demiurge/image.vert.glsl", Vertex, GLSLSource);
-    frgShader = renderer->shaderManager.preprocess("demiurge/image.frag.glsl", Fragment, GLSLSource);
-
-    format.appendPart("position", basics::Vec2f)
+    format.appendPart("inPosition", basics::Vec2f)
         ->nextGroup()
         ->setInstance()
-        ->appendPart("image_pos", basics::Vec4f)
-        ->appendPart("image_color", basics::Vec4f)
-        ->appendPart("image_radius", basics::Vec4f)
-        ->appendPart("image_rotation", basics::Vec4f)
-        ->appendPart("image_factor", basics::Float)
-        ->appendPart("image_depth", basics::Float)
-        ->appendPart("image_fillmode", basics::Float)
+        ->appendPart("inRectPos", basics::Vec4f)
+        ->appendPart("inRectColor", basics::Vec4f)
+        ->appendPart("inRectRadius", basics::Vec4f)
+        ->appendPart("inRectRotation", basics::Vec4f)
+        ->appendPart("inRectFactor", basics::Float)
+        ->appendPart("inRectDepth", basics::Float)
+        ->appendPart("inFillType", basics::Float)
         ->nextGroup()
-        ->decideStruct()
-        ->debugState();
+        ->decideStruct();
+
+    vtxShader = renderer->shaderManager.preprocess("demiurge/image.vert.glsl", Vertex, GLSLSource, format);
+    frgShader = renderer->shaderManager.preprocess("demiurge/image.frag.glsl", Fragment, GLSLSource, format);
 
     quadBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(glm::vec2));
     quadBuffer->updateData(std::array<glm::vec2, 4>{{{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}}}.data());

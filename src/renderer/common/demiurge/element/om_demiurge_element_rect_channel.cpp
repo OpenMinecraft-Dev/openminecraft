@@ -6,18 +6,17 @@ namespace openminecraft::renderer::common::demiurge::element
 {
 void OMDemiurgeRectChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRenderTarget *target)
 {
-    vtxShader = renderer->shaderManager.preprocess("demiurge/rect.vert.glsl", Vertex, GLSLSource);
-    frgShader = renderer->shaderManager.preprocess("demiurge/rect.frag.glsl", Fragment, GLSLSource);
-
-    format.appendPart("position", basics::Vec2f)
+    format.appendPart("inPosition", basics::Vec2f)
         ->nextGroup()
         ->setInstance()
-        ->appendPart("rect_pos", basics::Vec4f)
-        ->appendPart("rect_color", basics::Vec4f)
-        ->appendPart("rect_depth", basics::Float)
+        ->appendPart("inRectPos", basics::Vec4f)
+        ->appendPart("inRectColor", basics::Vec4f)
+        ->appendPart("inRectDepth", basics::Float)
         ->nextGroup()
-        ->decideStruct()
-        ->debugState();
+        ->decideStruct();
+
+    vtxShader = renderer->shaderManager.preprocess("demiurge/rect.vert.glsl", Vertex, GLSLSource, format);
+    frgShader = renderer->shaderManager.preprocess("demiurge/rect.frag.glsl", Fragment, GLSLSource, format);
 
     OMDemiurgeQuadChannel::init(uniformBuffer, target);
 }

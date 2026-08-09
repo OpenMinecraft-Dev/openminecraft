@@ -4,14 +4,7 @@
 #include "basics/geometry.glsl"
 #include "basics/rotation.glsl"
 
-layout(location = 0) in vec2 inPosition;
-layout(location = 1) in vec4 inRectPos;
-layout(location = 2) in vec4 inRectColor;
-layout(location = 3) in vec4 inRectRadius;
-layout(location = 4) in vec4 inRectRotation;
-layout(location = 5) in float inRectFactor;
-layout(location = 6) in float inRectDepth;
-layout(location = 7) in float inFillType;
+#vertex
 
 layout(location = 0) out vec4 imageColor;
 layout(location = 1) out vec2 imagePosition;

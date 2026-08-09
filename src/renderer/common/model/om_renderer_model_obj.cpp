@@ -7,12 +7,11 @@ namespace openminecraft::renderer::common::model
 {
 OMRendererModelObj::OMRendererModelObj(OMRenderer *renderer, std::istream *src)
 {
-    format.appendPart("objPosition", basics::Vec3f)
-        ->appendPart("objTextureUV", basics::Vec2f)
-        ->appendPart("objNormal", basics::Vec3f)
+    format.appendPart("inPosition", basics::Vec3f)
+        ->appendPart("inTexCoord", basics::Vec2f)
+        ->appendPart("inNormal", basics::Vec3f)
         ->nextGroup()
-        ->decideStruct()
-        ->debugState();
+        ->decideStruct();
 
     std::vector<Vertex> vertices = {};
     std::vector<uint32_t> indices = {};

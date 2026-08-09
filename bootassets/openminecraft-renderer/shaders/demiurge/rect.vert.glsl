@@ -3,10 +3,7 @@
 
 #include "basics/geometry.glsl"
 
-layout(location = 0) in vec2 inPosition;
-layout(location = 1) in vec4 inRectPos;
-layout(location = 2) in vec4 inRectColor;
-layout(location = 3) in float inRectDepth;
+#vertex
 
 layout(location = 0) out vec4 rectColor;
 

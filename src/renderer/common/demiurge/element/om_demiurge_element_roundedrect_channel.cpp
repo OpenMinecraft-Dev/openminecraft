@@ -8,21 +8,20 @@ namespace openminecraft::renderer::common::demiurge::element
 {
 void OMDemiurgeRoundedRectChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRenderTarget *target)
 {
-    vtxShader = renderer->shaderManager.preprocess("demiurge/roundedrect.vert.glsl", Vertex, GLSLSource);
-    frgShader = renderer->shaderManager.preprocess("demiurge/roundedrect.frag.glsl", Fragment, GLSLSource);
-
-    format.appendPart("position", basics::Vec2f)
+    format.appendPart("inPosition", basics::Vec2f)
         ->nextGroup()
         ->setInstance()
-        ->appendPart("rrect_pos", basics::Vec4f)
-        ->appendPart("rrect_color", basics::Vec4f)
-        ->appendPart("rrect_radius", basics::Vec4f)
-        ->appendPart("rrect_rotation", basics::Vec4f)
-        ->appendPart("rrect_factor", basics::Float)
-        ->appendPart("rrect_depth", basics::Float)
+        ->appendPart("inRectPos", basics::Vec4f)
+        ->appendPart("inRectColor", basics::Vec4f)
+        ->appendPart("inRectRadius", basics::Vec4f)
+        ->appendPart("inRectRotation", basics::Vec4f)
+        ->appendPart("inRectFactor", basics::Float)
+        ->appendPart("inRectDepth", basics::Float)
         ->nextGroup()
-        ->decideStruct()
-        ->debugState();
+        ->decideStruct();
+
+    vtxShader = renderer->shaderManager.preprocess("demiurge/roundedrect.vert.glsl", Vertex, GLSLSource, format);
+    frgShader = renderer->shaderManager.preprocess("demiurge/roundedrect.frag.glsl", Fragment, GLSLSource, format);
 
     OMDemiurgeQuadChannel::init(uniformBuffer, target);
 }

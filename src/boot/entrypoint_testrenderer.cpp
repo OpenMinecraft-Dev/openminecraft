@@ -36,17 +36,10 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     this->overlay = overlay;
     camera = std::make_shared<basics::OMCamera>(renderer, glm::vec3{2.0f, 2.0f, 2.0f}, -135.0f, -35.0f);
 
-    // INFO: basic shaders for renderer
-    objectFrg = renderer->shaderManager.preprocess("core/objectbase.frag.glsl", Fragment, GLSLSource);
-    objectVtx = renderer->shaderManager.preprocess("core/objectbase.vert.glsl", Vertex, GLSLSource);
-    outputFrg = renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource);
-    outputVtx = renderer->shaderManager.preprocess("core/bilt.vert.glsl", Vertex, GLSLSource);
-
-    format.appendPart("position", basics::Vec3f)
-        ->appendPart("textureUV", basics::Vec2f)
+    format.appendPart("inPosition", basics::Vec3f)
+        ->appendPart("inTexCoord", basics::Vec2f)
         ->nextGroup()
-        ->decideStruct()
-        ->debugState();
+        ->decideStruct();
 
     objModel = new model::OMRendererModelObj(
         renderer, vfs::fsfetch("/bootassets/openminecraft-renderer/models/viking_room.obj").get());
@@ -73,6 +66,11 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
 
     textureImage = renderer->allocateTexture(img.getWidth(), img.getHeight(), Dim2, ColorRgba);
     textureImage->updateData(img.fetchData());
+
+    objectFrg = renderer->shaderManager.preprocess("core/objectbase.frag.glsl", Fragment, GLSLSource, objModel->format);
+    objectVtx = renderer->shaderManager.preprocess("core/objectbase.vert.glsl", Vertex, GLSLSource, objModel->format);
+    outputFrg = renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format);
+    outputVtx = renderer->shaderManager.preprocess("core/bilt.vert.glsl", Vertex, GLSLSource, format);
 
     // INFO: core pipeline creation
     mainPipeline = renderer->createPipeline()

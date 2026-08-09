@@ -12,16 +12,19 @@ OMRendererBoxBlurHandler::OMRendererBoxBlurHandler(OMRenderer *renderer) : OMRen
 {
     this->renderer = renderer;
 
-    outputBlurp2Frg = renderer->shaderManager.preprocess("core/effects/boxblurp2.frag.glsl", Fragment, GLSLSource);
-    outputBlurp2Vtx = renderer->shaderManager.preprocess("core/effects/boxblurp2.vert.glsl", Vertex, GLSLSource);
-    outputBlurp1Frg = renderer->shaderManager.preprocess("core/effects/boxblurp1.frag.glsl", Fragment, GLSLSource);
-    outputBlurp1Vtx = renderer->shaderManager.preprocess("core/effects/boxblurp1.vert.glsl", Vertex, GLSLSource);
-
-    format.appendPart("position", basics::Vec3f)
-        ->appendPart("textureUV", basics::Vec2f)
+    format.appendPart("inPosition", basics::Vec3f)
+        ->appendPart("inTexCoord", basics::Vec2f)
         ->nextGroup()
-        ->decideStruct()
-        ->debugState();
+        ->decideStruct();
+
+    outputBlurp2Frg =
+        renderer->shaderManager.preprocess("core/effects/boxblurp2.frag.glsl", Fragment, GLSLSource, format);
+    outputBlurp2Vtx =
+        renderer->shaderManager.preprocess("core/effects/boxblurp2.vert.glsl", Vertex, GLSLSource, format);
+    outputBlurp1Frg =
+        renderer->shaderManager.preprocess("core/effects/boxblurp1.frag.glsl", Fragment, GLSLSource, format);
+    outputBlurp1Vtx =
+        renderer->shaderManager.preprocess("core/effects/boxblurp1.vert.glsl", Vertex, GLSLSource, format);
 
     blurTemp = new wrap::OMRendererTempTarget(renderer);
     blurTemp->construct(renderer->getExtent());

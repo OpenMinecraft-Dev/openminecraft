@@ -4,12 +4,7 @@
 #include "basics/geometry.glsl"
 #include "basics/texelbuf.glsl"
 
-layout(location = 0) in vec2 inPosition;
-layout(location = 1) in vec4 inTextPos;
-layout(location = 2) in vec4 inTextColor;
-layout(location = 3) in float inTextDepth;
-layout(location = 4) in float inTextFactor;
-layout(location = 5) in int inTextGlyphId;
+#vertex
 
 layout(location = 0) out vec4 textColor;
 layout(location = 1) out vec2 textUv;

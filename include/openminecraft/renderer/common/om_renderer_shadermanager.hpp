@@ -2,6 +2,7 @@
 #define OM_RENDERER_SHADERMANAGER_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include <memory>
 #include <string>
@@ -17,7 +18,8 @@ class OMRendererShaderManager
     }
     ~OMRendererShaderManager() = default;
 
-    auto preprocess(std::string name, OMShaderType, OMShaderFileType) -> std::shared_ptr<OMShader>;
+    auto preprocess(std::string name, OMShaderType, OMShaderFileType, basics::OMVertexFormat &)
+        -> std::shared_ptr<OMShader>;
 
   private:
     std::string root;
