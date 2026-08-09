@@ -53,7 +53,7 @@ OMRendererTextureOpenGL::OMRendererTextureOpenGL(uint64_t width, uint64_t height
     this->gl = &renderer->gl;
     if (arr == common::Depth)
     {
-        gl->glGenRenderBuffers(1, &texture);
+        gl->glGenRenderbuffers(1, &texture);
         gl->glBindRenderbuffer(GL_RENDERBUFFER, texture);
         gl->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
     }
