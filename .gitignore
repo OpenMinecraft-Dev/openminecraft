@@ -25,3 +25,4 @@ vmstd
 *.txt
 dbg
 perf*
+bootassets/external

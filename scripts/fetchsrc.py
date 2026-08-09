@@ -6,7 +6,7 @@ import os
 import threading
 import time
 
-BASEPATH = "assets"
+BASEPATH = "bootassets/external"
 
 def savefile(pp, content):
     file_path = os.path.join(BASEPATH, pp)
@@ -23,6 +23,9 @@ def ff(k, v):
         except BaseException as e:
             pass
 
+def needed(n):
+    return "png" in n or "mcmeta" in n or "json" in n
+
 metadata = json.loads(str(urlopen("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json").read(), encoding='utf-8'))
 for k in metadata["versions"]:
     if k["id"] == metadata["latest"]["release"]:
@@ -32,16 +35,17 @@ for k in metadata["versions"]:
         with BytesIO(urlopen(vermeta["downloads"]["client"]["url"]).read()) as bio:
             with zipfile.ZipFile(bio, 'r') as zf:
                 for n in zf.infolist():
-                    if n.filename.startswith("assets/") and not n.is_dir():
+                    if n.filename.startswith("assets/") and not n.is_dir() and needed(n.filename):
                         print(f"Saving {n.filename}")
                         savefile(n.filename[7:], zf.open(n.filename).read())
         print(f"Fetching assets data")
         assets = json.loads(str(urlopen(vermeta["assetIndex"]["url"]).read(), encoding='utf-8'))
         thrs = []
         for (k, v) in assets["objects"].items():
-            t = threading.Thread(target=ff, args=(k,v))
-            thrs.append(t)
-            t.start()
+            if needed(k):
+                t = threading.Thread(target=ff, args=(k,v))
+                thrs.append(t)
+                t.start()
         
         for tt in thrs:
             tt.join()
