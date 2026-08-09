@@ -99,7 +99,17 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, common
                 ImageSubresourceRange(
                     ((arr == common::Depth) ? ImageAspectFlagBits::eDepth : ImageAspectFlagBits::eColor), 0, 1, 0, 1)),
             renderer->allocator);
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.image.create"));
+    }
+}
 
+void OMRendererTextureVk::setupSampler()
+{
+    try
+    {
         auto prop = renderer->physicalDevice.getProperties();
         auto fea = renderer->physicalDevice.getFeatures();
 

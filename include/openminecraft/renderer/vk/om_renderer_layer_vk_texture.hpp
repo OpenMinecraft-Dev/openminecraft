@@ -22,6 +22,7 @@ class OMRendererTextureVk : public common::OMRendererTexture
     void transitionImageLayout(::vk::CommandBuffer cmd, ::vk::ImageLayout oldLayout, ::vk::ImageLayout newLayout);
     void updateData(void *p) override;
     void updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h) override;
+    void setupSampler() override;
 
     ::vk::Format format;
     ::vk::Image image;

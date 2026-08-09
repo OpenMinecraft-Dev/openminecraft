@@ -31,6 +31,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer, std::
 
     auto ext = renderer->getExtent();
     middleTexture = renderer->allocateTexture(ext.x, ext.y, Dim2, ColorRgba);
+    middleTexture->setupSampler();
     middleDepth = renderer->allocateTexture(ext.x, ext.y, Dim2, Depth);
 
     middleRenderTarget = renderer->createRenderTarget();
@@ -85,6 +86,7 @@ void OMDemiurgeRendererHandler::submitTasks()
 
         auto ext = renderer->getExtent();
         middleTexture = renderer->allocateTexture(ext.x, ext.y, Dim2, ColorRgba);
+        middleTexture->setupSampler();
         middleDepth = renderer->allocateTexture(ext.x, ext.y, Dim2, Depth);
 
         middleRenderTarget->replaceTarget(0, middleTexture);

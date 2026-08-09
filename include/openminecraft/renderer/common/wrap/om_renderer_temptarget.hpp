@@ -29,6 +29,7 @@ class OMRendererTempTarget
         }
 
         colorTexture = renderer->allocateTexture(ext.x, ext.y, Dim2, ColorRgba);
+        colorTexture->setupSampler();
         depthTexture = renderer->allocateTexture(ext.x, ext.y, Dim2, Depth);
 
         if (!target)
