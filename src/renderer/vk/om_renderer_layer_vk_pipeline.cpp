@@ -31,11 +31,6 @@ OMRendererPipelineVk::~OMRendererPipelineVk()
     {
         if (available)
         {
-            for (auto smp : tempSamplers)
-            {
-                renderer->logicalDevice.destroySampler(smp, renderer->allocator);
-            }
-
             for (auto m : tempBufferViews)
             {
                 renderer->logicalDevice.destroyBufferView(m, renderer->allocator);
@@ -226,19 +221,8 @@ void OMRendererPipelineVk::bindInput(int idx, common::OMRendererTexture *texture
 {
     try
     {
-        auto prop = renderer->physicalDevice.getProperties();
-        auto fea = renderer->physicalDevice.getFeatures();
-
-        auto textureSampler = renderer->logicalDevice.createSampler(
-            SamplerCreateInfo({}, Filter::eLinear, Filter::eLinear, SamplerMipmapMode::eLinear,
-                              SamplerAddressMode::eClampToEdge, SamplerAddressMode::eClampToEdge,
-                              SamplerAddressMode::eClampToEdge, 0.0f, fea.samplerAnisotropy,
-                              prop.limits.maxSamplerAnisotropy, false, CompareOp::eAlways, 0.0f, 0.0f,
-                              BorderColor::eIntOpaqueBlack, false),
-            renderer->allocator);
-        tempSamplers.push_back(textureSampler);
-
-        auto cc = DescriptorImageInfo(textureSampler, reinterpret_cast<OMRendererTextureVk *>(texture)->imageView,
+        auto cc = DescriptorImageInfo(reinterpret_cast<OMRendererTextureVk *>(texture)->sampler,
+                                      reinterpret_cast<OMRendererTextureVk *>(texture)->imageView,
                                       ImageLayout::eShaderReadOnlyOptimal);
         renderer->logicalDevice.updateDescriptorSets(
             WriteDescriptorSet(descriptorSet, idx, 0, DescriptorType::eCombinedImageSampler, cc, {}), nullptr);

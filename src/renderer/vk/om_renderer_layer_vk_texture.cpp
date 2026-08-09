@@ -98,6 +98,17 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, common
                 ImageSubresourceRange(
                     ((arr == common::Depth) ? ImageAspectFlagBits::eDepth : ImageAspectFlagBits::eColor), 0, 1, 0, 1)),
             renderer->allocator);
+
+        auto prop = renderer->physicalDevice.getProperties();
+        auto fea = renderer->physicalDevice.getFeatures();
+
+        sampler = renderer->logicalDevice.createSampler(
+            SamplerCreateInfo({}, Filter::eLinear, Filter::eLinear, SamplerMipmapMode::eLinear,
+                              SamplerAddressMode::eClampToEdge, SamplerAddressMode::eClampToEdge,
+                              SamplerAddressMode::eClampToEdge, 0.0f, fea.samplerAnisotropy,
+                              prop.limits.maxSamplerAnisotropy, false, CompareOp::eAlways, 0.0f, 0.0f,
+                              BorderColor::eIntOpaqueBlack, false),
+            renderer->allocator);
     }
     catch (SystemError &e)
     {
@@ -109,6 +120,7 @@ OMRendererTextureVk::~OMRendererTextureVk()
 {
     try
     {
+        renderer->logicalDevice.destroySampler(sampler, renderer->allocator);
         renderer->logicalDevice.destroyImageView(imageView, renderer->allocator);
         renderer->logicalDevice.freeMemory(imageMemory, renderer->allocator);
         renderer->logicalDevice.destroyImage(image, renderer->allocator);

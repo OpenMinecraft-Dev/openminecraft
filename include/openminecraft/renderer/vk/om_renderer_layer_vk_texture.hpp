@@ -2,6 +2,7 @@
 #define OM_RENDERER_LAYER_VK_TEXTURE_HPP
 #include "om_renderer_layer_vk.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
+#include "vulkan/vulkan_handles.hpp"
 
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
@@ -26,6 +27,7 @@ class OMRendererTextureVk : public common::OMRendererTexture
     ::vk::Image image;
     ::vk::ImageView imageView;
     ::vk::DeviceMemory imageMemory;
+    ::vk::Sampler sampler;
 
   private:
     OMRendererVk *renderer;

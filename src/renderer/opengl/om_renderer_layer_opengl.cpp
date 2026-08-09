@@ -161,7 +161,12 @@ OMRendererOpenGL::~OMRendererOpenGL()
 
 auto OMRendererOpenGL::driver() -> std::string
 {
-    return reinterpret_cast<const char *>(gl.glGetString(GL_RENDERER));
+    auto r = gl.glGetString(GL_RENDERER);
+    if (r)
+    {
+        return reinterpret_cast<const char *>(r);
+    }
+    return "<unknown>";
 }
 auto OMRendererOpenGL::allocateBuffer(common::OMBufferUsage usage, uint64_t length) -> common::OMRendererBuffer *
 {
