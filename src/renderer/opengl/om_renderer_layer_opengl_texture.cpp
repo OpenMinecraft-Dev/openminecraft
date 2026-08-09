@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_texture.hpp"
 #include "GL/glcorearb.h"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
+#include <array>
 
 namespace openminecraft::renderer::opengl
 {
