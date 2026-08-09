@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 #include "vulkan/vulkan.hpp"
+#include "vulkan/vulkan_enums.hpp"
 
 using namespace ::vk;
 using namespace openminecraft::i18n::res;
@@ -107,7 +108,7 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, common
                               SamplerAddressMode::eClampToEdge, SamplerAddressMode::eClampToEdge,
                               SamplerAddressMode::eClampToEdge, 0.0f, fea.samplerAnisotropy,
                               prop.limits.maxSamplerAnisotropy, false, CompareOp::eAlways, 0.0f, 0.0f,
-                              BorderColor::eIntOpaqueBlack, false),
+                              BorderColor::eFloatOpaqueBlack, false),
             renderer->allocator);
     }
     catch (SystemError &e)

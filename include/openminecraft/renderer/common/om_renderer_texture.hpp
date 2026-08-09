@@ -25,6 +25,20 @@ enum OMTextureArrangement
     ColorRgb
 };
 
+enum OMTextureAddressMode
+{
+    Repeat,
+    ClampToBorder,
+    ClampToEdge
+};
+
+enum OMTextureBorder
+{
+    OpaqueBlack,
+    OpaqueWhite,
+    TransparentBlack
+};
+
 class OMRendererTexture : public OMRendererObject
 {
   public:
@@ -42,6 +56,9 @@ class OMRendererTexture : public OMRendererObject
     {
         return Texture;
     }
+
+    OMTextureAddressMode addressMode = ClampToEdge;
+    OMTextureBorder border = OpaqueBlack;
 
   protected:
     OMRenderer *renderer;

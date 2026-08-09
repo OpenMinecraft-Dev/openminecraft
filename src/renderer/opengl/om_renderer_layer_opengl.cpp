@@ -145,6 +145,7 @@ void OMRendererOpenGL::initGlFuncs()
     gl.glGetProgramResourceIndex = fetchGlFunc<PFNGLGETPROGRAMRESOURCEINDEXPROC>("glGetProgramResourceIndex");
     gl.glShaderStorageBlockBinding = fetchGlFunc<PFNGLSHADERSTORAGEBLOCKBINDINGPROC>("glShaderStorageBlockBinding");
     gl.glTexBuffer = fetchGlFunc<PFNGLTEXBUFFERPROC>("glTexBuffer");
+    gl.glGenerateMipmap = fetchGlFunc<PFNGLGENERATEMIPMAPPROC>("glGenerateMipmap");
 }
 
 OMRendererOpenGL::~OMRendererOpenGL()

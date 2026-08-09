@@ -65,6 +65,7 @@ OMRendererTextureOpenGL::OMRendererTextureOpenGL(uint64_t width, uint64_t height
         gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, 0);
         updateData(nullptr);
     }
 }
@@ -83,7 +84,9 @@ OMRendererTextureOpenGL::~OMRendererTextureOpenGL()
 void OMRendererTextureOpenGL::updateData(void *d)
 {
     gl->glBindTexture(fromCommon(type), texture);
+    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 5);
     gl->glTexImage2D(fromCommon(type), 0, fromCommonI(arr), width, height, 0, fromCommon(arr), GL_UNSIGNED_BYTE, d);
+    gl->glGenerateMipmap(GL_TEXTURE_2D);
     gl->glBindTexture(fromCommon(type), 0);
 }
 
