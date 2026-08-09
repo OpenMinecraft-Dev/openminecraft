@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 
 #include "openminecraft/i18n/om_i18n_res.hpp"
+#include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
@@ -68,6 +69,34 @@ static auto fromCommonUsage(common::OMTextureArrangement arr) -> Format
     }
 }
 
+static auto fromCommonType(common::OMTextureAddressMode a) -> SamplerAddressMode
+{
+    switch (a)
+    {
+    case common::Repeat:
+        return SamplerAddressMode::eRepeat;
+    default:
+    case common::ClampToEdge:
+        return SamplerAddressMode::eClampToEdge;
+    case common::ClampToBorder:
+        return SamplerAddressMode::eClampToBorder;
+    }
+}
+
+static auto fromCommonType(common::OMTextureBorder b) -> BorderColor
+{
+    switch (b)
+    {
+    default:
+    case common::OpaqueBlack:
+        return BorderColor::eFloatOpaqueBlack;
+    case common::OpaqueWhite:
+        return BorderColor::eFloatOpaqueWhite;
+    case common::TransparentBlack:
+        return BorderColor::eFloatTransparentBlack;
+    }
+}
+
 OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, common::OMTextureType type,
                                          common::OMTextureArrangement arr, OMRendererVk *renderer)
     : OMRendererTexture(width, height, type, arr, reinterpret_cast<OMRenderer *>(renderer)), renderer(renderer)
@@ -114,11 +143,10 @@ void OMRendererTextureVk::setupSampler()
         auto fea = renderer->physicalDevice.getFeatures();
 
         sampler = renderer->logicalDevice.createSampler(
-            SamplerCreateInfo({}, Filter::eLinear, Filter::eLinear, SamplerMipmapMode::eLinear,
-                              SamplerAddressMode::eClampToEdge, SamplerAddressMode::eClampToEdge,
-                              SamplerAddressMode::eClampToEdge, 0.0f, fea.samplerAnisotropy,
-                              prop.limits.maxSamplerAnisotropy, false, CompareOp::eAlways, 0.0f, 0.0f,
-                              BorderColor::eFloatOpaqueBlack, false),
+            SamplerCreateInfo(
+                {}, Filter::eLinear, Filter::eLinear, SamplerMipmapMode::eLinear, fromCommonType(addressModeU),
+                fromCommonType(addressModeV), SamplerAddressMode::eClampToEdge, 0.0f, fea.samplerAnisotropy,
+                prop.limits.maxSamplerAnisotropy, false, CompareOp::eAlways, 0.0f, 0.0f, fromCommonType(border), false),
             renderer->allocator);
     }
     catch (SystemError &e)

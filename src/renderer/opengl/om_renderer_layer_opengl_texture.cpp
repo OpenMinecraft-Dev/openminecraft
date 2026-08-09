@@ -46,6 +46,38 @@ static auto fromCommonI(common::OMTextureArrangement arr) -> GLenum
     }
 }
 
+static auto fromCommon(common::OMTextureAddressMode a) -> GLenum
+{
+    switch (a)
+    {
+    case common::Repeat:
+        return GL_REPEAT;
+    default:
+    case common::ClampToEdge:
+        return GL_CLAMP_TO_EDGE;
+    case common::ClampToBorder:
+        return GL_CLAMP_TO_BORDER;
+    }
+}
+
+static std::array<float, 4> transparentBlack = {0.0f, 0.0f, 0.0f, 0.0f};
+static std::array<float, 4> opaqueBlack = {0.0f, 0.0f, 0.0f, 1.0f};
+static std::array<float, 4> opaqueWhite = {1.0f, 1.0f, 1.0f, 1.0f};
+
+static auto fromCommon(common::OMTextureBorder b) -> float *
+{
+    switch (b)
+    {
+    case common::TransparentBlack:
+        return transparentBlack.data();
+    case common::OpaqueWhite:
+        return opaqueWhite.data();
+    default:
+    case common::OpaqueBlack:
+        return opaqueBlack.data();
+    }
+}
+
 OMRendererTextureOpenGL::OMRendererTextureOpenGL(uint64_t width, uint64_t height, common::OMTextureType type,
                                                  common::OMTextureArrangement arr, OMRendererOpenGL *renderer)
     : common::OMRendererTexture(width, height, type, arr, renderer)
@@ -67,9 +99,9 @@ void OMRendererTextureOpenGL::setupSampler()
     gl->glBindTexture(fromCommon(type), texture);
     gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, 0);
+    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, fromCommon(addressModeU));
+    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, fromCommon(addressModeV));
+    gl->glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, fromCommon(border));
     updateData(nullptr);
 }
 OMRendererTextureOpenGL::~OMRendererTextureOpenGL()

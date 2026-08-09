@@ -59,7 +59,8 @@ class OMRendererTexture : public OMRendererObject
 
     virtual void setupSampler() = 0;
 
-    OMTextureAddressMode addressMode = ClampToEdge;
+    OMTextureAddressMode addressModeU = ClampToEdge;
+    OMTextureAddressMode addressModeV = ClampToEdge;
     OMTextureBorder border = OpaqueBlack;
 
   protected:
