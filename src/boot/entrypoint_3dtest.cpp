@@ -2,6 +2,7 @@
 #include "SDL3/SDL_keycode.h"
 #include "SDL3/SDL_messagebox.h"
 #include "SDL3/SDL_mouse.h"
+#include "SDL3/SDL_video.h"
 #include "glm/ext/vector_float3.hpp"
 #include "openminecraft/boot/entrypoint_testrenderer.hpp"
 #include "openminecraft/boot/om_boot.hpp"
@@ -59,7 +60,7 @@ class OMNodeRendererHandler : public OMRendererHandler
                        {"fill", node::OMDemiurgeImageFillType::Cover},
                        {"radius", glm::vec4(0.0f, 0.0f, 0.0f, 25.0f)},
                        {"width", 40_percent},
-                       {"height", 50_percent},
+                       {"height", 70_percent},
                    })
                    ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                                ->style({
@@ -264,6 +265,7 @@ void rendererTest(renderer::OMBackend backend)
         // INFO: requires at least OpenGL 3.3 Core Profile or Vulkan 1.2
         OMWindow win({util::Version(3, 3, 0, 0), util::Version(1, 2, 0, 0)}, conf,
                      "/bootassets/openminecraft-renderer/shaders");
+        SDL_SetWindowFullscreen(reinterpret_cast<SDL_Window *>(*win), true);
 
         event::OMEventBusSDL bus;
         auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{2.0f, 2.0f, 2.0f}, -135.0f, -35.0f);
