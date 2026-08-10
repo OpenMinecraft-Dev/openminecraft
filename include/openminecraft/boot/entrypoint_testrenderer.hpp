@@ -63,8 +63,6 @@ class OMTestRenderer : public OMRendererHandler
     OMRendererBuffer *uniformBuffer;
     OMRendererTexture *textureImage;
     OMRendererPipeline *pipeline = nullptr;
-    OMRendererBuffer *mainVtxBuffer;
-    OMRendererBuffer *mainIdxBuffer;
     OMRendererPipeline *mainPipeline;
     wrap::OMRendererTempTarget *tempTarget;
     model::OMRendererModelObj *objModel;

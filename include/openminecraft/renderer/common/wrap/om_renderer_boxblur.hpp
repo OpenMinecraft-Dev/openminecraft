@@ -41,7 +41,6 @@ class OMRendererBoxBlurHandler : public OMRendererHandler
     OMRendererPipeline *blurp1Pipeline, *blurp2Pipeline;
     OMRendererTempTarget *blurTemp;
     OMRendererBuffer *blurArgs;
-    OMRendererBuffer *quadVertex, *quadIndex;
 
     std::shared_ptr<OMShader> outputBlurp2Vtx, outputBlurp1Vtx;
     std::shared_ptr<OMShader> outputBlurp2Frg, outputBlurp1Frg;

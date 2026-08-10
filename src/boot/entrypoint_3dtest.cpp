@@ -25,9 +25,12 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include <array>
 #include <chrono>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <map>
+#include <string>
+#include <vector>
 
 using namespace openminecraft::renderer;
 using namespace openminecraft::renderer::common::demiurge;

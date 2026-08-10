@@ -83,22 +83,29 @@ class OMRendererTask : public OMRendererObject
         bindTarget(target);
         return this;
     }
-    virtual void draw(uint64_t vertexCount) = 0;
-    inline auto drawN(uint64_t vertexCount) -> OMRendererTask *
-    {
-        draw(vertexCount);
-        return this;
-    }
     virtual void drawInstance(uint64_t vertexCount, uint64_t instanceCount) = 0;
     inline auto drawInstanceN(uint64_t vertexCount, uint64_t instanceCount) -> OMRendererTask *
     {
         drawInstance(vertexCount, instanceCount);
         return this;
     }
-    virtual void drawInstance(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance) = 0;
-    inline auto drawInstanceN(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance) -> OMRendererTask *
+    virtual void drawIndexed(uint64_t vertexCount) = 0;
+    inline auto drawIndexedN(uint64_t vertexCount) -> OMRendererTask *
     {
-        drawInstance(vertexCount, instanceCount, firstInstance);
+        drawIndexed(vertexCount);
+        return this;
+    }
+    virtual void drawIndexedInstance(uint64_t vertexCount, uint64_t instanceCount) = 0;
+    inline auto drawIndexedInstanceN(uint64_t vertexCount, uint64_t instanceCount) -> OMRendererTask *
+    {
+        drawIndexedInstance(vertexCount, instanceCount);
+        return this;
+    }
+    virtual void drawIndexedInstance(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance) = 0;
+    inline auto drawIndexedInstanceN(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance)
+        -> OMRendererTask *
+    {
+        drawIndexedInstance(vertexCount, instanceCount, firstInstance);
         return this;
     }
     virtual void drawIndirect(uint64_t begin, uint64_t count) = 0;

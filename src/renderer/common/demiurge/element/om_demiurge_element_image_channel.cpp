@@ -74,7 +74,7 @@ auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, float upper, float
             task->pipeline(pipelines[i])
                 ->vertexBuffer({quadBuffer, instanceBuffer})
                 ->indexBuffer(quadIndex)
-                ->drawInstance(6, 1, i);
+                ->drawIndexedInstance(6, 1, i);
         }
     }
 }

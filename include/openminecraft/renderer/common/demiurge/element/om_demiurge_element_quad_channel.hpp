@@ -80,7 +80,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
                         ->indexBuffer(quadIndex);
                     currentChannel = this;
                 }
-                task->drawInstance(6, i - start, start);
+                task->drawIndexedInstance(6, i - start, start);
                 inDraw = false;
             }
         }

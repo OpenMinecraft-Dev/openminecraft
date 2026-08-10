@@ -3,7 +3,6 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include <array>
 
 namespace openminecraft::renderer::common::wrap
 {
@@ -61,19 +60,6 @@ OMRendererBoxBlurHandler::OMRendererBoxBlurHandler(OMRenderer *renderer) : OMRen
                          ->depth(false, false)
                          ->buildN();
     blurp2Pipeline->bindInput(0, blurArgs);
-
-    std::array<OMRendererBoxBlurVertex, 4> vtxs = {{
-        {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}},
-        {{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
-        {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
-        {{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f}},
-    }};
-    std::array<uint32_t, 6> vtxi = {0, 1, 2, 2, 3, 0};
-
-    quadVertex = renderer->allocateBuffer(VertexData, 4 * sizeof(OMRendererBoxBlurVertex));
-    quadVertex->updateData(vtxs.data());
-    quadIndex = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
-    quadIndex->updateData(vtxi.data());
 }
 OMRendererBoxBlurHandler::~OMRendererBoxBlurHandler()
 {
@@ -81,9 +67,6 @@ OMRendererBoxBlurHandler::~OMRendererBoxBlurHandler()
     delete blurp2Pipeline;
     delete blurArgs;
     delete blurTemp;
-
-    delete quadVertex;
-    delete quadIndex;
 }
 auto OMRendererBoxBlurHandler::firstLayerTask(OMRendererTask *pre) -> OMRendererTask *
 {
@@ -91,15 +74,13 @@ auto OMRendererBoxBlurHandler::firstLayerTask(OMRendererTask *pre) -> OMRenderer
         ->dependOn(pre)
         ->target(blurTemp->target)
         ->pipeline(blurp1Pipeline)
-        ->vertexBuffer({quadVertex})
-        ->indexBuffer(quadIndex)
-        ->drawN(6)
+        ->drawInstanceN(6, 1)
         ->finishN();
     ;
 }
 auto OMRendererBoxBlurHandler::secondLayerTask(OMRendererTask *task) -> OMRendererTask *
 {
-    return task->pipeline(blurp2Pipeline)->vertexBuffer({quadVertex})->indexBuffer(quadIndex)->drawN(6);
+    return task->pipeline(blurp2Pipeline)->drawInstanceN(6, 1);
 }
 void OMRendererBoxBlurHandler::update(OMRendererBoxBlurArg a)
 {

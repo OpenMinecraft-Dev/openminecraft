@@ -44,19 +44,6 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     objModel = new model::OMRendererModelObj(
         renderer, vfs::fsfetch("/bootassets/openminecraft-renderer/models/viking_room.obj").get());
 
-    mainVtxBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(VertexStruct));
-    mainIdxBuffer = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
-
-    // INFO: 4 vertices and 6 vertex indices to render a texture to the screen
-    mainVtxBuffer->updateData(std::array<VertexStruct, 4>{
-        {
-            {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}},
-            {{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
-            {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
-            {{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f}},
-        }}.data());
-    mainIdxBuffer->updateData(std::array{0u, 1u, 2u, 2u, 3u, 0u}.data());
-
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(UniformStructure));
 
     auto imgraw = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/viking_room.png");
@@ -185,7 +172,7 @@ void OMTestRenderer::submitTasks()
                      ->pipeline(pipeline)
                      ->vertexBuffer({objModel->vertexData})
                      ->indexBuffer(objModel->vertexIndex)
-                     ->drawN(objModel->vertexCount)
+                     ->drawIndexedN(objModel->vertexCount)
                      ->finishN();
     blurHandler
         ->secondLayerTask(renderer->createTask("main")
@@ -194,9 +181,7 @@ void OMTestRenderer::submitTasks()
                               ->dependOn(renderer->fetchTask("demiurgeui_compose"))
                               ->target(renderer->getDefaultRenderTarget())
                               ->pipeline(mainPipeline)
-                              ->vertexBuffer({mainVtxBuffer})
-                              ->indexBuffer(mainIdxBuffer)
-                              ->drawN(6))
+                              ->drawInstanceN(6, 1))
         ->finishN();
 }
 OMTestRenderer::~OMTestRenderer()
@@ -206,9 +191,6 @@ OMTestRenderer::~OMTestRenderer()
     delete textureImage;
     delete uniformBuffer;
     delete objModel;
-
-    delete mainIdxBuffer;
-    delete mainVtxBuffer;
 
     delete tempTarget;
 }
