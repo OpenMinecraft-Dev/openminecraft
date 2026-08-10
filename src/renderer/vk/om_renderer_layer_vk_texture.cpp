@@ -7,6 +7,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan_structs.hpp"
 
 using namespace ::vk;
 using namespace openminecraft::i18n::res;
@@ -97,20 +98,22 @@ static auto fromCommonType(common::OMTextureBorder b) -> BorderColor
     }
 }
 
-OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, common::OMTextureType type,
+OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64_t mipmap, common::OMTextureType type,
                                          common::OMTextureArrangement arr, OMRendererVk *renderer)
-    : OMRendererTexture(width, height, type, arr, reinterpret_cast<OMRenderer *>(renderer)), renderer(renderer)
+    : OMRendererTexture(width, height, mipmap, type, arr, reinterpret_cast<OMRenderer *>(renderer)), renderer(renderer),
+      mipmap(mipmap)
 {
     try
     {
         auto memprop = renderer->physicalDevice.getMemoryProperties();
         format = fromCommonUsage(arr);
         image = renderer->logicalDevice.createImage(
-            ImageCreateInfo({}, fromCommonType(type), format, Extent3D(width, height, 1), 1, 1, SampleCountFlagBits::e1,
-                            ImageTiling::eOptimal,
-                            (arr == common::Depth) ? ImageUsageFlagBits::eDepthStencilAttachment
-                                                   : ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled |
-                                                         ImageUsageFlagBits::eColorAttachment,
+            ImageCreateInfo({}, fromCommonType(type), format, Extent3D(width, height, 1), mipmap + 1, 1,
+                            SampleCountFlagBits::e1, ImageTiling::eOptimal,
+                            (arr == common::Depth)
+                                ? ImageUsageFlagBits::eDepthStencilAttachment
+                                : ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled |
+                                      ImageUsageFlagBits::eColorAttachment | ImageUsageFlagBits::eTransferSrc,
                             SharingMode::eExclusive, {}, ImageLayout::eUndefined),
             renderer->allocator);
 
@@ -123,15 +126,37 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, common
         renderer->logicalDevice.bindImageMemory(image, imageMemory, 0);
 
         imageView = renderer->logicalDevice.createImageView(
-            ImageViewCreateInfo(
-                {}, image, fromCommonType2(type), format, {},
-                ImageSubresourceRange(
-                    ((arr == common::Depth) ? ImageAspectFlagBits::eDepth : ImageAspectFlagBits::eColor), 0, 1, 0, 1)),
+            ImageViewCreateInfo({}, image, fromCommonType2(type), format, {},
+                                ImageSubresourceRange(((arr == common::Depth) ? ImageAspectFlagBits::eDepth
+                                                                              : ImageAspectFlagBits::eColor),
+                                                      0, mipmap + 1, 0, 1)),
             renderer->allocator);
     }
     catch (SystemError &e)
     {
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.image.create"));
+    }
+}
+
+static auto toFilter(common::OMTextureFilter f) -> Filter
+{
+    switch (f)
+    {
+    case common::Linear:
+        return Filter::eLinear;
+    case common::Nearest:
+        return Filter::eNearest;
+    }
+}
+
+static auto toMipFilter(common::OMTextureFilter f) -> SamplerMipmapMode
+{
+    switch (f)
+    {
+    case common::Linear:
+        return SamplerMipmapMode::eLinear;
+    case common::Nearest:
+        return SamplerMipmapMode::eNearest;
     }
 }
 
@@ -143,11 +168,51 @@ void OMRendererTextureVk::setupSampler()
         auto fea = renderer->physicalDevice.getFeatures();
 
         sampler = renderer->logicalDevice.createSampler(
-            SamplerCreateInfo(
-                {}, Filter::eLinear, Filter::eLinear, SamplerMipmapMode::eLinear, fromCommonType(addressModeU),
-                fromCommonType(addressModeV), SamplerAddressMode::eClampToEdge, 0.0f, fea.samplerAnisotropy,
-                prop.limits.maxSamplerAnisotropy, false, CompareOp::eAlways, 0.0f, 0.0f, fromCommonType(border), false),
+            SamplerCreateInfo({}, toFilter(magFilter), toFilter(minFilter), toMipFilter(mipFilter),
+                              fromCommonType(addressModeU), fromCommonType(addressModeV),
+                              SamplerAddressMode::eClampToEdge, 0.0f, fea.samplerAnisotropy,
+                              prop.limits.maxSamplerAnisotropy, false, CompareOp::eAlways, 0.0f, mipmap + 1,
+                              fromCommonType(border), false),
             renderer->allocator);
+
+        if (mipmap > 0)
+        {
+            auto cmdBuff = renderer->logicalDevice.allocateCommandBuffers(
+                CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
+            cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
+
+            transitionImageLayout(cmdBuff, ImageLayout::eShaderReadOnlyOptimal, ImageLayout::eTransferSrcOptimal, 0);
+
+            auto w = width;
+            auto h = height;
+            for (int i = 1; i <= mipmap; ++i)
+            {
+                auto cw = std::max(1, static_cast<int>(w >> 1));
+                auto ch = std::max(1, static_cast<int>(h >> 1));
+
+                transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal, i);
+                auto blit = ImageBlit(ImageSubresourceLayers(ImageAspectFlagBits::eColor, i - 1, 0, 1),
+                                      {Offset3D(0, 0, 0), Offset3D(w, h, 1)},
+                                      ImageSubresourceLayers(ImageAspectFlagBits::eColor, i, 0, 1),
+                                      {Offset3D(0, 0, 0), Offset3D(cw, ch, 1)});
+                cmdBuff.blitImage(image, ImageLayout::eTransferSrcOptimal, image, ImageLayout::eTransferDstOptimal, 1,
+                                  &blit, Filter::eLinear);
+                transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eTransferSrcOptimal, i);
+                transitionImageLayout(cmdBuff, ImageLayout::eTransferSrcOptimal, ImageLayout::eShaderReadOnlyOptimal,
+                                      i - 1);
+
+                w = cw;
+                h = ch;
+            }
+            transitionImageLayout(cmdBuff, ImageLayout::eTransferSrcOptimal, ImageLayout::eShaderReadOnlyOptimal,
+                                  mipmap);
+
+            cmdBuff.end();
+            renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
+            renderer->queues.first.waitIdle();
+
+            renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
+        }
     }
     catch (SystemError &e)
     {
@@ -169,33 +234,47 @@ OMRendererTextureVk::~OMRendererTextureVk()
     }
 }
 
-void OMRendererTextureVk::transitionImageLayout(CommandBuffer cmd, ImageLayout oldLayout, ImageLayout newLayout)
+static auto toAccessMask(ImageLayout layout) -> AccessFlagBits
+{
+    switch (layout)
+    {
+    case ImageLayout::eTransferDstOptimal:
+        return AccessFlagBits::eTransferWrite;
+    case ImageLayout::eTransferSrcOptimal:
+        return AccessFlagBits::eTransferRead;
+    case ImageLayout::eShaderReadOnlyOptimal:
+        return AccessFlagBits::eShaderRead;
+    case ImageLayout::eUndefined:
+    default:
+        return {};
+    }
+}
+
+static auto toStage(ImageLayout layout) -> PipelineStageFlagBits
+{
+    switch (layout)
+    {
+    case ImageLayout::eTransferSrcOptimal:
+    case ImageLayout::eTransferDstOptimal:
+        return PipelineStageFlagBits::eTransfer;
+    case ImageLayout::eShaderReadOnlyOptimal:
+        return PipelineStageFlagBits::eFragmentShader;
+    case ImageLayout::eUndefined:
+    default:
+        return PipelineStageFlagBits::eTopOfPipe;
+    }
+}
+
+void OMRendererTextureVk::transitionImageLayout(CommandBuffer cmd, ImageLayout oldLayout, ImageLayout newLayout,
+                                                uint64_t level)
 {
     auto barrier = ImageMemoryBarrier({}, {}, oldLayout, newLayout, QueueFamilyIgnored, QueueFamilyIgnored, image,
-                                      ImageSubresourceRange(ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+                                      ImageSubresourceRange(ImageAspectFlagBits::eColor, level, 1, 0, 1));
 
-    PipelineStageFlagBits sourceStage, destinationStage;
+    PipelineStageFlagBits sourceStage = toStage(oldLayout), destinationStage = toStage(newLayout);
 
-    if (oldLayout == ImageLayout::eUndefined && newLayout == ImageLayout::eTransferDstOptimal)
-    {
-        barrier.srcAccessMask = {};
-        barrier.dstAccessMask = AccessFlagBits::eTransferWrite;
-
-        sourceStage = PipelineStageFlagBits::eTopOfPipe;
-        destinationStage = PipelineStageFlagBits::eTransfer;
-    }
-    else if (oldLayout == ImageLayout::eTransferDstOptimal && newLayout == ImageLayout::eShaderReadOnlyOptimal)
-    {
-        barrier.srcAccessMask = AccessFlagBits::eTransferWrite;
-        barrier.dstAccessMask = AccessFlagBits::eShaderRead;
-
-        sourceStage = PipelineStageFlagBits::eTransfer;
-        destinationStage = PipelineStageFlagBits::eFragmentShader;
-    }
-    else
-    {
-        throw OMRendererException(i18n::res::translate("openminecraft.renderer.vk.err.image.layout"));
-    }
+    barrier.srcAccessMask = toAccessMask(oldLayout);
+    barrier.dstAccessMask = toAccessMask(newLayout);
 
     cmd.pipelineBarrier(sourceStage, destinationStage, {}, nullptr, nullptr, barrier);
 }
@@ -212,7 +291,7 @@ void OMRendererTextureVk::updateData(void *p)
             CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
 
         cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
-        transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal);
+        transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal, 0);
         cmdBuff.copyBufferToImage(
             reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
             BufferImageCopy(0, width, height,
@@ -220,7 +299,7 @@ void OMRendererTextureVk::updateData(void *p)
                                                                                 : ImageAspectFlagBits::eColor,
                                                    0, 0, 1),
                             Offset3D(0, 0, 0), Extent3D(width, height, 1)));
-        transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal);
+        transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal, 0);
 
         cmdBuff.end();
         renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
@@ -247,7 +326,7 @@ void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64
             CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
 
         cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
-        transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal);
+        transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal, 0);
         cmdBuff.copyBufferToImage(
             reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
             BufferImageCopy(0, w, h,
@@ -255,7 +334,7 @@ void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64
                                                                                 : ImageAspectFlagBits::eColor,
                                                    0, 0, 1),
                             Offset3D(x, y, 0), Extent3D(w, h, 1)));
-        transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal);
+        transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal, 0);
 
         cmdBuff.end();
         renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));

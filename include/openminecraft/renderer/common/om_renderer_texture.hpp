@@ -39,10 +39,16 @@ enum OMTextureBorder
     TransparentBlack
 };
 
+enum OMTextureFilter : uint8_t
+{
+    Linear = 0,
+    Nearest = 1
+};
+
 class OMRendererTexture : public OMRendererObject
 {
   public:
-    OMRendererTexture(uint64_t width, uint64_t height, OMTextureType type, OMTextureArrangement arr,
+    OMRendererTexture(uint64_t width, uint64_t height, uint64_t mipmap, OMTextureType type, OMTextureArrangement arr,
                       OMRenderer *renderer);
     virtual ~OMRendererTexture();
     const uint64_t width, height;
@@ -62,7 +68,9 @@ class OMRendererTexture : public OMRendererObject
     OMTextureAddressMode addressModeU = ClampToEdge;
     OMTextureAddressMode addressModeV = ClampToEdge;
     OMTextureBorder border = OpaqueBlack;
-    int mipmapLevels = 0;
+    OMTextureFilter magFilter = Linear;
+    OMTextureFilter minFilter = Linear;
+    OMTextureFilter mipFilter = Linear;
 
   protected:
     OMRenderer *renderer;

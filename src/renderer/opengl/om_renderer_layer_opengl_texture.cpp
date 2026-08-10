@@ -79,9 +79,10 @@ static auto fromCommon(common::OMTextureBorder b) -> float *
     }
 }
 
-OMRendererTextureOpenGL::OMRendererTextureOpenGL(uint64_t width, uint64_t height, common::OMTextureType type,
-                                                 common::OMTextureArrangement arr, OMRendererOpenGL *renderer)
-    : common::OMRendererTexture(width, height, type, arr, renderer)
+OMRendererTextureOpenGL::OMRendererTextureOpenGL(uint64_t width, uint64_t height, uint64_t mipmap,
+                                                 common::OMTextureType type, common::OMTextureArrangement arr,
+                                                 OMRendererOpenGL *renderer)
+    : common::OMRendererTexture(width, height, mipmap, type, arr, renderer), mipmap(mipmap)
 {
     this->gl = &renderer->gl;
     if (arr == common::Depth)
@@ -93,17 +94,60 @@ OMRendererTextureOpenGL::OMRendererTextureOpenGL(uint64_t width, uint64_t height
     else
     {
         gl->glGenTextures(1, &texture);
+        updateData(nullptr);
     }
 }
+
+static auto toFilter(common::OMTextureFilter f, common::OMTextureFilter mip) -> GLenum
+{
+    switch (f << 1 | mip)
+    {
+    default:
+    case 0b00:
+        return GL_LINEAR_MIPMAP_LINEAR;
+    case 0b01:
+        return GL_LINEAR_MIPMAP_NEAREST;
+    case 0b10:
+        return GL_NEAREST_MIPMAP_LINEAR;
+    case 0b11:
+        return GL_NEAREST_MIPMAP_NEAREST;
+    }
+}
+
+static auto toFilter2(common::OMTextureFilter f) -> GLenum
+{
+    switch (f)
+    {
+    default:
+    case common::Linear:
+        return GL_LINEAR;
+    case common::Nearest:
+        return GL_NEAREST;
+    }
+}
+
 void OMRendererTextureOpenGL::setupSampler()
 {
     gl->glBindTexture(fromCommon(type), texture);
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, mipmap);
+    if (mipmap > 0)
+    {
+        gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, toFilter(minFilter, mipFilter));
+        gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, toFilter(magFilter, mipFilter));
+    }
+    else
+    {
+        gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, toFilter2(minFilter));
+        gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, toFilter2(magFilter));
+    }
     gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, fromCommon(addressModeU));
     gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, fromCommon(addressModeV));
     gl->glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, fromCommon(border));
-    updateData(nullptr);
+    if (mipmap > 0)
+    {
+        gl->glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    gl->glBindTexture(fromCommon(type), 0);
 }
 OMRendererTextureOpenGL::~OMRendererTextureOpenGL()
 {
@@ -120,9 +164,7 @@ OMRendererTextureOpenGL::~OMRendererTextureOpenGL()
 void OMRendererTextureOpenGL::updateData(void *d)
 {
     gl->glBindTexture(fromCommon(type), texture);
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, mipmapLevels);
     gl->glTexImage2D(fromCommon(type), 0, fromCommonI(arr), width, height, 0, fromCommon(arr), GL_UNSIGNED_BYTE, d);
-    gl->glGenerateMipmap(GL_TEXTURE_2D);
     gl->glBindTexture(fromCommon(type), 0);
 }
 

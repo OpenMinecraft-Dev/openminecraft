@@ -6,8 +6,8 @@
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include <cstdlib>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -30,21 +30,13 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer, std::
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(SimpleUniform));
 
     auto ext = renderer->getExtent();
-    middleTexture = renderer->allocateTexture(ext.x, ext.y, Dim2, ColorRgba);
-    middleTexture->setupSampler();
-    middleDepth = renderer->allocateTexture(ext.x, ext.y, Dim2, Depth);
+    middleTarget = new wrap::OMRendererTempTarget(renderer);
+    middleTarget->construct(ext);
 
-    middleRenderTarget = renderer->createRenderTarget();
-    middleRenderTarget->attachTarget(middleTexture);
-    middleRenderTarget->attachTarget(middleDepth);
-    middleRenderTarget->build();
-
-    rect.init(uniformBuffer, middleRenderTarget);
-    roundedRect.init(uniformBuffer, middleRenderTarget);
-    image.init(uniformBuffer, middleRenderTarget);
-    sector.init(uniformBuffer, middleRenderTarget);
-
-    srand(time(nullptr));
+    rect.init(uniformBuffer, middleTarget->target);
+    roundedRect.init(uniformBuffer, middleTarget->target);
+    image.init(uniformBuffer, middleTarget->target);
+    sector.init(uniformBuffer, middleTarget->target);
 }
 
 OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
@@ -59,9 +51,7 @@ OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
     }
     delete uniformBuffer;
 
-    delete middleTexture;
-    delete middleDepth;
-    delete middleRenderTarget;
+    delete middleTarget;
 }
 
 auto OMDemiurgeRendererHandler::fetchFontChannel(fontproc::OMFontSet *s)
@@ -73,28 +63,15 @@ auto OMDemiurgeRendererHandler::fetchFontChannel(fontproc::OMFontSet *s)
     }
 
     auto c = std::make_shared<element::OMDemiurgeTextSdfChannel>(this->renderer, [&]() -> void { recordTask(); }, s);
-    c->init(uniformBuffer, middleRenderTarget);
+    c->init(uniformBuffer, middleTarget->target);
     fonts[s] = c;
     return c;
 }
 
 void OMDemiurgeRendererHandler::submitTasks()
 {
-    {
-        delete middleDepth;
-        delete middleTexture;
+    middleTarget->construct(renderer->getExtent());
 
-        auto ext = renderer->getExtent();
-        middleTexture = renderer->allocateTexture(ext.x, ext.y, Dim2, ColorRgba);
-        middleTexture->setupSampler();
-        middleDepth = renderer->allocateTexture(ext.x, ext.y, Dim2, Depth);
-
-        middleRenderTarget->replaceTarget(0, middleTexture);
-        middleRenderTarget->replaceTarget(1, middleDepth);
-        middleRenderTarget->rebuild();
-    }
-
-    srand(time(nullptr));
     auto ext = renderer->getLogicalExtent();
     SimpleUniform u{ext.x, ext.y};
     uniformBuffer->updateData(&u);
@@ -105,7 +82,7 @@ void OMDemiurgeRendererHandler::submitTasks()
 
 void OMDemiurgeRendererHandler::recordTask(bool resize)
 {
-    task->target(middleRenderTarget);
+    task->target(middleTarget->target);
 
     element::OMDemiurgeAbstractChannel *channel = nullptr;
     for (float layer = bottomDepth; layer >= topDepth; layer -= 0.01f)

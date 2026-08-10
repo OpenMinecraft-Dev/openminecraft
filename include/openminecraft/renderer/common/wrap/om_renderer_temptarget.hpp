@@ -28,9 +28,9 @@ class OMRendererTempTarget
             delete depthTexture;
         }
 
-        colorTexture = renderer->allocateTexture(ext.x, ext.y, Dim2, ColorRgba);
+        colorTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, ColorRgba);
         colorTexture->setupSampler();
-        depthTexture = renderer->allocateTexture(ext.x, ext.y, Dim2, Depth);
+        depthTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, Depth);
 
         if (!target)
         {

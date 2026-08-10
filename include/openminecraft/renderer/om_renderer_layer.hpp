@@ -38,7 +38,7 @@ class OMRenderer
 
     virtual auto driver() -> std::string = 0;
     virtual auto allocateBuffer(common::OMBufferUsage usage, uint64_t length) -> common::OMRendererBuffer * = 0;
-    virtual auto allocateTexture(uint64_t width, uint64_t height, common::OMTextureType type,
+    virtual auto allocateTexture(uint64_t width, uint64_t height, uint64_t mipmap, common::OMTextureType type,
                                  common::OMTextureArrangement arrangement) -> common::OMRendererTexture * = 0;
     virtual auto createRenderTarget() -> common::OMRendererRenderTarget * = 0;
     virtual auto getDefaultRenderTarget() -> common::OMRendererRenderTarget * = 0;

@@ -272,7 +272,7 @@ void rendererTest(renderer::OMBackend backend)
 
         auto hnd2 = std::make_shared<OMNodeRendererHandler>(win());
         auto hnd = std::make_shared<test::OMTestRenderer>(
-            win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTexture; }, bus, camera);
+            win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTarget->colorTexture; }, bus, camera);
         hnd2->camera = camera.get();
         win()->registerHandler(hnd2);
         win()->registerHandler(hnd);

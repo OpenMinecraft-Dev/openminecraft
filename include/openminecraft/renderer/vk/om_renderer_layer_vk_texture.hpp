@@ -15,11 +15,12 @@ namespace openminecraft::renderer::vk
 class OMRendererTextureVk : public common::OMRendererTexture
 {
   public:
-    OMRendererTextureVk(uint64_t width, uint64_t height, common::OMTextureType type, common::OMTextureArrangement arr,
-                        OMRendererVk *renderer);
+    OMRendererTextureVk(uint64_t width, uint64_t height, uint64_t mipmap, common::OMTextureType type,
+                        common::OMTextureArrangement arr, OMRendererVk *renderer);
     ~OMRendererTextureVk() override;
 
-    void transitionImageLayout(::vk::CommandBuffer cmd, ::vk::ImageLayout oldLayout, ::vk::ImageLayout newLayout);
+    void transitionImageLayout(::vk::CommandBuffer cmd, ::vk::ImageLayout oldLayout, ::vk::ImageLayout newLayout,
+                               uint64_t layer);
     void updateData(void *p) override;
     void updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h) override;
     void setupSampler() override;
@@ -31,6 +32,7 @@ class OMRendererTextureVk : public common::OMRendererTexture
     ::vk::Sampler sampler;
 
   private:
+    uint64_t mipmap;
     OMRendererVk *renderer;
 };
 } // namespace openminecraft::renderer::vk

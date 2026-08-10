@@ -15,11 +15,10 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include "openminecraft/util/om_util_ticker.hpp"
 #include <memory>
 #include <unordered_map>
-#include <vector>
 namespace openminecraft::renderer::common::demiurge
 {
 constexpr float bottomDepth = 0.99f;
@@ -49,9 +48,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     std::shared_ptr<OMDemiurgeNode> node;
 
-    OMRendererTexture *middleTexture = nullptr;
-    OMRendererTexture *middleDepth = nullptr;
-    OMRendererRenderTarget *middleRenderTarget = nullptr;
+    wrap::OMRendererTempTarget *middleTarget;
     OMRendererBuffer *uniformBuffer;
     OMRenderer *renderer;
 

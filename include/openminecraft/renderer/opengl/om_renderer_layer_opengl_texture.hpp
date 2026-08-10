@@ -10,7 +10,7 @@ namespace openminecraft::renderer::opengl
 class OMRendererTextureOpenGL : public common::OMRendererTexture
 {
   public:
-    OMRendererTextureOpenGL(uint64_t width, uint64_t height, common::OMTextureType type,
+    OMRendererTextureOpenGL(uint64_t width, uint64_t height, uint64_t mipmap, common::OMTextureType type,
                             common::OMTextureArrangement arr, OMRendererOpenGL *renderer);
     ~OMRendererTextureOpenGL() override;
 
@@ -20,6 +20,7 @@ class OMRendererTextureOpenGL : public common::OMRendererTexture
     GLuint texture;
 
   private:
+    uint64_t mipmap;
     OMRendererOpenGLFuncs *gl;
 };
 } // namespace openminecraft::renderer::opengl

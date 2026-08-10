@@ -64,9 +64,9 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     specs::png::OMPngFile img;
     img.parse(imgraw);
 
-    textureImage = renderer->allocateTexture(img.getWidth(), img.getHeight(), Dim2, ColorRgba);
-    textureImage->setupSampler();
+    textureImage = renderer->allocateTexture(img.getWidth(), img.getHeight(), 7, Dim2, ColorRgba);
     textureImage->updateData(img.fetchData());
+    textureImage->setupSampler();
 
     objectFrg = renderer->shaderManager.preprocess("core/objectbase.frag.glsl", Fragment, GLSLSource, objModel->format);
     objectVtx = renderer->shaderManager.preprocess("core/objectbase.vert.glsl", Vertex, GLSLSource, objModel->format);
