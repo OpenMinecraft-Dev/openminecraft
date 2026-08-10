@@ -2,6 +2,7 @@
 #include "GL/glcorearb.h"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include <array>
+#include <cstdint>
 
 namespace openminecraft::renderer::opengl
 {
@@ -9,13 +10,11 @@ static auto fromCommon(common::OMTextureType t) -> GLenum
 {
     switch (t)
     {
-    case common::Dim1:
-        return GL_TEXTURE_1D;
     case common::Dim2:
     default:
         return GL_TEXTURE_2D;
-    case common::Dim3:
-        return GL_TEXTURE_3D;
+    case common::Dim2Array:
+        return GL_TEXTURE_2D_ARRAY;
     }
 }
 
@@ -79,10 +78,10 @@ static auto fromCommon(common::OMTextureBorder b) -> float *
     }
 }
 
-OMRendererTextureOpenGL::OMRendererTextureOpenGL(uint64_t width, uint64_t height, uint64_t mipmap,
+OMRendererTextureOpenGL::OMRendererTextureOpenGL(uint64_t width, uint64_t height, uint64_t layers, uint64_t mipmap,
                                                  common::OMTextureType type, common::OMTextureArrangement arr,
                                                  OMRendererOpenGL *renderer)
-    : common::OMRendererTexture(width, height, mipmap, type, arr, renderer), mipmap(mipmap)
+    : common::OMRendererTexture(width, height, layers, mipmap, type, arr, renderer), mipmap(mipmap), layers(layers)
 {
     this->gl = &renderer->gl;
     if (arr == common::Depth)
@@ -94,8 +93,25 @@ OMRendererTextureOpenGL::OMRendererTextureOpenGL(uint64_t width, uint64_t height
     else
     {
         gl->glGenTextures(1, &texture);
-        updateData(nullptr);
+        allocateBase();
     }
+}
+
+void OMRendererTextureOpenGL::allocateBase()
+{
+    gl->glBindTexture(fromCommon(type), texture);
+    switch (type)
+    {
+    case common::Dim2:
+        gl->glTexImage2D(fromCommon(type), 0, fromCommonI(arr), width, height, 0, fromCommon(arr), GL_UNSIGNED_BYTE,
+                         nullptr);
+        break;
+    case common::Dim2Array:
+        gl->glTexImage3D(fromCommon(type), 0, fromCommonI(arr), width, height, layers, 0, fromCommon(arr),
+                         GL_UNSIGNED_BYTE, nullptr);
+        break;
+    }
+    gl->glBindTexture(fromCommon(type), 0);
 }
 
 static auto toFilter(common::OMTextureFilter f, common::OMTextureFilter mip) -> GLenum
@@ -129,23 +145,24 @@ static auto toFilter2(common::OMTextureFilter f) -> GLenum
 void OMRendererTextureOpenGL::setupSampler()
 {
     gl->glBindTexture(fromCommon(type), texture);
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, mipmap);
+    gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MAX_LEVEL, mipmap);
     if (mipmap > 0)
     {
-        gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, toFilter(minFilter, mipFilter));
-        gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, toFilter(magFilter, mipFilter));
+        gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MIN_FILTER, toFilter(minFilter, mipFilter));
+        gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MAG_FILTER, toFilter(magFilter, mipFilter));
     }
     else
     {
-        gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, toFilter2(minFilter));
-        gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, toFilter2(magFilter));
+        gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MIN_FILTER, toFilter2(minFilter));
+        gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MAG_FILTER, toFilter2(magFilter));
     }
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, fromCommon(addressModeU));
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, fromCommon(addressModeV));
-    gl->glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, fromCommon(border));
+    gl->glTexParameteri(fromCommon(type), GL_TEXTURE_WRAP_S, fromCommon(addressModeU));
+    gl->glTexParameteri(fromCommon(type), GL_TEXTURE_WRAP_T, fromCommon(addressModeV));
+    gl->glTexParameteri(fromCommon(type), GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    gl->glTexParameterfv(fromCommon(type), GL_TEXTURE_BORDER_COLOR, fromCommon(border));
     if (mipmap > 0)
     {
-        gl->glGenerateMipmap(GL_TEXTURE_2D);
+        gl->glGenerateMipmap(fromCommon(type));
     }
     gl->glBindTexture(fromCommon(type), 0);
 }
@@ -161,17 +178,33 @@ OMRendererTextureOpenGL::~OMRendererTextureOpenGL()
     }
 }
 
-void OMRendererTextureOpenGL::updateData(void *d)
+void OMRendererTextureOpenGL::updateData(void *d, uint64_t layer)
 {
     gl->glBindTexture(fromCommon(type), texture);
-    gl->glTexImage2D(fromCommon(type), 0, fromCommonI(arr), width, height, 0, fromCommon(arr), GL_UNSIGNED_BYTE, d);
+    switch (type)
+    {
+    case common::OMTextureType::Dim2:
+        gl->glTexImage2D(fromCommon(type), 0, fromCommonI(arr), width, height, 0, fromCommon(arr), GL_UNSIGNED_BYTE, d);
+        break;
+    case common::OMTextureType::Dim2Array:
+        gl->glTexSubImage3D(fromCommon(type), 0, 0, 0, layer, width, height, 1, fromCommon(arr), GL_UNSIGNED_BYTE, d);
+        break;
+    }
     gl->glBindTexture(fromCommon(type), 0);
 }
 
-void OMRendererTextureOpenGL::updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h)
+void OMRendererTextureOpenGL::updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h, uint64_t layer)
 {
     gl->glBindTexture(fromCommon(type), texture);
-    gl->glTexSubImage2D(fromCommon(type), 0, x, y, w, h, fromCommon(arr), GL_UNSIGNED_BYTE, p);
+    switch (type)
+    {
+    case common::OMTextureType::Dim2:
+        gl->glTexSubImage2D(fromCommon(type), 0, x, y, w, h, fromCommon(arr), GL_UNSIGNED_BYTE, p);
+        break;
+    case common::OMTextureType::Dim2Array:
+        gl->glTexSubImage3D(fromCommon(type), 0, x, y, layer, w, h, 1, fromCommon(arr), GL_UNSIGNED_BYTE, p);
+        break;
+    }
     gl->glBindTexture(fromCommon(type), 0);
 }
 } // namespace openminecraft::renderer::opengl

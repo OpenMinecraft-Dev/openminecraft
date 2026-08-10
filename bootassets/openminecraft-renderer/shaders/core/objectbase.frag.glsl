@@ -12,13 +12,13 @@ uniform ObjectInfo {
     vec3 lightColor;
     vec3 ambientColor;
 } ubo;
-uniform sampler2D inTexture;
+uniform sampler2DArray inTexture;
 
 void main() {
     float diff = max(dot(objNormal, ubo.lightDirection), 0.0);
     vec3 diffuse = diff * ubo.lightColor;
 
-    vec4 texColor = texture(inTexture, objTexCoord);
+    vec4 texColor = texture(inTexture, vec3(objTexCoord, 0));
     vec3 result = (ubo.ambientColor + diffuse) * texColor.rgb;
 
     outColor = vec4(result, texColor.a);

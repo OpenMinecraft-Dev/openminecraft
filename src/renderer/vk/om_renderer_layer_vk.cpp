@@ -202,8 +202,8 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 
         defaultTarget = this->createRenderTarget();
         defaultTarget->build();
-        defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height, 0,
-                                                   common::Dim2, common::Depth);
+        defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height, 1,
+                                                   0, common::Dim2, common::Depth);
 
         for (int i = 0; i < framesInFlight; i++)
         {
@@ -368,10 +368,11 @@ auto OMRendererVk::allocateBuffer(common::OMBufferUsage usage, uint64_t length) 
     return new OMRendererBufferVk(usage, length, this);
 }
 
-auto OMRendererVk::allocateTexture(uint64_t width, uint64_t height, uint64_t mipmap, common::OMTextureType type,
-                                   common::OMTextureArrangement arr) -> common::OMRendererTexture *
+auto OMRendererVk::allocateTexture(uint64_t width, uint64_t height, uint64_t layers, uint64_t mipmap,
+                                   common::OMTextureType type, common::OMTextureArrangement arr)
+    -> common::OMRendererTexture *
 {
-    return new OMRendererTextureVk(width, height, mipmap, type, arr, this);
+    return new OMRendererTextureVk(width, height, layers, mipmap, type, arr, this);
 }
 auto OMRendererVk::createRenderTarget() -> common::OMRendererRenderTarget *
 {
@@ -547,7 +548,7 @@ rebuild:
     swapchainManager->reinit();
 
     delete defaultDepthBuffer;
-    defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height, 0,
+    defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height, 1, 0,
                                                common::Dim2, common::Depth);
     t.pop();
 

@@ -4,6 +4,7 @@
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
+#include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_buffer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
@@ -56,12 +57,21 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
         auto obj = glpipe->inputs[i];
         switch (glpipe->inputTypes[i])
         {
-        case common::ImageSampler:
+        case common::ImageSampler: {
             ops.push_back({ActiveTexture, static_cast<GLuint>(GL_TEXTURE0 + i)});
-            ops.push_back(
-                {BindTexture, GL_TEXTURE_2D, reinterpret_cast<OMRendererTextureOpenGL *>(glpipe->inputs[i])->texture});
+            auto tex = reinterpret_cast<OMRendererTextureOpenGL *>(glpipe->inputs[i]);
+            switch (tex->type)
+            {
+            case common::Dim2:
+                ops.push_back({BindTexture, GL_TEXTURE_2D, tex->texture});
+                break;
+            case common::Dim2Array:
+                ops.push_back({BindTexture, GL_TEXTURE_2D_ARRAY, tex->texture});
+                break;
+            }
 
             break;
+        }
         case common::UniformTexelBuffer:
             ops.push_back({ActiveTexture, static_cast<GLuint>(GL_TEXTURE0 + i)});
             ops.push_back(

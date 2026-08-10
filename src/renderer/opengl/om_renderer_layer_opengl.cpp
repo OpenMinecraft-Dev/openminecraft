@@ -97,10 +97,11 @@ auto OMRendererOpenGL::allocateBuffer(common::OMBufferUsage usage, uint64_t leng
 {
     return new OMRendererBufferOpenGL(usage, length, this);
 }
-auto OMRendererOpenGL::allocateTexture(uint64_t width, uint64_t height, uint64_t mipmap, common::OMTextureType type,
-                                       common::OMTextureArrangement arr) -> common::OMRendererTexture *
+auto OMRendererOpenGL::allocateTexture(uint64_t width, uint64_t height, uint64_t layers, uint64_t mipmap,
+                                       common::OMTextureType type, common::OMTextureArrangement arr)
+    -> common::OMRendererTexture *
 {
-    return new OMRendererTextureOpenGL(width, height, mipmap, type, arr, this);
+    return new OMRendererTextureOpenGL(width, height, layers, mipmap, type, arr, this);
 }
 auto OMRendererOpenGL::createRenderTarget() -> common::OMRendererRenderTarget *
 {

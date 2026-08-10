@@ -13,9 +13,8 @@ namespace openminecraft::renderer::common
 {
 enum OMTextureType : uint8_t
 {
-    Dim1,
     Dim2,
-    Dim3
+    Dim2Array
 };
 
 enum OMTextureArrangement
@@ -48,15 +47,15 @@ enum OMTextureFilter : uint8_t
 class OMRendererTexture : public OMRendererObject
 {
   public:
-    OMRendererTexture(uint64_t width, uint64_t height, uint64_t mipmap, OMTextureType type, OMTextureArrangement arr,
-                      OMRenderer *renderer);
+    OMRendererTexture(uint64_t width, uint64_t height, uint64_t layers, uint64_t mipmap, OMTextureType type,
+                      OMTextureArrangement arr, OMRenderer *renderer);
     virtual ~OMRendererTexture();
     const uint64_t width, height;
     const OMTextureType type;
     const OMTextureArrangement arr;
 
-    virtual void updateData(void *p) = 0;
-    virtual void updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h) = 0;
+    virtual void updateData(void *p, uint64_t layer = 0) = 0;
+    virtual void updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h, uint64_t layer = 0) = 0;
 
     inline auto objType() -> OMRendererObjectType override
     {

@@ -8,6 +8,7 @@
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_structs.hpp"
+#include <cstdint>
 
 using namespace ::vk;
 using namespace openminecraft::i18n::res;
@@ -28,31 +29,15 @@ static auto findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properties,
     return 0;
 }
 
-static auto fromCommonType(common::OMTextureType type) -> ImageType
-{
-    switch (type)
-    {
-    case common::Dim1:
-        return ImageType::e1D;
-    default:
-    case common::Dim2:
-        return ImageType::e2D;
-    case common::Dim3:
-        return ImageType::e3D;
-    }
-}
-
 static auto fromCommonType2(common::OMTextureType type) -> ImageViewType
 {
     switch (type)
     {
-    case common::Dim1:
-        return ImageViewType::e1D;
     default:
     case common::Dim2:
         return ImageViewType::e2D;
-    case common::Dim3:
-        return ImageViewType::e3D;
+    case common::Dim2Array:
+        return ImageViewType::e2DArray;
     }
 }
 
@@ -98,17 +83,18 @@ static auto fromCommonType(common::OMTextureBorder b) -> BorderColor
     }
 }
 
-OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64_t mipmap, common::OMTextureType type,
-                                         common::OMTextureArrangement arr, OMRendererVk *renderer)
-    : OMRendererTexture(width, height, mipmap, type, arr, reinterpret_cast<OMRenderer *>(renderer)), renderer(renderer),
-      mipmap(mipmap)
+OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64_t layers, uint64_t mipmap,
+                                         common::OMTextureType type, common::OMTextureArrangement arr,
+                                         OMRendererVk *renderer)
+    : OMRendererTexture(width, height, layers, mipmap, type, arr, reinterpret_cast<OMRenderer *>(renderer)),
+      renderer(renderer), mipmap(mipmap), layers(layers)
 {
     try
     {
         auto memprop = renderer->physicalDevice.getMemoryProperties();
         format = fromCommonUsage(arr);
         image = renderer->logicalDevice.createImage(
-            ImageCreateInfo({}, fromCommonType(type), format, Extent3D(width, height, 1), mipmap + 1, 1,
+            ImageCreateInfo({}, ImageType::e2D, format, Extent3D(width, height, 1), mipmap + 1, layers,
                             SampleCountFlagBits::e1, ImageTiling::eOptimal,
                             (arr == common::Depth)
                                 ? ImageUsageFlagBits::eDepthStencilAttachment
@@ -129,7 +115,7 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64
             ImageViewCreateInfo({}, image, fromCommonType2(type), format, {},
                                 ImageSubresourceRange(((arr == common::Depth) ? ImageAspectFlagBits::eDepth
                                                                               : ImageAspectFlagBits::eColor),
-                                                      0, mipmap + 1, 0, 1)),
+                                                      0, mipmap + 1, 0, layers)),
             renderer->allocator);
     }
     catch (SystemError &e)
@@ -183,7 +169,8 @@ void OMRendererTextureVk::setupSampler()
                 CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
             cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
 
-            transitionImageLayout(cmdBuff, ImageLayout::eShaderReadOnlyOptimal, ImageLayout::eTransferSrcOptimal, 0);
+            transitionImageLayout(cmdBuff, ImageLayout::eShaderReadOnlyOptimal, ImageLayout::eTransferSrcOptimal, 0, 0,
+                                  layers);
 
             auto w = width;
             auto h = height;
@@ -192,22 +179,23 @@ void OMRendererTextureVk::setupSampler()
                 auto cw = std::max(1, static_cast<int>(w >> 1));
                 auto ch = std::max(1, static_cast<int>(h >> 1));
 
-                transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal, i);
-                auto blit = ImageBlit(ImageSubresourceLayers(ImageAspectFlagBits::eColor, i - 1, 0, 1),
+                transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal, i, 0, layers);
+                auto blit = ImageBlit(ImageSubresourceLayers(ImageAspectFlagBits::eColor, i - 1, 0, layers),
                                       {Offset3D(0, 0, 0), Offset3D(w, h, 1)},
-                                      ImageSubresourceLayers(ImageAspectFlagBits::eColor, i, 0, 1),
+                                      ImageSubresourceLayers(ImageAspectFlagBits::eColor, i, 0, layers),
                                       {Offset3D(0, 0, 0), Offset3D(cw, ch, 1)});
                 cmdBuff.blitImage(image, ImageLayout::eTransferSrcOptimal, image, ImageLayout::eTransferDstOptimal, 1,
                                   &blit, Filter::eLinear);
-                transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eTransferSrcOptimal, i);
+                transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eTransferSrcOptimal, i, 0,
+                                      layers);
                 transitionImageLayout(cmdBuff, ImageLayout::eTransferSrcOptimal, ImageLayout::eShaderReadOnlyOptimal,
-                                      i - 1);
+                                      i - 1, 0, layers);
 
                 w = cw;
                 h = ch;
             }
             transitionImageLayout(cmdBuff, ImageLayout::eTransferSrcOptimal, ImageLayout::eShaderReadOnlyOptimal,
-                                  mipmap);
+                                  mipmap, 0, layers);
 
             cmdBuff.end();
             renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
@@ -268,10 +256,10 @@ static auto toStage(ImageLayout layout) -> PipelineStageFlagBits
 }
 
 void OMRendererTextureVk::transitionImageLayout(CommandBuffer cmd, ImageLayout oldLayout, ImageLayout newLayout,
-                                                uint64_t level)
+                                                uint64_t mip, uint64_t baseLayer, uint64_t layers)
 {
     auto barrier = ImageMemoryBarrier({}, {}, oldLayout, newLayout, QueueFamilyIgnored, QueueFamilyIgnored, image,
-                                      ImageSubresourceRange(ImageAspectFlagBits::eColor, level, 1, 0, 1));
+                                      ImageSubresourceRange(ImageAspectFlagBits::eColor, mip, 1, baseLayer, layers));
 
     PipelineStageFlagBits sourceStage = toStage(oldLayout), destinationStage = toStage(newLayout);
 
@@ -281,7 +269,7 @@ void OMRendererTextureVk::transitionImageLayout(CommandBuffer cmd, ImageLayout o
     cmd.pipelineBarrier(sourceStage, destinationStage, {}, nullptr, nullptr, barrier);
 }
 
-void OMRendererTextureVk::updateData(void *p)
+void OMRendererTextureVk::updateData(void *p, uint64_t layer)
 {
     try
     {
@@ -293,15 +281,16 @@ void OMRendererTextureVk::updateData(void *p)
             CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
 
         cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
-        transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal, 0);
+        transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal, 0, layer, 1);
         cmdBuff.copyBufferToImage(
             reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
             BufferImageCopy(0, width, height,
                             ImageSubresourceLayers((this->arr == common::Depth) ? ImageAspectFlagBits::eDepth
                                                                                 : ImageAspectFlagBits::eColor,
-                                                   0, 0, 1),
+                                                   0, layer, 1),
                             Offset3D(0, 0, 0), Extent3D(width, height, 1)));
-        transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal, 0);
+        transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal, 0, layer,
+                              1);
 
         cmdBuff.end();
         renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
@@ -317,7 +306,7 @@ void OMRendererTextureVk::updateData(void *p)
     }
 }
 
-void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h)
+void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h, uint64_t layer)
 {
     try
     {
@@ -328,15 +317,16 @@ void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64
             CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
 
         cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
-        transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal, 0);
+        transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal, 0, layer, 1);
         cmdBuff.copyBufferToImage(
             reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
             BufferImageCopy(0, w, h,
                             ImageSubresourceLayers((this->arr == common::Depth) ? ImageAspectFlagBits::eDepth
                                                                                 : ImageAspectFlagBits::eColor,
-                                                   0, 0, 1),
+                                                   0, layer, 1),
                             Offset3D(x, y, 0), Extent3D(w, h, 1)));
-        transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal, 0);
+        transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal, 0, layer,
+                              1);
 
         cmdBuff.end();
         renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
