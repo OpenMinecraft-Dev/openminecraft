@@ -23,6 +23,7 @@ auto main(int argc, char **argv) -> int
     openminecraft::log::multithread::registerCurrentThreadName("launcher");
 
     signal(SIGSEGV, sighnd);
+    std::atexit([]() -> void { logger.dumpStacktrace(); });
 
     std::vector<std::string> a;
     logger.info("Args:");
