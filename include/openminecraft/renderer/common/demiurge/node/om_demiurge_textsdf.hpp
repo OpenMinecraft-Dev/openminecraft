@@ -19,6 +19,8 @@ class OMDemiurgeTextSdfNode : public OMDemiurgeNode
     std::vector<int> glyphIds = {};
     OMDemiurgeRendererHandler *handler = nullptr;
     fontproc::OMFontSet *set = nullptr;
+
+    std::vector<fontproc::OMFontSetShapeResult> shapeResult;
 };
 } // namespace openminecraft::renderer::common::demiurge::node
 

@@ -2,9 +2,6 @@
 
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/boot/om_boot.hpp"
-#include "openminecraft/fontproc/om_font.hpp"
-#include "openminecraft/fontproc/om_font_outline.hpp"
-#include "openminecraft/fontproc/om_fontset.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
@@ -13,7 +10,6 @@
 #include "openminecraft/specs/abstracts/om_image.hpp"
 #include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
-#include "openminecraft/util/om_util_ticker.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
@@ -100,68 +96,6 @@ auto boot(std::vector<std::string> args) -> int
 
         delete img;
 
-        break;
-    }
-    case "font"_hash: {
-        fontproc::OMFontSet fset;
-        auto target = args[2];
-        for (int i = 3; i < args.size(); ++i)
-        {
-            std::ifstream istr(args[i], std::ios::binary);
-            fset.fontList.push_back(std::make_shared<fontproc::OMFont>(istr));
-        }
-        auto result = fset.shape(target);
-        for (auto &r : result)
-        {
-            logger->info("#{} 0x{:x} {},{} {},{}", r.fontId, r.glyphId, r.position.x, r.position.y, r.size.x, r.size.y);
-        }
-        auto bb = fset.bound(target);
-        logger->debug("text extent {} {}", bb.x, bb.y);
-        break;
-    }
-    case "angle"_hash: {
-        glm::vec3 defaultNormal = glm::vec3(0.0f, 0.0f, 1.0f);
-        glm::vec3 targetNormal = glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f));
-        float selfRotation = glm::radians(22.0f);
-
-        glm::quat q1 = glm::rotation(defaultNormal, targetNormal);
-        glm::quat q2 = glm::angleAxis(selfRotation, targetNormal);
-        glm::quat q = q2 * q1;
-        logger->debug("{}, {}, {}, {}", q.x, q.y, q.z, q.w);
-        break;
-    }
-    case "glyph"_hash: {
-        std::ifstream istr(args[2], std::ios::binary);
-        fontproc::OMFont f(istr);
-        auto test = f.buildOutline(std::stoi(args[3], nullptr, 16), false);
-        auto scale = f.scale();
-        for (auto &op : test.operations)
-        {
-            op.target /= scale;
-            op.control1 /= scale;
-            op.control2 /= scale;
-            switch (op.type)
-            {
-            case fontproc::Move:
-                logger->info("Move To {},{}", op.target.x, op.target.y);
-                break;
-            case fontproc::Line:
-                logger->info("Line To {},{}", op.target.x, op.target.y);
-                break;
-            case fontproc::Quadratic:
-                logger->info("Quad To {},{} control {},{}", op.target.x, op.target.y, op.control1.x, op.control1.y);
-                break;
-            case fontproc::Cubic:
-                logger->info("Cubic To {},{} control1 {},{} control2 {},{}", op.target.x, op.target.y, op.control1.x,
-                             op.control1.y, op.control2.x, op.control2.y);
-                break;
-            case fontproc::Close:
-                logger->info("Close");
-                break;
-            }
-        }
-        auto s = f.fetchBox(std::stoi(args[3], nullptr, 16), false);
-        logger->info("{} SVG Operations {} x {}", test.operations.size(), s.y - s.x, s.w - s.z);
         break;
     }
     default:

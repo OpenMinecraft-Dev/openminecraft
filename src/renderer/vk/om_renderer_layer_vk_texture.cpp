@@ -142,6 +142,7 @@ static auto toFilter(common::OMTextureFilter f) -> Filter
 {
     switch (f)
     {
+    default:
     case common::Linear:
         return Filter::eLinear;
     case common::Nearest:
@@ -153,6 +154,7 @@ static auto toMipFilter(common::OMTextureFilter f) -> SamplerMipmapMode
 {
     switch (f)
     {
+    default:
     case common::Linear:
         return SamplerMipmapMode::eLinear;
     case common::Nearest:

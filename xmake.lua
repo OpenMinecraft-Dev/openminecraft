@@ -120,6 +120,10 @@ add_requires("boost", { system = false, configs = { stacktrace = true, asio = tr
 add_requires("fmt", { system = false, configs = { header_only = true } })
 add_requires("harfbuzz", { system = false, configs = { freetype = false } })
 
+if is_mode("debug") then
+	add_requires("tracy")
+end
+
 ------------------------------------------------------------------------------
 -- Submodules
 --------------------------------------------------------------------------------
@@ -185,6 +189,10 @@ add_packages(
 	"yoga",
 	{ system = false }
 )
+
+if is_mode("debug") then
+	add_packages("tracy")
+end
 
 if not mobile() and not vulkandyn() and not apple() then
 	add_packages("vulkan-loader")

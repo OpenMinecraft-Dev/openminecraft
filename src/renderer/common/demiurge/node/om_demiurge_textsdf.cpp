@@ -16,7 +16,8 @@ auto OMDemiurgeTextSdfNode::syncLayout() -> void
 {
     if (stylesStorage.isModified())
     {
-        auto b = set->bound(stylesStorage.get<std::string>("text", ""));
+        shapeResult = set->shape(stylesStorage.get<std::string>("text", ""));
+        auto b = set->bound(shapeResult);
         auto th = stylesStorage.get<int>("textheight", 12);
 
         stylesStorage.put("minWidth", b.x * th);
@@ -33,7 +34,7 @@ auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, float dep
         auto pp = stylesStorage.get<OMDemiurgeRect>("layoutBound");
 
         auto text = stylesStorage.get<std::string>("text", "");
-        auto s = set->shape(text);
+        auto &s = shapeResult;
         auto ch = handler->fetchFontChannel(set);
 
         if (s.size() > glyphIds.size())

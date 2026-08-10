@@ -78,9 +78,8 @@ static auto approximateCubicToQuadratic(glm::vec2 P0, glm::vec2 P1, glm::vec2 P2
     return P0 + s * d1;
 }
 
-auto OMFontSet::bound(std::string s) -> glm::vec2
+auto OMFontSet::bound(std::vector<OMFontSetShapeResult> shaped) -> glm::vec2
 {
-    auto shaped = shape(s);
     if (shaped.empty())
         return glm::vec2(0.0f);
 

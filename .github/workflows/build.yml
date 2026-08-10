@@ -3,7 +3,7 @@ on: [push, pull_request]
 env:
   LINK_JOBS: 16
   JOBS: 16
-  MODE: debug
+  MODE: releasedbg
   XMAKE_ARGS: -v
   ANDROID_NDK_VERSION: r27c
   OHOS_SDK_VERSION: 6.1-Release
