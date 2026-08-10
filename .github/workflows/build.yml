@@ -261,6 +261,10 @@ jobs:
         if: matrix.plat == 'macos' && matrix.arch == 'arm64'
         run: xmake run openminecraft 3dtest vk & PID=$!; screencapture -x -V30 -C
           ./prod/temp.mov
+      - name: MacOS Run Test 2
+        if: matrix.plat == 'macos'
+        run: xmake run openminecraft 3dtest gl & PID=$!; screencapture -x -V30 -C
+          ./prod/temp2.mov
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7
         with:
