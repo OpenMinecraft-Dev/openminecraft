@@ -120,7 +120,7 @@ OMRendererTextureOpenGL::~OMRendererTextureOpenGL()
 void OMRendererTextureOpenGL::updateData(void *d)
 {
     gl->glBindTexture(fromCommon(type), texture);
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 5);
+    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, mipmapLevels);
     gl->glTexImage2D(fromCommon(type), 0, fromCommonI(arr), width, height, 0, fromCommon(arr), GL_UNSIGNED_BYTE, d);
     gl->glGenerateMipmap(GL_TEXTURE_2D);
     gl->glBindTexture(fromCommon(type), 0);

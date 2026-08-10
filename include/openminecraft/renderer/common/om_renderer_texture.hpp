@@ -62,6 +62,7 @@ class OMRendererTexture : public OMRendererObject
     OMTextureAddressMode addressModeU = ClampToEdge;
     OMTextureAddressMode addressModeV = ClampToEdge;
     OMTextureBorder border = OpaqueBlack;
+    int mipmapLevels = 0;
 
   protected:
     OMRenderer *renderer;

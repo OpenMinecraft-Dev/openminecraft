@@ -105,7 +105,15 @@ class OMNodeRendererHandler : public OMRendererHandler
                                                {"flexGrow", 1.0f},
                                                {"text", renderer->driver()},
                                                {"textheight", 18},
-                                           })))
+                                           }))
+                               ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                           ->style({
+                                               {"color", (int)0xffffffff},
+                                               {"flexGrow", 1.0f},
+                                               {"text", ""},
+                                               {"textheight", 18},
+                                           })
+                                           ->store(resolutionNode)))
                    ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                                ->style({
                                    {"flexShrink", 0.0f},
@@ -227,12 +235,15 @@ class OMNodeRendererHandler : public OMRendererHandler
             fps = 0;
         }
 
+        auto e = renderer->getExtent();
+
         auto m = camera->getPos();
         posTextNode->style("text", fmt::format("{:.2f} {:.2f} {:.2f}", m.x, m.y, m.z));
         povTextNode->style("text", fmt::format("Yaw {:.2f} Pitch {:.2f}", camera->getYaw(), camera->getPitch()));
+        resolutionNode->style("text", fmt::format("{} x {}", e.x, e.y));
     }
 
-    std::shared_ptr<OMDemiurgeNode> node, graphNode, textNode, fpsTextNode, posTextNode, povTextNode;
+    std::shared_ptr<OMDemiurgeNode> node, graphNode, textNode, fpsTextNode, posTextNode, povTextNode, resolutionNode;
     std::shared_ptr<OMDemiurgeRendererHandler> internal;
     std::shared_ptr<fontproc::OMFontSet> fontset;
     std::vector<std::shared_ptr<OMDemiurgeNode>> sectorNodes = {};
@@ -249,7 +260,7 @@ void rendererTest(renderer::OMBackend backend)
     auto logger = std::make_shared<log::OMLogger>("Test Renderer");
     try
     {
-        OMWindowConfig conf = {backend, false};
+        OMWindowConfig conf = {backend, false, 240, 3840, 2160};
         // INFO: requires at least OpenGL 3.3 Core Profile or Vulkan 1.2
         OMWindow win({util::Version(3, 3, 0, 0), util::Version(1, 2, 0, 0)}, conf,
                      "/bootassets/openminecraft-renderer/shaders");
