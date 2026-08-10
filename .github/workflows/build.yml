@@ -259,7 +259,7 @@ jobs:
         run: xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft
       - name: MacOS Run Test
         if: matrix.plat == 'macos' && matrix.arch == 'arm64'
-        run: xmake run openminecraft 3dtest vk & PID=$!; screencapture -x -V30 -C
+        run: xmake run openminecraft 3dtest gl & PID=$!; screencapture -x -V30 -C
           ./prod/temp.mov
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7
