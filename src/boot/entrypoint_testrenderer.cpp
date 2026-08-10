@@ -36,10 +36,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     this->overlay = overlay;
     camera = std::make_shared<basics::OMCamera>(renderer, glm::vec3{2.0f, 2.0f, 2.0f}, -135.0f, -35.0f);
 
-    format.appendPart("inPosition", basics::Vec3f)
-        ->appendPart("inTexCoord", basics::Vec2f)
-        ->nextGroup()
-        ->decideStruct();
+    format.nextGroup()->decideStruct();
 
     objModel = new model::OMRendererModelObj(
         renderer, vfs::fsfetch("/bootassets/openminecraft-renderer/models/viking_room.obj").get());

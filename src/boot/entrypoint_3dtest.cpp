@@ -16,9 +16,11 @@
 #include "openminecraft/renderer/common/event/om_eventbus.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
+#include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/om_renderer_window.hpp"
+#include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/util/om_util_ticker.hpp"
 #include "openminecraft/util/om_util_version.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
@@ -48,6 +50,11 @@ class OMNodeRendererHandler : public OMRendererHandler
     OMNodeRendererHandler(OMRenderer *renderer) : OMRendererHandler(renderer)
     {
         this->renderer = renderer;
+
+        auto f = vfs::fsfetch("/bootassets/openminecraft-renderer/texture/summer_1am.png");
+
+        specs::png::OMPngFile png;
+        png.parse(f);
 
         fontset = std::make_shared<fontproc::OMFontSet>();
 

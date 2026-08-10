@@ -11,7 +11,7 @@ layout(location = 1) out vec2 imagePosition;
 layout(location = 2) out vec4 imageRadius;
 layout(location = 3) out vec4 imageRectPosition;
 layout(location = 4) out float imageFactor;
-layout(location = 5) out vec2 iamgeUv;
+layout(location = 5) out vec2 imageUv;
 layout(location = 6) flat out float imageFillType;
 
 uniform ScreenData {

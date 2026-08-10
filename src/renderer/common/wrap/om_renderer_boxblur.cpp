@@ -11,10 +11,7 @@ OMRendererBoxBlurHandler::OMRendererBoxBlurHandler(OMRenderer *renderer) : OMRen
 {
     this->renderer = renderer;
 
-    format.appendPart("inPosition", basics::Vec3f)
-        ->appendPart("inTexCoord", basics::Vec2f)
-        ->nextGroup()
-        ->decideStruct();
+    format.nextGroup()->decideStruct();
 
     outputBlurp2Frg =
         renderer->shaderManager.preprocess("core/effects/boxblurp2.frag.glsl", Fragment, GLSLSource, format);

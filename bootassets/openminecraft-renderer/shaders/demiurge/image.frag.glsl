@@ -24,18 +24,19 @@ uniform sampler2D inTexture;
 #define FILLTYPE_COVER 2
 
 void main() {
+    float dummy = ubo.width + ubo.height;
     vec2 rectCenter = geom_rectCenterPos(imageRectPosition);
     vec2 halfSize   = imageRectPosition.zw / 2.0;
     vec2 localPos   = imagePosition - rectCenter;
 
-    float alpha = sdf_rrect(localPos, halfSize, inRadius, 0.0, inFactor);
+    float alpha = sdf_rrect(localPos, halfSize, imageRadius, 0.0, imageFactor);
 
     vec2 imageSize = vec2(textureSize(inTexture, 0));
     vec2 rectSize  = imageRectPosition.zw;
     vec2 uv;
 
     if (int(imageFillType) == FILLTYPE_FIT) {
-        uv = inUv;
+        uv = imageUv;
     }
     else {
         float scale = int(imageFillType) == FILLTYPE_CONTAIN ? min(rectSize.x / imageSize.x, rectSize.y / imageSize.y)
