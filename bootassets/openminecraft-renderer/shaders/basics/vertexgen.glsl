@@ -39,4 +39,12 @@ vec2 vertexgen_quad_ndc() {
     return ndc[vid];
 }
 
+int vertexgen_id() {
+#ifdef VULKAN
+    return gl_VertexIndex;
+#else
+    return gl_VertexID;
+#endif
+}
+
 #endif

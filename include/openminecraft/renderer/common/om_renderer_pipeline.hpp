@@ -34,6 +34,22 @@ struct OMReedererPipelineBlendState
 {
     OMRendererPipelineBlendType srcColor, dstColor, srcAlpha, dstAlpha;
 };
+enum OMRendererPipelinePrimitive
+{
+    TriangleList,
+    TriangleStrip,
+    TriangleFan,
+    LineList,
+    LineStrip,
+    PointList
+};
+
+enum OMRendererPipelinePolygonMode
+{
+    Fill,
+    Line,
+    Point
+};
 class OMRendererPipeline : public OMRendererObject
 {
   public:
@@ -112,6 +128,24 @@ class OMRendererPipeline : public OMRendererObject
         return this;
     }
 
+    inline auto primitiveType(OMRendererPipelinePrimitive p) -> OMRendererPipeline *
+    {
+        primitive = p;
+        return this;
+    }
+
+    inline auto enableDepthClamp(bool p) -> OMRendererPipeline *
+    {
+        depthClamp = p;
+        return this;
+    }
+
+    inline auto setPolygonMode(OMRendererPipelinePolygonMode m) -> OMRendererPipeline *
+    {
+        polygonMode = m;
+        return this;
+    }
+
     inline auto objType() -> OMRendererObjectType override
     {
         return Pipeline;
@@ -122,6 +156,9 @@ class OMRendererPipeline : public OMRendererObject
     bool enableDepthWrite = false;
     bool enableReverseZ = false;
     uint64_t sampleCount = 1;
+    OMRendererPipelinePrimitive primitive = TriangleList;
+    bool depthClamp = false;
+    OMRendererPipelinePolygonMode polygonMode = Fill;
 };
 } // namespace openminecraft::renderer::common
 

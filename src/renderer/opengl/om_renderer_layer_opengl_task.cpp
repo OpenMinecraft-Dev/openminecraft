@@ -96,6 +96,20 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
 
     auto s = glpipe->blendState;
     ops.push_back({glpipe->enableDepthTest ? Enable : Disable, GL_DEPTH_TEST});
+    ops.push_back({glpipe->depthClamp ? Enable : Disable, GL_DEPTH_CLAMP});
+    switch (glpipe->polygonMode)
+    {
+    default:
+    case common::Fill:
+        ops.push_back({PolygonMode, GL_FRONT_AND_BACK, GL_FILL});
+        break;
+    case common::Line:
+        ops.push_back({PolygonMode, GL_FRONT_AND_BACK, GL_LINE});
+        break;
+    case common::Point:
+        ops.push_back({PolygonMode, GL_FRONT_AND_BACK, GL_POINT});
+        break;
+    }
     ops.push_back({DepthMask, glpipe->enableDepthWrite});
     if (glpipe->enableReverseZ)
     {
@@ -219,12 +233,32 @@ void OMRendererTaskOpenGL::bindIndirectBuffer(common::OMRendererBuffer *buffer)
 {
     ops.push_back({BindBuffer, GL_DRAW_INDIRECT_BUFFER, reinterpret_cast<OMRendererBufferOpenGL *>(buffer)->buffer});
 }
+
+auto OMRendererTaskOpenGL::primitiveType() -> GLenum
+{
+    switch (pipeline->primitive)
+    {
+    default:
+    case common::TriangleList:
+        return GL_TRIANGLES;
+    case common::TriangleStrip:
+        return GL_TRIANGLE_STRIP;
+    case common::TriangleFan:
+        return GL_TRIANGLE_FAN;
+    case common::LineList:
+        return GL_LINES;
+    case common::LineStrip:
+        return GL_LINE_STRIP;
+    case common::PointList:
+        return GL_POINTS;
+    }
+}
 void OMRendererTaskOpenGL::drawIndirect(uint64_t begin, uint64_t count)
 {
     ops.push_back({BindVertexArray, vaos.back()});
     ops.push_back({UseProgram, program});
     ops.push_back({MultiDrawElementsIndirect,
-                   {GL_TRIANGLES, GL_UNSIGNED_INT, static_cast<GLuint>(count), 5 * sizeof(uint32_t)},
+                   {primitiveType(), GL_UNSIGNED_INT, static_cast<GLuint>(count), 5 * sizeof(uint32_t)},
                    {reinterpret_cast<void *>(begin * 5 * sizeof(uint32_t))}});
     ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
@@ -244,7 +278,7 @@ void OMRendererTaskOpenGL::draw(uint64_t vertexCount)
 {
     ops.push_back({BindVertexArray, vaos.back()});
     ops.push_back({UseProgram, program});
-    ops.push_back({DrawArrays, GL_TRIANGLES, 0, static_cast<GLuint>(vertexCount)});
+    ops.push_back({DrawArrays, primitiveType(), 0, static_cast<GLuint>(vertexCount)});
     ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
 }
@@ -252,8 +286,8 @@ void OMRendererTaskOpenGL::drawInstance(uint64_t vertexCount, uint64_t instanceC
 {
     ops.push_back({BindVertexArray, vaos.back()});
     ops.push_back({UseProgram, program});
-    ops.push_back(
-        {DrawArraysInstanced, GL_TRIANGLES, 0, static_cast<GLuint>(vertexCount), static_cast<GLuint>(instanceCount)});
+    ops.push_back({DrawArraysInstanced, primitiveType(), 0, static_cast<GLuint>(vertexCount),
+                   static_cast<GLuint>(instanceCount)});
     ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
 }
@@ -261,8 +295,8 @@ void OMRendererTaskOpenGL::drawInstance(uint64_t vertexCount, uint64_t instanceC
 {
     ops.push_back({BindVertexArray, vaos.back()});
     ops.push_back({UseProgram, program});
-    ops.push_back(
-        {DrawArraysInstanced, GL_TRIANGLES, 0, static_cast<GLuint>(vertexCount), static_cast<GLuint>(instanceCount)});
+    ops.push_back({DrawArraysInstanced, primitiveType(), 0, static_cast<GLuint>(vertexCount),
+                   static_cast<GLuint>(instanceCount)});
     ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
 }
@@ -270,7 +304,7 @@ void OMRendererTaskOpenGL::drawIndexed(uint64_t vertexCount)
 {
     ops.push_back({BindVertexArray, vaos.back()});
     ops.push_back({UseProgram, program});
-    ops.push_back({DrawElements, {GL_TRIANGLES, static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT}, {nullptr}});
+    ops.push_back({DrawElements, {primitiveType(), static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT}, {nullptr}});
     ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
 }
@@ -280,7 +314,7 @@ void OMRendererTaskOpenGL::drawIndexedInstance(uint64_t vertexCount, uint64_t in
     ops.push_back({UseProgram, program});
     ops.push_back(
         {DrawElementsInstanced,
-         {GL_TRIANGLES, static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT, static_cast<GLuint>(instanceCount)},
+         {primitiveType(), static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT, static_cast<GLuint>(instanceCount)},
          {nullptr}});
     ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
@@ -291,7 +325,7 @@ void OMRendererTaskOpenGL::drawIndexedInstance(uint64_t vertexCount, uint64_t in
     ops.push_back({UseProgram, program});
     ops.push_back(
         {DrawElementsInstanced,
-         {GL_TRIANGLES, static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT, static_cast<GLuint>(instanceCount)},
+         {primitiveType(), static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT, static_cast<GLuint>(instanceCount)},
          {nullptr}});
 
     ops.push_back({BindVertexArray, 0});
@@ -395,6 +429,9 @@ void OMRendererTaskOpenGL::execute()
             break;
         case DrawArrays:
             gl->glDrawArrays(op.args[0], op.args[1], op.args[2]);
+            break;
+        case PolygonMode:
+            gl->glPolygonMode(op.args[0], op.args[1]);
             break;
         }
     }

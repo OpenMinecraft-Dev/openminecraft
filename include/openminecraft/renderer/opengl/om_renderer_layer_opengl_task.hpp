@@ -38,7 +38,8 @@ enum OMRendererOpType
     ClearColor,
     DrawArraysInstanced,
     BlitFramebuffer,
-    DrawArrays
+    DrawArrays,
+    PolygonMode
 };
 union OMRendererOpenGLArg {
     GLuint i;
@@ -86,9 +87,9 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     void execute();
 
   private:
+    auto primitiveType() -> GLenum;
     OMRendererOpenGLFuncs *gl;
     OMRendererPipelineOpenGL *pipeline;
-    // GLuint vertexArrayObject;
     std::vector<GLuint> vaos;
 
     GLuint program;

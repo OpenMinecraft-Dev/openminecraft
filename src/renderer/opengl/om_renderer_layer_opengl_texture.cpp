@@ -3,7 +3,6 @@
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include <array>
 #include <cstdint>
-#include <iostream>
 
 namespace openminecraft::renderer::opengl
 {
@@ -200,6 +199,7 @@ void OMRendererTextureOpenGL::updateData(void *d, uint64_t layer)
     gl->glBindTexture(fromCommon(type), texture);
     switch (type)
     {
+    default:
     case common::OMTextureType::Dim2:
         gl->glTexImage2D(fromCommon(type), 0, fromCommonI(arr), width, height, 0, fromCommon(arr), GL_UNSIGNED_BYTE, d);
         break;
@@ -215,6 +215,7 @@ void OMRendererTextureOpenGL::updateDataPart(void *p, uint64_t x, uint64_t y, ui
     gl->glBindTexture(fromCommon(type), texture);
     switch (type)
     {
+    default:
     case common::OMTextureType::Dim2:
         gl->glTexSubImage2D(fromCommon(type), 0, x, y, w, h, fromCommon(arr), GL_UNSIGNED_BYTE, p);
         break;

@@ -73,7 +73,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
 
     blurHandler = std::make_shared<wrap::OMRendererBoxBlurHandler>(renderer);
     renderer->registerHandler(blurHandler);
-    blurHandler->update({12.0f, 32.0f});
+    blurHandler->update({8.0f, 32.0f});
 
     tempTargetMS = new wrap::OMRendererTempTarget(renderer);
     tempTarget = new wrap::OMRendererTempTarget(renderer);

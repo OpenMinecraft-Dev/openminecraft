@@ -69,6 +69,13 @@ auto boot(std::vector<std::string> args) -> int
     logger->info("User: {} / {}", os::fetchUsername(), os::fetchLoginUser());
     logger->info("Total memory: {} bytes", os::fetchMemoryTotal());
 
+    if (args.size() < 3)
+    {
+        args.resize(3);
+        args[1] = "3dtest";
+        args[2] = "vk";
+    }
+
     switch (hash_compile_time(args[1].c_str()))
     {
     case "3dtest"_hash:

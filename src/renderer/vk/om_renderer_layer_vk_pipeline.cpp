@@ -307,10 +307,49 @@ void OMRendererPipelineVk::build()
         s = SampleCountFlagBits::e64;
     }
 
+    PrimitiveTopology t;
+    switch (primitive)
+    {
+    default:
+    case common::TriangleList:
+        t = PrimitiveTopology::eTriangleList;
+        break;
+    case common::TriangleFan:
+        t = PrimitiveTopology::eTriangleFan;
+        break;
+    case common::TriangleStrip:
+        t = PrimitiveTopology::eTriangleStrip;
+        break;
+    case common::LineList:
+        t = PrimitiveTopology::eLineList;
+        break;
+    case common::LineStrip:
+        t = PrimitiveTopology::eLineStrip;
+        break;
+    case common::PointList:
+        t = PrimitiveTopology::ePointList;
+        break;
+    }
+
+    PolygonMode md;
+    switch (polygonMode)
+    {
+    default:
+    case common::Fill:
+        md = PolygonMode::eFill;
+        break;
+    case common::Line:
+        md = PolygonMode::eLine;
+        break;
+    case common::Point:
+        md = PolygonMode::ePoint;
+        break;
+    }
+
     auto vertexInput = PipelineVertexInputStateCreateInfo({}, vertexInputBindingDesc, vertexInputAttrDesc);
-    auto inputAssembly = PipelineInputAssemblyStateCreateInfo({}, PrimitiveTopology::eTriangleList, false);
-    auto rasterization = PipelineRasterizationStateCreateInfo(
-        {}, false, false, PolygonMode::eFill, CullModeFlagBits::eNone, FrontFace::eCounterClockwise, true, 0, 0, 0, 1);
+    auto inputAssembly = PipelineInputAssemblyStateCreateInfo({}, t, false);
+    auto rasterization = PipelineRasterizationStateCreateInfo({}, depthClamp, false, md, CullModeFlagBits::eNone,
+                                                              FrontFace::eCounterClockwise, true, 0, 0, 0, 1);
     auto multisample = PipelineMultisampleStateCreateInfo({}, s, false);
     auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
     std::vector attc = {PipelineColorBlendAttachmentState(
