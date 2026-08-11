@@ -14,7 +14,8 @@ namespace openminecraft::renderer::common
 enum OMTextureType : uint8_t
 {
     Dim2,
-    Dim2Array
+    Dim2Array,
+    Dim2Multisample
 };
 
 enum OMTextureArrangement

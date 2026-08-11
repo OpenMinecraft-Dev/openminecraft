@@ -7,9 +7,12 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_pipeline.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan_structs.hpp"
 #include <cstdint>
+#include <stdexcept>
 #include <vulkan/vulkan.hpp>
 
 using namespace ::vk;
@@ -112,6 +115,7 @@ void OMRendererTaskVk::drawIndirect(uint64_t begin, uint64_t count)
 }
 void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
 {
+    this->target = target;
     try
     {
         if (target == renderer->getDefaultRenderTarget())
@@ -220,12 +224,57 @@ void OMRendererTaskVk::finish()
 {
     try
     {
-        if (!isDefault)
+        if (!isDefault && !isResolved)
         {
             commandBuffer.endRenderPass();
         }
         commandBuffer.end();
         begin = false;
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.task"));
+    }
+}
+void OMRendererTaskVk::resolveTo(common::OMRendererRenderTarget *target)
+{
+    try
+    {
+        commandBuffer.endRenderPass();
+        isResolved = true;
+
+        auto src = reinterpret_cast<OMRendererRenderTargetVk *>(this->target);
+        auto dst = reinterpret_cast<OMRendererRenderTargetVk *>(target);
+
+        if (src->textures.size() != dst->textures.size())
+        {
+            throw std::logic_error("fail!");
+        }
+
+        for (int i = 0; i < src->textures.size(); ++i)
+        {
+            if (src->textures[i]->arr != common::Depth && dst->textures[i]->arr != common::Depth)
+            {
+                auto srci = reinterpret_cast<OMRendererTextureVk *>(src->textures[i]);
+                auto dsti = reinterpret_cast<OMRendererTextureVk *>(dst->textures[i]);
+
+                srci->transitionImageLayout(commandBuffer, ImageLayout::eShaderReadOnlyOptimal,
+                                            ImageLayout::eTransferSrcOptimal, 0, 0, 1);
+                dsti->transitionImageLayout(commandBuffer, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal, 0,
+                                            0, 1);
+
+                commandBuffer.resolveImage(
+                    srci->image, ImageLayout::eTransferSrcOptimal, dsti->image, ImageLayout::eTransferDstOptimal,
+                    {ImageResolve(ImageSubresourceLayers(ImageAspectFlagBits::eColor, 0, 0, 1), Offset3D(0, 0, 0),
+                                  ImageSubresourceLayers(ImageAspectFlagBits::eColor, 0, 0, 1), Offset3D(0, 0, 0),
+                                  Extent3D(srci->width, srci->height, 1))});
+
+                srci->transitionImageLayout(commandBuffer, ImageLayout::eTransferSrcOptimal,
+                                            ImageLayout::eShaderReadOnlyOptimal, 0, 0, 1);
+                dsti->transitionImageLayout(commandBuffer, ImageLayout::eTransferDstOptimal,
+                                            ImageLayout::eShaderReadOnlyOptimal, 0, 0, 1);
+            }
+        }
     }
     catch (SystemError &e)
     {

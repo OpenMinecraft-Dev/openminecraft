@@ -295,11 +295,23 @@ void OMRendererPipelineVk::build()
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.pipeline.desc"));
     }
 
+    SampleCountFlagBits s;
+#define DET(n)                                                                                                         \
+    if (sampleCount <= n)                                                                                              \
+    {                                                                                                                  \
+        s = SampleCountFlagBits::e##n;                                                                                 \
+    }
+    DET(1)
+    else DET(2) else DET(4) else DET(8) else DET(16) else DET(32) else
+    {
+        s = SampleCountFlagBits::e64;
+    }
+
     auto vertexInput = PipelineVertexInputStateCreateInfo({}, vertexInputBindingDesc, vertexInputAttrDesc);
     auto inputAssembly = PipelineInputAssemblyStateCreateInfo({}, PrimitiveTopology::eTriangleList, false);
     auto rasterization = PipelineRasterizationStateCreateInfo(
         {}, false, false, PolygonMode::eFill, CullModeFlagBits::eNone, FrontFace::eCounterClockwise, true, 0, 0, 0, 1);
-    auto multisample = PipelineMultisampleStateCreateInfo({}, SampleCountFlagBits::e1, false);
+    auto multisample = PipelineMultisampleStateCreateInfo({}, s, false);
     auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
     std::vector attc = {PipelineColorBlendAttachmentState(
         enableBlend, convert(blendState.srcColor), convert(blendState.dstColor), BlendOp::eAdd,

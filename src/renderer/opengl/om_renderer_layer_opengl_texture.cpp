@@ -3,6 +3,7 @@
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include <array>
 #include <cstdint>
+#include <iostream>
 
 namespace openminecraft::renderer::opengl
 {
@@ -15,6 +16,8 @@ static auto fromCommon(common::OMTextureType t) -> GLenum
         return GL_TEXTURE_2D;
     case common::Dim2Array:
         return GL_TEXTURE_2D_ARRAY;
+    case common::Dim2Multisample:
+        return GL_TEXTURE_2D_MULTISAMPLE;
     }
 }
 
@@ -88,7 +91,14 @@ OMRendererTextureOpenGL::OMRendererTextureOpenGL(uint64_t width, uint64_t height
     {
         gl->glGenRenderbuffers(1, &texture);
         gl->glBindRenderbuffer(GL_RENDERBUFFER, texture);
-        gl->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+        if (type == common::OMTextureType::Dim2Multisample)
+        {
+            gl->glRenderbufferStorageMultisample(GL_RENDERBUFFER, layers, GL_DEPTH24_STENCIL8, width, height);
+        }
+        else
+        {
+            gl->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+        }
     }
     else
     {
@@ -109,6 +119,10 @@ void OMRendererTextureOpenGL::allocateBase()
     case common::Dim2Array:
         gl->glTexImage3D(fromCommon(type), 0, fromCommonI(arr), width, height, layers, 0, fromCommon(arr),
                          GL_UNSIGNED_BYTE, nullptr);
+        break;
+    case common::Dim2Multisample:
+        gl->glTexImage2DMultisample(fromCommon(type), layers, fromCommonI(arr), width, height, true);
+        mipmap = 0;
         break;
     }
     gl->glBindTexture(fromCommon(type), 0);
@@ -145,24 +159,27 @@ static auto toFilter2(common::OMTextureFilter f) -> GLenum
 void OMRendererTextureOpenGL::setupSampler()
 {
     gl->glBindTexture(fromCommon(type), texture);
-    gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MAX_LEVEL, mipmap);
-    if (mipmap > 0)
+    if (type != common::Dim2Multisample)
     {
-        gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MIN_FILTER, toFilter(minFilter, mipFilter));
-        gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MAG_FILTER, toFilter(magFilter, mipFilter));
-    }
-    else
-    {
-        gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MIN_FILTER, toFilter2(minFilter));
-        gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MAG_FILTER, toFilter2(magFilter));
-    }
-    gl->glTexParameteri(fromCommon(type), GL_TEXTURE_WRAP_S, fromCommon(addressModeU));
-    gl->glTexParameteri(fromCommon(type), GL_TEXTURE_WRAP_T, fromCommon(addressModeV));
-    gl->glTexParameteri(fromCommon(type), GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    gl->glTexParameterfv(fromCommon(type), GL_TEXTURE_BORDER_COLOR, fromCommon(border));
-    if (mipmap > 0)
-    {
-        gl->glGenerateMipmap(fromCommon(type));
+        gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MAX_LEVEL, mipmap);
+        if (mipmap > 0)
+        {
+            gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MIN_FILTER, toFilter(minFilter, mipFilter));
+            gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MAG_FILTER, toFilter(magFilter, mipFilter));
+        }
+        else
+        {
+            gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MIN_FILTER, toFilter2(minFilter));
+            gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MAG_FILTER, toFilter2(magFilter));
+        }
+        gl->glTexParameteri(fromCommon(type), GL_TEXTURE_WRAP_S, fromCommon(addressModeU));
+        gl->glTexParameteri(fromCommon(type), GL_TEXTURE_WRAP_T, fromCommon(addressModeV));
+        gl->glTexParameteri(fromCommon(type), GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        gl->glTexParameterfv(fromCommon(type), GL_TEXTURE_BORDER_COLOR, fromCommon(border));
+        if (mipmap > 0)
+        {
+            gl->glGenerateMipmap(fromCommon(type));
+        }
     }
     gl->glBindTexture(fromCommon(type), 0);
 }

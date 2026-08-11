@@ -68,6 +68,9 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
             case common::Dim2Array:
                 ops.push_back({BindTexture, GL_TEXTURE_2D_ARRAY, tex->texture});
                 break;
+            case common::Dim2Multisample:
+                ops.push_back({BindTexture, GL_TEXTURE_2D_MULTISAMPLE, tex->texture});
+                break;
             }
 
             break;
@@ -282,6 +285,19 @@ void OMRendererTaskOpenGL::finish()
     gl->glBindVertexArray(0);
 }
 
+void OMRendererTaskOpenGL::resolveTo(common::OMRendererRenderTarget *target)
+{
+    auto result = reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer;
+    ops.push_back({BindFramebuffer, GL_READ_FRAMEBUFFER, framebuffer});
+    ops.push_back({BindFramebuffer, GL_DRAW_FRAMEBUFFER, result});
+    auto siz = target->fetchSize();
+    GLuint wid = siz.x;
+    GLuint hei = siz.y;
+    ops.push_back({BlitFramebuffer, 0, 0, wid, hei, 0, 0, wid, hei, GL_COLOR_BUFFER_BIT, GL_NEAREST});
+    ops.push_back({BindFramebuffer, GL_READ_FRAMEBUFFER, 0});
+    ops.push_back({BindFramebuffer, GL_DRAW_FRAMEBUFFER, 0});
+}
+
 int a = 0;
 void OMRendererTaskOpenGL::execute()
 {
@@ -289,6 +305,10 @@ void OMRendererTaskOpenGL::execute()
     {
         switch (op.type)
         {
+        case BlitFramebuffer:
+            gl->glBlitFramebuffer(op.args[0], op.args[1], op.args[2], op.args[3], op.args[4], op.args[5], op.args[6],
+                                  op.args[7], op.args[8], op.args[9]);
+            break;
         case BindFramebuffer:
             gl->glBindFramebuffer(op.args[0], op.args[1]);
             break;

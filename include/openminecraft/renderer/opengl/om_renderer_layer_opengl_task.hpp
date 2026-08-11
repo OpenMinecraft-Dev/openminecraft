@@ -36,7 +36,8 @@ enum OMRendererOpType
     DepthMask,
     DrawElementsInstancedBaseInstance,
     ClearColor,
-    DrawArraysInstanced
+    DrawArraysInstanced,
+    BlitFramebuffer
 };
 union OMRendererOpenGLArg {
     GLuint i;
@@ -55,7 +56,7 @@ union OMRendererOpenGLArg {
 struct OMRendererTaskOp
 {
     OMRendererOpType type;
-    std::array<GLuint, 8> args;
+    std::array<GLuint, 12> args;
     std::array<void *, 2> ptrArgs;
     std::array<GLfloat, 8> floatArgs;
 };
@@ -77,6 +78,7 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     void drawIndexedInstance(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance) override;
     void drawIndirect(uint64_t begin, uint64_t count) override;
     void finish() override;
+    void resolveTo(common::OMRendererRenderTarget *target) override;
 
     void execute();
 

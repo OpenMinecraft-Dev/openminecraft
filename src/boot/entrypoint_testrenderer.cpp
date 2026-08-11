@@ -75,9 +75,10 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     renderer->registerHandler(blurHandler);
     blurHandler->update({12.0f, 32.0f});
 
+    tempTargetMS = new wrap::OMRendererTempTarget(renderer);
     tempTarget = new wrap::OMRendererTempTarget(renderer);
-
     auto ext = renderer->getExtent();
+    tempTargetMS->construct(ext, 8);
     tempTarget->construct(ext);
 
     pipeline = renderer->createPipeline()
@@ -85,7 +86,8 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
                    ->inputName("ObjectInfo")
                    ->input(ImageSampler)
                    ->inputName("inTexture")
-                   ->output(tempTarget->target)
+                   ->output(tempTargetMS->target)
+                   ->samples(4)
                    ->shader(objectFrg)
                    ->shader(objectVtx)
                    ->format(objModel->format)
@@ -157,6 +159,7 @@ void OMTestRenderer::afterFrame()
 
 void OMTestRenderer::submitTasks()
 {
+    tempTargetMS->construct(renderer->getExtent(), 8);
     tempTarget->construct(renderer->getExtent());
 
     mainPipeline->bindInput(0, tempTarget->colorTexture);
@@ -165,12 +168,14 @@ void OMTestRenderer::submitTasks()
     auto scene = renderer->createTask("scene")
                      ->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
                      ->clearDepth(0.0f)
-                     ->target(tempTarget->target)
+                     ->target(tempTargetMS->target)
                      ->pipeline(pipeline)
                      ->vertexBuffer({objModel->vertexData})
                      ->indexBuffer(objModel->vertexIndex)
                      ->drawIndexedN(objModel->vertexCount)
+                     ->resolve(tempTarget->target)
                      ->finishN();
+
     blurHandler
         ->secondLayerTask(renderer->createTask("main")
                               ->dependOn(scene)
@@ -189,6 +194,7 @@ OMTestRenderer::~OMTestRenderer()
     delete uniformBuffer;
     delete objModel;
 
+    delete tempTargetMS;
     delete tempTarget;
 }
 } // namespace openminecraft::boot::test

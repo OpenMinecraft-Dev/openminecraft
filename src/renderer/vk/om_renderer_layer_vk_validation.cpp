@@ -1,8 +1,6 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
-#include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
 #include <cstdio>
@@ -75,6 +73,7 @@ OMRendererVkValidation::OMRendererVkValidation(std::vector<LayerProperties> prop
 {
     logger = std::make_shared<log::OMLogger>("OMRendererVkValidation", this);
     enabled = false;
+    return;
     for (auto p : props)
     {
         if (std::string(p.layerName.data()) == "VK_LAYER_KHRONOS_validation")

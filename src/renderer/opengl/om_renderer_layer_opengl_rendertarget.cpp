@@ -73,7 +73,20 @@ void OMRendererRenderTargetOpenGL::build()
             }
             else
             {
-                gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D,
+                GLenum type;
+                switch (tt->type)
+                {
+                case common::Dim2:
+                    type = GL_TEXTURE_2D;
+                    break;
+                case common::Dim2Array:
+                    type = GL_TEXTURE_2D_ARRAY;
+                    break;
+                case common::Dim2Multisample:
+                    type = GL_TEXTURE_2D_MULTISAMPLE;
+                    break;
+                }
+                gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, type,
                                            reinterpret_cast<OMRendererTextureOpenGL *>(tt)->texture, 0);
                 i++;
             }

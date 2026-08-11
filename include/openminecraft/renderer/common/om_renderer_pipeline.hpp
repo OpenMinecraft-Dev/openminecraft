@@ -106,6 +106,12 @@ class OMRendererPipeline : public OMRendererObject
         return this;
     }
 
+    inline auto samples(uint64_t n) -> OMRendererPipeline *
+    {
+        sampleCount = n;
+        return this;
+    }
+
     inline auto objType() -> OMRendererObjectType override
     {
         return Pipeline;
@@ -115,6 +121,7 @@ class OMRendererPipeline : public OMRendererObject
     bool enableDepthTest = false;
     bool enableDepthWrite = false;
     bool enableReverseZ = false;
+    uint64_t sampleCount = 1;
 };
 } // namespace openminecraft::renderer::common
 

@@ -106,7 +106,7 @@ void OMRendererRenderTargetVk::build()
                 {
                     attachDesc.push_back({{},
                                           reinterpret_cast<OMRendererTextureVk *>(tt)->format,
-                                          SampleCountFlagBits::e1,
+                                          reinterpret_cast<OMRendererTextureVk *>(tt)->sampleCount,
                                           AttachmentLoadOp::eClear,
                                           AttachmentStoreOp::eDontCare,
                                           AttachmentLoadOp::eDontCare,
@@ -119,7 +119,7 @@ void OMRendererRenderTargetVk::build()
                 {
                     attachDesc.push_back({{},
                                           reinterpret_cast<OMRendererTextureVk *>(tt)->format,
-                                          SampleCountFlagBits::e1,
+                                          reinterpret_cast<OMRendererTextureVk *>(tt)->sampleCount,
                                           AttachmentLoadOp::eClear,
                                           AttachmentStoreOp::eStore,
                                           AttachmentLoadOp::eDontCare,

@@ -3,6 +3,7 @@
 
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
+#include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include <cstdint>
@@ -26,6 +27,7 @@ class OMRendererTaskVk : public common::OMRendererTask
     void drawIndexedInstance(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance) override;
     void drawIndirect(uint64_t begin, uint64_t count) override;
     void finish() override;
+    void resolveTo(common::OMRendererRenderTarget *target) override;
 
     auto isOnDefault() -> bool;
 
@@ -33,8 +35,10 @@ class OMRendererTaskVk : public common::OMRendererTask
     common::OMRendererBuffer *indirectBuffer;
 
   private:
+    common::OMRendererRenderTarget *target;
     OMRendererVk *renderer;
     bool isDefault = false;
+    bool isResolved = false;
     bool begin = false;
     common::OMRendererPipeline *pipe;
 };

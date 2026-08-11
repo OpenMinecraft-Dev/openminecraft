@@ -2,6 +2,7 @@
 #define OM_RENDERER_LAYER_VK_TEXTURE_HPP
 #include "om_renderer_layer_vk.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
+#include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_handles.hpp"
 #include <cstdint>
 
@@ -31,6 +32,8 @@ class OMRendererTextureVk : public common::OMRendererTexture
     ::vk::ImageView imageView;
     ::vk::DeviceMemory imageMemory;
     ::vk::Sampler sampler;
+
+    ::vk::SampleCountFlagBits sampleCount;
 
   private:
     uint64_t mipmap;

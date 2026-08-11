@@ -64,7 +64,7 @@ class OMTestRenderer : public OMRendererHandler
     OMRendererTexture *textureImage;
     OMRendererPipeline *pipeline = nullptr;
     OMRendererPipeline *mainPipeline;
-    wrap::OMRendererTempTarget *tempTarget;
+    wrap::OMRendererTempTarget *tempTargetMS, *tempTarget;
     model::OMRendererModelObj *objModel;
 
     std::shared_ptr<wrap::OMRendererBoxBlurHandler> blurHandler;

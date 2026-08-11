@@ -120,6 +120,12 @@ class OMRendererTask : public OMRendererObject
         finish();
         return this;
     }
+    virtual void resolveTo(OMRendererRenderTarget *target) = 0;
+    inline auto resolve(OMRendererRenderTarget *target) -> OMRendererTask *
+    {
+        resolveTo(target);
+        return this;
+    }
 
     inline auto objType() -> OMRendererObjectType override
     {

@@ -35,6 +35,7 @@ static auto fromCommonType2(common::OMTextureType type) -> ImageViewType
     {
     default:
     case common::Dim2:
+    case common::Dim2Multisample:
         return ImageViewType::e2D;
     case common::Dim2Array:
         return ImageViewType::e2DArray;
@@ -89,13 +90,32 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64
     : OMRendererTexture(width, height, layers, mipmap, type, arr, reinterpret_cast<OMRenderer *>(renderer)),
       renderer(renderer), mipmap(mipmap), layers(layers)
 {
+    if (type == common::Dim2Multisample)
+    {
+#define DET(n)                                                                                                         \
+    if (layers <= n)                                                                                                   \
+    {                                                                                                                  \
+        sampleCount = SampleCountFlagBits::e##n;                                                                       \
+    }
+        DET(1)
+        else DET(2) else DET(4) else DET(8) else DET(16) else DET(32) else
+        {
+            sampleCount = SampleCountFlagBits::e64;
+        }
+        layers = 1;
+    }
+    else
+    {
+        sampleCount = SampleCountFlagBits::e1;
+    }
+
     try
     {
         auto memprop = renderer->physicalDevice.getMemoryProperties();
         format = fromCommonUsage(arr);
         image = renderer->logicalDevice.createImage(
-            ImageCreateInfo({}, ImageType::e2D, format, Extent3D(width, height, 1), mipmap + 1, layers,
-                            SampleCountFlagBits::e1, ImageTiling::eOptimal,
+            ImageCreateInfo({}, ImageType::e2D, format, Extent3D(width, height, 1), mipmap + 1, layers, sampleCount,
+                            ImageTiling::eOptimal,
                             (arr == common::Depth)
                                 ? ImageUsageFlagBits::eDepthStencilAttachment
                                 : ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled |
