@@ -53,6 +53,18 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     textureImage->updateData(img.fetchData(), 1);
     textureImage->setupSampler();
 
+    /*textureAtlas = renderer->allocateTexture(16, 16, 4, 4, OMTextureType::Dim2Array, OMTextureArrangement::ColorRgba);
+    int i = 0;
+    for (auto l : {"dirt", "stone", "cobblestone", "coal_ore"})
+    {
+        auto imgraw = vfs::fsfetch(fmt::format("/bootassets/external/minecraft/textures/block/{}.png", l));
+        specs::png::OMPngFile img2;
+        img2.parse(imgraw);
+        textureAtlas->updateData(img2.fetchData(), i);
+        ++i;
+    }
+    textureAtlas->setupSampler();*/
+
     objectFrg = renderer->shaderManager.preprocess("core/objectbase.frag.glsl", Fragment, GLSLSource, objModel->format);
     objectVtx = renderer->shaderManager.preprocess("core/objectbase.vert.glsl", Vertex, GLSLSource, objModel->format);
     outputFrg = renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format);
@@ -193,6 +205,7 @@ OMTestRenderer::~OMTestRenderer()
     delete mainPipeline;
     delete pipeline;
     delete textureImage;
+    // delete textureAtlas;
     delete uniformBuffer;
     delete objModel;
 

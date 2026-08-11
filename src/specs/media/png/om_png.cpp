@@ -172,7 +172,7 @@ auto OMPngFile::parseBlockHeader(std::shared_ptr<std::istream> istr, OMPngChunkT
     case "IHDR"_hash:
         *b = Header;
         break;
-    case "PTLE"_hash:
+    case "PLTE"_hash:
         *b = PaletteDefine;
         break;
     case "tRNS"_hash:
@@ -396,7 +396,7 @@ auto OMPngFile::getStride(int width) -> uint32_t
         else
         {
             auto bits = width * head.bitDepth;
-            return bits + (8 - bits % 8) % 8;
+            return (bits + 7) / 8;
         }
     }
     }

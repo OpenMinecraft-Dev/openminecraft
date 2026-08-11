@@ -61,7 +61,7 @@ class OMTestRenderer : public OMRendererHandler
 
     // INFO: these are the resource handles used for rendering
     OMRendererBuffer *uniformBuffer;
-    OMRendererTexture *textureImage;
+    OMRendererTexture *textureImage, *textureAtlas;
     OMRendererPipeline *pipeline = nullptr;
     OMRendererPipeline *mainPipeline;
     wrap::OMRendererTempTarget *tempTargetMS, *tempTarget;
