@@ -5,9 +5,7 @@ namespace openminecraft::renderer::common::demiurge::element
 {
 void OMDemiurgeSectorChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRenderTarget *target)
 {
-    format.appendPart("inPosition", basics::Vec2f)
-        ->nextGroup()
-        ->setInstance()
+    format.setInstance()
         ->appendPart("inSectorPos", basics::Vec4f)
         ->appendPart("inSectorColor", basics::Vec4f)
         ->appendPart("inSectorRotation", basics::Vec4f)

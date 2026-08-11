@@ -2,6 +2,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 
 #include "basics/geometry.glsl"
+#include "basics/vertexgen.glsl"
 
 #vertex
 
@@ -13,6 +14,7 @@ uniform ScreenData {
 } ubo;
 
 void main() {
+    vec2 inPosition = vertexgen_quad_normal();
     vec2 screenPos = inRectPos.xy + inPosition.xy * inRectPos.zw;
 
     gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), inRectDepth, 1.0);

@@ -8,9 +8,7 @@ namespace openminecraft::renderer::common::demiurge::element
 {
 void OMDemiurgeImageChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRenderTarget *target)
 {
-    format.appendPart("inPosition", basics::Vec2f)
-        ->nextGroup()
-        ->setInstance()
+    format.setInstance()
         ->appendPart("inRectPos", basics::Vec4f)
         ->appendPart("inRectColor", basics::Vec4f)
         ->appendPart("inRectRadius", basics::Vec4f)
@@ -24,10 +22,6 @@ void OMDemiurgeImageChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRen
     vtxShader = renderer->shaderManager.preprocess("demiurge/image.vert.glsl", Vertex, GLSLSource, format);
     frgShader = renderer->shaderManager.preprocess("demiurge/image.frag.glsl", Fragment, GLSLSource, format);
 
-    quadBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(glm::vec2));
-    quadBuffer->updateData(std::array<glm::vec2, 4>{{{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}}}.data());
-    quadIndex = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
-    quadIndex->updateData(std::array<uint32_t, 6>{{0, 1, 2, 2, 3, 0}}.data());
     instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
 
     this->uniform = uniformBuffer;
@@ -71,10 +65,7 @@ auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, float upper, float
                 pipelines[i]->bindInput(1, textures[i]);
             }
 
-            task->pipeline(pipelines[i])
-                ->vertexBufferInstanced({quadBuffer, instanceBuffer}, i)
-                ->indexBuffer(quadIndex)
-                ->drawIndexedInstance(6, 1, i);
+            task->pipeline(pipelines[i])->vertexBufferInstanced({instanceBuffer}, i)->drawInstance(6, 1, i);
             currentChannel = this;
         }
     }

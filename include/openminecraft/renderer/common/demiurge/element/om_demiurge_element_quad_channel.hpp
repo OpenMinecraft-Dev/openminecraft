@@ -5,7 +5,6 @@
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
-#include <array>
 #include <functional>
 #include <utility>
 namespace openminecraft::renderer::common::demiurge::element
@@ -22,18 +21,11 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
     auto destroy() -> void override
     {
         delete instanceBuffer;
-        delete quadBuffer;
-        delete quadIndex;
         delete pipeline;
     }
 
     auto init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) -> void override
     {
-        quadBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(glm::vec2));
-        quadBuffer->updateData(
-            std::array<glm::vec2, 4>{{{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}}}.data());
-        quadIndex = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
-        quadIndex->updateData(std::array<uint32_t, 6>{{0, 1, 2, 2, 3, 0}}.data());
         instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
 
         pipeline = renderer->createPipeline()
@@ -75,12 +67,10 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
             {
                 if (currentChannel != this)
                 {
-                    task->pipeline(pipeline)
-                        ->vertexBufferInstanced({quadBuffer, instanceBuffer}, start)
-                        ->indexBuffer(quadIndex);
+                    task->pipeline(pipeline)->vertexBufferInstanced({instanceBuffer}, start);
                     currentChannel = this;
                 }
-                task->drawIndexedInstance(6, i - start, start);
+                task->drawInstance(6, i - start, start);
                 inDraw = false;
             }
         }
@@ -105,8 +95,6 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
     std::function<void()> recreation;
     basics::OMVertexFormat format;
 
-    OMRendererBuffer *quadBuffer;
-    OMRendererBuffer *quadIndex;
     OMRendererBuffer *instanceBuffer = nullptr;
 
     OMRendererPipeline *pipeline;

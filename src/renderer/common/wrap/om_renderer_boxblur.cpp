@@ -71,13 +71,13 @@ auto OMRendererBoxBlurHandler::firstLayerTask(OMRendererTask *pre) -> OMRenderer
         ->dependOn(pre)
         ->target(blurTemp->target)
         ->pipeline(blurp1Pipeline)
-        ->drawInstanceN(6, 1)
+        ->drawN(6)
         ->finishN();
     ;
 }
 auto OMRendererBoxBlurHandler::secondLayerTask(OMRendererTask *task) -> OMRendererTask *
 {
-    return task->pipeline(blurp2Pipeline)->drawInstanceN(6, 1);
+    return task->pipeline(blurp2Pipeline)->drawN(6);
 }
 void OMRendererBoxBlurHandler::update(OMRendererBoxBlurArg a)
 {

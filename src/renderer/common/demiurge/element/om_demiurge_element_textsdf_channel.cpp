@@ -37,9 +37,7 @@ auto OMDemiurgeTextSdfChannel::storeGlyph(fontproc::OMFontSetShapeResult r) -> i
 }
 void OMDemiurgeTextSdfChannel::init(OMRendererBuffer *uniform, OMRendererRenderTarget *target)
 {
-    format.appendPart("inPosition", basics::Vec2f)
-        ->nextGroup()
-        ->setInstance()
+    format.setInstance()
         ->appendPart("inTextPos", basics::Vec4f)
         ->appendPart("inTextColor", basics::Vec4f)
         ->appendPart("inTextDepth", basics::Float)
@@ -51,10 +49,6 @@ void OMDemiurgeTextSdfChannel::init(OMRendererBuffer *uniform, OMRendererRenderT
     vtxShader = renderer->shaderManager.preprocess("demiurge/textsdf.vert.glsl", Vertex, GLSLSource, format);
     frgShader = renderer->shaderManager.preprocess("demiurge/textsdf.frag.glsl", Fragment, GLSLSource, format);
 
-    quadBuffer = renderer->allocateBuffer(VertexData, 4 * sizeof(glm::vec2));
-    quadBuffer->updateData(std::array<glm::vec2, 4>{{{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}}}.data());
-    quadIndex = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
-    quadIndex->updateData(std::array<uint32_t, 6>{{0, 1, 2, 2, 3, 0}}.data());
     instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
 
     glyphBuffer = renderer->allocateBuffer(UniformTexel, 1024 * sizeof(float));

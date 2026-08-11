@@ -6,9 +6,7 @@ namespace openminecraft::renderer::common::demiurge::element
 {
 void OMDemiurgeRectChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRenderTarget *target)
 {
-    format.appendPart("inPosition", basics::Vec2f)
-        ->nextGroup()
-        ->setInstance()
+    format.setInstance()
         ->appendPart("inRectPos", basics::Vec4f)
         ->appendPart("inRectColor", basics::Vec4f)
         ->appendPart("inRectDepth", basics::Float)

@@ -183,7 +183,7 @@ void OMTestRenderer::submitTasks()
                               ->dependOn(renderer->fetchTask("demiurgeui_compose"))
                               ->target(renderer->getDefaultRenderTarget())
                               ->pipeline(mainPipeline)
-                              ->drawInstanceN(6, 1))
+                              ->drawN(6))
         ->finishN();
 }
 OMTestRenderer::~OMTestRenderer()

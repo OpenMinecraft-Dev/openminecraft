@@ -240,7 +240,24 @@ void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
     ops.push_back({Enable, GL_DEPTH_TEST});
     isCleared = false;
 }
+void OMRendererTaskOpenGL::draw(uint64_t vertexCount)
+{
+    ops.push_back({BindVertexArray, vaos.back()});
+    ops.push_back({UseProgram, program});
+    ops.push_back({DrawArrays, GL_TRIANGLES, 0, static_cast<GLuint>(vertexCount)});
+    ops.push_back({BindVertexArray, 0});
+    gl->glBindVertexArray(0);
+}
 void OMRendererTaskOpenGL::drawInstance(uint64_t vertexCount, uint64_t instanceCount)
+{
+    ops.push_back({BindVertexArray, vaos.back()});
+    ops.push_back({UseProgram, program});
+    ops.push_back(
+        {DrawArraysInstanced, GL_TRIANGLES, 0, static_cast<GLuint>(vertexCount), static_cast<GLuint>(instanceCount)});
+    ops.push_back({BindVertexArray, 0});
+    gl->glBindVertexArray(0);
+}
+void OMRendererTaskOpenGL::drawInstance(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance)
 {
     ops.push_back({BindVertexArray, vaos.back()});
     ops.push_back({UseProgram, program});
@@ -375,6 +392,9 @@ void OMRendererTaskOpenGL::execute()
             break;
         case DrawArraysInstanced:
             gl->glDrawArraysInstanced(op.args[0], op.args[1], op.args[2], op.args[3]);
+            break;
+        case DrawArrays:
+            gl->glDrawArrays(op.args[0], op.args[1], op.args[2]);
             break;
         }
     }

@@ -26,8 +26,6 @@ class OMDemiurgeImageChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementIma
     auto destroy() -> void override
     {
         delete instanceBuffer;
-        delete quadBuffer;
-        delete quadIndex;
         for (auto p : pipelines)
         {
             delete p.second;
