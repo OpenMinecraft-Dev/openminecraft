@@ -78,7 +78,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     tempTargetMS = new wrap::OMRendererTempTarget(renderer);
     tempTarget = new wrap::OMRendererTempTarget(renderer);
     auto ext = renderer->getExtent();
-    tempTargetMS->construct(ext, 8);
+    tempTargetMS->construct(ext, 4);
     tempTarget->construct(ext);
 
     pipeline = renderer->createPipeline()
@@ -159,7 +159,7 @@ void OMTestRenderer::afterFrame()
 
 void OMTestRenderer::submitTasks()
 {
-    tempTargetMS->construct(renderer->getExtent(), 8);
+    tempTargetMS->construct(renderer->getExtent(), 4);
     tempTarget->construct(renderer->getExtent());
 
     mainPipeline->bindInput(0, tempTarget->colorTexture);
