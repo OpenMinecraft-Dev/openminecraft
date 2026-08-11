@@ -110,6 +110,36 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
         ops.push_back({PolygonMode, GL_FRONT_AND_BACK, GL_POINT});
         break;
     }
+    switch (glpipe->cullMode)
+    {
+    default:
+    case common::None:
+        ops.push_back({Disable, GL_CULL_FACE});
+        break;
+    case common::Front:
+        ops.push_back({Enable, GL_CULL_FACE});
+        ops.push_back({CullFace, GL_FRONT});
+        break;
+    case common::Back:
+        ops.push_back({Enable, GL_CULL_FACE});
+        ops.push_back({CullFace, GL_BACK});
+        break;
+    case common::FrontAndBack:
+        ops.push_back({Enable, GL_CULL_FACE});
+        ops.push_back({CullFace, GL_FRONT_AND_BACK});
+        break;
+    }
+    if (glpipe->cullClockwise)
+    {
+        ops.push_back({FrontFace, GL_CCW});
+    }
+    else
+    {
+        ops.push_back({FrontFace, GL_CW});
+    }
+    ops.push_back({glpipe->enableDepthBias ? Enable : Disable, GL_POLYGON_OFFSET_FILL});
+    ops.push_back({PolygonOffset, {}, {}, glpipe->depthBiasSlope, glpipe->depthBiasConstant});
+    ops.push_back({LineWidth, {}, {}, glpipe->lineWidth});
     ops.push_back({DepthMask, glpipe->enableDepthWrite});
     if (glpipe->enableReverseZ)
     {
@@ -269,9 +299,7 @@ void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
     this->framebuffer = reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer;
     ops.push_back(
         {BindFramebuffer, GL_FRAMEBUFFER, reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer});
-    ops.push_back({Disable, GL_CULL_FACE});
     ops.push_back({Enable, GL_FRAMEBUFFER_SRGB});
-    ops.push_back({Enable, GL_DEPTH_TEST});
     isCleared = false;
 }
 void OMRendererTaskOpenGL::draw(uint64_t vertexCount)
@@ -432,6 +460,18 @@ void OMRendererTaskOpenGL::execute()
             break;
         case PolygonMode:
             gl->glPolygonMode(op.args[0], op.args[1]);
+            break;
+        case CullFace:
+            gl->glCullFace(op.args[0]);
+            break;
+        case FrontFace:
+            gl->glFrontFace(op.args[0]);
+            break;
+        case LineWidth:
+            gl->glLineWidth(op.floatArgs[0]);
+            break;
+        case PolygonOffset:
+            gl->glPolygonOffset(op.floatArgs[0], op.floatArgs[1]);
             break;
         }
     }

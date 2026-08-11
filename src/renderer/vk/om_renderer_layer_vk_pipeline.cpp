@@ -346,10 +346,29 @@ void OMRendererPipelineVk::build()
         break;
     }
 
+    CullModeFlagBits cm;
+    switch (cullMode)
+    {
+    default:
+    case common::None:
+        cm = CullModeFlagBits::eNone;
+        break;
+    case common::Front:
+        cm = CullModeFlagBits::eFront;
+        break;
+    case common::Back:
+        cm = CullModeFlagBits::eBack;
+        break;
+    case common::FrontAndBack:
+        cm = CullModeFlagBits::eFrontAndBack;
+        break;
+    }
+
     auto vertexInput = PipelineVertexInputStateCreateInfo({}, vertexInputBindingDesc, vertexInputAttrDesc);
     auto inputAssembly = PipelineInputAssemblyStateCreateInfo({}, t, false);
-    auto rasterization = PipelineRasterizationStateCreateInfo({}, depthClamp, false, md, CullModeFlagBits::eNone,
-                                                              FrontFace::eCounterClockwise, true, 0, 0, 0, 1);
+    auto rasterization = PipelineRasterizationStateCreateInfo(
+        {}, depthClamp, false, md, cm, cullClockwise ? FrontFace::eClockwise : FrontFace::eCounterClockwise,
+        enableDepthBias, depthBiasConstant, 0, depthBiasSlope, lineWidth);
     auto multisample = PipelineMultisampleStateCreateInfo({}, s, false);
     auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
     std::vector attc = {PipelineColorBlendAttachmentState(

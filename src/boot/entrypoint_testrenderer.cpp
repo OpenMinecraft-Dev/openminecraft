@@ -88,6 +88,8 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
                    ->inputName("inTexture")
                    ->output(tempTargetMS->target)
                    ->samples(4)
+                   ->setCullMode(renderer::common::Back)
+                   ->setCullClockwise(true)
                    ->shader(objectFrg)
                    ->shader(objectVtx)
                    ->format(objModel->format)

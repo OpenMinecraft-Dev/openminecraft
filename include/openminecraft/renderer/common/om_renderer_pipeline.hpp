@@ -50,6 +50,14 @@ enum OMRendererPipelinePolygonMode
     Line,
     Point
 };
+
+enum OMRendererPipelineCullMode
+{
+    None,
+    Front,
+    Back,
+    FrontAndBack
+};
 class OMRendererPipeline : public OMRendererObject
 {
   public:
@@ -146,6 +154,32 @@ class OMRendererPipeline : public OMRendererObject
         return this;
     }
 
+    inline auto setCullMode(OMRendererPipelineCullMode m) -> OMRendererPipeline *
+    {
+        cullMode = m;
+        return this;
+    }
+
+    inline auto setCullClockwise(bool b) -> OMRendererPipeline *
+    {
+        cullClockwise = b;
+        return this;
+    }
+
+    inline auto setLineWidth(float l) -> OMRendererPipeline *
+    {
+        lineWidth = l;
+        return this;
+    }
+
+    inline auto depthBias(bool e, float constant, float slope) -> OMRendererPipeline *
+    {
+        enableDepthBias = e;
+        depthBiasConstant = constant;
+        depthBiasSlope = slope;
+        return this;
+    }
+
     inline auto objType() -> OMRendererObjectType override
     {
         return Pipeline;
@@ -159,6 +193,12 @@ class OMRendererPipeline : public OMRendererObject
     OMRendererPipelinePrimitive primitive = TriangleList;
     bool depthClamp = false;
     OMRendererPipelinePolygonMode polygonMode = Fill;
+    OMRendererPipelineCullMode cullMode = None;
+    bool cullClockwise = false;
+    float lineWidth = 1.0f;
+    bool enableDepthBias = true;
+    float depthBiasConstant = 0.0f;
+    float depthBiasSlope = 0.0f;
 };
 } // namespace openminecraft::renderer::common
 

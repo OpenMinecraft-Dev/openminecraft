@@ -39,7 +39,11 @@ enum OMRendererOpType
     DrawArraysInstanced,
     BlitFramebuffer,
     DrawArrays,
-    PolygonMode
+    PolygonMode,
+    CullFace,
+    FrontFace,
+    LineWidth,
+    PolygonOffset
 };
 union OMRendererOpenGLArg {
     GLuint i;
