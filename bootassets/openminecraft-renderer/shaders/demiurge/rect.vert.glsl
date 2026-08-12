@@ -8,12 +8,15 @@
 
 layout(location = 0) out vec4 rectColor;
 
-uniform ScreenData {
+uniform ScreenData
+{
     float width;
     float height;
-} ubo;
+}
+ubo;
 
-void main() {
+void main()
+{
     vec2 inPosition = vertexgen_quad_normal();
     vec2 screenPos = inRectPos.xy + inPosition.xy * inRectPos.zw;
 

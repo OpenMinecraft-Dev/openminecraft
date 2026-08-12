@@ -15,6 +15,7 @@
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_boxblur.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include <chrono>
 #include <functional>
 
@@ -61,10 +62,10 @@ class OMTestRenderer : public OMRendererHandler
     OMRendererBuffer *uniformBuffer, *voxelBuffer, *lightingBuffer, *cameraBuffer;
     OMRendererTexture *textureImage, *textureAtlas;
     OMRendererPipeline *pipeline = nullptr;
-    OMRendererPipeline *voxelPipeline = nullptr;
     OMRendererPipeline *mainPipeline;
     wrap::OMRendererTempTarget *tempTargetMS, *tempTarget;
     model::OMRendererModelObj *objModel;
+    wrap::OMVoxelManager *voxelManager;
 
     std::shared_ptr<wrap::OMRendererBoxBlurHandler> blurHandler;
 

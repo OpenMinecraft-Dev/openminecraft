@@ -6,6 +6,7 @@ layout(location = 0) out vec4 outColor;
 
 uniform sampler2D inTexture;
 
-void main() {
+void main()
+{
     outColor = texture(inTexture, biltTexCoord);
 }

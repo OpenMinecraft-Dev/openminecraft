@@ -13,37 +13,43 @@ layout(location = 6) flat in float imageFillType;
 
 layout(location = 0) out vec4 outColor;
 
-uniform ScreenData {
+uniform ScreenData
+{
     float width;
     float height;
-} ubo;
+}
+ubo;
 uniform sampler2D inTexture;
 
 #define FILLTYPE_FIT 0
 #define FILLTYPE_CONTAIN 1
 #define FILLTYPE_COVER 2
 
-void main() {
+void main()
+{
     float dummy = ubo.width + ubo.height;
     vec2 rectCenter = geom_rectCenterPos(imageRectPosition);
-    vec2 halfSize   = imageRectPosition.zw / 2.0;
-    vec2 localPos   = imagePosition - rectCenter;
+    vec2 halfSize = imageRectPosition.zw / 2.0;
+    vec2 localPos = imagePosition - rectCenter;
 
     float alpha = sdf_rrect(localPos, halfSize, imageRadius, 0.0, imageFactor);
 
     vec2 imageSize = vec2(textureSize(inTexture, 0));
-    vec2 rectSize  = imageRectPosition.zw;
+    vec2 rectSize = imageRectPosition.zw;
     vec2 uv;
 
-    if (int(imageFillType) == FILLTYPE_FIT) {
+    if (int(imageFillType) == FILLTYPE_FIT)
+    {
         uv = imageUv;
     }
-    else {
+    else
+    {
         float scale = int(imageFillType) == FILLTYPE_CONTAIN ? min(rectSize.x / imageSize.x, rectSize.y / imageSize.y)
-                                       : max(rectSize.x / imageSize.x, rectSize.y / imageSize.y);
+                                                             : max(rectSize.x / imageSize.x, rectSize.y / imageSize.y);
         vec2 scaledImgSize = imageSize * scale;
         uv = (imagePosition - rectCenter) / scaledImgSize + 0.5;
-        if (int(imageFillType) == FILLTYPE_CONTAIN && (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)) {
+        if (int(imageFillType) == FILLTYPE_CONTAIN && (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0))
+        {
             alpha = 0.0;
         }
     }

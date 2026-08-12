@@ -5,7 +5,8 @@
 
 layout(location = 0) out vec2 outTexCoord;
 
-void main() {
+void main()
+{
     gl_Position = vec4(vertexgen_quad_ndc(), 0.0, 1.0);
 #ifdef VULKAN
     gl_Position.y = -gl_Position.y;

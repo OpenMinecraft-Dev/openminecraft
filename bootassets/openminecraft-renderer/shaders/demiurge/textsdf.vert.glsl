@@ -12,18 +12,23 @@ layout(location = 1) out vec2 textUv;
 layout(location = 2) flat out int textGlyphId;
 layout(location = 3) out float textFactor;
 
-uniform ScreenData {
+uniform ScreenData
+{
     float width;
     float height;
-} ubo;
+}
+ubo;
 uniform samplerBuffer GlyphData;
 
-vec4 getBBox() {
+vec4 getBBox()
+{
 
-    return vec4(texelFetchF(GlyphData, 0 + inTextGlyphId), texelFetchF(GlyphData, 1 + inTextGlyphId), texelFetchF(GlyphData, 2 + inTextGlyphId), texelFetchF(GlyphData, 3 + inTextGlyphId));
+    return vec4(texelFetchF(GlyphData, 0 + inTextGlyphId), texelFetchF(GlyphData, 1 + inTextGlyphId),
+                texelFetchF(GlyphData, 2 + inTextGlyphId), texelFetchF(GlyphData, 3 + inTextGlyphId));
 }
 
-void main() {
+void main()
+{
     vec2 inPosition = vertexgen_quad_normal();
     vec2 screenPos = inTextPos.xy + inPosition.xy * inTextPos.zw;
 

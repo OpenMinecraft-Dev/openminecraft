@@ -16,6 +16,7 @@
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_boxblur.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 
@@ -23,6 +24,7 @@
 #include <functional>
 #include <glm/glm.hpp>
 #include <memory>
+#include <utility>
 #include <vector>
 #include "tiny_obj_loader.h"
 
@@ -32,10 +34,9 @@ namespace openminecraft::boot::test
 {
 OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMRendererTexture *()> overlay,
                                event::OMEventBusSDL &bus, std::shared_ptr<basics::OMCamera> camera)
-    : renderer(renderer), logger("OMTestRenderer", this), OMRendererHandler(renderer), camera(camera)
+    : renderer(renderer), logger("OMTestRenderer", this), OMRendererHandler(renderer), camera(std::move(camera))
 {
     this->overlay = overlay;
-    camera = std::make_shared<basics::OMCamera>(renderer, glm::vec3{2.0f, 2.0f, 2.0f}, -135.0f, -35.0f);
 
     format.nextGroup()->decideStruct();
 
@@ -43,6 +44,8 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
         renderer, vfs::fsfetch("/bootassets/openminecraft-renderer/models/viking_room.obj").get());
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(glm::mat4));
+    auto model = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    uniformBuffer->updateData(&model);
     voxelBuffer = renderer->allocateBuffer(Uniform, sizeof(glm::mat4));
     glm::mat4 m(1.0f);
     voxelBuffer->updateData(&m);
@@ -130,31 +133,12 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     pipeline->bindInput(2, lightingBuffer);
     pipeline->bindInput(3, textureImage);
 
-    voxelPipeline = renderer->createPipeline()
-                        ->input(UniformBuffer)
-                        ->inputName("ObjectInfo")
-                        ->input(UniformBuffer)
-                        ->inputName("Camera")
-                        ->input(UniformBuffer)
-                        ->inputName("Lighting")
-                        ->input(ImageSampler)
-                        ->inputName("inTexture")
-                        ->output(tempTargetMS->target)
-                        ->samples(4)
-                        ->setCullMode(renderer::common::Back)
-                        ->setFrontClockwise(true)
-                        ->shader(voxelFrg)
-                        ->shader(voxelVtx)
-                        ->format(format)
-                        ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
-                        ->blend(true)
-                        ->depth(true, true)
-                        ->depthReverseZ(true)
-                        ->buildN();
-    voxelPipeline->bindInput(0, voxelBuffer);
-    voxelPipeline->bindInput(1, cameraBuffer);
-    voxelPipeline->bindInput(2, lightingBuffer);
-    voxelPipeline->bindInput(3, textureAtlas);
+    voxelManager = new wrap::OMVoxelManager(renderer, tempTargetMS->target);
+
+    voxelManager->pipeline->bindInput(0, voxelBuffer);
+    voxelManager->pipeline->bindInput(1, cameraBuffer);
+    voxelManager->pipeline->bindInput(2, lightingBuffer);
+    voxelManager->pipeline->bindInput(3, textureAtlas);
 }
 
 static float ang = 0.0f;
@@ -166,8 +150,6 @@ void OMTestRenderer::beforeFrame()
         tp = std::chrono::high_resolution_clock::now();
         timing = true;
     }
-    auto model = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
     LightingUniform li;
     li.lightDirection = glm::normalize(glm::vec3(-std::cos(ang), -std::sin(ang), 1.0));
     li.lightColor = glm::vec3(1.0);
@@ -175,7 +157,6 @@ void OMTestRenderer::beforeFrame()
 
     auto cam = camera->fetchProjMat() * camera->fetchViewMat();
 
-    uniformBuffer->updateData(&model);
     cameraBuffer->updateData(&cam);
     lightingBuffer->updateData(&li);
     ang += 0.001f;
@@ -226,16 +207,15 @@ void OMTestRenderer::submitTasks()
     mainPipeline->bindInput(0, tempTarget->colorTexture);
     blurHandler->bind(overlay(), tempTarget->colorTexture);
 
-    auto scene = renderer->createTask("scene")
-                     ->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
-                     ->clearDepth(0.0f)
-                     ->target(tempTargetMS->target)
-                     ->pipeline(pipeline)
-                     ->vertexBuffer({objModel->vertexData})
-                     ->indexBuffer(objModel->vertexIndex)
-                     ->drawIndexedN(objModel->vertexCount)
-                     ->pipeline(voxelPipeline)
-                     ->drawInstanceN(6, 1)
+    auto scene = voxelManager
+                     ->submit(renderer->createTask("scene")
+                                  ->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
+                                  ->clearDepth(0.0f)
+                                  ->target(tempTargetMS->target)
+                                  ->pipeline(pipeline)
+                                  ->vertexBuffer({objModel->vertexData})
+                                  ->indexBuffer(objModel->vertexIndex)
+                                  ->drawIndexedN(objModel->vertexCount))
                      ->resolve(tempTarget->target)
                      ->finishN();
 
@@ -251,7 +231,6 @@ void OMTestRenderer::submitTasks()
 }
 OMTestRenderer::~OMTestRenderer()
 {
-    delete voxelPipeline;
     delete mainPipeline;
     delete pipeline;
     delete textureImage;
@@ -261,6 +240,7 @@ OMTestRenderer::~OMTestRenderer()
     delete cameraBuffer;
     delete lightingBuffer;
     delete objModel;
+    delete voxelManager;
 
     delete tempTargetMS;
     delete tempTarget;

@@ -11,10 +11,11 @@ layout(location = 4) in float rrectFactor;
 
 layout(location = 0) out vec4 outColor;
 
-void main() {
+void main()
+{
     vec2 rectCenter = geom_rectCenterPos(rrectRectPosition);
-    vec2 halfSize   = rrectRectPosition.zw / 2.0;
-    vec2 localPos   = rrectPosition - rectCenter;
+    vec2 halfSize = rrectRectPosition.zw / 2.0;
+    vec2 localPos = rrectPosition - rectCenter;
 
     float alpha = sdf_rrect(localPos, halfSize, rrectRadius, 0.0, rrectFactor);
 

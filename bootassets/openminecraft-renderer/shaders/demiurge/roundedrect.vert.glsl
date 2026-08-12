@@ -13,18 +13,22 @@ layout(location = 2) out vec4 rrectRadius;
 layout(location = 3) out vec4 rrectRectPosition;
 layout(location = 4) out float rrectFactor;
 
-uniform ScreenData {
+uniform ScreenData
+{
     float width;
     float height;
-} ubo;
+}
+ubo;
 
-void main() {
+void main()
+{
     vec2 inPosition = vertexgen_quad_normal();
     vec2 screenPos = inRectPos.xy - vec2(10) + inPosition.xy * (inRectPos.zw + vec2(20));
     vec2 rectCenter = geom_rectCenterPos(inRectPos);
     vec3 localPos = vec3(screenPos - rectCenter, 0.0);
 
-    gl_Position = vec4(geom_toNdc(rectCenter + rotation_quat(inRectRotation, localPos).xy, ubo.width, ubo.height), inRectDepth, 1.0);
+    gl_Position = vec4(geom_toNdc(rectCenter + rotation_quat(inRectRotation, localPos).xy, ubo.width, ubo.height),
+                       inRectDepth, 1.0);
     rrectColor = inRectColor;
     rrectPosition = screenPos;
     rrectRadius = inRectRadius;

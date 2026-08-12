@@ -13,18 +13,22 @@ layout(location = 2) out vec4 secSectorPosition;
 layout(location = 3) out vec2 secSectorAngle;
 layout(location = 4) out float secSectorFactor;
 
-uniform ScreenData {
+uniform ScreenData
+{
     float width;
     float height;
-} ubo;
+}
+ubo;
 
-void main() {
+void main()
+{
     vec2 inPosition = vertexgen_quad_normal();
     vec2 screenPos = inSectorPos.xy - vec2(10) + inPosition.xy * (inSectorPos.zw + vec2(20));
     vec2 rectCenter = geom_rectCenterPos(inSectorPos);
     vec3 localPos = vec3(screenPos - rectCenter, 0.0);
 
-    gl_Position = vec4(geom_toNdc(rectCenter + rotation_quat(inSectorRotation, localPos).xy, ubo.width, ubo.height), inSectorDepth, 1.0);
+    gl_Position = vec4(geom_toNdc(rectCenter + rotation_quat(inSectorRotation, localPos).xy, ubo.width, ubo.height),
+                       inSectorDepth, 1.0);
     secColor = inSectorColor;
     secPosition = screenPos;
     secSectorPosition = inSectorPos;

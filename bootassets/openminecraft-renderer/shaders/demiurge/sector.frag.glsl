@@ -11,9 +11,10 @@ layout(location = 4) in float secSectorFactor;
 
 layout(location = 0) out vec4 outColor;
 
-void main() {
+void main()
+{
     vec2 sectorCenter = geom_rectCenterPos(secSectorPosition);
-    vec2 halfSize   = secSectorPosition.zw / 2.0;
+    vec2 halfSize = secSectorPosition.zw / 2.0;
 
     outColor = secColor * sdf_sector(secPosition, halfSize, sectorCenter, secSectorAngle, 0, secSectorFactor);
 }

@@ -5,6 +5,7 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include <cstdint>
 #include <ios>
+#include <iostream>
 #include <memory>
 #include <regex>
 #include <string>

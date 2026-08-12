@@ -1,3 +1,5 @@
-uniform Camera {
+uniform Camera
+{
     mat4 viewProj;
-} camera;
+}
+camera;
