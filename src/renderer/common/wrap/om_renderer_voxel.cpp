@@ -25,7 +25,7 @@ static auto packVoxelMetadata(uint16_t tex, uint16_t chkid) -> int
 {
     return tex << 16 | chkid;
 }
-auto OMVoxelManager::compile(std::vector<OMVoxel> &lb) -> std::vector<int>
+/*auto OMVoxelManager::compile(std::vector<OMVoxel> &lb) -> std::vector<int>
 {
     std::vector<int> d;
     std::bitset<16 * 16 * 16> exists = {false};
@@ -79,6 +79,129 @@ auto OMVoxelManager::compile(std::vector<OMVoxel> &lb) -> std::vector<int>
     }
 
     return d;
+}*/
+auto OMVoxelManager::compile(std::vector<OMVoxel> &lb) -> std::vector<int>
+{
+    std::vector<int> d;
+    // 预分配空间，每个体素最多6个面，每个面2个int
+    d.reserve(lb.size() * 12);
+
+    std::bitset<16 * 16 * 16> exists = {false};
+
+    for (auto &v : lb)
+    {
+        exists.set(v.y * 256 + v.x * 16 + v.z);
+    }
+
+    auto exist = [&](int x, int y, int z) -> bool {
+        if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
+            return false;
+        return exists.test(y * 256 + x * 16 + z);
+    };
+
+    // AO计算函数：返回四个角的值 (ao1, ao2, ao3, ao4)
+    auto computeAO = [&](int x, int y, int z, OMVoxelFacing facing) -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> {
+        uint8_t ao1 = 0, ao2 = 0, ao3 = 0, ao4 = 0;
+
+        auto countNeighbors = [&](int dx, int dy, int dz) -> int { return exist(x + dx, y + dy, z + dz) ? 1 : 0; };
+
+        switch (facing)
+        {
+        case OMVoxelFacing::NegY: { // 底面，法线朝下，固定 y=v.y
+            ao1 = countNeighbors(-1, 0, -1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, -1);
+            ao2 = countNeighbors(-1, 0, 1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, 1);
+            ao3 = countNeighbors(1, 0, -1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, -1);
+            ao4 = countNeighbors(1, 0, 1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, 1);
+            break;
+        }
+        case OMVoxelFacing::PosY: { // 顶面，法线朝上，固定 y=v.y+1
+            ao1 = countNeighbors(-1, 0, -1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, -1);
+            ao2 = countNeighbors(-1, 0, 1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, 1);
+            ao3 = countNeighbors(1, 0, -1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, -1);
+            ao4 = countNeighbors(1, 0, 1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, 1);
+            break;
+        }
+        case OMVoxelFacing::NegX: { // 左面，法线朝-X，固定 x=v.x
+            ao2 = countNeighbors(0, -1, -1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, -1);
+            ao1 = countNeighbors(0, 1, -1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, -1);
+            ao4 = countNeighbors(0, -1, 1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, 1);
+            ao3 = countNeighbors(0, 1, 1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, 1);
+            break;
+        }
+        case OMVoxelFacing::PosX: { // 右面，法线朝+X，固定 x=v.x+1
+            ao4 = countNeighbors(0, -1, -1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, -1);
+            ao3 = countNeighbors(0, 1, -1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, -1);
+            ao2 = countNeighbors(0, -1, 1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, 1);
+            ao1 = countNeighbors(0, 1, 1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, 1);
+            break;
+        }
+        case OMVoxelFacing::NegZ: { // 后面，法线朝-Z，固定 z=v.z
+            ao4 = countNeighbors(-1, -1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, -1, 0);
+            ao3 = countNeighbors(-1, 1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, 1, 0);
+            ao2 = countNeighbors(1, -1, 0) + countNeighbors(1, 0, 0) + countNeighbors(0, -1, 0);
+            ao1 = countNeighbors(1, 1, 0) + countNeighbors(1, 0, 0) + countNeighbors(0, 1, 0);
+            break;
+        }
+        case OMVoxelFacing::PosZ: { // 前面，法线朝+Z，固定 z=v.z+1
+            ao2 = countNeighbors(-1, -1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, -1, 0);
+            ao1 = countNeighbors(-1, 1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, 1, 0);
+            ao4 = countNeighbors(1, -1, 0) + countNeighbors(1, 0, 0) + countNeighbors(0, -1, 0);
+            ao3 = countNeighbors(1, 1, 0) + countNeighbors(1, 0, 0) + countNeighbors(0, 1, 0);
+            break;
+        }
+        default:
+            break;
+        }
+        return {ao1, ao2, ao3, ao4};
+    };
+
+    for (auto &v : lb)
+    {
+        // NegY
+        if (!exist(v.x, v.y - 1, v.z))
+        {
+            auto [ao1, ao2, ao3, ao4] = computeAO(v.x, v.y, v.z, OMVoxelFacing::NegY);
+            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::NegY, ao1, ao2, ao3, ao4));
+            d.emplace_back(packVoxelMetadata(v.texId, 0));
+        }
+        // PosY
+        if (!exist(v.x, v.y + 1, v.z))
+        {
+            auto [ao1, ao2, ao3, ao4] = computeAO(v.x, v.y, v.z, OMVoxelFacing::PosY);
+            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::PosY, ao1, ao2, ao3, ao4));
+            d.emplace_back(packVoxelMetadata(v.texId, 0));
+        }
+        // NegX
+        if (!exist(v.x - 1, v.y, v.z))
+        {
+            auto [ao1, ao2, ao3, ao4] = computeAO(v.x, v.y, v.z, OMVoxelFacing::NegX);
+            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::NegX, ao1, ao2, ao3, ao4));
+            d.emplace_back(packVoxelMetadata(v.texId, 0));
+        }
+        // PosX
+        if (!exist(v.x + 1, v.y, v.z))
+        {
+            auto [ao1, ao2, ao3, ao4] = computeAO(v.x, v.y, v.z, OMVoxelFacing::PosX);
+            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::PosX, ao1, ao2, ao3, ao4));
+            d.emplace_back(packVoxelMetadata(v.texId, 0));
+        }
+        // NegZ
+        if (!exist(v.x, v.y, v.z - 1))
+        {
+            auto [ao1, ao2, ao3, ao4] = computeAO(v.x, v.y, v.z, OMVoxelFacing::NegZ);
+            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::NegZ, ao1, ao2, ao3, ao4));
+            d.emplace_back(packVoxelMetadata(v.texId, 0));
+        }
+        // PosZ
+        if (!exist(v.x, v.y, v.z + 1))
+        {
+            auto [ao1, ao2, ao3, ao4] = computeAO(v.x, v.y, v.z, OMVoxelFacing::PosZ);
+            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::PosZ, ao1, ao2, ao3, ao4));
+            d.emplace_back(packVoxelMetadata(v.texId, 0));
+        }
+    }
+
+    return d;
 }
 OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *target)
 {
@@ -113,7 +236,9 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                    ->depthReverseZ(true)
                    ->buildN();
 
-    std::vector<OMVoxel> datar = {{0, 0, 0, 0}, {1, 0, 1, 0}, {2, 0, 0, 1}, {3, 1, 0, 0}};
+    std::vector<OMVoxel> datar = {
+        {0, 1, 1, 1}, {1, 1, 2, 1}, {2, 1, 1, 2}, {3, 2, 1, 1}, {1, 1, 0, 1}, {2, 1, 1, 0}, {3, 0, 1, 1},
+    };
     auto data = compile(datar);
 
     voxels = renderer->allocateBuffer(InstanceData, data.size() * sizeof(uint32_t));

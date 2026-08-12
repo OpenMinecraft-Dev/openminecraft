@@ -151,7 +151,7 @@ void OMTestRenderer::beforeFrame()
         timing = true;
     }
     LightingUniform li;
-    li.lightDirection = glm::normalize(glm::vec3(-std::cos(ang), -std::sin(ang), 0.5));
+    li.lightDirection = glm::normalize(glm::vec3(0.5, 0.5, 0.5));
     li.lightColor = glm::vec3(1.0);
     li.ambientColor = glm::vec3(0.05);
 

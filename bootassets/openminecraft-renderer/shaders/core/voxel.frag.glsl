@@ -26,7 +26,7 @@ void main()
     float diffuse = max(dot(voxNormal, lighting.lightDirection), 0.0);
 
     vec4 texColor = texture(inTexture, vec3(voxTexCoord, voxTexLayer));
-    vec3 result = ao * (lighting.ambientColor + diffuse * lighting.lightColor) * texColor.rgb;
+    vec3 result = ao * (lighting.ambientColor + 1 * lighting.lightColor) * texColor.rgb;
 
     outColor = vec4(result, texColor.a);
 }
