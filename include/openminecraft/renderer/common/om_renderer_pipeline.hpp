@@ -160,7 +160,7 @@ class OMRendererPipeline : public OMRendererObject
         return this;
     }
 
-    inline auto setCullClockwise(bool b) -> OMRendererPipeline *
+    inline auto setFrontClockwise(bool b) -> OMRendererPipeline *
     {
         cullClockwise = b;
         return this;

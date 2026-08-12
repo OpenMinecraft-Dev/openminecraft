@@ -161,15 +161,14 @@ void OMRendererTextureOpenGL::setupSampler()
     if (type != common::Dim2Multisample)
     {
         gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MAX_LEVEL, mipmap);
+        gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MAG_FILTER, toFilter2(magFilter));
         if (mipmap > 0)
         {
             gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MIN_FILTER, toFilter(minFilter, mipFilter));
-            gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MAG_FILTER, toFilter(magFilter, mipFilter));
         }
         else
         {
             gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MIN_FILTER, toFilter2(minFilter));
-            gl->glTexParameteri(fromCommon(type), GL_TEXTURE_MAG_FILTER, toFilter2(magFilter));
         }
         gl->glTexParameteri(fromCommon(type), GL_TEXTURE_WRAP_S, fromCommon(addressModeU));
         gl->glTexParameteri(fromCommon(type), GL_TEXTURE_WRAP_T, fromCommon(addressModeV));

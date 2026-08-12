@@ -114,6 +114,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: 'true'
+      - name: Fetch Resource
+        run: python ./scripts/fetchsrc.py
       - name: Generate cache name (UNIX)
         if: matrix.plat != 'windows'
         run: |

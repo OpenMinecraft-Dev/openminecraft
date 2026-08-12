@@ -131,11 +131,11 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     }
     if (glpipe->cullClockwise)
     {
-        ops.push_back({FrontFace, GL_CCW});
+        ops.push_back({FrontFace, GL_CW});
     }
     else
     {
-        ops.push_back({FrontFace, GL_CW});
+        ops.push_back({FrontFace, GL_CCW});
     }
     ops.push_back({glpipe->enableDepthBias ? Enable : Disable, GL_POLYGON_OFFSET_FILL});
     ops.push_back({PolygonOffset, {}, {}, glpipe->depthBiasSlope, glpipe->depthBiasConstant});

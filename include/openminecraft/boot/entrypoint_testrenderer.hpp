@@ -32,10 +32,8 @@ namespace openminecraft::boot::test
 // INFO: The uniform buffer data structure used for the renderer
 // INFO: model, view, proj for object rendering
 #pragma pack(1)
-struct UniformStructure
+struct LightingUniform
 {
-    glm::mat4 model;
-    glm::mat4 viewProj;
     glm::vec3 lightDirection;
     float _pad1;
     glm::vec3 lightColor;
@@ -60,9 +58,10 @@ class OMTestRenderer : public OMRendererHandler
     void afterFrame() override;
 
     // INFO: these are the resource handles used for rendering
-    OMRendererBuffer *uniformBuffer;
+    OMRendererBuffer *uniformBuffer, *voxelBuffer, *lightingBuffer, *cameraBuffer;
     OMRendererTexture *textureImage, *textureAtlas;
     OMRendererPipeline *pipeline = nullptr;
+    OMRendererPipeline *voxelPipeline = nullptr;
     OMRendererPipeline *mainPipeline;
     wrap::OMRendererTempTarget *tempTargetMS, *tempTarget;
     model::OMRendererModelObj *objModel;

@@ -19,32 +19,24 @@ const vec2 normal[6] = vec2[6](
     vec2(0.0, 0.0)
 );
 
-vec2 vertexgen_quad_normal() {
-#ifdef VULKAN
-    int vid = gl_VertexIndex;
-#else
-    int vid = gl_VertexID;
-#endif
-
-    return normal[vid];
-}
-
-vec2 vertexgen_quad_ndc() {
-#ifdef VULKAN
-    int vid = gl_VertexIndex;
-#else
-    int vid = gl_VertexID;
-#endif
-
-    return ndc[vid];
-}
-
 int vertexgen_id() {
 #ifdef VULKAN
     return gl_VertexIndex;
 #else
     return gl_VertexID;
 #endif
+}
+
+vec2 vertexgen_quad_normal() {
+    return normal[vertexgen_id()];
+}
+
+vec2 vertexgen_quad_normal_ccw() {
+    return normal[5 - vertexgen_id()];
+}
+
+vec2 vertexgen_quad_ndc() {
+    return ndc[vertexgen_id()];
 }
 
 #endif

@@ -367,7 +367,7 @@ void OMRendererPipelineVk::build()
     auto vertexInput = PipelineVertexInputStateCreateInfo({}, vertexInputBindingDesc, vertexInputAttrDesc);
     auto inputAssembly = PipelineInputAssemblyStateCreateInfo({}, t, false);
     auto rasterization = PipelineRasterizationStateCreateInfo(
-        {}, depthClamp, false, md, cm, cullClockwise ? FrontFace::eClockwise : FrontFace::eCounterClockwise,
+        {}, depthClamp, false, md, cm, cullClockwise ? FrontFace::eCounterClockwise : FrontFace::eClockwise,
         enableDepthBias, depthBiasConstant, 0, depthBiasSlope, lineWidth);
     auto multisample = PipelineMultisampleStateCreateInfo({}, s, false);
     auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
