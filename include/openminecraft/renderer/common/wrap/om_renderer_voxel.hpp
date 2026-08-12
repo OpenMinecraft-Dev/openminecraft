@@ -6,8 +6,14 @@
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <cstdint>
+#include <vector>
 namespace openminecraft::renderer::common::wrap
 {
+struct OMVoxel
+{
+    int texId;
+    int x, y, z;
+};
 enum OMVoxelFacing : uint8_t
 {
     NegX = 0b000,
@@ -17,16 +23,27 @@ enum OMVoxelFacing : uint8_t
     NegY = 0b010,
     PosY = 0b110
 };
+// INFO: note for the ambient occulusion
+// Type -> (AO1, AO2, AO3, AO4)
+// NegX => ((0, 1, 0), (0, 0, 0), (0, 1, 1), (0, 0, 1))
+// PosX => ((1, 1, 1), (1, 0, 1), (1, 1, 0), (1, 0, 0))
+// NegZ => ((1, 1, 0), (1, 0, 0), (0, 1, 0), (0, 0, 0))
+// PosZ => ((0, 1, 1), (0, 0, 1), (1, 1, 1), (1, 0, 1))
+// NegY => ((0, 0, 0), (0, 0, 1), (1, 0, 0), (1, 0, 1))
+// PosY => ((0, 1, 0), (0, 1, 1), (1, 1, 0), (1, 1, 1))
 class OMVoxelManager
 {
   public:
     OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *);
     ~OMVoxelManager();
 
+    auto compile(std::vector<OMVoxel> &) -> std::vector<int>;
+
     auto submit(OMRendererTask *) -> OMRendererTask *;
 
     OMRendererPipeline *pipeline;
     OMRendererBuffer *voxels;
+    int c;
 };
 } // namespace openminecraft::renderer::common::wrap
 

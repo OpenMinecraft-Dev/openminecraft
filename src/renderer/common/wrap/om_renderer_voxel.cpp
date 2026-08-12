@@ -4,8 +4,10 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include <array>
+#include <bitset>
 #include <cstdint>
+#include <iostream>
+#include <vector>
 
 namespace openminecraft::renderer::common::wrap
 {
@@ -22,6 +24,61 @@ static auto packVoxelPos(uint8_t x, uint8_t y, uint8_t z, uint8_t skyLight, uint
 static auto packVoxelMetadata(uint16_t tex, uint16_t chkid) -> int
 {
     return tex << 16 | chkid;
+}
+auto OMVoxelManager::compile(std::vector<OMVoxel> &lb) -> std::vector<int>
+{
+    std::vector<int> d;
+    std::bitset<16 * 16 * 16> exists = {false};
+
+    for (auto &v : lb)
+    {
+        exists.set(v.y * 256 + v.x * 16 + v.z);
+    }
+
+    auto exist = [&](int x, int y, int z) -> bool {
+        if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
+        {
+            return false;
+        }
+
+        return exists.test(y * 256 + x * 16 + z);
+    };
+
+    for (auto &v : lb)
+    {
+        if (!exist(v.x, v.y - 1, v.z))
+        {
+            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::NegY, 0, 0, 0, 0));
+            d.emplace_back(packVoxelMetadata(v.texId, 0));
+        }
+        if (!exist(v.x, v.y + 1, v.z))
+        {
+            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::PosY, 0, 0, 0, 0));
+            d.emplace_back(packVoxelMetadata(v.texId, 0));
+        }
+        if (!exist(v.x - 1, v.y, v.z))
+        {
+            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::NegX, 0, 0, 0, 0));
+            d.emplace_back(packVoxelMetadata(v.texId, 0));
+        }
+        if (!exist(v.x + 1, v.y, v.z))
+        {
+            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::PosX, 0, 0, 0, 0));
+            d.emplace_back(packVoxelMetadata(v.texId, 0));
+        }
+        if (!exist(v.x, v.y, v.z - 1))
+        {
+            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::NegZ, 0, 0, 0, 0));
+            d.emplace_back(packVoxelMetadata(v.texId, 0));
+        }
+        if (!exist(v.x, v.y, v.z + 1))
+        {
+            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::PosZ, 0, 0, 0, 0));
+            d.emplace_back(packVoxelMetadata(v.texId, 0));
+        }
+    }
+
+    return d;
 }
 OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *target)
 {
@@ -56,16 +113,12 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                    ->depthReverseZ(true)
                    ->buildN();
 
-    voxels = renderer->allocateBuffer(InstanceData, 6 * 2 * sizeof(uint32_t));
-    std::array<int, 6 * 2> data = {
-        packVoxelPos(5, 0, 0, 15, 0, NegX, 0, 0, 0, 0), packVoxelMetadata(3, 0),
-        packVoxelPos(5, 0, 0, 15, 0, PosX, 0, 0, 0, 0), packVoxelMetadata(3, 0),
-        packVoxelPos(5, 0, 0, 15, 0, NegY, 0, 0, 0, 0), packVoxelMetadata(3, 0),
-        packVoxelPos(5, 0, 0, 15, 0, PosY, 0, 0, 0, 0), packVoxelMetadata(3, 0),
-        packVoxelPos(5, 0, 0, 15, 0, NegZ, 0, 0, 0, 0), packVoxelMetadata(3, 0),
-        packVoxelPos(5, 0, 0, 15, 0, PosZ, 0, 0, 0, 0), packVoxelMetadata(3, 0),
-    };
+    std::vector<OMVoxel> datar = {{0, 0, 0, 0}, {1, 0, 1, 0}, {2, 0, 0, 1}, {3, 1, 0, 0}};
+    auto data = compile(datar);
+
+    voxels = renderer->allocateBuffer(InstanceData, data.size() * sizeof(uint32_t));
     voxels->updateData(data.data());
+    c = data.size();
 }
 OMVoxelManager::~OMVoxelManager()
 {
@@ -75,6 +128,6 @@ OMVoxelManager::~OMVoxelManager()
 
 auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
 {
-    return task->pipeline(pipeline)->vertexBuffer({voxels})->drawInstanceN(6, 6);
+    return task->pipeline(pipeline)->vertexBuffer({voxels})->drawInstanceN(6, c / 2);
 }
 } // namespace openminecraft::renderer::common::wrap

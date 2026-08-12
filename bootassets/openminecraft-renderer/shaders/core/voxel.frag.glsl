@@ -4,6 +4,8 @@
 layout(location = 0) in vec2 objTexCoord;
 layout(location = 1) in vec3 objNormal;
 layout(location = 2) in float objTexLayer;
+layout(location = 3) in float objAoLevel;
+layout(location = 4) in vec3 obj;
 
 layout(location = 0) out vec4 outColor;
 

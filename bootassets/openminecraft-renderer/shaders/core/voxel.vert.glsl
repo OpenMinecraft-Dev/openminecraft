@@ -8,6 +8,8 @@
 layout(location = 0) out vec2 objTexCoord;
 layout(location = 1) out vec3 objNormal;
 layout(location = 2) out float objTexLayer;
+layout(location = 3) out float objAoLevel;
+layout(location = 4) out vec3 obj;
 
 uniform ObjectInfo
 {
@@ -39,7 +41,7 @@ void main()
     vec3 worldPos;
     vec3 norm;
     vec2 uv;
-
+    
     switch (VOXEL_FACING_AXIS)
     {
     case 0: {
@@ -48,7 +50,7 @@ void main()
         uv = (sign == 0.0) ? vec2(or.y, inv_or.x) : inv_or.yx;
         break;
     }
-    case 1: { // Z 轴 (前/后)
+    case 1: {
         worldPos = vec3(bx + or.x, by + or.y, bz + sign);
         norm = vec3(0.0, 0.0, 1.0);
         uv = (sign == 0.0) ? inv_or.xy : vec2(or.x, inv_or.y);
@@ -70,4 +72,27 @@ void main()
     objTexCoord = uv;
     objNormal = normalize((ubo.model * vec4(norm * (VOXEL_FACING_SIGN == 0 ? -1 : 1), 0.0)).xyz);
     objTexLayer = float(voxelMetadata >> 16);
+
+    // INFO: forwarding
+    // (0, 0) -> ao1
+    // (0, 1) -> ao2
+    // (1, 0) -> ao3
+    // (1, 1) -> ao4
+    int idx = int(uv.x) << 1 | int(uv.y);
+    switch (idx) {
+        case 0:
+            objAoLevel = VOXEL_AO1;
+            break;
+        case 1:
+            objAoLevel = VOXEL_AO2;
+            break;
+        case 2:
+            objAoLevel = VOXEL_AO3;
+            break;
+        case 3:
+            objAoLevel = VOXEL_AO4;
+            break;
+    }
+
+    obj = worldPos - vec3(bx, by, bz);
 }
