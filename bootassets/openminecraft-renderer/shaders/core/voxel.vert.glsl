@@ -5,11 +5,10 @@
 
 #include "basics/vertexgen.glsl"
 
-layout(location = 0) out vec2 objTexCoord;
-layout(location = 1) out vec3 objNormal;
-layout(location = 2) out float objTexLayer;
-layout(location = 3) out float objAoLevel;
-layout(location = 4) out vec3 obj;
+layout(location = 0) out vec2 voxTexCoord;
+layout(location = 1) out vec3 voxNormal;
+layout(location = 2) out float voxTexLayer;
+layout(location = 3) out float voxAoLevel;
 
 uniform ObjectInfo
 {
@@ -69,9 +68,9 @@ void main()
     }
     gl_Position = camera.viewProj * ubo.model * vec4(worldPos, 1.0);
 
-    objTexCoord = uv;
-    objNormal = normalize((ubo.model * vec4(norm * (VOXEL_FACING_SIGN == 0 ? -1 : 1), 0.0)).xyz);
-    objTexLayer = float(voxelMetadata >> 16);
+    voxTexCoord = uv;
+    voxNormal = normalize((ubo.model * vec4(norm * (VOXEL_FACING_SIGN == 0 ? -1 : 1), 0.0)).xyz);
+    voxTexLayer = float(voxelMetadata >> 16);
 
     // INFO: forwarding
     // (0, 0) -> ao1
@@ -81,18 +80,16 @@ void main()
     int idx = int(uv.x) << 1 | int(uv.y);
     switch (idx) {
         case 0:
-            objAoLevel = VOXEL_AO1;
+            voxAoLevel = VOXEL_AO1;
             break;
         case 1:
-            objAoLevel = VOXEL_AO2;
+            voxAoLevel = VOXEL_AO2;
             break;
         case 2:
-            objAoLevel = VOXEL_AO3;
+            voxAoLevel = VOXEL_AO3;
             break;
         case 3:
-            objAoLevel = VOXEL_AO4;
+            voxAoLevel = VOXEL_AO4;
             break;
     }
-
-    obj = worldPos - vec3(bx, by, bz);
 }

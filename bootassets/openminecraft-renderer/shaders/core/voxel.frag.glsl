@@ -1,11 +1,10 @@
 #version 330 core
 #extension GL_ARB_separate_shader_objects : enable
 
-layout(location = 0) in vec2 objTexCoord;
-layout(location = 1) in vec3 objNormal;
-layout(location = 2) in float objTexLayer;
-layout(location = 3) in float objAoLevel;
-layout(location = 4) in vec3 obj;
+layout(location = 0) in vec2 voxTexCoord;
+layout(location = 1) in vec3 voxNormal;
+layout(location = 2) in float voxTexLayer;
+layout(location = 3) in float voxAoLevel;
 
 layout(location = 0) out vec4 outColor;
 
@@ -21,11 +20,13 @@ uniform sampler2DArray inTexture;
 void main()
 {
     mat4 unused = camera.viewProj * ubo.model;
-    float diff = max(dot(objNormal, lighting.lightDirection), 0.0);
-    vec3 diffuse = diff * lighting.lightColor;
 
-    vec4 texColor = texture(inTexture, vec3(objTexCoord, objTexLayer));
-    vec3 result = (lighting.ambientColor + diffuse) * texColor.rgb;
+    float ao = mix(1.0, 0.0, voxAoLevel / 3.0);
+
+    float diffuse = max(dot(voxNormal, lighting.lightDirection), 0.0);
+
+    vec4 texColor = texture(inTexture, vec3(voxTexCoord, voxTexLayer));
+    vec3 result = ao * (lighting.ambientColor + diffuse * lighting.lightColor) * texColor.rgb;
 
     outColor = vec4(result, texColor.a);
 }

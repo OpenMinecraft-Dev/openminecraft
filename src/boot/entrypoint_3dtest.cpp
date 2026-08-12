@@ -272,7 +272,7 @@ void rendererTest(renderer::OMBackend backend)
         SDL_SetWindowFullscreen(reinterpret_cast<SDL_Window *>(*win), true);
 
         event::OMEventBusSDL bus;
-        auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{2.0f, 2.0f, 0.0f}, 180.0f, -45.0f);
+        auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{-1.0f, 5.0f, -1.0f}, 45.0f, -45.0f);
 
         auto hnd2 = std::make_shared<OMNodeRendererHandler>(win());
         auto hnd = std::make_shared<test::OMTestRenderer>(

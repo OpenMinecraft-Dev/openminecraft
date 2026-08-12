@@ -151,7 +151,7 @@ void OMTestRenderer::beforeFrame()
         timing = true;
     }
     LightingUniform li;
-    li.lightDirection = glm::normalize(glm::vec3(-std::cos(ang), -std::sin(ang), 1.0));
+    li.lightDirection = glm::normalize(glm::vec3(-std::cos(ang), -std::sin(ang), 0.5));
     li.lightColor = glm::vec3(1.0);
     li.ambientColor = glm::vec3(0.05);
 
@@ -212,10 +212,11 @@ void OMTestRenderer::submitTasks()
                                   ->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
                                   ->clearDepth(0.0f)
                                   ->target(tempTargetMS->target)
-                                  ->pipeline(pipeline)
-                                  ->vertexBuffer({objModel->vertexData})
-                                  ->indexBuffer(objModel->vertexIndex)
-                                  ->drawIndexedN(objModel->vertexCount))
+                              // ->pipeline(pipeline)
+                              // ->vertexBuffer({objModel->vertexData})
+                              // ->indexBuffer(objModel->vertexIndex)
+                              // ->drawIndexedN(objModel->vertexCount)
+                              )
                      ->resolve(tempTarget->target)
                      ->finishN();
 
