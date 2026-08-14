@@ -2,6 +2,7 @@
 #define OM_CAMERA_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/renderer/common/basics/om_position.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <glm/glm.hpp>
 
@@ -31,7 +32,11 @@ class OMCamera
 
     auto getPos() -> glm::vec3
     {
-        return location;
+        return position.toCombinedPos();
+    }
+    auto getPosRaw() -> OMPosition<16, int64_t, float>
+    {
+        return position;
     }
     auto getYaw() -> float
     {
@@ -46,7 +51,7 @@ class OMCamera
     OMRenderer *renderer;
     log::OMLogger logger;
 
-    glm::vec3 location;
+    OMPosition<16, int64_t, float> position;
     float yaw = 0.0f;
     float pitch = 0.0f;
 };

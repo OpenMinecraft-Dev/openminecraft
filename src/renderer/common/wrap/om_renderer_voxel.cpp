@@ -46,7 +46,6 @@ auto OMVoxelManager::compile(std::vector<OMVoxel> &lb) -> std::vector<int>
         return exists.test(y * 256 + x * 16 + z);
     };
 
-
     auto computeAO = [&](int x, int y, int z, OMVoxelFacing facing) -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> {
         uint8_t ao1 = 0, ao2 = 0, ao3 = 0, ao4 = 0;
 
@@ -220,8 +219,9 @@ auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
     return task->pipeline(pipeline)->vertexBuffer({voxels})->drawInstanceN(6, c / 2);
 }
 
-auto OMVoxelManager::update(basics::OMCamera &camera) -> void {
-    auto l = glm::vec3(0.0) - camera.getPos();
+auto OMVoxelManager::update(basics::OMCamera &camera) -> void
+{
+    auto l = basics::OMPosition<16, int64_t, float>() - camera.getPosRaw();
     chunkoffs->updateData(&l);
 }
 } // namespace openminecraft::renderer::common::wrap

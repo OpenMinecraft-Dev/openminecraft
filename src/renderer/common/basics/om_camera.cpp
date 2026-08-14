@@ -8,7 +8,7 @@
 namespace openminecraft::renderer::common::basics
 {
 OMCamera::OMCamera(OMRenderer *renderer, glm::vec3 location, float yaw, float pitch)
-    : renderer(renderer), location(location), yaw(yaw), pitch(pitch), logger("OMCamera", this)
+    : renderer(renderer), position(location), yaw(yaw), pitch(pitch), logger("OMCamera", this)
 {
 }
 
@@ -61,22 +61,22 @@ void OMCamera::moveCamera(OMCameraMovement mv, float d)
     switch (mv)
     {
     case Forward:
-        location += front * d;
+        position += front * d;
         break;
     case Back:
-        location -= front * d;
+        position -= front * d;
         break;
     case Left:
-        location -= glm::normalize(glm::cross(front, {0.0f, 1.0f, 0.0f})) * d;
+        position -= glm::normalize(glm::cross(front, {0.0f, 1.0f, 0.0f})) * d;
         break;
     case Right:
-        location += glm::normalize(glm::cross(front, {0.0f, 1.0f, 0.0f})) * d;
+        position += glm::normalize(glm::cross(front, {0.0f, 1.0f, 0.0f})) * d;
         break;
     case Up:
-        location += glm::vec3{0.0f, 1.0f, 0.0f} * d;
+        position += glm::vec3{0.0f, 1.0f, 0.0f} * d;
         break;
     case Down:
-        location -= glm::vec3{0.0f, 1.0f, 0.0f} * d;
+        position -= glm::vec3{0.0f, 1.0f, 0.0f} * d;
         break;
     default:
         break;
