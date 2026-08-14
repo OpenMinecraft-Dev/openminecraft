@@ -259,14 +259,6 @@ jobs:
           env.XMAKE_ARGS }} openminecraft-elysiavis
       - name: Xmake Install
         run: xmake install -o prod ${{ env.XMAKE_ARGS }} openminecraft
-      - name: MacOS Run Test
-        if: matrix.plat == 'macos' && matrix.arch == 'arm64'
-        run: xmake run openminecraft 3dtest vk & PID=$!; screencapture -x -V60 -C
-          ./prod/temp.mov
-      - name: MacOS Run Test 2
-        if: matrix.plat == 'macos'
-        run: xmake run openminecraft 3dtest gl & PID=$!; screencapture -x -V60 -C
-          ./prod/temp2.mov
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7
         with:

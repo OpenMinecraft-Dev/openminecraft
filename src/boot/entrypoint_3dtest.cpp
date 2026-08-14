@@ -265,11 +265,11 @@ void rendererTest(renderer::OMBackend backend)
     auto logger = std::make_shared<log::OMLogger>("Test Renderer");
     try
     {
-        OMWindowConfig conf = {backend, false, 240, 3840, 2160};
+        OMWindowConfig conf = {backend, false, 240, 800, 600};
         // INFO: requires at least OpenGL 3.3 Core Profile or Vulkan 1.2
         OMWindow win({util::Version(3, 3, 0, 0), util::Version(1, 2, 0, 0)}, conf,
                      "/bootassets/openminecraft-renderer/shaders");
-        SDL_SetWindowFullscreen(reinterpret_cast<SDL_Window *>(*win), true);
+        // SDL_SetWindowFullscreen(reinterpret_cast<SDL_Window *>(*win), true);
 
         event::OMEventBusSDL bus;
         auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{-1.0f, 5.0f, -1.0f}, 45.0f, -45.0f);
