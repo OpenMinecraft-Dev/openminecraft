@@ -39,7 +39,6 @@ auto main(int argc, char **argv) -> int
         "/bootassets");
     int re = openminecraft::boot::boot(a);
     logger.info("Kernel exited with code {}", re);
-    std::exit(re);
 
     return re;
 }

@@ -27,6 +27,7 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <map>

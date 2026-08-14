@@ -25,7 +25,6 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <utility>
-#include <vector>
 #include "tiny_obj_loader.h"
 
 using namespace openminecraft::renderer::common;

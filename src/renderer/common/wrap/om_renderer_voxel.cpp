@@ -236,9 +236,19 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                    ->depthReverseZ(true)
                    ->buildN();
 
-    std::vector<OMVoxel> datar = {
-        {0, 1, 1, 1}, {1, 1, 2, 1}, {2, 1, 1, 2}, {3, 2, 1, 1}, {1, 1, 0, 1}, {2, 1, 1, 0}, {3, 0, 1, 1},
-    };
+    srand(time(nullptr));
+    std::vector<OMVoxel> datar = {};
+    for (int x = 0; x < 16; ++x)
+    {
+        for (int y = 0; y < 16; ++y)
+        {
+            for (int z = 0; z < 16; ++z)
+            {
+                OMVoxel v = {rand() % 4, x, y, z};
+                datar.emplace_back(v);
+            }
+        }
+    }
     auto data = compile(datar);
 
     voxels = renderer->allocateBuffer(InstanceData, data.size() * sizeof(uint32_t));

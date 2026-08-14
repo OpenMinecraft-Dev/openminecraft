@@ -1,6 +1,7 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 
 #include "openminecraft/log/om_log_common.hpp"
+#include <atomic>
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
@@ -24,13 +25,15 @@ int entryLength = 0;
 OMMemEntry *entries = nullptr;
 uint64_t blocks = 0;
 
-std::mutex mutex;
+std::atomic_bool accessing;
 
 log::OMLogger logger("Memory Record/Castorice");
 void rec(MemModifyInfo &&i)
 {
-    while (!mutex.try_lock())
+    bool expected = false;
+    while (!accessing.compare_exchange_weak(expected, true))
     {
+        expected = false;
     }
 begin:
     for (int id = 0; id < entryLength; id++)
@@ -55,7 +58,7 @@ begin:
                 blocks++;
             }
 
-            mutex.unlock();
+            accessing.store(false);
 
             return;
         }

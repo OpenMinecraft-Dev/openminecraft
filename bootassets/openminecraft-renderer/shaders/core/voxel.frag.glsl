@@ -21,7 +21,7 @@ void main()
 {
     mat4 unused = camera.viewProj * ubo.model;
 
-    float ao = mix(1.0, 0.0, voxAoLevel / 3.0);
+    float ao = mix(1.0, 0.5, voxAoLevel / 3.0);
 
     float diffuse = max(dot(voxNormal, lighting.lightDirection), 0.0);
 
