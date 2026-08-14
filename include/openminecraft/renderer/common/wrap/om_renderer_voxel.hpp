@@ -1,6 +1,7 @@
 #ifndef OM_RENDEER_VOXEL_HPP
 #define OM_RENDEER_VOXEL_HPP
 
+#include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
@@ -40,9 +41,11 @@ class OMVoxelManager
     auto compile(std::vector<OMVoxel> &) -> std::vector<int>;
 
     auto submit(OMRendererTask *) -> OMRendererTask *;
+    auto update(basics::OMCamera &camera) -> void;
 
     OMRendererPipeline *pipeline;
     OMRendererBuffer *voxels;
+    OMRendererBuffer *chunkoffs;
     int c;
 };
 } // namespace openminecraft::renderer::common::wrap

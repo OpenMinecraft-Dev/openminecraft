@@ -1,12 +1,14 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
+#include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include <array>
 #include <bitset>
 #include <cstdint>
-#include <iostream>
 #include <vector>
 
 namespace openminecraft::renderer::common::wrap
@@ -25,65 +27,10 @@ static auto packVoxelMetadata(uint16_t tex, uint16_t chkid) -> int
 {
     return tex << 16 | chkid;
 }
-/*auto OMVoxelManager::compile(std::vector<OMVoxel> &lb) -> std::vector<int>
-{
-    std::vector<int> d;
-    std::bitset<16 * 16 * 16> exists = {false};
-
-    for (auto &v : lb)
-    {
-        exists.set(v.y * 256 + v.x * 16 + v.z);
-    }
-
-    auto exist = [&](int x, int y, int z) -> bool {
-        if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
-        {
-            return false;
-        }
-
-        return exists.test(y * 256 + x * 16 + z);
-    };
-
-    for (auto &v : lb)
-    {
-        if (!exist(v.x, v.y - 1, v.z))
-        {
-            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::NegY, 0, 0, 0, 0));
-            d.emplace_back(packVoxelMetadata(v.texId, 0));
-        }
-        if (!exist(v.x, v.y + 1, v.z))
-        {
-            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::PosY, 0, 0, 0, 0));
-            d.emplace_back(packVoxelMetadata(v.texId, 0));
-        }
-        if (!exist(v.x - 1, v.y, v.z))
-        {
-            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::NegX, 0, 0, 0, 0));
-            d.emplace_back(packVoxelMetadata(v.texId, 0));
-        }
-        if (!exist(v.x + 1, v.y, v.z))
-        {
-            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::PosX, 0, 0, 0, 0));
-            d.emplace_back(packVoxelMetadata(v.texId, 0));
-        }
-        if (!exist(v.x, v.y, v.z - 1))
-        {
-            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::NegZ, 0, 0, 0, 0));
-            d.emplace_back(packVoxelMetadata(v.texId, 0));
-        }
-        if (!exist(v.x, v.y, v.z + 1))
-        {
-            d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::PosZ, 0, 0, 0, 0));
-            d.emplace_back(packVoxelMetadata(v.texId, 0));
-        }
-    }
-
-    return d;
-}*/
 auto OMVoxelManager::compile(std::vector<OMVoxel> &lb) -> std::vector<int>
 {
     std::vector<int> d;
-    // 预分配空间，每个体素最多6个面，每个面2个int
+
     d.reserve(lb.size() * 12);
 
     std::bitset<16 * 16 * 16> exists = {false};
@@ -99,7 +46,7 @@ auto OMVoxelManager::compile(std::vector<OMVoxel> &lb) -> std::vector<int>
         return exists.test(y * 256 + x * 16 + z);
     };
 
-    // AO计算函数：返回四个角的值 (ao1, ao2, ao3, ao4)
+
     auto computeAO = [&](int x, int y, int z, OMVoxelFacing facing) -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> {
         uint8_t ao1 = 0, ao2 = 0, ao3 = 0, ao4 = 0;
 
@@ -107,42 +54,42 @@ auto OMVoxelManager::compile(std::vector<OMVoxel> &lb) -> std::vector<int>
 
         switch (facing)
         {
-        case OMVoxelFacing::NegY: { // 底面，法线朝下，固定 y=v.y
+        case OMVoxelFacing::NegY: {
             ao1 = countNeighbors(-1, 0, -1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, -1);
             ao2 = countNeighbors(-1, 0, 1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, 1);
             ao3 = countNeighbors(1, 0, -1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, -1);
             ao4 = countNeighbors(1, 0, 1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, 1);
             break;
         }
-        case OMVoxelFacing::PosY: { // 顶面，法线朝上，固定 y=v.y+1
+        case OMVoxelFacing::PosY: {
             ao1 = countNeighbors(-1, 0, -1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, -1);
             ao2 = countNeighbors(-1, 0, 1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, 1);
             ao3 = countNeighbors(1, 0, -1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, -1);
             ao4 = countNeighbors(1, 0, 1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, 1);
             break;
         }
-        case OMVoxelFacing::NegX: { // 左面，法线朝-X，固定 x=v.x
+        case OMVoxelFacing::NegX: {
             ao2 = countNeighbors(0, -1, -1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, -1);
             ao1 = countNeighbors(0, 1, -1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, -1);
             ao4 = countNeighbors(0, -1, 1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, 1);
             ao3 = countNeighbors(0, 1, 1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, 1);
             break;
         }
-        case OMVoxelFacing::PosX: { // 右面，法线朝+X，固定 x=v.x+1
+        case OMVoxelFacing::PosX: {
             ao4 = countNeighbors(0, -1, -1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, -1);
             ao3 = countNeighbors(0, 1, -1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, -1);
             ao2 = countNeighbors(0, -1, 1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, 1);
             ao1 = countNeighbors(0, 1, 1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, 1);
             break;
         }
-        case OMVoxelFacing::NegZ: { // 后面，法线朝-Z，固定 z=v.z
+        case OMVoxelFacing::NegZ: {
             ao4 = countNeighbors(-1, -1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, -1, 0);
             ao3 = countNeighbors(-1, 1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, 1, 0);
             ao2 = countNeighbors(1, -1, 0) + countNeighbors(1, 0, 0) + countNeighbors(0, -1, 0);
             ao1 = countNeighbors(1, 1, 0) + countNeighbors(1, 0, 0) + countNeighbors(0, 1, 0);
             break;
         }
-        case OMVoxelFacing::PosZ: { // 前面，法线朝+Z，固定 z=v.z+1
+        case OMVoxelFacing::PosZ: {
             ao2 = countNeighbors(-1, -1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, -1, 0);
             ao1 = countNeighbors(-1, 1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, 1, 0);
             ao4 = countNeighbors(1, -1, 0) + countNeighbors(1, 0, 0) + countNeighbors(0, -1, 0);
@@ -223,6 +170,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                    ->inputName("Lighting")
                    ->input(ImageSampler)
                    ->inputName("inTexture")
+                   ->input(UniformTexelBuffer)
+                   ->inputName("inChunkPos")
                    ->output(target)
                    ->samples(4)
                    ->setCullMode(renderer::common::Back)
@@ -254,15 +203,25 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
     voxels = renderer->allocateBuffer(InstanceData, data.size() * sizeof(uint32_t));
     voxels->updateData(data.data());
     c = data.size();
+
+    chunkoffs = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
+
+    pipeline->bindInput(4, chunkoffs);
 }
 OMVoxelManager::~OMVoxelManager()
 {
     delete voxels;
+    delete chunkoffs;
     delete pipeline;
 }
 
 auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
 {
     return task->pipeline(pipeline)->vertexBuffer({voxels})->drawInstanceN(6, c / 2);
+}
+
+auto OMVoxelManager::update(basics::OMCamera &camera) -> void {
+    auto l = glm::vec3(0.0) - camera.getPos();
+    chunkoffs->updateData(&l);
 }
 } // namespace openminecraft::renderer::common::wrap

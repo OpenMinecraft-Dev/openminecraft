@@ -16,6 +16,9 @@ uniform ObjectInfo
 }
 ubo;
 #include "basics/structs/camera.glsl"
+#include "basics/structs/lighting.glsl"
+uniform sampler2DArray inTexture;
+uniform samplerBuffer inChunkPos;
 
 #define VOXEL_X (((voxelPos) >> 28) & 15)
 #define VOXEL_Y (((voxelPos) >> 24) & 15)
@@ -31,6 +34,8 @@ ubo;
 
 void main()
 {
+    float unused = lighting.lightDirection.x + texture(inTexture, vec3(0.0)).x;
+
     float bx = float(VOXEL_X);
     float by = float(VOXEL_Y);
     float bz = float(VOXEL_Z);
@@ -66,7 +71,9 @@ void main()
         break;
     }
     }
-    gl_Position = camera.viewProj * ubo.model * vec4(worldPos, 1.0);
+
+    vec3 coff = vec3(texelFetch(inChunkPos, voxelMetadata & 0xffff).r, texelFetch(inChunkPos, (voxelMetadata & 0xffff) + 1).r, texelFetch(inChunkPos, (voxelMetadata & 0xffff) + 2).r);
+    gl_Position = camera.viewProj * ubo.model * vec4(worldPos + coff, 1.0);
 
     voxTexCoord = uv;
     voxNormal = normalize((ubo.model * vec4(norm * (VOXEL_FACING_SIGN == 0 ? -1 : 1), 0.0)).xyz);

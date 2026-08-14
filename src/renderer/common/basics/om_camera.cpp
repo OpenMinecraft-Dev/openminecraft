@@ -19,7 +19,7 @@ auto OMCamera::fetchViewMat() -> glm::mat4
     front.y = std::sin(glm::radians(pitch));
     front.z = std::sin(glm::radians(yaw)) * std::cos(glm::radians(pitch));
     front = glm::normalize(front);
-    return glm::lookAt(location, location + front, {0.0f, 1.0f, 0.0f});
+    return glm::lookAt(glm::vec3(0.0), front, {0.0f, 1.0f, 0.0f});
 }
 
 auto OMCamera::fetchProjMat() -> glm::mat4

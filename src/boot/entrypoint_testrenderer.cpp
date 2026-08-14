@@ -159,6 +159,8 @@ void OMTestRenderer::beforeFrame()
     cameraBuffer->updateData(&cam);
     lightingBuffer->updateData(&li);
     ang += 0.001f;
+
+    voxelManager->update(*camera);
 }
 
 void OMTestRenderer::keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp)
