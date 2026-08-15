@@ -158,4 +158,26 @@ void OMRendererBufferVk::updateDataPart(void *src, uint64_t offset, uint64_t len
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.buffer.update"));
     }
 }
+
+void OMRendererBufferVk::copyTo(OMRendererBuffer *dst)
+{
+    try
+    {
+        auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
+        if (alwaysMapped)
+        {
+            dst->updateDataPart(data, 0, length);
+        }
+        else
+        {
+            auto vtx = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
+            dst->updateDataPart(vtx, 0, length);
+            renderer->logicalDevice.unmapMemory(this->bufferMemory);
+        }
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.buffer.update"));
+    }
+}
 } // namespace openminecraft::renderer::vk

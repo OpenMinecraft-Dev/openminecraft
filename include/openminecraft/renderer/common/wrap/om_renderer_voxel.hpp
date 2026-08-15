@@ -11,6 +11,7 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
 #include <cstdint>
+#include <unordered_map>
 #include <vector>
 namespace openminecraft::renderer::common::wrap
 {

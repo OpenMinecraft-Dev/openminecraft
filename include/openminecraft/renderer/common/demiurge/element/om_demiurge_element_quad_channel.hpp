@@ -47,9 +47,11 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
     {
         if (instanceBuffer->length < this->bufferSize())
         {
+            auto ninstanceBuffer = renderer->allocateBuffer(InstanceData, this->bufferSize());
+            instanceBuffer->copyTo(ninstanceBuffer);
+
             delete instanceBuffer;
-            instanceBuffer = renderer->allocateBuffer(InstanceData, this->bufferSize());
-            instanceBuffer->updateData(this->objects.data());
+            instanceBuffer = ninstanceBuffer;
         }
 
         bool inDraw = false;

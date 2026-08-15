@@ -59,8 +59,6 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     auto fetchFontChannel(fontproc::OMFontSet *) -> std::shared_ptr<element::OMDemiurgeTextSdfChannel>;
 
-    OMRendererTask *task = nullptr;
-
   private:
     std::unordered_map<fontproc::OMFontSet *, std::shared_ptr<element::OMDemiurgeTextSdfChannel>> fonts = {};
 

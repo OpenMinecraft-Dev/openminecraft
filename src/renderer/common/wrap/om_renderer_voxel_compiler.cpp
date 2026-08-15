@@ -28,8 +28,7 @@ auto OMVoxelCompiler::compile(world::OMChunk<16> &chunk,
                               std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, int chunkid)
     -> std::vector<int>
 {
-    std::vector<int> d;
-    d.reserve(16 * 12);
+    std::vector<int> d = {};
 
     auto exist = [&](int x, int y, int z) -> bool {
         if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)

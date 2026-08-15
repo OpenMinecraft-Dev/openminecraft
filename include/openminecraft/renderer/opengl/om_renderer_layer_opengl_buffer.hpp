@@ -17,6 +17,7 @@ class OMRendererBufferOpenGL : public common::OMRendererBuffer
     void updateDataPart(void *src, uint64_t offset, uint64_t length) override;
     void bind();
     void unbind();
+    void copyTo(OMRendererBuffer *) override;
     GLuint buffer;
     GLuint texel;
 

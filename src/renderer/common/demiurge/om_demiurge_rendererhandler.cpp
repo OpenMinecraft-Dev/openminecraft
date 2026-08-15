@@ -76,12 +76,13 @@ void OMDemiurgeRendererHandler::submitTasks()
     SimpleUniform u{ext.x, ext.y};
     uniformBuffer->updateData(&u);
 
-    this->task = renderer->createTask("demiurgeui_compose");
+    renderer->createTask("demiurgeui_compose");
     recordTask(true);
 }
 
 void OMDemiurgeRendererHandler::recordTask(bool resize)
 {
+    auto task = renderer->fetchTask("demiurgeui_compose");
     task->target(middleTarget->target);
 
     element::OMDemiurgeAbstractChannel *channel = nullptr;

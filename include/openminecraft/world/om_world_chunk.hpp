@@ -6,6 +6,7 @@
 #include <iterator>
 #include <utility>
 #include <array>
+#include <vector>
 namespace openminecraft::world
 {
 template <int Cs> class OMChunk
@@ -63,6 +64,8 @@ template <int Cs> class OMChunk
         {
             return !(*this == other);
         }
+
+        std::vector<uint32_t> extras = {};
 
       private:
         const OMChunk *chunk_;
