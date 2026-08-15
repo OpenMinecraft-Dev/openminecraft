@@ -6,6 +6,8 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include "openminecraft/specs/png/om_png.hpp"
+#include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
 #include <array>
 #include <cstdint>
@@ -49,11 +51,11 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                    ->buildN();
 
     srand(time(nullptr));
-    for (int cx = 0; cx < 8; ++cx)
+    for (int cx = 0; cx < 4; ++cx)
     {
-        for (int cy = 0; cy < 8; ++cy)
+        for (int cy = 0; cy < 4; ++cy)
         {
-            for (int cz = 0; cz < 8; ++cz)
+            for (int cz = 0; cz < 4; ++cz)
             {
                 world::OMChunk<16> datar(cx, cy, cz);
                 for (int x = 0; x < 16; ++x)
@@ -72,8 +74,6 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
     }
 
     auto externalAccessor = [&](glm::ivec3 pos, int64_t chunkx, int64_t chunky, int64_t chunkz) -> bool {
-        /*logger.info("External Accessor called for ({}, {}, {}) at ({}, {}, {})", pos.x, pos.y, pos.z, chunkx, chunky,
-                    chunkz);*/
         if (pos.x < 0)
         {
             chunkx -= 1;
@@ -131,12 +131,29 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
 
     chunkoffs = renderer->allocateBuffer(UniformTexel, chunks.size() * 3 * sizeof(float));
 
+    textureAtlas = renderer->allocateTexture(16, 16, 8, 4, OMTextureType::Dim2Array, OMTextureArrangement::ColorRgba);
+    int i = 0;
+    for (auto l : {"dirt", "stone", "cobblestone", "coal_ore", "iron_ore", "dirt", "copper_ore", "diamond_ore"})
+    {
+        auto imgraw = vfs::fsfetch(fmt::format("/bootassets/external/minecraft/textures/block/{}.png", l));
+        specs::png::OMPngFile img2;
+        img2.parse(imgraw);
+        textureAtlas->updateData(img2.fetchData(), i);
+        ++i;
+    }
+    textureAtlas->mipFilter = Nearest;
+    textureAtlas->magFilter = Nearest;
+    textureAtlas->minFilter = Nearest;
+    textureAtlas->setupSampler();
+
+    pipeline->bindInput(3, textureAtlas);
     pipeline->bindInput(4, chunkoffs);
 }
 OMVoxelManager::~OMVoxelManager()
 {
     delete voxels;
     delete chunkoffs;
+    delete textureAtlas;
     delete pipeline;
 }
 

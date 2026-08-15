@@ -59,19 +59,15 @@ class OMTestRenderer : public OMRendererHandler
     void afterFrame() override;
 
     // INFO: these are the resource handles used for rendering
-    OMRendererBuffer *uniformBuffer, *voxelBuffer, *lightingBuffer, *cameraBuffer;
-    OMRendererTexture *textureImage, *textureAtlas;
-    OMRendererPipeline *pipeline = nullptr;
+    OMRendererBuffer *uniformBuffer, *voxelModelBuffer, *lightingBuffer, *cameraBuffer;
     OMRendererPipeline *mainPipeline;
     wrap::OMRendererTempTarget *tempTargetMS, *tempTarget;
-    model::OMRendererModelObj *objModel;
     wrap::OMVoxelManager *voxelManager;
 
     std::shared_ptr<wrap::OMRendererBoxBlurHandler> blurHandler;
 
     std::function<OMRendererTexture *()> overlay;
 
-    void keyInput(bool w, bool a, bool s, bool d, bool lsh, bool sp);
     std::shared_ptr<basics::OMCamera> camera;
     basics::OMVertexFormat format;
 
@@ -82,8 +78,6 @@ class OMTestRenderer : public OMRendererHandler
 
     float m_cameraMoveSpeed = 3.4f;
 
-    std::shared_ptr<OMShader> objectVtx;
-    std::shared_ptr<OMShader> objectFrg;
     std::shared_ptr<OMShader> outputVtx;
     std::shared_ptr<OMShader> outputFrg;
 

@@ -355,6 +355,39 @@ void rendererTest(renderer::OMBackend backend)
             camera->modPitch(-e.tfinger.dy * 0.5f * 100.0f);
             camera->modYaw(e.tfinger.dx * 0.5f * 100.0f);
         });
+        bus.appendGeneral([&]() {
+            static auto startTime = std::chrono::high_resolution_clock::now();
+            const auto currentTime = std::chrono::high_resolution_clock::now();
+            const float time = std::chrono::duration<float>(currentTime - startTime).count();
+            startTime = currentTime;
+
+            constexpr float moveSpeed = 4.3f;
+
+            if (keystates[0])
+            {
+                camera->moveCamera(basics::Forward, moveSpeed * time);
+            }
+            if (keystates[1])
+            {
+                camera->moveCamera(basics::Left, moveSpeed * time);
+            }
+            if (keystates[2])
+            {
+                camera->moveCamera(basics::Back, moveSpeed * time);
+            }
+            if (keystates[3])
+            {
+                camera->moveCamera(basics::Right, moveSpeed * time);
+            }
+            if (keystates[4])
+            {
+                camera->moveCamera(basics::Down, moveSpeed * time);
+            }
+            if (keystates[5])
+            {
+                camera->moveCamera(basics::Up, moveSpeed * time);
+            }
+        });
 
         util::OMTicker ticker;
         while (isRunning)
@@ -366,7 +399,6 @@ void rendererTest(renderer::OMBackend backend)
             {
                 bus.handle(static_cast<SDL_EventType>(e.type), e);
             }
-            hnd->keyInput(keystates[0], keystates[1], keystates[2], keystates[3], keystates[4], keystates[5]);
 
             win()->render(ticker);
 

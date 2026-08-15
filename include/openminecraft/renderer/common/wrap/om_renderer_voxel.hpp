@@ -56,6 +56,7 @@ class OMVoxelManager
     OMRendererPipeline *pipeline;
     OMRendererBuffer *voxels;
     OMRendererBuffer *chunkoffs;
+    OMRendererTexture *textureAtlas;
     int faceCount;
 
   private:

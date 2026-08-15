@@ -39,6 +39,17 @@ template <typename T, typename S> class OMEventBus
                 eventQueue.pop();
             }
         });
+
+        loopThread = new std::thread([&]() -> auto {
+            while (active)
+            {
+                for (auto h : generalHandlers)
+                {
+                    h();
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+        });
     }
     ~OMEventBus()
     {
@@ -46,11 +57,18 @@ template <typename T, typename S> class OMEventBus
         newEvents.notify_all();
         handlerThread->join();
         delete handlerThread;
+        loopThread->join();
+        delete loopThread;
     }
 
     inline void append(T t, std::function<void(S &)> h)
     {
         handlers[t].emplace_back(h);
+    }
+
+    inline void appendGeneral(std::function<void()> h)
+    {
+        generalHandlers.emplace_back(h);
     }
 
     inline void handle(T t, S &s)
@@ -60,9 +78,11 @@ template <typename T, typename S> class OMEventBus
     }
 
     std::unordered_map<T, std::vector<std::function<void(S &)>>> handlers;
+    std::vector<std::function<void()>> generalHandlers;
 
   private:
     std::thread *handlerThread;
+    std::thread *loopThread;
     std::atomic_bool active = true;
     std::condition_variable newEvents;
     std::mutex mtx;
