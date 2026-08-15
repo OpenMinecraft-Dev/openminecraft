@@ -1,20 +1,17 @@
 #ifndef OM_RENDEER_VOXEL_HPP
 #define OM_RENDEER_VOXEL_HPP
 
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include "openminecraft/world/om_world_chunk.hpp"
 #include <cstdint>
 #include <vector>
 namespace openminecraft::renderer::common::wrap
 {
-struct OMVoxel
-{
-    int texId;
-    int x, y, z;
-};
 enum OMVoxelFacing : uint8_t
 {
     NegX = 0b000,
@@ -38,7 +35,7 @@ class OMVoxelManager
     OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *);
     ~OMVoxelManager();
 
-    auto compile(std::vector<OMVoxel> &, int chunkid = 0) -> std::vector<int>;
+    auto compile(world::OMChunk<16> &, std::function<bool(int x, int y, int z)>, int chunkid = 0) -> std::vector<int>;
 
     auto submit(OMRendererTask *) -> OMRendererTask *;
     auto update(basics::OMCamera &camera) -> void;
@@ -47,6 +44,9 @@ class OMVoxelManager
     OMRendererBuffer *voxels;
     OMRendererBuffer *chunkoffs;
     int c;
+
+  private:
+    log::OMLogger logger;
 };
 } // namespace openminecraft::renderer::common::wrap
 

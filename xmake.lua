@@ -139,6 +139,7 @@ includes("src/i18n/xmake.lua")
 includes("src/renderer/xmake.lua")
 includes("src/specs/xmake.lua")
 includes("src/fontproc/xmake.lua")
+includes("src/world/xmake.lua")
 includes("tests/xmake.lua")
 includes("tools/xmake.lua")
 
@@ -170,7 +171,8 @@ add_deps(
 	"openminecraft-i18n",
 	"openminecraft-renderer",
 	"openminecraft-specs",
-	"openminecraft-fontproc"
+	"openminecraft-fontproc",
+	"openminecraft-world"
 )
 
 add_packages(
