@@ -45,7 +45,7 @@ void main()
     vec3 worldPos;
     vec3 norm;
     vec2 uv;
-    
+
     switch (VOXEL_FACING_AXIS)
     {
     case 0: {
@@ -72,7 +72,9 @@ void main()
     }
     }
 
-    vec3 coff = vec3(texelFetch(inChunkPos, voxelMetadata & 0xffff).r, texelFetch(inChunkPos, (voxelMetadata & 0xffff) + 1).r, texelFetch(inChunkPos, (voxelMetadata & 0xffff) + 2).r);
+    vec3 coff = vec3(texelFetch(inChunkPos, (voxelMetadata & 0xffff) * 3).r,
+                     texelFetch(inChunkPos, (voxelMetadata & 0xffff) * 3 + 1).r,
+                     texelFetch(inChunkPos, (voxelMetadata & 0xffff) * 3 + 2).r);
     gl_Position = camera.viewProj * ubo.model * vec4(worldPos + coff, 1.0);
 
     voxTexCoord = uv;
@@ -85,18 +87,19 @@ void main()
     // (1, 0) -> ao3
     // (1, 1) -> ao4
     int idx = int(uv.x) << 1 | int(uv.y);
-    switch (idx) {
-        case 0:
-            voxAoLevel = VOXEL_AO1;
-            break;
-        case 1:
-            voxAoLevel = VOXEL_AO2;
-            break;
-        case 2:
-            voxAoLevel = VOXEL_AO3;
-            break;
-        case 3:
-            voxAoLevel = VOXEL_AO4;
-            break;
+    switch (idx)
+    {
+    case 0:
+        voxAoLevel = VOXEL_AO1;
+        break;
+    case 1:
+        voxAoLevel = VOXEL_AO2;
+        break;
+    case 2:
+        voxAoLevel = VOXEL_AO3;
+        break;
+    case 3:
+        voxAoLevel = VOXEL_AO4;
+        break;
     }
 }

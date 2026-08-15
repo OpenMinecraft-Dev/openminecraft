@@ -243,8 +243,9 @@ class OMNodeRendererHandler : public OMRendererHandler
 
         auto e = renderer->getExtent();
 
-        auto m = camera->getPos();
-        posTextNode->style("text", fmt::format("{:.2f} {:.2f} {:.2f}", m.x, m.y, m.z));
+        auto m = camera->getPosRaw();
+        posTextNode->style("text", fmt::format("{} {} {} + {:.2f} {:.2f} {:.2f}", m.chunkx, m.chunky, m.chunkz,
+                                               m.localx, m.localy, m.localz));
         povTextNode->style("text", fmt::format("Yaw {:.2f} Pitch {:.2f}", camera->getYaw(), camera->getPitch()));
         resolutionNode->style("text", fmt::format("{} x {}", e.x, e.y));
     }

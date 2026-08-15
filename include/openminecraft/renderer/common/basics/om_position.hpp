@@ -104,10 +104,10 @@ template <int Cs, typename Cp, typename Lp> class OMPosition
         return {(float)dx, (float)dy, (float)dz};
     }
 
-  private:
     Cp chunkx, chunky, chunkz;
     Lp localx, localy, localz;
 
+  private:
     void normalize()
     {
         auto lx = (long double)localx;

@@ -38,7 +38,7 @@ class OMVoxelManager
     OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *);
     ~OMVoxelManager();
 
-    auto compile(std::vector<OMVoxel> &) -> std::vector<int>;
+    auto compile(std::vector<OMVoxel> &, int chunkid = 0) -> std::vector<int>;
 
     auto submit(OMRendererTask *) -> OMRendererTask *;
     auto update(basics::OMCamera &camera) -> void;

@@ -27,7 +27,7 @@ static auto packVoxelMetadata(uint16_t tex, uint16_t chkid) -> int
 {
     return tex << 16 | chkid;
 }
-auto OMVoxelManager::compile(std::vector<OMVoxel> &lb) -> std::vector<int>
+auto OMVoxelManager::compile(std::vector<OMVoxel> &lb, int chunkid) -> std::vector<int>
 {
     std::vector<int> d;
 
@@ -108,42 +108,42 @@ auto OMVoxelManager::compile(std::vector<OMVoxel> &lb) -> std::vector<int>
         {
             auto [ao1, ao2, ao3, ao4] = computeAO(v.x, v.y, v.z, OMVoxelFacing::NegY);
             d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::NegY, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.texId, 0));
+            d.emplace_back(packVoxelMetadata(v.texId, chunkid));
         }
         // PosY
         if (!exist(v.x, v.y + 1, v.z))
         {
             auto [ao1, ao2, ao3, ao4] = computeAO(v.x, v.y, v.z, OMVoxelFacing::PosY);
             d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::PosY, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.texId, 0));
+            d.emplace_back(packVoxelMetadata(v.texId, chunkid));
         }
         // NegX
         if (!exist(v.x - 1, v.y, v.z))
         {
             auto [ao1, ao2, ao3, ao4] = computeAO(v.x, v.y, v.z, OMVoxelFacing::NegX);
             d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::NegX, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.texId, 0));
+            d.emplace_back(packVoxelMetadata(v.texId, chunkid));
         }
         // PosX
         if (!exist(v.x + 1, v.y, v.z))
         {
             auto [ao1, ao2, ao3, ao4] = computeAO(v.x, v.y, v.z, OMVoxelFacing::PosX);
             d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::PosX, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.texId, 0));
+            d.emplace_back(packVoxelMetadata(v.texId, chunkid));
         }
         // NegZ
         if (!exist(v.x, v.y, v.z - 1))
         {
             auto [ao1, ao2, ao3, ao4] = computeAO(v.x, v.y, v.z, OMVoxelFacing::NegZ);
             d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::NegZ, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.texId, 0));
+            d.emplace_back(packVoxelMetadata(v.texId, chunkid));
         }
         // PosZ
         if (!exist(v.x, v.y, v.z + 1))
         {
             auto [ao1, ao2, ao3, ao4] = computeAO(v.x, v.y, v.z, OMVoxelFacing::PosZ);
             d.emplace_back(packVoxelPos(v.x, v.y, v.z, 15, 0, OMVoxelFacing::PosZ, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.texId, 0));
+            d.emplace_back(packVoxelMetadata(v.texId, chunkid));
         }
     }
 
@@ -197,13 +197,15 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
             }
         }
     }
-    auto data = compile(datar);
+    auto data = compile(datar, 0);
+    auto data2 = compile(datar, 1);
+    data.insert(data.end(), data2.begin(), data2.end());
 
     voxels = renderer->allocateBuffer(InstanceData, data.size() * sizeof(uint32_t));
     voxels->updateData(data.data());
     c = data.size();
 
-    chunkoffs = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
+    chunkoffs = renderer->allocateBuffer(UniformTexel, 2 * 3 * sizeof(float));
 
     pipeline->bindInput(4, chunkoffs);
 }
@@ -221,7 +223,11 @@ auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
-    auto l = basics::OMPosition<16, int64_t, float>() - camera.getPosRaw();
-    chunkoffs->updateData(&l);
+    auto pp = basics::OMPosition<16, int64_t, float>();
+    auto l = pp - camera.getPosRaw();
+    auto pp2 = basics::OMPosition<16, int64_t, float>();
+    pp2.chunky = 1;
+    auto l2 = pp2 - camera.getPosRaw();
+    chunkoffs->updateData(std::array<glm::vec3, 2>{l, l2}.data());
 }
 } // namespace openminecraft::renderer::common::wrap
