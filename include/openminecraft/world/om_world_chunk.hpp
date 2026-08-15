@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <iterator>
 #include <utility>
+#include <array>
 namespace openminecraft::world
 {
 template <int Cs> class OMChunk
