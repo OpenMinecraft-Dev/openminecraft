@@ -1,6 +1,7 @@
 #ifndef OM_RENDEER_VOXEL_HPP
 #define OM_RENDEER_VOXEL_HPP
 
+#include "glm/glm.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
@@ -35,7 +36,8 @@ class OMVoxelManager
     OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *);
     ~OMVoxelManager();
 
-    auto compile(world::OMChunk<16> &, std::function<bool(int x, int y, int z)>, int chunkid = 0) -> std::vector<int>;
+    auto compile(world::OMChunk<16> &, std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)>, int chunkid = 0)
+        -> std::vector<int>;
 
     auto submit(OMRendererTask *) -> OMRendererTask *;
     auto update(basics::OMCamera &camera) -> void;

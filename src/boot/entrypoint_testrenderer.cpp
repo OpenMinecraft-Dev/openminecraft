@@ -61,9 +61,9 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     textureImage->updateData(img.fetchData(), 1);
     textureImage->setupSampler();
 
-    textureAtlas = renderer->allocateTexture(16, 16, 5, 4, OMTextureType::Dim2Array, OMTextureArrangement::ColorRgba);
+    textureAtlas = renderer->allocateTexture(16, 16, 8, 4, OMTextureType::Dim2Array, OMTextureArrangement::ColorRgba);
     int i = 0;
-    for (auto l : {"dirt", "stone", "cobblestone", "coal_ore", "dirt"})
+    for (auto l : {"dirt", "stone", "cobblestone", "coal_ore", "iron_ore", "dirt", "copper_ore", "diamond_ore"})
     {
         auto imgraw = vfs::fsfetch(fmt::format("/bootassets/external/minecraft/textures/block/{}.png", l));
         specs::png::OMPngFile img2;

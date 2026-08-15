@@ -39,17 +39,10 @@ template <int Cs> class OMChunk
         {
         }
 
-        const_iterator &operator++()
+        auto operator++() -> const_iterator &
         {
             ++index_;
             return *this;
-        }
-
-        auto operator++(int) -> const_iterator
-        {
-            const_iterator tmp = *this;
-            ++(*this);
-            return tmp;
         }
 
         auto operator*() const -> value_type
@@ -90,8 +83,9 @@ template <int Cs> class OMChunk
         return blocks[y * Cs * Cs + x * Cs + z] != 0;
     }
 
-  private:
     int64_t chunkx, chunky, chunkz;
+
+  private:
     std::array<uint32_t, Cs * Cs * Cs> blocks = {};
 };
 } // namespace openminecraft::world
