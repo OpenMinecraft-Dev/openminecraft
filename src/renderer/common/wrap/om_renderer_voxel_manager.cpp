@@ -13,146 +13,6 @@
 
 namespace openminecraft::renderer::common::wrap
 {
-// INFO: packed vertex structure in u32
-// xxxx yyyy zzzz ssss bbbb ffff aaaaaaaa
-static auto packVoxelPos(uint8_t x, uint8_t y, uint8_t z, uint8_t skyLight, uint8_t blockLight, OMVoxelFacing facing,
-                         uint8_t ao1, uint8_t ao2, uint8_t ao3, uint8_t ao4) -> int
-{
-    return x << 28 | y << 24 | z << 20 | skyLight << 16 | blockLight << 12 | facing << 8 | ao1 << 6 | ao2 << 4 |
-           ao3 << 2 | ao4;
-}
-// INFO: packed vertex metadata in u32
-// DS*16 CS*16
-static auto packVoxelMetadata(uint16_t tex, uint16_t chkid) -> int
-{
-    return tex << 16 | chkid;
-}
-auto OMVoxelManager::compile(world::OMChunk<16> &chunk,
-                             std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, int chunkid)
-    -> std::vector<int>
-{
-    std::vector<int> d;
-    d.reserve(16 * 12);
-
-    auto exist = [&](int x, int y, int z) -> bool {
-        if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
-            return externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz);
-        return chunk.exists(x, y, z);
-    };
-
-    auto computeAO = [&](int x, int y, int z, OMVoxelFacing facing) -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> {
-        uint8_t ao1 = 0, ao2 = 0, ao3 = 0, ao4 = 0;
-
-        auto countNeighbors = [&](int dx, int dy, int dz) -> int { return exist(x + dx, y + dy, z + dz) ? 1 : 0; };
-
-        switch (facing)
-        {
-        case OMVoxelFacing::NegY: {
-            ao1 = countNeighbors(-1, 0, -1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, -1);
-            ao2 = countNeighbors(-1, 0, 1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, 1);
-            ao3 = countNeighbors(1, 0, -1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, -1);
-            ao4 = countNeighbors(1, 0, 1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, 1);
-            break;
-        }
-        case OMVoxelFacing::PosY: {
-            ao1 = countNeighbors(-1, 0, -1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, -1);
-            ao2 = countNeighbors(-1, 0, 1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, 1);
-            ao3 = countNeighbors(1, 0, -1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, -1);
-            ao4 = countNeighbors(1, 0, 1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, 1);
-            break;
-        }
-        case OMVoxelFacing::NegX: {
-            ao2 = countNeighbors(0, -1, -1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, -1);
-            ao1 = countNeighbors(0, 1, -1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, -1);
-            ao4 = countNeighbors(0, -1, 1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, 1);
-            ao3 = countNeighbors(0, 1, 1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, 1);
-            break;
-        }
-        case OMVoxelFacing::PosX: {
-            ao4 = countNeighbors(0, -1, -1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, -1);
-            ao3 = countNeighbors(0, 1, -1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, -1);
-            ao2 = countNeighbors(0, -1, 1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, 1);
-            ao1 = countNeighbors(0, 1, 1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, 1);
-            break;
-        }
-        case OMVoxelFacing::NegZ: {
-            ao4 = countNeighbors(-1, -1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, -1, 0);
-            ao3 = countNeighbors(-1, 1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, 1, 0);
-            ao2 = countNeighbors(1, -1, 0) + countNeighbors(1, 0, 0) + countNeighbors(0, -1, 0);
-            ao1 = countNeighbors(1, 1, 0) + countNeighbors(1, 0, 0) + countNeighbors(0, 1, 0);
-            break;
-        }
-        case OMVoxelFacing::PosZ: {
-            ao2 = countNeighbors(-1, -1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, -1, 0);
-            ao1 = countNeighbors(-1, 1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, 1, 0);
-            ao4 = countNeighbors(1, -1, 0) + countNeighbors(1, 0, 0) + countNeighbors(0, -1, 0);
-            ao3 = countNeighbors(1, 1, 0) + countNeighbors(1, 0, 0) + countNeighbors(0, 1, 0);
-            break;
-        }
-        default:
-            break;
-        }
-        return {ao1, ao2, ao3, ao4};
-    };
-
-    for (auto const &v : chunk)
-    {
-        if (v.second == 0)
-        {
-            continue;
-        }
-
-        if (!exist(v.first.x, v.first.y - 1, v.first.z))
-        {
-            auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, OMVoxelFacing::NegY);
-            d.emplace_back(
-                packVoxelPos(v.first.x, v.first.y, v.first.z, 15, 0, OMVoxelFacing::NegY, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.second, chunkid));
-        }
-
-        if (!exist(v.first.x, v.first.y + 1, v.first.z))
-        {
-            auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, OMVoxelFacing::PosY);
-            d.emplace_back(
-                packVoxelPos(v.first.x, v.first.y, v.first.z, 15, 0, OMVoxelFacing::PosY, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.second, chunkid));
-        }
-
-        if (!exist(v.first.x - 1, v.first.y, v.first.z))
-        {
-            auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, OMVoxelFacing::NegX);
-            d.emplace_back(
-                packVoxelPos(v.first.x, v.first.y, v.first.z, 15, 0, OMVoxelFacing::NegX, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.second, chunkid));
-        }
-
-        if (!exist(v.first.x + 1, v.first.y, v.first.z))
-        {
-            auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, OMVoxelFacing::PosX);
-            d.emplace_back(
-                packVoxelPos(v.first.x, v.first.y, v.first.z, 15, 0, OMVoxelFacing::PosX, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.second, chunkid));
-        }
-
-        if (!exist(v.first.x, v.first.y, v.first.z - 1))
-        {
-            auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, OMVoxelFacing::NegZ);
-            d.emplace_back(
-                packVoxelPos(v.first.x, v.first.y, v.first.z, 15, 0, OMVoxelFacing::NegZ, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.second, chunkid));
-        }
-
-        if (!exist(v.first.x, v.first.y, v.first.z + 1))
-        {
-            auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, OMVoxelFacing::PosZ);
-            d.emplace_back(
-                packVoxelPos(v.first.x, v.first.y, v.first.z, 15, 0, OMVoxelFacing::PosZ, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.second, chunkid));
-        }
-    }
-
-    return d;
-}
 OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *target) : logger("OMVoxelManager", this)
 {
     basics::OMVertexFormat format;
@@ -189,32 +49,87 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                    ->buildN();
 
     srand(time(nullptr));
-    world::OMChunk<16> datar(0, 0, 0);
-    for (int x = 0; x < 16; ++x)
+    for (int cx = 0; cx < 8; ++cx)
     {
-        for (int y = 0; y < 16; ++y)
+        for (int cy = 0; cy < 8; ++cy)
         {
-            for (int z = 0; z < 16; ++z)
+            for (int cz = 0; cz < 8; ++cz)
             {
-                datar.setBlock(x, y, z, (rand() % 8));
+                world::OMChunk<16> datar(cx, cy, cz);
+                for (int x = 0; x < 16; ++x)
+                {
+                    for (int y = 0; y < 16; ++y)
+                    {
+                        for (int z = 0; z < 16; ++z)
+                        {
+                            datar.setBlock(x, y, z, (rand() % 8));
+                        }
+                    }
+                }
+                chunks.emplace_back(datar);
             }
         }
     }
 
     auto externalAccessor = [&](glm::ivec3 pos, int64_t chunkx, int64_t chunky, int64_t chunkz) -> bool {
-        logger.info("External Accessor called for ({}, {}, {}) at ({}, {}, {})", pos.x, pos.y, pos.z, chunkx, chunky,
-                    chunkz);
+        /*logger.info("External Accessor called for ({}, {}, {}) at ({}, {}, {})", pos.x, pos.y, pos.z, chunkx, chunky,
+                    chunkz);*/
+        if (pos.x < 0)
+        {
+            chunkx -= 1;
+            pos.x += 16;
+        }
+        else if (pos.x >= 16)
+        {
+            chunkx += 1;
+            pos.x -= 16;
+        }
+        if (pos.y < 0)
+        {
+            chunky -= 1;
+            pos.y += 16;
+        }
+        else if (pos.y >= 16)
+        {
+            chunky += 1;
+            pos.y -= 16;
+        }
+        if (pos.z < 0)
+        {
+            chunkz -= 1;
+            pos.z += 16;
+        }
+        else if (pos.z >= 16)
+        {
+            chunkz += 1;
+            pos.z -= 16;
+        }
+
+        for (auto &chk : chunks)
+        {
+            if (chk.chunkx == chunkx && chk.chunky == chunky && chk.chunkz == chunkz)
+            {
+                return chk.exists(pos.x, pos.y, pos.z);
+            }
+        }
         return false;
     };
-    auto data = compile(datar, externalAccessor, 0);
-    auto data2 = compile(datar, externalAccessor, 1);
-    data.insert(data.end(), data2.begin(), data2.end());
+
+    std::vector<int> data = {};
+
+    int cid = 0;
+    for (auto &chk : chunks)
+    {
+        auto r = compiler.compile(chk, externalAccessor, cid);
+        data.insert(data.end(), r.begin(), r.end());
+        ++cid;
+    }
 
     voxels = renderer->allocateBuffer(InstanceData, data.size() * sizeof(uint32_t));
     voxels->updateData(data.data());
-    c = data.size();
+    faceCount = data.size();
 
-    chunkoffs = renderer->allocateBuffer(UniformTexel, 2 * 3 * sizeof(float));
+    chunkoffs = renderer->allocateBuffer(UniformTexel, chunks.size() * 3 * sizeof(float));
 
     pipeline->bindInput(4, chunkoffs);
 }
@@ -227,16 +142,21 @@ OMVoxelManager::~OMVoxelManager()
 
 auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
 {
-    return task->pipeline(pipeline)->vertexBuffer({voxels})->drawInstanceN(6, c / 2);
+    return task->pipeline(pipeline)->vertexBuffer({voxels})->drawInstanceN(6, faceCount / 2);
 }
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
-    auto pp = basics::OMPosition<16, int64_t, float>();
-    auto l = pp - camera.getPosRaw();
-    auto pp2 = basics::OMPosition<16, int64_t, float>();
-    pp2.chunky = 1;
-    auto l2 = pp2 - camera.getPosRaw();
-    chunkoffs->updateData(std::array<glm::vec3, 2>{l, l2}.data());
+    int i = 0;
+    for (auto &chk : chunks)
+    {
+        auto pp = basics::OMPosition<16, int64_t, float>();
+        pp.chunkx = chk.chunkx;
+        pp.chunky = chk.chunky;
+        pp.chunkz = chk.chunkz;
+        auto l = pp - camera.getPosRaw();
+        chunkoffs->updateDataPart(&l, sizeof(glm::vec3) * i, sizeof(glm::vec3));
+        ++i;
+    }
 }
 } // namespace openminecraft::renderer::common::wrap

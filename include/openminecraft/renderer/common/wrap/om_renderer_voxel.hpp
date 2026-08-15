@@ -1,6 +1,7 @@
 #ifndef OM_RENDEER_VOXEL_HPP
 #define OM_RENDEER_VOXEL_HPP
 
+#include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
@@ -30,14 +31,24 @@ enum OMVoxelFacing : uint8_t
 // PosZ => ((0, 1, 1), (0, 0, 1), (1, 1, 1), (1, 0, 1))
 // NegY => ((0, 0, 0), (0, 0, 1), (1, 0, 0), (1, 0, 1))
 // PosY => ((0, 1, 0), (0, 1, 1), (1, 1, 0), (1, 1, 1))
+class OMVoxelCompiler
+{
+  public:
+    OMVoxelCompiler();
+    ~OMVoxelCompiler();
+
+    auto compile(world::OMChunk<16> &, std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)>, int chunkid = 0)
+        -> std::vector<int>;
+
+  private:
+    log::OMLogger logger;
+};
+
 class OMVoxelManager
 {
   public:
     OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *);
     ~OMVoxelManager();
-
-    auto compile(world::OMChunk<16> &, std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)>, int chunkid = 0)
-        -> std::vector<int>;
 
     auto submit(OMRendererTask *) -> OMRendererTask *;
     auto update(basics::OMCamera &camera) -> void;
@@ -45,10 +56,13 @@ class OMVoxelManager
     OMRendererPipeline *pipeline;
     OMRendererBuffer *voxels;
     OMRendererBuffer *chunkoffs;
-    int c;
+    int faceCount;
 
   private:
     log::OMLogger logger;
+    OMVoxelCompiler compiler;
+
+    std::vector<world::OMChunk<16>> chunks;
 };
 } // namespace openminecraft::renderer::common::wrap
 

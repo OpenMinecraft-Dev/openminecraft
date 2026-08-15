@@ -25,15 +25,23 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_Z (((voxelPos) >> 20) & 15)
 #define VOXEL_SKYLIGHT (((voxelPos) >> 16) & 15)
 #define VOXEL_BLOCKLIGHT (((voxelPos) >> 12) & 15)
+#define VOXEL_ENABLED (((voxelPos) >> 11) & 1)
 #define VOXEL_FACING_SIGN (((voxelPos) >> 10) & 1)
 #define VOXEL_FACING_AXIS (((voxelPos) >> 8) & 3)
 #define VOXEL_AO1 (((voxelPos) >> 6) & 3)
 #define VOXEL_AO2 (((voxelPos) >> 4) & 3)
 #define VOXEL_AO3 (((voxelPos) >> 2) & 3)
 #define VOXEL_AO4 ((voxelPos) & 3)
+#define VOXEL_TEXTUREID (((voxelMetadata) >> 16) & 0xffff)
+#define VOXEL_CHUNKID ((voxelMetadata) & 0xffff)
 
 void main()
 {
+    if (VOXEL_ENABLED == 0)
+    {
+        gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+        return;
+    }
     float unused = lighting.lightDirection.x + texture(inTexture, vec3(0.0)).x;
 
     float bx = float(VOXEL_X);
@@ -72,14 +80,13 @@ void main()
     }
     }
 
-    vec3 coff = vec3(texelFetch(inChunkPos, (voxelMetadata & 0xffff) * 3).r,
-                     texelFetch(inChunkPos, (voxelMetadata & 0xffff) * 3 + 1).r,
-                     texelFetch(inChunkPos, (voxelMetadata & 0xffff) * 3 + 2).r);
+    vec3 coff = vec3(texelFetch(inChunkPos, VOXEL_CHUNKID * 3).r, texelFetch(inChunkPos, VOXEL_CHUNKID * 3 + 1).r,
+                     texelFetch(inChunkPos, VOXEL_CHUNKID * 3 + 2).r);
     gl_Position = camera.viewProj * ubo.model * vec4(worldPos + coff, 1.0);
 
     voxTexCoord = uv;
     voxNormal = normalize((ubo.model * vec4(norm * (VOXEL_FACING_SIGN == 0 ? -1 : 1), 0.0)).xyz);
-    voxTexLayer = float(voxelMetadata >> 16);
+    voxTexLayer = float(VOXEL_TEXTUREID);
 
     // INFO: forwarding
     // (0, 0) -> ao1
