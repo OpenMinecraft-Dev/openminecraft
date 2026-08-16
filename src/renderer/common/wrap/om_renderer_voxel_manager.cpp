@@ -11,9 +11,7 @@
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
-#include <chrono>
 #include <cstdint>
-#include <thread>
 #include <vector>
 
 namespace openminecraft::renderer::common::wrap
@@ -24,6 +22,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
     format.setInstance()
         ->appendPart("voxelPos", basics::Integer)
         ->appendPart("voxelMetadata", basics::Integer)
+        ->appendPart("voxelExtra", basics::Integer)
         ->nextGroup()
         ->decideStruct();
     auto voxelFrg = renderer->shaderManager.preprocess("core/voxel.frag.glsl", Fragment, GLSLSource, format);
@@ -86,7 +85,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
         }
     }
 
-    faceCount = voxels->totalSize / (2 * sizeof(int));
+    faceCount = voxels->totalSize / sizeof(OMVoxel);
 
     chunkoffs = renderer->allocateBuffer(UniformTexel, chunks.size() * 3 * sizeof(float));
 
@@ -159,11 +158,8 @@ auto OMVoxelManager::compile(int i) -> void
         }
         return false;
     };
-    std::vector<int> m = {};
-    compiler.compile(chunks[i], externalAccessor, i, [&](int v0, int v1) {
-        m.emplace_back(v0);
-        m.emplace_back(v1);
-    });
+    std::vector<OMVoxel> m = {};
+    compiler.compile(chunks[i], externalAccessor, i, [&](OMVoxel v) { m.emplace_back(v); });
 
     while (!chunkBlocks[i].empty())
     {
@@ -173,9 +169,9 @@ auto OMVoxelManager::compile(int i) -> void
 
     while (!m.empty())
     {
-        auto blk = voxels->allocate(2 * sizeof(int), m.size() * sizeof(int));
+        auto blk = voxels->allocate(sizeof(OMVoxel), m.size() * sizeof(OMVoxel));
         voxels->update(blk, m.data());
-        m.erase(m.begin(), std::next(m.begin(), blk.length / sizeof(int)));
+        m.erase(m.begin(), std::next(m.begin(), blk.length / sizeof(OMVoxel)));
         chunkBlocks[i].push_back(blk);
     }
 }

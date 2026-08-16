@@ -13,11 +13,10 @@ OMVoxelCompiler::~OMVoxelCompiler()
 
 // INFO: packed vertex structure in u32
 // xxxx yyyy zzzz ssss bbbb efff aaaaaaaa
-static auto packVoxelPos(uint8_t x, uint8_t y, uint8_t z, uint8_t skyLight, uint8_t blockLight, OMVoxelFacing facing,
-                         uint8_t ao1, uint8_t ao2, uint8_t ao3, uint8_t ao4) -> int
+static auto packVoxelPos(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint8_t ao1, uint8_t ao2, uint8_t ao3,
+                         uint8_t ao4) -> int
 {
-    return x << 28 | y << 24 | z << 20 | skyLight << 16 | blockLight << 12 | 1 << 11 | facing << 8 | ao1 << 6 |
-           ao2 << 4 | ao3 << 2 | ao4;
+    return x << 28 | y << 24 | z << 20 | 1 << 11 | facing << 8 | ao1 << 6 | ao2 << 4 | ao3 << 2 | ao4;
 }
 // INFO: packed vertex metadata in u32
 // DS*16 CS*16
@@ -37,7 +36,7 @@ constexpr std::array<std::pair<glm::ivec3, OMVoxelFacing>, 6> faceMapping = {{
 
 auto OMVoxelCompiler::compile(world::OMChunk<16> &chunk,
                               std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, int chunkid,
-                              std::function<void(int vPos, int vMeta)> commiter) -> void
+                              std::function<void(OMVoxel)> commiter) -> void
 {
     auto exist = [&](int x, int y, int z) -> bool {
         if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
@@ -112,8 +111,8 @@ auto OMVoxelCompiler::compile(world::OMChunk<16> &chunk,
             if (!exist(v.first.x + p.first.x, v.first.y + p.first.y, v.first.z + p.first.z))
             {
                 auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, p.second);
-                commiter(packVoxelPos(v.first.x, v.first.y, v.first.z, 15, 0, p.second, ao1, ao2, ao3, ao4),
-                         packVoxelMetadata(v.second, chunkid));
+                commiter(OMVoxel{packVoxelPos(v.first.x, v.first.y, v.first.z, p.second, ao1, ao2, ao3, ao4),
+                                 packVoxelMetadata(v.second, chunkid), 0});
             }
         }
     }

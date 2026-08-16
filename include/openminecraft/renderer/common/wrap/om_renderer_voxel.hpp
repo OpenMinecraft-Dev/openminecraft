@@ -13,10 +13,15 @@
 #include "openminecraft/world/om_world_chunk.hpp"
 #include <cstdint>
 #include <list>
-#include <unordered_map>
 #include <vector>
 namespace openminecraft::renderer::common::wrap
 {
+struct OMVoxel
+{
+    int32_t voxelBasic;
+    int32_t voxelMeta;
+    int32_t voxelExtra;
+};
 enum OMVoxelFacing : uint8_t
 {
     NegX = 0b000,
@@ -41,7 +46,7 @@ class OMVoxelCompiler
     ~OMVoxelCompiler();
 
     auto compile(world::OMChunk<16> &, std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)>, int chunkid,
-                 std::function<void(int vPos, int vMeta)>) -> void;
+                 std::function<void(OMVoxel)>) -> void;
 
   private:
     log::OMLogger logger;
