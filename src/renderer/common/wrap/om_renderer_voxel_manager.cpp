@@ -9,7 +9,6 @@
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
-#include <array>
 #include <cstdint>
 #include <vector>
 
@@ -120,8 +119,10 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
     int cid = 0;
     for (auto &chk : chunks)
     {
-        auto r = compiler.compile(chk, externalAccessor, cid);
-        data.insert(data.end(), r.begin(), r.end());
+        compiler.compile(chk, externalAccessor, cid, [&](int v0, int v1) {
+            data.emplace_back(v0);
+            data.emplace_back(v1);
+        });
         ++cid;
     }
 

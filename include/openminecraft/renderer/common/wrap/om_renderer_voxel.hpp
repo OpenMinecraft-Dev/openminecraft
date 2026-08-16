@@ -38,8 +38,8 @@ class OMVoxelCompiler
     OMVoxelCompiler();
     ~OMVoxelCompiler();
 
-    auto compile(world::OMChunk<16> &, std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)>, int chunkid = 0)
-        -> std::vector<int>;
+    auto compile(world::OMChunk<16> &, std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)>, int chunkid,
+                 std::function<void(int vPos, int vMeta)>) -> void;
 
   private:
     log::OMLogger logger;

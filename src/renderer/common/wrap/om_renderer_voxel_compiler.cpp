@@ -1,4 +1,6 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include <array>
+#include <set>
 
 namespace openminecraft::renderer::common::wrap
 {
@@ -24,12 +26,19 @@ static auto packVoxelMetadata(uint16_t tex, uint16_t chkid) -> int
     return tex << 16 | chkid;
 }
 
-auto OMVoxelCompiler::compile(world::OMChunk<16> &chunk,
-                              std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, int chunkid)
-    -> std::vector<int>
-{
-    std::vector<int> d = {};
+constexpr std::array<std::pair<glm::ivec3, OMVoxelFacing>, 6> faceMapping = {{
+    {{0, -1, 0}, NegY},
+    {{0, 1, 0}, PosY},
+    {{-1, 0, 0}, NegX},
+    {{1, 0, 0}, PosX},
+    {{0, 0, -1}, NegZ},
+    {{0, 0, 1}, PosZ},
+}};
 
+auto OMVoxelCompiler::compile(world::OMChunk<16> &chunk,
+                              std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, int chunkid,
+                              std::function<void(int vPos, int vMeta)> commiter) -> void
+{
     auto exist = [&](int x, int y, int z) -> bool {
         if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
             return externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz);
@@ -98,55 +107,15 @@ auto OMVoxelCompiler::compile(world::OMChunk<16> &chunk,
             continue;
         }
 
-        if (!exist(v.first.x, v.first.y - 1, v.first.z))
+        for (auto &p : faceMapping)
         {
-            auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, OMVoxelFacing::NegY);
-            d.emplace_back(
-                packVoxelPos(v.first.x, v.first.y, v.first.z, 15, 0, OMVoxelFacing::NegY, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.second, chunkid));
-        }
-
-        if (!exist(v.first.x, v.first.y + 1, v.first.z))
-        {
-            auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, OMVoxelFacing::PosY);
-            d.emplace_back(
-                packVoxelPos(v.first.x, v.first.y, v.first.z, 15, 0, OMVoxelFacing::PosY, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.second, chunkid));
-        }
-
-        if (!exist(v.first.x - 1, v.first.y, v.first.z))
-        {
-            auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, OMVoxelFacing::NegX);
-            d.emplace_back(
-                packVoxelPos(v.first.x, v.first.y, v.first.z, 15, 0, OMVoxelFacing::NegX, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.second, chunkid));
-        }
-
-        if (!exist(v.first.x + 1, v.first.y, v.first.z))
-        {
-            auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, OMVoxelFacing::PosX);
-            d.emplace_back(
-                packVoxelPos(v.first.x, v.first.y, v.first.z, 15, 0, OMVoxelFacing::PosX, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.second, chunkid));
-        }
-
-        if (!exist(v.first.x, v.first.y, v.first.z - 1))
-        {
-            auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, OMVoxelFacing::NegZ);
-            d.emplace_back(
-                packVoxelPos(v.first.x, v.first.y, v.first.z, 15, 0, OMVoxelFacing::NegZ, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.second, chunkid));
-        }
-
-        if (!exist(v.first.x, v.first.y, v.first.z + 1))
-        {
-            auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, OMVoxelFacing::PosZ);
-            d.emplace_back(
-                packVoxelPos(v.first.x, v.first.y, v.first.z, 15, 0, OMVoxelFacing::PosZ, ao1, ao2, ao3, ao4));
-            d.emplace_back(packVoxelMetadata(v.second, chunkid));
+            if (!exist(v.first.x + p.first.x, v.first.y + p.first.y, v.first.z + p.first.z))
+            {
+                auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, p.second);
+                commiter(packVoxelPos(v.first.x, v.first.y, v.first.z, 15, 0, p.second, ao1, ao2, ao3, ao4),
+                         packVoxelMetadata(v.second, chunkid));
+            }
         }
     }
-
-    return d;
 }
 } // namespace openminecraft::renderer::common::wrap
