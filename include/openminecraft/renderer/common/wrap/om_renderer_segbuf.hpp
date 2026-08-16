@@ -76,6 +76,10 @@ class OMRendererSegBuf
         if (block.length == 0)
             return;
 
+        auto temp = std::calloc(1, block.length);
+        buffer->updateDataPart(temp, block.offset, block.length);
+        std::free(temp);
+
         auto it = freeBlocks.begin();
         while (it != freeBlocks.end() && it->offset < block.offset)
         {

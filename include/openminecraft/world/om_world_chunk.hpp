@@ -22,10 +22,21 @@ template <int Cs> class OMChunk
     void setBlock(int x, int y, int z, uint32_t block)
     {
         blocks[y * Cs * Cs + x * Cs + z] = block;
+        dirty = true;
     }
     auto getBlock(int x, int y, int z) -> uint32_t
     {
         return blocks[y * Cs * Cs + x * Cs + z];
+    }
+
+    void solveDirty()
+    {
+        dirty = false;
+    }
+
+    auto isDirty() -> bool
+    {
+        return dirty;
     }
 
     class const_iterator
@@ -91,6 +102,7 @@ template <int Cs> class OMChunk
 
   private:
     std::array<uint32_t, Cs * Cs * Cs> blocks = {};
+    bool dirty = true;
 };
 } // namespace openminecraft::world
 

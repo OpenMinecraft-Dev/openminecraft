@@ -11,7 +11,9 @@
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
+#include <chrono>
 #include <cstdint>
+#include <thread>
 #include <vector>
 
 namespace openminecraft::renderer::common::wrap
@@ -65,7 +67,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                     {
                         for (int z = 0; z < 16; ++z)
                         {
-                            datar.setBlock(x, y, z, (rand() % 8));
+                            datar.setBlock(x, y, z, (rand() % 7) + 1);
                         }
                     }
                 }
@@ -74,6 +76,48 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
         }
     }
 
+    voxels = new OMRendererSegBuf(renderer, 0x200);
+
+    {
+        chunkBlocks.resize(chunks.size());
+        for (int i = 0; i < chunks.size(); ++i)
+        {
+            compile(i);
+        }
+    }
+
+    faceCount = voxels->totalSize / (2 * sizeof(int));
+
+    chunkoffs = renderer->allocateBuffer(UniformTexel, chunks.size() * 3 * sizeof(float));
+
+    textureAtlas = renderer->allocateTexture(16, 16, 8, 4, OMTextureType::Dim2Array, OMTextureArrangement::ColorRgba);
+    int i = 0;
+    for (auto l : {"dirt", "stone", "cobblestone", "coal_ore", "iron_ore", "dirt", "copper_ore", "diamond_ore"})
+    {
+        auto imgraw = vfs::fsfetch(fmt::format("/bootassets/external/minecraft/textures/block/{}.png", l));
+        specs::png::OMPngFile img2;
+        img2.parse(imgraw);
+        textureAtlas->updateData(img2.fetchData(), i);
+        ++i;
+    }
+    textureAtlas->mipFilter = Nearest;
+    textureAtlas->magFilter = Nearest;
+    textureAtlas->minFilter = Nearest;
+    textureAtlas->setupSampler();
+
+    pipeline->bindInput(3, textureAtlas);
+    pipeline->bindInput(4, chunkoffs);
+}
+OMVoxelManager::~OMVoxelManager()
+{
+    delete voxels;
+    delete chunkoffs;
+    delete textureAtlas;
+    delete pipeline;
+}
+
+auto OMVoxelManager::compile(int i) -> void
+{
     auto externalAccessor = [&](glm::ivec3 pos, int64_t chunkx, int64_t chunky, int64_t chunkz) -> bool {
         if (pos.x < 0)
         {
@@ -115,64 +159,25 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
         }
         return false;
     };
+    std::vector<int> m = {};
+    compiler.compile(chunks[i], externalAccessor, i, [&](int v0, int v1) {
+        m.emplace_back(v0);
+        m.emplace_back(v1);
+    });
 
-    voxels = new OMRendererSegBuf(renderer, 0x200);
-
-    int cid = 0;
-    chunkBlocks.resize(chunks.size());
-    for (auto &chk : chunks)
+    while (!chunkBlocks[i].empty())
     {
-        std::vector<int> m = {};
-        compiler.compile(chk, externalAccessor, cid, [&](int v0, int v1) {
-            m.emplace_back(v0);
-            m.emplace_back(v1);
-        });
-
-        while (!chunkBlocks[cid].empty())
-        {
-            voxels->deallocate(chunkBlocks[cid].back());
-            chunkBlocks[cid].pop_back();
-        }
-
-        while (!m.empty())
-        {
-            auto blk = voxels->allocate(2 * sizeof(int), m.size() * sizeof(int));
-            voxels->update(blk, m.data());
-            m.erase(m.begin(), std::next(m.begin(), blk.length / sizeof(int)));
-            chunkBlocks[cid].push_back(blk);
-        }
-
-        ++cid;
+        voxels->deallocate(chunkBlocks[i].back());
+        chunkBlocks[i].pop_back();
     }
 
-    faceCount = voxels->totalSize / (2 * sizeof(int));
-
-    chunkoffs = renderer->allocateBuffer(UniformTexel, chunks.size() * 3 * sizeof(float));
-
-    textureAtlas = renderer->allocateTexture(16, 16, 8, 4, OMTextureType::Dim2Array, OMTextureArrangement::ColorRgba);
-    int i = 0;
-    for (auto l : {"dirt", "stone", "cobblestone", "coal_ore", "iron_ore", "dirt", "copper_ore", "diamond_ore"})
+    while (!m.empty())
     {
-        auto imgraw = vfs::fsfetch(fmt::format("/bootassets/external/minecraft/textures/block/{}.png", l));
-        specs::png::OMPngFile img2;
-        img2.parse(imgraw);
-        textureAtlas->updateData(img2.fetchData(), i);
-        ++i;
+        auto blk = voxels->allocate(2 * sizeof(int), m.size() * sizeof(int));
+        voxels->update(blk, m.data());
+        m.erase(m.begin(), std::next(m.begin(), blk.length / sizeof(int)));
+        chunkBlocks[i].push_back(blk);
     }
-    textureAtlas->mipFilter = Nearest;
-    textureAtlas->magFilter = Nearest;
-    textureAtlas->minFilter = Nearest;
-    textureAtlas->setupSampler();
-
-    pipeline->bindInput(3, textureAtlas);
-    pipeline->bindInput(4, chunkoffs);
-}
-OMVoxelManager::~OMVoxelManager()
-{
-    delete voxels;
-    delete chunkoffs;
-    delete textureAtlas;
-    delete pipeline;
 }
 
 auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
@@ -185,6 +190,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
     int i = 0;
     for (auto &chk : chunks)
     {
+        if (chk.isDirty())
+        {
+            compile(i);
+            chk.solveDirty();
+        }
         auto pp = basics::OMPosition<16, int64_t, float>();
         pp.chunkx = chk.chunkx;
         pp.chunky = chk.chunky;

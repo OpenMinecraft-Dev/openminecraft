@@ -68,6 +68,8 @@ class OMVoxelManager
 
     std::vector<world::OMChunk<16>> chunks;
     std::vector<std::list<OMRendererSegBufBlock>> chunkBlocks = {};
+
+    void compile(int i);
 };
 } // namespace openminecraft::renderer::common::wrap
 
