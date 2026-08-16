@@ -188,6 +188,8 @@ auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
     int i = 0;
+    std::vector<glm::vec3> offs = {};
+    offs.resize(chunks.size());
     for (auto &chk : chunks)
     {
         if (chk.isDirty())
@@ -199,9 +201,9 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         pp.chunkx = chk.chunkx;
         pp.chunky = chk.chunky;
         pp.chunkz = chk.chunkz;
-        auto l = pp - camera.getPosRaw();
-        chunkoffs->updateDataPart(&l, sizeof(glm::vec3) * i, sizeof(glm::vec3));
+        offs[i] = pp - camera.getPosRaw();
         ++i;
     }
+    chunkoffs->updateData(offs.data());
 }
 } // namespace openminecraft::renderer::common::wrap
