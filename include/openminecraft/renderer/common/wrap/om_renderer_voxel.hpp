@@ -8,9 +8,11 @@
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
 #include <cstdint>
+#include <list>
 #include <unordered_map>
 #include <vector>
 namespace openminecraft::renderer::common::wrap
@@ -55,7 +57,7 @@ class OMVoxelManager
     auto update(basics::OMCamera &camera) -> void;
 
     OMRendererPipeline *pipeline;
-    OMRendererBuffer *voxels;
+    OMRendererSegBuf *voxels;
     OMRendererBuffer *chunkoffs;
     OMRendererTexture *textureAtlas;
     int faceCount;
@@ -65,6 +67,7 @@ class OMVoxelManager
     OMVoxelCompiler compiler;
 
     std::vector<world::OMChunk<16>> chunks;
+    std::vector<std::list<OMRendererSegBufBlock>> chunkBlocks = {};
 };
 } // namespace openminecraft::renderer::common::wrap
 

@@ -1,3 +1,5 @@
+#include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
@@ -114,21 +116,36 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
         return false;
     };
 
-    std::vector<int> data = {};
+    voxels = new OMRendererSegBuf(renderer, 0x200);
 
     int cid = 0;
+    chunkBlocks.resize(chunks.size());
     for (auto &chk : chunks)
     {
+        std::vector<int> m = {};
         compiler.compile(chk, externalAccessor, cid, [&](int v0, int v1) {
-            data.emplace_back(v0);
-            data.emplace_back(v1);
+            m.emplace_back(v0);
+            m.emplace_back(v1);
         });
+
+        while (!chunkBlocks[cid].empty())
+        {
+            voxels->deallocate(chunkBlocks[cid].back());
+            chunkBlocks[cid].pop_back();
+        }
+
+        while (!m.empty())
+        {
+            auto blk = voxels->allocate(2 * sizeof(int), m.size() * sizeof(int));
+            voxels->update(blk, m.data());
+            m.erase(m.begin(), std::next(m.begin(), blk.length / sizeof(int)));
+            chunkBlocks[cid].push_back(blk);
+        }
+
         ++cid;
     }
 
-    voxels = renderer->allocateBuffer(InstanceData, data.size() * sizeof(uint32_t));
-    voxels->updateData(data.data());
-    faceCount = data.size();
+    faceCount = voxels->totalSize / (2 * sizeof(int));
 
     chunkoffs = renderer->allocateBuffer(UniformTexel, chunks.size() * 3 * sizeof(float));
 
@@ -160,7 +177,7 @@ OMVoxelManager::~OMVoxelManager()
 
 auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
 {
-    return task->pipeline(pipeline)->vertexBuffer({voxels})->drawInstanceN(6, faceCount / 2);
+    return task->pipeline(pipeline)->vertexBuffer({voxels->buffer})->drawInstanceN(6, faceCount);
 }
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
