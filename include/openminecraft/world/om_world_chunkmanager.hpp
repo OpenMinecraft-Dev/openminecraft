@@ -4,6 +4,7 @@
 #include "openminecraft/world/om_world_chunk.hpp"
 #include <atomic>
 #include <functional>
+#include <iostream>
 #include <mutex>
 #include <optional>
 #include <vector>
@@ -44,6 +45,7 @@ template <int Cs> class OMChunkManager
     void loadChunk(OMChunk<Cs> &chunk)
     {
         std::lock_guard<std::mutex> lock(chunkMutex);
+        chunk.markDirty();
         OMChunkIndex idx{chunk.chunkx, chunk.chunky, chunk.chunkz};
 
         int slot;
@@ -70,8 +72,15 @@ template <int Cs> class OMChunkManager
 
         int slot = it->second;
         chunkMap.erase(it);
-        chunks[slot].reset();
+        chunks[slot] = std::nullopt;
         emptySlots.push_back(slot);
+
+        markIfExists({idx.x + 1, idx.y, idx.z});
+        markIfExists({idx.x - 1, idx.y, idx.z});
+        markIfExists({idx.x, idx.y + 1, idx.z});
+        markIfExists({idx.x, idx.y - 1, idx.z});
+        markIfExists({idx.x, idx.y, idx.z + 1});
+        markIfExists({idx.x, idx.y, idx.z - 1});
     }
 
     auto getChunk(const OMChunkIndex &idx) const -> const OMChunk<Cs> &
@@ -93,6 +102,14 @@ template <int Cs> class OMChunkManager
         if (it == chunkMap.end())
             throw std::runtime_error("Chunk not loaded");
         return chunks[it->second].value();
+    }
+
+    void markIfExists(OMChunkIndex idx)
+    {
+        if (chunkMap.count(idx))
+        {
+            chunks[chunkMap[idx]]->markDirty();
+        }
     }
 
     auto chunkLoaded(const OMChunkIndex &idx) -> bool

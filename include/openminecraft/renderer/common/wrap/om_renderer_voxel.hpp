@@ -71,6 +71,7 @@ class OMVoxelManager
     OMRendererTexture *textureAtlas;
 
   private:
+    OMRenderer *renderer;
     std::function<void()> rec;
     log::OMLogger logger;
     OMVoxelCompiler compiler;
