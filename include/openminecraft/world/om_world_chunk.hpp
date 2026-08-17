@@ -35,7 +35,7 @@ template <int Cs> class OMChunk
         dirty = false;
     }
 
-    auto isDirty() -> bool
+    auto isDirty() const -> bool
     {
         return dirty;
     }

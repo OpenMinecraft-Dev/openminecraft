@@ -30,13 +30,12 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_AO2 (((voxelPos) >> 4) & 3)
 #define VOXEL_AO3 (((voxelPos) >> 2) & 3)
 #define VOXEL_AO4 ((voxelPos) & 3)
-#define VOXEL_TEXTUREID ((voxelMetadata >> 18) & 0x3fff)
-#define VOXEL_CHUNKID ((voxelMetadata >> 4) & 0x3fff)
+#define VOXEL_TEXTUREID ((voxelMetadata >> 16) & 0xffff)
+#define VOXEL_CHUNKID ((voxelMetadata) & 0xffff)
 #define VOXEL_L1 ((voxelLight >> 28) & 15)
 #define VOXEL_L2 ((voxelLight >> 24) & 15)
 #define VOXEL_L3 ((voxelLight >> 20) & 15)
 #define VOXEL_L4 ((voxelLight >> 16) & 15)
-#define VOXEL_COLORMAP (((voxelMetadata) & 0xf) << 8 | (((voxelPos) >> 12) & 0xff))
 
 void main()
 {

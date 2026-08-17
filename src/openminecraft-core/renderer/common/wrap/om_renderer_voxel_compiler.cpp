@@ -15,24 +15,22 @@ OMVoxelCompiler::~OMVoxelCompiler()
 // x -> Voxel X Coordinate (4 bits)
 // y -> Voxel Y Coordinate (4 bits)
 // z -> Voxel Z Coordinate (4 bits)
-// m -> Voxel Colormap Index (8 + 4 bits)
 // e -> Voxel Enable (1 bit)
 // a -> Voxel Ambient Occclusion Levels (4 * 2 bits)
 // t -> Voxel Texture Index (14 bits)
 // c -> Voxel Chunk ID (14 bits)
 // INFO: packed vertex structure in u32
-// xxxx yyyy zzzz mmmm mmmm efff aaaa aaaa
+// xxxx yyyy zzzz {reserved} efff aaaa aaaa
 static auto packVoxelPos(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint8_t ao1, uint8_t ao2, uint8_t ao3,
-                         uint8_t ao4, uint16_t cmap) -> int
+                         uint8_t ao4) -> int
 {
-    return x << 28 | y << 24 | z << 20 | ((cmap & 0xff) << 12) | 1 << 11 | facing << 8 | ao1 << 6 | ao2 << 4 |
-           ao3 << 2 | ao4;
+    return x << 28 | y << 24 | z << 20 | 1 << 11 | facing << 8 | ao1 << 6 | ao2 << 4 | ao3 << 2 | ao4;
 }
 // INFO: packed vertex metadata in u32
-// tttt tttt tttt ttcc cccc cccc cccc mmmm
-static auto packVoxelMetadata(uint16_t tex, uint16_t chkid, uint16_t cmap) -> int
+// tttt tttt tttt tttt cccc cccc cccc cccc
+static auto packVoxelMetadata(uint16_t tex, uint16_t chkid) -> int
 {
-    return tex << 18 | ((chkid & 0x3fff) << 4) | ((cmap >> 8) & 0xf);
+    return tex << 16 | chkid;
 }
 
 // INFO: packed vertex light in u32
@@ -128,8 +126,8 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             if (!exist(v.first.x + p.first.x, v.first.y + p.first.y, v.first.z + p.first.z))
             {
                 auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, p.second);
-                commiter(OMVoxel{packVoxelPos(v.first.x, v.first.y, v.first.z, p.second, ao1, ao2, ao3, ao4, 0),
-                                 packVoxelMetadata(v.second, chunkid, 0), packVoxelLight(15, 15, 15, 15)});
+                commiter(OMVoxel{packVoxelPos(v.first.x, v.first.y, v.first.z, p.second, ao1, ao2, ao3, ao4),
+                                 packVoxelMetadata(v.second, chunkid), packVoxelLight(15, 15, 15, 15)});
             }
         }
     }

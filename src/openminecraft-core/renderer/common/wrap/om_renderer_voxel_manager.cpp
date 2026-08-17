@@ -62,29 +62,6 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                    ->depthReverseZ(true)
                    ->buildN();
 
-    /*std::srand(std::time(nullptr));
-    for (int cx = 0; cx < 4; ++cx)
-    {
-        for (int cy = 0; cy < 4; ++cy)
-        {
-            for (int cz = 0; cz < 4; ++cz)
-            {
-                world::OMChunk<16> datar(cx, cy, cz);
-                for (int x = 0; x < 16; ++x)
-                {
-                    for (int y = 0; y < 16; ++y)
-                    {
-                        for (int z = 0; z < 16; ++z)
-                        {
-                            datar.setBlock(x, y, z, (rand() % 7) + 1);
-                        }
-                    }
-                }
-                chunkManager.loadChunk(datar);
-            }
-        }
-    }*/
-
     voxels = new OMRendererSegBuf(renderer, 0x200);
 
     chunkBlocks.resize(1);
@@ -97,7 +74,12 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
     pipeline->bindInput(4, chunkoffs);
 
     renderer->addSchedule([&]() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+        if (cz >= 32)
+        {
+            return;
+        }
 
         world::OMChunk<16> datar(cx, cy, cz);
         for (int x = 0; x < 16; ++x)
@@ -113,12 +95,12 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
         chunkManager.loadChunk(datar);
 
         ++cx;
-        if (cx > 3)
+        if (cx > 32)
         {
             cx = 0;
             cy++;
         }
-        if (cy > 3)
+        if (cy > 16)
         {
             cy = 0;
             cz++;
@@ -197,55 +179,46 @@ auto OMVoxelManager::compile(int i) -> void
     }
 }
 
-auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
-{
-    return task->pipeline(pipeline)
-        ->vertexBuffer({voxels->buffer})
-        ->drawInstanceN(6, voxels->totalSize / sizeof(OMVoxel));
-}
-
-std::unordered_map<int, glm::ivec3> test = {};
-
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
-    if (chunkBlocks.size() < chunkManager.numChunks())
-    {
-        chunkBlocks.resize(chunkManager.numChunks());
-        delete chunkoffs;
-        chunkoffs = renderer->allocateBuffer(UniformTexel, chunkManager.numChunks() * 3 * sizeof(float));
-        pipeline->bindInput(4, chunkoffs);
-    }
-
     if (chunkManager.numChunks())
     {
-        int i = 0;
         std::vector<glm::vec3> offs = {};
-        offs.resize(chunkManager.numChunks());
+        offs.reserve(chunkManager.numChunks());
         auto l = voxels->totalSize;
         chunkManager.withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) {
+            int i = 0;
             for (auto &ochk : chunks)
             {
                 if (!ochk.has_value())
                 {
                     compile(i);
-                    offs[i] = glm::vec3(INFINITY);
-                    ++i;
-                    continue;
+                    offs.emplace_back(INFINITY);
                 }
-                auto &chk = ochk.value();
-                if (chk.isDirty())
+                else
                 {
-                    compile(i);
-                    chk.solveDirty();
+                    auto &chk = ochk.value();
+                    if (chk.isDirty())
+                    {
+                        compile(i);
+                        chk.solveDirty();
+                    }
+                    auto pp = basics::OMPosition<16, int64_t, float>();
+                    pp.chunkx = chk.chunkx;
+                    pp.chunky = chk.chunky;
+                    pp.chunkz = chk.chunkz;
+                    offs.emplace_back(pp - camera.getPosRaw());
                 }
-                auto pp = basics::OMPosition<16, int64_t, float>();
-                pp.chunkx = chk.chunkx;
-                pp.chunky = chk.chunky;
-                pp.chunkz = chk.chunkz;
-                offs[i] = pp - camera.getPosRaw();
                 ++i;
             }
         });
+
+        if (offs.size() * sizeof(glm::vec3) > chunkoffs->length)
+        {
+            delete chunkoffs;
+            chunkoffs = renderer->allocateBuffer(UniformTexel, chunkManager.numChunks() * 3 * sizeof(float));
+            pipeline->bindInput(4, chunkoffs);
+        }
         chunkoffs->updateData(offs.data());
 
         if (l != voxels->totalSize)
@@ -253,5 +226,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             rec();
         }
     }
+}
+
+auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
+{
+    return task->pipeline(pipeline)
+        ->vertexBuffer({voxels->buffer})
+        ->drawInstanceN(6, voxels->totalSize / sizeof(OMVoxel));
 }
 } // namespace openminecraft::renderer::common::wrap

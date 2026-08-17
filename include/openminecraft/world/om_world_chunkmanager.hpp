@@ -61,6 +61,13 @@ template <int Cs> class OMChunkManager
         }
         chunks[slot].emplace(std::move(chunk));
         chunkMap[idx] = slot;
+
+        markIfExists({idx.x + 1, idx.y, idx.z});
+        markIfExists({idx.x - 1, idx.y, idx.z});
+        markIfExists({idx.x, idx.y + 1, idx.z});
+        markIfExists({idx.x, idx.y - 1, idx.z});
+        markIfExists({idx.x, idx.y, idx.z + 1});
+        markIfExists({idx.x, idx.y, idx.z - 1});
     }
 
     void unloadChunk(const OMChunkIndex &idx)
