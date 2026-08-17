@@ -10,7 +10,9 @@
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/util/om_util_ticker.hpp"
 #include "openminecraft/util/om_util_version.hpp"
+#include <functional>
 #include <glm/glm.hpp>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -138,10 +140,27 @@ class OMRenderer
     std::vector<std::vector<common::OMRendererTask *>> layeredTasks;
     common::OMRendererShaderManager shaderManager;
 
+    void addSchedule(std::function<void()> f)
+    {
+        std::lock_guard g(scheduleMutex);
+        scheduleQueue.push_back(f);
+    }
+
   protected:
     void *window;
+    std::mutex scheduleMutex = {};
     std::unordered_map<std::string, common::OMRendererTask *> tasks;
     std::vector<std::shared_ptr<common::OMRendererHandler>> handlers;
+
+    std::vector<std::function<void()>> scheduleQueue;
+    void runSchedules()
+    {
+        std::lock_guard g(scheduleMutex);
+        for (auto &p : scheduleQueue)
+        {
+            p();
+        }
+    }
 
   private:
     const AppInfo info;

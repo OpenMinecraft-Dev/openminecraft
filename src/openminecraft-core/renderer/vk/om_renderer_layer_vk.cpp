@@ -221,6 +221,13 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     {
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.renderer"));
     }
+
+    scheThr = new std::thread([&]() {
+        while (active)
+        {
+            runSchedules();
+        }
+    });
 }
 
 void OMRendererVk::rebuildDefaults()
@@ -827,6 +834,11 @@ OMRendererVk::~OMRendererVk()
     try
     {
         logicalDevice.waitIdle();
+
+        active = false;
+        scheThr->join();
+        delete scheThr;
+
         for (auto sync : frameSyncs)
         {
             for (auto s : sync.pipelineSemaphores)

@@ -74,7 +74,22 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     tempTargetMS->construct(ext, 4);
     tempTarget->construct(ext);
 
-    voxelManager = new wrap::OMVoxelManager(renderer, tempTargetMS->target);
+    textureAtlas = renderer->allocateTexture(16, 16, 8, 4, OMTextureType::Dim2Array, OMTextureArrangement::ColorRgba);
+    int i = 0;
+    for (auto l : {"dirt", "stone", "cobblestone", "coal_ore", "iron_ore", "dirt", "copper_ore", "diamond_ore"})
+    {
+        auto imgraw = vfs::fsfetch(fmt::format("/bootassets/external/minecraft/textures/block/{}.png", l));
+        specs::png::OMPngFile img2;
+        img2.parse(imgraw);
+        textureAtlas->updateData(img2.fetchData(), i);
+        ++i;
+    }
+    textureAtlas->mipFilter = Nearest;
+    textureAtlas->magFilter = Nearest;
+    textureAtlas->minFilter = Nearest;
+    textureAtlas->setupSampler();
+
+    voxelManager = new wrap::OMVoxelManager(renderer, tempTargetMS->target, textureAtlas);
 
     voxelManager->pipeline->bindInput(0, voxelModelBuffer);
     voxelManager->pipeline->bindInput(1, cameraBuffer);
@@ -142,6 +157,7 @@ OMTestRenderer::~OMTestRenderer()
     delete cameraBuffer;
     delete lightingBuffer;
     delete voxelManager;
+    delete textureAtlas;
 
     delete tempTargetMS;
     delete tempTarget;

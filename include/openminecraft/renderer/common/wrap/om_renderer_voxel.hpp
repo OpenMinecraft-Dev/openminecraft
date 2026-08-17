@@ -8,12 +8,41 @@
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
+#include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
 #include <cstdint>
 #include <list>
+#include <unordered_map>
 #include <vector>
+namespace openminecraft::renderer::common::wrap
+{
+struct OMChunkIndex
+{
+    int64_t x, y, z;
+
+    auto operator==(const OMChunkIndex &c) const -> bool
+    {
+        return x == c.x && y == c.y && z == c.z;
+    }
+};
+}; // namespace openminecraft::renderer::common::wrap
+
+namespace std
+{
+template <> struct hash<openminecraft::renderer::common::wrap::OMChunkIndex>
+{
+    size_t operator()(const openminecraft::renderer::common::wrap::OMChunkIndex &c) const noexcept
+    {
+        uint64_t hash = std::hash<int64_t>{}(c.x);
+        hash ^= std::hash<int64_t>{}(c.y) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+        hash ^= std::hash<int64_t>{}(c.z) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+        return hash;
+    }
+};
+} // namespace std
+
 namespace openminecraft::renderer::common::wrap
 {
 struct OMVoxel
@@ -55,7 +84,7 @@ class OMVoxelCompiler
 class OMVoxelManager
 {
   public:
-    OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *);
+    OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *);
     ~OMVoxelManager();
 
     auto submit(OMRendererTask *) -> OMRendererTask *;
@@ -73,6 +102,7 @@ class OMVoxelManager
 
     std::vector<world::OMChunk<16>> chunks;
     std::vector<std::list<OMRendererSegBufBlock>> chunkBlocks = {};
+    std::unordered_map<OMChunkIndex, int> chunkMap;
 
     void compile(int i);
 };

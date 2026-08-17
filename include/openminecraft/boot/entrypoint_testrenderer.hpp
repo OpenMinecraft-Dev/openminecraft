@@ -63,6 +63,7 @@ class OMTestRenderer : public OMRendererHandler
     OMRendererPipeline *mainPipeline;
     wrap::OMRendererTempTarget *tempTargetMS, *tempTarget;
     wrap::OMVoxelManager *voxelManager;
+    OMRendererTexture *textureAtlas;
 
     std::shared_ptr<wrap::OMRendererBoxBlurHandler> blurHandler;
 

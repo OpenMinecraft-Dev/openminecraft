@@ -14,6 +14,7 @@
 #include <any>
 #include <functional>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 #ifdef OM_VULKAN_DYNAMIC
@@ -109,6 +110,8 @@ class OMRendererVk : public OMRenderer
     bool needRebuild = false;
 
   private:
+    bool active = true;
+    std::thread *scheThr = nullptr;
     void rebuildDefaults();
     void updateSyncObjects();
 

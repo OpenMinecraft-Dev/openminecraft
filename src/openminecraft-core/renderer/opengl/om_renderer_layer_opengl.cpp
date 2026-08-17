@@ -170,6 +170,7 @@ void OMRendererOpenGL::render(util::OMTicker &t)
         t.pop();
     }
     t.push("gl_pretasks");
+    runSchedules();
     for (auto h : handlers)
     {
         h->beforeFrame();
