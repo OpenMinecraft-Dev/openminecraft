@@ -229,8 +229,14 @@ jobs:
         with:
           path: ${{ env.CACHEPATH }}
           key: ${{ matrix.plat }}-${{ matrix.loaderarch }}-corepkgs-${{ env.CACHENAME }}
-      - name: Build
+      - name: Generate Bundle
         shell: bash
+        run: |
+          cd bootassets
+          zip -r boot.bundle .
+          mv boot.bundle ..
+          cd ..
+      - name: Build
         run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{
           env.XMAKE_ARGS }} openminecraft
       - name: Build network tools

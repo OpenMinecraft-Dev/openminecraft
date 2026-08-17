@@ -126,30 +126,22 @@ add_requires("harfbuzz", { system = false, configs = { freetype = false } })
 
 includes("src/openminecraft/log/xmake.lua")
 includes("src/openminecraft/vm/xmake.lua")
-includes("src/mem/xmake.lua")
-includes("src/io/xmake.lua")
+includes("src/openminecraft/mem/xmake.lua")
+includes("src/openminecraft/io/xmake.lua")
 includes("src/boot/xmake.lua")
-includes("src/vfs/xmake.lua")
-includes("src/util/xmake.lua")
-includes("src/i18n/xmake.lua")
-includes("src/renderer/xmake.lua")
-includes("src/specs/xmake.lua")
-includes("src/fontproc/xmake.lua")
-includes("src/world/xmake.lua")
+includes("src/openminecraft/vfs/xmake.lua")
+includes("src/openminecraft/util/xmake.lua")
+includes("src/openminecraft/i18n/xmake.lua")
+includes("src/openminecraft/renderer/xmake.lua")
+includes("src/openminecraft/specs/xmake.lua")
+includes("src/openminecraft/fontproc/xmake.lua")
+includes("src/openminecraft/world/xmake.lua")
 includes("tests/xmake.lua")
 includes("tools/xmake.lua")
 
 --------------------------------------------------------------------------------
 -- openminecraft (core target)
 --------------------------------------------------------------------------------
-
-rule("bootassets.compress")
-before_build(function (target)
-	os.cd("bootassets")
-	os.vrunv("zip", {"-r", "boot.bundle", "."})
-	os.vrunv("mv", {"boot.bundle", ".."})
-	os.cd("..")
-end)
 
 target("openminecraft")
 if is_plat("android", "harmony") then
@@ -162,8 +154,6 @@ elseif is_plat("iphoneos0") then
 else
 	set_kind("binary")
 end
-
-add_rules("bootassets.compress")
 
 add_includedirs("include")
 add_files("launcher/**.cpp")

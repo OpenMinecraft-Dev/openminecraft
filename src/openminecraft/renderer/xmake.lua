@@ -15,4 +15,4 @@ add_packages(
 	"harfbuzz"
 )
 add_files("**.cpp")
-add_includedirs("../../include")
+add_includedirs(path.join(os.projectdir(), "include"))
