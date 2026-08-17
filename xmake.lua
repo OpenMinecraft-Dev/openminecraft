@@ -120,10 +120,6 @@ add_requires("boost", { system = false, configs = { stacktrace = true, asio = tr
 add_requires("fmt", { system = false, configs = { header_only = true } })
 add_requires("harfbuzz", { system = false, configs = { freetype = false } })
 
-if is_mode("debug") then
-	add_requires("tracy")
-end
-
 ------------------------------------------------------------------------------
 -- Submodules
 --------------------------------------------------------------------------------
@@ -147,18 +143,36 @@ includes("tools/xmake.lua")
 -- openminecraft (core target)
 --------------------------------------------------------------------------------
 
+rule("bootassets.compress")
+before_build(function (target)
+	os.cd("bootassets")
+	os.vrunv("zip", {"-r", "boot.bundle", "."})
+	os.vrunv("mv", {"boot.bundle", ".."})
+	os.cd("..")
+end)
+
 target("openminecraft")
 if is_plat("android", "harmony") then
 	set_kind("shared")
 	add_rules("utils.symbols.export_all")
+elseif is_plat("iphoneos") then
+	set_kind("binary")
+	add_rules("xcode.application")
+	add_files("misc/Info.plist")
 else
 	set_kind("binary")
 end
 
+add_rules("bootassets.compress")
+
 add_includedirs("include")
 add_files("launcher/**.cpp")
-add_rules("utils.bin2obj", { extensions = { ".bundle" } })
-add_files("boot.bundle", { zeroend = false })
+if is_plat("mingw", "windows") then
+	add_rules("utils.bin2obj", { extensions = { ".bundle" } })
+	add_files("boot.bundle", { zeroend = false })
+else
+	add_files("launcher/**.S")
+end
 
 add_deps(
 	"openminecraft-log",
@@ -191,10 +205,6 @@ add_packages(
 	"yoga",
 	{ system = false }
 )
-
-if is_mode("debug") then
-	add_packages("tracy")
-end
 
 if not mobile() and not vulkandyn() and not apple() then
 	add_packages("vulkan-loader")

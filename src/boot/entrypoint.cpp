@@ -1,5 +1,6 @@
 #include <SDL3/SDL_error.h>
 
+#include "SDL3/SDL_messagebox.h"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/boot/om_boot.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
@@ -66,14 +67,13 @@ auto boot(std::vector<std::string> args) -> int
     logger->info("hardware / software status");
     logger->info("CPU Name: {}", os::fetchCpuName());
     logger->info("System: {}, version {}", os::fetchSystemName(), os::fetchSystemVersion());
-    logger->info("User: {} / {}", os::fetchUsername(), os::fetchLoginUser());
     logger->info("Total memory: {} bytes", os::fetchMemoryTotal());
 
     if (args.size() < 3)
     {
         args.resize(3);
         args[1] = "3dtest";
-        args[2] = "vk";
+        args[2] = "gl";
     }
 
     switch (hash_compile_time(args[1].c_str()))

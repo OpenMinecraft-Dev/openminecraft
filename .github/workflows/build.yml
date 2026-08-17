@@ -152,25 +152,6 @@ jobs:
           source ~/.xmake/profile
       - name: Setup Python packages
         run: pip install wheel
-      - name: Restore xmake packages (bootstrap)
-        uses: actions/cache/restore@v5
-        with:
-          path: ${{ env.CACHEPATH }}
-          key: ${{ matrix.plat }}-${{ matrix.loaderarch }}-pkgs-
-          restore-keys: ${{ matrix.plat }}-${{ matrix.loaderarch }}-pkgs-
-      - name: Generate header
-        run: |
-          xmake f -yc ${{ env.XMAKE_ARGS }}
-          xmake -y -v -b openminecraft-bundlemaker
-          xmake run -y -w . openminecraft-bundlemaker -a Cyrene -c -t boot.bundle -P bootassets
-          xmake run -w . openminecraft-bundlemaker -r -t boot.bundle
-      - name: Save xmake packages (bootstrap)
-        uses: actions/cache/save@v5
-        with:
-          path: ${{ env.CACHEPATH }}
-          key: ${{ matrix.plat }}-${{ matrix.loaderarch }}-pkgs-${{ env.CACHENAME }}
-      - name: Clear xmake cache
-        run: rm -r ${{ env.CACHEPATH }}
       - name: Restore xmake packages (Core)
         uses: actions/cache/restore@v5
         with:
