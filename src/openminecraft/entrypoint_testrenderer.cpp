@@ -89,7 +89,7 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     textureAtlas->minFilter = Nearest;
     textureAtlas->setupSampler();
 
-    voxelManager = new wrap::OMVoxelManager(renderer, tempTargetMS->target, textureAtlas);
+    voxelManager = new wrap::OMVoxelManager(renderer, tempTargetMS->target, textureAtlas, [&]() { record(); });
 
     voxelManager->pipeline->bindInput(0, voxelModelBuffer);
     voxelManager->pipeline->bindInput(1, cameraBuffer);
@@ -119,6 +119,17 @@ void OMTestRenderer::beforeFrame()
     voxelManager->update(*camera);
 }
 
+void OMTestRenderer::record()
+{
+    voxelManager
+        ->submit(renderer->fetchTask("scene")
+                     ->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
+                     ->clearDepth(0.0f)
+                     ->target(tempTargetMS->target))
+        ->resolve(tempTarget->target)
+        ->finishN();
+}
+
 void OMTestRenderer::afterFrame()
 {
 }
@@ -131,14 +142,7 @@ void OMTestRenderer::submitTasks()
     mainPipeline->bindInput(0, tempTarget->colorTexture);
     blurHandler->bind(overlay(), tempTarget->colorTexture);
 
-    auto scene = voxelManager
-                     ->submit(renderer->createTask("scene")
-                                  ->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
-                                  ->clearDepth(0.0f)
-                                  ->target(tempTargetMS->target))
-                     ->resolve(tempTarget->target)
-                     ->finishN();
-
+    auto scene = renderer->createTask("scene");
     blurHandler
         ->secondLayerTask(renderer->createTask("main")
                               ->dependOn(scene)
@@ -148,6 +152,8 @@ void OMTestRenderer::submitTasks()
                               ->pipeline(mainPipeline)
                               ->drawN(6))
         ->finishN();
+
+    record();
 }
 OMTestRenderer::~OMTestRenderer()
 {

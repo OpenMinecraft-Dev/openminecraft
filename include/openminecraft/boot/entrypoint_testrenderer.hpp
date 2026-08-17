@@ -58,6 +58,8 @@ class OMTestRenderer : public OMRendererHandler
     void beforeFrame() override;
     void afterFrame() override;
 
+    void record();
+
     // INFO: these are the resource handles used for rendering
     OMRendererBuffer *uniformBuffer, *voxelModelBuffer, *lightingBuffer, *cameraBuffer;
     OMRendererPipeline *mainPipeline;

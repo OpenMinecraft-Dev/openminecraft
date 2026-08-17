@@ -3,6 +3,7 @@
 
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include <iostream>
 #include <vector>
 #include <algorithm>
 
@@ -46,7 +47,7 @@ class OMRendererSegBuf
         delete buffer;
     }
 
-    auto allocate(uint32_t minSize, uint32_t maxSize) -> OMRendererSegBufBlock
+    auto allocate(uint32_t minSize, uint32_t maxSize, uint32_t alignment) -> OMRendererSegBufBlock
     {
         if (maxSize < minSize)
             maxSize = minSize;
@@ -55,8 +56,9 @@ class OMRendererSegBuf
         {
             if (it->length >= minSize)
             {
-
-                OMRendererSegBufBlock allocated = it->slice(maxSize);
+                auto allo = std::min(it->length, maxSize);
+                allo -= (allo % alignment);
+                OMRendererSegBufBlock allocated = it->slice(allo);
 
                 if (it->length == 0)
                 {
@@ -68,7 +70,7 @@ class OMRendererSegBuf
 
         expand();
 
-        return allocate(minSize, maxSize);
+        return allocate(minSize, maxSize, alignment);
     }
 
     void deallocate(OMRendererSegBufBlock block)
@@ -121,13 +123,7 @@ class OMRendererSegBuf
     {
         uint32_t newTotal = totalSize * 2;
         OMRendererBuffer *newBuffer = renderer->allocateBuffer(InstanceData, newTotal);
-        if (!newBuffer)
-        {
-            throw std::runtime_error("Failed to expand segmented buffer");
-        }
-
         buffer->copyTo(newBuffer);
-
         delete buffer;
         buffer = newBuffer;
 

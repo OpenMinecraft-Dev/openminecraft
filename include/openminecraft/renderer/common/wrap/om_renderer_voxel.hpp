@@ -59,7 +59,7 @@ class OMVoxelCompiler
 class OMVoxelManager
 {
   public:
-    OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *);
+    OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *, std::function<void()>);
     ~OMVoxelManager();
 
     auto submit(OMRendererTask *) -> OMRendererTask *;
@@ -69,9 +69,9 @@ class OMVoxelManager
     OMRendererSegBuf *voxels;
     OMRendererBuffer *chunkoffs;
     OMRendererTexture *textureAtlas;
-    int faceCount;
 
   private:
+    std::function<void()> rec;
     log::OMLogger logger;
     OMVoxelCompiler compiler;
 

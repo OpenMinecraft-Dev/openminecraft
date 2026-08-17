@@ -10,18 +10,21 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
 #include <cstdint>
+#include <functional>
 #include <vector>
 
 namespace openminecraft::renderer::common::wrap
 {
-OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *target, OMRendererTexture *tex)
+OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *target, OMRendererTexture *tex,
+                               std::function<void()> rec)
     : logger("OMVoxelManager", this)
 {
+    this->rec = rec;
     basics::OMVertexFormat format;
     format.setInstance()
         ->appendPart("voxelPos", basics::Integer)
         ->appendPart("voxelMetadata", basics::Integer)
-        ->appendPart("voxelExtra", basics::Integer)
+        ->appendPart("voxelLight", basics::Integer)
         ->nextGroup()
         ->decideStruct();
     auto voxelFrg = renderer->shaderManager.preprocess("core/voxel.frag.glsl", Fragment, GLSLSource, format);
@@ -76,12 +79,6 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
     voxels = new OMRendererSegBuf(renderer, 0x200);
 
     chunkBlocks.resize(chunkManager.numChunks());
-    for (int i = 0; i < chunkManager.numChunks(); ++i)
-    {
-        compile(i);
-    }
-
-    faceCount = voxels->totalSize / sizeof(OMVoxel);
 
     chunkoffs = renderer->allocateBuffer(UniformTexel, chunkManager.numChunks() * 3 * sizeof(float));
 
@@ -89,6 +86,15 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
 
     pipeline->bindInput(3, textureAtlas);
     pipeline->bindInput(4, chunkoffs);
+
+    /*renderer->addSchedule([&]() {
+        chunkManager.withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) {
+            for (auto &e : chunks)
+            {
+                chunks[0]->setBlock(0, 0, 0, rand() % 8);
+            }
+        });
+    });*/
 }
 OMVoxelManager::~OMVoxelManager()
 {
@@ -146,7 +152,7 @@ auto OMVoxelManager::compile(int i) -> void
 
     while (!m.empty())
     {
-        auto blk = voxels->allocate(sizeof(OMVoxel), m.size() * sizeof(OMVoxel));
+        auto blk = voxels->allocate(sizeof(OMVoxel), m.size() * sizeof(OMVoxel), sizeof(OMVoxel));
         voxels->update(blk, m.data());
         m.erase(m.begin(), std::next(m.begin(), blk.length / sizeof(OMVoxel)));
         chunkBlocks[i].push_back(blk);
@@ -155,7 +161,9 @@ auto OMVoxelManager::compile(int i) -> void
 
 auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
 {
-    return task->pipeline(pipeline)->vertexBuffer({voxels->buffer})->drawInstanceN(6, faceCount);
+    return task->pipeline(pipeline)
+        ->vertexBuffer({voxels->buffer})
+        ->drawInstanceN(6, voxels->totalSize / sizeof(OMVoxel));
 }
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
@@ -163,6 +171,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
     int i = 0;
     std::vector<glm::vec3> offs = {};
     offs.resize(chunkManager.numChunks());
+    auto l = voxels->totalSize;
     chunkManager.withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) {
         for (auto &ochk : chunks)
         {
@@ -185,5 +194,10 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         }
     });
     chunkoffs->updateData(offs.data());
+
+    if (l != voxels->totalSize)
+    {
+        rec();
+    }
 }
 } // namespace openminecraft::renderer::common::wrap
