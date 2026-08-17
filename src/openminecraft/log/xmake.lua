@@ -5,11 +5,11 @@ local config = {
 	["plat-android"] = true,
 }
 
-includes("../../utils.lua")
+includes(path.join(os.projectdir(), "utils.lua"))
 
 target("openminecraft-log")
 set_kind("static")
 add_packages("fmt", "boost")
 add_files("*.cpp")
 addExtFiles(config)
-add_includedirs("../../include")
+add_includedirs(path.join(os.projectdir(), "include"))

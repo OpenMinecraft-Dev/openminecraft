@@ -6,5 +6,5 @@ if is_plat("windows") then
 end
 add_deps("openminecraft-specs", "openminecraft-log", "openminecraft-i18n")
 add_packages("fmt")
-add_includedirs("../../include")
+add_includedirs(path.join(os.projectdir(), "include"))
 

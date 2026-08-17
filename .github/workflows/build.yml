@@ -230,6 +230,7 @@ jobs:
           path: ${{ env.CACHEPATH }}
           key: ${{ matrix.plat }}-${{ matrix.loaderarch }}-corepkgs-${{ env.CACHENAME }}
       - name: Build
+        shell: bash
         run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{
           env.XMAKE_ARGS }} openminecraft
       - name: Build network tools

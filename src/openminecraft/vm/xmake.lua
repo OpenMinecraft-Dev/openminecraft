@@ -6,7 +6,7 @@ local config = {
 	["plat-windows"] = true,
 }
 
-includes("../../utils.lua")
+includes(path.join(os.projectdir(), "utils.lua"))
 
 target("openminecraft-vm")
 set_kind("static")
@@ -14,4 +14,4 @@ add_packages("fmt", "boost", "libffi")
 add_deps("openminecraft-mem", "openminecraft-log", "openminecraft-specs", "openminecraft-vfs")
 add_files("**.cpp|arch/**|plat/**")
 addExtFiles(config)
-add_includedirs("../../include")
+add_includedirs(path.join(os.projectdir(), "include"))

@@ -124,8 +124,8 @@ add_requires("harfbuzz", { system = false, configs = { freetype = false } })
 -- Submodules
 --------------------------------------------------------------------------------
 
-includes("src/log/xmake.lua")
-includes("src/vm/xmake.lua")
+includes("src/openminecraft/log/xmake.lua")
+includes("src/openminecraft/vm/xmake.lua")
 includes("src/mem/xmake.lua")
 includes("src/io/xmake.lua")
 includes("src/boot/xmake.lua")
@@ -155,7 +155,7 @@ target("openminecraft")
 if is_plat("android", "harmony") then
 	set_kind("shared")
 	add_rules("utils.symbols.export_all")
-elseif is_plat("iphoneos") then
+elseif is_plat("iphoneos0") then
 	set_kind("binary")
 	add_rules("xcode.application")
 	add_files("misc/Info.plist")
@@ -167,12 +167,8 @@ add_rules("bootassets.compress")
 
 add_includedirs("include")
 add_files("launcher/**.cpp")
-if is_plat("mingw", "windows") then
-	add_rules("utils.bin2obj", { extensions = { ".bundle" } })
-	add_files("boot.bundle", { zeroend = false })
-else
-	add_files("launcher/**.S")
-end
+add_rules("utils.bin2obj", { extensions = { ".bundle" } })
+add_files("boot.bundle", { zeroend = false })
 
 add_deps(
 	"openminecraft-log",
