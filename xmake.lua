@@ -124,18 +124,8 @@ add_requires("harfbuzz", { system = false, configs = { freetype = false } })
 -- Submodules
 --------------------------------------------------------------------------------
 
-includes("src/openminecraft/log/xmake.lua")
-includes("src/openminecraft/vm/xmake.lua")
-includes("src/openminecraft/mem/xmake.lua")
-includes("src/openminecraft/io/xmake.lua")
+includes("src/openminecraft-core/xmake.lua")
 includes("src/boot/xmake.lua")
-includes("src/openminecraft/vfs/xmake.lua")
-includes("src/openminecraft/util/xmake.lua")
-includes("src/openminecraft/i18n/xmake.lua")
-includes("src/openminecraft/renderer/xmake.lua")
-includes("src/openminecraft/specs/xmake.lua")
-includes("src/openminecraft/fontproc/xmake.lua")
-includes("src/openminecraft/world/xmake.lua")
 includes("tests/xmake.lua")
 includes("tools/xmake.lua")
 
@@ -156,25 +146,11 @@ else
 end
 
 add_includedirs("include")
-add_files("launcher/**.cpp")
+add_files("src/boot/launcher.cpp")
 add_rules("utils.bin2obj", { extensions = { ".bundle" } })
 add_files("boot.bundle", { zeroend = false })
 
-add_deps(
-	"openminecraft-log",
-	"openminecraft-vm",
-	"openminecraft-mem",
-	"openminecraft-io",
-	"openminecraft-vfs",
-	"openminecraft-boot",
-	"openminecraft-util",
-	"openminecraft-i18n",
-	"openminecraft-renderer",
-	"openminecraft-specs",
-	"openminecraft-fontproc",
-	"openminecraft-world"
-)
-
+add_deps("openminecraft-core", "openminecraft-boot")
 add_packages(
 	"harfbuzz",
 	"vulkan-headers",

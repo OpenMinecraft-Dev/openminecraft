@@ -229,8 +229,10 @@ jobs:
         with:
           path: ${{ env.CACHEPATH }}
           key: ${{ matrix.plat }}-${{ matrix.loaderarch }}-corepkgs-${{ env.CACHENAME }}
+      - name: Install zip via Chocolatey
+        if: matrix.plat == 'windows'
+        run: choco install zip -y
       - name: Generate Bundle
-        shell: bash
         run: |
           cd bootassets
           zip -r boot.bundle .
