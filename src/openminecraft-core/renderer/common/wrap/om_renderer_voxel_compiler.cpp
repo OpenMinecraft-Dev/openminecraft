@@ -51,7 +51,7 @@ constexpr std::array<std::pair<glm::ivec3, OMVoxelFacing>, 6> faceMapping = {{
     {{0, 0, 1}, PosZ},
 }};
 
-auto OMVoxelCompiler::compile(world::OMChunk<16> &chunk,
+auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                               std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, int chunkid,
                               std::function<void(OMVoxel)> commiter) -> void
 {
@@ -116,7 +116,7 @@ auto OMVoxelCompiler::compile(world::OMChunk<16> &chunk,
         return {ao1, ao2, ao3, ao4};
     };
 
-    for (auto const &v : chunk)
+    for (const auto &v : chunk)
     {
         if (v.second == 0)
         {

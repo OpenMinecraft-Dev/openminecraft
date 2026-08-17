@@ -24,39 +24,6 @@ template <int Cs> class OMChunk
     {
         blocks[y * Cs * Cs + x * Cs + z] = block;
         dirty = true;
-
-        int64_t cx = 0, cy = 0, cz = 0;
-        if (x <= 0)
-        {
-            --cx;
-        }
-        else if (x >= Cs)
-        {
-            ++cx;
-        }
-
-        if (y <= 0)
-        {
-            --cy;
-        }
-        else if (y >= Cs)
-        {
-            ++cy;
-        }
-
-        if (z <= 0)
-        {
-            --cz;
-        }
-        else if (z >= Cs)
-        {
-            ++cz;
-        }
-
-        if (cx != 0 && cy != 0 && cz != 0)
-        {
-            markNeighbour(cx, cy, cz);
-        }
     }
     auto getBlock(int x, int y, int z) -> uint32_t
     {
@@ -121,16 +88,16 @@ template <int Cs> class OMChunk
         const OMChunk *chunk_;
         size_t index_;
     };
-    auto begin() -> const_iterator const
+    auto begin() const -> const_iterator const
     {
         return const_iterator(this, 0);
     }
-    auto end() -> const_iterator const
+    auto end() const -> const_iterator const
     {
         return const_iterator(this, Cs * Cs * Cs);
     }
 
-    auto exists(int x, int y, int z) -> bool
+    auto exists(int x, int y, int z) const -> bool
     {
         if (x < 0 || y < 0 || z < 0 || x >= Cs || y >= Cs || z >= Cs)
             return false;
@@ -142,7 +109,6 @@ template <int Cs> class OMChunk
   private:
     std::array<uint32_t, Cs * Cs * Cs> blocks = {};
     bool dirty = true;
-    std::function<void(int64_t, int64_t, int64_t)> markNeighbour = [](int64_t, int64_t, int64_t) {};
 };
 } // namespace openminecraft::world
 

@@ -8,12 +8,8 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include "openminecraft/specs/png/om_png.hpp"
-#include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
-#include <chrono>
 #include <cstdint>
-#include <thread>
 #include <vector>
 
 namespace openminecraft::renderer::common::wrap
@@ -62,7 +58,6 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
             for (int cz = 0; cz < 4; ++cz)
             {
                 world::OMChunk<16> datar(cx, cy, cz);
-                chunkMap[{cx, cy, cz}] = chunks.size();
                 for (int x = 0; x < 16; ++x)
                 {
                     for (int y = 0; y < 16; ++y)
@@ -73,22 +68,22 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                         }
                     }
                 }
-                chunks.emplace_back(datar);
+                chunkManager.loadChunk(datar);
             }
         }
     }
 
     voxels = new OMRendererSegBuf(renderer, 0x200);
 
-    chunkBlocks.resize(chunks.size());
-    for (int i = 0; i < chunks.size(); ++i)
+    chunkBlocks.resize(chunkManager.numChunks());
+    for (int i = 0; i < chunkManager.numChunks(); ++i)
     {
         compile(i);
     }
 
     faceCount = voxels->totalSize / sizeof(OMVoxel);
 
-    chunkoffs = renderer->allocateBuffer(UniformTexel, chunks.size() * 3 * sizeof(float));
+    chunkoffs = renderer->allocateBuffer(UniformTexel, chunkManager.numChunks() * 3 * sizeof(float));
 
     textureAtlas = tex;
 
@@ -136,12 +131,12 @@ auto OMVoxelManager::compile(int i) -> void
             pos.z -= 16;
         }
 
-        OMChunkIndex idx = {chunkx, chunky, chunkz};
+        world::OMChunkIndex idx = {chunkx, chunky, chunkz};
 
-        return chunkMap.count(idx) && chunks[chunkMap[idx]].exists(pos.x, pos.y, pos.z);
+        return chunkManager.chunkLoaded(idx) && chunkManager.getChunk(idx).exists(pos.x, pos.y, pos.z);
     };
     std::vector<OMVoxel> m = {};
-    compiler.compile(chunks[i], externalAccessor, i, [&](OMVoxel v) { m.emplace_back(v); });
+    compiler.compile(chunkManager.getChunk(i).value(), externalAccessor, i, [&](OMVoxel v) { m.emplace_back(v); });
 
     while (!chunkBlocks[i].empty())
     {
@@ -167,21 +162,28 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
     int i = 0;
     std::vector<glm::vec3> offs = {};
-    offs.resize(chunks.size());
-    for (auto &chk : chunks)
-    {
-        if (chk.isDirty())
+    offs.resize(chunkManager.numChunks());
+    chunkManager.withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) {
+        for (auto &ochk : chunks)
         {
-            compile(i);
-            chk.solveDirty();
+            if (!ochk.has_value())
+            {
+                continue;
+            }
+            auto &chk = ochk.value();
+            if (chk.isDirty())
+            {
+                compile(i);
+                chk.solveDirty();
+            }
+            auto pp = basics::OMPosition<16, int64_t, float>();
+            pp.chunkx = chk.chunkx;
+            pp.chunky = chk.chunky;
+            pp.chunkz = chk.chunkz;
+            offs[i] = pp - camera.getPosRaw();
+            ++i;
         }
-        auto pp = basics::OMPosition<16, int64_t, float>();
-        pp.chunkx = chk.chunkx;
-        pp.chunky = chk.chunky;
-        pp.chunkz = chk.chunkz;
-        offs[i] = pp - camera.getPosRaw();
-        ++i;
-    }
+    });
     chunkoffs->updateData(offs.data());
 }
 } // namespace openminecraft::renderer::common::wrap
