@@ -238,6 +238,10 @@ jobs:
           zip -r boot.bundle .
           mv boot.bundle ..
           cd ..
+          cd externalassets
+          zip -r external.bundle .
+          mv external.bundle ..
+          cd ..
       - name: Build
         run: xmake build -y --jobs=${{ env.JOBS }} --linkjobs=${{ env.LINK_JOBS }} ${{
           env.XMAKE_ARGS }} openminecraft

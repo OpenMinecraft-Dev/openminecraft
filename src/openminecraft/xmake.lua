@@ -14,6 +14,7 @@ add_includedirs(path.join(os.projectdir(), "include"))
 add_files("**.cpp")
 add_rules("utils.bin2obj", { extensions = { ".bundle" } })
 add_files(path.join(os.projectdir(), "boot.bundle"), { zeroend = false })
+add_files(path.join(os.projectdir(), "external.bundle"), { zeroend = false })
 
 add_deps("openminecraft-core")
 add_packages(

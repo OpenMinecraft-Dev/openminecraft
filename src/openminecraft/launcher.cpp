@@ -8,6 +8,8 @@ extern "C"
 {
     extern const char _binary_boot_bundle_start[];
     extern const char _binary_boot_bundle_end[];
+    extern const char _binary_external_bundle_start[];
+    extern const char _binary_external_bundle_end[];
 }
 
 auto logger = openminecraft::log::OMLogger("launcher");
@@ -35,6 +37,9 @@ auto main(int argc, char **argv) -> int
     logger.info("Booting kernel...");
     openminecraft::vfs::fsmountZipArchive(
         _binary_boot_bundle_start, (uint32_t)(_binary_boot_bundle_end - _binary_boot_bundle_start), "/bootassets");
+    openminecraft::vfs::fsmountZipArchive(_binary_external_bundle_start,
+                                          (uint32_t)(_binary_external_bundle_end - _binary_external_bundle_start),
+                                          "/external");
     int re = openminecraftshell::boot(a);
     logger.info("Kernel exited with code {}", re);
 

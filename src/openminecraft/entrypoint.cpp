@@ -122,9 +122,22 @@ auto boot(std::vector<std::string> args) -> int
         rendererTest(args[2] == "gl" ? renderer::OpenGL : renderer::Vulkan);
         break;
     case "model"_hash: {
-        auto ff = vfs::fsfetch(fmt::format("/bootassets/external/minecraft/{}/{}.json", args[2], args[3]));
+        auto ff = vfs::fsfetch(fmt::format("/external/minecraft/{}/{}.json", args[2], args[3]));
         json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(ff));
         auto ll = bld.build();
+
+        auto ff2 = vfs::fsfetch("/external/minecraft/models/block/cube_all.json");
+        json::OMJsonAstBuilder bld2(std::make_shared<json::OMJsonTokenIter>(ff2));
+        auto ll2 = bld2.build();
+
+        auto ff3 = vfs::fsfetch("/external/minecraft/models/block/cube.json");
+        json::OMJsonAstBuilder bld3(std::make_shared<json::OMJsonTokenIter>(ff3));
+        auto ll3 = bld3.build();
+
+        ll->getMap().erase("parent");
+        ll->merge(ll2);
+        ll->getMap().erase("parent");
+        ll->merge(ll3);
 
         prettyJson(ll, logger);
         break;

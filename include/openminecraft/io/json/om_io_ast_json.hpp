@@ -31,6 +31,9 @@ class OMJsonNode
     virtual auto getNumber() -> int64_t = 0;
     virtual auto getBoolean() -> bool = 0;
     virtual auto getString() -> std::string = 0;
+    virtual void merge(std::shared_ptr<OMJsonNode>)
+    {
+    }
 };
 
 class OMJsonNodeString : public OMJsonNode
@@ -110,6 +113,32 @@ class OMJsonNodeObject : public OMJsonNode
     {
         throw std::logic_error("this is a json object!");
     }
+    void merge(std::shared_ptr<OMJsonNode> other) override
+    {
+        if (other->type() != Object)
+            return;
+
+        auto &other_map = other->getMap();
+        for (auto &[key, val] : other_map)
+        {
+            auto it = data.find(key);
+            if (it != data.end())
+            {
+                if (it->second->type() == val->type())
+                {
+                    it->second->merge(val);
+                }
+                else
+                {
+                    it->second = val;
+                }
+            }
+            else
+            {
+                data[key] = val;
+            }
+        }
+    }
 
   private:
     std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> data;
@@ -150,6 +179,14 @@ class OMJsonNodeArray : public OMJsonNode
     auto getString() -> std::string override
     {
         throw std::logic_error("this is a json array!");
+    }
+    void merge(std::shared_ptr<OMJsonNode> other) override
+    {
+        if (other->type() != Array)
+            return;
+
+        auto &other_arr = other->getArray();
+        arr.insert(arr.end(), other_arr.begin(), other_arr.end());
     }
 
   private:

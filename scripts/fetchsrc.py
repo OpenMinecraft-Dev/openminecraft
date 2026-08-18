@@ -5,8 +5,7 @@ from io import BytesIO
 import os
 import threading
 
-BASEPATH = "bootassets/external"
-
+BASEPATH = "externalassets"
 
 def savefile(pp, content):
     if pp.endswith("png") or pp.endswith("json") or pp.endswith("mcmeta"):

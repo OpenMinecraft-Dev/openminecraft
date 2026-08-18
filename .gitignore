@@ -27,3 +27,4 @@ dbg
 perf*
 bootassets/external
 .DS_Store
+externalassets

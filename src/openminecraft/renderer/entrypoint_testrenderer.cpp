@@ -1,4 +1,4 @@
-#include "openminecraft-shell/entrypoint_testrenderer.hpp"
+#include "openminecraft-shell/renderer/entrypoint_testrenderer.hpp"
 
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"
@@ -80,7 +80,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
     int i = 0;
     for (auto l : {"dirt", "stone", "cobblestone", "coal_ore", "iron_ore", "dirt", "copper_ore", "diamond_ore"})
     {
-        auto imgraw = vfs::fsfetch(fmt::format("/bootassets/external/minecraft/textures/block/{}.png", l));
+        auto imgraw = vfs::fsfetch(fmt::format("/external/minecraft/textures/block/{}.png", l));
         specs::png::OMPngFile img2;
         img2.parse(imgraw);
         textureAtlas->updateData(img2.fetchData(), i);
