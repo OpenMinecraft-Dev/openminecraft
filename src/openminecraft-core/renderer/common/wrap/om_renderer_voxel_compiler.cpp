@@ -18,17 +18,19 @@ OMVoxelCompiler::~OMVoxelCompiler()
 // X -> Voxel X Coordinate Div (4 bits)
 // Y -> Voxel Y Coordinate Div (4 bits)
 // Z -> Voxel Z Coordinate Div (4 bits)
+// s -> Voxel Scale (3 * 4 bits)
 // e -> Voxel Enable (1 bit)
 // a -> Voxel Ambient Occclusion Levels (4 * 2 bits)
 // t -> Voxel Texture Index (16 bits)
 // c -> Voxel Chunk ID (16 bits)
 // u -> unused
 // INFO: packed vertex structure in u32
-// xxxx yyyy zzzz efff XXXX YYYY ZZZZ uuuu
-static auto packVoxelPos(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint8_t dx, uint8_t dy, uint8_t dz)
-    -> int
+// xxxx yyyy zzzz efff XXXX YYYY ZZZZ ssss
+static auto packVoxelPos(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint8_t dx, uint8_t dy, uint8_t dz,
+                         uint8_t scaleY) -> int
 {
-    return x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | dx << 12 | dy << 8 | dz << 4;
+    return x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | dx << 12 | dy << 8 | dz << 4 |
+           ((scaleY - 1) & 0xf);
 }
 // INFO: packed vertex metadata in u32
 // tttt tttt tttt tttt cccc cccc cccc cccc
@@ -38,12 +40,12 @@ static auto packVoxelMetadata(uint16_t tex, uint16_t chkid) -> int
 }
 
 // INFO: packed vertex extra in u32
-// llll llll llll llll uuuu uuuu aaaa aaaa
+// llll llll llll llll ssss ssss aaaa aaaa
 static auto packVoxelExtra(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4, uint8_t ao1, uint8_t ao2, uint8_t ao3,
-                           uint8_t ao4) -> int
+                           uint8_t ao4, uint8_t scaleX, uint8_t scaleZ) -> int
 {
-    return ((l1 & 0xf) << 28) | ((l2 & 0xf) << 24) | ((l3 & 0xf) << 20) | ((l4 & 0xf) << 16) | ao1 << 6 | ao2 << 4 |
-           ao3 << 2 | ao4;
+    return ((l1 & 0xf) << 28) | ((l2 & 0xf) << 24) | ((l3 & 0xf) << 20) | ((l4 & 0xf) << 16) |
+           (((scaleX - 1) & 0xf) << 12) | (((scaleZ - 1) & 0xf) << 8) | ao1 << 6 | ao2 << 4 | ao3 << 2 | ao4;
 }
 
 constexpr std::array<std::pair<glm::ivec3, OMVoxelFacing>, 6> faceMapping = {{
@@ -129,13 +131,13 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
 
         for (auto &p : faceMapping)
         {
-            if (!exist(v.first.x + p.first.x, v.first.y + p.first.y, v.first.z + p.first.z) || true)
+            if (!exist(v.first.x + p.first.x, v.first.y + p.first.y, v.first.z + p.first.z))
             {
                 auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, p.second);
 
-                commiter(OMVoxel{packVoxelPos(v.first.x, v.first.y, v.first.z, p.second, 8, 8, 8),
+                commiter(OMVoxel{packVoxelPos(v.first.x, v.first.y, v.first.z, p.second, 8, 8, 8, 16),
                                  packVoxelMetadata(v.second, chunkid),
-                                 packVoxelExtra(15, 15, 15, 15, ao1, ao2, ao3, ao4)});
+                                 packVoxelExtra(15, 15, 15, 15, ao1, ao2, ao3, ao4, 16, 16)});
             }
         }
     }

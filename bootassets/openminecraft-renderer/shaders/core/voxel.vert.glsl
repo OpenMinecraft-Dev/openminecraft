@@ -39,6 +39,9 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_AO2 (((voxelExtra) >> 4) & 3)
 #define VOXEL_AO3 (((voxelExtra) >> 2) & 3)
 #define VOXEL_AO4 ((voxelExtra) & 3)
+#define VOXEL_SX ((((voxelExtra) >> 12) & 15) + 1)
+#define VOXEL_SY ((((voxelPos)) & 15) + 1)
+#define VOXEL_SZ ((((voxelExtra) >> 8) & 15) + 1)
 
 void main()
 {
@@ -60,7 +63,7 @@ void main()
     vec3 norm;
     vec2 uv, oruv;
 
-    vec3 modelSize = vec3(1.0, 1.0, 0.5);
+    vec3 modelSize = vec3(float(VOXEL_SX) / 16, float(VOXEL_SY) / 16, float(VOXEL_SZ) / 16);
 
     switch (VOXEL_FACING_AXIS)
     {
