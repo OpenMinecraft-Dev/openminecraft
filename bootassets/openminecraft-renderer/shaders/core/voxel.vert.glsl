@@ -10,6 +10,7 @@ layout(location = 1) out vec3 voxNormal;
 layout(location = 2) out float voxTexLayer;
 layout(location = 3) out float voxAoLevel;
 layout(location = 4) out vec2 voxLight;
+layout(location = 5) out float voxFactor;
 
 #include "basics/structs/camera.glsl"
 uniform sampler2DArray inTexture;
@@ -68,6 +69,7 @@ void main()
         uv = (sign == 0.0) ? vec2(or.y, inv_or.x) : inv_or.yx;
         oruv = uv;
         uv *= modelSize.zy;
+        voxFactor = 0.6;
         break;
     }
     case 1: {
@@ -77,6 +79,7 @@ void main()
         uv = (sign == 0.0) ? inv_or.xy : vec2(or.x, inv_or.y);
         oruv = uv;
         uv *= modelSize.xy;
+        voxFactor = 0.8;
         break;
     }
     case 2: {
@@ -86,6 +89,7 @@ void main()
         uv = vec2(or.x, inv_or.y);
         oruv = uv;
         uv *= modelSize.xz;
+        voxFactor = sign == 1 ? 1.0 : 0.5;
         break;
     }
     default: {

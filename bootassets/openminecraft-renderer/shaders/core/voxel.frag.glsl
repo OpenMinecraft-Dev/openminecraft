@@ -6,6 +6,7 @@ layout(location = 1) in vec3 voxNormal;
 layout(location = 2) in float voxTexLayer;
 layout(location = 3) in float voxAoLevel;
 layout(location = 4) in vec2 voxLight;
+layout(location = 5) in float voxFactor;
 
 layout(location = 0) out vec4 outColor;
 
@@ -16,10 +17,10 @@ void main()
 {
     mat4 unused = camera.viewProj;
 
-    float ao = mix(1.0, 0.5, voxAoLevel / 3.0);
+    float ao = mix(1.0, 0.2, voxAoLevel / 3.0);
 
     vec4 texColor = texture(inTexture, vec3(voxTexCoord, voxTexLayer));
-    vec3 result = ao * texColor.rgb;
+    vec3 result = voxFactor * ao * texColor.rgb;
 
     outColor = vec4(result, texColor.a);
 }
