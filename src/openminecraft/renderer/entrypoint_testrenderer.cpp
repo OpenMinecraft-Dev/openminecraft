@@ -98,10 +98,10 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
             for (int cz = 0; cz < 8; ++cz)
             {
                 world::OMChunk<16> cnk(cx, cy, cz);
-                cnk.setBlock(0, 0, 0, 3);
-                cnk.setBlock(0, 1, 0, 3);
-                cnk.setBlock(1, 0, 0, 3);
-                cnk.setBlock(0, 0, 1, 3);
+                cnk.setBlock(0, 0, 0, 7);
+                cnk.setBlock(0, 1, 1, 7);
+                cnk.setBlock(1, 1, 1, 7);
+                cnk.setBlock(1, 1, 0, 7);
                 chunkManager->loadChunk(cnk);
             }
         }
@@ -111,7 +111,6 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
 
     voxelManager->pipeline->bindInput(0, voxelModelBuffer);
     voxelManager->pipeline->bindInput(1, cameraBuffer);
-    voxelManager->pipeline->bindInput(2, lightingBuffer);
 }
 
 static float ang = 0.0f;

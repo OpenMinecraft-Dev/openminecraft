@@ -9,6 +9,7 @@ layout(location = 0) out vec2 voxTexCoord;
 layout(location = 1) out vec3 voxNormal;
 layout(location = 2) out float voxTexLayer;
 layout(location = 3) out float voxAoLevel;
+layout(location = 4) out vec2 voxLight;
 
 uniform ObjectInfo
 {
@@ -16,7 +17,6 @@ uniform ObjectInfo
 }
 ubo;
 #include "basics/structs/camera.glsl"
-#include "basics/structs/lighting.glsl"
 uniform sampler2DArray inTexture;
 uniform samplerBuffer inChunkPos;
 
@@ -29,19 +29,15 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_XD (((voxelPos) >> 12) & 15)
 #define VOXEL_YD (((voxelPos) >> 8) & 15)
 #define VOXEL_ZD (((voxelPos) >> 4) & 15)
-#define VOXEL_TEXTUREID ((voxelMetadata >> 16) & 0xffff)
+#define VOXEL_ROTATION ((voxelMetadata >> 30) & 3)
+#define VOXEL_TEXTUREID ((voxelMetadata >> 16) & 0x3fff)
 #define VOXEL_CHUNKID ((voxelMetadata) & 0xffff)
-#define VOXEL_L1 ((voxelExtra >> 28) & 15)
-#define VOXEL_L2 ((voxelExtra >> 24) & 15)
-#define VOXEL_L3 ((voxelExtra >> 20) & 15)
-#define VOXEL_L4 ((voxelExtra >> 16) & 15)
-#define VOXEL_AO1 (((voxelExtra) >> 6) & 3)
-#define VOXEL_AO2 (((voxelExtra) >> 4) & 3)
-#define VOXEL_AO3 (((voxelExtra) >> 2) & 3)
-#define VOXEL_AO4 ((voxelExtra) & 3)
-#define VOXEL_SX ((((voxelExtra) >> 12) & 15) + 1)
-#define VOXEL_SY ((((voxelPos)) & 15) + 1)
-#define VOXEL_SZ ((((voxelExtra) >> 8) & 15) + 1)
+#define VOXEL_SL(n) ((voxelExtra >> (28 - 4 * (n))) & 15)
+#define VOXEL_BL(n) ((voxelExtra >> (12 - 4 * (n))) & 15)
+#define VOXEL_SX (((voxelExtra2) >> 24) & 0xff)
+#define VOXEL_SY (((voxelExtra2) >> 16) & 0xff)
+#define VOXEL_SZ (((voxelExtra2) >> 8) & 0xff)
+#define VOXEL_AO(n) ((voxelExtra2 >> (6 - 2 * (n))) & 3)
 
 void main()
 {
@@ -50,7 +46,7 @@ void main()
         gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
         return;
     }
-    float unused = lighting.lightDirection.x + texture(inTexture, vec3(0.0)).x;
+    float unused = texture(inTexture, vec3(0.0)).x;
 
     float bx = float(VOXEL_X) + float(VOXEL_XD) / 16;
     float by = float(VOXEL_Y) + float(VOXEL_YD) / 16;
@@ -100,6 +96,13 @@ void main()
     }
     }
 
+    int rota = VOXEL_ROTATION;
+    while (rota > 0)
+    {
+        uv = vec2(1 - uv.y, uv.x);
+        --rota;
+    }
+
     worldPos += worldPosOffset;
     worldPos *= modelSize;
     worldPos += vec3(bx, by, bz);
@@ -118,19 +121,6 @@ void main()
     // (1, 0) -> ao3
     // (1, 1) -> ao4
     int idx = int(oruv.x) << 1 | int(oruv.y);
-    switch (idx)
-    {
-    case 0:
-        voxAoLevel = VOXEL_AO1;
-        break;
-    case 1:
-        voxAoLevel = VOXEL_AO2;
-        break;
-    case 2:
-        voxAoLevel = VOXEL_AO3;
-        break;
-    case 3:
-        voxAoLevel = VOXEL_AO4;
-        break;
-    }
+    voxAoLevel = VOXEL_AO(idx);
+    voxLight = vec2(float(VOXEL_BL(idx)) / 15, float(VOXEL_SL(idx)) / 15);
 }

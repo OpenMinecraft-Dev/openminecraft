@@ -23,29 +23,39 @@ OMVoxelCompiler::~OMVoxelCompiler()
 // a -> Voxel Ambient Occclusion Levels (4 * 2 bits)
 // t -> Voxel Texture Index (16 bits)
 // c -> Voxel Chunk ID (16 bits)
+// r -> Voxel Rotation (2 bits, 00 -> 0deg, 01 -> 90deg, 10 -> 180deg, 11 -> 270deg)
+// l -> Voxel Sky Light (4 * 4 bits)
+// L -> Voxel Block Light (4 * 4 bits)
 // u -> unused
 // INFO: packed vertex structure in u32
-// xxxx yyyy zzzz efff XXXX YYYY ZZZZ ssss
-static auto packVoxelPos(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint8_t dx, uint8_t dy, uint8_t dz,
-                         uint8_t scaleY) -> int
+// xxxx yyyy zzzz efff XXXX YYYY ZZZZ uuuu
+static auto packVoxelPos(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint8_t dx, uint8_t dy, uint8_t dz)
+    -> int
 {
-    return x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | dx << 12 | dy << 8 | dz << 4 |
-           ((scaleY - 1) & 0xf);
+    return x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | dx << 12 | dy << 8 | dz << 4;
 }
 // INFO: packed vertex metadata in u32
-// tttt tttt tttt tttt cccc cccc cccc cccc
-static auto packVoxelMetadata(uint16_t tex, uint16_t chkid) -> int
+// rrtt tttt tttt tttt cccc cccc cccc cccc
+static auto packVoxelMetadata(uint16_t tex, uint16_t chkid, uint8_t rotation) -> int
 {
-    return (tex << 16) | chkid;
+    return (rotation << 30) | ((tex & 0x3fff) << 16) | chkid;
 }
 
 // INFO: packed vertex extra in u32
-// llll llll llll llll ssss ssss aaaa aaaa
-static auto packVoxelExtra(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4, uint8_t ao1, uint8_t ao2, uint8_t ao3,
-                           uint8_t ao4, uint8_t scaleX, uint8_t scaleZ) -> int
+// llll llll llll llll LLLL LLLL LLLL LLLL
+static auto packVoxelExtra(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4, uint8_t bl1, uint8_t bl2, uint8_t bl3,
+                           uint8_t bl4) -> int
 {
-    return ((l1 & 0xf) << 28) | ((l2 & 0xf) << 24) | ((l3 & 0xf) << 20) | ((l4 & 0xf) << 16) |
-           (((scaleX - 1) & 0xf) << 12) | (((scaleZ - 1) & 0xf) << 8) | ao1 << 6 | ao2 << 4 | ao3 << 2 | ao4;
+    return ((l1 & 0xf) << 28) | ((l2 & 0xf) << 24) | ((l3 & 0xf) << 20) | ((l4 & 0xf) << 16) | ((bl1 & 0xf) << 12) |
+           ((bl2 & 0xf) << 8) | ((bl3 & 0xf) << 4) | (bl4 & 0xf);
+}
+
+// INFO: packed vertex extra2 in u32
+// ssss ssss ssss ssss ssss ssss aaaa aaaa
+static auto packVoxelExtra2(uint8_t scaleX, uint8_t scaleY, uint8_t scaleZ, uint8_t ao1, uint8_t ao2, uint8_t ao3,
+                            uint8_t ao4) -> int
+{
+    return (scaleX << 24) | (scaleY << 16) | (scaleZ << 8) | ao1 << 6 | ao2 << 4 | ao3 << 2 | ao4;
 }
 
 constexpr std::array<std::pair<glm::ivec3, OMVoxelFacing>, 6> faceMapping = {{
@@ -71,49 +81,56 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
         uint8_t ao1 = 0, ao2 = 0, ao3 = 0, ao4 = 0;
 
         auto countNeighbors = [&](int dx, int dy, int dz) -> int { return exist(x + dx, y + dy, z + dz) ? 1 : 0; };
+        auto finalAO = [&](int corner, int side1, int side2) {
+            if (side1 && side2)
+            {
+                return 3;
+            }
+            return side1 + side2 + corner;
+        };
 
         switch (facing)
         {
         case OMVoxelFacing::NegY: {
-            ao1 = countNeighbors(-1, 0, -1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, -1);
-            ao2 = countNeighbors(-1, 0, 1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, 1);
-            ao3 = countNeighbors(1, 0, -1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, -1);
-            ao4 = countNeighbors(1, 0, 1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, 1);
+            ao1 = finalAO(countNeighbors(-1, -1, -1), countNeighbors(-1, -1, 0), countNeighbors(0, -1, -1));
+            ao2 = finalAO(countNeighbors(-1, -1, 1), countNeighbors(-1, -1, 0), countNeighbors(0, -1, 1));
+            ao3 = finalAO(countNeighbors(1, -1, -1), countNeighbors(1, -1, 0), countNeighbors(0, -1, -1));
+            ao4 = finalAO(countNeighbors(1, -1, 1), countNeighbors(1, -1, 0), countNeighbors(0, -1, 1));
             break;
         }
         case OMVoxelFacing::PosY: {
-            ao1 = countNeighbors(-1, 0, -1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, -1);
-            ao2 = countNeighbors(-1, 0, 1) + countNeighbors(-1, 0, 0) + countNeighbors(0, 0, 1);
-            ao3 = countNeighbors(1, 0, -1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, -1);
-            ao4 = countNeighbors(1, 0, 1) + countNeighbors(1, 0, 0) + countNeighbors(0, 0, 1);
+            ao1 = finalAO(countNeighbors(-1, 1, -1), countNeighbors(-1, 1, 0), countNeighbors(0, 1, -1));
+            ao2 = finalAO(countNeighbors(-1, 1, 1), countNeighbors(-1, 1, 0), countNeighbors(0, 1, 1));
+            ao3 = finalAO(countNeighbors(1, 1, -1), countNeighbors(1, 1, 0), countNeighbors(0, 1, -1));
+            ao4 = finalAO(countNeighbors(1, 1, 1), countNeighbors(1, 1, 0), countNeighbors(0, 1, 1));
             break;
         }
         case OMVoxelFacing::NegX: {
-            ao2 = countNeighbors(0, -1, -1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, -1);
-            ao1 = countNeighbors(0, 1, -1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, -1);
-            ao4 = countNeighbors(0, -1, 1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, 1);
-            ao3 = countNeighbors(0, 1, 1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, 1);
+            ao2 = finalAO(countNeighbors(-1, -1, -1), countNeighbors(-1, -1, 0), countNeighbors(-1, 0, -1));
+            ao1 = finalAO(countNeighbors(-1, 1, -1), countNeighbors(-1, 1, 0), countNeighbors(-1, 0, -1));
+            ao4 = finalAO(countNeighbors(-1, -1, 1), countNeighbors(-1, -1, 0), countNeighbors(-1, 0, 1));
+            ao3 = finalAO(countNeighbors(-1, 1, 1), countNeighbors(-1, 1, 0), countNeighbors(-1, 0, 1));
             break;
         }
         case OMVoxelFacing::PosX: {
-            ao4 = countNeighbors(0, -1, -1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, -1);
-            ao3 = countNeighbors(0, 1, -1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, -1);
-            ao2 = countNeighbors(0, -1, 1) + countNeighbors(0, -1, 0) + countNeighbors(0, 0, 1);
-            ao1 = countNeighbors(0, 1, 1) + countNeighbors(0, 1, 0) + countNeighbors(0, 0, 1);
+            ao4 = finalAO(countNeighbors(1, -1, -1), countNeighbors(1, -1, 0), countNeighbors(1, 0, -1));
+            ao3 = finalAO(countNeighbors(1, 1, -1), countNeighbors(1, 1, 0), countNeighbors(1, 0, -1));
+            ao2 = finalAO(countNeighbors(1, -1, 1), countNeighbors(1, -1, 0), countNeighbors(1, 0, 1));
+            ao1 = finalAO(countNeighbors(1, 1, 1), countNeighbors(1, 1, 0), countNeighbors(1, 0, 1));
             break;
         }
         case OMVoxelFacing::NegZ: {
-            ao4 = countNeighbors(-1, -1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, -1, 0);
-            ao3 = countNeighbors(-1, 1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, 1, 0);
-            ao2 = countNeighbors(1, -1, 0) + countNeighbors(1, 0, 0) + countNeighbors(0, -1, 0);
-            ao1 = countNeighbors(1, 1, 0) + countNeighbors(1, 0, 0) + countNeighbors(0, 1, 0);
+            ao4 = finalAO(countNeighbors(-1, -1, -1), countNeighbors(-1, 0, -1), countNeighbors(0, -1, -1));
+            ao3 = finalAO(countNeighbors(-1, 1, -1), countNeighbors(-1, 0, -1), countNeighbors(0, 1, -1));
+            ao2 = finalAO(countNeighbors(1, -1, -1), countNeighbors(1, 0, -1), countNeighbors(0, -1, -1));
+            ao1 = finalAO(countNeighbors(1, 1, -1), countNeighbors(1, 0, -1), countNeighbors(0, 1, -1));
             break;
         }
         case OMVoxelFacing::PosZ: {
-            ao2 = countNeighbors(-1, -1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, -1, 0);
-            ao1 = countNeighbors(-1, 1, 0) + countNeighbors(-1, 0, 0) + countNeighbors(0, 1, 0);
-            ao4 = countNeighbors(1, -1, 0) + countNeighbors(1, 0, 0) + countNeighbors(0, -1, 0);
-            ao3 = countNeighbors(1, 1, 0) + countNeighbors(1, 0, 0) + countNeighbors(0, 1, 0);
+            ao2 = finalAO(countNeighbors(-1, -1, 1), countNeighbors(-1, 0, 1), countNeighbors(0, -1, 1));
+            ao1 = finalAO(countNeighbors(-1, 1, 1), countNeighbors(-1, 0, 1), countNeighbors(0, 1, 1));
+            ao4 = finalAO(countNeighbors(1, -1, 1), countNeighbors(1, 0, 1), countNeighbors(0, -1, 1));
+            ao3 = finalAO(countNeighbors(1, 1, 1), countNeighbors(1, 0, 1), countNeighbors(0, 1, 1));
             break;
         }
         default:
@@ -135,9 +152,9 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             {
                 auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, p.second);
 
-                commiter(OMVoxel{packVoxelPos(v.first.x, v.first.y, v.first.z, p.second, 8, 8, 8, 16),
-                                 packVoxelMetadata(v.second, chunkid),
-                                 packVoxelExtra(15, 15, 15, 15, ao1, ao2, ao3, ao4, 16, 16)});
+                commiter(OMVoxel{packVoxelPos(v.first.x, v.first.y, v.first.z, p.second, 0, 0, 0),
+                                 packVoxelMetadata(v.second, chunkid, 0), packVoxelExtra(15, 15, 15, 15, 0, 0, 0, 0),
+                                 packVoxelExtra2(16, 16, 16, ao1, ao2, ao3, ao4)});
             }
         }
     }

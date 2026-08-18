@@ -108,6 +108,14 @@ template <int Cs> class OMChunkManager
         auto it = chunkMap.find(idx);
         if (it == chunkMap.end())
             throw std::runtime_error("Chunk not loaded");
+
+        markIfExists({idx.x + 1, idx.y, idx.z});
+        markIfExists({idx.x - 1, idx.y, idx.z});
+        markIfExists({idx.x, idx.y + 1, idx.z});
+        markIfExists({idx.x, idx.y - 1, idx.z});
+        markIfExists({idx.x, idx.y, idx.z + 1});
+        markIfExists({idx.x, idx.y, idx.z - 1});
+
         return chunks[it->second].value();
     }
 

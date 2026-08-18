@@ -11,13 +11,10 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
-#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <thread>
-#include <unordered_map>
 #include <vector>
 
 namespace openminecraft::renderer::common::wrap
@@ -36,6 +33,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
         ->appendPart("voxelPos", basics::Integer)
         ->appendPart("voxelMetadata", basics::Integer)
         ->appendPart("voxelExtra", basics::Integer)
+        ->appendPart("voxelExtra2", basics::Integer)
         ->nextGroup()
         ->decideStruct();
     auto voxelFrg = renderer->shaderManager.preprocess("core/voxel.frag.glsl", Fragment, GLSLSource, format);
@@ -46,8 +44,6 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                    ->inputName("ObjectInfo")
                    ->input(UniformBuffer)
                    ->inputName("Camera")
-                   ->input(UniformBuffer)
-                   ->inputName("Lighting")
                    ->input(ImageSampler)
                    ->inputName("inTexture")
                    ->input(UniformTexelBuffer)
@@ -73,8 +69,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
 
     textureAtlas = tex;
 
-    pipeline->bindInput(3, textureAtlas);
-    pipeline->bindInput(4, chunkoffs);
+    pipeline->bindInput(2, textureAtlas);
+    pipeline->bindInput(3, chunkoffs);
 }
 OMVoxelManager::~OMVoxelManager()
 {
@@ -186,7 +182,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         {
             delete chunkoffs;
             chunkoffs = renderer->allocateBuffer(UniformTexel, chunkManager->numChunks() * 3 * sizeof(float) * 2);
-            pipeline->bindInput(4, chunkoffs);
+            pipeline->bindInput(3, chunkoffs);
         }
         chunkoffs->updateData(offs.data());
 
