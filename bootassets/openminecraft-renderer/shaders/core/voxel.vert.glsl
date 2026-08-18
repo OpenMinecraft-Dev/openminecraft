@@ -23,23 +23,22 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_X (((voxelPos) >> 28) & 15)
 #define VOXEL_Y (((voxelPos) >> 24) & 15)
 #define VOXEL_Z (((voxelPos) >> 20) & 15)
-#define VOXEL_ENABLED (((voxelPos) >> 11) & 1)
-#define VOXEL_FACING_SIGN (((voxelPos) >> 10) & 1)
-#define VOXEL_FACING_AXIS (((voxelPos) >> 8) & 3)
-#define VOXEL_AO1 (((voxelPos) >> 6) & 3)
-#define VOXEL_AO2 (((voxelPos) >> 4) & 3)
-#define VOXEL_AO3 (((voxelPos) >> 2) & 3)
-#define VOXEL_AO4 ((voxelPos) & 3)
-#define VOXEL_TEXTUREID ((voxelMetadata >> 16) & 0x3fff)
+#define VOXEL_ENABLED (((voxelPos) >> 19) & 1)
+#define VOXEL_FACING_SIGN (((voxelPos) >> 18) & 1)
+#define VOXEL_FACING_AXIS (((voxelPos) >> 16) & 3)
+#define VOXEL_XD (((voxelPos) >> 12) & 15)
+#define VOXEL_YD (((voxelPos) >> 8) & 15)
+#define VOXEL_ZD (((voxelPos) >> 4) & 15)
+#define VOXEL_TEXTUREID ((voxelMetadata >> 16) & 0xffff)
 #define VOXEL_CHUNKID ((voxelMetadata) & 0xffff)
 #define VOXEL_L1 ((voxelExtra >> 28) & 15)
 #define VOXEL_L2 ((voxelExtra >> 24) & 15)
 #define VOXEL_L3 ((voxelExtra >> 20) & 15)
 #define VOXEL_L4 ((voxelExtra >> 16) & 15)
-#define VOXEL_OFFSETU (((voxelExtra) >> 12) & 15)
-#define VOXEL_OFFSETV (((voxelExtra) >> 8) & 15)
-#define VOXEL_SIZEU (((voxelExtra) >> 4) & 15)
-#define VOXEL_SIZEV (((voxelExtra)) & 15)
+#define VOXEL_AO1 (((voxelExtra) >> 6) & 3)
+#define VOXEL_AO2 (((voxelExtra) >> 4) & 3)
+#define VOXEL_AO3 (((voxelExtra) >> 2) & 3)
+#define VOXEL_AO4 ((voxelExtra) & 3)
 
 void main()
 {
@@ -50,37 +49,46 @@ void main()
     }
     float unused = lighting.lightDirection.x + texture(inTexture, vec3(0.0)).x;
 
-    float bx = float(VOXEL_X);
-    float by = float(VOXEL_Y);
-    float bz = float(VOXEL_Z);
+    float bx = float(VOXEL_X) + float(VOXEL_XD) / 16;
+    float by = float(VOXEL_Y) + float(VOXEL_YD) / 16;
+    float bz = float(VOXEL_Z) + float(VOXEL_ZD) / 16;
     vec2 or = VOXEL_FACING_SIGN == 1 ? vertexgen_quad_normal() : vertexgen_quad_normal_ccw();
     vec2 inv_or = vec2(1.0) - or ;
     float sign = float(VOXEL_FACING_SIGN);
     vec3 worldPos;
+    vec3 worldPosOffset;
     vec3 norm;
-    vec2 uv;
+    vec2 uv, oruv;
 
-    vec2 offsets = vec2(float(VOXEL_OFFSETU) / 16, float(VOXEL_OFFSETV) / 16);
-    vec2 siz = vec2(float(VOXEL_SIZEU) / 16, float(VOXEL_SIZEV) / 16);
+    vec3 modelSize = vec3(1.0, 1.0, 0.5);
 
     switch (VOXEL_FACING_AXIS)
     {
     case 0: {
-        worldPos = vec3(sign, or.x * siz.x + offsets.x, or.y * siz.y + offsets.y);
+        worldPos = vec3(0, or.x, or.y);
+        worldPosOffset = vec3(sign, 0, 0);
         norm = vec3(1.0, 0.0, 0.0);
         uv = (sign == 0.0) ? vec2(or.y, inv_or.x) : inv_or.yx;
+        oruv = uv;
+        uv *= modelSize.zy;
         break;
     }
     case 1: {
-        worldPos = vec3(or.x * siz.x + offsets.x, or.y * siz.y + offsets.y, sign);
+        worldPos = vec3(or.x, or.y, 0);
+        worldPosOffset = vec3(0, 0, sign);
         norm = vec3(0.0, 0.0, 1.0);
         uv = (sign == 0.0) ? inv_or.xy : vec2(or.x, inv_or.y);
+        oruv = uv;
+        uv *= modelSize.xy;
         break;
     }
     case 2: {
-        worldPos = vec3(or.x * siz.x + offsets.x, sign, inv_or.y * siz.y + offsets.y);
-        norm = vec3(0.0, 1.0, 0.0);
+        worldPos = vec3(or.x, 0, inv_or.y);
+        worldPosOffset = vec3(0, sign, 0);
+        norm = vec3(0.0, 0.5, 0.0);
         uv = vec2(or.x, inv_or.y);
+        oruv = uv;
+        uv *= modelSize.xz;
         break;
     }
     default: {
@@ -89,8 +97,9 @@ void main()
     }
     }
 
+    worldPos += worldPosOffset;
+    worldPos *= modelSize;
     worldPos += vec3(bx, by, bz);
-    uv *= siz;
 
     vec3 coff = vec3(texelFetch(inChunkPos, VOXEL_CHUNKID * 3).r, texelFetch(inChunkPos, VOXEL_CHUNKID * 3 + 1).r,
                      texelFetch(inChunkPos, VOXEL_CHUNKID * 3 + 2).r);
@@ -105,7 +114,7 @@ void main()
     // (0, 1) -> ao2
     // (1, 0) -> ao3
     // (1, 1) -> ao4
-    int idx = int(uv.x) << 1 | int(uv.y);
+    int idx = int(oruv.x) << 1 | int(oruv.y);
     switch (idx)
     {
     case 0:
