@@ -11,11 +11,6 @@ layout(location = 2) out float voxTexLayer;
 layout(location = 3) out float voxAoLevel;
 layout(location = 4) out vec2 voxLight;
 
-uniform ObjectInfo
-{
-    mat4 model;
-}
-ubo;
 #include "basics/structs/camera.glsl"
 uniform sampler2DArray inTexture;
 uniform samplerBuffer inChunkPos;
@@ -109,10 +104,10 @@ void main()
 
     vec3 coff = vec3(texelFetch(inChunkPos, VOXEL_CHUNKID * 3).r, texelFetch(inChunkPos, VOXEL_CHUNKID * 3 + 1).r,
                      texelFetch(inChunkPos, VOXEL_CHUNKID * 3 + 2).r);
-    gl_Position = camera.viewProj * ubo.model * vec4(worldPos + coff, 1.0);
+    gl_Position = camera.viewProj * vec4(worldPos + coff, 1.0);
 
     voxTexCoord = uv;
-    voxNormal = normalize((ubo.model * vec4(norm * (VOXEL_FACING_SIGN == 0 ? -1 : 1), 0.0)).xyz);
+    voxNormal = normalize((vec4(norm * (VOXEL_FACING_SIGN == 0 ? -1 : 1), 0.0)).xyz);
     voxTexLayer = float(VOXEL_TEXTUREID);
 
     // INFO: forwarding

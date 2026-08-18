@@ -9,17 +9,12 @@ layout(location = 4) in vec2 voxLight;
 
 layout(location = 0) out vec4 outColor;
 
-uniform ObjectInfo
-{
-    mat4 model;
-}
-ubo;
 #include "basics/structs/camera.glsl"
 uniform sampler2DArray inTexture;
 
 void main()
 {
-    mat4 unused = camera.viewProj * ubo.model;
+    mat4 unused = camera.viewProj;
 
     float ao = mix(1.0, 0.5, voxAoLevel / 3.0);
 

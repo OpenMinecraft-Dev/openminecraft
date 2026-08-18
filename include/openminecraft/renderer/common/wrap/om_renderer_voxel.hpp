@@ -67,9 +67,9 @@ class OMVoxelManager
     auto submit(OMRendererTask *) -> OMRendererTask *;
     auto update(basics::OMCamera &camera) -> void;
 
-    OMRendererPipeline *pipeline;
+    OMRendererPipeline *pipeline, *debugPipeline;
     OMRendererSegBuf *voxels;
-    OMRendererBuffer *chunkoffs;
+    OMRendererBuffer *chunkoffs, *debugoffs;
     OMRendererTexture *textureAtlas;
 
   private:

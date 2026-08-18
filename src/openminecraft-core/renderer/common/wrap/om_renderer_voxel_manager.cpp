@@ -11,6 +11,8 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
+#include "vulkan/vulkan_core.h"
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <functional>
@@ -28,7 +30,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
     this->renderer = renderer;
     this->chunkManager = man;
 
-    basics::OMVertexFormat format;
+    basics::OMVertexFormat format, format2;
     format.setInstance()
         ->appendPart("voxelPos", basics::Integer)
         ->appendPart("voxelMetadata", basics::Integer)
@@ -36,12 +38,10 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
         ->appendPart("voxelExtra2", basics::Integer)
         ->nextGroup()
         ->decideStruct();
-    auto voxelFrg = renderer->shaderManager.preprocess("core/voxel.frag.glsl", Fragment, GLSLSource, format);
-    auto voxelVtx = renderer->shaderManager.preprocess("core/voxel.vert.glsl", Vertex, GLSLSource, format);
+
+    format2.appendPart("voxelPos", basics::Vec3f)->nextGroup()->decideStruct();
 
     pipeline = renderer->createPipeline()
-                   ->input(UniformBuffer)
-                   ->inputName("ObjectInfo")
                    ->input(UniformBuffer)
                    ->inputName("Camera")
                    ->input(ImageSampler)
@@ -52,8 +52,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                    ->samples(4)
                    ->setCullMode(renderer::common::Back)
                    ->setFrontClockwise(true)
-                   ->shader(voxelFrg)
-                   ->shader(voxelVtx)
+                   ->shader(renderer->shaderManager.preprocess("core/voxel.frag.glsl", Fragment, GLSLSource, format))
+                   ->shader(renderer->shaderManager.preprocess("core/voxel.vert.glsl", Vertex, GLSLSource, format))
                    ->format(format)
                    ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
                    ->blend(true)
@@ -61,22 +61,42 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                    ->depthReverseZ(true)
                    ->buildN();
 
+    debugPipeline =
+        renderer->createPipeline()
+            ->input(UniformBuffer)
+            ->inputName("Camera")
+            ->primitiveType(LineList)
+            ->setLineWidth(2.0f)
+            ->output(target)
+            ->samples(4)
+            ->shader(renderer->shaderManager.preprocess("core/voxeldebug.frag.glsl", Fragment, GLSLSource, format2))
+            ->shader(renderer->shaderManager.preprocess("core/voxeldebug.vert.glsl", Vertex, GLSLSource, format2))
+            ->format(format2)
+            ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+            ->blend(true)
+            ->depth(false, false)
+            ->depthReverseZ(true)
+            ->buildN();
+
     voxels = new OMRendererSegBuf(renderer, 0x200);
 
     chunkBlocks.resize(1);
 
     chunkoffs = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
+    debugoffs = renderer->allocateBuffer(VertexData, 6 * 2 * 3 * sizeof(float));
 
     textureAtlas = tex;
 
-    pipeline->bindInput(2, textureAtlas);
-    pipeline->bindInput(3, chunkoffs);
+    pipeline->bindInput(1, textureAtlas);
+    pipeline->bindInput(2, chunkoffs);
 }
 OMVoxelManager::~OMVoxelManager()
 {
     delete voxels;
     delete chunkoffs;
+    delete debugoffs;
     delete pipeline;
+    delete debugPipeline;
 }
 
 auto OMVoxelManager::compile(int i) -> void
@@ -146,6 +166,20 @@ auto OMVoxelManager::compile(int i) -> void
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
+    auto pp = basics::OMPosition<16, int64_t, float>();
+    pp.chunkx = 0;
+    pp.chunky = 0;
+    pp.chunkz = 0;
+
+    auto pp2 = basics::OMPosition<16, int64_t, float>();
+    pp2.chunkx = 0;
+    pp2.chunky = 0;
+    pp2.chunkz = 0;
+    debugoffs->updateData(std::array<glm::vec3, 12>{
+        {
+            pp - camera.getPosRaw(),
+            pp2 - camera.getPosRaw(),
+        }}.data());
     if (chunkManager->numChunks())
     {
         std::vector<glm::vec3> offs = {};
@@ -182,7 +216,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         {
             delete chunkoffs;
             chunkoffs = renderer->allocateBuffer(UniformTexel, chunkManager->numChunks() * 3 * sizeof(float) * 2);
-            pipeline->bindInput(3, chunkoffs);
+            pipeline->bindInput(2, chunkoffs);
         }
         chunkoffs->updateData(offs.data());
 
@@ -197,6 +231,8 @@ auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
 {
     return task->pipeline(pipeline)
         ->vertexBuffer({voxels->buffer})
-        ->drawInstanceN(6, voxels->totalSize / sizeof(OMVoxel));
+        ->drawInstanceN(6, voxels->totalSize / sizeof(OMVoxel))
+        ->pipeline(debugPipeline)
+        ->drawN(2);
 }
 } // namespace openminecraft::renderer::common::wrap

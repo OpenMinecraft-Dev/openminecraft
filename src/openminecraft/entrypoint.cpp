@@ -1,6 +1,7 @@
 #include <SDL3/SDL_error.h>
 
 #include "SDL3/SDL_messagebox.h"
+#include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft-shell/entrypoint.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
@@ -133,6 +134,9 @@ auto boot(std::vector<std::string> args) -> int
         auto ff3 = vfs::fsfetch("/external/minecraft/models/block/cube.json");
         json::OMJsonAstBuilder bld3(std::make_shared<json::OMJsonTokenIter>(ff3));
         auto ll3 = bld3.build();
+
+        data::OMIdentifier ident(ll->getMap()["parent"]->getString());
+        logger->debug("{}", ident.toPath());
 
         ll->getMap().erase("parent");
         ll->merge(ll2);

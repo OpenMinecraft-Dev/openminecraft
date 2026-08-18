@@ -109,8 +109,8 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
     voxelManager =
         new wrap::OMVoxelManager(renderer, tempTargetMS->target, textureAtlas, chunkManager, [&]() { record(); });
 
-    voxelManager->pipeline->bindInput(0, voxelModelBuffer);
-    voxelManager->pipeline->bindInput(1, cameraBuffer);
+    voxelManager->pipeline->bindInput(0, cameraBuffer);
+    voxelManager->debugPipeline->bindInput(0, cameraBuffer);
 }
 
 static float ang = 0.0f;
