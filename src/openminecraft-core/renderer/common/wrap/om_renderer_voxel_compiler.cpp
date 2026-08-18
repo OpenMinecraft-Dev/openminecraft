@@ -18,6 +18,7 @@ OMVoxelCompiler::~OMVoxelCompiler()
 // X -> Voxel X Coordinate Div (4 bits)
 // Y -> Voxel Y Coordinate Div (4 bits)
 // Z -> Voxel Z Coordinate Div (4 bits)
+// S -> Voxel Div Sign (3 bits)
 // s -> Voxel Scale (3 * 4 bits)
 // e -> Voxel Enable (1 bit)
 // a -> Voxel Ambient Occclusion Levels (4 * 2 bits)
@@ -28,11 +29,12 @@ OMVoxelCompiler::~OMVoxelCompiler()
 // L -> Voxel Block Light (4 * 4 bits)
 // u -> unused
 // INFO: packed vertex structure in u32
-// xxxx yyyy zzzz efff XXXX YYYY ZZZZ uuuu
-static auto packVoxelPos(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint8_t dx, uint8_t dy, uint8_t dz)
-    -> int
+// xxxx yyyy zzzz efff XXXX YYYY ZZZZ SSSu
+static auto packVoxelPos(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint8_t dx, uint8_t dy, uint8_t dz,
+                         bool negx, bool negy, bool negz) -> int
 {
-    return x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | dx << 12 | dy << 8 | dz << 4;
+    return x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | dx << 12 | dy << 8 | dz << 4 |
+           ((negx & 1) << 3) | ((negy & 1) << 2) | ((negz & 1) << 1);
 }
 // INFO: packed vertex metadata in u32
 // rrtt tttt tttt tttt cccc cccc cccc cccc
@@ -152,7 +154,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             {
                 auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, p.second);
 
-                commiter(OMVoxel{packVoxelPos(v.first.x, v.first.y, v.first.z, p.second, 0, 0, 0),
+                commiter(OMVoxel{packVoxelPos(v.first.x, v.first.y, v.first.z, p.second, 0, 0, 0, true, true, true),
                                  packVoxelMetadata(v.second, chunkid, 0), packVoxelExtra(15, 15, 15, 15, 0, 0, 0, 0),
                                  packVoxelExtra2(16, 16, 16, ao1, ao2, ao3, ao4)});
             }

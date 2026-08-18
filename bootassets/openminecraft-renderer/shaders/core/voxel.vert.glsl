@@ -24,6 +24,9 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_XD (((voxelPos) >> 12) & 15)
 #define VOXEL_YD (((voxelPos) >> 8) & 15)
 #define VOXEL_ZD (((voxelPos) >> 4) & 15)
+#define VOXEL_XS (((voxelPos) >> 3) & 1)
+#define VOXEL_YS (((voxelPos) >> 2) & 1)
+#define VOXEL_ZS (((voxelPos) >> 1) & 1)
 #define VOXEL_ROTATION ((voxelMetadata >> 30) & 3)
 #define VOXEL_TEXTUREID ((voxelMetadata >> 16) & 0x3fff)
 #define VOXEL_CHUNKID ((voxelMetadata) & 0xffff)
@@ -43,9 +46,9 @@ void main()
     }
     float unused = texture(inTexture, vec3(0.0)).x;
 
-    float bx = float(VOXEL_X) + float(VOXEL_XD) / 16;
-    float by = float(VOXEL_Y) + float(VOXEL_YD) / 16;
-    float bz = float(VOXEL_Z) + float(VOXEL_ZD) / 16;
+    float bx = float(VOXEL_X) + float(VOXEL_XD) / 16 * (VOXEL_XS == 1 ? -1 : 1);
+    float by = float(VOXEL_Y) + float(VOXEL_YD) / 16 * (VOXEL_YS == 1 ? -1 : 1);
+    float bz = float(VOXEL_Z) + float(VOXEL_ZD) / 16 * (VOXEL_ZS == 1 ? -1 : 1);
     vec2 or = VOXEL_FACING_SIGN == 1 ? vertexgen_quad_normal() : vertexgen_quad_normal_ccw();
     vec2 inv_or = vec2(1.0) - or ;
     float sign = float(VOXEL_FACING_SIGN);
