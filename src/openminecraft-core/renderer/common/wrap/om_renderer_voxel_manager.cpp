@@ -66,7 +66,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
             ->input(UniformBuffer)
             ->inputName("Camera")
             ->primitiveType(LineList)
-            ->setLineWidth(200.0f)
+            ->setLineWidth(2.0f)
             ->output(target)
             ->samples(4)
             ->shader(renderer->shaderManager.preprocess("core/voxeldebug.frag.glsl", Fragment, GLSLSource, format2))
@@ -83,7 +83,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
     chunkBlocks.resize(1);
 
     chunkoffs = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
-    debugoffs = renderer->allocateBuffer(VertexData, 6 * 2 * 3 * sizeof(float));
+    debugoffs = renderer->allocateBuffer(VertexData, 12 * 2 * 3 * sizeof(float));
 
     textureAtlas = tex;
 
@@ -141,7 +141,7 @@ auto OMVoxelManager::compile(int i) -> void
     auto &ck = chunkManager->getChunk(i);
     if (ck.has_value())
     {
-        compiler.compile(ck.value(), externalAccessor, i, [&](OMVoxel v) { m.emplace_back(v); });
+        compiler.compile(ck.value(), externalAccessor, i, [&](OMVoxel v) -> void { m.emplace_back(v); });
     }
 
     if (chunkBlocks.size() <= i)
@@ -166,40 +166,31 @@ auto OMVoxelManager::compile(int i) -> void
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
-    auto pp = basics::OMPosition<16, int64_t, float>();
-    pp.chunkx = 0;
-    pp.chunky = 0;
-    pp.chunkz = 0;
+    auto cc = camera.getPosRaw();
+    auto pp = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz);
+    auto pp2 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky, cc.chunkz);
+    auto pp3 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky + 1, cc.chunkz);
+    auto pp4 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz + 1);
+    auto pp5 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky + 1, cc.chunkz);
+    auto pp6 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky, cc.chunkz + 1);
+    auto pp7 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky + 1, cc.chunkz + 1);
+    auto pp8 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky + 1, cc.chunkz + 1);
 
-    auto pp2 = basics::OMPosition<16, int64_t, float>();
-    pp2.chunkx = 0;
-    pp2.chunky = 1;
-    pp2.chunkz = 0;
-
-    auto pp3 = basics::OMPosition<16, int64_t, float>();
-    pp3.chunkx = 1;
-    pp3.chunky = 0;
-    pp3.chunkz = 0;
-
-    auto pp4 = basics::OMPosition<16, int64_t, float>();
-    pp4.chunkx = 0;
-    pp4.chunky = 0;
-    pp4.chunkz = 1;
-    debugoffs->updateData(std::array<glm::vec3, 12>{
+    debugoffs->updateData(std::array<glm::vec3, 2 * 12>{
         {
-            pp - camera.getPosRaw(),
-            pp2 - camera.getPosRaw(),
-            pp - camera.getPosRaw(),
-            pp3 - camera.getPosRaw(),
-            pp - camera.getPosRaw(),
-            pp4 - camera.getPosRaw(),
+            pp - camera.getPosRaw(),  pp2 - camera.getPosRaw(), pp - camera.getPosRaw(),  pp3 - camera.getPosRaw(),
+            pp - camera.getPosRaw(),  pp4 - camera.getPosRaw(), pp8 - camera.getPosRaw(), pp5 - camera.getPosRaw(),
+            pp8 - camera.getPosRaw(), pp6 - camera.getPosRaw(), pp8 - camera.getPosRaw(), pp7 - camera.getPosRaw(),
+            pp2 - camera.getPosRaw(), pp5 - camera.getPosRaw(), pp2 - camera.getPosRaw(), pp6 - camera.getPosRaw(),
+            pp3 - camera.getPosRaw(), pp5 - camera.getPosRaw(), pp3 - camera.getPosRaw(), pp7 - camera.getPosRaw(),
+            pp4 - camera.getPosRaw(), pp6 - camera.getPosRaw(), pp4 - camera.getPosRaw(), pp7 - camera.getPosRaw(),
         }}.data());
     if (chunkManager->numChunks())
     {
         std::vector<glm::vec3> offs = {};
         offs.reserve(chunkManager->numChunks());
         auto l = voxels->totalSize;
-        chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) {
+        chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
             for (auto &ochk : chunks)
             {
@@ -247,7 +238,7 @@ auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
         ->vertexBuffer({voxels->buffer})
         ->drawInstanceN(6, voxels->totalSize / sizeof(OMVoxel))
         ->pipeline(debugPipeline)
-        ->vertexBuffer({chunkoffs})
-        ->drawN(2 * 3);
+        ->vertexBuffer({debugoffs})
+        ->drawN(2 * 12);
 }
 } // namespace openminecraft::renderer::common::wrap

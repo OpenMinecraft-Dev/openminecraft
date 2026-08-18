@@ -14,6 +14,10 @@ template <int Cs, typename Cp, typename Lp> class OMPosition
     {
     }
 
+    OMPosition(Cp cx, Cp cy, Cp cz) : chunkx(cx), chunky(cy), chunkz(cz), localx(0), localy(0), localz(0)
+    {
+    }
+
     OMPosition() : chunkx(0), chunky(0), chunkz(0), localx(0), localy(0), localz(0)
     {
     }
