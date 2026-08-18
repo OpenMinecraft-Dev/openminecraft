@@ -10,10 +10,12 @@
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
+#include "openminecraft/world/om_world_chunkmanager.hpp"
 #include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <thread>
 #include <unordered_map>
 #include <vector>
@@ -22,11 +24,12 @@ namespace openminecraft::renderer::common::wrap
 {
 uint64_t cx = 0, cy = 0, cz = 0;
 OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *target, OMRendererTexture *tex,
-                               std::function<void()> rec)
+                               std::shared_ptr<world::OMChunkManager<16>> man, std::function<void()> rec)
     : logger("OMVoxelManager", this)
 {
     this->rec = rec;
     this->renderer = renderer;
+    this->chunkManager = man;
 
     basics::OMVertexFormat format;
     format.setInstance()
@@ -72,40 +75,6 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
 
     pipeline->bindInput(3, textureAtlas);
     pipeline->bindInput(4, chunkoffs);
-
-    renderer->addSchedule([&]() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
-        if (cz >= 32)
-        {
-            return;
-        }
-
-        world::OMChunk<16> datar(cx, cy, cz);
-        for (int x = 0; x < 16; ++x)
-        {
-            for (int y = 0; y < 16; ++y)
-            {
-                for (int z = 0; z < 16; ++z)
-                {
-                    datar.setBlock(x, y, z, (rand() % 7) + 1);
-                }
-            }
-        }
-        chunkManager.loadChunk(datar);
-
-        ++cx;
-        if (cx > 32)
-        {
-            cx = 0;
-            cy++;
-        }
-        if (cy > 16)
-        {
-            cy = 0;
-            cz++;
-        }
-    });
 }
 OMVoxelManager::~OMVoxelManager()
 {
@@ -150,10 +119,10 @@ auto OMVoxelManager::compile(int i) -> void
 
         world::OMChunkIndex idx = {chunkx, chunky, chunkz};
 
-        return chunkManager.chunkLoaded(idx) && chunkManager.getChunk(idx).exists(pos.x, pos.y, pos.z);
+        return chunkManager->chunkLoaded(idx) && chunkManager->getChunk(idx).exists(pos.x, pos.y, pos.z);
     };
     std::vector<OMVoxel> m = {};
-    auto &ck = chunkManager.getChunk(i);
+    auto &ck = chunkManager->getChunk(i);
     if (ck.has_value())
     {
         compiler.compile(ck.value(), externalAccessor, i, [&](OMVoxel v) { m.emplace_back(v); });
@@ -181,12 +150,12 @@ auto OMVoxelManager::compile(int i) -> void
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
-    if (chunkManager.numChunks())
+    if (chunkManager->numChunks())
     {
         std::vector<glm::vec3> offs = {};
-        offs.reserve(chunkManager.numChunks());
+        offs.reserve(chunkManager->numChunks());
         auto l = voxels->totalSize;
-        chunkManager.withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) {
+        chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) {
             int i = 0;
             for (auto &ochk : chunks)
             {
@@ -216,7 +185,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         if (offs.size() * sizeof(glm::vec3) > chunkoffs->length)
         {
             delete chunkoffs;
-            chunkoffs = renderer->allocateBuffer(UniformTexel, chunkManager.numChunks() * 3 * sizeof(float));
+            chunkoffs = renderer->allocateBuffer(UniformTexel, chunkManager->numChunks() * 3 * sizeof(float) * 2);
             pipeline->bindInput(4, chunkoffs);
         }
         chunkoffs->updateData(offs.data());

@@ -59,7 +59,8 @@ class OMVoxelCompiler
 class OMVoxelManager
 {
   public:
-    OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *, std::function<void()>);
+    OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *,
+                   std::shared_ptr<world::OMChunkManager<16>>, std::function<void()>);
     ~OMVoxelManager();
 
     auto submit(OMRendererTask *) -> OMRendererTask *;
@@ -76,7 +77,7 @@ class OMVoxelManager
     log::OMLogger logger;
     OMVoxelCompiler compiler;
 
-    world::OMChunkManager<16> chunkManager;
+    std::shared_ptr<world::OMChunkManager<16>> chunkManager;
     std::vector<std::list<OMRendererSegBufBlock>> chunkBlocks = {};
 
     void compile(int i);

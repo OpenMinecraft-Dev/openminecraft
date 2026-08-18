@@ -18,6 +18,8 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
+#include "openminecraft/world/om_world_chunk.hpp"
+#include "openminecraft/world/om_world_chunkmanager.hpp"
 
 #include <chrono>
 #include <functional>
@@ -88,8 +90,24 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
     textureAtlas->magFilter = Nearest;
     textureAtlas->minFilter = Nearest;
     textureAtlas->setupSampler();
-
-    voxelManager = new wrap::OMVoxelManager(renderer, tempTargetMS->target, textureAtlas, [&]() { record(); });
+    auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
+    for (int cx = 0; cx < 8; ++cx)
+    {
+        for (int cy = 0; cy < 8; ++cy)
+        {
+            for (int cz = 0; cz < 8; ++cz)
+            {
+                world::OMChunk<16> cnk(cx, cy, cz);
+                cnk.setBlock(0, 0, 0, 1);
+                cnk.setBlock(0, 1, 0, 1);
+                cnk.setBlock(1, 0, 0, 1);
+                cnk.setBlock(0, 0, 1, 1);
+                chunkManager->loadChunk(cnk);
+            }
+        }
+    }
+    voxelManager =
+        new wrap::OMVoxelManager(renderer, tempTargetMS->target, textureAtlas, chunkManager, [&]() { record(); });
 
     voxelManager->pipeline->bindInput(0, voxelModelBuffer);
     voxelManager->pipeline->bindInput(1, cameraBuffer);

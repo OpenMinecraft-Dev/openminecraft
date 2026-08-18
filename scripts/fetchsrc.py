@@ -9,7 +9,7 @@ BASEPATH = "bootassets/external"
 
 
 def savefile(pp, content):
-    if pp.endswith("png"):
+    if pp.endswith("png") or pp.endswith("json") or pp.endswith("mcmeta"):
         file_path = os.path.join(BASEPATH, pp)
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with open(file_path, "wb") as f:
