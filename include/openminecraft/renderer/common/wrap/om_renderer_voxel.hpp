@@ -26,6 +26,7 @@ struct OMVoxel
     int32_t voxelMeta;
     int32_t voxelExtra;
     int32_t voxelExtra2;
+    int32_t voxelExtra3;
 };
 enum OMVoxelFacing : uint8_t
 {

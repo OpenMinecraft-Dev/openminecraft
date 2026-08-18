@@ -33,10 +33,22 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_CHUNKID ((voxelMetadata) & 0xffff)
 #define VOXEL_SL(n) ((voxelExtra >> (28 - 4 * (n))) & 15)
 #define VOXEL_BL(n) ((voxelExtra >> (12 - 4 * (n))) & 15)
-#define VOXEL_SX (((voxelExtra2) >> 24) & 0xff)
-#define VOXEL_SY (((voxelExtra2) >> 16) & 0xff)
-#define VOXEL_SZ (((voxelExtra2) >> 8) & 0xff)
+#define VOXEL_SX (((voxelExtra2) >> 27) & 0x1f)
+#define VOXEL_SY (((voxelExtra2) >> 22) & 0x1f)
+#define VOXEL_SZ (((voxelExtra2) >> 17) & 0x1f)
 #define VOXEL_AO(n) ((voxelExtra2 >> (6 - 2 * (n))) & 3)
+#define VOXEL_U0 ((voxelPos & 1) | ((voxelExtra2 >> 8) & 15))
+#define VOXEL_V0 ((voxelExtra2 >> 12) & 0x1f)
+#define VOXEL_U1 ((voxelExtra3 >> 27) & 0x1f)
+#define VOXEL_V1 ((voxelExtra3 >> 22) & 0x1f)
+#define VOXEL_RAXIS ((voxelExtra3 >> 20) & 3)
+#define VOXEL_RCENTERXNEG ((voxelExtra3 >> 19) & 1)
+#define VOXEL_RCENTERYNEG ((voxelExtra3 >> 18) & 1)
+#define VOXEL_RCENTERZNEG ((voxelExtra3 >> 17) & 1)
+#define VOXEL_RCENTERX ((voxelExtra3 >> 13) & 15)
+#define VOXEL_RCENTERY ((voxelExtra3 >> 9) & 15)
+#define VOXEL_RCENTERZ ((voxelExtra3 >> 5) & 15)
+#define VOXEL_RANGLE (voxelExtra3 & 7)
 
 void main()
 {
@@ -47,9 +59,19 @@ void main()
     }
     float unused = texture(inTexture, vec3(0.0)).x;
 
-    float bx = float(VOXEL_X) + float(VOXEL_XD) / 16 * (VOXEL_XS == 1 ? -1 : 1);
-    float by = float(VOXEL_Y) + float(VOXEL_YD) / 16 * (VOXEL_YS == 1 ? -1 : 1);
-    float bz = float(VOXEL_Z) + float(VOXEL_ZD) / 16 * (VOXEL_ZS == 1 ? -1 : 1);
+    float rotationAngle = float(VOXEL_RANGLE - 2) * 22.5f;
+    int rotationAxis = VOXEL_RAXIS;
+    vec3 rotationCenter = vec3(float(VOXEL_RCENTERX) / 16 * (VOXEL_RCENTERXNEG == 1 ? -1 : 1),
+                               float(VOXEL_RCENTERY) / 16 * (VOXEL_RCENTERYNEG == 1 ? -1 : 1),
+                               float(VOXEL_RCENTERZ) / 16 * (VOXEL_RCENTERZNEG == 1 ? -1 : 1));
+
+    vec3 modelOffset =
+        vec3(float(VOXEL_XD) / 16 * (VOXEL_XS == 1 ? -1 : 1), float(VOXEL_YD) / 16 * (VOXEL_YS == 1 ? -1 : 1),
+             float(VOXEL_ZD) / 16 * (VOXEL_ZS == 1 ? -1 : 1));
+
+    float bx = float(VOXEL_X);
+    float by = float(VOXEL_Y);
+    float bz = float(VOXEL_Z);
     vec2 or = VOXEL_FACING_SIGN == 1 ? vertexgen_quad_normal() : vertexgen_quad_normal_ccw();
     vec2 inv_or = vec2(1.0) - or ;
     float sign = float(VOXEL_FACING_SIGN);
@@ -107,6 +129,7 @@ void main()
 
     worldPos += worldPosOffset;
     worldPos *= modelSize;
+    worldPos += modelOffset;
     worldPos += vec3(bx, by, bz);
 
     vec3 coff = vec3(texelFetch(inChunkPos, VOXEL_CHUNKID * 3).r, texelFetch(inChunkPos, VOXEL_CHUNKID * 3 + 1).r,

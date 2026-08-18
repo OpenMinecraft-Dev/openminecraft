@@ -19,7 +19,7 @@ OMVoxelCompiler::~OMVoxelCompiler()
 // Y -> Voxel Y Coordinate Div (4 bits)
 // Z -> Voxel Z Coordinate Div (4 bits)
 // S -> Voxel Div Sign (3 bits)
-// s -> Voxel Scale (3 * 4 bits)
+// s -> Voxel Scale (3 * 5 bits)
 // e -> Voxel Enable (1 bit)
 // a -> Voxel Ambient Occclusion Levels (4 * 2 bits)
 // t -> Voxel Texture Index (16 bits)
@@ -27,37 +27,38 @@ OMVoxelCompiler::~OMVoxelCompiler()
 // r -> Voxel Rotation (2 bits, 00 -> 0deg, 01 -> 90deg, 10 -> 180deg, 11 -> 270deg)
 // l -> Voxel Sky Light (4 * 4 bits)
 // L -> Voxel Block Light (4 * 4 bits)
+// U -> Voxel UV Offset (4 * 5 bits)
+// A -> Voxel Rotation Axis (2 bits)
+// C -> Voxel Rotation Center (3 * 5 bits)
+// n -> Voxel Angle (3 bits)
 // u -> unused
 // INFO: packed vertex structure in u32
-// xxxx yyyy zzzz efff XXXX YYYY ZZZZ SSSu
-static auto packVoxelPos(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint8_t dx, uint8_t dy, uint8_t dz,
-                         bool negx, bool negy, bool negz) -> int
-{
-    return x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | dx << 12 | dy << 8 | dz << 4 |
-           ((negx & 1) << 3) | ((negy & 1) << 2) | ((negz & 1) << 1);
-}
-// INFO: packed vertex metadata in u32
+// xxxx yyyy zzzz efff XXXX YYYY ZZZZ SSSU
 // rrtt tttt tttt tttt cccc cccc cccc cccc
-static auto packVoxelMetadata(uint16_t tex, uint16_t chkid, uint8_t rotation) -> int
-{
-    return (rotation << 30) | ((tex & 0x3fff) << 16) | chkid;
-}
-
-// INFO: packed vertex extra in u32
 // llll llll llll llll LLLL LLLL LLLL LLLL
-static auto packVoxelExtra(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4, uint8_t bl1, uint8_t bl2, uint8_t bl3,
-                           uint8_t bl4) -> int
+// sssss sssss sssss U UUUU UUUU aaaa aaaa
+// UUUUU UUUUU AA CCC CCCC CCCC CCCC uunnn
+static constexpr auto packVoxel(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint8_t dx, uint8_t dy,
+                                uint8_t dz, bool negx, bool negy, bool negz, uint16_t tex, uint16_t chkid,
+                                uint8_t rotation, uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4, uint8_t bl1,
+                                uint8_t bl2, uint8_t bl3, uint8_t bl4, uint8_t scaleX, uint8_t scaleY, uint8_t scaleZ,
+                                uint8_t ao1, uint8_t ao2, uint8_t ao3, uint8_t ao4, uint8_t u0, uint8_t v0, uint8_t u1,
+                                uint8_t v1, uint8_t rotationAxis, uint8_t rotationCx, uint8_t rotationCy,
+                                uint8_t rotationCz, bool rCxNeg, bool rCyNeg, bool rCzNeg, uint8_t rAngle)
+    -> std::array<int, 5>
 {
-    return ((l1 & 0xf) << 28) | ((l2 & 0xf) << 24) | ((l3 & 0xf) << 20) | ((l4 & 0xf) << 16) | ((bl1 & 0xf) << 12) |
-           ((bl2 & 0xf) << 8) | ((bl3 & 0xf) << 4) | (bl4 & 0xf);
-}
-
-// INFO: packed vertex extra2 in u32
-// ssss ssss ssss ssss ssss ssss aaaa aaaa
-static auto packVoxelExtra2(uint8_t scaleX, uint8_t scaleY, uint8_t scaleZ, uint8_t ao1, uint8_t ao2, uint8_t ao3,
-                            uint8_t ao4) -> int
-{
-    return (scaleX << 24) | (scaleY << 16) | (scaleZ << 8) | ao1 << 6 | ao2 << 4 | ao3 << 2 | ao4;
+    return {
+        x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | dx << 12 | dy << 8 | dz << 4 | ((negx & 1) << 3) |
+            ((negy & 1) << 2) | ((negz & 1) << 1) | ((u0 >> 4) & 1),
+        (rotation << 30) | ((tex & 0x3fff) << 16) | chkid,
+        ((l1 & 0xf) << 28) | ((l2 & 0xf) << 24) | ((l3 & 0xf) << 20) | ((l4 & 0xf) << 16) | ((bl1 & 0xf) << 12) |
+            ((bl2 & 0xf) << 8) | ((bl3 & 0xf) << 4) | (bl4 & 0xf),
+        ((scaleX & 0x1f) << 27) | ((scaleY & 0x1f) << 22) | ((scaleZ & 0x1f) << 17) | ao1 << 6 | ao2 << 4 | ao3 << 2 |
+            ao4 | ((v0 & 0x1f) << 12) | ((u0 & 0xf) << 8),
+        ((u1 & 0x1f) << 27) | ((v1 & 0x1f) << 22) | ((rotationAxis & 3) << 20) | (rCxNeg << 19) | (rCyNeg << 18) |
+            (rCzNeg << 17) | ((rotationCx & 0xf) << 13) | ((rotationCy & 0xf) << 9) | ((rotationCz & 0xf) << 5) |
+            (rAngle & 7),
+    };
 }
 
 constexpr std::array<std::pair<glm::ivec3, OMVoxelFacing>, 6> faceMapping = {{
@@ -153,10 +154,10 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             if (!exist(v.first.x + p.first.x, v.first.y + p.first.y, v.first.z + p.first.z))
             {
                 auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, p.second);
-
-                commiter(OMVoxel{packVoxelPos(v.first.x, v.first.y, v.first.z, p.second, 0, 0, 0, true, true, true),
-                                 packVoxelMetadata(v.second, chunkid, 0), packVoxelExtra(15, 15, 15, 15, 0, 0, 0, 0),
-                                 packVoxelExtra2(16, 16, 16, ao1, ao2, ao3, ao4)});
+                auto vox = packVoxel(v.first.x, v.first.y, v.first.z, p.second, 0, 0, 0, true, true, true, v.second,
+                                     chunkid, 0, 15, 15, 15, 15, 0, 0, 0, 0, 16, 16, 16, ao1, ao2, ao3, ao4, 0, 0, 16,
+                                     16, 0, 0, 0, 0, false, false, false, 2);
+                commiter(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4]});
             }
         }
     }

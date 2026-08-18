@@ -36,6 +36,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
         ->appendPart("voxelMetadata", basics::Integer)
         ->appendPart("voxelExtra", basics::Integer)
         ->appendPart("voxelExtra2", basics::Integer)
+        ->appendPart("voxelExtra3", basics::Integer)
         ->nextGroup()
         ->decideStruct();
 
