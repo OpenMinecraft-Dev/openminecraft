@@ -48,7 +48,16 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_RCENTERX ((voxelExtra3 >> 13) & 15)
 #define VOXEL_RCENTERY ((voxelExtra3 >> 9) & 15)
 #define VOXEL_RCENTERZ ((voxelExtra3 >> 5) & 15)
+#define VOXEL_GENUV ((voxelExtra3 << 3) & 1)
 #define VOXEL_RANGLE (voxelExtra3 & 7)
+
+vec3 rotateVec(vec3 v, float angle, vec3 axis)
+{
+    float s = sin(angle);
+    float c = cos(angle);
+    float oc = 1.0 - c;
+    return v * c + cross(axis, v) * s + axis * dot(axis, v) * oc;
+}
 
 void main()
 {
@@ -80,6 +89,9 @@ void main()
     vec3 norm;
     vec2 uv, oruv;
 
+    vec2 uv0 = vec2(float(VOXEL_U0) / 16, float(VOXEL_V0) / 16);
+    vec2 uv1 = vec2(float(VOXEL_U1) / 16, float(VOXEL_V1) / 16);
+
     vec3 modelSize = vec3(float(VOXEL_SX) / 16, float(VOXEL_SY) / 16, float(VOXEL_SZ) / 16);
 
     switch (VOXEL_FACING_AXIS)
@@ -90,7 +102,14 @@ void main()
         norm = vec3(1.0, 0.0, 0.0);
         uv = (sign == 0.0) ? vec2(or.y, inv_or.x) : inv_or.yx;
         oruv = uv;
-        uv *= modelSize.zy;
+        if (VOXEL_GENUV == 1)
+        {
+            uv *= modelSize.zy;
+        }
+        else
+        {
+            uv = mix(uv0, uv1, uv);
+        }
         voxFactor = 0.6;
         break;
     }
@@ -100,7 +119,14 @@ void main()
         norm = vec3(0.0, 0.0, 1.0);
         uv = (sign == 0.0) ? inv_or.xy : vec2(or.x, inv_or.y);
         oruv = uv;
-        uv *= modelSize.xy;
+        if (VOXEL_GENUV == 1)
+        {
+            uv *= modelSize.xy;
+        }
+        else
+        {
+            uv = mix(uv0, uv1, uv);
+        }
         voxFactor = 0.8;
         break;
     }
@@ -110,7 +136,14 @@ void main()
         norm = vec3(0.0, 0.5, 0.0);
         uv = vec2(or.x, inv_or.y);
         oruv = uv;
-        uv *= modelSize.xz;
+        if (VOXEL_GENUV == 1)
+        {
+            uv *= modelSize.xz;
+        }
+        else
+        {
+            uv = mix(uv0, uv1, uv);
+        }
         voxFactor = sign == 1 ? 1.0 : 0.5;
         break;
     }
@@ -128,6 +161,21 @@ void main()
     }
 
     worldPos += worldPosOffset;
+
+    vec3 rotAxis = vec3(0.0);
+    if (rotationAxis == 0)
+        rotAxis = vec3(1.0, 0.0, 0.0);
+    else if (rotationAxis == 1)
+        rotAxis = vec3(0.0, 1.0, 0.0);
+    else if (rotationAxis == 2)
+        rotAxis = vec3(0.0, 0.0, 1.0);
+
+    vec3 centered = worldPos - rotationCenter;
+    float angRad = radians(rotationAngle);
+    vec3 rotatedPos = rotateVec(centered, angRad, rotAxis) + rotationCenter;
+
+    worldPos = rotatedPos;
+
     worldPos *= modelSize;
     worldPos += modelOffset;
     worldPos += vec3(bx, by, bz);

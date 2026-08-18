@@ -31,20 +31,21 @@ OMVoxelCompiler::~OMVoxelCompiler()
 // A -> Voxel Rotation Axis (2 bits)
 // C -> Voxel Rotation Center (3 * 5 bits)
 // n -> Voxel Angle (3 bits)
+// G -> Voxel Uses Generated UV (1 bit)
 // u -> unused
 // INFO: packed vertex structure in u32
 // xxxx yyyy zzzz efff XXXX YYYY ZZZZ SSSU
 // rrtt tttt tttt tttt cccc cccc cccc cccc
 // llll llll llll llll LLLL LLLL LLLL LLLL
 // sssss sssss sssss U UUUU UUUU aaaa aaaa
-// UUUUU UUUUU AA CCC CCCC CCCC CCCC uunnn
+// UUUUU UUUUU AA CCC CCCC CCCC CCCC uGnnn
 static constexpr auto packVoxel(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint8_t dx, uint8_t dy,
                                 uint8_t dz, bool negx, bool negy, bool negz, uint16_t tex, uint16_t chkid,
                                 uint8_t rotation, uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4, uint8_t bl1,
                                 uint8_t bl2, uint8_t bl3, uint8_t bl4, uint8_t scaleX, uint8_t scaleY, uint8_t scaleZ,
                                 uint8_t ao1, uint8_t ao2, uint8_t ao3, uint8_t ao4, uint8_t u0, uint8_t v0, uint8_t u1,
                                 uint8_t v1, uint8_t rotationAxis, uint8_t rotationCx, uint8_t rotationCy,
-                                uint8_t rotationCz, bool rCxNeg, bool rCyNeg, bool rCzNeg, uint8_t rAngle)
+                                uint8_t rotationCz, bool rCxNeg, bool rCyNeg, bool rCzNeg, uint8_t rAngle, bool genUV)
     -> std::array<int, 5>
 {
     return {
@@ -57,7 +58,7 @@ static constexpr auto packVoxel(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing f
             ao4 | ((v0 & 0x1f) << 12) | ((u0 & 0xf) << 8),
         ((u1 & 0x1f) << 27) | ((v1 & 0x1f) << 22) | ((rotationAxis & 3) << 20) | (rCxNeg << 19) | (rCyNeg << 18) |
             (rCzNeg << 17) | ((rotationCx & 0xf) << 13) | ((rotationCy & 0xf) << 9) | ((rotationCz & 0xf) << 5) |
-            (rAngle & 7),
+            (genUV << 3) | (rAngle & 7),
     };
 }
 
@@ -156,7 +157,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                 auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, p.second);
                 auto vox = packVoxel(v.first.x, v.first.y, v.first.z, p.second, 0, 0, 0, true, true, true, v.second,
                                      chunkid, 0, 15, 15, 15, 15, 0, 0, 0, 0, 16, 16, 16, ao1, ao2, ao3, ao4, 0, 0, 16,
-                                     16, 0, 0, 0, 0, false, false, false, 2);
+                                     16, 0, 0, 0, 0, false, false, false, 2, false);
                 commiter(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4]});
             }
         }
