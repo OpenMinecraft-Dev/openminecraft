@@ -1,4 +1,4 @@
-#include "openminecraft/boot/entrypoint_testrenderer.hpp"
+#include "openminecraft-shell/entrypoint_testrenderer.hpp"
 
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"
@@ -29,9 +29,9 @@
 
 using namespace openminecraft::renderer::common;
 
-namespace openminecraft::boot::test
+namespace openminecraftshell::renderer
 {
-OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMRendererTexture *()> overlay,
+OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTexture *()> overlay,
                                event::OMEventBusSDL &bus, std::shared_ptr<basics::OMCamera> camera)
     : renderer(renderer), logger("OMTestRenderer", this), OMRendererHandler(renderer), camera(std::move(camera))
 {
@@ -186,4 +186,4 @@ OMTestRenderer::~OMTestRenderer()
     delete tempTargetMS;
     delete tempTarget;
 }
-} // namespace openminecraft::boot::test
+} // namespace openminecraftshell::renderer

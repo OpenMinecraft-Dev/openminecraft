@@ -6,7 +6,6 @@
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/event/om_eventbus.hpp"
-#include "openminecraft/renderer/common/model/om_renderer_model_obj.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
@@ -25,10 +24,12 @@
 
 #include <memory>
 
+using namespace openminecraft;
+using namespace openminecraft::renderer;
 using namespace openminecraft::renderer::common;
 
 // INFO: The renderer test definition, behaves like a renderer handler (and it should be)
-namespace openminecraft::boot::test
+namespace openminecraftshell::renderer
 {
 // INFO: The uniform buffer data structure used for the renderer
 // INFO: model, view, proj for object rendering
@@ -49,7 +50,7 @@ using VertexStruct = basics::OMVertex<glm::vec3, glm::vec2>;
 class OMTestRenderer : public OMRendererHandler
 {
   public:
-    OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMRendererTexture *()> t, event::OMEventBusSDL &bus,
+    OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTexture *()> t, event::OMEventBusSDL &bus,
                    std::shared_ptr<basics::OMCamera> camera);
     ~OMTestRenderer() override;
 
@@ -77,7 +78,7 @@ class OMTestRenderer : public OMRendererHandler
     log::OMLogger logger;
 
   private:
-    renderer::OMRenderer *renderer;
+    OMRenderer *renderer;
 
     float m_cameraMoveSpeed = 3.4f;
 
@@ -88,6 +89,6 @@ class OMTestRenderer : public OMRendererHandler
     bool timing = false;
     int fps = 0;
 };
-} // namespace openminecraft::boot::test
+} // namespace openminecraftshell::renderer
 
 #endif

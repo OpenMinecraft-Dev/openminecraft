@@ -1,4 +1,4 @@
-#include "openminecraft/boot/om_boot.hpp"
+#include "openminecraft-shell/entrypoint.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
@@ -35,7 +35,7 @@ auto main(int argc, char **argv) -> int
     logger.info("Booting kernel...");
     openminecraft::vfs::fsmountZipArchive(
         _binary_boot_bundle_start, (uint32_t)(_binary_boot_bundle_end - _binary_boot_bundle_start), "/bootassets");
-    int re = openminecraft::boot::boot(a);
+    int re = openminecraftshell::boot(a);
     logger.info("Kernel exited with code {}", re);
 
     return re;

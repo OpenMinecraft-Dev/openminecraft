@@ -2,8 +2,9 @@
 
 #include "SDL3/SDL_messagebox.h"
 #include "openminecraft/binary/om_bin_hash.hpp"
-#include "openminecraft/boot/om_boot.hpp"
+#include "openminecraft-shell/entrypoint.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
+#include "openminecraft/io/json/om_io_ast_json.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
@@ -11,7 +12,9 @@
 #include "openminecraft/specs/abstracts/om_image.hpp"
 #include "openminecraft/specs/jfif/om_jfif.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
+#include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
+#include "openminecraft/io/json/om_io_ast_builder_json.hpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
@@ -30,10 +33,11 @@
 #include <glm/gtx/quaternion.hpp>
 
 using namespace openminecraft;
+using namespace openminecraft::io;
 using namespace openminecraft::vm;
 using namespace openminecraft::binary::hash;
 
-namespace openminecraft::boot
+namespace openminecraftshell
 {
 // INFO: i18n environment initialization
 static void setupI18nEnv()
@@ -44,11 +48,47 @@ static void setupI18nEnv()
     i18n::res::load();
 }
 
+void prettyJson(std::shared_ptr<json::OMJsonNode> node, std::shared_ptr<log::OMLogger> logger, int l = 0)
+{
+    switch (node->type())
+    {
+    case io::json::Object:
+        logger->info("{} {{", std::string(l * 4, ' '));
+        for (auto &pp : node->getMap())
+        {
+            logger->info("{} \"{}\" = ", std::string(l * 4, ' '), pp.first);
+            prettyJson(pp.second, logger, l + 1);
+        }
+        logger->info("{} }}", std::string(l * 4, ' '));
+        break;
+    case io::json::Array:
+        logger->info("{} [", std::string(l * 4, ' '));
+        for (auto &pp : node->getArray())
+        {
+            prettyJson(pp, logger, l + 1);
+        }
+        logger->info("{} ]", std::string(l * 4, ' '));
+        break;
+    case io::json::Number:
+        logger->info("{} {}", std::string(l * 4, ' '), node->getNumberFloating());
+        break;
+    case io::json::Primitive:
+        logger->info("{} {}", std::string(l * 4, ' '), node->getBoolean());
+        break;
+    case io::json::String:
+        logger->info("{} {}", std::string(l * 4, ' '), node->getString());
+        break;
+    case io::json::Null:
+        logger->info("{} null", std::string(l * 4, ' '));
+        break;
+    }
+}
+
 // INFO: main function
 auto boot(std::vector<std::string> args) -> int
 {
     log::multithread::registerCurrentThreadName("engineMain");
-    auto logger = std::make_unique<log::OMLogger>("boot");
+    auto logger = std::make_shared<log::OMLogger>("boot");
 
     SDL_SetMemoryFunctions(mem::allocator::tracedMallocSDL, mem::allocator::tracedCallocSDL,
                            mem::allocator::tracedReallocSDL, mem::allocator::tracedFreeSDL);
@@ -81,28 +121,12 @@ auto boot(std::vector<std::string> args) -> int
     case "3dtest"_hash:
         rendererTest(args[2] == "gl" ? renderer::OpenGL : renderer::Vulkan);
         break;
-    case "pic"_hash: {
-        auto in = args[2];
-        auto out = args[3];
+    case "model"_hash: {
+        auto ff = vfs::fsfetch(fmt::format("/bootassets/external/minecraft/{}/{}.json", args[2], args[3]));
+        json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(ff));
+        auto ll = bld.build();
 
-        specs::OMImage *img;
-
-        if (in.find(".png") != -1)
-        {
-            img = new specs::png::OMPngFile();
-        }
-        else if (in.find(".jpg") != -1 || in.find(".jpeg") != -1)
-        {
-            img = new specs::jfif::OMJfifFile();
-        }
-
-        img->parseBase(std::make_shared<std::ifstream>(in, std::ios::binary));
-        std::ofstream of(out, std::ios::binary);
-        of.write(reinterpret_cast<char *>(img->fetchData()), img->getWidth() * img->getHeight() * 4);
-        of.close();
-
-        delete img;
-
+        prettyJson(ll, logger);
         break;
     }
     default:
@@ -115,4 +139,4 @@ progEnd:
     return 0;
 }
 
-} // namespace openminecraft::boot
+} // namespace openminecraftshell

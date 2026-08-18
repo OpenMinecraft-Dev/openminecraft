@@ -5,11 +5,13 @@
 #include <string>
 #include <vector>
 
-namespace openminecraft::boot
+using namespace openminecraft;
+
+namespace openminecraftshell
 {
 // INFO: the boot function for the app
 auto boot(std::vector<std::string> args) -> int;
 void rendererTest(renderer::OMBackend);
-} // namespace openminecraft::boot
+} // namespace openminecraftshell
 
 #endif

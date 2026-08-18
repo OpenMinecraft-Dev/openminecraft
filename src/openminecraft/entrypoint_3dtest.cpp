@@ -4,8 +4,7 @@
 #include "SDL3/SDL_mouse.h"
 #include "SDL3/SDL_video.h"
 #include "glm/ext/vector_float3.hpp"
-#include "openminecraft/boot/entrypoint_testrenderer.hpp"
-#include "openminecraft/boot/om_boot.hpp"
+#include "openminecraft-shell/entrypoint_testrenderer.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
@@ -37,7 +36,7 @@
 using namespace openminecraft::renderer;
 using namespace openminecraft::renderer::common::demiurge;
 
-namespace openminecraft::boot
+namespace openminecraftshell
 {
 constexpr std::array<int, 16> DebugColors = {
     (int)0xF9FFFFFF, (int)0xF9801DFF, (int)0xC74EBDFF, 0x3AB3DAFF, (int)0xFED83DFF, (int)0x80C71FFF,
@@ -262,7 +261,7 @@ class OMNodeRendererHandler : public OMRendererHandler
 };
 
 bool isRunning = true;
-void rendererTest(renderer::OMBackend backend)
+void rendererTest(OMBackend backend)
 {
     auto logger = std::make_shared<log::OMLogger>("Test Renderer");
     try
@@ -276,7 +275,7 @@ void rendererTest(renderer::OMBackend backend)
         auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{-1.0f, 5.0f, -1.0f}, 45.0f, -45.0f);
 
         auto hnd2 = std::make_shared<OMNodeRendererHandler>(win());
-        auto hnd = std::make_shared<test::OMTestRenderer>(
+        auto hnd = std::make_shared<renderer::OMTestRenderer>(
             win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTarget->colorTexture; }, bus, camera);
         hnd2->camera = camera.get();
         win()->registerHandler(hnd2);
@@ -416,4 +415,4 @@ void rendererTest(renderer::OMBackend backend)
         logger->fatal(e.what());
     }
 }
-} // namespace openminecraft::boot
+} // namespace openminecraftshell
