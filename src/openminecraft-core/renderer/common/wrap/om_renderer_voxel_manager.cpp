@@ -35,7 +35,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
     format.setInstance()
         ->appendPart("voxelPos", basics::Integer)
         ->appendPart("voxelMetadata", basics::Integer)
-        ->appendPart("voxelLight", basics::Integer)
+        ->appendPart("voxelExtra", basics::Integer)
         ->nextGroup()
         ->decideStruct();
     auto voxelFrg = renderer->shaderManager.preprocess("core/voxel.frag.glsl", Fragment, GLSLSource, format);

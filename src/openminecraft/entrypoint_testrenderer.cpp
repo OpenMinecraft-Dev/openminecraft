@@ -98,10 +98,10 @@ OMTestRenderer::OMTestRenderer(renderer::OMRenderer *renderer, std::function<OMR
             for (int cz = 0; cz < 8; ++cz)
             {
                 world::OMChunk<16> cnk(cx, cy, cz);
-                cnk.setBlock(0, 0, 0, 1);
-                cnk.setBlock(0, 1, 0, 1);
-                cnk.setBlock(1, 0, 0, 1);
-                cnk.setBlock(0, 0, 1, 1);
+                cnk.setBlock(0, 0, 0, 3);
+                cnk.setBlock(0, 1, 0, 3);
+                cnk.setBlock(1, 0, 0, 3);
+                cnk.setBlock(0, 0, 1, 3);
                 chunkManager->loadChunk(cnk);
             }
         }

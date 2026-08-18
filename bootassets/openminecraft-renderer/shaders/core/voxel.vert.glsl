@@ -30,12 +30,16 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_AO2 (((voxelPos) >> 4) & 3)
 #define VOXEL_AO3 (((voxelPos) >> 2) & 3)
 #define VOXEL_AO4 ((voxelPos) & 3)
-#define VOXEL_TEXTUREID ((voxelMetadata >> 16) & 0xffff)
+#define VOXEL_TEXTUREID ((voxelMetadata >> 16) & 0x3fff)
 #define VOXEL_CHUNKID ((voxelMetadata) & 0xffff)
-#define VOXEL_L1 ((voxelLight >> 28) & 15)
-#define VOXEL_L2 ((voxelLight >> 24) & 15)
-#define VOXEL_L3 ((voxelLight >> 20) & 15)
-#define VOXEL_L4 ((voxelLight >> 16) & 15)
+#define VOXEL_L1 ((voxelExtra >> 28) & 15)
+#define VOXEL_L2 ((voxelExtra >> 24) & 15)
+#define VOXEL_L3 ((voxelExtra >> 20) & 15)
+#define VOXEL_L4 ((voxelExtra >> 16) & 15)
+#define VOXEL_OFFSETU (((voxelExtra) >> 12) & 15)
+#define VOXEL_OFFSETV (((voxelExtra) >> 8) & 15)
+#define VOXEL_SIZEU (((voxelExtra) >> 4) & 15)
+#define VOXEL_SIZEV (((voxelExtra)) & 15)
 
 void main()
 {
@@ -56,31 +60,37 @@ void main()
     vec3 norm;
     vec2 uv;
 
+    vec2 offsets = vec2(float(VOXEL_OFFSETU) / 16, float(VOXEL_OFFSETV) / 16);
+    vec2 siz = vec2(float(VOXEL_SIZEU) / 16, float(VOXEL_SIZEV) / 16);
+
     switch (VOXEL_FACING_AXIS)
     {
     case 0: {
-        worldPos = vec3(bx + sign, by + or.x, bz + or.y);
+        worldPos = vec3(sign, or.x * siz.x + offsets.x, or.y * siz.y + offsets.y);
         norm = vec3(1.0, 0.0, 0.0);
         uv = (sign == 0.0) ? vec2(or.y, inv_or.x) : inv_or.yx;
         break;
     }
     case 1: {
-        worldPos = vec3(bx + or.x, by + or.y, bz + sign);
+        worldPos = vec3(or.x * siz.x + offsets.x, or.y * siz.y + offsets.y, sign);
         norm = vec3(0.0, 0.0, 1.0);
         uv = (sign == 0.0) ? inv_or.xy : vec2(or.x, inv_or.y);
         break;
     }
     case 2: {
-        worldPos = vec3(bx + or.x, by + sign, bz + inv_or.y);
+        worldPos = vec3(or.x * siz.x + offsets.x, sign, inv_or.y * siz.y + offsets.y);
         norm = vec3(0.0, 1.0, 0.0);
         uv = vec2(or.x, inv_or.y);
         break;
     }
     default: {
-        worldPos = vec3(bx, by, bz);
+        worldPos = vec3(0);
         break;
     }
     }
+
+    worldPos += vec3(bx, by, bz);
+    uv *= siz;
 
     vec3 coff = vec3(texelFetch(inChunkPos, VOXEL_CHUNKID * 3).r, texelFetch(inChunkPos, VOXEL_CHUNKID * 3 + 1).r,
                      texelFetch(inChunkPos, VOXEL_CHUNKID * 3 + 2).r);
