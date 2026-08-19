@@ -1,4 +1,3 @@
-#include <iostream>
 #include <utility>
 
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
@@ -17,7 +16,23 @@ OMModelPrecompiler::OMModelPrecompiler(std::string root, OMTextureAtlas &atlas)
 {
 }
 
-auto OMModelPrecompiler::precompile(int modelId, OMIdentifier name, bool subsitute)
+auto OMModelPrecompiler::loadModel(OMIdentifier i) -> int
+{
+    models.resize(modelId + 1);
+    models[modelId] = {};
+
+    auto pre = precompile(i);
+
+    for (auto &p : pre->getArray())
+    {
+        models[modelId].emplace_back(wrapPart(p));
+    }
+
+    modelId++;
+    return modelId - 1;
+}
+
+auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
     -> std::shared_ptr<openminecraft::io::json::OMJsonNode>
 {
     auto ff = vfs::fsfetch(fmt::format("{}/{}/models/{}.json", root, name.namesp, name.path));
@@ -26,7 +41,7 @@ auto OMModelPrecompiler::precompile(int modelId, OMIdentifier name, bool subsitu
 
     if (ll->getMap().count("parent"))
     {
-        auto sub = precompile(-1, OMIdentifier(ll->getMap()["parent"]->getString()), false);
+        auto sub = precompile(OMIdentifier(ll->getMap()["parent"]->getString()), false);
         ll->getMap().erase("parent");
         ll->merge(sub);
     }

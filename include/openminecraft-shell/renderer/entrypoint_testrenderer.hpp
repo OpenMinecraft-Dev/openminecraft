@@ -2,6 +2,7 @@
 #define OM_RENDERER_LAYER_VK_TESTRENDERER
 #include "glm/ext/vector_float3.hpp"
 #include "glm/fwd.hpp"
+#include "openminecraft-shell/data/om_textureatlas.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
@@ -66,7 +67,7 @@ class OMTestRenderer : public OMRendererHandler
     OMRendererPipeline *mainPipeline;
     wrap::OMRendererTempTarget *tempTargetMS, *tempTarget;
     wrap::OMVoxelManager *voxelManager;
-    OMRendererTexture *textureAtlas;
+    data::OMTextureAtlas *textureAtlas;
 
     std::shared_ptr<wrap::OMRendererBoxBlurHandler> blurHandler;
 

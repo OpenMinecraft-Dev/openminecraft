@@ -99,14 +99,18 @@ class OMModelPrecompiler
     OMModelPrecompiler(std::string root, OMTextureAtlas &);
     ~OMModelPrecompiler() = default;
 
-    auto precompile(int, OMIdentifier, bool = true) -> std::shared_ptr<openminecraft::io::json::OMJsonNode>;
+    auto precompile(OMIdentifier, bool = true) -> std::shared_ptr<openminecraft::io::json::OMJsonNode>;
     auto wrapFace(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelFace;
     auto wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelPart;
 
+    auto loadModel(OMIdentifier) -> int;
+
   private:
+    int modelId = 0;
     std::string root;
     openminecraft::log::OMLogger logger;
     OMTextureAtlas &textureAtlas;
+    std::vector<std::vector<OMModelPart>> models;
 };
 } // namespace openminecraftshell::data
 

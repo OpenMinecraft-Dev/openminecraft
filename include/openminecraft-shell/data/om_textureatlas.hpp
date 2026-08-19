@@ -51,6 +51,9 @@ class OMTextureAtlas
             img2.parse(imgraw);
             texture->updateData(img2.fetchData(), p.second);
         }
+        texture->mipFilter = openminecraft::renderer::common::Nearest;
+        texture->magFilter = openminecraft::renderer::common::Nearest;
+        texture->minFilter = openminecraft::renderer::common::Nearest;
         texture->setupSampler();
     }
 

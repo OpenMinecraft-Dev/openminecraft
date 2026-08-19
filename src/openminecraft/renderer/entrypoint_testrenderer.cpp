@@ -5,6 +5,8 @@
 #include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float4.hpp"
 #include "glm/geometric.hpp"
+#include "openminecraft-shell/data/om_identifier.hpp"
+#include "openminecraft-shell/data/om_textureatlas.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/event/om_eventbus.hpp"
@@ -76,20 +78,17 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
     tempTargetMS->construct(ext, 4);
     tempTarget->construct(ext);
 
-    textureAtlas = renderer->allocateTexture(16, 16, 8, 4, OMTextureType::Dim2Array, OMTextureArrangement::ColorRgba);
-    int i = 0;
-    for (auto l : {"dirt", "stone", "cobblestone", "coal_ore", "iron_ore", "dirt", "copper_ore", "diamond_ore"})
-    {
-        auto imgraw = vfs::fsfetch(fmt::format("/external/minecraft/textures/block/{}.png", l));
-        specs::png::OMPngFile img2;
-        img2.parse(imgraw);
-        textureAtlas->updateData(img2.fetchData(), i);
-        ++i;
-    }
-    textureAtlas->mipFilter = Nearest;
-    textureAtlas->magFilter = Nearest;
-    textureAtlas->minFilter = Nearest;
-    textureAtlas->setupSampler();
+    textureAtlas = new data::OMTextureAtlas("/external", renderer);
+    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/dirt"));
+    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/stone"));
+    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/cobblestone"));
+    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/coal_ore"));
+    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/iron_ore"));
+    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/dirt"));
+    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/copper_ore"));
+    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/diamond_ore"));
+    textureAtlas->build();
+
     auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
     for (int cx = 0; cx < 8; ++cx)
     {
@@ -106,8 +105,8 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
             }
         }
     }
-    voxelManager =
-        new wrap::OMVoxelManager(renderer, tempTargetMS->target, textureAtlas, chunkManager, [&]() { record(); });
+    voxelManager = new wrap::OMVoxelManager(renderer, tempTargetMS->target, textureAtlas->texture, chunkManager,
+                                            [&]() { record(); });
 
     voxelManager->pipeline->bindInput(0, cameraBuffer);
     voxelManager->debugPipeline->bindInput(0, cameraBuffer);

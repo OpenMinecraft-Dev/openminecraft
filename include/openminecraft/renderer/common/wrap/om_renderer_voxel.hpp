@@ -20,6 +20,7 @@
 
 namespace openminecraft::renderer::common::wrap
 {
+
 struct OMVoxel
 {
     int32_t voxelBasic;
@@ -35,7 +36,8 @@ enum OMVoxelFacing : uint8_t
     NegZ = 0b001,
     PosZ = 0b101,
     NegY = 0b010,
-    PosY = 0b110
+    PosY = 0b110,
+    None = 0b111,
 };
 // INFO: note for the ambient occulusion
 // Type -> (AO1, AO2, AO3, AO4)
@@ -45,6 +47,39 @@ enum OMVoxelFacing : uint8_t
 // PosZ => ((0, 1, 1), (0, 0, 1), (1, 1, 1), (1, 0, 1))
 // NegY => ((0, 0, 0), (0, 0, 1), (1, 0, 0), (1, 0, 1))
 // PosY => ((0, 1, 0), (0, 1, 1), (1, 1, 0), (1, 1, 1))
+
+class OMVoxelHandler
+{
+  public:
+    virtual auto queryNumParts(int) -> int = 0;
+    virtual auto queryPartFaceEnabled(int, int, OMVoxelFacing) -> bool = 0;
+    virtual auto queryPartFaceTex(int, int, OMVoxelFacing) -> int = 0;
+    virtual auto queryPartFaceCull(int, int, OMVoxelFacing) -> OMVoxelFacing = 0;
+};
+
+class OMVoxelHandlerDummy : public OMVoxelHandler
+{
+  public:
+    OMVoxelHandlerDummy() = default;
+    ~OMVoxelHandlerDummy() = default;
+    auto queryNumParts(int b) -> int override
+    {
+        return b == 0 ? 0 : 1;
+    }
+    auto queryPartFaceEnabled(int b, int, OMVoxelFacing) -> bool override
+    {
+        return b != 0;
+    }
+    auto queryPartFaceTex(int b, int, OMVoxelFacing) -> int override
+    {
+        return b;
+    }
+    auto queryPartFaceCull(int, int, OMVoxelFacing v) -> OMVoxelFacing override
+    {
+        return v;
+    }
+};
+
 class OMVoxelCompiler
 {
   public:
@@ -53,6 +88,8 @@ class OMVoxelCompiler
 
     auto compile(const world::OMChunk<16> &, std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)>, int chunkid,
                  std::function<void(OMVoxel)>) -> void;
+
+    OMVoxelHandler *handler = new OMVoxelHandlerDummy();
 
   private:
     log::OMLogger logger;
@@ -84,6 +121,7 @@ class OMVoxelManager
 
     void compile(int i);
 };
+
 } // namespace openminecraft::renderer::common::wrap
 
 #endif

@@ -125,11 +125,11 @@ auto boot(std::vector<std::string> args) -> int
         rendererTest(args[2] == "gl" ? renderer::OpenGL : renderer::Vulkan);
         break;
     case "model"_hash: {
-        data::OMTextureAtlas atlas("/exteenal", nullptr);
+        data::OMTextureAtlas atlas("/external", nullptr);
         data::OMModelPrecompiler precomp("/external", atlas);
-        auto ll = precomp.precompile(0, data::OMIdentifier(args[2], args[3]));
+        auto ll = precomp.loadModel(data::OMIdentifier(args[2], args[3]));
 
-        prettyJson(ll, logger);
+        logger->info("model loaded at {}", ll);
         break;
     }
     default:

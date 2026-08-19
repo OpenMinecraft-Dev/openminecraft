@@ -145,7 +145,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
 
     for (const auto &v : chunk)
     {
-        if (v.second == 0)
+        if (handler->queryNumParts(v.second) == 0)
         {
             continue;
         }
