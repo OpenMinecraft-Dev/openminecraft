@@ -2,6 +2,7 @@
 
 #include "SDL3/SDL_messagebox.h"
 #include "openminecraft-shell/data/om_identifier.hpp"
+#include "openminecraft-shell/data/om_model_precompiler.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft-shell/entrypoint.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
@@ -77,7 +78,7 @@ void prettyJson(std::shared_ptr<json::OMJsonNode> node, std::shared_ptr<log::OML
         logger->info("{} {}", std::string(l * 4, ' '), node->getBoolean());
         break;
     case io::json::String:
-        logger->info("{} {}", std::string(l * 4, ' '), node->getString());
+        logger->info("{} \"{}\"", std::string(l * 4, ' '), node->getString());
         break;
     case io::json::Null:
         logger->info("{} null", std::string(l * 4, ' '));
@@ -123,25 +124,8 @@ auto boot(std::vector<std::string> args) -> int
         rendererTest(args[2] == "gl" ? renderer::OpenGL : renderer::Vulkan);
         break;
     case "model"_hash: {
-        auto ff = vfs::fsfetch(fmt::format("/external/minecraft/{}/{}.json", args[2], args[3]));
-        json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(ff));
-        auto ll = bld.build();
-
-        auto ff2 = vfs::fsfetch("/external/minecraft/models/block/cube_all.json");
-        json::OMJsonAstBuilder bld2(std::make_shared<json::OMJsonTokenIter>(ff2));
-        auto ll2 = bld2.build();
-
-        auto ff3 = vfs::fsfetch("/external/minecraft/models/block/cube.json");
-        json::OMJsonAstBuilder bld3(std::make_shared<json::OMJsonTokenIter>(ff3));
-        auto ll3 = bld3.build();
-
-        data::OMIdentifier ident(ll->getMap()["parent"]->getString());
-        logger->debug("{}", ident.toPath());
-
-        ll->getMap().erase("parent");
-        ll->merge(ll2);
-        ll->getMap().erase("parent");
-        ll->merge(ll3);
+        data::OMModelPrecompiler precomp("/external");
+        auto ll = precomp.precompile(data::OMIdentifier(args[2], args[3]));
 
         prettyJson(ll, logger);
         break;
