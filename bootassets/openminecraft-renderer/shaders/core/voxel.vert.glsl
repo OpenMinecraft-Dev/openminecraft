@@ -64,7 +64,7 @@ vec2 doRotate(vec2 uv)
     int rota = VOXEL_ROTATION;
     while (rota > 0)
     {
-        uv = vec2(1 - uv.y, uv.x);
+        uv = vec2(uv.y, 1 - uv.x);
         --rota;
     }
     return uv;
