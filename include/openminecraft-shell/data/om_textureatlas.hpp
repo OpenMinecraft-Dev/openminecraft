@@ -22,10 +22,7 @@ class OMTextureAtlas
     }
     ~OMTextureAtlas()
     {
-        if (!texture)
-        {
-            delete texture;
-        }
+        delete texture;
     }
 
     auto addTexture(OMIdentifier i) -> int

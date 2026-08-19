@@ -222,6 +222,10 @@ void OMPngFile::parseTRNS(std::shared_ptr<std::istream> istr)
         pp &= 0xffffff00;
         pp |= currentChunk.data[i];
         i++;
+        if (i >= currentChunk.data.size())
+        {
+            return;
+        }
     }
 }
 void OMPngFile::parseIDAT(std::shared_ptr<std::istream> istr)

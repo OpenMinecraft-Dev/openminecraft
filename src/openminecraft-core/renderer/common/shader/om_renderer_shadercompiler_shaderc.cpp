@@ -56,7 +56,7 @@ auto OMRendererShaderCompilerBackendShaderc::compile(std::shared_ptr<OMShader> s
     shaderc::CompileOptions opt;
 
     opt.SetSourceLanguage(shader->type == GLSLSource ? shaderc_source_language_glsl : shaderc_source_language_hlsl);
-    // opt.SetOptimizationLevel(shaderc_optimization_level_performance);
+    opt.SetOptimizationLevel(shaderc_optimization_level_performance);
     opt.SetAutoBindUniforms(true);
     opt.SetAutoSampledTextures(true);
     opt.SetPreserveBindings(true);
