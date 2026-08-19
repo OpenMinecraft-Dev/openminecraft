@@ -4,16 +4,100 @@
 #include "fmt/format.h"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft/io/json/om_io_ast_builder_json.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 
 using namespace openminecraft;
 using namespace openminecraft::io;
+using namespace openminecraft::renderer::common::wrap;
 
 namespace openminecraftshell::data
 {
-OMModelPrecompiler::OMModelPrecompiler(std::string root, OMTextureAtlas &atlas)
-    : root(std::move(root)), logger("OMModelPrecompiler", this), textureAtlas(atlas)
+OMModelPrecompiler::OMModelPrecompiler(std::string root, OMTextureAtlas *atlas)
+    : root(std::move(root)), logger("OMModelPrecompiler", this), textureAtlas(*atlas)
 {
+}
+
+auto OMModelPrecompiler::queryNumParts(int bsid) -> int
+{
+    return models[bsid].size();
+}
+auto OMModelPrecompiler::queryPartFaceEnabled(int bsid, int pid, ::OMVoxelFacing f) -> bool
+{
+    switch (f)
+    {
+    default:
+    case ::NegX:
+        return models[bsid][pid].enableWest;
+    case ::PosX:
+        return models[bsid][pid].enableEast;
+    case ::NegZ:
+        return models[bsid][pid].enableNorth;
+    case ::PosZ:
+        return models[bsid][pid].enableSouth;
+    case ::NegY:
+        return models[bsid][pid].enableDown;
+    case ::PosY:
+        return models[bsid][pid].enableUp;
+    }
+}
+auto OMModelPrecompiler::queryPartFaceTex(int bsid, int pid, ::OMVoxelFacing f) -> int
+{
+    switch (f)
+    {
+    default:
+    case ::NegX:
+        return models[bsid][pid].west.textureid;
+    case ::PosX:
+        return models[bsid][pid].east.textureid;
+    case ::NegZ:
+        return models[bsid][pid].north.textureid;
+    case ::PosZ:
+        return models[bsid][pid].south.textureid;
+    case ::NegY:
+        return models[bsid][pid].down.textureid;
+    case ::PosY:
+        return models[bsid][pid].up.textureid;
+    }
+}
+auto cullFaceTo(OMModelCullSide s) -> ::OMVoxelFacing
+{
+    switch (s)
+    {
+    case Down:
+        return NegY;
+    case Up:
+        return PosY;
+    case South:
+        return PosZ;
+    case North:
+        return NegZ;
+    case West:
+        return NegX;
+    case East:
+        return PosX;
+    case None:
+        return openminecraft::renderer::common::wrap::None;
+    }
+}
+auto OMModelPrecompiler::queryPartFaceCull(int bsid, int pid, ::OMVoxelFacing f) -> ::OMVoxelFacing
+{
+    switch (f)
+    {
+    default:
+    case ::NegX:
+        return cullFaceTo(models[bsid][pid].west.cull);
+    case ::PosX:
+        return cullFaceTo(models[bsid][pid].east.cull);
+    case ::NegZ:
+        return cullFaceTo(models[bsid][pid].north.cull);
+    case ::PosZ:
+        return cullFaceTo(models[bsid][pid].south.cull);
+    case ::NegY:
+        return cullFaceTo(models[bsid][pid].down.cull);
+    case ::PosY:
+        return cullFaceTo(models[bsid][pid].up.cull);
+    }
 }
 
 auto OMModelPrecompiler::loadModel(OMIdentifier i) -> int
@@ -23,9 +107,12 @@ auto OMModelPrecompiler::loadModel(OMIdentifier i) -> int
 
     auto pre = precompile(i);
 
-    for (auto &p : pre->getArray())
+    if (pre)
     {
-        models[modelId].emplace_back(wrapPart(p));
+        for (auto &p : pre->getArray())
+        {
+            models[modelId].emplace_back(wrapPart(p));
+        }
     }
 
     modelId++;
@@ -57,16 +144,19 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
             }
         }
 
-        for (auto &elem : ll->getMap()["elements"]->getArray())
+        if (ll->getMap().count("elements"))
         {
-            for (auto &fce : elem->getMap()["faces"]->getMap())
+            for (auto &elem : ll->getMap()["elements"]->getArray())
             {
-                auto text = fce.second->getMap()["texture"]->getString();
-
-                if (text[0] == '#' && tex.count(text.substr(1)))
+                for (auto &fce : elem->getMap()["faces"]->getMap())
                 {
-                    fce.second->getMap()["texture"] = tex[text.substr(1)];
-                    textureAtlas.addTexture(OMIdentifier(fce.second->getMap()["texture"]->getString()));
+                    auto text = fce.second->getMap()["texture"]->getString();
+
+                    if (text[0] == '#' && tex.count(text.substr(1)))
+                    {
+                        fce.second->getMap()["texture"] = tex[text.substr(1)];
+                        textureAtlas.addTexture(OMIdentifier(fce.second->getMap()["texture"]->getString()));
+                    }
                 }
             }
         }

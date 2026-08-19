@@ -7,6 +7,7 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/io/json/om_io_ast_json.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include <memory>
 #include <string>
 namespace openminecraftshell::data
@@ -93,10 +94,10 @@ struct OMModelPart
     OMModelAxis rotateAxis;
     double rotateAngle;
 };
-class OMModelPrecompiler
+class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxelHandler
 {
   public:
-    OMModelPrecompiler(std::string root, OMTextureAtlas &);
+    OMModelPrecompiler(std::string root, OMTextureAtlas *);
     ~OMModelPrecompiler() = default;
 
     auto precompile(OMIdentifier, bool = true) -> std::shared_ptr<openminecraft::io::json::OMJsonNode>;
@@ -104,6 +105,12 @@ class OMModelPrecompiler
     auto wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelPart;
 
     auto loadModel(OMIdentifier) -> int;
+
+    auto queryNumParts(int bsid) -> int override;
+    auto queryPartFaceEnabled(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> bool override;
+    auto queryPartFaceTex(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> int override;
+    auto queryPartFaceCull(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
+        -> openminecraft::renderer::common::wrap::OMVoxelFacing override;
 
   private:
     int modelId = 0;

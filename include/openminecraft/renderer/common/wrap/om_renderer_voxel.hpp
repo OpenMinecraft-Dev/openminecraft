@@ -51,10 +51,13 @@ enum OMVoxelFacing : uint8_t
 class OMVoxelHandler
 {
   public:
-    virtual auto queryNumParts(int) -> int = 0;
-    virtual auto queryPartFaceEnabled(int, int, OMVoxelFacing) -> bool = 0;
-    virtual auto queryPartFaceTex(int, int, OMVoxelFacing) -> int = 0;
-    virtual auto queryPartFaceCull(int, int, OMVoxelFacing) -> OMVoxelFacing = 0;
+    virtual ~OMVoxelHandler()
+    {
+    }
+    virtual auto queryNumParts(int bsid) -> int = 0;
+    virtual auto queryPartFaceEnabled(int bsid, int pid, OMVoxelFacing) -> bool = 0;
+    virtual auto queryPartFaceTex(int bsid, int pid, OMVoxelFacing) -> int = 0;
+    virtual auto queryPartFaceCull(int bsid, int pid, OMVoxelFacing) -> OMVoxelFacing = 0;
 };
 
 class OMVoxelHandlerDummy : public OMVoxelHandler
@@ -99,7 +102,7 @@ class OMVoxelManager
 {
   public:
     OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *,
-                   std::shared_ptr<world::OMChunkManager<16>>, std::function<void()>);
+                   std::shared_ptr<world::OMChunkManager<16>>, std::function<void()>, OMVoxelHandler *);
     ~OMVoxelManager();
 
     auto submit(OMRendererTask *) -> OMRendererTask *;
@@ -111,6 +114,7 @@ class OMVoxelManager
     OMRendererTexture *textureAtlas;
 
   private:
+    OMVoxelHandler *voxelHandler;
     OMRenderer *renderer;
     std::function<void()> rec;
     log::OMLogger logger;

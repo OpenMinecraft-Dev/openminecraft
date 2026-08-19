@@ -62,15 +62,6 @@ static constexpr auto packVoxel(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing f
     };
 }
 
-constexpr std::array<std::pair<glm::ivec3, OMVoxelFacing>, 6> faceMapping = {{
-    {{0, -1, 0}, NegY},
-    {{0, 1, 0}, PosY},
-    {{-1, 0, 0}, NegX},
-    {{1, 0, 0}, PosX},
-    {{0, 0, -1}, NegZ},
-    {{0, 0, 1}, PosZ},
-}};
-
 auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                               std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, int chunkid,
                               std::function<void(OMVoxel)> commiter) -> void
@@ -150,15 +141,40 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             continue;
         }
 
-        for (auto &p : faceMapping)
-        {
-            if (!exist(v.first.x + p.first.x, v.first.y + p.first.y, v.first.z + p.first.z))
+        auto checkExists = [&](OMVoxelFacing f) -> bool {
+            switch (f)
             {
-                auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, p.second);
-                auto vox = packVoxel(v.first.x, v.first.y, v.first.z, p.second, 0, 0, 0, true, true, true, v.second,
-                                     chunkid, 0, 15, 15, 15, 15, 0, 0, 0, 0, 16, 16, 16, ao1, ao2, ao3, ao4, 0, 0, 16,
-                                     16, 0, 0, 0, 0, false, false, false, 2, false);
-                commiter(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4]});
+            case None:
+                return false;
+            case NegX:
+                return exist(v.first.x - 1, v.first.y, v.first.z);
+            case NegY:
+                return exist(v.first.x, v.first.y - 1, v.first.z);
+            case NegZ:
+                return exist(v.first.x, v.first.y, v.first.z - 1);
+            case PosX:
+                return exist(v.first.x + 1, v.first.y, v.first.z);
+            case PosY:
+                return exist(v.first.x, v.first.y + 1, v.first.z);
+            case PosZ:
+                return exist(v.first.x, v.first.y, v.first.z + 1);
+            }
+        };
+
+        for (int i = 0; i < handler->queryNumParts(v.second); ++i)
+        {
+            for (auto f : {NegX, NegY, NegZ, PosX, PosY, PosZ})
+            {
+                if (handler->queryPartFaceEnabled(v.second, i, f) &&
+                    !checkExists(handler->queryPartFaceCull(v.second, i, f)))
+                {
+                    auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, f);
+                    auto vox =
+                        packVoxel(v.first.x, v.first.y, v.first.z, f, 0, 0, 0, true, true, true,
+                                  handler->queryPartFaceTex(v.second, i, f), chunkid, 0, 15, 15, 15, 15, 0, 0, 0, 0, 16,
+                                  16, 16, ao1, ao2, ao3, ao4, 0, 0, 16, 16, 0, 0, 0, 0, false, false, false, 2, false);
+                    commiter(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4]});
+                }
             }
         }
     }

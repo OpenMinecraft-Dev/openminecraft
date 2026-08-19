@@ -6,6 +6,7 @@
 #include "glm/ext/vector_float4.hpp"
 #include "glm/geometric.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
+#include "openminecraft-shell/data/om_model_precompiler.hpp"
 #include "openminecraft-shell/data/om_textureatlas.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
@@ -79,15 +80,6 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
     tempTarget->construct(ext);
 
     textureAtlas = new data::OMTextureAtlas("/external", renderer);
-    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/dirt"));
-    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/stone"));
-    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/cobblestone"));
-    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/coal_ore"));
-    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/iron_ore"));
-    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/dirt"));
-    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/copper_ore"));
-    textureAtlas->addTexture(data::OMIdentifier("minecraft:block/diamond_ore"));
-    textureAtlas->build();
 
     auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
     for (int cx = 0; cx < 8; ++cx)
@@ -105,8 +97,20 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
             }
         }
     }
-    voxelManager = new wrap::OMVoxelManager(renderer, tempTargetMS->target, textureAtlas->texture, chunkManager,
-                                            [&]() { record(); });
+
+    voxelHandler = new data::OMModelPrecompiler("/external", textureAtlas);
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/air"));
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/stone"));
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/cobblestone"));
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/coal_ore"));
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/iron_ore"));
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/dirt"));
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/copper_ore"));
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/diamond_ore"));
+    textureAtlas->build();
+
+    voxelManager = new wrap::OMVoxelManager(
+        renderer, tempTargetMS->target, textureAtlas->texture, chunkManager, [&]() { record(); }, this->voxelHandler);
 
     voxelManager->pipeline->bindInput(0, cameraBuffer);
     voxelManager->debugPipeline->bindInput(0, cameraBuffer);
