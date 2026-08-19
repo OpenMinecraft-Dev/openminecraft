@@ -81,8 +81,8 @@ void main()
     float bx = float(VOXEL_X);
     float by = float(VOXEL_Y);
     float bz = float(VOXEL_Z);
-    vec2 or = VOXEL_FACING_SIGN == 1 ? vertexgen_quad_normal() : vertexgen_quad_normal_ccw();
-    vec2 inv_or = vec2(1.0) - or ;
+    vec2 orgin = VOXEL_FACING_SIGN == 1 ? vertexgen_quad_normal() : vertexgen_quad_normal_ccw();
+    vec2 inv_or = vec2(1.0) - orgin;
     float sign = float(VOXEL_FACING_SIGN);
     vec3 worldPos;
     vec3 worldPosOffset;
@@ -97,10 +97,10 @@ void main()
     switch (VOXEL_FACING_AXIS)
     {
     case 0: {
-        worldPos = vec3(0, or.x, or.y);
+        worldPos = vec3(0, orgin.x, orgin.y);
         worldPosOffset = vec3(sign, 0, 0);
         norm = vec3(1.0, 0.0, 0.0);
-        uv = (sign == 0.0) ? vec2(or.y, inv_or.x) : inv_or.yx;
+        uv = (sign == 0.0) ? vec2(orgin.y, inv_or.x) : inv_or.yx;
         oruv = uv;
         if (VOXEL_GENUV == 1)
         {
@@ -114,10 +114,10 @@ void main()
         break;
     }
     case 1: {
-        worldPos = vec3(or.x, or.y, 0);
+        worldPos = vec3(orgin.x, orgin.y, 0);
         worldPosOffset = vec3(0, 0, sign);
         norm = vec3(0.0, 0.0, 1.0);
-        uv = (sign == 0.0) ? inv_or.xy : vec2(or.x, inv_or.y);
+        uv = (sign == 0.0) ? inv_or.xy : vec2(orgin.x, inv_or.y);
         oruv = uv;
         if (VOXEL_GENUV == 1)
         {
@@ -131,10 +131,10 @@ void main()
         break;
     }
     case 2: {
-        worldPos = vec3(or.x, 0, inv_or.y);
+        worldPos = vec3(orgin.x, 0, inv_or.y);
         worldPosOffset = vec3(0, sign, 0);
         norm = vec3(0.0, 0.5, 0.0);
-        uv = vec2(or.x, inv_or.y);
+        uv = vec2(orgin.x, inv_or.y);
         oruv = uv;
         if (VOXEL_GENUV == 1)
         {
