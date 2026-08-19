@@ -3,6 +3,7 @@
 
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
 #include "fmt/format.h"
+#include "glm/fwd.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft/io/json/om_io_ast_builder_json.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
@@ -17,6 +18,15 @@ namespace openminecraftshell::data
 OMModelPrecompiler::OMModelPrecompiler(std::string root, OMTextureAtlas *atlas)
     : root(std::move(root)), logger("OMModelPrecompiler", this), textureAtlas(*atlas)
 {
+}
+
+auto OMModelPrecompiler::queryPartSize(int bsid, int pid) -> glm::ivec3
+{
+    return models[bsid][pid].to - models[bsid][pid].from;
+}
+auto OMModelPrecompiler::queryPartOffset(int bsid, int pid) -> glm::ivec3
+{
+    return models[bsid][pid].from;
 }
 
 auto OMModelPrecompiler::queryNumParts(int bsid) -> int
@@ -99,6 +109,61 @@ auto OMModelPrecompiler::queryPartFaceCull(int bsid, int pid, ::OMVoxelFacing f)
     case ::PosY:
         return cullFaceTo(models[bsid][pid].up.cull);
     }
+}
+
+auto OMModelPrecompiler::queryPartFaceUVAuto(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing f)
+    -> bool
+{
+    switch (f)
+    {
+    default:
+    case ::NegX:
+        return models[bsid][pid].west.autoUV;
+    case ::PosX:
+        return models[bsid][pid].east.autoUV;
+    case ::NegZ:
+        return models[bsid][pid].north.autoUV;
+    case ::PosZ:
+        return models[bsid][pid].south.autoUV;
+    case ::NegY:
+        return models[bsid][pid].down.autoUV;
+    case ::PosY:
+        return models[bsid][pid].up.autoUV;
+    }
+}
+auto OMModelPrecompiler::queryPartFaceUV(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing f)
+    -> glm::ivec4
+{
+    glm::ivec2 uv0, uv1;
+    switch (f)
+    {
+    default:
+    case ::NegX:
+        uv0 = models[bsid][pid].west.uv0;
+        uv1 = models[bsid][pid].west.uv1;
+        break;
+    case ::PosX:
+        uv0 = models[bsid][pid].east.uv0;
+        uv1 = models[bsid][pid].east.uv1;
+        break;
+    case ::NegZ:
+        uv0 = models[bsid][pid].north.uv0;
+        uv1 = models[bsid][pid].north.uv1;
+        break;
+    case ::PosZ:
+        uv0 = models[bsid][pid].south.uv0;
+        uv1 = models[bsid][pid].south.uv1;
+        break;
+    case ::NegY:
+        uv0 = models[bsid][pid].down.uv0;
+        uv1 = models[bsid][pid].down.uv1;
+        break;
+    case ::PosY:
+        uv0 = models[bsid][pid].up.uv0;
+        uv1 = models[bsid][pid].up.uv1;
+        break;
+    }
+    return {uv0.x, uv0.y, uv1.x, uv1.y};
 }
 
 auto OMModelPrecompiler::loadModel(OMIdentifier i) -> int

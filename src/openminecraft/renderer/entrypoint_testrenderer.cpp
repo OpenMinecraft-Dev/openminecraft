@@ -106,7 +106,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/iron_ore"));
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/dirt"));
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/copper_ore"));
-    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/diamond_ore"));
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/stone_slab"));
     textureAtlas->build();
 
     voxelManager = new wrap::OMVoxelManager(

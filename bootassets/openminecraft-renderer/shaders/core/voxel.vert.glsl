@@ -48,7 +48,7 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_RCENTERX ((voxelExtra3 >> 13) & 15)
 #define VOXEL_RCENTERY ((voxelExtra3 >> 9) & 15)
 #define VOXEL_RCENTERZ ((voxelExtra3 >> 5) & 15)
-#define VOXEL_GENUV ((voxelExtra3 << 3) & 1)
+#define VOXEL_GENUV ((voxelExtra3 >> 3) & 1)
 #define VOXEL_RANGLE (voxelExtra3 & 7)
 
 vec3 rotateVec(vec3 v, float angle, vec3 axis)

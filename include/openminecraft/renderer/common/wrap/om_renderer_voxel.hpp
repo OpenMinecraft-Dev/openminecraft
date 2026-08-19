@@ -15,7 +15,6 @@
 #include "openminecraft/world/om_world_chunkmanager.hpp"
 #include <cstdint>
 #include <list>
-#include <unordered_map>
 #include <vector>
 
 namespace openminecraft::renderer::common::wrap
@@ -58,6 +57,10 @@ class OMVoxelHandler
     virtual auto queryPartFaceEnabled(int bsid, int pid, OMVoxelFacing) -> bool = 0;
     virtual auto queryPartFaceTex(int bsid, int pid, OMVoxelFacing) -> int = 0;
     virtual auto queryPartFaceCull(int bsid, int pid, OMVoxelFacing) -> OMVoxelFacing = 0;
+    virtual auto queryPartSize(int bsid, int pid) -> glm::ivec3 = 0;
+    virtual auto queryPartOffset(int bsid, int pid) -> glm::ivec3 = 0;
+    virtual auto queryPartFaceUVAuto(int bsid, int pid, OMVoxelFacing) -> bool = 0;
+    virtual auto queryPartFaceUV(int bsid, int pid, OMVoxelFacing) -> glm::ivec4 = 0;
 };
 
 class OMVoxelHandlerDummy : public OMVoxelHandler
@@ -80,6 +83,22 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     auto queryPartFaceCull(int, int, OMVoxelFacing v) -> OMVoxelFacing override
     {
         return v;
+    }
+    auto queryPartSize(int bsid, int pid) -> glm::ivec3 override
+    {
+        return {16, 16, 16};
+    }
+    auto queryPartOffset(int bsid, int pid) -> glm::ivec3 override
+    {
+        return {0, 0, 0};
+    }
+    auto queryPartFaceUVAuto(int bsid, int pid, OMVoxelFacing) -> bool override
+    {
+        return true;
+    }
+    auto queryPartFaceUV(int bsid, int pid, OMVoxelFacing) -> glm::ivec4 override
+    {
+        return {0, 0, 16, 16};
     }
 };
 
