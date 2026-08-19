@@ -28,6 +28,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <map>
 #include <string>
@@ -118,7 +119,15 @@ class OMNodeRendererHandler : public OMRendererHandler
                                                {"text", ""},
                                                {"textheight", 18},
                                            })
-                                           ->store(resolutionNode)))
+                                           ->store(precisionNode))
+                               ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                           ->style({
+                                               {"color", (int)0xffffffff},
+                                               {"flexGrow", 1.0f},
+                                               {"text", ""},
+                                               {"textheight", 18},
+                                           })
+                                           ->store(precisionNode2)))
                    ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                                ->style({
                                    {"flexShrink", 0.0f},
@@ -240,16 +249,42 @@ class OMNodeRendererHandler : public OMRendererHandler
             fps = 0;
         }
 
-        auto e = renderer->getExtent();
-
         auto m = camera->getPosRaw();
         posTextNode->style("text", fmt::format("{} {} {} + {:.2f} {:.2f} {:.2f}", m.chunkx, m.chunky, m.chunkz,
                                                m.localx, m.localy, m.localz));
+        float fx = static_cast<float>(m.chunkx) * 16 + m.localx;
+        double dx = static_cast<double>(m.chunkx) * 16 + m.localx;
+        float fz = static_cast<float>(m.chunkz) * 16 + m.localz;
+        double dz = static_cast<double>(m.chunkz) * 16 + m.localz;
         povTextNode->style("text", fmt::format("Yaw {:.2f} Pitch {:.2f}", camera->getYaw(), camera->getPitch()));
-        resolutionNode->style("text", fmt::format("{} x {}", e.x, e.y));
+        precisionNode->style("text", fmt::format("float precision: {}", getUlpf(std::max(fx, fz))));
+        precisionNode2->style("text", fmt::format("double precision: {}", getUlp(std::max(dx, dz))));
+    }
+    auto getUlpf(float s) -> float
+    {
+        if (s == 0.0)
+        {
+            return std::numeric_limits<float>::min();
+        }
+
+        int exp;
+        std::frexpf(s, &exp);
+        return std::ldexp(1.0, exp - 1 - 23);
+    }
+    auto getUlp(double s) -> double
+    {
+        if (s == 0.0)
+        {
+            return std::numeric_limits<double>::min();
+        }
+
+        int exp;
+        std::frexp(s, &exp);
+        return std::ldexp(1.0, exp - 1 - 52);
     }
 
-    std::shared_ptr<OMDemiurgeNode> node, graphNode, textNode, fpsTextNode, posTextNode, povTextNode, resolutionNode;
+    std::shared_ptr<OMDemiurgeNode> node, graphNode, textNode, fpsTextNode, posTextNode, povTextNode, precisionNode,
+        precisionNode2;
     std::shared_ptr<OMDemiurgeRendererHandler> internal;
     std::shared_ptr<fontproc::OMFontSet> fontset;
     std::vector<std::shared_ptr<OMDemiurgeNode>> sectorNodes = {};
