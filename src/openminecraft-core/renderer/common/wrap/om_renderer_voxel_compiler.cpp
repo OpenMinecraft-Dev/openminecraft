@@ -173,6 +173,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                     auto siz = handler->queryPartSize(v.second, i);
                     auto off = handler->queryPartOffset(v.second, i);
                     auto uv = handler->queryPartFaceUV(v.second, i, f);
+                    logger.debug("{}:{} + {:03b} {} {} {} {}", v.second, i, (int)f, uv.x, uv.y, uv.z, uv.w);
                     auto vox = packVoxel(v.first.x, v.first.y, v.first.z, f, off.x, off.y, off.z, true, true, true,
                                          handler->queryPartFaceTex(v.second, i, f), chunkid, 0, 15, 15, 15, 15, 0, 0, 0,
                                          0, siz.x, siz.y, siz.z, ao1, ao2, ao3, ao4, uv.x, uv.y, uv.z, uv.w, 0, 0, 0, 0,

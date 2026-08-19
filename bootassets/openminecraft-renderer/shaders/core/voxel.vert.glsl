@@ -37,7 +37,7 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_SY (((voxelExtra2) >> 22) & 0x1f)
 #define VOXEL_SZ (((voxelExtra2) >> 17) & 0x1f)
 #define VOXEL_AO(n) ((voxelExtra2 >> (6 - 2 * (n))) & 3)
-#define VOXEL_U0 ((voxelPos & 1) | ((voxelExtra2 >> 8) & 15))
+#define VOXEL_U0 (((voxelPos & 1) << 4) | ((voxelExtra2 >> 8) & 15))
 #define VOXEL_V0 ((voxelExtra2 >> 12) & 0x1f)
 #define VOXEL_U1 ((voxelExtra3 >> 27) & 0x1f)
 #define VOXEL_V1 ((voxelExtra3 >> 22) & 0x1f)

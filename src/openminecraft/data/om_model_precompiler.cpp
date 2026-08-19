@@ -274,7 +274,7 @@ auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::io::json::OMJso
         textureAtlas.subtex[OMIdentifier(face->getMap()["texture"]->getString())],
         {uv ? uv->getArray()[0]->getNumber() : 0, uv ? uv->getArray()[1]->getNumber() : 0},
         {uv ? uv->getArray()[2]->getNumber() : 0, uv ? uv->getArray()[3]->getNumber() : 0},
-        !uv,
+        uv == nullptr,
         true,
         face->getMap().count("rotation") ? static_cast<int>(face->getMap()["rotation"]->getNumber()) : 0,
     };
