@@ -268,7 +268,7 @@ class OMNodeRendererHandler : public OMRendererHandler
         }
 
         int exp;
-        std::frexpf(s, &exp);
+        std::frexp(s, &exp);
         return std::ldexp(1.0, exp - 1 - 23);
     }
     auto getUlp(double s) -> double
