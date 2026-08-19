@@ -3,6 +3,7 @@
 #include "SDL3/SDL_messagebox.h"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
+#include "openminecraft-shell/data/om_textureatlas.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft-shell/entrypoint.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
@@ -124,8 +125,9 @@ auto boot(std::vector<std::string> args) -> int
         rendererTest(args[2] == "gl" ? renderer::OpenGL : renderer::Vulkan);
         break;
     case "model"_hash: {
-        data::OMModelPrecompiler precomp("/external");
-        auto ll = precomp.precompile(data::OMIdentifier(args[2], args[3]));
+        data::OMTextureAtlas atlas("/exteenal", nullptr);
+        data::OMModelPrecompiler precomp("/external", atlas);
+        auto ll = precomp.precompile(0, data::OMIdentifier(args[2], args[3]));
 
         prettyJson(ll, logger);
         break;

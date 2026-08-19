@@ -12,11 +12,12 @@ using namespace openminecraft::io;
 
 namespace openminecraftshell::data
 {
-OMModelPrecompiler::OMModelPrecompiler(std::string root) : root(std::move(root)), logger("OMModelPrecompiler", this)
+OMModelPrecompiler::OMModelPrecompiler(std::string root, OMTextureAtlas &atlas)
+    : root(std::move(root)), logger("OMModelPrecompiler", this), textureAtlas(atlas)
 {
 }
 
-auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
+auto OMModelPrecompiler::precompile(int modelId, OMIdentifier name, bool subsitute)
     -> std::shared_ptr<openminecraft::io::json::OMJsonNode>
 {
     auto ff = vfs::fsfetch(fmt::format("{}/{}/models/{}.json", root, name.namesp, name.path));
@@ -25,7 +26,7 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
 
     if (ll->getMap().count("parent"))
     {
-        auto sub = precompile(OMIdentifier(ll->getMap()["parent"]->getString()), false);
+        auto sub = precompile(-1, OMIdentifier(ll->getMap()["parent"]->getString()), false);
         ll->getMap().erase("parent");
         ll->merge(sub);
     }
@@ -50,6 +51,7 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
                 if (text[0] == '#' && tex.count(text.substr(1)))
                 {
                     fce.second->getMap()["texture"] = tex[text.substr(1)];
+                    textureAtlas.addTexture(OMIdentifier(fce.second->getMap()["texture"]->getString()));
                 }
             }
         }
@@ -59,5 +61,51 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
     {
         return ll;
     }
+}
+
+auto OMModelPrecompiler::wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode> part) -> OMModelPart
+{
+    auto mm = part->getMap()["faces"]->getMap();
+    auto from = part->getMap()["from"]->getArray();
+    auto to = part->getMap()["to"]->getArray();
+    auto ro = part->getMap().count("rotation") ? part->getMap()["rotation"] : nullptr;
+    return {
+        mm.count("east") ? wrapFace(mm["east"]) : OMModelFace(),
+        mm.count("east") > 0,
+        mm.count("west") ? wrapFace(mm["west"]) : OMModelFace(),
+        mm.count("west") > 0,
+        mm.count("down") ? wrapFace(mm["down"]) : OMModelFace(),
+        mm.count("down") > 0,
+        mm.count("up") ? wrapFace(mm["up"]) : OMModelFace(),
+        mm.count("up") > 0,
+        mm.count("south") ? wrapFace(mm["south"]) : OMModelFace(),
+        mm.count("south") > 0,
+        mm.count("north") ? wrapFace(mm["north"]) : OMModelFace(),
+        mm.count("north") > 0,
+        {from[0]->getNumber(), from[1]->getNumber(), from[2]->getNumber()},
+        {to[0]->getNumber(), to[1]->getNumber(), to[2]->getNumber()},
+        part->getMap().count("shade") ? part->getMap()["shade"]->getBoolean() : true,
+        ro != nullptr,
+        ro ? glm::ivec3{static_cast<int>(ro->getMap()["origin"]->getArray()[0]->getNumber()),
+                        static_cast<int>(ro->getMap()["origin"]->getArray()[1]->getNumber()),
+                        static_cast<int>(ro->getMap()["origin"]->getArray()[2]->getNumber())}
+           : glm::ivec3{},
+        ro ? fromAxis(ro->getMap()["axis"]->getString()) : X,
+        ro ? ro->getMap()["angle"]->getNumberFloating() : 0.0,
+    };
+}
+
+auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::io::json::OMJsonNode> face) -> OMModelFace
+{
+    auto uv = face->getMap().count("uv") ? face->getMap()["uv"] : nullptr;
+    return {
+        from(face->getMap().count("cull") ? face->getMap()["cull"]->getString() : "none"),
+        textureAtlas.subtex[OMIdentifier(face->getMap()["texture"]->getString())],
+        {uv ? uv->getArray()[0]->getNumber() : 0, uv ? uv->getArray()[1]->getNumber() : 0},
+        {uv ? uv->getArray()[2]->getNumber() : 0, uv ? uv->getArray()[3]->getNumber() : 0},
+        !uv,
+        true,
+        face->getMap().count("rotation") ? static_cast<int>(face->getMap()["rotation"]->getNumber()) : 0,
+    };
 }
 } // namespace openminecraftshell::data
