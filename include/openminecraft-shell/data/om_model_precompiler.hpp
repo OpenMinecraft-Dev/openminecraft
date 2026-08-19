@@ -8,6 +8,7 @@
 #include "openminecraft/io/json/om_io_ast_json.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include <iostream>
 #include <memory>
 #include <string>
 namespace openminecraftshell::data

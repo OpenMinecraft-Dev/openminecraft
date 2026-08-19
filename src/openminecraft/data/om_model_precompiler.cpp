@@ -1,3 +1,4 @@
+#include <iostream>
 #include <utility>
 
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
@@ -204,7 +205,7 @@ auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::io::json::OMJso
 {
     auto uv = face->getMap().count("uv") ? face->getMap()["uv"] : nullptr;
     return {
-        from(face->getMap().count("cull") ? face->getMap()["cull"]->getString() : "none"),
+        from(face->getMap().count("cullface") ? face->getMap()["cullface"]->getString() : "none"),
         textureAtlas.subtex[OMIdentifier(face->getMap()["texture"]->getString())],
         {uv ? uv->getArray()[0]->getNumber() : 0, uv ? uv->getArray()[1]->getNumber() : 0},
         {uv ? uv->getArray()[2]->getNumber() : 0, uv ? uv->getArray()[3]->getNumber() : 0},
