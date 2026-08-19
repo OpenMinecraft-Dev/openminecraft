@@ -59,6 +59,17 @@ vec3 rotateVec(vec3 v, float angle, vec3 axis)
     return v * c + cross(axis, v) * s + axis * dot(axis, v) * oc;
 }
 
+vec2 doRotate(vec2 uv)
+{
+    int rota = VOXEL_ROTATION;
+    while (rota > 0)
+    {
+        uv = vec2(1 - uv.y, uv.x);
+        --rota;
+    }
+    return uv;
+}
+
 void main()
 {
     if (VOXEL_ENABLED == 0)
@@ -102,6 +113,7 @@ void main()
         norm = vec3(1.0, 0.0, 0.0);
         uv = (sign == 0.0) ? vec2(orgin.y, inv_or.x) : inv_or.yx;
         oruv = uv;
+        uv = doRotate(uv);
         if (VOXEL_GENUV == 1)
         {
             uv *= modelSize.zy;
@@ -119,6 +131,7 @@ void main()
         norm = vec3(0.0, 0.0, 1.0);
         uv = (sign == 0.0) ? inv_or.xy : vec2(orgin.x, inv_or.y);
         oruv = uv;
+        uv = doRotate(uv);
         if (VOXEL_GENUV == 1)
         {
             uv *= modelSize.xy;
@@ -136,6 +149,7 @@ void main()
         norm = vec3(0.0, 0.5, 0.0);
         uv = vec2(orgin.x, inv_or.y);
         oruv = uv;
+        uv = doRotate(uv);
         if (VOXEL_GENUV == 1)
         {
             uv *= modelSize.xz;
@@ -151,13 +165,6 @@ void main()
         worldPos = vec3(0);
         break;
     }
-    }
-
-    int rota = VOXEL_ROTATION;
-    while (rota > 0)
-    {
-        uv = vec2(1 - uv.y, uv.x);
-        --rota;
     }
 
     worldPos += worldPosOffset;
