@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include <utility>
 
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
@@ -7,6 +8,7 @@
 #include "glm/fwd.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft/io/json/om_io_ast_builder_json.hpp"
+#include "openminecraft/io/json/om_io_ast_json.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 
@@ -216,6 +218,267 @@ auto OMModelPrecompiler::loadModel(OMIdentifier i, bool soild) -> int
     return modelId - 1;
 }
 
+auto rotateVoxelElementZ90(const glm::ivec3 &from, const glm::ivec3 &to) -> std::pair<glm::ivec3, glm::ivec3>
+{
+    glm::ivec3 corners[8] = {{from.x, from.y, from.z}, {from.x, from.y, to.z}, {from.x, to.y, from.z},
+                             {from.x, to.y, to.z},     {to.x, from.y, from.z}, {to.x, from.y, to.z},
+                             {to.x, to.y, from.z},     {to.x, to.y, to.z}};
+
+    glm::ivec3 newMin = glm::ivec3(16, 16, 16);
+    glm::ivec3 newMax = glm::ivec3(0, 0, 0);
+
+    for (const auto &p : corners)
+    {
+        glm::ivec3 centered = p - glm::ivec3(8, 8, 8);
+
+        glm::ivec3 rotated;
+        rotated = {-centered.y, centered.x, centered.z};
+        glm::ivec3 finalPos = rotated + glm::ivec3(8, 8, 8);
+
+        newMin = glm::min(newMin, finalPos);
+        newMax = glm::max(newMax, finalPos);
+    }
+
+    return {newMin, newMax};
+}
+
+auto rotateVoxelElementX90(const glm::ivec3 &from, const glm::ivec3 &to) -> std::pair<glm::ivec3, glm::ivec3>
+{
+    glm::ivec3 corners[8] = {{from.x, from.y, from.z}, {from.x, from.y, to.z}, {from.x, to.y, from.z},
+                             {from.x, to.y, to.z},     {to.x, from.y, from.z}, {to.x, from.y, to.z},
+                             {to.x, to.y, from.z},     {to.x, to.y, to.z}};
+
+    glm::ivec3 newMin = glm::ivec3(16, 16, 16);
+    glm::ivec3 newMax = glm::ivec3(0, 0, 0);
+
+    for (const auto &p : corners)
+    {
+        glm::ivec3 centered = p - glm::ivec3(8, 8, 8);
+
+        glm::ivec3 rotated;
+        rotated = {centered.x, -centered.z, centered.y};
+        glm::ivec3 finalPos = rotated + glm::ivec3(8, 8, 8);
+
+        newMin = glm::min(newMin, finalPos);
+        newMax = glm::max(newMax, finalPos);
+    }
+
+    return {newMin, newMax};
+}
+
+auto rotateVoxelElementY90(const glm::ivec3 &from, const glm::ivec3 &to) -> std::pair<glm::ivec3, glm::ivec3>
+{
+    glm::ivec3 corners[8] = {{from.x, from.y, from.z}, {from.x, from.y, to.z}, {from.x, to.y, from.z},
+                             {from.x, to.y, to.z},     {to.x, from.y, from.z}, {to.x, from.y, to.z},
+                             {to.x, to.y, from.z},     {to.x, to.y, to.z}};
+
+    glm::ivec3 newMin = glm::ivec3(16, 16, 16);
+    glm::ivec3 newMax = glm::ivec3(0, 0, 0);
+
+    for (const auto &p : corners)
+    {
+        glm::ivec3 centered = p - glm::ivec3(8, 8, 8);
+
+        glm::ivec3 rotated;
+        rotated = {-centered.z, centered.y, centered.x};
+        glm::ivec3 finalPos = rotated + glm::ivec3(8, 8, 8);
+
+        newMin = glm::min(newMin, finalPos);
+        newMax = glm::max(newMax, finalPos);
+    }
+
+    return {newMin, newMax};
+}
+
+auto OMModelPrecompiler::loadModelWithArgs(OMIdentifier i, int xrot, int yrot, int zrot, bool lockuv, bool soild) -> int
+{
+    models.resize(modelId + 1);
+    modelSoild.resize(modelId + 1);
+    models[modelId] = {};
+
+    auto pre = precompile(i);
+
+    if (pre)
+    {
+        for (auto &p : pre->getArray())
+        {
+            auto &mm = p->getMap()["faces"]->getMap();
+            auto fetchface = [&](std::string f) -> std::shared_ptr<openminecraft::io::json::OMJsonNode> {
+                auto face = mm.find(f);
+                if (face != mm.end())
+                {
+                    return face->second;
+                }
+                else
+                {
+                    return nullptr;
+                }
+            };
+            auto putface = [&](std::string f, std::shared_ptr<openminecraft::io::json::OMJsonNode> a) {
+                if (!a)
+                {
+                    if (mm.count(f))
+                    {
+                        mm.erase(f);
+                    }
+                }
+                else
+                {
+                    mm[f] = a;
+                }
+            };
+            auto xrot90 = [&]() {
+                auto &from = p->getMap()["from"]->getArray();
+                auto &to = p->getMap()["to"]->getArray();
+                auto fromv = glm::ivec3{from[0]->getNumber(), from[1]->getNumber(), from[2]->getNumber()};
+                auto tov = glm::ivec3{to[0]->getNumber(), to[1]->getNumber(), to[2]->getNumber()};
+                auto vv = rotateVoxelElementX90(fromv, tov);
+
+                from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.x));
+                from[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.y));
+                from[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.z));
+                to[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.x));
+                to[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.y));
+                to[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.z));
+
+                auto fup = fetchface("up");
+                auto fsouth = fetchface("south");
+                auto fdown = fetchface("down");
+                auto fnorth = fetchface("north");
+
+                putface("south", fup);
+                putface("down", fsouth);
+                putface("north", fdown);
+                putface("up", fnorth);
+
+                auto fwest = fetchface("west");
+                auto feast = fetchface("east");
+
+                if (fwest)
+                {
+                    fwest->getMap()["rotation"] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(
+                        ((fwest->getMap().count("rotation") ? fwest->getMap()["rotation"]->getNumber() : 0) +
+                         (lockuv ? -90 : 90)) %
+                        360));
+                }
+                if (feast)
+                {
+                    feast->getMap()["rotation"] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(
+                        ((feast->getMap().count("rotation") ? feast->getMap()["rotation"]->getNumber() : 0) +
+                         (lockuv ? -90 : 90)) %
+                        360));
+                }
+            };
+            auto yrot90 = [&]() {
+                auto &from = p->getMap()["from"]->getArray();
+                auto &to = p->getMap()["to"]->getArray();
+                auto fromv = glm::ivec3{from[0]->getNumber(), from[1]->getNumber(), from[2]->getNumber()};
+                auto tov = glm::ivec3{to[0]->getNumber(), to[1]->getNumber(), to[2]->getNumber()};
+                auto vv = rotateVoxelElementY90(fromv, tov);
+
+                from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.x));
+                from[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.y));
+                from[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.z));
+                to[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.x));
+                to[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.y));
+                to[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.z));
+
+                auto feast = fetchface("east");
+                auto fsouth = fetchface("south");
+                auto fwest = fetchface("west");
+                auto fnorth = fetchface("north");
+
+                putface("south", feast);
+                putface("west", fsouth);
+                putface("north", fwest);
+                putface("east", fnorth);
+
+                auto fup = fetchface("up");
+                auto fdown = fetchface("down");
+
+                if (fup)
+                {
+                    fup->getMap()["rotation"] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(
+                        ((fup->getMap().count("rotation") ? fup->getMap()["rotation"]->getNumber() : 0) +
+                         (lockuv ? -90 : 90)) %
+                        360));
+                }
+                if (fdown)
+                {
+                    fdown->getMap()["rotation"] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(
+                        ((fdown->getMap().count("rotation") ? fdown->getMap()["rotation"]->getNumber() : 0) +
+                         (lockuv ? -90 : 90)) %
+                        360));
+                }
+            };
+            auto zrot90 = [&]() {
+                auto &from = p->getMap()["from"]->getArray();
+                auto &to = p->getMap()["to"]->getArray();
+                auto fromv = glm::ivec3{from[0]->getNumber(), from[1]->getNumber(), from[2]->getNumber()};
+                auto tov = glm::ivec3{to[0]->getNumber(), to[1]->getNumber(), to[2]->getNumber()};
+                auto vv = rotateVoxelElementZ90(fromv, tov);
+
+                from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.x));
+                from[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.y));
+                from[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.z));
+                to[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.x));
+                to[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.y));
+                to[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.z));
+
+                auto fup = fetchface("up");
+                auto fwest = fetchface("west");
+                auto fdown = fetchface("down");
+                auto feast = fetchface("east");
+
+                putface("west", fup);
+                putface("down", fwest);
+                putface("east", fdown);
+                putface("up", feast);
+
+                auto fnorth = fetchface("north");
+                auto fsouth = fetchface("south");
+
+                if (fnorth)
+                {
+                    fnorth->getMap()["rotation"] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(
+                        ((fnorth->getMap().count("rotation") ? fnorth->getMap()["rotation"]->getNumber() : 0) +
+                         (lockuv ? -90 : 90)) %
+                        360));
+                }
+                if (fsouth)
+                {
+                    fsouth->getMap()["rotation"] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(
+                        ((fsouth->getMap().count("rotation") ? fsouth->getMap()["rotation"]->getNumber() : 0) +
+                         (lockuv ? -90 : 90)) %
+                        360));
+                }
+            };
+
+            while (xrot > 0)
+            {
+                xrot90();
+                xrot -= 90;
+            }
+            while (yrot > 0)
+            {
+                yrot90();
+                yrot -= 90;
+            }
+            while (zrot > 0)
+            {
+                zrot90();
+                zrot -= 90;
+            }
+
+            models[modelId].emplace_back(wrapPart(p));
+        }
+    }
+
+    modelSoild[modelId] = soild;
+    modelId++;
+    return modelId - 1;
+}
+
 auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
     -> std::shared_ptr<openminecraft::io::json::OMJsonNode>
 {
@@ -273,6 +536,7 @@ auto OMModelPrecompiler::wrapPart(std::shared_ptr<openminecraft::io::json::OMJso
     auto ro = part->getMap().count("rotation") ? part->getMap()["rotation"] : nullptr;
     auto fromv = glm::ivec3{from[0]->getNumber(), from[1]->getNumber(), from[2]->getNumber()};
     auto tov = glm::ivec3{to[0]->getNumber(), to[1]->getNumber(), to[2]->getNumber()};
+
     return {
         mm.count("east") ? wrapFace(mm["east"], OMModelCullSide::East, fromv, tov) : OMModelFace(),
         mm.count("east") > 0,

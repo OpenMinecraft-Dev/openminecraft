@@ -115,7 +115,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/oak_stairs"), false);
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/spruce_door_bottom_left"), false);
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/spruce_door_top_left"), false);
-    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/oak_button"), false);
+    voxelHandler->loadModelWithArgs(data::OMIdentifier("minecraft:block/oak_button"), 90, 270, 0, true, false);
     textureAtlas->build();
 
     voxelManager = new wrap::OMVoxelManager(

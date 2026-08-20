@@ -106,6 +106,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelPart;
 
     auto loadModel(OMIdentifier, bool = true) -> int;
+    auto loadModelWithArgs(OMIdentifier, int, int, int, bool, bool = true) -> int;
 
     auto queryNumParts(int bsid) -> int override;
     auto queryPartFaceEnabled(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> bool override;
