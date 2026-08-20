@@ -106,7 +106,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto wrapFace(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelFace;
     auto wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelPart;
 
-    auto loadModel(OMIdentifier) -> int;
+    auto loadModel(OMIdentifier, bool = true) -> int;
 
     auto queryNumParts(int bsid) -> int override;
     auto queryPartFaceEnabled(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> bool override;
@@ -122,6 +122,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto queryPartRotationAxis(int bsid, int pid) -> int override;
     auto queryPartRotationCenter(int bsid, int pid) -> glm::ivec3 override;
     auto queryPartRotationAngle(int bsid, int pid) -> int override;
+    auto querySoild(int bsid) -> bool override;
 
   private:
     int modelId = 0;
@@ -129,6 +130,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     openminecraft::log::OMLogger logger;
     OMTextureAtlas &textureAtlas;
     std::vector<std::vector<OMModelPart>> models;
+    std::vector<bool> modelSoild;
 };
 } // namespace openminecraftshell::data
 

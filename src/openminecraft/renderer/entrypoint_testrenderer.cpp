@@ -99,15 +99,15 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
     }
 
     voxelHandler = new data::OMModelPrecompiler("/external", textureAtlas);
-    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/air"));
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/air"), false);
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/stone"));
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/cobblestone"));
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/coal_ore"));
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/iron_ore"));
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/dirt"));
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/copper_ore"));
-    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/tall_grass_bottom"));
-    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/tall_grass_top"));
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/tall_grass_bottom"), false);
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/tall_grass_top"), false);
     textureAtlas->build();
 
     voxelManager = new wrap::OMVoxelManager(

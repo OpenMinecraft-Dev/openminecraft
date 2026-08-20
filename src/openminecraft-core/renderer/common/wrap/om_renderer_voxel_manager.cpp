@@ -140,8 +140,14 @@ auto OMVoxelManager::compile(int i) -> void
         }
 
         world::OMChunkIndex idx = {chunkx, chunky, chunkz};
-
-        return chunkManager->chunkLoaded(idx) && chunkManager->getChunk(idx).exists(pos.x, pos.y, pos.z);
+        if (chunkManager->chunkLoaded(idx))
+        {
+            return chunkManager->getChunk(idx).fetch(pos.x, pos.y, pos.z);
+        }
+        else
+        {
+            return 0;
+        }
     };
     std::vector<OMVoxel> m = {};
     auto &ck = chunkManager->getChunk(i);

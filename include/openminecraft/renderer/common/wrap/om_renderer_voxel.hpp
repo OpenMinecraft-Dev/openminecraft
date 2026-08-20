@@ -65,6 +65,7 @@ class OMVoxelHandler
     virtual auto queryPartRotationAxis(int bsid, int pid) -> int = 0;
     virtual auto queryPartRotationCenter(int bsid, int pid) -> glm::ivec3 = 0;
     virtual auto queryPartRotationAngle(int bsid, int pid) -> int = 0;
+    virtual auto querySoild(int bsid) -> bool = 0;
 };
 
 class OMVoxelHandlerDummy : public OMVoxelHandler
@@ -120,6 +121,10 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     {
         return 2;
     }
+    auto querySoild(int bsid) -> bool override
+    {
+        return true;
+    }
 };
 
 class OMVoxelCompiler
@@ -128,8 +133,8 @@ class OMVoxelCompiler
     OMVoxelCompiler();
     ~OMVoxelCompiler();
 
-    auto compile(const world::OMChunk<16> &, std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)>, int chunkid,
-                 std::function<void(OMVoxel)>) -> void;
+    auto compile(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
+                 int chunkid, std::function<void(OMVoxel)>) -> void;
 
     OMVoxelHandler *handler = new OMVoxelHandlerDummy();
 

@@ -202,9 +202,15 @@ auto OMModelPrecompiler::queryPartRotationAngle(int bsid, int pid) -> int
     return static_cast<float>(models[bsid][pid].rotateAngle + 45) / 22.5f;
 }
 
-auto OMModelPrecompiler::loadModel(OMIdentifier i) -> int
+auto OMModelPrecompiler::querySoild(int bsid) -> bool
+{
+    return modelSoild[bsid];
+}
+
+auto OMModelPrecompiler::loadModel(OMIdentifier i, bool soild) -> int
 {
     models.resize(modelId + 1);
+    modelSoild.resize(modelId + 1);
     models[modelId] = {};
 
     auto pre = precompile(i);
@@ -217,6 +223,7 @@ auto OMModelPrecompiler::loadModel(OMIdentifier i) -> int
         }
     }
 
+    modelSoild[modelId] = soild;
     modelId++;
     return modelId - 1;
 }

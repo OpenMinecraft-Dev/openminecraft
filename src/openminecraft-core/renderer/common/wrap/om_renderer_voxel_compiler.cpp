@@ -63,19 +63,20 @@ static constexpr auto packVoxel(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing f
 }
 
 auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
-                              std::function<bool(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, int chunkid,
-                              std::function<void(OMVoxel)> commiter) -> void
+                              std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
+                              int chunkid, std::function<void(OMVoxel)> commiter) -> void
 {
-    auto exist = [&](int x, int y, int z) -> bool {
+    auto existSoild = [&](int x, int y, int z) -> bool {
         if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
-            return externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz);
-        return chunk.exists(x, y, z);
+            return handler->querySoild(externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz));
+
+        return handler->querySoild(chunk.fetch(x, y, z));
     };
 
     auto computeAO = [&](int x, int y, int z, OMVoxelFacing facing) -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> {
         uint8_t ao1 = 0, ao2 = 0, ao3 = 0, ao4 = 0;
 
-        auto countNeighbors = [&](int dx, int dy, int dz) -> int { return exist(x + dx, y + dy, z + dz) ? 1 : 0; };
+        auto countNeighbors = [&](int dx, int dy, int dz) -> int { return existSoild(x + dx, y + dy, z + dz) ? 1 : 0; };
         auto finalAO = [&](int corner, int side1, int side2) {
             if (side1 && side2)
             {
@@ -141,23 +142,23 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             continue;
         }
 
-        auto checkExists = [&](OMVoxelFacing f) -> bool {
+        auto checkExistSoild = [&](OMVoxelFacing f) -> bool {
             switch (f)
             {
             case None:
                 return false;
             case NegX:
-                return exist(v.first.x - 1, v.first.y, v.first.z);
+                return existSoild(v.first.x - 1, v.first.y, v.first.z);
             case NegY:
-                return exist(v.first.x, v.first.y - 1, v.first.z);
+                return existSoild(v.first.x, v.first.y - 1, v.first.z);
             case NegZ:
-                return exist(v.first.x, v.first.y, v.first.z - 1);
+                return existSoild(v.first.x, v.first.y, v.first.z - 1);
             case PosX:
-                return exist(v.first.x + 1, v.first.y, v.first.z);
+                return existSoild(v.first.x + 1, v.first.y, v.first.z);
             case PosY:
-                return exist(v.first.x, v.first.y + 1, v.first.z);
+                return existSoild(v.first.x, v.first.y + 1, v.first.z);
             case PosZ:
-                return exist(v.first.x, v.first.y, v.first.z + 1);
+                return existSoild(v.first.x, v.first.y, v.first.z + 1);
             }
         };
 
@@ -167,7 +168,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             {
                 auto ff = handler->queryPartFaceCull(v.second, i, f);
                 if (handler->queryPartFaceEnabled(v.second, i, f) &&
-                    !checkExists(handler->queryPartFaceCull(v.second, i, f)))
+                    !checkExistSoild(handler->queryPartFaceCull(v.second, i, f)))
                 {
                     auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, f);
                     auto siz = handler->queryPartSize(v.second, i);

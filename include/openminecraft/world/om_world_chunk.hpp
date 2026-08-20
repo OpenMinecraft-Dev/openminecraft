@@ -97,11 +97,18 @@ template <int Cs> class OMChunk
         return const_iterator(this, Cs * Cs * Cs);
     }
 
-    auto exists(int x, int y, int z) const -> bool
+    [[nodiscard]] auto exists(int x, int y, int z) const -> bool
     {
         if (x < 0 || y < 0 || z < 0 || x >= Cs || y >= Cs || z >= Cs)
             return false;
         return blocks[y * Cs * Cs + x * Cs + z] != 0;
+    }
+
+    [[nodiscard]] auto fetch(int x, int y, int z) const -> uint32_t
+    {
+        if (x < 0 || y < 0 || z < 0 || x >= Cs || y >= Cs || z >= Cs)
+            return 0;
+        return blocks[y * Cs * Cs + x * Cs + z];
     }
 
     int64_t chunkx, chunky, chunkz;
