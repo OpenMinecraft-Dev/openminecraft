@@ -89,6 +89,7 @@ auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
     -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t>
 {
     uint8_t ao1 = 0, ao2 = 0, ao3 = 0, ao4 = 0;
+    // INFO: ambientocculusion property check & per-vertex check is needed!
     auto countNeighbors = [&](int dx, int dy, int dz) -> int {
         auto tgbs = queryBlockstate(chunk, externalAccessor, x + dx, y + dy, z + dz);
         if (tgbs == 0)

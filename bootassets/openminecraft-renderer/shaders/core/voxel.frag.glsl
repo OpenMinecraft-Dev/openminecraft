@@ -17,7 +17,7 @@ void main()
 {
     mat4 unused = camera.viewProj;
 
-    float ao = mix(1.0, 0.2, voxAoLevel / 3.0);
+    float ao = mix(1.0, -2.0, voxAoLevel / 3.0);
 
     vec4 texColor = texture(inTexture, vec3(voxTexCoord, voxTexLayer));
     if (texColor.a < 0.005)
