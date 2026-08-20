@@ -187,6 +187,21 @@ auto OMModelPrecompiler::queryPartFaceRotation(int bsid, int pid,
     }
 }
 
+auto OMModelPrecompiler::queryPartRotationAxis(int bsid, int pid) -> int
+{
+    return models[bsid][pid].rotateAxis;
+}
+
+auto OMModelPrecompiler::queryPartRotationCenter(int bsid, int pid) -> glm::ivec3
+{
+    return models[bsid][pid].rotateOrigin;
+}
+
+auto OMModelPrecompiler::queryPartRotationAngle(int bsid, int pid) -> int
+{
+    return static_cast<float>(models[bsid][pid].rotateAngle + 45) / 22.5f;
+}
+
 auto OMModelPrecompiler::loadModel(OMIdentifier i) -> int
 {
     models.resize(modelId + 1);

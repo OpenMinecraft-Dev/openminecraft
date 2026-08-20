@@ -109,7 +109,7 @@ void main()
     {
     case 0: {
         worldPos = vec3(0, orgin.x, orgin.y);
-        worldPosOffset = vec3(sign, 0, 0);
+        worldPosOffset = vec3(modelSize.x == 0 ? 0 : sign, 0, 0);
         norm = vec3(1.0, 0.0, 0.0);
         uv = (sign == 0.0) ? vec2(orgin.y, inv_or.x) : inv_or.yx;
         oruv = uv;
@@ -127,7 +127,7 @@ void main()
     }
     case 1: {
         worldPos = vec3(orgin.x, orgin.y, 0);
-        worldPosOffset = vec3(0, 0, sign);
+        worldPosOffset = vec3(0, 0, modelSize.z == 0 ? 0 : sign);
         norm = vec3(0.0, 0.0, 1.0);
         uv = (sign == 0.0) ? inv_or.xy : vec2(orgin.x, inv_or.y);
         oruv = uv;
@@ -145,7 +145,7 @@ void main()
     }
     case 2: {
         worldPos = vec3(orgin.x, 0, inv_or.y);
-        worldPosOffset = vec3(0, sign, 0);
+        worldPosOffset = vec3(0, modelSize.y == 0 ? 0 : sign, 0);
         norm = vec3(0.0, 0.5, 0.0);
         uv = vec2(orgin.x, inv_or.y);
         oruv = uv;
@@ -168,6 +168,8 @@ void main()
     }
 
     worldPos += worldPosOffset;
+    worldPos *= modelSize;
+    worldPos += modelOffset;
 
     vec3 rotAxis = vec3(0.0);
     if (rotationAxis == 0)
@@ -177,14 +179,8 @@ void main()
     else if (rotationAxis == 2)
         rotAxis = vec3(0.0, 0.0, 1.0);
 
-    vec3 centered = worldPos - rotationCenter;
-    float angRad = radians(rotationAngle);
-    vec3 rotatedPos = rotateVec(centered, angRad, rotAxis) + rotationCenter;
+    worldPos = rotateVec(worldPos - rotationCenter, radians(rotationAngle), rotAxis) + rotationCenter;
 
-    worldPos = rotatedPos;
-
-    worldPos *= modelSize;
-    worldPos += modelOffset;
     worldPos += vec3(bx, by, bz);
 
     vec3 coff = vec3(texelFetch(inChunkPos, VOXEL_CHUNKID * 3).r, texelFetch(inChunkPos, VOXEL_CHUNKID * 3 + 1).r,

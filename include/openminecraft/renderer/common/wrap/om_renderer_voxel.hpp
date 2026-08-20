@@ -62,6 +62,9 @@ class OMVoxelHandler
     virtual auto queryPartFaceUVAuto(int bsid, int pid, OMVoxelFacing) -> bool = 0;
     virtual auto queryPartFaceUV(int bsid, int pid, OMVoxelFacing) -> glm::ivec4 = 0;
     virtual auto queryPartFaceRotation(int bsid, int pid, OMVoxelFacing) -> int = 0;
+    virtual auto queryPartRotationAxis(int bsid, int pid) -> int = 0;
+    virtual auto queryPartRotationCenter(int bsid, int pid) -> glm::ivec3 = 0;
+    virtual auto queryPartRotationAngle(int bsid, int pid) -> int = 0;
 };
 
 class OMVoxelHandlerDummy : public OMVoxelHandler
@@ -104,6 +107,18 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     auto queryPartFaceRotation(int bsid, int pid, OMVoxelFacing) -> int override
     {
         return 0;
+    }
+    auto queryPartRotationAxis(int bsid, int pid) -> int override
+    {
+        return 0;
+    }
+    auto queryPartRotationCenter(int bsid, int pid) -> glm::ivec3 override
+    {
+        return {0, 0, 0};
+    }
+    auto queryPartRotationAngle(int bsid, int pid) -> int override
+    {
+        return 2;
     }
 };
 

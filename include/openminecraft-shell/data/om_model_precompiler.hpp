@@ -8,6 +8,7 @@
 #include "openminecraft/io/json/om_io_ast_json.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include <cstdint>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -44,11 +45,11 @@ static auto from(std::string s) -> OMModelCullSide
         return None;
     }
 }
-enum OMModelAxis
+enum OMModelAxis : uint8_t
 {
-    X,
-    Y,
-    Z
+    X = 0,
+    Y = 1,
+    Z = 2
 };
 static auto fromAxis(std::string s) -> OMModelAxis
 {
@@ -118,6 +119,9 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto queryPartFaceUV(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
         -> glm::ivec4 override;
     auto queryPartFaceRotation(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> int override;
+    auto queryPartRotationAxis(int bsid, int pid) -> int override;
+    auto queryPartRotationCenter(int bsid, int pid) -> glm::ivec3 override;
+    auto queryPartRotationAngle(int bsid, int pid) -> int override;
 
   private:
     int modelId = 0;
