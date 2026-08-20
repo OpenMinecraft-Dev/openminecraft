@@ -53,6 +53,7 @@ beg:
     case '\r':
         this->source->ignore(1);
         goto beg;
+    case '-':
     case '0':
     case '1':
     case '2':
@@ -84,7 +85,7 @@ beg:
     case 't':
     case 'n': {
         std::array<char, 5> b;
-	b[4] = '\0';
+        b[4] = '\0';
         this->source->read(b.data(), 4);
         if (std::strncmp(b.data(), "true", 4) == 0 || std::strncmp(b.data(), "null", 4) == 0)
         {
@@ -97,7 +98,7 @@ beg:
     }
     case 'f': {
         std::array<char, 6> b;
-	b[5] = '\0';
+        b[5] = '\0';
         this->source->read(b.data(), 5);
         if (std::strncmp(b.data(), "false", 5) == 0)
         {

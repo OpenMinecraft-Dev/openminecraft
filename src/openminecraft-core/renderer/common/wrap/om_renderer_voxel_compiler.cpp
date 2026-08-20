@@ -74,14 +74,51 @@ auto OMVoxelCompiler::existSoild(const world::OMChunk<16> &chunk,
     return handler->querySoild(chunk.fetch(x, y, z));
 }
 
+auto OMVoxelCompiler::queryBlockstate(const world::OMChunk<16> &chunk,
+                                      std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
+                                      int x, int y, int z) -> uint32_t
+{
+    if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
+        return externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz);
+
+    return chunk.fetch(x, y, z);
+}
+
 auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
                                 std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, int x,
-                                int y, int z, OMVoxelFacing facing) -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t>
+                                int y, int z, OMVoxelFacing facing, int bsid, int pid)
+    -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t>
 {
     uint8_t ao1 = 0, ao2 = 0, ao3 = 0, ao4 = 0;
-
     auto countNeighbors = [&](int dx, int dy, int dz) -> int {
-        return existSoild(chunk, externalAccessor, x + dx, y + dy, z + dz) ? 1 : 0;
+        auto tgbs = queryBlockstate(chunk, externalAccessor, x + dx, y + dy, z + dz);
+        if (tgbs == 0)
+            return 0;
+
+        auto siz = handler->queryPartSize(bsid, pid);
+        auto off = handler->queryPartOffset(bsid, pid);
+
+        glm::ivec3 base = glm::ivec3(x, y, z) * 16;
+        glm::ivec3 currMin = base + off;
+        glm::ivec3 currMax = currMin + siz;
+
+        glm::ivec3 neighborBase = glm::ivec3(x + dx, y + dy, z + dz) * 16;
+
+        for (int i = 0; i < handler->queryNumParts(tgbs); ++i)
+        {
+            auto psiz = handler->queryPartSize(tgbs, i);
+            auto poff = handler->queryPartOffset(tgbs, i);
+
+            glm::ivec3 tgtMin = neighborBase + poff;
+            glm::ivec3 tgtMax = tgtMin + psiz;
+
+            if (currMin.x <= tgtMax.x && currMax.x >= tgtMin.x && currMin.y <= tgtMax.y && currMax.y >= tgtMin.y &&
+                currMin.z <= tgtMax.z && currMax.z >= tgtMin.z)
+            {
+                return 1;
+            }
+        }
+        return 0;
     };
     auto finalAO = [&](int corner, int side1, int side2) {
         if (side1 && side2)
@@ -183,7 +220,8 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                 if (handler->queryPartFaceEnabled(v.second, i, f) &&
                     !checkExistSoild(chunk, externalAccessor, v.first, handler->queryPartFaceCull(v.second, i, f)))
                 {
-                    auto [ao1, ao2, ao3, ao4] = computeAO(chunk, externalAccessor, v.first.x, v.first.y, v.first.z, f);
+                    auto [ao1, ao2, ao3, ao4] =
+                        computeAO(chunk, externalAccessor, v.first.x, v.first.y, v.first.z, f, v.second, i);
                     auto siz = handler->queryPartSize(v.second, i);
                     auto off = handler->queryPartOffset(v.second, i);
                     auto uv = handler->queryPartFaceUV(v.second, i, f);
