@@ -1,4 +1,6 @@
+#include "glm/fwd.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include "openminecraft/world/om_world_chunkmanager.hpp"
 #include <array>
 #include <cstdint>
 
@@ -62,79 +64,110 @@ static constexpr auto packVoxel(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing f
     };
 }
 
+auto OMVoxelCompiler::existSoild(const world::OMChunk<16> &chunk,
+                                 std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, int x,
+                                 int y, int z) -> bool
+{
+    if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
+        return handler->querySoild(externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz));
+
+    return handler->querySoild(chunk.fetch(x, y, z));
+}
+
+auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
+                                std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, int x,
+                                int y, int z, OMVoxelFacing facing) -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t>
+{
+    uint8_t ao1 = 0, ao2 = 0, ao3 = 0, ao4 = 0;
+
+    auto countNeighbors = [&](int dx, int dy, int dz) -> int {
+        return existSoild(chunk, externalAccessor, x + dx, y + dy, z + dz) ? 1 : 0;
+    };
+    auto finalAO = [&](int corner, int side1, int side2) {
+        if (side1 && side2)
+        {
+            return 3;
+        }
+        return side1 + side2 + corner;
+    };
+
+    switch (facing)
+    {
+    case OMVoxelFacing::NegY: {
+        ao1 = finalAO(countNeighbors(-1, -1, -1), countNeighbors(-1, -1, 0), countNeighbors(0, -1, -1));
+        ao2 = finalAO(countNeighbors(-1, -1, 1), countNeighbors(-1, -1, 0), countNeighbors(0, -1, 1));
+        ao3 = finalAO(countNeighbors(1, -1, -1), countNeighbors(1, -1, 0), countNeighbors(0, -1, -1));
+        ao4 = finalAO(countNeighbors(1, -1, 1), countNeighbors(1, -1, 0), countNeighbors(0, -1, 1));
+        break;
+    }
+    case OMVoxelFacing::PosY: {
+        ao1 = finalAO(countNeighbors(-1, 1, -1), countNeighbors(-1, 1, 0), countNeighbors(0, 1, -1));
+        ao2 = finalAO(countNeighbors(-1, 1, 1), countNeighbors(-1, 1, 0), countNeighbors(0, 1, 1));
+        ao3 = finalAO(countNeighbors(1, 1, -1), countNeighbors(1, 1, 0), countNeighbors(0, 1, -1));
+        ao4 = finalAO(countNeighbors(1, 1, 1), countNeighbors(1, 1, 0), countNeighbors(0, 1, 1));
+        break;
+    }
+    case OMVoxelFacing::NegX: {
+        ao2 = finalAO(countNeighbors(-1, -1, -1), countNeighbors(-1, -1, 0), countNeighbors(-1, 0, -1));
+        ao1 = finalAO(countNeighbors(-1, 1, -1), countNeighbors(-1, 1, 0), countNeighbors(-1, 0, -1));
+        ao4 = finalAO(countNeighbors(-1, -1, 1), countNeighbors(-1, -1, 0), countNeighbors(-1, 0, 1));
+        ao3 = finalAO(countNeighbors(-1, 1, 1), countNeighbors(-1, 1, 0), countNeighbors(-1, 0, 1));
+        break;
+    }
+    case OMVoxelFacing::PosX: {
+        ao4 = finalAO(countNeighbors(1, -1, -1), countNeighbors(1, -1, 0), countNeighbors(1, 0, -1));
+        ao3 = finalAO(countNeighbors(1, 1, -1), countNeighbors(1, 1, 0), countNeighbors(1, 0, -1));
+        ao2 = finalAO(countNeighbors(1, -1, 1), countNeighbors(1, -1, 0), countNeighbors(1, 0, 1));
+        ao1 = finalAO(countNeighbors(1, 1, 1), countNeighbors(1, 1, 0), countNeighbors(1, 0, 1));
+        break;
+    }
+    case OMVoxelFacing::NegZ: {
+        ao4 = finalAO(countNeighbors(-1, -1, -1), countNeighbors(-1, 0, -1), countNeighbors(0, -1, -1));
+        ao3 = finalAO(countNeighbors(-1, 1, -1), countNeighbors(-1, 0, -1), countNeighbors(0, 1, -1));
+        ao2 = finalAO(countNeighbors(1, -1, -1), countNeighbors(1, 0, -1), countNeighbors(0, -1, -1));
+        ao1 = finalAO(countNeighbors(1, 1, -1), countNeighbors(1, 0, -1), countNeighbors(0, 1, -1));
+        break;
+    }
+    case OMVoxelFacing::PosZ: {
+        ao2 = finalAO(countNeighbors(-1, -1, 1), countNeighbors(-1, 0, 1), countNeighbors(0, -1, 1));
+        ao1 = finalAO(countNeighbors(-1, 1, 1), countNeighbors(-1, 0, 1), countNeighbors(0, 1, 1));
+        ao4 = finalAO(countNeighbors(1, -1, 1), countNeighbors(1, 0, 1), countNeighbors(0, -1, 1));
+        ao3 = finalAO(countNeighbors(1, 1, 1), countNeighbors(1, 0, 1), countNeighbors(0, 1, 1));
+        break;
+    }
+    default:
+        break;
+    }
+    return {ao1, ao2, ao3, ao4};
+}
+
+auto OMVoxelCompiler::checkExistSoild(const world::OMChunk<16> &chunk,
+                                      std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
+                                      glm::ivec3 v, OMVoxelFacing f) -> bool
+{
+    switch (f)
+    {
+    case None:
+        return false;
+    case NegX:
+        return existSoild(chunk, externalAccessor, v.x - 1, v.y, v.z);
+    case NegY:
+        return existSoild(chunk, externalAccessor, v.x, v.y - 1, v.z);
+    case NegZ:
+        return existSoild(chunk, externalAccessor, v.x, v.y, v.z - 1);
+    case PosX:
+        return existSoild(chunk, externalAccessor, v.x + 1, v.y, v.z);
+    case PosY:
+        return existSoild(chunk, externalAccessor, v.x, v.y + 1, v.z);
+    case PosZ:
+        return existSoild(chunk, externalAccessor, v.x, v.y, v.z + 1);
+    }
+}
+
 auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                               std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
                               int chunkid, std::function<void(OMVoxel)> commiter) -> void
 {
-    auto existSoild = [&](int x, int y, int z) -> bool {
-        if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
-            return handler->querySoild(externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz));
-
-        return handler->querySoild(chunk.fetch(x, y, z));
-    };
-
-    auto computeAO = [&](int x, int y, int z, OMVoxelFacing facing) -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> {
-        uint8_t ao1 = 0, ao2 = 0, ao3 = 0, ao4 = 0;
-
-        auto countNeighbors = [&](int dx, int dy, int dz) -> int { return existSoild(x + dx, y + dy, z + dz) ? 1 : 0; };
-        auto finalAO = [&](int corner, int side1, int side2) {
-            if (side1 && side2)
-            {
-                return 3;
-            }
-            return side1 + side2 + corner;
-        };
-
-        switch (facing)
-        {
-        case OMVoxelFacing::NegY: {
-            ao1 = finalAO(countNeighbors(-1, -1, -1), countNeighbors(-1, -1, 0), countNeighbors(0, -1, -1));
-            ao2 = finalAO(countNeighbors(-1, -1, 1), countNeighbors(-1, -1, 0), countNeighbors(0, -1, 1));
-            ao3 = finalAO(countNeighbors(1, -1, -1), countNeighbors(1, -1, 0), countNeighbors(0, -1, -1));
-            ao4 = finalAO(countNeighbors(1, -1, 1), countNeighbors(1, -1, 0), countNeighbors(0, -1, 1));
-            break;
-        }
-        case OMVoxelFacing::PosY: {
-            ao1 = finalAO(countNeighbors(-1, 1, -1), countNeighbors(-1, 1, 0), countNeighbors(0, 1, -1));
-            ao2 = finalAO(countNeighbors(-1, 1, 1), countNeighbors(-1, 1, 0), countNeighbors(0, 1, 1));
-            ao3 = finalAO(countNeighbors(1, 1, -1), countNeighbors(1, 1, 0), countNeighbors(0, 1, -1));
-            ao4 = finalAO(countNeighbors(1, 1, 1), countNeighbors(1, 1, 0), countNeighbors(0, 1, 1));
-            break;
-        }
-        case OMVoxelFacing::NegX: {
-            ao2 = finalAO(countNeighbors(-1, -1, -1), countNeighbors(-1, -1, 0), countNeighbors(-1, 0, -1));
-            ao1 = finalAO(countNeighbors(-1, 1, -1), countNeighbors(-1, 1, 0), countNeighbors(-1, 0, -1));
-            ao4 = finalAO(countNeighbors(-1, -1, 1), countNeighbors(-1, -1, 0), countNeighbors(-1, 0, 1));
-            ao3 = finalAO(countNeighbors(-1, 1, 1), countNeighbors(-1, 1, 0), countNeighbors(-1, 0, 1));
-            break;
-        }
-        case OMVoxelFacing::PosX: {
-            ao4 = finalAO(countNeighbors(1, -1, -1), countNeighbors(1, -1, 0), countNeighbors(1, 0, -1));
-            ao3 = finalAO(countNeighbors(1, 1, -1), countNeighbors(1, 1, 0), countNeighbors(1, 0, -1));
-            ao2 = finalAO(countNeighbors(1, -1, 1), countNeighbors(1, -1, 0), countNeighbors(1, 0, 1));
-            ao1 = finalAO(countNeighbors(1, 1, 1), countNeighbors(1, 1, 0), countNeighbors(1, 0, 1));
-            break;
-        }
-        case OMVoxelFacing::NegZ: {
-            ao4 = finalAO(countNeighbors(-1, -1, -1), countNeighbors(-1, 0, -1), countNeighbors(0, -1, -1));
-            ao3 = finalAO(countNeighbors(-1, 1, -1), countNeighbors(-1, 0, -1), countNeighbors(0, 1, -1));
-            ao2 = finalAO(countNeighbors(1, -1, -1), countNeighbors(1, 0, -1), countNeighbors(0, -1, -1));
-            ao1 = finalAO(countNeighbors(1, 1, -1), countNeighbors(1, 0, -1), countNeighbors(0, 1, -1));
-            break;
-        }
-        case OMVoxelFacing::PosZ: {
-            ao2 = finalAO(countNeighbors(-1, -1, 1), countNeighbors(-1, 0, 1), countNeighbors(0, -1, 1));
-            ao1 = finalAO(countNeighbors(-1, 1, 1), countNeighbors(-1, 0, 1), countNeighbors(0, 1, 1));
-            ao4 = finalAO(countNeighbors(1, -1, 1), countNeighbors(1, 0, 1), countNeighbors(0, -1, 1));
-            ao3 = finalAO(countNeighbors(1, 1, 1), countNeighbors(1, 0, 1), countNeighbors(0, 1, 1));
-            break;
-        }
-        default:
-            break;
-        }
-        return {ao1, ao2, ao3, ao4};
-    };
-
     for (const auto &v : chunk)
     {
         if (handler->queryNumParts(v.second) == 0)
@@ -142,35 +175,15 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             continue;
         }
 
-        auto checkExistSoild = [&](OMVoxelFacing f) -> bool {
-            switch (f)
-            {
-            case None:
-                return false;
-            case NegX:
-                return existSoild(v.first.x - 1, v.first.y, v.first.z);
-            case NegY:
-                return existSoild(v.first.x, v.first.y - 1, v.first.z);
-            case NegZ:
-                return existSoild(v.first.x, v.first.y, v.first.z - 1);
-            case PosX:
-                return existSoild(v.first.x + 1, v.first.y, v.first.z);
-            case PosY:
-                return existSoild(v.first.x, v.first.y + 1, v.first.z);
-            case PosZ:
-                return existSoild(v.first.x, v.first.y, v.first.z + 1);
-            }
-        };
-
         for (int i = 0; i < handler->queryNumParts(v.second); ++i)
         {
             for (auto f : {NegX, NegY, NegZ, PosX, PosY, PosZ})
             {
                 auto ff = handler->queryPartFaceCull(v.second, i, f);
                 if (handler->queryPartFaceEnabled(v.second, i, f) &&
-                    !checkExistSoild(handler->queryPartFaceCull(v.second, i, f)))
+                    !checkExistSoild(chunk, externalAccessor, v.first, handler->queryPartFaceCull(v.second, i, f)))
                 {
-                    auto [ao1, ao2, ao3, ao4] = computeAO(v.first.x, v.first.y, v.first.z, f);
+                    auto [ao1, ao2, ao3, ao4] = computeAO(chunk, externalAccessor, v.first.x, v.first.y, v.first.z, f);
                     auto siz = handler->queryPartSize(v.second, i);
                     auto off = handler->queryPartOffset(v.second, i);
                     auto uv = handler->queryPartFaceUV(v.second, i, f);

@@ -133,6 +133,12 @@ class OMVoxelCompiler
     OMVoxelCompiler();
     ~OMVoxelCompiler();
 
+    auto existSoild(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, int x,
+                    int y, int z) -> bool;
+    auto computeAO(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, int x,
+                   int y, int z, OMVoxelFacing) -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t>;
+    auto checkExistSoild(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
+                         glm::ivec3, OMVoxelFacing) -> bool;
     auto compile(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                  int chunkid, std::function<void(OMVoxel)>) -> void;
 
