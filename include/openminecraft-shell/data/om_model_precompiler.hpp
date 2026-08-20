@@ -24,7 +24,7 @@ enum OMModelCullSide
     East,
     None,
 };
-static auto from(std::string s) -> OMModelCullSide
+static auto fromSide(std::string s) -> OMModelCullSide
 {
     using namespace binary::hash;
     switch (hash_compile_time(s.c_str()))
@@ -70,8 +70,6 @@ struct OMModelFace
     OMModelCullSide cull;
     int textureid;
     glm::ivec2 uv0, uv1;
-    bool autoUV;
-    bool keepUV;
     int rotation;
 };
 struct OMModelPart
@@ -103,7 +101,8 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     ~OMModelPrecompiler() = default;
 
     auto precompile(OMIdentifier, bool = true) -> std::shared_ptr<openminecraft::io::json::OMJsonNode>;
-    auto wrapFace(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelFace;
+    auto wrapFace(std::shared_ptr<openminecraft::io::json::OMJsonNode>, OMModelCullSide, glm::ivec3 from, glm::ivec3 to)
+        -> OMModelFace;
     auto wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelPart;
 
     auto loadModel(OMIdentifier, bool = true) -> int;
@@ -114,7 +113,6 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto queryPartFaceCull(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
         -> openminecraft::renderer::common::wrap::OMVoxelFacing override;
     auto queryPartAABB(int bsid, int pid) -> renderer::common::wrap::OMVoxelAABB override;
-    auto queryPartFaceUVAuto(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> bool override;
     auto queryPartFaceUV(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
         -> glm::ivec4 override;
     auto queryPartFaceRotation(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> int override;

@@ -3,6 +3,7 @@
 
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
 #include "fmt/format.h"
+#include "glm/common.hpp"
 #include "glm/fwd.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft/io/json/om_io_ast_builder_json.hpp"
@@ -118,26 +119,6 @@ auto OMModelPrecompiler::queryPartFaceCull(int bsid, int pid, ::OMVoxelFacing f)
     }
 }
 
-auto OMModelPrecompiler::queryPartFaceUVAuto(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing f)
-    -> bool
-{
-    switch (f)
-    {
-    default:
-    case ::NegX:
-        return models[bsid][pid].west.autoUV;
-    case ::PosX:
-        return models[bsid][pid].east.autoUV;
-    case ::NegZ:
-        return models[bsid][pid].north.autoUV;
-    case ::PosZ:
-        return models[bsid][pid].south.autoUV;
-    case ::NegY:
-        return models[bsid][pid].down.autoUV;
-    case ::PosY:
-        return models[bsid][pid].up.autoUV;
-    }
-}
 auto OMModelPrecompiler::queryPartFaceUV(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing f)
     -> glm::ivec4
 {
@@ -290,21 +271,23 @@ auto OMModelPrecompiler::wrapPart(std::shared_ptr<openminecraft::io::json::OMJso
     auto from = part->getMap()["from"]->getArray();
     auto to = part->getMap()["to"]->getArray();
     auto ro = part->getMap().count("rotation") ? part->getMap()["rotation"] : nullptr;
+    auto fromv = glm::ivec3{from[0]->getNumber(), from[1]->getNumber(), from[2]->getNumber()};
+    auto tov = glm::ivec3{to[0]->getNumber(), to[1]->getNumber(), to[2]->getNumber()};
     return {
-        mm.count("east") ? wrapFace(mm["east"]) : OMModelFace(),
+        mm.count("east") ? wrapFace(mm["east"], OMModelCullSide::East, fromv, tov) : OMModelFace(),
         mm.count("east") > 0,
-        mm.count("west") ? wrapFace(mm["west"]) : OMModelFace(),
+        mm.count("west") ? wrapFace(mm["west"], OMModelCullSide::West, fromv, tov) : OMModelFace(),
         mm.count("west") > 0,
-        mm.count("down") ? wrapFace(mm["down"]) : OMModelFace(),
+        mm.count("down") ? wrapFace(mm["down"], OMModelCullSide::Down, fromv, tov) : OMModelFace(),
         mm.count("down") > 0,
-        mm.count("up") ? wrapFace(mm["up"]) : OMModelFace(),
+        mm.count("up") ? wrapFace(mm["up"], OMModelCullSide::Up, fromv, tov) : OMModelFace(),
         mm.count("up") > 0,
-        mm.count("south") ? wrapFace(mm["south"]) : OMModelFace(),
+        mm.count("south") ? wrapFace(mm["south"], OMModelCullSide::South, fromv, tov) : OMModelFace(),
         mm.count("south") > 0,
-        mm.count("north") ? wrapFace(mm["north"]) : OMModelFace(),
+        mm.count("north") ? wrapFace(mm["north"], OMModelCullSide::North, fromv, tov) : OMModelFace(),
         mm.count("north") > 0,
-        {from[0]->getNumber(), from[1]->getNumber(), from[2]->getNumber()},
-        {to[0]->getNumber(), to[1]->getNumber(), to[2]->getNumber()},
+        fromv,
+        tov,
         part->getMap().count("shade") ? part->getMap()["shade"]->getBoolean() : true,
         ro != nullptr,
         ro ? glm::ivec3{static_cast<int>(ro->getMap()["origin"]->getArray()[0]->getNumber()),
@@ -316,16 +299,48 @@ auto OMModelPrecompiler::wrapPart(std::shared_ptr<openminecraft::io::json::OMJso
     };
 }
 
-auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::io::json::OMJsonNode> face) -> OMModelFace
+auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::io::json::OMJsonNode> face, OMModelCullSide c,
+                                  glm::ivec3 from, glm::ivec3 to) -> OMModelFace
 {
     auto uv = face->getMap().count("uv") ? face->getMap()["uv"] : nullptr;
+    glm::ivec2 uv0, uv1;
+    if (uv)
+    {
+        uv0 = {uv->getArray()[0]->getNumber(), uv->getArray()[1]->getNumber()};
+        uv1 = {uv->getArray()[2]->getNumber(), uv->getArray()[3]->getNumber()};
+    }
+    else
+    {
+        uv0 = {0.0, 0.0};
+        uv1 = {0.0, 0.0};
+        switch (c)
+        {
+        case Up:
+        case Down:
+            uv0 = {from.x, from.z};
+            uv1 = {to.x, to.z};
+            break;
+        case North:
+        case South:
+            uv0 = {from.x, from.y};
+            uv1 = {to.x, to.y};
+            break;
+        case West:
+        case East:
+            uv0 = {from.z, from.y};
+            uv1 = {to.z, to.y};
+            break;
+        case None:
+        default:
+            break;
+        }
+    }
+
     return {
-        from(face->getMap().count("cullface") ? face->getMap()["cullface"]->getString() : "none"),
+        fromSide(face->getMap().count("cullface") ? face->getMap()["cullface"]->getString() : "none"),
         textureAtlas.subtex[OMIdentifier(face->getMap()["texture"]->getString())],
-        {uv ? uv->getArray()[0]->getNumber() : 0, uv ? uv->getArray()[1]->getNumber() : 0},
-        {uv ? uv->getArray()[2]->getNumber() : 0, uv ? uv->getArray()[3]->getNumber() : 0},
-        uv == nullptr,
-        true,
+        uv0,
+        uv1,
         face->getMap().count("rotation") ? static_cast<int>(face->getMap()["rotation"]->getNumber()) : 0,
     };
 }

@@ -48,7 +48,6 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_RCENTERX ((voxelExtra3 >> 13) & 15)
 #define VOXEL_RCENTERY ((voxelExtra3 >> 9) & 15)
 #define VOXEL_RCENTERZ ((voxelExtra3 >> 5) & 15)
-#define VOXEL_GENUV ((voxelExtra3 >> 3) & 1)
 #define VOXEL_RANGLE (voxelExtra3 & 7)
 
 vec3 rotateVec(vec3 v, float angle, vec3 axis)
@@ -114,14 +113,6 @@ void main()
         uv = (sign == 0.0) ? vec2(orgin.y, inv_or.x) : inv_or.yx;
         oruv = uv;
         uv = doRotate(uv);
-        if (VOXEL_GENUV == 1)
-        {
-            uv *= modelSize.zy;
-        }
-        else
-        {
-            uv = mix(uv0, uv1, uv);
-        }
         voxFactor = 0.6;
         break;
     }
@@ -132,14 +123,6 @@ void main()
         uv = (sign == 0.0) ? inv_or.xy : vec2(orgin.x, inv_or.y);
         oruv = uv;
         uv = doRotate(uv);
-        if (VOXEL_GENUV == 1)
-        {
-            uv *= modelSize.xy;
-        }
-        else
-        {
-            uv = mix(uv0, uv1, uv);
-        }
         voxFactor = 0.8;
         break;
     }
@@ -150,14 +133,6 @@ void main()
         uv = vec2(orgin.x, inv_or.y);
         oruv = uv;
         uv = doRotate(uv);
-        if (VOXEL_GENUV == 1)
-        {
-            uv *= modelSize.xz;
-        }
-        else
-        {
-            uv = mix(uv0, uv1, uv);
-        }
         voxFactor = sign == 1 ? 1.0 : 0.5;
         break;
     }
@@ -167,6 +142,7 @@ void main()
     }
     }
 
+    uv = mix(uv0, uv1, uv);
     worldPos += worldPosOffset;
     worldPos *= modelSize;
     worldPos += modelOffset;

@@ -20,6 +20,10 @@ void main()
     float ao = mix(1.0, 0.2, voxAoLevel / 3.0);
 
     vec4 texColor = texture(inTexture, vec3(voxTexCoord, voxTexLayer));
+    if (texColor.a < 0.005)
+    {
+        discard;
+    }
     vec3 result = voxFactor * ao * texColor.rgb;
 
     outColor = vec4(result, texColor.a);
