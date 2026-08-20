@@ -166,6 +166,27 @@ auto OMModelPrecompiler::queryPartFaceUV(int bsid, int pid, openminecraft::rende
     return {uv0.x, uv0.y, uv1.x, uv1.y};
 }
 
+auto OMModelPrecompiler::queryPartFaceRotation(int bsid, int pid,
+                                               openminecraft::renderer::common::wrap::OMVoxelFacing f) -> int
+{
+    switch (f)
+    {
+    default:
+    case ::NegX:
+        return models[bsid][pid].west.rotation / 90;
+    case ::PosX:
+        return models[bsid][pid].east.rotation / 90;
+    case ::NegZ:
+        return models[bsid][pid].north.rotation / 90;
+    case ::PosZ:
+        return models[bsid][pid].south.rotation / 90;
+    case ::NegY:
+        return models[bsid][pid].down.rotation / 90;
+    case ::PosY:
+        return models[bsid][pid].up.rotation / 90;
+    }
+}
+
 auto OMModelPrecompiler::loadModel(OMIdentifier i) -> int
 {
     models.resize(modelId + 1);
