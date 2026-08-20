@@ -20,13 +20,20 @@ OMModelPrecompiler::OMModelPrecompiler(std::string root, OMTextureAtlas *atlas)
 {
 }
 
-auto OMModelPrecompiler::queryPartSize(int bsid, int pid) -> glm::ivec3
+auto OMModelPrecompiler::queryOcculusionShape(int bsid) -> OMVoxelShape
 {
-    return models[bsid][pid].to - models[bsid][pid].from;
+    std::vector<OMVoxelAABB> r;
+    for (auto &pp : models[bsid])
+    {
+        r.emplace_back(OMVoxelAABB{pp.from, pp.to - pp.from});
+    }
+
+    return {r};
 }
-auto OMModelPrecompiler::queryPartOffset(int bsid, int pid) -> glm::ivec3
+
+auto OMModelPrecompiler::queryPartAABB(int bsid, int pid) -> OMVoxelAABB
 {
-    return models[bsid][pid].from;
+    return {models[bsid][pid].from, models[bsid][pid].to - models[bsid][pid].from};
 }
 
 auto OMModelPrecompiler::queryNumParts(int bsid) -> int

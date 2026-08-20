@@ -113,8 +113,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto queryPartFaceTex(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> int override;
     auto queryPartFaceCull(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
         -> openminecraft::renderer::common::wrap::OMVoxelFacing override;
-    auto queryPartSize(int bsid, int pid) -> glm::ivec3 override;
-    auto queryPartOffset(int bsid, int pid) -> glm::ivec3 override;
+    auto queryPartAABB(int bsid, int pid) -> renderer::common::wrap::OMVoxelAABB override;
     auto queryPartFaceUVAuto(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> bool override;
     auto queryPartFaceUV(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
         -> glm::ivec4 override;
@@ -123,6 +122,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto queryPartRotationCenter(int bsid, int pid) -> glm::ivec3 override;
     auto queryPartRotationAngle(int bsid, int pid) -> int override;
     auto querySoild(int bsid) -> bool override;
+    auto queryOcculusionShape(int bsid) -> openminecraft::renderer::common::wrap::OMVoxelShape override;
 
   private:
     int modelId = 0;

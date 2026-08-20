@@ -95,29 +95,13 @@ auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
         if (tgbs == 0)
             return 0;
 
-        auto siz = handler->queryPartSize(bsid, pid);
-        auto off = handler->queryPartOffset(bsid, pid);
+        auto currentAabb = handler->queryPartAABB(bsid, pid).applyOffset(glm::ivec3(dx, dy, dz) * -16);
 
-        glm::ivec3 base = glm::ivec3(x, y, z) * 16;
-        glm::ivec3 currMin = base + off;
-        glm::ivec3 currMax = currMin + siz;
-
-        glm::ivec3 neighborBase = glm::ivec3(x + dx, y + dy, z + dz) * 16;
-
-        for (int i = 0; i < handler->queryNumParts(tgbs); ++i)
+        if (handler->queryOcculusionShape(tgbs).intersect(currentAabb))
         {
-            auto psiz = handler->queryPartSize(tgbs, i);
-            auto poff = handler->queryPartOffset(tgbs, i);
-
-            glm::ivec3 tgtMin = neighborBase + poff;
-            glm::ivec3 tgtMax = tgtMin + psiz;
-
-            if (currMin.x <= tgtMax.x && currMax.x >= tgtMin.x && currMin.y <= tgtMax.y && currMax.y >= tgtMin.y &&
-                currMin.z <= tgtMax.z && currMax.z >= tgtMin.z)
-            {
-                return 1;
-            }
+            return 1;
         }
+
         return 0;
     };
     auto finalAO = [&](int corner, int side1, int side2) {
@@ -222,16 +206,17 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                 {
                     auto [ao1, ao2, ao3, ao4] =
                         computeAO(chunk, externalAccessor, v.first.x, v.first.y, v.first.z, f, v.second, i);
-                    auto siz = handler->queryPartSize(v.second, i);
-                    auto off = handler->queryPartOffset(v.second, i);
+                    auto aabb = handler->queryPartAABB(v.second, i);
                     auto uv = handler->queryPartFaceUV(v.second, i, f);
                     auto raxis = handler->queryPartRotationCenter(v.second, i);
                     auto vox = packVoxel(
-                        v.first.x, v.first.y, v.first.z, f, std::abs(off.x), std::abs(off.y), std::abs(off.z),
-                        off.x < 0, off.y < 0, off.z < 0, handler->queryPartFaceTex(v.second, i, f), chunkid,
-                        handler->queryPartFaceRotation(v.second, i, f), 15, 15, 15, 15, 0, 0, 0, 0, siz.x, siz.y, siz.z,
-                        ao1, ao2, ao3, ao4, uv.x, uv.y, uv.z, uv.w, handler->queryPartRotationAxis(v.second, i),
-                        std::abs(raxis.x), std::abs(raxis.y), std::abs(raxis.z), raxis.x < 0, raxis.y < 0, raxis.z < 0,
+                        v.first.x, v.first.y, v.first.z, f, std::abs(aabb.offset.x), std::abs(aabb.offset.y),
+                        std::abs(aabb.offset.z), aabb.offset.x < 0, aabb.offset.y < 0, aabb.offset.z < 0,
+                        handler->queryPartFaceTex(v.second, i, f), chunkid,
+                        handler->queryPartFaceRotation(v.second, i, f), 15, 15, 15, 15, 0, 0, 0, 0, aabb.size.x,
+                        aabb.size.y, aabb.size.z, ao1, ao2, ao3, ao4, uv.x, uv.y, uv.z, uv.w,
+                        handler->queryPartRotationAxis(v.second, i), std::abs(raxis.x), std::abs(raxis.y),
+                        std::abs(raxis.z), raxis.x < 0, raxis.y < 0, raxis.z < 0,
                         handler->queryPartRotationAngle(v.second, i), handler->queryPartFaceUVAuto(v.second, i, f));
                     commiter(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4]});
                 }

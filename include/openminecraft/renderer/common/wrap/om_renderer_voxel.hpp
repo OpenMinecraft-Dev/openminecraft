@@ -14,12 +14,74 @@
 #include "openminecraft/world/om_world_chunk.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
 #include <cstdint>
+#include <initializer_list>
 #include <list>
 #include <vector>
 
 namespace openminecraft::renderer::common::wrap
 {
+struct OMVoxelAABB
+{
+    glm::ivec3 offset;
+    glm::ivec3 size;
 
+    [[nodiscard]] inline auto applyOffset(glm::ivec3 v) const -> OMVoxelAABB
+    {
+        return {offset + v, size};
+    }
+
+    [[nodiscard]] inline auto intersect(const OMVoxelAABB &other) const -> bool
+    {
+        glm::ivec3 currMin = offset;
+        glm::ivec3 currMax = currMin + size;
+        glm::ivec3 tgtMin = other.offset;
+        glm::ivec3 tgtMax = tgtMin + other.size;
+        return currMin.x <= tgtMax.x && currMax.x >= tgtMin.x && currMin.y <= tgtMax.y && currMax.y >= tgtMin.y &&
+               currMin.z <= tgtMax.z && currMax.z >= tgtMin.z;
+    }
+};
+struct OMVoxelShape
+{
+    std::vector<OMVoxelAABB> aabbs = {};
+
+  public:
+    OMVoxelShape() = default;
+    OMVoxelShape(const OMVoxelAABB &a)
+    {
+        aabbs.emplace_back(a);
+    }
+    OMVoxelShape(const std::initializer_list<OMVoxelAABB> l) : aabbs(l)
+    {
+    }
+    OMVoxelShape(const std::vector<OMVoxelAABB> l) : aabbs(l)
+    {
+    }
+
+    [[nodiscard]] inline auto intersect(const OMVoxelAABB &other) const -> bool
+    {
+        for (auto const &a : aabbs)
+        {
+            if (other.intersect(a))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    [[nodiscard]] inline auto intersect(const OMVoxelShape &other) const -> bool
+    {
+        for (auto const &a : aabbs)
+        {
+            if (other.intersect(a))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+};
 struct OMVoxel
 {
     int32_t voxelBasic;
@@ -57,8 +119,7 @@ class OMVoxelHandler
     virtual auto queryPartFaceEnabled(int bsid, int pid, OMVoxelFacing) -> bool = 0;
     virtual auto queryPartFaceTex(int bsid, int pid, OMVoxelFacing) -> int = 0;
     virtual auto queryPartFaceCull(int bsid, int pid, OMVoxelFacing) -> OMVoxelFacing = 0;
-    virtual auto queryPartSize(int bsid, int pid) -> glm::ivec3 = 0;
-    virtual auto queryPartOffset(int bsid, int pid) -> glm::ivec3 = 0;
+    virtual auto queryPartAABB(int bsid, int pid) -> OMVoxelAABB = 0;
     virtual auto queryPartFaceUVAuto(int bsid, int pid, OMVoxelFacing) -> bool = 0;
     virtual auto queryPartFaceUV(int bsid, int pid, OMVoxelFacing) -> glm::ivec4 = 0;
     virtual auto queryPartFaceRotation(int bsid, int pid, OMVoxelFacing) -> int = 0;
@@ -66,6 +127,7 @@ class OMVoxelHandler
     virtual auto queryPartRotationCenter(int bsid, int pid) -> glm::ivec3 = 0;
     virtual auto queryPartRotationAngle(int bsid, int pid) -> int = 0;
     virtual auto querySoild(int bsid) -> bool = 0;
+    virtual auto queryOcculusionShape(int bsid) -> OMVoxelShape = 0;
 };
 
 class OMVoxelHandlerDummy : public OMVoxelHandler
@@ -89,13 +151,9 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     {
         return v;
     }
-    auto queryPartSize(int bsid, int pid) -> glm::ivec3 override
+    auto queryPartAABB(int bsid, int pid) -> OMVoxelAABB override
     {
-        return {16, 16, 16};
-    }
-    auto queryPartOffset(int bsid, int pid) -> glm::ivec3 override
-    {
-        return {0, 0, 0};
+        return {{0, 0, 0}, {16, 16, 16}};
     }
     auto queryPartFaceUVAuto(int bsid, int pid, OMVoxelFacing) -> bool override
     {
@@ -124,6 +182,10 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     auto querySoild(int bsid) -> bool override
     {
         return true;
+    }
+    auto queryOcculusionShape(int bsid) -> OMVoxelShape override
+    {
+        return {{{0, 0, 0}, {16, 16, 16}}};
     }
 };
 
