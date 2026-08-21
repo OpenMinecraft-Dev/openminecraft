@@ -98,11 +98,12 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
                 cnk.setBlock(3, 1, 0, 10);
                 cnk.setBlock(3, 2, 0, 11);
                 cnk.setBlock(0, 1, 0, 14);
-                cnk.setBlock(0, 2, 1, 13);
+                cnk.setBlock(0, 2, 1, 12);
                 cnk.setBlock(0, 1, 2, 6);
                 cnk.setBlock(15, 1, 1, 6);
                 cnk.setBlock(15, 0, 0, 2);
                 cnk.setBlock(15, 1, 2, 6);
+                cnk.setBlock(15, 1, 0, 13);
                 chunkManager->loadChunk(cnk);
             }
         }
@@ -121,7 +122,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/oak_stairs"), false);
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/spruce_door_bottom_left"), false);
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/spruce_door_top_left"), false);
-    voxelHandler->loadModelWithArgs(data::OMIdentifier("minecraft:block/acacia_button"), 0, 0, 0, true, false);
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/acacia_sign_rot_0"), false);
     voxelHandler->loadModelWithArgs(data::OMIdentifier("minecraft:block/oak_button"), 0, 0, 0, false, false);
     voxelHandler->loadModelMultipart(
         {

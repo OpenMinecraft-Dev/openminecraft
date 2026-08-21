@@ -1,6 +1,5 @@
 #include "glm/fwd.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
-#include "openminecraft/world/om_world_chunkmanager.hpp"
 #include <array>
 #include <cstdint>
 
@@ -24,7 +23,7 @@ OMVoxelCompiler::~OMVoxelCompiler()
 // s -> Voxel Scale (3 * 5 bits)
 // e -> Voxel Enable (1 bit)
 // a -> Voxel Ambient Occclusion Levels (4 * 2 bits)
-// t -> Voxel Texture Index (16 bits)
+// t -> Voxel Texture Index (14 bits)
 // c -> Voxel Chunk ID (16 bits)
 // r -> Voxel Rotation (2 bits, 00 -> 0deg, 01 -> 90deg, 10 -> 180deg, 11 -> 270deg)
 // l -> Voxel Sky Light (4 * 4 bits)
@@ -34,21 +33,22 @@ OMVoxelCompiler::~OMVoxelCompiler()
 // C -> Voxel Rotation Center (3 * 5 bits)
 // n -> Voxel Angle (3 bits)
 // S -> Voxel Shade (1 bit)
+// M -> Voxel Colormap (1 bit)
 // u -> unused
 // INFO: packed vertex structure in u32
 // xxxx yyyy zzzz efff XXXX YYYY ZZZZ SSSU
 // rrtt tttt tttt tttt cccc cccc cccc cccc
 // llll llll llll llll LLLL LLLL LLLL LLLL
 // sssss sssss sssss U UUUU UUUU aaaa aaaa
-// UUUUU UUUUU AA CCC CCCC CCCC CCCC uSnnn
+// UUUUU UUUUU AA CCC CCCC CCCC CCCC MSnnn
 static constexpr auto packVoxel(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint8_t dx, uint8_t dy,
                                 uint8_t dz, bool negx, bool negy, bool negz, uint16_t tex, uint16_t chkid,
                                 uint8_t rotation, uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4, uint8_t bl1,
                                 uint8_t bl2, uint8_t bl3, uint8_t bl4, uint8_t scaleX, uint8_t scaleY, uint8_t scaleZ,
                                 uint8_t ao1, uint8_t ao2, uint8_t ao3, uint8_t ao4, uint8_t u0, uint8_t v0, uint8_t u1,
                                 uint8_t v1, uint8_t rotationAxis, uint8_t rotationCx, uint8_t rotationCy,
-                                uint8_t rotationCz, bool rCxNeg, bool rCyNeg, bool rCzNeg, uint8_t rAngle, bool shade)
-    -> std::array<int, 5>
+                                uint8_t rotationCz, bool rCxNeg, bool rCyNeg, bool rCzNeg, uint8_t rAngle, bool shade,
+                                bool colormap) -> std::array<int, 5>
 {
     return {
         x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | dx << 12 | dy << 8 | dz << 4 | ((negx & 1) << 3) |
@@ -60,7 +60,7 @@ static constexpr auto packVoxel(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing f
             ao4 | ((v0 & 0x1f) << 12) | ((u0 & 0xf) << 8),
         ((u1 & 0x1f) << 27) | ((v1 & 0x1f) << 22) | ((rotationAxis & 3) << 20) | (rCxNeg << 19) | (rCyNeg << 18) |
             (rCzNeg << 17) | ((rotationCx & 0xf) << 13) | ((rotationCy & 0xf) << 9) | ((rotationCz & 0xf) << 5) |
-            (shade << 3) | (rAngle & 7),
+            (colormap << 4) | (shade << 3) | (rAngle & 7),
     };
 }
 
@@ -244,15 +244,15 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                     auto aabb = handler->queryPartAABB(v.second, i);
                     auto uv = handler->queryPartFaceUV(v.second, i, f);
                     auto raxis = handler->queryPartRotationCenter(v.second, i);
-                    auto vox =
-                        packVoxel(v.first.x, v.first.y, v.first.z, f, std::abs(aabb.offset.x), std::abs(aabb.offset.y),
-                                  std::abs(aabb.offset.z), aabb.offset.x < 0, aabb.offset.y < 0, aabb.offset.z < 0,
-                                  handler->queryPartFaceTex(v.second, i, f), chunkid,
-                                  handler->queryPartFaceRotation(v.second, i, f), 15, 15, 15, 15, 0, 0, 0, 0,
-                                  aabb.size.x, aabb.size.y, aabb.size.z, ao1, ao2, ao3, ao4, uv.x, uv.y, uv.z, uv.w,
-                                  handler->queryPartRotationAxis(v.second, i), std::abs(raxis.x), std::abs(raxis.y),
-                                  std::abs(raxis.z), raxis.x < 0, raxis.y < 0, raxis.z < 0,
-                                  handler->queryPartRotationAngle(v.second, i), handler->queryPartShade(v.second, i));
+                    auto vox = packVoxel(
+                        v.first.x, v.first.y, v.first.z, f, std::abs(aabb.offset.x), std::abs(aabb.offset.y),
+                        std::abs(aabb.offset.z), aabb.offset.x < 0, aabb.offset.y < 0, aabb.offset.z < 0,
+                        handler->queryPartFaceTex(v.second, i, f), chunkid,
+                        handler->queryPartFaceRotation(v.second, i, f), 15, 15, 15, 15, 0, 0, 0, 0, aabb.size.x,
+                        aabb.size.y, aabb.size.z, ao1, ao2, ao3, ao4, uv.x, uv.y, uv.z, uv.w,
+                        handler->queryPartRotationAxis(v.second, i), std::abs(raxis.x), std::abs(raxis.y),
+                        std::abs(raxis.z), raxis.x < 0, raxis.y < 0, raxis.z < 0,
+                        handler->queryPartRotationAngle(v.second, i), handler->queryPartShade(v.second, i), false);
                     commiter(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4]});
                 }
             }

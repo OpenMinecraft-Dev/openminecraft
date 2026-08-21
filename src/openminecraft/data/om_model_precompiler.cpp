@@ -211,7 +211,8 @@ auto OMModelPrecompiler::loadModel(OMIdentifier i, bool soild) -> int
     return loadModelWithArgs(i, 0, 0, 0, false, soild);
 }
 
-auto rotateVoxelElementZ90(const glm::ivec3 &from, const glm::ivec3 &to) -> std::pair<glm::ivec3, glm::ivec3>
+// INFO: General rorate function
+auto rotateVoxelElement90(const glm::ivec3 &from, const glm::ivec3 &to, int i) -> std::pair<glm::ivec3, glm::ivec3>
 {
     glm::ivec3 corners[8] = {{from.x, from.y, from.z}, {from.x, from.y, to.z}, {from.x, to.y, from.z},
                              {from.x, to.y, to.z},     {to.x, from.y, from.z}, {to.x, from.y, to.z},
@@ -225,55 +226,18 @@ auto rotateVoxelElementZ90(const glm::ivec3 &from, const glm::ivec3 &to) -> std:
         glm::ivec3 centered = p - glm::ivec3(8, 8, 8);
 
         glm::ivec3 rotated;
-        rotated = {-centered.y, centered.x, centered.z};
-        glm::ivec3 finalPos = rotated + glm::ivec3(8, 8, 8);
-
-        newMin = glm::min(newMin, finalPos);
-        newMax = glm::max(newMax, finalPos);
-    }
-
-    return {newMin, newMax};
-}
-
-auto rotateVoxelElementX90(const glm::ivec3 &from, const glm::ivec3 &to) -> std::pair<glm::ivec3, glm::ivec3>
-{
-    glm::ivec3 corners[8] = {{from.x, from.y, from.z}, {from.x, from.y, to.z}, {from.x, to.y, from.z},
-                             {from.x, to.y, to.z},     {to.x, from.y, from.z}, {to.x, from.y, to.z},
-                             {to.x, to.y, from.z},     {to.x, to.y, to.z}};
-
-    glm::ivec3 newMin = glm::ivec3(16, 16, 16);
-    glm::ivec3 newMax = glm::ivec3(0, 0, 0);
-
-    for (const auto &p : corners)
-    {
-        glm::ivec3 centered = p - glm::ivec3(8, 8, 8);
-
-        glm::ivec3 rotated;
-        rotated = {centered.x, -centered.z, centered.y};
-        glm::ivec3 finalPos = rotated + glm::ivec3(8, 8, 8);
-
-        newMin = glm::min(newMin, finalPos);
-        newMax = glm::max(newMax, finalPos);
-    }
-
-    return {newMin, newMax};
-}
-
-auto rotateVoxelElementY90(const glm::ivec3 &from, const glm::ivec3 &to) -> std::pair<glm::ivec3, glm::ivec3>
-{
-    glm::ivec3 corners[8] = {{from.x, from.y, from.z}, {from.x, from.y, to.z}, {from.x, to.y, from.z},
-                             {from.x, to.y, to.z},     {to.x, from.y, from.z}, {to.x, from.y, to.z},
-                             {to.x, to.y, from.z},     {to.x, to.y, to.z}};
-
-    glm::ivec3 newMin = glm::ivec3(16, 16, 16);
-    glm::ivec3 newMax = glm::ivec3(0, 0, 0);
-
-    for (const auto &p : corners)
-    {
-        glm::ivec3 centered = p - glm::ivec3(8, 8, 8);
-
-        glm::ivec3 rotated;
-        rotated = {-centered.z, centered.y, centered.x};
+        switch (i)
+        {
+        case 0:
+            rotated = {centered.x, -centered.z, centered.y};
+            break;
+        case 1:
+            rotated = {-centered.z, centered.y, centered.x};
+            break;
+        case 2:
+            rotated = {-centered.y, centered.x, centered.z};
+            break;
+        }
         glm::ivec3 finalPos = rotated + glm::ivec3(8, 8, 8);
 
         newMin = glm::min(newMin, finalPos);
@@ -351,7 +315,6 @@ auto OMModelPrecompiler::loadModelWithArgs(OMIdentifier i, int xrot, int yrot, i
                 }
                 else
                 {
-
                     if (a->getMap().count("cullface"))
                     {
                         a->getMap()["cullface"] = std::make_shared<json::OMJsonNodeString>(f);
@@ -364,7 +327,7 @@ auto OMModelPrecompiler::loadModelWithArgs(OMIdentifier i, int xrot, int yrot, i
                 auto &to = p->getMap()["to"]->getArray();
                 auto fromv = glm::ivec3{from[0]->getNumber(), from[1]->getNumber(), from[2]->getNumber()};
                 auto tov = glm::ivec3{to[0]->getNumber(), to[1]->getNumber(), to[2]->getNumber()};
-                auto vv = rotateVoxelElementX90(fromv, tov);
+                auto vv = rotateVoxelElement90(fromv, tov, 0);
 
                 from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.x));
                 from[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.y));
@@ -406,7 +369,7 @@ auto OMModelPrecompiler::loadModelWithArgs(OMIdentifier i, int xrot, int yrot, i
                 auto &to = p->getMap()["to"]->getArray();
                 auto fromv = glm::ivec3{from[0]->getNumber(), from[1]->getNumber(), from[2]->getNumber()};
                 auto tov = glm::ivec3{to[0]->getNumber(), to[1]->getNumber(), to[2]->getNumber()};
-                auto vv = rotateVoxelElementY90(fromv, tov);
+                auto vv = rotateVoxelElement90(fromv, tov, 1);
 
                 from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.x));
                 from[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.y));
@@ -448,7 +411,7 @@ auto OMModelPrecompiler::loadModelWithArgs(OMIdentifier i, int xrot, int yrot, i
                 auto &to = p->getMap()["to"]->getArray();
                 auto fromv = glm::ivec3{from[0]->getNumber(), from[1]->getNumber(), from[2]->getNumber()};
                 auto tov = glm::ivec3{to[0]->getNumber(), to[1]->getNumber(), to[2]->getNumber()};
-                auto vv = rotateVoxelElementZ90(fromv, tov);
+                auto vv = rotateVoxelElement90(fromv, tov, 2);
 
                 from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.x));
                 from[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.y));
