@@ -118,6 +118,7 @@ auto OMVoxelManager::compile(int i) -> void
             chunkx += 1;
             pos.x -= 16;
         }
+
         if (pos.y < 0)
         {
             chunky -= 1;
@@ -128,6 +129,7 @@ auto OMVoxelManager::compile(int i) -> void
             chunky += 1;
             pos.y -= 16;
         }
+
         if (pos.z < 0)
         {
             chunkz -= 1;

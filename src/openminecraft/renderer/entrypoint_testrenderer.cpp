@@ -82,11 +82,11 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
     textureAtlas = new data::OMTextureAtlas("/external", renderer);
 
     auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
-    for (int cx = 0; cx < 8; ++cx)
+    for (int cx = -1; cx < 8; ++cx)
     {
         for (int cy = 0; cy < 8; ++cy)
         {
-            for (int cz = 0; cz < 8; ++cz)
+            for (int cz = -1; cz < 8; ++cz)
             {
                 world::OMChunk<16> cnk(cx, cy, cz);
                 cnk.setBlock(0, 0, 0, cx / 2 + 1);
@@ -96,8 +96,12 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
                 cnk.setBlock(1, 1, 0, 9);
                 cnk.setBlock(3, 1, 0, 10);
                 cnk.setBlock(3, 2, 0, 11);
-                cnk.setBlock(0, 1, 0, 12);
+                cnk.setBlock(0, 1, 0, 13);
                 cnk.setBlock(0, 2, 1, 13);
+                cnk.setBlock(0, 1, 2, 6);
+                cnk.setBlock(15, 1, 1, 6);
+                cnk.setBlock(15, 0, 0, 6);
+                cnk.setBlock(15, 1, 2, 6);
                 chunkManager->loadChunk(cnk);
             }
         }

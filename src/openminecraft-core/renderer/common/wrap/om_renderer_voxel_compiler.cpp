@@ -78,7 +78,9 @@ auto OMVoxelCompiler::queryBlockstate(const world::OMChunk<16> &chunk,
                                       int x, int y, int z) -> uint32_t
 {
     if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
+    {
         return externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz);
+    }
 
     return chunk.fetch(x, y, z);
 }
@@ -89,15 +91,19 @@ auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
     -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t>
 {
     uint8_t ao1 = 0, ao2 = 0, ao3 = 0, ao4 = 0;
-    // INFO: ambientocculusion property check & per-vertex check is needed!
-    auto countNeighbors = [&](int dx, int dy, int dz) -> int {
+    auto currentAabb = handler->queryPartAABB(bsid, pid);
+    // INFO: ambientocculusion property is needed!
+    auto countNeighborsPoint = [&](int dx, int dy, int dz, glm::ivec3 pos) -> int {
         auto tgbs = queryBlockstate(chunk, externalAccessor, x + dx, y + dy, z + dz);
         if (tgbs == 0)
             return 0;
 
-        auto currentAabb = handler->queryPartAABB(bsid, pid).applyOffset(glm::ivec3(dx, dy, dz) * -16);
+        auto currentPos =
+            glm::mix(currentAabb.offset, currentAabb.offset + currentAabb.size, glm::vec3(pos.x, pos.y, pos.z)) -
+            (glm::ivec3(dx, dy, dz) * 16);
 
-        if (handler->queryOcculusionShape(tgbs).intersect(currentAabb))
+        auto occ = handler->queryOcculusionShape(tgbs);
+        if (occ.contains(currentPos))
         {
             return 1;
         }
@@ -115,45 +121,69 @@ auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
     switch (facing)
     {
     case OMVoxelFacing::NegY: {
-        ao1 = finalAO(countNeighbors(-1, -1, -1), countNeighbors(-1, -1, 0), countNeighbors(0, -1, -1));
-        ao2 = finalAO(countNeighbors(-1, -1, 1), countNeighbors(-1, -1, 0), countNeighbors(0, -1, 1));
-        ao3 = finalAO(countNeighbors(1, -1, -1), countNeighbors(1, -1, 0), countNeighbors(0, -1, -1));
-        ao4 = finalAO(countNeighbors(1, -1, 1), countNeighbors(1, -1, 0), countNeighbors(0, -1, 1));
+        ao1 = finalAO(countNeighborsPoint(-1, -1, -1, {0, 0, 0}), countNeighborsPoint(-1, -1, 0, {0, 0, 0}),
+                      countNeighborsPoint(0, -1, -1, {0, 0, 0}));
+        ao2 = finalAO(countNeighborsPoint(-1, -1, 1, {0, 0, 1}), countNeighborsPoint(-1, -1, 0, {0, 0, 1}),
+                      countNeighborsPoint(0, -1, 1, {0, 0, 1}));
+        ao3 = finalAO(countNeighborsPoint(1, -1, -1, {1, 0, 0}), countNeighborsPoint(1, -1, 0, {1, 0, 0}),
+                      countNeighborsPoint(0, -1, -1, {1, 0, 0}));
+        ao4 = finalAO(countNeighborsPoint(1, -1, 1, {1, 0, 1}), countNeighborsPoint(1, -1, 0, {1, 0, 1}),
+                      countNeighborsPoint(0, -1, 1, {1, 0, 1}));
         break;
     }
     case OMVoxelFacing::PosY: {
-        ao1 = finalAO(countNeighbors(-1, 1, -1), countNeighbors(-1, 1, 0), countNeighbors(0, 1, -1));
-        ao2 = finalAO(countNeighbors(-1, 1, 1), countNeighbors(-1, 1, 0), countNeighbors(0, 1, 1));
-        ao3 = finalAO(countNeighbors(1, 1, -1), countNeighbors(1, 1, 0), countNeighbors(0, 1, -1));
-        ao4 = finalAO(countNeighbors(1, 1, 1), countNeighbors(1, 1, 0), countNeighbors(0, 1, 1));
+        ao1 = finalAO(countNeighborsPoint(-1, 1, -1, {0, 1, 0}), countNeighborsPoint(-1, 1, 0, {0, 1, 0}),
+                      countNeighborsPoint(0, 1, -1, {0, 1, 0}));
+        ao2 = finalAO(countNeighborsPoint(-1, 1, 1, {0, 1, 1}), countNeighborsPoint(-1, 1, 0, {0, 1, 1}),
+                      countNeighborsPoint(0, 1, 1, {0, 1, 1}));
+        ao3 = finalAO(countNeighborsPoint(1, 1, -1, {1, 1, 0}), countNeighborsPoint(1, 1, 0, {1, 1, 0}),
+                      countNeighborsPoint(0, 1, -1, {1, 1, 0}));
+        ao4 = finalAO(countNeighborsPoint(1, 1, 1, {1, 1, 1}), countNeighborsPoint(1, 1, 0, {1, 1, 1}),
+                      countNeighborsPoint(0, 1, 1, {1, 1, 1}));
         break;
     }
     case OMVoxelFacing::NegX: {
-        ao2 = finalAO(countNeighbors(-1, -1, -1), countNeighbors(-1, -1, 0), countNeighbors(-1, 0, -1));
-        ao1 = finalAO(countNeighbors(-1, 1, -1), countNeighbors(-1, 1, 0), countNeighbors(-1, 0, -1));
-        ao4 = finalAO(countNeighbors(-1, -1, 1), countNeighbors(-1, -1, 0), countNeighbors(-1, 0, 1));
-        ao3 = finalAO(countNeighbors(-1, 1, 1), countNeighbors(-1, 1, 0), countNeighbors(-1, 0, 1));
+        ao1 = finalAO(countNeighborsPoint(-1, 1, -1, {0, 1, 0}), countNeighborsPoint(-1, 1, 0, {0, 1, 0}),
+                      countNeighborsPoint(-1, 0, -1, {0, 1, 0}));
+        ao2 = finalAO(countNeighborsPoint(-1, -1, -1, {0, 0, 0}), countNeighborsPoint(-1, -1, 0, {0, 0, 0}),
+                      countNeighborsPoint(-1, 0, -1, {0, 0, 0}));
+        ao3 = finalAO(countNeighborsPoint(-1, 1, 1, {0, 1, 1}), countNeighborsPoint(-1, 1, 0, {0, 1, 1}),
+                      countNeighborsPoint(-1, 0, 1, {0, 1, 1}));
+        ao4 = finalAO(countNeighborsPoint(-1, -1, 1, {0, 0, 1}), countNeighborsPoint(-1, -1, 0, {0, 0, 1}),
+                      countNeighborsPoint(-1, 0, 1, {0, 0, 1}));
         break;
     }
     case OMVoxelFacing::PosX: {
-        ao4 = finalAO(countNeighbors(1, -1, -1), countNeighbors(1, -1, 0), countNeighbors(1, 0, -1));
-        ao3 = finalAO(countNeighbors(1, 1, -1), countNeighbors(1, 1, 0), countNeighbors(1, 0, -1));
-        ao2 = finalAO(countNeighbors(1, -1, 1), countNeighbors(1, -1, 0), countNeighbors(1, 0, 1));
-        ao1 = finalAO(countNeighbors(1, 1, 1), countNeighbors(1, 1, 0), countNeighbors(1, 0, 1));
+        ao1 = finalAO(countNeighborsPoint(1, 1, 1, {1, 1, 1}), countNeighborsPoint(1, 1, 0, {1, 1, 1}),
+                      countNeighborsPoint(1, 0, 1, {1, 1, 1}));
+        ao2 = finalAO(countNeighborsPoint(1, -1, 1, {1, 0, 1}), countNeighborsPoint(1, -1, 0, {1, 0, 1}),
+                      countNeighborsPoint(1, 0, 1, {1, 0, 1}));
+        ao3 = finalAO(countNeighborsPoint(1, 1, -1, {1, 1, 0}), countNeighborsPoint(1, 1, 0, {1, 1, 0}),
+                      countNeighborsPoint(1, 0, -1, {1, 1, 0}));
+        ao4 = finalAO(countNeighborsPoint(1, -1, -1, {1, 0, 0}), countNeighborsPoint(1, -1, 0, {1, 0, 0}),
+                      countNeighborsPoint(1, 0, -1, {1, 0, 0}));
         break;
     }
     case OMVoxelFacing::NegZ: {
-        ao4 = finalAO(countNeighbors(-1, -1, -1), countNeighbors(-1, 0, -1), countNeighbors(0, -1, -1));
-        ao3 = finalAO(countNeighbors(-1, 1, -1), countNeighbors(-1, 0, -1), countNeighbors(0, 1, -1));
-        ao2 = finalAO(countNeighbors(1, -1, -1), countNeighbors(1, 0, -1), countNeighbors(0, -1, -1));
-        ao1 = finalAO(countNeighbors(1, 1, -1), countNeighbors(1, 0, -1), countNeighbors(0, 1, -1));
+        ao1 = finalAO(countNeighborsPoint(1, 1, -1, {1, 1, 0}), countNeighborsPoint(1, 0, -1, {1, 1, 0}),
+                      countNeighborsPoint(0, 1, -1, {1, 1, 0}));
+        ao2 = finalAO(countNeighborsPoint(1, -1, -1, {1, 0, 0}), countNeighborsPoint(1, 0, -1, {1, 0, 0}),
+                      countNeighborsPoint(0, -1, -1, {1, 0, 0}));
+        ao3 = finalAO(countNeighborsPoint(-1, 1, -1, {0, 1, 0}), countNeighborsPoint(-1, 0, -1, {0, 1, 0}),
+                      countNeighborsPoint(0, 1, -1, {0, 1, 0}));
+        ao4 = finalAO(countNeighborsPoint(-1, -1, -1, {0, 0, 0}), countNeighborsPoint(-1, 0, -1, {0, 0, 0}),
+                      countNeighborsPoint(0, -1, -1, {0, 0, 0}));
         break;
     }
     case OMVoxelFacing::PosZ: {
-        ao2 = finalAO(countNeighbors(-1, -1, 1), countNeighbors(-1, 0, 1), countNeighbors(0, -1, 1));
-        ao1 = finalAO(countNeighbors(-1, 1, 1), countNeighbors(-1, 0, 1), countNeighbors(0, 1, 1));
-        ao4 = finalAO(countNeighbors(1, -1, 1), countNeighbors(1, 0, 1), countNeighbors(0, -1, 1));
-        ao3 = finalAO(countNeighbors(1, 1, 1), countNeighbors(1, 0, 1), countNeighbors(0, 1, 1));
+        ao1 = finalAO(countNeighborsPoint(-1, 1, 1, {0, 1, 1}), countNeighborsPoint(-1, 0, 1, {0, 1, 1}),
+                      countNeighborsPoint(0, 1, 1, {0, 1, 1}));
+        ao2 = finalAO(countNeighborsPoint(-1, -1, 1, {0, 0, 1}), countNeighborsPoint(-1, 0, 1, {0, 0, 1}),
+                      countNeighborsPoint(0, -1, 1, {0, 0, 1}));
+        ao3 = finalAO(countNeighborsPoint(1, 1, 1, {1, 1, 1}), countNeighborsPoint(1, 0, 1, {1, 1, 1}),
+                      countNeighborsPoint(0, 1, 1, {1, 1, 1}));
+        ao4 = finalAO(countNeighborsPoint(1, -1, 1, {1, 0, 1}), countNeighborsPoint(1, 0, 1, {1, 0, 1}),
+                      countNeighborsPoint(0, -1, 1, {1, 0, 1}));
         break;
     }
     default:

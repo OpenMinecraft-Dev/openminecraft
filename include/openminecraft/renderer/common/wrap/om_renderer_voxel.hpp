@@ -39,6 +39,14 @@ struct OMVoxelAABB
         return currMin.x <= tgtMax.x && currMax.x >= tgtMin.x && currMin.y <= tgtMax.y && currMax.y >= tgtMin.y &&
                currMin.z <= tgtMax.z && currMax.z >= tgtMin.z;
     }
+
+    [[nodiscard]] inline auto contains(const glm::ivec3 p) const -> bool
+    {
+        glm::ivec3 currMin = offset;
+        glm::ivec3 currMax = currMin + size;
+        return currMin.x <= p.x && currMax.x >= p.x && currMin.y <= p.y && currMax.y >= p.y && currMin.z <= p.z &&
+               currMax.z >= p.z;
+    }
 };
 struct OMVoxelShape
 {
@@ -55,6 +63,18 @@ struct OMVoxelShape
     }
     OMVoxelShape(const std::vector<OMVoxelAABB> l) : aabbs(l)
     {
+    }
+
+    [[nodiscard]] inline auto contains(const glm::ivec3 p) const -> bool
+    {
+        for (auto const &a : aabbs)
+        {
+            if (a.contains(p))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     [[nodiscard]] inline auto intersect(const OMVoxelAABB &other) const -> bool
