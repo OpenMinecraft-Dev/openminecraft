@@ -89,7 +89,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
             for (int cz = -1; cz < 8; ++cz)
             {
                 world::OMChunk<16> cnk(cx, cy, cz);
-                cnk.setBlock(0, 0, 0, cx / 2 + 1);
+                cnk.setBlock(0, 0, 0, 1);
                 cnk.setBlock(0, 1, 1, 6);
                 cnk.setBlock(2, 1, 0, 7);
                 cnk.setBlock(2, 2, 0, 8);
@@ -100,7 +100,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
                 cnk.setBlock(0, 2, 1, 13);
                 cnk.setBlock(0, 1, 2, 6);
                 cnk.setBlock(15, 1, 1, 6);
-                cnk.setBlock(15, 0, 0, 6);
+                cnk.setBlock(15, 0, 0, 2);
                 cnk.setBlock(15, 1, 2, 6);
                 chunkManager->loadChunk(cnk);
             }

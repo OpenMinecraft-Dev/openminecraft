@@ -96,7 +96,9 @@ auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
     auto countNeighborsPoint = [&](int dx, int dy, int dz, glm::ivec3 pos) -> int {
         auto tgbs = queryBlockstate(chunk, externalAccessor, x + dx, y + dy, z + dz);
         if (tgbs == 0)
+        {
             return 0;
+        }
 
         auto currentPos =
             glm::mix(currentAabb.offset, currentAabb.offset + currentAabb.size, glm::vec3(pos.x, pos.y, pos.z)) -

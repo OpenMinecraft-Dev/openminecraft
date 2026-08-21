@@ -107,7 +107,7 @@ OMVoxelManager::~OMVoxelManager()
 
 auto OMVoxelManager::compile(int i) -> void
 {
-    auto externalAccessor = [&](glm::ivec3 pos, int64_t chunkx, int64_t chunky, int64_t chunkz) -> bool {
+    auto externalAccessor = [&](glm::ivec3 pos, int64_t chunkx, int64_t chunky, int64_t chunkz) -> uint32_t {
         if (pos.x < 0)
         {
             chunkx -= 1;
