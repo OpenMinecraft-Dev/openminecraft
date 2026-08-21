@@ -39,13 +39,15 @@ class OMTextureAtlas
         specs::png::OMPngFile img2;
         img2.parse(imgraw);
 
-        int pres = img2.getWidth() / 16 * img2.getHeight() / 16;
-
-        logger.debug("{}texture {}:{} => {}", pres == 1 ? "" : "*", i.namesp, i.path, tid);
+        subtexSizes[i] = {img2.getWidth(), img2.getHeight()};
+        if (img2.getWidth() > 16 || img2.getHeight() > 16)
+        {
+            return -1;
+        }
+        logger.debug("texture {}:{} => {}", i.namesp, i.path, tid);
 
         subtex[i] = tid;
-        subtexSizes[i] = {img2.getWidth(), img2.getHeight()};
-        tid += pres;
+        ++tid;
         return subtex[i];
     }
 
@@ -59,59 +61,32 @@ class OMTextureAtlas
             specs::png::OMPngFile img2;
             img2.parse(imgraw);
 
-            std::array<uint8_t, 4 * 16 * 16> bm = {};
-            int texoffset = 0;
-            for (int y = 0; y < img2.getHeight() / 16; ++y)
+            if (img2.getWidth() > 16 || img2.getHeight() > 16)
             {
-                for (int x = 0; x < img2.getWidth() / 16; ++x)
-                {
-                    for (int py = 0; py < 16; ++py)
-                    {
-                        int cx = x * 16;
-                        int cy = y * 16 + py;
-                        int pixoff = 4 * (cy * img2.getWidth() + cx);
-
-                        std::memcpy(bm.data() + 4 * 16 * py,
-                                    reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(img2.fetchData()) + pixoff),
-                                    4 * 16);
-                    }
-                    texture->updateData(bm.data(), p.second + y * img2.getHeight() / 16 + x);
-                }
+                continue;
             }
+
+            std::array<uint8_t, 4 * 16 * 16> bm = {};
+            for (int py = 0; py < 16; ++py)
+            {
+                int cy = py;
+                int pixoff = 4 * (cy * img2.getWidth());
+
+                std::memcpy(bm.data() + 4 * 16 * py,
+                            reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(img2.fetchData()) + pixoff), 4 * 16);
+            }
+            texture->updateData(bm.data(), p.second);
         }
+
         texture->mipFilter = openminecraft::renderer::common::Nearest;
         texture->magFilter = openminecraft::renderer::common::Nearest;
         texture->minFilter = openminecraft::renderer::common::Nearest;
         texture->setupSampler();
     }
 
-    auto mapTexture(OMIdentifier i, glm::vec2 uv0, glm::vec2 uv1) -> std::tuple<glm::ivec2, glm::ivec2, int>
+    auto textureSize(OMIdentifier i) -> glm::ivec2
     {
-        uv0 /= 16.0f;
-        uv0 *= subtexSizes[i];
-        uv1 /= 16.0f;
-        uv1 *= subtexSizes[i];
-
-        int offsetx = 0;
-        int offsety = 0;
-
-        while (uv0.x > 16 || uv1.x > 16)
-        {
-            ++offsetx;
-            uv0.x -= 16;
-            uv1.x -= 16;
-        }
-
-        while (uv0.y > 16 || uv1.y > 16)
-        {
-            ++offsety;
-            uv0.y -= 16;
-            uv1.y -= 16;
-        }
-
-        int texoffset = offsety * subtexSizes[i].y / 16 + offsetx;
-
-        return std::make_tuple(uv0, uv1, subtex[i] + texoffset);
+        return subtexSizes[i];
     }
 
   private:

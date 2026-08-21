@@ -22,28 +22,28 @@ namespace openminecraft::renderer::common::wrap
 {
 struct OMVoxelAABB
 {
-    glm::ivec3 offset;
-    glm::ivec3 size;
+    glm::vec3 offset;
+    glm::vec3 size;
 
-    [[nodiscard]] inline auto applyOffset(glm::ivec3 v) const -> OMVoxelAABB
+    [[nodiscard]] inline auto applyOffset(glm::vec3 v) const -> OMVoxelAABB
     {
         return {offset + v, size};
     }
 
     [[nodiscard]] inline auto intersect(const OMVoxelAABB &other) const -> bool
     {
-        glm::ivec3 currMin = offset;
-        glm::ivec3 currMax = currMin + size;
-        glm::ivec3 tgtMin = other.offset;
-        glm::ivec3 tgtMax = tgtMin + other.size;
+        glm::vec3 currMin = offset;
+        glm::vec3 currMax = currMin + size;
+        glm::vec3 tgtMin = other.offset;
+        glm::vec3 tgtMax = tgtMin + other.size;
         return currMin.x <= tgtMax.x && currMax.x >= tgtMin.x && currMin.y <= tgtMax.y && currMax.y >= tgtMin.y &&
                currMin.z <= tgtMax.z && currMax.z >= tgtMin.z;
     }
 
-    [[nodiscard]] inline auto contains(const glm::ivec3 p) const -> bool
+    [[nodiscard]] inline auto contains(const glm::vec3 p) const -> bool
     {
-        glm::ivec3 currMin = offset;
-        glm::ivec3 currMax = currMin + size;
+        glm::vec3 currMin = offset;
+        glm::vec3 currMax = currMin + size;
         return currMin.x <= p.x && currMax.x >= p.x && currMin.y <= p.y && currMax.y >= p.y && currMin.z <= p.z &&
                currMax.z >= p.z;
     }
@@ -65,7 +65,7 @@ struct OMVoxelShape
     {
     }
 
-    [[nodiscard]] inline auto contains(const glm::ivec3 p) const -> bool
+    [[nodiscard]] inline auto contains(const glm::vec3 p) const -> bool
     {
         for (auto const &a : aabbs)
         {
@@ -149,6 +149,7 @@ class OMVoxelHandler
     virtual auto queryOcclusionShape(int bsid) -> OMVoxelShape = 0;
     virtual auto queryAmbientOcclusion(int bsid) -> bool = 0;
     virtual auto queryPartShade(int bsid, int pid) -> bool = 0;
+    virtual auto queryComplex(int bsid) -> bool = 0;
 };
 
 class OMVoxelHandlerDummy : public OMVoxelHandler
@@ -211,6 +212,10 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     auto queryPartShade(int bsid, int pid) -> bool override
     {
         return true;
+    }
+    auto queryComplex(int bsid) -> bool override
+    {
+        return false;
     }
 };
 

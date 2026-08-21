@@ -23,6 +23,11 @@ OMModelPrecompiler::OMModelPrecompiler(std::string root, OMTextureAtlas *atlas)
     : root(std::move(root)), logger("OMModelPrecompiler", this), textureAtlas(*atlas)
 {
 }
+auto OMModelPrecompiler::queryComplex(int bsid) -> bool
+{
+    return modelComplex[bsid];
+}
+
 auto OMModelPrecompiler::queryPartShade(int bsid, int pid) -> bool
 {
     return models[bsid][pid].shade;
@@ -212,20 +217,20 @@ auto OMModelPrecompiler::loadModel(OMIdentifier i, bool soild) -> int
 }
 
 // INFO: General rorate function
-auto rotateVoxelElement90(const glm::ivec3 &from, const glm::ivec3 &to, int i) -> std::pair<glm::ivec3, glm::ivec3>
+auto rotateVoxelElement90(const glm::vec3 &from, const glm::vec3 &to, int i) -> std::pair<glm::vec3, glm::vec3>
 {
-    glm::ivec3 corners[8] = {{from.x, from.y, from.z}, {from.x, from.y, to.z}, {from.x, to.y, from.z},
-                             {from.x, to.y, to.z},     {to.x, from.y, from.z}, {to.x, from.y, to.z},
-                             {to.x, to.y, from.z},     {to.x, to.y, to.z}};
+    glm::vec3 corners[8] = {{from.x, from.y, from.z}, {from.x, from.y, to.z}, {from.x, to.y, from.z},
+                            {from.x, to.y, to.z},     {to.x, from.y, from.z}, {to.x, from.y, to.z},
+                            {to.x, to.y, from.z},     {to.x, to.y, to.z}};
 
-    glm::ivec3 newMin = glm::ivec3(16, 16, 16);
-    glm::ivec3 newMax = glm::ivec3(0, 0, 0);
+    auto newMin = glm::vec3(16, 16, 16);
+    auto newMax = glm::vec3(0, 0, 0);
 
     for (const auto &p : corners)
     {
-        glm::ivec3 centered = p - glm::ivec3(8, 8, 8);
+        auto centered = p - glm::vec3(8, 8, 8);
 
-        glm::ivec3 rotated;
+        glm::vec3 rotated;
         switch (i)
         {
         case 0:
@@ -238,7 +243,7 @@ auto rotateVoxelElement90(const glm::ivec3 &from, const glm::ivec3 &to, int i) -
             rotated = {-centered.y, centered.x, centered.z};
             break;
         }
-        glm::ivec3 finalPos = rotated + glm::ivec3(8, 8, 8);
+        auto finalPos = rotated + glm::vec3(8, 8, 8);
 
         newMin = glm::min(newMin, finalPos);
         newMax = glm::max(newMax, finalPos);
@@ -282,6 +287,9 @@ auto OMModelPrecompiler::loadModelWithArgs(OMIdentifier i, int xrot, int yrot, i
     models.resize(modelId + 1);
     modelSoild.resize(modelId + 1);
     modelAmbientOcculusion.resize(modelId + 1);
+    modelComplex.resize(modelId + 1);
+
+    modelComplex[modelId] = false;
     models[modelId] = {};
 
     auto prem = precompile(i);
@@ -325,8 +333,10 @@ auto OMModelPrecompiler::loadModelWithArgs(OMIdentifier i, int xrot, int yrot, i
             auto xrot90 = [&]() {
                 auto &from = p->getMap()["from"]->getArray();
                 auto &to = p->getMap()["to"]->getArray();
-                auto fromv = glm::ivec3{from[0]->getNumber(), from[1]->getNumber(), from[2]->getNumber()};
-                auto tov = glm::ivec3{to[0]->getNumber(), to[1]->getNumber(), to[2]->getNumber()};
+                auto fromv =
+                    glm::vec3{from[0]->getNumberFloating(), from[1]->getNumberFloating(), from[2]->getNumberFloating()};
+                auto tov =
+                    glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
                 auto vv = rotateVoxelElement90(fromv, tov, 0);
 
                 from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.x));
@@ -367,8 +377,10 @@ auto OMModelPrecompiler::loadModelWithArgs(OMIdentifier i, int xrot, int yrot, i
             auto yrot90 = [&]() {
                 auto &from = p->getMap()["from"]->getArray();
                 auto &to = p->getMap()["to"]->getArray();
-                auto fromv = glm::ivec3{from[0]->getNumber(), from[1]->getNumber(), from[2]->getNumber()};
-                auto tov = glm::ivec3{to[0]->getNumber(), to[1]->getNumber(), to[2]->getNumber()};
+                auto fromv =
+                    glm::vec3{from[0]->getNumberFloating(), from[1]->getNumberFloating(), from[2]->getNumberFloating()};
+                auto tov =
+                    glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
                 auto vv = rotateVoxelElement90(fromv, tov, 1);
 
                 from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.x));
@@ -409,8 +421,10 @@ auto OMModelPrecompiler::loadModelWithArgs(OMIdentifier i, int xrot, int yrot, i
             auto zrot90 = [&]() {
                 auto &from = p->getMap()["from"]->getArray();
                 auto &to = p->getMap()["to"]->getArray();
-                auto fromv = glm::ivec3{from[0]->getNumber(), from[1]->getNumber(), from[2]->getNumber()};
-                auto tov = glm::ivec3{to[0]->getNumber(), to[1]->getNumber(), to[2]->getNumber()};
+                auto fromv =
+                    glm::vec3{from[0]->getNumberFloating(), from[1]->getNumberFloating(), from[2]->getNumberFloating()};
+                auto tov =
+                    glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
                 auto vv = rotateVoxelElement90(fromv, tov, 2);
 
                 from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.x));
@@ -477,6 +491,11 @@ auto OMModelPrecompiler::loadModelWithArgs(OMIdentifier i, int xrot, int yrot, i
     return modelId - 1;
 }
 
+static auto isNotInteger(std::shared_ptr<json::OMJsonNode> n) -> bool
+{
+    return std::abs(n->getNumberFloating() - std::round(n->getNumberFloating())) > 1e-5;
+}
+
 auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
     -> std::shared_ptr<openminecraft::io::json::OMJsonNode>
 {
@@ -506,6 +525,27 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
         {
             for (auto &elem : ll->getMap()["elements"]->getArray())
             {
+                auto fromn = elem->getMap()["from"]->getArray();
+                auto ton = elem->getMap()["to"]->getArray();
+
+                if (isNotInteger(fromn[0]) || isNotInteger(fromn[1]) || isNotInteger(fromn[2]) ||
+                    isNotInteger(ton[0]) || isNotInteger(ton[1]) || isNotInteger(ton[2]))
+                {
+                    modelComplex[modelId] = true;
+                }
+
+                if (elem->getMap().count("rotation"))
+                {
+                    auto origin = elem->getMap()["rotation"]->getMap()["origin"]->getArray();
+                    auto angle = elem->getMap()["rotation"]->getMap()["angle"];
+
+                    if (isNotInteger(angle) || isNotInteger(origin[0]) || isNotInteger(origin[1]) ||
+                        isNotInteger(origin[2]))
+                    {
+                        modelComplex[modelId] = true;
+                    }
+                }
+
                 for (auto &fce : elem->getMap()["faces"]->getMap())
                 {
                     auto text = fce.second->getMap()["texture"]->getString();
@@ -513,12 +553,31 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
                     if (text[0] == '#' && tex.count(text.substr(1)))
                     {
                         fce.second->getMap()["texture"] = tex[text.substr(1)];
-                        textureAtlas.addTexture(OMIdentifier(fce.second->getMap()["texture"]->getString()));
+                    }
+
+                    auto tident = OMIdentifier(fce.second->getMap()["texture"]->getString());
+                    textureAtlas.addTexture(tident);
+                    auto tsize = textureAtlas.textureSize(tident);
+                    if (tsize.x > 16 || tsize.y > 16)
+                    {
+                        modelComplex[modelId] = true;
+                        continue;
+                    }
+
+                    if (fce.second->getMap().count("uv"))
+                    {
+                        auto aa = fce.second->getMap()["uv"]->getArray();
+
+                        if (isNotInteger(aa[0]) || isNotInteger(aa[1]) || isNotInteger(aa[2]) || isNotInteger(aa[3]))
+                        {
+                            modelComplex[modelId] = true;
+                        }
                     }
                 }
             }
         }
     }
+
     return ll;
 }
 
@@ -528,8 +587,8 @@ auto OMModelPrecompiler::wrapPart(std::shared_ptr<openminecraft::io::json::OMJso
     auto from = part->getMap()["from"]->getArray();
     auto to = part->getMap()["to"]->getArray();
     auto ro = part->getMap().count("rotation") ? part->getMap()["rotation"] : nullptr;
-    auto fromv = glm::ivec3{from[0]->getNumber(), from[1]->getNumber(), from[2]->getNumber()};
-    auto tov = glm::ivec3{to[0]->getNumber(), to[1]->getNumber(), to[2]->getNumber()};
+    auto fromv = glm::vec3{from[0]->getNumberFloating(), from[1]->getNumberFloating(), from[2]->getNumberFloating()};
+    auto tov = glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
 
     return {
         mm.count("east") ? wrapFace(mm["east"], OMModelCullSide::East, fromv, tov) : OMModelFace(),
@@ -548,20 +607,20 @@ auto OMModelPrecompiler::wrapPart(std::shared_ptr<openminecraft::io::json::OMJso
         tov,
         part->getMap().count("shade") ? part->getMap()["shade"]->getBoolean() : true,
         ro != nullptr,
-        ro ? glm::ivec3{static_cast<int>(ro->getMap()["origin"]->getArray()[0]->getNumber()),
-                        static_cast<int>(ro->getMap()["origin"]->getArray()[1]->getNumber()),
-                        static_cast<int>(ro->getMap()["origin"]->getArray()[2]->getNumber())}
-           : glm::ivec3{},
+        ro ? glm::vec3{static_cast<double>(ro->getMap()["origin"]->getArray()[0]->getNumberFloating()),
+                       static_cast<double>(ro->getMap()["origin"]->getArray()[1]->getNumberFloating()),
+                       static_cast<double>(ro->getMap()["origin"]->getArray()[2]->getNumberFloating())}
+           : glm::vec3{},
         ro ? fromAxis(ro->getMap()["axis"]->getString()) : X,
         ro ? ro->getMap()["angle"]->getNumberFloating() : 0.0,
     };
 }
 
 auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::io::json::OMJsonNode> face, OMModelCullSide c,
-                                  glm::ivec3 from, glm::ivec3 to) -> OMModelFace
+                                  glm::vec3 from, glm::vec3 to) -> OMModelFace
 {
     auto uv = face->getMap().count("uv") ? face->getMap()["uv"] : nullptr;
-    glm::ivec2 uv0, uv1;
+    glm::vec2 uv0, uv1;
     if (uv)
     {
         uv0 = {std::round(uv->getArray()[0]->getNumberFloating()), std::round(uv->getArray()[1]->getNumberFloating())};
@@ -594,13 +653,12 @@ auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::io::json::OMJso
         }
     }
 
-    auto mapped = textureAtlas.mapTexture(OMIdentifier(face->getMap()["texture"]->getString()), uv0, uv1);
-
+    // TODO: new texture logics!
     return {
         fromSide(face->getMap().count("cullface") ? face->getMap()["cullface"]->getString() : "none"),
-        std::get<2>(mapped),
-        std::get<0>(mapped),
-        std::get<1>(mapped),
+        modelComplex[modelId] ? 0 : textureAtlas.subtex[OMIdentifier(face->getMap()["texture"]->getString())],
+        uv0,
+        uv1,
         face->getMap().count("rotation") ? static_cast<int>(face->getMap()["rotation"]->getNumber()) : 0,
     };
 }

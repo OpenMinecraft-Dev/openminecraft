@@ -103,7 +103,7 @@ auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
 
         auto currentPos =
             glm::mix(currentAabb.offset, currentAabb.offset + currentAabb.size, glm::vec3(pos.x, pos.y, pos.z)) -
-            (glm::ivec3(dx, dy, dz) * 16);
+            (glm::vec3(dx, dy, dz) * 16.0f);
 
         auto occ = handler->queryOcclusionShape(tgbs);
         if (occ.contains(currentPos))
@@ -237,6 +237,10 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                 if (handler->queryPartFaceEnabled(v.second, i, f) &&
                     !checkExistSoild(chunk, externalAccessor, v.first, handler->queryPartFaceCull(v.second, i, f)))
                 {
+                    if (handler->queryComplex(v.second))
+                    {
+                        continue;
+                    }
                     auto [ao1, ao2, ao3, ao4] =
                         handler->queryAmbientOcclusion(v.second) && handler->queryPartShade(v.second, i)
                             ? computeAO(chunk, externalAccessor, v.first.x, v.first.y, v.first.z, f, v.second, i)

@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 #include <tuple>
+#include <vector>
 namespace openminecraftshell::data
 {
 enum OMModelCullSide
@@ -71,7 +72,7 @@ struct OMModelFace
 {
     OMModelCullSide cull;
     int textureid;
-    glm::ivec2 uv0, uv1;
+    glm::vec2 uv0, uv1;
     int rotation;
 };
 struct OMModelPart
@@ -89,10 +90,10 @@ struct OMModelPart
     OMModelFace north;
     bool enableNorth;
 
-    glm::ivec3 from, to;
+    glm::vec3 from, to;
     bool shade;
     bool rotate;
-    glm::ivec3 rotateOrigin;
+    glm::vec3 rotateOrigin;
     OMModelAxis rotateAxis;
     double rotateAngle;
 };
@@ -103,7 +104,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     ~OMModelPrecompiler() = default;
 
     auto precompile(OMIdentifier, bool = true) -> std::shared_ptr<openminecraft::io::json::OMJsonNode>;
-    auto wrapFace(std::shared_ptr<openminecraft::io::json::OMJsonNode>, OMModelCullSide, glm::ivec3 from, glm::ivec3 to)
+    auto wrapFace(std::shared_ptr<openminecraft::io::json::OMJsonNode>, OMModelCullSide, glm::vec3 from, glm::vec3 to)
         -> OMModelFace;
     auto wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelPart;
 
@@ -127,6 +128,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto queryOcclusionShape(int bsid) -> openminecraft::renderer::common::wrap::OMVoxelShape override;
     auto queryAmbientOcclusion(int bsid) -> bool override;
     auto queryPartShade(int bsid, int pid) -> bool override;
+    auto queryComplex(int bsid) -> bool override;
 
   private:
     int modelId = 0;
@@ -136,6 +138,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     std::vector<std::vector<OMModelPart>> models;
     std::vector<bool> modelSoild;
     std::vector<bool> modelAmbientOcculusion;
+    std::vector<bool> modelComplex;
 };
 } // namespace openminecraftshell::data
 
