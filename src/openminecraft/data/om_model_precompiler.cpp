@@ -570,8 +570,8 @@ auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::io::json::OMJso
     glm::ivec2 uv0, uv1;
     if (uv)
     {
-        uv0 = {uv->getArray()[0]->getNumber(), uv->getArray()[1]->getNumber()};
-        uv1 = {uv->getArray()[2]->getNumber(), uv->getArray()[3]->getNumber()};
+        uv0 = {std::round(uv->getArray()[0]->getNumberFloating()), std::round(uv->getArray()[1]->getNumberFloating())};
+        uv1 = {std::round(uv->getArray()[2]->getNumberFloating()), std::round(uv->getArray()[3]->getNumberFloating())};
     }
     else
     {
@@ -600,11 +600,13 @@ auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::io::json::OMJso
         }
     }
 
+    auto mapped = textureAtlas.mapTexture(OMIdentifier(face->getMap()["texture"]->getString()), uv0, uv1);
+
     return {
         fromSide(face->getMap().count("cullface") ? face->getMap()["cullface"]->getString() : "none"),
-        textureAtlas.subtex[OMIdentifier(face->getMap()["texture"]->getString())],
-        uv0,
-        uv1,
+        std::get<2>(mapped),
+        std::get<0>(mapped),
+        std::get<1>(mapped),
         face->getMap().count("rotation") ? static_cast<int>(face->getMap()["rotation"]->getNumber()) : 0,
     };
 }

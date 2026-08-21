@@ -96,7 +96,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
                 cnk.setBlock(1, 1, 0, 9);
                 cnk.setBlock(3, 1, 0, 10);
                 cnk.setBlock(3, 2, 0, 11);
-                cnk.setBlock(0, 1, 0, 13);
+                cnk.setBlock(0, 1, 0, 14);
                 cnk.setBlock(0, 2, 1, 13);
                 cnk.setBlock(0, 1, 2, 6);
                 cnk.setBlock(15, 1, 1, 6);
@@ -122,6 +122,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/spruce_door_top_left"), false);
     voxelHandler->loadModelWithArgs(data::OMIdentifier("minecraft:block/oak_button"), 90, 270, 0, true, false);
     voxelHandler->loadModelWithArgs(data::OMIdentifier("minecraft:block/oak_button"), 0, 90, 0, false, false);
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/oak_shelf"), false);
     textureAtlas->build();
 
     voxelManager = new wrap::OMVoxelManager(
