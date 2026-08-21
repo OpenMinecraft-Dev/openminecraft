@@ -146,7 +146,9 @@ class OMVoxelHandler
     virtual auto queryPartRotationCenter(int bsid, int pid) -> glm::ivec3 = 0;
     virtual auto queryPartRotationAngle(int bsid, int pid) -> int = 0;
     virtual auto querySoild(int bsid) -> bool = 0;
-    virtual auto queryOcculusionShape(int bsid) -> OMVoxelShape = 0;
+    virtual auto queryOcclusionShape(int bsid) -> OMVoxelShape = 0;
+    virtual auto queryAmbientOcclusion(int bsid) -> bool = 0;
+    virtual auto queryPartShade(int bsid, int pid) -> bool = 0;
 };
 
 class OMVoxelHandlerDummy : public OMVoxelHandler
@@ -198,9 +200,17 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     {
         return true;
     }
-    auto queryOcculusionShape(int bsid) -> OMVoxelShape override
+    auto queryOcclusionShape(int bsid) -> OMVoxelShape override
     {
         return {{{0, 0, 0}, {16, 16, 16}}};
+    }
+    auto queryAmbientOcclusion(int bsid) -> bool override
+    {
+        return true;
+    }
+    auto queryPartShade(int bsid, int pid) -> bool override
+    {
+        return true;
     }
 };
 

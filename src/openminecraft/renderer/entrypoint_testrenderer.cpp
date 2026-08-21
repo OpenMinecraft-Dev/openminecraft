@@ -122,7 +122,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/spruce_door_top_left"), false);
     voxelHandler->loadModelWithArgs(data::OMIdentifier("minecraft:block/oak_button"), 90, 270, 0, true, false);
     voxelHandler->loadModelWithArgs(data::OMIdentifier("minecraft:block/oak_button"), 0, 90, 0, false, false);
-    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/oak_shelf"), false);
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/lever"), false);
     textureAtlas->build();
 
     voxelManager = new wrap::OMVoxelManager(

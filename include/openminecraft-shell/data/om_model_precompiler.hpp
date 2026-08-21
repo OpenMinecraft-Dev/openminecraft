@@ -121,7 +121,9 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto queryPartRotationCenter(int bsid, int pid) -> glm::ivec3 override;
     auto queryPartRotationAngle(int bsid, int pid) -> int override;
     auto querySoild(int bsid) -> bool override;
-    auto queryOcculusionShape(int bsid) -> openminecraft::renderer::common::wrap::OMVoxelShape override;
+    auto queryOcclusionShape(int bsid) -> openminecraft::renderer::common::wrap::OMVoxelShape override;
+    auto queryAmbientOcclusion(int bsid) -> bool override;
+    auto queryPartShade(int bsid, int pid) -> bool override;
 
   private:
     int modelId = 0;
@@ -130,6 +132,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     OMTextureAtlas &textureAtlas;
     std::vector<std::vector<OMModelPart>> models;
     std::vector<bool> modelSoild;
+    std::vector<bool> modelAmbientOcculusion;
 };
 } // namespace openminecraftshell::data
 

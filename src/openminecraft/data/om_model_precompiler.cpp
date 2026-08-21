@@ -22,8 +22,16 @@ OMModelPrecompiler::OMModelPrecompiler(std::string root, OMTextureAtlas *atlas)
     : root(std::move(root)), logger("OMModelPrecompiler", this), textureAtlas(*atlas)
 {
 }
+auto OMModelPrecompiler::queryPartShade(int bsid, int pid) -> bool
+{
+    return models[bsid][pid].shade;
+}
+auto OMModelPrecompiler::queryAmbientOcclusion(int bsid) -> bool
+{
+    return modelAmbientOcculusion[bsid];
+}
 
-auto OMModelPrecompiler::queryOcculusionShape(int bsid) -> OMVoxelShape
+auto OMModelPrecompiler::queryOcclusionShape(int bsid) -> OMVoxelShape
 {
     std::vector<OMVoxelAABB> r;
     for (auto &pp : models[bsid])
@@ -199,23 +207,7 @@ auto OMModelPrecompiler::querySoild(int bsid) -> bool
 
 auto OMModelPrecompiler::loadModel(OMIdentifier i, bool soild) -> int
 {
-    models.resize(modelId + 1);
-    modelSoild.resize(modelId + 1);
-    models[modelId] = {};
-
-    auto pre = precompile(i);
-
-    if (pre)
-    {
-        for (auto &p : pre->getArray())
-        {
-            models[modelId].emplace_back(wrapPart(p));
-        }
-    }
-
-    modelSoild[modelId] = soild;
-    modelId++;
-    return modelId - 1;
+    return loadModelWithArgs(i, 0, 0, 0, false, soild);
 }
 
 auto rotateVoxelElementZ90(const glm::ivec3 &from, const glm::ivec3 &to) -> std::pair<glm::ivec3, glm::ivec3>
@@ -294,9 +286,13 @@ auto OMModelPrecompiler::loadModelWithArgs(OMIdentifier i, int xrot, int yrot, i
 {
     models.resize(modelId + 1);
     modelSoild.resize(modelId + 1);
+    modelAmbientOcculusion.resize(modelId + 1);
     models[modelId] = {};
 
-    auto pre = precompile(i);
+    auto prem = precompile(i);
+    modelAmbientOcculusion[modelId] =
+        prem->getMap().count("ambientocclusion") ? prem->getMap()["ambientocclusion"]->getBoolean() : true;
+    auto pre = prem->getMap()["elements"];
 
     if (pre)
     {
@@ -520,12 +516,8 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
                 }
             }
         }
-        return ll->getMap()["elements"];
     }
-    else
-    {
-        return ll;
-    }
+    return ll;
 }
 
 auto OMModelPrecompiler::wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode> part) -> OMModelPart

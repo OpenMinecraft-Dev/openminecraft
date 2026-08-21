@@ -48,6 +48,7 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_RCENTERX ((voxelExtra3 >> 13) & 15)
 #define VOXEL_RCENTERY ((voxelExtra3 >> 9) & 15)
 #define VOXEL_RCENTERZ ((voxelExtra3 >> 5) & 15)
+#define VOXEL_SHADE ((voxelExtra3 >> 3) & 1)
 #define VOXEL_RANGLE (voxelExtra3 & 7)
 
 vec3 rotateVec(vec3 v, float angle, vec3 axis)
@@ -175,4 +176,9 @@ void main()
     int idx = int(oruv.x) << 1 | int(oruv.y);
     voxAoLevel = VOXEL_AO(idx);
     voxLight = vec2(float(VOXEL_BL(idx)) / 15, float(VOXEL_SL(idx)) / 15);
+
+    if (VOXEL_SHADE == 0)
+    {
+        voxFactor = 1.0;
+    }
 }
