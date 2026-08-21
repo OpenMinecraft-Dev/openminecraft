@@ -91,6 +91,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
                 world::OMChunk<16> cnk(cx, cy, cz);
                 cnk.setBlock(0, 0, 0, 1);
                 cnk.setBlock(0, 1, 1, 6);
+                cnk.setBlock(2, 0, 0, 15);
                 cnk.setBlock(2, 1, 0, 7);
                 cnk.setBlock(2, 2, 0, 8);
                 cnk.setBlock(1, 1, 0, 9);
@@ -120,9 +121,15 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/oak_stairs"), false);
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/spruce_door_bottom_left"), false);
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/spruce_door_top_left"), false);
-    voxelHandler->loadModelWithArgs(data::OMIdentifier("minecraft:block/oak_button"), 90, 270, 0, true, false);
-    voxelHandler->loadModelWithArgs(data::OMIdentifier("minecraft:block/oak_button"), 0, 90, 0, false, false);
-    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/lever"), false);
+    voxelHandler->loadModelWithArgs(data::OMIdentifier("minecraft:block/acacia_button"), 0, 0, 0, true, false);
+    voxelHandler->loadModelWithArgs(data::OMIdentifier("minecraft:block/oak_button"), 0, 0, 0, false, false);
+    voxelHandler->loadModelMultipart(
+        {
+            {data::OMIdentifier("minecraft:block/oak_shelf"), 0, 90, 0, false},
+            {data::OMIdentifier("minecraft:block/oak_shelf_unpowered"), 0, 90, 0, false},
+        },
+        false);
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/grass_block"));
     textureAtlas->build();
 
     voxelManager = new wrap::OMVoxelManager(

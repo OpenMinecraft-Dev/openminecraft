@@ -9,9 +9,11 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include <cstdint>
+#include <initializer_list>
 #include <iostream>
 #include <memory>
 #include <string>
+#include <tuple>
 namespace openminecraftshell::data
 {
 enum OMModelCullSide
@@ -107,6 +109,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
 
     auto loadModel(OMIdentifier, bool = true) -> int;
     auto loadModelWithArgs(OMIdentifier, int, int, int, bool, bool = true) -> int;
+    auto loadModelMultipart(std::initializer_list<std::tuple<OMIdentifier, int, int, int, bool>>, bool = true) -> int;
 
     auto queryNumParts(int bsid) -> int override;
     auto queryPartFaceEnabled(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> bool override;

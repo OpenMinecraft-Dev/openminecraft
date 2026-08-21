@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
 #include "fmt/format.h"
@@ -282,6 +283,36 @@ auto rotateVoxelElementY90(const glm::ivec3 &from, const glm::ivec3 &to) -> std:
     return {newMin, newMax};
 }
 
+auto OMModelPrecompiler::loadModelMultipart(std::initializer_list<std::tuple<OMIdentifier, int, int, int, bool>> models,
+                                            bool soild) -> int
+{
+    std::vector<OMModelPart> parts;
+
+    for (auto &p : models)
+    {
+        auto &ident = std::get<0>(p);
+        auto &xrot = std::get<1>(p);
+        auto &yrot = std::get<2>(p);
+        auto &zrot = std::get<3>(p);
+        auto &lockuv = std::get<4>(p);
+
+        auto tempModelId = loadModelWithArgs(ident, xrot, yrot, zrot, lockuv);
+        parts.insert(parts.end(), this->models[tempModelId].begin(), this->models[tempModelId].end());
+        --modelId;
+    }
+
+    this->models.resize(modelId + 1);
+    modelSoild.resize(modelId + 1);
+    modelAmbientOcculusion.resize(modelId + 1);
+
+    this->models[modelId].assign(parts.begin(), parts.end());
+    modelSoild[modelId] = soild;
+    modelAmbientOcculusion[modelId] = true;
+
+    ++modelId;
+    return modelId - 1;
+}
+
 auto OMModelPrecompiler::loadModelWithArgs(OMIdentifier i, int xrot, int yrot, int zrot, bool lockuv, bool soild) -> int
 {
     models.resize(modelId + 1);
@@ -320,6 +351,11 @@ auto OMModelPrecompiler::loadModelWithArgs(OMIdentifier i, int xrot, int yrot, i
                 }
                 else
                 {
+
+                    if (a->getMap().count("cullface"))
+                    {
+                        a->getMap()["cullface"] = std::make_shared<json::OMJsonNodeString>(f);
+                    }
                     mm[f] = a;
                 }
             };
@@ -450,20 +486,23 @@ auto OMModelPrecompiler::loadModelWithArgs(OMIdentifier i, int xrot, int yrot, i
                 }
             };
 
-            while (xrot > 0)
+            int txrot = xrot;
+            int tyrot = yrot;
+            int tzrot = zrot;
+            while (txrot > 0)
             {
                 xrot90();
-                xrot -= 90;
+                txrot -= 90;
             }
-            while (yrot > 0)
+            while (tyrot > 0)
             {
                 yrot90();
-                yrot -= 90;
+                tyrot -= 90;
             }
-            while (zrot > 0)
+            while (tzrot > 0)
             {
                 zrot90();
-                zrot -= 90;
+                tzrot -= 90;
             }
 
             models[modelId].emplace_back(wrapPart(p));

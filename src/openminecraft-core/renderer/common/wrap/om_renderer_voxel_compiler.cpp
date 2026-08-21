@@ -238,7 +238,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                     !checkExistSoild(chunk, externalAccessor, v.first, handler->queryPartFaceCull(v.second, i, f)))
                 {
                     auto [ao1, ao2, ao3, ao4] =
-                        handler->queryAmbientOcclusion(v.second)
+                        handler->queryAmbientOcclusion(v.second) && handler->queryPartShade(v.second, i)
                             ? computeAO(chunk, externalAccessor, v.first.x, v.first.y, v.first.z, f, v.second, i)
                             : std::make_tuple<uint8_t, uint8_t, uint8_t, uint8_t>(0, 0, 0, 0);
                     auto aabb = handler->queryPartAABB(v.second, i);

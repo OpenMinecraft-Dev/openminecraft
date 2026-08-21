@@ -91,10 +91,6 @@ class OMTextureAtlas
         uv0 *= subtexSizes[i];
         uv1 /= 16.0f;
         uv1 *= subtexSizes[i];
-        if (subtexSizes[i].x > 16)
-        {
-            logger.info("{} {} {} {}", uv0.x, uv0.y, uv1.x, uv1.y);
-        }
 
         int offsetx = 0;
         int offsety = 0;
@@ -114,11 +110,6 @@ class OMTextureAtlas
         }
 
         int texoffset = offsety * subtexSizes[i].y / 16 + offsetx;
-
-        if (subtexSizes[i].x > 16)
-        {
-            logger.debug("mapped to {} {} {} {} @ {} {}", uv0.x, uv0.y, uv1.x, uv1.y, offsetx, offsety);
-        }
 
         return std::make_tuple(uv0, uv1, subtex[i] + texoffset);
     }
