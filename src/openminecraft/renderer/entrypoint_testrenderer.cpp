@@ -104,6 +104,8 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
                 cnk.setBlock(15, 0, 0, 2);
                 cnk.setBlock(15, 1, 2, 6);
                 cnk.setBlock(15, 1, 0, 13);
+                cnk.setBlock(15, 2, 2, 16);
+                cnk.setBlock(15, 2, 1, 17);
                 chunkManager->loadChunk(cnk);
             }
         }
@@ -132,6 +134,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
         false);
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/grass_block"));
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/lever"), false);
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/rail"), false);
     textureAtlas->build();
 
     voxelManager = new wrap::OMVoxelManager(
