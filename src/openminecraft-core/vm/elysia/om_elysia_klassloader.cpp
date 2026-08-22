@@ -105,7 +105,7 @@ auto OMElysiaKlassloader::constructArrayClass(OMElysiaKlass *k) -> OMElysiaArray
     klass->methods->argSlots = 1;
     klass->methods->cachedDescriptor =
         std::make_shared<std::pair<std::vector<OMElysiaSignaturePart>, OMElysiaSignaturePart>>(
-            std::move(parseSignature(klass->methods->descriptor)));
+            parseSignature(klass->methods->descriptor));
     klass->methods->accessFlag = JVM_Acc_Public | JVM_Acc_Final | JVM_Acc_Native;
     klass->nativeMethodCount = 1;
     klass->nativeMethods = elysium->metaspaceHeap.allocateArray<OMElysiaNativeMethod>(1);
@@ -469,7 +469,7 @@ auto OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> i
             clsfile->constants.data->at(clsfile->methods.data->at(i).descriptorIndex).valueString);
         m.argSlots = argSlots(m.descriptor) + (m.isStatic() ? 0 : 1);
         m.cachedDescriptor = std::make_shared<std::pair<std::vector<OMElysiaSignaturePart>, OMElysiaSignaturePart>>(
-            std::move(parseSignature(m.descriptor)));
+            parseSignature(m.descriptor));
 
         if (m.isNative())
         {

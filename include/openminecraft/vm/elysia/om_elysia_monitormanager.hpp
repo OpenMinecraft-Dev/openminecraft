@@ -7,7 +7,7 @@
 #include <utility>
 namespace openminecraft::vm::elysia
 {
-class OMElysiaOop;
+struct OMElysiaOop;
 class OMElysiaMonitorManager
 {
   public:

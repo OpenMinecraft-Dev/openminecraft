@@ -123,7 +123,7 @@ auto fetchCpuName() -> std::string
             result += ch;
         }
     }
-    return result;
+    return result == "" ? fetchFromDevFs() : result;
 #elif defined(__aarch64__)
     std::string cpuname;
     aarch64_tocpuname(cpuinfo_aarch64(), &cpuname);

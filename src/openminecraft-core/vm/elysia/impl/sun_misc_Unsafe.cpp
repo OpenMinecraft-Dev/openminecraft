@@ -318,8 +318,6 @@ static auto defineAnonymousClass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *inst
                                  OMElysiaNativeHandle *bytearr, OMElysiaNativeHandle *cpPatches)
     -> OMElysiaNativeHandle *
 {
-    auto k = reinterpret_cast<OMElysiaKlass *>(
-        env->GetLongField(host, interface::field(env, "java/lang/Class", "<ptr>", "J")));
     auto barr = env->GetByteArrayElements(bytearr, nullptr);
     auto kls = env->internal->elysium->klassLoader->loadClassWithoutMirror(
         std::make_shared<std::istringstream>(std::string(reinterpret_cast<char *>(barr), env->GetArrayLength(bytearr))),

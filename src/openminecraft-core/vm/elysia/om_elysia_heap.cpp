@@ -35,7 +35,7 @@ static auto sortBlocks(OMElysiaHeapBlock *head) -> OMElysiaHeapBlock *
 }
 
 OMElysiaHeap::OMElysiaHeap(const char *id, uint64_t maxSize, float expandFactor)
-    : rawHeap(mem::allocator::pageSize(), maxSize), logger("OMElysiaHeap", this), maxSize(maxSize),
+    : logger("OMElysiaHeap", this), rawHeap(mem::allocator::pageSize(), maxSize), maxSize(maxSize),
       expandFactor(expandFactor)
 {
     rawHeap.id = id;

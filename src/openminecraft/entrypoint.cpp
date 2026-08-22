@@ -128,7 +128,6 @@ auto boot(std::vector<std::string> args) -> int
         return 1;
     }
 
-progEnd:
     SDL_Quit();
 
     return 0;

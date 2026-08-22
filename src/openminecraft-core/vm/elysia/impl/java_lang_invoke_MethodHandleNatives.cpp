@@ -16,6 +16,7 @@ namespace openminecraft::vm::elysia::impl
 {
 extern log::OMLogger logger;
 constexpr int MN_Method = 0x10000;
+[[maybe_unused]]
 constexpr int MN_Constructor = 0x20000;
 constexpr int MN_Field = 0x40000;
 extern "C"

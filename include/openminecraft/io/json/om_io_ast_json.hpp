@@ -42,6 +42,7 @@ class OMJsonNodeString : public OMJsonNode
     OMJsonNodeString(std::string value) : value(std::move(value))
     {
     }
+    virtual ~OMJsonNodeString() = default;
 
     auto type() -> OMJsonNodeType override
     {
@@ -151,6 +152,7 @@ class OMJsonNodeArray : public OMJsonNode
     OMJsonNodeArray(std::vector<std::shared_ptr<OMJsonNode>> arr) : arr(std::move(arr))
     {
     }
+    virtual ~OMJsonNodeArray() = default;
 
     auto type() -> OMJsonNodeType override
     {
@@ -200,6 +202,7 @@ class OMJsonNodeNumber : public OMJsonNode
     OMJsonNodeNumber(int64_t v) : dvalue(static_cast<double>(v)), ivalue(v)
     {
     }
+    virtual ~OMJsonNodeNumber() = default;
 
     OMJsonNodeNumber(double v) : dvalue(v), ivalue(static_cast<int64_t>(v))
     {
@@ -246,6 +249,7 @@ class OMJsonNodePrimitive : public OMJsonNode
     OMJsonNodePrimitive(bool v) : value(v)
     {
     }
+    virtual ~OMJsonNodePrimitive() = default;
 
     auto type() -> OMJsonNodeType override
     {
@@ -285,6 +289,7 @@ class OMJsonNodeNull : public OMJsonNode
 {
   public:
     OMJsonNodeNull() = default;
+    virtual ~OMJsonNodeNull() = default;
 
     auto type() -> OMJsonNodeType override
     {

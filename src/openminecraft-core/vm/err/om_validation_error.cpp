@@ -16,7 +16,7 @@ OMValidationError::OMValidationError() : state(Unknown), reason(""), additional(
 
 auto OMValidationError::what() const noexcept -> const char *
 {
-    auto str = new std::string(fmt::format("{} -> {}", reason, additional));
+    auto str = new std::string(fmt::format("State {}, {} -> {}", static_cast<int>(state), reason, additional));
     return str->c_str();
 }
 } // namespace openminecraft::vm::err

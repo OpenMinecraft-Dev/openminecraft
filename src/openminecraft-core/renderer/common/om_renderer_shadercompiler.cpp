@@ -25,24 +25,20 @@ OMRendererShaderCompiler::OMRendererShaderCompiler()
 
                     std::shared_ptr<OMShader> target;
 
-                    for (auto &_ : backends)
+                    for (auto &comp : backends)
                     {
-                        for (auto &comp : backends)
+                        if (comp->accept(ll.source->type))
                         {
-                            if (comp->accept(ll.source->type))
-                            {
-                                ll.source = comp->compile(ll.source);
-                                goto compend;
-                            }
+                            ll.source = comp->compile(ll.source);
+                            goto compend;
                         }
-
-                        throw OMRendererException("Unknown shader type to compile!");
-
-                    compend:
-                        results[ll.id] = ll.source;
-                        countFinished++;
-                        break;
                     }
+
+                    throw OMRendererException("Unknown shader type to compile!");
+
+                compend:
+                    results[ll.id] = ll.source;
+                    countFinished++;
                 }
                 else
                 {

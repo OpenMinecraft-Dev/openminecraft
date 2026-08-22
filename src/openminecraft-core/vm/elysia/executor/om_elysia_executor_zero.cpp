@@ -1187,8 +1187,7 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             pc += 4;
             goto exec;
         }
-        default:
-        unk: {
+        default: {
             logger.warn("unknown operand 0x{:02x}!", *pc);
             while (true)
             {

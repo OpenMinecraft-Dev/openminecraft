@@ -72,7 +72,7 @@ OMElysium::OMElysium()
 
             for (auto &s : prim)
             {
-                auto c = klassLoader->constructPrimitiveClass(s);
+                klassLoader->constructPrimitiveClass(s);
             }
 
             auto klasses = {

@@ -34,7 +34,7 @@ namespace openminecraftshell::renderer
 {
 OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTexture *()> overlay,
                                event::OMEventBusSDL &bus, std::shared_ptr<basics::OMCamera> camera)
-    : renderer(renderer), logger("OMTestRenderer", this), OMRendererHandler(renderer), camera(std::move(camera))
+    : OMRendererHandler(renderer), camera(std::move(camera)), logger("OMTestRenderer", this), renderer(renderer)
 {
     this->overlay = overlay;
 

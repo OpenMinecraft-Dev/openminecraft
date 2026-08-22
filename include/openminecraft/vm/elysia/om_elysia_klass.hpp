@@ -11,7 +11,7 @@
 
 namespace openminecraft::vm::elysia
 {
-class OMElysiaOop;
+struct OMElysiaOop;
 class OMElysiaKlassloader;
 
 class OMElysiaInstanceKlass;

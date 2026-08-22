@@ -83,14 +83,11 @@ class OMTestRenderer : public OMRendererHandler
   private:
     OMRenderer *renderer;
 
-    float m_cameraMoveSpeed = 3.4f;
-
     std::shared_ptr<OMShader> outputVtx;
     std::shared_ptr<OMShader> outputFrg;
 
     std::chrono::high_resolution_clock::time_point tp;
     bool timing = false;
-    int fps = 0;
 };
 } // namespace openminecraftshell::renderer
 

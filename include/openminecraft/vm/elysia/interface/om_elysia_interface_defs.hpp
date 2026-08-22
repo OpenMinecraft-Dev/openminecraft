@@ -21,8 +21,8 @@ namespace openminecraft::vm::elysia
 
 using jsize = jint;
 class OMElysiaKlass;
-class OMElysiaOop;
-class OMElysiaMethod;
+struct OMElysiaOop;
+struct OMElysiaMethod;
 class OMElysiaField;
 class OMElysium;
 
@@ -34,6 +34,7 @@ struct OMElysiaNativeHandle
 
 #define handleFetch(h) (h ? h->object : nullptr)
 
+[[maybe_unused]]
 static auto createTempHandle(OMElysiaOop *oop) -> OMElysiaNativeHandle *
 {
     auto hnd = reinterpret_cast<OMElysiaNativeHandle *>(malloc(sizeof(OMElysiaNativeHandle)));

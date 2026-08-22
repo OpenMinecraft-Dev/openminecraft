@@ -147,7 +147,6 @@ auto OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id) -> void *
     auto &item = constantPoolRaw[id];
     auto &bm = bootstrapMethods[item.dynamic.bootstrapIndex];
 
-    auto &methodref = constantPoolRaw[bm.bootstrapMethodRef].methodHandle;
     auto elysium = klassloader->elysium;
 
     std::vector<OMElysiaOop *> target;
