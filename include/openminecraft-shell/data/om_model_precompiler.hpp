@@ -65,6 +65,13 @@ struct OMModelPart
     OMModelAxis rotateAxis;
     double rotateAngle;
 };
+struct OMModel
+{
+    std::vector<OMModelPart> parts;
+    std::vector<bool> partAmbientOcculusion;
+    std::vector<bool> partComplex;
+    bool soild;
+};
 class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxelHandler
 {
   public:
@@ -75,6 +82,8 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto wrapFace(std::shared_ptr<openminecraft::io::json::OMJsonNode>, OMModelCullSide, glm::vec3 from, glm::vec3 to)
         -> OMModelFace;
     auto wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelPart;
+
+    auto composeBlock(std::vector<int>, bool = true) -> int;
 
     auto loadModelPart(OMIdentifier, bool = true) -> int;
     auto loadModelPartWithArgs(OMIdentifier, int, int, int, bool, bool = true) -> int;
@@ -92,9 +101,9 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto queryPartRotationAngle(int bsid, int pid) -> int override;
     auto querySoild(int bsid) -> bool override;
     auto queryOcclusionShape(int bsid) -> openminecraft::renderer::common::wrap::OMVoxelShape override;
-    auto queryAmbientOcclusion(int bsid) -> bool override;
+    auto queryPartAmbientOcclusion(int bsid, int pid) -> bool override;
     auto queryPartShade(int bsid, int pid) -> bool override;
-    auto queryComplex(int bsid) -> bool override;
+    auto queryPartComplex(int bsid, int pid) -> bool override;
     auto queryPartFaceSecondaryTexture(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
         -> bool override;
     auto queryPartRotationAngleF(int bsid, int pid) -> float override;
@@ -104,7 +113,8 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     std::string root;
     openminecraft::log::OMLogger logger;
     OMTextureAtlas &textureAtlas;
-    std::vector<std::vector<OMModelPart>> models;
+    std::vector<OMModel> blockModels;
+    std::vector<std::vector<OMModelPart>> modelParts;
     std::vector<bool> modelSoild;
     std::vector<bool> modelAmbientOcculusion;
     std::vector<bool> modelComplex;

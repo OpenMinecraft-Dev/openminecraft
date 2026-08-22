@@ -157,9 +157,9 @@ class OMVoxelHandler
     virtual auto queryPartRotationAngle(int bsid, int pid) -> int = 0;
     virtual auto querySoild(int bsid) -> bool = 0;
     virtual auto queryOcclusionShape(int bsid) -> OMVoxelShape = 0;
-    virtual auto queryAmbientOcclusion(int bsid) -> bool = 0;
+    virtual auto queryPartAmbientOcclusion(int bsid, int pid) -> bool = 0;
     virtual auto queryPartShade(int bsid, int pid) -> bool = 0;
-    virtual auto queryComplex(int bsid) -> bool = 0;
+    virtual auto queryPartComplex(int bsid, int pid) -> bool = 0;
     virtual auto queryPartFaceSecondaryTexture(int bsid, int pid, OMVoxelFacing) -> bool = 0;
     virtual auto queryPartRotationAngleF(int bsid, int pid) -> float = 0;
 };
@@ -217,7 +217,7 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     {
         return {{{0, 0, 0}, {16, 16, 16}}};
     }
-    auto queryAmbientOcclusion(int bsid) -> bool override
+    auto queryPartAmbientOcclusion(int bsid, int pid) -> bool override
     {
         return true;
     }
@@ -225,7 +225,7 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     {
         return true;
     }
-    auto queryComplex(int bsid) -> bool override
+    auto queryPartComplex(int bsid, int pid) -> bool override
     {
         return false;
     }
