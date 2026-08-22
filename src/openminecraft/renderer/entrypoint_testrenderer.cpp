@@ -131,13 +131,16 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
         },
         false);
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/grass_block"));
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/lever"), false);
     textureAtlas->build();
 
     voxelManager = new wrap::OMVoxelManager(
-        renderer, tempTargetMS->target, textureAtlas->texture, chunkManager, [&]() { record(); }, this->voxelHandler);
+        renderer, tempTargetMS->target, textureAtlas->texture, textureAtlas->textureSecondary, chunkManager,
+        [&]() { record(); }, this->voxelHandler);
 
     voxelManager->pipeline->bindInput(0, cameraBuffer);
     voxelManager->debugPipeline->bindInput(0, cameraBuffer);
+    voxelManager->complexPipeline->bindInput(0, cameraBuffer);
 }
 
 static float ang = 0.0f;

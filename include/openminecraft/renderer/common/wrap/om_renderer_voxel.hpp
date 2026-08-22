@@ -110,6 +110,16 @@ struct OMVoxel
     int32_t voxelExtra2;
     int32_t voxelExtra3;
 };
+struct OMVoxelComplex
+{
+    int32_t voxelBasic;
+    int32_t voxelMeta;
+    int32_t voxelExtra;
+    glm::vec3 voxelOffset;
+    glm::vec2 voxelUV0, voxelUV1;
+    float voxelRotationAngle;
+    glm::vec3 voxelRotationCenter, voxelSize;
+};
 enum OMVoxelFacing : uint8_t
 {
     NegX = 0b000,
@@ -140,16 +150,18 @@ class OMVoxelHandler
     virtual auto queryPartFaceTex(int bsid, int pid, OMVoxelFacing) -> int = 0;
     virtual auto queryPartFaceCull(int bsid, int pid, OMVoxelFacing) -> OMVoxelFacing = 0;
     virtual auto queryPartAABB(int bsid, int pid) -> OMVoxelAABB = 0;
-    virtual auto queryPartFaceUV(int bsid, int pid, OMVoxelFacing) -> glm::ivec4 = 0;
+    virtual auto queryPartFaceUV(int bsid, int pid, OMVoxelFacing) -> glm::vec4 = 0;
     virtual auto queryPartFaceRotation(int bsid, int pid, OMVoxelFacing) -> int = 0;
     virtual auto queryPartRotationAxis(int bsid, int pid) -> int = 0;
-    virtual auto queryPartRotationCenter(int bsid, int pid) -> glm::ivec3 = 0;
+    virtual auto queryPartRotationCenter(int bsid, int pid) -> glm::vec3 = 0;
     virtual auto queryPartRotationAngle(int bsid, int pid) -> int = 0;
     virtual auto querySoild(int bsid) -> bool = 0;
     virtual auto queryOcclusionShape(int bsid) -> OMVoxelShape = 0;
     virtual auto queryAmbientOcclusion(int bsid) -> bool = 0;
     virtual auto queryPartShade(int bsid, int pid) -> bool = 0;
     virtual auto queryComplex(int bsid) -> bool = 0;
+    virtual auto queryPartFaceSecondaryTexture(int bsid, int pid, OMVoxelFacing) -> bool = 0;
+    virtual auto queryPartRotationAngleF(int bsid, int pid) -> float = 0;
 };
 
 class OMVoxelHandlerDummy : public OMVoxelHandler
@@ -177,7 +189,7 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     {
         return {{0, 0, 0}, {16, 16, 16}};
     }
-    auto queryPartFaceUV(int bsid, int pid, OMVoxelFacing) -> glm::ivec4 override
+    auto queryPartFaceUV(int bsid, int pid, OMVoxelFacing) -> glm::vec4 override
     {
         return {0, 0, 16, 16};
     }
@@ -189,7 +201,7 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     {
         return 0;
     }
-    auto queryPartRotationCenter(int bsid, int pid) -> glm::ivec3 override
+    auto queryPartRotationCenter(int bsid, int pid) -> glm::vec3 override
     {
         return {0, 0, 0};
     }
@@ -217,6 +229,14 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     {
         return false;
     }
+    auto queryPartFaceSecondaryTexture(int bsid, int pid, OMVoxelFacing) -> bool override
+    {
+        return false;
+    }
+    auto queryPartRotationAngleF(int bsid, int pid) -> float override
+    {
+        return 0.0f;
+    }
 };
 
 class OMVoxelCompiler
@@ -234,7 +254,7 @@ class OMVoxelCompiler
     auto checkExistSoild(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                          glm::ivec3, OMVoxelFacing) -> bool;
     auto compile(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
-                 int chunkid, std::function<void(OMVoxel)>) -> void;
+                 int chunkid, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>) -> void;
 
     OMVoxelHandler *handler = new OMVoxelHandlerDummy();
 
@@ -245,17 +265,18 @@ class OMVoxelCompiler
 class OMVoxelManager
 {
   public:
-    OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *,
+    OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *, OMRendererTexture *,
                    std::shared_ptr<world::OMChunkManager<16>>, std::function<void()>, OMVoxelHandler *);
     ~OMVoxelManager();
 
     auto submit(OMRendererTask *) -> OMRendererTask *;
     auto update(basics::OMCamera &camera) -> void;
 
-    OMRendererPipeline *pipeline, *debugPipeline;
-    OMRendererSegBuf *voxels;
+    OMRendererPipeline *pipeline, *debugPipeline, *complexPipeline;
+    OMRendererSegBuf *voxels, *voxelsComplex;
     OMRendererBuffer *chunkoffs, *debugoffs;
     OMRendererTexture *textureAtlas;
+    OMRendererTexture *textureAtlasSecondary;
 
   private:
     OMVoxelHandler *voxelHandler;
@@ -265,7 +286,7 @@ class OMVoxelManager
     OMVoxelCompiler compiler;
 
     std::shared_ptr<world::OMChunkManager<16>> chunkManager;
-    std::vector<std::list<OMRendererSegBufBlock>> chunkBlocks = {};
+    std::vector<std::list<OMRendererSegBufBlock>> chunkBlocks, chunkBlocksComplex = {};
 
     void compile(int i);
 };

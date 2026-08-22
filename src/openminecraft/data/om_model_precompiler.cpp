@@ -23,6 +23,32 @@ OMModelPrecompiler::OMModelPrecompiler(std::string root, OMTextureAtlas *atlas)
     : root(std::move(root)), logger("OMModelPrecompiler", this), textureAtlas(*atlas)
 {
 }
+
+auto OMModelPrecompiler::queryPartFaceSecondaryTexture(int bsid, int pid,
+                                                       openminecraft::renderer::common::wrap::OMVoxelFacing f) -> bool
+{
+    switch (f)
+    {
+    default:
+    case ::NegX:
+        return models[bsid][pid].west.secondaryTex;
+    case ::PosX:
+        return models[bsid][pid].east.secondaryTex;
+    case ::NegZ:
+        return models[bsid][pid].north.secondaryTex;
+    case ::PosZ:
+        return models[bsid][pid].south.secondaryTex;
+    case ::NegY:
+        return models[bsid][pid].down.secondaryTex;
+    case ::PosY:
+        return models[bsid][pid].up.secondaryTex;
+    }
+}
+auto OMModelPrecompiler::queryPartRotationAngleF(int bsid, int pid) -> float
+{
+    return models[bsid][pid].rotateAngle;
+}
+
 auto OMModelPrecompiler::queryComplex(int bsid) -> bool
 {
     return modelComplex[bsid];
@@ -136,9 +162,9 @@ auto OMModelPrecompiler::queryPartFaceCull(int bsid, int pid, ::OMVoxelFacing f)
 }
 
 auto OMModelPrecompiler::queryPartFaceUV(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing f)
-    -> glm::ivec4
+    -> glm::vec4
 {
-    glm::ivec2 uv0, uv1;
+    glm::vec2 uv0, uv1;
     switch (f)
     {
     default:
@@ -196,7 +222,7 @@ auto OMModelPrecompiler::queryPartRotationAxis(int bsid, int pid) -> int
     return models[bsid][pid].rotateAxis;
 }
 
-auto OMModelPrecompiler::queryPartRotationCenter(int bsid, int pid) -> glm::ivec3
+auto OMModelPrecompiler::queryPartRotationCenter(int bsid, int pid) -> glm::vec3
 {
     return models[bsid][pid].rotateOrigin;
 }
@@ -653,13 +679,13 @@ auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::io::json::OMJso
         }
     }
 
-    // TODO: new texture logics!
-    return {
-        fromSide(face->getMap().count("cullface") ? face->getMap()["cullface"]->getString() : "none"),
-        modelComplex[modelId] ? 0 : textureAtlas.subtex[OMIdentifier(face->getMap()["texture"]->getString())],
-        uv0,
-        uv1,
-        face->getMap().count("rotation") ? static_cast<int>(face->getMap()["rotation"]->getNumber()) : 0,
-    };
+    auto ident = OMIdentifier(face->getMap()["texture"]->getString());
+
+    return {fromSide(face->getMap().count("cullface") ? face->getMap()["cullface"]->getString() : "none"),
+            textureAtlas.subtex.count(ident) == 0 ? textureAtlas.addWideTexture(ident) : textureAtlas.subtex[ident],
+            uv0,
+            uv1,
+            face->getMap().count("rotation") ? static_cast<int>(face->getMap()["rotation"]->getNumber()) : 0,
+            textureAtlas.subtex.count(ident) == 0};
 }
 } // namespace openminecraftshell::data

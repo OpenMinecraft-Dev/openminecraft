@@ -74,6 +74,7 @@ struct OMModelFace
     int textureid;
     glm::vec2 uv0, uv1;
     int rotation;
+    bool secondaryTex;
 };
 struct OMModelPart
 {
@@ -118,17 +119,19 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto queryPartFaceCull(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
         -> openminecraft::renderer::common::wrap::OMVoxelFacing override;
     auto queryPartAABB(int bsid, int pid) -> renderer::common::wrap::OMVoxelAABB override;
-    auto queryPartFaceUV(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
-        -> glm::ivec4 override;
+    auto queryPartFaceUV(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> glm::vec4 override;
     auto queryPartFaceRotation(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> int override;
     auto queryPartRotationAxis(int bsid, int pid) -> int override;
-    auto queryPartRotationCenter(int bsid, int pid) -> glm::ivec3 override;
+    auto queryPartRotationCenter(int bsid, int pid) -> glm::vec3 override;
     auto queryPartRotationAngle(int bsid, int pid) -> int override;
     auto querySoild(int bsid) -> bool override;
     auto queryOcclusionShape(int bsid) -> openminecraft::renderer::common::wrap::OMVoxelShape override;
     auto queryAmbientOcclusion(int bsid) -> bool override;
     auto queryPartShade(int bsid, int pid) -> bool override;
     auto queryComplex(int bsid) -> bool override;
+    auto queryPartFaceSecondaryTexture(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
+        -> bool override;
+    auto queryPartRotationAngleF(int bsid, int pid) -> float override;
 
   private:
     int modelId = 0;

@@ -23,8 +23,8 @@ namespace openminecraft::renderer::common::wrap
 {
 uint64_t cx = 0, cy = 0, cz = 0;
 OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *target, OMRendererTexture *tex,
-                               std::shared_ptr<world::OMChunkManager<16>> man, std::function<void()> rec,
-                               OMVoxelHandler *handler)
+                               OMRendererTexture *texSec, std::shared_ptr<world::OMChunkManager<16>> man,
+                               std::function<void()> rec, OMVoxelHandler *handler)
     : logger("OMVoxelManager", this)
 {
     this->rec = rec;
@@ -35,7 +35,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
     delete compiler.handler;
     compiler.handler = voxelHandler;
 
-    basics::OMVertexFormat format, format2;
+    basics::OMVertexFormat format, format2, formatComplex;
     format.setInstance()
         ->appendPart("voxelPos", basics::Integer)
         ->appendPart("voxelMetadata", basics::Integer)
@@ -46,6 +46,18 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
         ->decideStruct();
 
     format2.appendPart("voxelPos", basics::Vec3f)->nextGroup()->decideStruct();
+    formatComplex.setInstance()
+        ->appendPart("voxelBasics", basics::Integer)
+        ->appendPart("voxelMetadata", basics::Integer)
+        ->appendPart("voxelExtra", basics::Integer)
+        ->appendPart("voxelOffset", basics::Vec3f)
+        ->appendPart("voxelUV0", basics::Vec2f)
+        ->appendPart("voxelUV1", basics::Vec2f)
+        ->appendPart("voxelRotationAngle", basics::Float)
+        ->appendPart("voxelRotationCenter", basics::Vec3f)
+        ->appendPart("voxelSize", basics::Vec3f)
+        ->nextGroup()
+        ->decideStruct();
 
     pipeline = renderer->createPipeline()
                    ->input(UniformBuffer)
@@ -67,6 +79,30 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                    ->depthReverseZ(true)
                    ->buildN();
 
+    complexPipeline = renderer->createPipeline()
+                          ->input(UniformBuffer)
+                          ->inputName("Camera")
+                          ->input(ImageSampler)
+                          ->inputName("inTexture")
+                          ->input(ImageSampler)
+                          ->inputName("inTextureSec")
+                          ->input(UniformTexelBuffer)
+                          ->inputName("inChunkPos")
+                          ->output(target)
+                          ->samples(4)
+                          ->setCullMode(renderer::common::Back)
+                          ->setFrontClockwise(true)
+                          ->shader(renderer->shaderManager.preprocess("core/voxelcomplex.frag.glsl", Fragment,
+                                                                      GLSLSource, formatComplex))
+                          ->shader(renderer->shaderManager.preprocess("core/voxelcomplex.vert.glsl", Vertex, GLSLSource,
+                                                                      formatComplex))
+                          ->format(formatComplex)
+                          ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+                          ->blend(true)
+                          ->depth(true, true)
+                          ->depthReverseZ(true)
+                          ->buildN();
+
     debugPipeline =
         renderer->createPipeline()
             ->input(UniformBuffer)
@@ -84,24 +120,33 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
             ->depthReverseZ(true)
             ->buildN();
 
-    voxels = new OMRendererSegBuf(renderer, 0x200);
+    voxels = new OMRendererSegBuf(renderer, 16 * sizeof(OMVoxel));
+    voxelsComplex = new OMRendererSegBuf(renderer, 16 * sizeof(OMVoxelComplex));
 
     chunkBlocks.resize(1);
+    chunkBlocksComplex.resize(1);
 
     chunkoffs = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
     debugoffs = renderer->allocateBuffer(VertexData, 12 * 2 * 3 * sizeof(float));
 
     textureAtlas = tex;
+    textureAtlasSecondary = texSec;
 
     pipeline->bindInput(1, textureAtlas);
     pipeline->bindInput(2, chunkoffs);
+
+    complexPipeline->bindInput(1, textureAtlas);
+    complexPipeline->bindInput(2, textureAtlasSecondary);
+    complexPipeline->bindInput(3, chunkoffs);
 }
 OMVoxelManager::~OMVoxelManager()
 {
     delete voxels;
+    delete voxelsComplex;
     delete chunkoffs;
     delete debugoffs;
     delete pipeline;
+    delete complexPipeline;
     delete debugPipeline;
 }
 
@@ -152,10 +197,14 @@ auto OMVoxelManager::compile(int i) -> void
         }
     };
     std::vector<OMVoxel> m = {};
+    std::vector<OMVoxelComplex> cm = {};
+
     auto &ck = chunkManager->getChunk(i);
     if (ck.has_value())
     {
-        compiler.compile(ck.value(), externalAccessor, i, [&](OMVoxel v) -> void { m.emplace_back(v); });
+        compiler.compile(
+            ck.value(), externalAccessor, i, [&](OMVoxel v) -> void { m.emplace_back(v); },
+            [&](OMVoxelComplex v) -> void { cm.emplace_back(v); });
     }
 
     if (chunkBlocks.size() <= i)
@@ -176,7 +225,27 @@ auto OMVoxelManager::compile(int i) -> void
         m.erase(m.begin(), std::next(m.begin(), blk.length / sizeof(OMVoxel)));
         chunkBlocks[i].push_back(blk);
     }
-}
+
+    if (chunkBlocksComplex.size() <= i)
+    {
+        chunkBlocksComplex.resize(i + 1);
+    }
+
+    while (!chunkBlocksComplex[i].empty())
+    {
+        voxelsComplex->deallocate(chunkBlocksComplex[i].back());
+        chunkBlocksComplex[i].pop_back();
+    }
+
+    while (!cm.empty())
+    {
+        auto blk =
+            voxelsComplex->allocate(sizeof(OMVoxelComplex), cm.size() * sizeof(OMVoxelComplex), sizeof(OMVoxelComplex));
+        voxelsComplex->update(blk, cm.data());
+        cm.erase(cm.begin(), std::next(cm.begin(), blk.length / sizeof(OMVoxelComplex)));
+        chunkBlocksComplex[i].push_back(blk);
+    }
+} // namespace openminecraft::renderer::common::wrap
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
@@ -204,6 +273,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         std::vector<glm::vec3> offs = {};
         offs.reserve(chunkManager->numChunks());
         auto l = voxels->totalSize;
+        auto l2 = voxelsComplex->totalSize;
         chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
             for (auto &ochk : chunks)
@@ -236,10 +306,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             delete chunkoffs;
             chunkoffs = renderer->allocateBuffer(UniformTexel, chunkManager->numChunks() * 3 * sizeof(float) * 2);
             pipeline->bindInput(2, chunkoffs);
+            complexPipeline->bindInput(3, chunkoffs);
         }
         chunkoffs->updateData(offs.data());
 
-        if (l != voxels->totalSize)
+        if (l != voxels->totalSize || l2 != voxelsComplex->totalSize)
         {
             rec();
         }
@@ -251,6 +322,9 @@ auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
     return task->pipeline(pipeline)
         ->vertexBuffer({voxels->buffer})
         ->drawInstanceN(6, voxels->totalSize / sizeof(OMVoxel))
+        ->pipeline(complexPipeline)
+        ->vertexBuffer({voxelsComplex->buffer})
+        ->drawInstanceN(6, voxelsComplex->totalSize / sizeof(OMVoxelComplex))
         ->pipeline(debugPipeline)
         ->vertexBuffer({debugoffs})
         ->drawN(2 * 12);

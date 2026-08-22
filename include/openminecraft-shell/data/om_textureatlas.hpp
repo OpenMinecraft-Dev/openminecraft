@@ -26,6 +26,7 @@ class OMTextureAtlas
     }
     ~OMTextureAtlas()
     {
+        delete textureSecondary;
         delete texture;
     }
 
@@ -49,6 +50,24 @@ class OMTextureAtlas
         subtex[i] = tid;
         ++tid;
         return subtex[i];
+    }
+
+    auto addWideTexture(OMIdentifier i) -> int
+    {
+        if (subtexWide.count(i))
+        {
+            return subtexWide[i];
+        }
+        auto imgraw = vfs::fsfetch(fmt::format("{}/{}/textures/{}.png", root, i.namesp, i.path));
+        specs::png::OMPngFile img2;
+        img2.parse(imgraw);
+
+        subtexSizes[i] = {img2.getWidth(), img2.getHeight()};
+        logger.debug("wide texture ({}x{}) {}:{} => {}", subtexSizes[i].x, subtexSizes[i].y, i.namesp, i.path, wtid);
+
+        subtexWide[i] = wtid;
+        ++wtid;
+        return subtexWide[i];
     }
 
     void build()
@@ -82,6 +101,31 @@ class OMTextureAtlas
         texture->magFilter = openminecraft::renderer::common::Nearest;
         texture->minFilter = openminecraft::renderer::common::Nearest;
         texture->setupSampler();
+
+        textureSecondary = renderer->allocateTexture(32, 32, wtid, 4, renderer::common::Dim2Array,
+                                                     openminecraft::renderer::common::ColorRgba);
+        for (auto &p : subtexWide)
+        {
+            auto imgraw = vfs::fsfetch(fmt::format("{}/{}/textures/{}.png", root, p.first.namesp, p.first.path));
+            specs::png::OMPngFile img2;
+            img2.parse(imgraw);
+
+            std::array<uint8_t, 4 * 32 * 32> bm = {};
+            for (int py = 0; py < 32; ++py)
+            {
+                int cy = py;
+                int pixoff = 4 * (cy * img2.getWidth());
+
+                std::memcpy(bm.data() + 4 * 32 * py,
+                            reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(img2.fetchData()) + pixoff), 4 * 32);
+            }
+            textureSecondary->updateData(bm.data(), p.second);
+        }
+
+        textureSecondary->mipFilter = openminecraft::renderer::common::Nearest;
+        textureSecondary->magFilter = openminecraft::renderer::common::Nearest;
+        textureSecondary->minFilter = openminecraft::renderer::common::Nearest;
+        textureSecondary->setupSampler();
     }
 
     auto textureSize(OMIdentifier i) -> glm::ivec2
@@ -91,12 +135,15 @@ class OMTextureAtlas
 
   private:
     int tid = 0;
+    int wtid = 0;
     std::string root;
     renderer::OMRenderer *renderer;
 
   public:
     renderer::common::OMRendererTexture *texture = nullptr;
+    renderer::common::OMRendererTexture *textureSecondary = nullptr;
     std::unordered_map<OMIdentifier, int> subtex;
+    std::unordered_map<OMIdentifier, int> subtexWide;
     std::unordered_map<OMIdentifier, glm::ivec2> subtexSizes;
     log::OMLogger logger;
 };
