@@ -25,6 +25,7 @@ auto OMCamera::fetchViewMat() -> glm::mat4
 auto OMCamera::fetchProjMat() -> glm::mat4
 {
     auto extent = renderer->getExtent();
+    extent = glm::max(extent, glm::vec2(1.0f, 1.0f));
     return glm::perspective(glm::radians(70.0f), extent.x / extent.y, 1000.0f, 0.05f);
 }
 

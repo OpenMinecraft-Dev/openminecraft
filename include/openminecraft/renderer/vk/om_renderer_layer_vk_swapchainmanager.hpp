@@ -26,7 +26,7 @@ class OMSwapchainManager : public util::OMReinitable
                        std::pair<uint32_t, uint32_t> families, ::vk::Device dev, ::vk::AllocationCallbacks callbacks,
                        void *window);
     static auto chooseSurfaceFormat(OMSwapchainCap cap) -> ::vk::SurfaceFormatKHR;
-    auto chooseExtent(const OMSwapchainCap &cap) -> ::vk::Extent2D;
+    auto chooseExtent(OMSwapchainCap &cap) -> ::vk::Extent2D;
     static auto choosePresentMode(const OMSwapchainCap &cap) -> ::vk::PresentModeKHR;
     ~OMSwapchainManager() = default;
 

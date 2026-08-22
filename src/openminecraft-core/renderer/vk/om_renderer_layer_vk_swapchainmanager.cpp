@@ -41,7 +41,7 @@ auto OMSwapchainManager::chooseSurfaceFormat(OMSwapchainCap cap) -> SurfaceForma
     return cap.formats[0];
 }
 
-auto OMSwapchainManager::chooseExtent(const OMSwapchainCap &cap) -> Extent2D
+auto OMSwapchainManager::chooseExtent(OMSwapchainCap &cap) -> Extent2D
 {
     if (cap.capabilities.currentExtent.width != -1)
     {
