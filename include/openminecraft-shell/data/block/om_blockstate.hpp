@@ -6,6 +6,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <algorithm>
 namespace openminecraftshell::data::block
 {
 class OMBlockState
