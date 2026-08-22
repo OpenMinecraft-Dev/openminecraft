@@ -2,6 +2,7 @@
 #define OM_WORLD_REGISTRY_HPP
 
 #include <unordered_map>
+#include <cstdint>
 namespace openminecraft::world
 {
 template <typename K, typename T> class OMWorldRegistry
