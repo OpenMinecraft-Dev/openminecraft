@@ -1,9 +1,5 @@
 #include <SDL3/SDL_error.h>
 
-#include "SDL3/SDL_messagebox.h"
-#include "openminecraft-shell/data/om_identifier.hpp"
-#include "openminecraft-shell/data/om_model_precompiler.hpp"
-#include "openminecraft-shell/data/om_textureatlas.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft-shell/entrypoint.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
@@ -12,18 +8,11 @@
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/renderer/om_renderer_window.hpp"
-#include "openminecraft/specs/abstracts/om_image.hpp"
-#include "openminecraft/specs/jfif/om_jfif.hpp"
-#include "openminecraft/specs/png/om_png.hpp"
-#include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
-#include "openminecraft/io/json/om_io_ast_builder_json.hpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <boost/stacktrace/stacktrace.hpp>
-#include <fstream>
-#include <iostream>
 #include <memory>
 #include <string>
 
@@ -122,7 +111,7 @@ auto boot(std::vector<std::string> args) -> int
     switch (hash_compile_time(args[1].c_str()))
     {
     case "3dtest"_hash:
-        rendererTest(args[2] == "gl" ? renderer::OpenGL : renderer::Vulkan);
+        rendererLoop(args[2] == "gl" ? renderer::OpenGL : renderer::Vulkan);
         break;
     default:
         return 1;

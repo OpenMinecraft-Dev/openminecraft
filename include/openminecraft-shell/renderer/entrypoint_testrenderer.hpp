@@ -2,6 +2,7 @@
 #define OM_RENDERER_LAYER_VK_TESTRENDERER
 #include "glm/ext/vector_float3.hpp"
 #include "glm/fwd.hpp"
+#include "openminecraft-shell/data/block/om_blockstate_resolver.hpp"
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
 #include "openminecraft-shell/data/om_textureatlas.hpp"
 #include "openminecraft/log/om_log_common.hpp"
@@ -69,6 +70,8 @@ class OMTestRenderer : public OMRendererHandler
     wrap::OMRendererTempTarget *tempTargetMS, *tempTarget;
     wrap::OMVoxelManager *voxelManager;
     data::OMTextureAtlas *textureAtlas;
+
+    data::block::OMBlockstateResolver *blockstateResolver;
     data::OMModelPrecompiler *voxelHandler;
 
     std::shared_ptr<wrap::OMRendererBoxBlurHandler> blurHandler;

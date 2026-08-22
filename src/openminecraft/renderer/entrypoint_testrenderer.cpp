@@ -5,6 +5,8 @@
 #include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float4.hpp"
 #include "glm/geometric.hpp"
+#include "openminecraft-shell/data/block/om_block.hpp"
+#include "openminecraft-shell/data/block/om_blockstate_resolver.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
 #include "openminecraft-shell/data/om_textureatlas.hpp"
@@ -110,6 +112,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
     }
 
     voxelHandler = new data::OMModelPrecompiler("/external", textureAtlas);
+    blockstateResolver = new data::block::OMBlockstateResolver("/external", *voxelHandler);
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/air"), false);
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/stone"));
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/cobblestone"));
@@ -131,8 +134,12 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
         },
         false);
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/grass_block"));
-    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/lever"), false);
+    voxelHandler->loadModel(data::OMIdentifier("minecraft:block/acacia_fence_gate_open"), false);
     voxelHandler->loadModel(data::OMIdentifier("minecraft:block/rail"), false);
+
+    data::block::OMBlock blk(data::OMIdentifier("minecraft:acacia_button"));
+    blockstateResolver->resolve(blk);
+
     textureAtlas->build();
 
     voxelManager = new wrap::OMVoxelManager(
@@ -211,6 +218,7 @@ OMTestRenderer::~OMTestRenderer()
     delete cameraBuffer;
     delete lightingBuffer;
     delete voxelManager;
+    delete blockstateResolver;
     delete textureAtlas;
 
     delete tempTargetMS;

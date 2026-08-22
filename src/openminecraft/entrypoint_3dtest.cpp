@@ -26,7 +26,6 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
-#include <cstdlib>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -296,7 +295,7 @@ class OMNodeRendererHandler : public OMRendererHandler
 };
 
 bool isRunning = true;
-void rendererTest(OMBackend backend)
+void rendererLoop(OMBackend backend)
 {
     auto logger = std::make_shared<log::OMLogger>("Test Renderer");
     try

@@ -11,7 +11,7 @@ namespace openminecraftshell
 {
 // INFO: the boot function for the app
 auto boot(std::vector<std::string> args) -> int;
-void rendererTest(renderer::OMBackend);
+void rendererLoop(renderer::OMBackend);
 } // namespace openminecraftshell
 
 #endif
