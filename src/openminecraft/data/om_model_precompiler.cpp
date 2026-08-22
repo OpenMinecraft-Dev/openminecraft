@@ -274,9 +274,9 @@ auto OMModelPrecompiler::querySoild(int bsid) -> bool
     return modelSoild[bsid];
 }
 
-auto OMModelPrecompiler::loadModel(OMIdentifier i, bool soild) -> int
+auto OMModelPrecompiler::loadModelPart(OMIdentifier i, bool soild) -> int
 {
-    return loadModelWithArgs(i, 0, 0, 0, false, soild);
+    return loadModelPartWithArgs(i, 0, 0, 0, false, soild);
 }
 
 // INFO: General rorate function
@@ -315,37 +315,8 @@ auto rotateVoxelElement90(const glm::vec3 &from, const glm::vec3 &to, int i) -> 
     return {newMin, newMax};
 }
 
-auto OMModelPrecompiler::loadModelMultipart(std::initializer_list<std::tuple<OMIdentifier, int, int, int, bool>> models,
-                                            bool soild) -> int
-{
-    std::vector<OMModelPart> parts;
-
-    for (auto &p : models)
-    {
-        auto &ident = std::get<0>(p);
-        auto &xrot = std::get<1>(p);
-        auto &yrot = std::get<2>(p);
-        auto &zrot = std::get<3>(p);
-        auto &lockuv = std::get<4>(p);
-
-        auto tempModelId = loadModelWithArgs(ident, xrot, yrot, zrot, lockuv);
-        parts.insert(parts.end(), this->models[tempModelId].begin(), this->models[tempModelId].end());
-        --modelId;
-    }
-
-    this->models.resize(modelId + 1);
-    modelSoild.resize(modelId + 1);
-    modelAmbientOcculusion.resize(modelId + 1);
-
-    this->models[modelId].assign(parts.begin(), parts.end());
-    modelSoild[modelId] = soild;
-    modelAmbientOcculusion[modelId] = true;
-
-    ++modelId;
-    return modelId - 1;
-}
-
-auto OMModelPrecompiler::loadModelWithArgs(OMIdentifier i, int xrot, int yrot, int zrot, bool lockuv, bool soild) -> int
+auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yrot, int zrot, bool lockuv, bool soild)
+    -> int
 {
     models.resize(modelId + 1);
     modelSoild.resize(modelId + 1);
