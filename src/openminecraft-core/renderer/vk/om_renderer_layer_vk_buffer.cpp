@@ -71,6 +71,10 @@ void OMRendererBufferVk::initialize()
 {
     try
     {
+        if (usage == common::InstanceData || usage == common::UniformTexel || usage == common::Uniform)
+        {
+            alwaysMapped = true;
+        }
         auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
         this->buffer = renderer->logicalDevice.createBuffer(
             BufferCreateInfo({}, this->length, mapToUsageFlag(this->usage), SharingMode::eExclusive),

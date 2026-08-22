@@ -31,7 +31,7 @@ class OMRendererBuffer : public OMRendererObject
     const OMBufferUsage usage;
     const uint64_t length;
     void *data = nullptr;
-    bool alwaysMapped = true;
+    bool alwaysMapped = false;
 
     virtual void updateData(void *src) = 0;
     virtual void updateDataPart(void *src, uint64_t offset, uint64_t length) = 0;

@@ -55,25 +55,22 @@ OMRendererBufferOpenGL::~OMRendererBufferOpenGL()
 }
 void OMRendererBufferOpenGL::updateData(void *src)
 {
-    renderer->gl.glBindBuffer(convertFrom(usage), buffer);
+    bind();
     renderer->gl.glBufferData(convertFrom(usage), length, src,
                               (usage == common::VertexData || usage == common::VertexIndex) ? GL_STATIC_DRAW
                                                                                             : GL_DYNAMIC_DRAW);
-    renderer->gl.glBindBuffer(convertFrom(usage), 0);
 }
 void OMRendererBufferOpenGL::updateDataPart(void *src, uint64_t offset, uint64_t length)
 {
-    renderer->gl.glBindBuffer(convertFrom(usage), buffer);
+    bind();
     renderer->gl.glBufferSubData(convertFrom(usage), offset, length, src);
-    renderer->gl.glBindBuffer(convertFrom(usage), 0);
 }
 void OMRendererBufferOpenGL::copyTo(OMRendererBuffer *buf)
 {
     void *temp = malloc(length);
 
-    renderer->gl.glBindBuffer(convertFrom(usage), buffer);
+    bind();
     renderer->gl.glGetBufferSubData(convertFrom(usage), 0, length, temp);
-    renderer->gl.glBindBuffer(convertFrom(usage), 0);
 
     buf->updateDataPart(temp, 0, length);
     free(temp);
