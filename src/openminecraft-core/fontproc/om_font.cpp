@@ -98,8 +98,6 @@ auto OMFont::buildBasicPolygon(int charcode, bool uni) -> std::shared_ptr<OMTria
 {
     auto outline = buildOutline(charcode, uni);
 
-    auto font = static_cast<hb_font_t *>(hbFont);
-
     auto s = scale();
 
     auto rawpoly = outline.buildPolygons(8, s.x, s.y);
@@ -165,8 +163,6 @@ auto OMFont::buildGlyph(int charcode, bool uni) -> std::shared_ptr<OMFontGlyph>
     auto ots = buildBasicPolygon(charcode, uni);
 
     auto font = static_cast<hb_font_t *>(hbFont);
-
-    auto s = scale();
 
     hb_codepoint_t gly = charcode;
     if (uni)

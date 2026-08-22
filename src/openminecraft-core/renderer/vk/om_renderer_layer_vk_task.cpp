@@ -1,5 +1,4 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_task.hpp"
-#include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
@@ -14,13 +13,14 @@
 #include <cstdint>
 #include <stdexcept>
 #include <vulkan/vulkan.hpp>
+#include "openminecraft/i18n/om_i18n_res.hpp"
 
 using namespace ::vk;
 using namespace openminecraft::i18n::res;
 
 namespace openminecraft::renderer::vk
 {
-OMRendererTaskVk::OMRendererTaskVk(OMRendererVk *renderer) : renderer(renderer), common::OMRendererTask(renderer)
+OMRendererTaskVk::OMRendererTaskVk(OMRendererVk *renderer) : common::OMRendererTask(renderer), renderer(renderer)
 {
     try
     {

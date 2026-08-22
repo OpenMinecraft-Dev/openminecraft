@@ -22,7 +22,7 @@ OMRendererModelObj::OMRendererModelObj(OMRenderer *renderer, std::istream *src)
         std::vector<tinyobj::material_t> materials;
         std::string warn, err;
 
-        bool success = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, src);
+        tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, src);
 
         std::unordered_map<Vertex, uint32_t> uniqueVertices;
 

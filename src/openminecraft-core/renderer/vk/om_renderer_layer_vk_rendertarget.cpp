@@ -14,7 +14,7 @@ using namespace openminecraft::i18n::res;
 namespace openminecraft::renderer::vk
 {
 OMRendererRenderTargetVk::OMRendererRenderTargetVk(OMRendererVk *renderer)
-    : renderer(renderer), common::OMRendererRenderTarget(renderer)
+    : common::OMRendererRenderTarget(renderer), renderer(renderer)
 {
 }
 

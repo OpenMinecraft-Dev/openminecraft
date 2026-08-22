@@ -12,7 +12,7 @@ class OMJsonTokenIter : public OMTokenIter<OMJsonToken>
     OMJsonTokenIter(std::shared_ptr<std::istream> istr) : OMTokenIter(istr)
     {
     }
-    ~OMJsonTokenIter() = default;
+    virtual ~OMJsonTokenIter() = default;
 
     auto next() -> std::shared_ptr<OMJsonToken> override;
     auto end() -> bool override;

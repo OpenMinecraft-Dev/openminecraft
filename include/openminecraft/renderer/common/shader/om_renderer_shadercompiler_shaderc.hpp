@@ -15,7 +15,7 @@ class OMRendererShaderCompilerBackendShaderc : public OMRendererShaderCompilerBa
     {
         compiler = std::make_shared<shaderc::Compiler>();
     }
-    ~OMRendererShaderCompilerBackendShaderc() = default;
+    virtual ~OMRendererShaderCompilerBackendShaderc() = default;
 
     auto compile(std::shared_ptr<OMShader> shader) -> std::shared_ptr<OMShader> override;
 

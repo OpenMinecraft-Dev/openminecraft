@@ -10,8 +10,6 @@
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include <array>
-#include <iostream>
-#include <tuple>
 #include <unordered_map>
 #include <utility>
 using namespace openminecraft;
@@ -21,7 +19,7 @@ class OMTextureAtlas
 {
   public:
     OMTextureAtlas(std::string root, renderer::OMRenderer *renderer)
-        : renderer(renderer), root(std::move(root)), logger("OMTextureAtlas", this)
+        : root(std::move(root)), renderer(renderer), logger("OMTextureAtlas", this)
     {
     }
     ~OMTextureAtlas()

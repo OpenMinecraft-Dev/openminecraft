@@ -84,7 +84,6 @@ auto OMFontSet::bound(std::vector<OMFontSetShapeResult> shaped) -> glm::vec2
         return glm::vec2(0.0f);
 
     glm::vec2 maxb(0.0f);
-    float minx = INFINITY;
     for (auto &g : shaped)
     {
         maxb = glm::max(maxb, g.position + g.size);

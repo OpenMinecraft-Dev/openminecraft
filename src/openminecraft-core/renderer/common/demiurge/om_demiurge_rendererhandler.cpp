@@ -21,7 +21,7 @@ struct SimpleUniform
 };
 
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer, std::shared_ptr<OMDemiurgeNode> n)
-    : renderer(renderer), OMRendererHandler(renderer), rect(renderer, [&]() -> void { recordTask(); }),
+    : OMRendererHandler(renderer), renderer(renderer), rect(renderer, [&]() -> void { recordTask(); }),
       roundedRect(renderer, [&]() -> void { recordTask(); }), image(renderer, [&]() -> void { recordTask(); }),
       sector(renderer, [&]() -> void { recordTask(); }), logger("OMDemiurgeRendererHandler", this)
 {

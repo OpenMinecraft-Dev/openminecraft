@@ -29,7 +29,7 @@ static auto convertFrom(common::OMBufferUsage u) -> GLenum
 }
 
 OMRendererBufferOpenGL::OMRendererBufferOpenGL(common::OMBufferUsage usage, uint64_t length, OMRendererOpenGL *renderer)
-    : usage(usage), length(length), renderer(renderer), common::OMRendererBuffer(usage, length, renderer)
+    : common::OMRendererBuffer(usage, length, renderer), renderer(renderer), length(length), usage(usage)
 {
     renderer->gl.glGenBuffers(1, &buffer);
     mem::castorice::rec({mem::castorice::Allocation, nullptr, static_cast<size_t>(length), "opengl"});

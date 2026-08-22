@@ -83,6 +83,7 @@ class OMJsonNodeObject : public OMJsonNode
     OMJsonNodeObject(std::unordered_map<std::string, std::shared_ptr<OMJsonNode>> v) : data(std::move(v))
     {
     }
+    virtual ~OMJsonNodeObject() = default;
 
     auto type() -> OMJsonNodeType override
     {
@@ -196,7 +197,7 @@ class OMJsonNodeArray : public OMJsonNode
 class OMJsonNodeNumber : public OMJsonNode
 {
   public:
-    OMJsonNodeNumber(int64_t v) : ivalue(v), dvalue(static_cast<double>(v))
+    OMJsonNodeNumber(int64_t v) : dvalue(static_cast<double>(v)), ivalue(v)
     {
     }
 

@@ -16,7 +16,7 @@ namespace openminecraft::specs::zip
 OMZip::OMZip() = default;
 OMZip::~OMZip() = default;
 
-auto findHeader(std::initializer_list<char> header, std::shared_ptr<std::istream> istr) -> uint64_t
+auto findHeader(std::initializer_list<char> header, std::shared_ptr<std::istream> istr)
 {
     char temp = 0x00;
 header:
@@ -32,8 +32,6 @@ header:
     }
 
     istr->seekg(-header.size(), std::ios::cur);
-
-    return istr->tellg();
 }
 
 void OMZip::parseCentralDirectory(std::shared_ptr<std::istream> istr, OMZipCentralDirectoryWrap &d)
@@ -85,7 +83,7 @@ void OMZip::parse(std::shared_ptr<std::istream> istr)
     lastStream = istr;
     istr->seekg(-65536, std::ios::end);
 
-    auto eocd = findHeader(eocdHeader, istr);
+    findHeader(eocdHeader, istr);
     istr->read(reinterpret_cast<char *>(&centralDir), sizeof(centralDir));
     centralDir.diskNumber = binary::le16ToNative(centralDir.diskNumber);
     centralDir.centralDirectoryDiskNumber = binary::le16ToNative(centralDir.centralDirectoryDiskNumber);

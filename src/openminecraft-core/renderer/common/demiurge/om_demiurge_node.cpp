@@ -1,7 +1,6 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
-#include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "yoga/YGNode.h"
 #include "yoga/YGNodeStyle.h"
 #include <any>
@@ -9,6 +8,109 @@
 
 namespace openminecraft::renderer::common::demiurge
 {
+static auto toYGDirection(OMDemiurgeDirection d) -> YGFlexDirection
+{
+    switch (d)
+    {
+    case Row:
+    default:
+        return YGFlexDirectionRow;
+    case RowReverse:
+        return YGFlexDirectionRowReverse;
+    case Column:
+        return YGFlexDirectionColumn;
+    case ColumnReverse:
+        return YGFlexDirectionColumnReverse;
+    }
+}
+
+static auto toYGWrap(OMDemiurgeWrap w) -> YGWrap
+{
+    switch (w)
+    {
+    case Wrap:
+        return YGWrapWrap;
+    case WrapReverse:
+        return YGWrapWrapReverse;
+    default:
+    case NoWrap:
+        return YGWrapNoWrap;
+    }
+}
+
+static auto toYGJustify(OMDemiurgeAlign a) -> YGJustify
+{
+    switch (a)
+    {
+    default:
+    case FlexStart:
+        return YGJustifyFlexStart;
+    case Auto:
+    case Stretch:
+    case Baseline:
+    case Center:
+        return YGJustifyCenter;
+    case FlexEnd:
+        return YGJustifyFlexEnd;
+    case SpaceAround:
+        return YGJustifySpaceAround;
+    case SpaceBetween:
+        return YGJustifySpaceBetween;
+    case SpaceEvenly:
+        return YGJustifySpaceEvenly;
+    }
+}
+static auto toYGAlign(OMDemiurgeAlign a) -> YGAlign
+{
+    switch (a)
+    {
+    default:
+    case Auto:
+        return YGAlignAuto;
+    case FlexStart:
+        return YGAlignFlexStart;
+    case Center:
+        return YGAlignCenter;
+    case FlexEnd:
+        return YGAlignFlexEnd;
+    case Stretch:
+        return YGAlignStretch;
+    case Baseline:
+        return YGAlignBaseline;
+    case SpaceBetween:
+        return YGAlignSpaceBetween;
+    case SpaceAround:
+        return YGAlignSpaceAround;
+    case SpaceEvenly:
+        return YGAlignSpaceEvenly;
+    }
+}
+
+static void setSizeToYoga(YGNodeRef node, OMDemiurgeSize size, bool isWidth)
+{
+    switch (size.unit)
+    {
+    case OMDemiurgeSize::Pixel:
+        if (isWidth)
+            YGNodeStyleSetWidth(node, size.value);
+        else
+            YGNodeStyleSetHeight(node, size.value);
+        break;
+    case OMDemiurgeSize::Percent:
+        if (isWidth)
+            YGNodeStyleSetWidthPercent(node, size.value * 100.0f);
+        else
+            YGNodeStyleSetHeightPercent(node, size.value * 100.0f);
+        break;
+    case OMDemiurgeSize::Fit:
+        if (isWidth)
+            YGNodeStyleSetWidthAuto(node);
+        else
+            YGNodeStyleSetHeightAuto(node);
+        break;
+    }
+}
+
 OMDemiurgeNode::OMDemiurgeNode()
 {
     yogaNode = YGNodeNew();

@@ -38,11 +38,11 @@ class OMShader : public OMRendererObject
     OMShader() = default;
     OMShader(OMShaderFileType type, std::vector<uint8_t> data, std::string filename, std::string entrypoint,
              OMShaderType typebase)
-        : type(type), data(std::move(data)), entrypoint(std::move(entrypoint)), filename(std::move(filename)),
+        : data(std::move(data)), type(type), filename(std::move(filename)), entrypoint(std::move(entrypoint)),
           typebase(typebase)
     {
     }
-    ~OMShader() = default;
+    virtual ~OMShader() = default;
 
     const std::vector<uint8_t> data;
     OMShaderFileType type;

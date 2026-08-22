@@ -21,7 +21,7 @@ namespace openminecraft::renderer::vk::swapchain
 OMSwapchainManager::OMSwapchainManager(SurfaceKHR surface, std::function<OMSwapchainCap()> fetch,
                                        std::pair<uint32_t, uint32_t> families, Device dev,
                                        AllocationCallbacks callbacks, void *window)
-    : families(std::move(families)), fetch(std::move(fetch)), surface(surface), device(dev), callbacks(callbacks),
+    : surface(surface), families(std::move(families)), fetch(std::move(fetch)), device(dev), callbacks(callbacks),
       window(window)
 {
     OMSwapchainManager::reinit();

@@ -21,7 +21,7 @@ using namespace ::vk;
 namespace openminecraft::renderer::vk
 {
 OMRendererPipelineVk::OMRendererPipelineVk(OMRendererVk *renderer)
-    : renderer(renderer), common::OMRendererPipeline(renderer), logger("OMRendererPipelineVk", this)
+    : common::OMRendererPipeline(renderer), renderer(renderer), logger("OMRendererPipelineVk", this)
 {
 }
 

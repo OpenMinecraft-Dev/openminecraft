@@ -292,7 +292,6 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
         {
             for (auto f : {NegX, NegY, NegZ, PosX, PosY, PosZ})
             {
-                auto ff = handler->queryPartFaceCull(v.second, i, f);
                 if (handler->queryPartFaceEnabled(v.second, i, f) &&
                     !checkExistSoild(chunk, externalAccessor, v.first, handler->queryPartFaceCull(v.second, i, f)))
                 {

@@ -25,7 +25,7 @@ OMRendererShaderCompiler::OMRendererShaderCompiler()
 
                     std::shared_ptr<OMShader> target;
 
-                    for (auto &comp : backends)
+                    for (auto &_ : backends)
                     {
                         for (auto &comp : backends)
                         {

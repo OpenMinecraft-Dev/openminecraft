@@ -5,7 +5,6 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_styles.hpp"
 #include "yoga/YGNode.h"
 #include "yoga/YGNodeLayout.h"
-#include "yoga/YGNodeStyle.h"
 #include <algorithm>
 #include <any>
 #include <initializer_list>
@@ -18,30 +17,6 @@
 namespace openminecraft::renderer::common::demiurge
 {
 class OMDemiurgeRendererHandler;
-static void setSizeToYoga(YGNodeRef node, OMDemiurgeSize size, bool isWidth)
-{
-    switch (size.unit)
-    {
-    case OMDemiurgeSize::Pixel:
-        if (isWidth)
-            YGNodeStyleSetWidth(node, size.value);
-        else
-            YGNodeStyleSetHeight(node, size.value);
-        break;
-    case OMDemiurgeSize::Percent:
-        if (isWidth)
-            YGNodeStyleSetWidthPercent(node, size.value * 100.0f);
-        else
-            YGNodeStyleSetHeightPercent(node, size.value * 100.0f);
-        break;
-    case OMDemiurgeSize::Fit:
-        if (isWidth)
-            YGNodeStyleSetWidthAuto(node);
-        else
-            YGNodeStyleSetHeightAuto(node);
-        break;
-    }
-}
 
 class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
 {

@@ -54,31 +54,30 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
 
     for (int i = 0; i < glpipe->inputTypes.size(); i++)
     {
-        auto obj = glpipe->inputs[i];
         switch (glpipe->inputTypes[i])
         {
         case common::ImageSampler: {
-            ops.push_back({ActiveTexture, static_cast<GLuint>(GL_TEXTURE0 + i)});
+            ops.push_back({ActiveTexture, {static_cast<GLuint>(GL_TEXTURE0 + i)}});
             auto tex = reinterpret_cast<OMRendererTextureOpenGL *>(glpipe->inputs[i]);
             switch (tex->type)
             {
             case common::Dim2:
-                ops.push_back({BindTexture, GL_TEXTURE_2D, tex->texture});
+                ops.push_back({BindTexture, {GL_TEXTURE_2D, tex->texture}});
                 break;
             case common::Dim2Array:
-                ops.push_back({BindTexture, GL_TEXTURE_2D_ARRAY, tex->texture});
+                ops.push_back({BindTexture, {GL_TEXTURE_2D_ARRAY, tex->texture}});
                 break;
             case common::Dim2Multisample:
-                ops.push_back({BindTexture, GL_TEXTURE_2D_MULTISAMPLE, tex->texture});
+                ops.push_back({BindTexture, {GL_TEXTURE_2D_MULTISAMPLE, tex->texture}});
                 break;
             }
 
             break;
         }
         case common::UniformTexelBuffer:
-            ops.push_back({ActiveTexture, static_cast<GLuint>(GL_TEXTURE0 + i)});
-            ops.push_back(
-                {BindTexture, GL_TEXTURE_BUFFER, reinterpret_cast<OMRendererBufferOpenGL *>(glpipe->inputs[i])->texel});
+            ops.push_back({ActiveTexture, {static_cast<GLuint>(GL_TEXTURE0 + i)}});
+            ops.push_back({BindTexture,
+                           {GL_TEXTURE_BUFFER, reinterpret_cast<OMRendererBufferOpenGL *>(glpipe->inputs[i])->texel}});
 
             break;
         case common::UniformBuffer:
@@ -95,69 +94,69 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     }
 
     auto s = glpipe->blendState;
-    ops.push_back({glpipe->enableDepthTest ? Enable : Disable, GL_DEPTH_TEST});
-    ops.push_back({glpipe->depthClamp ? Enable : Disable, GL_DEPTH_CLAMP});
+    ops.push_back({glpipe->enableDepthTest ? Enable : Disable, {GL_DEPTH_TEST}});
+    ops.push_back({glpipe->depthClamp ? Enable : Disable, {GL_DEPTH_CLAMP}});
     switch (glpipe->polygonMode)
     {
     default:
     case common::Fill:
-        ops.push_back({PolygonMode, GL_FRONT_AND_BACK, GL_FILL});
+        ops.push_back({PolygonMode, {GL_FRONT_AND_BACK, GL_FILL}});
         break;
     case common::Line:
-        ops.push_back({PolygonMode, GL_FRONT_AND_BACK, GL_LINE});
+        ops.push_back({PolygonMode, {GL_FRONT_AND_BACK, GL_LINE}});
         break;
     case common::Point:
-        ops.push_back({PolygonMode, GL_FRONT_AND_BACK, GL_POINT});
+        ops.push_back({PolygonMode, {GL_FRONT_AND_BACK, GL_POINT}});
         break;
     }
     switch (glpipe->cullMode)
     {
     default:
     case common::None:
-        ops.push_back({Disable, GL_CULL_FACE});
+        ops.push_back({Disable, {GL_CULL_FACE}});
         break;
     case common::Front:
-        ops.push_back({Enable, GL_CULL_FACE});
-        ops.push_back({CullFace, GL_FRONT});
+        ops.push_back({Enable, {GL_CULL_FACE}});
+        ops.push_back({CullFace, {GL_FRONT}});
         break;
     case common::Back:
-        ops.push_back({Enable, GL_CULL_FACE});
-        ops.push_back({CullFace, GL_BACK});
+        ops.push_back({Enable, {GL_CULL_FACE}});
+        ops.push_back({CullFace, {GL_BACK}});
         break;
     case common::FrontAndBack:
-        ops.push_back({Enable, GL_CULL_FACE});
-        ops.push_back({CullFace, GL_FRONT_AND_BACK});
+        ops.push_back({Enable, {GL_CULL_FACE}});
+        ops.push_back({CullFace, {GL_FRONT_AND_BACK}});
         break;
     }
     if (glpipe->cullClockwise)
     {
-        ops.push_back({FrontFace, GL_CW});
+        ops.push_back({FrontFace, {GL_CW}});
     }
     else
     {
-        ops.push_back({FrontFace, GL_CCW});
+        ops.push_back({FrontFace, {GL_CCW}});
     }
-    ops.push_back({glpipe->enableDepthBias ? Enable : Disable, GL_POLYGON_OFFSET_FILL});
-    ops.push_back({PolygonOffset, {}, {}, glpipe->depthBiasSlope, glpipe->depthBiasConstant});
-    ops.push_back({LineWidth, {}, {}, glpipe->lineWidth});
-    ops.push_back({DepthMask, glpipe->enableDepthWrite});
+    ops.push_back({glpipe->enableDepthBias ? Enable : Disable, {GL_POLYGON_OFFSET_FILL}});
+    ops.push_back({PolygonOffset, {}, {}, {glpipe->depthBiasSlope, glpipe->depthBiasConstant}});
+    ops.push_back({LineWidth, {}, {}, {glpipe->lineWidth}});
+    ops.push_back({DepthMask, {glpipe->enableDepthWrite}});
     if (glpipe->enableReverseZ)
     {
-        ops.push_back({DepthFunc, GL_GREATER});
+        ops.push_back({DepthFunc, {GL_GREATER}});
     }
     else
     {
-        ops.push_back({DepthFunc, GL_LESS});
+        ops.push_back({DepthFunc, {GL_LESS}});
     }
-    ops.push_back({glpipe->enableBlend ? Enable : Disable, GL_BLEND});
+    ops.push_back({glpipe->enableBlend ? Enable : Disable, {GL_BLEND}});
     ops.push_back(
-        {BlendFuncSeparate, convert(s.srcColor), convert(s.dstColor), convert(s.srcAlpha), convert(s.dstAlpha)});
+        {BlendFuncSeparate, {convert(s.srcColor), convert(s.dstColor), convert(s.srcAlpha), convert(s.dstAlpha)}});
 
     if (!isCleared)
     {
-        ops.push_back({ClearDepth, {}, {}, depthClear});
-        ops.push_back({ClearColor, {}, {}, colorClear.r, colorClear.g, colorClear.b, colorClear.a});
-        ops.push_back({Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
+        ops.push_back({ClearDepth, {}, {}, {depthClear}});
+        ops.push_back({ClearColor, {}, {}, {colorClear.r, colorClear.g, colorClear.b, colorClear.a}});
+        ops.push_back({Clear, {GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT}});
         isCleared = true;
     }
 }
@@ -261,7 +260,7 @@ void OMRendererTaskOpenGL::bindIndexBuffer(common::OMRendererBuffer *buffer)
 }
 void OMRendererTaskOpenGL::bindIndirectBuffer(common::OMRendererBuffer *buffer)
 {
-    ops.push_back({BindBuffer, GL_DRAW_INDIRECT_BUFFER, reinterpret_cast<OMRendererBufferOpenGL *>(buffer)->buffer});
+    ops.push_back({BindBuffer, {GL_DRAW_INDIRECT_BUFFER, reinterpret_cast<OMRendererBufferOpenGL *>(buffer)->buffer}});
 }
 
 auto OMRendererTaskOpenGL::primitiveType() -> GLenum
@@ -285,12 +284,12 @@ auto OMRendererTaskOpenGL::primitiveType() -> GLenum
 }
 void OMRendererTaskOpenGL::drawIndirect(uint64_t begin, uint64_t count)
 {
-    ops.push_back({BindVertexArray, vaos.back()});
-    ops.push_back({UseProgram, program});
+    ops.push_back({BindVertexArray, {vaos.back()}});
+    ops.push_back({UseProgram, {program}});
     ops.push_back({MultiDrawElementsIndirect,
                    {primitiveType(), GL_UNSIGNED_INT, static_cast<GLuint>(count), 5 * sizeof(uint32_t)},
                    {reinterpret_cast<void *>(begin * 5 * sizeof(uint32_t))}});
-    ops.push_back({BindVertexArray, 0});
+    ops.push_back({BindVertexArray, {0}});
     gl->glBindVertexArray(0);
 }
 void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
@@ -298,65 +297,65 @@ void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
     ops.clear();
     this->framebuffer = reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer;
     ops.push_back(
-        {BindFramebuffer, GL_FRAMEBUFFER, reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer});
-    ops.push_back({Enable, GL_FRAMEBUFFER_SRGB});
+        {BindFramebuffer, {GL_FRAMEBUFFER, reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer}});
+    ops.push_back({Enable, {GL_FRAMEBUFFER_SRGB}});
     isCleared = false;
 }
 void OMRendererTaskOpenGL::draw(uint64_t vertexCount)
 {
-    ops.push_back({BindVertexArray, vaos.back()});
-    ops.push_back({UseProgram, program});
-    ops.push_back({DrawArrays, primitiveType(), 0, static_cast<GLuint>(vertexCount)});
-    ops.push_back({BindVertexArray, 0});
+    ops.push_back({BindVertexArray, {vaos.back()}});
+    ops.push_back({UseProgram, {program}});
+    ops.push_back({DrawArrays, {primitiveType(), 0, static_cast<GLuint>(vertexCount)}});
+    ops.push_back({BindVertexArray, {0}});
     gl->glBindVertexArray(0);
 }
 void OMRendererTaskOpenGL::drawInstance(uint64_t vertexCount, uint64_t instanceCount)
 {
-    ops.push_back({BindVertexArray, vaos.back()});
-    ops.push_back({UseProgram, program});
-    ops.push_back({DrawArraysInstanced, primitiveType(), 0, static_cast<GLuint>(vertexCount),
-                   static_cast<GLuint>(instanceCount)});
-    ops.push_back({BindVertexArray, 0});
+    ops.push_back({BindVertexArray, {vaos.back()}});
+    ops.push_back({UseProgram, {program}});
+    ops.push_back({DrawArraysInstanced,
+                   {primitiveType(), 0, static_cast<GLuint>(vertexCount), static_cast<GLuint>(instanceCount)}});
+    ops.push_back({BindVertexArray, {0}});
     gl->glBindVertexArray(0);
 }
 void OMRendererTaskOpenGL::drawInstance(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance)
 {
-    ops.push_back({BindVertexArray, vaos.back()});
-    ops.push_back({UseProgram, program});
-    ops.push_back({DrawArraysInstanced, primitiveType(), 0, static_cast<GLuint>(vertexCount),
-                   static_cast<GLuint>(instanceCount)});
-    ops.push_back({BindVertexArray, 0});
+    ops.push_back({BindVertexArray, {vaos.back()}});
+    // ops.push_back({UseProgram, program});
+    ops.push_back({DrawArraysInstanced,
+                   {primitiveType(), 0, static_cast<GLuint>(vertexCount), static_cast<GLuint>(instanceCount)}});
+    ops.push_back({BindVertexArray, {0}});
     gl->glBindVertexArray(0);
 }
 void OMRendererTaskOpenGL::drawIndexed(uint64_t vertexCount)
 {
-    ops.push_back({BindVertexArray, vaos.back()});
-    ops.push_back({UseProgram, program});
+    ops.push_back({BindVertexArray, {vaos.back()}});
+    ops.push_back({UseProgram, {program}});
     ops.push_back({DrawElements, {primitiveType(), static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT}, {nullptr}});
-    ops.push_back({BindVertexArray, 0});
+    ops.push_back({BindVertexArray, {0}});
     gl->glBindVertexArray(0);
 }
 void OMRendererTaskOpenGL::drawIndexedInstance(uint64_t vertexCount, uint64_t instanceCount)
 {
-    ops.push_back({BindVertexArray, vaos.back()});
-    ops.push_back({UseProgram, program});
+    ops.push_back({BindVertexArray, {vaos.back()}});
+    ops.push_back({UseProgram, {program}});
     ops.push_back(
         {DrawElementsInstanced,
          {primitiveType(), static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT, static_cast<GLuint>(instanceCount)},
          {nullptr}});
-    ops.push_back({BindVertexArray, 0});
+    ops.push_back({BindVertexArray, {0}});
     gl->glBindVertexArray(0);
 }
 void OMRendererTaskOpenGL::drawIndexedInstance(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance)
 {
-    ops.push_back({BindVertexArray, vaos.back()});
-    ops.push_back({UseProgram, program});
+    ops.push_back({BindVertexArray, {vaos.back()}});
+    ops.push_back({UseProgram, {program}});
     ops.push_back(
         {DrawElementsInstanced,
          {primitiveType(), static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT, static_cast<GLuint>(instanceCount)},
          {nullptr}});
 
-    ops.push_back({BindVertexArray, 0});
+    ops.push_back({BindVertexArray, {0}});
     gl->glBindVertexArray(0);
 }
 void OMRendererTaskOpenGL::finish()
@@ -367,14 +366,14 @@ void OMRendererTaskOpenGL::finish()
 void OMRendererTaskOpenGL::resolveTo(common::OMRendererRenderTarget *target)
 {
     auto result = reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer;
-    ops.push_back({BindFramebuffer, GL_READ_FRAMEBUFFER, framebuffer});
-    ops.push_back({BindFramebuffer, GL_DRAW_FRAMEBUFFER, result});
+    ops.push_back({BindFramebuffer, {GL_READ_FRAMEBUFFER, framebuffer}});
+    ops.push_back({BindFramebuffer, {GL_DRAW_FRAMEBUFFER, result}});
     auto siz = target->fetchSize();
     GLuint wid = siz.x;
     GLuint hei = siz.y;
-    ops.push_back({BlitFramebuffer, 0, 0, wid, hei, 0, 0, wid, hei, GL_COLOR_BUFFER_BIT, GL_NEAREST});
-    ops.push_back({BindFramebuffer, GL_READ_FRAMEBUFFER, 0});
-    ops.push_back({BindFramebuffer, GL_DRAW_FRAMEBUFFER, 0});
+    ops.push_back({BlitFramebuffer, {0, 0, wid, hei, 0, 0, wid, hei, GL_COLOR_BUFFER_BIT, GL_NEAREST}});
+    ops.push_back({BindFramebuffer, {GL_READ_FRAMEBUFFER, 0}});
+    ops.push_back({BindFramebuffer, {GL_DRAW_FRAMEBUFFER, 0}});
 }
 
 int a = 0;

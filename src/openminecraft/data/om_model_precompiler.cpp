@@ -24,6 +24,43 @@ OMModelPrecompiler::OMModelPrecompiler(std::string root, OMTextureAtlas *atlas)
 {
 }
 
+static auto fromSide(std::string s) -> OMModelCullSide
+{
+    using namespace binary::hash;
+    switch (hash_compile_time(s.c_str()))
+    {
+    case "down"_hash:
+        return Down;
+    case "up"_hash:
+        return Up;
+    case "south"_hash:
+        return South;
+    case "north"_hash:
+        return North;
+    case "east"_hash:
+        return East;
+    case "west"_hash:
+        return West;
+    default:
+        return None;
+    }
+}
+
+static auto fromAxis(std::string s) -> OMModelAxis
+{
+    using namespace binary::hash;
+    switch (hash_compile_time(s.c_str()))
+    {
+    default:
+    case "x"_hash:
+        return X;
+    case "y"_hash:
+        return Y;
+    case "z"_hash:
+        return Z;
+    }
+}
+
 auto OMModelPrecompiler::queryPartFaceSecondaryTexture(int bsid, int pid,
                                                        openminecraft::renderer::common::wrap::OMVoxelFacing f) -> bool
 {

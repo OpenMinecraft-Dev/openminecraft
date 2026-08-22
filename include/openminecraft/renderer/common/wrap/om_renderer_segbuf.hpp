@@ -3,7 +3,6 @@
 
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include <iostream>
 #include <vector>
 #include <algorithm>
 
@@ -36,7 +35,7 @@ struct OMRendererSegBufBlock
 class OMRendererSegBuf
 {
   public:
-    OMRendererSegBuf(OMRenderer *renderer, uint32_t initialSize) : renderer(renderer), totalSize(initialSize)
+    OMRendererSegBuf(OMRenderer *renderer, uint32_t initialSize) : totalSize(initialSize), renderer(renderer)
     {
         buffer = renderer->allocateBuffer(InstanceData, totalSize);
         freeBlocks = {{0, totalSize}};

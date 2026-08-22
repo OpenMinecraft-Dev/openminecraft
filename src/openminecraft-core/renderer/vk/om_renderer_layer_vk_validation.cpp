@@ -17,34 +17,6 @@ namespace openminecraft::renderer::vk::validation
 {
 log::OMLogger internal("Vulkan Validation");
 
-static auto notify(DebugUtilsMessageSeverityFlagBitsEXT s, DebugUtilsMessageTypeFlagsEXT t,
-                   DebugUtilsMessengerCallbackDataEXT data, void *user) -> int
-{
-    if (!data.pMessage)
-    {
-        return VK_SUCCESS;
-    }
-
-    internal.debug("{}", (void *)data.pMessageIdName);
-    switch (s)
-    {
-    default:
-    case DebugUtilsMessageSeverityFlagBitsEXT::eVerbose:
-        internal.debug("{}", data.pMessage);
-        break;
-    case DebugUtilsMessageSeverityFlagBitsEXT::eInfo:
-        internal.info("{}", data.pMessage);
-        break;
-    case DebugUtilsMessageSeverityFlagBitsEXT::eWarning:
-        internal.warn("{}", data.pMessage);
-        break;
-    case DebugUtilsMessageSeverityFlagBitsEXT::eError:
-        internal.error("{}", data.pMessage);
-        break;
-    }
-
-    return VK_SUCCESS;
-}
 static auto notifyNew(DebugReportFlagBitsEXT flags, DebugReportObjectTypeEXT objectType, uint64_t object,
                       size_t location, int32_t messageCode, const char *pLayerPrefix, const char *pMessage,
                       void *pUserData) -> VkBool32

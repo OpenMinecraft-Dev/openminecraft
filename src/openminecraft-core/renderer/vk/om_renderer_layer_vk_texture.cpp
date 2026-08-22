@@ -88,7 +88,7 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64
                                          common::OMTextureType type, common::OMTextureArrangement arr,
                                          OMRendererVk *renderer)
     : OMRendererTexture(width, height, layers, mipmap, type, arr, reinterpret_cast<OMRenderer *>(renderer)),
-      renderer(renderer), mipmap(mipmap), layers(layers)
+      mipmap(mipmap), layers(layers), renderer(renderer)
 {
     if (type == common::Dim2Multisample)
     {

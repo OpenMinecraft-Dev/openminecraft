@@ -402,7 +402,7 @@ auto OMRendererVk::getLogicalExtent() const -> glm::vec2
 
 void OMRendererVk::render(OMTicker &t)
 {
-    Result lastError;
+    auto lastError = Result::eSuccess;
     t.push("vk_render");
     if (needRebuild)
     {

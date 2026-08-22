@@ -1,7 +1,6 @@
 #ifndef OM_RENDERER_LAYER_VK_SWAPCHAINMANAGER_HPP
 #define OM_RENDERER_LAYER_VK_SWAPCHAINMANAGER_HPP
 
-#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/util/om_util_reinitable.hpp"
 #include <functional>
 #ifdef OM_VULKAN_DYNAMIC
@@ -28,7 +27,7 @@ class OMSwapchainManager : public util::OMReinitable
     static auto chooseSurfaceFormat(OMSwapchainCap cap) -> ::vk::SurfaceFormatKHR;
     auto chooseExtent(OMSwapchainCap &cap) -> ::vk::Extent2D;
     static auto choosePresentMode(const OMSwapchainCap &cap) -> ::vk::PresentModeKHR;
-    ~OMSwapchainManager() = default;
+    virtual ~OMSwapchainManager() = default;
 
     void reinit() override;
     void destroy();

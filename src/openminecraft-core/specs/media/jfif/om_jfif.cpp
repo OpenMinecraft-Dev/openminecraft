@@ -172,7 +172,7 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
         auto factor = components[sel.selector].factor;
 
         blockids.push_back({sel.selector, static_cast<uint8_t>(sel.table >> 4),
-                            static_cast<uint8_t>(sel.table & 0xf | 0x10), components[sel.selector].tableId, 0, 0,
+                            static_cast<uint8_t>((sel.table & 0xf) | 0x10), components[sel.selector].tableId, 0, 0,
                             mcuStatus.mcumaxwidth / (factor >> 4 & 0xf), mcuStatus.mcumaxheight / (factor & 0xf)});
         mcuStatus.mcuwidth = blockids[0].scaleX * 8;
         mcuStatus.mcuheight = blockids[0].scaleY * 8;
@@ -192,8 +192,8 @@ void OMJfifFile::parseStartOfScan(std::shared_ptr<std::istream> istr)
                 for (int bx = 0; bx < (factor >> 4 & 0xf); bx++)
                 {
                     blockids.push_back({sel.selector, static_cast<uint8_t>(sel.table >> 4),
-                                        static_cast<uint8_t>(sel.table & 0xf | 0x10), components[sel.selector].tableId,
-                                        bx, by, (factor >> 4 & 0xf), (factor & 0xf)});
+                                        static_cast<uint8_t>((sel.table & 0xf) | 0x10),
+                                        components[sel.selector].tableId, bx, by, (factor >> 4 & 0xf), (factor & 0xf)});
                 }
             }
 

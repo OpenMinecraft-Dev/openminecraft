@@ -16,7 +16,7 @@ class OMDemiurgeTextSdfChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementT
         : OMDemiurgeQuadChannel(renderer, f), fontSet(set)
     {
     }
-    ~OMDemiurgeTextSdfChannel() = default;
+    virtual ~OMDemiurgeTextSdfChannel() = default;
 
     void init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) override;
     void destroy() override

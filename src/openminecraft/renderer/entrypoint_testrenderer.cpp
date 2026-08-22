@@ -19,8 +19,6 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_boxblur.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
-#include "openminecraft/specs/png/om_png.hpp"
-#include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
 

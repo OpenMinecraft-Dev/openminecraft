@@ -6,7 +6,7 @@
 namespace openminecraft::renderer
 {
 OMRenderer::OMRenderer(AppInfo info, void *window, std::string shaderPath)
-    : info(std::move(info)), window(window), shaderManager(shaderPath)
+    : shaderManager(shaderPath), window(window), info(std::move(info))
 {
 }
 } // namespace openminecraft::renderer
