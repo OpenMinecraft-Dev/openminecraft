@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <vector>
 #include <algorithm>
+#include <cmath>
 
 namespace openminecraft::renderer::common::wrap
 {
@@ -55,7 +56,7 @@ class OMRendererSegBuf
         {
             if (it->length >= minSize)
             {
-                auto allo = std::min(it->length, maxSize);
+                auto allo = it->length < maxSize ? it->length : maxSize;
                 allo -= (allo % alignment);
                 OMRendererSegBufBlock allocated = it->slice(allo);
 
