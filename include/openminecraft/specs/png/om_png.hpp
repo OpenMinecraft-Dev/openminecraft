@@ -108,6 +108,7 @@ class OMPngFile : public OMBlockedFile<OMPngChunkType>, public OMImage
     std::shared_ptr<zlib::OMZLibInflater> inflater;
     OMPngHead head;
     std::vector<int, mem::OMStlAllocator<allocatorTag, int>> palette;
+    uint16_t greyThreshold;
 
     auto crc(OMPngChunk chunk) -> uint64_t;
 };

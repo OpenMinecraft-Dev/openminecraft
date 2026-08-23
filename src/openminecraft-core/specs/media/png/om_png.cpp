@@ -28,7 +28,8 @@ OMPngFile::OMPngFile()
     processorMap[ImageEnd] = [&](std::shared_ptr<std::istream> istr) -> void {};
 }
 
-static void writePixel(uint8_t *result, uint8_t *source, OMPngColorType type, uint8_t bitdepth, int x, int *palette)
+static void writePixel(uint8_t *result, uint8_t *source, OMPngColorType type, uint8_t bitdepth, int x, int *palette,
+                       uint16_t greyThreshold)
 {
     switch (type)
     {
@@ -77,7 +78,7 @@ static void writePixel(uint8_t *result, uint8_t *source, OMPngColorType type, ui
         if (bitdepth == 8)
         {
             std::memset(result, source[x * bitdepth / 8], 3);
-            result[3] = 0xff;
+            result[3] = result[0] == greyThreshold ? 0x00 : 0xff;
         }
         else
         {
@@ -90,7 +91,7 @@ static void writePixel(uint8_t *result, uint8_t *source, OMPngColorType type, ui
             value = static_cast<uint8_t>((value * 255) / ((1 << bitdepth) - 1));
 
             std::memset(result, value, 3);
-            result[3] = 0xff;
+            result[3] = value == greyThreshold ? 0x00 : 0xff;
         }
         break;
     default:
@@ -152,6 +153,8 @@ auto OMPngFile::parseBlockHeader(std::shared_ptr<std::istream> istr, OMPngChunkT
     istr->read(reinterpret_cast<char *>(currentChunk.data.data()), length);
     istr->read(reinterpret_cast<char *>(&currentChunk.crc), 4);
     currentChunk.crc = binary::be32ToNative(currentChunk.crc);
+
+    std::cout << "[PNG] " << currentChunk.name.data() << " " << length << std::endl;
 
     auto res = crc(currentChunk);
     if (res != currentChunk.crc)
@@ -216,6 +219,10 @@ void OMPngFile::parsePTLE(std::shared_ptr<std::istream> istr)
 
 void OMPngFile::parseTRNS(std::shared_ptr<std::istream> istr)
 {
+    if (palette.empty())
+    {
+        greyThreshold = currentChunk.data[0] << 16 | currentChunk.data[1];
+    }
     int i = 0;
     for (auto &pp : palette)
     {
@@ -354,7 +361,7 @@ void OMPngFile::writeIntoBufferAdam(std::vector<uint8_t, mem::OMStlAllocator<all
                 int pixelIndex = finalY * head.width + finalX;
 
                 writePixel(dataBuffer.data() + pixelIndex * 4, current.data(), head.type, head.bitDepth, x,
-                           palette.data());
+                           palette.data(), greyThreshold);
             }
         }
     }
@@ -364,7 +371,7 @@ void OMPngFile::writeIntoBuffer(std::vector<uint8_t, mem::OMStlAllocator<allocat
     for (int x = 0; x < head.width; x++)
     {
         std::array<uint8_t, 4> buffer;
-        writePixel(buffer.data(), current.data(), head.type, head.bitDepth, x, palette.data());
+        writePixel(buffer.data(), current.data(), head.type, head.bitDepth, x, palette.data(), greyThreshold);
         dataBuffer.push_back(buffer[0]);
         dataBuffer.push_back(buffer[1]);
         dataBuffer.push_back(buffer[2]);

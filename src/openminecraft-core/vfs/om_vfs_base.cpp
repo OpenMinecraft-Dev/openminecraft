@@ -142,6 +142,7 @@ auto compressPath(std::string vp) -> std::string
 }
 auto fsfetch(std::string fullPath) -> std::shared_ptr<std::istream>
 {
+    logger.debug("fetching {}", fullPath);
     auto pth = compressPath(fullPath);
     for (auto p : m)
     {
