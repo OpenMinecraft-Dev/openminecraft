@@ -18,7 +18,7 @@ namespace openminecraftshell::data
 class OMTextureAtlas
 {
   public:
-    OMTextureAtlas(std::string root, renderer::OMRenderer *renderer)
+    OMTextureAtlas(std::string root, openminecraft::renderer::OMRenderer *renderer)
         : root(std::move(root)), renderer(renderer), logger("OMTextureAtlas", this)
     {
     }
@@ -70,7 +70,7 @@ class OMTextureAtlas
 
     void build()
     {
-        texture = renderer->allocateTexture(16, 16, tid, 4, renderer::common::Dim2Array,
+        texture = renderer->allocateTexture(16, 16, tid, 4, openminecraft::renderer::common::Dim2Array,
                                             openminecraft::renderer::common::ColorRgba);
         for (auto &p : subtex)
         {
@@ -100,7 +100,7 @@ class OMTextureAtlas
         texture->minFilter = openminecraft::renderer::common::Nearest;
         texture->setupSampler();
 
-        textureSecondary = renderer->allocateTexture(32, 32, wtid, 4, renderer::common::Dim2Array,
+        textureSecondary = renderer->allocateTexture(32, 32, wtid, 4, openminecraft::renderer::common::Dim2Array,
                                                      openminecraft::renderer::common::ColorRgba);
         for (auto &p : subtexWide)
         {
@@ -135,11 +135,11 @@ class OMTextureAtlas
     int tid = 0;
     int wtid = 0;
     std::string root;
-    renderer::OMRenderer *renderer;
+    openminecraft::renderer::OMRenderer *renderer;
 
   public:
-    renderer::common::OMRendererTexture *texture = nullptr;
-    renderer::common::OMRendererTexture *textureSecondary = nullptr;
+    openminecraft::renderer::common::OMRendererTexture *texture = nullptr;
+    openminecraft::renderer::common::OMRendererTexture *textureSecondary = nullptr;
     std::unordered_map<OMIdentifier, int> subtex;
     std::unordered_map<OMIdentifier, int> subtexWide;
     std::unordered_map<OMIdentifier, glm::ivec2> subtexSizes;

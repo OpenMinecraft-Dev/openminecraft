@@ -94,7 +94,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto queryPartFaceTex(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> int override;
     auto queryPartFaceCull(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
         -> openminecraft::renderer::common::wrap::OMVoxelFacing override;
-    auto queryPartAABB(int bsid, int pid) -> renderer::common::wrap::OMVoxelAABB override;
+    auto queryPartAABB(int bsid, int pid) -> openminecraft::renderer::common::wrap::OMVoxelAABB override;
     auto queryPartFaceUV(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> glm::vec4 override;
     auto queryPartFaceRotation(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> int override;
     auto queryPartRotationAxis(int bsid, int pid) -> int override;

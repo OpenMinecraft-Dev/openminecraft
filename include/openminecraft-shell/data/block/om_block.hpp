@@ -55,6 +55,7 @@ class OMBlock
     OMBlock(OMIdentifier name) : name(std::move(name))
     {
     }
+    OMBlock() = default;
     ~OMBlock() = default;
     auto isSoild(bool v) -> OMBlock &
     {
@@ -62,11 +63,22 @@ class OMBlock
         return *this;
     }
 
-    const OMIdentifier name;
+    OMIdentifier name;
     std::unordered_map<OMBlockState, int> states;
     std::unordered_map<OMBlockModelIdentifier, int> requiredModels;
     std::shared_ptr<openminecraft::io::json::OMJsonNode> resolverCache = nullptr;
     bool soild = true;
+
+    auto operator=(const OMBlock &other) -> OMBlock &
+    {
+        this->name = OMIdentifier(other.name.namesp, other.name.path);
+        this->states = other.states;
+        this->requiredModels = other.requiredModels;
+        this->resolverCache = other.resolverCache;
+        this->soild = other.soild;
+
+        return *this;
+    }
 };
 } // namespace openminecraftshell::data::block
 
