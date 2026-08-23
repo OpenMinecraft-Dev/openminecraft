@@ -28,7 +28,11 @@ template <typename K, typename T> class OMWorldRegistry
 
   private:
     uint32_t nextId = 0;
+
+  public:
     std::unordered_map<K, uint32_t> nameToId;
+
+  private:
     std::unordered_map<uint32_t, T> idToRegistry;
 };
 

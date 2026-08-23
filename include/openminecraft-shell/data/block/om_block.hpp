@@ -48,13 +48,10 @@ namespace openminecraftshell::data::block
 class OMBlock
 {
   public:
-    OMBlock(OMIdentifier name, std::unordered_map<OMBlockState, int> bs) : name(std::move(name)), states(bs)
+    OMBlock(std::unordered_map<OMBlockState, int> bs) : states(std::move(bs))
     {
     }
 
-    OMBlock(OMIdentifier name) : name(std::move(name))
-    {
-    }
     OMBlock() = default;
     ~OMBlock() = default;
     auto isSoild(bool v) -> OMBlock &
@@ -63,22 +60,12 @@ class OMBlock
         return *this;
     }
 
-    OMIdentifier name;
     std::unordered_map<OMBlockState, int> states;
     std::unordered_map<OMBlockModelIdentifier, int> requiredModels;
     std::shared_ptr<openminecraft::io::json::OMJsonNode> resolverCache = nullptr;
     bool soild = true;
 
-    auto operator=(const OMBlock &other) -> OMBlock &
-    {
-        this->name = OMIdentifier(other.name.namesp, other.name.path);
-        this->states = other.states;
-        this->requiredModels = other.requiredModels;
-        this->resolverCache = other.resolverCache;
-        this->soild = other.soild;
-
-        return *this;
-    }
+    auto operator=(const OMBlock &other) -> OMBlock & = default;
 };
 } // namespace openminecraftshell::data::block
 

@@ -94,7 +94,17 @@ void OMApplication::registerBlocks()
     using data::block::blockRegistery;
     using data::block::OMBlock;
 
-    blockRegistery.registerItem(OMIdentifier("minecraft:air"), OMBlock(OMIdentifier("minecraft:air")).isSoild(false));
+    blockRegistery.registerItem(OMIdentifier("minecraft:air"), OMBlock().isSoild(false));
+    blockRegistery.registerItem(OMIdentifier("minecraft:stone"), OMBlock().isSoild(true));
+    blockRegistery.registerItem(OMIdentifier("minecraft:cobblestone"), OMBlock().isSoild(true));
+    blockRegistery.registerItem(OMIdentifier("minecraft:coal_ore"), OMBlock().isSoild(true));
+    blockRegistery.registerItem(OMIdentifier("minecraft:iron_ore"), OMBlock().isSoild(true));
+    blockRegistery.registerItem(OMIdentifier("minecraft:dirt"), OMBlock().isSoild(true));
+    blockRegistery.registerItem(OMIdentifier("minecraft:copper_ore"), OMBlock().isSoild(true));
+    blockRegistery.registerItem(OMIdentifier("minecraft:tall_grass"), OMBlock().isSoild(false));
+    blockRegistery.registerItem(OMIdentifier("minecraft:cherry_stairs"), OMBlock().isSoild(false));
+    blockRegistery.registerItem(OMIdentifier("minecraft:cherry_door"), OMBlock().isSoild(false));
+    blockRegistery.registerItem(OMIdentifier("minecraft:cherry_hanging_sign"), OMBlock().isSoild(false));
 }
 
 void OMApplication::mainLoop(OMBackend backend)

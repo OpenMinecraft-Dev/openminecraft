@@ -1,5 +1,6 @@
 #include "openminecraft-shell/data/block/om_blockstate_resolver.hpp"
 #include "openminecraft-shell/data/block/om_block.hpp"
+#include "openminecraft-shell/data/block/om_block_registery.hpp"
 #include "openminecraft-shell/data/block/om_blockstate.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft/io/json/om_io_ast_json.hpp"
@@ -30,12 +31,12 @@ void OMBlockstateResolver::resolveModel(OMBlock &blk, std::shared_ptr<io::json::
     }
     blk.requiredModels[i] = compiler.loadModelPartWithArgs(i.location, i.xrot, i.yrot, i.zrot, i.uvlock);
 }
-void OMBlockstateResolver::resolve(OMBlock &blk)
+void OMBlockstateResolver::resolve(OMIdentifier ident)
 {
+    auto &blk = blockRegistery.getRegistry(ident);
     blk.states.clear();
     blk.requiredModels.clear();
 
-    auto ident = blk.name;
     auto ff = vfs::fsfetch(fmt::format("{}/{}/blockstates/{}.json", root, ident.namesp, ident.path));
     json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(ff));
     auto ll = bld.build();
@@ -155,8 +156,9 @@ static auto caseCheck(OMBlockState &bs, std::shared_ptr<json::OMJsonNode> node) 
     return true;
 }
 
-auto OMBlockstateResolver::fetchModel(OMBlock &blk, std::string state) -> int
+auto OMBlockstateResolver::fetchModel(OMIdentifier ident, std::string state) -> int
 {
+    auto &blk = blockRegistery.getRegistry(ident);
     auto st = OMBlockState(state);
     auto hsh = st.hash();
 

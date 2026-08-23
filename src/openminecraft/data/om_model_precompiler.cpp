@@ -527,6 +527,10 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
 
 static auto isNotInteger(std::shared_ptr<json::OMJsonNode> n) -> bool
 {
+    if (n == nullptr)
+    {
+        return true;
+    }
     return std::abs(n->getNumberFloating() - std::round(n->getNumberFloating())) > 1e-5;
 }
 
@@ -652,8 +656,8 @@ auto OMModelPrecompiler::wrapPart(std::shared_ptr<openminecraft::io::json::OMJso
                        static_cast<double>(ro->getMap()["origin"]->getArray()[1]->getNumberFloating()),
                        static_cast<double>(ro->getMap()["origin"]->getArray()[2]->getNumberFloating())}
            : glm::vec3{},
-        ro ? fromAxis(ro->getMap()["axis"]->getString()) : X,
-        ro ? ro->getMap()["angle"]->getNumberFloating() : 0.0,
+        ro && ro->getMap()["axis"] != nullptr ? fromAxis(ro->getMap()["axis"]->getString()) : X,
+        ro && ro->getMap()["angle"] != nullptr ? ro->getMap()["angle"]->getNumberFloating() : 0.0,
     };
 }
 

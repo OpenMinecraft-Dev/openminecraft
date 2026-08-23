@@ -113,26 +113,27 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererT
 
     voxelHandler = new data::OMModelPrecompiler("/external", textureAtlas);
     blockstateResolver = new data::block::OMBlockstateResolver("/external", *voxelHandler);
-    blockstateResolver->resolve(data::block::blockRegistery.getRegistry(data::OMIdentifier("minecraft:air")));
-    blockstateResolver->fetchModel(data::block::blockRegistery.getRegistry(data::OMIdentifier("minecraft:air")), "");
-    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/stone"))});
-    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/cobblestone"))});
-    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/coal_ore"))});
-    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/iron_ore"))});
-    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/dirt"))});
-    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/copper_ore"))});
-    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/tall_grass_bottom"))},
-                               false);
-    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/tall_grass_top"))},
-                               false);
-    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/cherry_stairs"))},
-                               false);
-    voxelHandler->composeBlock(
-        {voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/spruce_door_bottom_left"))}, false);
-    voxelHandler->composeBlock(
-        {voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/spruce_door_top_left"))}, false);
-    voxelHandler->composeBlock(
-        {voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/cherry_hanging_sign_rot_0"))}, false);
+    for (auto &p : data::block::blockRegistery.nameToId)
+    {
+        blockstateResolver->resolve(p.first);
+    }
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:air"), "");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:stone"), "");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cobblestone"), "");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:coal_ore"), "");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:iron_ore"), "");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:dirt"), "");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:copper_ore"), "");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:tall_grass"), "half=lower");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:tall_grass"), "half=upper");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_stairs"),
+                                   "facing=east,half=bottom,shape=straight");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_door"),
+                                   "facing=east,half=lower,hinge=left,open=false");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_door"),
+                                   "facing=east,half=upper,hinge=left,open=false");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_hanging_sign"), "attached=false,rotation=0");
+
     voxelHandler->composeBlock(
         {voxelHandler->loadModelPartWithArgs(data::OMIdentifier("minecraft:block/cherry_button"), 0, 0, 0, false)},
         false);
