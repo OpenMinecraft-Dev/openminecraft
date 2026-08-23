@@ -5,6 +5,7 @@
 #include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float4.hpp"
 #include "glm/geometric.hpp"
+#include "openminecraft-shell/data/block/om_block_registery.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_resolver.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
@@ -112,7 +113,8 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererT
 
     voxelHandler = new data::OMModelPrecompiler("/external", textureAtlas);
     blockstateResolver = new data::block::OMBlockstateResolver("/external", *voxelHandler);
-    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/air"))}, false);
+    blockstateResolver->resolve(data::block::blockRegistery.getRegistry(data::OMIdentifier("minecraft:air")));
+    blockstateResolver->fetchModel(data::block::blockRegistery.getRegistry(data::OMIdentifier("minecraft:air")), "");
     voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/stone"))});
     voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/cobblestone"))});
     voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/coal_ore"))});
