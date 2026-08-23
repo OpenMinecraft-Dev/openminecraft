@@ -1,5 +1,6 @@
 #include <SDL3/SDL_error.h>
 
+#include <algorithm>
 #include "SDL3/SDL_events.h"
 #include "openminecraft-shell/data/block/om_block.hpp"
 #include "openminecraft-shell/data/block/om_block_registery.hpp"
