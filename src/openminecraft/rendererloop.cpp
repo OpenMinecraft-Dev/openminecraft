@@ -4,7 +4,7 @@
 #include "SDL3/SDL_mouse.h"
 #include "SDL3/SDL_video.h"
 #include "glm/ext/vector_float3.hpp"
-#include "openminecraft-shell/renderer/entrypoint_testrenderer.hpp"
+#include "openminecraft-shell/renderer/worldrenderer.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"

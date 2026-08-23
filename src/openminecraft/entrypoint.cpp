@@ -101,21 +101,13 @@ auto boot(std::vector<std::string> args) -> int
     logger->info("System: {}, version {}", os::fetchSystemName(), os::fetchSystemVersion());
     logger->info("Total memory: {} bytes", os::fetchMemoryTotal());
 
-    if (args.size() < 3)
+    renderer::OMBackend bk = renderer::Vulkan;
+    if (args.size() >= 2)
     {
-        args.resize(3);
-        args[1] = "3dtest";
-        args[2] = "gl";
+        bk = args[1] == "gl" ? renderer::OpenGL : renderer::Vulkan;
     }
 
-    switch (hash_compile_time(args[1].c_str()))
-    {
-    case "3dtest"_hash:
-        rendererLoop(args[2] == "gl" ? renderer::OpenGL : renderer::Vulkan);
-        break;
-    default:
-        return 1;
-    }
+    rendererLoop(bk);
 
     SDL_Quit();
 

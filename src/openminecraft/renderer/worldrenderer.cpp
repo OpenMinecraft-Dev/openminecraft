@@ -1,12 +1,10 @@
-#include "openminecraft-shell/renderer/entrypoint_testrenderer.hpp"
+#include "openminecraft-shell/renderer/worldrenderer.hpp"
 
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float4.hpp"
 #include "glm/geometric.hpp"
-#include "openminecraft-shell/data/block/om_block.hpp"
-#include "openminecraft-shell/data/block/om_block_registery.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_resolver.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
@@ -106,7 +104,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
                 cnk.setBlock(15, 1, 2, 6);
                 cnk.setBlock(15, 1, 0, 13);
                 cnk.setBlock(15, 2, 2, 16);
-                cnk.setBlock(15, 2, 1, 18);
+                cnk.setBlock(15, 2, 1, 17);
                 chunkManager->loadChunk(cnk);
             }
         }
@@ -145,18 +143,6 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
     voxelHandler->composeBlock(
         {voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/cherry_fence_gate_open"))}, false);
     voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/rail"))}, false);
-
-    data::block::OMBlock blk(data::OMIdentifier("minecraft:cherry_button"));
-    blk.isSoild(false);
-    blockstateResolver->resolve(blk);
-    data::block::OMBlock blk2(data::OMIdentifier("minecraft:cherry_fence"));
-    blk2.isSoild(false);
-    blockstateResolver->resolve(blk2);
-    data::block::OMBlock blk3(data::OMIdentifier("minecraft:cherry_shelf"));
-    blk3.isSoild(false);
-    blockstateResolver->resolve(blk3);
-
-    logger.debug("block model at {}", blockstateResolver->fetchModel(blk3, "facing=north,powered=false"));
 
     textureAtlas->build();
 
