@@ -20,9 +20,9 @@ template <int Cs> class OMChunk
     {
     }
 
-    void setBlock(int x, int y, int z, uint32_t block)
+    void setBlock(int x, int y, int z, uint32_t blockstate)
     {
-        blocks[y * Cs * Cs + x * Cs + z] = block;
+        blocks[y * Cs * Cs + x * Cs + z] = blockstate;
         dirty = true;
     }
     auto getBlock(int x, int y, int z) -> uint32_t

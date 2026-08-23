@@ -106,7 +106,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
                 cnk.setBlock(15, 1, 2, 6);
                 cnk.setBlock(15, 1, 0, 13);
                 cnk.setBlock(15, 2, 2, 16);
-                cnk.setBlock(15, 2, 1, 17);
+                cnk.setBlock(15, 2, 1, 18);
                 chunkManager->loadChunk(cnk);
             }
         }

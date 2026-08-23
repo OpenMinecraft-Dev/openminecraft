@@ -2,8 +2,11 @@
 #include "openminecraft-shell/data/block/om_block.hpp"
 #include "openminecraft-shell/data/block/om_blockstate.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
+#include "openminecraft/io/json/om_io_ast_json.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/json/om_io_ast_builder_json.hpp"
+#include <memory>
+#include <vector>
 
 using namespace openminecraft::io;
 
@@ -41,17 +44,115 @@ void OMBlockstateResolver::resolve(OMBlock &blk)
     {
         for (auto &l : ll->getMap()["variants"]->getMap())
         {
-            resolveModel(blk, l.second);
+            if (l.second->type() == openminecraft::io::json::Object)
+            {
+                resolveModel(blk, l.second);
+            }
+            else
+            {
+                for (auto &lp : l.second->getArray())
+                {
+                    resolveModel(blk, lp);
+                }
+            }
         }
     }
     else if (ll->getMap().count("multipart"))
     {
         for (auto &l : ll->getMap()["multipart"]->getArray())
         {
-            resolveModel(blk, l->getMap()["apply"]);
+            auto &ll = l->getMap()["apply"];
+            if (ll->type() == openminecraft::io::json::Object)
+            {
+                resolveModel(blk, ll);
+            }
+            else
+            {
+                for (auto &lp : ll->getArray())
+                {
+                    resolveModel(blk, lp);
+                }
+            }
         }
     }
     blk.resolverCache = ll;
+}
+
+static auto caseCheck(OMBlockState &bs, std::shared_ptr<json::OMJsonNode> node) -> bool
+{
+    if (!node)
+        return true;
+
+    if (node->type() != json::Object)
+        return true;
+
+    for (auto &st : node->getMap())
+    {
+        if (st.first == "AND")
+        {
+            if (st.second->type() == json::Array)
+            {
+                for (auto &p : st.second->getArray())
+                    if (!caseCheck(bs, p))
+                        return false;
+            }
+            else
+            {
+                if (!caseCheck(bs, st.second))
+                    return false;
+            }
+        }
+        else if (st.first == "OR")
+        {
+            bool any_match = false;
+            if (st.second->type() == json::Array)
+            {
+                for (auto &p : st.second->getArray())
+                    if (caseCheck(bs, p))
+                    {
+                        any_match = true;
+                        break;
+                    }
+            }
+            else
+            {
+                any_match = caseCheck(bs, st.second);
+            }
+            if (!any_match)
+                return false;
+        }
+        else
+        {
+            if (!bs.properties.count(st.first))
+                return false;
+
+            std::string target;
+            if (st.second->type() == openminecraft::io::json::String)
+            {
+                target = st.second->getString();
+            }
+            else if (st.second->type() == openminecraft::io::json::Primitive)
+            {
+                target = st.second->getBoolean() ? "true" : "false";
+            }
+            else if (st.second->type() == openminecraft::io::json::Number)
+            {
+                target = st.second->getNumber();
+            }
+
+            auto pos = target.find('|');
+            if (pos != std::string::npos)
+            {
+                return target.find(bs.properties[st.first]) != std::string::npos;
+            }
+            else
+            {
+                if (bs.properties[st.first] != target)
+                    return false;
+            }
+        }
+    }
+    return true;
 }
 
 auto OMBlockstateResolver::fetchModel(OMBlock &blk, std::string state) -> int
@@ -70,11 +171,52 @@ auto OMBlockstateResolver::fetchModel(OMBlock &blk, std::string state) -> int
         {
             if (OMBlockState(var.first).hash() == hsh)
             {
-                auto i = compiler.composeBlock({}, blk.soild);
+                std::vector<int> ids = {};
+                if (var.second->type() == openminecraft::io::json::Object)
+                {
+                    ids.emplace_back(blk.requiredModels[identFrom(var.second)]);
+                }
+                else
+                {
+                    for (auto &lp : var.second->getArray())
+                    {
+                        ids.emplace_back(blk.requiredModels[identFrom(lp)]);
+                    }
+                }
+
+                auto i = compiler.composeBlock(ids, blk.soild);
                 blk.states[st] = i;
                 return i;
             }
         }
+    }
+    else if (blk.resolverCache->getMap().count("multipart"))
+    {
+        std::vector<int> ids = {};
+        for (auto &l : blk.resolverCache->getMap()["multipart"]->getArray())
+        {
+            if (!caseCheck(st, l->getMap().count("when") ? l->getMap()["when"] : nullptr))
+            {
+                continue;
+            }
+
+            auto &ll = l->getMap()["apply"];
+            if (ll->type() == openminecraft::io::json::Object)
+            {
+                ids.emplace_back(blk.requiredModels[identFrom(ll)]);
+            }
+            else
+            {
+                for (auto &lp : ll->getArray())
+                {
+                    ids.emplace_back(blk.requiredModels[identFrom(lp)]);
+                }
+            }
+        }
+
+        auto i = compiler.composeBlock(ids, blk.soild);
+        blk.states[st] = i;
+        return i;
     }
 
     return -1;
