@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 namespace openminecraftshell::data
 {
@@ -85,8 +86,8 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
 
     auto composeBlock(std::vector<int>, bool = true) -> int;
 
-    auto loadModelPart(OMIdentifier, bool = true) -> int;
-    auto loadModelPartWithArgs(OMIdentifier, int, int, int, bool, bool = true) -> int;
+    auto loadModelPart(OMIdentifier) -> int;
+    auto loadModelPartWithArgs(OMIdentifier, int, int, int, bool) -> int;
 
     auto queryNumParts(int bsid) -> int override;
     auto queryPartFaceEnabled(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> bool override;
@@ -115,7 +116,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     OMTextureAtlas &textureAtlas;
     std::vector<OMModel> blockModels;
     std::vector<std::vector<OMModelPart>> modelParts;
-    std::vector<bool> modelSoild;
+    std::unordered_map<OMIdentifier, int> modelPartIdents;
     std::vector<bool> modelAmbientOcculusion;
     std::vector<bool> modelComplex;
 };

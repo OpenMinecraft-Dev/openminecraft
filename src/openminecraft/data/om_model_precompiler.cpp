@@ -273,9 +273,9 @@ auto OMModelPrecompiler::querySoild(int bsid) -> bool
     return blockModels[bsid].soild;
 }
 
-auto OMModelPrecompiler::loadModelPart(OMIdentifier i, bool soild) -> int
+auto OMModelPrecompiler::loadModelPart(OMIdentifier i) -> int
 {
-    return loadModelPartWithArgs(i, 0, 0, 0, false, soild);
+    return loadModelPartWithArgs(i, 0, 0, 0, false);
 }
 
 // INFO: General rorate function
@@ -314,16 +314,18 @@ auto rotateVoxelElement90(const glm::vec3 &from, const glm::vec3 &to, int i) -> 
     return {newMin, newMax};
 }
 
-auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yrot, int zrot, bool lockuv, bool soild)
-    -> int
+auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yrot, int zrot, bool lockuv) -> int
 {
+    logger.info("precompiling {}:{} @ {}, rot {} {} {}, uvlock {}", i.namesp, i.path, modelId, xrot, yrot, zrot,
+                lockuv ? "true" : "false");
     modelParts.resize(modelId + 1);
-    modelSoild.resize(modelId + 1);
     modelAmbientOcculusion.resize(modelId + 1);
     modelComplex.resize(modelId + 1);
 
     modelComplex[modelId] = false;
     modelParts[modelId] = {};
+
+    modelPartIdents[i] = modelId;
 
     auto prem = precompile(i);
     modelAmbientOcculusion[modelId] =
@@ -519,7 +521,6 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
         }
     }
 
-    modelSoild[modelId] = soild;
     modelId++;
     return modelId - 1;
 }
@@ -579,8 +580,14 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
                     }
                 }
 
+                bool needToBeSpilt = true;
                 for (auto &fce : elem->getMap()["faces"]->getMap())
                 {
+                    if (!fce.second->getMap().count("tintindex"))
+                    {
+                        needToBeSpilt = false;
+                    }
+
                     auto text = fce.second->getMap()["texture"]->getString();
 
                     if (text[0] == '#' && tex.count(text.substr(1)))
@@ -607,6 +614,7 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
                         }
                     }
                 }
+                modelComplex[modelId] = true;
             }
         }
     }

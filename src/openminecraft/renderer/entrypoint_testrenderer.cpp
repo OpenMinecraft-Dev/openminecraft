@@ -113,37 +113,35 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
 
     voxelHandler = new data::OMModelPrecompiler("/external", textureAtlas);
     blockstateResolver = new data::block::OMBlockstateResolver("/external", *voxelHandler);
-    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/air"), false)}, false);
+    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/air"))}, false);
     voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/stone"))});
     voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/cobblestone"))});
     voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/coal_ore"))});
     voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/iron_ore"))});
     voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/dirt"))});
     voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/copper_ore"))});
+    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/tall_grass_bottom"))},
+                               false);
+    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/tall_grass_top"))},
+                               false);
+    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/oak_stairs"))}, false);
     voxelHandler->composeBlock(
-        {voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/tall_grass_bottom"), false)}, false);
+        {voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/spruce_door_bottom_left"))}, false);
     voxelHandler->composeBlock(
-        {voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/tall_grass_top"), false)}, false);
-    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/oak_stairs"), false)},
+        {voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/spruce_door_top_left"))}, false);
+    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/acacia_sign_rot_0"))},
                                false);
     voxelHandler->composeBlock(
-        {voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/spruce_door_bottom_left"), false)}, false);
+        {voxelHandler->loadModelPartWithArgs(data::OMIdentifier("minecraft:block/oak_button"), 0, 0, 0, false)}, false);
     voxelHandler->composeBlock(
-        {voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/spruce_door_top_left"), false)}, false);
-    voxelHandler->composeBlock(
-        {voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/acacia_sign_rot_0"), false)}, false);
-    voxelHandler->composeBlock(
-        {voxelHandler->loadModelPartWithArgs(data::OMIdentifier("minecraft:block/oak_button"), 0, 0, 0, false, false)},
-        false);
-    voxelHandler->composeBlock(
-        {voxelHandler->loadModelPartWithArgs(data::OMIdentifier("minecraft:block/oak_shelf"), 0, 90, 0, false, false),
-         voxelHandler->loadModelPartWithArgs(data::OMIdentifier("minecraft:block/oak_shelf_unpowered"), 0, 90, 0, false,
+        {voxelHandler->loadModelPartWithArgs(data::OMIdentifier("minecraft:block/oak_shelf"), 0, 90, 0, false),
+         voxelHandler->loadModelPartWithArgs(data::OMIdentifier("minecraft:block/oak_shelf_unpowered"), 0, 90, 0,
                                              false)},
         false);
     voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/grass_block"))});
     voxelHandler->composeBlock(
-        {voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/acacia_fence_gate_open"), false)}, false);
-    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/rail"), false)}, false);
+        {voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/acacia_fence_gate_open"))}, false);
+    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/rail"))}, false);
 
     data::block::OMBlock blk(data::OMIdentifier("minecraft:acacia_button"));
     blockstateResolver->resolve(blk);

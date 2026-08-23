@@ -10,6 +10,7 @@ class OMIdentifier
   public:
     OMIdentifier(std::string np, std::string path);
     OMIdentifier(std::string);
+    OMIdentifier() = default;
 
     auto toPath() -> std::string;
 
