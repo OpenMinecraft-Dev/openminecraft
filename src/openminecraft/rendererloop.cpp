@@ -309,7 +309,7 @@ void rendererLoop(OMBackend backend)
         auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{-1.0f, 5.0f, -1.0f}, 45.0f, -45.0f);
 
         auto hnd2 = std::make_shared<OMNodeRendererHandler>(win());
-        auto hnd = std::make_shared<renderer::OMTestRenderer>(
+        auto hnd = std::make_shared<renderer::OMWorldRenderer>(
             win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTarget->colorTexture; }, bus, camera);
         hnd2->camera = camera.get();
         win()->registerHandler(hnd2);

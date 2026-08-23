@@ -50,12 +50,12 @@ struct LightingUniform
 // INFO: simple vertex structure
 using VertexStruct = basics::OMVertex<glm::vec3, glm::vec2>;
 
-class OMTestRenderer : public OMRendererHandler
+class OMWorldRenderer : public OMRendererHandler
 {
   public:
-    OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTexture *()> t, event::OMEventBusSDL &bus,
-                   std::shared_ptr<basics::OMCamera> camera);
-    ~OMTestRenderer() override;
+    OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererTexture *()> t, event::OMEventBusSDL &bus,
+                    std::shared_ptr<basics::OMCamera> camera);
+    ~OMWorldRenderer() override;
 
     // INFO: count frames per second, submit and create tasks, etc.
     void submitTasks() override;

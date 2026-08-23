@@ -33,9 +33,9 @@ using namespace openminecraft::renderer::common;
 
 namespace openminecraftshell::renderer
 {
-OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTexture *()> overlay,
-                               event::OMEventBusSDL &bus, std::shared_ptr<basics::OMCamera> camera)
-    : OMRendererHandler(renderer), camera(std::move(camera)), logger("OMTestRenderer", this), renderer(renderer)
+OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererTexture *()> overlay,
+                                 event::OMEventBusSDL &bus, std::shared_ptr<basics::OMCamera> camera)
+    : OMRendererHandler(renderer), camera(std::move(camera)), logger("OMWorldRenderer", this), renderer(renderer)
 {
     this->overlay = overlay;
 
@@ -157,7 +157,7 @@ OMTestRenderer::OMTestRenderer(OMRenderer *renderer, std::function<OMRendererTex
 
 static float ang = 0.0f;
 
-void OMTestRenderer::beforeFrame()
+void OMWorldRenderer::beforeFrame()
 {
     if (!timing)
     {
@@ -178,7 +178,7 @@ void OMTestRenderer::beforeFrame()
     voxelManager->update(*camera);
 }
 
-void OMTestRenderer::record()
+void OMWorldRenderer::record()
 {
     voxelManager
         ->submit(renderer->fetchTask("scene")
@@ -189,11 +189,11 @@ void OMTestRenderer::record()
         ->finishN();
 }
 
-void OMTestRenderer::afterFrame()
+void OMWorldRenderer::afterFrame()
 {
 }
 
-void OMTestRenderer::submitTasks()
+void OMWorldRenderer::submitTasks()
 {
     tempTargetMS->construct(renderer->getExtent(), 4);
     tempTarget->construct(renderer->getExtent());
@@ -214,7 +214,7 @@ void OMTestRenderer::submitTasks()
 
     record();
 }
-OMTestRenderer::~OMTestRenderer()
+OMWorldRenderer::~OMWorldRenderer()
 {
     delete mainPipeline;
     delete voxelModelBuffer;
