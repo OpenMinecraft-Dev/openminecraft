@@ -7,6 +7,7 @@
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
 #include <array>
+#include <cmath>
 
 namespace openminecraftshell::renderer
 {
