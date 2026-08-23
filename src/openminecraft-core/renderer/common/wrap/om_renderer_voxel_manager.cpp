@@ -11,7 +11,6 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
-#include "vulkan/vulkan_core.h"
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -76,6 +75,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                    ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
                    ->blend(true)
                    ->depth(true, true)
+                   ->depthEquals(true)
                    ->depthReverseZ(true)
                    ->buildN();
 
@@ -100,6 +100,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                           ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
                           ->blend(true)
                           ->depth(true, true)
+                          ->depthEquals(true)
                           ->depthReverseZ(true)
                           ->buildN();
 

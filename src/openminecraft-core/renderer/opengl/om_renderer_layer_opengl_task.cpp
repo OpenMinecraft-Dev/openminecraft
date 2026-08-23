@@ -143,11 +143,25 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     ops.push_back({DepthMask, glpipe->enableDepthWrite});
     if (glpipe->enableReverseZ)
     {
-        ops.push_back({DepthFunc, GL_GREATER});
+        if (glpipe->enableDepthEqual)
+        {
+            ops.push_back({DepthFunc, GL_GEQUAL});
+        }
+        else
+        {
+            ops.push_back({DepthFunc, GL_GREATER});
+        }
     }
     else
     {
-        ops.push_back({DepthFunc, GL_LESS});
+        if (glpipe->enableDepthEqual)
+        {
+            ops.push_back({DepthFunc, GL_LEQUAL});
+        }
+        else
+        {
+            ops.push_back({DepthFunc, GL_LESS});
+        }
     }
     ops.push_back({glpipe->enableBlend ? Enable : Disable, GL_BLEND});
     ops.push_back(

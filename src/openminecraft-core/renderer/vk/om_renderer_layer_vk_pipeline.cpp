@@ -378,9 +378,11 @@ void OMRendererPipelineVk::build()
             ColorComponentFlagBits::eB)};
     auto colorblend =
         PipelineColorBlendStateCreateInfo({}, false, LogicOp::eNoOp, attc, std::array{0.f, 0.f, 0.f, 0.f});
-    auto depthStencil = PipelineDepthStencilStateCreateInfo({}, enableDepthTest, enableDepthWrite,
-                                                            enableReverseZ ? CompareOp::eGreater : CompareOp::eLess,
-                                                            true, true, {}, {}, 0.0f, 1.0f);
+    auto depthStencil = PipelineDepthStencilStateCreateInfo(
+        {}, enableDepthTest, enableDepthWrite,
+        enableReverseZ ? (enableDepthEqual ? CompareOp::eGreaterOrEqual : CompareOp::eGreater)
+                       : (enableDepthEqual ? CompareOp::eLessOrEqual : CompareOp::eLess),
+        true, true, {}, {}, 0.0f, 1.0f);
     std::vector<DynamicState> states = {DynamicState::eScissor, DynamicState::eViewport};
     auto dynamicState = PipelineDynamicStateCreateInfo({}, states);
 

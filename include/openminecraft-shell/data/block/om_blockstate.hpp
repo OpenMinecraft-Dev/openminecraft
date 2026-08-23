@@ -73,6 +73,11 @@ class OMBlockState
         return seed;
     }
 
+    auto operator==(const OMBlockState o) const -> bool
+    {
+        return hash() == o.hash();
+    }
+
     std::unordered_map<std::string, std::string> properties;
 };
 } // namespace openminecraftshell::data::block

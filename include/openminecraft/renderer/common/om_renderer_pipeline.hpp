@@ -185,6 +185,12 @@ class OMRendererPipeline : public OMRendererObject
         return Pipeline;
     }
 
+    inline auto depthEquals(bool e) -> OMRendererPipeline *
+    {
+        enableDepthEqual = e;
+        return this;
+    }
+
     bool enableBlend = false;
     bool enableDepthTest = false;
     bool enableDepthWrite = false;
@@ -199,6 +205,7 @@ class OMRendererPipeline : public OMRendererObject
     bool enableDepthBias = true;
     float depthBiasConstant = 0.0f;
     float depthBiasSlope = 0.0f;
+    bool enableDepthEqual = false;
 };
 } // namespace openminecraft::renderer::common
 

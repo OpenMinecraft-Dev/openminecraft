@@ -3,12 +3,10 @@
 
 #include "openminecraft-shell/data/block/om_blockstate.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
-#include <initializer_list>
-#include <set>
+#include "openminecraft/io/json/om_io_ast_json.hpp"
+#include <memory>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
-#include <vector>
 namespace openminecraftshell::data::block
 {
 struct OMBlockModelIdentifier
@@ -50,23 +48,25 @@ namespace openminecraftshell::data::block
 class OMBlock
 {
   public:
-    OMBlock(OMIdentifier name, std::initializer_list<std::pair<OMBlockState, int>> bs)
-        : name(std::move(name)), states(bs)
+    OMBlock(OMIdentifier name, std::unordered_map<OMBlockState, int> bs) : name(std::move(name)), states(bs)
     {
     }
 
-    OMBlock(OMIdentifier name, std::vector<std::pair<OMBlockState, int>> bs)
-        : name(std::move(name)), states(std::move(bs))
-    {
-    }
     OMBlock(OMIdentifier name) : name(std::move(name))
     {
     }
     ~OMBlock() = default;
+    auto isSoild(bool v) -> OMBlock &
+    {
+        soild = v;
+        return *this;
+    }
 
     const OMIdentifier name;
-    std::vector<std::pair<OMBlockState, int>> states;
+    std::unordered_map<OMBlockState, int> states;
     std::unordered_map<OMBlockModelIdentifier, int> requiredModels;
+    std::shared_ptr<openminecraft::io::json::OMJsonNode> resolverCache = nullptr;
+    bool soild = true;
 };
 } // namespace openminecraftshell::data::block
 
