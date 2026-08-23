@@ -1,5 +1,5 @@
-#ifndef OM_RENDERER_LAYER_VK_TESTRENDERER
-#define OM_RENDERER_LAYER_VK_TESTRENDERER
+#ifndef WORLDRENDERER_HPP
+#define WORLDRENDERER_HPP
 #include "glm/ext/vector_float3.hpp"
 #include "glm/fwd.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_resolver.hpp"

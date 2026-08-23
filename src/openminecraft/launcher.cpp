@@ -1,8 +1,10 @@
-#include "openminecraft-shell/entrypoint.hpp"
+#include "openminecraft-shell/application.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include <csignal>
+#include <string>
+#include "openminecraft/log/om_log_common.hpp"
 
 extern "C"
 {
@@ -40,7 +42,8 @@ auto main(int argc, char **argv) -> int
     openminecraft::vfs::fsmountZipArchive(_binary_external_bundle_start,
                                           (uint32_t)(_binary_external_bundle_end - _binary_external_bundle_start),
                                           "/external");
-    int re = openminecraftshell::boot(a);
+    openminecraftshell::OMApplication app(a);
+    int re = app.entry();
     logger.info("Kernel exited with code {}", re);
 
     return re;
