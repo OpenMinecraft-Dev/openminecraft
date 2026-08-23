@@ -1,6 +1,8 @@
 #ifndef OM_FONT_TRIANGLE_LIST
 #define OM_FONT_TRIANGLE_LIST
 
+#define NOMINMAX
+
 #include "glm/glm.hpp"
 #include "mapbox/earcut.hpp"
 #include "openminecraft/fontproc/om_font_polygon.hpp"
