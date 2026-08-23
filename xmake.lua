@@ -1,8 +1,6 @@
 -- Set language standard
 set_languages("c++17")
 
-set_warnings("all")
-
 add_rules("mode.release")
 add_rules("mode.releasedbg")
 add_rules("mode.minsizerel")
