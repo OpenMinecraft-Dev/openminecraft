@@ -154,8 +154,6 @@ auto OMPngFile::parseBlockHeader(std::shared_ptr<std::istream> istr, OMPngChunkT
     istr->read(reinterpret_cast<char *>(&currentChunk.crc), 4);
     currentChunk.crc = binary::be32ToNative(currentChunk.crc);
 
-    std::cout << "[PNG] " << currentChunk.name.data() << " " << length << std::endl;
-
     auto res = crc(currentChunk);
     if (res != currentChunk.crc)
     {
