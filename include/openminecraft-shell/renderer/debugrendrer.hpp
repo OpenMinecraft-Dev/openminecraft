@@ -32,7 +32,7 @@ class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandle
     {
         if (s == 0.0)
         {
-            return std::numeric_limits<float>::min();
+            return 0.0f;
         }
 
         int exp;
@@ -43,7 +43,7 @@ class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandle
     {
         if (s == 0.0)
         {
-            return std::numeric_limits<double>::min();
+            return 0.0;
         }
 
         int exp;
