@@ -127,7 +127,10 @@ void OMRendererBufferVk::updateData(void *src)
         else
         {
             auto vtx = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
-            std::memcpy(vtx, src, this->length);
+            if (vtx)
+            {
+                std::memcpy(vtx, src, this->length);
+            }
             renderer->logicalDevice.unmapMemory(this->bufferMemory);
         }
     }
