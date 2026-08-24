@@ -59,11 +59,24 @@ void OMRendererBufferOpenGL::updateData(void *src)
     renderer->gl.glBufferData(convertFrom(usage), length, src,
                               (usage == common::VertexData || usage == common::VertexIndex) ? GL_STATIC_DRAW
                                                                                             : GL_DYNAMIC_DRAW);
+
+    if (usage == common::UniformTexel)
+    {
+        renderer->gl.glBindTexture(GL_TEXTURE_BUFFER, texel);
+        renderer->gl.glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, buffer);
+    }
+    unbind();
 }
 void OMRendererBufferOpenGL::updateDataPart(void *src, uint64_t offset, uint64_t length)
 {
     bind();
     renderer->gl.glBufferSubData(convertFrom(usage), offset, length, src);
+
+    if (usage == common::UniformTexel)
+    {
+        renderer->gl.glBindTexture(GL_TEXTURE_BUFFER, texel);
+        renderer->gl.glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, buffer);
+    }
     unbind();
 }
 void OMRendererBufferOpenGL::copyTo(OMRendererBuffer *buf)

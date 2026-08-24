@@ -274,7 +274,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
     if (chunkManager->numChunks())
     {
         std::vector<glm::vec3> offs = {};
-        offs.reserve(chunkManager->numChunks());
+        offs.resize(chunkManager->numChunks());
         auto l = voxels->totalSize;
         auto l2 = voxelsComplex->totalSize;
         chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
@@ -284,7 +284,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                 if (!ochk.has_value())
                 {
                     compile(i);
-                    offs.emplace_back(INFINITY);
+                    offs[i] = glm::vec3{INFINITY};
                 }
                 else
                 {
@@ -298,7 +298,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     pp.chunkx = chk.chunkx;
                     pp.chunky = chk.chunky;
                     pp.chunkz = chk.chunkz;
-                    offs.emplace_back(pp - camera.getPosRaw());
+                    offs[i] = pp - camera.getPosRaw();
                 }
                 ++i;
             }
@@ -308,10 +308,14 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         {
             delete chunkoffs;
             chunkoffs = renderer->allocateBuffer(UniformTexel, chunkManager->numChunks() * 3 * sizeof(float) * 2);
+            chunkoffs->updateData(offs.data());
             pipeline->bindInput(2, chunkoffs);
             complexPipeline->bindInput(3, chunkoffs);
         }
-        chunkoffs->updateData(offs.data());
+        else
+        {
+            chunkoffs->updateData(offs.data());
+        }
 
         if (l != voxels->totalSize || l2 != voxelsComplex->totalSize)
         {
