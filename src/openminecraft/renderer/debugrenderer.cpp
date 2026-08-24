@@ -218,10 +218,10 @@ void OMDebugRenderer::afterFrame()
     auto m = camera->getPosRaw();
     posTextNode->style("text", fmt::format("{} {} {} + {:.2f} {:.2f} {:.2f}", m.chunkx, m.chunky, m.chunkz, m.localx,
                                            m.localy, m.localz));
-    float fx = static_cast<float>(m.chunkx) * 16 + m.localx;
-    double dx = static_cast<double>(m.chunkx) * 16 + m.localx;
-    float fz = static_cast<float>(m.chunkz) * 16 + m.localz;
-    double dz = static_cast<double>(m.chunkz) * 16 + m.localz;
+    float fx = std::abs(static_cast<float>(m.chunkx) * 16 + m.localx);
+    double dx = std::abs(static_cast<double>(m.chunkx) * 16 + m.localx);
+    float fz = std::abs(static_cast<float>(m.chunkz) * 16 + m.localz);
+    double dz = std::abs(static_cast<double>(m.chunkz) * 16 + m.localz);
     povTextNode->style("text", fmt::format("Yaw {:.2f} Pitch {:.2f}", camera->getYaw(), camera->getPitch()));
     precisionNode->style("text", fmt::format("float precision: {}", getUlpf(std::max(fx, fz))));
     precisionNode2->style("text", fmt::format("double precision: {}", getUlp(std::max(dx, dz))));
