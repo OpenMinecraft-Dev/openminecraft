@@ -64,6 +64,7 @@ void OMRendererBufferOpenGL::updateDataPart(void *src, uint64_t offset, uint64_t
 {
     bind();
     renderer->gl.glBufferSubData(convertFrom(usage), offset, length, src);
+    unbind();
 }
 void OMRendererBufferOpenGL::copyTo(OMRendererBuffer *buf)
 {
@@ -71,6 +72,7 @@ void OMRendererBufferOpenGL::copyTo(OMRendererBuffer *buf)
 
     bind();
     renderer->gl.glGetBufferSubData(convertFrom(usage), 0, length, temp);
+    unbind();
 
     buf->updateDataPart(temp, 0, length);
     free(temp);
