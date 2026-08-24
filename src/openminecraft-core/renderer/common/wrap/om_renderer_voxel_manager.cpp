@@ -55,6 +55,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
         ->appendPart("voxelRotationAngle", basics::Float)
         ->appendPart("voxelRotationCenter", basics::Vec3f)
         ->appendPart("voxelSize", basics::Vec3f)
+        ->appendPart("voxelRotationAngleExt1", basics::Float)
+        ->appendPart("voxelRotationAngleExt2", basics::Float)
         ->nextGroup()
         ->decideStruct();
 

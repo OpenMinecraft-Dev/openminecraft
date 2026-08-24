@@ -33,7 +33,8 @@ enum OMModelAxis : uint8_t
 {
     X = 0,
     Y = 1,
-    Z = 2
+    Z = 2,
+    Any = 3
 };
 
 struct OMModelFace
@@ -65,6 +66,8 @@ struct OMModelPart
     glm::vec3 rotateOrigin;
     OMModelAxis rotateAxis;
     double rotateAngle;
+
+    glm::vec3 rotateAngleExt;
 };
 struct OMModel
 {
@@ -108,6 +111,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto queryPartFaceSecondaryTexture(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
         -> bool override;
     auto queryPartRotationAngleF(int bsid, int pid) -> float override;
+    auto queryPartRotationAngleExt(int bsid, int pid) -> glm::vec3 override;
 
   private:
     int modelId = 0;

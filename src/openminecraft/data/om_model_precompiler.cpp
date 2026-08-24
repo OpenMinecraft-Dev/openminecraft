@@ -23,6 +23,11 @@ OMModelPrecompiler::OMModelPrecompiler(std::string root, OMTextureAtlas *atlas)
 {
 }
 
+auto OMModelPrecompiler::queryPartRotationAngleExt(int bsid, int pid) -> glm::vec3
+{
+    return blockModels[bsid].parts[pid].rotateAngleExt;
+}
+
 static auto fromSide(std::string s) -> OMModelCullSide
 {
     using namespace binary::hash;
@@ -584,14 +589,8 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
                     }
                 }
 
-                bool needToBeSpilt = true;
                 for (auto &fce : elem->getMap()["faces"]->getMap())
                 {
-                    if (!fce.second->getMap().count("tintindex"))
-                    {
-                        needToBeSpilt = false;
-                    }
-
                     auto text = fce.second->getMap()["texture"]->getString();
 
                     if (text[0] == '#' && tex.count(text.substr(1)))
@@ -618,7 +617,6 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
                         }
                     }
                 }
-                modelComplex[modelId] = true;
             }
         }
     }
@@ -634,31 +632,35 @@ auto OMModelPrecompiler::wrapPart(std::shared_ptr<openminecraft::io::json::OMJso
     auto ro = part->getMap().count("rotation") ? part->getMap()["rotation"] : nullptr;
     auto fromv = glm::vec3{from[0]->getNumberFloating(), from[1]->getNumberFloating(), from[2]->getNumberFloating()};
     auto tov = glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
+    auto roCenter = ro ? glm::vec3{static_cast<double>(ro->getMap()["origin"]->getArray()[0]->getNumberFloating()),
+                                   static_cast<double>(ro->getMap()["origin"]->getArray()[1]->getNumberFloating()),
+                                   static_cast<double>(ro->getMap()["origin"]->getArray()[2]->getNumberFloating())}
+                       : glm::vec3{};
+    auto roAngleExt =
+        glm::vec3(ro && ro->getMap().count("x") ? static_cast<float>(ro->getMap()["x"]->getNumberFloating()) : 0.0f,
+                  ro && ro->getMap().count("y") ? static_cast<float>(ro->getMap()["y"]->getNumberFloating()) : 0.0f,
+                  ro && ro->getMap().count("z") ? static_cast<float>(ro->getMap()["z"]->getNumberFloating()) : 0.0f);
 
-    return {
-        mm.count("east") ? wrapFace(mm["east"], OMModelCullSide::East, fromv, tov) : OMModelFace(),
-        mm.count("east") > 0,
-        mm.count("west") ? wrapFace(mm["west"], OMModelCullSide::West, fromv, tov) : OMModelFace(),
-        mm.count("west") > 0,
-        mm.count("down") ? wrapFace(mm["down"], OMModelCullSide::Down, fromv, tov) : OMModelFace(),
-        mm.count("down") > 0,
-        mm.count("up") ? wrapFace(mm["up"], OMModelCullSide::Up, fromv, tov) : OMModelFace(),
-        mm.count("up") > 0,
-        mm.count("south") ? wrapFace(mm["south"], OMModelCullSide::South, fromv, tov) : OMModelFace(),
-        mm.count("south") > 0,
-        mm.count("north") ? wrapFace(mm["north"], OMModelCullSide::North, fromv, tov) : OMModelFace(),
-        mm.count("north") > 0,
-        fromv,
-        tov,
-        part->getMap().count("shade") ? part->getMap()["shade"]->getBoolean() : true,
-        ro != nullptr,
-        ro ? glm::vec3{static_cast<double>(ro->getMap()["origin"]->getArray()[0]->getNumberFloating()),
-                       static_cast<double>(ro->getMap()["origin"]->getArray()[1]->getNumberFloating()),
-                       static_cast<double>(ro->getMap()["origin"]->getArray()[2]->getNumberFloating())}
-           : glm::vec3{},
-        ro && ro->getMap()["axis"] != nullptr ? fromAxis(ro->getMap()["axis"]->getString()) : X,
-        ro && ro->getMap()["angle"] != nullptr ? ro->getMap()["angle"]->getNumberFloating() : 0.0,
-    };
+    return {mm.count("east") ? wrapFace(mm["east"], OMModelCullSide::East, fromv, tov) : OMModelFace(),
+            mm.count("east") > 0,
+            mm.count("west") ? wrapFace(mm["west"], OMModelCullSide::West, fromv, tov) : OMModelFace(),
+            mm.count("west") > 0,
+            mm.count("down") ? wrapFace(mm["down"], OMModelCullSide::Down, fromv, tov) : OMModelFace(),
+            mm.count("down") > 0,
+            mm.count("up") ? wrapFace(mm["up"], OMModelCullSide::Up, fromv, tov) : OMModelFace(),
+            mm.count("up") > 0,
+            mm.count("south") ? wrapFace(mm["south"], OMModelCullSide::South, fromv, tov) : OMModelFace(),
+            mm.count("south") > 0,
+            mm.count("north") ? wrapFace(mm["north"], OMModelCullSide::North, fromv, tov) : OMModelFace(),
+            mm.count("north") > 0,
+            fromv,
+            tov,
+            part->getMap().count("shade") ? part->getMap()["shade"]->getBoolean() : true,
+            ro != nullptr,
+            roCenter,
+            ro && ro->getMap()["axis"] != nullptr ? fromAxis(ro->getMap()["axis"]->getString()) : (ro ? Any : X),
+            ro && ro->getMap()["angle"] != nullptr ? ro->getMap()["angle"]->getNumberFloating() : 0.0,
+            roAngleExt};
 }
 
 auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::io::json::OMJsonNode> face, OMModelCullSide c,

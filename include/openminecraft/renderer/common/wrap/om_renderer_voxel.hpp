@@ -119,6 +119,7 @@ struct OMVoxelComplex
     glm::vec2 voxelUV0, voxelUV1;
     float voxelRotationAngle;
     glm::vec3 voxelRotationCenter, voxelSize;
+    float voxelRotationAngleExt1, voxelRotationAngleExt2;
 };
 enum OMVoxelFacing : uint8_t
 {
@@ -155,6 +156,7 @@ class OMVoxelHandler
     virtual auto queryPartRotationAxis(int bsid, int pid) -> int = 0;
     virtual auto queryPartRotationCenter(int bsid, int pid) -> glm::vec3 = 0;
     virtual auto queryPartRotationAngle(int bsid, int pid) -> int = 0;
+    virtual auto queryPartRotationAngleExt(int bsid, int pid) -> glm::vec3 = 0;
     virtual auto querySoild(int bsid) -> bool = 0;
     virtual auto queryOcclusionShape(int bsid) -> OMVoxelShape = 0;
     virtual auto queryPartAmbientOcclusion(int bsid, int pid) -> bool = 0;
@@ -236,6 +238,10 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     auto queryPartRotationAngleF(int bsid, int pid) -> float override
     {
         return 0.0f;
+    }
+    auto queryPartRotationAngleExt(int bsid, int pid) -> glm::vec3 override
+    {
+        return {};
     }
 };
 

@@ -132,7 +132,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererT
                                    "facing=east,half=lower,hinge=left,open=false");
     blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_door"),
                                    "facing=east,half=upper,hinge=left,open=false");
-    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_hanging_sign"), "attached=false,rotation=0");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_hanging_sign"), "attached=false,rotation=3");
 
     voxelHandler->composeBlock(
         {voxelHandler->loadModelPartWithArgs(data::OMIdentifier("minecraft:block/cherry_button"), 0, 0, 0, false)},

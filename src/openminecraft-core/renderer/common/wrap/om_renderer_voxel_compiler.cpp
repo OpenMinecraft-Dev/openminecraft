@@ -2,6 +2,7 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include <array>
 #include <cstdint>
+#include <iostream>
 #include <tuple>
 
 namespace openminecraft::renderer::common::wrap
@@ -110,8 +111,8 @@ static constexpr auto packVoxelComplex(uint8_t x, uint8_t y, uint8_t z, OMVoxelF
                                        uint8_t bl1, uint8_t bl2, uint8_t bl3, uint8_t bl4, uint8_t ao1, uint8_t ao2,
                                        uint8_t ao3, uint8_t ao4, bool shade, bool colormap, glm::vec3 modelOffset,
                                        glm::vec2 uv0, glm::vec2 uv1, uint8_t rotationAxis, float rotationAngle,
-                                       glm::vec3 rotationCenter, glm::vec3 modelSize)
-    -> std::tuple<int32_t, int32_t, int32_t, glm::vec3, glm::vec2, glm::vec2, float, glm::vec3, glm::vec3>
+                                       glm::vec3 rotationCenter, glm::vec3 modelSize, glm::vec3 angleExt)
+    -> std::tuple<int32_t, int32_t, int32_t, glm::vec3, glm::vec2, glm::vec2, float, glm::vec3, glm::vec3, float, float>
 {
     return std::make_tuple(x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | (texSec << 12) |
                                ((rotationAxis & 3) << 10) | (shade << 9) | (colormap << 8) | (ao1 << 6) | (ao2 << 4) |
@@ -119,7 +120,8 @@ static constexpr auto packVoxelComplex(uint8_t x, uint8_t y, uint8_t z, OMVoxelF
                            (rotation << 30) | ((tex & 0x3fff) << 16) | chkid,
                            ((l1 & 0xf) << 28) | ((l2 & 0xf) << 24) | ((l3 & 0xf) << 20) | ((l4 & 0xf) << 16) |
                                ((bl1 & 0xf) << 12) | ((bl2 & 0xf) << 8) | ((bl3 & 0xf) << 4) | (bl4 & 0xf),
-                           modelOffset, uv0, uv1, rotationAngle, rotationCenter, modelSize);
+                           modelOffset, uv0, uv1, rotationAxis == 3 ? angleExt.x : rotationAngle, rotationCenter,
+                           modelSize, angleExt.y, angleExt.z);
 }
 
 auto OMVoxelCompiler::existSoild(const world::OMChunk<16> &chunk,
@@ -311,10 +313,12 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                             v.first.x, v.first.y, v.first.z, f, texSec, handler->queryPartFaceTex(v.second, i, f),
                             chunkid, handler->queryPartFaceRotation(v.second, i, f), 15, 15, 15, 15, 0, 0, 0, 0, ao1,
                             ao2, ao3, ao4, handler->queryPartShade(v.second, i), false, aabb.offset, {uv.x, uv.y},
-                            {uv.z, uv.w}, handler->queryPartRotationAxis(v.second, i), rotationAngle, raxis, aabb.size);
+                            {uv.z, uv.w}, handler->queryPartRotationAxis(v.second, i), rotationAngle, raxis, aabb.size,
+                            handler->queryPartRotationAngleExt(v.second, i));
                         committer2(OMVoxelComplex{std::get<0>(vox), std::get<1>(vox), std::get<2>(vox),
                                                   std::get<3>(vox), std::get<4>(vox), std::get<5>(vox),
-                                                  std::get<6>(vox), std::get<7>(vox), std::get<8>(vox)});
+                                                  std::get<6>(vox), std::get<7>(vox), std::get<8>(vox),
+                                                  std::get<9>(vox), std::get<10>(vox)});
                         continue;
                     }
 

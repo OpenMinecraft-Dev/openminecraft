@@ -134,16 +134,26 @@ void main()
     worldPos *= modelSize;
     worldPos += modelOffset;
 
-    vec3 rotAxis = vec3(0.0);
-    if (rotationAxis == 0)
-        rotAxis = vec3(1.0, 0.0, 0.0);
-    else if (rotationAxis == 1)
-        rotAxis = vec3(0.0, 1.0, 0.0);
-    else if (rotationAxis == 2)
-        rotAxis = vec3(0.0, 0.0, 1.0);
+    if (rotationAxis != 3)
+    {
+        vec3 rotAxis = vec3(0.0);
+        if (rotationAxis == 0)
+            rotAxis = vec3(1.0, 0.0, 0.0);
+        else if (rotationAxis == 1)
+            rotAxis = vec3(0.0, 1.0, 0.0);
+        else if (rotationAxis == 2)
+            rotAxis = vec3(0.0, 0.0, 1.0);
 
-    worldPos = rotateVec(worldPos - rotationCenter / vec3(16.0), radians(rotationAngle), rotAxis) +
-               rotationCenter / vec3(16.0);
+        worldPos = rotateVec(worldPos - rotationCenter / vec3(16.0), radians(rotationAngle), rotAxis) +
+                   rotationCenter / vec3(16.0);
+    }
+    else
+    {
+        worldPos = rotateVec(worldPos - rotationCenter / vec3(16.0), radians(rotationAngle), vec3(1.0, 0.0, 0.0));
+        worldPos = rotateVec(worldPos, radians(voxelRotationAngleExt1), vec3(0.0, 1.0, 0.0));
+        worldPos =
+            rotateVec(worldPos, radians(voxelRotationAngleExt2), vec3(0.0, 0.0, 1.0)) + rotationCenter / vec3(16.0);
+    }
 
     worldPos += vec3(bx, by, bz);
 
