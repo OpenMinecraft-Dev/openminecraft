@@ -121,7 +121,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererT
         {
             for (int cz = -1; cz < 8; ++cz)
             {
-                world::OMChunk<16> cnk(cx, cy, cz);
+                world::OMChunk<16> cnk(cx + 0x7fffffffffffffff, cy, cz);
                 cnk.setBlock(0, 0, 0, blockStone);
                 cnk.setBlock(0, 1, 1, blockCopperOre);
                 cnk.setBlock(2, 0, 0, blockGrassBlock);
