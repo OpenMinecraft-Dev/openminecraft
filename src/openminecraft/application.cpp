@@ -105,6 +105,11 @@ void OMApplication::registerBlocks()
     blockRegistery.registerItem(OMIdentifier("minecraft:cherry_stairs"), OMBlock().isSoild(false));
     blockRegistery.registerItem(OMIdentifier("minecraft:cherry_door"), OMBlock().isSoild(false));
     blockRegistery.registerItem(OMIdentifier("minecraft:cherry_hanging_sign"), OMBlock().isSoild(false));
+    blockRegistery.registerItem(OMIdentifier("minecraft:cherry_button"), OMBlock().isSoild(false));
+    blockRegistery.registerItem(OMIdentifier("minecraft:cherry_shelf"), OMBlock().isSoild(false));
+    blockRegistery.registerItem(OMIdentifier("minecraft:grass_block"), OMBlock().isSoild(true));
+    blockRegistery.registerItem(OMIdentifier("minecraft:cherry_fence_gate"), OMBlock().isSoild(false));
+    blockRegistery.registerItem(OMIdentifier("minecraft:rail"), OMBlock().isSoild(false));
 }
 
 void OMApplication::mainLoop(OMBackend backend)

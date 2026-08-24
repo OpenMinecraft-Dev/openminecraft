@@ -133,19 +133,13 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererT
     blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_door"),
                                    "facing=east,half=upper,hinge=left,open=false");
     blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_hanging_sign"), "attached=false,rotation=3");
-
-    voxelHandler->composeBlock(
-        {voxelHandler->loadModelPartWithArgs(data::OMIdentifier("minecraft:block/cherry_button"), 0, 0, 0, false)},
-        false);
-    voxelHandler->composeBlock(
-        {voxelHandler->loadModelPartWithArgs(data::OMIdentifier("minecraft:block/cherry_shelf"), 0, 90, 0, false),
-         voxelHandler->loadModelPartWithArgs(data::OMIdentifier("minecraft:block/cherry_shelf_unpowered"), 0, 90, 0,
-                                             false)},
-        false);
-    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/grass_block"))});
-    voxelHandler->composeBlock(
-        {voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/cherry_fence_gate_open"))}, false);
-    voxelHandler->composeBlock({voxelHandler->loadModelPart(data::OMIdentifier("minecraft:block/rail"))}, false);
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_button"),
+                                   "face=floor,facing=north,powered=false");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_shelf"), "facing=east,powered=false");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:grass_block"), "snowy=false");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_fence_gate"),
+                                   "facing=south,in_wall=false,open=true");
+    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:rail"), "shape=north_south");
 
     textureAtlas->build();
 

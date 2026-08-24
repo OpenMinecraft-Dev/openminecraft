@@ -7,6 +7,7 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/json/om_io_ast_builder_json.hpp"
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 using namespace openminecraft::io;
