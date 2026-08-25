@@ -78,11 +78,6 @@ void OMBlockstateResolver::resolve(OMIdentifier ident)
     }
     resolverCache[ident] = ll;
 
-    if (blk.properties.empty())
-    {
-        return;
-    }
-
     std::vector<OMBlockState> states = {};
     states.emplace_back("");
 
@@ -193,14 +188,10 @@ auto OMBlockstateResolver::fetchModelS(OMIdentifier ident, std::string state) ->
     {
         return states[ident][st];
     }
-
-    for (auto &l : states[ident])
+    else
     {
-        logger.warn("{}", l.first.tosimple());
+        return -1;
     }
-
-    logger.warn("cache miss for {}:{}[{}]", ident.namesp, ident.path, state);
-    return fetchModel(ident, st);
 }
 
 auto OMBlockstateResolver::fetchModel(OMIdentifier ident, OMBlockState state) -> int
