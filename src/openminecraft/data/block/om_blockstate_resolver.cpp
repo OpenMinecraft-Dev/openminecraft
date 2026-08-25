@@ -195,7 +195,6 @@ auto OMBlockstateResolver::fetchModel(OMIdentifier ident, OMBlockState state) ->
 {
     auto &blk = blockRegistery.getRegistry(ident);
     auto &st = state;
-    auto hsh = st.hash();
 
     if (states[ident].count(st))
     {
@@ -206,7 +205,14 @@ auto OMBlockstateResolver::fetchModel(OMIdentifier ident, OMBlockState state) ->
     {
         for (auto &var : resolverCache[ident]->getMap()["variants"]->getMap())
         {
-            if (OMBlockState(var.first).hash() == hsh)
+            auto bs = OMBlockState(var.first);
+            for (auto &k : bs.properties)
+            {
+                if (st.properties[k.first] != k.second)
+                {
+                    goto next;
+                }
+            }
             {
                 std::vector<int> ids = {};
                 if (var.second->type() == openminecraft::io::json::Object)
@@ -225,6 +231,8 @@ auto OMBlockstateResolver::fetchModel(OMIdentifier ident, OMBlockState state) ->
                 states[ident][st] = i;
                 return i;
             }
+        next:
+            continue;
         }
     }
     else if (resolverCache[ident]->getMap().count("multipart"))

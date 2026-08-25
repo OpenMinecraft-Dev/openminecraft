@@ -85,11 +85,16 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererT
 
     voxelHandler = new data::OMModelPrecompiler("/external", textureAtlas);
     blockstateResolver = new data::block::OMBlockstateResolver("/external", *voxelHandler);
+    blockstateResolver->resolve(data::OMIdentifier("minecraft:air"));
+    auto blockAir = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:air"), "");
+
     for (auto &p : data::block::blockRegistery.nameToId)
     {
-        blockstateResolver->resolve(p.first);
+        if (p.first.namesp != "minecraft" || p.first.path != "air")
+        {
+            blockstateResolver->resolve(p.first);
+        }
     }
-    auto blockAir = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:air"), "");
     auto blockStone = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:stone"), "");
     auto blockCobblestone = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cobblestone"), "");
     auto blockCoalOre = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:coal_ore"), "");
