@@ -46,7 +46,6 @@ auto OMRendererShaderManager::preprocess(std::string name, OMShaderType type, OM
                                          basics::OMVertexFormat &format) -> std::shared_ptr<OMShader>
 {
     logger.debug("loading {}", name);
-    format.debugState();
 
     std::string vtxdef = "";
     int i = 0;

@@ -14,6 +14,10 @@ class OMBlockState
   public:
     OMBlockState(std::string props)
     {
+        if (props == "")
+        {
+            return;
+        }
         int current = 0;
         std::string::size_type next;
         while ((next = props.find_first_of(",", current)) != std::string::npos)
@@ -78,7 +82,7 @@ class OMBlockState
         return hash() == o.hash();
     }
 
-    auto tosimple() -> std::string
+    auto tosimple() const -> std::string
     {
         std::string f = "";
 

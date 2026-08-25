@@ -194,6 +194,11 @@ auto OMBlockstateResolver::fetchModelS(OMIdentifier ident, std::string state) ->
         return states[ident][st];
     }
 
+    for (auto &l : states[ident])
+    {
+        logger.warn("{}", l.first.tosimple());
+    }
+
     logger.warn("cache miss for {}:{}[{}]", ident.namesp, ident.path, state);
     return fetchModel(ident, st);
 }

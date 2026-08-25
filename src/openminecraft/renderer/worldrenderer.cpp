@@ -115,8 +115,9 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererT
     auto blockCherryShelf = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_shelf"),
                                                             "facing=east,powered=false,side_chain=unconnected");
     auto blockGrassBlock = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:grass_block"), "snowy=false");
-    auto blockCherryFence = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_fence_gate"),
-                                                            "facing=south,in_wall=false,open=true,water_logged=false");
+    auto blockCherryFence =
+        blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_fence_gate"),
+                                        "facing=south,in_wall=false,open=true,powered=false,water_logged=false");
     auto blockRail = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:rail"), "shape=north_south");
     textureAtlas->build();
 

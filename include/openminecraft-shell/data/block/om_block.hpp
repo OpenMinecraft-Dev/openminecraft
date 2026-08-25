@@ -90,10 +90,6 @@ class OMBlock
     {
         return prop("hinge", {"left", "right"});
     }
-    auto propAttached() -> OMBlock &
-    {
-        return prop("attached", {"ceiling", "floor", "wall"});
-    }
     auto propFace() -> OMBlock &
     {
         return prop("face", {"ceiling", "floor", "wall"});
