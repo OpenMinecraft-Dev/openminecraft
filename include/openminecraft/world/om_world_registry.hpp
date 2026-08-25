@@ -11,11 +11,13 @@ template <typename K, typename T> class OMWorldRegistry
     OMWorldRegistry() = default;
     ~OMWorldRegistry() = default;
 
-    void registerItem(K name, T &item)
+    auto registerItem(K name, T &item) -> T &
     {
         nameToId[std::move(name)] = nextId;
         idToRegistry[nextId] = item;
         ++nextId;
+
+        return idToRegistry[nextId - 1];
     }
     auto id(K name) -> uint32_t
     {

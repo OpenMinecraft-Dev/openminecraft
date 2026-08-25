@@ -10,7 +10,6 @@ namespace openminecraft::renderer::common::basics
 OMCamera::OMCamera(OMRenderer *renderer, glm::vec3 location, float yaw, float pitch)
     : renderer(renderer), logger("OMCamera", this), position(location), yaw(yaw), pitch(pitch)
 {
-    position.chunkx = 0x7fffffffffffffff;
 }
 
 auto OMCamera::fetchViewMat() -> glm::mat4

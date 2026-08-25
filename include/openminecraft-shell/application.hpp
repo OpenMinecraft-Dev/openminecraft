@@ -16,8 +16,6 @@ class OMApplication
     auto entry() -> int;
     void mainLoop(openminecraft::renderer::OMBackend backend);
 
-    void registerBlocks();
-
   private:
     std::vector<std::string> args;
     openminecraft::log::OMLogger logger;

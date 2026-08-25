@@ -7,7 +7,6 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/json/om_io_ast_builder_json.hpp"
 #include <memory>
-#include <stdexcept>
 #include <vector>
 
 using namespace openminecraft::io;
@@ -23,20 +22,20 @@ auto OMBlockstateResolver::identFrom(std::shared_ptr<io::json::OMJsonNode> node)
     bool uvlock = node->getMap().count("uvlock") ? node->getMap()["uvlock"]->getBoolean() : false;
     return {ident, xrot, yrot, zrot, uvlock};
 }
-void OMBlockstateResolver::resolveModel(OMBlock &blk, std::shared_ptr<io::json::OMJsonNode> node)
+void OMBlockstateResolver::resolveModel(OMIdentifier id, std::shared_ptr<io::json::OMJsonNode> node)
 {
     auto i = identFrom(node);
-    if (blk.requiredModels.count(i))
+    if (requiredModels[id].count(i))
     {
         return;
     }
-    blk.requiredModels[i] = compiler.loadModelPartWithArgs(i.location, i.xrot, i.yrot, i.zrot, i.uvlock);
+    requiredModels[id][i] = compiler.loadModelPartWithArgs(i.location, i.xrot, i.yrot, i.zrot, i.uvlock);
 }
 void OMBlockstateResolver::resolve(OMIdentifier ident)
 {
     auto &blk = blockRegistery.getRegistry(ident);
-    blk.states.clear();
-    blk.requiredModels.clear();
+    states[ident].clear();
+    requiredModels[ident].clear();
 
     auto ff = vfs::fsfetch(fmt::format("{}/{}/blockstates/{}.json", root, ident.namesp, ident.path));
     json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(ff));
@@ -48,13 +47,13 @@ void OMBlockstateResolver::resolve(OMIdentifier ident)
         {
             if (l.second->type() == openminecraft::io::json::Object)
             {
-                resolveModel(blk, l.second);
+                resolveModel(ident, l.second);
             }
             else
             {
                 for (auto &lp : l.second->getArray())
                 {
-                    resolveModel(blk, lp);
+                    resolveModel(ident, lp);
                 }
             }
         }
@@ -66,18 +65,43 @@ void OMBlockstateResolver::resolve(OMIdentifier ident)
             auto &ll = l->getMap()["apply"];
             if (ll->type() == openminecraft::io::json::Object)
             {
-                resolveModel(blk, ll);
+                resolveModel(ident, ll);
             }
             else
             {
                 for (auto &lp : ll->getArray())
                 {
-                    resolveModel(blk, lp);
+                    resolveModel(ident, lp);
                 }
             }
         }
     }
-    blk.resolverCache = ll;
+    resolverCache[ident] = ll;
+
+    if (blk.properties.empty())
+    {
+        return;
+    }
+
+    std::vector<OMBlockState> states = {};
+    states.emplace_back("");
+
+    for (const auto &pp : blk.properties)
+    {
+        auto oldStates = states;
+        std::vector<OMBlockState> newStates;
+        for (const auto &v : pp.second)
+        {
+            for (const auto &os : oldStates)
+            {
+                auto raw = os.properties;
+                raw[pp.first] = v;
+                newStates.emplace_back(raw);
+            }
+        }
+
+        states = newStates;
+    }
 }
 
 static auto caseCheck(OMBlockState &bs, std::shared_ptr<json::OMJsonNode> node) -> bool
@@ -163,40 +187,40 @@ auto OMBlockstateResolver::fetchModel(OMIdentifier ident, std::string state) -> 
     auto st = OMBlockState(state);
     auto hsh = st.hash();
 
-    if (blk.states.count(st))
+    if (states[ident].count(st))
     {
-        return blk.states[st];
+        return states[ident][st];
     }
 
-    if (blk.resolverCache->getMap().count("variants"))
+    if (resolverCache[ident]->getMap().count("variants"))
     {
-        for (auto &var : blk.resolverCache->getMap()["variants"]->getMap())
+        for (auto &var : resolverCache[ident]->getMap()["variants"]->getMap())
         {
             if (OMBlockState(var.first).hash() == hsh)
             {
                 std::vector<int> ids = {};
                 if (var.second->type() == openminecraft::io::json::Object)
                 {
-                    ids.emplace_back(blk.requiredModels[identFrom(var.second)]);
+                    ids.emplace_back(requiredModels[ident][identFrom(var.second)]);
                 }
                 else
                 {
                     for (auto &lp : var.second->getArray())
                     {
-                        ids.emplace_back(blk.requiredModels[identFrom(lp)]);
+                        ids.emplace_back(requiredModels[ident][identFrom(lp)]);
                     }
                 }
 
                 auto i = compiler.composeBlock(ids, blk.soild);
-                blk.states[st] = i;
+                states[ident][st] = i;
                 return i;
             }
         }
     }
-    else if (blk.resolverCache->getMap().count("multipart"))
+    else if (resolverCache[ident]->getMap().count("multipart"))
     {
         std::vector<int> ids = {};
-        for (auto &l : blk.resolverCache->getMap()["multipart"]->getArray())
+        for (auto &l : resolverCache[ident]->getMap()["multipart"]->getArray())
         {
             if (!caseCheck(st, l->getMap().count("when") ? l->getMap()["when"] : nullptr))
             {
@@ -206,19 +230,19 @@ auto OMBlockstateResolver::fetchModel(OMIdentifier ident, std::string state) -> 
             auto &ll = l->getMap()["apply"];
             if (ll->type() == openminecraft::io::json::Object)
             {
-                ids.emplace_back(blk.requiredModels[identFrom(ll)]);
+                ids.emplace_back(requiredModels[ident][identFrom(ll)]);
             }
             else
             {
                 for (auto &lp : ll->getArray())
                 {
-                    ids.emplace_back(blk.requiredModels[identFrom(lp)]);
+                    ids.emplace_back(requiredModels[ident][identFrom(lp)]);
                 }
             }
         }
 
         auto i = compiler.composeBlock(ids, blk.soild);
-        blk.states[st] = i;
+        states[ident][st] = i;
         return i;
     }
 

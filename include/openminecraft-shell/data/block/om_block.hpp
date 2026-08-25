@@ -4,6 +4,7 @@
 #include "openminecraft-shell/data/block/om_blockstate.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft/io/json/om_io_ast_json.hpp"
+#include <initializer_list>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -48,10 +49,6 @@ namespace openminecraftshell::data::block
 class OMBlock
 {
   public:
-    OMBlock(std::unordered_map<OMBlockState, int> bs) : states(std::move(bs))
-    {
-    }
-
     OMBlock() = default;
     ~OMBlock() = default;
     auto isSoild(bool v) -> OMBlock &
@@ -60,10 +57,30 @@ class OMBlock
         return *this;
     }
 
-    std::unordered_map<OMBlockState, int> states;
-    std::unordered_map<OMBlockModelIdentifier, int> requiredModels;
-    std::shared_ptr<openminecraft::io::json::OMJsonNode> resolverCache = nullptr;
+    auto prop(std::string n, std::initializer_list<std::string> values) -> OMBlock &
+    {
+        properties[n] = values;
+        return *this;
+    }
+    auto propFacing() -> OMBlock &
+    {
+        return prop("facing", {"east", "west", "north", "south"});
+    }
+    auto propInWall() -> OMBlock &
+    {
+        return prop("in_wall", {"true", "false"});
+    }
+    auto propOpen() -> OMBlock &
+    {
+        return prop("open", {"true", "false"});
+    }
+    auto propPowered() -> OMBlock &
+    {
+        return prop("powered", {"true", "false"});
+    }
+
     bool soild = true;
+    std::unordered_map<std::string, std::vector<std::string>> properties;
 
     auto operator=(const OMBlock &other) -> OMBlock & = default;
 };

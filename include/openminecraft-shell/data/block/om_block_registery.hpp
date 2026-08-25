@@ -10,6 +10,7 @@ using namespace openminecraft::world;
 namespace openminecraftshell::data::block
 {
 extern OMWorldRegistry<OMIdentifier, OMBlock> blockRegistery;
-}
+void registerBlocks();
+} // namespace openminecraftshell::data::block
 
 #endif
