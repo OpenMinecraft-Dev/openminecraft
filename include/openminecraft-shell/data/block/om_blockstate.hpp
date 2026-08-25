@@ -78,6 +78,18 @@ class OMBlockState
         return hash() == o.hash();
     }
 
+    auto tosimple() -> std::string
+    {
+        std::string f = "";
+
+        for (auto &p : properties)
+        {
+            f += (p.first + "=" + p.second + ",");
+        }
+
+        return f.substr(0, f.size() - 1);
+    }
+
     std::unordered_map<std::string, std::string> properties;
 };
 } // namespace openminecraftshell::data::block

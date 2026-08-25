@@ -14,7 +14,7 @@ void registerBlocks()
     blockRegistery.registerItem(OMIdentifier("minecraft:iron_ore"), OMBlock().isSoild(true));
     blockRegistery.registerItem(OMIdentifier("minecraft:dirt"), OMBlock().isSoild(true));
     blockRegistery.registerItem(OMIdentifier("minecraft:copper_ore"), OMBlock().isSoild(true));
-    blockRegistery.registerItem(OMIdentifier("minecraft:tall_grass"), OMBlock().isSoild(false));
+    blockRegistery.registerItem(OMIdentifier("minecraft:tall_grass"), OMBlock().isSoild(false).propHalf());
     blockRegistery.registerItem(OMIdentifier("minecraft:cherry_stairs"), OMBlock().isSoild(false));
     blockRegistery.registerItem(OMIdentifier("minecraft:cherry_door"), OMBlock().isSoild(false));
     blockRegistery.registerItem(OMIdentifier("minecraft:cherry_hanging_sign"), OMBlock().isSoild(false));

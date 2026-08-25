@@ -22,7 +22,8 @@ class OMBlockstateResolver
     ~OMBlockstateResolver() = default;
 
     void resolve(OMIdentifier);
-    auto fetchModel(OMIdentifier, std::string state) -> int;
+    auto fetchModel(OMIdentifier, OMBlockState state) -> int;
+    auto fetchModelS(OMIdentifier, std::string state) -> int;
 
   private:
     void resolveModel(OMIdentifier, std::shared_ptr<io::json::OMJsonNode>);

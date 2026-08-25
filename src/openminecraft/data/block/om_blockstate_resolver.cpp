@@ -102,6 +102,11 @@ void OMBlockstateResolver::resolve(OMIdentifier ident)
 
         states = newStates;
     }
+
+    for (auto &s : states)
+    {
+        fetchModel(ident, s);
+    }
 }
 
 static auto caseCheck(OMBlockState &bs, std::shared_ptr<json::OMJsonNode> node) -> bool
@@ -181,10 +186,15 @@ static auto caseCheck(OMBlockState &bs, std::shared_ptr<json::OMJsonNode> node) 
     return true;
 }
 
-auto OMBlockstateResolver::fetchModel(OMIdentifier ident, std::string state) -> int
+auto OMBlockstateResolver::fetchModelS(OMIdentifier ident, std::string state) -> int
+{
+    return fetchModel(ident, OMBlockState(state));
+}
+
+auto OMBlockstateResolver::fetchModel(OMIdentifier ident, OMBlockState state) -> int
 {
     auto &blk = blockRegistery.getRegistry(ident);
-    auto st = OMBlockState(state);
+    auto &st = state;
     auto hsh = st.hash();
 
     if (states[ident].count(st))

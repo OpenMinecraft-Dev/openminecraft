@@ -78,6 +78,10 @@ class OMBlock
     {
         return prop("powered", {"true", "false"});
     }
+    auto propHalf() -> OMBlock &
+    {
+        return prop("half", {"upper", "lower"});
+    }
 
     bool soild = true;
     std::unordered_map<std::string, std::vector<std::string>> properties;

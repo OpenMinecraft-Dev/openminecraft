@@ -89,31 +89,31 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererT
     {
         blockstateResolver->resolve(p.first);
     }
-    blockstateResolver->fetchModel(data::OMIdentifier("minecraft:air"), "");
-    auto blockStone = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:stone"), "");
-    auto blockCobblestone = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cobblestone"), "");
-    auto blockCoalOre = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:coal_ore"), "");
-    auto blockIronOre = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:iron_ore"), "");
-    auto blockDirt = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:dirt"), "");
-    auto blockCopperOre = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:copper_ore"), "");
-    auto blockTallGrassL = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:tall_grass"), "half=lower");
-    auto blockTallGrassH = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:tall_grass"), "half=upper");
-    auto blockCherryStairs = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_stairs"),
-                                                            "facing=east,half=bottom,shape=straight");
-    auto blockCherryDoorL = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_door"),
-                                                           "facing=east,half=lower,hinge=left,open=false");
-    auto blockCherryDoorH = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_door"),
-                                                           "facing=east,half=upper,hinge=left,open=false");
-    auto blockCherrySign = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_hanging_sign"),
-                                                          "attached=false,rotation=3");
-    auto blockCherryButton = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_button"),
-                                                            "face=floor,facing=north,powered=false");
+    auto blockAir = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:air"), "");
+    auto blockStone = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:stone"), "");
+    auto blockCobblestone = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cobblestone"), "");
+    auto blockCoalOre = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:coal_ore"), "");
+    auto blockIronOre = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:iron_ore"), "");
+    auto blockDirt = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:dirt"), "");
+    auto blockCopperOre = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:copper_ore"), "");
+    auto blockTallGrassL = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:tall_grass"), "half=lower");
+    auto blockTallGrassH = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:tall_grass"), "half=upper");
+    auto blockCherryStairs = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_stairs"),
+                                                             "facing=east,half=bottom,shape=straight");
+    auto blockCherryDoorL = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_door"),
+                                                            "facing=east,half=lower,hinge=left,open=false");
+    auto blockCherryDoorH = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_door"),
+                                                            "facing=east,half=upper,hinge=left,open=false");
+    auto blockCherrySign = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_hanging_sign"),
+                                                           "attached=false,rotation=3");
+    auto blockCherryButton = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_button"),
+                                                             "face=floor,facing=north,powered=false");
     auto blockCherryShelf =
-        blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_shelf"), "facing=east,powered=false");
-    auto blockGrassBlock = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:grass_block"), "snowy=false");
-    auto blockCherryFence = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:cherry_fence_gate"),
-                                                           "facing=south,in_wall=false,open=true");
-    auto blockRail = blockstateResolver->fetchModel(data::OMIdentifier("minecraft:rail"), "shape=north_south");
+        blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_shelf"), "facing=east,powered=false");
+    auto blockGrassBlock = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:grass_block"), "snowy=false");
+    auto blockCherryFence = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_fence_gate"),
+                                                            "facing=south,in_wall=false,open=true");
+    auto blockRail = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:rail"), "shape=north_south");
     textureAtlas->build();
 
     auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
