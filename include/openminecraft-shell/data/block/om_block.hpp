@@ -82,6 +82,30 @@ class OMBlock
     {
         return prop("half", {"upper", "lower"});
     }
+    auto propWaterlogged() -> OMBlock &
+    {
+        return prop("water_logged", {"true", "false"});
+    }
+    auto propHinge() -> OMBlock &
+    {
+        return prop("hinge", {"left", "right"});
+    }
+    auto propAttached() -> OMBlock &
+    {
+        return prop("attached", {"ceiling", "floor", "wall"});
+    }
+    auto propFace() -> OMBlock &
+    {
+        return prop("face", {"ceiling", "floor", "wall"});
+    }
+    auto propRotation() -> OMBlock &
+    {
+        return prop("rotation", {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"});
+    }
+    auto propSnowy() -> OMBlock &
+    {
+        return prop("snowy", {"true", "false"});
+    }
 
     bool soild = true;
     std::unordered_map<std::string, std::vector<std::string>> properties;

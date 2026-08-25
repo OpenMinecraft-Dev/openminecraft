@@ -102,21 +102,21 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererT
     auto blockCopperOre = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:copper_ore"), "");
     auto blockTallGrassL = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:tall_grass"), "half=lower");
     auto blockTallGrassH = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:tall_grass"), "half=upper");
-    auto blockCherryStairs = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_stairs"),
-                                                             "facing=east,half=bottom,shape=straight");
+    auto blockCherryStairs = blockstateResolver->fetchModelS(
+        data::OMIdentifier("minecraft:cherry_stairs"), "facing=east,half=bottom,shape=straight,water_logged=false");
     auto blockCherryDoorL = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_door"),
                                                             "facing=east,half=lower,hinge=left,open=false");
     auto blockCherryDoorH = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_door"),
                                                             "facing=east,half=upper,hinge=left,open=false");
     auto blockCherrySign = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_hanging_sign"),
-                                                           "attached=false,rotation=3");
+                                                           "attached=false,rotation=3,water_logged=false");
     auto blockCherryButton = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_button"),
                                                              "face=floor,facing=north,powered=false");
-    auto blockCherryShelf =
-        blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_shelf"), "facing=east,powered=false");
+    auto blockCherryShelf = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_shelf"),
+                                                            "facing=east,powered=false,side_chain=unconnected");
     auto blockGrassBlock = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:grass_block"), "snowy=false");
     auto blockCherryFence = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_fence_gate"),
-                                                            "facing=south,in_wall=false,open=true");
+                                                            "facing=south,in_wall=false,open=true,water_logged=false");
     auto blockRail = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:rail"), "shape=north_south");
     textureAtlas->build();
 

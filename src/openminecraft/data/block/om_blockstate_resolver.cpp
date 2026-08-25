@@ -188,7 +188,14 @@ static auto caseCheck(OMBlockState &bs, std::shared_ptr<json::OMJsonNode> node) 
 
 auto OMBlockstateResolver::fetchModelS(OMIdentifier ident, std::string state) -> int
 {
-    return fetchModel(ident, OMBlockState(state));
+    auto st = OMBlockState(state);
+    if (states[ident].count(st))
+    {
+        return states[ident][st];
+    }
+
+    logger.warn("cache miss for {}:{}[{}]", ident.namesp, ident.path, state);
+    return fetchModel(ident, st);
 }
 
 auto OMBlockstateResolver::fetchModel(OMIdentifier ident, OMBlockState state) -> int
