@@ -29,7 +29,6 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <thread>
-#include <unistd.h>
 #include <utility>
 
 using namespace openminecraft::renderer::common;
