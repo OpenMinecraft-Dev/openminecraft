@@ -22,7 +22,7 @@ class OMBlockstateResolver
     ~OMBlockstateResolver() = default;
 
     void resolve(OMIdentifier);
-    auto fetchModel(OMIdentifier, OMBlockState state) -> int;
+    void buildModel(OMIdentifier, OMBlockState state);
     auto fetchModelS(OMIdentifier, std::string state) -> int;
 
   private:

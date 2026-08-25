@@ -1,0 +1,42 @@
+#include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
+#include "fmt/format.h"
+#include "openminecraft-shell/data/block/om_block_registery.hpp"
+#include "openminecraft-shell/data/om_identifier.hpp"
+#include <iostream>
+
+namespace openminecraftshell::data::block
+{
+openminecraft::world::OMWorldRegistry<OMIdentifier, OMBlockStateCombined> blockstateRegistry;
+
+void registerBlockstates()
+{
+    for (auto &l : blockRegistery.nameToId)
+    {
+        std::vector<OMBlockState> states = {};
+        states.emplace_back("");
+
+        for (const auto &pp : blockRegistery.getRegistry(l.first).properties)
+        {
+            auto oldStates = states;
+            std::vector<OMBlockState> newStates;
+            for (const auto &v : pp.second)
+            {
+                for (const auto &os : oldStates)
+                {
+                    auto raw = os.properties;
+                    raw[pp.first] = v;
+                    newStates.emplace_back(raw);
+                }
+            }
+
+            states = newStates;
+        }
+        for (auto &st : states)
+        {
+            auto c = OMBlockStateCombined{l.first, st};
+            blockstateRegistry.registerItem(
+                OMIdentifier(l.first.namesp, fmt::format("{}[{}]", l.first.path, st.tosimple())), c);
+        }
+    }
+}
+} // namespace openminecraftshell::data::block

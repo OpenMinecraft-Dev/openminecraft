@@ -56,6 +56,9 @@ class OMBlockState
     {
         this->properties = properties;
     }
+    OMBlockState() : OMBlockState("")
+    {
+    }
     ~OMBlockState()
     {
     }
@@ -84,9 +87,11 @@ class OMBlockState
 
     auto tosimple() const -> std::string
     {
+        std::vector<std::pair<std::string, std::string>> sortedProps(properties.begin(), properties.end());
+        std::sort(sortedProps.begin(), sortedProps.end());
         std::string f = "";
 
-        for (auto &p : properties)
+        for (auto &p : sortedProps)
         {
             f += (p.first + "=" + p.second + ",");
         }

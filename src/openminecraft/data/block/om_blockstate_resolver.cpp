@@ -77,31 +77,6 @@ void OMBlockstateResolver::resolve(OMIdentifier ident)
         }
     }
     resolverCache[ident] = ll;
-
-    std::vector<OMBlockState> states = {};
-    states.emplace_back("");
-
-    for (const auto &pp : blk.properties)
-    {
-        auto oldStates = states;
-        std::vector<OMBlockState> newStates;
-        for (const auto &v : pp.second)
-        {
-            for (const auto &os : oldStates)
-            {
-                auto raw = os.properties;
-                raw[pp.first] = v;
-                newStates.emplace_back(raw);
-            }
-        }
-
-        states = newStates;
-    }
-
-    for (auto &s : states)
-    {
-        fetchModel(ident, s);
-    }
 }
 
 static auto caseCheck(OMBlockState &bs, std::shared_ptr<json::OMJsonNode> node) -> bool
@@ -190,18 +165,18 @@ auto OMBlockstateResolver::fetchModelS(OMIdentifier ident, std::string state) ->
     }
     else
     {
-        return -1;
+        return 0;
     }
 }
 
-auto OMBlockstateResolver::fetchModel(OMIdentifier ident, OMBlockState state) -> int
+void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
 {
     auto &blk = blockRegistery.getRegistry(ident);
     auto &st = state;
 
     if (states[ident].count(st))
     {
-        return states[ident][st];
+        return;
     }
 
     if (resolverCache[ident]->getMap().count("variants"))
@@ -232,7 +207,7 @@ auto OMBlockstateResolver::fetchModel(OMIdentifier ident, OMBlockState state) ->
 
                 auto i = compiler.composeBlock(ids, blk.soild);
                 states[ident][st] = i;
-                return i;
+                return;
             }
         next:
             continue;
@@ -264,9 +239,7 @@ auto OMBlockstateResolver::fetchModel(OMIdentifier ident, OMBlockState state) ->
 
         auto i = compiler.composeBlock(ids, blk.soild);
         states[ident][st] = i;
-        return i;
+        return;
     }
-
-    return -1;
 }
 } // namespace openminecraftshell::data::block

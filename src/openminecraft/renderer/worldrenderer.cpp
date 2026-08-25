@@ -6,6 +6,7 @@
 #include "glm/ext/vector_float4.hpp"
 #include "glm/geometric.hpp"
 #include "openminecraft-shell/data/block/om_block_registery.hpp"
+#include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_resolver.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
@@ -84,8 +85,9 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererT
 
     voxelHandler = new data::OMModelPrecompiler("/external", textureAtlas);
     blockstateResolver = new data::block::OMBlockstateResolver("/external", *voxelHandler);
+
     blockstateResolver->resolve(data::OMIdentifier("minecraft:air"));
-    auto blockAir = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:air"), "");
+    blockstateResolver->buildModel(data::OMIdentifier("minecraft:air"), {});
 
     for (auto &p : data::block::blockRegistery.nameToId)
     {
@@ -94,6 +96,16 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererT
             blockstateResolver->resolve(p.first);
         }
     }
+
+    for (auto &p : data::block::blockstateRegistry.nameToId)
+    {
+        auto &reg = data::block::blockstateRegistry.getRegistry(p.first);
+        if (reg.block.namesp != "minecraft" || reg.block.path != "air")
+        {
+            blockstateResolver->buildModel(reg.block, reg.state);
+        }
+    }
+
     auto blockStone = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:stone"), "");
     auto blockCobblestone = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cobblestone"), "");
     auto blockCoalOre = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:coal_ore"), "");

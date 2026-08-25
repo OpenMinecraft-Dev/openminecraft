@@ -4,6 +4,7 @@
 #include "SDL3/SDL_events.h"
 #include "openminecraft-shell/data/block/om_block.hpp"
 #include "openminecraft-shell/data/block/om_block_registery.hpp"
+#include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
@@ -81,6 +82,7 @@ auto OMApplication::entry() -> int
     }
 
     data::block::registerBlocks();
+    data::block::registerBlockstates();
     mainLoop(bk);
 
     SDL_Quit();
