@@ -136,5 +136,6 @@ void main()
     // Determine inside/outside
     minDist = minDist * (2.0 * step(0.5, abs(float(winding))) - 1.0);
 
-    outColor = textColor * smoothstep(-textFactor, 0.0, minDist);
+    float actualFactor = smoothstep(-textFactor, textFactor, minDist);
+    outColor = textColor * actualFactor;
 }

@@ -29,13 +29,22 @@ void main()
 
     int radius = int(ubo.radius);
 
-    /*vec4 result = vec4(0.0);
+    vec4 result = vec4(0.0);
     float weightSum = 0.0;
 
-    for (int x = -radius; x <= radius; x++) {
-        float weight = gaussianWeight(0, float(x), ubo.sigma);
+    for (int x = -radius; x <= radius; x++)
+    {
+        float weight = gaussianWeight(0, float(x), 5);
 
-        vec2 off = outTexCoord + vec2(0, x) * texelSize;
+        vec2 off;
+        if (ubo.direction == 0)
+        {
+            off = outTexCoord + vec2(0, x) * texelSize;
+        }
+        else
+        {
+            off = outTexCoord + vec2(x, 0) * texelSize;
+        }
         // gino: we had to do this otherwise wrong pixels will be fetched
         off = clamp(off, vec2(0.0 + texelSize), vec2(1.0 - texelSize));
         vec4 sampleColor = texture(inTexture, off);
@@ -44,9 +53,9 @@ void main()
         weightSum += weight;
     }
 
-    vec4 o = result / weightSum;*/
+    outColor = result / weightSum;
 
-    vec4 result = vec4(0.0);
+    /*vec4 result = vec4(0.0);
     int count = 0;
     for (int x = -radius; x <= radius; x++)
     {
@@ -59,9 +68,9 @@ void main()
         {
             offset = vec2(float(x), 0) * texelSize;
         }
-        result += texture(inTexture, outTexCoord + offset);
+        vec4 sample = texture(inTexture, outTexCoord + offset);
+        result += sample;
         count++;
     }
-    vec4 o = result / float(count);
-    outColor = o;
+    outColor = result / float(count);*/
 }

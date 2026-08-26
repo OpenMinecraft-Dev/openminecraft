@@ -22,6 +22,17 @@ OMRendererBoxBlurHandler::OMRendererBoxBlurHandler(OMRenderer *renderer) : OMRen
     blurArgs = renderer->allocateBuffer(Uniform, sizeof(OMRendererBoxBlurArg));
     blurArgs2 = renderer->allocateBuffer(Uniform, sizeof(OMRendererBoxBlurArg));
 
+    biltPipeline = renderer->createPipeline()
+                       ->input(ImageSampler)
+                       ->inputName("inTexture")
+                       ->output(blurTemp2->target)
+                       ->shader(renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format))
+                       ->shader(renderer->shaderManager.preprocess("core/bilt2.vert.glsl", Vertex, GLSLSource, format))
+                       ->format(format)
+                       ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+                       ->blend(true)
+                       ->depth(false, false)
+                       ->buildN();
     blurp1Pipeline =
         renderer->createPipeline()
             ->input(UniformBuffer)
@@ -43,7 +54,7 @@ OMRendererBoxBlurHandler::OMRendererBoxBlurHandler(OMRenderer *renderer) : OMRen
             ->inputName("BlurArgs")
             ->input(ImageSampler)
             ->inputName("inTexture")
-            ->output(renderer->getDefaultRenderTarget())
+            ->output(blurTemp2->target)
             ->shader(renderer->shaderManager.preprocess("core/effects/boxblur.frag.glsl", Fragment, GLSLSource, format))
             ->shader(renderer->shaderManager.preprocess("core/effects/boxblur.vert.glsl", Vertex, GLSLSource, format))
             ->format(format)
@@ -74,15 +85,17 @@ OMRendererBoxBlurHandler::~OMRendererBoxBlurHandler()
     delete blurp1Pipeline;
     delete blurp2Pipeline;
     delete composePipeline;
+    delete biltPipeline;
     delete blurArgs;
     delete blurArgs2;
     delete blurTemp;
     delete blurTemp2;
 }
-auto OMRendererBoxBlurHandler::firstLayerTask(OMRendererTask *pre) -> OMRendererTask *
+auto OMRendererBoxBlurHandler::blurPass(OMRendererTask *pre) -> OMRendererTask *
 {
     return renderer->createTask(fmt::format("boxblur_{}", ++boxblurIndex))
-        ->dependOn(renderer->createTask(fmt::format("boxblur_{}_pre", ++boxblurIndex))
+        ->dependOn(renderer->createTask(fmt::format("boxblur_{}", ++boxblurIndex))
+                       ->dependOn(pre)
                        ->target(blurTemp->target)
                        ->pipeline(blurp1Pipeline)
                        ->drawN(6)
@@ -91,6 +104,20 @@ auto OMRendererBoxBlurHandler::firstLayerTask(OMRendererTask *pre) -> OMRenderer
         ->pipeline(blurp2Pipeline)
         ->drawN(6)
         ->finishN();
+}
+auto OMRendererBoxBlurHandler::firstLayerTask(OMRendererTask *pre) -> OMRendererTask *
+{
+    auto task = renderer->createTask(fmt::format("boxblur_{}", ++boxblurIndex))
+                    ->target(blurTemp2->target)
+                    ->pipeline(biltPipeline)
+                    ->drawN(6)
+                    ->finishN();
+    for (int i = 0; i < 1; ++i)
+    {
+        task = blurPass(task);
+    }
+
+    return task;
 }
 auto OMRendererBoxBlurHandler::secondLayerTask(OMRendererTask *task) -> OMRendererTask *
 {
@@ -114,13 +141,14 @@ void OMRendererBoxBlurHandler::submitTasks()
 {
     blurTemp->construct(renderer->getExtent());
     blurTemp2->construct(renderer->getExtent());
+    blurp1Pipeline->bindInput(1, blurTemp2->colorTexture);
     blurp2Pipeline->bindInput(1, blurTemp->colorTexture);
     composePipeline->bindInput(1, blurTemp2->colorTexture);
 }
 
 void OMRendererBoxBlurHandler::bind(OMRendererTexture *uplayer, OMRendererTexture *bottomLayer)
 {
-    blurp1Pipeline->bindInput(1, bottomLayer);
+    biltPipeline->bindInput(0, bottomLayer);
     composePipeline->bindInput(0, uplayer);
 }
 } // namespace openminecraft::renderer::common::wrap
