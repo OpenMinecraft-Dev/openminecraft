@@ -270,6 +270,51 @@ class OMVoxelCompiler
     log::OMLogger logger;
 };
 
+template <typename It> class OMVoxelLayer
+{
+  public:
+    OMVoxelLayer(OMRenderer *renderer)
+    {
+        voxelBuffer = new OMRendererSegBuf(renderer, 16 * sizeof(It));
+        chunkBlocks.resize(1);
+    }
+    ~OMVoxelLayer()
+    {
+        delete voxelBuffer;
+    }
+
+    void loadData(int i, std::vector<It> &cm)
+    {
+        if (chunkBlocks.size() <= i)
+        {
+            chunkBlocks.resize(i + 1);
+        }
+
+        while (!chunkBlocks[i].empty())
+        {
+            voxelBuffer->deallocate(chunkBlocks[i].back());
+            chunkBlocks[i].pop_back();
+        }
+
+        while (!cm.empty())
+        {
+            auto blk = voxelBuffer->allocate(sizeof(It), cm.size() * sizeof(It), sizeof(It));
+            voxelBuffer->update(blk, cm.data());
+            cm.erase(cm.begin(), std::next(cm.begin(), blk.length / sizeof(It)));
+            chunkBlocks[i].push_back(blk);
+        }
+    }
+
+    auto buf() -> OMRendererSegBuf *
+    {
+        return voxelBuffer;
+    }
+
+  private:
+    std::vector<std::list<OMRendererSegBufBlock>> chunkBlocks;
+    OMRendererSegBuf *voxelBuffer;
+};
+
 class OMVoxelManager
 {
   public:
@@ -282,7 +327,6 @@ class OMVoxelManager
     auto update(basics::OMCamera &camera) -> void;
 
     OMRendererPipeline *pipeline, *debugPipeline, *complexPipeline;
-    OMRendererSegBuf *voxels, *voxelsComplex;
     OMRendererBuffer *chunkoffs, *debugoffs;
     OMRendererTexture *textureAtlas;
     OMRendererTexture *textureAtlasSecondary;
@@ -297,7 +341,8 @@ class OMVoxelManager
 
     std::function<uint32_t(uint32_t)> converter;
     std::shared_ptr<world::OMChunkManager<16>> chunkManager;
-    std::vector<std::list<OMRendererSegBufBlock>> chunkBlocks, chunkBlocksComplex = {};
+    OMVoxelLayer<OMVoxel> *voxelLayer;
+    OMVoxelLayer<OMVoxelComplex> *voxelComplexLayer;
 
     void compile(int i);
 };

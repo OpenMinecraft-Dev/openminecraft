@@ -16,6 +16,8 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <set>
+#include <tuple>
 #include <vector>
 
 namespace openminecraft::renderer::common::wrap
@@ -128,11 +130,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
             ->depthReverseZ(true)
             ->buildN();
 
-    voxels = new OMRendererSegBuf(renderer, 16 * sizeof(OMVoxel));
-    voxelsComplex = new OMRendererSegBuf(renderer, 16 * sizeof(OMVoxelComplex));
-
-    chunkBlocks.resize(1);
-    chunkBlocksComplex.resize(1);
+    voxelLayer = new OMVoxelLayer<OMVoxel>(renderer);
+    voxelComplexLayer = new OMVoxelLayer<OMVoxelComplex>(renderer);
 
     chunkoffs = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
     debugoffs = renderer->allocateBuffer(VertexData, 12 * 2 * 3 * sizeof(float));
@@ -149,8 +148,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
 }
 OMVoxelManager::~OMVoxelManager()
 {
-    delete voxels;
-    delete voxelsComplex;
+    delete voxelLayer;
+    delete voxelComplexLayer;
     delete chunkoffs;
     delete debugoffs;
     delete pipeline;
@@ -215,44 +214,8 @@ auto OMVoxelManager::compile(int i) -> void
             [&](OMVoxelComplex v) -> void { cm.emplace_back(v); });
     }
 
-    if (chunkBlocks.size() <= i)
-    {
-        chunkBlocks.resize(i + 1);
-    }
-
-    while (!chunkBlocks[i].empty())
-    {
-        voxels->deallocate(chunkBlocks[i].back());
-        chunkBlocks[i].pop_back();
-    }
-
-    while (!m.empty())
-    {
-        auto blk = voxels->allocate(sizeof(OMVoxel), m.size() * sizeof(OMVoxel), sizeof(OMVoxel));
-        voxels->update(blk, m.data());
-        m.erase(m.begin(), std::next(m.begin(), blk.length / sizeof(OMVoxel)));
-        chunkBlocks[i].push_back(blk);
-    }
-
-    if (chunkBlocksComplex.size() <= i)
-    {
-        chunkBlocksComplex.resize(i + 1);
-    }
-
-    while (!chunkBlocksComplex[i].empty())
-    {
-        voxelsComplex->deallocate(chunkBlocksComplex[i].back());
-        chunkBlocksComplex[i].pop_back();
-    }
-
-    while (!cm.empty())
-    {
-        auto blk =
-            voxelsComplex->allocate(sizeof(OMVoxelComplex), cm.size() * sizeof(OMVoxelComplex), sizeof(OMVoxelComplex));
-        voxelsComplex->update(blk, cm.data());
-        cm.erase(cm.begin(), std::next(cm.begin(), blk.length / sizeof(OMVoxelComplex)));
-        chunkBlocksComplex[i].push_back(blk);
-    }
+    voxelLayer->loadData(i, m);
+    voxelComplexLayer->loadData(i, cm);
 } // namespace openminecraft::renderer::common::wrap
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
@@ -296,8 +259,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
     {
         std::vector<glm::vec3> offs = {};
         offs.resize(chunkManager->numChunks());
-        auto l = voxels->totalSize;
-        auto l2 = voxelsComplex->totalSize;
+        auto l = voxelLayer->buf()->totalSize;
+        auto l2 = voxelComplexLayer->buf()->totalSize;
         chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
             for (auto &ochk : chunks)
@@ -345,7 +308,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             }
         }
 
-        if (l != voxels->totalSize || l2 != voxelsComplex->totalSize)
+        if (l != voxelLayer->buf()->totalSize || l2 != voxelComplexLayer->buf()->totalSize)
         {
             rec();
         }
@@ -355,11 +318,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
 {
     return task->pipeline(pipeline)
-        ->vertexBuffer({voxels->buffer})
-        ->drawInstanceN(6, voxels->totalSize / sizeof(OMVoxel))
+        ->vertexBuffer({voxelLayer->buf()->buffer})
+        ->drawInstanceN(6, voxelLayer->buf()->totalSize / sizeof(OMVoxel))
         ->pipeline(complexPipeline)
-        ->vertexBuffer({voxelsComplex->buffer})
-        ->drawInstanceN(6, voxelsComplex->totalSize / sizeof(OMVoxelComplex))
+        ->vertexBuffer({voxelComplexLayer->buf()->buffer})
+        ->drawInstanceN(6, voxelComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex))
         ->pipeline(debugPipeline)
         ->vertexBuffer({debugoffs})
         ->drawN(2 * 12);
