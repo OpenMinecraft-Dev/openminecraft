@@ -556,6 +556,15 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
     if (subsitute)
     {
         auto &tex = ll->getMap()["textures"]->getMap();
+
+        for (auto &pp : tex)
+        {
+            if (pp.second->type() == openminecraft::io::json::Object)
+            {
+                pp.second = pp.second->getMap()["sprite"];
+            }
+        }
+
         for (auto &pp : tex)
         {
             if (pp.second->getString()[0] == '#' && tex.count(pp.second->getString().substr(1)))

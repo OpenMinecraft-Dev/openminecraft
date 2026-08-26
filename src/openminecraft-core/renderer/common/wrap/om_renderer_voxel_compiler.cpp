@@ -129,9 +129,10 @@ auto OMVoxelCompiler::existSoild(const world::OMChunk<16> &chunk,
                                  int y, int z) -> bool
 {
     if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
-        return handler->querySoild(externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz));
+        return handler->querySoild(
+            converter(externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz)));
 
-    return handler->querySoild(chunk.fetch(x, y, z));
+    return handler->querySoild(converter(chunk.fetch(x, y, z)));
 }
 
 auto OMVoxelCompiler::queryBlockstate(const world::OMChunk<16> &chunk,
