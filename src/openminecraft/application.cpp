@@ -113,6 +113,10 @@ void OMApplication::mainLoop(OMBackend backend)
 
         std::array<bool, 6> keystates = {false, false, false, false, false, false};
         bus.append(SDL_EVENT_WINDOW_RESIZED, [&](SDL_Event &) -> void { win()->requestResize(); });
+        bus.append(SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED, [&](SDL_Event &) -> void { win()->requestResize(); });
+        bus.append(SDL_EVENT_WINDOW_METAL_VIEW_RESIZED, [&](SDL_Event &) -> void { win()->requestResize(); });
+        bus.append(SDL_EVENT_WINDOW_ENTER_FULLSCREEN, [&](SDL_Event &) -> void { win()->requestResize(); });
+        bus.append(SDL_EVENT_WINDOW_LEAVE_FULLSCREEN, [&](SDL_Event &) -> void { win()->requestResize(); });
         bus.append(SDL_EVENT_QUIT, [&](SDL_Event &) -> void { isRunning = false; });
         bus.append(SDL_EVENT_KEY_DOWN, [&](SDL_Event &e) -> void {
             if (e.key.repeat)

@@ -14,6 +14,7 @@
 #include "openminecraft/world/om_world_chunk.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
 #include <cstdint>
+#include <functional>
 #include <initializer_list>
 #include <list>
 #include <vector>
@@ -263,6 +264,7 @@ class OMVoxelCompiler
                  int chunkid, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>) -> void;
 
     OMVoxelHandler *handler = new OMVoxelHandlerDummy();
+    std::function<uint32_t(uint32_t)> converter;
 
   private:
     log::OMLogger logger;
@@ -272,7 +274,8 @@ class OMVoxelManager
 {
   public:
     OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *, OMRendererTexture *,
-                   std::shared_ptr<world::OMChunkManager<16>>, std::function<void()>, OMVoxelHandler *);
+                   std::shared_ptr<world::OMChunkManager<16>>, std::function<void()>, OMVoxelHandler *,
+                   std::function<uint32_t(uint32_t)>);
     ~OMVoxelManager();
 
     auto submit(OMRendererTask *) -> OMRendererTask *;
@@ -291,6 +294,7 @@ class OMVoxelManager
     log::OMLogger logger;
     OMVoxelCompiler compiler;
 
+    std::function<uint32_t(uint32_t)> converter;
     std::shared_ptr<world::OMChunkManager<16>> chunkManager;
     std::vector<std::list<OMRendererSegBufBlock>> chunkBlocks, chunkBlocksComplex = {};
 

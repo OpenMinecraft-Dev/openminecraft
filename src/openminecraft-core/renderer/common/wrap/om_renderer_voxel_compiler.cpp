@@ -165,7 +165,7 @@ auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
             glm::mix(currentAabb.offset, currentAabb.offset + currentAabb.size, glm::vec3(pos.x, pos.y, pos.z)) -
             (glm::vec3(dx, dy, dz) * 16.0f);
 
-        auto occ = handler->queryOcclusionShape(tgbs);
+        auto occ = handler->queryOcclusionShape(converter(tgbs));
         if (occ.contains(currentPos))
         {
             return 1;
@@ -285,36 +285,37 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
 {
     for (const auto &v : chunk)
     {
-        if (handler->queryNumParts(v.second) == 0)
+        auto bsid = converter(v.second);
+        if (handler->queryNumParts(bsid) == 0)
         {
             continue;
         }
 
-        for (int i = 0; i < handler->queryNumParts(v.second); ++i)
+        for (int i = 0; i < handler->queryNumParts(bsid); ++i)
         {
             for (auto f : {NegX, NegY, NegZ, PosX, PosY, PosZ})
             {
-                if (handler->queryPartFaceEnabled(v.second, i, f) &&
-                    !checkExistSoild(chunk, externalAccessor, v.first, handler->queryPartFaceCull(v.second, i, f)))
+                if (handler->queryPartFaceEnabled(bsid, i, f) &&
+                    !checkExistSoild(chunk, externalAccessor, v.first, handler->queryPartFaceCull(bsid, i, f)))
                 {
                     auto [ao1, ao2, ao3, ao4] =
-                        handler->queryPartAmbientOcclusion(v.second, i) && handler->queryPartShade(v.second, i)
-                            ? computeAO(chunk, externalAccessor, v.first.x, v.first.y, v.first.z, f, v.second, i)
+                        handler->queryPartAmbientOcclusion(bsid, i) && handler->queryPartShade(bsid, i)
+                            ? computeAO(chunk, externalAccessor, v.first.x, v.first.y, v.first.z, f, bsid, i)
                             : std::make_tuple<uint8_t, uint8_t, uint8_t, uint8_t>(0, 0, 0, 0);
-                    auto aabb = handler->queryPartAABB(v.second, i);
-                    auto uv = handler->queryPartFaceUV(v.second, i, f);
-                    auto raxis = handler->queryPartRotationCenter(v.second, i);
+                    auto aabb = handler->queryPartAABB(bsid, i);
+                    auto uv = handler->queryPartFaceUV(bsid, i, f);
+                    auto raxis = handler->queryPartRotationCenter(bsid, i);
 
-                    if (handler->queryPartComplex(v.second, i))
+                    if (handler->queryPartComplex(bsid, i))
                     {
-                        float rotationAngle = handler->queryPartRotationAngleF(v.second, i);
-                        bool texSec = handler->queryPartFaceSecondaryTexture(v.second, i, f);
+                        float rotationAngle = handler->queryPartRotationAngleF(bsid, i);
+                        bool texSec = handler->queryPartFaceSecondaryTexture(bsid, i, f);
                         auto vox = packVoxelComplex(
-                            v.first.x, v.first.y, v.first.z, f, texSec, handler->queryPartFaceTex(v.second, i, f),
-                            chunkid, handler->queryPartFaceRotation(v.second, i, f), 15, 15, 15, 15, 0, 0, 0, 0, ao1,
-                            ao2, ao3, ao4, handler->queryPartShade(v.second, i), false, aabb.offset, {uv.x, uv.y},
-                            {uv.z, uv.w}, handler->queryPartRotationAxis(v.second, i), rotationAngle, raxis, aabb.size,
-                            handler->queryPartRotationAngleExt(v.second, i));
+                            v.first.x, v.first.y, v.first.z, f, texSec, handler->queryPartFaceTex(bsid, i, f), chunkid,
+                            handler->queryPartFaceRotation(bsid, i, f), 15, 15, 15, 15, 0, 0, 0, 0, ao1, ao2, ao3, ao4,
+                            handler->queryPartShade(bsid, i), false, aabb.offset, {uv.x, uv.y}, {uv.z, uv.w},
+                            handler->queryPartRotationAxis(bsid, i), rotationAngle, raxis, aabb.size,
+                            handler->queryPartRotationAngleExt(bsid, i));
                         committer2(OMVoxelComplex{std::get<0>(vox), std::get<1>(vox), std::get<2>(vox),
                                                   std::get<3>(vox), std::get<4>(vox), std::get<5>(vox),
                                                   std::get<6>(vox), std::get<7>(vox), std::get<8>(vox),
@@ -325,12 +326,11 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                     auto vox = packVoxel(
                         v.first.x, v.first.y, v.first.z, f, std::abs(aabb.offset.x), std::abs(aabb.offset.y),
                         std::abs(aabb.offset.z), aabb.offset.x < 0, aabb.offset.y < 0, aabb.offset.z < 0,
-                        handler->queryPartFaceTex(v.second, i, f), chunkid,
-                        handler->queryPartFaceRotation(v.second, i, f), 15, 15, 15, 15, 0, 0, 0, 0, aabb.size.x,
-                        aabb.size.y, aabb.size.z, ao1, ao2, ao3, ao4, uv.x, uv.y, uv.z, uv.w,
-                        handler->queryPartRotationAxis(v.second, i), std::abs(raxis.x), std::abs(raxis.y),
+                        handler->queryPartFaceTex(bsid, i, f), chunkid, handler->queryPartFaceRotation(bsid, i, f), 15,
+                        15, 15, 15, 0, 0, 0, 0, aabb.size.x, aabb.size.y, aabb.size.z, ao1, ao2, ao3, ao4, uv.x, uv.y,
+                        uv.z, uv.w, handler->queryPartRotationAxis(bsid, i), std::abs(raxis.x), std::abs(raxis.y),
                         std::abs(raxis.z), raxis.x < 0, raxis.y < 0, raxis.z < 0,
-                        handler->queryPartRotationAngle(v.second, i), handler->queryPartShade(v.second, i), false);
+                        handler->queryPartRotationAngle(bsid, i), handler->queryPartShade(bsid, i), false);
                     commiter(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4]});
                 }
             }

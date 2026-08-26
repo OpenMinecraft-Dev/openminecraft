@@ -105,32 +105,6 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererT
             blockstateResolver->buildModel(reg.block, reg.state);
         }
     }
-
-    auto blockStone = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:stone"), "");
-    auto blockCobblestone = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cobblestone"), "");
-    auto blockCoalOre = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:coal_ore"), "");
-    auto blockIronOre = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:iron_ore"), "");
-    auto blockDirt = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:dirt"), "");
-    auto blockCopperOre = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:copper_ore"), "");
-    auto blockTallGrassL = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:tall_grass"), "half=lower");
-    auto blockTallGrassH = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:tall_grass"), "half=upper");
-    auto blockCherryStairs = blockstateResolver->fetchModelS(
-        data::OMIdentifier("minecraft:cherry_stairs"), "facing=east,half=bottom,shape=straight,water_logged=false");
-    auto blockCherryDoorL = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_door"),
-                                                            "facing=east,half=lower,hinge=left,open=false");
-    auto blockCherryDoorH = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_door"),
-                                                            "facing=east,half=upper,hinge=left,open=false");
-    auto blockCherrySign = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_hanging_sign"),
-                                                           "attached=false,rotation=3,water_logged=false");
-    auto blockCherryButton = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_button"),
-                                                             "face=floor,facing=north,powered=false");
-    auto blockCherryShelf = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_shelf"),
-                                                            "facing=east,powered=false,side_chain=unconnected");
-    auto blockGrassBlock = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:grass_block"), "snowy=false");
-    auto blockCherryFence =
-        blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:cherry_fence_gate"),
-                                        "facing=south,in_wall=false,open=true,powered=false,water_logged=false");
-    auto blockRail = blockstateResolver->fetchModelS(data::OMIdentifier("minecraft:rail"), "shape=north_south");
     textureAtlas->build();
 
     auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
@@ -140,24 +114,41 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererT
         {
             for (int cz = -1; cz < 8; ++cz)
             {
+                using data::block::blockstateRegistry;
                 world::OMChunk<16> cnk(cx, cy, cz);
-                cnk.setBlock(0, 0, 0, blockStone);
-                cnk.setBlock(0, 1, 1, blockCopperOre);
-                cnk.setBlock(2, 0, 0, blockGrassBlock);
-                cnk.setBlock(2, 1, 0, blockTallGrassL);
-                cnk.setBlock(2, 2, 0, blockTallGrassH);
-                cnk.setBlock(1, 1, 0, blockCherryStairs);
-                cnk.setBlock(3, 1, 0, blockCherryDoorL);
-                cnk.setBlock(3, 2, 0, blockCherryDoorH);
-                cnk.setBlock(0, 1, 0, blockCherryShelf);
-                cnk.setBlock(0, 2, 1, blockCherrySign);
-                cnk.setBlock(0, 1, 2, blockCopperOre);
-                cnk.setBlock(15, 1, 1, blockCopperOre);
-                cnk.setBlock(15, 0, 0, blockCobblestone);
-                cnk.setBlock(15, 1, 2, blockCopperOre);
-                cnk.setBlock(15, 1, 0, blockCherryButton);
-                cnk.setBlock(15, 2, 2, blockCherryFence);
-                cnk.setBlock(15, 2, 1, blockRail);
+                cnk.setBlock(0, 0, 0, blockstateRegistry.id(data::OMIdentifier("minecraft:stone[]")));
+                cnk.setBlock(0, 1, 1, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                cnk.setBlock(2, 0, 0, blockstateRegistry.id(data::OMIdentifier("minecraft:grass_block[snowy=false]")));
+                cnk.setBlock(2, 1, 0, blockstateRegistry.id(data::OMIdentifier("minecraft:tall_grass[half=lower]")));
+                cnk.setBlock(2, 2, 0, blockstateRegistry.id(data::OMIdentifier("minecraft:tall_grass[half=upper]")));
+                cnk.setBlock(
+                    1, 1, 0,
+                    blockstateRegistry.id(data::OMIdentifier(
+                        "minecraft:cherry_stairs[facing=east,half=bottom,shape=straight,water_logged=false]")));
+                cnk.setBlock(3, 1, 0,
+                             blockstateRegistry.id(data::OMIdentifier(
+                                 "minecraft:cherry_door[facing=east,half=lower,hinge=left,open=false]")));
+                cnk.setBlock(3, 2, 0,
+                             blockstateRegistry.id(data::OMIdentifier(
+                                 "minecraft:cherry_door[facing=east,half=upper,hinge=left,open=false]")));
+                cnk.setBlock(0, 1, 0,
+                             blockstateRegistry.id(data::OMIdentifier(
+                                 "minecraft:cherry_shelf[facing=east,powered=false,side_chain=unconnected]")));
+                cnk.setBlock(0, 2, 1,
+                             blockstateRegistry.id(data::OMIdentifier(
+                                 "minecraft:cherry_hanging_sign[attached=false,rotation=3,water_logged=false]")));
+                cnk.setBlock(0, 1, 2, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                cnk.setBlock(15, 1, 1, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                cnk.setBlock(15, 0, 0, blockstateRegistry.id(data::OMIdentifier("minecraft:cobblestone[]")));
+                cnk.setBlock(15, 1, 2, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                cnk.setBlock(15, 1, 0,
+                             blockstateRegistry.id(
+                                 data::OMIdentifier("minecraft:cherry_button[face=floor,facing=south,powered=true]")));
+                cnk.setBlock(
+                    15, 2, 2,
+                    blockstateRegistry.id(data::OMIdentifier("minecraft:cherry_fence_gate[facing=south,in_wall=false,"
+                                                             "open=true,powered=true,water_logged=true]")));
+                cnk.setBlock(15, 2, 1, blockstateRegistry.id(data::OMIdentifier("minecraft:rail[shape=north_south]")));
                 chunkManager->loadChunk(cnk);
             }
         }
@@ -165,7 +156,11 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererT
 
     voxelManager = new wrap::OMVoxelManager(
         renderer, tempTargetMS->target, textureAtlas->texture, textureAtlas->textureSecondary, chunkManager,
-        [&]() { record(); }, this->voxelHandler);
+        [&]() { record(); }, this->voxelHandler,
+        [&](uint32_t v) -> uint32_t {
+            const auto &reg = data::block::blockstateRegistry.idToRegistry[v];
+            return blockstateResolver->fetchModelS(reg.block, reg.state.tosimple());
+        });
 
     voxelManager->pipeline->bindInput(0, cameraBuffer);
     voxelManager->debugPipeline->bindInput(0, cameraBuffer);

@@ -10,8 +10,15 @@ openminecraft::world::OMWorldRegistry<OMIdentifier, OMBlockStateCombined> blocks
 
 void registerBlockstates()
 {
+    auto c = OMBlockStateCombined{OMIdentifier("minecraft:air"), {}};
+    blockstateRegistry.registerItem(OMIdentifier("minecraft:air[]"), c);
+
     for (auto &l : blockRegistery.nameToId)
     {
+        if (l.first.namesp == "minecraft" && l.first.path == "air")
+        {
+            continue;
+        }
         std::vector<OMBlockState> states = {};
         states.emplace_back("");
 

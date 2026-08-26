@@ -23,16 +23,19 @@ namespace openminecraft::renderer::common::wrap
 uint64_t cx = 0, cy = 0, cz = 0;
 OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *target, OMRendererTexture *tex,
                                OMRendererTexture *texSec, std::shared_ptr<world::OMChunkManager<16>> man,
-                               std::function<void()> rec, OMVoxelHandler *handler)
+                               std::function<void()> rec, OMVoxelHandler *handler,
+                               std::function<uint32_t(uint32_t)> converter)
     : logger("OMVoxelManager", this)
 {
     this->rec = rec;
     this->renderer = renderer;
     this->chunkManager = man;
     this->voxelHandler = handler;
+    this->converter = converter;
 
     delete compiler.handler;
     compiler.handler = voxelHandler;
+    compiler.converter = converter;
 
     basics::OMVertexFormat format, format2, formatComplex;
     format.setInstance()
