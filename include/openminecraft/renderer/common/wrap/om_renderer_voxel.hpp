@@ -288,6 +288,7 @@ class OMVoxelManager
     OMRendererTexture *textureAtlasSecondary;
 
   private:
+    uint64_t cameraHash = 0;
     OMVoxelHandler *voxelHandler;
     OMRenderer *renderer;
     std::function<void()> rec;

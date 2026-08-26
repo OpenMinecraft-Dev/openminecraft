@@ -274,6 +274,22 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             pp3 - camera.getPosRaw(), pp5 - camera.getPosRaw(), pp3 - camera.getPosRaw(), pp7 - camera.getPosRaw(),
             pp4 - camera.getPosRaw(), pp6 - camera.getPosRaw(), pp4 - camera.getPosRaw(), pp7 - camera.getPosRaw(),
         }}.data());
+    uint64_t hsh = chunkManager->numChunks();
+    hsh *= 31;
+    hsh += camera.getPosRaw().chunkx;
+    hsh *= 31;
+    hsh += camera.getPosRaw().chunky;
+    hsh *= 31;
+    hsh += camera.getPosRaw().chunkz;
+    hsh *= 31;
+    hsh += camera.getPosRaw().localx * 0x1000000;
+    hsh *= 31;
+    hsh += camera.getPosRaw().localy * 0x1000000;
+    hsh *= 31;
+    hsh += camera.getPosRaw().localz * 0x1000000;
+
+    bool miss = hsh != cameraHash;
+
     if (chunkManager->numChunks())
     {
         std::vector<glm::vec3> offs = {};
@@ -317,7 +333,14 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         }
         else
         {
-            chunkoffs->updateData(offs.data());
+            if (miss)
+            {
+                chunkoffs->updateData(offs.data());
+            }
+            else
+            {
+                cameraHash = hsh;
+            }
         }
 
         if (l != voxels->totalSize || l2 != voxelsComplex->totalSize)
