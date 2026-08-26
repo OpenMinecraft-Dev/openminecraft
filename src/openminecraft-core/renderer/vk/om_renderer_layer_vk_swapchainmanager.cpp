@@ -3,6 +3,7 @@
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "vulkan/vulkan_enums.hpp"
+#include <iostream>
 
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
