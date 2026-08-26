@@ -63,26 +63,27 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
         ->nextGroup()
         ->decideStruct();
 
-    pipeline = renderer->createPipeline()
-                   ->input(UniformBuffer)
-                   ->inputName("Camera")
-                   ->input(ImageSampler)
-                   ->inputName("inTexture")
-                   ->input(UniformTexelBuffer)
-                   ->inputName("inChunkPos")
-                   ->output(target)
-                   ->samples(4)
-                   ->setCullMode(renderer::common::Back)
-                   ->setFrontClockwise(true)
-                   ->shader(renderer->shaderManager.preprocess("core/voxel.frag.glsl", Fragment, GLSLSource, format))
-                   ->shader(renderer->shaderManager.preprocess("core/voxel.vert.glsl", Vertex, GLSLSource, format))
-                   ->format(format)
-                   ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
-                   ->blend(true)
-                   ->depth(true, true)
-                   ->depthEquals(true)
-                   ->depthReverseZ(true)
-                   ->buildN();
+    pipeline =
+        renderer->createPipeline()
+            ->input(UniformBuffer)
+            ->inputName("Camera")
+            ->input(ImageSampler)
+            ->inputName("inTexture")
+            ->input(UniformTexelBuffer)
+            ->inputName("inChunkPos")
+            ->output(target)
+            ->samples(4)
+            ->setCullMode(renderer::common::Back)
+            ->setFrontClockwise(true)
+            ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.frag.glsl", Fragment, GLSLSource, format))
+            ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.vert.glsl", Vertex, GLSLSource, format))
+            ->format(format)
+            ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+            ->blend(true)
+            ->depth(true, true)
+            ->depthEquals(true)
+            ->depthReverseZ(true)
+            ->buildN();
 
     complexPipeline = renderer->createPipeline()
                           ->input(UniformBuffer)
@@ -97,10 +98,10 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                           ->samples(4)
                           ->setCullMode(renderer::common::Back)
                           ->setFrontClockwise(true)
-                          ->shader(renderer->shaderManager.preprocess("core/voxelcomplex.frag.glsl", Fragment,
+                          ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcomplex.frag.glsl", Fragment,
                                                                       GLSLSource, formatComplex))
-                          ->shader(renderer->shaderManager.preprocess("core/voxelcomplex.vert.glsl", Vertex, GLSLSource,
-                                                                      formatComplex))
+                          ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcomplex.vert.glsl", Vertex,
+                                                                      GLSLSource, formatComplex))
                           ->format(formatComplex)
                           ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
                           ->blend(true)
@@ -117,8 +118,9 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
             ->setLineWidth(2.0f)
             ->output(target)
             ->samples(4)
-            ->shader(renderer->shaderManager.preprocess("core/voxeldebug.frag.glsl", Fragment, GLSLSource, format2))
-            ->shader(renderer->shaderManager.preprocess("core/voxeldebug.vert.glsl", Vertex, GLSLSource, format2))
+            ->shader(
+                renderer->shaderManager.preprocess("core/voxel/voxeldebug.frag.glsl", Fragment, GLSLSource, format2))
+            ->shader(renderer->shaderManager.preprocess("core/voxel/voxeldebug.vert.glsl", Vertex, GLSLSource, format2))
             ->format(format2)
             ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
             ->blend(true)

@@ -13,23 +13,19 @@
 #include "openminecraft-shell/data/om_textureatlas.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
-#include "openminecraft/renderer/common/event/om_eventbus.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
-#include "openminecraft/renderer/common/wrap/om_renderer_boxblur.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
-#include "openminecraft/world/om_world_chunk.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
 
 #include <chrono>
 #include <functional>
 #include <glm/glm.hpp>
 #include <memory>
-#include <thread>
 #include <utility>
 
 using namespace openminecraft::renderer::common;
@@ -53,8 +49,6 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
 
     outputFrg = renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format);
     outputVtx = renderer->shaderManager.preprocess("core/bilt.vert.glsl", Vertex, GLSLSource, format);
-    auto voxelFrg = renderer->shaderManager.preprocess("core/voxel.frag.glsl", Fragment, GLSLSource, format);
-    auto voxelVtx = renderer->shaderManager.preprocess("core/voxel.vert.glsl", Vertex, GLSLSource, format);
 
     tempTargetMS = new wrap::OMRendererTempTarget(renderer);
     tempTarget = new wrap::OMRendererTempTarget(renderer);
