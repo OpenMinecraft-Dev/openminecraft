@@ -7,7 +7,7 @@ layout(location = 0) out vec4 outColor;
 uniform BlurArgs
 {
     float radius;
-    vec2 direction;
+    float direction;
 }
 ubo;
 uniform sampler2D inTexture;
@@ -50,7 +50,15 @@ void main()
     int count = 0;
     for (int x = -radius; x <= radius; x++)
     {
-        vec2 offset = direction * float(x) * texelSize;
+        vec2 offset;
+        if (ubo.direction == 0)
+        {
+            offset = vec2(0, float(x)) * texelSize;
+        }
+        else
+        {
+            offset = vec2(float(x), 0) * texelSize;
+        }
         result += texture(inTexture, outTexCoord + offset);
         count++;
     }
