@@ -53,8 +53,8 @@ using VertexStruct = basics::OMVertex<glm::vec3, glm::vec2>;
 class OMWorldRenderer : public OMRendererHandler
 {
   public:
-    OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererTexture *()> t, event::OMEventBusSDL &bus,
-                    std::shared_ptr<basics::OMCamera> camera, std::shared_ptr<world::OMChunkManager<16>>);
+    OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::OMCamera> camera,
+                    std::shared_ptr<world::OMChunkManager<16>>);
     ~OMWorldRenderer() override;
 
     // INFO: count frames per second, submit and create tasks, etc.
@@ -72,8 +72,6 @@ class OMWorldRenderer : public OMRendererHandler
 
     data::block::OMBlockstateResolver *blockstateResolver;
     data::OMModelPrecompiler *voxelHandler;
-
-    std::function<OMRendererTexture *()> overlay;
 
     std::shared_ptr<basics::OMCamera> camera;
     basics::OMVertexFormat format;

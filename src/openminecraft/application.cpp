@@ -156,9 +156,7 @@ void OMApplication::mainLoop(OMBackend backend)
         }
 
         auto hnd2 = std::make_shared<renderer::OMDebugRenderer>(win());
-        auto hnd = std::make_shared<renderer::OMWorldRenderer>(
-            win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTarget->colorTexture; }, bus, camera,
-            chunkManager);
+        auto hnd = std::make_shared<renderer::OMWorldRenderer>(win(), camera, chunkManager);
         auto hnd3 = std::make_shared<renderer::OMComposeRenderer>(
             win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTarget->colorTexture; },
             [&]() -> OMRendererTexture * { return hnd->tempTarget->colorTexture; });

@@ -36,13 +36,10 @@ using namespace openminecraft::renderer::common;
 
 namespace openminecraftshell::renderer
 {
-OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererTexture *()> overlay,
-                                 event::OMEventBusSDL &bus, std::shared_ptr<basics::OMCamera> camera,
+OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::OMCamera> camera,
                                  std::shared_ptr<OMChunkManager<16>> chunkManager)
     : OMRendererHandler(renderer), camera(std::move(camera)), logger("OMWorldRenderer", this), renderer(renderer)
 {
-    this->overlay = overlay;
-
     format.nextGroup()->decideStruct();
 
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(glm::mat4));

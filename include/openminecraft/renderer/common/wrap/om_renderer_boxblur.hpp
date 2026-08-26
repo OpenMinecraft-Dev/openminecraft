@@ -15,7 +15,6 @@ namespace openminecraft::renderer::common::wrap
 struct OMRendererBoxBlurArg
 {
     float radius;
-    float sigma;
 };
 struct OMRendererBoxBlurVertex
 {
