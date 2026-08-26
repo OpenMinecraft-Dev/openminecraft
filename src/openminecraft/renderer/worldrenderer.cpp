@@ -59,23 +59,6 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererT
     auto voxelFrg = renderer->shaderManager.preprocess("core/voxel.frag.glsl", Fragment, GLSLSource, format);
     auto voxelVtx = renderer->shaderManager.preprocess("core/voxel.vert.glsl", Vertex, GLSLSource, format);
 
-    // INFO: core pipeline creation
-    mainPipeline = renderer->createPipeline()
-                       ->input(ImageSampler)
-                       ->inputName("inTexture")
-                       ->output(renderer->getDefaultRenderTarget())
-                       ->shader(outputFrg)
-                       ->shader(outputVtx)
-                       ->format(format)
-                       ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
-                       ->blend(true)
-                       ->depth(false, false)
-                       ->buildN();
-
-    blurHandler = std::make_shared<wrap::OMRendererBoxBlurHandler>(renderer);
-    renderer->registerHandler(blurHandler);
-    blurHandler->update({8.0f, 32.0f});
-
     tempTargetMS = new wrap::OMRendererTempTarget(renderer);
     tempTarget = new wrap::OMRendererTempTarget(renderer);
     auto ext = renderer->getExtent();
@@ -147,7 +130,7 @@ void OMWorldRenderer::beforeFrame()
 void OMWorldRenderer::record()
 {
     voxelManager
-        ->submit(renderer->fetchTask("scene")
+        ->submit(renderer->fetchTask("voxel")
                      ->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
                      ->clearDepth(0.0f)
                      ->target(tempTargetMS->target))
@@ -164,25 +147,12 @@ void OMWorldRenderer::submitTasks()
     tempTargetMS->construct(renderer->getExtent(), 4);
     tempTarget->construct(renderer->getExtent());
 
-    mainPipeline->bindInput(0, tempTarget->colorTexture);
-    blurHandler->bind(overlay(), tempTarget->colorTexture);
-
-    auto scene = renderer->createTask("scene");
-    blurHandler
-        ->secondLayerTask(renderer->createTask("main")
-                              ->dependOn(scene)
-                              ->dependOn(blurHandler->firstLayerTask(scene))
-                              ->dependOn(renderer->fetchTask("demiurgeui_compose"))
-                              ->target(renderer->getDefaultRenderTarget())
-                              ->pipeline(mainPipeline)
-                              ->drawN(6))
-        ->finishN();
+    renderer->createTask("voxel");
 
     record();
 }
 OMWorldRenderer::~OMWorldRenderer()
 {
-    delete mainPipeline;
     delete voxelModelBuffer;
     delete uniformBuffer;
     delete cameraBuffer;

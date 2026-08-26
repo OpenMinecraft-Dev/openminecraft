@@ -66,15 +66,12 @@ class OMWorldRenderer : public OMRendererHandler
 
     // INFO: these are the resource handles used for rendering
     OMRendererBuffer *uniformBuffer, *voxelModelBuffer, *lightingBuffer, *cameraBuffer;
-    OMRendererPipeline *mainPipeline;
     wrap::OMRendererTempTarget *tempTargetMS, *tempTarget;
     wrap::OMVoxelManager *voxelManager;
     data::OMTextureAtlas *textureAtlas;
 
     data::block::OMBlockstateResolver *blockstateResolver;
     data::OMModelPrecompiler *voxelHandler;
-
-    std::shared_ptr<wrap::OMRendererBoxBlurHandler> blurHandler;
 
     std::function<OMRendererTexture *()> overlay;
 

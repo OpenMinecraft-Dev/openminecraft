@@ -6,6 +6,7 @@
 #include "openminecraft-shell/data/block/om_block_registery.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
+#include "openminecraft-shell/renderer/composerenderer.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
@@ -158,9 +159,13 @@ void OMApplication::mainLoop(OMBackend backend)
         auto hnd = std::make_shared<renderer::OMWorldRenderer>(
             win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTarget->colorTexture; }, bus, camera,
             chunkManager);
+        auto hnd3 = std::make_shared<renderer::OMComposeRenderer>(
+            win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTarget->colorTexture; },
+            [&]() -> OMRendererTexture * { return hnd->tempTarget->colorTexture; });
         hnd2->camera = camera.get();
         win()->registerHandler(hnd2);
         win()->registerHandler(hnd);
+        win()->registerHandler(hnd3);
         win()->baseInit();
 
         std::array<bool, 6> keystates = {false, false, false, false, false, false};
@@ -290,6 +295,7 @@ void OMApplication::mainLoop(OMBackend backend)
 
         hnd = nullptr;
         hnd2 = nullptr;
+        hnd3 = nullptr;
     }
     catch (OMRendererException &e)
     {
