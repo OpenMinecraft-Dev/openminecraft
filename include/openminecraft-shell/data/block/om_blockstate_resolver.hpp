@@ -9,7 +9,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include <memory>
 #include <unordered_map>
-#include <utility>
+
 namespace openminecraftshell::data::block
 {
 class OMBlockstateResolver
@@ -23,7 +23,7 @@ class OMBlockstateResolver
 
     void resolve(OMIdentifier);
     void buildModel(OMIdentifier, OMBlockState state);
-    auto fetchModelS(OMIdentifier, std::string state) -> int;
+    auto fetchModel(OMIdentifier, OMBlockState state) -> int;
 
   private:
     void resolveModel(OMIdentifier, std::shared_ptr<io::json::OMJsonNode>);

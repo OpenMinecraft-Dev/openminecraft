@@ -54,7 +54,7 @@ class OMWorldRenderer : public OMRendererHandler
 {
   public:
     OMWorldRenderer(OMRenderer *renderer, std::function<OMRendererTexture *()> t, event::OMEventBusSDL &bus,
-                    std::shared_ptr<basics::OMCamera> camera);
+                    std::shared_ptr<basics::OMCamera> camera, std::shared_ptr<world::OMChunkManager<16>>);
     ~OMWorldRenderer() override;
 
     // INFO: count frames per second, submit and create tasks, etc.

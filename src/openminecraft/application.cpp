@@ -103,9 +103,61 @@ void OMApplication::mainLoop(OMBackend backend)
         event::OMEventBusSDL bus;
         auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{-1.0f, 5.0f, -1.0f}, 45.0f, -45.0f);
 
+        auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
+        for (int cx = -1; cx < 8; ++cx)
+        {
+            for (int cy = 0; cy < 8; ++cy)
+            {
+                for (int cz = -1; cz < 8; ++cz)
+                {
+                    using data::block::blockstateRegistry;
+                    world::OMChunk<16> cnk(cx, cy, cz);
+                    cnk.setBlock(0, 0, 0, blockstateRegistry.id(data::OMIdentifier("minecraft:stone[]")));
+                    cnk.setBlock(0, 1, 1, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                    cnk.setBlock(2, 0, 0,
+                                 blockstateRegistry.id(data::OMIdentifier("minecraft:grass_block[snowy=false]")));
+                    cnk.setBlock(2, 1, 0,
+                                 blockstateRegistry.id(data::OMIdentifier("minecraft:tall_grass[half=lower]")));
+                    cnk.setBlock(2, 2, 0,
+                                 blockstateRegistry.id(data::OMIdentifier("minecraft:tall_grass[half=upper]")));
+                    cnk.setBlock(
+                        1, 1, 0,
+                        blockstateRegistry.id(data::OMIdentifier(
+                            "minecraft:cherry_stairs[facing=east,half=bottom,shape=straight,water_logged=false]")));
+                    cnk.setBlock(3, 1, 0,
+                                 blockstateRegistry.id(data::OMIdentifier(
+                                     "minecraft:cherry_door[facing=east,half=lower,hinge=left,open=false]")));
+                    cnk.setBlock(3, 2, 0,
+                                 blockstateRegistry.id(data::OMIdentifier(
+                                     "minecraft:cherry_door[facing=east,half=upper,hinge=left,open=false]")));
+                    cnk.setBlock(0, 1, 0,
+                                 blockstateRegistry.id(data::OMIdentifier(
+                                     "minecraft:cherry_shelf[facing=east,powered=false,side_chain=unconnected]")));
+                    cnk.setBlock(0, 2, 1,
+                                 blockstateRegistry.id(data::OMIdentifier(
+                                     "minecraft:cherry_hanging_sign[attached=false,rotation=3,water_logged=false]")));
+                    cnk.setBlock(0, 1, 2, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                    cnk.setBlock(15, 1, 1, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                    cnk.setBlock(15, 0, 0, blockstateRegistry.id(data::OMIdentifier("minecraft:cobblestone[]")));
+                    cnk.setBlock(15, 1, 2, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                    cnk.setBlock(15, 1, 0,
+                                 blockstateRegistry.id(data::OMIdentifier(
+                                     "minecraft:cherry_button[face=floor,facing=south,powered=true]")));
+                    cnk.setBlock(15, 2, 2,
+                                 blockstateRegistry.id(
+                                     data::OMIdentifier("minecraft:cherry_fence_gate[facing=south,in_wall=false,"
+                                                        "open=true,powered=true,water_logged=true]")));
+                    cnk.setBlock(15, 2, 1,
+                                 blockstateRegistry.id(data::OMIdentifier("minecraft:rail[shape=north_south]")));
+                    chunkManager->loadChunk(cnk);
+                }
+            }
+        }
+
         auto hnd2 = std::make_shared<renderer::OMDebugRenderer>(win());
         auto hnd = std::make_shared<renderer::OMWorldRenderer>(
-            win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTarget->colorTexture; }, bus, camera);
+            win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTarget->colorTexture; }, bus, camera,
+            chunkManager);
         hnd2->camera = camera.get();
         win()->registerHandler(hnd2);
         win()->registerHandler(hnd);

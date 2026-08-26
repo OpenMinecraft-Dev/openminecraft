@@ -156,12 +156,11 @@ static auto caseCheck(OMBlockState &bs, std::shared_ptr<json::OMJsonNode> node) 
     return true;
 }
 
-auto OMBlockstateResolver::fetchModelS(OMIdentifier ident, std::string state) -> int
+auto OMBlockstateResolver::fetchModel(OMIdentifier ident, OMBlockState state) -> int
 {
-    auto st = OMBlockState(state);
-    if (states[ident].count(st))
+    if (states[ident].count(state))
     {
-        return states[ident][st];
+        return states[ident][state];
     }
     else
     {
