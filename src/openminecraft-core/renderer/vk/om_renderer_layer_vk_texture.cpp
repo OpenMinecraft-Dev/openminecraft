@@ -53,6 +53,10 @@ static auto fromCommonUsage(common::OMTextureArrangement arr) -> Format
     default:
     case common::ColorRgba:
         return Format::eR8G8B8A8Srgb;
+    case common::ColorRgbaF16:
+        return Format::eR16G16B16A16Sfloat;
+    case common::ColorRgbaF32:
+        return Format::eR32G32B32A32Sfloat;
     }
 }
 

@@ -10,6 +10,7 @@
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
@@ -323,9 +324,10 @@ class OMVoxelManager
                    std::function<uint32_t(uint32_t)>);
     ~OMVoxelManager();
 
-    auto submit(OMRendererTask *) -> OMRendererTask *;
+    auto submit(OMRendererTask *, OMRendererTexture *, int = 1) -> OMRendererTask *;
     auto update(basics::OMCamera &camera) -> void;
 
+    OMRendererTempTarget *translucentTarget;
     OMRendererPipeline *pipeline, *debugPipeline, *complexPipeline;
     OMRendererBuffer *chunkoffs, *debugoffs;
     OMRendererTexture *textureAtlas;

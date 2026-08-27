@@ -22,7 +22,9 @@ enum OMTextureArrangement
 {
     Depth,
     ColorRgba,
-    ColorRgb
+    ColorRgb,
+    ColorRgbaF16,
+    ColorRgbaF32
 };
 
 enum OMTextureAddressMode

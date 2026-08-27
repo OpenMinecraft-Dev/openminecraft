@@ -16,7 +16,10 @@ class OMRendererTempTarget
     ~OMRendererTempTarget()
     {
         delete colorTexture;
-        delete depthTexture;
+        if (!externalDepth)
+        {
+            delete depthTexture;
+        }
         delete target;
     }
 
@@ -25,18 +28,23 @@ class OMRendererTempTarget
         if (target)
         {
             delete colorTexture;
-            delete depthTexture;
+            if (!externalDepth)
+            {
+                delete depthTexture;
+            }
         }
+
+        externalDepth = false;
 
         if (samples <= 1)
         {
-            colorTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, ColorRgba);
+            colorTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, ColorRgbaF16);
             colorTexture->setupSampler();
             depthTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, Depth);
         }
         else
         {
-            colorTexture = renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample, ColorRgba);
+            colorTexture = renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample, ColorRgbaF16);
             colorTexture->setupSampler();
             depthTexture = renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample, Depth);
         }
@@ -56,6 +64,47 @@ class OMRendererTempTarget
         }
     }
 
+    void constructWithDepth(OMRendererTexture *depth, glm::vec2 ext, uint64_t samples = 1)
+    {
+        if (target)
+        {
+            delete colorTexture;
+            if (!externalDepth)
+            {
+                delete depthTexture;
+            }
+        }
+
+        externalDepth = true;
+        depthTexture = depth;
+
+        if (samples <= 1)
+        {
+            colorTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, ColorRgbaF16);
+            colorTexture->setupSampler();
+        }
+        else
+        {
+            colorTexture = renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample, ColorRgbaF16);
+            colorTexture->setupSampler();
+        }
+
+        if (!target)
+        {
+            target = renderer->createRenderTarget();
+            target->attachTarget(colorTexture);
+            target->attachTarget(depthTexture);
+            target->build();
+        }
+        else
+        {
+            target->replaceTarget(0, colorTexture);
+            target->replaceTarget(1, depthTexture);
+            target->rebuild();
+        }
+    }
+
+    bool externalDepth = false;
     OMRendererRenderTarget *target = nullptr;
     OMRendererTexture *colorTexture;
     OMRendererTexture *depthTexture;

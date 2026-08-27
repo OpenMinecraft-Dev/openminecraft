@@ -124,7 +124,8 @@ void OMWorldRenderer::record()
         ->submit(renderer->fetchTask("voxel")
                      ->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
                      ->clearDepth(0.0f)
-                     ->target(tempTargetMS->target))
+                     ->target(tempTargetMS->target),
+                 tempTargetMS->depthTexture, 4)
         ->resolve(tempTarget->target)
         ->finishN();
 }

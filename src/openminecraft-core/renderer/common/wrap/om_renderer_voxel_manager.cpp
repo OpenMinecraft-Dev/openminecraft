@@ -1,6 +1,7 @@
 #include "glm/fwd.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
@@ -145,6 +146,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
     complexPipeline->bindInput(1, textureAtlas);
     complexPipeline->bindInput(2, textureAtlasSecondary);
     complexPipeline->bindInput(3, chunkoffs);
+
+    translucentTarget = new OMRendererTempTarget(renderer);
 }
 OMVoxelManager::~OMVoxelManager()
 {
@@ -155,6 +158,7 @@ OMVoxelManager::~OMVoxelManager()
     delete pipeline;
     delete complexPipeline;
     delete debugPipeline;
+    delete translucentTarget;
 }
 
 auto OMVoxelManager::compile(int i) -> void
@@ -216,7 +220,7 @@ auto OMVoxelManager::compile(int i) -> void
 
     voxelLayer->loadData(i, m);
     voxelComplexLayer->loadData(i, cm);
-} // namespace openminecraft::renderer::common::wrap
+}
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
@@ -315,8 +319,9 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
     }
 }
 
-auto OMVoxelManager::submit(OMRendererTask *task) -> OMRendererTask *
+auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTexture *depth, int samples) -> OMRendererTask *
 {
+    translucentTarget->constructWithDepth(depth, renderer->getExtent(), samples);
     return task->pipeline(pipeline)
         ->vertexBuffer({voxelLayer->buf()->buffer})
         ->drawInstanceN(6, voxelLayer->buf()->totalSize / sizeof(OMVoxel))
