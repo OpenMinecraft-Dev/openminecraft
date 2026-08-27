@@ -175,32 +175,21 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
             ->depthReverseZ(true)
             ->buildN();
 
-    biltCutoutPipeline =
-        renderer->createPipeline()
-            ->input(ImageSampler)
-            ->inputName("inTexture")
-            ->output(target)
-            ->samples(1)
-            ->shader(renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format))
-            ->shader(renderer->shaderManager.preprocess("core/bilt2.vert.glsl", Vertex, GLSLSource, format))
-            ->format(format)
-            ->blend(false)
-            ->depth(false, false)
-            ->buildN();
-
-    biltTranslucentPipeline =
-        renderer->createPipeline()
-            ->input(ImageSampler)
-            ->inputName("inTexture")
-            ->output(target)
-            ->samples(1)
-            ->shader(renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format))
-            ->shader(renderer->shaderManager.preprocess("core/bilt2.vert.glsl", Vertex, GLSLSource, format))
-            ->format(format)
-            ->blendFunc({One, Alpha, Zero, One})
-            ->blend(true)
-            ->depth(false, false)
-            ->buildN();
+    composePipeline = renderer->createPipeline()
+                          ->input(ImageSampler)
+                          ->inputName("inTextureCutout")
+                          ->input(ImageSampler)
+                          ->inputName("inTextureTranslucent")
+                          ->output(target)
+                          ->samples(1)
+                          ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcompose.frag.glsl", Fragment,
+                                                                      GLSLSource, format))
+                          ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcompose.vert.glsl", Vertex,
+                                                                      GLSLSource, format))
+                          ->format(format)
+                          ->blend(false)
+                          ->depth(false, false)
+                          ->buildN();
 
     voxelLayer = new OMVoxelLayer<OMVoxel>(renderer);
     voxelComplexLayer = new OMVoxelLayer<OMVoxelComplex>(renderer);
@@ -243,8 +232,7 @@ OMVoxelManager::~OMVoxelManager()
     delete translucentPipeline;
     delete translucentComplexPipeline;
     delete debugPipeline;
-    delete biltTranslucentPipeline;
-    delete biltCutoutPipeline;
+    delete composePipeline;
     delete translucentTargetMS;
     delete cutoutTarget;
     delete translucentTarget;
@@ -419,8 +407,8 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *target, 
     translucentTargetMS->constructWithDepth(target->depthTexture, renderer->getExtent(), 4);
     cutoutTarget->construct(renderer->getExtent());
     translucentTarget->construct(renderer->getExtent());
-    biltCutoutPipeline->bindInput(0, cutoutTarget->colorTexture);
-    biltTranslucentPipeline->bindInput(0, translucentTarget->colorTexture);
+    composePipeline->bindInput(0, cutoutTarget->colorTexture);
+    composePipeline->bindInput(1, translucentTarget->colorTexture);
 
     return task->target(target->target)
         ->pipeline(pipeline)
@@ -443,9 +431,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *target, 
         ->drawInstanceN(6, voxelTranslucentComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex))
         ->resolve(translucentTarget->target)
         ->target(resolveTarget->target)
-        ->pipeline(biltCutoutPipeline)
-        ->drawN(6)
-        ->pipeline(biltTranslucentPipeline)
+        ->pipeline(composePipeline)
         ->drawN(6)
         ->finishN();
 }

@@ -337,7 +337,7 @@ class OMVoxelManager
     OMRendererTempTarget *cutoutTarget;
     OMRendererPipeline *pipeline, *debugPipeline, *complexPipeline;
     OMRendererPipeline *translucentPipeline, *translucentComplexPipeline;
-    OMRendererPipeline *biltCutoutPipeline, *biltTranslucentPipeline;
+    OMRendererPipeline *composePipeline;
     OMRendererBuffer *chunkoffs, *debugoffs;
     OMRendererTexture *textureAtlas;
     OMRendererTexture *textureAtlasSecondary;
