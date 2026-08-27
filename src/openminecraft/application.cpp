@@ -105,11 +105,11 @@ void OMApplication::mainLoop(OMBackend backend)
         auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{-1.0f, 5.0f, -1.0f}, 45.0f, -45.0f);
 
         auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
-        for (int cx = -1; cx < 8; ++cx)
+        for (int cx = -1; cx < 4; ++cx)
         {
-            for (int cy = 0; cy < 8; ++cy)
+            for (int cy = 0; cy < 4; ++cy)
             {
-                for (int cz = -1; cz < 8; ++cz)
+                for (int cz = -1; cz < 4; ++cz)
                 {
                     using data::block::blockstateRegistry;
                     world::OMChunk<16> cnk(cx, cy, cz);

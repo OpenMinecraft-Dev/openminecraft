@@ -43,7 +43,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
 
     translucentTargetMS = new OMRendererTempTarget(renderer);
     translucentTargetMS->clearDepth = false;
-    translucentTargetMS->construct(renderer->getExtent(), 4);
+    translucentTargetMS->construct(renderer->getExtent(), 4, true);
 
     cutoutTarget = new OMRendererTempTarget(renderer);
     cutoutTarget->construct(renderer->getExtent());
@@ -385,13 +385,15 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
 {
     cutoutTargetMS->construct(renderer->getExtent(), 4);
     translucentTargetMS->clearDepth = false;
-    translucentTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), 4);
+    translucentTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), 4, true);
     cutoutTarget->construct(renderer->getExtent());
-    translucentTarget->construct(renderer->getExtent());
+    translucentTarget->construct(renderer->getExtent(), 1, true);
     composePipeline->bindInput(0, cutoutTarget->colorTexture);
     composePipeline->bindInput(1, translucentTarget->colorTexture);
 
-    return task->target(cutoutTargetMS->target)
+    return task->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
+        ->clearDepth(0.0f)
+        ->target(cutoutTargetMS->target)
         ->pipeline(pipeline)
         ->vertexBuffer({voxelLayer->buf()->buffer})
         ->drawInstanceN(6, voxelLayer->buf()->totalSize / sizeof(OMVoxel))

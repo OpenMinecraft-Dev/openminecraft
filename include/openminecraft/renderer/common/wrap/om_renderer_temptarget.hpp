@@ -23,7 +23,7 @@ class OMRendererTempTarget
         delete target;
     }
 
-    void construct(glm::vec2 ext, uint64_t samples = 1)
+    void construct(glm::vec2 ext, uint64_t samples = 1, bool flt = false)
     {
         if (target)
         {
@@ -38,13 +38,14 @@ class OMRendererTempTarget
 
         if (samples <= 1)
         {
-            colorTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, ColorRgbaF16);
+            colorTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, flt ? ColorRgbaF16 : ColorRgba);
             colorTexture->setupSampler();
             depthTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, Depth);
         }
         else
         {
-            colorTexture = renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample, ColorRgbaF16);
+            colorTexture =
+                renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample, flt ? ColorRgbaF16 : ColorRgba);
             colorTexture->setupSampler();
             depthTexture = renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample, Depth);
         }
@@ -65,7 +66,7 @@ class OMRendererTempTarget
         }
     }
 
-    void constructWithDepth(OMRendererTexture *depth, glm::vec2 ext, uint64_t samples = 1)
+    void constructWithDepth(OMRendererTexture *depth, glm::vec2 ext, uint64_t samples = 1, bool flt = false)
     {
         if (target)
         {
@@ -81,12 +82,13 @@ class OMRendererTempTarget
 
         if (samples <= 1)
         {
-            colorTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, ColorRgbaF16);
+            colorTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, flt ? ColorRgbaF16 : ColorRgba);
             colorTexture->setupSampler();
         }
         else
         {
-            colorTexture = renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample, ColorRgbaF16);
+            colorTexture =
+                renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample, flt ? ColorRgbaF16 : ColorRgba);
             colorTexture->setupSampler();
         }
 

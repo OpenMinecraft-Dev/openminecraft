@@ -121,8 +121,7 @@ void OMWorldRenderer::beforeFrame()
 
 void OMWorldRenderer::record()
 {
-    voxelManager->submit(renderer->fetchTask("voxel")->clearColor({0.198f, 0.371f, 1.0f, 1.0f})->clearDepth(0.0f),
-                         tempTarget);
+    voxelManager->submit(renderer->fetchTask("voxel"), tempTarget);
 }
 
 void OMWorldRenderer::afterFrame()
