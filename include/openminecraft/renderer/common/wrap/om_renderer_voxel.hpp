@@ -7,6 +7,7 @@
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
+#include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
@@ -325,7 +326,7 @@ template <typename It> class OMVoxelLayer
 class OMVoxelManager
 {
   public:
-    OMVoxelManager(OMRenderer *renderer, OMRendererTexture *, OMRendererTexture *,
+    OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *, OMRendererTexture *,
                    std::shared_ptr<world::OMChunkManager<16>>, std::function<void()>, OMVoxelHandler *,
                    std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)>);
     ~OMVoxelManager();

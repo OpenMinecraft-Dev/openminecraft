@@ -9,6 +9,7 @@
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_structs.hpp"
 #include <cstdint>
+#include <iostream>
 
 using namespace ::vk;
 using namespace openminecraft::i18n::res;
