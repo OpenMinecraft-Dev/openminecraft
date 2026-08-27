@@ -17,8 +17,6 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <set>
-#include <tuple>
 #include <vector>
 
 namespace openminecraft::renderer::common::wrap
@@ -125,10 +123,10 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
             ->samples(4)
             ->setCullMode(renderer::common::Back)
             ->setFrontClockwise(true)
-            ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.frag.glsl", Fragment, GLSLSource, format))
+            ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.oit.frag.glsl", Fragment, GLSLSource, format))
             ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.vert.glsl", Vertex, GLSLSource, format))
             ->format(format)
-            ->blendFunc({One, One, One, One})
+            ->blendFunc({One, One, Zero, OneMinusAlpha})
             ->blend(true)
             ->depth(true, false)
             ->depthEquals(true)
@@ -147,12 +145,12 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                                      ->samples(4)
                                      ->setCullMode(renderer::common::Back)
                                      ->setFrontClockwise(true)
-                                     ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcomplex.frag.glsl",
-                                                                                 Fragment, GLSLSource, formatComplex))
+                                     ->shader(renderer->shaderManager.preprocess(
+                                         "core/voxel/voxelcomplex.oit.frag.glsl", Fragment, GLSLSource, formatComplex))
                                      ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcomplex.vert.glsl",
                                                                                  Vertex, GLSLSource, formatComplex))
                                      ->format(formatComplex)
-                                     ->blendFunc({One, One, One, One})
+                                     ->blendFunc({One, One, Zero, OneMinusAlpha})
                                      ->blend(true)
                                      ->depth(true, false)
                                      ->depthEquals(true)
@@ -396,7 +394,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *target, 
         ->vertexBuffer({debugoffs})
         ->drawN(2 * 12)
         ->resolve(resolveTarget->target)
-        ->clearColor(glm::vec4(0.0))
+        ->clearColor(glm::vec4(0.0, 0.0, 0.0, 1.0))
         ->target(translucentTarget->target)
         ->pipeline(translucentPipeline)
         ->vertexBuffer({voxelTranslucentLayer->buf()->buffer})

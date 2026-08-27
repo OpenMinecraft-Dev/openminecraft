@@ -24,7 +24,8 @@ enum OMTextureArrangement
     ColorRgba,
     ColorRgb,
     ColorRgbaF16,
-    ColorRgbaF32
+    ColorRgbaF32,
+    ColorRF32
 };
 
 enum OMTextureAddressMode

@@ -57,6 +57,8 @@ static auto fromCommonUsage(common::OMTextureArrangement arr) -> Format
         return Format::eR16G16B16A16Sfloat;
     case common::ColorRgbaF32:
         return Format::eR32G32B32A32Sfloat;
+    case common::ColorRF32:
+        return Format::eR32Sfloat;
     }
 }
 

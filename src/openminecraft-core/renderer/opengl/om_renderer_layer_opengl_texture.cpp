@@ -49,6 +49,8 @@ static auto fromCommonI(common::OMTextureArrangement arr) -> GLenum
         return GL_RGBA16F;
     case common::ColorRgbaF32:
         return GL_RGBA32F;
+    case common::ColorRF32:
+        return GL_R32F;
     }
 }
 
