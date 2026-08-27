@@ -175,6 +175,33 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
             ->depthReverseZ(true)
             ->buildN();
 
+    biltCutoutPipeline =
+        renderer->createPipeline()
+            ->input(ImageSampler)
+            ->inputName("inTexture")
+            ->output(target)
+            ->samples(1)
+            ->shader(renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format))
+            ->shader(renderer->shaderManager.preprocess("core/bilt2.vert.glsl", Vertex, GLSLSource, format))
+            ->format(format)
+            ->blend(false)
+            ->depth(false, false)
+            ->buildN();
+
+    biltTranslucentPipeline =
+        renderer->createPipeline()
+            ->input(ImageSampler)
+            ->inputName("inTexture")
+            ->output(target)
+            ->samples(1)
+            ->shader(renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format))
+            ->shader(renderer->shaderManager.preprocess("core/bilt2.vert.glsl", Vertex, GLSLSource, format))
+            ->format(format)
+            ->blendFunc({One, Alpha, One, OneMinusAlpha})
+            ->blend(true)
+            ->depth(false, false)
+            ->buildN();
+
     voxelLayer = new OMVoxelLayer<OMVoxel>(renderer);
     voxelComplexLayer = new OMVoxelLayer<OMVoxelComplex>(renderer);
     voxelTranslucentLayer = new OMVoxelLayer<OMVoxel>(renderer);
@@ -197,8 +224,11 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
     translucentComplexPipeline->bindInput(2, textureAtlasSecondary);
     translucentComplexPipeline->bindInput(3, chunkoffs);
 
+    translucentTargetMS = new OMRendererTempTarget(renderer);
+    translucentTargetMS->clearDepth = false;
+
+    cutoutTarget = new OMRendererTempTarget(renderer);
     translucentTarget = new OMRendererTempTarget(renderer);
-    translucentTarget->clearDepth = false;
 }
 OMVoxelManager::~OMVoxelManager()
 {
@@ -213,6 +243,10 @@ OMVoxelManager::~OMVoxelManager()
     delete translucentPipeline;
     delete translucentComplexPipeline;
     delete debugPipeline;
+    delete biltTranslucentPipeline;
+    delete biltCutoutPipeline;
+    delete translucentTargetMS;
+    delete cutoutTarget;
     delete translucentTarget;
 }
 
@@ -382,7 +416,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *target, OMRendererTempTarget *resolveTarget)
     -> OMRendererTask *
 {
-    translucentTarget->constructWithDepth(target->depthTexture, renderer->getExtent(), 4);
+    translucentTargetMS->constructWithDepth(target->depthTexture, renderer->getExtent(), 4);
+    cutoutTarget->construct(renderer->getExtent());
+    translucentTarget->construct(renderer->getExtent());
+    biltCutoutPipeline->bindInput(0, cutoutTarget->colorTexture);
+    biltTranslucentPipeline->bindInput(0, translucentTarget->colorTexture);
+
     return task->target(target->target)
         ->pipeline(pipeline)
         ->vertexBuffer({voxelLayer->buf()->buffer})
@@ -393,15 +432,21 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *target, 
         ->pipeline(debugPipeline)
         ->vertexBuffer({debugoffs})
         ->drawN(2 * 12)
-        ->resolve(resolveTarget->target)
+        ->resolve(cutoutTarget->target)
         ->clearColor(glm::vec4(0.0, 0.0, 0.0, 1.0))
-        ->target(translucentTarget->target)
+        ->target(translucentTargetMS->target)
         ->pipeline(translucentPipeline)
         ->vertexBuffer({voxelTranslucentLayer->buf()->buffer})
         ->drawInstanceN(6, voxelTranslucentLayer->buf()->totalSize / sizeof(OMVoxel))
         ->pipeline(translucentComplexPipeline)
         ->vertexBuffer({voxelTranslucentComplexLayer->buf()->buffer})
         ->drawInstanceN(6, voxelTranslucentComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex))
+        ->resolve(translucentTarget->target)
+        ->target(resolveTarget->target)
+        ->pipeline(biltCutoutPipeline)
+        ->drawN(6)
+        ->pipeline(biltTranslucentPipeline)
+        ->drawN(6)
         ->finishN();
 }
 } // namespace openminecraft::renderer::common::wrap

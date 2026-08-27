@@ -333,9 +333,11 @@ class OMVoxelManager
     auto submit(OMRendererTask *, OMRendererTempTarget *, OMRendererTempTarget *) -> OMRendererTask *;
     auto update(basics::OMCamera &camera) -> void;
 
-    OMRendererTempTarget *translucentTarget;
+    OMRendererTempTarget *translucentTargetMS, *translucentTarget;
+    OMRendererTempTarget *cutoutTarget;
     OMRendererPipeline *pipeline, *debugPipeline, *complexPipeline;
     OMRendererPipeline *translucentPipeline, *translucentComplexPipeline;
+    OMRendererPipeline *biltCutoutPipeline, *biltTranslucentPipeline;
     OMRendererBuffer *chunkoffs, *debugoffs;
     OMRendererTexture *textureAtlas;
     OMRendererTexture *textureAtlasSecondary;
