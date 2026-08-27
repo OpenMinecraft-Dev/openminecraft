@@ -41,6 +41,14 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererTexture *tex, OMR
     cutoutTargetMS = new OMRendererTempTarget(renderer);
     cutoutTargetMS->construct(renderer->getExtent(), 4);
 
+    translucentTargetMS = new OMRendererTempTarget(renderer);
+    translucentTargetMS->clearDepth = false;
+    translucentTargetMS->construct(renderer->getExtent(), 4);
+
+    cutoutTarget = new OMRendererTempTarget(renderer);
+    cutoutTarget->construct(renderer->getExtent());
+    translucentTarget = new OMRendererTempTarget(renderer);
+
     basics::OMVertexFormat format, format2, formatComplex, simpleFormat;
     simpleFormat.nextGroup()->decideStruct();
     format.setInstance()
@@ -122,7 +130,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererTexture *tex, OMR
             ->inputName("inTexture")
             ->input(UniformTexelBuffer)
             ->inputName("inChunkPos")
-            ->output(cutoutTargetMS->target)
+            ->output(translucentTargetMS->target)
             ->samples(4)
             ->setCullMode(renderer::common::Back)
             ->setFrontClockwise(true)
@@ -144,7 +152,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererTexture *tex, OMR
                                      ->inputName("inTextureSec")
                                      ->input(UniformTexelBuffer)
                                      ->inputName("inChunkPos")
-                                     ->output(cutoutTargetMS->target)
+                                     ->output(translucentTargetMS->target)
                                      ->samples(4)
                                      ->setCullMode(renderer::common::Back)
                                      ->setFrontClockwise(true)
@@ -183,7 +191,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererTexture *tex, OMR
                           ->inputName("inTextureCutout")
                           ->input(ImageSampler)
                           ->inputName("inTextureTranslucent")
-                          ->output(cutoutTargetMS->target)
+                          ->output(cutoutTarget->target)
                           ->samples(1)
                           ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcompose.frag.glsl", Fragment,
                                                                       GLSLSource, format))
@@ -215,12 +223,6 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererTexture *tex, OMR
     translucentComplexPipeline->bindInput(1, textureAtlas);
     translucentComplexPipeline->bindInput(2, textureAtlasSecondary);
     translucentComplexPipeline->bindInput(3, chunkoffs);
-
-    translucentTargetMS = new OMRendererTempTarget(renderer);
-    translucentTargetMS->clearDepth = false;
-
-    cutoutTarget = new OMRendererTempTarget(renderer);
-    translucentTarget = new OMRendererTempTarget(renderer);
 }
 OMVoxelManager::~OMVoxelManager()
 {
@@ -327,21 +329,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             pp3 - camera.getPosRaw(), pp5 - camera.getPosRaw(), pp3 - camera.getPosRaw(), pp7 - camera.getPosRaw(),
             pp4 - camera.getPosRaw(), pp6 - camera.getPosRaw(), pp4 - camera.getPosRaw(), pp7 - camera.getPosRaw(),
         }}.data());
-    uint64_t hsh = chunkManager->numChunks();
-    hsh *= 31;
-    hsh += camera.getPosRaw().chunkx;
-    hsh *= 31;
-    hsh += camera.getPosRaw().chunky;
-    hsh *= 31;
-    hsh += camera.getPosRaw().chunkz;
-    hsh *= 31;
-    hsh += camera.getPosRaw().localx * 0x1000000;
-    hsh *= 31;
-    hsh += camera.getPosRaw().localy * 0x1000000;
-    hsh *= 31;
-    hsh += camera.getPosRaw().localz * 0x1000000;
-
-    bool miss = hsh != cameraHash;
 
     if (chunkManager->numChunks())
     {
@@ -380,23 +367,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         {
             delete chunkoffs;
             chunkoffs = renderer->allocateBuffer(UniformTexel, chunkManager->numChunks() * 3 * sizeof(float) * 2);
-            chunkoffs->updateData(offs.data());
             pipeline->bindInput(2, chunkoffs);
             complexPipeline->bindInput(3, chunkoffs);
             translucentPipeline->bindInput(2, chunkoffs);
             translucentComplexPipeline->bindInput(3, chunkoffs);
         }
-        else
-        {
-            if (miss)
-            {
-                chunkoffs->updateData(offs.data());
-            }
-            else
-            {
-                cameraHash = hsh;
-            }
-        }
+        chunkoffs->updateDataPart(offs.data(), 0, offs.size() * sizeof(glm::vec3));
 
         if (l != voxelLayer->buf()->totalSize || l2 != voxelComplexLayer->buf()->totalSize)
         {
@@ -407,6 +383,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
 auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveTarget) -> OMRendererTask *
 {
+    cutoutTargetMS->construct(renderer->getExtent(), 4);
     translucentTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), 4);
     cutoutTarget->construct(renderer->getExtent());
     translucentTarget->construct(renderer->getExtent());
