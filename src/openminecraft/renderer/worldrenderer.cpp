@@ -50,11 +50,8 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     outputFrg = renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format);
     outputVtx = renderer->shaderManager.preprocess("core/bilt.vert.glsl", Vertex, GLSLSource, format);
 
-    tempTargetMS = new wrap::OMRendererTempTarget(renderer);
     tempTarget = new wrap::OMRendererTempTarget(renderer);
-    auto ext = renderer->getExtent();
-    tempTargetMS->construct(ext, 4);
-    tempTarget->construct(ext);
+    tempTarget->construct(renderer->getExtent());
 
     textureAtlas = new data::OMTextureAtlas("/external", renderer);
 
@@ -83,8 +80,8 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     textureAtlas->build();
 
     voxelManager = new wrap::OMVoxelManager(
-        renderer, tempTargetMS->target, textureAtlas->texture, textureAtlas->textureSecondary, chunkManager,
-        [&]() { record(); }, this->voxelHandler,
+        renderer, textureAtlas->texture, textureAtlas->textureSecondary, chunkManager, [&]() { record(); },
+        this->voxelHandler,
         [&](uint32_t v) -> uint32_t {
             const auto &reg = data::block::blockstateRegistry.idToRegistry[v];
             return blockstateResolver->fetchModel(reg.block, reg.state);
@@ -123,7 +120,7 @@ void OMWorldRenderer::beforeFrame()
 void OMWorldRenderer::record()
 {
     voxelManager->submit(renderer->fetchTask("voxel")->clearColor({0.198f, 0.371f, 1.0f, 1.0f})->clearDepth(0.0f),
-                         tempTargetMS, tempTarget);
+                         tempTarget);
 }
 
 void OMWorldRenderer::afterFrame()
@@ -132,7 +129,6 @@ void OMWorldRenderer::afterFrame()
 
 void OMWorldRenderer::submitTasks()
 {
-    tempTargetMS->construct(renderer->getExtent(), 4);
     tempTarget->construct(renderer->getExtent());
 
     renderer->createTask("voxel");
@@ -149,7 +145,6 @@ OMWorldRenderer::~OMWorldRenderer()
     delete blockstateResolver;
     delete textureAtlas;
 
-    delete tempTargetMS;
     delete tempTarget;
 }
 } // namespace openminecraftshell::renderer

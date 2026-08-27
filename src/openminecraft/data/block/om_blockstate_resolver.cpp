@@ -156,11 +156,12 @@ static auto caseCheck(OMBlockState &bs, std::shared_ptr<json::OMJsonNode> node) 
     return true;
 }
 
-auto OMBlockstateResolver::fetchModel(OMIdentifier ident, OMBlockState state) -> int
+auto OMBlockstateResolver::fetchModel(OMIdentifier ident, OMBlockState state, int variant) -> int
 {
     if (states[ident].count(state))
     {
-        return states[ident][state];
+        auto &m = states[ident][state];
+        return m[variant % m.size()];
     }
     else
     {
@@ -191,22 +192,23 @@ void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
                 }
             }
             {
-                std::vector<int> ids = {};
                 if (var.second->type() == openminecraft::io::json::Object)
                 {
-                    ids.emplace_back(requiredModels[ident][identFrom(var.second)]);
+                    auto i = compiler.composeBlock({requiredModels[ident][identFrom(var.second)]}, blk.soild,
+                                                   blk.translucent);
+                    states[ident][st].emplace_back(i);
+                    return;
                 }
                 else
                 {
                     for (auto &lp : var.second->getArray())
                     {
-                        ids.emplace_back(requiredModels[ident][identFrom(lp)]);
+                        auto i =
+                            compiler.composeBlock({requiredModels[ident][identFrom(lp)]}, blk.soild, blk.translucent);
+                        states[ident][st].emplace_back(i);
                     }
+                    return;
                 }
-
-                auto i = compiler.composeBlock(ids, blk.soild, blk.translucent);
-                states[ident][st] = i;
-                return;
             }
         next:
             continue;
@@ -237,7 +239,7 @@ void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
         }
 
         auto i = compiler.composeBlock(ids, blk.soild, blk.translucent);
-        states[ident][st] = i;
+        states[ident][st].emplace_back(i);
         return;
     }
 }

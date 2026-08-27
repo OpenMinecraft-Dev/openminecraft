@@ -325,16 +325,16 @@ template <typename It> class OMVoxelLayer
 class OMVoxelManager
 {
   public:
-    OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *, OMRendererTexture *,
+    OMVoxelManager(OMRenderer *renderer, OMRendererTexture *, OMRendererTexture *,
                    std::shared_ptr<world::OMChunkManager<16>>, std::function<void()>, OMVoxelHandler *,
                    std::function<uint32_t(uint32_t)>);
     ~OMVoxelManager();
 
-    auto submit(OMRendererTask *, OMRendererTempTarget *, OMRendererTempTarget *) -> OMRendererTask *;
+    auto submit(OMRendererTask *, OMRendererTempTarget *) -> OMRendererTask *;
     auto update(basics::OMCamera &camera) -> void;
 
     OMRendererTempTarget *translucentTargetMS, *translucentTarget;
-    OMRendererTempTarget *cutoutTarget;
+    OMRendererTempTarget *cutoutTargetMS, *cutoutTarget;
     OMRendererPipeline *pipeline, *debugPipeline, *complexPipeline;
     OMRendererPipeline *translucentPipeline, *translucentComplexPipeline;
     OMRendererPipeline *composePipeline;

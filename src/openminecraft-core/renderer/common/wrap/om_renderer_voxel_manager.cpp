@@ -22,10 +22,9 @@
 namespace openminecraft::renderer::common::wrap
 {
 uint64_t cx = 0, cy = 0, cz = 0;
-OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *target, OMRendererTexture *tex,
-                               OMRendererTexture *texSec, std::shared_ptr<world::OMChunkManager<16>> man,
-                               std::function<void()> rec, OMVoxelHandler *handler,
-                               std::function<uint32_t(uint32_t)> converter)
+OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererTexture *tex, OMRendererTexture *texSec,
+                               std::shared_ptr<world::OMChunkManager<16>> man, std::function<void()> rec,
+                               OMVoxelHandler *handler, std::function<uint32_t(uint32_t)> converter)
     : logger("OMVoxelManager", this)
 {
     this->rec = rec;
@@ -37,6 +36,9 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
     delete compiler.handler;
     compiler.handler = voxelHandler;
     compiler.converter = converter;
+
+    cutoutTargetMS = new OMRendererTempTarget(renderer);
+    cutoutTargetMS->construct(renderer->getExtent(), 4);
 
     basics::OMVertexFormat format, format2, formatComplex, simpleFormat;
     simpleFormat.nextGroup()->decideStruct();
@@ -73,7 +75,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
             ->inputName("inTexture")
             ->input(UniformTexelBuffer)
             ->inputName("inChunkPos")
-            ->output(target)
+            ->output(cutoutTargetMS->target)
             ->samples(4)
             ->setCullMode(renderer::common::Back)
             ->setFrontClockwise(true)
@@ -96,7 +98,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                           ->inputName("inTextureSec")
                           ->input(UniformTexelBuffer)
                           ->inputName("inChunkPos")
-                          ->output(target)
+                          ->output(cutoutTargetMS->target)
                           ->samples(4)
                           ->setCullMode(renderer::common::Back)
                           ->setFrontClockwise(true)
@@ -119,7 +121,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
             ->inputName("inTexture")
             ->input(UniformTexelBuffer)
             ->inputName("inChunkPos")
-            ->output(target)
+            ->output(cutoutTargetMS->target)
             ->samples(4)
             ->setCullMode(renderer::common::Back)
             ->setFrontClockwise(true)
@@ -141,7 +143,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                                      ->inputName("inTextureSec")
                                      ->input(UniformTexelBuffer)
                                      ->inputName("inChunkPos")
-                                     ->output(target)
+                                     ->output(cutoutTargetMS->target)
                                      ->samples(4)
                                      ->setCullMode(renderer::common::Back)
                                      ->setFrontClockwise(true)
@@ -163,7 +165,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
             ->inputName("Camera")
             ->primitiveType(LineList)
             ->setLineWidth(2.0f)
-            ->output(target)
+            ->output(cutoutTargetMS->target)
             ->samples(4)
             ->shader(
                 renderer->shaderManager.preprocess("core/voxel/voxeldebug.frag.glsl", Fragment, GLSLSource, format2))
@@ -180,7 +182,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                           ->inputName("inTextureCutout")
                           ->input(ImageSampler)
                           ->inputName("inTextureTranslucent")
-                          ->output(target)
+                          ->output(cutoutTargetMS->target)
                           ->samples(1)
                           ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcompose.frag.glsl", Fragment,
                                                                       GLSLSource, format))
@@ -234,6 +236,7 @@ OMVoxelManager::~OMVoxelManager()
     delete debugPipeline;
     delete composePipeline;
     delete translucentTargetMS;
+    delete cutoutTargetMS;
     delete cutoutTarget;
     delete translucentTarget;
 }
@@ -401,16 +404,15 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
     }
 }
 
-auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *target, OMRendererTempTarget *resolveTarget)
-    -> OMRendererTask *
+auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveTarget) -> OMRendererTask *
 {
-    translucentTargetMS->constructWithDepth(target->depthTexture, renderer->getExtent(), 4);
+    translucentTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), 4);
     cutoutTarget->construct(renderer->getExtent());
     translucentTarget->construct(renderer->getExtent());
     composePipeline->bindInput(0, cutoutTarget->colorTexture);
     composePipeline->bindInput(1, translucentTarget->colorTexture);
 
-    return task->target(target->target)
+    return task->target(cutoutTargetMS->target)
         ->pipeline(pipeline)
         ->vertexBuffer({voxelLayer->buf()->buffer})
         ->drawInstanceN(6, voxelLayer->buf()->totalSize / sizeof(OMVoxel))

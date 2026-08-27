@@ -9,6 +9,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 namespace openminecraftshell::data::block
 {
@@ -23,13 +24,13 @@ class OMBlockstateResolver
 
     void resolve(OMIdentifier);
     void buildModel(OMIdentifier, OMBlockState state);
-    auto fetchModel(OMIdentifier, OMBlockState state) -> int;
+    auto fetchModel(OMIdentifier, OMBlockState state, int = 0) -> int;
 
   private:
     void resolveModel(OMIdentifier, std::shared_ptr<io::json::OMJsonNode>);
     auto identFrom(std::shared_ptr<io::json::OMJsonNode>) -> OMBlockModelIdentifier;
 
-    std::unordered_map<OMIdentifier, std::unordered_map<OMBlockState, int>> states;
+    std::unordered_map<OMIdentifier, std::unordered_map<OMBlockState, std::vector<int>>> states;
     std::unordered_map<OMIdentifier, std::shared_ptr<io::json::OMJsonNode>> resolverCache;
     std::unordered_map<OMIdentifier, std::unordered_map<OMBlockModelIdentifier, int>> requiredModels;
 
