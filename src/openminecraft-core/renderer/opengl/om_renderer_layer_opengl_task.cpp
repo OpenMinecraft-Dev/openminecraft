@@ -171,7 +171,14 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     {
         ops.push_back({ClearDepth, {}, {}, depthClear});
         ops.push_back({ClearColor, {}, {}, colorClear.r, colorClear.g, colorClear.b, colorClear.a});
-        ops.push_back({Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
+        if (needClearDepth)
+        {
+            ops.push_back({Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
+        }
+        else
+        {
+            ops.push_back({Clear, GL_COLOR_BUFFER_BIT});
+        }
         isCleared = true;
     }
 }
@@ -314,6 +321,7 @@ void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
         {BindFramebuffer, GL_FRAMEBUFFER, reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer});
     ops.push_back({Enable, GL_FRAMEBUFFER_SRGB});
     isCleared = false;
+    needClearDepth = target->clearDepth;
 }
 void OMRendererTaskOpenGL::draw(uint64_t vertexCount)
 {

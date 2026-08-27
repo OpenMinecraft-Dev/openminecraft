@@ -28,6 +28,8 @@ class OMRendererRenderTarget : public OMRendererObject
     {
         return RenderTarget;
     }
+
+    bool clearDepth = true;
 };
 } // namespace openminecraft::renderer::common
 

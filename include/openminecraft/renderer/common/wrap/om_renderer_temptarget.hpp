@@ -92,6 +92,7 @@ class OMRendererTempTarget
         if (!target)
         {
             target = renderer->createRenderTarget();
+            target->clearDepth = clearDepth;
             target->attachTarget(colorTexture);
             target->attachTarget(depthTexture);
             target->build();
@@ -105,6 +106,7 @@ class OMRendererTempTarget
     }
 
     bool externalDepth = false;
+    bool clearDepth = true;
     OMRendererRenderTarget *target = nullptr;
     OMRendererTexture *colorTexture;
     OMRendererTexture *depthTexture;

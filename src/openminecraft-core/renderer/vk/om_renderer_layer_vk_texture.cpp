@@ -121,7 +121,8 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64
             ImageCreateInfo({}, ImageType::e2D, format, Extent3D(width, height, 1), mipmap + 1, layers, sampleCount,
                             ImageTiling::eOptimal,
                             (arr == common::Depth)
-                                ? ImageUsageFlagBits::eDepthStencilAttachment
+                                ? ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled |
+                                      ImageUsageFlagBits::eDepthStencilAttachment | ImageUsageFlagBits::eTransferSrc
                                 : ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled |
                                       ImageUsageFlagBits::eColorAttachment | ImageUsageFlagBits::eTransferSrc,
                             SharingMode::eExclusive, {}, ImageLayout::eUndefined),
