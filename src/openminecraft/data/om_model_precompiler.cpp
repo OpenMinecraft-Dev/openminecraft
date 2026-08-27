@@ -65,6 +65,11 @@ static auto fromAxis(std::string s) -> OMModelAxis
     }
 }
 
+auto OMModelPrecompiler::queryTranslucent(int bsid) -> bool
+{
+    return blockModels[bsid].translucent;
+}
+
 auto OMModelPrecompiler::queryPartFaceSecondaryTexture(int bsid, int pid,
                                                        openminecraft::renderer::common::wrap::OMVoxelFacing f) -> bool
 {
@@ -719,10 +724,11 @@ auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::io::json::OMJso
             textureAtlas.subtex.count(ident) == 0};
 }
 
-auto OMModelPrecompiler::composeBlock(std::vector<int> partids, bool soild) -> int
+auto OMModelPrecompiler::composeBlock(std::vector<int> partids, bool soild, bool translucent) -> int
 {
     auto &m = blockModels.emplace_back();
     m.soild = soild;
+    m.translucent = translucent;
     for (auto i : partids)
     {
         for (auto &mp : modelParts[i])

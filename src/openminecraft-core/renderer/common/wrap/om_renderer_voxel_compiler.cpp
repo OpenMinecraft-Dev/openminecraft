@@ -282,7 +282,9 @@ auto OMVoxelCompiler::checkExistSoild(const world::OMChunk<16> &chunk,
 auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                               std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
                               int chunkid, std::function<void(OMVoxel)> commiter,
-                              std::function<void(OMVoxelComplex)> committer2) -> void
+                              std::function<void(OMVoxelComplex)> commiterComplex,
+                              std::function<void(OMVoxel)> commiterTranslucent,
+                              std::function<void(OMVoxelComplex)> commiterTranslucentComplex) -> void
 {
     for (const auto &v : chunk)
     {
@@ -307,6 +309,8 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                     auto uv = handler->queryPartFaceUV(bsid, i, f);
                     auto raxis = handler->queryPartRotationCenter(bsid, i);
 
+                    auto trans = handler->queryTranslucent(bsid);
+
                     if (handler->queryPartComplex(bsid, i))
                     {
                         float rotationAngle = handler->queryPartRotationAngleF(bsid, i);
@@ -317,10 +321,14 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                             handler->queryPartShade(bsid, i), false, aabb.offset, {uv.x, uv.y}, {uv.z, uv.w},
                             handler->queryPartRotationAxis(bsid, i), rotationAngle, raxis, aabb.size,
                             handler->queryPartRotationAngleExt(bsid, i));
-                        committer2(OMVoxelComplex{std::get<0>(vox), std::get<1>(vox), std::get<2>(vox),
-                                                  std::get<3>(vox), std::get<4>(vox), std::get<5>(vox),
-                                                  std::get<6>(vox), std::get<7>(vox), std::get<8>(vox),
-                                                  std::get<9>(vox), std::get<10>(vox)});
+                        auto func = commiterComplex;
+                        if (trans)
+                        {
+                            func = commiterTranslucentComplex;
+                        }
+                        func(OMVoxelComplex{std::get<0>(vox), std::get<1>(vox), std::get<2>(vox), std::get<3>(vox),
+                                            std::get<4>(vox), std::get<5>(vox), std::get<6>(vox), std::get<7>(vox),
+                                            std::get<8>(vox), std::get<9>(vox), std::get<10>(vox)});
                         continue;
                     }
 
@@ -332,7 +340,12 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                         uv.z, uv.w, handler->queryPartRotationAxis(bsid, i), std::abs(raxis.x), std::abs(raxis.y),
                         std::abs(raxis.z), raxis.x < 0, raxis.y < 0, raxis.z < 0,
                         handler->queryPartRotationAngle(bsid, i), handler->queryPartShade(bsid, i), false);
-                    commiter(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4]});
+                    auto func = commiter;
+                    if (trans)
+                    {
+                        func = commiterTranslucent;
+                    }
+                    func(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4]});
                 }
             }
         }

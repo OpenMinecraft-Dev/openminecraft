@@ -75,6 +75,7 @@ struct OMModel
     std::vector<bool> partAmbientOcculusion;
     std::vector<bool> partComplex;
     bool soild;
+    bool translucent;
 };
 class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxelHandler
 {
@@ -87,7 +88,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
         -> OMModelFace;
     auto wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelPart;
 
-    auto composeBlock(std::vector<int>, bool = true) -> int;
+    auto composeBlock(std::vector<int>, bool = true, bool = false) -> int;
 
     auto loadModelPart(OMIdentifier) -> int;
     auto loadModelPartWithArgs(OMIdentifier, int, int, int, bool) -> int;
@@ -112,6 +113,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
         -> bool override;
     auto queryPartRotationAngleF(int bsid, int pid) -> float override;
     auto queryPartRotationAngleExt(int bsid, int pid) -> glm::vec3 override;
+    auto queryTranslucent(int bsid) -> bool override;
 
   private:
     int modelId = 0;

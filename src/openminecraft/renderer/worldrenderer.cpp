@@ -93,6 +93,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     voxelManager->pipeline->bindInput(0, cameraBuffer);
     voxelManager->debugPipeline->bindInput(0, cameraBuffer);
     voxelManager->complexPipeline->bindInput(0, cameraBuffer);
+    voxelManager->translucentPipeline->bindInput(0, cameraBuffer);
     voxelManager->translucentComplexPipeline->bindInput(0, cameraBuffer);
 }
 

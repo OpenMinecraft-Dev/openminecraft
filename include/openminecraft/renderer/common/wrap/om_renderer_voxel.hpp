@@ -166,6 +166,7 @@ class OMVoxelHandler
     virtual auto queryPartComplex(int bsid, int pid) -> bool = 0;
     virtual auto queryPartFaceSecondaryTexture(int bsid, int pid, OMVoxelFacing) -> bool = 0;
     virtual auto queryPartRotationAngleF(int bsid, int pid) -> float = 0;
+    virtual auto queryTranslucent(int bsid) -> bool = 0;
 };
 
 class OMVoxelHandlerDummy : public OMVoxelHandler
@@ -245,6 +246,10 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     {
         return {};
     }
+    auto queryTranslucent(int bsid) -> bool override
+    {
+        return false;
+    }
 };
 
 class OMVoxelCompiler
@@ -262,7 +267,8 @@ class OMVoxelCompiler
     auto checkExistSoild(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                          glm::ivec3, OMVoxelFacing) -> bool;
     auto compile(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
-                 int chunkid, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>) -> void;
+                 int chunkid, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>,
+                 std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>) -> void;
 
     OMVoxelHandler *handler = new OMVoxelHandlerDummy();
     std::function<uint32_t(uint32_t)> converter;
@@ -344,8 +350,8 @@ class OMVoxelManager
 
     std::function<uint32_t(uint32_t)> converter;
     std::shared_ptr<world::OMChunkManager<16>> chunkManager;
-    OMVoxelLayer<OMVoxel> *voxelLayer;
-    OMVoxelLayer<OMVoxelComplex> *voxelComplexLayer;
+    OMVoxelLayer<OMVoxel> *voxelLayer, *voxelTranslucentLayer;
+    OMVoxelLayer<OMVoxelComplex> *voxelComplexLayer, *voxelTranslucentComplexLayer;
 
     void compile(int i);
 };

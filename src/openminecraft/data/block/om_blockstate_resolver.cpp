@@ -204,7 +204,7 @@ void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
                     }
                 }
 
-                auto i = compiler.composeBlock(ids, blk.soild);
+                auto i = compiler.composeBlock(ids, blk.soild, blk.translucent);
                 states[ident][st] = i;
                 return;
             }
@@ -236,7 +236,7 @@ void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
             }
         }
 
-        auto i = compiler.composeBlock(ids, blk.soild);
+        auto i = compiler.composeBlock(ids, blk.soild, blk.translucent);
         states[ident][st] = i;
         return;
     }

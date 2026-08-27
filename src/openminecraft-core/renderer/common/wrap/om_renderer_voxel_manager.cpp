@@ -113,6 +113,27 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                           ->depthEquals(true)
                           ->depthReverseZ(true)
                           ->buildN();
+    translucentPipeline =
+        renderer->createPipeline()
+            ->input(UniformBuffer)
+            ->inputName("Camera")
+            ->input(ImageSampler)
+            ->inputName("inTexture")
+            ->input(UniformTexelBuffer)
+            ->inputName("inChunkPos")
+            ->output(target)
+            ->samples(4)
+            ->setCullMode(renderer::common::Back)
+            ->setFrontClockwise(true)
+            ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.frag.glsl", Fragment, GLSLSource, format))
+            ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.vert.glsl", Vertex, GLSLSource, format))
+            ->format(format)
+            ->blendFunc({One, One, One, One})
+            ->blend(true)
+            ->depth(true, false)
+            ->depthEquals(true)
+            ->depthReverseZ(true)
+            ->buildN();
     translucentComplexPipeline = renderer->createPipeline()
                                      ->input(UniformBuffer)
                                      ->inputName("Camera")
@@ -131,10 +152,10 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                                      ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcomplex.vert.glsl",
                                                                                  Vertex, GLSLSource, formatComplex))
                                      ->format(formatComplex)
-                                     ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+                                     ->blendFunc({One, One, One, One})
                                      ->blend(true)
                                      ->depth(true, false)
-                                     ->depthEquals(false)
+                                     ->depthEquals(true)
                                      ->depthReverseZ(true)
                                      ->buildN();
 
@@ -158,6 +179,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
 
     voxelLayer = new OMVoxelLayer<OMVoxel>(renderer);
     voxelComplexLayer = new OMVoxelLayer<OMVoxelComplex>(renderer);
+    voxelTranslucentLayer = new OMVoxelLayer<OMVoxel>(renderer);
+    voxelTranslucentComplexLayer = new OMVoxelLayer<OMVoxelComplex>(renderer);
 
     chunkoffs = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
     debugoffs = renderer->allocateBuffer(VertexData, 12 * 2 * 3 * sizeof(float));
@@ -167,10 +190,11 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
 
     pipeline->bindInput(1, textureAtlas);
     pipeline->bindInput(2, chunkoffs);
-
     complexPipeline->bindInput(1, textureAtlas);
     complexPipeline->bindInput(2, textureAtlasSecondary);
     complexPipeline->bindInput(3, chunkoffs);
+    translucentPipeline->bindInput(1, textureAtlas);
+    translucentPipeline->bindInput(2, chunkoffs);
     translucentComplexPipeline->bindInput(1, textureAtlas);
     translucentComplexPipeline->bindInput(2, textureAtlasSecondary);
     translucentComplexPipeline->bindInput(3, chunkoffs);
@@ -182,10 +206,13 @@ OMVoxelManager::~OMVoxelManager()
 {
     delete voxelLayer;
     delete voxelComplexLayer;
+    delete voxelTranslucentLayer;
+    delete voxelTranslucentComplexLayer;
     delete chunkoffs;
     delete debugoffs;
     delete pipeline;
     delete complexPipeline;
+    delete translucentPipeline;
     delete translucentComplexPipeline;
     delete debugPipeline;
     delete translucentTarget;
@@ -237,19 +264,22 @@ auto OMVoxelManager::compile(int i) -> void
             return 0;
         }
     };
-    std::vector<OMVoxel> m = {};
-    std::vector<OMVoxelComplex> cm = {};
+    std::vector<OMVoxel> m = {}, tm = {};
+    std::vector<OMVoxelComplex> cm = {}, tcm = {};
 
     auto &ck = chunkManager->getChunk(i);
     if (ck.has_value())
     {
         compiler.compile(
             ck.value(), externalAccessor, i, [&](OMVoxel v) -> void { m.emplace_back(v); },
-            [&](OMVoxelComplex v) -> void { cm.emplace_back(v); });
+            [&](OMVoxelComplex v) -> void { cm.emplace_back(v); }, [&](OMVoxel v) -> void { tm.emplace_back(v); },
+            [&](OMVoxelComplex v) -> void { tcm.emplace_back(v); });
     }
 
     voxelLayer->loadData(i, m);
     voxelComplexLayer->loadData(i, cm);
+    voxelTranslucentLayer->loadData(i, tm);
+    voxelTranslucentComplexLayer->loadData(i, tcm);
 }
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
@@ -329,6 +359,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             chunkoffs->updateData(offs.data());
             pipeline->bindInput(2, chunkoffs);
             complexPipeline->bindInput(3, chunkoffs);
+            translucentPipeline->bindInput(2, chunkoffs);
             translucentComplexPipeline->bindInput(3, chunkoffs);
         }
         else
@@ -365,10 +396,14 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *target, 
         ->vertexBuffer({debugoffs})
         ->drawN(2 * 12)
         ->resolve(resolveTarget->target)
+        ->clearColor(glm::vec4(0.0))
         ->target(translucentTarget->target)
+        ->pipeline(translucentPipeline)
+        ->vertexBuffer({voxelTranslucentLayer->buf()->buffer})
+        ->drawInstanceN(6, voxelTranslucentLayer->buf()->totalSize / sizeof(OMVoxel))
         ->pipeline(translucentComplexPipeline)
-        ->vertexBuffer({voxelComplexLayer->buf()->buffer})
-        ->drawInstanceN(6, voxelComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex))
+        ->vertexBuffer({voxelTranslucentComplexLayer->buf()->buffer})
+        ->drawInstanceN(6, voxelTranslucentComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex))
         ->finishN();
 }
 } // namespace openminecraft::renderer::common::wrap

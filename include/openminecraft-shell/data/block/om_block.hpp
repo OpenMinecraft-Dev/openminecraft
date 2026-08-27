@@ -56,6 +56,11 @@ class OMBlock
         soild = v;
         return *this;
     }
+    auto isTranslucent(bool v) -> OMBlock &
+    {
+        translucent = v;
+        return *this;
+    }
 
     auto prop(std::string n, std::initializer_list<std::string> values) -> OMBlock &
     {
@@ -104,6 +109,7 @@ class OMBlock
     }
 
     bool soild = true;
+    bool translucent = false;
     std::unordered_map<std::string, std::vector<std::string>> properties;
 
     auto operator=(const OMBlock &other) -> OMBlock & = default;
