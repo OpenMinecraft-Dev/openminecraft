@@ -197,7 +197,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
             ->shader(renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format))
             ->shader(renderer->shaderManager.preprocess("core/bilt2.vert.glsl", Vertex, GLSLSource, format))
             ->format(format)
-            ->blendFunc({One, Alpha, One, OneMinusAlpha})
+            ->blendFunc({One, Alpha, Zero, One})
             ->blend(true)
             ->depth(false, false)
             ->buildN();
