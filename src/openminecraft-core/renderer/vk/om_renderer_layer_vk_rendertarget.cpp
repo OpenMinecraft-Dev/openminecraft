@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 #include "vulkan/vulkan.hpp"
+#include "vulkan/vulkan_enums.hpp"
 #include <algorithm>
 
 using namespace ::vk;
@@ -104,15 +105,16 @@ void OMRendererRenderTargetVk::build()
             {
                 if (tt->arr == common::OMTextureArrangement::Depth)
                 {
-                    attachDesc.push_back({{},
-                                          reinterpret_cast<OMRendererTextureVk *>(tt)->format,
-                                          reinterpret_cast<OMRendererTextureVk *>(tt)->sampleCount,
-                                          clearDepth ? AttachmentLoadOp::eClear : AttachmentLoadOp::eLoad,
-                                          AttachmentStoreOp::eStore,
-                                          AttachmentLoadOp::eDontCare,
-                                          AttachmentStoreOp::eDontCare,
-                                          ImageLayout::eUndefined,
-                                          ImageLayout::eDepthStencilAttachmentOptimal});
+                    attachDesc.push_back(
+                        {{},
+                         reinterpret_cast<OMRendererTextureVk *>(tt)->format,
+                         reinterpret_cast<OMRendererTextureVk *>(tt)->sampleCount,
+                         clearDepth ? AttachmentLoadOp::eClear : AttachmentLoadOp::eLoad,
+                         AttachmentStoreOp::eStore,
+                         AttachmentLoadOp::eDontCare,
+                         AttachmentStoreOp::eDontCare,
+                         clearDepth ? ImageLayout::eUndefined : ImageLayout::eDepthStencilAttachmentOptimal,
+                         ImageLayout::eDepthStencilAttachmentOptimal});
                     depthAttach.emplace_back(a, ImageLayout::eDepthStencilAttachmentOptimal);
                 }
                 else

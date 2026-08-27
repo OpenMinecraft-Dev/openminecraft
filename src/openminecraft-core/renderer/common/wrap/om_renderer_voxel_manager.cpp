@@ -384,6 +384,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveTarget) -> OMRendererTask *
 {
     cutoutTargetMS->construct(renderer->getExtent(), 4);
+    translucentTargetMS->clearDepth = false;
     translucentTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), 4);
     cutoutTarget->construct(renderer->getExtent());
     translucentTarget->construct(renderer->getExtent());
