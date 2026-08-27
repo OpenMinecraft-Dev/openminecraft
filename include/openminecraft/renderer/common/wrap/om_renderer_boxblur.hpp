@@ -35,7 +35,6 @@ class OMRendererBoxBlurHandler : public OMRendererHandler
     void afterFrame() override;
     void submitTasks() override;
 
-    auto blurPass(OMRendererTask *) -> OMRendererTask *;
     auto firstLayerTask(OMRendererTask *) -> OMRendererTask *;
     auto secondLayerTask(OMRendererTask *) -> OMRendererTask *;
     void bind(OMRendererTexture *uplayer, OMRendererTexture *bottomLayer);
