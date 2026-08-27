@@ -138,9 +138,12 @@ void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
         }
         else
         {
-            renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, commandBuffer);
-            commandBuffer = renderer->logicalDevice.allocateCommandBuffers(
-                {renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1})[0];
+            if (!begin)
+            {
+                renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, commandBuffer);
+                commandBuffer = renderer->logicalDevice.allocateCommandBuffers(
+                    {renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1})[0];
+            }
 
             auto rt = reinterpret_cast<OMRendererRenderTargetVk *>(target);
 
@@ -162,6 +165,11 @@ void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
                 commandBuffer.begin({CommandBufferUsageFlagBits::eSimultaneousUse});
                 begin = true;
             }
+            else
+            {
+                commandBuffer.endRenderPass();
+            }
+
             commandBuffer.beginRenderPass(
                 RenderPassBeginInfo(reinterpret_cast<OMRendererRenderTargetVk *>(target)->renderPass,
                                     reinterpret_cast<OMRendererRenderTargetVk *>(target)->block->framebuffer,

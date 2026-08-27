@@ -309,7 +309,6 @@ void OMRendererTaskOpenGL::drawIndirect(uint64_t begin, uint64_t count)
 }
 void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
 {
-    ops.clear();
     this->framebuffer = reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer;
     ops.push_back(
         {BindFramebuffer, GL_FRAMEBUFFER, reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer});
