@@ -22,7 +22,8 @@ class OMRendererTextureVk : public common::OMRendererTexture
     ~OMRendererTextureVk() override;
 
     void transitionImageLayout(::vk::CommandBuffer cmd, ::vk::ImageLayout oldLayout, ::vk::ImageLayout newLayout,
-                               uint64_t mip, uint64_t baseLayer, uint64_t layers);
+                               uint64_t mip, uint64_t baseLayer, uint64_t layers,
+                               ::vk::ImageAspectFlags aspect = ::vk::ImageAspectFlagBits::eColor);
     void updateData(void *p, uint64_t) override;
     void updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h, uint64_t) override;
     void setupSampler() override;

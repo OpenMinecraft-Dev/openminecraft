@@ -167,7 +167,14 @@ void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
             }
             else
             {
-                commandBuffer.endRenderPass();
+                if (!isResolved)
+                {
+                    commandBuffer.endRenderPass();
+                }
+                else
+                {
+                    isResolved = false;
+                }
             }
 
             commandBuffer.beginRenderPass(
@@ -283,11 +290,10 @@ void OMRendererTaskVk::resolveTo(common::OMRendererRenderTarget *target)
 
         for (int i = 0; i < src->textures.size(); ++i)
         {
+            auto srci = reinterpret_cast<OMRendererTextureVk *>(src->textures[i]);
+            auto dsti = reinterpret_cast<OMRendererTextureVk *>(dst->textures[i]);
             if (src->textures[i]->arr != common::Depth && dst->textures[i]->arr != common::Depth)
             {
-                auto srci = reinterpret_cast<OMRendererTextureVk *>(src->textures[i]);
-                auto dsti = reinterpret_cast<OMRendererTextureVk *>(dst->textures[i]);
-
                 srci->transitionImageLayout(commandBuffer, ImageLayout::eShaderReadOnlyOptimal,
                                             ImageLayout::eTransferSrcOptimal, 0, 0, 1);
                 dsti->transitionImageLayout(commandBuffer, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal, 0,

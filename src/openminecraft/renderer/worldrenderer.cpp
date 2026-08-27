@@ -93,6 +93,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     voxelManager->pipeline->bindInput(0, cameraBuffer);
     voxelManager->debugPipeline->bindInput(0, cameraBuffer);
     voxelManager->complexPipeline->bindInput(0, cameraBuffer);
+    voxelManager->translucentComplexPipeline->bindInput(0, cameraBuffer);
 }
 
 static float ang = 0.0f;
@@ -120,14 +121,8 @@ void OMWorldRenderer::beforeFrame()
 
 void OMWorldRenderer::record()
 {
-    voxelManager
-        ->submit(renderer->fetchTask("voxel")
-                     ->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
-                     ->clearDepth(0.0f)
-                     ->target(tempTargetMS->target),
-                 tempTargetMS->depthTexture, 4)
-        ->resolve(tempTarget->target)
-        ->finishN();
+    voxelManager->submit(renderer->fetchTask("voxel")->clearColor({0.198f, 0.371f, 1.0f, 1.0f})->clearDepth(0.0f),
+                         tempTargetMS, tempTarget);
 }
 
 void OMWorldRenderer::afterFrame()

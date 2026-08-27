@@ -324,11 +324,12 @@ class OMVoxelManager
                    std::function<uint32_t(uint32_t)>);
     ~OMVoxelManager();
 
-    auto submit(OMRendererTask *, OMRendererTexture *, int = 1) -> OMRendererTask *;
+    auto submit(OMRendererTask *, OMRendererTempTarget *, OMRendererTempTarget *) -> OMRendererTask *;
     auto update(basics::OMCamera &camera) -> void;
 
     OMRendererTempTarget *translucentTarget;
     OMRendererPipeline *pipeline, *debugPipeline, *complexPipeline;
+    OMRendererPipeline *translucentPipeline, *translucentComplexPipeline;
     OMRendererBuffer *chunkoffs, *debugoffs;
     OMRendererTexture *textureAtlas;
     OMRendererTexture *textureAtlasSecondary;

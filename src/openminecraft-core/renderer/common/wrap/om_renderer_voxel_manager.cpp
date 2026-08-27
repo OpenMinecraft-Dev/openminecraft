@@ -112,6 +112,30 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
                           ->depthEquals(true)
                           ->depthReverseZ(true)
                           ->buildN();
+    translucentComplexPipeline = renderer->createPipeline()
+                                     ->input(UniformBuffer)
+                                     ->inputName("Camera")
+                                     ->input(ImageSampler)
+                                     ->inputName("inTexture")
+                                     ->input(ImageSampler)
+                                     ->inputName("inTextureSec")
+                                     ->input(UniformTexelBuffer)
+                                     ->inputName("inChunkPos")
+                                     ->output(target)
+                                     ->samples(1)
+                                     ->setCullMode(renderer::common::Back)
+                                     ->setFrontClockwise(true)
+                                     ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcomplex.frag.glsl",
+                                                                                 Fragment, GLSLSource, formatComplex))
+                                     ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcomplex.vert.glsl",
+                                                                                 Vertex, GLSLSource, formatComplex))
+                                     ->format(formatComplex)
+                                     ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+                                     ->blend(true)
+                                     ->depth(true, true)
+                                     ->depthEquals(true)
+                                     ->depthReverseZ(true)
+                                     ->buildN();
 
     debugPipeline =
         renderer->createPipeline()
@@ -146,6 +170,9 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *tar
     complexPipeline->bindInput(1, textureAtlas);
     complexPipeline->bindInput(2, textureAtlasSecondary);
     complexPipeline->bindInput(3, chunkoffs);
+    translucentComplexPipeline->bindInput(1, textureAtlas);
+    translucentComplexPipeline->bindInput(2, textureAtlasSecondary);
+    translucentComplexPipeline->bindInput(3, chunkoffs);
 
     translucentTarget = new OMRendererTempTarget(renderer);
 }
@@ -157,6 +184,7 @@ OMVoxelManager::~OMVoxelManager()
     delete debugoffs;
     delete pipeline;
     delete complexPipeline;
+    delete translucentComplexPipeline;
     delete debugPipeline;
     delete translucentTarget;
 }
@@ -299,6 +327,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             chunkoffs->updateData(offs.data());
             pipeline->bindInput(2, chunkoffs);
             complexPipeline->bindInput(3, chunkoffs);
+            translucentComplexPipeline->bindInput(3, chunkoffs);
         }
         else
         {
@@ -319,10 +348,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
     }
 }
 
-auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTexture *depth, int samples) -> OMRendererTask *
+auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *target, OMRendererTempTarget *resolveTarget)
+    -> OMRendererTask *
 {
-    translucentTarget->constructWithDepth(depth, renderer->getExtent(), samples);
-    return task->pipeline(pipeline)
+    translucentTarget->construct(renderer->getExtent());
+    return task->target(target->target)
+        ->pipeline(pipeline)
         ->vertexBuffer({voxelLayer->buf()->buffer})
         ->drawInstanceN(6, voxelLayer->buf()->totalSize / sizeof(OMVoxel))
         ->pipeline(complexPipeline)
@@ -330,6 +361,8 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTexture *depth, int 
         ->drawInstanceN(6, voxelComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex))
         ->pipeline(debugPipeline)
         ->vertexBuffer({debugoffs})
-        ->drawN(2 * 12);
+        ->drawN(2 * 12)
+        ->resolve(resolveTarget->target)
+        ->finishN();
 }
 } // namespace openminecraft::renderer::common::wrap

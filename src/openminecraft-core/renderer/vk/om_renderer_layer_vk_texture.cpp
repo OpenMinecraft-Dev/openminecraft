@@ -264,7 +264,7 @@ static auto toAccessMask(ImageLayout layout) -> AccessFlagBits
     }
 }
 
-static auto toStage(ImageLayout layout) -> PipelineStageFlagBits
+static auto toStage(ImageLayout layout) -> PipelineStageFlags
 {
     switch (layout)
     {
@@ -273,6 +273,8 @@ static auto toStage(ImageLayout layout) -> PipelineStageFlagBits
         return PipelineStageFlagBits::eTransfer;
     case ImageLayout::eShaderReadOnlyOptimal:
         return PipelineStageFlagBits::eFragmentShader;
+    case ImageLayout::eDepthStencilAttachmentOptimal:
+        return PipelineStageFlagBits::eFragmentShader | PipelineStageFlagBits::eVertexShader;
     case ImageLayout::eUndefined:
     default:
         return PipelineStageFlagBits::eTopOfPipe;
@@ -280,12 +282,13 @@ static auto toStage(ImageLayout layout) -> PipelineStageFlagBits
 }
 
 void OMRendererTextureVk::transitionImageLayout(CommandBuffer cmd, ImageLayout oldLayout, ImageLayout newLayout,
-                                                uint64_t mip, uint64_t baseLayer, uint64_t layers)
+                                                uint64_t mip, uint64_t baseLayer, uint64_t layers,
+                                                ::vk::ImageAspectFlags aspect)
 {
     auto barrier = ImageMemoryBarrier({}, {}, oldLayout, newLayout, QueueFamilyIgnored, QueueFamilyIgnored, image,
-                                      ImageSubresourceRange(ImageAspectFlagBits::eColor, mip, 1, baseLayer, layers));
+                                      ImageSubresourceRange(aspect, mip, 1, baseLayer, layers));
 
-    PipelineStageFlagBits sourceStage = toStage(oldLayout), destinationStage = toStage(newLayout);
+    auto sourceStage = toStage(oldLayout), destinationStage = toStage(newLayout);
 
     barrier.srcAccessMask = toAccessMask(oldLayout);
     barrier.dstAccessMask = toAccessMask(newLayout);

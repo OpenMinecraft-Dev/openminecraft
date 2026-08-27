@@ -143,7 +143,7 @@ void OMApplication::mainLoop(OMBackend backend)
                     cnk.setBlock(15, 1, 2, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
                     cnk.setBlock(15, 1, 0,
                                  blockstateRegistry.id(data::OMIdentifier(
-                                     "minecraft:cherry_button[face=floor,facing=south,powered=true]")));
+                                     "minecraft:cherry_button[face=floor,facing=south,powered=false]")));
                     cnk.setBlock(15, 2, 2,
                                  blockstateRegistry.id(
                                      data::OMIdentifier("minecraft:cherry_fence_gate[facing=south,in_wall=false,"
