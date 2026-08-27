@@ -2,7 +2,6 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include <array>
 #include <cstdint>
-#include <iostream>
 #include <tuple>
 
 namespace openminecraft::renderer::common::wrap
@@ -130,9 +129,10 @@ auto OMVoxelCompiler::existSoild(const world::OMChunk<16> &chunk,
 {
     if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
         return handler->querySoild(
-            converter(externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz)));
+            converter(externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz), chunk.chunkx,
+                      chunk.chunky, chunk.chunkz, x, y, z));
 
-    return handler->querySoild(converter(chunk.fetch(x, y, z)));
+    return handler->querySoild(converter(chunk.fetch(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
 }
 
 auto OMVoxelCompiler::queryBlockstate(const world::OMChunk<16> &chunk,
@@ -166,7 +166,7 @@ auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
             glm::mix(currentAabb.offset, currentAabb.offset + currentAabb.size, glm::vec3(pos.x, pos.y, pos.z)) -
             (glm::vec3(dx, dy, dz) * 16.0f);
 
-        auto occ = handler->queryOcclusionShape(converter(tgbs));
+        auto occ = handler->queryOcclusionShape(converter(tgbs, chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
         if (occ.contains(currentPos))
         {
             return 1;
@@ -288,7 +288,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
 {
     for (const auto &v : chunk)
     {
-        auto bsid = converter(v.second);
+        auto bsid = converter(v.second, chunk.chunkx, chunk.chunky, chunk.chunkz, v.first.x, v.first.y, v.first.z);
         if (handler->queryNumParts(bsid) == 0)
         {
             continue;

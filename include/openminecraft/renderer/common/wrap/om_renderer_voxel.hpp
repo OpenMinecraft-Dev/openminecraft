@@ -271,7 +271,7 @@ class OMVoxelCompiler
                  std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>) -> void;
 
     OMVoxelHandler *handler = new OMVoxelHandlerDummy();
-    std::function<uint32_t(uint32_t)> converter;
+    std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> converter;
 
   private:
     log::OMLogger logger;
@@ -327,7 +327,7 @@ class OMVoxelManager
   public:
     OMVoxelManager(OMRenderer *renderer, OMRendererTexture *, OMRendererTexture *,
                    std::shared_ptr<world::OMChunkManager<16>>, std::function<void()>, OMVoxelHandler *,
-                   std::function<uint32_t(uint32_t)>);
+                   std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)>);
     ~OMVoxelManager();
 
     auto submit(OMRendererTask *, OMRendererTempTarget *) -> OMRendererTask *;
@@ -350,7 +350,7 @@ class OMVoxelManager
     log::OMLogger logger;
     OMVoxelCompiler compiler;
 
-    std::function<uint32_t(uint32_t)> converter;
+    std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> converter;
     std::shared_ptr<world::OMChunkManager<16>> chunkManager;
     OMVoxelLayer<OMVoxel> *voxelLayer, *voxelTranslucentLayer;
     OMVoxelLayer<OMVoxelComplex> *voxelComplexLayer, *voxelTranslucentComplexLayer;

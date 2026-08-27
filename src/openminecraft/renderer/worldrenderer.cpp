@@ -82,9 +82,11 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     voxelManager = new wrap::OMVoxelManager(
         renderer, textureAtlas->texture, textureAtlas->textureSecondary, chunkManager, [&]() { record(); },
         this->voxelHandler,
-        [&](uint32_t v) -> uint32_t {
+        [&](uint32_t v, uint64_t cx, uint64_t cy, uint64_t cz, int x, int y, int z) -> uint32_t {
             const auto &reg = data::block::blockstateRegistry.idToRegistry[v];
-            return blockstateResolver->fetchModel(reg.block, reg.state);
+            uint64_t h = (cx * 16 + x) * 341873128712L + (cy * 16 + y) * 132897987541L + cz * 16 + z + 1L;
+            h ^= h >> 16;
+            return blockstateResolver->fetchModel(reg.block, reg.state, h);
         });
 
     voxelManager->pipeline->bindInput(0, cameraBuffer);
