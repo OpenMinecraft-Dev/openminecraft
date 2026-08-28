@@ -3,7 +3,7 @@
 
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
-#include "openminecraft/renderer/common/wrap/om_renderer_boxblur.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_blur.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 namespace openminecraftshell::renderer
 {
@@ -20,7 +20,7 @@ class OMComposeRenderer : public openminecraft::renderer::common::OMRendererHand
     void afterFrame() override;
 
   private:
-    std::shared_ptr<openminecraft::renderer::common::wrap::OMRendererBoxBlurHandler> blurHandler;
+    std::shared_ptr<openminecraft::renderer::common::wrap::OMRendererBlurHandler> blurHandler;
     openminecraft::renderer::common::OMRendererPipeline *mainPipeline;
     openminecraft::renderer::OMRenderer *renderer;
 

@@ -1,6 +1,7 @@
 #include "openminecraft-shell/renderer/composerenderer.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_blur.hpp"
 
 using namespace openminecraft::renderer::common;
 
@@ -30,9 +31,9 @@ OMComposeRenderer::OMComposeRenderer(openminecraft::renderer::OMRenderer *render
                        ->depth(false, false)
                        ->buildN();
 
-    blurHandler = std::make_shared<wrap::OMRendererBoxBlurHandler>(renderer);
+    blurHandler = std::make_shared<wrap::OMRendererBlurHandler>(renderer, 1);
     renderer->registerHandler(blurHandler);
-    blurHandler->update({4.0f});
+    blurHandler->update({16.0f, wrap::Gaussian});
 }
 
 OMComposeRenderer::~OMComposeRenderer()

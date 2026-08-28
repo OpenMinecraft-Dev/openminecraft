@@ -1,8 +1,6 @@
-#ifndef OM_RENDERER_BOXBLUR
-#define OM_RENDERER_BOXBLUR
+#ifndef OM_RENDERER_BLUR_HPP
+#define OM_RENDERER_BLUR_HPP
 
-#include "glm/ext/vector_float3.hpp"
-#include "glm/fwd.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
@@ -13,23 +11,27 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 namespace openminecraft::renderer::common::wrap
 {
-struct OMRendererBoxBlurArg
+enum OMRendererBlurType : int
+{
+    Gaussian = 0,
+    Box = 1,
+    Triangular = 2,
+    SmoothStep = 3,
+    Radial = 4
+};
+struct OMRendererBlurArg
 {
     float radius;
+    int blurType;
     float direction;
 };
-struct OMRendererBoxBlurVertex
-{
-    glm::vec3 pos;
-    glm::vec2 uv;
-};
-class OMRendererBoxBlurHandler : public OMRendererHandler
+class OMRendererBlurHandler : public OMRendererHandler
 {
   public:
-    OMRendererBoxBlurHandler(OMRenderer *);
-    ~OMRendererBoxBlurHandler() override;
+    OMRendererBlurHandler(OMRenderer *, int);
+    ~OMRendererBlurHandler() override;
 
-    void update(OMRendererBoxBlurArg);
+    void update(OMRendererBlurArg);
 
     void beforeFrame() override;
     void afterFrame() override;
@@ -47,6 +49,7 @@ class OMRendererBoxBlurHandler : public OMRendererHandler
 
   private:
     OMRenderer *renderer;
+    int passes = 1;
 };
 } // namespace openminecraft::renderer::common::wrap
 

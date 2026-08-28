@@ -15,7 +15,7 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
-#include "openminecraft/renderer/common/wrap/om_renderer_boxblur.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_blur.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include <chrono>
