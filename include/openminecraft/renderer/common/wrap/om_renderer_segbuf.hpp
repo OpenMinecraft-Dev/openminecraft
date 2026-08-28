@@ -78,7 +78,8 @@ class OMRendererSegBuf
         if (block.length == 0)
             return;
 
-        auto temp = std::calloc(1, block.length);
+        auto temp = std::malloc(block.length);
+        std::memset(temp, 0x00, block.length);
         buffer->updateDataPart(temp, block.offset, block.length);
         std::free(temp);
 
@@ -124,6 +125,10 @@ class OMRendererSegBuf
         uint32_t newTotal = totalSize * 2;
         OMRendererBuffer *newBuffer = renderer->allocateBuffer(InstanceData, newTotal);
         buffer->copyTo(newBuffer);
+        auto temp = std::malloc(totalSize);
+        std::memset(temp, 0x00, totalSize);
+        newBuffer->updateDataPart(temp, totalSize, totalSize);
+        std::free(temp);
         delete buffer;
         buffer = newBuffer;
 

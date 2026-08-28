@@ -321,14 +321,10 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                             handler->queryPartShade(bsid, i), false, aabb.offset, {uv.x, uv.y}, {uv.z, uv.w},
                             handler->queryPartRotationAxis(bsid, i), rotationAngle, raxis, aabb.size,
                             handler->queryPartRotationAngleExt(bsid, i));
-                        auto func = commiterComplex;
-                        if (trans)
-                        {
-                            func = commiterTranslucentComplex;
-                        }
-                        func(OMVoxelComplex{std::get<0>(vox), std::get<1>(vox), std::get<2>(vox), std::get<3>(vox),
-                                            std::get<4>(vox), std::get<5>(vox), std::get<6>(vox), std::get<7>(vox),
-                                            std::get<8>(vox), std::get<9>(vox), std::get<10>(vox)});
+                        (trans ? commiterTranslucentComplex : commiterComplex)(
+                            OMVoxelComplex{std::get<0>(vox), std::get<1>(vox), std::get<2>(vox), std::get<3>(vox),
+                                           std::get<4>(vox), std::get<5>(vox), std::get<6>(vox), std::get<7>(vox),
+                                           std::get<8>(vox), std::get<9>(vox), std::get<10>(vox)});
                         continue;
                     }
 
@@ -340,12 +336,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                         uv.z, uv.w, handler->queryPartRotationAxis(bsid, i), std::abs(raxis.x), std::abs(raxis.y),
                         std::abs(raxis.z), raxis.x < 0, raxis.y < 0, raxis.z < 0,
                         handler->queryPartRotationAngle(bsid, i), handler->queryPartShade(bsid, i), false);
-                    auto func = commiter;
-                    if (trans)
-                    {
-                        func = commiterTranslucent;
-                    }
-                    func(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4]});
+                    (trans ? commiterTranslucent : commiter)(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4]});
                 }
             }
         }
