@@ -40,6 +40,10 @@ class OMRendererSegBuf
     {
         buffer = renderer->allocateBuffer(InstanceData, totalSize);
         freeBlocks = {{0, totalSize}};
+        auto temp = std::malloc(totalSize);
+        memset(temp, 0x00, totalSize);
+        buffer->updateData(temp);
+        std::free(temp);
     }
 
     ~OMRendererSegBuf()
@@ -79,7 +83,7 @@ class OMRendererSegBuf
             return;
 
         auto temp = std::malloc(block.length);
-        std::memset(temp, 0x00, block.length);
+        memset(temp, 0x00, block.length);
         buffer->updateDataPart(temp, block.offset, block.length);
         std::free(temp);
 
