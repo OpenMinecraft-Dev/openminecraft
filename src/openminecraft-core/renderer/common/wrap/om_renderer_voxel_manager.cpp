@@ -200,7 +200,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                           ->format(simpleFormat)
                           ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
                           ->blend(true)
-                          ->depth(false, false)
+                          ->depth(false, true)
                           ->depthReverseZ(true)
                           ->buildN();
 
@@ -265,6 +265,7 @@ OMVoxelManager::~OMVoxelManager()
     delete cutoutTargetMS;
     delete cutoutTarget;
     delete translucentTarget;
+    delete skyDiscPipeline;
 }
 
 auto OMVoxelManager::compile(int i) -> void
