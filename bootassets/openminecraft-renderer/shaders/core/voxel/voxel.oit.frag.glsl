@@ -27,5 +27,5 @@ void main()
     }
     vec3 result = voxFactor * ao * texColor.rgb;
 
-    outColor = vec4(fog_gendefault(result.rgb * texColor.a), texColor.a);
+    outColor = fog_gendefault(vec4(result.rgb * texColor.a, texColor.a), 0.0);
 }
