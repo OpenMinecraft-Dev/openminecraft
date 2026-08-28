@@ -36,7 +36,6 @@ static auto notifyNew(DebugReportFlagBitsEXT flags, DebugReportObjectTypeEXT obj
         break;
     case DebugReportFlagBitsEXT::eError:
         internal.error("{}", pMessage);
-        internal.dumpStacktrace();
         break;
     }
     return false;

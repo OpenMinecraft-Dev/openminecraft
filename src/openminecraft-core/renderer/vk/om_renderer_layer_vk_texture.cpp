@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
 
 #include "openminecraft/i18n/om_i18n_res.hpp"
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
@@ -9,7 +10,6 @@
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_structs.hpp"
 #include <cstdint>
-#include <iostream>
 
 using namespace ::vk;
 using namespace openminecraft::i18n::res;

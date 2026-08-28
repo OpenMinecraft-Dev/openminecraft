@@ -98,7 +98,7 @@ auto OMRendererBoxBlurHandler::firstLayerTask(OMRendererTask *pre) -> OMRenderer
                     ->target(blurTemp2->target)
                     ->pipeline(biltPipeline)
                     ->drawN(6);
-    for (int i = 0; i < 1; ++i)
+    for (int i = 0; i < 4; ++i)
     {
         task->target(blurTemp->target)
             ->pipeline(blurp1Pipeline)

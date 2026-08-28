@@ -39,11 +39,11 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     compiler.converter = converter;
 
     cutoutTargetMS = new OMRendererTempTarget(renderer);
-    cutoutTargetMS->construct(renderer->getExtent(), 4);
+    cutoutTargetMS->construct(renderer->getExtent(), samples);
 
     translucentTargetMS = new OMRendererTempTarget(renderer);
     translucentTargetMS->clearDepth = false;
-    translucentTargetMS->construct(renderer->getExtent(), 4, true);
+    translucentTargetMS->construct(renderer->getExtent(), samples, true);
 
     cutoutTarget = new OMRendererTempTarget(renderer);
     cutoutTarget->construct(renderer->getExtent());
@@ -85,7 +85,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->input(UniformTexelBuffer)
             ->inputName("inChunkPos")
             ->output(cutoutTargetMS->target)
-            ->samples(4)
+            ->samples(samples)
             ->setCullMode(renderer::common::Back)
             ->setFrontClockwise(true)
             ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.frag.glsl", Fragment, GLSLSource, format))
@@ -108,7 +108,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                           ->input(UniformTexelBuffer)
                           ->inputName("inChunkPos")
                           ->output(cutoutTargetMS->target)
-                          ->samples(4)
+                          ->samples(samples)
                           ->setCullMode(renderer::common::Back)
                           ->setFrontClockwise(true)
                           ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcomplex.frag.glsl", Fragment,
@@ -131,7 +131,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->input(UniformTexelBuffer)
             ->inputName("inChunkPos")
             ->output(translucentTargetMS->target)
-            ->samples(4)
+            ->samples(samples)
             ->setCullMode(renderer::common::Back)
             ->setFrontClockwise(true)
             ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.oit.frag.glsl", Fragment, GLSLSource, format))
@@ -153,7 +153,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                      ->input(UniformTexelBuffer)
                                      ->inputName("inChunkPos")
                                      ->output(translucentTargetMS->target)
-                                     ->samples(4)
+                                     ->samples(samples)
                                      ->setCullMode(renderer::common::Back)
                                      ->setFrontClockwise(true)
                                      ->shader(renderer->shaderManager.preprocess(
@@ -175,7 +175,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->primitiveType(LineList)
             ->setLineWidth(2.0f)
             ->output(cutoutTargetMS->target)
-            ->samples(4)
+            ->samples(samples)
             ->shader(
                 renderer->shaderManager.preprocess("core/voxel/voxeldebug.frag.glsl", Fragment, GLSLSource, format2))
             ->shader(renderer->shaderManager.preprocess("core/voxel/voxeldebug.vert.glsl", Vertex, GLSLSource, format2))
@@ -194,10 +194,10 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                           ->output(resolveTarget)
                           ->samples(1)
                           ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcompose.frag.glsl", Fragment,
-                                                                      GLSLSource, format))
+                                                                      GLSLSource, simpleFormat))
                           ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcompose.vert.glsl", Vertex,
-                                                                      GLSLSource, format))
-                          ->format(format)
+                                                                      GLSLSource, simpleFormat))
+                          ->format(simpleFormat)
                           ->blend(false)
                           ->depth(false, false)
                           ->buildN();
@@ -383,39 +383,45 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
 auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveTarget) -> OMRendererTask *
 {
-    cutoutTargetMS->construct(renderer->getExtent(), 4);
+    cutoutTargetMS->construct(renderer->getExtent(), samples);
     translucentTargetMS->clearDepth = false;
-    translucentTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), 4, true);
+    translucentTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), samples, true);
     cutoutTarget->construct(renderer->getExtent());
     translucentTarget->construct(renderer->getExtent(), 1, true);
-    composePipeline->bindInput(0, cutoutTarget->colorTexture);
-    composePipeline->bindInput(1, translucentTarget->colorTexture);
+    composePipeline->bindInput(0, (samples == 1 ? cutoutTargetMS : cutoutTarget)->colorTexture);
+    composePipeline->bindInput(1, (samples == 1 ? translucentTargetMS : translucentTarget)->colorTexture);
 
-    return task->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
-        ->clearDepth(0.0f)
-        ->target(cutoutTargetMS->target)
-        ->pipeline(pipeline)
-        ->vertexBuffer({voxelLayer->buf()->buffer})
-        ->drawInstanceN(6, voxelLayer->buf()->totalSize / sizeof(OMVoxel))
-        ->pipeline(complexPipeline)
-        ->vertexBuffer({voxelComplexLayer->buf()->buffer})
-        ->drawInstanceN(6, voxelComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex))
-        ->pipeline(debugPipeline)
-        ->vertexBuffer({debugoffs})
-        ->drawN(2 * 12)
-        ->resolve(cutoutTarget->target)
-        ->clearColor(glm::vec4(0.0, 0.0, 0.0, 1.0))
+    auto tsk = task->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
+                   ->clearDepth(0.0f)
+                   ->target(cutoutTargetMS->target)
+                   ->pipeline(pipeline)
+                   ->vertexBuffer({voxelLayer->buf()->buffer})
+                   ->drawInstanceN(6, voxelLayer->buf()->totalSize / sizeof(OMVoxel))
+                   ->pipeline(complexPipeline)
+                   ->vertexBuffer({voxelComplexLayer->buf()->buffer})
+                   ->drawInstanceN(6, voxelComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex))
+                   ->pipeline(debugPipeline)
+                   ->vertexBuffer({debugoffs})
+                   ->drawN(2 * 12);
+
+    if (samples != 1)
+    {
+        tsk->resolve(cutoutTarget->target);
+    }
+
+    tsk->clearColor(glm::vec4(0.0, 0.0, 0.0, 1.0))
         ->target(translucentTargetMS->target)
         ->pipeline(translucentPipeline)
         ->vertexBuffer({voxelTranslucentLayer->buf()->buffer})
         ->drawInstanceN(6, voxelTranslucentLayer->buf()->totalSize / sizeof(OMVoxel))
         ->pipeline(translucentComplexPipeline)
         ->vertexBuffer({voxelTranslucentComplexLayer->buf()->buffer})
-        ->drawInstanceN(6, voxelTranslucentComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex))
-        ->resolve(translucentTarget->target)
-        ->target(resolveTarget->target)
-        ->pipeline(composePipeline)
-        ->drawN(6)
-        ->finishN();
+        ->drawInstanceN(6, voxelTranslucentComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex));
+
+    if (samples != 1)
+    {
+        tsk->resolve(translucentTarget->target);
+    }
+    return tsk->target(resolveTarget->target)->pipeline(composePipeline)->drawN(6)->finishN();
 }
 } // namespace openminecraft::renderer::common::wrap
