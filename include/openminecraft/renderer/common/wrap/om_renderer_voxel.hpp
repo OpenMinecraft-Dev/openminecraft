@@ -339,6 +339,7 @@ class OMVoxelManager
     OMRendererPipeline *pipeline, *debugPipeline, *complexPipeline;
     OMRendererPipeline *translucentPipeline, *translucentComplexPipeline;
     OMRendererPipeline *composePipeline;
+    OMRendererPipeline *skyDiscPipeline;
     OMRendererBuffer *chunkoffs, *debugoffs;
     OMRendererTexture *textureAtlas;
     OMRendererTexture *textureAtlasSecondary;

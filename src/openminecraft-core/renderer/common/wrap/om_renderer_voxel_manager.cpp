@@ -186,6 +186,22 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->depthReverseZ(true)
             ->buildN();
 
+    skyDiscPipeline = renderer->createPipeline()
+                          ->input(UniformBuffer)
+                          ->inputName("Camera")
+                          ->output(cutoutTargetMS->target)
+                          ->samples(samples)
+                          ->shader(renderer->shaderManager.preprocess("core/voxel/skydisc.frag.glsl", Fragment,
+                                                                      GLSLSource, simpleFormat))
+                          ->shader(renderer->shaderManager.preprocess("core/voxel/skydisc.vert.glsl", Vertex,
+                                                                      GLSLSource, simpleFormat))
+                          ->format(simpleFormat)
+                          ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+                          ->blend(true)
+                          ->depth(false, false)
+                          ->depthReverseZ(true)
+                          ->buildN();
+
     composePipeline = renderer->createPipeline()
                           ->input(ImageSampler)
                           ->inputName("inTextureCutout")
@@ -394,6 +410,8 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     auto tsk = task->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
                    ->clearDepth(0.0f)
                    ->target(cutoutTargetMS->target)
+                   ->pipeline(skyDiscPipeline)
+                   ->drawN(24)
                    ->pipeline(pipeline)
                    ->vertexBuffer({voxelLayer->buf()->buffer})
                    ->drawInstanceN(6, voxelLayer->buf()->totalSize / sizeof(OMVoxel))

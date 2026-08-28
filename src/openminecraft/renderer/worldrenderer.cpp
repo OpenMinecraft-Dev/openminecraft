@@ -94,6 +94,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     voxelManager->complexPipeline->bindInput(0, cameraBuffer);
     voxelManager->translucentPipeline->bindInput(0, cameraBuffer);
     voxelManager->translucentComplexPipeline->bindInput(0, cameraBuffer);
+    voxelManager->skyDiscPipeline->bindInput(0, cameraBuffer);
 }
 
 static float ang = 0.0f;
