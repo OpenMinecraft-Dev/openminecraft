@@ -95,7 +95,6 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     }
 
     auto s = glpipe->blendState;
-    ops.push_back({glpipe->enableDepthTest ? Enable : Disable, GL_DEPTH_TEST});
     ops.push_back({glpipe->depthClamp ? Enable : Disable, GL_DEPTH_CLAMP});
     switch (glpipe->polygonMode)
     {
@@ -141,6 +140,7 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     ops.push_back({PolygonOffset, {}, {}, glpipe->depthBiasSlope, glpipe->depthBiasConstant});
     ops.push_back({LineWidth, {}, {}, glpipe->lineWidth});
     ops.push_back({DepthMask, glpipe->enableDepthWrite});
+    ops.push_back({glpipe->enableDepthTest ? Enable : Disable, GL_DEPTH_TEST});
     if (glpipe->enableReverseZ)
     {
         if (glpipe->enableDepthEqual)

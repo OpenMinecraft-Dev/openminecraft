@@ -3,8 +3,14 @@
 
 vec4 fog_gen(vec4 original, float fogStart, float fogEnd, vec3 fogColor, float targetOpacity)
 {
-    return vec4(mix(original.rgb, fogColor, smoothstep(fogEnd, fogStart, gl_FragCoord.z)),
-                mix(original.a, targetOpacity, smoothstep(fogEnd, fogStart, gl_FragCoord.z)));
+    float d = gl_FragCoord.z;
+
+#ifndef VULKAN
+    d = (d - 0.5) * 2;
+#endif
+
+    return vec4(mix(original.rgb, fogColor, smoothstep(fogEnd, fogStart, d)),
+                mix(original.a, targetOpacity, smoothstep(fogEnd, fogStart, d)));
 }
 
 vec4 fog_gendefault(vec4 original, float targetOpacity)
