@@ -130,7 +130,7 @@ class OMRendererSegBuf
         OMRendererBuffer *newBuffer = renderer->allocateBuffer(InstanceData, newTotal);
         buffer->copyTo(newBuffer);
         auto temp = std::malloc(totalSize);
-        std::memset(temp, 0x00, totalSize);
+        memset(temp, 0x00, totalSize);
         newBuffer->updateDataPart(temp, totalSize, totalSize);
         std::free(temp);
         delete buffer;
