@@ -323,6 +323,14 @@ template <typename It> class OMVoxelLayer
     OMRendererSegBuf *voxelBuffer;
 };
 
+struct OMVoxelSkyDisc
+{
+    glm::vec3 diskCenterColor;
+    float discRange;
+    glm::vec3 diskSideColor;
+    float discHeight;
+};
+
 class OMVoxelManager
 {
   public:
@@ -342,6 +350,7 @@ class OMVoxelManager
     OMRendererPipeline *composePipeline;
     OMRendererPipeline *skyDiscPipeline;
     OMRendererBuffer *chunkoffs, *debugoffs;
+    OMRendererBuffer *skydisc;
     OMRendererTexture *textureAtlas;
     OMRendererTexture *textureAtlasSecondary;
 

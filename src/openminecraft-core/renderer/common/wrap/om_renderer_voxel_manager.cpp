@@ -189,6 +189,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     skyDiscPipeline = renderer->createPipeline()
                           ->input(UniformBuffer)
                           ->inputName("Camera")
+                          ->input(UniformBuffer)
+                          ->inputName("SkyDiscData")
                           ->output(cutoutTargetMS->target)
                           ->samples(samples)
                           ->shader(renderer->shaderManager.preprocess("core/voxel/skydisc.frag.glsl", Fragment,
@@ -225,6 +227,9 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
 
     chunkoffs = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
     debugoffs = renderer->allocateBuffer(VertexData, 12 * 2 * 3 * sizeof(float));
+    skydisc = renderer->allocateBuffer(Uniform, sizeof(OMVoxelSkyDisc));
+    OMVoxelSkyDisc disc = {{0.470, 0.654, 1.0}, 256, {0.198, 0.371, 1.0}, -16};
+    skydisc->updateData(&disc);
 
     textureAtlas = tex;
     textureAtlasSecondary = texSec;
@@ -239,6 +244,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     translucentComplexPipeline->bindInput(1, textureAtlas);
     translucentComplexPipeline->bindInput(2, textureAtlasSecondary);
     translucentComplexPipeline->bindInput(3, chunkoffs);
+    skyDiscPipeline->bindInput(1, skydisc);
 }
 OMVoxelManager::~OMVoxelManager()
 {
@@ -248,6 +254,7 @@ OMVoxelManager::~OMVoxelManager()
     delete voxelTranslucentComplexLayer;
     delete chunkoffs;
     delete debugoffs;
+    delete skydisc;
     delete pipeline;
     delete complexPipeline;
     delete translucentPipeline;
