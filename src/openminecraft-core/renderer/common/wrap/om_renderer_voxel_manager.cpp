@@ -442,4 +442,14 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     }
     return tsk->target(resolveTarget->target)->pipeline(composePipeline)->drawN(6)->finishN();
 }
+
+void OMVoxelManager::bindCameraBuffer(OMRendererBuffer *cameraBuffer)
+{
+    pipeline->bindInput(0, cameraBuffer);
+    debugPipeline->bindInput(0, cameraBuffer);
+    complexPipeline->bindInput(0, cameraBuffer);
+    translucentPipeline->bindInput(0, cameraBuffer);
+    translucentComplexPipeline->bindInput(0, cameraBuffer);
+    skyDiscPipeline->bindInput(0, cameraBuffer);
+}
 } // namespace openminecraft::renderer::common::wrap

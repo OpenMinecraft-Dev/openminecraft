@@ -89,12 +89,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
             return blockstateResolver->fetchModel(reg.block, reg.state, h);
         });
 
-    voxelManager->pipeline->bindInput(0, cameraBuffer);
-    voxelManager->debugPipeline->bindInput(0, cameraBuffer);
-    voxelManager->complexPipeline->bindInput(0, cameraBuffer);
-    voxelManager->translucentPipeline->bindInput(0, cameraBuffer);
-    voxelManager->translucentComplexPipeline->bindInput(0, cameraBuffer);
-    voxelManager->skyDiscPipeline->bindInput(0, cameraBuffer);
+    voxelManager->bindCameraBuffer(cameraBuffer);
 }
 
 static float ang = 0.0f;

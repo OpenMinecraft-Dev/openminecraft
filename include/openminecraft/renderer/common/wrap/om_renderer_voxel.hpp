@@ -333,6 +333,7 @@ class OMVoxelManager
 
     auto submit(OMRendererTask *, OMRendererTempTarget *) -> OMRendererTask *;
     auto update(basics::OMCamera &camera) -> void;
+    void bindCameraBuffer(OMRendererBuffer *);
 
     OMRendererTempTarget *translucentTargetMS, *translucentTarget;
     OMRendererTempTarget *cutoutTargetMS, *cutoutTarget;
