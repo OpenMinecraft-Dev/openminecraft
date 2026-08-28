@@ -10,6 +10,7 @@ layout(location = 5) in float voxFactor;
 
 layout(location = 0) out vec4 outColor;
 
+#include "basics/fog.glsl"
 #include "basics/structs/camera.glsl"
 uniform sampler2DArray inTexture;
 
@@ -26,5 +27,5 @@ void main()
     }
     vec3 result = voxFactor * ao * texColor.rgb;
 
-    outColor = vec4(result, texColor.a);
+    outColor = vec4(fog_gendefault(result.rgb), texColor.a);
 }
