@@ -10,7 +10,6 @@
 #include <cstdint>
 #include <ctime>
 #include <fstream>
-#include <nameser.h>
 #include <sstream>
 #include <stdexcept>
 
