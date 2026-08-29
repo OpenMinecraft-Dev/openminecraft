@@ -9,6 +9,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
 #include "openminecraft/mem/om_mem_allocator.hpp"
+#include "openminecraft/network/om_network_dnsquery.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/om_renderer_window.hpp"
@@ -166,6 +167,12 @@ void OMApplication::mainLoop(OMBackend backend)
         win()->registerHandler(hnd);
         win()->registerHandler(hnd3);
         win()->baseInit();
+
+        auto r = openminecraft::network::queryDns("awa.kjmc.top");
+        for (auto l : r)
+        {
+            logger->warn("{} {}", l.target, l.port);
+        }
 
         std::array<bool, 6> keystates = {false, false, false, false, false, false};
         bus.append(SDL_EVENT_WINDOW_RESIZED, [&](SDL_Event &) -> void { win()->requestResize(); });
