@@ -364,6 +364,36 @@ void OMRendererPipelineVk::build()
         break;
     }
 
+    CompareOp op;
+    switch (depthOperator)
+    {
+    case common::Greater:
+        op = CompareOp::eGreater;
+        break;
+    case common::Less:
+        op = CompareOp::eLess;
+        break;
+    case common::GreaterOrEqual:
+        op = CompareOp::eGreaterOrEqual;
+        break;
+    case common::LessOrEqual:
+        op = CompareOp::eLessOrEqual;
+        break;
+    case common::Equal:
+        op = CompareOp::eEqual;
+        break;
+    case common::NotEqual:
+        op = CompareOp::eNotEqual;
+        break;
+    default:
+    case common::Always:
+        op = CompareOp::eAlways;
+        break;
+    case common::Never:
+        op = CompareOp::eNever;
+        break;
+    }
+
     auto vertexInput = PipelineVertexInputStateCreateInfo({}, vertexInputBindingDesc, vertexInputAttrDesc);
     auto inputAssembly = PipelineInputAssemblyStateCreateInfo({}, t, false);
     auto rasterization = PipelineRasterizationStateCreateInfo(
@@ -378,11 +408,8 @@ void OMRendererPipelineVk::build()
             ColorComponentFlagBits::eB)};
     auto colorblend =
         PipelineColorBlendStateCreateInfo({}, false, LogicOp::eNoOp, attc, std::array{0.f, 0.f, 0.f, 0.f});
-    auto depthStencil = PipelineDepthStencilStateCreateInfo(
-        {}, enableDepthTest, enableDepthWrite,
-        enableReverseZ ? (enableDepthEqual ? CompareOp::eGreaterOrEqual : CompareOp::eGreater)
-                       : (enableDepthEqual ? CompareOp::eLessOrEqual : CompareOp::eLess),
-        true, true, {}, {}, 0.0f, 1.0f);
+    auto depthStencil =
+        PipelineDepthStencilStateCreateInfo({}, enableDepthTest, enableDepthWrite, op, true, true, {}, {}, 0.0f, 1.0f);
     std::vector<DynamicState> states = {DynamicState::eScissor, DynamicState::eViewport};
     auto dynamicState = PipelineDynamicStateCreateInfo({}, states);
 

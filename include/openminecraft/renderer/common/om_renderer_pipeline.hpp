@@ -58,6 +58,18 @@ enum OMRendererPipelineCullMode
     Back,
     FrontAndBack
 };
+
+enum OMRendererPipelineCompareOp
+{
+    Greater,
+    Less,
+    GreaterOrEqual,
+    LessOrEqual,
+    Equal,
+    NotEqual,
+    Always,
+    Never
+};
 class OMRendererPipeline : public OMRendererObject
 {
   public:
@@ -113,11 +125,6 @@ class OMRendererPipeline : public OMRendererObject
     {
         enableDepthTest = test;
         enableDepthWrite = write;
-        return this;
-    }
-    inline auto depthReverseZ(bool reverse) -> OMRendererPipeline *
-    {
-        enableReverseZ = reverse;
         return this;
     }
 
@@ -185,16 +192,15 @@ class OMRendererPipeline : public OMRendererObject
         return Pipeline;
     }
 
-    inline auto depthEquals(bool e) -> OMRendererPipeline *
+    inline auto depthOp(OMRendererPipelineCompareOp op) -> OMRendererPipeline *
     {
-        enableDepthEqual = e;
+        depthOperator = op;
         return this;
     }
 
     bool enableBlend = false;
     bool enableDepthTest = false;
     bool enableDepthWrite = false;
-    bool enableReverseZ = false;
     uint64_t sampleCount = 1;
     OMRendererPipelinePrimitive primitive = TriangleList;
     bool depthClamp = false;
@@ -205,7 +211,7 @@ class OMRendererPipeline : public OMRendererObject
     bool enableDepthBias = true;
     float depthBiasConstant = 0.0f;
     float depthBiasSlope = 0.0f;
-    bool enableDepthEqual = false;
+    OMRendererPipelineCompareOp depthOperator = Less;
 };
 } // namespace openminecraft::renderer::common
 

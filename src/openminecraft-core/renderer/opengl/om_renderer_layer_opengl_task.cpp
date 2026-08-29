@@ -141,27 +141,33 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     ops.push_back({LineWidth, {}, {}, glpipe->lineWidth});
     ops.push_back({DepthMask, glpipe->enableDepthWrite});
     ops.push_back({glpipe->enableDepthTest ? Enable : Disable, GL_DEPTH_TEST});
-    if (glpipe->enableReverseZ)
+    switch (glpipe->depthOperator)
     {
-        if (glpipe->enableDepthEqual)
-        {
-            ops.push_back({DepthFunc, GL_GEQUAL});
-        }
-        else
-        {
-            ops.push_back({DepthFunc, GL_GREATER});
-        }
-    }
-    else
-    {
-        if (glpipe->enableDepthEqual)
-        {
-            ops.push_back({DepthFunc, GL_LEQUAL});
-        }
-        else
-        {
-            ops.push_back({DepthFunc, GL_LESS});
-        }
+    case common::Greater:
+        ops.push_back({DepthFunc, GL_GREATER});
+        break;
+    case common::Less:
+        ops.push_back({DepthFunc, GL_LESS});
+        break;
+    case common::GreaterOrEqual:
+        ops.push_back({DepthFunc, GL_GEQUAL});
+        break;
+    case common::LessOrEqual:
+        ops.push_back({DepthFunc, GL_LEQUAL});
+        break;
+    case common::Equal:
+        ops.push_back({DepthFunc, GL_EQUAL});
+        break;
+    case common::NotEqual:
+        ops.push_back({DepthFunc, GL_NOTEQUAL});
+        break;
+    default:
+    case common::Always:
+        ops.push_back({DepthFunc, GL_ALWAYS});
+        break;
+    case common::Never:
+        ops.push_back({DepthFunc, GL_NEVER});
+        break;
     }
     ops.push_back({glpipe->enableBlend ? Enable : Disable, GL_BLEND});
     ops.push_back(

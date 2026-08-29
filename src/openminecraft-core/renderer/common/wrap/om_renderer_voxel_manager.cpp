@@ -94,8 +94,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
             ->blend(true)
             ->depth(true, true)
-            ->depthEquals(true)
-            ->depthReverseZ(true)
+            ->depthOp(GreaterOrEqual)
             ->buildN();
 
     complexPipeline = renderer->createPipeline()
@@ -119,8 +118,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                           ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
                           ->blend(true)
                           ->depth(true, true)
-                          ->depthEquals(true)
-                          ->depthReverseZ(true)
+                          ->depthOp(GreaterOrEqual)
                           ->buildN();
     translucentPipeline =
         renderer->createPipeline()
@@ -140,8 +138,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->blendFunc({One, One, Zero, OneMinusAlpha})
             ->blend(true)
             ->depth(true, false)
-            ->depthEquals(true)
-            ->depthReverseZ(true)
+            ->depthOp(GreaterOrEqual)
             ->buildN();
     translucentComplexPipeline = renderer->createPipeline()
                                      ->input(UniformBuffer)
@@ -164,8 +161,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                      ->blendFunc({One, One, Zero, OneMinusAlpha})
                                      ->blend(true)
                                      ->depth(true, false)
-                                     ->depthEquals(true)
-                                     ->depthReverseZ(true)
+                                     ->depthOp(GreaterOrEqual)
                                      ->buildN();
 
     debugPipeline =
@@ -183,7 +179,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
             ->blend(true)
             ->depth(true, true)
-            ->depthReverseZ(true)
+            ->depthOp(Greater)
             ->buildN();
 
     skyDiscPipeline = renderer->createPipeline()
@@ -201,7 +197,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                           ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
                           ->blend(true)
                           ->depth(false, true)
-                          ->depthReverseZ(true)
+                          ->depthOp(Greater)
                           ->buildN();
 
     composePipeline = renderer->createPipeline()
