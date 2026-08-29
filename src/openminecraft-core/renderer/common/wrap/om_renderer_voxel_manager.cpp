@@ -39,6 +39,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     compiler.handler = voxelHandler;
     compiler.converter = converter;
 
+    compilerPool = new OMVoxelCompilerPool(*man.get(), compiler);
+
     cutoutTargetMS = new OMRendererTempTarget(renderer);
     cutoutTargetMS->construct(renderer->getExtent(), samples);
 
@@ -245,6 +247,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
 }
 OMVoxelManager::~OMVoxelManager()
 {
+    delete compilerPool;
     delete voxelLayer;
     delete voxelComplexLayer;
     delete voxelTranslucentLayer;
@@ -269,70 +272,6 @@ void OMVoxelManager::unloadChunk(int i)
 {
     std::vector<OMVoxel> m = {}, tm = {};
     std::vector<OMVoxelComplex> cm = {}, tcm = {};
-    voxelLayer->loadData(i, m);
-    voxelComplexLayer->loadData(i, cm);
-    voxelTranslucentLayer->loadData(i, tm);
-    voxelTranslucentComplexLayer->loadData(i, tcm);
-}
-
-auto OMVoxelManager::compile(int i) -> void
-{
-    auto externalAccessor = [&](glm::ivec3 pos, int64_t chunkx, int64_t chunky, int64_t chunkz) -> uint32_t {
-        if (pos.x < 0)
-        {
-            chunkx -= 1;
-            pos.x += 16;
-        }
-        else if (pos.x >= 16)
-        {
-            chunkx += 1;
-            pos.x -= 16;
-        }
-
-        if (pos.y < 0)
-        {
-            chunky -= 1;
-            pos.y += 16;
-        }
-        else if (pos.y >= 16)
-        {
-            chunky += 1;
-            pos.y -= 16;
-        }
-
-        if (pos.z < 0)
-        {
-            chunkz -= 1;
-            pos.z += 16;
-        }
-        else if (pos.z >= 16)
-        {
-            chunkz += 1;
-            pos.z -= 16;
-        }
-
-        world::OMChunkIndex idx = {chunkx, chunky, chunkz};
-        if (chunkManager->chunkLoaded(idx))
-        {
-            return chunkManager->getChunk(idx).fetch(pos.x, pos.y, pos.z);
-        }
-        else
-        {
-            return 0;
-        }
-    };
-    std::vector<OMVoxel> m = {}, tm = {};
-    std::vector<OMVoxelComplex> cm = {}, tcm = {};
-
-    auto &ck = chunkManager->getChunk(i);
-    if (ck.has_value())
-    {
-        compiler.compile(
-            ck.value(), externalAccessor, i, [&](OMVoxel v) -> void { m.emplace_back(v); },
-            [&](OMVoxelComplex v) -> void { cm.emplace_back(v); }, [&](OMVoxel v) -> void { tm.emplace_back(v); },
-            [&](OMVoxelComplex v) -> void { tcm.emplace_back(v); });
-    }
-
     voxelLayer->loadData(i, m);
     voxelComplexLayer->loadData(i, cm);
     voxelTranslucentLayer->loadData(i, tm);
@@ -375,6 +314,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             {
                 if (!ochk.has_value())
                 {
+                    unloadChunk(i);
                     offs[i] = glm::vec3{INFINITY};
                 }
                 else
@@ -391,26 +331,15 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         });
         chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
-            auto m = std::chrono::steady_clock::now();
             for (auto &ochk : chunks)
             {
-                if (!ochk.has_value())
-                {
-                    unloadChunk(i);
-                }
-                else
+                if (ochk.has_value())
                 {
                     auto &chk = ochk.value();
                     if (chk.isDirty())
                     {
-                        compile(i);
+                        compilerPool->compile(i);
                         chk.solveDirty();
-                    }
-
-                    if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m)
-                            .count() >= 1)
-                    {
-                        break;
                     }
                 }
                 ++i;
@@ -427,6 +356,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             translucentComplexPipeline->bindInput(3, chunkoffs);
         }
         chunkoffs->updateDataPart(offs.data(), 0, offs.size() * sizeof(glm::vec3));
+
+        compilerPool->upload(voxelLayer, voxelComplexLayer, voxelTranslucentLayer, voxelTranslucentComplexLayer);
 
         if (l != voxelLayer->buf()->totalSize || l2 != voxelComplexLayer->buf()->totalSize ||
             l3 != voxelTranslucentLayer->buf()->totalSize || l4 != voxelTranslucentComplexLayer->buf()->totalSize)

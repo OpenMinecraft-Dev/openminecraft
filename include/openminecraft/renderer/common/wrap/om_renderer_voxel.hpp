@@ -19,6 +19,9 @@
 #include <functional>
 #include <initializer_list>
 #include <list>
+#include <mutex>
+#include <thread>
+#include <unordered_map>
 #include <vector>
 
 namespace openminecraft::renderer::common::wrap
@@ -331,6 +334,31 @@ struct OMVoxelSkyDisc
     float discHeight;
 };
 
+class OMVoxelCompilerPool
+{
+  public:
+    OMVoxelCompilerPool(world::OMChunkManager<16> &, OMVoxelCompiler &, int = 4);
+    ~OMVoxelCompilerPool();
+
+    void upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMVoxelComplex> *cutoutComplex,
+                OMVoxelLayer<OMVoxel> *translucent, OMVoxelLayer<OMVoxelComplex> *translucentComplex);
+    void compile(int i);
+
+  private:
+    world::OMChunkManager<16> &manager;
+    OMVoxelCompiler &compiler;
+
+    std::mutex poolMutex;
+    std::vector<int> queuedChunks;
+
+    std::mutex bufferMutex;
+    std::unordered_map<int, std::vector<OMVoxel>> cutout, translucent;
+    std::unordered_map<int, std::vector<OMVoxelComplex>> cutoutComplex, translucentComplex;
+
+    std::vector<std::thread *> thrs;
+    bool active = true;
+};
+
 class OMVoxelManager
 {
   public:
@@ -367,7 +395,8 @@ class OMVoxelManager
     OMVoxelLayer<OMVoxel> *voxelLayer, *voxelTranslucentLayer;
     OMVoxelLayer<OMVoxelComplex> *voxelComplexLayer, *voxelTranslucentComplexLayer;
 
-    void compile(int i);
+    OMVoxelCompilerPool *compilerPool;
+
     void unloadChunk(int i);
 };
 
