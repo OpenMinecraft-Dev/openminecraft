@@ -1,4 +1,5 @@
 #include "boost/asio.hpp"
+#include "boost/asio/ip/udp.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include <boost/asio/connect.hpp>
 #include <boost/asio/impl/read.hpp>
@@ -54,7 +55,7 @@ auto main(int argc, char **argv) -> int
     ip::tcp::socket socket(io);
     ip::tcp::resolver reso(io);
     auto temp = reso.resolve(argv[1], argv[2]);
-    connect(socket, temp);
+    socket.connect(*temp.begin());
 
     auto timestmp = static_cast<uint64_t>(time(nullptr));
 
@@ -76,7 +77,7 @@ auto main(int argc, char **argv) -> int
     payld.write(reinterpret_cast<char *>(&timestmp), sizeof(uint64_t));*/
 
     logger.info("connected to the Minecraft server!, timestamp {:016x}", timestmp);
-    write(socket, buffer(payld.str().c_str(), payld.str().size()));
+    socket.write_some(buffer(payld.str().c_str(), payld.str().size()));
 
     std::ofstream of("server.dat");
 

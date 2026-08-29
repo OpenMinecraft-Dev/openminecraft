@@ -107,11 +107,11 @@ void OMApplication::mainLoop(OMBackend backend)
         auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{-1.0f, 5.0f, -1.0f}, 45.0f, -45.0f);
 
         auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
-        for (int cx = -1; cx < 8; ++cx)
+        for (int cx = -1; cx < 16; ++cx)
         {
-            for (int cy = 0; cy < 8; ++cy)
+            for (int cy = 0; cy < 16; ++cy)
             {
-                for (int cz = -1; cz < 8; ++cz)
+                for (int cz = -1; cz < 16; ++cz)
                 {
                     using data::block::blockstateRegistry;
                     world::OMChunk<16> cnk(cx, cy, cz);
@@ -167,12 +167,6 @@ void OMApplication::mainLoop(OMBackend backend)
         win()->registerHandler(hnd);
         win()->registerHandler(hnd3);
         win()->baseInit();
-
-        auto r = openminecraft::network::queryDns("_minecraft._tcp.awa.kjmc.top");
-        for (auto l : r)
-        {
-            logger->warn("{} {}", l.target, l.port);
-        }
 
         std::array<bool, 6> keystates = {false, false, false, false, false, false};
         bus.append(SDL_EVENT_WINDOW_RESIZED, [&](SDL_Event &) -> void { win()->requestResize(); });

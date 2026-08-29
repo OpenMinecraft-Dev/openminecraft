@@ -13,6 +13,7 @@
 #include "openminecraft/world/om_world_chunk.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <functional>
@@ -366,11 +367,17 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         offs.resize(chunkManager->numChunks());
         auto l = voxelLayer->buf()->totalSize;
         auto l2 = voxelComplexLayer->buf()->totalSize;
+        auto l3 = voxelTranslucentLayer->buf()->totalSize;
+        auto l4 = voxelTranslucentComplexLayer->buf()->totalSize;
         chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
             for (auto &ochk : chunks)
             {
-                if (ochk.has_value())
+                if (!ochk.has_value())
+                {
+                    offs[i] = glm::vec3{INFINITY};
+                }
+                else
                 {
                     const auto &chk = ochk.value();
                     auto pp = basics::OMPosition<16, int64_t, float>();
@@ -384,12 +391,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         });
         chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
+            auto m = std::chrono::steady_clock::now();
             for (auto &ochk : chunks)
             {
                 if (!ochk.has_value())
                 {
                     unloadChunk(i);
-                    offs[i] = glm::vec3{INFINITY};
                 }
                 else
                 {
@@ -398,6 +405,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     {
                         compile(i);
                         chk.solveDirty();
+                    }
+
+                    if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m)
+                            .count() >= 1)
+                    {
+                        break;
                     }
                 }
                 ++i;
@@ -415,7 +428,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         }
         chunkoffs->updateDataPart(offs.data(), 0, offs.size() * sizeof(glm::vec3));
 
-        if (l != voxelLayer->buf()->totalSize || l2 != voxelComplexLayer->buf()->totalSize)
+        if (l != voxelLayer->buf()->totalSize || l2 != voxelComplexLayer->buf()->totalSize ||
+            l3 != voxelTranslucentLayer->buf()->totalSize || l4 != voxelTranslucentComplexLayer->buf()->totalSize)
         {
             rec();
         }
