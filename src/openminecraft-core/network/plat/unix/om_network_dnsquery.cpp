@@ -1,7 +1,14 @@
-/*#include "resolv.h"
-#include <netdb.h>
+#include "openminecraft/network/om_network_dnsquery.hpp"
 
-void test()
+#include "openminecraft/log/om_log_common.hpp"
+#include "resolv.h"
+#include <netdb.h>
+#include <vector>
+
+namespace openminecraft::network
+{
+log::OMLogger logger("DNS Query");
+auto queryDns(std::string n) -> std::vector<OMNetworkDnsResult>
 {
     res_init();
 
@@ -9,13 +16,15 @@ void test()
     int len = res_query("_minecraft._tcp.awa.kjmc.top", ns_c_in, ns_t_srv, answer, sizeof(answer));
     if (len < 0)
     {
-        printf("DNS query failed: %s\n", hstrerror(h_errno));
+        logger.warn("DNS query failed: {}", hstrerror(h_errno));
+        return {};
     }
 
     ns_msg handle;
     ns_initparse(answer, len, &handle);
 
     int count = ns_msg_count(handle, ns_s_an);
+    std::vector<OMNetworkDnsResult> result;
     for (int i = 0; i < count; i++)
     {
         ns_rr rr;
@@ -33,7 +42,10 @@ void test()
                 continue;
             }
 
-            printf("Priority: %u, Weight: %u, Port: %u, Target: %s\n", priority, weight, port, target);
+            result.push_back({target, port});
         }
     }
-}*/
+
+    return result;
+}
+} // namespace openminecraft::network

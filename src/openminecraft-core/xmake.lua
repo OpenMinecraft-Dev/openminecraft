@@ -46,4 +46,6 @@ add_packages(
 )
 
 add_files("*.cpp")
--- add_syslinks("resolv")
+if not is_plat("windows", "mingw") then
+	add_syslinks("resolv")
+end
