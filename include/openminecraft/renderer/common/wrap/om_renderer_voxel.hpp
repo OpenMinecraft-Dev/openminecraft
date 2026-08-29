@@ -291,7 +291,7 @@ template <typename It> class OMVoxelLayer
         delete voxelBuffer;
     }
 
-    void loadData(int i, std::vector<It> &cm)
+    inline void loadData(int i, std::vector<It> &cm)
     {
         if (chunkBlocks.size() <= i)
         {

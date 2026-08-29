@@ -9,6 +9,7 @@ includes("renderer/xmake.lua")
 includes("specs/xmake.lua")
 includes("fontproc/xmake.lua")
 includes("world/xmake.lua")
+includes("network/xmake.lua")
 
 target("openminecraft-core")
 set_kind("static")
@@ -23,7 +24,8 @@ add_deps(
 	"openminecraft-renderer",
 	"openminecraft-specs",
 	"openminecraft-fontproc",
-	"openminecraft-world"
+	"openminecraft-world",
+	"openminecraft-network"
 )
 
 add_packages(
@@ -44,3 +46,4 @@ add_packages(
 )
 
 add_files("*.cpp")
+-- add_syslinks("resolv")

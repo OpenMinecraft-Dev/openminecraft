@@ -10,9 +10,9 @@
 #include <cstdint>
 #include <ctime>
 #include <fstream>
+#include <nameser.h>
 #include <sstream>
 #include <stdexcept>
-#include "ares.h"
 
 using namespace openminecraft;
 using namespace boost::asio;
@@ -51,22 +51,6 @@ auto main(int argc, char **argv) -> int
     log::OMLogger logger("Network Test");
     logger.info("test!");
 
-    ares_channel channel;
-    if (ares_init_options(&channel, nullptr, 0x0) != ARES_SUCCESS)
-    {
-        throw std::logic_error("fail");
-    }
-
-    uint16_t arg;
-    ares_query(
-        channel, "_minecraft._tcp.awa.kjmc.top", ARES_CLASS_IN, ARES_REC_TYPE_SRV,
-        [](void *arg, int status, int timeouts, unsigned char *abuf, int alen) -> void {
-            log::OMLogger logger("Network Test");
-
-            logger.warn("{} {}", status, alen);
-        },
-        &arg);
-
     io_context io;
     ip::tcp::socket socket(io);
     ip::tcp::resolver reso(io);
@@ -88,12 +72,12 @@ auto main(int argc, char **argv) -> int
     payld << static_cast<char>(1);
     payld << static_cast<char>(0x00);
     // packet 3: ping request
-    payld << static_cast<char>(9);
+    /*payld << static_cast<char>(9);
     payld << static_cast<char>(0x01);
-    payld.write(reinterpret_cast<char *>(&timestmp), sizeof(uint64_t));
+    payld.write(reinterpret_cast<char *>(&timestmp), sizeof(uint64_t));*/
 
+    logger.info("connected to the Minecraft server!, timestamp {:016x}", timestmp);
     write(socket, buffer(payld.str().c_str(), payld.str().size()));
-    logger.info("connected to the Minecraft server!");
 
     std::ofstream of("server.dat");
 
@@ -108,6 +92,7 @@ auto main(int argc, char **argv) -> int
             while (length > 0)
             {
                 auto l = socket.read_some(buffer(buf, length));
+                logger.debug("{} bytes", l);
                 of.write(buf, l);
                 length -= l;
             }
@@ -122,6 +107,8 @@ auto main(int argc, char **argv) -> int
             break;
         }
     }
+
+    of.close();
 
     return 0;
 }
