@@ -368,6 +368,7 @@ class OMVoxelManager
     OMVoxelLayer<OMVoxelComplex> *voxelComplexLayer, *voxelTranslucentComplexLayer;
 
     void compile(int i);
+    void unloadChunk(int i);
 };
 
 } // namespace openminecraft::renderer::common::wrap

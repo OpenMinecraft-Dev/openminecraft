@@ -264,6 +264,16 @@ OMVoxelManager::~OMVoxelManager()
     delete skyDiscPipeline;
 }
 
+void OMVoxelManager::unloadChunk(int i)
+{
+    std::vector<OMVoxel> m = {}, tm = {};
+    std::vector<OMVoxelComplex> cm = {}, tcm = {};
+    voxelLayer->loadData(i, m);
+    voxelComplexLayer->loadData(i, cm);
+    voxelTranslucentLayer->loadData(i, tm);
+    voxelTranslucentComplexLayer->loadData(i, tcm);
+}
+
 auto OMVoxelManager::compile(int i) -> void
 {
     auto externalAccessor = [&](glm::ivec3 pos, int64_t chunkx, int64_t chunky, int64_t chunkz) -> uint32_t {
@@ -360,9 +370,25 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             int i = 0;
             for (auto &ochk : chunks)
             {
+                if (ochk.has_value())
+                {
+                    const auto &chk = ochk.value();
+                    auto pp = basics::OMPosition<16, int64_t, float>();
+                    pp.chunkx = chk.chunkx;
+                    pp.chunky = chk.chunky;
+                    pp.chunkz = chk.chunkz;
+                    offs[i] = pp - camera.getPosRaw();
+                }
+                ++i;
+            }
+        });
+        chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
+            int i = 0;
+            for (auto &ochk : chunks)
+            {
                 if (!ochk.has_value())
                 {
-                    compile(i);
+                    unloadChunk(i);
                     offs[i] = glm::vec3{INFINITY};
                 }
                 else
@@ -373,11 +399,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                         compile(i);
                         chk.solveDirty();
                     }
-                    auto pp = basics::OMPosition<16, int64_t, float>();
-                    pp.chunkx = chk.chunkx;
-                    pp.chunky = chk.chunky;
-                    pp.chunkz = chk.chunkz;
-                    offs[i] = pp - camera.getPosRaw();
                 }
                 ++i;
             }
