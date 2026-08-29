@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_texture.hpp"
 #include <algorithm>
+#include <vector>
 
 namespace openminecraft::renderer::opengl
 {
@@ -64,6 +65,7 @@ void OMRendererRenderTargetOpenGL::build()
         gl->glGenFramebuffers(1, &framebuffer);
         gl->glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         int i = 0;
+        std::vector<GLenum> drawbufs = {};
         for (auto tt : textures)
         {
             if (tt->arr == common::Depth)
@@ -86,11 +88,15 @@ void OMRendererRenderTargetOpenGL::build()
                     type = GL_TEXTURE_2D_MULTISAMPLE;
                     break;
                 }
+                drawbufs.push_back(GL_COLOR_ATTACHMENT0 + i);
                 gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, type,
                                            reinterpret_cast<OMRendererTextureOpenGL *>(tt)->texture, 0);
+
                 i++;
             }
         }
+
+        gl->glDrawBuffers(drawbufs.size(), drawbufs.data());
     }
 
     gl->glBindFramebuffer(GL_FRAMEBUFFER, 0);
