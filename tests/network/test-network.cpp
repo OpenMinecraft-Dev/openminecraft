@@ -1,6 +1,7 @@
 #include "boost/asio.hpp"
 #include "boost/asio/ip/udp.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/network/om_network_packet.hpp"
 #include <boost/asio/connect.hpp>
 #include <boost/asio/impl/read.hpp>
 #include <boost/asio/impl/write.hpp>
@@ -61,16 +62,17 @@ auto main(int argc, char **argv) -> int
 
     std::ostringstream payld;
     // packet 1: Handshake
-    payld << static_cast<char>(16);
-    payld << static_cast<char>(0x00);
-    payld << static_cast<char>(0b10000101) << static_cast<char>(0b00000110);
-    payld << static_cast<char>(9);
-    payld.write("localhost", 9);
-    payld << static_cast<char>(0b10000001) << static_cast<char>(0b00111100);
-    payld << static_cast<char>(1);
+    auto pck = network::OMNetworkPacket()
+                   .varInt(16)
+                   .varInt(0x00)
+                   .varInt(773)
+                   .utf8WithPrefix("localhost")
+                   .shortInt(25565)
+                   .varInt(1);
+    payld.write(reinterpret_cast<char *>(pck.data()), pck.datalen());
     // packet 2: Fetch metadata
-    payld << static_cast<char>(1);
-    payld << static_cast<char>(0x00);
+    auto pck2 = network::OMNetworkPacket().varInt(1).varInt(0x00);
+    payld.write(reinterpret_cast<char *>(pck2.data()), pck2.datalen());
     // packet 3: ping request
     /*payld << static_cast<char>(9);
     payld << static_cast<char>(0x01);
