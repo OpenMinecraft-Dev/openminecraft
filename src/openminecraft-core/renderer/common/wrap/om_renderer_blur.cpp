@@ -30,7 +30,7 @@ OMRendererBlurHandler::OMRendererBlurHandler(OMRenderer *renderer, int passes) :
                        ->shader(renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format))
                        ->shader(renderer->shaderManager.preprocess("core/bilt2.vert.glsl", Vertex, GLSLSource, format))
                        ->format(format)
-                       ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+                       ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
                        ->blend(true)
                        ->depth(false, false)
                        ->buildN();
@@ -44,7 +44,7 @@ OMRendererBlurHandler::OMRendererBlurHandler(OMRenderer *renderer, int passes) :
             ->shader(renderer->shaderManager.preprocess("core/effects/blur.frag.glsl", Fragment, GLSLSource, format))
             ->shader(renderer->shaderManager.preprocess("core/effects/blur.vert.glsl", Vertex, GLSLSource, format))
             ->format(format)
-            ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+            ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
             ->blend(true)
             ->depth(false, false)
             ->buildN();
@@ -59,7 +59,7 @@ OMRendererBlurHandler::OMRendererBlurHandler(OMRenderer *renderer, int passes) :
             ->shader(renderer->shaderManager.preprocess("core/effects/blur.frag.glsl", Fragment, GLSLSource, format))
             ->shader(renderer->shaderManager.preprocess("core/effects/blur.vert.glsl", Vertex, GLSLSource, format))
             ->format(format)
-            ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+            ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
             ->blend(true)
             ->depth(false, false)
             ->buildN();
@@ -75,7 +75,7 @@ OMRendererBlurHandler::OMRendererBlurHandler(OMRenderer *renderer, int passes) :
             ->shader(renderer->shaderManager.preprocess("core/effects/compose.frag.glsl", Fragment, GLSLSource, format))
             ->shader(renderer->shaderManager.preprocess("core/effects/compose.vert.glsl", Vertex, GLSLSource, format))
             ->format(format)
-            ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+            ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
             ->blend(true)
             ->depth(false, false)
             ->buildN();

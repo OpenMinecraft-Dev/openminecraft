@@ -35,7 +35,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
                        ->shader(frgShader)
                        ->shader(vtxShader)
                        ->format(format)
-                       ->blendFunc({Alpha, OneMinusAlpha, One, OneMinusAlpha})
+                       ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
                        ->blend(true)
                        ->depth(false, false)
                        ->buildN();

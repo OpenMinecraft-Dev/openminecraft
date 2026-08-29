@@ -23,6 +23,23 @@ OMRendererTaskOpenGL::~OMRendererTaskOpenGL()
 {
     gl->glDeleteVertexArrays(vaos.size(), vaos.data());
 }
+static auto convert(common::OMRendererPipelineBlendOp o) -> GLenum
+{
+    switch (o)
+    {
+    default:
+    case common::Add:
+        return GL_FUNC_ADD;
+    case common::Subtract:
+        return GL_FUNC_SUBTRACT;
+    case common::ReverseSubstract:
+        return GL_FUNC_REVERSE_SUBTRACT;
+    case common::Min:
+        return GL_MIN;
+    case common::Max:
+        return GL_MAX;
+    }
+}
 
 static auto convert(common::OMRendererPipelineBlendType t) -> GLenum
 {
@@ -33,10 +50,79 @@ static auto convert(common::OMRendererPipelineBlendType t) -> GLenum
         return GL_ONE;
     case common::Zero:
         return GL_ZERO;
-    case common::Alpha:
+    case common::SrcAlpha:
         return GL_SRC_ALPHA;
-    case common::OneMinusAlpha:
+    case common::OneMinusSrcAlpha:
         return GL_ONE_MINUS_SRC_ALPHA;
+    case common::DstAlpha:
+        return GL_DST_ALPHA;
+    case common::OneMinusDstAlpha:
+        return GL_ONE_MINUS_DST_ALPHA;
+    case common::SrcColor:
+        return GL_SRC_COLOR;
+    case common::OneMinusSrcColor:
+        return GL_ONE_MINUS_SRC_COLOR;
+    case common::DstColor:
+        return GL_DST_COLOR;
+    case common::OneMinusDstColor:
+        return GL_ONE_MINUS_DST_COLOR;
+    case common::ConstantColor:
+        return GL_CONSTANT_COLOR;
+    case common::OneMinusConstantColor:
+        return GL_ONE_MINUS_CONSTANT_COLOR;
+    case common::ConstantAlpha:
+        return GL_CONSTANT_ALPHA;
+    case common::OneMinusConstantAlpha:
+        return GL_ONE_MINUS_CONSTANT_ALPHA;
+    case common::SrcAlphaSaturate:
+        return GL_SRC_ALPHA_SATURATE;
+    case common::Src1Color:
+        return GL_SRC1_COLOR;
+    case common::OneMinusSrc1Color:
+        return GL_ONE_MINUS_SRC1_COLOR;
+    case common::Src1Alpha:
+        return GL_SRC1_ALPHA;
+    case common::OneMinusSrc1Alpha:
+        return GL_ONE_MINUS_SRC1_ALPHA;
+    }
+}
+
+static auto convert(common::OMRendererPipelineBlendLogicOp o) -> GLenum
+{
+    switch (o)
+    {
+    case common::Clear:
+        return GL_CLEAR;
+    case common::And:
+        return GL_AND;
+    case common::AndReverse:
+        return GL_AND_REVERSE;
+    case common::Copy:
+        return GL_COPY;
+    case common::AndInverted:
+        return GL_AND_INVERTED;
+    case common::NoOp:
+        return GL_NOOP;
+    case common::Xor:
+        return GL_XOR;
+    case common::Or:
+        return GL_OR;
+    case common::Nor:
+        return GL_NOR;
+    case common::Equivalent:
+        return GL_EQUIV;
+    case common::Invert:
+        return GL_INVERT;
+    case common::OrReverse:
+        return GL_OR_REVERSE;
+    case common::CopyInverted:
+        return GL_COPY_INVERTED;
+    case common::OrInverted:
+        return GL_OR_INVERTED;
+    case common::Nand:
+        return GL_NAND;
+    case common::Set:
+        return GL_SET;
     }
 }
 
@@ -172,6 +258,17 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     ops.push_back({glpipe->enableBlend ? Enable : Disable, GL_BLEND});
     ops.push_back(
         {BlendFuncSeparate, convert(s.srcColor), convert(s.dstColor), convert(s.srcAlpha), convert(s.dstAlpha)});
+    ops.push_back({BlendEquationSeparate, convert(glpipe->blendOperatorColor), convert(glpipe->blendOperatorAlpha)});
+    ops.push_back(
+        {BlendColor,
+         {},
+         {},
+         {glpipe->blendConstant.r, glpipe->blendConstant.g, glpipe->blendConstant.b, glpipe->blendConstant.a}});
+
+    ops.push_back({glpipe->enableMultisampleShading ? Enable : Disable, GL_SAMPLE_SHADING});
+    ops.push_back({glpipe->enablePrimitiveRestart ? Enable : Disable, GL_PRIMITIVE_RESTART_FIXED_INDEX});
+    ops.push_back({glpipe->enableBlendLogicOp ? Enable : Disable, GL_COLOR_LOGIC_OP});
+    ops.push_back({LogicOp, convert(glpipe->blendLogicOperator)});
 
     if (!isCleared)
     {
@@ -499,6 +596,15 @@ void OMRendererTaskOpenGL::execute()
             break;
         case PolygonOffset:
             gl->glPolygonOffset(op.floatArgs[0], op.floatArgs[1]);
+            break;
+        case BlendColor:
+            gl->glBlendColor(op.floatArgs[0], op.floatArgs[1], op.floatArgs[2], op.floatArgs[3]);
+            break;
+        case BlendEquationSeparate:
+            gl->glBlendEquationSeparate(op.args[0], op.args[1]);
+            break;
+        case LogicOp:
+            gl->glLogicOp(op.args[0]);
             break;
         }
     }

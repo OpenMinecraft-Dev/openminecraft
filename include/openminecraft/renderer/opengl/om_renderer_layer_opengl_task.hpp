@@ -43,7 +43,10 @@ enum OMRendererOpType
     CullFace,
     FrontFace,
     LineWidth,
-    PolygonOffset
+    PolygonOffset,
+    BlendColor,
+    BlendEquationSeparate,
+    LogicOp
 };
 union OMRendererOpenGLArg {
     GLuint i;

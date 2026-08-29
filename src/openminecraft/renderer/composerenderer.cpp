@@ -26,7 +26,7 @@ OMComposeRenderer::OMComposeRenderer(openminecraft::renderer::OMRenderer *render
                        ->shader(renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format))
                        ->shader(renderer->shaderManager.preprocess("core/bilt.vert.glsl", Vertex, GLSLSource, format))
                        ->format(format)
-                       ->blendFunc({Alpha, OneMinusAlpha, Alpha, OneMinusAlpha})
+                       ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
                        ->blend(true)
                        ->depth(false, false)
                        ->buildN();

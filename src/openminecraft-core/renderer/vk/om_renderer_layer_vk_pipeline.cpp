@@ -233,6 +233,23 @@ void OMRendererPipelineVk::bindInput(int idx, common::OMRendererTexture *texture
     }
 }
 
+static auto convert(common::OMRendererPipelineBlendOp p) -> BlendOp
+{
+    switch (p)
+    {
+    case common::Add:
+        return BlendOp::eAdd;
+    case common::Subtract:
+        return BlendOp::eSubtract;
+    case common::ReverseSubstract:
+        return BlendOp::eReverseSubtract;
+    case common::Min:
+        return BlendOp::eMin;
+    case common::Max:
+        return BlendOp::eMax;
+    }
+}
+
 static auto convert(common::OMRendererPipelineBlendType t) -> BlendFactor
 {
     switch (t)
@@ -242,10 +259,80 @@ static auto convert(common::OMRendererPipelineBlendType t) -> BlendFactor
         return BlendFactor::eOne;
     case common::Zero:
         return BlendFactor::eZero;
-    case common::Alpha:
+    case common::SrcAlpha:
         return BlendFactor::eSrcAlpha;
-    case common::OneMinusAlpha:
+    case common::OneMinusSrcAlpha:
         return BlendFactor::eOneMinusSrcAlpha;
+    case common::DstAlpha:
+        return BlendFactor::eDstAlpha;
+    case common::OneMinusDstAlpha:
+        return BlendFactor::eOneMinusDstAlpha;
+    case common::SrcColor:
+        return BlendFactor::eSrcColor;
+    case common::OneMinusSrcColor:
+        return BlendFactor::eOneMinusSrcColor;
+    case common::DstColor:
+        return BlendFactor::eDstColor;
+    case common::OneMinusDstColor:
+        return BlendFactor::eOneMinusDstColor;
+    case common::ConstantColor:
+        return BlendFactor::eConstantColor;
+    case common::OneMinusConstantColor:
+        return BlendFactor::eOneMinusConstantColor;
+    case common::ConstantAlpha:
+        return BlendFactor::eConstantAlpha;
+    case common::OneMinusConstantAlpha:
+        return BlendFactor::eOneMinusConstantAlpha;
+    case common::SrcAlphaSaturate:
+        return BlendFactor::eSrcAlphaSaturate;
+    case common::Src1Color:
+        return BlendFactor::eSrc1Color;
+    case common::OneMinusSrc1Color:
+        return BlendFactor::eOneMinusSrc1Color;
+    case common::Src1Alpha:
+        return BlendFactor::eSrc1Alpha;
+    case common::OneMinusSrc1Alpha:
+        return BlendFactor::eOneMinusSrc1Alpha;
+    }
+}
+
+static auto convert(common::OMRendererPipelineBlendLogicOp o) -> LogicOp
+{
+    switch (o)
+    {
+    case common::Clear:
+        return LogicOp::eClear;
+    case common::And:
+        return LogicOp::eAnd;
+    case common::AndReverse:
+        return LogicOp::eAndReverse;
+    case common::Copy:
+        return LogicOp::eCopy;
+    case common::AndInverted:
+        return LogicOp::eAndInverted;
+    default:
+    case common::NoOp:
+        return LogicOp::eNoOp;
+    case common::Xor:
+        return LogicOp::eXor;
+    case common::Or:
+        return LogicOp::eOr;
+    case common::Nor:
+        return LogicOp::eNor;
+    case common::Equivalent:
+        return LogicOp::eEquivalent;
+    case common::Invert:
+        return LogicOp::eInvert;
+    case common::OrReverse:
+        return LogicOp::eOrReverse;
+    case common::CopyInverted:
+        return LogicOp::eCopyInverted;
+    case common::OrInverted:
+        return LogicOp::eOrInverted;
+    case common::Nand:
+        return LogicOp::eNand;
+    case common::Set:
+        return LogicOp::eSet;
     }
 }
 
@@ -395,19 +482,20 @@ void OMRendererPipelineVk::build()
     }
 
     auto vertexInput = PipelineVertexInputStateCreateInfo({}, vertexInputBindingDesc, vertexInputAttrDesc);
-    auto inputAssembly = PipelineInputAssemblyStateCreateInfo({}, t, false);
+    auto inputAssembly = PipelineInputAssemblyStateCreateInfo({}, t, enablePrimitiveRestart);
     auto rasterization = PipelineRasterizationStateCreateInfo(
         {}, depthClamp, false, md, cm, cullClockwise ? FrontFace::eCounterClockwise : FrontFace::eClockwise,
         enableDepthBias, depthBiasConstant, 0, depthBiasSlope, lineWidth);
-    auto multisample = PipelineMultisampleStateCreateInfo({}, s, false);
+    auto multisample = PipelineMultisampleStateCreateInfo({}, s, enableMultisampleShading);
     auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
     std::vector attc = {PipelineColorBlendAttachmentState(
-        enableBlend, convert(blendState.srcColor), convert(blendState.dstColor), BlendOp::eAdd,
-        convert(blendState.srcAlpha), convert(blendState.dstAlpha), BlendOp::eAdd,
+        enableBlend, convert(blendState.srcColor), convert(blendState.dstColor), convert(blendOperatorColor),
+        convert(blendState.srcAlpha), convert(blendState.dstAlpha), convert(blendOperatorAlpha),
         ColorComponentFlagBits::eA | ColorComponentFlagBits::eR | ColorComponentFlagBits::eG |
             ColorComponentFlagBits::eB)};
-    auto colorblend =
-        PipelineColorBlendStateCreateInfo({}, false, LogicOp::eNoOp, attc, std::array{0.f, 0.f, 0.f, 0.f});
+    auto colorblend = PipelineColorBlendStateCreateInfo(
+        {}, enableBlendLogicOp, convert(blendLogicOperator), attc,
+        std::array{blendConstant.r, blendConstant.g, blendConstant.b, blendConstant.a});
     auto depthStencil =
         PipelineDepthStencilStateCreateInfo({}, enableDepthTest, enableDepthWrite, op, true, true, {}, {}, 0.0f, 1.0f);
     std::vector<DynamicState> states = {DynamicState::eScissor, DynamicState::eViewport};

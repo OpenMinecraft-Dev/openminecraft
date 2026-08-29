@@ -1,6 +1,7 @@
 #ifndef OM_RENDERER_PIPELINE_HPP
 #define OM_RENDERER_PIPELINE_HPP
 
+#include "glm/fwd.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
@@ -27,8 +28,31 @@ enum OMRendererPipelineBlendType
 {
     One,
     Zero,
-    Alpha,
-    OneMinusAlpha
+    SrcAlpha,
+    OneMinusSrcAlpha,
+    DstAlpha,
+    OneMinusDstAlpha,
+    SrcColor,
+    OneMinusSrcColor,
+    DstColor,
+    OneMinusDstColor,
+    ConstantColor,
+    OneMinusConstantColor,
+    ConstantAlpha,
+    OneMinusConstantAlpha,
+    SrcAlphaSaturate,
+    Src1Color,
+    OneMinusSrc1Color,
+    Src1Alpha,
+    OneMinusSrc1Alpha
+};
+enum OMRendererPipelineBlendOp
+{
+    Add,
+    Subtract,
+    ReverseSubstract,
+    Min,
+    Max
 };
 struct OMReedererPipelineBlendState
 {
@@ -69,6 +93,26 @@ enum OMRendererPipelineCompareOp
     NotEqual,
     Always,
     Never
+};
+
+enum OMRendererPipelineBlendLogicOp
+{
+    Clear,
+    And,
+    AndReverse,
+    Copy,
+    AndInverted,
+    NoOp,
+    Xor,
+    Or,
+    Nor,
+    Equivalent,
+    Invert,
+    OrReverse,
+    CopyInverted,
+    OrInverted,
+    Nand,
+    Set
 };
 class OMRendererPipeline : public OMRendererObject
 {
@@ -198,6 +242,38 @@ class OMRendererPipeline : public OMRendererObject
         return this;
     }
 
+    inline auto blendOp(OMRendererPipelineBlendOp opColor, OMRendererPipelineBlendOp opAlpha) -> OMRendererPipeline *
+    {
+        blendOperatorColor = opColor;
+        blendOperatorAlpha = opAlpha;
+        return this;
+    }
+
+    inline auto blendCons(glm::vec4 c) -> OMRendererPipeline *
+    {
+        blendConstant = c;
+        return this;
+    }
+
+    inline auto multisampleShading(bool b) -> OMRendererPipeline *
+    {
+        enableMultisampleShading = b;
+        return this;
+    }
+
+    inline auto primitiveRestart(bool b) -> OMRendererPipeline *
+    {
+        enablePrimitiveRestart = b;
+        return this;
+    }
+
+    inline auto blendLogicOp(bool enable, OMRendererPipelineBlendLogicOp type) -> OMRendererPipeline *
+    {
+        enableBlendLogicOp = enable;
+        blendLogicOperator = type;
+        return this;
+    }
+
     bool enableBlend = false;
     bool enableDepthTest = false;
     bool enableDepthWrite = false;
@@ -212,6 +288,13 @@ class OMRendererPipeline : public OMRendererObject
     float depthBiasConstant = 0.0f;
     float depthBiasSlope = 0.0f;
     OMRendererPipelineCompareOp depthOperator = Less;
+    OMRendererPipelineBlendOp blendOperatorColor = Add;
+    OMRendererPipelineBlendOp blendOperatorAlpha = Add;
+    glm::vec4 blendConstant = {0.0f, 0.0f, 0.0f, 0.0f};
+    bool enableMultisampleShading = true;
+    bool enablePrimitiveRestart = false;
+    bool enableBlendLogicOp = false;
+    OMRendererPipelineBlendLogicOp blendLogicOperator = NoOp;
 };
 } // namespace openminecraft::renderer::common
 
