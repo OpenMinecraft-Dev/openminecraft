@@ -1,3 +1,4 @@
+[中文](README-zh.md)
 # OpenMinecraft
 New engine/client project
 ## Submodules
