@@ -46,6 +46,6 @@ add_packages(
 )
 
 add_files("*.cpp")
-if not is_plat("windows", "mingw") then
+if not is_plat("windows", "mingw", "bsd") then
 	add_syslinks("resolv")
 end
