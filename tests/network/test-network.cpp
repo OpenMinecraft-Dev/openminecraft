@@ -48,7 +48,7 @@ auto readVarInt(ip::tcp::socket &socket) -> int
 auto main(int argc, char **argv) -> int
 {
     log::OMLogger logger("Network Test");
-    logger.info("test!");
+    logger.info("test! {} {}", argv[1], argv[2]);
 
     io_context io;
     ip::tcp::socket socket(io);

@@ -46,6 +46,9 @@ add_packages(
 )
 
 add_files("*.cpp")
-if not is_plat("windows", "mingw", "bsd") then
+if is_plat("windows", "mingw") then
+        add_syslinks("dnsapi")
+end
+if not is_plat("windows", "mingw", "bsd", "android") then
 	add_syslinks("resolv")
 end

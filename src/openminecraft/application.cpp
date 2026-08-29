@@ -168,7 +168,7 @@ void OMApplication::mainLoop(OMBackend backend)
         win()->registerHandler(hnd3);
         win()->baseInit();
 
-        auto r = openminecraft::network::queryDns("awa.kjmc.top");
+        auto r = openminecraft::network::queryDns("_minecraft._tcp.awa.kjmc.top");
         for (auto l : r)
         {
             logger->warn("{} {}", l.target, l.port);
