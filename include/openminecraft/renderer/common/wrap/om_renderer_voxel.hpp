@@ -396,6 +396,7 @@ class OMVoxelManager
     OMRendererPipeline *composePipeline;
     OMRendererPipeline *skyDiscPipeline;
     OMRendererPipeline *lightmapPipeline;
+    OMRendererPipeline *skyPipeline;
     OMRendererBuffer *chunkoffs, *debugoffs;
     OMRendererBuffer *skydisc;
     OMRendererBuffer *fogdata;

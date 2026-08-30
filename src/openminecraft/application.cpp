@@ -107,7 +107,7 @@ void OMApplication::mainLoop(OMBackend backend)
         auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{-1.0f, 5.0f, -1.0f}, 45.0f, -45.0f);
 
         auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
-        int radius = 8;
+        int radius = 4;
         for (int cx = -radius; cx < radius; ++cx)
         {
             for (int cy = -radius; cy < radius; ++cy)

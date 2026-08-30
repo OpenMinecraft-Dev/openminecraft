@@ -236,6 +236,19 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                            ->depth(false, false)
                            ->buildN();
 
+    skyPipeline =
+        renderer->createPipeline()
+            ->input(UniformBuffer)
+            ->inputName("SkyDiscData")
+            ->output(cutoutTargetMS->target)
+            ->samples(samples)
+            ->shader(renderer->shaderManager.preprocess("core/voxel/sky.frag.glsl", Fragment, GLSLSource, simpleFormat))
+            ->shader(renderer->shaderManager.preprocess("core/voxel/sky.vert.glsl", Vertex, GLSLSource, simpleFormat))
+            ->format(simpleFormat)
+            ->blend(false)
+            ->depth(false, false)
+            ->buildN();
+
     composePipeline = renderer->createPipeline()
                           ->input(ImageSampler)
                           ->inputName("inTextureCutout")
@@ -309,9 +322,11 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     translucentComplexPipeline->bindInput(5, lightmap->colorTexture);
     skyDiscPipeline->bindInput(1, skydisc);
     lightmapPipeline->bindInput(0, lightmapData);
+    skyPipeline->bindInput(0, skydisc);
 }
 OMVoxelManager::~OMVoxelManager()
 {
+    delete skyPipeline;
     delete lightmap;
     delete lightmapPipeline;
     delete lightmapData;
@@ -450,9 +465,11 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     auto tsk = task->target(lightmap->target)
                    ->pipeline(lightmapPipeline)
                    ->drawN(6)
-                   ->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
+                   ->clearColor({0.0f, 0.0f, 0.0f, 0.0f})
                    ->clearDepth(0.0f)
                    ->target(cutoutTargetMS->target)
+                   ->pipeline(skyPipeline)
+                   ->drawN(6)
                    ->pipeline(skyDiscPipeline)
                    ->drawN(24)
                    ->pipeline(pipeline)
