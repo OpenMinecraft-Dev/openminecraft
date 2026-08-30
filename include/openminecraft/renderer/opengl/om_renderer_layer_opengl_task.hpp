@@ -46,7 +46,9 @@ enum OMRendererOpType
     PolygonOffset,
     BlendColor,
     BlendEquationSeparate,
-    LogicOp
+    LogicOp,
+    Viewport,
+    Scissor
 };
 union OMRendererOpenGLArg {
     GLuint i;

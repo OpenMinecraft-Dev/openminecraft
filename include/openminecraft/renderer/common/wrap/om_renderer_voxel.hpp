@@ -350,6 +350,7 @@ struct OMVoxelLightMap
     glm::vec3 ambientColor;
     float pad3_ = 0;
     glm::vec3 nightVisionColor;
+    float pad4_ = 0;
 };
 
 class OMVoxelCompilerPool

@@ -419,12 +419,17 @@ void OMRendererTaskOpenGL::drawIndirect(uint64_t begin, uint64_t count)
 }
 void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
 {
-    this->framebuffer = reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer;
-    ops.push_back(
-        {BindFramebuffer, GL_FRAMEBUFFER, reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->framebuffer});
+    auto tgt = reinterpret_cast<OMRendererRenderTargetOpenGL *>(target);
+    this->framebuffer = tgt->framebuffer;
+    ops.push_back({BindFramebuffer, GL_FRAMEBUFFER, tgt->framebuffer});
     ops.push_back({Enable, GL_FRAMEBUFFER_SRGB});
     isCleared = false;
     needClearDepth = target->clearDepth;
+
+    auto siz = tgt->fetchSize();
+
+    ops.push_back({Viewport, 0, 0, static_cast<GLuint>(siz.x), static_cast<GLuint>(siz.y)});
+    ops.push_back({Scissor, 0, 0, static_cast<GLuint>(siz.x), static_cast<GLuint>(siz.y)});
 }
 void OMRendererTaskOpenGL::draw(uint64_t vertexCount)
 {
@@ -605,6 +610,12 @@ void OMRendererTaskOpenGL::execute()
             break;
         case LogicOp:
             gl->glLogicOp(op.args[0]);
+            break;
+        case Scissor:
+            gl->glScissor(op.args[0], op.args[1], op.args[2], op.args[3]);
+            break;
+        case Viewport:
+            gl->glViewport(op.args[0], op.args[1], op.args[2], op.args[3]);
             break;
         }
     }

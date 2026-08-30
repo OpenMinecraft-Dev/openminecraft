@@ -233,7 +233,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                                                        GLSLSource, simpleFormat))
                            ->format(simpleFormat)
                            ->blend(false)
-                           ->depth(false, false)
+                           ->depth(false, true)
                            ->buildN();
 
     skyPipeline =
@@ -246,7 +246,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->shader(renderer->shaderManager.preprocess("core/voxel/sky.vert.glsl", Vertex, GLSLSource, simpleFormat))
             ->format(simpleFormat)
             ->blend(false)
-            ->depth(false, false)
+            ->depth(false, true)
             ->buildN();
 
     composePipeline = renderer->createPipeline()
