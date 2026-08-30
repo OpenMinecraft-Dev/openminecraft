@@ -115,7 +115,7 @@ void OMApplication::mainLoop(OMBackend backend)
                 {
                     using data::block::blockstateRegistry;
                     world::OMChunk<16> cnk(cx, cy, cz);
-                    cnk.setBlock(0, 0, 0, blockstateRegistry.id(data::OMIdentifier("minecraft:blue_stained_glass[]")));
+                    cnk.setBlock(0, 0, 0, blockstateRegistry.id(data::OMIdentifier("minecraft:white_stained_glass[]")));
                     cnk.setBlock(0, 1, 1, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
                     cnk.setBlock(2, 0, 0,
                                  blockstateRegistry.id(data::OMIdentifier("minecraft:grass_block[snowy=false]")));

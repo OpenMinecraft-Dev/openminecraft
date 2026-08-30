@@ -19,11 +19,13 @@
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_structs.hpp"
 #include <SDL3/SDL_vulkan.h>
+#include <chrono>
 #include <cstdlib>
 #include <cstring>
 #include <memory>
 #include <string>
 #include <system_error>
+#include <thread>
 #include <utility>
 #include <vector>
 

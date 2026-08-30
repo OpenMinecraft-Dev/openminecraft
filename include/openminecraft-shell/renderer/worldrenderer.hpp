@@ -34,19 +34,6 @@ using namespace openminecraft::renderer::common;
 // INFO: The renderer test definition, behaves like a renderer handler (and it should be)
 namespace openminecraftshell::renderer
 {
-// INFO: The uniform buffer data structure used for the renderer
-// INFO: model, view, proj for object rendering
-#pragma pack(1)
-struct LightingUniform
-{
-    glm::vec3 lightDirection;
-    float _pad1;
-    glm::vec3 lightColor;
-    float _pad2;
-    glm::vec3 ambientColor;
-    float _pad3;
-};
-#pragma pack()
 // INFO: simple vertex structure
 using VertexStruct = basics::OMVertex<glm::vec3, glm::vec2>;
 
@@ -65,7 +52,7 @@ class OMWorldRenderer : public OMRendererHandler
     void record();
 
     // INFO: these are the resource handles used for rendering
-    OMRendererBuffer *uniformBuffer, *voxelModelBuffer, *lightingBuffer, *cameraBuffer;
+    OMRendererBuffer *uniformBuffer, *voxelModelBuffer, *cameraBuffer;
     wrap::OMRendererTempTarget *tempTarget;
     wrap::OMVoxelManager *voxelManager;
     data::OMTextureAtlas *textureAtlas;
@@ -83,9 +70,6 @@ class OMWorldRenderer : public OMRendererHandler
 
     std::shared_ptr<OMShader> outputVtx;
     std::shared_ptr<OMShader> outputFrg;
-
-    std::chrono::high_resolution_clock::time_point tp;
-    bool timing = false;
 };
 } // namespace openminecraftshell::renderer
 

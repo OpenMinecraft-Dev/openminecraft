@@ -42,7 +42,7 @@ void registerBlocks()
         OMBlock().isSoild(false).prop("shape", {"ascending_east", "ascending_north", "ascending_east", "ascending_west",
                                                 "east_west", "north_east", "north_south", "north_west", "south_east",
                                                 "south_west"}));
-    blockRegistery.registerItem(OMIdentifier("minecraft:blue_stained_glass"),
+    blockRegistery.registerItem(OMIdentifier("minecraft:white_stained_glass"),
                                 OMBlock().isSoild(false).isTranslucent(true));
 }
 } // namespace openminecraftshell::data::block

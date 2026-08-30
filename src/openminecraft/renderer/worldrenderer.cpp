@@ -3,8 +3,6 @@
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
-#include "glm/ext/vector_float4.hpp"
-#include "glm/geometric.hpp"
 #include "openminecraft-shell/data/block/om_block_registery.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_resolver.hpp"
@@ -22,7 +20,6 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
 
-#include <chrono>
 #include <functional>
 #include <glm/glm.hpp>
 #include <memory>
@@ -41,11 +38,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(glm::mat4));
     auto model = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     uniformBuffer->updateData(&model);
-    voxelModelBuffer = renderer->allocateBuffer(Uniform, sizeof(glm::mat4));
-    glm::mat4 m(1.0f);
-    voxelModelBuffer->updateData(&m);
     cameraBuffer = renderer->allocateBuffer(Uniform, sizeof(glm::mat4));
-    lightingBuffer = renderer->allocateBuffer(Uniform, sizeof(LightingUniform));
 
     outputFrg = renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format);
     outputVtx = renderer->shaderManager.preprocess("core/bilt.vert.glsl", Vertex, GLSLSource, format);
@@ -92,26 +85,8 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     voxelManager->bindCameraBuffer(cameraBuffer);
 }
 
-static float ang = 0.0f;
-
 void OMWorldRenderer::beforeFrame()
 {
-    if (!timing)
-    {
-        tp = std::chrono::high_resolution_clock::now();
-        timing = true;
-    }
-    LightingUniform li;
-    li.lightDirection = glm::normalize(glm::vec3(0.5, 0.5, 0.5));
-    li.lightColor = glm::vec3(1.0);
-    li.ambientColor = glm::vec3(0.05);
-
-    auto cam = camera->fetchProjMat() * camera->fetchViewMat();
-
-    cameraBuffer->updateData(&cam);
-    lightingBuffer->updateData(&li);
-    ang += 0.001f;
-
     voxelManager->update(*camera);
 }
 
@@ -122,6 +97,9 @@ void OMWorldRenderer::record()
 
 void OMWorldRenderer::afterFrame()
 {
+    auto cam = camera->fetchProjMat() * camera->fetchViewMat();
+
+    cameraBuffer->updateData(&cam);
 }
 
 void OMWorldRenderer::submitTasks()
@@ -134,10 +112,8 @@ void OMWorldRenderer::submitTasks()
 }
 OMWorldRenderer::~OMWorldRenderer()
 {
-    delete voxelModelBuffer;
     delete uniformBuffer;
     delete cameraBuffer;
-    delete lightingBuffer;
     delete voxelManager;
     delete blockstateResolver;
     delete textureAtlas;
