@@ -378,16 +378,34 @@ class OMVoxelCompilerPool
     bool active = true;
 };
 
+class OMVoxelColorManager
+{
+  public:
+    virtual ~OMVoxelColorManager()
+    {
+    }
+
+    virtual auto getSkyColor() -> glm::vec3 = 0;
+    virtual auto getSkyDiscColor() -> glm::vec3 = 0;
+    virtual auto getSkyDiskRange() -> float = 0;
+    virtual auto getSkyDiskHeight() -> float = 0;
+    virtual auto getFogRange() -> glm::vec2 = 0;
+    virtual auto getBlockTint() -> glm::vec3 = 0;
+    virtual auto getSkyLightColor() -> glm::vec3 = 0;
+};
+
 class OMVoxelManager
 {
   public:
     OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *, OMRendererTexture *,
                    std::shared_ptr<world::OMChunkManager<16>>, std::function<void()>, OMVoxelHandler *,
-                   std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)>);
+                   std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)>,
+                   OMVoxelColorManager *);
     ~OMVoxelManager();
 
     auto submit(OMRendererTask *, OMRendererTempTarget *) -> OMRendererTask *;
     auto update(basics::OMCamera &camera) -> void;
+    auto updateColor() -> void;
     void bindCameraBuffer(OMRendererBuffer *);
 
     OMRendererTempTarget *translucentTargetMS, *translucentTarget;
@@ -405,6 +423,7 @@ class OMVoxelManager
     OMRendererTexture *textureAtlas;
     OMRendererTexture *textureAtlasSecondary;
     OMRendererTempTarget *lightmap;
+    OMVoxelColorManager *colorManager;
 
   private:
     int samples = 4;

@@ -27,7 +27,8 @@ uint64_t cx = 0, cy = 0, cz = 0;
 OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *resolveTarget, OMRendererTexture *tex,
                                OMRendererTexture *texSec, std::shared_ptr<world::OMChunkManager<16>> man,
                                std::function<void()> rec, OMVoxelHandler *handler,
-                               std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> converter)
+                               std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> converter,
+                               OMVoxelColorManager *colorman)
     : logger("OMVoxelManager", this)
 {
     this->rec = rec;
@@ -35,6 +36,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     this->chunkManager = man;
     this->voxelHandler = handler;
     this->converter = converter;
+    this->colorManager = colorman;
 
     delete compiler.handler;
     compiler.handler = voxelHandler;
@@ -273,31 +275,9 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     chunkoffs = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
     debugoffs = renderer->allocateBuffer(VertexData, 12 * 2 * 3 * sizeof(float));
     skydisc = renderer->allocateBuffer(Uniform, sizeof(OMVoxelSkyDisc));
-    OMVoxelSkyDisc disc = {{0.470, 0.654, 1.0}, 256, {0.198, 0.371, 1.0}, -16};
-    skydisc->updateData(&disc);
     fogdata = renderer->allocateBuffer(Uniform, sizeof(float) * 5);
-    std::array<float, 5> d = {0.0005, 0.0006, 0.470, 0.654, 1.0};
-    fogdata->updateData(d.data());
 
     lightmapData = renderer->allocateBuffer(Uniform, sizeof(OMVoxelLightMap));
-    OMVoxelLightMap dayData = {
-        1.0, // SkyFactor
-        1.0, // BlockFactor
-        0.0, // NightVisionFactor
-        0.0, // DarknessScale
-        0.0, // BossOverlayWorldDarkeningFactor
-        1.0, // BrightnessFactor
-        0,
-        0,
-        {1.0, 0.8, 0.6}, // BlockLightTint
-        0,
-        {1.0, 1.0, 1.0}, // SkyLightColor
-        0,
-        {0.01, 0.01, 0.01}, // AmbientColor
-        0,
-        {0.7, 0.7, 0.7} // NightVisionColor
-    };
-    lightmapData->updateData(&dayData);
 
     textureAtlas = tex;
     textureAtlasSecondary = texSec;
@@ -362,6 +342,34 @@ void OMVoxelManager::unloadChunk(int i)
     voxelTranslucentComplexLayer->loadData(i, tcm);
 }
 
+auto OMVoxelManager::updateColor() -> void
+{
+    OMVoxelSkyDisc disc = {colorManager->getSkyDiscColor(), 256, colorManager->getSkyColor(), -16};
+    skydisc->updateData(&disc);
+    std::array<float, 5> d = {colorManager->getFogRange().x, colorManager->getFogRange().y, disc.diskCenterColor.r,
+                              disc.diskCenterColor.g, disc.diskCenterColor.b};
+    fogdata->updateData(d.data());
+
+    OMVoxelLightMap dayData = {
+        1.0, // SkyFactor
+        1.0, // BlockFactor
+        0.0, // NightVisionFactor
+        0.0, // DarknessScale
+        0.0, // BossOverlayWorldDarkeningFactor
+        1.0, // BrightnessFactor
+        0,
+        0,
+        colorManager->getBlockTint(), // BlockLightTint
+        0,
+        colorManager->getSkyLightColor(), // SkyLightColor
+        0,
+        {0.01, 0.01, 0.01}, // AmbientColor
+        0,
+        {0.7, 0.7, 0.7} // NightVisionColor
+    };
+    lightmapData->updateData(&dayData);
+}
+
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
     auto cc = camera.getPosRaw();
@@ -383,6 +391,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             pp3 - camera.getPosRaw(), pp5 - camera.getPosRaw(), pp3 - camera.getPosRaw(), pp7 - camera.getPosRaw(),
             pp4 - camera.getPosRaw(), pp6 - camera.getPosRaw(), pp4 - camera.getPosRaw(), pp7 - camera.getPosRaw(),
         }}.data());
+
+    updateColor();
 
     if (chunkManager->numChunks())
     {

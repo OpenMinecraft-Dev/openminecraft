@@ -29,6 +29,38 @@ using namespace openminecraft::renderer::common;
 
 namespace openminecraftshell::renderer
 {
+class OMWorldColorManager : public wrap::OMVoxelColorManager
+{
+    auto getSkyColor() -> glm::vec3 override
+    {
+        return {0.198, 0.371, 1.0};
+    }
+    auto getSkyDiscColor() -> glm::vec3 override
+    {
+        return {0.470, 0.654, 1.0};
+    }
+    auto getSkyDiskRange() -> float override
+    {
+        return 256.0f;
+    }
+    auto getSkyDiskHeight() -> float override
+    {
+        return -16.0f;
+    }
+    auto getFogRange() -> glm::vec2 override
+    {
+        return {0.0005, 0.0006};
+    }
+    auto getBlockTint() -> glm::vec3 override
+    {
+        return {1.0, 0.8, 0.6};
+    }
+    auto getSkyLightColor() -> glm::vec3 override
+    {
+        return {1.0, 1.0, 1.0};
+    }
+};
+static OMWorldColorManager *colorManager = new OMWorldColorManager;
 OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::OMCamera> camera,
                                  std::shared_ptr<OMChunkManager<16>> chunkManager)
     : OMRendererHandler(renderer), camera(std::move(camera)), logger("OMWorldRenderer", this), renderer(renderer)
@@ -80,7 +112,8 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
             uint64_t h = (cx * 16 + x) * 341873128712L + (cy * 16 + y) * 132897987541L + cz * 16 + z + 1L;
             h ^= h >> 16;
             return blockstateResolver->fetchModel(reg.block, reg.state, h);
-        });
+        },
+        colorManager);
 
     voxelManager->bindCameraBuffer(cameraBuffer);
 }
