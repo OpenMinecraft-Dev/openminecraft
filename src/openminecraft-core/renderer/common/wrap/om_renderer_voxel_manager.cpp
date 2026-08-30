@@ -235,10 +235,10 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     chunkoffs = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
     debugoffs = renderer->allocateBuffer(VertexData, 12 * 2 * 3 * sizeof(float));
     skydisc = renderer->allocateBuffer(Uniform, sizeof(OMVoxelSkyDisc));
-    OMVoxelSkyDisc disc = {{0.470, 0.654, 1.0}, 256, {0.198, 0.371, 1.0}, -16};
+    OMVoxelSkyDisc disc = {{0.02, 0.02, 0.06}, 256, {0.02, 0.03, 0.14}, -16};
     skydisc->updateData(&disc);
     fogdata = renderer->allocateBuffer(Uniform, sizeof(float) * 5);
-    std::array<float, 5> d = {0.0005, 0.0006, 0.470, 0.654, 1.0};
+    std::array<float, 5> d = {0.0005, 0.0006, 0.02, 0.02, 0.06};
     fogdata->updateData(d.data());
 
     textureAtlas = tex;
@@ -394,7 +394,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     composePipeline->bindInput(0, (samples == 1 ? cutoutTargetMS : cutoutTarget)->colorTexture);
     composePipeline->bindInput(1, (samples == 1 ? translucentTargetMS : translucentTarget)->colorTexture);
 
-    auto tsk = task->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
+    auto tsk = task->clearColor({0.02f, 0.03f, 0.14f, 1.0f})
                    ->clearDepth(0.0f)
                    ->target(cutoutTargetMS->target)
                    ->pipeline(skyDiscPipeline)
