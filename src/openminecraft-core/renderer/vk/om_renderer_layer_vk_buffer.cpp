@@ -5,6 +5,9 @@
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan_handles.hpp"
+#include "vulkan/vulkan_structs.hpp"
+#include <limits>
 
 using namespace vk;
 using namespace openminecraft::renderer::common;
@@ -41,7 +44,6 @@ static auto findMemoryType(uint32_t typeFilter, MemoryPropertyFlags properties,
 static auto defFlags() -> MemoryPropertyFlags
 {
     return MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent;
-    ;
 }
 
 static auto mapToUsageFlag(OMBufferUsage usage) -> BufferUsageFlagBits
@@ -145,6 +147,10 @@ void OMRendererBufferVk::updateDataPart(void *src, uint64_t offset, uint64_t len
     try
     {
         auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
+        if (renderer->currentFence != Fence{})
+        {
+            renderer->logicalDevice.waitForFences(renderer->currentFence, true, std::numeric_limits<uint64_t>::max());
+        }
         if (alwaysMapped)
         {
             std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(data) + offset), src, length);
@@ -167,6 +173,10 @@ void OMRendererBufferVk::copyTo(OMRendererBuffer *dst)
     try
     {
         auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
+        if (renderer->currentFence != Fence{})
+        {
+            renderer->logicalDevice.waitForFences(renderer->currentFence, true, std::numeric_limits<uint64_t>::max());
+        }
         if (alwaysMapped)
         {
             dst->updateDataPart(data, 0, length);

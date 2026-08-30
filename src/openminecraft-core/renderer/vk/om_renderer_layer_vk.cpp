@@ -519,6 +519,7 @@ void OMRendererVk::render(OMTicker &t)
         t.pop();
 
         t.pop();
+        currentFence = sync.inFlightFence;
         return;
     }
     catch (SystemError &e)

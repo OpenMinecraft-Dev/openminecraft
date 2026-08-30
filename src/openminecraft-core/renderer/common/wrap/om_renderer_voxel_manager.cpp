@@ -355,6 +355,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             translucentPipeline->bindInput(2, chunkoffs);
             translucentComplexPipeline->bindInput(3, chunkoffs);
         }
+
         chunkoffs->updateDataPart(offs.data(), 0, offs.size() * sizeof(glm::vec3));
 
         compilerPool->upload(voxelLayer, voxelComplexLayer, voxelTranslucentLayer, voxelTranslucentComplexLayer);
