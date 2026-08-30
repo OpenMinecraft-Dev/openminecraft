@@ -334,6 +334,24 @@ struct OMVoxelSkyDisc
     float discHeight;
 };
 
+struct OMVoxelLightMap
+{
+    float skyFactor;
+    float blockFactor;
+    float nightVisionFactor;
+    float darknessScale;
+    float bossOverlayWorldDarkeningFactor;
+    float brightnessFactor;
+    float pad01_, pad02_;
+    glm::vec3 blockLightTint;
+    float pad1_ = 0;
+    glm::vec3 skyLightColor;
+    float pad2_ = 0;
+    glm::vec3 ambientColor;
+    float pad3_ = 0;
+    glm::vec3 nightVisionColor;
+};
+
 class OMVoxelCompilerPool
 {
   public:
@@ -377,11 +395,14 @@ class OMVoxelManager
     OMRendererPipeline *translucentPipeline, *translucentComplexPipeline;
     OMRendererPipeline *composePipeline;
     OMRendererPipeline *skyDiscPipeline;
+    OMRendererPipeline *lightmapPipeline;
     OMRendererBuffer *chunkoffs, *debugoffs;
     OMRendererBuffer *skydisc;
     OMRendererBuffer *fogdata;
+    OMRendererBuffer *lightmapData;
     OMRendererTexture *textureAtlas;
     OMRendererTexture *textureAtlasSecondary;
+    OMRendererTempTarget *lightmap;
 
   private:
     int samples = 4;

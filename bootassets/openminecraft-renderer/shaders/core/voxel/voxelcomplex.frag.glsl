@@ -17,6 +17,7 @@ uniform sampler2DArray inTexture;
 uniform sampler2DArray inTextureSec;
 uniform samplerBuffer inChunkPos;
 #include "basics/structs/fog.glsl"
+uniform sampler2D inLightmap;
 
 void main()
 {
@@ -41,5 +42,6 @@ void main()
     }
     vec3 result = voxFactor * ao * texColor.rgb;
 
-    outColor = fog_gen(vec4(result, texColor.a), fog.fogStart, fog.fogEnd, vec3(fog.fogR, fog.fogG, fog.fogB), 1.0);
+    outColor = fog_gen(vec4(result, texColor.a) * texture(inLightmap, voxLight), fog.fogStart, fog.fogEnd,
+                       vec3(fog.fogR, fog.fogG, fog.fogB), 1.0);
 }

@@ -1,4 +1,5 @@
 #include "glm/fwd.hpp"
+#include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
@@ -51,6 +52,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     cutoutTarget = new OMRendererTempTarget(renderer);
     cutoutTarget->construct(renderer->getExtent());
     translucentTarget = new OMRendererTempTarget(renderer);
+    lightmap = new OMRendererTempTarget(renderer);
+    lightmap->construct({16.0, 16.0}, 1, true);
 
     basics::OMVertexFormat format, format2, formatComplex, simpleFormat;
     simpleFormat.nextGroup()->decideStruct();
@@ -89,6 +92,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->inputName("inChunkPos")
             ->input(UniformBuffer)
             ->inputName("FogData")
+            ->input(ImageSampler)
+            ->inputName("inLightmap")
             ->output(cutoutTargetMS->target)
             ->samples(samples)
             ->setCullMode(renderer::common::Back)
@@ -113,6 +118,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                           ->inputName("inChunkPos")
                           ->input(UniformBuffer)
                           ->inputName("FogData")
+                          ->input(ImageSampler)
+                          ->inputName("inLightmap")
                           ->output(cutoutTargetMS->target)
                           ->samples(samples)
                           ->setCullMode(renderer::common::Back)
@@ -137,6 +144,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->inputName("inChunkPos")
             ->input(UniformBuffer)
             ->inputName("FogData")
+            ->input(ImageSampler)
+            ->inputName("inLightmap")
             ->output(translucentTargetMS->target)
             ->samples(samples)
             ->setCullMode(renderer::common::Back)
@@ -160,6 +169,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                      ->inputName("inChunkPos")
                                      ->input(UniformBuffer)
                                      ->inputName("FogData")
+                                     ->input(ImageSampler)
+                                     ->inputName("inLightmap")
                                      ->output(translucentTargetMS->target)
                                      ->samples(samples)
                                      ->setCullMode(renderer::common::Back)
@@ -211,6 +222,20 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                           ->depthOp(Greater)
                           ->buildN();
 
+    lightmapPipeline = renderer->createPipeline()
+                           ->input(UniformBuffer)
+                           ->inputName("LightmapInfo")
+                           ->output(lightmap->target)
+                           ->samples(1)
+                           ->shader(renderer->shaderManager.preprocess("core/voxel/lightmap.frag.glsl", Fragment,
+                                                                       GLSLSource, simpleFormat))
+                           ->shader(renderer->shaderManager.preprocess("core/voxel/lightmap.vert.glsl", Vertex,
+                                                                       GLSLSource, simpleFormat))
+                           ->format(simpleFormat)
+                           ->blend(false)
+                           ->depth(false, false)
+                           ->buildN();
+
     composePipeline = renderer->createPipeline()
                           ->input(ImageSampler)
                           ->inputName("inTextureCutout")
@@ -235,11 +260,31 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     chunkoffs = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
     debugoffs = renderer->allocateBuffer(VertexData, 12 * 2 * 3 * sizeof(float));
     skydisc = renderer->allocateBuffer(Uniform, sizeof(OMVoxelSkyDisc));
-    OMVoxelSkyDisc disc = {{0.02, 0.02, 0.06}, 256, {0.02, 0.03, 0.14}, -16};
+    OMVoxelSkyDisc disc = {{0.470, 0.654, 1.0}, 256, {0.198, 0.371, 1.0}, -16};
     skydisc->updateData(&disc);
     fogdata = renderer->allocateBuffer(Uniform, sizeof(float) * 5);
-    std::array<float, 5> d = {0.0005, 0.0006, 0.02, 0.02, 0.06};
+    std::array<float, 5> d = {0.0005, 0.0006, 0.470, 0.654, 1.0};
     fogdata->updateData(d.data());
+
+    lightmapData = renderer->allocateBuffer(Uniform, sizeof(OMVoxelLightMap));
+    OMVoxelLightMap dayData = {
+        1.0, // SkyFactor
+        1.0, // BlockFactor
+        0.0, // NightVisionFactor
+        0.0, // DarknessScale
+        0.0, // BossOverlayWorldDarkeningFactor
+        1.0, // BrightnessFactor
+        0,
+        0,
+        {1.0, 0.8, 0.6}, // BlockLightTint
+        0,
+        {1.0, 1.0, 1.0}, // SkyLightColor
+        0,
+        {0.01, 0.01, 0.01}, // AmbientColor
+        0,
+        {0.7, 0.7, 0.7} // NightVisionColor
+    };
+    lightmapData->updateData(&dayData);
 
     textureAtlas = tex;
     textureAtlasSecondary = texSec;
@@ -247,21 +292,29 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     pipeline->bindInput(1, textureAtlas);
     pipeline->bindInput(2, chunkoffs);
     pipeline->bindInput(3, fogdata);
+    pipeline->bindInput(4, lightmap->colorTexture);
     complexPipeline->bindInput(1, textureAtlas);
     complexPipeline->bindInput(2, textureAtlasSecondary);
     complexPipeline->bindInput(3, chunkoffs);
     complexPipeline->bindInput(4, fogdata);
+    complexPipeline->bindInput(5, lightmap->colorTexture);
     translucentPipeline->bindInput(1, textureAtlas);
     translucentPipeline->bindInput(2, chunkoffs);
     translucentPipeline->bindInput(3, fogdata);
+    translucentPipeline->bindInput(4, lightmap->colorTexture);
     translucentComplexPipeline->bindInput(1, textureAtlas);
     translucentComplexPipeline->bindInput(2, textureAtlasSecondary);
     translucentComplexPipeline->bindInput(3, chunkoffs);
     translucentComplexPipeline->bindInput(4, fogdata);
+    translucentComplexPipeline->bindInput(5, lightmap->colorTexture);
     skyDiscPipeline->bindInput(1, skydisc);
+    lightmapPipeline->bindInput(0, lightmapData);
 }
 OMVoxelManager::~OMVoxelManager()
 {
+    delete lightmap;
+    delete lightmapPipeline;
+    delete lightmapData;
     delete fogdata;
     delete compilerPool;
     delete voxelLayer;
@@ -394,7 +447,10 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     composePipeline->bindInput(0, (samples == 1 ? cutoutTargetMS : cutoutTarget)->colorTexture);
     composePipeline->bindInput(1, (samples == 1 ? translucentTargetMS : translucentTarget)->colorTexture);
 
-    auto tsk = task->clearColor({0.02f, 0.03f, 0.14f, 1.0f})
+    auto tsk = task->target(lightmap->target)
+                   ->pipeline(lightmapPipeline)
+                   ->drawN(6)
+                   ->clearColor({0.198f, 0.371f, 1.0f, 1.0f})
                    ->clearDepth(0.0f)
                    ->target(cutoutTargetMS->target)
                    ->pipeline(skyDiscPipeline)
