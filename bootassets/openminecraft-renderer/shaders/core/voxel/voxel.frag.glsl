@@ -11,12 +11,16 @@ layout(location = 5) in float voxFactor;
 layout(location = 0) out vec4 outColor;
 
 #include "basics/fog.glsl"
+
 #include "basics/structs/camera.glsl"
 uniform sampler2DArray inTexture;
+uniform samplerBuffer inChunkPos;
+#include "basics/structs/fog.glsl"
 
 void main()
 {
     mat4 unused = camera.viewProj;
+    float unused2 = texelFetch(inChunkPos, 0).r;
 
     float ao = mix(1.0, 0.2, voxAoLevel / 3.0);
 
@@ -27,5 +31,5 @@ void main()
     }
     vec3 result = voxFactor * ao * texColor.rgb;
 
-    outColor = fog_gendefault(vec4(result, texColor.a), 1.0);
+    outColor = fog_gen(vec4(result, texColor.a), fog.fogStart, fog.fogEnd, vec3(fog.fogR, fog.fogG, fog.fogB), 1.0);
 }

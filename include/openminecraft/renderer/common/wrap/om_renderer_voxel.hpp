@@ -379,6 +379,7 @@ class OMVoxelManager
     OMRendererPipeline *skyDiscPipeline;
     OMRendererBuffer *chunkoffs, *debugoffs;
     OMRendererBuffer *skydisc;
+    OMRendererBuffer *fogdata;
     OMRendererTexture *textureAtlas;
     OMRendererTexture *textureAtlasSecondary;
 

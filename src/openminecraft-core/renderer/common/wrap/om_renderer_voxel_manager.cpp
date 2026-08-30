@@ -87,6 +87,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->inputName("inTexture")
             ->input(UniformTexelBuffer)
             ->inputName("inChunkPos")
+            ->input(UniformBuffer)
+            ->inputName("FogData")
             ->output(cutoutTargetMS->target)
             ->samples(samples)
             ->setCullMode(renderer::common::Back)
@@ -109,6 +111,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                           ->inputName("inTextureSec")
                           ->input(UniformTexelBuffer)
                           ->inputName("inChunkPos")
+                          ->input(UniformBuffer)
+                          ->inputName("FogData")
                           ->output(cutoutTargetMS->target)
                           ->samples(samples)
                           ->setCullMode(renderer::common::Back)
@@ -131,6 +135,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->inputName("inTexture")
             ->input(UniformTexelBuffer)
             ->inputName("inChunkPos")
+            ->input(UniformBuffer)
+            ->inputName("FogData")
             ->output(translucentTargetMS->target)
             ->samples(samples)
             ->setCullMode(renderer::common::Back)
@@ -152,6 +158,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                      ->inputName("inTextureSec")
                                      ->input(UniformTexelBuffer)
                                      ->inputName("inChunkPos")
+                                     ->input(UniformBuffer)
+                                     ->inputName("FogData")
                                      ->output(translucentTargetMS->target)
                                      ->samples(samples)
                                      ->setCullMode(renderer::common::Back)
@@ -229,24 +237,32 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     skydisc = renderer->allocateBuffer(Uniform, sizeof(OMVoxelSkyDisc));
     OMVoxelSkyDisc disc = {{0.470, 0.654, 1.0}, 256, {0.198, 0.371, 1.0}, -16};
     skydisc->updateData(&disc);
+    fogdata = renderer->allocateBuffer(Uniform, sizeof(float) * 5);
+    std::array<float, 5> d = {0.0005, 0.0006, 0.470, 0.654, 1.0};
+    fogdata->updateData(d.data());
 
     textureAtlas = tex;
     textureAtlasSecondary = texSec;
 
     pipeline->bindInput(1, textureAtlas);
     pipeline->bindInput(2, chunkoffs);
+    pipeline->bindInput(3, fogdata);
     complexPipeline->bindInput(1, textureAtlas);
     complexPipeline->bindInput(2, textureAtlasSecondary);
     complexPipeline->bindInput(3, chunkoffs);
+    complexPipeline->bindInput(4, fogdata);
     translucentPipeline->bindInput(1, textureAtlas);
     translucentPipeline->bindInput(2, chunkoffs);
+    translucentPipeline->bindInput(3, fogdata);
     translucentComplexPipeline->bindInput(1, textureAtlas);
     translucentComplexPipeline->bindInput(2, textureAtlasSecondary);
     translucentComplexPipeline->bindInput(3, chunkoffs);
+    translucentComplexPipeline->bindInput(4, fogdata);
     skyDiscPipeline->bindInput(1, skydisc);
 }
 OMVoxelManager::~OMVoxelManager()
 {
+    delete fogdata;
     delete compilerPool;
     delete voxelLayer;
     delete voxelComplexLayer;
