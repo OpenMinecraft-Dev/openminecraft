@@ -98,7 +98,6 @@ void OMWorldRenderer::record()
 void OMWorldRenderer::afterFrame()
 {
     auto cam = camera->fetchProjMat() * camera->fetchViewMat();
-
     cameraBuffer->updateData(&cam);
 }
 
