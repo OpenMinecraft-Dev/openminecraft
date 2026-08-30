@@ -63,16 +63,6 @@ auto OMRendererShaderManager::preprocess(std::string name, OMShaderType type, OM
 
     std::string str(raw.begin(), raw.end());
 
-    if (filetype == GLSLSource)
-    {
-        auto l = str.find("#vertex");
-
-        if (l != std::string::npos)
-        {
-            str.replace(l, 7, vtxdef);
-        }
-    }
-
     std::regex include_regex("^\\s*#include\\s+(?:\"([^\"]+)\"|<([^>]+)>)", std::regex::multiline);
 
     while (true)
@@ -114,6 +104,16 @@ auto OMRendererShaderManager::preprocess(std::string name, OMShaderType type, OM
 
             std::string strsub(raw.begin(), raw.end());
             str.replace(rit->pos, rit->length, strsub);
+        }
+    }
+
+    if (filetype == GLSLSource)
+    {
+        auto l = str.find("#vertex");
+
+        if (l != std::string::npos)
+        {
+            str.replace(l, 7, vtxdef);
         }
     }
 

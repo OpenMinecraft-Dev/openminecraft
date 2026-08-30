@@ -66,8 +66,8 @@ auto main(int argc, char **argv) -> int
                    .varInt(16)
                    .varInt(0x00)
                    .varInt(773)
-                   .utf8WithPrefix("localhost")
-                   .shortInt(25565)
+                   .utf8WithLength("localhost")
+                   .int16(25565)
                    .varInt(1);
     payld.write(reinterpret_cast<char *>(pck.data()), pck.datalen());
     // packet 2: Fetch metadata
