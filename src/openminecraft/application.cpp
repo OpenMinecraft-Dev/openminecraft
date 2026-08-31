@@ -98,7 +98,7 @@ void OMApplication::mainLoop(OMBackend backend)
     auto logger = std::make_shared<log::OMLogger>("Test Renderer");
     try
     {
-        OMWindowConfig conf = {backend, false, 240, 1024, 768};
+        OMWindowConfig conf = {backend, false, 240, 854, 480};
         // INFO: requires at least OpenGL 3.3 Core Profile or Vulkan 1.2
         OMWindow win({util::Version(3, 3, 0, 0), util::Version(1, 2, 0, 0)}, conf,
                      "/bootassets/openminecraft-renderer/shaders");

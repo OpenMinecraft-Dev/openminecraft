@@ -43,7 +43,7 @@ class OMCamera
         auto l = rot * glm::vec4(r, 1.0f);
         l /= l.w;
 
-        return !(l.x > 1.0 || l.x < -1.0 || l.y > 1.0 || l.y < -1.0);
+        return !(l.x > 2 || l.x < -1.25 || l.y > 2 || l.y < -1.25 || l.z < 0.0f);
     }
     void modYaw(float delta);
     void modPitch(float delta);
