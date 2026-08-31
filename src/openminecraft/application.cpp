@@ -298,6 +298,7 @@ void OMApplication::mainLoop(OMBackend backend)
         });
         bus.append(SDL_EVENT_MOUSE_BUTTON_DOWN, [&](SDL_Event &e) {
             logger->warn("mouse release {}: {} {}", e.button.button, e.button.x, e.button.y);
+            hnd2->node->acceptEvent(e.button.x, e.button.y);
         });
         bus.append(SDL_EVENT_MOUSE_WHEEL, [&](SDL_Event &e) {
             logger->warn("mouse wheel: {} {} at {} {}", e.wheel.x, e.wheel.y, e.wheel.mouse_x, e.wheel.mouse_y);

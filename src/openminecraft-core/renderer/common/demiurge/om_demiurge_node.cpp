@@ -5,6 +5,7 @@
 #include "yoga/YGNodeStyle.h"
 #include <any>
 #include <array>
+#include <iostream>
 
 namespace openminecraft::renderer::common::demiurge
 {
@@ -312,6 +313,27 @@ updateChildren:
     for (auto f : children)
     {
         f->syncBoundary(b.x, b.y);
+    }
+}
+
+void OMDemiurgeNode::acceptEvent(float x, float y)
+{
+    try
+    {
+        auto bo = stylesStorage.get<OMDemiurgeRect>("layoutBound");
+
+        if (x >= bo.x && x <= bo.x + bo.width && y >= bo.y && y <= bo.y + bo.height)
+        {
+            std::cout << typeid(*this).name() << std::endl;
+
+            for (auto f : children)
+            {
+                f->acceptEvent(x, y);
+            }
+        }
+    }
+    catch (std::bad_any_cast &e)
+    {
     }
 }
 } // namespace openminecraft::renderer::common::demiurge

@@ -65,6 +65,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     virtual auto syncLayout() -> void;
     auto syncLayoutAll() -> void;
     auto syncBoundary(float x, float y) -> void;
+    void acceptEvent(float x, float y);
 
     inline auto style(std::string s, std::any a) -> std::shared_ptr<OMDemiurgeNode>
     {
