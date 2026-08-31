@@ -1,6 +1,7 @@
 #ifndef OM_CAMERA_HPP
 #define OM_CAMERA_HPP
 
+#include "glm/fwd.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_position.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
@@ -18,6 +19,12 @@ enum OMCameraMovement
     Down
 };
 
+struct OMCameraPlane
+{
+    glm::vec3 normal;
+    float d;
+};
+
 class OMCamera
 {
   public:
@@ -25,6 +32,19 @@ class OMCamera
     ~OMCamera() = default;
     auto fetchViewMat() -> glm::mat4;
     auto fetchProjMat() -> glm::mat4;
+    auto visible(OMPosition<16, int64_t, float> p, glm::mat4 &rot) -> bool
+    {
+        if (p.chunkx == position.chunkx && p.chunky == position.chunky && p.chunkz == position.chunkz)
+        {
+            return true;
+        }
+
+        auto r = p - position;
+        auto l = rot * glm::vec4(r, 1.0f);
+        l /= l.w;
+
+        return !(l.x > 1.0 || l.x < -1.0 || l.y > 1.0 || l.y < -1.0);
+    }
     void modYaw(float delta);
     void modPitch(float delta);
 
@@ -54,6 +74,7 @@ class OMCamera
     OMPosition<16, int64_t, float> position;
     float yaw = 0.0f;
     float pitch = 0.0f;
+    float fov = 70.0f;
 };
 } // namespace openminecraft::renderer::common::basics
 

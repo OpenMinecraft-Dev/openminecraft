@@ -113,6 +113,8 @@ template <int Cs> class OMChunk
 
     int64_t chunkx, chunky, chunkz;
 
+    bool visible = false;
+
   private:
     std::array<uint32_t, Cs * Cs * Cs> blocks = {};
     bool dirty = true;

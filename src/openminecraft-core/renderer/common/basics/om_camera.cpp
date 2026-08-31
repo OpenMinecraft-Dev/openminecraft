@@ -26,7 +26,7 @@ auto OMCamera::fetchProjMat() -> glm::mat4
 {
     auto extent = renderer->getExtent();
     extent = glm::max(extent, glm::vec2(1.0f, 1.0f));
-    return glm::perspective(glm::radians(70.0f), extent.x / extent.y, 1000.0f, 0.05f);
+    return glm::perspectiveRH_ZO(glm::radians(fov), extent.x / extent.y, 1000.0f, 0.05f);
 }
 
 void OMCamera::modYaw(float d)

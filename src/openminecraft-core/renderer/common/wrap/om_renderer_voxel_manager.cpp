@@ -434,20 +434,29 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                 {
                     auto &chk = ochk.value();
 
-                    auto pp = basics::OMPosition<16, int64_t, float>();
-                    pp.chunkx = chk.chunkx;
-                    pp.chunky = chk.chunky;
-                    pp.chunkz = chk.chunkz;
+                    auto cc = basics::OMPosition<16, int64_t, float>();
+                    cc.chunkx = chk.chunkx;
+                    cc.chunky = chk.chunky;
+                    cc.chunkz = chk.chunkz;
 
-                    auto r = mat * glm::vec4((pp - camera.getPosRaw()), 1.0);
-                    r /= r.w;
+                    auto pp = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz);
+                    auto pp2 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky, cc.chunkz);
+                    auto pp3 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky + 1, cc.chunkz);
+                    auto pp4 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz + 1);
+                    auto pp5 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky + 1, cc.chunkz);
+                    auto pp6 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky, cc.chunkz + 1);
+                    auto pp7 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky + 1, cc.chunkz + 1);
+                    auto pp8 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky + 1, cc.chunkz + 1);
 
-                    if (r.x > 1.0 || r.x < -1.0 || r.y > 1.0 || r.y < -1.0)
+                    auto visible = camera.visible(pp, mat) || camera.visible(pp2, mat) || camera.visible(pp3, mat) ||
+                                   camera.visible(pp4, mat) || camera.visible(pp5, mat) || camera.visible(pp6, mat) ||
+                                   camera.visible(pp7, mat) || camera.visible(pp8, mat);
+
+                    if (chk.visible && !visible)
                     {
                         unloadChunk(i);
-                        chk.markDirty();
                     }
-                    else
+                    else if (chk.visible && visible)
                     {
                         if (chk.isDirty())
                         {
@@ -455,6 +464,13 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                             chk.solveDirty();
                         }
                     }
+                    else if (!chk.visible && visible)
+                    {
+                        compilerPool->compile(i);
+                        chk.solveDirty();
+                    }
+
+                    chk.visible = visible;
                 }
                 ++i;
             }
