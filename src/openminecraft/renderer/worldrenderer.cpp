@@ -169,7 +169,7 @@ void OMWorldRenderer::beforeFrame()
 
 void OMWorldRenderer::record()
 {
-    voxelManager->submit(renderer->fetchTask("voxel"), tempTarget);
+    voxelManager->submit(renderer->fetchTask("voxel"), tempTarget)->finishN();
 }
 
 static int gameT = 0;
@@ -179,9 +179,9 @@ void OMWorldRenderer::afterFrame()
     auto cam = camera->fetchProjMat() * camera->fetchViewMat();
     cameraBuffer->updateData(&cam);
 
-    colorManager->updateGameTime(gameT / 24000.0f);
-    gameT = (gameT + 1) % 24000;
-    logger.info("{} tick", gameT);
+    // colorManager->updateGameTime(gameT / 24000.0f);
+    // gameT = (gameT + 1) % 24000;
+    // logger.info("{} tick", gameT);
 }
 
 void OMWorldRenderer::submitTasks()

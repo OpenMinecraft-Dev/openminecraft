@@ -149,7 +149,8 @@ void OMRendererBufferVk::updateDataPart(void *src, uint64_t offset, uint64_t len
         auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
         if (renderer->currentFence != Fence{})
         {
-            renderer->logicalDevice.waitForFences(renderer->currentFence, true, std::numeric_limits<uint64_t>::max());
+            (void)renderer->logicalDevice.waitForFences(renderer->currentFence, true,
+                                                        std::numeric_limits<uint64_t>::max());
         }
         if (alwaysMapped)
         {
@@ -175,7 +176,8 @@ void OMRendererBufferVk::copyTo(OMRendererBuffer *dst)
         auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
         if (renderer->currentFence != Fence{})
         {
-            renderer->logicalDevice.waitForFences(renderer->currentFence, true, std::numeric_limits<uint64_t>::max());
+            (void)renderer->logicalDevice.waitForFences(renderer->currentFence, true,
+                                                        std::numeric_limits<uint64_t>::max());
         }
         if (alwaysMapped)
         {
