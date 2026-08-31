@@ -1,6 +1,8 @@
 #include <SDL3/SDL_error.h>
 
 #include "SDL3/SDL_events.h"
+#include "SDL3/SDL_keyboard.h"
+#include "SDL3/SDL_mouse.h"
 #include "openminecraft-shell/data/block/om_block_registery.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
@@ -231,7 +233,10 @@ void OMApplication::mainLoop(OMBackend backend)
             }
         });
         bus.append(SDL_EVENT_MOUSE_BUTTON_DOWN, [&](SDL_Event &e) -> void {
-            SDL_SetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win), true);
+            if (e.button.button == 1)
+            {
+                SDL_SetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win), true);
+            }
         });
         bus.append(SDL_EVENT_MOUSE_MOTION, [&](SDL_Event &e) -> void {
             if (SDL_GetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win)))
@@ -276,6 +281,18 @@ void OMApplication::mainLoop(OMBackend backend)
             {
                 camera->moveCamera(basics::Up, moveSpeed * time);
             }
+        });
+
+        bus.append(SDL_EVENT_MOUSE_MOTION,
+                   [&](SDL_Event &e) { logger->warn("mouse motion: {} {}", e.motion.x, e.motion.y); });
+        bus.append(SDL_EVENT_MOUSE_BUTTON_UP, [&](SDL_Event &e) {
+            logger->warn("mouse press {}: {} {}", e.button.button, e.button.x, e.button.y);
+        });
+        bus.append(SDL_EVENT_MOUSE_BUTTON_DOWN, [&](SDL_Event &e) {
+            logger->warn("mouse release {}: {} {}", e.button.button, e.button.x, e.button.y);
+        });
+        bus.append(SDL_EVENT_MOUSE_WHEEL, [&](SDL_Event &e) {
+            logger->warn("mouse wheel: {} {} at {} {}", e.wheel.x, e.wheel.y, e.wheel.mouse_x, e.wheel.mouse_y);
         });
 
         util::OMTicker ticker;

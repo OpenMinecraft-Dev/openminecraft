@@ -45,14 +45,14 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                            {"color", (int)0xffffffff},
                                            {"flexGrow", 1.0f},
                                            {"text", "OpenMinecraft Demo"},
-                                           {"textheight", 18},
+                                           {"textheight", 12},
                                        }))
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                        ->style({
                                            {"color", (int)0xffffffff},
                                            {"flexGrow", 1.0f},
                                            {"text", ""},
-                                           {"textheight", 18},
+                                           {"textheight", 12},
                                        })
                                        ->store(fpsTextNode))
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
@@ -60,7 +60,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                            {"color", (int)0xffffffff},
                                            {"flexGrow", 1.0f},
                                            {"text", ""},
-                                           {"textheight", 18},
+                                           {"textheight", 12},
                                        })
                                        ->store(posTextNode))
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
@@ -68,7 +68,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                            {"color", (int)0xffffffff},
                                            {"flexGrow", 1.0f},
                                            {"text", ""},
-                                           {"textheight", 18},
+                                           {"textheight", 12},
                                        })
                                        ->store(povTextNode))
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
@@ -76,14 +76,14 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                            {"color", (int)0xffffffff},
                                            {"flexGrow", 1.0f},
                                            {"text", renderer->driver()},
-                                           {"textheight", 18},
+                                           {"textheight", 12},
                                        }))
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                        ->style({
                                            {"color", (int)0xffffffff},
                                            {"flexGrow", 1.0f},
                                            {"text", ""},
-                                           {"textheight", 18},
+                                           {"textheight", 12},
                                        })
                                        ->store(precisionNode))
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
@@ -91,7 +91,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                            {"color", (int)0xffffffff},
                                            {"flexGrow", 1.0f},
                                            {"text", ""},
-                                           {"textheight", 18},
+                                           {"textheight", 12},
                                        })
                                        ->store(precisionNode2)))
                ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
@@ -161,7 +161,7 @@ auto OMDebugRenderer::updateState(util::OMTicker &t) -> void
             auto n2 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                           ->style({
                               {"flexGrow", 0.0f},
-                              {"textheight", 14},
+                              {"textheight", 12},
                           });
             textNode->mount(n2);
             textNodes.emplace_back(n2);
