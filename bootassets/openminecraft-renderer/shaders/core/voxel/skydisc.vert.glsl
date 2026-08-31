@@ -37,7 +37,14 @@ void main()
     }
 
     actualPos *= disc.discRange;
-    actualPos.y = disc.discHeight;
+    if (id % 3 == 0)
+    {
+        actualPos.y = disc.discHeight;
+    }
+    else
+    {
+        actualPos.y = -disc.discHeight;
+    }
     gl_Position = camera.viewProj * actualPos;
     gl_Position.z = 0;
 }

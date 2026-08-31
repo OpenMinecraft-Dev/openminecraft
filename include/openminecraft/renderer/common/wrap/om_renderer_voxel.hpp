@@ -401,6 +401,7 @@ class OMVoxelColorManager
     virtual auto getDarknessScale() -> float = 0;
     virtual auto getBossOverlayWorldDarkeningFactor() -> float = 0;
     virtual auto getBrightnessFactor() -> float = 0;
+    virtual auto getFogColor() -> glm::vec3 = 0;
 
     inline auto isDirty() -> bool
     {

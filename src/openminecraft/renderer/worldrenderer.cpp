@@ -99,6 +99,10 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     {
         return 1.0f;
     }
+    auto getFogColor() -> glm::vec3 override
+    {
+        return glm::vec3{0.752, 0.84, 1.0} * glm::mix(0.1f, 1.0f, gameTime);
+    }
 };
 static OMWorldColorManager *colorManager = new OMWorldColorManager;
 OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::OMCamera> camera,
@@ -175,8 +179,9 @@ void OMWorldRenderer::afterFrame()
     auto cam = camera->fetchProjMat() * camera->fetchViewMat();
     cameraBuffer->updateData(&cam);
 
-    colorManager->updateGameTime((sin((gameT / 24000.0f - 0.25f) * 2.0f * 3.1415926535) + 1.0f) * 0.5f);
+    colorManager->updateGameTime(gameT / 24000.0f);
     gameT = (gameT + 1) % 24000;
+    logger.info("{} tick", gameT);
 }
 
 void OMWorldRenderer::submitTasks()

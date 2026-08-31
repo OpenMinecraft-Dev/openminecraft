@@ -348,8 +348,8 @@ auto OMVoxelManager::updateColor() -> void
     {
         OMVoxelSkyDisc disc = {colorManager->getSkyDiscColor(), 256, colorManager->getSkyColor(), -16};
         skydisc->updateData(&disc);
-        std::array<float, 5> d = {colorManager->getFogRange().x, colorManager->getFogRange().y, disc.diskCenterColor.r,
-                                  disc.diskCenterColor.g, disc.diskCenterColor.b};
+        auto fg = colorManager->getFogColor();
+        std::array<float, 5> d = {colorManager->getFogRange().x, colorManager->getFogRange().y, fg.r, fg.g, fg.b};
         fogdata->updateData(d.data());
 
         OMVoxelLightMap dayData = {colorManager->getSkyFactor(),
