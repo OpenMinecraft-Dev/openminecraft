@@ -171,6 +171,7 @@ void OMApplication::mainLoop(OMBackend backend)
         win()->registerHandler(hnd3);
         win()->baseInit();
 
+        bool inGame = false;
         std::array<bool, 6> keystates = {false, false, false, false, false, false};
         bus.append(SDL_EVENT_WINDOW_RESIZED, [&](SDL_Event &) -> void { win()->requestResize(); });
         bus.append(SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED, [&](SDL_Event &) -> void { win()->requestResize(); });
@@ -188,6 +189,7 @@ void OMApplication::mainLoop(OMBackend backend)
             {
             case SDLK_ESCAPE:
                 SDL_SetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win), false);
+                inGame = false;
                 break;
             case SDLK_W:
                 keystates[0] = true;
@@ -236,6 +238,7 @@ void OMApplication::mainLoop(OMBackend backend)
             if (e.button.button == 1)
             {
                 SDL_SetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win), true);
+                inGame = true;
             }
         });
         bus.append(SDL_EVENT_MOUSE_MOTION, [&](SDL_Event &e) -> void {
@@ -256,6 +259,11 @@ void OMApplication::mainLoop(OMBackend backend)
             startTime = currentTime;
 
             constexpr float moveSpeed = 4.3f;
+
+            if (!inGame)
+            {
+                return;
+            }
 
             if (keystates[0])
             {
@@ -294,6 +302,10 @@ void OMApplication::mainLoop(OMBackend backend)
         bus.append(SDL_EVENT_MOUSE_WHEEL, [&](SDL_Event &e) {
             logger->warn("mouse wheel: {} {} at {} {}", e.wheel.x, e.wheel.y, e.wheel.mouse_x, e.wheel.mouse_y);
         });
+        bus.append(SDL_EVENT_KEY_DOWN, [&](SDL_Event &e) {
+            logger->warn("key down: {} {} {}", e.key.key, e.key.repeat ? "true" : "false", e.key.mod);
+        });
+        bus.append(SDL_EVENT_KEY_UP, [&](SDL_Event &e) { logger->warn("key up: {}", e.key.key); });
 
         util::OMTicker ticker;
         while (isRunning)
