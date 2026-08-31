@@ -85,7 +85,7 @@ void OMRendererPipelineOpenGL::build()
             std::vector<GLchar> log = {};
             gl->glGetProgramInfoLog(prog, 0, &l, log.data());
             log.resize(l);
-            gl->glGetProgramInfoLog(prog, 1024, nullptr, log.data());
+            gl->glGetProgramInfoLog(prog, 1024, &l, log.data());
             throw std::runtime_error(fmt::format("compile error: {}", log.data()));
         }
 
@@ -100,11 +100,11 @@ void OMRendererPipelineOpenGL::build()
     gl->glGetProgramiv(programbase, GL_LINK_STATUS, &status);
     if (!status)
     {
-        GLsizei l;
-        std::vector<GLchar> log = {};
-        gl->glGetProgramInfoLog(programbase, 0, &l, log.data());
-        log.resize(l);
-        gl->glGetProgramInfoLog(programbase, 1024, nullptr, log.data());
+        std::vector<GLchar> log;
+        GLint length;
+        gl->glGetProgramiv(programbase, GL_INFO_LOG_LENGTH, &length);
+        log.resize(length);
+        gl->glGetProgramInfoLog(programbase, length, nullptr, log.data());
         throw std::runtime_error(fmt::format("link error: {}", log.data()));
     }
 
