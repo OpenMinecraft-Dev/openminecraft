@@ -425,6 +425,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                 ++i;
             }
         });
+        auto mat = camera.fetchProjMat() * camera.fetchViewMat();
         chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
             for (auto &ochk : chunks)
@@ -432,10 +433,27 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                 if (ochk.has_value())
                 {
                     auto &chk = ochk.value();
-                    if (chk.isDirty())
+
+                    auto pp = basics::OMPosition<16, int64_t, float>();
+                    pp.chunkx = chk.chunkx;
+                    pp.chunky = chk.chunky;
+                    pp.chunkz = chk.chunkz;
+
+                    auto r = mat * glm::vec4((pp - camera.getPosRaw()), 1.0);
+                    r /= r.w;
+
+                    if (r.x > 1.0 || r.x < -1.0 || r.y > 1.0 || r.y < -1.0)
                     {
-                        compilerPool->compile(i);
-                        chk.solveDirty();
+                        unloadChunk(i);
+                        chk.markDirty();
+                    }
+                    else
+                    {
+                        if (chk.isDirty())
+                        {
+                            compilerPool->compile(i);
+                            chk.solveDirty();
+                        }
                     }
                 }
                 ++i;
