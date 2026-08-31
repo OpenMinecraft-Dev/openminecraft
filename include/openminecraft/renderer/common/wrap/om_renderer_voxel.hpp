@@ -15,6 +15,7 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
+#include <atomic>
 #include <cstdint>
 #include <functional>
 #include <initializer_list>
@@ -392,6 +393,26 @@ class OMVoxelColorManager
     virtual auto getFogRange() -> glm::vec2 = 0;
     virtual auto getBlockTint() -> glm::vec3 = 0;
     virtual auto getSkyLightColor() -> glm::vec3 = 0;
+    virtual auto getAmbientColor() -> glm::vec3 = 0;
+    virtual auto getNightVisionColor() -> glm::vec3 = 0;
+    virtual auto getBlockFactor() -> float = 0;
+    virtual auto getSkyFactor() -> float = 0;
+    virtual auto getNightVisionFactor() -> float = 0;
+    virtual auto getDarknessScale() -> float = 0;
+    virtual auto getBossOverlayWorldDarkeningFactor() -> float = 0;
+    virtual auto getBrightnessFactor() -> float = 0;
+
+    inline auto isDirty() -> bool
+    {
+        return dirty;
+    }
+    inline void solveDirty()
+    {
+        dirty = false;
+    }
+
+  protected:
+    std::atomic_bool dirty = true;
 };
 
 class OMVoxelManager

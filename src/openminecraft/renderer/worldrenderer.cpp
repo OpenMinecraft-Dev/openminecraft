@@ -2,6 +2,7 @@
 
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"
+#include "glm/ext/quaternion_common.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "openminecraft-shell/data/block/om_block_registery.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
@@ -31,13 +32,20 @@ namespace openminecraftshell::renderer
 {
 class OMWorldColorManager : public wrap::OMVoxelColorManager
 {
+  public:
+    float gameTime = 0.0f;
+    auto updateGameTime(float v) -> void
+    {
+        gameTime = glm::clamp(v, 0.0f, 1.0f);
+        dirty = true;
+    }
     auto getSkyColor() -> glm::vec3 override
     {
-        return {0.198, 0.371, 1.0};
+        return glm::mix(glm::vec3{0.02, 0.03, 0.14}, glm::vec3{0.198, 0.371, 1.0}, gameTime);
     }
     auto getSkyDiscColor() -> glm::vec3 override
     {
-        return {0.470, 0.654, 1.0};
+        return glm::mix(glm::vec3{0.02, 0.02, 0.06}, glm::vec3{0.470, 0.654, 1.0}, gameTime);
     }
     auto getSkyDiskRange() -> float override
     {
@@ -53,11 +61,43 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     }
     auto getBlockTint() -> glm::vec3 override
     {
-        return {1.0, 0.8, 0.6};
+        return {1.0, 0.85, 0.55};
     }
     auto getSkyLightColor() -> glm::vec3 override
     {
-        return {1.0, 1.0, 1.0};
+        return glm::mix(glm::vec3{0.02, 0.03, 0.14}, glm::vec3{0.9, 0.95, 1.0}, gameTime);
+    }
+    auto getAmbientColor() -> glm::vec3 override
+    {
+        return {0.04, 0.04, 0.04};
+    }
+    auto getNightVisionColor() -> glm::vec3 override
+    {
+        return {0.7, 0.7, 0.7};
+    }
+    auto getBlockFactor() -> float override
+    {
+        return 1.0f;
+    }
+    auto getSkyFactor() -> float override
+    {
+        return 1.0f;
+    }
+    auto getNightVisionFactor() -> float override
+    {
+        return 0.0f;
+    }
+    auto getDarknessScale() -> float override
+    {
+        return 0.0f;
+    }
+    auto getBossOverlayWorldDarkeningFactor() -> float override
+    {
+        return 0.0f;
+    }
+    auto getBrightnessFactor() -> float override
+    {
+        return 1.0f;
     }
 };
 static OMWorldColorManager *colorManager = new OMWorldColorManager;
@@ -128,10 +168,15 @@ void OMWorldRenderer::record()
     voxelManager->submit(renderer->fetchTask("voxel"), tempTarget);
 }
 
+static int gameT = 0;
+
 void OMWorldRenderer::afterFrame()
 {
     auto cam = camera->fetchProjMat() * camera->fetchViewMat();
     cameraBuffer->updateData(&cam);
+
+    colorManager->updateGameTime((sin((gameT / 24000.0f - 0.25f) * 2.0f * 3.1415926535) + 1.0f) * 0.5f);
+    gameT = (gameT + 1) % 24000;
 }
 
 void OMWorldRenderer::submitTasks()

@@ -344,30 +344,32 @@ void OMVoxelManager::unloadChunk(int i)
 
 auto OMVoxelManager::updateColor() -> void
 {
-    OMVoxelSkyDisc disc = {colorManager->getSkyDiscColor(), 256, colorManager->getSkyColor(), -16};
-    skydisc->updateData(&disc);
-    std::array<float, 5> d = {colorManager->getFogRange().x, colorManager->getFogRange().y, disc.diskCenterColor.r,
-                              disc.diskCenterColor.g, disc.diskCenterColor.b};
-    fogdata->updateData(d.data());
+    if (colorManager->isDirty())
+    {
+        OMVoxelSkyDisc disc = {colorManager->getSkyDiscColor(), 256, colorManager->getSkyColor(), -16};
+        skydisc->updateData(&disc);
+        std::array<float, 5> d = {colorManager->getFogRange().x, colorManager->getFogRange().y, disc.diskCenterColor.r,
+                                  disc.diskCenterColor.g, disc.diskCenterColor.b};
+        fogdata->updateData(d.data());
 
-    OMVoxelLightMap dayData = {
-        1.0, // SkyFactor
-        1.0, // BlockFactor
-        0.0, // NightVisionFactor
-        0.0, // DarknessScale
-        0.0, // BossOverlayWorldDarkeningFactor
-        1.0, // BrightnessFactor
-        0,
-        0,
-        colorManager->getBlockTint(), // BlockLightTint
-        0,
-        colorManager->getSkyLightColor(), // SkyLightColor
-        0,
-        {0.01, 0.01, 0.01}, // AmbientColor
-        0,
-        {0.7, 0.7, 0.7} // NightVisionColor
-    };
-    lightmapData->updateData(&dayData);
+        OMVoxelLightMap dayData = {colorManager->getSkyFactor(),
+                                   colorManager->getBlockFactor(),
+                                   colorManager->getNightVisionFactor(),
+                                   colorManager->getDarknessScale(),
+                                   colorManager->getBossOverlayWorldDarkeningFactor(),
+                                   colorManager->getBrightnessFactor(),
+                                   0,
+                                   0,
+                                   colorManager->getBlockTint(),
+                                   0,
+                                   colorManager->getSkyLightColor(),
+                                   0,
+                                   colorManager->getAmbientColor(),
+                                   0,
+                                   colorManager->getNightVisionColor()};
+        lightmapData->updateData(&dayData);
+        colorManager->solveDirty();
+    }
 }
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
