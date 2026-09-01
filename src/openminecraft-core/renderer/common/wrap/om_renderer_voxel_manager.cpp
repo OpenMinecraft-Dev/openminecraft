@@ -425,7 +425,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                 ++i;
             }
         });
-        auto mat = camera.fetchProjMat() * camera.fetchViewMat();
+
         chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
             for (auto &ochk : chunks)
@@ -438,6 +438,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     cc.chunkx = chk.chunkx;
                     cc.chunky = chk.chunky;
                     cc.chunkz = chk.chunkz;
+                    cc.localx = 8.0f;
+                    cc.localy = 8.0f;
+                    cc.localz = 8.0f;
+
+                    auto visible = camera.isSphereVisible(cc - camera.getPosRaw(), 32.0f);
 
                     auto pp = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz);
                     auto pp2 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky, cc.chunkz);
@@ -448,9 +453,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     auto pp7 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky + 1, cc.chunkz + 1);
                     auto pp8 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky + 1, cc.chunkz + 1);
 
-                    auto visible = camera.visible(pp, mat) || camera.visible(pp2, mat) || camera.visible(pp3, mat) ||
-                                   camera.visible(pp4, mat) || camera.visible(pp5, mat) || camera.visible(pp6, mat) ||
-                                   camera.visible(pp7, mat) || camera.visible(pp8, mat);
+                    visible =
+                        visible | camera.isVisibleByYawPitch({pp - camera.getPosRaw(), pp2 - camera.getPosRaw(),
+                                                              pp3 - camera.getPosRaw(), pp4 - camera.getPosRaw(),
+                                                              pp5 - camera.getPosRaw(), pp6 - camera.getPosRaw(),
+                                                              pp7 - camera.getPosRaw(), pp8 - camera.getPosRaw()});
 
                     if (chk.visible && !visible)
                     {
