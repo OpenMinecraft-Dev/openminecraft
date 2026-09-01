@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/common/basics/om_position.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <glm/glm.hpp>
+#include <array>
 
 namespace openminecraft::renderer::common::basics
 {
