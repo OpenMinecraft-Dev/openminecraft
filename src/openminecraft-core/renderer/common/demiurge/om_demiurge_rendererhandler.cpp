@@ -108,7 +108,7 @@ void OMDemiurgeRendererHandler::beforeFrame()
 {
     auto ext = renderer->getLogicalExtent();
 
-    node->layout(ext.x, ext.y);
+    node->layout(fit ? YGUndefined : ext.x, fit ? YGUndefined : ext.y);
     node->submit(this, bottomDepth);
 
     rect.update();

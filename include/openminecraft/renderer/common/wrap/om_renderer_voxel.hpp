@@ -23,6 +23,7 @@
 #include <mutex>
 #include <thread>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace openminecraft::renderer::common::wrap
@@ -362,18 +363,30 @@ class OMVoxelCompilerPool
 
     void upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMVoxelComplex> *cutoutComplex,
                 OMVoxelLayer<OMVoxel> *translucent, OMVoxelLayer<OMVoxelComplex> *translucentComplex);
-    void compile(int i);
+    void compile(int i, bool = false);
+    void dropCache(int i)
+    {
+        std::lock_guard g(bufferMutex);
+        cached.erase(i);
+        cutoutC.erase(i);
+        cutoutComplexC.erase(i);
+        translucentC.erase(i);
+        translucentComplexC.erase(i);
+    }
 
   private:
+    std::unordered_map<int, bool> cached;
     world::OMChunkManager<16> &manager;
     OMVoxelCompiler &compiler;
 
     std::mutex poolMutex;
-    std::vector<int> queuedChunks;
+    std::vector<std::pair<int, bool>> queuedChunks;
 
     std::mutex bufferMutex;
     std::unordered_map<int, std::vector<OMVoxel>> cutout, translucent;
     std::unordered_map<int, std::vector<OMVoxelComplex>> cutoutComplex, translucentComplex;
+    std::unordered_map<int, std::vector<OMVoxel>> cutoutC, translucentC;
+    std::unordered_map<int, std::vector<OMVoxelComplex>> cutoutComplexC, translucentComplexC;
 
     std::vector<std::thread *> thrs;
     bool active = true;

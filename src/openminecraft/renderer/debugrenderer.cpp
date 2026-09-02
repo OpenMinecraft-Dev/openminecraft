@@ -30,8 +30,8 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                    {"flexDirection", Column},
                    {"fill", node::OMDemiurgeImageFillType::Cover},
                    {"radius", glm::vec4(0.0f, 0.0f, 0.0f, 25.0f)},
-                   {"width", 40_percent},
-                   {"height", 70_percent},
+                   {"width", OMDemiurgeSize::fit()},
+                   {"height", OMDemiurgeSize::fit()},
                })
                ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                            ->style({
@@ -100,92 +100,15 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                {"flexGrow", 1.0f},
                                {"width", 100_percent},
                            })
-                           ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
-                                       ->style({
-                                           {"flexShrink", 0.0f},
-                                           {"flexGrow", 1.0f},
-                                       })
-                                       ->store(graphNode))
                            ->store(textNode));
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
+    internal->fit = true;
     renderer->registerHandler(internal);
 }
 OMDebugRenderer::~OMDebugRenderer()
 {
     internal = nullptr;
-}
-
-auto OMDebugRenderer::updateState(util::OMTicker &t) -> void
-{
-    std::map<std::string, uint64_t> results;
-    uint64_t total = 0;
-    for (auto &e : t.ticks)
-    {
-        if (e.first.depth != 1)
-        {
-            continue;
-        }
-
-        if (e.first.pop)
-        {
-            results[e.first.id] = e.second - results[e.first.id];
-            total += results[e.first.id];
-        }
-        else
-        {
-            results[e.first.id] = e.second;
-        }
-    }
-
-    while (sectorNodes.size() != results.size())
-    {
-        if (sectorNodes.size() > results.size())
-        {
-            graphNode->umount(sectorNodes.back());
-            textNode->umount(textNodes.back());
-            sectorNodes.pop_back();
-            textNodes.pop_back();
-        }
-        else
-        {
-            auto n = std::make_shared<node::OMDemiurgeSectorNode>()->style({
-                {"position", OMDemiurgePosition::Absolute},
-                {"width", 100_percent},
-                {"height", 100_percent},
-                {"rotationPivot", glm::vec3(0.0f, -2.0f, 1.0f)},
-            });
-            graphNode->mount(n);
-            sectorNodes.emplace_back(n);
-
-            auto n2 = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                          ->style({
-                              {"flexGrow", 0.0f},
-                              {"textheight", 12},
-                          });
-            textNode->mount(n2);
-            textNodes.emplace_back(n2);
-        }
-    }
-
-    float curang = glm::radians(90.0f);
-    int i = 0;
-    std::vector<std::pair<std::string, uint64_t>> vec(results.begin(), results.end());
-
-    std::sort(vec.begin(), vec.end(), [](const auto &a, const auto &b) -> auto { return a.second > b.second; });
-    for (auto &p : vec)
-    {
-        auto c = DebugColors[(i + 3) % 16];
-        sectorNodes[i]->style("beginAngle", curang)->style("color", c);
-        auto fct = (double)p.second / (double)total;
-        curang += glm::radians(360.0f) * fct;
-        sectorNodes[i]->style("endAngle", curang);
-        textNodes[i]
-            ->style("text",
-                    fmt::format("{}: {:.2f} us / {:.2f} %", p.first, static_cast<float>(p.second) / 1000, fct * 100))
-            ->style("color", c);
-        ++i;
-    }
 }
 
 void OMDebugRenderer::submitTasks()

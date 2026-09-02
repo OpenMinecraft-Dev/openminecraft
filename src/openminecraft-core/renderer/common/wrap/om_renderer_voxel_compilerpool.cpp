@@ -28,7 +28,8 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     continue;
                 }
-                next = queuedChunks.back();
+                next = queuedChunks.back().first;
+                bool useCache = queuedChunks.back().second;
                 queuedChunks.pop_back();
                 poolMutex.unlock();
 
@@ -81,6 +82,17 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                 auto cnk = manager.getChunk(next);
                 if (cnk.has_value())
                 {
+                    if (useCache && cached.count(next))
+                    {
+                        bufferMutex.lock();
+                        cutout[next] = cutoutC[next];
+                        cutoutComplex[next] = cutoutComplexC[next];
+                        translucent[next] = translucentC[next];
+                        translucentComplex[next] = translucentComplexC[next];
+                        bufferMutex.unlock();
+                        continue;
+                    }
+
                     std::vector<OMVoxel> m = {}, tm = {};
                     std::vector<OMVoxelComplex> cm = {}, tcm = {};
                     compiler.compile(
@@ -90,10 +102,15 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                         [&](OMVoxelComplex v) -> void { tcm.emplace_back(v); });
 
                     bufferMutex.lock();
+                    cached[next] = true;
                     cutout[next].assign(m.begin(), m.end());
                     cutoutComplex[next].assign(cm.begin(), cm.end());
                     translucent[next].assign(tm.begin(), tm.end());
                     translucentComplex[next].assign(tcm.begin(), tcm.end());
+                    cutoutC[next].assign(m.begin(), m.end());
+                    cutoutComplexC[next].assign(cm.begin(), cm.end());
+                    translucentC[next].assign(tm.begin(), tm.end());
+                    translucentComplexC[next].assign(tcm.begin(), tcm.end());
                     bufferMutex.unlock();
                 }
             }
@@ -140,9 +157,9 @@ void OMVoxelCompilerPool::upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMV
     }
     this->translucentComplex.clear();
 }
-void OMVoxelCompilerPool::compile(int i)
+void OMVoxelCompilerPool::compile(int i, bool useCache)
 {
     std::lock_guard g(poolMutex);
-    queuedChunks.emplace_back(i);
+    queuedChunks.emplace_back(i, useCache);
 }
 } // namespace openminecraft::renderer::common::wrap

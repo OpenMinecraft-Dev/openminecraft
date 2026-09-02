@@ -410,7 +410,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             {
                 if (!ochk.has_value())
                 {
-                    unloadChunk(i);
                     offs[i] = glm::vec3{INFINITY};
                 }
                 else
@@ -430,7 +429,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             int i = 0;
             for (auto &ochk : chunks)
             {
-                if (ochk.has_value())
+                if (!ochk.has_value())
+                {
+                    compilerPool->dropCache(i);
+                    unloadChunk(i);
+                }
+                else
                 {
                     auto &chk = ochk.value();
 
@@ -467,13 +471,13 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     {
                         if (chk.isDirty())
                         {
-                            compilerPool->compile(i);
+                            compilerPool->compile(i, false);
                             chk.solveDirty();
                         }
                     }
                     else if (!chk.visible && visible)
                     {
-                        compilerPool->compile(i);
+                        compilerPool->compile(i, true);
                         chk.solveDirty();
                     }
 

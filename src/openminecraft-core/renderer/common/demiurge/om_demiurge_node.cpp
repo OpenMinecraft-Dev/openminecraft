@@ -3,6 +3,7 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "yoga/YGNode.h"
 #include "yoga/YGNodeStyle.h"
+#include "yoga/YGValue.h"
 #include <any>
 #include <array>
 #include <iostream>

@@ -320,8 +320,6 @@ void OMApplication::mainLoop(OMBackend backend)
             }
 
             win()->render(ticker);
-
-            hnd2->updateState(ticker);
         }
 
         hnd = nullptr;

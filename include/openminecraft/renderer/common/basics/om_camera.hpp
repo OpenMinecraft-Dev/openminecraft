@@ -125,7 +125,7 @@ class OMCamera
         if (maxYaw - minYaw >= 180.0f)
             return true;
 
-        float margin = 45.0f;
+        float margin = 35.0f;
 
         bool yawVisible = (maxYaw >= -hFovDeg - margin) && (minYaw <= hFovDeg + margin);
         bool pitchVisible = (maxPitch >= -vFovDeg - margin) && (minPitch <= vFovDeg + margin);

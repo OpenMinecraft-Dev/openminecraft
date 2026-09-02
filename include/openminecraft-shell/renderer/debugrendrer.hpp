@@ -23,7 +23,6 @@ class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandle
     OMDebugRenderer(openminecraft::renderer::OMRenderer *renderer);
     virtual ~OMDebugRenderer() override;
 
-    auto updateState(openminecraft::util::OMTicker &t) -> void;
     void submitTasks() override;
     void beforeFrame() override;
     void afterFrame() override;
@@ -51,8 +50,8 @@ class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandle
         return std::ldexp(1.0, exp - 1 - 52);
     }
 
-    std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode> node, graphNode, textNode, fpsTextNode,
-        posTextNode, povTextNode, precisionNode, precisionNode2;
+    std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode> node, textNode, fpsTextNode, posTextNode,
+        povTextNode, precisionNode, precisionNode2;
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeRendererHandler> internal;
     std::shared_ptr<openminecraft::fontproc::OMFontSet> fontset;
     std::vector<std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode>> sectorNodes = {},
