@@ -1,6 +1,7 @@
 #include <utility>
 
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
+#include "glm/common.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
@@ -66,7 +67,8 @@ auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, float dep
                 s[i].size.y * th,
             };
             t->depth = depth;
-            t->factor = stylesStorage.get<float>("factor", 0.05f);
+            t->factor = stylesStorage.get<float>(
+                "factor", 0.05f - 0.0005f * (glm::clamp(static_cast<float>(th), 12.0f, 92.0f) - 12.0f));
             t->glyphIndex = ch->storeGlyph(s[i]);
         }
 

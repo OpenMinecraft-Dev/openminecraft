@@ -82,7 +82,7 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                 auto cnk = manager.getChunk(next);
                 if (cnk.has_value())
                 {
-                    if (useCache && cached.count(next))
+                    if (useCache && cached.count(next) && !cnk->isDirty())
                     {
                         bufferMutex.lock();
                         cutout[next] = cutoutC[next];
