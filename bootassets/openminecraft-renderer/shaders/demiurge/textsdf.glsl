@@ -26,7 +26,7 @@ vec4 getBBox()
 
 void main()
 {
-    vec2 inPosition = (vertexgen_quad_normal() - vec2(0.5)) * 3 + vec2(0.5);
+    vec2 inPosition = vertexgen_quad_normal();
     vec2 screenPos = inTextPos.xy + inPosition.xy * inTextPos.zw;
 
     gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), inTextDepth, 1.0);

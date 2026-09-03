@@ -17,7 +17,20 @@
 namespace openminecraft::renderer::common::demiurge
 {
 class OMDemiurgeRendererHandler;
-
+enum OMDemiurgeEventType
+{
+    MouseMove,
+    MouseDown,
+    MouseUp,
+    MouseWheel,
+    KeyDown,
+    KeyUp,
+};
+enum OMDemiurgeEventResult
+{
+    Handled,
+    Ignored,
+};
 class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
 {
   public:
@@ -38,6 +51,14 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         YGNodeInsertChild(yogaNode, child->yogaNode, children.size() - 1);
 
         return shared_from_this();
+    }
+
+    auto mountDirect(std::shared_ptr<OMDemiurgeNode> child)
+    {
+        child->parent = this;
+        children.push_back(child);
+
+        YGNodeInsertChild(yogaNode, child->yogaNode, children.size() - 1);
     }
 
     virtual void umount(std::shared_ptr<OMDemiurgeNode> child)
@@ -65,7 +86,13 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     virtual auto syncLayout() -> void;
     auto syncLayoutAll() -> void;
     auto syncBoundary(float x, float y) -> void;
-    void acceptEvent(float x, float y);
+
+    virtual auto processEvent(float x, float y, OMDemiurgeEventType type, uint8_t ext, void *data)
+        -> OMDemiurgeEventResult
+    {
+        return Ignored;
+    }
+    void acceptEvent(float x, float y, OMDemiurgeEventType type, uint8_t, void * = nullptr);
 
     inline auto style(std::string s, std::any a) -> std::shared_ptr<OMDemiurgeNode>
     {

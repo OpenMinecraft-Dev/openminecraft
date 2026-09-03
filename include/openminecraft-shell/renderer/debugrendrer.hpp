@@ -50,7 +50,7 @@ class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandle
         return std::ldexp(1.0, exp - 1 - 52);
     }
 
-    std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode> node, textNode, fpsTextNode, posTextNode,
+    std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode> node, fpsTextNode, posTextNode,
         povTextNode, precisionNode, precisionNode2;
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeRendererHandler> internal;
     std::shared_ptr<openminecraft::fontproc::OMFontSet> fontset;

@@ -317,7 +317,7 @@ updateChildren:
     }
 }
 
-void OMDemiurgeNode::acceptEvent(float x, float y)
+void OMDemiurgeNode::acceptEvent(float x, float y, OMDemiurgeEventType type, uint8_t ext, void *data)
 {
     try
     {
@@ -325,11 +325,12 @@ void OMDemiurgeNode::acceptEvent(float x, float y)
 
         if (x >= bo.x && x <= bo.x + bo.width && y >= bo.y && y <= bo.y + bo.height)
         {
-            std::cout << typeid(*this).name() << std::endl;
-
-            for (auto f : children)
+            if (processEvent(x, y, type, ext, data) == Ignored)
             {
-                f->acceptEvent(x, y);
+                for (auto f : children)
+                {
+                    f->acceptEvent(x, y, type, ext, data);
+                }
             }
         }
     }

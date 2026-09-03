@@ -13,6 +13,7 @@
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/network/om_network_dnsquery.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
+#include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/om_renderer_window.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
@@ -291,22 +292,30 @@ void OMApplication::mainLoop(OMBackend backend)
             }
         });
 
-        bus.append(SDL_EVENT_MOUSE_MOTION,
-                   [&](SDL_Event &e) { logger->warn("mouse motion: {} {}", e.motion.x, e.motion.y); });
+        bus.append(SDL_EVENT_MOUSE_MOTION, [&](SDL_Event &e) {
+            logger->warn("mouse motion: {} {}", e.motion.x, e.motion.y);
+            hnd2->node->acceptEvent(e.button.x, e.button.y, demiurge::MouseMove, e.button.button);
+        });
         bus.append(SDL_EVENT_MOUSE_BUTTON_UP, [&](SDL_Event &e) {
             logger->warn("mouse press {}: {} {}", e.button.button, e.button.x, e.button.y);
+            hnd2->node->acceptEvent(e.button.x, e.button.y, demiurge::MouseUp, e.button.button);
         });
         bus.append(SDL_EVENT_MOUSE_BUTTON_DOWN, [&](SDL_Event &e) {
             logger->warn("mouse release {}: {} {}", e.button.button, e.button.x, e.button.y);
-            hnd2->node->acceptEvent(e.button.x, e.button.y);
+            hnd2->node->acceptEvent(e.button.x, e.button.y, demiurge::MouseDown, e.button.button);
         });
         bus.append(SDL_EVENT_MOUSE_WHEEL, [&](SDL_Event &e) {
             logger->warn("mouse wheel: {} {} at {} {}", e.wheel.x, e.wheel.y, e.wheel.mouse_x, e.wheel.mouse_y);
+            hnd2->node->acceptEvent(e.button.x, e.button.y, demiurge::MouseWheel, e.button.button);
         });
         bus.append(SDL_EVENT_KEY_DOWN, [&](SDL_Event &e) {
             logger->warn("key down: {} {} {}", e.key.key, e.key.repeat ? "true" : "false", e.key.mod);
+            hnd2->node->acceptEvent(e.button.x, e.button.y, demiurge::KeyDown, e.key.key);
         });
-        bus.append(SDL_EVENT_KEY_UP, [&](SDL_Event &e) { logger->warn("key up: {}", e.key.key); });
+        bus.append(SDL_EVENT_KEY_UP, [&](SDL_Event &e) {
+            logger->warn("key up: {}", e.key.key);
+            hnd2->node->acceptEvent(e.button.x, e.button.y, demiurge::KeyUp, e.key.key);
+        });
 
         util::OMTicker ticker;
         while (isRunning)
