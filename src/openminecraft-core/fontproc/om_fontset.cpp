@@ -50,7 +50,7 @@ auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
         float bottom = bbox.w;
 
         float x = penpos.x + g.offsetx + left;
-        float y = penpos.y + g.offsety - bottom + mes.x - mes.y;
+        float y = penpos.y + g.offsety - bottom + mes.x;
         float w = right - left;
         float h = bottom - top;
 
