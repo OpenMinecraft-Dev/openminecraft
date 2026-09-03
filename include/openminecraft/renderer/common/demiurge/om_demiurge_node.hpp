@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 #include <yoga/Yoga.h>
+#include <cstdint>
 
 namespace openminecraft::renderer::common::demiurge
 {
