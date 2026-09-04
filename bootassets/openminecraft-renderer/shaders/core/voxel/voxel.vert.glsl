@@ -25,12 +25,9 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_XD (((voxelPos) >> 12) & 15)
 #define VOXEL_YD (((voxelPos) >> 8) & 15)
 #define VOXEL_ZD (((voxelPos) >> 4) & 15)
-#define VOXEL_XS (((voxelPos) >> 3) & 1)
-#define VOXEL_YS (((voxelPos) >> 2) & 1)
-#define VOXEL_ZS (((voxelPos) >> 1) & 1)
 #define VOXEL_ROTATION ((voxelMetadata >> 30) & 3)
 #define VOXEL_TEXTUREID ((voxelMetadata >> 16) & 0x3fff)
-#define VOXEL_CHUNKID ((voxelMetadata) & 0xffff)
+#define VOXEL_CHUNKID ((((voxelPos >> 1) & 7) << 16) | ((voxelMetadata) & 0xffff))
 #define VOXEL_SL(n) ((voxelExtra >> (28 - 4 * (n))) & 15)
 #define VOXEL_BL(n) ((voxelExtra >> (12 - 4 * (n))) & 15)
 #define VOXEL_SX (((voxelExtra2) >> 27) & 0x1f)
@@ -86,8 +83,8 @@ void main()
                                float(VOXEL_RCENTERZ) / 16 * (VOXEL_RCENTERZNEG == 1 ? -1 : 1));
 
     vec3 modelOffset =
-        vec3(float(VOXEL_XD) / 16 * (VOXEL_XS == 1 ? -1 : 1), float(VOXEL_YD) / 16 * (VOXEL_YS == 1 ? -1 : 1),
-             float(VOXEL_ZD) / 16 * (VOXEL_ZS == 1 ? -1 : 1));
+        vec3(float(VOXEL_XD) / 16, float(VOXEL_YD) / 16,
+             float(VOXEL_ZD) / 16);
 
     float bx = float(VOXEL_X);
     float by = float(VOXEL_Y);

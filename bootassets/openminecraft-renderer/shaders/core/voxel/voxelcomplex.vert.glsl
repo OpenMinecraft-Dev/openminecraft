@@ -30,7 +30,7 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_AO(n) ((voxelBasics >> (6 - 2 * (n))) & 3)
 #define VOXEL_ROTATION ((voxelMetadata >> 30) & 3)
 #define VOXEL_TEXTUREID ((voxelMetadata >> 16) & 0x3fff)
-#define VOXEL_CHUNKID ((voxelMetadata) & 0xffff)
+#define VOXEL_CHUNKID ((((voxelBasics >> 13) & 7) << 16) | ((voxelMetadata) & 0xffff))
 #define VOXEL_SL(n) ((voxelExtra >> (28 - 4 * (n))) & 15)
 #define VOXEL_BL(n) ((voxelExtra >> (12 - 4 * (n))) & 15)
 

@@ -541,7 +541,7 @@ static auto isNotInteger(std::shared_ptr<json::OMJsonNode> n) -> bool
     {
         return true;
     }
-    return std::abs(n->getNumberFloating() - std::round(n->getNumberFloating())) > 1e-5;
+    return std::abs(n->getNumberFloating() - std::round(n->getNumberFloating())) > 1e-5 || n->getNumberFloating() < 0;
 }
 
 auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
