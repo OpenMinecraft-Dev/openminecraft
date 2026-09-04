@@ -64,7 +64,7 @@ void OMDemiurgeButton::setBackgroundColor(int c)
 {
     bkgNode->style("color", c);
 }
-void OMDemiurgeButton::setRadius(glm::vec4 r)
+void OMDemiurgeButton::setBackgroundRadius(glm::vec4 r)
 {
     bkgNode->style("radius", r);
 }
