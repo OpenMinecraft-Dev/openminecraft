@@ -6,6 +6,7 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <cstdint>
 namespace openminecraft::renderer::common::demiurge
 {
 class OMDemiurgeStyles
