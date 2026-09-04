@@ -61,6 +61,14 @@ class OMDemiurgeStyles
             }
         }
 
+        if constexpr (std::is_same_v<T, int>)
+        {
+            if (styles[s].type() == typeid(uint32_t))
+            {
+                return get<uint32_t>(s);
+            }
+        }
+
         if (styles[s].type() == typeid(T))
         {
             return get<T>(s);

@@ -33,7 +33,7 @@ OMComposeRenderer::OMComposeRenderer(openminecraft::renderer::OMRenderer *render
 
     blurHandler = std::make_shared<wrap::OMRendererBlurHandler>(renderer, 1);
     renderer->registerHandler(blurHandler);
-    blurHandler->update({64.0f, wrap::Triangular});
+    blurHandler->update({64.0f, wrap::Gaussian});
 }
 
 OMComposeRenderer::~OMComposeRenderer()
