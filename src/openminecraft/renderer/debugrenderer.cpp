@@ -24,10 +24,11 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
     auto rawfile2 = vfs::fsfetch("/bootassets/openminecraft-boot/font/MapleMono-NF-Regular.ttf");
     fontset->fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile2.get()));
 
-    node = std::make_shared<node::OMDemiurgeRectNode>()
+    node = std::make_shared<node::OMDemiurgeContainerNode>()
                ->style({
                    {"color", (int)0x23232399},
                    {"flexDirection", Column},
+                   {"flexGap", 5_px},
                    {"radius", glm::vec4(0.0f, 0.0f, 0.0f, 25.0f)},
                    {"width", OMDemiurgeSize::fit()},
                    {"height", OMDemiurgeSize::fit()},

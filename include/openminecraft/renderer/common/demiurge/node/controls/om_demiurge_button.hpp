@@ -9,7 +9,10 @@ class OMDemiurgeButton : public OMDemiurgeContainerNode
 {
   public:
     OMDemiurgeButton(fontproc::OMFontSet *fontset);
-    virtual ~OMDemiurgeButton();
+    ~OMDemiurgeButton() override;
+
+    auto processEvent(float x, float y, OMDemiurgeEventType type, uint8_t ext, void *data)
+        -> OMDemiurgeEventResult override;
 };
 } // namespace openminecraft::renderer::common::demiurge::node::controls
 

@@ -2,6 +2,7 @@
 #include "glm/ext/vector_float2.hpp"
 #include "openminecraft/fontproc/om_font.hpp"
 #include "openminecraft/fontproc/om_font_outline.hpp"
+#include <algorithm>
 #include <cmath>
 #include <vector>
 #include <glm/glm.hpp>
@@ -36,7 +37,6 @@ auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
     std::vector<OMFontSetShapeResult> result;
 
     glm::vec2 penpos(0.0f);
-    auto mes = fontList[0]->metrics(rtl);
     for (auto &g : glyphs)
     {
         if (g.glyphId == 0x0)
@@ -48,6 +48,8 @@ auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
         float right = bbox.y;
         float top = bbox.z;
         float bottom = bbox.w;
+
+        auto mes = g.font->metrics(rtl);
 
         float x = penpos.x + g.offsetx + left;
         float y = penpos.y + g.offsety - bottom + mes.x;
@@ -89,6 +91,17 @@ auto OMFontSet::bound(std::vector<OMFontSetShapeResult> shaped) -> glm::vec2
         maxb = glm::max(maxb, g.position + g.size);
     }
 
+    float globalAsc = 0.0f;
+    float globalDesc = 0.0f;
+    float globalGap = 0.0f;
+    for (auto &f : fontList)
+    {
+        auto met = fontList[0]->metrics(false);
+        globalAsc = std::max(globalAsc, met.x);
+        globalDesc = std::max(globalDesc, met.y);
+        globalGap = std::max(globalGap, met.z);
+    }
+    maxb.y = globalAsc - globalDesc + globalGap;
     return {maxb.x - shaped[0].position.x, maxb.y};
 }
 
