@@ -22,11 +22,11 @@ OMDemiurgeButton::OMDemiurgeButton(fontproc::OMFontSet *fontset)
         {"height", 100_percent},
     });
     textNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset)->style({
-        {"text", "OpenMinecraft Demo"},
+        {"text", "Button"},
         {"textheight", 16},
         {"color", 0xffffffff},
         {"alignSelf", OMDemiurgeAlign::Center},
-        {"margin", std::array<OMDemiurgeSize, 4>{10_px, 20_px, 10_px, 10_px}},
+        {"margin", std::array<OMDemiurgeSize, 4>{5_px, 10_px, 5_px, 5_px}},
     });
     this->mountDirect(bkgNode);
     this->mountDirect(textNode);
@@ -55,6 +55,14 @@ auto OMDemiurgeButton::submit(OMDemiurgeRendererHandler *handler, float depth) -
 void OMDemiurgeButton::setText(std::string s)
 {
     textNode->style("text", s);
+}
+void OMDemiurgeButton::setTextColor(int c)
+{
+    textNode->style("color", c);
+}
+void OMDemiurgeButton::setBackgroundColor(int c)
+{
+    bkgNode->style("color", c);
 }
 void OMDemiurgeButton::setRadius(glm::vec4 r)
 {

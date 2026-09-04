@@ -87,7 +87,13 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                {"textheight", 16},
                            })
                            ->store(precisionNode2))
-               ->mount(std::make_shared<node::controls::OMDemiurgeButton>(fontset.get()));
+               ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
+                           ->style({
+                               {"flexDirection", Row},
+                               {"flexGap", 5_px},
+                           })
+                           ->mount(std::make_shared<node::controls::OMDemiurgeButton>(fontset.get()))
+                           ->mount(std::make_shared<node::controls::OMDemiurgeButton>(fontset.get())));
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->fit = true;

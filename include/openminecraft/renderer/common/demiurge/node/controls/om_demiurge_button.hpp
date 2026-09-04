@@ -19,6 +19,8 @@ class OMDemiurgeButton : public OMDemiurgeContainerNode
         -> OMDemiurgeEventResult override;
 
     void setText(std::string s);
+    void setTextColor(int c);
+    void setBackgroundColor(int c);
     void setRadius(glm::vec4 r);
 
   private:
