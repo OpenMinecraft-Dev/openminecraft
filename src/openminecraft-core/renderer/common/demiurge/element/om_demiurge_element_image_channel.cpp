@@ -28,8 +28,7 @@ void OMDemiurgeImageChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRen
     this->target = target;
 }
 
-auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, float upper, float lower,
-                                        OMDemiurgeAbstractChannel *&currentChannel) -> void
+auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, float upper, float lower) -> void
 {
     if (instanceBuffer->length < this->bufferSize())
     {
@@ -66,7 +65,6 @@ auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, float upper, float
             }
 
             task->pipeline(pipelines[i])->vertexBufferInstanced({instanceBuffer}, i)->drawInstance(6, 1, i);
-            currentChannel = this;
         }
     }
 }

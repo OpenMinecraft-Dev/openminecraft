@@ -21,8 +21,7 @@ class OMDemiurgeImageChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementIma
     ~OMDemiurgeImageChannel() = default;
 
     auto init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) -> void override;
-    auto submitTask(OMRendererTask *task, float upper, float lower, OMDemiurgeAbstractChannel *&currentChannel)
-        -> void override;
+    auto submitTask(OMRendererTask *task, float upper, float lower) -> void override;
     auto destroy() -> void override
     {
         delete instanceBuffer;

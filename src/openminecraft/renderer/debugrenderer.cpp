@@ -1,12 +1,9 @@
 #include "openminecraft-shell/renderer/debugrendrer.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_image.hpp"
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_sector.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
-#include <map>
+#include <iostream>
 #include <memory>
 
 using namespace openminecraft::renderer;
@@ -24,6 +21,8 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
     auto rawfile2 = vfs::fsfetch("/bootassets/openminecraft-boot/font/MapleMono-NF-Regular.ttf");
     fontset->fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile2.get()));
 
+    auto button = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
+    button->setOnClick([]() -> void { std::cout << "button clicked!" << std::endl; });
     node = std::make_shared<node::OMDemiurgeContainerNode>()
                ->style({
                    {"color", (int)0x23232399},
@@ -92,8 +91,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                {"flexDirection", Row},
                                {"flexGap", 5_px},
                            })
-                           ->mount(std::make_shared<node::controls::OMDemiurgeButton>(fontset.get()))
-                           ->mount(std::make_shared<node::controls::OMDemiurgeButton>(fontset.get())));
+                           ->mount(button));
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->fit = true;

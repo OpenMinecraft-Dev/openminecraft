@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include <functional>
+#include <iostream>
 #include <utility>
 namespace openminecraft::renderer::common::demiurge::element
 {
@@ -42,8 +43,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
         pipeline->bindInput(0, uniform);
     }
 
-    auto submitTask(OMRendererTask *task, float upper, float lower, OMDemiurgeAbstractChannel *&currentChannel)
-        -> void override
+    auto submitTask(OMRendererTask *task, float upper, float lower) -> void override
     {
         if (instanceBuffer->length < this->bufferSize())
         {
@@ -67,12 +67,9 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
             }
             else if (inDraw && !isDraw)
             {
-                if (currentChannel != this)
-                {
-                    task->pipeline(pipeline)->vertexBufferInstanced({instanceBuffer}, start);
-                    currentChannel = this;
-                }
-                task->drawInstance(6, i - start, start);
+                task->pipeline(pipeline)
+                    ->vertexBufferInstanced({instanceBuffer}, start)
+                    ->drawInstance(6, i - start, start);
                 inDraw = false;
             }
         }

@@ -85,16 +85,15 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
     auto task = renderer->fetchTask("demiurgeui_compose");
     task->target(middleTarget->target);
 
-    element::OMDemiurgeAbstractChannel *channel = nullptr;
     for (float layer = bottomDepth; layer >= topDepth; layer -= 0.01f)
     {
-        rect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
-        roundedRect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
-        image.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
-        sector.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
+        rect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
+        roundedRect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
+        image.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
+        sector.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
         for (auto &p : fonts)
         {
-            p.second->submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth, channel);
+            p.second->submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
         }
     }
     task->finish();

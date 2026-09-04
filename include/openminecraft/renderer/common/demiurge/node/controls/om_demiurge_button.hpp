@@ -5,6 +5,7 @@
 #include "openminecraft/fontproc/om_fontset.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
+#include <functional>
 #include <memory>
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
@@ -22,10 +23,12 @@ class OMDemiurgeButton : public OMDemiurgeContainerNode
     void setTextColor(int c);
     void setBackgroundColor(int c);
     void setBackgroundRadius(glm::vec4 r);
+    void setOnClick(std::function<void()> h);
 
   private:
     std::shared_ptr<OMDemiurgeNode> textNode;
     std::shared_ptr<OMDemiurgeNode> bkgNode;
+    std::function<void()> handle = []() -> void {};
 };
 } // namespace openminecraft::renderer::common::demiurge::node::controls
 

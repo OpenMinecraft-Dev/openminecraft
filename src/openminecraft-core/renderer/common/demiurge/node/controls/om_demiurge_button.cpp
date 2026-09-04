@@ -38,7 +38,7 @@ auto OMDemiurgeButton::processEvent(float x, float y, OMDemiurgeEventType type, 
 {
     if (type == MouseDown)
     {
-        setText(fmt::format("Hello {:.2f} {:.2f}!", x, y));
+        handle();
         return Handled;
     }
     else
@@ -67,5 +67,9 @@ void OMDemiurgeButton::setBackgroundColor(int c)
 void OMDemiurgeButton::setBackgroundRadius(glm::vec4 r)
 {
     bkgNode->style("radius", r);
+}
+void OMDemiurgeButton::setOnClick(std::function<void()> h)
+{
+    handle = h;
 }
 } // namespace openminecraft::renderer::common::demiurge::node::controls
