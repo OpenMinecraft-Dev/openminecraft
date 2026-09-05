@@ -6,7 +6,7 @@
 
 namespace openminecraft::renderer::common::demiurge::element
 {
-auto OMDemiurgeTextSdfChannel::storeGlyph(fontproc::OMFontSetShapeResult r) -> int
+auto OMDemiurgeTextSdfChannel::storeGlyph(geom::OMFontSetShapeResult r) -> int
 {
     auto gid = static_cast<uint64_t>(r.fontId) << 32 | r.glyphId;
     if (glyphOffsets.count(gid))

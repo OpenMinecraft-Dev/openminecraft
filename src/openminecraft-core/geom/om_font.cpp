@@ -1,14 +1,14 @@
-#include "openminecraft/fontproc/om_font.hpp"
+#include "openminecraft/geom/om_font.hpp"
 #include "glm/ext/vector_float2.hpp"
 #include "glm/ext/vector_float4.hpp"
 #include "harfbuzz/hb.h"
-#include "openminecraft/fontproc/om_font_outline.hpp"
+#include "openminecraft/geom/om_font_outline.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
 
 #include <iostream>
 #include <vector>
 
-namespace openminecraft::fontproc
+namespace openminecraft::geom
 {
 OMFont::OMFont(std::istream &istr) : logger("OMFont", this)
 {
@@ -150,4 +150,4 @@ OMFont::~OMFont()
     hb_face_destroy(static_cast<hb_face_t *>(hbFace));
 }
 
-} // namespace openminecraft::fontproc
+} // namespace openminecraft::geom

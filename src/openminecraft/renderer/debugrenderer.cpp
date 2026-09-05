@@ -16,13 +16,15 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
 {
     this->renderer = renderer;
 
-    fontset = std::make_shared<fontproc::OMFontSet>();
+    fontset = std::make_shared<geom::OMFontSet>();
 
     auto rawfile2 = vfs::fsfetch("/bootassets/openminecraft-boot/font/MapleMono-NF-Regular.ttf");
-    fontset->fontList.push_back(std::make_shared<fontproc::OMFont>(*rawfile2.get()));
+    fontset->fontList.push_back(std::make_shared<geom::OMFont>(*rawfile2.get()));
 
     auto button = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
-    button->setOnClick([]() -> void { std::cout << "button clicked!" << std::endl; });
+    button->setOnClick([]() -> void { std::cout << "button 1 clicked!" << std::endl; });
+    auto button2 = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
+    button2->setOnClick([]() -> void { std::cout << "button 2 clicked!" << std::endl; });
     node = std::make_shared<node::OMDemiurgeContainerNode>()
                ->style({
                    {"color", (int)0x23232399},
@@ -86,12 +88,8 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                {"textheight", 16},
                            })
                            ->store(precisionNode2))
-               ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
-                           ->style({
-                               {"flexDirection", Row},
-                               {"flexGap", 5_px},
-                           })
-                           ->mount(button));
+               ->mount(button)
+               ->mount(button2);
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->fit = true;

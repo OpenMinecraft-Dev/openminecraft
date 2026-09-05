@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-namespace openminecraft::fontproc
+namespace openminecraft::geom
 {
 constexpr const char allocatorId[] = "font_processor";
 class OMFontOutline;
@@ -39,6 +39,6 @@ class OMFont
 
     log::OMLogger logger;
 };
-} // namespace openminecraft::fontproc
+} // namespace openminecraft::geom
 
 #endif

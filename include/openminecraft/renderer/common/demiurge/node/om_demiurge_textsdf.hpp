@@ -1,14 +1,14 @@
 #ifndef OM_DEMIURGE_TEXTSDF_HPP
 #define OM_DEMIURGE_TEXTSDF_HPP
 
-#include "openminecraft/fontproc/om_fontset.hpp"
+#include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 namespace openminecraft::renderer::common::demiurge::node
 {
 class OMDemiurgeTextSdfNode : public OMDemiurgeNode
 {
   public:
-    OMDemiurgeTextSdfNode(fontproc::OMFontSet *fontset);
+    OMDemiurgeTextSdfNode(geom::OMFontSet *fontset);
     virtual ~OMDemiurgeTextSdfNode();
 
     auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
@@ -18,9 +18,9 @@ class OMDemiurgeTextSdfNode : public OMDemiurgeNode
   private:
     std::vector<int> glyphIds = {};
     OMDemiurgeRendererHandler *handler = nullptr;
-    fontproc::OMFontSet *set = nullptr;
+    geom::OMFontSet *set = nullptr;
 
-    std::vector<fontproc::OMFontSetShapeResult> shapeResult;
+    std::vector<geom::OMFontSetShapeResult> shapeResult;
 };
 } // namespace openminecraft::renderer::common::demiurge::node
 

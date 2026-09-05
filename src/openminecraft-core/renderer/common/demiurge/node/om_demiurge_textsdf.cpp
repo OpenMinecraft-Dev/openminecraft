@@ -8,7 +8,7 @@
 
 namespace openminecraft::renderer::common::demiurge::node
 {
-OMDemiurgeTextSdfNode::OMDemiurgeTextSdfNode(fontproc::OMFontSet *f) : set(std::move(f))
+OMDemiurgeTextSdfNode::OMDemiurgeTextSdfNode(geom::OMFontSet *f) : set(std::move(f))
 {
 }
 OMDemiurgeTextSdfNode::~OMDemiurgeTextSdfNode() = default;

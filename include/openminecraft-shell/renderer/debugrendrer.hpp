@@ -1,7 +1,7 @@
 #ifndef DEBUGRENDERER_HPP
 #define DEBUGRENDERER_HPP
 
-#include "openminecraft/fontproc/om_fontset.hpp"
+#include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
@@ -53,7 +53,7 @@ class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandle
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode> node, fpsTextNode, posTextNode,
         povTextNode, precisionNode, precisionNode2;
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeRendererHandler> internal;
-    std::shared_ptr<openminecraft::fontproc::OMFontSet> fontset;
+    std::shared_ptr<openminecraft::geom::OMFontSet> fontset;
     std::vector<std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode>> sectorNodes = {},
                                                                                             textNodes = {};
     int fps = 0;

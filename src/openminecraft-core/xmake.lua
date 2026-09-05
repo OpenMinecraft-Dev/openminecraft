@@ -7,7 +7,7 @@ includes("util/xmake.lua")
 includes("i18n/xmake.lua")
 includes("renderer/xmake.lua")
 includes("specs/xmake.lua")
-includes("fontproc/xmake.lua")
+includes("geom/xmake.lua")
 includes("world/xmake.lua")
 includes("network/xmake.lua")
 
@@ -23,7 +23,7 @@ add_deps(
 	"openminecraft-i18n",
 	"openminecraft-renderer",
 	"openminecraft-specs",
-	"openminecraft-fontproc",
+	"openminecraft-geom",
 	"openminecraft-world",
 	"openminecraft-network"
 )

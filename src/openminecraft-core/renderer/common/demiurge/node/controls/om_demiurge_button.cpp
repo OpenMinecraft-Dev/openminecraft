@@ -10,13 +10,13 @@
 
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
-OMDemiurgeButton::OMDemiurgeButton(fontproc::OMFontSet *fontset)
+OMDemiurgeButton::OMDemiurgeButton(geom::OMFontSet *fontset)
 {
     stylesStorage.put("justifyContent", OMDemiurgeAlign::Center);
     stylesStorage.put("alignItems", OMDemiurgeAlign::Center);
     bkgNode = std::make_shared<OMDemiurgeRectNode>()->style({
         {"color", 0x23232388},
-        {"radius", glm::vec4(50.0f)},
+        {"radius", glm::vec4(20.0f)},
         {"position", Absolute},
         {"width", 100_percent},
         {"height", 100_percent},

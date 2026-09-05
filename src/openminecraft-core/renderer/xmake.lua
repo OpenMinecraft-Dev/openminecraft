@@ -1,6 +1,6 @@
 target("openminecraft-renderer")
 set_kind("static")
-add_deps("openminecraft-mem", "openminecraft-fontproc", "openminecraft-world")
+add_deps("openminecraft-mem", "openminecraft-geom", "openminecraft-world")
 add_packages(
 	"zlib",
 	"shaderc",

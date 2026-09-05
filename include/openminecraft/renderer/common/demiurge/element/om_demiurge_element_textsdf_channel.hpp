@@ -1,7 +1,7 @@
 #ifndef OM_DEMIURGE_ELEMENT_TEXTSDF_CHANNEL_HPP
 #define OM_DEMIURGE_ELEMENT_TEXTSDF_CHANNEL_HPP
 
-#include "openminecraft/fontproc/om_fontset.hpp"
+#include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_quad_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_textsdf.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
@@ -12,7 +12,7 @@ namespace openminecraft::renderer::common::demiurge::element
 class OMDemiurgeTextSdfChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementTextSdf>
 {
   public:
-    OMDemiurgeTextSdfChannel(OMRenderer *renderer, std::function<void()> f, fontproc::OMFontSet *set)
+    OMDemiurgeTextSdfChannel(OMRenderer *renderer, std::function<void()> f, geom::OMFontSet *set)
         : OMDemiurgeQuadChannel(renderer, f), fontSet(set)
     {
     }
@@ -26,10 +26,10 @@ class OMDemiurgeTextSdfChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementT
         OMDemiurgeQuadChannel::destroy();
     }
 
-    auto storeGlyph(fontproc::OMFontSetShapeResult) -> int;
+    auto storeGlyph(geom::OMFontSetShapeResult) -> int;
 
   private:
-    fontproc::OMFontSet *fontSet;
+    geom::OMFontSet *fontSet;
     OMRendererBuffer *glyphBuffer;
 
     std::unordered_map<uint64_t, uint32_t> glyphOffsets = {};

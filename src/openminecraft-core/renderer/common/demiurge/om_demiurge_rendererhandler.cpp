@@ -1,5 +1,5 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
-#include "openminecraft/fontproc/om_fontset.hpp"
+#include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_roundedrect_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_textsdf_channel.hpp"
@@ -54,7 +54,7 @@ OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
     delete middleTarget;
 }
 
-auto OMDemiurgeRendererHandler::fetchFontChannel(fontproc::OMFontSet *s)
+auto OMDemiurgeRendererHandler::fetchFontChannel(geom::OMFontSet *s)
     -> std::shared_ptr<element::OMDemiurgeTextSdfChannel>
 {
     if (fonts.count(s))

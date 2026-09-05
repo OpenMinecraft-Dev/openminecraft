@@ -2,7 +2,7 @@
 #define OM_DEMIURGE_BUTTON_HPP
 
 #include "glm/fwd.hpp"
-#include "openminecraft/fontproc/om_fontset.hpp"
+#include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include <functional>
@@ -12,7 +12,7 @@ namespace openminecraft::renderer::common::demiurge::node::controls
 class OMDemiurgeButton : public OMDemiurgeContainerNode
 {
   public:
-    OMDemiurgeButton(fontproc::OMFontSet *fontset);
+    OMDemiurgeButton(geom::OMFontSet *fontset);
     ~OMDemiurgeButton() override;
 
     auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;

@@ -1,13 +1,13 @@
-#include "openminecraft/fontproc/om_fontset.hpp"
+#include "openminecraft/geom/om_fontset.hpp"
 #include "glm/ext/vector_float2.hpp"
-#include "openminecraft/fontproc/om_font.hpp"
-#include "openminecraft/fontproc/om_font_outline.hpp"
+#include "openminecraft/geom/om_font.hpp"
+#include "openminecraft/geom/om_font_outline.hpp"
 #include <algorithm>
 #include <cmath>
 #include <vector>
 #include <glm/glm.hpp>
 
-namespace openminecraft::fontproc
+namespace openminecraft::geom
 {
 auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
 {
@@ -127,25 +127,25 @@ auto OMFontSet::compile(OMFontSetShapeResult r) -> std::vector<float>
     {
         switch (ot.type)
         {
-        case fontproc::Move:
+        case geom::Move:
             beginPoints.emplace_back(ot.target / ext);
             break;
-        case fontproc::Line:
+        case geom::Line:
             bufferData.emplace_back(ot.target / ext);
             bufferData.emplace_back(INFINITY, INFINITY);
             ++vtxCount;
             break;
-        case fontproc::Cubic:
+        case geom::Cubic:
             bufferData.emplace_back(ot.target / ext);
             bufferData.emplace_back(approximateCubicToQuadratic(curr, ot.control1, ot.control2, ot.target) / ext);
             ++vtxCount;
             break;
-        case fontproc::Quadratic:
+        case geom::Quadratic:
             bufferData.emplace_back(ot.target / ext);
             bufferData.emplace_back(ot.control1 / ext);
             ++vtxCount;
             break;
-        case fontproc::Close:
+        case geom::Close:
             curves.push_back(vtxCount);
             vtxCount = 0;
             continue;
@@ -176,4 +176,4 @@ auto OMFontSet::compile(OMFontSetShapeResult r) -> std::vector<float>
 
     return finalData;
 }
-} // namespace openminecraft::fontproc
+} // namespace openminecraft::geom

@@ -2,12 +2,12 @@
 #define OM_FONTSET_HPP
 
 #include "glm/ext/vector_float2.hpp"
-#include "openminecraft/fontproc/om_font.hpp"
+#include "openminecraft/geom/om_font.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include <string>
 #include <vector>
 #include <memory>
-namespace openminecraft::fontproc
+namespace openminecraft::geom
 {
 struct OMFontSetShapeResult
 {
@@ -34,6 +34,6 @@ class OMFontSet
   private:
     log::OMLogger logger;
 };
-} // namespace openminecraft::fontproc
+} // namespace openminecraft::geom
 
 #endif

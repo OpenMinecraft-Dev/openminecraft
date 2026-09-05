@@ -1,7 +1,7 @@
 #ifndef OM_DEMIURGE_RENDERERHANDLER_HPP
 #define OM_DEMIURGE_RENDERERHANDLER_HPP
 
-#include "openminecraft/fontproc/om_fontset.hpp"
+#include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_image_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_rect_channel.hpp"
@@ -57,12 +57,12 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     element::OMDemiurgeImageChannel image;
     element::OMDemiurgeSectorChannel sector;
 
-    auto fetchFontChannel(fontproc::OMFontSet *) -> std::shared_ptr<element::OMDemiurgeTextSdfChannel>;
+    auto fetchFontChannel(geom::OMFontSet *) -> std::shared_ptr<element::OMDemiurgeTextSdfChannel>;
 
     bool fit = false;
 
   private:
-    std::unordered_map<fontproc::OMFontSet *, std::shared_ptr<element::OMDemiurgeTextSdfChannel>> fonts = {};
+    std::unordered_map<geom::OMFontSet *, std::shared_ptr<element::OMDemiurgeTextSdfChannel>> fonts = {};
 
     log::OMLogger logger;
 };

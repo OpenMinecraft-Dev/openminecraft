@@ -1,4 +1,4 @@
-target("openminecraft-fontproc")
+target("openminecraft-geom")
 set_kind("static")
 add_packages("fmt", "boost", "harfbuzz", "glm")
 add_deps("openminecraft-io", "openminecraft-log")

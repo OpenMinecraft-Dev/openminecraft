@@ -1,6 +1,6 @@
 #ifndef OM_FONT_OUTLINE_HPP
 #define OM_FONT_OUTLINE_HPP
-#include "openminecraft/fontproc/om_font.hpp"
+#include "openminecraft/geom/om_font.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 
 #include <fmt/format.h>
@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 
-namespace openminecraft::fontproc
+namespace openminecraft::geom
 {
 enum OMFontOutlineOperationType
 {
@@ -60,29 +60,29 @@ class OMFontOutline
 
     std::vector<OMFontOutlineOperation> operations;
 };
-} // namespace openminecraft::fontproc
+} // namespace openminecraft::geom
 
-template <> struct fmt::formatter<openminecraft::fontproc::OMFontOutlineOperationType> : formatter<string_view>
+template <> struct fmt::formatter<openminecraft::geom::OMFontOutlineOperationType> : formatter<string_view>
 {
-    auto format(openminecraft::fontproc::OMFontOutlineOperationType c, format_context &ctx) const
+    auto format(openminecraft::geom::OMFontOutlineOperationType c, format_context &ctx) const
         -> format_context::iterator
     {
         std::string s;
         switch (c)
         {
-        case openminecraft::fontproc::Move:
+        case openminecraft::geom::Move:
             s = "Move";
             break;
-        case openminecraft::fontproc::Line:
+        case openminecraft::geom::Line:
             s = "Line";
             break;
-        case openminecraft::fontproc::Quadratic:
+        case openminecraft::geom::Quadratic:
             s = "Quadratic";
             break;
-        case openminecraft::fontproc::Cubic:
+        case openminecraft::geom::Cubic:
             s = "Cubic";
             break;
-        case openminecraft::fontproc::Close:
+        case openminecraft::geom::Close:
             s = "Close";
             break;
         default:
