@@ -6,6 +6,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include <string>
 #include <vector>
+#include <memory>
 namespace openminecraft::fontproc
 {
 struct OMFontSetShapeResult

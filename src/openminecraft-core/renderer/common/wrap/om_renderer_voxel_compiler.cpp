@@ -260,6 +260,7 @@ auto OMVoxelCompiler::checkExistSoild(const world::OMChunk<16> &chunk,
 {
     switch (f)
     {
+    default:
     case None:
         return false;
     case NegX:

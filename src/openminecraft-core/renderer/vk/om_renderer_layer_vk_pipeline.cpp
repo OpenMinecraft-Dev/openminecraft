@@ -237,6 +237,7 @@ static auto convert(common::OMRendererPipelineBlendOp p) -> BlendOp
 {
     switch (p)
     {
+    default:
     case common::Add:
         return BlendOp::eAdd;
     case common::Subtract:

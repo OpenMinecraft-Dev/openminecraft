@@ -183,6 +183,7 @@ auto cullFaceTo(OMModelCullSide s) -> ::OMVoxelFacing
         return NegX;
     case East:
         return PosX;
+    default:
     case None:
         return openminecraft::renderer::common::wrap::None;
     }

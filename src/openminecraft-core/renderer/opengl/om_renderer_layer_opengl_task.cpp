@@ -101,6 +101,7 @@ static auto convert(common::OMRendererPipelineBlendLogicOp o) -> GLenum
         return GL_COPY;
     case common::AndInverted:
         return GL_AND_INVERTED;
+    default:
     case common::NoOp:
         return GL_NOOP;
     case common::Xor:
