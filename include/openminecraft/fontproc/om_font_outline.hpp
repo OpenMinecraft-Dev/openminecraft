@@ -1,6 +1,5 @@
 #ifndef OM_FONT_OUTLINE_HPP
 #define OM_FONT_OUTLINE_HPP
-#include "om_font_polygon.hpp"
 #include "openminecraft/fontproc/om_font.hpp"
 #include "openminecraft/mem/om_mem_stl_allocator.hpp"
 
@@ -60,59 +59,6 @@ class OMFontOutline
     }
 
     std::vector<OMFontOutlineOperation> operations;
-
-    auto buildPolygons(int prec, int xsc, int ysc) -> std::vector<std::shared_ptr<OMFontPolygon>>
-    {
-        std::vector<std::shared_ptr<OMFontPolygon>> polygons;
-        auto poly = mem::fast_shared<allocatorId, OMFontPolygon>();
-        glm::vec2 current;
-        for (auto op : operations)
-        {
-            switch (op.type)
-            {
-            case Close:
-                polygons.push_back(poly);
-                poly = mem::fast_shared<allocatorId, OMFontPolygon>();
-                break;
-            case Move:
-            case Line:
-                poly->addVertex(op.target);
-                current = op.target;
-                break;
-            case Quadratic:
-                for (int i = 1; i <= prec; i++)
-                {
-                    auto add = static_cast<float>(i) / static_cast<float>(prec);
-                    auto pp =
-                        current * (1 - add) * (1 - add) + op.control1 * (2 * add * (1 - add)) + op.target * add * add;
-                    poly->addVertex(pp);
-                }
-                current = op.target;
-                break;
-            case Cubic:
-                for (int i = 1; i <= prec; i++)
-                {
-                    auto add = static_cast<float>(i) / static_cast<float>(prec);
-                    auto pp = current * (1 - add) * (1 - add) * (1 - add) +
-                              op.control1 * (3 * add * (1 - add) * (1 - add)) +
-                              op.control2 * (3 * add * add * (1 - add)) + op.target * add * add * add;
-                    poly->addVertex(pp);
-                }
-                current = op.target;
-                break;
-            }
-        }
-
-        for (auto pp : polygons)
-        {
-            for (auto &p : pp->vertices)
-            {
-                p /= glm::vec2{xsc, ysc};
-            }
-        }
-
-        return polygons;
-    }
 };
 } // namespace openminecraft::fontproc
 

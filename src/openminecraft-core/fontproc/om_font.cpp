@@ -2,15 +2,10 @@
 #include "glm/ext/vector_float2.hpp"
 #include "glm/ext/vector_float4.hpp"
 #include "harfbuzz/hb.h"
-#include "openminecraft/fontproc/om_font_glyph.hpp"
 #include "openminecraft/fontproc/om_font_outline.hpp"
-
-#include "openminecraft/fontproc/om_font_triangle_list.hpp"
 #include "openminecraft/io/om_io_utils.hpp"
-#include "openminecraft/mem/om_mem_stl_allocator.hpp"
+
 #include <iostream>
-#include <memory>
-#include <unordered_map>
 #include <vector>
 
 namespace openminecraft::fontproc
@@ -92,88 +87,6 @@ auto OMFont::buildOutline(int charcode, bool uni) -> OMFontOutline
     hb_font_draw_glyph(font, gly, drawfuncs, &outline);
 
     return outline;
-}
-
-auto OMFont::buildBasicPolygon(int charcode, bool uni) -> std::shared_ptr<OMTriangleList>
-{
-    auto outline = buildOutline(charcode, uni);
-
-    auto s = scale();
-
-    auto rawpoly = outline.buildPolygons(8, s.x, s.y);
-    std::sort(rawpoly.begin(), rawpoly.end(),
-              [](std::shared_ptr<OMFontPolygon> p1, std::shared_ptr<OMFontPolygon> p2) -> bool {
-                  return p1->area() > p2->area();
-              });
-
-    std::unordered_map<int, int> parents;
-    for (int i = 0; i < rawpoly.size(); i++)
-    {
-        // gino: -1 for virtual root
-        int parent = -1;
-        for (int j = 0; j < i; j++)
-        {
-            if (rawpoly[j]->isPolyInside(rawpoly[i]))
-            {
-                parent = j;
-            }
-        }
-
-        parents[i] = parent;
-    }
-
-    std::vector<int, mem::OMStlAllocator<allocatorId, int>> filledPoly;
-    for (int pi = 0; pi < rawpoly.size(); pi++)
-    {
-        auto currentIdx = pi;
-        int depth = 0;
-        while (currentIdx != -1)
-        {
-            currentIdx = parents[currentIdx];
-            depth++;
-        }
-
-        // gino: the depth is even, means that this polygon need to be rendered
-        if (depth & 0x1)
-        {
-            filledPoly.push_back(pi);
-        }
-    }
-
-    std::vector<std::shared_ptr<OMTriangleList>> listbase;
-    for (auto polyid : filledPoly)
-    {
-        std::vector<std::shared_ptr<OMFontPolygon>> polys;
-        for (auto sid : parents)
-        {
-            if (sid.second == polyid)
-            {
-                polys.push_back(rawpoly[sid.first]);
-            }
-        }
-
-        listbase.push_back(mem::fast_shared<allocatorId, OMTriangleList>(rawpoly[polyid], polys));
-    }
-
-    return mem::fast_shared<allocatorId, OMTriangleList>(listbase);
-}
-
-auto OMFont::buildGlyph(int charcode, bool uni) -> std::shared_ptr<OMFontGlyph>
-{
-    auto ots = buildBasicPolygon(charcode, uni);
-
-    auto font = static_cast<hb_font_t *>(hbFont);
-
-    hb_codepoint_t gly = charcode;
-    if (uni)
-    {
-        hb_font_get_nominal_glyph(font, charcode, &gly);
-    }
-
-    hb_glyph_extents_t extents;
-    hb_font_get_glyph_extents(font, gly, &extents);
-
-    return mem::fast_shared<allocatorId, OMFontGlyph>(ots, fetchBox(charcode, uni));
 }
 
 auto OMFont::fetchBox(int charcode, bool uni) -> glm::vec4
