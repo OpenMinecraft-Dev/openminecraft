@@ -105,6 +105,58 @@ auto parseSvgPath(std::string p) -> std::vector<OMSvgPathSegment>
             case 'm':
                 target.push_back({.op = RelativeMoveTo, .move = {{a[0], a[1]}}});
                 break;
+            case 'L':
+                target.push_back({.op = LineTo, .line = {{a[0], a[1]}}});
+                break;
+            case 'l':
+                target.push_back({.op = RelativeLineTo, .line = {{a[0], a[1]}}});
+                break;
+            case 'H':
+                target.push_back({.op = HorizontalLineTo, .hline = {a[0]}});
+                break;
+            case 'h':
+                target.push_back({.op = RelativeHorizontalLineTo, .hline = {a[0]}});
+                break;
+            case 'V':
+                target.push_back({.op = VerticalLineTo, .hline = {a[0]}});
+                break;
+            case 'v':
+                target.push_back({.op = RelativeVerticalLineTo, .hline = {a[0]}});
+                break;
+            case 'C':
+                target.push_back({.op = CubicTo, .cubic = {{a[0], a[1]}, {a[2], a[3]}, {a[4], a[5]}}});
+                break;
+            case 'c':
+                target.push_back({.op = RelativeCubicTo, .cubic = {{a[0], a[1]}, {a[2], a[3]}, {a[4], a[5]}}});
+                break;
+            case 'S':
+                target.push_back({.op = SmoothCubicTo, .smoothCubic = {{a[0], a[1]}, {a[2], a[3]}}});
+                break;
+            case 's':
+                target.push_back({.op = RelativeSmoothCubicTo, .smoothCubic = {{a[0], a[1]}, {a[2], a[3]}}});
+                break;
+            case 'Q':
+                target.push_back({.op = QuadraticTo, .quadratic = {{a[0], a[1]}, {a[2], a[3]}}});
+                break;
+            case 'q':
+                target.push_back({.op = RelativeQuadraticTo, .quadratic = {{a[0], a[1]}, {a[2], a[3]}}});
+                break;
+            case 'T':
+                target.push_back({.op = SmoothQuadraticTo, .smoothQuadratic = {{a[0], a[1]}}});
+                break;
+            case 't':
+                target.push_back({.op = RelativeSmoothQuadraticTo, .smoothQuadratic = {{a[0], a[1]}}});
+                break;
+            case 'A':
+                target.push_back(
+                    {.op = ArcTo,
+                     .arc = {a[0], a[1], a[2], static_cast<bool>(a[3]), static_cast<bool>(a[4]), {a[5], a[6]}}});
+                break;
+            case 'a':
+                target.push_back(
+                    {.op = RelativeArcTo,
+                     .arc = {a[0], a[1], a[2], static_cast<bool>(a[3]), static_cast<bool>(a[4]), {a[5], a[6]}}});
+                break;
             default:
                 break;
             }
