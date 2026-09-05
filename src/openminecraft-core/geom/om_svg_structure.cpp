@@ -259,12 +259,16 @@ auto parseSvgPath(std::string p) -> std::vector<OMSvgPathSegment>
                 segs.push_back(args);
             }
             args = "";
-            segs.emplace_back(&c);
+            segs.emplace_back(1, c);
         }
         else
         {
             args += c;
         }
+    }
+    if (args.size() > 0)
+    {
+        segs.push_back(args);
     }
 
     std::vector<OMSvgPathSegment> target = {};

@@ -121,9 +121,10 @@ vec2 sdf_cubicBezier(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float t)
     return u * u * u * p0 + 3.0 * u * u * t * p1 + 3.0 * u * t * t * p2 + t * t * t * p3;
 }
 
+#define SEGS 32
+#define STEPS 32
 float sdf_distanceToCubicBezier(vec2 p, vec2 p0, vec2 p1, vec2 p2, vec2 p3)
 {
-    const int STEPS = 16;
     float d = 1e10;
     vec2 prev = p0;
     for (int i = 1; i <= STEPS; ++i)
@@ -136,7 +137,7 @@ float sdf_distanceToCubicBezier(vec2 p, vec2 p0, vec2 p1, vec2 p2, vec2 p3)
     return d;
 }
 
-#define ARC_SEGMENTS 24
+#define ARC_SEGMENTS 32
 float sdf_distanceToArc(vec2 p, vec2 start, vec2 end, float rx, float ry, float xrotDeg, bool largeArc, bool sweep)
 {
     if (rx < 1e-6 || ry < 1e-6)
@@ -179,13 +180,6 @@ float sdf_distanceToArc(vec2 p, vec2 start, vec2 end, float rx, float ry, float 
         delta -= 2.0 * 3.14159265358979;
     else if (sweep && delta < 0.0)
         delta += 2.0 * 3.14159265358979;
-    if (largeArc)
-    {
-        if (delta >= 0.0)
-            delta -= 2.0 * 3.14159265358979;
-        else
-            delta += 2.0 * 3.14159265358979;
-    }
 
     float d = 1e10;
     vec2 prev;
@@ -209,6 +203,113 @@ float sdf_distanceToArc(vec2 p, vec2 start, vec2 end, float rx, float ry, float 
         prev = cur;
     }
     return d;
+}
+
+int sdf_windingCubic(vec2 p, vec2 p0, vec2 p1, vec2 p2, vec2 p3, int winding)
+{
+    vec2 prev = p0;
+    for (int i = 1; i <= SEGS; ++i)
+    {
+        float t = float(i) / float(SEGS);
+        vec2 cur = sdf_cubicBezier(p0, p1, p2, p3, t);
+        float tInter;
+        if (sdf_intersectLineY(p.y, prev, cur, tInter) > 0)
+        {
+            float xInter = prev.x + tInter * (cur.x - prev.x);
+            if (xInter < p.x)
+            {
+                float dy = cur.y - prev.y;
+                if (abs(dy) > 1e-5)
+                {
+                    winding += (dy > 0.0) ? 1 : -1;
+                }
+            }
+        }
+        prev = cur;
+    }
+    return winding;
+}
+
+int sdf_windingArc(vec2 p, vec2 start, vec2 end, float rx, float ry, float xrotDeg, bool largeArc, bool sweep,
+                   int winding)
+{
+    if (rx < 1e-6 || ry < 1e-6)
+    {
+        float t;
+        if (sdf_intersectLineY(p.y, start, end, t) > 0)
+        {
+            float xInter = start.x + t * (end.x - start.x);
+            if (xInter < p.x)
+            {
+                float dy = end.y - start.y;
+                if (abs(dy) > 1e-5)
+                    winding += (dy > 0.0) ? 1 : -1;
+            }
+        }
+        return winding;
+    }
+
+    float phi = radians(xrotDeg);
+    float cosPhi = cos(phi), sinPhi = sin(phi);
+
+    vec2 mid = (start - end) * 0.5;
+    float x1p = cosPhi * mid.x + sinPhi * mid.y;
+    float y1p = -sinPhi * mid.x + cosPhi * mid.y;
+
+    float lambda = (x1p * x1p) / (rx * rx) + (y1p * y1p) / (ry * ry);
+    if (lambda > 1.0)
+    {
+        float s = sqrt(lambda);
+        rx *= s;
+        ry *= s;
+    }
+
+    float rx2 = rx * rx, ry2 = ry * ry;
+    float den = rx2 * y1p * y1p + ry2 * x1p * x1p;
+    float num = rx2 * ry2 - rx2 * y1p * y1p - ry2 * x1p * x1p;
+    float coef = (largeArc != sweep) ? 1.0 : -1.0;
+    coef *= sqrt(max(0.0, num / max(den, 1e-12)));
+
+    float cxp = coef * (rx * y1p / ry);
+    float cyp = -coef * (ry * x1p / rx);
+
+    float cx = cosPhi * cxp - sinPhi * cyp + (start.x + end.x) * 0.5;
+    float cy = sinPhi * cxp + cosPhi * cyp + (start.y + end.y) * 0.5;
+
+    float theta1 = atan((y1p - cyp) / ry, (x1p - cxp) / rx);
+    float theta2 = atan((-y1p - cyp) / ry, (-x1p - cxp) / rx);
+    float delta = theta2 - theta1;
+
+    if (!sweep && delta > 0.0)
+        delta -= 2.0 * 3.14159265358979;
+    else if (sweep && delta < 0.0)
+        delta += 2.0 * 3.14159265358979;
+
+    vec2 prev = vec2(cx + rx * cos(theta1) * cosPhi - ry * sin(theta1) * sinPhi,
+                     cy + rx * cos(theta1) * sinPhi + ry * sin(theta1) * cosPhi);
+
+    for (int i = 1; i <= ARC_SEGMENTS; ++i)
+    {
+        float t = float(i) / float(ARC_SEGMENTS);
+        float ang = theta1 + t * delta;
+        vec2 cur = vec2(cx + rx * cos(ang) * cosPhi - ry * sin(ang) * sinPhi,
+                        cy + rx * cos(ang) * sinPhi + ry * sin(ang) * cosPhi);
+
+        float tInter;
+        if (sdf_intersectLineY(p.y, prev, cur, tInter) > 0)
+        {
+            float xInter = prev.x + tInter * (cur.x - prev.x);
+            if (xInter < p.x)
+            {
+                float dy = cur.y - prev.y;
+                if (abs(dy) > 1e-5)
+                    winding += (dy > 0.0) ? 1 : -1;
+            }
+        }
+        prev = cur;
+    }
+
+    return winding;
 }
 
 #endif
