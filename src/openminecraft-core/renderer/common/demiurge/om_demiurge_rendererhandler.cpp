@@ -3,6 +3,7 @@
 #include "openminecraft/geom/om_svg_structure.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
+#include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_cliprect_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_roundedrect_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_textsdf_channel.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
@@ -26,7 +27,8 @@ struct SimpleUniform
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer, std::shared_ptr<OMDemiurgeNode> n)
     : OMRendererHandler(renderer), renderer(renderer), rect(renderer, [&]() -> void { recordTask(); }),
       roundedRect(renderer, [&]() -> void { recordTask(); }), image(renderer, [&]() -> void { recordTask(); }),
-      sector(renderer, [&]() -> void { recordTask(); }), logger("OMDemiurgeRendererHandler", this)
+      sector(renderer, [&]() -> void { recordTask(); }), clipRect(renderer, [&]() -> void { recordTask(); }),
+      logger("OMDemiurgeRendererHandler", this)
 {
     node = n;
 
@@ -40,6 +42,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer, std::
     roundedRect.init(uniformBuffer, middleTarget->target);
     image.init(uniformBuffer, middleTarget->target);
     sector.init(uniformBuffer, middleTarget->target);
+    clipRect.init(uniformBuffer, middleTarget->target);
 
     auto comp =
         openminecraft::geom::svg::compile(openminecraft::geom::svg::mergeTo(openminecraft::geom::svg::parseSvgPath(
@@ -77,6 +80,7 @@ OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
     roundedRect.destroy();
     image.destroy();
     sector.destroy();
+    clipRect.destroy();
     for (auto &p : fonts)
     {
         p.second->destroy();
@@ -119,6 +123,7 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
 
     for (float layer = bottomDepth; layer >= topDepth; layer -= 0.01f)
     {
+        clipRect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
         rect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
         roundedRect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
         image.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
@@ -147,6 +152,7 @@ void OMDemiurgeRendererHandler::beforeFrame()
     roundedRect.update();
     image.update();
     sector.update();
+    clipRect.update();
     for (auto &p : fonts)
     {
         p.second->update();

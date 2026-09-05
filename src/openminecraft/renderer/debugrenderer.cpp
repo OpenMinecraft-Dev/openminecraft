@@ -1,5 +1,6 @@
 #include "openminecraft-shell/renderer/debugrendrer.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
+#include "openminecraft/renderer/common/demiurge/node/om_demiurge_cliprect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
@@ -34,6 +35,11 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                    {"width", OMDemiurgeSize::fit()},
                    {"height", OMDemiurgeSize::fit()},
                })
+               ->mount(std::make_shared<node::OMDemiurgeClipRectNode>()->style({
+                   {"position", Absolute},
+                   {"width", 20_percent},
+                   {"height", 20_percent},
+               }))
                ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                            ->style({
                                {"color", (int)0xffffffff},

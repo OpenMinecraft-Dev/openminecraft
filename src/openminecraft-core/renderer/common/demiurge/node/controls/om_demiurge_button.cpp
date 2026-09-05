@@ -1,4 +1,5 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
+#include "openminecraft/renderer/common/demiurge/node/om_demiurge_cliprect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
@@ -28,8 +29,8 @@ OMDemiurgeButton::OMDemiurgeButton(geom::OMFontSet *fontset)
         {"alignSelf", OMDemiurgeAlign::Center},
         {"margin", std::array<OMDemiurgeSize, 4>{5_px, 10_px, 5_px, 5_px}},
     });
-    this->mountDirect(textNode);
     this->mountDirect(bkgNode);
+    this->mountDirect(textNode);
 }
 OMDemiurgeButton::~OMDemiurgeButton() = default;
 

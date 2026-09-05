@@ -3,6 +3,7 @@
 
 #include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_cliprect_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_image_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_rect_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_roundedrect_channel.hpp"
@@ -59,6 +60,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     element::OMDemiurgeRoundedRectChannel roundedRect;
     element::OMDemiurgeImageChannel image;
     element::OMDemiurgeSectorChannel sector;
+    element::OMDemiurgeClipRectChannel clipRect;
 
     auto fetchFontChannel(geom::OMFontSet *) -> std::shared_ptr<element::OMDemiurgeTextSdfChannel>;
 
