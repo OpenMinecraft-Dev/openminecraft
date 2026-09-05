@@ -52,6 +52,9 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     OMRendererBuffer *uniformBuffer;
     OMRenderer *renderer;
 
+    OMRendererBuffer *testBuffer;
+    OMRendererPipeline *testPipeline;
+
     element::OMDemiurgeRectChannel rect;
     element::OMDemiurgeRoundedRectChannel roundedRect;
     element::OMDemiurgeImageChannel image;
