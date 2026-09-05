@@ -44,5 +44,6 @@ void registerBlocks()
                                                 "south_west"}));
     blockRegistery.registerItem(OMIdentifier("minecraft:white_stained_glass"),
                                 OMBlock().isSoild(false).isTranslucent(true));
+    blockRegistery.registerItem(OMIdentifier("minecraft:stone_pressure_plate"), OMBlock().isSoild(false).propPowered());
 }
 } // namespace openminecraftshell::data::block

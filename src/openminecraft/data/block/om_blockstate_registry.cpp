@@ -2,11 +2,13 @@
 #include "fmt/format.h"
 #include "openminecraft-shell/data/block/om_block_registery.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
+#include "openminecraft/log/om_log_common.hpp"
 #include <iostream>
 
 namespace openminecraftshell::data::block
 {
 openminecraft::world::OMWorldRegistry<OMIdentifier, OMBlockStateCombined> blockstateRegistry;
+static openminecraft::log::OMLogger logger("Blockstate Resolver");
 
 void registerBlockstates()
 {
@@ -41,6 +43,7 @@ void registerBlockstates()
         for (auto &st : states)
         {
             auto c = OMBlockStateCombined{l.first, st};
+            logger.debug("registering {}[{}]", l.first.path, st.tosimple());
             blockstateRegistry.registerItem(
                 OMIdentifier(l.first.namesp, fmt::format("{}[{}]", l.first.path, st.tosimple())), c);
         }

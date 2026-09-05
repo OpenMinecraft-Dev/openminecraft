@@ -105,7 +105,13 @@ auto OMFontSet::bound(std::vector<OMFontSetShapeResult> shaped) -> glm::vec2
     return {maxb.x - shaped[0].position.x, maxb.y};
 }
 
-auto OMFontSet::genOutline(OMFontSetShapeResult r) -> std::vector<float>
+// INFO: compiled glyph structure
+// Chunk 1: bounding box (4 floats)
+// Chunk 2: curve counts (n, 1 float)
+// Chunk 3: curve segment counts (n floats)
+// Chunk 4: curve begin points (2*n floats)
+// Chunk 5: curve data
+auto OMFontSet::compile(OMFontSetShapeResult r) -> std::vector<float>
 {
     std::vector<glm::vec2> bufferData = {};
     std::vector<glm::vec2> beginPoints = {};

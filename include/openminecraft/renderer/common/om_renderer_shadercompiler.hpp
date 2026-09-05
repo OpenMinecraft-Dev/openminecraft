@@ -40,7 +40,7 @@ class OMRendererShaderCompiler
 
   private:
     std::vector<std::shared_ptr<OMRendererShaderCompilerBackend>> backends;
-    std::vector<std::thread> compilerPool;
+    std::vector<std::thread *> compilerPool;
     std::queue<OMRendererShaderState> shaderQueue;
     std::unordered_map<int, std::shared_ptr<OMShader>> results;
 

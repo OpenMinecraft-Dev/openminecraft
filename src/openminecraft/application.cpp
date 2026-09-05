@@ -23,6 +23,7 @@
 #include <boost/stacktrace/stacktrace.hpp>
 #include "openminecraft/renderer/common/event/om_eventbus.hpp"
 #include <chrono>
+#include <iostream>
 #include <memory>
 #include <string>
 #include "openminecraft-shell/renderer/debugrendrer.hpp"
@@ -154,8 +155,9 @@ void OMApplication::mainLoop(OMBackend backend)
                                  blockstateRegistry.id(
                                      data::OMIdentifier("minecraft:cherry_fence_gate[facing=south,in_wall=false,"
                                                         "open=true,powered=true,water_logged=true]")));
-                    cnk.setBlock(15, 2, 1,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:rail[shape=north_south]")));
+                    cnk.setBlock(
+                        15, 2, 1,
+                        blockstateRegistry.id(data::OMIdentifier("minecraft:stone_pressure_plate[powered=false]")));
                     chunkManager->loadChunk(cnk);
                 }
             }

@@ -10,7 +10,7 @@ OMRendererShaderCompiler::OMRendererShaderCompiler()
 {
     for (int i = 0; i < 12; i++)
     {
-        compilerPool.emplace_back([&]() -> void {
+        compilerPool.push_back(new std::thread([&]() -> void {
             while (available)
             {
                 while (!queueLock.try_lock())
@@ -47,7 +47,7 @@ OMRendererShaderCompiler::OMRendererShaderCompiler()
 
                 queueLock.unlock();
             }
-        });
+        }));
     }
 }
 OMRendererShaderCompiler::~OMRendererShaderCompiler()
@@ -55,7 +55,8 @@ OMRendererShaderCompiler::~OMRendererShaderCompiler()
     available = false;
     for (auto &thr : compilerPool)
     {
-        thr.join();
+        thr->join();
+        delete thr;
     }
 }
 

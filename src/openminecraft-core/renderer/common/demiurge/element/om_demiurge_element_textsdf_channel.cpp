@@ -14,7 +14,7 @@ auto OMDemiurgeTextSdfChannel::storeGlyph(fontproc::OMFontSetShapeResult r) -> i
         return glyphOffsets[gid];
     }
 
-    auto gdata = fontSet->genOutline(r);
+    auto gdata = fontSet->compile(r);
     auto offset = glyphData.size();
     glyphData.insert(glyphData.end(), gdata.begin(), gdata.end());
 

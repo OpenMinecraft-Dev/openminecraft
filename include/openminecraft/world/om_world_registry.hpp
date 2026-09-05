@@ -1,6 +1,7 @@
 #ifndef OM_WORLD_REGISTRY_HPP
 #define OM_WORLD_REGISTRY_HPP
 
+#include <stdexcept>
 #include <unordered_map>
 #include <cstdint>
 namespace openminecraft::world
@@ -21,7 +22,14 @@ template <typename K, typename T> class OMWorldRegistry
     }
     auto id(K name) -> uint32_t
     {
-        return nameToId[std::move(name)];
+        if (nameToId.count(name))
+        {
+            return nameToId[std::move(name)];
+        }
+        else
+        {
+            throw std::logic_error("key not found!");
+        }
     }
     auto getRegistry(K name) -> T &
     {
