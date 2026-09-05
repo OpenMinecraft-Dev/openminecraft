@@ -38,7 +38,8 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
                        ->format(format)
                        ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
                        ->blend(true)
-                       ->depth(false, false)
+                       ->depth(true, true)
+                       ->depthOp(LessOrEqual)
                        ->buildN();
         pipeline->bindInput(0, uniform);
     }

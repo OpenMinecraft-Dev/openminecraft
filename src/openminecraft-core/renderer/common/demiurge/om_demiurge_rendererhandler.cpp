@@ -11,7 +11,6 @@
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
-#include <iostream>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -64,7 +63,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer, std::
             ->format(simp)
             ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
             ->blend(true)
-            ->depth(false, false)
+            ->depth(true, true)
             ->buildN();
     testPipeline->bindInput(0, testBuffer);
 }

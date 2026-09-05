@@ -64,7 +64,8 @@ void OMDemiurgeTextSdfChannel::init(OMRendererBuffer *uniform, OMRendererRenderT
                    ->format(format)
                    ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
                    ->blend(true)
-                   ->depth(false, false)
+                   ->depth(true, true)
+                   ->depthOp(LessOrEqual)
                    ->buildN();
     pipeline->bindInput(0, uniform);
     pipeline->bindInput(1, glyphBuffer);

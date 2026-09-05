@@ -10,14 +10,12 @@ layout(location = 0) out vec2 svgGlyphPos;
 void main()
 {
     svgGlyphPos = vertexgen_quad_normal() * vec2(1.0, -1.0) + vec2(0.0, 1.0);
-    gl_Position = vec4(vertexgen_quad_normal() * vec2(0.25), 1.0, 1.0);
+    gl_Position = vec4(vertexgen_quad_normal() * vec2(0.25), 0.9, 1.0);
 }
 #endif
 
 #ifdef FRAGMENT_SHADER
 #include "basics/sdf/sdf_text.glsl"
-float curType;
-float curParams[6];
 
 layout(location = 0) in vec2 svgGlyphPos;
 layout(location = 0) out vec4 outColor;
@@ -42,7 +40,7 @@ void main()
         vec2 pointer = start;
         for (int j = 0; j < curveCount; j++)
         {
-            curType = texelFetchF(inSvgData, (idx));
+            float curType = texelFetchF(inSvgData, (idx));
             idx++;
 
             if (curType == 0.0)

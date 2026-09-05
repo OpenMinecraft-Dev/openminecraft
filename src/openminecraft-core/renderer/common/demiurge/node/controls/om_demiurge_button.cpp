@@ -28,8 +28,8 @@ OMDemiurgeButton::OMDemiurgeButton(geom::OMFontSet *fontset)
         {"alignSelf", OMDemiurgeAlign::Center},
         {"margin", std::array<OMDemiurgeSize, 4>{5_px, 10_px, 5_px, 5_px}},
     });
-    this->mountDirect(bkgNode);
     this->mountDirect(textNode);
+    this->mountDirect(bkgNode);
 }
 OMDemiurgeButton::~OMDemiurgeButton() = default;
 

@@ -58,7 +58,8 @@ auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, float upper, float
                                    ->format(format)
                                    ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
                                    ->blend(true)
-                                   ->depth(false, false)
+                                   ->depth(true, true)
+                                   ->depthOp(LessOrEqual)
                                    ->buildN();
                 pipelines[i]->bindInput(0, uniform);
                 pipelines[i]->bindInput(1, textures[i]);
