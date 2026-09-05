@@ -1,13 +1,20 @@
 #include "openminecraft/geom/om_svg_structure.hpp"
-#include <iostream>
-#include <unordered_map>
-#include <utility>
+#include <cmath>
 #include <vector>
 #include <string>
 #include <cctype>
 
-namespace openminecraft::geom
+namespace openminecraft::geom::svg
 {
+auto mergeTo(std::vector<OMSvgPathSegment> p) -> std::vector<OMSvgCurve>
+{
+    glm::vec2 current = {NAN, NAN};
+    std::vector<OMSvgCurve> result = {};
+    for (const auto &seg : p)
+    {
+    }
+    return {};
+}
 auto parseFloatArr(std::string p) -> std::vector<float>
 {
     std::vector<float> result;
@@ -90,78 +97,94 @@ auto parseSvgPath(std::string p) -> std::vector<OMSvgPathSegment>
     {
         if (*it == "z" || *it == "Z")
         {
-            target.push_back({.op = Close});
+            target.push_back({Close});
         }
         else
         {
             auto op = it->at(0);
             ++it;
             auto a = parseFloatArr(*it);
+            OMSvgPathSegment seg;
             switch (op)
             {
             case 'M':
-                target.push_back({.op = MoveTo, .move = {{a[0], a[1]}}});
+                seg.op = MoveTo;
+                seg.move = {{a[0], a[1]}};
                 break;
             case 'm':
-                target.push_back({.op = RelativeMoveTo, .move = {{a[0], a[1]}}});
+                seg.op = RelativeMoveTo;
+                seg.move = {{a[0], a[1]}};
                 break;
             case 'L':
-                target.push_back({.op = LineTo, .line = {{a[0], a[1]}}});
+                seg.op = LineTo;
+                seg.move = {{a[0], a[1]}};
                 break;
             case 'l':
-                target.push_back({.op = RelativeLineTo, .line = {{a[0], a[1]}}});
+                seg.op = RelativeLineTo;
+                seg.move = {{a[0], a[1]}};
                 break;
             case 'H':
-                target.push_back({.op = HorizontalLineTo, .hline = {a[0]}});
+                seg.op = HorizontalLineTo;
+                seg.hline = {a[0]};
                 break;
             case 'h':
-                target.push_back({.op = RelativeHorizontalLineTo, .hline = {a[0]}});
+                seg.op = RelativeHorizontalLineTo;
+                seg.hline = {a[0]};
                 break;
             case 'V':
-                target.push_back({.op = VerticalLineTo, .hline = {a[0]}});
+                seg.op = VerticalLineTo;
+                seg.vline = {a[0]};
                 break;
             case 'v':
-                target.push_back({.op = RelativeVerticalLineTo, .hline = {a[0]}});
+                seg.op = RelativeVerticalLineTo;
+                seg.vline = {a[0]};
                 break;
             case 'C':
-                target.push_back({.op = CubicTo, .cubic = {{a[0], a[1]}, {a[2], a[3]}, {a[4], a[5]}}});
+                seg.op = CubicTo;
+                seg.cubic = {{a[0], a[1]}, {a[2], a[3]}, {a[4], a[5]}};
                 break;
             case 'c':
-                target.push_back({.op = RelativeCubicTo, .cubic = {{a[0], a[1]}, {a[2], a[3]}, {a[4], a[5]}}});
+                seg.op = RelativeCubicTo;
+                seg.cubic = {{a[0], a[1]}, {a[2], a[3]}, {a[4], a[5]}};
                 break;
             case 'S':
-                target.push_back({.op = SmoothCubicTo, .smoothCubic = {{a[0], a[1]}, {a[2], a[3]}}});
+                seg.op = SmoothCubicTo;
+                seg.smoothCubic = {{a[0], a[1]}, {a[2], a[3]}};
                 break;
             case 's':
-                target.push_back({.op = RelativeSmoothCubicTo, .smoothCubic = {{a[0], a[1]}, {a[2], a[3]}}});
+                seg.op = RelativeSmoothCubicTo;
+                seg.smoothCubic = {{a[0], a[1]}, {a[2], a[3]}};
                 break;
             case 'Q':
-                target.push_back({.op = QuadraticTo, .quadratic = {{a[0], a[1]}, {a[2], a[3]}}});
+                seg.op = QuadraticTo;
+                seg.quadratic = {{a[0], a[1]}, {a[2], a[3]}};
                 break;
             case 'q':
-                target.push_back({.op = RelativeQuadraticTo, .quadratic = {{a[0], a[1]}, {a[2], a[3]}}});
+                seg.op = RelativeQuadraticTo;
+                seg.quadratic = {{a[0], a[1]}, {a[2], a[3]}};
                 break;
             case 'T':
-                target.push_back({.op = SmoothQuadraticTo, .smoothQuadratic = {{a[0], a[1]}}});
+                seg.op = SmoothQuadraticTo;
+                seg.smoothQuadratic = {{a[0], a[1]}};
                 break;
             case 't':
-                target.push_back({.op = RelativeSmoothQuadraticTo, .smoothQuadratic = {{a[0], a[1]}}});
+                seg.op = RelativeSmoothQuadraticTo;
+                seg.smoothQuadratic = {{a[0], a[1]}};
                 break;
             case 'A':
-                target.push_back(
-                    {.op = ArcTo,
-                     .arc = {a[0], a[1], a[2], static_cast<bool>(a[3]), static_cast<bool>(a[4]), {a[5], a[6]}}});
+                seg.op = ArcTo;
+                seg.arc = {a[0], a[1], a[2], static_cast<bool>(a[3]), static_cast<bool>(a[4]), {a[5], a[6]}};
                 break;
             case 'a':
-                target.push_back(
-                    {.op = RelativeArcTo,
-                     .arc = {a[0], a[1], a[2], static_cast<bool>(a[3]), static_cast<bool>(a[4]), {a[5], a[6]}}});
+                seg.op = RelativeArcTo;
+                seg.arc = {a[0], a[1], a[2], static_cast<bool>(a[3]), static_cast<bool>(a[4]), {a[5], a[6]}};
                 break;
             default:
                 break;
             }
+            target.push_back(seg);
         }
     }
     return target;
 }
-} // namespace openminecraft::geom
+} // namespace openminecraft::geom::svg

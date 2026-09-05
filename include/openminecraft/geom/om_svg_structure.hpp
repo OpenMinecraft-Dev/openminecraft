@@ -4,8 +4,28 @@
 #include "glm/ext/vector_float2.hpp"
 #include <string>
 #include <vector>
-namespace openminecraft::geom
+namespace openminecraft::geom::svg
 {
+enum OMSvgCurveType
+{
+    StraightLine,
+    Quadratic,
+    Cubic,
+    Arc
+};
+struct OMSvgCurve
+{
+    OMSvgCurveType op;
+    glm::vec2 begin, end;
+
+    glm::vec2 control1;
+    glm::vec2 control2;
+    float rx;
+    float ry;
+    float xRot;
+    bool largeArcFlag;
+    bool sweepFlag;
+};
 enum OMSvgOperations
 {
     MoveTo,
@@ -91,6 +111,7 @@ struct OMSvgPathSegment
 
 auto parseSvgPath(std::string) -> std::vector<OMSvgPathSegment>;
 auto parseFloatArr(std::string) -> std::vector<float>;
-} // namespace openminecraft::geom
+auto mergeTo(std::vector<OMSvgPathSegment>) -> std::vector<OMSvgCurve>;
+} // namespace openminecraft::geom::svg
 
 #endif

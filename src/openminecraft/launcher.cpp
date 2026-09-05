@@ -49,7 +49,7 @@ auto main(int argc, char **argv) -> int
     logger.info("Kernel exited with code {}", re);
 
     return re;*/
-    openminecraft::geom::parseSvgPath(
+    openminecraft::geom::svg::parseSvgPath(
         "M3.25 4.8c.515 0 .773 0 .955.129q.097.069.166.166c.13.182.129.44.129.955v.7c0 .515 0 .773-.129.955a.7.7 0 0 "
         "1-.166.166c-.182.13-.44.129-.955.129s-.773 0-.955-.129a.7.7 0 0 1-.166-.166C1.999 7.523 2 7.265 2 "
         "6.75v-.7c0-.515 0-.773.129-.955a.7.7 0 0 1 .166-.166c.182-.13.44-.13.955-.13M7.1 6.2c.375 0 .563 0 "
