@@ -8,15 +8,15 @@ namespace openminecraft::geom::svg
 {
 enum OMSvgCurveType
 {
-    StraightLine,
-    Quadratic,
-    Cubic,
-    Arc
+    StraightLine = 0,
+    Quadratic = 1,
+    Cubic = 2,
+    Arc = 3
 };
 struct OMSvgCurve
 {
     OMSvgCurveType op;
-    glm::vec2 begin, end;
+    glm::vec2 end;
 
     glm::vec2 control1;
     glm::vec2 control2;
@@ -111,7 +111,8 @@ struct OMSvgPathSegment
 
 auto parseSvgPath(std::string) -> std::vector<OMSvgPathSegment>;
 auto parseFloatArr(std::string) -> std::vector<float>;
-auto mergeTo(std::vector<OMSvgPathSegment>) -> std::vector<OMSvgCurve>;
+auto mergeTo(std::vector<OMSvgPathSegment>) -> std::vector<std::pair<glm::vec2, std::vector<OMSvgCurve>>>;
+auto compile(std::vector<std::pair<glm::vec2, std::vector<OMSvgCurve>>> r, glm::vec2 siz) -> std::vector<float>;
 } // namespace openminecraft::geom::svg
 
 #endif
