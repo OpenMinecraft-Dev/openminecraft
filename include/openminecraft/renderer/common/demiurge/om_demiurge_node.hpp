@@ -88,8 +88,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     auto syncLayoutAll() -> void;
     auto syncBoundary(float x, float y) -> void;
 
-    virtual auto processEvent(float x, float y, OMDemiurgeEventType type, uint8_t ext, void *data)
-        -> OMDemiurgeEventResult
+    virtual auto processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult
     {
         return Ignored;
     }

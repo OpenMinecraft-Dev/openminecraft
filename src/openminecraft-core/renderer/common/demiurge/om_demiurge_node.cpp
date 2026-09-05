@@ -325,7 +325,21 @@ void OMDemiurgeNode::acceptEvent(float x, float y, OMDemiurgeEventType type, uin
 
         if (x >= bo.x && x <= bo.x + bo.width && y >= bo.y && y <= bo.y + bo.height)
         {
-            if (processEvent(x, y, type, ext, data) == Ignored)
+            OMDemiurgeEventResult result = Ignored;
+            switch (type)
+            {
+            case MouseDown:
+                result = processMouseDown(x, y, ext);
+                break;
+            case MouseMove:
+            case MouseUp:
+            case MouseWheel:
+            case KeyDown:
+            case KeyUp:
+                break;
+            }
+
+            if (result == Ignored)
             {
                 for (auto f : children)
                 {

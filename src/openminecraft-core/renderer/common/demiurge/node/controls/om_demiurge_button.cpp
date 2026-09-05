@@ -33,18 +33,10 @@ OMDemiurgeButton::OMDemiurgeButton(fontproc::OMFontSet *fontset)
 }
 OMDemiurgeButton::~OMDemiurgeButton() = default;
 
-auto OMDemiurgeButton::processEvent(float x, float y, OMDemiurgeEventType type, uint8_t ext, void *data)
-    -> OMDemiurgeEventResult
+auto OMDemiurgeButton::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult
 {
-    if (type == MouseDown)
-    {
-        handle();
-        return Handled;
-    }
-    else
-    {
-        return Ignored;
-    }
+    handle();
+    return Handled;
 }
 
 auto OMDemiurgeButton::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
