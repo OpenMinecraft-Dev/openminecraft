@@ -106,11 +106,19 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     }
     auto getSunriseColor() -> glm::vec4 override
     {
-        return {0.855, 0.388, 0.200, 0.8f};
+        return {0.855, 0.388, 0.200, 0.44f};
     }
     auto getSunAngle() -> float override
     {
         return 270.0f;
+    }
+    auto getMoonAngle() -> float override
+    {
+        return 90.0f;
+    }
+    auto getMoonPhase() -> int override
+    {
+        return 5;
     }
 };
 static OMWorldColorManager *colorManager = new OMWorldColorManager;
@@ -136,6 +144,23 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     specs::png::OMPngFile f;
     f.parse(vfs::fsfetch("/external/minecraft/textures/environment/celestial/sun.png"));
     sunTex->updateData(f.fetchData());
+    sunTex->magFilter = Nearest;
+    sunTex->minFilter = Nearest;
+    sunTex->setupSampler();
+
+    moonTex = renderer->allocateTexture(32, 32, 8, 0, Dim2Array, ColorRgba);
+    int i = 0;
+    for (auto p : {"new_moon", "waxing_crescent", "first_quarter", "waxing_gibbous", "full_moon", "waning_gibbous",
+                   "third_quarter", "waning_crescent"})
+    {
+        specs::png::OMPngFile f;
+        f.parse(vfs::fsfetch(fmt::format("/external/minecraft/textures/environment/celestial/moon/{}.png", p)));
+        moonTex->updateData(f.fetchData(), i);
+        ++i;
+    }
+    moonTex->magFilter = Nearest;
+    moonTex->minFilter = Nearest;
+    moonTex->setupSampler();
 
     textureAtlas = new data::OMTextureAtlas("/external", renderer);
 
@@ -173,7 +198,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
             h ^= h >> 16;
             return blockstateResolver->fetchModel(reg.block, reg.state, h);
         },
-        colorManager, sunTex);
+        colorManager, sunTex, moonTex);
 
     voxelManager->bindCameraBuffer(cameraBuffer);
 
@@ -247,6 +272,7 @@ OMWorldRenderer::~OMWorldRenderer()
     delete blockstateResolver;
     delete textureAtlas;
     delete sunTex;
+    delete moonTex;
 
     delete tempTarget;
 }

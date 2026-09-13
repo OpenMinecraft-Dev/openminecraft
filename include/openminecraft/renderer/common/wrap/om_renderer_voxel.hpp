@@ -349,6 +349,12 @@ struct OMVoxelSunrise
     float sunAngle;
 };
 
+struct OMVoxelMoon
+{
+    float moonAngle;
+    int moonPhase;
+};
+
 struct OMVoxelLightMap
 {
     float skyFactor;
@@ -429,6 +435,8 @@ class OMVoxelColorManager
     virtual auto getFogColor() -> glm::vec3 = 0;
     virtual auto getSunriseColor() -> glm::vec4 = 0;
     virtual auto getSunAngle() -> float = 0;
+    virtual auto getMoonAngle() -> float = 0;
+    virtual auto getMoonPhase() -> int = 0;
 
     inline auto isDirty() -> bool
     {
@@ -449,7 +457,7 @@ class OMVoxelManager
     OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *, OMRendererTexture *,
                    std::shared_ptr<world::OMChunkManager<16>>, std::function<void()>, OMVoxelHandler *,
                    std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)>,
-                   OMVoxelColorManager *, OMRendererTexture *);
+                   OMVoxelColorManager *, OMRendererTexture *, OMRendererTexture *);
     ~OMVoxelManager();
 
     auto submit(OMRendererTask *, OMRendererTempTarget *) -> OMRendererTask *;
@@ -469,6 +477,7 @@ class OMVoxelManager
     OMRendererBuffer *skydisc;
     OMRendererBuffer *fogdata;
     OMRendererBuffer *lightmapData;
+    OMRendererBuffer *moonData;
     OMRendererTexture *textureAtlas;
     OMRendererTexture *textureAtlasSecondary;
     OMRendererTempTarget *lightmap;
@@ -476,9 +485,9 @@ class OMVoxelManager
 
     OMRendererBuffer *sunrise;
     OMRendererPipeline *sunrisePipeline;
-    OMRendererPipeline *sunPipeline;
+    OMRendererPipeline *sunPipeline, *moonPipeline;
 
-    OMRendererTexture *sunTex;
+    OMRendererTexture *sunTex, *moonTex;
 
   private:
     int samples = 4;

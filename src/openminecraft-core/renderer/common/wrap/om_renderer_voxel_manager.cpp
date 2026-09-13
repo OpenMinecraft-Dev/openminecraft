@@ -14,7 +14,6 @@
 #include "openminecraft/world/om_world_chunk.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
 #include <array>
-#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <functional>
@@ -28,7 +27,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                OMRendererTexture *texSec, std::shared_ptr<world::OMChunkManager<16>> man,
                                std::function<void()> rec, OMVoxelHandler *handler,
                                std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> converter,
-                               OMVoxelColorManager *colorman, OMRendererTexture *sunTex)
+                               OMVoxelColorManager *colorman, OMRendererTexture *sunTex, OMRendererTexture *moonTex)
     : logger("OMVoxelManager", this)
 {
     this->rec = rec;
@@ -38,6 +37,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     this->converter = converter;
     this->colorManager = colorman;
     this->sunTex = sunTex;
+    this->moonTex = moonTex;
 
     delete compiler.handler;
     compiler.handler = voxelHandler;
@@ -245,6 +245,26 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->depthOp(Greater)
             ->buildN();
 
+    moonPipeline =
+        renderer->createPipeline()
+            ->input(UniformBuffer)
+            ->inputName("Camera")
+            ->input(UniformBuffer)
+            ->inputName("MoonData")
+            ->input(ImageSampler)
+            ->inputName("inTexture")
+            ->output(cutoutTargetMS->target)
+            ->samples(samples)
+            ->shader(
+                renderer->shaderManager.preprocess("core/voxel/moon.frag.glsl", Fragment, GLSLSource, simpleFormat))
+            ->shader(renderer->shaderManager.preprocess("core/voxel/moon.vert.glsl", Vertex, GLSLSource, simpleFormat))
+            ->format(simpleFormat)
+            ->blendFunc({SrcAlpha, One, SrcAlpha, One})
+            ->blend(true)
+            ->depth(false, true)
+            ->depthOp(Greater)
+            ->buildN();
+
     sunrisePipeline = renderer->createPipeline()
                           ->input(UniformBuffer)
                           ->inputName("Camera")
@@ -317,6 +337,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     skydisc = renderer->allocateBuffer(Uniform, sizeof(OMVoxelSkyDisc));
     fogdata = renderer->allocateBuffer(Uniform, sizeof(float) * 5);
     sunrise = renderer->allocateBuffer(Uniform, sizeof(OMVoxelSunrise));
+    moonData = renderer->allocateBuffer(Uniform, sizeof(OMVoxelMoon));
 
     lightmapData = renderer->allocateBuffer(Uniform, sizeof(OMVoxelLightMap));
 
@@ -347,6 +368,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     sunrisePipeline->bindInput(1, sunrise);
     sunPipeline->bindInput(1, sunrise);
     sunPipeline->bindInput(2, sunTex);
+    moonPipeline->bindInput(1, moonData);
+    moonPipeline->bindInput(2, moonTex);
 }
 OMVoxelManager::~OMVoxelManager()
 {
@@ -364,6 +387,7 @@ OMVoxelManager::~OMVoxelManager()
     delete debugoffs;
     delete skydisc;
     delete sunrise;
+    delete moonData;
     delete pipeline;
     delete complexPipeline;
     delete translucentPipeline;
@@ -377,6 +401,7 @@ OMVoxelManager::~OMVoxelManager()
     delete skyDiscPipeline;
     delete sunrisePipeline;
     delete sunPipeline;
+    delete moonPipeline;
 }
 
 void OMVoxelManager::unloadChunk(int i)
@@ -419,6 +444,8 @@ auto OMVoxelManager::updateColor() -> void
         auto fg = srgbToLinear(colorManager->getFogColor());
         std::array<float, 5> d = {colorManager->getFogRange().x, colorManager->getFogRange().y, fg.r, fg.g, fg.b};
         fogdata->updateData(d.data());
+        OMVoxelMoon m = {colorManager->getMoonAngle(), colorManager->getMoonPhase()};
+        moonData->updateData(&m);
 
         OMVoxelLightMap dayData = {colorManager->getSkyFactor(),
                                    colorManager->getBlockFactor(),
@@ -601,6 +628,8 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
                    ->drawN(18)
                    ->pipeline(sunPipeline)
                    ->drawN(6)
+                   ->pipeline(moonPipeline)
+                   ->drawN(6)
                    ->pipeline(pipeline)
                    ->vertexBuffer({voxelLayer->buf()->buffer})
                    ->drawInstanceN(6, voxelLayer->buf()->totalSize / sizeof(OMVoxel))
@@ -642,5 +671,6 @@ void OMVoxelManager::bindCameraBuffer(OMRendererBuffer *cameraBuffer)
     skyDiscPipeline->bindInput(0, cameraBuffer);
     sunrisePipeline->bindInput(0, cameraBuffer);
     sunPipeline->bindInput(0, cameraBuffer);
+    moonPipeline->bindInput(0, cameraBuffer);
 }
 } // namespace openminecraft::renderer::common::wrap
