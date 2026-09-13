@@ -449,7 +449,7 @@ class OMVoxelManager
     OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *, OMRendererTexture *,
                    std::shared_ptr<world::OMChunkManager<16>>, std::function<void()>, OMVoxelHandler *,
                    std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)>,
-                   OMVoxelColorManager *);
+                   OMVoxelColorManager *, OMRendererTexture *);
     ~OMVoxelManager();
 
     auto submit(OMRendererTask *, OMRendererTempTarget *) -> OMRendererTask *;
@@ -476,6 +476,9 @@ class OMVoxelManager
 
     OMRendererBuffer *sunrise;
     OMRendererPipeline *sunrisePipeline;
+    OMRendererPipeline *sunPipeline;
+
+    OMRendererTexture *sunTex;
 
   private:
     int samples = 4;

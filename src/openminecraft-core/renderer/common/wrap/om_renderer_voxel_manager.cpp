@@ -28,7 +28,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                OMRendererTexture *texSec, std::shared_ptr<world::OMChunkManager<16>> man,
                                std::function<void()> rec, OMVoxelHandler *handler,
                                std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> converter,
-                               OMVoxelColorManager *colorman)
+                               OMVoxelColorManager *colorman, OMRendererTexture *sunTex)
     : logger("OMVoxelManager", this)
 {
     this->rec = rec;
@@ -37,6 +37,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     this->voxelHandler = handler;
     this->converter = converter;
     this->colorManager = colorman;
+    this->sunTex = sunTex;
 
     delete compiler.handler;
     compiler.handler = voxelHandler;
@@ -225,6 +226,25 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                           ->depthOp(Greater)
                           ->buildN();
 
+    sunPipeline =
+        renderer->createPipeline()
+            ->input(UniformBuffer)
+            ->inputName("Camera")
+            ->input(UniformBuffer)
+            ->inputName("SunRiseData")
+            ->input(ImageSampler)
+            ->inputName("inTexture")
+            ->output(cutoutTargetMS->target)
+            ->samples(samples)
+            ->shader(renderer->shaderManager.preprocess("core/voxel/sun.frag.glsl", Fragment, GLSLSource, simpleFormat))
+            ->shader(renderer->shaderManager.preprocess("core/voxel/sun.vert.glsl", Vertex, GLSLSource, simpleFormat))
+            ->format(simpleFormat)
+            ->blendFunc({SrcAlpha, One, SrcAlpha, One})
+            ->blend(true)
+            ->depth(false, true)
+            ->depthOp(Greater)
+            ->buildN();
+
     sunrisePipeline = renderer->createPipeline()
                           ->input(UniformBuffer)
                           ->inputName("Camera")
@@ -325,6 +345,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     lightmapPipeline->bindInput(0, lightmapData);
     skyPipeline->bindInput(0, skydisc);
     sunrisePipeline->bindInput(1, sunrise);
+    sunPipeline->bindInput(1, sunrise);
+    sunPipeline->bindInput(2, sunTex);
 }
 OMVoxelManager::~OMVoxelManager()
 {
@@ -354,6 +376,7 @@ OMVoxelManager::~OMVoxelManager()
     delete translucentTarget;
     delete skyDiscPipeline;
     delete sunrisePipeline;
+    delete sunPipeline;
 }
 
 void OMVoxelManager::unloadChunk(int i)
@@ -576,6 +599,8 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
                    ->drawN(10)
                    ->pipeline(sunrisePipeline)
                    ->drawN(18)
+                   ->pipeline(sunPipeline)
+                   ->drawN(6)
                    ->pipeline(pipeline)
                    ->vertexBuffer({voxelLayer->buf()->buffer})
                    ->drawInstanceN(6, voxelLayer->buf()->totalSize / sizeof(OMVoxel))
@@ -616,5 +641,6 @@ void OMVoxelManager::bindCameraBuffer(OMRendererBuffer *cameraBuffer)
     translucentComplexPipeline->bindInput(0, cameraBuffer);
     skyDiscPipeline->bindInput(0, cameraBuffer);
     sunrisePipeline->bindInput(0, cameraBuffer);
+    sunPipeline->bindInput(0, cameraBuffer);
 }
 } // namespace openminecraft::renderer::common::wrap

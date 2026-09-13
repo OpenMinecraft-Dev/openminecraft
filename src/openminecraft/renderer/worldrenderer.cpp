@@ -20,6 +20,8 @@
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include "openminecraft/specs/png/om_png.hpp"
+#include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
 
 #include <array>
@@ -108,7 +110,7 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     }
     auto getSunAngle() -> float override
     {
-        return 0.0f;
+        return 270.0f;
     }
 };
 static OMWorldColorManager *colorManager = new OMWorldColorManager;
@@ -129,6 +131,11 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
 
     tempTarget = new wrap::OMRendererTempTarget(renderer);
     tempTarget->construct(renderer->getExtent());
+
+    sunTex = renderer->allocateTexture(32, 32, 0, Dim2, ColorRgba);
+    specs::png::OMPngFile f;
+    f.parse(vfs::fsfetch("/external/minecraft/textures/environment/celestial/sun.png"));
+    sunTex->updateData(f.fetchData());
 
     textureAtlas = new data::OMTextureAtlas("/external", renderer);
 
@@ -166,7 +173,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
             h ^= h >> 16;
             return blockstateResolver->fetchModel(reg.block, reg.state, h);
         },
-        colorManager);
+        colorManager, sunTex);
 
     voxelManager->bindCameraBuffer(cameraBuffer);
 
@@ -239,6 +246,7 @@ OMWorldRenderer::~OMWorldRenderer()
     delete voxelManager;
     delete blockstateResolver;
     delete textureAtlas;
+    delete sunTex;
 
     delete tempTarget;
 }
