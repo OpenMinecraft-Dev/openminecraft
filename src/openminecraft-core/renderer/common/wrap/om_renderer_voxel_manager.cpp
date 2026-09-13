@@ -376,6 +376,12 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     std::uniform_real_distribution<> distrib(0.0f, 1.0f);
 
     std::vector<float> starData = {};
+    for (int i = 0; i < 16; ++i)
+    {
+        starData.push_back(distrib(gen));
+    }
+    starData.clear();
+
     for (int i = 0; i < 1500; i++)
     {
         auto x = (distrib(gen) * 2.0f) - 1.0f;
@@ -383,6 +389,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
         auto z = (distrib(gen) * 2.0f) - 1.0f;
 
         float starSize = 0.15f + (distrib(gen) * 0.1f);
+
         float lengthSq = sqrt(x * x + y * y + z * z);
         if (lengthSq > 0.010000001f && lengthSq < 1.0f)
         {
