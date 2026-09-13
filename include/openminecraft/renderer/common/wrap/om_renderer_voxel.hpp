@@ -437,6 +437,8 @@ class OMVoxelColorManager
     virtual auto getSunAngle() -> float = 0;
     virtual auto getMoonAngle() -> float = 0;
     virtual auto getMoonPhase() -> int = 0;
+    virtual auto getStarOpacity() -> float = 0;
+    virtual auto getStarRotation() -> float = 0;
 
     inline auto isDirty() -> bool
     {
@@ -489,6 +491,7 @@ class OMVoxelManager
 
     OMRendererTexture *sunTex, *moonTex;
     OMRendererBuffer *starBuffer;
+    OMRendererBuffer *starBaseData;
     OMRendererPipeline *starPipeline;
 
   private:

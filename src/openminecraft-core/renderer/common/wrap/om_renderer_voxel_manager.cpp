@@ -280,6 +280,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
         renderer->createPipeline()
             ->input(UniformBuffer)
             ->inputName("Camera")
+            ->input(UniformBuffer)
+            ->inputName("StarData")
             ->output(cutoutTargetMS->target)
             ->samples(samples)
             ->shader(renderer->shaderManager.preprocess("core/voxel/star.frag.glsl", Fragment, GLSLSource, starFormat))
@@ -397,6 +399,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     starBuffer = renderer->allocateBuffer(InstanceData, starData.size() * sizeof(float));
     starBuffer->updateData(starData.data());
 
+    starBaseData = renderer->allocateBuffer(Uniform, sizeof(float) * 2);
+
     pipeline->bindInput(1, textureAtlas);
     pipeline->bindInput(2, chunkoffs);
     pipeline->bindInput(3, fogdata);
@@ -423,6 +427,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     sunPipeline->bindInput(2, sunTex);
     moonPipeline->bindInput(1, moonData);
     moonPipeline->bindInput(2, moonTex);
+    starPipeline->bindInput(1, starBaseData);
 }
 OMVoxelManager::~OMVoxelManager()
 {
@@ -457,6 +462,7 @@ OMVoxelManager::~OMVoxelManager()
     delete moonPipeline;
     delete starBuffer;
     delete starPipeline;
+    delete starBaseData;
 }
 
 void OMVoxelManager::unloadChunk(int i)
@@ -501,6 +507,8 @@ auto OMVoxelManager::updateColor() -> void
         fogdata->updateData(d.data());
         OMVoxelMoon m = {colorManager->getMoonAngle(), colorManager->getMoonPhase()};
         moonData->updateData(&m);
+        starBaseData->updateData(
+            std::array<float, 2>{colorManager->getStarRotation(), colorManager->getStarOpacity()}.data());
 
         OMVoxelLightMap dayData = {colorManager->getSkyFactor(),
                                    colorManager->getBlockFactor(),

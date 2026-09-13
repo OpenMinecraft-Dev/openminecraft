@@ -120,6 +120,14 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     {
         return 5;
     }
+    auto getStarOpacity() -> float override
+    {
+        return 0.5f;
+    }
+    auto getStarRotation() -> float override
+    {
+        return 0.0f;
+    }
 };
 static OMWorldColorManager *colorManager = new OMWorldColorManager;
 static std::chrono::steady_clock::time_point tp = {};

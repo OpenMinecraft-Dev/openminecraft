@@ -6,6 +6,14 @@
 #include "basics/vertexgen.glsl"
 
 #include "basics/structs/camera.glsl"
+uniform StarData
+{
+    float rotation;
+    float opacity;
+}
+star;
+
+layout(location = 0) flat out float starOpacity;
 
 mat3 billboardRotation(vec3 center, float zRot)
 {
@@ -26,10 +34,17 @@ mat3 billboardRotation(vec3 center, float zRot)
 
 void main()
 {
+    float c = cos(radians(star.rotation));
+    float s = sin(radians(star.rotation));
+    mat3 globalRot = mat3(c, s, 0.0, -s, c, 0.0, 0.0, 0.0, 1.0);
+
+    vec3 rCenter = globalRot * starCenter;
+
     vec2 p = vertexgen_quad_ndc();
     vec3 local = vec3(p * starSize, 0.0);
 
-    local = billboardRotation(starCenter, starZrot) * local + starCenter;
+    local = billboardRotation(rCenter, starZrot) * local + rCenter;
 
     gl_Position = camera.viewProj * vec4(local, 1.0);
+    starOpacity = star.opacity;
 }
