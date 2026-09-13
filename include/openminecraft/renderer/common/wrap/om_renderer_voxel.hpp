@@ -488,6 +488,8 @@ class OMVoxelManager
     OMRendererPipeline *sunPipeline, *moonPipeline;
 
     OMRendererTexture *sunTex, *moonTex;
+    OMRendererBuffer *starBuffer;
+    OMRendererPipeline *starPipeline;
 
   private:
     int samples = 4;

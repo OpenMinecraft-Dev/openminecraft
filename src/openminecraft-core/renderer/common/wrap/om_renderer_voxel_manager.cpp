@@ -1,4 +1,7 @@
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/ext/vector_float3.hpp"
 #include "glm/fwd.hpp"
+#include "glm/geometric.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
@@ -18,6 +21,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <random>
 #include <vector>
 
 namespace openminecraft::renderer::common::wrap
@@ -58,7 +62,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     lightmap = new OMRendererTempTarget(renderer);
     lightmap->construct({16.0, 16.0}, 1, true);
 
-    basics::OMVertexFormat format, format2, formatComplex, simpleFormat;
+    basics::OMVertexFormat format, format2, formatComplex, simpleFormat, starFormat;
     simpleFormat.nextGroup()->decideStruct();
     format.setInstance()
         ->appendPart("voxelPos", basics::Integer)
@@ -82,6 +86,13 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
         ->appendPart("voxelSize", basics::Vec3f)
         ->appendPart("voxelRotationAngleExt1", basics::Float)
         ->appendPart("voxelRotationAngleExt2", basics::Float)
+        ->nextGroup()
+        ->decideStruct();
+
+    starFormat.setInstance()
+        ->appendPart("starCenter", basics::Vec3f)
+        ->appendPart("starZrot", basics::Float)
+        ->appendPart("starSize", basics::Float)
         ->nextGroup()
         ->decideStruct();
 
@@ -265,6 +276,21 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->depthOp(Greater)
             ->buildN();
 
+    starPipeline =
+        renderer->createPipeline()
+            ->input(UniformBuffer)
+            ->inputName("Camera")
+            ->output(cutoutTargetMS->target)
+            ->samples(samples)
+            ->shader(renderer->shaderManager.preprocess("core/voxel/star.frag.glsl", Fragment, GLSLSource, starFormat))
+            ->shader(renderer->shaderManager.preprocess("core/voxel/star.vert.glsl", Vertex, GLSLSource, starFormat))
+            ->format(starFormat)
+            ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
+            ->blend(true)
+            ->depth(false, true)
+            ->depthOp(Greater)
+            ->buildN();
+
     sunrisePipeline = renderer->createPipeline()
                           ->input(UniformBuffer)
                           ->inputName("Camera")
@@ -344,6 +370,33 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     textureAtlas = tex;
     textureAtlasSecondary = texSec;
 
+    std::mt19937 gen(1029);
+    std::uniform_real_distribution<> distrib(0.0f, 1.0f);
+
+    std::vector<float> starData = {};
+    for (int i = 0; i < 1500; i++)
+    {
+        auto x = (distrib(gen) * 2.0f) - 1.0f;
+        auto y = (distrib(gen) * 2.0f) - 1.0f;
+        auto z = (distrib(gen) * 2.0f) - 1.0f;
+
+        float starSize = 0.15f + (distrib(gen) * 0.1f);
+        float lengthSq = sqrt(x * x + y * y + z * z);
+        if (lengthSq > 0.010000001f && lengthSq < 1.0f)
+        {
+            auto center = glm::normalize(glm::vec3(x, y, z)) * glm::vec3(100.0f);
+            auto zrot = distrib(gen) * 3.1415927410125732 * 2.0;
+
+            starData.emplace_back(center.x);
+            starData.emplace_back(center.y);
+            starData.emplace_back(center.z);
+            starData.emplace_back(zrot);
+            starData.emplace_back(starSize);
+        }
+    }
+    starBuffer = renderer->allocateBuffer(InstanceData, starData.size() * sizeof(float));
+    starBuffer->updateData(starData.data());
+
     pipeline->bindInput(1, textureAtlas);
     pipeline->bindInput(2, chunkoffs);
     pipeline->bindInput(3, fogdata);
@@ -402,6 +455,8 @@ OMVoxelManager::~OMVoxelManager()
     delete sunrisePipeline;
     delete sunPipeline;
     delete moonPipeline;
+    delete starBuffer;
+    delete starPipeline;
 }
 
 void OMVoxelManager::unloadChunk(int i)
@@ -630,6 +685,9 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
                    ->drawN(6)
                    ->pipeline(moonPipeline)
                    ->drawN(6)
+                   ->pipeline(starPipeline)
+                   ->vertexBuffer({starBuffer})
+                   ->drawInstanceN(6, 1500)
                    ->pipeline(pipeline)
                    ->vertexBuffer({voxelLayer->buf()->buffer})
                    ->drawInstanceN(6, voxelLayer->buf()->totalSize / sizeof(OMVoxel))
@@ -672,5 +730,6 @@ void OMVoxelManager::bindCameraBuffer(OMRendererBuffer *cameraBuffer)
     sunrisePipeline->bindInput(0, cameraBuffer);
     sunPipeline->bindInput(0, cameraBuffer);
     moonPipeline->bindInput(0, cameraBuffer);
+    starPipeline->bindInput(0, cameraBuffer);
 }
 } // namespace openminecraft::renderer::common::wrap
