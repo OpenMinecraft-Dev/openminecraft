@@ -122,7 +122,7 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     }
     auto getStarOpacity() -> float override
     {
-        return 0.5f;
+        return 0.2f;
     }
     auto getStarRotation() -> float override
     {

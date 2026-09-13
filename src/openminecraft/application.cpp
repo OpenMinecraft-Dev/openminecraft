@@ -263,7 +263,7 @@ void OMApplication::mainLoop(OMBackend backend)
             const float time = std::chrono::duration<float>(currentTime - startTime).count();
             startTime = currentTime;
 
-            constexpr float moveSpeed = 4.3f;
+            constexpr float moveSpeed = 40.3f;
 
             if (!inGame)
             {
