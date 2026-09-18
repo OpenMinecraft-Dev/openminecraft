@@ -459,7 +459,7 @@ class OMVoxelManager
     OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *, OMRendererTexture *,
                    std::shared_ptr<world::OMChunkManager<16>>, std::function<void()>, OMVoxelHandler *,
                    std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)>,
-                   OMVoxelColorManager *, OMRendererTexture *, OMRendererTexture *);
+                   OMVoxelColorManager *, OMRendererTexture *, OMRendererTexture *, OMRendererTexture *);
     ~OMVoxelManager();
 
     auto submit(OMRendererTask *, OMRendererTempTarget *) -> OMRendererTask *;
@@ -480,6 +480,8 @@ class OMVoxelManager
     OMRendererBuffer *fogdata;
     OMRendererBuffer *lightmapData;
     OMRendererBuffer *moonData;
+    OMRendererBuffer *cloudData;
+    OMRendererTexture *cloudTex;
     OMRendererTexture *textureAtlas;
     OMRendererTexture *textureAtlasSecondary;
     OMRendererTempTarget *lightmap;
@@ -493,6 +495,8 @@ class OMVoxelManager
     OMRendererBuffer *starBuffer;
     OMRendererBuffer *starBaseData;
     OMRendererPipeline *starPipeline;
+
+    OMRendererPipeline *cloudPipeline;
 
   private:
     int samples = 4;

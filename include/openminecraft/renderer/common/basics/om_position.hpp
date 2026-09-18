@@ -108,6 +108,25 @@ template <int Cs, typename Cp, typename Lp> class OMPosition
         return {(float)dx, (float)dy, (float)dz};
     }
 
+    [[nodiscard]] auto getModX(int64_t regionBlocks) const -> float
+    {
+        int64_t M = regionBlocks / Cs;
+        int64_t modChunk = ((chunkx % M) + M) % M;
+        return static_cast<float>(modChunk * Cs + localx);
+    }
+
+    [[nodiscard]] auto getY() const -> float
+    {
+        return chunky * Cs + localy;
+    }
+
+    [[nodiscard]] auto getModZ(int64_t regionBlocks) const -> float
+    {
+        int64_t M = regionBlocks / Cs;
+        int64_t modChunk = ((chunkz % M) + M) % M;
+        return static_cast<float>(modChunk * Cs + localz);
+    }
+
     Cp chunkx, chunky, chunkz;
     Lp localx, localy, localz;
 

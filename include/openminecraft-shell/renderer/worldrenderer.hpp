@@ -58,6 +58,7 @@ class OMWorldRenderer : public OMRendererHandler
     data::OMTextureAtlas *textureAtlas;
     OMRendererTexture *sunTex;
     OMRendererTexture *moonTex;
+    OMRendererTexture *cloudTex;
 
     data::block::OMBlockstateResolver *blockstateResolver;
     data::OMModelPrecompiler *voxelHandler;

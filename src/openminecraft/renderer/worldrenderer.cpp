@@ -26,6 +26,7 @@
 
 #include <array>
 #include <chrono>
+#include <fstream>
 #include <functional>
 #include <glm/glm.hpp>
 #include <memory>
@@ -131,6 +132,7 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
 };
 static OMWorldColorManager *colorManager = new OMWorldColorManager;
 static std::chrono::steady_clock::time_point tp = {};
+
 OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::OMCamera> camera,
                                  std::shared_ptr<OMChunkManager<16>> chunkManager)
     : OMRendererHandler(renderer), camera(std::move(camera)), logger("OMWorldRenderer", this), renderer(renderer)
@@ -170,6 +172,16 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     moonTex->minFilter = Nearest;
     moonTex->setupSampler();
 
+    cloudTex = renderer->allocateTexture(256, 256, 0, Dim2, ColorRgba);
+    specs::png::OMPngFile f2;
+    f2.parse(vfs::fsfetch("/external/minecraft/textures/environment/clouds.png"));
+    cloudTex->updateData(f2.fetchData());
+    cloudTex->addressModeU = Repeat;
+    cloudTex->addressModeV = Repeat;
+    cloudTex->magFilter = Nearest;
+    cloudTex->minFilter = Nearest;
+    cloudTex->setupSampler();
+
     textureAtlas = new data::OMTextureAtlas("/external", renderer);
 
     voxelHandler = new data::OMModelPrecompiler("/external", textureAtlas);
@@ -206,7 +218,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
             h ^= h >> 16;
             return blockstateResolver->fetchModel(reg.block, reg.state, h);
         },
-        colorManager, sunTex, moonTex);
+        colorManager, sunTex, moonTex, cloudTex);
 
     voxelManager->bindCameraBuffer(cameraBuffer);
 
@@ -281,6 +293,7 @@ OMWorldRenderer::~OMWorldRenderer()
     delete textureAtlas;
     delete sunTex;
     delete moonTex;
+    delete cloudTex;
 
     delete tempTarget;
 }
