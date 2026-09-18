@@ -7,6 +7,15 @@ const vec2 ndc[6] =
 const vec2 normal[6] =
     vec2[6](vec2(0.0, 0.0), vec2(0.0, 1.0), vec2(1.0, 1.0), vec2(1.0, 1.0), vec2(1.0, 0.0), vec2(0.0, 0.0));
 
+int vertexgen_instanceid()
+{
+#ifdef VULKAN
+    return gl_InstanceIndex;
+#else
+    return gl_InstanceID;
+#endif
+}
+
 int vertexgen_id()
 {
 #ifdef VULKAN

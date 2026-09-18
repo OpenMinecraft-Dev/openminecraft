@@ -32,7 +32,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                std::function<void()> rec, OMVoxelHandler *handler,
                                std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> converter,
                                OMVoxelColorManager *colorman, OMRendererTexture *sunTex, OMRendererTexture *moonTex,
-                               OMRendererTexture *cloudTex)
+                               OMRendererTexture *cloudTex, std::vector<bool> cloudStats)
     : logger("OMVoxelManager", this)
 {
     this->rec = rec;
@@ -44,6 +44,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     this->sunTex = sunTex;
     this->moonTex = moonTex;
     this->cloudTex = cloudTex;
+    this->cloudStats = cloudStats;
 
     delete compiler.handler;
     compiler.handler = voxelHandler;

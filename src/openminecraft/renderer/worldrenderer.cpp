@@ -31,6 +31,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <utility>
+#include <vector>
 
 using namespace openminecraft::renderer::common;
 
@@ -182,6 +183,15 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     cloudTex->minFilter = Nearest;
     cloudTex->setupSampler();
 
+    std::vector<bool> stats;
+    for (int x = 0; x < 256; ++x)
+    {
+        for (int y = 0; y < 256; ++y)
+        {
+            stats.push_back(reinterpret_cast<uint8_t *>(f2.fetchData())[(y * 256 + x) * 4] >= 128);
+        }
+    }
+
     textureAtlas = new data::OMTextureAtlas("/external", renderer);
 
     voxelHandler = new data::OMModelPrecompiler("/external", textureAtlas);
@@ -218,7 +228,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
             h ^= h >> 16;
             return blockstateResolver->fetchModel(reg.block, reg.state, h);
         },
-        colorManager, sunTex, moonTex, cloudTex);
+        colorManager, sunTex, moonTex, cloudTex, stats);
 
     voxelManager->bindCameraBuffer(cameraBuffer);
 
