@@ -779,7 +779,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
         ->target(translucentTargetMS->target)
         ->pipeline(cloudPipeline)
         ->vertexBuffer({cloudBuffer})
-        ->drawInstanceN(6, cloudBuffer->length / sizeof(uint32_t))
+        ->drawInstanceN(36, cloudBuffer->length / sizeof(uint32_t))
         ->pipeline(translucentPipeline)
         ->vertexBuffer({voxelTranslucentLayer->buf()->buffer})
         ->drawInstanceN(6, voxelTranslucentLayer->buf()->totalSize / sizeof(OMVoxel))
