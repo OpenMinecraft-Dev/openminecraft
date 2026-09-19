@@ -467,6 +467,7 @@ class OMVoxelManager
     auto update(basics::OMCamera &camera) -> void;
     auto updateColor() -> void;
     void bindCameraBuffer(OMRendererBuffer *);
+    auto buildVoxelCloud() -> std::vector<uint32_t>;
 
     OMRendererTempTarget *translucentTargetMS, *translucentTarget;
     OMRendererTempTarget *cutoutTargetMS, *cutoutTarget;
@@ -499,6 +500,7 @@ class OMVoxelManager
 
     OMRendererPipeline *cloudPipeline;
     std::vector<bool> cloudStats;
+    OMRendererBuffer *cloudBuffer;
 
   private:
     int samples = 4;

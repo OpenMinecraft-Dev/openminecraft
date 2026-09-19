@@ -65,7 +65,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     lightmap = new OMRendererTempTarget(renderer);
     lightmap->construct({16.0, 16.0}, 1, true);
 
-    basics::OMVertexFormat format, format2, formatComplex, simpleFormat, starFormat;
+    basics::OMVertexFormat format, format2, formatComplex, simpleFormat, starFormat, cloudFormat;
     simpleFormat.nextGroup()->decideStruct();
     format.setInstance()
         ->appendPart("voxelPos", basics::Integer)
@@ -98,6 +98,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
         ->appendPart("starSize", basics::Float)
         ->nextGroup()
         ->decideStruct();
+
+    cloudFormat.setInstance()->appendPart("cloudInfo", basics::Integer)->nextGroup()->decideStruct();
 
     pipeline =
         renderer->createPipeline()
@@ -315,25 +317,23 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                           ->depthOp(Greater)
                           ->buildN();
 
-    cloudPipeline =
-        renderer->createPipeline()
-            ->input(UniformBuffer)
-            ->inputName("Camera")
-            ->input(UniformBuffer)
-            ->inputName("CloudData")
-            ->input(ImageSampler)
-            ->inputName("inTexture")
-            ->output(translucentTargetMS->target)
-            ->samples(samples)
-            ->shader(
-                renderer->shaderManager.preprocess("core/voxel/cloud.frag.glsl", Fragment, GLSLSource, simpleFormat))
-            ->shader(renderer->shaderManager.preprocess("core/voxel/cloud.vert.glsl", Vertex, GLSLSource, simpleFormat))
-            ->format(simpleFormat)
-            ->blendFunc({One, One, Zero, OneMinusSrcAlpha})
-            ->blend(true)
-            ->depth(true, false)
-            ->depthOp(GreaterOrEqual)
-            ->buildN();
+    cloudPipeline = renderer->createPipeline()
+                        ->input(UniformBuffer)
+                        ->inputName("Camera")
+                        ->input(UniformBuffer)
+                        ->inputName("CloudData")
+                        ->output(translucentTargetMS->target)
+                        ->samples(samples)
+                        ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcloud.frag.glsl", Fragment,
+                                                                    GLSLSource, cloudFormat))
+                        ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcloud.vert.glsl", Vertex,
+                                                                    GLSLSource, cloudFormat))
+                        ->format(cloudFormat)
+                        ->blendFunc({One, One, Zero, OneMinusSrcAlpha})
+                        ->blend(true)
+                        ->depth(true, false)
+                        ->depthOp(GreaterOrEqual)
+                        ->buildN();
 
     lightmapPipeline = renderer->createPipeline()
                            ->input(UniformBuffer)
@@ -390,6 +390,12 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     sunrise = renderer->allocateBuffer(Uniform, sizeof(OMVoxelSunrise));
     moonData = renderer->allocateBuffer(Uniform, sizeof(OMVoxelMoon));
     cloudData = renderer->allocateBuffer(Uniform, sizeof(glm::vec3));
+
+    {
+        auto p = buildVoxelCloud();
+        cloudBuffer = renderer->allocateBuffer(InstanceData, sizeof(uint32_t) * p.size());
+        cloudBuffer->updateData(p.data());
+    }
 
     lightmapData = renderer->allocateBuffer(Uniform, sizeof(OMVoxelLightMap));
 
@@ -460,7 +466,6 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     moonPipeline->bindInput(2, moonTex);
     starPipeline->bindInput(1, starBaseData);
     cloudPipeline->bindInput(1, cloudData);
-    cloudPipeline->bindInput(2, cloudTex);
 }
 OMVoxelManager::~OMVoxelManager()
 {
@@ -498,6 +503,7 @@ OMVoxelManager::~OMVoxelManager()
     delete starBaseData;
     delete cloudData;
     delete cloudPipeline;
+    delete cloudBuffer;
 }
 
 void OMVoxelManager::unloadChunk(int i)
@@ -564,7 +570,27 @@ auto OMVoxelManager::updateColor() -> void
         colorManager->solveDirty();
     }
 }
+auto OMVoxelManager::buildVoxelCloud() -> std::vector<uint32_t>
+{
+    auto ex = [&](uint8_t x, uint8_t y) -> bool { return cloudStats[static_cast<int>(y << 8) | x]; };
+    std::vector<uint32_t> da;
+    for (int x = 0; x <= 255; ++x)
+    {
+        for (int y = 0; y <= 255; ++y)
+        {
+            if (ex(x, y))
+            {
+                auto east = ex(x + 1, y);
+                auto west = ex(x - 1, y);
+                auto north = ex(x, y + 1);
+                auto south = ex(x, y - 1);
 
+                da.push_back(east << 20 | west << 19 | north << 18 | south << 17 | ((x & 0xff) << 8) | (y & 0xff));
+            }
+        }
+    }
+    return da;
+}
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
     auto cc = camera.getPosRaw();
@@ -752,7 +778,8 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     tsk->clearColor(glm::vec4(0.0, 0.0, 0.0, 1.0))
         ->target(translucentTargetMS->target)
         ->pipeline(cloudPipeline)
-        ->drawN(6)
+        ->vertexBuffer({cloudBuffer})
+        ->drawInstanceN(6, cloudBuffer->length / sizeof(uint32_t))
         ->pipeline(translucentPipeline)
         ->vertexBuffer({voxelTranslucentLayer->buf()->buffer})
         ->drawInstanceN(6, voxelTranslucentLayer->buf()->totalSize / sizeof(OMVoxel))
