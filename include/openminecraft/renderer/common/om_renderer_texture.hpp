@@ -20,12 +20,12 @@ enum OMTextureType : uint8_t
 
 enum OMTextureArrangement
 {
-    Depth,
-    ColorRgba,
-    ColorRgb,
-    ColorRgbaF16,
-    ColorRgbaF32,
-    ColorRF32
+    D32Sfloat,
+    R8G8B8A8Srgb,
+    R8G8B8Srgb,
+    R16G16B16A16Sfloat,
+    R32G32B32A32Sfloat,
+    R32Sfloat
 };
 
 enum OMTextureAddressMode

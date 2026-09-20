@@ -24,12 +24,12 @@ static auto fromCommon(common::OMTextureArrangement arr) -> GLenum
 {
     switch (arr)
     {
-    case common::ColorRgb:
+    case common::R8G8B8Srgb:
         return GL_RGB;
-    case common::ColorRgba:
+    case common::R8G8B8A8Srgb:
     default:
         return GL_RGBA;
-    case common::Depth:
+    case common::D32Sfloat:
         return GL_DEPTH_COMPONENT32F;
     }
 }
@@ -38,18 +38,18 @@ static auto fromCommonI(common::OMTextureArrangement arr) -> GLenum
 {
     switch (arr)
     {
-    case common::ColorRgb:
+    case common::R8G8B8Srgb:
         return GL_SRGB8;
-    case common::ColorRgba:
+    case common::R8G8B8A8Srgb:
     default:
         return GL_SRGB8_ALPHA8;
-    case common::Depth:
+    case common::D32Sfloat:
         return GL_DEPTH_COMPONENT32F;
-    case common::ColorRgbaF16:
+    case common::R16G16B16A16Sfloat:
         return GL_RGBA16F;
-    case common::ColorRgbaF32:
+    case common::R32G32B32A32Sfloat:
         return GL_RGBA32F;
-    case common::ColorRF32:
+    case common::R32Sfloat:
         return GL_R32F;
     }
 }
@@ -92,7 +92,7 @@ OMRendererTextureOpenGL::OMRendererTextureOpenGL(uint64_t width, uint64_t height
     : common::OMRendererTexture(width, height, layers, mipmap, type, arr, renderer), mipmap(mipmap), layers(layers)
 {
     this->gl = &renderer->gl;
-    if (arr == common::Depth)
+    if (arr == common::D32Sfloat)
     {
         gl->glGenRenderbuffers(1, &texture);
         gl->glBindRenderbuffer(GL_RENDERBUFFER, texture);
@@ -189,7 +189,7 @@ void OMRendererTextureOpenGL::setupSampler()
 }
 OMRendererTextureOpenGL::~OMRendererTextureOpenGL()
 {
-    if (arr == common::Depth)
+    if (arr == common::D32Sfloat)
     {
         gl->glDeleteRenderbuffers(1, &texture);
     }

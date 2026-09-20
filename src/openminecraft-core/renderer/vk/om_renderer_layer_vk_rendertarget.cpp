@@ -103,7 +103,7 @@ void OMRendererRenderTargetVk::build()
             uint32_t a = 0;
             for (auto tt : textures)
             {
-                if (tt->arr == common::OMTextureArrangement::Depth)
+                if (tt->arr == common::D32Sfloat)
                 {
                     attachDesc.push_back(
                         {{},

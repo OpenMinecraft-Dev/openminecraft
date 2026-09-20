@@ -71,7 +71,7 @@ class OMTextureAtlas
     void build()
     {
         texture = renderer->allocateTexture(16, 16, tid, 4, openminecraft::renderer::common::Dim2Array,
-                                            openminecraft::renderer::common::ColorRgba);
+                                            openminecraft::renderer::common::R8G8B8A8Srgb);
         for (auto &p : subtex)
         {
             auto imgraw = vfs::fsfetch(fmt::format("{}/{}/textures/{}.png", root, p.first.namesp, p.first.path));
@@ -101,7 +101,7 @@ class OMTextureAtlas
         texture->setupSampler();
 
         textureSecondary = renderer->allocateTexture(32, 32, wtid, 4, openminecraft::renderer::common::Dim2Array,
-                                                     openminecraft::renderer::common::ColorRgba);
+                                                     openminecraft::renderer::common::R8G8B8A8Srgb);
         for (auto &p : subtexWide)
         {
             auto imgraw = vfs::fsfetch(fmt::format("{}/{}/textures/{}.png", root, p.first.namesp, p.first.path));

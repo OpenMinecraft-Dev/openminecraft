@@ -38,16 +38,16 @@ class OMRendererTempTarget
 
         if (samples <= 1)
         {
-            colorTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, flt ? ColorRgbaF16 : ColorRgba);
+            colorTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, flt ? R16G16B16A16Sfloat : R8G8B8A8Srgb);
             colorTexture->setupSampler();
-            depthTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, Depth);
+            depthTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, D32Sfloat);
         }
         else
         {
-            colorTexture =
-                renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample, flt ? ColorRgbaF16 : ColorRgba);
+            colorTexture = renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample,
+                                                     flt ? R16G16B16A16Sfloat : R8G8B8A8Srgb);
             colorTexture->setupSampler();
-            depthTexture = renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample, Depth);
+            depthTexture = renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample, D32Sfloat);
         }
 
         if (!target)
@@ -82,13 +82,13 @@ class OMRendererTempTarget
 
         if (samples <= 1)
         {
-            colorTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, flt ? ColorRgbaF16 : ColorRgba);
+            colorTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, flt ? R16G16B16A16Sfloat : R8G8B8A8Srgb);
             colorTexture->setupSampler();
         }
         else
         {
-            colorTexture =
-                renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample, flt ? ColorRgbaF16 : ColorRgba);
+            colorTexture = renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample,
+                                                     flt ? R16G16B16A16Sfloat : R8G8B8A8Srgb);
             colorTexture->setupSampler();
         }
 

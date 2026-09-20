@@ -3,6 +3,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
+#include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
@@ -205,7 +206,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
         defaultTarget = this->createRenderTarget();
         defaultTarget->build();
         defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height, 1,
-                                                   0, common::Dim2, common::Depth);
+                                                   0, common::Dim2, common::D32Sfloat);
 
         for (int i = 0; i < framesInFlight; i++)
         {
@@ -559,7 +560,7 @@ rebuild:
 
     delete defaultDepthBuffer;
     defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height, 1, 0,
-                                               common::Dim2, common::Depth);
+                                               common::Dim2, common::D32Sfloat);
     t.pop();
 
     this->clearTasks();

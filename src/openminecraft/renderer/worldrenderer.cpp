@@ -151,7 +151,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     tempTarget = new wrap::OMRendererTempTarget(renderer);
     tempTarget->construct(renderer->getExtent());
 
-    sunTex = renderer->allocateTexture(32, 32, 0, Dim2, ColorRgba);
+    sunTex = renderer->allocateTexture(32, 32, 0, Dim2, R8G8B8A8Srgb);
     specs::png::OMPngFile f;
     f.parse(vfs::fsfetch("/external/minecraft/textures/environment/celestial/sun.png"));
     sunTex->updateData(f.fetchData());
@@ -159,7 +159,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     sunTex->minFilter = Nearest;
     sunTex->setupSampler();
 
-    moonTex = renderer->allocateTexture(32, 32, 8, 0, Dim2Array, ColorRgba);
+    moonTex = renderer->allocateTexture(32, 32, 8, 0, Dim2Array, R8G8B8A8Srgb);
     int i = 0;
     for (auto p : {"new_moon", "waxing_crescent", "first_quarter", "waxing_gibbous", "full_moon", "waning_gibbous",
                    "third_quarter", "waning_crescent"})
@@ -173,7 +173,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     moonTex->minFilter = Nearest;
     moonTex->setupSampler();
 
-    cloudTex = renderer->allocateTexture(256, 256, 0, Dim2, ColorRgba);
+    cloudTex = renderer->allocateTexture(256, 256, 0, Dim2, R8G8B8A8Srgb);
     specs::png::OMPngFile f2;
     f2.parse(vfs::fsfetch("/external/minecraft/textures/environment/clouds.png"));
     cloudTex->updateData(f2.fetchData());

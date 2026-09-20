@@ -150,7 +150,7 @@ void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
             std::vector<ClearValue> test;
             for (auto ii : rt->textures)
             {
-                if (ii->arr == common::Depth)
+                if (ii->arr == common::D32Sfloat)
                 {
                     test.push_back(ClearValue({depthClear, 0}));
                 }
@@ -292,7 +292,7 @@ void OMRendererTaskVk::resolveTo(common::OMRendererRenderTarget *target)
         {
             auto srci = reinterpret_cast<OMRendererTextureVk *>(src->textures[i]);
             auto dsti = reinterpret_cast<OMRendererTextureVk *>(dst->textures[i]);
-            if (src->textures[i]->arr != common::Depth && dst->textures[i]->arr != common::Depth)
+            if (src->textures[i]->arr != common::D32Sfloat && dst->textures[i]->arr != common::D32Sfloat)
             {
                 srci->transitionImageLayout(commandBuffer, ImageLayout::eShaderReadOnlyOptimal,
                                             ImageLayout::eTransferSrcOptimal, 0, 0, 1);

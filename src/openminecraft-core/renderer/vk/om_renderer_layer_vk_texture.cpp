@@ -47,18 +47,18 @@ static auto fromCommonUsage(common::OMTextureArrangement arr) -> Format
 {
     switch (arr)
     {
-    case common::Depth:
+    case common::D32Sfloat:
         return Format::eD32Sfloat;
-    case common::ColorRgb:
+    case common::R8G8B8Srgb:
         return Format::eR8G8B8Srgb;
     default:
-    case common::ColorRgba:
+    case common::R8G8B8A8Srgb:
         return Format::eR8G8B8A8Srgb;
-    case common::ColorRgbaF16:
+    case common::R16G16B16A16Sfloat:
         return Format::eR16G16B16A16Sfloat;
-    case common::ColorRgbaF32:
+    case common::R32G32B32A32Sfloat:
         return Format::eR32G32B32A32Sfloat;
-    case common::ColorRF32:
+    case common::R32Sfloat:
         return Format::eR32Sfloat;
     }
 }
@@ -123,7 +123,7 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64
         image = renderer->logicalDevice.createImage(
             ImageCreateInfo({}, ImageType::e2D, format, Extent3D(width, height, 1), mipmap + 1, layers, sampleCount,
                             ImageTiling::eOptimal,
-                            (arr == common::Depth)
+                            (arr == common::D32Sfloat)
                                 ? ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled |
                                       ImageUsageFlagBits::eDepthStencilAttachment | ImageUsageFlagBits::eTransferSrc
                                 : ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled |
@@ -141,8 +141,8 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64
 
         imageView = renderer->logicalDevice.createImageView(
             ImageViewCreateInfo({}, image, fromCommonType2(type), format, {},
-                                ImageSubresourceRange(((arr == common::Depth) ? ImageAspectFlagBits::eDepth
-                                                                              : ImageAspectFlagBits::eColor),
+                                ImageSubresourceRange(((arr == common::D32Sfloat) ? ImageAspectFlagBits::eDepth
+                                                                                  : ImageAspectFlagBits::eColor),
                                                       0, mipmap + 1, 0, layers)),
             renderer->allocator);
     }
@@ -305,7 +305,7 @@ void OMRendererTextureVk::updateData(void *p, uint64_t layer)
     try
     {
         auto stagBuffer =
-            renderer->allocateBuffer(common::Misc, width * height * ((this->arr == common::ColorRgb) ? 3 : 4));
+            renderer->allocateBuffer(common::Misc, width * height * ((this->arr == common::R8G8B8Srgb) ? 3 : 4));
         stagBuffer->updateData(p);
 
         auto cmdBuff = renderer->logicalDevice.allocateCommandBuffers(
@@ -316,8 +316,8 @@ void OMRendererTextureVk::updateData(void *p, uint64_t layer)
         cmdBuff.copyBufferToImage(
             reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
             BufferImageCopy(0, width, height,
-                            ImageSubresourceLayers((this->arr == common::Depth) ? ImageAspectFlagBits::eDepth
-                                                                                : ImageAspectFlagBits::eColor,
+                            ImageSubresourceLayers((this->arr == common::D32Sfloat) ? ImageAspectFlagBits::eDepth
+                                                                                    : ImageAspectFlagBits::eColor,
                                                    0, layer, 1),
                             Offset3D(0, 0, 0), Extent3D(width, height, 1)));
         transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal, 0, layer,
@@ -341,7 +341,7 @@ void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64
 {
     try
     {
-        auto stagBuffer = renderer->allocateBuffer(common::Misc, w * h * ((this->arr == common::ColorRgb) ? 3 : 4));
+        auto stagBuffer = renderer->allocateBuffer(common::Misc, w * h * ((this->arr == common::R8G8B8Srgb) ? 3 : 4));
         stagBuffer->updateData(p);
 
         auto cmdBuff = renderer->logicalDevice.allocateCommandBuffers(
@@ -352,8 +352,8 @@ void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64
         cmdBuff.copyBufferToImage(
             reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
             BufferImageCopy(0, w, h,
-                            ImageSubresourceLayers((this->arr == common::Depth) ? ImageAspectFlagBits::eDepth
-                                                                                : ImageAspectFlagBits::eColor,
+                            ImageSubresourceLayers((this->arr == common::D32Sfloat) ? ImageAspectFlagBits::eDepth
+                                                                                    : ImageAspectFlagBits::eColor,
                                                    0, layer, 1),
                             Offset3D(x, y, 0), Extent3D(w, h, 1)));
         transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal, 0, layer,
