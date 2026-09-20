@@ -150,7 +150,7 @@ void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
             std::vector<ClearValue> test;
             for (auto ii : rt->textures)
             {
-                if (ii->arr == common::D32Sfloat)
+                if (!isColorFormat(ii->arr))
                 {
                     test.push_back(ClearValue({depthClear, 0}));
                 }

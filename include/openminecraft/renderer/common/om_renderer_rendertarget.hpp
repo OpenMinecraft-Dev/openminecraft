@@ -30,6 +30,7 @@ class OMRendererRenderTarget : public OMRendererObject
     }
 
     bool clearDepth = true;
+    bool storeDepth = false;
 };
 } // namespace openminecraft::renderer::common
 

@@ -68,7 +68,7 @@ void OMRendererRenderTargetOpenGL::build()
         std::vector<GLenum> drawbufs = {};
         for (auto tt : textures)
         {
-            if (tt->arr == common::D32Sfloat)
+            if (!isColorFormat(tt->arr))
             {
                 gl->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
                                               reinterpret_cast<OMRendererTextureOpenGL *>(tt)->texture);

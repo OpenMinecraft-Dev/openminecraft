@@ -53,6 +53,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     compilerPool = new OMVoxelCompilerPool(*man.get(), compiler);
 
     cutoutTargetMS = new OMRendererTempTarget(renderer);
+    cutoutTargetMS->storeDepth = true;
     cutoutTargetMS->construct(renderer->getExtent(), samples);
 
     translucentTargetMS = new OMRendererTempTarget(renderer);
@@ -489,7 +490,6 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     moonPipeline->bindInput(2, moonTex);
     starPipeline->bindInput(1, starBaseData);
     cloudPipeline->bindInput(1, cloudData);
-    cloudComposePipeline->bindInput(0, cloudTarget->colorTexture);
 }
 OMVoxelManager::~OMVoxelManager()
 {
@@ -762,6 +762,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
 auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveTarget) -> OMRendererTask *
 {
+    cutoutTargetMS->storeDepth = true;
     cutoutTargetMS->construct(renderer->getExtent(), samples);
     translucentTargetMS->clearDepth = false;
     translucentTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), samples, true);
@@ -772,7 +773,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     cloudTarget->construct(renderer->getExtent());
     composePipeline->bindInput(0, (samples == 1 ? cutoutTargetMS : cutoutTarget)->colorTexture);
     composePipeline->bindInput(1, (samples == 1 ? translucentTargetMS : translucentTarget)->colorTexture);
-    cloudComposePipeline->bindInput(0, cloudTarget->colorTexture);
+    cloudComposePipeline->bindInput(0, (samples == 1 ? cloudTargetMS : cloudTarget)->colorTexture);
 
     auto tsk = task->target(lightmap->target)
                    ->pipeline(lightmapPipeline)

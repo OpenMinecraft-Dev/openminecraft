@@ -38,19 +38,113 @@ static auto fromCommonI(common::OMTextureArrangement arr) -> GLenum
 {
     switch (arr)
     {
+    case common::D32Sfloat:
+        return GL_DEPTH_COMPONENT32F;
+    case common::D32SfloatS8Uint:
+        return GL_DEPTH32F_STENCIL8;
+    case common::D24SfloatS8Uint:
+        return GL_DEPTH24_STENCIL8;
     case common::R8G8B8Srgb:
         return GL_SRGB8;
     case common::R8G8B8A8Srgb:
     default:
         return GL_SRGB8_ALPHA8;
-    case common::D32Sfloat:
-        return GL_DEPTH_COMPONENT32F;
+    case common::R8Sint:
+        return GL_R8I;
+    case common::R8G8Sint:
+        return GL_RG8I;
+    case common::R8G8B8Sint:
+        return GL_RGB8I;
+    case common::R8G8B8A8Sint:
+        return GL_RGBA8I;
+    case common::R8Uint:
+        return GL_R8UI;
+    case common::R8G8Uint:
+        return GL_RG8UI;
+    case common::R8G8B8Uint:
+        return GL_RGB8UI;
+    case common::R8G8B8A8Uint:
+        return GL_RGBA8UI;
+    case common::R8Snorm:
+        return GL_R8_SNORM;
+    case common::R8G8Snorm:
+        return GL_RG8_SNORM;
+    case common::R8G8B8Snorm:
+        return GL_RGB8_SNORM;
+    case common::R8G8B8A8Snorm:
+        return GL_RGBA8_SNORM;
+    case common::R8Unorm:
+        return GL_R8;
+    case common::R8G8Unorm:
+        return GL_RG8;
+    case common::R8G8B8Unorm:
+        return GL_RGB8;
+    case common::R8G8B8A8Unorm:
+        return GL_RGBA8;
+    case common::R16Sfloat:
+        return GL_R16F;
+    case common::R16G16Sfloat:
+        return GL_RG16F;
+    case common::R16G16B16Sfloat:
+        return GL_RGB16F;
     case common::R16G16B16A16Sfloat:
         return GL_RGBA16F;
-    case common::R32G32B32A32Sfloat:
-        return GL_RGBA32F;
+    case common::R16Sint:
+        return GL_R16I;
+    case common::R16G16Sint:
+        return GL_RG16I;
+    case common::R16G16B16Sint:
+        return GL_RGB16I;
+    case common::R16G16B16A16Sint:
+        return GL_RGBA16I;
+    case common::R16Uint:
+        return GL_R16UI;
+    case common::R16G16Uint:
+        return GL_RG16UI;
+    case common::R16G16B16Uint:
+        return GL_RGB16UI;
+    case common::R16G16B16A16Uint:
+        return GL_RGBA16UI;
+    case common::R16Snorm:
+        return GL_R16_SNORM;
+    case common::R16G16Snorm:
+        return GL_RG16_SNORM;
+    case common::R16G16B16Snorm:
+        return GL_RGB16_SNORM;
+    case common::R16G16B16A16Snorm:
+        return GL_RGBA16_SNORM;
+    case common::R16Unorm:
+        return GL_R16;
+    case common::R16G16Unorm:
+        return GL_RG16;
+    case common::R16G16B16Unorm:
+        return GL_RGB16;
+    case common::R16G16B16A16Unorm:
+        return GL_RGBA16;
     case common::R32Sfloat:
         return GL_R32F;
+    case common::R32G32Sfloat:
+        return GL_RG32F;
+    case common::R32G32B32Sfloat:
+        return GL_RGB32F;
+    case common::R32G32B32A32Sfloat:
+        return GL_RGBA32F;
+    case common::R32Sint:
+        return GL_R32I;
+    case common::R32G32Sint:
+        return GL_RG32I;
+    case common::R32G32B32Sint:
+        return GL_RGB32I;
+    case common::R32G32B32A32Sint:
+        return GL_RGBA32I;
+    case common::R32Uint:
+        return GL_R32UI;
+    case common::R32G32Uint:
+        return GL_RG32UI;
+    case common::R32G32B32Uint:
+        return GL_RGB32UI;
+    case common::R32G32B32A32Uint:
+        return GL_RGBA32UI;
     }
 }
 
@@ -92,7 +186,7 @@ OMRendererTextureOpenGL::OMRendererTextureOpenGL(uint64_t width, uint64_t height
     : common::OMRendererTexture(width, height, layers, mipmap, type, arr, renderer), mipmap(mipmap), layers(layers)
 {
     this->gl = &renderer->gl;
-    if (arr == common::D32Sfloat)
+    if (!isColorFormat(arr))
     {
         gl->glGenRenderbuffers(1, &texture);
         gl->glBindRenderbuffer(GL_RENDERBUFFER, texture);
@@ -189,7 +283,7 @@ void OMRendererTextureOpenGL::setupSampler()
 }
 OMRendererTextureOpenGL::~OMRendererTextureOpenGL()
 {
-    if (arr == common::D32Sfloat)
+    if (!isColorFormat(arr))
     {
         gl->glDeleteRenderbuffers(1, &texture);
     }

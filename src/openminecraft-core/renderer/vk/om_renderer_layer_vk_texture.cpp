@@ -49,17 +49,103 @@ static auto fromCommonUsage(common::OMTextureArrangement arr) -> Format
     {
     case common::D32Sfloat:
         return Format::eD32Sfloat;
+    case common::D32SfloatS8Uint:
+        return Format::eD32SfloatS8Uint;
+    case common::D24SfloatS8Uint:
+        return Format::eD24UnormS8Uint;
     case common::R8G8B8Srgb:
         return Format::eR8G8B8Srgb;
     default:
     case common::R8G8B8A8Srgb:
         return Format::eR8G8B8A8Srgb;
+    case common::R8Sint:
+        return Format::eR8Sint;
+    case common::R8G8Sint:
+        return Format::eR8G8Sint;
+    case common::R8G8B8Sint:
+        return Format::eR8G8B8Sint;
+    case common::R8G8B8A8Sint:
+        return Format::eR8G8B8A8Sint;
+    case common::R8Uint:
+        return Format::eR8Uint;
+    case common::R8G8Uint:
+        return Format::eR8G8Uint;
+    case common::R8G8B8Uint:
+        return Format::eR8G8B8Uint;
+    case common::R8G8B8A8Uint:
+        return Format::eR8G8B8A8Uint;
+    case common::R8Snorm:
+        return Format::eR8Snorm;
+    case common::R8G8Snorm:
+        return Format::eR8G8Snorm;
+    case common::R8G8B8Snorm:
+        return Format::eR8G8B8Snorm;
+    case common::R8G8B8A8Snorm:
+        return Format::eR8G8B8A8Snorm;
+    case common::R8Unorm:
+        return Format::eR8Unorm;
+    case common::R8G8Unorm:
+        return Format::eR8G8Unorm;
+    case common::R8G8B8Unorm:
+        return Format::eR8G8B8Unorm;
+    case common::R8G8B8A8Unorm:
+        return Format::eR8G8B8A8Unorm;
+    case common::R16Sfloat:
+        return Format::eR16Sfloat;
+    case common::R16G16Sfloat:
+        return Format::eR16G16Sfloat;
+    case common::R16G16B16Sfloat:
+        return Format::eR16G16B16Sfloat;
     case common::R16G16B16A16Sfloat:
         return Format::eR16G16B16A16Sfloat;
-    case common::R32G32B32A32Sfloat:
-        return Format::eR32G32B32A32Sfloat;
+    case common::R16Sint:
+        return Format::eR16Sint;
+    case common::R16G16Sint:
+        return Format::eR16G16Sint;
+    case common::R16G16B16Sint:
+        return Format::eR16G16B16Sint;
+    case common::R16G16B16A16Sint:
+        return Format::eR16G16B16A16Sint;
+    case common::R16Uint:
+        return Format::eR16Uint;
+    case common::R16G16Uint:
+        return Format::eR16G16Uint;
+    case common::R16G16B16Uint:
+        return Format::eR16G16B16Uint;
+    case common::R16G16B16A16Uint:
+        return Format::eR16G16B16A16Uint;
+    case common::R16Snorm:
+        return Format::eR16Snorm;
+    case common::R16G16Snorm:
+        return Format::eR16G16Snorm;
+    case common::R16G16B16Snorm:
+        return Format::eR16G16B16Snorm;
+    case common::R16G16B16A16Snorm:
+        return Format::eR16G16B16A16Snorm;
+    case common::R16Unorm:
+        return Format::eR16Unorm;
+    case common::R16G16Unorm:
+        return Format::eR16G16Unorm;
+    case common::R16G16B16Unorm:
+        return Format::eR16G16B16Unorm;
+    case common::R16G16B16A16Unorm:
+        return Format::eR16G16B16A16Unorm;
     case common::R32Sfloat:
         return Format::eR32Sfloat;
+    case common::R32G32Sfloat:
+        return Format::eR32G32Sfloat;
+    case common::R32G32B32Sfloat:
+        return Format::eR32G32B32Sfloat;
+    case common::R32G32B32A32Sfloat:
+        return Format::eR32G32B32A32Sfloat;
+    case common::R32Sint:
+        return Format::eR32Sint;
+    case common::R32G32Sint:
+        return Format::eR32G32Sint;
+    case common::R32G32B32Sint:
+        return Format::eR32G32B32Sint;
+    case common::R32G32B32A32Sint:
+        return Format::eR32G32B32A32Sint;
     }
 }
 
@@ -123,7 +209,7 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64
         image = renderer->logicalDevice.createImage(
             ImageCreateInfo({}, ImageType::e2D, format, Extent3D(width, height, 1), mipmap + 1, layers, sampleCount,
                             ImageTiling::eOptimal,
-                            (arr == common::D32Sfloat)
+                            (!isColorFormat(arr))
                                 ? ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled |
                                       ImageUsageFlagBits::eDepthStencilAttachment | ImageUsageFlagBits::eTransferSrc
                                 : ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled |
@@ -141,8 +227,9 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64
 
         imageView = renderer->logicalDevice.createImageView(
             ImageViewCreateInfo({}, image, fromCommonType2(type), format, {},
-                                ImageSubresourceRange(((arr == common::D32Sfloat) ? ImageAspectFlagBits::eDepth
-                                                                                  : ImageAspectFlagBits::eColor),
+                                ImageSubresourceRange(((!isColorFormat(arr))
+                                                           ? ImageAspectFlagBits::eDepth | ImageAspectFlagBits::eStencil
+                                                           : ImageAspectFlagBits::eColor),
                                                       0, mipmap + 1, 0, layers)),
             renderer->allocator);
     }
@@ -316,8 +403,8 @@ void OMRendererTextureVk::updateData(void *p, uint64_t layer)
         cmdBuff.copyBufferToImage(
             reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
             BufferImageCopy(0, width, height,
-                            ImageSubresourceLayers((this->arr == common::D32Sfloat) ? ImageAspectFlagBits::eDepth
-                                                                                    : ImageAspectFlagBits::eColor,
+                            ImageSubresourceLayers((!isColorFormat(arr)) ? ImageAspectFlagBits::eDepth
+                                                                         : ImageAspectFlagBits::eColor,
                                                    0, layer, 1),
                             Offset3D(0, 0, 0), Extent3D(width, height, 1)));
         transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal, 0, layer,
@@ -352,8 +439,8 @@ void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64
         cmdBuff.copyBufferToImage(
             reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
             BufferImageCopy(0, w, h,
-                            ImageSubresourceLayers((this->arr == common::D32Sfloat) ? ImageAspectFlagBits::eDepth
-                                                                                    : ImageAspectFlagBits::eColor,
+                            ImageSubresourceLayers((!isColorFormat(arr)) ? ImageAspectFlagBits::eDepth
+                                                                         : ImageAspectFlagBits::eColor,
                                                    0, layer, 1),
                             Offset3D(x, y, 0), Extent3D(w, h, 1)));
         transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal, 0, layer,

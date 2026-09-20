@@ -103,14 +103,14 @@ void OMRendererRenderTargetVk::build()
             uint32_t a = 0;
             for (auto tt : textures)
             {
-                if (tt->arr == common::D32Sfloat)
+                if (!isColorFormat(tt->arr))
                 {
                     attachDesc.push_back(
                         {{},
                          reinterpret_cast<OMRendererTextureVk *>(tt)->format,
                          reinterpret_cast<OMRendererTextureVk *>(tt)->sampleCount,
                          clearDepth ? AttachmentLoadOp::eClear : AttachmentLoadOp::eLoad,
-                         AttachmentStoreOp::eStore,
+                         storeDepth ? AttachmentStoreOp::eStore : AttachmentStoreOp::eDontCare,
                          AttachmentLoadOp::eDontCare,
                          AttachmentStoreOp::eDontCare,
                          clearDepth ? ImageLayout::eUndefined : ImageLayout::eDepthStencilAttachmentOptimal,
