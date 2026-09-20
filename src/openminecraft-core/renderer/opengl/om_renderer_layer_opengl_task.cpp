@@ -308,6 +308,14 @@ static auto fromCommon(common::basics::OMVertexPropType t) -> std::pair<int, GLu
         return std::make_pair(3, GL_INT);
     case common::basics::Vec4i:
         return std::make_pair(4, GL_INT);
+    case common::basics::UInteger:
+        return std::make_pair(1, GL_UNSIGNED_INT);
+    case common::basics::Vec2ui:
+        return std::make_pair(2, GL_UNSIGNED_INT);
+    case common::basics::Vec3ui:
+        return std::make_pair(3, GL_UNSIGNED_INT);
+    case common::basics::Vec4ui:
+        return std::make_pair(4, GL_UNSIGNED_INT);
     case common::basics::Double:
         return std::make_pair(1, GL_DOUBLE);
     case common::basics::Vec2d:

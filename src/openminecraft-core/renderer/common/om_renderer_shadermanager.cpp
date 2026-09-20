@@ -20,6 +20,8 @@ static auto convertType(basics::OMVertexPropType t) -> std::string
         return "float";
     case basics::Integer:
         return "int";
+    case basics::UInteger:
+        return "uint";
     case basics::Double:
         return "double";
     case basics::Vec2f:
@@ -34,6 +36,12 @@ static auto convertType(basics::OMVertexPropType t) -> std::string
         return "ivec3";
     case basics::Vec4i:
         return "ivec4";
+    case basics::Vec2ui:
+        return "uivec2";
+    case basics::Vec3ui:
+        return "uivec3";
+    case basics::Vec4ui:
+        return "uivec4";
     case basics::Vec2d:
         return "dvec2";
     case basics::Vec3d:

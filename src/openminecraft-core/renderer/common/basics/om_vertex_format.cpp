@@ -76,10 +76,13 @@ auto OMVertexFormat::typeAlign(OMVertexPropType type) -> int
     case Integer:
     case Vec2f:
     case Vec2i:
+    case Vec2ui:
     case Vec3f:
     case Vec3i:
+    case Vec3ui:
     case Vec4f:
     case Vec4i:
+    case Vec4ui:
     default:
         return sizeof(float);
     }
