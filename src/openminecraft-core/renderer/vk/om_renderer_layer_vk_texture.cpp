@@ -228,7 +228,7 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64
         imageView = renderer->logicalDevice.createImageView(
             ImageViewCreateInfo({}, image, fromCommonType2(type), format, {},
                                 ImageSubresourceRange(((!isColorFormat(arr))
-                                                           ? ImageAspectFlagBits::eDepth | ImageAspectFlagBits::eStencil
+                                                           ? ImageAspectFlagBits::eDepth
                                                            : ImageAspectFlagBits::eColor),
                                                       0, mipmap + 1, 0, layers)),
             renderer->allocator);
