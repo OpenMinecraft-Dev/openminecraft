@@ -7,6 +7,8 @@ layout(location = 0) out vec4 outColor;
 uniform CloudData
 {
     vec3 modPos;
+    float opacity;
+    vec3 color;
 }
 cloud;
 
@@ -14,5 +16,5 @@ void main()
 {
     mat4 unused = camera.viewProj;
     float unused2 = cloud.modPos.x;
-    outColor = vec4(vec3(1.0), 0.7);
+    outColor = vec4(cloud.color, cloud.opacity);
 }

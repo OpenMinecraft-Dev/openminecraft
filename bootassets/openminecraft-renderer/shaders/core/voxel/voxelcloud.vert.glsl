@@ -9,6 +9,8 @@
 uniform CloudData
 {
     vec3 modPos;
+    float opacity;
+    vec3 color;
 }
 cloud;
 
@@ -33,28 +35,28 @@ void main()
     switch (vertexgen_id() / 6)
     {
     case 0:
-        if (((cloudInfo >> 20) & 1) == 0)
+        if (((cloudInfo >> 20) & 1) == 1)
         {
             gl_Position = vec4(0.0, 0.0, 100.0, 1.0);
             return;
         }
         break;
     case 1:
-        if (((cloudInfo >> 19) & 1) == 0)
+        if (((cloudInfo >> 19) & 1) == 1)
+        {
+            gl_Position = vec4(0.0, 0.0, 100.0, 1.0);
+            return;
+        }
+        break;
+    case 4:
+        if (((cloudInfo >> 18) & 1) == 1)
         {
             gl_Position = vec4(0.0, 0.0, 100.0, 1.0);
             return;
         }
         break;
     case 5:
-        if (((cloudInfo >> 18) & 1) == 0)
-        {
-            gl_Position = vec4(0.0, 0.0, 100.0, 1.0);
-            return;
-        }
-        break;
-    case 6:
-        if (((cloudInfo >> 17) & 1) == 0)
+        if (((cloudInfo >> 17) & 1) == 1)
         {
             gl_Position = vec4(0.0, 0.0, 100.0, 1.0);
             return;

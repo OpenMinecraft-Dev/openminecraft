@@ -355,6 +355,13 @@ struct OMVoxelMoon
     int moonPhase;
 };
 
+struct OMVoxelCloud
+{
+    glm::vec3 camera;
+    float opacity;
+    glm::vec3 color;
+};
+
 struct OMVoxelLightMap
 {
     float skyFactor;
@@ -471,6 +478,7 @@ class OMVoxelManager
 
     OMRendererTempTarget *translucentTargetMS, *translucentTarget;
     OMRendererTempTarget *cutoutTargetMS, *cutoutTarget;
+    OMRendererTempTarget *cloudTargetMS, *cloudTarget;
     OMRendererPipeline *pipeline, *debugPipeline, *complexPipeline;
     OMRendererPipeline *translucentPipeline, *translucentComplexPipeline;
     OMRendererPipeline *composePipeline;
@@ -498,7 +506,7 @@ class OMVoxelManager
     OMRendererBuffer *starBaseData;
     OMRendererPipeline *starPipeline;
 
-    OMRendererPipeline *cloudPipeline;
+    OMRendererPipeline *cloudPipeline, *cloudComposePipeline;
     std::vector<bool> cloudStats;
     OMRendererBuffer *cloudBuffer;
 

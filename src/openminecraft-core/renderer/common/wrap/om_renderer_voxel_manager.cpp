@@ -59,6 +59,13 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     translucentTargetMS->clearDepth = false;
     translucentTargetMS->construct(renderer->getExtent(), samples, true);
 
+    cloudTargetMS = new OMRendererTempTarget(renderer);
+    cloudTargetMS->clearDepth = false;
+    cloudTargetMS->construct(renderer->getExtent(), samples);
+
+    cloudTarget = new OMRendererTempTarget(renderer);
+    cloudTarget->construct(renderer->getExtent());
+
     cutoutTarget = new OMRendererTempTarget(renderer);
     cutoutTarget->construct(renderer->getExtent());
     translucentTarget = new OMRendererTempTarget(renderer);
@@ -322,18 +329,34 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                         ->inputName("Camera")
                         ->input(UniformBuffer)
                         ->inputName("CloudData")
-                        ->output(translucentTargetMS->target)
+                        ->output(cloudTargetMS->target)
                         ->samples(samples)
                         ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcloud.frag.glsl", Fragment,
                                                                     GLSLSource, cloudFormat))
                         ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcloud.vert.glsl", Vertex,
                                                                     GLSLSource, cloudFormat))
                         ->format(cloudFormat)
-                        ->blendFunc({One, One, Zero, OneMinusSrcAlpha})
+                        ->blendFunc({One, Zero, One, Zero})
                         ->blend(true)
-                        ->depth(true, false)
+                        ->depth(true, true)
                         ->depthOp(GreaterOrEqual)
                         ->buildN();
+
+    cloudComposePipeline =
+        renderer->createPipeline()
+            ->input(ImageSampler)
+            ->inputName("inTexture")
+            ->output(translucentTargetMS->target)
+            ->samples(samples)
+            ->shader(
+                renderer->shaderManager.preprocess("core/voxel/cloud.frag.glsl", Fragment, GLSLSource, simpleFormat))
+            ->shader(renderer->shaderManager.preprocess("core/voxel/cloud.vert.glsl", Vertex, GLSLSource, simpleFormat))
+            ->format(simpleFormat)
+            ->blendFunc({One, One, Zero, OneMinusSrcAlpha})
+            ->blend(true)
+            ->depth(true, false)
+            ->depthOp(GreaterOrEqual)
+            ->buildN();
 
     lightmapPipeline = renderer->createPipeline()
                            ->input(UniformBuffer)
@@ -389,7 +412,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     fogdata = renderer->allocateBuffer(Uniform, sizeof(float) * 5);
     sunrise = renderer->allocateBuffer(Uniform, sizeof(OMVoxelSunrise));
     moonData = renderer->allocateBuffer(Uniform, sizeof(OMVoxelMoon));
-    cloudData = renderer->allocateBuffer(Uniform, sizeof(glm::vec3));
+    cloudData = renderer->allocateBuffer(Uniform, sizeof(OMVoxelCloud));
 
     {
         auto p = buildVoxelCloud();
@@ -466,6 +489,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     moonPipeline->bindInput(2, moonTex);
     starPipeline->bindInput(1, starBaseData);
     cloudPipeline->bindInput(1, cloudData);
+    cloudComposePipeline->bindInput(0, cloudTarget->colorTexture);
 }
 OMVoxelManager::~OMVoxelManager()
 {
@@ -492,8 +516,10 @@ OMVoxelManager::~OMVoxelManager()
     delete composePipeline;
     delete translucentTargetMS;
     delete cutoutTargetMS;
+    delete cloudTargetMS;
     delete cutoutTarget;
     delete translucentTarget;
+    delete cloudTarget;
     delete skyDiscPipeline;
     delete sunrisePipeline;
     delete sunPipeline;
@@ -504,6 +530,7 @@ OMVoxelManager::~OMVoxelManager()
     delete cloudData;
     delete cloudPipeline;
     delete cloudBuffer;
+    delete cloudComposePipeline;
 }
 
 void OMVoxelManager::unloadChunk(int i)
@@ -595,7 +622,9 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
     auto cc = camera.getPosRaw();
 
-    cloudData->updateData(std::array<glm::vec3, 1>{{{cc.getModX(256 * 12), cc.getY(), cc.getModZ(256 * 12)}}}.data());
+    cloudData->updateData(
+        std::array<OMVoxelCloud, 1>{{{{cc.getModX(256 * 12), cc.getY(), cc.getModZ(256 * 12)}, 0.8, glm::vec3(1.0)}}}
+            .data());
 
     auto pp = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz);
     auto pp2 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky, cc.chunkz);
@@ -738,8 +767,12 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     translucentTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), samples, true);
     cutoutTarget->construct(renderer->getExtent());
     translucentTarget->construct(renderer->getExtent(), 1, true);
+    cloudTargetMS->clearDepth = false;
+    cloudTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), samples);
+    cloudTarget->construct(renderer->getExtent());
     composePipeline->bindInput(0, (samples == 1 ? cutoutTargetMS : cutoutTarget)->colorTexture);
     composePipeline->bindInput(1, (samples == 1 ? translucentTargetMS : translucentTarget)->colorTexture);
+    cloudComposePipeline->bindInput(0, cloudTarget->colorTexture);
 
     auto tsk = task->target(lightmap->target)
                    ->pipeline(lightmapPipeline)
@@ -775,11 +808,21 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
         tsk->resolve(cutoutTarget->target);
     }
 
-    tsk->clearColor(glm::vec4(0.0, 0.0, 0.0, 1.0))
-        ->target(translucentTargetMS->target)
+    tsk->clearColor(glm::vec4(0.0))
+        ->target(cloudTargetMS->target)
         ->pipeline(cloudPipeline)
         ->vertexBuffer({cloudBuffer})
-        ->drawInstanceN(36, cloudBuffer->length / sizeof(uint32_t))
+        ->drawInstanceN(36, cloudBuffer->length / sizeof(uint32_t));
+
+    if (samples != 1)
+    {
+        tsk->resolve(cloudTarget->target);
+    }
+
+    tsk->clearColor(glm::vec4(0.0, 0.0, 0.0, 1.0))
+        ->target(translucentTargetMS->target)
+        ->pipeline(cloudComposePipeline)
+        ->drawN(6)
         ->pipeline(translucentPipeline)
         ->vertexBuffer({voxelTranslucentLayer->buf()->buffer})
         ->drawInstanceN(6, voxelTranslucentLayer->buf()->totalSize / sizeof(OMVoxel))
