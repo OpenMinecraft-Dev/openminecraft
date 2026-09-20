@@ -1,0 +1,55 @@
+{
+    "inputs": [
+        {
+            "name": "Camera",
+            "type": "uniform"
+        },
+        {
+            "name": "StarData",
+            "type": "uniform"
+        }
+    ],
+    "shaders": {
+        "fragment": {
+            "language": "glsl",
+            "path": "core/voxel/star.frag.glsl"
+        },
+        "vertex": {
+            "language": "glsl",
+            "path": "core/voxel/star.vert.glsl"
+        }
+    },
+    "vertex": [
+        {
+            "instance": true,
+            "props": [
+                {
+                    "name": "starCenter",
+                    "type": "vec3f"
+                },
+                {
+                    "name": "starZrot",
+                    "type": "float"
+                },
+                {
+                    "name": "starSize",
+                    "type": "float"
+                }
+            ]
+        }
+    ],
+    "blend": {
+        "enabled": true,
+        "funcs": {
+            "src_color": "src_alpha",
+            "dst_color": "1-src_alpha",
+            "src_alpha": "src_alpha",
+            "dst_alpha": "1-src_alpha"
+        }
+    },
+    "depth": {
+        "test": false,
+        "write": false,
+        "operator": ">"
+    }
+}
