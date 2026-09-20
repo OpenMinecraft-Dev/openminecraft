@@ -1,11 +1,10 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
-#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/specs/zip/om_zip.hpp"
 #include "openminecraft/util/om_util_memstream.hpp"
+#include "openminecraft/vfs/om_vfs_bundlefs.hpp"
+#include "openminecraft/vfs/om_vfs_realfs.hpp"
+#include "openminecraft/vfs/om_vfs_zipfs.hpp"
 #include <cstddef>
-#include <filesystem>
-#include <fstream>
-#include <ios>
 #include <iostream>
 #include <istream>
 #include <memory>
@@ -14,62 +13,39 @@
 
 namespace openminecraft::vfs
 {
-std::unordered_map<std::string, std::function<std::shared_ptr<std::istream>(std::string)>> m;
-std::unordered_map<std::string, MountInfo> info;
-log::OMLogger logger("vfs");
+std::unordered_map<std::string, std::shared_ptr<OMFsProvider>> fshandlers;
 auto mountinvaild(std::string mp) -> bool
 {
     return mp.empty() || mp[0] != '/' || mp == "/" || mp[mp.length() - 1] == '/';
 }
-auto fsmountReal(std::string path, std::string mountpoint) -> bool
-{
-    if (!std::filesystem::exists(path))
-    {
-        logger.info("!real:{}", path);
-        return false;
-    }
-    if (mountinvaild(mountpoint))
-    {
-        return false;
-    }
-    m[mountpoint] = [path](std::string proc) -> std::shared_ptr<std::istream> {
-        return std::make_shared<std::ifstream>(path + "/" + proc, std::ios::binary);
-    };
-    info[mountpoint] = {Real, path};
-    logger.info("real:{} -> virt:{}", path, mountpoint);
-    return true;
-}
 auto fsumount(std::string mountpoint) -> bool
 {
-    if (m.count(mountpoint))
+    if (fshandlers.count(mountpoint))
     {
-        m.erase(mountpoint);
-        info.erase(mountpoint);
-        logger.info("null -> virt:{}", mountpoint);
+        fshandlers.erase(mountpoint);
         return true;
     }
 
     return false;
 }
-auto fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string mountpoint) -> bool
+
+static auto fsmount(std::shared_ptr<OMFsProvider> p, std::string mountpoint) -> bool
 {
     if (mountinvaild(mountpoint))
     {
         return false;
     }
-    m[mountpoint] = [info](std::string proc) -> std::shared_ptr<std::istream> {
-        for (auto i : info->files)
-        {
-            if (i.first.name == proc)
-            {
-                return std::make_shared<util::OMMemoryStream>(reinterpret_cast<const char *>(i.second), i.first.length);
-            }
-        }
-        return nullptr;
-    };
-    vfs::info[mountpoint] = {Bundle, info};
-    logger.info("bundle -> virt:{}", mountpoint);
-    return false;
+    fshandlers[mountpoint] = p;
+    return true;
+}
+
+auto fsmountReal(std::string root, std::string mountpoint) -> bool
+{
+    return fsmount(std::make_shared<OMFsProviderReal>(root), mountpoint);
+}
+auto fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string mountpoint) -> bool
+{
+    return fsmount(std::make_shared<OMFsProviderBundle>(info), mountpoint);
 }
 auto fsmountZipArchive(const char *src, std::size_t length, std::string mountpoint) -> bool
 {
@@ -77,24 +53,9 @@ auto fsmountZipArchive(const char *src, std::size_t length, std::string mountpoi
 }
 auto fsmountZipArchive(std::shared_ptr<std::istream> istr, std::string mountpoint) -> bool
 {
-    if (mountinvaild(mountpoint))
-    {
-        return false;
-    }
-
     auto pp = std::make_shared<specs::zip::OMZip>();
     pp->parse(istr);
-    m[mountpoint] = [pp](std::string proc) -> std::shared_ptr<std::istream> {
-        auto handle = pp->findFile(proc);
-        if (!handle)
-        {
-            return nullptr;
-        }
-        return pp->read(handle);
-    };
-    vfs::info[mountpoint] = {Zip, pp};
-    logger.info("zip -> virt:{}", mountpoint);
-    return false;
+    return fsmount(std::make_shared<OMFsProviderZip>(pp), mountpoint);
 }
 auto compressPath(std::string vp) -> std::string
 {
@@ -143,13 +104,13 @@ auto compressPath(std::string vp) -> std::string
 auto fsfetch(std::string fullPath) -> std::shared_ptr<std::istream>
 {
     auto pth = compressPath(fullPath);
-    for (auto p : m)
+    for (auto p : fshandlers)
     {
         if (!pth.find(p.first))
         {
-            return p.second(pth.substr(p.first.length() + 1, pth.length()));
+            return p.second->read(pth.substr(p.first.length() + 1, pth.length()));
         }
     }
-    return {nullptr};
+    return nullptr;
 }
 } // namespace openminecraft::vfs
