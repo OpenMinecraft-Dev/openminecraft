@@ -427,6 +427,12 @@ void OMRendererTaskOpenGL::drawIndirect(uint64_t begin, uint64_t count)
 }
 void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
 {
+    if (finished) {
+        ops.clear();
+        gl->glDeleteVertexArrays(vaos.size(), vaos.data());
+        vaos.clear();
+        finished = false;
+    }
     auto tgt = reinterpret_cast<OMRendererRenderTargetOpenGL *>(target);
     this->framebuffer = tgt->framebuffer;
     ops.push_back({BindFramebuffer, GL_FRAMEBUFFER, tgt->framebuffer});
@@ -492,6 +498,7 @@ void OMRendererTaskOpenGL::drawIndexedInstance(uint64_t vertexCount, uint64_t in
 void OMRendererTaskOpenGL::finish()
 {
     gl->glBindVertexArray(0);
+    finished = true;
 }
 
 void OMRendererTaskOpenGL::resolveTo(common::OMRendererRenderTarget *target)

@@ -108,6 +108,7 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     std::vector<OMRendererTaskOp> ops;
     bool isCleared = false;
     bool needClearDepth = false;
+    bool finished = false;
 };
 } // namespace openminecraft::renderer::opengl
 
