@@ -257,7 +257,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
 
 void OMWorldRenderer::beforeFrame()
 {
-    voxelManager->update(*camera);
+    // voxelManager->update(*camera);
     timeBuffer->updateData(std::array<float, 1>{
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tp).count() / 1000.0f}
                                .data());
@@ -275,6 +275,7 @@ static int gameT = 0;
 
 void OMWorldRenderer::afterFrame()
 {
+    voxelManager->update(*camera);
     auto cam = camera->fetchProjMat() * camera->fetchViewMat();
     cameraBuffer->updateData(&cam);
 }
