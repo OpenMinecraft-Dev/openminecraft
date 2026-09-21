@@ -423,7 +423,6 @@ void OMRendererTaskOpenGL::drawIndirect(uint64_t begin, uint64_t count)
     ops.push_back({MultiDrawElementsIndirect,
                    {primitiveType(), GL_UNSIGNED_INT, static_cast<GLuint>(count), 5 * sizeof(uint32_t)},
                    {reinterpret_cast<void *>(begin * 5 * sizeof(uint32_t))}});
-    ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
 }
 void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
@@ -445,7 +444,6 @@ void OMRendererTaskOpenGL::draw(uint64_t vertexCount)
     ops.push_back({BindVertexArray, vaos.back()});
     ops.push_back({UseProgram, program});
     ops.push_back({DrawArrays, primitiveType(), 0, static_cast<GLuint>(vertexCount)});
-    ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
 }
 void OMRendererTaskOpenGL::drawInstance(uint64_t vertexCount, uint64_t instanceCount)
@@ -454,7 +452,6 @@ void OMRendererTaskOpenGL::drawInstance(uint64_t vertexCount, uint64_t instanceC
     ops.push_back({UseProgram, program});
     ops.push_back({DrawArraysInstanced, primitiveType(), 0, static_cast<GLuint>(vertexCount),
                    static_cast<GLuint>(instanceCount)});
-    ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
 }
 void OMRendererTaskOpenGL::drawInstance(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance)
@@ -463,7 +460,6 @@ void OMRendererTaskOpenGL::drawInstance(uint64_t vertexCount, uint64_t instanceC
     ops.push_back({UseProgram, program});
     ops.push_back({DrawArraysInstanced, primitiveType(), 0, static_cast<GLuint>(vertexCount),
                    static_cast<GLuint>(instanceCount)});
-    ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
 }
 void OMRendererTaskOpenGL::drawIndexed(uint64_t vertexCount)
@@ -471,7 +467,6 @@ void OMRendererTaskOpenGL::drawIndexed(uint64_t vertexCount)
     ops.push_back({BindVertexArray, vaos.back()});
     ops.push_back({UseProgram, program});
     ops.push_back({DrawElements, {primitiveType(), static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT}, {nullptr}});
-    ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
 }
 void OMRendererTaskOpenGL::drawIndexedInstance(uint64_t vertexCount, uint64_t instanceCount)
@@ -482,7 +477,6 @@ void OMRendererTaskOpenGL::drawIndexedInstance(uint64_t vertexCount, uint64_t in
         {DrawElementsInstanced,
          {primitiveType(), static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT, static_cast<GLuint>(instanceCount)},
          {nullptr}});
-    ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
 }
 void OMRendererTaskOpenGL::drawIndexedInstance(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance)
@@ -493,8 +487,6 @@ void OMRendererTaskOpenGL::drawIndexedInstance(uint64_t vertexCount, uint64_t in
         {DrawElementsInstanced,
          {primitiveType(), static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT, static_cast<GLuint>(instanceCount)},
          {nullptr}});
-
-    ops.push_back({BindVertexArray, 0});
     gl->glBindVertexArray(0);
 }
 void OMRendererTaskOpenGL::finish()
