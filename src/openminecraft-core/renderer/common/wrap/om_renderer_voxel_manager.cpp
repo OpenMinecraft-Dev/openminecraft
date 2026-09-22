@@ -68,6 +68,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     cloudTarget->construct(renderer->getExtent());
 
     cutoutTarget = new OMRendererTempTarget(renderer);
+    cutoutTarget->clearDepth = false;
     cutoutTarget->construct(renderer->getExtent());
     translucentTarget = new OMRendererTempTarget(renderer);
     lightmap = new OMRendererTempTarget(renderer);
@@ -776,6 +777,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     cloudComposePipeline->bindInput(0, (samples == 1 ? cloudTargetMS : cloudTarget)->colorTexture);
 
     auto tsk = task->target(lightmap->target)
+		   ->beginDebugTag("environment")
                    ->pipeline(lightmapPipeline)
                    ->drawN(6)
                    ->clearColor({0.0f, 0.0f, 0.0f, 0.0f})
@@ -794,6 +796,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
                    ->pipeline(starPipeline)
                    ->vertexBuffer({starBuffer})
                    ->drawInstanceN(6, starBuffer->length / sizeof(float) / 5)
+                   ->endDebugTag()
                    ->pipeline(pipeline)
                    ->vertexBuffer({voxelLayer->buf()->buffer})
                    ->drawInstanceN(6, voxelLayer->buf()->totalSize / sizeof(OMVoxel))

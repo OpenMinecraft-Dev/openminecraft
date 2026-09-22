@@ -317,4 +317,13 @@ void OMRendererTaskVk::resolveTo(common::OMRendererRenderTarget *target)
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.task"));
     }
 }
+void OMRendererTaskVk::pushDebugTag(std::string tag)
+{
+    renderer->validationLayer->ifEnable(
+        [&]() { commandBuffer.beginDebugUtilsLabelEXT(DebugUtilsLabelEXT(tag.data(), {0.5f, 0.5f, 0.5f, 0.5f})); });
+}
+void OMRendererTaskVk::popDebugTag()
+{
+    renderer->validationLayer->ifEnable([&]() { commandBuffer.endDebugUtilsLabelEXT(); });
+}
 } // namespace openminecraft::renderer::vk

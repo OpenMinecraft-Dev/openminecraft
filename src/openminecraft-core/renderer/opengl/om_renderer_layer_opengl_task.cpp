@@ -427,7 +427,8 @@ void OMRendererTaskOpenGL::drawIndirect(uint64_t begin, uint64_t count)
 }
 void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
 {
-    if (finished) {
+    if (finished)
+    {
         ops.clear();
         gl->glDeleteVertexArrays(vaos.size(), vaos.data());
         vaos.clear();
@@ -514,13 +515,35 @@ void OMRendererTaskOpenGL::resolveTo(common::OMRendererRenderTarget *target)
     ops.push_back({BindFramebuffer, GL_DRAW_FRAMEBUFFER, 0});
 }
 
-int a = 0;
+static GLuint debugid = 0;
+void OMRendererTaskOpenGL::pushDebugTag(std::string tag)
+{
+    ops.push_back({PushDebugGroup, {static_cast<GLuint>(tag.size())}, {tag.data()}});
+}
+void OMRendererTaskOpenGL::popDebugTag()
+{
+    ops.push_back({PopDebugGroup});
+}
+
 void OMRendererTaskOpenGL::execute()
 {
     for (auto &op : ops)
     {
         switch (op.type)
         {
+        case PushDebugGroup:
+            if (gl->glPushDebugGroup)
+            {
+                gl->glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, ++debugid, op.args[0],
+                                     reinterpret_cast<const GLchar *>(op.ptrArgs[0]));
+            }
+            break;
+        case PopDebugGroup:
+            if (gl->glPopDebugGroup)
+            {
+                gl->glPopDebugGroup();
+            }
+            break;
         case BlitFramebuffer:
             gl->glBlitFramebuffer(op.args[0], op.args[1], op.args[2], op.args[3], op.args[4], op.args[5], op.args[6],
                                   op.args[7], op.args[8], op.args[9]);

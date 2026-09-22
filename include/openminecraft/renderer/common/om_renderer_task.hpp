@@ -138,6 +138,17 @@ class OMRendererTask : public OMRendererObject
         resolveTo(target);
         return this;
     }
+    virtual void pushDebugTag(std::string) = 0;
+    inline auto beginDebugTag(std::string s) -> OMRendererTask *
+    {
+        pushDebugTag(s);
+        return this;
+    }
+    virtual void popDebugTag() = 0;
+    inline auto endDebugTag() -> OMRendererTask *
+    {
+        return this;
+    }
 
     inline auto objType() -> OMRendererObjectType override
     {

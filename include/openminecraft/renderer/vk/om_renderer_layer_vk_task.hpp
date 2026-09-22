@@ -30,6 +30,8 @@ class OMRendererTaskVk : public common::OMRendererTask
     void drawIndirect(uint64_t begin, uint64_t count) override;
     void finish() override;
     void resolveTo(common::OMRendererRenderTarget *target) override;
+    void pushDebugTag(std::string tag) override;
+    void popDebugTag() override;
 
     auto isOnDefault() -> bool;
 
