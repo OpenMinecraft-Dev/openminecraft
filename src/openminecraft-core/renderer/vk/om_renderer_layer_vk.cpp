@@ -89,7 +89,7 @@ VKAPI_ATTR void vkCmdBeginDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, cons
     }
 }
 
-VKAPI_ATTR void void vkCmdEndDebugUtilsLabelEXT(VkCommandBuffer commandBuffer) {
+VKAPI_ATTR void vkCmdEndDebugUtilsLabelEXT(VkCommandBuffer commandBuffer) {
     auto func = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT");
     if (func != nullptr)
     {
