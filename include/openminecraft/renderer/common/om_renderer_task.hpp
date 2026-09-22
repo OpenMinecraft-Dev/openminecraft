@@ -147,6 +147,7 @@ class OMRendererTask : public OMRendererObject
     virtual void popDebugTag() = 0;
     inline auto endDebugTag() -> OMRendererTask *
     {
+        popDebugTag();
         return this;
     }
 
