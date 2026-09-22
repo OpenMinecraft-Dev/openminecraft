@@ -80,6 +80,22 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugReportCallbackEXT(VkInstance instance, 
         func(instance, callback, pAllocator);
     }
 }
+
+VKAPI_ATTR void vkCmdBeginDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT *pLabelInfo) {
+    auto func = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkCmdBeginDebugUtilsLabelEXT");
+    if (func != nullptr)
+    {
+        func(commandBuffer, pLabelInfo);
+    }
+}
+
+VKAPI_ATTR void void vkCmdEndDebugUtilsLabelEXT(VkCommandBuffer commandBuffer) {
+    auto func = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT");
+    if (func != nullptr)
+    {
+        func(commandBuffer);
+    }
+}
 #endif
 
 using namespace vk;

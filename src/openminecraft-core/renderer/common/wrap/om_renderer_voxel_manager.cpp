@@ -62,6 +62,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
 
     cloudTargetMS = new OMRendererTempTarget(renderer);
     cloudTargetMS->clearDepth = false;
+    cloudTargetMS->storeDepth = true;
     cloudTargetMS->construct(renderer->getExtent(), samples);
 
     cloudTarget = new OMRendererTempTarget(renderer);
@@ -797,6 +798,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
                    ->vertexBuffer({starBuffer})
                    ->drawInstanceN(6, starBuffer->length / sizeof(float) / 5)
                    ->endDebugTag()
+		   ->beginDebugTag("cutout/opaque chunks")
                    ->pipeline(pipeline)
                    ->vertexBuffer({voxelLayer->buf()->buffer})
                    ->drawInstanceN(6, voxelLayer->buf()->totalSize / sizeof(OMVoxel))
@@ -805,25 +807,27 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
                    ->drawInstanceN(6, voxelComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex))
                    ->pipeline(debugPipeline)
                    ->vertexBuffer({debugoffs})
-                   ->drawN(2 * 12);
+                   ->drawN(2 * 12)
+		   ->endDebugTag();
 
     if (samples != 1)
     {
         tsk->resolve(cutoutTarget->target);
     }
 
-    tsk->clearColor(glm::vec4(0.0))
+    tsk->beginDebugTag("clouds")->clearColor(glm::vec4(0.0))
         ->target(cloudTargetMS->target)
         ->pipeline(cloudPipeline)
         ->vertexBuffer({cloudBuffer})
-        ->drawInstanceN(36, cloudBuffer->length / sizeof(uint32_t));
+        ->drawInstanceN(36, cloudBuffer->length / sizeof(uint32_t))
+	->endDebugTag();
 
     if (samples != 1)
     {
         tsk->resolve(cloudTarget->target);
     }
 
-    tsk->clearColor(glm::vec4(0.0, 0.0, 0.0, 1.0))
+    tsk->beginDebugTag("translucent chunks")->clearColor(glm::vec4(0.0, 0.0, 0.0, 1.0))
         ->target(translucentTargetMS->target)
         ->pipeline(cloudComposePipeline)
         ->drawN(6)
@@ -832,7 +836,8 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
         ->drawInstanceN(6, voxelTranslucentLayer->buf()->totalSize / sizeof(OMVoxel))
         ->pipeline(translucentComplexPipeline)
         ->vertexBuffer({voxelTranslucentComplexLayer->buf()->buffer})
-        ->drawInstanceN(6, voxelTranslucentComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex));
+        ->drawInstanceN(6, voxelTranslucentComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex))
+	->endDebugTag();
 
     if (samples != 1)
     {
