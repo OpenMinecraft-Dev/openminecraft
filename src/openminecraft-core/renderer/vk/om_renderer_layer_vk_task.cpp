@@ -319,11 +319,15 @@ void OMRendererTaskVk::resolveTo(common::OMRendererRenderTarget *target)
 }
 void OMRendererTaskVk::pushDebugTag(std::string tag)
 {
+#ifdef OM_VULKAN_DYNAMIC
     renderer->validationLayer->ifEnable(
         [&]() { commandBuffer.beginDebugUtilsLabelEXT(DebugUtilsLabelEXT(tag.data(), {0.5f, 0.5f, 0.5f, 0.5f})); });
+#endif
 }
 void OMRendererTaskVk::popDebugTag()
 {
+#ifdef OM_VULKAN_DYNAMIC
     renderer->validationLayer->ifEnable([&]() { commandBuffer.endDebugUtilsLabelEXT(); });
+#endif
 }
 } // namespace openminecraft::renderer::vk
