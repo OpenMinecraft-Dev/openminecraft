@@ -1,6 +1,7 @@
 #ifndef OM_DEMIURGE_BUTTON_HPP
 #define OM_DEMIURGE_BUTTON_HPP
 
+#include "glm/ext/vector_float3.hpp"
 #include "glm/fwd.hpp"
 #include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
@@ -31,6 +32,7 @@ class OMDemiurgeButton : public OMDemiurgeContainerNode
     void update() override;
 
     animation::OMAnimationValue<float> opacity;
+    animation::OMAnimationValue<glm::vec3> backgroundColor;
 
   private:
     std::shared_ptr<OMDemiurgeNode> textNode;

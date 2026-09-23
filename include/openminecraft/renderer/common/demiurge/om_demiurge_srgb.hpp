@@ -5,6 +5,12 @@
 #include <cstdint>
 namespace openminecraft::renderer::common::demiurge
 {
+inline auto f3ToRgba(glm::vec3 c) -> uint32_t
+{
+    uint32_t r = c.r * 255.0f, g = c.g * 255.0f, b = c.b * 255.0f;
+    return r << 24 | g << 16 | b << 8;
+}
+
 inline auto srgbToLinear(glm::vec4 c) -> glm::vec4
 {
     auto s2l = [](float v) -> float {

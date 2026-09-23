@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
+#include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 #include <array>
 #include <SDL3/SDL.h>
 #include <memory>
@@ -14,7 +15,7 @@ using namespace openminecraft::renderer::common::animation;
 
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
-OMDemiurgeButton::OMDemiurgeButton(geom::OMFontSet *fontset) : opacity(0.6f)
+OMDemiurgeButton::OMDemiurgeButton(geom::OMFontSet *fontset) : opacity(0.6f), backgroundColor({0.1f, 0.1f, 0.1f})
 {
     stylesStorage.put("justifyContent", OMDemiurgeAlign::Center);
     stylesStorage.put("alignItems", OMDemiurgeAlign::Center);
@@ -34,7 +35,7 @@ OMDemiurgeButton::OMDemiurgeButton(geom::OMFontSet *fontset) : opacity(0.6f)
 OMDemiurgeButton::~OMDemiurgeButton() = default;
 void OMDemiurgeButton::update()
 {
-    bkgNode->style("color", (int)(0x23232300 | static_cast<uint8_t>(opacity.get() * 255.0f)));
+    bkgNode->style("color", (int)(f3ToRgba(backgroundColor.get()) | static_cast<uint8_t>(opacity.get() * 255.0f)));
     bkgNode->style("radius", stylesStorage.get<glm::vec4>("radius", glm::vec4(5.0f)));
     textNode->style("text", stylesStorage.get<std::string>("label", "Button"));
     textNode->style("textheight", stylesStorage.get<int>("textheight", 16));
