@@ -30,6 +30,8 @@ const vec3 faceCorners[24] = vec3[24](
 
 const int triIndices[6] = int[6](0, 1, 2, 0, 2, 3);
 
+layout(location = 0) flat out float colorMod;
+
 void main()
 {
     switch (vertexgen_id() / 6)
@@ -40,6 +42,7 @@ void main()
             gl_Position = vec4(0.0, 0.0, 100.0, 1.0);
             return;
         }
+        colorMod = 0.8;
         break;
     case 1:
         if (((cloudInfo >> 19) & 1) == 1)
@@ -47,6 +50,10 @@ void main()
             gl_Position = vec4(0.0, 0.0, 100.0, 1.0);
             return;
         }
+        colorMod = 0.8;
+        break;
+    case 3:
+        colorMod = 0.5;
         break;
     case 4:
         if (((cloudInfo >> 18) & 1) == 1)
@@ -54,6 +61,7 @@ void main()
             gl_Position = vec4(0.0, 0.0, 100.0, 1.0);
             return;
         }
+        colorMod = 0.8;
         break;
     case 5:
         if (((cloudInfo >> 17) & 1) == 1)
@@ -61,8 +69,10 @@ void main()
             gl_Position = vec4(0.0, 0.0, 100.0, 1.0);
             return;
         }
+        colorMod = 0.8;
         break;
     default:
+        colorMod = 1.0;
         break;
     }
     int iid = vertexgen_id() / 6 * 4 + triIndices[vertexgen_id() % 6];

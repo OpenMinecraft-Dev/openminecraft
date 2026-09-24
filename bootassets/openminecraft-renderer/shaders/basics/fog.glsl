@@ -9,6 +9,8 @@ vec4 fog_gen(vec4 original, float fogStart, float fogEnd, vec3 fogColor, float t
     d = (d - 0.5) * 2;
 #endif
 
+    d = 50 / (999.5 * d + 0.05);
+
     return vec4(mix(original.rgb, fogColor, smoothstep(fogEnd, fogStart, d)),
                 mix(original.a, targetOpacity, smoothstep(fogEnd, fogStart, d)));
 }

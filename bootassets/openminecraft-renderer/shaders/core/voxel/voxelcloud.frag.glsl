@@ -12,9 +12,11 @@ uniform CloudData
 }
 cloud;
 
+layout(location = 0) flat in float colorMod;
+
 void main()
 {
     mat4 unused = camera.viewProj;
     float unused2 = cloud.modPos.x;
-    outColor = vec4(cloud.color, cloud.opacity);
+    outColor = vec4(cloud.color * colorMod, cloud.opacity);
 }
