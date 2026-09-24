@@ -1,4 +1,5 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
+#include "glm/ext/vector_float3.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_cliprect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
@@ -15,7 +16,8 @@ using namespace openminecraft::renderer::common::animation;
 
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
-OMDemiurgeButton::OMDemiurgeButton(geom::OMFontSet *fontset) : opacity(0.6f), backgroundColor({0.1f, 0.1f, 0.1f})
+OMDemiurgeButton::OMDemiurgeButton(geom::OMFontSet *fontset)
+    : opacity(0.6f), backgroundColor({0.1f, 0.1f, 0.1f}), textColor({1.0f, 1.0f, 1.0f, 1.0f})
 {
     stylesStorage.put("justifyContent", OMDemiurgeAlign::Center);
     stylesStorage.put("alignItems", OMDemiurgeAlign::Center);
@@ -25,7 +27,6 @@ OMDemiurgeButton::OMDemiurgeButton(geom::OMFontSet *fontset) : opacity(0.6f), ba
         {"height", 100_percent},
     });
     textNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset)->style({
-        {"color", 0xffffffff},
         {"alignSelf", OMDemiurgeAlign::Center},
         {"margin", std::array<OMDemiurgeSize, 4>{5_px, 10_px, 5_px, 5_px}},
     });
@@ -37,6 +38,7 @@ void OMDemiurgeButton::update()
 {
     bkgNode->style("color", (int)(f3ToRgba(backgroundColor.get()) | static_cast<uint8_t>(opacity.get() * 255.0f)));
     bkgNode->style("radius", stylesStorage.get<glm::vec4>("radius", glm::vec4(5.0f)));
+    textNode->style("color", f4ToRgba(textColor.get()));
     textNode->style("text", stylesStorage.get<std::string>("label", "Button"));
     textNode->style("textheight", stylesStorage.get<int>("textheight", 16));
     OMDemiurgeContainerNode::update();
@@ -76,13 +78,13 @@ void OMDemiurgeButton::setText(std::string s)
 {
     textNode->style("text", s);
 }
-void OMDemiurgeButton::setTextColor(int c)
+void OMDemiurgeButton::setTextColor(glm::vec4 d)
 {
-    textNode->style("color", c);
+    textColor.animateTo(d, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.2f));
 }
-void OMDemiurgeButton::setBackgroundColor(int c)
+void OMDemiurgeButton::setBackgroundColor(glm::vec3 d)
 {
-    bkgNode->style("color", c);
+    backgroundColor.animateTo(d, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.2f));
 }
 void OMDemiurgeButton::setBackgroundRadius(glm::vec4 r)
 {

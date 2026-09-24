@@ -25,14 +25,15 @@ class OMDemiurgeButton : public OMDemiurgeContainerNode
     auto processMouseExit(float x, float y) -> OMDemiurgeEventResult override;
 
     void setText(std::string s);
-    void setTextColor(int c);
-    void setBackgroundColor(int c);
+    void setTextColor(glm::vec4 d);
+    void setBackgroundColor(glm::vec3 d);
     void setBackgroundRadius(glm::vec4 r);
     void setOnClick(std::function<void()> h);
     void update() override;
 
     animation::OMAnimationValue<float> opacity;
     animation::OMAnimationValue<glm::vec3> backgroundColor;
+    animation::OMAnimationValue<glm::vec4> textColor;
 
   private:
     std::shared_ptr<OMDemiurgeNode> textNode;
