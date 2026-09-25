@@ -25,6 +25,7 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_CHUNKID ((((voxelPos >> 1) & 7) << 16) | ((voxelMetadata) & 0xffff))
 #define VOXEL_SL(n) ((voxelExtra >> (28 - 4 * (n))) & 15)
 #define VOXEL_BL(n) ((voxelExtra >> (12 - 4 * (n))) & 15)
+#define VOXEL_FLUIDH(n) ((voxelExtra2 >> (24 - 8 * n)) & 0xff)
 
 void main()
 {
@@ -83,6 +84,56 @@ void main()
 
     worldPos += worldPosOffset;
 
+    int idx = int(oruv.x) << 1 | int(oruv.y);
+    if (VOXEL_FACING_AXIS == 2 && VOXEL_FACING_SIGN == 1)
+    {
+        by += VOXEL_FLUIDH(idx) / 255.0 - 1;
+    }
+    if (VOXEL_FACING_AXIS == 0 && VOXEL_FACING_SIGN == 0)
+    {
+        if (idx == 0)
+        {
+            by += VOXEL_FLUIDH(0) / 255.0 - 1;
+        }
+        else if (idx == 2)
+        {
+            by += VOXEL_FLUIDH(1) / 255.0 - 1;
+        }
+    }
+    if (VOXEL_FACING_AXIS == 1 && VOXEL_FACING_SIGN == 0)
+    {
+        if (idx == 0)
+        {
+            by += VOXEL_FLUIDH(2) / 255.0 - 1;
+        }
+        else if (idx == 2)
+        {
+            by += VOXEL_FLUIDH(0) / 255.0 - 1;
+        }
+    }
+    if (VOXEL_FACING_AXIS == 0 && VOXEL_FACING_SIGN == 1)
+    {
+        if (idx == 0)
+        {
+            by += VOXEL_FLUIDH(3) / 255.0 - 1;
+        }
+        else if (idx == 2)
+        {
+            by += VOXEL_FLUIDH(2) / 255.0 - 1;
+        }
+    }
+    if (VOXEL_FACING_AXIS == 1 && VOXEL_FACING_SIGN == 1)
+    {
+        if (idx == 0)
+        {
+            by += VOXEL_FLUIDH(1) / 255.0 - 1;
+        }
+        else if (idx == 2)
+        {
+            by += VOXEL_FLUIDH(3) / 255.0 - 1;
+        }
+    }
+
     worldPos += vec3(bx, by, bz);
 
     vec3 coff = vec3(texelFetch(inChunkPos, VOXEL_CHUNKID * 3).r, texelFetch(inChunkPos, VOXEL_CHUNKID * 3 + 1).r,
@@ -93,6 +144,5 @@ void main()
     voxNormal = normalize((vec4(norm * (VOXEL_FACING_SIGN == 0 ? -1 : 1), 0.0)).xyz);
     voxTexLayer = float(VOXEL_TEXTUREID);
 
-    int idx = int(oruv.x) << 1 | int(oruv.y);
     voxLight = vec2(float(VOXEL_BL(idx)) / 15, float(VOXEL_SL(idx)) / 15);
 }

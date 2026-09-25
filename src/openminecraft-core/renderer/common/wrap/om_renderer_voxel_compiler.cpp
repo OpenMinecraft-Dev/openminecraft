@@ -396,12 +396,14 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             auto a = handler->queryFluidFalling(bsid);
             auto b = handler->queryFluidLevel(bsid);
 
+            auto h = handler->queryFluidFalling(bsid) ? 255 : 200;
+
             for (auto f : {NegX, NegY, NegZ, PosX, PosY, PosZ})
             {
                 if (!checkExistFluid(chunk, externalAccessor, v.first, f))
                 {
                     auto vox = packVoxelFluid(v.first.x, v.first.y, v.first.z, f, handler->queryFluidTex(bsid), chunkid,
-                                              15, 15, 15, 15, 0, 0, 0, 0, b, b, b, b);
+                                              15, 15, 15, 15, 0, 0, 0, 0, h, h, h, h);
                     commiterTranslucentFluid(OMVoxelFluid{vox[0], vox[1], vox[2], vox[3]});
                 }
             }

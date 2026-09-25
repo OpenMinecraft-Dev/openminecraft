@@ -122,7 +122,7 @@ void OMApplication::mainLoop(OMBackend backend)
                     using data::block::blockstateRegistry;
                     world::OMChunk<16> cnk(cx, cy, cz);
                     cnk.setBlock(0, 0, 0,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=15]")));
+                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=true,level=15]")));
                     cnk.setBlock(0, 15, 0,
                                  blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=true,level=15]")));
                     cnk.setBlock(15, 0, 0,
