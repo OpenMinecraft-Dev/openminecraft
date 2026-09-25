@@ -308,7 +308,8 @@ class OMVoxelCompiler
                    glm::ivec3, OMVoxelFacing, uint32_t) -> bool;
     auto compile(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                  int chunkid, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>,
-                 std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>) -> void;
+                 std::function<void(OMVoxelFluid)>, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>,
+                 std::function<void(OMVoxelFluid)>) -> void;
 
     OMVoxelHandler *handler = new OMVoxelHandlerDummy();
     std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> converter;
@@ -415,7 +416,8 @@ class OMVoxelCompilerPool
     ~OMVoxelCompilerPool();
 
     void upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMVoxelComplex> *cutoutComplex,
-                OMVoxelLayer<OMVoxel> *translucent, OMVoxelLayer<OMVoxelComplex> *translucentComplex);
+                OMVoxelLayer<OMVoxelFluid> *fluid, OMVoxelLayer<OMVoxel> *translucent,
+                OMVoxelLayer<OMVoxelComplex> *translucentComplex, OMVoxelLayer<OMVoxelFluid> *translucentFluid);
     void compile(int i, bool = false);
     void dropCache(int i)
     {
@@ -438,8 +440,10 @@ class OMVoxelCompilerPool
     std::mutex bufferMutex;
     std::unordered_map<int, std::vector<OMVoxel>> cutout, translucent;
     std::unordered_map<int, std::vector<OMVoxelComplex>> cutoutComplex, translucentComplex;
+    std::unordered_map<int, std::vector<OMVoxelFluid>> fluid, translucentFluid;
     std::unordered_map<int, std::vector<OMVoxel>> cutoutC, translucentC;
     std::unordered_map<int, std::vector<OMVoxelComplex>> cutoutComplexC, translucentComplexC;
+    std::unordered_map<int, std::vector<OMVoxelFluid>> fluidC, translucentFluidC;
 
     std::vector<std::thread *> thrs;
     bool active = true;
@@ -506,8 +510,8 @@ class OMVoxelManager
     OMRendererTempTarget *translucentTargetMS, *translucentTarget;
     OMRendererTempTarget *cutoutTargetMS, *cutoutTarget;
     OMRendererTempTarget *cloudTargetMS, *cloudTarget;
-    OMRendererPipeline *pipeline, *debugPipeline, *complexPipeline;
-    OMRendererPipeline *translucentPipeline, *translucentComplexPipeline;
+    OMRendererPipeline *pipeline, *debugPipeline, *complexPipeline, *fluidPipeline;
+    OMRendererPipeline *translucentPipeline, *translucentComplexPipeline, *translucentFluidPipeline;
     OMRendererPipeline *composePipeline;
     OMRendererPipeline *skyDiscPipeline;
     OMRendererPipeline *lightmapPipeline;
@@ -549,6 +553,7 @@ class OMVoxelManager
     std::shared_ptr<world::OMChunkManager<16>> chunkManager;
     OMVoxelLayer<OMVoxel> *voxelLayer, *voxelTranslucentLayer;
     OMVoxelLayer<OMVoxelComplex> *voxelComplexLayer, *voxelTranslucentComplexLayer;
+    OMVoxelLayer<OMVoxelFluid> *voxelFluidLayer, *voxelTranslucentFluidLayer;
 
     OMVoxelCompilerPool *compilerPool;
 

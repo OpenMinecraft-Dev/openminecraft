@@ -93,7 +93,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelPart;
 
     auto composeModel(std::vector<int>, bool = true, bool = false, bool = false) -> int;
-    auto composeFluidModel(bool falling, uint8_t level, OMIdentifier tex) -> int;
+    auto composeFluidModel(bool translucent, bool falling, uint8_t level, OMIdentifier tex) -> int;
 
     auto loadModelPart(OMIdentifier) -> int;
     auto loadModelPartWithArgs(OMIdentifier, int, int, int, bool) -> int;

@@ -75,9 +75,10 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     lightmap = new OMRendererTempTarget(renderer);
     lightmap->construct({16.0, 16.0}, 1, true);
 
-    basics::OMVertexFormat format, format2, formatComplex, simpleFormat, starFormat, cloudFormat;
+    basics::OMVertexFormat voxelFormat, voxelDebug, formatComplex, simpleFormat, starFormat, cloudFormat,
+        voxelFluidFormat;
     simpleFormat.nextGroup()->decideStruct();
-    format.setInstance()
+    voxelFormat.setInstance()
         ->appendPart("voxelPos", basics::Integer)
         ->appendPart("voxelMetadata", basics::Integer)
         ->appendPart("voxelExtra", basics::Integer)
@@ -86,7 +87,15 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
         ->nextGroup()
         ->decideStruct();
 
-    format2.appendPart("voxelPos", basics::Vec3f)->nextGroup()->decideStruct();
+    voxelFluidFormat.setInstance()
+        ->appendPart("voxelPos", basics::Integer)
+        ->appendPart("voxelMetadata", basics::Integer)
+        ->appendPart("voxelExtra", basics::Integer)
+        ->appendPart("voxelExtra2", basics::Integer)
+        ->nextGroup()
+        ->decideStruct();
+
+    voxelDebug.appendPart("voxelPos", basics::Vec3f)->nextGroup()->decideStruct();
     formatComplex.setInstance()
         ->appendPart("voxelBasics", basics::Integer)
         ->appendPart("voxelMetadata", basics::Integer)
@@ -127,9 +136,10 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->samples(samples)
             ->setCullMode(renderer::common::Back)
             ->setFrontClockwise(true)
-            ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.frag.glsl", Fragment, GLSLSource, format))
-            ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.vert.glsl", Vertex, GLSLSource, format))
-            ->format(format)
+            ->shader(
+                renderer->shaderManager.preprocess("core/voxel/voxel.frag.glsl", Fragment, GLSLSource, voxelFormat))
+            ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.vert.glsl", Vertex, GLSLSource, voxelFormat))
+            ->format(voxelFormat)
             ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
             ->blend(true)
             ->depth(true, true)
@@ -163,6 +173,31 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                           ->depth(true, true)
                           ->depthOp(GreaterOrEqual)
                           ->buildN();
+    fluidPipeline = renderer->createPipeline()
+                        ->input(UniformBuffer)
+                        ->inputName("Camera")
+                        ->input(ImageSampler)
+                        ->inputName("inTexture")
+                        ->input(UniformTexelBuffer)
+                        ->inputName("inChunkPos")
+                        ->input(UniformBuffer)
+                        ->inputName("FogData")
+                        ->input(ImageSampler)
+                        ->inputName("inLightmap")
+                        ->output(cutoutTargetMS->target)
+                        ->samples(samples)
+                        ->setCullMode(renderer::common::Back)
+                        ->setFrontClockwise(true)
+                        ->shader(renderer->shaderManager.preprocess("core/voxel/voxelfluid.frag.glsl", Fragment,
+                                                                    GLSLSource, voxelFluidFormat))
+                        ->shader(renderer->shaderManager.preprocess("core/voxel/voxelfluid.vert.glsl", Vertex,
+                                                                    GLSLSource, voxelFluidFormat))
+                        ->format(voxelFluidFormat)
+                        ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
+                        ->blend(true)
+                        ->depth(true, true)
+                        ->depthOp(Greater)
+                        ->buildN();
     translucentPipeline =
         renderer->createPipeline()
             ->input(UniformBuffer)
@@ -179,9 +214,10 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->samples(samples)
             ->setCullMode(renderer::common::Back)
             ->setFrontClockwise(true)
-            ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.oit.frag.glsl", Fragment, GLSLSource, format))
-            ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.vert.glsl", Vertex, GLSLSource, format))
-            ->format(format)
+            ->shader(
+                renderer->shaderManager.preprocess("core/voxel/voxel.oit.frag.glsl", Fragment, GLSLSource, voxelFormat))
+            ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.vert.glsl", Vertex, GLSLSource, voxelFormat))
+            ->format(voxelFormat)
             ->blendFunc({One, One, Zero, OneMinusSrcAlpha})
             ->blend(true)
             ->depth(true, false)
@@ -214,24 +250,49 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                      ->depth(true, false)
                                      ->depthOp(GreaterOrEqual)
                                      ->buildN();
+    translucentFluidPipeline = renderer->createPipeline()
+                                   ->input(UniformBuffer)
+                                   ->inputName("Camera")
+                                   ->input(ImageSampler)
+                                   ->inputName("inTexture")
+                                   ->input(UniformTexelBuffer)
+                                   ->inputName("inChunkPos")
+                                   ->input(UniformBuffer)
+                                   ->inputName("FogData")
+                                   ->input(ImageSampler)
+                                   ->inputName("inLightmap")
+                                   ->output(translucentTargetMS->target)
+                                   ->samples(samples)
+                                   ->setCullMode(renderer::common::Back)
+                                   ->setFrontClockwise(true)
+                                   ->shader(renderer->shaderManager.preprocess("core/voxel/voxelfluid.oit.frag.glsl",
+                                                                               Fragment, GLSLSource, voxelFluidFormat))
+                                   ->shader(renderer->shaderManager.preprocess("core/voxel/voxelfluid.vert.glsl",
+                                                                               Vertex, GLSLSource, voxelFluidFormat))
+                                   ->format(voxelFluidFormat)
+                                   ->blendFunc({One, One, Zero, OneMinusSrcAlpha})
+                                   ->blend(true)
+                                   ->depth(true, false)
+                                   ->depthOp(Greater)
+                                   ->buildN();
 
-    debugPipeline =
-        renderer->createPipeline()
-            ->input(UniformBuffer)
-            ->inputName("Camera")
-            ->primitiveType(LineList)
-            ->setLineWidth(2.0f)
-            ->output(cutoutTargetMS->target)
-            ->samples(samples)
-            ->shader(
-                renderer->shaderManager.preprocess("core/voxel/voxeldebug.frag.glsl", Fragment, GLSLSource, format2))
-            ->shader(renderer->shaderManager.preprocess("core/voxel/voxeldebug.vert.glsl", Vertex, GLSLSource, format2))
-            ->format(format2)
-            ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
-            ->blend(true)
-            ->depth(true, true)
-            ->depthOp(Greater)
-            ->buildN();
+    debugPipeline = renderer->createPipeline()
+                        ->input(UniformBuffer)
+                        ->inputName("Camera")
+                        ->primitiveType(LineList)
+                        ->setLineWidth(2.0f)
+                        ->output(cutoutTargetMS->target)
+                        ->samples(samples)
+                        ->shader(renderer->shaderManager.preprocess("core/voxel/voxeldebug.frag.glsl", Fragment,
+                                                                    GLSLSource, voxelDebug))
+                        ->shader(renderer->shaderManager.preprocess("core/voxel/voxeldebug.vert.glsl", Vertex,
+                                                                    GLSLSource, voxelDebug))
+                        ->format(voxelDebug)
+                        ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
+                        ->blend(true)
+                        ->depth(true, true)
+                        ->depthOp(Greater)
+                        ->buildN();
 
     skyDiscPipeline = renderer->createPipeline()
                           ->input(UniformBuffer)
@@ -408,6 +469,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     voxelComplexLayer = new OMVoxelLayer<OMVoxelComplex>(renderer);
     voxelTranslucentLayer = new OMVoxelLayer<OMVoxel>(renderer);
     voxelTranslucentComplexLayer = new OMVoxelLayer<OMVoxelComplex>(renderer);
+    voxelFluidLayer = new OMVoxelLayer<OMVoxelFluid>(renderer);
+    voxelTranslucentFluidLayer = new OMVoxelLayer<OMVoxelFluid>(renderer);
 
     chunkoffs = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
     debugoffs = renderer->allocateBuffer(VertexData, 12 * 2 * 3 * sizeof(float));
@@ -473,6 +536,10 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     complexPipeline->bindInput(3, chunkoffs);
     complexPipeline->bindInput(4, fogdata);
     complexPipeline->bindInput(5, lightmap->colorTexture);
+    fluidPipeline->bindInput(1, textureAtlas);
+    fluidPipeline->bindInput(2, chunkoffs);
+    fluidPipeline->bindInput(3, fogdata);
+    fluidPipeline->bindInput(4, lightmap->colorTexture);
     translucentPipeline->bindInput(1, textureAtlas);
     translucentPipeline->bindInput(2, chunkoffs);
     translucentPipeline->bindInput(3, fogdata);
@@ -482,6 +549,10 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     translucentComplexPipeline->bindInput(3, chunkoffs);
     translucentComplexPipeline->bindInput(4, fogdata);
     translucentComplexPipeline->bindInput(5, lightmap->colorTexture);
+    translucentFluidPipeline->bindInput(1, textureAtlas);
+    translucentFluidPipeline->bindInput(2, chunkoffs);
+    translucentFluidPipeline->bindInput(3, fogdata);
+    translucentFluidPipeline->bindInput(4, lightmap->colorTexture);
     skyDiscPipeline->bindInput(1, skydisc);
     lightmapPipeline->bindInput(0, lightmapData);
     skyPipeline->bindInput(0, skydisc);
@@ -505,6 +576,8 @@ OMVoxelManager::~OMVoxelManager()
     delete voxelComplexLayer;
     delete voxelTranslucentLayer;
     delete voxelTranslucentComplexLayer;
+    delete voxelFluidLayer;
+    delete voxelTranslucentFluidLayer;
     delete chunkoffs;
     delete debugoffs;
     delete skydisc;
@@ -512,8 +585,10 @@ OMVoxelManager::~OMVoxelManager()
     delete moonData;
     delete pipeline;
     delete complexPipeline;
+    delete fluidPipeline;
     delete translucentPipeline;
     delete translucentComplexPipeline;
+    delete translucentFluidPipeline;
     delete debugPipeline;
     delete composePipeline;
     delete translucentTargetMS;
@@ -657,6 +732,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         auto l2 = voxelComplexLayer->buf()->totalSize;
         auto l3 = voxelTranslucentLayer->buf()->totalSize;
         auto l4 = voxelTranslucentComplexLayer->buf()->totalSize;
+        auto l5 = voxelFluidLayer->buf()->totalSize;
+        auto l6 = voxelTranslucentFluidLayer->buf()->totalSize;
         chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
             for (auto &ochk : chunks)
@@ -746,16 +823,20 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             chunkoffs = renderer->allocateBuffer(UniformTexel, chunkManager->numChunks() * 3 * sizeof(float) * 2);
             pipeline->bindInput(2, chunkoffs);
             complexPipeline->bindInput(3, chunkoffs);
+            fluidPipeline->bindInput(2, chunkoffs);
             translucentPipeline->bindInput(2, chunkoffs);
             translucentComplexPipeline->bindInput(3, chunkoffs);
+            translucentFluidPipeline->bindInput(2, chunkoffs);
         }
 
         chunkoffs->updateDataPart(offs.data(), 0, offs.size() * sizeof(glm::vec3));
 
-        compilerPool->upload(voxelLayer, voxelComplexLayer, voxelTranslucentLayer, voxelTranslucentComplexLayer);
+        compilerPool->upload(voxelLayer, voxelComplexLayer, voxelFluidLayer, voxelTranslucentLayer,
+                             voxelTranslucentComplexLayer, voxelTranslucentFluidLayer);
 
         if (l != voxelLayer->buf()->totalSize || l2 != voxelComplexLayer->buf()->totalSize ||
-            l3 != voxelTranslucentLayer->buf()->totalSize || l4 != voxelTranslucentComplexLayer->buf()->totalSize)
+            l3 != voxelTranslucentLayer->buf()->totalSize || l4 != voxelTranslucentComplexLayer->buf()->totalSize ||
+            l5 != voxelFluidLayer->buf()->totalSize || l6 != voxelTranslucentFluidLayer->buf()->totalSize)
         {
             rec();
         }
@@ -778,7 +859,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     cloudComposePipeline->bindInput(0, (samples == 1 ? cloudTargetMS : cloudTarget)->colorTexture);
 
     auto tsk = task->target(lightmap->target)
-		   ->beginDebugTag("environment")
+                   ->beginDebugTag("environment")
                    ->pipeline(lightmapPipeline)
                    ->drawN(6)
                    ->clearColor({0.0f, 0.0f, 0.0f, 0.0f})
@@ -798,36 +879,41 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
                    ->vertexBuffer({starBuffer})
                    ->drawInstanceN(6, starBuffer->length / sizeof(float) / 5)
                    ->endDebugTag()
-		   ->beginDebugTag("cutout/opaque chunks")
+                   ->beginDebugTag("cutout/opaque chunks")
                    ->pipeline(pipeline)
                    ->vertexBuffer({voxelLayer->buf()->buffer})
                    ->drawInstanceN(6, voxelLayer->buf()->totalSize / sizeof(OMVoxel))
                    ->pipeline(complexPipeline)
                    ->vertexBuffer({voxelComplexLayer->buf()->buffer})
                    ->drawInstanceN(6, voxelComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex))
+                   ->pipeline(fluidPipeline)
+                   ->vertexBuffer({voxelFluidLayer->buf()->buffer})
+                   ->drawInstanceN(6, voxelFluidLayer->buf()->totalSize / sizeof(OMVoxelFluid))
                    ->pipeline(debugPipeline)
                    ->vertexBuffer({debugoffs})
                    ->drawN(2 * 12)
-		   ->endDebugTag();
+                   ->endDebugTag();
 
     if (samples != 1)
     {
         tsk->resolve(cutoutTarget->target);
     }
 
-    tsk->beginDebugTag("clouds")->clearColor(glm::vec4(0.0))
+    tsk->beginDebugTag("clouds")
+        ->clearColor(glm::vec4(0.0))
         ->target(cloudTargetMS->target)
         ->pipeline(cloudPipeline)
         ->vertexBuffer({cloudBuffer})
         ->drawInstanceN(36, cloudBuffer->length / sizeof(uint32_t))
-	->endDebugTag();
+        ->endDebugTag();
 
     if (samples != 1)
     {
         tsk->resolve(cloudTarget->target);
     }
 
-    tsk->beginDebugTag("translucent chunks")->clearColor(glm::vec4(0.0, 0.0, 0.0, 1.0))
+    tsk->beginDebugTag("translucent chunks")
+        ->clearColor(glm::vec4(0.0, 0.0, 0.0, 1.0))
         ->target(translucentTargetMS->target)
         ->pipeline(cloudComposePipeline)
         ->drawN(6)
@@ -837,7 +923,10 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
         ->pipeline(translucentComplexPipeline)
         ->vertexBuffer({voxelTranslucentComplexLayer->buf()->buffer})
         ->drawInstanceN(6, voxelTranslucentComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex))
-	->endDebugTag();
+        ->pipeline(translucentFluidPipeline)
+        ->vertexBuffer({voxelTranslucentFluidLayer->buf()->buffer})
+        ->drawInstanceN(6, voxelTranslucentFluidLayer->buf()->totalSize / sizeof(OMVoxelFluid))
+        ->endDebugTag();
 
     if (samples != 1)
     {
@@ -851,8 +940,10 @@ void OMVoxelManager::bindCameraBuffer(OMRendererBuffer *cameraBuffer)
     pipeline->bindInput(0, cameraBuffer);
     debugPipeline->bindInput(0, cameraBuffer);
     complexPipeline->bindInput(0, cameraBuffer);
+    fluidPipeline->bindInput(0, cameraBuffer);
     translucentPipeline->bindInput(0, cameraBuffer);
     translucentComplexPipeline->bindInput(0, cameraBuffer);
+    translucentFluidPipeline->bindInput(0, cameraBuffer);
     skyDiscPipeline->bindInput(0, cameraBuffer);
     sunrisePipeline->bindInput(0, cameraBuffer);
     sunPipeline->bindInput(0, cameraBuffer);

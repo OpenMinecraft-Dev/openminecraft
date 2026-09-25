@@ -774,11 +774,11 @@ auto OMModelPrecompiler::composeModel(std::vector<int> partids, bool soild, bool
     return blockModels.size() - 1;
 }
 
-auto OMModelPrecompiler::composeFluidModel(bool falling, uint8_t level, OMIdentifier tex) -> int
+auto OMModelPrecompiler::composeFluidModel(bool translucent, bool falling, uint8_t level, OMIdentifier tex) -> int
 {
     auto &m = blockModels.emplace_back();
     m.soild = false;
-    m.translucent = true;
+    m.translucent = translucent;
     m.fluid = true;
     m.fluidFalling = falling;
     m.fluidLevel = level;

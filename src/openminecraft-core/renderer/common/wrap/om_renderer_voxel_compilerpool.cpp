@@ -1,6 +1,5 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include <chrono>
-#include <iostream>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -95,11 +94,13 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
 
                     std::vector<OMVoxel> m = {}, tm = {};
                     std::vector<OMVoxelComplex> cm = {}, tcm = {};
+                    std::vector<OMVoxelFluid> fm = {}, tfm = {};
                     compiler.compile(
                         cnk.value(), externalAccessor, next, [&](OMVoxel v) -> void { m.emplace_back(v); },
                         [&](OMVoxelComplex v) -> void { cm.emplace_back(v); },
-                        [&](OMVoxel v) -> void { tm.emplace_back(v); },
-                        [&](OMVoxelComplex v) -> void { tcm.emplace_back(v); });
+                        [&](OMVoxelFluid v) { fm.emplace_back(v); }, [&](OMVoxel v) -> void { tm.emplace_back(v); },
+                        [&](OMVoxelComplex v) -> void { tcm.emplace_back(v); },
+                        [&](OMVoxelFluid v) { tfm.emplace_back(v); });
 
                     bufferMutex.lock();
                     cached[next] = true;
@@ -107,10 +108,14 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                     cutoutComplex[next].assign(cm.begin(), cm.end());
                     translucent[next].assign(tm.begin(), tm.end());
                     translucentComplex[next].assign(tcm.begin(), tcm.end());
+                    fluid[next].assign(fm.begin(), fm.end());
+                    translucentFluid[next].assign(tfm.begin(), tfm.end());
                     cutoutC[next].assign(m.begin(), m.end());
                     cutoutComplexC[next].assign(cm.begin(), cm.end());
                     translucentC[next].assign(tm.begin(), tm.end());
                     translucentComplexC[next].assign(tcm.begin(), tcm.end());
+                    fluidC[next].assign(fm.begin(), fm.end());
+                    translucentFluidC[next].assign(tfm.begin(), tfm.end());
                     bufferMutex.unlock();
                 }
             }
@@ -129,7 +134,9 @@ OMVoxelCompilerPool::~OMVoxelCompilerPool()
 }
 
 void OMVoxelCompilerPool::upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMVoxelComplex> *cutoutComplex,
-                                 OMVoxelLayer<OMVoxel> *translucent, OMVoxelLayer<OMVoxelComplex> *translucentComplex)
+                                 OMVoxelLayer<OMVoxelFluid> *fluid, OMVoxelLayer<OMVoxel> *translucent,
+                                 OMVoxelLayer<OMVoxelComplex> *translucentComplex,
+                                 OMVoxelLayer<OMVoxelFluid> *translucentFluid)
 {
     std::lock_guard g(bufferMutex);
 
@@ -156,6 +163,18 @@ void OMVoxelCompilerPool::upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMV
         translucentComplex->loadData(p.first, p.second);
     }
     this->translucentComplex.clear();
+
+    for (auto &p : this->fluid)
+    {
+        fluid->loadData(p.first, p.second);
+    }
+    this->fluid.clear();
+
+    for (auto &p : this->translucentFluid)
+    {
+        translucentFluid->loadData(p.first, p.second);
+    }
+    this->translucentFluid.clear();
 }
 void OMVoxelCompilerPool::compile(int i, bool useCache)
 {

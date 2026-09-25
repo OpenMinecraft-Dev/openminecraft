@@ -2,6 +2,7 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include <array>
 #include <cstdint>
+#include <functional>
 #include <tuple>
 
 namespace openminecraft::renderer::common::wrap
@@ -344,27 +345,27 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                               std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
                               int chunkid, std::function<void(OMVoxel)> commiter,
                               std::function<void(OMVoxelComplex)> commiterComplex,
+                              std::function<void(OMVoxelFluid)> committerFluid,
                               std::function<void(OMVoxel)> commiterTranslucent,
-                              std::function<void(OMVoxelComplex)> commiterTranslucentComplex) -> void
+                              std::function<void(OMVoxelComplex)> commiterTranslucentComplex,
+                              std::function<void(OMVoxelFluid)> commiterTranslucentFluid) -> void
 {
     for (const auto &v : chunk)
     {
         auto bsid = converter(v.second, chunk.chunkx, chunk.chunky, chunk.chunkz, v.first.x, v.first.y, v.first.z);
+        auto trans = handler->queryTranslucent(bsid);
+
         if (handler->queryFluid(bsid))
         {
             // TODO: fluid building logics
             auto a = handler->queryFluidFalling(bsid);
             auto b = handler->queryFluidLevel(bsid);
 
-            packVoxelFluid(v.first.x, v.first.y, v.first.z, {}, handler->queryFluidTex(bsid), chunkid, 15, 15, 15, 15,
-                           0, 0, 0, 0, b, b, b, b);
-
             for (auto f : {NegX, NegY, NegZ, PosX, PosY, PosZ})
             {
-                auto vox = packVoxel(v.first.x, v.first.y, v.first.z, f, 0, 0, 0, handler->queryFluidTex(bsid), chunkid,
-                                     0, 15, 15, 15, 15, 0, 0, 0, 0, 16, 16, 16, 0, 0, 0, 0, 0, 0, 16, 16, 0, 0, 0, 0,
-                                     true, true, true, 2, false, false);
-                commiterTranslucent(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4]});
+                auto vox = packVoxelFluid(v.first.x, v.first.y, v.first.z, f, handler->queryFluidTex(bsid), chunkid, 15,
+                                          15, 15, 15, 0, 0, 0, 0, b, b, b, b);
+                commiterTranslucentFluid(OMVoxelFluid{vox[0], vox[1], vox[2], vox[3]});
             }
         }
 
@@ -388,8 +389,6 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                     auto aabb = handler->queryPartAABB(bsid, i);
                     auto uv = handler->queryPartFaceUV(bsid, i, f);
                     auto raxis = handler->queryPartRotationCenter(bsid, i);
-
-                    auto trans = handler->queryTranslucent(bsid);
 
                     if (handler->queryPartComplex(bsid, i))
                     {
