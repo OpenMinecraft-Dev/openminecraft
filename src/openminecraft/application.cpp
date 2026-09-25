@@ -195,7 +195,6 @@ void OMApplication::mainLoop(OMBackend backend)
             switch (e.key.key)
             {
             case SDLK_ESCAPE:
-                SDL_SetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win), false);
                 inGame = false;
                 break;
             case SDLK_W:
@@ -244,7 +243,6 @@ void OMApplication::mainLoop(OMBackend backend)
         bus.append(SDL_EVENT_MOUSE_BUTTON_DOWN, [&](SDL_Event &e) -> void {
             if (e.button.button == 1)
             {
-                SDL_SetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win), true);
                 inGame = true;
             }
         });
@@ -328,6 +326,7 @@ void OMApplication::mainLoop(OMBackend backend)
             {
                 bus.handle(static_cast<SDL_EventType>(e.type), e);
             }
+            SDL_SetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win), inGame);
 
             win()->render(ticker);
         }
