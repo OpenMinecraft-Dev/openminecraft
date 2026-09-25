@@ -164,6 +164,18 @@ auto OMVoxelCompiler::existSoild(const world::OMChunk<16> &chunk,
     return handler->querySoild(converter(chunk.fetch(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
 }
 
+auto OMVoxelCompiler::existFluid(const world::OMChunk<16> &chunk,
+                                 std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, int x,
+                                 int y, int z) -> bool
+{
+    if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
+        return handler->queryFluid(
+            converter(externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz), chunk.chunkx,
+                      chunk.chunky, chunk.chunkz, x, y, z));
+
+    return handler->queryFluid(converter(chunk.fetch(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
+}
+
 auto OMVoxelCompiler::queryBlockstate(const world::OMChunk<16> &chunk,
                                       std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
                                       int x, int y, int z) -> uint32_t
@@ -309,6 +321,30 @@ auto OMVoxelCompiler::checkExistSoild(const world::OMChunk<16> &chunk,
     }
 }
 
+auto OMVoxelCompiler::checkExistFluid(const world::OMChunk<16> &chunk,
+                                      std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
+                                      glm::ivec3 v, OMVoxelFacing f) -> bool
+{
+    switch (f)
+    {
+    default:
+    case None:
+        return false;
+    case NegX:
+        return existFluid(chunk, externalAccessor, v.x - 1, v.y, v.z);
+    case NegY:
+        return existFluid(chunk, externalAccessor, v.x, v.y - 1, v.z);
+    case NegZ:
+        return existFluid(chunk, externalAccessor, v.x, v.y, v.z - 1);
+    case PosX:
+        return existFluid(chunk, externalAccessor, v.x + 1, v.y, v.z);
+    case PosY:
+        return existFluid(chunk, externalAccessor, v.x, v.y + 1, v.z);
+    case PosZ:
+        return existFluid(chunk, externalAccessor, v.x, v.y, v.z + 1);
+    }
+}
+
 auto OMVoxelCompiler::checkSkip(const world::OMChunk<16> &chunk,
                                 std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
                                 glm::ivec3 v, OMVoxelFacing f, uint32_t id) -> bool
@@ -357,15 +393,17 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
 
         if (handler->queryFluid(bsid))
         {
-            // TODO: fluid building logics
             auto a = handler->queryFluidFalling(bsid);
             auto b = handler->queryFluidLevel(bsid);
 
             for (auto f : {NegX, NegY, NegZ, PosX, PosY, PosZ})
             {
-                auto vox = packVoxelFluid(v.first.x, v.first.y, v.first.z, f, handler->queryFluidTex(bsid), chunkid, 15,
-                                          15, 15, 15, 0, 0, 0, 0, b, b, b, b);
-                commiterTranslucentFluid(OMVoxelFluid{vox[0], vox[1], vox[2], vox[3]});
+                if (!checkExistFluid(chunk, externalAccessor, v.first, f))
+                {
+                    auto vox = packVoxelFluid(v.first.x, v.first.y, v.first.z, f, handler->queryFluidTex(bsid), chunkid,
+                                              15, 15, 15, 15, 0, 0, 0, 0, b, b, b, b);
+                    commiterTranslucentFluid(OMVoxelFluid{vox[0], vox[1], vox[2], vox[3]});
+                }
             }
         }
 

@@ -300,9 +300,13 @@ class OMVoxelCompiler
                          int x, int y, int z) -> uint32_t;
     auto existSoild(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, int x,
                     int y, int z) -> bool;
+    auto existFluid(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, int x,
+                    int y, int z) -> bool;
     auto computeAO(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, int x,
                    int y, int z, OMVoxelFacing, int bsid, int pid) -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t>;
     auto checkExistSoild(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
+                         glm::ivec3, OMVoxelFacing) -> bool;
+    auto checkExistFluid(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                          glm::ivec3, OMVoxelFacing) -> bool;
     auto checkSkip(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                    glm::ivec3, OMVoxelFacing, uint32_t) -> bool;
