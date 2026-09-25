@@ -57,6 +57,11 @@ class OMBlock : public std::enable_shared_from_this<OMBlock>
         soild = v;
         return shared_from_this();
     }
+    auto isFluid(bool v) -> std::shared_ptr<OMBlock>
+    {
+        fluid = v;
+        return shared_from_this();
+    }
     auto isTranslucent(bool v) -> std::shared_ptr<OMBlock>
     {
         translucent = v;
@@ -117,6 +122,7 @@ class OMBlock : public std::enable_shared_from_this<OMBlock>
 
     bool soild = true;
     bool translucent = false;
+    bool fluid = false;
     std::unordered_map<std::string, std::vector<std::string>> properties;
 
     auto operator=(const OMBlock &other) -> OMBlock & = default;

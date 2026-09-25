@@ -3,7 +3,6 @@
 #include "openminecraft-shell/data/block/om_block_registery.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-#include <iostream>
 
 namespace openminecraftshell::data::block
 {

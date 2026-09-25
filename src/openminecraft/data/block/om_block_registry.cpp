@@ -1,5 +1,6 @@
 #include "openminecraft-shell/data/block/om_block.hpp"
 #include "openminecraft-shell/data/block/om_block_registery.hpp"
+#include "openminecraft-shell/data/om_identifier.hpp"
 #include <memory>
 
 namespace openminecraftshell::data::block
@@ -58,5 +59,11 @@ void registerBlocks()
                                 std::make_shared<OMTransparentBlock>()->isSoild(false));
     blockRegistery.registerItem(OMIdentifier("minecraft:stone_pressure_plate"),
                                 std::make_shared<OMBlock>()->isSoild(false)->propPowered());
+    blockRegistery.registerItem(
+        OMIdentifier("minecraft:water"),
+        std::make_shared<OMBlock>()
+            ->isFluid(true)
+            ->prop("level", {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"})
+            ->prop("falling", {"true", "false"}));
 }
 } // namespace openminecraftshell::data::block

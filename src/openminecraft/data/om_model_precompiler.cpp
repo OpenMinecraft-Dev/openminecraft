@@ -1,3 +1,4 @@
+#include <iostream>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -290,6 +291,24 @@ auto OMModelPrecompiler::queryPartRotationAngle(int bsid, int pid) -> int
 auto OMModelPrecompiler::querySoild(int bsid) -> bool
 {
     return blockModels[bsid].soild;
+}
+
+auto OMModelPrecompiler::queryFluid(int bsid) -> bool
+{
+    return blockModels[bsid].fluid;
+}
+
+auto OMModelPrecompiler::queryFluidFalling(int bsid) -> bool
+{
+    return blockModels[bsid].fluidFalling;
+}
+auto OMModelPrecompiler::queryFluidLevel(int bsid) -> uint8_t
+{
+    return blockModels[bsid].fluidLevel;
+}
+auto OMModelPrecompiler::queryFluidTex(int bsid) -> int
+{
+    return blockModels[bsid].fluidTex;
 }
 
 auto OMModelPrecompiler::loadModelPart(OMIdentifier i) -> int
@@ -733,12 +752,18 @@ auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::io::json::OMJso
             textureAtlas.subtex.count(ident) == 0};
 }
 
-auto OMModelPrecompiler::composeBlock(std::vector<int> partids, bool soild, bool translucent, bool skipsRendering)
-    -> int
+auto OMModelPrecompiler::composeModel(std::vector<int> partids, bool soild, bool translucent, bool skipsRendering,
+                                      bool waterlogged) -> int
 {
     auto &m = blockModels.emplace_back();
     m.soild = soild;
     m.translucent = translucent;
+    m.fluid = waterlogged;
+    if (m.fluid)
+    {
+        m.fluidFalling = false;
+        m.fluidLevel = 15;
+    }
     for (auto i : partids)
     {
         for (auto &mp : modelParts[i])
@@ -748,6 +773,19 @@ auto OMModelPrecompiler::composeBlock(std::vector<int> partids, bool soild, bool
             m.partAmbientOcculusion.push_back(modelAmbientOcculusion[i]);
         }
     }
+
+    return blockModels.size() - 1;
+}
+
+auto OMModelPrecompiler::composeFluidModel(bool falling, uint8_t level, OMIdentifier tex) -> int
+{
+    auto &m = blockModels.emplace_back();
+    m.soild = false;
+    m.translucent = true;
+    m.fluid = true;
+    m.fluidFalling = falling;
+    m.fluidLevel = level;
+    m.fluidTex = textureAtlas.addTexture(tex);
 
     return blockModels.size() - 1;
 }

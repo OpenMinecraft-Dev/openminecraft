@@ -76,6 +76,10 @@ struct OMModel
     std::vector<bool> partComplex;
     bool soild;
     bool translucent;
+    bool fluid;
+    bool fluidFalling;
+    uint8_t fluidLevel;
+    uint32_t fluidTex;
 };
 class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxelHandler
 {
@@ -88,7 +92,8 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
         -> OMModelFace;
     auto wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelPart;
 
-    auto composeBlock(std::vector<int>, bool = true, bool = false, bool = false) -> int;
+    auto composeModel(std::vector<int>, bool = true, bool = false, bool = false, bool = false) -> int;
+    auto composeFluidModel(bool falling, uint8_t level, OMIdentifier tex) -> int;
 
     auto loadModelPart(OMIdentifier) -> int;
     auto loadModelPartWithArgs(OMIdentifier, int, int, int, bool) -> int;
@@ -116,6 +121,10 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto queryPartRotationAngleF(int bsid, int pid) -> float override;
     auto queryPartRotationAngleExt(int bsid, int pid) -> glm::vec3 override;
     auto queryTranslucent(int bsid) -> bool override;
+    auto queryFluid(int bsid) -> bool override;
+    auto queryFluidFalling(int bsid) -> bool override;
+    auto queryFluidLevel(int bsid) -> uint8_t override;
+    auto queryFluidTex(int bsid) -> int override;
 
   private:
     int modelId = 0;

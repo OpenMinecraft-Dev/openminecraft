@@ -35,6 +35,18 @@ template <typename K, typename T> class OMWorldRegistry
     {
         return idToRegistry[nameToId[std::move(name)]];
     }
+    auto nameFromId(uint32_t t) -> K &
+    {
+        for (auto &k : nameToId)
+        {
+            if (k.second == t)
+            {
+                return k.first;
+            }
+        }
+
+        return {};
+    }
 
   private:
     uint32_t nextId = 0;

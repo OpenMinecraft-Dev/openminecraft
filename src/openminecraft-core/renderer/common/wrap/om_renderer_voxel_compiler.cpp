@@ -18,6 +18,36 @@ OMVoxelCompiler::~OMVoxelCompiler()
 // y -> Voxel Y Coordinate (4 bits)
 // z -> Voxel Z Coordinate (4 bits)
 // f -> Voxel Facing (3 bits)
+// e -> Voxel Enable (1 bit)
+// t -> Voxel Texture Index (14 bits)
+// c -> Voxel Chunk ID (19 bits)
+// l -> Voxel Sky Light (4 * 4 bits)
+// L -> Voxel Block Light (4 * 4 bits)
+// h -> Voxel Fluid Corner Heights (4 * 8 bits)
+// u -> unused
+// xxxx yyyy zzzz efff uuuu uuuu uuuu cccu
+// uutt tttt tttt tttt cccc cccc cccc cccc
+// llll llll llll llll LLLL LLLL LLLL LLLL
+// hhhh hhhh hhhh hhhh hhhh hhhh hhhh hhhh
+static constexpr auto packVoxelFluid(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint16_t tex, int32_t chkid,
+                                     uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4, uint8_t bl1, uint8_t bl2,
+                                     uint8_t bl3, uint8_t bl4, uint8_t h1, uint8_t h2, uint8_t h3, uint8_t h4)
+    -> std::array<int, 4>
+{
+    return {
+        x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | (((chkid >> 16) & 7) << 1),
+        ((tex & 0x3fff) << 16) | (chkid & 0xffff),
+        ((l1 & 0xf) << 28) | ((l2 & 0xf) << 24) | ((l3 & 0xf) << 20) | ((l4 & 0xf) << 16) | ((bl1 & 0xf) << 12) |
+            ((bl2 & 0xf) << 8) | ((bl3 & 0xf) << 4) | (bl4 & 0xf),
+        h1 << 24 | h2 << 16 | h3 << 8 | h4,
+    };
+}
+
+// INFO: letter -> meanings
+// x -> Voxel X Coordinate (4 bits)
+// y -> Voxel Y Coordinate (4 bits)
+// z -> Voxel Z Coordinate (4 bits)
+// f -> Voxel Facing (3 bits)
 // X -> Voxel X Coordinate Div (4 bits)
 // Y -> Voxel Y Coordinate Div (4 bits)
 // Z -> Voxel Z Coordinate Div (4 bits)
@@ -320,6 +350,24 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
     for (const auto &v : chunk)
     {
         auto bsid = converter(v.second, chunk.chunkx, chunk.chunky, chunk.chunkz, v.first.x, v.first.y, v.first.z);
+        if (handler->queryFluid(bsid))
+        {
+            // TODO: fluid building logics
+            auto a = handler->queryFluidFalling(bsid);
+            auto b = handler->queryFluidLevel(bsid);
+
+            packVoxelFluid(v.first.x, v.first.y, v.first.z, {}, handler->queryFluidTex(bsid), chunkid, 15, 15, 15, 15,
+                           0, 0, 0, 0, b, b, b, b);
+
+            for (auto f : {NegX, NegY, NegZ, PosX, PosY, PosZ})
+            {
+                auto vox = packVoxel(v.first.x, v.first.y, v.first.z, f, 0, 0, 0, handler->queryFluidTex(bsid), chunkid,
+                                     0, 15, 15, 15, 15, 0, 0, 0, 0, 16, 16, 16, 0, 0, 0, 0, 0, 0, 16, 16, 0, 0, 0, 0,
+                                     true, true, true, 2, false, false);
+                commiterTranslucent(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4]});
+            }
+        }
+
         if (handler->queryNumParts(bsid) == 0)
         {
             continue;

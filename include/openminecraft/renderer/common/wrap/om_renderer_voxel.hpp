@@ -118,6 +118,13 @@ struct OMVoxel
     int32_t voxelExtra2;
     int32_t voxelExtra3;
 };
+struct OMVoxelFluid
+{
+    int32_t voxelBasic;
+    int32_t voxelMeta;
+    int32_t voxelExtra;
+    int32_t voxelExtra2;
+};
 struct OMVoxelComplex
 {
     int32_t voxelBasic;
@@ -174,6 +181,10 @@ class OMVoxelHandler
     virtual auto queryPartFaceSecondaryTexture(int bsid, int pid, OMVoxelFacing) -> bool = 0;
     virtual auto queryPartRotationAngleF(int bsid, int pid) -> float = 0;
     virtual auto queryTranslucent(int bsid) -> bool = 0;
+    virtual auto queryFluid(int bsid) -> bool = 0;
+    virtual auto queryFluidFalling(int bsid) -> bool = 0;
+    virtual auto queryFluidLevel(int bsid) -> uint8_t = 0;
+    virtual auto queryFluidTex(int bsid) -> int = 0;
 };
 
 class OMVoxelHandlerDummy : public OMVoxelHandler
@@ -260,6 +271,22 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     auto querySkipsRendering(int bsid, int tgbsid, OMVoxelFacing) -> bool override
     {
         return false;
+    }
+    auto queryFluid(int bsid) -> bool override
+    {
+        return false;
+    }
+    auto queryFluidFalling(int bsid) -> bool override
+    {
+        return false;
+    }
+    auto queryFluidLevel(int bsid) -> uint8_t override
+    {
+        return 0;
+    }
+    auto queryFluidTex(int bsid) -> int override
+    {
+        return 0;
     }
 };
 

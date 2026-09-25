@@ -6,6 +6,7 @@
 #include "openminecraft/io/json/om_io_ast_json.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/io/json/om_io_ast_builder_json.hpp"
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -36,6 +37,11 @@ void OMBlockstateResolver::resolve(OMIdentifier ident)
     auto &blk = blockRegistery.getRegistry(ident);
     states[ident].clear();
     requiredModels[ident].clear();
+
+    if (blk->fluid)
+    {
+        return;
+    }
 
     auto ff = vfs::fsfetch(fmt::format("{}/{}/blockstates/{}.json", root, ident.namesp, ident.path));
     json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(ff));
@@ -179,6 +185,14 @@ void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
         return;
     }
 
+    if (blk->fluid)
+    {
+        states[ident][st].emplace_back(
+            compiler.composeFluidModel(st.properties["falling"] == "true", std::stoi(st.properties["level"]),
+                                       OMIdentifier(ident.namesp + ":block/" + ident.path + "_still")));
+        return;
+    }
+
     if (resolverCache[ident]->getMap().count("variants"))
     {
         for (auto &var : resolverCache[ident]->getMap()["variants"]->getMap())
@@ -194,8 +208,9 @@ void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
             {
                 if (var.second->type() == openminecraft::io::json::Object)
                 {
-                    auto i = compiler.composeBlock({requiredModels[ident][identFrom(var.second)]}, blk->soild,
-                                                   blk->translucent);
+                    auto i = compiler.composeModel(
+                        {requiredModels[ident][identFrom(var.second)]}, blk->soild, blk->translucent,
+                        st.properties.count("waterlogged") ? st.properties["waterlogged"] == "true" : false);
                     states[ident][st].emplace_back(i);
                     return;
                 }
@@ -203,8 +218,9 @@ void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
                 {
                     for (auto &lp : var.second->getArray())
                     {
-                        auto i =
-                            compiler.composeBlock({requiredModels[ident][identFrom(lp)]}, blk->soild, blk->translucent);
+                        auto i = compiler.composeModel(
+                            {requiredModels[ident][identFrom(lp)]}, blk->soild, blk->translucent,
+                            st.properties.count("waterlogged") ? st.properties["waterlogged"] == "true" : false);
                         states[ident][st].emplace_back(i);
                     }
                     return;
@@ -238,7 +254,9 @@ void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
             }
         }
 
-        auto i = compiler.composeBlock(ids, blk->soild, blk->translucent);
+        auto i =
+            compiler.composeModel(ids, blk->soild, blk->translucent,
+                                  st.properties.count("waterlogged") ? st.properties["waterlogged"] == "true" : false);
         states[ident][st].emplace_back(i);
         return;
     }

@@ -39,7 +39,7 @@ class OMTextureAtlas
         img2.parse(imgraw);
 
         subtexSizes[i] = {img2.getWidth(), img2.getHeight()};
-        if (img2.getWidth() > 16 || img2.getHeight() > 16)
+        if (img2.getWidth() > 16 && img2.getHeight() > 16)
         {
             return -1;
         }
@@ -78,7 +78,7 @@ class OMTextureAtlas
             specs::png::OMPngFile img2;
             img2.parse(imgraw);
 
-            if (img2.getWidth() > 16 || img2.getHeight() > 16)
+            if (img2.getWidth() > 16 && img2.getHeight() > 16)
             {
                 continue;
             }
