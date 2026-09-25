@@ -137,7 +137,7 @@ void OMApplication::mainLoop(OMBackend backend)
                     cnk.setBlock(
                         1, 1, 0,
                         blockstateRegistry.id(data::OMIdentifier(
-                            "minecraft:cherry_stairs[facing=east,half=bottom,shape=straight,water_logged=false]")));
+                            "minecraft:cherry_stairs[facing=east,half=bottom,shape=straight,water_logged=true]")));
                     cnk.setBlock(3, 1, 0,
                                  blockstateRegistry.id(data::OMIdentifier(
                                      "minecraft:cherry_door[facing=east,half=lower,hinge=left,open=false]")));
@@ -159,7 +159,7 @@ void OMApplication::mainLoop(OMBackend backend)
                     cnk.setBlock(15, 2, 2,
                                  blockstateRegistry.id(
                                      data::OMIdentifier("minecraft:cherry_fence_gate[facing=south,in_wall=false,"
-                                                        "open=true,powered=true,water_logged=true]")));
+                                                        "open=true,powered=true,water_logged=false]")));
                     cnk.setBlock(
                         15, 2, 1,
                         blockstateRegistry.id(data::OMIdentifier("minecraft:stone_pressure_plate[powered=false]")));

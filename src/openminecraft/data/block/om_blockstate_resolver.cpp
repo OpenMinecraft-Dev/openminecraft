@@ -210,7 +210,7 @@ void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
                 {
                     auto i = compiler.composeModel(
                         {requiredModels[ident][identFrom(var.second)]}, blk->soild, blk->translucent,
-                        st.properties.count("waterlogged") ? st.properties["waterlogged"] == "true" : false);
+                        st.properties.count("water_logged") ? st.properties["water_logged"] == "true" : false);
                     states[ident][st].emplace_back(i);
                     return;
                 }
@@ -220,7 +220,7 @@ void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
                     {
                         auto i = compiler.composeModel(
                             {requiredModels[ident][identFrom(lp)]}, blk->soild, blk->translucent,
-                            st.properties.count("waterlogged") ? st.properties["waterlogged"] == "true" : false);
+                            st.properties.count("water_logged") ? st.properties["water_logged"] == "true" : false);
                         states[ident][st].emplace_back(i);
                     }
                     return;
@@ -254,9 +254,9 @@ void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
             }
         }
 
-        auto i =
-            compiler.composeModel(ids, blk->soild, blk->translucent,
-                                  st.properties.count("waterlogged") ? st.properties["waterlogged"] == "true" : false);
+        auto i = compiler.composeModel(ids, blk->soild, blk->translucent,
+                                       st.properties.count("water_logged") ? st.properties["water_logged"] == "true"
+                                                                           : false);
         states[ident][st].emplace_back(i);
         return;
     }
