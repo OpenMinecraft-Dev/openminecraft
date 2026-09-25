@@ -380,49 +380,56 @@ auto OMVoxelCompiler::checkSkip(const world::OMChunk<16> &chunk,
 
 auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
                                     std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
-                                    glm::ivec3 v, int idx) -> float
+                                    glm::ivec3 v, int idx, int current) -> float
 {
-    std::array<int, 3> neighbours = {};
+    uint32_t selfState = converter(queryBlockstate(chunk, externalAccessor, v.x, v.y, v.z), chunk.chunkx, chunk.chunky,
+                                   chunk.chunkz, v.x, v.y, v.z);
+    if (!handler->queryFluid(selfState))
+    {
+        return 0.0f;
+    }
 
+    float tot = handler->queryFluidFalling(selfState) ? 8.0f : (8.0f - current);
+    int lev = 1;
+
+    std::array<glm::ivec3, 3> nPos;
     switch (idx)
     {
     case 0:
-        neighbours[0] = queryBlockstate(chunk, externalAccessor, v.x - 1, v.y, v.z - 1);
-        neighbours[1] = queryBlockstate(chunk, externalAccessor, v.x - 1, v.y, v.z);
-        neighbours[2] = queryBlockstate(chunk, externalAccessor, v.x, v.y, v.z - 1);
+        nPos = {{{v.x - 1, v.y, v.z - 1}, {v.x - 1, v.y, v.z}, {v.x, v.y, v.z - 1}}};
         break;
     case 2:
-        neighbours[0] = queryBlockstate(chunk, externalAccessor, v.x - 1, v.y, v.z + 1);
-        neighbours[1] = queryBlockstate(chunk, externalAccessor, v.x - 1, v.y, v.z);
-        neighbours[2] = queryBlockstate(chunk, externalAccessor, v.x, v.y, v.z + 1);
+        nPos = {{{v.x + 1, v.y, v.z - 1}, {v.x + 1, v.y, v.z}, {v.x, v.y, v.z - 1}}};
         break;
     case 1:
-        neighbours[0] = queryBlockstate(chunk, externalAccessor, v.x + 1, v.y, v.z - 1);
-        neighbours[1] = queryBlockstate(chunk, externalAccessor, v.x + 1, v.y, v.z);
-        neighbours[2] = queryBlockstate(chunk, externalAccessor, v.x, v.y, v.z - 1);
+        nPos = {{{v.x - 1, v.y, v.z + 1}, {v.x - 1, v.y, v.z}, {v.x, v.y, v.z + 1}}};
         break;
     case 3:
-        neighbours[0] = queryBlockstate(chunk, externalAccessor, v.x + 1, v.y, v.z + 1);
-        neighbours[1] = queryBlockstate(chunk, externalAccessor, v.x + 1, v.y, v.z);
-        neighbours[2] = queryBlockstate(chunk, externalAccessor, v.x, v.y, v.z + 1);
+        nPos = {{{v.x + 1, v.y, v.z + 1}, {v.x + 1, v.y, v.z}, {v.x, v.y, v.z + 1}}};
         break;
     default:
-        break;
+        return 227.0f * (tot / 8.0f);
     }
 
-    auto lev = 0;
-    auto tot = 0.0f;
-
-    for (int i = 0; i < 3; ++i)
+    for (const auto &p : nPos)
     {
-        if (handler->queryFluid(neighbours[i]))
+        uint32_t ns = converter(queryBlockstate(chunk, externalAccessor, p.x, p.y, p.z), chunk.chunkx, chunk.chunky,
+                                chunk.chunkz, p.x, p.y, p.z);
+        if (!handler->queryFluid(ns))
+            continue;
+
+        if (handler->queryFluidFalling(ns))
         {
-            lev++;
-            tot += (handler->queryFluidLevel(neighbours[i]) & 0b111) + 1;
+            tot += 8.0f;
         }
+        else
+        {
+            tot += 8.0f - handler->queryFluidLevel(ns);
+        }
+        lev++;
     }
 
-    return lev ? 227.0f * (tot / lev) / 8.0f : 0.0f;
+    return 255.0f * (tot / lev) / 9.0f;
 }
 
 auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
@@ -442,13 +449,12 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
         if (handler->queryFluid(bsid))
         {
             auto a = handler->queryFluidFalling(bsid);
-            auto b = (handler->queryFluidLevel(bsid) & 0b111) + 1;
+            auto b = (handler->queryFluidLevel(bsid) & 0b111);
 
-            auto currentlev = 227.0f * b / 8.0f;
-            auto h1 = a ? 255.0f : (currentlev + checkAvgFluid(chunk, externalAccessor, v.first, 0)) / 2;
-            auto h2 = a ? 255.0f : (currentlev + checkAvgFluid(chunk, externalAccessor, v.first, 1)) / 2;
-            auto h3 = a ? 255.0f : (currentlev + checkAvgFluid(chunk, externalAccessor, v.first, 2)) / 2;
-            auto h4 = a ? 255.0f : (currentlev + checkAvgFluid(chunk, externalAccessor, v.first, 3)) / 2;
+            auto h1 = a ? 255.0f : (checkAvgFluid(chunk, externalAccessor, v.first, 0, b));
+            auto h2 = a ? 255.0f : (checkAvgFluid(chunk, externalAccessor, v.first, 1, b));
+            auto h3 = a ? 255.0f : (checkAvgFluid(chunk, externalAccessor, v.first, 2, b));
+            auto h4 = a ? 255.0f : (checkAvgFluid(chunk, externalAccessor, v.first, 3, b));
 
             for (auto f : {NegX, NegY, NegZ, PosX, PosY, PosZ})
             {

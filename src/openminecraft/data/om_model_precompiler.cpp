@@ -759,7 +759,7 @@ auto OMModelPrecompiler::composeModel(std::vector<int> partids, bool soild, bool
     m.translucent = translucent;
     m.fluid = waterlogged;
     m.fluidFalling = false;
-    m.fluidLevel = 15;
+    m.fluidLevel = 0;
     m.fluidTex = textureAtlas.addTexture(OMIdentifier("minecraft:block/water_still"));
     for (auto i : partids)
     {
