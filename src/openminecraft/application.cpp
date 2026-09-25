@@ -145,8 +145,7 @@ void OMApplication::mainLoop(OMBackend backend)
                                  blockstateRegistry.id(data::OMIdentifier(
                                      "minecraft:cherry_door[facing=east,half=upper,hinge=left,open=false]")));
                     cnk.setBlock(0, 1, 0,
-                                 blockstateRegistry.id(data::OMIdentifier(
-                                     "minecraft:cherry_shelf[facing=east,powered=false,side_chain=unconnected]")));
+                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=15]")));
                     cnk.setBlock(0, 2, 1,
                                  blockstateRegistry.id(data::OMIdentifier(
                                      "minecraft:cherry_hanging_sign[attached=false,rotation=3,water_logged=false]")));
@@ -266,7 +265,7 @@ void OMApplication::mainLoop(OMBackend backend)
             const float time = std::chrono::duration<float>(currentTime - startTime).count();
             startTime = currentTime;
 
-            constexpr float moveSpeed = 40.3f;
+            constexpr float moveSpeed = 1.3f;
 
             if (!inGame)
             {

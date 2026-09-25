@@ -27,6 +27,8 @@ void main()
         discard;
     }
     vec3 result = voxFactor * texColor.rgb;
+    result.r *= 0.2;
+    result.g *= 0.2;
 
     outColor = fog_gen(vec4(result.rgb * texColor.a, texColor.a) * texture(inLightmap, voxLight), fog.fogStart,
                        fog.fogEnd, vec3(fog.fogR, fog.fogG, fog.fogB), 0.0);

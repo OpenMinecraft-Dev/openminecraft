@@ -124,6 +124,14 @@ void OMRendererBufferVk::updateData(void *src)
 
         if (alwaysMapped)
         {
+            if (std::memcmp(data, src, length) == 0)
+            {
+                return;
+            }
+            if (synced)
+            {
+                renderer->logicalDevice.waitIdle();
+            }
             std::memcpy(data, src, this->length);
         }
         else
@@ -131,6 +139,10 @@ void OMRendererBufferVk::updateData(void *src)
             auto vtx = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
             if (vtx)
             {
+                if (synced)
+                {
+                    renderer->logicalDevice.waitIdle();
+                }
                 std::memcpy(vtx, src, this->length);
             }
             renderer->logicalDevice.unmapMemory(this->bufferMemory);
@@ -147,18 +159,27 @@ void OMRendererBufferVk::updateDataPart(void *src, uint64_t offset, uint64_t len
     try
     {
         auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
-        if (renderer->currentFence != Fence{})
-        {
-            (void)renderer->logicalDevice.waitForFences(renderer->currentFence, true,
-                                                        std::numeric_limits<uint64_t>::max());
-        }
+
         if (alwaysMapped)
         {
+            if (std::memcmp(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(data) + offset), src, length) == 0)
+            {
+                return;
+            }
+            if (synced)
+            {
+                renderer->logicalDevice.waitIdle();
+            }
             std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(data) + offset), src, length);
         }
         else
         {
             auto vtx = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
+
+            if (synced)
+            {
+                renderer->logicalDevice.waitIdle();
+            }
             std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(vtx) + offset), src, length);
             renderer->logicalDevice.unmapMemory(this->bufferMemory);
         }
@@ -174,11 +195,7 @@ void OMRendererBufferVk::copyTo(OMRendererBuffer *dst)
     try
     {
         auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
-        if (renderer->currentFence != Fence{})
-        {
-            (void)renderer->logicalDevice.waitForFences(renderer->currentFence, true,
-                                                        std::numeric_limits<uint64_t>::max());
-        }
+
         if (alwaysMapped)
         {
             dst->updateDataPart(data, 0, length);

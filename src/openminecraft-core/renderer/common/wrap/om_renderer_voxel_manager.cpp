@@ -273,6 +273,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                    ->blendFunc({One, One, Zero, OneMinusSrcAlpha})
                                    ->blend(true)
                                    ->depth(true, false)
+                                   ->depthBias(true, -1.0f, -1.0f)
                                    ->depthOp(Greater)
                                    ->buildN();
 
@@ -695,6 +696,7 @@ auto OMVoxelManager::buildVoxelCloud() -> std::vector<uint32_t>
     }
     return da;
 }
+
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
     auto cc = camera.getPosRaw();
@@ -829,6 +831,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             translucentFluidPipeline->bindInput(2, chunkoffs);
         }
 
+        chunkoffs->synced = true;
         chunkoffs->updateDataPart(offs.data(), 0, offs.size() * sizeof(glm::vec3));
 
         compilerPool->upload(voxelLayer, voxelComplexLayer, voxelFluidLayer, voxelTranslucentLayer,
