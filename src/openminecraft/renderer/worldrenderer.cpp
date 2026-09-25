@@ -277,6 +277,7 @@ void OMWorldRenderer::afterFrame()
 {
     voxelManager->update(*camera);
     auto cam = camera->fetchProjMat() * camera->fetchViewMat();
+    cameraBuffer->synced = true;
     cameraBuffer->updateData(&cam);
 }
 

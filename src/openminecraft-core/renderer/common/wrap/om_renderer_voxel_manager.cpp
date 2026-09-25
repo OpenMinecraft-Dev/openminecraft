@@ -196,6 +196,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                         ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
                         ->blend(true)
                         ->depth(true, true)
+                        ->depthBias(true, -1.0f, -2.0f)
                         ->depthOp(Greater)
                         ->buildN();
     translucentPipeline =
@@ -273,7 +274,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                    ->blendFunc({One, One, Zero, OneMinusSrcAlpha})
                                    ->blend(true)
                                    ->depth(true, false)
-                                   ->depthBias(true, -1.0f, -1.0f)
+                                   ->depthBias(true, -1.0f, -2.0f)
                                    ->depthOp(Greater)
                                    ->buildN();
 

@@ -153,7 +153,7 @@ void OMDebugRenderer::afterFrame()
 
     auto tpe = std::chrono::steady_clock::now();
     auto cc = std::chrono::duration_cast<std::chrono::nanoseconds>(tpe - tp);
-    if (cc.count() > 5e7)
+    if (cc.count() > 5e8)
     {
         fpsTextNode->style("text",
                            fmt::format("FPS: {}", static_cast<int>(static_cast<float>(fps) / cc.count() * 1e9)));
