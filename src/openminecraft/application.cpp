@@ -121,10 +121,12 @@ void OMApplication::mainLoop(OMBackend backend)
                 {
                     using data::block::blockstateRegistry;
                     world::OMChunk<16> cnk(cx, cy, cz);
+                    cnk.setBlock(0, 1, 0,
+                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=14]")));
                     cnk.setBlock(0, 0, 0,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=true,level=15]")));
+                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=true,level=14]")));
                     cnk.setBlock(0, 15, 0,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=true,level=15]")));
+                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=true,level=14]")));
                     cnk.setBlock(15, 0, 0,
                                  blockstateRegistry.id(data::OMIdentifier("minecraft:white_stained_glass[]")));
                     cnk.setBlock(0, 1, 1, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
@@ -144,8 +146,6 @@ void OMApplication::mainLoop(OMBackend backend)
                     cnk.setBlock(3, 2, 0,
                                  blockstateRegistry.id(data::OMIdentifier(
                                      "minecraft:cherry_door[facing=east,half=upper,hinge=left,open=false]")));
-                    cnk.setBlock(0, 1, 0,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=15]")));
                     cnk.setBlock(0, 2, 1,
                                  blockstateRegistry.id(data::OMIdentifier(
                                      "minecraft:cherry_hanging_sign[attached=false,rotation=3,water_logged=false]")));

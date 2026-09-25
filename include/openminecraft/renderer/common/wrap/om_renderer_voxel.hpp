@@ -310,6 +310,8 @@ class OMVoxelCompiler
                          glm::ivec3, OMVoxelFacing) -> bool;
     auto checkSkip(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                    glm::ivec3, OMVoxelFacing, uint32_t) -> bool;
+    auto checkAvgFluid(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
+                       glm::ivec3, int) -> float;
     auto compile(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                  int chunkid, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>,
                  std::function<void(OMVoxelFluid)>, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>,

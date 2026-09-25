@@ -25,7 +25,7 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_CHUNKID ((((voxelPos >> 1) & 7) << 16) | ((voxelMetadata) & 0xffff))
 #define VOXEL_SL(n) ((voxelExtra >> (28 - 4 * (n))) & 15)
 #define VOXEL_BL(n) ((voxelExtra >> (12 - 4 * (n))) & 15)
-#define VOXEL_FLUIDH(n) ((voxelExtra2 >> (24 - 8 * n)) & 0xff)
+#define VOXEL_FLUIDH(n) float((voxelExtra2 >> (24 - 8 * n)) & 0xff)
 
 void main()
 {
