@@ -418,11 +418,11 @@ auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
         if (handler->queryFluid(neighbours[i]))
         {
             lev++;
-            tot += (handler->queryFluidLevel(neighbours[i]) & 0b111);
+            tot += (handler->queryFluidLevel(neighbours[i]) & 0b111) + 1;
         }
     }
 
-    return lev ? 227.0f * (tot / lev) / 7.0f : 0.0f;
+    return lev ? 227.0f * (tot / lev) / 8.0f : 0.0f;
 }
 
 auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
@@ -442,9 +442,9 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
         if (handler->queryFluid(bsid))
         {
             auto a = handler->queryFluidFalling(bsid);
-            auto b = handler->queryFluidLevel(bsid) & 0b111;
+            auto b = (handler->queryFluidLevel(bsid) & 0b111) + 1;
 
-            auto currentlev = 227.0f * b / 7.0f;
+            auto currentlev = 227.0f * b / 8.0f;
             auto h1 = a ? 255.0f : (currentlev + checkAvgFluid(chunk, externalAccessor, v.first, 0)) / 2;
             auto h2 = a ? 255.0f : (currentlev + checkAvgFluid(chunk, externalAccessor, v.first, 1)) / 2;
             auto h3 = a ? 255.0f : (currentlev + checkAvgFluid(chunk, externalAccessor, v.first, 2)) / 2;
