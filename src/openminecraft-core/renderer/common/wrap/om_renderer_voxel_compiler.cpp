@@ -436,7 +436,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                               std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
                               int chunkid, std::function<void(OMVoxel)> commiter,
                               std::function<void(OMVoxelComplex)> commiterComplex,
-                              std::function<void(OMVoxelFluid)> committerFluid,
+                              std::function<void(OMVoxelFluid)> commiterFluid,
                               std::function<void(OMVoxel)> commiterTranslucent,
                               std::function<void(OMVoxelComplex)> commiterTranslucentComplex,
                               std::function<void(OMVoxelFluid)> commiterTranslucentFluid) -> void

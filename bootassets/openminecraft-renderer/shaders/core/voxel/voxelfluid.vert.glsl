@@ -85,55 +85,65 @@ void main()
     worldPos += worldPosOffset;
 
     int idx = int(oruv.x) << 1 | int(oruv.y);
+    float yoff = 0;
     if (VOXEL_FACING_AXIS == 2 && VOXEL_FACING_SIGN == 1)
     {
-        by += VOXEL_FLUIDH(idx) / 255.0 - 1;
+        yoff = VOXEL_FLUIDH(idx) / 255.0 - 1;
     }
     if (VOXEL_FACING_AXIS == 0 && VOXEL_FACING_SIGN == 0)
     {
         if (idx == 0)
         {
-            by += VOXEL_FLUIDH(0) / 255.0 - 1;
+            yoff = VOXEL_FLUIDH(0) / 255.0 - 1;
+            uv.y -= yoff;
         }
         else if (idx == 2)
         {
-            by += VOXEL_FLUIDH(1) / 255.0 - 1;
+            yoff = VOXEL_FLUIDH(1) / 255.0 - 1;
+            uv.y -= yoff;
         }
     }
     if (VOXEL_FACING_AXIS == 1 && VOXEL_FACING_SIGN == 0)
     {
         if (idx == 0)
         {
-            by += VOXEL_FLUIDH(2) / 255.0 - 1;
+            yoff = VOXEL_FLUIDH(2) / 255.0 - 1;
+            uv.y -= yoff;
         }
         else if (idx == 2)
         {
-            by += VOXEL_FLUIDH(0) / 255.0 - 1;
+            yoff = VOXEL_FLUIDH(0) / 255.0 - 1;
+            uv.y -= yoff;
         }
     }
     if (VOXEL_FACING_AXIS == 0 && VOXEL_FACING_SIGN == 1)
     {
         if (idx == 0)
         {
-            by += VOXEL_FLUIDH(3) / 255.0 - 1;
+            yoff = VOXEL_FLUIDH(3) / 255.0 - 1;
+            uv.y -= yoff;
         }
         else if (idx == 2)
         {
-            by += VOXEL_FLUIDH(2) / 255.0 - 1;
+            yoff = VOXEL_FLUIDH(2) / 255.0 - 1;
+            uv.y -= yoff;
         }
     }
     if (VOXEL_FACING_AXIS == 1 && VOXEL_FACING_SIGN == 1)
     {
         if (idx == 0)
         {
-            by += VOXEL_FLUIDH(1) / 255.0 - 1;
+            yoff = VOXEL_FLUIDH(1) / 255.0 - 1;
+            uv.y -= yoff;
         }
         else if (idx == 2)
         {
-            by += VOXEL_FLUIDH(3) / 255.0 - 1;
+            yoff = VOXEL_FLUIDH(3) / 255.0 - 1;
+            uv.y -= yoff;
         }
     }
 
+    by += yoff;
     worldPos += vec3(bx, by, bz);
 
     vec3 coff = vec3(texelFetch(inChunkPos, VOXEL_CHUNKID * 3).r, texelFetch(inChunkPos, VOXEL_CHUNKID * 3 + 1).r,
