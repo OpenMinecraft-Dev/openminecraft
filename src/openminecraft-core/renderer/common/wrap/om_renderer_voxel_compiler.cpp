@@ -183,9 +183,6 @@ auto OMVoxelCompiler::existFluidSame(const world::OMChunk<16> &chunk,
     return exist && handler->queryFluidSame(converter(queryBlockstate(chunk, externalAccessor, x, y, z), chunk.chunkx,
                                                       chunk.chunky, chunk.chunkz, x, y, z),
                                             state);
-    /*return handler->queryFluidSame(
-        converter(queryBlockstate(chunk, externalAccessor, x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z),
-        state);*/
 }
 
 auto OMVoxelCompiler::queryBlockstate(const world::OMChunk<16> &chunk,
