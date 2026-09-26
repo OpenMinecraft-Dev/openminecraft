@@ -13,6 +13,7 @@ layout(location = 4) out float voxFactor;
 
 #include "basics/structs/camera.glsl"
 uniform sampler2DArray inTexture;
+uniform sampler2DArray inTextureSec;
 uniform samplerBuffer inChunkPos;
 
 #define VOXEL_X (((voxelPos) >> 28) & 15)
@@ -34,7 +35,7 @@ void main()
         gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
         return;
     }
-    float unused = texture(inTexture, vec3(0.0)).x;
+    float unused = texture(inTexture, vec3(0.0)).x * texture(inTextureSec, vec3(0.0)).x;
 
     float bx = float(VOXEL_X);
     float by = float(VOXEL_Y);

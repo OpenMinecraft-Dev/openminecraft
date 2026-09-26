@@ -178,6 +178,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                         ->inputName("Camera")
                         ->input(ImageSampler)
                         ->inputName("inTexture")
+                        ->input(ImageSampler)
+                        ->inputName("inTextureSec")
                         ->input(UniformTexelBuffer)
                         ->inputName("inChunkPos")
                         ->input(UniformBuffer)
@@ -256,6 +258,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                    ->inputName("Camera")
                                    ->input(ImageSampler)
                                    ->inputName("inTexture")
+                                   ->input(ImageSampler)
+                                   ->inputName("inTextureSec")
                                    ->input(UniformTexelBuffer)
                                    ->inputName("inChunkPos")
                                    ->input(UniformBuffer)
@@ -539,9 +543,10 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     complexPipeline->bindInput(4, fogdata);
     complexPipeline->bindInput(5, lightmap->colorTexture);
     fluidPipeline->bindInput(1, textureAtlas);
-    fluidPipeline->bindInput(2, chunkoffs);
-    fluidPipeline->bindInput(3, fogdata);
-    fluidPipeline->bindInput(4, lightmap->colorTexture);
+    fluidPipeline->bindInput(2, textureAtlasSecondary);
+    fluidPipeline->bindInput(3, chunkoffs);
+    fluidPipeline->bindInput(4, fogdata);
+    fluidPipeline->bindInput(5, lightmap->colorTexture);
     translucentPipeline->bindInput(1, textureAtlas);
     translucentPipeline->bindInput(2, chunkoffs);
     translucentPipeline->bindInput(3, fogdata);
@@ -552,9 +557,10 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     translucentComplexPipeline->bindInput(4, fogdata);
     translucentComplexPipeline->bindInput(5, lightmap->colorTexture);
     translucentFluidPipeline->bindInput(1, textureAtlas);
-    translucentFluidPipeline->bindInput(2, chunkoffs);
-    translucentFluidPipeline->bindInput(3, fogdata);
-    translucentFluidPipeline->bindInput(4, lightmap->colorTexture);
+    translucentFluidPipeline->bindInput(2, textureAtlasSecondary);
+    translucentFluidPipeline->bindInput(3, chunkoffs);
+    translucentFluidPipeline->bindInput(4, fogdata);
+    translucentFluidPipeline->bindInput(5, lightmap->colorTexture);
     skyDiscPipeline->bindInput(1, skydisc);
     lightmapPipeline->bindInput(0, lightmapData);
     skyPipeline->bindInput(0, skydisc);
@@ -826,10 +832,10 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             chunkoffs = renderer->allocateBuffer(UniformTexel, chunkManager->numChunks() * 3 * sizeof(float) * 2);
             pipeline->bindInput(2, chunkoffs);
             complexPipeline->bindInput(3, chunkoffs);
-            fluidPipeline->bindInput(2, chunkoffs);
+            fluidPipeline->bindInput(3, chunkoffs);
             translucentPipeline->bindInput(2, chunkoffs);
             translucentComplexPipeline->bindInput(3, chunkoffs);
-            translucentFluidPipeline->bindInput(2, chunkoffs);
+            translucentFluidPipeline->bindInput(3, chunkoffs);
         }
 
         chunkoffs->synced = true;

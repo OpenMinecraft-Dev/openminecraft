@@ -12,6 +12,7 @@ layout(location = 0) out vec4 outColor;
 #include "basics/fog.glsl"
 #include "basics/structs/camera.glsl"
 uniform sampler2DArray inTexture;
+uniform sampler2DArray inTextureSec;
 uniform samplerBuffer inChunkPos;
 #include "basics/structs/fog.glsl"
 uniform sampler2D inLightmap;
@@ -19,7 +20,7 @@ uniform sampler2D inLightmap;
 void main()
 {
     mat4 unused = camera.viewProj;
-    float unused2 = texelFetch(inChunkPos, 0).r;
+    float unused2 = texelFetch(inChunkPos, 0).r * texture(inTextureSec, vec3(0.0)).x;
 
     vec4 texColor = texture(inTexture, vec3(voxTexCoord, voxTexLayer));
     if (texColor.a < 0.005)

@@ -227,10 +227,9 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64
 
         imageView = renderer->logicalDevice.createImageView(
             ImageViewCreateInfo({}, image, fromCommonType2(type), format, {},
-                                ImageSubresourceRange(((!isColorFormat(arr))
-                                                           ? ImageAspectFlagBits::eDepth
-                                                           : ImageAspectFlagBits::eColor),
-                                                      0, mipmap + 1, 0, layers)),
+                                ImageSubresourceRange(
+                                    ((!isColorFormat(arr)) ? ImageAspectFlagBits::eDepth : ImageAspectFlagBits::eColor),
+                                    0, mipmap + 1, 0, layers)),
             renderer->allocator);
     }
     catch (SystemError &e)
@@ -399,7 +398,8 @@ void OMRendererTextureVk::updateData(void *p, uint64_t layer)
             CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
 
         cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
-        transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal, 0, layer, 1);
+        transitionImageLayout(cmdBuff, uploaded[layer] ? ImageLayout::eShaderReadOnlyOptimal : ImageLayout::eUndefined,
+                              ImageLayout::eTransferDstOptimal, 0, layer, 1);
         cmdBuff.copyBufferToImage(
             reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
             BufferImageCopy(0, width, height,
@@ -413,6 +413,8 @@ void OMRendererTextureVk::updateData(void *p, uint64_t layer)
         cmdBuff.end();
         renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
         renderer->queues.first.waitIdle();
+
+        uploaded[layer] = true;
 
         renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
 
@@ -435,7 +437,8 @@ void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64
             CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
 
         cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
-        transitionImageLayout(cmdBuff, ImageLayout::eUndefined, ImageLayout::eTransferDstOptimal, 0, layer, 1);
+        transitionImageLayout(cmdBuff, uploaded[layer] ? ImageLayout::eShaderReadOnlyOptimal : ImageLayout::eUndefined,
+                              ImageLayout::eTransferDstOptimal, 0, layer, 1);
         cmdBuff.copyBufferToImage(
             reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
             BufferImageCopy(0, w, h,
@@ -449,6 +452,8 @@ void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64
         cmdBuff.end();
         renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
         renderer->queues.first.waitIdle();
+
+        uploaded[layer] = true;
 
         renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
 

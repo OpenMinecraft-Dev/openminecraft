@@ -5,6 +5,7 @@
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_handles.hpp"
 #include <cstdint>
+#include <unordered_map>
 
 #ifdef OM_VULKAN_DYNAMIC
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
@@ -40,6 +41,7 @@ class OMRendererTextureVk : public common::OMRendererTexture
     uint64_t mipmap;
     uint64_t layers;
     OMRendererVk *renderer;
+    std::unordered_map<uint64_t, bool> uploaded;
 };
 } // namespace openminecraft::renderer::vk
 
