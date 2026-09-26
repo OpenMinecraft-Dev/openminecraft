@@ -6,6 +6,7 @@ layout(location = 1) in vec3 voxNormal;
 layout(location = 2) in float voxTexLayer;
 layout(location = 3) in vec2 voxLight;
 layout(location = 4) in float voxFactor;
+layout(location = 5) flat in int voxSec;
 
 layout(location = 0) out vec4 outColor;
 
@@ -22,7 +23,16 @@ void main()
     mat4 unused = camera.viewProj;
     float unused2 = texelFetch(inChunkPos, 0).r * texture(inTextureSec, vec3(0.0)).x;
 
-    vec4 texColor = texture(inTexture, vec3(voxTexCoord, voxTexLayer));
+    vec4 texColor;
+    if (voxSec == 1)
+    {
+        texColor = texture(inTextureSec, vec3(voxTexCoord, voxTexLayer));
+    }
+    else
+    {
+        texColor = texture(inTexture, vec3(voxTexCoord, voxTexLayer));
+    }
+
     if (texColor.a < 0.005)
     {
         discard;

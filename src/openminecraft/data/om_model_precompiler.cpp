@@ -320,6 +320,11 @@ auto OMModelPrecompiler::queryFluidSame(int bsid1, int bsid2) -> bool
     return fluidModels[bsid1] == fluidModels[bsid2];
 }
 
+auto OMModelPrecompiler::queryFluidTexSec(int bsid) -> int
+{
+    return blockModels[bsid].fluidTexFlow;
+}
+
 auto OMModelPrecompiler::loadModelPart(OMIdentifier i) -> int
 {
     return loadModelPartWithArgs(i, 0, 0, 0, false);
@@ -786,7 +791,7 @@ auto OMModelPrecompiler::composeModel(std::vector<int> partids, bool soild, bool
 }
 
 auto OMModelPrecompiler::composeFluidModel(OMIdentifier ident, bool translucent, bool falling, uint8_t level,
-                                           OMIdentifier tex) -> int
+                                           OMIdentifier tex, OMIdentifier texFlow) -> int
 {
     auto &m = blockModels.emplace_back();
     m.soild = false;
@@ -795,6 +800,7 @@ auto OMModelPrecompiler::composeFluidModel(OMIdentifier ident, bool translucent,
     m.fluidFalling = falling;
     m.fluidLevel = level;
     m.fluidTex = textureAtlas.addTexture(tex);
+    m.fluidTexFlow = textureAtlas.addWideTexture(texFlow);
     m.waterlogged = false;
 
     fluidModels[blockModels.size() - 1] = ident;

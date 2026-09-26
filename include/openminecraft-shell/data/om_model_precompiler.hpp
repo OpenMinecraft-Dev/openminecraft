@@ -80,6 +80,7 @@ struct OMModel
     bool fluidFalling;
     uint8_t fluidLevel;
     uint32_t fluidTex;
+    uint32_t fluidTexFlow;
     bool waterlogged;
 };
 class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxelHandler
@@ -94,7 +95,8 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelPart;
 
     auto composeModel(std::vector<int>, bool = true, bool = false, bool = false) -> int;
-    auto composeFluidModel(OMIdentifier ident, bool translucent, bool falling, uint8_t level, OMIdentifier tex) -> int;
+    auto composeFluidModel(OMIdentifier ident, bool translucent, bool falling, uint8_t level, OMIdentifier tex,
+                           OMIdentifier texFlow) -> int;
 
     auto loadModelPart(OMIdentifier) -> int;
     auto loadModelPartWithArgs(OMIdentifier, int, int, int, bool) -> int;
@@ -128,6 +130,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto queryFluidTex(int bsid) -> int override;
     auto queryWaterlogged(int bsid) -> bool override;
     auto queryFluidSame(int bsid1, int bsid2) -> bool override;
+    auto queryFluidTexSec(int bsid) -> int override;
 
   private:
     int modelId = 0;

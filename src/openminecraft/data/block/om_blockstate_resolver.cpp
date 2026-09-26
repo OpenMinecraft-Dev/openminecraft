@@ -189,7 +189,8 @@ void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
     {
         states[ident][st].emplace_back(compiler.composeFluidModel(
             ident, blk->translucent, st.properties["falling"] == "true", std::stoi(st.properties["level"]),
-            OMIdentifier(ident.namesp + ":block/" + ident.path + "_still")));
+            OMIdentifier(ident.namesp + ":block/" + ident.path + "_still"),
+            OMIdentifier(ident.namesp + ":block/" + ident.path + "_flow")));
         return;
     }
 
