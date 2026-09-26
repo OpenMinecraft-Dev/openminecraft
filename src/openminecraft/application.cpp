@@ -124,11 +124,15 @@ void OMApplication::mainLoop(OMBackend backend)
                     cnk.setBlock(0, 1, 0,
                                  blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=1]")));
                     cnk.setBlock(0, 0, 0,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=true,level=8]")));
+                                 blockstateRegistry.id(data::OMIdentifier("minecraft:lava[falling=true,level=8]")));
                     cnk.setBlock(0, 15, 0,
                                  blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=true,level=8]")));
                     cnk.setBlock(15, 1, 0,
                                  blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=2]")));
+                    cnk.setBlock(0, 1, 15,
+                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=2]")));
+                    cnk.setBlock(15, 1, 15,
+                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=3]")));
                     cnk.setBlock(15, 0, 0,
                                  blockstateRegistry.id(data::OMIdentifier("minecraft:white_stained_glass[]")));
                     cnk.setBlock(0, 1, 1, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));

@@ -165,16 +165,27 @@ auto OMVoxelCompiler::existSoild(const world::OMChunk<16> &chunk,
     return handler->querySoild(converter(chunk.fetch(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
 }
 
-auto OMVoxelCompiler::existFluid(const world::OMChunk<16> &chunk,
-                                 std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, int x,
-                                 int y, int z) -> bool
+auto OMVoxelCompiler::existFluidSame(const world::OMChunk<16> &chunk,
+                                     std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
+                                     int x, int y, int z, int state) -> bool
 {
+    bool exist;
     if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
-        return handler->queryFluid(
+    {
+        exist = handler->queryFluid(
             converter(externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz), chunk.chunkx,
                       chunk.chunky, chunk.chunkz, x, y, z));
-
-    return handler->queryFluid(converter(chunk.fetch(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
+    }
+    else
+    {
+        exist = handler->queryFluid(converter(chunk.fetch(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
+    }
+    return exist && handler->queryFluidSame(converter(queryBlockstate(chunk, externalAccessor, x, y, z), chunk.chunkx,
+                                                      chunk.chunky, chunk.chunkz, x, y, z),
+                                            state);
+    /*return handler->queryFluidSame(
+        converter(queryBlockstate(chunk, externalAccessor, x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z),
+        state);*/
 }
 
 auto OMVoxelCompiler::queryBlockstate(const world::OMChunk<16> &chunk,
@@ -196,7 +207,6 @@ auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
 {
     uint8_t ao1 = 0, ao2 = 0, ao3 = 0, ao4 = 0;
     auto currentAabb = handler->queryPartAABB(bsid, pid);
-    // INFO: ambientocculusion property is needed!
     auto countNeighborsPoint = [&](int dx, int dy, int dz, glm::ivec3 pos) -> int {
         auto tgbs = queryBlockstate(chunk, externalAccessor, x + dx, y + dy, z + dz);
         if (tgbs == 0)
@@ -322,9 +332,9 @@ auto OMVoxelCompiler::checkExistSoild(const world::OMChunk<16> &chunk,
     }
 }
 
-auto OMVoxelCompiler::checkExistFluid(const world::OMChunk<16> &chunk,
-                                      std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
-                                      glm::ivec3 v, OMVoxelFacing f) -> bool
+auto OMVoxelCompiler::checkExistFluidSame(
+    const world::OMChunk<16> &chunk, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
+    glm::ivec3 v, OMVoxelFacing f, int state) -> bool
 {
     switch (f)
     {
@@ -332,17 +342,17 @@ auto OMVoxelCompiler::checkExistFluid(const world::OMChunk<16> &chunk,
     case None:
         return false;
     case NegX:
-        return existFluid(chunk, externalAccessor, v.x - 1, v.y, v.z);
+        return existFluidSame(chunk, externalAccessor, v.x - 1, v.y, v.z, state);
     case NegY:
-        return existFluid(chunk, externalAccessor, v.x, v.y - 1, v.z);
+        return existFluidSame(chunk, externalAccessor, v.x, v.y - 1, v.z, state);
     case NegZ:
-        return existFluid(chunk, externalAccessor, v.x, v.y, v.z - 1);
+        return existFluidSame(chunk, externalAccessor, v.x, v.y, v.z - 1, state);
     case PosX:
-        return existFluid(chunk, externalAccessor, v.x + 1, v.y, v.z);
+        return existFluidSame(chunk, externalAccessor, v.x + 1, v.y, v.z, state);
     case PosY:
-        return existFluid(chunk, externalAccessor, v.x, v.y + 1, v.z);
+        return existFluidSame(chunk, externalAccessor, v.x, v.y + 1, v.z, state);
     case PosZ:
-        return existFluid(chunk, externalAccessor, v.x, v.y, v.z + 1);
+        return existFluidSame(chunk, externalAccessor, v.x, v.y, v.z + 1, state);
     }
 }
 
@@ -418,6 +428,11 @@ auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
         if (!handler->queryFluid(ns))
             continue;
 
+        if (!handler->queryFluidSame(selfState, ns))
+        {
+            continue;
+        }
+
         if (handler->queryFluidFalling(ns))
         {
             tot += 8.0f;
@@ -458,11 +473,12 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
 
             for (auto f : {NegX, NegY, NegZ, PosX, PosY, PosZ})
             {
-                if (!checkExistFluid(chunk, externalAccessor, v.first, f))
+                if (!checkExistFluidSame(chunk, externalAccessor, v.first, f, bsid))
                 {
                     auto vox = packVoxelFluid(v.first.x, v.first.y, v.first.z, f, handler->queryFluidTex(bsid), chunkid,
                                               15, 15, 15, 15, 0, 0, 0, 0, h1, h2, h3, h4);
-                    commiterTranslucentFluid(OMVoxelFluid{vox[0], vox[1], vox[2], vox[3]});
+                    (trans || handler->queryWaterlogged(bsid) ? commiterTranslucentFluid : commiterFluid)(
+                        OMVoxelFluid{vox[0], vox[1], vox[2], vox[3]});
                 }
             }
         }

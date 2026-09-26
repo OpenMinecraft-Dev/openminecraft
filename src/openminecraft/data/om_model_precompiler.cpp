@@ -310,6 +310,15 @@ auto OMModelPrecompiler::queryFluidTex(int bsid) -> int
 {
     return blockModels[bsid].fluidTex;
 }
+auto OMModelPrecompiler::queryWaterlogged(int bsid) -> bool
+{
+    return blockModels[bsid].waterlogged;
+}
+
+auto OMModelPrecompiler::queryFluidSame(int bsid1, int bsid2) -> bool
+{
+    return fluidModels[bsid1] == fluidModels[bsid2];
+}
 
 auto OMModelPrecompiler::loadModelPart(OMIdentifier i) -> int
 {
@@ -761,6 +770,7 @@ auto OMModelPrecompiler::composeModel(std::vector<int> partids, bool soild, bool
     m.fluidFalling = false;
     m.fluidLevel = 0;
     m.fluidTex = textureAtlas.addTexture(OMIdentifier("minecraft:block/water_still"));
+    m.waterlogged = waterlogged;
     for (auto i : partids)
     {
         for (auto &mp : modelParts[i])
@@ -771,10 +781,12 @@ auto OMModelPrecompiler::composeModel(std::vector<int> partids, bool soild, bool
         }
     }
 
+    fluidModels[blockModels.size() - 1] = OMIdentifier("minecraft:water");
     return blockModels.size() - 1;
 }
 
-auto OMModelPrecompiler::composeFluidModel(bool translucent, bool falling, uint8_t level, OMIdentifier tex) -> int
+auto OMModelPrecompiler::composeFluidModel(OMIdentifier ident, bool translucent, bool falling, uint8_t level,
+                                           OMIdentifier tex) -> int
 {
     auto &m = blockModels.emplace_back();
     m.soild = false;
@@ -783,6 +795,9 @@ auto OMModelPrecompiler::composeFluidModel(bool translucent, bool falling, uint8
     m.fluidFalling = falling;
     m.fluidLevel = level;
     m.fluidTex = textureAtlas.addTexture(tex);
+    m.waterlogged = false;
+
+    fluidModels[blockModels.size() - 1] = ident;
 
     return blockModels.size() - 1;
 }

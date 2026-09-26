@@ -185,6 +185,8 @@ class OMVoxelHandler
     virtual auto queryFluidFalling(int bsid) -> bool = 0;
     virtual auto queryFluidLevel(int bsid) -> uint8_t = 0;
     virtual auto queryFluidTex(int bsid) -> int = 0;
+    virtual auto queryWaterlogged(int bsid) -> bool = 0;
+    virtual auto queryFluidSame(int bsid1, int bsid2) -> bool = 0;
 };
 
 class OMVoxelHandlerDummy : public OMVoxelHandler
@@ -288,6 +290,14 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     {
         return 0;
     }
+    auto queryWaterlogged(int bsid) -> bool override
+    {
+        return false;
+    }
+    auto queryFluidSame(int bsid1, int bsid2) -> bool override
+    {
+        return true;
+    }
 };
 
 class OMVoxelCompiler
@@ -300,14 +310,14 @@ class OMVoxelCompiler
                          int x, int y, int z) -> uint32_t;
     auto existSoild(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, int x,
                     int y, int z) -> bool;
-    auto existFluid(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, int x,
-                    int y, int z) -> bool;
+    auto existFluidSame(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
+                        int x, int y, int z, int) -> bool;
     auto computeAO(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, int x,
                    int y, int z, OMVoxelFacing, int bsid, int pid) -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t>;
     auto checkExistSoild(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                          glm::ivec3, OMVoxelFacing) -> bool;
-    auto checkExistFluid(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
-                         glm::ivec3, OMVoxelFacing) -> bool;
+    auto checkExistFluidSame(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
+                             glm::ivec3, OMVoxelFacing, int) -> bool;
     auto checkSkip(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                    glm::ivec3, OMVoxelFacing, uint32_t) -> bool;
     auto checkAvgFluid(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,

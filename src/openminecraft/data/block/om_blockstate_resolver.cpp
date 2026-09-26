@@ -188,7 +188,7 @@ void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
     if (blk->fluid)
     {
         states[ident][st].emplace_back(compiler.composeFluidModel(
-            blk->translucent, st.properties["falling"] == "true", std::stoi(st.properties["level"]),
+            ident, blk->translucent, st.properties["falling"] == "true", std::stoi(st.properties["level"]),
             OMIdentifier(ident.namesp + ":block/" + ident.path + "_still")));
         return;
     }
