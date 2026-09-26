@@ -272,6 +272,7 @@ void OMWorldRenderer::record()
 }
 
 static int gameT = 0;
+static std::chrono::steady_clock::time_point tickTp = std::chrono::steady_clock::now();
 
 void OMWorldRenderer::afterFrame()
 {
@@ -279,6 +280,12 @@ void OMWorldRenderer::afterFrame()
     auto cam = camera->fetchProjMat() * camera->fetchViewMat();
     cameraBuffer->synced = true;
     cameraBuffer->updateData(&cam);
+
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tickTp).count() > 50)
+    {
+        tickTp = std::chrono::steady_clock::now();
+        textureAtlas->updateAnim();
+    }
 }
 
 void OMWorldRenderer::submitTasks()

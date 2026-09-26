@@ -124,7 +124,7 @@ void OMApplication::mainLoop(OMBackend backend)
                     cnk.setBlock(0, 1, 0,
                                  blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=1]")));
                     cnk.setBlock(0, 0, 0,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:lava[falling=true,level=8]")));
+                                 blockstateRegistry.id(data::OMIdentifier("minecraft:lava[falling=false,level=0]")));
                     cnk.setBlock(0, 15, 0,
                                  blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=true,level=8]")));
                     cnk.setBlock(15, 1, 0,

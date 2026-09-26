@@ -1,6 +1,7 @@
 #ifndef OM_RENDERER_LAYER_VK_TEXTURE_HPP
 #define OM_RENDERER_LAYER_VK_TEXTURE_HPP
 #include "om_renderer_layer_vk.hpp"
+#include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_handles.hpp"
@@ -42,6 +43,8 @@ class OMRendererTextureVk : public common::OMRendererTexture
     uint64_t layers;
     OMRendererVk *renderer;
     std::unordered_map<uint64_t, bool> uploaded;
+
+    common::OMRendererBuffer *stagBuffer = nullptr;
 };
 } // namespace openminecraft::renderer::vk
 

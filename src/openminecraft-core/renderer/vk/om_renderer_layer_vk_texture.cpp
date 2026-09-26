@@ -332,6 +332,11 @@ OMRendererTextureVk::~OMRendererTextureVk()
         renderer->logicalDevice.destroyImageView(imageView, renderer->allocator);
         renderer->logicalDevice.freeMemory(imageMemory, renderer->allocator);
         renderer->logicalDevice.destroyImage(image, renderer->allocator);
+
+        if (stagBuffer)
+        {
+            delete stagBuffer;
+        }
     }
     catch (SystemError &e)
     {
@@ -390,8 +395,11 @@ void OMRendererTextureVk::updateData(void *p, uint64_t layer)
 {
     try
     {
-        auto stagBuffer =
-            renderer->allocateBuffer(common::Misc, width * height * ((this->arr == common::R8G8B8Srgb) ? 3 : 4));
+        if (stagBuffer == nullptr)
+        {
+            stagBuffer =
+                renderer->allocateBuffer(common::Misc, width * height * ((this->arr == common::R8G8B8Srgb) ? 3 : 4));
+        }
         stagBuffer->updateData(p);
 
         auto cmdBuff = renderer->logicalDevice.allocateCommandBuffers(
@@ -418,7 +426,7 @@ void OMRendererTextureVk::updateData(void *p, uint64_t layer)
 
         renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
 
-        delete stagBuffer;
+        // delete stagBuffer;
     }
     catch (SystemError &e)
     {

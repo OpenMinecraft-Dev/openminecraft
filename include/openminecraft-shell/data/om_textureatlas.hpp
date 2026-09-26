@@ -48,7 +48,7 @@ class OMTextureAtlas
 
         if (subtexFiles[i]->getHeight() > 16)
         {
-            logger.debug("flowing {}x!", subtexFiles[i]->getHeight() / 16);
+            subtexAnimMeta[i] = subtexFiles[i]->getHeight() / 16;
         }
 
         logger.debug("texture {}:{} => {}", i.namesp, i.path, tid);
@@ -73,7 +73,7 @@ class OMTextureAtlas
 
         if (subtexWideFiles[i]->getHeight() > 32)
         {
-            logger.debug("flowing {}x!", subtexWideFiles[i]->getHeight() / 32);
+            subtexWideAnimMeta[i] = subtexWideFiles[i]->getHeight() / 32;
         }
         logger.debug("wide texture ({}x{}) {}:{} => {}", subtexSizes[i].x, subtexSizes[i].y, i.namesp, i.path, wtid);
 
@@ -136,6 +136,44 @@ class OMTextureAtlas
         textureSecondary->setupSampler();
     }
 
+    void updateAnim()
+    {
+        for (const auto &p : subtexAnimMeta)
+        {
+            subtexAnim[p.first] = (subtexAnim[p.first] + p.second - 1) % p.second;
+            std::array<uint8_t, 4 * 16 * 16> bm = {};
+            for (int py = 0; py < 16; ++py)
+            {
+                int cy = py + subtexAnim[p.first];
+                int pixoff = 4 * (cy * subtexFiles[p.first]->getWidth());
+
+                std::memcpy(
+                    bm.data() + 4 * 16 * py,
+                    reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(subtexFiles[p.first]->fetchData()) + pixoff),
+                    4 * 16);
+            }
+            texture->updateData(bm.data(), subtex[p.first]);
+        }
+
+        for (const auto &p : subtexWideAnimMeta)
+        {
+            subtexWideAnim[p.first] = (subtexWideAnim[p.first] + p.second - 1) % p.second;
+
+            std::array<uint8_t, 4 * 32 * 32> bm = {};
+            for (int py = 0; py < 32; ++py)
+            {
+                int cy = py + subtexWideAnim[p.first];
+                int pixoff = 4 * (cy * subtexWideFiles[p.first]->getWidth());
+
+                std::memcpy(bm.data() + 4 * 32 * py,
+                            reinterpret_cast<void *>(
+                                reinterpret_cast<uintptr_t>(subtexWideFiles[p.first]->fetchData()) + pixoff),
+                            4 * 32);
+            }
+            textureSecondary->updateData(bm.data(), subtexWide[p.first]);
+        }
+    }
+
     auto textureSize(OMIdentifier i) -> glm::ivec2
     {
         return subtexSizes[i];
@@ -152,8 +190,12 @@ class OMTextureAtlas
     openminecraft::renderer::common::OMRendererTexture *textureSecondary = nullptr;
     std::unordered_map<OMIdentifier, int> subtex;
     std::unordered_map<OMIdentifier, std::shared_ptr<specs::png::OMPngFile>> subtexFiles;
+    std::unordered_map<OMIdentifier, int> subtexAnim;
+    std::unordered_map<OMIdentifier, int> subtexAnimMeta;
     std::unordered_map<OMIdentifier, int> subtexWide;
     std::unordered_map<OMIdentifier, std::shared_ptr<specs::png::OMPngFile>> subtexWideFiles;
+    std::unordered_map<OMIdentifier, int> subtexWideAnim;
+    std::unordered_map<OMIdentifier, int> subtexWideAnimMeta;
     std::unordered_map<OMIdentifier, glm::ivec2> subtexSizes;
     log::OMLogger logger;
 };
