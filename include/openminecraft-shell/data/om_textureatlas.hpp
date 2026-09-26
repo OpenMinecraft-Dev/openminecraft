@@ -10,6 +10,7 @@
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include <array>
+#include <memory>
 #include <unordered_map>
 #include <utility>
 using namespace openminecraft;
@@ -35,14 +36,21 @@ class OMTextureAtlas
             return subtex[i];
         }
         auto imgraw = vfs::fsfetch(fmt::format("{}/{}/textures/{}.png", root, i.namesp, i.path));
-        specs::png::OMPngFile img2;
-        img2.parse(imgraw);
 
-        subtexSizes[i] = {img2.getWidth(), img2.getHeight()};
-        if (img2.getWidth() > 16 && img2.getHeight() > 16)
+        subtexFiles[i] = std::make_shared<specs::png::OMPngFile>();
+        subtexFiles[i]->parse(imgraw);
+
+        subtexSizes[i] = {subtexFiles[i]->getWidth(), subtexFiles[i]->getHeight()};
+        if (subtexFiles[i]->getWidth() > 16 && subtexFiles[i]->getHeight() > 16)
         {
             return -1;
         }
+
+        if (subtexFiles[i]->getHeight() > 16)
+        {
+            logger.debug("flowing {}x!", subtexFiles[i]->getHeight() / 16);
+        }
+
         logger.debug("texture {}:{} => {}", i.namesp, i.path, tid);
 
         subtex[i] = tid;
@@ -57,10 +65,16 @@ class OMTextureAtlas
             return subtexWide[i];
         }
         auto imgraw = vfs::fsfetch(fmt::format("{}/{}/textures/{}.png", root, i.namesp, i.path));
-        specs::png::OMPngFile img2;
-        img2.parse(imgraw);
 
-        subtexSizes[i] = {img2.getWidth(), img2.getHeight()};
+        subtexWideFiles[i] = std::make_shared<specs::png::OMPngFile>();
+        subtexWideFiles[i]->parse(imgraw);
+
+        subtexSizes[i] = {subtexWideFiles[i]->getWidth(), subtexWideFiles[i]->getHeight()};
+
+        if (subtexWideFiles[i]->getHeight() > 32)
+        {
+            logger.debug("flowing {}x!", subtexWideFiles[i]->getHeight() / 32);
+        }
         logger.debug("wide texture ({}x{}) {}:{} => {}", subtexSizes[i].x, subtexSizes[i].y, i.namesp, i.path, wtid);
 
         subtexWide[i] = wtid;
@@ -74,11 +88,7 @@ class OMTextureAtlas
                                             openminecraft::renderer::common::R8G8B8A8Srgb);
         for (auto &p : subtex)
         {
-            auto imgraw = vfs::fsfetch(fmt::format("{}/{}/textures/{}.png", root, p.first.namesp, p.first.path));
-            specs::png::OMPngFile img2;
-            img2.parse(imgraw);
-
-            if (img2.getWidth() > 16 && img2.getHeight() > 16)
+            if (subtexFiles[p.first]->getWidth() > 16 && subtexFiles[p.first]->getHeight() > 16)
             {
                 continue;
             }
@@ -87,10 +97,12 @@ class OMTextureAtlas
             for (int py = 0; py < 16; ++py)
             {
                 int cy = py;
-                int pixoff = 4 * (cy * img2.getWidth());
+                int pixoff = 4 * (cy * subtexFiles[p.first]->getWidth());
 
-                std::memcpy(bm.data() + 4 * 16 * py,
-                            reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(img2.fetchData()) + pixoff), 4 * 16);
+                std::memcpy(
+                    bm.data() + 4 * 16 * py,
+                    reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(subtexFiles[p.first]->fetchData()) + pixoff),
+                    4 * 16);
             }
             texture->updateData(bm.data(), p.second);
         }
@@ -104,18 +116,16 @@ class OMTextureAtlas
                                                      openminecraft::renderer::common::R8G8B8A8Srgb);
         for (auto &p : subtexWide)
         {
-            auto imgraw = vfs::fsfetch(fmt::format("{}/{}/textures/{}.png", root, p.first.namesp, p.first.path));
-            specs::png::OMPngFile img2;
-            img2.parse(imgraw);
-
             std::array<uint8_t, 4 * 32 * 32> bm = {};
             for (int py = 0; py < 32; ++py)
             {
                 int cy = py;
-                int pixoff = 4 * (cy * img2.getWidth());
+                int pixoff = 4 * (cy * subtexWideFiles[p.first]->getWidth());
 
                 std::memcpy(bm.data() + 4 * 32 * py,
-                            reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(img2.fetchData()) + pixoff), 4 * 32);
+                            reinterpret_cast<void *>(
+                                reinterpret_cast<uintptr_t>(subtexWideFiles[p.first]->fetchData()) + pixoff),
+                            4 * 32);
             }
             textureSecondary->updateData(bm.data(), p.second);
         }
@@ -141,7 +151,9 @@ class OMTextureAtlas
     openminecraft::renderer::common::OMRendererTexture *texture = nullptr;
     openminecraft::renderer::common::OMRendererTexture *textureSecondary = nullptr;
     std::unordered_map<OMIdentifier, int> subtex;
+    std::unordered_map<OMIdentifier, std::shared_ptr<specs::png::OMPngFile>> subtexFiles;
     std::unordered_map<OMIdentifier, int> subtexWide;
+    std::unordered_map<OMIdentifier, std::shared_ptr<specs::png::OMPngFile>> subtexWideFiles;
     std::unordered_map<OMIdentifier, glm::ivec2> subtexSizes;
     log::OMLogger logger;
 };
