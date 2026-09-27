@@ -9,13 +9,24 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
+#include "openminecraft/io/json/om_io_ast_builder_json.hpp"
 #include <array>
 #include <memory>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 using namespace openminecraft;
 namespace openminecraftshell::data
 {
+struct OMTextureAnimation
+{
+    int maxFrames;
+    int currentFrame = 0;
+    bool useMapping;
+    std::vector<int> mapping;
+    int interval = 0;
+    int intervalCount = 0;
+};
 class OMTextureAtlas
 {
   public:
@@ -48,7 +59,33 @@ class OMTextureAtlas
 
         if (subtexFiles[i]->getHeight() > 16)
         {
-            subtexAnimMeta[i] = subtexFiles[i]->getHeight() / 16;
+            subtexAnimData[i] = {subtexFiles[i]->getHeight() / 16};
+
+            auto metadata = vfs::fsfetch(fmt::format("{}/{}/textures/{}.png.mcmeta", root, i.namesp, i.path));
+            if (metadata)
+            {
+                io::json::OMJsonAstBuilder bld(std::make_shared<io::json::OMJsonTokenIter>(metadata));
+                auto c = bld.build();
+                if (c->getMap().count("animation"))
+                {
+                    if (c->getMap()["animation"]->getMap().count("frametime"))
+                    {
+                        subtexAnimData[i].interval = c->getMap()["animation"]->getMap()["frametime"]->getNumber();
+                    }
+                    if (c->getMap()["animation"]->getMap().count("frames"))
+                    {
+                        auto ll = c->getMap()["animation"]->getMap()["frames"];
+                        int l = 0;
+                        for (const auto &fr : ll->getArray())
+                        {
+                            subtexAnimData[i].mapping.push_back(fr->getNumber());
+                            ++l;
+                        }
+                        subtexAnimData[i].maxFrames = subtexAnimData[i].mapping.size();
+                        subtexAnimData[i].useMapping = true;
+                    }
+                }
+            }
         }
 
         logger.debug("texture {}:{} => {}", i.namesp, i.path, tid);
@@ -73,7 +110,33 @@ class OMTextureAtlas
 
         if (subtexWideFiles[i]->getHeight() > 32)
         {
-            subtexWideAnimMeta[i] = subtexWideFiles[i]->getHeight() / 32;
+            subtexWideAnimData[i] = {subtexWideFiles[i]->getHeight() / 32};
+
+            auto metadata = vfs::fsfetch(fmt::format("{}/{}/textures/{}.png.mcmeta", root, i.namesp, i.path));
+            if (metadata)
+            {
+                io::json::OMJsonAstBuilder bld(std::make_shared<io::json::OMJsonTokenIter>(metadata));
+                auto c = bld.build();
+                if (c->getMap().count("animation"))
+                {
+                    if (c->getMap()["animation"]->getMap().count("frametime"))
+                    {
+                        subtexWideAnimData[i].interval = c->getMap()["animation"]->getMap()["frametime"]->getNumber();
+                    }
+                    if (c->getMap()["animation"]->getMap().count("frames"))
+                    {
+                        auto ll = c->getMap()["animation"]->getMap()["frames"];
+                        int l = 0;
+                        for (const auto &fr : ll->getArray())
+                        {
+                            subtexWideAnimData[i].mapping.push_back(fr->getNumber());
+                            ++l;
+                        }
+                        subtexWideAnimData[i].maxFrames = subtexWideAnimData[i].mapping.size();
+                        subtexWideAnimData[i].useMapping = true;
+                    }
+                }
+            }
         }
         logger.debug("wide texture ({}x{}) {}:{} => {}", subtexSizes[i].x, subtexSizes[i].y, i.namesp, i.path, wtid);
 
@@ -138,13 +201,27 @@ class OMTextureAtlas
 
     void updateAnim()
     {
-        for (const auto &p : subtexAnimMeta)
+        for (auto &p : subtexAnimData)
         {
-            subtexAnim[p.first] = (subtexAnim[p.first] + p.second - 1) % p.second;
+            if (p.second.interval)
+            {
+                ++p.second.intervalCount;
+
+                if (p.second.intervalCount >= p.second.interval)
+                {
+                    p.second.intervalCount = 0;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            p.second.currentFrame = (p.second.currentFrame + 1) % p.second.maxFrames;
             std::array<uint8_t, 4 * 16 * 16> bm = {};
             for (int py = 0; py < 16; ++py)
             {
-                int cy = py + subtexAnim[p.first];
+                int cy =
+                    py + (p.second.useMapping ? p.second.mapping[p.second.currentFrame] : p.second.currentFrame) * 16;
                 int pixoff = 4 * (cy * subtexFiles[p.first]->getWidth());
 
                 std::memcpy(
@@ -155,14 +232,28 @@ class OMTextureAtlas
             texture->updateData(bm.data(), subtex[p.first]);
         }
 
-        for (const auto &p : subtexWideAnimMeta)
+        for (auto &p : subtexWideAnimData)
         {
-            subtexWideAnim[p.first] = (subtexWideAnim[p.first] + p.second - 1) % p.second;
+            if (p.second.interval)
+            {
+                ++p.second.intervalCount;
+
+                if (p.second.intervalCount >= p.second.interval)
+                {
+                    p.second.intervalCount = 0;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            p.second.currentFrame = (p.second.currentFrame + 1) % p.second.maxFrames;
 
             std::array<uint8_t, 4 * 32 * 32> bm = {};
             for (int py = 0; py < 32; ++py)
             {
-                int cy = py + subtexWideAnim[p.first];
+                int cy =
+                    py + (p.second.useMapping ? p.second.mapping[p.second.currentFrame] : p.second.currentFrame) * 32;
                 int pixoff = 4 * (cy * subtexWideFiles[p.first]->getWidth());
 
                 std::memcpy(bm.data() + 4 * 32 * py,
@@ -190,12 +281,10 @@ class OMTextureAtlas
     openminecraft::renderer::common::OMRendererTexture *textureSecondary = nullptr;
     std::unordered_map<OMIdentifier, int> subtex;
     std::unordered_map<OMIdentifier, std::shared_ptr<specs::png::OMPngFile>> subtexFiles;
-    std::unordered_map<OMIdentifier, int> subtexAnim;
-    std::unordered_map<OMIdentifier, int> subtexAnimMeta;
+    std::unordered_map<OMIdentifier, OMTextureAnimation> subtexAnimData;
     std::unordered_map<OMIdentifier, int> subtexWide;
     std::unordered_map<OMIdentifier, std::shared_ptr<specs::png::OMPngFile>> subtexWideFiles;
-    std::unordered_map<OMIdentifier, int> subtexWideAnim;
-    std::unordered_map<OMIdentifier, int> subtexWideAnimMeta;
+    std::unordered_map<OMIdentifier, OMTextureAnimation> subtexWideAnimData;
     std::unordered_map<OMIdentifier, glm::ivec2> subtexSizes;
     log::OMLogger logger;
 };
