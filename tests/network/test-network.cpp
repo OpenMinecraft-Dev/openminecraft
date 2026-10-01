@@ -102,12 +102,15 @@ auto main(int argc, char **argv) -> int
             while (length > 0)
             {
                 auto l = in->readsome(buf, length);
-                logger.debug("{} bytes", l);
+                if (l != 0)
+                {
+                    logger.debug("{} bytes", l);
+                }
                 of.write(buf, l);
+                of.flush();
                 length -= l;
             }
             logger.info("read packet 0x{:02x}, length {}", id, lcnst);
-            of.flush();
         }
         catch (std::logic_error &e)
         {
