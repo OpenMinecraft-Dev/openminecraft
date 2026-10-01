@@ -3,6 +3,7 @@
 #include "openminecraft/util/om_util_memstream.hpp"
 #include "openminecraft/vfs/om_vfs_bundlefs.hpp"
 #include "openminecraft/vfs/om_vfs_realfs.hpp"
+#include "openminecraft/vfs/om_vfs_tcpfs.hpp"
 #include "openminecraft/vfs/om_vfs_zipfs.hpp"
 #include <cstddef>
 #include <iostream>
@@ -39,6 +40,10 @@ static auto fsmount(std::shared_ptr<OMFsProvider> p, std::string mountpoint) -> 
     return true;
 }
 
+auto fsmountTcp(std::string host, std::string port, std::string mountpoint) -> bool
+{
+    return fsmount(std::make_shared<OMFsProviderTcp>(host, port), mountpoint);
+}
 auto fsmountReal(std::string root, std::string mountpoint) -> bool
 {
     return fsmount(std::make_shared<OMFsProviderReal>(root), mountpoint);
@@ -109,6 +114,18 @@ auto fsfetch(std::string fullPath) -> std::shared_ptr<std::istream>
         if (!pth.find(p.first))
         {
             return p.second->read(pth.substr(p.first.length() + 1, pth.length()));
+        }
+    }
+    return nullptr;
+}
+auto fswrite(std::string fullPath) -> std::shared_ptr<std::ostream>
+{
+    auto pth = compressPath(fullPath);
+    for (auto p : fshandlers)
+    {
+        if (!pth.find(p.first))
+        {
+            return p.second->write(pth.substr(p.first.length() + 1, pth.length()));
         }
     }
     return nullptr;

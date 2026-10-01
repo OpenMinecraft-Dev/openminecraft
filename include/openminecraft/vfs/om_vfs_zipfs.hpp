@@ -2,11 +2,11 @@
 #define OM_VFS_ZIPFS_HPP
 
 #include "openminecraft/specs/zip/om_zip.hpp"
-#include "openminecraft/vfs/om_vfs_base.hpp"
+#include "openminecraft/vfs/om_vfs_virtualfs.hpp"
 #include <memory>
 namespace openminecraft::vfs
 {
-class OMFsProviderZip : public OMFsProvider
+class OMFsProviderZip : public OMFsProviderVirtual
 {
   public:
     OMFsProviderZip(std::shared_ptr<specs::zip::OMZip> file) : file(file)

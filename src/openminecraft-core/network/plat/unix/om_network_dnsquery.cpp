@@ -125,7 +125,7 @@ auto queryDns(std::string n) -> std::vector<OMNetworkDnsResult>
     res_init();
 
     unsigned char answer[65536];
-    int len = res_query(("_minecraft._tcp." + n).c_str(), ns_c_in, ns_t_srv, answer, sizeof(answer));
+    int len = res_query(n.c_str(), ns_c_in, ns_t_srv, answer, sizeof(answer));
     if (len < 0)
     {
         logger.warn("DNS query failed: {}", hstrerror(h_errno));

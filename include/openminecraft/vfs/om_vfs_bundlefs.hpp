@@ -2,10 +2,10 @@
 #define OM_VFS_BUNDLEFS_HPP
 
 #include "openminecraft/specs/vfsbundle/om_vfsbundle.hpp"
-#include "openminecraft/vfs/om_vfs_base.hpp"
+#include "openminecraft/vfs/om_vfs_virtualfs.hpp"
 namespace openminecraft::vfs
 {
-class OMFsProviderBundle : public OMFsProvider
+class OMFsProviderBundle : public OMFsProviderVirtual
 {
   public:
     OMFsProviderBundle(std::shared_ptr<specs::vfsbundle::OMBundle> file) : file(file)

@@ -15,6 +15,9 @@ namespace openminecraft::vfs
 class OMFsProvider
 {
   public:
+    virtual ~OMFsProvider()
+    {
+    }
     virtual auto read(std::string) -> std::shared_ptr<std::istream> = 0;
     virtual auto write(std::string) -> std::shared_ptr<std::ostream>
     {
@@ -24,12 +27,14 @@ class OMFsProvider
 
 extern std::unordered_map<std::string, std::shared_ptr<OMFsProvider>> fshandlers;
 
+auto fsmountTcp(std::string host, std::string port, std::string mountpoint) -> bool;
 auto fsmountReal(std::string root, std::string mountpoint) -> bool;
 auto fsmountBundle(std::shared_ptr<specs::vfsbundle::OMBundle> info, std::string mountpoint) -> bool;
 auto fsmountZipArchive(const char *src, std::size_t length, std::string mountpoint) -> bool;
 auto fsmountZipArchive(std::shared_ptr<std::istream> istr, std::string mountpoint) -> bool;
 auto fsumount(std::string mountpoint) -> bool;
 auto fsfetch(std::string fullPath) -> std::shared_ptr<std::istream>;
+auto fswrite(std::string fullPath) -> std::shared_ptr<std::ostream>;
 } // namespace openminecraft::vfs
 
 #endif

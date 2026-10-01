@@ -1,13 +1,15 @@
 #ifndef OM_VFS_REALFS_HPP
 #define OM_VFS_REALFS_HPP
 
+#include <utility>
+
 #include "openminecraft/vfs/om_vfs_base.hpp"
 namespace openminecraft::vfs
 {
 class OMFsProviderReal : public OMFsProvider
 {
   public:
-    OMFsProviderReal(std::string root) : root(root)
+    OMFsProviderReal(std::string root) : root(std::move(root))
     {
     }
 

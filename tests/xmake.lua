@@ -1,6 +1,7 @@
 target("openminecraft-test-network")
 set_kind("binary")
-add_deps("openminecraft-io", "openminecraft-log")
+add_deps("openminecraft-io", "openminecraft-log", "openminecraft-vfs", "openminecraft-network")
 add_packages("fmt", "boost", "c-ares")
 add_files("network/test-network.cpp")
 add_includedirs(path.join(os.projectdir(), "include"))
+add_syslinks("resolv")
