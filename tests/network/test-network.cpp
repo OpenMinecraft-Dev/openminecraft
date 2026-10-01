@@ -48,15 +48,21 @@ auto readVarInt(std::shared_ptr<std::istream> istr) -> int
 auto main(int argc, char **argv) -> int
 {
     log::OMLogger logger("Network Test");
-    logger.info("try connect to {} {}", argv[1], argv[2]);
 
-    auto res = network::queryDns("_minecraft._tcp.awa.kjmc.top");
+    auto host = std::string(argv[1]);
+    auto port = std::string(argv[2]);
+
+    logger.info("try connect to {} {}", host, port);
+
+    auto res = network::queryDns(std::string("_minecraft._tcp.") + host);
     for (const auto &r : res)
     {
-        logger.warn("{}:{}", r.target, r.port);
+        host = r.target;
+        port = std::to_string(r.port);
+        logger.info("=> {}:{}", host, port);
     }
 
-    vfs::fsmountTcp(argv[1], argv[2], "/mcserver_conn");
+    vfs::fsmountTcp(host, port, "/mcserver_conn");
     auto in = vfs::fsfetch("/mcserver_conn/connect");
     auto out = vfs::fswrite("/mcserver_conn/connect");
 
@@ -96,11 +102,8 @@ auto main(int argc, char **argv) -> int
             while (length > 0)
             {
                 auto l = in->readsome(buf, length);
-                if (l != 0)
-                {
-                    logger.debug("{} bytes", l);
-                }
-                of.write(buf, length);
+                logger.debug("{} bytes", l);
+                of.write(buf, l);
                 length -= l;
             }
             logger.info("read packet 0x{:02x}, length {}", id, lcnst);
