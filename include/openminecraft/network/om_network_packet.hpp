@@ -2,6 +2,7 @@
 #define OM_NETWORK_SOCKETSTREAM_HPP
 
 #include <vector>
+#include <string>
 namespace openminecraft::network
 {
 class OMNetworkPacket
