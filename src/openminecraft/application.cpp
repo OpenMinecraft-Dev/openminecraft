@@ -27,7 +27,6 @@
 #include <chrono>
 #include <iostream>
 #include <memory>
-#include <nl_types.h>
 #include <string>
 #include "openminecraft-shell/renderer/debugrendrer.hpp"
 #include "openminecraft-shell/renderer/worldrenderer.hpp"
@@ -37,7 +36,6 @@
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
-#include <thread>
 #include <vector>
 
 #include "openminecraft-shell/application.hpp"
