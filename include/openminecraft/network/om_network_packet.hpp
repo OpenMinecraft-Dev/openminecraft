@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <cstdint>
 namespace openminecraft::network
 {
 class OMNetworkPacket
