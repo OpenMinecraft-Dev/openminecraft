@@ -18,7 +18,7 @@ template <typename T> class OMCodingBase
     virtual void write(OMNetworkPacket) = 0;
     virtual auto read() -> OMNetworkPacket = 0;
 
-  private:
+  protected:
     std::shared_ptr<std::istream> in;
     std::shared_ptr<std::ostream> out;
     T &handler;

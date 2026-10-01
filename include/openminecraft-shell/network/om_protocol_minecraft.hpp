@@ -16,7 +16,7 @@ enum OMProtocolMinecraftState
 class OMProtocolMinecraftHandler
 {
   public:
-    OMProtocolMinecraftHandler();
+    OMProtocolMinecraftHandler() = default;
 };
 
 class OMProtocolMinecraft : public openminecraft::network::protocol::OMCodingBase<OMProtocolMinecraftHandler>
@@ -27,6 +27,9 @@ class OMProtocolMinecraft : public openminecraft::network::protocol::OMCodingBas
         : OMCodingBase(in, out, handler)
     {
     }
+
+    void write(openminecraft::network::OMNetworkPacket) override;
+    auto read() -> openminecraft::network::OMNetworkPacket override;
 };
 } // namespace openminecraftshell::network
 

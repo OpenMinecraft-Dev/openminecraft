@@ -16,6 +16,7 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/om_renderer_window.hpp"
+#include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
@@ -26,10 +27,12 @@
 #include <chrono>
 #include <iostream>
 #include <memory>
+#include <nl_types.h>
 #include <string>
 #include "openminecraft-shell/renderer/debugrendrer.hpp"
 #include "openminecraft-shell/renderer/worldrenderer.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
+#include "openminecraft-shell/network/om_protocol_minecraft.hpp"
 
 #include <SDL3/SDL.h>
 #include <boost/stacktrace.hpp>
@@ -91,11 +94,56 @@ auto OMApplication::entry() -> int
 
     data::block::registerBlocks();
     data::block::registerBlockstates();
-    mainLoop(bk);
+    networkSetup();
+    // mainLoop(bk);
 
     SDL_Quit();
 
     return 0;
+}
+
+void OMApplication::networkSetup()
+{
+    std::string host = "MinecraftOnline.com";
+    std::string port = "25565";
+    logger.info("try connect to {} {}", host, port);
+
+    auto res = openminecraft::network::queryDns(std::string("_minecraft._tcp.") + host);
+    for (const auto &r : res)
+    {
+        host = r.target;
+        port = std::to_string(r.port);
+        logger.info("=> {}:{}", host, port);
+    }
+
+    vfs::fsmountTcp(host, port, "/mcserver_conn");
+    auto in = vfs::fsfetch("/mcserver_conn/connect");
+    auto out = vfs::fswrite("/mcserver_conn/connect");
+
+    openminecraftshell::network::OMProtocolMinecraftHandler hnd;
+    openminecraftshell::network::OMProtocolMinecraft protocol(in, out, hnd);
+
+    try
+    {
+        protocol.write(openminecraft::network::OMNetworkPacket()
+                           .uint8(0x00)
+                           .varInt(773)
+                           .utf8WithLength("localhost")
+                           .int16(25565)
+                           .varInt(1));
+
+        protocol.write(openminecraft::network::OMNetworkPacket().uint8(0x00));
+        protocol.write(openminecraft::network::OMNetworkPacket().uint8(0x01).int64(time(nullptr)));
+
+        auto p = protocol.read();
+        logger.debug("packet length {}", p.datalen());
+
+        vfs::fsumount("/mcserver_conn");
+    }
+    catch (const std::ios_base::failure &e)
+    {
+        logger.error("connection closed!");
+    }
 }
 
 void OMApplication::mainLoop(OMBackend backend)

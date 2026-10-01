@@ -10,7 +10,7 @@ namespace openminecraft::vfs
 class OMFsProviderTcp : public OMFsProvider
 {
   public:
-    OMFsProviderTcp(std::string host, std::string port) : host(std::move(host)), port(port), socket(context)
+    OMFsProviderTcp(std::string host, std::string port) : host(std::move(host)), port(std::move(port)), socket(context)
     {
     }
 

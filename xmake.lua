@@ -126,5 +126,4 @@ add_requires("harfbuzz", { system = false, configs = { freetype = false } })
 
 includes("src/openminecraft-core/xmake.lua")
 includes("src/openminecraft/xmake.lua")
-includes("tests/xmake.lua")
 includes("tools/xmake.lua")

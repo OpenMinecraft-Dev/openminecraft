@@ -14,9 +14,9 @@ class OMNetworkPacket
         return buffer.size();
     }
 
-    auto data() -> uint8_t *
+    auto data() -> char *
     {
-        return buffer.data();
+        return reinterpret_cast<char *>(buffer.data());
     }
 
     auto reset() -> OMNetworkPacket &
@@ -43,6 +43,12 @@ class OMNetworkPacket
         {
             buffer.push_back(ch);
         }
+        return *this;
+    }
+
+    auto uint8(uint8_t t) -> OMNetworkPacket &
+    {
+        buffer.push_back(t);
         return *this;
     }
 
