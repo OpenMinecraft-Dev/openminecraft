@@ -51,7 +51,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
     fontset->fontList.push_back(std::make_shared<geom::OMFont>(*rawfile1.get()));
 
     auto button = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
-    button->setOnClick([]() -> void { std::cout << "button 1 clicked!" << std::endl; });
+    button->setOnClick([]() { exit(0); });
     auto button2 = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     button2->setOnClick([]() -> void { std::cout << "button 2 clicked!" << std::endl; });
     node = std::make_shared<node::OMDemiurgeContainerNode>()
@@ -76,7 +76,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                        ->style({
                                            {"color", (int)0xffffffff},
-                                           {"text", fmt::format("OpenMinecraft {}", OM_VERSION)},
+                                           {"text", fmt::format("OpenMinecraft {}-{}", OM_VERSION, OM_VERSION_CHANNEL)},
                                            {"textheight", 16},
                                        }))
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
@@ -155,8 +155,6 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                            {"textheight", 16},
                                        })
                                        ->store(precisionNode2)));
-
-    button->setOnClick([]() { exit(0); });
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     renderer->registerHandler(internal);

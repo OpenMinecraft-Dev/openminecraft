@@ -28,7 +28,13 @@ if is_plat("harmony") then
 	includes("extlibs/libffi_port.lua")
 end
 
-add_defines("OM_VERSION=\"v0.0.1\"")
+--------------------------------------------------------------------------------
+-- Define version
+--------------------------------------------------------------------------------
+
+includes("version.lua")
+add_defines("OM_VERSION=\"" .. openminecraft_version .. "\"")
+add_defines("OM_VERSION_CHANNEL=\"" .. openminecraft_version_channel .. "\"")
 
 --------------------------------------------------------------------------------
 -- Platform configs
