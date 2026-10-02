@@ -91,6 +91,15 @@ auto OMApplication::entry() -> int
     OMBackend bk = Vulkan;
     if (args.size() >= 2)
     {
+        if (args[1] == "help")
+        {
+            logger->info("OpenMinecraft Demo App {}-{}", OM_VERSION, OM_VERSION_CHANNEL);
+            logger->info("usage: [backend]");
+            logger->info("possible backends:");
+            logger->info("vk -> Vulkan Backend (1.2, Default)");
+            logger->info("gl -> OpenGL Backend (3.3 Core Profile)");
+            goto end;
+        }
         bk = args[1] == "gl" ? OpenGL : Vulkan;
     }
 
@@ -99,6 +108,7 @@ auto OMApplication::entry() -> int
     // networkSetup();
     mainLoop(bk);
 
+end:
     SDL_Quit();
 
     return 0;

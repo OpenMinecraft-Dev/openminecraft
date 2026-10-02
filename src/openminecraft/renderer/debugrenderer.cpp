@@ -1,14 +1,12 @@
 #include "openminecraft-shell/renderer/debugrendrer.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_cliprect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_svg.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
+#include "openminecraft/vm/os/om_hardware.hpp"
 #include <array>
-#include <iostream>
 #include <memory>
 #include <string>
 
@@ -18,27 +16,26 @@ using namespace openminecraft::renderer::common::demiurge;
 
 namespace openminecraftshell::renderer
 {
-const std::array<std::string, 8> loadingRing = {
-    "M2.757 6.046c-.263.123-.38.439-.214.676a3 3 0 1 0 .012-3.46c-.168.235-.053.552.21.676.261.125.57.007.76-.213a1.95 "
-    "1.95 0 1 1-.01 2.54c-.188-.221-.495-.341-.758-.219",
-    "M2.563 4.57C2.277 4.52 2 4.711 2 5.001a3 3 0 1 0 "
-    "1.995-2.828c-.273.098-.36.423-.218.675.144.252.464.332.745.261A1.95 1.95 0 1 1 3.06 "
-    "5.184c-.028-.288-.21-.563-.496-.614",
-    "M3.954 2.757c-.123-.263-.439-.38-.676-.214a3 3 0 1 0 "
-    "3.46.012c-.235-.168-.552-.053-.676.21-.125.261-.007.57.213.76a1.95 1.95 0 1 "
-    "1-2.54-.01c.221-.187.341-.495.219-.758",
-    "M5.846 2.674c.1-.272-.041-.578-.327-.629a3 3 0 1 0 2.44 "
-    "2.456c-.05-.286-.354-.429-.627-.331-.274.097-.408.399-.387.688a1.95 1.95 0 1 "
-    "1-1.79-1.802c.29.023.592-.11.691-.382",
-    "M7.243 3.954c.263-.123.38-.438.214-.676a3 3 0 1 0-.012 "
-    "3.461c.168-.236.053-.553-.21-.677-.261-.125-.57-.007-.76.213a1.95 1.95 0 1 1 .01-2.54c.187.221.495.342.758.219",
-    "M7.326 5.846c.272.1.578-.04.629-.327a3 3 0 1 0-2.456 "
-    "2.44c.286-.049.428-.354.331-.627-.097-.274-.399-.408-.688-.387a1.95 1.95 0 1 1 1.802-1.79c-.023.29.11.592.382.691",
-    "M6.046 7.243c.122.263.438.38.676.214a3 3 0 1 0-3.461-.012c.236.168.553.053.677-.21.125-.261.006-.57-.213-.76a1.95 "
-    "1.95 0 1 1 2.54.01c-.221.187-.342.495-.22.758",
-    "M4.153 7.326c-.099.272.042.578.327.629a3 3 0 1 0-2.438-2.456c.048.286.353.428.626.331s.408-.399.387-.688a1.95 "
-    "1.95 0 1 1 1.79 1.802c-.29-.023-.592.11-.692.382",
-};
+static inline auto fromBytes(uint64_t l) -> std::string
+{
+    if (l < 1024)
+    {
+        return fmt::format("{} B", l);
+    }
+    if (l < 1024 * 1024)
+    {
+        return fmt::format("{:.2f} KB", static_cast<double>(l) / 1024);
+    }
+    if (l < 1024 * 1024 * 1024)
+    {
+        return fmt::format("{:.2f} MB", static_cast<double>(l) / 1024 / 1024);
+    }
+    if (l < 1024ull * 1024 * 1024 * 1024)
+    {
+        return fmt::format("{:.2f} GB", static_cast<double>(l) / 1024 / 1024 / 1024);
+    }
+    return fmt::format("{:.2f} TB", static_cast<double>(l) / 1024 / 1024 / 1024 / 1024);
+}
 OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(renderer)
 {
     this->renderer = renderer;
@@ -52,8 +49,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
 
     auto button = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     button->setOnClick([]() { exit(0); });
-    auto button2 = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
-    button2->setOnClick([]() -> void { std::cout << "button 2 clicked!" << std::endl; });
+    button->setBackgroundColor({0.17, 0.17, 0.20});
     node = std::make_shared<node::OMDemiurgeContainerNode>()
                ->style({
                    {"flexDirection", Row},
@@ -62,64 +58,79 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                    {"height", OMDemiurgeSize::fit()},
                    {"alignItems", OMDemiurgeAlign::FlexStart},
                })
-               ->mount(std::make_shared<node::OMDemiurgeRectNode>()
+               ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                            ->style({
-                               {"color", (int)0x23232333},
                                {"flexDirection", Column},
-                               {"flexGap", 5_px},
                                {"width", OMDemiurgeSize::fit()},
                                {"height", OMDemiurgeSize::fit()},
-                               {"radius", glm::vec4(5.0f)},
-                               {"margin", std::array<OMDemiurgeSize, 4>{10_px, 10_px, 10_px, 10_px}},
-                               {"border", OMDemiurgeEdgeInsets{10, 10, 10, 10}},
+                               {"alignItems", OMDemiurgeAlign::FlexStart},
                            })
-                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                           ->mount(std::make_shared<node::OMDemiurgeRectNode>()
                                        ->style({
-                                           {"color", (int)0xffffffff},
-                                           {"text", fmt::format("OpenMinecraft {}-{}", OM_VERSION, OM_VERSION_CHANNEL)},
-                                           {"textheight", 16},
-                                       }))
-                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                                       ->style({
-                                           {"color", (int)0xffffffff},
-                                           {"text", "\"virtual testing world\""},
-                                           {"textheight", 16},
-                                       }))
-                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                                       ->style({
-                                           {"color", (int)0xffffffff},
-                                           {"text", ""},
-                                           {"textheight", 16},
+                                           {"color", (int)0x2c2c3433},
+                                           {"flexDirection", Column},
+                                           {"flexGap", 5_px},
+                                           {"width", OMDemiurgeSize::fit()},
+                                           {"height", OMDemiurgeSize::fit()},
+                                           {"radius", glm::vec4(5.0f)},
+                                           {"margin", std::array<OMDemiurgeSize, 4>{10_px, 10_px, 10_px, 10_px}},
+                                           {"border", OMDemiurgeEdgeInsets{10, 10, 10, 10}},
                                        })
-                                       ->store(fpsTextNode))
-                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                                       ->style({
-                                           {"color", (int)0xffffffff},
-                                           {"text", ""},
-                                           {"textheight", 16},
-                                       })
-                                       ->store(posTextNode))
-                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                                       ->style({
-                                           {"color", (int)0xffffffff},
-                                           {"text", ""},
-                                           {"textheight", 16},
-                                       })
-                                       ->store(povTextNode))
-                           ->mount(button->style("animation_speed", 1.0f)->style("label", "Quit"))
-                           ->mount(button2
-                                       ->mount(std::make_shared<node::OMDemiurgeSvgNode>()
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
-                                                       {"width", 20_px},
-                                                       {"height", 20_px},
+                                                       {"color", (int)0x00d4ffff},
+                                                       {"text", fmt::format("OpenMinecraft {}-{}", OM_VERSION,
+                                                                            OM_VERSION_CHANNEL)},
+                                                       {"textheight", 16},
+                                                   }))
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                                   ->style({
                                                        {"color", (int)0xffffffff},
-                                                       {"svgPath", loadingRing[0]},
+                                                       {"text", "\"virtual testing world\""},
+                                                       {"textheight", 16},
+                                                   }))
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                                   ->style({
+                                                       {"color", (int)0xffffffff},
+                                                       {"text", ""},
+                                                       {"textheight", 16},
                                                    })
-                                                   ->store(svgNode))
-                                       ->style("label", "")))
+                                                   ->store(fpsTextNode))
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                                   ->style({
+                                                       {"color", (int)0xffffffff},
+                                                       {"text", ""},
+                                                       {"textheight", 16},
+                                                   })
+                                                   ->store(posTextNode))
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                                   ->style({
+                                                       {"color", (int)0xffffffff},
+                                                       {"text", ""},
+                                                       {"textheight", 16},
+                                                   })
+                                                   ->store(povTextNode)))
+                           ->mount(std::make_shared<node::OMDemiurgeRectNode>()
+                                       ->style({
+                                           {"color", (int)0x2c2c3433},
+                                           {"flexDirection", Column},
+                                           {"flexGap", 5_px},
+                                           {"width", OMDemiurgeSize::fit()},
+                                           {"height", OMDemiurgeSize::fit()},
+                                           {"radius", glm::vec4(5.0f)},
+                                           {"margin", std::array<OMDemiurgeSize, 4>{10_px, 10_px, 10_px, 10_px}},
+                                           {"border", OMDemiurgeEdgeInsets{10, 10, 10, 10}},
+                                       })
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                                   ->style({
+                                                       {"color", (int)0x00d4ffff},
+                                                       {"text", "Operations"},
+                                                       {"textheight", 16},
+                                                   }))
+                                       ->mount(button->style("animation_speed", 1.0f)->style("label", "Quit"))))
                ->mount(std::make_shared<node::OMDemiurgeRectNode>()
                            ->style({
-                               {"color", (int)0x23232333},
+                               {"color", (int)0x2c2c3433},
                                {"flexDirection", Column},
                                {"flexGap", 5_px},
                                {"width", OMDemiurgeSize::fit()},
@@ -131,14 +142,33 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                            })
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                        ->style({
-                                           {"color", (int)0xffffffff},
-                                           {"text", "Hardware & lowlevel stats"},
+                                           {"color", (int)0x00d4ffff},
+                                           {"text", "Hardware/software & lowlevel stats"},
                                            {"textheight", 16},
                                        }))
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                        ->style({
                                            {"color", (int)0xffffffff},
                                            {"text", renderer->driver()},
+                                           {"textheight", 16},
+                                       }))
+                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                       ->style({
+                                           {"color", (int)0xffffffff},
+                                           {"text", vm::os::fetchCpuName()},
+                                           {"textheight", 16},
+                                       }))
+                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                       ->style({
+                                           {"color", (int)0xffffffff},
+                                           {"text", vm::os::fetchSystemName() + " " + vm::os::fetchSystemVersion()},
+                                           {"textheight", 16},
+                                       }))
+                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                       ->style({
+                                           {"color", (int)0xffffffff},
+                                           {"text", fromBytes(vm::os::fetchMemoryTotal()) + " / Page " +
+                                                        fromBytes(vm::os::fetchPageSize())},
                                            {"textheight", 16},
                                        }))
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
@@ -190,7 +220,6 @@ void OMDebugRenderer::afterFrame()
 
         tp = std::chrono::steady_clock::now();
         fps = 0;
-        svgNode->style("svgPath", loadingRing[(++i) % 8]);
     }
 
     auto m = camera->getPosRaw();
