@@ -64,6 +64,10 @@ auto OMApplication::entry() -> int
     log::multithread::registerCurrentThreadName("engineMain");
     auto logger = std::make_shared<log::OMLogger>("boot");
 
+    SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_NAME_STRING, "OpenMinecraft");
+    SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_VERSION_STRING, "v0.0.1");
+    SDL_SetHint(SDL_HINT_APP_NAME, "OpenMinecraft");
+
     SDL_SetMemoryFunctions(mem::allocator::tracedMallocSDL, mem::allocator::tracedCallocSDL,
                            mem::allocator::tracedReallocSDL, mem::allocator::tracedFreeSDL);
     setupI18nEnv();
@@ -92,8 +96,8 @@ auto OMApplication::entry() -> int
 
     data::block::registerBlocks();
     data::block::registerBlockstates();
-    networkSetup();
-    // mainLoop(bk);
+    // networkSetup();
+    mainLoop(bk);
 
     SDL_Quit();
 
