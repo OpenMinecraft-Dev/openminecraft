@@ -65,7 +65,7 @@ auto OMApplication::entry() -> int
     auto logger = std::make_shared<log::OMLogger>("boot");
 
     SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_NAME_STRING, "OpenMinecraft");
-    SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_VERSION_STRING, "v0.0.1");
+    SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_VERSION_STRING, OM_VERSION);
     SDL_SetHint(SDL_HINT_APP_NAME, "OpenMinecraft");
 
     SDL_SetMemoryFunctions(mem::allocator::tracedMallocSDL, mem::allocator::tracedCallocSDL,
@@ -367,6 +367,22 @@ void OMApplication::mainLoop(OMBackend backend)
         });
         bus.append(SDL_EVENT_KEY_UP, [&](SDL_Event &e) -> void {
             hnd2->node->acceptEvent(INFINITY, INFINITY, demiurge::KeyUp, e.key.key);
+        });
+
+        bus.append(SDL_EVENT_FINGER_MOTION, [&](SDL_Event &e) {
+            int w, h;
+            SDL_GetWindowSize(reinterpret_cast<SDL_Window *>(*win), &w, &h);
+            hnd2->node->acceptEvent(e.tfinger.x * w, e.tfinger.y * h, demiurge::MouseMove, e.tfinger.fingerID);
+        });
+        bus.append(SDL_EVENT_FINGER_UP, [&](SDL_Event &e) {
+            int w, h;
+            SDL_GetWindowSize(reinterpret_cast<SDL_Window *>(*win), &w, &h);
+            hnd2->node->acceptEvent(e.tfinger.x * w, e.tfinger.y * h, demiurge::MouseUp, e.tfinger.fingerID);
+        });
+        bus.append(SDL_EVENT_FINGER_DOWN, [&](SDL_Event &e) {
+            int w, h;
+            SDL_GetWindowSize(reinterpret_cast<SDL_Window *>(*win), &w, &h);
+            hnd2->node->acceptEvent(e.tfinger.x * w, e.tfinger.y * h, demiurge::MouseDown, e.tfinger.fingerID);
         });
 
         util::OMTicker ticker;

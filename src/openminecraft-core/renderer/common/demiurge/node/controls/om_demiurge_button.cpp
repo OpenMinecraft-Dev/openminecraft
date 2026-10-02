@@ -53,6 +53,7 @@ auto OMDemiurgeButton::processMouseUp(float x, float y, uint8_t button) -> OMDem
 {
     opacity.animateTo(stylesStorage.get<float>("opacity_hovered", 0.8f), easeOutCirc<float>,
                       stylesStorage.get<float>("animation_speed", 0.2f));
+    handle();
     return Handled;
 }
 
@@ -74,10 +75,6 @@ auto OMDemiurgeButton::submit(OMDemiurgeRendererHandler *handler, float depth) -
     OMDemiurgeContainerNode::submit(handler, depth);
 }
 
-void OMDemiurgeButton::setText(std::string s)
-{
-    textNode->style("text", s);
-}
 void OMDemiurgeButton::setTextColor(glm::vec4 d)
 {
     textColor.animateTo(d, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.2f));

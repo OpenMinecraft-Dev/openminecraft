@@ -2,6 +2,7 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_cliprect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
+#include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_svg.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
@@ -61,17 +62,27 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                    {"height", OMDemiurgeSize::fit()},
                    {"alignItems", OMDemiurgeAlign::FlexStart},
                })
-               ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
+               ->mount(std::make_shared<node::OMDemiurgeRectNode>()
                            ->style({
+                               {"color", (int)0x23232333},
                                {"flexDirection", Column},
                                {"flexGap", 5_px},
                                {"width", OMDemiurgeSize::fit()},
                                {"height", OMDemiurgeSize::fit()},
+                               {"radius", glm::vec4(5.0f)},
+                               {"margin", std::array<OMDemiurgeSize, 4>{10_px, 10_px, 10_px, 10_px}},
+                               {"border", OMDemiurgeEdgeInsets{10, 10, 10, 10}},
                            })
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                        ->style({
                                            {"color", (int)0xffffffff},
-                                           {"text", "OpenMinecraft Demo v0.0.1"},
+                                           {"text", fmt::format("OpenMinecraft {}", OM_VERSION)},
+                                           {"textheight", 16},
+                                       }))
+                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                       ->style({
+                                           {"color", (int)0xffffffff},
+                                           {"text", "\"virtual testing world\""},
                                            {"textheight", 16},
                                        }))
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
@@ -95,7 +106,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                            {"textheight", 16},
                                        })
                                        ->store(povTextNode))
-                           ->mount(button->style("animation_speed", 1.0f))
+                           ->mount(button->style("animation_speed", 1.0f)->style("label", "Quit"))
                            ->mount(button2
                                        ->mount(std::make_shared<node::OMDemiurgeSvgNode>()
                                                    ->style({
@@ -106,12 +117,16 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                                    })
                                                    ->store(svgNode))
                                        ->style("label", "")))
-               ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
+               ->mount(std::make_shared<node::OMDemiurgeRectNode>()
                            ->style({
+                               {"color", (int)0x23232333},
                                {"flexDirection", Column},
                                {"flexGap", 5_px},
                                {"width", OMDemiurgeSize::fit()},
                                {"height", OMDemiurgeSize::fit()},
+                               {"radius", glm::vec4(5.0f)},
+                               {"margin", std::array<OMDemiurgeSize, 4>{10_px, 10_px, 10_px, 10_px}},
+                               {"border", OMDemiurgeEdgeInsets{10, 10, 10, 10}},
                                {"alignItems", OMDemiurgeAlign::FlexEnd},
                            })
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
@@ -140,6 +155,8 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                            {"textheight", 16},
                                        })
                                        ->store(precisionNode2)));
+
+    button->setOnClick([]() { exit(0); });
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     renderer->registerHandler(internal);

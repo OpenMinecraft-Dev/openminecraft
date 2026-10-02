@@ -24,7 +24,6 @@ class OMDemiurgeButton : public OMDemiurgeContainerNode
     auto processMouseEnter(float x, float y) -> OMDemiurgeEventResult override;
     auto processMouseExit(float x, float y) -> OMDemiurgeEventResult override;
 
-    void setText(std::string s);
     void setTextColor(glm::vec4 d);
     void setBackgroundColor(glm::vec3 d);
     void setBackgroundRadius(glm::vec4 r);
