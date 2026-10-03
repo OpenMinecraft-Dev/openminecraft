@@ -17,8 +17,8 @@ using namespace openminecraft::renderer::common::demiurge;
 
 namespace openminecraftshell::renderer
 {
-OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *renderer)
-    : OMRendererHandler(renderer), renderer(renderer), offset(0.0)
+OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *renderer, std::function<void()> enter)
+    : OMRendererHandler(renderer), renderer(renderer), offset(0.0), enterCallback(enter)
 {
     fontset = std::make_shared<geom::OMFontSet>();
 
@@ -26,7 +26,10 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     fontset->fontList.push_back(std::make_shared<geom::OMFont>(*rawfile1.get()));
 
     auto button = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
-    button->setOnClick([&]() { offset.animateTo(-1.0, common::animation::easeInQuint<float>, 1.0); });
+    button->setOnClick([&]() {
+        offset.animateTo(-1.0, common::animation::easeInQuint<float>, 1.0);
+        enterCallback();
+    });
     button->setBackgroundColor({0.17, 0.17, 0.20});
     auto button2 = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     button2->setOnClick([&]() { exit(0); });

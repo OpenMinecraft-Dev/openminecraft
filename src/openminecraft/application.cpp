@@ -231,8 +231,13 @@ void OMApplication::mainLoop(OMBackend backend)
             }
         }
 
-        auto hnd4 = std::make_shared<renderer::OMSurfaceRenderer>(win());
-        auto hnd2 = std::make_shared<renderer::OMDebugRenderer>(win(), [&]() { hnd4->openScreen(); });
+        bool mainScreen = true;
+
+        auto hnd4 = std::make_shared<renderer::OMSurfaceRenderer>(win(), [&]() { mainScreen = false; });
+        auto hnd2 = std::make_shared<renderer::OMDebugRenderer>(win(), [&]() {
+            hnd4->openScreen();
+            mainScreen = true;
+        });
         auto hnd = std::make_shared<renderer::OMWorldRenderer>(win(), camera, chunkManager);
         auto hnd3 = std::make_shared<renderer::OMComposeRenderer>(win(), hnd4->internal->middleTarget,
                                                                   hnd2->internal->middleTarget, hnd->tempTarget);
@@ -251,6 +256,58 @@ void OMApplication::mainLoop(OMBackend backend)
         bus.append(SDL_EVENT_WINDOW_ENTER_FULLSCREEN, [&](SDL_Event &) -> void { win()->requestResize(); });
         bus.append(SDL_EVENT_WINDOW_LEAVE_FULLSCREEN, [&](SDL_Event &) -> void { win()->requestResize(); });
         bus.append(SDL_EVENT_QUIT, [&](SDL_Event &) -> void { isRunning = false; });
+        bus.append(SDL_EVENT_MOUSE_MOTION, [&](SDL_Event &e) -> void {
+            if (SDL_GetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win)))
+            {
+                camera->modPitch(-e.motion.yrel * 0.15);
+                camera->modYaw(e.motion.xrel * 0.15);
+            }
+        });
+        bus.append(SDL_EVENT_FINGER_MOTION, [&](SDL_Event &e) -> void {
+            camera->modPitch(-e.tfinger.dy * 0.5f * 100.0f);
+            camera->modYaw(e.tfinger.dx * 0.5f * 100.0f);
+        });
+        bus.appendGeneral([&]() {
+            static auto startTime = std::chrono::high_resolution_clock::now();
+            const auto currentTime = std::chrono::high_resolution_clock::now();
+            const float time = std::chrono::duration<float>(currentTime - startTime).count();
+            startTime = currentTime;
+
+            constexpr float moveSpeed = 1.3f;
+
+            if (!inGame)
+            {
+                return;
+            }
+
+            if (keystates[0])
+            {
+                camera->moveCamera(basics::Forward, moveSpeed * time);
+            }
+            if (keystates[1])
+            {
+                camera->moveCamera(basics::Left, moveSpeed * time);
+            }
+            if (keystates[2])
+            {
+                camera->moveCamera(basics::Back, moveSpeed * time);
+            }
+            if (keystates[3])
+            {
+                camera->moveCamera(basics::Right, moveSpeed * time);
+            }
+            if (keystates[4])
+            {
+                camera->moveCamera(basics::Down, moveSpeed * time);
+            }
+            if (keystates[5])
+            {
+                camera->moveCamera(basics::Up, moveSpeed * time);
+            }
+        });
+
+        hnd2->node->bindEventBus(bus);
+        hnd4->node->bindEventBus(bus);
         bus.append(SDL_EVENT_KEY_DOWN, [&](SDL_Event &e) -> void {
             if (e.key.repeat)
             {
@@ -306,78 +363,10 @@ void OMApplication::mainLoop(OMBackend backend)
             }
         });
         bus.append(SDL_EVENT_MOUSE_BUTTON_DOWN, [&](SDL_Event &e) -> void {
-            if (e.button.button == 1)
+            if (e.button.button == 1 && !mainScreen)
             {
                 inGame = true;
             }
-        });
-        bus.append(SDL_EVENT_MOUSE_MOTION, [&](SDL_Event &e) -> void {
-            if (SDL_GetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win)))
-            {
-                camera->modPitch(-e.motion.yrel * 0.15);
-                camera->modYaw(e.motion.xrel * 0.15);
-            }
-        });
-        bus.append(SDL_EVENT_FINGER_MOTION, [&](SDL_Event &e) -> void {
-            camera->modPitch(-e.tfinger.dy * 0.5f * 100.0f);
-            camera->modYaw(e.tfinger.dx * 0.5f * 100.0f);
-        });
-        bus.appendGeneral([&]() {
-            static auto startTime = std::chrono::high_resolution_clock::now();
-            const auto currentTime = std::chrono::high_resolution_clock::now();
-            const float time = std::chrono::duration<float>(currentTime - startTime).count();
-            startTime = currentTime;
-
-            constexpr float moveSpeed = 1.3f;
-
-            if (!inGame)
-            {
-                return;
-            }
-
-            if (keystates[0])
-            {
-                camera->moveCamera(basics::Forward, moveSpeed * time);
-            }
-            if (keystates[1])
-            {
-                camera->moveCamera(basics::Left, moveSpeed * time);
-            }
-            if (keystates[2])
-            {
-                camera->moveCamera(basics::Back, moveSpeed * time);
-            }
-            if (keystates[3])
-            {
-                camera->moveCamera(basics::Right, moveSpeed * time);
-            }
-            if (keystates[4])
-            {
-                camera->moveCamera(basics::Down, moveSpeed * time);
-            }
-            if (keystates[5])
-            {
-                camera->moveCamera(basics::Up, moveSpeed * time);
-            }
-        });
-
-        hnd2->node->bindEventBus(bus);
-        hnd4->node->bindEventBus(bus);
-
-        bus.append(SDL_EVENT_FINGER_MOTION, [&](SDL_Event &e) {
-            int w, h;
-            SDL_GetWindowSize(reinterpret_cast<SDL_Window *>(*win), &w, &h);
-            hnd2->node->acceptEvent(e.tfinger.x * w, e.tfinger.y * h, demiurge::MouseMove, e.tfinger.fingerID);
-        });
-        bus.append(SDL_EVENT_FINGER_UP, [&](SDL_Event &e) {
-            int w, h;
-            SDL_GetWindowSize(reinterpret_cast<SDL_Window *>(*win), &w, &h);
-            hnd2->node->acceptEvent(e.tfinger.x * w, e.tfinger.y * h, demiurge::MouseUp, e.tfinger.fingerID);
-        });
-        bus.append(SDL_EVENT_FINGER_DOWN, [&](SDL_Event &e) {
-            int w, h;
-            SDL_GetWindowSize(reinterpret_cast<SDL_Window *>(*win), &w, &h);
-            hnd2->node->acceptEvent(e.tfinger.x * w, e.tfinger.y * h, demiurge::MouseDown, e.tfinger.fingerID);
         });
 
         util::OMTicker ticker;

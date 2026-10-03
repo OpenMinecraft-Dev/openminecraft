@@ -161,6 +161,22 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
                    [&](SDL_Event &e) -> void { acceptEvent(INFINITY, INFINITY, demiurge::KeyDown, e.key.key); });
         bus.append(SDL_EVENT_KEY_UP,
                    [&](SDL_Event &e) -> void { acceptEvent(INFINITY, INFINITY, demiurge::KeyUp, e.key.key); });
+
+        bus.append(SDL_EVENT_FINGER_MOTION, [&](SDL_Event &e) {
+            int w, h;
+            SDL_GetWindowSize(SDL_GetWindowFromEvent(&e), &w, &h);
+            acceptEvent(e.tfinger.x * w, e.tfinger.y * h, demiurge::MouseMove, e.tfinger.fingerID);
+        });
+        bus.append(SDL_EVENT_FINGER_UP, [&](SDL_Event &e) {
+            int w, h;
+            SDL_GetWindowSize(SDL_GetWindowFromEvent(&e), &w, &h);
+            acceptEvent(e.tfinger.x * w, e.tfinger.y * h, demiurge::MouseUp, e.tfinger.fingerID);
+        });
+        bus.append(SDL_EVENT_FINGER_DOWN, [&](SDL_Event &e) {
+            int w, h;
+            SDL_GetWindowSize(SDL_GetWindowFromEvent(&e), &w, &h);
+            acceptEvent(e.tfinger.x * w, e.tfinger.y * h, demiurge::MouseDown, e.tfinger.fingerID);
+        });
     }
 
   protected:

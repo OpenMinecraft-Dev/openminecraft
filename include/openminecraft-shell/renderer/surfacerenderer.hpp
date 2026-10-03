@@ -6,12 +6,13 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
+#include <functional>
 namespace openminecraftshell::renderer
 {
 class OMSurfaceRenderer : public openminecraft::renderer::common::OMRendererHandler
 {
   public:
-    OMSurfaceRenderer(openminecraft::renderer::OMRenderer *renderer);
+    OMSurfaceRenderer(openminecraft::renderer::OMRenderer *renderer, std::function<void()>);
     virtual ~OMSurfaceRenderer() override;
 
     void submitTasks() override;
@@ -25,6 +26,7 @@ class OMSurfaceRenderer : public openminecraft::renderer::common::OMRendererHand
 
     std::shared_ptr<openminecraft::geom::OMFontSet> fontset;
 
+    std::function<void()> enterCallback;
     void openScreen();
 };
 } // namespace openminecraftshell::renderer
