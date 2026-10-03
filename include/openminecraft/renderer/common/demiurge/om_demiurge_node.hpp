@@ -3,6 +3,7 @@
 
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_styles.hpp"
+#include "openminecraft/renderer/common/event/om_eventbus.hpp"
 #include "yoga/YGNode.h"
 #include "yoga/YGNodeLayout.h"
 #include <algorithm>
@@ -138,6 +139,27 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
             stylesStorage.put(p.first, p.second);
         }
         return shared_from_this();
+    }
+
+    inline void bindEventBus(event::OMEventBusSDL &bus)
+    {
+        bus.append(SDL_EVENT_MOUSE_MOTION, [&](SDL_Event &e) -> void {
+            acceptEvent(e.button.x, e.button.y, demiurge::MouseMove, e.button.button);
+        });
+        bus.append(SDL_EVENT_MOUSE_BUTTON_UP, [&](SDL_Event &e) -> void {
+            acceptEvent(e.button.x, e.button.y, demiurge::MouseUp, e.button.button);
+        });
+        bus.append(SDL_EVENT_MOUSE_BUTTON_DOWN, [&](SDL_Event &e) -> void {
+            acceptEvent(e.button.x, e.button.y, demiurge::MouseDown, e.button.button);
+        });
+        bus.append(SDL_EVENT_MOUSE_WHEEL, [&](SDL_Event &e) -> void {
+            acceptEvent(e.wheel.mouse_x, e.wheel.mouse_y, demiurge::MouseWheel, e.button.button,
+                        std::array<float, 2>{e.wheel.x, e.wheel.y}.data());
+        });
+        bus.append(SDL_EVENT_KEY_DOWN,
+                   [&](SDL_Event &e) -> void { acceptEvent(INFINITY, INFINITY, demiurge::KeyDown, e.key.key); });
+        bus.append(SDL_EVENT_KEY_UP,
+                   [&](SDL_Event &e) -> void { acceptEvent(INFINITY, INFINITY, demiurge::KeyUp, e.key.key); });
     }
 
   protected:

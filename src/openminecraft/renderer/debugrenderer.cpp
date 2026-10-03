@@ -1,16 +1,13 @@
 #include "openminecraft-shell/renderer/debugrendrer.hpp"
-#include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
-#include "openminecraft/renderer/common/demiurge/om_demiurge_styles.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <array>
-#include <iostream>
 #include <memory>
 #include <string>
 
@@ -40,7 +37,8 @@ static inline auto fromBytes(uint64_t l) -> std::string
     }
     return fmt::format("{:.2f} TB", static_cast<double>(l) / 1024 / 1024 / 1024 / 1024);
 }
-OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(renderer), offset(1.0f)
+OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, std::function<void()> mscr)
+    : OMRendererHandler(renderer), offset(1.0f)
 {
     this->renderer = renderer;
 
@@ -57,6 +55,9 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
         offset.animateTo(0.0, common::animation::easeOutCubic<float>, 1.0);
     });
     button->setBackgroundColor({0.17, 0.17, 0.20});
+    auto button2 = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
+    button2->setOnClick(mscr);
+    button2->setBackgroundColor({0.17, 0.17, 0.20});
     node = std::make_shared<node::OMDemiurgeContainerNode>()
                ->style({
                    {"flexDirection", Row},
@@ -135,7 +136,8 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                                        {"text", "Operations"},
                                                        {"textheight", 16},
                                                    }))
-                                       ->mount(button->style("animation_speed", 1.0f)->style("label", "UI Fade In"))))
+                                       ->mount(button->style("animation_speed", 1.0f)->style("label", "UI Fade In"))
+                                       ->mount(button2->style("animation_speed", 1.0f)->style("label", "Return"))))
                ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                            ->style({
                                {"flexDirection", Column},
@@ -221,6 +223,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                                    ->store(precisionNode2))));
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
+    internal->name = "debughud";
     renderer->registerHandler(internal);
     offset.animateTo(0.0, common::animation::easeOutCubic<float>, 1.0);
 }

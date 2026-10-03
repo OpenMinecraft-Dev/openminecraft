@@ -7,6 +7,7 @@
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft-shell/renderer/composerenderer.hpp"
+#include "openminecraft-shell/renderer/surfacerenderer.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
@@ -230,13 +231,14 @@ void OMApplication::mainLoop(OMBackend backend)
             }
         }
 
-        auto hnd2 = std::make_shared<renderer::OMDebugRenderer>(win());
+        auto hnd4 = std::make_shared<renderer::OMSurfaceRenderer>(win());
+        auto hnd2 = std::make_shared<renderer::OMDebugRenderer>(win(), [&]() { hnd4->openScreen(); });
         auto hnd = std::make_shared<renderer::OMWorldRenderer>(win(), camera, chunkManager);
-        auto hnd3 = std::make_shared<renderer::OMComposeRenderer>(
-            win(), [&]() -> OMRendererTexture * { return hnd2->internal->middleTarget->colorTexture; },
-            [&]() -> OMRendererTexture * { return hnd->tempTarget->colorTexture; });
+        auto hnd3 = std::make_shared<renderer::OMComposeRenderer>(win(), hnd4->internal->middleTarget,
+                                                                  hnd2->internal->middleTarget, hnd->tempTarget);
         hnd2->camera = camera.get();
         win()->registerHandler(hnd2);
+        win()->registerHandler(hnd4);
         win()->registerHandler(hnd);
         win()->registerHandler(hnd3);
         win()->baseInit();
@@ -359,25 +361,8 @@ void OMApplication::mainLoop(OMBackend backend)
             }
         });
 
-        bus.append(SDL_EVENT_MOUSE_MOTION, [&](SDL_Event &e) -> void {
-            hnd2->node->acceptEvent(e.button.x, e.button.y, demiurge::MouseMove, e.button.button);
-        });
-        bus.append(SDL_EVENT_MOUSE_BUTTON_UP, [&](SDL_Event &e) -> void {
-            hnd2->node->acceptEvent(e.button.x, e.button.y, demiurge::MouseUp, e.button.button);
-        });
-        bus.append(SDL_EVENT_MOUSE_BUTTON_DOWN, [&](SDL_Event &e) -> void {
-            hnd2->node->acceptEvent(e.button.x, e.button.y, demiurge::MouseDown, e.button.button);
-        });
-        bus.append(SDL_EVENT_MOUSE_WHEEL, [&](SDL_Event &e) -> void {
-            hnd2->node->acceptEvent(e.wheel.mouse_x, e.wheel.mouse_y, demiurge::MouseWheel, e.button.button,
-                                    std::array<float, 2>{e.wheel.x, e.wheel.y}.data());
-        });
-        bus.append(SDL_EVENT_KEY_DOWN, [&](SDL_Event &e) -> void {
-            hnd2->node->acceptEvent(INFINITY, INFINITY, demiurge::KeyDown, e.key.key);
-        });
-        bus.append(SDL_EVENT_KEY_UP, [&](SDL_Event &e) -> void {
-            hnd2->node->acceptEvent(INFINITY, INFINITY, demiurge::KeyUp, e.key.key);
-        });
+        hnd2->node->bindEventBus(bus);
+        hnd4->node->bindEventBus(bus);
 
         bus.append(SDL_EVENT_FINGER_MOTION, [&](SDL_Event &e) {
             int w, h;
@@ -413,6 +398,7 @@ void OMApplication::mainLoop(OMBackend backend)
         hnd = nullptr;
         hnd2 = nullptr;
         hnd3 = nullptr;
+        hnd4 = nullptr;
     }
     catch (OMRendererException &e)
     {

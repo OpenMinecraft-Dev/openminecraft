@@ -83,13 +83,13 @@ void OMDemiurgeRendererHandler::submitTasks()
     auto ext = renderer->getLogicalExtent();
     uniformBuffer->updateData(std::array<float, 2>{ext.x, ext.y}.data());
 
-    renderer->createTask("demiurgeui_compose");
+    renderer->createTask("demiurgeui_compose_" + name);
     recordTask(true);
 }
 
 void OMDemiurgeRendererHandler::recordTask(bool resize)
 {
-    auto task = renderer->fetchTask("demiurgeui_compose");
+    auto task = renderer->fetchTask("demiurgeui_compose_" + name);
     task->target(middleTarget->target);
 
     for (float layer = bottomDepth; layer >= topDepth; layer -= 0.01f)
@@ -108,7 +108,7 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
     task->finish();
     if (!resize)
     {
-        renderer->taskRecreate("demiurgeui_compose");
+        renderer->taskRecreate("demiurgeui_compose_" + name);
     }
 }
 

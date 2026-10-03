@@ -7,8 +7,10 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
+#include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include <array>
 #include <cmath>
+#include <functional>
 
 namespace openminecraftshell::renderer
 {
@@ -21,7 +23,7 @@ constexpr std::array<int, 16> DebugColors = {
 class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandler
 {
   public:
-    OMDebugRenderer(openminecraft::renderer::OMRenderer *renderer);
+    OMDebugRenderer(openminecraft::renderer::OMRenderer *renderer, std::function<void()>);
     virtual ~OMDebugRenderer() override;
 
     void submitTasks() override;
@@ -63,6 +65,11 @@ class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandle
     openminecraft::renderer::common::basics::OMCamera *camera;
 
     openminecraft::renderer::common::animation::OMAnimationValue<float> offset;
+
+    auto getTex() -> openminecraft::renderer::common::OMRendererTexture *
+    {
+        return internal->middleTarget->colorTexture;
+    }
 };
 } // namespace openminecraftshell::renderer
 
