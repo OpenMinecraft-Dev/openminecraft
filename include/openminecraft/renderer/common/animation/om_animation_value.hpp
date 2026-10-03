@@ -22,6 +22,14 @@ template <typename T> class OMAnimationValue
         status = 0.0f;
     }
 
+    void setTo(T value)
+    {
+        this->value = value;
+        beginValue = value;
+        targetValue = value;
+        status = -1.0f;
+    }
+
     auto get() -> T
     {
         if (status >= 0.0f)

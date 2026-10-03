@@ -20,6 +20,7 @@
 #include <cmath>
 #include <cstdint>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <random>
 #include <vector>
@@ -735,8 +736,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
     if (chunkManager->numChunks())
     {
-        std::vector<glm::vec3> offs = {};
-        offs.resize(chunkManager->numChunks());
+        if (chunkOffsetCache.size() != chunkManager->numChunks())
+        {
+            chunkOffsetCache.resize(chunkManager->numChunks());
+        }
+
         auto l = voxelLayer->buf()->totalSize;
         auto l2 = voxelComplexLayer->buf()->totalSize;
         auto l3 = voxelTranslucentLayer->buf()->totalSize;
@@ -749,7 +753,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             {
                 if (!ochk.has_value())
                 {
-                    offs[i] = glm::vec3{INFINITY};
+                    chunkOffsetCache[i] = glm::vec3{INFINITY};
                 }
                 else
                 {
@@ -758,7 +762,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     pp.chunkx = chk.chunkx;
                     pp.chunky = chk.chunky;
                     pp.chunkz = chk.chunkz;
-                    offs[i] = pp - camera.getPosRaw();
+                    chunkOffsetCache[i] = pp - camera.getPosRaw();
                 }
                 ++i;
             }
@@ -826,7 +830,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             }
         });
 
-        if (offs.size() * sizeof(glm::vec3) > chunkoffs->length)
+        if (chunkOffsetCache.size() * sizeof(glm::vec3) > chunkoffs->length)
         {
             delete chunkoffs;
             chunkoffs = renderer->allocateBuffer(UniformTexel, chunkManager->numChunks() * 3 * sizeof(float) * 2);
@@ -839,7 +843,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         }
 
         chunkoffs->synced = true;
-        chunkoffs->updateDataPart(offs.data(), 0, offs.size() * sizeof(glm::vec3));
+        chunkoffs->updateDataPart(chunkOffsetCache.data(), 0, chunkOffsetCache.size() * sizeof(glm::vec3));
 
         compilerPool->upload(voxelLayer, voxelComplexLayer, voxelFluidLayer, voxelTranslucentLayer,
                              voxelTranslucentComplexLayer, voxelTranslucentFluidLayer);

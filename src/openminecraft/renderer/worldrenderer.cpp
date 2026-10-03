@@ -315,5 +315,6 @@ OMWorldRenderer::~OMWorldRenderer()
     delete cloudTex;
 
     delete tempTarget;
+    delete voxelHandler;
 }
 } // namespace openminecraftshell::renderer

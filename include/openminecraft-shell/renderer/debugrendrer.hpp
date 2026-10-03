@@ -2,6 +2,7 @@
 #define DEBUGRENDERER_HPP
 
 #include "openminecraft/geom/om_fontset.hpp"
+#include "openminecraft/renderer/common/animation/om_animation_value.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
@@ -60,6 +61,8 @@ class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandle
     std::chrono::steady_clock::time_point tp = {};
     openminecraft::renderer::OMRenderer *renderer;
     openminecraft::renderer::common::basics::OMCamera *camera;
+
+    openminecraft::renderer::common::animation::OMAnimationValue<float> offset;
 };
 } // namespace openminecraftshell::renderer
 

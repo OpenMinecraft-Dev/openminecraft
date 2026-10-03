@@ -578,6 +578,8 @@ class OMVoxelManager
 
     OMVoxelCompilerPool *compilerPool;
 
+    std::vector<glm::vec3> chunkOffsetCache;
+
     void unloadChunk(int i);
 };
 

@@ -157,11 +157,6 @@ template <typename T> auto easeInOutElastic(T x) -> T
                      : (pow(2, -20 * x + 10) * sin((20 * x - 11.125) * c5)) / 2 + 1;
 }
 
-template <typename T> auto easeInBounce(T x) -> T
-{
-    return 1 - easeOutBounce(1 - x);
-}
-
 template <typename T> auto easeOutBounce(T x) -> T
 {
     const auto n1 = 7.5625;
@@ -183,6 +178,11 @@ template <typename T> auto easeOutBounce(T x) -> T
     {
         return n1 * (x -= 2.625 / d1) * x + 0.984375;
     }
+}
+
+template <typename T> auto easeInBounce(T x) -> T
+{
+    return 1 - easeOutBounce(1 - x);
 }
 
 template <typename T> auto easeInOutBounce(T x) -> T
