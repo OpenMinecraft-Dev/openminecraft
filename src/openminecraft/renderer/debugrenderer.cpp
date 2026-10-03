@@ -53,8 +53,8 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
 
     auto button = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     button->setOnClick([&]() {
-        offset.setTo(1.0);
-        offset.animateTo(0.0, common::animation::easeOutElastic<float>, 3.0);
+        offset.setTo(-1.0);
+        offset.animateTo(0.0, common::animation::easeOutCubic<float>, 1.0);
     });
     button->setBackgroundColor({0.17, 0.17, 0.20});
     node = std::make_shared<node::OMDemiurgeContainerNode>()
@@ -64,7 +64,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                    {"width", OMDemiurgeSize::fit()},
                    {"height", OMDemiurgeSize::fit()},
                    {"alignItems", OMDemiurgeAlign::FlexStart},
-                   {"offsetY", 100_percent},
+                   {"offsetY", OMDemiurgeSize::percent(-100.0f)},
                })
                ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                            ->style({
@@ -222,7 +222,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     renderer->registerHandler(internal);
-    offset.animateTo(0.0, common::animation::easeOutElastic<float>, 3.0);
+    offset.animateTo(0.0, common::animation::easeOutCubic<float>, 1.0);
 }
 OMDebugRenderer::~OMDebugRenderer()
 {
