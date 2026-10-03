@@ -128,63 +128,89 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer) : OMRendererHandler(rende
                                                        {"textheight", 16},
                                                    }))
                                        ->mount(button->style("animation_speed", 1.0f)->style("label", "Quit"))))
-               ->mount(std::make_shared<node::OMDemiurgeRectNode>()
+               ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                            ->style({
-                               {"color", (int)0x2c2c3433},
                                {"flexDirection", Column},
-                               {"flexGap", 5_px},
                                {"width", OMDemiurgeSize::fit()},
                                {"height", OMDemiurgeSize::fit()},
-                               {"radius", glm::vec4(5.0f)},
-                               {"margin", std::array<OMDemiurgeSize, 4>{10_px, 10_px, 10_px, 10_px}},
-                               {"border", OMDemiurgeEdgeInsets{10, 10, 10, 10}},
                                {"alignItems", OMDemiurgeAlign::FlexEnd},
                            })
-                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                           ->mount(std::make_shared<node::OMDemiurgeRectNode>()
                                        ->style({
-                                           {"color", (int)0x00d4ffff},
-                                           {"text", "Hardware/software & lowlevel stats"},
-                                           {"textheight", 16},
-                                       }))
-                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                                       ->style({
-                                           {"color", (int)0xffffffff},
-                                           {"text", renderer->driver()},
-                                           {"textheight", 16},
-                                       }))
-                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                                       ->style({
-                                           {"color", (int)0xffffffff},
-                                           {"text", vm::os::fetchCpuName()},
-                                           {"textheight", 16},
-                                       }))
-                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                                       ->style({
-                                           {"color", (int)0xffffffff},
-                                           {"text", vm::os::fetchSystemName() + " " + vm::os::fetchSystemVersion()},
-                                           {"textheight", 16},
-                                       }))
-                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                                       ->style({
-                                           {"color", (int)0xffffffff},
-                                           {"text", fromBytes(vm::os::fetchMemoryTotal()) + " / Page " +
-                                                        fromBytes(vm::os::fetchPageSize())},
-                                           {"textheight", 16},
-                                       }))
-                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                                       ->style({
-                                           {"color", (int)0xffffffff},
-                                           {"text", ""},
-                                           {"textheight", 16},
+                                           {"color", (int)0x2c2c3433},
+                                           {"flexDirection", Column},
+                                           {"flexGap", 5_px},
+                                           {"width", OMDemiurgeSize::fit()},
+                                           {"height", OMDemiurgeSize::fit()},
+                                           {"radius", glm::vec4(5.0f)},
+                                           {"margin", std::array<OMDemiurgeSize, 4>{10_px, 10_px, 10_px, 10_px}},
+                                           {"border", OMDemiurgeEdgeInsets{10, 10, 10, 10}},
+                                           {"alignItems", OMDemiurgeAlign::FlexEnd},
                                        })
-                                       ->store(precisionNode))
-                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                                   ->style({
+                                                       {"color", (int)0x00d4ffff},
+                                                       {"text", "Hardware/software stats"},
+                                                       {"textheight", 16},
+                                                   }))
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                                   ->style({
+                                                       {"color", (int)0xffffffff},
+                                                       {"text", renderer->driver()},
+                                                       {"textheight", 16},
+                                                   }))
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                                   ->style({
+                                                       {"color", (int)0xffffffff},
+                                                       {"text", vm::os::fetchCpuName()},
+                                                       {"textheight", 16},
+                                                   }))
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                                   ->style({
+                                                       {"color", (int)0xffffffff},
+                                                       {"text",
+                                                        vm::os::fetchSystemName() + " " + vm::os::fetchSystemVersion()},
+                                                       {"textheight", 16},
+                                                   }))
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                                   ->style({
+                                                       {"color", (int)0xffffffff},
+                                                       {"text", fromBytes(vm::os::fetchMemoryTotal()) + " / Page " +
+                                                                    fromBytes(vm::os::fetchPageSize())},
+                                                       {"textheight", 16},
+                                                   })))
+                           ->mount(std::make_shared<node::OMDemiurgeRectNode>()
                                        ->style({
-                                           {"color", (int)0xffffffff},
-                                           {"text", ""},
-                                           {"textheight", 16},
+                                           {"color", (int)0x2c2c3433},
+                                           {"flexDirection", Column},
+                                           {"flexGap", 5_px},
+                                           {"width", OMDemiurgeSize::fit()},
+                                           {"height", OMDemiurgeSize::fit()},
+                                           {"radius", glm::vec4(5.0f)},
+                                           {"margin", std::array<OMDemiurgeSize, 4>{10_px, 10_px, 10_px, 10_px}},
+                                           {"border", OMDemiurgeEdgeInsets{10, 10, 10, 10}},
+                                           {"alignItems", OMDemiurgeAlign::FlexEnd},
                                        })
-                                       ->store(precisionNode2)));
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                                   ->style({
+                                                       {"color", (int)0x00d4ffff},
+                                                       {"text", "Precision stats"},
+                                                       {"textheight", 16},
+                                                   }))
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                                   ->style({
+                                                       {"color", (int)0xffffffff},
+                                                       {"text", ""},
+                                                       {"textheight", 16},
+                                                   })
+                                                   ->store(precisionNode))
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                                   ->style({
+                                                       {"color", (int)0xffffffff},
+                                                       {"text", ""},
+                                                       {"textheight", 16},
+                                                   })
+                                                   ->store(precisionNode2))));
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     renderer->registerHandler(internal);
@@ -230,7 +256,7 @@ void OMDebugRenderer::afterFrame()
     float fz = std::abs(static_cast<float>(m.chunkz) * 16 + m.localz);
     double dz = std::abs(static_cast<double>(m.chunkz) * 16 + m.localz);
     povTextNode->style("text", fmt::format("Yaw {:.2f} Pitch {:.2f}", camera->getYaw(), camera->getPitch()));
-    precisionNode->style("text", fmt::format("float precision: {}", getUlpf(std::max(fx, fz))));
-    precisionNode2->style("text", fmt::format("double precision: {}", getUlp(std::max(dx, dz))));
+    precisionNode->style("text", fmt::format("float: {}", getUlpf(std::max(fx, fz))));
+    precisionNode2->style("text", fmt::format("double: {}", getUlp(std::max(dx, dz))));
 }
 } // namespace openminecraftshell::renderer
