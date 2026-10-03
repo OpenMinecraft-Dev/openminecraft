@@ -26,9 +26,11 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     fontset->fontList.push_back(std::make_shared<geom::OMFont>(*rawfile1.get()));
 
     auto button = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
-    button->setOnClick([&]() { offset.animateTo(1.0, common::animation::easeInCubic<float>, 1.0); });
+    button->setOnClick([&]() { offset.animateTo(-1.0, common::animation::easeInQuint<float>, 1.0); });
     button->setBackgroundColor({0.17, 0.17, 0.20});
-
+    auto button2 = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
+    button2->setOnClick([&]() { exit(0); });
+    button2->setBackgroundColor({0.17, 0.17, 0.20});
     node = std::make_shared<node::OMDemiurgeRectNode>()
                ->style({
                    {"color", (int)0x2c2c3433},
@@ -37,13 +39,12 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                    {"width", OMDemiurgeSize::fit()},
                    {"height", OMDemiurgeSize::fit()},
                    {"radius", glm::vec4(5.0f)},
-                   {"margin", std::array<OMDemiurgeSize, 4>{10_px, 10_px, 10_px, 10_px}},
                    {"border", OMDemiurgeEdgeInsets{50, 10, 100, 10}},
                })
                ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                            ->style({
                                {"flexDirection", Column},
-                               {"flexGap", 40_px},
+                               {"flexGap", 15_px},
                                {"border", OMDemiurgeEdgeInsets{10, 10, 10, 220}},
                            })
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
@@ -52,8 +53,10 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                                            {"text", "OpenMinecraft"},
                                            {"textheight", 24},
                                            {"alignSelf", OMDemiurgeAlign::FlexStart},
+                                           {"border", OMDemiurgeEdgeInsets{0, 60, 0, 0}},
                                        }))
-                           ->mount(button->style("animation_speed", 1.0f)->style("label", "Demo Test")))
+                           ->mount(button->style("animation_speed", 1.0f)->style("label", "Demo Test"))
+                           ->mount(button2->style("animation_speed", 1.0f)->style("label", "Quit")))
                ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                            ->style({
                                {"color", (int)0xffffffff},
@@ -83,6 +86,6 @@ void OMSurfaceRenderer::afterFrame()
 
 void OMSurfaceRenderer::openScreen()
 {
-    offset.animateTo(0.0, common::animation::easeOutCubic<float>, 1.0);
+    offset.animateTo(0.0, common::animation::easeOutQuint<float>, 1.0);
 }
 } // namespace openminecraftshell::renderer

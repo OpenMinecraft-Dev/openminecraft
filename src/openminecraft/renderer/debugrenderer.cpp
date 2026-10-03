@@ -52,7 +52,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, std::function<void()> msc
     auto button = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     button->setOnClick([&]() {
         offset.setTo(-1.0);
-        offset.animateTo(0.0, common::animation::easeOutCubic<float>, 1.0);
+        offset.animateTo(0.0, common::animation::easeOutQuint<float>, 1.0);
     });
     button->setBackgroundColor({0.17, 0.17, 0.20});
     auto button2 = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
@@ -225,7 +225,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, std::function<void()> msc
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->name = "debughud";
     renderer->registerHandler(internal);
-    offset.animateTo(0.0, common::animation::easeOutCubic<float>, 1.0);
+    offset.animateTo(0.0, common::animation::easeOutQuint<float>, 1.0);
 }
 OMDebugRenderer::~OMDebugRenderer()
 {
