@@ -318,13 +318,18 @@ updateChildren:
     }
 }
 
+void OMDemiurgeNode::acceptEvent(OMDemiurgeEventType type, uint32_t ext, void *data)
+{
+    std::cout << ext << std::endl;
+}
+
 void OMDemiurgeNode::acceptEvent(float x, float y, OMDemiurgeEventType type, uint8_t ext, void *data)
 {
     try
     {
         auto bo = stylesStorage.get<OMDemiurgeRect>("layoutBound");
-
-        if (x >= bo.x && x <= bo.x + bo.width && y >= bo.y && y <= bo.y + bo.height)
+        if ((x >= bo.x && x <= bo.x + bo.width && y >= bo.y && y <= bo.y + bo.height) ||
+            (std::isinf(x) && std::isinf(y)))
         {
             if (!(mx >= bo.x && mx <= bo.x + bo.width && my >= bo.y && my <= bo.y + bo.height))
             {
@@ -360,8 +365,7 @@ void OMDemiurgeNode::acceptEvent(float x, float y, OMDemiurgeEventType type, uin
                 result = processMouseScroll(x, y, f[0], f[1]);
                 break;
             }
-            case KeyDown:
-            case KeyUp:
+            default:
                 break;
             }
 

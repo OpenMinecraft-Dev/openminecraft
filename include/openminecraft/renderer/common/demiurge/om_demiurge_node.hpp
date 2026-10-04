@@ -10,6 +10,7 @@
 #include <any>
 #include <cmath>
 #include <initializer_list>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -126,6 +127,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         return Ignored;
     }
     void acceptEvent(float x, float y, OMDemiurgeEventType type, uint8_t, void * = nullptr);
+    void acceptEvent(OMDemiurgeEventType type, uint32_t, void * = nullptr);
 
     inline auto style(std::string s, std::any a) -> std::shared_ptr<OMDemiurgeNode>
     {
@@ -157,10 +159,8 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
             acceptEvent(e.mousewheel.x, e.mousewheel.y, demiurge::MouseWheel, -1,
                         std::array<float, 2>{e.mousewheel.wheelx, e.mousewheel.wheely}.data());
         });
-        buswrap.append(event::KeyDown,
-                       [&](event::OMEvent &e) { acceptEvent(INFINITY, INFINITY, demiurge::KeyDown, e.key.keycode); });
-        buswrap.append(event::KeyUp,
-                       [&](event::OMEvent &e) { acceptEvent(INFINITY, INFINITY, demiurge::KeyUp, e.key.keycode); });
+        buswrap.append(event::KeyDown, [&](event::OMEvent &e) { acceptEvent(demiurge::KeyDown, e.key.keycode); });
+        buswrap.append(event::KeyUp, [&](event::OMEvent &e) { acceptEvent(demiurge::KeyUp, e.key.keycode); });
     }
 
   protected:
