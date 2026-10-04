@@ -244,6 +244,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
             ->shader(renderer->shaderManager.preprocess("demiurge/scene/scene1.vert.glsl", Vertex, GLSLSource, simp))
             ->shader(renderer->shaderManager.preprocess("demiurge/scene/scene1.frag.glsl", Fragment, GLSLSource, simp))
             ->format(simp)
+            ->blendFunc({One, One, One, One})
             ->blend(false)
             ->depth(false, false)
             ->buildN();

@@ -9,6 +9,7 @@ layout(location = 4) in float voxFactor;
 layout(location = 5) flat in int voxSec;
 
 layout(location = 0) out vec4 outColor;
+layout(location = 1) out vec4 outReveal;
 
 #include "basics/fog.glsl"
 #include "basics/structs/camera.glsl"
@@ -41,6 +42,7 @@ void main()
     result.r *= 0.2;
     result.g *= 0.2;
 
+    outReveal = vec4(texColor.a);
     outColor = fog_gen(vec4(result.rgb * texColor.a, texColor.a) * texture(inLightmap, voxLight), fog.fogStart,
                        fog.fogEnd, vec3(fog.fogR, fog.fogG, fog.fogB), 0.0);
 }

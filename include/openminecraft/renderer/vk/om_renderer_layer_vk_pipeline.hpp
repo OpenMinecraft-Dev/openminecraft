@@ -79,7 +79,7 @@ class OMRendererPipelineVk : public common::OMRendererPipeline
 
     std::vector<int> shaderIds;
 
-    common::OMReedererPipelineBlendState blendState;
+    std::vector<common::OMReedererPipelineBlendState> blendState;
 };
 } // namespace openminecraft::renderer::vk
 

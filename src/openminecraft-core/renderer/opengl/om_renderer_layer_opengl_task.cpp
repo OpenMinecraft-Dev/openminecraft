@@ -257,8 +257,11 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
         break;
     }
     ops.push_back({glpipe->enableBlend ? Enable : Disable, GL_BLEND});
-    ops.push_back(
-        {BlendFuncSeparate, convert(s.srcColor), convert(s.dstColor), convert(s.srcAlpha), convert(s.dstAlpha)});
+    for (int i = 0; i < s.size(); ++i)
+    {
+        ops.push_back({BlendFuncSeparatei, static_cast<GLuint>(i), convert(s[i].srcColor), convert(s[i].dstColor),
+                       convert(s[i].srcAlpha), convert(s[i].dstAlpha)});
+    }
     ops.push_back({BlendEquationSeparate, convert(glpipe->blendOperatorColor), convert(glpipe->blendOperatorAlpha)});
     ops.push_back(
         {BlendColor,
@@ -274,14 +277,16 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     if (!isCleared)
     {
         ops.push_back({ClearDepth, {}, {}, depthClear});
-        ops.push_back({ClearColor, {}, {}, colorClear.r, colorClear.g, colorClear.b, colorClear.a});
+        for (int i = 0; i < colorClear.size(); ++i)
+        {
+            ops.push_back({ClearBufferfv,
+                           {GL_COLOR, static_cast<GLuint>(i)},
+                           {},
+                           {colorClear[i].r, colorClear[i].g, colorClear[i].b, colorClear[i].a}});
+        }
         if (needClearDepth)
         {
-            ops.push_back({Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
-        }
-        else
-        {
-            ops.push_back({Clear, GL_COLOR_BUFFER_BIT});
+            ops.push_back({Clear, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
         }
         isCleared = true;
     }
@@ -510,7 +515,16 @@ void OMRendererTaskOpenGL::resolveTo(common::OMRendererRenderTarget *target)
     auto siz = target->fetchSize();
     GLuint wid = siz.x;
     GLuint hei = siz.y;
-    ops.push_back({BlitFramebuffer, 0, 0, wid, hei, 0, 0, wid, hei, GL_COLOR_BUFFER_BIT, GL_NEAREST});
+    auto tex = reinterpret_cast<OMRendererRenderTargetOpenGL *>(target)->textures;
+    for (int i = 0; i < tex.size(); ++i)
+    {
+        if (common::isColorFormat(tex[i]->arr))
+        {
+            ops.push_back({ReadBuffer, static_cast<GLuint>(GL_COLOR_ATTACHMENT0 + i)});
+            ops.push_back({DrawBuffers, 1, static_cast<GLuint>(GL_COLOR_ATTACHMENT0 + i)});
+            ops.push_back({BlitFramebuffer, 0, 0, wid, hei, 0, 0, wid, hei, GL_COLOR_BUFFER_BIT, GL_NEAREST});
+        }
+    }
     ops.push_back({BindFramebuffer, GL_READ_FRAMEBUFFER, 0});
     ops.push_back({BindFramebuffer, GL_DRAW_FRAMEBUFFER, 0});
 }
@@ -518,7 +532,8 @@ void OMRendererTaskOpenGL::resolveTo(common::OMRendererRenderTarget *target)
 static GLuint debugid = 0;
 void OMRendererTaskOpenGL::pushDebugTag(std::string tag)
 {
-    ops.push_back({PushDebugGroup, {static_cast<GLuint>(tag.size())}, {tag.data()}});
+    tags.push_back(tag);
+    ops.push_back({PushDebugGroup, {static_cast<GLuint>(tags.back().size())}, {tags.back().data()}});
 }
 void OMRendererTaskOpenGL::popDebugTag()
 {
@@ -607,7 +622,7 @@ void OMRendererTaskOpenGL::execute()
             gl->glClearDepth(op.floatArgs[0]);
             break;
         case ClearBufferfv:
-            gl->glClearBufferfv(GL_DEPTH, 1, &op.floatArgs[0]);
+            gl->glClearBufferfv(op.args[0], op.args[1], &op.floatArgs[0]);
             break;
         case ClearColor:
             gl->glClearColor(op.floatArgs[0], op.floatArgs[1], op.floatArgs[2], op.floatArgs[3]);
@@ -647,6 +662,15 @@ void OMRendererTaskOpenGL::execute()
             break;
         case Viewport:
             gl->glViewport(op.args[0], op.args[1], op.args[2], op.args[3]);
+            break;
+        case BlendFuncSeparatei:
+            gl->glBlendFuncSeparatei(op.args[0], op.args[1], op.args[2], op.args[3], op.args[4]);
+            break;
+        case ReadBuffer:
+            gl->glReadBuffer(op.args[0]);
+            break;
+        case DrawBuffers:
+            gl->glDrawBuffers(op.args[0], &op.args[1]);
             break;
         }
     }

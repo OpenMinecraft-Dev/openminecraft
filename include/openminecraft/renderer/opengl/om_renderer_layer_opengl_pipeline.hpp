@@ -36,7 +36,7 @@ class OMRendererPipelineOpenGL : public common::OMRendererPipeline
     std::vector<OMRendererObject *> inputs;
     std::vector<common::OMRendererPipelineInputType> inputTypes;
     std::vector<std::string> inputNames;
-    common::OMReedererPipelineBlendState blendState;
+    std::vector<common::OMReedererPipelineBlendState> blendState;
 
   private:
     OMRendererOpenGLFuncs *gl;

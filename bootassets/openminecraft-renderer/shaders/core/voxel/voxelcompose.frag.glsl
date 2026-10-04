@@ -6,14 +6,16 @@ layout(location = 0) out vec4 outColor;
 
 uniform sampler2D inTextureCutout;
 uniform sampler2D inTextureTranslucent;
+uniform sampler2D inTextureTranslucentReveal;
 
 void main()
 {
     vec4 cutoutSample = texture(inTextureCutout, biltTexCoord);
     vec4 translucentSample = texture(inTextureTranslucent, biltTexCoord);
+    vec4 revealSample = texture(inTextureTranslucentReveal, biltTexCoord);
 
     vec3 opaque = cutoutSample.rgb;
-    float reveal = translucentSample.a;
+    float reveal = revealSample.r;
     vec3 accum = translucentSample.rgb;
 
     vec3 linearColor = accum + opaque * reveal;

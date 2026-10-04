@@ -24,13 +24,14 @@ class OMRendererTask : public OMRendererObject
 
     virtual ~OMRendererTask() = default;
 
-    inline void setClearColor(glm::vec4 c)
+    inline void setClearColor(glm::vec4 c, int i = 0)
     {
-        colorClear = c;
+        colorClear.resize(i + 1);
+        colorClear[i] = c;
     }
-    inline auto clearColor(glm::vec4 color) -> OMRendererTask *
+    inline auto clearColor(glm::vec4 color, int i = 0) -> OMRendererTask *
     {
-        setClearColor(color);
+        setClearColor(color, i);
         return this;
     }
 
@@ -181,7 +182,7 @@ class OMRendererTask : public OMRendererObject
     bool solved = false;
 
   protected:
-    glm::vec4 colorClear = {0.0f, 0.0f, 0.0f, 0.0f};
+    std::vector<glm::vec4> colorClear = {{0.0f, 0.0f, 0.0f, 0.0f}};
     float depthClear = 1.0f;
 
   private:

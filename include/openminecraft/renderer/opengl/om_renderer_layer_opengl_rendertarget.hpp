@@ -23,11 +23,11 @@ class OMRendererRenderTargetOpenGL : public common::OMRendererRenderTarget
 
     GLuint framebuffer;
 
+    std::vector<common::OMRendererTexture *> textures;
+
   private:
     OMRendererOpenGLFuncs *gl;
     OMRendererOpenGL *glrenderer;
-
-    std::vector<common::OMRendererTexture *> textures;
 };
 } // namespace openminecraft::renderer::opengl
 

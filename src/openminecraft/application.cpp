@@ -166,8 +166,8 @@ void OMApplication::mainLoop(OMBackend backend)
     try
     {
         OMWindowConfig conf = {backend, false, 240, 854, 480};
-        // INFO: requires at least OpenGL 3.3 Core Profile or Vulkan 1.2
-        OMWindow win({util::Version(3, 3, 0, 0), util::Version(1, 2, 0, 0)}, conf,
+        // INFO: requires at least OpenGL 4.0 Core Profile or Vulkan 1.2
+        OMWindow win({util::Version(4, 0, 0, 0), util::Version(1, 2, 0, 0)}, conf,
                      "/bootassets/openminecraft-renderer/shaders");
 
         using OMEventBusSDL = event::OMEventBus<SDL_EventType, SDL_Event>;

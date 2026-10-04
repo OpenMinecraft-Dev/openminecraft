@@ -148,6 +148,7 @@ void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
             auto rt = reinterpret_cast<OMRendererRenderTargetVk *>(target);
 
             std::vector<ClearValue> test;
+            int i = 0;
             for (auto ii : rt->textures)
             {
                 if (!isColorFormat(ii->arr))
@@ -156,7 +157,8 @@ void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
                 }
                 else
                 {
-                    test.push_back(ClearValue({colorClear.r, colorClear.g, colorClear.b, colorClear.a}));
+                    test.push_back(ClearValue({colorClear[i].r, colorClear[i].g, colorClear[i].b, colorClear[i].a}));
+                    ++i;
                 }
             }
 

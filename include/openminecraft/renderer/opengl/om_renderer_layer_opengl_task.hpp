@@ -33,6 +33,7 @@ enum OMRendererOpType
     BlendFunc,
     DepthFunc,
     BlendFuncSeparate,
+    BlendFuncSeparatei,
     DepthMask,
     DrawElementsInstancedBaseInstance,
     ClearColor,
@@ -50,7 +51,9 @@ enum OMRendererOpType
     Viewport,
     Scissor,
     PushDebugGroup,
-    PopDebugGroup
+    PopDebugGroup,
+    ReadBuffer,
+    DrawBuffers
 };
 union OMRendererOpenGLArg {
     GLuint i;
@@ -113,6 +116,7 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     bool isCleared = false;
     bool needClearDepth = false;
     bool finished = false;
+    std::vector<std::string> tags;
 };
 } // namespace openminecraft::renderer::opengl
 

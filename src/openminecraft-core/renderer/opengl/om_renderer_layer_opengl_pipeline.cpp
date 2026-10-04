@@ -137,7 +137,7 @@ void OMRendererPipelineOpenGL::build()
 
 void OMRendererPipelineOpenGL::setBlendFunc(common::OMReedererPipelineBlendState state)
 {
-    this->blendState = state;
+    this->blendState.push_back(state);
 }
 
 void OMRendererPipelineOpenGL::bindInput(int idx, common::OMRendererBuffer *buff)

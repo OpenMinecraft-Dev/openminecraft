@@ -498,18 +498,11 @@ void OMRendererPipelineVk::build()
     auto multisample = PipelineMultisampleStateCreateInfo({}, s, enableMultisampleShading);
     auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
 
-    // TODO: tempoary solution!
-    int attcc = reinterpret_cast<OMRendererRenderTargetVk *>(this->target)->textures.size() - 1;
-    if (1 > attcc)
-    {
-        attcc = 1;
-    }
     std::vector<PipelineColorBlendAttachmentState> attc = {};
-    for (int i = 0; i < attcc; ++i)
+    for (const auto &bs : blendState)
     {
-        attc.emplace_back(enableBlend, convert(blendState.srcColor), convert(blendState.dstColor),
-                          convert(blendOperatorColor), convert(blendState.srcAlpha), convert(blendState.dstAlpha),
-                          convert(blendOperatorAlpha),
+        attc.emplace_back(enableBlend, convert(bs.srcColor), convert(bs.dstColor), convert(blendOperatorColor),
+                          convert(bs.srcAlpha), convert(bs.dstAlpha), convert(blendOperatorAlpha),
                           ColorComponentFlagBits::eA | ColorComponentFlagBits::eR | ColorComponentFlagBits::eG |
                               ColorComponentFlagBits::eB);
     }
@@ -554,7 +547,7 @@ void OMRendererPipelineVk::build()
 
 void OMRendererPipelineVk::setBlendFunc(common::OMReedererPipelineBlendState state)
 {
-    this->blendState = state;
+    this->blendState.push_back(state);
 }
 
 } // namespace openminecraft::renderer::vk
