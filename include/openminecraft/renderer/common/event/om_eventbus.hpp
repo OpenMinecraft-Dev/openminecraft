@@ -1,11 +1,9 @@
 #ifndef OM_EVENTBUS_HPP
 #define OM_EVENTBUS_HPP
 
-#include "SDL3/SDL_events.h"
 #include <atomic>
 #include <condition_variable>
 #include <functional>
-#include <iostream>
 #include <mutex>
 #include <queue>
 #include <thread>
@@ -89,7 +87,7 @@ template <typename T, typename S> class OMEventBus
 
     std::queue<std::pair<T, S>> eventQueue;
 };
-using OMEventBusSDL = OMEventBus<SDL_EventType, SDL_Event>;
+
 } // namespace openminecraft::renderer::common::event
 
 #endif

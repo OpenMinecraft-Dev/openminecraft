@@ -3,7 +3,7 @@
 
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_styles.hpp"
-#include "openminecraft/renderer/common/event/om_eventbus.hpp"
+#include "openminecraft/renderer/common/event/om_eventbus_wrap.hpp"
 #include "yoga/YGNode.h"
 #include "yoga/YGNodeLayout.h"
 #include <algorithm>
@@ -142,41 +142,25 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         return shared_from_this();
     }
 
-    inline void bindEventBus(event::OMEventBusSDL &bus)
+    inline void bindEventBus(event::OMEventBusWrap &buswrap)
     {
-        bus.append(SDL_EVENT_MOUSE_MOTION, [&](SDL_Event &e) -> void {
-            acceptEvent(e.button.x, e.button.y, demiurge::MouseMove, e.button.button);
+        buswrap.append(event::MouseMotion, [&](event::OMEvent &e) {
+            acceptEvent(e.mousemotion.x, e.mousemotion.y, demiurge::MouseMove, -1);
         });
-        bus.append(SDL_EVENT_MOUSE_BUTTON_UP, [&](SDL_Event &e) -> void {
-            acceptEvent(e.button.x, e.button.y, demiurge::MouseUp, e.button.button);
+        buswrap.append(event::MouseUp, [&](event::OMEvent &e) {
+            acceptEvent(e.mousebutton.x, e.mousebutton.y, demiurge::MouseUp, e.mousebutton.button);
         });
-        bus.append(SDL_EVENT_MOUSE_BUTTON_DOWN, [&](SDL_Event &e) -> void {
-            acceptEvent(e.button.x, e.button.y, demiurge::MouseDown, e.button.button);
+        buswrap.append(event::MouseDown, [&](event::OMEvent &e) {
+            acceptEvent(e.mousebutton.x, e.mousebutton.y, demiurge::MouseDown, e.mousebutton.button);
         });
-        bus.append(SDL_EVENT_MOUSE_WHEEL, [&](SDL_Event &e) -> void {
-            acceptEvent(e.wheel.mouse_x, e.wheel.mouse_y, demiurge::MouseWheel, e.button.button,
-                        std::array<float, 2>{e.wheel.x, e.wheel.y}.data());
+        buswrap.append(event::MouseWheel, [&](event::OMEvent &e) {
+            acceptEvent(e.mousewheel.x, e.mousewheel.y, demiurge::MouseWheel, -1,
+                        std::array<float, 2>{e.mousewheel.wheelx, e.mousewheel.wheely}.data());
         });
-        bus.append(SDL_EVENT_KEY_DOWN,
-                   [&](SDL_Event &e) -> void { acceptEvent(INFINITY, INFINITY, demiurge::KeyDown, e.key.key); });
-        bus.append(SDL_EVENT_KEY_UP,
-                   [&](SDL_Event &e) -> void { acceptEvent(INFINITY, INFINITY, demiurge::KeyUp, e.key.key); });
-
-        bus.append(SDL_EVENT_FINGER_MOTION, [&](SDL_Event &e) {
-            int w, h;
-            SDL_GetWindowSize(SDL_GetWindowFromEvent(&e), &w, &h);
-            acceptEvent(e.tfinger.x * w, e.tfinger.y * h, demiurge::MouseMove, e.tfinger.fingerID);
-        });
-        bus.append(SDL_EVENT_FINGER_UP, [&](SDL_Event &e) {
-            int w, h;
-            SDL_GetWindowSize(SDL_GetWindowFromEvent(&e), &w, &h);
-            acceptEvent(e.tfinger.x * w, e.tfinger.y * h, demiurge::MouseUp, e.tfinger.fingerID);
-        });
-        bus.append(SDL_EVENT_FINGER_DOWN, [&](SDL_Event &e) {
-            int w, h;
-            SDL_GetWindowSize(SDL_GetWindowFromEvent(&e), &w, &h);
-            acceptEvent(e.tfinger.x * w, e.tfinger.y * h, demiurge::MouseDown, e.tfinger.fingerID);
-        });
+        buswrap.append(event::KeyDown,
+                       [&](event::OMEvent &e) { acceptEvent(INFINITY, INFINITY, demiurge::KeyDown, e.key.keycode); });
+        buswrap.append(event::KeyUp,
+                       [&](event::OMEvent &e) { acceptEvent(INFINITY, INFINITY, demiurge::KeyUp, e.key.keycode); });
     }
 
   protected:

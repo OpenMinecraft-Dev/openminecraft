@@ -23,7 +23,8 @@ constexpr std::array<int, 16> DebugColors = {
 class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandler
 {
   public:
-    OMDebugRenderer(openminecraft::renderer::OMRenderer *renderer, std::function<void()>);
+    OMDebugRenderer(openminecraft::renderer::OMRenderer *renderer,
+                    openminecraft::renderer::common::event::OMEventBusWrap &);
     virtual ~OMDebugRenderer() override;
 
     void submitTasks() override;

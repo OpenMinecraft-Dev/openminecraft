@@ -25,6 +25,7 @@
 #include <array>
 #include <boost/stacktrace/stacktrace.hpp>
 #include "openminecraft/renderer/common/event/om_eventbus.hpp"
+#include "openminecraft/renderer/common/event/om_eventbus_wrap.hpp"
 #include <chrono>
 #include <iostream>
 #include <memory>
@@ -169,7 +170,9 @@ void OMApplication::mainLoop(OMBackend backend)
         OMWindow win({util::Version(3, 3, 0, 0), util::Version(1, 2, 0, 0)}, conf,
                      "/bootassets/openminecraft-renderer/shaders");
 
-        event::OMEventBusSDL bus;
+        using OMEventBusSDL = event::OMEventBus<SDL_EventType, SDL_Event>;
+        OMEventBusSDL bus;
+        event::OMEventBusWrap buswrap;
         auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{-1.0f, 5.0f, -1.0f}, 45.0f, -45.0f);
 
         auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
@@ -232,12 +235,26 @@ void OMApplication::mainLoop(OMBackend backend)
         }
 
         bool mainScreen = true;
-
-        auto hnd4 = std::make_shared<renderer::OMSurfaceRenderer>(win(), [&]() { mainScreen = false; });
-        auto hnd2 = std::make_shared<renderer::OMDebugRenderer>(win(), [&]() {
-            hnd4->openScreen();
-            mainScreen = true;
+        buswrap.append(event::Custom, [&](event::OMEvent &e) {
+            logger->debug("Received event {:x}", e.custom.flag);
+            switch (e.custom.flag)
+            {
+            case 0:
+                mainScreen = true;
+                break;
+            case 1:
+                mainScreen = false;
+                break;
+            case 2:
+                isRunning = false;
+                break;
+            default:
+                break;
+            }
         });
+
+        auto hnd4 = std::make_shared<renderer::OMSurfaceRenderer>(win(), buswrap);
+        auto hnd2 = std::make_shared<renderer::OMDebugRenderer>(win(), buswrap);
         auto hnd = std::make_shared<renderer::OMWorldRenderer>(win(), camera, chunkManager);
         auto hnd3 = std::make_shared<renderer::OMComposeRenderer>(win(), hnd4->internal->middleTarget,
                                                                   hnd2->internal->middleTarget, hnd->tempTarget);
@@ -306,8 +323,84 @@ void OMApplication::mainLoop(OMBackend backend)
             }
         });
 
-        hnd2->node->bindEventBus(bus);
-        hnd4->node->bindEventBus(bus);
+        bus.append(SDL_EVENT_MOUSE_MOTION, [&](SDL_Event &e) -> void {
+            event::OMEvent ev;
+            ev.type = event::MouseMotion;
+            ev.mousemotion.x = e.motion.x;
+            ev.mousemotion.y = e.motion.y;
+            ev.mousemotion.button = -1;
+            buswrap.handle(event::MouseMotion, ev);
+        });
+        bus.append(SDL_EVENT_MOUSE_BUTTON_UP, [&](SDL_Event &e) -> void {
+            event::OMEvent ev;
+            ev.type = event::MouseUp;
+            ev.mousebutton.x = e.button.x;
+            ev.mousebutton.y = e.button.y;
+            ev.mousebutton.button = e.button.button;
+            buswrap.handle(event::MouseUp, ev);
+        });
+        bus.append(SDL_EVENT_MOUSE_BUTTON_DOWN, [&](SDL_Event &e) -> void {
+            event::OMEvent ev;
+            ev.type = event::MouseDown;
+            ev.mousebutton.x = e.button.x;
+            ev.mousebutton.y = e.button.y;
+            ev.mousebutton.button = e.button.button;
+            buswrap.handle(event::MouseDown, ev);
+        });
+        bus.append(SDL_EVENT_MOUSE_WHEEL, [&](SDL_Event &e) -> void {
+            event::OMEvent ev;
+            ev.type = event::MouseWheel;
+            ev.mousewheel.x = e.wheel.x;
+            ev.mousewheel.y = e.wheel.y;
+            ev.mousewheel.wheelx = e.wheel.x;
+            ev.mousewheel.wheely = e.wheel.y;
+            buswrap.handle(event::MouseWheel, ev);
+        });
+        bus.append(SDL_EVENT_KEY_DOWN, [&](SDL_Event &e) -> void {
+            event::OMEvent ev;
+            ev.type = event::KeyDown;
+            ev.key.keycode = e.key.key;
+            buswrap.handle(event::KeyDown, ev);
+        });
+        bus.append(SDL_EVENT_KEY_UP, [&](SDL_Event &e) -> void {
+            event::OMEvent ev;
+            ev.type = event::KeyUp;
+            ev.key.keycode = e.key.key;
+            buswrap.handle(event::KeyUp, ev);
+        });
+        bus.append(SDL_EVENT_FINGER_MOTION, [&](SDL_Event &e) {
+            int w, h;
+            SDL_GetWindowSize(SDL_GetWindowFromEvent(&e), &w, &h);
+            event::OMEvent ev;
+            ev.type = event::MouseMotion;
+            ev.mousemotion.x = e.tfinger.x * w;
+            ev.mousemotion.y = e.tfinger.y * h;
+            ev.mousemotion.button = e.tfinger.fingerID;
+            buswrap.handle(event::MouseMotion, ev);
+        });
+        bus.append(SDL_EVENT_FINGER_UP, [&](SDL_Event &e) {
+            int w, h;
+            SDL_GetWindowSize(SDL_GetWindowFromEvent(&e), &w, &h);
+            event::OMEvent ev;
+            ev.type = event::MouseUp;
+            ev.mousebutton.x = e.tfinger.x * w;
+            ev.mousebutton.y = e.tfinger.y * h;
+            ev.mousebutton.button = e.tfinger.fingerID;
+            buswrap.handle(event::MouseUp, ev);
+        });
+        bus.append(SDL_EVENT_FINGER_DOWN, [&](SDL_Event &e) {
+            int w, h;
+            SDL_GetWindowSize(SDL_GetWindowFromEvent(&e), &w, &h);
+            event::OMEvent ev;
+            ev.type = event::MouseDown;
+            ev.mousebutton.x = e.tfinger.x * w;
+            ev.mousebutton.y = e.tfinger.y * h;
+            ev.mousebutton.button = e.tfinger.fingerID;
+            buswrap.handle(event::MouseDown, ev);
+        });
+
+        hnd2->node->bindEventBus(buswrap);
+        hnd4->node->bindEventBus(buswrap);
         bus.append(SDL_EVENT_KEY_DOWN, [&](SDL_Event &e) -> void {
             if (e.key.repeat)
             {

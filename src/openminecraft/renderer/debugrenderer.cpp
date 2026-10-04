@@ -14,6 +14,7 @@
 using namespace openminecraft::renderer;
 using namespace openminecraft;
 using namespace openminecraft::renderer::common::demiurge;
+using namespace openminecraft::renderer::common;
 
 namespace openminecraftshell::renderer
 {
@@ -37,7 +38,7 @@ static inline auto fromBytes(uint64_t l) -> std::string
     }
     return fmt::format("{:.2f} TB", static_cast<double>(l) / 1024 / 1024 / 1024 / 1024);
 }
-OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, std::function<void()> mscr)
+OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::common::event::OMEventBusWrap &bus)
     : OMRendererHandler(renderer), offset(1.0f)
 {
     this->renderer = renderer;
@@ -56,7 +57,12 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, std::function<void()> msc
     });
     button->setBackgroundColor({0.17, 0.17, 0.20});
     auto button2 = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
-    button2->setOnClick(mscr);
+    button2->setOnClick([&]() {
+        event::OMEvent e;
+        e.type = event::Custom;
+        e.custom.flag = 0;
+        bus.handle(event::Custom, e);
+    });
     button2->setBackgroundColor({0.17, 0.17, 0.20});
     node = std::make_shared<node::OMDemiurgeContainerNode>()
                ->style({

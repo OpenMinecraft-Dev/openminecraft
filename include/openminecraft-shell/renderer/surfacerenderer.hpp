@@ -12,7 +12,8 @@ namespace openminecraftshell::renderer
 class OMSurfaceRenderer : public openminecraft::renderer::common::OMRendererHandler
 {
   public:
-    OMSurfaceRenderer(openminecraft::renderer::OMRenderer *renderer, std::function<void()>);
+    OMSurfaceRenderer(openminecraft::renderer::OMRenderer *renderer,
+                      openminecraft::renderer::common::event::OMEventBusWrap &);
     virtual ~OMSurfaceRenderer() override;
 
     void submitTasks() override;
@@ -26,7 +27,7 @@ class OMSurfaceRenderer : public openminecraft::renderer::common::OMRendererHand
 
     std::shared_ptr<openminecraft::geom::OMFontSet> fontset;
 
-    std::function<void()> enterCallback;
+    openminecraft::renderer::common::event::OMEventBusWrap &bus;
     void openScreen();
 };
 } // namespace openminecraftshell::renderer
