@@ -12,6 +12,7 @@ layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec4 outReveal;
 
 #include "basics/fog.glsl"
+#include "basics/depthweight.glsl"
 #include "basics/structs/camera.glsl"
 uniform sampler2DArray inTexture;
 uniform sampler2DArray inTextureSec;
@@ -42,7 +43,10 @@ void main()
     result.r *= 0.2;
     result.g *= 0.2;
 
+    texColor.a *= 1.4;
+
     outReveal = vec4(texColor.a);
-    outColor = fog_gen(vec4(result.rgb * texColor.a, texColor.a) * texture(inLightmap, voxLight), fog.fogStart,
-                       fog.fogEnd, vec3(fog.fogR, fog.fogG, fog.fogB), 0.0);
+    outColor = fog_gen(vec4(result.rgb * texColor.a * depthweight_weight(), texColor.a * depthweight_weight()) *
+                           texture(inLightmap, voxLight),
+                       fog.fogStart, fog.fogEnd, vec3(fog.fogR, fog.fogG, fog.fogB), 0.0);
 }

@@ -224,7 +224,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                 renderer->shaderManager.preprocess("core/voxel/voxel.oit.frag.glsl", Fragment, GLSLSource, voxelFormat))
             ->shader(renderer->shaderManager.preprocess("core/voxel/voxel.vert.glsl", Vertex, GLSLSource, voxelFormat))
             ->format(voxelFormat)
-            ->blendFunc({One, One, Zero, OneMinusSrcAlpha})
+            ->blendFunc({One, One, One, One})
             ->blendFunc({Zero, OneMinusSrcAlpha, Zero, OneMinusSrcAlpha})
             ->blend(true)
             ->depth(true, false)
@@ -252,7 +252,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                      ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcomplex.vert.glsl",
                                                                                  Vertex, GLSLSource, formatComplex))
                                      ->format(formatComplex)
-                                     ->blendFunc({One, One, Zero, OneMinusSrcAlpha})
+                                     ->blendFunc({One, One, One, One})
                                      ->blendFunc({Zero, OneMinusSrcAlpha, Zero, OneMinusSrcAlpha})
                                      ->blend(true)
                                      ->depth(true, false)
@@ -280,7 +280,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                    ->shader(renderer->shaderManager.preprocess("core/voxel/voxelfluid.vert.glsl",
                                                                                Vertex, GLSLSource, voxelFluidFormat))
                                    ->format(voxelFluidFormat)
-                                   ->blendFunc({One, One, Zero, OneMinusSrcAlpha})
+                                   ->blendFunc({One, One, One, One})
                                    ->blendFunc({Zero, OneMinusSrcAlpha, Zero, OneMinusSrcAlpha})
                                    ->blend(true)
                                    ->depth(true, false)
@@ -428,7 +428,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                 renderer->shaderManager.preprocess("core/voxel/cloud.frag.glsl", Fragment, GLSLSource, simpleFormat))
             ->shader(renderer->shaderManager.preprocess("core/voxel/cloud.vert.glsl", Vertex, GLSLSource, simpleFormat))
             ->format(simpleFormat)
-            ->blendFunc({One, One, Zero, OneMinusSrcAlpha})
+            ->blendFunc({One, One, One, One})
             ->blendFunc({Zero, OneMinusSrcAlpha, Zero, OneMinusSrcAlpha})
             ->blend(true)
             ->depth(true, false)
@@ -943,7 +943,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     }
 
     tsk->beginDebugTag("translucent chunks")
-        ->clearColor(glm::vec4(0.0, 0.0, 0.0, 1.0), 0)
+        ->clearColor(glm::vec4(0.0, 0.0, 0.0, 0.0), 0)
         ->clearColor(glm::vec4(1.0, 1.0, 1.0, 1.0), 1)
         ->target(translucentTargetMS->target)
         ->pipeline(cloudComposePipeline)

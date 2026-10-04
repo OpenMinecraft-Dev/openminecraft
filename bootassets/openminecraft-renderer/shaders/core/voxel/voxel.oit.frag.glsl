@@ -12,6 +12,7 @@ layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec4 outReveal;
 
 #include "basics/fog.glsl"
+#include "basics/depthweight.glsl"
 #include "basics/structs/camera.glsl"
 uniform sampler2DArray inTexture;
 uniform samplerBuffer inChunkPos;
@@ -33,6 +34,7 @@ void main()
     vec3 result = voxFactor * ao * texColor.rgb;
 
     outReveal = vec4(texColor.a);
-    outColor = fog_gen(vec4(result.rgb * texColor.a, texColor.a) * texture(inLightmap, voxLight), fog.fogStart,
-                       fog.fogEnd, vec3(fog.fogR, fog.fogG, fog.fogB), 0.0);
+    outColor = fog_gen(vec4(result.rgb * texColor.a * depthweight_weight(), texColor.a * depthweight_weight()) *
+                           texture(inLightmap, voxLight),
+                       fog.fogStart, fog.fogEnd, vec3(fog.fogR, fog.fogG, fog.fogB), 0.0);
 }
