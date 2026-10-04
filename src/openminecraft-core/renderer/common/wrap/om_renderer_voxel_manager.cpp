@@ -144,7 +144,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
             ->blend(true)
             ->depth(true, true)
-            ->depthOp(GreaterOrEqual)
+            ->depthOp(LessOrEqual)
             ->buildN();
 
     complexPipeline = renderer->createPipeline()
@@ -172,7 +172,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                           ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
                           ->blend(true)
                           ->depth(true, true)
-                          ->depthOp(GreaterOrEqual)
+                          ->depthOp(LessOrEqual)
                           ->buildN();
     fluidPipeline = renderer->createPipeline()
                         ->input(UniformBuffer)
@@ -200,7 +200,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                         ->blend(true)
                         ->depth(true, true)
                         ->depthBias(true, -1.0f, -2.0f)
-                        ->depthOp(Greater)
+                        ->depthOp(Less)
                         ->buildN();
     translucentPipeline =
         renderer->createPipeline()
@@ -225,7 +225,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->blendFunc({One, One, Zero, OneMinusSrcAlpha})
             ->blend(true)
             ->depth(true, false)
-            ->depthOp(GreaterOrEqual)
+            ->depthOp(LessOrEqual)
             ->buildN();
     translucentComplexPipeline = renderer->createPipeline()
                                      ->input(UniformBuffer)
@@ -252,7 +252,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                      ->blendFunc({One, One, Zero, OneMinusSrcAlpha})
                                      ->blend(true)
                                      ->depth(true, false)
-                                     ->depthOp(GreaterOrEqual)
+                                     ->depthOp(LessOrEqual)
                                      ->buildN();
     translucentFluidPipeline = renderer->createPipeline()
                                    ->input(UniformBuffer)
@@ -280,7 +280,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                    ->blend(true)
                                    ->depth(true, false)
                                    ->depthBias(true, -1.0f, -2.0f)
-                                   ->depthOp(Greater)
+                                   ->depthOp(Less)
                                    ->buildN();
 
     debugPipeline = renderer->createPipeline()
@@ -298,7 +298,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                         ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
                         ->blend(true)
                         ->depth(true, true)
-                        ->depthOp(Greater)
+                        ->depthOp(Less)
                         ->buildN();
 
     skyDiscPipeline = renderer->createPipeline()
@@ -410,7 +410,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                         ->blendFunc({One, Zero, One, Zero})
                         ->blend(true)
                         ->depth(true, true)
-                        ->depthOp(GreaterOrEqual)
+                        ->depthOp(LessOrEqual)
                         ->buildN();
 
     cloudComposePipeline =
@@ -426,7 +426,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->blendFunc({One, One, Zero, OneMinusSrcAlpha})
             ->blend(true)
             ->depth(true, false)
-            ->depthOp(GreaterOrEqual)
+            ->depthOp(Always)
             ->buildN();
 
     lightmapPipeline = renderer->createPipeline()
@@ -881,7 +881,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
                    ->pipeline(lightmapPipeline)
                    ->drawN(6)
                    ->clearColor({0.0f, 0.0f, 0.0f, 0.0f})
-                   ->clearDepth(0.0f)
+                   ->clearDepth(1.0f)
                    ->target(cutoutTargetMS->target)
                    ->pipeline(skyPipeline)
                    ->drawN(6)
