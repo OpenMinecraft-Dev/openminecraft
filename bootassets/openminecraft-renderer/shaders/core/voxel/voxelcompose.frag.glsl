@@ -9,13 +9,16 @@ uniform sampler2D inTextureTranslucent;
 
 void main()
 {
-    vec3 opaque = texture(inTextureCutout, biltTexCoord).rgb;
-    float reveal = texture(inTextureTranslucent, biltTexCoord).a;
-    vec3 accum = texture(inTextureTranslucent, biltTexCoord).rgb;
+    vec4 cutoutSample = texture(inTextureCutout, biltTexCoord);
+    vec4 translucentSample = texture(inTextureTranslucent, biltTexCoord);
 
-    vec3 limited_accum = accum / (vec3(2.0) + accum);
+    vec3 opaque = cutoutSample.rgb;
+    float reveal = translucentSample.a;
+    vec3 accum = translucentSample.rgb;
 
-    vec3 linearColor = opaque * reveal + limited_accum * (1 - reveal);
+    vec3 linearColor = accum + opaque * reveal;
+
+    linearColor = linearColor / (linearColor + vec3(1.0));
 
     outColor = vec4(linearColor, 1.0);
 }
