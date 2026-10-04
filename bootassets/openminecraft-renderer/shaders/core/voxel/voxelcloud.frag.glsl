@@ -2,7 +2,9 @@
 #extension GL_ARB_separate_shader_objects : enable
 
 layout(location = 0) out vec4 outColor;
+layout(location = 1) out vec4 outReveal;
 
+#include "basics/depthweight.glsl"
 #include "basics/structs/camera.glsl"
 uniform CloudData
 {
@@ -18,5 +20,7 @@ void main()
 {
     mat4 unused = camera.viewProj;
     float unused2 = cloud.modPos.x;
-    outColor = vec4(cloud.color * colorMod, cloud.opacity);
+    outColor = vec4(cloud.color * cloud.opacity * colorMod * depthweight_weight(),
+                    cloud.opacity * colorMod * depthweight_weight());
+    outReveal = vec4(cloud.opacity * colorMod);
 }
