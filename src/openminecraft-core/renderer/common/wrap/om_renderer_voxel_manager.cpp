@@ -791,20 +791,24 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
                     auto visible = camera.isSphereVisible(cc - camera.getPosRaw(), 32.0f);
 
-                    auto pp = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz);
-                    auto pp2 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky, cc.chunkz);
-                    auto pp3 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky + 1, cc.chunkz);
-                    auto pp4 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz + 1);
-                    auto pp5 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky + 1, cc.chunkz);
-                    auto pp6 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky, cc.chunkz + 1);
-                    auto pp7 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky + 1, cc.chunkz + 1);
-                    auto pp8 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky + 1, cc.chunkz + 1);
+                    auto pp =
+                        basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz) - camera.getPosRaw();
+                    auto pp2 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky, cc.chunkz) -
+                               camera.getPosRaw();
+                    auto pp3 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky + 1, cc.chunkz) -
+                               camera.getPosRaw();
+                    auto pp4 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz + 1) -
+                               camera.getPosRaw();
+                    auto pp5 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky + 1, cc.chunkz) -
+                               camera.getPosRaw();
+                    auto pp6 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky, cc.chunkz + 1) -
+                               camera.getPosRaw();
+                    auto pp7 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky + 1, cc.chunkz + 1) -
+                               camera.getPosRaw();
+                    auto pp8 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky + 1, cc.chunkz + 1) -
+                               camera.getPosRaw();
 
-                    visible =
-                        visible | camera.isVisibleByYawPitch({pp - camera.getPosRaw(), pp2 - camera.getPosRaw(),
-                                                              pp3 - camera.getPosRaw(), pp4 - camera.getPosRaw(),
-                                                              pp5 - camera.getPosRaw(), pp6 - camera.getPosRaw(),
-                                                              pp7 - camera.getPosRaw(), pp8 - camera.getPosRaw()});
+                    visible |= camera.isVisibleByYawPitch({pp, pp2, pp3, pp4, pp5, pp6, pp7, pp8});
 
                     if (chk.visible && !visible)
                     {
