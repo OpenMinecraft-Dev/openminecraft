@@ -239,10 +239,10 @@ void OMApplication::mainLoop(OMBackend backend)
             logger->debug("Received event {:x}", e.custom.flag);
             switch (e.custom.flag)
             {
-            case 0:
+            case 3:
                 mainScreen = true;
                 break;
-            case 1:
+            case 4:
                 mainScreen = false;
                 break;
             case 2:

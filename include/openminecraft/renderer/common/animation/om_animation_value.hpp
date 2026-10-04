@@ -3,6 +3,8 @@
 
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include <chrono>
+#include <functional>
+#include <iostream>
 namespace openminecraft::renderer::common::animation
 {
 template <typename T> class OMAnimationValue
@@ -43,6 +45,7 @@ template <typename T> class OMAnimationValue
             {
                 status = -1.0f;
                 value = targetValue;
+                onAnimateFinish(value);
                 return value;
             }
             else
@@ -54,6 +57,9 @@ template <typename T> class OMAnimationValue
 
         return value;
     }
+
+  public:
+    std::function<void(T)> onAnimateFinish = [](T v) {};
 
   private:
     OMEasingFunc easingFunc = [](float x) { return x; };

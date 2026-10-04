@@ -89,6 +89,12 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->name = "surface";
     renderer->registerHandler(internal);
+    offset.onAnimateFinish = [&](float v) {
+        event::OMEvent e;
+        e.type = event::Custom;
+        e.custom.flag = v == 0 ? 3 : 4;
+        bus.handle(event::Custom, e);
+    };
 }
 OMSurfaceRenderer::~OMSurfaceRenderer()
 {
