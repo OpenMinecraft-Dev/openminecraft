@@ -43,6 +43,7 @@ struct OMEvent
         struct
         {
             uint32_t keycode;
+            uint16_t modifier;
         } key;
         struct
         {

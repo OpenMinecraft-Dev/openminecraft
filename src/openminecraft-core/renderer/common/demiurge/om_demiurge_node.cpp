@@ -318,9 +318,12 @@ updateChildren:
     }
 }
 
-void OMDemiurgeNode::acceptEvent(OMDemiurgeEventType type, uint32_t ext, void *data)
+void OMDemiurgeNode::acceptEvent(OMDemiurgeEventType type, uint32_t ext, uint16_t mod)
 {
-    std::cout << ext << std::endl;
+    for (auto f : children)
+    {
+        f->acceptEvent(type, ext, mod);
+    }
 }
 
 void OMDemiurgeNode::acceptEvent(float x, float y, OMDemiurgeEventType type, uint8_t ext, void *data)

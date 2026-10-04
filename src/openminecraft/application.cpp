@@ -360,12 +360,14 @@ void OMApplication::mainLoop(OMBackend backend)
             event::OMEvent ev;
             ev.type = event::KeyDown;
             ev.key.keycode = e.key.key;
+            ev.key.modifier = e.key.mod;
             buswrap.handle(event::KeyDown, ev);
         });
         bus.append(SDL_EVENT_KEY_UP, [&](SDL_Event &e) -> void {
             event::OMEvent ev;
             ev.type = event::KeyUp;
             ev.key.keycode = e.key.key;
+            ev.key.modifier = e.key.mod;
             buswrap.handle(event::KeyUp, ev);
         });
         bus.append(SDL_EVENT_FINGER_MOTION, [&](SDL_Event &e) {
