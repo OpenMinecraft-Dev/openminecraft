@@ -563,7 +563,7 @@ class OMVoxelManager
     OMRendererBuffer *cloudBuffer;
 
   private:
-    int samples = 1;
+    int samples = 2;
     OMVoxelHandler *voxelHandler;
     OMRenderer *renderer;
     std::function<void()> rec;

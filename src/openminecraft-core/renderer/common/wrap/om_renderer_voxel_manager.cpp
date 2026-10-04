@@ -58,6 +58,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     cutoutTargetMS->construct(renderer->getExtent(), samples);
 
     translucentTargetMS = new OMRendererTempTarget(renderer);
+    translucentTargetMS->additionalTexFormats.push_back(R32Sfloat);
     translucentTargetMS->clearDepth = false;
     translucentTargetMS->construct(renderer->getExtent(), samples, true);
 
@@ -73,6 +74,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     cutoutTarget->clearDepth = false;
     cutoutTarget->construct(renderer->getExtent());
     translucentTarget = new OMRendererTempTarget(renderer);
+    translucentTarget->additionalTexFormats.push_back(R32Sfloat);
     lightmap = new OMRendererTempTarget(renderer);
     lightmap->construct({16.0, 16.0}, 1, true);
 

@@ -15,6 +15,11 @@ class OMRendererTempTarget
     }
     ~OMRendererTempTarget()
     {
+        for (auto tex : additionalTex)
+        {
+            delete tex;
+        }
+        additionalTex.clear();
         delete colorTexture;
         if (!externalDepth)
         {
@@ -27,6 +32,11 @@ class OMRendererTempTarget
     {
         if (target)
         {
+            for (auto tex : additionalTex)
+            {
+                delete tex;
+            }
+            additionalTex.clear();
             delete colorTexture;
             if (!externalDepth)
             {
@@ -50,19 +60,36 @@ class OMRendererTempTarget
             depthTexture = renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample, D32Sfloat);
         }
 
+        for (auto tf : additionalTexFormats)
+        {
+            auto tex = renderer->allocateTexture(ext.x, ext.y, samples, 0, samples <= 1 ? Dim2 : Dim2Multisample, tf);
+            tex->setupSampler();
+            additionalTex.push_back(tex);
+        }
+
         if (!target)
         {
             target = renderer->createRenderTarget();
             target->clearDepth = clearDepth;
             target->storeDepth = storeDepth;
             target->attachTarget(colorTexture);
+            for (auto tex : additionalTex)
+            {
+                target->attachTarget(tex);
+            }
             target->attachTarget(depthTexture);
             target->build();
         }
         else
         {
             target->replaceTarget(0, colorTexture);
-            target->replaceTarget(1, depthTexture);
+            int i = 1;
+            for (auto tex : additionalTex)
+            {
+                target->replaceTarget(i, tex);
+                i++;
+            }
+            target->replaceTarget(i, depthTexture);
             target->rebuild();
         }
     }
@@ -71,6 +98,11 @@ class OMRendererTempTarget
     {
         if (target)
         {
+            for (auto tex : additionalTex)
+            {
+                delete tex;
+            }
+            additionalTex.clear();
             delete colorTexture;
             if (!externalDepth)
             {
@@ -93,19 +125,36 @@ class OMRendererTempTarget
             colorTexture->setupSampler();
         }
 
+        for (auto tf : additionalTexFormats)
+        {
+            auto tex = renderer->allocateTexture(ext.x, ext.y, samples, 0, samples <= 1 ? Dim2 : Dim2Multisample, tf);
+            tex->setupSampler();
+            additionalTex.push_back(tex);
+        }
+
         if (!target)
         {
             target = renderer->createRenderTarget();
             target->clearDepth = clearDepth;
             target->storeDepth = storeDepth;
             target->attachTarget(colorTexture);
+            for (auto tex : additionalTex)
+            {
+                target->attachTarget(tex);
+            }
             target->attachTarget(depthTexture);
             target->build();
         }
         else
         {
             target->replaceTarget(0, colorTexture);
-            target->replaceTarget(1, depthTexture);
+            int i = 1;
+            for (auto tex : additionalTex)
+            {
+                target->replaceTarget(i, tex);
+                i++;
+            }
+            target->replaceTarget(i, depthTexture);
             target->rebuild();
         }
     }
@@ -117,6 +166,9 @@ class OMRendererTempTarget
     OMRendererTexture *colorTexture;
     OMRendererTexture *depthTexture;
     OMRenderer *renderer;
+
+    std::vector<OMTextureArrangement> additionalTexFormats = {};
+    std::vector<OMRendererTexture *> additionalTex = {};
 };
 } // namespace openminecraft::renderer::common::wrap
 

@@ -497,11 +497,23 @@ void OMRendererPipelineVk::build()
         enableDepthBias, depthBiasConstant, 0, depthBiasSlope, lineWidth);
     auto multisample = PipelineMultisampleStateCreateInfo({}, s, enableMultisampleShading);
     auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
-    std::vector attc = {PipelineColorBlendAttachmentState(
-        enableBlend, convert(blendState.srcColor), convert(blendState.dstColor), convert(blendOperatorColor),
-        convert(blendState.srcAlpha), convert(blendState.dstAlpha), convert(blendOperatorAlpha),
-        ColorComponentFlagBits::eA | ColorComponentFlagBits::eR | ColorComponentFlagBits::eG |
-            ColorComponentFlagBits::eB)};
+
+    // TODO: tempoary solution!
+    int attcc = reinterpret_cast<OMRendererRenderTargetVk *>(this->target)->textures.size() - 1;
+    if (1 > attcc)
+    {
+        attcc = 1;
+    }
+    std::vector<PipelineColorBlendAttachmentState> attc = {};
+    for (int i = 0; i < attcc; ++i)
+    {
+        attc.emplace_back(enableBlend, convert(blendState.srcColor), convert(blendState.dstColor),
+                          convert(blendOperatorColor), convert(blendState.srcAlpha), convert(blendState.dstAlpha),
+                          convert(blendOperatorAlpha),
+                          ColorComponentFlagBits::eA | ColorComponentFlagBits::eR | ColorComponentFlagBits::eG |
+                              ColorComponentFlagBits::eB);
+    }
+
     auto colorblend = PipelineColorBlendStateCreateInfo(
         {}, enableBlendLogicOp, convert(blendLogicOperator), attc,
         std::array{blendConstant.r, blendConstant.g, blendConstant.b, blendConstant.a});

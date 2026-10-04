@@ -111,8 +111,7 @@ void OMRendererRenderTargetVk::build()
                          reinterpret_cast<OMRendererTextureVk *>(tt)->sampleCount,
                          clearDepth ? AttachmentLoadOp::eClear : AttachmentLoadOp::eLoad,
                          storeDepth ? AttachmentStoreOp::eStore : AttachmentStoreOp::eDontCare,
-			 // AttachmentStoreOp::eStore,
-			 AttachmentLoadOp::eDontCare,
+                         AttachmentLoadOp::eDontCare,
                          AttachmentStoreOp::eDontCare,
                          clearDepth ? ImageLayout::eUndefined : ImageLayout::eDepthStencilAttachmentOptimal,
                          ImageLayout::eDepthStencilAttachmentOptimal});
