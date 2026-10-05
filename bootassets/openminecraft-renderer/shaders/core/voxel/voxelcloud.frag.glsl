@@ -20,7 +20,7 @@ void main()
 {
     mat4 unused = camera.viewProj;
     float unused2 = cloud.modPos.x;
-    outColor = vec4(cloud.color * cloud.opacity * colorMod * depthweight_weight(),
-                    cloud.opacity * colorMod * depthweight_weight());
-    outReveal = vec4(cloud.opacity * colorMod);
+    outColor =
+        vec4(cloud.color * cloud.opacity * colorMod * depthweight_weight(), cloud.opacity * depthweight_weight());
+    outReveal = vec4(cloud.opacity);
 }

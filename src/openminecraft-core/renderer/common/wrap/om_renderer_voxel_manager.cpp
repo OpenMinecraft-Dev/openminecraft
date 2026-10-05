@@ -437,7 +437,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->blendFunc({Zero, SrcAlpha, Zero, SrcAlpha})
             ->blend(true)
             ->depth(true, false)
-            ->depthOp(Greater)
+            ->depthOp(Always)
             ->buildN();
 
     lightmapPipeline = renderer->createPipeline()
