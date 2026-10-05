@@ -415,7 +415,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                                                     GLSLSource, cloudFormat))
                         ->format(cloudFormat)
                         ->blendFunc({One, Zero, One, Zero})
-                        ->blendFunc({Zero, OneMinusSrcAlpha, Zero, OneMinusSrcAlpha})
+                        ->blendFunc({OneMinusSrcAlpha, Zero, OneMinusSrcAlpha, Zero})
                         ->blend(true)
                         ->depth(true, true)
                         ->depthOp(LessOrEqual)
@@ -726,7 +726,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
     auto cc = camera.getPosRaw();
 
     cloudData->updateData(
-        std::array<OMVoxelCloud, 1>{{{{cc.getModX(256 * 12), cc.getY(), cc.getModZ(256 * 12)}, 0.8, glm::vec3(1.0)}}}
+        std::array<OMVoxelCloud, 1>{{{{cc.getModX(256 * 12), cc.getY(), cc.getModZ(256 * 12)}, 0.8, glm::vec3(0.5)}}}
             .data());
 
     auto pp = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz);
