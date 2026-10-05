@@ -14,7 +14,8 @@ float depthweight_getDepth()
 
 float depthweight_weight()
 {
-    return clamp(pow(1.0 - depthweight_getDepth(), 3.0) * 1e3, 1e-2, 3e3);
+    return 1.0;
+    // return clamp(pow(1.0 - depthweight_getDepth(), 3.0) * 1e3, 1e-2, 3e3);
 }
 
 #endif
