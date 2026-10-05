@@ -286,7 +286,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                    ->blendFunc({Zero, OneMinusSrcAlpha, Zero, OneMinusSrcAlpha})
                                    ->blend(true)
                                    ->depth(true, false)
-                                   ->depthBias(true, -1.0f, -2.0f)
+                                   ->depthBias(true, 1.0f, 2.0f)
                                    ->depthOp(Less)
                                    ->buildN();
 
