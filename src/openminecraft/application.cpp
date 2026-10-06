@@ -176,8 +176,8 @@ void OMApplication::mainLoop(OMBackend backend)
         auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{-1.0f, 5.0f, -1.0f}, 45.0f, -45.0f);
 
         auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
-        int width = 4;
-        int height = 4;
+        int width = 16;
+        int height = 16;
         int depth = 8;
         for (int cx = -width; cx < width; ++cx)
         {
@@ -261,6 +261,8 @@ void OMApplication::mainLoop(OMBackend backend)
         auto hnd3 = std::make_shared<renderer::OMComposeRenderer>(win(), hnd4->internal->middleTarget,
                                                                   hnd2->internal->middleTarget, hnd->tempTarget);
         hnd2->camera = camera.get();
+        hnd2->stateFetch = [&]() { return hnd->voxelManager->fetchLayerState(); };
+        hnd->voxelManager->fetchLayerState();
         win()->registerHandler(hnd2);
         win()->registerHandler(hnd4);
         win()->registerHandler(hnd);

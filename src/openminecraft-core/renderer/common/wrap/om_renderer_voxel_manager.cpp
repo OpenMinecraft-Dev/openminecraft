@@ -27,7 +27,53 @@
 
 namespace openminecraft::renderer::common::wrap
 {
-uint64_t cx = 0, cy = 0, cz = 0;
+struct Frustum
+{
+    glm::vec4 planes[6];
+
+    static auto fromMatrix(const glm::mat4 &clip) -> Frustum
+    {
+        Frustum f;
+        glm::vec4 row1 = {clip[0][0], clip[1][0], clip[2][0], clip[3][0]};
+        glm::vec4 row2 = {clip[0][1], clip[1][1], clip[2][1], clip[3][1]};
+        glm::vec4 row3 = {clip[0][2], clip[1][2], clip[2][2], clip[3][2]};
+        glm::vec4 row4 = {clip[0][3], clip[1][3], clip[2][3], clip[3][3]};
+
+        f.planes[0] = row4 + row1;
+        f.planes[1] = row4 - row1;
+        f.planes[2] = row4 + row2;
+        f.planes[3] = row4 - row2;
+        f.planes[4] = row4 + row3;
+        f.planes[5] = row4 - row3;
+
+        for (auto &p : f.planes)
+        {
+            float len = glm::length(glm::vec3(p));
+            p /= len;
+        }
+        return f;
+    }
+
+    [[nodiscard]] auto cubeVisible(std::array<glm::vec3, 8> verts) const -> bool
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            bool allOutside = true;
+            for (int j = 0; j < 8; j++)
+            {
+                if (glm::dot(glm::vec3(planes[i]), verts[j]) + planes[i].w > 0.0f)
+                {
+                    allOutside = false;
+                    break;
+                }
+            }
+            if (allOutside)
+                return false;
+        }
+        return true;
+    }
+};
+
 OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *resolveTarget, OMRendererTexture *tex,
                                OMRendererTexture *texSec, std::shared_ptr<world::OMChunkManager<16>> man,
                                std::function<void()> rec, OMVoxelHandler *handler,
@@ -721,6 +767,38 @@ auto OMVoxelManager::buildVoxelCloud() -> std::vector<uint32_t>
     return da;
 }
 
+auto OMVoxelManager::fetchLayerState() -> std::array<std::pair<uint32_t, uint32_t>, 6>
+{
+    return {{
+        {voxelLayer->buf()->usedSize(), voxelLayer->buf()->totalSize},
+        {voxelComplexLayer->buf()->usedSize(), voxelComplexLayer->buf()->totalSize},
+        {voxelFluidLayer->buf()->usedSize(), voxelFluidLayer->buf()->totalSize},
+        {voxelTranslucentLayer->buf()->usedSize(), voxelTranslucentLayer->buf()->totalSize},
+        {voxelTranslucentComplexLayer->buf()->usedSize(), voxelTranslucentComplexLayer->buf()->totalSize},
+        {voxelTranslucentFluidLayer->buf()->usedSize(), voxelTranslucentFluidLayer->buf()->totalSize},
+    }};
+}
+
+auto OMVoxelManager::hashLayerState() -> uint64_t
+{
+    uint64_t result = 0;
+    constexpr uint64_t hsh = 1024049593;
+    result = result * hsh + voxelLayer->buf()->usedSize();
+    result = result * hsh + voxelLayer->buf()->totalSize;
+    result = result * hsh + voxelComplexLayer->buf()->usedSize();
+    result = result * hsh + voxelComplexLayer->buf()->totalSize;
+    result = result * hsh + voxelFluidLayer->buf()->usedSize();
+    result = result * hsh + voxelFluidLayer->buf()->totalSize;
+    result = result * hsh + voxelTranslucentLayer->buf()->usedSize();
+    result = result * hsh + voxelTranslucentLayer->buf()->totalSize;
+    result = result * hsh + voxelTranslucentComplexLayer->buf()->usedSize();
+    result = result * hsh + voxelTranslucentComplexLayer->buf()->totalSize;
+    result = result * hsh + voxelTranslucentFluidLayer->buf()->usedSize();
+    result = result * hsh + voxelTranslucentFluidLayer->buf()->totalSize;
+
+    return result;
+}
+
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
     auto cc = camera.getPosRaw();
@@ -757,12 +835,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             chunkOffsetCache.resize(chunkManager->numChunks());
         }
 
-        auto l = voxelLayer->buf()->totalSize;
-        auto l2 = voxelComplexLayer->buf()->totalSize;
-        auto l3 = voxelTranslucentLayer->buf()->totalSize;
-        auto l4 = voxelTranslucentComplexLayer->buf()->totalSize;
-        auto l5 = voxelFluidLayer->buf()->totalSize;
-        auto l6 = voxelTranslucentFluidLayer->buf()->totalSize;
+        auto layerState = hashLayerState();
         chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
             for (auto &ochk : chunks)
@@ -784,6 +857,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             }
         });
 
+        auto frusturm = Frustum::fromMatrix(camera.fetchProjMat() * camera.fetchViewMat());
         chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
             for (auto &ochk : chunks)
@@ -801,30 +875,25 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     cc.chunkx = chk.chunkx;
                     cc.chunky = chk.chunky;
                     cc.chunkz = chk.chunkz;
-                    cc.localx = 8.0f;
-                    cc.localy = 8.0f;
-                    cc.localz = 8.0f;
+                    cc.localx = 0.0f;
+                    cc.localy = 0.0f;
+                    cc.localz = 0.0f;
 
-                    auto visible = camera.isSphereVisible(cc - camera.getPosRaw(), 32.0f);
-
-                    auto pp =
+                    auto pp0 =
                         basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz) - camera.getPosRaw();
-                    auto pp2 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky, cc.chunkz) -
-                               camera.getPosRaw();
-                    auto pp3 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky + 1, cc.chunkz) -
-                               camera.getPosRaw();
-                    auto pp4 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz + 1) -
-                               camera.getPosRaw();
-                    auto pp5 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky + 1, cc.chunkz) -
-                               camera.getPosRaw();
-                    auto pp6 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky, cc.chunkz + 1) -
-                               camera.getPosRaw();
-                    auto pp7 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky + 1, cc.chunkz + 1) -
-                               camera.getPosRaw();
-                    auto pp8 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky + 1, cc.chunkz + 1) -
+                    auto pp1 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky + 1, cc.chunkz + 1) -
                                camera.getPosRaw();
 
-                    visible |= camera.isVisibleByYawPitch({pp, pp2, pp3, pp4, pp5, pp6, pp7, pp8});
+                    auto visible = frusturm.cubeVisible(std::array<glm::vec3, 8>{{
+                        {pp0.x, pp0.y, pp0.z},
+                        {pp1.x, pp0.y, pp0.z},
+                        {pp0.x, pp1.y, pp0.z},
+                        {pp1.x, pp1.y, pp0.z},
+                        {pp0.x, pp0.y, pp1.z},
+                        {pp1.x, pp0.y, pp1.z},
+                        {pp0.x, pp1.y, pp1.z},
+                        {pp1.x, pp1.y, pp1.z},
+                    }});
 
                     if (chk.visible && !visible)
                     {
@@ -868,9 +937,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         compilerPool->upload(voxelLayer, voxelComplexLayer, voxelFluidLayer, voxelTranslucentLayer,
                              voxelTranslucentComplexLayer, voxelTranslucentFluidLayer);
 
-        if (l != voxelLayer->buf()->totalSize || l2 != voxelComplexLayer->buf()->totalSize ||
-            l3 != voxelTranslucentLayer->buf()->totalSize || l4 != voxelTranslucentComplexLayer->buf()->totalSize ||
-            l5 != voxelFluidLayer->buf()->totalSize || l6 != voxelTranslucentFluidLayer->buf()->totalSize)
+        if (layerState != hashLayerState())
         {
             rec();
         }
@@ -918,13 +985,13 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
                    ->beginDebugTag("cutout/opaque chunks")
                    ->pipeline(pipeline)
                    ->vertexBuffer({voxelLayer->buf()->buffer})
-                   ->drawInstanceN(6, voxelLayer->buf()->totalSize / sizeof(OMVoxel))
+                   ->drawInstanceN(6, voxelLayer->buf()->usedSize() / sizeof(OMVoxel))
                    ->pipeline(complexPipeline)
                    ->vertexBuffer({voxelComplexLayer->buf()->buffer})
-                   ->drawInstanceN(6, voxelComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex))
+                   ->drawInstanceN(6, voxelComplexLayer->buf()->usedSize() / sizeof(OMVoxelComplex))
                    ->pipeline(fluidPipeline)
                    ->vertexBuffer({voxelFluidLayer->buf()->buffer})
-                   ->drawInstanceN(6, voxelFluidLayer->buf()->totalSize / sizeof(OMVoxelFluid))
+                   ->drawInstanceN(6, voxelFluidLayer->buf()->usedSize() / sizeof(OMVoxelFluid))
                    ->pipeline(debugPipeline)
                    ->vertexBuffer({debugoffs})
                    ->drawN(2 * 12)
@@ -957,13 +1024,13 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
         ->drawN(6)
         ->pipeline(translucentPipeline)
         ->vertexBuffer({voxelTranslucentLayer->buf()->buffer})
-        ->drawInstanceN(6, voxelTranslucentLayer->buf()->totalSize / sizeof(OMVoxel))
+        ->drawInstanceN(6, voxelTranslucentLayer->buf()->usedSize() / sizeof(OMVoxel))
         ->pipeline(translucentComplexPipeline)
         ->vertexBuffer({voxelTranslucentComplexLayer->buf()->buffer})
-        ->drawInstanceN(6, voxelTranslucentComplexLayer->buf()->totalSize / sizeof(OMVoxelComplex))
+        ->drawInstanceN(6, voxelTranslucentComplexLayer->buf()->usedSize() / sizeof(OMVoxelComplex))
         ->pipeline(translucentFluidPipeline)
         ->vertexBuffer({voxelTranslucentFluidLayer->buf()->buffer})
-        ->drawInstanceN(6, voxelTranslucentFluidLayer->buf()->totalSize / sizeof(OMVoxelFluid))
+        ->drawInstanceN(6, voxelTranslucentFluidLayer->buf()->usedSize() / sizeof(OMVoxelFluid))
         ->endDebugTag();
 
     if (samples != 1)

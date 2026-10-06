@@ -15,6 +15,7 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/world/om_world_chunk.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
+#include <array>
 #include <atomic>
 #include <cstdint>
 #include <functional>
@@ -527,6 +528,8 @@ class OMVoxelManager
     auto updateColor() -> void;
     void bindCameraBuffer(OMRendererBuffer *);
     auto buildVoxelCloud() -> std::vector<uint32_t>;
+    auto hashLayerState() -> uint64_t;
+    auto fetchLayerState() -> std::array<std::pair<uint32_t, uint32_t>, 6>;
 
     OMRendererTempTarget *translucentTargetMS, *translucentTarget;
     OMRendererTempTarget *cutoutTargetMS, *cutoutTarget;

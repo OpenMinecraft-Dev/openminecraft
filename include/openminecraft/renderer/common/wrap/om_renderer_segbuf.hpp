@@ -3,6 +3,7 @@
 
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <cmath>
@@ -119,6 +120,16 @@ class OMRendererSegBuf
 
     OMRendererBuffer *buffer;
     uint32_t totalSize;
+
+    auto usedSize() -> uint32_t
+    {
+        if (freeBlocks.empty())
+        {
+            return totalSize;
+        }
+
+        return freeBlocks.back().offset;
+    }
 
   private:
     OMRenderer *renderer;
