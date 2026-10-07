@@ -88,6 +88,8 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                         cutoutComplex[next] = cutoutComplexC[next];
                         translucent[next] = translucentC[next];
                         translucentComplex[next] = translucentComplexC[next];
+                        fluid[next] = fluidC[next];
+                        translucentFluid[next] = translucentFluidC[next];
                         bufferMutex.unlock();
                         continue;
                     }

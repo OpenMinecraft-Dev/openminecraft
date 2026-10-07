@@ -685,10 +685,13 @@ void OMVoxelManager::unloadChunk(int i)
 {
     std::vector<OMVoxel> m = {}, tm = {};
     std::vector<OMVoxelComplex> cm = {}, tcm = {};
+    std::vector<OMVoxelFluid> fm = {}, tfm = {};
     voxelLayer->loadData(i, m);
     voxelComplexLayer->loadData(i, cm);
     voxelTranslucentLayer->loadData(i, tm);
     voxelTranslucentComplexLayer->loadData(i, tcm);
+    voxelFluidLayer->loadData(i, fm);
+    voxelTranslucentFluidLayer->loadData(i, tfm);
 }
 
 auto srgbToLinear(const glm::vec3 &c) -> glm::vec3
