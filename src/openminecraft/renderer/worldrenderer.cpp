@@ -56,7 +56,7 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     }
     auto getSkyDiskHeight() -> float override
     {
-        return -16.0f;
+        return 16.0f;
     }
     auto getFogRange() -> glm::vec2 override
     {

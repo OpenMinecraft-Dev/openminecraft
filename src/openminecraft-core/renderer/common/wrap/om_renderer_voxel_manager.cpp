@@ -720,8 +720,8 @@ auto OMVoxelManager::updateColor() -> void
 {
     if (colorManager->isDirty())
     {
-        OMVoxelSkyDisc disc = {srgbToLinear(colorManager->getSkyDiscColor()), 256,
-                               srgbToLinear(colorManager->getFogColor()), 16};
+        OMVoxelSkyDisc disc = {srgbToLinear(colorManager->getSkyDiscColor()), colorManager->getSkyDiskRange(),
+                               srgbToLinear(colorManager->getFogColor()), colorManager->getSkyDiskHeight()};
         skydisc->updateData(&disc);
         OMVoxelSunrise ris = {srgbToLinear(colorManager->getSunriseColor()), colorManager->getSunAngle()};
         sunrise->updateData(&ris);
@@ -833,7 +833,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
     lastp = cur;
 
     cloudData->updateData(std::array<OMVoxelCloud, 1>{
-        {{{cc.getModX(256 * 12) - tt, cc.getY(), cc.getModZ(256 * 12)}, 0.8, glm::vec3(0.5)}}}
+        {{{cc.getModX(256 * 12) + tt, cc.getY(), cc.getModZ(256 * 12)}, 0.8, glm::vec3(0.5)}}}
                               .data());
 
     auto pp = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz);
