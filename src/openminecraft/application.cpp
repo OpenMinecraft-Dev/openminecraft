@@ -262,6 +262,7 @@ void OMApplication::mainLoop(OMBackend backend)
                                                                   hnd2->internal->middleTarget, hnd->tempTarget);
         hnd2->camera = camera.get();
         hnd2->stateFetch = [&]() { return hnd->voxelManager->fetchLayerState(); };
+        hnd2->chunkFetch = [&]() { return hnd->voxelManager->fetchChunkState(); };
         hnd->voxelManager->fetchLayerState();
         win()->registerHandler(hnd2);
         win()->registerHandler(hnd4);

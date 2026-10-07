@@ -286,7 +286,14 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
                                                        {"text", ""},
                                                        {"textheight", 12},
                                                    })
-                                                   ->store(vtfState))));
+                                                   ->store(vtfState))
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                                   ->style({
+                                                       {"color", (int)0xffffffff},
+                                                       {"text", ""},
+                                                       {"textheight", 12},
+                                                   })
+                                                   ->store(chunkstate))));
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->name = "debughud";
@@ -348,5 +355,8 @@ void OMDebugRenderer::afterFrame()
         const auto &d = st[i];
         lst[i]->style("text", fmt::format("{}: {} / {}", tags[i], fromBytes(d.first), fromBytes(d.second)));
     }
+
+    auto chunkst = chunkFetch();
+    chunkstate->style("text", fmt::format("{} chunks / {} rendered", chunkst.first, chunkst.second));
 }
 } // namespace openminecraftshell::renderer

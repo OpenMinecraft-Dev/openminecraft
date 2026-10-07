@@ -785,24 +785,38 @@ auto OMVoxelManager::fetchLayerState() -> std::array<std::pair<uint32_t, uint32_
     }};
 }
 
-auto OMVoxelManager::hashLayerState() -> uint64_t
+auto OMVoxelManager::hashLayerState() -> std::array<uint32_t, 12>
 {
-    uint64_t result = 0;
-    constexpr uint64_t hsh = 1024049593;
-    result = result * hsh + voxelLayer->buf()->usedSize();
-    result = result * hsh + voxelLayer->buf()->totalSize;
-    result = result * hsh + voxelComplexLayer->buf()->usedSize();
-    result = result * hsh + voxelComplexLayer->buf()->totalSize;
-    result = result * hsh + voxelFluidLayer->buf()->usedSize();
-    result = result * hsh + voxelFluidLayer->buf()->totalSize;
-    result = result * hsh + voxelTranslucentLayer->buf()->usedSize();
-    result = result * hsh + voxelTranslucentLayer->buf()->totalSize;
-    result = result * hsh + voxelTranslucentComplexLayer->buf()->usedSize();
-    result = result * hsh + voxelTranslucentComplexLayer->buf()->totalSize;
-    result = result * hsh + voxelTranslucentFluidLayer->buf()->usedSize();
-    result = result * hsh + voxelTranslucentFluidLayer->buf()->totalSize;
+    return {
+        voxelLayer->buf()->usedSize(),
+        voxelLayer->buf()->totalSize,
+        voxelComplexLayer->buf()->usedSize(),
+        voxelComplexLayer->buf()->totalSize,
+        voxelFluidLayer->buf()->usedSize(),
+        voxelFluidLayer->buf()->totalSize,
+        voxelTranslucentLayer->buf()->usedSize(),
+        voxelTranslucentLayer->buf()->totalSize,
+        voxelTranslucentComplexLayer->buf()->usedSize(),
+        voxelTranslucentComplexLayer->buf()->totalSize,
+        voxelTranslucentFluidLayer->buf()->usedSize(),
+        voxelTranslucentFluidLayer->buf()->totalSize,
+    };
+}
 
-    return result;
+auto OMVoxelManager::fetchChunkState() -> std::pair<uint32_t, uint32_t>
+{
+    uint32_t total = 0, nonfree = 0;
+    chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
+        for (const auto &c : chunks)
+        {
+            ++total;
+            if (c->visible)
+            {
+                ++nonfree;
+            }
+        }
+    });
+    return {total, nonfree};
 }
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void

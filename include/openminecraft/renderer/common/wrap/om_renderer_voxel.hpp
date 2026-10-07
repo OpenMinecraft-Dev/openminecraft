@@ -528,8 +528,9 @@ class OMVoxelManager
     auto updateColor() -> void;
     void bindCameraBuffer(OMRendererBuffer *);
     auto buildVoxelCloud() -> std::vector<uint32_t>;
-    auto hashLayerState() -> uint64_t;
+    auto hashLayerState() -> std::array<uint32_t, 12>;
     auto fetchLayerState() -> std::array<std::pair<uint32_t, uint32_t>, 6>;
+    auto fetchChunkState() -> std::pair<uint32_t, uint32_t>;
 
     OMRendererTempTarget *translucentTargetMS, *translucentTarget;
     OMRendererTempTarget *cutoutTargetMS, *cutoutTarget;
