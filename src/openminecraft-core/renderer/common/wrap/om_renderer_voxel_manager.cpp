@@ -17,6 +17,7 @@
 #include "openminecraft/world/om_world_chunk.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <functional>
@@ -819,13 +820,21 @@ auto OMVoxelManager::fetchChunkState() -> std::pair<uint32_t, uint32_t>
     return {total, nonfree};
 }
 
+static float tt = 0.0f;
+static auto lastp = std::chrono::steady_clock::now();
+
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
     auto cc = camera.getPosRaw();
 
-    cloudData->updateData(
-        std::array<OMVoxelCloud, 1>{{{{cc.getModX(256 * 12), cc.getY(), cc.getModZ(256 * 12)}, 0.8, glm::vec3(0.5)}}}
-            .data());
+    auto cur = std::chrono::steady_clock::now();
+    tt += std::chrono::duration_cast<std::chrono::milliseconds>(cur - lastp).count() / 1000.0f * 3.0f;
+    tt = std::fmod(tt, 256 * 12);
+    lastp = cur;
+
+    cloudData->updateData(std::array<OMVoxelCloud, 1>{
+        {{{cc.getModX(256 * 12) - tt, cc.getY(), cc.getModZ(256 * 12)}, 0.8, glm::vec3(0.5)}}}
+                              .data());
 
     auto pp = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz);
     auto pp2 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky, cc.chunkz);
