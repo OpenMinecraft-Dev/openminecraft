@@ -517,13 +517,13 @@ class OMVoxelManager
 {
   public:
     OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *, OMRendererTexture *,
-                   std::shared_ptr<world::OMChunkManager<16>>, std::function<void()>, OMVoxelHandler *,
+                   std::shared_ptr<world::OMChunkManager<16>>, std::function<void(bool)>, OMVoxelHandler *,
                    std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)>,
                    OMVoxelColorManager *, OMRendererTexture *, OMRendererTexture *, OMRendererTexture *,
                    std::vector<bool>);
     ~OMVoxelManager();
 
-    auto submit(OMRendererTask *, OMRendererTempTarget *) -> OMRendererTask *;
+    auto submit(OMRendererTask *, OMRendererTempTarget *, bool = true) -> OMRendererTask *;
     auto update(basics::OMCamera &camera) -> void;
     auto updateColor() -> void;
     void bindCameraBuffer(OMRendererBuffer *);
@@ -566,10 +566,10 @@ class OMVoxelManager
     OMRendererBuffer *cloudBuffer;
 
   private:
-    int samples = 2;
+    int samples = 1;
     OMVoxelHandler *voxelHandler;
     OMRenderer *renderer;
-    std::function<void()> rec;
+    std::function<void(bool)> rec;
     log::OMLogger logger;
     OMVoxelCompiler compiler;
 

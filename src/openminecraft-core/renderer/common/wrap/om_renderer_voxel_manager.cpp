@@ -76,7 +76,7 @@ struct Frustum
 
 OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *resolveTarget, OMRendererTexture *tex,
                                OMRendererTexture *texSec, std::shared_ptr<world::OMChunkManager<16>> man,
-                               std::function<void()> rec, OMVoxelHandler *handler,
+                               std::function<void(bool)> rec, OMVoxelHandler *handler,
                                std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> converter,
                                OMVoxelColorManager *colorman, OMRendererTexture *sunTex, OMRendererTexture *moonTex,
                                OMRendererTexture *cloudTex, std::vector<bool> cloudStats)
@@ -939,27 +939,30 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
         if (layerState != hashLayerState())
         {
-            rec();
+            rec(false);
         }
     }
 }
 
-auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveTarget) -> OMRendererTask *
+auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveTarget, bool r) -> OMRendererTask *
 {
-    cutoutTargetMS->storeDepth = true;
-    cutoutTargetMS->construct(renderer->getExtent(), samples);
-    translucentTargetMS->clearDepth = false;
-    translucentTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), samples, true);
-    cutoutTarget->construct(renderer->getExtent());
-    translucentTarget->construct(renderer->getExtent(), 1, true);
-    cloudTargetMS->clearDepth = false;
-    cloudTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), samples);
-    cloudTarget->construct(renderer->getExtent());
-    composePipeline->bindInput(0, (samples == 1 ? cutoutTargetMS : cutoutTarget)->colorTexture);
-    composePipeline->bindInput(1, (samples == 1 ? translucentTargetMS : translucentTarget)->colorTexture);
-    composePipeline->bindInput(2, (samples == 1 ? translucentTargetMS : translucentTarget)->additionalTex[0]);
-    cloudComposePipeline->bindInput(0, (samples == 1 ? cloudTargetMS : cloudTarget)->colorTexture);
-    cloudComposePipeline->bindInput(1, (samples == 1 ? cloudTargetMS : cloudTarget)->additionalTex[0]);
+    if (r)
+    {
+        cutoutTargetMS->storeDepth = true;
+        cutoutTargetMS->construct(renderer->getExtent(), samples);
+        translucentTargetMS->clearDepth = false;
+        translucentTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), samples, true);
+        cutoutTarget->construct(renderer->getExtent());
+        translucentTarget->construct(renderer->getExtent(), 1, true);
+        cloudTargetMS->clearDepth = false;
+        cloudTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), samples);
+        cloudTarget->construct(renderer->getExtent());
+        composePipeline->bindInput(0, (samples == 1 ? cutoutTargetMS : cutoutTarget)->colorTexture);
+        composePipeline->bindInput(1, (samples == 1 ? translucentTargetMS : translucentTarget)->colorTexture);
+        composePipeline->bindInput(2, (samples == 1 ? translucentTargetMS : translucentTarget)->additionalTex[0]);
+        cloudComposePipeline->bindInput(0, (samples == 1 ? cloudTargetMS : cloudTarget)->colorTexture);
+        cloudComposePipeline->bindInput(1, (samples == 1 ? cloudTargetMS : cloudTarget)->additionalTex[0]);
+    }
 
     auto tsk = task->target(lightmap->target)
                    ->beginDebugTag("environment")

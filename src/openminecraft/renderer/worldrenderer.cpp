@@ -221,7 +221,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     colorManager->updateGameTime(0.4);
     voxelManager = new wrap::OMVoxelManager(
         renderer, tempTarget->target, textureAtlas->texture, textureAtlas->textureSecondary, chunkManager,
-        [&]() -> void { record(); }, this->voxelHandler,
+        [&](bool r) -> void { record(r); }, this->voxelHandler,
         [&](uint32_t v, uint64_t cx, uint64_t cy, uint64_t cz, int x, int y, int z) -> uint32_t {
             const auto &reg = data::block::blockstateRegistry.idToRegistry[v];
             uint64_t h = (cx * 16 + x) * 341873128712L + (cy * 16 + y) * 132897987541L + cz * 16 + z + 1L;
@@ -264,10 +264,10 @@ void OMWorldRenderer::beforeFrame()
                                .data());
 }
 
-void OMWorldRenderer::record()
+void OMWorldRenderer::record(bool r)
 {
     voxelManager
-        ->submit(renderer->fetchTask("voxel"), tempTarget)
+        ->submit(renderer->fetchTask("voxel"), tempTarget, r)
         // ->pipeline(bgPipe)->drawN(6)
         ->finishN();
 }
@@ -298,7 +298,7 @@ void OMWorldRenderer::submitTasks()
 
     renderer->createTask("voxel");
 
-    record();
+    record(true);
 }
 OMWorldRenderer::~OMWorldRenderer()
 {

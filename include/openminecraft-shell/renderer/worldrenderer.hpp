@@ -49,7 +49,7 @@ class OMWorldRenderer : public OMRendererHandler
     void beforeFrame() override;
     void afterFrame() override;
 
-    void record();
+    void record(bool r);
 
     // INFO: these are the resource handles used for rendering
     OMRendererBuffer *uniformBuffer, *voxelModelBuffer, *cameraBuffer;
