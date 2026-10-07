@@ -453,6 +453,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                         ->inputName("Camera")
                         ->input(UniformBuffer)
                         ->inputName("CloudData")
+                        ->input(UniformBuffer)
+                        ->inputName("FogData")
                         ->output(cloudTargetMS->target)
                         ->samples(samples)
                         ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcloud.frag.glsl", Fragment,
@@ -634,6 +636,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     moonPipeline->bindInput(2, moonTex);
     starPipeline->bindInput(1, starBaseData);
     cloudPipeline->bindInput(1, cloudData);
+    cloudPipeline->bindInput(2, fogdata);
 }
 OMVoxelManager::~OMVoxelManager()
 {

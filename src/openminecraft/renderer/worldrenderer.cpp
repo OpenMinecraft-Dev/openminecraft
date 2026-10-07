@@ -60,7 +60,7 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     }
     auto getFogRange() -> glm::vec2 override
     {
-        return {100, 50};
+        return {400, 300};
     }
     auto getBlockTint() -> glm::vec3 override
     {
