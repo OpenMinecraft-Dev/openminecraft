@@ -348,11 +348,11 @@ void OMApplication::mainLoop(OMBackend backend)
 
                 if (keystates[5])
                 {
-                    movingSpeed.y = std::min(movingSpeed.y + accelY, MAX_SPEED_TICK);
+                    movingSpeed.y = fmin(movingSpeed.y + accelY, MAX_SPEED_TICK);
                 }
                 else if (keystates[4])
                 {
-                    movingSpeed.y = std::max(movingSpeed.y - accelY, -MAX_SPEED_TICK);
+                    movingSpeed.y = fmax(movingSpeed.y - accelY, -MAX_SPEED_TICK);
                 }
 
                 movingSpeed.y = std::clamp(movingSpeed.y, -MAX_SPEED_TICK, MAX_SPEED_TICK);
