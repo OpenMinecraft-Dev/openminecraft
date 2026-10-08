@@ -543,7 +543,7 @@ class OMVoxelManager
     OMRendererPipeline *skyPipeline;
     OMRendererBuffer *chunkoffs, *debugoffs;
     OMRendererBuffer *skydisc;
-    OMRendererBuffer *fogdata;
+    OMRendererBuffer *fogdata, *cloudFogdata;
     OMRendererBuffer *lightmapData;
     OMRendererBuffer *moonData;
     OMRendererBuffer *cloudData;

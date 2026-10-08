@@ -44,7 +44,7 @@ void main()
     result.g *= 0.2;
 
     outReveal = vec4(texColor.a);
-    outColor = vec4(fog_gen(vec4(result.rgb * texture(inLightmap, voxLight).rgb, 1.0), fog.fogStart, fog.fogEnd,
+    outColor = vec4(fog_gen(vec4(result.rgb * texture(inLightmap, voxLight).rgb, texColor.a), fog.fogStart, fog.fogEnd,
                             vec3(fog.fogR, fog.fogG, fog.fogB), 0.0)
                             .rgb *
                         texColor.a * depthweight_weight(),

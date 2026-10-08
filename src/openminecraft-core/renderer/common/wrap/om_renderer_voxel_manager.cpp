@@ -548,6 +548,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     debugoffs = renderer->allocateBuffer(VertexData, 12 * 2 * 3 * sizeof(float));
     skydisc = renderer->allocateBuffer(Uniform, sizeof(OMVoxelSkyDisc));
     fogdata = renderer->allocateBuffer(Uniform, sizeof(float) * 5);
+    cloudFogdata = renderer->allocateBuffer(Uniform, sizeof(float) * 5);
     sunrise = renderer->allocateBuffer(Uniform, sizeof(OMVoxelSunrise));
     moonData = renderer->allocateBuffer(Uniform, sizeof(OMVoxelMoon));
     cloudData = renderer->allocateBuffer(Uniform, sizeof(OMVoxelCloud));
@@ -637,7 +638,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     moonPipeline->bindInput(2, moonTex);
     starPipeline->bindInput(1, starBaseData);
     cloudPipeline->bindInput(1, cloudData);
-    cloudPipeline->bindInput(2, fogdata);
+    cloudPipeline->bindInput(2, cloudFogdata);
 }
 OMVoxelManager::~OMVoxelManager()
 {
@@ -646,6 +647,7 @@ OMVoxelManager::~OMVoxelManager()
     delete lightmapPipeline;
     delete lightmapData;
     delete fogdata;
+    delete cloudFogdata;
     delete compilerPool;
     delete voxelLayer;
     delete voxelComplexLayer;
@@ -728,6 +730,10 @@ auto OMVoxelManager::updateColor() -> void
         auto fg = srgbToLinear(colorManager->getFogColor());
         std::array<float, 5> d = {colorManager->getFogRange().x, colorManager->getFogRange().y, fg.r, fg.g, fg.b};
         fogdata->updateData(d.data());
+
+        std::array<float, 5> d2 = {colorManager->getFogRange().x * 3, colorManager->getFogRange().y * 3, fg.r, fg.g,
+                                   fg.b};
+        cloudFogdata->updateData(d2.data());
         OMVoxelMoon m = {colorManager->getMoonAngle(), colorManager->getMoonPhase()};
         moonData->updateData(&m);
         starBaseData->updateData(

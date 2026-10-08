@@ -3,6 +3,7 @@
 #include "SDL3/SDL_events.h"
 #include "SDL3/SDL_keyboard.h"
 #include "SDL3/SDL_mouse.h"
+#include "glm/ext/vector_float3.hpp"
 #include "openminecraft-shell/data/block/om_block_registery.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
@@ -22,6 +23,7 @@
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
+#include <algorithm>
 #include <array>
 #include <boost/stacktrace/stacktrace.hpp>
 #include "openminecraft/renderer/common/event/om_eventbus.hpp"
@@ -289,43 +291,75 @@ void OMApplication::mainLoop(OMBackend backend)
             camera->modPitch(-e.tfinger.dy * 0.5f * 100.0f);
             camera->modYaw(e.tfinger.dx * 0.5f * 100.0f);
         });
+
+        glm::vec3 movingSpeed = {0.0f, 0.0f, 0.0f};
         bus.appendGeneral([&]() {
             static auto startTime = std::chrono::high_resolution_clock::now();
             const auto currentTime = std::chrono::high_resolution_clock::now();
             const float time = std::chrono::duration<float>(currentTime - startTime).count();
             startTime = currentTime;
 
-            constexpr float moveSpeed = 40.3f;
+            constexpr float TICK_RATE = 20.0f;
+            constexpr float TICK_DT = 1.0f / TICK_RATE;
 
-            if (!inGame)
+            constexpr float FRICTION_GROUND = 0.546f;
+            constexpr float FRICTION_AIR = 0.91f;
+            constexpr float ACCEL_WALK = 0.1f;
+            constexpr float MAX_SPEED_TICK = 0.21585f;
+
+            static float accumulator = 0.0f;
+            accumulator += time;
+
+            while (accumulator >= TICK_DT)
             {
-                return;
+                float inputX = (keystates[0] ? 1.0f : 0.0f) - (keystates[2] ? 1.0f : 0.0f);
+                float inputZ = (keystates[3] ? 1.0f : 0.0f) - (keystates[1] ? 1.0f : 0.0f);
+                float len = std::sqrt(inputX * inputX + inputZ * inputZ);
+                if (len > 0.0f)
+                {
+                    inputX /= len;
+                    inputZ /= len;
+                }
+
+                bool onGround = false;
+                float friction = onGround ? FRICTION_GROUND : FRICTION_AIR;
+                movingSpeed.x *= friction;
+                movingSpeed.z *= friction;
+                movingSpeed.y *= FRICTION_AIR;
+
+                float accel = ACCEL_WALK * (onGround ? 1.0f : 0.2f);
+                movingSpeed.x += inputX * accel;
+                movingSpeed.z += inputZ * accel;
+
+                float horizSpeed = std::sqrt(movingSpeed.x * movingSpeed.x + movingSpeed.z * movingSpeed.z);
+                if (horizSpeed > MAX_SPEED_TICK)
+                {
+                    movingSpeed.x *= MAX_SPEED_TICK / horizSpeed;
+                    movingSpeed.z *= MAX_SPEED_TICK / horizSpeed;
+                }
+
+                accumulator -= TICK_DT;
+
+                float frictionY = onGround ? FRICTION_GROUND : FRICTION_AIR;
+                movingSpeed.y *= frictionY;
+
+                float accelY = ACCEL_WALK * (onGround ? 1.0f : 0.2f);
+
+                if (keystates[5])
+                {
+                    movingSpeed.y = std::min(movingSpeed.y + accelY, MAX_SPEED_TICK);
+                }
+                else if (keystates[4])
+                {
+                    movingSpeed.y = std::max(movingSpeed.y - accelY, -MAX_SPEED_TICK);
+                }
+
+                movingSpeed.y = std::clamp(movingSpeed.y, -MAX_SPEED_TICK, MAX_SPEED_TICK);
             }
 
-            if (keystates[0])
-            {
-                camera->moveCamera(basics::Forward, moveSpeed * time);
-            }
-            if (keystates[1])
-            {
-                camera->moveCamera(basics::Left, moveSpeed * time);
-            }
-            if (keystates[2])
-            {
-                camera->moveCamera(basics::Back, moveSpeed * time);
-            }
-            if (keystates[3])
-            {
-                camera->moveCamera(basics::Right, moveSpeed * time);
-            }
-            if (keystates[4])
-            {
-                camera->moveCamera(basics::Down, moveSpeed * time);
-            }
-            if (keystates[5])
-            {
-                camera->moveCamera(basics::Up, moveSpeed * time);
-            }
+            camera->moveCamera(basics::OMCameraMovement::Forward, movingSpeed.x * TICK_RATE * time);
+            camera->moveCamera(basics::OMCameraMovement::Right, movingSpeed.z * TICK_RATE * time);
+            camera->moveCamera(basics::OMCameraMovement::Up, movingSpeed.y * TICK_RATE * time);
         });
 
         bus.append(SDL_EVENT_MOUSE_MOTION, [&](SDL_Event &e) -> void {

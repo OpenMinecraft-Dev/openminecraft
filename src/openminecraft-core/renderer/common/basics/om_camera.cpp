@@ -26,7 +26,7 @@ auto OMCamera::fetchProjMat() -> glm::mat4
 {
     auto extent = renderer->getExtent();
     extent = glm::max(extent, glm::vec2(1.0f, 1.0f));
-    return glm::perspectiveRH_ZO(glm::radians(fov), extent.x / extent.y, 0.05f, 1000.0f);
+    return glm::perspectiveRH_ZO(glm::radians(fov), extent.x / extent.y, 0.05f, 1500.0f);
 }
 
 void OMCamera::modYaw(float d)
@@ -55,7 +55,6 @@ void OMCamera::moveCamera(OMCameraMovement mv, float d)
     glm::vec3 front;
     front.x = std::cos(glm::radians(yaw)) * std::cos(glm::radians(pitch));
     front.y = 0;
-    // front.y = std::sin(glm::radians(pitch));
     front.z = std::sin(glm::radians(yaw)) * std::cos(glm::radians(pitch));
     front = glm::normalize(front);
 

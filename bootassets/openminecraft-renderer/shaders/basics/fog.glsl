@@ -9,7 +9,9 @@ vec4 fog_gen(vec4 original, float fogStart, float fogEnd, vec3 fogColor, float t
     d = (d - 0.5) * 2;
 #endif
 
-    d = 50 / (1000 - d * 999.95);
+    const float near = 0.05;
+    const float far = 1500;
+    d = (near * far) / (far - d * (far - near));
 
     return vec4(mix(original.rgb, fogColor, smoothstep(fogEnd, fogStart, d)),
                 mix(original.a, targetOpacity, smoothstep(fogEnd, fogStart, d)));
