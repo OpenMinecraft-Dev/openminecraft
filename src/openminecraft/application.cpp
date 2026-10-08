@@ -41,6 +41,7 @@
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
 #include <vector>
+#include <cmath>
 
 #include "openminecraft-shell/application.hpp"
 
