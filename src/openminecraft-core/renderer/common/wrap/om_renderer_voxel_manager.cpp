@@ -749,11 +749,11 @@ auto OMVoxelManager::updateColor() -> void
                                    0,
                                    colorManager->getBlockTint(),
                                    0,
-                                   colorManager->getSkyLightColor(),
+                                   srgbToLinear(colorManager->getSkyLightColor()),
                                    0,
-                                   colorManager->getAmbientColor(),
+                                   srgbToLinear(colorManager->getAmbientColor()),
                                    0,
-                                   colorManager->getNightVisionColor()};
+                                   srgbToLinear(colorManager->getNightVisionColor())};
         lightmapData->updateData(&dayData);
         colorManager->solveDirty();
     }
@@ -842,7 +842,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
     cloudData->updateData(std::array<OMVoxelCloud, 1>{{{{cc.getModX(256 * 12) + tt, cc.getY(), cc.getModZ(256 * 12)},
                                                         cloudc.a,
-                                                        glm::vec3(cloudc.r, cloudc.g, cloudc.b)}}}
+                                                        srgbToLinear(glm::vec3(cloudc.r, cloudc.g, cloudc.b))}}}
                               .data());
 
     auto pp = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz);

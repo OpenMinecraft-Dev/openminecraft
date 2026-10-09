@@ -17,5 +17,5 @@ void main()
 {
     mat4 unused = camera.viewProj;
     float unused2 = sun.sunAngle;
-    outColor = texture(inTexture, texCoord);
+    outColor = texture(inTexture, texCoord) * 10;
 }
