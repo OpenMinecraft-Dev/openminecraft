@@ -51,6 +51,58 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
                           .append(22330, glm::vec3(0.06f, 0.06f, 0.09f)),
                       animation::Multiply);
 
+    animation::OMAnimationMultiTimeline<24000, glm::vec3> skyColorTimeline =
+        animation::OMAnimationMultiTimeline<24000, glm::vec3>()
+            .timeline(animation::OMAnimationTimelineValue<24000, glm::vec3>().append(0, glm::vec3(0.4706, 0.6549, 1.0)),
+                      animation::Add)
+            .timeline(animation::OMAnimationTimelineValue<24000, glm::vec3>()
+                          .append(133, glm::vec3(1.0f))
+                          .append(11867, glm::vec3(1.0f))
+                          .append(13670, glm::vec3(0.0f))
+                          .append(22330, glm::vec3(0.0f)),
+                      animation::Multiply);
+
+    animation::OMAnimationTimelineValue<24000, float> sunAngle =
+        animation::OMAnimationTimelineValue<24000, float>().append(6000, 360.0f).append(6000, 0.0f);
+
+    animation::OMAnimationTimelineValue<24000, float> moonAngle =
+        animation::OMAnimationTimelineValue<24000, float>().append(6000, 540.0f).append(6000, 180.0f);
+
+    animation::OMAnimationTimelineValue<24000, glm::vec4> sunRiseColor =
+        animation::OMAnimationTimelineValue<24000, glm::vec4>()
+            .append(71, glm::vec4(0.941176f, 0.639216f, 0.2f, 0.372549f))
+            .append(310, glm::vec4(0.960784f, 0.729412f, 0.2f, 0.160784f))
+            .append(565, glm::vec4(0.984314f, 0.831373f, 0.2f, 0.023529f))
+            .append(730, glm::vec4(1.0f, 0.898039f, 0.2f, 0.0f))
+            .append(11270, glm::vec4(1.0f, 0.898039f, 0.2f, 0.0f))
+            .append(11397, glm::vec4(0.988235f, 0.847059f, 0.2f, 0.015686f))
+            .append(11522, glm::vec4(0.976471f, 0.796078f, 0.2f, 0.058824f))
+            .append(11690, glm::vec4(0.960784f, 0.729412f, 0.2f, 0.160784f))
+            .append(11929, glm::vec4(0.941176f, 0.639216f, 0.2f, 0.372549f))
+            .append(12243, glm::vec4(0.905882f, 0.529412f, 0.2f, 0.694118f))
+            .append(12358, glm::vec4(0.894118f, 0.494118f, 0.2f, 0.8f))
+            .append(12512, glm::vec4(0.878431f, 0.447059f, 0.2f, 0.913725f))
+            .append(12613, glm::vec4(0.866667f, 0.419608f, 0.2f, 0.964706f))
+            .append(12732, glm::vec4(0.854902f, 0.388235f, 0.2f, 0.996078f))
+            .append(12841, glm::vec4(0.843137f, 0.360784f, 0.2f, 0.996078f))
+            .append(13035, glm::vec4(0.823529f, 0.317647f, 0.2f, 0.925490f))
+            .append(13252, glm::vec4(0.8f, 0.278431f, 0.2f, 0.756863f))
+            .append(13775, glm::vec4(0.745098f, 0.215686f, 0.2f, 0.211765f))
+            .append(13888, glm::vec4(0.733333f, 0.207843f, 0.2f, 0.121569f))
+            .append(14039, glm::vec4(0.717647f, 0.2f, 0.2f, 0.035294f))
+            .append(14192, glm::vec4(0.701961f, 0.2f, 0.2f, 0.0f))
+            .append(21807, glm::vec4(0.698039f, 0.2f, 0.2f, 0.0f))
+            .append(21961, glm::vec4(0.717647f, 0.2f, 0.2f, 0.035294f))
+            .append(22112, glm::vec4(0.733333f, 0.207843f, 0.2f, 0.121569f))
+            .append(22225, glm::vec4(0.745098f, 0.215686f, 0.2f, 0.211765f))
+            .append(22748, glm::vec4(0.8f, 0.278431f, 0.2f, 0.756863f))
+            .append(22965, glm::vec4(0.823529f, 0.317647f, 0.2f, 0.925490f))
+            .append(23159, glm::vec4(0.843137f, 0.360784f, 0.2f, 0.996078f))
+            .append(23272, glm::vec4(0.854902f, 0.388235f, 0.2f, 0.996078f))
+            .append(23488, glm::vec4(0.878431f, 0.447059f, 0.2f, 0.913725f))
+            .append(23642, glm::vec4(0.894118f, 0.494118f, 0.2f, 0.8f))
+            .append(23757, glm::vec4(0.905882f, 0.529412f, 0.2f, 0.694118f));
+
   public:
     int tick = 0;
     auto updateGameTime(int t) -> void
@@ -60,7 +112,7 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     }
     auto getSkyDiscColor() -> glm::vec3 override
     {
-        return glm::mix(glm::vec3(0.0), glm::vec3(0.4706, 0.6549, 1.0), 0.4);
+        return skyColorTimeline[tick];
     }
     auto getSkyDiskRange() -> float override
     {
@@ -120,15 +172,15 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     }
     auto getSunriseColor() -> glm::vec4 override
     {
-        return {0.855, 0.388, 0.200, 0.44f};
+        return sunRiseColor[tick];
     }
     auto getSunAngle() -> float override
     {
-        return 270.0f;
+        return sunAngle[tick];
     }
     auto getMoonAngle() -> float override
     {
-        return 90.0f;
+        return moonAngle[tick];
     }
     auto getMoonPhase() -> int override
     {
@@ -230,7 +282,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     }
     textureAtlas->build();
 
-    colorManager->updateGameTime(13000);
+    colorManager->updateGameTime(12000);
     voxelManager = new wrap::OMVoxelManager(
         renderer, tempTarget->target, textureAtlas->texture, textureAtlas->textureSecondary, chunkManager,
         [&](bool r) -> void { record(r); }, this->voxelHandler,
@@ -284,8 +336,13 @@ void OMWorldRenderer::record(bool r)
         ->finishN();
 }
 
-static int gameT = 0;
+static int gameT = 12000;
 static std::chrono::steady_clock::time_point tickTp = std::chrono::steady_clock::now();
+
+auto OMWorldRenderer::getTick() -> int
+{
+    return gameT;
+}
 
 void OMWorldRenderer::afterFrame()
 {
@@ -298,6 +355,12 @@ void OMWorldRenderer::afterFrame()
     {
         tickTp = std::chrono::steady_clock::now();
         textureAtlas->updateAnim();
+    }
+
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tickTp).count() > 1)
+    {
+        gameT += 2;
+        colorManager->updateGameTime(gameT);
     }
 }
 

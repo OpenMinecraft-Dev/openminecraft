@@ -124,7 +124,14 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
                                                        {"text", ""},
                                                        {"textheight", 12},
                                                    })
-                                                   ->store(povTextNode)))
+                                                   ->store(povTextNode))
+                                       ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                                   ->style({
+                                                       {"color", (int)0xffffffff},
+                                                       {"text", ""},
+                                                       {"textheight", 12},
+                                                   })
+                                                   ->store(tickNode)))
                            ->mount(std::make_shared<node::OMDemiurgeRectNode>()
                                        ->style({
                                            {"color", (int)0x2c2c3433},
@@ -358,5 +365,7 @@ void OMDebugRenderer::afterFrame()
 
     auto chunkst = chunkFetch();
     chunkstate->style("text", fmt::format("{} chunks / {} rendered", chunkst.first, chunkst.second));
+
+    tickNode->style("text", fmt::format("Tick: {}", gameTickFetch()));
 }
 } // namespace openminecraftshell::renderer

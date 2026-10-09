@@ -55,7 +55,7 @@ class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandle
     }
 
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode> node, fpsTextNode, posTextNode,
-        povTextNode, precisionNode, precisionNode2;
+        povTextNode, precisionNode, precisionNode2, tickNode;
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode> vState, vcState, vfState, vtState,
         vtcState, vtfState, chunkstate;
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeRendererHandler> internal;
@@ -71,6 +71,7 @@ class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandle
 
     std::function<std::array<std::pair<uint32_t, uint32_t>, 6>()> stateFetch;
     std::function<std::pair<uint32_t, uint32_t>()> chunkFetch;
+    std::function<int()> gameTickFetch;
 
     auto getTex() -> openminecraft::renderer::common::OMRendererTexture *
     {

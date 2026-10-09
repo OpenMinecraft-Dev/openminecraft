@@ -50,6 +50,7 @@ class OMWorldRenderer : public OMRendererHandler
     void afterFrame() override;
 
     void record(bool r);
+    auto getTick() -> int;
 
     // INFO: these are the resource handles used for rendering
     OMRendererBuffer *uniformBuffer, *voxelModelBuffer, *cameraBuffer;
