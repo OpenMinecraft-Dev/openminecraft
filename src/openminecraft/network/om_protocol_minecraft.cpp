@@ -29,7 +29,7 @@ static inline auto readVarInt(std::shared_ptr<std::istream> istr) -> int
 void OMProtocolMinecraft::write(openminecraft::network::OMNetworkPacket pck)
 {
     openminecraft::network::OMNetworkPacket pcklength;
-    pcklength.varInt(pck.datalen());
+    pcklength.writeVarInt(pck.datalen());
 
     out->write(pcklength.data(), pcklength.datalen());
     out->write(pck.data(), pck.datalen());

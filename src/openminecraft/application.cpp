@@ -147,17 +147,20 @@ void OMApplication::networkSetup()
     try
     {
         protocol.write(openminecraft::network::OMNetworkPacket()
-                           .uint8(0x00)
-                           .varInt(773)
-                           .utf8WithLength("localhost")
-                           .int16(25565)
-                           .varInt(1));
+                           .write<uint8_t>(0x00)
+                           .writeVarInt(773)
+                           .writeUtf8WithLength("localhost")
+                           .write<int16_t>(25565)
+                           .writeVarInt(1));
 
-        protocol.write(openminecraft::network::OMNetworkPacket().uint8(0x00));
-        protocol.write(openminecraft::network::OMNetworkPacket().uint8(0x01).int64(time(nullptr)));
+        protocol.write(openminecraft::network::OMNetworkPacket().write<uint8_t>(0x00));
+        protocol.write(openminecraft::network::OMNetworkPacket().write<uint8_t>(0x01).write<int64_t>(time(nullptr)));
 
         auto p = protocol.read();
         logger.debug("packet length {}", p.datalen());
+
+        p.readVarInt();
+        logger.debug(p.readUtf8WithLength());
 
         vfs::fsumount("/mcserver_conn");
     }

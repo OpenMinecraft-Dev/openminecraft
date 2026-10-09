@@ -1,6 +1,8 @@
 #ifndef OM_NETWORK_SOCKETSTREAM_HPP
 #define OM_NETWORK_SOCKETSTREAM_HPP
 
+#include <algorithm>
+#include <type_traits>
 #include <vector>
 #include <string>
 #include <cstdint>
@@ -27,7 +29,26 @@ class OMNetworkPacket
         return *this;
     }
 
-    auto varInt(uint32_t value) -> OMNetworkPacket &
+    auto readVarInt() -> uint32_t
+    {
+        int value = 0;
+
+        for (int position = 0; position < 32; position += 7)
+        {
+            auto currentByte = read<uint8_t>();
+
+            value |= (int)(currentByte & 0x7F) << position;
+
+            if ((currentByte & 0x80) == 0)
+            {
+                return value;
+            }
+        }
+
+        return value;
+    }
+
+    auto writeVarInt(int32_t value) -> OMNetworkPacket &
     {
         while ((value & ~0x7F) != 0)
         {
@@ -38,9 +59,19 @@ class OMNetworkPacket
         return *this;
     }
 
-    auto utf8WithLength(std::string s) -> OMNetworkPacket &
+    auto readUtf8WithLength() -> std::string
     {
-        varInt(s.size());
+        auto l = readVarInt();
+
+        std::string result = {reinterpret_cast<char *>(&buffer.at(offset)), l};
+        offset += l;
+
+        return result;
+    }
+
+    auto writeUtf8WithLength(std::string s) -> OMNetworkPacket &
+    {
+        writeVarInt(s.size());
         for (auto ch : s)
         {
             buffer.push_back(ch);
@@ -48,40 +79,51 @@ class OMNetworkPacket
         return *this;
     }
 
-    auto uint8(uint8_t t) -> OMNetworkPacket &
+    template <typename T> auto read() -> T
     {
-        buffer.push_back(t);
-        return *this;
+        if constexpr (std::is_same_v<T, uint8_t>)
+        {
+            return buffer[offset++];
+        }
+        else
+        {
+            static_assert(!std::is_same_v<T, T>, "not supported!");
+        }
     }
 
-    auto int16(int16_t t) -> OMNetworkPacket &
+    template <typename T> auto write(T &&t) -> OMNetworkPacket &
     {
-        buffer.push_back((t >> 8) & 0xff);
-        buffer.push_back(t & 0xff);
-        return *this;
-    }
-
-    auto int32(int32_t t) -> OMNetworkPacket &
-    {
-        buffer.push_back((t >> 24) & 0xff);
-        buffer.push_back((t >> 16) & 0xff);
-        buffer.push_back((t >> 8) & 0xff);
-        buffer.push_back(t & 0xff);
-
-        return *this;
-    }
-
-    auto int64(int64_t t) -> OMNetworkPacket &
-    {
-        buffer.push_back((t >> 56) & 0xff);
-        buffer.push_back((t >> 48) & 0xff);
-        buffer.push_back((t >> 40) & 0xff);
-        buffer.push_back((t >> 32) & 0xff);
-        buffer.push_back((t >> 24) & 0xff);
-        buffer.push_back((t >> 16) & 0xff);
-        buffer.push_back((t >> 8) & 0xff);
-        buffer.push_back(t & 0xff);
-
+        if constexpr (std::is_same_v<T, uint8_t>)
+        {
+            buffer.push_back(t);
+        }
+        else if constexpr (std::is_same_v<T, int16_t>)
+        {
+            buffer.push_back((t >> 8) & 0xff);
+            buffer.push_back(t & 0xff);
+        }
+        else if constexpr (std::is_same_v<T, int32_t>)
+        {
+            buffer.push_back((t >> 24) & 0xff);
+            buffer.push_back((t >> 16) & 0xff);
+            buffer.push_back((t >> 8) & 0xff);
+            buffer.push_back(t & 0xff);
+        }
+        else if constexpr (std::is_same_v<T, int64_t>)
+        {
+            buffer.push_back((t >> 56) & 0xff);
+            buffer.push_back((t >> 48) & 0xff);
+            buffer.push_back((t >> 40) & 0xff);
+            buffer.push_back((t >> 32) & 0xff);
+            buffer.push_back((t >> 24) & 0xff);
+            buffer.push_back((t >> 16) & 0xff);
+            buffer.push_back((t >> 8) & 0xff);
+            buffer.push_back(t & 0xff);
+        }
+        else
+        {
+            static_assert(!std::is_same_v<T, T>, "not supported!");
+        }
         return *this;
     }
 
