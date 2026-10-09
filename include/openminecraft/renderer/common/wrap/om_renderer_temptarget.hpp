@@ -76,6 +76,7 @@ class OMRendererTempTarget
             for (auto tex : additionalTex)
             {
                 target->attachTarget(tex);
+                target->clearColorAtt.push_back(true);
             }
             target->attachTarget(depthTexture);
             target->build();
@@ -141,6 +142,7 @@ class OMRendererTempTarget
             for (auto tex : additionalTex)
             {
                 target->attachTarget(tex);
+                target->clearColorAtt.push_back(true);
             }
             target->attachTarget(depthTexture);
             target->build();

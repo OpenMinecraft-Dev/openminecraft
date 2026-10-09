@@ -1081,7 +1081,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     {
         tsk->resolve(translucentTarget->target);
     }
-    return tsk->target(resolveTarget->target)->pipeline(composePipeline)->drawN(6);
+    return tsk->removeClearColor(1)->target(resolveTarget->target)->pipeline(composePipeline)->drawN(6);
 }
 
 void OMVoxelManager::bindCameraBuffer(OMRendererBuffer *cameraBuffer)

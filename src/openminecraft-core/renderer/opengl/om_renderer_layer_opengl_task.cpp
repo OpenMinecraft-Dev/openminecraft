@@ -1,5 +1,6 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_task.hpp"
 #include "GL/glcorearb.h"
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
@@ -11,6 +12,8 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_rendertarget.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_texture.hpp"
 #include <cstdint>
+#include <iostream>
+#include <stdexcept>
 #include <utility>
 
 namespace openminecraft::renderer::opengl
@@ -279,10 +282,17 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
         ops.push_back({ClearDepth, {}, {}, depthClear});
         for (int i = 0; i < colorClear.size(); ++i)
         {
-            ops.push_back({ClearBufferfv,
-                           {GL_COLOR, static_cast<GLuint>(i)},
-                           {},
-                           {colorClear[i].r, colorClear[i].g, colorClear[i].b, colorClear[i].a}});
+            if (target->clearColorAtt.size() <= i)
+            {
+                throw std::logic_error("not enough clear flags!");
+            }
+            if (target->clearColorAtt[i])
+            {
+                ops.push_back({ClearBufferfv,
+                               {GL_COLOR, static_cast<GLuint>(i)},
+                               {},
+                               {colorClear[i].r, colorClear[i].g, colorClear[i].b, colorClear[i].a}});
+            }
         }
         if (needClearDepth)
         {
@@ -441,6 +451,7 @@ void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
     }
     auto tgt = reinterpret_cast<OMRendererRenderTargetOpenGL *>(target);
     this->framebuffer = tgt->framebuffer;
+    this->target = tgt;
     ops.push_back({BindFramebuffer, GL_FRAMEBUFFER, tgt->framebuffer});
     ops.push_back({Enable, GL_FRAMEBUFFER_SRGB});
     isCleared = false;

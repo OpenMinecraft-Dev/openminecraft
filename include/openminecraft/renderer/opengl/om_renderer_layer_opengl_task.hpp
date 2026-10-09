@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
+#include "openminecraft/renderer/opengl/om_renderer_layer_opengl_rendertarget.hpp"
 #include <array>
 #include <cstdint>
 #include <vector>
@@ -110,6 +111,7 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
 
     GLuint program;
     GLuint framebuffer;
+    OMRendererRenderTargetOpenGL *target;
     common::basics::OMVertexFormat vtxFormat;
 
     std::vector<OMRendererTaskOp> ops;

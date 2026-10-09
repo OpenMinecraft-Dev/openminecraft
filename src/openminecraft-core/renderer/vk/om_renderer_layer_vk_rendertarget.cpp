@@ -8,6 +8,7 @@
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_enums.hpp"
 #include <algorithm>
+#include <stdexcept>
 
 using namespace ::vk;
 using namespace openminecraft::i18n::res;
@@ -119,10 +120,14 @@ void OMRendererRenderTargetVk::build()
                 }
                 else
                 {
+                    if (a >= clearColorAtt.size())
+                    {
+                        throw std::logic_error("clear flags not enough!");
+                    }
                     attachDesc.push_back({{},
                                           reinterpret_cast<OMRendererTextureVk *>(tt)->format,
                                           reinterpret_cast<OMRendererTextureVk *>(tt)->sampleCount,
-                                          AttachmentLoadOp::eClear,
+                                          clearColorAtt[a] ? AttachmentLoadOp::eClear : AttachmentLoadOp::eLoad,
                                           AttachmentStoreOp::eStore,
                                           AttachmentLoadOp::eDontCare,
                                           AttachmentStoreOp::eDontCare,

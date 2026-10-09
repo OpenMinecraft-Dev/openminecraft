@@ -4,6 +4,7 @@
 #include "glm/glm.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_object.hpp"
+#include <initializer_list>
 namespace openminecraft::renderer
 {
 class OMRenderer;
@@ -31,6 +32,7 @@ class OMRendererRenderTarget : public OMRendererObject
 
     bool clearDepth = true;
     bool storeDepth = false;
+    std::vector<bool> clearColorAtt = {true};
 };
 } // namespace openminecraft::renderer::common
 

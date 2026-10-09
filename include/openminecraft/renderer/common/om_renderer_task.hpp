@@ -34,6 +34,11 @@ class OMRendererTask : public OMRendererObject
         setClearColor(color, i);
         return this;
     }
+    inline auto removeClearColor(int i) -> OMRendererTask *
+    {
+        colorClear.erase(colorClear.begin() + i);
+        return this;
+    }
 
     inline void setClearDepth(float d)
     {
