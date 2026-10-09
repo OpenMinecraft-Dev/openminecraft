@@ -11,6 +11,7 @@
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
 #include "openminecraft-shell/data/om_textureatlas.hpp"
+#include "openminecraft/renderer/common/animation/om_animation_multitimeline.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
@@ -26,8 +27,6 @@
 
 #include <array>
 #include <chrono>
-#include <fstream>
-#include <functional>
 #include <glm/glm.hpp>
 #include <memory>
 #include <utility>
@@ -39,16 +38,29 @@ namespace openminecraftshell::renderer
 {
 class OMWorldColorManager : public wrap::OMVoxelColorManager
 {
+  private:
+    animation::OMAnimationMultiTimeline<24000, glm::vec3> fogColorTimeline =
+        animation::OMAnimationMultiTimeline<24000, glm::vec3>()
+            .timeline(animation::OMAnimationTimelineValue<24000, glm::vec3>().append(
+                          0, glm::vec3(0.752941f, 0.847059f, 1.0f)),
+                      animation::Add)
+            .timeline(animation::OMAnimationTimelineValue<24000, glm::vec3>()
+                          .append(133, glm::vec3(1.0f))
+                          .append(11867, glm::vec3(1.0f))
+                          .append(13670, glm::vec3(0.06f, 0.06f, 0.09f))
+                          .append(22330, glm::vec3(0.06f, 0.06f, 0.09f)),
+                      animation::Multiply);
+
   public:
-    float gameTime = 0.0f;
-    auto updateGameTime(float v) -> void
+    int tick = 0;
+    auto updateGameTime(int t) -> void
     {
-        gameTime = glm::clamp(v, 0.0f, 1.0f);
+        tick = t % 24000;
         dirty = true;
     }
     auto getSkyDiscColor() -> glm::vec3 override
     {
-        return glm::mix(glm::vec3(0.0), glm::vec3(0.4706, 0.6549, 1.0), gameTime);
+        return glm::mix(glm::vec3(0.0), glm::vec3(0.4706, 0.6549, 1.0), 0.4);
     }
     auto getSkyDiskRange() -> float override
     {
@@ -68,7 +80,7 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     }
     auto getSkyLightColor() -> glm::vec3 override
     {
-        return glm::mix(glm::vec3(0.48f, 0.48f, 1.0f), glm::vec3(1.0), gameTime);
+        return glm::mix(glm::vec3(0.48f, 0.48f, 1.0f), glm::vec3(1.0), 0.4);
     }
     auto getAmbientColor() -> glm::vec3 override
     {
@@ -84,7 +96,7 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     }
     auto getSkyFactor() -> float override
     {
-        return glm::mix(0.24f, 1.0f, gameTime);
+        return glm::mix(0.24f, 1.0f, 0.4);
     }
     auto getNightVisionFactor() -> float override
     {
@@ -104,7 +116,7 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     }
     auto getFogColor() -> glm::vec3 override
     {
-        return glm::vec3(0.7529, 0.8471, 1.0) * glm::mix(glm::vec3(0.05, 0.05, 0.09), glm::vec3(1.0), gameTime);
+        return fogColorTimeline[tick];
     }
     auto getSunriseColor() -> glm::vec4 override
     {
@@ -218,7 +230,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     }
     textureAtlas->build();
 
-    colorManager->updateGameTime(0.4);
+    colorManager->updateGameTime(13000);
     voxelManager = new wrap::OMVoxelManager(
         renderer, tempTarget->target, textureAtlas->texture, textureAtlas->textureSecondary, chunkManager,
         [&](bool r) -> void { record(r); }, this->voxelHandler,

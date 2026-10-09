@@ -10,6 +10,10 @@ constexpr float PI = 3.14159265358979;
 using OMEasingFuncSignature = float(float);
 using OMEasingFunc = std::function<OMEasingFuncSignature>;
 
+template <typename T> auto linear(T x) -> T
+{
+    return x;
+}
 template <typename T> auto easeInSine(T x) -> T
 {
     return 1 - cos((x * PI) / 2);
@@ -232,7 +236,6 @@ template <typename T> auto symmetricEaseBezier(T x, T px, T py) -> T
 {
     return easeBezier(x, px, py, 1.0f - px, 1.0f - py);
 }
-
 } // namespace openminecraft::renderer::common::animation
 
 #endif

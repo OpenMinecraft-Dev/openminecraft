@@ -11,6 +11,18 @@ std::string fetchCpuName()
     char name[256] = {0};
     RegGetValue(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", "ProcessorNameString", REG_SZ,
                 nullptr, name, &length);
+    for (int i = length - 1; i >= 0; --i)
+    {
+        if (name[i] == ' ' || name[i] == '\0')
+        {
+            name[i] = '\0';
+        }
+        else
+        {
+            break;
+        }
+    }
+
     return name;
 }
 std::string fetchUsername()

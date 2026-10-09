@@ -62,7 +62,7 @@ template <typename T> class OMAnimationValue
     std::function<void(T)> onAnimateFinish = [](T v) {};
 
   private:
-    OMEasingFunc easingFunc = [](float x) { return x; };
+    OMEasingFunc easingFunc = linear<float>;
     std::chrono::steady_clock::time_point beginTimepoint;
     float sec = 0.0f;
     T beginValue;
