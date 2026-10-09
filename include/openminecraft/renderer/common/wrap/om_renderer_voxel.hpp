@@ -499,6 +499,7 @@ class OMVoxelColorManager
     virtual auto getMoonPhase() -> int = 0;
     virtual auto getStarOpacity() -> float = 0;
     virtual auto getStarRotation() -> float = 0;
+    virtual auto getCloudColor() -> glm::vec4 = 0;
 
     inline auto isDirty() -> bool
     {

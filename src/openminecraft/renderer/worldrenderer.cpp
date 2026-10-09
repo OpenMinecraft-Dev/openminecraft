@@ -62,11 +62,40 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
                           .append(22330, glm::vec3(0.0f)),
                       animation::Multiply);
 
+    animation::OMAnimationMultiTimeline<24000, glm::vec4> colorColorTimeline =
+        animation::OMAnimationMultiTimeline<24000, glm::vec4>()
+            .timeline(
+                animation::OMAnimationTimelineValue<24000, glm::vec4>().append(0, glm::vec4(1.0f, 1.0f, 1.0f, 0.8f)),
+                animation::Add)
+            .timeline(animation::OMAnimationTimelineValue<24000, glm::vec4>()
+                          .append(133, glm::vec4(1.0f))
+                          .append(11867, glm::vec4(1.0f))
+                          .append(13670, glm::vec4(0.1f, 0.1f, 0.15f, 1.0f))
+                          .append(22330, glm::vec4(0.1f, 0.1f, 0.15f, 1.0f)),
+                      animation::Multiply);
+
+    animation::OMAnimationMultiTimeline<24000, glm::vec3> skylightColorTimeline =
+        animation::OMAnimationMultiTimeline<24000, glm::vec3>()
+            .timeline(animation::OMAnimationTimelineValue<24000, glm::vec3>().append(0, glm::vec3(1.0)), animation::Add)
+            .timeline(animation::OMAnimationTimelineValue<24000, glm::vec3>()
+                          .append(133, glm::vec3(1.0f))
+                          .append(11867, glm::vec3(1.0f))
+                          .append(13670, glm::vec3(0.48f, 0.48f, 1.0f))
+                          .append(22330, glm::vec3(0.48f, 0.48f, 1.0f)),
+                      animation::Multiply);
+
     animation::OMAnimationTimelineValue<24000, float> sunAngle =
         animation::OMAnimationTimelineValue<24000, float>().append(6000, 360.0f).append(6000, 0.0f);
 
     animation::OMAnimationTimelineValue<24000, float> moonAngle =
         animation::OMAnimationTimelineValue<24000, float>().append(6000, 540.0f).append(6000, 180.0f);
+
+    animation::OMAnimationTimelineValue<24000, float> skylightFactorTimeline =
+        animation::OMAnimationTimelineValue<24000, float>()
+            .append(133, 1.0f)
+            .append(11867, 1.0f)
+            .append(13670, 0.24f)
+            .append(22330, 0.24f);
 
     animation::OMAnimationTimelineValue<24000, glm::vec4> sunRiseColor =
         animation::OMAnimationTimelineValue<24000, glm::vec4>()
@@ -132,7 +161,7 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     }
     auto getSkyLightColor() -> glm::vec3 override
     {
-        return glm::mix(glm::vec3(0.48f, 0.48f, 1.0f), glm::vec3(1.0), 0.4);
+        return skylightColorTimeline[tick];
     }
     auto getAmbientColor() -> glm::vec3 override
     {
@@ -148,7 +177,7 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     }
     auto getSkyFactor() -> float override
     {
-        return glm::mix(0.24f, 1.0f, 0.4);
+        return skylightFactorTimeline[tick];
     }
     auto getNightVisionFactor() -> float override
     {
@@ -193,6 +222,10 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     auto getStarRotation() -> float override
     {
         return 0.0f;
+    }
+    auto getCloudColor() -> glm::vec4 override
+    {
+        return colorColorTimeline[tick];
     }
 };
 static OMWorldColorManager *colorManager = new OMWorldColorManager;

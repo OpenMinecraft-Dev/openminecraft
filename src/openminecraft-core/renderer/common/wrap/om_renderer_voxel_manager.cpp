@@ -838,8 +838,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
     tt = std::fmod(tt, 256 * 12);
     lastp = cur;
 
-    cloudData->updateData(std::array<OMVoxelCloud, 1>{
-        {{{cc.getModX(256 * 12) + tt, cc.getY(), cc.getModZ(256 * 12)}, 0.8, glm::vec3(0.5)}}}
+    auto cloudc = colorManager->getCloudColor();
+
+    cloudData->updateData(std::array<OMVoxelCloud, 1>{{{{cc.getModX(256 * 12) + tt, cc.getY(), cc.getModZ(256 * 12)},
+                                                        cloudc.a,
+                                                        glm::vec3(cloudc.r, cloudc.g, cloudc.b)}}}
                               .data());
 
     auto pp = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz);
