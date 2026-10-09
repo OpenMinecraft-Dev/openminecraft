@@ -15,7 +15,7 @@ class OMApplication
 
     auto entry() -> int;
     void mainLoop(openminecraft::renderer::OMBackend backend);
-    void networkSetup();
+    void networkSetup(std::string, std::string);
 
   private:
     std::vector<std::string> args;

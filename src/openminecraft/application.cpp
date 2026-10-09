@@ -110,12 +110,16 @@ auto OMApplication::entry() -> int
             logger->info("gl -> OpenGL Backend (3.3 Core Profile)");
             goto end;
         }
+        else if (args[1] == "network")
+        {
+            networkSetup(args[2], args[3]);
+            goto end;
+        }
         bk = args[1] == "gl" ? OpenGL : Vulkan;
     }
 
     data::block::registerBlocks();
     data::block::registerBlockstates();
-    // networkSetup();
     mainLoop(bk);
 
 end:
@@ -124,10 +128,8 @@ end:
     return 0;
 }
 
-void OMApplication::networkSetup()
+void OMApplication::networkSetup(std::string host, std::string port)
 {
-    std::string host = "MinecraftOnline.com";
-    std::string port = "25565";
     logger.info("try connect to {} {}", host, port);
 
     auto res = openminecraft::network::queryDns(std::string("_minecraft._tcp.") + host);
