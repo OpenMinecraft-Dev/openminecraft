@@ -1,11 +1,12 @@
 #ifndef OM_NETWORK_SOCKETSTREAM_HPP
 #define OM_NETWORK_SOCKETSTREAM_HPP
 
-#include <algorithm>
+#include <iostream>
 #include <type_traits>
 #include <vector>
 #include <string>
 #include <cstdint>
+#include <iomanip>
 namespace openminecraft::network
 {
 class OMNetworkPacket
@@ -131,6 +132,24 @@ class OMNetworkPacket
         -> OMNetworkPacket &
     {
         buffer.assign(begin, end);
+        return *this;
+    }
+
+    auto debug() -> OMNetworkPacket &
+    {
+        for (auto b : buffer)
+        {
+            std::cout << std::hex << std::setfill('0') << std::setw(2) << (int)b << " ";
+        }
+        std::cout << std::dec << std::endl;
+
+        return *this;
+    }
+
+    uint32_t id;
+    auto packetId(uint32_t id) -> OMNetworkPacket &
+    {
+        this->id = id;
         return *this;
     }
 

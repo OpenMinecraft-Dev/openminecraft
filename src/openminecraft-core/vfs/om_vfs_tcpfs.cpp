@@ -1,4 +1,5 @@
 #include "openminecraft/vfs/om_vfs_tcpfs.hpp"
+#include <iomanip>
 #include <iostream>
 #include <istream>
 #include <fstream>
@@ -28,13 +29,29 @@ class OMFsProviderTcpBuf : public std::streambuf
   protected:
     auto xsgetn(char *s, std::streamsize n) -> std::streamsize override
     {
-        boost::system::error_code ec;
-        auto r = provider->socket.read_some(buffer(s, n), ec);
-        if (ec.failed())
+        std::streamsize total = 0;
+        while (total < n)
         {
-            throw std::logic_error("connection lost: " + ec.message());
+            boost::system::error_code ec;
+            auto r = provider->socket.read_some(buffer(s + total, n - total), ec);
+
+            if (ec.failed())
+            {
+                if (total > 0)
+                    return total;
+                throw std::logic_error("connection lost: " + ec.message());
+            }
+
+            if (r == 0)
+            {
+                if (total > 0)
+                    return total;
+                throw std::logic_error("connection closed by peer");
+            }
+
+            total += r;
         }
-        return r;
+        return total;
     }
     auto xsputn(const char *s, std::streamsize n) -> std::streamsize override
     {
@@ -66,7 +83,6 @@ class OMFsProviderTcpIStream : public std::istream
     OMFsProviderTcpIStream(OMFsProviderTcp *p) : std::istream(nullptr), buf(p)
     {
         rdbuf(&buf);
-        exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
     }
 
   private:

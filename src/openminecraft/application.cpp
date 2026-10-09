@@ -35,6 +35,7 @@
 #include <chrono>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include "openminecraft-shell/renderer/debugrendrer.hpp"
 #include "openminecraft-shell/renderer/worldrenderer.hpp"
@@ -114,8 +115,8 @@ auto OMApplication::entry() -> int
 
     data::block::registerBlocks();
     data::block::registerBlockstates();
-    // networkSetup();
-    mainLoop(bk);
+    networkSetup();
+    // mainLoop(bk);
 
 end:
     SDL_Quit();
@@ -147,24 +148,24 @@ void OMApplication::networkSetup()
     try
     {
         protocol.write(openminecraft::network::OMNetworkPacket()
-                           .write<uint8_t>(0x00)
+                           .packetId(0x00)
                            .writeVarInt(773)
-                           .writeUtf8WithLength("localhost")
+                           .writeUtf8WithLength(host)
                            .write<int16_t>(25565)
                            .writeVarInt(1));
 
-        protocol.write(openminecraft::network::OMNetworkPacket().write<uint8_t>(0x00));
-        protocol.write(openminecraft::network::OMNetworkPacket().write<uint8_t>(0x01).write<int64_t>(time(nullptr)));
+        protocol.write(openminecraft::network::OMNetworkPacket().packetId(0x00));
 
         auto p = protocol.read();
-        logger.debug("packet length {}", p.datalen());
-
-        p.readVarInt();
         logger.debug(p.readUtf8WithLength());
+
+        protocol.write(openminecraft::network::OMNetworkPacket().packetId(0x01).write<int64_t>(time(nullptr)));
+        p = protocol.read();
+        logger.debug("packet length {}", p.datalen());
 
         vfs::fsumount("/mcserver_conn");
     }
-    catch (const std::ios_base::failure &e)
+    catch (std::logic_error &e)
     {
         logger.error("connection closed!");
     }
