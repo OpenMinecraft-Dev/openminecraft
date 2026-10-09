@@ -389,7 +389,7 @@ void OMWorldRenderer::afterFrame()
         tickTp = std::chrono::steady_clock::now();
         textureAtlas->updateAnim();
 
-        gameT += 100;
+        gameT += 1;
         gameT %= 24000;
         colorManager->updateGameTime(gameT);
     }

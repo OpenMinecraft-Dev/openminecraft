@@ -115,8 +115,8 @@ auto OMApplication::entry() -> int
 
     data::block::registerBlocks();
     data::block::registerBlockstates();
-    networkSetup();
-    // mainLoop(bk);
+    // networkSetup();
+    mainLoop(bk);
 
 end:
     SDL_Quit();

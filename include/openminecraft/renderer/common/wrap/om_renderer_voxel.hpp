@@ -118,6 +118,7 @@ struct OMVoxel
     int32_t voxelExtra;
     int32_t voxelExtra2;
     int32_t voxelExtra3;
+    int32_t voxelType;
 };
 struct OMVoxelFluid
 {
@@ -125,6 +126,7 @@ struct OMVoxelFluid
     int32_t voxelMeta;
     int32_t voxelExtra;
     int32_t voxelExtra2;
+    int32_t voxelType;
 };
 struct OMVoxelComplex
 {
@@ -136,6 +138,7 @@ struct OMVoxelComplex
     float voxelRotationAngle;
     glm::vec3 voxelRotationCenter, voxelSize;
     float voxelRotationAngleExt1, voxelRotationAngleExt2;
+    int32_t voxelType;
 };
 enum OMVoxelFacing : uint8_t
 {

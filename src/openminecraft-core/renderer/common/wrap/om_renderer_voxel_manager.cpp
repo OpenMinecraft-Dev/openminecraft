@@ -136,6 +136,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
         ->appendPart("voxelExtra", basics::Integer)
         ->appendPart("voxelExtra2", basics::Integer)
         ->appendPart("voxelExtra3", basics::Integer)
+        ->appendPart("voxelType", basics::Integer)
         ->nextGroup()
         ->decideStruct();
 
@@ -144,6 +145,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
         ->appendPart("voxelMetadata", basics::Integer)
         ->appendPart("voxelExtra", basics::Integer)
         ->appendPart("voxelExtra2", basics::Integer)
+        ->appendPart("voxelType", basics::Integer)
         ->nextGroup()
         ->decideStruct();
 
@@ -160,6 +162,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
         ->appendPart("voxelSize", basics::Vec3f)
         ->appendPart("voxelRotationAngleExt1", basics::Float)
         ->appendPart("voxelRotationAngleExt2", basics::Float)
+        ->appendPart("voxelType", basics::Integer)
         ->nextGroup()
         ->decideStruct();
 
