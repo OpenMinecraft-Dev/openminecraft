@@ -387,7 +387,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->shader(renderer->shaderManager.preprocess("core/voxel/sun.frag.glsl", Fragment, GLSLSource, simpleFormat))
             ->shader(renderer->shaderManager.preprocess("core/voxel/sun.vert.glsl", Vertex, GLSLSource, simpleFormat))
             ->format(simpleFormat)
-            ->blendFunc({SrcAlpha, One, SrcAlpha, One})
+            ->blendFunc({One, One, One, One})
             ->blend(true)
             ->depth(false, true)
             ->depthOp(Greater)

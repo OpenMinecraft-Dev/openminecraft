@@ -369,7 +369,7 @@ void OMWorldRenderer::record(bool r)
         ->finishN();
 }
 
-static int gameT = 12000;
+static int gameT = 0;
 static std::chrono::steady_clock::time_point tickTp = std::chrono::steady_clock::now();
 
 auto OMWorldRenderer::getTick() -> int
@@ -388,11 +388,9 @@ void OMWorldRenderer::afterFrame()
     {
         tickTp = std::chrono::steady_clock::now();
         textureAtlas->updateAnim();
-    }
 
-    if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tickTp).count() > 1)
-    {
-        gameT += 2;
+        gameT += 1;
+        gameT %= 24000;
         colorManager->updateGameTime(gameT);
     }
 }
