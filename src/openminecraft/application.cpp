@@ -161,9 +161,12 @@ void OMApplication::networkSetup(std::string host, std::string port)
         auto p = protocol.read();
         logger.debug(p.readUtf8WithLength());
 
+        auto tp = std::chrono::steady_clock::now();
         protocol.write(openminecraft::network::OMNetworkPacket().packetId(0x01).write<int64_t>(time(nullptr)));
         p = protocol.read();
-        logger.debug("packet length {}", p.datalen());
+        logger.debug(
+            "{} ms",
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tp).count());
 
         vfs::fsumount("/mcserver_conn");
     }
