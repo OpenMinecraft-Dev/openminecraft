@@ -1,6 +1,7 @@
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_777.hpp"
 #include "openminecraft-shell/network/om_protocol_minecraft.hpp"
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_general.hpp"
+#include "openminecraft/network/om_network_packet.hpp"
 #include "openminecraft/util/om_util_uuid.hpp"
 #include <tuple>
 #include <vector>
@@ -98,6 +99,24 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             handler.handleConfigurationFeatureFlags(flags);
             return;
         }
+            // Registry Data
+        case 0x07: {
+            // pck.debug(64);
+            logger.debug(pck.readUtf8WithLength());
+            auto reg = pck.readVarInt();
+            for (int i = 0; i < reg; ++i)
+            {
+                logger.debug(pck.readUtf8WithLength());
+                auto havenbt = pck.read<uint8_t>();
+                if (havenbt)
+                {
+                    pck.debug();
+
+                    return;
+                }
+            }
+            return;
+        }
             // Chat Report Custom
         case 0x0f: {
             auto i = pck.readVarInt();
@@ -116,7 +135,7 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         break;
     }
 
-    pck.debug(128);
+    pck.debug(64);
     OMProtocolMinecraftTransformerGeneral::handleRest(state, pck);
 }
 } // namespace openminecraftshell::network::transformers

@@ -198,6 +198,12 @@ class OMNetworkPacket
         return *this;
     }
 
+    auto readRaw(uint8_t *buf, uint64_t l) -> uint64_t
+    {
+        *buf = buffer[offset++];
+        return 1;
+    }
+
     auto assign(std::vector<uint8_t>::const_iterator begin, std::vector<uint8_t>::const_iterator end)
         -> OMNetworkPacket &
     {

@@ -52,9 +52,6 @@
 
 #include "openminecraft-shell/application.hpp"
 
-#define NBT_OWN_ZLIB "zlib.h"
-#include "libnbt/nbt.h"
-
 using namespace openminecraft;
 using namespace openminecraft::renderer::common;
 using namespace openminecraft::renderer;
