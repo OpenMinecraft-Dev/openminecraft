@@ -1,6 +1,7 @@
 #ifndef OM_PROTOCOL_MINECRAFT_HPP
 #define OM_PROTOCOL_MINECRAFT_HPP
 
+#include "openminecraft/network/om_network_packet.hpp"
 #include "openminecraft/network/protocol/coding/om_coding.hpp"
 #include "openminecraft/util/om_util_uuid.hpp"
 #include <functional>
@@ -34,6 +35,9 @@ class OMProtocolMinecraftHandler
     std::function<void(int64_t)> handlePongResponse = [](int64_t) {};
     std::function<void(OMProtocolGameProfile)> handleLoginSucccess = [](OMProtocolGameProfile) {};
     std::function<void()> handleEnterConfiguration = []() {};
+    std::function<void(std::string, openminecraft::network::OMNetworkPacket &)> handleConfigurationPluginMessage =
+        [](std::string, openminecraft::network::OMNetworkPacket &) {};
+    std::function<void(std::vector<std::string>)> handleConfigurationFeatureFlags = [](std::vector<std::string>) {};
 };
 
 class OMProtocolMinecraft : public openminecraft::network::protocol::OMCodingBase

@@ -3,6 +3,7 @@
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_general.hpp"
 #include "openminecraft/util/om_util_uuid.hpp"
 #include <tuple>
+#include <vector>
 
 namespace openminecraftshell::network::transformers
 {
@@ -80,11 +81,29 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
     case Handshake:
     case Status:
     case Configuration:
+        switch (pck.id)
+        {
+        case 0x01:
+            handler.handleConfigurationPluginMessage(pck.readUtf8WithLength(), pck);
+            return;
+        case 0x0d: {
+            auto i = pck.readVarInt();
+            std::vector<std::string> flags;
+            for (int k = 0; k < i; ++k)
+            {
+                flags.push_back(pck.readUtf8WithLength());
+            }
+            handler.handleConfigurationFeatureFlags(flags);
+            return;
+        }
+        default:
+            break;
+        }
     case Play:
         break;
     }
 
-    pck.debug(32);
+    pck.debug(128);
     OMProtocolMinecraftTransformerGeneral::handleRest(state, pck);
 }
 } // namespace openminecraftshell::network::transformers

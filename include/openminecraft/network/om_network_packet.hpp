@@ -225,6 +225,10 @@ class OMNetworkPacket
             }
             i++;
         }
+        if (i == 0)
+        {
+            std::cout << "(empty packet)";
+        }
         std::cout << std::dec << std::endl;
 
         return *this;

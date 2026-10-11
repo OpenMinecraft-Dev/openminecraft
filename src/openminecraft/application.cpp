@@ -161,7 +161,16 @@ void OMApplication::networkSetup(std::string host, std::string port)
         transformer.sendLoginAcknowledged();
     };
     hnd.handleEnterConfiguration = [&]() { transformer.sendConfigurationKnownPacks({}); };
-
+    hnd.handleConfigurationPluginMessage = [&](std::string id, openminecraft::network::OMNetworkPacket &) {
+        logger.debug("plugin message {}", id);
+    };
+    hnd.handleConfigurationFeatureFlags = [&](std::vector<std::string> f) {
+        logger.debug("feature flags: ");
+        for (const auto &s : f)
+        {
+            logger.debug(s);
+        }
+    };
     try
     {
         transformer.sendHandshake(host, std::stoi(port), 2);
