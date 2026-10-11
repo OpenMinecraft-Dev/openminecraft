@@ -83,9 +83,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
     case Configuration:
         switch (pck.id)
         {
+            // Plugin Message
         case 0x01:
             handler.handleConfigurationPluginMessage(pck.readUtf8WithLength(), pck);
             return;
+            // Feature Flags
         case 0x0d: {
             auto i = pck.readVarInt();
             std::vector<std::string> flags;
@@ -94,6 +96,17 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
                 flags.push_back(pck.readUtf8WithLength());
             }
             handler.handleConfigurationFeatureFlags(flags);
+            return;
+        }
+            // Chat Report Custom
+        case 0x0f: {
+            auto i = pck.readVarInt();
+            std::vector<std::tuple<std::string, std::string, std::string>> report;
+            for (int k = 0; k < i; ++k)
+            {
+                report.emplace_back(pck.readUtf8WithLength(), pck.readUtf8WithLength(), pck.readUtf8WithLength());
+            }
+            handler.handleConfigurationReportDetails(report);
             return;
         }
         default:

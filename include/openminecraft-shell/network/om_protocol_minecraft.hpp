@@ -38,6 +38,8 @@ class OMProtocolMinecraftHandler
     std::function<void(std::string, openminecraft::network::OMNetworkPacket &)> handleConfigurationPluginMessage =
         [](std::string, openminecraft::network::OMNetworkPacket &) {};
     std::function<void(std::vector<std::string>)> handleConfigurationFeatureFlags = [](std::vector<std::string>) {};
+    std::function<void(std::vector<std::tuple<std::string, std::string, std::string>>)>
+        handleConfigurationReportDetails = [](std::vector<std::tuple<std::string, std::string, std::string>>) {};
 };
 
 class OMProtocolMinecraft : public openminecraft::network::protocol::OMCodingBase
