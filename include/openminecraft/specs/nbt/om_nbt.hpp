@@ -36,12 +36,12 @@ class OMNbtTag
                  std::vector<std::shared_ptr<OMNbtTag>>, std::vector<int32_t>, std::vector<int64_t>>
         data;
 
-    template <typename T> const T &get() const
+    template <typename T> auto get() const -> const T &
     {
         return std::get<T>(data);
     }
 
-    template <typename T> T &get()
+    template <typename T> auto get() -> T &
     {
         return std::get<T>(data);
     }
@@ -50,7 +50,7 @@ class OMNbtTag
 class OMNbtReader
 {
   public:
-    OMNbtReader(std::vector<uint8_t>)
+    OMNbtReader(std::function<uint8_t()>)
     {
     }
 };
