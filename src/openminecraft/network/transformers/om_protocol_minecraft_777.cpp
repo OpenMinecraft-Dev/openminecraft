@@ -28,6 +28,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             logger.debug("{} {}", pk.size(), vtoken.size());
             break;
         }
+        case 0x03: {
+            auto thr = pck.readVarInt();
+            logger.debug("compress threshould {}", thr);
+            break;
+        }
         default:
             break;
         }

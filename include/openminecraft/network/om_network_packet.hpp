@@ -8,6 +8,7 @@
 #include <string>
 #include <cstdint>
 #include <iomanip>
+#include <cstring>
 namespace openminecraft::network
 {
 class OMNetworkPacket
