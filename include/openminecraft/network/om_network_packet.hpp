@@ -26,6 +26,16 @@ class OMNetworkPacket
         return reinterpret_cast<char *>(buffer.data());
     }
 
+    auto restDatalen() -> uint64_t
+    {
+        return buffer.size() - offset;
+    }
+
+    auto restData() -> char *
+    {
+        return reinterpret_cast<char *>(buffer.data()) + offset;
+    }
+
     auto reset() -> OMNetworkPacket &
     {
         offset = 0;
@@ -137,6 +147,10 @@ class OMNetworkPacket
             }
             return d;
         }
+        else if constexpr (std::is_same_v<T, util::OMUuid>)
+        {
+            return util::OMUuid(read<int64_t>(), read<int64_t>());
+        }
         else
         {
             static_assert(!std::is_same_v<T, T>, "not supported!");
@@ -191,11 +205,18 @@ class OMNetworkPacket
         return *this;
     }
 
-    auto debug() -> OMNetworkPacket &
+    auto debug(int l = 24) -> OMNetworkPacket &
     {
+        int i = 0;
         for (auto b : buffer)
         {
             std::cout << std::hex << std::setfill('0') << std::setw(2) << (int)b << " ";
+            if (i > l)
+            {
+                std::cout << " ...";
+                break;
+            }
+            i++;
         }
         std::cout << std::dec << std::endl;
 

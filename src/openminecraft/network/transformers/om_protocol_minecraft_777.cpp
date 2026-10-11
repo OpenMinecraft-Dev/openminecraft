@@ -1,5 +1,8 @@
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_777.hpp"
+#include "openminecraft-shell/network/om_protocol_minecraft.hpp"
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_general.hpp"
+#include "openminecraft/util/om_util_uuid.hpp"
+#include <tuple>
 
 namespace openminecraftshell::network::transformers
 {
@@ -11,6 +14,26 @@ void OMProtocolMinecraftTransformer777::sendLoginHello(std::string name, openmin
                        .write<openminecraft::util::OMUuid>(uuid));
 }
 
+void OMProtocolMinecraftTransformer777::sendLoginAcknowledged()
+{
+    protocol.write(openminecraft::network::OMNetworkPacket().packetId(0x03));
+    protocol.switchState(network::Configuration);
+    handler.handleEnterConfiguration();
+}
+
+void OMProtocolMinecraftTransformer777::sendConfigurationKnownPacks(
+    std::vector<std::tuple<std::string, std::string, std::string>> pcks)
+{
+    auto pck = openminecraft::network::OMNetworkPacket().packetId(0x07).writeVarInt(pcks.size());
+    for (const auto &p : pcks)
+    {
+        pck.writeUtf8WithLength(std::get<0>(p));
+        pck.writeUtf8WithLength(std::get<1>(p));
+        pck.writeUtf8WithLength(std::get<2>(p));
+    }
+    protocol.write(pck);
+}
+
 void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState state,
                                                    openminecraft::network::OMNetworkPacket &pck)
 {
@@ -19,6 +42,7 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
     case Login:
         switch (pck.id)
         {
+            // Encryption Request
         case 0x01: {
             pck.readUtf8WithLength();
             auto pk = pck.readPrefixArray<uint8_t>();
@@ -26,12 +50,28 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             bool shouldAuth = pck.read<uint8_t>();
 
             logger.debug("{} {}", pk.size(), vtoken.size());
-            break;
+            return;
         }
+            // Login Success
+        case 0x02: {
+            OMProtocolGameProfile profile = {};
+            profile.uuid = pck.read<openminecraft::util::OMUuid>().toString();
+            profile.name = pck.readUtf8WithLength();
+            for (int i = 0; i < pck.readVarInt(); ++i)
+            {
+                profile.properties.emplace_back(pck.readUtf8WithLength(), pck.readUtf8WithLength(),
+                                                pck.readUtf8WithLength());
+            }
+            profile.sessionId = pck.read<openminecraft::util::OMUuid>().toString();
+            handler.handleLoginSucccess(profile);
+            return;
+        }
+            // Set Compression
         case 0x03: {
             auto thr = pck.readVarInt();
-            logger.debug("compress threshould {}", thr);
-            break;
+            protocol.enableCompression(thr);
+            logger.debug("compress threshould {} bytes", thr);
+            return;
         }
         default:
             break;
@@ -39,10 +79,12 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         break;
     case Handshake:
     case Status:
-    case Configure:
+    case Configuration:
     case Play:
         break;
     }
+
+    pck.debug(32);
     OMProtocolMinecraftTransformerGeneral::handleRest(state, pck);
 }
 } // namespace openminecraftshell::network::transformers

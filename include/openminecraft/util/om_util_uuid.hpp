@@ -13,6 +13,9 @@ namespace openminecraft::util
 class OMUuid
 {
   public:
+    OMUuid() : OMUuid(0, 0)
+    {
+    }
     OMUuid(uint64_t low, uint64_t high) : low(low), high(high)
     {
     }

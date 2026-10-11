@@ -13,6 +13,9 @@ class OMProtocolMinecraftTransformer777 : public OMProtocolMinecraftTransformerG
     }
 
     void sendLoginHello(std::string name, openminecraft::util::OMUuid uuid) override;
+    void sendLoginAcknowledged() override;
+    void sendConfigurationKnownPacks(std::vector<std::tuple<std::string, std::string, std::string>>) override;
+
     void handleRest(OMProtocolMinecraftState, openminecraft::network::OMNetworkPacket &) override;
 
   private:

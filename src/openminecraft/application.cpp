@@ -147,6 +147,8 @@ void OMApplication::networkSetup(std::string host, std::string port)
     auto out = vfs::fswrite("/mcserver_conn/connect");
 
     openminecraftshell::network::OMProtocolMinecraftHandler hnd;
+    openminecraftshell::network::OMProtocolMinecraft protocol(in, out);
+    openminecraftshell::network::transformers::OMProtocolMinecraftTransformer777 transformer(protocol, hnd);
     hnd.handleStatusResponse = [&](std::string res) { logger.debug(res); };
     hnd.handlePongResponse = [&](int64_t t) {
         logger.debug("{} ms", std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -154,14 +156,21 @@ void OMApplication::networkSetup(std::string host, std::string port)
                                       .count() -
                                   t);
     };
-    openminecraftshell::network::OMProtocolMinecraft protocol(in, out);
-    openminecraftshell::network::transformers::OMProtocolMinecraftTransformer777 transformer(protocol, hnd);
+    hnd.handleLoginSucccess = [&](network::OMProtocolGameProfile p) {
+        logger.debug("login as {}, uuid {}, session {}", p.name, p.uuid.toString(), p.sessionId.toString());
+        transformer.sendLoginAcknowledged();
+    };
+    hnd.handleEnterConfiguration = [&]() { transformer.sendConfigurationKnownPacks({}); };
 
     try
     {
         transformer.sendHandshake(host, std::stoi(port), 2);
         transformer.sendLoginHello("Coder2_", openminecraft::util::OMUuid("00000000-0000-0000-0000-000000000000"));
-        transformer.handle();
+
+        while (true)
+        {
+            transformer.handle();
+        }
 
         /*transformer.sendStatusRequest();
 
