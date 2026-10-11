@@ -7,6 +7,7 @@
 #include "openminecraft-shell/data/block/om_block_registery.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
+#include "openminecraft-shell/network/transformers/om_protocol_minecraft_general.hpp"
 #include "openminecraft-shell/renderer/composerenderer.hpp"
 #include "openminecraft-shell/renderer/surfacerenderer.hpp"
 #include "openminecraft-shell/supplements/interpolation_argb.hpp"
@@ -145,28 +146,29 @@ void OMApplication::networkSetup(std::string host, std::string port)
     auto out = vfs::fswrite("/mcserver_conn/connect");
 
     openminecraftshell::network::OMProtocolMinecraftHandler hnd;
-    openminecraftshell::network::OMProtocolMinecraft protocol(in, out, hnd);
+    hnd.handleStatusResponse = [&](std::string res) { logger.debug(res); };
+    hnd.handlePongResponse = [&](int64_t t) {
+        logger.debug("{} ms", std::chrono::duration_cast<std::chrono::milliseconds>(
+                                  std::chrono::steady_clock::now().time_since_epoch())
+                                      .count() -
+                                  t);
+    };
+    openminecraftshell::network::OMProtocolMinecraft protocol(in, out);
+    openminecraftshell::network::transformers::OMProtocolMinecraftTransformerGeneral transformer(protocol, hnd);
 
     try
     {
-        protocol.write(openminecraft::network::OMNetworkPacket()
-                           .packetId(0x00)
-                           .writeVarInt(773)
-                           .writeUtf8WithLength(host)
-                           .write<int16_t>(25565)
-                           .writeVarInt(1));
+        transformer.sendHandshake(host, std::stoi(port), 2);
+        transformer.sendLoginHello("Coder2_", 0, 0);
+        transformer.handle();
 
-        protocol.write(openminecraft::network::OMNetworkPacket().packetId(0x00));
+        /*transformer.sendStatusRequest();
 
-        auto p = protocol.read();
-        logger.debug(p.readUtf8WithLength());
-
-        auto tp = std::chrono::steady_clock::now();
-        protocol.write(openminecraft::network::OMNetworkPacket().packetId(0x01).write<int64_t>(time(nullptr)));
-        p = protocol.read();
-        logger.debug(
-            "{} ms",
-            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tp).count());
+        transformer.handle();
+        transformer.sendStatusPingRequest(
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
+                .count());
+        transformer.handle();*/
 
         vfs::fsumount("/mcserver_conn");
     }

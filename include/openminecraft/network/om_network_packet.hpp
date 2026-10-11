@@ -86,13 +86,43 @@ class OMNetworkPacket
         {
             return buffer[offset++];
         }
+        else if constexpr (std::is_same_v<T, int16_t>)
+        {
+            int16_t d = 0;
+            for (int i = 0; i < 2; ++i)
+            {
+                d <<= 8;
+                d |= buffer[offset++];
+            }
+            return d;
+        }
+        else if constexpr (std::is_same_v<T, int32_t>)
+        {
+            int32_t d = 0;
+            for (int i = 0; i < 4; ++i)
+            {
+                d <<= 8;
+                d |= buffer[offset++];
+            }
+            return d;
+        }
+        else if constexpr (std::is_same_v<T, int64_t>)
+        {
+            int64_t d = 0;
+            for (int i = 0; i < 8; ++i)
+            {
+                d <<= 8;
+                d |= buffer[offset++];
+            }
+            return d;
+        }
         else
         {
             static_assert(!std::is_same_v<T, T>, "not supported!");
         }
     }
 
-    template <typename T> auto write(T &&t) -> OMNetworkPacket &
+    template <typename T> auto write(T t) -> OMNetworkPacket &
     {
         if constexpr (std::is_same_v<T, uint8_t>)
         {

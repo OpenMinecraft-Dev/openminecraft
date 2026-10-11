@@ -7,11 +7,11 @@
 #include <utility>
 namespace openminecraft::network::protocol
 {
-template <typename T> class OMCodingBase
+class OMCodingBase
 {
   public:
-    OMCodingBase(std::shared_ptr<std::istream> in, std::shared_ptr<std::ostream> out, T &handler)
-        : in(std::move(in)), out(std::move(out)), handler(handler)
+    OMCodingBase(std::shared_ptr<std::istream> in, std::shared_ptr<std::ostream> out)
+        : in(std::move(in)), out(std::move(out))
     {
     }
 
@@ -21,7 +21,6 @@ template <typename T> class OMCodingBase
   protected:
     std::shared_ptr<std::istream> in;
     std::shared_ptr<std::ostream> out;
-    T &handler;
 };
 } // namespace openminecraft::network::protocol
 
