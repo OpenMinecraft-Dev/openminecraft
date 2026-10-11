@@ -207,9 +207,16 @@ class OMNetworkPacket
 
     auto debug(int l = 24) -> OMNetworkPacket &
     {
+        int skip = offset;
         int i = 0;
         for (auto b : buffer)
         {
+            if (skip > 0)
+            {
+                skip--;
+                continue;
+            }
+
             std::cout << std::hex << std::setfill('0') << std::setw(2) << (int)b << " ";
             if (i > l)
             {
