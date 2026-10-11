@@ -3,6 +3,7 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/network/protocol/coding/om_coding.hpp"
+#include "openminecraft/util/om_util_uuid.hpp"
 #include <functional>
 #include <memory>
 namespace openminecraftshell::network
@@ -64,7 +65,7 @@ class OMProtocolMinecraftTransformer
     virtual void sendStatusRequest() = 0;
     virtual void sendStatusPingRequest(int64_t tick) = 0;
 
-    virtual void sendLoginHello(std::string name, uint64_t ul, uint64_t uh) = 0;
+    virtual void sendLoginHello(std::string name, openminecraft::util::OMUuid uuid) = 0;
 
     virtual void handle() = 0;
 };

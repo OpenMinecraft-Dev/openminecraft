@@ -1,6 +1,7 @@
 #ifndef OM_NETWORK_SOCKETSTREAM_HPP
 #define OM_NETWORK_SOCKETSTREAM_HPP
 
+#include "openminecraft/util/om_util_uuid.hpp"
 #include <iostream>
 #include <type_traits>
 #include <vector>
@@ -80,6 +81,25 @@ class OMNetworkPacket
         return *this;
     }
 
+    template <typename T> auto readPrefixArray() -> std::vector<T>
+    {
+        auto length = readVarInt();
+        if constexpr (std::is_same_v<T, uint8_t>)
+        {
+            std::vector<T> data;
+            data.resize(length);
+
+            std::memcpy(data.data(), buffer.data() + offset, length);
+            offset += length;
+
+            return data;
+        }
+        else
+        {
+            static_assert(!std::is_same_v<T, T>, "not supported!");
+        }
+    }
+
     template <typename T> auto read() -> T
     {
         if constexpr (std::is_same_v<T, uint8_t>)
@@ -150,6 +170,11 @@ class OMNetworkPacket
             buffer.push_back((t >> 16) & 0xff);
             buffer.push_back((t >> 8) & 0xff);
             buffer.push_back(t & 0xff);
+        }
+        else if constexpr (std::is_same_v<T, util::OMUuid>)
+        {
+            write<int64_t>(t.highBits());
+            write<int64_t>(t.lowBits());
         }
         else
         {

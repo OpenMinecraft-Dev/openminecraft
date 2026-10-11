@@ -1,5 +1,5 @@
-#ifndef OM_PROTOCOL_MINECRAFT_777_HPP
-#define OM_PROTOCOL_MINECRAFT_777_HPP
+#ifndef OM_PROTOCOL_MINECRAFT_GENERAL_HPP
+#define OM_PROTOCOL_MINECRAFT_GENERAL_HPP
 
 #include "openminecraft-shell/network/om_protocol_minecraft.hpp"
 #include "openminecraft/log/om_log_common.hpp"
@@ -17,7 +17,7 @@ class OMProtocolMinecraftTransformerGeneral : public OMProtocolMinecraftTransfor
     void sendStatusRequest() override;
     void sendStatusPingRequest(int64_t tick) override;
 
-    void sendLoginHello(std::string name, uint64_t ul, uint64_t uh) override;
+    void sendLoginHello(std::string name, openminecraft::util::OMUuid uuid) override = 0;
 
     void handle() override;
     virtual void handleRest(OMProtocolMinecraftState, openminecraft::network::OMNetworkPacket &);

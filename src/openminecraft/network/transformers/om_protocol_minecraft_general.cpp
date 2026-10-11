@@ -1,6 +1,8 @@
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_general.hpp"
 #include "openminecraft-shell/network/om_protocol_minecraft.hpp"
 #include "openminecraft/network/om_network_packet.hpp"
+#include "openminecraft/util/om_util_uuid.hpp"
+#include <cstdint>
 
 namespace openminecraftshell::network::transformers
 {
@@ -21,15 +23,6 @@ void OMProtocolMinecraftTransformerGeneral::sendStatusRequest()
 void OMProtocolMinecraftTransformerGeneral::sendStatusPingRequest(int64_t t)
 {
     protocol.write(openminecraft::network::OMNetworkPacket().packetId(0x01).write<int64_t>(t));
-}
-
-void OMProtocolMinecraftTransformerGeneral::sendLoginHello(std::string name, uint64_t ul, uint64_t uh)
-{
-    protocol.write(openminecraft::network::OMNetworkPacket()
-                       .packetId(0x00)
-                       .writeUtf8WithLength(name)
-                       .write<int64_t>(ul)
-                       .write<int64_t>(uh));
 }
 
 void OMProtocolMinecraftTransformerGeneral::handleRest(OMProtocolMinecraftState s,

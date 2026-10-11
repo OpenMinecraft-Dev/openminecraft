@@ -7,6 +7,7 @@
 #include "openminecraft-shell/data/block/om_block_registery.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
+#include "openminecraft-shell/network/transformers/om_protocol_minecraft_777.hpp"
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_general.hpp"
 #include "openminecraft-shell/renderer/composerenderer.hpp"
 #include "openminecraft-shell/renderer/surfacerenderer.hpp"
@@ -154,12 +155,12 @@ void OMApplication::networkSetup(std::string host, std::string port)
                                   t);
     };
     openminecraftshell::network::OMProtocolMinecraft protocol(in, out);
-    openminecraftshell::network::transformers::OMProtocolMinecraftTransformerGeneral transformer(protocol, hnd);
+    openminecraftshell::network::transformers::OMProtocolMinecraftTransformer777 transformer(protocol, hnd);
 
     try
     {
         transformer.sendHandshake(host, std::stoi(port), 2);
-        transformer.sendLoginHello("Coder2_", 0, 0);
+        transformer.sendLoginHello("Coder2_", openminecraft::util::OMUuid("00000000-0000-0000-0000-000000000000"));
         transformer.handle();
 
         /*transformer.sendStatusRequest();
