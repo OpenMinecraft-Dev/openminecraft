@@ -3,6 +3,8 @@
 
 #include "openminecraft/util/om_util_uuid.hpp"
 #include <iostream>
+#include <istream>
+#include <memory>
 #include <type_traits>
 #include <vector>
 #include <string>
@@ -247,9 +249,13 @@ class OMNetworkPacket
         return *this;
     }
 
+    auto asStream() -> std::shared_ptr<std::istream>;
+
   private:
     std::vector<uint8_t> buffer;
     uint64_t offset;
+
+    friend class OMNetworkPacketStreamBuf;
 };
 } // namespace openminecraft::network
 

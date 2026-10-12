@@ -24,6 +24,7 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/om_renderer_window.hpp"
+#include "openminecraft/specs/nbt/om_nbt_reader.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
@@ -35,6 +36,7 @@
 #include "openminecraft/renderer/common/event/om_eventbus.hpp"
 #include "openminecraft/renderer/common/event/om_eventbus_wrap.hpp"
 #include <chrono>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -115,6 +117,12 @@ auto OMApplication::entry() -> int
         else if (args[1] == "network")
         {
             networkSetup(args[2], args[3]);
+            goto end;
+        }
+        else if (args[1] == "nbt")
+        {
+            specs::nbt::OMNbtReader reader(std::make_shared<std::ifstream>(args[2], std::ios::binary));
+            reader.parse();
             goto end;
         }
         bk = args[1] == "gl" ? OpenGL : Vulkan;

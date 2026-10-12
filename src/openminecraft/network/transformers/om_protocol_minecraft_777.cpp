@@ -111,7 +111,6 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
                 if (havenbt)
                 {
                     pck.debug();
-
                     return;
                 }
             }
