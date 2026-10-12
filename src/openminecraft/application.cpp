@@ -122,7 +122,7 @@ auto OMApplication::entry() -> int
         else if (args[1] == "nbt")
         {
             specs::nbt::OMNbtReader reader(std::make_shared<std::ifstream>(args[2], std::ios::binary));
-            reader.parse();
+            reader.parse(false);
             goto end;
         }
         bk = args[1] == "gl" ? OpenGL : Vulkan;

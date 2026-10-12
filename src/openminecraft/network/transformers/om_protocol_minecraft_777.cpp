@@ -111,7 +111,7 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
                 auto havenbt = pck.read<uint8_t>();
                 if (havenbt)
                 {
-                    pck.debug(256 * 2);
+                    // pck.debug(0x76fa);
 
                     openminecraft::specs::nbt::OMNbtReader r(pck.asStream());
                     r.parse(false);

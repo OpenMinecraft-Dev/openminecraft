@@ -2,6 +2,8 @@
 #include "fmt/format.h"
 #include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/specs/nbt/om_nbt.hpp"
+#include <ios>
+#include <iostream>
 #include <memory>
 #include <stack>
 #include <stdexcept>
@@ -29,11 +31,17 @@ auto OMNbtReader::parse(bool haveName) -> std::shared_ptr<OMNbtTag>
 
     std::shared_ptr<OMNbtTag> result = nullptr;
 
-    for (int i = 0; i < 34; ++i)
+    while (true)
     {
         if (!context.empty() && context.top().current->type == List && context.top().rest <= 0)
         {
             context.pop();
+
+            if (context.empty())
+            {
+                break;
+            }
+
             continue;
         }
 
@@ -101,7 +109,7 @@ auto OMNbtReader::parse(bool haveName) -> std::shared_ptr<OMNbtTag>
             NBTLong b;
             istr->read(reinterpret_cast<char *>(&b), 8);
             b = binary::be64ToNative(b);
-            tag = std::make_shared<OMNbtTag>(Long, n, *reinterpret_cast<NBTDouble *>(&b));
+            tag = std::make_shared<OMNbtTag>(Double, n, *reinterpret_cast<NBTDouble *>(&b));
             break;
         }
         case ByteArray: {
@@ -165,7 +173,7 @@ auto OMNbtReader::parse(bool haveName) -> std::shared_ptr<OMNbtTag>
             break;
         }
         default:
-            throw std::logic_error(fmt::format("unknown tag {:x}", (int)type));
+            throw std::logic_error(fmt::format("unknown tag {:x} at {:x}", (int)type, (int)istr->tellg()));
         }
 
         if (context.empty())

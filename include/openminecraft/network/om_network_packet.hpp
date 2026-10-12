@@ -213,9 +213,10 @@ class OMNetworkPacket
         return *this;
     }
 
-    auto debug(int l = 24) -> OMNetworkPacket &
+    auto debug(int l = 24, bool o = true, int customoff = 0) -> OMNetworkPacket &
     {
-        int skip = offset;
+        int skip = o ? offset : 0;
+        skip += customoff;
         int i = 0;
         for (auto b : buffer)
         {
