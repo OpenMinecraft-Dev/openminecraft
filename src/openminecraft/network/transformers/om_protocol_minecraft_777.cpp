@@ -2,6 +2,7 @@
 #include "openminecraft-shell/network/om_protocol_minecraft.hpp"
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_general.hpp"
 #include "openminecraft/network/om_network_packet.hpp"
+#include "openminecraft/specs/nbt/om_nbt_reader.hpp"
 #include "openminecraft/util/om_util_uuid.hpp"
 #include <tuple>
 #include <vector>
@@ -110,8 +111,12 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
                 auto havenbt = pck.read<uint8_t>();
                 if (havenbt)
                 {
-                    pck.debug();
-                    return;
+                    pck.debug(256 * 2);
+
+                    openminecraft::specs::nbt::OMNbtReader r(pck.asStream());
+                    r.parse(false);
+
+                    // return;
                 }
             }
             return;

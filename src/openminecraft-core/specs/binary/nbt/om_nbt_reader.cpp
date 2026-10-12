@@ -1,8 +1,10 @@
 #include "openminecraft/specs/nbt/om_nbt_reader.hpp"
+#include "fmt/format.h"
 #include "openminecraft/binary/om_bin_endians.hpp"
 #include "openminecraft/specs/nbt/om_nbt.hpp"
 #include <memory>
 #include <stack>
+#include <stdexcept>
 #include <vector>
 
 namespace openminecraft::specs::nbt
@@ -162,6 +164,8 @@ auto OMNbtReader::parse(bool haveName) -> std::shared_ptr<OMNbtTag>
 
             break;
         }
+        default:
+            throw std::logic_error(fmt::format("unknown tag {:x}", (int)type));
         }
 
         if (context.empty())
@@ -193,8 +197,6 @@ auto OMNbtReader::parse(bool haveName) -> std::shared_ptr<OMNbtTag>
             context.push({tag, elemType, static_cast<int>(rest)});
         }
     }
-
-    throw 0;
 
     return result;
 }

@@ -201,7 +201,7 @@ void OMApplication::networkSetup(std::string host, std::string port)
     }
     catch (std::logic_error &e)
     {
-        logger.error("connection closed!");
+        logger.error("connection closed! {}", e.what());
     }
 }
 
