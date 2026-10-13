@@ -111,12 +111,31 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
                 auto havenbt = pck.read<uint8_t>();
                 if (havenbt)
                 {
-                    // pck.debug(0x76fa);
-
                     openminecraft::specs::nbt::OMNbtReader r(pck.asStream());
                     r.parse(false);
+                }
+            }
+            return;
+        }
+            // Update Tag
+        case 0x0e: {
+            logger.debug("tags");
 
-                    // return;
+            int regCount = pck.readVarInt();
+            for (int i = 0; i < regCount; ++i)
+            {
+                logger.debug(pck.readUtf8WithLength());
+                int tagsCount = pck.readVarInt();
+
+                for (int ti = 0; ti < tagsCount; ++ti)
+                {
+                    logger.debug(pck.readUtf8WithLength());
+
+                    int entriesCount = pck.readVarInt();
+                    for (int e = 0; e < entriesCount; ++e)
+                    {
+                        pck.readVarInt();
+                    }
                 }
             }
             return;
