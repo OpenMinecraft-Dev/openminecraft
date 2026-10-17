@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace openminecraftshell::data::block
+namespace openminecraft::shell::data::block
 {
 class OMBlockstateResolver
 {
@@ -38,6 +38,6 @@ class OMBlockstateResolver
     OMModelPrecompiler &compiler;
     log::OMLogger logger;
 };
-} // namespace openminecraftshell::data::block
+} // namespace openminecraft::shell::data::block
 
 #endif

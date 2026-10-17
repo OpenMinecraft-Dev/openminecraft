@@ -1,5 +1,5 @@
-#ifndef DEBUGRENDERER_HPP
-#define DEBUGRENDERER_HPP
+#ifndef OM_DEBUG_RENDERER_HPP
+#define OM_DEBUG_RENDERER_HPP
 
 #include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
@@ -12,7 +12,7 @@
 #include <cmath>
 #include <functional>
 
-namespace openminecraftshell::renderer
+namespace openminecraft::shell::renderer
 {
 constexpr std::array<int, 16> DebugColors = {
     (int)0xF9FFFFFF, (int)0xF9801DFF, (int)0xC74EBDFF, 0x3AB3DAFF, (int)0xFED83DFF, (int)0x80C71FFF,
@@ -78,6 +78,6 @@ class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandle
         return internal->middleTarget->colorTexture;
     }
 };
-} // namespace openminecraftshell::renderer
+} // namespace openminecraft::shell::renderer
 
 #endif

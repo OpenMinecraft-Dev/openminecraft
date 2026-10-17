@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cctype>
 
-namespace openminecraftshell::data
+namespace openminecraft::shell::data
 {
 static auto toLower(std::string s) -> std::string
 {
@@ -41,4 +41,4 @@ auto OMIdentifier::toPath() -> std::string
     return namesp + ":" + path;
 }
 
-} // namespace openminecraftshell::data
+} // namespace openminecraft::shell::data

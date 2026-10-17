@@ -2,7 +2,7 @@
 #define OM_PROTOCOL_MINECRAFT_777_HPP
 
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_general.hpp"
-namespace openminecraftshell::network::transformers
+namespace openminecraft::shell::network::transformers
 {
 class OMProtocolMinecraftTransformer777 : public OMProtocolMinecraftTransformerGeneral
 {
@@ -22,6 +22,6 @@ class OMProtocolMinecraftTransformer777 : public OMProtocolMinecraftTransformerG
   private:
     openminecraft::log::OMLogger logger = {"OMProtocolMinecraftTransformer777", this};
 };
-} // namespace openminecraftshell::network::transformers
+} // namespace openminecraft::shell::network::transformers
 
 #endif

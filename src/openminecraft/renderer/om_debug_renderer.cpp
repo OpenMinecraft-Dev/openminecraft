@@ -1,4 +1,4 @@
-#include "openminecraft-shell/renderer/debugrendrer.hpp"
+#include "openminecraft-shell/renderer/om_debug_renderer.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
@@ -16,7 +16,7 @@ using namespace openminecraft;
 using namespace openminecraft::renderer::common::demiurge;
 using namespace openminecraft::renderer::common;
 
-namespace openminecraftshell::renderer
+namespace openminecraft::shell::renderer
 {
 static inline auto fromBytes(uint64_t l) -> std::string
 {
@@ -368,4 +368,4 @@ void OMDebugRenderer::afterFrame()
 
     tickNode->style("text", fmt::format("Tick: {}", gameTickFetch()));
 }
-} // namespace openminecraftshell::renderer
+} // namespace openminecraft::shell::renderer

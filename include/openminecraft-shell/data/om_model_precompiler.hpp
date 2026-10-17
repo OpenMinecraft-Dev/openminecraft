@@ -16,7 +16,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
-namespace openminecraftshell::data
+namespace openminecraft::shell::data
 {
 enum OMModelCullSide
 {
@@ -145,6 +145,6 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
 
     std::unordered_map<int, OMIdentifier> fluidModels;
 };
-} // namespace openminecraftshell::data
+} // namespace openminecraft::shell::data
 
 #endif

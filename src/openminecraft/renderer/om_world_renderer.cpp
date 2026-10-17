@@ -1,11 +1,11 @@
-#include "openminecraft-shell/renderer/worldrenderer.hpp"
+#include "openminecraft-shell/renderer/om_world_renderer.hpp"
 
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/quaternion_common.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/fwd.hpp"
-#include "openminecraft-shell/data/block/om_block_registery.hpp"
+#include "openminecraft-shell/data/block/om_block_registry.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_resolver.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
@@ -34,7 +34,7 @@
 
 using namespace openminecraft::renderer::common;
 
-namespace openminecraftshell::renderer
+namespace openminecraft::shell::renderer
 {
 class OMWorldColorManager : public wrap::OMVoxelColorManager
 {
@@ -297,7 +297,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     blockstateResolver->resolve(data::OMIdentifier("minecraft:air"));
     blockstateResolver->buildModel(data::OMIdentifier("minecraft:air"), {});
 
-    for (auto &p : data::block::blockRegistery.nameToId)
+    for (auto &p : data::block::blockRegistry.nameToId)
     {
         if (p.first.namesp != "minecraft" || p.first.path != "air")
         {
@@ -424,4 +424,4 @@ OMWorldRenderer::~OMWorldRenderer()
     delete tempTarget;
     delete voxelHandler;
 }
-} // namespace openminecraftshell::renderer
+} // namespace openminecraft::shell::renderer

@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace openminecraftshell::network::transformers
+namespace openminecraft::shell::network::transformers
 {
 void OMProtocolMinecraftTransformer777::sendLoginHello(std::string name, openminecraft::util::OMUuid uuid)
 {
@@ -77,14 +77,14 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
                                                 pck.readUtf8WithLength());
             }
             profile.sessionId = pck.read<openminecraft::util::OMUuid>().toString();
-            handler.handleLoginSucccess(profile);
+            handler.handleLoginSuccess(profile);
             return;
         }
             // Set Compression
         case 0x03: {
             auto thr = pck.readVarInt();
             protocol.enableCompression(thr);
-            logger.debug("compress threshould {} bytes", thr);
+            logger.debug("compress threshold {} bytes", thr);
             return;
         }
         default:
@@ -247,4 +247,4 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
     OMProtocolMinecraftTransformerGeneral::handleRest(state, pck);
     throw std::logic_error("unknown packet!");
 }
-} // namespace openminecraftshell::network::transformers
+} // namespace openminecraft::shell::network::transformers

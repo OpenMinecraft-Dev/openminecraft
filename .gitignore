@@ -29,3 +29,4 @@ bootassets/external
 .DS_Store
 externalassets
 *.xcodeproj/
+._*

@@ -1,5 +1,5 @@
-#ifndef OM_SURFACERENDERER_HPP
-#define OM_SURFACERENDERER_HPP
+#ifndef OM_SURFACE_RENDERER_HPP
+#define OM_SURFACE_RENDERER_HPP
 
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
@@ -7,7 +7,7 @@
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
 #include <functional>
-namespace openminecraftshell::renderer
+namespace openminecraft::shell::renderer
 {
 class OMSurfaceRenderer : public openminecraft::renderer::common::OMRendererHandler
 {
@@ -30,6 +30,6 @@ class OMSurfaceRenderer : public openminecraft::renderer::common::OMRendererHand
     openminecraft::renderer::common::event::OMEventBusWrap &bus;
     void openScreen();
 };
-} // namespace openminecraftshell::renderer
+} // namespace openminecraft::shell::renderer
 
 #endif

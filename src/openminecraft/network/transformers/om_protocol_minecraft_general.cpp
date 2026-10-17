@@ -4,7 +4,7 @@
 #include "openminecraft/util/om_util_uuid.hpp"
 #include <cstdint>
 
-namespace openminecraftshell::network::transformers
+namespace openminecraft::shell::network::transformers
 {
 // Handshake, packet 0x00 (Handshake)
 // structure:
@@ -83,4 +83,4 @@ void OMProtocolMinecraftTransformerGeneral::handle()
         break;
     }
 }
-} // namespace openminecraftshell::network::transformers
+} // namespace openminecraft::shell::network::transformers

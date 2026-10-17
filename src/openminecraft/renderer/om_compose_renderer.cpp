@@ -1,4 +1,4 @@
-#include "openminecraft-shell/renderer/composerenderer.hpp"
+#include "openminecraft-shell/renderer/om_compose_renderer.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_blur.hpp"
@@ -6,7 +6,7 @@
 
 using namespace openminecraft::renderer::common;
 
-namespace openminecraftshell::renderer
+namespace openminecraft::shell::renderer
 {
 OMComposeRenderer::OMComposeRenderer(openminecraft::renderer::OMRenderer *renderer,
                                      openminecraft::renderer::common::wrap::OMRendererTempTarget *surface,
@@ -86,4 +86,4 @@ void OMComposeRenderer::beforeFrame()
 void OMComposeRenderer::afterFrame()
 {
 }
-} // namespace openminecraftshell::renderer
+} // namespace openminecraft::shell::renderer

@@ -9,7 +9,7 @@
 #include <memory>
 #include <tuple>
 #include <vector>
-namespace openminecraftshell::network
+namespace openminecraft::shell::network
 {
 struct OMProtocolGameProfile
 {
@@ -34,7 +34,7 @@ class OMProtocolMinecraftHandler
 
     std::function<void(std::string)> handleStatusResponse = [](std::string) {};
     std::function<void(int64_t)> handlePongResponse = [](int64_t) {};
-    std::function<void(OMProtocolGameProfile)> handleLoginSucccess = [](OMProtocolGameProfile) {};
+    std::function<void(OMProtocolGameProfile)> handleLoginSuccess = [](OMProtocolGameProfile) {};
     std::function<void()> handleEnterConfiguration = []() {};
     std::function<void(std::string, openminecraft::network::OMNetworkPacket &)> handleConfigurationPluginMessage =
         [](std::string, openminecraft::network::OMNetworkPacket &) {};
@@ -67,7 +67,7 @@ class OMProtocolMinecraft : public openminecraft::network::protocol::OMCodingBas
   private:
     OMProtocolMinecraftState state = Handshake;
     bool compression = false;
-    uint32_t compressionThreshould = 0;
+    uint32_t compressionThreshold = 0;
 
   public:
     OMProtocolMinecraft(std::shared_ptr<std::istream> in, std::shared_ptr<std::ostream> out) : OMCodingBase(in, out)
@@ -89,7 +89,7 @@ class OMProtocolMinecraft : public openminecraft::network::protocol::OMCodingBas
     void enableCompression(uint32_t t)
     {
         compression = true;
-        compressionThreshould = t;
+        compressionThreshold = t;
     }
 };
 
@@ -118,6 +118,6 @@ class OMProtocolMinecraftTransformer
 
     virtual void handle() = 0;
 };
-} // namespace openminecraftshell::network
+} // namespace openminecraft::shell::network
 
 #endif

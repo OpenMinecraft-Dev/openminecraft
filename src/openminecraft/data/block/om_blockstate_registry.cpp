@@ -1,10 +1,10 @@
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "fmt/format.h"
-#include "openminecraft-shell/data/block/om_block_registery.hpp"
+#include "openminecraft-shell/data/block/om_block_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 
-namespace openminecraftshell::data::block
+namespace openminecraft::shell::data::block
 {
 openminecraft::world::OMWorldRegistry<OMIdentifier, OMBlockStateCombined> blockstateRegistry;
 static openminecraft::log::OMLogger logger("Blockstate Resolver");
@@ -14,7 +14,7 @@ void registerBlockstates()
     auto c = OMBlockStateCombined{OMIdentifier("minecraft:air"), {}};
     blockstateRegistry.registerItem(OMIdentifier("minecraft:air[]"), c);
 
-    for (auto &l : blockRegistery.nameToId)
+    for (auto &l : blockRegistry.nameToId)
     {
         if (l.first.namesp == "minecraft" && l.first.path == "air")
         {
@@ -23,7 +23,7 @@ void registerBlockstates()
         std::vector<OMBlockState> states = {};
         states.emplace_back("");
 
-        for (const auto &pp : blockRegistery.getRegistry(l.first)->properties)
+        for (const auto &pp : blockRegistry.getRegistry(l.first)->properties)
         {
             auto oldStates = states;
             std::vector<OMBlockState> newStates;
@@ -48,4 +48,4 @@ void registerBlockstates()
         }
     }
 }
-} // namespace openminecraftshell::data::block
+} // namespace openminecraft::shell::data::block

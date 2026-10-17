@@ -1,11 +1,11 @@
-#ifndef APPLICATION_HPP
-#define APPLICATION_HPP
+#ifndef OM_APPLICATION_HPP
+#define OM_APPLICATION_HPP
 
 #include "SDL3/SDL_events.h"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/om_renderer_window.hpp"
 #include <vector>
-namespace openminecraftshell
+namespace openminecraft::shell
 {
 class OMApplication
 {
@@ -22,6 +22,6 @@ class OMApplication
     openminecraft::log::OMLogger logger;
     bool isRunning = true;
 };
-}; // namespace openminecraftshell
+}; // namespace openminecraft::shell
 
 #endif

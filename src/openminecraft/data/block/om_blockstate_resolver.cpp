@@ -1,6 +1,6 @@
 #include "openminecraft-shell/data/block/om_blockstate_resolver.hpp"
 #include "openminecraft-shell/data/block/om_block.hpp"
-#include "openminecraft-shell/data/block/om_block_registery.hpp"
+#include "openminecraft-shell/data/block/om_block_registry.hpp"
 #include "openminecraft-shell/data/block/om_blockstate.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft/io/json/om_io_ast_json.hpp"
@@ -12,7 +12,7 @@
 
 using namespace openminecraft::io;
 
-namespace openminecraftshell::data::block
+namespace openminecraft::shell::data::block
 {
 auto OMBlockstateResolver::identFrom(std::shared_ptr<io::json::OMJsonNode> node) -> OMBlockModelIdentifier
 {
@@ -34,7 +34,7 @@ void OMBlockstateResolver::resolveModel(OMIdentifier id, std::shared_ptr<io::jso
 }
 void OMBlockstateResolver::resolve(OMIdentifier ident)
 {
-    auto &blk = blockRegistery.getRegistry(ident);
+    auto &blk = blockRegistry.getRegistry(ident);
     states[ident].clear();
     requiredModels[ident].clear();
 
@@ -177,7 +177,7 @@ auto OMBlockstateResolver::fetchModel(OMIdentifier ident, OMBlockState state, in
 
 void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
 {
-    auto &blk = blockRegistery.getRegistry(ident);
+    auto &blk = blockRegistry.getRegistry(ident);
     auto &st = state;
 
     if (states[ident].count(st))
@@ -262,4 +262,4 @@ void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
         return;
     }
 }
-} // namespace openminecraftshell::data::block
+} // namespace openminecraft::shell::data::block

@@ -8,7 +8,7 @@
 #include <initializer_list>
 #include <memory>
 #include <unordered_map>
-namespace openminecraftshell::data::block
+namespace openminecraft::shell::data::block
 {
 struct OMBlockModelIdentifier
 {
@@ -24,17 +24,17 @@ struct OMBlockModelIdentifier
                yrot == ident.yrot && zrot == ident.zrot && uvlock == ident.uvlock;
     }
 };
-} // namespace openminecraftshell::data::block
+} // namespace openminecraft::shell::data::block
 
 namespace std
 {
-template <> struct hash<openminecraftshell::data::block::OMBlockModelIdentifier>
+template <> struct hash<openminecraft::shell::data::block::OMBlockModelIdentifier>
 {
-    auto operator()(const openminecraftshell::data::block::OMBlockModelIdentifier &id) const noexcept -> std::size_t
+    auto operator()(const openminecraft::shell::data::block::OMBlockModelIdentifier &id) const noexcept -> std::size_t
     {
         std::size_t seed = 0;
         seed ^=
-            std::hash<openminecraftshell::data::OMIdentifier>{}(id.location) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            std::hash<openminecraft::shell::data::OMIdentifier>{}(id.location) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         seed ^= std::hash<int>{}(id.xrot) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         seed ^= std::hash<int>{}(id.yrot) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         seed ^= std::hash<int>{}(id.zrot) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
@@ -45,14 +45,14 @@ template <> struct hash<openminecraftshell::data::block::OMBlockModelIdentifier>
 };
 } // namespace std
 using openminecraft::renderer::common::wrap::OMVoxelFacing;
-namespace openminecraftshell::data::block
+namespace openminecraft::shell::data::block
 {
 class OMBlock : public std::enable_shared_from_this<OMBlock>
 {
   public:
     OMBlock() = default;
     ~OMBlock() = default;
-    auto isSoild(bool v) -> std::shared_ptr<OMBlock>
+    auto isSolid(bool v) -> std::shared_ptr<OMBlock>
     {
         soild = v;
         return shared_from_this();
@@ -144,6 +144,6 @@ class OMTransparentBlock : public OMBlock
         return false;
     }
 };
-} // namespace openminecraftshell::data::block
+} // namespace openminecraft::shell::data::block
 
 #endif

@@ -7,7 +7,7 @@
 #include "fmt/format.h"
 #include "glm/common.hpp"
 #include "glm/fwd.hpp"
-#include "openminecraft-shell/data/block/om_block_registery.hpp"
+#include "openminecraft-shell/data/block/om_block_registry.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft/io/json/om_io_ast_builder_json.hpp"
@@ -19,7 +19,7 @@ using namespace openminecraft;
 using namespace openminecraft::io;
 using namespace openminecraft::renderer::common::wrap;
 
-namespace openminecraftshell::data
+namespace openminecraft::shell::data
 {
 OMModelPrecompiler::OMModelPrecompiler(std::string root, OMTextureAtlas *atlas)
     : root(std::move(root)), logger("OMModelPrecompiler", this), textureAtlas(*atlas)
@@ -72,7 +72,7 @@ auto OMModelPrecompiler::querySkipsRendering(int bsid, int tgbsid,
 {
     const auto &b = block::blockstateRegistry.idToRegistry[bsid];
     const auto &tb = block::blockstateRegistry.idToRegistry[tgbsid];
-    return block::blockRegistery.getRegistry(b.block)->skipsRendering(b, tb, d);
+    return block::blockRegistry.getRegistry(b.block)->skipsRendering(b, tb, d);
 }
 auto OMModelPrecompiler::queryTranslucent(int bsid) -> bool
 {
@@ -807,4 +807,4 @@ auto OMModelPrecompiler::composeFluidModel(OMIdentifier ident, bool translucent,
 
     return blockModels.size() - 1;
 }
-} // namespace openminecraftshell::data
+} // namespace openminecraft::shell::data

@@ -4,7 +4,7 @@
 #include "openminecraft/renderer/common/animation/om_animation_interpolation.hpp"
 #include <functional>
 
-namespace openminecraftshell::supplements
+namespace openminecraft::shell::supplements
 {
 const static std::function<int(int, int, float)> argbInterpolate = [](int ca, int cb, float p) {
     int aa = (ca >> 24) & 0xff;
@@ -25,6 +25,6 @@ const static std::function<int(int, int, float)> argbInterpolate = [](int ca, in
 
     return a << 24 | r << 16 | g << 8 | b;
 };
-} // namespace openminecraftshell::supplements
+} // namespace openminecraft::shell::supplements
 
 #endif

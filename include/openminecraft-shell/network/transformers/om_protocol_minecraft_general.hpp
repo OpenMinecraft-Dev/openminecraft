@@ -4,7 +4,7 @@
 #include "openminecraft-shell/network/om_protocol_minecraft.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/network/om_network_packet.hpp"
-namespace openminecraftshell::network::transformers
+namespace openminecraft::shell::network::transformers
 {
 class OMProtocolMinecraftTransformerGeneral : public OMProtocolMinecraftTransformer
 {
@@ -28,6 +28,6 @@ class OMProtocolMinecraftTransformerGeneral : public OMProtocolMinecraftTransfor
   private:
     openminecraft::log::OMLogger logger = {"OMProtocolMinecraftTransformerGeneral", this};
 };
-} // namespace openminecraftshell::network::transformers
+} // namespace openminecraft::shell::network::transformers
 
 #endif

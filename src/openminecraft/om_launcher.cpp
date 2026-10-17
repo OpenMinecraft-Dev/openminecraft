@@ -1,4 +1,4 @@
-#include "openminecraft-shell/application.hpp"
+#include "openminecraft-shell/om_application.hpp"
 #include "openminecraft/geom/om_svg_structure.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
@@ -44,7 +44,7 @@ auto main(int argc, char **argv) -> int
     openminecraft::vfs::fsmountZipArchive(_binary_external_bundle_start,
                                           (uint32_t)(_binary_external_bundle_end - _binary_external_bundle_start),
                                           "/external");
-    openminecraftshell::OMApplication app(a);
+    openminecraft::shell::OMApplication app(a);
     int re = app.entry();
     logger.info("Kernel exited with code {}", re);
 

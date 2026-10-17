@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace openminecraftshell::network
+namespace openminecraft::shell::network
 {
 static inline auto readVarInt(std::shared_ptr<std::istream> istr) -> int
 {
@@ -86,4 +86,4 @@ auto OMProtocolMinecraft::read() -> openminecraft::network::OMNetworkPacket
     p.id = p.readVarInt();
     return p;
 }
-} // namespace openminecraftshell::network
+} // namespace openminecraft::shell::network

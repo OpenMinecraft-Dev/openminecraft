@@ -1,5 +1,5 @@
-#ifndef WORLDRENDERER_HPP
-#define WORLDRENDERER_HPP
+#ifndef OM_WORLD_RENDERER_HPP
+#define OM_WORLD_RENDERER_HPP
 #include "glm/ext/vector_float3.hpp"
 #include "glm/fwd.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_resolver.hpp"
@@ -32,7 +32,7 @@ using namespace openminecraft::renderer;
 using namespace openminecraft::renderer::common;
 
 // INFO: The renderer test definition, behaves like a renderer handler (and it should be)
-namespace openminecraftshell::renderer
+namespace openminecraft::shell::renderer
 {
 // INFO: simple vertex structure
 using VertexStruct = basics::OMVertex<glm::vec3, glm::vec2>;
@@ -78,6 +78,6 @@ class OMWorldRenderer : public OMRendererHandler
     std::shared_ptr<OMShader> outputVtx;
     std::shared_ptr<OMShader> outputFrg;
 };
-} // namespace openminecraftshell::renderer
+} // namespace openminecraft::shell::renderer
 
 #endif

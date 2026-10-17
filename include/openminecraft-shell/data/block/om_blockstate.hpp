@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <utility>
 #include <algorithm>
-namespace openminecraftshell::data::block
+namespace openminecraft::shell::data::block
 {
 class OMBlockState
 {
@@ -101,13 +101,13 @@ class OMBlockState
 
     std::unordered_map<std::string, std::string> properties;
 };
-} // namespace openminecraftshell::data::block
+} // namespace openminecraft::shell::data::block
 
 namespace std
 {
-template <> struct hash<openminecraftshell::data::block::OMBlockState>
+template <> struct hash<openminecraft::shell::data::block::OMBlockState>
 {
-    auto operator()(const openminecraftshell::data::block::OMBlockState &s) const noexcept -> std::size_t
+    auto operator()(const openminecraft::shell::data::block::OMBlockState &s) const noexcept -> std::size_t
     {
         return s.hash();
     }

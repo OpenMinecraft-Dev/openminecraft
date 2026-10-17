@@ -1,5 +1,5 @@
-#ifndef OM_BLOCK_REGISTERY_HPP
-#define OM_BLOCK_REGISTERY_HPP
+#ifndef OM_BLOCK_REGISTRY_HPP
+#define OM_BLOCK_REGISTRY_HPP
 
 #include "openminecraft-shell/data/block/om_block.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
@@ -8,10 +8,10 @@
 
 using namespace openminecraft::world;
 
-namespace openminecraftshell::data::block
+namespace openminecraft::shell::data::block
 {
-extern OMWorldRegistry<OMIdentifier, std::shared_ptr<OMBlock>> blockRegistery;
+extern OMWorldRegistry<OMIdentifier, std::shared_ptr<OMBlock>> blockRegistry;
 void registerBlocks();
-} // namespace openminecraftshell::data::block
+} // namespace openminecraft::shell::data::block
 
 #endif

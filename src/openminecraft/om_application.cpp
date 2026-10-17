@@ -4,14 +4,14 @@
 #include "SDL3/SDL_keyboard.h"
 #include "SDL3/SDL_mouse.h"
 #include "glm/ext/vector_float3.hpp"
-#include "openminecraft-shell/data/block/om_block_registery.hpp"
+#include "openminecraft-shell/data/block/om_block_registry.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_777.hpp"
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_general.hpp"
-#include "openminecraft-shell/renderer/composerenderer.hpp"
-#include "openminecraft-shell/renderer/surfacerenderer.hpp"
-#include "openminecraft-shell/supplements/interpolation_argb.hpp"
+#include "openminecraft-shell/renderer/om_compose_renderer.hpp"
+#include "openminecraft-shell/renderer/om_surface_renderer.hpp"
+#include "openminecraft-shell/supplements/om_interpolation_argb.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/log/om_log_threadname.hpp"
@@ -41,8 +41,8 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include "openminecraft-shell/renderer/debugrendrer.hpp"
-#include "openminecraft-shell/renderer/worldrenderer.hpp"
+#include "openminecraft-shell/renderer/om_debug_renderer.hpp"
+#include "openminecraft-shell/renderer/om_world_renderer.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
 #include "openminecraft-shell/network/om_protocol_minecraft.hpp"
 
@@ -52,13 +52,13 @@
 #include <vector>
 #include <cmath>
 
-#include "openminecraft-shell/application.hpp"
+#include "openminecraft-shell/om_application.hpp"
 
 using namespace openminecraft;
 using namespace openminecraft::renderer::common;
 using namespace openminecraft::renderer;
 
-namespace openminecraftshell
+namespace openminecraft::shell
 {
 OMApplication::OMApplication(std::vector<std::string> args) : logger("OMApplication", this), args(args)
 {
@@ -154,9 +154,9 @@ void OMApplication::networkSetup(std::string host, std::string port)
     auto in = vfs::fsfetch("/mcserver_conn/connect");
     auto out = vfs::fswrite("/mcserver_conn/connect");
 
-    openminecraftshell::network::OMProtocolMinecraftHandler hnd;
-    openminecraftshell::network::OMProtocolMinecraft protocol(in, out);
-    openminecraftshell::network::transformers::OMProtocolMinecraftTransformer777 transformer(protocol, hnd);
+    openminecraft::shell::network::OMProtocolMinecraftHandler hnd;
+    openminecraft::shell::network::OMProtocolMinecraft protocol(in, out);
+    openminecraft::shell::network::transformers::OMProtocolMinecraftTransformer777 transformer(protocol, hnd);
     hnd.handleStatusResponse = [&](std::string res) { logger.debug(res); };
     hnd.handlePongResponse = [&](int64_t t) {
         logger.debug("{} ms", std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -164,7 +164,7 @@ void OMApplication::networkSetup(std::string host, std::string port)
                                       .count() -
                                   t);
     };
-    hnd.handleLoginSucccess = [&](network::OMProtocolGameProfile p) {
+    hnd.handleLoginSuccess = [&](network::OMProtocolGameProfile p) {
         logger.debug("login as {}, uuid {}, session {}", p.name, p.uuid.toString(), p.sessionId.toString());
         transformer.sendLoginAcknowledged();
     };
@@ -583,4 +583,4 @@ void OMApplication::mainLoop(OMBackend backend)
         logger->fatal(e.what());
     }
 }
-} // namespace openminecraftshell
+} // namespace openminecraft::shell

@@ -1,4 +1,4 @@
-#include "openminecraft-shell/renderer/surfacerenderer.hpp"
+#include "openminecraft-shell/renderer/om_surface_renderer.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
@@ -17,7 +17,7 @@ using namespace openminecraft;
 using namespace openminecraft::renderer::common::demiurge;
 using namespace openminecraft::renderer::common;
 
-namespace openminecraftshell::renderer
+namespace openminecraft::shell::renderer
 {
 OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *renderer,
                                      openminecraft::renderer::common::event::OMEventBusWrap &bus)
@@ -115,4 +115,4 @@ void OMSurfaceRenderer::openScreen()
 {
     offset.animateTo(0.0, common::animation::easeOutQuint<float>, 1.0);
 }
-} // namespace openminecraftshell::renderer
+} // namespace openminecraft::shell::renderer

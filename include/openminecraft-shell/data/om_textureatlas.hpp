@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 using namespace openminecraft;
-namespace openminecraftshell::data
+namespace openminecraft::shell::data
 {
 struct OMTextureAnimation
 {
@@ -288,6 +288,6 @@ class OMTextureAtlas
     std::unordered_map<OMIdentifier, glm::ivec2> subtexSizes;
     log::OMLogger logger;
 };
-} // namespace openminecraftshell::data
+} // namespace openminecraft::shell::data
 
 #endif
