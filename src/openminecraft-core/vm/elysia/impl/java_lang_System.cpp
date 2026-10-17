@@ -66,7 +66,7 @@ extern "C"
         auto srcraw = env->internal->elysium->oopManager->arrAccess<uint8_t>(handleFetch(src));
         auto dstraw = env->internal->elysium->oopManager->arrAccess<uint8_t>(handleFetch(dst));
         std::memmove(&dstraw[elementSize * dstPos], &srcraw[elementSize * srcPos],
-                     elementSize * elementSize);
+                     elementSize * static_cast<uint64_t>(length));
     }
 
     static void setIn0(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *in)

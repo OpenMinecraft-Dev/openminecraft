@@ -231,11 +231,11 @@ void readMem(OMElysium *elysium)
     {
     case "norm"_hash: {
 #define readT(k, type, n, tt)                                                                                          \
-    auto (k) = openminecraft::mem::safeRead<type>(addr);                                                                 \
+    auto(k) = openminecraft::mem::safeRead<type>(addr);                                                                \
     fmt::print(fmt::fg(addrColor), "@({}){}", n, addr);                                                                \
-    if ((k).has_value())                                                                                                 \
+    if ((k).has_value())                                                                                               \
     {                                                                                                                  \
-        fmt::println(" = 0x{:0" + fmt::format("{}", sizeof(type) * 2) + "x}", static_cast<tt>((k).value()));             \
+        fmt::println(" = 0x{:0" + fmt::format("{}", sizeof(type) * 2) + "x}", static_cast<tt>((k).value()));           \
     }                                                                                                                  \
     else                                                                                                               \
     {                                                                                                                  \
@@ -547,7 +547,7 @@ void printElysium(OMElysium *elysium)
     }
 }
 
-int main(int argc, const char *argv[])
+auto main(int argc, const char *argv[]) -> int
 {
     openminecraft::log::multithread::registerCurrentThreadName("Bootstrap");
     auto *elysium = new OMElysium;

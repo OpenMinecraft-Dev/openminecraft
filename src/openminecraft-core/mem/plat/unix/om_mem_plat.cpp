@@ -47,25 +47,27 @@ OMHeap::~OMHeap()
 
 void OMHeap::activate(void *p, uint64_t length)
 {
-    if (madvise(p, length, MADV_WILLNEED) == -1)
-    {
-        logger.error("[unix-like] madvise fail ({})", strerror(errno));
-        throw std::bad_alloc();
-    }
-
+    // INFO: grant access before advising. macOS rejects madvise(MADV_WILLNEED) with EPERM
+    // while the range is still mapped PROT_NONE, so the old order failed on Darwin.
     if (mprotect(p, length, PROT_READ | PROT_WRITE) == -1)
     {
         logger.error("[unix-like] mprotect fail ({}), pagesize = {}", strerror(errno), sysconf(_SC_PAGESIZE));
         throw std::bad_alloc();
     }
+
+    // INFO: MADV_WILLNEED is only a prefetch hint, never fail an allocation because of it.
+    if (madvise(p, length, MADV_WILLNEED) == -1)
+    {
+        logger.warn("[unix-like] madvise(willneed) ignored ({})", strerror(errno));
+    }
 }
 
 void OMHeap::deactivate(void *p, uint64_t length)
 {
+    // INFO: releasing the physical pages is best effort; a failure only costs RSS, not correctness.
     if (madvise(p, length, MADV_DONTNEED) == -1)
     {
-        logger.error("[unix-like] madvise fail ({})", strerror(errno));
-        throw std::bad_alloc();
+        logger.warn("[unix-like] madvise(dontneed) ignored ({})", strerror(errno));
     }
 
     if (mprotect(p, length, PROT_NONE) == -1)

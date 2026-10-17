@@ -15,10 +15,12 @@
 #include "openminecraft/vm/elysia/om_elysia_types.hpp"
 #include "openminecraft/vm/elysia/om_elysium.hpp"
 #include "optimizations.hpp"
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include <thread>
 
 using namespace openminecraft::binary::hash;
 
@@ -1221,16 +1223,16 @@ auto OMElysiaExecutorZero::findRoutine(std::string klass, std::string name) -> O
             auto hnd = *reinterpret_cast<OMElysiaOop **>(thisThread.metadata->zero.stackPointer + a * sizeof(void *));
             {
                 auto klass = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandle", true)
-                              ->toInstance()
-                              ->findField("form", "Ljava/lang/invoke/LambdaForm;")
-                              ->offset;
+                                 ->toInstance()
+                                 ->findField("form", "Ljava/lang/invoke/LambdaForm;")
+                                 ->offset;
                 hnd = elysium->oopManager->oopAccessPointerField(hnd, klass);
             }
             {
                 auto klass = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/LambdaForm", true)
-                              ->toInstance()
-                              ->findField("vmentry", "Ljava/lang/invoke/MemberName;")
-                              ->offset;
+                                 ->toInstance()
+                                 ->findField("vmentry", "Ljava/lang/invoke/MemberName;")
+                                 ->offset;
                 hnd = elysium->oopManager->oopAccessPointerField(hnd, klass);
             }
             auto remap = **pc == op_invokevirtual || **pc == op_invokeinterface;
