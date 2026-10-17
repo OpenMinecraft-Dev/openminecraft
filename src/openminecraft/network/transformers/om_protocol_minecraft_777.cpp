@@ -11,13 +11,16 @@
 #include <unordered_map>
 #include <vector>
 
+using openminecraft::network::OMUtf8String;
+using openminecraft::network::OMVarInt;
+
 namespace openminecraft::shell::network::transformers
 {
 void OMProtocolMinecraftTransformer777::sendLoginHello(std::string name, openminecraft::util::OMUuid uuid)
 {
     protocol.write(openminecraft::network::OMNetworkPacket()
                        .packetId(0x00)
-                       .writeUtf8WithLength(name)
+                       .write(OMUtf8String(name))
                        .write<openminecraft::util::OMUuid>(uuid));
 }
 
@@ -31,12 +34,13 @@ void OMProtocolMinecraftTransformer777::sendLoginAcknowledged()
 void OMProtocolMinecraftTransformer777::sendConfigurationKnownPacks(
     std::vector<std::tuple<std::string, std::string, std::string>> pcks)
 {
-    auto pck = openminecraft::network::OMNetworkPacket().packetId(0x07).writeVarInt(pcks.size());
+    auto pck =
+        openminecraft::network::OMNetworkPacket().packetId(0x07).write(OMVarInt(static_cast<int32_t>(pcks.size())));
     for (const auto &p : pcks)
     {
-        pck.writeUtf8WithLength(std::get<0>(p));
-        pck.writeUtf8WithLength(std::get<1>(p));
-        pck.writeUtf8WithLength(std::get<2>(p));
+        pck.write(OMUtf8String(std::get<0>(p)));
+        pck.write(OMUtf8String(std::get<1>(p)));
+        pck.write(OMUtf8String(std::get<2>(p)));
     }
     protocol.write(pck);
 }
@@ -58,7 +62,7 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         {
             // Encryption Request
         case 0x01: {
-            pck.readUtf8WithLength();
+            pck.read<OMUtf8String>();
             auto pk = pck.readPrefixArray<uint8_t>();
             auto vtoken = pck.readPrefixArray<uint8_t>();
             bool shouldAuth = pck.read<uint8_t>();
@@ -70,11 +74,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         case 0x02: {
             OMProtocolGameProfile profile = {};
             profile.uuid = pck.read<openminecraft::util::OMUuid>().toString();
-            profile.name = pck.readUtf8WithLength();
-            for (int i = 0; i < pck.readVarInt(); ++i)
+            profile.name = pck.read<OMUtf8String>();
+            for (int i = 0; i < pck.read<OMVarInt>(); ++i)
             {
-                profile.properties.emplace_back(pck.readUtf8WithLength(), pck.readUtf8WithLength(),
-                                                pck.readUtf8WithLength());
+                profile.properties.emplace_back(pck.read<OMUtf8String>(), pck.read<OMUtf8String>(),
+                                                pck.read<OMUtf8String>());
             }
             profile.sessionId = pck.read<openminecraft::util::OMUuid>().toString();
             handler.handleLoginSuccess(profile);
@@ -82,7 +86,7 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         }
             // Set Compression
         case 0x03: {
-            auto thr = pck.readVarInt();
+            auto thr = pck.read<OMVarInt>();
             protocol.enableCompression(thr);
             logger.debug("compress threshold {} bytes", thr);
             return;
@@ -98,7 +102,7 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         {
             // Plugin Message
         case 0x01:
-            handler.handleConfigurationPluginMessage(pck.readUtf8WithLength(), pck);
+            handler.handleConfigurationPluginMessage(pck.read<OMUtf8String>(), pck);
             return;
             // Configuration Finish
         case 0x03:
@@ -106,25 +110,19 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             return;
             // Feature Flags
         case 0x0d: {
-            auto i = pck.readVarInt();
-            std::vector<std::string> flags;
-            for (int k = 0; k < i; ++k)
-            {
-                flags.push_back(pck.readUtf8WithLength());
-            }
-            handler.handleConfigurationFeatureFlags(flags);
+            handler.handleConfigurationFeatureFlags(pck.readPrefixArray<std::string>());
             return;
         }
             // Registry Data
         case 0x07: {
-            auto regName = pck.readUtf8WithLength();
-            auto reg = pck.readVarInt();
+            auto regName = pck.read<OMUtf8String>();
+            auto reg = pck.read<OMVarInt>();
 
             std::unordered_map<std::string, std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>> regItems;
 
             for (int i = 0; i < reg; ++i)
             {
-                auto name = pck.readUtf8WithLength();
+                auto name = pck.read<OMUtf8String>();
                 auto havenbt = pck.read<bool>();
                 std::shared_ptr<openminecraft::specs::nbt::OMNbtTag> args = nullptr;
                 if (havenbt)
@@ -142,21 +140,21 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             // Update Tag
         case 0x0e: {
             std::unordered_map<std::string, std::unordered_map<std::string, std::vector<int>>> tags;
-            int regCount = pck.readVarInt();
+            int regCount = pck.read<OMVarInt>();
             for (int i = 0; i < regCount; ++i)
             {
-                auto regName = pck.readUtf8WithLength();
+                auto regName = pck.read<OMUtf8String>();
                 auto &reg = tags[regName];
-                int tagsCount = pck.readVarInt();
+                int tagsCount = pck.read<OMVarInt>();
 
                 for (int ti = 0; ti < tagsCount; ++ti)
                 {
-                    auto &entries = reg[pck.readUtf8WithLength()];
+                    auto &entries = reg[pck.read<OMUtf8String>()];
 
-                    int entriesCount = pck.readVarInt();
+                    int entriesCount = pck.read<OMVarInt>();
                     for (int e = 0; e < entriesCount; ++e)
                     {
-                        entries.push_back(pck.readVarInt());
+                        entries.push_back(pck.read<OMVarInt>());
                     }
                 }
             }
@@ -165,11 +163,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         }
             // Chat Report Custom
         case 0x0f: {
-            auto i = pck.readVarInt();
+            auto i = pck.read<OMVarInt>();
             std::vector<std::tuple<std::string, std::string, std::string>> report;
             for (int k = 0; k < i; ++k)
             {
-                report.emplace_back(pck.readUtf8WithLength(), pck.readUtf8WithLength(), pck.readUtf8WithLength());
+                report.emplace_back(pck.read<OMUtf8String>(), pck.read<OMUtf8String>(), pck.read<OMUtf8String>());
             }
             handler.handleConfigurationReportDetails(report);
             return;
@@ -190,23 +188,18 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             auto entityId = pck.read<int32_t>();
             bool ishardcore = pck.read<bool>();
 
-            std::vector<std::string> dims;
-            int dimC = pck.readVarInt();
-            for (int i = 0; i < dimC; ++i)
-            {
-                dims.push_back(pck.readUtf8WithLength());
-            }
-            auto maxplayers = pck.readVarInt();
-            auto viewDistance = pck.readVarInt();
-            auto simulationDistance = pck.readVarInt();
+            auto dims = pck.readPrefixArray<std::string>();
+            auto maxplayers = pck.read<OMVarInt>();
+            auto viewDistance = pck.read<OMVarInt>();
+            auto simulationDistance = pck.read<OMVarInt>();
             auto reducedDebugInfo = pck.read<bool>();
             auto enableRespawnScreen = pck.read<bool>();
             auto doLimitedCrafting = pck.read<bool>();
-            auto dimType = pck.readVarInt();
-            auto dimName = pck.readUtf8WithLength();
+            auto dimType = pck.read<OMVarInt>();
+            auto dimName = pck.read<OMUtf8String>();
             auto hashSeed = pck.read<int64_t>();
-            auto gameMode = pck.readVarInt();
-            auto prevGameMode = pck.readVarInt();
+            auto gameMode = pck.read<OMVarInt>();
+            auto prevGameMode = pck.read<OMVarInt>();
             auto isDebug = pck.read<bool>();
             auto isFlat = pck.read<bool>();
             auto hasDeathLocation = pck.read<bool>();
@@ -214,11 +207,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             int64_t depthPos = 0;
             if (hasDeathLocation)
             {
-                deathDim = pck.readUtf8WithLength();
+                deathDim = pck.read<OMUtf8String>();
                 depthPos = pck.read<int64_t>();
             }
-            auto portalCooldown = pck.readVarInt();
-            auto seaLevel = pck.readVarInt();
+            auto portalCooldown = pck.read<OMVarInt>();
+            auto seaLevel = pck.read<OMVarInt>();
             auto onlineMode = pck.read<bool>();
             auto secureChat = pck.read<bool>();
 
@@ -235,8 +228,12 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         }
             // Set Held Slot
         case 0x6b: {
-            handler.handlePlaySetHeldSlot(pck.readVarInt());
+            handler.handlePlaySetHeldSlot(pck.read<OMVarInt>());
             return;
+        }
+            // Update Recipes
+        case 0x88: {
+            break;
         }
         default:
             break;

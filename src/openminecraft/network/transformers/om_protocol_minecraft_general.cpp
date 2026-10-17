@@ -4,6 +4,9 @@
 #include "openminecraft/util/om_util_uuid.hpp"
 #include <cstdint>
 
+using openminecraft::network::OMUtf8String;
+using openminecraft::network::OMVarInt;
+
 namespace openminecraft::shell::network::transformers
 {
 // Handshake, packet 0x00 (Handshake)
@@ -16,10 +19,10 @@ void OMProtocolMinecraftTransformerGeneral::sendHandshake(std::string host, uint
 {
     protocol.write(openminecraft::network::OMNetworkPacket()
                        .packetId(0x00)
-                       .writeVarInt(777)
-                       .writeUtf8WithLength(host)
+                       .write(OMVarInt(777))
+                       .write(OMUtf8String(host))
                        .write<int16_t>(25565)
-                       .writeVarInt(nextstate));
+                       .write(OMVarInt(nextstate)));
     protocol.switchState(nextstate == 1 ? network::Status : network::Login);
 }
 // Status, packet 0x00 (Status Request)
@@ -70,7 +73,7 @@ void OMProtocolMinecraftTransformerGeneral::handle()
         {
             // Status Response
         case 0x00:
-            handler.handleStatusResponse(pck.readUtf8WithLength());
+            handler.handleStatusResponse(pck.read<OMUtf8String>());
             break;
             // Pong Response
         case 0x01:

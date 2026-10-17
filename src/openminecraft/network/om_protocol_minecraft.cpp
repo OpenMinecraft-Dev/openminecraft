@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <vector>
 
+using openminecraft::network::OMVarInt;
+
 namespace openminecraft::shell::network
 {
 static inline auto readVarInt(std::shared_ptr<std::istream> istr) -> int
@@ -33,15 +35,15 @@ static inline auto readVarInt(std::shared_ptr<std::istream> istr) -> int
 void OMProtocolMinecraft::write(openminecraft::network::OMNetworkPacket pck)
 {
     openminecraft::network::OMNetworkPacket pckid;
-    pckid.writeVarInt(pck.id);
+    pckid.write(OMVarInt(static_cast<int32_t>(pck.id)));
 
     if (compression)
     {
         openminecraft::network::OMNetworkPacket pckclength;
-        pckclength.writeVarInt(0);
+        pckclength.write(OMVarInt(0));
 
         openminecraft::network::OMNetworkPacket pcklength;
-        pcklength.writeVarInt(pck.datalen() + pckid.datalen() + pckclength.datalen());
+        pcklength.write(OMVarInt(static_cast<int32_t>(pck.datalen() + pckid.datalen() + pckclength.datalen())));
 
         out->write(pcklength.data(), pcklength.datalen());
         out->write(pckclength.data(), pckclength.datalen());
@@ -51,7 +53,7 @@ void OMProtocolMinecraft::write(openminecraft::network::OMNetworkPacket pck)
     else
     {
         openminecraft::network::OMNetworkPacket pcklength;
-        pcklength.writeVarInt(pck.datalen() + pckid.datalen());
+        pcklength.write(OMVarInt(static_cast<int32_t>(pck.datalen() + pckid.datalen())));
 
         out->write(pcklength.data(), pcklength.datalen());
         out->write(pckid.data(), pckid.datalen());
@@ -72,7 +74,7 @@ auto OMProtocolMinecraft::read() -> openminecraft::network::OMNetworkPacket
 
     if (compression)
     {
-        auto comlength = p.readVarInt();
+        auto comlength = p.read<OMVarInt>();
         if (comlength)
         {
             std::vector<uint8_t> datade = {};
@@ -83,7 +85,7 @@ auto OMProtocolMinecraft::read() -> openminecraft::network::OMNetworkPacket
             p = openminecraft::network::OMNetworkPacket().assign(datade.begin(), datade.end());
         }
     }
-    p.id = p.readVarInt();
+    p.id = p.read<OMVarInt>();
     return p;
 }
 } // namespace openminecraft::shell::network

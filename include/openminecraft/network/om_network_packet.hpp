@@ -6,13 +6,46 @@
 #include <istream>
 #include <memory>
 #include <type_traits>
+#include <utility>
 #include <vector>
 #include <string>
 #include <cstdint>
 #include <iomanip>
 #include <cstring>
+#include <stdexcept>
+#include <fmt/format.h>
 namespace openminecraft::network
 {
+struct OMVarInt
+{
+    int32_t value = 0;
+
+    constexpr OMVarInt() = default;
+    constexpr OMVarInt(int32_t v) : value(v)
+    {
+    }
+
+    constexpr operator int32_t() const
+    {
+        return value;
+    }
+};
+
+struct OMUtf8String
+{
+    std::string value;
+
+    OMUtf8String() = default;
+    OMUtf8String(std::string v) : value(std::move(v))
+    {
+    }
+
+    operator const std::string &() const
+    {
+        return value;
+    }
+};
+
 class OMNetworkPacket
 {
   public:
@@ -44,63 +77,25 @@ class OMNetworkPacket
         return *this;
     }
 
-    auto readVarInt() -> uint32_t
-    {
-        int value = 0;
-
-        for (int position = 0; position < 32; position += 7)
-        {
-            auto currentByte = read<uint8_t>();
-
-            value |= (int)(currentByte & 0x7F) << position;
-
-            if ((currentByte & 0x80) == 0)
-            {
-                return value;
-            }
-        }
-
-        return value;
-    }
-
-    auto writeVarInt(int32_t value) -> OMNetworkPacket &
-    {
-        while ((value & ~0x7F) != 0)
-        {
-            buffer.push_back((value & 0x7F) | 0x80);
-            value >>= 7;
-        }
-        buffer.push_back(value);
-        return *this;
-    }
-
-    auto readUtf8WithLength() -> std::string
-    {
-        auto l = readVarInt();
-
-        std::string result = {reinterpret_cast<char *>(&buffer.at(offset)), l};
-        offset += l;
-
-        return result;
-    }
-
-    auto writeUtf8WithLength(std::string s) -> OMNetworkPacket &
-    {
-        writeVarInt(s.size());
-        for (auto ch : s)
-        {
-            buffer.push_back(ch);
-        }
-        return *this;
-    }
-
     template <typename T> auto readPrefixArray() -> std::vector<T>
     {
-        auto length = readVarInt();
+        auto count = read<OMVarInt>().value;
+
+        if (count <= 0)
+        {
+            return {};
+        }
+
+        if (static_cast<uint64_t>(count) > restDatalen())
+        {
+            throw std::logic_error("[OMNetworkPacket] prefix array length exceeds remaining data!");
+        }
+
+        auto length = static_cast<std::size_t>(count);
+
         if constexpr (std::is_same_v<T, uint8_t>)
         {
-            std::vector<T> data;
-            data.resize(length);
+            std::vector<T> data(length);
 
             std::memcpy(data.data(), buffer.data() + offset, length);
             offset += length;
@@ -109,13 +104,48 @@ class OMNetworkPacket
         }
         else
         {
-            static_assert(!std::is_same_v<T, T>, "not supported!");
+            std::vector<T> data;
+            data.reserve(length);
+
+            for (std::size_t i = 0; i < length; ++i)
+            {
+                data.push_back(read<T>());
+            }
+
+            return data;
         }
     }
 
     template <typename T> auto read() -> T
     {
-        if constexpr (std::is_same_v<T, uint8_t> || std::is_same_v<T, bool>)
+        if constexpr (std::is_same_v<T, OMVarInt>)
+        {
+            uint32_t value = 0;
+
+            for (int position = 0; position < 32; position += 7)
+            {
+                auto currentByte = read<uint8_t>();
+
+                value |= static_cast<uint32_t>(currentByte & 0x7F) << position;
+
+                if ((currentByte & 0x80) == 0)
+                {
+                    break;
+                }
+            }
+
+            return OMVarInt(static_cast<int32_t>(value));
+        }
+        else if constexpr (std::is_same_v<T, OMUtf8String> || std::is_same_v<T, std::string>)
+        {
+            auto length = read<OMVarInt>().value;
+
+            std::string value = {reinterpret_cast<char *>(&buffer.at(offset)), static_cast<std::size_t>(length)};
+            offset += length;
+
+            return value;
+        }
+        else if constexpr (std::is_same_v<T, uint8_t> || std::is_same_v<T, bool>)
         {
             return buffer[offset++];
         }
@@ -155,6 +185,12 @@ class OMNetworkPacket
             }
             return d;
         }
+        else if constexpr (std::is_same_v<T, double>)
+        {
+            auto l = read<int64_t>();
+
+            return *reinterpret_cast<double *>(&l);
+        }
         else if constexpr (std::is_same_v<T, util::OMUuid>)
         {
             return util::OMUuid(read<int64_t>(), read<int64_t>());
@@ -167,7 +203,26 @@ class OMNetworkPacket
 
     template <typename T> auto write(T t) -> OMNetworkPacket &
     {
-        if constexpr (std::is_same_v<T, uint8_t> || std::is_same_v<T, bool>)
+        if constexpr (std::is_same_v<T, OMVarInt>)
+        {
+            auto value = static_cast<uint32_t>(t.value);
+
+            while ((value & ~0x7Fu) != 0)
+            {
+                buffer.push_back(static_cast<uint8_t>((value & 0x7F) | 0x80));
+                value >>= 7;
+            }
+
+            buffer.push_back(static_cast<uint8_t>(value));
+        }
+        else if constexpr (std::is_same_v<T, OMUtf8String> || std::is_same_v<T, std::string>)
+        {
+            const std::string &value = t;
+
+            write(OMVarInt(static_cast<int32_t>(value.size())));
+            buffer.insert(buffer.end(), value.begin(), value.end());
+        }
+        else if constexpr (std::is_same_v<T, uint8_t> || std::is_same_v<T, bool>)
         {
             buffer.push_back(t);
         }
@@ -193,6 +248,14 @@ class OMNetworkPacket
             buffer.push_back((t >> 16) & 0xff);
             buffer.push_back((t >> 8) & 0xff);
             buffer.push_back(t & 0xff);
+        }
+        else if constexpr (std::is_same_v<T, float>)
+        {
+            write<int32_t>(*reinterpret_cast<int32_t *>(&t));
+        }
+        else if constexpr (std::is_same_v<T, double>)
+        {
+            write<int64_t>(*reinterpret_cast<int64_t *>(&t));
         }
         else if constexpr (std::is_same_v<T, util::OMUuid>)
         {
@@ -264,6 +327,50 @@ class OMNetworkPacket
 
     friend class OMNetworkPacketStreamBuf;
 };
+
+// INFO: std::vector<OMUtf8String> 与 std::vector<std::string> 之间没有隐式转换（容器不协变），
+// 需要时用这两个helper显式转换。
+inline auto toStdStrings(const std::vector<OMUtf8String> &values) -> std::vector<std::string>
+{
+    std::vector<std::string> result;
+    result.reserve(values.size());
+
+    for (const auto &value : values)
+    {
+        result.push_back(value.value);
+    }
+
+    return result;
+}
+
+inline auto toUtf8Strings(const std::vector<std::string> &values) -> std::vector<OMUtf8String>
+{
+    std::vector<OMUtf8String> result;
+    result.reserve(values.size());
+
+    for (const auto &value : values)
+    {
+        result.emplace_back(value);
+    }
+
+    return result;
+}
 } // namespace openminecraft::network
+
+template <> struct fmt::formatter<openminecraft::network::OMVarInt> : formatter<int32_t>
+{
+    auto format(openminecraft::network::OMVarInt v, format_context &ctx) const -> format_context::iterator
+    {
+        return formatter<int32_t>::format(v.value, ctx);
+    }
+};
+
+template <> struct fmt::formatter<openminecraft::network::OMUtf8String> : formatter<string_view>
+{
+    auto format(const openminecraft::network::OMUtf8String &v, format_context &ctx) const -> format_context::iterator
+    {
+        return formatter<string_view>::format(v.value, ctx);
+    }
+};
 
 #endif
