@@ -183,6 +183,9 @@ void OMApplication::networkSetup(std::string host, std::string port)
         logger.debug("configuration finish!");
         transformer.sendConfigurationFinishAcknowledged();
     };
+    hnd.handlePlayLogin = [&](int, bool, std::vector<std::string>, uint32_t, uint32_t, uint32_t, bool, bool, bool,
+                              uint32_t, std::string dimName, int64_t, uint32_t, uint32_t, bool, bool, bool, std::string,
+                              int64_t, uint32_t, uint32_t, bool, bool) { logger.debug("login at {}", dimName); };
     try
     {
         transformer.sendHandshake(host, std::stoi(port), 2);

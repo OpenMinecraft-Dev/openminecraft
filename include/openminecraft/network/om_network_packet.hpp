@@ -139,6 +139,12 @@ class OMNetworkPacket
             }
             return d;
         }
+        else if constexpr (std::is_same_v<T, float>)
+        {
+            auto l = read<int32_t>();
+
+            return *reinterpret_cast<float *>(&l);
+        }
         else if constexpr (std::is_same_v<T, int64_t>)
         {
             int64_t d = 0;

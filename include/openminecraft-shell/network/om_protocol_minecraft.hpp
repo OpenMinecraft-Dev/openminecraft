@@ -51,6 +51,15 @@ class OMProtocolMinecraftHandler
             [](std::unordered_map<std::string, std::unordered_map<std::string, std::vector<int>>> &) {};
     std::function<void()> handleConfigurationFinish = []() {};
     std::function<void()> handleEnterPlay = []() {};
+    std::function<void(int, bool, std::vector<std::string>, uint32_t, uint32_t, uint32_t, bool, bool, bool, uint32_t,
+                       std::string, int64_t, uint32_t, uint32_t, bool, bool, bool, std::string, int64_t, uint32_t,
+                       uint32_t, bool, bool)>
+        handlePlayLogin = [](int, bool, std::vector<std::string>, uint32_t, uint32_t, uint32_t, bool, bool, bool,
+                             uint32_t, std::string, int64_t, uint32_t, uint32_t, bool, bool, bool, std::string, int64_t,
+                             uint32_t, uint32_t, bool, bool) {};
+    std::function<void(uint8_t, bool)> handlePlayChangeDifficulty = [](uint8_t, bool) {};
+    std::function<void(uint8_t, float, float)> handlePlayPlayerAbilities = [](uint8_t, float, float) {};
+    std::function<void(uint32_t)> handlePlaySetHeldSlot = [](uint32_t) {};
 };
 
 class OMProtocolMinecraft : public openminecraft::network::protocol::OMCodingBase

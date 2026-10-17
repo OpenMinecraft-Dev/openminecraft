@@ -180,22 +180,64 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
     case Play:
         switch (pck.id)
         {
+            // Change Difficulty
+        case 0x0a: {
+            handler.handlePlayChangeDifficulty(pck.read<uint8_t>(), pck.read<bool>());
+            return;
+        }
+            // Login
         case 0x32: {
-            logger.debug("entity id: {}", pck.read<int32_t>());
+            auto entityId = pck.read<int32_t>();
             bool ishardcore = pck.read<bool>();
+
+            std::vector<std::string> dims;
             int dimC = pck.readVarInt();
             for (int i = 0; i < dimC; ++i)
             {
-                logger.debug(pck.readUtf8WithLength());
+                dims.push_back(pck.readUtf8WithLength());
             }
             auto maxplayers = pck.readVarInt();
             auto viewDistance = pck.readVarInt();
             auto simulationDistance = pck.readVarInt();
-            break;
-        }
-        case 0x2d:
-            logger.debug("chunk data!");
+            auto reducedDebugInfo = pck.read<bool>();
+            auto enableRespawnScreen = pck.read<bool>();
+            auto doLimitedCrafting = pck.read<bool>();
+            auto dimType = pck.readVarInt();
+            auto dimName = pck.readUtf8WithLength();
+            auto hashSeed = pck.read<int64_t>();
+            auto gameMode = pck.readVarInt();
+            auto prevGameMode = pck.readVarInt();
+            auto isDebug = pck.read<bool>();
+            auto isFlat = pck.read<bool>();
+            auto hasDeathLocation = pck.read<bool>();
+            std::string deathDim = "";
+            int64_t depthPos = 0;
+            if (hasDeathLocation)
+            {
+                deathDim = pck.readUtf8WithLength();
+                depthPos = pck.read<int64_t>();
+            }
+            auto portalCooldown = pck.readVarInt();
+            auto seaLevel = pck.readVarInt();
+            auto onlineMode = pck.read<bool>();
+            auto secureChat = pck.read<bool>();
+
+            handler.handlePlayLogin(entityId, ishardcore, dims, maxplayers, viewDistance, simulationDistance,
+                                    reducedDebugInfo, enableRespawnScreen, doLimitedCrafting, dimType, dimName,
+                                    hashSeed, gameMode, prevGameMode, isDebug, isFlat, hasDeathLocation, deathDim,
+                                    depthPos, portalCooldown, seaLevel, onlineMode, secureChat);
             return;
+        }
+            // Player Abilities
+        case 0x41: {
+            handler.handlePlayPlayerAbilities(pck.read<uint8_t>(), pck.read<float>(), pck.read<float>());
+            return;
+        }
+            // Set Held Slot
+        case 0x6b: {
+            handler.handlePlaySetHeldSlot(pck.readVarInt());
+            return;
+        }
         default:
             break;
         }
