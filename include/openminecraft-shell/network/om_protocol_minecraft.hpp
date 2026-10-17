@@ -6,6 +6,7 @@
 #include "openminecraft/specs/nbt/om_nbt.hpp"
 #include "openminecraft/specs/nbt/om_nbt_reader.hpp"
 #include "openminecraft/util/om_util_uuid.hpp"
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -76,6 +77,7 @@ class OMProtocolMinecraftHandler
     std::function<void(uint8_t, bool)> handlePlayChangeDifficulty = [](uint8_t, bool) {};
     std::function<void(uint8_t, float, float)> handlePlayPlayerAbilities = [](uint8_t, float, float) {};
     std::function<void(uint32_t)> handlePlaySetHeldSlot = [](uint32_t) {};
+    std::function<void(int, uint8_t)> handlePlayEntityEvent = [](int, uint8_t) {};
 };
 
 class OMProtocolMinecraft : public openminecraft::network::protocol::OMCodingBase
@@ -140,8 +142,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
 {
     static constexpr bool supported = true;
 
-    static auto read(openminecraft::network::OMNetworkPacket &pck)
-        -> openminecraft::shell::network::OMProtocolKnownPack
+    static auto read(openminecraft::network::OMNetworkPacket &pck) -> openminecraft::shell::network::OMProtocolKnownPack
     {
         return {pck.read<openminecraft::network::OMUtf8String>(), pck.read<openminecraft::network::OMUtf8String>(),
                 pck.read<openminecraft::network::OMUtf8String>()};

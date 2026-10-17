@@ -164,6 +164,16 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             handler.handlePlayChangeDifficulty(pck.read<uint8_t>(), pck.read<bool>());
             return;
         }
+            // Commands
+        case 0x10: {
+            logger.warn("skipped Commands packet!");
+            return;
+        }
+            // Entity Event
+        case 0x22: {
+            handler.handlePlayEntityEvent(pck.read<int32_t>(), pck.read<uint8_t>());
+            return;
+        }
             // Login
         case 0x32: {
             auto entityId = pck.read<int32_t>();
@@ -214,7 +224,8 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         }
             // Update Recipes
         case 0x88: {
-            break;
+            logger.warn("skipped Update Recipes packet!");
+            return;
         }
         default:
             break;
