@@ -5,6 +5,7 @@
 #include <iostream>
 #include <istream>
 #include <memory>
+#include <optional>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -44,6 +45,11 @@ struct OMUtf8String
     {
         return value;
     }
+};
+
+template <typename T> struct OMNetworkPacketCodec
+{
+    static constexpr bool supported = false;
 };
 
 class OMNetworkPacket
@@ -108,6 +114,41 @@ class OMNetworkPacket
             data.reserve(length);
 
             for (std::size_t i = 0; i < length; ++i)
+            {
+                data.push_back(read<T>());
+            }
+
+            return data;
+        }
+    }
+
+    template <typename T> auto readFixedArray(std::size_t count) -> std::vector<T>
+    {
+        if (count == 0)
+        {
+            return {};
+        }
+
+        if (static_cast<uint64_t>(count) > restDatalen())
+        {
+            throw std::logic_error("[OMNetworkPacket] fixed array length exceeds remaining data!");
+        }
+
+        if constexpr (std::is_same_v<T, uint8_t>)
+        {
+            std::vector<T> data(count);
+
+            std::memcpy(data.data(), buffer.data() + offset, count);
+            offset += count;
+
+            return data;
+        }
+        else
+        {
+            std::vector<T> data;
+            data.reserve(count);
+
+            for (std::size_t i = 0; i < count; ++i)
             {
                 data.push_back(read<T>());
             }
@@ -195,9 +236,14 @@ class OMNetworkPacket
         {
             return util::OMUuid(read<int64_t>(), read<int64_t>());
         }
+        else if constexpr (OMNetworkPacketCodec<T>::supported)
+        {
+            return OMNetworkPacketCodec<T>::read(*this);
+        }
         else
         {
-            static_assert(!std::is_same_v<T, T>, "not supported!");
+            static_assert(!std::is_same_v<T, T>,
+                          "OMNetworkPacket::read: unsupported type, specialize OMNetworkPacketCodec<T> to extend");
         }
     }
 
@@ -262,11 +308,40 @@ class OMNetworkPacket
             write<int64_t>(t.highBits());
             write<int64_t>(t.lowBits());
         }
+        else if constexpr (OMNetworkPacketCodec<T>::supported)
+        {
+            OMNetworkPacketCodec<T>::write(*this, t);
+        }
         else
         {
-            static_assert(!std::is_same_v<T, T>, "not supported!");
+            static_assert(!std::is_same_v<T, T>,
+                          "OMNetworkPacket::write: unsupported type, specialize OMNetworkPacketCodec<T> to extend");
         }
         return *this;
+    }
+
+    template <typename T> auto writeFixedArray(const std::vector<T> &values) -> OMNetworkPacket &
+    {
+        if constexpr (std::is_same_v<T, uint8_t>)
+        {
+            buffer.insert(buffer.end(), values.begin(), values.end());
+        }
+        else
+        {
+            for (const auto &value : values)
+            {
+                write<T>(value);
+            }
+        }
+
+        return *this;
+    }
+
+    template <typename T> auto writePrefixArray(const std::vector<T> &values) -> OMNetworkPacket &
+    {
+        write(OMVarInt(static_cast<int32_t>(values.size())));
+
+        return writeFixedArray(values);
     }
 
     auto readRaw(uint8_t *buf, uint64_t l) -> uint64_t
@@ -330,6 +405,34 @@ class OMNetworkPacket
 
 // INFO: std::vector<OMUtf8String> 与 std::vector<std::string> 之间没有隐式转换（容器不协变），
 // 需要时用这两个helper显式转换。
+
+// INFO: std::optional<T> 的通用特化：1 字节存在标记 + 可选负载。
+// 负载沿用 read<T>() / write(T) 的既有分支（内建类型或其它 OMNetworkPacketCodec<T>）。
+template <typename T> struct OMNetworkPacketCodec<std::optional<T>>
+{
+    static constexpr bool supported = true;
+
+    static auto read(OMNetworkPacket &pck) -> std::optional<T>
+    {
+        if (!pck.read<bool>())
+        {
+            return std::nullopt;
+        }
+
+        return pck.read<T>();
+    }
+
+    static auto write(OMNetworkPacket &pck, const std::optional<T> &value) -> void
+    {
+        pck.write<bool>(value.has_value());
+
+        if (value.has_value())
+        {
+            pck.write<T>(*value);
+        }
+    }
+};
+
 inline auto toStdStrings(const std::vector<OMUtf8String> &values) -> std::vector<std::string>
 {
     std::vector<std::string> result;

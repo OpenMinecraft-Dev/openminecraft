@@ -19,7 +19,7 @@ class OMProtocolMinecraftTransformerGeneral : public OMProtocolMinecraftTransfor
 
     void sendLoginHello(std::string name, openminecraft::util::OMUuid uuid) override = 0;
     void sendLoginAcknowledged() override = 0;
-    void sendConfigurationKnownPacks(std::vector<std::tuple<std::string, std::string, std::string>>) override = 0;
+    void sendConfigurationKnownPacks(std::vector<OMProtocolKnownPack>) override = 0;
     void sendConfigurationFinishAcknowledged() override = 0;
 
     void handle() override;

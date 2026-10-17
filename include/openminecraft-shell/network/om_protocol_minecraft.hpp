@@ -4,18 +4,34 @@
 #include "openminecraft/network/om_network_packet.hpp"
 #include "openminecraft/network/protocol/coding/om_coding.hpp"
 #include "openminecraft/specs/nbt/om_nbt.hpp"
+#include "openminecraft/specs/nbt/om_nbt_reader.hpp"
 #include "openminecraft/util/om_util_uuid.hpp"
 #include <functional>
 #include <memory>
+#include <optional>
 #include <tuple>
 #include <vector>
 namespace openminecraft::shell::network
 {
+struct OMProtocolGameProfileProperty
+{
+    std::string name;
+    std::string value;
+    std::string signature;
+};
+
+struct OMProtocolKnownPack
+{
+    std::string namesp;
+    std::string id;
+    std::string version;
+};
+
 struct OMProtocolGameProfile
 {
     std::string name;
     openminecraft::util::OMUuid uuid;
-    std::vector<std::tuple<std::string, std::string, std::string>> properties;
+    std::vector<OMProtocolGameProfileProperty> properties;
     openminecraft::util::OMUuid sessionId;
 };
 
@@ -113,11 +129,65 @@ class OMProtocolMinecraftTransformer
     virtual void sendLoginHello(std::string name, openminecraft::util::OMUuid uuid) = 0;
     virtual void sendLoginAcknowledged() = 0;
 
-    virtual void sendConfigurationKnownPacks(std::vector<std::tuple<std::string, std::string, std::string>>) = 0;
+    virtual void sendConfigurationKnownPacks(std::vector<OMProtocolKnownPack>) = 0;
     virtual void sendConfigurationFinishAcknowledged() = 0;
 
     virtual void handle() = 0;
 };
 } // namespace openminecraft::shell::network
+
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolKnownPack>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolKnownPack
+    {
+        return {pck.read<openminecraft::network::OMUtf8String>(), pck.read<openminecraft::network::OMUtf8String>(),
+                pck.read<openminecraft::network::OMUtf8String>()};
+    }
+
+    static auto write(openminecraft::network::OMNetworkPacket &pck,
+                      const openminecraft::shell::network::OMProtocolKnownPack &value) -> void
+    {
+        pck.write(openminecraft::network::OMUtf8String(value.namesp));
+        pck.write(openminecraft::network::OMUtf8String(value.id));
+        pck.write(openminecraft::network::OMUtf8String(value.version));
+    }
+};
+
+template <> struct openminecraft::network::OMNetworkPacketCodec<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>
+    {
+        openminecraft::specs::nbt::OMNbtReader reader(pck.asStream());
+
+        return reader.parse(false);
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolGameProfileProperty>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolGameProfileProperty
+    {
+        return {pck.read<openminecraft::network::OMUtf8String>(), pck.read<openminecraft::network::OMUtf8String>(),
+                pck.read<openminecraft::network::OMUtf8String>()};
+    }
+
+    static auto write(openminecraft::network::OMNetworkPacket &pck,
+                      const openminecraft::shell::network::OMProtocolGameProfileProperty &value) -> void
+    {
+        pck.write(openminecraft::network::OMUtf8String(value.name));
+        pck.write(openminecraft::network::OMUtf8String(value.value));
+        pck.write(openminecraft::network::OMUtf8String(value.signature));
+    }
+};
 
 #endif

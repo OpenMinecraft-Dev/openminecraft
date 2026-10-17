@@ -3,14 +3,41 @@
 //       misc/om_network_packet_test.cpp -o /tmp/om_network_packet_test
 //   /tmp/om_network_packet_test
 
+#include "openminecraft-shell/network/om_protocol_minecraft.hpp"
 #include "openminecraft/network/om_network_packet.hpp"
 
 #include <cstdint>
+#include <optional>
 #include <cstdio>
 #include <string>
 #include <vector>
 
 using namespace openminecraft::network;
+
+// 扩展点示例：自定义类型只需要特化 OMNetworkPacketCodec<T>，无需改动 OMNetworkPacket
+struct TestPair
+{
+    int32_t left = 0;
+    int32_t right = 0;
+};
+
+namespace openminecraft::network
+{
+template <> struct OMNetworkPacketCodec<TestPair>
+{
+    static constexpr bool supported = true;
+
+    static auto read(OMNetworkPacket &pck) -> TestPair
+    {
+        return {pck.read<int32_t>(), pck.read<int32_t>()};
+    }
+
+    static auto write(OMNetworkPacket &pck, const TestPair &value) -> void
+    {
+        pck.write<int32_t>(value.left).write<int32_t>(value.right);
+    }
+};
+} // namespace openminecraft::network
 
 static int failures = 0;
 
@@ -163,6 +190,110 @@ static auto testWireFormat() -> void
     }
 }
 
+static auto testCustomCodec() -> void
+{
+    // 标量
+    OMNetworkPacket p;
+    p.write(TestPair{7, -9});
+    p.reset();
+
+    auto pair = p.read<TestPair>();
+    CHECK(pair.left == 7 && pair.right == -9);
+
+    // 数组：readPrefixArray 复用 read<TestPair>()，同样自动支持
+    OMNetworkPacket a;
+    a.write(OMVarInt(2)).write(TestPair{1, 2}).write(TestPair{3, 4});
+    a.reset();
+
+    auto list = a.readPrefixArray<TestPair>();
+    CHECK(list.size() == 2 && list[0].left == 1 && list[1].right == 4);
+}
+
+static auto testFixedAndPrefixArrayWrites() -> void
+{
+    // 定长数组：线上没有长度前缀
+    OMNetworkPacket fixed;
+    fixed.writeFixedArray<int32_t>({1, -2, 3});
+    fixed.writeFixedArray<uint8_t>({0x11, 0x22, 0x33});
+    fixed.writeFixedArray<TestPair>({TestPair{1, 2}, TestPair{3, 4}});
+    fixed.writeFixedArray<int32_t>({});
+
+    fixed.reset();
+
+    auto fi = fixed.readFixedArray<int32_t>(3);
+    CHECK(fi.size() == 3 && fi[0] == 1 && fi[1] == -2 && fi[2] == 3);
+
+    auto fb = fixed.readFixedArray<uint8_t>(3);
+    CHECK(fb.size() == 3 && fb[0] == 0x11 && fb[1] == 0x22 && fb[2] == 0x33);
+
+    auto fp = fixed.readFixedArray<TestPair>(2);
+    CHECK(fp.size() == 2 && fp[0].left == 1 && fp[1].right == 4);
+
+    auto fe = fixed.readFixedArray<int32_t>(0);
+    CHECK(fe.empty());
+
+    // 前缀数组：先 VarInt 元素个数
+    OMNetworkPacket prefixed;
+    prefixed.writePrefixArray<int32_t>({1, -2, 3});
+    prefixed.writePrefixArray<OMUtf8String>({OMUtf8String("aa"), OMUtf8String("bb")});
+    prefixed.writePrefixArray<uint8_t>({0x11, 0x22});
+
+    // 线上第一字节应当是元素个数 3
+    CHECK(reinterpret_cast<const uint8_t *>(prefixed.data())[0] == 0x03);
+
+    prefixed.reset();
+
+    auto pi = prefixed.readPrefixArray<int32_t>();
+    CHECK(pi.size() == 3 && pi[1] == -2);
+
+    auto ps = prefixed.readPrefixArray<OMUtf8String>();
+    CHECK(ps.size() == 2 && ps[0].value == "aa" && ps[1].value == "bb");
+
+    auto pb = prefixed.readPrefixArray<uint8_t>();
+    CHECK(pb.size() == 2 && pb[1] == 0x22);
+}
+
+static auto testProtocolCodecs() -> void
+{
+    using openminecraft::shell::network::OMProtocolGameProfileProperty;
+    using openminecraft::shell::network::OMProtocolKnownPack;
+
+    OMNetworkPacket p;
+    p.writePrefixArray<OMProtocolKnownPack>({{"minecraft", "core", "1.21"}, {"forge", "neoforge", "1"}});
+    p.writePrefixArray<OMProtocolGameProfileProperty>({{"textures", "abc", "sig"}});
+    p.reset();
+
+    auto packs = p.readPrefixArray<OMProtocolKnownPack>();
+    CHECK(packs.size() == 2);
+    CHECK(packs[0].namesp == "minecraft" && packs[0].id == "core" && packs[0].version == "1.21");
+    CHECK(packs[1].namesp == "forge" && packs[1].id == "neoforge");
+
+    auto props = p.readPrefixArray<OMProtocolGameProfileProperty>();
+    CHECK(props.size() == 1 && props[0].name == "textures" && props[0].signature == "sig");
+}
+
+static auto testOptionalCodec() -> void
+{
+    OMNetworkPacket p;
+    p.write(std::optional<TestPair>{TestPair{5, 6}});
+    p.write(std::optional<TestPair>{});
+    p.write(std::optional<int32_t>{42});
+    p.write(std::optional<std::string>{"hi"});
+    p.reset();
+
+    auto present = p.read<std::optional<TestPair>>();
+    CHECK(present.has_value() && present->left == 5 && present->right == 6);
+
+    auto absent = p.read<std::optional<TestPair>>();
+    CHECK(!absent.has_value());
+
+    auto number = p.read<std::optional<int32_t>>();
+    CHECK(number.has_value() && *number == 42);
+
+    auto text = p.read<std::optional<std::string>>();
+    CHECK(text.has_value() && *text == "hi");
+}
+
 static auto testStringVectorConversion() -> void
 {
     std::vector<OMUtf8String> utf8 = {OMUtf8String("x"), OMUtf8String("yy")};
@@ -180,6 +311,10 @@ auto main() -> int
     testEmptyArray();
     testScalars();
     testWireFormat();
+    testCustomCodec();
+    testFixedAndPrefixArrayWrites();
+    testProtocolCodecs();
+    testOptionalCodec();
     testStringVectorConversion();
 
     if (failures)

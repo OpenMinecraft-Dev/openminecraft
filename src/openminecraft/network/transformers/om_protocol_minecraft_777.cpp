@@ -31,18 +31,9 @@ void OMProtocolMinecraftTransformer777::sendLoginAcknowledged()
     handler.handleEnterConfiguration();
 }
 
-void OMProtocolMinecraftTransformer777::sendConfigurationKnownPacks(
-    std::vector<std::tuple<std::string, std::string, std::string>> pcks)
+void OMProtocolMinecraftTransformer777::sendConfigurationKnownPacks(std::vector<OMProtocolKnownPack> pcks)
 {
-    auto pck =
-        openminecraft::network::OMNetworkPacket().packetId(0x07).write(OMVarInt(static_cast<int32_t>(pcks.size())));
-    for (const auto &p : pcks)
-    {
-        pck.write(OMUtf8String(std::get<0>(p)));
-        pck.write(OMUtf8String(std::get<1>(p)));
-        pck.write(OMUtf8String(std::get<2>(p)));
-    }
-    protocol.write(pck);
+    protocol.write(openminecraft::network::OMNetworkPacket().packetId(0x07).writePrefixArray(pcks));
 }
 
 void OMProtocolMinecraftTransformer777::sendConfigurationFinishAcknowledged()
@@ -75,11 +66,7 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             OMProtocolGameProfile profile = {};
             profile.uuid = pck.read<openminecraft::util::OMUuid>().toString();
             profile.name = pck.read<OMUtf8String>();
-            for (int i = 0; i < pck.read<OMVarInt>(); ++i)
-            {
-                profile.properties.emplace_back(pck.read<OMUtf8String>(), pck.read<OMUtf8String>(),
-                                                pck.read<OMUtf8String>());
-            }
+            profile.properties = pck.readPrefixArray<OMProtocolGameProfileProperty>();
             profile.sessionId = pck.read<openminecraft::util::OMUuid>().toString();
             handler.handleLoginSuccess(profile);
             return;
@@ -123,15 +110,9 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             for (int i = 0; i < reg; ++i)
             {
                 auto name = pck.read<OMUtf8String>();
-                auto havenbt = pck.read<bool>();
-                std::shared_ptr<openminecraft::specs::nbt::OMNbtTag> args = nullptr;
-                if (havenbt)
-                {
-                    openminecraft::specs::nbt::OMNbtReader r(pck.asStream());
-                    args = r.parse(false);
-                }
+                auto args = pck.read<std::optional<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>>();
 
-                regItems[name] = args;
+                regItems[name] = args.value_or(nullptr);
             }
 
             handler.handleConfigurationRegistryData(regName, regItems);
