@@ -3,6 +3,7 @@
 
 #include "openminecraft/network/om_network_packet.hpp"
 #include "openminecraft/network/protocol/coding/om_coding.hpp"
+#include "openminecraft/specs/nbt/om_nbt.hpp"
 #include "openminecraft/util/om_util_uuid.hpp"
 #include <functional>
 #include <memory>
@@ -40,6 +41,16 @@ class OMProtocolMinecraftHandler
     std::function<void(std::vector<std::string>)> handleConfigurationFeatureFlags = [](std::vector<std::string>) {};
     std::function<void(std::vector<std::tuple<std::string, std::string, std::string>>)>
         handleConfigurationReportDetails = [](std::vector<std::tuple<std::string, std::string, std::string>>) {};
+    std::function<void(std::string,
+                       const std::unordered_map<std::string, std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>> &)>
+        handleConfigurationRegistryData =
+            [](std::string,
+               const std::unordered_map<std::string, std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>> &) {};
+    std::function<void(std::unordered_map<std::string, std::unordered_map<std::string, std::vector<int>>> &)>
+        handleConfigurationUpdateTag =
+            [](std::unordered_map<std::string, std::unordered_map<std::string, std::vector<int>>> &) {};
+    std::function<void()> handleConfigurationFinish = []() {};
+    std::function<void()> handleEnterPlay = []() {};
 };
 
 class OMProtocolMinecraft : public openminecraft::network::protocol::OMCodingBase
@@ -94,6 +105,7 @@ class OMProtocolMinecraftTransformer
     virtual void sendLoginAcknowledged() = 0;
 
     virtual void sendConfigurationKnownPacks(std::vector<std::tuple<std::string, std::string, std::string>>) = 0;
+    virtual void sendConfigurationFinishAcknowledged() = 0;
 
     virtual void handle() = 0;
 };

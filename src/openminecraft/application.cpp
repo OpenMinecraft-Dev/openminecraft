@@ -179,6 +179,10 @@ void OMApplication::networkSetup(std::string host, std::string port)
             logger.debug(s);
         }
     };
+    hnd.handleConfigurationFinish = [&]() {
+        logger.debug("configuration finish!");
+        transformer.sendConfigurationFinishAcknowledged();
+    };
     try
     {
         transformer.sendHandshake(host, std::stoi(port), 2);

@@ -2,9 +2,13 @@
 #include "openminecraft-shell/network/om_protocol_minecraft.hpp"
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_general.hpp"
 #include "openminecraft/network/om_network_packet.hpp"
+#include "openminecraft/specs/nbt/om_nbt.hpp"
 #include "openminecraft/specs/nbt/om_nbt_reader.hpp"
 #include "openminecraft/util/om_util_uuid.hpp"
+#include <memory>
+#include <stdexcept>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 namespace openminecraftshell::network::transformers
@@ -35,6 +39,13 @@ void OMProtocolMinecraftTransformer777::sendConfigurationKnownPacks(
         pck.writeUtf8WithLength(std::get<2>(p));
     }
     protocol.write(pck);
+}
+
+void OMProtocolMinecraftTransformer777::sendConfigurationFinishAcknowledged()
+{
+    protocol.write(openminecraft::network::OMNetworkPacket().packetId(0x03));
+    protocol.switchState(network::Play);
+    handler.handleEnterPlay();
 }
 
 void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState state,
@@ -89,6 +100,10 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         case 0x01:
             handler.handleConfigurationPluginMessage(pck.readUtf8WithLength(), pck);
             return;
+            // Configuration Finish
+        case 0x03:
+            handler.handleConfigurationFinish();
+            return;
             // Feature Flags
         case 0x0d: {
             auto i = pck.readVarInt();
@@ -102,42 +117,50 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         }
             // Registry Data
         case 0x07: {
-            // pck.debug(64);
-            logger.debug(pck.readUtf8WithLength());
+            auto regName = pck.readUtf8WithLength();
             auto reg = pck.readVarInt();
+
+            std::unordered_map<std::string, std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>> regItems;
+
             for (int i = 0; i < reg; ++i)
             {
-                logger.debug(pck.readUtf8WithLength());
-                auto havenbt = pck.read<uint8_t>();
+                auto name = pck.readUtf8WithLength();
+                auto havenbt = pck.read<bool>();
+                std::shared_ptr<openminecraft::specs::nbt::OMNbtTag> args = nullptr;
                 if (havenbt)
                 {
                     openminecraft::specs::nbt::OMNbtReader r(pck.asStream());
-                    r.parse(false);
+                    args = r.parse(false);
                 }
+
+                regItems[name] = args;
             }
+
+            handler.handleConfigurationRegistryData(regName, regItems);
             return;
         }
             // Update Tag
         case 0x0e: {
-            logger.debug("tags");
-
+            std::unordered_map<std::string, std::unordered_map<std::string, std::vector<int>>> tags;
             int regCount = pck.readVarInt();
             for (int i = 0; i < regCount; ++i)
             {
-                logger.debug(pck.readUtf8WithLength());
+                auto regName = pck.readUtf8WithLength();
+                auto &reg = tags[regName];
                 int tagsCount = pck.readVarInt();
 
                 for (int ti = 0; ti < tagsCount; ++ti)
                 {
-                    logger.debug(pck.readUtf8WithLength());
+                    auto &entries = reg[pck.readUtf8WithLength()];
 
                     int entriesCount = pck.readVarInt();
                     for (int e = 0; e < entriesCount; ++e)
                     {
-                        pck.readVarInt();
+                        entries.push_back(pck.readVarInt());
                     }
                 }
             }
+            handler.handleConfigurationUpdateTag(tags);
             return;
         }
             // Chat Report Custom
@@ -155,10 +178,31 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             break;
         }
     case Play:
-        break;
+        switch (pck.id)
+        {
+        case 0x32: {
+            logger.debug("entity id: {}", pck.read<int32_t>());
+            bool ishardcore = pck.read<bool>();
+            int dimC = pck.readVarInt();
+            for (int i = 0; i < dimC; ++i)
+            {
+                logger.debug(pck.readUtf8WithLength());
+            }
+            auto maxplayers = pck.readVarInt();
+            auto viewDistance = pck.readVarInt();
+            auto simulationDistance = pck.readVarInt();
+            break;
+        }
+        case 0x2d:
+            logger.debug("chunk data!");
+            return;
+        default:
+            break;
+        }
     }
 
     pck.debug(64);
     OMProtocolMinecraftTransformerGeneral::handleRest(state, pck);
+    throw std::logic_error("unknown packet!");
 }
 } // namespace openminecraftshell::network::transformers

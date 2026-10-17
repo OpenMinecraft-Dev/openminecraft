@@ -115,7 +115,7 @@ class OMNetworkPacket
 
     template <typename T> auto read() -> T
     {
-        if constexpr (std::is_same_v<T, uint8_t>)
+        if constexpr (std::is_same_v<T, uint8_t> || std::is_same_v<T, bool>)
         {
             return buffer[offset++];
         }
@@ -161,7 +161,7 @@ class OMNetworkPacket
 
     template <typename T> auto write(T t) -> OMNetworkPacket &
     {
-        if constexpr (std::is_same_v<T, uint8_t>)
+        if constexpr (std::is_same_v<T, uint8_t> || std::is_same_v<T, bool>)
         {
             buffer.push_back(t);
         }
