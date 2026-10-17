@@ -20,9 +20,9 @@ template <int Cs> class OMChunk
     {
     }
 
-    void setBlock(int x, int y, int z, uint32_t blockstate)
+    void setBlock(int x, int y, int z, uint32_t blockState)
     {
-        blocks[y * Cs * Cs + x * Cs + z] = blockstate;
+        blocks[y * Cs * Cs + x * Cs + z] = blockState;
         dirty = true;
     }
     auto getBlock(int x, int y, int z) -> uint32_t
@@ -54,28 +54,28 @@ template <int Cs> class OMChunk
         using pointer = const value_type *;
         using reference = const value_type &;
 
-        const_iterator(const OMChunk *chunk, size_t index) : chunk_(chunk), index_(index)
+        const_iterator(const OMChunk *chunk, size_t index) : chunk(chunk), index(index)
         {
         }
 
         auto operator++() -> const_iterator &
         {
-            ++index_;
+            ++index;
             return *this;
         }
 
         auto operator*() const -> value_type
         {
-            int x = (index_ / Cs) % Cs;
-            int y = index_ / (Cs * Cs);
-            int z = index_ % Cs;
-            uint32_t block = chunk_->blocks[index_];
+            int x = (index / Cs) % Cs;
+            int y = index / (Cs * Cs);
+            int z = index % Cs;
+            uint32_t block = chunk->blocks[index];
             return {{x, y, z}, block};
         }
 
         auto operator==(const const_iterator &other) const -> bool
         {
-            return chunk_ == other.chunk_ && index_ == other.index_;
+            return chunk == other.chunk && index == other.index;
         }
         auto operator!=(const const_iterator &other) const -> bool
         {
@@ -85,8 +85,8 @@ template <int Cs> class OMChunk
         std::vector<uint32_t> extras = {};
 
       private:
-        const OMChunk *chunk_;
-        size_t index_;
+        const OMChunk *chunk;
+        size_t index;
     };
     auto begin() const -> const_iterator const
     {

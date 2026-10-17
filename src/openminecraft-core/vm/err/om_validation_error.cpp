@@ -5,7 +5,7 @@
 
 namespace openminecraft::vm::err
 {
-OMValidationError::OMValidationError(ValidationState state, std::string reason, std::string additional)
+OMValidationError::OMValidationError(OMValidationState state, std::string reason, std::string additional)
     : state(state), reason(std::move(reason)), additional(std::move(additional))
 {
 }

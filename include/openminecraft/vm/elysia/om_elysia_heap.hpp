@@ -1,5 +1,5 @@
-#ifndef OM_ELYSIA_HEAP
-#define OM_ELYSIA_HEAP
+#ifndef OM_ELYSIA_HEAP_HPP
+#define OM_ELYSIA_HEAP_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/mem/om_mem_prealloc.hpp"

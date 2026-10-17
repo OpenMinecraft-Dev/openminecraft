@@ -28,7 +28,7 @@ uint64_t blocks = 0;
 std::atomic_bool accessing;
 
 log::OMLogger logger("Memory Record/Castorice");
-void rec(MemModifyInfo &&i)
+void rec(OMMemModifyInfo &&i)
 {
     bool expected = false;
     while (!accessing.compare_exchange_weak(expected, true))

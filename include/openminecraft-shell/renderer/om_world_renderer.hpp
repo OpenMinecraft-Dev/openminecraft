@@ -61,7 +61,7 @@ class OMWorldRenderer : public OMRendererHandler
     OMRendererTexture *moonTex;
     OMRendererTexture *cloudTex;
 
-    data::block::OMBlockstateResolver *blockstateResolver;
+    data::block::OMBlockStateResolver *blockStateResolver;
     data::OMModelPrecompiler *voxelHandler;
 
     std::shared_ptr<basics::OMCamera> camera;

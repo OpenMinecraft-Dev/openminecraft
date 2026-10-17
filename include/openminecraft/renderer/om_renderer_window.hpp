@@ -15,7 +15,7 @@ enum OMBackend : uint8_t
     OpenGL = 0,
     Vulkan = 1
 };
-using OMVersionRequirement = std::array<util::Version, 2>;
+using OMVersionRequirement = std::array<util::OMVersion, 2>;
 struct OMWindowConfig
 {
     OMBackend backend;

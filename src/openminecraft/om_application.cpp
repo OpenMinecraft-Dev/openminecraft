@@ -129,7 +129,7 @@ auto OMApplication::entry() -> int
     }
 
     data::block::registerBlocks();
-    data::block::registerBlockstates();
+    data::block::registerBlockStates();
     mainLoop(bk);
 
 end:
@@ -219,7 +219,7 @@ void OMApplication::mainLoop(OMBackend backend)
     {
         OMWindowConfig conf = {backend, false, 240, 854, 480};
         // INFO: requires at least OpenGL 4.0 Core Profile or Vulkan 1.2
-        OMWindow win({util::Version(4, 0, 0, 0), util::Version(1, 2, 0, 0)}, conf,
+        OMWindow win({util::OMVersion(4, 0, 0, 0), util::OMVersion(1, 2, 0, 0)}, conf,
                      "/bootassets/openminecraft-renderer/shaders");
 
         using OMEventBusSDL = event::OMEventBus<SDL_EventType, SDL_Event>;
@@ -237,52 +237,52 @@ void OMApplication::mainLoop(OMBackend backend)
             {
                 for (int cz = -height; cz < height; ++cz)
                 {
-                    using data::block::blockstateRegistry;
+                    using data::block::blockStateRegistry;
                     world::OMChunk<16> cnk(cx, cy, cz);
                     cnk.setBlock(0, 1, 0,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=1]")));
+                                 blockStateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=1]")));
                     cnk.setBlock(0, 0, 0,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:lava[falling=false,level=0]")));
+                                 blockStateRegistry.id(data::OMIdentifier("minecraft:lava[falling=false,level=0]")));
                     cnk.setBlock(0, 15, 0,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=true,level=8]")));
+                                 blockStateRegistry.id(data::OMIdentifier("minecraft:water[falling=true,level=8]")));
                     cnk.setBlock(15, 1, 0,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=2]")));
+                                 blockStateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=2]")));
                     cnk.setBlock(0, 1, 15,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=2]")));
+                                 blockStateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=2]")));
                     cnk.setBlock(15, 1, 15,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=3]")));
+                                 blockStateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=3]")));
                     cnk.setBlock(15, 0, 0,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:white_stained_glass[]")));
-                    cnk.setBlock(0, 1, 1, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                                 blockStateRegistry.id(data::OMIdentifier("minecraft:white_stained_glass[]")));
+                    cnk.setBlock(0, 1, 1, blockStateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
                     cnk.setBlock(2, 0, 0,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:grass_block[snowy=false]")));
+                                 blockStateRegistry.id(data::OMIdentifier("minecraft:grass_block[snowy=false]")));
                     cnk.setBlock(2, 1, 0,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:tall_grass[half=lower]")));
+                                 blockStateRegistry.id(data::OMIdentifier("minecraft:tall_grass[half=lower]")));
                     cnk.setBlock(2, 2, 0,
-                                 blockstateRegistry.id(data::OMIdentifier("minecraft:tall_grass[half=upper]")));
+                                 blockStateRegistry.id(data::OMIdentifier("minecraft:tall_grass[half=upper]")));
                     cnk.setBlock(
                         1, 1, 0,
-                        blockstateRegistry.id(data::OMIdentifier(
+                        blockStateRegistry.id(data::OMIdentifier(
                             "minecraft:cherry_stairs[facing=east,half=bottom,shape=straight,water_logged=true]")));
                     cnk.setBlock(3, 1, 0,
-                                 blockstateRegistry.id(data::OMIdentifier(
+                                 blockStateRegistry.id(data::OMIdentifier(
                                      "minecraft:cherry_door[facing=east,half=lower,hinge=left,open=false]")));
                     cnk.setBlock(3, 2, 0,
-                                 blockstateRegistry.id(data::OMIdentifier(
+                                 blockStateRegistry.id(data::OMIdentifier(
                                      "minecraft:cherry_door[facing=east,half=upper,hinge=left,open=false]")));
                     cnk.setBlock(0, 2, 1,
-                                 blockstateRegistry.id(data::OMIdentifier(
+                                 blockStateRegistry.id(data::OMIdentifier(
                                      "minecraft:cherry_hanging_sign[attached=false,rotation=3,water_logged=false]")));
-                    cnk.setBlock(0, 1, 2, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
-                    cnk.setBlock(15, 1, 1, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
-                    cnk.setBlock(15, 1, 2, blockstateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                    cnk.setBlock(0, 1, 2, blockStateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                    cnk.setBlock(15, 1, 1, blockStateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                    cnk.setBlock(15, 1, 2, blockStateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
                     cnk.setBlock(15, 2, 2,
-                                 blockstateRegistry.id(
+                                 blockStateRegistry.id(
                                      data::OMIdentifier("minecraft:cherry_fence_gate[facing=south,in_wall=false,"
                                                         "open=true,powered=true,water_logged=false]")));
                     cnk.setBlock(
                         15, 2, 1,
-                        blockstateRegistry.id(data::OMIdentifier("minecraft:stone_pressure_plate[powered=false]")));
+                        blockStateRegistry.id(data::OMIdentifier("minecraft:stone_pressure_plate[powered=false]")));
                     chunkManager->loadChunk(cnk);
                 }
             }

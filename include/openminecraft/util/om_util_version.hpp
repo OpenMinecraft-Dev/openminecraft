@@ -6,24 +6,24 @@
 
 namespace openminecraft::util
 {
-class Version
+class OMVersion
 {
   public:
-    Version(uint16_t major, uint16_t minor, uint16_t patch1, uint16_t patch2);
-    Version(uint16_t major, uint16_t minor, uint16_t patch1);
-    Version(uint32_t vkver);
-    Version() : majorver(0), minorver(0), patch1(0), patch2(0)
+    OMVersion(uint16_t major, uint16_t minor, uint16_t patch1, uint16_t patch2);
+    OMVersion(uint16_t major, uint16_t minor, uint16_t patch1);
+    OMVersion(uint32_t vkver);
+    OMVersion() : majorVersion(0), minorVersion(0), patch1(0), patch2(0)
     {
     }
-    ~Version();
+    ~OMVersion();
 
     auto toString() -> std::string;
 
     auto toVKVersion() -> int;
     auto toVKApiVersion() -> int;
 
-    const uint16_t majorver;
-    const uint16_t minorver;
+    const uint16_t majorVersion;
+    const uint16_t minorVersion;
     const uint16_t patch1;
     const uint16_t patch2;
 };

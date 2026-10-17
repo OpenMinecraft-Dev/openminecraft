@@ -13,14 +13,14 @@
 
 namespace openminecraft::shell::data::block
 {
-class OMBlockstateResolver
+class OMBlockStateResolver
 {
   public:
-    OMBlockstateResolver(std::string root, OMModelPrecompiler &compiler)
-        : root(root), compiler(compiler), logger("OMBlockstateResolver", this)
+    OMBlockStateResolver(std::string root, OMModelPrecompiler &compiler)
+        : root(root), compiler(compiler), logger("OMBlockStateResolver", this)
     {
     }
-    ~OMBlockstateResolver() = default;
+    ~OMBlockStateResolver() = default;
 
     void resolve(OMIdentifier);
     void buildModel(OMIdentifier, OMBlockState state);

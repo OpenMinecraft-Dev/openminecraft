@@ -53,12 +53,12 @@ class OMMemoryStreamBuf : public std::streambuf
 class OMMemoryStream : public std::istream
 {
   public:
-    OMMemoryStream(const char *src, std::size_t length) : std::istream(&buf_), buf_(src, length)
+    OMMemoryStream(const char *src, std::size_t length) : std::istream(&buf), buf(src, length)
     {
     }
 
   private:
-    OMMemoryStreamBuf buf_;
+    OMMemoryStreamBuf buf;
 };
 } // namespace openminecraft::util
 

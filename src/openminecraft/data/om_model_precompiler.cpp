@@ -70,8 +70,8 @@ static auto fromAxis(std::string s) -> OMModelAxis
 auto OMModelPrecompiler::querySkipsRendering(int bsid, int tgbsid,
                                              openminecraft::renderer::common::wrap::OMVoxelFacing d) -> bool
 {
-    const auto &b = block::blockstateRegistry.idToRegistry[bsid];
-    const auto &tb = block::blockstateRegistry.idToRegistry[tgbsid];
+    const auto &b = block::blockStateRegistry.idToRegistry[bsid];
+    const auto &tb = block::blockStateRegistry.idToRegistry[tgbsid];
     return block::blockRegistry.getRegistry(b.block)->skipsRendering(b, tb, d);
 }
 auto OMModelPrecompiler::queryTranslucent(int bsid) -> bool

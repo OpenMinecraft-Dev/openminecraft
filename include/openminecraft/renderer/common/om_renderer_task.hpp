@@ -1,5 +1,5 @@
-#ifndef OM_RENDERER_TASK
-#define OM_RENDERER_TASK
+#ifndef OM_RENDERER_TASK_HPP
+#define OM_RENDERER_TASK_HPP
 
 #include "glm/ext/vector_float4.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"

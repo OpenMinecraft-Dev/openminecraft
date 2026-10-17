@@ -15,22 +15,22 @@
 #define OM_MEM_VMCODE 8
 namespace openminecraft::mem::castorice
 {
-enum MemModifyType
+enum OMMemModifyType
 {
     Allocation,
     Free
 };
 
-struct MemModifyInfo
+struct OMMemModifyInfo
 {
-    MemModifyType type;
+    OMMemModifyType type;
     void *addr;
     size_t length;
     const char *tag;
 };
 
 auto heapSize(void *p) -> size_t;
-void rec(MemModifyInfo &&i);
+void rec(OMMemModifyInfo &&i);
 void printres(std::function<void(std::string, std::string)>);
 } // namespace openminecraft::mem::castorice
 

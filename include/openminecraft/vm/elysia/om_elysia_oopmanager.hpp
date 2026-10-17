@@ -1,5 +1,5 @@
-#ifndef OM_ELYSIA_OOPMANAGER
-#define OM_ELYSIA_OOPMANAGER
+#ifndef OM_ELYSIA_OOPMANAGER_HPP
+#define OM_ELYSIA_OOPMANAGER_HPP
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vm/elysia/om_elysia_klass.hpp"

@@ -1,5 +1,5 @@
-#ifndef OM_ELYSIA_INTERFACE_UTILS
-#define OM_ELYSIA_INTERFACE_UTILS
+#ifndef OM_ELYSIA_INTERFACE_UTILS_HPP
+#define OM_ELYSIA_INTERFACE_UTILS_HPP
 
 #include "openminecraft/mem/om_mem_allocator.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"

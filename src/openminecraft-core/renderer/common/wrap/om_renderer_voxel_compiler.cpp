@@ -181,12 +181,12 @@ auto OMVoxelCompiler::existFluidSame(const world::OMChunk<16> &chunk,
     {
         exist = handler->queryFluid(converter(chunk.fetch(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
     }
-    return exist && handler->queryFluidSame(converter(queryBlockstate(chunk, externalAccessor, x, y, z), chunk.chunkx,
+    return exist && handler->queryFluidSame(converter(queryBlockState(chunk, externalAccessor, x, y, z), chunk.chunkx,
                                                       chunk.chunky, chunk.chunkz, x, y, z),
                                             state);
 }
 
-auto OMVoxelCompiler::queryBlockstate(const world::OMChunk<16> &chunk,
+auto OMVoxelCompiler::queryBlockState(const world::OMChunk<16> &chunk,
                                       std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
                                       int x, int y, int z) -> uint32_t
 {
@@ -206,7 +206,7 @@ auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
     uint8_t ao1 = 0, ao2 = 0, ao3 = 0, ao4 = 0;
     auto currentAabb = handler->queryPartAABB(bsid, pid);
     auto countNeighborsPoint = [&](int dx, int dy, int dz, glm::ivec3 pos) -> int {
-        auto tgbs = queryBlockstate(chunk, externalAccessor, x + dx, y + dy, z + dz);
+        auto tgbs = queryBlockState(chunk, externalAccessor, x + dx, y + dy, z + dz);
         if (tgbs == 0)
         {
             return 0;
@@ -365,22 +365,22 @@ auto OMVoxelCompiler::checkSkip(const world::OMChunk<16> &chunk,
     case None:
         return false;
     case NegX:
-        target = queryBlockstate(chunk, externalAccessor, v.x - 1, v.y, v.z);
+        target = queryBlockState(chunk, externalAccessor, v.x - 1, v.y, v.z);
         break;
     case NegY:
-        target = queryBlockstate(chunk, externalAccessor, v.x, v.y - 1, v.z);
+        target = queryBlockState(chunk, externalAccessor, v.x, v.y - 1, v.z);
         break;
     case NegZ:
-        target = queryBlockstate(chunk, externalAccessor, v.x, v.y, v.z - 1);
+        target = queryBlockState(chunk, externalAccessor, v.x, v.y, v.z - 1);
         break;
     case PosX:
-        target = queryBlockstate(chunk, externalAccessor, v.x + 1, v.y, v.z);
+        target = queryBlockState(chunk, externalAccessor, v.x + 1, v.y, v.z);
         break;
     case PosY:
-        target = queryBlockstate(chunk, externalAccessor, v.x, v.y + 1, v.z);
+        target = queryBlockState(chunk, externalAccessor, v.x, v.y + 1, v.z);
         break;
     case PosZ:
-        target = queryBlockstate(chunk, externalAccessor, v.x, v.y, v.z + 1);
+        target = queryBlockState(chunk, externalAccessor, v.x, v.y, v.z + 1);
         break;
     }
     return handler->querySkipsRendering(id, target, f);
@@ -390,7 +390,7 @@ auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
                                     std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
                                     glm::ivec3 v, int idx, int current) -> float
 {
-    uint32_t selfState = converter(queryBlockstate(chunk, externalAccessor, v.x, v.y, v.z), chunk.chunkx, chunk.chunky,
+    uint32_t selfState = converter(queryBlockState(chunk, externalAccessor, v.x, v.y, v.z), chunk.chunkx, chunk.chunky,
                                    chunk.chunkz, v.x, v.y, v.z);
     if (!handler->queryFluid(selfState))
     {
@@ -421,7 +421,7 @@ auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
 
     for (const auto &p : nPos)
     {
-        uint32_t ns = converter(queryBlockstate(chunk, externalAccessor, p.x, p.y, p.z), chunk.chunkx, chunk.chunky,
+        uint32_t ns = converter(queryBlockState(chunk, externalAccessor, p.x, p.y, p.z), chunk.chunkx, chunk.chunky,
                                 chunk.chunkz, p.x, p.y, p.z);
         if (!handler->queryFluid(ns))
             continue;

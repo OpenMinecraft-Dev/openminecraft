@@ -1,5 +1,5 @@
-#ifndef OM_RENDERER_EXCEPTION
-#define OM_RENDERER_EXCEPTION
+#ifndef OM_RENDERER_EXCEPTION_HPP
+#define OM_RENDERER_EXCEPTION_HPP
 
 #include <string>
 #include <utility>

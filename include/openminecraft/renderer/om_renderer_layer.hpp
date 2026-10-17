@@ -27,10 +27,10 @@ namespace openminecraft::renderer
 struct AppInfo
 {
     std::string appName;
-    util::Version appVer;
+    util::OMVersion appVer;
     std::string engineName;
-    util::Version engineVer;
-    util::Version minApiVersion;
+    util::OMVersion engineVer;
+    util::OMVersion minApiVersion;
 };
 class OMRenderer
 {

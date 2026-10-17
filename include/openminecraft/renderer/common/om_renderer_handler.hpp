@@ -1,5 +1,5 @@
-#ifndef OM_RENDERER_APP_HPP
-#define OM_RENDERER_APP_HPP
+#ifndef OM_RENDERER_HANDLER_HPP
+#define OM_RENDERER_HANDLER_HPP
 
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/om_renderer_object.hpp"

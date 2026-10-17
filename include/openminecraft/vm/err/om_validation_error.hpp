@@ -1,12 +1,12 @@
-#ifndef OM_VALIDATION_ERROR
-#define OM_VALIDATION_ERROR
+#ifndef OM_VALIDATION_ERROR_HPP
+#define OM_VALIDATION_ERROR_HPP
 
 #include <exception>
 #include <string>
 
 namespace openminecraft::vm::err
 {
-enum ValidationState
+enum OMValidationState
 {
     Unknown,
     Loading,
@@ -18,12 +18,12 @@ enum ValidationState
 class OMValidationError : public std::exception
 {
   private:
-    ValidationState state;
+    OMValidationState state;
     std::string reason;
     std::string additional;
 
   public:
-    OMValidationError(ValidationState, std::string, std::string);
+    OMValidationError(OMValidationState, std::string, std::string);
     OMValidationError();
     virtual const char *what() const throw();
 };

@@ -4,29 +4,29 @@
 
 namespace openminecraft::util
 {
-Version::Version(uint16_t major, uint16_t minor, uint16_t patch1, uint16_t patch2)
-    : majorver(major), minorver(minor), patch1(patch1), patch2(patch2)
+OMVersion::OMVersion(uint16_t major, uint16_t minor, uint16_t patch1, uint16_t patch2)
+    : majorVersion(major), minorVersion(minor), patch1(patch1), patch2(patch2)
 {
 }
-Version::Version(uint16_t major, uint16_t minor, uint16_t patch1)
-    : majorver(major), minorver(minor), patch1(patch1), patch2(0)
+OMVersion::OMVersion(uint16_t major, uint16_t minor, uint16_t patch1)
+    : majorVersion(major), minorVersion(minor), patch1(patch1), patch2(0)
 {
 }
-Version::Version(uint32_t vkver)
-    : majorver(VK_VERSION_MAJOR(vkver)), minorver(VK_VERSION_MINOR(vkver)), patch1(VK_VERSION_PATCH(vkver)), patch2(0)
+OMVersion::OMVersion(uint32_t vkver)
+    : majorVersion(VK_VERSION_MAJOR(vkver)), minorVersion(VK_VERSION_MINOR(vkver)), patch1(VK_VERSION_PATCH(vkver)), patch2(0)
 {
 }
-Version::~Version() = default;
-auto Version::toString() -> std::string
+OMVersion::~OMVersion() = default;
+auto OMVersion::toString() -> std::string
 {
-    return fmt::format("{}.{}.{}.{}", majorver, minorver, patch1, patch2);
+    return fmt::format("{}.{}.{}.{}", majorVersion, minorVersion, patch1, patch2);
 }
-auto Version::toVKVersion() -> int
+auto OMVersion::toVKVersion() -> int
 {
-    return VK_MAKE_VERSION(majorver, minorver, patch1);
+    return VK_MAKE_VERSION(majorVersion, minorVersion, patch1);
 }
-auto Version::toVKApiVersion() -> int
+auto OMVersion::toVKApiVersion() -> int
 {
-    return VK_MAKE_API_VERSION(majorver, minorver, patch1, patch2);
+    return VK_MAKE_API_VERSION(majorVersion, minorVersion, patch1, patch2);
 }
 } // namespace openminecraft::util

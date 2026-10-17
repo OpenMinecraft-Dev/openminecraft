@@ -12,15 +12,15 @@ namespace openminecraft::specs::zip
 class OMZipSubStreamBuf : public std::streambuf
 {
   public:
-    OMZipSubStreamBuf(std::istream &src, std::streampos startPos, std::streamsize length)
-        : src_(src), start_(startPos), length_(length), absolutePos_(0)
+    OMZipSubStreamBuf(std::istream &source, std::streampos startPos, std::streamsize length)
+        : src(source), start(startPos), length(length), absolutePos(0)
     {
-        savedPos_ = src_.tellg();
-        if (savedPos_ == -1)
+        savedPos = src.tellg();
+        if (savedPos == -1)
             throw std::runtime_error("Source stream does not support tellg/seekg, required for zero-copy sub-stream");
 
-        src_.seekg(start_);
-        if (!src_)
+        src.seekg(start);
+        if (!src)
             throw std::runtime_error("Failed to seek to sub-stream start position");
 
         setg(nullptr, nullptr, nullptr);
@@ -28,10 +28,10 @@ class OMZipSubStreamBuf : public std::streambuf
 
     ~OMZipSubStreamBuf() override
     {
-        if (savedPos_ != std::streampos(-1))
+        if (savedPos != std::streampos(-1))
         {
-            src_.clear();
-            src_.seekg(savedPos_);
+            src.clear();
+            src.seekg(savedPos);
         }
     }
 
@@ -41,20 +41,20 @@ class OMZipSubStreamBuf : public std::streambuf
   protected:
     auto underflow() -> int_type override
     {
-        if (absolutePos_ >= length_)
+        if (absolutePos >= length)
         {
             return traits_type::eof();
         }
 
         char ch;
-        if (!src_.get(ch))
+        if (!src.get(ch))
         {
             return traits_type::eof();
         }
 
-        ourBuf_[0] = ch;
-        setg(&ourBuf_[0], &ourBuf_[0], &ourBuf_[1]);
-        absolutePos_ = static_cast<uint64_t>(absolutePos_) + 1;
+        ourBuf[0] = ch;
+        setg(&ourBuf[0], &ourBuf[0], &ourBuf[1]);
+        absolutePos = static_cast<uint64_t>(absolutePos) + 1;
         return traits_type::to_int_type(ch);
     }
 
@@ -71,23 +71,23 @@ class OMZipSubStreamBuf : public std::streambuf
             newAbsolute = off;
             break;
         case std::ios_base::cur:
-            newAbsolute = absolutePos_ + off;
+            newAbsolute = absolutePos + off;
             break;
         case std::ios_base::end:
-            newAbsolute = length_ + off;
+            newAbsolute = length + off;
             break;
         default:
             return {-1};
         }
 
-        if (newAbsolute < 0 || newAbsolute > length_)
+        if (newAbsolute < 0 || newAbsolute > length)
             return {-1}; // 越界
 
-        std::streampos newSrcPos = start_ + newAbsolute;
-        if (!src_.seekg(newSrcPos))
+        std::streampos newSrcPos = start + newAbsolute;
+        if (!src.seekg(newSrcPos))
             return {-1};
 
-        absolutePos_ = newAbsolute;
+        absolutePos = newAbsolute;
         setg(nullptr, nullptr, nullptr);
         return {newAbsolute};
     }
@@ -98,24 +98,24 @@ class OMZipSubStreamBuf : public std::streambuf
     }
 
   private:
-    std::istream &src_;
-    std::streampos start_;
-    std::streamsize length_;
-    std::streampos absolutePos_;
-    std::streampos savedPos_;
-    std::array<char, 2> ourBuf_;
+    std::istream &src;
+    std::streampos start;
+    std::streamsize length;
+    std::streampos absolutePos;
+    std::streampos savedPos;
+    std::array<char, 2> ourBuf;
 };
 
 class OMZipSubStream : public std::istream
 {
   public:
     OMZipSubStream(std::istream &src, std::streampos start, std::streamsize length)
-        : std::istream(&buf_), buf_(src, start, length)
+        : std::istream(&buf), buf(src, start, length)
     {
     }
 
   private:
-    OMZipSubStreamBuf buf_;
+    OMZipSubStreamBuf buf;
 };
 } // namespace openminecraft::specs::zip
 

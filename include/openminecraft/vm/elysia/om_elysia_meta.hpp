@@ -6,15 +6,15 @@
 
 namespace openminecraft::vm::elysia
 {
-class StateGuard
+class OMStateGuard
 {
   public:
-    StateGuard(OMElysiaThreadState state)
+    OMStateGuard(OMElysiaThreadState state)
     {
         st = thisThread.metadata->state;
         thisThread.switchState(state);
     }
-    ~StateGuard()
+    ~OMStateGuard()
     {
         thisThread.switchState(st);
     }
@@ -25,7 +25,7 @@ class StateGuard
 template <typename Func>
 HOT_FUNC inline auto execWithState(OMElysiaThreadState state, Func &&func) -> decltype(std::forward<Func>(func)())
 {
-    StateGuard g(state);
+    OMStateGuard g(state);
     return func();
 }
 } // namespace openminecraft::vm::elysia

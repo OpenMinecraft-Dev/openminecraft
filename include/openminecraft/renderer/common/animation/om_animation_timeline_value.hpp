@@ -1,5 +1,5 @@
-#ifndef OM_ANIMATION_TIMELINE_HPP
-#define OM_ANIMATION_TIMELINE_HPP
+#ifndef OM_ANIMATION_TIMELINE_VALUE_HPP
+#define OM_ANIMATION_TIMELINE_VALUE_HPP
 
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_interpolation.hpp"

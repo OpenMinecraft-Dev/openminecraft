@@ -1,5 +1,5 @@
-#ifndef OM_NETWORK_SOCKETSTREAM_HPP
-#define OM_NETWORK_SOCKETSTREAM_HPP
+#ifndef OM_NETWORK_PACKET_HPP
+#define OM_NETWORK_PACKET_HPP
 
 #include "openminecraft/util/om_util_uuid.hpp"
 #include <iostream>

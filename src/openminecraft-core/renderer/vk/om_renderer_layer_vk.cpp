@@ -782,7 +782,7 @@ auto OMRendererVk::fetchRequiredExtensions() -> OMResult<std::vector<const char 
         for (auto l : layers)
         {
             logger->info(translate("openminecraft.renderer.vk.layerdata", l.layerName.data(), l.description.data(),
-                                   Version(l.implementationVersion).toString(), Version(l.specVersion).toString()));
+                                   OMVersion(l.implementationVersion).toString(), OMVersion(l.specVersion).toString()));
         }
         validationLayer = std::make_shared<validation::OMRendererVkValidation>(layers);
         validationLayer->attachExts(&exts);

@@ -1,5 +1,5 @@
-#ifndef OM_RENDERER_LAYER_VK_BUFFER
-#define OM_RENDERER_LAYER_VK_BUFFER
+#ifndef OM_RENDERER_LAYER_VK_BUFFER_HPP
+#define OM_RENDERER_LAYER_VK_BUFFER_HPP
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 
 #ifdef OM_VULKAN_DYNAMIC

@@ -1,5 +1,5 @@
-#ifndef OM_IO_TOKEN
-#define OM_IO_TOKEN
+#ifndef OM_IO_TOKEN_HPP
+#define OM_IO_TOKEN_HPP
 
 #include <string>
 #include <type_traits>

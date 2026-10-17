@@ -14,7 +14,7 @@ using namespace openminecraft::io;
 
 namespace openminecraft::shell::data::block
 {
-auto OMBlockstateResolver::identFrom(std::shared_ptr<io::json::OMJsonNode> node) -> OMBlockModelIdentifier
+auto OMBlockStateResolver::identFrom(std::shared_ptr<io::json::OMJsonNode> node) -> OMBlockModelIdentifier
 {
     OMIdentifier ident(node->getMap()["model"]->getString());
     int xrot = node->getMap().count("x") ? node->getMap()["x"]->getNumber() : 0;
@@ -23,7 +23,7 @@ auto OMBlockstateResolver::identFrom(std::shared_ptr<io::json::OMJsonNode> node)
     bool uvlock = node->getMap().count("uvlock") ? node->getMap()["uvlock"]->getBoolean() : false;
     return {ident, xrot, yrot, zrot, uvlock};
 }
-void OMBlockstateResolver::resolveModel(OMIdentifier id, std::shared_ptr<io::json::OMJsonNode> node)
+void OMBlockStateResolver::resolveModel(OMIdentifier id, std::shared_ptr<io::json::OMJsonNode> node)
 {
     auto i = identFrom(node);
     if (requiredModels[id].count(i))
@@ -32,7 +32,7 @@ void OMBlockstateResolver::resolveModel(OMIdentifier id, std::shared_ptr<io::jso
     }
     requiredModels[id][i] = compiler.loadModelPartWithArgs(i.location, i.xrot, i.yrot, i.zrot, i.uvlock);
 }
-void OMBlockstateResolver::resolve(OMIdentifier ident)
+void OMBlockStateResolver::resolve(OMIdentifier ident)
 {
     auto &blk = blockRegistry.getRegistry(ident);
     states[ident].clear();
@@ -162,7 +162,7 @@ static auto caseCheck(OMBlockState &bs, std::shared_ptr<json::OMJsonNode> node) 
     return true;
 }
 
-auto OMBlockstateResolver::fetchModel(OMIdentifier ident, OMBlockState state, int variant) -> int
+auto OMBlockStateResolver::fetchModel(OMIdentifier ident, OMBlockState state, int variant) -> int
 {
     if (states[ident].count(state))
     {
@@ -175,7 +175,7 @@ auto OMBlockstateResolver::fetchModel(OMIdentifier ident, OMBlockState state, in
     }
 }
 
-void OMBlockstateResolver::buildModel(OMIdentifier ident, OMBlockState state)
+void OMBlockStateResolver::buildModel(OMIdentifier ident, OMBlockState state)
 {
     auto &blk = blockRegistry.getRegistry(ident);
     auto &st = state;

@@ -13,7 +13,7 @@ namespace openminecraft::network
 class OMNetworkPacketStreamBuf : public std::streambuf
 {
   public:
-    explicit OMNetworkPacketStreamBuf(OMNetworkPacket &packet) : packet_(packet)
+    explicit OMNetworkPacketStreamBuf(OMNetworkPacket &packet) : packet(packet)
     {
         syncFromPacket();
     }
@@ -88,19 +88,19 @@ class OMNetworkPacketStreamBuf : public std::streambuf
         }
         else if (dir == std::ios_base::cur)
         {
-            newOffset = static_cast<off_type>(packet_.offset) + off;
+            newOffset = static_cast<off_type>(packet.offset) + off;
         }
         else if (dir == std::ios_base::end)
         {
-            newOffset = static_cast<off_type>(packet_.buffer.size()) + off;
+            newOffset = static_cast<off_type>(packet.buffer.size()) + off;
         }
 
-        if (newOffset < 0 || newOffset > static_cast<off_type>(packet_.buffer.size()))
+        if (newOffset < 0 || newOffset > static_cast<off_type>(packet.buffer.size()))
         {
             return pos_type(off_type(-1));
         }
 
-        packet_.offset = static_cast<uint64_t>(newOffset);
+        packet.offset = static_cast<uint64_t>(newOffset);
         syncFromPacket();
         return {newOffset};
     }
@@ -108,13 +108,13 @@ class OMNetworkPacketStreamBuf : public std::streambuf
   private:
     void syncFromPacket()
     {
-        baseOffset_ = packet_.offset;
+        baseOffset = packet.offset;
 
-        auto &buf = packet_.buffer;
-        if (baseOffset_ < buf.size())
+        auto &buf = packet.buffer;
+        if (baseOffset < buf.size())
         {
-            char *base = reinterpret_cast<char *>(buf.data() + baseOffset_);
-            char *end = base + (buf.size() - baseOffset_);
+            char *base = reinterpret_cast<char *>(buf.data() + baseOffset);
+            char *end = base + (buf.size() - baseOffset);
             setg(base, base, end);
         }
         else
@@ -129,23 +129,23 @@ class OMNetworkPacketStreamBuf : public std::streambuf
         {
             return;
         }
-        packet_.offset = baseOffset_ + static_cast<uint64_t>(gptr() - eback());
+        packet.offset = baseOffset + static_cast<uint64_t>(gptr() - eback());
     }
 
-    OMNetworkPacket &packet_;
-    uint64_t baseOffset_ = 0;
+    OMNetworkPacket &packet;
+    uint64_t baseOffset = 0;
 };
 
 class OMNetworkPacketIStream : public std::istream
 {
   public:
-    OMNetworkPacketIStream(OMNetworkPacket &packet) : std::istream(&buf_), buf_(packet)
+    OMNetworkPacketIStream(OMNetworkPacket &packet) : std::istream(&buf), buf(packet)
     {
         exceptions(std::ios::badbit);
     }
 
   private:
-    OMNetworkPacketStreamBuf buf_;
+    OMNetworkPacketStreamBuf buf;
 };
 
 } // namespace openminecraft::network

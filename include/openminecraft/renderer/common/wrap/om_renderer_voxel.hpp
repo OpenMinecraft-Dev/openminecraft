@@ -1,5 +1,5 @@
-#ifndef OM_RENDEER_VOXEL_HPP
-#define OM_RENDEER_VOXEL_HPP
+#ifndef OM_RENDERER_VOXEL_HPP
+#define OM_RENDERER_VOXEL_HPP
 
 #include "glm/fwd.hpp"
 #include "glm/glm.hpp"
@@ -315,7 +315,7 @@ class OMVoxelCompiler
     OMVoxelCompiler();
     ~OMVoxelCompiler();
 
-    auto queryBlockstate(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
+    auto queryBlockState(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                          int x, int y, int z) -> uint32_t;
     auto existSoild(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, int x,
                     int y, int z) -> bool;
@@ -423,15 +423,15 @@ struct OMVoxelLightMap
     float darknessScale;
     float bossOverlayWorldDarkeningFactor;
     float brightnessFactor;
-    float pad01_, pad02_;
+    float pad01, pad02;
     glm::vec3 blockLightTint;
-    float pad1_ = 0;
+    float pad1 = 0;
     glm::vec3 skyLightColor;
-    float pad2_ = 0;
+    float pad2 = 0;
     glm::vec3 ambientColor;
-    float pad3_ = 0;
+    float pad3 = 0;
     glm::vec3 nightVisionColor;
-    float pad4_ = 0;
+    float pad4 = 0;
 };
 
 class OMVoxelCompilerPool

@@ -1,5 +1,5 @@
-#ifndef OM_ENCODING_UTF_HPP
-#define OM_ENCODING_UTF_HPP
+#ifndef OM_UTIL_ENCODING_UTF_HPP
+#define OM_UTIL_ENCODING_UTF_HPP
 #include <cstdint>
 #include <cstring>
 #include <string>

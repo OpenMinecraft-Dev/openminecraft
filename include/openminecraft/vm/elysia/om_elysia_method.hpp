@@ -1,5 +1,5 @@
-#ifndef OM_ELYSIA_METHOD
-#define OM_ELYSIA_METHOD
+#ifndef OM_ELYSIA_METHOD_HPP
+#define OM_ELYSIA_METHOD_HPP
 
 #include "openminecraft/specs/classfile/om_classfile.hpp"
 #include "openminecraft/vm/elysia/interface/om_elysia_interface_defs.hpp"

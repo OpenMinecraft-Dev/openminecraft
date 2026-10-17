@@ -1,5 +1,5 @@
-#ifndef OM_DEMIURGE_ELEMENT_TEXTSDF
-#define OM_DEMIURGE_ELEMENT_TEXTSDF
+#ifndef OM_DEMIURGE_ELEMENT_TEXTSDF_HPP
+#define OM_DEMIURGE_ELEMENT_TEXTSDF_HPP
 
 #include "glm/ext/vector_float4.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"

@@ -15,9 +15,9 @@ struct OMBlockStateCombined
 
 namespace openminecraft::shell::data::block
 {
-extern openminecraft::world::OMWorldRegistry<OMIdentifier, OMBlockStateCombined> blockstateRegistry;
+extern openminecraft::world::OMWorldRegistry<OMIdentifier, OMBlockStateCombined> blockStateRegistry;
 
-void registerBlockstates();
+void registerBlockStates();
 } // namespace openminecraft::shell::data::block
 
 #endif

@@ -292,25 +292,25 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     textureAtlas = new data::OMTextureAtlas("/external", renderer);
 
     voxelHandler = new data::OMModelPrecompiler("/external", textureAtlas);
-    blockstateResolver = new data::block::OMBlockstateResolver("/external", *voxelHandler);
+    blockStateResolver = new data::block::OMBlockStateResolver("/external", *voxelHandler);
 
-    blockstateResolver->resolve(data::OMIdentifier("minecraft:air"));
-    blockstateResolver->buildModel(data::OMIdentifier("minecraft:air"), {});
+    blockStateResolver->resolve(data::OMIdentifier("minecraft:air"));
+    blockStateResolver->buildModel(data::OMIdentifier("minecraft:air"), {});
 
     for (auto &p : data::block::blockRegistry.nameToId)
     {
         if (p.first.namesp != "minecraft" || p.first.path != "air")
         {
-            blockstateResolver->resolve(p.first);
+            blockStateResolver->resolve(p.first);
         }
     }
 
-    for (auto &p : data::block::blockstateRegistry.nameToId)
+    for (auto &p : data::block::blockStateRegistry.nameToId)
     {
-        auto &reg = data::block::blockstateRegistry.getRegistry(p.first);
+        auto &reg = data::block::blockStateRegistry.getRegistry(p.first);
         if (reg.block.namesp != "minecraft" || reg.block.path != "air")
         {
-            blockstateResolver->buildModel(reg.block, reg.state);
+            blockStateResolver->buildModel(reg.block, reg.state);
         }
     }
     textureAtlas->build();
@@ -320,10 +320,10 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
         renderer, tempTarget->target, textureAtlas->texture, textureAtlas->textureSecondary, chunkManager,
         [&](bool r) -> void { record(r); }, this->voxelHandler,
         [&](uint32_t v, uint64_t cx, uint64_t cy, uint64_t cz, int x, int y, int z) -> uint32_t {
-            const auto &reg = data::block::blockstateRegistry.idToRegistry[v];
+            const auto &reg = data::block::blockStateRegistry.idToRegistry[v];
             uint64_t h = (cx * 16 + x) * 341873128712L + (cy * 16 + y) * 132897987541L + cz * 16 + z + 1L;
             h ^= h >> 16;
-            return blockstateResolver->fetchModel(reg.block, reg.state, h);
+            return blockStateResolver->fetchModel(reg.block, reg.state, h);
         },
         colorManager, sunTex, moonTex, cloudTex, stats);
 
@@ -415,7 +415,7 @@ OMWorldRenderer::~OMWorldRenderer()
     delete uniformBuffer;
     delete cameraBuffer;
     delete voxelManager;
-    delete blockstateResolver;
+    delete blockStateResolver;
     delete textureAtlas;
     delete sunTex;
     delete moonTex;

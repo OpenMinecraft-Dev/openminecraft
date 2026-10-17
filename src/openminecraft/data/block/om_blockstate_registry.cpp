@@ -6,13 +6,13 @@
 
 namespace openminecraft::shell::data::block
 {
-openminecraft::world::OMWorldRegistry<OMIdentifier, OMBlockStateCombined> blockstateRegistry;
-static openminecraft::log::OMLogger logger("Blockstate Resolver");
+openminecraft::world::OMWorldRegistry<OMIdentifier, OMBlockStateCombined> blockStateRegistry;
+static openminecraft::log::OMLogger logger("BlockState Registry");
 
-void registerBlockstates()
+void registerBlockStates()
 {
     auto c = OMBlockStateCombined{OMIdentifier("minecraft:air"), {}};
-    blockstateRegistry.registerItem(OMIdentifier("minecraft:air[]"), c);
+    blockStateRegistry.registerItem(OMIdentifier("minecraft:air[]"), c);
 
     for (auto &l : blockRegistry.nameToId)
     {
@@ -43,7 +43,7 @@ void registerBlockstates()
         {
             auto c = OMBlockStateCombined{l.first, st};
             logger.debug("registering {}[{}]", l.first.path, st.tosimple());
-            blockstateRegistry.registerItem(
+            blockStateRegistry.registerItem(
                 OMIdentifier(l.first.namesp, fmt::format("{}[{}]", l.first.path, st.tosimple())), c);
         }
     }

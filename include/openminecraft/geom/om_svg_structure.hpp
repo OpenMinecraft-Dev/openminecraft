@@ -1,5 +1,5 @@
-#ifndef OM_SVG_STRUCTURE
-#define OM_SVG_STRUCTURE
+#ifndef OM_SVG_STRUCTURE_HPP
+#define OM_SVG_STRUCTURE_HPP
 
 #include "glm/ext/vector_float2.hpp"
 #include <string>

@@ -1,5 +1,5 @@
-#ifndef OM_RENDERER_RENDER_TARGET_HPP
-#define OM_RENDERER_RENDER_TARGET_HPP
+#ifndef OM_RENDERER_RENDERTARGET_HPP
+#define OM_RENDERER_RENDERTARGET_HPP
 
 #include "glm/glm.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"

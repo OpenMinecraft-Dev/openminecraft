@@ -8,7 +8,7 @@
 #define DefaultLocale "en_us"
 namespace openminecraft::i18n::res
 {
-struct LangInfo
+struct OMLangInfo
 {
     std::string modName;
     std::vector<std::string> locales;

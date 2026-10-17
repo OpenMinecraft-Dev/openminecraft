@@ -17,79 +17,79 @@ namespace openminecraft::specs::zlib
 class OMZlibInflateStreamBuf : public std::streambuf
 {
   public:
-    OMZlibInflateStreamBuf(std::shared_ptr<std::istream> src, int windowBits = 15, std::size_t inBufSize = 4096,
+    OMZlibInflateStreamBuf(std::shared_ptr<std::istream> source, int windowBits = 15, std::size_t inBufSize = 4096,
                            std::size_t outBufSize = 4096)
-        : src_(std::move(src)), inBuf_(inBufSize), outBuf_(outBufSize)
+        : src(std::move(source)), inBuf(inBufSize), outBuf(outBufSize)
     {
-        strm_.zalloc = Z_NULL;
-        strm_.zfree = Z_NULL;
-        strm_.opaque = Z_NULL;
-        strm_.avail_in = 0;
-        strm_.next_in = nullptr;
+        strm.zalloc = Z_NULL;
+        strm.zfree = Z_NULL;
+        strm.opaque = Z_NULL;
+        strm.avail_in = 0;
+        strm.next_in = nullptr;
 
-        if (inflateInit2(&strm_, windowBits) != Z_OK)
+        if (inflateInit2(&strm, windowBits) != Z_OK)
         {
             throw std::runtime_error("inflateInit2 failed");
         }
 
-        char *base = outBuf_.data();
+        char *base = outBuf.data();
         setg(base, base, base);
     }
 
     ~OMZlibInflateStreamBuf() override
     {
-        inflateEnd(&strm_);
+        inflateEnd(&strm);
     }
 
   protected:
     auto underflow() -> int_type override
     {
-        if (eof_)
+        if (eof)
         {
             return traits_type::eof();
         }
 
-        char *outPtr = outBuf_.data();
-        std::size_t outSize = outBuf_.size();
+        char *outPtr = outBuf.data();
+        std::size_t outSize = outBuf.size();
 
-        strm_.next_out = reinterpret_cast<Bytef *>(outPtr);
-        strm_.avail_out = outSize;
+        strm.next_out = reinterpret_cast<Bytef *>(outPtr);
+        strm.avail_out = outSize;
 
-        while (strm_.avail_out == outSize)
+        while (strm.avail_out == outSize)
         {
-            if (strm_.avail_in == 0)
+            if (strm.avail_in == 0)
             {
-                src_->read(inBuf_.data(), inBuf_.size());
-                std::streamsize n = src_->gcount();
+                src->read(inBuf.data(), inBuf.size());
+                std::streamsize n = src->gcount();
                 if (n == 0)
                 {
-                    eof_ = true;
+                    eof = true;
                     return traits_type::eof();
                 }
-                strm_.next_in = reinterpret_cast<Bytef *>(inBuf_.data());
-                strm_.avail_in = static_cast<uInt>(n);
+                strm.next_in = reinterpret_cast<Bytef *>(inBuf.data());
+                strm.avail_in = static_cast<uInt>(n);
             }
 
-            int ret = inflate(&strm_, Z_NO_FLUSH);
+            int ret = inflate(&strm, Z_NO_FLUSH);
 
             if (ret != Z_OK && ret != Z_STREAM_END)
             {
                 throw std::runtime_error(fmt::format("inflate failed, {}", ret));
             }
 
-            if (strm_.avail_out < outSize)
+            if (strm.avail_out < outSize)
             {
                 break;
             }
 
             if (ret == Z_STREAM_END)
             {
-                eof_ = true;
+                eof = true;
                 return traits_type::eof();
             }
         }
 
-        std::size_t produced = outSize - strm_.avail_out;
+        std::size_t produced = outSize - strm.avail_out;
 
         setg(outPtr, outPtr, outPtr + produced);
 
@@ -97,25 +97,25 @@ class OMZlibInflateStreamBuf : public std::streambuf
     }
 
   private:
-    std::shared_ptr<std::istream> src_;
-    z_stream strm_;
-    std::vector<char> inBuf_;
-    std::vector<char> outBuf_;
-    bool eof_{};
+    std::shared_ptr<std::istream> src;
+    z_stream strm;
+    std::vector<char> inBuf;
+    std::vector<char> outBuf;
+    bool eof{};
 };
 
 class OMZlibInflaterStream : public std::istream
 {
   public:
-    OMZlibInflaterStream(std::shared_ptr<std::istream> src, int windowBits = 15, std::size_t inBufSize = 4096,
+    OMZlibInflaterStream(std::shared_ptr<std::istream> source, int windowBits = 15, std::size_t inBufSize = 4096,
                          std::size_t outBufSize = 4096)
-        : std::istream(&buf_), buf_(src, windowBits, inBufSize, outBufSize)
+        : std::istream(&buf), buf(source, windowBits, inBufSize, outBufSize)
     {
     }
 
   private:
     std::shared_ptr<std::istream> src;
-    OMZlibInflateStreamBuf buf_;
+    OMZlibInflateStreamBuf buf;
 };
 } // namespace openminecraft::specs::zlib
 

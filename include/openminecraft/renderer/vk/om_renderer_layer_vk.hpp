@@ -38,7 +38,7 @@ void vkFree(void *, void *p);
 void vkInternalAlloc(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s);
 void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s);
 
-struct FrameSync
+struct OMFrameSync
 {
     std::vector<::vk::Semaphore> pipelineSemaphores;
     ::vk::Fence inFlightFence;
@@ -100,9 +100,9 @@ class OMRendererVk : public OMRenderer
 
     ::vk::CommandPool tempCommandPool;
 
-    std::vector<FrameSync> frameSyncs;
+    std::vector<OMFrameSync> frameSyncs;
     std::vector<::vk::Semaphore> frameRenderSemaphores;
-    std::map<uint32_t, FrameSync> inflights;
+    std::map<uint32_t, OMFrameSync> inflights;
 
     int framesInFlight = 3;
     int thisFrame = 0;

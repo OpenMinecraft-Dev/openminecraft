@@ -16,7 +16,7 @@ namespace openminecraft::i18n::res
 {
 std::vector<std::string> base;
 std::vector<std::string> modNames;
-std::vector<LangInfo> records;
+std::vector<OMLangInfo> records;
 std::string locale;
 std::unordered_map<std::string, std::unordered_map<std::string, std::string>> translates;
 log::OMLogger logger = log::OMLogger("i18n");

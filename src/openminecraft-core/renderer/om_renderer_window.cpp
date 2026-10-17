@@ -10,8 +10,8 @@ namespace openminecraft::renderer
 OMWindow::OMWindow(OMVersionRequirement requirement, OMWindowConfig config, std::string shaderPath)
     : logger("OMWindow", this)
 {
-    renderer::AppInfo a = {config.initialTitle, util::Version(1, 0, 0, 0), "OpenMinecraft Engine",
-                           util::Version(1, 0, 0, 0), requirement[config.backend]};
+    renderer::AppInfo a = {config.initialTitle, util::OMVersion(1, 0, 0, 0), "OpenMinecraft Engine",
+                           util::OMVersion(1, 0, 0, 0), requirement[config.backend]};
     uint64_t additionalFlags = 0;
     switch (config.backend)
     {
