@@ -186,6 +186,8 @@ void OMApplication::networkSetup(std::string host, std::string port)
     hnd.handlePlayLogin = [&](int, bool, std::vector<std::string>, uint32_t, uint32_t, uint32_t, bool, bool, bool,
                               uint32_t, std::string dimName, int64_t, uint32_t, uint32_t, bool, bool, bool, std::string,
                               int64_t, uint32_t, uint32_t, bool, bool) { logger.debug("login at {}", dimName); };
+    hnd.handlePlayPlayerPosition = [&](uint32_t, double x, double y, double z, double, double, double, float, float,
+                                       int) { logger.debug("Position: {} {} {}", x, y, z); };
     try
     {
         transformer.sendHandshake(host, std::stoi(port), 2);

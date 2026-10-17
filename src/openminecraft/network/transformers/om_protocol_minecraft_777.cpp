@@ -217,6 +217,25 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             handler.handlePlayPlayerAbilities(pck.read<uint8_t>(), pck.read<float>(), pck.read<float>());
             return;
         }
+            // Player Position
+        case 0x49: {
+            handler.handlePlayPlayerPosition(
+                pck.read<OMVarInt>(), pck.read<double>(), pck.read<double>(), pck.read<double>(), pck.read<double>(),
+                pck.read<double>(), pck.read<double>(), pck.read<float>(), pck.read<float>(), pck.read<int32_t>());
+            return;
+        }
+            // Recipe Book Add
+        case 0x4b: {
+            logger.warn("skipped Recipe Book Add packet!");
+            return;
+        }
+            // Recipe Book Settings
+        case 0x4d: {
+            handler.handlePlayRecipeBookSettings(pck.read<bool>(), pck.read<bool>(), pck.read<bool>(), pck.read<bool>(),
+                                                 pck.read<bool>(), pck.read<bool>(), pck.read<bool>(),
+                                                 pck.read<bool>());
+            return;
+        }
             // Set Held Slot
         case 0x6b: {
             handler.handlePlaySetHeldSlot(pck.read<OMVarInt>());

@@ -78,6 +78,10 @@ class OMProtocolMinecraftHandler
     std::function<void(uint8_t, float, float)> handlePlayPlayerAbilities = [](uint8_t, float, float) {};
     std::function<void(uint32_t)> handlePlaySetHeldSlot = [](uint32_t) {};
     std::function<void(int, uint8_t)> handlePlayEntityEvent = [](int, uint8_t) {};
+    std::function<void(bool, bool, bool, bool, bool, bool, bool, bool)> handlePlayRecipeBookSettings =
+        [](bool, bool, bool, bool, bool, bool, bool, bool) {};
+    std::function<void(uint32_t, double, double, double, double, double, double, float, float, int)>
+        handlePlayPlayerPosition = [](uint32_t, double, double, double, double, double, double, float, float, int) {};
 };
 
 class OMProtocolMinecraft : public openminecraft::network::protocol::OMCodingBase
