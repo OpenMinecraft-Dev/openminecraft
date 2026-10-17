@@ -98,7 +98,7 @@ OMBundle::OMBundle(std::shared_ptr<std::istream> stream) : OMBundle()
     {
         auto off = rdbe64(stream);
         auto fileoff = rdbe64(stream);
-        auto pp = stream->tellg();
+        auto restorePos = stream->tellg();
         STRERR
 
         stream->seekg(static_cast<std::streamoff>(off));
@@ -107,13 +107,13 @@ OMBundle::OMBundle(std::shared_ptr<std::istream> stream) : OMBundle()
 
         stream->seekg(static_cast<std::streamoff>(fileoff));
 
-        auto dd = new uint8_t[fmd.length];
-        stream->read(reinterpret_cast<char *>(dd), static_cast<std::streamsize>(fmd.length));
+        auto data = new uint8_t[fmd.length];
+        stream->read(reinterpret_cast<char *>(data), static_cast<std::streamsize>(fmd.length));
         STRERR
 
-        files.emplace_back(fmd, dd);
+        files.emplace_back(fmd, data);
 
-        stream->seekg(pp);
+        stream->seekg(restorePos);
     }
 
     writable = true;
@@ -199,10 +199,10 @@ void OMBundle::saveBundle(std::ostream &stream)
     auto i = 0;
     stream.write(reinterpret_cast<const char *>(&i), 2);
 
-    auto ll = binary::be64ToNative(files.size());
-    stream.write(reinterpret_cast<const char *>(&ll), sizeof(ll));
+    auto fileCount = binary::be64ToNative(files.size());
+    stream.write(reinterpret_cast<const char *>(&fileCount), sizeof(fileCount));
 
-    auto currentOff = binary::be64ToNative(8 + sizeof(ll) + files.size() * 2 * sizeof(uint64_t));
+    auto currentOff = binary::be64ToNative(8 + sizeof(fileCount) + files.size() * 2 * sizeof(uint64_t));
 
 #define OFFSWITCH currentOff = binary::be64ToNative(currentOff);
 

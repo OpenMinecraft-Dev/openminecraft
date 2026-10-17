@@ -120,13 +120,13 @@ auto OMFont::shape(std::string s, bool &isRTL) -> std::vector<OMFontShapeResult>
     auto glyphPos = hb_buffer_get_glyph_positions(buf, &glyphs);
     std::vector<OMFontShapeResult> result = {};
 
-    auto ss = scale();
+    auto scaleVec = scale();
 
     for (int i = 0; i < glyphs; ++i)
     {
-        result.emplace_back(OMFontShapeResult{glyphInfo[i].codepoint, glyphInfo[i].cluster, glyphPos[i].x_offset / ss.x,
-                                              glyphPos[i].y_offset / ss.y, glyphPos[i].x_advance / ss.x,
-                                              glyphPos[i].y_advance / ss.y, this});
+        result.emplace_back(OMFontShapeResult{glyphInfo[i].codepoint, glyphInfo[i].cluster, glyphPos[i].x_offset / scaleVec.x,
+                                              glyphPos[i].y_offset / scaleVec.y, glyphPos[i].x_advance / scaleVec.x,
+                                              glyphPos[i].y_advance / scaleVec.y, this});
     }
 
     hb_buffer_destroy(buf);

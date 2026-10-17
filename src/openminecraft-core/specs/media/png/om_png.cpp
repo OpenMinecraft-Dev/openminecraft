@@ -208,10 +208,10 @@ void OMPngFile::parseIHDR(std::shared_ptr<std::istream> istr)
 
 void OMPngFile::parsePTLE(std::shared_ptr<std::istream> istr)
 {
-    auto mm = currentChunk.data;
+    auto chunkData = currentChunk.data;
     for (int i = 0; i < currentChunk.data.size() / 3; i++)
     {
-        palette.push_back((mm[i * 3] << 24) | (mm[i * 3 + 1] << 16) | (mm[i * 3 + 2] << 8) | 0xff);
+        palette.push_back((chunkData[i * 3] << 24) | (chunkData[i * 3 + 1] << 16) | (chunkData[i * 3 + 2] << 8) | 0xff);
     }
 }
 
@@ -222,10 +222,10 @@ void OMPngFile::parseTRNS(std::shared_ptr<std::istream> istr)
         greyThreshold = currentChunk.data[0] << 16 | currentChunk.data[1];
     }
     int i = 0;
-    for (auto &pp : palette)
+    for (auto &color : palette)
     {
-        pp &= 0xffffff00;
-        pp |= currentChunk.data[i];
+        color &= 0xffffff00;
+        color |= currentChunk.data[i];
         i++;
         if (i >= currentChunk.data.size())
         {

@@ -29,10 +29,10 @@ extern "C"
     static auto clone(OMElysiaJNIEnv *env, OMElysiaNativeHandle *hnd) -> OMElysiaNativeHandle *
     {
         auto klass = env->GetObjectClass(hnd);
-        auto vv = env->AllocObject(klass);
-        std::memcpy(handleFetch(vv), handleFetch(hnd),
+        auto object = env->AllocObject(klass);
+        std::memcpy(handleFetch(object), handleFetch(hnd),
                     env->internal->elysium->oopManager->oopHeaderLength() + klass->toInstance()->length);
-        return vv;
+        return object;
     }
 
     void Java_java_lang_Object_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)

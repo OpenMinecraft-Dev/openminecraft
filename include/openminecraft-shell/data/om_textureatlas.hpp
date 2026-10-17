@@ -74,9 +74,9 @@ class OMTextureAtlas
                     }
                     if (c->getMap()["animation"]->getMap().count("frames"))
                     {
-                        auto ll = c->getMap()["animation"]->getMap()["frames"];
+                        auto frames = c->getMap()["animation"]->getMap()["frames"];
                         int l = 0;
-                        for (const auto &fr : ll->getArray())
+                        for (const auto &fr : frames->getArray())
                         {
                             subtexAnimData[i].mapping.push_back(fr->getNumber());
                             ++l;
@@ -125,9 +125,9 @@ class OMTextureAtlas
                     }
                     if (c->getMap()["animation"]->getMap().count("frames"))
                     {
-                        auto ll = c->getMap()["animation"]->getMap()["frames"];
+                        auto frames = c->getMap()["animation"]->getMap()["frames"];
                         int l = 0;
-                        for (const auto &fr : ll->getArray())
+                        for (const auto &fr : frames->getArray())
                         {
                             subtexWideAnimData[i].mapping.push_back(fr->getNumber());
                             ++l;

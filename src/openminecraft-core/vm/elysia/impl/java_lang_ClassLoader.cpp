@@ -30,8 +30,8 @@ extern "C"
     static auto findBootstrapClass(OMElysiaJNIEnv *env, OMElysiaNativeHandle *cld, OMElysiaNativeHandle *name)
         -> OMElysiaNativeHandle *
     {
-        auto nn = env->GetStringUTFChars(name, nullptr);
-        std::string c = nn;
+        auto nameChars = env->GetStringUTFChars(name, nullptr);
+        std::string c = nameChars;
         for (auto &ch : c)
         {
             if (ch == '.')
@@ -40,7 +40,7 @@ extern "C"
             }
         }
         auto kls = env->internal->elysium->klassLoader->fetchOrLoadClass(c);
-        env->ReleaseStringUTFChars(name, nn);
+        env->ReleaseStringUTFChars(name, nameChars);
         return kls ? createTempHandle(kls->mirror) : nullptr;
     }
     void Java_java_lang_ClassLoader_registerNatives(OMElysiaJNIEnv *env, OMElysiaKlass *klass)

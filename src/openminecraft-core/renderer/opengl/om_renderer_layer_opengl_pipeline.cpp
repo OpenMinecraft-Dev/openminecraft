@@ -67,13 +67,13 @@ void OMRendererPipelineOpenGL::build()
 {
     auto programbase = gl->glCreateProgram();
     std::vector<GLuint> subprogs;
-    for (auto pp : preshaders)
+    for (auto preshader : preshaders)
     {
-        auto prog = gl->glCreateShader(fromCommon(pp->typebase));
-        auto ss = reinterpret_cast<const GLchar *>(pp->data.data());
-        auto sl = (GLint)pp->data.size();
-        logger.info("compling {}", pp->filename);
-        gl->glShaderSource(prog, 1, &ss, &sl);
+        auto prog = gl->glCreateShader(fromCommon(preshader->typebase));
+        auto source = reinterpret_cast<const GLchar *>(preshader->data.data());
+        auto sl = (GLint)preshader->data.size();
+        logger.info("compling {}", preshader->filename);
+        gl->glShaderSource(prog, 1, &source, &sl);
         gl->glCompileShader(prog);
 
         GLint status;

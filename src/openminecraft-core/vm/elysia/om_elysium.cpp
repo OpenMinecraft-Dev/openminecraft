@@ -120,10 +120,10 @@ OMElysium::OMElysium()
             klassLoader->fetchOrLoadClass("java/lang/invoke/LambdaForm", true);
 
             auto l = klassLoader->fetchOrLoadClass("dev/openminecraft/MainKt", true);
-            auto mm = l->findMethod("main", "([Ljava/lang/String;)V");
+            auto mainMethod = l->findMethod("main", "([Ljava/lang/String;)V");
             std::array<OMElysiaNativeValue, 1> vv;
             vv[0].l = nullptr;
-            executor->callVoidFunction(mm, vv.data());
+            executor->callVoidFunction(mainMethod, vv.data());
 
             logger.info("main func ended");
 
@@ -163,12 +163,12 @@ void OMElysium::startThread(OMElysiaNativeHandle *thread)
     auto thrmthd = tc->interface.GetMethodID(thrcls, "run", "()V");
     tc->interface.SetIntField(thread, tc->interface.GetFieldID(thrcls, "threadStatus", "I"), 1);
     auto thrn = tc->interface.GetObjectField(thread, tc->interface.GetFieldID(thrcls, "name", "Ljava/lang/String;"));
-    auto nn = tc->interface.GetStringUTFChars(thrn, nullptr);
-    auto ll = std::string(nn);
-    tc->interface.ReleaseStringUTFChars(thrn, nn);
+    auto threadName = tc->interface.GetStringUTFChars(thrn, nullptr);
+    auto threadNameStr = std::string(threadName);
+    tc->interface.ReleaseStringUTFChars(thrn, threadName);
 
-    auto thr = std::make_shared<std::thread>([thread, thrcls, thrmthd, ll, this]() -> void {
-        thisThread.metadata->setName(ll);
+    auto thr = std::make_shared<std::thread>([thread, thrcls, thrmthd, threadNameStr, this]() -> void {
+        thisThread.metadata->setName(threadNameStr);
         std::array<OMElysiaNativeValue, 1> values;
         values[0].l = thread;
         this->executor->callVoidFunction(thrmthd, values.data());

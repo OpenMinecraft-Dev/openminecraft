@@ -71,10 +71,10 @@ static auto objectFieldOffset(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instanc
     auto nnstr = env->GetStringUTFChars(namestr, nullptr);
     auto ik = reinterpret_cast<OMElysiaKlass *>(
         env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
-    auto ff = ik->toInstance()->findField(nnstr, nullptr);
+    auto fieldInfo = ik->toInstance()->findField(nnstr, nullptr);
     env->ReleaseStringUTFChars(namestr, nnstr);
 
-    return env->internal->elysium->oopManager->oopAccessField(handleFetch(instance), ff->offset) -
+    return env->internal->elysium->oopManager->oopAccessField(handleFetch(instance), fieldInfo->offset) -
            reinterpret_cast<uintptr_t>(handleFetch(instance));
 }
 
@@ -86,10 +86,10 @@ static auto staticFieldOffset(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instanc
     auto nnstr = env->GetStringUTFChars(namestr, nullptr);
     auto ik = reinterpret_cast<OMElysiaKlass *>(
         env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
-    auto ff = ik->toInstance()->findField(nnstr, nullptr);
+    auto fieldInfo = ik->toInstance()->findField(nnstr, nullptr);
     env->ReleaseStringUTFChars(namestr, nnstr);
 
-    return reinterpret_cast<uintptr_t>(ik->toInstance()->staticBlock) + ff->offset - reinterpret_cast<uintptr_t>(kls);
+    return reinterpret_cast<uintptr_t>(ik->toInstance()->staticBlock) + fieldInfo->offset - reinterpret_cast<uintptr_t>(kls);
 }
 
 static auto staticFieldBase(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *field)

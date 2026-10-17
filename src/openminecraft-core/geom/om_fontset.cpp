@@ -67,17 +67,17 @@ auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
 
 static auto approximateCubicToQuadratic(glm::vec2 P0, glm::vec2 P1, glm::vec2 P2, glm::vec2 P3) -> glm::vec2
 {
-    glm::vec2 d1 = P1 - P0;
-    glm::vec2 d2 = P3 - P2;
-    float det = d1.x * d2.y - d1.y * d2.x;
+    glm::vec2 startDelta = P1 - P0;
+    glm::vec2 endDelta = P3 - P2;
+    float det = startDelta.x * endDelta.y - startDelta.y * endDelta.x;
     if (fabs(det) < 1e-6)
     {
         return (P1 + P2) * glm::vec2(0.5);
     }
     glm::vec2 diff = P3 - P0;
-    float s = (diff.x * d2.y - diff.y * d2.x) / det;
+    float s = (diff.x * endDelta.y - diff.y * endDelta.x) / det;
 
-    return P0 + s * d1;
+    return P0 + s * startDelta;
 }
 
 auto OMFontSet::bound(std::vector<OMFontSetShapeResult> shaped) -> glm::vec2
@@ -168,10 +168,10 @@ auto OMFontSet::compile(OMFontSetShapeResult r) -> std::vector<float>
         finalData.push_back(p.x);
         finalData.push_back(p.y);
     }
-    for (auto cc : bufferData)
+    for (auto chunkData : bufferData)
     {
-        finalData.push_back(cc.x);
-        finalData.push_back(cc.y);
+        finalData.push_back(chunkData.x);
+        finalData.push_back(chunkData.y);
     }
 
     return finalData;

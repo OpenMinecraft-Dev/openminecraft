@@ -121,9 +121,9 @@ auto OMModelPrecompiler::queryPartAmbientOcclusion(int bsid, int pid) -> bool
 auto OMModelPrecompiler::queryOcclusionShape(int bsid) -> OMVoxelShape
 {
     std::vector<OMVoxelAABB> r;
-    for (auto &pp : blockModels[bsid].parts)
+    for (auto &part : blockModels[bsid].parts)
     {
-        r.emplace_back(OMVoxelAABB{pp.from, pp.to - pp.from});
+        r.emplace_back(OMVoxelAABB{part.from, part.to - part.from});
     }
 
     return {r};
@@ -388,10 +388,10 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
     {
         for (auto &p : pre->getArray())
         {
-            auto &mm = p->getMap()["faces"]->getMap();
+            auto &faces = p->getMap()["faces"]->getMap();
             auto fetchface = [&](std::string f) -> std::shared_ptr<openminecraft::io::json::OMJsonNode> {
-                auto face = mm.find(f);
-                if (face != mm.end())
+                auto face = faces.find(f);
+                if (face != faces.end())
                 {
                     return face->second;
                 }
@@ -403,9 +403,9 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
             auto putface = [&](std::string f, std::shared_ptr<openminecraft::io::json::OMJsonNode> a) {
                 if (!a)
                 {
-                    if (mm.count(f))
+                    if (faces.count(f))
                     {
-                        mm.erase(f);
+                        faces.erase(f);
                     }
                 }
                 else
@@ -414,7 +414,7 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                     {
                         a->getMap()["cullface"] = std::make_shared<json::OMJsonNodeString>(f);
                     }
-                    mm[f] = a;
+                    faces[f] = a;
                 }
             };
             auto xrot90 = [&]() {
@@ -424,14 +424,14 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                     glm::vec3{from[0]->getNumberFloating(), from[1]->getNumberFloating(), from[2]->getNumberFloating()};
                 auto tov =
                     glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
-                auto vv = rotateVoxelElement90(fromv, tov, 0);
+                auto rotated = rotateVoxelElement90(fromv, tov, 0);
 
-                from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.x));
-                from[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.y));
-                from[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.z));
-                to[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.x));
-                to[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.y));
-                to[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.z));
+                from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.x));
+                from[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.y));
+                from[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.z));
+                to[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.x));
+                to[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.y));
+                to[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.z));
 
                 auto fup = fetchface("up");
                 auto fsouth = fetchface("south");
@@ -468,14 +468,14 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                     glm::vec3{from[0]->getNumberFloating(), from[1]->getNumberFloating(), from[2]->getNumberFloating()};
                 auto tov =
                     glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
-                auto vv = rotateVoxelElement90(fromv, tov, 1);
+                auto rotated = rotateVoxelElement90(fromv, tov, 1);
 
-                from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.x));
-                from[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.y));
-                from[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.z));
-                to[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.x));
-                to[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.y));
-                to[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.z));
+                from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.x));
+                from[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.y));
+                from[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.z));
+                to[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.x));
+                to[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.y));
+                to[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.z));
 
                 auto feast = fetchface("east");
                 auto fsouth = fetchface("south");
@@ -512,14 +512,14 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                     glm::vec3{from[0]->getNumberFloating(), from[1]->getNumberFloating(), from[2]->getNumberFloating()};
                 auto tov =
                     glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
-                auto vv = rotateVoxelElement90(fromv, tov, 2);
+                auto rotated = rotateVoxelElement90(fromv, tov, 2);
 
-                from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.x));
-                from[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.y));
-                from[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.first.z));
-                to[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.x));
-                to[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.y));
-                to[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(vv.second.z));
+                from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.x));
+                from[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.y));
+                from[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.z));
+                to[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.x));
+                to[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.y));
+                to[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.z));
 
                 auto fup = fetchface("up");
                 auto fwest = fetchface("west");
@@ -589,40 +589,40 @@ static auto isNotInteger(std::shared_ptr<json::OMJsonNode> n) -> bool
 auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
     -> std::shared_ptr<openminecraft::io::json::OMJsonNode>
 {
-    auto ff = vfs::fsfetch(fmt::format("{}/{}/models/{}.json", root, name.namesp, name.path));
-    json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(ff));
-    auto ll = bld.build();
+    auto modelStream = vfs::fsfetch(fmt::format("{}/{}/models/{}.json", root, name.namesp, name.path));
+    json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(modelStream));
+    auto document = bld.build();
 
-    if (ll->getMap().count("parent"))
+    if (document->getMap().count("parent"))
     {
-        auto sub = precompile(OMIdentifier(ll->getMap()["parent"]->getString()), false);
-        ll->getMap().erase("parent");
-        ll->merge(sub);
+        auto sub = precompile(OMIdentifier(document->getMap()["parent"]->getString()), false);
+        document->getMap().erase("parent");
+        document->merge(sub);
     }
 
     if (subsitute)
     {
-        auto &tex = ll->getMap()["textures"]->getMap();
+        auto &tex = document->getMap()["textures"]->getMap();
 
-        for (auto &pp : tex)
+        for (auto &texture : tex)
         {
-            if (pp.second->type() == openminecraft::io::json::Object)
+            if (texture.second->type() == openminecraft::io::json::Object)
             {
-                pp.second = pp.second->getMap()["sprite"];
+                texture.second = texture.second->getMap()["sprite"];
             }
         }
 
-        for (auto &pp : tex)
+        for (auto &texture : tex)
         {
-            if (pp.second->getString()[0] == '#' && tex.count(pp.second->getString().substr(1)))
+            if (texture.second->getString()[0] == '#' && tex.count(texture.second->getString().substr(1)))
             {
-                pp.second = tex[pp.second->getString().substr(1)];
+                texture.second = tex[texture.second->getString().substr(1)];
             }
         }
 
-        if (ll->getMap().count("elements"))
+        if (document->getMap().count("elements"))
         {
-            for (auto &elem : ll->getMap()["elements"]->getArray())
+            for (auto &elem : document->getMap()["elements"]->getArray())
             {
                 auto fromn = elem->getMap()["from"]->getArray();
                 auto ton = elem->getMap()["to"]->getArray();
@@ -665,9 +665,9 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
 
                     if (fce.second->getMap().count("uv"))
                     {
-                        auto aa = fce.second->getMap()["uv"]->getArray();
+                        auto uv = fce.second->getMap()["uv"]->getArray();
 
-                        if (isNotInteger(aa[0]) || isNotInteger(aa[1]) || isNotInteger(aa[2]) || isNotInteger(aa[3]))
+                        if (isNotInteger(uv[0]) || isNotInteger(uv[1]) || isNotInteger(uv[2]) || isNotInteger(uv[3]))
                         {
                             modelComplex[modelId] = true;
                         }
@@ -677,12 +677,12 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
         }
     }
 
-    return ll;
+    return document;
 }
 
 auto OMModelPrecompiler::wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode> part) -> OMModelPart
 {
-    auto mm = part->getMap()["faces"]->getMap();
+    auto faces = part->getMap()["faces"]->getMap();
     auto from = part->getMap()["from"]->getArray();
     auto to = part->getMap()["to"]->getArray();
     auto ro = part->getMap().count("rotation") ? part->getMap()["rotation"] : nullptr;
@@ -697,18 +697,18 @@ auto OMModelPrecompiler::wrapPart(std::shared_ptr<openminecraft::io::json::OMJso
                   ro && ro->getMap().count("y") ? static_cast<float>(ro->getMap()["y"]->getNumberFloating()) : 0.0f,
                   ro && ro->getMap().count("z") ? static_cast<float>(ro->getMap()["z"]->getNumberFloating()) : 0.0f);
 
-    return {mm.count("east") ? wrapFace(mm["east"], OMModelCullSide::East, fromv, tov) : OMModelFace(),
-            mm.count("east") > 0,
-            mm.count("west") ? wrapFace(mm["west"], OMModelCullSide::West, fromv, tov) : OMModelFace(),
-            mm.count("west") > 0,
-            mm.count("down") ? wrapFace(mm["down"], OMModelCullSide::Down, fromv, tov) : OMModelFace(),
-            mm.count("down") > 0,
-            mm.count("up") ? wrapFace(mm["up"], OMModelCullSide::Up, fromv, tov) : OMModelFace(),
-            mm.count("up") > 0,
-            mm.count("south") ? wrapFace(mm["south"], OMModelCullSide::South, fromv, tov) : OMModelFace(),
-            mm.count("south") > 0,
-            mm.count("north") ? wrapFace(mm["north"], OMModelCullSide::North, fromv, tov) : OMModelFace(),
-            mm.count("north") > 0,
+    return {faces.count("east") ? wrapFace(faces["east"], OMModelCullSide::East, fromv, tov) : OMModelFace(),
+            faces.count("east") > 0,
+            faces.count("west") ? wrapFace(faces["west"], OMModelCullSide::West, fromv, tov) : OMModelFace(),
+            faces.count("west") > 0,
+            faces.count("down") ? wrapFace(faces["down"], OMModelCullSide::Down, fromv, tov) : OMModelFace(),
+            faces.count("down") > 0,
+            faces.count("up") ? wrapFace(faces["up"], OMModelCullSide::Up, fromv, tov) : OMModelFace(),
+            faces.count("up") > 0,
+            faces.count("south") ? wrapFace(faces["south"], OMModelCullSide::South, fromv, tov) : OMModelFace(),
+            faces.count("south") > 0,
+            faces.count("north") ? wrapFace(faces["north"], OMModelCullSide::North, fromv, tov) : OMModelFace(),
+            faces.count("north") > 0,
             fromv,
             tov,
             part->getMap().count("shade") ? part->getMap()["shade"]->getBoolean() : true,

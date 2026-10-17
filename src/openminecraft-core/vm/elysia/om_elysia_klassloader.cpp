@@ -261,14 +261,14 @@ void OMElysiaKlassloader::fillVtable(OMElysiaInstanceKlass *klass)
 
     if (klass->interfaceImplCount)
     {
-        for (int ii = 0; ii < klass->interfaceImplCount; ii++)
+        for (int interfaceIndex = 0; interfaceIndex < klass->interfaceImplCount; interfaceIndex++)
         {
-            auto kk = klass->interfaceImpls[ii];
-            if (kk->vtable && kk->vtableLength)
+            auto interfaceKlass = klass->interfaceImpls[interfaceIndex];
+            if (interfaceKlass->vtable && interfaceKlass->vtableLength)
             {
-                for (int i = 0; i < kk->vtableLength; i++)
+                for (int i = 0; i < interfaceKlass->vtableLength; i++)
                 {
-                    rawVtable[fmt::format("{}{}", kk->vtable[i]->name, kk->vtable[i]->descriptor)] = kk->vtable[i];
+                    rawVtable[fmt::format("{}{}", interfaceKlass->vtable[i]->name, interfaceKlass->vtable[i]->descriptor)] = interfaceKlass->vtable[i];
                 }
             }
         }
@@ -281,8 +281,8 @@ void OMElysiaKlassloader::fillVtable(OMElysiaInstanceKlass *klass)
     {
         for (int i = 0; i < klass->superClass->vtableLength; i++)
         {
-            auto mm = klass->superClass->vtable[i];
-            rawVtable[fmt::format("{}{}", mm->name, mm->descriptor)] = mm;
+            auto method = klass->superClass->vtable[i];
+            rawVtable[fmt::format("{}{}", method->name, method->descriptor)] = method;
         }
     }
 
@@ -375,27 +375,27 @@ auto OMElysiaKlassloader::loadClassWithoutMirror(std::shared_ptr<std::istream> i
     {
         klass->interfaceImplCount = clsfile->interfaces.length;
         klass->interfaceImpls = elysium->metaspaceHeap.allocateArray<OMElysiaKlass *>(klass->interfaceImplCount);
-        for (int ii = 0; ii < klass->interfaceImplCount; ++ii)
+        for (int interfaceIndex = 0; interfaceIndex < klass->interfaceImplCount; ++interfaceIndex)
         {
             auto supclsname =
                 clsfile->constants.data
-                    ->at(clsfile->constants.data->at(clsfile->interfaces.data->at(ii)).classinfo.nameIndex)
+                    ->at(clsfile->constants.data->at(clsfile->interfaces.data->at(interfaceIndex)).classinfo.nameIndex)
                     .valueString;
             if (!findClass(supclsname))
             {
                 if (special)
                 {
                     loadClassWithoutMirror(supclsname, special);
-                    klass->interfaceImpls[ii] = findClass(supclsname);
+                    klass->interfaceImpls[interfaceIndex] = findClass(supclsname);
                 }
                 else
                 {
-                    klass->interfaceImpls[ii] = fetchOrLoadClass(supclsname);
+                    klass->interfaceImpls[interfaceIndex] = fetchOrLoadClass(supclsname);
                 }
             }
             else
             {
-                klass->interfaceImpls[ii] = findClass(supclsname);
+                klass->interfaceImpls[interfaceIndex] = findClass(supclsname);
             }
         }
     }

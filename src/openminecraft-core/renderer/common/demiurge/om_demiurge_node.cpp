@@ -229,11 +229,11 @@ auto OMDemiurgeNode::syncLayout() -> void
                 break;
             }
             case "margin"_hash: {
-                auto ii = std::any_cast<std::array<OMDemiurgeSize, 4>>(p.second);
-                auto &top = ii[0];
-                auto &bottom = ii[1];
-                auto &left = ii[2];
-                auto &right = ii[3];
+                auto insets = std::any_cast<std::array<OMDemiurgeSize, 4>>(p.second);
+                auto &top = insets[0];
+                auto &bottom = insets[1];
+                auto &left = insets[2];
+                auto &right = insets[3];
 
 #define update(source, type)                                                                                           \
     switch (source.unit)                                                                                               \

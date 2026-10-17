@@ -329,11 +329,11 @@ void OMDebugRenderer::afterFrame()
     }
 
     auto tpe = std::chrono::steady_clock::now();
-    auto cc = std::chrono::duration_cast<std::chrono::nanoseconds>(tpe - tp);
-    if (cc.count() > 5e8)
+    auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(tpe - tp);
+    if (elapsed.count() > 5e8)
     {
         fpsTextNode->style("text",
-                           fmt::format("FPS: {}", static_cast<int>(static_cast<float>(fps) / cc.count() * 1e9)));
+                           fmt::format("FPS: {}", static_cast<int>(static_cast<float>(fps) / elapsed.count() * 1e9)));
 
         tp = std::chrono::steady_clock::now();
         fps = 0;

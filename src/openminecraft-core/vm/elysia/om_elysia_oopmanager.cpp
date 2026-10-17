@@ -30,20 +30,20 @@ auto OMElysiaOopManager::oopArrayHeaderLength() -> uint64_t
 }
 auto OMElysiaOopManager::allocateOop(OMElysiaKlass *klass, uint64_t length) -> OMElysiaOop *
 {
-    auto ll = reinterpret_cast<OMElysiaOop *>(elysium->mainHeap.allocate(
+    auto oop = reinterpret_cast<OMElysiaOop *>(elysium->mainHeap.allocate(
         oopHeaderLength() + reinterpret_cast<OMElysiaInstanceKlass *>(klass)->length + length));
-    std::memset(ll, 0x00, oopHeaderLength() + reinterpret_cast<OMElysiaInstanceKlass *>(klass)->length + length);
+    std::memset(oop, 0x00, oopHeaderLength() + reinterpret_cast<OMElysiaInstanceKlass *>(klass)->length + length);
     if (elysium->metaspaceHeap.enablePtrCompress())
     {
-        reinterpret_cast<OMElysiaOopCompressed *>(ll)->klass = elysium->metaspaceHeap.compress(klass);
+        reinterpret_cast<OMElysiaOopCompressed *>(oop)->klass = elysium->metaspaceHeap.compress(klass);
     }
     else
     {
-        reinterpret_cast<OMElysiaOopUncompressed *>(ll)->klass = klass;
+        reinterpret_cast<OMElysiaOopUncompressed *>(oop)->klass = klass;
     }
 
-    ll->markword = dis(generator);
-    return ll;
+    oop->markword = dis(generator);
+    return oop;
 }
 
 auto OMElysiaOopManager::allocateString(std::string target) -> OMElysiaOop *
@@ -205,24 +205,24 @@ static auto arrayKlassItemLength(OMElysiaArrayKlass *klass) -> jint
 
 auto OMElysiaOopManager::allocateArr(OMElysiaArrayKlass *klass, jint length) -> OMElysiaOop *
 {
-    auto ll = reinterpret_cast<OMElysiaOop *>(
+    auto oop = reinterpret_cast<OMElysiaOop *>(
         elysium->mainHeap.allocate(oopArrayHeaderLength() + klass->itemLength * length));
-    std::memset(ll, 0x00, oopArrayHeaderLength() + klass->itemLength * length);
+    std::memset(oop, 0x00, oopArrayHeaderLength() + klass->itemLength * length);
 
     if (elysium->metaspaceHeap.enablePtrCompress())
     {
-        reinterpret_cast<OMElysiaArrayOopCompressed *>(ll)->klass = elysium->metaspaceHeap.compress(klass);
-        reinterpret_cast<OMElysiaArrayOopCompressed *>(ll)->length = length;
+        reinterpret_cast<OMElysiaArrayOopCompressed *>(oop)->klass = elysium->metaspaceHeap.compress(klass);
+        reinterpret_cast<OMElysiaArrayOopCompressed *>(oop)->length = length;
     }
     else
     {
-        reinterpret_cast<OMElysiaArrayOopUncompressed *>(ll)->klass = klass;
-        reinterpret_cast<OMElysiaArrayOopUncompressed *>(ll)->length = length;
+        reinterpret_cast<OMElysiaArrayOopUncompressed *>(oop)->klass = klass;
+        reinterpret_cast<OMElysiaArrayOopUncompressed *>(oop)->length = length;
     }
 
-    ll->markword = dis(generator);
+    oop->markword = dis(generator);
 
-    return ll;
+    return oop;
 }
 
 auto OMElysiaOopManager::allocateMultiArr(OMElysiaArrayKlass *klass, jint dim, jint *lengths) -> OMElysiaOop *

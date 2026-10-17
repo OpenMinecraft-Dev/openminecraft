@@ -66,8 +66,8 @@ auto OMRendererShaderManager::preprocess(std::string name, OMShaderType type, OM
         }
     }
 
-    auto ff = vfs::fsfetch(root + "/" + name);
-    auto raw = io::readOnce(ff.get());
+    auto file = vfs::fsfetch(root + "/" + name);
+    auto raw = io::readOnce(file.get());
 
     std::string str(raw.begin(), raw.end());
 
@@ -107,8 +107,8 @@ auto OMRendererShaderManager::preprocess(std::string name, OMShaderType type, OM
 
         for (auto rit = repl.rbegin(); rit != repl.rend(); ++rit)
         {
-            auto ff = vfs::fsfetch(root + "/" + rit->filename);
-            auto raw = io::readOnce(ff.get());
+            auto file = vfs::fsfetch(root + "/" + rit->filename);
+            auto raw = io::readOnce(file.get());
 
             std::string strsub(raw.begin(), raw.end());
             str.replace(rit->pos, rit->length, strsub);

@@ -62,13 +62,13 @@ void OMElysiaExecutorZero::pushFrame(OMElysiaMethod *m, uint8_t *retAddr, bool n
         return;
     }
 
-    auto ll = m->argSlots;
+    auto argSlots = m->argSlots;
     auto tc = thisThread.metadata;
 
     auto newlocal = reinterpret_cast<void *>(tc->zero.stackPointer - sizeof(OMElysiaJavaFrame));
-    std::memmove(newlocal, reinterpret_cast<void *>(tc->zero.stackPointer), ll * sizeof(void *));
+    std::memmove(newlocal, reinterpret_cast<void *>(tc->zero.stackPointer), argSlots * sizeof(void *));
 
-    zeroStackPop(ll * sizeof(void *));
+    zeroStackPop(argSlots * sizeof(void *));
 
     auto frame = reinterpret_cast<OMElysiaJavaFrame *>(zeroStackAlloc(sizeof(OMElysiaJavaFrame)));
 
@@ -847,14 +847,14 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             auto def = zeroCodeFetchArgs32Align(pc, 0);
             auto low = zeroCodeFetchArgs32Align(pc, 1);
             auto high = zeroCodeFetchArgs32Align(pc, 2);
-            auto ll = zeroStackPopGet<jint>();
-            if (ll > high || ll < low)
+            auto switchKey = zeroStackPopGet<jint>();
+            if (switchKey > high || switchKey < low)
             {
                 pc += def;
             }
             else
             {
-                auto off = zeroCodeFetchArgs32Align(pc, 3 + (ll - low));
+                auto off = zeroCodeFetchArgs32Align(pc, 3 + (switchKey - low));
                 pc += off;
             }
             goto exec;
@@ -879,37 +879,37 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
             continue;
         }
         case op_ireturn: {
-            auto pp = zeroStackPopGet<jint>();
+            auto intValue = zeroStackPopGet<jint>();
             popFrame(&pc);
-            zeroStackPush(pp);
+            zeroStackPush(intValue);
             updateFrame;
             continue;
         }
         case op_lreturn: {
-            auto pp = zeroStackPopWGet<jlong>();
+            auto longValue = zeroStackPopWGet<jlong>();
             popFrame(&pc);
-            zeroStackPushW(pp);
+            zeroStackPushW(longValue);
             updateFrame;
             continue;
         }
         case op_freturn: {
-            auto pp = zeroStackPopGet<jfloat>();
+            auto floatValue = zeroStackPopGet<jfloat>();
             popFrame(&pc);
-            zeroStackPush(pp);
+            zeroStackPush(floatValue);
             updateFrame;
             continue;
         }
         case op_dreturn: {
-            auto pp = zeroStackPopWGet<jdouble>();
+            auto doubleValue = zeroStackPopWGet<jdouble>();
             popFrame(&pc);
-            zeroStackPushW(pp);
+            zeroStackPushW(doubleValue);
             updateFrame;
             continue;
         }
         case op_areturn: {
-            auto pp = zeroStackPopGet<OMElysiaOop *>();
+            auto reference = zeroStackPopGet<OMElysiaOop *>();
             popFrame(&pc);
-            zeroStackPush(pp);
+            zeroStackPush(reference);
             updateFrame;
             continue;
         }
@@ -939,20 +939,20 @@ void OMElysiaExecutorZero::execute(OMElysiaMethod *m)
         }
         case op_invokespecial:
         case op_invokestatic: {
-            auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
-            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), pc + 3, false, &pc);
+            auto constant = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
+            pushFrame(reinterpret_cast<OMElysiaMethod *>(constant), pc + 3, false, &pc);
             updateFrame;
             continue;
         }
         case op_invokevirtual: {
-            auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
-            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), pc + 3, true, &pc);
+            auto constant = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
+            pushFrame(reinterpret_cast<OMElysiaMethod *>(constant), pc + 3, true, &pc);
             updateFrame;
             continue;
         }
         case op_invokeinterface: {
-            auto ff = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
-            pushFrame(reinterpret_cast<OMElysiaMethod *>(ff), pc + 5, true, &pc);
+            auto constant = CURRENT_KLASS->constantPoolFetchNormal(zeroCodeFetchArgu16p0(pc));
+            pushFrame(reinterpret_cast<OMElysiaMethod *>(constant), pc + 5, true, &pc);
             updateFrame;
             continue;
         }
@@ -1220,18 +1220,18 @@ auto OMElysiaExecutorZero::findRoutine(std::string klass, std::string name) -> O
         return [](OMElysium *elysium, uint8_t **pc, int a) -> void {
             auto hnd = *reinterpret_cast<OMElysiaOop **>(thisThread.metadata->zero.stackPointer + a * sizeof(void *));
             {
-                auto ff = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandle", true)
+                auto klass = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandle", true)
                               ->toInstance()
                               ->findField("form", "Ljava/lang/invoke/LambdaForm;")
                               ->offset;
-                hnd = elysium->oopManager->oopAccessPointerField(hnd, ff);
+                hnd = elysium->oopManager->oopAccessPointerField(hnd, klass);
             }
             {
-                auto ff = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/LambdaForm", true)
+                auto klass = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/LambdaForm", true)
                               ->toInstance()
                               ->findField("vmentry", "Ljava/lang/invoke/MemberName;")
                               ->offset;
-                hnd = elysium->oopManager->oopAccessPointerField(hnd, ff);
+                hnd = elysium->oopManager->oopAccessPointerField(hnd, klass);
             }
             auto remap = **pc == op_invokevirtual || **pc == op_invokeinterface;
             auto fieldoff = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MemberName", true)

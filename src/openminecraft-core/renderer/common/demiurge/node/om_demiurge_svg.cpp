@@ -18,10 +18,10 @@ auto OMDemiurgeSvgNode::submit(OMDemiurgeRendererHandler *handler, float depth) 
     if (stylesStorage.isModified())
     {
     update:
-        auto pp = stylesStorage.get<OMDemiurgeRect>("layoutBound");
+        auto layoutBound = stylesStorage.get<OMDemiurgeRect>("layoutBound");
         auto t = handler->svg.temporary(svgId);
 
-        t->position = {pp.x, pp.y, pp.width, pp.height};
+        t->position = {layoutBound.x, layoutBound.y, layoutBound.width, layoutBound.height};
         t->color = genLinear(stylesStorage.get<int>("color", 0));
         t->depth = depth;
         t->factor = stylesStorage.get<float>("factor", 0.01f);

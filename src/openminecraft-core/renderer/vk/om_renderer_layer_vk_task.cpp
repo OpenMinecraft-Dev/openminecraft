@@ -126,13 +126,13 @@ void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
         renderer->logicalDevice.waitIdle();
         if (isDefault)
         {
-            auto ii = CommandBufferInheritanceInfo(reinterpret_cast<OMRendererRenderTargetVk *>(target)->renderPass);
+            auto inheritanceInfo = CommandBufferInheritanceInfo(reinterpret_cast<OMRendererRenderTargetVk *>(target)->renderPass);
 
             if (!begin)
             {
                 commandBuffer.begin(
                     {CommandBufferUsageFlagBits::eSimultaneousUse | CommandBufferUsageFlagBits::eRenderPassContinue,
-                     &ii});
+                     &inheritanceInfo});
                 begin = true;
             }
         }
@@ -149,9 +149,9 @@ void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
 
             std::vector<ClearValue> test;
             int i = 0;
-            for (auto ii : rt->textures)
+            for (auto texture : rt->textures)
             {
-                if (!isColorFormat(ii->arr))
+                if (!isColorFormat(texture->arr))
                 {
                     test.push_back(ClearValue({depthClear, 0}));
                 }

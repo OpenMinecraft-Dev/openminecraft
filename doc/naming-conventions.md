@@ -149,7 +149,26 @@ src/openminecraft/<子模块>/...             shell 层实现
 
 - lowerCamelCase；允许领域内公认的缩写：`pck`（packet）、`hnd`（handler）、`buf`（buffer）、`idx`（index）、`ctx`（context）。
 - 缩写不得二义：`thr` 曾同时表示 thread 与 threshold，阈值请写全 `threshold`。
-- 循环变量、模板参数等短名（`i`、`j`、`T`、`Ts`）不受限制。
+- **禁止双字母占位名**：`pp`、`ll`、`ff`、`kk`、`mm`、`vv`、`tt`、`nn`、`ss`、`cc`、`ii`、`dd`、`aa`、`bb`。
+  这类名字不携带语义，而且同一个名字在不同文件里含义完全不同——`pp` 既曾是 Demiurge 的"布局边界矩形"，
+  也曾是渲染器的"位置"。按实际含义命名：`layoutBound`、`position`、`file`、`klass`、`method`、`field`、
+  `insets`、`texture`、`document`、`constant`。
+- **禁止编号变量组**：`pp2`…`pp8`、`h1`…`h4`、`l1`…`l4`、`k2`。成组对象用容器或结构体表达，不要靠数字后缀区分：
+
+  ```cpp
+  // 不要：pp、pp2、…、pp8
+  const std::array<Position, 8> corners = { ... };
+  corners[0] - cameraPos, corners[1] - cameraPos, ...
+
+  // 不要：h1、h2、h3、h4
+  const std::array<float, 4> cornerHeights = { ... };
+  ```
+
+  有序的单个量也不加数字：`l1..l4` 应写成 `byte0..byte3`，或直接用位运算。
+  位打包与 UV/AO 的领域惯用名（`l1..l4`、`ao1..ao4`、`u0/v0`）例外，见 §12.1。
+- 单字母名只用于极短作用域内的循环与数学量（`i`/`j`/`k`、坐标 `x`/`y`/`z`、差值 `dx`/`dy`/`dz`）；
+  `id`、`it`、`uv`、`fd`、`ok` 视为完整单词。若一个单字母名在函数里活过十几行，就该改成全称。
+- 模板参数（`T`、`Ts`）不受限制。
 
 ### 7.3 全局变量与常量
 
@@ -209,6 +228,7 @@ src/openminecraft/<子模块>/...             shell 层实现
 - [ ] 函数 / 方法 / 成员 / 局部变量都是 lowerCamelCase
 - [ ] 成员没有 `m_` 前缀、`_` 后缀
 - [ ] 宏有 `OM_` 前缀且全大写，用后 `#undef`
+- [ ] 局部变量没有双字母占位名（`pp`、`ll`、`ff`…），也没有 `pp2`、`h1` 这类数字后缀
 - [ ] 同一复合词在全仓库只有一种大小写（`BlockState` 不是 `Blockstate`，`registry` 不是 `registery`）
 - [ ] 提交信息符合 `[Tag] 小写英文短语`
 
@@ -225,6 +245,7 @@ src/openminecraft/<子模块>/...             shell 层实现
 | 嵌套类型省略 `OM` | `Unit`、`const_iterator` |
 | 代号命名空间 | `castorice`、`pixeltower`，仅内部实现 |
 | 第三方宏 | `GLM_*`、`VULKAN_HPP_*`、`JNI_VERSION_*` |
+| 位打包与图形惯用名（`om_renderer_voxel_compiler.cpp` 中的 `l1..l4`、`bl1..bl4`、`h1..h4`、`ao1..ao4`、`u0/v0/u1/v1`） | 这些名字与函数上方的位布局注释（`llll`、`hhhh` 等）逐位对应，改成容器反而看不出位域关系，属于打包函数的领域写法 |
 
 ### 12.2 待迁移（已知偏差）
 
@@ -239,6 +260,7 @@ src/openminecraft/<子模块>/...             shell 层实现
 | 日志颜色常量（`om_log_ansi.hpp`） | `OMLogAnsi*`（24 个） | `OM_LOG_ANSI_*`，长期可改 `constexpr` |
 | `.cpp` 内局部宏（`op_*`、`xaload`、`accessRead*`、`PUSHARG*`、`STRERR`、`PTRERR`、`OFFSWITCH`、`update`、`appendArg`、`updateFrame`、`CURRENT_KLASS`、`ARGTYPE_CASE0`） | 无 `OM_` 前缀 | `OM_` 前缀 |
 | 历史提交 tag | `[Rednerer]`、`[Rederer & Shell]` | 不改写历史，后续统一用 `[Renderer]`、`[Shell]` |
+| 单字母局部变量与参数 | 公共头文件中仍有约 180 个非坐标单字母参数（如 `setTextColor(glm::vec4 d)`、`samples(uint64_t n)`） | 新代码禁止；存量按文件逐步改为全称（`color`、`count`），坐标 `x`/`y` 与循环 `i`/`j` 保留 |
 
 ## 13. 工具
 
@@ -277,4 +299,5 @@ src/openminecraft/<子模块>/...             shell 层实现
 
 | 日期 | 内容 |
 | --- | --- |
+| 2026-10-17 | 局部变量清理：清除全部双字母占位名（`pp`/`ll`/`ff`/`kk`/`mm`/`vv`/`tt`/`nn`/`ss`/`cc`/`ii`/`dd`/`aa`/`bb`，115 处）与编号变量组（`pp2..pp8`、`h1..h4`、`l1..l4`、`k2`），改用语义名或 `std::array` |
 | 2026-10-17 | 首批统一：文件重命名（`registery` → `registry`、`debugrendrer` → `om_debug_renderer` 等）、shell 层补 `om_` 前缀并改用 `openminecraft::shell` 命名空间、拼写修正、`Blockstate` → `BlockState`、include guard 对齐文件名、类型补 `OM` 前缀、去掉成员尾下划线 |

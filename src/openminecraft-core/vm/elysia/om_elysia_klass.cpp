@@ -114,24 +114,24 @@ auto OMElysiaInstanceKlass::constantPoolFetchField(uint16_t id) -> void *
     auto mdname = constantPoolRaw[constantPoolRaw[item.ref.nameAndTypeIndex].nameAndType.nameIndex].valueString;
     auto mddesc = constantPoolRaw[constantPoolRaw[item.ref.nameAndTypeIndex].nameAndType.descriptorIndex].valueString;
 
-    auto kk = execWithState(InsideVM, [&]() -> OMElysiaKlass * { return klassloader->fetchOrLoadClass(clsname); });
+    auto klass = execWithState(InsideVM, [&]() -> OMElysiaKlass * { return klassloader->fetchOrLoadClass(clsname); });
 
-    while (kk)
+    while (klass)
     {
-        for (int i = 0; i < kk->toInstance()->fieldCount; i++)
+        for (int i = 0; i < klass->toInstance()->fieldCount; i++)
         {
-            if (std::strcmp(kk->toInstance()->fields[i].name, mdname.c_str()) == 0 &&
-                std::strcmp(kk->toInstance()->fields[i].desc, mddesc.c_str()) == 0)
+            if (std::strcmp(klass->toInstance()->fields[i].name, mdname.c_str()) == 0 &&
+                std::strcmp(klass->toInstance()->fields[i].desc, mddesc.c_str()) == 0)
             {
-                constantPool[id] = &kk->toInstance()->fields[i];
+                constantPool[id] = &klass->toInstance()->fields[i];
                 constantPoolState[id] = true;
 
-                klassloader->ensureClassInit(kk);
+                klassloader->ensureClassInit(klass);
 
-                return &kk->toInstance()->fields[i];
+                return &klass->toInstance()->fields[i];
             }
         }
-        kk = kk->superClass;
+        klass = klass->superClass;
     }
 
     return nullptr;
@@ -204,7 +204,7 @@ auto OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id) -> void *
     auto result = elysium->oopManager->allocateArr(
         elysium->klassLoader->fetchOrLoadClass("[Ljava/lang/Object;", true)->toArray(), 1);
 
-    auto mm =
+    auto linkCallSite =
         elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MethodHandleNatives", true)
             ->findMethod("linkCallSite", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/"
                                          "Object;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/invoke/MemberName;");
@@ -215,7 +215,7 @@ auto OMElysiaInstanceKlass::constantPoolFetchDynamic(uint16_t id) -> void *
     vv[3].l = createTempHandle(invokedType);
     vv[4].l = createTempHandle(arg);
     vv[5].l = createTempHandle(result);
-    auto mn = elysium->executor->callObjectFunction(mm, vv.data());
+    auto mn = elysium->executor->callObjectFunction(linkCallSite, vv.data());
     auto fieldoff = elysium->klassLoader->fetchOrLoadClass("java/lang/invoke/MemberName", true)
                         ->toInstance()
                         ->findField("<ptr>", "J")

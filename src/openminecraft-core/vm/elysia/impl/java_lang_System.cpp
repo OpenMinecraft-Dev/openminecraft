@@ -19,8 +19,8 @@ extern "C"
     static auto initProperties(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *properties)
         -> OMElysiaNativeHandle *
     {
-        auto kk = env->FindClass("java/util/Hashtable");
-        auto kkm = env->GetMethodID(kk, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+        auto hashtableKlass = env->FindClass("java/util/Hashtable");
+        auto kkm = env->GetMethodID(hashtableKlass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
         std::array<char, 1024> userdir;
 #ifdef OM_PLATFORM_WINDOWS
@@ -48,11 +48,11 @@ extern "C"
             {"java.vm.version", "0.0.1-ea"},
             {"java.vm.info", "zero interpreter"}};
 
-        for (auto &pp : propMap)
+        for (auto &property : propMap)
         {
             std::array<OMElysiaNativeValue, 2> args;
-            args[0].l = env->NewStringUTF(pp.first.c_str());
-            args[1].l = env->NewStringUTF(pp.second.c_str());
+            args[0].l = env->NewStringUTF(property.first.c_str());
+            args[1].l = env->NewStringUTF(property.second.c_str());
             env->CallObjectMethodA(properties, kkm, args.data());
         }
 
@@ -62,10 +62,11 @@ extern "C"
     static void arraycopy(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *src, jint srcPos,
                           OMElysiaNativeHandle *dst, jint dstPos, jint length)
     {
-        auto kk = env->GetObjectClass(src)->toArray()->itemLength;
+        auto elementSize = env->GetObjectClass(src)->toArray()->itemLength;
         auto srcraw = env->internal->elysium->oopManager->arrAccess<uint8_t>(handleFetch(src));
         auto dstraw = env->internal->elysium->oopManager->arrAccess<uint8_t>(handleFetch(dst));
-        std::memmove(&dstraw[kk * dstPos], &srcraw[kk * srcPos], kk * length);
+        std::memmove(&dstraw[elementSize * dstPos], &srcraw[elementSize * srcPos],
+                     elementSize * elementSize);
     }
 
     static void setIn0(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *in)

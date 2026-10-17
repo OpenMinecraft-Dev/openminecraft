@@ -58,9 +58,9 @@ auto fsmountZipArchive(const char *src, std::size_t length, std::string mountpoi
 }
 auto fsmountZipArchive(std::shared_ptr<std::istream> istr, std::string mountpoint) -> bool
 {
-    auto pp = std::make_shared<specs::zip::OMZip>();
-    pp->parse(istr);
-    return fsmount(std::make_shared<OMFsProviderZip>(pp), mountpoint);
+    auto zip = std::make_shared<specs::zip::OMZip>();
+    zip->parse(istr);
+    return fsmount(std::make_shared<OMFsProviderZip>(zip), mountpoint);
 }
 auto compressPath(std::string vp) -> std::string
 {

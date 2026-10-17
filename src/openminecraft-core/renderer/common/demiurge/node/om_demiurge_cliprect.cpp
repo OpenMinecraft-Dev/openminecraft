@@ -21,9 +21,9 @@ auto OMDemiurgeClipRectNode::submit(OMDemiurgeRendererHandler *handler, float de
     if (stylesStorage.isModified())
     {
     update:
-        auto pp = stylesStorage.get<OMDemiurgeRect>("layoutBound");
+        auto layoutBound = stylesStorage.get<OMDemiurgeRect>("layoutBound");
         auto t = handler->clipRect.temporary(rectId);
-        t->position = {pp.x, pp.y, pp.width, pp.height};
+        t->position = {layoutBound.x, layoutBound.y, layoutBound.width, layoutBound.height};
         t->depth = depth;
 
         stylesStorage.solve();

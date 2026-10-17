@@ -54,16 +54,16 @@ void load()
             {
                 auto p = fmt::format("{}/{}/lang/lang.json", rt, mod);
 
-                auto ff = vfs::fsfetch(p);
-                if (!ff || !ff->good())
+                auto file = vfs::fsfetch(p);
+                if (!file || !file->good())
                 {
                     logger.warn("Bad module language list file: {}", p);
                 }
-                json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(ff));
-                auto ll = bld.build();
+                json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(file));
+                auto document = bld.build();
 
                 std::vector<std::string> loc;
-                for (auto &a : ll->getMap()["available"]->getArray())
+                for (auto &a : document->getMap()["available"]->getArray())
                 {
                     loc.push_back(a->getString());
                 }

@@ -20,16 +20,16 @@ OMRendererShaderCompiler::OMRendererShaderCompiler()
 
                 if (!shaderQueue.empty())
                 {
-                    auto ll = shaderQueue.front();
+                    auto queued = shaderQueue.front();
                     shaderQueue.pop();
 
                     std::shared_ptr<OMShader> target;
 
                     for (auto &comp : backends)
                     {
-                        if (comp->accept(ll.source->type))
+                        if (comp->accept(queued.source->type))
                         {
-                            ll.source = comp->compile(ll.source);
+                            queued.source = comp->compile(queued.source);
                             goto compend;
                         }
                     }
@@ -37,7 +37,7 @@ OMRendererShaderCompiler::OMRendererShaderCompiler()
                     throw OMRendererException("Unknown shader type to compile!");
 
                 compend:
-                    results[ll.id] = ll.source;
+                    results[queued.id] = queued.source;
                     countFinished++;
                 }
                 else

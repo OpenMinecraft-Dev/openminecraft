@@ -21,10 +21,10 @@ auto defaultLocale() -> std::string
     {
         if (d[0]->language && d[0]->country)
         {
-            auto dd = fmt::format("{}_{}", d[0]->language, d[0]->country);
-            std::transform(dd.begin(), dd.end(), dd.begin(), ::tolower);
+            auto localeName = fmt::format("{}_{}", d[0]->language, d[0]->country);
+            std::transform(localeName.begin(), localeName.end(), localeName.begin(), ::tolower);
             mem::allocator::tracedFreeSDL(d);
-            return dd;
+            return localeName;
         }
         else
         {

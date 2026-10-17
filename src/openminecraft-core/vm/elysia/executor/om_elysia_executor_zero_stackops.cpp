@@ -52,8 +52,8 @@ void zeroStackPopToStatic(OMElysiaField *field, OMElysiaOopManager *oop, OMElysi
         accessWriteS('D', jdouble, zeroStackPopWGet);
     case 'L':
     case '[': {
-        auto pp = zeroStackPopGet<OMElysiaOop *>();
-        oop->oopAccessPointerStaticField(field->klass, field->offset, pp);
+        auto reference = zeroStackPopGet<OMElysiaOop *>();
+        oop->oopAccessPointerStaticField(field->klass, field->offset, reference);
         break;
     }
     default:
@@ -97,9 +97,9 @@ void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysiu
     {
 #define accessWrite(f, type, get)                                                                                      \
     case f: {                                                                                                          \
-        auto pp = get<type>();                                                                                         \
+        auto fieldValue = get<type>();                                                                                 \
         auto obj = zeroStackPopGet<OMElysiaOop *>();                                                                   \
-        *reinterpret_cast<type *>(oop->oopAccessField(obj, field->offset)) = pp;                                       \
+        *reinterpret_cast<type *>(oop->oopAccessField(obj, field->offset)) = fieldValue;                               \
         break;                                                                                                         \
     }
         accessWrite('Z', jboolean, zeroStackPopGet);
@@ -112,13 +112,13 @@ void zeroStackPopToField(OMElysiaField *field, OMElysiaOopManager *oop, OMElysiu
         accessWrite('D', jdouble, zeroStackPopWGet);
     case 'L':
     case '[': {
-        auto pp = zeroStackPopGet<OMElysiaOop *>();
-        oop->oopAccessPointerField(zeroStackPopGet<OMElysiaOop *>(), field->offset, pp);
+        auto reference = zeroStackPopGet<OMElysiaOop *>();
+        oop->oopAccessPointerField(zeroStackPopGet<OMElysiaOop *>(), field->offset, reference);
         break;
     }
     default: {
-        auto pp = zeroStackPopGet<jint>();
-        *reinterpret_cast<jint *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)) = pp;
+        auto intValue = zeroStackPopGet<jint>();
+        *reinterpret_cast<jint *>(oop->oopAccessField(zeroStackPopGet<OMElysiaOop *>(), field->offset)) = intValue;
         break;
     }
     }

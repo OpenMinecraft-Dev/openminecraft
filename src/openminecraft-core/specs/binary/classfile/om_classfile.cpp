@@ -163,14 +163,14 @@ void OMClassFile::loadAttr(util::OMMemoryReader &reader, OMClassAttribute &a)
             malloc(a.bootstrapMethod.numBootstrapMethods * sizeof(OMClassBootstrapMethodEntry)));
         for (int i = 0; i < a.bootstrapMethod.numBootstrapMethods; ++i)
         {
-            auto &mm = a.bootstrapMethod.bootstrapMethods[i];
-            mm.bootstrapMethodRef = reader.readu16();
-            mm.numBootstrapArguments = reader.readu16();
-            mm.bootstrapArguments = reinterpret_cast<uint16_t *>(malloc(2 * mm.numBootstrapArguments));
+            auto &bootstrapMethod = a.bootstrapMethod.bootstrapMethods[i];
+            bootstrapMethod.bootstrapMethodRef = reader.readu16();
+            bootstrapMethod.numBootstrapArguments = reader.readu16();
+            bootstrapMethod.bootstrapArguments = reinterpret_cast<uint16_t *>(malloc(2 * bootstrapMethod.numBootstrapArguments));
 
-            for (int j = 0; j < mm.numBootstrapArguments; ++j)
+            for (int j = 0; j < bootstrapMethod.numBootstrapArguments; ++j)
             {
-                mm.bootstrapArguments[j] = reader.readu16();
+                bootstrapMethod.bootstrapArguments[j] = reader.readu16();
             }
         }
         break;

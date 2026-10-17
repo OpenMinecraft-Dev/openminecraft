@@ -345,62 +345,62 @@ static auto fromCommon(common::basics::OMVertexPropType t) -> std::pair<int, GLu
 void OMRendererTaskOpenGL::bindVertexBufferInstanced(std::vector<common::OMRendererBuffer *> buffer, int off)
 {
     int index = 0;
-    for (auto pp : vtxFormat.parts)
+    for (auto binding : vtxFormat.parts)
     {
-        reinterpret_cast<OMRendererBufferOpenGL *>(buffer[pp.binding])->bind();
-        for (auto part : pp.parts)
+        reinterpret_cast<OMRendererBufferOpenGL *>(buffer[binding.binding])->bind();
+        for (auto part : binding.parts)
         {
-            auto offset = pp.isInstance ? off * pp.size : 0;
+            auto offset = binding.isInstance ? off * binding.size : 0;
 
             auto p = fromCommon(std::get<common::basics::OMVertexPropType>(part));
             if (std::get<GLuint>(p) == GL_INT)
             {
-                gl->glVertexAttribIPointer(index, p.first, p.second, pp.size,
+                gl->glVertexAttribIPointer(index, p.first, p.second, binding.size,
                                            reinterpret_cast<void *>(std::get<int>(part) + offset));
             }
             else
             {
-                gl->glVertexAttribPointer(index, p.first, p.second, GL_FALSE, pp.size,
+                gl->glVertexAttribPointer(index, p.first, p.second, GL_FALSE, binding.size,
                                           reinterpret_cast<void *>(std::get<int>(part) + offset));
             }
             gl->glEnableVertexAttribArray(index);
-            if (pp.isInstance)
+            if (binding.isInstance)
             {
                 gl->glVertexAttribDivisor(index, 1);
             }
             index++;
         }
-        reinterpret_cast<OMRendererBufferOpenGL *>(buffer[pp.binding])->unbind();
+        reinterpret_cast<OMRendererBufferOpenGL *>(buffer[binding.binding])->unbind();
     }
 }
 
 void OMRendererTaskOpenGL::bindVertexBuffer(std::vector<common::OMRendererBuffer *> buffer)
 {
     int index = 0;
-    for (auto pp : vtxFormat.parts)
+    for (auto binding : vtxFormat.parts)
     {
-        reinterpret_cast<OMRendererBufferOpenGL *>(buffer[pp.binding])->bind();
-        for (auto part : pp.parts)
+        reinterpret_cast<OMRendererBufferOpenGL *>(buffer[binding.binding])->bind();
+        for (auto part : binding.parts)
         {
             auto p = fromCommon(std::get<common::basics::OMVertexPropType>(part));
             if (std::get<GLuint>(p) == GL_INT)
             {
-                gl->glVertexAttribIPointer(index, p.first, p.second, pp.size,
+                gl->glVertexAttribIPointer(index, p.first, p.second, binding.size,
                                            reinterpret_cast<void *>(std::get<int>(part)));
             }
             else
             {
-                gl->glVertexAttribPointer(index, p.first, p.second, GL_FALSE, pp.size,
+                gl->glVertexAttribPointer(index, p.first, p.second, GL_FALSE, binding.size,
                                           reinterpret_cast<void *>(std::get<int>(part)));
             }
             gl->glEnableVertexAttribArray(index);
-            if (pp.isInstance)
+            if (binding.isInstance)
             {
                 gl->glVertexAttribDivisor(index, 1);
             }
             index++;
         }
-        reinterpret_cast<OMRendererBufferOpenGL *>(buffer[pp.binding])->unbind();
+        reinterpret_cast<OMRendererBufferOpenGL *>(buffer[binding.binding])->unbind();
     }
 }
 void OMRendererTaskOpenGL::bindIndexBuffer(common::OMRendererBuffer *buffer)

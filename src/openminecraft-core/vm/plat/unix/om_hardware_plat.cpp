@@ -88,8 +88,8 @@ static auto fetchFromDevFs() -> std::string
     }
     if (d != std::variant_npos)
     {
-        auto d2 = staging.find("\n", d + 10);
-        auto temp = std::string(staging.c_str()).substr(d + 10, d2 - d - 10);
+        auto lineEnd = staging.find("\n", d + 10);
+        auto temp = std::string(staging.c_str()).substr(d + 10, lineEnd - d - 10);
         auto dt = temp.find(":");
         return temp.substr(dt + 2);
     }

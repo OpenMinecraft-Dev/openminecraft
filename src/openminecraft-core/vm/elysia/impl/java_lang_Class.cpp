@@ -18,10 +18,10 @@ extern "C"
     static auto getPrimitiveClass(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *name)
         -> OMElysiaNativeHandle *
     {
-        auto nn = env->GetStringUTFChars(name, nullptr);
-        auto k2 = env->FindClass(nn);
-        env->ReleaseStringUTFChars(name, nn);
-        return createTempHandle(k2->mirror);
+        auto nameChars = env->GetStringUTFChars(name, nullptr);
+        auto primitiveKlass = env->FindClass(nameChars);
+        env->ReleaseStringUTFChars(name, nameChars);
+        return createTempHandle(primitiveKlass->mirror);
     }
 
     static auto desiredAssertionStatus0(OMElysiaJNIEnv *env, OMElysiaKlass *klass, OMElysiaNativeHandle *klasshnd)
@@ -42,8 +42,8 @@ extern "C"
                 {
                     throw std::logic_error("need to call klassloader!");
                 }
-                auto nn = env->GetStringUTFChars(name, nullptr);
-                std::string ss(nn);
+                auto nameChars = env->GetStringUTFChars(name, nullptr);
+                std::string ss(nameChars);
                 for (auto &ch : ss)
                 {
                     if (ch == '.')
@@ -52,7 +52,7 @@ extern "C"
                     }
                 }
                 auto kls = kld->fetchOrLoadClass(ss, true);
-                env->ReleaseStringUTFChars(name, nn);
+                env->ReleaseStringUTFChars(name, nameChars);
 
                 if (env->ExceptionCheck())
                 {
@@ -116,50 +116,50 @@ extern "C"
     static auto isAssignableFrom(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls, OMElysiaNativeHandle *klsother)
         -> jboolean
     {
-        auto kk = reinterpret_cast<OMElysiaKlass *>(
+        auto klass = reinterpret_cast<OMElysiaKlass *>(
             env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
         auto kkother = reinterpret_cast<OMElysiaKlass *>(
             env->GetLongField(klsother, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
-        return kkother->inherits(kk);
+        return kkother->inherits(klass);
     }
 
     static auto getDeclaredConstructors0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *kls, bool publicOnly)
         -> OMElysiaNativeHandle *
     {
-        auto kk = reinterpret_cast<OMElysiaKlass *>(
+        auto klass = reinterpret_cast<OMElysiaKlass *>(
             env->GetLongField(kls, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
         auto ctkk = env->FindClass("java/lang/reflect/Constructor");
         std::vector<OMElysiaNativeHandle *> hnds;
-        for (int i = 0; i < kk->methodCount; i++)
+        for (int i = 0; i < klass->methodCount; i++)
         {
-            if (kk->methods[i].isInit())
+            if (klass->methods[i].isInit())
             {
-                if (publicOnly && (kk->methods[i].accessFlag & JVM_Acc_Public) == 0)
+                if (publicOnly && (klass->methods[i].accessFlag & JVM_Acc_Public) == 0)
                 {
                     continue;
                 }
                 auto kns = env->AllocObject(ctkk);
 
                 env->SetLongField(kns, env->GetFieldID(env->FindClass("java/lang/reflect/Constructor"), "<ptr>", "J"),
-                                  reinterpret_cast<jlong>(&kk->methods[i]));
+                                  reinterpret_cast<jlong>(&klass->methods[i]));
                 env->SetObjectField(kns, env->GetFieldID(ctkk, "clazz", "Ljava/lang/Class;"),
-                                    env->internal->elysium->executor->recordLocalRef(kk->mirror));
+                                    env->internal->elysium->executor->recordLocalRef(klass->mirror));
                 env->SetIntField(kns, env->GetFieldID(ctkk, "slot", "I"), i);
-                env->SetIntField(kns, env->GetFieldID(ctkk, "modifiers", "I"), kk->methods[i].accessFlag);
+                env->SetIntField(kns, env->GetFieldID(ctkk, "modifiers", "I"), klass->methods[i].accessFlag);
                 env->SetObjectField(kns, env->GetFieldID(ctkk, "signature", "Ljava/lang/String;"),
-                                    env->NewStringUTF(kk->methods[i].descriptor));
+                                    env->NewStringUTF(klass->methods[i].descriptor));
 
                 auto excarr =
-                    env->NewObjectArray(kk->methods[i].exceptionsLength, env->FindClass("java/lang/Class"), nullptr);
-                for (int j = 0; j < kk->methods[i].exceptionsLength; j++)
+                    env->NewObjectArray(klass->methods[i].exceptionsLength, env->FindClass("java/lang/Class"), nullptr);
+                for (int j = 0; j < klass->methods[i].exceptionsLength; j++)
                 {
                     env->SetObjectArrayElement(
                         excarr, j,
-                        env->internal->elysium->executor->recordLocalRef(kk->methods[i].exceptions[j]->mirror));
+                        env->internal->elysium->executor->recordLocalRef(klass->methods[i].exceptions[j]->mirror));
                 }
                 env->SetObjectField(kns, env->GetFieldID(ctkk, "exceptionTypes", "[Ljava/lang/Class;"), excarr);
 
-                auto result = parseSignature(kk->methods[i].descriptor);
+                auto result = parseSignature(klass->methods[i].descriptor);
                 auto argTypearr = env->NewObjectArray(result.first.size(), env->FindClass("java/lang/Class"), nullptr);
                 for (int j = 0; j < result.first.size(); j++)
                 {
@@ -241,8 +241,8 @@ extern "C"
         auto kls = reinterpret_cast<OMElysiaKlass *>(
             env->GetLongField(klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
 
-        auto vv = std::string(kls->name);
-        for (auto &ch : vv)
+        auto klassName = std::string(kls->name);
+        for (auto &ch : klassName)
         {
             if (ch == '/')
             {
@@ -255,7 +255,7 @@ extern "C"
             }
         }
 
-        return env->NewStringUTF(vv.c_str());
+        return env->NewStringUTF(klassName.c_str());
     }
 
     static auto getDeclaredMethods0(OMElysiaJNIEnv *env, OMElysiaNativeHandle *klass, jboolean publicOnly)
@@ -265,39 +265,39 @@ extern "C"
             env->GetLongField(klass, env->GetFieldID(env->FindClass("java/lang/Class"), "<ptr>", "J")));
         auto mthk = env->FindClass("java/lang/reflect/Method");
 
-        auto kk = kls->toInstance();
+        auto instanceKlass = kls->toInstance();
         std::vector<OMElysiaNativeHandle *> hnds;
-        for (int i = 0; i < kk->methodCount; i++)
+        for (int i = 0; i < instanceKlass->methodCount; i++)
         {
-            if (!kk->methods[i].isInit() && !kk->methods->isClinit())
+            if (!instanceKlass->methods[i].isInit() && !instanceKlass->methods->isClinit())
             {
-                if (publicOnly && (kk->methods[i].accessFlag & JVM_Acc_Public) == 0)
+                if (publicOnly && (instanceKlass->methods[i].accessFlag & JVM_Acc_Public) == 0)
                 {
                     continue;
                 }
                 auto kns = env->AllocObject(mthk);
 
-                env->SetLongField(kns, env->GetFieldID(mthk, "<ptr>", "J"), reinterpret_cast<jlong>(&kk->methods[i]));
+                env->SetLongField(kns, env->GetFieldID(mthk, "<ptr>", "J"), reinterpret_cast<jlong>(&instanceKlass->methods[i]));
                 env->SetObjectField(kns, env->GetFieldID(mthk, "clazz", "Ljava/lang/Class;"),
-                                    env->internal->elysium->executor->recordLocalRef(kk->mirror));
+                                    env->internal->elysium->executor->recordLocalRef(instanceKlass->mirror));
                 env->SetObjectField(kns, env->GetFieldID(mthk, "name", "Ljava/lang/String;"),
-                                    env->NewStringUTF(kk->methods[i].name));
+                                    env->NewStringUTF(instanceKlass->methods[i].name));
                 env->SetIntField(kns, env->GetFieldID(mthk, "slot", "I"), i);
-                env->SetIntField(kns, env->GetFieldID(mthk, "modifiers", "I"), kk->methods[i].accessFlag);
+                env->SetIntField(kns, env->GetFieldID(mthk, "modifiers", "I"), instanceKlass->methods[i].accessFlag);
                 env->SetObjectField(kns, env->GetFieldID(mthk, "signature", "Ljava/lang/String;"),
-                                    env->NewStringUTF(kk->methods[i].descriptor));
+                                    env->NewStringUTF(instanceKlass->methods[i].descriptor));
 
                 auto excarr =
-                    env->NewObjectArray(kk->methods[i].exceptionsLength, env->FindClass("java/lang/Class"), nullptr);
-                for (int j = 0; j < kk->methods[i].exceptionsLength; j++)
+                    env->NewObjectArray(instanceKlass->methods[i].exceptionsLength, env->FindClass("java/lang/Class"), nullptr);
+                for (int j = 0; j < instanceKlass->methods[i].exceptionsLength; j++)
                 {
                     env->SetObjectArrayElement(
                         excarr, j,
-                        env->internal->elysium->executor->recordLocalRef(kk->methods[i].exceptions[j]->mirror));
+                        env->internal->elysium->executor->recordLocalRef(instanceKlass->methods[i].exceptions[j]->mirror));
                 }
                 env->SetObjectField(kns, env->GetFieldID(mthk, "exceptionTypes", "[Ljava/lang/Class;"), excarr);
 
-                auto result = parseSignature(kk->methods[i].descriptor);
+                auto result = parseSignature(instanceKlass->methods[i].descriptor);
                 auto argTypearr = env->NewObjectArray(result.first.size(), env->FindClass("java/lang/Class"), nullptr);
                 for (int j = 0; j < result.first.size(); j++)
                 {

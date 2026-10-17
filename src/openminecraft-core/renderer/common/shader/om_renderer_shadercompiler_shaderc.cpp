@@ -79,14 +79,14 @@ auto OMRendererShaderCompilerBackendShaderc::compile(std::shared_ptr<OMShader> s
     std::vector<uint8_t> data;
     for (unsigned int itt : result)
     {
-        uint8_t l1 = itt;
-        uint8_t l2 = itt >> 8;
-        uint8_t l3 = itt >> 16;
-        uint8_t l4 = itt >> 24;
-        data.push_back(l1);
-        data.push_back(l2);
-        data.push_back(l3);
-        data.push_back(l4);
+        uint8_t byte0 = itt;
+        uint8_t byte1 = itt >> 8;
+        uint8_t byte2 = itt >> 16;
+        uint8_t byte3 = itt >> 24;
+        data.push_back(byte0);
+        data.push_back(byte1);
+        data.push_back(byte2);
+        data.push_back(byte3);
     }
 
     return std::make_shared<OMShader>(SPIRVBinary, data, shader->filename + ".spirv", shader->entrypoint,

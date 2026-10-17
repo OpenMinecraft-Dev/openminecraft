@@ -477,14 +477,14 @@ void OMRendererVk::render(OMTicker &t)
             cmdBuffers.clear();
             for (auto tsk : layeredTasks[i])
             {
-                auto tt = reinterpret_cast<OMRendererTaskVk *>(tsk);
-                if (!tt->isOnDefault())
+                auto task = reinterpret_cast<OMRendererTaskVk *>(tsk);
+                if (!task->isOnDefault())
                 {
-                    cmdBuffers.emplace_back(tt->commandBuffer);
+                    cmdBuffers.emplace_back(task->commandBuffer);
                 }
-                else if (defaultCommandBuffers.count(tt))
+                else if (defaultCommandBuffers.count(task))
                 {
-                    cmdBuffers.emplace_back(defaultCommandBuffers[tt][imageIndex]);
+                    cmdBuffers.emplace_back(defaultCommandBuffers[task][imageIndex]);
                 }
             }
 

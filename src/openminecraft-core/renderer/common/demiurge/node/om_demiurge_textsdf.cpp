@@ -32,7 +32,7 @@ auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, float dep
     this->handler = handler;
     if (stylesStorage.isModified())
     {
-        auto pp = stylesStorage.get<OMDemiurgeRect>("layoutBound");
+        auto layoutBound = stylesStorage.get<OMDemiurgeRect>("layoutBound");
 
         auto text = stylesStorage.get<std::string>("text", "");
         auto &s = shapeResult;
@@ -61,8 +61,8 @@ auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, float dep
             auto t = ch->temporary(glyphIds[i]);
             t->color = genLinear(stylesStorage.get<int>("color", 0));
             t->position = {
-                pp.x + s[i].position.x * th,
-                pp.y + s[i].position.y * th,
+                layoutBound.x + s[i].position.x * th,
+                layoutBound.y + s[i].position.y * th,
                 s[i].size.x * th,
                 s[i].size.y * th,
             };

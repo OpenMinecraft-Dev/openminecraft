@@ -42,9 +42,9 @@ template <> struct hash<openminecraft::shell::data::OMIdentifier>
 {
     auto operator()(const openminecraft::shell::data::OMIdentifier &id) const noexcept -> std::size_t
     {
-        std::size_t h1 = std::hash<std::string>{}(id.namesp);
-        std::size_t h2 = std::hash<std::string>{}(id.path);
-        return h1 ^ (h2 << 1);
+        std::size_t namespaceHash = std::hash<std::string>{}(id.namesp);
+        std::size_t pathHash = std::hash<std::string>{}(id.path);
+        return namespaceHash ^ (pathHash << 1);
     }
 };
 } // namespace std

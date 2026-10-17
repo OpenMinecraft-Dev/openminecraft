@@ -66,17 +66,17 @@ void OMRendererRenderTargetOpenGL::build()
         gl->glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         int i = 0;
         std::vector<GLenum> drawbufs = {};
-        for (auto tt : textures)
+        for (auto texture : textures)
         {
-            if (!isColorFormat(tt->arr))
+            if (!isColorFormat(texture->arr))
             {
                 gl->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
-                                              reinterpret_cast<OMRendererTextureOpenGL *>(tt)->texture);
+                                              reinterpret_cast<OMRendererTextureOpenGL *>(texture)->texture);
             }
             else
             {
                 GLenum type;
-                switch (tt->type)
+                switch (texture->type)
                 {
                 case common::Dim2:
                     type = GL_TEXTURE_2D;
@@ -90,7 +90,7 @@ void OMRendererRenderTargetOpenGL::build()
                 }
                 drawbufs.push_back(GL_COLOR_ATTACHMENT0 + i);
                 gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, type,
-                                           reinterpret_cast<OMRendererTextureOpenGL *>(tt)->texture, 0);
+                                           reinterpret_cast<OMRendererTextureOpenGL *>(texture)->texture, 0);
 
                 i++;
             }

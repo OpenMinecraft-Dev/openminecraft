@@ -183,11 +183,11 @@ void OMRendererPipelineVk::vertexFormat(common::basics::OMVertexFormat format)
     {
         vertexInputBindingDesc.emplace_back(static_cast<uint32_t>(p.binding), static_cast<uint32_t>(p.size),
                                             p.isInstance ? VertexInputRate::eInstance : VertexInputRate::eVertex);
-        for (auto &pp : p.parts)
+        for (auto &part : p.parts)
         {
             vertexInputAttrDesc.emplace_back(loc, static_cast<uint32_t>(p.binding),
-                                             convertTo(std::get<common::basics::OMVertexPropType>(pp)),
-                                             static_cast<uint32_t>(std::get<int>(pp)));
+                                             convertTo(std::get<common::basics::OMVertexPropType>(part)),
+                                             static_cast<uint32_t>(std::get<int>(part)));
             loc++;
         }
     }
@@ -229,11 +229,11 @@ void OMRendererPipelineVk::bindInput(int idx, common::OMRendererTexture *texture
 {
     try
     {
-        auto cc = DescriptorImageInfo(reinterpret_cast<OMRendererTextureVk *>(texture)->sampler,
+        auto imageInfo = DescriptorImageInfo(reinterpret_cast<OMRendererTextureVk *>(texture)->sampler,
                                       reinterpret_cast<OMRendererTextureVk *>(texture)->imageView,
                                       ImageLayout::eShaderReadOnlyOptimal);
         renderer->logicalDevice.updateDescriptorSets(
-            WriteDescriptorSet(descriptorSet, idx, 0, DescriptorType::eCombinedImageSampler, cc, {}), nullptr);
+            WriteDescriptorSet(descriptorSet, idx, 0, DescriptorType::eCombinedImageSampler, imageInfo, {}), nullptr);
     }
     catch (SystemError &e)
     {

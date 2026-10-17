@@ -164,7 +164,29 @@ src/openminecraft/<submodule>/...           shell implementation
   `buf` (buffer), `idx` (index), `ctx` (context).
 - Abbreviations must not be ambiguous: `thr` used to mean both thread and threshold — spell the
   threshold one out as `threshold`.
-- Loop counters and template parameters (`i`, `j`, `T`, `Ts`) are unrestricted.
+- **Double-letter placeholder names are forbidden**: `pp`, `ll`, `ff`, `kk`, `mm`, `vv`, `tt`, `nn`,
+  `ss`, `cc`, `ii`, `dd`, `aa`, `bb`. They carry no meaning, and the same name meant completely
+  different things in different files — `pp` was both a Demiurge "layout bound rect" and a renderer
+  "position". Name them after what they hold: `layoutBound`, `position`, `file`, `klass`, `method`,
+  `field`, `insets`, `texture`, `document`, `constant`.
+- **Numbered variable groups are forbidden**: `pp2`…`pp8`, `h1`…`h4`, `l1`…`l4`, `k2`. Express
+  groups with containers or structs instead of numeric suffixes:
+
+  ```cpp
+  // don't: pp, pp2, …, pp8
+  const std::array<Position, 8> corners = { ... };
+  corners[0] - cameraPos, corners[1] - cameraPos, ...
+
+  // don't: h1, h2, h3, h4
+  const std::array<float, 4> cornerHeights = { ... };
+  ```
+
+  Ordered scalars get no digit either: `l1..l4` should be `byte0..byte3`, or plain bit operations.
+  Bit-packing and UV/AO domain idioms (`l1..l4`, `ao1..ao4`, `u0/v0`) are the exception — see 12.1.
+- Single-letter names are limited to very short scopes: loop counters and math quantities
+  (`i`/`j`/`k`, coordinates `x`/`y`/`z`, deltas `dx`/`dy`/`dz`). `id`, `it`, `uv`, `fd` and `ok`
+  count as complete words. If a single-letter name lives for more than a dozen lines, spell it out.
+- Template parameters (`T`, `Ts`) are unrestricted.
 
 ### 7.3 Globals and constants
 
@@ -231,6 +253,8 @@ Walk through this list when adding or modifying code:
 - [ ] Functions / methods / members / locals are lowerCamelCase
 - [ ] Members have no `m_` prefix and no `_` suffix
 - [ ] Macros have the `OM_` prefix, are UPPER_CASE, and are `#undef`ed after use
+- [ ] Locals carry no double-letter placeholder name (`pp`, `ll`, `ff`, …) and no numeric
+      suffix such as `pp2` or `h1`
 - [ ] One compound word has exactly one casing across the repository
       (`BlockState`, not `Blockstate`; `registry`, not `registery`)
 - [ ] Commit message follows `[Tag] lowercase English phrase`
@@ -248,6 +272,7 @@ Walk through this list when adding or modifying code:
 | Nested types omitting `OM` | `Unit`, `const_iterator` |
 | Codename namespaces | `castorice`, `pixeltower` — implementation details only |
 | Third-party macros | `GLM_*`, `VULKAN_HPP_*`, `JNI_VERSION_*` |
+| Bit-packing and graphics idioms (`l1..l4`, `bl1..bl4`, `h1..h4`, `ao1..ao4`, `u0/v0/u1/v1` in `om_renderer_voxel_compiler.cpp`) | These mirror the bit-layout comment above each packer (`llll`, `hhhh`, …) one field at a time; switching to containers would hide that correspondence, so they are accepted as the domain notation of the packing helpers |
 
 ### 12.2 Pending migration (known deviations)
 
@@ -262,6 +287,7 @@ Walk through this list when adding or modifying code:
 | ANSI color constants (`om_log_ansi.hpp`) | `OMLogAnsi*` (24 of them) | `OM_LOG_ANSI_*`; longer term make them `constexpr` |
 | `.cpp`-local macros (`op_*`, `xaload`, `accessRead*`, `PUSHARG*`, `STRERR`, `PTRERR`, `OFFSWITCH`, `update`, `appendArg`, `updateFrame`, `CURRENT_KLASS`, `ARGTYPE_CASE0`) | no `OM_` prefix | add the `OM_` prefix |
 | Historical commit tags | `[Rednerer]`, `[Rederer & Shell]` | do not rewrite history; use `[Renderer]` / `[Shell]` going forward |
+| Single-letter locals and parameters | Public headers still contain roughly 180 non-coordinate single-letter parameters (`setTextColor(glm::vec4 d)`, `samples(uint64_t n)`, …) | Forbidden in new code; convert existing ones file by file to full names (`color`, `count`), keeping `x`/`y` coordinates and `i`/`j` loop counters |
 
 ## 13. Tooling
 
@@ -303,4 +329,5 @@ Walk through this list when adding or modifying code:
 
 | Date | Change |
 | --- | --- |
+| 2026-10-17 | Local-variable cleanup: removed every double-letter placeholder name (`pp`/`ll`/`ff`/`kk`/`mm`/`vv`/`tt`/`nn`/`ss`/`cc`/`ii`/`dd`/`aa`/`bb`, 115 declarations) and every numbered variable group (`pp2..pp8`, `h1..h4`, `l1..l4`, `k2`), replacing them with semantic names or `std::array` |
 | 2026-10-17 | First cleanup pass: file renames (`registery` → `registry`, `debugrendrer` → `om_debug_renderer`, …), `om_` prefixes and the `openminecraft::shell` namespace for the shell layer, spelling fixes, `Blockstate` → `BlockState`, include guards aligned with file names, `OM` prefixes on types, trailing underscores removed from members |

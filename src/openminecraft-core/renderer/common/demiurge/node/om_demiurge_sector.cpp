@@ -22,10 +22,10 @@ auto OMDemiurgeSectorNode::submit(OMDemiurgeRendererHandler *handler, float dept
     if (stylesStorage.isModified())
     {
     update:
-        auto pp = stylesStorage.get<OMDemiurgeRect>("layoutBound");
+        auto layoutBound = stylesStorage.get<OMDemiurgeRect>("layoutBound");
         auto t = handler->sector.temporary(sectorId);
         t->color = genLinear(stylesStorage.get<int>("color", 0));
-        t->position = {pp.x, pp.y, pp.width, pp.height};
+        t->position = {layoutBound.x, layoutBound.y, layoutBound.width, layoutBound.height};
         t->depth = depth;
         t->factor = stylesStorage.get<float>("factor", 2.0f);
         t->beginAngle = stylesStorage.get<float>("beginAngle", 0.0f);
@@ -35,10 +35,10 @@ auto OMDemiurgeSectorNode::submit(OMDemiurgeRendererHandler *handler, float dept
         glm::vec3 targetNormal = glm::normalize(stylesStorage.get<glm::vec3>("rotationPivot", {0.0f, 0.0f, 1.0f}));
         auto selfRotation = stylesStorage.get<float>("rotation", 0.0f);
 
-        glm::quat q1 = glm::rotation(defaultNormal, targetNormal);
-        glm::quat q2 = glm::angleAxis(selfRotation, targetNormal);
+        glm::quat normalAlign = glm::rotation(defaultNormal, targetNormal);
+        glm::quat spinRotation = glm::angleAxis(selfRotation, targetNormal);
 
-        t->rotation = q2 * q1;
+        t->rotation = spinRotation * normalAlign;
 
         stylesStorage.solve();
     }

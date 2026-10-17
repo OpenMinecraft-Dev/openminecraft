@@ -227,14 +227,14 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
         break;
     case argTypeArray:
     case argTypeReference: {
-        auto vv = *reinterpret_cast<OMElysiaNativeHandle **>(retValue);
+        auto reference = *reinterpret_cast<OMElysiaNativeHandle **>(retValue);
         popFrame(realpc);
-        zeroStackPush(handleFetch(vv));
-        if (vv)
+        zeroStackPush(handleFetch(reference));
+        if (reference)
         {
-            if (vv->next == vv)
+            if (reference->next == reference)
             {
-                free(vv);
+                free(reference);
             }
         }
         break;
@@ -298,26 +298,26 @@ void OMElysiaExecutorZero::executeNative(OMElysiaMethod *m, bool isStatic, void 
 void OMElysiaExecutorZero::executeNativeLink(uint8_t **realpc, OMElysiaJavaFrame *frame)
 {
     auto tc = thisThread.metadata;
-    auto mm = tc->zero.frame->method;
+    auto method = tc->zero.frame->method;
 
-    if (mm->code)
+    if (method->code)
     {
-        executeNative(mm, mm->isStatic(), mm->code, realpc, frame);
+        executeNative(method, method->isStatic(), method->code, realpc, frame);
         return;
     }
 
-    for (int i = 0; i < mm->klass->nativeMethodCount; i++)
+    for (int i = 0; i < method->klass->nativeMethodCount; i++)
     {
-        auto &nm = mm->klass->nativeMethods[i];
-        if (mm->isSame(&nm))
+        auto &nm = method->klass->nativeMethods[i];
+        if (method->isSame(&nm))
         {
-            mm->code = reinterpret_cast<uint8_t *>(nm.funcPtr);
-            executeNative(mm, mm->isStatic(), nm.funcPtr, realpc, frame);
+            method->code = reinterpret_cast<uint8_t *>(nm.funcPtr);
+            executeNative(method, method->isStatic(), nm.funcPtr, realpc, frame);
             return;
         }
     }
 
-    auto ffm = fmt::format("Java_{}_{}", mm->klass->name, mm->name);
+    auto ffm = fmt::format("Java_{}_{}", method->klass->name, method->name);
     for (auto &c : ffm)
     {
         if (c == '/')
@@ -328,11 +328,11 @@ void OMElysiaExecutorZero::executeNativeLink(uint8_t **realpc, OMElysiaJavaFrame
 
     if (elysium->nativeFuncMap.count(ffm))
     {
-        mm->code = reinterpret_cast<uint8_t *>(elysium->nativeFuncMap[ffm]);
-        executeNative(mm, mm->isStatic(), elysium->nativeFuncMap[ffm], realpc, frame);
+        method->code = reinterpret_cast<uint8_t *>(elysium->nativeFuncMap[ffm]);
+        executeNative(method, method->isStatic(), elysium->nativeFuncMap[ffm], realpc, frame);
         return;
     }
 
-    throw std::logic_error("not implemented: " + fmt::format("{}.{}{}", mm->klass->name, mm->name, mm->descriptor));
+    throw std::logic_error("not implemented: " + fmt::format("{}.{}{}", method->klass->name, method->name, method->descriptor));
 }
 } // namespace openminecraft::vm::elysia::executor

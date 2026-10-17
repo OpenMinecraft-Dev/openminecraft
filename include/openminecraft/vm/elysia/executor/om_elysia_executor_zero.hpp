@@ -84,13 +84,13 @@ void zeroStackPushFromField(OMElysiaField *field, OMElysiaOopManager *oop, OMEly
 
 static inline auto zeroCodeFetchArgs32Align(uint8_t *pc, int offset) -> int32_t
 {
-    auto pp = pc + 1;
-    while (reinterpret_cast<uintptr_t>(pp) % 4)
+    auto cursor = pc + 1;
+    while (reinterpret_cast<uintptr_t>(cursor) % 4)
     {
-        ++pp;
+        ++cursor;
     }
-    return static_cast<int32_t>(pp[offset * 4] << 24) | static_cast<int32_t>(pp[offset * 4 + 1] << 16) |
-           static_cast<int32_t>(pp[offset * 4 + 2] << 8) | pp[offset * 4 + 3];
+    return static_cast<int32_t>(cursor[offset * 4] << 24) | static_cast<int32_t>(cursor[offset * 4 + 1] << 16) |
+           static_cast<int32_t>(cursor[offset * 4 + 2] << 8) | cursor[offset * 4 + 3];
 }
 template <typename T> static inline auto zeroStackPopGet() -> T
 {
@@ -206,13 +206,13 @@ template <typename T> static inline void zeroStackSaveLocalPopW(uint32_t l, OMEl
     else
     {
         auto value = zeroStackPopWGet<T>();
-        auto vv = *reinterpret_cast<uint64_t *>(&value);
+        auto bits = *reinterpret_cast<uint64_t *>(&value);
 
         auto dlow = reinterpret_cast<uintptr_t>(frame) - (l + 1) * sizeof(void *);
         auto dhigh = reinterpret_cast<uintptr_t>(frame) - (l + 1 + 1) * sizeof(void *);
 
-        *reinterpret_cast<uint32_t *>(dlow) = static_cast<uint32_t>(vv & 0xffffffff);
-        *reinterpret_cast<uint32_t *>(dhigh) = static_cast<uint32_t>(vv >> 32);
+        *reinterpret_cast<uint32_t *>(dlow) = static_cast<uint32_t>(bits & 0xffffffff);
+        *reinterpret_cast<uint32_t *>(dhigh) = static_cast<uint32_t>(bits >> 32);
     }
 }
 

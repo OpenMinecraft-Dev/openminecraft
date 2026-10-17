@@ -731,12 +731,12 @@ auto OMVoxelManager::updateColor() -> void
         OMVoxelSunrise ris = {srgbToLinear(colorManager->getSunriseColor()), colorManager->getSunAngle()};
         sunrise->updateData(&ris);
         auto fg = srgbToLinear(colorManager->getFogColor());
-        std::array<float, 5> d = {colorManager->getFogRange().x, colorManager->getFogRange().y, fg.r, fg.g, fg.b};
-        fogdata->updateData(d.data());
+        std::array<float, 5> fogParams = {colorManager->getFogRange().x, colorManager->getFogRange().y, fg.r, fg.g, fg.b};
+        fogdata->updateData(fogParams.data());
 
-        std::array<float, 5> d2 = {colorManager->getFogRange().x * 3, colorManager->getFogRange().y * 3, fg.r, fg.g,
+        std::array<float, 5> cloudFogParams = {colorManager->getFogRange().x * 3, colorManager->getFogRange().y * 3, fg.r, fg.g,
                                    fg.b};
-        cloudFogdata->updateData(d2.data());
+        cloudFogdata->updateData(cloudFogParams.data());
         OMVoxelMoon m = {colorManager->getMoonAngle(), colorManager->getMoonPhase()};
         moonData->updateData(&m);
         starBaseData->updateData(
@@ -829,42 +829,47 @@ auto OMVoxelManager::fetchChunkState() -> std::pair<uint32_t, uint32_t>
     return {total, nonfree};
 }
 
-static float tt = 0.0f;
+static float cloudTime = 0.0f;
 static auto lastp = std::chrono::steady_clock::now();
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
-    auto cc = camera.getPosRaw();
+    auto cameraPos = camera.getPosRaw();
 
     auto cur = std::chrono::steady_clock::now();
-    tt += std::chrono::duration_cast<std::chrono::milliseconds>(cur - lastp).count() / 1000.0f * 3.0f;
-    tt = std::fmod(tt, 256 * 12);
+    cloudTime += std::chrono::duration_cast<std::chrono::milliseconds>(cur - lastp).count() / 1000.0f * 3.0f;
+    cloudTime = std::fmod(cloudTime, 256 * 12);
     lastp = cur;
 
     auto cloudc = colorManager->getCloudColor();
 
-    cloudData->updateData(std::array<OMVoxelCloud, 1>{{{{cc.getModX(256 * 12) + tt, cc.getY(), cc.getModZ(256 * 12)},
+    cloudData->updateData(std::array<OMVoxelCloud, 1>{{{{cameraPos.getModX(256 * 12) + cloudTime, cameraPos.getY(), cameraPos.getModZ(256 * 12)},
                                                         cloudc.a,
                                                         srgbToLinear(glm::vec3(cloudc.r, cloudc.g, cloudc.b))}}}
                               .data());
 
-    auto pp = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz);
-    auto pp2 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky, cc.chunkz);
-    auto pp3 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky + 1, cc.chunkz);
-    auto pp4 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz + 1);
-    auto pp5 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky + 1, cc.chunkz);
-    auto pp6 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky, cc.chunkz + 1);
-    auto pp7 = basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky + 1, cc.chunkz + 1);
-    auto pp8 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky + 1, cc.chunkz + 1);
+    using Position = basics::OMPosition<16, int64_t, float>;
+    const std::array<Position, 8> corners = {
+        Position(cameraPos.chunkx, cameraPos.chunky, cameraPos.chunkz),
+        Position(cameraPos.chunkx + 1, cameraPos.chunky, cameraPos.chunkz),
+        Position(cameraPos.chunkx, cameraPos.chunky + 1, cameraPos.chunkz),
+        Position(cameraPos.chunkx, cameraPos.chunky, cameraPos.chunkz + 1),
+        Position(cameraPos.chunkx + 1, cameraPos.chunky + 1, cameraPos.chunkz),
+        Position(cameraPos.chunkx + 1, cameraPos.chunky, cameraPos.chunkz + 1),
+        Position(cameraPos.chunkx, cameraPos.chunky + 1, cameraPos.chunkz + 1),
+        Position(cameraPos.chunkx + 1, cameraPos.chunky + 1, cameraPos.chunkz + 1),
+    };
 
     debugoffs->updateData(std::array<glm::vec3, 2 * 12>{
         {
-            pp - camera.getPosRaw(),  pp2 - camera.getPosRaw(), pp - camera.getPosRaw(),  pp3 - camera.getPosRaw(),
-            pp - camera.getPosRaw(),  pp4 - camera.getPosRaw(), pp8 - camera.getPosRaw(), pp5 - camera.getPosRaw(),
-            pp8 - camera.getPosRaw(), pp6 - camera.getPosRaw(), pp8 - camera.getPosRaw(), pp7 - camera.getPosRaw(),
-            pp2 - camera.getPosRaw(), pp5 - camera.getPosRaw(), pp2 - camera.getPosRaw(), pp6 - camera.getPosRaw(),
-            pp3 - camera.getPosRaw(), pp5 - camera.getPosRaw(), pp3 - camera.getPosRaw(), pp7 - camera.getPosRaw(),
-            pp4 - camera.getPosRaw(), pp6 - camera.getPosRaw(), pp4 - camera.getPosRaw(), pp7 - camera.getPosRaw(),
+            corners[0] - camera.getPosRaw(), corners[1] - camera.getPosRaw(), corners[0] - camera.getPosRaw(),
+            corners[2] - camera.getPosRaw(), corners[0] - camera.getPosRaw(), corners[3] - camera.getPosRaw(),
+            corners[7] - camera.getPosRaw(), corners[4] - camera.getPosRaw(), corners[7] - camera.getPosRaw(),
+            corners[5] - camera.getPosRaw(), corners[7] - camera.getPosRaw(), corners[6] - camera.getPosRaw(),
+            corners[1] - camera.getPosRaw(), corners[4] - camera.getPosRaw(), corners[1] - camera.getPosRaw(),
+            corners[5] - camera.getPosRaw(), corners[2] - camera.getPosRaw(), corners[4] - camera.getPosRaw(),
+            corners[2] - camera.getPosRaw(), corners[6] - camera.getPosRaw(), corners[3] - camera.getPosRaw(),
+            corners[5] - camera.getPosRaw(), corners[3] - camera.getPosRaw(), corners[6] - camera.getPosRaw(),
         }}.data());
 
     updateColor();
@@ -888,11 +893,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                 else
                 {
                     const auto &chk = ochk.value();
-                    auto pp = basics::OMPosition<16, int64_t, float>();
-                    pp.chunkx = chk.chunkx;
-                    pp.chunky = chk.chunky;
-                    pp.chunkz = chk.chunkz;
-                    chunkOffsetCache[i] = pp - camera.getPosRaw();
+                    auto position = basics::OMPosition<16, int64_t, float>();
+                    position.chunkx = chk.chunkx;
+                    position.chunky = chk.chunky;
+                    position.chunkz = chk.chunkz;
+                    chunkOffsetCache[i] = position - camera.getPosRaw();
                 }
                 ++i;
             }
@@ -912,17 +917,17 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                 {
                     auto &chk = ochk.value();
 
-                    auto cc = basics::OMPosition<16, int64_t, float>();
-                    cc.chunkx = chk.chunkx;
-                    cc.chunky = chk.chunky;
-                    cc.chunkz = chk.chunkz;
-                    cc.localx = 0.0f;
-                    cc.localy = 0.0f;
-                    cc.localz = 0.0f;
+                    auto position = basics::OMPosition<16, int64_t, float>();
+                    position.chunkx = chk.chunkx;
+                    position.chunky = chk.chunky;
+                    position.chunkz = chk.chunkz;
+                    position.localx = 0.0f;
+                    position.localy = 0.0f;
+                    position.localz = 0.0f;
 
                     auto pp0 =
-                        basics::OMPosition<16, int64_t, float>(cc.chunkx, cc.chunky, cc.chunkz) - camera.getPosRaw();
-                    auto pp1 = basics::OMPosition<16, int64_t, float>(cc.chunkx + 1, cc.chunky + 1, cc.chunkz + 1) -
+                        basics::OMPosition<16, int64_t, float>(position.chunkx, position.chunky, position.chunkz) - camera.getPosRaw();
+                    auto pp1 = basics::OMPosition<16, int64_t, float>(position.chunkx + 1, position.chunky + 1, position.chunkz + 1) -
                                camera.getPosRaw();
 
                     auto visible = frusturm.cubeVisible(std::array<glm::vec3, 8>{{

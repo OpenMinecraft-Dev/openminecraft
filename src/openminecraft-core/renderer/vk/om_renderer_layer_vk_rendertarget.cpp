@@ -54,9 +54,9 @@ auto OMRendererRenderTargetVk::fetchSize() -> glm::vec2
     glm::vec2 target = {0.0f, 0.0f};
     for (auto tex : textures)
     {
-        auto tt = reinterpret_cast<OMRendererTextureVk *>(tex);
-        target.x = std::max(target.x, static_cast<float>(tt->width));
-        target.y = std::max(target.y, static_cast<float>(tt->height));
+        auto textureVk = reinterpret_cast<OMRendererTextureVk *>(tex);
+        target.x = std::max(target.x, static_cast<float>(textureVk->width));
+        target.y = std::max(target.y, static_cast<float>(textureVk->height));
     }
     return target;
 }
@@ -102,14 +102,14 @@ void OMRendererRenderTargetVk::build()
             std::vector<AttachmentReference> colorAttach, depthAttach = {};
             std::vector<AttachmentDescription> attachDesc = {};
             uint32_t a = 0;
-            for (auto tt : textures)
+            for (auto texture : textures)
             {
-                if (!isColorFormat(tt->arr))
+                if (!isColorFormat(texture->arr))
                 {
                     attachDesc.push_back(
                         {{},
-                         reinterpret_cast<OMRendererTextureVk *>(tt)->format,
-                         reinterpret_cast<OMRendererTextureVk *>(tt)->sampleCount,
+                         reinterpret_cast<OMRendererTextureVk *>(texture)->format,
+                         reinterpret_cast<OMRendererTextureVk *>(texture)->sampleCount,
                          clearDepth ? AttachmentLoadOp::eClear : AttachmentLoadOp::eLoad,
                          storeDepth ? AttachmentStoreOp::eStore : AttachmentStoreOp::eDontCare,
                          AttachmentLoadOp::eDontCare,
@@ -125,8 +125,8 @@ void OMRendererRenderTargetVk::build()
                         throw std::logic_error("clear flags not enough!");
                     }
                     attachDesc.push_back({{},
-                                          reinterpret_cast<OMRendererTextureVk *>(tt)->format,
-                                          reinterpret_cast<OMRendererTextureVk *>(tt)->sampleCount,
+                                          reinterpret_cast<OMRendererTextureVk *>(texture)->format,
+                                          reinterpret_cast<OMRendererTextureVk *>(texture)->sampleCount,
                                           clearColorAtt[a] ? AttachmentLoadOp::eClear : AttachmentLoadOp::eLoad,
                                           AttachmentStoreOp::eStore,
                                           AttachmentLoadOp::eDontCare,
@@ -180,9 +180,9 @@ void OMRendererRenderTargetVk::rebuild()
 void OMRendererRenderTargetVk::buildFramebuffer()
 {
     std::vector<ImageView> attch;
-    for (auto tt : textures)
+    for (auto texture : textures)
     {
-        attch.push_back(reinterpret_cast<OMRendererTextureVk *>(tt)->imageView);
+        attch.push_back(reinterpret_cast<OMRendererTextureVk *>(texture)->imageView);
     }
 
     auto ext = fetchSize();

@@ -461,22 +461,25 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
 
         if (handler->queryFluid(bsid))
         {
-            auto a = handler->queryFluidFalling(bsid);
-            auto b = (handler->queryFluidLevel(bsid) & 0b111);
+            const auto isFalling = handler->queryFluidFalling(bsid);
+            const auto fluidLevel = (handler->queryFluidLevel(bsid) & 0b111);
 
-            auto h1 = a ? 255.0f : (checkAvgFluid(chunk, externalAccessor, v.first, 0, b));
-            auto h2 = a ? 255.0f : (checkAvgFluid(chunk, externalAccessor, v.first, 1, b));
-            auto h3 = a ? 255.0f : (checkAvgFluid(chunk, externalAccessor, v.first, 2, b));
-            auto h4 = a ? 255.0f : (checkAvgFluid(chunk, externalAccessor, v.first, 3, b));
+            const std::array<float, 4> cornerHeights = {
+                isFalling ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 0, fluidLevel),
+                isFalling ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 1, fluidLevel),
+                isFalling ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 2, fluidLevel),
+                isFalling ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 3, fluidLevel),
+            };
 
             for (auto f : {NegX, NegY, NegZ, PosX, PosY, PosZ})
             {
                 if (!checkExistFluidSame(chunk, externalAccessor, v.first, f, bsid))
                 {
-                    auto useSec = b != 0 || a;
+                    auto useSec = fluidLevel != 0 || isFalling;
                     auto vox = packVoxelFluid(v.first.x, v.first.y, v.first.z, f,
                                               useSec ? handler->queryFluidTexSec(bsid) : handler->queryFluidTex(bsid),
-                                              chunkid, 15, 15, 15, 15, 0, 0, 0, 0, h1, h2, h3, h4, useSec);
+                                              chunkid, 15, 15, 15, 15, 0, 0, 0, 0, cornerHeights[0], cornerHeights[1],
+                                              cornerHeights[2], cornerHeights[3], useSec);
                     (trans || handler->queryWaterlogged(bsid) ? committerTranslucentFluid : committerFluid)(
                         OMVoxelFluid{vox[0], vox[1], vox[2], vox[3]});
                 }

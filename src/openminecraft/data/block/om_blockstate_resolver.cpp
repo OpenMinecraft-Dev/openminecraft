@@ -43,13 +43,13 @@ void OMBlockStateResolver::resolve(OMIdentifier ident)
         return;
     }
 
-    auto ff = vfs::fsfetch(fmt::format("{}/{}/blockstates/{}.json", root, ident.namesp, ident.path));
-    json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(ff));
-    auto ll = bld.build();
+    auto blockstateStream = vfs::fsfetch(fmt::format("{}/{}/blockstates/{}.json", root, ident.namesp, ident.path));
+    json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(blockstateStream));
+    auto document = bld.build();
 
-    if (ll->getMap().count("variants"))
+    if (document->getMap().count("variants"))
     {
-        for (auto &l : ll->getMap()["variants"]->getMap())
+        for (auto &l : document->getMap()["variants"]->getMap())
         {
             if (l.second->type() == openminecraft::io::json::Object)
             {
@@ -64,25 +64,25 @@ void OMBlockStateResolver::resolve(OMIdentifier ident)
             }
         }
     }
-    else if (ll->getMap().count("multipart"))
+    else if (document->getMap().count("multipart"))
     {
-        for (auto &l : ll->getMap()["multipart"]->getArray())
+        for (auto &l : document->getMap()["multipart"]->getArray())
         {
-            auto &ll = l->getMap()["apply"];
-            if (ll->type() == openminecraft::io::json::Object)
+            auto &apply = l->getMap()["apply"];
+            if (apply->type() == openminecraft::io::json::Object)
             {
-                resolveModel(ident, ll);
+                resolveModel(ident, apply);
             }
             else
             {
-                for (auto &lp : ll->getArray())
+                for (auto &lp : apply->getArray())
                 {
                     resolveModel(ident, lp);
                 }
             }
         }
     }
-    resolverCache[ident] = ll;
+    resolverCache[ident] = document;
 }
 
 static auto caseCheck(OMBlockState &bs, std::shared_ptr<json::OMJsonNode> node) -> bool
@@ -241,14 +241,14 @@ void OMBlockStateResolver::buildModel(OMIdentifier ident, OMBlockState state)
                 continue;
             }
 
-            auto &ll = l->getMap()["apply"];
-            if (ll->type() == openminecraft::io::json::Object)
+            auto &apply = l->getMap()["apply"];
+            if (apply->type() == openminecraft::io::json::Object)
             {
-                ids.emplace_back(requiredModels[ident][identFrom(ll)]);
+                ids.emplace_back(requiredModels[ident][identFrom(apply)]);
             }
             else
             {
-                for (auto &lp : ll->getArray())
+                for (auto &lp : apply->getArray())
                 {
                     ids.emplace_back(requiredModels[ident][identFrom(lp)]);
                 }

@@ -179,8 +179,8 @@ inline static auto utf32ToUtf8(std::vector<int> cps) -> std::string
             s.push_back(static_cast<uint8_t>(0b10000000 | (i & 0b00111111)));
         }
     }
-    auto ss = std::string(s.begin(), s.end());
-    return ss;
+    auto narrow = std::string(s.begin(), s.end());
+    return narrow;
 }
 } // namespace openminecraft::util::encoding
 

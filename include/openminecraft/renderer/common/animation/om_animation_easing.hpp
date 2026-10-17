@@ -163,24 +163,24 @@ template <typename T> auto easeInOutElastic(T x) -> T
 
 template <typename T> auto easeOutBounce(T x) -> T
 {
-    const auto n1 = 7.5625;
-    const auto d1 = 2.75;
+    const auto bounceScale = 7.5625;
+    const auto bounceDivisor = 2.75;
 
-    if (x < 1 / d1)
+    if (x < 1 / bounceDivisor)
     {
-        return n1 * x * x;
+        return bounceScale * x * x;
     }
-    else if (x < 2 / d1)
+    else if (x < 2 / bounceDivisor)
     {
-        return n1 * (x -= 1.5 / d1) * x + 0.75;
+        return bounceScale * (x -= 1.5 / bounceDivisor) * x + 0.75;
     }
-    else if (x < 2.5 / d1)
+    else if (x < 2.5 / bounceDivisor)
     {
-        return n1 * (x -= 2.25 / d1) * x + 0.9375;
+        return bounceScale * (x -= 2.25 / bounceDivisor) * x + 0.9375;
     }
     else
     {
-        return n1 * (x -= 2.625 / d1) * x + 0.984375;
+        return bounceScale * (x -= 2.625 / bounceDivisor) * x + 0.984375;
     }
 }
 

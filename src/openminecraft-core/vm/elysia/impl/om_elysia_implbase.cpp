@@ -43,8 +43,8 @@ auto Java_sun_misc_Signal_findSignal(OMElysiaJNIEnv *env, OMElysiaKlass *, OMEly
 {
     /*using namespace openminecraft::binary::hash;
     jint result = 0;
-    auto nn = env->GetStringUTFChars(name, nullptr);
-    switch (hash_compile_time(nn))
+    auto nameChars = env->GetStringUTFChars(name, nullptr);
+    switch (hash_compile_time(nameChars))
     {
     case "HUP"_hash:
         result = SIGHUP;
@@ -73,9 +73,9 @@ auto Java_sun_misc_Signal_handle0(OMElysiaJNIEnv *env, OMElysiaKlass *, jint sig
 void Java_java_lang_ClassLoader$NativeLibrary_load(OMElysiaJNIEnv *env, OMElysiaNativeHandle *lib,
                                                    OMElysiaNativeHandle *name, jboolean)
 {
-    auto nn = env->GetStringUTFChars(name, nullptr);
-    logger.warn("request to load library {}, while elysium doesn't support library loading!", nn);
-    env->ReleaseStringUTFChars(name, nn);
+    auto nameChars = env->GetStringUTFChars(name, nullptr);
+    logger.warn("request to load library {}, while elysium doesn't support library loading!", nameChars);
+    env->ReleaseStringUTFChars(name, nameChars);
 
     auto kl = env->FindClass("java/lang/ClassLoader$NativeLibrary");
     env->SetBooleanField(lib, env->GetFieldID(kl, "loaded", "Z"), true);

@@ -42,15 +42,15 @@ auto OMJfifFile::bufferReqBits(std::shared_ptr<std::istream> istr, int b) -> boo
 
 void OMJfifFile::bufferLogStatus(std::shared_ptr<std::istream> istr)
 {
-    int pp = bitBuffer.bitsAvailable();
+    int bitsLeft = bitBuffer.bitsAvailable();
     size_t off = istr->tellg();
-    while (pp > 0)
+    while (bitsLeft > 0)
     {
-        pp -= 8;
+        bitsLeft -= 8;
         off--;
     }
 
-    logger.info("offset +{:02x}.{}", off, -pp);
+    logger.info("offset +{:02x}.{}", off, -bitsLeft);
 }
 
 auto OMJfifFile::bufferReadExtra(std::shared_ptr<std::istream> istr, int datalen) -> int64_t
