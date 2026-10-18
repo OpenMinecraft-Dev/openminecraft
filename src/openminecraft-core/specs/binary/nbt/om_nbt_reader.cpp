@@ -69,7 +69,10 @@ auto OMNbtReader::parse(bool haveName) -> std::shared_ptr<OMNbtTag>
             break;
         case End:
             tag = std::make_shared<OMNbtTag>(End, n, 0);
-            context.pop();
+            if (!context.empty())
+            {
+                context.pop();
+            }
             break;
         case Byte: {
             NBTByte b;
@@ -181,6 +184,12 @@ auto OMNbtReader::parse(bool haveName) -> std::shared_ptr<OMNbtTag>
             if (tag->type != OMNbtTagType::End)
             {
                 result = tag;
+
+                // INFO: 根节点不是 Compound/List 时（例如文本组件的 String 根），读完就是整个 NBT
+                if (tag->type != List && tag->type != Compound)
+                {
+                    break;
+                }
             }
             else
             {

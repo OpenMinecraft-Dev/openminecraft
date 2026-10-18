@@ -41,6 +41,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <variant>
 #include "openminecraft-shell/renderer/om_debug_renderer.hpp"
 #include "openminecraft-shell/renderer/om_world_renderer.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
@@ -154,40 +155,495 @@ void OMApplication::networkSetup(std::string host, std::string port)
     auto in = vfs::fsfetch("/mcserver_conn/connect");
     auto out = vfs::fswrite("/mcserver_conn/connect");
 
-    openminecraft::shell::network::OMProtocolMinecraftHandler hnd;
+    struct : openminecraft::shell::network::OMProtocolMinecraftHandler
+    {
+        log::OMLogger *logger;
+        network::OMProtocolMinecraftTransformer *transformer;
+
+        void title(const char *name)
+        {
+            logger->debug("** {} **", name);
+        }
+
+        void handleStatusResponse(std::string statusJson) override
+        {
+            title("Status Response");
+            logger->debug("json: {}", statusJson);
+        }
+
+        void handleStatusPongResponse(int64_t clientTimestamp) override
+        {
+            title("Pong Response");
+            logger->debug("client timestamp: {}", clientTimestamp);
+            logger->debug("rtt: {} ms", std::chrono::duration_cast<std::chrono::milliseconds>(
+                                            std::chrono::steady_clock::now().time_since_epoch())
+                                                .count() -
+                                            clientTimestamp);
+        }
+
+        void handleLoginSuccess(network::OMProtocolGameProfile profile) override
+        {
+            title("Login Success");
+            logger->debug("name: {}", profile.name);
+            logger->debug("uuid: {}", profile.uuid.toString());
+            logger->debug("session: {}", profile.sessionId.toString());
+            logger->debug("properties: {}", profile.properties.size());
+
+            for (const auto &property : profile.properties)
+            {
+                logger->debug("  property {} = {} (signature {} bytes)", property.name, property.value,
+                              property.signature.size());
+            }
+
+            transformer->sendLoginAcknowledged();
+        }
+
+        void handleEnterConfiguration() override
+        {
+            title("Enter Configuration");
+            transformer->sendConfigurationKnownPacks({});
+        }
+
+        void handleConfigurationPluginMessage(std::string channel,
+                                              openminecraft::network::OMNetworkPacket &data) override
+        {
+            title("Configuration Plugin Message");
+            logger->debug("channel: {}", channel);
+            logger->debug("payload: {} bytes", data.restDatalen());
+        }
+
+        void handleConfigurationFeatureFlags(std::vector<std::string> featureFlags) override
+        {
+            title("Feature Flags");
+            logger->debug("count: {}", featureFlags.size());
+
+            for (const auto &flag : featureFlags)
+            {
+                logger->debug("  {}", flag);
+            }
+        }
+
+        void handleConfigurationReportDetails(const network::OMProtocolCustomReportDetails &details) override
+        {
+            title("Custom Report Details");
+            logger->debug("count: {}", details.details.size());
+
+            for (const auto &detail : details.details)
+            {
+                logger->debug("  {} = {}", detail.title, detail.description);
+            }
+        }
+
+        void handleConfigurationRegistryData(const network::OMProtocolRegistryData &data) override
+        {
+            title("Registry Data");
+            logger->debug("registry: {}", data.registry);
+            logger->debug("entries: {}", data.entries.size());
+
+            for (const auto &entry : data.entries)
+            {
+                logger->debug("  {}: {}", entry.name, entry.data ? "nbt" : "none");
+            }
+        }
+
+        void handleConfigurationUpdateTag(const network::OMProtocolUpdateTags &tags) override
+        {
+            title("Update Tags");
+            logger->debug("groups: {}", tags.groups.size());
+
+            for (const auto &group : tags.groups)
+            {
+                logger->debug("  group {}: {} tags", group.registry, group.tags.size());
+
+                for (const auto &tag : group.tags)
+                {
+                    logger->debug("    tag {}: {} entries", tag.name, tag.entries.size());
+                }
+            }
+        }
+
+        void handleConfigurationFinish() override
+        {
+            title("Configuration Finish");
+            transformer->sendConfigurationFinishAcknowledged();
+        }
+
+        void handleEnterPlay() override
+        {
+            title("Enter Play");
+        }
+
+        void handlePlayLogin(int entityId, bool isHardcore, std::vector<std::string> dimensionNames,
+                             uint32_t maxPlayers, uint32_t viewDistance, uint32_t simulationDistance,
+                             bool reducedDebugInfo, bool enableRespawnScreen, bool doLimitedCrafting,
+                             uint32_t dimensionTypeId, std::string dimensionName, int64_t hashedSeed, uint32_t gameMode,
+                             uint32_t previousGameMode, bool isDebug, bool isFlat, bool hasDeathLocation,
+                             std::string deathDimensionName, openminecraft::network::OMPackedPos deathLocation,
+                             uint32_t portalCooldown, uint32_t seaLevel, bool onlineMode, bool secureChat) override
+        {
+            title("Login (play)");
+            logger->debug("entity id: {}", entityId);
+            logger->debug("hardcore: {}", isHardcore);
+            logger->debug("dimension names: {}", dimensionNames.size());
+
+            for (const auto &name : dimensionNames)
+            {
+                logger->debug("  {}", name);
+            }
+
+            logger->debug("max players: {}", maxPlayers);
+            logger->debug("view distance: {}", viewDistance);
+            logger->debug("simulation distance: {}", simulationDistance);
+            logger->debug("reduced debug info: {}", reducedDebugInfo);
+            logger->debug("enable respawn screen: {}", enableRespawnScreen);
+            logger->debug("limited crafting: {}", doLimitedCrafting);
+            logger->debug("dimension type: {}", dimensionTypeId);
+            logger->debug("dimension name: {}", dimensionName);
+            logger->debug("hashed seed: {}", hashedSeed);
+            logger->debug("game mode: {}", gameMode);
+            logger->debug("previous game mode: {}", previousGameMode);
+            logger->debug("debug: {}", isDebug);
+            logger->debug("flat: {}", isFlat);
+            logger->debug("death location: {} {}({}, {}, {})", hasDeathLocation, deathDimensionName, deathLocation.x(),
+                          deathLocation.y(), deathLocation.z());
+            logger->debug("portal cooldown: {}", portalCooldown);
+            logger->debug("sea level: {}", seaLevel);
+            logger->debug("online mode: {}", onlineMode);
+            logger->debug("secure chat: {}", secureChat);
+        }
+
+        void handlePlaySetExperience(const network::OMProtocolSetExperience &experience) override
+        {
+            title("Set Experience");
+            logger->debug("bar: {}", experience.experienceBar);
+            logger->debug("level: {}", experience.level);
+            logger->debug("total: {}", experience.totalExperience);
+        }
+
+        void handlePlaySetHealth(const network::OMProtocolSetHealth &health) override
+        {
+            title("Set Health");
+            logger->debug("health: {}", health.health);
+            logger->debug("food: {}", health.food);
+            logger->debug("saturation: {}", health.foodSaturation);
+        }
+
+        void handlePlayUpdateAdvancements(const network::OMProtocolUpdateAdvancements &advancements) override
+        {
+            title("Update Advancements");
+            logger->debug("reset: {} showed: {} added: {} removed: {} progress: {}", advancements.reset,
+                          advancements.showAdvancements, advancements.added.size(), advancements.removed.size(),
+                          advancements.progress.size());
+
+            for (const auto &advancement : advancements.added)
+            {
+                logger->debug("  advancement {}", advancement.id);
+
+                if (advancement.parent)
+                {
+                    logger->debug("    parent: {}", *advancement.parent);
+                }
+
+                for (const auto &group : advancement.requirements)
+                {
+                    std::string joined;
+
+                    for (const auto &criterion : group)
+                    {
+                        joined += criterion + " ";
+                    }
+
+                    logger->debug("    requirement: {}", joined);
+                }
+
+                logger->debug("    telemetry: {}", advancement.sendsTelemetry);
+            }
+
+            for (const auto &removed : advancements.removed)
+            {
+                logger->debug("  removed {}", removed);
+            }
+
+            for (const auto &progress : advancements.progress)
+            {
+                logger->debug("  progress {}", progress.id);
+
+                for (const auto &criterion : progress.criteria)
+                {
+                    if (criterion.date)
+                    {
+                        logger->debug("    {} achieved at {}", criterion.id, *criterion.date);
+                    }
+                    else
+                    {
+                        logger->debug("    {} not achieved", criterion.id);
+                    }
+                }
+            }
+
+            if (advancements.truncated)
+            {
+                logger->warn("advancements truncated: display data is not parsed yet");
+            }
+        }
+
+        void handlePlayUpdateAttributes(const network::OMProtocolUpdateAttributes &attributes) override
+        {
+            title("Update Attributes");
+            logger->debug("entity: {} attributes: {}", attributes.entityId, attributes.attributes.size());
+
+            for (const auto &attribute : attributes.attributes)
+            {
+                logger->debug("  attribute {}: base {}, modifiers {}", attribute.attributeId, attribute.base,
+                              attribute.modifiers.size());
+
+                for (const auto &modifier : attribute.modifiers)
+                {
+                    logger->debug("    modifier {}: amount {} operation {}", modifier.id, modifier.amount,
+                                  modifier.operation);
+                }
+            }
+        }
+
+        void handlePlaySetContainerContent(const network::OMProtocolSetContainerContent &content) override
+        {
+            title("Set Container Content");
+            logger->debug("window: {} state: {} slots: {}", content.windowId, content.stateId, content.slots.size());
+
+            for (std::size_t i = 0; i < content.slots.size(); ++i)
+            {
+                const auto &slot = content.slots[i];
+
+                if (slot.count > 0)
+                {
+                    logger->debug("  slot {}: item {} x{}", i, slot.itemId, slot.count);
+                }
+            }
+
+            if (content.carriedItem.count > 0)
+            {
+                logger->debug("carried: item {} x{}", content.carriedItem.itemId, content.carriedItem.count);
+            }
+
+            if (content.truncated)
+            {
+                logger->warn("container content truncated: item components are not parsed yet");
+            }
+        }
+
+        void handlePlayPostEffects(const network::OMProtocolPostEffects &effects) override
+        {
+            title("Post Effects");
+            logger->debug("count: {}", effects.effects.size());
+
+            for (const auto &effect : effects.effects)
+            {
+                logger->debug("  {}", effect);
+            }
+        }
+
+        void handlePlayPlayerInfoUpdate(const network::OMProtocolPlayerInfoUpdate &update) override
+        {
+            title("Player Info Update");
+            logger->debug("actions: 0x{:02x} entries: {}", update.actions, update.entries.size());
+
+            for (const auto &entry : update.entries)
+            {
+                logger->debug("  player {}", entry.uuid.toString());
+
+                if (entry.name)
+                {
+                    logger->debug("    name: {}", *entry.name);
+                }
+
+                for (const auto &property : entry.properties)
+                {
+                    logger->debug("    property {} = {} (signed: {})", property.name, property.value,
+                                  property.isSigned);
+                }
+
+                if (entry.chat)
+                {
+                    logger->debug("    chat session {} expires {} key {} bytes signature {} bytes",
+                                  entry.chat->sessionId.toString(), entry.chat->publicKeyExpiry,
+                                  entry.chat->publicKey.size(), entry.chat->keySignature.size());
+                }
+
+                if (entry.gameMode)
+                {
+                    logger->debug("    game mode: {}", *entry.gameMode);
+                }
+
+                if (entry.listed)
+                {
+                    logger->debug("    listed: {}", *entry.listed);
+                }
+
+                if (entry.latency)
+                {
+                    logger->debug("    latency: {} ms", *entry.latency);
+                }
+
+                if (entry.displayName)
+                {
+                    if (const auto *text = std::get_if<specs::nbt::NBTString>(&(*entry.displayName)->data))
+                    {
+                        logger->debug("    display name: {}", *text);
+                    }
+                    else
+                    {
+                        logger->debug("    display name: nbt tag type {}",
+                                      static_cast<int>((*entry.displayName)->type));
+                    }
+                }
+
+                if (entry.hat)
+                {
+                    logger->debug("    hat: {}", *entry.hat);
+                }
+
+                if (entry.listOrder)
+                {
+                    logger->debug("    list order: {}", *entry.listOrder);
+                }
+            }
+        }
+
+        void handlePlayServerData(const network::OMProtocolServerData &data) override
+        {
+            title("Server Data");
+
+            if (data.motd)
+            {
+                if (const auto *text = std::get_if<specs::nbt::NBTString>(&data.motd->data))
+                {
+                    logger->debug("motd: {}", *text);
+                }
+                else
+                {
+                    logger->debug("motd: nbt tag type {}", static_cast<int>(data.motd->type));
+                }
+            }
+
+            logger->debug("icon: {} bytes", data.icon ? data.icon->size() : 0);
+        }
+
+        void handlePlaySetDefaultSpawnPosition(const network::OMProtocolSetDefaultSpawnPosition &spawn) override
+        {
+            title("Set Default Spawn Position");
+            logger->debug("dimension: {}", spawn.dimension);
+            logger->debug("position: ({}, {}, {})", spawn.position.x(), spawn.position.y(), spawn.position.z());
+            logger->debug("yaw: {} pitch: {}", spawn.yaw, spawn.pitch);
+        }
+
+        void handlePlaySetTime(const network::OMProtocolSetTime &time) override
+        {
+            title("Set Time");
+            logger->debug("game time: {}", time.gameTime);
+            logger->debug("clocks: {}", time.clocks.size());
+
+            for (const auto &clock : time.clocks)
+            {
+                logger->debug("  clock {}: total ticks {}, partial tick {}, rate {}", clock.id, clock.totalTicks,
+                              clock.partialTick, clock.rate);
+            }
+        }
+
+        void handlePlayInitializeBorder(double x, double z, double oldDiameter, double newDiameter, int64_t lerpTime,
+                                        int32_t portalTeleportBoundary, int32_t warningBlocks,
+                                        int32_t warningTime) override
+        {
+            title("Initialize Border");
+            logger->debug("center: ({}, {})", x, z);
+            logger->debug("diameter: {} -> {}", oldDiameter, newDiameter);
+            logger->debug("lerp time: {} ms", lerpTime);
+            logger->debug("portal teleport boundary: {}", portalTeleportBoundary);
+            logger->debug("warning blocks: {} warning time: {} s", warningBlocks, warningTime);
+        }
+
+        void handlePlayChangeDifficulty(uint8_t difficulty, bool difficultyLocked) override
+        {
+            title("Change Difficulty");
+            logger->debug("difficulty: {}", difficulty);
+            logger->debug("locked: {}", difficultyLocked);
+        }
+
+        void handlePlayPlayerAbilities(uint8_t flags, float flyingSpeed, float fieldOfViewModifier) override
+        {
+            title("Player Abilities");
+            logger->debug("flags: 0x{:02x}", flags);
+            logger->debug("flying speed: {}", flyingSpeed);
+            logger->debug("field of view modifier: {}", fieldOfViewModifier);
+        }
+
+        void handlePlaySetHeldSlot(uint32_t slot) override
+        {
+            title("Set Held Slot");
+            logger->debug("slot: {}", slot);
+        }
+
+        void handlePlayEntityEvent(int entityId, uint8_t status) override
+        {
+            title("Entity Event");
+            logger->debug("entity id: {}", entityId);
+            logger->debug("status: {}", status);
+        }
+
+        void handlePlayGameEvent(int entityId, uint8_t status) override
+        {
+            title("Game Event");
+            logger->debug("event: {}", entityId);
+            logger->debug("value: {}", status);
+        }
+
+        void handlePlayRecipeBookSettings(bool craftingRecipeBookOpen, bool craftingRecipeBookFilterActive,
+                                          bool smeltingRecipeBookOpen, bool smeltingRecipeBookFilterActive,
+                                          bool blastFurnaceRecipeBookOpen, bool blastFurnaceRecipeBookFilterActive,
+                                          bool smokerRecipeBookOpen, bool smokerRecipeBookFilterActive) override
+        {
+            title("Recipe Book Settings");
+            logger->debug("crafting: open {} filter {}", craftingRecipeBookOpen, craftingRecipeBookFilterActive);
+            logger->debug("smelting: open {} filter {}", smeltingRecipeBookOpen, smeltingRecipeBookFilterActive);
+            logger->debug("blast furnace: open {} filter {}", blastFurnaceRecipeBookOpen,
+                          blastFurnaceRecipeBookFilterActive);
+            logger->debug("smoker: open {} filter {}", smokerRecipeBookOpen, smokerRecipeBookFilterActive);
+        }
+
+        void handlePlayPlayerPosition(uint32_t teleportId, double x, double y, double z, double velocityX,
+                                      double velocityY, double velocityZ, float yaw, float pitch, int flags) override
+        {
+            title("Player Position");
+            logger->debug("teleport id: {}", teleportId);
+            logger->debug("position: ({}, {}, {})", x, y, z);
+            logger->debug("velocity: ({}, {}, {})", velocityX, velocityY, velocityZ);
+            logger->debug("yaw: {} pitch: {}", yaw, pitch);
+            logger->debug("flags: 0x{:02x}", flags);
+        }
+
+        void handlePlayTickingState(float rate, bool isFrozen) override
+        {
+            title("Ticking State");
+            logger->debug("rate: {}", rate);
+            logger->debug("frozen: {}", isFrozen);
+        }
+
+        void handlePlayStepTick(uint32_t ticks) override
+        {
+            title("Step Tick");
+            logger->debug("ticks: {}", ticks);
+        }
+
+        void handlePlaySetChunkCacheCenter(int32_t centerX, int32_t centerZ) override
+        {
+            title("Set Chunk Cache Center");
+            logger->debug("center: ({}, {})", centerX, centerZ);
+        }
+    } hnd;
+    hnd.logger = &logger;
     openminecraft::shell::network::OMProtocolMinecraft protocol(in, out);
     openminecraft::shell::network::transformers::OMProtocolMinecraftTransformer777 transformer(protocol, hnd);
-    hnd.handleStatusResponse = [&](std::string res) { logger.debug(res); };
-    hnd.handlePongResponse = [&](int64_t t) {
-        logger.debug("{} ms", std::chrono::duration_cast<std::chrono::milliseconds>(
-                                  std::chrono::steady_clock::now().time_since_epoch())
-                                      .count() -
-                                  t);
-    };
-    hnd.handleLoginSuccess = [&](network::OMProtocolGameProfile p) {
-        logger.debug("login as {}, uuid {}, session {}", p.name, p.uuid.toString(), p.sessionId.toString());
-        transformer.sendLoginAcknowledged();
-    };
-    hnd.handleEnterConfiguration = [&]() { transformer.sendConfigurationKnownPacks({}); };
-    hnd.handleConfigurationPluginMessage = [&](std::string id, openminecraft::network::OMNetworkPacket &) {
-        logger.debug("plugin message {}", id);
-    };
-    hnd.handleConfigurationFeatureFlags = [&](std::vector<std::string> f) {
-        logger.debug("feature flags: ");
-        for (const auto &s : f)
-        {
-            logger.debug(s);
-        }
-    };
-    hnd.handleConfigurationFinish = [&]() {
-        logger.debug("configuration finish!");
-        transformer.sendConfigurationFinishAcknowledged();
-    };
-    hnd.handlePlayLogin = [&](int, bool, std::vector<std::string>, uint32_t, uint32_t, uint32_t, bool, bool, bool,
-                              uint32_t, std::string dimName, int64_t, uint32_t, uint32_t, bool, bool, bool, std::string,
-                              int64_t, uint32_t, uint32_t, bool, bool) { logger.debug("login at {}", dimName); };
-    hnd.handlePlayPlayerPosition = [&](uint32_t, double x, double y, double z, double, double, double, float, float,
-                                       int) { logger.debug("Position: {} {} {}", x, y, z); };
+    hnd.transformer = &transformer;
+
     try
     {
         transformer.sendHandshake(host, std::stoi(port), 2);

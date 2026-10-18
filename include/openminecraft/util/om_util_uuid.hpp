@@ -58,7 +58,7 @@ class OMUuid
         low = parseHex64(hex, 16);
     }
 
-    auto toString() -> std::string
+    auto toString() const -> std::string
     {
         std::stringstream ss;
         ss << std::hex << std::setfill('0');
@@ -71,11 +71,11 @@ class OMUuid
                hex.substr(20, 12);
     }
 
-    auto lowBits() -> uint64_t
+    auto lowBits() const -> uint64_t
     {
         return low;
     }
-    auto highBits() -> uint64_t
+    auto highBits() const -> uint64_t
     {
         return high;
     }

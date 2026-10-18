@@ -32,6 +32,67 @@ struct OMVarInt
     }
 };
 
+struct OMVarLong
+{
+    int64_t value = 0;
+
+    constexpr OMVarLong() = default;
+    constexpr OMVarLong(int64_t v) : value(v)
+    {
+    }
+
+    constexpr operator int64_t() const
+    {
+        return value;
+    }
+};
+
+// INFO: Minecraft 协议的 Position：x/z 各 26 位、y 12 位（补码）打包进一个 Long。
+struct OMPackedPos
+{
+    int64_t value = 0;
+
+    constexpr OMPackedPos() = default;
+    constexpr explicit OMPackedPos(int64_t packed) : value(packed)
+    {
+    }
+
+    static constexpr auto from(int32_t x, int32_t y, int32_t z) -> OMPackedPos
+    {
+        return OMPackedPos(static_cast<int64_t>((static_cast<uint64_t>(x) & 0x3FFFFFF) << 38 |
+                                                (static_cast<uint64_t>(z) & 0x3FFFFFF) << 12 |
+                                                (static_cast<uint64_t>(y) & 0xFFF)));
+    }
+
+    constexpr auto x() const -> int32_t
+    {
+        return signExtend(static_cast<uint64_t>(value) >> 38, 26);
+    }
+
+    constexpr auto y() const -> int32_t
+    {
+        return signExtend(static_cast<uint64_t>(value) & 0xFFF, 12);
+    }
+
+    constexpr auto z() const -> int32_t
+    {
+        return signExtend((static_cast<uint64_t>(value) >> 12) & 0x3FFFFFF, 26);
+    }
+
+  private:
+    static constexpr auto signExtend(uint64_t raw, int bits) -> int32_t
+    {
+        auto scoped = static_cast<int64_t>(raw);
+
+        if (scoped >= (static_cast<int64_t>(1) << (bits - 1)))
+        {
+            scoped -= static_cast<int64_t>(1) << bits;
+        }
+
+        return static_cast<int32_t>(scoped);
+    }
+};
+
 struct OMUtf8String
 {
     std::string value;
@@ -177,9 +238,41 @@ class OMNetworkPacket
 
             return OMVarInt(static_cast<int32_t>(value));
         }
+        else if constexpr (std::is_same_v<T, OMVarLong>)
+        {
+            uint64_t value = 0;
+
+            for (int position = 0; position < 64; position += 7)
+            {
+                auto currentByte = read<uint8_t>();
+
+                value |= static_cast<uint64_t>(currentByte & 0x7F) << position;
+
+                if ((currentByte & 0x80) == 0)
+                {
+                    break;
+                }
+            }
+
+            return OMVarLong(static_cast<int64_t>(value));
+        }
+        else if constexpr (std::is_same_v<T, OMPackedPos>)
+        {
+            return OMPackedPos(read<int64_t>());
+        }
         else if constexpr (std::is_same_v<T, OMUtf8String> || std::is_same_v<T, std::string>)
         {
             auto length = read<OMVarInt>().value;
+
+            if (length <= 0)
+            {
+                return {};
+            }
+
+            if (static_cast<uint64_t>(length) > restDatalen())
+            {
+                throw std::logic_error("[OMNetworkPacket] string length exceeds remaining data!");
+            }
 
             std::string value = {reinterpret_cast<char *>(&buffer.at(offset)), static_cast<std::size_t>(length)};
             offset += length;
@@ -234,7 +327,10 @@ class OMNetworkPacket
         }
         else if constexpr (std::is_same_v<T, util::OMUuid>)
         {
-            return util::OMUuid(read<int64_t>(), read<int64_t>());
+            auto high = read<int64_t>();
+            auto low = read<int64_t>();
+
+            return util::OMUuid(static_cast<uint64_t>(low), static_cast<uint64_t>(high));
         }
         else if constexpr (OMNetworkPacketCodec<T>::supported)
         {
@@ -260,6 +356,22 @@ class OMNetworkPacket
             }
 
             buffer.push_back(static_cast<uint8_t>(value));
+        }
+        else if constexpr (std::is_same_v<T, OMVarLong>)
+        {
+            auto value = static_cast<uint64_t>(t.value);
+
+            while ((value & ~0x7Full) != 0)
+            {
+                buffer.push_back(static_cast<uint8_t>((value & 0x7F) | 0x80));
+                value >>= 7;
+            }
+
+            buffer.push_back(static_cast<uint8_t>(value));
+        }
+        else if constexpr (std::is_same_v<T, OMPackedPos>)
+        {
+            write<int64_t>(t.value);
         }
         else if constexpr (std::is_same_v<T, OMUtf8String> || std::is_same_v<T, std::string>)
         {
@@ -403,11 +515,6 @@ class OMNetworkPacket
     friend class OMNetworkPacketStreamBuf;
 };
 
-// INFO: std::vector<OMUtf8String> 与 std::vector<std::string> 之间没有隐式转换（容器不协变），
-// 需要时用这两个helper显式转换。
-
-// INFO: std::optional<T> 的通用特化：1 字节存在标记 + 可选负载。
-// 负载沿用 read<T>() / write(T) 的既有分支（内建类型或其它 OMNetworkPacketCodec<T>）。
 template <typename T> struct OMNetworkPacketCodec<std::optional<T>>
 {
     static constexpr bool supported = true;
@@ -465,6 +572,14 @@ template <> struct fmt::formatter<openminecraft::network::OMVarInt> : formatter<
     auto format(openminecraft::network::OMVarInt v, format_context &ctx) const -> format_context::iterator
     {
         return formatter<int32_t>::format(v.value, ctx);
+    }
+};
+
+template <> struct fmt::formatter<openminecraft::network::OMVarLong> : formatter<int64_t>
+{
+    auto format(openminecraft::network::OMVarLong v, format_context &ctx) const -> format_context::iterator
+    {
+        return formatter<int64_t>::format(v.value, ctx);
     }
 };
 

@@ -2,17 +2,14 @@
 #include "openminecraft-shell/network/om_protocol_minecraft.hpp"
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_general.hpp"
 #include "openminecraft/network/om_network_packet.hpp"
-#include "openminecraft/specs/nbt/om_nbt.hpp"
-#include "openminecraft/specs/nbt/om_nbt_reader.hpp"
 #include "openminecraft/util/om_util_uuid.hpp"
-#include <memory>
 #include <stdexcept>
-#include <tuple>
-#include <unordered_map>
 #include <vector>
 
+using openminecraft::network::OMPackedPos;
 using openminecraft::network::OMUtf8String;
 using openminecraft::network::OMVarInt;
+using openminecraft::network::OMVarLong;
 
 namespace openminecraft::shell::network::transformers
 {
@@ -63,12 +60,7 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         }
             // Login Success
         case 0x02: {
-            OMProtocolGameProfile profile = {};
-            profile.uuid = pck.read<openminecraft::util::OMUuid>().toString();
-            profile.name = pck.read<OMUtf8String>();
-            profile.properties = pck.readPrefixArray<OMProtocolGameProfileProperty>();
-            profile.sessionId = pck.read<openminecraft::util::OMUuid>().toString();
-            handler.handleLoginSuccess(profile);
+            handler.handleLoginSuccess(pck.read<OMProtocolGameProfile>());
             return;
         }
             // Set Compression
@@ -102,55 +94,17 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         }
             // Registry Data
         case 0x07: {
-            auto regName = pck.read<OMUtf8String>();
-            auto reg = pck.read<OMVarInt>();
-
-            std::unordered_map<std::string, std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>> regItems;
-
-            for (int i = 0; i < reg; ++i)
-            {
-                auto name = pck.read<OMUtf8String>();
-                auto args = pck.read<std::optional<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>>();
-
-                regItems[name] = args.value_or(nullptr);
-            }
-
-            handler.handleConfigurationRegistryData(regName, regItems);
+            handler.handleConfigurationRegistryData(pck.read<OMProtocolRegistryData>());
             return;
         }
             // Update Tag
         case 0x0e: {
-            std::unordered_map<std::string, std::unordered_map<std::string, std::vector<int>>> tags;
-            int regCount = pck.read<OMVarInt>();
-            for (int i = 0; i < regCount; ++i)
-            {
-                auto regName = pck.read<OMUtf8String>();
-                auto &reg = tags[regName];
-                int tagsCount = pck.read<OMVarInt>();
-
-                for (int ti = 0; ti < tagsCount; ++ti)
-                {
-                    auto &entries = reg[pck.read<OMUtf8String>()];
-
-                    int entriesCount = pck.read<OMVarInt>();
-                    for (int e = 0; e < entriesCount; ++e)
-                    {
-                        entries.push_back(pck.read<OMVarInt>());
-                    }
-                }
-            }
-            handler.handleConfigurationUpdateTag(tags);
+            handler.handleConfigurationUpdateTag(pck.read<OMProtocolUpdateTags>());
             return;
         }
             // Chat Report Custom
         case 0x0f: {
-            auto i = pck.read<OMVarInt>();
-            std::vector<std::tuple<std::string, std::string, std::string>> report;
-            for (int k = 0; k < i; ++k)
-            {
-                report.emplace_back(pck.read<OMUtf8String>(), pck.read<OMUtf8String>(), pck.read<OMUtf8String>());
-            }
-            handler.handleConfigurationReportDetails(report);
+            handler.handleConfigurationReportDetails(pck.read<OMProtocolCustomReportDetails>());
             return;
         }
         default:
@@ -169,9 +123,34 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             logger.warn("skipped Commands packet!");
             return;
         }
+            // Set Container Content
+        case 0x12: {
+            handler.handlePlaySetContainerContent(pck.read<OMProtocolSetContainerContent>());
+            return;
+        }
             // Entity Event
         case 0x22: {
             handler.handlePlayEntityEvent(pck.read<int32_t>(), pck.read<uint8_t>());
+            return;
+        }
+            // Game Event
+        case 0x27: {
+            handler.handlePlayGameEvent(pck.read<int32_t>(), pck.read<uint8_t>());
+            return;
+        }
+            // Initialize Border
+        case 0x2c: {
+            auto x = pck.read<double>();
+            auto z = pck.read<double>();
+            auto oldDiameter = pck.read<double>();
+            auto newDiameter = pck.read<double>();
+            auto lerpTime = pck.read<OMVarLong>();
+            auto portalTeleportBoundary = pck.read<OMVarInt>();
+            auto warningBlocks = pck.read<OMVarInt>();
+            auto warningTime = pck.read<OMVarInt>();
+
+            handler.handlePlayInitializeBorder(x, z, oldDiameter, newDiameter, lerpTime, portalTeleportBoundary,
+                                               warningBlocks, warningTime);
             return;
         }
             // Login
@@ -195,11 +174,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             auto isFlat = pck.read<bool>();
             auto hasDeathLocation = pck.read<bool>();
             std::string deathDim = "";
-            int64_t depthPos = 0;
+            OMPackedPos depthPos;
             if (hasDeathLocation)
             {
                 deathDim = pck.read<OMUtf8String>();
-                depthPos = pck.read<int64_t>();
+                depthPos = pck.read<OMPackedPos>();
             }
             auto portalCooldown = pck.read<OMVarInt>();
             auto seaLevel = pck.read<OMVarInt>();
@@ -215,6 +194,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             // Player Abilities
         case 0x41: {
             handler.handlePlayPlayerAbilities(pck.read<uint8_t>(), pck.read<float>(), pck.read<float>());
+            return;
+        }
+            // Player Info Update
+        case 0x47: {
+            handler.handlePlayPlayerInfoUpdate(pck.read<OMProtocolPlayerInfoUpdate>());
             return;
         }
             // Player Position
@@ -236,9 +220,69 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
                                                  pck.read<bool>());
             return;
         }
+            // Post Effects
+        case 0x53: {
+            handler.handlePlayPostEffects(pck.read<OMProtocolPostEffects>());
+            return;
+        }
+            // Server Data
+        case 0x58: {
+            handler.handlePlayServerData(pck.read<OMProtocolServerData>());
+            return;
+        }
+            // Set Chunk Cache Center
+        case 0x60: {
+            handler.handlePlaySetChunkCacheCenter(pck.read<OMVarInt>(), pck.read<OMVarInt>());
+            return;
+        }
+            // Set Default Spawn Position
+        case 0x63: {
+            handler.handlePlaySetDefaultSpawnPosition(pck.read<OMProtocolSetDefaultSpawnPosition>());
+            return;
+        }
+            // Set Entity Metadata
+        case 0x65: {
+            logger.debug("skipped Set Entity Metadata packet!");
+            return;
+        }
+            // Set Experience
+        case 0x69: {
+            handler.handlePlaySetExperience(pck.read<OMProtocolSetExperience>());
+            return;
+        }
+            // Set Health
+        case 0x6a: {
+            handler.handlePlaySetHealth(pck.read<OMProtocolSetHealth>());
+            return;
+        }
             // Set Held Slot
         case 0x6b: {
             handler.handlePlaySetHeldSlot(pck.read<OMVarInt>());
+            return;
+        }
+            // Set Time
+        case 0x73: {
+            handler.handlePlaySetTime(pck.read<OMProtocolSetTime>());
+            return;
+        }
+            // Ticking State
+        case 0x82: {
+            handler.handlePlayTickingState(pck.read<float>(), pck.read<bool>());
+            return;
+        }
+            // Step Tick
+        case 0x83: {
+            handler.handlePlayStepTick(pck.read<OMVarInt>());
+            return;
+        }
+            // Update Advancements
+        case 0x85: {
+            handler.handlePlayUpdateAdvancements(pck.read<OMProtocolUpdateAdvancements>());
+            return;
+        }
+            // Update Attributes
+        case 0x86: {
+            handler.handlePlayUpdateAttributes(pck.read<OMProtocolUpdateAttributes>());
             return;
         }
             // Update Recipes

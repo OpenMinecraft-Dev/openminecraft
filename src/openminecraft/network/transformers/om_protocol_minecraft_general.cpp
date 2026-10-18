@@ -77,7 +77,7 @@ void OMProtocolMinecraftTransformerGeneral::handle()
             break;
             // Pong Response
         case 0x01:
-            handler.handlePongResponse(pck.read<int64_t>());
+            handler.handleStatusPongResponse(pck.read<int64_t>());
             break;
         }
         break;

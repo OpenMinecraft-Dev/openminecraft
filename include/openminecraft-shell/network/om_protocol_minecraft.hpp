@@ -1,6 +1,8 @@
 #ifndef OM_PROTOCOL_MINECRAFT_HPP
 #define OM_PROTOCOL_MINECRAFT_HPP
 
+#include "openminecraft-shell/network/om_protocol_codecs.hpp"
+#include "openminecraft-shell/network/om_protocol_minecraft_structs.hpp"
 #include "openminecraft/network/om_network_packet.hpp"
 #include "openminecraft/network/protocol/coding/om_coding.hpp"
 #include "openminecraft/specs/nbt/om_nbt.hpp"
@@ -9,33 +11,9 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <optional>
-#include <tuple>
 #include <vector>
 namespace openminecraft::shell::network
 {
-struct OMProtocolGameProfileProperty
-{
-    std::string name;
-    std::string value;
-    std::string signature;
-};
-
-struct OMProtocolKnownPack
-{
-    std::string namesp;
-    std::string id;
-    std::string version;
-};
-
-struct OMProtocolGameProfile
-{
-    std::string name;
-    openminecraft::util::OMUuid uuid;
-    std::vector<OMProtocolGameProfileProperty> properties;
-    openminecraft::util::OMUuid sessionId;
-};
-
 enum OMProtocolMinecraftState
 {
     Handshake,
@@ -48,40 +26,119 @@ class OMProtocolMinecraftHandler
 {
   public:
     OMProtocolMinecraftHandler() = default;
+    virtual ~OMProtocolMinecraftHandler() = default;
 
-    std::function<void(std::string)> handleStatusResponse = [](std::string) {};
-    std::function<void(int64_t)> handlePongResponse = [](int64_t) {};
-    std::function<void(OMProtocolGameProfile)> handleLoginSuccess = [](OMProtocolGameProfile) {};
-    std::function<void()> handleEnterConfiguration = []() {};
-    std::function<void(std::string, openminecraft::network::OMNetworkPacket &)> handleConfigurationPluginMessage =
-        [](std::string, openminecraft::network::OMNetworkPacket &) {};
-    std::function<void(std::vector<std::string>)> handleConfigurationFeatureFlags = [](std::vector<std::string>) {};
-    std::function<void(std::vector<std::tuple<std::string, std::string, std::string>>)>
-        handleConfigurationReportDetails = [](std::vector<std::tuple<std::string, std::string, std::string>>) {};
-    std::function<void(std::string,
-                       const std::unordered_map<std::string, std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>> &)>
-        handleConfigurationRegistryData =
-            [](std::string,
-               const std::unordered_map<std::string, std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>> &) {};
-    std::function<void(std::unordered_map<std::string, std::unordered_map<std::string, std::vector<int>>> &)>
-        handleConfigurationUpdateTag =
-            [](std::unordered_map<std::string, std::unordered_map<std::string, std::vector<int>>> &) {};
-    std::function<void()> handleConfigurationFinish = []() {};
-    std::function<void()> handleEnterPlay = []() {};
-    std::function<void(int, bool, std::vector<std::string>, uint32_t, uint32_t, uint32_t, bool, bool, bool, uint32_t,
-                       std::string, int64_t, uint32_t, uint32_t, bool, bool, bool, std::string, int64_t, uint32_t,
-                       uint32_t, bool, bool)>
-        handlePlayLogin = [](int, bool, std::vector<std::string>, uint32_t, uint32_t, uint32_t, bool, bool, bool,
-                             uint32_t, std::string, int64_t, uint32_t, uint32_t, bool, bool, bool, std::string, int64_t,
-                             uint32_t, uint32_t, bool, bool) {};
-    std::function<void(uint8_t, bool)> handlePlayChangeDifficulty = [](uint8_t, bool) {};
-    std::function<void(uint8_t, float, float)> handlePlayPlayerAbilities = [](uint8_t, float, float) {};
-    std::function<void(uint32_t)> handlePlaySetHeldSlot = [](uint32_t) {};
-    std::function<void(int, uint8_t)> handlePlayEntityEvent = [](int, uint8_t) {};
-    std::function<void(bool, bool, bool, bool, bool, bool, bool, bool)> handlePlayRecipeBookSettings =
-        [](bool, bool, bool, bool, bool, bool, bool, bool) {};
-    std::function<void(uint32_t, double, double, double, double, double, double, float, float, int)>
-        handlePlayPlayerPosition = [](uint32_t, double, double, double, double, double, double, float, float, int) {};
+    virtual void handleStatusResponse(std::string statusJson) = 0;
+    virtual void handleStatusPongResponse(int64_t clientTimestamp) = 0;
+
+    virtual void handleLoginSuccess(OMProtocolGameProfile profile)
+    {
+    }
+
+    virtual void handleEnterConfiguration()
+    {
+    }
+    virtual void handleConfigurationPluginMessage(std::string channel, openminecraft::network::OMNetworkPacket &data)
+    {
+    }
+    virtual void handleConfigurationFeatureFlags(std::vector<std::string> featureFlags)
+    {
+    }
+    virtual void handleConfigurationReportDetails(const OMProtocolCustomReportDetails &details)
+    {
+    }
+    virtual void handleConfigurationRegistryData(const OMProtocolRegistryData &data)
+    {
+    }
+    virtual void handleConfigurationUpdateTag(const OMProtocolUpdateTags &tags)
+    {
+    }
+    virtual void handleConfigurationFinish()
+    {
+    }
+
+    virtual void handleEnterPlay()
+    {
+    }
+    virtual void handlePlayLogin(int entityId, bool isHardcore, std::vector<std::string> dimensionNames,
+                                 uint32_t maxPlayers, uint32_t viewDistance, uint32_t simulationDistance,
+                                 bool reducedDebugInfo, bool enableRespawnScreen, bool doLimitedCrafting,
+                                 uint32_t dimensionTypeId, std::string dimensionName, int64_t hashedSeed,
+                                 uint32_t gameMode, uint32_t previousGameMode, bool isDebug, bool isFlat,
+                                 bool hasDeathLocation, std::string deathDimensionName,
+                                 openminecraft::network::OMPackedPos deathLocation, uint32_t portalCooldown,
+                                 uint32_t seaLevel, bool onlineMode, bool secureChat)
+    {
+    }
+    virtual void handlePlaySetExperience(const OMProtocolSetExperience &experience)
+    {
+    }
+    virtual void handlePlaySetHealth(const OMProtocolSetHealth &health)
+    {
+    }
+    virtual void handlePlayUpdateAdvancements(const OMProtocolUpdateAdvancements &advancements)
+    {
+    }
+    virtual void handlePlayUpdateAttributes(const OMProtocolUpdateAttributes &attributes)
+    {
+    }
+    virtual void handlePlaySetContainerContent(const OMProtocolSetContainerContent &content)
+    {
+    }
+    virtual void handlePlayPostEffects(const OMProtocolPostEffects &effects)
+    {
+    }
+    virtual void handlePlayPlayerInfoUpdate(const OMProtocolPlayerInfoUpdate &update)
+    {
+    }
+    virtual void handlePlayServerData(const OMProtocolServerData &data)
+    {
+    }
+    virtual void handlePlaySetDefaultSpawnPosition(const OMProtocolSetDefaultSpawnPosition &spawn)
+    {
+    }
+    virtual void handlePlaySetTime(const OMProtocolSetTime &time)
+    {
+    }
+    virtual void handlePlayInitializeBorder(double x, double z, double oldDiameter, double newDiameter,
+                                            int64_t lerpTime, int32_t portalTeleportBoundary, int32_t warningBlocks,
+                                            int32_t warningTime)
+    {
+    }
+    virtual void handlePlayChangeDifficulty(uint8_t difficulty, bool difficultyLocked)
+    {
+    }
+    virtual void handlePlayPlayerAbilities(uint8_t flags, float flyingSpeed, float fieldOfViewModifier)
+    {
+    }
+    virtual void handlePlaySetHeldSlot(uint32_t slot)
+    {
+    }
+    virtual void handlePlayEntityEvent(int entityId, uint8_t status)
+    {
+    }
+    virtual void handlePlayGameEvent(int entityId, uint8_t status)
+    {
+    }
+    virtual void handlePlayRecipeBookSettings(bool craftingRecipeBookOpen, bool craftingRecipeBookFilterActive,
+                                              bool smeltingRecipeBookOpen, bool smeltingRecipeBookFilterActive,
+                                              bool blastFurnaceRecipeBookOpen, bool blastFurnaceRecipeBookFilterActive,
+                                              bool smokerRecipeBookOpen, bool smokerRecipeBookFilterActive)
+    {
+    }
+    virtual void handlePlayPlayerPosition(uint32_t teleportId, double x, double y, double z, double velocityX,
+                                          double velocityY, double velocityZ, float yaw, float pitch, int flags)
+    {
+    }
+    virtual void handlePlayTickingState(float rate, bool isFrozen)
+    {
+    }
+    virtual void handlePlayStepTick(uint32_t ticks)
+    {
+    }
+    virtual void handlePlaySetChunkCacheCenter(int32_t centerX, int32_t centerZ)
+    {
+    }
 };
 
 class OMProtocolMinecraft : public openminecraft::network::protocol::OMCodingBase
@@ -141,58 +198,5 @@ class OMProtocolMinecraftTransformer
     virtual void handle() = 0;
 };
 } // namespace openminecraft::shell::network
-
-template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolKnownPack>
-{
-    static constexpr bool supported = true;
-
-    static auto read(openminecraft::network::OMNetworkPacket &pck) -> openminecraft::shell::network::OMProtocolKnownPack
-    {
-        return {pck.read<openminecraft::network::OMUtf8String>(), pck.read<openminecraft::network::OMUtf8String>(),
-                pck.read<openminecraft::network::OMUtf8String>()};
-    }
-
-    static auto write(openminecraft::network::OMNetworkPacket &pck,
-                      const openminecraft::shell::network::OMProtocolKnownPack &value) -> void
-    {
-        pck.write(openminecraft::network::OMUtf8String(value.namesp));
-        pck.write(openminecraft::network::OMUtf8String(value.id));
-        pck.write(openminecraft::network::OMUtf8String(value.version));
-    }
-};
-
-template <> struct openminecraft::network::OMNetworkPacketCodec<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>
-{
-    static constexpr bool supported = true;
-
-    static auto read(openminecraft::network::OMNetworkPacket &pck)
-        -> std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>
-    {
-        openminecraft::specs::nbt::OMNbtReader reader(pck.asStream());
-
-        return reader.parse(false);
-    }
-};
-
-template <>
-struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolGameProfileProperty>
-{
-    static constexpr bool supported = true;
-
-    static auto read(openminecraft::network::OMNetworkPacket &pck)
-        -> openminecraft::shell::network::OMProtocolGameProfileProperty
-    {
-        return {pck.read<openminecraft::network::OMUtf8String>(), pck.read<openminecraft::network::OMUtf8String>(),
-                pck.read<openminecraft::network::OMUtf8String>()};
-    }
-
-    static auto write(openminecraft::network::OMNetworkPacket &pck,
-                      const openminecraft::shell::network::OMProtocolGameProfileProperty &value) -> void
-    {
-        pck.write(openminecraft::network::OMUtf8String(value.name));
-        pck.write(openminecraft::network::OMUtf8String(value.value));
-        pck.write(openminecraft::network::OMUtf8String(value.signature));
-    }
-};
 
 #endif
