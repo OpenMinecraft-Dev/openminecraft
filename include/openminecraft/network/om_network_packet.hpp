@@ -182,6 +182,20 @@ template <typename T> struct OMIDOr
     }
 };
 
+
+// INFO: Minecraft protocol "ID Set": either a registry tag (type 0) or an inline id list
+// (type > 0, holding type - 1 ids).
+struct OMIdSet
+{
+    int32_t type = 0;
+    std::string tag;          // present when type == 0 (registry tag name)
+    std::vector<int32_t> ids; // present when type != 0, size == type - 1
+
+    auto isTag() const -> bool
+    {
+        return type == 0;
+    }
+};
 // INFO: Minecraft protocol LpVec3: a low-precision vector of three doubles.
 // Layout: packed bitfield — X 15 bits, Y 15 bits, Z 15 bits, continuation flag 1 bit,
 // scale factor 2 bits (+ VarInt tail when the flag is set). A leading zero byte means (0, 0, 0).
@@ -799,7 +813,55 @@ template <typename T> struct OMNetworkPacketCodec<OMIDOr<T>>
         }
     }
 };
-inline auto toStdStrings(const std::vector<OMUtf8String> &values) -> std::vector<std::string>
+
+
+// INFO: "ID Set" 复用同一套扩展点：type 0 读注册表 tag 名，否则读 type-1 个 VarInt id
+template <> struct OMNetworkPacketCodec<OMIdSet>
+{
+    static constexpr bool supported = true;
+
+    static auto read(OMNetworkPacket &pck) -> OMIdSet
+    {
+        OMIdSet result;
+        result.type = static_cast<int32_t>(pck.read<OMVarInt>());
+
+        if (result.type == 0)
+        {
+            result.tag = pck.read<std::string>();
+            return result;
+        }
+
+        if (result.type < 0 || static_cast<uint64_t>(result.type - 1) > pck.restDatalen())
+        {
+            throw std::logic_error("[OMNetworkPacket] id set exceeds remaining data!");
+        }
+
+        result.ids.reserve(static_cast<std::size_t>(result.type - 1));
+
+        for (int32_t i = 0; i < result.type - 1; ++i)
+        {
+            result.ids.push_back(static_cast<int32_t>(pck.read<OMVarInt>()));
+        }
+
+        return result;
+    }
+
+    static auto write(OMNetworkPacket &pck, const OMIdSet &value) -> void
+    {
+        pck.write(OMVarInt(value.type));
+
+        if (value.type == 0)
+        {
+            pck.write<std::string>(value.tag);
+            return;
+        }
+
+        for (auto id : value.ids)
+        {
+            pck.write(OMVarInt(id));
+        }
+    }
+};inline auto toStdStrings(const std::vector<OMUtf8String> &values) -> std::vector<std::string>
 {
     std::vector<std::string> result;
     result.reserve(values.size());

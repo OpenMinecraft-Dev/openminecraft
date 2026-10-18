@@ -83,6 +83,37 @@ struct OMProtocolItemStack
     std::vector<int32_t> removedComponents;
 };
 
+// Slot Display: how an item should be rendered (recipe book, advises, etc.).
+// Wire order: type (VarInt, minecraft:slot_display registry id) followed by type-specific data.
+// INFO: the slot_display registry is data driven; the ids below follow the vanilla registration order.
+enum class OMSlotDisplayKind : int32_t
+{
+    Empty = 0,
+    AnyFuel = 1,
+    WithAnyPotion = 2,
+    OnlyWithComponent = 3,
+    Item = 4,
+    ItemStack = 5,
+    Tag = 6,
+    Dyed = 7,
+    SmithingTrim = 8,
+    WithRemainder = 9,
+    Composite = 10
+};
+
+struct OMSlotDisplay
+{
+    int32_t type = 0;
+    OMSlotDisplayKind kind = OMSlotDisplayKind::Empty;
+    std::vector<OMSlotDisplay> nested; // base / dye+target / material / ingredient+remainder / options
+    int32_t itemId = 0;                // minecraft:item
+    int32_t componentTypeId = 0;       // minecraft:only_with_component
+    int32_t patternId = 0;             // minecraft:smithing_trim
+    std::string tag;                   // minecraft:tag (identifier, no leading '#')
+    OMProtocolItemStack stack;         // minecraft:item_stack
+    bool truncated = false;            // item stack with added components cannot be delimited yet
+};
+
 // Set Container Content (0x12): the full content of a container window.
 // Wire order: windowId (VarInt) | stateId (VarInt) | slots (Array of Item Stack) | carriedItem (Item Stack)
 // TODO: truncated: data component not supported, add flag

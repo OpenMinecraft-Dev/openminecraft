@@ -912,6 +912,114 @@ static auto testUpdateLightCodec() -> void
     CHECK(OMBitSet::fromBytes({}).data.empty());
 }
 
+static auto testIdSet() -> void
+{
+    // tag 形式
+    OMIdSet tagSet;
+    tagSet.type = 0;
+    tagSet.tag = "minecraft:logs";
+
+    OMNetworkPacket p;
+    p.write(tagSet);
+    p.reset();
+
+    auto a = p.read<OMIdSet>();
+    CHECK(a.type == 0 && a.isTag() && a.tag == "minecraft:logs" && a.ids.empty());
+
+    // 内联形式：type = 3 表示 2 个 id
+    OMIdSet inlineSet;
+    inlineSet.type = 3;
+    inlineSet.ids = {5, 7};
+
+    OMNetworkPacket q;
+    q.write(inlineSet);
+    q.reset();
+
+    auto b = q.read<OMIdSet>();
+    CHECK(b.type == 3 && !b.isTag() && b.ids.size() == 2 && b.ids[0] == 5 && b.ids[1] == 7);
+
+    // type = 1 表示空集合
+    OMIdSet empty;
+    empty.type = 1;
+
+    OMNetworkPacket r;
+    r.write(empty);
+    r.reset();
+
+    auto c = r.read<OMIdSet>();
+    CHECK(c.type == 1 && c.ids.empty() && r.restDatalen() == 0);
+}
+
+static auto testSlotDisplay() -> void
+{
+    using openminecraft::shell::network::OMSlotDisplay;
+    using openminecraft::shell::network::OMSlotDisplayKind;
+
+    // minecraft:item
+    OMNetworkPacket p;
+    p.write(OMVarInt(static_cast<int32_t>(OMSlotDisplayKind::Item)));
+    p.write(OMVarInt(42));
+    p.reset();
+
+    auto item = p.read<OMSlotDisplay>();
+    CHECK(item.kind == OMSlotDisplayKind::Item && item.itemId == 42 && p.restDatalen() == 0);
+
+    // minecraft:tag（无 '#' 前缀）
+    OMNetworkPacket q;
+    q.write(OMVarInt(static_cast<int32_t>(OMSlotDisplayKind::Tag)));
+    q.write<std::string>("minecraft:logs");
+    q.reset();
+
+    auto tag = q.read<OMSlotDisplay>();
+    CHECK(tag.kind == OMSlotDisplayKind::Tag && tag.tag == "minecraft:logs");
+
+    // minecraft:dyed(dye, target)
+    OMNetworkPacket r;
+    r.write(OMVarInt(static_cast<int32_t>(OMSlotDisplayKind::Dyed)));
+    r.write(OMVarInt(static_cast<int32_t>(OMSlotDisplayKind::Item)));
+    r.write(OMVarInt(7));
+    r.write(OMVarInt(static_cast<int32_t>(OMSlotDisplayKind::Item)));
+    r.write(OMVarInt(9));
+    r.reset();
+
+    auto dyed = r.read<OMSlotDisplay>();
+    CHECK(dyed.kind == OMSlotDisplayKind::Dyed && dyed.nested.size() == 2);
+    CHECK(dyed.nested[0].itemId == 7 && dyed.nested[1].itemId == 9);
+
+    // minecraft:composite（嵌套 2 个）
+    OMNetworkPacket c;
+    c.write(OMVarInt(static_cast<int32_t>(OMSlotDisplayKind::Composite)));
+    c.write(OMVarInt(2));
+    c.write(OMVarInt(static_cast<int32_t>(OMSlotDisplayKind::Empty)));
+    c.write(OMVarInt(static_cast<int32_t>(OMSlotDisplayKind::Item)));
+    c.write(OMVarInt(3));
+    c.reset();
+
+    auto composite = c.read<OMSlotDisplay>();
+    CHECK(composite.kind == OMSlotDisplayKind::Composite && composite.nested.size() == 2);
+    CHECK(composite.nested[0].kind == OMSlotDisplayKind::Empty && composite.nested[1].itemId == 3);
+
+    // minecraft:only_with_component（base + component type id）
+    OMNetworkPacket o;
+    o.write(OMVarInt(static_cast<int32_t>(OMSlotDisplayKind::OnlyWithComponent)));
+    o.write(OMVarInt(static_cast<int32_t>(OMSlotDisplayKind::Item)));
+    o.write(OMVarInt(1));
+    o.write(OMVarInt(77));
+    o.reset();
+
+    auto only = o.read<OMSlotDisplay>();
+    CHECK(only.nested.size() == 1 && only.nested[0].itemId == 1 && only.componentTypeId == 77);
+
+    // minecraft:item_stack（空槽）
+    OMNetworkPacket st;
+    st.write(OMVarInt(static_cast<int32_t>(OMSlotDisplayKind::ItemStack)));
+    st.write(OMVarInt(0));
+    st.reset();
+
+    auto stack = st.read<OMSlotDisplay>();
+    CHECK(stack.kind == OMSlotDisplayKind::ItemStack && stack.stack.count == 0 && !stack.truncated);
+}
+
 static auto testOptionalCodec() -> void
 {
     OMNetworkPacket p;
@@ -969,6 +1077,8 @@ auto main() -> int
     testSetExperienceCodec();
     testBitSet();
     testIDOr();
+    testIdSet();
+    testSlotDisplay();
     testLpVec3();
     testAngle();
     testTeleportEntityCodec();

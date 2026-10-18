@@ -354,6 +354,110 @@ struct OMProtocolLightCodec
 };
 } // namespace openminecraft::network
 
+// INFO: Slot Display is recursive: several variants nest another display (or a list of them).
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMSlotDisplay>
+{
+    static constexpr bool supported = true;
+
+    using Display = openminecraft::shell::network::OMSlotDisplay;
+    using Kind = openminecraft::shell::network::OMSlotDisplayKind;
+
+    // INFO: 1.20.5+ Slot = count | item id | added components | removed components.
+    // The payload of an added component depends on its type, so parsing stops (truncated) when one shows up.
+    static auto readStack(openminecraft::network::OMNetworkPacket &pck,
+                          openminecraft::shell::network::OMProtocolItemStack &stack) -> bool
+    {
+        stack.count = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+        if (stack.count <= 0)
+        {
+            return true;
+        }
+
+        stack.itemId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+        auto addedCount = pck.read<openminecraft::network::OMVarInt>().value;
+
+        if (addedCount > 0)
+        {
+            return false;
+        }
+
+        auto removedCount = pck.read<openminecraft::network::OMVarInt>().value;
+
+        for (int32_t i = 0; i < removedCount; ++i)
+        {
+            stack.removedComponents.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+        }
+
+        return true;
+    }
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck) -> Display
+    {
+        Display result;
+
+        result.type = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.kind = static_cast<Kind>(result.type);
+
+        switch (result.kind)
+        {
+        case Kind::Empty:
+        case Kind::AnyFuel:
+            break;
+        case Kind::WithAnyPotion:
+            result.nested.push_back(read(pck)); // base
+            break;
+        case Kind::OnlyWithComponent:
+            result.nested.push_back(read(pck)); // base
+            result.componentTypeId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+            break;
+        case Kind::Item:
+            result.itemId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+            break;
+        case Kind::ItemStack:
+            result.truncated = !readStack(pck, result.stack);
+            break;
+        case Kind::Tag:
+            result.tag = pck.read<std::string>();
+            break;
+        case Kind::Dyed:
+            result.nested.push_back(read(pck)); // dye
+            result.nested.push_back(read(pck)); // target
+            break;
+        case Kind::SmithingTrim:
+            result.nested.push_back(read(pck)); // base
+            result.nested.push_back(read(pck)); // material
+            result.patternId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+            break;
+        case Kind::WithRemainder:
+            result.nested.push_back(read(pck)); // ingredient
+            result.nested.push_back(read(pck)); // remainder
+            break;
+        case Kind::Composite:
+        {
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
+            {
+                throw std::logic_error("[OMNetworkPacket] slot display options exceed remaining data!");
+            }
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                result.nested.push_back(read(pck));
+            }
+
+            break;
+        }
+        default:
+            throw std::logic_error("[OMNetworkPacket] unknown slot display type (slot_display registry is dynamic)!");
+        }
+
+        return result;
+    }
+};
+
 // INFO: the reason is a text component encoded as NBT (read only, NBT has no writer yet)
 template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolDisconnect>
 {
