@@ -47,7 +47,7 @@ struct OMVarLong
     }
 };
 
-// INFO: Minecraft 协议的 Position：x/z 各 26 位、y 12 位（补码）打包进一个 Long。
+// INFO: Minecraft protocol Position: x/z are 26 bits each and y is 12 bits (two's complement), packed into one Long.
 struct OMPackedPos
 {
     int64_t value = 0;
@@ -90,6 +90,59 @@ struct OMPackedPos
         }
 
         return static_cast<int32_t>(scoped);
+    }
+};
+
+// INFO: Minecraft protocol BitSet: a VarInt-prefixed long array; bit i set means that bit is enabled.
+struct OMBitSet
+{
+    std::vector<uint64_t> data;
+
+    auto size() const -> std::size_t
+    {
+        return data.size() * 64;
+    }
+
+    auto test(std::size_t index) const -> bool
+    {
+        auto longIndex = index / 64;
+        auto bitIndex = static_cast<uint32_t>(index % 64);
+
+        return longIndex < data.size() && ((data[longIndex] >> bitIndex) & 1) != 0;
+    }
+
+    auto count() const -> std::size_t
+    {
+        std::size_t total = 0;
+
+        for (auto value : data)
+        {
+            while (value != 0)
+            {
+                value &= value - 1;
+                ++total;
+            }
+        }
+
+        return total;
+    }
+};
+
+// INFO: Minecraft protocol "ID or X": a value of type X that is either inline or a registry reference.
+// Wire order: id (VarInt, 0 = X follows inline, otherwise registry id + 1) | [value: X, only when id == 0]
+template <typename T> struct OMIDOr
+{
+    int32_t id = 0;
+    std::optional<T> value;
+
+    auto isInline() const -> bool
+    {
+        return id == 0;
+    }
+
+    auto registryId() const -> int32_t
+    {
+        return id - 1;
     }
 };
 
@@ -260,6 +313,26 @@ class OMNetworkPacket
         {
             return OMPackedPos(read<int64_t>());
         }
+        else if constexpr (std::is_same_v<T, OMBitSet>)
+        {
+            OMBitSet result;
+
+            auto length = read<OMVarInt>().value;
+
+            if (length < 0 || static_cast<uint64_t>(length) * 8 > restDatalen())
+            {
+                throw std::logic_error("[OMNetworkPacket] bitset exceeds remaining data!");
+            }
+
+            result.data.reserve(static_cast<std::size_t>(length));
+
+            for (int32_t i = 0; i < length; ++i)
+            {
+                result.data.push_back(static_cast<uint64_t>(read<int64_t>()));
+            }
+
+            return result;
+        }
         else if constexpr (std::is_same_v<T, OMUtf8String> || std::is_same_v<T, std::string>)
         {
             auto length = read<OMVarInt>().value;
@@ -372,6 +445,15 @@ class OMNetworkPacket
         else if constexpr (std::is_same_v<T, OMPackedPos>)
         {
             write<int64_t>(t.value);
+        }
+        else if constexpr (std::is_same_v<T, OMBitSet>)
+        {
+            write(OMVarInt(static_cast<int32_t>(t.data.size())));
+
+            for (auto value : t.data)
+            {
+                write<int64_t>(static_cast<int64_t>(value));
+            }
         }
         else if constexpr (std::is_same_v<T, OMUtf8String> || std::is_same_v<T, std::string>)
         {
@@ -540,6 +622,35 @@ template <typename T> struct OMNetworkPacketCodec<std::optional<T>>
     }
 };
 
+
+// INFO: "ID or X" 复用同一套扩展点：id 为 0 时内联读取 X，否则只是注册表引用
+template <typename T> struct OMNetworkPacketCodec<OMIDOr<T>>
+{
+    static constexpr bool supported = true;
+
+    static auto read(OMNetworkPacket &pck) -> OMIDOr<T>
+    {
+        OMIDOr<T> result;
+        result.id = static_cast<int32_t>(pck.read<OMVarInt>());
+
+        if (result.id == 0)
+        {
+            result.value = pck.read<T>();
+        }
+
+        return result;
+    }
+
+    static auto write(OMNetworkPacket &pck, const OMIDOr<T> &value) -> void
+    {
+        pck.write(OMVarInt(value.id));
+
+        if (value.id == 0 && value.value)
+        {
+            pck.write<T>(*value.value);
+        }
+    }
+};
 inline auto toStdStrings(const std::vector<OMUtf8String> &values) -> std::vector<std::string>
 {
     std::vector<std::string> result;

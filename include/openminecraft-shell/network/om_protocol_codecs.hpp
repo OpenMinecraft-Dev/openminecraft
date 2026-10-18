@@ -266,6 +266,258 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     }
 };
 
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolChunkDataAndLight>
+{
+    static constexpr bool supported = true;
+
+    using Chunk = openminecraft::shell::network::OMProtocolChunkDataAndLight;
+    using Section = openminecraft::shell::network::OMProtocolChunkSection;
+    using Palette = openminecraft::shell::network::OMProtocolPalettedContainer;
+
+    static constexpr std::size_t blockEntries = 4096;
+    static constexpr std::size_t biomeEntries = 64;
+
+    static auto readLongArray(openminecraft::network::OMNetworkPacket &pck) -> std::vector<int64_t>
+    {
+        auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+        if (count < 0 || static_cast<uint64_t>(count) * 8 > pck.restDatalen())
+        {
+            throw std::logic_error("[OMNetworkPacket] long array exceeds remaining data!");
+        }
+
+        std::vector<int64_t> values;
+        values.reserve(static_cast<std::size_t>(count));
+
+        for (int32_t i = 0; i < count; ++i)
+        {
+            values.push_back(pck.read<int64_t>());
+        }
+
+        return values;
+    }
+
+// INFO: since 1.21.5 the data array has no length prefix; its size derives from bits and entry count
+    static auto readPalettedContainer(openminecraft::network::OMNetworkPacket &pck, Palette &container,
+                                      std::size_t entries, uint8_t maxIndirectBits) -> void
+    {
+        container.bitsPerEntry = pck.read<uint8_t>();
+
+        if (container.bitsPerEntry == 0)
+        {
+            container.palette.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+            return;
+        }
+
+        if (container.bitsPerEntry <= maxIndirectBits)
+        {
+            auto paletteCount = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (paletteCount < 0 || static_cast<uint64_t>(paletteCount) > pck.restDatalen())
+            {
+                throw std::logic_error("[OMNetworkPacket] palette exceeds remaining data!");
+            }
+
+            for (int32_t i = 0; i < paletteCount; ++i)
+            {
+                container.palette.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+            }
+        }
+
+        auto bits = static_cast<std::size_t>(container.bitsPerEntry);
+        auto entriesPerLong = 64 / bits;
+        auto longCount = (entries + entriesPerLong - 1) / entriesPerLong;
+
+        if (longCount * 8 > pck.restDatalen())
+        {
+            throw std::logic_error("[OMNetworkPacket] paletted data exceeds remaining data!");
+        }
+
+        container.data.reserve(longCount);
+
+        for (std::size_t i = 0; i < longCount; ++i)
+        {
+            container.data.push_back(pck.read<int64_t>());
+        }
+    }
+
+// INFO: 1.16+ packing: entries never span longs and padding is appended at the end
+    static auto decodeBlockStates(const Palette &container, std::vector<int32_t> &states) -> bool
+    {
+        if (container.bitsPerEntry == 0)
+        {
+            states.assign(blockEntries, container.palette.empty() ? 0 : container.palette[0]);
+            return true;
+        }
+
+        auto bits = static_cast<std::size_t>(container.bitsPerEntry);
+        auto entriesPerLong = 64 / bits;
+
+        if (entriesPerLong == 0)
+        {
+            return false;
+        }
+
+        auto longCount = (blockEntries + entriesPerLong - 1) / entriesPerLong;
+
+        if (container.data.size() < longCount)
+        {
+            return false;
+        }
+
+        const auto mask = (static_cast<uint64_t>(1) << bits) - 1;
+
+        states.clear();
+        states.reserve(blockEntries);
+
+        for (std::size_t i = 0; i < blockEntries; ++i)
+        {
+            auto longIndex = i / entriesPerLong;
+            auto bitIndex = (i % entriesPerLong) * bits;
+            auto id = static_cast<int32_t>((static_cast<uint64_t>(container.data[longIndex]) >> bitIndex) & mask);
+
+            if (bits <= 8)
+            {
+                if (id < 0 || static_cast<std::size_t>(id) >= container.palette.size())
+                {
+                    return false;
+                }
+
+                id = container.palette[id];
+            }
+
+            states.push_back(id);
+        }
+
+        return true;
+    }
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck) -> Chunk
+    {
+        Chunk result;
+
+        result.chunkX = pck.read<int32_t>();
+        result.chunkZ = pck.read<int32_t>();
+
+        auto heightmapCount = pck.read<openminecraft::network::OMVarInt>().value;
+
+        for (int32_t i = 0; i < heightmapCount; ++i)
+        {
+            openminecraft::shell::network::OMProtocolHeightmap heightmap;
+            heightmap.type = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+            heightmap.values = readLongArray(pck);
+
+            result.heightmaps.push_back(std::move(heightmap));
+        }
+
+        result.dataLength = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+        if (result.dataLength < 0 || static_cast<uint64_t>(result.dataLength) > pck.restDatalen())
+        {
+            throw std::logic_error("[OMNetworkPacket] chunk data exceeds remaining data!");
+        }
+
+        auto dataEnd = pck.restDatalen() - static_cast<uint64_t>(result.dataLength);
+
+        while (pck.restDatalen() > dataEnd)
+        {
+            Section section;
+            section.blockCount = pck.read<int16_t>();
+            section.fluidCount = pck.read<int16_t>();
+            readPalettedContainer(pck, section.blockStates, blockEntries, 8);
+            readPalettedContainer(pck, section.biomes, biomeEntries, 3);
+
+            result.sections.push_back(std::move(section));
+        }
+
+        if (pck.restDatalen() != dataEnd)
+        {
+            throw std::logic_error("[OMNetworkPacket] chunk sections overran the data blob!");
+        }
+
+        auto blockEntityCount = pck.read<openminecraft::network::OMVarInt>().value;
+
+        for (int32_t i = 0; i < blockEntityCount; ++i)
+        {
+            openminecraft::shell::network::OMProtocolBlockEntity entity;
+            entity.packedXZ = pck.read<uint8_t>();
+            entity.y = pck.read<int16_t>();
+            entity.type = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+            entity.data = pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>();
+
+            result.blockEntities.push_back(std::move(entity));
+        }
+
+        result.light.skyLightMask = pck.read<openminecraft::network::OMBitSet>();
+        result.light.blockLightMask = pck.read<openminecraft::network::OMBitSet>();
+        result.light.emptySkyLightMask = pck.read<openminecraft::network::OMBitSet>();
+        result.light.emptyBlockLightMask = pck.read<openminecraft::network::OMBitSet>();
+
+        for (std::vector<std::vector<uint8_t>> *target : {&result.light.skyLight, &result.light.blockLight})
+        {
+            auto arrayCount = pck.read<openminecraft::network::OMVarInt>().value;
+
+            for (int32_t i = 0; i < arrayCount; ++i)
+            {
+                auto length = pck.read<openminecraft::network::OMVarInt>().value;
+
+                if (length < 0 || static_cast<uint64_t>(length) > pck.restDatalen())
+                {
+                    throw std::logic_error("[OMNetworkPacket] light array exceeds remaining data!");
+                }
+
+                target->push_back(pck.readFixedArray<uint8_t>(static_cast<std::size_t>(length)));
+            }
+        }
+
+// INFO: decode every section and compare its non-air block count with blockCount
+        bool valid = !result.sections.empty();
+
+        for (const auto &section : result.sections)
+        {
+            result.declaredBlockCount += section.blockCount;
+
+            std::vector<int32_t> states;
+
+            if (!decodeBlockStates(section.blockStates, states))
+            {
+                valid = false;
+                continue;
+            }
+
+            int32_t nonAir = 0;
+
+            for (auto id : states)
+            {
+                if (id != 0)
+                {
+                    ++nonAir;
+                }
+            }
+
+            result.decodedBlockCount += nonAir;
+
+            if (nonAir != section.blockCount)
+            {
+                valid = false;
+            }
+        }
+
+        result.valid = valid;
+        result.lightComplete = pck.restDatalen() == 0;
+
+        if (!result.lightComplete)
+        {
+// INFO: the light array layout is still unconfirmed; record the leftover length and skip it
+            result.lightTrailingBytes = static_cast<int32_t>(pck.restDatalen());
+            pck.readFixedArray<uint8_t>(pck.restDatalen());
+        }
+
+        return result;
+    }
+};
+
 template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolSetExperience>
 {
     static constexpr bool supported = true;
@@ -321,7 +573,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
 {
     static constexpr bool supported = true;
 
-    // INFO: display 里含 Text Component(NBT) 与 Slot(物品栈)，暂不支持；返回 false 表示无法继续
+// INFO: display data holds a Text Component (NBT) and a Slot (item stack); not supported yet
     static auto read(openminecraft::network::OMNetworkPacket &pck)
         -> openminecraft::shell::network::OMProtocolUpdateAdvancements
     {
@@ -343,7 +595,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
 
             if (pck.read<bool>())
             {
-                // INFO: display 数据未实现
+// INFO: display data is not implemented yet
                 result.added.push_back(std::move(advancement));
                 result.truncated = true;
                 pck.readFixedArray<uint8_t>(pck.restDatalen());
@@ -492,7 +744,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
 
         if (addedCount > 0)
         {
-            // INFO: added components 的负载长度依赖具体组件类型，暂不支持
+// INFO: the payload length of added components depends on the component type; not supported yet
             return false;
         }
 
@@ -568,7 +820,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
 {
     static constexpr bool supported = true;
 
-    // INFO: NBT 目前只支持读，因此不提供 write
+// INFO: NBT is read-only for now, so no write is provided
     static auto read(openminecraft::network::OMNetworkPacket &pck)
         -> openminecraft::shell::network::OMProtocolServerData
     {

@@ -16,6 +16,8 @@ class OMProtocolMinecraftTransformer777 : public OMProtocolMinecraftTransformerG
     void sendLoginAcknowledged() override;
     void sendConfigurationKnownPacks(std::vector<OMProtocolKnownPack>) override;
     void sendConfigurationFinishAcknowledged() override;
+    void sendPlayConfirmTeleportation(uint32_t teleportID, double x, double y, double z, float yaw,
+                                      float pitch) override;
 
     void handleRest(OMProtocolMinecraftState, openminecraft::network::OMNetworkPacket &) override;
 

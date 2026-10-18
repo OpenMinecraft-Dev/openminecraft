@@ -70,6 +70,9 @@ class OMProtocolMinecraftHandler
                                  uint32_t seaLevel, bool onlineMode, bool secureChat)
     {
     }
+    virtual void handlePlayChunkDataAndLight(const OMProtocolChunkDataAndLight &chunk)
+    {
+    }
     virtual void handlePlaySetExperience(const OMProtocolSetExperience &experience)
     {
     }
@@ -139,6 +142,12 @@ class OMProtocolMinecraftHandler
     virtual void handlePlaySetChunkCacheCenter(int32_t centerX, int32_t centerZ)
     {
     }
+    virtual void handlePlayChunkBatchStart()
+    {
+    }
+    virtual void handlePlayChunkBatchEnd(uint32_t numOfChunks)
+    {
+    }
 };
 
 class OMProtocolMinecraft : public openminecraft::network::protocol::OMCodingBase
@@ -194,6 +203,8 @@ class OMProtocolMinecraftTransformer
 
     virtual void sendConfigurationKnownPacks(std::vector<OMProtocolKnownPack>) = 0;
     virtual void sendConfigurationFinishAcknowledged() = 0;
+    virtual void sendPlayConfirmTeleportation(uint32_t teleportID, double x, double y, double z, float yaw,
+                                              float pitch) = 0;
 
     virtual void handle() = 0;
 };

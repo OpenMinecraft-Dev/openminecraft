@@ -312,6 +312,32 @@ void OMApplication::networkSetup(std::string host, std::string port)
             logger->debug("secure chat: {}", secureChat);
         }
 
+        void handlePlayChunkDataAndLight(const network::OMProtocolChunkDataAndLight &chunk) override
+        {
+            title("Chunk Data And Light");
+            logger->debug("chunk: ({}, {}) data: {} bytes sections: {}", chunk.chunkX, chunk.chunkZ, chunk.dataLength,
+                          chunk.sections.size());
+            logger->debug("heightmaps: {} block entities: {}", chunk.heightmaps.size(), chunk.blockEntities.size());
+            logger->debug("light: sky {} arrays, block {} arrays", chunk.light.skyLight.size(),
+                          chunk.light.blockLight.size());
+            logger->debug("blocks: decoded {} / declared {}", chunk.decodedBlockCount, chunk.declaredBlockCount);
+
+            if (chunk.valid)
+            {
+                logger->debug("blocks verified: decoded counts match every section");
+            }
+            else
+            {
+                logger->warn("blocks NOT verified: decoded {} != declared {}", chunk.decodedBlockCount,
+                             chunk.declaredBlockCount);
+            }
+
+            if (!chunk.lightComplete)
+            {
+                logger->debug("light arrays skipped: {} bytes (client can recompute)", chunk.lightTrailingBytes);
+            }
+        }
+
         void handlePlaySetExperience(const network::OMProtocolSetExperience &experience) override
         {
             title("Set Experience");
@@ -618,6 +644,8 @@ void OMApplication::networkSetup(std::string host, std::string port)
             logger->debug("velocity: ({}, {}, {})", velocityX, velocityY, velocityZ);
             logger->debug("yaw: {} pitch: {}", yaw, pitch);
             logger->debug("flags: 0x{:02x}", flags);
+
+            transformer->sendPlayConfirmTeleportation(teleportId, x, y, z, yaw, pitch);
         }
 
         void handlePlayTickingState(float rate, bool isFrozen) override
@@ -637,6 +665,11 @@ void OMApplication::networkSetup(std::string host, std::string port)
         {
             title("Set Chunk Cache Center");
             logger->debug("center: ({}, {})", centerX, centerZ);
+        }
+
+        void handlePlayChunkBatchStart() override
+        {
+            title("Chunk Batch Start");
         }
     } hnd;
     hnd.logger = &logger;

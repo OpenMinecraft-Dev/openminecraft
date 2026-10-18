@@ -182,6 +182,81 @@ struct OMProtocolSetExperience
     int32_t totalExperience = 0;
 };
 
+// One heightmap of a chunk: a type id plus the packed 9-bit height values as longs.
+struct OMProtocolHeightmap
+{
+    int32_t type = 0;
+    std::vector<int64_t> values;
+};
+
+// A paletted container (block states or biomes) of one chunk section.
+// bitsPerEntry 0 means a single value; 1-8 means an indirect palette; > 8 means direct registry ids.
+struct OMProtocolPalettedContainer
+{
+    uint8_t bitsPerEntry = 0;
+    std::vector<int32_t> palette;
+    std::vector<int64_t> data;
+};
+
+// One 16x16x16 chunk section.
+// Wire order: blockCount (Short) | fluidCount (Short) | blockStates (Paletted Container) |
+//             biomes (Paletted Container)
+struct OMProtocolChunkSection
+{
+    int16_t blockCount = 0;
+    int16_t fluidCount = 0;
+    OMProtocolPalettedContainer blockStates;
+    OMProtocolPalettedContainer biomes;
+};
+
+// One block entity of a chunk.
+// Wire order: packedXZ (Unsigned Byte) | y (Short) | type (VarInt) | data (NBT)
+struct OMProtocolBlockEntity
+{
+    uint8_t packedXZ = 0;
+    int16_t y = 0;
+    int32_t type = 0;
+    std::shared_ptr<openminecraft::specs::nbt::OMNbtTag> data;
+};
+
+// Light data of a chunk: four masks plus the light arrays themselves.
+// INFO: the four masks are parsed as BitSets. Per the wiki the light arrays are highly inconsistent
+// and all-zero data there has no real effect, so the client can recompute them; this implementation
+// skips the arrays and reports whether everything was parsed through lightComplete.
+struct OMProtocolChunkLight
+{
+    openminecraft::network::OMBitSet skyLightMask;
+    openminecraft::network::OMBitSet blockLightMask;
+    openminecraft::network::OMBitSet emptySkyLightMask;
+    openminecraft::network::OMBitSet emptyBlockLightMask;
+    std::vector<std::vector<uint8_t>> skyLight;
+    std::vector<std::vector<uint8_t>> blockLight;
+};
+
+// Chunk Data And Light (0x2E): a chunk's heightmaps, block data, block entities and light.
+// Wire order: chunkX (Int) | chunkZ (Int) | heightmaps | data (Byte Array) |
+//             blockEntities (Array) | light (4 masks + 2 arrays of byte arrays)
+// In this protocol version heightmaps are not NBT: a VarInt entry count followed by, per entry,
+// (VarInt type + VarInt long count + long array).
+// A section header is two Shorts: non-air block count and fluid count. Since 1.21.5 the paletted
+// container data array has no length prefix: its size is ceil(entries / (64 / bitsPerEntry)) and
+// entries never span longs (padding is appended at the end).
+// Verification: every section is decoded and its non-air block count must match blockCount.
+struct OMProtocolChunkDataAndLight
+{
+    int32_t chunkX = 0;
+    int32_t chunkZ = 0;
+    std::vector<OMProtocolHeightmap> heightmaps;
+    int32_t dataLength = 0;
+    std::vector<OMProtocolChunkSection> sections;
+    std::vector<OMProtocolBlockEntity> blockEntities;
+    OMProtocolChunkLight light;
+    int32_t declaredBlockCount = 0;
+    int32_t decodedBlockCount = 0;
+    bool valid = false;         // block data check: decoded non-air blocks == blockCount per section
+    bool lightComplete = false; // whether the light data was fully parsed
+    int32_t lightTrailingBytes = 0;
+};
 // Post Effects (0x53): the post-processing effects the client should apply.
 // Wire order: effects (Array of Identifier)
 struct OMProtocolPostEffects

@@ -594,6 +594,59 @@ static auto testSetExperienceCodec() -> void
     CHECK(parsed.totalExperience == 1395);
 }
 
+static auto testBitSet() -> void
+{
+    OMBitSet set;
+    set.data = {0b1011ULL, 1ULL << 63};
+
+    CHECK(set.size() == 128);
+    CHECK(set.test(0) && set.test(1) && !set.test(2) && set.test(3));
+    CHECK(!set.test(64) && set.test(127));
+    CHECK(set.count() == 4);
+
+    OMNetworkPacket p;
+    p.write(set);
+    p.reset();
+
+    auto parsed = p.read<OMBitSet>();
+    CHECK(parsed.data == set.data);
+    CHECK(parsed.test(3) && parsed.test(127) && !parsed.test(2));
+
+    OMBitSet empty;
+    OMNetworkPacket q;
+    q.write(empty);
+    q.reset();
+    CHECK(q.read<OMBitSet>().data.empty());
+}
+
+static auto testIDOr() -> void
+{
+    OMIDOr<OMUtf8String> inlineValue;
+    inlineValue.id = 0;
+    inlineValue.value = OMUtf8String("minecraft:test");
+
+    OMIDOr<OMUtf8String> referenced;
+    referenced.id = 3; // 注册表 id 2 + 1
+
+    OMNetworkPacket p;
+    p.write(inlineValue);
+    p.write(referenced);
+    p.reset();
+
+    auto a = p.read<OMIDOr<OMUtf8String>>();
+    CHECK(a.id == 0 && a.isInline() && a.value && a.value->value == "minecraft:test");
+
+    auto b = p.read<OMIDOr<OMUtf8String>>();
+    CHECK(b.id == 3 && !b.isInline() && b.registryId() == 2 && !b.value);
+
+    // 也支持直接内联基本类型
+    OMNetworkPacket q;
+    q.write(OMIDOr<int32_t>());
+    q.reset();
+    auto c = q.read<OMIDOr<int32_t>>();
+    CHECK(c.id == 0 && c.value == 0);
+}
+
 static auto testOptionalCodec() -> void
 {
     OMNetworkPacket p;
@@ -649,6 +702,8 @@ auto main() -> int
     testUpdateAdvancementsCodec();
     testSetHealthCodec();
     testSetExperienceCodec();
+    testBitSet();
+    testIDOr();
     testOptionalCodec();
     testStringVectorConversion();
 

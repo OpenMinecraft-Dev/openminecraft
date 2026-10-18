@@ -40,6 +40,19 @@ void OMProtocolMinecraftTransformer777::sendConfigurationFinishAcknowledged()
     handler.handleEnterPlay();
 }
 
+void OMProtocolMinecraftTransformer777::sendPlayConfirmTeleportation(uint32_t teleportID, double x, double y, double z,
+                                                                     float yaw, float pitch)
+{
+    protocol.write(openminecraft::network::OMNetworkPacket()
+                       .packetId(0x0)
+                       .write<OMVarInt>(teleportID)
+                       .write(x)
+                       .write(y)
+                       .write(z)
+                       .write(yaw)
+                       .write(pitch));
+}
+
 void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState state,
                                                    openminecraft::network::OMNetworkPacket &pck)
 {
@@ -113,9 +126,23 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
     case Play:
         switch (pck.id)
         {
+            // Bundle Delimeter
+        case 0x00: {
+            return;
+        }
             // Change Difficulty
         case 0x0a: {
             handler.handlePlayChangeDifficulty(pck.read<uint8_t>(), pck.read<bool>());
+            return;
+        }
+            // Chunk Batch End
+        case 0x0b: {
+            handler.handlePlayChunkBatchEnd(pck.read<OMVarInt>());
+            return;
+        }
+            // Chunk Batch Start
+        case 0x0c: {
+            handler.handlePlayChunkBatchStart();
             return;
         }
             // Commands
@@ -151,6 +178,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
 
             handler.handlePlayInitializeBorder(x, z, oldDiameter, newDiameter, lerpTime, portalTeleportBoundary,
                                                warningBlocks, warningTime);
+            return;
+        }
+            // Chunk Data And Light
+        case 0x2e: {
+            handler.handlePlayChunkDataAndLight(pck.read<OMProtocolChunkDataAndLight>());
             return;
         }
             // Login
@@ -265,6 +297,7 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             handler.handlePlaySetTime(pck.read<OMProtocolSetTime>());
             return;
         }
+            //
             // Ticking State
         case 0x82: {
             handler.handlePlayTickingState(pck.read<float>(), pck.read<bool>());
@@ -295,8 +328,7 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         }
     }
 
-    pck.debug(64);
-    OMProtocolMinecraftTransformerGeneral::handleRest(state, pck);
-    throw std::logic_error("unknown packet!");
+    // pck.debug(64);
+    // OMProtocolMinecraftTransformerGeneral::handleRest(state, pck);
 }
 } // namespace openminecraft::shell::network::transformers
