@@ -847,6 +847,71 @@ static auto testRemoveEntitiesCodec() -> void
     CHECK(q.read<OMProtocolRemoveEntities>().entityIds.empty());
 }
 
+static auto testSpawnEntityCodec() -> void
+{
+    using openminecraft::shell::network::OMProtocolSpawnEntity;
+
+    // 按实测报文逐字节构造：entityId, uuid, type, x/y/z, velocity(LpVec3), pitch, yaw, headYaw, data
+    OMNetworkPacket p;
+    p.write(OMVarInt(20630));
+    p.write(openminecraft::util::OMUuid(0x972665c8ccd6d99bULL, 0x7dd3f4d416f940a4ULL));
+    p.write(OMVarInt(72));
+    p.write<double>(-506.5).write<double>(13.0).write<double>(-222.8);
+    p.write<uint8_t>(0xf9).write<uint8_t>(0xff).write<int32_t>(0x7FFEED19); // velocity LpVec3
+    p.write<uint8_t>(0x00);                                                // pitch = 0
+    p.write<uint8_t>(0x69);                                                // yaw
+    p.write<uint8_t>(0x00);                                                // head yaw = 0
+    p.write(OMVarInt(0));                                                  // data
+    p.reset();
+
+    auto parsed = p.read<OMProtocolSpawnEntity>();
+    CHECK(parsed.entityId == 20630 && parsed.type == 72);
+    CHECK(parsed.x == -506.5 && parsed.y == 13.0 && parsed.z == -222.8);
+    CHECK(parsed.pitch.degrees == 0.0);
+    CHECK(parsed.yaw.raw() == 0x69);
+    CHECK(parsed.headYaw.degrees == 0.0);
+    CHECK(parsed.data == 0);
+    CHECK(p.restDatalen() == 0); // 字段顺序正确才能恰好消费完
+}
+
+static auto testUpdateLightCodec() -> void
+{
+    using openminecraft::shell::network::OMProtocolUpdateLight;
+
+    // 掩码用 java.util.BitSet.toByteArray() 编码：VarInt 字节数 + 小端字节
+    OMNetworkPacket p;
+    p.write(OMVarInt(-32)).write(OMVarInt(-14));
+    p.write(OMVarInt(2));
+    p.write<uint8_t>(0x00).write<uint8_t>(0x03);   // bit 8, 9
+    p.write(OMVarInt(0));                           // block mask
+    p.write(OMVarInt(0));                           // empty sky mask
+    p.write(OMVarInt(0));                           // empty block mask
+    p.write(OMVarInt(2));                           // 2 个 sky 数组
+    for (int i = 0; i < 2; ++i)
+    {
+        p.write(OMVarInt(2048));
+        p.writeFixedArray(std::vector<uint8_t>(2048, static_cast<uint8_t>(i + 1)));
+    }
+    p.write(OMVarInt(0));                           // 0 个 block 数组
+    p.reset();
+
+    auto parsed = p.read<OMProtocolUpdateLight>();
+    CHECK(parsed.chunkX == -32 && parsed.chunkZ == -14);
+    CHECK(parsed.light.skyLightMask.count() == 2);
+    CHECK(parsed.light.skyLightMask.test(8) && parsed.light.skyLightMask.test(9));
+    CHECK(!parsed.light.skyLightMask.test(7));
+    CHECK(parsed.light.skyLight.size() == 2 && parsed.light.skyLight[1][0] == 2);
+    CHECK(parsed.light.blockLight.empty());
+    CHECK(parsed.complete);
+
+    // BitSet 字节数组往返（对应 java BitSet.toByteArray / BitSet.valueOf）
+    OMBitSet mask;
+    mask.data = {0x0000000000000300ULL}; // bit 8, 9
+    CHECK(mask.toBytes() == std::vector<uint8_t>({0x00, 0x03}));
+    CHECK(OMBitSet::fromBytes({0x00, 0x03}).count() == 2);
+    CHECK(OMBitSet::fromBytes({}).data.empty());
+}
+
 static auto testOptionalCodec() -> void
 {
     OMNetworkPacket p;
@@ -910,6 +975,8 @@ auto main() -> int
     testEntityPositionCodecs();
     testSetHeadRotationCodec();
     testRemoveEntitiesCodec();
+    testSpawnEntityCodec();
+    testUpdateLightCodec();
     testOptionalCodec();
     testStringVectorConversion();
 

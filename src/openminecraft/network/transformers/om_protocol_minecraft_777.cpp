@@ -4,6 +4,7 @@
 #include "openminecraft/network/om_network_packet.hpp"
 #include "openminecraft/util/om_util_uuid.hpp"
 #include <cstdio>
+#include <fstream>
 #include <stdexcept>
 #include <vector>
 
@@ -196,6 +197,25 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             // Chunk Data And Light
         case 0x2e: {
             handler.handlePlayChunkDataAndLight(pck.read<OMProtocolChunkDataAndLight>());
+            return;
+        }
+            // Update Light
+        case 0x31: {
+            static int lightIndex = 0;
+            char path[64];
+            std::snprintf(path, sizeof(path), "/tmp/light_%03d.hex", lightIndex++);
+            {
+                std::ofstream out(path, std::ios::binary);
+                const auto *bytes = reinterpret_cast<const uint8_t *>(pck.data());
+                for (uint64_t i = 0; i < pck.datalen(); ++i)
+                {
+                    char hex[4];
+                    std::snprintf(hex, sizeof(hex), "%02x", bytes[i]);
+                    out << hex;
+                }
+            }
+            logger.info("PKT 0x31 saved {} ({} bytes)", path, pck.datalen());
+            handler.handlePlayUpdateLight(pck.read<OMProtocolUpdateLight>());
             return;
         }
             // Login

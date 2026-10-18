@@ -220,9 +220,8 @@ struct OMProtocolBlockEntity
 };
 
 // Light data of a chunk: four masks plus the light arrays themselves.
-// INFO: the four masks are parsed as BitSets. Per the wiki the light arrays are highly inconsistent
-// and all-zero data there has no real effect, so the client can recompute them; this implementation
-// skips the arrays and reports whether everything was parsed through lightComplete.
+// Masks are java.util.BitSet.toByteArray() encoded: VarInt byte count + little-endian bytes;
+// each light array is a VarInt 2048 followed by 2048 bytes of packed light values.
 struct OMProtocolChunkLight
 {
     openminecraft::network::OMBitSet skyLightMask;
@@ -256,6 +255,7 @@ struct OMProtocolChunkDataAndLight
     bool valid = false;         // block data check: decoded non-air blocks == blockCount per section
     bool lightComplete = false; // whether the light data was fully parsed
     int32_t lightTrailingBytes = 0;
+    std::vector<uint8_t> lightHead; // first bytes at the start of the light region
 };
 // One step of a stepped position path: absolute position plus its tick offset.
 struct OMProtocolPositionStep
@@ -328,7 +328,7 @@ struct OMProtocolRemoveEntities
 
 // Spawn Entity (0x01): a new entity in the world.
 // Wire order: entityId (VarInt) | uuid (UUID) | type (VarInt registry id) | x/y/z (Double) |
-//             pitch (Angle) | yaw (Angle) | headYaw (Angle) | data (VarInt) | velocity (LpVec3)
+//             velocity (LpVec3) | pitch (Angle) | yaw (Angle) | headYaw (Angle) | data (VarInt)
 struct OMProtocolSpawnEntity
 {
     int32_t entityId = 0;
@@ -342,6 +342,16 @@ struct OMProtocolSpawnEntity
     openminecraft::network::OMAngle headYaw;
     int32_t data = 0;
     openminecraft::network::OMLpVec3 velocity;
+};
+
+// Update Light (0x31): light data of a single chunk.
+// Wire order: chunkX (VarInt) | chunkZ (VarInt) | light data (4 BitSets + sky/block light arrays)
+struct OMProtocolUpdateLight
+{
+    int32_t chunkX = 0;
+    int32_t chunkZ = 0;
+    OMProtocolChunkLight light;
+    bool complete = false;
 };
 
 // Post Effects (0x53): the post-processing effects the client should apply.

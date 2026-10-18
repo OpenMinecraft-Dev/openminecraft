@@ -266,6 +266,124 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     }
 };
 
+// INFO: light data uses java.util.BitSet.toByteArray() masks, not long arrays:
+// mask = VarInt byte count + bytes (bit i => bytes[i / 8] & (1 << (i % 8))).
+namespace openminecraft::network
+{
+struct OMProtocolLightCodec
+{
+    static constexpr std::size_t arrayLength = 2048;
+
+    static auto readMask(OMNetworkPacket &pck) -> OMBitSet
+    {
+        auto length = pck.read<OMVarInt>().value;
+
+        if (length < 0 || static_cast<uint64_t>(length) > pck.restDatalen())
+        {
+            throw std::logic_error("[OMNetworkPacket] light mask exceeds remaining data!");
+        }
+
+        return OMBitSet::fromBytes(pck.readFixedArray<uint8_t>(static_cast<std::size_t>(length)));
+    }
+
+    static auto writeMask(OMNetworkPacket &pck, const OMBitSet &mask) -> void
+    {
+        auto bytes = mask.toBytes();
+
+        pck.write(OMVarInt(static_cast<int32_t>(bytes.size())));
+        pck.writeFixedArray(bytes);
+    }
+
+    static auto readArrays(OMNetworkPacket &pck, std::vector<std::vector<uint8_t>> &target) -> void
+    {
+        auto count = pck.read<OMVarInt>().value;
+
+        if (count < 0 || count > 64)
+        {
+            throw std::logic_error("[OMNetworkPacket] light array count out of range!");
+        }
+
+        for (int32_t i = 0; i < count; ++i)
+        {
+            auto length = pck.read<OMVarInt>().value;
+
+            if (length != static_cast<int32_t>(arrayLength))
+            {
+                throw std::logic_error("[OMNetworkPacket] light array length is not 2048!");
+            }
+
+            target.push_back(pck.readFixedArray<uint8_t>(arrayLength));
+        }
+    }
+
+    static auto read(OMNetworkPacket &pck, openminecraft::shell::network::OMProtocolChunkLight &light) -> void
+    {
+        light.skyLightMask = readMask(pck);
+        light.blockLightMask = readMask(pck);
+        light.emptySkyLightMask = readMask(pck);
+        light.emptyBlockLightMask = readMask(pck);
+
+        readArrays(pck, light.skyLight);
+        readArrays(pck, light.blockLight);
+
+        if (pck.restDatalen() != 0)
+        {
+            // 理论上不会发生：严格解析必须恰好消费完，超出部分直接丢弃以保持流同步
+            pck.readFixedArray<uint8_t>(pck.restDatalen());
+        }
+    }
+
+    static auto write(OMNetworkPacket &pck, const openminecraft::shell::network::OMProtocolChunkLight &light) -> void
+    {
+        writeMask(pck, light.skyLightMask);
+        writeMask(pck, light.blockLightMask);
+        writeMask(pck, light.emptySkyLightMask);
+        writeMask(pck, light.emptyBlockLightMask);
+
+        for (const std::vector<std::vector<uint8_t>> *arrays : {&light.skyLight, &light.blockLight})
+        {
+            pck.write(OMVarInt(static_cast<int32_t>(arrays->size())));
+
+            for (const auto &array : *arrays)
+            {
+                pck.write(OMVarInt(static_cast<int32_t>(array.size())));
+                pck.writeFixedArray(array);
+            }
+        }
+    }
+};
+} // namespace openminecraft::network
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolUpdateLight>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolUpdateLight
+    {
+        openminecraft::shell::network::OMProtocolUpdateLight result;
+
+        result.chunkX = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.chunkZ = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+        openminecraft::network::OMProtocolLightCodec::read(pck, result.light);
+
+        result.complete = pck.restDatalen() == 0;
+
+        return result;
+    }
+
+    static auto write(openminecraft::network::OMNetworkPacket &pck,
+                      const openminecraft::shell::network::OMProtocolUpdateLight &value) -> void
+    {
+        pck.write(openminecraft::network::OMVarInt(value.chunkX));
+        pck.write(openminecraft::network::OMVarInt(value.chunkZ));
+
+        openminecraft::network::OMProtocolLightCodec::write(pck, value.light);
+    }
+};
+
 template <>
 struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolChunkDataAndLight>
 {
@@ -449,27 +567,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
             result.blockEntities.push_back(std::move(entity));
         }
 
-        result.light.skyLightMask = pck.read<openminecraft::network::OMBitSet>();
-        result.light.blockLightMask = pck.read<openminecraft::network::OMBitSet>();
-        result.light.emptySkyLightMask = pck.read<openminecraft::network::OMBitSet>();
-        result.light.emptyBlockLightMask = pck.read<openminecraft::network::OMBitSet>();
-
-        for (std::vector<std::vector<uint8_t>> *target : {&result.light.skyLight, &result.light.blockLight})
-        {
-            auto arrayCount = pck.read<openminecraft::network::OMVarInt>().value;
-
-            for (int32_t i = 0; i < arrayCount; ++i)
-            {
-                auto length = pck.read<openminecraft::network::OMVarInt>().value;
-
-                if (length < 0 || static_cast<uint64_t>(length) > pck.restDatalen())
-                {
-                    throw std::logic_error("[OMNetworkPacket] light array exceeds remaining data!");
-                }
-
-                target->push_back(pck.readFixedArray<uint8_t>(static_cast<std::size_t>(length)));
-            }
-        }
+        openminecraft::network::OMProtocolLightCodec::read(pck, result.light);
 
 // INFO: decode every section and compare its non-air block count with blockCount
         bool valid = !result.sections.empty();
@@ -618,11 +716,11 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         result.x = pck.read<double>();
         result.y = pck.read<double>();
         result.z = pck.read<double>();
+        result.velocity = pck.read<openminecraft::network::OMLpVec3>();
         result.pitch = pck.read<openminecraft::network::OMAngle>();
         result.yaw = pck.read<openminecraft::network::OMAngle>();
         result.headYaw = pck.read<openminecraft::network::OMAngle>();
         result.data = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
-        result.velocity = pck.read<openminecraft::network::OMLpVec3>();
 
         return result;
     }
@@ -636,11 +734,11 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         pck.write<double>(value.x);
         pck.write<double>(value.y);
         pck.write<double>(value.z);
+        pck.write(value.velocity);
         pck.write(value.pitch);
         pck.write(value.yaw);
         pck.write(value.headYaw);
         pck.write(openminecraft::network::OMVarInt(value.data));
-        pck.write(value.velocity);
     }
 };
 

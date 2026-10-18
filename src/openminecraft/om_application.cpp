@@ -318,8 +318,8 @@ void OMApplication::networkSetup(std::string host, std::string port)
             logger->debug("chunk: ({}, {}) data: {} bytes sections: {}", chunk.chunkX, chunk.chunkZ, chunk.dataLength,
                           chunk.sections.size());
             logger->debug("heightmaps: {} block entities: {}", chunk.heightmaps.size(), chunk.blockEntities.size());
-            logger->debug("light: sky {} arrays, block {} arrays", chunk.light.skyLight.size(),
-                          chunk.light.blockLight.size());
+            logger->debug("light: {} arrays, sky mask bits {}, block mask bits {}", chunk.light.skyLight.size(),
+                          chunk.light.skyLightMask.count(), chunk.light.blockLightMask.count());
             logger->debug("blocks: decoded {} / declared {}", chunk.decodedBlockCount, chunk.declaredBlockCount);
 
             if (chunk.valid)
@@ -334,7 +334,14 @@ void OMApplication::networkSetup(std::string host, std::string port)
 
             if (!chunk.lightComplete)
             {
-                logger->debug("light arrays skipped: {} bytes (client can recompute)", chunk.lightTrailingBytes);
+                std::string head;
+
+                for (auto byte : chunk.lightHead)
+                {
+                    head += fmt::format("{:02x} ", byte);
+                }
+
+                logger->warn("light data incomplete: {} trailing bytes, head: {}", chunk.lightTrailingBytes, head);
             }
         }
 

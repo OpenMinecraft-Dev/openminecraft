@@ -113,6 +113,40 @@ struct OMBitSet
         return longIndex < data.size() && ((data[longIndex] >> bitIndex) & 1) != 0;
     }
 
+    // java.util.BitSet.toByteArray()：第 i 位 = bytes[i / 8] 的 (1 << (i % 8))
+    static auto fromBytes(const std::vector<uint8_t> &bytes) -> OMBitSet
+    {
+        OMBitSet result;
+        result.data.assign((bytes.size() + 7) / 8, 0);
+
+        for (std::size_t i = 0; i < bytes.size(); ++i)
+        {
+            result.data[i / 8] |= static_cast<uint64_t>(bytes[i]) << ((i % 8) * 8);
+        }
+
+        return result;
+    }
+
+    auto toBytes() const -> std::vector<uint8_t>
+    {
+        std::vector<uint8_t> bytes;
+
+        for (auto value : data)
+        {
+            for (int i = 0; i < 8; ++i)
+            {
+                bytes.push_back(static_cast<uint8_t>((value >> (i * 8)) & 0xFF));
+            }
+        }
+
+        while (!bytes.empty() && bytes.back() == 0)
+        {
+            bytes.pop_back();
+        }
+
+        return bytes;
+    }
+
     auto count() const -> std::size_t
     {
         std::size_t total = 0;
@@ -384,7 +418,8 @@ class OMNetworkPacket
 
             if ((first & 0x04ULL) != 0)
             {
-                scaleFactor |= static_cast<uint64_t>(static_cast<uint32_t>(static_cast<int32_t>(read<OMVarInt>()))) << 2;
+                scaleFactor |= static_cast<uint64_t>(static_cast<uint32_t>(static_cast<int32_t>(read<OMVarInt>())))
+                               << 2;
             }
 
             auto scale = static_cast<double>(scaleFactor);
@@ -737,8 +772,6 @@ template <typename T> struct OMNetworkPacketCodec<std::optional<T>>
     }
 };
 
-
-// INFO: "ID or X" 复用同一套扩展点：id 为 0 时内联读取 X，否则只是注册表引用
 template <typename T> struct OMNetworkPacketCodec<OMIDOr<T>>
 {
     static constexpr bool supported = true;

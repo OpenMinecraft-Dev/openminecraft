@@ -160,6 +160,9 @@ class OMProtocolMinecraftHandler
     virtual void handlePlaySetEntityVelocity(uint32_t entityId, double vx, double vy, double vz)
     {
     }
+    virtual void handlePlayUpdateLight(const OMProtocolUpdateLight &light)
+    {
+    }
     virtual void handlePlaySpawnEntity(const OMProtocolSpawnEntity &entity)
     {
     }
