@@ -160,6 +160,9 @@ class OMProtocolMinecraftHandler
     virtual void handlePlaySetEntityVelocity(uint32_t entityId, double vx, double vy, double vz)
     {
     }
+    virtual void handlePlayDisconnect(const OMProtocolDisconnect &disconnect)
+    {
+    }
     virtual void handlePlayUpdateLight(const OMProtocolUpdateLight &light)
     {
     }
@@ -170,6 +173,9 @@ class OMProtocolMinecraftHandler
     {
     }
     virtual void handlePlaySetHeadRotation(const OMProtocolSetHeadRotation &rotation)
+    {
+    }
+    virtual void handlePlayKeepAlive(int64_t id)
     {
     }
 };
@@ -229,6 +235,7 @@ class OMProtocolMinecraftTransformer
     virtual void sendConfigurationFinishAcknowledged() = 0;
     virtual void sendPlayConfirmTeleportation(uint32_t teleportID, double x, double y, double z, float yaw,
                                               float pitch) = 0;
+    virtual void sendPlayKeepAlive(int64_t id) = 0;
 
     virtual void handle() = 0;
 };

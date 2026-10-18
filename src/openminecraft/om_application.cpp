@@ -312,6 +312,24 @@ void OMApplication::networkSetup(std::string host, std::string port)
             logger->debug("secure chat: {}", secureChat);
         }
 
+        void handlePlayDisconnect(const network::OMProtocolDisconnect &disconnect) override
+        {
+            title("Disconnect");
+
+            if (!disconnect.reason)
+            {
+                logger->debug("reason: <none>");
+                return;
+            }
+
+            logger->debug("reason tag type: {}", static_cast<int>(disconnect.reason->type));
+
+            if (const auto *text = std::get_if<openminecraft::specs::nbt::NBTString>(&disconnect.reason->data))
+            {
+                logger->debug("reason: {}", *text);
+            }
+        }
+
         void handlePlayChunkDataAndLight(const network::OMProtocolChunkDataAndLight &chunk) override
         {
             title("Chunk Data And Light");
@@ -740,6 +758,12 @@ void OMApplication::networkSetup(std::string host, std::string port)
             title("Set Head Rotation");
             logger->debug("entity: {}", rotation.entityId);
             logger->debug("head yaw: {} (raw 0x{:02x})", rotation.headYaw.degrees, rotation.headYaw.raw());
+        }
+
+        void handlePlayKeepAlive(int64_t id) override
+        {
+            title("Keep Alive");
+            transformer->sendPlayKeepAlive(id);
         }
     } hnd;
     hnd.logger = &logger;

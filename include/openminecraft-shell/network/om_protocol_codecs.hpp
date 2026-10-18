@@ -354,6 +354,22 @@ struct OMProtocolLightCodec
 };
 } // namespace openminecraft::network
 
+// INFO: the reason is a text component encoded as NBT (read only, NBT has no writer yet)
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolDisconnect>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolDisconnect
+    {
+        openminecraft::shell::network::OMProtocolDisconnect result;
+
+        result.reason = pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>();
+
+        return result;
+    }
+};
+
 template <>
 struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolUpdateLight>
 {

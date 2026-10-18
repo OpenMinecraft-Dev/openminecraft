@@ -354,6 +354,13 @@ struct OMProtocolUpdateLight
     bool complete = false;
 };
 
+// Disconnect (0x20): the server kicks the client with a text component reason.
+// Wire order: reason (Text Component, network NBT with an unnamed root tag)
+struct OMProtocolDisconnect
+{
+    std::shared_ptr<openminecraft::specs::nbt::OMNbtTag> reason;
+};
+
 // Post Effects (0x53): the post-processing effects the client should apply.
 // Wire order: effects (Array of Identifier)
 struct OMProtocolPostEffects

@@ -23,6 +23,7 @@ class OMProtocolMinecraftTransformerGeneral : public OMProtocolMinecraftTransfor
     void sendConfigurationFinishAcknowledged() override = 0;
     void sendPlayConfirmTeleportation(uint32_t teleportID, double x, double y, double z, float yaw,
                                       float pitch) override = 0;
+    void sendPlayKeepAlive(int64_t id) override = 0;
 
     void handle() override;
     virtual void handleRest(OMProtocolMinecraftState, openminecraft::network::OMNetworkPacket &);
