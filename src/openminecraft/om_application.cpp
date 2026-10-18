@@ -507,6 +507,23 @@ void OMApplication::networkSetup(std::string host, std::string port)
                 {
                     logger->debug("  slot {}: item {} x{}", i, slot.itemId, slot.count);
                 }
+
+                for (const auto &component : slot.components.added)
+                {
+                    if (component.type == 3)
+                    {
+                        logger->debug("  slot {}: damage {}", i, component.damage);
+                    }
+                    else if (component.type == 6)
+                    {
+                        logger->debug("  slot {}: custom name {}", i, component.customName);
+                    }
+                    else
+                    {
+                        logger->warn("  slot {}: unknown data component {} -> truncated", i, component.type);
+                    }
+                }
+
             }
 
             if (content.carriedItem.count > 0)

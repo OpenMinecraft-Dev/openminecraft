@@ -484,6 +484,7 @@ static auto testContainerContentCodec() -> void
     OMNetworkPacket p;
     p.write(OMVarInt(0)).write(OMVarInt(1)).write(OMVarInt(2)); // window, state, 2 slots
     p.write(OMVarInt(0));                                       // empty slot
+    // 槽位：count=3, itemId=5, addedCount=0, removedCount=1, removed id=7
     p.write(OMVarInt(3)).write(OMVarInt(5)).write(OMVarInt(0)).write(OMVarInt(1)).write(OMVarInt(7));
     p.write(OMVarInt(0)); // carried item: empty
     p.reset();
@@ -492,7 +493,7 @@ static auto testContainerContentCodec() -> void
     CHECK(parsed.windowId == 0 && parsed.stateId == 1 && parsed.slots.size() == 2);
     CHECK(parsed.slots[0].count == 0);
     CHECK(parsed.slots[1].count == 3 && parsed.slots[1].itemId == 5);
-    CHECK(parsed.slots[1].removedComponents.size() == 1 && parsed.slots[1].removedComponents[0] == 7);
+    CHECK(parsed.slots[1].components.removed.size() == 1 && parsed.slots[1].components.removed[0] == 7);
     CHECK(parsed.carriedItem.count == 0 && !parsed.truncated);
 }
 

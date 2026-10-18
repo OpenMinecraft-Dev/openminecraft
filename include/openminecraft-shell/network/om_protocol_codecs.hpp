@@ -375,22 +375,9 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         }
 
         stack.itemId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        stack.components = pck.read<openminecraft::shell::network::OMProtocolDataComponentPatch>();
 
-        auto addedCount = pck.read<openminecraft::network::OMVarInt>().value;
-
-        if (addedCount > 0)
-        {
-            return false;
-        }
-
-        auto removedCount = pck.read<openminecraft::network::OMVarInt>().value;
-
-        for (int32_t i = 0; i < removedCount; ++i)
-        {
-            stack.removedComponents.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
-        }
-
-        return true;
+        return !stack.components.truncated;
     }
 
     static auto read(openminecraft::network::OMNetworkPacket &pck) -> Display
@@ -459,6 +446,101 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
 };
 
 // INFO: the reason is a text component encoded as NBT (read only, NBT has no writer yet)
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolDataComponent>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolDataComponent
+    {
+        openminecraft::shell::network::OMProtocolDataComponent result;
+
+        result.type = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+        // INFO: the payload layout depends on the component type; only known ids are decoded for now
+        switch (result.type)
+        {
+        case 3: // minecraft:damage (VarInt)
+            result.damage = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+            break;
+        case 6: // minecraft:custom_name (network NBT text component: tag | VarInt name len | VarInt value len)
+        {
+            auto tag = pck.read<uint8_t>();
+            auto nameLength = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (tag != 8 || nameLength != 0)
+            {
+                result.truncated = true;
+                break;
+            }
+
+            auto length = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (length < 0 || static_cast<uint64_t>(length) > pck.restDatalen())
+            {
+                result.truncated = true;
+                break;
+            }
+
+            auto bytes = pck.readFixedArray<uint8_t>(static_cast<std::size_t>(length));
+            result.customName.assign(bytes.begin(), bytes.end());
+            break;
+        }
+        default:
+            result.truncated = true;
+            break;
+        }
+
+        if (result.truncated)
+        {
+            auto consumed = pck.datalen() - pck.restDatalen();
+            auto back = std::min<std::size_t>(consumed, 8);
+            auto count = std::min<std::size_t>(static_cast<std::size_t>(pck.restDatalen()) + back, 40);
+            const auto *bytes = reinterpret_cast<const uint8_t *>(pck.data()) + consumed - back;
+            result.head.assign(bytes, bytes + count);
+        }
+
+        return result;
+    }
+};
+
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolDataComponentPatch>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolDataComponentPatch
+    {
+        openminecraft::shell::network::OMProtocolDataComponentPatch result;
+
+        auto addedCount = pck.read<openminecraft::network::OMVarInt>().value;
+        auto removedCount = pck.read<openminecraft::network::OMVarInt>().value;
+
+        if (addedCount < 0 || removedCount < 0)
+        {
+            throw std::logic_error("[OMNetworkPacket] component patch count out of range!");
+        }
+
+        for (int32_t i = 0; i < addedCount; ++i)
+        {
+            result.added.push_back(pck.read<openminecraft::shell::network::OMProtocolDataComponent>());
+
+            if (result.added.back().truncated)
+            {
+                result.truncated = true;
+                return result;
+            }
+        }
+
+        for (int32_t i = 0; i < removedCount; ++i)
+        {
+            result.removed.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+        }
+
+        return result;
+    }
+};
+
 template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolDisconnect>
 {
     static constexpr bool supported = true;
@@ -1230,24 +1312,9 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
         }
 
         slot.itemId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        slot.components = pck.read<openminecraft::shell::network::OMProtocolDataComponentPatch>();
 
-        auto addedCount = pck.read<openminecraft::network::OMVarInt>().value;
-
-        if (addedCount > 0)
-        {
-// INFO: the payload length of added components depends on the component type; not supported yet
-            return false;
-        }
-
-        auto removedCount = pck.read<openminecraft::network::OMVarInt>().value;
-
-        for (int32_t i = 0; i < removedCount; ++i)
-        {
-            slot.removedComponents.push_back(
-                static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
-        }
-
-        return true;
+        return !slot.components.truncated;
     }
 
     static auto read(openminecraft::network::OMNetworkPacket &pck)

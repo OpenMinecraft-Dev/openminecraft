@@ -76,11 +76,31 @@ struct OMProtocolPlayerInfoUpdate
 
 // One slot of Set Container Content (0x12). count 0 means an empty slot.
 // Wire order: count (VarInt) | [itemId (VarInt) | added components (Array) | removed components (Array of VarInt)]
+// One entry of a data component patch: registry id plus the payload of that component.
+// INFO: the payload layout depends on the component type, so only known types are decoded;
+// unknown ones keep their raw head bytes and set truncated.
+struct OMProtocolDataComponent
+{
+    int32_t type = 0;             // minecraft:data_component_type registry id
+    int32_t damage = 0;           // type 3: minecraft:damage (VarInt)
+    std::string customName;       // type 6: minecraft:custom_name (network NBT text component)
+    bool truncated = false;       // payload not decodable yet
+    std::vector<uint8_t> head;    // raw payload bytes when truncated
+};
+
+// DataComponentPatch wire order: added count | removed count | added payloads | removed ids.
+struct OMProtocolDataComponentPatch
+{
+    std::vector<OMProtocolDataComponent> added;
+    std::vector<int32_t> removed;
+    bool truncated = false; // set when any added component could not be delimited
+};
+
 struct OMProtocolItemStack
 {
     int32_t count = 0;
     int32_t itemId = 0;
-    std::vector<int32_t> removedComponents;
+    OMProtocolDataComponentPatch components;
 };
 
 // Slot Display: how an item should be rendered (recipe book, advises, etc.).
