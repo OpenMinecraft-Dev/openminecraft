@@ -1,12 +1,15 @@
 #ifndef OM_PROTOCOL_CODECS_HPP
 #define OM_PROTOCOL_CODECS_HPP
 
+#include "openminecraft-shell/network/om_data_component_mapping.hpp"
 #include "openminecraft-shell/network/om_protocol_minecraft_structs.hpp"
 #include "openminecraft/network/om_network_packet.hpp"
 #include "openminecraft/specs/nbt/om_nbt_reader.hpp"
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
+#include <unordered_map>
 #include <vector>
 
 template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolRegistryData>
@@ -328,7 +331,6 @@ struct OMProtocolLightCodec
 
         if (pck.restDatalen() != 0)
         {
-            // 理论上不会发生：严格解析必须恰好消费完，超出部分直接丢弃以保持流同步
             pck.readFixedArray<uint8_t>(pck.restDatalen());
         }
     }
@@ -421,8 +423,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
             result.nested.push_back(read(pck)); // ingredient
             result.nested.push_back(read(pck)); // remainder
             break;
-        case Kind::Composite:
-        {
+        case Kind::Composite: {
             auto count = pck.read<openminecraft::network::OMVarInt>().value;
 
             if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
@@ -446,46 +447,1161 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
 };
 
 // INFO: the reason is a text component encoded as NBT (read only, NBT has no writer yet)
-template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolDataComponent>
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolFireworkExplosion>
 {
     static constexpr bool supported = true;
 
     static auto read(openminecraft::network::OMNetworkPacket &pck)
-        -> openminecraft::shell::network::OMProtocolDataComponent
+        -> openminecraft::shell::network::OMProtocolFireworkExplosion
     {
-        openminecraft::shell::network::OMProtocolDataComponent result;
+        openminecraft::shell::network::OMProtocolFireworkExplosion result;
 
-        result.type = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.shape = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
 
-        // INFO: the payload layout depends on the component type; only known ids are decoded for now
+        for (std::vector<int32_t> *target : {&result.colors, &result.fadeColors})
+        {
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
+            {
+                throw std::logic_error("[OMNetworkPacket] firework colors out of range!");
+            }
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                target->push_back(pck.read<int32_t>());
+            }
+        }
+
+        result.hasTrail = pck.read<bool>();
+        result.hasTwinkle = pck.read<bool>();
+
+        return result;
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolPotionDetail>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolPotionDetail
+    {
+        openminecraft::shell::network::OMProtocolPotionDetail result;
+
+        result.amplifier = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.duration = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.ambient = pck.read<bool>();
+        result.showParticles = pck.read<bool>();
+        result.showIcon = pck.read<bool>();
+
+        // Hidden Effect: prefixed optional detail (recursive)
+        if (pck.read<bool>())
+        {
+            result.hiddenEffect = std::make_shared<openminecraft::shell::network::OMProtocolPotionDetail>(
+                pck.read<openminecraft::shell::network::OMProtocolPotionDetail>());
+        }
+
+        return result;
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolPotionEffect>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolPotionEffect
+    {
+        openminecraft::shell::network::OMProtocolPotionEffect result;
+
+        result.typeId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.detail = pck.read<openminecraft::shell::network::OMProtocolPotionDetail>();
+
+        return result;
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolSoundEvent>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolSoundEvent
+    {
+        openminecraft::shell::network::OMProtocolSoundEvent result;
+
+        result.location = pck.read<std::string>();
+
+        if (pck.read<bool>())
+        {
+            result.range = pck.read<float>();
+        }
+
+        return result;
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolJukeboxSong>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolJukeboxSong
+    {
+        openminecraft::shell::network::OMProtocolJukeboxSong result;
+
+        result.soundEvent = pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolSoundEvent>>();
+        result.description = pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>();
+        result.duration = pck.read<float>();
+        result.output = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+        return result;
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolTrimMaterial>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolTrimMaterial
+    {
+        openminecraft::shell::network::OMProtocolTrimMaterial result;
+
+        result.suffix = pck.read<std::string>();
+
+        auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+        for (int32_t i = 0; i < count; ++i)
+        {
+            openminecraft::shell::network::OMProtocolTrimMaterialOverride entry;
+            entry.armorMaterial = pck.read<std::string>();
+            entry.assetName = pck.read<std::string>();
+            result.overrides.push_back(std::move(entry));
+        }
+
+        result.overriddenAssetName = pck.read<std::string>();
+        result.description = pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>();
+
+        return result;
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolTrimPattern>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolTrimPattern
+    {
+        openminecraft::shell::network::OMProtocolTrimPattern result;
+
+        result.assetName = pck.read<std::string>();
+        result.templateItem = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.description = pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>();
+        result.decal = pck.read<bool>();
+
+        return result;
+    }
+};
+
+// INFO: a Slot (1.20.5+): count | item id | DataComponentPatch
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolItemStack>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolItemStack
+    {
+        openminecraft::shell::network::OMProtocolItemStack result;
+
+        result.count = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+        if (result.count <= 0)
+        {
+            return result;
+        }
+
+        result.itemId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.components = pck.read<openminecraft::shell::network::OMProtocolDataComponentPatch>();
+
+        return result;
+    }
+};
+
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolDataComponent>
+{
+    static constexpr bool supported = true;
+
+    using Component = openminecraft::shell::network::OMProtocolDataComponent;
+    using Type = openminecraft::shell::network::OMDataComponentType;
+
+    // network NBT text component: tag(08) + VarInt name length + VarInt value length + JSON
+    static auto readTextComponent(openminecraft::network::OMNetworkPacket &pck, std::string &out) -> bool
+    {
+        auto tag = pck.read<uint8_t>();
+        auto nameLength = pck.read<openminecraft::network::OMVarInt>().value;
+
+        if (tag != 8 || nameLength != 0)
+        {
+            return false;
+        }
+
+        auto length = pck.read<openminecraft::network::OMVarInt>().value;
+
+        if (length < 0 || static_cast<uint64_t>(length) > pck.restDatalen())
+        {
+            return false;
+        }
+
+        auto bytes = pck.readFixedArray<uint8_t>(static_cast<std::size_t>(length));
+        out.assign(bytes.begin(), bytes.end());
+        return true;
+    }
+
+    // consume effect array (shared by consumable and death_protection)
+    static auto readConsumeEffects(openminecraft::network::OMNetworkPacket &pck, Component &result, int32_t count)
+        -> void
+    {
+        for (int32_t i = 0; i < count; ++i)
+        {
+            auto effectType = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+            result.intList.push_back(effectType);
+
+            switch (effectType)
+            {
+            case 0: // minecraft:apply_effects: effect array + probability
+            {
+                auto effectCount = pck.read<openminecraft::network::OMVarInt>().value;
+
+                for (int32_t j = 0; j < effectCount; ++j)
+                {
+                    result.potionEffects.push_back(
+                        pck.read<openminecraft::shell::network::OMProtocolPotionEffect>());
+                }
+
+                if (result.truncated)
+                {
+                    break;
+                }
+
+                result.floatList.push_back(pck.read<float>()); // probability
+                break;
+            }
+            case 1: // minecraft:remove_effects：ID Set
+                result.idSet = pck.read<openminecraft::network::OMIdSet>();
+                break;
+            case 2: // minecraft:clear_all_effects: no data
+                break;
+            case 3: // minecraft:teleport_randomly：Float
+                result.floatList.push_back(pck.read<float>());
+                break;
+            case 4: // minecraft:play_sound：Sound Event
+                pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolSoundEvent>>();
+                break;
+            default:
+                result.truncated = true;
+                break;
+            }
+
+            if (result.truncated)
+            {
+                break;
+            }
+        }
+    }
+
+    // decoder table: pick the payload branch by component name (fully decoupled from the wire id table)
+    static auto handlerFor(std::string_view name) -> int32_t
+    {
+        static const std::unordered_map<std::string_view, Type> table = {
+        {"minecraft:custom_data", Type::CustomData},
+        {"minecraft:max_stack_size", Type::MaxStackSize},
+        {"minecraft:max_damage", Type::MaxDamage},
+        {"minecraft:damage", Type::Damage},
+        {"minecraft:unbreakable", Type::Unbreakable},
+        {"minecraft:use_effects", Type::UseEffects},
+        {"minecraft:custom_name", Type::CustomName},
+        {"minecraft:minimum_attack_charge", Type::MinimumAttackCharge},
+        {"minecraft:damage_type", Type::DamageType},
+        {"minecraft:item_name", Type::ItemName},
+        {"minecraft:item_model", Type::ItemModel},
+        {"minecraft:lore", Type::Lore},
+        {"minecraft:rarity", Type::Rarity},
+        {"minecraft:enchantments", Type::Enchantments},
+        {"minecraft:can_place_on", Type::CanPlaceOn},
+        {"minecraft:can_break", Type::CanBreak},
+        {"minecraft:attribute_modifiers", Type::AttributeModifiers},
+        {"minecraft:custom_model_data", Type::CustomModelData},
+        {"minecraft:tooltip_display", Type::TooltipDisplay},
+        {"minecraft:repair_cost", Type::RepairCost},
+        {"minecraft:creative_slot_lock", Type::CreativeSlotLock},
+        {"minecraft:enchantment_glint_override", Type::EnchantmentGlintOverride},
+        {"minecraft:intangible_projectile", Type::IntangibleProjectile},
+        {"minecraft:food", Type::Food},
+        {"minecraft:consumable", Type::Consumable},
+        {"minecraft:use_remainder", Type::UseRemainder},
+        {"minecraft:use_cooldown", Type::UseCooldown},
+        {"minecraft:damage_resistant", Type::DamageResistant},
+        {"minecraft:tool", Type::Tool},
+        {"minecraft:weapon", Type::Weapon},
+        {"minecraft:attack_range", Type::AttackRange},
+        {"minecraft:enchantable", Type::Enchantable},
+        {"minecraft:equippable", Type::Equippable},
+        {"minecraft:repairable", Type::Repairable},
+        {"minecraft:glider", Type::Glider},
+        {"minecraft:tooltip_style", Type::TooltipStyle},
+        {"minecraft:death_protection", Type::DeathProtection},
+        {"minecraft:blocks_attacks", Type::BlocksAttacks},
+        {"minecraft:piercing_weapon", Type::PiercingWeapon},
+        {"minecraft:kinetic_weapon", Type::KineticWeapon},
+        {"minecraft:attack_animation", Type::AttackAnimation},
+        {"minecraft:interact_animation", Type::InteractAnimation},
+        {"minecraft:additional_trade_cost", Type::AdditionalTradeCost},
+        {"minecraft:block_transformer", Type::BlockTransformer},
+        {"minecraft:villager_food", Type::VillagerFood},
+        {"minecraft:stored_enchantments", Type::StoredEnchantments},
+        {"minecraft:dye", Type::Dye},
+        {"minecraft:dyed_color", Type::DyedColor},
+        {"minecraft:map_id", Type::MapId},
+        {"minecraft:map_decorations", Type::MapDecorations},
+        {"minecraft:map_post_processing", Type::MapPostProcessing},
+        {"minecraft:charged_projectiles", Type::ChargedProjectiles},
+        {"minecraft:bundle_contents", Type::BundleContents},
+        {"minecraft:potion_contents", Type::PotionContents},
+        {"minecraft:potion_duration_scale", Type::PotionDurationScale},
+        {"minecraft:suspicious_stew_effects", Type::SuspiciousStewEffects},
+        {"minecraft:writable_book_content", Type::WritableBookContent},
+        {"minecraft:written_book_content", Type::WrittenBookContent},
+        {"minecraft:trim", Type::Trim},
+        {"minecraft:debug_stick_state", Type::DebugStickState},
+        {"minecraft:entity_data", Type::EntityData},
+        {"minecraft:bucket_entity_data", Type::BucketEntityData},
+        {"minecraft:block_entity_data", Type::BlockEntityData},
+        {"minecraft:instrument", Type::Instrument},
+        {"minecraft:provides_trim_material", Type::ProvidesTrimMaterial},
+        {"minecraft:ominous_bottle_amplifier", Type::OminousBottleAmplifier},
+        {"minecraft:jukebox_playable", Type::JukeboxPlayable},
+        {"minecraft:provides_banner_patterns", Type::ProvidesBannerPatterns},
+        {"minecraft:recipes", Type::Recipes},
+        {"minecraft:lodestone_tracker", Type::LodestoneTracker},
+        {"minecraft:firework_explosion", Type::FireworkExplosion},
+        {"minecraft:fireworks", Type::Fireworks},
+        {"minecraft:profile", Type::Profile},
+        {"minecraft:note_block_sound", Type::NoteBlockSound},
+        {"minecraft:banner_patterns", Type::BannerPatterns},
+        {"minecraft:base_color", Type::BaseColor},
+        {"minecraft:pot_decorations", Type::PotDecorations},
+        {"minecraft:container", Type::Container},
+        {"minecraft:block_state", Type::BlockState},
+        {"minecraft:bees", Type::Bees},
+        {"minecraft:sulfur_cube_content", Type::SulfurCubeContent},
+        {"minecraft:lock", Type::Lock},
+        {"minecraft:container_loot", Type::ContainerLoot},
+        {"minecraft:break_sound", Type::BreakSound},
+        {"minecraft:compostable", Type::Compostable},
+        {"minecraft:cooking_fuel", Type::CookingFuel},
+        {"minecraft:brewing_fuel", Type::BrewingFuel},
+        {"minecraft:mob_visibility", Type::MobVisibility},
+        {"minecraft:villager/variant", Type::VillagerVariant},
+        {"minecraft:wolf/variant", Type::WolfVariant},
+        {"minecraft:wolf/sound_variant", Type::WolfSoundVariant},
+        {"minecraft:wolf/collar", Type::WolfCollar},
+        {"minecraft:fox/variant", Type::FoxVariant},
+        {"minecraft:salmon/size", Type::SalmonSize},
+        {"minecraft:parrot/variant", Type::ParrotVariant},
+        {"minecraft:tropical_fish/pattern", Type::TropicalFishPattern},
+        {"minecraft:tropical_fish/base_color", Type::TropicalFishBaseColor},
+        {"minecraft:tropical_fish/pattern_color", Type::TropicalFishPatternColor},
+        {"minecraft:mooshroom/variant", Type::MooshroomVariant},
+        {"minecraft:rabbit/variant", Type::RabbitVariant},
+        {"minecraft:pig/variant", Type::PigVariant},
+        {"minecraft:pig/sound_variant", Type::PigSoundVariant},
+        {"minecraft:cow/variant", Type::CowVariant},
+        {"minecraft:cow/sound_variant", Type::CowSoundVariant},
+        {"minecraft:chicken/variant", Type::ChickenVariant},
+        {"minecraft:chicken/sound_variant", Type::ChickenSoundVariant},
+        {"minecraft:zombie_nautilus/variant", Type::ZombieNautilusVariant},
+        {"minecraft:frog/variant", Type::FrogVariant},
+        {"minecraft:horse/variant", Type::HorseVariant},
+        {"minecraft:painting/variant", Type::PaintingVariant},
+        {"minecraft:llama/variant", Type::LlamaVariant},
+        {"minecraft:axolotl/variant", Type::AxolotlVariant},
+        {"minecraft:cat/variant", Type::CatVariant},
+        {"minecraft:cat/sound_variant", Type::CatSoundVariant},
+        {"minecraft:cat/collar", Type::CatCollar},
+        {"minecraft:sheep/color", Type::SheepColor},
+        {"minecraft:shulker/color", Type::ShulkerColor},
+        {"minecraft:provides_pottery_pattern", Type::ProvidesPotteryPattern},
+        {"minecraft:sign_text_front", Type::SignTextFront},
+        {"minecraft:sign_text_back", Type::SignTextBack},
+        {"minecraft:waxed", Type::Waxed},
+        {"minecraft:cushion/color", Type::CushionColor},
+        };
+
+        auto it = table.find(name);
+
+        return it == table.end() ? -1 : static_cast<int32_t>(it->second);
+    }
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck) -> Component
+    {
+        Component result;
+
+        auto rawId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+        const auto *mapping =
+            static_cast<const openminecraft::shell::network::OMDataComponentMapping *>(pck.userContext());
+        auto name = mapping != nullptr ? mapping->name(rawId) : std::string_view{};
+        auto kind = handlerFor(name);
+
+        if (kind < 0)
+        {
+            // unknown id: the id table does not match this protocol version, payload cannot be delimited
+            result.intValue = rawId;
+            result.truncated = true;
+
+            auto consumed = pck.datalen() - pck.restDatalen();
+            auto back = std::min<std::size_t>(consumed, 8);
+            auto count = std::min<std::size_t>(static_cast<std::size_t>(pck.restDatalen()) + back, 40);
+            const auto *bytes = reinterpret_cast<const uint8_t *>(pck.data()) + consumed - back;
+            result.head.assign(bytes, bytes + count);
+
+            return result;
+        }
+
+        result.type = static_cast<Type>(kind);
+
         switch (result.type)
         {
-        case 3: // minecraft:damage (VarInt)
-            result.damage = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        // no payload
+        case Type::Unbreakable:
+        case Type::CreativeSlotLock:
+        case Type::Glider:
+        case Type::IntangibleProjectile:
+        case Type::Waxed:
             break;
-        case 6: // minecraft:custom_name (network NBT text component: tag | VarInt name len | VarInt value len)
-        {
-            auto tag = pck.read<uint8_t>();
-            auto nameLength = pck.read<openminecraft::network::OMVarInt>().value;
 
-            if (tag != 8 || nameLength != 0)
+        // VarInt / VarInt enum
+        case Type::MaxStackSize:
+        case Type::MaxDamage:
+        case Type::Damage:
+        case Type::RepairCost:
+        case Type::AdditionalTradeCost:
+        case Type::OminousBottleAmplifier:
+        case Type::MapId:
+        case Type::Enchantable:
+        case Type::Rarity:
+        case Type::Dye:
+        case Type::BaseColor:
+        case Type::WolfCollar:
+        case Type::CatCollar:
+        case Type::SheepColor:
+        case Type::ShulkerColor:
+        case Type::CushionColor:
+        case Type::TropicalFishPattern:
+        case Type::TropicalFishBaseColor:
+        case Type::TropicalFishPatternColor:
+        case Type::FoxVariant:
+        case Type::SalmonSize:
+        case Type::ParrotVariant:
+        case Type::MooshroomVariant:
+        case Type::RabbitVariant:
+        case Type::HorseVariant:
+        case Type::LlamaVariant:
+        case Type::AxolotlVariant:
+        case Type::MapPostProcessing:
+        case Type::VillagerVariant:
+        case Type::PigVariant:
+        case Type::PigSoundVariant:
+        case Type::CowVariant:
+        case Type::CowSoundVariant:
+        case Type::ChickenVariant:
+        case Type::ChickenSoundVariant:
+        case Type::FrogVariant:
+        case Type::CatVariant:
+        case Type::CatSoundVariant:
+        case Type::WolfVariant:
+        case Type::WolfSoundVariant:
+        case Type::ZombieNautilusVariant:
+        case Type::PaintingVariant:
+        case Type::BreakSound:
+        case Type::DamageType:
+        case Type::Instrument:
+        case Type::BlockTransformer:
+            result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+            break;
+
+        // Float
+        case Type::MinimumAttackCharge:
+        case Type::PotionDurationScale:
+            result.floatValue = pck.read<float>();
+            break;
+
+        // Boolean
+        case Type::EnchantmentGlintOverride:
+            result.boolValue = pck.read<bool>();
+            break;
+
+        // Identifier
+        case Type::ItemModel:
+        case Type::TooltipStyle:
+        case Type::NoteBlockSound:
+            result.stringValue = pck.read<std::string>();
+            break;
+
+        // text component: network NBT (no root name); a String tag carries the JSON directly
+        case Type::CustomName:
+        case Type::ItemName: {
+            result.nbt = pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>();
+
+            if (result.nbt != nullptr)
             {
-                result.truncated = true;
-                break;
+                if (const auto *text = std::get_if<openminecraft::specs::nbt::NBTString>(&result.nbt->data))
+                {
+                    result.stringValue = *text;
+                }
             }
 
-            auto length = pck.read<openminecraft::network::OMVarInt>().value;
-
-            if (length < 0 || static_cast<uint64_t>(length) > pck.restDatalen())
-            {
-                result.truncated = true;
-                break;
-            }
-
-            auto bytes = pck.readFixedArray<uint8_t>(static_cast<std::size_t>(length));
-            result.customName.assign(bytes.begin(), bytes.end());
             break;
         }
+
+        // NBT components: network NBT (no root name)
+        case Type::CustomData:
+        case Type::BucketEntityData:
+            result.nbt = pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>();
+            break;
+
+        // NBT components prefixed by a type id
+        case Type::EntityData:
+        case Type::BlockEntityData:
+            result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+            result.nbt = pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>();
+            break;
+
+        // lodestone_tracker：Boolean | (Identifier + Position) | Boolean
+        case Type::LodestoneTracker:
+        {
+            result.boolValue = pck.read<bool>();
+
+            if (result.boolValue)
+            {
+                result.stringValue = pck.read<std::string>();                            // dimension
+                result.position = pck.read<openminecraft::network::OMPackedPos>();       // position
+            }
+
+            result.secondBool = pck.read<bool>();                                        // tracked
+            break;
+        }
+
+        // tool: rules | default mining speed | damage per block | can destroy in creative
+        case Type::Tool:
+        {
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
+            {
+                result.truncated = true;
+                break;
+            }
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                openminecraft::shell::network::OMProtocolToolRule rule;
+
+                rule.blocks = pck.read<openminecraft::network::OMIdSet>();
+
+                if (pck.read<bool>())
+                {
+                    rule.speed = pck.read<float>();
+                }
+
+                if (pck.read<bool>())
+                {
+                    rule.correctDrop = pck.read<bool>();
+                }
+
+                result.toolRules.push_back(std::move(rule));
+            }
+
+            result.floatValue = pck.read<float>();                                // default mining speed
+            result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()); // damage per block
+            result.boolValue = pck.read<bool>();                                  // can destroy in creative
+            break;
+        }
+
+        // can_place_on / can_break：Prefixed Array of Block Predicate
+        case Type::CanPlaceOn:
+        case Type::CanBreak:
+        {
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
+            {
+                result.truncated = true;
+                break;
+            }
+
+            result.intList.push_back(count);
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                // Blocks：Prefixed Optional ID Set
+                if (pck.read<bool>())
+                {
+                    result.idSet = pck.read<openminecraft::network::OMIdSet>();
+                }
+
+                // Properties：Prefixed Optional Prefixed Array of (name, value)
+                if (pck.read<bool>())
+                {
+                    auto propertyCount = pck.read<openminecraft::network::OMVarInt>().value;
+
+                    for (int32_t j = 0; j < propertyCount; ++j)
+                    {
+                        result.stringList.push_back(pck.read<std::string>());
+                        result.stringList.push_back(pck.read<std::string>());
+                    }
+                }
+
+                // NBT：Prefixed Optional NBT
+                if (pck.read<bool>())
+                {
+                    pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>();
+                }
+
+                // exact data component matchers: type + structured component value
+                auto componentCount = pck.read<openminecraft::network::OMVarInt>().value;
+
+                for (int32_t j = 0; j < componentCount; ++j)
+                {
+                    // read one full component recursively (type + payload)
+                    auto nested = read(pck);
+                    result.componentTypes.push_back(static_cast<int32_t>(nested.type));
+                }
+
+                // partial data component predicates: type + NBT predicate
+                auto partialCount = pck.read<openminecraft::network::OMVarInt>().value;
+
+                for (int32_t j = 0; j < partialCount; ++j)
+                {
+                    result.intListB.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+                    pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>();
+                }
+            }
+
+            break;
+        }
+
+        // piercing_weapon：Boolean | Boolean | Optional Sound Event | Optional Sound Event
+        case Type::PiercingWeapon:
+        {
+            result.boolValue = pck.read<bool>();   // deals knockback
+            result.secondBool = pck.read<bool>();  // dismounts
+
+            if (pck.read<bool>())                  // optional sound
+            {
+                result.intList.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+            }
+
+            if (pck.read<bool>())                  // optional hit sound
+            {
+                result.intListB.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+            }
+
+            break;
+        }
+
+        // firework_explosion：shape | colors | fade colors | trail | twinkle
+        case Type::FireworkExplosion:
+            result.fireworkExplosion =
+                pck.read<openminecraft::shell::network::OMProtocolFireworkExplosion>();
+            break;
+
+        // fireworks: VarInt flight duration + explosion array
+        case Type::Fireworks:
+        {
+            result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
+            {
+                result.truncated = true;
+                break;
+            }
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                result.fireworkExplosions.push_back(
+                    pck.read<openminecraft::shell::network::OMProtocolFireworkExplosion>());
+            }
+
+            break;
+        }
+
+        // death_protection：Prefixed Array of Consume Effect
+        case Type::DeathProtection:
+        {
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
+            {
+                result.truncated = true;
+                break;
+            }
+
+            readConsumeEffects(pck, result, count);
+            break;
+        }
+
+        // consumable: Float | VarInt animation | ID or Sound Event | Boolean | effect array
+        case Type::Consumable:
+        {
+            result.floatValue = pck.read<float>();                                        // consume seconds
+            result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()); // animation
+            result.soundEvent =
+                pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolSoundEvent>>();
+            result.boolValue = pck.read<bool>();                                          // has consume particles
+
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
+            {
+                result.truncated = true;
+                break;
+            }
+
+            readConsumeEffects(pck, result, count);
+            break;
+        }
+
+        // potion_contents: optional VarInt | optional Int | effect array | optional String
+        case Type::PotionContents:
+        {
+            if (pck.read<bool>())
+            {
+                result.potionId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+            }
+
+            if (pck.read<bool>())
+            {
+                result.potionColor = pck.read<int32_t>();
+            }
+
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
+            {
+                result.truncated = true;
+                break;
+            }
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                result.potionEffects.push_back(
+                    pck.read<openminecraft::shell::network::OMProtocolPotionEffect>());
+            }
+
+            if (!result.truncated && pck.read<bool>())
+            {
+                result.stringValue = pck.read<std::string>(); // custom name
+            }
+
+            break;
+        }
+
+        // writable_book_content: per page raw String + optional filtered string
+        case Type::WritableBookContent:
+        {
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
+            {
+                result.truncated = true;
+                break;
+            }
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                openminecraft::shell::network::OMProtocolBookPage page;
+                page.raw = pck.read<std::string>();
+
+                if (pck.read<bool>())
+                {
+                    page.filtered = pck.read<std::string>();
+                }
+
+                result.bookPages.push_back(std::move(page));
+            }
+
+            break;
+        }
+
+        // written_book_content: title + optional filtered title + author + generation + pages + resolved
+        case Type::WrittenBookContent:
+        {
+            result.stringValue = pck.read<std::string>();          // raw title
+
+            if (pck.read<bool>())
+            {
+                result.optionalString = pck.read<std::string>();   // filtered title
+            }
+
+            result.stringList.push_back(pck.read<std::string>());  // author
+            result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()); // generation
+
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
+            {
+                result.truncated = true;
+                break;
+            }
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                openminecraft::shell::network::OMProtocolWrittenBookPage page;
+                page.raw = pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>();
+
+                if (pck.read<bool>())
+                {
+                    page.filtered = pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>();
+                }
+
+                result.writtenBookPages.push_back(std::move(page));
+            }
+
+            result.secondBool = pck.read<bool>();                  // resolved
+            break;
+        }
+
+        // provides_trim_material：ID or Trim Material
+        case Type::ProvidesTrimMaterial:
+            result.providesTrimMaterial =
+                pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolTrimMaterial>>();
+            break;
+
+        // jukebox_playable：ID or Jukebox Song
+        case Type::JukeboxPlayable:
+            result.jukeboxSong =
+                pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolJukeboxSong>>();
+            break;
+
+        // trim：ID or Trim Material + ID or Trim Pattern
+        case Type::Trim:
+            result.trimMaterial =
+                pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolTrimMaterial>>();
+            result.trimPattern =
+                pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolTrimPattern>>();
+            break;
+
+        // banner_patterns: count + (pattern id | Dye Color)
+        case Type::BannerPatterns:
+        {
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
+            {
+                result.truncated = true;
+                break;
+            }
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                result.intList.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+                result.intListB.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+            }
+
+            break;
+        }
+
+        // bees: count + (entity type | NBT | ticks | min ticks)
+        case Type::Bees:
+        {
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
+            {
+                result.truncated = true;
+                break;
+            }
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                result.intList.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+                result.nbtList.push_back(pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>());
+                result.intListB.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+                result.intListC.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+            }
+
+            break;
+        }
+
+        // use_cooldown: Float seconds + optional Identifier (group)
+        case Type::UseCooldown:
+        {
+            result.floatValue = pck.read<float>();
+
+            if (pck.read<bool>())
+            {
+                result.optionalString = pck.read<std::string>();
+            }
+
+            break;
+        }
+
+        // attribute_modifiers: count + (attribute id | Identifier | Double | two enums)
+        case Type::AttributeModifiers:
+        {
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
+            {
+                result.truncated = true;
+                break;
+            }
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                openminecraft::shell::network::OMProtocolItemAttributeModifier modifier;
+                modifier.attributeId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+                modifier.id = pck.read<std::string>();
+                modifier.value = pck.read<double>();
+                modifier.operation = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+                modifier.slot = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+                result.attributeModifiers.push_back(std::move(modifier));
+            }
+
+            break;
+        }
+
+        // single Slot
+        case Type::UseRemainder:
+        case Type::SulfurCubeContent:
+            result.stack = std::make_shared<openminecraft::shell::network::OMProtocolItemStack>(
+                pck.read<openminecraft::shell::network::OMProtocolItemStack>());
+            break;
+
+        // Prefixed Array of Slot
+        case Type::ChargedProjectiles:
+        case Type::BundleContents:
+        case Type::Container:
+        {
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
+            {
+                result.truncated = true;
+                break;
+            }
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                result.stacks.push_back(std::make_shared<openminecraft::shell::network::OMProtocolItemStack>(
+                    pck.read<openminecraft::shell::network::OMProtocolItemStack>()));
+            }
+
+            break;
+        }
+
+        // lore: count + one text component per line
+        case Type::Lore: {
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                auto line = pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>();
+
+                if (line == nullptr)
+                {
+                    result.truncated = true;
+                    break;
+                }
+
+                if (const auto *text = std::get_if<openminecraft::specs::nbt::NBTString>(&line->data))
+                {
+                    result.stringList.push_back(*text);
+                }
+                else
+                {
+                    result.stringList.emplace_back();
+                }
+            }
+
+            break;
+        }
+
+        // enchantments / stored_enchantments: count + (id + level)
+        case Type::Enchantments:
+        case Type::StoredEnchantments: {
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                result.intList.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+                result.intListB.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+            }
+
+            break;
+        }
+
+        // custom_model_data：floats | bools | strings | ints
+        case Type::CustomModelData: {
+            auto floats = pck.read<openminecraft::network::OMVarInt>().value;
+
+            for (int32_t i = 0; i < floats; ++i)
+            {
+                result.floatList.push_back(pck.read<float>());
+            }
+
+            auto bools = pck.read<openminecraft::network::OMVarInt>().value;
+
+            for (int32_t i = 0; i < bools; ++i)
+            {
+                result.boolList.push_back(pck.read<bool>());
+            }
+
+            auto strings = pck.read<openminecraft::network::OMVarInt>().value;
+
+            for (int32_t i = 0; i < strings; ++i)
+            {
+                result.stringList.push_back(pck.read<std::string>());
+            }
+
+            auto ints = pck.read<openminecraft::network::OMVarInt>().value;
+
+            for (int32_t i = 0; i < ints; ++i)
+            {
+                result.intList.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+            }
+
+            break;
+        }
+
+        // tooltip_display: bool + hidden component id list
+        case Type::TooltipDisplay: {
+            result.boolValue = pck.read<bool>();
+
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                result.intList.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+            }
+
+            break;
+        }
+
+        // dyed_color: fixed Int
+        case Type::DyedColor:
+            result.intValue = pck.read<int32_t>();
+            break;
+
+        // food：VarInt + Float + Boolean
+        case Type::Food:
+            result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+            result.floatValue = pck.read<float>();
+            result.boolValue = pck.read<bool>();
+            break;
+
+        // use_effects：Boolean + Boolean + Float
+        case Type::UseEffects:
+            result.boolValue = pck.read<bool>();
+            result.intList.push_back(pck.read<bool>() ? 1 : 0);
+            result.floatValue = pck.read<float>();
+            break;
+
+        // weapon：VarInt + Float
+        case Type::Weapon:
+            result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+            result.floatValue = pck.read<float>();
+            break;
+
+        // attack_range: six Floats
+        case Type::AttackRange:
+            for (int32_t i = 0; i < 6; ++i)
+            {
+                result.floatList.push_back(pck.read<float>());
+            }
+            break;
+
+        // attack_animation / interact_animation：type + duration
+        case Type::AttackAnimation:
+        case Type::InteractAnimation:
+            result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+            result.intList.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+            break;
+
+        // block_state: count + (name + value)
+        case Type::BlockState: {
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                result.stringList.push_back(pck.read<std::string>());
+                result.stringList.push_back(pck.read<std::string>());
+            }
+
+            break;
+        }
+
+        // suspicious_stew_effects: count + (effect id + duration)
+        case Type::SuspiciousStewEffects: {
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                result.intList.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+                result.intListB.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+            }
+
+            break;
+        }
+
+        // pot_decorations: four item ids
+        case Type::PotDecorations: {
+            auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                result.intList.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+            }
+
+            break;
+        }
+
+        // provides_pottery_pattern: registry id
+        case Type::ProvidesPotteryPattern:
+            result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+            break;
+
+        // damage_resistant / repairable / provides_banner_patterns：ID Set
+        case Type::DamageResistant:
+        case Type::Repairable:
+        case Type::ProvidesBannerPatterns:
+            result.idSet = pck.read<openminecraft::network::OMIdSet>();
+
+            if (result.idSet.isTag())
+            {
+                result.stringValue = result.idSet.tag;
+            }
+            else
+            {
+                result.intList = result.idSet.ids;
+            }
+
+            break;
+
         default:
             result.truncated = true;
             break;
@@ -504,7 +1620,8 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
     }
 };
 
-template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolDataComponentPatch>
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolDataComponentPatch>
 {
     static constexpr bool supported = true;
 
@@ -556,8 +1673,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
     }
 };
 
-template <>
-struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolUpdateLight>
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolUpdateLight>
 {
     static constexpr bool supported = true;
 
@@ -618,7 +1734,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
         return values;
     }
 
-// INFO: since 1.21.5 the data array has no length prefix; its size derives from bits and entry count
+    // INFO: since 1.21.5 the data array has no length prefix; its size derives from bits and entry count
     static auto readPalettedContainer(openminecraft::network::OMNetworkPacket &pck, Palette &container,
                                       std::size_t entries, uint8_t maxIndirectBits) -> void
     {
@@ -662,7 +1778,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
         }
     }
 
-// INFO: 1.16+ packing: entries never span longs and padding is appended at the end
+    // INFO: 1.16+ packing: entries never span longs and padding is appended at the end
     static auto decodeBlockStates(const Palette &container, std::vector<int32_t> &states) -> bool
     {
         if (container.bitsPerEntry == 0)
@@ -771,7 +1887,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
 
         openminecraft::network::OMProtocolLightCodec::read(pck, result.light);
 
-// INFO: decode every section and compare its non-air block count with blockCount
+        // INFO: decode every section and compare its non-air block count with blockCount
         bool valid = !result.sections.empty();
 
         for (const auto &section : result.sections)
@@ -809,7 +1925,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
 
         if (!result.lightComplete)
         {
-// INFO: the light array layout is still unconfirmed; record the leftover length and skip it
+            // INFO: the light array layout is still unconfirmed; record the leftover length and skip it
             result.lightTrailingBytes = static_cast<int32_t>(pck.restDatalen());
             pck.readFixedArray<uint8_t>(pck.restDatalen());
         }
@@ -823,15 +1939,17 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
 {
     static constexpr bool supported = true;
 
-    // INFO: 相对位移在线上是 Short，单位 1/4096 格
+    // INFO: relative movement is a Short on the wire, in 1/4096 of a block
     static auto readDelta(openminecraft::network::OMNetworkPacket &pck) -> double
     {
-        return static_cast<double>(pck.read<int16_t>()) / openminecraft::shell::network::OMProtocolUpdateEntityPosition::deltaUnitsPerBlock;
+        return static_cast<double>(pck.read<int16_t>()) /
+               openminecraft::shell::network::OMProtocolUpdateEntityPosition::deltaUnitsPerBlock;
     }
 
     static auto writeDelta(openminecraft::network::OMNetworkPacket &pck, double value) -> void
     {
-        auto raw = std::lround(value * openminecraft::shell::network::OMProtocolUpdateEntityPosition::deltaUnitsPerBlock);
+        auto raw =
+            std::lround(value * openminecraft::shell::network::OMProtocolUpdateEntityPosition::deltaUnitsPerBlock);
         raw = std::clamp<long>(raw, -32768, 32767);
 
         pck.write<int16_t>(static_cast<int16_t>(raw));
@@ -890,8 +2008,8 @@ struct openminecraft::network::OMNetworkPacketCodec<
     static auto write(openminecraft::network::OMNetworkPacket &pck,
                       const openminecraft::shell::network::OMProtocolUpdateEntityPositionRotation &value) -> void
     {
-        using Position = openminecraft::network::OMNetworkPacketCodec<
-            openminecraft::shell::network::OMProtocolUpdateEntityPosition>;
+        using Position =
+            openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolUpdateEntityPosition>;
 
         pck.write(openminecraft::network::OMVarInt(value.entityId));
         Position::writeDelta(pck, value.deltaX);
@@ -944,8 +2062,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
     }
 };
 
-template <>
-struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolRemoveEntities>
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolRemoveEntities>
 {
     static constexpr bool supported = true;
 
@@ -1007,8 +2124,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     }
 };
 
-template <>
-struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolTeleportEntity>
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolTeleportEntity>
 {
     static constexpr bool supported = true;
 
@@ -1120,8 +2236,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
 {
     static constexpr bool supported = true;
 
-    static auto read(openminecraft::network::OMNetworkPacket &pck)
-        -> openminecraft::shell::network::OMProtocolSetHealth
+    static auto read(openminecraft::network::OMNetworkPacket &pck) -> openminecraft::shell::network::OMProtocolSetHealth
     {
         openminecraft::shell::network::OMProtocolSetHealth result;
 
@@ -1146,7 +2261,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
 {
     static constexpr bool supported = true;
 
-// INFO: display data holds a Text Component (NBT) and a Slot (item stack); not supported yet
+    // INFO: display data holds a Text Component (NBT) and a Slot (item stack); not supported yet
     static auto read(openminecraft::network::OMNetworkPacket &pck)
         -> openminecraft::shell::network::OMProtocolUpdateAdvancements
     {
@@ -1168,7 +2283,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
 
             if (pck.read<bool>())
             {
-// INFO: display data is not implemented yet
+                // INFO: display data is not implemented yet
                 result.added.push_back(std::move(advancement));
                 result.truncated = true;
                 pck.readFixedArray<uint8_t>(pck.restDatalen());
@@ -1304,15 +2419,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     static auto readSlot(openminecraft::network::OMNetworkPacket &pck,
                          openminecraft::shell::network::OMProtocolItemStack &slot) -> bool
     {
-        slot.count = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
-
-        if (slot.count <= 0)
-        {
-            return true;
-        }
-
-        slot.itemId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
-        slot.components = pck.read<openminecraft::shell::network::OMProtocolDataComponentPatch>();
+        slot = pck.read<openminecraft::shell::network::OMProtocolItemStack>();
 
         return !slot.components.truncated;
     }
@@ -1378,7 +2485,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
 {
     static constexpr bool supported = true;
 
-// INFO: NBT is read-only for now, so no write is provided
+    // INFO: NBT is read-only for now, so no write is provided
     static auto read(openminecraft::network::OMNetworkPacket &pck)
         -> openminecraft::shell::network::OMProtocolServerData
     {
@@ -1399,8 +2506,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
 {
     static constexpr bool supported = true;
 
-    static auto read(openminecraft::network::OMNetworkPacket &pck)
-        -> openminecraft::shell::network::OMProtocolSetTime
+    static auto read(openminecraft::network::OMNetworkPacket &pck) -> openminecraft::shell::network::OMProtocolSetTime
     {
         openminecraft::shell::network::OMProtocolSetTime result;
 
@@ -1426,7 +2532,8 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
     static auto write(openminecraft::network::OMNetworkPacket &pck,
                       const openminecraft::shell::network::OMProtocolSetTime &value) -> void
     {
-        pck.write<int64_t>(value.gameTime).write(openminecraft::network::OMVarInt(static_cast<int32_t>(value.clocks.size())));
+        pck.write<int64_t>(value.gameTime)
+            .write(openminecraft::network::OMVarInt(static_cast<int32_t>(value.clocks.size())));
 
         for (const auto &clock : value.clocks)
         {

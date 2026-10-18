@@ -113,7 +113,7 @@ struct OMBitSet
         return longIndex < data.size() && ((data[longIndex] >> bitIndex) & 1) != 0;
     }
 
-    // java.util.BitSet.toByteArray()：第 i 位 = bytes[i / 8] 的 (1 << (i % 8))
+    // java.util.BitSet.toByteArray(): bit i = bytes[i / 8] & (1 << (i % 8))
     static auto fromBytes(const std::vector<uint8_t> &bytes) -> OMBitSet
     {
         OMBitSet result;
@@ -279,6 +279,17 @@ class OMNetworkPacket
     auto restDatalen() -> uint64_t
     {
         return buffer.size() - offset;
+    }
+
+    // Protocol level parsing context (e.g. the data component id mapping), set by the transformer before dispatch
+    auto setUserContext(const void *value) -> void
+    {
+        contextPointer = value;
+    }
+
+    auto userContext() const -> const void *
+    {
+        return contextPointer;
     }
 
     auto restData() -> char *
@@ -755,6 +766,7 @@ class OMNetworkPacket
     auto asStream() -> std::shared_ptr<std::istream>;
 
   private:
+    const void *contextPointer = nullptr;
     std::vector<uint8_t> buffer;
     uint64_t offset;
 
@@ -815,7 +827,7 @@ template <typename T> struct OMNetworkPacketCodec<OMIDOr<T>>
 };
 
 
-// INFO: "ID Set" 复用同一套扩展点：type 0 读注册表 tag 名，否则读 type-1 个 VarInt id
+// INFO: "ID Set" uses the same extension point: type 0 reads a registry tag name, otherwise type-1 VarInt ids
 template <> struct OMNetworkPacketCodec<OMIdSet>
 {
     static constexpr bool supported = true;

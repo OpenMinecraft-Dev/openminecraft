@@ -1,6 +1,7 @@
 #ifndef OM_PROTOCOL_MINECRAFT_777_HPP
 #define OM_PROTOCOL_MINECRAFT_777_HPP
 
+#include "openminecraft-shell/network/om_data_component_mapping.hpp"
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_general.hpp"
 namespace openminecraft::shell::network::transformers
 {
@@ -10,7 +11,10 @@ class OMProtocolMinecraftTransformer777 : public OMProtocolMinecraftTransformerG
     OMProtocolMinecraftTransformer777(OMProtocolMinecraft &p, OMProtocolMinecraftHandler &hnd)
         : OMProtocolMinecraftTransformerGeneral(p, hnd)
     {
+        componentMapping.setNames(componentNames());
     }
+
+    static auto componentNames() -> std::vector<std::string>;
 
     void sendLoginHello(std::string name, openminecraft::util::OMUuid uuid) override;
     void sendLoginAcknowledged() override;
@@ -23,6 +27,7 @@ class OMProtocolMinecraftTransformer777 : public OMProtocolMinecraftTransformerG
     void handleRest(OMProtocolMinecraftState, openminecraft::network::OMNetworkPacket &) override;
 
   private:
+    openminecraft::shell::network::OMDataComponentMapping componentMapping;
     openminecraft::log::OMLogger logger = {"OMProtocolMinecraftTransformer777", this};
 };
 } // namespace openminecraft::shell::network::transformers

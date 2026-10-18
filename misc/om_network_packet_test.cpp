@@ -14,7 +14,7 @@
 
 using namespace openminecraft::network;
 
-// 扩展点示例：自定义类型只需要特化 OMNetworkPacketCodec<T>，无需改动 OMNetworkPacket
+// extension point demo: a custom type only needs an OMNetworkPacketCodec<T> specialization
 struct TestPair
 {
     int32_t left = 0;
@@ -94,7 +94,7 @@ static auto testPrefixArrays() -> void
     p.write(OMVarInt(300));
     p.write(OMVarInt(-5));
 
-    // std::string[2]（OMUtf8String 的自然类型版本）
+    // std::string[2] (the natural plain-type form of OMUtf8String)
     p.write(OMVarInt(2));
     p.write(std::string("alpha"));
     p.write(std::string("beta"));
@@ -193,7 +193,7 @@ static auto testWireFormat() -> void
 
 static auto testCustomCodec() -> void
 {
-    // 标量
+    // scalars
     OMNetworkPacket p;
     p.write(TestPair{7, -9});
     p.reset();
@@ -201,7 +201,7 @@ static auto testCustomCodec() -> void
     auto pair = p.read<TestPair>();
     CHECK(pair.left == 7 && pair.right == -9);
 
-    // 数组：readPrefixArray 复用 read<TestPair>()，同样自动支持
+    // arrays: readPrefixArray reuses read<TestPair>() and works automatically
     OMNetworkPacket a;
     a.write(OMVarInt(2)).write(TestPair{1, 2}).write(TestPair{3, 4});
     a.reset();
@@ -212,7 +212,7 @@ static auto testCustomCodec() -> void
 
 static auto testFixedAndPrefixArrayWrites() -> void
 {
-    // 定长数组：线上没有长度前缀
+    // fixed arrays: no length prefix on the wire
     OMNetworkPacket fixed;
     fixed.writeFixedArray<int32_t>({1, -2, 3});
     fixed.writeFixedArray<uint8_t>({0x11, 0x22, 0x33});
@@ -233,13 +233,13 @@ static auto testFixedAndPrefixArrayWrites() -> void
     auto fe = fixed.readFixedArray<int32_t>(0);
     CHECK(fe.empty());
 
-    // 前缀数组：先 VarInt 元素个数
+    // prefix arrays: a VarInt element count comes first
     OMNetworkPacket prefixed;
     prefixed.writePrefixArray<int32_t>({1, -2, 3});
     prefixed.writePrefixArray<OMUtf8String>({OMUtf8String("aa"), OMUtf8String("bb")});
     prefixed.writePrefixArray<uint8_t>({0x11, 0x22});
 
-    // 线上第一字节应当是元素个数 3
+    // the first wire byte must be the element count 3
     CHECK(reinterpret_cast<const uint8_t *>(prefixed.data())[0] == 0x03);
 
     prefixed.reset();
@@ -339,7 +339,7 @@ static auto testVarLong() -> void
     CHECK(p.read<OMVarLong>().value == 0x7FFFFFFFFFFFFFFFLL);
     CHECK(p.read<OMVarLong>().value == INT64_MIN);
 
-    // 线格式：300 -> AC 02；-1 -> FF x9 + 01（共 12 字节）
+    // wire format: 300 -> AC 02; -1 -> FF x9 + 01 (12 bytes total)
     OMNetworkPacket w;
     w.write(OMVarLong(300)).write(OMVarLong(-1));
 
@@ -352,7 +352,7 @@ static auto testVarLong() -> void
     }
     CHECK(bytes[11] == 0x01);
 
-    // 数组与隐式转换
+    // arrays and implicit conversions
     OMNetworkPacket a;
     a.writePrefixArray<OMVarLong>({OMVarLong(-1), OMVarLong(1)});
     a.reset();
@@ -441,7 +441,7 @@ static auto testSpawnPositionCodec() -> void
     CHECK(parsed.position.x() == -496 && parsed.position.y() == 66 && parsed.position.z() == -224);
     CHECK(parsed.yaw == 0.0f && parsed.pitch == 90.0f);
 
-    // 边界值：26 位与 12 位补码的两端
+    // edge values: both ends of the 26-bit and 12-bit two's complement ranges
     OMProtocolSetDefaultSpawnPosition edge;
     edge.dimension = "minecraft:the_nether";
     edge.position = OMPackedPos::from(33554431, -2048, -33554432);
@@ -484,7 +484,7 @@ static auto testContainerContentCodec() -> void
     OMNetworkPacket p;
     p.write(OMVarInt(0)).write(OMVarInt(1)).write(OMVarInt(2)); // window, state, 2 slots
     p.write(OMVarInt(0));                                       // empty slot
-    // 槽位：count=3, itemId=5, addedCount=0, removedCount=1, removed id=7
+    // slot: count=3, itemId=5, addedCount=0, removedCount=1, removed id=7
     p.write(OMVarInt(3)).write(OMVarInt(5)).write(OMVarInt(0)).write(OMVarInt(1)).write(OMVarInt(7));
     p.write(OMVarInt(0)); // carried item: empty
     p.reset();
@@ -627,7 +627,7 @@ static auto testIDOr() -> void
     inlineValue.value = OMUtf8String("minecraft:test");
 
     OMIDOr<OMUtf8String> referenced;
-    referenced.id = 3; // 注册表 id 2 + 1
+    referenced.id = 3; // registry id 2 + 1
 
     OMNetworkPacket p;
     p.write(inlineValue);
@@ -640,7 +640,7 @@ static auto testIDOr() -> void
     auto b = p.read<OMIDOr<OMUtf8String>>();
     CHECK(b.id == 3 && !b.isInline() && b.registryId() == 2 && !b.value);
 
-    // 也支持直接内联基本类型
+    // plain scalar types work inline as well
     OMNetworkPacket q;
     q.write(OMIDOr<int32_t>());
     q.reset();
@@ -650,7 +650,7 @@ static auto testIDOr() -> void
 
 static auto testLpVec3() -> void
 {
-    // wiki 提供的样本：数值 -> 预期字节
+    // samples from the wiki: value -> expected bytes
     struct Sample
     {
         double x, y, z;
@@ -692,7 +692,7 @@ static auto testLpVec3() -> void
 
 static auto testAngle() -> void
 {
-    // 1 字节 = 1/256 圈 = 1.40625 度
+    // one byte = 1/256 of a turn = 1.40625 degrees
     struct Sample
     {
         double degrees;
@@ -718,7 +718,7 @@ static auto testAngle() -> void
         CHECK(std::abs(parsed.degrees - static_cast<double>(sample.raw) * (360.0 / 256.0)) < 1e-9);
     }
 
-    // 360 度回绕到 0
+    // 360 degrees wraps to 0
     OMAngle fullTurn(360.0);
     CHECK(fullTurn.raw() == 0x00);
 }
@@ -727,7 +727,7 @@ static auto testTeleportEntityCodec() -> void
 {
     using openminecraft::shell::network::OMProtocolTeleportEntity;
 
-    // 线性路径
+    // linear path
     OMProtocolTeleportEntity linear;
     linear.entityId = 18898;
     linear.pathType = 0;
@@ -748,7 +748,7 @@ static auto testTeleportEntityCodec() -> void
     CHECK(a.yaw == linear.yaw && a.pitch == linear.pitch && a.onGround);
     CHECK(a.steps.empty());
 
-    // 步进路径
+    // stepped path
     OMProtocolTeleportEntity stepped;
     stepped.entityId = 42;
     stepped.pathType = 1;
@@ -770,7 +770,7 @@ static auto testEntityPositionCodecs() -> void
     using openminecraft::shell::network::OMProtocolUpdateEntityPosition;
     using openminecraft::shell::network::OMProtocolUpdateEntityPositionRotation;
 
-    // 位移：线上 Short，单位 1/4096 格
+    // movement: a Short on the wire, in 1/4096 of a block
     OMProtocolUpdateEntityPosition position;
     position.entityId = 19130;
     position.deltaX = 0.062255859375;  // 255 / 4096
@@ -786,14 +786,14 @@ static auto testEntityPositionCodecs() -> void
     CHECK(a.entityId == 19130 && a.onGround);
     CHECK(a.deltaX == position.deltaX && a.deltaY == position.deltaY && a.deltaZ == position.deltaZ);
 
-    // 位移 + 旋转：yaw/pitch 是 Angle（1/256 圈）
+    // movement + rotation: yaw/pitch are Angle (1/256 of a turn)
     OMProtocolUpdateEntityPositionRotation rotated;
     rotated.entityId = 19158;
     rotated.deltaX = 0.18798828125;
     rotated.deltaY = 0.05810546875;
     rotated.deltaZ = 0.0;
     rotated.yaw = OMAngle(272.39948);
-    rotated.pitch = OMAngle(97.03125);  // 精确的 69 个单位
+    rotated.pitch = OMAngle(97.03125);  // exactly 69 units
     rotated.onGround = true;
 
     OMNetworkPacket q;
@@ -814,7 +814,7 @@ static auto testSetHeadRotationCodec() -> void
 
     OMProtocolSetHeadRotation rotation;
     rotation.entityId = 19428;
-    rotation.headYaw = OMAngle(139.21875); // 99 个 Angle 单位
+    rotation.headYaw = OMAngle(139.21875); // 99 Angle units
 
     OMNetworkPacket p;
     p.write(rotation);
@@ -852,7 +852,7 @@ static auto testSpawnEntityCodec() -> void
 {
     using openminecraft::shell::network::OMProtocolSpawnEntity;
 
-    // 按实测报文逐字节构造：entityId, uuid, type, x/y/z, velocity(LpVec3), pitch, yaw, headYaw, data
+    // built byte by byte from a captured packet: entityId, uuid, type, x/y/z, velocity(LpVec3), pitch, yaw, headYaw, data
     OMNetworkPacket p;
     p.write(OMVarInt(20630));
     p.write(openminecraft::util::OMUuid(0x972665c8ccd6d99bULL, 0x7dd3f4d416f940a4ULL));
@@ -872,14 +872,14 @@ static auto testSpawnEntityCodec() -> void
     CHECK(parsed.yaw.raw() == 0x69);
     CHECK(parsed.headYaw.degrees == 0.0);
     CHECK(parsed.data == 0);
-    CHECK(p.restDatalen() == 0); // 字段顺序正确才能恰好消费完
+    CHECK(p.restDatalen() == 0); // only the correct field order consumes the packet exactly
 }
 
 static auto testUpdateLightCodec() -> void
 {
     using openminecraft::shell::network::OMProtocolUpdateLight;
 
-    // 掩码用 java.util.BitSet.toByteArray() 编码：VarInt 字节数 + 小端字节
+    // masks use java.util.BitSet.toByteArray(): VarInt byte count + little-endian bytes
     OMNetworkPacket p;
     p.write(OMVarInt(-32)).write(OMVarInt(-14));
     p.write(OMVarInt(2));
@@ -887,13 +887,13 @@ static auto testUpdateLightCodec() -> void
     p.write(OMVarInt(0));                           // block mask
     p.write(OMVarInt(0));                           // empty sky mask
     p.write(OMVarInt(0));                           // empty block mask
-    p.write(OMVarInt(2));                           // 2 个 sky 数组
+    p.write(OMVarInt(2));                           // two sky arrays
     for (int i = 0; i < 2; ++i)
     {
         p.write(OMVarInt(2048));
         p.writeFixedArray(std::vector<uint8_t>(2048, static_cast<uint8_t>(i + 1)));
     }
-    p.write(OMVarInt(0));                           // 0 个 block 数组
+    p.write(OMVarInt(0));                           // zero block arrays
     p.reset();
 
     auto parsed = p.read<OMProtocolUpdateLight>();
@@ -905,7 +905,7 @@ static auto testUpdateLightCodec() -> void
     CHECK(parsed.light.blockLight.empty());
     CHECK(parsed.complete);
 
-    // BitSet 字节数组往返（对应 java BitSet.toByteArray / BitSet.valueOf）
+    // BitSet byte array round trip (java BitSet.toByteArray / BitSet.valueOf)
     OMBitSet mask;
     mask.data = {0x0000000000000300ULL}; // bit 8, 9
     CHECK(mask.toBytes() == std::vector<uint8_t>({0x00, 0x03}));
@@ -915,7 +915,7 @@ static auto testUpdateLightCodec() -> void
 
 static auto testIdSet() -> void
 {
-    // tag 形式
+    // tag form
     OMIdSet tagSet;
     tagSet.type = 0;
     tagSet.tag = "minecraft:logs";
@@ -927,7 +927,7 @@ static auto testIdSet() -> void
     auto a = p.read<OMIdSet>();
     CHECK(a.type == 0 && a.isTag() && a.tag == "minecraft:logs" && a.ids.empty());
 
-    // 内联形式：type = 3 表示 2 个 id
+    // inline form: type = 3 means two ids
     OMIdSet inlineSet;
     inlineSet.type = 3;
     inlineSet.ids = {5, 7};
@@ -939,7 +939,7 @@ static auto testIdSet() -> void
     auto b = q.read<OMIdSet>();
     CHECK(b.type == 3 && !b.isTag() && b.ids.size() == 2 && b.ids[0] == 5 && b.ids[1] == 7);
 
-    // type = 1 表示空集合
+    // type = 1 means an empty set
     OMIdSet empty;
     empty.type = 1;
 
@@ -965,7 +965,7 @@ static auto testSlotDisplay() -> void
     auto item = p.read<OMSlotDisplay>();
     CHECK(item.kind == OMSlotDisplayKind::Item && item.itemId == 42 && p.restDatalen() == 0);
 
-    // minecraft:tag（无 '#' 前缀）
+    // minecraft:tag (no '#' prefix)
     OMNetworkPacket q;
     q.write(OMVarInt(static_cast<int32_t>(OMSlotDisplayKind::Tag)));
     q.write<std::string>("minecraft:logs");
@@ -987,7 +987,7 @@ static auto testSlotDisplay() -> void
     CHECK(dyed.kind == OMSlotDisplayKind::Dyed && dyed.nested.size() == 2);
     CHECK(dyed.nested[0].itemId == 7 && dyed.nested[1].itemId == 9);
 
-    // minecraft:composite（嵌套 2 个）
+    // minecraft:composite (two nested entries)
     OMNetworkPacket c;
     c.write(OMVarInt(static_cast<int32_t>(OMSlotDisplayKind::Composite)));
     c.write(OMVarInt(2));
@@ -1011,7 +1011,7 @@ static auto testSlotDisplay() -> void
     auto only = o.read<OMSlotDisplay>();
     CHECK(only.nested.size() == 1 && only.nested[0].itemId == 1 && only.componentTypeId == 77);
 
-    // minecraft:item_stack（空槽）
+    // minecraft:item_stack (empty stack)
     OMNetworkPacket st;
     st.write(OMVarInt(static_cast<int32_t>(OMSlotDisplayKind::ItemStack)));
     st.write(OMVarInt(0));
