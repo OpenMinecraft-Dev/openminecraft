@@ -61,7 +61,8 @@ void OMProtocolMinecraftTransformer777::sendPlayKeepAlive(int64_t id)
 
 auto OMProtocolMinecraftTransformer777::componentNames() -> std::vector<std::string>
 {
-    // INFO: order matches the field registration order of net.minecraft.core.component.DataComponents (protocol 777 / 1.21.9)
+    // INFO: order matches the field registration order of net.minecraft.core.component.DataComponents (protocol 777
+    // / 1.21.9)
     return {
         "minecraft:custom_data",
         "minecraft:max_stack_size",
@@ -272,6 +273,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             handler.handlePlaySpawnEntity(pck.read<OMProtocolSpawnEntity>());
             return;
         }
+            // Block Update
+        case 0x08: {
+            handler.handlePlayBlockUpdate(pck.read<OMProtocolBlockUpdate>());
+            return;
+        }
             // Change Difficulty
         case 0x0a: {
             handler.handlePlayChangeDifficulty(pck.read<uint8_t>(), pck.read<bool>());
@@ -295,6 +301,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             // Set Container Content
         case 0x12: {
             handler.handlePlaySetContainerContent(pck.read<OMProtocolSetContainerContent>());
+            return;
+        }
+            // Damage Event
+        case 0x19: {
+            handler.handlePlayDamageEvent(pck.read<OMProtocolDamageEvent>());
             return;
         }
             // Disconnect
@@ -340,6 +351,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             // Chunk Data And Light
         case 0x2e: {
             handler.handlePlayChunkDataAndLight(pck.read<OMProtocolChunkDataAndLight>());
+            return;
+        }
+            // World Event
+        case 0x2f: {
+            handler.handlePlayWorldEvent(pck.read<OMProtocolWorldEvent>());
             return;
         }
             // Update Light
@@ -393,6 +409,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             // Update Entity Position and Rotation
         case 0x37: {
             handler.handlePlayUpdateEntityPositionRotation(pck.read<OMProtocolUpdateEntityPositionRotation>());
+            return;
+        }
+            // Update Entity Rotation
+        case 0x39: {
+            handler.handlePlayUpdateEntityRotation(pck.read<OMProtocolUpdateEntityRotation>());
             return;
         }
             // Player Abilities
@@ -464,6 +485,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             auto entityId = pck.read<OMVarInt>();
             auto v = pck.read<OMLpVec3>();
             handler.handlePlaySetEntityVelocity(entityId, v.x, v.y, v.z);
+            return;
+        }
+            // Set Equipment
+        case 0x68: {
+            handler.handlePlaySetEquipment(pck.read<OMProtocolSetEquipment>());
             return;
         }
             // Set Experience

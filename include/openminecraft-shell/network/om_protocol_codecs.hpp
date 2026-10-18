@@ -642,7 +642,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
     static constexpr bool supported = true;
 
     using Component = openminecraft::shell::network::OMProtocolDataComponent;
-    using Type = openminecraft::shell::network::OMDataComponentType;
+    using Type = openminecraft::shell::network::OMDataComponentHandler;
 
     // network NBT text component: tag(08) + VarInt name length + VarInt value length + JSON
     static auto readTextComponent(openminecraft::network::OMNetworkPacket &pck, std::string &out) -> bool
@@ -937,6 +937,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         case Type::DamageType:
         case Type::Instrument:
         case Type::BlockTransformer:
+        case Type::VillagerFood: // minecraft:villager_food: VarInt nutrition
             result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
             break;
 
@@ -999,6 +1000,232 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
             }
 
             result.secondBool = pck.read<bool>();                                        // tracked
+            break;
+        }
+
+        // compostable: resolvable int layers
+        case Type::Compostable:
+            result.compostLayers = pck.read<openminecraft::network::OMResolvableInt>();
+            break;
+
+        // brewing_fuel: resolvable int uses | resolvable float speed multiplier
+        case Type::BrewingFuel:
+            result.brewingUses = pck.read<openminecraft::network::OMResolvableInt>();
+            result.brewingSpeedMultiplier = pck.read<openminecraft::network::OMResolvableFloat>();
+            break;
+
+        // cooking_fuel: resolvable int burn time | resolvable float speed multiplier
+        case Type::CookingFuel:
+            result.cookingBurnTime = pck.read<openminecraft::network::OMResolvableInt>();
+            result.cookingSpeedMultiplier = pck.read<openminecraft::network::OMResolvableFloat>();
+            break;
+
+        // mob_visibility: entity type holder set | visibility float
+        case Type::MobVisibility:
+            result.idSet = pck.read<openminecraft::network::OMIdSet>();
+            result.floatValue = pck.read<float>();
+            break;
+
+        // sign_text_front / sign_text_back: 4 messages | optional 4 filtered | Dye Color | glowing
+        case Type::SignTextFront:
+        case Type::SignTextBack:
+        {
+            for (int32_t i = 0; i < 4; ++i)
+            {
+                result.signMessages.push_back(pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>());
+            }
+
+            if (pck.read<bool>())
+            {
+                for (int32_t i = 0; i < 4; ++i)
+                {
+                    result.signFiltered.push_back(pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>());
+                }
+            }
+
+            result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()); // Dye Color
+            result.boolValue = pck.read<bool>();                                                  // glowing text
+            break;
+        }
+
+        // blocks_attacks: 2 Floats | reduction array | 3 Floats | optional id set | 2 optional sounds
+        case Type::BlocksAttacks:
+        {
+            result.floatList.push_back(pck.read<float>()); // block delay seconds
+            result.floatList.push_back(pck.read<float>()); // disable cooldown scale
+
+            auto reductionCount = pck.read<openminecraft::network::OMVarInt>().value;
+
+            for (int32_t i = 0; i < reductionCount; ++i)
+            {
+                openminecraft::shell::network::OMProtocolBlockAttackReduction reduction;
+
+                reduction.horizontalBlockingAngle = pck.read<float>();
+
+                if (pck.read<bool>())
+                {
+                    reduction.type = pck.read<openminecraft::network::OMIdSet>();
+                }
+
+                reduction.base = pck.read<float>();
+                reduction.factor = pck.read<float>();
+
+                result.blockAttackReductions.push_back(reduction);
+            }
+
+            result.floatList.push_back(pck.read<float>()); // item damage threshold
+            result.floatList.push_back(pck.read<float>()); // item damage base
+            result.floatList.push_back(pck.read<float>()); // item damage factor
+
+            if (pck.read<bool>())
+            {
+                result.idSet = pck.read<openminecraft::network::OMIdSet>(); // bypassed by
+            }
+
+            if (pck.read<bool>())
+            {
+                result.soundEvent =
+                    pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolSoundEvent>>();
+            }
+
+            if (pck.read<bool>())
+            {
+                result.soundEvent2 =
+                    pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolSoundEvent>>();
+            }
+
+            break;
+        }
+
+        // profile: kind | (partial: optional username/uuid/properties | complete: game profile) |
+        //          optional body/cape/elytra | optional model
+        case Type::Profile:
+        {
+            result.profile.kind = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+            if (result.profile.kind == 0)
+            {
+                if (pck.read<bool>())
+                {
+                    result.profile.username = pck.read<std::string>();
+                }
+
+                if (pck.read<bool>())
+                {
+                    result.profile.uuid = pck.read<openminecraft::util::OMUuid>();
+                }
+
+                auto propertyCount = pck.read<openminecraft::network::OMVarInt>().value;
+
+                for (int32_t i = 0; i < propertyCount; ++i)
+                {
+                    openminecraft::shell::network::OMProtocolGameProfileProperty property;
+                    property.name = pck.read<std::string>();
+                    property.value = pck.read<std::string>();
+
+                    if (pck.read<bool>())
+                    {
+                        property.signature = pck.read<std::string>();
+                    }
+
+                    result.profile.properties.push_back(std::move(property));
+                }
+            }
+            else
+            {
+                auto profile = pck.read<openminecraft::shell::network::OMProtocolGameProfile>();
+                result.profile.username = profile.name;
+                result.profile.uuid = profile.uuid;
+                result.profile.properties = std::move(profile.properties);
+            }
+
+            for (std::optional<std::string> *target :
+                 {&result.profile.body, &result.profile.cape, &result.profile.elytra})
+            {
+                if (pck.read<bool>())
+                {
+                    *target = pck.read<std::string>();
+                }
+            }
+
+            if (pck.read<bool>())
+            {
+                result.profile.model = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+            }
+
+            break;
+        }
+
+        // kinetic_weapon: 2 VarInts | 3 optional conditions | 2 Floats | 2 optional sounds
+        case Type::KineticWeapon:
+        {
+            result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()); // contact cooldown
+            result.intList.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>())); // delay
+
+            for (int32_t i = 0; i < 3; ++i)
+            {
+                bool present = pck.read<bool>();
+                result.intListB.push_back(present ? 1 : 0);
+
+                if (present)
+                {
+                    openminecraft::shell::network::OMProtocolKineticWeaponConditions conditions;
+
+                    conditions.maxDurationTicks =
+                        static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+                    conditions.minSpeed = pck.read<float>();
+                    conditions.minRelativeSpeed = pck.read<float>();
+
+                    result.kineticConditions.push_back(conditions);
+                }
+            }
+
+            result.floatList.push_back(pck.read<float>()); // forward movement
+            result.floatList.push_back(pck.read<float>()); // damage multiplier
+
+            for (int32_t i = 0; i < 2; ++i)
+            {
+                if (pck.read<bool>())
+                {
+                    result.intListC.push_back(
+                        static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>())); // sound id
+                }
+            }
+
+            break;
+        }
+
+        // equippable: slot | equip sound | optional model | optional camera overlay |
+        //             optional allowed entities | 4 booleans | shearing sound
+        case Type::Equippable:
+        {
+            result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()); // slot enum
+            result.soundEvent =
+                pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolSoundEvent>>();
+
+            if (pck.read<bool>())                                          // optional model
+            {
+                result.optionalString = pck.read<std::string>();
+            }
+
+            if (pck.read<bool>())                                          // optional camera overlay
+            {
+                result.stringValue = pck.read<std::string>();
+            }
+
+            if (pck.read<bool>())                                          // optional allowed entities
+            {
+                result.idSet = pck.read<openminecraft::network::OMIdSet>();
+            }
+
+            result.boolValue = pck.read<bool>();                           // dispensable
+            result.secondBool = pck.read<bool>();                          // swappable
+            result.intList.push_back(pck.read<bool>() ? 1 : 0);            // damage on hurt
+            result.intListB.push_back(pck.read<bool>() ? 1 : 0);           // can be sheared
+
+            result.soundEvent2 =
+                pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolSoundEvent>>();
+
             break;
         }
 
@@ -1652,6 +1879,145 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
         for (int32_t i = 0; i < removedCount; ++i)
         {
             result.removed.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+        }
+
+        return result;
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolBlockUpdate>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolBlockUpdate
+    {
+        openminecraft::shell::network::OMProtocolBlockUpdate result;
+
+        result.location = pck.read<openminecraft::network::OMPackedPos>();
+        result.blockStateId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+        return result;
+    }
+
+    static auto write(openminecraft::network::OMNetworkPacket &pck,
+                      const openminecraft::shell::network::OMProtocolBlockUpdate &value) -> void
+    {
+        pck.write(value.location);
+        pck.write(openminecraft::network::OMVarInt(value.blockStateId));
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolWorldEvent>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolWorldEvent
+    {
+        openminecraft::shell::network::OMProtocolWorldEvent result;
+
+        result.event = pck.read<int32_t>();
+        result.location = pck.read<openminecraft::network::OMPackedPos>();
+        result.data = pck.read<int32_t>();
+        result.disableRelativeVolume = pck.read<bool>();
+
+        return result;
+    }
+
+    static auto write(openminecraft::network::OMNetworkPacket &pck,
+                      const openminecraft::shell::network::OMProtocolWorldEvent &value) -> void
+    {
+        pck.write<int32_t>(value.event);
+        pck.write(value.location);
+        pck.write<int32_t>(value.data);
+        pck.write<bool>(value.disableRelativeVolume);
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolUpdateEntityRotation>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolUpdateEntityRotation
+    {
+        openminecraft::shell::network::OMProtocolUpdateEntityRotation result;
+
+        result.entityId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.onGround = pck.read<bool>();
+        result.yaw = pck.read<openminecraft::network::OMAngle>();
+        result.pitch = pck.read<openminecraft::network::OMAngle>();
+
+        return result;
+    }
+
+    static auto write(openminecraft::network::OMNetworkPacket &pck,
+                      const openminecraft::shell::network::OMProtocolUpdateEntityRotation &value) -> void
+    {
+        pck.write(openminecraft::network::OMVarInt(value.entityId));
+        pck.write<bool>(value.onGround);
+        pck.write(value.yaw);
+        pck.write(value.pitch);
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolSetEquipment>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolSetEquipment
+    {
+        openminecraft::shell::network::OMProtocolSetEquipment result;
+
+        result.entityId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+        while (true)
+        {
+            auto rawSlot = pck.read<uint8_t>();
+
+            openminecraft::shell::network::OMProtocolEquipmentEntry entry;
+            entry.slot = rawSlot & 0x7F;                                  // low 7 bits are the slot enum
+            entry.item = pck.read<openminecraft::shell::network::OMProtocolItemStack>();
+
+            bool last = (rawSlot & 0x80) != 0;                            // MSB marks the last entry
+            result.equipment.push_back(std::move(entry));
+
+            if (last || pck.restDatalen() == 0)
+            {
+                break;
+            }
+        }
+
+        return result;
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolDamageEvent>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolDamageEvent
+    {
+        openminecraft::shell::network::OMProtocolDamageEvent result;
+
+        result.entityId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.sourceTypeId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.sourceCauseId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.sourceDirectId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+        if (pck.read<bool>())
+        {
+            result.sourceX = pck.read<double>();
+            result.sourceY = pck.read<double>();
+            result.sourceZ = pck.read<double>();
         }
 
         return result;

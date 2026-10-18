@@ -1021,6 +1021,551 @@ static auto testSlotDisplay() -> void
     CHECK(stack.kind == OMSlotDisplayKind::ItemStack && stack.stack.count == 0 && !stack.truncated);
 }
 
+// helper: build a mapping holding only the components used by a test (ids are explicit)
+static auto makeMapping(std::initializer_list<std::pair<int32_t, const char *>> entries)
+    -> openminecraft::shell::network::OMDataComponentMapping
+{
+    std::vector<std::string> names;
+
+    for (const auto &[id, name] : entries)
+    {
+        if (static_cast<int32_t>(names.size()) <= id)
+        {
+            names.resize(static_cast<std::size_t>(id) + 1);
+        }
+
+        names[static_cast<std::size_t>(id)] = name;
+    }
+
+    openminecraft::shell::network::OMDataComponentMapping mapping;
+    mapping.setNames(std::move(names));
+    return mapping;
+}
+
+static auto testDataComponents() -> void
+{
+    using openminecraft::shell::network::OMDataComponentMapping;
+    using openminecraft::shell::network::OMDataComponentHandler;
+    using openminecraft::shell::network::OMProtocolDataComponent;
+
+    // damage (id 3): VarInt payload
+    {
+        auto mapping = makeMapping({{3, "minecraft:damage"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(3)).write(OMVarInt(100));
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::Damage && component.intValue == 100);
+    }
+
+    // custom_name (id 6): network NBT string without root name
+    {
+        auto mapping = makeMapping({{6, "minecraft:custom_name"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(6));
+        p.write<uint8_t>(0x08).write(OMVarInt(0)).write(OMVarInt(15)); // tag, name len, value len
+        for (char c : std::string("{\"text\":\"test\"}"))
+        {
+            p.write<uint8_t>(static_cast<uint8_t>(c));
+        }
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::CustomName);
+        CHECK(component.stringValue == "{\"text\":\"test\"}");
+    }
+
+    // lore (id 11): count + text components
+    {
+        auto mapping = makeMapping({{11, "minecraft:lore"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(11)).write(OMVarInt(2));
+        for (const char *line : {"line1", "line2"})
+        {
+            auto text = std::string(line);
+            p.write<uint8_t>(0x08).write(OMVarInt(0)).write(OMVarInt(static_cast<int32_t>(text.size())));
+            for (char c : text)
+            {
+                p.write<uint8_t>(static_cast<uint8_t>(c));
+            }
+        }
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::Lore && component.stringList.size() == 2);
+        CHECK(component.stringList[0] == "line1" && component.stringList[1] == "line2");
+    }
+
+    // enchantments (id 13): count + (id, level) pairs
+    {
+        auto mapping = makeMapping({{13, "minecraft:enchantments"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(13)).write(OMVarInt(2));
+        p.write(OMVarInt(5)).write(OMVarInt(3));  // sharpness 3
+        p.write(OMVarInt(7)).write(OMVarInt(2));  // unbreaking 2
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::Enchantments);
+        CHECK(component.intList.size() == 2 && component.intList[0] == 5 && component.intList[1] == 7);
+        CHECK(component.intListB.size() == 2 && component.intListB[0] == 3 && component.intListB[1] == 2);
+    }
+
+    // attribute_modifiers (id 16)
+    {
+        auto mapping = makeMapping({{16, "minecraft:attribute_modifiers"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(16)).write(OMVarInt(1));
+        p.write(OMVarInt(2));                                      // attribute id
+        p.write<std::string>("minecraft:base_attack_damage");      // modifier id
+        p.write<double>(7.5);                                      // value
+        p.write(OMVarInt(0)).write(OMVarInt(1));                   // operation, slot
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::AttributeModifiers);
+        CHECK(component.attributeModifiers.size() == 1);
+        CHECK(component.attributeModifiers[0].attributeId == 2);
+        CHECK(component.attributeModifiers[0].id == "minecraft:base_attack_damage");
+        CHECK(component.attributeModifiers[0].value == 7.5);
+        CHECK(component.attributeModifiers[0].operation == 0 && component.attributeModifiers[0].slot == 1);
+    }
+
+    // use_cooldown (id 26): Float + optional Identifier
+    {
+        auto mapping = makeMapping({{26, "minecraft:use_cooldown"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(26)).write<float>(0.5f).write<bool>(true).write<std::string>("minecraft:test");
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::UseCooldown);
+        CHECK(component.floatValue == 0.5f && component.optionalString == "minecraft:test");
+    }
+
+    // tool (id 28): one rule + default speed + damage per block + creative flag
+    {
+        auto mapping = makeMapping({{28, "minecraft:tool"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(28)).write(OMVarInt(1));   // one rule
+        p.write(OMVarInt(3)).write(OMVarInt(1)).write(OMVarInt(9)); // id set: 1 inline id (9)
+        p.write<bool>(true).write<float>(8.0f);      // optional speed
+        p.write<bool>(false);                        // no correct-drop override
+        p.write<float>(2.0f);                        // default mining speed
+        p.write(OMVarInt(1));                        // damage per block
+        p.write<bool>(true);                         // can destroy in creative
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::Tool);
+        CHECK(component.toolRules.size() == 1 && component.floatValue == 2.0f);
+        CHECK(component.intValue == 1 && component.boolValue);
+    }
+
+    // unknown name -> truncated, no overrun
+    {
+        auto mapping = makeMapping({{99, "minecraft:unknown"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(99)).write<uint8_t>(0xAA).write<uint8_t>(0xBB);
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.truncated);
+        CHECK(!component.head.empty());   // raw head captured for later analysis
+    }
+}
+
+static auto testMoreDataComponents() -> void
+{
+    using openminecraft::shell::network::OMDataComponentHandler;
+    using openminecraft::shell::network::OMProtocolDataComponent;
+
+    // potion_contents (53): optional id | optional color | effects | optional name
+    {
+        auto mapping = makeMapping({{53, "minecraft:potion_contents"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(53));
+        p.write<bool>(true).write(OMVarInt(3));          // potion id
+        p.write<bool>(true).write<int32_t>(0xFF0000);    // custom color
+        p.write(OMVarInt(1));                            // one effect
+        p.write(OMVarInt(7));                            // type id
+        p.write(OMVarInt(1)).write(OMVarInt(200));       // amplifier, duration
+        p.write<bool>(true).write<bool>(true).write<bool>(false); // ambient, particles, icon
+        p.write<bool>(false);                            // no hidden effect
+        p.write<bool>(false);                            // no custom name
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::PotionContents);
+        CHECK(component.potionId == 3 && component.potionColor == 0xFF0000);
+        CHECK(component.potionEffects.size() == 1 && component.potionEffects[0].typeId == 7);
+    }
+
+    // firework_explosion (70): shape | colors | fade | trail | twinkle
+    {
+        auto mapping = makeMapping({{70, "minecraft:firework_explosion"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(70));
+        p.write(OMVarInt(2));                            // shape = star
+        p.write(OMVarInt(1)).write<int32_t>(0x112233);   // colors
+        p.write(OMVarInt(1)).write<int32_t>(0x445566);   // fade colors
+        p.write<bool>(true).write<bool>(false);          // trail, twinkle
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::FireworkExplosion);
+        CHECK(component.fireworkExplosion.shape == 2);
+        CHECK(component.fireworkExplosion.colors.size() == 1 && component.fireworkExplosion.colors[0] == 0x112233);
+        CHECK(component.fireworkExplosion.hasTrail && !component.fireworkExplosion.hasTwinkle);
+    }
+
+    // fireworks (71): flight duration + explosion array
+    {
+        auto mapping = makeMapping({{71, "minecraft:fireworks"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(71)).write(OMVarInt(2));        // flight
+        p.write(OMVarInt(1));                            // one explosion
+        p.write(OMVarInt(0));                            // shape
+        p.write(OMVarInt(0)).write(OMVarInt(0));         // no colors
+        p.write<bool>(false).write<bool>(false);
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::Fireworks);
+        CHECK(component.intValue == 2 && component.fireworkExplosions.size() == 1);
+    }
+
+    // trim (58): ID or Trim Material + ID or Trim Pattern (registry references)
+    {
+        auto mapping = makeMapping({{58, "minecraft:trim"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(58));
+        p.write(OMVarInt(2));                            // material: registry id 1
+        p.write(OMVarInt(3));                            // pattern: registry id 2
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::Trim);
+        CHECK(!component.trimMaterial.isInline() && component.trimMaterial.registryId() == 1);
+        CHECK(!component.trimPattern.isInline() && component.trimPattern.registryId() == 2);
+    }
+
+    // consumable (24): seconds | animation | sound | particles | effects
+    {
+        auto mapping = makeMapping({{24, "minecraft:consumable"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(24));
+        p.write<float>(1.6f);                            // consume seconds
+        p.write(OMVarInt(1));                            // animation = eat
+        p.write(OMVarInt(1));                            // sound: registry id 0
+        p.write<bool>(true);                             // has particles
+        p.write(OMVarInt(1));                            // one effect
+        p.write(OMVarInt(2));                            // clear_all_effects
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::Consumable);
+        CHECK(component.floatValue == 1.6f && component.intValue == 1 && component.boolValue);
+        CHECK(component.intList.size() == 1 && component.intList[0] == 2);
+    }
+
+    // can_place_on (14): one predicate with a blocks id set only
+    {
+        auto mapping = makeMapping({{14, "minecraft:can_place_on"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(14));
+        p.write(OMVarInt(1));                            // one predicate
+        p.write<bool>(true);                             // blocks present
+        p.write(OMVarInt(2)).write(OMVarInt(5));         // id set: one inline id (5)
+        p.write<bool>(false);                            // no properties
+        p.write<bool>(false);                            // no nbt
+        p.write(OMVarInt(0));                            // no exact matchers
+        p.write(OMVarInt(0));                            // no partial predicates
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::CanPlaceOn);
+        CHECK(component.idSet.ids.size() == 1 && component.idSet.ids[0] == 5);
+    }
+}
+
+static auto testNewComponents() -> void
+{
+    using openminecraft::shell::network::OMDataComponentHandler;
+    using openminecraft::shell::network::OMProtocolDataComponent;
+
+    // villager_food (44): VarInt
+    {
+        auto mapping = makeMapping({{44, "minecraft:villager_food"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(44)).write(OMVarInt(6));
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::VillagerFood && component.intValue == 6);
+    }
+
+    // mob_visibility (87): ID Set + Float
+    {
+        auto mapping = makeMapping({{87, "minecraft:mob_visibility"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(87));
+        p.write(OMVarInt(2)).write(OMVarInt(4));   // one inline entity id
+        p.write<float>(2.5f);
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::MobVisibility);
+        CHECK(component.idSet.ids.size() == 1 && component.idSet.ids[0] == 4);
+        CHECK(component.floatValue == 2.5f);
+    }
+
+    // piercing_weapon (38): two booleans + two optional sounds (absent)
+    {
+        auto mapping = makeMapping({{38, "minecraft:piercing_weapon"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(38)).write<bool>(true).write<bool>(false).write<bool>(false).write<bool>(false);
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::PiercingWeapon);
+        CHECK(component.boolValue && !component.secondBool);
+        CHECK(component.intList.empty() && component.intListB.empty());
+    }
+
+    // lodestone_tracker (69): no position + tracked
+    {
+        auto mapping = makeMapping({{69, "minecraft:lodestone_tracker"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(69)).write<bool>(false).write<bool>(true);
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::LodestoneTracker);
+        CHECK(!component.boolValue && component.secondBool);
+    }
+
+    // banner_patterns (74): one layer (pattern id + dye color)
+    {
+        auto mapping = makeMapping({{74, "minecraft:banner_patterns"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(74)).write(OMVarInt(1)).write(OMVarInt(3)).write(OMVarInt(14));
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::BannerPatterns);
+        CHECK(component.intList.size() == 1 && component.intList[0] == 3);
+        CHECK(component.intListB.size() == 1 && component.intListB[0] == 14);
+    }
+
+    // bees (79): one bee (entity type + NBT + ticks + min ticks)
+    {
+        auto mapping = makeMapping({{79, "minecraft:bees"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(79)).write(OMVarInt(1));
+        p.write(OMVarInt(5));                                // entity type
+        p.write<uint8_t>(0x08).write(OMVarInt(0)).write(OMVarInt(1)).write<uint8_t>('b'); // tiny NBT string
+        p.write(OMVarInt(20)).write(OMVarInt(10));           // ticks, min ticks
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::Bees);
+        CHECK(component.intList.size() == 1 && component.intList[0] == 5);
+        CHECK(component.intListB[0] == 20 && component.intListC[0] == 10);
+    }
+
+    // sign_text_front (118): 4 lines, no filtered lines, color + glowing
+    {
+        auto mapping = makeMapping({{118, "minecraft:sign_text_front"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(118));
+
+        for (int i = 0; i < 4; ++i)
+        {
+            p.write<uint8_t>(0x08).write(OMVarInt(0)).write(OMVarInt(1)).write<uint8_t>('x'); // one-char line
+        }
+
+        p.write<bool>(false);      // no filtered lines
+        p.write(OMVarInt(3));      // dye color
+        p.write<bool>(true);       // glowing
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::SignTextFront);
+        CHECK(component.signMessages.size() == 4 && component.signFiltered.empty());
+        CHECK(component.intValue == 3 && component.boolValue);
+    }
+
+    // equippable (32): slot + sound + 3 absent optionals + 4 booleans + shearing sound
+    {
+        auto mapping = makeMapping({{32, "minecraft:equippable"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(32));
+        p.write(OMVarInt(4));            // slot = head
+        p.write(OMVarInt(1));            // equip sound: registry id 0
+        p.write<bool>(false);            // no model
+        p.write<bool>(false);            // no camera overlay
+        p.write<bool>(false);            // no allowed entities
+        p.write<bool>(true);             // dispensable
+        p.write<bool>(false);            // swappable
+        p.write<bool>(true);             // damage on hurt
+        p.write<bool>(false);            // can be sheared
+        p.write(OMVarInt(2));            // shearing sound: registry id 1
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::Equippable);
+        CHECK(component.intValue == 4 && component.boolValue && !component.secondBool);
+        CHECK(component.intList[0] == 1 && component.intListB[0] == 0);
+    }
+}
+
+static auto testResolvableNumbers() -> void
+{
+    // constant float: 0x00 + Float
+    OMResolvableFloat constant;
+    constant.isReference = false;
+    constant.value = 2.5f;
+
+    OMNetworkPacket p;
+    p.write(constant);
+    p.reset();
+
+    auto a = p.read<OMResolvableFloat>();
+    CHECK(!a.isReference && a.value == 2.5f && a.key.empty());
+
+    // reference float: 0x01 + Identifier
+    OMResolvableFloat reference;
+    reference.isReference = true;
+    reference.key = "minecraft:test";
+
+    OMNetworkPacket q;
+    q.write(reference);
+    q.reset();
+
+    auto b = q.read<OMResolvableFloat>();
+    CHECK(b.isReference && b.key == "minecraft:test");
+
+    // constant / reference int
+    OMResolvableInt intConstant;
+    intConstant.value = 42;
+
+    OMResolvableInt intReference;
+    intReference.isReference = true;
+    intReference.key = "minecraft:other";
+
+    OMNetworkPacket r;
+    r.write(intConstant);
+    r.write(intReference);
+    r.reset();
+
+    auto c = r.read<OMResolvableInt>();
+    CHECK(!c.isReference && c.value == 42);
+
+    auto d = r.read<OMResolvableInt>();
+    CHECK(d.isReference && d.key == "minecraft:other");
+}
+
+static auto testResolvableComponents() -> void
+{
+    using openminecraft::shell::network::OMDataComponentHandler;
+    using openminecraft::shell::network::OMProtocolDataComponent;
+
+    // cooking_fuel (85): resolvable int burn time + resolvable float speed
+    {
+        auto mapping = makeMapping({{85, "minecraft:cooking_fuel"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(85));
+        p.write<bool>(false).write(OMVarInt(200));                 // burn time constant
+        p.write<bool>(true).write<std::string>("minecraft:fuel");  // speed multiplier reference
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::CookingFuel);
+        CHECK(!component.cookingBurnTime.isReference && component.cookingBurnTime.value == 200);
+        CHECK(component.cookingSpeedMultiplier.isReference &&
+              component.cookingSpeedMultiplier.key == "minecraft:fuel");
+    }
+
+    // brewing_fuel (86): resolvable int uses + resolvable float speed
+    {
+        auto mapping = makeMapping({{86, "minecraft:brewing_fuel"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(86));
+        p.write<bool>(true).write<std::string>("minecraft:uses");  // uses reference
+        p.write<bool>(false).write<float>(1.5f);                   // speed constant
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::BrewingFuel);
+        CHECK(component.brewingUses.isReference && component.brewingUses.key == "minecraft:uses");
+        CHECK(!component.brewingSpeedMultiplier.isReference && component.brewingSpeedMultiplier.value == 1.5f);
+    }
+
+    // compostable (84): resolvable int layers
+    {
+        auto mapping = makeMapping({{84, "minecraft:compostable"}});
+
+        OMNetworkPacket p;
+        p.write(OMVarInt(84)).write<bool>(false).write(OMVarInt(7));
+        p.setUserContext(&mapping);
+        p.reset();
+
+        auto component = p.read<OMProtocolDataComponent>();
+        CHECK(component.type == OMDataComponentHandler::Compostable);
+        CHECK(!component.compostLayers.isReference && component.compostLayers.value == 7);
+    }
+}
+
 static auto testOptionalCodec() -> void
 {
     OMNetworkPacket p;
@@ -1080,6 +1625,11 @@ auto main() -> int
     testIDOr();
     testIdSet();
     testSlotDisplay();
+    testDataComponents();
+    testMoreDataComponents();
+    testNewComponents();
+    testResolvableNumbers();
+    testResolvableComponents();
     testLpVec3();
     testAngle();
     testTeleportEntityCodec();

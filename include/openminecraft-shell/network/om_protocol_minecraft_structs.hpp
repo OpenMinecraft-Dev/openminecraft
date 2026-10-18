@@ -78,7 +78,7 @@ struct OMProtocolPlayerInfoUpdate
 // Wire order: count (VarInt) | [itemId (VarInt) | added components (Array) | removed components (Array of VarInt)]
 // INFO: component *kinds* in the order of net.minecraft.core.component.DataComponents; the wire ids are
 // resolved through OMDataComponentMapping (installed by the transformer per protocol version).
-enum class OMDataComponentType : int32_t
+enum class OMDataComponentHandler : int32_t
 {
     CustomData = 0,   // minecraft:custom_data
     MaxStackSize = 1,   // minecraft:max_stack_size
@@ -297,6 +297,37 @@ struct OMProtocolFireworkExplosion
     bool hasTwinkle = false;
 };
 
+// One damage reduction entry of minecraft:blocks_attacks.
+struct OMProtocolBlockAttackReduction
+{
+    float horizontalBlockingAngle = 0.0f;
+    std::optional<openminecraft::network::OMIdSet> type; // optional damage type id set
+    float base = 0.0f;
+    float factor = 0.0f;
+};
+
+// Resolvable profile: either a partial (username/uuid/properties) or a complete game profile,
+// followed by optional skin overrides and the arm model.
+struct OMProtocolResolvableProfile
+{
+    int32_t kind = 0; // 0 = partial, 1 = complete
+    std::optional<std::string> username;
+    std::optional<openminecraft::util::OMUuid> uuid;
+    std::vector<OMProtocolGameProfileProperty> properties;
+    std::optional<std::string> body;
+    std::optional<std::string> cape;
+    std::optional<std::string> elytra;
+    std::optional<int32_t> model; // WIDE = 0, SLIM = 1
+};
+
+// Kinetic weapon conditions: max duration ticks | min speed | min relative speed.
+struct OMProtocolKineticWeaponConditions
+{
+    int32_t maxDurationTicks = 0;
+    float minSpeed = 0.0f;
+    float minRelativeSpeed = 0.0f;
+};
+
 // One rule of minecraft:tool.
 struct OMProtocolToolRule
 {
@@ -312,7 +343,7 @@ struct OMProtocolItemStack; // forward declaration: Slot payloads use shared_ptr
 // unknown ones keep their raw head bytes and set truncated.
 struct OMProtocolDataComponent
 {
-    OMDataComponentType type = OMDataComponentType::CustomData;
+    OMDataComponentHandler type = OMDataComponentHandler::CustomData;
     int32_t intValue = 0;               // VarInt / VarInt enum payload
     float floatValue = 0.0f;            // Float payload
     bool boolValue = false;             // Boolean payload
@@ -337,6 +368,7 @@ struct OMProtocolDataComponent
     std::vector<OMProtocolBookPage> bookPages;              // writable_book_content
     std::vector<OMProtocolWrittenBookPage> writtenBookPages; // written_book_content
     openminecraft::network::OMIDOr<OMProtocolSoundEvent> soundEvent; // consumable sound
+    openminecraft::network::OMIDOr<OMProtocolSoundEvent> soundEvent2; // second sound (equippable shearing)
     std::vector<OMProtocolPotionEffect> potionEffects; // potion_contents / apply_effects
     std::optional<int32_t> potionId;                   // potion_contents potion id
     std::optional<int32_t> potionColor;                // potion_contents custom color
@@ -344,6 +376,16 @@ struct OMProtocolDataComponent
     std::vector<OMProtocolFireworkExplosion> fireworkExplosions; // fireworks
     std::vector<int32_t> componentTypes; // exact component matcher types of a block predicate
     std::vector<OMProtocolToolRule> toolRules; // rule list of minecraft:tool
+    std::vector<OMProtocolKineticWeaponConditions> kineticConditions; // minecraft:kinetic_weapon
+    OMProtocolResolvableProfile profile; // minecraft:profile
+    openminecraft::network::OMResolvableInt cookingBurnTime;         // minecraft:cooking_fuel
+    openminecraft::network::OMResolvableFloat cookingSpeedMultiplier; // minecraft:cooking_fuel
+    openminecraft::network::OMResolvableInt brewingUses;             // minecraft:brewing_fuel
+    openminecraft::network::OMResolvableFloat brewingSpeedMultiplier; // minecraft:brewing_fuel
+    openminecraft::network::OMResolvableInt compostLayers;            // minecraft:compostable
+    std::vector<OMProtocolBlockAttackReduction> blockAttackReductions; // minecraft:blocks_attacks
+    std::vector<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>> signMessages; // 4 raw text components
+    std::vector<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>> signFiltered; // 0 or 4 filtered components
     std::shared_ptr<OMProtocolItemStack> stack;               // Slot payload (use_remainder / sulfur_cube_content)
     std::vector<std::shared_ptr<OMProtocolItemStack>> stacks; // Slot array (charged_projectiles / bundle_contents / container)
     bool truncated = false;             // payload not decodable yet
@@ -672,6 +714,64 @@ struct OMProtocolUpdateLight
 struct OMProtocolDisconnect
 {
     std::shared_ptr<openminecraft::specs::nbt::OMNbtTag> reason;
+};
+
+// Damage Event (0x19): an entity took damage.
+// Wire order: entityId (VarInt) | sourceTypeId (VarInt) | sourceCauseId (VarInt, id + 1) |
+//             sourceDirectId (VarInt, id + 1) | sourcePosition (Optional: X/Y/Z Double)
+struct OMProtocolDamageEvent
+{
+    int32_t entityId = 0;
+    int32_t sourceTypeId = 0;
+    int32_t sourceCauseId = 0;
+    int32_t sourceDirectId = 0;
+    std::optional<double> sourceX;
+    std::optional<double> sourceY;
+    std::optional<double> sourceZ;
+};
+
+// Block Update (0x08): a single block changed inside the render distance.
+// Wire order: location (Position) | blockStateId (VarInt, global block state palette)
+struct OMProtocolBlockUpdate
+{
+    openminecraft::network::OMPackedPos location;
+    int32_t blockStateId = 0;
+};
+
+// World Event (0x2F): play a sound or particle effect at a position.
+// Wire order: event (Int) | location (Position) | data (Int) | disableRelativeVolume (Bool)
+struct OMProtocolWorldEvent
+{
+    int32_t event = 0;
+    openminecraft::network::OMPackedPos location;
+    int32_t data = 0;
+    bool disableRelativeVolume = false;
+};
+
+// Update Entity Rotation (0x39): absolute body rotation of an entity.
+// Wire order: entityId (VarInt) | onGround (Bool) | yaw (Angle) | pitch (Angle)
+struct OMProtocolUpdateEntityRotation
+{
+    int32_t entityId = 0;
+    bool onGround = false;
+    openminecraft::network::OMAngle yaw;
+    openminecraft::network::OMAngle pitch;
+};
+
+// One equipment entry: slot enum (low 7 bits) plus the item in that slot.
+struct OMProtocolEquipmentEntry
+{
+    int32_t slot = 0;
+    OMProtocolItemStack item;
+};
+
+// Set Equipment (0x68): the equipment of an entity.
+// Wire order: entityId (VarInt) | equipment entries; each entry is slot (Byte enum) + item (Slot),
+// and the most significant bit of the slot byte marks the last entry.
+struct OMProtocolSetEquipment
+{
+    int32_t entityId = 0;
+    std::vector<OMProtocolEquipmentEntry> equipment;
 };
 
 // Post Effects (0x53): the post-processing effects the client should apply.

@@ -241,6 +241,22 @@ struct OMAngle
     }
 };
 
+// INFO: ResolvableFloat / ResolvableInt: a constant or a registry key reference.
+// Wire format: boolean (false = constant, true = reference) then Float / VarInt or an Identifier.
+struct OMResolvableFloat
+{
+    bool isReference = false;
+    float value = 0.0f;
+    std::string key;
+};
+
+struct OMResolvableInt
+{
+    bool isReference = false;
+    int32_t value = 0;
+    std::string key;
+};
+
 struct OMUtf8String
 {
     std::string value;
@@ -419,6 +435,38 @@ class OMNetworkPacket
         {
             return OMPackedPos(read<int64_t>());
         }
+        else if constexpr (std::is_same_v<T, OMResolvableFloat>)
+        {
+            OMResolvableFloat result;
+            result.isReference = read<bool>();
+
+            if (result.isReference)
+            {
+                result.key = read<std::string>();
+            }
+            else
+            {
+                result.value = read<float>();
+            }
+
+            return result;
+        }
+        else if constexpr (std::is_same_v<T, OMResolvableInt>)
+        {
+            OMResolvableInt result;
+            result.isReference = read<bool>();
+
+            if (result.isReference)
+            {
+                result.key = read<std::string>();
+            }
+            else
+            {
+                result.value = static_cast<int32_t>(read<OMVarInt>());
+            }
+
+            return result;
+        }
         else if constexpr (std::is_same_v<T, OMAngle>)
         {
             return OMAngle::fromRaw(read<uint8_t>());
@@ -587,6 +635,32 @@ class OMNetworkPacket
         else if constexpr (std::is_same_v<T, OMPackedPos>)
         {
             write<int64_t>(t.value);
+        }
+        else if constexpr (std::is_same_v<T, OMResolvableFloat>)
+        {
+            write<bool>(t.isReference);
+
+            if (t.isReference)
+            {
+                write<std::string>(t.key);
+            }
+            else
+            {
+                write<float>(t.value);
+            }
+        }
+        else if constexpr (std::is_same_v<T, OMResolvableInt>)
+        {
+            write<bool>(t.isReference);
+
+            if (t.isReference)
+            {
+                write<std::string>(t.key);
+            }
+            else
+            {
+                write(OMVarInt(t.value));
+            }
         }
         else if constexpr (std::is_same_v<T, OMAngle>)
         {

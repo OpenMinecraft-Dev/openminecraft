@@ -160,6 +160,21 @@ class OMProtocolMinecraftHandler
     virtual void handlePlaySetEntityVelocity(uint32_t entityId, double vx, double vy, double vz)
     {
     }
+    virtual void handlePlayBlockUpdate(const OMProtocolBlockUpdate &update)
+    {
+    }
+    virtual void handlePlayWorldEvent(const OMProtocolWorldEvent &event)
+    {
+    }
+    virtual void handlePlayUpdateEntityRotation(const OMProtocolUpdateEntityRotation &rotation)
+    {
+    }
+    virtual void handlePlaySetEquipment(const OMProtocolSetEquipment &equipment)
+    {
+    }
+    virtual void handlePlayDamageEvent(const OMProtocolDamageEvent &event)
+    {
+    }
     virtual void handlePlayDisconnect(const OMProtocolDisconnect &disconnect)
     {
     }

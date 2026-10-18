@@ -312,6 +312,51 @@ void OMApplication::networkSetup(std::string host, std::string port)
             logger->debug("secure chat: {}", secureChat);
         }
 
+        void handlePlayBlockUpdate(const network::OMProtocolBlockUpdate &update) override
+        {
+            title("Block Update");
+            logger->debug("location: ({}, {}, {}) state: {}", update.location.x(), update.location.y(),
+                          update.location.z(), update.blockStateId);
+        }
+
+        void handlePlayWorldEvent(const network::OMProtocolWorldEvent &event) override
+        {
+            title("World Event");
+            logger->debug("event: {} data: {} relative volume disabled: {}", event.event, event.data,
+                          event.disableRelativeVolume);
+            logger->debug("location: ({}, {}, {})", event.location.x(), event.location.y(), event.location.z());
+        }
+
+        void handlePlayUpdateEntityRotation(const network::OMProtocolUpdateEntityRotation &rotation) override
+        {
+            title("Update Entity Rotation");
+            logger->debug("entity: {} on ground: {}", rotation.entityId, rotation.onGround);
+            logger->debug("yaw: {} pitch: {}", rotation.yaw.degrees, rotation.pitch.degrees);
+        }
+
+        void handlePlaySetEquipment(const network::OMProtocolSetEquipment &equipment) override
+        {
+            title("Set Equipment");
+            logger->debug("entity: {} entries: {}", equipment.entityId, equipment.equipment.size());
+
+            for (const auto &entry : equipment.equipment)
+            {
+                logger->debug("  slot {}: item {} x{}", entry.slot, entry.item.itemId, entry.item.count);
+            }
+        }
+
+        void handlePlayDamageEvent(const network::OMProtocolDamageEvent &event) override
+        {
+            title("Damage Event");
+            logger->debug("entity: {} type: {} cause: {} direct: {}", event.entityId, event.sourceTypeId,
+                          event.sourceCauseId, event.sourceDirectId);
+
+            if (event.sourceX)
+            {
+                logger->debug("source position: ({}, {}, {})", *event.sourceX, *event.sourceY, *event.sourceZ);
+            }
+        }
+
         void handlePlayDisconnect(const network::OMProtocolDisconnect &disconnect) override
         {
             title("Disconnect");
@@ -512,58 +557,113 @@ void OMApplication::networkSetup(std::string host, std::string port)
                 {
                     switch (component.type)
                     {
-                    case network::OMDataComponentType::Damage:
+                    case network::OMDataComponentHandler::Damage:
                         logger->debug("  slot {}: damage {}", i, component.intValue);
                         break;
-                    case network::OMDataComponentType::CustomName:
-                    case network::OMDataComponentType::ItemName:
+                    case network::OMDataComponentHandler::CustomName:
+                    case network::OMDataComponentHandler::ItemName:
                         logger->debug("  slot {}: name {}", i, component.stringValue);
                         break;
-                    case network::OMDataComponentType::Rarity:
+                    case network::OMDataComponentHandler::Rarity:
                         logger->debug("  slot {}: rarity {}", i, component.intValue);
                         break;
-                    case network::OMDataComponentType::Tool:
+                    case network::OMDataComponentHandler::Compostable:
+                        logger->debug("  slot {}: compostable layers {}", i,
+                                      component.compostLayers.isReference
+                                          ? component.compostLayers.key
+                                          : std::to_string(component.compostLayers.value));
+                        break;
+                    case network::OMDataComponentHandler::BrewingFuel:
+                        logger->debug("  slot {}: brewing fuel uses {} speed {}", i,
+                                      component.brewingUses.isReference
+                                          ? component.brewingUses.key
+                                          : std::to_string(component.brewingUses.value),
+                                      component.brewingSpeedMultiplier.isReference
+                                          ? component.brewingSpeedMultiplier.key
+                                          : std::to_string(component.brewingSpeedMultiplier.value));
+                        break;
+                    case network::OMDataComponentHandler::CookingFuel:
+                        logger->debug("  slot {}: cooking fuel burn {} speed {}", i,
+                                      component.cookingBurnTime.isReference
+                                          ? component.cookingBurnTime.key
+                                          : std::to_string(component.cookingBurnTime.value),
+                                      component.cookingSpeedMultiplier.isReference
+                                          ? component.cookingSpeedMultiplier.key
+                                          : std::to_string(component.cookingSpeedMultiplier.value));
+                        break;
+                    case network::OMDataComponentHandler::MobVisibility:
+                        logger->debug("  slot {}: mob visibility {} entity types {}", i, component.floatValue,
+                                      component.idSet.ids.size());
+                        break;
+                    case network::OMDataComponentHandler::VillagerFood:
+                        logger->debug("  slot {}: villager food nutrition {}", i, component.intValue);
+                        break;
+                    case network::OMDataComponentHandler::SignTextFront:
+                    case network::OMDataComponentHandler::SignTextBack:
+                        logger->debug("  slot {}: sign text color {} glowing {} lines {}", i, component.intValue,
+                                      component.boolValue, component.signMessages.size());
+                        break;
+                    case network::OMDataComponentHandler::BlocksAttacks:
+                        logger->debug("  slot {}: blocks attacks delay {} reductions {}", i,
+                                      component.floatList.empty() ? 0.0f : component.floatList[0],
+                                      component.blockAttackReductions.size());
+                        break;
+                    case network::OMDataComponentHandler::Profile:
+                        logger->debug("  slot {}: profile kind {} name {} properties {}", i, component.profile.kind,
+                                      component.profile.username.value_or("<none>"), component.profile.properties.size());
+                        break;
+                    case network::OMDataComponentHandler::KineticWeapon:
+                        logger->debug("  slot {}: kinetic cooldown {} conditions {} forward {} damage {}", i,
+                                      component.intValue, component.kineticConditions.size(),
+                                      component.floatList.empty() ? 0.0f : component.floatList[0],
+                                      component.floatList.size() > 1 ? component.floatList[1] : 0.0f);
+                        break;
+                    case network::OMDataComponentHandler::Equippable:
+                        logger->debug("  slot {}: equippable slot {} dispensable {} swappable {}", i, component.intValue,
+                                      component.boolValue, component.secondBool);
+                        break;
+                    case network::OMDataComponentHandler::Tool:
                         logger->debug("  slot {}: tool rules {} default speed {} damage/block {} creative {} ", i,
                                       component.toolRules.size(), component.floatValue, component.intValue,
                                       component.boolValue);
                         break;
-                    case network::OMDataComponentType::FireworkExplosion:
+                    case network::OMDataComponentHandler::FireworkExplosion:
                         logger->debug("  slot {}: firework shape {} colors {} fade {}", i, component.fireworkExplosion.shape,
                                       component.fireworkExplosion.colors.size(),
                                       component.fireworkExplosion.fadeColors.size());
                         break;
-                    case network::OMDataComponentType::Fireworks:
+                    case network::OMDataComponentHandler::Fireworks:
                         logger->debug("  slot {}: fireworks flight {} explosions {}", i, component.intValue,
                                       component.fireworkExplosions.size());
                         break;
-                    case network::OMDataComponentType::PiercingWeapon:
+                    case network::OMDataComponentHandler::PiercingWeapon:
                         logger->debug("  slot {}: piercing knockback {} dismounts {} sounds {} / {}", i, component.boolValue,
                                       component.secondBool, component.intList.size(), component.intListB.size());
                         break;
-                    case network::OMDataComponentType::PotionContents:
+                    case network::OMDataComponentHandler::PotionContents:
                         logger->debug("  slot {}: potion {} color {} effects {}", i, component.potionId.value_or(-1),
                                       component.potionColor.value_or(-1), component.potionEffects.size());
                         break;
-                    case network::OMDataComponentType::Consumable:
+                    case network::OMDataComponentHandler::Consumable:
                         logger->debug("  slot {}: consumable {}s animation {} particles {} effects {}", i,
                                       component.floatValue, component.intValue, component.boolValue,
                                       component.intList.size());
                         break;
-                    case network::OMDataComponentType::WritableBookContent:
+                    case network::OMDataComponentHandler::WritableBookContent:
                         logger->debug("  slot {}: writable book {} pages", i, component.bookPages.size());
                         break;
-                    case network::OMDataComponentType::WrittenBookContent:
+                    case network::OMDataComponentHandler::WrittenBookContent:
                         logger->debug("  slot {}: written book '{}' by {}, {} pages", i, component.stringValue,
                                       component.stringList.empty() ? "" : component.stringList[0],
                                       component.writtenBookPages.size());
                         break;
-                    case network::OMDataComponentType::ProvidesTrimMaterial:
+                    case network::OMDataComponentHandler::ProvidesTrimMaterial:
                         logger->debug("  slot {}: trim material {}", i,
                                       component.providesTrimMaterial.isInline()
                                           ? component.providesTrimMaterial.value->suffix
                                           : std::to_string(component.providesTrimMaterial.registryId()));
                         break;
-                    case network::OMDataComponentType::JukeboxPlayable:
+                    case network::OMDataComponentHandler::JukeboxPlayable:
                         logger->debug("  slot {}: jukebox song {}", i,
                                       component.jukeboxSong.isInline()
                                           ? component.jukeboxSong.value->soundEvent.value
@@ -571,7 +671,7 @@ void OMApplication::networkSetup(std::string host, std::string port)
                                                 : std::string("<inline>")
                                           : std::to_string(component.jukeboxSong.registryId()));
                         break;
-                    case network::OMDataComponentType::Trim:
+                    case network::OMDataComponentHandler::Trim:
                         logger->debug("  slot {}: trim material {} pattern {}", i,
                                       component.trimMaterial.isInline()
                                           ? component.trimMaterial.value->suffix
@@ -580,42 +680,42 @@ void OMApplication::networkSetup(std::string host, std::string port)
                                           ? component.trimPattern.value->assetName
                                           : std::to_string(component.trimPattern.registryId()));
                         break;
-                    case network::OMDataComponentType::LodestoneTracker:
+                    case network::OMDataComponentHandler::LodestoneTracker:
                         logger->debug("  slot {}: lodestone has position {} tracked {}", i, component.boolValue,
                                       component.secondBool);
                         break;
-                    case network::OMDataComponentType::BannerPatterns:
+                    case network::OMDataComponentHandler::BannerPatterns:
                         logger->debug("  slot {}: {} banner layers", i, component.intList.size());
                         break;
-                    case network::OMDataComponentType::Bees:
+                    case network::OMDataComponentHandler::Bees:
                         logger->debug("  slot {}: {} bees", i, component.intList.size());
                         break;
-                    case network::OMDataComponentType::UseCooldown:
+                    case network::OMDataComponentHandler::UseCooldown:
                         logger->debug("  slot {}: cooldown {}s group {}", i, component.floatValue,
                                       component.optionalString.value_or("<default>"));
                         break;
-                    case network::OMDataComponentType::AttributeModifiers:
+                    case network::OMDataComponentHandler::AttributeModifiers:
                         for (const auto &modifier : component.attributeModifiers)
                         {
                             logger->debug("  slot {}: attribute {} {} value {} op {} slot {}", i, modifier.attributeId,
                                           modifier.id, modifier.value, modifier.operation, modifier.slot);
                         }
                         break;
-                    case network::OMDataComponentType::UseRemainder:
-                    case network::OMDataComponentType::SulfurCubeContent:
+                    case network::OMDataComponentHandler::UseRemainder:
+                    case network::OMDataComponentHandler::SulfurCubeContent:
                         logger->debug("  slot {}: contained item {} x{}", i,
                                       component.stack != nullptr ? component.stack->itemId : -1,
                                       component.stack != nullptr ? component.stack->count : 0);
                         break;
-                    case network::OMDataComponentType::ChargedProjectiles:
-                    case network::OMDataComponentType::BundleContents:
-                    case network::OMDataComponentType::Container:
+                    case network::OMDataComponentHandler::ChargedProjectiles:
+                    case network::OMDataComponentHandler::BundleContents:
+                    case network::OMDataComponentHandler::Container:
                         logger->debug("  slot {}: {} contained items", i, component.stacks.size());
                         break;
-                    case network::OMDataComponentType::CustomData:
-                    case network::OMDataComponentType::BucketEntityData:
-                    case network::OMDataComponentType::EntityData:
-                    case network::OMDataComponentType::BlockEntityData:
+                    case network::OMDataComponentHandler::CustomData:
+                    case network::OMDataComponentHandler::BucketEntityData:
+                    case network::OMDataComponentHandler::EntityData:
+                    case network::OMDataComponentHandler::BlockEntityData:
                         logger->debug("  slot {}: nbt {}", i,
                                       component.nbt != nullptr ? static_cast<int>(component.nbt->type) : -1);
                         break;
