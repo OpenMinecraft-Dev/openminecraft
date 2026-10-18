@@ -360,7 +360,8 @@ void OMDebugRenderer::afterFrame()
     for (int i = 0; i < 6; ++i)
     {
         const auto &d = st[i];
-        lst[i]->style("text", fmt::format("{}: {} / {}", tags[i], fromBytes(d.first), fromBytes(d.second)));
+        lst[i]->style("text", fmt::format("{}: {} / {}, {} blocks", tags[i], fromBytes(std::get<0>(d)),
+                                          fromBytes(std::get<1>(d)), std::get<2>(d)));
     }
 
     auto chunkst = chunkFetch();

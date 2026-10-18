@@ -23,6 +23,7 @@
 #include <list>
 #include <mutex>
 #include <thread>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -533,7 +534,7 @@ class OMVoxelManager
     void bindCameraBuffer(OMRendererBuffer *);
     auto buildVoxelCloud() -> std::vector<uint32_t>;
     auto hashLayerState() -> std::array<uint32_t, 12>;
-    auto fetchLayerState() -> std::array<std::pair<uint32_t, uint32_t>, 6>;
+    auto fetchLayerState() -> std::array<std::tuple<uint32_t, uint32_t, uint32_t>, 6>;
     auto fetchChunkState() -> std::pair<uint32_t, uint32_t>;
 
     OMRendererTempTarget *translucentTargetMS, *translucentTarget;

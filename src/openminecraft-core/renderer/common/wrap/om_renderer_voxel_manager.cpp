@@ -21,7 +21,6 @@
 #include <cmath>
 #include <cstdint>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <random>
 #include <vector>
@@ -731,11 +730,12 @@ auto OMVoxelManager::updateColor() -> void
         OMVoxelSunrise ris = {srgbToLinear(colorManager->getSunriseColor()), colorManager->getSunAngle()};
         sunrise->updateData(&ris);
         auto fg = srgbToLinear(colorManager->getFogColor());
-        std::array<float, 5> fogParams = {colorManager->getFogRange().x, colorManager->getFogRange().y, fg.r, fg.g, fg.b};
+        std::array<float, 5> fogParams = {colorManager->getFogRange().x, colorManager->getFogRange().y, fg.r, fg.g,
+                                          fg.b};
         fogdata->updateData(fogParams.data());
 
-        std::array<float, 5> cloudFogParams = {colorManager->getFogRange().x * 3, colorManager->getFogRange().y * 3, fg.r, fg.g,
-                                   fg.b};
+        std::array<float, 5> cloudFogParams = {colorManager->getFogRange().x * 3, colorManager->getFogRange().y * 3,
+                                               fg.r, fg.g, fg.b};
         cloudFogdata->updateData(cloudFogParams.data());
         OMVoxelMoon m = {colorManager->getMoonAngle(), colorManager->getMoonPhase()};
         moonData->updateData(&m);
@@ -783,15 +783,19 @@ auto OMVoxelManager::buildVoxelCloud() -> std::vector<uint32_t>
     return da;
 }
 
-auto OMVoxelManager::fetchLayerState() -> std::array<std::pair<uint32_t, uint32_t>, 6>
+auto OMVoxelManager::fetchLayerState() -> std::array<std::tuple<uint32_t, uint32_t, uint32_t>, 6>
 {
     return {{
-        {voxelLayer->buf()->usedSize(), voxelLayer->buf()->totalSize},
-        {voxelComplexLayer->buf()->usedSize(), voxelComplexLayer->buf()->totalSize},
-        {voxelFluidLayer->buf()->usedSize(), voxelFluidLayer->buf()->totalSize},
-        {voxelTranslucentLayer->buf()->usedSize(), voxelTranslucentLayer->buf()->totalSize},
-        {voxelTranslucentComplexLayer->buf()->usedSize(), voxelTranslucentComplexLayer->buf()->totalSize},
-        {voxelTranslucentFluidLayer->buf()->usedSize(), voxelTranslucentFluidLayer->buf()->totalSize},
+        {voxelLayer->buf()->usedSize(), voxelLayer->buf()->totalSize, voxelLayer->buf()->blockCount()},
+        {voxelComplexLayer->buf()->usedSize(), voxelComplexLayer->buf()->totalSize,
+         voxelComplexLayer->buf()->blockCount()},
+        {voxelFluidLayer->buf()->usedSize(), voxelFluidLayer->buf()->totalSize, voxelFluidLayer->buf()->blockCount()},
+        {voxelTranslucentLayer->buf()->usedSize(), voxelTranslucentLayer->buf()->totalSize,
+         voxelTranslucentLayer->buf()->blockCount()},
+        {voxelTranslucentComplexLayer->buf()->usedSize(), voxelTranslucentComplexLayer->buf()->totalSize,
+         voxelTranslucentComplexLayer->buf()->blockCount()},
+        {voxelTranslucentFluidLayer->buf()->usedSize(), voxelTranslucentFluidLayer->buf()->totalSize,
+         voxelTranslucentFluidLayer->buf()->blockCount()},
     }};
 }
 
@@ -843,9 +847,10 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
     auto cloudc = colorManager->getCloudColor();
 
-    cloudData->updateData(std::array<OMVoxelCloud, 1>{{{{cameraPos.getModX(256 * 12) + cloudTime, cameraPos.getY(), cameraPos.getModZ(256 * 12)},
-                                                        cloudc.a,
-                                                        srgbToLinear(glm::vec3(cloudc.r, cloudc.g, cloudc.b))}}}
+    cloudData->updateData(std::array<OMVoxelCloud, 1>{
+        {{{cameraPos.getModX(256 * 12) + cloudTime, cameraPos.getY(), cameraPos.getModZ(256 * 12)},
+          cloudc.a,
+          srgbToLinear(glm::vec3(cloudc.r, cloudc.g, cloudc.b))}}}
                               .data());
 
     using Position = basics::OMPosition<16, int64_t, float>;
@@ -926,8 +931,10 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     position.localz = 0.0f;
 
                     auto pp0 =
-                        basics::OMPosition<16, int64_t, float>(position.chunkx, position.chunky, position.chunkz) - camera.getPosRaw();
-                    auto pp1 = basics::OMPosition<16, int64_t, float>(position.chunkx + 1, position.chunky + 1, position.chunkz + 1) -
+                        basics::OMPosition<16, int64_t, float>(position.chunkx, position.chunky, position.chunkz) -
+                        camera.getPosRaw();
+                    auto pp1 = basics::OMPosition<16, int64_t, float>(position.chunkx + 1, position.chunky + 1,
+                                                                      position.chunkz + 1) -
                                camera.getPosRaw();
 
                     auto visible = frusturm.cubeVisible(std::array<glm::vec3, 8>{{

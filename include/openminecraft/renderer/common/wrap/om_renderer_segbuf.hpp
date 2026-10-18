@@ -131,6 +131,11 @@ class OMRendererSegBuf
         return freeBlocks.back().offset;
     }
 
+    auto blockCount() -> uint32_t
+    {
+        return freeBlocks.size();
+    }
+
   private:
     OMRenderer *renderer;
     std::vector<OMRendererSegBufBlock> freeBlocks;
