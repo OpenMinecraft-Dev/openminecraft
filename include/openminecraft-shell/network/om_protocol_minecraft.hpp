@@ -73,6 +73,15 @@ class OMProtocolMinecraftHandler
     virtual void handlePlayChunkDataAndLight(const OMProtocolChunkDataAndLight &chunk)
     {
     }
+    virtual void handlePlayUpdateEntityPosition(const OMProtocolUpdateEntityPosition &position)
+    {
+    }
+    virtual void handlePlayUpdateEntityPositionRotation(const OMProtocolUpdateEntityPositionRotation &position)
+    {
+    }
+    virtual void handlePlayTeleportEntity(const OMProtocolTeleportEntity &teleport)
+    {
+    }
     virtual void handlePlaySetExperience(const OMProtocolSetExperience &experience)
     {
     }
@@ -146,6 +155,18 @@ class OMProtocolMinecraftHandler
     {
     }
     virtual void handlePlayChunkBatchEnd(uint32_t numOfChunks)
+    {
+    }
+    virtual void handlePlaySetEntityVelocity(uint32_t entityId, double vx, double vy, double vz)
+    {
+    }
+    virtual void handlePlaySpawnEntity(const OMProtocolSpawnEntity &entity)
+    {
+    }
+    virtual void handlePlayRemoveEntities(const OMProtocolRemoveEntities &entities)
+    {
+    }
+    virtual void handlePlaySetHeadRotation(const OMProtocolSetHeadRotation &rotation)
     {
     }
 };

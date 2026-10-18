@@ -257,6 +257,93 @@ struct OMProtocolChunkDataAndLight
     bool lightComplete = false; // whether the light data was fully parsed
     int32_t lightTrailingBytes = 0;
 };
+// One step of a stepped position path: absolute position plus its tick offset.
+struct OMProtocolPositionStep
+{
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
+    int32_t tickOffset = 0;
+};
+
+// Teleport Entity (0x23, called entity_position_sync since 1.21.2).
+// Wire order: entityId (VarInt) | pathType (VarInt: 0 = linear, 1 = stepped) |
+//             linear: x/y/z (Double) | stepped: steps (Array of Position Step) |
+//             yaw (Float, degrees) | pitch (Float, degrees) | onGround (Bool)
+struct OMProtocolTeleportEntity
+{
+    int32_t entityId = 0;
+    int32_t pathType = 0;
+    double endX = 0.0;
+    double endY = 0.0;
+    double endZ = 0.0;
+    std::vector<OMProtocolPositionStep> steps;
+    float yaw = 0.0f;
+    float pitch = 0.0f;
+    bool onGround = false;
+};
+
+// Update Entity Position (0x36): a relative movement of an entity.
+// Wire order: entityId (VarInt) | deltaX (Short) | deltaY (Short) | deltaZ (Short) | onGround (Bool)
+// Deltas are fixed point with a scale of 1/4096 block; this struct exposes them in blocks.
+struct OMProtocolUpdateEntityPosition
+{
+    static constexpr double deltaUnitsPerBlock = 4096.0;
+
+    int32_t entityId = 0;
+    double deltaX = 0.0;
+    double deltaY = 0.0;
+    double deltaZ = 0.0;
+    bool onGround = false;
+};
+
+// Update Entity Position and Rotation (0x37): relative movement plus absolute rotation.
+// Wire order: entityId (VarInt) | deltaX/Y/Z (Short, 1/4096 block) | yaw (Angle) | pitch (Angle) |
+//             onGround (Bool)
+struct OMProtocolUpdateEntityPositionRotation
+{
+    int32_t entityId = 0;
+    double deltaX = 0.0;
+    double deltaY = 0.0;
+    double deltaZ = 0.0;
+    openminecraft::network::OMAngle yaw;
+    openminecraft::network::OMAngle pitch;
+    bool onGround = false;
+};
+
+// Set Head Rotation (0x55): the absolute head yaw of an entity.
+// Wire order: entityId (VarInt) | headYaw (Angle)
+struct OMProtocolSetHeadRotation
+{
+    int32_t entityId = 0;
+    openminecraft::network::OMAngle headYaw;
+};
+
+// Remove Entities (0x4E): the entity ids the client should drop from its world.
+// Wire order: entityIds (Array of VarInt)
+struct OMProtocolRemoveEntities
+{
+    std::vector<int32_t> entityIds;
+};
+
+// Spawn Entity (0x01): a new entity in the world.
+// Wire order: entityId (VarInt) | uuid (UUID) | type (VarInt registry id) | x/y/z (Double) |
+//             pitch (Angle) | yaw (Angle) | headYaw (Angle) | data (VarInt) | velocity (LpVec3)
+struct OMProtocolSpawnEntity
+{
+    int32_t entityId = 0;
+    openminecraft::util::OMUuid uuid;
+    int32_t type = 0;
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
+    openminecraft::network::OMAngle pitch;
+    openminecraft::network::OMAngle yaw;
+    openminecraft::network::OMAngle headYaw;
+    int32_t data = 0;
+    openminecraft::network::OMLpVec3 velocity;
+};
+
 // Post Effects (0x53): the post-processing effects the client should apply.
 // Wire order: effects (Array of Identifier)
 struct OMProtocolPostEffects

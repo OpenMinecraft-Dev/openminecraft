@@ -338,6 +338,44 @@ void OMApplication::networkSetup(std::string host, std::string port)
             }
         }
 
+        void handlePlayUpdateEntityPosition(const network::OMProtocolUpdateEntityPosition &position) override
+        {
+            title("Update Entity Position");
+            logger->debug("entity: {} delta: ({}, {}, {}) on ground: {}", position.entityId, position.deltaX,
+                          position.deltaY, position.deltaZ, position.onGround);
+        }
+
+        void handlePlayUpdateEntityPositionRotation(
+            const network::OMProtocolUpdateEntityPositionRotation &position) override
+        {
+            title("Update Entity Position and Rotation");
+            logger->debug("entity: {} delta: ({}, {}, {}) yaw: {} pitch: {} on ground: {}", position.entityId,
+                          position.deltaX, position.deltaY, position.deltaZ, position.yaw.degrees,
+                          position.pitch.degrees, position.onGround);
+        }
+
+        void handlePlayTeleportEntity(const network::OMProtocolTeleportEntity &teleport) override
+        {
+            title("Teleport Entity");
+            logger->debug("entity: {} path type: {}", teleport.entityId, teleport.pathType);
+
+            if (teleport.pathType == 0)
+            {
+                logger->debug("target: ({}, {}, {})", teleport.endX, teleport.endY, teleport.endZ);
+            }
+            else
+            {
+                logger->debug("steps: {}", teleport.steps.size());
+
+                for (const auto &step : teleport.steps)
+                {
+                    logger->debug("  step ({}, {}, {}) tick +{}", step.x, step.y, step.z, step.tickOffset);
+                }
+            }
+
+            logger->debug("yaw: {} pitch: {} on ground: {}", teleport.yaw, teleport.pitch, teleport.onGround);
+        }
+
         void handlePlaySetExperience(const network::OMProtocolSetExperience &experience) override
         {
             title("Set Experience");
@@ -670,6 +708,31 @@ void OMApplication::networkSetup(std::string host, std::string port)
         void handlePlayChunkBatchStart() override
         {
             title("Chunk Batch Start");
+        }
+
+        void handlePlaySetEntityVelocity(uint32_t entityId, double vx, double vy, double vz) override
+        {
+            title("Set Entity Velocity");
+            logger->debug("entity: {}", entityId);
+            logger->debug("velocity: {} {} {}", vx, vy, vz);
+        }
+
+        void handlePlayRemoveEntities(const network::OMProtocolRemoveEntities &entities) override
+        {
+            title("Remove Entities");
+            logger->debug("count: {}", entities.entityIds.size());
+
+            for (auto id : entities.entityIds)
+            {
+                logger->debug("  entity {}", id);
+            }
+        }
+
+        void handlePlaySetHeadRotation(const network::OMProtocolSetHeadRotation &rotation) override
+        {
+            title("Set Head Rotation");
+            logger->debug("entity: {}", rotation.entityId);
+            logger->debug("head yaw: {} (raw 0x{:02x})", rotation.headYaw.degrees, rotation.headYaw.raw());
         }
     } hnd;
     hnd.logger = &logger;

@@ -647,6 +647,206 @@ static auto testIDOr() -> void
     CHECK(c.id == 0 && c.value == 0);
 }
 
+static auto testLpVec3() -> void
+{
+    // wiki 提供的样本：数值 -> 预期字节
+    struct Sample
+    {
+        double x, y, z;
+        std::vector<uint8_t> bytes;
+    };
+
+    const Sample samples[] = {
+        {0.0, 0.0, 0.0, {0x00}},
+        {1.0, 0.0, -1.0, {0xF1, 0xFF, 0x00, 0x00, 0xFF, 0xFF}},
+        {10.0, 0.2, -5.0, {0xF6, 0xFF, 0x40, 0x01, 0x05, 0x1F, 0x02}},
+    };
+
+    for (const auto &sample : samples)
+    {
+        OMLpVec3 value;
+        value.x = sample.x;
+        value.y = sample.y;
+        value.z = sample.z;
+
+        OMNetworkPacket p;
+        p.write(value);
+
+        CHECK(p.datalen() == sample.bytes.size());
+
+        const auto *bytes = reinterpret_cast<const uint8_t *>(p.data());
+
+        for (std::size_t i = 0; i < sample.bytes.size() && i < p.datalen(); ++i)
+        {
+            CHECK(bytes[i] == sample.bytes[i]);
+        }
+
+        p.reset();
+        auto parsed = p.read<OMLpVec3>();
+        CHECK(std::abs(parsed.x - sample.x) < 0.01);
+        CHECK(std::abs(parsed.y - sample.y) < 0.01);
+        CHECK(std::abs(parsed.z - sample.z) < 0.01);
+    }
+}
+
+static auto testAngle() -> void
+{
+    // 1 字节 = 1/256 圈 = 1.40625 度
+    struct Sample
+    {
+        double degrees;
+        uint8_t raw;
+    };
+
+    const Sample samples[] = {
+        {0.0, 0x00}, {45.0, 0x20}, {90.0, 0x40}, {180.0, 0x80}, {270.0, 0xC0}, {-90.0, 0xC0},
+    };
+
+    for (const auto &sample : samples)
+    {
+        OMAngle angle(sample.degrees);
+        CHECK(angle.raw() == sample.raw);
+
+        OMNetworkPacket p;
+        p.write(angle);
+        CHECK(p.datalen() == 1);
+        CHECK(static_cast<uint8_t>(p.data()[0]) == sample.raw);
+
+        p.reset();
+        auto parsed = p.read<OMAngle>();
+        CHECK(std::abs(parsed.degrees - static_cast<double>(sample.raw) * (360.0 / 256.0)) < 1e-9);
+    }
+
+    // 360 度回绕到 0
+    OMAngle fullTurn(360.0);
+    CHECK(fullTurn.raw() == 0x00);
+}
+
+static auto testTeleportEntityCodec() -> void
+{
+    using openminecraft::shell::network::OMProtocolTeleportEntity;
+
+    // 线性路径
+    OMProtocolTeleportEntity linear;
+    linear.entityId = 18898;
+    linear.pathType = 0;
+    linear.endX = -506.0983854342508;
+    linear.endY = 13.0157000003336;
+    linear.endZ = -224.42918151056918;
+    linear.yaw = 272.39948f;
+    linear.pitch = 15.5f;
+    linear.onGround = true;
+
+    OMNetworkPacket p;
+    p.write(linear);
+    p.reset();
+
+    auto a = p.read<OMProtocolTeleportEntity>();
+    CHECK(a.entityId == 18898 && a.pathType == 0);
+    CHECK(a.endX == linear.endX && a.endY == linear.endY && a.endZ == linear.endZ);
+    CHECK(a.yaw == linear.yaw && a.pitch == linear.pitch && a.onGround);
+    CHECK(a.steps.empty());
+
+    // 步进路径
+    OMProtocolTeleportEntity stepped;
+    stepped.entityId = 42;
+    stepped.pathType = 1;
+    stepped.steps = {{1.0, 2.0, 3.0, 0}, {-1.5, 64.0, 7.25, 3}};
+    stepped.onGround = false;
+
+    OMNetworkPacket q;
+    q.write(stepped);
+    q.reset();
+
+    auto b = q.read<OMProtocolTeleportEntity>();
+    CHECK(b.pathType == 1 && b.steps.size() == 2);
+    CHECK(b.steps[0].x == 1.0 && b.steps[0].y == 2.0 && b.steps[0].z == 3.0 && b.steps[0].tickOffset == 0);
+    CHECK(b.steps[1].x == -1.5 && b.steps[1].tickOffset == 3);
+}
+
+static auto testEntityPositionCodecs() -> void
+{
+    using openminecraft::shell::network::OMProtocolUpdateEntityPosition;
+    using openminecraft::shell::network::OMProtocolUpdateEntityPositionRotation;
+
+    // 位移：线上 Short，单位 1/4096 格
+    OMProtocolUpdateEntityPosition position;
+    position.entityId = 19130;
+    position.deltaX = 0.062255859375;  // 255 / 4096
+    position.deltaY = -0.1875;         // -768 / 4096
+    position.deltaZ = 5.8125;          // 23808 / 4096
+    position.onGround = true;
+
+    OMNetworkPacket p;
+    p.write(position);
+    p.reset();
+
+    auto a = p.read<OMProtocolUpdateEntityPosition>();
+    CHECK(a.entityId == 19130 && a.onGround);
+    CHECK(a.deltaX == position.deltaX && a.deltaY == position.deltaY && a.deltaZ == position.deltaZ);
+
+    // 位移 + 旋转：yaw/pitch 是 Angle（1/256 圈）
+    OMProtocolUpdateEntityPositionRotation rotated;
+    rotated.entityId = 19158;
+    rotated.deltaX = 0.18798828125;
+    rotated.deltaY = 0.05810546875;
+    rotated.deltaZ = 0.0;
+    rotated.yaw = OMAngle(272.39948);
+    rotated.pitch = OMAngle(97.03125);  // 精确的 69 个单位
+    rotated.onGround = true;
+
+    OMNetworkPacket q;
+    q.write(rotated);
+    q.reset();
+
+    auto b = q.read<OMProtocolUpdateEntityPositionRotation>();
+    CHECK(b.entityId == 19158);
+    CHECK(b.deltaX == rotated.deltaX && b.deltaY == rotated.deltaY && b.deltaZ == 0.0);
+    CHECK(b.yaw.raw() == 194);   // round(272.39948 / 1.40625) & 0xFF
+    CHECK(b.pitch.raw() == 69);
+    CHECK(b.onGround);
+}
+
+static auto testSetHeadRotationCodec() -> void
+{
+    using openminecraft::shell::network::OMProtocolSetHeadRotation;
+
+    OMProtocolSetHeadRotation rotation;
+    rotation.entityId = 19428;
+    rotation.headYaw = OMAngle(139.21875); // 99 个 Angle 单位
+
+    OMNetworkPacket p;
+    p.write(rotation);
+    p.reset();
+
+    auto parsed = p.read<OMProtocolSetHeadRotation>();
+    CHECK(parsed.entityId == 19428);
+    CHECK(parsed.headYaw.raw() == 0x63);
+    CHECK(parsed.headYaw.degrees == 139.21875);
+}
+
+static auto testRemoveEntitiesCodec() -> void
+{
+    using openminecraft::shell::network::OMProtocolRemoveEntities;
+
+    OMProtocolRemoveEntities entities;
+    entities.entityIds = {19174, 42, 19428};
+
+    OMNetworkPacket p;
+    p.write(entities);
+    p.reset();
+
+    auto parsed = p.read<OMProtocolRemoveEntities>();
+    CHECK(parsed.entityIds.size() == 3);
+    CHECK(parsed.entityIds[0] == 19174 && parsed.entityIds[1] == 42 && parsed.entityIds[2] == 19428);
+
+    OMProtocolRemoveEntities empty;
+    OMNetworkPacket q;
+    q.write(empty);
+    q.reset();
+    CHECK(q.read<OMProtocolRemoveEntities>().entityIds.empty());
+}
+
 static auto testOptionalCodec() -> void
 {
     OMNetworkPacket p;
@@ -704,6 +904,12 @@ auto main() -> int
     testSetExperienceCodec();
     testBitSet();
     testIDOr();
+    testLpVec3();
+    testAngle();
+    testTeleportEntityCodec();
+    testEntityPositionCodecs();
+    testSetHeadRotationCodec();
+    testRemoveEntitiesCodec();
     testOptionalCodec();
     testStringVectorConversion();
 

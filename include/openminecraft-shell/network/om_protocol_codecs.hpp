@@ -518,6 +518,279 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     }
 };
 
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolUpdateEntityPosition>
+{
+    static constexpr bool supported = true;
+
+    // INFO: 相对位移在线上是 Short，单位 1/4096 格
+    static auto readDelta(openminecraft::network::OMNetworkPacket &pck) -> double
+    {
+        return static_cast<double>(pck.read<int16_t>()) / openminecraft::shell::network::OMProtocolUpdateEntityPosition::deltaUnitsPerBlock;
+    }
+
+    static auto writeDelta(openminecraft::network::OMNetworkPacket &pck, double value) -> void
+    {
+        auto raw = std::lround(value * openminecraft::shell::network::OMProtocolUpdateEntityPosition::deltaUnitsPerBlock);
+        raw = std::clamp<long>(raw, -32768, 32767);
+
+        pck.write<int16_t>(static_cast<int16_t>(raw));
+    }
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolUpdateEntityPosition
+    {
+        openminecraft::shell::network::OMProtocolUpdateEntityPosition result;
+
+        result.entityId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.deltaX = readDelta(pck);
+        result.deltaY = readDelta(pck);
+        result.deltaZ = readDelta(pck);
+        result.onGround = pck.read<bool>();
+
+        return result;
+    }
+
+    static auto write(openminecraft::network::OMNetworkPacket &pck,
+                      const openminecraft::shell::network::OMProtocolUpdateEntityPosition &value) -> void
+    {
+        pck.write(openminecraft::network::OMVarInt(value.entityId));
+        writeDelta(pck, value.deltaX);
+        writeDelta(pck, value.deltaY);
+        writeDelta(pck, value.deltaZ);
+        pck.write<bool>(value.onGround);
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<
+    openminecraft::shell::network::OMProtocolUpdateEntityPositionRotation>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolUpdateEntityPositionRotation
+    {
+        openminecraft::shell::network::OMProtocolUpdateEntityPositionRotation result;
+
+        result.entityId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.deltaX = static_cast<double>(pck.read<int16_t>()) /
+                        openminecraft::shell::network::OMProtocolUpdateEntityPosition::deltaUnitsPerBlock;
+        result.deltaY = static_cast<double>(pck.read<int16_t>()) /
+                        openminecraft::shell::network::OMProtocolUpdateEntityPosition::deltaUnitsPerBlock;
+        result.deltaZ = static_cast<double>(pck.read<int16_t>()) /
+                        openminecraft::shell::network::OMProtocolUpdateEntityPosition::deltaUnitsPerBlock;
+        result.yaw = pck.read<openminecraft::network::OMAngle>();
+        result.pitch = pck.read<openminecraft::network::OMAngle>();
+        result.onGround = pck.read<bool>();
+
+        return result;
+    }
+
+    static auto write(openminecraft::network::OMNetworkPacket &pck,
+                      const openminecraft::shell::network::OMProtocolUpdateEntityPositionRotation &value) -> void
+    {
+        using Position = openminecraft::network::OMNetworkPacketCodec<
+            openminecraft::shell::network::OMProtocolUpdateEntityPosition>;
+
+        pck.write(openminecraft::network::OMVarInt(value.entityId));
+        Position::writeDelta(pck, value.deltaX);
+        Position::writeDelta(pck, value.deltaY);
+        Position::writeDelta(pck, value.deltaZ);
+        pck.write(value.yaw);
+        pck.write(value.pitch);
+        pck.write<bool>(value.onGround);
+    }
+};
+
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolSpawnEntity>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolSpawnEntity
+    {
+        openminecraft::shell::network::OMProtocolSpawnEntity result;
+
+        result.entityId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.uuid = pck.read<openminecraft::util::OMUuid>();
+        result.type = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.x = pck.read<double>();
+        result.y = pck.read<double>();
+        result.z = pck.read<double>();
+        result.pitch = pck.read<openminecraft::network::OMAngle>();
+        result.yaw = pck.read<openminecraft::network::OMAngle>();
+        result.headYaw = pck.read<openminecraft::network::OMAngle>();
+        result.data = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.velocity = pck.read<openminecraft::network::OMLpVec3>();
+
+        return result;
+    }
+
+    static auto write(openminecraft::network::OMNetworkPacket &pck,
+                      const openminecraft::shell::network::OMProtocolSpawnEntity &value) -> void
+    {
+        pck.write(openminecraft::network::OMVarInt(value.entityId));
+        pck.write(value.uuid);
+        pck.write(openminecraft::network::OMVarInt(value.type));
+        pck.write<double>(value.x);
+        pck.write<double>(value.y);
+        pck.write<double>(value.z);
+        pck.write(value.pitch);
+        pck.write(value.yaw);
+        pck.write(value.headYaw);
+        pck.write(openminecraft::network::OMVarInt(value.data));
+        pck.write(value.velocity);
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolRemoveEntities>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolRemoveEntities
+    {
+        openminecraft::shell::network::OMProtocolRemoveEntities result;
+
+        auto count = pck.read<openminecraft::network::OMVarInt>().value;
+
+        if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
+        {
+            throw std::logic_error("[OMNetworkPacket] entity id array exceeds remaining data!");
+        }
+
+        result.entityIds.reserve(static_cast<std::size_t>(count));
+
+        for (int32_t i = 0; i < count; ++i)
+        {
+            result.entityIds.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
+        }
+
+        return result;
+    }
+
+    static auto write(openminecraft::network::OMNetworkPacket &pck,
+                      const openminecraft::shell::network::OMProtocolRemoveEntities &value) -> void
+    {
+        pck.write(openminecraft::network::OMVarInt(static_cast<int32_t>(value.entityIds.size())));
+
+        for (auto id : value.entityIds)
+        {
+            pck.write(openminecraft::network::OMVarInt(id));
+        }
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolSetHeadRotation>
+{
+    static constexpr bool supported = true;
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolSetHeadRotation
+    {
+        openminecraft::shell::network::OMProtocolSetHeadRotation result;
+
+        result.entityId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.headYaw = pck.read<openminecraft::network::OMAngle>();
+
+        return result;
+    }
+
+    static auto write(openminecraft::network::OMNetworkPacket &pck,
+                      const openminecraft::shell::network::OMProtocolSetHeadRotation &value) -> void
+    {
+        pck.write(openminecraft::network::OMVarInt(value.entityId));
+        pck.write(value.headYaw);
+    }
+};
+
+template <>
+struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolTeleportEntity>
+{
+    static constexpr bool supported = true;
+
+    enum PathType : int32_t
+    {
+        Linear = 0,
+        Stepped = 1
+    };
+
+    static auto read(openminecraft::network::OMNetworkPacket &pck)
+        -> openminecraft::shell::network::OMProtocolTeleportEntity
+    {
+        openminecraft::shell::network::OMProtocolTeleportEntity result;
+
+        result.entityId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+        result.pathType = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+        if (result.pathType == Linear)
+        {
+            result.endX = pck.read<double>();
+            result.endY = pck.read<double>();
+            result.endZ = pck.read<double>();
+        }
+        else
+        {
+            auto stepCount = pck.read<openminecraft::network::OMVarInt>().value;
+
+            if (stepCount < 0 || static_cast<uint64_t>(stepCount) > pck.restDatalen())
+            {
+                throw std::logic_error("[OMNetworkPacket] teleport steps exceed remaining data!");
+            }
+
+            for (int32_t i = 0; i < stepCount; ++i)
+            {
+                openminecraft::shell::network::OMProtocolPositionStep step;
+                step.x = pck.read<double>();
+                step.y = pck.read<double>();
+                step.z = pck.read<double>();
+                step.tickOffset = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+
+                result.steps.push_back(std::move(step));
+            }
+        }
+
+        result.yaw = pck.read<float>();
+        result.pitch = pck.read<float>();
+        result.onGround = pck.read<bool>();
+
+        return result;
+    }
+
+    static auto write(openminecraft::network::OMNetworkPacket &pck,
+                      const openminecraft::shell::network::OMProtocolTeleportEntity &value) -> void
+    {
+        pck.write(openminecraft::network::OMVarInt(value.entityId));
+        pck.write(openminecraft::network::OMVarInt(value.pathType));
+
+        if (value.pathType == Linear)
+        {
+            pck.write<double>(value.endX);
+            pck.write<double>(value.endY);
+            pck.write<double>(value.endZ);
+        }
+        else
+        {
+            pck.write(openminecraft::network::OMVarInt(static_cast<int32_t>(value.steps.size())));
+
+            for (const auto &step : value.steps)
+            {
+                pck.write<double>(step.x);
+                pck.write<double>(step.y);
+                pck.write<double>(step.z);
+                pck.write(openminecraft::network::OMVarInt(step.tickOffset));
+            }
+        }
+
+        pck.write<float>(value.yaw);
+        pck.write<float>(value.pitch);
+        pck.write<bool>(value.onGround);
+    }
+};
+
 template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolSetExperience>
 {
     static constexpr bool supported = true;

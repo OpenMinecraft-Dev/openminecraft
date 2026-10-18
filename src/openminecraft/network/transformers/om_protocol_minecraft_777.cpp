@@ -3,9 +3,12 @@
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_general.hpp"
 #include "openminecraft/network/om_network_packet.hpp"
 #include "openminecraft/util/om_util_uuid.hpp"
+#include <cstdio>
 #include <stdexcept>
 #include <vector>
 
+using openminecraft::network::OMAngle;
+using openminecraft::network::OMLpVec3;
 using openminecraft::network::OMPackedPos;
 using openminecraft::network::OMUtf8String;
 using openminecraft::network::OMVarInt;
@@ -130,6 +133,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         case 0x00: {
             return;
         }
+            // Spawn Entity
+        case 0x01: {
+            handler.handlePlaySpawnEntity(pck.read<OMProtocolSpawnEntity>());
+            return;
+        }
             // Change Difficulty
         case 0x0a: {
             handler.handlePlayChangeDifficulty(pck.read<uint8_t>(), pck.read<bool>());
@@ -158,6 +166,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             // Entity Event
         case 0x22: {
             handler.handlePlayEntityEvent(pck.read<int32_t>(), pck.read<uint8_t>());
+            return;
+        }
+            // Teleport Entity
+        case 0x23: {
+            handler.handlePlayTeleportEntity(pck.read<OMProtocolTeleportEntity>());
             return;
         }
             // Game Event
@@ -223,6 +236,16 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
                                     depthPos, portalCooldown, seaLevel, onlineMode, secureChat);
             return;
         }
+            // Update Entity Position
+        case 0x36: {
+            handler.handlePlayUpdateEntityPosition(pck.read<OMProtocolUpdateEntityPosition>());
+            return;
+        }
+            // Update Entity Position and Rotation
+        case 0x37: {
+            handler.handlePlayUpdateEntityPositionRotation(pck.read<OMProtocolUpdateEntityPositionRotation>());
+            return;
+        }
             // Player Abilities
         case 0x41: {
             handler.handlePlayPlayerAbilities(pck.read<uint8_t>(), pck.read<float>(), pck.read<float>());
@@ -245,6 +268,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             logger.warn("skipped Recipe Book Add packet!");
             return;
         }
+            // Remove Entities
+        case 0x4e: {
+            handler.handlePlayRemoveEntities(pck.read<OMProtocolRemoveEntities>());
+            return;
+        }
             // Recipe Book Settings
         case 0x4d: {
             handler.handlePlayRecipeBookSettings(pck.read<bool>(), pck.read<bool>(), pck.read<bool>(), pck.read<bool>(),
@@ -255,6 +283,11 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             // Post Effects
         case 0x53: {
             handler.handlePlayPostEffects(pck.read<OMProtocolPostEffects>());
+            return;
+        }
+            // Set Head Rotation
+        case 0x55: {
+            handler.handlePlaySetHeadRotation(pck.read<OMProtocolSetHeadRotation>());
             return;
         }
             // Server Data
@@ -275,6 +308,13 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
             // Set Entity Metadata
         case 0x65: {
             logger.debug("skipped Set Entity Metadata packet!");
+            return;
+        }
+            // Set Entity Velocity
+        case 0x67: {
+            auto entityId = pck.read<OMVarInt>();
+            auto v = pck.read<OMLpVec3>();
+            handler.handlePlaySetEntityVelocity(entityId, v.x, v.y, v.z);
             return;
         }
             // Set Experience
@@ -328,7 +368,7 @@ void OMProtocolMinecraftTransformer777::handleRest(OMProtocolMinecraftState stat
         }
     }
 
-    // pck.debug(64);
-    // OMProtocolMinecraftTransformerGeneral::handleRest(state, pck);
+    pck.debug(64);
+    OMProtocolMinecraftTransformerGeneral::handleRest(state, pck);
 }
 } // namespace openminecraft::shell::network::transformers

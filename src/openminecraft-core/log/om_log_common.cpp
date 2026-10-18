@@ -35,22 +35,42 @@ OMLogger::~OMLogger() = default;
 
 void OMLogger::debug(std::string msg)
 {
+    if (!enabled)
+    {
+        return;
+    }
     log(Debug, msg);
 }
 void OMLogger::info(std::string msg)
 {
+    if (!enabled)
+    {
+        return;
+    }
     log(Info, msg);
 }
 void OMLogger::warn(std::string msg)
 {
+    if (!enabled)
+    {
+        return;
+    }
     log(Warn, msg);
 }
 void OMLogger::error(std::string msg)
 {
+    if (!enabled)
+    {
+        return;
+    }
     log(Error, msg);
 }
 void OMLogger::fatal(std::string msg)
 {
+    if (!enabled)
+    {
+        return;
+    }
     log(Fatal, msg);
 }
 

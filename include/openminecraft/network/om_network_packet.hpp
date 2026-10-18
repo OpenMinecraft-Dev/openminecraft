@@ -12,6 +12,8 @@
 #include <string>
 #include <cstdint>
 #include <iomanip>
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <stdexcept>
 #include <fmt/format.h>
@@ -143,6 +145,51 @@ template <typename T> struct OMIDOr
     auto registryId() const -> int32_t
     {
         return id - 1;
+    }
+};
+
+// INFO: Minecraft protocol LpVec3: a low-precision vector of three doubles.
+// Layout: packed bitfield — X 15 bits, Y 15 bits, Z 15 bits, continuation flag 1 bit,
+// scale factor 2 bits (+ VarInt tail when the flag is set). A leading zero byte means (0, 0, 0).
+struct OMLpVec3
+{
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
+
+    static constexpr double maxQuantizedValue = 32766.0;
+
+    static auto pack(double value) -> uint64_t
+    {
+        return static_cast<uint64_t>(std::llround((value * 0.5 + 0.5) * maxQuantizedValue));
+    }
+
+    static auto unpack(uint64_t value) -> double
+    {
+        return std::min(static_cast<double>(value & 32767ULL), maxQuantizedValue) * 2.0 / maxQuantizedValue - 1.0;
+    }
+};
+
+// INFO: Minecraft protocol Angle: one byte where one unit is 1/256 of a full turn; exposed in degrees.
+struct OMAngle
+{
+    static constexpr double degreesPerUnit = 360.0 / 256.0;
+
+    double degrees = 0.0;
+
+    constexpr OMAngle() = default;
+    constexpr explicit OMAngle(double value) : degrees(value)
+    {
+    }
+
+    static auto fromRaw(uint8_t raw) -> OMAngle
+    {
+        return OMAngle(static_cast<double>(raw) * degreesPerUnit);
+    }
+
+    auto raw() const -> uint8_t
+    {
+        return static_cast<uint8_t>(std::lround(degrees / degreesPerUnit) & 0xFF);
     }
 };
 
@@ -313,6 +360,41 @@ class OMNetworkPacket
         {
             return OMPackedPos(read<int64_t>());
         }
+        else if constexpr (std::is_same_v<T, OMAngle>)
+        {
+            return OMAngle::fromRaw(read<uint8_t>());
+        }
+        else if constexpr (std::is_same_v<T, OMLpVec3>)
+        {
+            OMLpVec3 result;
+
+            auto first = read<uint8_t>();
+
+            if (first == 0)
+            {
+                return result;
+            }
+
+            auto second = read<uint8_t>();
+            auto rest = static_cast<uint64_t>(static_cast<uint32_t>(read<int32_t>()));
+
+            auto packed = (rest << 16) | (static_cast<uint64_t>(second) << 8) | first;
+
+            uint64_t scaleFactor = first & 0x03ULL;
+
+            if ((first & 0x04ULL) != 0)
+            {
+                scaleFactor |= static_cast<uint64_t>(static_cast<uint32_t>(static_cast<int32_t>(read<OMVarInt>()))) << 2;
+            }
+
+            auto scale = static_cast<double>(scaleFactor);
+
+            result.x = OMLpVec3::unpack(packed >> 3ULL) * scale;
+            result.y = OMLpVec3::unpack(packed >> 18ULL) * scale;
+            result.z = OMLpVec3::unpack(packed >> 33ULL) * scale;
+
+            return result;
+        }
         else if constexpr (std::is_same_v<T, OMBitSet>)
         {
             OMBitSet result;
@@ -445,6 +527,39 @@ class OMNetworkPacket
         else if constexpr (std::is_same_v<T, OMPackedPos>)
         {
             write<int64_t>(t.value);
+        }
+        else if constexpr (std::is_same_v<T, OMAngle>)
+        {
+            buffer.push_back(t.raw());
+        }
+        else if constexpr (std::is_same_v<T, OMLpVec3>)
+        {
+            auto maxCoordinate = std::max({std::fabs(t.x), std::fabs(t.y), std::fabs(t.z)});
+
+            if (std::isnan(maxCoordinate) || maxCoordinate < 1.0 / OMLpVec3::maxQuantizedValue)
+            {
+                buffer.push_back(0);
+            }
+            else
+            {
+                auto scaleFactor = static_cast<uint64_t>(std::ceil(maxCoordinate));
+                bool needContinuation = (scaleFactor & 0x03ULL) != scaleFactor;
+                auto packedScale = needContinuation ? ((scaleFactor & 0x03ULL) | 0x04ULL) : scaleFactor;
+
+                auto packedX = OMLpVec3::pack(t.x / static_cast<double>(scaleFactor)) << 3ULL;
+                auto packedY = OMLpVec3::pack(t.y / static_cast<double>(scaleFactor)) << 18ULL;
+                auto packedZ = OMLpVec3::pack(t.z / static_cast<double>(scaleFactor)) << 33ULL;
+                auto packed = packedZ | packedY | packedX | packedScale;
+
+                buffer.push_back(static_cast<uint8_t>(packed & 0xFFULL));
+                buffer.push_back(static_cast<uint8_t>((packed >> 8ULL) & 0xFFULL));
+                write<int32_t>(static_cast<int32_t>((packed >> 16ULL) & 0xFFFFFFFFULL));
+
+                if (needContinuation)
+                {
+                    write(OMVarInt(static_cast<int32_t>(scaleFactor >> 2ULL)));
+                }
+            }
         }
         else if constexpr (std::is_same_v<T, OMBitSet>)
         {

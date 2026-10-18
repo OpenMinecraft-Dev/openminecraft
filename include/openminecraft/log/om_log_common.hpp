@@ -57,6 +57,8 @@ class OMLogger
     }
     void dumpStacktrace();
 
+    bool enabled = true;
+
   protected:
     std::string loggerName;
     std::ostream *target;
