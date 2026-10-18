@@ -3,6 +3,7 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
+#include <cstring>
 
 namespace openminecraft::renderer::opengl
 {
@@ -56,6 +57,7 @@ OMRendererBufferOpenGL::~OMRendererBufferOpenGL()
 void OMRendererBufferOpenGL::updateData(void *src)
 {
     bind();
+
     renderer->gl.glBufferData(convertFrom(usage), length, src,
                               (usage == common::VertexData || usage == common::VertexIndex) ? GL_STATIC_DRAW
                                                                                             : GL_DYNAMIC_DRAW);
@@ -67,10 +69,26 @@ void OMRendererBufferOpenGL::updateData(void *src)
     }
     unbind();
 }
+void OMRendererBufferOpenGL::moveDataPart(uint64_t target, uint64_t original, uint64_t length)
+{
+    bind();
+    auto data = renderer->gl.glMapBuffer(convertFrom(usage), GL_READ_WRITE);
+    std::memmove(reinterpret_cast<uint8_t *>(data) + target, reinterpret_cast<uint8_t *>(data) + original, length);
+    renderer->gl.glUnmapBuffer(convertFrom(usage));
+
+    if (usage == common::UniformTexel)
+    {
+        renderer->gl.glBindTexture(GL_TEXTURE_BUFFER, texel);
+        renderer->gl.glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, buffer);
+    }
+    unbind();
+}
 void OMRendererBufferOpenGL::updateDataPart(void *src, uint64_t offset, uint64_t length)
 {
     bind();
-    renderer->gl.glBufferSubData(convertFrom(usage), offset, length, src);
+    auto data = renderer->gl.glMapBuffer(convertFrom(usage), GL_READ_WRITE);
+    std::memcpy(reinterpret_cast<uint8_t *>(data) + offset, src, length);
+    renderer->gl.glUnmapBuffer(convertFrom(usage));
 
     if (usage == common::UniformTexel)
     {

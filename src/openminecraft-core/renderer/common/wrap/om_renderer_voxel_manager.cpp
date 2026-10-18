@@ -955,7 +955,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
                     if (chk.visible && !visible)
                     {
-                        // 视角抖动时不要立刻卸载：连续多帧不可见才真正释放
                         if (hideFrames[i] < OMVoxelManager::unloadDelay)
                         {
                             ++hideFrames[i];
@@ -1009,6 +1008,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
         if (layerState != hashLayerState())
         {
+            voxelLayer->merge();
+            voxelComplexLayer->merge();
+            voxelFluidLayer->merge();
+            voxelTranslucentLayer->merge();
+            voxelTranslucentComplexLayer->merge();
+            voxelTranslucentFluidLayer->merge();
             rec(false);
         }
     }

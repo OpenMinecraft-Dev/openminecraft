@@ -4,6 +4,7 @@
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <iostream>
+#include <list>
 #include <vector>
 #include <algorithm>
 #include <cmath>
@@ -111,6 +112,62 @@ class OMRendererSegBuf
             }
         }
         freeBlocks = std::move(merged);
+    }
+
+    // 把传入的块列表按地址顺序挤到缓冲区头部（使用 GPU 侧的 moveDataPart 搬移），
+    // 返回搬移后的块列表（offset 已更新），同时重建空闲链表，
+    // 使 usedSize() 精确等于真实数据量。
+    // 把传入的块搬进现有空闲区（绝不覆盖仍在使用中的数据）：
+    //   1. 按 offset 升序处理，逐个在 freeBlocks 里找足够大的洞；
+    //   2. 只往更低地址搬（消除高水位），搬完把旧区间清零归还空闲链表；
+    //   3. 找不到合适的洞就保持原位。
+    // 返回搬移后的块列表（offset 已更新）。
+    auto compact(std::list<OMRendererSegBufBlock> blocks) -> std::list<OMRendererSegBufBlock>
+    {
+        blocks.sort(
+            [](const OMRendererSegBufBlock &a, const OMRendererSegBufBlock &b) { return a.offset < b.offset; });
+
+        std::list<OMRendererSegBufBlock> result;
+
+        for (auto &block : blocks)
+        {
+            if (block.length == 0)
+            {
+                continue;
+            }
+
+            // 在空闲链表中找第一个足够大且位于当前块之前的洞
+            auto it = freeBlocks.begin();
+
+            while (it != freeBlocks.end() && (it->length < block.length || it->offset >= block.offset))
+            {
+                ++it;
+            }
+
+            if (it == freeBlocks.end())
+            {
+                result.push_back(block); // 没有可用空洞，保持原位
+                continue;
+            }
+
+            // 从洞里切出目标区间（slice 会把洞的 offset 前移、length 减少）
+            auto target = it->slice(block.length);
+
+            if (it->length == 0)
+            {
+                freeBlocks.erase(it);
+            }
+
+            buffer->moveDataPart(target.offset, block.offset, block.length);
+
+            // 旧区间清零并归还空闲链表（内部会排序 + 合并相邻洞）
+            deallocate(block);
+
+            block.offset = target.offset;
+            result.push_back(block);
+        }
+
+        return result;
     }
 
     void update(OMRendererSegBufBlock block, const void *data)

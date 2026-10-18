@@ -379,6 +379,14 @@ template <typename It> class OMVoxelLayer
         }
     }
 
+    auto merge()
+    {
+        for (auto &p : chunkBlocks)
+        {
+            p = voxelBuffer->compact(p);
+        }
+    }
+
     auto buf() -> OMRendererSegBuf *
     {
         return voxelBuffer;

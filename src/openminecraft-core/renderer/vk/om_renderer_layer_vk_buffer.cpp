@@ -7,7 +7,6 @@
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_handles.hpp"
 #include "vulkan/vulkan_structs.hpp"
-#include <limits>
 
 using namespace vk;
 using namespace openminecraft::renderer::common;
@@ -145,6 +144,40 @@ void OMRendererBufferVk::updateData(void *src)
                 }
                 std::memcpy(vtx, src, this->length);
             }
+            renderer->logicalDevice.unmapMemory(this->bufferMemory);
+        }
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.buffer.update"));
+    }
+}
+
+void OMRendererBufferVk::moveDataPart(uint64_t target, uint64_t original, uint64_t length)
+{
+    try
+    {
+        auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
+
+        if (alwaysMapped)
+        {
+            if (synced)
+            {
+                renderer->logicalDevice.waitIdle();
+            }
+            std::memmove(reinterpret_cast<uint8_t *>(data) + target, reinterpret_cast<uint8_t *>(data) + original,
+                         length);
+        }
+        else
+        {
+            auto vtx = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
+
+            if (synced)
+            {
+                renderer->logicalDevice.waitIdle();
+            }
+            std::memmove(reinterpret_cast<uint8_t *>(vtx) + target, reinterpret_cast<uint8_t *>(vtx) + original,
+                         length);
             renderer->logicalDevice.unmapMemory(this->bufferMemory);
         }
     }
