@@ -909,6 +909,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         });
 
         auto frusturm = Frustum::fromMatrix(camera.fetchProjMat() * camera.fetchViewMat());
+
+        if (hideFrames.size() != chunkManager->numChunks())
+        {
+            hideFrames.assign(chunkManager->numChunks(), 0);
+        }
         chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
             for (auto &ochk : chunks)
@@ -950,10 +955,21 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
                     if (chk.visible && !visible)
                     {
-                        unloadChunk(i);
+                        // 视角抖动时不要立刻卸载：连续多帧不可见才真正释放
+                        if (hideFrames[i] < OMVoxelManager::unloadDelay)
+                        {
+                            ++hideFrames[i];
+                            visible = true;
+                        }
+                        else
+                        {
+                            unloadChunk(i);
+                        }
                     }
                     else if (chk.visible && visible)
                     {
+                        hideFrames[i] = 0;
+
                         if (chk.isDirty())
                         {
                             compilerPool->compile(i, false);
@@ -962,6 +978,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     }
                     else if (!chk.visible && visible)
                     {
+                        hideFrames[i] = 0;
                         compilerPool->compile(i, true);
                         chk.solveDirty();
                     }

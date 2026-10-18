@@ -588,6 +588,9 @@ class OMVoxelManager
     OMVoxelCompilerPool *compilerPool;
 
     std::vector<glm::vec3> chunkOffsetCache;
+    // 视角抖动抑制：chunk 离开视锥后延迟卸载，避免来回编译/卸载
+    std::vector<uint8_t> hideFrames;
+    static constexpr uint8_t unloadDelay = 20; // 连续 20 帧不可见才真正卸载
 
     void unloadChunk(int i);
 };
