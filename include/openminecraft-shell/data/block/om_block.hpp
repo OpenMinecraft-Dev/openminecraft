@@ -101,7 +101,7 @@ class OMBlock : public std::enable_shared_from_this<OMBlock>
     }
     auto propWaterlogged() -> std::shared_ptr<OMBlock>
     {
-        return prop("water_logged", {"true", "false"});
+        return prop("waterlogged", {"true", "false"});
     }
     auto propHinge() -> std::shared_ptr<OMBlock>
     {

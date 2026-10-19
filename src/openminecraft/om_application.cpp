@@ -1078,7 +1078,7 @@ void OMApplication::mainLoop(OMBackend backend)
                     cnk.setBlock(
                         1, 1, 0,
                         blockStateRegistry.id(data::OMIdentifier(
-                            "minecraft:cherry_stairs[facing=east,half=bottom,shape=straight,water_logged=true]")));
+                            "minecraft:cherry_stairs[facing=east,half=bottom,shape=straight,waterlogged=true]")));
                     cnk.setBlock(3, 1, 0,
                                  blockStateRegistry.id(data::OMIdentifier(
                                      "minecraft:cherry_door[facing=east,half=lower,hinge=left,open=false,powered=false]")));
@@ -1087,14 +1087,14 @@ void OMApplication::mainLoop(OMBackend backend)
                                      "minecraft:cherry_door[facing=east,half=upper,hinge=left,open=false,powered=false]")));
                     cnk.setBlock(0, 2, 1,
                                  blockStateRegistry.id(data::OMIdentifier(
-                                     "minecraft:cherry_hanging_sign[attached=false,rotation=3,water_logged=false]")));
+                                     "minecraft:cherry_hanging_sign[attached=false,rotation=3,waterlogged=false]")));
                     cnk.setBlock(0, 1, 2, blockStateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
                     cnk.setBlock(15, 1, 1, blockStateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
                     cnk.setBlock(15, 1, 2, blockStateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
                     cnk.setBlock(15, 2, 2,
                                  blockStateRegistry.id(
                                      data::OMIdentifier("minecraft:cherry_fence_gate[facing=south,in_wall=false,"
-                                                        "open=true,powered=true,water_logged=false]")));
+                                                        "open=true,powered=true,waterlogged=false]")));
                     cnk.setBlock(
                         15, 2, 1,
                         blockStateRegistry.id(data::OMIdentifier("minecraft:stone_pressure_plate[powered=false]")));
