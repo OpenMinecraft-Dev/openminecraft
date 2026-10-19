@@ -28,7 +28,7 @@ void registerBlocks()
             ->propWaterlogged());
     blockRegistry.registerItem(
         OMIdentifier("minecraft:cherry_door"),
-        std::make_shared<OMBlock>()->isSolid(false)->propFacing()->propHalf()->propHinge()->propOpen()->propOpen());
+        std::make_shared<OMBlock>()->isSolid(false)->propFacing()->propHalf()->propHinge()->propOpen()->propPowered());
     blockRegistry.registerItem(OMIdentifier("minecraft:cherry_hanging_sign"), std::make_shared<OMBlock>()
                                                                                    ->isSolid(false)
                                                                                    ->prop("attached", {"true", "false"})
@@ -51,17 +51,18 @@ void registerBlocks()
     blockRegistry.registerItem(
         OMIdentifier("minecraft:rail"),
         std::make_shared<OMBlock>()->isSolid(false)->prop(
-            "shape", {"ascending_east", "ascending_north", "ascending_east", "ascending_west", "east_west",
-                      "north_east", "north_south", "north_west", "south_east", "south_west"}));
+            "shape", {"north_south", "east_west", "ascending_east", "ascending_west", "ascending_north",
+                      "ascending_south", "south_east", "south_west", "north_east", "north_west"}));
     blockRegistry.registerItem(OMIdentifier("minecraft:white_stained_glass"),
                                 std::make_shared<OMTransparentBlock>()->isSolid(false)->isTranslucent(true));
     blockRegistry.registerItem(OMIdentifier("minecraft:glass"),
-                                std::make_shared<OMTransparentBlock>()->isSolid(false));
+                                std::make_shared<OMTransparentBlock>()->isSolid(false)->isTranslucent(true));
     blockRegistry.registerItem(OMIdentifier("minecraft:stone_pressure_plate"),
                                 std::make_shared<OMBlock>()->isSolid(false)->propPowered());
     blockRegistry.registerItem(
         OMIdentifier("minecraft:water"),
         std::make_shared<OMBlock>()
+            ->isSolid(false)
             ->isFluid(true)
             ->isTranslucent(true)
             ->prop("level", {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"})
@@ -69,6 +70,7 @@ void registerBlocks()
     blockRegistry.registerItem(
         OMIdentifier("minecraft:lava"),
         std::make_shared<OMBlock>()
+            ->isSolid(false)
             ->isFluid(true)
             ->prop("level", {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"})
             ->prop("falling", {"true", "false"}));

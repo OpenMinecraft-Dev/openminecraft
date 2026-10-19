@@ -1081,10 +1081,10 @@ void OMApplication::mainLoop(OMBackend backend)
                             "minecraft:cherry_stairs[facing=east,half=bottom,shape=straight,water_logged=true]")));
                     cnk.setBlock(3, 1, 0,
                                  blockStateRegistry.id(data::OMIdentifier(
-                                     "minecraft:cherry_door[facing=east,half=lower,hinge=left,open=false]")));
+                                     "minecraft:cherry_door[facing=east,half=lower,hinge=left,open=false,powered=false]")));
                     cnk.setBlock(3, 2, 0,
                                  blockStateRegistry.id(data::OMIdentifier(
-                                     "minecraft:cherry_door[facing=east,half=upper,hinge=left,open=false]")));
+                                     "minecraft:cherry_door[facing=east,half=upper,hinge=left,open=false,powered=false]")));
                     cnk.setBlock(0, 2, 1,
                                  blockStateRegistry.id(data::OMIdentifier(
                                      "minecraft:cherry_hanging_sign[attached=false,rotation=3,water_logged=false]")));
