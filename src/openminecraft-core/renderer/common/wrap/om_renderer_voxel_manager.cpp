@@ -7,6 +7,7 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include <algorithm>
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
@@ -890,6 +891,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             chunkOffsetCache.resize(chunkManager->numChunks());
         }
 
+        // INFO: resize 新增的条目是 0。若某帧出现"实例数据有效、但对应 chunkoffs 仍是 0"，
+        // 这些体素的世界坐标就是 (0,0,0)+局部坐标 —— 即"永远渲染在原点附近(+xz)"的错误体素。
+        // 这里每帧先整体填成 INFINITY（顶点被裁掉），再用真实偏移覆盖，保证不会残留 0 值条目。
+        std::fill(chunkOffsetCache.begin(), chunkOffsetCache.end(), glm::vec3{INFINITY});
+
         auto layerState = hashLayerState();
         chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
@@ -1005,7 +1011,19 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         }
 
         chunkoffs->synced = true;
-        chunkoffs->updateDataPart(chunkOffsetCache.data(), 0, chunkOffsetCache.size() * sizeof(glm::vec3));
+
+        const uint64_t usedBytes = chunkOffsetCache.size() * sizeof(glm::vec3);
+        chunkoffs->updateDataPart(chunkOffsetCache.data(), 0, std::min<uint64_t>(usedBytes, chunkoffs->length));
+
+        // 尾部余量写成 INFINITY：即使实例里出现越界的 chunkId，
+        // texelFetch 读到的是 INFINITY（顶点被裁掉），而不是 0（渲染在原点）。
+        static std::vector<glm::vec3> offsetGuard(512, glm::vec3{INFINITY});
+        if (chunkoffs->length > usedBytes)
+        {
+            const uint64_t guardBytes = std::min<uint64_t>(chunkoffs->length - usedBytes,
+                                                           offsetGuard.size() * sizeof(glm::vec3));
+            chunkoffs->updateDataPart(offsetGuard.data(), usedBytes, guardBytes);
+        }
 
         compilerPool->upload(voxelLayer, voxelComplexLayer, voxelFluidLayer, voxelTranslucentLayer,
                              voxelTranslucentComplexLayer, voxelTranslucentFluidLayer);
