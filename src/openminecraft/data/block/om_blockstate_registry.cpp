@@ -6,7 +6,9 @@
 
 namespace openminecraft::shell::data::block
 {
-openminecraft::world::OMWorldRegistry<OMIdentifier, OMBlockStateCombined> blockStateRegistry;
+// INFO: intentionally leaked (see om_block_registry.cpp) to survive shutdown races.
+openminecraft::world::OMWorldRegistry<OMIdentifier, OMBlockStateCombined> &blockStateRegistry =
+    *new openminecraft::world::OMWorldRegistry<OMIdentifier, OMBlockStateCombined>();
 static openminecraft::log::OMLogger logger("BlockState Registry");
 
 void registerBlockStates()

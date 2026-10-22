@@ -5,7 +5,11 @@
 
 namespace openminecraft::shell::data::block
 {
-OMWorldRegistry<OMIdentifier, std::shared_ptr<OMBlock>> blockRegistry;
+// INFO: intentionally leaked. Detached worker threads may still look up blocks while
+// the process exits; a static destructor would empty the registry under their feet
+// (manifesting as std::logic_error("key not found!") / use-after-free).
+OMWorldRegistry<OMIdentifier, std::shared_ptr<OMBlock>> &blockRegistry =
+    *new OMWorldRegistry<OMIdentifier, std::shared_ptr<OMBlock>>();
 
 void registerBlocks()
 {

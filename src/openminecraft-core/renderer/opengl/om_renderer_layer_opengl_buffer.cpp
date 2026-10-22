@@ -3,7 +3,9 @@
 #include "openminecraft/mem/om_mem_record.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
+#include <algorithm>
 #include <cstring>
+#include <vector>
 
 namespace openminecraft::renderer::opengl
 {
@@ -33,21 +35,23 @@ OMRendererBufferOpenGL::OMRendererBufferOpenGL(common::OMBufferUsage usage, uint
     : common::OMRendererBuffer(usage, length, renderer), renderer(renderer), length(length), usage(usage)
 {
     renderer->gl.glGenBuffers(1, &buffer);
-    mem::castorice::rec({mem::castorice::Allocation, nullptr, static_cast<size_t>(length), "opengl"});
 
-    updateData(nullptr);
-
+    // INFO: UniformTexel 必须先把纹理对象创建出来，updateData 内部会绑定它并调用 glTexBuffer。
+    // 之前的顺序是先 updateData 再 glGenTextures，导致 updateData 里使用未初始化的 texel，
+    // 把缓冲区绑到一个不存在的纹理名上，驱动内部状态被破坏后在 updateData 中崩溃。
     if (usage == common::UniformTexel)
     {
         renderer->gl.glGenTextures(1, &texel);
-        renderer->gl.glBindTexture(GL_TEXTURE_BUFFER, texel);
-        renderer->gl.glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, buffer);
     }
+
+    mem::castorice::rec({mem::castorice::Allocation, nullptr, static_cast<size_t>(length), "opengl"});
+
+    updateData(nullptr);
 }
 
 OMRendererBufferOpenGL::~OMRendererBufferOpenGL()
 {
-    if (usage == common::UniformTexel)
+    if (usage == common::UniformTexel && texel != 0)
     {
         renderer->gl.glDeleteTextures(1, &texel);
     }
@@ -58,11 +62,14 @@ void OMRendererBufferOpenGL::updateData(void *src)
 {
     bind();
 
-    renderer->gl.glBufferData(convertFrom(usage), length, src,
+    if (length > 0)
+    {
+        renderer->gl.glBufferData(convertFrom(usage), length, src,
                               (usage == common::VertexData || usage == common::VertexIndex) ? GL_STATIC_DRAW
                                                                                             : GL_DYNAMIC_DRAW);
+    }
 
-    if (usage == common::UniformTexel)
+    if (usage == common::UniformTexel && texel != 0)
     {
         renderer->gl.glBindTexture(GL_TEXTURE_BUFFER, texel);
         renderer->gl.glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, buffer);
@@ -71,12 +78,39 @@ void OMRendererBufferOpenGL::updateData(void *src)
 }
 void OMRendererBufferOpenGL::moveDataPart(uint64_t target, uint64_t original, uint64_t length)
 {
-    bind();
-    auto data = renderer->gl.glMapBuffer(convertFrom(usage), GL_READ_WRITE);
-    std::memmove(reinterpret_cast<uint8_t *>(data) + target, reinterpret_cast<uint8_t *>(data) + original, length);
-    renderer->gl.glUnmapBuffer(convertFrom(usage));
+    if (length == 0 || target == original)
+    {
+        return;
+    }
 
-    if (usage == common::UniformTexel)
+    bind();
+
+    // 覆盖源与目标的整个区间，一次映射即可安全处理重叠搬移
+    const uint64_t lo = std::min(target, original);
+    const uint64_t hi = std::max(target + length, original + length);
+
+    // INFO: glMapBuffer 在 OpenGL 3.2+ core profile 中不存在（macOS 只提供 glMapBufferRange）；
+    // 调用旧入口会返回 NULL，随后 memcpy 空指针崩溃。这里统一使用 core API 并检查返回值。
+    void *data = renderer->gl.glMapBufferRange(convertFrom(usage), static_cast<GLintptr>(lo),
+                                               static_cast<GLsizeiptr>(hi - lo), GL_MAP_READ_BIT | GL_MAP_WRITE_BIT);
+
+    if (data != nullptr)
+    {
+        auto *base = static_cast<uint8_t *>(data);
+        std::memmove(base + (target - lo), base + (original - lo), static_cast<size_t>(length));
+        renderer->gl.glUnmapBuffer(convertFrom(usage));
+    }
+    else
+    {
+        // 映射失败时退化为 读回 + 写回
+        std::vector<uint8_t> temp(static_cast<size_t>(length));
+        renderer->gl.glGetBufferSubData(convertFrom(usage), static_cast<GLintptr>(original),
+                                        static_cast<GLsizeiptr>(length), temp.data());
+        renderer->gl.glBufferSubData(convertFrom(usage), static_cast<GLintptr>(target),
+                                     static_cast<GLsizeiptr>(length), temp.data());
+    }
+
+    if (usage == common::UniformTexel && texel != 0)
     {
         renderer->gl.glBindTexture(GL_TEXTURE_BUFFER, texel);
         renderer->gl.glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, buffer);
@@ -86,11 +120,27 @@ void OMRendererBufferOpenGL::moveDataPart(uint64_t target, uint64_t original, ui
 void OMRendererBufferOpenGL::updateDataPart(void *src, uint64_t offset, uint64_t length)
 {
     bind();
-    auto data = renderer->gl.glMapBuffer(convertFrom(usage), GL_READ_WRITE);
-    std::memcpy(reinterpret_cast<uint8_t *>(data) + offset, src, length);
-    renderer->gl.glUnmapBuffer(convertFrom(usage));
 
-    if (usage == common::UniformTexel)
+    if (length > 0)
+    {
+        // 同上：core profile 下只能用 glMapBufferRange
+        void *data = renderer->gl.glMapBufferRange(convertFrom(usage), static_cast<GLintptr>(offset),
+                                                   static_cast<GLsizeiptr>(length),
+                                                   GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+
+        if (data != nullptr)
+        {
+            std::memcpy(data, src, static_cast<size_t>(length));
+            renderer->gl.glUnmapBuffer(convertFrom(usage));
+        }
+        else
+        {
+            renderer->gl.glBufferSubData(convertFrom(usage), static_cast<GLintptr>(offset),
+                                         static_cast<GLsizeiptr>(length), src);
+        }
+    }
+
+    if (usage == common::UniformTexel && texel != 0)
     {
         renderer->gl.glBindTexture(GL_TEXTURE_BUFFER, texel);
         renderer->gl.glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, buffer);

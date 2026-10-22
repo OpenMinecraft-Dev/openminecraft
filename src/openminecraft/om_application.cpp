@@ -41,6 +41,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <cstdlib>
 #include <thread>
 #include <variant>
 #include "openminecraft-shell/renderer/om_debug_renderer.hpp"
@@ -1031,6 +1032,25 @@ void OMApplication::networkSetup(std::string host, std::string port)
 void OMApplication::mainLoop(OMBackend backend)
 {
     auto logger = std::make_shared<log::OMLogger>("Test Renderer");
+
+    std::atomic<bool> stopProducing{false};
+    std::thread producer;
+
+    struct ProducerJoiner
+    {
+        std::atomic<bool> &stop;
+        std::thread &thr;
+
+        ~ProducerJoiner()
+        {
+            stop.store(true);
+            if (thr.joinable())
+            {
+                thr.join();
+            }
+        }
+    } producerJoiner{stopProducing, producer};
+
     try
     {
         OMWindowConfig conf = {backend, false, 240, 854, 480};
@@ -1045,7 +1065,7 @@ void OMApplication::mainLoop(OMBackend backend)
 
         auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
 
-        new std::thread([chunkManager]() {
+        producer = std::thread([chunkManager, &stopProducing]() {
             int width = 16;
             int height = 16;
             int depth = 8;
@@ -1055,6 +1075,11 @@ void OMApplication::mainLoop(OMBackend backend)
                 {
                     for (int cz = -height; cz < height; ++cz)
                     {
+                        if (stopProducing.load())
+                        {
+                            return;
+                        }
+
                         using data::block::blockStateRegistry;
                         world::OMChunk<16> cnk(cx, cy, cz);
                         for (int x = 0; x < 16; ++x)
@@ -1393,8 +1418,22 @@ void OMApplication::mainLoop(OMBackend backend)
         });
 
         util::OMTicker ticker;
+
+        // 测试用：OM_AUTOEXIT_MS 毫秒后自动退出，用于验证完整的关闭路径
+        const char *autoExitEnv = std::getenv("OM_AUTOEXIT_MS");
+        const long long autoExitMs = autoExitEnv ? std::atoll(autoExitEnv) : 0;
+        const auto loopStart = std::chrono::steady_clock::now();
+
         while (isRunning)
         {
+            if (autoExitMs > 0 &&
+                std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - loopStart)
+                        .count() > autoExitMs)
+            {
+                logger->info("auto exit triggered after {} ms", autoExitMs);
+                isRunning = false;
+            }
+
             ticker.begin();
 
             SDL_Event e;
