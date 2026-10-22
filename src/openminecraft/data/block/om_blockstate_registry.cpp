@@ -11,15 +11,8 @@ static openminecraft::log::OMLogger logger("BlockState Registry");
 
 void registerBlockStates()
 {
-    auto c = OMBlockStateCombined{OMIdentifier("minecraft:air"), {}};
-    blockStateRegistry.registerItem(OMIdentifier("minecraft:air[]"), c);
-
     for (auto &l : blockRegistry.nameToId)
     {
-        if (l.first.namesp == "minecraft" && l.first.path == "air")
-        {
-            continue;
-        }
         std::vector<OMBlockState> states = {};
         states.emplace_back("");
 

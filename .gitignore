@@ -30,3 +30,4 @@ bootassets/external
 externalassets
 *.xcodeproj/
 ._*
+exports

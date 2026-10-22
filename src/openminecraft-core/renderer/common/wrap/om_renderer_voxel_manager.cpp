@@ -820,9 +820,13 @@ auto OMVoxelManager::hashLayerState() -> std::array<uint32_t, 12>
 auto OMVoxelManager::fetchChunkState() -> std::pair<uint32_t, uint32_t>
 {
     uint32_t total = 0, nonfree = 0;
-    chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
+    chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
         for (const auto &c : chunks)
         {
+            if (!c)
+            {
+                continue;
+            }
             ++total;
             if (c->visible)
             {
@@ -887,17 +891,17 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         }
 
         auto layerState = hashLayerState();
-        chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
+        chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
             for (auto &ochk : chunks)
             {
-                if (!ochk.has_value())
+                if (!ochk)
                 {
                     chunkOffsetCache[i] = glm::vec3{INFINITY};
                 }
                 else
                 {
-                    const auto &chk = ochk.value();
+                    const auto &chk = *ochk;
                     auto position = basics::OMPosition<16, int64_t, float>();
                     position.chunkx = chk.chunkx;
                     position.chunky = chk.chunky;
@@ -914,18 +918,18 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         {
             hideFrames.assign(chunkManager->numChunks(), 0);
         }
-        chunkManager->withChunks([&](std::vector<std::optional<world::OMChunk<16>>> &chunks) -> void {
+        chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
             for (auto &ochk : chunks)
             {
-                if (!ochk.has_value())
+                if (!ochk)
                 {
                     compilerPool->dropCache(i);
                     unloadChunk(i);
                 }
                 else
                 {
-                    auto &chk = ochk.value();
+                    auto &chk = *ochk;
 
                     auto position = basics::OMPosition<16, int64_t, float>();
                     position.chunkx = chk.chunkx;

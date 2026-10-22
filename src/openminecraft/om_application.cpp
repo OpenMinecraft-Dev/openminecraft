@@ -41,6 +41,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <variant>
 #include "openminecraft-shell/renderer/om_debug_renderer.hpp"
 #include "openminecraft-shell/renderer/om_world_renderer.hpp"
@@ -575,9 +576,8 @@ void OMApplication::networkSetup(std::string host, std::string port)
                         break;
                     case network::OMDataComponentHandler::BrewingFuel:
                         logger->debug("  slot {}: brewing fuel uses {} speed {}", i,
-                                      component.brewingUses.isReference
-                                          ? component.brewingUses.key
-                                          : std::to_string(component.brewingUses.value),
+                                      component.brewingUses.isReference ? component.brewingUses.key
+                                                                        : std::to_string(component.brewingUses.value),
                                       component.brewingSpeedMultiplier.isReference
                                           ? component.brewingSpeedMultiplier.key
                                           : std::to_string(component.brewingSpeedMultiplier.value));
@@ -610,7 +610,8 @@ void OMApplication::networkSetup(std::string host, std::string port)
                         break;
                     case network::OMDataComponentHandler::Profile:
                         logger->debug("  slot {}: profile kind {} name {} properties {}", i, component.profile.kind,
-                                      component.profile.username.value_or("<none>"), component.profile.properties.size());
+                                      component.profile.username.value_or("<none>"),
+                                      component.profile.properties.size());
                         break;
                     case network::OMDataComponentHandler::KineticWeapon:
                         logger->debug("  slot {}: kinetic cooldown {} conditions {} forward {} damage {}", i,
@@ -619,8 +620,8 @@ void OMApplication::networkSetup(std::string host, std::string port)
                                       component.floatList.size() > 1 ? component.floatList[1] : 0.0f);
                         break;
                     case network::OMDataComponentHandler::Equippable:
-                        logger->debug("  slot {}: equippable slot {} dispensable {} swappable {}", i, component.intValue,
-                                      component.boolValue, component.secondBool);
+                        logger->debug("  slot {}: equippable slot {} dispensable {} swappable {}", i,
+                                      component.intValue, component.boolValue, component.secondBool);
                         break;
                     case network::OMDataComponentHandler::Tool:
                         logger->debug("  slot {}: tool rules {} default speed {} damage/block {} creative {} ", i,
@@ -628,8 +629,8 @@ void OMApplication::networkSetup(std::string host, std::string port)
                                       component.boolValue);
                         break;
                     case network::OMDataComponentHandler::FireworkExplosion:
-                        logger->debug("  slot {}: firework shape {} colors {} fade {}", i, component.fireworkExplosion.shape,
-                                      component.fireworkExplosion.colors.size(),
+                        logger->debug("  slot {}: firework shape {} colors {} fade {}", i,
+                                      component.fireworkExplosion.shape, component.fireworkExplosion.colors.size(),
                                       component.fireworkExplosion.fadeColors.size());
                         break;
                     case network::OMDataComponentHandler::Fireworks:
@@ -637,8 +638,9 @@ void OMApplication::networkSetup(std::string host, std::string port)
                                       component.fireworkExplosions.size());
                         break;
                     case network::OMDataComponentHandler::PiercingWeapon:
-                        logger->debug("  slot {}: piercing knockback {} dismounts {} sounds {} / {}", i, component.boolValue,
-                                      component.secondBool, component.intList.size(), component.intListB.size());
+                        logger->debug("  slot {}: piercing knockback {} dismounts {} sounds {} / {}", i,
+                                      component.boolValue, component.secondBool, component.intList.size(),
+                                      component.intListB.size());
                         break;
                     case network::OMDataComponentHandler::PotionContents:
                         logger->debug("  slot {}: potion {} color {} effects {}", i, component.potionId.value_or(-1),
@@ -672,13 +674,12 @@ void OMApplication::networkSetup(std::string host, std::string port)
                                           : std::to_string(component.jukeboxSong.registryId()));
                         break;
                     case network::OMDataComponentHandler::Trim:
-                        logger->debug("  slot {}: trim material {} pattern {}", i,
-                                      component.trimMaterial.isInline()
-                                          ? component.trimMaterial.value->suffix
-                                          : std::to_string(component.trimMaterial.registryId()),
-                                      component.trimPattern.isInline()
-                                          ? component.trimPattern.value->assetName
-                                          : std::to_string(component.trimPattern.registryId()));
+                        logger->debug(
+                            "  slot {}: trim material {} pattern {}", i,
+                            component.trimMaterial.isInline() ? component.trimMaterial.value->suffix
+                                                              : std::to_string(component.trimMaterial.registryId()),
+                            component.trimPattern.isInline() ? component.trimPattern.value->assetName
+                                                             : std::to_string(component.trimPattern.registryId()));
                         break;
                     case network::OMDataComponentHandler::LodestoneTracker:
                         logger->debug("  slot {}: lodestone has position {} tracked {}", i, component.boolValue,
@@ -733,8 +734,8 @@ void OMApplication::networkSetup(std::string host, std::string port)
                             head += fmt::format("{:02x} ", byte);
                         }
 
-                        logger->warn("  slot {}: component {} truncated, head: {}", i, static_cast<int32_t>(component.type),
-                                     head);
+                        logger->warn("  slot {}: component {} truncated, head: {}", i,
+                                     static_cast<int32_t>(component.type), head);
                     }
                 }
             }
@@ -1043,65 +1044,87 @@ void OMApplication::mainLoop(OMBackend backend)
         auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{-1.0f, 5.0f, -1.0f}, 45.0f, -45.0f);
 
         auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
-        int width = 16;
-        int height = 16;
-        int depth = 8;
-        for (int cx = -width; cx < width; ++cx)
-        {
-            for (int cy = -depth; cy <= 0; ++cy)
+
+        new std::thread([chunkManager]() {
+            int width = 16;
+            int height = 16;
+            int depth = 8;
+            for (int cx = -width; cx < width; ++cx)
             {
-                for (int cz = -height; cz < height; ++cz)
+                for (int cy = -depth; cy <= 0; ++cy)
                 {
-                    using data::block::blockStateRegistry;
-                    world::OMChunk<16> cnk(cx, cy, cz);
-                    cnk.setBlock(0, 1, 0,
-                                 blockStateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=1]")));
-                    cnk.setBlock(0, 0, 0,
-                                 blockStateRegistry.id(data::OMIdentifier("minecraft:lava[falling=false,level=0]")));
-                    cnk.setBlock(0, 15, 0,
-                                 blockStateRegistry.id(data::OMIdentifier("minecraft:water[falling=true,level=8]")));
-                    cnk.setBlock(15, 1, 0,
-                                 blockStateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=2]")));
-                    cnk.setBlock(0, 1, 15,
-                                 blockStateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=2]")));
-                    cnk.setBlock(15, 1, 15,
-                                 blockStateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=3]")));
-                    cnk.setBlock(15, 0, 0,
-                                 blockStateRegistry.id(data::OMIdentifier("minecraft:white_stained_glass[]")));
-                    cnk.setBlock(0, 1, 1, blockStateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
-                    cnk.setBlock(2, 0, 0,
-                                 blockStateRegistry.id(data::OMIdentifier("minecraft:grass_block[snowy=false]")));
-                    cnk.setBlock(2, 1, 0,
-                                 blockStateRegistry.id(data::OMIdentifier("minecraft:tall_grass[half=lower]")));
-                    cnk.setBlock(2, 2, 0,
-                                 blockStateRegistry.id(data::OMIdentifier("minecraft:tall_grass[half=upper]")));
-                    cnk.setBlock(
-                        1, 1, 0,
-                        blockStateRegistry.id(data::OMIdentifier(
-                            "minecraft:cherry_stairs[facing=east,half=bottom,shape=straight,waterlogged=true]")));
-                    cnk.setBlock(3, 1, 0,
-                                 blockStateRegistry.id(data::OMIdentifier(
-                                     "minecraft:cherry_door[facing=east,half=lower,hinge=left,open=false,powered=false]")));
-                    cnk.setBlock(3, 2, 0,
-                                 blockStateRegistry.id(data::OMIdentifier(
-                                     "minecraft:cherry_door[facing=east,half=upper,hinge=left,open=false,powered=false]")));
-                    cnk.setBlock(0, 2, 1,
-                                 blockStateRegistry.id(data::OMIdentifier(
-                                     "minecraft:cherry_hanging_sign[attached=false,rotation=3,waterlogged=false]")));
-                    cnk.setBlock(0, 1, 2, blockStateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
-                    cnk.setBlock(15, 1, 1, blockStateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
-                    cnk.setBlock(15, 1, 2, blockStateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
-                    cnk.setBlock(15, 2, 2,
-                                 blockStateRegistry.id(
-                                     data::OMIdentifier("minecraft:cherry_fence_gate[facing=south,in_wall=false,"
-                                                        "open=true,powered=true,waterlogged=false]")));
-                    cnk.setBlock(
-                        15, 2, 1,
-                        blockStateRegistry.id(data::OMIdentifier("minecraft:stone_pressure_plate[powered=false]")));
-                    chunkManager->loadChunk(cnk);
+                    for (int cz = -height; cz < height; ++cz)
+                    {
+                        using data::block::blockStateRegistry;
+                        world::OMChunk<16> cnk(cx, cy, cz);
+                        for (int x = 0; x < 16; ++x)
+                        {
+                            for (int y = 0; y < 16; ++y)
+                            {
+                                for (int z = 0; z < 16; ++z)
+                                {
+                                    cnk.setBlock(x, y, z, blockStateRegistry.id(data::OMIdentifier("minecraft:air[]")));
+                                }
+                            }
+                        }
+                        cnk.setBlock(
+                            0, 1, 0,
+                            blockStateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=1]")));
+                        cnk.setBlock(
+                            0, 0, 0,
+                            blockStateRegistry.id(data::OMIdentifier("minecraft:lava[falling=false,level=0]")));
+                        cnk.setBlock(
+                            0, 15, 0,
+                            blockStateRegistry.id(data::OMIdentifier("minecraft:water[falling=true,level=8]")));
+                        cnk.setBlock(
+                            15, 1, 0,
+                            blockStateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=2]")));
+                        cnk.setBlock(
+                            0, 1, 15,
+                            blockStateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=2]")));
+                        cnk.setBlock(
+                            15, 1, 15,
+                            blockStateRegistry.id(data::OMIdentifier("minecraft:water[falling=false,level=3]")));
+                        cnk.setBlock(15, 0, 0,
+                                     blockStateRegistry.id(data::OMIdentifier("minecraft:white_stained_glass[]")));
+                        cnk.setBlock(0, 1, 1, blockStateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                        cnk.setBlock(2, 0, 0,
+                                     blockStateRegistry.id(data::OMIdentifier("minecraft:grass_block[snowy=false]")));
+                        cnk.setBlock(2, 1, 0,
+                                     blockStateRegistry.id(data::OMIdentifier("minecraft:tall_grass[half=lower]")));
+                        cnk.setBlock(2, 2, 0,
+                                     blockStateRegistry.id(data::OMIdentifier("minecraft:tall_grass[half=upper]")));
+                        cnk.setBlock(
+                            1, 1, 0,
+                            blockStateRegistry.id(data::OMIdentifier(
+                                "minecraft:cherry_stairs[facing=east,half=bottom,shape=straight,waterlogged=true]")));
+                        cnk.setBlock(
+                            3, 1, 0,
+                            blockStateRegistry.id(data::OMIdentifier(
+                                "minecraft:cherry_door[facing=east,half=lower,hinge=left,open=false,powered=false]")));
+                        cnk.setBlock(
+                            3, 2, 0,
+                            blockStateRegistry.id(data::OMIdentifier(
+                                "minecraft:cherry_door[facing=east,half=upper,hinge=left,open=false,powered=false]")));
+                        cnk.setBlock(
+                            0, 2, 1,
+                            blockStateRegistry.id(data::OMIdentifier(
+                                "minecraft:cherry_hanging_sign[attached=false,rotation=3,waterlogged=false]")));
+                        cnk.setBlock(0, 1, 2, blockStateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                        cnk.setBlock(15, 1, 1, blockStateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                        cnk.setBlock(15, 1, 2, blockStateRegistry.id(data::OMIdentifier("minecraft:copper_ore[]")));
+                        cnk.setBlock(15, 2, 2,
+                                     blockStateRegistry.id(
+                                         data::OMIdentifier("minecraft:cherry_fence_gate[facing=south,in_wall=false,"
+                                                            "open=true,powered=true,waterlogged=false]")));
+                        cnk.setBlock(
+                            15, 2, 1,
+                            blockStateRegistry.id(data::OMIdentifier("minecraft:stone_pressure_plate[powered=false]")));
+                        chunkManager->loadChunk(cnk);
+                    }
                 }
             }
-        }
+        });
 
         bool mainScreen = true;
         buswrap.append(event::Custom, [&](event::OMEvent &e) {

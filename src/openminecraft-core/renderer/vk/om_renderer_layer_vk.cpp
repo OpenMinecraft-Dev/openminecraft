@@ -837,6 +837,9 @@ OMRendererVk::~OMRendererVk()
 {
     try
     {
+        // 先停掉 shader 编译线程并丢弃结果，避免 Vulkan 对象销毁后仍有线程访问
+        compiler.stop();
+
         logicalDevice.waitIdle();
 
         active = false;

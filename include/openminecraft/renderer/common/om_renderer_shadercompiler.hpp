@@ -1,8 +1,10 @@
 #ifndef OM_RENDERER_SHADERCOMPILER_HPP
 #define OM_RENDERER_SHADERCOMPILER_HPP
 
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include <atomic>
+#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -31,6 +33,9 @@ class OMRendererShaderCompiler
     OMRendererShaderCompiler();
     ~OMRendererShaderCompiler();
 
+    // 停止所有编译线程并丢弃未完成的任务；可重复调用（析构时也会调用）
+    void stop();
+
     void install(std::shared_ptr<OMRendererShaderCompilerBackend> backend);
 
     auto addCompileTask(std::shared_ptr<OMShader> shader) -> int;
@@ -45,10 +50,14 @@ class OMRendererShaderCompiler
     std::unordered_map<int, std::shared_ptr<OMShader>> results;
 
     std::mutex queueLock;
-    bool available = true;
+    std::condition_variable queueCv;
+    std::atomic<bool> available = true;
+    std::atomic<bool> stopped = false;
 
     std::atomic_int countFinished = 0;
-    float countTotal = 0;
+    std::atomic<int> countTotal = 0;
+
+    log::OMLogger logger;
 };
 } // namespace openminecraft::renderer::common
 

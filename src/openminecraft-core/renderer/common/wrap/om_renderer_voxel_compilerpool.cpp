@@ -32,6 +32,7 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                 queuedChunks.pop_back();
                 poolMutex.unlock();
 
+                std::unordered_map<world::OMChunkIndex, std::shared_ptr<const world::OMChunk<16>>> neighborCache;
                 auto externalAccessor = [&](glm::ivec3 pos, int64_t chunkx, int64_t chunky,
                                             int64_t chunkz) -> uint32_t {
                     if (pos.x < 0)
@@ -68,18 +69,23 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                     }
 
                     world::OMChunkIndex idx = {chunkx, chunky, chunkz};
-                    if (manager.chunkLoaded(idx))
+
+                    // 邻域指针做缓存：每个 chunk 编译只加锁一次，而不是逐方块加锁
+                    auto cachedNeighbor = neighborCache.find(idx);
+                    if (cachedNeighbor == neighborCache.end())
                     {
-                        return manager.getChunk(idx).fetch(pos.x, pos.y, pos.z);
+                        cachedNeighbor = neighborCache.emplace(idx, manager.tryGetChunk(idx)).first;
                     }
-                    else
+
+                    if (cachedNeighbor->second)
                     {
-                        return 0;
+                        return cachedNeighbor->second->fetch(pos.x, pos.y, pos.z);
                     }
+                    return 0;
                 };
 
                 auto cnk = manager.getChunk(next);
-                if (cnk.has_value())
+                if (cnk)
                 {
                     if (useCache && cached.count(next) && !cnk->isDirty())
                     {
@@ -98,7 +104,7 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                     std::vector<OMVoxelComplex> cm = {}, tcm = {};
                     std::vector<OMVoxelFluid> fm = {}, tfm = {};
                     compiler.compile(
-                        cnk.value(), externalAccessor, next, [&](OMVoxel v) -> void { m.emplace_back(v); },
+                        *cnk, externalAccessor, next, [&](OMVoxel v) -> void { m.emplace_back(v); },
                         [&](OMVoxelComplex v) -> void { cm.emplace_back(v); },
                         [&](OMVoxelFluid v) { fm.emplace_back(v); }, [&](OMVoxel v) -> void { tm.emplace_back(v); },
                         [&](OMVoxelComplex v) -> void { tcm.emplace_back(v); },

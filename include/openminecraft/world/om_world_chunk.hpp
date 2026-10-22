@@ -2,6 +2,7 @@
 #define OM_WORLD_CHUNK_HPP
 
 #include "glm/glm.hpp"
+#include <atomic>
 #include <cstdint>
 #include <functional>
 #include <iterator>
@@ -15,6 +16,41 @@ template <int Cs> class OMChunk
   public:
     OMChunk(int64_t chunkx, int64_t chunky, int64_t chunkz) : chunkx(chunkx), chunky(chunky), chunkz(chunkz)
     {
+    }
+
+    // std::atomic 成员会删除隐式的拷贝/移动构造，这里显式实现
+    OMChunk(const OMChunk &other)
+        : chunkx(other.chunkx), chunky(other.chunky), chunkz(other.chunkz), visible(other.visible.load()),
+          blocks(other.blocks), dirty(other.dirty.load())
+    {
+    }
+
+    auto operator=(const OMChunk &other) -> OMChunk &
+    {
+        chunkx = other.chunkx;
+        chunky = other.chunky;
+        chunkz = other.chunkz;
+        blocks = other.blocks;
+        visible.store(other.visible.load());
+        dirty.store(other.dirty.load());
+        return *this;
+    }
+
+    OMChunk(OMChunk &&other) noexcept
+        : chunkx(other.chunkx), chunky(other.chunky), chunkz(other.chunkz), visible(other.visible.load()),
+          blocks(std::move(other.blocks)), dirty(other.dirty.load())
+    {
+    }
+
+    auto operator=(OMChunk &&other) noexcept -> OMChunk &
+    {
+        chunkx = other.chunkx;
+        chunky = other.chunky;
+        chunkz = other.chunkz;
+        blocks = std::move(other.blocks);
+        visible.store(other.visible.load());
+        dirty.store(other.dirty.load());
+        return *this;
     }
     ~OMChunk()
     {
@@ -32,17 +68,17 @@ template <int Cs> class OMChunk
 
     void solveDirty()
     {
-        dirty = false;
+        dirty.store(false);
     }
 
     auto isDirty() const -> bool
     {
-        return dirty;
+        return dirty.load();
     }
 
     void markDirty()
     {
-        dirty = true;
+        dirty.store(true);
     }
 
     class const_iterator
@@ -113,11 +149,11 @@ template <int Cs> class OMChunk
 
     int64_t chunkx, chunky, chunkz;
 
-    bool visible = true;
+    std::atomic<bool> visible{true};
 
   private:
     std::array<uint32_t, Cs * Cs * Cs> blocks = {};
-    bool dirty = true;
+    std::atomic<bool> dirty{true};
 };
 } // namespace openminecraft::world
 
