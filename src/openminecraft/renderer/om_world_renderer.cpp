@@ -11,6 +11,7 @@
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
 #include "openminecraft-shell/data/om_textureatlas.hpp"
+#include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_multitimeline.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
@@ -85,10 +86,16 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
                       animation::Multiply);
 
     animation::OMAnimationTimelineValue<24000, float> sunAngle =
-        animation::OMAnimationTimelineValue<24000, float>().append(6000, 360.0f).append(6000, 0.0f);
+        animation::OMAnimationTimelineValue<24000, float>()
+            .easing([](float a) { return animation::symmetricEaseBezier(a, 0.362f, 0.241f); })
+            .append(6000, 360.0f)
+            .append(6000, 0.0f);
 
     animation::OMAnimationTimelineValue<24000, float> moonAngle =
-        animation::OMAnimationTimelineValue<24000, float>().append(6000, 540.0f).append(6000, 180.0f);
+        animation::OMAnimationTimelineValue<24000, float>()
+            .easing([](float a) { return animation::symmetricEaseBezier(a, 0.362f, 0.241f); })
+            .append(6000, 540.0f)
+            .append(6000, 180.0f);
 
     animation::OMAnimationTimelineValue<24000, float> skylightFactorTimeline =
         animation::OMAnimationTimelineValue<24000, float>()
@@ -369,7 +376,7 @@ void OMWorldRenderer::record(bool r)
         ->finishN();
 }
 
-static int gameT = 0;
+static int gameT = 13500;
 static std::chrono::steady_clock::time_point tickTp = std::chrono::steady_clock::now();
 
 auto OMWorldRenderer::getTick() -> int
