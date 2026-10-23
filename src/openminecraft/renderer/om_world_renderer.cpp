@@ -1,4 +1,7 @@
 #include "openminecraft-shell/renderer/om_world_renderer.hpp"
+#include <cstdlib>
+#include <typeinfo>
+#include <fstream>
 
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"

@@ -19,6 +19,7 @@ class OMRendererBufferOpenGL : public common::OMRendererBuffer
     void bind();
     void unbind();
     void copyTo(OMRendererBuffer *) override;
+    auto fetchData() -> std::shared_ptr<void> override;
     GLuint buffer = 0;
     GLuint texel = 0;
 

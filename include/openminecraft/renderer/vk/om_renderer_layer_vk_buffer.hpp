@@ -21,6 +21,7 @@ class OMRendererBufferVk : public common::OMRendererBuffer
     void updateDataPart(void *src, uint64_t offset, uint64_t length) override;
     void moveDataPart(uint64_t target, uint64_t original, uint64_t length) override;
     void copyTo(OMRendererBuffer *) override;
+    auto fetchData() -> std::shared_ptr<void> override;
 
     ::vk::Buffer buffer;
     ::vk::DeviceMemory bufferMemory;

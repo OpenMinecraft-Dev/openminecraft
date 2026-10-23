@@ -37,6 +37,8 @@ class OMRendererBuffer : public OMRendererObject
     virtual void updateDataPart(void *src, uint64_t offset, uint64_t length) = 0;
     virtual void moveDataPart(uint64_t target, uint64_t original, uint64_t length) = 0;
     virtual void copyTo(OMRendererBuffer *) = 0;
+
+    virtual auto fetchData() -> std::shared_ptr<void> = 0;
     auto objType() -> OMRendererObjectType override
     {
         return DataBuffer;

@@ -56,7 +56,6 @@ static auto mapToUsageFlag(OMBufferUsage usage) -> BufferUsageFlags
     case VertexIndex:
         return BufferUsageFlagBits::eIndexBuffer;
     case Misc:
-        // 上传（buffer -> image）用 eTransferSrc，回读（image -> buffer）需要 eTransferDst
         return BufferUsageFlagBits::eTransferSrc | BufferUsageFlagBits::eTransferDst;
     case Uniform:
         return BufferUsageFlagBits::eUniformBuffer;
@@ -221,6 +220,37 @@ void OMRendererBufferVk::updateDataPart(void *src, uint64_t offset, uint64_t len
     catch (SystemError &e)
     {
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.buffer.update"));
+    }
+}
+
+auto OMRendererBufferVk::fetchData() -> std::shared_ptr<void>
+{
+    try
+    {
+        auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
+
+        // 确保 GPU 已写完
+        renderer->logicalDevice.waitIdle();
+
+        std::shared_ptr<void> result(std::malloc(this->length), [](void *p) { std::free(p); });
+
+        if (alwaysMapped && data != nullptr)
+        {
+            // 持久映射（默认）：HOST_COHERENT，直接拷贝，不能再 vkMapMemory
+            std::memcpy(result.get(), data, this->length);
+        }
+        else
+        {
+            void *mapped = renderer->logicalDevice.mapMemory(this->bufferMemory, 0, this->length);
+            std::memcpy(result.get(), mapped, this->length);
+            renderer->logicalDevice.unmapMemory(this->bufferMemory);
+        }
+
+        return result;
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.buffer.fetch"));
     }
 }
 

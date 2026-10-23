@@ -19,6 +19,7 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include <chrono>
+#include <string>
 #include <functional>
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE

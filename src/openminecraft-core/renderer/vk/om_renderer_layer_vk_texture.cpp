@@ -2,6 +2,7 @@
 
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
+#include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
@@ -506,10 +507,7 @@ auto OMRendererTextureVk::fetchData(uint64_t layer) -> std::shared_ptr<void>
 
         renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
 
-        void *mapped = renderer->logicalDevice.mapMemory(vkStaging->bufferMemory, 0, bytes);
-        std::shared_ptr<void> result(std::malloc(bytes), [](void *p) { std::free(p); });
-        std::memcpy(result.get(), mapped, bytes);
-        renderer->logicalDevice.unmapMemory(vkStaging->bufferMemory);
+        auto result = staging->fetchData();
 
         delete staging;
 

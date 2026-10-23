@@ -147,6 +147,18 @@ void OMRendererBufferOpenGL::updateDataPart(void *src, uint64_t offset, uint64_t
     }
     unbind();
 }
+auto OMRendererBufferOpenGL::fetchData() -> std::shared_ptr<void>
+{
+    std::shared_ptr<void> result(std::malloc(length), [](void *p) { std::free(p); });
+
+    // 与 copyTo 相同：绑定后用 glGetBufferSubData 读回
+    bind();
+    renderer->gl.glGetBufferSubData(convertFrom(usage), 0, length, result.get());
+    unbind();
+
+    return result;
+}
+
 void OMRendererBufferOpenGL::copyTo(OMRendererBuffer *buf)
 {
     void *temp = malloc(length);
