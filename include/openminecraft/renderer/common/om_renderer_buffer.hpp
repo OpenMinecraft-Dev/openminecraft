@@ -3,6 +3,7 @@
 #include "openminecraft/renderer/om_renderer_object.hpp"
 #include <fmt/format.h>
 #include <openminecraft/log/om_log_common.hpp>
+#include <memory>
 
 namespace openminecraft::renderer
 {
