@@ -538,7 +538,9 @@ class OMVoxelManager
 
     auto submit(OMRendererTask *, OMRendererTempTarget *, bool = true) -> OMRendererTask *;
     auto update(basics::OMCamera &camera) -> void;
+
     auto updateColor() -> void;
+    auto calcActualFogColor() -> glm::vec3;
     void bindCameraBuffer(OMRendererBuffer *);
     auto buildVoxelCloud() -> std::vector<uint32_t>;
     auto hashLayerState() -> std::array<uint32_t, 12>;
@@ -595,10 +597,13 @@ class OMVoxelManager
 
     OMVoxelCompilerPool *compilerPool;
 
+    glm::vec3 actualFogColor = glm::vec3(1.0f);
+    glm::vec3 cameraForward = glm::vec3(0.0f, 0.0f, 1.0f);
+    int renderDistance = 8;
+
     std::vector<glm::vec3> chunkOffsetCache;
-    // 视角抖动抑制：chunk 离开视锥后延迟卸载，避免来回编译/卸载
     std::vector<uint8_t> hideFrames;
-    static constexpr uint8_t unloadDelay = 20; // 连续 20 帧不可见才真正卸载
+    static constexpr uint8_t unloadDelay = 20;
 
     void unloadChunk(int i);
 };

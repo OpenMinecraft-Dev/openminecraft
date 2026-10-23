@@ -721,6 +721,41 @@ auto srgbToLinear(const glm::vec4 &cp) -> glm::vec4
     return {r.x, r.y, r.z, cp.w};
 }
 
+auto OMVoxelManager::calcActualFogColor() -> glm::vec3
+{
+    glm::vec3 fogColor = colorManager->getFogColor();
+
+    if (renderDistance >= 4)
+    {
+        const float sunAngle = glm::radians(colorManager->getSunAngle());
+
+        const float sunX = std::sin(sunAngle) > 0.0f ? -1.0f : 1.0f;
+
+        const float lookingAtSun = cameraForward.x * sunX;
+
+        if (lookingAtSun > 0.0f)
+        {
+            const glm::vec4 sunrise = colorManager->getSunriseColor();
+            const float alpha = sunrise.w;
+
+            if (alpha > 0.0f)
+            {
+                const float t = std::min(lookingAtSun * alpha, 1.0f);
+                fogColor = glm::mix(fogColor, glm::vec3(sunrise), t);
+            }
+        }
+    }
+
+    const glm::vec3 skyColor = colorManager->getSkyDiscColor();
+
+    const float skyFogEnd = std::min(colorManager->getFogRange().y / 16.0f, static_cast<float>(renderDistance));
+
+    float skyColorMix = std::clamp(skyFogEnd / 32.0f, 0.25f, 1.0f);
+    skyColorMix = 1.0f - std::pow(skyColorMix, 0.25f);
+
+    return glm::mix(fogColor, skyColor, skyColorMix);
+}
+
 auto OMVoxelManager::updateColor() -> void
 {
     if (colorManager->isDirty())
@@ -730,7 +765,7 @@ auto OMVoxelManager::updateColor() -> void
         skydisc->updateData(&disc);
         OMVoxelSunrise ris = {srgbToLinear(colorManager->getSunriseColor()), colorManager->getSunAngle()};
         sunrise->updateData(&ris);
-        auto fg = srgbToLinear(colorManager->getFogColor());
+        auto fg = srgbToLinear(actualFogColor);
         std::array<float, 5> fogParams = {colorManager->getFogRange().x, colorManager->getFogRange().y, fg.r, fg.g,
                                           fg.b};
         fogdata->updateData(fogParams.data());
@@ -882,6 +917,9 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             corners[5] - camera.getPosRaw(), corners[3] - camera.getPosRaw(), corners[6] - camera.getPosRaw(),
         }}.data());
 
+    cameraForward = camera.getForward();
+    actualFogColor = calcActualFogColor();
+
     updateColor();
 
     if (chunkManager->numChunks())
@@ -891,9 +929,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             chunkOffsetCache.resize(chunkManager->numChunks());
         }
 
-        // INFO: resize 新增的条目是 0。若某帧出现"实例数据有效、但对应 chunkoffs 仍是 0"，
-        // 这些体素的世界坐标就是 (0,0,0)+局部坐标 —— 即"永远渲染在原点附近(+xz)"的错误体素。
-        // 这里每帧先整体填成 INFINITY（顶点被裁掉），再用真实偏移覆盖，保证不会残留 0 值条目。
         std::fill(chunkOffsetCache.begin(), chunkOffsetCache.end(), glm::vec3{INFINITY});
 
         auto layerState = hashLayerState();
@@ -1015,13 +1050,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         const uint64_t usedBytes = chunkOffsetCache.size() * sizeof(glm::vec3);
         chunkoffs->updateDataPart(chunkOffsetCache.data(), 0, std::min<uint64_t>(usedBytes, chunkoffs->length));
 
-        // 尾部余量写成 INFINITY：即使实例里出现越界的 chunkId，
-        // texelFetch 读到的是 INFINITY（顶点被裁掉），而不是 0（渲染在原点）。
         static std::vector<glm::vec3> offsetGuard(512, glm::vec3{INFINITY});
         if (chunkoffs->length > usedBytes)
         {
-            const uint64_t guardBytes = std::min<uint64_t>(chunkoffs->length - usedBytes,
-                                                           offsetGuard.size() * sizeof(glm::vec3));
+            const uint64_t guardBytes =
+                std::min<uint64_t>(chunkoffs->length - usedBytes, offsetGuard.size() * sizeof(glm::vec3));
             chunkoffs->updateDataPart(offsetGuard.data(), usedBytes, guardBytes);
         }
 

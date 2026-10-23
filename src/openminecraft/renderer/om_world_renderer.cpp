@@ -376,7 +376,7 @@ void OMWorldRenderer::record(bool r)
         ->finishN();
 }
 
-static int gameT = 13500;
+static int gameT = 12000;
 static std::chrono::steady_clock::time_point tickTp = std::chrono::steady_clock::now();
 
 auto OMWorldRenderer::getTick() -> int
