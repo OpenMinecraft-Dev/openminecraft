@@ -301,24 +301,15 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     voxelHandler = new data::OMModelPrecompiler("/external/assets", textureAtlas);
     blockStateResolver = new data::block::OMBlockStateResolver("/external/assets", *voxelHandler);
 
-    blockStateResolver->resolve(data::OMIdentifier("minecraft:air"));
-    blockStateResolver->buildModel(data::OMIdentifier("minecraft:air"), {});
-
     for (auto &p : data::block::blockRegistry.nameToId)
     {
-        if (p.first.namesp != "minecraft" || p.first.path != "air")
-        {
-            blockStateResolver->resolve(p.first);
-        }
+        blockStateResolver->resolve(p.first);
     }
 
     for (auto &p : data::block::blockStateRegistry.nameToId)
     {
         auto &reg = data::block::blockStateRegistry.getRegistry(p.first);
-        if (reg.block.namesp != "minecraft" || reg.block.path != "air")
-        {
-            blockStateResolver->buildModel(reg.block, reg.state);
-        }
+        blockStateResolver->buildModel(reg.block, reg.state);
     }
     textureAtlas->build();
 
@@ -345,7 +336,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
             ->input(UniformBuffer)
             ->inputName("Time")
             ->output(tempTarget->target)
-            ->shader(renderer->shaderManager.preprocess("demiurge/scene/scene1.vert.glsl", Vertex, GLSLSource, simp))
+            ->shader(renderer->shaderManager.preprocess("demiurge/scene/scene.vert.glsl", Vertex, GLSLSource, simp))
             ->shader(renderer->shaderManager.preprocess("demiurge/scene/scene1.frag.glsl", Fragment, GLSLSource, simp))
             ->format(simp)
             ->blendFunc({One, One, One, One})
@@ -362,7 +353,6 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
 
 void OMWorldRenderer::beforeFrame()
 {
-    // voxelManager->update(*camera);
     timeBuffer->updateData(std::array<float, 1>{
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tp).count() / 1000.0f}
                                .data());
