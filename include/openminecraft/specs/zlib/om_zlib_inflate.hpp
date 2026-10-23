@@ -7,7 +7,10 @@
 #include <functional>
 namespace openminecraft::specs::zlib
 {
+#ifndef OM_ZLIB_ALLOCATOR_TAG_DEFINED
+#define OM_ZLIB_ALLOCATOR_TAG_DEFINED
 inline constexpr const char allocatorTag[] = "zlib";
+#endif
 
 class OMZLibInflater
 {

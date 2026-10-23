@@ -25,6 +25,7 @@
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/om_renderer_window.hpp"
 #include "openminecraft/specs/nbt/om_nbt_reader.hpp"
+#include "openminecraft/specs/zlib/om_zlib_deflate.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
@@ -126,6 +127,19 @@ auto OMApplication::entry() -> int
         {
             specs::nbt::OMNbtReader reader(std::make_shared<std::ifstream>(args[2], std::ios::binary));
             reader.parse(false);
+            goto end;
+        }
+        else if (args[1] == "zlib")
+        {
+            specs::zlib::OMZLibDeflater def([](uint8_t *data, uint64_t l) {
+                for (int i = 0; i < l; ++i)
+                {
+                    std::cout << std::hex << std::setfill('0') << std::setw(2) << (int)data[i] << " ";
+                }
+                std::cout << std::endl;
+            });
+            def.input(reinterpret_cast<uint8_t *>(const_cast<char *>(args[2].c_str())), args[2].size());
+            def.finish();
             goto end;
         }
         bk = args[1] == "gl" ? OpenGL : Vulkan;

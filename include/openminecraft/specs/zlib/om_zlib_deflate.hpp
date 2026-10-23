@@ -1,0 +1,32 @@
+#ifndef OM_ZLIB_DEFLATE_HPP
+#define OM_ZLIB_DEFLATE_HPP
+
+#include "openminecraft/mem/om_mem_stl_allocator.hpp"
+#include "zlib.h"
+#include <cstdint>
+#include <functional>
+namespace openminecraft::specs::zlib
+{
+#ifndef OM_ZLIB_ALLOCATOR_TAG_DEFINED
+#define OM_ZLIB_ALLOCATOR_TAG_DEFINED
+inline constexpr const char allocatorTag[] = "zlib";
+#endif
+
+class OMZLibDeflater
+{
+  public:
+    OMZLibDeflater(std::function<void(uint8_t *, uint64_t)> dataAcceptor);
+    ~OMZLibDeflater();
+
+    void input(uint8_t *src, uint64_t length);
+    void finish();
+
+  private:
+    std::vector<uint8_t, mem::OMStlAllocator<allocatorTag, uint8_t>> buffer;
+
+    std::function<void(uint8_t *, uint64_t)> dataAcceptor;
+    z_stream strm;
+};
+} // namespace openminecraft::specs::zlib
+
+#endif
