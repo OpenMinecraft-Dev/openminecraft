@@ -49,7 +49,7 @@ class OMTextureAtlas
         auto imgraw = vfs::fsfetch(fmt::format("{}/{}/textures/{}.png", root, i.namesp, i.path));
 
         subtexFiles[i] = std::make_shared<specs::png::OMPngFile>();
-        subtexFiles[i]->parse(imgraw);
+        subtexFiles[i]->parseBase(imgraw);
 
         subtexSizes[i] = {subtexFiles[i]->getWidth(), subtexFiles[i]->getHeight()};
         if (subtexFiles[i]->getWidth() > 16 && subtexFiles[i]->getHeight() > 16)
@@ -104,7 +104,7 @@ class OMTextureAtlas
         auto imgraw = vfs::fsfetch(fmt::format("{}/{}/textures/{}.png", root, i.namesp, i.path));
 
         subtexWideFiles[i] = std::make_shared<specs::png::OMPngFile>();
-        subtexWideFiles[i]->parse(imgraw);
+        subtexWideFiles[i]->parseBase(imgraw);
 
         subtexSizes[i] = {subtexWideFiles[i]->getWidth(), subtexWideFiles[i]->getHeight()};
 

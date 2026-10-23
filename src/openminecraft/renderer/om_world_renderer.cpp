@@ -260,7 +260,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
 
     sunTex = renderer->allocateTexture(32, 32, 0, Dim2, R8G8B8A8Srgb);
     specs::png::OMPngFile f;
-    f.parse(vfs::fsfetch("/external/assets/minecraft/textures/environment/celestial/sun.png"));
+    f.parseBase(vfs::fsfetch("/external/assets/minecraft/textures/environment/celestial/sun.png"));
     sunTex->updateData(f.fetchData());
     sunTex->magFilter = Nearest;
     sunTex->minFilter = Nearest;
@@ -272,7 +272,8 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
                    "third_quarter", "waning_crescent"})
     {
         specs::png::OMPngFile f;
-        f.parse(vfs::fsfetch(fmt::format("/external/assets/minecraft/textures/environment/celestial/moon/{}.png", p)));
+        f.parseBase(
+            vfs::fsfetch(fmt::format("/external/assets/minecraft/textures/environment/celestial/moon/{}.png", p)));
         moonTex->updateData(f.fetchData(), i);
         ++i;
     }
@@ -282,7 +283,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
 
     cloudTex = renderer->allocateTexture(256, 256, 0, Dim2, R8G8B8A8Srgb);
     specs::png::OMPngFile f2;
-    f2.parse(vfs::fsfetch("/external/assets/minecraft/textures/environment/clouds.png"));
+    f2.parseBase(vfs::fsfetch("/external/assets/minecraft/textures/environment/clouds.png"));
     cloudTex->updateData(f2.fetchData());
     cloudTex->addressModeU = Repeat;
     cloudTex->addressModeV = Repeat;
