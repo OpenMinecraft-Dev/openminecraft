@@ -45,7 +45,7 @@ static auto defFlags() -> MemoryPropertyFlags
     return MemoryPropertyFlagBits::eHostVisible | MemoryPropertyFlagBits::eHostCoherent;
 }
 
-static auto mapToUsageFlag(OMBufferUsage usage) -> BufferUsageFlagBits
+static auto mapToUsageFlag(OMBufferUsage usage) -> BufferUsageFlags
 {
     switch (usage)
     {
@@ -56,7 +56,8 @@ static auto mapToUsageFlag(OMBufferUsage usage) -> BufferUsageFlagBits
     case VertexIndex:
         return BufferUsageFlagBits::eIndexBuffer;
     case Misc:
-        return BufferUsageFlagBits::eTransferSrc;
+        // 上传（buffer -> image）用 eTransferSrc，回读（image -> buffer）需要 eTransferDst
+        return BufferUsageFlagBits::eTransferSrc | BufferUsageFlagBits::eTransferDst;
     case Uniform:
         return BufferUsageFlagBits::eUniformBuffer;
     case Indirect:

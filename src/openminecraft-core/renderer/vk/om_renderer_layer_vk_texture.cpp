@@ -472,4 +472,52 @@ void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.image.update"));
     }
 }
+auto OMRendererTextureVk::fetchData(uint64_t layer) -> std::shared_ptr<void>
+{
+    try
+    {
+        const uint64_t bytes = width * height * ((this->arr == common::R8G8B8Srgb) ? 3 : 4);
+        const ImageLayout currentLayout =
+            uploaded[layer] ? ImageLayout::eShaderReadOnlyOptimal : ImageLayout::eUndefined;
+
+        auto staging = renderer->allocateBuffer(common::Misc, bytes);
+        auto vkStaging = reinterpret_cast<OMRendererBufferVk *>(staging);
+
+        auto cmdBuff = renderer->logicalDevice.allocateCommandBuffers(
+            CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
+
+        cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
+
+        transitionImageLayout(cmdBuff, currentLayout, ImageLayout::eTransferSrcOptimal, 0, layer, 1);
+        cmdBuff.copyImageToBuffer(
+            image, ImageLayout::eTransferSrcOptimal, vkStaging->buffer,
+            BufferImageCopy(0, width, height,
+                            ImageSubresourceLayers((!isColorFormat(arr)) ? ImageAspectFlagBits::eDepth
+                                                                         : ImageAspectFlagBits::eColor,
+                                                   0, layer, 1),
+                            Offset3D(0, 0, 0), Extent3D(width, height, 1)));
+
+        transitionImageLayout(cmdBuff, ImageLayout::eTransferSrcOptimal, ImageLayout::eShaderReadOnlyOptimal, 0, layer,
+                              1);
+
+        cmdBuff.end();
+        renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
+        renderer->queues.first.waitIdle();
+
+        renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
+
+        void *mapped = renderer->logicalDevice.mapMemory(vkStaging->bufferMemory, 0, bytes);
+        std::shared_ptr<void> result(std::malloc(bytes), [](void *p) { std::free(p); });
+        std::memcpy(result.get(), mapped, bytes);
+        renderer->logicalDevice.unmapMemory(vkStaging->bufferMemory);
+
+        delete staging;
+
+        return result;
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.image.fetch"));
+    }
+}
 } // namespace openminecraft::renderer::vk

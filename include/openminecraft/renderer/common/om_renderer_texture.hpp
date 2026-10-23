@@ -4,6 +4,7 @@
 #include "openminecraft/renderer/om_renderer_object.hpp"
 
 #include <cstdint>
+#include <memory>
 
 namespace openminecraft::renderer
 {
@@ -119,6 +120,8 @@ class OMRendererTexture : public OMRendererObject
     }
 
     virtual void setupSampler() = 0;
+
+    virtual auto fetchData(uint64_t layer = 0) -> std::shared_ptr<void> = 0;
 
     OMTextureAddressMode addressModeU = ClampToEdge;
     OMTextureAddressMode addressModeV = ClampToEdge;

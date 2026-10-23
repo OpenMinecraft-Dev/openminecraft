@@ -29,6 +29,7 @@ class OMRendererTextureVk : public common::OMRendererTexture
     void updateData(void *p, uint64_t) override;
     void updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h, uint64_t) override;
     void setupSampler() override;
+    auto fetchData(uint64_t layer = 0) -> std::shared_ptr<void> override;
 
     ::vk::Format format;
     ::vk::Image image;

@@ -19,6 +19,7 @@ class OMRendererTextureOpenGL : public common::OMRendererTexture
     void updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h, uint64_t) override;
     void setupSampler() override;
     void allocateBase();
+    auto fetchData(uint64_t layer = 0) -> std::shared_ptr<void> override;
     GLuint texture;
 
   private:

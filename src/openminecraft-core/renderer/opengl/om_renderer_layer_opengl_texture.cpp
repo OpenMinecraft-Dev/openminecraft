@@ -3,6 +3,7 @@
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include <array>
 #include <cstdint>
+#include <cstdlib>
 
 namespace openminecraft::renderer::opengl
 {
@@ -323,5 +324,16 @@ void OMRendererTextureOpenGL::updateDataPart(void *p, uint64_t x, uint64_t y, ui
         break;
     }
     gl->glBindTexture(fromCommon(type), 0);
+}
+
+auto OMRendererTextureOpenGL::fetchData(uint64_t layer) -> std::shared_ptr<void>
+{
+    auto all = std::malloc(width * height * 4);
+    gl->glBindTexture(fromCommon(type), texture);
+    gl->glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    gl->glGetTexImage(fromCommon(type), layer, fromCommon(arr), GL_UNSIGNED_BYTE, all);
+    gl->glBindTexture(fromCommon(type), 0);
+
+    return {all, [](void *p) { std::free(p); }};
 }
 } // namespace openminecraft::renderer::opengl
