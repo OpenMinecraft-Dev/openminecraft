@@ -3,6 +3,7 @@
 
 #include "openminecraft/io/om_io_parser.hpp"
 #include <memory>
+#include <utility>
 
 namespace openminecraft::io
 {
@@ -11,7 +12,7 @@ constexpr const char allocatorId[] = "io_parser";
 template <typename T> class OMTokenIter : public OMParser
 {
   public:
-    OMTokenIter(std::shared_ptr<std::istream> istr) : OMParser(istr.get())
+    OMTokenIter(std::shared_ptr<std::istream> istr) : OMParser(std::move(istr))
     {
     }
     ~OMTokenIter() = default;
