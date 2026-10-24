@@ -113,6 +113,18 @@ void OMRendererTaskVk::drawIndirect(uint64_t begin, uint64_t count)
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.task"));
     }
 }
+void OMRendererTaskVk::drawIndirect()
+{
+    try
+    {
+        commandBuffer.drawIndexedIndirect(reinterpret_cast<OMRendererBufferVk *>(indirectBuffer)->buffer, 0, 1,
+                                          5 * sizeof(uint32_t));
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.task"));
+    }
+}
 void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
 {
     this->target = target;

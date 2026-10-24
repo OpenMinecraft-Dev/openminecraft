@@ -77,13 +77,13 @@ struct Frustum
 
 OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *resolveTarget, OMRendererTexture *tex,
                                OMRendererTexture *texSec, std::shared_ptr<world::OMChunkManager<16>> man,
-                               std::function<void(bool)> rec, OMVoxelHandler *handler,
+                               std::function<void(bool)> recordTask, OMVoxelHandler *handler,
                                std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> converter,
                                OMVoxelColorManager *colorman, OMRendererTexture *sunTex, OMRendererTexture *moonTex,
                                OMRendererTexture *cloudTex, std::vector<bool> cloudStats)
     : logger("OMVoxelManager", this)
 {
-    this->rec = rec;
+    this->recordTask = recordTask;
     this->renderer = renderer;
     this->chunkManager = man;
     this->voxelHandler = handler;
@@ -1069,7 +1069,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             voxelTranslucentLayer->merge();
             voxelTranslucentComplexLayer->merge();
             voxelTranslucentFluidLayer->merge();
-            rec(false);
+            recordTask(false);
         }
     }
 }

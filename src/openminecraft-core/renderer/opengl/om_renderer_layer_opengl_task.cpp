@@ -440,6 +440,13 @@ void OMRendererTaskOpenGL::drawIndirect(uint64_t begin, uint64_t count)
                    {reinterpret_cast<void *>(begin * 5 * sizeof(uint32_t))}});
     gl->glBindVertexArray(0);
 }
+void OMRendererTaskOpenGL::drawIndirect()
+{
+    ops.push_back({BindVertexArray, vaos.back()});
+    ops.push_back({UseProgram, program});
+    ops.push_back({DrawElementsIndirect, {primitiveType(), GL_UNSIGNED_INT}, {nullptr}});
+    gl->glBindVertexArray(0);
+}
 void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
 {
     if (finished)
@@ -682,6 +689,9 @@ void OMRendererTaskOpenGL::execute()
             break;
         case DrawBuffers:
             gl->glDrawBuffers(op.args[0], &op.args[1]);
+            break;
+        case DrawElementsIndirect:
+            gl->glDrawElementsIndirect(op.args[0], op.args[1], op.ptrArgs[0]);
             break;
         }
     }

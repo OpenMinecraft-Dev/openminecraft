@@ -582,10 +582,10 @@ class OMVoxelManager
     OMRendererBuffer *cloudBuffer;
 
   private:
-    int samples = 2;
+    int samples = 1;
     OMVoxelHandler *voxelHandler;
     OMRenderer *renderer;
-    std::function<void(bool)> rec;
+    std::function<void(bool)> recordTask;
     log::OMLogger logger;
     OMVoxelCompiler compiler;
 

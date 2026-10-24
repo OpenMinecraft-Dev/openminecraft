@@ -105,7 +105,7 @@ auto OMApplication::entry() -> int
             logger->info("usage: [backend]");
             logger->info("possible backends:");
             logger->info("vk -> Vulkan Backend (1.2, Default)");
-            logger->info("gl -> OpenGL Backend (3.3 Core Profile)");
+            logger->info("gl -> OpenGL Backend (4.0 Core Profile)");
             goto end;
         }
         else if (args[1] == "network")

@@ -28,6 +28,7 @@ class OMRendererTaskVk : public common::OMRendererTask
     void drawIndexedInstance(uint64_t vertexCount, uint64_t instanceCount) override;
     void drawIndexedInstance(uint64_t vertexCount, uint64_t instanceCount, uint64_t firstInstance) override;
     void drawIndirect(uint64_t begin, uint64_t count) override;
+    void drawIndirect() override;
     void finish() override;
     void resolveTo(common::OMRendererRenderTarget *target) override;
     void pushDebugTag(std::string tag) override;

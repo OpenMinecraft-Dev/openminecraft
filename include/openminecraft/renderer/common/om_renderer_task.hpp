@@ -132,6 +132,12 @@ class OMRendererTask : public OMRendererObject
         drawIndirect(begin, count);
         return this;
     }
+    virtual void drawIndirect() = 0;
+    inline auto drawIndirectN() -> OMRendererTask *
+    {
+        drawIndirect();
+        return this;
+    }
     virtual void finish() = 0;
     inline auto finishN() -> OMRendererTask *
     {
