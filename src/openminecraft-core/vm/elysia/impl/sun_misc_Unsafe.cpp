@@ -89,7 +89,8 @@ static auto staticFieldOffset(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instanc
     auto fieldInfo = ik->toInstance()->findField(nnstr, nullptr);
     env->ReleaseStringUTFChars(namestr, nnstr);
 
-    return reinterpret_cast<uintptr_t>(ik->toInstance()->staticBlock) + fieldInfo->offset - reinterpret_cast<uintptr_t>(kls);
+    return reinterpret_cast<uintptr_t>(ik->toInstance()->staticBlock) + fieldInfo->offset -
+           reinterpret_cast<uintptr_t>(kls);
 }
 
 static auto staticFieldBase(OMElysiaJNIEnv *env, OMElysiaNativeHandle *instance, OMElysiaNativeHandle *field)

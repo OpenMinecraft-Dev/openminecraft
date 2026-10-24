@@ -182,7 +182,6 @@ template <typename T> struct OMIDOr
     }
 };
 
-
 // INFO: Minecraft protocol "ID Set": either a registry tag (type 0) or an inline id list
 // (type > 0, holding type - 1 ids).
 struct OMIdSet
@@ -900,7 +899,6 @@ template <typename T> struct OMNetworkPacketCodec<OMIDOr<T>>
     }
 };
 
-
 // INFO: "ID Set" uses the same extension point: type 0 reads a registry tag name, otherwise type-1 VarInt ids
 template <> struct OMNetworkPacketCodec<OMIdSet>
 {
@@ -947,7 +945,8 @@ template <> struct OMNetworkPacketCodec<OMIdSet>
             pck.write(OMVarInt(id));
         }
     }
-};inline auto toStdStrings(const std::vector<OMUtf8String> &values) -> std::vector<std::string>
+};
+inline auto toStdStrings(const std::vector<OMUtf8String> &values) -> std::vector<std::string>
 {
     std::vector<std::string> result;
     result.reserve(values.size());

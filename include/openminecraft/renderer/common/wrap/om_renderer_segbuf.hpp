@@ -124,8 +124,7 @@ class OMRendererSegBuf
     // 返回搬移后的块列表（offset 已更新）。
     auto compact(std::list<OMRendererSegBufBlock> blocks) -> std::list<OMRendererSegBufBlock>
     {
-        blocks.sort(
-            [](const OMRendererSegBufBlock &a, const OMRendererSegBufBlock &b) { return a.offset < b.offset; });
+        blocks.sort([](const OMRendererSegBufBlock &a, const OMRendererSegBufBlock &b) { return a.offset < b.offset; });
 
         std::list<OMRendererSegBufBlock> result;
 

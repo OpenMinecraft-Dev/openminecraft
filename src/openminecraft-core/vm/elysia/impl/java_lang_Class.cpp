@@ -277,7 +277,8 @@ extern "C"
                 }
                 auto kns = env->AllocObject(mthk);
 
-                env->SetLongField(kns, env->GetFieldID(mthk, "<ptr>", "J"), reinterpret_cast<jlong>(&instanceKlass->methods[i]));
+                env->SetLongField(kns, env->GetFieldID(mthk, "<ptr>", "J"),
+                                  reinterpret_cast<jlong>(&instanceKlass->methods[i]));
                 env->SetObjectField(kns, env->GetFieldID(mthk, "clazz", "Ljava/lang/Class;"),
                                     env->internal->elysium->executor->recordLocalRef(instanceKlass->mirror));
                 env->SetObjectField(kns, env->GetFieldID(mthk, "name", "Ljava/lang/String;"),
@@ -287,13 +288,13 @@ extern "C"
                 env->SetObjectField(kns, env->GetFieldID(mthk, "signature", "Ljava/lang/String;"),
                                     env->NewStringUTF(instanceKlass->methods[i].descriptor));
 
-                auto excarr =
-                    env->NewObjectArray(instanceKlass->methods[i].exceptionsLength, env->FindClass("java/lang/Class"), nullptr);
+                auto excarr = env->NewObjectArray(instanceKlass->methods[i].exceptionsLength,
+                                                  env->FindClass("java/lang/Class"), nullptr);
                 for (int j = 0; j < instanceKlass->methods[i].exceptionsLength; j++)
                 {
-                    env->SetObjectArrayElement(
-                        excarr, j,
-                        env->internal->elysium->executor->recordLocalRef(instanceKlass->methods[i].exceptions[j]->mirror));
+                    env->SetObjectArrayElement(excarr, j,
+                                               env->internal->elysium->executor->recordLocalRef(
+                                                   instanceKlass->methods[i].exceptions[j]->mirror));
                 }
                 env->SetObjectField(kns, env->GetFieldID(mthk, "exceptionTypes", "[Ljava/lang/Class;"), excarr);
 

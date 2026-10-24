@@ -230,8 +230,8 @@ void OMRendererPipelineVk::bindInput(int idx, common::OMRendererTexture *texture
     try
     {
         auto imageInfo = DescriptorImageInfo(reinterpret_cast<OMRendererTextureVk *>(texture)->sampler,
-                                      reinterpret_cast<OMRendererTextureVk *>(texture)->imageView,
-                                      ImageLayout::eShaderReadOnlyOptimal);
+                                             reinterpret_cast<OMRendererTextureVk *>(texture)->imageView,
+                                             ImageLayout::eShaderReadOnlyOptimal);
         renderer->logicalDevice.updateDescriptorSets(
             WriteDescriptorSet(descriptorSet, idx, 0, DescriptorType::eCombinedImageSampler, imageInfo, {}), nullptr);
     }

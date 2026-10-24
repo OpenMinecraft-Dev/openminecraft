@@ -268,7 +268,8 @@ void OMElysiaKlassloader::fillVtable(OMElysiaInstanceKlass *klass)
             {
                 for (int i = 0; i < interfaceKlass->vtableLength; i++)
                 {
-                    rawVtable[fmt::format("{}{}", interfaceKlass->vtable[i]->name, interfaceKlass->vtable[i]->descriptor)] = interfaceKlass->vtable[i];
+                    rawVtable[fmt::format("{}{}", interfaceKlass->vtable[i]->name,
+                                          interfaceKlass->vtable[i]->descriptor)] = interfaceKlass->vtable[i];
                 }
             }
         }

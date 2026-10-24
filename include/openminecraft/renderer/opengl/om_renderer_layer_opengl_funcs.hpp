@@ -1089,7 +1089,8 @@ gl.glNamedCopyBufferSubDataEXT = fetchGlFunc<PFNGLNAMEDCOPYBUFFERSUBDATAEXTPROC>
 gl.glGetActiveUniformName = fetchGlFunc<PFNGLGETACTIVEUNIFORMNAMEPROC>("glGetActiveUniformName");
 gl.glVertexAttribP2ui = fetchGlFunc<PFNGLVERTEXATTRIBP2UIPROC>("glVertexAttribP2ui");
 gl.glVertexAttribL2dv = fetchGlFunc<PFNGLVERTEXATTRIBL2DVPROC>("glVertexAttribL2dv");
-gl.glGetFramebufferAttachmentParameteriv = fetchGlFunc<PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC>("glGetFramebufferAttachmentParameteriv");
+gl.glGetFramebufferAttachmentParameteriv =
+    fetchGlFunc<PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC>("glGetFramebufferAttachmentParameteriv");
 gl.glShaderStorageBlockBinding = fetchGlFunc<PFNGLSHADERSTORAGEBLOCKBINDINGPROC>("glShaderStorageBlockBinding");
 gl.glTexBufferRange = fetchGlFunc<PFNGLTEXBUFFERRANGEPROC>("glTexBufferRange");
 gl.glGetTextureSamplerHandleARB = fetchGlFunc<PFNGLGETTEXTURESAMPLERHANDLEARBPROC>("glGetTextureSamplerHandleARB");
@@ -1111,9 +1112,11 @@ gl.glGetVertexAttribiv = fetchGlFunc<PFNGLGETVERTEXATTRIBIVPROC>("glGetVertexAtt
 gl.glDepthRangedNV = fetchGlFunc<PFNGLDEPTHRANGEDNVPROC>("glDepthRangedNV");
 gl.glUniformMatrix3x2dv = fetchGlFunc<PFNGLUNIFORMMATRIX3X2DVPROC>("glUniformMatrix3x2dv");
 gl.glVertexAttribL1ui64vNV = fetchGlFunc<PFNGLVERTEXATTRIBL1UI64VNVPROC>("glVertexAttribL1ui64vNV");
-gl.glGetActiveAtomicCounterBufferiv = fetchGlFunc<PFNGLGETACTIVEATOMICCOUNTERBUFFERIVPROC>("glGetActiveAtomicCounterBufferiv");
+gl.glGetActiveAtomicCounterBufferiv =
+    fetchGlFunc<PFNGLGETACTIVEATOMICCOUNTERBUFFERIVPROC>("glGetActiveAtomicCounterBufferiv");
 gl.glEnableClientStateIndexedEXT = fetchGlFunc<PFNGLENABLECLIENTSTATEINDEXEDEXTPROC>("glEnableClientStateIndexedEXT");
-gl.glMultiDrawArraysIndirectBindlessCountNV = fetchGlFunc<PFNGLMULTIDRAWARRAYSINDIRECTBINDLESSCOUNTNVPROC>("glMultiDrawArraysIndirectBindlessCountNV");
+gl.glMultiDrawArraysIndirectBindlessCountNV =
+    fetchGlFunc<PFNGLMULTIDRAWARRAYSINDIRECTBINDLESSCOUNTNVPROC>("glMultiDrawArraysIndirectBindlessCountNV");
 gl.glTextureStorage2DMultisample = fetchGlFunc<PFNGLTEXTURESTORAGE2DMULTISAMPLEPROC>("glTextureStorage2DMultisample");
 gl.glVertexAttribL1ui64vARB = fetchGlFunc<PFNGLVERTEXATTRIBL1UI64VARBPROC>("glVertexAttribL1ui64vARB");
 gl.glGetnUniformfvARB = fetchGlFunc<PFNGLGETNUNIFORMFVARBPROC>("glGetnUniformfvARB");
@@ -1132,17 +1135,22 @@ gl.glTextureParameteriv = fetchGlFunc<PFNGLTEXTUREPARAMETERIVPROC>("glTexturePar
 gl.glBlitNamedFramebuffer = fetchGlFunc<PFNGLBLITNAMEDFRAMEBUFFERPROC>("glBlitNamedFramebuffer");
 gl.glTexImage2DMultisample = fetchGlFunc<PFNGLTEXIMAGE2DMULTISAMPLEPROC>("glTexImage2DMultisample");
 gl.glTextureParameterIuiv = fetchGlFunc<PFNGLTEXTUREPARAMETERIUIVPROC>("glTextureParameterIuiv");
-gl.glNamedProgramLocalParameterI4uivEXT = fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETERI4UIVEXTPROC>("glNamedProgramLocalParameterI4uivEXT");
+gl.glNamedProgramLocalParameterI4uivEXT =
+    fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETERI4UIVEXTPROC>("glNamedProgramLocalParameterI4uivEXT");
 gl.glNamedFramebufferParameteri = fetchGlFunc<PFNGLNAMEDFRAMEBUFFERPARAMETERIPROC>("glNamedFramebufferParameteri");
-gl.glNamedFramebufferParameteriEXT = fetchGlFunc<PFNGLNAMEDFRAMEBUFFERPARAMETERIEXTPROC>("glNamedFramebufferParameteriEXT");
+gl.glNamedFramebufferParameteriEXT =
+    fetchGlFunc<PFNGLNAMEDFRAMEBUFFERPARAMETERIEXTPROC>("glNamedFramebufferParameteriEXT");
 gl.glGetQueryBufferObjectiv = fetchGlFunc<PFNGLGETQUERYBUFFEROBJECTIVPROC>("glGetQueryBufferObjectiv");
-gl.glVertexArrayVertexAttribIFormatEXT = fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBIFORMATEXTPROC>("glVertexArrayVertexAttribIFormatEXT");
-gl.glMultiDrawElementsIndirectCountARB = fetchGlFunc<PFNGLMULTIDRAWELEMENTSINDIRECTCOUNTARBPROC>("glMultiDrawElementsIndirectCountARB");
+gl.glVertexArrayVertexAttribIFormatEXT =
+    fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBIFORMATEXTPROC>("glVertexArrayVertexAttribIFormatEXT");
+gl.glMultiDrawElementsIndirectCountARB =
+    fetchGlFunc<PFNGLMULTIDRAWELEMENTSINDIRECTCOUNTARBPROC>("glMultiDrawElementsIndirectCountARB");
 gl.glCopyMultiTexSubImage2DEXT = fetchGlFunc<PFNGLCOPYMULTITEXSUBIMAGE2DEXTPROC>("glCopyMultiTexSubImage2DEXT");
 gl.glGetMultisamplefv = fetchGlFunc<PFNGLGETMULTISAMPLEFVPROC>("glGetMultisamplefv");
 gl.glGetProgramPipelineiv = fetchGlFunc<PFNGLGETPROGRAMPIPELINEIVPROC>("glGetProgramPipelineiv");
 gl.glNamedBufferSubDataEXT = fetchGlFunc<PFNGLNAMEDBUFFERSUBDATAEXTPROC>("glNamedBufferSubDataEXT");
-gl.glGetNamedRenderbufferParameteriv = fetchGlFunc<PFNGLGETNAMEDRENDERBUFFERPARAMETERIVPROC>("glGetNamedRenderbufferParameteriv");
+gl.glGetNamedRenderbufferParameteriv =
+    fetchGlFunc<PFNGLGETNAMEDRENDERBUFFERPARAMETERIVPROC>("glGetNamedRenderbufferParameteriv");
 gl.glDisableVertexArrayAttribEXT = fetchGlFunc<PFNGLDISABLEVERTEXARRAYATTRIBEXTPROC>("glDisableVertexArrayAttribEXT");
 gl.glDeleteBuffers = fetchGlFunc<PFNGLDELETEBUFFERSPROC>("glDeleteBuffers");
 gl.glGetActiveUniformsiv = fetchGlFunc<PFNGLGETACTIVEUNIFORMSIVPROC>("glGetActiveUniformsiv");
@@ -1155,12 +1163,16 @@ gl.glVertexAttrib4dv = fetchGlFunc<PFNGLVERTEXATTRIB4DVPROC>("glVertexAttrib4dv"
 gl.glDrawElementsIndirect = fetchGlFunc<PFNGLDRAWELEMENTSINDIRECTPROC>("glDrawElementsIndirect");
 gl.glDrawRangeElements = fetchGlFunc<PFNGLDRAWRANGEELEMENTSPROC>("glDrawRangeElements");
 gl.glGetSamplerParameterfv = fetchGlFunc<PFNGLGETSAMPLERPARAMETERFVPROC>("glGetSamplerParameterfv");
-gl.glNamedRenderbufferStorageMultisample = fetchGlFunc<PFNGLNAMEDRENDERBUFFERSTORAGEMULTISAMPLEPROC>("glNamedRenderbufferStorageMultisample");
-gl.glGetTextureLevelParameterfvEXT = fetchGlFunc<PFNGLGETTEXTURELEVELPARAMETERFVEXTPROC>("glGetTextureLevelParameterfvEXT");
+gl.glNamedRenderbufferStorageMultisample =
+    fetchGlFunc<PFNGLNAMEDRENDERBUFFERSTORAGEMULTISAMPLEPROC>("glNamedRenderbufferStorageMultisample");
+gl.glGetTextureLevelParameterfvEXT =
+    fetchGlFunc<PFNGLGETTEXTURELEVELPARAMETERFVEXTPROC>("glGetTextureLevelParameterfvEXT");
 gl.glTexParameterf = fetchGlFunc<PFNGLTEXPARAMETERFPROC>("glTexParameterf");
 gl.glProgramUniformMatrix3fvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX3FVEXTPROC>("glProgramUniformMatrix3fvEXT");
-gl.glNamedProgramLocalParametersI4ivEXT = fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETERSI4IVEXTPROC>("glNamedProgramLocalParametersI4ivEXT");
-gl.glFlushMappedNamedBufferRangeEXT = fetchGlFunc<PFNGLFLUSHMAPPEDNAMEDBUFFERRANGEEXTPROC>("glFlushMappedNamedBufferRangeEXT");
+gl.glNamedProgramLocalParametersI4ivEXT =
+    fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETERSI4IVEXTPROC>("glNamedProgramLocalParametersI4ivEXT");
+gl.glFlushMappedNamedBufferRangeEXT =
+    fetchGlFunc<PFNGLFLUSHMAPPEDNAMEDBUFFERRANGEEXTPROC>("glFlushMappedNamedBufferRangeEXT");
 gl.glIsNamedBufferResidentNV = fetchGlFunc<PFNGLISNAMEDBUFFERRESIDENTNVPROC>("glIsNamedBufferResidentNV");
 gl.glGenFramebuffers = fetchGlFunc<PFNGLGENFRAMEBUFFERSPROC>("glGenFramebuffers");
 gl.glProgramParameteriARB = fetchGlFunc<PFNGLPROGRAMPARAMETERIARBPROC>("glProgramParameteriARB");
@@ -1174,10 +1186,14 @@ gl.glPatchParameterfv = fetchGlFunc<PFNGLPATCHPARAMETERFVPROC>("glPatchParameter
 gl.glCopyNamedBufferSubData = fetchGlFunc<PFNGLCOPYNAMEDBUFFERSUBDATAPROC>("glCopyNamedBufferSubData");
 gl.glProgramUniform4dEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM4DEXTPROC>("glProgramUniform4dEXT");
 gl.glGetTexParameterIuiv = fetchGlFunc<PFNGLGETTEXPARAMETERIUIVPROC>("glGetTexParameterIuiv");
-gl.glFramebufferSampleLocationsfvARB = fetchGlFunc<PFNGLFRAMEBUFFERSAMPLELOCATIONSFVARBPROC>("glFramebufferSampleLocationsfvARB");
-gl.glNamedProgramLocalParameter4fEXT = fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETER4FEXTPROC>("glNamedProgramLocalParameter4fEXT");
-gl.glProgramUniformMatrix2x4dvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX2X4DVEXTPROC>("glProgramUniformMatrix2x4dvEXT");
-gl.glMultiDrawElementsIndirectBindlessNV = fetchGlFunc<PFNGLMULTIDRAWELEMENTSINDIRECTBINDLESSNVPROC>("glMultiDrawElementsIndirectBindlessNV");
+gl.glFramebufferSampleLocationsfvARB =
+    fetchGlFunc<PFNGLFRAMEBUFFERSAMPLELOCATIONSFVARBPROC>("glFramebufferSampleLocationsfvARB");
+gl.glNamedProgramLocalParameter4fEXT =
+    fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETER4FEXTPROC>("glNamedProgramLocalParameter4fEXT");
+gl.glProgramUniformMatrix2x4dvEXT =
+    fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX2X4DVEXTPROC>("glProgramUniformMatrix2x4dvEXT");
+gl.glMultiDrawElementsIndirectBindlessNV =
+    fetchGlFunc<PFNGLMULTIDRAWELEMENTSINDIRECTBINDLESSNVPROC>("glMultiDrawElementsIndirectBindlessNV");
 gl.glCreateShader = fetchGlFunc<PFNGLCREATESHADERPROC>("glCreateShader");
 gl.glBeginQueryIndexed = fetchGlFunc<PFNGLBEGINQUERYINDEXEDPROC>("glBeginQueryIndexed");
 gl.glNamedFramebufferDrawBuffer = fetchGlFunc<PFNGLNAMEDFRAMEBUFFERDRAWBUFFERPROC>("glNamedFramebufferDrawBuffer");
@@ -1186,21 +1202,24 @@ gl.glUniformHandleui64vARB = fetchGlFunc<PFNGLUNIFORMHANDLEUI64VARBPROC>("glUnif
 gl.glVertexAttribP4uiv = fetchGlFunc<PFNGLVERTEXATTRIBP4UIVPROC>("glVertexAttribP4uiv");
 gl.glProgramUniform2iv = fetchGlFunc<PFNGLPROGRAMUNIFORM2IVPROC>("glProgramUniform2iv");
 gl.glInvalidateTexSubImage = fetchGlFunc<PFNGLINVALIDATETEXSUBIMAGEPROC>("glInvalidateTexSubImage");
-gl.glVertexArrayEdgeFlagOffsetEXT = fetchGlFunc<PFNGLVERTEXARRAYEDGEFLAGOFFSETEXTPROC>("glVertexArrayEdgeFlagOffsetEXT");
+gl.glVertexArrayEdgeFlagOffsetEXT =
+    fetchGlFunc<PFNGLVERTEXARRAYEDGEFLAGOFFSETEXTPROC>("glVertexArrayEdgeFlagOffsetEXT");
 gl.glVertexAttrib1f = fetchGlFunc<PFNGLVERTEXATTRIB1FPROC>("glVertexAttrib1f");
 gl.glProgramUniform3ui64vARB = fetchGlFunc<PFNGLPROGRAMUNIFORM3UI64VARBPROC>("glProgramUniform3ui64vARB");
 gl.glTextureStorage2DEXT = fetchGlFunc<PFNGLTEXTURESTORAGE2DEXTPROC>("glTextureStorage2DEXT");
 gl.glUniform3d = fetchGlFunc<PFNGLUNIFORM3DPROC>("glUniform3d");
 gl.glClear = fetchGlFunc<PFNGLCLEARPROC>("glClear");
 gl.glTextureBarrier = fetchGlFunc<PFNGLTEXTUREBARRIERPROC>("glTextureBarrier");
-gl.glNamedProgramLocalParameterI4ivEXT = fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETERI4IVEXTPROC>("glNamedProgramLocalParameterI4ivEXT");
+gl.glNamedProgramLocalParameterI4ivEXT =
+    fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETERI4IVEXTPROC>("glNamedProgramLocalParameterI4ivEXT");
 gl.glGetVertexArrayIntegervEXT = fetchGlFunc<PFNGLGETVERTEXARRAYINTEGERVEXTPROC>("glGetVertexArrayIntegervEXT");
 gl.glGetStageIndexNV = fetchGlFunc<PFNGLGETSTAGEINDEXNVPROC>("glGetStageIndexNV");
 gl.glClearDepthf = fetchGlFunc<PFNGLCLEARDEPTHFPROC>("glClearDepthf");
 gl.glBlendEquationiARB = fetchGlFunc<PFNGLBLENDEQUATIONIARBPROC>("glBlendEquationiARB");
 gl.glVertexAttribBinding = fetchGlFunc<PFNGLVERTEXATTRIBBINDINGPROC>("glVertexAttribBinding");
 gl.glProgramUniform4ui64vARB = fetchGlFunc<PFNGLPROGRAMUNIFORM4UI64VARBPROC>("glProgramUniform4ui64vARB");
-gl.glVertexArraySecondaryColorOffsetEXT = fetchGlFunc<PFNGLVERTEXARRAYSECONDARYCOLOROFFSETEXTPROC>("glVertexArraySecondaryColorOffsetEXT");
+gl.glVertexArraySecondaryColorOffsetEXT =
+    fetchGlFunc<PFNGLVERTEXARRAYSECONDARYCOLOROFFSETEXTPROC>("glVertexArraySecondaryColorOffsetEXT");
 gl.glIsVertexArray = fetchGlFunc<PFNGLISVERTEXARRAYPROC>("glIsVertexArray");
 gl.glVertexAttribL4i64NV = fetchGlFunc<PFNGLVERTEXATTRIBL4I64NVPROC>("glVertexAttribL4i64NV");
 gl.glMultiTexImage3DEXT = fetchGlFunc<PFNGLMULTITEXIMAGE3DEXTPROC>("glMultiTexImage3DEXT");
@@ -1224,11 +1243,13 @@ gl.glGetUniformLocation = fetchGlFunc<PFNGLGETUNIFORMLOCATIONPROC>("glGetUniform
 gl.glProgramUniformMatrix2fv = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX2FVPROC>("glProgramUniformMatrix2fv");
 gl.glGetPointerIndexedvEXT = fetchGlFunc<PFNGLGETPOINTERINDEXEDVEXTPROC>("glGetPointerIndexedvEXT");
 gl.glGetTextureParameteriv = fetchGlFunc<PFNGLGETTEXTUREPARAMETERIVPROC>("glGetTextureParameteriv");
-gl.glDisableClientStateIndexedEXT = fetchGlFunc<PFNGLDISABLECLIENTSTATEINDEXEDEXTPROC>("glDisableClientStateIndexedEXT");
+gl.glDisableClientStateIndexedEXT =
+    fetchGlFunc<PFNGLDISABLECLIENTSTATEINDEXEDEXTPROC>("glDisableClientStateIndexedEXT");
 gl.glVertexArrayBindingDivisor = fetchGlFunc<PFNGLVERTEXARRAYBINDINGDIVISORPROC>("glVertexArrayBindingDivisor");
 gl.glAttachShader = fetchGlFunc<PFNGLATTACHSHADERPROC>("glAttachShader");
 gl.glDisableVertexArrayAttrib = fetchGlFunc<PFNGLDISABLEVERTEXARRAYATTRIBPROC>("glDisableVertexArrayAttrib");
-gl.glGetNamedFramebufferParameterivEXT = fetchGlFunc<PFNGLGETNAMEDFRAMEBUFFERPARAMETERIVEXTPROC>("glGetNamedFramebufferParameterivEXT");
+gl.glGetNamedFramebufferParameterivEXT =
+    fetchGlFunc<PFNGLGETNAMEDFRAMEBUFFERPARAMETERIVEXTPROC>("glGetNamedFramebufferParameterivEXT");
 gl.glPolygonMode = fetchGlFunc<PFNGLPOLYGONMODEPROC>("glPolygonMode");
 gl.glColorMask = fetchGlFunc<PFNGLCOLORMASKPROC>("glColorMask");
 gl.glProgramUniformMatrix4dvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX4DVEXTPROC>("glProgramUniformMatrix4dvEXT");
@@ -1237,7 +1258,8 @@ gl.glStencilFuncSeparate = fetchGlFunc<PFNGLSTENCILFUNCSEPARATEPROC>("glStencilF
 gl.glUniformMatrix3x4fv = fetchGlFunc<PFNGLUNIFORMMATRIX3X4FVPROC>("glUniformMatrix3x4fv");
 gl.glRenderbufferStorage = fetchGlFunc<PFNGLRENDERBUFFERSTORAGEPROC>("glRenderbufferStorage");
 gl.glProgramUniform4ivEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM4IVEXTPROC>("glProgramUniform4ivEXT");
-gl.glProgramUniformMatrix2x3fvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX2X3FVEXTPROC>("glProgramUniformMatrix2x3fvEXT");
+gl.glProgramUniformMatrix2x3fvEXT =
+    fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX2X3FVEXTPROC>("glProgramUniformMatrix2x3fvEXT");
 gl.glUniform1uiv = fetchGlFunc<PFNGLUNIFORM1UIVPROC>("glUniform1uiv");
 gl.glGetDoublev = fetchGlFunc<PFNGLGETDOUBLEVPROC>("glGetDoublev");
 gl.glVertexAttribI4sv = fetchGlFunc<PFNGLVERTEXATTRIBI4SVPROC>("glVertexAttribI4sv");
@@ -1254,9 +1276,11 @@ gl.glHint = fetchGlFunc<PFNGLHINTPROC>("glHint");
 gl.glCompressedTexSubImage2D = fetchGlFunc<PFNGLCOMPRESSEDTEXSUBIMAGE2DPROC>("glCompressedTexSubImage2D");
 gl.glDeleteSync = fetchGlFunc<PFNGLDELETESYNCPROC>("glDeleteSync");
 gl.glBindBuffersRange = fetchGlFunc<PFNGLBINDBUFFERSRANGEPROC>("glBindBuffersRange");
-gl.glGetNamedFramebufferParameteriv = fetchGlFunc<PFNGLGETNAMEDFRAMEBUFFERPARAMETERIVPROC>("glGetNamedFramebufferParameteriv");
+gl.glGetNamedFramebufferParameteriv =
+    fetchGlFunc<PFNGLGETNAMEDFRAMEBUFFERPARAMETERIVPROC>("glGetNamedFramebufferParameteriv");
 gl.glVertexAttribL1i64vNV = fetchGlFunc<PFNGLVERTEXATTRIBL1I64VNVPROC>("glVertexAttribL1i64vNV");
-gl.glGetNamedRenderbufferParameterivEXT = fetchGlFunc<PFNGLGETNAMEDRENDERBUFFERPARAMETERIVEXTPROC>("glGetNamedRenderbufferParameterivEXT");
+gl.glGetNamedRenderbufferParameterivEXT =
+    fetchGlFunc<PFNGLGETNAMEDRENDERBUFFERPARAMETERIVEXTPROC>("glGetNamedRenderbufferParameterivEXT");
 gl.glDeleteTransformFeedbacks = fetchGlFunc<PFNGLDELETETRANSFORMFEEDBACKSPROC>("glDeleteTransformFeedbacks");
 gl.glProvokingVertex = fetchGlFunc<PFNGLPROVOKINGVERTEXPROC>("glProvokingVertex");
 gl.glStencilMaskSeparate = fetchGlFunc<PFNGLSTENCILMASKSEPARATEPROC>("glStencilMaskSeparate");
@@ -1265,7 +1289,8 @@ gl.glGetTransformFeedbackVarying = fetchGlFunc<PFNGLGETTRANSFORMFEEDBACKVARYINGP
 gl.glClearNamedBufferSubData = fetchGlFunc<PFNGLCLEARNAMEDBUFFERSUBDATAPROC>("glClearNamedBufferSubData");
 gl.glProgramUniform2ui64ARB = fetchGlFunc<PFNGLPROGRAMUNIFORM2UI64ARBPROC>("glProgramUniform2ui64ARB");
 gl.glNamedFramebufferTextureEXT = fetchGlFunc<PFNGLNAMEDFRAMEBUFFERTEXTUREEXTPROC>("glNamedFramebufferTextureEXT");
-gl.glGetMultiTexLevelParameterfvEXT = fetchGlFunc<PFNGLGETMULTITEXLEVELPARAMETERFVEXTPROC>("glGetMultiTexLevelParameterfvEXT");
+gl.glGetMultiTexLevelParameterfvEXT =
+    fetchGlFunc<PFNGLGETMULTITEXLEVELPARAMETERFVEXTPROC>("glGetMultiTexLevelParameterfvEXT");
 gl.glBlendEquationSeparate = fetchGlFunc<PFNGLBLENDEQUATIONSEPARATEPROC>("glBlendEquationSeparate");
 gl.glBindBuffersBase = fetchGlFunc<PFNGLBINDBUFFERSBASEPROC>("glBindBuffersBase");
 gl.glGetnUniformivARB = fetchGlFunc<PFNGLGETNUNIFORMIVARBPROC>("glGetnUniformivARB");
@@ -1278,16 +1303,19 @@ gl.glGetUniformi64vARB = fetchGlFunc<PFNGLGETUNIFORMI64VARBPROC>("glGetUniformi6
 gl.glGetnUniformi64vARB = fetchGlFunc<PFNGLGETNUNIFORMI64VARBPROC>("glGetnUniformi64vARB");
 gl.glProgramUniform4ui64ARB = fetchGlFunc<PFNGLPROGRAMUNIFORM4UI64ARBPROC>("glProgramUniform4ui64ARB");
 gl.glGetAttachedShaders = fetchGlFunc<PFNGLGETATTACHEDSHADERSPROC>("glGetAttachedShaders");
-gl.glGetActiveSubroutineUniformName = fetchGlFunc<PFNGLGETACTIVESUBROUTINEUNIFORMNAMEPROC>("glGetActiveSubroutineUniformName");
+gl.glGetActiveSubroutineUniformName =
+    fetchGlFunc<PFNGLGETACTIVESUBROUTINEUNIFORMNAMEPROC>("glGetActiveSubroutineUniformName");
 gl.glGetTextureParameterIuivEXT = fetchGlFunc<PFNGLGETTEXTUREPARAMETERIUIVEXTPROC>("glGetTextureParameterIuivEXT");
-gl.glVertexArrayVertexAttribLFormatEXT = fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBLFORMATEXTPROC>("glVertexArrayVertexAttribLFormatEXT");
+gl.glVertexArrayVertexAttribLFormatEXT =
+    fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBLFORMATEXTPROC>("glVertexArrayVertexAttribLFormatEXT");
 gl.glProgramUniform2dEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM2DEXTPROC>("glProgramUniform2dEXT");
 gl.glVertexAttrib1s = fetchGlFunc<PFNGLVERTEXATTRIB1SPROC>("glVertexAttrib1s");
 gl.glVertexAttrib3dv = fetchGlFunc<PFNGLVERTEXATTRIB3DVPROC>("glVertexAttrib3dv");
 gl.glUniform2ui64vARB = fetchGlFunc<PFNGLUNIFORM2UI64VARBPROC>("glUniform2ui64vARB");
 gl.glMultiDrawElements = fetchGlFunc<PFNGLMULTIDRAWELEMENTSPROC>("glMultiDrawElements");
 gl.glGetProgramiv = fetchGlFunc<PFNGLGETPROGRAMIVPROC>("glGetProgramiv");
-gl.glProgramUniformMatrix3x2dvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX3X2DVEXTPROC>("glProgramUniformMatrix3x2dvEXT");
+gl.glProgramUniformMatrix3x2dvEXT =
+    fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX3X2DVEXTPROC>("glProgramUniformMatrix3x2dvEXT");
 gl.glProgramUniform2i64ARB = fetchGlFunc<PFNGLPROGRAMUNIFORM2I64ARBPROC>("glProgramUniform2i64ARB");
 gl.glStencilOpSeparate = fetchGlFunc<PFNGLSTENCILOPSEPARATEPROC>("glStencilOpSeparate");
 gl.glReadPixels = fetchGlFunc<PFNGLREADPIXELSPROC>("glReadPixels");
@@ -1308,7 +1336,8 @@ gl.glGetNamedBufferPointervEXT = fetchGlFunc<PFNGLGETNAMEDBUFFERPOINTERVEXTPROC>
 gl.glDrawArraysIndirect = fetchGlFunc<PFNGLDRAWARRAYSINDIRECTPROC>("glDrawArraysIndirect");
 gl.glProgramUniformHandleui64ARB = fetchGlFunc<PFNGLPROGRAMUNIFORMHANDLEUI64ARBPROC>("glProgramUniformHandleui64ARB");
 gl.glGetQueryObjectuiv = fetchGlFunc<PFNGLGETQUERYOBJECTUIVPROC>("glGetQueryObjectuiv");
-gl.glInvalidateNamedFramebufferData = fetchGlFunc<PFNGLINVALIDATENAMEDFRAMEBUFFERDATAPROC>("glInvalidateNamedFramebufferData");
+gl.glInvalidateNamedFramebufferData =
+    fetchGlFunc<PFNGLINVALIDATENAMEDFRAMEBUFFERDATAPROC>("glInvalidateNamedFramebufferData");
 gl.glTexParameterIiv = fetchGlFunc<PFNGLTEXPARAMETERIIVPROC>("glTexParameterIiv");
 gl.glCompileShaderIncludeARB = fetchGlFunc<PFNGLCOMPILESHADERINCLUDEARBPROC>("glCompileShaderIncludeARB");
 gl.glMultiDrawArrays = fetchGlFunc<PFNGLMULTIDRAWARRAYSPROC>("glMultiDrawArrays");
@@ -1324,9 +1353,11 @@ gl.glFlushMappedBufferRange = fetchGlFunc<PFNGLFLUSHMAPPEDBUFFERRANGEPROC>("glFl
 gl.glVertexAttribI4usv = fetchGlFunc<PFNGLVERTEXATTRIBI4USVPROC>("glVertexAttribI4usv");
 gl.glClearNamedBufferData = fetchGlFunc<PFNGLCLEARNAMEDBUFFERDATAPROC>("glClearNamedBufferData");
 gl.glGetnCompressedTexImage = fetchGlFunc<PFNGLGETNCOMPRESSEDTEXIMAGEPROC>("glGetnCompressedTexImage");
-gl.glGetActiveSubroutineUniformiv = fetchGlFunc<PFNGLGETACTIVESUBROUTINEUNIFORMIVPROC>("glGetActiveSubroutineUniformiv");
+gl.glGetActiveSubroutineUniformiv =
+    fetchGlFunc<PFNGLGETACTIVESUBROUTINEUNIFORMIVPROC>("glGetActiveSubroutineUniformiv");
 gl.glTextureParameterIiv = fetchGlFunc<PFNGLTEXTUREPARAMETERIIVPROC>("glTextureParameterIiv");
-gl.glNamedRenderbufferStorageMultisampleEXT = fetchGlFunc<PFNGLNAMEDRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC>("glNamedRenderbufferStorageMultisampleEXT");
+gl.glNamedRenderbufferStorageMultisampleEXT =
+    fetchGlFunc<PFNGLNAMEDRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC>("glNamedRenderbufferStorageMultisampleEXT");
 gl.glFramebufferTexture2D = fetchGlFunc<PFNGLFRAMEBUFFERTEXTURE2DPROC>("glFramebufferTexture2D");
 gl.glUniform1ui = fetchGlFunc<PFNGLUNIFORM1UIPROC>("glUniform1ui");
 gl.glBindFragDataLocationIndexed = fetchGlFunc<PFNGLBINDFRAGDATALOCATIONINDEXEDPROC>("glBindFragDataLocationIndexed");
@@ -1336,20 +1367,24 @@ gl.glSamplerParameterIuiv = fetchGlFunc<PFNGLSAMPLERPARAMETERIUIVPROC>("glSample
 gl.glGetQueryBufferObjectuiv = fetchGlFunc<PFNGLGETQUERYBUFFEROBJECTUIVPROC>("glGetQueryBufferObjectuiv");
 gl.glProgramUniformMatrix4x2fv = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX4X2FVPROC>("glProgramUniformMatrix4x2fv");
 gl.glMultiTexImage1DEXT = fetchGlFunc<PFNGLMULTITEXIMAGE1DEXTPROC>("glMultiTexImage1DEXT");
-gl.glProgramUniformMatrix2x3dvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX2X3DVEXTPROC>("glProgramUniformMatrix2x3dvEXT");
+gl.glProgramUniformMatrix2x3dvEXT =
+    fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX2X3DVEXTPROC>("glProgramUniformMatrix2x3dvEXT");
 gl.glVertexAttrib1fv = fetchGlFunc<PFNGLVERTEXATTRIB1FVPROC>("glVertexAttrib1fv");
 gl.glGetUniformui64vARB = fetchGlFunc<PFNGLGETUNIFORMUI64VARBPROC>("glGetUniformui64vARB");
 gl.glDispatchCompute = fetchGlFunc<PFNGLDISPATCHCOMPUTEPROC>("glDispatchCompute");
 gl.glVertexAttribIPointer = fetchGlFunc<PFNGLVERTEXATTRIBIPOINTERPROC>("glVertexAttribIPointer");
 gl.glGetnTexImage = fetchGlFunc<PFNGLGETNTEXIMAGEPROC>("glGetnTexImage");
 gl.glVertexAttribI2uiv = fetchGlFunc<PFNGLVERTEXATTRIBI2UIVPROC>("glVertexAttribI2uiv");
-gl.glProgramUniformMatrix3x4fvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX3X4FVEXTPROC>("glProgramUniformMatrix3x4fvEXT");
-gl.glDrawElementsInstancedBaseInstance = fetchGlFunc<PFNGLDRAWELEMENTSINSTANCEDBASEINSTANCEPROC>("glDrawElementsInstancedBaseInstance");
+gl.glProgramUniformMatrix3x4fvEXT =
+    fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX3X4FVEXTPROC>("glProgramUniformMatrix3x4fvEXT");
+gl.glDrawElementsInstancedBaseInstance =
+    fetchGlFunc<PFNGLDRAWELEMENTSINSTANCEDBASEINSTANCEPROC>("glDrawElementsInstancedBaseInstance");
 gl.glGetDoublei_v = fetchGlFunc<PFNGLGETDOUBLEI_VPROC>("glGetDoublei_v");
 gl.glUniform2ui64ARB = fetchGlFunc<PFNGLUNIFORM2UI64ARBPROC>("glUniform2ui64ARB");
 gl.glProgramUniform4i64ARB = fetchGlFunc<PFNGLPROGRAMUNIFORM4I64ARBPROC>("glProgramUniform4i64ARB");
 gl.glMatrixPushEXT = fetchGlFunc<PFNGLMATRIXPUSHEXTPROC>("glMatrixPushEXT");
-gl.glDrawElementsInstancedBaseVertexBaseInstance = fetchGlFunc<PFNGLDRAWELEMENTSINSTANCEDBASEVERTEXBASEINSTANCEPROC>("glDrawElementsInstancedBaseVertexBaseInstance");
+gl.glDrawElementsInstancedBaseVertexBaseInstance =
+    fetchGlFunc<PFNGLDRAWELEMENTSINSTANCEDBASEVERTEXBASEINSTANCEPROC>("glDrawElementsInstancedBaseVertexBaseInstance");
 gl.glUniform1i64vARB = fetchGlFunc<PFNGLUNIFORM1I64VARBPROC>("glUniform1i64vARB");
 gl.glBindTexture = fetchGlFunc<PFNGLBINDTEXTUREPROC>("glBindTexture");
 gl.glVertexAttribL3d = fetchGlFunc<PFNGLVERTEXATTRIBL3DPROC>("glVertexAttribL3d");
@@ -1361,8 +1396,10 @@ gl.glUniform1d = fetchGlFunc<PFNGLUNIFORM1DPROC>("glUniform1d");
 gl.glProgramUniform2ui = fetchGlFunc<PFNGLPROGRAMUNIFORM2UIPROC>("glProgramUniform2ui");
 gl.glUniform3ui64vARB = fetchGlFunc<PFNGLUNIFORM3UI64VARBPROC>("glUniform3ui64vARB");
 gl.glGetMultiTexEnvivEXT = fetchGlFunc<PFNGLGETMULTITEXENVIVEXTPROC>("glGetMultiTexEnvivEXT");
-gl.glVertexArrayTexCoordOffsetEXT = fetchGlFunc<PFNGLVERTEXARRAYTEXCOORDOFFSETEXTPROC>("glVertexArrayTexCoordOffsetEXT");
-gl.glCompressedMultiTexImage1DEXT = fetchGlFunc<PFNGLCOMPRESSEDMULTITEXIMAGE1DEXTPROC>("glCompressedMultiTexImage1DEXT");
+gl.glVertexArrayTexCoordOffsetEXT =
+    fetchGlFunc<PFNGLVERTEXARRAYTEXCOORDOFFSETEXTPROC>("glVertexArrayTexCoordOffsetEXT");
+gl.glCompressedMultiTexImage1DEXT =
+    fetchGlFunc<PFNGLCOMPRESSEDMULTITEXIMAGE1DEXTPROC>("glCompressedMultiTexImage1DEXT");
 gl.glCopyTextureSubImage3D = fetchGlFunc<PFNGLCOPYTEXTURESUBIMAGE3DPROC>("glCopyTextureSubImage3D");
 gl.glTextureStorage3DEXT = fetchGlFunc<PFNGLTEXTURESTORAGE3DEXTPROC>("glTextureStorage3DEXT");
 gl.glProgramUniform3fvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM3FVEXTPROC>("glProgramUniform3fvEXT");
@@ -1372,7 +1409,8 @@ gl.glTextureParameterf = fetchGlFunc<PFNGLTEXTUREPARAMETERFPROC>("glTextureParam
 gl.glUniform4i64ARB = fetchGlFunc<PFNGLUNIFORM4I64ARBPROC>("glUniform4i64ARB");
 gl.glFramebufferTextureLayerARB = fetchGlFunc<PFNGLFRAMEBUFFERTEXTURELAYERARBPROC>("glFramebufferTextureLayerARB");
 gl.glFramebufferTexture = fetchGlFunc<PFNGLFRAMEBUFFERTEXTUREPROC>("glFramebufferTexture");
-gl.glCompressedMultiTexSubImage1DEXT = fetchGlFunc<PFNGLCOMPRESSEDMULTITEXSUBIMAGE1DEXTPROC>("glCompressedMultiTexSubImage1DEXT");
+gl.glCompressedMultiTexSubImage1DEXT =
+    fetchGlFunc<PFNGLCOMPRESSEDMULTITEXSUBIMAGE1DEXTPROC>("glCompressedMultiTexSubImage1DEXT");
 gl.glCreateQueries = fetchGlFunc<PFNGLCREATEQUERIESPROC>("glCreateQueries");
 gl.glCopyMultiTexSubImage3DEXT = fetchGlFunc<PFNGLCOPYMULTITEXSUBIMAGE3DEXTPROC>("glCopyMultiTexSubImage3DEXT");
 gl.glClampColor = fetchGlFunc<PFNGLCLAMPCOLORPROC>("glClampColor");
@@ -1382,7 +1420,8 @@ gl.glCreateProgramPipelines = fetchGlFunc<PFNGLCREATEPROGRAMPIPELINESPROC>("glCr
 gl.glFramebufferReadBufferEXT = fetchGlFunc<PFNGLFRAMEBUFFERREADBUFFEREXTPROC>("glFramebufferReadBufferEXT");
 gl.glUniformui64vNV = fetchGlFunc<PFNGLUNIFORMUI64VNVPROC>("glUniformui64vNV");
 gl.glStencilMask = fetchGlFunc<PFNGLSTENCILMASKPROC>("glStencilMask");
-gl.glNamedProgramLocalParametersI4uivEXT = fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETERSI4UIVEXTPROC>("glNamedProgramLocalParametersI4uivEXT");
+gl.glNamedProgramLocalParametersI4uivEXT =
+    fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETERSI4UIVEXTPROC>("glNamedProgramLocalParametersI4uivEXT");
 gl.glBlendFunc = fetchGlFunc<PFNGLBLENDFUNCPROC>("glBlendFunc");
 gl.glGetVertexArrayIndexediv = fetchGlFunc<PFNGLGETVERTEXARRAYINDEXEDIVPROC>("glGetVertexArrayIndexediv");
 gl.glGetQueryiv = fetchGlFunc<PFNGLGETQUERYIVPROC>("glGetQueryiv");
@@ -1398,7 +1437,8 @@ gl.glProgramUniform2ivEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM2IVEXTPROC>("glProgra
 gl.glGetIntegerv = fetchGlFunc<PFNGLGETINTEGERVPROC>("glGetIntegerv");
 gl.glShaderSource = fetchGlFunc<PFNGLSHADERSOURCEPROC>("glShaderSource");
 gl.glUniform4ui64ARB = fetchGlFunc<PFNGLUNIFORM4UI64ARBPROC>("glUniform4ui64ARB");
-gl.glMultiDrawArraysIndirectCountARB = fetchGlFunc<PFNGLMULTIDRAWARRAYSINDIRECTCOUNTARBPROC>("glMultiDrawArraysIndirectCountARB");
+gl.glMultiDrawArraysIndirectCountARB =
+    fetchGlFunc<PFNGLMULTIDRAWARRAYSINDIRECTCOUNTARBPROC>("glMultiDrawArraysIndirectCountARB");
 gl.glVertexAttribL2i64vNV = fetchGlFunc<PFNGLVERTEXATTRIBL2I64VNVPROC>("glVertexAttribL2i64vNV");
 gl.glCopyTextureSubImage2DEXT = fetchGlFunc<PFNGLCOPYTEXTURESUBIMAGE2DEXTPROC>("glCopyTextureSubImage2DEXT");
 gl.glGenerateMipmap = fetchGlFunc<PFNGLGENERATEMIPMAPPROC>("glGenerateMipmap");
@@ -1412,7 +1452,8 @@ gl.glTextureImage2DEXT = fetchGlFunc<PFNGLTEXTUREIMAGE2DEXTPROC>("glTextureImage
 gl.glProgramUniform2d = fetchGlFunc<PFNGLPROGRAMUNIFORM2DPROC>("glProgramUniform2d");
 gl.glBeginConditionalRender = fetchGlFunc<PFNGLBEGINCONDITIONALRENDERPROC>("glBeginConditionalRender");
 gl.glProgramUniform2i64vARB = fetchGlFunc<PFNGLPROGRAMUNIFORM2I64VARBPROC>("glProgramUniform2i64vARB");
-gl.glProgramUniformMatrix3x2fvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX3X2FVEXTPROC>("glProgramUniformMatrix3x2fvEXT");
+gl.glProgramUniformMatrix3x2fvEXT =
+    fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX3X2FVEXTPROC>("glProgramUniformMatrix3x2fvEXT");
 gl.glBindFramebuffer = fetchGlFunc<PFNGLBINDFRAMEBUFFERPROC>("glBindFramebuffer");
 gl.glUniform4fv = fetchGlFunc<PFNGLUNIFORM4FVPROC>("glUniform4fv");
 gl.glTexCoordFormatNV = fetchGlFunc<PFNGLTEXCOORDFORMATNVPROC>("glTexCoordFormatNV");
@@ -1420,15 +1461,19 @@ gl.glGetRenderbufferParameteriv = fetchGlFunc<PFNGLGETRENDERBUFFERPARAMETERIVPRO
 gl.glUniformMatrix4x3dv = fetchGlFunc<PFNGLUNIFORMMATRIX4X3DVPROC>("glUniformMatrix4x3dv");
 gl.glGetnUniformiv = fetchGlFunc<PFNGLGETNUNIFORMIVPROC>("glGetnUniformiv");
 gl.glProgramUniform4uivEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM4UIVEXTPROC>("glProgramUniform4uivEXT");
-gl.glNamedFramebufferRenderbufferEXT = fetchGlFunc<PFNGLNAMEDFRAMEBUFFERRENDERBUFFEREXTPROC>("glNamedFramebufferRenderbufferEXT");
+gl.glNamedFramebufferRenderbufferEXT =
+    fetchGlFunc<PFNGLNAMEDFRAMEBUFFERRENDERBUFFEREXTPROC>("glNamedFramebufferRenderbufferEXT");
 gl.glTexParameterfv = fetchGlFunc<PFNGLTEXPARAMETERFVPROC>("glTexParameterfv");
 gl.glProgramUniform1iv = fetchGlFunc<PFNGLPROGRAMUNIFORM1IVPROC>("glProgramUniform1iv");
 gl.glGetTextureLevelParameterfv = fetchGlFunc<PFNGLGETTEXTURELEVELPARAMETERFVPROC>("glGetTextureLevelParameterfv");
 gl.glGetnUniformui64vARB = fetchGlFunc<PFNGLGETNUNIFORMUI64VARBPROC>("glGetnUniformui64vARB");
-gl.glCompressedMultiTexSubImage2DEXT = fetchGlFunc<PFNGLCOMPRESSEDMULTITEXSUBIMAGE2DEXTPROC>("glCompressedMultiTexSubImage2DEXT");
+gl.glCompressedMultiTexSubImage2DEXT =
+    fetchGlFunc<PFNGLCOMPRESSEDMULTITEXSUBIMAGE2DEXTPROC>("glCompressedMultiTexSubImage2DEXT");
 gl.glProgramUniform4fEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM4FEXTPROC>("glProgramUniform4fEXT");
-gl.glVertexArrayVertexAttribIOffsetEXT = fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBIOFFSETEXTPROC>("glVertexArrayVertexAttribIOffsetEXT");
-gl.glGetCompressedMultiTexImageEXT = fetchGlFunc<PFNGLGETCOMPRESSEDMULTITEXIMAGEEXTPROC>("glGetCompressedMultiTexImageEXT");
+gl.glVertexArrayVertexAttribIOffsetEXT =
+    fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBIOFFSETEXTPROC>("glVertexArrayVertexAttribIOffsetEXT");
+gl.glGetCompressedMultiTexImageEXT =
+    fetchGlFunc<PFNGLGETCOMPRESSEDMULTITEXIMAGEEXTPROC>("glGetCompressedMultiTexImageEXT");
 gl.glProgramUniformMatrix2dv = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX2DVPROC>("glProgramUniformMatrix2dv");
 gl.glVertexArrayVertexBuffers = fetchGlFunc<PFNGLVERTEXARRAYVERTEXBUFFERSPROC>("glVertexArrayVertexBuffers");
 gl.glUniform4i64vARB = fetchGlFunc<PFNGLUNIFORM4I64VARBPROC>("glUniform4i64vARB");
@@ -1437,26 +1482,31 @@ gl.glTextureImage3DEXT = fetchGlFunc<PFNGLTEXTUREIMAGE3DEXTPROC>("glTextureImage
 gl.glGetMultiTexEnvfvEXT = fetchGlFunc<PFNGLGETMULTITEXENVFVEXTPROC>("glGetMultiTexEnvfvEXT");
 gl.glGetIntegeri_v = fetchGlFunc<PFNGLGETINTEGERI_VPROC>("glGetIntegeri_v");
 gl.glTextureSubImage2D = fetchGlFunc<PFNGLTEXTURESUBIMAGE2DPROC>("glTextureSubImage2D");
-gl.glNamedBufferPageCommitmentEXT = fetchGlFunc<PFNGLNAMEDBUFFERPAGECOMMITMENTEXTPROC>("glNamedBufferPageCommitmentEXT");
+gl.glNamedBufferPageCommitmentEXT =
+    fetchGlFunc<PFNGLNAMEDBUFFERPAGECOMMITMENTEXTPROC>("glNamedBufferPageCommitmentEXT");
 gl.glLineWidth = fetchGlFunc<PFNGLLINEWIDTHPROC>("glLineWidth");
 gl.glCopyBufferSubData = fetchGlFunc<PFNGLCOPYBUFFERSUBDATAPROC>("glCopyBufferSubData");
 gl.glMakeNamedBufferResidentNV = fetchGlFunc<PFNGLMAKENAMEDBUFFERRESIDENTNVPROC>("glMakeNamedBufferResidentNV");
 gl.glVertexAttribP4ui = fetchGlFunc<PFNGLVERTEXATTRIBP4UIPROC>("glVertexAttribP4ui");
 gl.glBufferStorage = fetchGlFunc<PFNGLBUFFERSTORAGEPROC>("glBufferStorage");
 gl.glMatrixOrthoEXT = fetchGlFunc<PFNGLMATRIXORTHOEXTPROC>("glMatrixOrthoEXT");
-gl.glCompressedMultiTexImage2DEXT = fetchGlFunc<PFNGLCOMPRESSEDMULTITEXIMAGE2DEXTPROC>("glCompressedMultiTexImage2DEXT");
+gl.glCompressedMultiTexImage2DEXT =
+    fetchGlFunc<PFNGLCOMPRESSEDMULTITEXIMAGE2DEXTPROC>("glCompressedMultiTexImage2DEXT");
 gl.glGetnTexImageARB = fetchGlFunc<PFNGLGETNTEXIMAGEARBPROC>("glGetnTexImageARB");
 gl.glVertexAttrib3s = fetchGlFunc<PFNGLVERTEXATTRIB3SPROC>("glVertexAttrib3s");
-gl.glGetFramebufferParameterivEXT = fetchGlFunc<PFNGLGETFRAMEBUFFERPARAMETERIVEXTPROC>("glGetFramebufferParameterivEXT");
+gl.glGetFramebufferParameterivEXT =
+    fetchGlFunc<PFNGLGETFRAMEBUFFERPARAMETERIVEXTPROC>("glGetFramebufferParameterivEXT");
 gl.glGetNamedBufferParameteri64v = fetchGlFunc<PFNGLGETNAMEDBUFFERPARAMETERI64VPROC>("glGetNamedBufferParameteri64v");
 gl.glGetNamedBufferPointerv = fetchGlFunc<PFNGLGETNAMEDBUFFERPOINTERVPROC>("glGetNamedBufferPointerv");
-gl.glVertexArrayVertexBindingDivisorEXT = fetchGlFunc<PFNGLVERTEXARRAYVERTEXBINDINGDIVISOREXTPROC>("glVertexArrayVertexBindingDivisorEXT");
+gl.glVertexArrayVertexBindingDivisorEXT =
+    fetchGlFunc<PFNGLVERTEXARRAYVERTEXBINDINGDIVISOREXTPROC>("glVertexArrayVertexBindingDivisorEXT");
 gl.glGenTextures = fetchGlFunc<PFNGLGENTEXTURESPROC>("glGenTextures");
 gl.glUniformMatrix2x4dv = fetchGlFunc<PFNGLUNIFORMMATRIX2X4DVPROC>("glUniformMatrix2x4dv");
 gl.glPrimitiveRestartIndex = fetchGlFunc<PFNGLPRIMITIVERESTARTINDEXPROC>("glPrimitiveRestartIndex");
 gl.glInvalidateFramebuffer = fetchGlFunc<PFNGLINVALIDATEFRAMEBUFFERPROC>("glInvalidateFramebuffer");
 gl.glEvaluateDepthValuesARB = fetchGlFunc<PFNGLEVALUATEDEPTHVALUESARBPROC>("glEvaluateDepthValuesARB");
-gl.glNamedFramebufferTexture3DEXT = fetchGlFunc<PFNGLNAMEDFRAMEBUFFERTEXTURE3DEXTPROC>("glNamedFramebufferTexture3DEXT");
+gl.glNamedFramebufferTexture3DEXT =
+    fetchGlFunc<PFNGLNAMEDFRAMEBUFFERTEXTURE3DEXTPROC>("glNamedFramebufferTexture3DEXT");
 gl.glUniform2iv = fetchGlFunc<PFNGLUNIFORM2IVPROC>("glUniform2iv");
 gl.glProgramUniform1f = fetchGlFunc<PFNGLPROGRAMUNIFORM1FPROC>("glProgramUniform1f");
 gl.glGetVertexAttribLui64vNV = fetchGlFunc<PFNGLGETVERTEXATTRIBLUI64VNVPROC>("glGetVertexAttribLui64vNV");
@@ -1470,9 +1520,11 @@ gl.glUniform2fv = fetchGlFunc<PFNGLUNIFORM2FVPROC>("glUniform2fv");
 gl.glPointParameterfv = fetchGlFunc<PFNGLPOINTPARAMETERFVPROC>("glPointParameterfv");
 gl.glPointParameteriv = fetchGlFunc<PFNGLPOINTPARAMETERIVPROC>("glPointParameteriv");
 gl.glClipControl = fetchGlFunc<PFNGLCLIPCONTROLPROC>("glClipControl");
-gl.glGetSubroutineUniformLocation = fetchGlFunc<PFNGLGETSUBROUTINEUNIFORMLOCATIONPROC>("glGetSubroutineUniformLocation");
+gl.glGetSubroutineUniformLocation =
+    fetchGlFunc<PFNGLGETSUBROUTINEUNIFORMLOCATIONPROC>("glGetSubroutineUniformLocation");
 gl.glProgramUniform4fv = fetchGlFunc<PFNGLPROGRAMUNIFORM4FVPROC>("glProgramUniform4fv");
-gl.glVertexArrayMultiTexCoordOffsetEXT = fetchGlFunc<PFNGLVERTEXARRAYMULTITEXCOORDOFFSETEXTPROC>("glVertexArrayMultiTexCoordOffsetEXT");
+gl.glVertexArrayMultiTexCoordOffsetEXT =
+    fetchGlFunc<PFNGLVERTEXARRAYMULTITEXCOORDOFFSETEXTPROC>("glVertexArrayMultiTexCoordOffsetEXT");
 gl.glMapBuffer = fetchGlFunc<PFNGLMAPBUFFERPROC>("glMapBuffer");
 gl.glProgramUniform3iv = fetchGlFunc<PFNGLPROGRAMUNIFORM3IVPROC>("glProgramUniform3iv");
 gl.glGetTextureHandleARB = fetchGlFunc<PFNGLGETTEXTUREHANDLEARBPROC>("glGetTextureHandleARB");
@@ -1495,7 +1547,8 @@ gl.glDrawCommandsAddressNV = fetchGlFunc<PFNGLDRAWCOMMANDSADDRESSNVPROC>("glDraw
 gl.glBlendEquation = fetchGlFunc<PFNGLBLENDEQUATIONPROC>("glBlendEquation");
 gl.glUniformMatrix2x3fv = fetchGlFunc<PFNGLUNIFORMMATRIX2X3FVPROC>("glUniformMatrix2x3fv");
 gl.glProgramUniform4iv = fetchGlFunc<PFNGLPROGRAMUNIFORM4IVPROC>("glProgramUniform4iv");
-gl.glNamedProgramLocalParameterI4uiEXT = fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETERI4UIEXTPROC>("glNamedProgramLocalParameterI4uiEXT");
+gl.glNamedProgramLocalParameterI4uiEXT =
+    fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETERI4UIEXTPROC>("glNamedProgramLocalParameterI4uiEXT");
 gl.glDeleteVertexArrays = fetchGlFunc<PFNGLDELETEVERTEXARRAYSPROC>("glDeleteVertexArrays");
 gl.glNamedProgramStringEXT = fetchGlFunc<PFNGLNAMEDPROGRAMSTRINGEXTPROC>("glNamedProgramStringEXT");
 gl.glIsFramebuffer = fetchGlFunc<PFNGLISFRAMEBUFFERPROC>("glIsFramebuffer");
@@ -1528,7 +1581,8 @@ gl.glBlendEquationSeparatei = fetchGlFunc<PFNGLBLENDEQUATIONSEPARATEIPROC>("glBl
 gl.glVertexAttrib4Nbv = fetchGlFunc<PFNGLVERTEXATTRIB4NBVPROC>("glVertexAttrib4Nbv");
 gl.glDisablei = fetchGlFunc<PFNGLDISABLEIPROC>("glDisablei");
 gl.glGetTextureLevelParameteriv = fetchGlFunc<PFNGLGETTEXTURELEVELPARAMETERIVPROC>("glGetTextureLevelParameteriv");
-gl.glGetProgramResourceLocationIndex = fetchGlFunc<PFNGLGETPROGRAMRESOURCELOCATIONINDEXPROC>("glGetProgramResourceLocationIndex");
+gl.glGetProgramResourceLocationIndex =
+    fetchGlFunc<PFNGLGETPROGRAMRESOURCELOCATIONINDEXPROC>("glGetProgramResourceLocationIndex");
 gl.glUniform3i = fetchGlFunc<PFNGLUNIFORM3IPROC>("glUniform3i");
 gl.glPushClientAttribDefaultEXT = fetchGlFunc<PFNGLPUSHCLIENTATTRIBDEFAULTEXTPROC>("glPushClientAttribDefaultEXT");
 gl.glVertexAttribI3iv = fetchGlFunc<PFNGLVERTEXATTRIBI3IVPROC>("glVertexAttribI3iv");
@@ -1536,10 +1590,12 @@ gl.glGetQueryObjectiv = fetchGlFunc<PFNGLGETQUERYOBJECTIVPROC>("glGetQueryObject
 gl.glGetInteger64v = fetchGlFunc<PFNGLGETINTEGER64VPROC>("glGetInteger64v");
 gl.glProgramUniform1i64ARB = fetchGlFunc<PFNGLPROGRAMUNIFORM1I64ARBPROC>("glProgramUniform1i64ARB");
 gl.glClearStencil = fetchGlFunc<PFNGLCLEARSTENCILPROC>("glClearStencil");
-gl.glMultiDrawArraysIndirectBindlessNV = fetchGlFunc<PFNGLMULTIDRAWARRAYSINDIRECTBINDLESSNVPROC>("glMultiDrawArraysIndirectBindlessNV");
+gl.glMultiDrawArraysIndirectBindlessNV =
+    fetchGlFunc<PFNGLMULTIDRAWARRAYSINDIRECTBINDLESSNVPROC>("glMultiDrawArraysIndirectBindlessNV");
 gl.glProgramUniform4ui = fetchGlFunc<PFNGLPROGRAMUNIFORM4UIPROC>("glProgramUniform4ui");
 gl.glGetProgramResourceName = fetchGlFunc<PFNGLGETPROGRAMRESOURCENAMEPROC>("glGetProgramResourceName");
-gl.glVertexArrayVertexAttribDivisorEXT = fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBDIVISOREXTPROC>("glVertexArrayVertexAttribDivisorEXT");
+gl.glVertexArrayVertexAttribDivisorEXT =
+    fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBDIVISOREXTPROC>("glVertexArrayVertexAttribDivisorEXT");
 gl.glTextureParameterfEXT = fetchGlFunc<PFNGLTEXTUREPARAMETERFEXTPROC>("glTextureParameterfEXT");
 gl.glIsCommandListNV = fetchGlFunc<PFNGLISCOMMANDLISTNVPROC>("glIsCommandListNV");
 gl.glTextureBufferEXT = fetchGlFunc<PFNGLTEXTUREBUFFEREXTPROC>("glTextureBufferEXT");
@@ -1558,19 +1614,22 @@ gl.glProgramUniform3fv = fetchGlFunc<PFNGLPROGRAMUNIFORM3FVPROC>("glProgramUnifo
 gl.glUniform3ui = fetchGlFunc<PFNGLUNIFORM3UIPROC>("glUniform3ui");
 gl.glGenerateMultiTexMipmapEXT = fetchGlFunc<PFNGLGENERATEMULTITEXMIPMAPEXTPROC>("glGenerateMultiTexMipmapEXT");
 gl.glDeleteFramebuffers = fetchGlFunc<PFNGLDELETEFRAMEBUFFERSPROC>("glDeleteFramebuffers");
-gl.glMultiDrawElementsIndirectCount = fetchGlFunc<PFNGLMULTIDRAWELEMENTSINDIRECTCOUNTPROC>("glMultiDrawElementsIndirectCount");
+gl.glMultiDrawElementsIndirectCount =
+    fetchGlFunc<PFNGLMULTIDRAWELEMENTSINDIRECTCOUNTPROC>("glMultiDrawElementsIndirectCount");
 gl.glSpecializeShaderARB = fetchGlFunc<PFNGLSPECIALIZESHADERARBPROC>("glSpecializeShaderARB");
 gl.glClearNamedFramebufferfi = fetchGlFunc<PFNGLCLEARNAMEDFRAMEBUFFERFIPROC>("glClearNamedFramebufferfi");
 gl.glCheckNamedFramebufferStatus = fetchGlFunc<PFNGLCHECKNAMEDFRAMEBUFFERSTATUSPROC>("glCheckNamedFramebufferStatus");
 gl.glVertexAttrib4Nub = fetchGlFunc<PFNGLVERTEXATTRIB4NUBPROC>("glVertexAttrib4Nub");
 gl.glDispatchComputeIndirect = fetchGlFunc<PFNGLDISPATCHCOMPUTEINDIRECTPROC>("glDispatchComputeIndirect");
-gl.glCompressedMultiTexImage3DEXT = fetchGlFunc<PFNGLCOMPRESSEDMULTITEXIMAGE3DEXTPROC>("glCompressedMultiTexImage3DEXT");
+gl.glCompressedMultiTexImage3DEXT =
+    fetchGlFunc<PFNGLCOMPRESSEDMULTITEXIMAGE3DEXTPROC>("glCompressedMultiTexImage3DEXT");
 gl.glTexSubImage3D = fetchGlFunc<PFNGLTEXSUBIMAGE3DPROC>("glTexSubImage3D");
 gl.glCopyTextureSubImage2D = fetchGlFunc<PFNGLCOPYTEXTURESUBIMAGE2DPROC>("glCopyTextureSubImage2D");
 gl.glVertexAttribL3i64vNV = fetchGlFunc<PFNGLVERTEXATTRIBL3I64VNVPROC>("glVertexAttribL3i64vNV");
 gl.glVertexArrayAttribBinding = fetchGlFunc<PFNGLVERTEXARRAYATTRIBBINDINGPROC>("glVertexArrayAttribBinding");
 gl.glVertexAttribL4d = fetchGlFunc<PFNGLVERTEXATTRIBL4DPROC>("glVertexAttribL4d");
-gl.glVertexArrayFogCoordOffsetEXT = fetchGlFunc<PFNGLVERTEXARRAYFOGCOORDOFFSETEXTPROC>("glVertexArrayFogCoordOffsetEXT");
+gl.glVertexArrayFogCoordOffsetEXT =
+    fetchGlFunc<PFNGLVERTEXARRAYFOGCOORDOFFSETEXTPROC>("glVertexArrayFogCoordOffsetEXT");
 gl.glProgramUniform1ivEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM1IVEXTPROC>("glProgramUniform1ivEXT");
 gl.glCompressedTextureImage2DEXT = fetchGlFunc<PFNGLCOMPRESSEDTEXTUREIMAGE2DEXTPROC>("glCompressedTextureImage2DEXT");
 gl.glBindBufferRange = fetchGlFunc<PFNGLBINDBUFFERRANGEPROC>("glBindBufferRange");
@@ -1596,17 +1655,20 @@ gl.glMultiTexBufferEXT = fetchGlFunc<PFNGLMULTITEXBUFFEREXTPROC>("glMultiTexBuff
 gl.glVertexAttribI3i = fetchGlFunc<PFNGLVERTEXATTRIBI3IPROC>("glVertexAttribI3i");
 gl.glMinSampleShading = fetchGlFunc<PFNGLMINSAMPLESHADINGPROC>("glMinSampleShading");
 gl.glUniform2ui = fetchGlFunc<PFNGLUNIFORM2UIPROC>("glUniform2ui");
-gl.glProgramUniformMatrix3x4dvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX3X4DVEXTPROC>("glProgramUniformMatrix3x4dvEXT");
+gl.glProgramUniformMatrix3x4dvEXT =
+    fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX3X4DVEXTPROC>("glProgramUniformMatrix3x4dvEXT");
 gl.glVertexAttribI4uiv = fetchGlFunc<PFNGLVERTEXATTRIBI4UIVPROC>("glVertexAttribI4uiv");
 gl.glFramebufferTextureLayer = fetchGlFunc<PFNGLFRAMEBUFFERTEXTURELAYERPROC>("glFramebufferTextureLayer");
 gl.glClearBufferSubData = fetchGlFunc<PFNGLCLEARBUFFERSUBDATAPROC>("glClearBufferSubData");
 gl.glNamedBufferDataEXT = fetchGlFunc<PFNGLNAMEDBUFFERDATAEXTPROC>("glNamedBufferDataEXT");
-gl.glNamedFramebufferTextureFaceEXT = fetchGlFunc<PFNGLNAMEDFRAMEBUFFERTEXTUREFACEEXTPROC>("glNamedFramebufferTextureFaceEXT");
+gl.glNamedFramebufferTextureFaceEXT =
+    fetchGlFunc<PFNGLNAMEDFRAMEBUFFERTEXTUREFACEEXTPROC>("glNamedFramebufferTextureFaceEXT");
 gl.glGetInternalformati64v = fetchGlFunc<PFNGLGETINTERNALFORMATI64VPROC>("glGetInternalformati64v");
 gl.glGetProgramInfoLog = fetchGlFunc<PFNGLGETPROGRAMINFOLOGPROC>("glGetProgramInfoLog");
 gl.glNormalFormatNV = fetchGlFunc<PFNGLNORMALFORMATNVPROC>("glNormalFormatNV");
 gl.glTexParameteriv = fetchGlFunc<PFNGLTEXPARAMETERIVPROC>("glTexParameteriv");
-gl.glMakeTextureHandleNonResidentARB = fetchGlFunc<PFNGLMAKETEXTUREHANDLENONRESIDENTARBPROC>("glMakeTextureHandleNonResidentARB");
+gl.glMakeTextureHandleNonResidentARB =
+    fetchGlFunc<PFNGLMAKETEXTUREHANDLENONRESIDENTARBPROC>("glMakeTextureHandleNonResidentARB");
 gl.glFramebufferDrawBuffersEXT = fetchGlFunc<PFNGLFRAMEBUFFERDRAWBUFFERSEXTPROC>("glFramebufferDrawBuffersEXT");
 gl.glIsEnabledIndexedEXT = fetchGlFunc<PFNGLISENABLEDINDEXEDEXTPROC>("glIsEnabledIndexedEXT");
 gl.glDrawCommandsNV = fetchGlFunc<PFNGLDRAWCOMMANDSNVPROC>("glDrawCommandsNV");
@@ -1626,10 +1688,12 @@ gl.glVertexAttribP1ui = fetchGlFunc<PFNGLVERTEXATTRIBP1UIPROC>("glVertexAttribP1
 gl.glVertexArrayNormalOffsetEXT = fetchGlFunc<PFNGLVERTEXARRAYNORMALOFFSETEXTPROC>("glVertexArrayNormalOffsetEXT");
 gl.glVertexAttribL1d = fetchGlFunc<PFNGLVERTEXATTRIBL1DPROC>("glVertexAttribL1d");
 gl.glTexStorage2D = fetchGlFunc<PFNGLTEXSTORAGE2DPROC>("glTexStorage2D");
-gl.glGetNamedFramebufferAttachmentParameteriv = fetchGlFunc<PFNGLGETNAMEDFRAMEBUFFERATTACHMENTPARAMETERIVPROC>("glGetNamedFramebufferAttachmentParameteriv");
+gl.glGetNamedFramebufferAttachmentParameteriv =
+    fetchGlFunc<PFNGLGETNAMEDFRAMEBUFFERATTACHMENTPARAMETERIVPROC>("glGetNamedFramebufferAttachmentParameteriv");
 gl.glMultiTexSubImage2DEXT = fetchGlFunc<PFNGLMULTITEXSUBIMAGE2DEXTPROC>("glMultiTexSubImage2DEXT");
 gl.glGetBufferParameterui64vNV = fetchGlFunc<PFNGLGETBUFFERPARAMETERUI64VNVPROC>("glGetBufferParameterui64vNV");
-gl.glNamedFramebufferRenderbuffer = fetchGlFunc<PFNGLNAMEDFRAMEBUFFERRENDERBUFFERPROC>("glNamedFramebufferRenderbuffer");
+gl.glNamedFramebufferRenderbuffer =
+    fetchGlFunc<PFNGLNAMEDFRAMEBUFFERRENDERBUFFERPROC>("glNamedFramebufferRenderbuffer");
 gl.glBindTransformFeedback = fetchGlFunc<PFNGLBINDTRANSFORMFEEDBACKPROC>("glBindTransformFeedback");
 gl.glGetBufferPointerv = fetchGlFunc<PFNGLGETBUFFERPOINTERVPROC>("glGetBufferPointerv");
 gl.glMapNamedBufferEXT = fetchGlFunc<PFNGLMAPNAMEDBUFFEREXTPROC>("glMapNamedBufferEXT");
@@ -1638,7 +1702,8 @@ gl.glVertexAttribI4iv = fetchGlFunc<PFNGLVERTEXATTRIBI4IVPROC>("glVertexAttribI4
 gl.glDrawArraysInstanced = fetchGlFunc<PFNGLDRAWARRAYSINSTANCEDPROC>("glDrawArraysInstanced");
 gl.glUniformMatrix4dv = fetchGlFunc<PFNGLUNIFORMMATRIX4DVPROC>("glUniformMatrix4dv");
 gl.glTextureStorage3DMultisample = fetchGlFunc<PFNGLTEXTURESTORAGE3DMULTISAMPLEPROC>("glTextureStorage3DMultisample");
-gl.glProgramUniformHandleui64vARB = fetchGlFunc<PFNGLPROGRAMUNIFORMHANDLEUI64VARBPROC>("glProgramUniformHandleui64vARB");
+gl.glProgramUniformHandleui64vARB =
+    fetchGlFunc<PFNGLPROGRAMUNIFORMHANDLEUI64VARBPROC>("glProgramUniformHandleui64vARB");
 gl.glProgramUniform1i = fetchGlFunc<PFNGLPROGRAMUNIFORM1IPROC>("glProgramUniform1i");
 gl.glScissorArrayv = fetchGlFunc<PFNGLSCISSORARRAYVPROC>("glScissorArrayv");
 gl.glDepthRangeArraydvNV = fetchGlFunc<PFNGLDEPTHRANGEARRAYDVNVPROC>("glDepthRangeArraydvNV");
@@ -1665,7 +1730,8 @@ gl.glVertexAttribP2uiv = fetchGlFunc<PFNGLVERTEXATTRIBP2UIVPROC>("glVertexAttrib
 gl.glNamedBufferData = fetchGlFunc<PFNGLNAMEDBUFFERDATAPROC>("glNamedBufferData");
 gl.glProgramUniform4d = fetchGlFunc<PFNGLPROGRAMUNIFORM4DPROC>("glProgramUniform4d");
 gl.glCopyTextureSubImage1D = fetchGlFunc<PFNGLCOPYTEXTURESUBIMAGE1DPROC>("glCopyTextureSubImage1D");
-gl.glGetNamedProgramLocalParameterfvEXT = fetchGlFunc<PFNGLGETNAMEDPROGRAMLOCALPARAMETERFVEXTPROC>("glGetNamedProgramLocalParameterfvEXT");
+gl.glGetNamedProgramLocalParameterfvEXT =
+    fetchGlFunc<PFNGLGETNAMEDPROGRAMLOCALPARAMETERFVEXTPROC>("glGetNamedProgramLocalParameterfvEXT");
 gl.glVertexAttribL2d = fetchGlFunc<PFNGLVERTEXATTRIBL2DPROC>("glVertexAttribL2d");
 gl.glGetCompressedTexImage = fetchGlFunc<PFNGLGETCOMPRESSEDTEXIMAGEPROC>("glGetCompressedTexImage");
 gl.glProgramUniform3d = fetchGlFunc<PFNGLPROGRAMUNIFORM3DPROC>("glProgramUniform3d");
@@ -1679,7 +1745,8 @@ gl.glGenTransformFeedbacks = fetchGlFunc<PFNGLGENTRANSFORMFEEDBACKSPROC>("glGenT
 gl.glVertexAttribL4ui64vNV = fetchGlFunc<PFNGLVERTEXATTRIBL4UI64VNVPROC>("glVertexAttribL4ui64vNV");
 gl.glBindImageTexture = fetchGlFunc<PFNGLBINDIMAGETEXTUREPROC>("glBindImageTexture");
 gl.glClearNamedFramebufferiv = fetchGlFunc<PFNGLCLEARNAMEDFRAMEBUFFERIVPROC>("glClearNamedFramebufferiv");
-gl.glDrawTransformFeedbackInstanced = fetchGlFunc<PFNGLDRAWTRANSFORMFEEDBACKINSTANCEDPROC>("glDrawTransformFeedbackInstanced");
+gl.glDrawTransformFeedbackInstanced =
+    fetchGlFunc<PFNGLDRAWTRANSFORMFEEDBACKINSTANCEDPROC>("glDrawTransformFeedbackInstanced");
 gl.glTextureView = fetchGlFunc<PFNGLTEXTUREVIEWPROC>("glTextureView");
 gl.glUniformMatrix3x2fv = fetchGlFunc<PFNGLUNIFORMMATRIX3X2FVPROC>("glUniformMatrix3x2fv");
 gl.glVertexAttribL2i64NV = fetchGlFunc<PFNGLVERTEXATTRIBL2I64NVPROC>("glVertexAttribL2i64NV");
@@ -1692,34 +1759,43 @@ gl.glGetBooleani_v = fetchGlFunc<PFNGLGETBOOLEANI_VPROC>("glGetBooleani_v");
 gl.glSamplerParameterfv = fetchGlFunc<PFNGLSAMPLERPARAMETERFVPROC>("glSamplerParameterfv");
 gl.glProgramUniform2i = fetchGlFunc<PFNGLPROGRAMUNIFORM2IPROC>("glProgramUniform2i");
 gl.glProgramUniform1uiv = fetchGlFunc<PFNGLPROGRAMUNIFORM1UIVPROC>("glProgramUniform1uiv");
-gl.glGetMultiTexLevelParameterivEXT = fetchGlFunc<PFNGLGETMULTITEXLEVELPARAMETERIVEXTPROC>("glGetMultiTexLevelParameterivEXT");
-gl.glCompressedTextureSubImage1DEXT = fetchGlFunc<PFNGLCOMPRESSEDTEXTURESUBIMAGE1DEXTPROC>("glCompressedTextureSubImage1DEXT");
+gl.glGetMultiTexLevelParameterivEXT =
+    fetchGlFunc<PFNGLGETMULTITEXLEVELPARAMETERIVEXTPROC>("glGetMultiTexLevelParameterivEXT");
+gl.glCompressedTextureSubImage1DEXT =
+    fetchGlFunc<PFNGLCOMPRESSEDTEXTURESUBIMAGE1DEXTPROC>("glCompressedTextureSubImage1DEXT");
 gl.glVertexAttrib4Nubv = fetchGlFunc<PFNGLVERTEXATTRIB4NUBVPROC>("glVertexAttrib4Nubv");
-gl.glVertexArrayBindVertexBufferEXT = fetchGlFunc<PFNGLVERTEXARRAYBINDVERTEXBUFFEREXTPROC>("glVertexArrayBindVertexBufferEXT");
+gl.glVertexArrayBindVertexBufferEXT =
+    fetchGlFunc<PFNGLVERTEXARRAYBINDVERTEXBUFFEREXTPROC>("glVertexArrayBindVertexBufferEXT");
 gl.glVertexAttribL3i64NV = fetchGlFunc<PFNGLVERTEXATTRIBL3I64NVPROC>("glVertexAttribL3i64NV");
 gl.glMultiTexParameteriEXT = fetchGlFunc<PFNGLMULTITEXPARAMETERIEXTPROC>("glMultiTexParameteriEXT");
 gl.glGetSynciv = fetchGlFunc<PFNGLGETSYNCIVPROC>("glGetSynciv");
 gl.glGetPointeri_vEXT = fetchGlFunc<PFNGLGETPOINTERI_VEXTPROC>("glGetPointeri_vEXT");
 gl.glMultiDrawElementsBaseVertex = fetchGlFunc<PFNGLMULTIDRAWELEMENTSBASEVERTEXPROC>("glMultiDrawElementsBaseVertex");
 gl.glProgramUniform1uivEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM1UIVEXTPROC>("glProgramUniform1uivEXT");
-gl.glTextureStorage3DMultisampleEXT = fetchGlFunc<PFNGLTEXTURESTORAGE3DMULTISAMPLEEXTPROC>("glTextureStorage3DMultisampleEXT");
+gl.glTextureStorage3DMultisampleEXT =
+    fetchGlFunc<PFNGLTEXTURESTORAGE3DMULTISAMPLEEXTPROC>("glTextureStorage3DMultisampleEXT");
 gl.glUniform4dv = fetchGlFunc<PFNGLUNIFORM4DVPROC>("glUniform4dv");
 gl.glGetSamplerParameterIiv = fetchGlFunc<PFNGLGETSAMPLERPARAMETERIIVPROC>("glGetSamplerParameterIiv");
 gl.glCopyTexSubImage1D = fetchGlFunc<PFNGLCOPYTEXSUBIMAGE1DPROC>("glCopyTexSubImage1D");
 gl.glClearDepthdNV = fetchGlFunc<PFNGLCLEARDEPTHDNVPROC>("glClearDepthdNV");
 gl.glMatrixScalefEXT = fetchGlFunc<PFNGLMATRIXSCALEFEXTPROC>("glMatrixScalefEXT");
 gl.glCopyTextureImage1DEXT = fetchGlFunc<PFNGLCOPYTEXTUREIMAGE1DEXTPROC>("glCopyTextureImage1DEXT");
-gl.glNamedFramebufferTexture1DEXT = fetchGlFunc<PFNGLNAMEDFRAMEBUFFERTEXTURE1DEXTPROC>("glNamedFramebufferTexture1DEXT");
+gl.glNamedFramebufferTexture1DEXT =
+    fetchGlFunc<PFNGLNAMEDFRAMEBUFFERTEXTURE1DEXTPROC>("glNamedFramebufferTexture1DEXT");
 gl.glEnableVertexAttribArray = fetchGlFunc<PFNGLENABLEVERTEXATTRIBARRAYPROC>("glEnableVertexAttribArray");
 gl.glUnmapNamedBufferEXT = fetchGlFunc<PFNGLUNMAPNAMEDBUFFEREXTPROC>("glUnmapNamedBufferEXT");
-gl.glGetCompressedTextureSubImage = fetchGlFunc<PFNGLGETCOMPRESSEDTEXTURESUBIMAGEPROC>("glGetCompressedTextureSubImage");
+gl.glGetCompressedTextureSubImage =
+    fetchGlFunc<PFNGLGETCOMPRESSEDTEXTURESUBIMAGEPROC>("glGetCompressedTextureSubImage");
 gl.glViewportIndexedfv = fetchGlFunc<PFNGLVIEWPORTINDEXEDFVPROC>("glViewportIndexedfv");
 gl.glGetShaderSource = fetchGlFunc<PFNGLGETSHADERSOURCEPROC>("glGetShaderSource");
 gl.glEnableVertexArrayAttrib = fetchGlFunc<PFNGLENABLEVERTEXARRAYATTRIBPROC>("glEnableVertexArrayAttrib");
-gl.glGetNamedProgramLocalParameterIivEXT = fetchGlFunc<PFNGLGETNAMEDPROGRAMLOCALPARAMETERIIVEXTPROC>("glGetNamedProgramLocalParameterIivEXT");
+gl.glGetNamedProgramLocalParameterIivEXT =
+    fetchGlFunc<PFNGLGETNAMEDPROGRAMLOCALPARAMETERIIVEXTPROC>("glGetNamedProgramLocalParameterIivEXT");
 gl.glGetUniformuiv = fetchGlFunc<PFNGLGETUNIFORMUIVPROC>("glGetUniformuiv");
-gl.glGetTextureLevelParameterivEXT = fetchGlFunc<PFNGLGETTEXTURELEVELPARAMETERIVEXTPROC>("glGetTextureLevelParameterivEXT");
-gl.glCheckNamedFramebufferStatusEXT = fetchGlFunc<PFNGLCHECKNAMEDFRAMEBUFFERSTATUSEXTPROC>("glCheckNamedFramebufferStatusEXT");
+gl.glGetTextureLevelParameterivEXT =
+    fetchGlFunc<PFNGLGETTEXTURELEVELPARAMETERIVEXTPROC>("glGetTextureLevelParameterivEXT");
+gl.glCheckNamedFramebufferStatusEXT =
+    fetchGlFunc<PFNGLCHECKNAMEDFRAMEBUFFERSTATUSEXTPROC>("glCheckNamedFramebufferStatusEXT");
 gl.glCullFace = fetchGlFunc<PFNGLCULLFACEPROC>("glCullFace");
 gl.glProgramUniform3ui64ARB = fetchGlFunc<PFNGLPROGRAMUNIFORM3UI64ARBPROC>("glProgramUniform3ui64ARB");
 gl.glUniform3iv = fetchGlFunc<PFNGLUNIFORM3IVPROC>("glUniform3iv");
@@ -1750,12 +1826,15 @@ gl.glFogCoordFormatNV = fetchGlFunc<PFNGLFOGCOORDFORMATNVPROC>("glFogCoordFormat
 gl.glProgramUniform1ui64ARB = fetchGlFunc<PFNGLPROGRAMUNIFORM1UI64ARBPROC>("glProgramUniform1ui64ARB");
 gl.glMatrixMultTransposefEXT = fetchGlFunc<PFNGLMATRIXMULTTRANSPOSEFEXTPROC>("glMatrixMultTransposefEXT");
 gl.glGetImageHandleARB = fetchGlFunc<PFNGLGETIMAGEHANDLEARBPROC>("glGetImageHandleARB");
-gl.glNamedRenderbufferStorageMultisampleCoverageEXT = fetchGlFunc<PFNGLNAMEDRENDERBUFFERSTORAGEMULTISAMPLECOVERAGEEXTPROC>("glNamedRenderbufferStorageMultisampleCoverageEXT");
+gl.glNamedRenderbufferStorageMultisampleCoverageEXT =
+    fetchGlFunc<PFNGLNAMEDRENDERBUFFERSTORAGEMULTISAMPLECOVERAGEEXTPROC>(
+        "glNamedRenderbufferStorageMultisampleCoverageEXT");
 gl.glTransformFeedbackBufferBase = fetchGlFunc<PFNGLTRANSFORMFEEDBACKBUFFERBASEPROC>("glTransformFeedbackBufferBase");
 gl.glVertexAttribI4ubv = fetchGlFunc<PFNGLVERTEXATTRIBI4UBVPROC>("glVertexAttribI4ubv");
 gl.glUniform3dv = fetchGlFunc<PFNGLUNIFORM3DVPROC>("glUniform3dv");
 gl.glBlendFunciARB = fetchGlFunc<PFNGLBLENDFUNCIARBPROC>("glBlendFunciARB");
-gl.glNamedProgramLocalParameterI4iEXT = fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETERI4IEXTPROC>("glNamedProgramLocalParameterI4iEXT");
+gl.glNamedProgramLocalParameterI4iEXT =
+    fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETERI4IEXTPROC>("glNamedProgramLocalParameterI4iEXT");
 gl.glVertexArrayAttribLFormat = fetchGlFunc<PFNGLVERTEXARRAYATTRIBLFORMATPROC>("glVertexArrayAttribLFormat");
 gl.glGetInteger64i_v = fetchGlFunc<PFNGLGETINTEGER64I_VPROC>("glGetInteger64i_v");
 gl.glFrontFace = fetchGlFunc<PFNGLFRONTFACEPROC>("glFrontFace");
@@ -1769,13 +1848,15 @@ gl.glCopyImageSubData = fetchGlFunc<PFNGLCOPYIMAGESUBDATAPROC>("glCopyImageSubDa
 gl.glTextureSubImage1D = fetchGlFunc<PFNGLTEXTURESUBIMAGE1DPROC>("glTextureSubImage1D");
 gl.glObjectPtrLabel = fetchGlFunc<PFNGLOBJECTPTRLABELPROC>("glObjectPtrLabel");
 gl.glUniform1f = fetchGlFunc<PFNGLUNIFORM1FPROC>("glUniform1f");
-gl.glNamedFramebufferTextureLayer = fetchGlFunc<PFNGLNAMEDFRAMEBUFFERTEXTURELAYERPROC>("glNamedFramebufferTextureLayer");
+gl.glNamedFramebufferTextureLayer =
+    fetchGlFunc<PFNGLNAMEDFRAMEBUFFERTEXTURELAYERPROC>("glNamedFramebufferTextureLayer");
 gl.glDeleteTextures = fetchGlFunc<PFNGLDELETETEXTURESPROC>("glDeleteTextures");
 gl.glGetTextureImage = fetchGlFunc<PFNGLGETTEXTUREIMAGEPROC>("glGetTextureImage");
 gl.glGetIntegerui64vNV = fetchGlFunc<PFNGLGETINTEGERUI64VNVPROC>("glGetIntegerui64vNV");
 gl.glTexSubImage2D = fetchGlFunc<PFNGLTEXSUBIMAGE2DPROC>("glTexSubImage2D");
 gl.glScissor = fetchGlFunc<PFNGLSCISSORPROC>("glScissor");
-gl.glRenderbufferStorageMultisample = fetchGlFunc<PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC>("glRenderbufferStorageMultisample");
+gl.glRenderbufferStorageMultisample =
+    fetchGlFunc<PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC>("glRenderbufferStorageMultisample");
 gl.glTextureRenderbufferEXT = fetchGlFunc<PFNGLTEXTURERENDERBUFFEREXTPROC>("glTextureRenderbufferEXT");
 gl.glGetVertexArrayIndexed64iv = fetchGlFunc<PFNGLGETVERTEXARRAYINDEXED64IVPROC>("glGetVertexArrayIndexed64iv");
 gl.glUniform1i64ARB = fetchGlFunc<PFNGLUNIFORM1I64ARBPROC>("glUniform1i64ARB");
@@ -1790,7 +1871,8 @@ gl.glProgramUniform4dvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM4DVEXTPROC>("glProgra
 gl.glGetFramebufferParameteriv = fetchGlFunc<PFNGLGETFRAMEBUFFERPARAMETERIVPROC>("glGetFramebufferParameteriv");
 gl.glClearTexSubImage = fetchGlFunc<PFNGLCLEARTEXSUBIMAGEPROC>("glClearTexSubImage");
 gl.glIsSync = fetchGlFunc<PFNGLISSYNCPROC>("glIsSync");
-gl.glTransformFeedbackBufferRange = fetchGlFunc<PFNGLTRANSFORMFEEDBACKBUFFERRANGEPROC>("glTransformFeedbackBufferRange");
+gl.glTransformFeedbackBufferRange =
+    fetchGlFunc<PFNGLTRANSFORMFEEDBACKBUFFERRANGEPROC>("glTransformFeedbackBufferRange");
 gl.glGetVertexArrayPointeri_vEXT = fetchGlFunc<PFNGLGETVERTEXARRAYPOINTERI_VEXTPROC>("glGetVertexArrayPointeri_vEXT");
 gl.glFlush = fetchGlFunc<PFNGLFLUSHPROC>("glFlush");
 gl.glCreateTransformFeedbacks = fetchGlFunc<PFNGLCREATETRANSFORMFEEDBACKSPROC>("glCreateTransformFeedbacks");
@@ -1798,7 +1880,8 @@ gl.glGetQueryBufferObjectui64v = fetchGlFunc<PFNGLGETQUERYBUFFEROBJECTUI64VPROC>
 gl.glTextureImage1DEXT = fetchGlFunc<PFNGLTEXTUREIMAGE1DEXTPROC>("glTextureImage1DEXT");
 gl.glFinish = fetchGlFunc<PFNGLFINISHPROC>("glFinish");
 gl.glGetFloatIndexedvEXT = fetchGlFunc<PFNGLGETFLOATINDEXEDVEXTPROC>("glGetFloatIndexedvEXT");
-gl.glProgramUniformMatrix4x3fvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX4X3FVEXTPROC>("glProgramUniformMatrix4x3fvEXT");
+gl.glProgramUniformMatrix4x3fvEXT =
+    fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX4X3FVEXTPROC>("glProgramUniformMatrix4x3fvEXT");
 gl.glVertexAttribL4i64vNV = fetchGlFunc<PFNGLVERTEXATTRIBL4I64VNVPROC>("glVertexAttribL4i64vNV");
 gl.glPointParameteri = fetchGlFunc<PFNGLPOINTPARAMETERIPROC>("glPointParameteri");
 gl.glNamedBufferStorageEXT = fetchGlFunc<PFNGLNAMEDBUFFERSTORAGEEXTPROC>("glNamedBufferStorageEXT");
@@ -1822,32 +1905,39 @@ gl.glIsEnabled = fetchGlFunc<PFNGLISENABLEDPROC>("glIsEnabled");
 gl.glMemoryBarrier = fetchGlFunc<PFNGLMEMORYBARRIERPROC>("glMemoryBarrier");
 gl.glEndQuery = fetchGlFunc<PFNGLENDQUERYPROC>("glEndQuery");
 gl.glCopyMultiTexImage1DEXT = fetchGlFunc<PFNGLCOPYMULTITEXIMAGE1DEXTPROC>("glCopyMultiTexImage1DEXT");
-gl.glProgramUniformMatrix2x4fvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX2X4FVEXTPROC>("glProgramUniformMatrix2x4fvEXT");
+gl.glProgramUniformMatrix2x4fvEXT =
+    fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX2X4FVEXTPROC>("glProgramUniformMatrix2x4fvEXT");
 gl.glGetVertexAttribfv = fetchGlFunc<PFNGLGETVERTEXATTRIBFVPROC>("glGetVertexAttribfv");
-gl.glCompressedTextureSubImage3DEXT = fetchGlFunc<PFNGLCOMPRESSEDTEXTURESUBIMAGE3DEXTPROC>("glCompressedTextureSubImage3DEXT");
+gl.glCompressedTextureSubImage3DEXT =
+    fetchGlFunc<PFNGLCOMPRESSEDTEXTURESUBIMAGE3DEXTPROC>("glCompressedTextureSubImage3DEXT");
 gl.glVertexAttribIFormat = fetchGlFunc<PFNGLVERTEXATTRIBIFORMATPROC>("glVertexAttribIFormat");
 gl.glCompileShader = fetchGlFunc<PFNGLCOMPILESHADERPROC>("glCompileShader");
 gl.glMinSampleShadingARB = fetchGlFunc<PFNGLMINSAMPLESHADINGARBPROC>("glMinSampleShadingARB");
-gl.glNamedBufferPageCommitmentARB = fetchGlFunc<PFNGLNAMEDBUFFERPAGECOMMITMENTARBPROC>("glNamedBufferPageCommitmentARB");
+gl.glNamedBufferPageCommitmentARB =
+    fetchGlFunc<PFNGLNAMEDBUFFERPAGECOMMITMENTARBPROC>("glNamedBufferPageCommitmentARB");
 gl.glProgramUniform4uiv = fetchGlFunc<PFNGLPROGRAMUNIFORM4UIVPROC>("glProgramUniform4uiv");
 gl.glClientAttribDefaultEXT = fetchGlFunc<PFNGLCLIENTATTRIBDEFAULTEXTPROC>("glClientAttribDefaultEXT");
 gl.glGetTransformFeedbackiv = fetchGlFunc<PFNGLGETTRANSFORMFEEDBACKIVPROC>("glGetTransformFeedbackiv");
 gl.glVertexAttrib4fv = fetchGlFunc<PFNGLVERTEXATTRIB4FVPROC>("glVertexAttrib4fv");
 gl.glBindVertexArray = fetchGlFunc<PFNGLBINDVERTEXARRAYPROC>("glBindVertexArray");
 gl.glEnableIndexedEXT = fetchGlFunc<PFNGLENABLEINDEXEDEXTPROC>("glEnableIndexedEXT");
-gl.glNamedFramebufferTextureLayerEXT = fetchGlFunc<PFNGLNAMEDFRAMEBUFFERTEXTURELAYEREXTPROC>("glNamedFramebufferTextureLayerEXT");
+gl.glNamedFramebufferTextureLayerEXT =
+    fetchGlFunc<PFNGLNAMEDFRAMEBUFFERTEXTURELAYEREXTPROC>("glNamedFramebufferTextureLayerEXT");
 gl.glGetTexLevelParameterfv = fetchGlFunc<PFNGLGETTEXLEVELPARAMETERFVPROC>("glGetTexLevelParameterfv");
 gl.glGetCommandHeaderNV = fetchGlFunc<PFNGLGETCOMMANDHEADERNVPROC>("glGetCommandHeaderNV");
 gl.glDrawElements = fetchGlFunc<PFNGLDRAWELEMENTSPROC>("glDrawElements");
-gl.glNamedProgramLocalParameter4fvEXT = fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETER4FVEXTPROC>("glNamedProgramLocalParameter4fvEXT");
-gl.glTextureStorage2DMultisampleEXT = fetchGlFunc<PFNGLTEXTURESTORAGE2DMULTISAMPLEEXTPROC>("glTextureStorage2DMultisampleEXT");
+gl.glNamedProgramLocalParameter4fvEXT =
+    fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETER4FVEXTPROC>("glNamedProgramLocalParameter4fvEXT");
+gl.glTextureStorage2DMultisampleEXT =
+    fetchGlFunc<PFNGLTEXTURESTORAGE2DMULTISAMPLEEXTPROC>("glTextureStorage2DMultisampleEXT");
 gl.glProgramUniformMatrix2x3dv = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX2X3DVPROC>("glProgramUniformMatrix2x3dv");
 gl.glBindTextures = fetchGlFunc<PFNGLBINDTEXTURESPROC>("glBindTextures");
 gl.glClearBufferfv = fetchGlFunc<PFNGLCLEARBUFFERFVPROC>("glClearBufferfv");
 gl.glClearNamedFramebufferfv = fetchGlFunc<PFNGLCLEARNAMEDFRAMEBUFFERFVPROC>("glClearNamedFramebufferfv");
 gl.glTextureParameterIivEXT = fetchGlFunc<PFNGLTEXTUREPARAMETERIIVEXTPROC>("glTextureParameterIivEXT");
 gl.glUniformMatrix4x2dv = fetchGlFunc<PFNGLUNIFORMMATRIX4X2DVPROC>("glUniformMatrix4x2dv");
-gl.glGetNamedBufferParameterui64vNV = fetchGlFunc<PFNGLGETNAMEDBUFFERPARAMETERUI64VNVPROC>("glGetNamedBufferParameterui64vNV");
+gl.glGetNamedBufferParameterui64vNV =
+    fetchGlFunc<PFNGLGETNAMEDBUFFERPARAMETERUI64VNVPROC>("glGetNamedBufferParameterui64vNV");
 gl.glProgramUniform3i64vARB = fetchGlFunc<PFNGLPROGRAMUNIFORM3I64VARBPROC>("glProgramUniform3i64vARB");
 gl.glMultiTexGenfvEXT = fetchGlFunc<PFNGLMULTITEXGENFVEXTPROC>("glMultiTexGenfvEXT");
 gl.glGetUniformfv = fetchGlFunc<PFNGLGETUNIFORMFVPROC>("glGetUniformfv");
@@ -1857,14 +1947,17 @@ gl.glGetnUniformfv = fetchGlFunc<PFNGLGETNUNIFORMFVPROC>("glGetnUniformfv");
 gl.glTextureSubImage1DEXT = fetchGlFunc<PFNGLTEXTURESUBIMAGE1DEXTPROC>("glTextureSubImage1DEXT");
 gl.glCompressedTexImage3D = fetchGlFunc<PFNGLCOMPRESSEDTEXIMAGE3DPROC>("glCompressedTexImage3D");
 gl.glVertexAttrib2d = fetchGlFunc<PFNGLVERTEXATTRIB2DPROC>("glVertexAttrib2d");
-gl.glListDrawCommandsStatesClientNV = fetchGlFunc<PFNGLLISTDRAWCOMMANDSSTATESCLIENTNVPROC>("glListDrawCommandsStatesClientNV");
+gl.glListDrawCommandsStatesClientNV =
+    fetchGlFunc<PFNGLLISTDRAWCOMMANDSSTATESCLIENTNVPROC>("glListDrawCommandsStatesClientNV");
 gl.glPopDebugGroup = fetchGlFunc<PFNGLPOPDEBUGGROUPPROC>("glPopDebugGroup");
 gl.glGetMultiTexParameterIivEXT = fetchGlFunc<PFNGLGETMULTITEXPARAMETERIIVEXTPROC>("glGetMultiTexParameterIivEXT");
 gl.glBindVertexBuffers = fetchGlFunc<PFNGLBINDVERTEXBUFFERSPROC>("glBindVertexBuffers");
 gl.glPolygonOffset = fetchGlFunc<PFNGLPOLYGONOFFSETPROC>("glPolygonOffset");
-gl.glMultiDrawElementsIndirectBindlessCountNV = fetchGlFunc<PFNGLMULTIDRAWELEMENTSINDIRECTBINDLESSCOUNTNVPROC>("glMultiDrawElementsIndirectBindlessCountNV");
+gl.glMultiDrawElementsIndirectBindlessCountNV =
+    fetchGlFunc<PFNGLMULTIDRAWELEMENTSINDIRECTBINDLESSCOUNTNVPROC>("glMultiDrawElementsIndirectBindlessCountNV");
 gl.glGetTexParameterIiv = fetchGlFunc<PFNGLGETTEXPARAMETERIIVPROC>("glGetTexParameterIiv");
-gl.glVertexArrayVertexAttribFormatEXT = fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBFORMATEXTPROC>("glVertexArrayVertexAttribFormatEXT");
+gl.glVertexArrayVertexAttribFormatEXT =
+    fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBFORMATEXTPROC>("glVertexArrayVertexAttribFormatEXT");
 gl.glGetFragDataIndex = fetchGlFunc<PFNGLGETFRAGDATAINDEXPROC>("glGetFragDataIndex");
 gl.glActiveTexture = fetchGlFunc<PFNGLACTIVETEXTUREPROC>("glActiveTexture");
 gl.glCopyTextureImage2DEXT = fetchGlFunc<PFNGLCOPYTEXTUREIMAGE2DEXTPROC>("glCopyTextureImage2DEXT");
@@ -1875,20 +1968,23 @@ gl.glProgramUniformMatrix4fvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX4FVEXTPRO
 gl.glGetUniformiv = fetchGlFunc<PFNGLGETUNIFORMIVPROC>("glGetUniformiv");
 gl.glMatrixFrustumEXT = fetchGlFunc<PFNGLMATRIXFRUSTUMEXTPROC>("glMatrixFrustumEXT");
 gl.glTextureStorage2D = fetchGlFunc<PFNGLTEXTURESTORAGE2DPROC>("glTextureStorage2D");
-gl.glInvalidateNamedFramebufferSubData = fetchGlFunc<PFNGLINVALIDATENAMEDFRAMEBUFFERSUBDATAPROC>("glInvalidateNamedFramebufferSubData");
+gl.glInvalidateNamedFramebufferSubData =
+    fetchGlFunc<PFNGLINVALIDATENAMEDFRAMEBUFFERSUBDATAPROC>("glInvalidateNamedFramebufferSubData");
 gl.glTextureBuffer = fetchGlFunc<PFNGLTEXTUREBUFFERPROC>("glTextureBuffer");
 gl.glMatrixLoaddEXT = fetchGlFunc<PFNGLMATRIXLOADDEXTPROC>("glMatrixLoaddEXT");
 gl.glGetQueryBufferObjecti64v = fetchGlFunc<PFNGLGETQUERYBUFFEROBJECTI64VPROC>("glGetQueryBufferObjecti64v");
 gl.glUniformMatrix4x3fv = fetchGlFunc<PFNGLUNIFORMMATRIX4X3FVPROC>("glUniformMatrix4x3fv");
 gl.glVertexAttrib2dv = fetchGlFunc<PFNGLVERTEXATTRIB2DVPROC>("glVertexAttrib2dv");
 gl.glSpecializeShader = fetchGlFunc<PFNGLSPECIALIZESHADERPROC>("glSpecializeShader");
-gl.glVertexArrayVertexAttribOffsetEXT = fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBOFFSETEXTPROC>("glVertexArrayVertexAttribOffsetEXT");
+gl.glVertexArrayVertexAttribOffsetEXT =
+    fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBOFFSETEXTPROC>("glVertexArrayVertexAttribOffsetEXT");
 gl.glCopyTextureSubImage1DEXT = fetchGlFunc<PFNGLCOPYTEXTURESUBIMAGE1DEXTPROC>("glCopyTextureSubImage1DEXT");
 gl.glTexturePageCommitmentEXT = fetchGlFunc<PFNGLTEXTUREPAGECOMMITMENTEXTPROC>("glTexturePageCommitmentEXT");
 gl.glProgramUniformMatrix2dvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX2DVEXTPROC>("glProgramUniformMatrix2dvEXT");
 gl.glDrawTransformFeedbackStream = fetchGlFunc<PFNGLDRAWTRANSFORMFEEDBACKSTREAMPROC>("glDrawTransformFeedbackStream");
 gl.glVertexAttrib4f = fetchGlFunc<PFNGLVERTEXATTRIB4FPROC>("glVertexAttrib4f");
-gl.glMakeNamedBufferNonResidentNV = fetchGlFunc<PFNGLMAKENAMEDBUFFERNONRESIDENTNVPROC>("glMakeNamedBufferNonResidentNV");
+gl.glMakeNamedBufferNonResidentNV =
+    fetchGlFunc<PFNGLMAKENAMEDBUFFERNONRESIDENTNVPROC>("glMakeNamedBufferNonResidentNV");
 gl.glVertexAttrib4uiv = fetchGlFunc<PFNGLVERTEXATTRIB4UIVPROC>("glVertexAttrib4uiv");
 gl.glClientWaitSync = fetchGlFunc<PFNGLCLIENTWAITSYNCPROC>("glClientWaitSync");
 gl.glGetVertexAttribLui64vARB = fetchGlFunc<PFNGLGETVERTEXATTRIBLUI64VARBPROC>("glGetVertexAttribLui64vARB");
@@ -1924,7 +2020,8 @@ gl.glVertexBindingDivisor = fetchGlFunc<PFNGLVERTEXBINDINGDIVISORPROC>("glVertex
 gl.glProgramUniform2fv = fetchGlFunc<PFNGLPROGRAMUNIFORM2FVPROC>("glProgramUniform2fv");
 gl.glEndQueryIndexed = fetchGlFunc<PFNGLENDQUERYINDEXEDPROC>("glEndQueryIndexed");
 gl.glGetnUniformuiv = fetchGlFunc<PFNGLGETNUNIFORMUIVPROC>("glGetnUniformuiv");
-gl.glProgramUniformMatrix4x3dvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX4X3DVEXTPROC>("glProgramUniformMatrix4x3dvEXT");
+gl.glProgramUniformMatrix4x3dvEXT =
+    fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX4X3DVEXTPROC>("glProgramUniformMatrix4x3dvEXT");
 gl.glDrawTransformFeedback = fetchGlFunc<PFNGLDRAWTRANSFORMFEEDBACKPROC>("glDrawTransformFeedback");
 gl.glVertexAttrib1dv = fetchGlFunc<PFNGLVERTEXATTRIB1DVPROC>("glVertexAttrib1dv");
 gl.glGetMultiTexGendvEXT = fetchGlFunc<PFNGLGETMULTITEXGENDVEXTPROC>("glGetMultiTexGendvEXT");
@@ -1938,7 +2035,8 @@ gl.glProgramUniform1dvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM1DVEXTPROC>("glProgra
 gl.glGetTexParameterfv = fetchGlFunc<PFNGLGETTEXPARAMETERFVPROC>("glGetTexParameterfv");
 gl.glBufferPageCommitmentARB = fetchGlFunc<PFNGLBUFFERPAGECOMMITMENTARBPROC>("glBufferPageCommitmentARB");
 gl.glVertexAttribL2ui64NV = fetchGlFunc<PFNGLVERTEXATTRIBL2UI64NVPROC>("glVertexAttribL2ui64NV");
-gl.glNamedFramebufferSampleLocationsfvARB = fetchGlFunc<PFNGLNAMEDFRAMEBUFFERSAMPLELOCATIONSFVARBPROC>("glNamedFramebufferSampleLocationsfvARB");
+gl.glNamedFramebufferSampleLocationsfvARB =
+    fetchGlFunc<PFNGLNAMEDFRAMEBUFFERSAMPLELOCATIONSFVARBPROC>("glNamedFramebufferSampleLocationsfvARB");
 gl.glVertexAttrib2f = fetchGlFunc<PFNGLVERTEXATTRIB2FPROC>("glVertexAttrib2f");
 gl.glCreateVertexArrays = fetchGlFunc<PFNGLCREATEVERTEXARRAYSPROC>("glCreateVertexArrays");
 gl.glGetNamedStringARB = fetchGlFunc<PFNGLGETNAMEDSTRINGARBPROC>("glGetNamedStringARB");
@@ -1948,7 +2046,8 @@ gl.glTexImage2D = fetchGlFunc<PFNGLTEXIMAGE2DPROC>("glTexImage2D");
 gl.glFramebufferTextureFaceARB = fetchGlFunc<PFNGLFRAMEBUFFERTEXTUREFACEARBPROC>("glFramebufferTextureFaceARB");
 gl.glReadnPixelsARB = fetchGlFunc<PFNGLREADNPIXELSARBPROC>("glReadnPixelsARB");
 gl.glMultiTexGendEXT = fetchGlFunc<PFNGLMULTITEXGENDEXTPROC>("glMultiTexGendEXT");
-gl.glCompressedMultiTexSubImage3DEXT = fetchGlFunc<PFNGLCOMPRESSEDMULTITEXSUBIMAGE3DEXTPROC>("glCompressedMultiTexSubImage3DEXT");
+gl.glCompressedMultiTexSubImage3DEXT =
+    fetchGlFunc<PFNGLCOMPRESSEDMULTITEXSUBIMAGE3DEXTPROC>("glCompressedMultiTexSubImage3DEXT");
 gl.glProgramUniform1fEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM1FEXTPROC>("glProgramUniform1fEXT");
 gl.glSamplerParameteri = fetchGlFunc<PFNGLSAMPLERPARAMETERIPROC>("glSamplerParameteri");
 gl.glGetGraphicsResetStatus = fetchGlFunc<PFNGLGETGRAPHICSRESETSTATUSPROC>("glGetGraphicsResetStatus");
@@ -1971,7 +2070,8 @@ gl.glCreateStatesNV = fetchGlFunc<PFNGLCREATESTATESNVPROC>("glCreateStatesNV");
 gl.glGetTextureParameterfv = fetchGlFunc<PFNGLGETTEXTUREPARAMETERFVPROC>("glGetTextureParameterfv");
 gl.glGetVertexAttribLi64vNV = fetchGlFunc<PFNGLGETVERTEXATTRIBLI64VNVPROC>("glGetVertexAttribLi64vNV");
 gl.glGetProgramResourceiv = fetchGlFunc<PFNGLGETPROGRAMRESOURCEIVPROC>("glGetProgramResourceiv");
-gl.glDrawTransformFeedbackStreamInstanced = fetchGlFunc<PFNGLDRAWTRANSFORMFEEDBACKSTREAMINSTANCEDPROC>("glDrawTransformFeedbackStreamInstanced");
+gl.glDrawTransformFeedbackStreamInstanced =
+    fetchGlFunc<PFNGLDRAWTRANSFORMFEEDBACKSTREAMINSTANCEDPROC>("glDrawTransformFeedbackStreamInstanced");
 gl.glIsProgram = fetchGlFunc<PFNGLISPROGRAMPROC>("glIsProgram");
 gl.glVertexAttribL4ui64NV = fetchGlFunc<PFNGLVERTEXATTRIBL4UI64NVPROC>("glVertexAttribL4ui64NV");
 gl.glProgramUniformMatrix4x3fv = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX4X3FVPROC>("glProgramUniformMatrix4x3fv");
@@ -1987,17 +2087,20 @@ gl.glIsShader = fetchGlFunc<PFNGLISSHADERPROC>("glIsShader");
 gl.glDepthFunc = fetchGlFunc<PFNGLDEPTHFUNCPROC>("glDepthFunc");
 gl.glClearDepth = fetchGlFunc<PFNGLCLEARDEPTHPROC>("glClearDepth");
 gl.glProgramUniform2iEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM2IEXTPROC>("glProgramUniform2iEXT");
-gl.glNamedProgramLocalParameter4dvEXT = fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETER4DVEXTPROC>("glNamedProgramLocalParameter4dvEXT");
+gl.glNamedProgramLocalParameter4dvEXT =
+    fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETER4DVEXTPROC>("glNamedProgramLocalParameter4dvEXT");
 gl.glMultiTexGenfEXT = fetchGlFunc<PFNGLMULTITEXGENFEXTPROC>("glMultiTexGenfEXT");
 gl.glUniformMatrix2dv = fetchGlFunc<PFNGLUNIFORMMATRIX2DVPROC>("glUniformMatrix2dv");
 gl.glBlendEquationSeparateiARB = fetchGlFunc<PFNGLBLENDEQUATIONSEPARATEIARBPROC>("glBlendEquationSeparateiARB");
 gl.glProgramUniform2fEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM2FEXTPROC>("glProgramUniform2fEXT");
 gl.glUniformSubroutinesuiv = fetchGlFunc<PFNGLUNIFORMSUBROUTINESUIVPROC>("glUniformSubroutinesuiv");
-gl.glProgramUniformMatrix4x2fvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX4X2FVEXTPROC>("glProgramUniformMatrix4x2fvEXT");
+gl.glProgramUniformMatrix4x2fvEXT =
+    fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX4X2FVEXTPROC>("glProgramUniformMatrix4x2fvEXT");
 gl.glTexImage3D = fetchGlFunc<PFNGLTEXIMAGE3DPROC>("glTexImage3D");
 gl.glTextureParameteri = fetchGlFunc<PFNGLTEXTUREPARAMETERIPROC>("glTextureParameteri");
 gl.glProgramUniform2uiv = fetchGlFunc<PFNGLPROGRAMUNIFORM2UIVPROC>("glProgramUniform2uiv");
-gl.glNamedProgramLocalParameters4fvEXT = fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETERS4FVEXTPROC>("glNamedProgramLocalParameters4fvEXT");
+gl.glNamedProgramLocalParameters4fvEXT =
+    fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETERS4FVEXTPROC>("glNamedProgramLocalParameters4fvEXT");
 gl.glBindVertexBuffer = fetchGlFunc<PFNGLBINDVERTEXBUFFERPROC>("glBindVertexBuffer");
 gl.glProgramUniform3uiEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM3UIEXTPROC>("glProgramUniform3uiEXT");
 gl.glColorFormatNV = fetchGlFunc<PFNGLCOLORFORMATNVPROC>("glColorFormatNV");
@@ -2005,7 +2108,8 @@ gl.glDrawBuffer = fetchGlFunc<PFNGLDRAWBUFFERPROC>("glDrawBuffer");
 gl.glUniformHandleui64ARB = fetchGlFunc<PFNGLUNIFORMHANDLEUI64ARBPROC>("glUniformHandleui64ARB");
 gl.glViewport = fetchGlFunc<PFNGLVIEWPORTPROC>("glViewport");
 gl.glGetProgramStageiv = fetchGlFunc<PFNGLGETPROGRAMSTAGEIVPROC>("glGetProgramStageiv");
-gl.glGetNamedBufferParameterivEXT = fetchGlFunc<PFNGLGETNAMEDBUFFERPARAMETERIVEXTPROC>("glGetNamedBufferParameterivEXT");
+gl.glGetNamedBufferParameterivEXT =
+    fetchGlFunc<PFNGLGETNAMEDBUFFERPARAMETERIVEXTPROC>("glGetNamedBufferParameterivEXT");
 gl.glMapNamedBuffer = fetchGlFunc<PFNGLMAPNAMEDBUFFERPROC>("glMapNamedBuffer");
 gl.glMultiTexGeniEXT = fetchGlFunc<PFNGLMULTITEXGENIEXTPROC>("glMultiTexGeniEXT");
 gl.glUniform3ui64ARB = fetchGlFunc<PFNGLUNIFORM3UI64ARBPROC>("glUniform3ui64ARB");
@@ -2013,10 +2117,13 @@ gl.glFramebufferRenderbuffer = fetchGlFunc<PFNGLFRAMEBUFFERRENDERBUFFERPROC>("gl
 gl.glProgramUniform2f = fetchGlFunc<PFNGLPROGRAMUNIFORM2FPROC>("glProgramUniform2f");
 gl.glProgramUniformui64vNV = fetchGlFunc<PFNGLPROGRAMUNIFORMUI64VNVPROC>("glProgramUniformui64vNV");
 gl.glPolygonOffsetClamp = fetchGlFunc<PFNGLPOLYGONOFFSETCLAMPPROC>("glPolygonOffsetClamp");
-gl.glGetNamedProgramLocalParameterIuivEXT = fetchGlFunc<PFNGLGETNAMEDPROGRAMLOCALPARAMETERIUIVEXTPROC>("glGetNamedProgramLocalParameterIuivEXT");
-gl.glMultiDrawArraysIndirectCount = fetchGlFunc<PFNGLMULTIDRAWARRAYSINDIRECTCOUNTPROC>("glMultiDrawArraysIndirectCount");
+gl.glGetNamedProgramLocalParameterIuivEXT =
+    fetchGlFunc<PFNGLGETNAMEDPROGRAMLOCALPARAMETERIUIVEXTPROC>("glGetNamedProgramLocalParameterIuivEXT");
+gl.glMultiDrawArraysIndirectCount =
+    fetchGlFunc<PFNGLMULTIDRAWARRAYSINDIRECTCOUNTPROC>("glMultiDrawArraysIndirectCount");
 gl.glGetVertexArrayIntegeri_vEXT = fetchGlFunc<PFNGLGETVERTEXARRAYINTEGERI_VEXTPROC>("glGetVertexArrayIntegeri_vEXT");
-gl.glGetNamedFramebufferAttachmentParameterivEXT = fetchGlFunc<PFNGLGETNAMEDFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC>("glGetNamedFramebufferAttachmentParameterivEXT");
+gl.glGetNamedFramebufferAttachmentParameterivEXT =
+    fetchGlFunc<PFNGLGETNAMEDFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC>("glGetNamedFramebufferAttachmentParameterivEXT");
 gl.glUniform4f = fetchGlFunc<PFNGLUNIFORM4FPROC>("glUniform4f");
 gl.glDeleteSamplers = fetchGlFunc<PFNGLDELETESAMPLERSPROC>("glDeleteSamplers");
 gl.glGetMultiTexParameterivEXT = fetchGlFunc<PFNGLGETMULTITEXPARAMETERIVEXTPROC>("glGetMultiTexParameterivEXT");
@@ -2027,9 +2134,11 @@ gl.glDisableClientStateiEXT = fetchGlFunc<PFNGLDISABLECLIENTSTATEIEXTPROC>("glDi
 gl.glGetVertexAttribdv = fetchGlFunc<PFNGLGETVERTEXATTRIBDVPROC>("glGetVertexAttribdv");
 gl.glProgramUniform2fvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORM2FVEXTPROC>("glProgramUniform2fvEXT");
 gl.glProgramUniform4f = fetchGlFunc<PFNGLPROGRAMUNIFORM4FPROC>("glProgramUniform4f");
-gl.glGetNamedProgramLocalParameterdvEXT = fetchGlFunc<PFNGLGETNAMEDPROGRAMLOCALPARAMETERDVEXTPROC>("glGetNamedProgramLocalParameterdvEXT");
+gl.glGetNamedProgramLocalParameterdvEXT =
+    fetchGlFunc<PFNGLGETNAMEDPROGRAMLOCALPARAMETERDVEXTPROC>("glGetNamedProgramLocalParameterdvEXT");
 gl.glGetAttribLocation = fetchGlFunc<PFNGLGETATTRIBLOCATIONPROC>("glGetAttribLocation");
-gl.glDrawArraysInstancedBaseInstance = fetchGlFunc<PFNGLDRAWARRAYSINSTANCEDBASEINSTANCEPROC>("glDrawArraysInstancedBaseInstance");
+gl.glDrawArraysInstancedBaseInstance =
+    fetchGlFunc<PFNGLDRAWARRAYSINSTANCEDBASEINSTANCEPROC>("glDrawArraysInstancedBaseInstance");
 gl.glDeleteRenderbuffers = fetchGlFunc<PFNGLDELETERENDERBUFFERSPROC>("glDeleteRenderbuffers");
 gl.glGetDebugMessageLogARB = fetchGlFunc<PFNGLGETDEBUGMESSAGELOGARBPROC>("glGetDebugMessageLogARB");
 gl.glMatrixScaledEXT = fetchGlFunc<PFNGLMATRIXSCALEDEXTPROC>("glMatrixScaledEXT");
@@ -2048,17 +2157,21 @@ gl.glGetString = fetchGlFunc<PFNGLGETSTRINGPROC>("glGetString");
 gl.glCreateShaderProgramv = fetchGlFunc<PFNGLCREATESHADERPROGRAMVPROC>("glCreateShaderProgramv");
 gl.glUniform2f = fetchGlFunc<PFNGLUNIFORM2FPROC>("glUniform2f");
 gl.glSamplerParameterIiv = fetchGlFunc<PFNGLSAMPLERPARAMETERIIVPROC>("glSamplerParameterIiv");
-gl.glMakeImageHandleNonResidentARB = fetchGlFunc<PFNGLMAKEIMAGEHANDLENONRESIDENTARBPROC>("glMakeImageHandleNonResidentARB");
+gl.glMakeImageHandleNonResidentARB =
+    fetchGlFunc<PFNGLMAKEIMAGEHANDLENONRESIDENTARBPROC>("glMakeImageHandleNonResidentARB");
 gl.glScissorIndexed = fetchGlFunc<PFNGLSCISSORINDEXEDPROC>("glScissorIndexed");
 gl.glVertexAttribL3dv = fetchGlFunc<PFNGLVERTEXATTRIBL3DVPROC>("glVertexAttribL3dv");
 gl.glViewportArrayv = fetchGlFunc<PFNGLVIEWPORTARRAYVPROC>("glViewportArrayv");
 gl.glSampleCoverage = fetchGlFunc<PFNGLSAMPLECOVERAGEPROC>("glSampleCoverage");
-gl.glNamedFramebufferTexture2DEXT = fetchGlFunc<PFNGLNAMEDFRAMEBUFFERTEXTURE2DEXTPROC>("glNamedFramebufferTexture2DEXT");
+gl.glNamedFramebufferTexture2DEXT =
+    fetchGlFunc<PFNGLNAMEDFRAMEBUFFERTEXTURE2DEXTPROC>("glNamedFramebufferTexture2DEXT");
 gl.glProgramUniformMatrix3x4fv = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX3X4FVPROC>("glProgramUniformMatrix3x4fv");
-gl.glDrawElementsInstancedBaseVertex = fetchGlFunc<PFNGLDRAWELEMENTSINSTANCEDBASEVERTEXPROC>("glDrawElementsInstancedBaseVertex");
+gl.glDrawElementsInstancedBaseVertex =
+    fetchGlFunc<PFNGLDRAWELEMENTSINSTANCEDBASEVERTEXPROC>("glDrawElementsInstancedBaseVertex");
 gl.glMultiTexEnvivEXT = fetchGlFunc<PFNGLMULTITEXENVIVEXTPROC>("glMultiTexEnvivEXT");
 gl.glBindImageTextures = fetchGlFunc<PFNGLBINDIMAGETEXTURESPROC>("glBindImageTextures");
-gl.glCompressedTextureSubImage2DEXT = fetchGlFunc<PFNGLCOMPRESSEDTEXTURESUBIMAGE2DEXTPROC>("glCompressedTextureSubImage2DEXT");
+gl.glCompressedTextureSubImage2DEXT =
+    fetchGlFunc<PFNGLCOMPRESSEDTEXTURESUBIMAGE2DEXTPROC>("glCompressedTextureSubImage2DEXT");
 gl.glGetIntegerIndexedvEXT = fetchGlFunc<PFNGLGETINTEGERINDEXEDVEXTPROC>("glGetIntegerIndexedvEXT");
 gl.glGetTextureImageEXT = fetchGlFunc<PFNGLGETTEXTUREIMAGEEXTPROC>("glGetTextureImageEXT");
 gl.glGetnUniformdv = fetchGlFunc<PFNGLGETNUNIFORMDVPROC>("glGetnUniformdv");
@@ -2101,7 +2214,8 @@ gl.glClearTexImage = fetchGlFunc<PFNGLCLEARTEXIMAGEPROC>("glClearTexImage");
 gl.glVertexArrayIndexOffsetEXT = fetchGlFunc<PFNGLVERTEXARRAYINDEXOFFSETEXTPROC>("glVertexArrayIndexOffsetEXT");
 gl.glTextureSubImage2DEXT = fetchGlFunc<PFNGLTEXTURESUBIMAGE2DEXTPROC>("glTextureSubImage2DEXT");
 gl.glReadBuffer = fetchGlFunc<PFNGLREADBUFFERPROC>("glReadBuffer");
-gl.glGetCompressedTextureImageEXT = fetchGlFunc<PFNGLGETCOMPRESSEDTEXTUREIMAGEEXTPROC>("glGetCompressedTextureImageEXT");
+gl.glGetCompressedTextureImageEXT =
+    fetchGlFunc<PFNGLGETCOMPRESSEDTEXTUREIMAGEEXTPROC>("glGetCompressedTextureImageEXT");
 gl.glGetNamedProgramivEXT = fetchGlFunc<PFNGLGETNAMEDPROGRAMIVEXTPROC>("glGetNamedProgramivEXT");
 gl.glGetTextureParameterIuiv = fetchGlFunc<PFNGLGETTEXTUREPARAMETERIUIVPROC>("glGetTextureParameterIuiv");
 gl.glGenBuffers = fetchGlFunc<PFNGLGENBUFFERSPROC>("glGenBuffers");
@@ -2125,24 +2239,30 @@ gl.glCreateBuffers = fetchGlFunc<PFNGLCREATEBUFFERSPROC>("glCreateBuffers");
 gl.glEnableVertexArrayEXT = fetchGlFunc<PFNGLENABLEVERTEXARRAYEXTPROC>("glEnableVertexArrayEXT");
 gl.glCompileCommandListNV = fetchGlFunc<PFNGLCOMPILECOMMANDLISTNVPROC>("glCompileCommandListNV");
 gl.glUniform3fv = fetchGlFunc<PFNGLUNIFORM3FVPROC>("glUniform3fv");
-gl.glMakeTextureHandleResidentARB = fetchGlFunc<PFNGLMAKETEXTUREHANDLERESIDENTARBPROC>("glMakeTextureHandleResidentARB");
+gl.glMakeTextureHandleResidentARB =
+    fetchGlFunc<PFNGLMAKETEXTUREHANDLERESIDENTARBPROC>("glMakeTextureHandleResidentARB");
 gl.glBufferData = fetchGlFunc<PFNGLBUFFERDATAPROC>("glBufferData");
 gl.glGetDoubleIndexedvEXT = fetchGlFunc<PFNGLGETDOUBLEINDEXEDVEXTPROC>("glGetDoubleIndexedvEXT");
 gl.glPixelStorei = fetchGlFunc<PFNGLPIXELSTOREIPROC>("glPixelStorei");
 gl.glUniformMatrix2x3dv = fetchGlFunc<PFNGLUNIFORMMATRIX2X3DVPROC>("glUniformMatrix2x3dv");
-gl.glRenderbufferStorageMultisampleCoverageNV = fetchGlFunc<PFNGLRENDERBUFFERSTORAGEMULTISAMPLECOVERAGENVPROC>("glRenderbufferStorageMultisampleCoverageNV");
+gl.glRenderbufferStorageMultisampleCoverageNV =
+    fetchGlFunc<PFNGLRENDERBUFFERSTORAGEMULTISAMPLECOVERAGENVPROC>("glRenderbufferStorageMultisampleCoverageNV");
 gl.glVertexAttribL1i64NV = fetchGlFunc<PFNGLVERTEXATTRIBL1I64NVPROC>("glVertexAttribL1i64NV");
 gl.glCompressedTextureSubImage2D = fetchGlFunc<PFNGLCOMPRESSEDTEXTURESUBIMAGE2DPROC>("glCompressedTextureSubImage2D");
 gl.glUniform1ui64ARB = fetchGlFunc<PFNGLUNIFORM1UI64ARBPROC>("glUniform1ui64ARB");
-gl.glNamedProgramLocalParameter4dEXT = fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETER4DEXTPROC>("glNamedProgramLocalParameter4dEXT");
+gl.glNamedProgramLocalParameter4dEXT =
+    fetchGlFunc<PFNGLNAMEDPROGRAMLOCALPARAMETER4DEXTPROC>("glNamedProgramLocalParameter4dEXT");
 gl.glGetBooleanIndexedvEXT = fetchGlFunc<PFNGLGETBOOLEANINDEXEDVEXTPROC>("glGetBooleanIndexedvEXT");
-gl.glConservativeRasterParameterfNV = fetchGlFunc<PFNGLCONSERVATIVERASTERPARAMETERFNVPROC>("glConservativeRasterParameterfNV");
+gl.glConservativeRasterParameterfNV =
+    fetchGlFunc<PFNGLCONSERVATIVERASTERPARAMETERFNVPROC>("glConservativeRasterParameterfNV");
 gl.glGetFloati_vEXT = fetchGlFunc<PFNGLGETFLOATI_VEXTPROC>("glGetFloati_vEXT");
-gl.glProgramUniformMatrix4x2dvEXT = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX4X2DVEXTPROC>("glProgramUniformMatrix4x2dvEXT");
+gl.glProgramUniformMatrix4x2dvEXT =
+    fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX4X2DVEXTPROC>("glProgramUniformMatrix4x2dvEXT");
 gl.glProgramUniform2ui64vARB = fetchGlFunc<PFNGLPROGRAMUNIFORM2UI64VARBPROC>("glProgramUniform2ui64vARB");
 gl.glGenSamplers = fetchGlFunc<PFNGLGENSAMPLERSPROC>("glGenSamplers");
 gl.glVertexAttribDivisorARB = fetchGlFunc<PFNGLVERTEXATTRIBDIVISORARBPROC>("glVertexAttribDivisorARB");
-gl.glVertexArrayVertexAttribBindingEXT = fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBBINDINGEXTPROC>("glVertexArrayVertexAttribBindingEXT");
+gl.glVertexArrayVertexAttribBindingEXT =
+    fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBBINDINGEXTPROC>("glVertexArrayVertexAttribBindingEXT");
 gl.glProgramUniformMatrix2x3fv = fetchGlFunc<PFNGLPROGRAMUNIFORMMATRIX2X3FVPROC>("glProgramUniformMatrix2x3fv");
 gl.glDeleteNamedStringARB = fetchGlFunc<PFNGLDELETENAMEDSTRINGARBPROC>("glDeleteNamedStringARB");
 gl.glIsEnabledi = fetchGlFunc<PFNGLISENABLEDIPROC>("glIsEnabledi");
@@ -2153,7 +2273,8 @@ gl.glGetCompressedTextureImage = fetchGlFunc<PFNGLGETCOMPRESSEDTEXTUREIMAGEPROC>
 gl.glMultiTexSubImage3DEXT = fetchGlFunc<PFNGLMULTITEXSUBIMAGE3DEXTPROC>("glMultiTexSubImage3DEXT");
 gl.glCreateSamplers = fetchGlFunc<PFNGLCREATESAMPLERSPROC>("glCreateSamplers");
 gl.glEndConditionalRender = fetchGlFunc<PFNGLENDCONDITIONALRENDERPROC>("glEndConditionalRender");
-gl.glVertexArrayVertexAttribLOffsetEXT = fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBLOFFSETEXTPROC>("glVertexArrayVertexAttribLOffsetEXT");
+gl.glVertexArrayVertexAttribLOffsetEXT =
+    fetchGlFunc<PFNGLVERTEXARRAYVERTEXATTRIBLOFFSETEXTPROC>("glVertexArrayVertexAttribLOffsetEXT");
 gl.glCompressedTexImage1D = fetchGlFunc<PFNGLCOMPRESSEDTEXIMAGE1DPROC>("glCompressedTexImage1D");
 gl.glGetObjectPtrLabel = fetchGlFunc<PFNGLGETOBJECTPTRLABELPROC>("glGetObjectPtrLabel");
 gl.glTextureStorage1DEXT = fetchGlFunc<PFNGLTEXTURESTORAGE1DEXTPROC>("glTextureStorage1DEXT");

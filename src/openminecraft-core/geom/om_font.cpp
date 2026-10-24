@@ -124,9 +124,10 @@ auto OMFont::shape(std::string s, bool &isRTL) -> std::vector<OMFontShapeResult>
 
     for (int i = 0; i < glyphs; ++i)
     {
-        result.emplace_back(OMFontShapeResult{glyphInfo[i].codepoint, glyphInfo[i].cluster, glyphPos[i].x_offset / scaleVec.x,
-                                              glyphPos[i].y_offset / scaleVec.y, glyphPos[i].x_advance / scaleVec.x,
-                                              glyphPos[i].y_advance / scaleVec.y, this});
+        result.emplace_back(OMFontShapeResult{glyphInfo[i].codepoint, glyphInfo[i].cluster,
+                                              glyphPos[i].x_offset / scaleVec.x, glyphPos[i].y_offset / scaleVec.y,
+                                              glyphPos[i].x_advance / scaleVec.x, glyphPos[i].y_advance / scaleVec.y,
+                                              this});
     }
 
     hb_buffer_destroy(buf);

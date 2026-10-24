@@ -333,6 +333,7 @@ void OMElysiaExecutorZero::executeNativeLink(uint8_t **realpc, OMElysiaJavaFrame
         return;
     }
 
-    throw std::logic_error("not implemented: " + fmt::format("{}.{}{}", method->klass->name, method->name, method->descriptor));
+    throw std::logic_error("not implemented: " +
+                           fmt::format("{}.{}{}", method->klass->name, method->name, method->descriptor));
 }
 } // namespace openminecraft::vm::elysia::executor

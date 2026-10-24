@@ -38,8 +38,8 @@ extern "C"
             memberName, interface::field(env, "java/lang/invoke/MemberName", "clazz", "Ljava/lang/Class;"));
 
         auto klass = reinterpret_cast<OMElysiaKlass *>(
-                      env->GetLongField(k, interface::field(env, "java/lang/Class", "<ptr>", "J")))
-                      ->toInstance();
+                         env->GetLongField(k, interface::field(env, "java/lang/Class", "<ptr>", "J")))
+                         ->toInstance();
 
         auto ffname = env->GetStringUTFChars(nm, nullptr);
         {
@@ -74,8 +74,8 @@ extern "C"
             memberName, interface::field(env, "java/lang/invoke/MemberName", "clazz", "Ljava/lang/Class;"));
 
         auto klass = reinterpret_cast<OMElysiaKlass *>(
-                      env->GetLongField(k, interface::field(env, "java/lang/Class", "<ptr>", "J")))
-                      ->toInstance();
+                         env->GetLongField(k, interface::field(env, "java/lang/Class", "<ptr>", "J")))
+                         ->toInstance();
 
         auto mmname = env->GetStringUTFChars(nm, nullptr);
         {

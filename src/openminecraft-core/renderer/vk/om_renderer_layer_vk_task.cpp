@@ -126,7 +126,8 @@ void OMRendererTaskVk::bindTarget(common::OMRendererRenderTarget *target)
         renderer->logicalDevice.waitIdle();
         if (isDefault)
         {
-            auto inheritanceInfo = CommandBufferInheritanceInfo(reinterpret_cast<OMRendererRenderTargetVk *>(target)->renderPass);
+            auto inheritanceInfo =
+                CommandBufferInheritanceInfo(reinterpret_cast<OMRendererRenderTargetVk *>(target)->renderPass);
 
             if (!begin)
             {

@@ -255,9 +255,9 @@ void OMBlockStateResolver::buildModel(OMIdentifier ident, OMBlockState state)
             }
         }
 
-        auto i = compiler.composeModel(ids, blk->soild, blk->translucent,
-                                       st.properties.count("waterlogged") ? st.properties["waterlogged"] == "true"
-                                                                           : false);
+        auto i =
+            compiler.composeModel(ids, blk->soild, blk->translucent,
+                                  st.properties.count("waterlogged") ? st.properties["waterlogged"] == "true" : false);
         states[ident][st].emplace_back(i);
         return;
     }

@@ -481,8 +481,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     }
 };
 
-template <>
-struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolPotionDetail>
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolPotionDetail>
 {
     static constexpr bool supported = true;
 
@@ -508,8 +507,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     }
 };
 
-template <>
-struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolPotionEffect>
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolPotionEffect>
 {
     static constexpr bool supported = true;
 
@@ -525,8 +523,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     }
 };
 
-template <>
-struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolSoundEvent>
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolSoundEvent>
 {
     static constexpr bool supported = true;
 
@@ -546,8 +543,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     }
 };
 
-template <>
-struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolJukeboxSong>
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolJukeboxSong>
 {
     static constexpr bool supported = true;
 
@@ -556,7 +552,8 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     {
         openminecraft::shell::network::OMProtocolJukeboxSong result;
 
-        result.soundEvent = pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolSoundEvent>>();
+        result.soundEvent =
+            pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolSoundEvent>>();
         result.description = pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>();
         result.duration = pck.read<float>();
         result.output = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
@@ -565,8 +562,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     }
 };
 
-template <>
-struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolTrimMaterial>
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolTrimMaterial>
 {
     static constexpr bool supported = true;
 
@@ -594,8 +590,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     }
 };
 
-template <>
-struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolTrimPattern>
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolTrimPattern>
 {
     static constexpr bool supported = true;
 
@@ -618,8 +613,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
 {
     static constexpr bool supported = true;
 
-    static auto read(openminecraft::network::OMNetworkPacket &pck)
-        -> openminecraft::shell::network::OMProtocolItemStack
+    static auto read(openminecraft::network::OMNetworkPacket &pck) -> openminecraft::shell::network::OMProtocolItemStack
     {
         openminecraft::shell::network::OMProtocolItemStack result;
 
@@ -684,8 +678,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
 
                 for (int32_t j = 0; j < effectCount; ++j)
                 {
-                    result.potionEffects.push_back(
-                        pck.read<openminecraft::shell::network::OMProtocolPotionEffect>());
+                    result.potionEffects.push_back(pck.read<openminecraft::shell::network::OMProtocolPotionEffect>());
                 }
 
                 if (result.truncated)
@@ -723,128 +716,128 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
     static auto handlerFor(std::string_view name) -> int32_t
     {
         static const std::unordered_map<std::string_view, Type> table = {
-        {"minecraft:custom_data", Type::CustomData},
-        {"minecraft:max_stack_size", Type::MaxStackSize},
-        {"minecraft:max_damage", Type::MaxDamage},
-        {"minecraft:damage", Type::Damage},
-        {"minecraft:unbreakable", Type::Unbreakable},
-        {"minecraft:use_effects", Type::UseEffects},
-        {"minecraft:custom_name", Type::CustomName},
-        {"minecraft:minimum_attack_charge", Type::MinimumAttackCharge},
-        {"minecraft:damage_type", Type::DamageType},
-        {"minecraft:item_name", Type::ItemName},
-        {"minecraft:item_model", Type::ItemModel},
-        {"minecraft:lore", Type::Lore},
-        {"minecraft:rarity", Type::Rarity},
-        {"minecraft:enchantments", Type::Enchantments},
-        {"minecraft:can_place_on", Type::CanPlaceOn},
-        {"minecraft:can_break", Type::CanBreak},
-        {"minecraft:attribute_modifiers", Type::AttributeModifiers},
-        {"minecraft:custom_model_data", Type::CustomModelData},
-        {"minecraft:tooltip_display", Type::TooltipDisplay},
-        {"minecraft:repair_cost", Type::RepairCost},
-        {"minecraft:creative_slot_lock", Type::CreativeSlotLock},
-        {"minecraft:enchantment_glint_override", Type::EnchantmentGlintOverride},
-        {"minecraft:intangible_projectile", Type::IntangibleProjectile},
-        {"minecraft:food", Type::Food},
-        {"minecraft:consumable", Type::Consumable},
-        {"minecraft:use_remainder", Type::UseRemainder},
-        {"minecraft:use_cooldown", Type::UseCooldown},
-        {"minecraft:damage_resistant", Type::DamageResistant},
-        {"minecraft:tool", Type::Tool},
-        {"minecraft:weapon", Type::Weapon},
-        {"minecraft:attack_range", Type::AttackRange},
-        {"minecraft:enchantable", Type::Enchantable},
-        {"minecraft:equippable", Type::Equippable},
-        {"minecraft:repairable", Type::Repairable},
-        {"minecraft:glider", Type::Glider},
-        {"minecraft:tooltip_style", Type::TooltipStyle},
-        {"minecraft:death_protection", Type::DeathProtection},
-        {"minecraft:blocks_attacks", Type::BlocksAttacks},
-        {"minecraft:piercing_weapon", Type::PiercingWeapon},
-        {"minecraft:kinetic_weapon", Type::KineticWeapon},
-        {"minecraft:attack_animation", Type::AttackAnimation},
-        {"minecraft:interact_animation", Type::InteractAnimation},
-        {"minecraft:additional_trade_cost", Type::AdditionalTradeCost},
-        {"minecraft:block_transformer", Type::BlockTransformer},
-        {"minecraft:villager_food", Type::VillagerFood},
-        {"minecraft:stored_enchantments", Type::StoredEnchantments},
-        {"minecraft:dye", Type::Dye},
-        {"minecraft:dyed_color", Type::DyedColor},
-        {"minecraft:map_id", Type::MapId},
-        {"minecraft:map_decorations", Type::MapDecorations},
-        {"minecraft:map_post_processing", Type::MapPostProcessing},
-        {"minecraft:charged_projectiles", Type::ChargedProjectiles},
-        {"minecraft:bundle_contents", Type::BundleContents},
-        {"minecraft:potion_contents", Type::PotionContents},
-        {"minecraft:potion_duration_scale", Type::PotionDurationScale},
-        {"minecraft:suspicious_stew_effects", Type::SuspiciousStewEffects},
-        {"minecraft:writable_book_content", Type::WritableBookContent},
-        {"minecraft:written_book_content", Type::WrittenBookContent},
-        {"minecraft:trim", Type::Trim},
-        {"minecraft:debug_stick_state", Type::DebugStickState},
-        {"minecraft:entity_data", Type::EntityData},
-        {"minecraft:bucket_entity_data", Type::BucketEntityData},
-        {"minecraft:block_entity_data", Type::BlockEntityData},
-        {"minecraft:instrument", Type::Instrument},
-        {"minecraft:provides_trim_material", Type::ProvidesTrimMaterial},
-        {"minecraft:ominous_bottle_amplifier", Type::OminousBottleAmplifier},
-        {"minecraft:jukebox_playable", Type::JukeboxPlayable},
-        {"minecraft:provides_banner_patterns", Type::ProvidesBannerPatterns},
-        {"minecraft:recipes", Type::Recipes},
-        {"minecraft:lodestone_tracker", Type::LodestoneTracker},
-        {"minecraft:firework_explosion", Type::FireworkExplosion},
-        {"minecraft:fireworks", Type::Fireworks},
-        {"minecraft:profile", Type::Profile},
-        {"minecraft:note_block_sound", Type::NoteBlockSound},
-        {"minecraft:banner_patterns", Type::BannerPatterns},
-        {"minecraft:base_color", Type::BaseColor},
-        {"minecraft:pot_decorations", Type::PotDecorations},
-        {"minecraft:container", Type::Container},
-        {"minecraft:block_state", Type::BlockState},
-        {"minecraft:bees", Type::Bees},
-        {"minecraft:sulfur_cube_content", Type::SulfurCubeContent},
-        {"minecraft:lock", Type::Lock},
-        {"minecraft:container_loot", Type::ContainerLoot},
-        {"minecraft:break_sound", Type::BreakSound},
-        {"minecraft:compostable", Type::Compostable},
-        {"minecraft:cooking_fuel", Type::CookingFuel},
-        {"minecraft:brewing_fuel", Type::BrewingFuel},
-        {"minecraft:mob_visibility", Type::MobVisibility},
-        {"minecraft:villager/variant", Type::VillagerVariant},
-        {"minecraft:wolf/variant", Type::WolfVariant},
-        {"minecraft:wolf/sound_variant", Type::WolfSoundVariant},
-        {"minecraft:wolf/collar", Type::WolfCollar},
-        {"minecraft:fox/variant", Type::FoxVariant},
-        {"minecraft:salmon/size", Type::SalmonSize},
-        {"minecraft:parrot/variant", Type::ParrotVariant},
-        {"minecraft:tropical_fish/pattern", Type::TropicalFishPattern},
-        {"minecraft:tropical_fish/base_color", Type::TropicalFishBaseColor},
-        {"minecraft:tropical_fish/pattern_color", Type::TropicalFishPatternColor},
-        {"minecraft:mooshroom/variant", Type::MooshroomVariant},
-        {"minecraft:rabbit/variant", Type::RabbitVariant},
-        {"minecraft:pig/variant", Type::PigVariant},
-        {"minecraft:pig/sound_variant", Type::PigSoundVariant},
-        {"minecraft:cow/variant", Type::CowVariant},
-        {"minecraft:cow/sound_variant", Type::CowSoundVariant},
-        {"minecraft:chicken/variant", Type::ChickenVariant},
-        {"minecraft:chicken/sound_variant", Type::ChickenSoundVariant},
-        {"minecraft:zombie_nautilus/variant", Type::ZombieNautilusVariant},
-        {"minecraft:frog/variant", Type::FrogVariant},
-        {"minecraft:horse/variant", Type::HorseVariant},
-        {"minecraft:painting/variant", Type::PaintingVariant},
-        {"minecraft:llama/variant", Type::LlamaVariant},
-        {"minecraft:axolotl/variant", Type::AxolotlVariant},
-        {"minecraft:cat/variant", Type::CatVariant},
-        {"minecraft:cat/sound_variant", Type::CatSoundVariant},
-        {"minecraft:cat/collar", Type::CatCollar},
-        {"minecraft:sheep/color", Type::SheepColor},
-        {"minecraft:shulker/color", Type::ShulkerColor},
-        {"minecraft:provides_pottery_pattern", Type::ProvidesPotteryPattern},
-        {"minecraft:sign_text_front", Type::SignTextFront},
-        {"minecraft:sign_text_back", Type::SignTextBack},
-        {"minecraft:waxed", Type::Waxed},
-        {"minecraft:cushion/color", Type::CushionColor},
+            {"minecraft:custom_data", Type::CustomData},
+            {"minecraft:max_stack_size", Type::MaxStackSize},
+            {"minecraft:max_damage", Type::MaxDamage},
+            {"minecraft:damage", Type::Damage},
+            {"minecraft:unbreakable", Type::Unbreakable},
+            {"minecraft:use_effects", Type::UseEffects},
+            {"minecraft:custom_name", Type::CustomName},
+            {"minecraft:minimum_attack_charge", Type::MinimumAttackCharge},
+            {"minecraft:damage_type", Type::DamageType},
+            {"minecraft:item_name", Type::ItemName},
+            {"minecraft:item_model", Type::ItemModel},
+            {"minecraft:lore", Type::Lore},
+            {"minecraft:rarity", Type::Rarity},
+            {"minecraft:enchantments", Type::Enchantments},
+            {"minecraft:can_place_on", Type::CanPlaceOn},
+            {"minecraft:can_break", Type::CanBreak},
+            {"minecraft:attribute_modifiers", Type::AttributeModifiers},
+            {"minecraft:custom_model_data", Type::CustomModelData},
+            {"minecraft:tooltip_display", Type::TooltipDisplay},
+            {"minecraft:repair_cost", Type::RepairCost},
+            {"minecraft:creative_slot_lock", Type::CreativeSlotLock},
+            {"minecraft:enchantment_glint_override", Type::EnchantmentGlintOverride},
+            {"minecraft:intangible_projectile", Type::IntangibleProjectile},
+            {"minecraft:food", Type::Food},
+            {"minecraft:consumable", Type::Consumable},
+            {"minecraft:use_remainder", Type::UseRemainder},
+            {"minecraft:use_cooldown", Type::UseCooldown},
+            {"minecraft:damage_resistant", Type::DamageResistant},
+            {"minecraft:tool", Type::Tool},
+            {"minecraft:weapon", Type::Weapon},
+            {"minecraft:attack_range", Type::AttackRange},
+            {"minecraft:enchantable", Type::Enchantable},
+            {"minecraft:equippable", Type::Equippable},
+            {"minecraft:repairable", Type::Repairable},
+            {"minecraft:glider", Type::Glider},
+            {"minecraft:tooltip_style", Type::TooltipStyle},
+            {"minecraft:death_protection", Type::DeathProtection},
+            {"minecraft:blocks_attacks", Type::BlocksAttacks},
+            {"minecraft:piercing_weapon", Type::PiercingWeapon},
+            {"minecraft:kinetic_weapon", Type::KineticWeapon},
+            {"minecraft:attack_animation", Type::AttackAnimation},
+            {"minecraft:interact_animation", Type::InteractAnimation},
+            {"minecraft:additional_trade_cost", Type::AdditionalTradeCost},
+            {"minecraft:block_transformer", Type::BlockTransformer},
+            {"minecraft:villager_food", Type::VillagerFood},
+            {"minecraft:stored_enchantments", Type::StoredEnchantments},
+            {"minecraft:dye", Type::Dye},
+            {"minecraft:dyed_color", Type::DyedColor},
+            {"minecraft:map_id", Type::MapId},
+            {"minecraft:map_decorations", Type::MapDecorations},
+            {"minecraft:map_post_processing", Type::MapPostProcessing},
+            {"minecraft:charged_projectiles", Type::ChargedProjectiles},
+            {"minecraft:bundle_contents", Type::BundleContents},
+            {"minecraft:potion_contents", Type::PotionContents},
+            {"minecraft:potion_duration_scale", Type::PotionDurationScale},
+            {"minecraft:suspicious_stew_effects", Type::SuspiciousStewEffects},
+            {"minecraft:writable_book_content", Type::WritableBookContent},
+            {"minecraft:written_book_content", Type::WrittenBookContent},
+            {"minecraft:trim", Type::Trim},
+            {"minecraft:debug_stick_state", Type::DebugStickState},
+            {"minecraft:entity_data", Type::EntityData},
+            {"minecraft:bucket_entity_data", Type::BucketEntityData},
+            {"minecraft:block_entity_data", Type::BlockEntityData},
+            {"minecraft:instrument", Type::Instrument},
+            {"minecraft:provides_trim_material", Type::ProvidesTrimMaterial},
+            {"minecraft:ominous_bottle_amplifier", Type::OminousBottleAmplifier},
+            {"minecraft:jukebox_playable", Type::JukeboxPlayable},
+            {"minecraft:provides_banner_patterns", Type::ProvidesBannerPatterns},
+            {"minecraft:recipes", Type::Recipes},
+            {"minecraft:lodestone_tracker", Type::LodestoneTracker},
+            {"minecraft:firework_explosion", Type::FireworkExplosion},
+            {"minecraft:fireworks", Type::Fireworks},
+            {"minecraft:profile", Type::Profile},
+            {"minecraft:note_block_sound", Type::NoteBlockSound},
+            {"minecraft:banner_patterns", Type::BannerPatterns},
+            {"minecraft:base_color", Type::BaseColor},
+            {"minecraft:pot_decorations", Type::PotDecorations},
+            {"minecraft:container", Type::Container},
+            {"minecraft:block_state", Type::BlockState},
+            {"minecraft:bees", Type::Bees},
+            {"minecraft:sulfur_cube_content", Type::SulfurCubeContent},
+            {"minecraft:lock", Type::Lock},
+            {"minecraft:container_loot", Type::ContainerLoot},
+            {"minecraft:break_sound", Type::BreakSound},
+            {"minecraft:compostable", Type::Compostable},
+            {"minecraft:cooking_fuel", Type::CookingFuel},
+            {"minecraft:brewing_fuel", Type::BrewingFuel},
+            {"minecraft:mob_visibility", Type::MobVisibility},
+            {"minecraft:villager/variant", Type::VillagerVariant},
+            {"minecraft:wolf/variant", Type::WolfVariant},
+            {"minecraft:wolf/sound_variant", Type::WolfSoundVariant},
+            {"minecraft:wolf/collar", Type::WolfCollar},
+            {"minecraft:fox/variant", Type::FoxVariant},
+            {"minecraft:salmon/size", Type::SalmonSize},
+            {"minecraft:parrot/variant", Type::ParrotVariant},
+            {"minecraft:tropical_fish/pattern", Type::TropicalFishPattern},
+            {"minecraft:tropical_fish/base_color", Type::TropicalFishBaseColor},
+            {"minecraft:tropical_fish/pattern_color", Type::TropicalFishPatternColor},
+            {"minecraft:mooshroom/variant", Type::MooshroomVariant},
+            {"minecraft:rabbit/variant", Type::RabbitVariant},
+            {"minecraft:pig/variant", Type::PigVariant},
+            {"minecraft:pig/sound_variant", Type::PigSoundVariant},
+            {"minecraft:cow/variant", Type::CowVariant},
+            {"minecraft:cow/sound_variant", Type::CowSoundVariant},
+            {"minecraft:chicken/variant", Type::ChickenVariant},
+            {"minecraft:chicken/sound_variant", Type::ChickenSoundVariant},
+            {"minecraft:zombie_nautilus/variant", Type::ZombieNautilusVariant},
+            {"minecraft:frog/variant", Type::FrogVariant},
+            {"minecraft:horse/variant", Type::HorseVariant},
+            {"minecraft:painting/variant", Type::PaintingVariant},
+            {"minecraft:llama/variant", Type::LlamaVariant},
+            {"minecraft:axolotl/variant", Type::AxolotlVariant},
+            {"minecraft:cat/variant", Type::CatVariant},
+            {"minecraft:cat/sound_variant", Type::CatSoundVariant},
+            {"minecraft:cat/collar", Type::CatCollar},
+            {"minecraft:sheep/color", Type::SheepColor},
+            {"minecraft:shulker/color", Type::ShulkerColor},
+            {"minecraft:provides_pottery_pattern", Type::ProvidesPotteryPattern},
+            {"minecraft:sign_text_front", Type::SignTextFront},
+            {"minecraft:sign_text_back", Type::SignTextBack},
+            {"minecraft:waxed", Type::Waxed},
+            {"minecraft:cushion/color", Type::CushionColor},
         };
 
         auto it = table.find(name);
@@ -989,17 +982,16 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
             break;
 
         // lodestone_tracker：Boolean | (Identifier + Position) | Boolean
-        case Type::LodestoneTracker:
-        {
+        case Type::LodestoneTracker: {
             result.boolValue = pck.read<bool>();
 
             if (result.boolValue)
             {
-                result.stringValue = pck.read<std::string>();                            // dimension
-                result.position = pck.read<openminecraft::network::OMPackedPos>();       // position
+                result.stringValue = pck.read<std::string>();                      // dimension
+                result.position = pck.read<openminecraft::network::OMPackedPos>(); // position
             }
 
-            result.secondBool = pck.read<bool>();                                        // tracked
+            result.secondBool = pck.read<bool>(); // tracked
             break;
         }
 
@@ -1028,8 +1020,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
 
         // sign_text_front / sign_text_back: 4 messages | optional 4 filtered | Dye Color | glowing
         case Type::SignTextFront:
-        case Type::SignTextBack:
-        {
+        case Type::SignTextBack: {
             for (int32_t i = 0; i < 4; ++i)
             {
                 result.signMessages.push_back(pck.read<std::shared_ptr<openminecraft::specs::nbt::OMNbtTag>>());
@@ -1049,8 +1040,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         }
 
         // blocks_attacks: 2 Floats | reduction array | 3 Floats | optional id set | 2 optional sounds
-        case Type::BlocksAttacks:
-        {
+        case Type::BlocksAttacks: {
             result.floatList.push_back(pck.read<float>()); // block delay seconds
             result.floatList.push_back(pck.read<float>()); // disable cooldown scale
 
@@ -1099,8 +1089,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
 
         // profile: kind | (partial: optional username/uuid/properties | complete: game profile) |
         //          optional body/cape/elytra | optional model
-        case Type::Profile:
-        {
+        case Type::Profile: {
             result.profile.kind = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
 
             if (result.profile.kind == 0)
@@ -1157,8 +1146,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         }
 
         // kinetic_weapon: 2 VarInts | 3 optional conditions | 2 Floats | 2 optional sounds
-        case Type::KineticWeapon:
-        {
+        case Type::KineticWeapon: {
             result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()); // contact cooldown
             result.intList.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>())); // delay
 
@@ -1171,8 +1159,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
                 {
                     openminecraft::shell::network::OMProtocolKineticWeaponConditions conditions;
 
-                    conditions.maxDurationTicks =
-                        static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
+                    conditions.maxDurationTicks = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
                     conditions.minSpeed = pck.read<float>();
                     conditions.minRelativeSpeed = pck.read<float>();
 
@@ -1197,31 +1184,30 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
 
         // equippable: slot | equip sound | optional model | optional camera overlay |
         //             optional allowed entities | 4 booleans | shearing sound
-        case Type::Equippable:
-        {
+        case Type::Equippable: {
             result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()); // slot enum
             result.soundEvent =
                 pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolSoundEvent>>();
 
-            if (pck.read<bool>())                                          // optional model
+            if (pck.read<bool>()) // optional model
             {
                 result.optionalString = pck.read<std::string>();
             }
 
-            if (pck.read<bool>())                                          // optional camera overlay
+            if (pck.read<bool>()) // optional camera overlay
             {
                 result.stringValue = pck.read<std::string>();
             }
 
-            if (pck.read<bool>())                                          // optional allowed entities
+            if (pck.read<bool>()) // optional allowed entities
             {
                 result.idSet = pck.read<openminecraft::network::OMIdSet>();
             }
 
-            result.boolValue = pck.read<bool>();                           // dispensable
-            result.secondBool = pck.read<bool>();                          // swappable
-            result.intList.push_back(pck.read<bool>() ? 1 : 0);            // damage on hurt
-            result.intListB.push_back(pck.read<bool>() ? 1 : 0);           // can be sheared
+            result.boolValue = pck.read<bool>();                 // dispensable
+            result.secondBool = pck.read<bool>();                // swappable
+            result.intList.push_back(pck.read<bool>() ? 1 : 0);  // damage on hurt
+            result.intListB.push_back(pck.read<bool>() ? 1 : 0); // can be sheared
 
             result.soundEvent2 =
                 pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolSoundEvent>>();
@@ -1230,8 +1216,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         }
 
         // tool: rules | default mining speed | damage per block | can destroy in creative
-        case Type::Tool:
-        {
+        case Type::Tool: {
             auto count = pck.read<openminecraft::network::OMVarInt>().value;
 
             if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
@@ -1259,16 +1244,15 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
                 result.toolRules.push_back(std::move(rule));
             }
 
-            result.floatValue = pck.read<float>();                                // default mining speed
+            result.floatValue = pck.read<float>(); // default mining speed
             result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()); // damage per block
-            result.boolValue = pck.read<bool>();                                  // can destroy in creative
+            result.boolValue = pck.read<bool>(); // can destroy in creative
             break;
         }
 
         // can_place_on / can_break：Prefixed Array of Block Predicate
         case Type::CanPlaceOn:
-        case Type::CanBreak:
-        {
+        case Type::CanBreak: {
             auto count = pck.read<openminecraft::network::OMVarInt>().value;
 
             if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
@@ -1329,17 +1313,16 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         }
 
         // piercing_weapon：Boolean | Boolean | Optional Sound Event | Optional Sound Event
-        case Type::PiercingWeapon:
-        {
-            result.boolValue = pck.read<bool>();   // deals knockback
-            result.secondBool = pck.read<bool>();  // dismounts
+        case Type::PiercingWeapon: {
+            result.boolValue = pck.read<bool>();  // deals knockback
+            result.secondBool = pck.read<bool>(); // dismounts
 
-            if (pck.read<bool>())                  // optional sound
+            if (pck.read<bool>()) // optional sound
             {
                 result.intList.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
             }
 
-            if (pck.read<bool>())                  // optional hit sound
+            if (pck.read<bool>()) // optional hit sound
             {
                 result.intListB.push_back(static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()));
             }
@@ -1349,13 +1332,11 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
 
         // firework_explosion：shape | colors | fade colors | trail | twinkle
         case Type::FireworkExplosion:
-            result.fireworkExplosion =
-                pck.read<openminecraft::shell::network::OMProtocolFireworkExplosion>();
+            result.fireworkExplosion = pck.read<openminecraft::shell::network::OMProtocolFireworkExplosion>();
             break;
 
         // fireworks: VarInt flight duration + explosion array
-        case Type::Fireworks:
-        {
+        case Type::Fireworks: {
             result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
 
             auto count = pck.read<openminecraft::network::OMVarInt>().value;
@@ -1376,8 +1357,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         }
 
         // death_protection：Prefixed Array of Consume Effect
-        case Type::DeathProtection:
-        {
+        case Type::DeathProtection: {
             auto count = pck.read<openminecraft::network::OMVarInt>().value;
 
             if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
@@ -1391,13 +1371,12 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         }
 
         // consumable: Float | VarInt animation | ID or Sound Event | Boolean | effect array
-        case Type::Consumable:
-        {
-            result.floatValue = pck.read<float>();                                        // consume seconds
+        case Type::Consumable: {
+            result.floatValue = pck.read<float>();                                                // consume seconds
             result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()); // animation
             result.soundEvent =
                 pck.read<openminecraft::network::OMIDOr<openminecraft::shell::network::OMProtocolSoundEvent>>();
-            result.boolValue = pck.read<bool>();                                          // has consume particles
+            result.boolValue = pck.read<bool>(); // has consume particles
 
             auto count = pck.read<openminecraft::network::OMVarInt>().value;
 
@@ -1412,8 +1391,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         }
 
         // potion_contents: optional VarInt | optional Int | effect array | optional String
-        case Type::PotionContents:
-        {
+        case Type::PotionContents: {
             if (pck.read<bool>())
             {
                 result.potionId = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>());
@@ -1434,8 +1412,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
 
             for (int32_t i = 0; i < count; ++i)
             {
-                result.potionEffects.push_back(
-                    pck.read<openminecraft::shell::network::OMProtocolPotionEffect>());
+                result.potionEffects.push_back(pck.read<openminecraft::shell::network::OMProtocolPotionEffect>());
             }
 
             if (!result.truncated && pck.read<bool>())
@@ -1447,8 +1424,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         }
 
         // writable_book_content: per page raw String + optional filtered string
-        case Type::WritableBookContent:
-        {
+        case Type::WritableBookContent: {
             auto count = pck.read<openminecraft::network::OMVarInt>().value;
 
             if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
@@ -1474,16 +1450,15 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         }
 
         // written_book_content: title + optional filtered title + author + generation + pages + resolved
-        case Type::WrittenBookContent:
-        {
-            result.stringValue = pck.read<std::string>();          // raw title
+        case Type::WrittenBookContent: {
+            result.stringValue = pck.read<std::string>(); // raw title
 
             if (pck.read<bool>())
             {
-                result.optionalString = pck.read<std::string>();   // filtered title
+                result.optionalString = pck.read<std::string>(); // filtered title
             }
 
-            result.stringList.push_back(pck.read<std::string>());  // author
+            result.stringList.push_back(pck.read<std::string>());                                 // author
             result.intValue = static_cast<int32_t>(pck.read<openminecraft::network::OMVarInt>()); // generation
 
             auto count = pck.read<openminecraft::network::OMVarInt>().value;
@@ -1507,7 +1482,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
                 result.writtenBookPages.push_back(std::move(page));
             }
 
-            result.secondBool = pck.read<bool>();                  // resolved
+            result.secondBool = pck.read<bool>(); // resolved
             break;
         }
 
@@ -1532,8 +1507,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
             break;
 
         // banner_patterns: count + (pattern id | Dye Color)
-        case Type::BannerPatterns:
-        {
+        case Type::BannerPatterns: {
             auto count = pck.read<openminecraft::network::OMVarInt>().value;
 
             if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
@@ -1552,8 +1526,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         }
 
         // bees: count + (entity type | NBT | ticks | min ticks)
-        case Type::Bees:
-        {
+        case Type::Bees: {
             auto count = pck.read<openminecraft::network::OMVarInt>().value;
 
             if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
@@ -1574,8 +1547,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         }
 
         // use_cooldown: Float seconds + optional Identifier (group)
-        case Type::UseCooldown:
-        {
+        case Type::UseCooldown: {
             result.floatValue = pck.read<float>();
 
             if (pck.read<bool>())
@@ -1587,8 +1559,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         }
 
         // attribute_modifiers: count + (attribute id | Identifier | Double | two enums)
-        case Type::AttributeModifiers:
-        {
+        case Type::AttributeModifiers: {
             auto count = pck.read<openminecraft::network::OMVarInt>().value;
 
             if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
@@ -1622,8 +1593,7 @@ template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::s
         // Prefixed Array of Slot
         case Type::ChargedProjectiles:
         case Type::BundleContents:
-        case Type::Container:
-        {
+        case Type::Container: {
             auto count = pck.read<openminecraft::network::OMVarInt>().value;
 
             if (count < 0 || static_cast<uint64_t>(count) > pck.restDatalen())
@@ -1885,8 +1855,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     }
 };
 
-template <>
-struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolBlockUpdate>
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolBlockUpdate>
 {
     static constexpr bool supported = true;
 
@@ -1909,8 +1878,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     }
 };
 
-template <>
-struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolWorldEvent>
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolWorldEvent>
 {
     static constexpr bool supported = true;
 
@@ -1965,8 +1933,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     }
 };
 
-template <>
-struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolSetEquipment>
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolSetEquipment>
 {
     static constexpr bool supported = true;
 
@@ -1982,10 +1949,10 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
             auto rawSlot = pck.read<uint8_t>();
 
             openminecraft::shell::network::OMProtocolEquipmentEntry entry;
-            entry.slot = rawSlot & 0x7F;                                  // low 7 bits are the slot enum
+            entry.slot = rawSlot & 0x7F; // low 7 bits are the slot enum
             entry.item = pck.read<openminecraft::shell::network::OMProtocolItemStack>();
 
-            bool last = (rawSlot & 0x80) != 0;                            // MSB marks the last entry
+            bool last = (rawSlot & 0x80) != 0; // MSB marks the last entry
             result.equipment.push_back(std::move(entry));
 
             if (last || pck.restDatalen() == 0)
@@ -1998,8 +1965,7 @@ struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::networ
     }
 };
 
-template <>
-struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolDamageEvent>
+template <> struct openminecraft::network::OMNetworkPacketCodec<openminecraft::shell::network::OMProtocolDamageEvent>
 {
     static constexpr bool supported = true;
 

@@ -65,8 +65,8 @@ void OMRendererBufferOpenGL::updateData(void *src)
     if (length > 0)
     {
         renderer->gl.glBufferData(convertFrom(usage), length, src,
-                              (usage == common::VertexData || usage == common::VertexIndex) ? GL_STATIC_DRAW
-                                                                                            : GL_DYNAMIC_DRAW);
+                                  (usage == common::VertexData || usage == common::VertexIndex) ? GL_STATIC_DRAW
+                                                                                                : GL_DYNAMIC_DRAW);
     }
 
     if (usage == common::UniformTexel && texel != 0)
@@ -106,8 +106,8 @@ void OMRendererBufferOpenGL::moveDataPart(uint64_t target, uint64_t original, ui
         std::vector<uint8_t> temp(static_cast<size_t>(length));
         renderer->gl.glGetBufferSubData(convertFrom(usage), static_cast<GLintptr>(original),
                                         static_cast<GLsizeiptr>(length), temp.data());
-        renderer->gl.glBufferSubData(convertFrom(usage), static_cast<GLintptr>(target),
-                                     static_cast<GLsizeiptr>(length), temp.data());
+        renderer->gl.glBufferSubData(convertFrom(usage), static_cast<GLintptr>(target), static_cast<GLsizeiptr>(length),
+                                     temp.data());
     }
 
     if (usage == common::UniformTexel && texel != 0)

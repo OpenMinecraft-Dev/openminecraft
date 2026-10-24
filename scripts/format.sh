@@ -1,2 +1,2 @@
-#!/bin/fish
-clang-format -style=file -i src/**.cpp tools/**.cpp tests/**.cpp include/**.hpp
+#!/usr/bin/env fish
+clang-format -style=file -i src/**.cpp tools/**.cpp include/**.hpp

@@ -13,7 +13,8 @@ OMVersion::OMVersion(uint16_t major, uint16_t minor, uint16_t patch1)
 {
 }
 OMVersion::OMVersion(uint32_t vkver)
-    : majorVersion(VK_VERSION_MAJOR(vkver)), minorVersion(VK_VERSION_MINOR(vkver)), patch1(VK_VERSION_PATCH(vkver)), patch2(0)
+    : majorVersion(VK_VERSION_MAJOR(vkver)), minorVersion(VK_VERSION_MINOR(vkver)), patch1(VK_VERSION_PATCH(vkver)),
+      patch2(0)
 {
 }
 OMVersion::~OMVersion() = default;
