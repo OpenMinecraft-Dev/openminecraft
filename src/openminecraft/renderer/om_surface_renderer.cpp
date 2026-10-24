@@ -11,6 +11,7 @@
 #include <array>
 #include <iostream>
 #include <memory>
+#include "openminecraft/renderer/common/demiurge/node/om_demiurge_shaderscene.hpp"
 
 using namespace openminecraft::renderer;
 using namespace openminecraft;
@@ -52,7 +53,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
         bus.handle(event::Custom, e);
     });
     button2->setBackgroundColor({0.17, 0.17, 0.20});
-    node = std::make_shared<node::OMDemiurgeRectNode>()
+    node = std::make_shared<node::OMDemiurgeShaderSceneNode>("demiurge/scene/scene1.frag.glsl")
                ->style({
                    {"color", (int)0x2c2c3433},
                    {"flexDirection", Column},
