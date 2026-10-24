@@ -119,6 +119,14 @@ auto OMApplication::entry() -> int
             reader.parse(false);
             goto end;
         }
+        else if (args[1] == "json")
+        {
+            io::json::OMJsonAstBuilder bld(
+                std::make_shared<io::json::OMJsonTokenIter>(std::make_shared<std::ifstream>(args[2])));
+            auto document = bld.build();
+            logger->debug("doc at {}", (void *)document.get());
+            goto end;
+        }
         else if (args[1] == "zlib")
         {
             specs::zlib::OMZLibDeflater def([](uint8_t *data, uint64_t l) {

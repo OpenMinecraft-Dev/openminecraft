@@ -21,6 +21,7 @@ Examples
     scripts/mc_srctool.py -v 1.21.9 --resources --output ./out
     scripts/mc_srctool.py -v 1.21.9 --data --no-datapack --output ./out
     scripts/mc_srctool.py -v 1.21.9 --resources --assets-ext png,json,mcmeta,ogg
+    scripts/mc_srctool.py -v 1.21.9 --all -o ./out --mirror https://bmclapi2.bangbang93.com
 """
 
 import argparse
@@ -37,6 +38,25 @@ import zipfile
 
 MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
 RESOURCE_CDN = "https://resources.download.minecraft.net/%s/%s"
+
+# 由 --mirror 设置；为空时全部使用官方源
+MIRROR = None
+
+
+def mirror_url(path):
+    """把镜像源的基础地址和 API 路径拼起来（path 以 / 开头）"""
+    return MIRROR.rstrip("/") + path
+
+
+def download_with_fallback(primary, fallback=None, dest=None):
+    """优先从镜像下载，失败时回退到官方地址"""
+    try:
+        return download(primary, dest)
+    except Exception as exc:  # noqa: BLE001
+        if fallback and fallback != primary:
+            log("mirror failed (%s), falling back to the official source" % exc)
+            return download(fallback, dest)
+        raise
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(ROOT, ".cache", "srctool")
 UA = {"User-Agent": "openminecraft-srctool/1.0"}
@@ -95,7 +115,10 @@ def load_manifest():
     path = os.path.join(CACHE, "meta", "version_manifest_v2.json")
     if not os.path.exists(path) or (time.time() - os.path.getmtime(path)) > 6 * 3600:
         log("fetching version manifest ...")
-        download(MANIFEST_URL, path)
+        if MIRROR:
+            download_with_fallback(mirror_url("/mc/game/version_manifest_v2.json"), MANIFEST_URL, path)
+        else:
+            download(MANIFEST_URL, path)
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -112,7 +135,10 @@ def version_meta(manifest, version_id):
     path = os.path.join(CACHE, "meta", version_id + ".json")
     if not os.path.exists(path):
         log("fetching metadata for %s ..." % version_id)
-        download(entry["url"], path)
+        if MIRROR:
+            download_with_fallback(mirror_url("/version/%s/json" % version_id), entry["url"], path)
+        else:
+            download(entry["url"], path)
     with open(path, "r", encoding="utf-8") as f:
         meta = json.load(f)
     meta["_type"] = entry.get("type", "?")
@@ -130,7 +156,10 @@ def fetch_distribution(meta, version_id, kind):
         return dest
 
     log("downloading %s jar (%.1f MiB) ..." % (kind, info["size"] / 1048576.0))
-    download(info["url"], dest)
+    if MIRROR:
+        download_with_fallback(mirror_url("/version/%s/%s" % (version_id, kind)), info["url"], dest)
+    else:
+        download(info["url"], dest)
 
     digest = sha1_of(dest)
     if digest != info["sha1"]:
@@ -180,7 +209,10 @@ def fetch_asset_objects(meta, out, exts, jobs, force):
     index_path = os.path.join(CACHE, "meta", meta.get("id", "?") + "-assets.json")
     if not os.path.exists(index_path):
         log("fetching asset index ...")
-        download(index["url"], index_path)
+        if MIRROR:
+            download_with_fallback(mirror_url("/assets/indexes/%s.json" % index["id"]), index["url"], index_path)
+        else:
+            download(index["url"], index_path)
     with open(index_path, "r", encoding="utf-8") as f:
         objects = json.load(f)["objects"]
 
@@ -200,7 +232,10 @@ def fetch_asset_objects(meta, out, exts, jobs, force):
         if os.path.exists(target) and not force:
             return 0
         h = obj["hash"]
-        data = download(RESOURCE_CDN % (h[:2], h))
+        if MIRROR:
+            data = download_with_fallback(mirror_url("/assets/%s/%s" % (h[:2], h)), RESOURCE_CDN % (h[:2], h))
+        else:
+            data = download(RESOURCE_CDN % (h[:2], h))
         if hashlib.sha1(data).hexdigest() != h:
             raise RuntimeError("asset hash mismatch: " + name)
         write_if_needed(target, data, True)
@@ -317,7 +352,15 @@ def main():
     ap.add_argument("--no-keep-jar", action="store_true", help="do not copy the client jar into the output")
     ap.add_argument("--no-datapack", action="store_true", help="datagen: reports only, skip the generated data pack")
     ap.add_argument("--force", action="store_true", help="overwrite files that already exist")
+    ap.add_argument("--mirror", metavar="URL",
+                    help="download mirror base url, e.g. https://bmclapi2.bangbang93.com "
+                         "(falls back to the official source when a mirror request fails)")
     args = ap.parse_args()
+
+    global MIRROR
+    MIRROR = args.mirror
+    if MIRROR:
+        log("using mirror: " + MIRROR)
 
     do_resources = args.all or args.resources or not (args.resources or args.data)
     do_data = args.all or args.data or not (args.resources or args.data)
