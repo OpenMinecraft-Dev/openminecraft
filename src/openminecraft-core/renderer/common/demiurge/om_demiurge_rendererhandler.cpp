@@ -141,63 +141,7 @@ void OMDemiurgeRendererHandler::beforeFrame()
     }
 }
 
-static void dumpTextureToPPM(OMRendererTexture *tex, const char *path)
-{
-    if (!tex)
-    {
-        return;
-    }
-
-    auto data = tex->fetchData(0);
-    if (!data)
-    {
-        return;
-    }
-
-    const uint32_t w = static_cast<uint32_t>(tex->width);
-    const uint32_t h = static_cast<uint32_t>(tex->height);
-    const auto *px = static_cast<const uint8_t *>(data.get());
-
-    const bool flipY = std::string(typeid(*tex).name()).find("OpenGL") != std::string::npos;
-
-    std::ofstream out(path, std::ios::binary);
-    out << "P6\n" << w << " " << h << "\n255\n";
-
-    std::vector<char> row(static_cast<size_t>(w) * 3);
-    for (uint32_t y = 0; y < h; ++y)
-    {
-        const uint32_t sy = flipY ? (h - 1 - y) : y;
-        for (uint32_t x = 0; x < w; ++x)
-        {
-            const uint8_t *p = px + (static_cast<size_t>(sy) * w + x) * 4;
-            row[static_cast<size_t>(x) * 3 + 0] = static_cast<char>(p[0]);
-            row[static_cast<size_t>(x) * 3 + 1] = static_cast<char>(p[1]);
-            row[static_cast<size_t>(x) * 3 + 2] = static_cast<char>(p[2]);
-        }
-        out.write(row.data(), static_cast<std::streamsize>(row.size()));
-    }
-}
-
 void OMDemiurgeRendererHandler::afterFrame()
 {
-    // 调试钩子：OM_DUMP_UI_TARGET=/path/ui.ppm（可选 OM_DUMP_UI_NAME=surface）导出一次渲染目标
-    static const char *dumpPath = std::getenv("OM_DUMP_UI_TARGET");
-    static const char *dumpName = std::getenv("OM_DUMP_UI_NAME");
-    static bool dumped = false;
-    static long long frame = 0;
-
-    ++frame;
-
-    static const long long dumpFrame = []() {
-        const char *f = std::getenv("OM_DUMP_UI_FRAME");
-        return f ? std::atoll(f) : 90LL;
-    }();
-
-    if (dumpPath && !dumped && frame >= dumpFrame && (!dumpName || name == dumpName))
-    {
-        dumped = true;
-        dumpTextureToPPM(middleTarget ? middleTarget->colorTexture : nullptr, dumpPath);
-        logger.info("demiurge target ({}) dumped to {}", name, dumpPath);
-    }
 }
 } // namespace openminecraft::renderer::common::demiurge
