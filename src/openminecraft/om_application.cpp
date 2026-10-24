@@ -44,6 +44,7 @@
 #include <fmt/format.h>
 #include <vector>
 #include <cmath>
+#include <iomanip>
 
 #include "openminecraft-shell/om_application.hpp"
 
