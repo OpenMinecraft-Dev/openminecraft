@@ -49,6 +49,8 @@ class OMRendererTempTarget
         if (samples <= 1)
         {
             colorTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, flt ? R16G16B16A16Sfloat : R8G8B8A8Srgb);
+            colorTexture->addressModeU = ClampToEdge;
+            colorTexture->addressModeV = ClampToEdge;
             colorTexture->setupSampler();
             depthTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, D32Sfloat);
         }
@@ -56,6 +58,8 @@ class OMRendererTempTarget
         {
             colorTexture = renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample,
                                                      flt ? R16G16B16A16Sfloat : R8G8B8A8Srgb);
+            colorTexture->addressModeU = ClampToEdge;
+            colorTexture->addressModeV = ClampToEdge;
             colorTexture->setupSampler();
             depthTexture = renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample, D32Sfloat);
         }
@@ -117,12 +121,16 @@ class OMRendererTempTarget
         if (samples <= 1)
         {
             colorTexture = renderer->allocateTexture(ext.x, ext.y, 0, Dim2, flt ? R16G16B16A16Sfloat : R8G8B8A8Srgb);
+            colorTexture->addressModeU = ClampToEdge;
+            colorTexture->addressModeV = ClampToEdge;
             colorTexture->setupSampler();
         }
         else
         {
             colorTexture = renderer->allocateTexture(ext.x, ext.y, samples, 0, Dim2Multisample,
                                                      flt ? R16G16B16A16Sfloat : R8G8B8A8Srgb);
+            colorTexture->addressModeU = ClampToEdge;
+            colorTexture->addressModeV = ClampToEdge;
             colorTexture->setupSampler();
         }
 

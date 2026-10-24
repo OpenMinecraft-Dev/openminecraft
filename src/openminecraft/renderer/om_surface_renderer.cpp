@@ -31,7 +31,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
 
     auto button = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     button->setOnClick([&]() {
-        offset.animateTo(-1.0, common::animation::easeInQuint<float>, 1.0);
+        offset.animateTo(-1.05, common::animation::easeInOutCirc<float>, 1.0);
 
         event::OMEvent e;
         e.type = event::Custom;
@@ -53,7 +53,13 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
         bus.handle(event::Custom, e);
     });
     button2->setBackgroundColor({0.17, 0.17, 0.20});
-    node = std::make_shared<node::OMDemiurgeShaderSceneNode>("demiurge/scene/scene1.frag.glsl")
+
+    bgNode = std::make_shared<node::OMDemiurgeShaderSceneNode>("demiurge/scene/train.glsl")
+                 ->style({
+                     {"width", OMDemiurgeSize::fit()},
+                     {"height", OMDemiurgeSize::fit()},
+                 });
+    node = std::make_shared<node::OMDemiurgeRectNode>()
                ->style({
                    {"color", (int)0x2c2c3433},
                    {"flexDirection", Column},
@@ -90,6 +96,10 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->name = "surface";
     renderer->registerHandler(internal);
+
+    background = std::make_shared<OMDemiurgeRendererHandler>(renderer, bgNode);
+    background->name = "surface_background";
+    renderer->registerHandler(background);
     offset.onAnimateFinish = [&](float v) {
         event::OMEvent e;
         e.type = event::Custom;
@@ -114,6 +124,6 @@ void OMSurfaceRenderer::afterFrame()
 
 void OMSurfaceRenderer::openScreen()
 {
-    offset.animateTo(0.0, common::animation::easeOutQuint<float>, 1.0);
+    offset.animateTo(0.0, common::animation::easeInOutCirc<float>, 1.0);
 }
 } // namespace openminecraft::shell::renderer

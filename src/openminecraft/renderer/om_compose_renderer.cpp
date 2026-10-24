@@ -3,10 +3,6 @@
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_blur.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
-#include <cstdlib>
-#include <fstream>
-#include <typeinfo>
-#include <vector>
 
 using namespace openminecraft::renderer::common;
 
@@ -15,8 +11,10 @@ namespace openminecraft::shell::renderer
 OMComposeRenderer::OMComposeRenderer(openminecraft::renderer::OMRenderer *renderer,
                                      openminecraft::renderer::common::wrap::OMRendererTempTarget *surface,
                                      openminecraft::renderer::common::wrap::OMRendererTempTarget *overlay,
-                                     openminecraft::renderer::common::wrap::OMRendererTempTarget *scene)
-    : openminecraft::renderer::common::OMRendererHandler(renderer), overlay(overlay), scene(scene), surface(surface)
+                                     openminecraft::renderer::common::wrap::OMRendererTempTarget *scene,
+                                     openminecraft::renderer::common::wrap::OMRendererTempTarget *surfaceBackground)
+    : openminecraft::renderer::common::OMRendererHandler(renderer), overlay(overlay), scene(scene), surface(surface),
+      surfaceBackground(surfaceBackground)
 {
     this->renderer = renderer;
 
@@ -69,7 +67,7 @@ void OMComposeRenderer::submitTasks()
 
     mainPipeline->bindInput(0, scene->colorTexture);
     overlayPipeline->bindInput(0, overlay->colorTexture);
-    blurHandler->bind(surface->colorTexture, scene->colorTexture);
+    blurHandler->bind(surface->colorTexture, surfaceBackground->colorTexture);
 
     auto voxel = renderer->fetchTask("voxel");
     blurHandler
@@ -77,6 +75,7 @@ void OMComposeRenderer::submitTasks()
                               ->dependOn(blurHandler->firstLayerTask(voxel)->dependOn(voxel))
                               ->dependOn(renderer->fetchTask("demiurgeui_compose_debughud"))
                               ->dependOn(renderer->fetchTask("demiurgeui_compose_surface"))
+                              ->dependOn(renderer->fetchTask("demiurgeui_compose_surface_background"))
                               ->target(renderer->getDefaultRenderTarget())
                               ->pipeline(mainPipeline)
                               ->drawN(6)

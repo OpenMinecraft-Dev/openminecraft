@@ -333,41 +333,16 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
 
     auto simp = basics::OMVertexFormat();
     simp.nextGroup()->decideStruct();
-    bgPipe =
-        renderer->createPipeline()
-            ->input(UniformBuffer)
-            ->inputName("ScreenData")
-            ->input(UniformBuffer)
-            ->inputName("Time")
-            ->output(tempTarget->target)
-            ->shader(renderer->shaderManager.preprocess("demiurge/scene/scene.vert.glsl", Vertex, GLSLSource, simp))
-            ->shader(renderer->shaderManager.preprocess("demiurge/scene/scene1.frag.glsl", Fragment, GLSLSource, simp))
-            ->format(simp)
-            ->blendFunc({One, One, One, One})
-            ->blend(false)
-            ->depth(false, false)
-            ->buildN();
-    screenSizeBuffer = renderer->allocateBuffer(Uniform, sizeof(float) * 2);
-    timeBuffer = renderer->allocateBuffer(Uniform, sizeof(float));
-
-    bgPipe->bindInput(0, screenSizeBuffer);
-    bgPipe->bindInput(1, timeBuffer);
     tp = std::chrono::steady_clock::now();
 }
 
 void OMWorldRenderer::beforeFrame()
 {
-    timeBuffer->updateData(std::array<float, 1>{
-        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tp).count() / 1000.0f}
-                               .data());
 }
 
 void OMWorldRenderer::record(bool r)
 {
-    voxelManager
-        ->submit(renderer->fetchTask("voxel"), tempTarget, r)
-        // ->pipeline(bgPipe)->drawN(6)
-        ->finishN();
+    voxelManager->submit(renderer->fetchTask("voxel"), tempTarget, r)->finishN();
 }
 
 static int gameT = 12000;
@@ -401,18 +376,12 @@ void OMWorldRenderer::submitTasks()
     auto siz = renderer->getExtent();
     tempTarget->construct(siz);
 
-    screenSizeBuffer->updateData(std::array<float, 2>{siz.x, siz.y}.data());
-
     renderer->createTask("voxel");
 
     record(true);
 }
 OMWorldRenderer::~OMWorldRenderer()
 {
-    delete bgPipe;
-    delete screenSizeBuffer;
-    delete timeBuffer;
-
     delete uniformBuffer;
     delete cameraBuffer;
     delete voxelManager;

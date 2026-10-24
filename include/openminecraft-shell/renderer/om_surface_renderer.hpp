@@ -6,7 +6,6 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
-#include <functional>
 namespace openminecraft::shell::renderer
 {
 class OMSurfaceRenderer : public openminecraft::renderer::common::OMRendererHandler
@@ -21,8 +20,8 @@ class OMSurfaceRenderer : public openminecraft::renderer::common::OMRendererHand
     void afterFrame() override;
 
     openminecraft::renderer::OMRenderer *renderer;
-    std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode> node;
-    std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeRendererHandler> internal;
+    std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode> node, bgNode;
+    std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeRendererHandler> internal, background;
     openminecraft::renderer::common::animation::OMAnimationValue<float> offset;
 
     std::shared_ptr<openminecraft::geom::OMFontSet> fontset;
