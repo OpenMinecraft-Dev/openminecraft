@@ -1,18 +1,22 @@
 #include "openminecraft-shell/data/block/om_block.hpp"
 #include "openminecraft-shell/data/block/om_block_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
+#include "openminecraft/io/json/om_io_ast_builder_json.hpp"
+#include "openminecraft/specs/zlib/om_zlib_inflaterstream.hpp"
+#include "openminecraft/vfs/om_vfs_base.hpp"
 #include <memory>
 
 namespace openminecraft::shell::data::block
 {
-// INFO: intentionally leaked. Detached worker threads may still look up blocks while
-// the process exits; a static destructor would empty the registry under their feet
-// (manifesting as std::logic_error("key not found!") / use-after-free).
 OMWorldRegistry<OMIdentifier, std::shared_ptr<OMBlock>> &blockRegistry =
     *new OMWorldRegistry<OMIdentifier, std::shared_ptr<OMBlock>>();
 
 void registerBlocks()
 {
+    io::json::OMJsonAstBuilder bld(std::make_shared<io::json::OMJsonTokenIter>(
+        std::make_shared<specs::zlib::OMZlibInflaterStream>(vfs::fsfetch("/bootassets/minecraft/blocks.json.zlib"))));
+    auto document = bld.build();
+
     blockRegistry.registerItem(OMIdentifier("minecraft:air"), std::make_shared<OMBlock>()->isSolid(false));
     blockRegistry.registerItem(OMIdentifier("minecraft:stone"), std::make_shared<OMBlock>()->isSolid(true));
     blockRegistry.registerItem(OMIdentifier("minecraft:cobblestone"), std::make_shared<OMBlock>()->isSolid(true));

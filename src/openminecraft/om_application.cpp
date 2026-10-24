@@ -18,6 +18,8 @@
 #include "openminecraft/renderer/om_renderer_window.hpp"
 #include "openminecraft/specs/nbt/om_nbt_reader.hpp"
 #include "openminecraft/specs/zlib/om_zlib_deflate.hpp"
+#include "openminecraft/specs/zlib/om_zlib_inflaterstream.hpp"
+#include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/vm/os/om_hardware.hpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
@@ -138,6 +140,20 @@ auto OMApplication::entry() -> int
             });
             def.input(reinterpret_cast<uint8_t *>(const_cast<char *>(args[2].c_str())), args[2].size());
             def.finish();
+            goto end;
+        }
+        else if (args[1] == "blk")
+        {
+            io::json::OMJsonAstBuilder bld(
+                std::make_shared<io::json::OMJsonTokenIter>(std::make_shared<specs::zlib::OMZlibInflaterStream>(
+                    vfs::fsfetch("/bootassets/minecraft/blocks.json.zlib"))));
+            auto document = bld.build();
+
+            for (const auto &p : document->getMap())
+            {
+                logger->debug(p.first);
+            }
+
             goto end;
         }
         bk = args[1] == "gl" ? OpenGL : Vulkan;
