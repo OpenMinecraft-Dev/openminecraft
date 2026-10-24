@@ -1,15 +1,11 @@
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
-#include "fmt/format.h"
 #include "openminecraft-shell/data/block/om_block_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
-#include "openminecraft/log/om_log_common.hpp"
 
 namespace openminecraft::shell::data::block
 {
-// INFO: intentionally leaked (see om_block_registry.cpp) to survive shutdown races.
-openminecraft::world::OMWorldRegistry<OMIdentifier, OMBlockStateCombined> &blockStateRegistry =
-    *new openminecraft::world::OMWorldRegistry<OMIdentifier, OMBlockStateCombined>();
-static openminecraft::log::OMLogger logger("BlockState Registry");
+openminecraft::world::OMWorldRegistry<OMBlockStateCombined, OMBlockStateCombined> &blockStateRegistry =
+    *new openminecraft::world::OMWorldRegistry<OMBlockStateCombined, OMBlockStateCombined>();
 
 void registerBlockStates()
 {
@@ -37,9 +33,7 @@ void registerBlockStates()
         for (auto &st : states)
         {
             auto c = OMBlockStateCombined{l.first, st};
-            logger.debug("registering {}[{}]", l.first.path, st.tosimple());
-            blockStateRegistry.registerItem(
-                OMIdentifier(l.first.namesp, fmt::format("{}[{}]", l.first.path, st.tosimple())), c);
+            blockStateRegistry.registerItem(c, c);
         }
     }
 }

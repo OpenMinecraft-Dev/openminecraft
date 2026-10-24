@@ -1,4 +1,5 @@
 #include "openminecraft-shell/renderer/om_debug_renderer.hpp"
+#include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
