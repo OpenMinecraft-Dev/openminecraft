@@ -547,8 +547,8 @@ OMVoxelManager::OMVoxelManager(
     voxelFluidLayer = new OMVoxelLayer<OMVoxelFluid>(renderer);
     voxelTranslucentFluidLayer = new OMVoxelLayer<OMVoxelFluid>(renderer);
 
-    chunkoffs = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
-    debugoffs = renderer->allocateBuffer(VertexData, 12 * 2 * 3 * sizeof(float));
+    chunkOffsetBuffer = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
+    debugOffsetBuffer = renderer->allocateBuffer(VertexData, 12 * 2 * 3 * sizeof(float));
     skydisc = renderer->allocateBuffer(Uniform, sizeof(OMVoxelSkyDisc));
     fogdata = renderer->allocateBuffer(Uniform, sizeof(float) * 5);
     cloudFogdata = renderer->allocateBuffer(Uniform, sizeof(float) * 5);
@@ -604,36 +604,36 @@ OMVoxelManager::OMVoxelManager(
     starBaseData = renderer->allocateBuffer(Uniform, sizeof(float) * 2);
 
     pipeline->bindInput(1, textureAtlas);
-    pipeline->bindInput(2, chunkoffs);
+    pipeline->bindInput(2, chunkOffsetBuffer);
     pipeline->bindInput(3, fogdata);
     pipeline->bindInput(4, lightmap->colorTexture);
 
     complexPipeline->bindInput(1, textureAtlas);
     complexPipeline->bindInput(2, textureAtlasSecondary);
-    complexPipeline->bindInput(3, chunkoffs);
+    complexPipeline->bindInput(3, chunkOffsetBuffer);
     complexPipeline->bindInput(4, fogdata);
     complexPipeline->bindInput(5, lightmap->colorTexture);
 
     fluidPipeline->bindInput(1, textureAtlas);
     fluidPipeline->bindInput(2, textureAtlasSecondary);
-    fluidPipeline->bindInput(3, chunkoffs);
+    fluidPipeline->bindInput(3, chunkOffsetBuffer);
     fluidPipeline->bindInput(4, fogdata);
     fluidPipeline->bindInput(5, lightmap->colorTexture);
 
     translucentPipeline->bindInput(1, textureAtlas);
-    translucentPipeline->bindInput(2, chunkoffs);
+    translucentPipeline->bindInput(2, chunkOffsetBuffer);
     translucentPipeline->bindInput(3, fogdata);
     translucentPipeline->bindInput(4, lightmap->colorTexture);
 
     translucentComplexPipeline->bindInput(1, textureAtlas);
     translucentComplexPipeline->bindInput(2, textureAtlasSecondary);
-    translucentComplexPipeline->bindInput(3, chunkoffs);
+    translucentComplexPipeline->bindInput(3, chunkOffsetBuffer);
     translucentComplexPipeline->bindInput(4, fogdata);
     translucentComplexPipeline->bindInput(5, lightmap->colorTexture);
 
     translucentFluidPipeline->bindInput(1, textureAtlas);
     translucentFluidPipeline->bindInput(2, textureAtlasSecondary);
-    translucentFluidPipeline->bindInput(3, chunkoffs);
+    translucentFluidPipeline->bindInput(3, chunkOffsetBuffer);
     translucentFluidPipeline->bindInput(4, fogdata);
     translucentFluidPipeline->bindInput(5, lightmap->colorTexture);
 
@@ -664,8 +664,8 @@ OMVoxelManager::~OMVoxelManager()
     delete voxelTranslucentComplexLayer;
     delete voxelFluidLayer;
     delete voxelTranslucentFluidLayer;
-    delete chunkoffs;
-    delete debugoffs;
+    delete chunkOffsetBuffer;
+    delete debugOffsetBuffer;
     delete skydisc;
     delete sunrise;
     delete moonData;
@@ -911,7 +911,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         Position(cameraPos.chunkx + 1, cameraPos.chunky + 1, cameraPos.chunkz + 1),
     };
 
-    debugoffs->updateData(std::array<glm::vec3, 2 * 12>{
+    debugOffsetBuffer->updateData(std::array<glm::vec3, 2 * 12>{
         {
             corners[0] - camera.getPosRaw(), corners[1] - camera.getPosRaw(), corners[0] - camera.getPosRaw(),
             corners[2] - camera.getPosRaw(), corners[0] - camera.getPosRaw(), corners[3] - camera.getPosRaw(),
@@ -1039,29 +1039,31 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             }
         });
 
-        if (chunkOffsetCache.size() * sizeof(glm::vec3) > chunkoffs->length)
+        if (chunkOffsetCache.size() * sizeof(glm::vec3) > chunkOffsetBuffer->length)
         {
-            delete chunkoffs;
-            chunkoffs = renderer->allocateBuffer(UniformTexel, chunkManager->numChunks() * 3 * sizeof(float) * 2);
-            pipeline->bindInput(2, chunkoffs);
-            complexPipeline->bindInput(3, chunkoffs);
-            fluidPipeline->bindInput(3, chunkoffs);
-            translucentPipeline->bindInput(2, chunkoffs);
-            translucentComplexPipeline->bindInput(3, chunkoffs);
-            translucentFluidPipeline->bindInput(3, chunkoffs);
+            delete chunkOffsetBuffer;
+            chunkOffsetBuffer =
+                renderer->allocateBuffer(UniformTexel, chunkManager->numChunks() * 3 * sizeof(float) * 2);
+            pipeline->bindInput(2, chunkOffsetBuffer);
+            complexPipeline->bindInput(3, chunkOffsetBuffer);
+            fluidPipeline->bindInput(3, chunkOffsetBuffer);
+            translucentPipeline->bindInput(2, chunkOffsetBuffer);
+            translucentComplexPipeline->bindInput(3, chunkOffsetBuffer);
+            translucentFluidPipeline->bindInput(3, chunkOffsetBuffer);
         }
 
-        chunkoffs->synced = true;
+        chunkOffsetBuffer->synced = true;
 
         const uint64_t usedBytes = chunkOffsetCache.size() * sizeof(glm::vec3);
-        chunkoffs->updateDataPart(chunkOffsetCache.data(), 0, std::min<uint64_t>(usedBytes, chunkoffs->length));
+        chunkOffsetBuffer->updateDataPart(chunkOffsetCache.data(), 0,
+                                          std::min<uint64_t>(usedBytes, chunkOffsetBuffer->length));
 
         static std::vector<glm::vec3> offsetGuard(512, glm::vec3{INFINITY});
-        if (chunkoffs->length > usedBytes)
+        if (chunkOffsetBuffer->length > usedBytes)
         {
             const uint64_t guardBytes =
-                std::min<uint64_t>(chunkoffs->length - usedBytes, offsetGuard.size() * sizeof(glm::vec3));
-            chunkoffs->updateDataPart(offsetGuard.data(), usedBytes, guardBytes);
+                std::min<uint64_t>(chunkOffsetBuffer->length - usedBytes, offsetGuard.size() * sizeof(glm::vec3));
+            chunkOffsetBuffer->updateDataPart(offsetGuard.data(), usedBytes, guardBytes);
         }
 
         compilerPool->upload(voxelLayer, voxelComplexLayer, voxelFluidLayer, voxelTranslucentLayer,
@@ -1132,7 +1134,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
                    ->vertexBuffer({voxelFluidLayer->buf()->buffer})
                    ->drawInstanceN(6, voxelFluidLayer->buf()->usedSize() / sizeof(OMVoxelFluid))
                    ->pipeline(debugPipeline)
-                   ->vertexBuffer({debugoffs})
+                   ->vertexBuffer({debugOffsetBuffer})
                    ->drawN(2 * 12)
                    ->endDebugTag();
 
