@@ -52,13 +52,16 @@ void registerBlocks()
     registerBlock(OMIdentifier("minecraft:iron_ore"), std::make_shared<OMBlock>()->isSolid(true));
     registerBlock(OMIdentifier("minecraft:dirt"), std::make_shared<OMBlock>()->isSolid(true));
     registerBlock(OMIdentifier("minecraft:copper_ore"), std::make_shared<OMBlock>()->isSolid(true));
-    registerBlock(OMIdentifier("minecraft:tall_grass"), std::make_shared<OMBlock>()->isSolid(false));
-    registerBlock(OMIdentifier("minecraft:cherry_stairs"), std::make_shared<OMBlock>()->isSolid(false));
+    registerBlock(OMIdentifier("minecraft:tall_grass"),
+                  std::make_shared<OMBlock>()->isSolid(false)->setColorSource(BiomeGrass));
+    registerBlock(OMIdentifier("minecraft:cherry_stairs"),
+                  std::make_shared<OMBlock>()->isSolid(false)->setColorSource(BiomeWater));
     registerBlock(OMIdentifier("minecraft:cherry_door"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:cherry_hanging_sign"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:cherry_button"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:cherry_shelf"), std::make_shared<OMBlock>()->isSolid(false));
-    registerBlock(OMIdentifier("minecraft:grass_block"), std::make_shared<OMBlock>()->isSolid(true));
+    registerBlock(OMIdentifier("minecraft:grass_block"),
+                  std::make_shared<OMBlock>()->isSolid(true)->setColorSource(BiomeGrass));
     registerBlock(OMIdentifier("minecraft:cherry_fence_gate"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:rail"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:white_stained_glass"),
@@ -66,8 +69,9 @@ void registerBlocks()
     registerBlock(OMIdentifier("minecraft:glass"),
                   std::make_shared<OMTransparentBlock>()->isSolid(false)->isTranslucent(true));
     registerBlock(OMIdentifier("minecraft:stone_pressure_plate"), std::make_shared<OMBlock>()->isSolid(false));
-    registerBlock(OMIdentifier("minecraft:water"),
-                  std::make_shared<OMBlock>()->isSolid(false)->isFluid(true)->isTranslucent(true));
+    registerBlock(
+        OMIdentifier("minecraft:water"),
+        std::make_shared<OMBlock>()->isSolid(false)->isFluid(true)->isTranslucent(true)->setColorSource(BiomeWater));
     registerBlock(OMIdentifier("minecraft:lava"), std::make_shared<OMBlock>()->isSolid(false)->isFluid(true));
 }
 } // namespace openminecraft::shell::data::block

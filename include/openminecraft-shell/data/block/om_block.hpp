@@ -47,6 +47,12 @@ template <> struct hash<openminecraft::shell::data::block::OMBlockModelIdentifie
 using openminecraft::renderer::common::wrap::OMVoxelFacing;
 namespace openminecraft::shell::data::block
 {
+enum OMBlockColorSource
+{
+    None,
+    BiomeGrass,
+    BiomeWater,
+};
 class OMBlock : public std::enable_shared_from_this<OMBlock>
 {
   public:
@@ -84,51 +90,17 @@ class OMBlock : public std::enable_shared_from_this<OMBlock>
         properties[n] = values;
         return shared_from_this();
     }
-    auto propFacing() -> std::shared_ptr<OMBlock>
+    auto setColorSource(OMBlockColorSource c) -> std::shared_ptr<OMBlock>
     {
-        return prop("facing", {"east", "west", "north", "south"});
-    }
-    auto propInWall() -> std::shared_ptr<OMBlock>
-    {
-        return prop("in_wall", {"true", "false"});
-    }
-    auto propOpen() -> std::shared_ptr<OMBlock>
-    {
-        return prop("open", {"true", "false"});
-    }
-    auto propPowered() -> std::shared_ptr<OMBlock>
-    {
-        return prop("powered", {"true", "false"});
-    }
-    auto propHalf() -> std::shared_ptr<OMBlock>
-    {
-        return prop("half", {"upper", "lower"});
-    }
-    auto propWaterlogged() -> std::shared_ptr<OMBlock>
-    {
-        return prop("waterlogged", {"true", "false"});
-    }
-    auto propHinge() -> std::shared_ptr<OMBlock>
-    {
-        return prop("hinge", {"left", "right"});
-    }
-    auto propFace() -> std::shared_ptr<OMBlock>
-    {
-        return prop("face", {"ceiling", "floor", "wall"});
-    }
-    auto propRotation() -> std::shared_ptr<OMBlock>
-    {
-        return prop("rotation", {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"});
-    }
-    auto propSnowy() -> std::shared_ptr<OMBlock>
-    {
-        return prop("snowy", {"true", "false"});
+        colorSource = c;
+        return shared_from_this();
     }
 
     bool soild = true;
     bool translucent = false;
     bool fluid = false;
     std::unordered_map<std::string, std::vector<std::string>> properties;
+    OMBlockColorSource colorSource = None;
 
     auto operator=(const OMBlock &other) -> OMBlock & = default;
 };

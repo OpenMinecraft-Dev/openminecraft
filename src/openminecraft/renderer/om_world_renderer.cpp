@@ -10,6 +10,8 @@
 #include "glm/ext/quaternion_common.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/fwd.hpp"
+#include "openminecraft-shell/data/biome/om_biome_registry.hpp"
+#include "openminecraft-shell/data/block/om_block.hpp"
 #include "openminecraft-shell/data/block/om_block_registry.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_resolver.hpp"
@@ -243,33 +245,38 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
 static OMWorldColorManager *colorManager = new OMWorldColorManager;
 static std::chrono::steady_clock::time_point tp = {};
 
+static auto convert(uint32_t rgb) -> glm::u8vec3
+{
+    return {rgb >> 16, rgb >> 8, rgb};
+}
 class OMWorldPaletteProvider : public wrap::OMChunkPaletteProvider
 {
+  public:
     auto color(const world::OMChunk<16> &chunk, int x, int y, int z, uint32_t blockState, int tintIndex)
         -> glm::u8vec3 override
     {
-        static openminecraft::log::OMLogger logger("ChunkPalette");
-        static std::atomic<uint64_t> calls{0};
-
-        const uint64_t call = calls.fetch_add(1, std::memory_order_relaxed);
-        const glm::u8vec3 result{255, 255, 255};
-
-        if (call < 32 || call % 8192 == 0)
+        if (blockState < data::block::blockStateRegistry.idToRegistry.size())
         {
-            std::string name = "?";
-
-            if (blockState < data::block::blockStateRegistry.idToRegistry.size())
+            const auto &c = data::block::blockStateRegistry.idToRegistry[blockState];
+            switch (data::block::blockRegistry.getRegistry(c.block)->colorSource)
             {
-                const auto &c = data::block::blockStateRegistry.idToRegistry[blockState];
-                name = fmt::format("{}[{}]", c.block.path, c.state.tosimple());
+            default:
+            case data::block::None:
+                return {255, 255, 255};
+            case data::block::BiomeGrass: {
+                return convert(
+                    data::biome::biomeRegistry.getRegistry(data::OMIdentifier("minecraft:plains"))->grassColor);
             }
-
-            logger.debug("[palette] call={} chunk=({},{},{}) state={} ({}) tintIndex={} pos=({},{},{}) -> ({},{},{})",
-                         call, chunk.chunkx, chunk.chunky, chunk.chunkz, blockState, name, tintIndex, x, y, z, result.r,
-                         result.g, result.b);
+            case data::block::BiomeWater: {
+                return convert(
+                    data::biome::biomeRegistry.getRegistry(data::OMIdentifier("minecraft:plains"))->waterColor);
+            }
+            }
         }
-
-        return result;
+        else
+        {
+            return {255, 255, 255};
+        }
     }
 };
 
@@ -323,6 +330,15 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     cloudTex->minFilter = Nearest;
     cloudTex->setupSampler();
 
+    std::vector<bool> stats;
+    for (int x = 0; x < 256; ++x)
+    {
+        for (int y = 0; y < 256; ++y)
+        {
+            stats.push_back(reinterpret_cast<uint8_t *>(f2.fetchData())[(y * 256 + x) * 4] >= 128);
+        }
+    }
+
     {
         auto loadColormap = [&](const char *name, std::array<glm::u8vec3, 256 * 256> &target) -> void {
             specs::png::OMPngFile f;
@@ -350,15 +366,6 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
         loadColormap("dry_foliage", dryFoliageColor);
         loadColormap("foliage", foliageColor);
         loadColormap("grass", grassColor);
-    }
-
-    std::vector<bool> stats;
-    for (int x = 0; x < 256; ++x)
-    {
-        for (int y = 0; y < 256; ++y)
-        {
-            stats.push_back(reinterpret_cast<uint8_t *>(f2.fetchData())[(y * 256 + x) * 4] >= 128);
-        }
     }
 
     textureAtlas = new data::OMTextureAtlas("/external/assets", renderer);

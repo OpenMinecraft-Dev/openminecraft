@@ -3,6 +3,7 @@
 #include "SDL3/SDL_events.h"
 #include "SDL3/SDL_mouse.h"
 #include "glm/ext/vector_float3.hpp"
+#include "openminecraft-shell/data/biome/om_biome_registry.hpp"
 #include "openminecraft-shell/data/block/om_block_registry.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
@@ -161,6 +162,7 @@ auto OMApplication::entry() -> int
 
     data::block::registerBlocks();
     data::block::registerBlockStates();
+    data::biome::registerBiomes();
     mainLoop(bk);
 
 end:

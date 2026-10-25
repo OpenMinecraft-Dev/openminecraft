@@ -33,7 +33,14 @@ template <typename K, typename T> class OMWorldRegistry
     }
     auto getRegistry(K name) -> T &
     {
-        return idToRegistry[nameToId[std::move(name)]];
+        if (nameToId.count(name))
+        {
+            return idToRegistry[nameToId[std::move(name)]];
+        }
+        else
+        {
+            throw std::logic_error("key not found!");
+        }
     }
     auto nameFromId(uint32_t t) -> K &
     {
