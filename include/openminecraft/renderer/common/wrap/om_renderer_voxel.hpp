@@ -311,6 +311,15 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     }
 };
 
+class OMChunkPaletteProvider
+{
+  public:
+    virtual ~OMChunkPaletteProvider() = default;
+
+    virtual auto color(const world::OMChunk<16> &chunk, int x, int y, int z, uint32_t blockState, int tintIndex)
+        -> glm::u8vec3 = 0;
+};
+
 class OMVoxelCompiler
 {
   public:
@@ -340,6 +349,8 @@ class OMVoxelCompiler
 
     OMVoxelHandler *handler = new OMVoxelHandlerDummy();
     std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> modelFetcher;
+
+    std::shared_ptr<OMChunkPaletteProvider> paletteProvider = nullptr;
 
   private:
     log::OMLogger logger;
@@ -534,7 +545,7 @@ class OMVoxelManager
                    std::shared_ptr<world::OMChunkManager<16>>, std::function<void(bool)>, OMVoxelHandler *,
                    std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)>,
                    OMVoxelColorManager *, OMRendererTexture *, OMRendererTexture *, OMRendererTexture *,
-                   std::vector<bool>);
+                   std::vector<bool>, std::shared_ptr<OMChunkPaletteProvider>);
     ~OMVoxelManager();
 
     auto submit(OMRendererTask *, OMRendererTempTarget *, bool = true) -> OMRendererTask *;
@@ -589,6 +600,7 @@ class OMVoxelManager
     std::function<void(bool)> recordTask;
     log::OMLogger logger;
     OMVoxelCompiler compiler;
+    std::shared_ptr<OMChunkPaletteProvider> paletteProvider = nullptr;
 
     std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> modelFetcher;
     std::shared_ptr<world::OMChunkManager<16>> chunkManager;

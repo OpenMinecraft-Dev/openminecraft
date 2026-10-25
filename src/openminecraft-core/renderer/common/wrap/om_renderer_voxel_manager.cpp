@@ -80,13 +80,15 @@ OMVoxelManager::OMVoxelManager(
     std::shared_ptr<world::OMChunkManager<16>> man, std::function<void(bool)> recordTask, OMVoxelHandler *handler,
     std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> modelFetcher,
     OMVoxelColorManager *colorman, OMRendererTexture *sunTex, OMRendererTexture *moonTex, OMRendererTexture *cloudTex,
-    std::vector<bool> cloudStats)
+    std::vector<bool> cloudStats, std::shared_ptr<OMChunkPaletteProvider> paletteProvider)
     : logger("OMVoxelManager", this)
 {
     this->recordTask = recordTask;
     this->renderer = renderer;
     this->chunkManager = man;
     this->voxelHandler = handler;
+    this->paletteProvider = paletteProvider;
+    this->compiler.paletteProvider = this->paletteProvider;
     this->modelFetcher = modelFetcher;
     this->colorManager = colorman;
     this->sunTex = sunTex;

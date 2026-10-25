@@ -234,23 +234,17 @@ void OMApplication::mainLoop(OMBackend backend)
                             }
                         }
                         cnk.setBlock(0, 1, 0,
-                                     blockStateRegistry.id(
-                                         data::block::makeBlockState("minecraft:water[level=1]")));
+                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:water[level=1]")));
                         cnk.setBlock(0, 0, 0,
-                                     blockStateRegistry.id(
-                                         data::block::makeBlockState("minecraft:lava[level=0]")));
+                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:lava[level=0]")));
                         cnk.setBlock(0, 15, 0,
-                                     blockStateRegistry.id(
-                                         data::block::makeBlockState("minecraft:water[level=8]")));
+                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:water[level=8]")));
                         cnk.setBlock(15, 1, 0,
-                                     blockStateRegistry.id(
-                                         data::block::makeBlockState("minecraft:water[level=2]")));
+                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:water[level=2]")));
                         cnk.setBlock(0, 1, 15,
-                                     blockStateRegistry.id(
-                                         data::block::makeBlockState("minecraft:water[level=2]")));
+                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:water[level=2]")));
                         cnk.setBlock(15, 1, 15,
-                                     blockStateRegistry.id(
-                                         data::block::makeBlockState("minecraft:water[level=3]")));
+                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:water[level=3]")));
                         cnk.setBlock(
                             15, 0, 0,
                             blockStateRegistry.id(data::block::makeBlockState("minecraft:white_stained_glass[]")));
@@ -321,6 +315,7 @@ void OMApplication::mainLoop(OMBackend backend)
 
         auto hnd4 = std::make_shared<renderer::OMSurfaceRenderer>(win(), buswrap);
         auto hnd2 = std::make_shared<renderer::OMDebugRenderer>(win(), buswrap);
+
         auto hnd = std::make_shared<renderer::OMWorldRenderer>(win(), camera, chunkManager);
         auto hnd3 = std::make_shared<renderer::OMComposeRenderer>(win(), hnd4->internal->middleTarget,
                                                                   hnd2->internal->middleTarget, hnd->tempTarget,
@@ -569,7 +564,6 @@ void OMApplication::mainLoop(OMBackend backend)
 
         util::OMTicker ticker;
 
-        // 测试用：OM_AUTOEXIT_MS 毫秒后自动退出，用于验证完整的关闭路径
         const char *autoExitEnv = std::getenv("OM_AUTOEXIT_MS");
         const long long autoExitMs = autoExitEnv ? std::atoll(autoExitEnv) : 0;
         const auto loopStart = std::chrono::steady_clock::now();

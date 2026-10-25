@@ -241,6 +241,15 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
 static OMWorldColorManager *colorManager = new OMWorldColorManager;
 static std::chrono::steady_clock::time_point tp = {};
 
+class OMWorldPaletteProvider : public wrap::OMChunkPaletteProvider
+{
+    auto color(const world::OMChunk<16> &chunk, int x, int y, int z, uint32_t blockState, int tintIndex)
+        -> glm::u8vec3 override
+    {
+        return {255, 255, 255};
+    }
+};
+
 OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::OMCamera> camera,
                                  std::shared_ptr<OMChunkManager<16>> chunkManager)
     : OMRendererHandler(renderer), camera(std::move(camera)), logger("OMWorldRenderer", this), renderer(renderer)
@@ -338,12 +347,10 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
             h ^= h >> 16;
             return blockStateResolver->fetchModel(reg.block, reg.state, h);
         },
-        colorManager, sunTex, moonTex, cloudTex, stats);
+        colorManager, sunTex, moonTex, cloudTex, stats, std::make_shared<OMWorldPaletteProvider>());
 
     voxelManager->bindCameraBuffer(cameraBuffer);
 
-    auto simp = basics::OMVertexFormat();
-    simp.nextGroup()->decideStruct();
     tp = std::chrono::steady_clock::now();
 }
 
