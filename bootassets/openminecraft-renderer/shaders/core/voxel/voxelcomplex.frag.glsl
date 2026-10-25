@@ -8,6 +8,7 @@ layout(location = 3) in float voxAoLevel;
 layout(location = 4) in vec2 voxLight;
 layout(location = 5) in float voxFactor;
 layout(location = 6) flat in int voxSecondaryTex;
+layout(location = 7) flat in vec3 voxColormap;
 
 layout(location = 0) out vec4 outColor;
 
@@ -40,7 +41,7 @@ void main()
     {
         discard;
     }
-    vec3 result = voxFactor * ao * texColor.rgb;
+    vec3 result = voxFactor * ao * texColor.rgb * voxColormap;
 
     outColor = fog_gen(vec4(result, texColor.a) * texture(inLightmap, voxLight), fog.fogStart, fog.fogEnd,
                        vec3(fog.fogR, fog.fogG, fog.fogB), 1.0);

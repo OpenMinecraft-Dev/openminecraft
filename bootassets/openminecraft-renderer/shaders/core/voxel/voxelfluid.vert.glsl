@@ -11,6 +11,7 @@ layout(location = 2) out float voxTexLayer;
 layout(location = 3) out vec2 voxLight;
 layout(location = 4) out float voxFactor;
 layout(location = 5) flat out int voxSec;
+layout(location = 6) flat out vec3 voxColormap;
 
 #include "basics/structs/camera.glsl"
 uniform sampler2DArray inTexture;
@@ -29,6 +30,9 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_SL(n) ((voxelExtra >> (28 - 4 * (n))) & 15)
 #define VOXEL_BL(n) ((voxelExtra >> (12 - 4 * (n))) & 15)
 #define VOXEL_FLUIDH(n) float((voxelExtra2 >> (24 - 8 * n)) & 0xff)
+#define VOXEL_COLORMAP_R ((voxelType >> 16) & 0xff)
+#define VOXEL_COLORMAP_G ((voxelType >> 8) & 0xff)
+#define VOXEL_COLORMAP_B ((voxelType) & 0xff)
 
 void main()
 {
@@ -213,4 +217,5 @@ void main()
 
     voxLight = vec2(float(VOXEL_BL(idx)) / 15, float(VOXEL_SL(idx)) / 15);
     voxSec = VOXEL_FLUIDFLOW;
+    voxColormap = vec3(VOXEL_COLORMAP_R / 255.0, VOXEL_COLORMAP_G / 255.0, VOXEL_COLORMAP_B / 255.0);
 }

@@ -11,6 +11,7 @@ layout(location = 2) out float voxTexLayer;
 layout(location = 3) out float voxAoLevel;
 layout(location = 4) out vec2 voxLight;
 layout(location = 5) out float voxFactor;
+layout(location = 6) flat out vec3 voxColormap;
 
 #include "basics/structs/camera.glsl"
 uniform sampler2DArray inTexture;
@@ -47,6 +48,9 @@ uniform samplerBuffer inChunkPos;
 #define VOXEL_RCENTERZ ((voxelExtra3 >> 5) & 15)
 #define VOXEL_SHADE ((voxelExtra3 >> 3) & 1)
 #define VOXEL_RANGLE (voxelExtra3 & 7)
+#define VOXEL_COLORMAP_R ((voxelType >> 16) & 0xff)
+#define VOXEL_COLORMAP_G ((voxelType >> 8) & 0xff)
+#define VOXEL_COLORMAP_B ((voxelType) & 0xff)
 
 vec3 rotateVec(vec3 v, float angle, vec3 axis)
 {
@@ -176,4 +180,5 @@ void main()
     {
         voxFactor = 1.0;
     }
+    voxColormap = vec3(VOXEL_COLORMAP_R / 255.0, VOXEL_COLORMAP_G / 255.0, VOXEL_COLORMAP_B / 255.0);
 }
