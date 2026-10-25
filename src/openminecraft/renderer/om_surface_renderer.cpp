@@ -54,7 +54,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     });
     button2->setBackgroundColor({0.17, 0.17, 0.20});
 
-    bgNode = std::make_shared<node::OMDemiurgeShaderSceneNode>("demiurge/scene/train.glsl")
+    bgNode = std::make_shared<node::OMDemiurgeShaderSceneNode>("demiurge/scene/colorful_way.glsl")
                  ->style({
                      {"width", OMDemiurgeSize::fit()},
                      {"height", OMDemiurgeSize::fit()},
