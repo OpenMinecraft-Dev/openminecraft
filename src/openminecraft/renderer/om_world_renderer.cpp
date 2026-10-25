@@ -252,32 +252,65 @@ static auto convert(uint32_t rgb) -> glm::u8vec3
 class OMWorldPaletteProvider : public wrap::OMChunkPaletteProvider
 {
   public:
+    OMWorldPaletteProvider(const std::array<glm::u8vec3, 256 * 256> &grass,
+                           const std::array<glm::u8vec3, 256 * 256> &foliage,
+                           const std::array<glm::u8vec3, 256 * 256> &dryFoliage)
+        : grass(grass), foliage(foliage), dryFoliage(dryFoliage)
+    {
+    }
+
     auto color(const world::OMChunk<16> &chunk, int x, int y, int z, uint32_t blockState, int tintIndex)
         -> glm::u8vec3 override
     {
-        if (blockState < data::block::blockStateRegistry.idToRegistry.size())
-        {
-            const auto &c = data::block::blockStateRegistry.idToRegistry[blockState];
-            switch (data::block::blockRegistry.getRegistry(c.block)->colorSource)
-            {
-            default:
-            case data::block::None:
-                return {255, 255, 255};
-            case data::block::BiomeGrass: {
-                return convert(
-                    data::biome::biomeRegistry.getRegistry(data::OMIdentifier("minecraft:plains"))->grassColor);
-            }
-            case data::block::BiomeWater: {
-                return convert(
-                    data::biome::biomeRegistry.getRegistry(data::OMIdentifier("minecraft:plains"))->waterColor);
-            }
-            }
-        }
-        else
+        if (blockState >= data::block::blockStateRegistry.idToRegistry.size())
         {
             return {255, 255, 255};
         }
+
+        const auto &c = data::block::blockStateRegistry.idToRegistry[blockState];
+        const auto *biome = biomeFor(chunk, x, y, z);
+
+        const float temperature = biome ? biome->temperature : 0.8f;
+        const float downfall = biome ? biome->downfall : 0.4f;
+
+        switch (data::block::blockRegistry.getRegistry(c.block)->colorSource)
+        {
+        default:
+        case data::block::None:
+            return {255, 255, 255};
+        case data::block::BiomeGrass:
+            return colormap(grass, temperature, downfall);
+        case data::block::BiomeFoliage:
+            return colormap(foliage, temperature, downfall);
+        case data::block::BiomeDryFoliage:
+            return colormap(dryFoliage, temperature, downfall);
+        case data::block::BiomeWater:
+            return convert(biome ? biome->waterColor : 0x3F76E4);
+        }
     }
+
+  private:
+    static auto colormap(const std::array<glm::u8vec3, 256 * 256> &map, float temperature, float downfall)
+        -> glm::u8vec3
+    {
+        const double humidity = static_cast<double>(temperature) * downfall;
+        int x = static_cast<int>((1.0 - temperature) * 255.0);
+        int y = static_cast<int>((1.0 - humidity) * 255.0);
+
+        x = x < 0 ? 0 : (x > 255 ? 255 : x);
+        y = y < 0 ? 0 : (y > 255 ? 255 : y);
+
+        return map[y * 256 + x];
+    }
+
+    static auto biomeFor(const world::OMChunk<16> &, int x, int y, int z) -> data::biome::OMBiome *
+    {
+        return data::biome::biomeRegistry.getRegistry(data::OMIdentifier("minecraft:plains")).get();
+    }
+
+    const std::array<glm::u8vec3, 256 * 256> &grass;
+    const std::array<glm::u8vec3, 256 * 256> &foliage;
+    const std::array<glm::u8vec3, 256 * 256> &dryFoliage;
 };
 
 OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::OMCamera> camera,
@@ -395,7 +428,8 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
             h ^= h >> 16;
             return blockStateResolver->fetchModel(reg.block, reg.state, h);
         },
-        colorManager, sunTex, moonTex, cloudTex, stats, std::make_shared<OMWorldPaletteProvider>());
+        colorManager, sunTex, moonTex, cloudTex, stats,
+        std::make_shared<OMWorldPaletteProvider>(grassColor, foliageColor, dryFoliageColor));
 
     voxelManager->bindCameraBuffer(cameraBuffer);
 

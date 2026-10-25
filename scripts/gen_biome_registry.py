@@ -83,7 +83,7 @@ def main():
     parser.add_argument("--output", default="src/openminecraft/data/biome/om_biome_registry.cpp")
     args = parser.parse_args()
 
-    cm = {n: decode_png(os.path.join(args.colormap, n + ".png")) for n in ("grass", "foliage", "dry_foliage")}
+    cm = {n: decode_png(os.path.join(args.colormap, n + ".png")) for n in ("foliage", "dry_foliage")}
 
     lines = []
     for path in sorted(glob.glob(os.path.join(args.datapack, "*.json"))):
@@ -93,15 +93,6 @@ def main():
         downfall = float(b["downfall"])
         eff = b.get("effects", {})
         attrs = b.get("attributes", {})
-
-        grass = colormap(cm["grass"], temp, downfall)
-        if "grass_color" in eff:
-            grass = hexcol(eff["grass_color"])
-        modifier = eff.get("grass_color_modifier")
-        if modifier == "swamp":
-            grass = 0x6A7039
-        elif modifier == "dark_forest":
-            grass = (grass & 0xFEFEFE) >> 1
 
         foliage = hexcol(eff["foliage_color"]) if "foliage_color" in eff else colormap(cm["foliage"], temp, downfall)
         dry = hexcol(eff["dry_foliage_color"]) if "dry_foliage_color" in eff else colormap(cm["dry_foliage"], temp, downfall)
@@ -113,7 +104,6 @@ def main():
             f'    biomeRegistry.registerItem(OMIdentifier("minecraft:{name}"), std::make_shared<OMBiome>()\n'
             f"        ->setTemperature({temp}f)\n"
             f"        ->setDownfall({downfall}f)\n"
-            f"        ->setGrassColor(0x{grass:06X})\n"
             f"        ->setWaterColor(0x{water:06X})\n"
             f"        ->setFoliageColor(0x{foliage:06X})\n"
             f"        ->setDryFoliageColor(0x{dry:06X})\n"
@@ -128,9 +118,9 @@ def main():
 
 // INFO: generated from a datapack export by scripts/gen_biome_registry.py.
 // All colors are baked at generation time:
-//   - grass / foliage / dry_foliage: effects override, otherwise sampled from
+//   - grass / foliage / dry_foliage are NOT baked here: the renderer samples
 //     textures/colormap/{grass,foliage,dry_foliage}.png at (temperature, downfall)
-//   - grass_color_modifier: swamp -> 0x6A7039, dark_forest -> (c & 0xFEFEFE) >> 1
+//     during chunk compilation, so the colors follow each biome's climate.
 //   - water_color: effects.water_color
 //   - sky_color: attributes[ minecraft:visual/sky_color ]
 //   - fog_color: attributes[ minecraft:visual/fog_color ], default 0xC0D8FF

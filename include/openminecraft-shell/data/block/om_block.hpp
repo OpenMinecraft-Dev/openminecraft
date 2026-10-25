@@ -51,6 +51,8 @@ enum OMBlockColorSource
 {
     None,
     BiomeGrass,
+    BiomeFoliage,
+    BiomeDryFoliage,
     BiomeWater,
 };
 class OMBlock : public std::enable_shared_from_this<OMBlock>

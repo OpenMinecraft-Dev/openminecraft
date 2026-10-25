@@ -21,11 +21,6 @@ class OMBiome : public std::enable_shared_from_this<OMBiome>
         this->downfall = downfall;
         return shared_from_this();
     }
-    auto setGrassColor(uint32_t c) -> std::shared_ptr<OMBiome>
-    {
-        this->grassColor = c;
-        return shared_from_this();
-    }
     auto setWaterColor(uint32_t c) -> std::shared_ptr<OMBiome>
     {
         this->waterColor = c;
@@ -55,7 +50,6 @@ class OMBiome : public std::enable_shared_from_this<OMBiome>
     float temperature = 0.8f;
     float downfall = 0.4f;
 
-    uint32_t grassColor = 0x91BD59;
     uint32_t waterColor = 0x3F76E4;
     uint32_t foliageColor = 0x77AB2F;
     uint32_t dryFoliageColor = 0xA37546;
