@@ -248,7 +248,8 @@ void main()
 {
     vec2 uv = fragCoord * vec2(ubo.width / ubo.height, 1.0);
     // uv.x += iTime;
-    float t = time.value * 4.0;
+    // float t = time.value * 4.0;
+    float t = sin(1.2 * time.value) + 4 * time.value;
     vec4 bg = background(uv, t);
 
     vec4 fg = vec4(0.);
