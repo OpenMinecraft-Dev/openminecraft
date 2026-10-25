@@ -80,7 +80,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                std::function<void(bool)> recordTask, OMVoxelHandler *handler,
                                std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> converter,
                                OMVoxelColorManager *colorman, OMRendererTexture *sunTex, OMRendererTexture *moonTex,
-                               OMRendererTexture *cloudTex, std::vector<bool> cloudStats)
+                               OMRendererTexture *cloudTex, std::vector<bool> cloudStats, OMRendererTexture *colormap)
     : logger("OMVoxelManager", this)
 {
     this->recordTask = recordTask;
@@ -93,6 +93,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     this->moonTex = moonTex;
     this->cloudTex = cloudTex;
     this->cloudStats = cloudStats;
+    this->colormap = colormap;
 
     delete compiler.handler;
     compiler.handler = voxelHandler;
@@ -187,6 +188,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->inputName("FogData")
             ->input(ImageSampler)
             ->inputName("inLightmap")
+            ->input(ImageSampler)
+            ->inputName("inColormap")
             ->output(cutoutTargetMS->target)
             ->samples(samples)
             ->setCullMode(renderer::common::Back)
@@ -214,6 +217,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                           ->inputName("FogData")
                           ->input(ImageSampler)
                           ->inputName("inLightmap")
+                          ->input(ImageSampler)
+                          ->inputName("inColormap")
                           ->output(cutoutTargetMS->target)
                           ->samples(samples)
                           ->setCullMode(renderer::common::Back)
@@ -241,6 +246,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                         ->inputName("FogData")
                         ->input(ImageSampler)
                         ->inputName("inLightmap")
+                        ->input(ImageSampler)
+                        ->inputName("inColormap")
                         ->output(cutoutTargetMS->target)
                         ->samples(samples)
                         ->setCullMode(renderer::common::Back)
@@ -268,6 +275,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
             ->inputName("FogData")
             ->input(ImageSampler)
             ->inputName("inLightmap")
+            ->input(ImageSampler)
+            ->inputName("inColormap")
             ->output(translucentTargetMS->target)
             ->samples(samples)
             ->setCullMode(renderer::common::Back)
@@ -295,6 +304,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                      ->inputName("FogData")
                                      ->input(ImageSampler)
                                      ->inputName("inLightmap")
+                                     ->input(ImageSampler)
+                                     ->inputName("inColormap")
                                      ->output(translucentTargetMS->target)
                                      ->samples(samples)
                                      ->setCullMode(renderer::common::Back)
@@ -323,6 +334,8 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
                                    ->inputName("FogData")
                                    ->input(ImageSampler)
                                    ->inputName("inLightmap")
+                                   ->input(ImageSampler)
+                                   ->inputName("inColormap")
                                    ->output(translucentTargetMS->target)
                                    ->samples(samples)
                                    ->setCullMode(renderer::common::Back)
@@ -607,30 +620,42 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
     pipeline->bindInput(2, chunkoffs);
     pipeline->bindInput(3, fogdata);
     pipeline->bindInput(4, lightmap->colorTexture);
+    pipeline->bindInput(5, colormap);
+
     complexPipeline->bindInput(1, textureAtlas);
     complexPipeline->bindInput(2, textureAtlasSecondary);
     complexPipeline->bindInput(3, chunkoffs);
     complexPipeline->bindInput(4, fogdata);
     complexPipeline->bindInput(5, lightmap->colorTexture);
+    complexPipeline->bindInput(6, colormap);
+
     fluidPipeline->bindInput(1, textureAtlas);
     fluidPipeline->bindInput(2, textureAtlasSecondary);
     fluidPipeline->bindInput(3, chunkoffs);
     fluidPipeline->bindInput(4, fogdata);
     fluidPipeline->bindInput(5, lightmap->colorTexture);
+    fluidPipeline->bindInput(6, colormap);
+
     translucentPipeline->bindInput(1, textureAtlas);
     translucentPipeline->bindInput(2, chunkoffs);
     translucentPipeline->bindInput(3, fogdata);
     translucentPipeline->bindInput(4, lightmap->colorTexture);
+    translucentPipeline->bindInput(5, colormap);
+
     translucentComplexPipeline->bindInput(1, textureAtlas);
     translucentComplexPipeline->bindInput(2, textureAtlasSecondary);
     translucentComplexPipeline->bindInput(3, chunkoffs);
     translucentComplexPipeline->bindInput(4, fogdata);
     translucentComplexPipeline->bindInput(5, lightmap->colorTexture);
+    translucentComplexPipeline->bindInput(6, colormap);
+
     translucentFluidPipeline->bindInput(1, textureAtlas);
     translucentFluidPipeline->bindInput(2, textureAtlasSecondary);
     translucentFluidPipeline->bindInput(3, chunkoffs);
     translucentFluidPipeline->bindInput(4, fogdata);
     translucentFluidPipeline->bindInput(5, lightmap->colorTexture);
+    translucentFluidPipeline->bindInput(6, colormap);
+
     skyDiscPipeline->bindInput(1, skydisc);
     lightmapPipeline->bindInput(0, lightmapData);
     skyPipeline->bindInput(0, skydisc);

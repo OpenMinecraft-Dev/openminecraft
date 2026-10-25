@@ -291,6 +291,17 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     cloudTex->minFilter = Nearest;
     cloudTex->setupSampler();
 
+    colormap = renderer->allocateTexture(256, 256, 3, 0, Dim2Array, R8G8B8A8Srgb);
+    i = 0;
+    for (auto v : {"dry_foliage", "foliage", "grass"})
+    {
+        specs::png::OMPngFile f;
+        f.parseBase(vfs::fsfetch(fmt::format("/external/assets/minecraft/textures/colormap/{}.png", v)));
+        colormap->updateData(f.fetchData(), i);
+        ++i;
+    }
+    colormap->setupSampler();
+
     std::vector<bool> stats;
     for (int x = 0; x < 256; ++x)
     {
@@ -327,7 +338,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
             h ^= h >> 16;
             return blockStateResolver->fetchModel(reg.block, reg.state, h);
         },
-        colorManager, sunTex, moonTex, cloudTex, stats);
+        colorManager, sunTex, moonTex, cloudTex, stats, colormap);
 
     voxelManager->bindCameraBuffer(cameraBuffer);
 
@@ -390,6 +401,7 @@ OMWorldRenderer::~OMWorldRenderer()
     delete sunTex;
     delete moonTex;
     delete cloudTex;
+    delete colormap;
 
     delete tempTarget;
     delete voxelHandler;

@@ -46,10 +46,8 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
 
     fontset = std::make_shared<geom::OMFontSet>();
 
-    auto rawfile2 = vfs::fsfetch("/bootassets/openminecraft-boot/font/MapleMono-NF-Regular.ttf");
+    auto rawfile2 = vfs::fsfetch("/bootassets/openminecraft-renderer/font/MapleMono-NF-Regular.ttf");
     fontset->fontList.push_back(std::make_shared<geom::OMFont>(*rawfile2.get()));
-    auto rawfile1 = vfs::fsfetch("/bootassets/openminecraft-boot/font/StarRailFont.ttf");
-    fontset->fontList.push_back(std::make_shared<geom::OMFont>(*rawfile1.get()));
 
     auto button = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     button->setOnClick([&]() {

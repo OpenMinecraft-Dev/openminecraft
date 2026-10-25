@@ -533,7 +533,7 @@ class OMVoxelManager
                    std::shared_ptr<world::OMChunkManager<16>>, std::function<void(bool)>, OMVoxelHandler *,
                    std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)>,
                    OMVoxelColorManager *, OMRendererTexture *, OMRendererTexture *, OMRendererTexture *,
-                   std::vector<bool>);
+                   std::vector<bool>, OMRendererTexture *);
     ~OMVoxelManager();
 
     auto submit(OMRendererTask *, OMRendererTempTarget *, bool = true) -> OMRendererTask *;
@@ -580,6 +580,7 @@ class OMVoxelManager
     OMRendererPipeline *cloudPipeline, *cloudComposePipeline;
     std::vector<bool> cloudStats;
     OMRendererBuffer *cloudBuffer;
+    OMRendererTexture *colormap;
 
   private:
     int samples = 1;
