@@ -1,5 +1,6 @@
 #ifndef OM_RENDERER_BUFFER_HPP
 #define OM_RENDERER_BUFFER_HPP
+#include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/om_renderer_object.hpp"
 #include <fmt/format.h>
 #include <openminecraft/log/om_log_common.hpp>
@@ -33,6 +34,7 @@ class OMRendererBuffer : public OMRendererObject
     const uint64_t length;
     void *data = nullptr;
     bool alwaysMapped = true;
+    basics::OMVertexPropType format = basics::OMVertexPropType::Float;
 
     virtual void updateData(void *src) = 0;
     virtual void updateDataPart(void *src, uint64_t offset, uint64_t length) = 0;

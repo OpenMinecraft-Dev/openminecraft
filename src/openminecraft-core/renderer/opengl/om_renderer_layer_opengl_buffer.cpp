@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_buffer.hpp"
 #include "GL/glcorearb.h"
 #include "openminecraft/mem/om_mem_record.hpp"
+#include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include <algorithm>
@@ -31,14 +32,43 @@ static auto convertFrom(common::OMBufferUsage u) -> GLenum
     }
 }
 
+static auto convertFrom(common::basics::OMVertexPropType type) -> GLenum
+{
+    switch (type)
+    {
+    default:
+    case common::basics::Float:
+        return GL_R32F;
+    case common::basics::Vec2f:
+        return GL_RG32F;
+    case common::basics::Vec3f:
+        return GL_RGB32F;
+    case common::basics::Vec4f:
+        return GL_RGBA32F;
+    case common::basics::Integer:
+        return GL_R32I;
+    case common::basics::Vec2i:
+        return GL_RG32I;
+    case common::basics::Vec3i:
+        return GL_RGB32I;
+    case common::basics::Vec4i:
+        return GL_RGBA32I;
+    case common::basics::UInteger:
+        return GL_R32UI;
+    case common::basics::Vec2ui:
+        return GL_RG32UI;
+    case common::basics::Vec3ui:
+        return GL_RGB32UI;
+    case common::basics::Vec4ui:
+        return GL_RGBA32UI;
+    }
+}
+
 OMRendererBufferOpenGL::OMRendererBufferOpenGL(common::OMBufferUsage usage, uint64_t length, OMRendererOpenGL *renderer)
     : common::OMRendererBuffer(usage, length, renderer), renderer(renderer), length(length), usage(usage)
 {
     renderer->gl.glGenBuffers(1, &buffer);
 
-    // INFO: UniformTexel 必须先把纹理对象创建出来，updateData 内部会绑定它并调用 glTexBuffer。
-    // 之前的顺序是先 updateData 再 glGenTextures，导致 updateData 里使用未初始化的 texel，
-    // 把缓冲区绑到一个不存在的纹理名上，驱动内部状态被破坏后在 updateData 中崩溃。
     if (usage == common::UniformTexel)
     {
         renderer->gl.glGenTextures(1, &texel);
@@ -85,12 +115,9 @@ void OMRendererBufferOpenGL::moveDataPart(uint64_t target, uint64_t original, ui
 
     bind();
 
-    // 覆盖源与目标的整个区间，一次映射即可安全处理重叠搬移
     const uint64_t lo = std::min(target, original);
     const uint64_t hi = std::max(target + length, original + length);
 
-    // INFO: glMapBuffer 在 OpenGL 3.2+ core profile 中不存在（macOS 只提供 glMapBufferRange）；
-    // 调用旧入口会返回 NULL，随后 memcpy 空指针崩溃。这里统一使用 core API 并检查返回值。
     void *data = renderer->gl.glMapBufferRange(convertFrom(usage), static_cast<GLintptr>(lo),
                                                static_cast<GLsizeiptr>(hi - lo), GL_MAP_READ_BIT | GL_MAP_WRITE_BIT);
 
@@ -123,7 +150,6 @@ void OMRendererBufferOpenGL::updateDataPart(void *src, uint64_t offset, uint64_t
 
     if (length > 0)
     {
-        // 同上：core profile 下只能用 glMapBufferRange
         void *data = renderer->gl.glMapBufferRange(convertFrom(usage), static_cast<GLintptr>(offset),
                                                    static_cast<GLsizeiptr>(length),
                                                    GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
@@ -151,7 +177,6 @@ auto OMRendererBufferOpenGL::fetchData() -> std::shared_ptr<void>
 {
     std::shared_ptr<void> result(std::malloc(length), [](void *p) { std::free(p); });
 
-    // 与 copyTo 相同：绑定后用 glGetBufferSubData 读回
     bind();
     renderer->gl.glGetBufferSubData(convertFrom(usage), 0, length, result.get());
     unbind();

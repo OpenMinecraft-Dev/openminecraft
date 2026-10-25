@@ -26,9 +26,9 @@ OMModelPrecompiler::OMModelPrecompiler(std::string root, OMTextureAtlas *atlas)
 {
 }
 
-auto OMModelPrecompiler::queryPartRotationAngleExt(int bsid, int pid) -> glm::vec3
+auto OMModelPrecompiler::queryPartRotationAngleExt(int modelId, int pid) -> glm::vec3
 {
-    return blockModels[bsid].parts[pid].rotateAngleExt;
+    return blockModels[modelId].parts[pid].rotateAngleExt;
 }
 
 static auto fromSide(std::string s) -> OMModelCullSide
@@ -67,61 +67,61 @@ static auto fromAxis(std::string s) -> OMModelAxis
         return Z;
     }
 }
-auto OMModelPrecompiler::querySkipsRendering(int bsid, int tgbsid,
+auto OMModelPrecompiler::querySkipsRendering(int modelId, int tgmodelId,
                                              openminecraft::renderer::common::wrap::OMVoxelFacing d) -> bool
 {
-    const auto &b = block::blockStateRegistry.idToRegistry[bsid];
-    const auto &tb = block::blockStateRegistry.idToRegistry[tgbsid];
+    const auto &b = block::blockStateRegistry.idToRegistry[modelId];
+    const auto &tb = block::blockStateRegistry.idToRegistry[tgmodelId];
     return block::blockRegistry.getRegistry(b.block)->skipsRendering(b, tb, d);
 }
-auto OMModelPrecompiler::queryTranslucent(int bsid) -> bool
+auto OMModelPrecompiler::queryTranslucent(int modelId) -> bool
 {
-    return blockModels[bsid].translucent;
+    return blockModels[modelId].translucent;
 }
 
-auto OMModelPrecompiler::queryPartFaceSecondaryTexture(int bsid, int pid,
+auto OMModelPrecompiler::queryPartFaceSecondaryTexture(int modelId, int pid,
                                                        openminecraft::renderer::common::wrap::OMVoxelFacing f) -> bool
 {
     switch (f)
     {
     default:
     case ::NegX:
-        return blockModels[bsid].parts[pid].west.secondaryTex;
+        return blockModels[modelId].parts[pid].west.secondaryTex;
     case ::PosX:
-        return blockModels[bsid].parts[pid].east.secondaryTex;
+        return blockModels[modelId].parts[pid].east.secondaryTex;
     case ::NegZ:
-        return blockModels[bsid].parts[pid].north.secondaryTex;
+        return blockModels[modelId].parts[pid].north.secondaryTex;
     case ::PosZ:
-        return blockModels[bsid].parts[pid].south.secondaryTex;
+        return blockModels[modelId].parts[pid].south.secondaryTex;
     case ::NegY:
-        return blockModels[bsid].parts[pid].down.secondaryTex;
+        return blockModels[modelId].parts[pid].down.secondaryTex;
     case ::PosY:
-        return blockModels[bsid].parts[pid].up.secondaryTex;
+        return blockModels[modelId].parts[pid].up.secondaryTex;
     }
 }
-auto OMModelPrecompiler::queryPartRotationAngleF(int bsid, int pid) -> float
+auto OMModelPrecompiler::queryPartRotationAngleF(int modelId, int pid) -> float
 {
-    return blockModels[bsid].parts[pid].rotateAngle;
+    return blockModels[modelId].parts[pid].rotateAngle;
 }
 
-auto OMModelPrecompiler::queryPartComplex(int bsid, int pid) -> bool
+auto OMModelPrecompiler::queryPartComplex(int modelId, int pid) -> bool
 {
-    return blockModels[bsid].partComplex[pid];
+    return blockModels[modelId].partComplex[pid];
 }
 
-auto OMModelPrecompiler::queryPartShade(int bsid, int pid) -> bool
+auto OMModelPrecompiler::queryPartShade(int modelId, int pid) -> bool
 {
-    return blockModels[bsid].parts[pid].shade;
+    return blockModels[modelId].parts[pid].shade;
 }
-auto OMModelPrecompiler::queryPartAmbientOcclusion(int bsid, int pid) -> bool
+auto OMModelPrecompiler::queryPartAmbientOcclusion(int modelId, int pid) -> bool
 {
-    return blockModels[bsid].partAmbientOcculusion[pid];
+    return blockModels[modelId].partAmbientOcculusion[pid];
 }
 
-auto OMModelPrecompiler::queryOcclusionShape(int bsid) -> OMVoxelShape
+auto OMModelPrecompiler::queryOcclusionShape(int modelId) -> OMVoxelShape
 {
     std::vector<OMVoxelAABB> r;
-    for (auto &part : blockModels[bsid].parts)
+    for (auto &part : blockModels[modelId].parts)
     {
         r.emplace_back(OMVoxelAABB{part.from, part.to - part.from});
     }
@@ -129,51 +129,52 @@ auto OMModelPrecompiler::queryOcclusionShape(int bsid) -> OMVoxelShape
     return {r};
 }
 
-auto OMModelPrecompiler::queryPartAABB(int bsid, int pid) -> OMVoxelAABB
+auto OMModelPrecompiler::queryPartAABB(int modelId, int pid) -> OMVoxelAABB
 {
-    return {blockModels[bsid].parts[pid].from, blockModels[bsid].parts[pid].to - blockModels[bsid].parts[pid].from};
+    return {blockModels[modelId].parts[pid].from,
+            blockModels[modelId].parts[pid].to - blockModels[modelId].parts[pid].from};
 }
 
-auto OMModelPrecompiler::queryNumParts(int bsid) -> int
+auto OMModelPrecompiler::queryNumParts(int modelId) -> int
 {
-    return blockModels[bsid].parts.size();
+    return blockModels[modelId].parts.size();
 }
-auto OMModelPrecompiler::queryPartFaceEnabled(int bsid, int pid, ::OMVoxelFacing f) -> bool
+auto OMModelPrecompiler::queryPartFaceEnabled(int modelId, int pid, ::OMVoxelFacing f) -> bool
 {
     switch (f)
     {
     default:
     case ::NegX:
-        return blockModels[bsid].parts[pid].enableWest;
+        return blockModels[modelId].parts[pid].enableWest;
     case ::PosX:
-        return blockModels[bsid].parts[pid].enableEast;
+        return blockModels[modelId].parts[pid].enableEast;
     case ::NegZ:
-        return blockModels[bsid].parts[pid].enableNorth;
+        return blockModels[modelId].parts[pid].enableNorth;
     case ::PosZ:
-        return blockModels[bsid].parts[pid].enableSouth;
+        return blockModels[modelId].parts[pid].enableSouth;
     case ::NegY:
-        return blockModels[bsid].parts[pid].enableDown;
+        return blockModels[modelId].parts[pid].enableDown;
     case ::PosY:
-        return blockModels[bsid].parts[pid].enableUp;
+        return blockModels[modelId].parts[pid].enableUp;
     }
 }
-auto OMModelPrecompiler::queryPartFaceTex(int bsid, int pid, ::OMVoxelFacing f) -> int
+auto OMModelPrecompiler::queryPartFaceTex(int modelId, int pid, ::OMVoxelFacing f) -> int
 {
     switch (f)
     {
     default:
     case ::NegX:
-        return blockModels[bsid].parts[pid].west.textureid;
+        return blockModels[modelId].parts[pid].west.textureid;
     case ::PosX:
-        return blockModels[bsid].parts[pid].east.textureid;
+        return blockModels[modelId].parts[pid].east.textureid;
     case ::NegZ:
-        return blockModels[bsid].parts[pid].north.textureid;
+        return blockModels[modelId].parts[pid].north.textureid;
     case ::PosZ:
-        return blockModels[bsid].parts[pid].south.textureid;
+        return blockModels[modelId].parts[pid].south.textureid;
     case ::NegY:
-        return blockModels[bsid].parts[pid].down.textureid;
+        return blockModels[modelId].parts[pid].down.textureid;
     case ::PosY:
-        return blockModels[bsid].parts[pid].up.textureid;
+        return blockModels[modelId].parts[pid].up.textureid;
     }
 }
 auto cullFaceTo(OMModelCullSide s) -> ::OMVoxelFacing
@@ -197,27 +198,27 @@ auto cullFaceTo(OMModelCullSide s) -> ::OMVoxelFacing
         return openminecraft::renderer::common::wrap::None;
     }
 }
-auto OMModelPrecompiler::queryPartFaceCull(int bsid, int pid, ::OMVoxelFacing f) -> ::OMVoxelFacing
+auto OMModelPrecompiler::queryPartFaceCull(int modelId, int pid, ::OMVoxelFacing f) -> ::OMVoxelFacing
 {
     switch (f)
     {
     default:
     case ::NegX:
-        return cullFaceTo(blockModels[bsid].parts[pid].west.cull);
+        return cullFaceTo(blockModels[modelId].parts[pid].west.cull);
     case ::PosX:
-        return cullFaceTo(blockModels[bsid].parts[pid].east.cull);
+        return cullFaceTo(blockModels[modelId].parts[pid].east.cull);
     case ::NegZ:
-        return cullFaceTo(blockModels[bsid].parts[pid].north.cull);
+        return cullFaceTo(blockModels[modelId].parts[pid].north.cull);
     case ::PosZ:
-        return cullFaceTo(blockModels[bsid].parts[pid].south.cull);
+        return cullFaceTo(blockModels[modelId].parts[pid].south.cull);
     case ::NegY:
-        return cullFaceTo(blockModels[bsid].parts[pid].down.cull);
+        return cullFaceTo(blockModels[modelId].parts[pid].down.cull);
     case ::PosY:
-        return cullFaceTo(blockModels[bsid].parts[pid].up.cull);
+        return cullFaceTo(blockModels[modelId].parts[pid].up.cull);
     }
 }
 
-auto OMModelPrecompiler::queryPartFaceUV(int bsid, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing f)
+auto OMModelPrecompiler::queryPartFaceUV(int modelId, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing f)
     -> glm::vec4
 {
     glm::vec2 uv0, uv1;
@@ -225,104 +226,104 @@ auto OMModelPrecompiler::queryPartFaceUV(int bsid, int pid, openminecraft::rende
     {
     default:
     case ::NegX:
-        uv0 = blockModels[bsid].parts[pid].west.uv0;
-        uv1 = blockModels[bsid].parts[pid].west.uv1;
+        uv0 = blockModels[modelId].parts[pid].west.uv0;
+        uv1 = blockModels[modelId].parts[pid].west.uv1;
         break;
     case ::PosX:
-        uv0 = blockModels[bsid].parts[pid].east.uv0;
-        uv1 = blockModels[bsid].parts[pid].east.uv1;
+        uv0 = blockModels[modelId].parts[pid].east.uv0;
+        uv1 = blockModels[modelId].parts[pid].east.uv1;
         break;
     case ::NegZ:
-        uv0 = blockModels[bsid].parts[pid].north.uv0;
-        uv1 = blockModels[bsid].parts[pid].north.uv1;
+        uv0 = blockModels[modelId].parts[pid].north.uv0;
+        uv1 = blockModels[modelId].parts[pid].north.uv1;
         break;
     case ::PosZ:
-        uv0 = blockModels[bsid].parts[pid].south.uv0;
-        uv1 = blockModels[bsid].parts[pid].south.uv1;
+        uv0 = blockModels[modelId].parts[pid].south.uv0;
+        uv1 = blockModels[modelId].parts[pid].south.uv1;
         break;
     case ::NegY:
-        uv0 = blockModels[bsid].parts[pid].down.uv0;
-        uv1 = blockModels[bsid].parts[pid].down.uv1;
+        uv0 = blockModels[modelId].parts[pid].down.uv0;
+        uv1 = blockModels[modelId].parts[pid].down.uv1;
         break;
     case ::PosY:
-        uv0 = blockModels[bsid].parts[pid].up.uv0;
-        uv1 = blockModels[bsid].parts[pid].up.uv1;
+        uv0 = blockModels[modelId].parts[pid].up.uv0;
+        uv1 = blockModels[modelId].parts[pid].up.uv1;
         break;
     }
     return {uv0.x, uv0.y, uv1.x, uv1.y};
 }
 
-auto OMModelPrecompiler::queryPartFaceRotation(int bsid, int pid,
+auto OMModelPrecompiler::queryPartFaceRotation(int modelId, int pid,
                                                openminecraft::renderer::common::wrap::OMVoxelFacing f) -> int
 {
     switch (f)
     {
     default:
     case ::NegX:
-        return blockModels[bsid].parts[pid].west.rotation / 90;
+        return blockModels[modelId].parts[pid].west.rotation / 90;
     case ::PosX:
-        return blockModels[bsid].parts[pid].east.rotation / 90;
+        return blockModels[modelId].parts[pid].east.rotation / 90;
     case ::NegZ:
-        return blockModels[bsid].parts[pid].north.rotation / 90;
+        return blockModels[modelId].parts[pid].north.rotation / 90;
     case ::PosZ:
-        return blockModels[bsid].parts[pid].south.rotation / 90;
+        return blockModels[modelId].parts[pid].south.rotation / 90;
     case ::NegY:
-        return blockModels[bsid].parts[pid].down.rotation / 90;
+        return blockModels[modelId].parts[pid].down.rotation / 90;
     case ::PosY:
-        return blockModels[bsid].parts[pid].up.rotation / 90;
+        return blockModels[modelId].parts[pid].up.rotation / 90;
     }
 }
 
-auto OMModelPrecompiler::queryPartRotationAxis(int bsid, int pid) -> int
+auto OMModelPrecompiler::queryPartRotationAxis(int modelId, int pid) -> int
 {
-    return blockModels[bsid].parts[pid].rotateAxis;
+    return blockModels[modelId].parts[pid].rotateAxis;
 }
 
-auto OMModelPrecompiler::queryPartRotationCenter(int bsid, int pid) -> glm::vec3
+auto OMModelPrecompiler::queryPartRotationCenter(int modelId, int pid) -> glm::vec3
 {
-    return blockModels[bsid].parts[pid].rotateOrigin;
+    return blockModels[modelId].parts[pid].rotateOrigin;
 }
 
-auto OMModelPrecompiler::queryPartRotationAngle(int bsid, int pid) -> int
+auto OMModelPrecompiler::queryPartRotationAngle(int modelId, int pid) -> int
 {
-    return static_cast<float>(blockModels[bsid].parts[pid].rotateAngle + 45) / 22.5f;
+    return static_cast<float>(blockModels[modelId].parts[pid].rotateAngle + 45) / 22.5f;
 }
 
-auto OMModelPrecompiler::querySoild(int bsid) -> bool
+auto OMModelPrecompiler::querySoild(int modelId) -> bool
 {
-    return blockModels[bsid].soild;
+    return blockModels[modelId].soild;
 }
 
-auto OMModelPrecompiler::queryFluid(int bsid) -> bool
+auto OMModelPrecompiler::queryFluid(int modelId) -> bool
 {
-    return blockModels[bsid].fluid;
+    return blockModels[modelId].fluid;
 }
 
-auto OMModelPrecompiler::queryFluidFalling(int bsid) -> bool
+auto OMModelPrecompiler::queryFluidFalling(int modelId) -> bool
 {
-    return blockModels[bsid].fluidFalling;
+    return blockModels[modelId].fluidFalling;
 }
-auto OMModelPrecompiler::queryFluidLevel(int bsid) -> uint8_t
+auto OMModelPrecompiler::queryFluidLevel(int modelId) -> uint8_t
 {
-    return blockModels[bsid].fluidLevel;
+    return blockModels[modelId].fluidLevel;
 }
-auto OMModelPrecompiler::queryFluidTex(int bsid) -> int
+auto OMModelPrecompiler::queryFluidTex(int modelId) -> int
 {
-    return blockModels[bsid].fluidTex;
+    return blockModels[modelId].fluidTex;
 }
-auto OMModelPrecompiler::queryWaterlogged(int bsid) -> bool
+auto OMModelPrecompiler::queryWaterlogged(int modelId) -> bool
 {
-    return blockModels[bsid].waterlogged;
-}
-
-auto OMModelPrecompiler::queryFluidSame(int bsid1, int bsid2) -> bool
-{
-    return fluidModels[bsid1] == fluidModels[bsid2];
+    return blockModels[modelId].waterlogged;
 }
 
-auto OMModelPrecompiler::queryFluidTexSec(int bsid) -> int
+auto OMModelPrecompiler::queryFluidSame(int modelId1, int modelId2) -> bool
 {
-    return blockModels[bsid].fluidTexFlow;
+    return fluidModels[modelId1] == fluidModels[modelId2];
+}
+
+auto OMModelPrecompiler::queryFluidTexSec(int modelId) -> int
+{
+    return blockModels[modelId].fluidTexFlow;
 }
 
 auto OMModelPrecompiler::loadModelPart(OMIdentifier i) -> int

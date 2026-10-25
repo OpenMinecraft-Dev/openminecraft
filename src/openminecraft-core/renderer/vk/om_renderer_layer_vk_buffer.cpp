@@ -229,14 +229,12 @@ auto OMRendererBufferVk::fetchData() -> std::shared_ptr<void>
     {
         auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
 
-        // 确保 GPU 已写完
         renderer->logicalDevice.waitIdle();
 
         std::shared_ptr<void> result(std::malloc(this->length), [](void *p) { std::free(p); });
 
         if (alwaysMapped && data != nullptr)
         {
-            // 持久映射（默认）：HOST_COHERENT，直接拷贝，不能再 vkMapMemory
             std::memcpy(result.get(), data, this->length);
         }
         else

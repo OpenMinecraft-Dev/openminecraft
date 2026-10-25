@@ -1,6 +1,7 @@
 #ifndef OM_RENDERER_VOXEL_HPP
 #define OM_RENDERER_VOXEL_HPP
 
+#include "glm/ext/vector_float3.hpp"
 #include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 #include "openminecraft/log/om_log_common.hpp"

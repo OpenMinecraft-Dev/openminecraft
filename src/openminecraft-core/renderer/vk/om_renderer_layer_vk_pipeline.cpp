@@ -205,8 +205,8 @@ void OMRendererPipelineVk::bindInput(int idx, common::OMRendererBuffer *buff)
         if (buff->usage == common::UniformTexel)
         {
             auto bv = renderer->logicalDevice.createBufferView(
-                BufferViewCreateInfo({}, reinterpret_cast<OMRendererBufferVk *>(buff)->buffer, Format::eR32Sfloat, 0,
-                                     static_cast<DeviceSize>(buff->length)),
+                BufferViewCreateInfo({}, reinterpret_cast<OMRendererBufferVk *>(buff)->buffer, convertTo(buff->format),
+                                     0, static_cast<DeviceSize>(buff->length)),
                 renderer->allocator);
             tempBufferViews.push_back(bv);
             renderer->logicalDevice.updateDescriptorSets(
