@@ -338,7 +338,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
             h ^= h >> 16;
             return blockStateResolver->fetchModel(reg.block, reg.state, h);
         },
-        colorManager, sunTex, moonTex, cloudTex, stats, colormap);
+        colorManager, sunTex, moonTex, cloudTex, stats);
 
     voxelManager->bindCameraBuffer(cameraBuffer);
 

@@ -7,7 +7,6 @@ layout(location = 2) in float voxTexLayer;
 layout(location = 3) in float voxAoLevel;
 layout(location = 4) in vec2 voxLight;
 layout(location = 5) in float voxFactor;
-layout(location = 6) flat in int voxColormap;
 
 layout(location = 0) out vec4 outColor;
 
@@ -18,7 +17,6 @@ uniform sampler2DArray inTexture;
 uniform samplerBuffer inChunkPos;
 #include "basics/structs/fog.glsl"
 uniform sampler2D inLightmap;
-uniform sampler2DArray inColormap;
 
 void main()
 {
@@ -33,11 +31,6 @@ void main()
         discard;
     }
     vec3 result = voxFactor * ao * texColor.rgb;
-
-    if (voxColormap == 1)
-    {
-        result *= texture(inColormap, vec3(0.2, 0.2, 2)).rgb;
-    }
 
     outColor = fog_gen(vec4(result, texColor.a) * texture(inLightmap, voxLight), fog.fogStart, fog.fogEnd,
                        vec3(fog.fogR, fog.fogG, fog.fogB), 1.0);

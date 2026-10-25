@@ -27,20 +27,18 @@ OMVoxelCompiler::~OMVoxelCompiler()
 // L -> Voxel Block Light (4 * 4 bits)
 // h -> Voxel Fluid Corner Heights (4 * 8 bits)
 // S -> Voxel Fluid Source flag (1 bit)
-// M -> Voxel Colormap (1 bit)
 // u -> unused
-// xxxx yyyy zzzz efff uuuu uuuu uuuM cccS
+// xxxx yyyy zzzz efff uuuu uuuu uuuu cccS
 // uutt tttt tttt tttt cccc cccc cccc cccc
 // llll llll llll llll LLLL LLLL LLLL LLLL
 // hhhh hhhh hhhh hhhh hhhh hhhh hhhh hhhh
 static constexpr auto packVoxelFluid(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint16_t tex, int32_t chkid,
                                      uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4, uint8_t bl1, uint8_t bl2,
                                      uint8_t bl3, uint8_t bl4, uint8_t h1, uint8_t h2, uint8_t h3, uint8_t h4,
-                                     bool source, bool colormap) -> std::array<int, 4>
+                                     bool source) -> std::array<int, 4>
 {
     return {
-        x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | colormap << 4 | (((chkid >> 16) & 7) << 1) |
-            source,
+        x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | (((chkid >> 16) & 7) << 1) | source,
         ((tex & 0x3fff) << 16) | (chkid & 0xffff),
         ((l1 & 0xf) << 28) | ((l2 & 0xf) << 24) | ((l3 & 0xf) << 20) | ((l4 & 0xf) << 16) | ((bl1 & 0xf) << 12) |
             ((bl2 & 0xf) << 8) | ((bl3 & 0xf) << 4) | (bl4 & 0xf),
@@ -69,21 +67,20 @@ static constexpr auto packVoxelFluid(uint8_t x, uint8_t y, uint8_t z, OMVoxelFac
 // C -> Voxel Rotation Center (3 * 5 bits)
 // n -> Voxel Angle (3 bits)
 // S -> Voxel Shade (1 bit)
-// M -> Voxel Colormap (1 bit)
 // u -> unused
 // INFO: packed vertex structure in u32
 // xxxx yyyy zzzz efff XXXX YYYY ZZZZ cccU
 // rrtt tttt tttt tttt cccc cccc cccc cccc
 // llll llll llll llll LLLL LLLL LLLL LLLL
 // sssss sssss sssss U UUUU UUUU aaaa aaaa
-// UUUUU UUUUU AA CCC CCCC CCCC CCCC MSnnn
+// UUUUU UUUUU AA CCC CCCC CCCC CCCC uSnnn
 static constexpr auto packVoxel(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint8_t dx, uint8_t dy,
                                 uint8_t dz, uint16_t tex, int32_t chkid, uint8_t rotation, uint8_t l1, uint8_t l2,
                                 uint8_t l3, uint8_t l4, uint8_t bl1, uint8_t bl2, uint8_t bl3, uint8_t bl4,
                                 uint8_t scaleX, uint8_t scaleY, uint8_t scaleZ, uint8_t ao1, uint8_t ao2, uint8_t ao3,
                                 uint8_t ao4, uint8_t u0, uint8_t v0, uint8_t u1, uint8_t v1, uint8_t rotationAxis,
                                 uint8_t rotationCx, uint8_t rotationCy, uint8_t rotationCz, bool rCxNeg, bool rCyNeg,
-                                bool rCzNeg, uint8_t rAngle, bool shade, bool colormap) -> std::array<int, 5>
+                                bool rCzNeg, uint8_t rAngle, bool shade) -> std::array<int, 5>
 {
     return {
         x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | dx << 12 | dy << 8 | dz << 4 |
@@ -95,7 +92,7 @@ static constexpr auto packVoxel(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing f
             ao4 | ((v0 & 0x1f) << 12) | ((u0 & 0xf) << 8),
         ((u1 & 0x1f) << 27) | ((v1 & 0x1f) << 22) | ((rotationAxis & 3) << 20) | (rCxNeg << 19) | (rCyNeg << 18) |
             (rCzNeg << 17) | ((rotationCx & 0xf) << 13) | ((rotationCy & 0xf) << 9) | ((rotationCz & 0xf) << 5) |
-            (colormap << 4) | (shade << 3) | (rAngle & 7),
+            (shade << 3) | (rAngle & 7),
     };
 }
 // INFO: letter -> meanings
@@ -111,7 +108,6 @@ static constexpr auto packVoxel(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing f
 // l -> Voxel Sky Light (4 * 4 bits)
 // L -> Voxel Block Light (4 * 4 bits)
 // S -> Voxel Shade (1 bit)
-// M -> Voxel Colormap (1 bit)
 // X/Y/Z -> Voxel Div Coordinate (3 floats)
 // U -> Voxel UV Offset (4 floats)
 // A -> Voxel Rotation Axis (2 bits)
@@ -121,7 +117,7 @@ static constexpr auto packVoxel(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing f
 // c -> Voxel Size (3 floats)
 // u -> unused
 // INFO: packed vertex structure in u32
-// xxxx yyyy zzzz efff cccs AASM aaaa aaaa
+// xxxx yyyy zzzz efff cccs AASu aaaa aaaa
 // rrtt tttt tttt tttt cccc cccc cccc cccc
 // llll llll llll llll LLLL LLLL LLLL LLLL
 // XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX
@@ -141,14 +137,14 @@ static constexpr auto packVoxel(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing f
 static constexpr auto packVoxelComplex(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, bool texSec, uint16_t tex,
                                        int32_t chkid, uint8_t rotation, uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4,
                                        uint8_t bl1, uint8_t bl2, uint8_t bl3, uint8_t bl4, uint8_t ao1, uint8_t ao2,
-                                       uint8_t ao3, uint8_t ao4, bool shade, bool colormap, glm::vec3 modelOffset,
-                                       glm::vec2 uv0, glm::vec2 uv1, uint8_t rotationAxis, float rotationAngle,
+                                       uint8_t ao3, uint8_t ao4, bool shade, glm::vec3 modelOffset, glm::vec2 uv0,
+                                       glm::vec2 uv1, uint8_t rotationAxis, float rotationAngle,
                                        glm::vec3 rotationCenter, glm::vec3 modelSize, glm::vec3 angleExt)
     -> std::tuple<int32_t, int32_t, int32_t, glm::vec3, glm::vec2, glm::vec2, float, glm::vec3, glm::vec3, float, float>
 {
     return std::make_tuple(x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | (((chkid >> 16) & 7) << 13) |
-                               (texSec << 12) | ((rotationAxis & 3) << 10) | (shade << 9) | (colormap << 8) |
-                               (ao1 << 6) | (ao2 << 4) | (ao3 << 2) | ao4,
+                               (texSec << 12) | ((rotationAxis & 3) << 10) | (shade << 9) | (ao1 << 6) | (ao2 << 4) |
+                               (ao3 << 2) | ao4,
                            (rotation << 30) | ((tex & 0x3fff) << 16) | (chkid & 0xffff),
                            ((l1 & 0xf) << 28) | ((l2 & 0xf) << 24) | ((l3 & 0xf) << 20) | ((l4 & 0xf) << 16) |
                                ((bl1 & 0xf) << 12) | ((bl2 & 0xf) << 8) | ((bl3 & 0xf) << 4) | (bl4 & 0xf),
@@ -481,7 +477,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                     auto vox = packVoxelFluid(v.first.x, v.first.y, v.first.z, f,
                                               useSec ? handler->queryFluidTexSec(bsid) : handler->queryFluidTex(bsid),
                                               chunkid, 15, 15, 15, 15, 0, 0, 0, 0, cornerHeights[0], cornerHeights[1],
-                                              cornerHeights[2], cornerHeights[3], useSec, false);
+                                              cornerHeights[2], cornerHeights[3], useSec);
                     (trans || handler->queryWaterlogged(bsid) ? committerTranslucentFluid : committerFluid)(
                         OMVoxelFluid{vox[0], vox[1], vox[2], vox[3]});
                 }
@@ -516,7 +512,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                         auto vox = packVoxelComplex(
                             v.first.x, v.first.y, v.first.z, f, texSec, handler->queryPartFaceTex(bsid, i, f), chunkid,
                             handler->queryPartFaceRotation(bsid, i, f), 15, 15, 15, 15, 0, 0, 0, 0, ao1, ao2, ao3, ao4,
-                            handler->queryPartShade(bsid, i), false, aabb.offset, {uv.x, uv.y}, {uv.z, uv.w},
+                            handler->queryPartShade(bsid, i), aabb.offset, {uv.x, uv.y}, {uv.z, uv.w},
                             handler->queryPartRotationAxis(bsid, i), rotationAngle, raxis, aabb.size,
                             handler->queryPartRotationAngleExt(bsid, i));
                         (trans ? committerTranslucentComplex : committerComplex)(
@@ -533,7 +529,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                                   aabb.size.y, aabb.size.z, ao1, ao2, ao3, ao4, uv.x, uv.y, uv.z, uv.w,
                                   handler->queryPartRotationAxis(bsid, i), std::abs(raxis.x), std::abs(raxis.y),
                                   std::abs(raxis.z), raxis.x < 0, raxis.y < 0, raxis.z < 0,
-                                  handler->queryPartRotationAngle(bsid, i), handler->queryPartShade(bsid, i), false);
+                                  handler->queryPartRotationAngle(bsid, i), handler->queryPartShade(bsid, i));
                     (trans ? committerTranslucent : committer)(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4]});
                 }
             }
