@@ -18,14 +18,16 @@ time;
 
 float hash(vec2 p)
 {
-    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+    p = mod(p, 256.0);
+
+    return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
 }
 
 float noise(vec2 x)
 {
     vec2 p = floor(x);
     vec2 f = fract(x);
-    vec2 u = f * f * (3.0 - 2.0 * f);
+    vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
 
     float a = hash(p);
     float b = hash(p + vec2(1.0, 0.0));
