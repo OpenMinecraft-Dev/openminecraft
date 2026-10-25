@@ -79,6 +79,11 @@ class OMBlock : public std::enable_shared_from_this<OMBlock>
         properties[n] = values;
         return shared_from_this();
     }
+    auto prop(std::string n, std::vector<std::string> values) -> std::shared_ptr<OMBlock>
+    {
+        properties[n] = values;
+        return shared_from_this();
+    }
     auto propFacing() -> std::shared_ptr<OMBlock>
     {
         return prop("facing", {"east", "west", "north", "south"});

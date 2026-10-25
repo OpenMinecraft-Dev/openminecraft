@@ -17,7 +17,6 @@ inline auto operator==(const OMBlockStateCombined &lhs, const OMBlockStateCombin
     return lhs.block == rhs.block && lhs.state == rhs.state;
 }
 
-// 用 "minecraft:water[falling=false,level=1]" 这种文本形式构建 key
 inline auto makeBlockState(const std::string &identifier) -> OMBlockStateCombined
 {
     const auto bracket = identifier.find('[');
@@ -28,9 +27,9 @@ inline auto makeBlockState(const std::string &identifier) -> OMBlockStateCombine
     }
 
     const auto end = identifier.rfind(']');
-    const std::string props =
-        (end == std::string::npos || end <= bracket + 1) ? std::string()
-                                                        : identifier.substr(bracket + 1, end - bracket - 1);
+    const std::string props = (end == std::string::npos || end <= bracket + 1)
+                                  ? std::string()
+                                  : identifier.substr(bracket + 1, end - bracket - 1);
 
     return {OMIdentifier(identifier.substr(0, bracket)), OMBlockState(props)};
 }

@@ -5,11 +5,23 @@
 #include "openminecraft/specs/zlib/om_zlib_inflaterstream.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include <memory>
+#include <unordered_map>
 
 namespace openminecraft::shell::data::block
 {
 OMWorldRegistry<OMIdentifier, std::shared_ptr<OMBlock>> &blockRegistry =
     *new OMWorldRegistry<OMIdentifier, std::shared_ptr<OMBlock>>();
+
+static std::unordered_map<OMIdentifier, std::unordered_map<std::string, std::vector<std::string>>> blkData;
+
+static void registerBlock(OMIdentifier ident, std::shared_ptr<OMBlock> blk)
+{
+    for (const auto &p : blkData[ident])
+    {
+        blk->prop(p.first, p.second);
+    }
+    blockRegistry.registerItem(ident, blk);
+}
 
 void registerBlocks()
 {
@@ -17,56 +29,43 @@ void registerBlocks()
         std::make_shared<specs::zlib::OMZlibInflaterStream>(vfs::fsfetch("/bootassets/minecraft/blocks.json.zlib"))));
     auto document = bld.build();
 
-    blockRegistry.registerItem(OMIdentifier("minecraft:air"), std::make_shared<OMBlock>()->isSolid(false));
-    blockRegistry.registerItem(OMIdentifier("minecraft:stone"), std::make_shared<OMBlock>()->isSolid(true));
-    blockRegistry.registerItem(OMIdentifier("minecraft:cobblestone"), std::make_shared<OMBlock>()->isSolid(true));
-    blockRegistry.registerItem(OMIdentifier("minecraft:coal_ore"), std::make_shared<OMBlock>()->isSolid(true));
-    blockRegistry.registerItem(OMIdentifier("minecraft:iron_ore"), std::make_shared<OMBlock>()->isSolid(true));
-    blockRegistry.registerItem(OMIdentifier("minecraft:dirt"), std::make_shared<OMBlock>()->isSolid(true));
-    blockRegistry.registerItem(OMIdentifier("minecraft:copper_ore"), std::make_shared<OMBlock>()->isSolid(true));
-    blockRegistry.registerItem(OMIdentifier("minecraft:tall_grass"),
-                               std::make_shared<OMBlock>()->isSolid(false)->propHalf());
-    blockRegistry.registerItem(
-        OMIdentifier("minecraft:cherry_stairs"),
-        std::make_shared<OMBlock>()
-            ->isSolid(false)
-            ->propFacing()
-            ->prop("half", {"top", "bottom"})
-            ->prop("shape", {"straight", "inner_left", "inner_right", "outer_left", "outer_right"})
-            ->propWaterlogged());
-    blockRegistry.registerItem(
-        OMIdentifier("minecraft:cherry_door"),
-        std::make_shared<OMBlock>()->isSolid(false)->propFacing()->propHalf()->propHinge()->propOpen()->propPowered());
-    blockRegistry.registerItem(OMIdentifier("minecraft:cherry_hanging_sign"), std::make_shared<OMBlock>()
-                                                                                  ->isSolid(false)
-                                                                                  ->prop("attached", {"true", "false"})
-                                                                                  ->propRotation()
-                                                                                  ->propWaterlogged());
-    blockRegistry.registerItem(OMIdentifier("minecraft:cherry_button"),
-                               std::make_shared<OMBlock>()->isSolid(false)->propFace()->propFacing()->propPowered());
-    blockRegistry.registerItem(OMIdentifier("minecraft:cherry_shelf"),
-                               std::make_shared<OMBlock>()->isSolid(false)->propFacing()->propPowered()->prop(
-                                   "side_chain", {"unconnected", "left", "right", "center"}));
-    blockRegistry.registerItem(OMIdentifier("minecraft:grass_block"),
-                               std::make_shared<OMBlock>()->isSolid(true)->propSnowy());
-    blockRegistry.registerItem(OMIdentifier("minecraft:cherry_fence_gate"), std::make_shared<OMBlock>()
-                                                                                ->isSolid(false)
-                                                                                ->propFacing()
-                                                                                ->propInWall()
-                                                                                ->propOpen()
-                                                                                ->propPowered()
-                                                                                ->propWaterlogged());
-    blockRegistry.registerItem(
-        OMIdentifier("minecraft:rail"),
-        std::make_shared<OMBlock>()->isSolid(false)->prop(
-            "shape", {"north_south", "east_west", "ascending_east", "ascending_west", "ascending_north",
-                      "ascending_south", "south_east", "south_west", "north_east", "north_west"}));
-    blockRegistry.registerItem(OMIdentifier("minecraft:white_stained_glass"),
-                               std::make_shared<OMTransparentBlock>()->isSolid(false)->isTranslucent(true));
-    blockRegistry.registerItem(OMIdentifier("minecraft:glass"),
-                               std::make_shared<OMTransparentBlock>()->isSolid(false)->isTranslucent(true));
-    blockRegistry.registerItem(OMIdentifier("minecraft:stone_pressure_plate"),
-                               std::make_shared<OMBlock>()->isSolid(false)->propPowered());
+    for (const auto &p : document->getMap())
+    {
+        auto sub = p.second->getMap();
+        auto ident = OMIdentifier(p.first);
+        if (sub.count("properties"))
+        {
+            for (const auto &pp : sub["properties"]->getMap())
+            {
+                for (const auto &t : pp.second->getArray())
+                {
+                    blkData[ident][pp.first].push_back(t->getString());
+                }
+            }
+        }
+    }
+
+    registerBlock(OMIdentifier("minecraft:air"), std::make_shared<OMBlock>()->isSolid(false));
+    registerBlock(OMIdentifier("minecraft:stone"), std::make_shared<OMBlock>()->isSolid(true));
+    registerBlock(OMIdentifier("minecraft:cobblestone"), std::make_shared<OMBlock>()->isSolid(true));
+    registerBlock(OMIdentifier("minecraft:coal_ore"), std::make_shared<OMBlock>()->isSolid(true));
+    registerBlock(OMIdentifier("minecraft:iron_ore"), std::make_shared<OMBlock>()->isSolid(true));
+    registerBlock(OMIdentifier("minecraft:dirt"), std::make_shared<OMBlock>()->isSolid(true));
+    registerBlock(OMIdentifier("minecraft:copper_ore"), std::make_shared<OMBlock>()->isSolid(true));
+    registerBlock(OMIdentifier("minecraft:tall_grass"), std::make_shared<OMBlock>()->isSolid(false));
+    registerBlock(OMIdentifier("minecraft:cherry_stairs"), std::make_shared<OMBlock>()->isSolid(false));
+    registerBlock(OMIdentifier("minecraft:cherry_door"), std::make_shared<OMBlock>()->isSolid(false));
+    registerBlock(OMIdentifier("minecraft:cherry_hanging_sign"), std::make_shared<OMBlock>()->isSolid(false));
+    registerBlock(OMIdentifier("minecraft:cherry_button"), std::make_shared<OMBlock>()->isSolid(false));
+    registerBlock(OMIdentifier("minecraft:cherry_shelf"), std::make_shared<OMBlock>()->isSolid(false));
+    registerBlock(OMIdentifier("minecraft:grass_block"), std::make_shared<OMBlock>()->isSolid(true));
+    registerBlock(OMIdentifier("minecraft:cherry_fence_gate"), std::make_shared<OMBlock>()->isSolid(false));
+    registerBlock(OMIdentifier("minecraft:rail"), std::make_shared<OMBlock>()->isSolid(false));
+    registerBlock(OMIdentifier("minecraft:white_stained_glass"),
+                  std::make_shared<OMTransparentBlock>()->isSolid(false)->isTranslucent(true));
+    registerBlock(OMIdentifier("minecraft:glass"),
+                  std::make_shared<OMTransparentBlock>()->isSolid(false)->isTranslucent(true));
+    registerBlock(OMIdentifier("minecraft:stone_pressure_plate"), std::make_shared<OMBlock>()->isSolid(false));
     blockRegistry.registerItem(
         OMIdentifier("minecraft:water"),
         std::make_shared<OMBlock>()
