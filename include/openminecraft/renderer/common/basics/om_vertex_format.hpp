@@ -122,7 +122,19 @@ enum OMVertexPropType
     Double,
     Vec2d,
     Vec3d,
-    Vec4d
+    Vec4d,
+    HalfFloat,
+    Vec2hf,
+    Vec3hf,
+    Vec4hf,
+    Short,
+    Vec2s,
+    Vec3s,
+    Vec4s,
+    UShort,
+    Vec2us,
+    Vec3us,
+    Vec4us,
 };
 
 struct OMVertexFormatGroup

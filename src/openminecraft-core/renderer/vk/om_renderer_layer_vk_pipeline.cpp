@@ -147,6 +147,30 @@ auto OMRendererPipelineVk::convertTo(common::basics::OMVertexPropType type) -> F
         return Format::eR32G32B32Uint;
     case common::basics::Vec4ui:
         return Format::eR32G32B32A32Uint;
+    case common::basics::HalfFloat:
+        return Format::eR16Sfloat;
+    case common::basics::Vec2hf:
+        return Format::eR16G16Sfloat;
+    case common::basics::Vec3hf:
+        return Format::eR16G16B16Sfloat;
+    case common::basics::Vec4hf:
+        return Format::eR16G16B16A16Sfloat;
+    case common::basics::Short:
+        return Format::eR16Sint;
+    case common::basics::Vec2s:
+        return Format::eR16G16Sint;
+    case common::basics::Vec3s:
+        return Format::eR16G16B16Sint;
+    case common::basics::Vec4s:
+        return Format::eR16G16B16A16Sint;
+    case common::basics::UShort:
+        return Format::eR16Uint;
+    case common::basics::Vec2us:
+        return Format::eR16G16Uint;
+    case common::basics::Vec3us:
+        return Format::eR16G16B16Uint;
+    case common::basics::Vec4us:
+        return Format::eR16G16B16A16Uint;
     }
 }
 

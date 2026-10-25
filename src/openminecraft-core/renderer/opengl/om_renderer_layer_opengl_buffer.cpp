@@ -61,6 +61,30 @@ static auto convertFrom(common::basics::OMVertexPropType type) -> GLenum
         return GL_RGB32UI;
     case common::basics::Vec4ui:
         return GL_RGBA32UI;
+    case common::basics::HalfFloat:
+        return GL_R16F;
+    case common::basics::Vec2hf:
+        return GL_RG16F;
+    case common::basics::Vec3hf:
+        return GL_RGB16F;
+    case common::basics::Vec4hf:
+        return GL_RGBA16F;
+    case common::basics::Short:
+        return GL_R16I;
+    case common::basics::Vec2s:
+        return GL_RG16I;
+    case common::basics::Vec3s:
+        return GL_RGB16I;
+    case common::basics::Vec4s:
+        return GL_RGBA16I;
+    case common::basics::UShort:
+        return GL_R16UI;
+    case common::basics::Vec2us:
+        return GL_RG16UI;
+    case common::basics::Vec3us:
+        return GL_RGB16UI;
+    case common::basics::Vec4us:
+        return GL_RGBA16UI;
     }
 }
 

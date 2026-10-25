@@ -339,6 +339,30 @@ static auto fromCommon(common::basics::OMVertexPropType t) -> std::pair<int, GLu
         return std::make_pair(3, GL_DOUBLE);
     case common::basics::Vec4d:
         return std::make_pair(4, GL_DOUBLE);
+    case common::basics::HalfFloat:
+        return std::make_pair(1, GL_HALF_FLOAT);
+    case common::basics::Vec2hf:
+        return std::make_pair(2, GL_HALF_FLOAT);
+    case common::basics::Vec3hf:
+        return std::make_pair(3, GL_HALF_FLOAT);
+    case common::basics::Vec4hf:
+        return std::make_pair(4, GL_HALF_FLOAT);
+    case common::basics::Short:
+        return std::make_pair(1, GL_SHORT);
+    case common::basics::Vec2s:
+        return std::make_pair(2, GL_SHORT);
+    case common::basics::Vec3s:
+        return std::make_pair(3, GL_SHORT);
+    case common::basics::Vec4s:
+        return std::make_pair(4, GL_SHORT);
+    case common::basics::UShort:
+        return std::make_pair(1, GL_UNSIGNED_SHORT);
+    case common::basics::Vec2us:
+        return std::make_pair(2, GL_UNSIGNED_SHORT);
+    case common::basics::Vec3us:
+        return std::make_pair(3, GL_UNSIGNED_SHORT);
+    case common::basics::Vec4us:
+        return std::make_pair(4, GL_UNSIGNED_SHORT);
     }
 }
 
@@ -353,7 +377,8 @@ void OMRendererTaskOpenGL::bindVertexBufferInstanced(std::vector<common::OMRende
             auto offset = binding.isInstance ? off * binding.size : 0;
 
             auto p = fromCommon(std::get<common::basics::OMVertexPropType>(part));
-            if (std::get<GLuint>(p) == GL_INT)
+            if (std::get<GLuint>(p) == GL_INT || std::get<GLuint>(p) == GL_SHORT ||
+                std::get<GLuint>(p) == GL_UNSIGNED_SHORT)
             {
                 gl->glVertexAttribIPointer(index, p.first, p.second, binding.size,
                                            reinterpret_cast<void *>(std::get<int>(part) + offset));

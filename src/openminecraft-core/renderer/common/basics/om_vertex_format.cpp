@@ -85,6 +85,19 @@ auto OMVertexFormat::typeAlign(OMVertexPropType type) -> int
     case Vec4ui:
     default:
         return sizeof(float);
+    case HalfFloat:
+    case Vec2hf:
+    case Vec3hf:
+    case Vec4hf:
+    case Short:
+    case Vec2s:
+    case Vec3s:
+    case Vec4s:
+    case UShort:
+    case Vec2us:
+    case Vec3us:
+    case Vec4us:
+        return sizeof(uint16_t);
     }
 }
 
@@ -116,6 +129,22 @@ auto OMVertexFormat::typeSize(OMVertexPropType type) -> int
         return sizeof(double) * 3;
     case Vec4d:
         return sizeof(double) * 4;
+    case HalfFloat:
+    case Short:
+    case UShort:
+        return sizeof(uint16_t);
+    case Vec2hf:
+    case Vec2s:
+    case Vec2us:
+        return sizeof(uint16_t) * 2;
+    case Vec3hf:
+    case Vec3s:
+    case Vec3us:
+        return sizeof(uint16_t) * 3;
+    case Vec4hf:
+    case Vec4s:
+    case Vec4us:
+        return sizeof(uint16_t) * 4;
     default:
         return 0;
     }
