@@ -158,30 +158,31 @@ auto OMVoxelCompiler::existSoild(const world::OMChunk<16> &chunk,
 {
     if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
         return handler->querySoild(
-            converter(externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz), chunk.chunkx,
-                      chunk.chunky, chunk.chunkz, x, y, z));
+            modelFetcher(externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz), chunk.chunkx,
+                         chunk.chunky, chunk.chunkz, x, y, z));
 
-    return handler->querySoild(converter(chunk.fetch(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
+    return handler->querySoild(modelFetcher(chunk.fetch(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
 }
 
 auto OMVoxelCompiler::existFluidSame(const world::OMChunk<16> &chunk,
                                      std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
-                                     int x, int y, int z, int state) -> bool
+                                     int x, int y, int z, int modelId) -> bool
 {
     bool exist;
     if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
     {
         exist = handler->queryFluid(
-            converter(externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz), chunk.chunkx,
-                      chunk.chunky, chunk.chunkz, x, y, z));
+            modelFetcher(externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz), chunk.chunkx,
+                         chunk.chunky, chunk.chunkz, x, y, z));
     }
     else
     {
-        exist = handler->queryFluid(converter(chunk.fetch(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
+        exist =
+            handler->queryFluid(modelFetcher(chunk.fetch(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
     }
-    return exist && handler->queryFluidSame(converter(queryBlockState(chunk, externalAccessor, x, y, z), chunk.chunkx,
-                                                      chunk.chunky, chunk.chunkz, x, y, z),
-                                            state);
+    return exist && handler->queryFluidSame(modelFetcher(queryBlockState(chunk, externalAccessor, x, y, z),
+                                                         chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z),
+                                            modelId);
 }
 
 auto OMVoxelCompiler::queryBlockState(const world::OMChunk<16> &chunk,
@@ -198,11 +199,11 @@ auto OMVoxelCompiler::queryBlockState(const world::OMChunk<16> &chunk,
 
 auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
                                 std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, int x,
-                                int y, int z, OMVoxelFacing facing, int bsid, int pid)
+                                int y, int z, OMVoxelFacing facing, int modelId, int pid)
     -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t>
 {
     uint8_t ao1 = 0, ao2 = 0, ao3 = 0, ao4 = 0;
-    auto currentAabb = handler->queryPartAABB(bsid, pid);
+    auto currentAabb = handler->queryPartAABB(modelId, pid);
     auto countNeighborsPoint = [&](int dx, int dy, int dz, glm::ivec3 pos) -> int {
         auto tgbs = queryBlockState(chunk, externalAccessor, x + dx, y + dy, z + dz);
         if (tgbs == 0)
@@ -214,7 +215,7 @@ auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
             glm::mix(currentAabb.offset, currentAabb.offset + currentAabb.size, glm::vec3(pos.x, pos.y, pos.z)) -
             (glm::vec3(dx, dy, dz) * 16.0f);
 
-        auto occ = handler->queryOcclusionShape(converter(tgbs, chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
+        auto occ = handler->queryOcclusionShape(modelFetcher(tgbs, chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
         if (occ.contains(currentPos))
         {
             return 1;
@@ -388,14 +389,14 @@ auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
                                     std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
                                     glm::ivec3 v, int idx, int current) -> float
 {
-    uint32_t selfState = converter(queryBlockState(chunk, externalAccessor, v.x, v.y, v.z), chunk.chunkx, chunk.chunky,
-                                   chunk.chunkz, v.x, v.y, v.z);
-    if (!handler->queryFluid(selfState))
+    uint32_t selfModel = modelFetcher(queryBlockState(chunk, externalAccessor, v.x, v.y, v.z), chunk.chunkx,
+                                      chunk.chunky, chunk.chunkz, v.x, v.y, v.z);
+    if (!handler->queryFluid(selfModel))
     {
         return 0.0f;
     }
 
-    float tot = handler->queryFluidFalling(selfState) ? 8.0f : (8.0f - current);
+    float tot = handler->queryFluidFalling(selfModel) ? 8.0f : (8.0f - current);
     int lev = 1;
 
     std::array<glm::ivec3, 3> nPos;
@@ -419,12 +420,12 @@ auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
 
     for (const auto &p : nPos)
     {
-        uint32_t ns = converter(queryBlockState(chunk, externalAccessor, p.x, p.y, p.z), chunk.chunkx, chunk.chunky,
-                                chunk.chunkz, p.x, p.y, p.z);
+        uint32_t ns = modelFetcher(queryBlockState(chunk, externalAccessor, p.x, p.y, p.z), chunk.chunkx, chunk.chunky,
+                                   chunk.chunkz, p.x, p.y, p.z);
         if (!handler->queryFluid(ns))
             continue;
 
-        if (!handler->queryFluidSame(selfState, ns))
+        if (!handler->queryFluidSame(selfModel, ns))
         {
             continue;
         }
@@ -454,7 +455,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
 {
     for (const auto &v : chunk)
     {
-        auto bsid = converter(v.second, chunk.chunkx, chunk.chunky, chunk.chunkz, v.first.x, v.first.y, v.first.z);
+        auto bsid = modelFetcher(v.second, chunk.chunkx, chunk.chunky, chunk.chunkz, v.first.x, v.first.y, v.first.z);
         auto trans = handler->queryTranslucent(bsid);
 
         if (handler->queryFluid(bsid))

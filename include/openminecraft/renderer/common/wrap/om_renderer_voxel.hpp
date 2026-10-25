@@ -338,7 +338,7 @@ class OMVoxelCompiler
                  std::function<void(OMVoxelFluid)>) -> void;
 
     OMVoxelHandler *handler = new OMVoxelHandlerDummy();
-    std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> converter;
+    std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> modelFetcher;
 
   private:
     log::OMLogger logger;
@@ -589,7 +589,7 @@ class OMVoxelManager
     log::OMLogger logger;
     OMVoxelCompiler compiler;
 
-    std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> converter;
+    std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> modelFetcher;
     std::shared_ptr<world::OMChunkManager<16>> chunkManager;
     OMVoxelLayer<OMVoxel> *voxelLayer, *voxelTranslucentLayer;
     OMVoxelLayer<OMVoxelComplex> *voxelComplexLayer, *voxelTranslucentComplexLayer;

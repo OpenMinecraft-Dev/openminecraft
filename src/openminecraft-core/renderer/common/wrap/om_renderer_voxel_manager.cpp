@@ -75,19 +75,19 @@ struct Frustum
     }
 };
 
-OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *resolveTarget, OMRendererTexture *tex,
-                               OMRendererTexture *texSec, std::shared_ptr<world::OMChunkManager<16>> man,
-                               std::function<void(bool)> recordTask, OMVoxelHandler *handler,
-                               std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> converter,
-                               OMVoxelColorManager *colorman, OMRendererTexture *sunTex, OMRendererTexture *moonTex,
-                               OMRendererTexture *cloudTex, std::vector<bool> cloudStats)
+OMVoxelManager::OMVoxelManager(
+    OMRenderer *renderer, OMRendererRenderTarget *resolveTarget, OMRendererTexture *tex, OMRendererTexture *texSec,
+    std::shared_ptr<world::OMChunkManager<16>> man, std::function<void(bool)> recordTask, OMVoxelHandler *handler,
+    std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> modelFetcher,
+    OMVoxelColorManager *colorman, OMRendererTexture *sunTex, OMRendererTexture *moonTex, OMRendererTexture *cloudTex,
+    std::vector<bool> cloudStats)
     : logger("OMVoxelManager", this)
 {
     this->recordTask = recordTask;
     this->renderer = renderer;
     this->chunkManager = man;
     this->voxelHandler = handler;
-    this->converter = converter;
+    this->modelFetcher = modelFetcher;
     this->colorManager = colorman;
     this->sunTex = sunTex;
     this->moonTex = moonTex;
@@ -96,7 +96,7 @@ OMVoxelManager::OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *res
 
     delete compiler.handler;
     compiler.handler = voxelHandler;
-    compiler.converter = converter;
+    compiler.modelFetcher = modelFetcher;
 
     compilerPool = new OMVoxelCompilerPool(*man.get(), compiler);
 
