@@ -274,6 +274,26 @@ auto OMModelPrecompiler::queryPartFaceRotation(int modelId, int pid,
     }
 }
 
+auto OMModelPrecompiler::queryPartFaceTint(int modelId, int pid, ::OMVoxelFacing f) -> int
+{
+    switch (f)
+    {
+    default:
+    case ::NegX:
+        return blockModels[modelId].parts[pid].west.tintindex;
+    case ::PosX:
+        return blockModels[modelId].parts[pid].east.tintindex;
+    case ::NegY:
+        return blockModels[modelId].parts[pid].down.tintindex;
+    case ::PosY:
+        return blockModels[modelId].parts[pid].up.tintindex;
+    case ::NegZ:
+        return blockModels[modelId].parts[pid].north.tintindex;
+    case ::PosZ:
+        return blockModels[modelId].parts[pid].south.tintindex;
+    }
+}
+
 auto OMModelPrecompiler::queryPartRotationAxis(int modelId, int pid) -> int
 {
     return blockModels[modelId].parts[pid].rotateAxis;
@@ -764,7 +784,8 @@ auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::io::json::OMJso
             uv0,
             uv1,
             face->getMap().count("rotation") ? static_cast<int>(face->getMap()["rotation"]->getNumber()) : 0,
-            textureAtlas.subtex.count(ident) == 0};
+            textureAtlas.subtex.count(ident) == 0,
+            face->getMap().count("tintindex") ? static_cast<int>(face->getMap()["tintindex"]->getNumber()) : -1};
 }
 
 auto OMModelPrecompiler::composeModel(std::vector<int> partids, bool soild, bool translucent, bool waterlogged) -> int

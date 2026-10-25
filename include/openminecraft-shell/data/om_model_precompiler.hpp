@@ -44,6 +44,9 @@ struct OMModelFace
     glm::vec2 uv0, uv1;
     int rotation;
     bool secondaryTex;
+
+    // 染色层索引：-1 表示该面不染色（对应模型 JSON 的 tintindex 字段）
+    int tintindex = -1;
 };
 struct OMModelPart
 {
@@ -113,6 +116,8 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto queryPartFaceUV(int modelId, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
         -> glm::vec4 override;
     auto queryPartFaceRotation(int modelId, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
+        -> int override;
+    auto queryPartFaceTint(int modelId, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
         -> int override;
     auto queryPartRotationAxis(int modelId, int pid) -> int override;
     auto queryPartRotationCenter(int modelId, int pid) -> glm::vec3 override;

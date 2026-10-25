@@ -1,5 +1,7 @@
 #include "openminecraft-shell/renderer/om_world_renderer.hpp"
+#include <set>
 #include <cstdlib>
+#include <initializer_list>
 #include <typeinfo>
 #include <fstream>
 
@@ -246,7 +248,28 @@ class OMWorldPaletteProvider : public wrap::OMChunkPaletteProvider
     auto color(const world::OMChunk<16> &chunk, int x, int y, int z, uint32_t blockState, int tintIndex)
         -> glm::u8vec3 override
     {
-        return {255, 255, 255};
+        static openminecraft::log::OMLogger logger("ChunkPalette");
+        static std::atomic<uint64_t> calls{0};
+
+        const uint64_t call = calls.fetch_add(1, std::memory_order_relaxed);
+        const glm::u8vec3 result{255, 255, 255};
+
+        if (call < 32 || call % 8192 == 0)
+        {
+            std::string name = "?";
+
+            if (blockState < data::block::blockStateRegistry.idToRegistry.size())
+            {
+                const auto &c = data::block::blockStateRegistry.idToRegistry[blockState];
+                name = fmt::format("{}[{}]", c.block.path, c.state.tosimple());
+            }
+
+            logger.debug("[palette] call={} chunk=({},{},{}) state={} ({}) tintIndex={} pos=({},{},{}) -> ({},{},{})",
+                         call, chunk.chunkx, chunk.chunky, chunk.chunkz, blockState, name, tintIndex, x, y, z, result.r,
+                         result.g, result.b);
+        }
+
+        return result;
     }
 };
 
@@ -300,16 +323,34 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     cloudTex->minFilter = Nearest;
     cloudTex->setupSampler();
 
-    colormap = renderer->allocateTexture(256, 256, 3, 0, Dim2Array, R8G8B8A8Srgb);
-    i = 0;
-    for (auto v : {"dry_foliage", "foliage", "grass"})
     {
-        specs::png::OMPngFile f;
-        f.parseBase(vfs::fsfetch(fmt::format("/external/assets/minecraft/textures/colormap/{}.png", v)));
-        colormap->updateData(f.fetchData(), i);
-        ++i;
+        auto loadColormap = [&](const char *name, std::array<glm::u8vec3, 256 * 256> &target) -> void {
+            specs::png::OMPngFile f;
+            f.parseBase(vfs::fsfetch(fmt::format("/external/assets/minecraft/textures/colormap/{}.png", name)));
+
+            if (f.getWidth() != 256 || f.getHeight() != 256)
+            {
+                logger.warn("[colormap] {} has unexpected size {}x{}", name, f.getWidth(), f.getHeight());
+                return;
+            }
+
+            auto *pp = reinterpret_cast<uint8_t *>(f.fetchData());
+
+            for (int y = 0; y < 256; ++y)
+            {
+                for (int x = 0; x < 256; ++x)
+                {
+                    const auto pixid = y * 256 + x;
+
+                    target[pixid] = {pp[pixid * 4], pp[pixid * 4 + 1], pp[pixid * 4 + 2]};
+                }
+            }
+        };
+
+        loadColormap("dry_foliage", dryFoliageColor);
+        loadColormap("foliage", foliageColor);
+        loadColormap("grass", grassColor);
     }
-    colormap->setupSampler();
 
     std::vector<bool> stats;
     for (int x = 0; x < 256; ++x)
@@ -408,7 +449,6 @@ OMWorldRenderer::~OMWorldRenderer()
     delete sunTex;
     delete moonTex;
     delete cloudTex;
-    delete colormap;
 
     delete tempTarget;
     delete voxelHandler;

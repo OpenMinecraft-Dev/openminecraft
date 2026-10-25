@@ -18,6 +18,7 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_blur.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include <array>
 #include <chrono>
 #include <string>
 #include <functional>
@@ -61,13 +62,14 @@ class OMWorldRenderer : public OMRendererHandler
     OMRendererTexture *sunTex;
     OMRendererTexture *moonTex;
     OMRendererTexture *cloudTex;
-    OMRendererTexture *colormap;
 
     data::block::OMBlockStateResolver *blockStateResolver;
     data::OMModelPrecompiler *voxelHandler;
 
     std::shared_ptr<basics::OMCamera> camera;
     basics::OMVertexFormat format;
+
+    std::array<glm::u8vec3, 256 * 256> grassColor, foliageColor, dryFoliageColor;
 
     log::OMLogger logger;
 

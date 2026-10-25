@@ -466,6 +466,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
 {
     for (const auto &v : chunk)
     {
+        // INFO: bsid 是 model id（由方块状态 id 映射而来），方块状态 id 是 v.second
         auto bsid = modelFetcher(v.second, chunk.chunkx, chunk.chunky, chunk.chunkz, v.first.x, v.first.y, v.first.z);
         auto trans = handler->queryTranslucent(bsid);
 
@@ -486,10 +487,16 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                 if (!checkExistFluidSame(chunk, externalAccessor, v.first, f, bsid))
                 {
                     auto useSec = fluidLevel != 0 || isFalling;
-                    auto vox = packVoxelFluid(v.first.x, v.first.y, v.first.z, f,
-                                              useSec ? handler->queryFluidTexSec(bsid) : handler->queryFluidTex(bsid),
-                                              chunkid, 15, 15, 15, 15, 0, 0, 0, 0, cornerHeights[0], cornerHeights[1],
-                                              cornerHeights[2], cornerHeights[3], useSec, 255, 255, 255);
+
+                    const glm::u8vec3 fluidTint =
+                        paletteProvider ? paletteProvider->color(chunk, v.first.x, v.first.y, v.first.z, v.second, 0)
+                                        : glm::u8vec3{255, 255, 255};
+
+                    auto vox =
+                        packVoxelFluid(v.first.x, v.first.y, v.first.z, f,
+                                       useSec ? handler->queryFluidTexSec(bsid) : handler->queryFluidTex(bsid), chunkid,
+                                       15, 15, 15, 15, 0, 0, 0, 0, cornerHeights[0], cornerHeights[1], cornerHeights[2],
+                                       cornerHeights[3], useSec, fluidTint.r, fluidTint.g, fluidTint.b);
                     (trans || handler->queryWaterlogged(bsid) ? committerTranslucentFluid : committerFluid)(
                         OMVoxelFluid{vox[0], vox[1], vox[2], vox[3], vox[4]});
                 }
@@ -517,6 +524,12 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                     auto uv = handler->queryPartFaceUV(bsid, i, f);
                     auto raxis = handler->queryPartRotationCenter(bsid, i);
 
+                    const int tintIndex = handler->queryPartFaceTint(bsid, i, f);
+                    const glm::u8vec3 tint =
+                        (tintIndex >= 0 && paletteProvider)
+                            ? paletteProvider->color(chunk, v.first.x, v.first.y, v.first.z, v.second, tintIndex)
+                            : glm::u8vec3{255, 255, 255};
+
                     if (handler->queryPartComplex(bsid, i))
                     {
                         float rotationAngle = handler->queryPartRotationAngleF(bsid, i);
@@ -526,7 +539,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                             handler->queryPartFaceRotation(bsid, i, f), 15, 15, 15, 15, 0, 0, 0, 0, ao1, ao2, ao3, ao4,
                             handler->queryPartShade(bsid, i), aabb.offset, {uv.x, uv.y}, {uv.z, uv.w},
                             handler->queryPartRotationAxis(bsid, i), rotationAngle, raxis, aabb.size,
-                            handler->queryPartRotationAngleExt(bsid, i), 255, 255, 255);
+                            handler->queryPartRotationAngleExt(bsid, i), tint.r, tint.g, tint.b);
                         (trans ? committerTranslucentComplex : committerComplex)(
                             OMVoxelComplex{std::get<0>(vox), std::get<1>(vox), std::get<2>(vox), std::get<3>(vox),
                                            std::get<4>(vox), std::get<5>(vox), std::get<6>(vox), std::get<7>(vox),
@@ -534,14 +547,15 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                         continue;
                     }
 
-                    auto vox = packVoxel(
-                        v.first.x, v.first.y, v.first.z, f, std::abs(aabb.offset.x), std::abs(aabb.offset.y),
-                        std::abs(aabb.offset.z), handler->queryPartFaceTex(bsid, i, f), chunkid,
-                        handler->queryPartFaceRotation(bsid, i, f), 15, 15, 15, 15, 0, 0, 0, 0, aabb.size.x,
-                        aabb.size.y, aabb.size.z, ao1, ao2, ao3, ao4, uv.x, uv.y, uv.z, uv.w,
-                        handler->queryPartRotationAxis(bsid, i), std::abs(raxis.x), std::abs(raxis.y),
-                        std::abs(raxis.z), raxis.x < 0, raxis.y < 0, raxis.z < 0,
-                        handler->queryPartRotationAngle(bsid, i), handler->queryPartShade(bsid, i), 255, 255, 255);
+                    auto vox =
+                        packVoxel(v.first.x, v.first.y, v.first.z, f, std::abs(aabb.offset.x), std::abs(aabb.offset.y),
+                                  std::abs(aabb.offset.z), handler->queryPartFaceTex(bsid, i, f), chunkid,
+                                  handler->queryPartFaceRotation(bsid, i, f), 15, 15, 15, 15, 0, 0, 0, 0, aabb.size.x,
+                                  aabb.size.y, aabb.size.z, ao1, ao2, ao3, ao4, uv.x, uv.y, uv.z, uv.w,
+                                  handler->queryPartRotationAxis(bsid, i), std::abs(raxis.x), std::abs(raxis.y),
+                                  std::abs(raxis.z), raxis.x < 0, raxis.y < 0, raxis.z < 0,
+                                  handler->queryPartRotationAngle(bsid, i), handler->queryPartShade(bsid, i), tint.r,
+                                  tint.g, tint.b);
                     (trans ? committerTranslucent : committer)(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4], vox[5]});
                 }
             }
