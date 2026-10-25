@@ -235,22 +235,22 @@ void OMApplication::mainLoop(OMBackend backend)
                         }
                         cnk.setBlock(0, 1, 0,
                                      blockStateRegistry.id(
-                                         data::block::makeBlockState("minecraft:water[falling=false,level=1]")));
+                                         data::block::makeBlockState("minecraft:water[level=1]")));
                         cnk.setBlock(0, 0, 0,
                                      blockStateRegistry.id(
-                                         data::block::makeBlockState("minecraft:lava[falling=false,level=0]")));
+                                         data::block::makeBlockState("minecraft:lava[level=0]")));
                         cnk.setBlock(0, 15, 0,
                                      blockStateRegistry.id(
-                                         data::block::makeBlockState("minecraft:water[falling=true,level=8]")));
+                                         data::block::makeBlockState("minecraft:water[level=8]")));
                         cnk.setBlock(15, 1, 0,
                                      blockStateRegistry.id(
-                                         data::block::makeBlockState("minecraft:water[falling=false,level=2]")));
+                                         data::block::makeBlockState("minecraft:water[level=2]")));
                         cnk.setBlock(0, 1, 15,
                                      blockStateRegistry.id(
-                                         data::block::makeBlockState("minecraft:water[falling=false,level=2]")));
+                                         data::block::makeBlockState("minecraft:water[level=2]")));
                         cnk.setBlock(15, 1, 15,
                                      blockStateRegistry.id(
-                                         data::block::makeBlockState("minecraft:water[falling=false,level=3]")));
+                                         data::block::makeBlockState("minecraft:water[level=3]")));
                         cnk.setBlock(
                             15, 0, 0,
                             blockStateRegistry.id(data::block::makeBlockState("minecraft:white_stained_glass[]")));

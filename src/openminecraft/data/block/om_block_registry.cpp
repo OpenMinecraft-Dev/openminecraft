@@ -66,20 +66,8 @@ void registerBlocks()
     registerBlock(OMIdentifier("minecraft:glass"),
                   std::make_shared<OMTransparentBlock>()->isSolid(false)->isTranslucent(true));
     registerBlock(OMIdentifier("minecraft:stone_pressure_plate"), std::make_shared<OMBlock>()->isSolid(false));
-    blockRegistry.registerItem(
-        OMIdentifier("minecraft:water"),
-        std::make_shared<OMBlock>()
-            ->isSolid(false)
-            ->isFluid(true)
-            ->isTranslucent(true)
-            ->prop("level", {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"})
-            ->prop("falling", {"true", "false"}));
-    blockRegistry.registerItem(
-        OMIdentifier("minecraft:lava"),
-        std::make_shared<OMBlock>()
-            ->isSolid(false)
-            ->isFluid(true)
-            ->prop("level", {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"})
-            ->prop("falling", {"true", "false"}));
+    registerBlock(OMIdentifier("minecraft:water"),
+                  std::make_shared<OMBlock>()->isSolid(false)->isFluid(true)->isTranslucent(true));
+    registerBlock(OMIdentifier("minecraft:lava"), std::make_shared<OMBlock>()->isSolid(false)->isFluid(true));
 }
 } // namespace openminecraft::shell::data::block

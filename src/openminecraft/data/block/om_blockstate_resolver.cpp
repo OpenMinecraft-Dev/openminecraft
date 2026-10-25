@@ -187,8 +187,11 @@ void OMBlockStateResolver::buildModel(OMIdentifier ident, OMBlockState state)
 
     if (blk->fluid)
     {
+        // 26.3：level 的 bit3 是 falling flag，低 3 位才是液面等级
+        const int rawLevel = st.properties.count("level") ? std::stoi(st.properties["level"]) : 0;
+
         states[ident][st].emplace_back(compiler.composeFluidModel(
-            ident, blk->translucent, st.properties["falling"] == "true", std::stoi(st.properties["level"]),
+            ident, blk->translucent, rawLevel >= 8, static_cast<uint8_t>(rawLevel & 7),
             OMIdentifier(ident.namesp + ":block/" + ident.path + "_still"),
             OMIdentifier(ident.namesp + ":block/" + ident.path + "_flow")));
         return;
