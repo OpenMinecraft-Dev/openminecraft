@@ -72,7 +72,7 @@ void OMComposeRenderer::submitTasks()
     auto voxel = renderer->fetchTask("voxel");
     blurHandler
         ->secondLayerTask(renderer->createTask("main")
-                              ->dependOn(blurHandler->firstLayerTask(voxel)->dependOn(voxel))
+                              ->dependOn(blurHandler->firstLayerTask(voxel, "demiurgeui_bgblur")->dependOn(voxel))
                               ->dependOn(renderer->fetchTask("demiurgeui_compose_debughud"))
                               ->dependOn(renderer->fetchTask("demiurgeui_compose_surface"))
                               ->dependOn(renderer->fetchTask("demiurgeui_compose_surface_background"))

@@ -92,12 +92,9 @@ OMRendererBlurHandler::~OMRendererBlurHandler()
     delete blurTemp2;
 }
 
-auto OMRendererBlurHandler::firstLayerTask(OMRendererTask *pre) -> OMRendererTask *
+auto OMRendererBlurHandler::firstLayerTask(OMRendererTask *pre, std::string name) -> OMRendererTask *
 {
-    auto task = renderer->createTask(fmt::format("boxblur_{}", ++boxblurIndex))
-                    ->target(blurTemp2->target)
-                    ->pipeline(biltPipeline)
-                    ->drawN(6);
+    auto task = renderer->createTask(name)->target(blurTemp2->target)->pipeline(biltPipeline)->drawN(6);
     for (int i = 0; i < passes; ++i)
     {
         task->target(blurTemp->target)

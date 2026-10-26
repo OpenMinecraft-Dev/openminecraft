@@ -37,7 +37,7 @@ class OMRendererBlurHandler : public OMRendererHandler
     void afterFrame() override;
     void submitTasks() override;
 
-    auto firstLayerTask(OMRendererTask *) -> OMRendererTask *;
+    auto firstLayerTask(OMRendererTask *, std::string) -> OMRendererTask *;
     auto secondLayerTask(OMRendererTask *) -> OMRendererTask *;
     void bind(OMRendererTexture *uplayer, OMRendererTexture *bottomLayer);
 
