@@ -7,7 +7,6 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/event/om_eventbus_wrap.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
-#include <iostream>
 #include <memory>
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_shaderscene.hpp"
 
@@ -70,7 +69,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                  });
     node = std::make_shared<node::OMDemiurgeRectNode>()
                ->style({
-                   {"color", (int)0x2c2c3433},
+                   {"color", (int)0x2c2c3400},
                    {"flexDirection", Column},
                    {"justifyContent", SpaceBetween},
                    {"width", OMDemiurgeSize::fit()},
@@ -86,21 +85,20 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                            })
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                        ->style({
-                                           {"color", (int)0xffffffff},
+                                           {"color", (int)0x232323ff},
                                            {"text", "OpenMinecraft"},
                                            {"textheight", 24},
                                            {"alignSelf", OMDemiurgeAlign::FlexStart},
+                                       }))
+                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                       ->style({
+                                           {"color", (int)0x232323ff},
+                                           {"text", fmt::format("Version {}-{}", OM_VERSION, OM_VERSION_CHANNEL)},
+                                           {"textheight", 12},
                                            {"border", OMDemiurgeEdgeInsets{0, 60, 0, 0}},
                                        }))
                            ->mount(button->style("animation_speed", 1.0f)->style("label", "Demo Test"))
-                           ->mount(button2->style("animation_speed", 1.0f)->style("label", "Quit")))
-               ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                           ->style({
-                               {"color", (int)0xffffffff},
-                               {"text", fmt::format("Version {}-{}", OM_VERSION, OM_VERSION_CHANNEL)},
-                               {"textheight", 12},
-                               {"alignSelf", OMDemiurgeAlign::FlexEnd},
-                           }));
+                           ->mount(button2->style("animation_speed", 1.0f)->style("label", "Quit")));
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->name = "surface";
@@ -109,6 +107,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     background = std::make_shared<OMDemiurgeRendererHandler>(renderer, bgNode);
     background->name = "surface_background";
     renderer->registerHandler(background);
+
     offset.onAnimateFinish = [&](float v) {
         event::OMEvent e;
         e.type = event::Custom;
@@ -129,6 +128,7 @@ void OMSurfaceRenderer::beforeFrame()
 void OMSurfaceRenderer::afterFrame()
 {
     node->style("offsetY", OMDemiurgeSize::percent(offset.get()));
+    bgNode->style("offsetY", OMDemiurgeSize::percent(offset.get()));
 }
 
 void OMSurfaceRenderer::openScreen()

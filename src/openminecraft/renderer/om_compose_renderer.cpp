@@ -36,7 +36,7 @@ OMComposeRenderer::OMComposeRenderer(openminecraft::renderer::OMRenderer *render
                        ->depth(false, false)
                        ->buildN();
 
-    overlayPipeline =
+    backgroundPipeline =
         renderer->createPipeline()
             ->input(ImageSampler)
             ->inputName("inTexture")
@@ -52,12 +52,16 @@ OMComposeRenderer::OMComposeRenderer(openminecraft::renderer::OMRenderer *render
     blurHandler = std::make_shared<wrap::OMRendererBlurHandler>(renderer, 1);
     renderer->registerHandler(blurHandler);
     blurHandler->update({16.0f, wrap::Triangular});
+
+    overlayBlurHandler = std::make_shared<wrap::OMRendererBlurHandler>(renderer, 1);
+    renderer->registerHandler(overlayBlurHandler);
+    overlayBlurHandler->update({16.0f, wrap::Triangular});
 }
 
 OMComposeRenderer::~OMComposeRenderer()
 {
     delete mainPipeline;
-    delete overlayPipeline;
+    delete backgroundPipeline;
     delete uplayerTarget;
 }
 
@@ -66,21 +70,25 @@ void OMComposeRenderer::submitTasks()
     uplayerTarget->construct(renderer->getExtent());
 
     mainPipeline->bindInput(0, scene->colorTexture);
-    overlayPipeline->bindInput(0, overlay->colorTexture);
+    backgroundPipeline->bindInput(0, surfaceBackground->colorTexture);
     blurHandler->bind(surface->colorTexture, surfaceBackground->colorTexture);
+    overlayBlurHandler->bind(overlay->colorTexture, scene->colorTexture);
 
     auto voxel = renderer->fetchTask("voxel");
     blurHandler
-        ->secondLayerTask(renderer->createTask("main")
-                              ->dependOn(blurHandler->firstLayerTask(voxel, "demiurgeui_bgblur")->dependOn(voxel))
-                              ->dependOn(renderer->fetchTask("demiurgeui_compose_debughud"))
-                              ->dependOn(renderer->fetchTask("demiurgeui_compose_surface"))
-                              ->dependOn(renderer->fetchTask("demiurgeui_compose_surface_background"))
-                              ->target(renderer->getDefaultRenderTarget())
-                              ->pipeline(mainPipeline)
-                              ->drawN(6)
-                              ->pipeline(overlayPipeline)
-                              ->drawN(6))
+        ->secondLayerTask(
+            overlayBlurHandler
+                ->secondLayerTask(
+                    renderer->createTask("main")
+                        ->dependOn(blurHandler->firstLayerTask(voxel, "demiurgeui_bgblur")->dependOn(voxel))
+                        ->dependOn(overlayBlurHandler->firstLayerTask(voxel, "demiurgeui_overlayblur")->dependOn(voxel))
+                        ->dependOn(renderer->fetchTask("demiurgeui_compose_surface"))
+                        ->dependOn(renderer->fetchTask("demiurgeui_compose_surface_background"))
+                        ->target(renderer->getDefaultRenderTarget())
+                        ->pipeline(mainPipeline)
+                        ->drawN(6))
+                ->pipeline(backgroundPipeline)
+                ->drawN(6))
         ->finishN();
 }
 void OMComposeRenderer::beforeFrame()

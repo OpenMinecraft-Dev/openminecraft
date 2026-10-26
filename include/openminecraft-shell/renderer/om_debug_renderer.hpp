@@ -67,8 +67,6 @@ class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandle
     openminecraft::renderer::OMRenderer *renderer;
     openminecraft::renderer::common::basics::OMCamera *camera;
 
-    openminecraft::renderer::common::animation::OMAnimationValue<float> offset;
-
     std::function<std::array<std::tuple<uint32_t, uint32_t, uint32_t>, 6>()> stateFetch;
     std::function<std::pair<uint32_t, uint32_t>()> chunkFetch;
     std::function<int()> gameTickFetch;
