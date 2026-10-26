@@ -191,6 +191,7 @@ class OMRendererTask : public OMRendererObject
         return true;
     }
     bool solved = false;
+    bool disabled = false;
 
   protected:
     std::vector<glm::vec4> colorClear = {{0.0f, 0.0f, 0.0f, 0.0f}};

@@ -5,10 +5,8 @@
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
-#include "openminecraft/renderer/common/demiurge/om_demiurge_styles.hpp"
 #include "openminecraft/renderer/common/event/om_eventbus_wrap.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
-#include <array>
 #include <iostream>
 #include <memory>
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_shaderscene.hpp"
@@ -41,7 +39,16 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     bus.append(event::Custom, [&](event::OMEvent &e) {
         if (e.custom.flag == 0)
         {
+            this->renderer->fetchTask("demiurgeui_compose_surface_background")->disabled = false;
+            this->renderer->fetchTask("demiurgeui_compose_surface")->disabled = false;
+
             openScreen();
+        }
+
+        if (e.custom.flag == 4)
+        {
+            this->renderer->fetchTask("demiurgeui_compose_surface_background")->disabled = true;
+            this->renderer->fetchTask("demiurgeui_compose_surface")->disabled = true;
         }
     });
     button->setBackgroundColor({0.17, 0.17, 0.20});

@@ -478,13 +478,16 @@ void OMRendererVk::render(OMTicker &t)
             for (auto tsk : layeredTasks[i])
             {
                 auto task = reinterpret_cast<OMRendererTaskVk *>(tsk);
-                if (!task->isOnDefault())
+                if (!task->disabled)
                 {
-                    cmdBuffers.emplace_back(task->commandBuffer);
-                }
-                else if (defaultCommandBuffers.count(task))
-                {
-                    cmdBuffers.emplace_back(defaultCommandBuffers[task][imageIndex]);
+                    if (!task->isOnDefault())
+                    {
+                        cmdBuffers.emplace_back(task->commandBuffer);
+                    }
+                    else if (defaultCommandBuffers.count(task))
+                    {
+                        cmdBuffers.emplace_back(defaultCommandBuffers[task][imageIndex]);
+                    }
                 }
             }
 
@@ -837,7 +840,6 @@ OMRendererVk::~OMRendererVk()
 {
     try
     {
-        // 先停掉 shader 编译线程并丢弃结果，避免 Vulkan 对象销毁后仍有线程访问
         compiler.stop();
 
         logicalDevice.waitIdle();

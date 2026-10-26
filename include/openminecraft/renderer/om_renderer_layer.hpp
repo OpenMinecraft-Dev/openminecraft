@@ -62,7 +62,11 @@ class OMRenderer
   public:
     inline auto fetchTask(std::string id) -> common::OMRendererTask *
     {
-        return tasks[id];
+        if (tasks.count(id))
+        {
+            return tasks[id];
+        }
+        return nullptr;
     }
     inline void clearTasks()
     {

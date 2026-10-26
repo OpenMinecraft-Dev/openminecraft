@@ -183,7 +183,10 @@ void OMRendererOpenGL::render(util::OMTicker &t)
         t.push(fmt::format("gl_task_layer{}", i));
         for (auto tsk : tsklist)
         {
-            reinterpret_cast<OMRendererTaskOpenGL *>(tsk)->execute();
+            if (!tsk->disabled)
+            {
+                reinterpret_cast<OMRendererTaskOpenGL *>(tsk)->execute();
+            }
         }
         t.pop();
         ++i;
