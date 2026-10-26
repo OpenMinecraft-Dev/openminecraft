@@ -4,6 +4,7 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include <array>
+#include <chrono>
 
 namespace openminecraft::renderer::common::demiurge::element
 {
@@ -34,8 +35,9 @@ auto OMDemiurgeShaderSceneChannel::update() -> void
 
     if (timeBuffer)
     {
-        float value = std::chrono::duration<float>(std::chrono::steady_clock::now() - startedAt).count();
-        timeBuffer->updateData(std::array<float, 1>{value}.data());
+        float value =
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startedAt).count();
+        timeBuffer->updateData(std::array<float, 1>{value / 1000.0f}.data());
     }
 }
 
@@ -74,33 +76,60 @@ auto OMDemiurgeShaderSceneChannel::submitTask(OMRendererTask *task, float upper,
             continue;
         }
 
-        auto pipelineIt = pipelines.find(i);
-        if (pipelineIt == pipelines.end())
+        auto *pipeline = ensurePipeline(i);
+
+        if (!pipeline)
         {
-            auto frgShader =
-                renderer->shaderManager.preprocess(resolveShaderName(shaderIt->second), Fragment, GLSLSource, format);
-
-            auto *pipeline = renderer->createPipeline()
-                                 ->input(UniformBuffer)
-                                 ->inputName("ScreenData")
-                                 ->input(UniformBuffer)
-                                 ->inputName("Time")
-                                 ->output(target)
-                                 ->shader(frgShader)
-                                 ->shader(vtxShader)
-                                 ->format(format)
-                                 ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
-                                 ->blend(false)
-                                 ->depth(false, false)
-                                 ->buildN();
-
-            pipeline->bindInput(0, uniform);
-            pipeline->bindInput(1, timeBuffer);
-
-            pipelineIt = pipelines.emplace(i, pipeline).first;
+            continue;
         }
 
-        task->pipeline(pipelineIt->second)->vertexBufferInstanced({instanceBuffer}, i)->drawInstance(6, 1, i);
+        task->pipeline(pipeline)->vertexBufferInstanced({instanceBuffer}, i)->drawInstance(6, 1, i);
     }
 }
+
+auto OMDemiurgeShaderSceneChannel::ensurePipeline(int i) -> OMRendererPipeline *
+{
+    auto it = pipelines.find(i);
+    if (it != pipelines.end())
+    {
+        return it->second;
+    }
+
+    auto shaderIt = shaders.find(i);
+    if (shaderIt == shaders.end() || !renderer || !target)
+    {
+        return nullptr;
+    }
+
+    auto frgShader =
+        renderer->shaderManager.preprocess(resolveShaderName(shaderIt->second), Fragment, GLSLSource, format);
+
+    auto *pipeline = renderer->createPipeline()
+                         ->input(UniformBuffer)
+                         ->inputName("ScreenData")
+                         ->input(UniformBuffer)
+                         ->inputName("Time")
+                         ->output(target)
+                         ->shader(frgShader)
+                         ->shader(vtxShader)
+                         ->format(format)
+                         ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
+                         ->blend(false)
+                         ->depth(false, false)
+                         ->buildN();
+
+    if (uniform)
+    {
+        pipeline->bindInput(0, uniform);
+    }
+
+    if (timeBuffer)
+    {
+        pipeline->bindInput(1, timeBuffer);
+    }
+
+    pipelines.emplace(i, pipeline);
+    return pipeline;
+}
+
 } // namespace openminecraft::renderer::common::demiurge::element

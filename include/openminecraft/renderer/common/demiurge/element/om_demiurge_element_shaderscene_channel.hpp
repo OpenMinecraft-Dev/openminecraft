@@ -65,9 +65,13 @@ class OMDemiurgeShaderSceneChannel : public OMDemiurgeQuadChannel<OMDemiurgeElem
             delete it->second;
             pipelines.erase(it);
         }
+
+        ensurePipeline(i);
     }
 
   private:
+    auto ensurePipeline(int i) -> OMRendererPipeline *;
+
     auto resolveShaderName(const std::string &name) const -> std::string
     {
         if (name.find('/') != std::string::npos)

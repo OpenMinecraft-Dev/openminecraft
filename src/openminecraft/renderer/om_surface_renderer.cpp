@@ -62,7 +62,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     });
     button2->setBackgroundColor({0.17, 0.17, 0.20});
 
-    bgNode = std::make_shared<node::OMDemiurgeShaderSceneNode>("demiurge/scene/colorful_way.glsl")
+    bgNode = std::make_shared<node::OMDemiurgeShaderSceneNode>("demiurge/scene/galaxy.glsl")
                  ->style({
                      {"width", OMDemiurgeSize::fit()},
                      {"height", OMDemiurgeSize::fit()},
@@ -85,14 +85,14 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                            })
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                        ->style({
-                                           {"color", (int)0x232323ff},
+                                           {"color", (int)0xffffffff},
                                            {"text", "OpenMinecraft"},
                                            {"textheight", 24},
                                            {"alignSelf", OMDemiurgeAlign::FlexStart},
                                        }))
                            ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                        ->style({
-                                           {"color", (int)0x232323ff},
+                                           {"color", (int)0xffffffff},
                                            {"text", fmt::format("Version {}-{}", OM_VERSION, OM_VERSION_CHANNEL)},
                                            {"textheight", 12},
                                            {"border", OMDemiurgeEdgeInsets{0, 60, 0, 0}},
