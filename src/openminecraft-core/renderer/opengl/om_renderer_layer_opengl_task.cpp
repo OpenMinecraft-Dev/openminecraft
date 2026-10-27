@@ -282,11 +282,11 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
         ops.push_back({ClearDepth, {}, {}, depthClear});
         for (int i = 0; i < colorClear.size(); ++i)
         {
-            if (target->clearColorAtt.size() <= i)
+            if (target->clearColorAttachments().size() <= i)
             {
                 throw std::logic_error("not enough clear flags!");
             }
-            if (target->clearColorAtt[i])
+            if (target->clearColorAttachments()[i])
             {
                 ops.push_back({ClearBufferfv,
                                {GL_COLOR, static_cast<GLuint>(i)},
@@ -487,7 +487,7 @@ void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
     ops.push_back({BindFramebuffer, GL_FRAMEBUFFER, tgt->framebuffer});
     ops.push_back({Enable, GL_FRAMEBUFFER_SRGB});
     isCleared = false;
-    needClearDepth = target->clearDepth;
+    needClearDepth = target->isClearDepth();
 
     auto siz = tgt->fetchSize();
 

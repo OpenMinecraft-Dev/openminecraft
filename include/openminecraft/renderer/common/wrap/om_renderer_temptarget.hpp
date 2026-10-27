@@ -74,13 +74,12 @@ class OMRendererTempTarget
         if (!target)
         {
             target = renderer->createRenderTarget();
-            target->clearDepth = clearDepth;
-            target->storeDepth = storeDepth;
+            target->setClearDepth(clearDepth)->setStoreDepth(storeDepth);
             target->attachTarget(colorTexture);
             for (auto tex : additionalTex)
             {
                 target->attachTarget(tex);
-                target->clearColorAtt.push_back(true);
+                target->addClearColorAtt(true);
             }
             target->attachTarget(depthTexture);
             target->build();
@@ -144,13 +143,12 @@ class OMRendererTempTarget
         if (!target)
         {
             target = renderer->createRenderTarget();
-            target->clearDepth = clearDepth;
-            target->storeDepth = storeDepth;
+            target->setClearDepth(clearDepth)->setStoreDepth(storeDepth);
             target->attachTarget(colorTexture);
             for (auto tex : additionalTex)
             {
                 target->attachTarget(tex);
-                target->clearColorAtt.push_back(true);
+                target->addClearColorAtt(true);
             }
             target->attachTarget(depthTexture);
             target->build();
@@ -169,9 +167,24 @@ class OMRendererTempTarget
         }
     }
 
-    bool externalDepth = false;
-    bool clearDepth = true;
-    bool storeDepth = false;
+    // INFO: 配置项统一走 setter
+    auto setClearDepth(bool value) -> OMRendererTempTarget *
+    {
+        clearDepth = value;
+        return this;
+    }
+
+    auto setStoreDepth(bool value) -> OMRendererTempTarget *
+    {
+        storeDepth = value;
+        return this;
+    }
+
+    auto isExternalDepth() const -> bool
+    {
+        return externalDepth;
+    }
+
     OMRendererRenderTarget *target = nullptr;
     OMRendererTexture *colorTexture;
     OMRendererTexture *depthTexture;
@@ -179,6 +192,11 @@ class OMRendererTempTarget
 
     std::vector<OMTextureArrangement> additionalTexFormats = {};
     std::vector<OMRendererTexture *> additionalTex = {};
+
+  private:
+    bool externalDepth = false;
+    bool clearDepth = true;
+    bool storeDepth = false;
 };
 } // namespace openminecraft::renderer::common::wrap
 

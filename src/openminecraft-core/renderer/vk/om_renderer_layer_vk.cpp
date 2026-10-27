@@ -478,7 +478,7 @@ void OMRendererVk::render(OMTicker &t)
             for (auto tsk : layeredTasks[i])
             {
                 auto task = reinterpret_cast<OMRendererTaskVk *>(tsk);
-                if (!task->disabled)
+                if (!task->isDisabled())
                 {
                     if (!task->isOnDefault())
                     {

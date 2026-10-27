@@ -191,13 +191,25 @@ class OMRendererTask : public OMRendererObject
         return true;
     }
     bool solved = false;
-    bool disabled = false;
+
+    // INFO: 用 setter 替代直接赋值，避免外部随意修改任务状态
+    inline auto setDisabled(bool value) -> OMRendererTask *
+    {
+        disabledState = value;
+        return this;
+    }
+
+    inline auto isDisabled() const -> bool
+    {
+        return disabledState;
+    }
 
   protected:
     std::vector<glm::vec4> colorClear = {{0.0f, 0.0f, 0.0f, 0.0f}};
     float depthClear = 1.0f;
 
   private:
+    bool disabledState = false;
     std::vector<OMRendererTask *> dependTasks;
 };
 } // namespace openminecraft::renderer::common

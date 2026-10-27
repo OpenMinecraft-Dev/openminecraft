@@ -39,18 +39,18 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     bus.append(event::Custom, [&](event::OMEvent &e) {
         if (e.custom.flag == EventMainScreenOpen)
         {
-            this->renderer->fetchTask("demiurgeui_compose_surface_background")->disabled = false;
-            this->renderer->fetchTask("demiurgeui_compose_surface")->disabled = false;
-            this->renderer->fetchTask("demiurgeui_bgblur")->disabled = false;
+            this->renderer->fetchTask("demiurgeui_compose_surface_background")->setDisabled(false);
+            this->renderer->fetchTask("demiurgeui_compose_surface")->setDisabled(false);
+            this->renderer->fetchTask("demiurgeui_bgblur")->setDisabled(false);
 
             openScreen();
         }
 
         if (e.custom.flag == EventMainScreenCloseFinish)
         {
-            this->renderer->fetchTask("demiurgeui_compose_surface_background")->disabled = true;
-            this->renderer->fetchTask("demiurgeui_compose_surface")->disabled = true;
-            this->renderer->fetchTask("demiurgeui_bgblur")->disabled = true;
+            this->renderer->fetchTask("demiurgeui_compose_surface_background")->setDisabled(true);
+            this->renderer->fetchTask("demiurgeui_compose_surface")->setDisabled(true);
+            this->renderer->fetchTask("demiurgeui_bgblur")->setDisabled(true);
         }
     });
     button->setBackgroundColor({0.17, 0.17, 0.20});

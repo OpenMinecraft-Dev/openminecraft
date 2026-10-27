@@ -30,6 +30,41 @@ class OMRendererRenderTarget : public OMRendererObject
         return RenderTarget;
     }
 
+    // INFO: 配置项统一走 setter，子类（各后端）可直接读取保护成员
+    inline auto setClearDepth(bool value) -> OMRendererRenderTarget *
+    {
+        clearDepth = value;
+        return this;
+    }
+
+    inline auto setStoreDepth(bool value) -> OMRendererRenderTarget *
+    {
+        storeDepth = value;
+        return this;
+    }
+
+    inline auto addClearColorAtt(bool value) -> OMRendererRenderTarget *
+    {
+        clearColorAtt.push_back(value);
+        return this;
+    }
+
+    inline auto isClearDepth() const -> bool
+    {
+        return clearDepth;
+    }
+
+    inline auto isStoreDepth() const -> bool
+    {
+        return storeDepth;
+    }
+
+    inline auto clearColorAttachments() const -> const std::vector<bool> &
+    {
+        return clearColorAtt;
+    }
+
+  protected:
     bool clearDepth = true;
     bool storeDepth = false;
     std::vector<bool> clearColorAtt = {true};

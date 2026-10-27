@@ -103,18 +103,18 @@ OMVoxelManager::OMVoxelManager(
     compilerPool = new OMVoxelCompilerPool(*man.get(), compiler);
 
     cutoutTargetMS = new OMRendererTempTarget(renderer);
-    cutoutTargetMS->storeDepth = true;
+    cutoutTargetMS->setStoreDepth(true);
     cutoutTargetMS->construct(renderer->getExtent(), samples);
 
     translucentTargetMS = new OMRendererTempTarget(renderer);
     translucentTargetMS->additionalTexFormats.push_back(R32Sfloat);
-    translucentTargetMS->clearDepth = false;
+    translucentTargetMS->setClearDepth(false);
     translucentTargetMS->construct(renderer->getExtent(), samples, true);
 
     cloudTargetMS = new OMRendererTempTarget(renderer);
     cloudTargetMS->additionalTexFormats.push_back(R32Sfloat);
-    cloudTargetMS->clearDepth = false;
-    cloudTargetMS->storeDepth = true;
+    cloudTargetMS->setClearDepth(false);
+    cloudTargetMS->setStoreDepth(true);
     cloudTargetMS->construct(renderer->getExtent(), samples);
 
     cloudTarget = new OMRendererTempTarget(renderer);
@@ -122,7 +122,7 @@ OMVoxelManager::OMVoxelManager(
     cloudTarget->construct(renderer->getExtent());
 
     cutoutTarget = new OMRendererTempTarget(renderer);
-    cutoutTarget->clearDepth = false;
+    cutoutTarget->setClearDepth(false);
     cutoutTarget->construct(renderer->getExtent());
     translucentTarget = new OMRendererTempTarget(renderer);
     translucentTarget->additionalTexFormats.push_back(R32Sfloat);
@@ -1088,13 +1088,13 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
 {
     if (r)
     {
-        cutoutTargetMS->storeDepth = true;
+        cutoutTargetMS->setStoreDepth(true);
         cutoutTargetMS->construct(renderer->getExtent(), samples);
-        translucentTargetMS->clearDepth = false;
+        translucentTargetMS->setClearDepth(false);
         translucentTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), samples, true);
         cutoutTarget->construct(renderer->getExtent());
         translucentTarget->construct(renderer->getExtent(), 1, true);
-        cloudTargetMS->clearDepth = false;
+        cloudTargetMS->setClearDepth(false);
         cloudTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), samples);
         cloudTarget->construct(renderer->getExtent());
         composePipeline->bindInput(0, (samples == 1 ? cutoutTargetMS : cutoutTarget)->colorTexture);
