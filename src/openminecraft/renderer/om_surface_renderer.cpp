@@ -1,4 +1,5 @@
 #include "openminecraft-shell/renderer/om_surface_renderer.hpp"
+#include "openminecraft-shell/om_application.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
@@ -36,7 +37,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
         bus.handle(event::Custom, e);
     });
     bus.append(event::Custom, [&](event::OMEvent &e) {
-        if (e.custom.flag == 0)
+        if (e.custom.flag == EventMainScreenOpen)
         {
             this->renderer->fetchTask("demiurgeui_compose_surface_background")->disabled = false;
             this->renderer->fetchTask("demiurgeui_compose_surface")->disabled = false;
@@ -45,7 +46,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
             openScreen();
         }
 
-        if (e.custom.flag == 4)
+        if (e.custom.flag == EventMainScreenCloseFinish)
         {
             this->renderer->fetchTask("demiurgeui_compose_surface_background")->disabled = true;
             this->renderer->fetchTask("demiurgeui_compose_surface")->disabled = true;
@@ -57,7 +58,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     button2->setOnClick([&]() {
         event::OMEvent e;
         e.type = event::Custom;
-        e.custom.flag = 2;
+        e.custom.flag = EventQuit;
         bus.handle(event::Custom, e);
     });
     button2->setBackgroundColor({0.17, 0.17, 0.20});
@@ -111,7 +112,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     offset.onAnimateFinish = [&](float v) {
         event::OMEvent e;
         e.type = event::Custom;
-        e.custom.flag = v == 0 ? 3 : 4;
+        e.custom.flag = v == 0 ? EventMainScreenOpenFinish : EventMainScreenCloseFinish;
         bus.handle(event::Custom, e);
     };
 }

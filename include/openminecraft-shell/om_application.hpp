@@ -7,6 +7,12 @@
 #include <vector>
 namespace openminecraft::shell
 {
+constexpr int EventMainScreenOpen = 0;
+constexpr int EventMainScreenClose = 1;
+constexpr int EventQuit = 2;
+constexpr int EventMainScreenOpenFinish = 3;
+constexpr int EventMainScreenCloseFinish = 4;
+
 class OMApplication
 {
   public:

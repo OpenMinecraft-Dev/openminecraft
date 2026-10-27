@@ -1,5 +1,6 @@
 #include "openminecraft-shell/renderer/om_debug_renderer.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
+#include "openminecraft-shell/om_application.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
@@ -53,7 +54,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
     button->setOnClick([&]() {
         event::OMEvent e;
         e.type = event::Custom;
-        e.custom.flag = 0;
+        e.custom.flag = EventMainScreenOpen;
         bus.handle(event::Custom, e);
     });
     button->setBackgroundColor({0.17, 0.17, 0.20});

@@ -296,18 +296,20 @@ void OMApplication::mainLoop(OMBackend backend)
             }
         });
 
+        bool inGame = false;
         bool mainScreen = true;
         buswrap.append(event::Custom, [&](event::OMEvent &e) {
             logger->debug("Received event {:x}", e.custom.flag);
             switch (e.custom.flag)
             {
-            case 3:
+            case EventMainScreenOpen:
                 mainScreen = true;
+                inGame = false;
                 break;
-            case 4:
+            case EventMainScreenCloseFinish:
                 mainScreen = false;
                 break;
-            case 2:
+            case EventQuit:
                 isRunning = false;
                 break;
             default:
@@ -333,7 +335,6 @@ void OMApplication::mainLoop(OMBackend backend)
         win()->registerHandler(hnd3);
         win()->baseInit();
 
-        bool inGame = false;
         std::array<bool, 6> keystates = {false, false, false, false, false, false};
         bus.append(SDL_EVENT_WINDOW_RESIZED, [&](SDL_Event &) -> void { win()->requestResize(); });
         bus.append(SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED, [&](SDL_Event &) -> void { win()->requestResize(); });
