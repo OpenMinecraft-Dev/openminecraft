@@ -31,3 +31,6 @@ externalassets
 *.xcodeproj/
 ._*
 exports
+*.csv
+*.js
+*.html
