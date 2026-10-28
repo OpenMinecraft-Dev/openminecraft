@@ -344,6 +344,12 @@ void OMDebugRenderer::afterFrame()
         std::vector<float> sorted = frameTimes;
         std::sort(sorted.begin(), sorted.end());
 
+        auto percentile = [&](double p) -> double {
+            const size_t idx =
+                std::min(sorted.size() - 1, static_cast<size_t>(p * static_cast<double>(sorted.size() - 1)));
+            return 1000.0 / sorted[idx];
+        };
+
         const size_t lowCount = std::max<size_t>(1, sorted.size() / 100);
         double lowSum = 0.0;
 
@@ -356,9 +362,12 @@ void OMDebugRenderer::afterFrame()
         const double lowFps = lowMs > 0.0 ? 1000.0 / lowMs : 0.0;
         const double instantFps = 1000.0 / frameTime;
 
-        fpsTextNode->style("text", fmt::format("FPS: {:.0f} (avg {:.0f}, 1% low {:.0f})", instantFps, avgFps, lowFps));
+        fpsTextNode->style(
+            "text", fmt::format("FPS: {:.0f} (avg {:.0f}, 1% low {:.0f}, p50 {:.2f} p95 {:.2f} p99 {:.2f})", instantFps,
+                                avgFps, lowFps, percentile(0.50), percentile(0.95), percentile(0.99)));
 
-        auto fo = fmt::format("{:.0f},{:.0f},{:.0f}\n", instantFps, avgFps, lowFps);
+        auto fo = fmt::format("{:.0f},{:.0f},{:.0f},{:.0f},{:.0f},{:.0f}\n", instantFps, avgFps, lowFps,
+                              percentile(0.50), percentile(0.95), percentile(0.99));
         off.write(fo.data(), fo.size());
         off.flush();
     }

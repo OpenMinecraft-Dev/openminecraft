@@ -17,13 +17,13 @@ from pyecharts import options as opts
 from pyecharts.charts import Line
 from pyecharts.globals import ThemeType
 
-COLUMNS = ["instantFps", "avgFps", "1% low"]
-COLORS = ["#f6c445", "#4c9be8", "#e05561"]
+COLUMNS = ["instantFps", "avgFps", "1% low", "p50", "p95", "p99"]
+COLORS = ["#f6c445", "#4c9be8", "#e05561", "#59c98b", "#b07de0", "#4ec9c9"]
 
 
 def load(path):
     with open(path, newline="") as f:
-        rows = [r for r in csv.reader(f) if r and len(r) >= 3]
+        rows = [r for r in csv.reader(f) if r and len(r) >= 6]
     if not rows:
         sys.exit(f"no data rows in {path}")
 
