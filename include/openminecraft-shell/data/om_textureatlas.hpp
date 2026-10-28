@@ -18,6 +18,14 @@
 using namespace openminecraft;
 namespace openminecraft::shell::data
 {
+// 每张动画贴图的帧缓存：预先拆好每一帧的 RGBA 数据，避免每次 tick 都做逐行 memcpy。
+struct OMTextureAnimCache
+{
+    std::vector<std::vector<uint8_t>> frames = {};
+    int lastUploaded = -1;
+    bool built = false;
+};
+
 struct OMTextureAnimation
 {
     int maxFrames;
@@ -217,19 +225,44 @@ class OMTextureAtlas
                 }
             }
             p.second.currentFrame = (p.second.currentFrame + 1) % p.second.maxFrames;
-            std::array<uint8_t, 4 * 16 * 16> bm = {};
-            for (int py = 0; py < 16; ++py)
-            {
-                int cy =
-                    py + (p.second.useMapping ? p.second.mapping[p.second.currentFrame] : p.second.currentFrame) * 16;
-                int pixoff = 4 * (cy * subtexFiles[p.first]->getWidth());
 
-                std::memcpy(
-                    bm.data() + 4 * 16 * py,
-                    reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(subtexFiles[p.first]->fetchData()) + pixoff),
-                    4 * 16);
+            auto &cache = animCache[p.first];
+            const int frame = p.second.currentFrame;
+
+            // 只在首次构建缓存时拆分帧，之后直接复用
+            if (!cache.built)
+            {
+                cache.frames.resize(p.second.maxFrames);
+
+                for (int f = 0; f < p.second.maxFrames; ++f)
+                {
+                    std::vector<uint8_t> bm(4 * 16 * 16);
+                    const int srcFrame = p.second.useMapping ? p.second.mapping[f] : f;
+
+                    for (int py = 0; py < 16; ++py)
+                    {
+                        int cy = py + srcFrame * 16;
+                        int pixoff = 4 * (cy * subtexFiles[p.first]->getWidth());
+
+                        std::memcpy(bm.data() + 4 * 16 * py,
+                                    reinterpret_cast<void *>(
+                                        reinterpret_cast<uintptr_t>(subtexFiles[p.first]->fetchData()) + pixoff),
+                                    4 * 16);
+                    }
+
+                    cache.frames[f] = std::move(bm);
+                }
+
+                cache.built = true;
             }
-            texture->updateData(bm.data(), subtex[p.first]);
+
+            if (cache.lastUploaded == frame)
+            {
+                continue;
+            }
+
+            texture->updateData(cache.frames[frame].data(), subtex[p.first]);
+            cache.lastUploaded = frame;
         }
 
         for (auto &p : subtexWideAnimData)
@@ -249,19 +282,42 @@ class OMTextureAtlas
             }
             p.second.currentFrame = (p.second.currentFrame + 1) % p.second.maxFrames;
 
-            std::array<uint8_t, 4 * 32 * 32> bm = {};
-            for (int py = 0; py < 32; ++py)
-            {
-                int cy =
-                    py + (p.second.useMapping ? p.second.mapping[p.second.currentFrame] : p.second.currentFrame) * 32;
-                int pixoff = 4 * (cy * subtexWideFiles[p.first]->getWidth());
+            auto &cache = animWideCache[p.first];
+            const int frame = p.second.currentFrame;
 
-                std::memcpy(bm.data() + 4 * 32 * py,
-                            reinterpret_cast<void *>(
-                                reinterpret_cast<uintptr_t>(subtexWideFiles[p.first]->fetchData()) + pixoff),
-                            4 * 32);
+            if (!cache.built)
+            {
+                cache.frames.resize(p.second.maxFrames);
+
+                for (int f = 0; f < p.second.maxFrames; ++f)
+                {
+                    std::vector<uint8_t> bm(4 * 32 * 32);
+                    const int srcFrame = p.second.useMapping ? p.second.mapping[f] : f;
+
+                    for (int py = 0; py < 32; ++py)
+                    {
+                        int cy = py + srcFrame * 32;
+                        int pixoff = 4 * (cy * subtexWideFiles[p.first]->getWidth());
+
+                        std::memcpy(bm.data() + 4 * 32 * py,
+                                    reinterpret_cast<void *>(
+                                        reinterpret_cast<uintptr_t>(subtexWideFiles[p.first]->fetchData()) + pixoff),
+                                    4 * 32);
+                    }
+
+                    cache.frames[f] = std::move(bm);
+                }
+
+                cache.built = true;
             }
-            textureSecondary->updateData(bm.data(), subtexWide[p.first]);
+
+            if (cache.lastUploaded == frame)
+            {
+                continue;
+            }
+
+            textureSecondary->updateData(cache.frames[frame].data(), subtexWide[p.first]);
+            cache.lastUploaded = frame;
         }
     }
 
@@ -282,9 +338,11 @@ class OMTextureAtlas
     std::unordered_map<OMIdentifier, int> subtex;
     std::unordered_map<OMIdentifier, std::shared_ptr<specs::png::OMPngFile>> subtexFiles;
     std::unordered_map<OMIdentifier, OMTextureAnimation> subtexAnimData;
+    std::unordered_map<OMIdentifier, OMTextureAnimCache> animCache;
     std::unordered_map<OMIdentifier, int> subtexWide;
     std::unordered_map<OMIdentifier, std::shared_ptr<specs::png::OMPngFile>> subtexWideFiles;
     std::unordered_map<OMIdentifier, OMTextureAnimation> subtexWideAnimData;
+    std::unordered_map<OMIdentifier, OMTextureAnimCache> animWideCache;
     std::unordered_map<OMIdentifier, glm::ivec2> subtexSizes;
     log::OMLogger logger;
 };
