@@ -91,6 +91,8 @@ class OMRenderer
 
     virtual void baseInit() = 0;
 
+    virtual auto fetchFrameTime() -> float = 0;
+
     virtual auto getExtent() const -> glm::vec2 = 0;
     virtual auto getLogicalExtent() const -> glm::vec2 = 0;
 

@@ -145,6 +145,17 @@ void OMRendererOpenGL::baseInit()
 
 void OMRendererOpenGL::render(util::OMTicker &t)
 {
+    {
+        auto now = std::chrono::steady_clock::now();
+
+        if (frameStamp != std::chrono::steady_clock::time_point{})
+        {
+            frameTimeMs = std::chrono::duration<float, std::milli>(now - frameStamp).count();
+        }
+
+        frameStamp = now;
+    }
+
     t.push("gl_render");
     if (needResize)
     {

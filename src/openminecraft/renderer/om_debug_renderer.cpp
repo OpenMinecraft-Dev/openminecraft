@@ -1,4 +1,6 @@
 #include "openminecraft-shell/renderer/om_debug_renderer.hpp"
+#include <algorithm>
+#include <functional>
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/om_application.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
@@ -312,23 +314,57 @@ void OMDebugRenderer::beforeFrame()
 }
 void OMDebugRenderer::afterFrame()
 {
-    ++fps;
+    const float frameTime = renderer->fetchFrameTime();
 
-    if (tp == std::chrono::steady_clock::time_point{})
+    if (frameTime > 0.0f)
     {
-        tp = std::chrono::steady_clock::now();
-        return;
+        frameTimes.push_back(frameTime);
+
+        if (frameTimes.size() > 600)
+        {
+            frameTimes.erase(frameTimes.begin(),
+                             frameTimes.begin() + static_cast<std::ptrdiff_t>(frameTimes.size() - 600));
+        }
     }
 
-    auto tpe = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(tpe - tp);
-    if (elapsed.count() > 5e8)
     {
-        fpsTextNode->style("text",
-                           fmt::format("FPS: {}", static_cast<int>(static_cast<float>(fps) / elapsed.count() * 1e9)));
+        if (!frameTimes.empty())
+        {
+            double sum = 0.0;
 
-        tp = std::chrono::steady_clock::now();
-        fps = 0;
+            for (auto v : frameTimes)
+            {
+                sum += v;
+            }
+
+            const double avgMs = sum / static_cast<double>(frameTimes.size());
+            const double avgFps = avgMs > 0.0 ? 1000.0 / avgMs : 0.0;
+
+            std::vector<float> sorted = frameTimes;
+            std::sort(sorted.begin(), sorted.end());
+
+            auto percentile = [&](double p) -> double {
+                const size_t idx =
+                    std::min(sorted.size() - 1, static_cast<size_t>(p * static_cast<double>(sorted.size() - 1)));
+                return 1000.0 / sorted[idx];
+            };
+
+            const size_t lowCount = std::max<size_t>(1, sorted.size() / 100);
+            double lowSum = 0.0;
+
+            for (size_t i = sorted.size() - lowCount; i < sorted.size(); ++i)
+            {
+                lowSum += sorted[i];
+            }
+
+            const double lowMs = lowSum / static_cast<double>(lowCount);
+            const double lowFps = lowMs > 0.0 ? 1000.0 / lowMs : 0.0;
+            const double instantFps = 1000.0 / frameTime;
+
+            fpsTextNode->style(
+                "text", fmt::format("FPS: {:.0f} (avg {:.0f}, 1% low {:.0f}, p50 {:.2f} p95 {:.2f} p99 {:.2f})",
+                                    instantFps, avgFps, lowFps, percentile(0.50), percentile(0.95), percentile(0.99)));
+        }
     }
 
     auto m = camera->getPosRaw();

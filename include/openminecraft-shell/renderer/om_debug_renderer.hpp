@@ -62,8 +62,7 @@ class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandle
     std::shared_ptr<openminecraft::geom::OMFontSet> fontset;
     std::vector<std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode>> sectorNodes = {},
                                                                                             textNodes = {};
-    int fps = 0;
-    std::chrono::steady_clock::time_point tp = {};
+    std::vector<float> frameTimes = {};
     openminecraft::renderer::OMRenderer *renderer;
     openminecraft::renderer::common::basics::OMCamera *camera;
 

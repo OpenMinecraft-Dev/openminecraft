@@ -29,6 +29,11 @@ class OMRendererOpenGL : public OMRenderer
     auto getDefaultRenderTarget() -> common::OMRendererRenderTarget * override;
     auto createPipeline() -> common::OMRendererPipeline * override;
     auto createTask(std::string name) -> common::OMRendererTask * override;
+    auto fetchFrameTime() -> float override
+    {
+        return frameTimeMs;
+    }
+
     auto getExtent() const -> glm::vec2 override;
     auto getLogicalExtent() const -> glm::vec2 override;
 
@@ -36,6 +41,10 @@ class OMRendererOpenGL : public OMRenderer
 
     void render(util::OMTicker &) override;
     void requestResize() override;
+
+    // 上一帧耗时（毫秒），由 render() 逐帧更新
+    float frameTimeMs = 0.0f;
+    std::chrono::steady_clock::time_point frameStamp = {};
 
     OMRendererOpenGLFuncs gl;
     common::OMRendererRenderTarget *defaultTarget;
