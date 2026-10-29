@@ -313,8 +313,8 @@ void OMRendererTextureVk::setupSampler()
                                   mipmap, 0, layers);
 
             cmdBuff.end();
-            renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
-            renderer->queues.first.waitIdle();
+            renderer->transferQueue.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
+            renderer->transferQueue.waitIdle();
 
             renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
         }
@@ -325,6 +325,35 @@ void OMRendererTextureVk::setupSampler()
     }
 }
 
+auto OMRendererTextureVk::acquireUpdateSlot(uint64_t bytes) -> OMTextureUpdateSlot &
+{
+    if (updateSlot.inFlight && updateSlot.fence)
+    {
+        renderer->logicalDevice.waitForFences(1, &updateSlot.fence, true, std::numeric_limits<uint64_t>::max());
+        updateSlot.inFlight = false;
+    }
+
+    if (!updateSlot.fence)
+    {
+        updateSlot.fence = renderer->logicalDevice.createFence(::vk::FenceCreateInfo());
+    }
+
+    if (!updateSlot.cmd)
+    {
+        updateSlot.cmd = renderer->logicalDevice.allocateCommandBuffers(
+            CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
+    }
+
+    if (updateSlot.capacity < bytes)
+    {
+        delete updateSlot.staging;
+        updateSlot.staging = renderer->allocateBuffer(common::Misc, bytes);
+        updateSlot.capacity = bytes;
+    }
+
+    return updateSlot;
+}
+
 OMRendererTextureVk::~OMRendererTextureVk()
 {
     try
@@ -333,6 +362,12 @@ OMRendererTextureVk::~OMRendererTextureVk()
         renderer->logicalDevice.destroyImageView(imageView, renderer->allocator);
         renderer->logicalDevice.freeMemory(imageMemory, renderer->allocator);
         renderer->logicalDevice.destroyImage(image, renderer->allocator);
+
+        // INFO: 这里不再等待 fence / 释放命令缓冲：纹理析构可能发生在设备拆除之后，
+        // 此时再调用 Vulkan 接口会在退出阶段崩溃。命令缓冲由命令池回收，
+        // fence 由设备销毁时一并释放，这里只回收 CPU 侧的 staging。
+        delete updateSlot.staging;
+        updateSlot.staging = nullptr;
 
         if (stagBuffer)
         {
@@ -396,21 +431,17 @@ void OMRendererTextureVk::updateData(void *p, uint64_t layer)
 {
     try
     {
-        if (stagBuffer == nullptr)
-        {
-            stagBuffer =
-                renderer->allocateBuffer(common::Misc, width * height * ((this->arr == common::R8G8B8Srgb) ? 3 : 4));
-        }
-        stagBuffer->updateData(p);
+        const uint64_t bytes = width * height * ((this->arr == common::R8G8B8Srgb) ? 3 : 4);
+        auto &slot = acquireUpdateSlot(bytes);
+        slot.staging->updateData(p);
 
-        auto cmdBuff = renderer->logicalDevice.allocateCommandBuffers(
-            CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
-
+        auto cmdBuff = slot.cmd;
+        cmdBuff.reset({});
         cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
         transitionImageLayout(cmdBuff, uploaded[layer] ? ImageLayout::eShaderReadOnlyOptimal : ImageLayout::eUndefined,
                               ImageLayout::eTransferDstOptimal, 0, layer, 1);
         cmdBuff.copyBufferToImage(
-            reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
+            reinterpret_cast<OMRendererBufferVk *>(slot.staging)->buffer, image, ImageLayout::eTransferDstOptimal,
             BufferImageCopy(0, width, height,
                             ImageSubresourceLayers((!isColorFormat(arr)) ? ImageAspectFlagBits::eDepth
                                                                          : ImageAspectFlagBits::eColor,
@@ -420,14 +451,11 @@ void OMRendererTextureVk::updateData(void *p, uint64_t layer)
                               1);
 
         cmdBuff.end();
-        renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
-        renderer->queues.first.waitIdle();
+        renderer->logicalDevice.resetFences(slot.fence);
+        renderer->transferQueue.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff), slot.fence);
+        slot.inFlight = true;
 
         uploaded[layer] = true;
-
-        renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
-
-        // delete stagBuffer;
     }
     catch (SystemError &e)
     {
@@ -439,17 +467,17 @@ void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64
 {
     try
     {
-        auto stagBuffer = renderer->allocateBuffer(common::Misc, w * h * ((this->arr == common::R8G8B8Srgb) ? 3 : 4));
-        stagBuffer->updateData(p);
+        const uint64_t bytes = w * h * ((this->arr == common::R8G8B8Srgb) ? 3 : 4);
+        auto &slot = acquireUpdateSlot(bytes);
+        slot.staging->updateData(p);
 
-        auto cmdBuff = renderer->logicalDevice.allocateCommandBuffers(
-            CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
-
+        auto cmdBuff = slot.cmd;
+        cmdBuff.reset({});
         cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
         transitionImageLayout(cmdBuff, uploaded[layer] ? ImageLayout::eShaderReadOnlyOptimal : ImageLayout::eUndefined,
                               ImageLayout::eTransferDstOptimal, 0, layer, 1);
         cmdBuff.copyBufferToImage(
-            reinterpret_cast<OMRendererBufferVk *>(stagBuffer)->buffer, image, ImageLayout::eTransferDstOptimal,
+            reinterpret_cast<OMRendererBufferVk *>(slot.staging)->buffer, image, ImageLayout::eTransferDstOptimal,
             BufferImageCopy(0, w, h,
                             ImageSubresourceLayers((!isColorFormat(arr)) ? ImageAspectFlagBits::eDepth
                                                                          : ImageAspectFlagBits::eColor,
@@ -459,14 +487,11 @@ void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64
                               1);
 
         cmdBuff.end();
-        renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
-        renderer->queues.first.waitIdle();
+        renderer->logicalDevice.resetFences(slot.fence);
+        renderer->transferQueue.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff), slot.fence);
+        slot.inFlight = true;
 
         uploaded[layer] = true;
-
-        renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
-
-        delete stagBuffer;
     }
     catch (SystemError &e)
     {
@@ -502,8 +527,8 @@ auto OMRendererTextureVk::fetchData(uint64_t layer) -> std::shared_ptr<void>
                               1);
 
         cmdBuff.end();
-        renderer->queues.first.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
-        renderer->queues.first.waitIdle();
+        renderer->transferQueue.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
+        renderer->transferQueue.waitIdle();
 
         renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
 

@@ -106,7 +106,12 @@ class OMRendererVk : public OMRenderer
     ::vk::DebugReportCallbackEXT reportCallback;
     ::vk::SurfaceKHR surface;
     std::pair<uint32_t, uint32_t> queueFamilyIndex;
+    uint32_t graphicsQueueIndex = 0;
+    uint32_t presentQueueIndex = 0;
     std::pair<::vk::Queue, ::vk::Queue> queues;
+    uint32_t transferQueueFamily = 0;
+    uint32_t transferQueueIndex = 0;
+    ::vk::Queue transferQueue;
 
     ::vk::CommandPool tempCommandPool;
 

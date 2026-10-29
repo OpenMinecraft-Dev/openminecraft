@@ -40,11 +40,25 @@ class OMRendererTextureVk : public common::OMRendererTexture
     ::vk::SampleCountFlagBits sampleCount;
 
   private:
+    // 纹理上传复用的槽位：命令缓冲 + fence + staging 绑定在一起，
+    // 复用前先等待上一次上传的 fence，避免改动仍在执行中的命令缓冲。
+    struct OMTextureUpdateSlot
+    {
+        ::vk::CommandBuffer cmd = nullptr;
+        ::vk::Fence fence = nullptr;
+        common::OMRendererBuffer *staging = nullptr;
+        bool inFlight = false;
+        uint64_t capacity = 0;
+    };
+
+    auto acquireUpdateSlot(uint64_t bytes) -> OMTextureUpdateSlot &;
+
     uint64_t mipmap;
     uint64_t layers;
     OMRendererVk *renderer;
     std::unordered_map<uint64_t, bool> uploaded;
 
+    OMTextureUpdateSlot updateSlot = {};
     common::OMRendererBuffer *stagBuffer = nullptr;
 };
 } // namespace openminecraft::renderer::vk

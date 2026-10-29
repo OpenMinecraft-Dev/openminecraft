@@ -463,7 +463,6 @@ void OMWorldRenderer::afterFrame()
     if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tickTp).count() > 50)
     {
         tickTp = std::chrono::steady_clock::now();
-        // TODO: fix performance issues
         textureAtlas->updateAnim();
 
         gameT += 1;

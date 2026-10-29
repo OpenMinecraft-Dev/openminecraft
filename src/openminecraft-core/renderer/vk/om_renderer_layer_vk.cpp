@@ -628,8 +628,13 @@ auto OMRendererVk::deviceQueueFetch() -> OMResult<std::any, std::string>
 {
     try
     {
-        queues = std::make_pair(logicalDevice.getQueue(queueFamilyIndex.first, 0),
-                                logicalDevice.getQueue(queueFamilyIndex.second, 0));
+        queues = std::make_pair(logicalDevice.getQueue(queueFamilyIndex.first, graphicsQueueIndex),
+                                logicalDevice.getQueue(queueFamilyIndex.second, presentQueueIndex));
+        transferQueue = logicalDevice.getQueue(transferQueueFamily, transferQueueIndex);
+
+        logger->debug("queue status graphics: {}#{} present: {}#{} transfer: {}#{}", queueFamilyIndex.first,
+                      graphicsQueueIndex, queueFamilyIndex.second, presentQueueIndex, transferQueueFamily,
+                      transferQueueIndex);
     }
     catch (SystemError &e)
     {
@@ -644,12 +649,36 @@ auto OMRendererVk::deviceCreation() -> OMResult<Device, std::string>
 {
     try
     {
+        // 每个队列族按"实际用到的最大 queue index + 1"申请队列
+        std::vector<std::pair<uint32_t, uint32_t>> need;
+        auto addNeed = [&](uint32_t fam, uint32_t count) {
+            for (auto &p : need)
+            {
+                if (p.first == fam)
+                {
+                    p.second = std::max(p.second, count);
+                    return;
+                }
+            }
+            need.emplace_back(fam, count);
+        };
+
+        addNeed(queueFamilyIndex.first, graphicsQueueIndex + 1);
+        addNeed(queueFamilyIndex.second, presentQueueIndex + 1);
+        addNeed(transferQueueFamily, transferQueueIndex + 1);
+
+        std::vector<std::vector<float>> priorities;
         std::vector<DeviceQueueCreateInfo> qis;
-        auto f = 1.f;
-        qis.push_back(DeviceQueueCreateInfo({}, queueFamilyIndex.first, 1, &f));
-        if (queueFamilyIndex.first != queueFamilyIndex.second)
+
+        for (auto &[fam, cnt] : need)
         {
-            qis.push_back(DeviceQueueCreateInfo({}, queueFamilyIndex.second, 1, &f));
+            priorities.emplace_back(cnt, 1.0f);
+        }
+
+        for (size_t i = 0; i < need.size(); ++i)
+        {
+            qis.push_back(DeviceQueueCreateInfo({}, need[i].first, need[i].second, priorities[i].data()));
+            logger->debug("request {} queue(s) from family {}", need[i].second, need[i].first);
         }
         auto fea = physicalDevice.getFeatures();
 
@@ -713,32 +742,180 @@ auto OMRendererVk::deviceSelection(std::function<int(std::vector<std::string>)> 
             id++;
         }
 
-        auto fmly = devtarget.getQueueFamilyProperties();
+        const auto fmly = devtarget.getQueueFamilyProperties();
+        const auto familyCount = static_cast<uint32_t>(fmly.size());
 
-        auto gf = -1;
-        auto pf = -1;
-
-        int idx = 0;
-        for (auto i : fmly)
+        std::vector<bool> supportsPresent(familyCount, false);
+        for (uint32_t i = 0; i < familyCount; ++i)
         {
-            if (i.queueFlags & QueueFlagBits::eGraphics)
-            {
-                gf = idx;
-            }
-
-            if (devtarget.getSurfaceSupportKHR(idx, surface))
-            {
-                pf = idx;
-            }
-            idx++;
+            supportsPresent[i] = devtarget.getSurfaceSupportKHR(i, surface);
+            logger->debug("queue {} flags={:x} count={} present={}", i, VkQueueFlags(fmly[i].queueFlags),
+                          fmly[i].queueCount, static_cast<bool>(supportsPresent[i]));
         }
 
-        queueFamilyIndex = std::make_pair(gf, pf);
+        auto hasFlag = [&](uint32_t f, QueueFlagBits bit) -> bool { return (fmly[f].queueFlags & bit) == bit; };
+        auto usable = [&](uint32_t f) -> bool { return f < familyCount && fmly[f].queueCount > 0; };
 
-        if (gf == -1 || pf == -1)
+        int32_t graphics = -1;
+        for (uint32_t i = 0; i < familyCount; ++i)
+        {
+            if (!usable(i) || !hasFlag(i, QueueFlagBits::eGraphics))
+            {
+                continue;
+            }
+
+            if (graphics < 0)
+            {
+                graphics = static_cast<int32_t>(i);
+                continue;
+            }
+
+            auto g = static_cast<uint32_t>(graphics);
+            const bool newCompute = hasFlag(i, QueueFlagBits::eCompute);
+            const bool oldCompute = hasFlag(g, QueueFlagBits::eCompute);
+
+            if (newCompute != oldCompute)
+            {
+                graphics = newCompute ? static_cast<int32_t>(i) : graphics;
+            }
+            else if (fmly[i].queueCount != fmly[g].queueCount)
+            {
+                graphics = fmly[i].queueCount > fmly[g].queueCount ? static_cast<int32_t>(i) : graphics;
+            }
+        }
+
+        if (graphics < 0)
         {
             return OMResult<PhysicalDevice, std::string>::err(translate("openminecraft.renderer.vk.err.family"));
         }
+
+        int32_t present = -1;
+        for (uint32_t i = 0; i < familyCount; ++i)
+        {
+            if (!usable(i) || !supportsPresent[i] || static_cast<int32_t>(i) == graphics)
+            {
+                continue;
+            }
+            present = static_cast<int32_t>(i);
+            break;
+        }
+
+        if (present < 0)
+        {
+            present = graphics;
+        }
+
+        int32_t transfer = -1;
+
+        for (uint32_t i = 0; i < familyCount; ++i)
+        {
+            if (!usable(i) || !hasFlag(i, QueueFlagBits::eTransfer) || hasFlag(i, QueueFlagBits::eGraphics))
+            {
+                continue;
+            }
+            if (transfer < 0 || fmly[i].queueCount > fmly[static_cast<uint32_t>(transfer)].queueCount)
+            {
+                transfer = static_cast<int32_t>(i);
+            }
+        }
+
+        if (transfer < 0)
+        {
+            for (uint32_t i = 0; i < familyCount; ++i)
+            {
+                if (!usable(i) || !hasFlag(i, QueueFlagBits::eTransfer) || static_cast<int32_t>(i) == graphics ||
+                    static_cast<int32_t>(i) == present)
+                {
+                    continue;
+                }
+                transfer = static_cast<int32_t>(i);
+                break;
+            }
+        }
+
+        if (transfer < 0)
+        {
+            for (uint32_t i = 0; i < familyCount; ++i)
+            {
+                if (!usable(i) || !hasFlag(i, QueueFlagBits::eTransfer) || static_cast<int32_t>(i) == graphics)
+                {
+                    continue;
+                }
+                transfer = static_cast<int32_t>(i);
+                break;
+            }
+        }
+
+        if (transfer < 0)
+        {
+            transfer = graphics;
+        }
+
+        const uint32_t gfam = static_cast<uint32_t>(graphics);
+        const uint32_t pfam = static_cast<uint32_t>(present);
+        const uint32_t tfam = static_cast<uint32_t>(transfer);
+
+        graphicsQueueIndex = 0;
+        presentQueueIndex = 0;
+        transferQueueIndex = 0;
+
+        if (pfam == gfam && fmly[pfam].queueCount >= 2)
+        {
+            presentQueueIndex = 1;
+        }
+
+        if (tfam == gfam)
+        {
+            uint32_t used = 1;
+            if (presentQueueIndex == 0 && pfam == tfam)
+            {
+            }
+            else
+            {
+                used = std::max(used, presentQueueIndex + 1);
+            }
+
+            if (fmly[tfam].queueCount > used)
+            {
+                transferQueueIndex = used;
+            }
+        }
+
+        auto requiredQueues = [&](uint32_t f) -> uint32_t {
+            uint32_t need = 1;
+            if (f == gfam)
+            {
+                need = std::max(need, graphicsQueueIndex + 1);
+            }
+            if (f == pfam)
+            {
+                need = std::max(need, presentQueueIndex + 1);
+            }
+            if (f == tfam)
+            {
+                need = std::max(need, transferQueueIndex + 1);
+            }
+            return need;
+        };
+
+        for (uint32_t f : {gfam, pfam, tfam})
+        {
+            if (requiredQueues(f) > fmly[f].queueCount)
+            {
+                logger->warn("queue family {} needs {} queues but only {} available", f, requiredQueues(f),
+                             fmly[f].queueCount);
+                graphicsQueueIndex = 0;
+                presentQueueIndex = 0;
+                transferQueueIndex = 0;
+                break;
+            }
+        }
+
+        queueFamilyIndex = std::make_pair(gfam, pfam);
+        transferQueueFamily = tfam;
+
+        logger->info("queue families: graphics={} (queue {}), present={} (queue {}), transfer={} (queue {})", gfam,
+                     graphicsQueueIndex, pfam, presentQueueIndex, tfam, transferQueueIndex);
 
         return OMResult<PhysicalDevice, std::string>::ok(devtarget);
     }
