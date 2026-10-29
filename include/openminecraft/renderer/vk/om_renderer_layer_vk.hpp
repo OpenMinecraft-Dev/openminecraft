@@ -113,7 +113,7 @@ class OMRendererVk : public OMRenderer
     uint32_t transferQueueIndex = 0;
     ::vk::Queue transferQueue;
 
-    ::vk::CommandPool tempCommandPool;
+    ::vk::CommandPool tempCommandPool, tempCommandPoolTransfer;
 
     std::vector<OMFrameSync> frameSyncs;
     std::vector<::vk::Semaphore> frameRenderSemaphores;

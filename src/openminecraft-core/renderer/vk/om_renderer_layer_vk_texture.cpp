@@ -281,7 +281,7 @@ void OMRendererTextureVk::setupSampler()
         if (mipmap > 0)
         {
             auto cmdBuff = renderer->logicalDevice.allocateCommandBuffers(
-                CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
+                CommandBufferAllocateInfo(renderer->tempCommandPoolTransfer, CommandBufferLevel::ePrimary, 1))[0];
             cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
 
             transitionImageLayout(cmdBuff, ImageLayout::eShaderReadOnlyOptimal, ImageLayout::eTransferSrcOptimal, 0, 0,
@@ -316,7 +316,7 @@ void OMRendererTextureVk::setupSampler()
             renderer->transferQueue.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
             renderer->transferQueue.waitIdle();
 
-            renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
+            renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPoolTransfer, 1, &cmdBuff);
         }
     }
     catch (SystemError &e)
@@ -335,13 +335,13 @@ auto OMRendererTextureVk::acquireUpdateSlot(uint64_t bytes) -> OMTextureUpdateSl
 
     if (!updateSlot.fence)
     {
-        updateSlot.fence = renderer->logicalDevice.createFence(::vk::FenceCreateInfo());
+        updateSlot.fence = renderer->logicalDevice.createFence(::vk::FenceCreateInfo(), renderer->allocator);
     }
 
     if (!updateSlot.cmd)
     {
         updateSlot.cmd = renderer->logicalDevice.allocateCommandBuffers(
-            CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
+            CommandBufferAllocateInfo(renderer->tempCommandPoolTransfer, CommandBufferLevel::ePrimary, 1))[0];
     }
 
     if (updateSlot.capacity < bytes)
@@ -363,16 +363,9 @@ OMRendererTextureVk::~OMRendererTextureVk()
         renderer->logicalDevice.freeMemory(imageMemory, renderer->allocator);
         renderer->logicalDevice.destroyImage(image, renderer->allocator);
 
-        // INFO: 这里不再等待 fence / 释放命令缓冲：纹理析构可能发生在设备拆除之后，
-        // 此时再调用 Vulkan 接口会在退出阶段崩溃。命令缓冲由命令池回收，
-        // fence 由设备销毁时一并释放，这里只回收 CPU 侧的 staging。
         delete updateSlot.staging;
         updateSlot.staging = nullptr;
-
-        if (stagBuffer)
-        {
-            delete stagBuffer;
-        }
+	renderer->logicalDevice.destroyFence(updateSlot.fence, renderer->allocator);
     }
     catch (SystemError &e)
     {
@@ -510,7 +503,7 @@ auto OMRendererTextureVk::fetchData(uint64_t layer) -> std::shared_ptr<void>
         auto vkStaging = reinterpret_cast<OMRendererBufferVk *>(staging);
 
         auto cmdBuff = renderer->logicalDevice.allocateCommandBuffers(
-            CommandBufferAllocateInfo(renderer->tempCommandPool, CommandBufferLevel::ePrimary, 1))[0];
+            CommandBufferAllocateInfo(renderer->tempCommandPoolTransfer, CommandBufferLevel::ePrimary, 1))[0];
 
         cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
 
@@ -530,7 +523,7 @@ auto OMRendererTextureVk::fetchData(uint64_t layer) -> std::shared_ptr<void>
         renderer->transferQueue.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff));
         renderer->transferQueue.waitIdle();
 
-        renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPool, 1, &cmdBuff);
+        renderer->logicalDevice.freeCommandBuffers(renderer->tempCommandPoolTransfer, 1, &cmdBuff);
 
         auto result = staging->fetchData();
 

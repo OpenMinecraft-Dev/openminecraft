@@ -202,6 +202,8 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     {
         tempCommandPool = logicalDevice.createCommandPool(
             CommandPoolCreateInfo(CommandPoolCreateFlagBits::eResetCommandBuffer, queueFamilyIndex.first), allocator);
+        tempCommandPoolTransfer = logicalDevice.createCommandPool(
+            CommandPoolCreateInfo(CommandPoolCreateFlagBits::eResetCommandBuffer, transferQueueFamily), allocator);
 
         defaultTarget = this->createRenderTarget();
         defaultTarget->build();
@@ -809,7 +811,7 @@ auto OMRendererVk::deviceSelection(std::function<int(std::vector<std::string>)> 
 
         for (uint32_t i = 0; i < familyCount; ++i)
         {
-            if (!usable(i) || !hasFlag(i, QueueFlagBits::eTransfer) || hasFlag(i, QueueFlagBits::eGraphics))
+            if (!usable(i) || !hasFlag(i, QueueFlagBits::eTransfer) || !hasFlag(i, QueueFlagBits::eGraphics) || hasFlag(i, QueueFlagBits::eGraphics))
             {
                 continue;
             }
@@ -823,7 +825,7 @@ auto OMRendererVk::deviceSelection(std::function<int(std::vector<std::string>)> 
         {
             for (uint32_t i = 0; i < familyCount; ++i)
             {
-                if (!usable(i) || !hasFlag(i, QueueFlagBits::eTransfer) || static_cast<int32_t>(i) == graphics ||
+                if (!usable(i) || !hasFlag(i, QueueFlagBits::eTransfer) || !hasFlag(i, QueueFlagBits::eGraphics) || static_cast<int32_t>(i) == graphics ||
                     static_cast<int32_t>(i) == present)
                 {
                     continue;
@@ -837,7 +839,7 @@ auto OMRendererVk::deviceSelection(std::function<int(std::vector<std::string>)> 
         {
             for (uint32_t i = 0; i < familyCount; ++i)
             {
-                if (!usable(i) || !hasFlag(i, QueueFlagBits::eTransfer) || static_cast<int32_t>(i) == graphics)
+                if (!usable(i) || !hasFlag(i, QueueFlagBits::eTransfer) || !hasFlag(i, QueueFlagBits::eGraphics) || static_cast<int32_t>(i) == graphics)
                 {
                     continue;
                 }
@@ -1065,6 +1067,7 @@ OMRendererVk::~OMRendererVk()
         }
         this->clearTasks();
         logicalDevice.destroyCommandPool(tempCommandPool, allocator);
+        logicalDevice.destroyCommandPool(tempCommandPoolTransfer, allocator);
         delete defaultTarget;
         handlers.clear();
 

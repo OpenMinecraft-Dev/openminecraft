@@ -300,7 +300,6 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->name = "debughud";
     renderer->registerHandler(internal);
-    // offset.animateTo(0.0, common::animation::easeOutQuint<float>, 1.0);
 }
 OMDebugRenderer::~OMDebugRenderer()
 {

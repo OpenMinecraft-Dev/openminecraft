@@ -42,7 +42,6 @@ class OMRendererOpenGL : public OMRenderer
     void render(util::OMTicker &) override;
     void requestResize() override;
 
-    // 上一帧耗时（毫秒），由 render() 逐帧更新
     float frameTimeMs = 0.0f;
     std::chrono::steady_clock::time_point frameStamp = {};
 
