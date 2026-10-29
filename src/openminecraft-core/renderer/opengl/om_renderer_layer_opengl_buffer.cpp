@@ -130,6 +130,7 @@ void OMRendererBufferOpenGL::updateData(void *src)
     }
     unbind();
 }
+// TODO: performance issue
 void OMRendererBufferOpenGL::moveDataPart(uint64_t target, uint64_t original, uint64_t length)
 {
     if (length == 0 || target == original)
@@ -139,27 +140,8 @@ void OMRendererBufferOpenGL::moveDataPart(uint64_t target, uint64_t original, ui
 
     bind();
 
-    const uint64_t lo = std::min(target, original);
-    const uint64_t hi = std::max(target + length, original + length);
-
-    void *data = renderer->gl.glMapBufferRange(convertFrom(usage), static_cast<GLintptr>(lo),
-                                               static_cast<GLsizeiptr>(hi - lo), GL_MAP_READ_BIT | GL_MAP_WRITE_BIT);
-
-    if (data != nullptr)
-    {
-        auto *base = static_cast<uint8_t *>(data);
-        std::memmove(base + (target - lo), base + (original - lo), static_cast<size_t>(length));
-        renderer->gl.glUnmapBuffer(convertFrom(usage));
-    }
-    else
-    {
-        // 映射失败时退化为 读回 + 写回
-        std::vector<uint8_t> temp(static_cast<size_t>(length));
-        renderer->gl.glGetBufferSubData(convertFrom(usage), static_cast<GLintptr>(original),
-                                        static_cast<GLsizeiptr>(length), temp.data());
-        renderer->gl.glBufferSubData(convertFrom(usage), static_cast<GLintptr>(target), static_cast<GLsizeiptr>(length),
-                                     temp.data());
-    }
+    renderer->gl.glCopyBufferSubData(convertFrom(usage), convertFrom(usage),
+                                     original, target, length);
 
     if (usage == common::UniformTexel && texel != 0)
     {

@@ -316,7 +316,6 @@ static std::ofstream off("test.csv");
 void OMDebugRenderer::afterFrame()
 {
     const float frameTime = renderer->fetchFrameTime();
-
     if (frameTime > 0.0f)
     {
         frameTimes.push_back(frameTime);
