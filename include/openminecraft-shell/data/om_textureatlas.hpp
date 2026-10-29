@@ -229,7 +229,6 @@ class OMTextureAtlas
             auto &cache = animCache[p.first];
             const int frame = p.second.currentFrame;
 
-            // 只在首次构建缓存时拆分帧，之后直接复用
             if (!cache.built)
             {
                 cache.frames.resize(p.second.maxFrames);

@@ -84,6 +84,13 @@ void OMSwapchainManager::reinit()
     this->format = form;
 
     extent = chooseExtent(supp);
+    if (supp.capabilities.currentTransform &
+        (SurfaceTransformFlagBitsKHR::eRotate90 | SurfaceTransformFlagBitsKHR::eRotate270))
+    {
+        auto temp = extent.width;
+        extent.width = extent.height;
+        extent.height = temp;
+    }
 
     SwapchainCreateInfoKHR createInfo({}, surface, imageCount, form.format, form.colorSpace, extent, 1,
                                       ImageUsageFlagBits::eColorAttachment, {}, {}, {},

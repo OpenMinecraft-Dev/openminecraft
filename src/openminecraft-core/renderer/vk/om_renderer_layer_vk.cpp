@@ -394,7 +394,9 @@ auto OMRendererVk::getDefaultRenderTarget() -> common::OMRendererRenderTarget *
 }
 auto OMRendererVk::getExtent() const -> glm::vec2
 {
-    return {static_cast<float>(swapchainManager->extent.width), static_cast<float>(swapchainManager->extent.height)};
+    int w, h;
+    SDL_GetWindowSizeInPixels(reinterpret_cast<SDL_Window *>(window), &w, &h);
+    return {w, h};
 }
 auto OMRendererVk::getLogicalExtent() const -> glm::vec2
 {

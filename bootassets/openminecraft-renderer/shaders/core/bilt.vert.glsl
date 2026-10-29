@@ -10,6 +10,8 @@ void main()
     gl_Position = vec4(vertexgen_quad_ndc(), 0.0, 1.0);
 #ifdef VULKAN
     gl_Position.y = -gl_Position.y;
+    // vec2 newxy = mat2(0, 1, -1, 0) * gl_Position.xy;
+    // gl_Position.xy = newxy;
 #endif
     biltTexCoord = vertexgen_quad_normal();
 }
