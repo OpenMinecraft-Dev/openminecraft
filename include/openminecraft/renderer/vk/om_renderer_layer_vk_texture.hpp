@@ -28,6 +28,7 @@ class OMRendererTextureVk : public common::OMRendererTexture
                                ::vk::ImageAspectFlags aspect = ::vk::ImageAspectFlagBits::eColor);
     void updateData(void *p, uint64_t) override;
     void updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h, uint64_t) override;
+    void updateDataMulti(const std::vector<common::OMRendererTexture::OMTextureDataUpdate> &updates) override;
     void setupSampler() override;
     auto fetchData(uint64_t layer = 0) -> std::shared_ptr<void> override;
 

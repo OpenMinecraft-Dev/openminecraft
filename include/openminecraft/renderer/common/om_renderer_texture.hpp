@@ -4,6 +4,7 @@
 #include "openminecraft/renderer/om_renderer_object.hpp"
 
 #include <cstdint>
+#include <vector>
 #include <memory>
 
 namespace openminecraft::renderer
@@ -113,6 +114,21 @@ class OMRendererTexture : public OMRendererObject
 
     virtual void updateData(void *p, uint64_t layer = 0) = 0;
     virtual void updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h, uint64_t layer = 0) = 0;
+
+    // 批量上传多个 layer：Vulkan 后端会合并成一次 barrier + 一次 submit
+    struct OMTextureDataUpdate
+    {
+        void *data;
+        uint64_t layer;
+    };
+
+    virtual void updateDataMulti(const std::vector<OMTextureDataUpdate> &updates)
+    {
+        for (auto &u : updates)
+        {
+            updateData(u.data, u.layer);
+        }
+    }
 
     inline auto objType() -> OMRendererObjectType override
     {

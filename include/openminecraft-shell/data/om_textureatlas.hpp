@@ -209,6 +209,10 @@ class OMTextureAtlas
 
     void updateAnim()
     {
+        // 同一 tick 内收集所有动画层，最后合并成一次提交（Vulkan 后端内部合并 barrier）
+        std::vector<openminecraft::renderer::common::OMRendererTexture::OMTextureDataUpdate> pendingSubtexUpdates;
+        std::vector<openminecraft::renderer::common::OMRendererTexture::OMTextureDataUpdate> pendingWideUpdates;
+
         for (auto &p : subtexAnimData)
         {
             if (p.second.interval)
@@ -260,8 +264,14 @@ class OMTextureAtlas
                 continue;
             }
 
-            texture->updateData(cache.frames[frame].data(), subtex[p.first]);
+            pendingSubtexUpdates.push_back({cache.frames[frame].data(), static_cast<uint64_t>(subtex[p.first])});
             cache.lastUploaded = frame;
+        }
+
+        if (!pendingSubtexUpdates.empty())
+        {
+            texture->updateDataMulti(pendingSubtexUpdates);
+            pendingSubtexUpdates.clear();
         }
 
         for (auto &p : subtexWideAnimData)
@@ -315,8 +325,15 @@ class OMTextureAtlas
                 continue;
             }
 
-            textureSecondary->updateData(cache.frames[frame].data(), subtexWide[p.first]);
+            pendingWideUpdates.push_back(
+                {cache.frames[frame].data(), static_cast<uint64_t>(subtexWide[p.first])});
             cache.lastUploaded = frame;
+        }
+
+        if (!pendingWideUpdates.empty())
+        {
+            textureSecondary->updateDataMulti(pendingWideUpdates);
+            pendingWideUpdates.clear();
         }
     }
 

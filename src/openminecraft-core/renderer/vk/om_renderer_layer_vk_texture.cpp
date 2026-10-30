@@ -207,6 +207,9 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64
     {
         auto memprop = renderer->physicalDevice.getMemoryProperties();
         format = fromCommonUsage(arr);
+        std::vector<uint32_t> fams;
+        fams.push_back(renderer->transferQueueIndex);
+        fams.push_back(renderer->queueFamilyIndex.first);
         image = renderer->logicalDevice.createImage(
             ImageCreateInfo({}, ImageType::e2D, format, Extent3D(width, height, 1), mipmap + 1, layers, sampleCount,
                             ImageTiling::eOptimal,
@@ -215,7 +218,7 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64
                                       ImageUsageFlagBits::eDepthStencilAttachment | ImageUsageFlagBits::eTransferSrc
                                 : ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled |
                                       ImageUsageFlagBits::eColorAttachment | ImageUsageFlagBits::eTransferSrc,
-                            SharingMode::eExclusive, {}, ImageLayout::eUndefined),
+                            SharingMode::eConcurrent, fams, ImageLayout::eUndefined),
             renderer->allocator);
 
         auto req = renderer->logicalDevice.getImageMemoryRequirements(image);
@@ -365,7 +368,7 @@ OMRendererTextureVk::~OMRendererTextureVk()
 
         delete updateSlot.staging;
         updateSlot.staging = nullptr;
-	renderer->logicalDevice.destroyFence(updateSlot.fence, renderer->allocator);
+        renderer->logicalDevice.destroyFence(updateSlot.fence, renderer->allocator);
     }
     catch (SystemError &e)
     {
@@ -449,6 +452,104 @@ void OMRendererTextureVk::updateData(void *p, uint64_t layer)
         slot.inFlight = true;
 
         uploaded[layer] = true;
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.image.update"));
+    }
+}
+
+void OMRendererTextureVk::updateDataMulti(const std::vector<common::OMRendererTexture::OMTextureDataUpdate> &updates)
+{
+    if (updates.empty())
+    {
+        return;
+    }
+
+    if (updates.size() == 1)
+    {
+        updateData(updates[0].data, updates[0].layer);
+        return;
+    }
+
+    try
+    {
+        const uint64_t bytes = width * height * ((this->arr == common::R8G8B8Srgb) ? 3 : 4);
+        auto &slot = acquireUpdateSlot(bytes * updates.size());
+        auto staging = reinterpret_cast<OMRendererBufferVk *>(slot.staging);
+
+        auto cmdBuff = slot.cmd;
+        cmdBuff.reset({});
+        cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
+
+        // 所有 layer 在 build() 阶段都已初始化过，可以对整张图用一次 barrier；
+        // 若仍有未初始化的 layer（首次上传），退回逐层转换以保证正确性。
+        bool allUploaded = true;
+        for (auto &u : updates)
+        {
+            if (!uploaded[u.layer])
+            {
+                allUploaded = false;
+                break;
+            }
+        }
+
+        uint64_t offset = 0;
+
+        if (allUploaded)
+        {
+            // 一次 barrier 覆盖整张图：ShaderReadOnly -> TransferDst
+            transitionImageLayout(cmdBuff, ImageLayout::eShaderReadOnlyOptimal, ImageLayout::eTransferDstOptimal, 0, 0,
+                                  layers);
+
+            for (auto &u : updates)
+            {
+                slot.staging->updateDataPart(u.data, offset, bytes);
+
+                cmdBuff.copyBufferToImage(
+                    staging->buffer, image, ImageLayout::eTransferDstOptimal,
+                    BufferImageCopy(offset, width, height,
+                                    ImageSubresourceLayers((!isColorFormat(arr)) ? ImageAspectFlagBits::eDepth
+                                                                                 : ImageAspectFlagBits::eColor,
+                                                           0, u.layer, 1),
+                                    Offset3D(0, 0, 0), Extent3D(width, height, 1)));
+
+                uploaded[u.layer] = true;
+                offset += bytes;
+            }
+
+            // 一次 barrier 覆盖整张图：TransferDst -> ShaderReadOnly
+            transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal, 0, 0,
+                                  layers);
+        }
+        else
+        {
+            for (auto &u : updates)
+            {
+                slot.staging->updateDataPart(u.data, offset, bytes);
+
+                transitionImageLayout(cmdBuff,
+                                      uploaded[u.layer] ? ImageLayout::eShaderReadOnlyOptimal : ImageLayout::eUndefined,
+                                      ImageLayout::eTransferDstOptimal, 0, u.layer, 1);
+                cmdBuff.copyBufferToImage(
+                    staging->buffer, image, ImageLayout::eTransferDstOptimal,
+                    BufferImageCopy(offset, width, height,
+                                    ImageSubresourceLayers((!isColorFormat(arr)) ? ImageAspectFlagBits::eDepth
+                                                                                 : ImageAspectFlagBits::eColor,
+                                                           0, u.layer, 1),
+                                    Offset3D(0, 0, 0), Extent3D(width, height, 1)));
+                transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal, 0,
+                                      u.layer, 1);
+
+                uploaded[u.layer] = true;
+                offset += bytes;
+            }
+        }
+
+        cmdBuff.end();
+        renderer->logicalDevice.resetFences(slot.fence);
+        renderer->transferQueue.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff), slot.fence);
+        slot.inFlight = true;
     }
     catch (SystemError &e)
     {
