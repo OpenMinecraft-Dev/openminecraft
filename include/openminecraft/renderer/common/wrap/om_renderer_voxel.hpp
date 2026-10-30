@@ -394,14 +394,20 @@ template <typename It> class OMVoxelLayer
             cm.erase(cm.begin(), std::next(cm.begin(), blk.length / sizeof(It)));
             chunkBlocks[i].push_back(blk);
         }
+
+        voxelBuffer->flushDirty();
     }
 
     auto merge()
     {
+        auto mergeStart = std::chrono::steady_clock::now();
+
         for (auto &p : chunkBlocks)
         {
             p = voxelBuffer->compact(p);
         }
+
+        voxelBuffer->flushDirty();
     }
 
     auto buf() -> OMRendererSegBuf *

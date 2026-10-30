@@ -129,7 +129,7 @@ void OMRendererBufferVk::updateData(void *src)
             }
             if (synced)
             {
-                renderer->logicalDevice.waitIdle();
+                renderer->queues.first.waitIdle();
             }
             std::memcpy(data, src, this->length);
         }
@@ -140,7 +140,7 @@ void OMRendererBufferVk::updateData(void *src)
             {
                 if (synced)
                 {
-                    renderer->logicalDevice.waitIdle();
+                    renderer->queues.first.waitIdle();
                 }
                 std::memcpy(vtx, src, this->length);
             }
@@ -163,7 +163,7 @@ void OMRendererBufferVk::moveDataPart(uint64_t target, uint64_t original, uint64
         {
             if (synced)
             {
-                renderer->logicalDevice.waitIdle();
+                renderer->queues.first.waitIdle();
             }
             std::memmove(reinterpret_cast<uint8_t *>(data) + target, reinterpret_cast<uint8_t *>(data) + original,
                          length);
@@ -174,7 +174,7 @@ void OMRendererBufferVk::moveDataPart(uint64_t target, uint64_t original, uint64
 
             if (synced)
             {
-                renderer->logicalDevice.waitIdle();
+                renderer->queues.first.waitIdle();
             }
             std::memmove(reinterpret_cast<uint8_t *>(vtx) + target, reinterpret_cast<uint8_t *>(vtx) + original,
                          length);
@@ -201,7 +201,7 @@ void OMRendererBufferVk::updateDataPart(void *src, uint64_t offset, uint64_t len
             }
             if (synced)
             {
-                renderer->logicalDevice.waitIdle();
+                renderer->queues.first.waitIdle();
             }
             std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(data) + offset), src, length);
         }
@@ -211,7 +211,7 @@ void OMRendererBufferVk::updateDataPart(void *src, uint64_t offset, uint64_t len
 
             if (synced)
             {
-                renderer->logicalDevice.waitIdle();
+                renderer->queues.first.waitIdle();
             }
             std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(vtx) + offset), src, length);
             renderer->logicalDevice.unmapMemory(this->bufferMemory);
@@ -229,7 +229,7 @@ auto OMRendererBufferVk::fetchData() -> std::shared_ptr<void>
     {
         auto renderer = reinterpret_cast<OMRendererVk *>(this->renderer);
 
-        renderer->logicalDevice.waitIdle();
+        renderer->queues.first.waitIdle();
 
         std::shared_ptr<void> result(std::malloc(this->length), [](void *p) { std::free(p); });
 
