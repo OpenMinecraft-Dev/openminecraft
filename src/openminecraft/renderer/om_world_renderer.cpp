@@ -243,7 +243,6 @@ class OMWorldColorManager : public wrap::OMVoxelColorManager
     }
 };
 static OMWorldColorManager *colorManager = new OMWorldColorManager;
-static std::chrono::steady_clock::time_point tp = {};
 
 static auto convert(uint32_t rgb) -> glm::u8vec3
 {
@@ -432,8 +431,6 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
         std::make_shared<OMWorldPaletteProvider>(grassColor, foliageColor, dryFoliageColor));
 
     voxelManager->bindCameraBuffer(cameraBuffer);
-
-    tp = std::chrono::steady_clock::now();
 }
 
 void OMWorldRenderer::beforeFrame()
