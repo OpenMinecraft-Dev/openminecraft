@@ -17,7 +17,6 @@ set_policy("build.optimization.lto", false)
 includes("utils.lua")
 includes("extlibs/vulkan.lua")
 includes("extlibs/sdl_port.lua")
-includes("extlibs/cares.lua")
 
 -- fix libffi compile exception
 if is_plat("linux") and is_arch("riscv64", "ppc64", "s390x") then
@@ -119,7 +118,6 @@ add_requires(
 	"zlib",
 	"bullet3",
 	"libffi",
-	"c-ares",
 	"libsdl3",
 	"yoga",
 	{ system = false }

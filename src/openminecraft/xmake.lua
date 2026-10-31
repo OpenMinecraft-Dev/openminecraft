@@ -30,7 +30,6 @@ add_packages(
 	"nlohmann_json",
 	"libsdl3",
 	"zlib",
-	"c-ares",
 	"yoga",
 	{ system = false }
 )
