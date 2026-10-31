@@ -1,4 +1,4 @@
-if is_plat("harmony") then
+if is_plat("harmony0") then
 	package("libsdl3")
 	set_homepage("https://www.libsdl.org/")
 	set_description("Simple DirectMedia Layer")
