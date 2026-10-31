@@ -152,6 +152,9 @@ jobs:
           source ~/.xmake/profile
       - name: Setup Python packages
         run: pip install wheel setuptools
+      - name: Install Meson
+        if: matrix.plat == 'macos' || matrix.plat == 'ios'
+        run: brew install meson
       - name: Restore xmake packages
         uses: actions/cache/restore@v5
         with:
