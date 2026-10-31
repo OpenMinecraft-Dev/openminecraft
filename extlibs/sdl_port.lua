@@ -1,10 +1,10 @@
-if is_plat("harmony0") then
+if is_plat("harmony") then
 	package("libsdl3")
 	set_homepage("https://www.libsdl.org/")
 	set_description("Simple DirectMedia Layer")
 	set_license("zlib")
 
-	add_urls("https://github.com/OpenMinecraft-Dev/SDL.git")
+	add_urls("https://github.com/libsdl-org/SDL.git")
 
 	add_deps("cmake", "egl-headers", "opengl-headers")
 
