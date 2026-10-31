@@ -152,12 +152,12 @@ jobs:
           source ~/.xmake/profile
       - name: Setup Python packages
         run: pip install wheel
-      - name: Restore xmake packages (Core)
+      - name: Restore xmake packages
         uses: actions/cache/restore@v5
         with:
           path: ${{ env.CACHEPATH }}
-          key: ${{ matrix.plat }}-${{ matrix.loaderarch }}-corepkgs-
-          restore-keys: ${{ matrix.plat }}-${{ matrix.loaderarch }}-corepkgs-
+          key: ${{ matrix.plat }}-${{ matrix.loaderarch }}-pkgs-
+          restore-keys: ${{ matrix.plat }}-${{ matrix.loaderarch }}-pkgs-
       - name: Setup OpenHarmony SDK
         if: matrix.plat == 'harmony'
         run: |
@@ -224,11 +224,11 @@ jobs:
         run: |
           sudo apt install gcc-mingw-w64 g++-mingw-w64 binutils-mingw-w64 mingw-w64-common mingw-w64-i686-dev mingw-w64-x86-64-dev libz-mingw-w64-dev
           xmake f -p mingw -a ${{ matrix.arch }} --toolchain=mingw --sdk=/usr/x86_64-w64-mingw32 --ldflags="-static" -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
-      - name: Save xmake packages (Core)
+      - name: Save xmake packages
         uses: actions/cache/save@v5
         with:
           path: ${{ env.CACHEPATH }}
-          key: ${{ matrix.plat }}-${{ matrix.loaderarch }}-corepkgs-${{ env.CACHENAME }}
+          key: ${{ matrix.plat }}-${{ matrix.loaderarch }}-pkgs-${{ env.CACHENAME }}
       - name: Install zip via Chocolatey
         if: matrix.plat == 'windows'
         run: choco install zip -y
