@@ -151,7 +151,7 @@ jobs:
           ./scripts/get.sh __local__
           source ~/.xmake/profile
       - name: Setup Python packages
-        run: pip install wheel
+        run: pip install wheel setuptools
       - name: Restore xmake packages
         uses: actions/cache/restore@v5
         with:
