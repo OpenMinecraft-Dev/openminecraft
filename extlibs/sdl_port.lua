@@ -10,7 +10,7 @@ if is_plat("harmony") then
 
 	on_load(function(package)
 		if not package:config("shared") then
-			package:add("syslinks", "ace_napi.z", "hilog_ndk.z", "ace_ndk.z", "rawfile.z", "pixelmap_ndk.z", "ohsensor", "deviceinfo_ndk.z", "ohcommonevent", "native_display_manager", "ohcamera", "ability_runtime")
+			package:add("syslinks", "ace_napi.z", "hilog_ndk.z", "ace_ndk.z", "rawfile.z", "pixelmap_ndk.z", "ohsensor", "deviceinfo_ndk.z", "ohcommonevent", "native_display_manager", "ohcamera", "ability_runtime", "image_receiver")
 		end
 	end)
 
