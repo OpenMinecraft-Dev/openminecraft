@@ -639,8 +639,8 @@ class OMVoxelManager
     glm::vec3 lastCameraLocal = glm::vec3{INFINITY};
     size_t lastOffsetCount = 0;
     bool offsetUploadedOnce = false;
-    std::vector<uint8_t> hideFrames;
-    static constexpr uint8_t unloadDelay = 20;
+    std::vector<uint16_t> hideFrames;
+    static constexpr uint16_t unloadDelay = 600;
 
     void unloadChunk(int i);
 };

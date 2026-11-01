@@ -975,6 +975,9 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         {
             hideFrames.assign(chunkManager->numChunks(), 0);
         }
+
+        // 每帧最多卸载的区块数：卸载需要清空 6 个层的数据，集中卸载会造成毫秒级卡顿
+        int unloadBudget = 32;
         chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
             for (auto &ochk : chunks)
@@ -983,7 +986,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                 {
                     // 不在这里 dropCache：slot 会被复用，缓存是否有效交由
                     // compilerPool 按 chunk 坐标判断（见 cachedOrigin）
-                    unloadChunk(i);
+                    if (unloadBudget > 0)
+                    {
+                        --unloadBudget;
+                        unloadChunk(i);
+                    }
                 }
                 else
                 {
@@ -1022,9 +1029,15 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                             ++hideFrames[i];
                             visible = true;
                         }
+                        else if (unloadBudget > 0)
+                        {
+                            --unloadBudget;
+                            unloadChunk(i);
+                        }
                         else
                         {
-                            unloadChunk(i);
+                            ++hideFrames[i];
+                            visible = true;
                         }
                     }
                     else if (chk.visible && visible)
