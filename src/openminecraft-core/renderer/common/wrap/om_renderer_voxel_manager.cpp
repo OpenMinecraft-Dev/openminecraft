@@ -888,6 +888,14 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
     auto cameraPos = camera.getPosRaw();
 
+    const std::array<int64_t, 3> cameraChunk = {cameraPos.chunkx, cameraPos.chunky, cameraPos.chunkz};
+    const glm::vec3 cameraLocal = {cameraPos.getModX(16), cameraPos.getY(), cameraPos.getModZ(16)};
+
+    const bool cameraMoved = !offsetUploadedOnce || cameraChunk != lastCameraChunk || cameraLocal != lastCameraLocal;
+
+    lastCameraChunk = cameraChunk;
+    lastCameraLocal = cameraLocal;
+
     auto cur = std::chrono::steady_clock::now();
     cloudTime += std::chrono::duration_cast<std::chrono::milliseconds>(cur - lastp).count() / 1000.0f * 3.0f;
     cloudTime = std::fmod(cloudTime, 256 * 12);
@@ -973,7 +981,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             {
                 if (!ochk)
                 {
-                    compilerPool->dropCache(i);
+                    // 不在这里 dropCache：slot 会被复用，缓存是否有效交由
+                    // compilerPool 按 chunk 坐标判断（见 cachedOrigin）
                     unloadChunk(i);
                 }
                 else
@@ -1058,16 +1067,26 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
         chunkOffsetBuffer->synced = true;
 
-        const uint64_t usedBytes = chunkOffsetCache.size() * sizeof(glm::vec3);
-        chunkOffsetBuffer->updateDataPart(chunkOffsetCache.data(), 0,
-                                          std::min<uint64_t>(usedBytes, chunkOffsetBuffer->length));
+        // 纯旋转不会改变 chunk 相对相机的偏移，只有位置/区块数变化时才需要重新上传
+        const bool offsetsDirty =
+            cameraMoved || chunkOffsetBufferReallocated || chunkOffsetCache.size() != lastOffsetCount;
 
-        static std::vector<glm::vec3> offsetGuard(512, glm::vec3{INFINITY});
-        if (chunkOffsetBuffer->length > usedBytes)
+        if (offsetsDirty)
         {
-            const uint64_t guardBytes =
-                std::min<uint64_t>(chunkOffsetBuffer->length - usedBytes, offsetGuard.size() * sizeof(glm::vec3));
-            chunkOffsetBuffer->updateDataPart(offsetGuard.data(), usedBytes, guardBytes);
+            const uint64_t usedBytes = chunkOffsetCache.size() * sizeof(glm::vec3);
+            chunkOffsetBuffer->updateDataPart(chunkOffsetCache.data(), 0,
+                                              std::min<uint64_t>(usedBytes, chunkOffsetBuffer->length));
+
+            static std::vector<glm::vec3> offsetGuard(512, glm::vec3{INFINITY});
+            if (chunkOffsetBuffer->length > usedBytes)
+            {
+                const uint64_t guardBytes = std::min<uint64_t>(chunkOffsetBuffer->length - usedBytes,
+                                                               offsetGuard.size() * sizeof(glm::vec3));
+                chunkOffsetBuffer->updateDataPart(offsetGuard.data(), usedBytes, guardBytes);
+            }
+
+            lastOffsetCount = chunkOffsetCache.size();
+            offsetUploadedOnce = true;
         }
 
         compilerPool->upload(voxelLayer, voxelComplexLayer, voxelFluidLayer, voxelTranslucentLayer,

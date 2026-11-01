@@ -26,6 +26,7 @@
 #include <thread>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -480,6 +481,7 @@ class OMVoxelCompilerPool
     {
         std::lock_guard g(bufferMutex);
         cached.erase(i);
+        cachedOrigin.erase(i);
         cutoutC.erase(i);
         cutoutComplexC.erase(i);
         translucentC.erase(i);
@@ -488,11 +490,16 @@ class OMVoxelCompilerPool
 
   private:
     std::unordered_map<int, bool> cached;
+    // 缓存对应的 chunk 坐标：slot 会被 chunkManager 回收复用，
+    // 仅当坐标一致时缓存才有效
+    std::unordered_map<int, world::OMChunkIndex> cachedOrigin;
     world::OMChunkManager<16> &manager;
     OMVoxelCompiler &compiler;
 
     std::mutex poolMutex;
     std::vector<std::pair<int, bool>> queuedChunks;
+    // 同一 chunk 在队列中只保留一份（快速转视角时会反复请求同一 chunk）
+    std::unordered_set<int> queuedIndex;
 
     std::mutex bufferMutex;
     std::unordered_map<int, std::vector<OMVoxel>> cutout, translucent;
@@ -626,6 +633,12 @@ class OMVoxelManager
     int renderDistance = 8;
 
     std::vector<glm::vec3> chunkOffsetCache;
+
+    // 相机变化检测：纯旋转不影响 chunk 偏移，可跳过重复上传
+    std::array<int64_t, 3> lastCameraChunk = {INT64_MIN, INT64_MIN, INT64_MIN};
+    glm::vec3 lastCameraLocal = glm::vec3{INFINITY};
+    size_t lastOffsetCount = 0;
+    bool offsetUploadedOnce = false;
     std::vector<uint8_t> hideFrames;
     static constexpr uint8_t unloadDelay = 20;
 

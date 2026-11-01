@@ -30,6 +30,7 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                 next = queuedChunks.back().first;
                 bool useCache = queuedChunks.back().second;
                 queuedChunks.pop_back();
+                queuedIndex.erase(next);
                 poolMutex.unlock();
 
                 std::unordered_map<world::OMChunkIndex, std::shared_ptr<const world::OMChunk<16>>> neighborCache;
@@ -87,7 +88,11 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                 auto cnk = manager.getChunk(next);
                 if (cnk)
                 {
-                    if (useCache && cached.count(next) && !cnk->isDirty())
+                    // slot 可能已被 chunkManager 复用：只有坐标一致时缓存才有效
+                    const world::OMChunkIndex origin = {cnk->chunkx, cnk->chunky, cnk->chunkz};
+                    const bool sameChunk = cachedOrigin.count(next) != 0 && cachedOrigin[next] == origin;
+
+                    if (useCache && cached.count(next) && sameChunk && !cnk->isDirty())
                     {
                         bufferMutex.lock();
                         cutout[next] = cutoutC[next];
@@ -112,6 +117,7 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
 
                     bufferMutex.lock();
                     cached[next] = true;
+                    cachedOrigin[next] = origin;
                     cutout[next].assign(m.begin(), m.end());
                     cutoutComplex[next].assign(cm.begin(), cm.end());
                     translucent[next].assign(tm.begin(), tm.end());
@@ -187,6 +193,13 @@ void OMVoxelCompilerPool::upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMV
 void OMVoxelCompilerPool::compile(int i, bool useCache)
 {
     std::lock_guard g(poolMutex);
+
+    // 去重：同一 chunk 已有排队请求时直接复用，避免快速旋转时队列膨胀
+    if (!queuedIndex.insert(i).second)
+    {
+        return;
+    }
+
     queuedChunks.emplace_back(i, useCache);
 }
 } // namespace openminecraft::renderer::common::wrap
