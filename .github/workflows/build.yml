@@ -155,7 +155,7 @@ jobs:
       - name: Install Meson
         if: (matrix.plat == 'macos' || matrix.plat == 'ios') && matrix.arch == 'arm64'
         run: |
-          brew install meson python-setuptools
+          brew install meson python-setuptools python-wheel
       - name: Restore xmake packages
         uses: actions/cache/restore@v5
         with:
