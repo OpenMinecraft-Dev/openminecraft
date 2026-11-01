@@ -23,5 +23,5 @@ void main()
 
     vec2 screenPos = inShaderScenePos.xy + uv * inShaderScenePos.zw;
 
-    gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), 0.0, 1.0);
+    gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), inShaderSceneDepth, 1.0);
 }

@@ -15,6 +15,20 @@ void OMDemiurgeClipRectChannel::init(OMRendererBuffer *uniformBuffer, OMRenderer
     vtxShader = renderer->shaderManager.preprocess("demiurge/cliprect.vert.glsl", Vertex, GLSLSource, format);
     frgShader = renderer->shaderManager.preprocess("demiurge/cliprect.frag.glsl", Fragment, GLSLSource, format);
 
-    OMDemiurgeQuadChannel::init(uniformBuffer, target);
+    instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
+
+    pipeline = renderer->createPipeline()
+                   ->input(UniformBuffer)
+                   ->inputName("ScreenData")
+                   ->output(target)
+                   ->shader(frgShader)
+                   ->shader(vtxShader)
+                   ->format(format)
+                   ->blendFunc({Zero, One, Zero, One})
+                   ->blend(true)
+                   ->depth(true, true)
+                   ->depthOp(LessOrEqual)
+                   ->buildN();
+    pipeline->bindInput(0, uniformBuffer);
 }
 } // namespace openminecraft::renderer::common::demiurge::element
