@@ -643,7 +643,7 @@ class OMVoxelManager
     size_t lastOffsetCount = 0;
     bool offsetUploadedOnce = false;
     std::vector<uint16_t> hideFrames;
-    static constexpr uint16_t unloadDelay = 600;
+    static constexpr uint16_t unloadDelay = 120;
 
     void unloadChunk(int i);
 };

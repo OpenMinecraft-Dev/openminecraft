@@ -969,6 +969,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     position.chunkx = chk.chunkx;
                     position.chunky = chk.chunky;
                     position.chunkz = chk.chunkz;
+
                     chunkOffsetCache[i] = position - camera.getPosRaw();
                 }
                 ++i;
@@ -982,7 +983,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             hideFrames.assign(chunkManager->numChunks(), 0);
         }
 
-        // 每帧最多卸载的区块数：卸载需要清空 6 个层的数据，集中卸载会造成毫秒级卡顿
         int unloadBudget = 32;
         chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
             int i = 0;
@@ -990,8 +990,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             {
                 if (!ochk)
                 {
-                    // 不在这里 dropCache：slot 会被复用，缓存是否有效交由
-                    // compilerPool 按 chunk 坐标判断（见 cachedOrigin）
                     if (unloadBudget > 0)
                     {
                         --unloadBudget;
@@ -1086,7 +1084,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
         chunkOffsetBuffer->synced = true;
 
-        // 纯旋转不会改变 chunk 相对相机的偏移，只有位置/区块数变化时才需要重新上传
         const bool offsetsDirty =
             cameraMoved || chunkOffsetBufferReallocated || chunkOffsetCache.size() != lastOffsetCount;
 
@@ -1099,8 +1096,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             static std::vector<glm::vec3> offsetGuard(512, glm::vec3{INFINITY});
             if (chunkOffsetBuffer->length > usedBytes)
             {
-                const uint64_t guardBytes = std::min<uint64_t>(chunkOffsetBuffer->length - usedBytes,
-                                                               offsetGuard.size() * sizeof(glm::vec3));
+                const uint64_t guardBytes =
+                    std::min<uint64_t>(chunkOffsetBuffer->length - usedBytes, offsetGuard.size() * sizeof(glm::vec3));
                 chunkOffsetBuffer->updateDataPart(offsetGuard.data(), usedBytes, guardBytes);
             }
 
