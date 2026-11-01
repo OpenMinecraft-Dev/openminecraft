@@ -594,7 +594,7 @@ void OMApplication::mainLoop(OMBackend backend)
             win()->render(ticker);
         }
 
-	logger->info("exiting!");
+        logger->info("exiting!");
 
         hnd = nullptr;
         hnd2 = nullptr;

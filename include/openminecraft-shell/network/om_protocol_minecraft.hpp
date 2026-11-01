@@ -252,6 +252,12 @@ class OMProtocolMinecraftTransformer
                                               float pitch) = 0;
     virtual void sendPlayKeepAlive(int64_t id) = 0;
 
+    // 1.20.2+：服务端按批发送区块，客户端必须在每批结束后回 Chunk Batch Received，
+    // 否则服务端会停止继续发送区块。
+    virtual void sendPlayChunkBatchReceived(float desiredChunksPerTick)
+    {
+    }
+
     virtual void handle() = 0;
 };
 } // namespace openminecraft::shell::network

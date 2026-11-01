@@ -59,6 +59,12 @@ void OMProtocolMinecraftTransformer777::sendPlayKeepAlive(int64_t id)
     protocol.write(openminecraft::network::OMNetworkPacket().packetId(0x1c).write(id));
 }
 
+void OMProtocolMinecraftTransformer777::sendPlayChunkBatchReceived(float desiredChunksPerTick)
+{
+    // exports/reports/packets.json: play/serverbound minecraft:chunk_batch_received protocol_id = 11
+    protocol.write(openminecraft::network::OMNetworkPacket().packetId(0x0b).write(desiredChunksPerTick));
+}
+
 auto OMProtocolMinecraftTransformer777::componentNames() -> std::vector<std::string>
 {
     // INFO: order matches the field registration order of net.minecraft.core.component.DataComponents (protocol 777

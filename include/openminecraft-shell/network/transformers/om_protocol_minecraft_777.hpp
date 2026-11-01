@@ -23,6 +23,7 @@ class OMProtocolMinecraftTransformer777 : public OMProtocolMinecraftTransformerG
     void sendPlayConfirmTeleportation(uint32_t teleportID, double x, double y, double z, float yaw,
                                       float pitch) override;
     void sendPlayKeepAlive(int64_t id) override;
+    void sendPlayChunkBatchReceived(float desiredChunksPerTick) override;
 
     void handleRest(OMProtocolMinecraftState, openminecraft::network::OMNetworkPacket &) override;
 

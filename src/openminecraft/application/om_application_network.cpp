@@ -4,10 +4,8 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_777.hpp"
 #include <algorithm>
-#include <cstdlib>
-#include <fstream>
+#include <iostream>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 using namespace openminecraft;
@@ -16,137 +14,6 @@ using namespace openminecraft::renderer;
 
 namespace openminecraft::shell
 {
-// INFO: debug helper: reads exports/blockstates.txt (id<TAB>minecraft:block[props])
-// and resolves the global block state ids sent by the server into readable names.
-static auto blockStateTable() -> const std::vector<std::string> &
-{
-    static const std::vector<std::string> table = []() {
-        std::vector<std::string> result;
-        std::ifstream in("exports/blockstates.txt");
-        std::string line;
-
-        while (std::getline(in, line))
-        {
-            const auto tab = line.find('\t');
-            if (tab == std::string::npos)
-            {
-                continue;
-            }
-
-            const int id = std::atoi(line.substr(0, tab).c_str());
-            if (id < 0)
-            {
-                continue;
-            }
-
-            if (static_cast<int>(result.size()) <= id)
-            {
-                result.resize(id + 1);
-            }
-
-            result[id] = line.substr(tab + 1);
-        }
-
-        return result;
-    }();
-
-    return table;
-}
-
-static auto describeBlockState(int id) -> std::string
-{
-    const auto &table = blockStateTable();
-
-    if (id >= 0 && id < static_cast<int>(table.size()) && !table[id].empty())
-    {
-        return table[id];
-    }
-
-    return fmt::format("<unknown id {}>", id);
-}
-
-static auto guessSection(const std::vector<std::pair<std::string, uint32_t>> &top) -> std::string
-{
-    if (top.empty())
-    {
-        return "empty";
-    }
-
-    auto blockName = [](const std::string &full) {
-        const auto bracket = full.find('[');
-        return bracket == std::string::npos ? full : full.substr(0, bracket);
-    };
-
-    // Take the three most common block names
-    std::vector<std::pair<std::string, double>> main;
-    for (size_t i = 0; i < top.size() && i < 3; ++i)
-    {
-        main.emplace_back(blockName(top[i].first), 100.0 * top[i].second / 4096.0);
-    }
-
-    auto has = [&](const std::string &name, double minPct) {
-        for (const auto &p : main)
-        {
-            if (p.first == name && p.second >= minPct)
-            {
-                return true;
-            }
-        }
-        return false;
-    };
-
-    auto contains = [&](const char *key, double minPct) {
-        for (const auto &p : main)
-        {
-            if (p.second >= minPct && p.first.find(key) != std::string::npos)
-            {
-                return true;
-            }
-        }
-        return false;
-    };
-
-    const double firstPct = main.empty() ? 0.0 : main[0].second;
-    const std::string &first = main.empty() ? std::string() : main[0].first;
-
-    if (firstPct >= 60.0 && first == "minecraft:air")
-    {
-        return "air (sky or cave)";
-    }
-    if (has("minecraft:lava", 5.0) || has("minecraft:water", 20.0))
-    {
-        return "fluid (water/lava)";
-    }
-    if (has("minecraft:bedrock", 5.0))
-    {
-        return "bedrock layer (world bottom)";
-    }
-    if (has("minecraft:grass_block", 3.0) || has("minecraft:short_grass", 1.0) || has("minecraft:tall_grass", 1.0) ||
-        has("minecraft:dirt", 5.0))
-    {
-        return "surface (grass/soil)";
-    }
-    if (contains("leaves", 3.0) || contains("_log", 2.0) || contains("_wood", 2.0))
-    {
-        return "tree canopy/logs";
-    }
-    if (has("minecraft:sand", 10.0) || has("minecraft:sandstone", 10.0) || has("minecraft:gravel", 10.0))
-    {
-        return "sand/gravel bed";
-    }
-    if (contains("deepslate", 20.0) || contains("stone", 20.0) || contains("tuff", 10.0) ||
-        contains("andesite", 10.0) || contains("granite", 10.0) || contains("diorite", 10.0))
-    {
-        return "underground rock (stone/deepslate)";
-    }
-    if (has("minecraft:water", 1.0))
-    {
-        return "water-bearing area";
-    }
-
-    return "mixed";
-}
-
 void OMApplication::networkSetup(std::string host, std::string port)
 {
     logger.info("try connect to {} {}", host, port);
@@ -431,7 +298,9 @@ void OMApplication::networkSetup(std::string host, std::string port)
                 logger->debug("section[{}] y={}..{} blockCount={} fluidCount={}", i, y0, y1, section.blockCount,
                               section.fluidCount);
 
-                // ---- blockStates: full histogram ----
+                logger->debug("  blockStates: bits={} palette={} dataLongs={}", bs.bitsPerEntry, bs.palette.size(),
+                              bs.data.size());
+
                 std::vector<uint32_t> histogram(bs.palette.size() == 0 ? 1 : bs.palette.size(), 0);
 
                 if (bs.bitsPerEntry == 0)
@@ -459,10 +328,7 @@ void OMApplication::networkSetup(std::string host, std::string port)
                     }
                 }
 
-                logger->debug("  blockStates: bits={} palette={} dataLongs={}", bs.bitsPerEntry, bs.palette.size(),
-                              bs.data.size());
-
-                std::vector<std::pair<std::string, uint32_t>> distribution;
+                std::vector<std::pair<uint32_t, uint32_t>> distribution;
                 distribution.reserve(bs.palette.size());
 
                 for (size_t k = 0; k < bs.palette.size(); ++k)
@@ -474,19 +340,17 @@ void OMApplication::networkSetup(std::string host, std::string port)
                         continue;
                     }
 
-                    distribution.emplace_back(describeBlockState(bs.palette[k]), count);
+                    distribution.emplace_back(bs.palette[k], count);
                 }
 
                 std::sort(distribution.begin(), distribution.end(),
                           [](const auto &a, const auto &b) { return a.second > b.second; });
 
-                for (size_t k = 0; k < distribution.size(); ++k)
+                for (const auto &entry : distribution)
                 {
-                    const double pct = 100.0 * distribution[k].second / 4096.0;
-                    logger->debug("    {:>5.1f}%  x{:<4}  {}", pct, distribution[k].second, distribution[k].first);
+                    logger->debug("    {:>5.1f}%  x{:<4}  id={}", 100.0 * entry.second / 4096.0, entry.second,
+                                  entry.first);
                 }
-
-                logger->debug("  guess: {}", guessSection(distribution));
 
                 // ---- biomes ----
                 std::string biomeList;
@@ -496,8 +360,6 @@ void OMApplication::networkSetup(std::string host, std::string port)
                 }
                 logger->debug("  biomes: bits={} palette={} ids=[{}]", bm.bitsPerEntry, bm.palette.size(), biomeList);
             }
-
-            throw 0;
         }
 
         void handlePlayUpdateEntityPosition(const network::OMProtocolUpdateEntityPosition &position) override
@@ -1052,9 +914,40 @@ void OMApplication::networkSetup(std::string host, std::string port)
             logger->debug("center: ({}, {})", centerX, centerZ);
         }
 
+        std::chrono::steady_clock::time_point chunkBatchStartTp = {};
+        float desiredChunksPerTick = 7.0f;
+
         void handlePlayChunkBatchStart() override
         {
             title("Chunk Batch Start");
+            chunkBatchStartTp = std::chrono::steady_clock::now();
+        }
+
+        void handlePlayChunkBatchEnd(uint32_t numOfChunks) override
+        {
+            // 1.20.2+：每批区块结束后必须回 Chunk Batch Received，
+            // 否则服务端会认为客户端处理不过来而停止继续发送区块。
+            if (numOfChunks > 0 && chunkBatchStartTp.time_since_epoch().count() != 0)
+            {
+                const double elapsedMs = std::chrono::duration<double, std::milli>(
+                                             std::chrono::steady_clock::now() - chunkBatchStartTp)
+                                             .count();
+                const double msPerChunk = elapsedMs / static_cast<double>(numOfChunks);
+
+                // 目标：每个 tick 最多花约 8ms 接收区块
+                desiredChunksPerTick =
+                    static_cast<float>(std::clamp(8.0 / std::max(msPerChunk, 0.01), 1.0, 32.0));
+            }
+
+            logger->debug("chunk batch: {} chunks, elapsed {:.1f}ms, desired {:.1f}/tick", numOfChunks,
+                          chunkBatchStartTp.time_since_epoch().count() == 0
+                              ? 0.0
+                              : std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() -
+                                                                          chunkBatchStartTp)
+                                    .count(),
+                          desiredChunksPerTick);
+
+            transformer->sendPlayChunkBatchReceived(desiredChunksPerTick);
         }
 
         void handlePlaySetEntityVelocity(uint32_t entityId, double vx, double vy, double vz) override

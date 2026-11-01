@@ -98,7 +98,6 @@ template <int Cs> class OMChunkManager
         markIfExists({idx.x, idx.y, idx.z - 1});
     }
 
-    // 返回 shared_ptr：即使之后 chunk 被卸载，调用方手里的对象依然有效
     auto getChunk(const OMChunkIndex &idx) const -> std::shared_ptr<const OMChunk<Cs>>
     {
         std::shared_lock<std::shared_mutex> lock(chunkMutex);
