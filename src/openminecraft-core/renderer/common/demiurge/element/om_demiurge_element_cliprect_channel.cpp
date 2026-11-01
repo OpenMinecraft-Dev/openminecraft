@@ -15,20 +15,9 @@ void OMDemiurgeClipRectChannel::init(OMRendererBuffer *uniformBuffer, OMRenderer
     vtxShader = renderer->shaderManager.preprocess("demiurge/cliprect.vert.glsl", Vertex, GLSLSource, format);
     frgShader = renderer->shaderManager.preprocess("demiurge/cliprect.frag.glsl", Fragment, GLSLSource, format);
 
-    instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
-
-    pipeline = renderer->createPipeline()
-                   ->input(UniformBuffer)
-                   ->inputName("ScreenData")
-                   ->output(target)
-                   ->shader(frgShader)
-                   ->shader(vtxShader)
-                   ->format(format)
-                   ->blendFunc({Zero, One, Zero, One})
-                   ->blend(true)
-                   ->depth(true, true)
-                   ->depthOp(LessOrEqual)
-                   ->buildN();
-    pipeline->bindInput(0, uniformBuffer);
+    // 剪裁通道只负责 discard + 写深度，颜色输出必须被彻底忽略：
+    // writeColor = false 在 Vulkan 里是 colorWriteMask = 0，在 OpenGL 里是 glColorMask(GL_FALSE, ...)，
+    // 这样 color attachment 完全不会被写，也就不存在"未定义颜色"的 UB。
+    initPipeline(uniformBuffer, target, false);
 }
 } // namespace openminecraft::renderer::common::demiurge::element

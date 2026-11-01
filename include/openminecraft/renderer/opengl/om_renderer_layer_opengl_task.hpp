@@ -55,7 +55,8 @@ enum OMRendererOpType
     PushDebugGroup,
     PopDebugGroup,
     ReadBuffer,
-    DrawBuffers
+    DrawBuffers,
+    ColorMask
 };
 union OMRendererOpenGLArg {
     GLuint i;

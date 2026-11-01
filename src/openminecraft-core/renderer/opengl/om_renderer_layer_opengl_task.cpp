@@ -230,6 +230,8 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     ops.push_back({PolygonOffset, {}, {}, glpipe->depthBiasSlope, glpipe->depthBiasConstant});
     ops.push_back({LineWidth, {}, {}, glpipe->lineWidth});
     ops.push_back({DepthMask, glpipe->enableDepthWrite});
+    const GLuint colorMask = static_cast<GLuint>(glpipe->colorWrite ? GL_TRUE : GL_FALSE);
+    ops.push_back({ColorMask, colorMask, colorMask, colorMask, colorMask});
     ops.push_back({glpipe->enableDepthTest ? Enable : Disable, GL_DEPTH_TEST});
     switch (glpipe->depthOperator)
     {
@@ -279,6 +281,11 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
 
     if (!isCleared)
     {
+        // glClear 同样受写掩码影响：绑定到该目标的第一个管线可能是 writeColor / depthWrite 关闭的
+        // （例如 cliprect），先把掩码恢复成全写，否则这次清除会被静默跳过。
+        ops.push_back({ColorMask, static_cast<GLuint>(GL_TRUE), static_cast<GLuint>(GL_TRUE),
+                       static_cast<GLuint>(GL_TRUE), static_cast<GLuint>(GL_TRUE)});
+        ops.push_back({DepthMask, static_cast<GLuint>(GL_TRUE)});
         ops.push_back({ClearDepth, {}, {}, depthClear});
         for (int i = 0; i < colorClear.size(); ++i)
         {
@@ -298,6 +305,12 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
         {
             ops.push_back({Clear, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
         }
+
+        // 清除用的是全写掩码，清除完必须把当前管线的掩码恢复回来：
+        // 绑定到该目标的第一个管线可能正是 writeColor = false 的通道（例如 cliprect）。
+        ops.push_back({DepthMask, glpipe->enableDepthWrite});
+        ops.push_back({ColorMask, colorMask, colorMask, colorMask, colorMask});
+
         isCleared = true;
     }
 }
@@ -660,6 +673,9 @@ void OMRendererTaskOpenGL::execute()
             break;
         case DepthMask:
             gl->glDepthMask(op.args[0]);
+            break;
+        case ColorMask:
+            gl->glColorMask(op.args[0], op.args[1], op.args[2], op.args[3]);
             break;
         case ClearDepth:
             gl->glClearDepth(op.floatArgs[0]);

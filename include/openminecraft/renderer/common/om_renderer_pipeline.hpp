@@ -165,6 +165,14 @@ class OMRendererPipeline : public OMRendererObject
         enableBlend = enable;
         return this;
     }
+
+    // 关闭该管线对 color attachment 的写入（只保留深度/模板写入）。
+    // Vulkan 侧映射为 colorWriteMask = 0，OpenGL 侧映射为 glColorMask(GL_FALSE x4)。
+    inline auto writeColor(bool enable) -> OMRendererPipeline *
+    {
+        colorWrite = enable;
+        return this;
+    }
     inline auto depth(bool test, bool write) -> OMRendererPipeline *
     {
         enableDepthTest = test;
@@ -275,6 +283,7 @@ class OMRendererPipeline : public OMRendererObject
     }
 
     bool enableBlend = false;
+    bool colorWrite = true;
     bool enableDepthTest = false;
     bool enableDepthWrite = false;
     uint64_t sampleCount = 1;

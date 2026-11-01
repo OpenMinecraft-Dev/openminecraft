@@ -538,12 +538,14 @@ void OMRendererPipelineVk::build()
     auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
 
     std::vector<PipelineColorBlendAttachmentState> attc = {};
+    const ColorComponentFlags colorMask =
+        colorWrite ? (ColorComponentFlagBits::eA | ColorComponentFlagBits::eR | ColorComponentFlagBits::eG |
+                      ColorComponentFlagBits::eB)
+                   : ColorComponentFlags{};
     for (const auto &bs : blendState)
     {
         attc.emplace_back(enableBlend, convert(bs.srcColor), convert(bs.dstColor), convert(blendOperatorColor),
-                          convert(bs.srcAlpha), convert(bs.dstAlpha), convert(blendOperatorAlpha),
-                          ColorComponentFlagBits::eA | ColorComponentFlagBits::eR | ColorComponentFlagBits::eG |
-                              ColorComponentFlagBits::eB);
+                          convert(bs.srcAlpha), convert(bs.dstAlpha), convert(blendOperatorAlpha), colorMask);
     }
 
     auto colorblend = PipelineColorBlendStateCreateInfo(

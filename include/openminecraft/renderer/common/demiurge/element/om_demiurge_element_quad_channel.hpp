@@ -27,21 +27,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
 
     auto init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) -> void override
     {
-        instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
-
-        pipeline = renderer->createPipeline()
-                       ->input(UniformBuffer)
-                       ->inputName("ScreenData")
-                       ->output(target)
-                       ->shader(frgShader)
-                       ->shader(vtxShader)
-                       ->format(format)
-                       ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
-                       ->blend(true)
-                       ->depth(true, true)
-                       ->depthOp(LessOrEqual)
-                       ->buildN();
-        pipeline->bindInput(0, uniform);
+        initPipeline(uniform, target, true);
     }
 
     auto submitTask(OMRendererTask *task, float upper, float lower) -> void override
@@ -91,6 +77,28 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
     }
 
   protected:
+    // 所有 Demiurge 四边形通道共用的管线构建；writeColor = false 的通道只写深度，
+    // 不对 color attachment 产生任何写入（cliprect 这类"只做剪裁"的通道用）。
+    auto initPipeline(OMRendererBuffer *uniform, OMRendererRenderTarget *target, bool writeColor) -> void
+    {
+        instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
+
+        pipeline = renderer->createPipeline()
+                       ->input(UniformBuffer)
+                       ->inputName("ScreenData")
+                       ->output(target)
+                       ->shader(frgShader)
+                       ->shader(vtxShader)
+                       ->format(format)
+                       ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
+                       ->blend(true)
+                       ->depth(true, true)
+                       ->depthOp(LessOrEqual)
+                       ->writeColor(writeColor)
+                       ->buildN();
+        pipeline->bindInput(0, uniform);
+    }
+
     OMRenderer *renderer;
     std::function<void()> recreation;
     basics::OMVertexFormat format;
