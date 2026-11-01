@@ -156,38 +156,44 @@ void OMVoxelCompilerPool::upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMV
 
     for (auto &p : this->cutout)
     {
-        cutout->loadData(p.first, p.second);
+        cutout->loadData(p.first, p.second, false);
     }
+    cutout->buf()->flushDirty();
     this->cutout.clear();
 
     for (auto &p : this->cutoutComplex)
     {
-        cutoutComplex->loadData(p.first, p.second);
+        cutoutComplex->loadData(p.first, p.second, false);
     }
+    cutoutComplex->buf()->flushDirty();
     this->cutoutComplex.clear();
 
     for (auto &p : this->translucent)
     {
-        translucent->loadData(p.first, p.second);
+        translucent->loadData(p.first, p.second, false);
     }
+    translucent->buf()->flushDirty();
     this->translucent.clear();
 
     for (auto &p : this->translucentComplex)
     {
-        translucentComplex->loadData(p.first, p.second);
+        translucentComplex->loadData(p.first, p.second, false);
     }
+    translucentComplex->buf()->flushDirty();
     this->translucentComplex.clear();
 
     for (auto &p : this->fluid)
     {
-        fluid->loadData(p.first, p.second);
+        fluid->loadData(p.first, p.second, false);
     }
+    fluid->buf()->flushDirty();
     this->fluid.clear();
 
     for (auto &p : this->translucentFluid)
     {
-        translucentFluid->loadData(p.first, p.second);
+        translucentFluid->loadData(p.first, p.second, false);
     }
+    translucentFluid->buf()->flushDirty();
     this->translucentFluid.clear();
 }
 void OMVoxelCompilerPool::compile(int i, bool useCache)

@@ -375,7 +375,7 @@ template <typename It> class OMVoxelLayer
         delete voxelBuffer;
     }
 
-    inline void loadData(int i, std::vector<It> &cm)
+    inline void loadData(int i, std::vector<It> &cm, bool flush = true)
     {
         if (chunkBlocks.size() <= i)
         {
@@ -396,7 +396,10 @@ template <typename It> class OMVoxelLayer
             chunkBlocks[i].push_back(blk);
         }
 
-        voxelBuffer->flushDirty();
+        if (flush)
+        {
+            voxelBuffer->flushDirty();
+        }
     }
 
     auto merge()

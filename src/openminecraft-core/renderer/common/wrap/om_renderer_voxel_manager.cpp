@@ -703,12 +703,18 @@ void OMVoxelManager::unloadChunk(int i)
     std::vector<OMVoxel> m = {}, tm = {};
     std::vector<OMVoxelComplex> cm = {}, tcm = {};
     std::vector<OMVoxelFluid> fm = {}, tfm = {};
-    voxelLayer->loadData(i, m);
-    voxelComplexLayer->loadData(i, cm);
-    voxelTranslucentLayer->loadData(i, tm);
-    voxelTranslucentComplexLayer->loadData(i, tcm);
-    voxelFluidLayer->loadData(i, fm);
-    voxelTranslucentFluidLayer->loadData(i, tfm);
+    voxelLayer->loadData(i, m, false);
+    voxelComplexLayer->loadData(i, cm, false);
+    voxelTranslucentLayer->loadData(i, tm, false);
+    voxelTranslucentComplexLayer->loadData(i, tcm, false);
+    voxelFluidLayer->loadData(i, fm, false);
+    voxelTranslucentFluidLayer->loadData(i, tfm, false);
+    voxelLayer->buf()->flushDirty();
+    voxelComplexLayer->buf()->flushDirty();
+    voxelTranslucentLayer->buf()->flushDirty();
+    voxelTranslucentComplexLayer->buf()->flushDirty();
+    voxelFluidLayer->buf()->flushDirty();
+    voxelTranslucentFluidLayer->buf()->flushDirty();
 }
 
 auto srgbToLinear(const glm::vec3 &c) -> glm::vec3
