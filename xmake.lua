@@ -108,6 +108,7 @@ if apple() then
 	add_requires("moltenvk", { configs = { shared = false } })
 end
 
+add_requires("python", { system = true })
 add_requires(
 	"vulkan-headers",
 	"glm",
