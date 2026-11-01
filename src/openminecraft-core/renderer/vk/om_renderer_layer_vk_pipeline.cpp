@@ -31,10 +31,11 @@ OMRendererPipelineVk::~OMRendererPipelineVk()
     {
         if (available)
         {
-            for (auto m : tempBufferViews)
+            for (auto &[binding, view] : bufferViews)
             {
-                renderer->logicalDevice.destroyBufferView(m, renderer->allocator);
+                renderer->logicalDevice.destroyBufferView(view, renderer->allocator);
             }
+            bufferViews.clear();
 
             if (descriptorPool || descriptorSet)
             {
@@ -232,11 +233,25 @@ void OMRendererPipelineVk::bindInput(int idx, common::OMRendererBuffer *buff)
                 BufferViewCreateInfo({}, reinterpret_cast<OMRendererBufferVk *>(buff)->buffer, convertTo(buff->format),
                                      0, static_cast<DeviceSize>(buff->length)),
                 renderer->allocator);
-            tempBufferViews.push_back(bv);
             renderer->logicalDevice.updateDescriptorSets(
                 WriteDescriptorSet(descriptorSet, idx, 0, descriptorSetLayoutBindings[idx].descriptorType, {}, {},
                                    {bv}),
                 nullptr);
+
+            // The buffer view now lives in the descriptor set.  Destroy the view that was previously bound to this
+            // binding, otherwise every rebind (which happens whenever a texel buffer is reallocated, e.g. the voxel
+            // chunk offset buffer or the glyph atlas) leaks a view which keeps referencing an already destroyed
+            // VkBuffer.
+            auto previous = bufferViews.find(static_cast<uint32_t>(idx));
+            if (previous != bufferViews.end())
+            {
+                renderer->logicalDevice.destroyBufferView(previous->second, renderer->allocator);
+                previous->second = bv;
+            }
+            else
+            {
+                bufferViews.emplace(static_cast<uint32_t>(idx), bv);
+            }
             return;
         }
         std::vector c = {DescriptorBufferInfo(reinterpret_cast<OMRendererBufferVk *>(buff)->buffer, 0,

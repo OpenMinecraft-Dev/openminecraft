@@ -9,6 +9,7 @@
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #ifdef OM_VULKAN_DYNAMIC
@@ -73,7 +74,7 @@ class OMRendererPipelineVk : public common::OMRendererPipeline
     ::vk::DescriptorSet descriptorSet;
     bool available = false;
 
-    std::vector<::vk::BufferView> tempBufferViews;
+    std::unordered_map<uint32_t, ::vk::BufferView> bufferViews;
 
     log::OMLogger logger;
 

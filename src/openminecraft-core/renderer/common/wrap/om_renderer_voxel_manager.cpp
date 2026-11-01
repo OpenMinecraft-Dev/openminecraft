@@ -1041,6 +1041,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             }
         });
 
+        bool chunkOffsetBufferReallocated = false;
         if (chunkOffsetCache.size() * sizeof(glm::vec3) > chunkOffsetBuffer->length)
         {
             delete chunkOffsetBuffer;
@@ -1052,6 +1053,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             translucentPipeline->bindInput(2, chunkOffsetBuffer);
             translucentComplexPipeline->bindInput(3, chunkOffsetBuffer);
             translucentFluidPipeline->bindInput(3, chunkOffsetBuffer);
+            chunkOffsetBufferReallocated = true;
         }
 
         chunkOffsetBuffer->synced = true;
@@ -1071,7 +1073,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         compilerPool->upload(voxelLayer, voxelComplexLayer, voxelFluidLayer, voxelTranslucentLayer,
                              voxelTranslucentComplexLayer, voxelTranslucentFluidLayer);
 
-        if (layerState != hashLayerState())
+        const bool layerStateChanged = layerState != hashLayerState();
+        if (layerStateChanged)
         {
             voxelLayer->merge();
             voxelComplexLayer->merge();
@@ -1079,6 +1082,13 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             voxelTranslucentLayer->merge();
             voxelTranslucentComplexLayer->merge();
             voxelTranslucentFluidLayer->merge();
+        }
+
+        // The chunk offset texel buffer was replaced and the voxel pipelines' descriptor sets now reference its new
+        // buffer view.  The already recorded voxel command buffer still points at the old (destroyed) buffer, so it
+        // must be recorded again before the next submit - even when the visible layer state itself did not change.
+        if (layerStateChanged || chunkOffsetBufferReallocated)
+        {
             recordTask(false);
         }
     }
