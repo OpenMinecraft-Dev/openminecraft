@@ -75,21 +75,47 @@ void OMComposeRenderer::submitTasks()
     overlayBlurHandler->bind(overlay->colorTexture, scene->colorTexture);
 
     auto voxel = renderer->fetchTask("voxel");
-    blurHandler
-        ->secondLayerTask(
-            overlayBlurHandler
-                ->secondLayerTask(
-                    renderer->createTask("main")
-                        ->dependOn(blurHandler->firstLayerTask(voxel, "demiurgeui_bgblur")->dependOn(voxel))
-                        ->dependOn(overlayBlurHandler->firstLayerTask(voxel, "demiurgeui_overlayblur")->dependOn(voxel))
-                        ->dependOn(renderer->fetchTask("demiurgeui_compose_surface"))
-                        ->dependOn(renderer->fetchTask("demiurgeui_compose_surface_background"))
-                        ->target(renderer->getDefaultRenderTarget())
-                        ->pipeline(mainPipeline)
-                        ->drawN(6))
-                ->pipeline(backgroundPipeline)
-                ->drawN(6))
-        ->finishN();
+    auto uiSurface = renderer->fetchTask("demiurgeui_compose_surface");
+    auto uiBackground = renderer->fetchTask("demiurgeui_compose_surface_background");
+    auto uiDebug = renderer->fetchTask("demiurgeui_compose_debughud");
+
+    auto bgBlur = blurHandler->firstLayerTask(voxel, "demiurgeui_bgblur");
+    bgBlur->dependOn(voxel);
+    if (uiBackground)
+    {
+        bgBlur->dependOn(uiBackground);
+    }
+    if (uiSurface)
+    {
+        bgBlur->dependOn(uiSurface);
+    }
+
+    auto overlayBlur = overlayBlurHandler->firstLayerTask(voxel, "demiurgeui_overlayblur");
+    overlayBlur->dependOn(voxel);
+    if (uiDebug)
+    {
+        overlayBlur->dependOn(uiDebug);
+    }
+
+    auto main = renderer->createTask("main");
+    main->dependOn(bgBlur);
+    main->dependOn(overlayBlur);
+    if (uiSurface)
+    {
+        main->dependOn(uiSurface);
+    }
+    if (uiBackground)
+    {
+        main->dependOn(uiBackground);
+    }
+    if (uiDebug)
+    {
+        main->dependOn(uiDebug);
+    }
+    main->target(renderer->getDefaultRenderTarget())->pipeline(mainPipeline)->drawN(6);
+
+    overlayBlurHandler->secondLayerTask(main)->pipeline(backgroundPipeline)->drawN(6);
+    blurHandler->secondLayerTask(main)->finishN();
 }
 void OMComposeRenderer::beforeFrame()
 {

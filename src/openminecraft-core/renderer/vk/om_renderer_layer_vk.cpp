@@ -326,6 +326,38 @@ auto OMRendererVk::taskRecreate(std::string id) -> void
     }
 }
 
+void OMRendererVk::resetFrameSynchronization()
+{
+    try
+    {
+        for (auto &sync : frameSyncs)
+        {
+            for (auto &sem : sync.pipelineSemaphores)
+            {
+                logicalDevice.destroySemaphore(sem, allocator);
+            }
+            sync.pipelineSemaphores.clear();
+        }
+
+        for (auto &sem : frameRenderSemaphores)
+        {
+            logicalDevice.destroySemaphore(sem, allocator);
+        }
+        frameRenderSemaphores.clear();
+
+        for (size_t i = 0; i < swapchainManager->swapchainImageViews.size(); ++i)
+        {
+            frameRenderSemaphores.push_back(logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator));
+        }
+
+        inflights.clear();
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.defaults"));
+    }
+}
+
 void OMRendererVk::updateSyncObjects()
 {
     try
@@ -447,16 +479,19 @@ void OMRendererVk::render(OMTicker &t)
         t.push("vk_acquireimage");
         auto [nxtRes, imageIndex] = logicalDevice.acquireNextImageKHR(
             swapchainManager->swapchain, std::numeric_limits<uint64_t>::max(), sync.imageAvailable(), {});
-        if (nxtRes != Result::eSuccess)
+        if (nxtRes != Result::eSuccess && nxtRes != Result::eSuboptimalKHR)
         {
-            if (nxtRes == Result::eSuboptimalKHR || nxtRes == Result::eErrorOutOfDateKHR ||
-                nxtRes == Result::eErrorSurfaceLostKHR)
+            if (nxtRes == Result::eErrorOutOfDateKHR || nxtRes == Result::eErrorSurfaceLostKHR)
             {
                 lastError = nxtRes;
                 t.pop();
                 goto rebuild;
             }
             throw OMRendererException(VkErrorTranslate(SystemError(nxtRes), "openminecraft.renderer.vk.err.nextimage"));
+        }
+        if (nxtRes == Result::eSuboptimalKHR)
+        {
+            needRebuild = true;
         }
         t.pop();
 
@@ -575,6 +610,7 @@ rebuild:
     t.push("vk_swapchain");
     swapchainManager->destroy();
     swapchainManager->reinit();
+    resetFrameSynchronization();
 
     delete defaultDepthBuffer;
     defaultDepthBuffer = this->allocateTexture(swapchainManager->extent.width, swapchainManager->extent.height, 1, 0,
@@ -651,7 +687,6 @@ auto OMRendererVk::deviceCreation() -> OMResult<Device, std::string>
 {
     try
     {
-        // 每个队列族按"实际用到的最大 queue index + 1"申请队列
         std::vector<std::pair<uint32_t, uint32_t>> need;
         auto addNeed = [&](uint32_t fam, uint32_t count) {
             for (auto &p : need)
