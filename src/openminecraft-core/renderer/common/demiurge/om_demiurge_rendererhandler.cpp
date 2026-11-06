@@ -99,6 +99,16 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
     auto task = renderer->fetchTask("demiurgeui_compose_" + name);
     task->target(middleTarget->target);
 
+    // 调试：OM_CLOSE_UI=1 时主界面与 galaxy 不再绘制（只清空目标），
+    // 用于 GPU 满负载渲染场景本体的性能测试。
+    static const bool hideUi = std::getenv("OM_CLOSE_UI") != nullptr;
+
+    if (hideUi && (name == "surface" || name == "surface_background"))
+    {
+        task->clearColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f))->clearDepth(1.0f)->finish();
+        return;
+    }
+
     for (float layer = bottomDepth; layer >= topDepth; layer -= 0.01f)
     {
         rect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);

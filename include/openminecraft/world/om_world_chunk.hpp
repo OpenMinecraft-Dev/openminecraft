@@ -56,6 +56,13 @@ template <int Cs> class OMChunk
     {
     }
 
+    // 用同一个方块状态填充整个区块（比逐块 setBlock 快得多）
+    void fill(uint32_t blockState)
+    {
+        blocks.fill(blockState);
+        dirty = true;
+    }
+
     void setBlock(int x, int y, int z, uint32_t blockState)
     {
         blocks[y * Cs * Cs + x * Cs + z] = blockState;

@@ -118,7 +118,7 @@ class OMRendererVk : public OMRenderer
     std::vector<::vk::Semaphore> frameRenderSemaphores;
     std::map<uint32_t, OMFrameSync> inflights;
 
-    int framesInFlight = 3;
+    int framesInFlight = 9;
     int thisFrame = 0;
     ::vk::Fence currentFence = {};
 

@@ -797,11 +797,11 @@ auto OMVoxelManager::updateColor() -> void
                                    0,
                                    colorManager->getBlockTint(),
                                    0,
-                                   srgbToLinear(colorManager->getSkyLightColor()),
+                                   colorManager->getSkyLightColor(),
                                    0,
-                                   srgbToLinear(colorManager->getAmbientColor()),
+                                   colorManager->getAmbientColor(),
                                    0,
-                                   srgbToLinear(colorManager->getNightVisionColor())};
+                                   colorManager->getNightVisionColor()};
         lightmapData->updateData(&dayData);
         colorManager->solveDirty();
     }

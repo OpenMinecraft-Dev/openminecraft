@@ -20,6 +20,8 @@ from pyecharts.charts import Line
 from pyecharts.globals import ThemeType
 
 COLUMNS = ["instantFps", "avgFps", "1% low", "p50", "p95", "p99"]
+# instantFps 与 1% low 表示瞬时/尖峰，做平滑会把尖峰平均掉，因此不参与 --smooth
+NO_SMOOTH = {0, 2}
 COLORS = ["#f6c445", "#4c9be8", "#e05561", "#59c98b", "#b07de0", "#4ec9c9"]
 
 
@@ -59,7 +61,7 @@ def main():
     ap.add_argument("output", nargs="?", default="fps.html")
     ap.add_argument("--max-points", type=int, default=4000,
                     help="最多绘制的点数（0 = 全量）；默认抽稀到 4000 保证交互流畅")
-    ap.add_argument("--smooth", type=int, default=1, help="rolling mean window (samples)")
+    ap.add_argument("--smooth", type=int, default=1, help="rolling mean window (samples; instantFps and 1%% low are not smoothed)")
     ap.add_argument("--title", default="OpenMinecraft — FPS / frame time percentiles")
     ap.add_argument("--embed-js", metavar="ECHARTS_JS",
                     help="把 echarts.min.js 内联进输出，生成完全离线可用的单文件 HTML")
@@ -89,7 +91,7 @@ def main():
     all_points = []
 
     for i, name in enumerate(COLUMNS):
-        y = rolling_mean(sampled[:, i], args.smooth)
+        y = sampled[:, i] if i in NO_SMOOTH else rolling_mean(sampled[:, i], args.smooth)
         all_points.append([[round(float(xi), 4), round(float(yi), 2)] for xi, yi in zip(x, y)])
         line.add_yaxis(
             series_name=f"{name} (mean {float(np.mean(sampled[:, i])):.0f})",

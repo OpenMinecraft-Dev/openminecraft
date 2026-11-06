@@ -34,6 +34,8 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <random>
+#include <cmath>
 #include <stdexcept>
 #include <string>
 #include <cstdlib>
@@ -57,6 +59,102 @@ using namespace openminecraft::renderer;
 
 namespace openminecraft::shell
 {
+namespace
+{
+// 简易 2D Perlin 噪声（用于地形高度）
+struct OMPerlinNoise
+{
+    std::array<int, 512> perm = {};
+
+    explicit OMPerlinNoise(uint32_t seed)
+    {
+        std::array<int, 256> p = {};
+        for (int i = 0; i < 256; ++i)
+        {
+            p[i] = i;
+        }
+
+        std::mt19937 rng(seed);
+        std::shuffle(p.begin(), p.end(), rng);
+
+        for (int i = 0; i < 512; ++i)
+        {
+            perm[i] = p[i & 255];
+        }
+    }
+
+    static float fade(float t)
+    {
+        return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
+    }
+
+    static float lerp(float a, float b, float t)
+    {
+        return a + t * (b - a);
+    }
+
+    static float grad(int hash, float x, float y)
+    {
+        switch (hash & 7)
+        {
+        case 0:
+            return x + y;
+        case 1:
+            return x - y;
+        case 2:
+            return -x + y;
+        case 3:
+            return -x - y;
+        case 4:
+            return x;
+        case 5:
+            return -x;
+        case 6:
+            return y;
+        default:
+            return -y;
+        }
+    }
+
+    auto noise(float x, float y) const -> float
+    {
+        const int xi = static_cast<int>(std::floor(x)) & 255;
+        const int yi = static_cast<int>(std::floor(y)) & 255;
+        const float xf = x - std::floor(x);
+        const float yf = y - std::floor(y);
+        const float u = fade(xf);
+        const float v = fade(yf);
+
+        const int aa = perm[perm[xi] + yi];
+        const int ab = perm[perm[xi] + yi + 1];
+        const int ba = perm[perm[xi + 1] + yi];
+        const int bb = perm[perm[xi + 1] + yi + 1];
+
+        const float x1 = lerp(grad(aa, xf, yf), grad(ba, xf - 1.0f, yf), u);
+        const float x2 = lerp(grad(ab, xf, yf - 1.0f), grad(bb, xf - 1.0f, yf - 1.0f), u);
+        return lerp(x1, x2, v);
+    }
+
+    auto fbm(float x, float y, int octaves) const -> float
+    {
+        float sum = 0.0f;
+        float amp = 1.0f;
+        float freq = 1.0f;
+        float norm = 0.0f;
+
+        for (int i = 0; i < octaves; ++i)
+        {
+            sum += amp * noise(x * freq, y * freq);
+            norm += amp;
+            amp *= 0.5f;
+            freq *= 2.0f;
+        }
+
+        return sum / norm;
+    }
+};
+} // namespace
+
 OMApplication::OMApplication(std::vector<std::string> args) : logger("OMApplication", this), args(args)
 {
 }
@@ -204,11 +302,13 @@ void OMApplication::mainLoop(OMBackend backend)
         using OMEventBusSDL = event::OMEventBus<SDL_EventType, SDL_Event>;
         OMEventBusSDL bus;
         event::OMEventBusWrap buswrap;
-        auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{-1.0f, 5.0f, -1.0f}, 45.0f, -45.0f);
+        auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{8.0f, 24.0f, 8.0f}, 45.0f, -35.0f);
 
         auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
 
         producer = std::thread([chunkManager, &stopProducing]() {
+            const OMPerlinNoise noise(0x9E3779B9u);
+
             int width = 16;
             int height = 16;
             int depth = 8;
@@ -224,73 +324,113 @@ void OMApplication::mainLoop(OMBackend backend)
                         }
 
                         using data::block::blockStateRegistry;
+                        using data::block::blockStateRegistry;
+
+                        static constexpr int seaLevel = 7;
+
+                        const uint32_t airId = blockStateRegistry.id(data::block::makeBlockState("minecraft:air[]"));
+                        const uint32_t stoneId =
+                            blockStateRegistry.id(data::block::makeBlockState("minecraft:stone[]"));
+                        const uint32_t dirtId = blockStateRegistry.id(data::block::makeBlockState("minecraft:dirt[]"));
+                        const uint32_t grassId =
+                            blockStateRegistry.id(data::block::makeBlockState("minecraft:grass_block[snowy=false]"));
+                        const uint32_t waterId =
+                            blockStateRegistry.id(data::block::makeBlockState("minecraft:water[level=0]"));
+
                         world::OMChunk<16> cnk(cx, cy, cz);
+
+                        std::array<int, 16 * 16> heights = {};
+                        int minHeight = 255;
+                        int maxHeight = -255;
+
                         for (int x = 0; x < 16; ++x)
                         {
-                            for (int y = 0; y < 16; ++y)
+                            for (int z = 0; z < 16; ++z)
                             {
-                                for (int z = 0; z < 16; ++z)
+                                const float wx = static_cast<float>(cx * 16 + x);
+                                const float wz = static_cast<float>(cz * 16 + z);
+
+                                const float h = 9.0f + 5.0f * noise.fbm(wx * 0.02f, wz * 0.02f, 4) +
+                                                1.2f * noise.fbm(wx * 0.09f, wz * 0.09f, 2);
+                                const int height = static_cast<int>(std::floor(h));
+
+                                heights[x * 16 + z] = height;
+                                minHeight = std::min(minHeight, height);
+                                maxHeight = std::max(maxHeight, height);
+                            }
+                        }
+
+                        const int chunkMinY = cy * 16;
+                        const int chunkMaxY = chunkMinY + 15;
+
+                        if (chunkMaxY < minHeight)
+                        {
+                            cnk.fill(stoneId);
+                        }
+                        else if (chunkMinY > maxHeight)
+                        {
+                            if (chunkMinY > seaLevel)
+                            {
+                                cnk.fill(airId);
+                            }
+                            else
+                            {
+                                cnk.fill(airId);
+
+                                for (int x = 0; x < 16; ++x)
                                 {
-                                    cnk.setBlock(x, y, z,
-                                                 blockStateRegistry.id(data::block::makeBlockState("minecraft:air[]")));
+                                    for (int z = 0; z < 16; ++z)
+                                    {
+                                        const int from = std::max(chunkMinY, heights[x * 16 + z] + 1);
+
+                                        for (int wy = from; wy <= seaLevel && wy <= chunkMaxY; ++wy)
+                                        {
+                                            cnk.setBlock(x, wy - chunkMinY, z, waterId);
+                                        }
+                                    }
                                 }
                             }
                         }
-                        cnk.setBlock(0, 1, 0,
-                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:water[level=1]")));
-                        cnk.setBlock(0, 0, 0,
-                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:lava[level=0]")));
-                        cnk.setBlock(0, 15, 0,
-                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:water[level=8]")));
-                        cnk.setBlock(15, 1, 0,
-                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:water[level=2]")));
-                        cnk.setBlock(0, 1, 15,
-                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:water[level=2]")));
-                        cnk.setBlock(15, 1, 15,
-                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:water[level=3]")));
-                        cnk.setBlock(
-                            15, 0, 0,
-                            blockStateRegistry.id(data::block::makeBlockState("minecraft:white_stained_glass[]")));
-                        cnk.setBlock(0, 1, 1,
-                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:copper_ore[]")));
-                        cnk.setBlock(
-                            2, 0, 0,
-                            blockStateRegistry.id(data::block::makeBlockState("minecraft:grass_block[snowy=false]")));
-                        cnk.setBlock(
-                            2, 1, 0,
-                            blockStateRegistry.id(data::block::makeBlockState("minecraft:tall_grass[half=lower]")));
-                        cnk.setBlock(
-                            2, 2, 0,
-                            blockStateRegistry.id(data::block::makeBlockState("minecraft:tall_grass[half=upper]")));
-                        cnk.setBlock(
-                            1, 1, 0,
-                            blockStateRegistry.id(data::block::makeBlockState(
-                                "minecraft:cherry_stairs[facing=east,half=bottom,shape=straight,waterlogged=true]")));
-                        cnk.setBlock(
-                            3, 1, 0,
-                            blockStateRegistry.id(data::block::makeBlockState(
-                                "minecraft:cherry_door[facing=east,half=lower,hinge=left,open=false,powered=false]")));
-                        cnk.setBlock(
-                            3, 2, 0,
-                            blockStateRegistry.id(data::block::makeBlockState(
-                                "minecraft:cherry_door[facing=east,half=upper,hinge=left,open=false,powered=false]")));
-                        cnk.setBlock(
-                            0, 2, 1,
-                            blockStateRegistry.id(data::block::makeBlockState(
-                                "minecraft:cherry_hanging_sign[attached=false,rotation=3,waterlogged=false]")));
-                        cnk.setBlock(0, 1, 2,
-                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:copper_ore[]")));
-                        cnk.setBlock(15, 1, 1,
-                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:copper_ore[]")));
-                        cnk.setBlock(15, 1, 2,
-                                     blockStateRegistry.id(data::block::makeBlockState("minecraft:copper_ore[]")));
-                        cnk.setBlock(15, 2, 2,
-                                     blockStateRegistry.id(data::block::makeBlockState(
-                                         "minecraft:cherry_fence_gate[facing=south,in_wall=false,"
-                                         "open=true,powered=true]")));
-                        cnk.setBlock(15, 2, 1,
-                                     blockStateRegistry.id(
-                                         data::block::makeBlockState("minecraft:stone_pressure_plate[powered=false]")));
+                        else
+                        {
+                            cnk.fill(airId);
+
+                            for (int x = 0; x < 16; ++x)
+                            {
+                                for (int z = 0; z < 16; ++z)
+                                {
+                                    const int height = heights[x * 16 + z];
+
+                                    for (int y = 0; y < 16; ++y)
+                                    {
+                                        const int wy = chunkMinY + y;
+
+                                        if (wy > height)
+                                        {
+                                            if (wy <= seaLevel)
+                                            {
+                                                cnk.setBlock(x, y, z, waterId);
+                                            }
+                                            continue;
+                                        }
+
+                                        if (wy == height)
+                                        {
+                                            cnk.setBlock(x, y, z, grassId);
+                                        }
+                                        else if (wy > height - 4)
+                                        {
+                                            cnk.setBlock(x, y, z, dirtId);
+                                        }
+                                        else
+                                        {
+                                            cnk.setBlock(x, y, z, stoneId);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         chunkManager->loadChunk(cnk);
                     }
                 }
