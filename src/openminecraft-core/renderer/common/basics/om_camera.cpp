@@ -12,6 +12,13 @@ OMCamera::OMCamera(OMRenderer *renderer, glm::vec3 location, float yaw, float pi
 {
 }
 
+OMCamera::OMCamera(OMRenderer *renderer, int64_t chunkX, int64_t chunkY, int64_t chunkZ, float localX, float localY,
+                   float localZ, float yaw, float pitch)
+    : renderer(renderer), logger("OMCamera", this), position(chunkX, chunkY, chunkZ, localX, localY, localZ),
+      yaw(yaw), pitch(pitch)
+{
+}
+
 auto OMCamera::fetchViewMat() -> glm::mat4
 {
     glm::vec3 front;

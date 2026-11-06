@@ -61,7 +61,6 @@ namespace openminecraft::shell
 {
 namespace
 {
-// 简易 2D Perlin 噪声（用于地形高度）
 struct OMPerlinNoise
 {
     std::array<int, 512> perm = {};
@@ -83,17 +82,17 @@ struct OMPerlinNoise
         }
     }
 
-    static float fade(float t)
+    static double fade(double t)
     {
-        return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
+        return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
     }
 
-    static float lerp(float a, float b, float t)
+    static double lerp(double a, double b, double t)
     {
         return a + t * (b - a);
     }
 
-    static float grad(int hash, float x, float y)
+    static double grad(int hash, double x, double y)
     {
         switch (hash & 7)
         {
@@ -116,38 +115,38 @@ struct OMPerlinNoise
         }
     }
 
-    auto noise(float x, float y) const -> float
+    auto noise(double x, double y) const -> double
     {
         const int xi = static_cast<int>(std::floor(x)) & 255;
         const int yi = static_cast<int>(std::floor(y)) & 255;
-        const float xf = x - std::floor(x);
-        const float yf = y - std::floor(y);
-        const float u = fade(xf);
-        const float v = fade(yf);
+        const double xf = x - std::floor(x);
+        const double yf = y - std::floor(y);
+        const double u = fade(xf);
+        const double v = fade(yf);
 
         const int aa = perm[perm[xi] + yi];
         const int ab = perm[perm[xi] + yi + 1];
         const int ba = perm[perm[xi + 1] + yi];
         const int bb = perm[perm[xi + 1] + yi + 1];
 
-        const float x1 = lerp(grad(aa, xf, yf), grad(ba, xf - 1.0f, yf), u);
-        const float x2 = lerp(grad(ab, xf, yf - 1.0f), grad(bb, xf - 1.0f, yf - 1.0f), u);
+        const double x1 = lerp(grad(aa, xf, yf), grad(ba, xf - 1.0, yf), u);
+        const double x2 = lerp(grad(ab, xf, yf - 1.0), grad(bb, xf - 1.0, yf - 1.0), u);
         return lerp(x1, x2, v);
     }
 
-    auto fbm(float x, float y, int octaves) const -> float
+    auto fbm(double x, double y, int octaves) const -> double
     {
-        float sum = 0.0f;
-        float amp = 1.0f;
-        float freq = 1.0f;
-        float norm = 0.0f;
+        double sum = 0.0;
+        double amp = 1.0;
+        double freq = 1.0;
+        double norm = 0.0;
 
         for (int i = 0; i < octaves; ++i)
         {
             sum += amp * noise(x * freq, y * freq);
             norm += amp;
-            amp *= 0.5f;
-            freq *= 2.0f;
+            amp *= 0.5;
+            freq *= 2.0;
         }
 
         return sum / norm;
@@ -302,7 +301,15 @@ void OMApplication::mainLoop(OMBackend backend)
         using OMEventBusSDL = event::OMEventBus<SDL_EventType, SDL_Event>;
         OMEventBusSDL bus;
         event::OMEventBusWrap buswrap;
-        auto camera = std::make_shared<basics::OMCamera>(win(), glm::vec3{8.0f, 24.0f, 8.0f}, 45.0f, -35.0f);
+        // 调试：OM_WORLD_OFFSET=<chunks> 把地形整体平移到远处坐标，
+        // 用于检查大坐标下的生成/精度异常
+        static const int64_t worldOffsetChunks = []() -> int64_t {
+            const char *v = std::getenv("OM_WORLD_OFFSET");
+            return v != nullptr ? std::atoll(v) : 0;
+        }();
+
+        auto camera = std::make_shared<basics::OMCamera>(win(), worldOffsetChunks, 1, worldOffsetChunks, 8.0f, 8.0f,
+                                                          8.0f, 45.0f, -35.0f);
 
         auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
 
@@ -312,6 +319,17 @@ void OMApplication::mainLoop(OMBackend backend)
             int width = 16;
             int height = 16;
             int depth = 8;
+
+            int gMinHeight = 255;
+            int gMaxHeight = -255;
+            long long gHeightSum = 0;
+            long long gHeightCount = 0;
+            std::array<char, 256> gHeightSeen = {};
+            int gChunkUniqueMin = 999;
+            int gChunkUniqueMax = 0;
+            long long gChunkUniqueSum = 0;
+            long long gChunkUniqueCount = 0;
+            unsigned long long gHeightHash = 1469598103934665603ull;
             for (int cx = -width; cx < width; ++cx)
             {
                 for (int cy = -depth; cy <= 0; ++cy)
@@ -337,7 +355,10 @@ void OMApplication::mainLoop(OMBackend backend)
                         const uint32_t waterId =
                             blockStateRegistry.id(data::block::makeBlockState("minecraft:water[level=0]"));
 
-                        world::OMChunk<16> cnk(cx, cy, cz);
+                        const int64_t bx = static_cast<int64_t>(cx) + worldOffsetChunks;
+                        const int64_t bz = static_cast<int64_t>(cz) + worldOffsetChunks;
+
+                        world::OMChunk<16> cnk(bx, cy, bz);
 
                         std::array<int, 16 * 16> heights = {};
                         int minHeight = 255;
@@ -347,16 +368,53 @@ void OMApplication::mainLoop(OMBackend backend)
                         {
                             for (int z = 0; z < 16; ++z)
                             {
-                                const float wx = static_cast<float>(cx * 16 + x);
-                                const float wz = static_cast<float>(cz * 16 + z);
+                                const double wx = static_cast<double>(bx) * 16.0 + static_cast<double>(x);
+                                const double wz = static_cast<double>(bz) * 16.0 + static_cast<double>(z);
 
-                                const float h = 9.0f + 5.0f * noise.fbm(wx * 0.02f, wz * 0.02f, 4) +
-                                                1.2f * noise.fbm(wx * 0.09f, wz * 0.09f, 2);
+                                const double h = 9.0 + 5.0 * noise.fbm(wx * 0.02, wz * 0.02, 4) +
+                                                 1.2 * noise.fbm(wx * 0.09, wz * 0.09, 2);
                                 const int height = static_cast<int>(std::floor(h));
 
                                 heights[x * 16 + z] = height;
                                 minHeight = std::min(minHeight, height);
                                 maxHeight = std::max(maxHeight, height);
+                            }
+                        }
+
+                        if (cy == 0)
+                        {
+                            gMinHeight = std::min(gMinHeight, minHeight);
+                            gMaxHeight = std::max(gMaxHeight, maxHeight);
+
+                            for (auto h : heights)
+                            {
+                                if (h >= -128 && h < 128)
+                                {
+                                    gHeightSeen[h + 128] = 1;
+                                }
+                                gHeightSum += h;
+                                ++gHeightCount;
+                            }
+
+                            // 每个区块内部的"高度种类数"：大坐标浮点精度丢失会导致该值变小
+                            std::array<int, 16 * 16> local = heights;
+                            std::sort(local.begin(), local.end());
+                            int localUnique = 1;
+                            for (size_t i = 1; i < local.size(); ++i)
+                            {
+                                if (local[i] != local[i - 1])
+                                {
+                                    ++localUnique;
+                                }
+                            }
+                            gChunkUniqueMin = std::min(gChunkUniqueMin, localUnique);
+                            gChunkUniqueMax = std::max(gChunkUniqueMax, localUnique);
+                            gChunkUniqueSum += localUnique;
+                            ++gChunkUniqueCount;
+
+                            for (auto h : heights)
+                            {
+                                gHeightHash = gHeightHash * 1000003ull + static_cast<unsigned long long>(h + 1000);
                             }
                         }
 
@@ -435,6 +493,21 @@ void OMApplication::mainLoop(OMBackend backend)
                     }
                 }
             }
+
+            int gUnique = 0;
+            for (auto v : gHeightSeen)
+            {
+                gUnique += v != 0;
+            }
+
+            std::fprintf(stderr,
+                         "[terrain] offsetChunks=%lld chunks=%lld heights min=%d max=%d unique=%d mean=%.2f "
+                         "chunkUnique min=%d max=%d avg=%.2f hash=%016llx\n",
+                         static_cast<long long>(worldOffsetChunks), gHeightCount / 256, gMinHeight, gMaxHeight, gUnique,
+                         static_cast<double>(gHeightSum) / std::max<long long>(gHeightCount, 1), gChunkUniqueMin,
+                         gChunkUniqueMax,
+                         static_cast<double>(gChunkUniqueSum) / std::max<long long>(gChunkUniqueCount, 1),
+                         gHeightHash);
         });
 
         bool inGame = false;
