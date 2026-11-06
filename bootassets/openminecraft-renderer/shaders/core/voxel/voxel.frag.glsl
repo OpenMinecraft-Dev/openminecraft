@@ -27,12 +27,14 @@ void main()
     float ao = mix(1.0, 0.2, voxAoLevel / 3.0);
 
     vec4 texColor = texture(inTexture, vec3(voxTexCoord, voxTexLayer));
-    if (texColor.a < 0.005)
+    // cutout 必须是不透明的 alpha test：
+    // 远处 mipmap 会把 alpha 平均成 0.3~0.6，若继续按 alpha 混合就会"透视"。
+    if (texColor.a < 0.1)
     {
         discard;
     }
     vec3 result = voxFactor * ao * texColor.rgb * voxColormap;
 
-    outColor = fog_gen(vec4(result, texColor.a) * texture(inLightmap, voxLight), fog.fogStart, fog.fogEnd,
+    outColor = fog_gen(vec4(result, 1.0) * texture(inLightmap, voxLight), fog.fogStart, fog.fogEnd,
                        vec3(fog.fogR, fog.fogG, fog.fogB), 1.0);
 }

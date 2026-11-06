@@ -579,8 +579,9 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                     auto useSec = fluidLevel != 0 || isFalling;
 
                     const glm::u8vec3 fluidTint =
-                        paletteProvider ? paletteProvider->color(chunk, v.first.x, v.first.y, v.first.z, v.second, 0)
-                                        : glm::u8vec3{255, 255, 255};
+                        paletteProvider
+                            ? paletteProvider->fluidColor(chunk, v.first.x, v.first.y, v.first.z, v.second)
+                            : glm::u8vec3{255, 255, 255};
 
                     auto vox =
                         packVoxelFluid(v.first.x, v.first.y, v.first.z, f,

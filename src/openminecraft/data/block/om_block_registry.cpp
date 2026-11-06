@@ -109,8 +109,10 @@ void registerBlocks()
     registerBlock(OMIdentifier("minecraft:gold_ore"), std::make_shared<OMBlock>()->isSolid(true));
     registerBlock(OMIdentifier("minecraft:granite"), std::make_shared<OMBlock>()->isSolid(true));
     registerBlock(OMIdentifier("minecraft:gravel"), std::make_shared<OMBlock>()->isSolid(true));
+    // 冰是半透明方块（贴图 alpha≈190），不能按"实心"参与剔除：
+    // 否则冰下方水面的顶面会被剔除，透过冰就看到"空洞"。
     registerBlock(OMIdentifier("minecraft:ice"),
-                  std::make_shared<OMTransparentBlock>()->isSolid(true)->isTranslucent(true));
+                  std::make_shared<OMTransparentBlock>()->isSolid(false)->isTranslucent(true));
     registerBlock(OMIdentifier("minecraft:lapis_ore"), std::make_shared<OMBlock>()->isSolid(true));
     registerBlock(OMIdentifier("minecraft:large_amethyst_bud"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:large_fern"),

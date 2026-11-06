@@ -258,6 +258,23 @@ class OMWorldPaletteProvider : public wrap::OMChunkPaletteProvider
     {
     }
 
+    // 含水方块（waterlogged=true）中的水必须使用水体颜色，否则会是白色
+    auto fluidColor(const world::OMChunk<16> &chunk, int x, int y, int z, uint32_t blockState) -> glm::u8vec3 override
+    {
+        if (blockState < data::block::blockStateRegistry.idToRegistry.size())
+        {
+            const auto &state = data::block::blockStateRegistry.idToRegistry[blockState];
+
+            if (state.state.properties.count("waterlogged") && state.state.properties.at("waterlogged") == "true")
+            {
+                const auto *biome = biomeFor(chunk, x, y, z);
+                return convert(biome ? biome->waterColor : 0x3F76E4);
+            }
+        }
+
+        return color(chunk, x, y, z, blockState, 0);
+    }
+
     auto color(const world::OMChunk<16> &chunk, int x, int y, int z, uint32_t blockState, int tintIndex)
         -> glm::u8vec3 override
     {

@@ -324,6 +324,13 @@ class OMChunkPaletteProvider
 
     virtual auto color(const world::OMChunk<16> &chunk, int x, int y, int z, uint32_t blockState, int tintIndex)
         -> glm::u8vec3 = 0;
+
+    // 流体部分的染色：含水方块（waterlogged）里的水应该用水体颜色，
+    // 而不是沿用方块自身的 colorSource（通常为 None -> 白色）
+    virtual auto fluidColor(const world::OMChunk<16> &chunk, int x, int y, int z, uint32_t blockState) -> glm::u8vec3
+    {
+        return color(chunk, x, y, z, blockState, 0);
+    }
 };
 
 class OMVoxelCompiler
