@@ -86,7 +86,7 @@ void registerBlocks()
                   std::make_shared<OMTransparentBlock>()->isSolid(false)->isTranslucent(true));
     registerBlock(OMIdentifier("minecraft:budding_amethyst"), std::make_shared<OMBlock>()->isSolid(true));
     registerBlock(OMIdentifier("minecraft:calcite"), std::make_shared<OMBlock>()->isSolid(true));
-    registerBlock(OMIdentifier("minecraft:cave_air"), std::make_shared<OMBlock>()->isSolid(true));
+    registerBlock(OMIdentifier("minecraft:cave_air"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:cave_vines"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:cave_vines_plant"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:chest"), std::make_shared<OMBlock>()->isSolid(false));

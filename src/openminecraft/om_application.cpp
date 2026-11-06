@@ -167,6 +167,7 @@ struct OMPreloadInfo
     int64_t maxChunkZ = 0;
     int64_t minSectionY = 0;
     int64_t maxSectionY = 0;
+    int64_t maxBlockY = -64; // 所有区块中最高非空气方块的世界 Y
     int loaded = 0;
 };
 
@@ -200,6 +201,35 @@ static auto preloadChunkBounds() -> OMPreloadInfo
 
         const int64_t minY = -4;
         const int64_t maxY = minY + static_cast<int64_t>(sections) - 1;
+
+        // 读取区块数据，找出最高非空气方块（临时 id 0 = air）
+        {
+            std::vector<uint32_t> ids(4096);
+
+            for (uint32_t si = 0; si < sections; ++si)
+            {
+                in.seekg(static_cast<std::streamoff>(20 + static_cast<size_t>(si) * (4 + 4096 * 4 + 64 * 4) + 4));
+                in.read(reinterpret_cast<char *>(ids.data()), 4096 * 4);
+
+                if (!in)
+                {
+                    break;
+                }
+
+                for (int i = 0; i < 4096; ++i)
+                {
+                    if (ids[i] != 0)
+                    {
+                        const int64_t y = (minY + static_cast<int64_t>(si)) * 16 + (i / 256);
+
+                        if (y > info.maxBlockY)
+                        {
+                            info.maxBlockY = y;
+                        }
+                    }
+                }
+            }
+        }
 
         if (first)
         {
@@ -517,9 +547,13 @@ void OMApplication::mainLoop(OMBackend backend)
             const int64_t centerChunkX = (bounds.minChunkX + bounds.maxChunkX + 1) / 2;
             const int64_t centerChunkZ = (bounds.minChunkZ + bounds.maxChunkZ + 1) / 2;
 
-            // 站在区域上方俯视
-            camera = std::make_shared<basics::OMCamera>(win(), centerChunkX, bounds.maxSectionY + 2, centerChunkZ, 8.0f,
-                                                        8.0f, 8.0f, 45.0f, -60.0f);
+            // 站在"最高非空气方块"上方 12 格俯视，避免相机飘到区块顶部之外
+            const int64_t cameraY = bounds.maxBlockY + 12;
+            const int64_t cameraChunkY = cameraY / 16;
+
+            camera = std::make_shared<basics::OMCamera>(win(), centerChunkX, cameraChunkY, centerChunkZ, 8.0f,
+                                                        static_cast<float>(cameraY - cameraChunkY * 16), 8.0f,
+                                                        45.0f, -50.0f);
         }
         else
         {

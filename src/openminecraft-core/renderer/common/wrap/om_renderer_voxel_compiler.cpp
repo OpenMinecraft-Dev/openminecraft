@@ -407,7 +407,12 @@ auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
         return 0.0f;
     }
 
-    float tot = handler->queryFluidFalling(selfModel) ? 8.0f : (8.0f - current);
+    // 上方还有同种流体时，该格不是液面，按满格（9）计算；
+    // 否则按 vanilla 的 8 - level（源水 = 8，即 8/9 格高）。
+    const bool selfHasFluidAbove =
+        checkExistFluidSame(chunk, externalAccessor, v, PosY, selfModel);
+
+    float tot = selfHasFluidAbove ? 9.0f : (handler->queryFluidFalling(selfModel) ? 9.0f : (8.0f - current));
     int lev = 1;
 
     std::array<glm::ivec3, 3> nPos;
@@ -441,9 +446,9 @@ auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
             continue;
         }
 
-        if (handler->queryFluidFalling(ns))
+        if (handler->queryFluidFalling(ns) || checkExistFluidSame(chunk, externalAccessor, p, PosY, ns))
         {
-            tot += 8.0f;
+            tot += 9.0f;
         }
         else
         {
@@ -475,16 +480,101 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             const auto isFalling = handler->queryFluidFalling(bsid);
             const auto fluidLevel = (handler->queryFluidLevel(bsid) & 0b111);
 
+            // 上方仍是同种流体 => 当前格不是液面，应该占满整格；
+            // 只有液面顶层的源水才是 8/9 格高（vanilla 行为）。
+            const bool fluidAbove = checkExistFluidSame(chunk, externalAccessor, v.first, PosY, bsid);
+            const bool fullBlock = isFalling || fluidAbove;
+
             const std::array<float, 4> cornerHeights = {
-                isFalling ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 0, fluidLevel),
-                isFalling ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 1, fluidLevel),
-                isFalling ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 2, fluidLevel),
-                isFalling ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 3, fluidLevel),
+                fullBlock ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 0, fluidLevel),
+                fullBlock ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 1, fluidLevel),
+                fullBlock ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 2, fluidLevel),
+                fullBlock ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 3, fluidLevel),
+            };
+
+            // 流体高度比较使用"共享边两侧的角点高度（0..255）"：
+            // 角点高度由同一组 4 个相邻方块平均得到，两侧结果一致，
+            // 因此不会因为 1/255 的量化差留下缝隙；同时也保证同一面只画一次。
+            auto cornerHeightOf = [&](const glm::ivec3 &p, int mdl, int idx) -> float {
+                if (handler->queryFluidFalling(mdl) ||
+                    checkExistFluidSame(chunk, externalAccessor, p, PosY, mdl))
+                {
+                    return 255.0f;
+                }
+
+                const auto level = static_cast<uint8_t>(handler->queryFluidLevel(mdl) & 0b111);
+                return checkAvgFluid(chunk, externalAccessor, p, idx, level);
             };
 
             for (auto f : {NegX, NegY, NegZ, PosX, PosY, PosZ})
             {
-                if (!checkExistFluidSame(chunk, externalAccessor, v.first, f, bsid))
+                bool culled = false;
+
+                if (f == NegX || f == PosX || f == NegZ || f == PosZ)
+                {
+                    // 侧面：同种流体但邻居液面更低时不能剔除，
+                    // 否则瀑布/台阶水流的侧面会出现缝隙
+                    glm::ivec3 np = v.first;
+
+                    switch (f)
+                    {
+                    case NegX:
+                        np.x -= 1;
+                        break;
+                    case PosX:
+                        np.x += 1;
+                        break;
+                    case NegZ:
+                        np.z -= 1;
+                        break;
+                    case PosZ:
+                        np.z += 1;
+                        break;
+                    default:
+                        break;
+                    }
+
+                    const uint32_t nst = queryBlockState(chunk, externalAccessor, np.x, np.y, np.z);
+                    const int nmdl =
+                        modelFetcher(nst, chunk.chunkx, chunk.chunky, chunk.chunkz, np.x, np.y, np.z);
+
+                    if (handler->queryFluid(nmdl) && handler->queryFluidSame(nmdl, bsid))
+                    {
+                        // 共享边的角点索引：idx0=(-x,-z) idx1=(-x,+z) idx2=(+x,-z) idx3=(+x,+z)
+                        int selfA = 0, selfB = 0, nA = 0, nB = 0;
+
+                        switch (f)
+                        {
+                        case PosX:
+                            selfA = 2, selfB = 3, nA = 0, nB = 1;
+                            break;
+                        case NegX:
+                            selfA = 0, selfB = 1, nA = 2, nB = 3;
+                            break;
+                        case PosZ:
+                            selfA = 1, selfB = 3, nA = 0, nB = 2;
+                            break;
+                        default: // NegZ
+                            selfA = 0, selfB = 2, nA = 1, nB = 3;
+                            break;
+                        }
+
+                        const float selfH = std::max(cornerHeights[selfA], cornerHeights[selfB]);
+                        const float neighbourH =
+                            std::max(cornerHeightOf(np, nmdl, nA), cornerHeightOf(np, nmdl, nB));
+
+                        // 邻居液面 >= 本侧（几乎相等）=> 本侧面被挡住；
+                        // 本侧只要更高（哪怕 1/255）就保留这一面，把缝隙完全盖住。
+                        // 两侧永远不会同时绘制 => 不会 z-fighting。
+                        culled = neighbourH >= selfH - 1e-3f;
+                    }
+                }
+                else
+                {
+                    culled = checkExistFluidSame(chunk, externalAccessor, v.first, f, bsid);
+                }
+
+                if (!culled)
                 {
                     auto useSec = fluidLevel != 0 || isFalling;
 
