@@ -10,7 +10,7 @@
     每个 section:
         blockCount u16
         fluidCount u16
-        blockIds   u32 * 4096    # 索引 = y*256 + x*16 + z，值为原始 block state id
+        blockIds   u32 * 4096    # 索引 = y*256 + z*16 + x（原版顺序），值为原始 block state id
         biomeIds   u32 * 64      # 索引 = y*16 + x*4 + z
 
 用法:

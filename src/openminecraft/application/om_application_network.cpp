@@ -26,9 +26,10 @@ namespace openminecraft::shell
 //   per section:
 //     blockCount i16
 //     fluidCount i16
-//     blockIds   u32 * 4096   // 按 y*256 + x*16 + z 索引，值为原始 block state id
+//     blockIds   u32 * 4096   // 按 y*256 + z*16 + x 索引（原版顺序，x 最快），值为原始 block state id
 //     biomeIds   u32 * 64     // 按 y*16 + x*4 + z 索引（4x4x4）
 // 每个 section 固定 4096+64 个 u32，不需要解码调色板，可直接索引读取。
+// 注意：方块索引沿用 Minecraft 原版顺序 y*256 + z*16 + x，与 OMChunk 的 y*256 + x*16 + z 不同。
 static void storeChunkToFile(const network::OMProtocolChunkDataAndLight &chunk)
 {
     std::error_code ec;

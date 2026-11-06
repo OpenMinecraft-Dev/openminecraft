@@ -155,6 +155,204 @@ struct OMPerlinNoise
 };
 } // namespace
 
+namespace
+{
+// 读取 chunks_mapped/*.omc（version 2，展开格式）并放入 chunkManager。
+struct OMPreloadInfo
+{
+    int64_t minChunkX = 0;
+    int64_t maxChunkX = 0;
+    int64_t minChunkZ = 0;
+    int64_t maxChunkZ = 0;
+    int64_t minSectionY = 0;
+    int64_t maxSectionY = 0;
+    int loaded = 0;
+};
+
+static auto preloadChunkBounds() -> OMPreloadInfo
+{
+    OMPreloadInfo info{};
+    bool first = true;
+
+    std::error_code ec;
+
+    for (auto &entry : std::filesystem::directory_iterator("chunks_mapped", ec))
+    {
+        if (ec || !entry.is_regular_file() || entry.path().extension() != ".omc")
+        {
+            continue;
+        }
+
+        std::ifstream in(entry.path(), std::ios::binary);
+        char header[20] = {};
+
+        if (!in.read(header, sizeof(header)) || std::memcmp(header, "OMCH", 4) != 0)
+        {
+            continue;
+        }
+
+        int32_t cx = 0, cz = 0;
+        uint32_t sections = 0;
+        std::memcpy(&cx, header + 8, 4);
+        std::memcpy(&cz, header + 12, 4);
+        std::memcpy(&sections, header + 16, 4);
+
+        const int64_t minY = -4;
+        const int64_t maxY = minY + static_cast<int64_t>(sections) - 1;
+
+        if (first)
+        {
+            info.minChunkX = info.maxChunkX = cx;
+            info.minChunkZ = info.maxChunkZ = cz;
+            info.minSectionY = minY;
+            info.maxSectionY = maxY;
+            first = false;
+        }
+        else
+        {
+            info.minChunkX = std::min<int64_t>(info.minChunkX, cx);
+            info.maxChunkX = std::max<int64_t>(info.maxChunkX, cx);
+            info.minChunkZ = std::min<int64_t>(info.minChunkZ, cz);
+            info.maxChunkZ = std::max<int64_t>(info.maxChunkZ, cz);
+            info.maxSectionY = std::max<int64_t>(info.maxSectionY, maxY);
+        }
+    }
+
+    return info;
+}
+
+static void preloadChunks(world::OMChunkManager<16> &manager)
+{
+    namespace fs = std::filesystem;
+
+    // 读取临时 id -> 方块名称的映射
+    std::unordered_map<int, std::string> tempToName;
+
+    {
+        auto in = std::make_shared<std::ifstream>("chunks_mapped/id_mapping.json");
+
+        if (!*in)
+        {
+            return;
+        }
+
+        io::json::OMJsonAstBuilder bld(std::make_shared<io::json::OMJsonTokenIter>(in));
+        auto doc = bld.build();
+
+        if (doc->getMap().count("tempIdToBlock"))
+        {
+            for (auto &p : doc->getMap()["tempIdToBlock"]->getMap())
+            {
+                tempToName[std::stoi(p.first)] = p.second->getString();
+            }
+        }
+    }
+
+    if (tempToName.empty())
+    {
+        return;
+    }
+
+    // 临时 id -> 客户端 registry block state id
+    std::vector<uint32_t> lut;
+
+    for (auto &p : tempToName)
+    {
+        if (static_cast<int>(lut.size()) <= p.first)
+        {
+            lut.resize(p.first + 1, 0);
+        }
+
+        try
+        {
+            lut[p.first] = data::block::blockStateRegistry.id(data::block::makeBlockState(p.second));
+        }
+        catch (std::exception &)
+        {
+            lut[p.first] = data::block::blockStateRegistry.id(data::block::makeBlockState("minecraft:stone[]"));
+        }
+    }
+
+    const uint32_t airId = data::block::blockStateRegistry.id(data::block::makeBlockState("minecraft:air[]"));
+
+    std::error_code ec;
+    int loadedChunks = 0;
+
+    for (auto &entry : fs::directory_iterator("chunks_mapped", ec))
+    {
+        if (ec || !entry.is_regular_file() || entry.path().extension() != ".omc")
+        {
+            continue;
+        }
+
+        std::ifstream in(entry.path(), std::ios::binary);
+
+        if (!in)
+        {
+            continue;
+        }
+
+        std::vector<char> buf((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+
+        if (buf.size() < 20 || std::memcmp(buf.data(), "OMCH", 4) != 0)
+        {
+            continue;
+        }
+
+        int32_t cx = 0, cz = 0;
+        uint32_t sections = 0;
+        std::memcpy(&cx, buf.data() + 8, 4);
+        std::memcpy(&cz, buf.data() + 12, 4);
+        std::memcpy(&sections, buf.data() + 16, 4);
+
+        size_t off = 20;
+
+        for (uint32_t si = 0; si < sections; ++si)
+        {
+            if (off + 4 + 4096 * 4 + 64 * 4 > buf.size())
+            {
+                break;
+            }
+
+            off += 4; // blockCount / fluidCount
+
+            const auto *ids = reinterpret_cast<const uint32_t *>(buf.data() + off);
+            off += 4096 * 4 + 64 * 4;
+
+            const int64_t chunkY = -4 + static_cast<int64_t>(si);
+            world::OMChunk<16> cnk(cx, chunkY, cz);
+            cnk.fill(airId);
+
+            // 文件里保存的是 Minecraft 原版顺序：index = y*256 + z*16 + x（x 最快），
+            // 而 OMChunk 内部是 y*256 + x*16 + z，所以这里必须显式换序。
+            for (int y = 0; y < 16; ++y)
+            {
+                for (int z = 0; z < 16; ++z)
+                {
+                    for (int x = 0; x < 16; ++x)
+                    {
+                        const uint32_t temp = ids[y * 256 + z * 16 + x];
+                        const uint32_t state = temp < lut.size() ? lut[temp] : airId;
+
+                        if (state != airId)
+                        {
+                            cnk.setBlock(x, y, z, state);
+                        }
+                    }
+                }
+            }
+
+            manager.loadChunk(cnk);
+        }
+
+        ++loadedChunks;
+    }
+
+    std::fprintf(stderr, "[preload] loaded %d chunks from chunks_mapped, tempIds=%zu\n", loadedChunks,
+                 tempToName.size());
+}
+} // namespace
+
 OMApplication::OMApplication(std::vector<std::string> args) : logger("OMApplication", this), args(args)
 {
 }
@@ -302,19 +500,41 @@ void OMApplication::mainLoop(OMBackend backend)
         using OMEventBusSDL = event::OMEventBus<SDL_EventType, SDL_Event>;
         OMEventBusSDL bus;
         event::OMEventBusWrap buswrap;
-        // 调试：OM_WORLD_OFFSET=<chunks> 把地形整体平移到远处坐标，
-        // 用于检查大坐标下的生成/精度异常
+
         static const int64_t worldOffsetChunks = []() -> int64_t {
             const char *v = std::getenv("OM_WORLD_OFFSET");
             return v != nullptr ? std::atoll(v) : 0;
         }();
 
-        auto camera = std::make_shared<basics::OMCamera>(win(), worldOffsetChunks, 1, worldOffsetChunks, 8.0f, 8.0f,
-                                                         8.0f, 45.0f, -35.0f);
+        static const bool preloadFromDisk = std::getenv("OM_CHUNK_PRELOAD") != nullptr;
+
+        std::shared_ptr<basics::OMCamera> camera;
+
+        if (preloadFromDisk)
+        {
+            const auto bounds = preloadChunkBounds();
+            const int64_t centerChunkX = (bounds.minChunkX + bounds.maxChunkX + 1) / 2;
+            const int64_t centerChunkZ = (bounds.minChunkZ + bounds.maxChunkZ + 1) / 2;
+
+            // 站在区域上方俯视
+            camera = std::make_shared<basics::OMCamera>(win(), centerChunkX, bounds.maxSectionY + 2, centerChunkZ, 8.0f,
+                                                        8.0f, 8.0f, 45.0f, -60.0f);
+        }
+        else
+        {
+            camera = std::make_shared<basics::OMCamera>(win(), worldOffsetChunks, 1, worldOffsetChunks, 8.0f, 8.0f,
+                                                        8.0f, 45.0f, -35.0f);
+        }
 
         auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
 
         producer = std::thread([chunkManager, &stopProducing]() {
+            if (preloadFromDisk)
+            {
+                preloadChunks(*chunkManager);
+                return;
+            }
+
             const OMPerlinNoise noise(0x9E3779B9u);
 
             int width = 16;
@@ -396,7 +616,6 @@ void OMApplication::mainLoop(OMBackend backend)
                                 ++gHeightCount;
                             }
 
-                            // 每个区块内部的"高度种类数"：大坐标浮点精度丢失会导致该值变小
                             std::array<int, 16 * 16> local = heights;
                             std::sort(local.begin(), local.end());
                             int localUnique = 1;
@@ -578,8 +797,8 @@ void OMApplication::mainLoop(OMBackend backend)
 
             constexpr float FRICTION_GROUND = 0.546f;
             constexpr float FRICTION_AIR = 0.91f;
-            constexpr float ACCEL_WALK = 0.1f;
-            constexpr float MAX_SPEED_TICK = 0.21585f;
+            constexpr float ACCEL_WALK = 0.3f;
+            constexpr float MAX_SPEED_TICK = 1.21585f;
 
             static float accumulator = 0.0f;
             accumulator += time;
