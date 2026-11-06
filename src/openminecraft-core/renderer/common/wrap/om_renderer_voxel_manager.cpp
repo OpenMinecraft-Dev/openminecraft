@@ -709,12 +709,7 @@ void OMVoxelManager::unloadChunk(int i)
     voxelTranslucentComplexLayer->loadData(i, tcm, false);
     voxelFluidLayer->loadData(i, fm, false);
     voxelTranslucentFluidLayer->loadData(i, tfm, false);
-    voxelLayer->buf()->flushDirty();
-    voxelComplexLayer->buf()->flushDirty();
-    voxelTranslucentLayer->buf()->flushDirty();
-    voxelTranslucentComplexLayer->buf()->flushDirty();
-    voxelFluidLayer->buf()->flushDirty();
-    voxelTranslucentFluidLayer->buf()->flushDirty();
+    // flush 统一推迟到 update() 末尾
 }
 
 auto srgbToLinear(const glm::vec3 &c) -> glm::vec3
@@ -1119,9 +1114,13 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             voxelTranslucentFluidLayer->merge();
         }
 
-        // The chunk offset texel buffer was replaced and the voxel pipelines' descriptor sets now reference its new
-        // buffer view.  The already recorded voxel command buffer still points at the old (destroyed) buffer, so it
-        // must be recorded again before the next submit - even when the visible layer state itself did not change.
+        voxelLayer->buf()->flushDirty();
+        voxelComplexLayer->buf()->flushDirty();
+        voxelFluidLayer->buf()->flushDirty();
+        voxelTranslucentLayer->buf()->flushDirty();
+        voxelTranslucentComplexLayer->buf()->flushDirty();
+        voxelTranslucentFluidLayer->buf()->flushDirty();
+
         if (layerStateChanged || chunkOffsetBufferReallocated)
         {
             recordTask(false);

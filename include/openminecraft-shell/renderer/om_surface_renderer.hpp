@@ -21,7 +21,7 @@ class OMSurfaceRenderer : public openminecraft::renderer::common::OMRendererHand
 
     openminecraft::renderer::OMRenderer *renderer;
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode> node, bgNode;
-    std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeRendererHandler> internal, background;
+    std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeRendererHandler> internal;
     openminecraft::renderer::common::animation::OMAnimationValue<float> offset;
 
     std::shared_ptr<openminecraft::geom::OMFontSet> fontset;

@@ -321,10 +321,10 @@ void OMDebugRenderer::afterFrame()
     {
         frameTimes.push_back(frameTime);
 
-        if (frameTimes.size() > 600)
+        if (frameTimes.size() > 100)
         {
             frameTimes.erase(frameTimes.begin(),
-                             frameTimes.begin() + static_cast<std::ptrdiff_t>(frameTimes.size() - 600));
+                             frameTimes.begin() + static_cast<std::ptrdiff_t>(frameTimes.size() - 100));
         }
     }
 

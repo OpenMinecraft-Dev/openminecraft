@@ -14,8 +14,7 @@ class OMComposeRenderer : public openminecraft::renderer::common::OMRendererHand
     OMComposeRenderer(openminecraft::renderer::OMRenderer *renderer,
                       openminecraft::renderer::common::wrap::OMRendererTempTarget *surface,
                       openminecraft::renderer::common::wrap::OMRendererTempTarget *overlay,
-                      openminecraft::renderer::common::wrap::OMRendererTempTarget *scene,
-                      openminecraft::renderer::common::wrap::OMRendererTempTarget *surfaceBackground);
+                      openminecraft::renderer::common::wrap::OMRendererTempTarget *scene);
     virtual ~OMComposeRenderer() override;
 
     void submitTasks() override;
@@ -24,10 +23,10 @@ class OMComposeRenderer : public openminecraft::renderer::common::OMRendererHand
 
   private:
     std::shared_ptr<openminecraft::renderer::common::wrap::OMRendererBlurHandler> blurHandler, overlayBlurHandler;
-    openminecraft::renderer::common::OMRendererPipeline *mainPipeline, *backgroundPipeline;
+    openminecraft::renderer::common::OMRendererPipeline *mainPipeline;
     openminecraft::renderer::OMRenderer *renderer;
 
-    openminecraft::renderer::common::wrap::OMRendererTempTarget *overlay, *scene, *surface, *surfaceBackground;
+    openminecraft::renderer::common::wrap::OMRendererTempTarget *overlay, *scene, *surface;
     openminecraft::renderer::common::wrap::OMRendererTempTarget *uplayerTarget;
 };
 } // namespace openminecraft::shell::renderer

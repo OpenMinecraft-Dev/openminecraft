@@ -375,7 +375,7 @@ template <typename It> class OMVoxelLayer
         delete voxelBuffer;
     }
 
-    inline void loadData(int i, std::vector<It> &cm, bool flush = true)
+    inline void loadData(int i, std::vector<It> &cm, bool flush = false)
     {
         if (chunkBlocks.size() <= i)
         {
@@ -411,7 +411,7 @@ template <typename It> class OMVoxelLayer
             p = voxelBuffer->compact(p);
         }
 
-        voxelBuffer->flushDirty();
+        // flush 统一推迟到 OMVoxelManager::update() 末尾，每帧每个 layer 只写一次
     }
 
     auto buf() -> OMRendererSegBuf *

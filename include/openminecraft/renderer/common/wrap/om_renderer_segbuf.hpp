@@ -3,6 +3,7 @@
 
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include <iostream>
 #include <list>
 #include <vector>
 #include <algorithm>

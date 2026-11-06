@@ -39,7 +39,6 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     bus.append(event::Custom, [&](event::OMEvent &e) {
         if (e.custom.flag == EventMainScreenOpen)
         {
-            this->renderer->fetchTask("demiurgeui_compose_surface_background")->setDisabled(false);
             this->renderer->fetchTask("demiurgeui_compose_surface")->setDisabled(false);
             this->renderer->fetchTask("demiurgeui_bgblur")->setDisabled(false);
 
@@ -48,7 +47,6 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
 
         if (e.custom.flag == EventMainScreenCloseFinish)
         {
-            this->renderer->fetchTask("demiurgeui_compose_surface_background")->setDisabled(true);
             this->renderer->fetchTask("demiurgeui_compose_surface")->setDisabled(true);
             this->renderer->fetchTask("demiurgeui_bgblur")->setDisabled(true);
         }
@@ -70,7 +68,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                  });
     node = std::make_shared<node::OMDemiurgeRectNode>()
                ->style({
-                   {"color", (int)0x2c2c3400},
+                   {"color", (int)0x2c2c3412},
                    {"flexDirection", Column},
                    {"justifyContent", SpaceBetween},
                    {"width", OMDemiurgeSize::fit()},
@@ -104,10 +102,6 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->name = "surface";
     renderer->registerHandler(internal);
-
-    background = std::make_shared<OMDemiurgeRendererHandler>(renderer, bgNode);
-    background->name = "surface_background";
-    renderer->registerHandler(background);
 
     offset.onAnimateFinish = [&](float v) {
         event::OMEvent e;
