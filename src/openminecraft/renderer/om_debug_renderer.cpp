@@ -305,6 +305,7 @@ std::ofstream off("test.csv");
 OMDebugRenderer::~OMDebugRenderer()
 {
     internal = nullptr;
+    off.flush();
 }
 
 void OMDebugRenderer::submitTasks()
@@ -363,10 +364,9 @@ void OMDebugRenderer::afterFrame()
 
         fpsTextNode->style("text", fmt::format("FPS: {:.0f} (avg {:.0f}, p50 {:.2f} p95 {:.2f} p99 {:.2f})", instantFps,
                                                avgFps, percentile(0.50), percentile(0.95), percentile(0.99)));
-        auto stt = fmt::format("{:.0f},{:.0f},{:.0f},{:.0f},{:.0f},{:.0f}\n", instantFps, avgFps, 0.0, percentile(0.50),
-                               percentile(0.95), percentile(0.99));
+        auto stt = fmt::format("{:.0f},{:.0f},{:.0f},{:.0f},{:.0f},{:.0f}\n", instantFps, avgFps, lowFps,
+                               percentile(0.50), percentile(0.95), percentile(0.99));
         off.write(stt.data(), stt.size());
-        off.flush();
     }
 
     auto m = camera->getPosRaw();

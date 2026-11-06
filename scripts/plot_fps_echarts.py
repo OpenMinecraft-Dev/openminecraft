@@ -4,6 +4,8 @@
 CSV 列顺序（无表头时按此顺序读取）：
     instantFps, avgFps, lowFps (1% low), p50, p95, p99
 
+横坐标为**时间（秒）**：由每帧 instantFps 换算帧时长后累加得到（起点 0）。
+
 用法:
     python3 scripts/plot_fps_echarts.py test.csv fps.html
     python3 scripts/plot_fps_echarts.py test.csv fps.html --max-points 4000 --smooth 20
@@ -36,6 +38,13 @@ def load(path):
     return np.array([[float(x) for x in r[:6]] for r in rows[start:]])
 
 
+def build_time_axis(data):
+    """用 instantFps 还原每帧耗时并累加，得到秒级时间轴（相对起点 0）。"""
+    fps = np.maximum(data[:, 0], 1.0)
+    frame_s = 1.0 / fps
+    return np.cumsum(frame_s) - frame_s[0]
+
+
 def rolling_mean(a, window):
     if window <= 1:
         return a
@@ -59,26 +68,32 @@ def main():
     data = load(args.input)
     n = len(data)
 
-    # 抽稀：保留首尾，等步长采样
+    # 全量时间轴（秒），抽稀后再取值，保证时间间隔正确
+    time_s = build_time_axis(data)
+
     if args.max_points and n > args.max_points:
         idx = np.linspace(0, n - 1, args.max_points).astype(int)
         sampled = data[idx]
-        x = [int(i) for i in idx]
+        x = time_s[idx]
     else:
         sampled = data
-        x = list(range(n))
+        x = time_s
 
     line = (
         Line(init_opts=opts.InitOpts(width="100%", height="680px", theme=ThemeType.DARK,
                                      page_title="OpenMinecraft FPS"))
-        .add_xaxis(x)
+        # 先给一个非空的 x 轴，避免 pyecharts 丢弃 series；实际坐标用 [x, y] 数据对
+        .add_xaxis([f"{v:.3f}" for v in x])
     )
+
+    all_points = []
 
     for i, name in enumerate(COLUMNS):
         y = rolling_mean(sampled[:, i], args.smooth)
+        all_points.append([[round(float(xi), 4), round(float(yi), 2)] for xi, yi in zip(x, y)])
         line.add_yaxis(
             series_name=f"{name} (mean {float(np.mean(sampled[:, i])):.0f})",
-            y_axis=[round(float(v), 2) for v in y],
+            y_axis=[],
             is_smooth=False,
             is_symbol_show=False,
             linestyle_opts=opts.LineStyleOpts(width=2.2 if i < 3 else 1.4, color=COLORS[i]),
@@ -86,9 +101,14 @@ def main():
             label_opts=opts.LabelOpts(is_show=False),
         )
 
+    # 直接写入数值对，规避 pyecharts 对 x 轴数据的自动打包
+    for si, pts in enumerate(all_points):
+        line.options["series"][si]["data"] = pts
+
     line.set_global_opts(
         title_opts=opts.TitleOpts(title=args.title,
-                                  subtitle=f"{n} samples" + (f" · drawn {len(x)}" if len(x) != n else "")
+                                  subtitle=f"{n} samples · span {float(x[-1]):.1f}s"
+                                           + (f" · drawn {len(x)}" if len(x) != n else "")
                                            + (f" · smooth {args.smooth}" if args.smooth > 1 else "")),
         legend_opts=opts.LegendOpts(pos_left="center", pos_top="7%", type_="scroll"),
         tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross"),
@@ -102,7 +122,7 @@ def main():
             opts.DataZoomOpts(type_="inside", xaxis_index=[0], range_start=0, range_end=100),
             opts.DataZoomOpts(type_="slider", xaxis_index=[0], pos_bottom="4%", height=24, range_start=0, range_end=100),
         ],
-        xaxis_opts=opts.AxisOpts(name="sample", type_="category", is_scale=True,
+        xaxis_opts=opts.AxisOpts(name="time (s)", type_="value", is_scale=True,
                                  name_location="middle", name_gap=32,
                                  axislabel_opts=opts.LabelOpts(rotate=0)),
         yaxis_opts=opts.AxisOpts(name="FPS", is_scale=True, splitline_opts=opts.SplitLineOpts(is_show=True)),
