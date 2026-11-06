@@ -342,7 +342,6 @@ void OMApplication::mainLoop(OMBackend backend)
                         }
 
                         using data::block::blockStateRegistry;
-                        using data::block::blockStateRegistry;
 
                         static constexpr int seaLevel = 7;
 

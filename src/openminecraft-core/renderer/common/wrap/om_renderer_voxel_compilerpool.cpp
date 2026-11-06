@@ -1,6 +1,7 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
 #include <chrono>
 #include <mutex>
+#include <queue>
 #include <thread>
 #include <vector>
 
@@ -27,9 +28,10 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     continue;
                 }
-                next = queuedChunks.back().first;
-                bool useCache = queuedChunks.back().second;
-                queuedChunks.pop_back();
+                auto request = queuedChunks.top();
+                queuedChunks.pop();
+                next = request.chunk;
+                bool useCache = request.useCache;
                 queuedIndex.erase(next);
                 poolMutex.unlock();
 
@@ -190,7 +192,7 @@ void OMVoxelCompilerPool::upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMV
     }
     this->translucentFluid.clear();
 }
-void OMVoxelCompilerPool::compile(int i, bool useCache)
+void OMVoxelCompilerPool::compile(int i, bool useCache, float distanceSq)
 {
     std::lock_guard g(poolMutex);
 
@@ -200,6 +202,6 @@ void OMVoxelCompilerPool::compile(int i, bool useCache)
         return;
     }
 
-    queuedChunks.emplace_back(i, useCache);
+    queuedChunks.push(OMCompileRequest{distanceSq, i, useCache});
 }
 } // namespace openminecraft::renderer::common::wrap

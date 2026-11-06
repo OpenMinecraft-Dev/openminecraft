@@ -1021,6 +1021,10 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                         {pp1.x, pp1.y, pp1.z},
                     }});
 
+                    // 以区块中心到相机的距离作为编译优先级（越近越先）
+                    const glm::vec3 chunkCenter = pp0 + glm::vec3(8.0f, 8.0f, 8.0f);
+                    const float compileDistanceSq = glm::dot(chunkCenter, chunkCenter);
+
                     if (chk.visible && !visible)
                     {
                         if (hideFrames[i] < OMVoxelManager::unloadDelay)
@@ -1045,14 +1049,14 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
                         if (chk.isDirty())
                         {
-                            compilerPool->compile(i, false);
+                            compilerPool->compile(i, false, compileDistanceSq);
                             chk.solveDirty();
                         }
                     }
                     else if (!chk.visible && visible)
                     {
                         hideFrames[i] = 0;
-                        compilerPool->compile(i, true);
+                        compilerPool->compile(i, true, compileDistanceSq);
                         chk.solveDirty();
                     }
 

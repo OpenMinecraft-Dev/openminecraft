@@ -479,7 +479,7 @@ class OMVoxelCompilerPool
     void upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMVoxelComplex> *cutoutComplex,
                 OMVoxelLayer<OMVoxelFluid> *fluid, OMVoxelLayer<OMVoxel> *translucent,
                 OMVoxelLayer<OMVoxelComplex> *translucentComplex, OMVoxelLayer<OMVoxelFluid> *translucentFluid);
-    void compile(int i, bool = false);
+    void compile(int i, bool useCache = false, float distanceSq = 3.4e38f);
     void dropCache(int i)
     {
         std::lock_guard g(bufferMutex);
@@ -500,7 +500,21 @@ class OMVoxelCompilerPool
     OMVoxelCompiler &compiler;
 
     std::mutex poolMutex;
-    std::vector<std::pair<int, bool>> queuedChunks;
+
+    // 编译请求：按与相机的距离平方排序（越近越先编译）
+    struct OMCompileRequest
+    {
+        float distanceSq = 0.0f;
+        int chunk = -1;
+        bool useCache = false;
+
+        bool operator>(const OMCompileRequest &other) const
+        {
+            return distanceSq > other.distanceSq;
+        }
+    };
+
+    std::priority_queue<OMCompileRequest, std::vector<OMCompileRequest>, std::greater<>> queuedChunks;
     // 同一 chunk 在队列中只保留一份（快速转视角时会反复请求同一 chunk）
     std::unordered_set<int> queuedIndex;
 

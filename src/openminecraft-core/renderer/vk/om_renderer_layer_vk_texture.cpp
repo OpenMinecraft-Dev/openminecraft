@@ -334,7 +334,7 @@ auto OMRendererTextureVk::acquireUpdateSlot(uint64_t bytes) -> OMTextureUpdateSl
 {
     if (updateSlot.inFlight && updateSlot.fence)
     {
-        renderer->logicalDevice.waitForFences(1, &updateSlot.fence, true, std::numeric_limits<uint64_t>::max());
+        auto result = renderer->logicalDevice.waitForFences(1, &updateSlot.fence, true, std::numeric_limits<uint64_t>::max());
         updateSlot.inFlight = false;
     }
 
