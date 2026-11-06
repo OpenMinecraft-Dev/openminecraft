@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include <SDL3/SDL_error.h>
 
 #include "SDL3/SDL_events.h"
@@ -309,7 +310,7 @@ void OMApplication::mainLoop(OMBackend backend)
         }();
 
         auto camera = std::make_shared<basics::OMCamera>(win(), worldOffsetChunks, 1, worldOffsetChunks, 8.0f, 8.0f,
-                                                          8.0f, 45.0f, -35.0f);
+                                                         8.0f, 45.0f, -35.0f);
 
         auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
 
@@ -505,8 +506,7 @@ void OMApplication::mainLoop(OMBackend backend)
                          static_cast<long long>(worldOffsetChunks), gHeightCount / 256, gMinHeight, gMaxHeight, gUnique,
                          static_cast<double>(gHeightSum) / std::max<long long>(gHeightCount, 1), gChunkUniqueMin,
                          gChunkUniqueMax,
-                         static_cast<double>(gChunkUniqueSum) / std::max<long long>(gChunkUniqueCount, 1),
-                         gHeightHash);
+                         static_cast<double>(gChunkUniqueSum) / std::max<long long>(gChunkUniqueCount, 1), gHeightHash);
         });
 
         bool inGame = false;

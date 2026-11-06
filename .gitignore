@@ -34,3 +34,4 @@ exports
 *.csv
 *.js
 *.html
+chunks/

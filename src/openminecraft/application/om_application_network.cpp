@@ -4,6 +4,9 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_777.hpp"
 #include <algorithm>
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -14,6 +17,106 @@ using namespace openminecraft::renderer;
 
 namespace openminecraft::shell
 {
+// 区块存储格式（little-endian，展开形式，便于 mmap/直接读取）：
+//   magic        char[4] "OMCH"
+//   version      u32 = 2
+//   chunkX       i32
+//   chunkZ       i32
+//   sectionCount u32
+//   per section:
+//     blockCount i16
+//     fluidCount i16
+//     blockIds   u32 * 4096   // 按 y*256 + x*16 + z 索引，值为原始 block state id
+//     biomeIds   u32 * 64     // 按 y*16 + x*4 + z 索引（4x4x4）
+// 每个 section 固定 4096+64 个 u32，不需要解码调色板，可直接索引读取。
+static void storeChunkToFile(const network::OMProtocolChunkDataAndLight &chunk)
+{
+    std::error_code ec;
+    std::filesystem::create_directories("chunks", ec);
+    if (ec)
+    {
+        return;
+    }
+
+    const auto path = fmt::format("chunks/{}_{}.omc", chunk.chunkX, chunk.chunkZ);
+    std::ofstream out(path, std::ios::binary | std::ios::trunc);
+
+    if (!out)
+    {
+        return;
+    }
+
+    auto writeU16 = [&](uint16_t v) { out.write(reinterpret_cast<const char *>(&v), sizeof(v)); };
+    auto writeU32 = [&](uint32_t v) { out.write(reinterpret_cast<const char *>(&v), sizeof(v)); };
+    auto writeI32 = [&](int32_t v) { out.write(reinterpret_cast<const char *>(&v), sizeof(v)); };
+
+    // 把 paletted container 展开成 entryCount 个 id
+    auto expand = [](const network::OMProtocolPalettedContainer &pc, size_t entryCount, uint32_t fallback) {
+        std::vector<uint32_t> ids(entryCount, fallback);
+
+        if (pc.palette.empty())
+        {
+            return ids;
+        }
+
+        if (pc.bitsPerEntry == 0)
+        {
+            std::fill(ids.begin(), ids.end(), static_cast<uint32_t>(pc.palette[0]));
+            return ids;
+        }
+
+        if (pc.data.empty())
+        {
+            return ids;
+        }
+
+        const uint32_t perLong = 64u / pc.bitsPerEntry;
+        const uint64_t mask = (pc.bitsPerEntry >= 64) ? ~0ull : ((1ull << pc.bitsPerEntry) - 1);
+
+        for (size_t k = 0; k < entryCount; ++k)
+        {
+            const size_t longIndex = k / perLong;
+            const uint32_t slot = static_cast<uint32_t>(k % perLong);
+
+            if (longIndex >= pc.data.size())
+            {
+                break;
+            }
+
+            const uint32_t entry =
+                static_cast<uint32_t>((static_cast<uint64_t>(pc.data[longIndex]) >> (slot * pc.bitsPerEntry)) & mask);
+
+            ids[k] = entry < pc.palette.size() ? static_cast<uint32_t>(pc.palette[entry]) : static_cast<uint32_t>(0);
+        }
+
+        return ids;
+    };
+
+    out.write("OMCH", 4);
+    writeU32(2);
+    writeI32(chunk.chunkX);
+    writeI32(chunk.chunkZ);
+    writeU32(static_cast<uint32_t>(chunk.sections.size()));
+
+    for (const auto &section : chunk.sections)
+    {
+        writeU16(static_cast<uint16_t>(section.blockCount));
+        writeU16(static_cast<uint16_t>(section.fluidCount));
+
+        const auto blockIds = expand(section.blockStates, 4096, 0);
+        for (auto id : blockIds)
+        {
+            writeU32(id);
+        }
+
+        const auto biomeIds = expand(section.biomes, 64, 0);
+        for (auto id : biomeIds)
+        {
+            writeU32(id);
+        }
+    }
+}
+
 void OMApplication::networkSetup(std::string host, std::string port)
 {
     logger.info("try connect to {} {}", host, port);
@@ -360,6 +463,9 @@ void OMApplication::networkSetup(std::string host, std::string port)
                 }
                 logger->debug("  biomes: bits={} palette={} ids=[{}]", bm.bitsPerEntry, bm.palette.size(), biomeList);
             }
+
+            storeChunkToFile(chunk);
+            logger->debug("chunk stored: chunks/{}_{}.omc", chunk.chunkX, chunk.chunkZ);
         }
 
         void handlePlayUpdateEntityPosition(const network::OMProtocolUpdateEntityPosition &position) override
