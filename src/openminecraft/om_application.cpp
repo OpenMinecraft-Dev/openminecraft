@@ -41,6 +41,7 @@
 #include <string>
 #include <cstdlib>
 #include <thread>
+#include <filesystem>
 #include "openminecraft-shell/renderer/om_debug_renderer.hpp"
 #include "openminecraft-shell/renderer/om_world_renderer.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
