@@ -1263,6 +1263,18 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     {
                         auto &chk = *ochk;
 
+                        // 全空气区块：不编译、不绘制、不占用缓冲空间
+                        if (chk.isEmpty())
+                        {
+                            if (chk.visible)
+                            {
+                                unloadChunk(i);
+                                chk.visible = false;
+                            }
+                            hideFrames[i] = 0;
+                            continue;
+                        }
+
                         const int64_t dcx = chk.chunkx - camChunkX;
                         const int64_t dcy = chk.chunky - camChunkY;
                         const int64_t dcz = chk.chunkz - camChunkZ;

@@ -90,6 +90,7 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     void bindVertexBufferInstanced(std::vector<common::OMRendererBuffer *> buffer, int off) override;
     void bindIndexBuffer(common::OMRendererBuffer *buffer) override;
     void bindIndirectBuffer(common::OMRendererBuffer *buffer) override;
+    auto isSupportIndirect() const -> bool override;
     void bindTarget(common::OMRendererRenderTarget *target) override;
     void draw(uint64_t vertexCount) override;
     void drawInstance(uint64_t vertexCount, uint64_t instanceCount) override;
@@ -122,6 +123,8 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     bool needClearDepth = false;
     bool finished = false;
     std::vector<std::string> tags;
+    // GL 4.3+ 才有 glMultiDrawElementsIndirect（drawIndirect(begin,count) 用到）
+    bool supportIndirect = false;
 };
 } // namespace openminecraft::renderer::opengl
 

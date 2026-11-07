@@ -211,6 +211,28 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                 };
 
                 auto cnk = manager.getChunk(next);
+                if (cnk && cnk->isEmpty())
+                {
+                    // 防御：空区块不编译，直接写入空结果（不占任何 block）
+                    std::lock_guard<std::mutex> g(bufferMutex);
+                    cached[next] = true;
+                    cachedOrigin[next] = {cnk->chunkx, cnk->chunky, cnk->chunkz};
+                    cutout[next].clear();
+                    cutoutComplex[next].clear();
+                    translucent[next].clear();
+                    translucentComplex[next].clear();
+                    fluid[next].clear();
+                    translucentFluid[next].clear();
+                    cutoutC[next].clear();
+                    cutoutComplexC[next].clear();
+                    translucentC[next].clear();
+                    translucentComplexC[next].clear();
+                    fluidC[next].clear();
+                    translucentFluidC[next].clear();
+                    visC[next] = (static_cast<uint64_t>(1) << 63); // 已知：完全可透过
+                    visPending[next] = {{cnk->chunkx, cnk->chunky, cnk->chunkz}, static_cast<uint64_t>(1) << 63};
+                    continue;
+                }
                 if (cnk)
                 {
                     // slot 可能已被 chunkManager 复用：只有坐标一致时缓存才有效

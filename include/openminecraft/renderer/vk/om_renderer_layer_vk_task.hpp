@@ -20,6 +20,10 @@ class OMRendererTaskVk : public common::OMRendererTask
     void bindVertexBuffer(std::vector<common::OMRendererBuffer *> buffer) override;
     void bindIndexBuffer(common::OMRendererBuffer *buffer) override;
     void bindIndirectBuffer(common::OMRendererBuffer *buffer) override;
+    auto isSupportIndirect() const -> bool override
+    {
+        return true;
+    }
     void bindTarget(common::OMRendererRenderTarget *target) override;
     void draw(uint64_t vertexCount) override;
     void drawInstance(uint64_t vertexCount, uint64_t instanceCount) override;

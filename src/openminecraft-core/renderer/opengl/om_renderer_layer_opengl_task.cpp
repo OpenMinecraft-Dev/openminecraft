@@ -21,6 +21,18 @@ namespace openminecraft::renderer::opengl
 OMRendererTaskOpenGL::OMRendererTaskOpenGL(OMRendererOpenGL *renderer) : common::OMRendererTask(renderer)
 {
     this->gl = &renderer->gl;
+
+    // indirect draw 需要 GL 4.3+（glMultiDrawElementsIndirect）；macOS 最高 4.1，因此为 false
+    GLint major = 0, minor = 0;
+    gl->glGetIntegerv(GL_MAJOR_VERSION, &major);
+    gl->glGetIntegerv(GL_MINOR_VERSION, &minor);
+
+    supportIndirect = (major > 4 || (major == 4 && minor >= 3)) && gl->glMultiDrawElementsIndirect != nullptr;
+}
+
+auto OMRendererTaskOpenGL::isSupportIndirect() const -> bool
+{
+    return supportIndirect;
 }
 OMRendererTaskOpenGL::~OMRendererTaskOpenGL()
 {

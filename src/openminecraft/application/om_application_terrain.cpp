@@ -302,6 +302,7 @@ static void preloadChunks(world::OMChunkManager<16> &manager)
 
             const int64_t chunkY = -4 + static_cast<int64_t>(si);
             world::OMChunk<16> cnk(cx, chunkY, cz);
+            cnk.setAirId(airId);
             cnk.fill(airId);
 
             for (int y = 0; y < 16; ++y)
@@ -323,6 +324,7 @@ static void preloadChunks(world::OMChunkManager<16> &manager)
 
             manager.loadChunk(cnk);
         }
+
 
         ++loadedChunks;
     }
@@ -428,6 +430,7 @@ void runTerrainGeneration(world::OMChunkManager<16> &manager, std::atomic<bool> 
                 const int64_t bz = static_cast<int64_t>(cz) + worldOffsetChunks;
 
                 world::OMChunk<16> cnk(bx, cy, bz);
+                cnk.setAirId(airId);
 
                 std::array<int, 16 * 16> heights = {};
                 int minHeight = 255;

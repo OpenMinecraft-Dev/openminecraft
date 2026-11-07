@@ -78,6 +78,13 @@ class OMRendererTask : public OMRendererObject
         return this;
     }
     virtual void bindIndirectBuffer(OMRendererBuffer *buffer) = 0;
+
+    // 当前后端/任务是否支持 indirect draw（drawIndirect* 可用）
+    virtual auto isSupportIndirect() const -> bool
+    {
+        return false;
+    }
+
     inline auto indirectBuffer(OMRendererBuffer *buffer) -> OMRendererTask *
     {
         bindIndirectBuffer(buffer);

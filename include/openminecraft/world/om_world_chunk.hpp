@@ -21,7 +21,7 @@ template <int Cs> class OMChunk
     // std::atomic 成员会删除隐式的拷贝/移动构造，这里显式实现
     OMChunk(const OMChunk &other)
         : chunkx(other.chunkx), chunky(other.chunky), chunkz(other.chunkz), visible(other.visible.load()),
-          blocks(other.blocks), dirty(other.dirty.load())
+          blocks(other.blocks), nonAirCount(other.nonAirCount.load()), dirty(other.dirty.load())
     {
     }
 
@@ -32,13 +32,14 @@ template <int Cs> class OMChunk
         chunkz = other.chunkz;
         blocks = other.blocks;
         visible.store(other.visible.load());
+        nonAirCount.store(other.nonAirCount.load());
         dirty.store(other.dirty.load());
         return *this;
     }
 
     OMChunk(OMChunk &&other) noexcept
         : chunkx(other.chunkx), chunky(other.chunky), chunkz(other.chunkz), visible(other.visible.load()),
-          blocks(std::move(other.blocks)), dirty(other.dirty.load())
+          blocks(std::move(other.blocks)), nonAirCount(other.nonAirCount.load()), dirty(other.dirty.load())
     {
     }
 
@@ -49,6 +50,7 @@ template <int Cs> class OMChunk
         chunkz = other.chunkz;
         blocks = std::move(other.blocks);
         visible.store(other.visible.load());
+        nonAirCount.store(other.nonAirCount.load());
         dirty.store(other.dirty.load());
         return *this;
     }
@@ -56,17 +58,42 @@ template <int Cs> class OMChunk
     {
     }
 
+    // 该区块的空气方块 id（加载器设置，用于统计非空气方块数）
+    void setAirId(uint32_t id)
+    {
+        airId = id;
+    }
+
     // 用同一个方块状态填充整个区块（比逐块 setBlock 快得多）
     void fill(uint32_t blockState)
     {
         blocks.fill(blockState);
+        // 全空气区块标记为 empty：编译器/渲染器可以直接跳过，不占缓冲
+        nonAirCount.store(blockState == airId ? 0 : static_cast<uint32_t>(Cs * Cs * Cs));
         dirty = true;
     }
 
     void setBlock(int x, int y, int z, uint32_t blockState)
     {
-        blocks[y * Cs * Cs + x * Cs + z] = blockState;
+        auto &slot = blocks[y * Cs * Cs + x * Cs + z];
+
+        if (slot == airId && blockState != airId)
+        {
+            ++nonAirCount;
+        }
+        else if (slot != airId && blockState == airId)
+        {
+            --nonAirCount;
+        }
+
+        slot = blockState;
         dirty = true;
+    }
+
+    // 区块内没有任何非空气方块（加载器可直接打上 empty tag）
+    [[nodiscard]] auto isEmpty() const -> bool
+    {
+        return nonAirCount.load(std::memory_order_relaxed) == 0;
     }
     auto getBlock(int x, int y, int z) -> uint32_t
     {
@@ -159,6 +186,9 @@ template <int Cs> class OMChunk
     // 新加载的区块默认不可见：避免第一次剔除时被当成"原本可见"，
     // 从而走 hideFrames 延迟卸载（会保留渲染 120 帧，且每帧只卸载 32 个）。
     std::atomic<bool> visible{false};
+    // 非空气方块数量：为 0 即 empty chunk，编译与渲染都可以直接跳过
+    std::atomic<uint32_t> nonAirCount{0};
+    uint32_t airId = 0;
 
   private:
     std::array<uint32_t, Cs * Cs * Cs> blocks = {};
