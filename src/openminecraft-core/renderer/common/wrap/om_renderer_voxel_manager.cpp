@@ -327,7 +327,7 @@ OMVoxelManager::OMVoxelManager(
                                    ->inputName("inLightmap")
                                    ->output(translucentTargetMS->target)
                                    ->samples(samples)
-                                   ->setCullMode(renderer::common::Back)
+                                   ->setCullMode(renderer::common::None)
                                    ->setFrontClockwise(true)
                                    ->shader(renderer->shaderManager.preprocess("core/voxel/voxelfluid.oit.frag.glsl",
                                                                                Fragment, GLSLSource, voxelFluidFormat))
@@ -709,7 +709,6 @@ void OMVoxelManager::unloadChunk(int i)
     voxelTranslucentComplexLayer->loadData(i, tcm, false);
     voxelFluidLayer->loadData(i, fm, false);
     voxelTranslucentFluidLayer->loadData(i, tfm, false);
-    // flush 统一推迟到 update() 末尾
 }
 
 auto srgbToLinear(const glm::vec3 &c) -> glm::vec3
