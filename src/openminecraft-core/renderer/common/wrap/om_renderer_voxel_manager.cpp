@@ -885,36 +885,11 @@ auto OMVoxelManager::fetchChunkState() -> std::pair<uint32_t, uint32_t>
     return {total, nonfree};
 }
 
-// 纳秒计时：OM_UPDATE_PROFILE=1 时输出 OMVoxelManager::update 各阶段耗时
-static inline auto omNowNs() -> uint64_t
-{
-    return static_cast<uint64_t>(
-        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch())
-            .count());
-}
-
 static float cloudTime = 0.0f;
 static auto lastp = std::chrono::steady_clock::now();
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
-    static const bool profileUpdate = std::getenv("OM_UPDATE_PROFILE") != nullptr;
-
-    const uint64_t profileStart = profileUpdate ? omNowNs() : 0;
-    uint64_t profileStamp = profileStart;
-    uint64_t nsSetup = 0, nsOffset = 0, nsCull = 0, nsOffsetUpload = 0;
-    uint64_t nsUpload = 0, nsMerge = 0, nsFlush = 0, nsRecord = 0;
-    uint64_t cntChunks = 0, cntVisible = 0, cntCompile = 0, cntUnload = 0;
-
-    auto profileMark = [&](uint64_t &out) {
-        if (profileUpdate)
-        {
-            const uint64_t now = omNowNs();
-            out = now - profileStamp;
-            profileStamp = now;
-        }
-    };
-
     auto cameraPos = camera.getPosRaw();
 
     const std::array<int64_t, 3> cameraChunk = {cameraPos.chunkx, cameraPos.chunky, cameraPos.chunkz};
@@ -967,7 +942,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
     updateColor();
 
-    profileMark(nsSetup);
 
     if (chunkManager->numChunks())
     {
@@ -1056,17 +1030,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
                             chunkOffsetCache[i] = position - camera.getPosRaw();
 
-                            if (profileUpdate)
-                            {
-                                ++cntChunks;
-                            }
                         }
                         ++i;
                     }
                 });
             }
 
-            profileMark(nsOffset);
 
             auto frusturm = Frustum::fromMatrix(camera.fetchProjMat() * camera.fetchViewMat());
 
@@ -1100,10 +1069,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                                 --unloadBudget;
                                 unloadChunk(ci);
 
-                                if (profileUpdate)
-                                {
-                                    ++cntUnload;
-                                }
                             }
                             continue;
                         }
@@ -1190,11 +1155,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                             {
                                 --unloadBudget;
                                 unloadChunk(i);
-
-                                if (profileUpdate)
-                                {
-                                    ++cntUnload;
-                                }
                             }
                             else
                             {
@@ -1210,11 +1170,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                             {
                                 compilerPool->compile(i, false, compileDistanceSq);
                                 chk.solveDirty();
-
-                                if (profileUpdate)
-                                {
-                                    ++cntCompile;
-                                }
                             }
                         }
                         else if (!chk.visible && visible)
@@ -1222,33 +1177,19 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                             hideFrames[i] = 0;
                             compilerPool->compile(i, true, compileDistanceSq);
                             chk.solveDirty();
-
-                            if (profileUpdate)
-                            {
-                                ++cntCompile;
-                            }
                         }
 
                         chk.visible = visible;
 
-                        if (visible)
+                        if (visible && hideFrames[i] > 0)
                         {
-                            if (profileUpdate)
-                            {
-                                ++cntVisible;
-                            }
-
-                            if (hideFrames[i] > 0)
-                            {
-                                ++pendingUnload;
-                            }
+                            ++pendingUnload;
                         }
                     }
                     ++i;
                 }
             });
 
-            profileMark(nsCull);
             cullingReady = true;
         }
         else
@@ -1271,11 +1212,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                             {
                                 --unloadBudget;
                                 unloadChunk(i);
-
-                                if (profileUpdate)
-                                {
-                                    ++cntUnload;
-                                }
                             }
                             continue;
                         }
@@ -1298,10 +1234,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                             unloadChunk(i);
                             chk.visible = false;
 
-                            if (profileUpdate)
-                            {
-                                ++cntUnload;
-                            }
                         }
                         else
                         {
@@ -1314,8 +1246,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                 pendingUnload = remaining;
             }
 
-            profileMark(nsOffset);
-            profileMark(nsCull);
         }
 
         bool chunkOffsetBufferReallocated = false;
@@ -1356,12 +1286,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             offsetUploadedOnce = true;
         }
 
-        profileMark(nsOffsetUpload);
-
         compilerPool->upload(voxelLayer, voxelComplexLayer, voxelFluidLayer, voxelTranslucentLayer,
                              voxelTranslucentComplexLayer, voxelTranslucentFluidLayer);
-
-        profileMark(nsUpload);
 
         const bool layerStateChanged = layerState != hashLayerState();
 
@@ -1376,36 +1302,14 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             voxelTranslucentComplexLayer->mergeStep(16);
             voxelTranslucentFluidLayer->mergeStep(16);
         }
-        /*if (layerStateChanged)
-        {
-            voxelLayer->merge();
-            voxelComplexLayer->merge();
-            voxelFluidLayer->merge();
-            voxelTranslucentLayer->merge();
-            voxelTranslucentComplexLayer->merge();
-            voxelTranslucentFluidLayer->merge();
-        }*/
 
-        profileMark(nsMerge);
+        voxelLayer->buf()->flushDirty();
+        voxelComplexLayer->buf()->flushDirty();
+        voxelFluidLayer->buf()->flushDirty();
+        voxelTranslucentLayer->buf()->flushDirty();
+        voxelTranslucentComplexLayer->buf()->flushDirty();
+        voxelTranslucentFluidLayer->buf()->flushDirty();
 
-        uint64_t flushBytes = 0;
-        voxelLayer->buf()->flushDirty(OMRendererSegBuf::flushBudgetBytes, &flushBytes);
-        voxelComplexLayer->buf()->flushDirty(OMRendererSegBuf::flushBudgetBytes, &flushBytes);
-        voxelFluidLayer->buf()->flushDirty(OMRendererSegBuf::flushBudgetBytes, &flushBytes);
-        voxelTranslucentLayer->buf()->flushDirty(OMRendererSegBuf::flushBudgetBytes, &flushBytes);
-        voxelTranslucentComplexLayer->buf()->flushDirty(OMRendererSegBuf::flushBudgetBytes, &flushBytes);
-        voxelTranslucentFluidLayer->buf()->flushDirty(OMRendererSegBuf::flushBudgetBytes, &flushBytes);
-
-        uint64_t flushLeft = 0;
-        if (profileUpdate)
-        {
-            flushLeft = voxelLayer->buf()->dirtyBytes() + voxelComplexLayer->buf()->dirtyBytes() +
-                        voxelFluidLayer->buf()->dirtyBytes() + voxelTranslucentLayer->buf()->dirtyBytes() +
-                        voxelTranslucentComplexLayer->buf()->dirtyBytes() +
-                        voxelTranslucentFluidLayer->buf()->dirtyBytes();
-        }
-
-        profileMark(nsFlush);
 
         // recordTask 会重录整帧（约 0.8ms），旋转视角时每帧都重录会明显掉帧。
         // 用 30ms 节流；容量变化或偏移缓冲重建时强制立即重录。
@@ -1444,32 +1348,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                 recordPending = false;
             }
         }
-
-        profileMark(nsRecord);
-
-        if (profileUpdate)
-        {
-            const uint64_t nsTotal = omNowNs() - profileStart;
-
-            std::fprintf(stderr,
-                         "[update] total=%llu setup=%llu offset=%llu cull=%llu offload=%llu upload=%llu merge=%llu "
-                         "flush=%llu record=%llu | chunks=%llu visible=%llu compile=%llu unload=%llu mergeState=%d "
-                         "flushBytes=%llu flushLeft=%llu usedBytes=%llu\n",
-                         static_cast<unsigned long long>(nsTotal), static_cast<unsigned long long>(nsSetup),
-                         static_cast<unsigned long long>(nsOffset), static_cast<unsigned long long>(nsCull),
-                         static_cast<unsigned long long>(nsOffsetUpload), static_cast<unsigned long long>(nsUpload),
-                         static_cast<unsigned long long>(nsMerge), static_cast<unsigned long long>(nsFlush),
-                         static_cast<unsigned long long>(nsRecord), static_cast<unsigned long long>(cntChunks),
-                         static_cast<unsigned long long>(cntVisible), static_cast<unsigned long long>(cntCompile),
-                         static_cast<unsigned long long>(cntUnload), static_cast<int>(layerStateChanged),
-                         static_cast<unsigned long long>(flushBytes), static_cast<unsigned long long>(flushLeft),
-                         static_cast<unsigned long long>(voxelLayer->buf()->usedSize()));
-        }
-    }
-    else if (profileUpdate)
-    {
-        std::fprintf(stderr, "[update] total=%llu | chunks=0\n",
-                     static_cast<unsigned long long>(omNowNs() - profileStart));
     }
 }
 

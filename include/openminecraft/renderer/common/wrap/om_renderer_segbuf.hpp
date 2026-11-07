@@ -152,7 +152,7 @@ class OMRendererSegBuf
     // 未传完的区间会留到下一帧继续（每帧最多 6 个图层 × 该值）。
     static constexpr uint64_t flushBudgetBytes = 1 * 1024 * 1024;
 
-    void flushDirty(uint64_t budget = flushBudgetBytes, uint64_t *flushedBytes = nullptr)
+    void flushDirty(uint64_t budget = flushBudgetBytes)
     {
         ++frameCounter;
 
@@ -192,24 +192,6 @@ class OMRendererSegBuf
         }
 
         dirtyRanges.erase(dirtyRanges.begin(), dirtyRanges.begin() + static_cast<std::ptrdiff_t>(consumed));
-
-        if (flushedBytes != nullptr)
-        {
-            *flushedBytes += spent;
-        }
-    }
-
-    // 还没上传的脏字节数（用于观察预算是否足够）
-    auto dirtyBytes() const -> uint64_t
-    {
-        uint64_t total = 0;
-
-        for (const auto &range : dirtyRanges)
-        {
-            total += range.end - range.begin;
-        }
-
-        return total;
     }
 
     void update(OMRendererSegBufBlock block, const void *data)
