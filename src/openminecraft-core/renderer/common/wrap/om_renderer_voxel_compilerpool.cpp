@@ -156,6 +156,29 @@ void OMVoxelCompilerPool::upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMV
 {
     std::lock_guard g(bufferMutex);
 
+    // 每帧上传预算：编译完成的结果可能一次堆积很多（尤其是快速加载/旋转），
+    // 一次性全部 memcpy 进 segbuf 会造成几十 ms 的卡顿。这里按字节限流，
+    // 未处理完的留到下一帧继续。
+    static constexpr uint64_t uploadBudgetBytes = 2 * 1024 * 1024;
+    uint64_t uploadSpent = 0;
+
+    auto drain = [&](auto &pending, auto *layer, uint64_t elementSize) {
+        for (auto it = pending.begin(); it != pending.end() && uploadSpent < uploadBudgetBytes;)
+        {
+            uploadSpent += static_cast<uint64_t>(it->second.size()) * elementSize;
+            layer->loadData(it->first, it->second, false);
+            it = pending.erase(it);
+        }
+    };
+
+    drain(this->cutout, cutout, sizeof(OMVoxel));
+    drain(this->cutoutComplex, cutoutComplex, sizeof(OMVoxelComplex));
+    drain(this->translucent, translucent, sizeof(OMVoxel));
+    drain(this->translucentComplex, translucentComplex, sizeof(OMVoxelComplex));
+    drain(this->fluid, fluid, sizeof(OMVoxelFluid));
+    drain(this->translucentFluid, translucentFluid, sizeof(OMVoxelFluid));
+
+    /* 旧的"一次性全部上传"实现保留在下面作为参考
     for (auto &p : this->cutout)
     {
         cutout->loadData(p.first, p.second, false);
@@ -191,6 +214,7 @@ void OMVoxelCompilerPool::upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMV
         translucentFluid->loadData(p.first, p.second, false);
     }
     this->translucentFluid.clear();
+    */
 }
 void OMVoxelCompilerPool::compile(int i, bool useCache, float distanceSq)
 {

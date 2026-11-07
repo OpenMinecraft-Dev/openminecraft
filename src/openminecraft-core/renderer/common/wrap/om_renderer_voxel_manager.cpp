@@ -1008,52 +1008,51 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
         pendingUnload = 0;
 
-        // 纯旋转不改变 chunk 相对相机的偏移，可以跳过 offsets 重建
-        // 纯旋转不改变 chunk 相对相机的偏移；只有相机位置、区块数量/槽位变化时才重建
-        const bool rebuildOffsets = cameraMoved || chunksLoading || !offsetUploadedOnce ||
-                                    chunkOffsetCache.size() != lastOffsetCount;
+        const bool rebuildOffsets =
+            cameraMoved || chunksLoading || !offsetUploadedOnce || chunkOffsetCache.size() != lastOffsetCount;
 
         if (!skipCulling)
         {
-        if (rebuildOffsets)
-        {
-            std::fill(chunkOffsetCache.begin(), chunkOffsetCache.end(), glm::vec3{INFINITY});
+            if (rebuildOffsets)
+            {
+                std::fill(chunkOffsetCache.begin(), chunkOffsetCache.end(), glm::vec3{INFINITY});
 
-            chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
-                int i = 0;
-                for (auto &ochk : chunks)
-                {
-                    if (!ochk)
+                chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
+                    int i = 0;
+                    for (auto &ochk : chunks)
                     {
-                        chunkOffsetCache[i] = glm::vec3{INFINITY};
-                    }
-                    else
-                    {
-                        const auto &chk = *ochk;
-                        auto position = basics::OMPosition<16, int64_t, float>();
-                        position.chunkx = chk.chunkx;
-                        position.chunky = chk.chunky;
-                        position.chunkz = chk.chunkz;
-
-                        chunkOffsetCache[i] = position - camera.getPosRaw();
-
-                        if (profileUpdate)
+                        if (!ochk)
                         {
-                            ++cntChunks;
+                            chunkOffsetCache[i] = glm::vec3{INFINITY};
                         }
-                    }
-                    ++i;
-                }
-            });
-        }
+                        else
+                        {
+                            const auto &chk = *ochk;
+                            auto position = basics::OMPosition<16, int64_t, float>();
+                            position.chunkx = chk.chunkx;
+                            position.chunky = chk.chunky;
+                            position.chunkz = chk.chunkz;
 
-        profileMark(nsOffset);
+                            chunkOffsetCache[i] = position - camera.getPosRaw();
+
+                            if (profileUpdate)
+                            {
+                                ++cntChunks;
+                            }
+                        }
+                        ++i;
+                    }
+                });
+            }
+
+            profileMark(nsOffset);
 
             auto frusturm = Frustum::fromMatrix(camera.fetchProjMat() * camera.fetchViewMat());
 
             // 先用整数区块坐标做廉价距离剔除：preload 时管理器里有几万个 16³ 子区块，
             // 逐帧对每个区块做 OMPosition + 8 角点视锥测试会成为主要开销。
-            const int64_t cheapRange = static_cast<int64_t>(effectiveRenderDistance > 0 ? effectiveRenderDistance : 1000) + 1;
+            const int64_t cheapRange =
+                static_cast<int64_t>(effectiveRenderDistance > 0 ? effectiveRenderDistance : 1000) + 1;
             const int64_t camChunkX = cameraPos.getChunkX();
             const int64_t camChunkY = cameraPos.getChunkY();
             const int64_t camChunkZ = cameraPos.getChunkZ();
@@ -1061,8 +1060,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             int unloadBudget = 32;
 
             // 候选列表：只保留距离范围内的区块槽位。相机只旋转时不必遍历全部几万个区块。
-            const bool rebuildCandidates = cameraMoved || chunksLoading || extentChanged ||
-                                           cullCandidates.empty() ||
+            const bool rebuildCandidates = cameraMoved || chunksLoading || extentChanged || cullCandidates.empty() ||
                                            static_cast<int>(cullCandidates.size()) > chunkManager->numChunks();
 
             chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
@@ -1124,9 +1122,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
                         if (!cheapFar)
                         {
-                            auto pp0 =
-                                basics::OMPosition<16, int64_t, float>(chk.chunkx, chk.chunky, chk.chunkz) -
-                                camera.getPosRaw();
+                            auto pp0 = basics::OMPosition<16, int64_t, float>(chk.chunkx, chk.chunky, chk.chunkz) -
+                                       camera.getPosRaw();
                             auto pp1 =
                                 basics::OMPosition<16, int64_t, float>(chk.chunkx + 1, chk.chunky + 1, chk.chunkz + 1) -
                                 camera.getPosRaw();
@@ -1340,24 +1337,16 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
         const bool layerStateChanged = layerState != hashLayerState();
 
-        // 定期 compact：旋转/移动时区块不断分配/释放，不合并会碎片化，
-        // usedSize 逐渐逼近 totalSize（绘制数量变大）导致帧率缓慢下降。
-        if (layerStateChanged)
+        // 增量 compact：每帧整理少量区块，保持 usedSize 接近真实数据量，
+        // 避免"全量 merge 后 FPS 突然上升、随后碎片增长又下降"的锯齿。
+        if (!skipCulling || layerStateChanged)
         {
-            static auto lastMergeTime = std::chrono::steady_clock::now();
-            const auto nowMerge = std::chrono::steady_clock::now();
-
-            if (std::chrono::duration_cast<std::chrono::milliseconds>(nowMerge - lastMergeTime).count() >= 250)
-            {
-                voxelLayer->merge();
-                voxelComplexLayer->merge();
-                voxelFluidLayer->merge();
-                voxelTranslucentLayer->merge();
-                voxelTranslucentComplexLayer->merge();
-                voxelTranslucentFluidLayer->merge();
-
-                lastMergeTime = nowMerge;
-            }
+            voxelLayer->mergeStep(16);
+            voxelComplexLayer->mergeStep(16);
+            voxelFluidLayer->mergeStep(16);
+            voxelTranslucentLayer->mergeStep(16);
+            voxelTranslucentComplexLayer->mergeStep(16);
+            voxelTranslucentFluidLayer->mergeStep(16);
         }
         /*if (layerStateChanged)
         {
@@ -1437,7 +1426,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             std::fprintf(stderr,
                          "[update] total=%llu setup=%llu offset=%llu cull=%llu offload=%llu upload=%llu merge=%llu "
                          "flush=%llu record=%llu | chunks=%llu visible=%llu compile=%llu unload=%llu mergeState=%d "
-                         "flushBytes=%llu flushLeft=%llu\n",
+                         "flushBytes=%llu flushLeft=%llu usedBytes=%llu\n",
                          static_cast<unsigned long long>(nsTotal), static_cast<unsigned long long>(nsSetup),
                          static_cast<unsigned long long>(nsOffset), static_cast<unsigned long long>(nsCull),
                          static_cast<unsigned long long>(nsOffsetUpload), static_cast<unsigned long long>(nsUpload),
@@ -1445,7 +1434,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                          static_cast<unsigned long long>(nsRecord), static_cast<unsigned long long>(cntChunks),
                          static_cast<unsigned long long>(cntVisible), static_cast<unsigned long long>(cntCompile),
                          static_cast<unsigned long long>(cntUnload), static_cast<int>(layerStateChanged),
-                         static_cast<unsigned long long>(flushBytes), static_cast<unsigned long long>(flushLeft));
+                         static_cast<unsigned long long>(flushBytes), static_cast<unsigned long long>(flushLeft),
+                         static_cast<unsigned long long>(voxelLayer->buf()->usedSize()));
         }
     }
     else if (profileUpdate)

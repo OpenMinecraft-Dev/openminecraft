@@ -421,12 +421,38 @@ template <typename It> class OMVoxelLayer
         // flush 统一推迟到 OMVoxelManager::update() 末尾，每帧每个 layer 只写一次
     }
 
+    // 增量 compact：每帧只整理 maxChunks 个区块，避免"整层 compact"造成周期性卡顿，
+    // 同时让 usedSize 始终接近实际存活数据量（否则绘制实例数会随碎片增长而膨胀，
+    // 表现为 FPS 周期性突然上升/下降）。
+    auto mergeStep(size_t maxChunks) -> void
+    {
+        if (chunkBlocks.empty())
+        {
+            return;
+        }
+
+        size_t processed = 0;
+
+        while (processed < maxChunks && mergeCursor < chunkBlocks.size())
+        {
+            chunkBlocks[mergeCursor] = voxelBuffer->compact(chunkBlocks[mergeCursor]);
+            ++mergeCursor;
+            ++processed;
+        }
+
+        if (mergeCursor >= chunkBlocks.size())
+        {
+            mergeCursor = 0;
+        }
+    }
+
     auto buf() -> OMRendererSegBuf *
     {
         return voxelBuffer;
     }
 
   private:
+    size_t mergeCursor = 0;
     std::vector<std::list<OMRendererSegBufBlock>> chunkBlocks;
     OMRendererSegBuf *voxelBuffer;
 };
