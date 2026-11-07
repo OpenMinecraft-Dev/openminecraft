@@ -918,6 +918,10 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
     lastCameraChunk = cameraChunk;
     lastCameraLocal = cameraLocal;
 
+    // 云层固定在相机高度（地平线附近）：视线顶边低于地平线时整层不可见
+    renderClouds = (camera.getPitch() + camera.getFov() * 0.5f) > -2.0f;
+
+
     auto cur = std::chrono::steady_clock::now();
     cloudTime += std::chrono::duration_cast<std::chrono::milliseconds>(cur - lastp).count() / 1000.0f * 3.0f;
     cloudTime = std::fmod(cloudTime, 256 * 12);
@@ -1589,14 +1593,26 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
         tsk->resolve(cutoutTarget->target);
     }
 
-    tsk->beginDebugTag("clouds")
-        ->clearColor(glm::vec4(0.0), 0)
-        ->clearColor(glm::vec4(1.0), 1)
-        ->target(cloudTargetMS->target)
-        ->pipeline(cloudPipeline)
-        ->vertexBuffer({cloudBuffer})
-        ->drawInstanceN(36, cloudBuffer->length / sizeof(uint32_t))
-        ->endDebugTag();
+    if (renderClouds)
+    {
+        tsk->beginDebugTag("clouds")
+            ->clearColor(glm::vec4(0.0), 0)
+            ->clearColor(glm::vec4(1.0), 1)
+            ->target(cloudTargetMS->target)
+            ->pipeline(cloudPipeline)
+            ->vertexBuffer({cloudBuffer})
+            ->drawInstanceN(36, cloudBuffer->length / sizeof(uint32_t))
+            ->endDebugTag();
+    }
+    else
+    {
+        // 整层不可见：只清空目标，避免后续 compose 采样到上一帧的云
+        tsk->beginDebugTag("clouds(skip)")
+            ->clearColor(glm::vec4(0.0), 0)
+            ->clearColor(glm::vec4(1.0), 1)
+            ->target(cloudTargetMS->target)
+            ->endDebugTag();
+    }
 
     if (samples != 1)
     {

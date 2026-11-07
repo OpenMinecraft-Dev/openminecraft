@@ -156,6 +156,10 @@ class OMCamera
     {
         return pitch;
     }
+    auto getFov() -> float
+    {
+        return fov;
+    }
 
   private:
     OMRenderer *renderer;

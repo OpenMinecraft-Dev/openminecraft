@@ -728,6 +728,8 @@ class OMVoxelManager
     std::array<int64_t, 3> lastBfsSection = {INT64_MIN, INT64_MIN, INT64_MIN};
     std::chrono::steady_clock::time_point lastBfsTime = std::chrono::steady_clock::now();
     bool bfsValid = false;
+    // 云层是否可见（相机俯仰 + 半 FOV 低于地平线时整层不可见，可跳过该 pass）
+    bool renderClouds = true;
     glm::vec2 lastExtent = glm::vec2(0.0f);
 
     void unloadChunk(int i);
