@@ -318,8 +318,6 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
             ops.push_back({Clear, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT});
         }
 
-        // 清除用的是全写掩码，清除完必须把当前管线的掩码恢复回来：
-        // 绑定到该目标的第一个管线可能正是 writeColor = false 的通道（例如 cliprect）。
         ops.push_back({DepthMask, glpipe->enableDepthWrite});
         ops.push_back({ColorMask, colorMask, colorMask, colorMask, colorMask});
 
@@ -564,8 +562,8 @@ void OMRendererTaskOpenGL::drawIndexedInstance(uint64_t vertexCount, uint64_t in
     ops.push_back({BindVertexArray, vaos.back()});
     ops.push_back({UseProgram, program});
     ops.push_back(
-        {DrawElementsInstanced,
-         {primitiveType(), static_cast<GLuint>(vertexCount), GL_UNSIGNED_INT, static_cast<GLuint>(instanceCount)},
+        {DrawElementsInstancedBaseInstance,
+         {primitiveType(), (GLuint)vertexCount, GL_UNSIGNED_INT, (GLuint)instanceCount, (GLuint)firstInstance},
          {nullptr}});
     gl->glBindVertexArray(0);
 }
