@@ -664,7 +664,7 @@ class OMVoxelManager
     size_t lastOffsetCount = 0;
     bool offsetUploadedOnce = false;
     std::vector<uint16_t> hideFrames;
-    static constexpr uint16_t unloadDelay = 120;
+    static constexpr uint16_t unloadDelay = 30;
 
     // culling 跳过：相机位置/朝向不变且没有区块加载时，不重建偏移、不做视锥测试
     float lastCameraYaw = INFINITY;
@@ -674,6 +674,8 @@ class OMVoxelManager
     uint32_t pendingUnload = 0;
     // 至少完成过一次有效的剔除后才能进入"跳过剔除"状态
     bool cullingReady = false;
+    // 距离范围内、需要每帧做视锥测试的区块槽位（旋转视角时只遍历这些）
+    std::vector<int> cullCandidates;
     // 窗口尺寸变化会改变投影矩阵，必须重新剔除
     glm::vec2 lastExtent = glm::vec2(0.0f);
 

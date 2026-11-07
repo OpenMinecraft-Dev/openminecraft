@@ -1008,7 +1008,14 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
         pendingUnload = 0;
 
+        // 纯旋转不改变 chunk 相对相机的偏移，可以跳过 offsets 重建
+        // 纯旋转不改变 chunk 相对相机的偏移；只有相机位置、区块数量/槽位变化时才重建
+        const bool rebuildOffsets = cameraMoved || chunksLoading || !offsetUploadedOnce ||
+                                    chunkOffsetCache.size() != lastOffsetCount;
+
         if (!skipCulling)
+        {
+        if (rebuildOffsets)
         {
             std::fill(chunkOffsetCache.begin(), chunkOffsetCache.end(), glm::vec3{INFINITY});
 
@@ -1038,72 +1045,120 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     ++i;
                 }
             });
+        }
 
-            profileMark(nsOffset);
+        profileMark(nsOffset);
 
             auto frusturm = Frustum::fromMatrix(camera.fetchProjMat() * camera.fetchViewMat());
 
-            int unloadBudget = 32;
-            chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
-                int i = 0;
-                for (auto &ochk : chunks)
-                {
-                    if (!ochk)
-                    {
-                        if (unloadBudget > 0)
-                        {
-                            --unloadBudget;
-                            unloadChunk(i);
+            // 先用整数区块坐标做廉价距离剔除：preload 时管理器里有几万个 16³ 子区块，
+            // 逐帧对每个区块做 OMPosition + 8 角点视锥测试会成为主要开销。
+            const int64_t cheapRange = static_cast<int64_t>(effectiveRenderDistance > 0 ? effectiveRenderDistance : 1000) + 1;
+            const int64_t camChunkX = cameraPos.getChunkX();
+            const int64_t camChunkY = cameraPos.getChunkY();
+            const int64_t camChunkZ = cameraPos.getChunkZ();
 
-                            if (profileUpdate)
+            int unloadBudget = 32;
+
+            // 候选列表：只保留距离范围内的区块槽位。相机只旋转时不必遍历全部几万个区块。
+            const bool rebuildCandidates = cameraMoved || chunksLoading || extentChanged ||
+                                           cullCandidates.empty() ||
+                                           static_cast<int>(cullCandidates.size()) > chunkManager->numChunks();
+
+            chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
+                if (rebuildCandidates)
+                {
+                    cullCandidates.clear();
+                    cullCandidates.reserve(chunks.size() / 8 + 16);
+
+                    for (int ci = 0; ci < static_cast<int>(chunks.size()); ++ci)
+                    {
+                        auto &candidate = chunks[ci];
+
+                        if (!candidate)
+                        {
+                            if (unloadBudget > 0)
                             {
-                                ++cntUnload;
+                                --unloadBudget;
+                                unloadChunk(ci);
+
+                                if (profileUpdate)
+                                {
+                                    ++cntUnload;
+                                }
                             }
+                            continue;
+                        }
+
+                        const int64_t cdx = candidate->chunkx - camChunkX;
+                        const int64_t cdy = candidate->chunky - camChunkY;
+                        const int64_t cdz = candidate->chunkz - camChunkZ;
+
+                        if (std::abs(cdx) <= cheapRange && std::abs(cdz) <= cheapRange && std::abs(cdy) <= cheapRange)
+                        {
+                            cullCandidates.push_back(ci);
                         }
                     }
-                    else
+                }
+
+                for (int i : cullCandidates)
+                {
+                    auto &ochk = chunks[i];
+                    if (!ochk)
+                    {
+                        continue;
+                    }
                     {
                         auto &chk = *ochk;
 
-                        auto position = basics::OMPosition<16, int64_t, float>();
-                        position.chunkx = chk.chunkx;
-                        position.chunky = chk.chunky;
-                        position.chunkz = chk.chunkz;
-                        position.localx = 0.0f;
-                        position.localy = 0.0f;
-                        position.localz = 0.0f;
+                        const int64_t dcx = chk.chunkx - camChunkX;
+                        const int64_t dcy = chk.chunky - camChunkY;
+                        const int64_t dcz = chk.chunkz - camChunkZ;
+                        const bool cheapFar =
+                            std::abs(dcx) > cheapRange || std::abs(dcz) > cheapRange || std::abs(dcy) > cheapRange;
 
-                        auto pp0 =
-                            basics::OMPosition<16, int64_t, float>(position.chunkx, position.chunky, position.chunkz) -
-                            camera.getPosRaw();
-                        auto pp1 = basics::OMPosition<16, int64_t, float>(position.chunkx + 1, position.chunky + 1,
-                                                                          position.chunkz + 1) -
-                                   camera.getPosRaw();
+                        bool visible = false;
+                        bool beyondDistance = cheapFar;
+                        glm::vec3 chunkCenter{0.0f};
+                        float compileDistanceSq = 0.0f;
 
-                        auto visible = frusturm.cubeVisible(std::array<glm::vec3, 8>{{
-                            {pp0.x, pp0.y, pp0.z},
-                            {pp1.x, pp0.y, pp0.z},
-                            {pp0.x, pp1.y, pp0.z},
-                            {pp1.x, pp1.y, pp0.z},
-                            {pp0.x, pp0.y, pp1.z},
-                            {pp1.x, pp0.y, pp1.z},
-                            {pp0.x, pp1.y, pp1.z},
-                            {pp1.x, pp1.y, pp1.z},
-                        }});
-
-                        // 以区块中心到相机的距离作为编译优先级（越近越先）
-                        const glm::vec3 chunkCenter = pp0 + glm::vec3(8.0f, 8.0f, 8.0f);
-                        const float compileDistanceSq = glm::dot(chunkCenter, chunkCenter);
-
-                        // 可选距离剔除（OM_RENDER_DISTANCE>0 时生效）
-                        if (cullRadiusSq > 0.0f && compileDistanceSq > cullRadiusSq)
+                        if (!cheapFar)
                         {
-                            visible = false;
+                            auto pp0 =
+                                basics::OMPosition<16, int64_t, float>(chk.chunkx, chk.chunky, chk.chunkz) -
+                                camera.getPosRaw();
+                            auto pp1 =
+                                basics::OMPosition<16, int64_t, float>(chk.chunkx + 1, chk.chunky + 1, chk.chunkz + 1) -
+                                camera.getPosRaw();
+
+                            visible = frusturm.cubeVisible(std::array<glm::vec3, 8>{{
+                                {pp0.x, pp0.y, pp0.z},
+                                {pp1.x, pp0.y, pp0.z},
+                                {pp0.x, pp1.y, pp0.z},
+                                {pp1.x, pp1.y, pp0.z},
+                                {pp0.x, pp0.y, pp1.z},
+                                {pp1.x, pp0.y, pp1.z},
+                                {pp0.x, pp1.y, pp1.z},
+                                {pp1.x, pp1.y, pp1.z},
+                            }});
+
+                            // 以区块中心到相机的距离作为编译优先级（越近越先）
+                            chunkCenter = pp0 + glm::vec3(8.0f, 8.0f, 8.0f);
+                            compileDistanceSq = glm::dot(chunkCenter, chunkCenter);
+
+                            // 距离剔除（精确）
+                            beyondDistance = cullRadiusSq > 0.0f && compileDistanceSq > cullRadiusSq;
+                            if (beyondDistance)
+                            {
+                                visible = false;
+                            }
                         }
 
                         if (chk.visible && !visible)
                         {
-                            if (hideFrames[i] < OMVoxelManager::unloadDelay)
+                            const uint16_t hideDelay = beyondDistance ? 2 : OMVoxelManager::unloadDelay;
+
+                            if (hideFrames[i] < hideDelay)
                             {
                                 ++hideFrames[i];
                                 visible = true;
@@ -1284,6 +1339,26 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         profileMark(nsUpload);
 
         const bool layerStateChanged = layerState != hashLayerState();
+
+        // 定期 compact：旋转/移动时区块不断分配/释放，不合并会碎片化，
+        // usedSize 逐渐逼近 totalSize（绘制数量变大）导致帧率缓慢下降。
+        if (layerStateChanged)
+        {
+            static auto lastMergeTime = std::chrono::steady_clock::now();
+            const auto nowMerge = std::chrono::steady_clock::now();
+
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(nowMerge - lastMergeTime).count() >= 250)
+            {
+                voxelLayer->merge();
+                voxelComplexLayer->merge();
+                voxelFluidLayer->merge();
+                voxelTranslucentLayer->merge();
+                voxelTranslucentComplexLayer->merge();
+                voxelTranslucentFluidLayer->merge();
+
+                lastMergeTime = nowMerge;
+            }
+        }
         /*if (layerStateChanged)
         {
             voxelLayer->merge();
@@ -1315,10 +1390,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
         profileMark(nsFlush);
 
-        // recordTask 会把所有绘制调用重新录制一遍（加载期间 ~0.6ms/帧）。
-        // 策略：
-        //  - GPU 缓冲区容量变化（expand 会换 buffer 指针）必须立刻重录，否则任务里仍是旧 buffer；
-        //  - 仅 usedSize 变化时按 200ms 节流重录（绘制数量暂时偏小是安全的）。
+        // recordTask 会重录整帧（约 0.8ms），旋转视角时每帧都重录会明显掉帧。
+        // 用 30ms 节流；容量变化或偏移缓冲重建时强制立即重录。
         const std::array<uint32_t, 6> layerCapacities = {
             voxelLayer->buf()->totalSize,
             voxelComplexLayer->buf()->totalSize,
@@ -1345,7 +1418,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             const bool forced = capacityChanged || chunkOffsetBufferReallocated;
             const auto now = std::chrono::steady_clock::now();
             const bool elapsedEnough =
-                std::chrono::duration_cast<std::chrono::milliseconds>(now - lastRecordTime).count() >= 200;
+                std::chrono::duration_cast<std::chrono::milliseconds>(now - lastRecordTime).count() >= 30;
 
             if (forced || elapsedEnough)
             {
