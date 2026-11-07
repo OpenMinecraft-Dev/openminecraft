@@ -126,7 +126,7 @@ void OMRendererBufferOpenGL::updateData(void *src)
     if (usage == common::UniformTexel && texel != 0)
     {
         renderer->gl.glBindTexture(GL_TEXTURE_BUFFER, texel);
-        renderer->gl.glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, buffer);
+        renderer->gl.glTexBuffer(GL_TEXTURE_BUFFER, convertFrom(format), buffer);
     }
     unbind();
 }
@@ -140,13 +140,12 @@ void OMRendererBufferOpenGL::moveDataPart(uint64_t target, uint64_t original, ui
 
     bind();
 
-    renderer->gl.glCopyBufferSubData(convertFrom(usage), convertFrom(usage),
-                                     original, target, length);
+    renderer->gl.glCopyBufferSubData(convertFrom(usage), convertFrom(usage), original, target, length);
 
     if (usage == common::UniformTexel && texel != 0)
     {
         renderer->gl.glBindTexture(GL_TEXTURE_BUFFER, texel);
-        renderer->gl.glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, buffer);
+        renderer->gl.glTexBuffer(GL_TEXTURE_BUFFER, convertFrom(format), buffer);
     }
     unbind();
 }
@@ -175,7 +174,7 @@ void OMRendererBufferOpenGL::updateDataPart(void *src, uint64_t offset, uint64_t
     if (usage == common::UniformTexel && texel != 0)
     {
         renderer->gl.glBindTexture(GL_TEXTURE_BUFFER, texel);
-        renderer->gl.glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, buffer);
+        renderer->gl.glTexBuffer(GL_TEXTURE_BUFFER, convertFrom(format), buffer);
     }
     unbind();
 }
