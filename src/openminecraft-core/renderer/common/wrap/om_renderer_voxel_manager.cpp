@@ -1008,6 +1008,20 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
         pendingUnload = 0;
 
+        // chunkManager 在后台线程加载区块时，chunks 会持续增长，而 numChunks() 返回后到真正持有
+        // withChunks 读锁之间仍可能插入新区块。这里在持锁时按 chunks.size() 补齐按槽位索引的数组，
+        // 否则 chunkOffsetCache[i] / hideFrames[i] 会写越界，破坏堆内存。
+        auto syncSlotState = [&](const std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
+            if (chunkOffsetCache.size() < chunks.size())
+            {
+                chunkOffsetCache.resize(chunks.size(), glm::vec3{INFINITY});
+            }
+            if (hideFrames.size() < chunks.size())
+            {
+                hideFrames.resize(chunks.size(), 0);
+            }
+        };
+
         const bool rebuildOffsets =
             cameraMoved || chunksLoading || !offsetUploadedOnce || chunkOffsetCache.size() != lastOffsetCount;
 
@@ -1018,6 +1032,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                 std::fill(chunkOffsetCache.begin(), chunkOffsetCache.end(), glm::vec3{INFINITY});
 
                 chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
+                    syncSlotState(chunks);
+
                     int i = 0;
                     for (auto &ochk : chunks)
                     {
@@ -1064,6 +1080,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                                            static_cast<int>(cullCandidates.size()) > chunkManager->numChunks();
 
             chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
+                syncSlotState(chunks);
+
                 if (rebuildCandidates)
                 {
                     cullCandidates.clear();
@@ -1101,6 +1119,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
                 for (int i : cullCandidates)
                 {
+                    // 候选槽位来自之前的帧；防御性检查，避免管理器重建/槽位变化后越界。
+                    if (i < 0 || static_cast<size_t>(i) >= chunks.size())
+                    {
+                        continue;
+                    }
+
                     auto &ochk = chunks[i];
                     if (!ochk)
                     {
@@ -1233,6 +1257,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                 uint32_t remaining = 0;
 
                 chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
+                    syncSlotState(chunks);
+
                     for (int i = 0; i < static_cast<int>(chunks.size()); ++i)
                     {
                         auto &ochk = chunks[i];

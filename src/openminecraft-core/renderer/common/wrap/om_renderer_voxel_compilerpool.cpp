@@ -92,18 +92,30 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                 {
                     // slot 可能已被 chunkManager 复用：只有坐标一致时缓存才有效
                     const world::OMChunkIndex origin = {cnk->chunkx, cnk->chunky, cnk->chunkz};
-                    const bool sameChunk = cachedOrigin.count(next) != 0 && cachedOrigin[next] == origin;
 
-                    if (useCache && cached.count(next) && sameChunk && !cnk->isDirty())
+                    // 多个编译线程会并发读写 cached/cachedOrigin 和缓存数据，必须与写入端使用同一把锁，
+                    // 否则在 unordered_map rehash 期间读取会访问已释放节点并破坏堆。
+                    bool cacheHit = false;
                     {
-                        bufferMutex.lock();
-                        cutout[next] = cutoutC[next];
-                        cutoutComplex[next] = cutoutComplexC[next];
-                        translucent[next] = translucentC[next];
-                        translucentComplex[next] = translucentComplexC[next];
-                        fluid[next] = fluidC[next];
-                        translucentFluid[next] = translucentFluidC[next];
-                        bufferMutex.unlock();
+                        std::lock_guard<std::mutex> g(bufferMutex);
+
+                        auto cachedOriginIt = cachedOrigin.find(next);
+                        const bool sameChunk = cachedOriginIt != cachedOrigin.end() && cachedOriginIt->second == origin;
+                        cacheHit = useCache && cached.count(next) != 0 && sameChunk && !cnk->isDirty();
+
+                        if (cacheHit)
+                        {
+                            cutout[next] = cutoutC[next];
+                            cutoutComplex[next] = cutoutComplexC[next];
+                            translucent[next] = translucentC[next];
+                            translucentComplex[next] = translucentComplexC[next];
+                            fluid[next] = fluidC[next];
+                            translucentFluid[next] = translucentFluidC[next];
+                        }
+                    }
+
+                    if (cacheHit)
+                    {
                         continue;
                     }
 

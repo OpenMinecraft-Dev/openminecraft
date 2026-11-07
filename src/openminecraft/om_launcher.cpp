@@ -30,6 +30,7 @@ auto main(int argc, char **argv) -> int
     openminecraft::log::multithread::registerCurrentThreadName("launcher");
 
     signal(SIGSEGV, sighnd);
+    signal(SIGABRT, sighnd);
 
     std::vector<std::string> a;
     logger.info("Args:");
