@@ -656,6 +656,8 @@ class OMVoxelManager
     OMRendererPipeline *lightmapPipeline;
     OMRendererPipeline *skyPipeline;
     OMRendererBuffer *chunkOffsetBuffer, *debugOffsetBuffer;
+    // 体素四边形的共享索引缓冲（0,1,2, 2,3,0）：4 顶点/面
+    OMRendererBuffer *voxelIndexBuffer = nullptr;
     OMRendererBuffer *skydisc;
     OMRendererBuffer *fogdata, *cloudFogdata;
     OMRendererBuffer *lightmapData;

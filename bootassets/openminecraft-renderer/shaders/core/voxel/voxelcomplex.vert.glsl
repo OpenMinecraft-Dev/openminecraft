@@ -70,7 +70,7 @@ void main()
         gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
         return;
     }
-    float unused = texture(inTexture, vec3(0.0)).x + texture(inTextureSec, vec3(0.0)).x;
+    float unused = float(textureSize(inTexture, 0).x + textureSize(inTextureSec, 0).x);
 
     float rotationAngle = voxelRotationAngle;
     int rotationAxis = VOXEL_RAXIS;
@@ -81,7 +81,7 @@ void main()
     float bx = float(VOXEL_X);
     float by = float(VOXEL_Y);
     float bz = float(VOXEL_Z);
-    vec2 orgin = VOXEL_FACING_SIGN == 1 ? vertexgen_quad_normal() : vertexgen_quad_normal_ccw();
+    vec2 orgin = VOXEL_FACING_SIGN == 1 ? vertexgen_quad_normal4() : vertexgen_quad_normal4_ccw();
     vec2 inv_or = vec2(1.0) - orgin;
     float sign = float(VOXEL_FACING_SIGN);
     vec3 worldPos;

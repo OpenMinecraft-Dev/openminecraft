@@ -550,6 +550,13 @@ OMVoxelManager::OMVoxelManager(
     voxelTranslucentFluidLayer = new OMVoxelLayer<OMVoxelFluid>(renderer);
 
     chunkOffsetBuffer = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
+
+    // 体素四边形改为 4 顶点 + 共享索引缓冲（6 个索引），顶点着色器只跑 4 次/面
+    voxelIndexBuffer = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
+    {
+        const std::array<uint32_t, 6> idx = {0, 1, 2, 2, 3, 0};
+        voxelIndexBuffer->updateData(const_cast<uint32_t *>(idx.data()));
+    }
     debugOffsetBuffer = renderer->allocateBuffer(VertexData, 12 * 2 * 3 * sizeof(float));
     skydisc = renderer->allocateBuffer(Uniform, sizeof(OMVoxelSkyDisc));
     fogdata = renderer->allocateBuffer(Uniform, sizeof(float) * 5);
@@ -668,6 +675,7 @@ OMVoxelManager::~OMVoxelManager()
     delete voxelTranslucentFluidLayer;
     delete chunkOffsetBuffer;
     delete debugOffsetBuffer;
+    delete voxelIndexBuffer;
     delete skydisc;
     delete sunrise;
     delete moonData;
@@ -1558,13 +1566,16 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
                    ->beginDebugTag("cutout/opaque chunks")
                    ->pipeline(pipeline)
                    ->vertexBuffer({voxelLayer->buf()->buffer})
-                   ->drawInstanceN(6, voxelLayer->buf()->usedSize() / sizeof(OMVoxel))
+                   ->indexBuffer(voxelIndexBuffer)
+                   ->drawIndexedInstanceN(6, voxelLayer->buf()->usedSize() / sizeof(OMVoxel))
                    ->pipeline(complexPipeline)
                    ->vertexBuffer({voxelComplexLayer->buf()->buffer})
-                   ->drawInstanceN(6, voxelComplexLayer->buf()->usedSize() / sizeof(OMVoxelComplex))
+                   ->indexBuffer(voxelIndexBuffer)
+                   ->drawIndexedInstanceN(6, voxelComplexLayer->buf()->usedSize() / sizeof(OMVoxelComplex))
                    ->pipeline(fluidPipeline)
                    ->vertexBuffer({voxelFluidLayer->buf()->buffer})
-                   ->drawInstanceN(6, voxelFluidLayer->buf()->usedSize() / sizeof(OMVoxelFluid))
+                   ->indexBuffer(voxelIndexBuffer)
+                   ->drawIndexedInstanceN(6, voxelFluidLayer->buf()->usedSize() / sizeof(OMVoxelFluid))
                    ->pipeline(debugPipeline)
                    ->vertexBuffer({debugOffsetBuffer})
                    ->drawN(2 * 12)
@@ -1597,13 +1608,16 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
         ->drawN(6)
         ->pipeline(translucentPipeline)
         ->vertexBuffer({voxelTranslucentLayer->buf()->buffer})
-        ->drawInstanceN(6, voxelTranslucentLayer->buf()->usedSize() / sizeof(OMVoxel))
+        ->indexBuffer(voxelIndexBuffer)
+        ->drawIndexedInstanceN(6, voxelTranslucentLayer->buf()->usedSize() / sizeof(OMVoxel))
         ->pipeline(translucentComplexPipeline)
         ->vertexBuffer({voxelTranslucentComplexLayer->buf()->buffer})
-        ->drawInstanceN(6, voxelTranslucentComplexLayer->buf()->usedSize() / sizeof(OMVoxelComplex))
+        ->indexBuffer(voxelIndexBuffer)
+        ->drawIndexedInstanceN(6, voxelTranslucentComplexLayer->buf()->usedSize() / sizeof(OMVoxelComplex))
         ->pipeline(translucentFluidPipeline)
         ->vertexBuffer({voxelTranslucentFluidLayer->buf()->buffer})
-        ->drawInstanceN(6, voxelTranslucentFluidLayer->buf()->usedSize() / sizeof(OMVoxelFluid))
+        ->indexBuffer(voxelIndexBuffer)
+        ->drawIndexedInstanceN(6, voxelTranslucentFluidLayer->buf()->usedSize() / sizeof(OMVoxelFluid))
         ->endDebugTag();
 
     if (samples != 1)
