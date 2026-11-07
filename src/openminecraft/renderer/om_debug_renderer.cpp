@@ -329,6 +329,13 @@ void OMDebugRenderer::afterFrame()
         }
     }
 
+    static uint64_t statFrame = 0;
+    static constexpr uint64_t statInterval = 10;
+    if ((++statFrame % statInterval) != 0)
+    {
+        return;
+    }
+
     if (!frameTimes.empty())
     {
         double sum = 0.0;
