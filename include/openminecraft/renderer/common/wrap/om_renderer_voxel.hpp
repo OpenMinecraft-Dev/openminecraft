@@ -429,6 +429,37 @@ template <typename It> class OMVoxelLayer
         }
     }
 
+    // 限时压缩：避免一次性整理整个图层造成几十毫秒的卡顿
+    auto mergeStepTimed(double budgetMs) -> void
+    {
+        if (chunkBlocks.empty())
+        {
+            return;
+        }
+
+        const auto start = std::chrono::steady_clock::now();
+        size_t processed = 0;
+
+        while (mergeCursor < chunkBlocks.size())
+        {
+            chunkBlocks[mergeCursor] = voxelBuffer->compact(chunkBlocks[mergeCursor]);
+            ++mergeCursor;
+            ++processed;
+
+            if ((processed & 31) == 0 &&
+                std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count() >
+                    budgetMs)
+            {
+                break;
+            }
+        }
+
+        if (mergeCursor >= chunkBlocks.size())
+        {
+            mergeCursor = 0;
+        }
+    }
+
     auto mergeStep(size_t maxChunks) -> void
     {
         if (chunkBlocks.empty())

@@ -95,7 +95,8 @@ class OMRendererSegBuf
         }
         freeBlocks.insert(it, block);
 
-        normalizeFreeBlocks();
+        // freeBlocks 插入时保持有序，这里只需线性合并相邻块
+        mergeFreeBlocks();
     }
 
     auto compact(std::list<OMRendererSegBufBlock> blocks) -> std::list<OMRendererSegBufBlock>
@@ -275,7 +276,12 @@ class OMRendererSegBuf
     {
         std::sort(freeBlocks.begin(), freeBlocks.end(),
                   [](const OMRendererSegBufBlock &a, const OMRendererSegBufBlock &b) { return a.offset < b.offset; });
+        mergeFreeBlocks();
+    }
 
+    // 线性合并相邻空闲块（假设已按 offset 有序）
+    void mergeFreeBlocks()
+    {
         std::vector<OMRendererSegBufBlock> merged;
         for (const auto &cur : freeBlocks)
         {

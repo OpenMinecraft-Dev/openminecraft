@@ -344,14 +344,26 @@ void OMVoxelCompilerPool::upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMV
     }
 
     static constexpr uint64_t uploadBudgetBytes = 2 * 1024 * 1024;
+    static constexpr double uploadBudgetMs = 1.5;
     uint64_t uploadSpent = 0;
+    const auto uploadStart = std::chrono::steady_clock::now();
 
     auto drain = [&](auto &pending, auto *layer, uint64_t elementSize) {
+        int processed = 0;
+
         for (auto it = pending.begin(); it != pending.end() && uploadSpent < uploadBudgetBytes;)
         {
+            if ((processed & 15) == 0 &&
+                std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - uploadStart).count() >
+                    uploadBudgetMs)
+            {
+                break;
+            }
+
             uploadSpent += static_cast<uint64_t>(it->second.size()) * elementSize;
             layer->loadData(it->first, it->second, false);
             it = pending.erase(it);
+            ++processed;
         }
     };
 

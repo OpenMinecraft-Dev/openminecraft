@@ -906,7 +906,9 @@ static auto lastp = std::chrono::steady_clock::now();
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
-    static constexpr bool bfsOcclusionEnabled = true;
+    // BFS 遮挡剔除在快速转视角时会造成 6~7ms 主线程尖峰，且实测整体为负收益；
+    // 默认关闭，需要时用 OM_BFS=1 打开。
+    static const bool bfsOcclusionEnabled = std::getenv("OM_BFS") != nullptr;
 
     auto cameraPos = camera.getPosRaw();
 
@@ -1494,31 +1496,43 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             voxelTranslucentFluidLayer->mergeStep(16);
         }
 
-        static int compactCooldown = 0;
-
-        if (--compactCooldown <= 0)
+        // 碎片整理改为限时增量式：每帧最多花 ~1ms，避免整层 merge 造成 10~40ms 卡顿
         {
-            bool didCompact = false;
+            const auto compactStart = std::chrono::steady_clock::now();
 
-            auto tryCompact = [&](auto *layer) {
+            auto fragmented = [](auto *layer) -> bool {
                 const uint64_t live = layer->liveBytesCount();
-                if (layer->buf()->usedSize() > live + live / 4 + 128 * 1024)
-                {
-                    layer->merge();
-                    didCompact = true;
-                }
+                return layer->buf()->usedSize() > live + live / 4 + 128 * 1024;
             };
 
-            tryCompact(voxelLayer);
-            tryCompact(voxelComplexLayer);
-            tryCompact(voxelFluidLayer);
-            tryCompact(voxelTranslucentLayer);
-            tryCompact(voxelTranslucentComplexLayer);
-            tryCompact(voxelTranslucentFluidLayer);
+            auto budgetLeft = [&]() -> bool {
+                return std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - compactStart)
+                           .count() < 1.0;
+            };
 
-            if (didCompact)
+            if (fragmented(voxelLayer) && budgetLeft())
             {
-                compactCooldown = 10;
+                voxelLayer->mergeStepTimed(0.3);
+            }
+            if (fragmented(voxelComplexLayer) && budgetLeft())
+            {
+                voxelComplexLayer->mergeStepTimed(0.3);
+            }
+            if (fragmented(voxelFluidLayer) && budgetLeft())
+            {
+                voxelFluidLayer->mergeStepTimed(0.3);
+            }
+            if (fragmented(voxelTranslucentLayer) && budgetLeft())
+            {
+                voxelTranslucentLayer->mergeStepTimed(0.3);
+            }
+            if (fragmented(voxelTranslucentComplexLayer) && budgetLeft())
+            {
+                voxelTranslucentComplexLayer->mergeStepTimed(0.3);
+            }
+            if (fragmented(voxelTranslucentFluidLayer) && budgetLeft())
+            {
+                voxelTranslucentFluidLayer->mergeStepTimed(0.3);
             }
         }
 
