@@ -148,16 +148,68 @@ class OMRendererSegBuf
         return result;
     }
 
-    void flushDirty()
+    // 单次 flush 的默认上传预算：避免一次性上传几百 MB 造成几十 ms 的卡顿。
+    // 未传完的区间会留到下一帧继续（每帧最多 6 个图层 × 该值）。
+    static constexpr uint64_t flushBudgetBytes = 1 * 1024 * 1024;
+
+    void flushDirty(uint64_t budget = flushBudgetBytes, uint64_t *flushedBytes = nullptr)
     {
-        if (dirtyMax <= dirtyMin)
+        ++frameCounter;
+
+        for (size_t i = 0; i < retiredBuffers.size();)
         {
-            return;
+            if (frameCounter - retiredBuffers[i].second > 8)
+            {
+                delete retiredBuffers[i].first;
+                retiredBuffers.erase(retiredBuffers.begin() + static_cast<std::ptrdiff_t>(i));
+            }
+            else
+            {
+                ++i;
+            }
         }
 
-        buffer->updateDataPart(shadow.data() + dirtyMin, dirtyMin, dirtyMax - dirtyMin);
-        dirtyMin = UINT32_MAX;
-        dirtyMax = 0;
+        uint64_t spent = 0;
+        size_t consumed = 0;
+
+        while (consumed < dirtyRanges.size() && spent < budget)
+        {
+            auto &range = dirtyRanges[consumed];
+            const uint64_t length = static_cast<uint64_t>(range.end - range.begin);
+            const uint64_t available = budget - spent;
+            const uint32_t part = static_cast<uint32_t>(std::min<uint64_t>(length, available));
+
+            buffer->updateDataPart(shadow.data() + range.begin, range.begin, part);
+            spent += part;
+
+            if (part < length)
+            {
+                range.begin += part;
+                break;
+            }
+
+            ++consumed;
+        }
+
+        dirtyRanges.erase(dirtyRanges.begin(), dirtyRanges.begin() + static_cast<std::ptrdiff_t>(consumed));
+
+        if (flushedBytes != nullptr)
+        {
+            *flushedBytes += spent;
+        }
+    }
+
+    // 还没上传的脏字节数（用于观察预算是否足够）
+    auto dirtyBytes() const -> uint64_t
+    {
+        uint64_t total = 0;
+
+        for (const auto &range : dirtyRanges)
+        {
+            total += range.end - range.begin;
+        }
+
+        return total;
     }
 
     void update(OMRendererSegBufBlock block, const void *data)
@@ -188,13 +240,53 @@ class OMRendererSegBuf
     OMRenderer *renderer;
     std::vector<OMRendererSegBufBlock> freeBlocks;
     std::vector<uint8_t> shadow;
-    uint32_t dirtyMin = UINT32_MAX;
-    uint32_t dirtyMax = 0;
+
+    struct OMRendererSegBufDirtyRange
+    {
+        uint32_t begin;
+        uint32_t end;
+    };
+
+    // 相邻/重叠的脏区间在 gap <= 16KB 时合并，既避免逐块上传调用过多，又不会把
+    // 整块 buffer 都算作脏（旧的 [dirtyMin, dirtyMax] 方案在区块分散时会退化成全部上传）。
+    static constexpr uint32_t dirtyMergeGap = 16 * 1024;
+    std::vector<OMRendererSegBufDirtyRange> dirtyRanges;
+    uint32_t frameCounter = 0;
+    std::vector<std::pair<OMRendererBuffer *, uint32_t>> retiredBuffers;
 
     void markDirty(uint32_t offset, uint32_t length)
     {
-        dirtyMin = std::min(dirtyMin, offset);
-        dirtyMax = std::max(dirtyMax, offset + length);
+        if (length == 0)
+        {
+            return;
+        }
+
+        const uint32_t end = offset + length;
+
+        size_t pos = 0;
+        while (pos < dirtyRanges.size() && dirtyRanges[pos].begin < offset)
+        {
+            ++pos;
+        }
+
+        dirtyRanges.insert(dirtyRanges.begin() + std::ptrdiff_t(pos), OMRendererSegBufDirtyRange{offset, end});
+
+        std::vector<OMRendererSegBufDirtyRange> merged;
+        merged.reserve(dirtyRanges.size());
+
+        for (const auto &range : dirtyRanges)
+        {
+            if (merged.empty() || static_cast<uint64_t>(merged.back().end) + dirtyMergeGap < range.begin)
+            {
+                merged.push_back(range);
+            }
+            else
+            {
+                merged.back().end = std::max(merged.back().end, range.end);
+            }
+        }
+
+        dirtyRanges.swap(merged);
     }
 
     void normalizeFreeBlocks()
@@ -227,7 +319,8 @@ class OMRendererSegBuf
         shadow.resize(newTotal, 0);
         newBuffer->updateDataPart(shadow.data() + totalSize, totalSize, totalSize);
 
-        delete buffer;
+        // 旧 GPU 缓冲可能仍被飞行中的帧引用：延迟若干帧再释放
+        retiredBuffers.push_back({buffer, frameCounter});
         buffer = newBuffer;
 
         freeBlocks.push_back({totalSize, totalSize});

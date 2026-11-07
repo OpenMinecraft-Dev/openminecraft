@@ -29,6 +29,25 @@ void OMProtocolMinecraftTransformer777::sendLoginAcknowledged()
     handler.handleEnterConfiguration();
 }
 
+void OMProtocolMinecraftTransformer777::sendConfigurationClientInformation(int viewDistance)
+{
+    // 26.3 configuration serverbound 0x00：
+    // Locale String(16) | View Distance Byte | Chat Mode VarInt | Chat Colors Bool |
+    // Displayed Skin Parts UByte | Main Hand VarInt | Text Filtering Bool |
+    // Allow Listings Bool | Particle Status VarInt
+    protocol.write(openminecraft::network::OMNetworkPacket()
+                       .packetId(0x00)
+                       .write(OMUtf8String("en_us"))
+                       .write(static_cast<uint8_t>(viewDistance))
+                       .write<OMVarInt>(0)
+                       .write(true)
+                       .write(static_cast<uint8_t>(0x7f))
+                       .write<OMVarInt>(1)
+                       .write(false)
+                       .write(true)
+                       .write<OMVarInt>(0));
+}
+
 void OMProtocolMinecraftTransformer777::sendConfigurationKnownPacks(std::vector<OMProtocolKnownPack> pcks)
 {
     protocol.write(openminecraft::network::OMNetworkPacket().packetId(0x07).writePrefixArray(pcks));

@@ -247,6 +247,11 @@ class OMProtocolMinecraftTransformer
     virtual void sendLoginAcknowledged() = 0;
 
     virtual void sendConfigurationKnownPacks(std::vector<OMProtocolKnownPack>) = 0;
+    // 上报客户端信息（含请求的 view distance），服务端据此决定区块发送半径
+    virtual void sendConfigurationClientInformation(int viewDistance)
+    {
+        (void)viewDistance;
+    }
     virtual void sendConfigurationFinishAcknowledged() = 0;
     virtual void sendPlayConfirmTeleportation(uint32_t teleportID, double x, double y, double z, float yaw,
                                               float pitch) = 0;

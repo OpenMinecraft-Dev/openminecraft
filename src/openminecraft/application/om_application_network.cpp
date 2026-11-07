@@ -4,6 +4,10 @@
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft-shell/network/transformers/om_protocol_minecraft_777.hpp"
 #include <algorithm>
+#include <condition_variable>
+#include <deque>
+#include <mutex>
+#include <thread>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -118,6 +122,76 @@ static void storeChunkToFile(const network::OMProtocolChunkDataAndLight &chunk)
     }
 }
 
+
+// 异步区块写盘：网络线程只负责入队，避免同步写盘（约 400KB/区块、~3ms）
+// 拖慢 chunk_batch_received 的 ACK，从而被服务端限速。
+class OMChunkWriter
+{
+  public:
+    ~OMChunkWriter()
+    {
+        {
+            std::lock_guard g(mutex);
+            stopping = true;
+        }
+        cv.notify_all();
+
+        if (worker.joinable())
+        {
+            worker.join();
+        }
+    }
+
+    void push(const network::OMProtocolChunkDataAndLight &chunk)
+    {
+        {
+            std::lock_guard g(mutex);
+            queue.push_back(chunk);
+
+            if (!worker.joinable())
+            {
+                worker = std::thread([this] { run(); });
+            }
+        }
+        cv.notify_one();
+    }
+
+  private:
+    void run()
+    {
+        std::unique_lock lock(mutex);
+
+        while (true)
+        {
+            cv.wait(lock, [this] { return stopping || !queue.empty(); });
+
+            if (queue.empty())
+            {
+                if (stopping)
+                {
+                    return;
+                }
+                continue;
+            }
+
+            auto chunk = std::move(queue.front());
+            queue.pop_front();
+
+            lock.unlock();
+            storeChunkToFile(chunk);
+            lock.lock();
+        }
+    }
+
+    std::deque<network::OMProtocolChunkDataAndLight> queue;
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool stopping = false;
+    std::thread worker;
+};
+
+static OMChunkWriter chunkWriter;
+
 void OMApplication::networkSetup(std::string host, std::string port)
 {
     logger.info("try connect to {} {}", host, port);
@@ -180,6 +254,16 @@ void OMApplication::networkSetup(std::string host, std::string port)
         void handleEnterConfiguration() override
         {
             title("Enter Configuration");
+
+            static const int viewDistance = []() -> int {
+                const char *v = std::getenv("OM_VIEW_DISTANCE");
+                return v != nullptr ? std::clamp(std::atoi(v), 2, 32) : 24;
+            }();
+
+            // 上报 view distance：服务端实际发送半径 = min(服务端配置, 该值)
+            transformer->sendConfigurationClientInformation(viewDistance);
+            logger->debug("client view distance: {}", viewDistance);
+
             transformer->sendConfigurationKnownPacks({});
         }
 
@@ -465,8 +549,7 @@ void OMApplication::networkSetup(std::string host, std::string port)
                 logger->debug("  biomes: bits={} palette={} ids=[{}]", bm.bitsPerEntry, bm.palette.size(), biomeList);
             }
 
-            storeChunkToFile(chunk);
-            logger->debug("chunk stored: chunks/{}_{}.omc", chunk.chunkX, chunk.chunkZ);
+            chunkWriter.push(chunk);
         }
 
         void handlePlayUpdateEntityPosition(const network::OMProtocolUpdateEntityPosition &position) override
@@ -1034,17 +1117,13 @@ void OMApplication::networkSetup(std::string host, std::string port)
         {
             // 1.20.2+：每批区块结束后必须回 Chunk Batch Received，
             // 否则服务端会认为客户端处理不过来而停止继续发送区块。
-            if (numOfChunks > 0 && chunkBatchStartTp.time_since_epoch().count() != 0)
-            {
-                const double elapsedMs = std::chrono::duration<double, std::milli>(
-                                             std::chrono::steady_clock::now() - chunkBatchStartTp)
-                                             .count();
-                const double msPerChunk = elapsedMs / static_cast<double>(numOfChunks);
-
-                // 目标：每个 tick 最多花约 8ms 接收区块
-                desiredChunksPerTick =
-                    static_cast<float>(std::clamp(8.0 / std::max(msPerChunk, 0.01), 1.0, 32.0));
-            }
+            // 固定速率：不要用客户端处理耗时（含写盘）反推 desired，
+            // 否则会被服务端限速到 1~3 个/tick，导致长时间只收到附近一小片区块。
+            static const float fixedDesired = []() -> float {
+                const char *v = std::getenv("OM_CHUNK_BATCH");
+                return v != nullptr ? std::stof(v) : 12.0f;
+            }();
+            desiredChunksPerTick = std::clamp(fixedDesired, 1.0f, 32.0f);
 
             logger->debug("chunk batch: {} chunks, elapsed {:.1f}ms, desired {:.1f}/tick", numOfChunks,
                           chunkBatchStartTp.time_since_epoch().count() == 0

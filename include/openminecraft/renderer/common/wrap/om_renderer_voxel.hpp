@@ -374,7 +374,7 @@ template <typename It> class OMVoxelLayer
   public:
     OMVoxelLayer(OMRenderer *renderer)
     {
-        voxelBuffer = new OMRendererSegBuf(renderer, 16 * sizeof(It));
+        voxelBuffer = new OMRendererSegBuf(renderer, 1024 * 1024);
         chunkBlocks.resize(1);
     }
     ~OMVoxelLayer()
@@ -665,6 +665,17 @@ class OMVoxelManager
     bool offsetUploadedOnce = false;
     std::vector<uint16_t> hideFrames;
     static constexpr uint16_t unloadDelay = 120;
+
+    // culling 跳过：相机位置/朝向不变且没有区块加载时，不重建偏移、不做视锥测试
+    float lastCameraYaw = INFINITY;
+    float lastCameraPitch = INFINITY;
+    uint64_t lastLoadVersion = 0;
+    // 处于"隐藏倒计时"中的区块数量；为 0 时跳过帧可以完全跳过卸载扫描
+    uint32_t pendingUnload = 0;
+    // 至少完成过一次有效的剔除后才能进入"跳过剔除"状态
+    bool cullingReady = false;
+    // 窗口尺寸变化会改变投影矩阵，必须重新剔除
+    glm::vec2 lastExtent = glm::vec2(0.0f);
 
     void unloadChunk(int i);
 };

@@ -100,7 +100,7 @@ OMVoxelManager::OMVoxelManager(
     compiler.handler = voxelHandler;
     compiler.modelFetcher = modelFetcher;
 
-    compilerPool = new OMVoxelCompilerPool(*man.get(), compiler);
+    compilerPool = new OMVoxelCompilerPool(*man.get(), compiler, 12);
 
     cutoutTargetMS = new OMRendererTempTarget(renderer);
     cutoutTargetMS->setStoreDepth(true);
@@ -327,7 +327,7 @@ OMVoxelManager::OMVoxelManager(
                                    ->inputName("inLightmap")
                                    ->output(translucentTargetMS->target)
                                    ->samples(samples)
-                                   ->setCullMode(renderer::common::None)
+                                   ->setCullMode(renderer::common::Back)
                                    ->setFrontClockwise(true)
                                    ->shader(renderer->shaderManager.preprocess("core/voxel/voxelfluid.oit.frag.glsl",
                                                                                Fragment, GLSLSource, voxelFluidFormat))
@@ -843,8 +843,12 @@ auto OMVoxelManager::fetchLayerState() -> std::array<std::tuple<uint32_t, uint32
     }};
 }
 
+// 绘制/重录粒度：1MB
 auto OMVoxelManager::hashLayerState() -> std::array<uint32_t, 12>
 {
+    // 用"按 1MB 圆整后的实例字节数"参与哈希：区块陆续上传时 usedSize 每帧都会变，
+    // 直接用它会导致 recordTask 每帧重录。圆整后只有跨过 1MB 边界（或容量变化）才重录，
+    // 绘制时同样按圆整后的数量提交，多出来的实例是清零数据（顶点着色器直接剔除）。
     return {
         voxelLayer->buf()->usedSize(),
         voxelLayer->buf()->totalSize,
@@ -881,11 +885,36 @@ auto OMVoxelManager::fetchChunkState() -> std::pair<uint32_t, uint32_t>
     return {total, nonfree};
 }
 
+// 纳秒计时：OM_UPDATE_PROFILE=1 时输出 OMVoxelManager::update 各阶段耗时
+static inline auto omNowNs() -> uint64_t
+{
+    return static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch())
+            .count());
+}
+
 static float cloudTime = 0.0f;
 static auto lastp = std::chrono::steady_clock::now();
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
+    static const bool profileUpdate = std::getenv("OM_UPDATE_PROFILE") != nullptr;
+
+    const uint64_t profileStart = profileUpdate ? omNowNs() : 0;
+    uint64_t profileStamp = profileStart;
+    uint64_t nsSetup = 0, nsOffset = 0, nsCull = 0, nsOffsetUpload = 0;
+    uint64_t nsUpload = 0, nsMerge = 0, nsFlush = 0, nsRecord = 0;
+    uint64_t cntChunks = 0, cntVisible = 0, cntCompile = 0, cntUnload = 0;
+
+    auto profileMark = [&](uint64_t &out) {
+        if (profileUpdate)
+        {
+            const uint64_t now = omNowNs();
+            out = now - profileStamp;
+            profileStamp = now;
+        }
+    };
+
     auto cameraPos = camera.getPosRaw();
 
     const std::array<int64_t, 3> cameraChunk = {cameraPos.chunkx, cameraPos.chunky, cameraPos.chunkz};
@@ -938,132 +967,276 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
     updateColor();
 
+    profileMark(nsSetup);
+
     if (chunkManager->numChunks())
     {
+        const auto camPosNow = camera.getPosRaw();
+        const float yawNow = camera.getYaw();
+        const float pitchNow = camera.getPitch();
+        const uint64_t loadVersionNow = chunkManager->loadVersion();
+
+        const glm::vec2 extentNow = renderer->getExtent();
+        const bool extentChanged = extentNow != lastExtent;
+        lastExtent = extentNow;
+
+        const bool cameraStill = !cameraMoved && yawNow == lastCameraYaw && pitchNow == lastCameraPitch;
+        const bool chunksLoading = loadVersionNow != lastLoadVersion;
+        bool skipCulling = cameraStill && !chunksLoading && !extentChanged && cullingReady;
+
+        const int effectiveRenderDistance = 16;
+        const float cullRadius = static_cast<float>(effectiveRenderDistance) * 16.0f;
+        const float cullRadiusSq = cullRadius * cullRadius;
+
+        lastCameraYaw = yawNow;
+        lastCameraPitch = pitchNow;
+        lastLoadVersion = loadVersionNow;
+
         if (chunkOffsetCache.size() != chunkManager->numChunks())
         {
             chunkOffsetCache.resize(chunkManager->numChunks());
+            skipCulling = false;
         }
-
-        std::fill(chunkOffsetCache.begin(), chunkOffsetCache.end(), glm::vec3{INFINITY});
-
-        auto layerState = hashLayerState();
-        chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
-            int i = 0;
-            for (auto &ochk : chunks)
-            {
-                if (!ochk)
-                {
-                    chunkOffsetCache[i] = glm::vec3{INFINITY};
-                }
-                else
-                {
-                    const auto &chk = *ochk;
-                    auto position = basics::OMPosition<16, int64_t, float>();
-                    position.chunkx = chk.chunkx;
-                    position.chunky = chk.chunky;
-                    position.chunkz = chk.chunkz;
-
-                    chunkOffsetCache[i] = position - camera.getPosRaw();
-                }
-                ++i;
-            }
-        });
-
-        auto frusturm = Frustum::fromMatrix(camera.fetchProjMat() * camera.fetchViewMat());
 
         if (hideFrames.size() != chunkManager->numChunks())
         {
             hideFrames.assign(chunkManager->numChunks(), 0);
+            skipCulling = false;
         }
 
-        int unloadBudget = 32;
-        chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
-            int i = 0;
-            for (auto &ochk : chunks)
-            {
-                if (!ochk)
+        auto layerState = hashLayerState();
+
+        pendingUnload = 0;
+
+        if (!skipCulling)
+        {
+            std::fill(chunkOffsetCache.begin(), chunkOffsetCache.end(), glm::vec3{INFINITY});
+
+            chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
+                int i = 0;
+                for (auto &ochk : chunks)
                 {
-                    if (unloadBudget > 0)
+                    if (!ochk)
                     {
-                        --unloadBudget;
-                        unloadChunk(i);
+                        chunkOffsetCache[i] = glm::vec3{INFINITY};
                     }
-                }
-                else
-                {
-                    auto &chk = *ochk;
-
-                    auto position = basics::OMPosition<16, int64_t, float>();
-                    position.chunkx = chk.chunkx;
-                    position.chunky = chk.chunky;
-                    position.chunkz = chk.chunkz;
-                    position.localx = 0.0f;
-                    position.localy = 0.0f;
-                    position.localz = 0.0f;
-
-                    auto pp0 =
-                        basics::OMPosition<16, int64_t, float>(position.chunkx, position.chunky, position.chunkz) -
-                        camera.getPosRaw();
-                    auto pp1 = basics::OMPosition<16, int64_t, float>(position.chunkx + 1, position.chunky + 1,
-                                                                      position.chunkz + 1) -
-                               camera.getPosRaw();
-
-                    auto visible = frusturm.cubeVisible(std::array<glm::vec3, 8>{{
-                        {pp0.x, pp0.y, pp0.z},
-                        {pp1.x, pp0.y, pp0.z},
-                        {pp0.x, pp1.y, pp0.z},
-                        {pp1.x, pp1.y, pp0.z},
-                        {pp0.x, pp0.y, pp1.z},
-                        {pp1.x, pp0.y, pp1.z},
-                        {pp0.x, pp1.y, pp1.z},
-                        {pp1.x, pp1.y, pp1.z},
-                    }});
-
-                    // 以区块中心到相机的距离作为编译优先级（越近越先）
-                    const glm::vec3 chunkCenter = pp0 + glm::vec3(8.0f, 8.0f, 8.0f);
-                    const float compileDistanceSq = glm::dot(chunkCenter, chunkCenter);
-
-                    if (chk.visible && !visible)
+                    else
                     {
+                        const auto &chk = *ochk;
+                        auto position = basics::OMPosition<16, int64_t, float>();
+                        position.chunkx = chk.chunkx;
+                        position.chunky = chk.chunky;
+                        position.chunkz = chk.chunkz;
+
+                        chunkOffsetCache[i] = position - camera.getPosRaw();
+
+                        if (profileUpdate)
+                        {
+                            ++cntChunks;
+                        }
+                    }
+                    ++i;
+                }
+            });
+
+            profileMark(nsOffset);
+
+            auto frusturm = Frustum::fromMatrix(camera.fetchProjMat() * camera.fetchViewMat());
+
+            int unloadBudget = 32;
+            chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
+                int i = 0;
+                for (auto &ochk : chunks)
+                {
+                    if (!ochk)
+                    {
+                        if (unloadBudget > 0)
+                        {
+                            --unloadBudget;
+                            unloadChunk(i);
+
+                            if (profileUpdate)
+                            {
+                                ++cntUnload;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        auto &chk = *ochk;
+
+                        auto position = basics::OMPosition<16, int64_t, float>();
+                        position.chunkx = chk.chunkx;
+                        position.chunky = chk.chunky;
+                        position.chunkz = chk.chunkz;
+                        position.localx = 0.0f;
+                        position.localy = 0.0f;
+                        position.localz = 0.0f;
+
+                        auto pp0 =
+                            basics::OMPosition<16, int64_t, float>(position.chunkx, position.chunky, position.chunkz) -
+                            camera.getPosRaw();
+                        auto pp1 = basics::OMPosition<16, int64_t, float>(position.chunkx + 1, position.chunky + 1,
+                                                                          position.chunkz + 1) -
+                                   camera.getPosRaw();
+
+                        auto visible = frusturm.cubeVisible(std::array<glm::vec3, 8>{{
+                            {pp0.x, pp0.y, pp0.z},
+                            {pp1.x, pp0.y, pp0.z},
+                            {pp0.x, pp1.y, pp0.z},
+                            {pp1.x, pp1.y, pp0.z},
+                            {pp0.x, pp0.y, pp1.z},
+                            {pp1.x, pp0.y, pp1.z},
+                            {pp0.x, pp1.y, pp1.z},
+                            {pp1.x, pp1.y, pp1.z},
+                        }});
+
+                        // 以区块中心到相机的距离作为编译优先级（越近越先）
+                        const glm::vec3 chunkCenter = pp0 + glm::vec3(8.0f, 8.0f, 8.0f);
+                        const float compileDistanceSq = glm::dot(chunkCenter, chunkCenter);
+
+                        // 可选距离剔除（OM_RENDER_DISTANCE>0 时生效）
+                        if (cullRadiusSq > 0.0f && compileDistanceSq > cullRadiusSq)
+                        {
+                            visible = false;
+                        }
+
+                        if (chk.visible && !visible)
+                        {
+                            if (hideFrames[i] < OMVoxelManager::unloadDelay)
+                            {
+                                ++hideFrames[i];
+                                visible = true;
+                            }
+                            else if (unloadBudget > 0)
+                            {
+                                --unloadBudget;
+                                unloadChunk(i);
+
+                                if (profileUpdate)
+                                {
+                                    ++cntUnload;
+                                }
+                            }
+                            else
+                            {
+                                ++hideFrames[i];
+                                visible = true;
+                            }
+                        }
+                        else if (chk.visible && visible)
+                        {
+                            hideFrames[i] = 0;
+
+                            if (chk.isDirty())
+                            {
+                                compilerPool->compile(i, false, compileDistanceSq);
+                                chk.solveDirty();
+
+                                if (profileUpdate)
+                                {
+                                    ++cntCompile;
+                                }
+                            }
+                        }
+                        else if (!chk.visible && visible)
+                        {
+                            hideFrames[i] = 0;
+                            compilerPool->compile(i, true, compileDistanceSq);
+                            chk.solveDirty();
+
+                            if (profileUpdate)
+                            {
+                                ++cntCompile;
+                            }
+                        }
+
+                        chk.visible = visible;
+
+                        if (visible)
+                        {
+                            if (profileUpdate)
+                            {
+                                ++cntVisible;
+                            }
+
+                            if (hideFrames[i] > 0)
+                            {
+                                ++pendingUnload;
+                            }
+                        }
+                    }
+                    ++i;
+                }
+            });
+
+            profileMark(nsCull);
+            cullingReady = true;
+        }
+        else
+        {
+            if (pendingUnload > 0)
+            {
+                int unloadBudget = 32;
+                uint32_t remaining = 0;
+
+                chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
+                    for (int i = 0; i < static_cast<int>(chunks.size()); ++i)
+                    {
+                        auto &ochk = chunks[i];
+
+                        if (!ochk)
+                        {
+                            if (unloadBudget > 0)
+                            {
+                                --unloadBudget;
+                                unloadChunk(i);
+
+                                if (profileUpdate)
+                                {
+                                    ++cntUnload;
+                                }
+                            }
+                            continue;
+                        }
+
+                        auto &chk = *ochk;
+
+                        if (!chk.visible || hideFrames[i] == 0)
+                        {
+                            continue;
+                        }
+
                         if (hideFrames[i] < OMVoxelManager::unloadDelay)
                         {
                             ++hideFrames[i];
-                            visible = true;
+                            ++remaining;
                         }
                         else if (unloadBudget > 0)
                         {
                             --unloadBudget;
                             unloadChunk(i);
+                            chk.visible = false;
+
+                            if (profileUpdate)
+                            {
+                                ++cntUnload;
+                            }
                         }
                         else
                         {
                             ++hideFrames[i];
-                            visible = true;
+                            ++remaining;
                         }
                     }
-                    else if (chk.visible && visible)
-                    {
-                        hideFrames[i] = 0;
+                });
 
-                        if (chk.isDirty())
-                        {
-                            compilerPool->compile(i, false, compileDistanceSq);
-                            chk.solveDirty();
-                        }
-                    }
-                    else if (!chk.visible && visible)
-                    {
-                        hideFrames[i] = 0;
-                        compilerPool->compile(i, true, compileDistanceSq);
-                        chk.solveDirty();
-                    }
-
-                    chk.visible = visible;
-                }
-                ++i;
+                pendingUnload = remaining;
             }
-        });
+
+            profileMark(nsOffset);
+            profileMark(nsCull);
+        }
 
         bool chunkOffsetBufferReallocated = false;
         if (chunkOffsetCache.size() * sizeof(glm::vec3) > chunkOffsetBuffer->length)
@@ -1103,11 +1276,15 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             offsetUploadedOnce = true;
         }
 
+        profileMark(nsOffsetUpload);
+
         compilerPool->upload(voxelLayer, voxelComplexLayer, voxelFluidLayer, voxelTranslucentLayer,
                              voxelTranslucentComplexLayer, voxelTranslucentFluidLayer);
 
+        profileMark(nsUpload);
+
         const bool layerStateChanged = layerState != hashLayerState();
-        if (layerStateChanged)
+        /*if (layerStateChanged)
         {
             voxelLayer->merge();
             voxelComplexLayer->merge();
@@ -1115,19 +1292,93 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             voxelTranslucentLayer->merge();
             voxelTranslucentComplexLayer->merge();
             voxelTranslucentFluidLayer->merge();
-        }
+        }*/
 
-        voxelLayer->buf()->flushDirty();
-        voxelComplexLayer->buf()->flushDirty();
-        voxelFluidLayer->buf()->flushDirty();
-        voxelTranslucentLayer->buf()->flushDirty();
-        voxelTranslucentComplexLayer->buf()->flushDirty();
-        voxelTranslucentFluidLayer->buf()->flushDirty();
+        profileMark(nsMerge);
 
-        if (layerStateChanged || chunkOffsetBufferReallocated)
+        uint64_t flushBytes = 0;
+        voxelLayer->buf()->flushDirty(OMRendererSegBuf::flushBudgetBytes, &flushBytes);
+        voxelComplexLayer->buf()->flushDirty(OMRendererSegBuf::flushBudgetBytes, &flushBytes);
+        voxelFluidLayer->buf()->flushDirty(OMRendererSegBuf::flushBudgetBytes, &flushBytes);
+        voxelTranslucentLayer->buf()->flushDirty(OMRendererSegBuf::flushBudgetBytes, &flushBytes);
+        voxelTranslucentComplexLayer->buf()->flushDirty(OMRendererSegBuf::flushBudgetBytes, &flushBytes);
+        voxelTranslucentFluidLayer->buf()->flushDirty(OMRendererSegBuf::flushBudgetBytes, &flushBytes);
+
+        uint64_t flushLeft = 0;
+        if (profileUpdate)
         {
-            recordTask(false);
+            flushLeft = voxelLayer->buf()->dirtyBytes() + voxelComplexLayer->buf()->dirtyBytes() +
+                        voxelFluidLayer->buf()->dirtyBytes() + voxelTranslucentLayer->buf()->dirtyBytes() +
+                        voxelTranslucentComplexLayer->buf()->dirtyBytes() +
+                        voxelTranslucentFluidLayer->buf()->dirtyBytes();
         }
+
+        profileMark(nsFlush);
+
+        // recordTask 会把所有绘制调用重新录制一遍（加载期间 ~0.6ms/帧）。
+        // 策略：
+        //  - GPU 缓冲区容量变化（expand 会换 buffer 指针）必须立刻重录，否则任务里仍是旧 buffer；
+        //  - 仅 usedSize 变化时按 200ms 节流重录（绘制数量暂时偏小是安全的）。
+        const std::array<uint32_t, 6> layerCapacities = {
+            voxelLayer->buf()->totalSize,
+            voxelComplexLayer->buf()->totalSize,
+            voxelFluidLayer->buf()->totalSize,
+            voxelTranslucentLayer->buf()->totalSize,
+            voxelTranslucentComplexLayer->buf()->totalSize,
+            voxelTranslucentFluidLayer->buf()->totalSize,
+        };
+
+        static std::array<uint32_t, 6> lastLayerCapacities = {};
+        static auto lastRecordTime = std::chrono::steady_clock::now();
+        static bool recordPending = false;
+
+        const bool capacityChanged = layerCapacities != lastLayerCapacities;
+        lastLayerCapacities = layerCapacities;
+
+        if (layerStateChanged || capacityChanged || chunkOffsetBufferReallocated)
+        {
+            recordPending = true;
+        }
+
+        if (recordPending)
+        {
+            const bool forced = capacityChanged || chunkOffsetBufferReallocated;
+            const auto now = std::chrono::steady_clock::now();
+            const bool elapsedEnough =
+                std::chrono::duration_cast<std::chrono::milliseconds>(now - lastRecordTime).count() >= 200;
+
+            if (forced || elapsedEnough)
+            {
+                recordTask(false);
+                lastRecordTime = now;
+                recordPending = false;
+            }
+        }
+
+        profileMark(nsRecord);
+
+        if (profileUpdate)
+        {
+            const uint64_t nsTotal = omNowNs() - profileStart;
+
+            std::fprintf(stderr,
+                         "[update] total=%llu setup=%llu offset=%llu cull=%llu offload=%llu upload=%llu merge=%llu "
+                         "flush=%llu record=%llu | chunks=%llu visible=%llu compile=%llu unload=%llu mergeState=%d "
+                         "flushBytes=%llu flushLeft=%llu\n",
+                         static_cast<unsigned long long>(nsTotal), static_cast<unsigned long long>(nsSetup),
+                         static_cast<unsigned long long>(nsOffset), static_cast<unsigned long long>(nsCull),
+                         static_cast<unsigned long long>(nsOffsetUpload), static_cast<unsigned long long>(nsUpload),
+                         static_cast<unsigned long long>(nsMerge), static_cast<unsigned long long>(nsFlush),
+                         static_cast<unsigned long long>(nsRecord), static_cast<unsigned long long>(cntChunks),
+                         static_cast<unsigned long long>(cntVisible), static_cast<unsigned long long>(cntCompile),
+                         static_cast<unsigned long long>(cntUnload), static_cast<int>(layerStateChanged),
+                         static_cast<unsigned long long>(flushBytes), static_cast<unsigned long long>(flushLeft));
+        }
+    }
+    else if (profileUpdate)
+    {
+        std::fprintf(stderr, "[update] total=%llu | chunks=0\n",
+                     static_cast<unsigned long long>(omNowNs() - profileStart));
     }
 }
 

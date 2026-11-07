@@ -156,7 +156,9 @@ template <int Cs> class OMChunk
 
     int64_t chunkx, chunky, chunkz;
 
-    std::atomic<bool> visible{true};
+    // 新加载的区块默认不可见：避免第一次剔除时被当成"原本可见"，
+    // 从而走 hideFrames 延迟卸载（会保留渲染 120 帧，且每帧只卸载 32 个）。
+    std::atomic<bool> visible{false};
 
   private:
     std::array<uint32_t, Cs * Cs * Cs> blocks = {};

@@ -44,9 +44,16 @@ template <int Cs> class OMChunkManager
   public:
     OMChunkManager() = default;
 
+    // 加载/卸载版本号：渲染端据此判断"是否有区块在加载"，避免无意义地重算 culling
+    auto loadVersion() const -> uint64_t
+    {
+        return version.load(std::memory_order_relaxed);
+    }
+
     void loadChunk(OMChunk<Cs> &chunk)
     {
         std::unique_lock<std::shared_mutex> lock(chunkMutex);
+        version.fetch_add(1, std::memory_order_relaxed);
         chunk.markDirty();
         OMChunkIndex idx{chunk.chunkx, chunk.chunky, chunk.chunkz};
 
@@ -81,6 +88,7 @@ template <int Cs> class OMChunkManager
     void unloadChunk(const OMChunkIndex &idx)
     {
         std::unique_lock<std::shared_mutex> lock(chunkMutex);
+        version.fetch_add(1, std::memory_order_relaxed);
         auto it = chunkMap.find(idx);
         if (it == chunkMap.end())
             return;
@@ -179,6 +187,7 @@ template <int Cs> class OMChunkManager
     }
 
     // 槽位存 shared_ptr：元素本身稳定，且卸载后旧的持有者仍安全
+    std::atomic<uint64_t> version{0};
     std::vector<std::shared_ptr<OMChunk<Cs>>> chunks;
     std::unordered_map<OMChunkIndex, int> chunkMap;
     std::vector<int> emptySlots;
