@@ -700,6 +700,12 @@ OMVoxelManager::~OMVoxelManager()
 
 void OMVoxelManager::unloadChunk(int i)
 {
+    if (static_cast<size_t>(i) < sectionVisibility.size())
+    {
+        sectionVisibility[i] = 0;
+        ++graphVersion;
+    }
+
     std::vector<OMVoxel> m = {}, tm = {};
     std::vector<OMVoxelComplex> cm = {}, tcm = {};
     std::vector<OMVoxelFluid> fm = {}, tfm = {};
@@ -890,6 +896,8 @@ static auto lastp = std::chrono::steady_clock::now();
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
+    static constexpr bool bfsOcclusionEnabled = true;
+
     auto cameraPos = camera.getPosRaw();
 
     const std::array<int64_t, 3> cameraChunk = {cameraPos.chunkx, cameraPos.chunky, cameraPos.chunkz};
@@ -942,7 +950,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
     updateColor();
 
-
     if (chunkManager->numChunks())
     {
         const auto camPosNow = camera.getPosRaw();
@@ -987,9 +994,156 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
         pendingUnload = 0;
 
-        // chunkManager 在后台线程加载区块时，chunks 会持续增长，而 numChunks() 返回后到真正持有
-        // withChunks 读锁之间仍可能插入新区块。这里在持锁时按 chunks.size() 补齐按槽位索引的数组，
-        // 否则 chunkOffsetCache[i] / hideFrames[i] 会写越界，破坏堆内存。
+        // 遮挡剔除：从相机所在 section 出发做 BFS，用可见性矩阵判断能否穿过 section。
+        // 只在相机换 section 或可见性数据变化时重算；数据变化的重算做 100ms 节流。
+        if (sectionVisibility.size() < static_cast<size_t>(chunkManager->numChunks()))
+        {
+            sectionVisibility.resize(static_cast<size_t>(chunkManager->numChunks()), 0);
+        }
+
+        const std::array<int64_t, 3> cameraSection = {cameraPos.chunkx, cameraPos.chunky, cameraPos.chunkz};
+        const bool bfsCameraChanged = cameraSection != lastBfsSection;
+        const bool bfsGraphChanged = graphVersion != bfsGraphVersion;
+        const bool bfsThrottled = !bfsCameraChanged && std::chrono::duration_cast<std::chrono::milliseconds>(
+                                                           std::chrono::steady_clock::now() - lastBfsTime)
+                                                               .count() < 100;
+
+        // 给距离内的候选 section 逐步补全可见性数据（每帧限量，避免抢占几何编译）
+        if (bfsOcclusionEnabled && !cullCandidates.empty())
+        {
+            int requested = 0;
+
+            for (size_t n = 0; n < cullCandidates.size() && requested < 48; ++n)
+            {
+                const size_t idx = (visFillCursor + n) % cullCandidates.size();
+                const int slot = cullCandidates[idx];
+
+                if (static_cast<size_t>(slot) < sectionVisibility.size() && (sectionVisibility[slot] >> 63) != 0)
+                {
+                    continue;
+                }
+
+                compilerPool->requestVisibility(slot);
+                ++requested;
+            }
+
+            visFillCursor = (visFillCursor + 48) % cullCandidates.size();
+        }
+
+        if (bfsOcclusionEnabled && (bfsCameraChanged || bfsGraphChanged) && !bfsThrottled)
+        {
+            lastBfsSection = cameraSection;
+            lastBfsTime = std::chrono::steady_clock::now();
+            bfsGraphVersion = graphVersion;
+            bfsValid = false;
+
+            chunkManager->withChunkMap([&](auto &chunkMap, const auto &chunks) -> void {
+                bfsVisibleMask.assign(chunks.size(), 0);
+
+                std::vector<uint8_t> entryMask(chunks.size(), 0);
+                std::vector<int> bfsQueue;
+                bfsQueue.reserve(4096);
+
+                auto camIt = chunkMap.find(world::OMChunkIndex{cameraSection[0], cameraSection[1], cameraSection[2]});
+                if (camIt == chunkMap.end())
+                {
+                    return;
+                }
+
+                const int64_t boxRange =
+                    static_cast<int64_t>(effectiveRenderDistance > 0 ? effectiveRenderDistance : 1000) + 1;
+                const int camSlot = camIt->second;
+                entryMask[camSlot] = 0x3F;
+                bfsQueue.push_back(camSlot);
+                bfsVisibleMask[camSlot] = 1;
+
+                static constexpr int dirs[6][3] = {{-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1}};
+                static constexpr int opposite[6] = {1, 0, 3, 2, 5, 4};
+
+                for (size_t qi = 0; qi < bfsQueue.size(); ++qi)
+                {
+                    const int slot = bfsQueue[qi];
+                    const auto &slotChunk = chunks[slot];
+
+                    if (!slotChunk)
+                    {
+                        continue;
+                    }
+
+                    const uint8_t em = entryMask[slot];
+                    const uint64_t rawVis = static_cast<size_t>(slot) < sectionVisibility.size()
+                                                ? sectionVisibility[slot]
+                                                : static_cast<uint64_t>(0);
+                    const bool visKnown = (rawVis >> 63) != 0;
+                    const uint64_t visMatrix = rawVis & 0x7FFFFFFFFFFFFFFFull;
+
+                    uint8_t exits = 0;
+
+                    if (!visKnown)
+                    {
+                        // 还没编译：视为完全可透过（保守，避免误剔除）
+                        exits = 0x3F;
+                    }
+                    else
+                    {
+                        for (int a = 0; a < 6; ++a)
+                        {
+                            if ((em & (1 << a)) != 0)
+                            {
+                                exits |= static_cast<uint8_t>((visMatrix >> (a * 6)) & 0x3F);
+                            }
+                        }
+                    }
+
+                    if (exits == 0)
+                    {
+                        continue;
+                    }
+
+                    for (int d = 0; d < 6; ++d)
+                    {
+                        if ((exits & (1 << d)) == 0)
+                        {
+                            continue;
+                        }
+
+                        const int64_t nx = slotChunk->chunkx + dirs[d][0];
+                        const int64_t ny = slotChunk->chunky + dirs[d][1];
+                        const int64_t nz = slotChunk->chunkz + dirs[d][2];
+
+                        if (std::llabs(nx - cameraSection[0]) > boxRange ||
+                            std::llabs(ny - cameraSection[1]) > boxRange ||
+                            std::llabs(nz - cameraSection[2]) > boxRange)
+                        {
+                            continue;
+                        }
+
+                        auto nIt = chunkMap.find(world::OMChunkIndex{nx, ny, nz});
+                        if (nIt == chunkMap.end())
+                        {
+                            continue;
+                        }
+
+                        const int nSlot = nIt->second;
+                        if (!chunks[nSlot])
+                        {
+                            continue;
+                        }
+
+                        const uint8_t newEntry = static_cast<uint8_t>(1 << opposite[d]);
+                        if ((entryMask[nSlot] & newEntry) == 0)
+                        {
+                            entryMask[nSlot] |= newEntry;
+                            bfsVisibleMask[nSlot] = 1;
+                            bfsQueue.push_back(nSlot);
+                        }
+                    }
+                }
+
+                bfsValid = true;
+            });
+        }
+
         auto syncSlotState = [&](const std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
             if (chunkOffsetCache.size() < chunks.size())
             {
@@ -1029,13 +1183,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                             position.chunkz = chk.chunkz;
 
                             chunkOffsetCache[i] = position - camera.getPosRaw();
-
                         }
                         ++i;
                     }
                 });
             }
-
 
             auto frusturm = Frustum::fromMatrix(camera.fetchProjMat() * camera.fetchViewMat());
 
@@ -1068,7 +1220,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                             {
                                 --unloadBudget;
                                 unloadChunk(ci);
-
                             }
                             continue;
                         }
@@ -1086,7 +1237,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
                 for (int i : cullCandidates)
                 {
-                    // 候选槽位来自之前的帧；防御性检查，避免管理器重建/槽位变化后越界。
                     if (i < 0 || static_cast<size_t>(i) >= chunks.size())
                     {
                         continue;
@@ -1130,16 +1280,20 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                                 {pp1.x, pp1.y, pp1.z},
                             }});
 
-                            // 以区块中心到相机的距离作为编译优先级（越近越先）
                             chunkCenter = pp0 + glm::vec3(8.0f, 8.0f, 8.0f);
                             compileDistanceSq = glm::dot(chunkCenter, chunkCenter);
 
-                            // 距离剔除（精确）
                             beyondDistance = cullRadiusSq > 0.0f && compileDistanceSq > cullRadiusSq;
                             if (beyondDistance)
                             {
                                 visible = false;
                             }
+                        }
+
+                        if (bfsOcclusionEnabled && bfsValid && static_cast<size_t>(i) < bfsVisibleMask.size() &&
+                            bfsVisibleMask[i] == 0)
+                        {
+                            visible = false;
                         }
 
                         if (chk.visible && !visible)
@@ -1191,6 +1345,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             });
 
             cullingReady = true;
+
         }
         else
         {
@@ -1233,7 +1388,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                             --unloadBudget;
                             unloadChunk(i);
                             chk.visible = false;
-
                         }
                         else
                         {
@@ -1245,7 +1399,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
                 pendingUnload = remaining;
             }
-
         }
 
         bool chunkOffsetBufferReallocated = false;
@@ -1286,13 +1439,26 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             offsetUploadedOnce = true;
         }
 
-        compilerPool->upload(voxelLayer, voxelComplexLayer, voxelFluidLayer, voxelTranslucentLayer,
-                             voxelTranslucentComplexLayer, voxelTranslucentFluidLayer);
+        compilerPool->upload(
+            voxelLayer, voxelComplexLayer, voxelFluidLayer, voxelTranslucentLayer, voxelTranslucentComplexLayer,
+            voxelTranslucentFluidLayer, [&](int slot, world::OMChunkIndex origin, uint64_t vis) {
+                auto chk = chunkManager->getChunk(slot);
+                if (!chk || chk->chunkx != origin.x || chk->chunky != origin.y || chk->chunkz != origin.z)
+                {
+                    return;
+                }
+
+                if (sectionVisibility.size() <= static_cast<size_t>(slot))
+                {
+                    sectionVisibility.resize(static_cast<size_t>(slot) + 1, 0);
+                }
+
+                sectionVisibility[slot] = vis;
+                ++graphVersion;
+            });
 
         const bool layerStateChanged = layerState != hashLayerState();
 
-        // 增量 compact：每帧整理少量区块，保持 usedSize 接近真实数据量，
-        // 避免"全量 merge 后 FPS 突然上升、随后碎片增长又下降"的锯齿。
         if (!skipCulling || layerStateChanged)
         {
             voxelLayer->mergeStep(16);
@@ -1310,9 +1476,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         voxelTranslucentComplexLayer->buf()->flushDirty();
         voxelTranslucentFluidLayer->buf()->flushDirty();
 
-
-        // recordTask 会重录整帧（约 0.8ms），旋转视角时每帧都重录会明显掉帧。
-        // 用 30ms 节流；容量变化或偏移缓冲重建时强制立即重录。
         const std::array<uint32_t, 6> layerCapacities = {
             voxelLayer->buf()->totalSize,
             voxelComplexLayer->buf()->totalSize,

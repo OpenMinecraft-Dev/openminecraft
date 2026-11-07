@@ -18,6 +18,7 @@
 #include "openminecraft/world/om_world_chunkmanager.hpp"
 #include <array>
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <initializer_list>
@@ -333,6 +334,9 @@ class OMChunkPaletteProvider
     }
 };
 
+// 由 16x16x16 的不透明占用网格计算 6x6 面可见性矩阵（bit63 = 已知）
+auto computeSectionVisibility(const std::array<uint8_t, 4096> &blocking) -> uint64_t;
+
 class OMVoxelCompiler
 {
   public:
@@ -359,6 +363,10 @@ class OMVoxelCompiler
                  int chunkid, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>,
                  std::function<void(OMVoxelFluid)>, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>,
                  std::function<void(OMVoxelFluid)>) -> void;
+
+    // 只做可见性扫描（不做网格生成）：给遮挡剔除的 BFS 补全所有区块的数据
+    auto computeVisibility(const world::OMChunk<16> &,
+                           std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>) -> uint64_t;
 
     OMVoxelHandler *handler = new OMVoxelHandlerDummy();
     std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> modelFetcher;
@@ -511,8 +519,11 @@ class OMVoxelCompilerPool
 
     void upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMVoxelComplex> *cutoutComplex,
                 OMVoxelLayer<OMVoxelFluid> *fluid, OMVoxelLayer<OMVoxel> *translucent,
-                OMVoxelLayer<OMVoxelComplex> *translucentComplex, OMVoxelLayer<OMVoxelFluid> *translucentFluid);
+                OMVoxelLayer<OMVoxelComplex> *translucentComplex, OMVoxelLayer<OMVoxelFluid> *translucentFluid,
+                const std::function<void(int, world::OMChunkIndex, uint64_t)> &visSink);
     void compile(int i, bool useCache = false, float distanceSq = 3.4e38f);
+    // 轻量可见性计算请求（不生成几何，只给遮挡剔除补数据）
+    void requestVisibility(int i);
     void dropCache(int i)
     {
         std::lock_guard g(bufferMutex);
@@ -522,6 +533,8 @@ class OMVoxelCompilerPool
         cutoutComplexC.erase(i);
         translucentC.erase(i);
         translucentComplexC.erase(i);
+        visC.erase(i);
+        visPending.erase(i);
     }
 
   private:
@@ -548,6 +561,8 @@ class OMVoxelCompilerPool
     };
 
     std::priority_queue<OMCompileRequest, std::vector<OMCompileRequest>, std::greater<>> queuedChunks;
+    std::vector<int> visRequests;
+    std::unordered_set<int> visQueued;
     // 同一 chunk 在队列中只保留一份（快速转视角时会反复请求同一 chunk）
     std::unordered_set<int> queuedIndex;
 
@@ -555,6 +570,10 @@ class OMVoxelCompilerPool
     std::unordered_map<int, std::vector<OMVoxel>> cutout, translucent;
     std::unordered_map<int, std::vector<OMVoxelComplex>> cutoutComplex, translucentComplex;
     std::unordered_map<int, std::vector<OMVoxelFluid>> fluid, translucentFluid;
+    // 每个 section 的 6x6 面可见性矩阵：bit(f*6 + t) 表示从 f 面看进去能否从 t 面穿出
+    std::unordered_map<int, uint64_t> visC;
+    std::unordered_map<int, std::pair<world::OMChunkIndex, uint64_t>> visPending;
+
     std::unordered_map<int, std::vector<OMVoxel>> cutoutC, translucentC;
     std::unordered_map<int, std::vector<OMVoxelComplex>> cutoutComplexC, translucentComplexC;
     std::unordered_map<int, std::vector<OMVoxelFluid>> fluidC, translucentFluidC;
@@ -662,7 +681,7 @@ class OMVoxelManager
     OMRendererBuffer *cloudBuffer;
 
   private:
-    int samples = 1;
+    int samples = 4;
     OMVoxelHandler *voxelHandler;
     OMRenderer *renderer;
     std::function<void(bool)> recordTask;
@@ -684,7 +703,6 @@ class OMVoxelManager
 
     std::vector<glm::vec3> chunkOffsetCache;
 
-    // 相机变化检测：纯旋转不影响 chunk 偏移，可跳过重复上传
     std::array<int64_t, 3> lastCameraChunk = {INT64_MIN, INT64_MIN, INT64_MIN};
     glm::vec3 lastCameraLocal = glm::vec3{INFINITY};
     size_t lastOffsetCount = 0;
@@ -692,17 +710,22 @@ class OMVoxelManager
     std::vector<uint16_t> hideFrames;
     static constexpr uint16_t unloadDelay = 30;
 
-    // culling 跳过：相机位置/朝向不变且没有区块加载时，不重建偏移、不做视锥测试
     float lastCameraYaw = INFINITY;
     float lastCameraPitch = INFINITY;
     uint64_t lastLoadVersion = 0;
-    // 处于"隐藏倒计时"中的区块数量；为 0 时跳过帧可以完全跳过卸载扫描
     uint32_t pendingUnload = 0;
-    // 至少完成过一次有效的剔除后才能进入"跳过剔除"状态
     bool cullingReady = false;
-    // 距离范围内、需要每帧做视锥测试的区块槽位（旋转视角时只遍历这些）
     std::vector<int> cullCandidates;
-    // 窗口尺寸变化会改变投影矩阵，必须重新剔除
+
+    std::vector<uint64_t> sectionVisibility;
+    // 可见性预计算游标（按 cullCandidates 轮转，每帧最多补 48 个）
+    size_t visFillCursor = 0;
+    std::vector<uint8_t> bfsVisibleMask;
+    uint64_t graphVersion = 0;
+    uint64_t bfsGraphVersion = ~0ull;
+    std::array<int64_t, 3> lastBfsSection = {INT64_MIN, INT64_MIN, INT64_MIN};
+    std::chrono::steady_clock::time_point lastBfsTime = std::chrono::steady_clock::now();
+    bool bfsValid = false;
     glm::vec2 lastExtent = glm::vec2(0.0f);
 
     void unloadChunk(int i);

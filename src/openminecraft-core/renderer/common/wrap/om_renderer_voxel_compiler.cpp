@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <functional>
 #include <tuple>
+#include <unordered_map>
 
 namespace openminecraft::renderer::common::wrap
 {
@@ -409,8 +410,7 @@ auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
 
     // 上方还有同种流体时，该格不是液面，按满格（9）计算；
     // 否则按 vanilla 的 8 - level（源水 = 8，即 8/9 格高）。
-    const bool selfHasFluidAbove =
-        checkExistFluidSame(chunk, externalAccessor, v, PosY, selfModel);
+    const bool selfHasFluidAbove = checkExistFluidSame(chunk, externalAccessor, v, PosY, selfModel);
 
     float tot = selfHasFluidAbove ? 9.0f : (handler->queryFluidFalling(selfModel) ? 9.0f : (8.0f - current));
     int lev = 1;
@@ -460,6 +460,42 @@ auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
     return 255.0f * (tot / lev) / 9.0f;
 }
 
+auto OMVoxelCompiler::computeVisibility(const world::OMChunk<16> &chunk,
+                                        std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor)
+    -> uint64_t
+{
+    std::array<uint8_t, 4096> blocking = {};
+
+    // 同一 blockstate 的 soild 结果固定，缓存避免逐方块做模型解析
+    std::unordered_map<uint32_t, bool> solidCache;
+    solidCache.reserve(256);
+
+    for (int y = 0; y < 16; ++y)
+    {
+        for (int z = 0; z < 16; ++z)
+        {
+            for (int x = 0; x < 16; ++x)
+            {
+                const uint32_t state = chunk.fetch(x, y, z);
+                auto it = solidCache.find(state);
+
+                if (it == solidCache.end())
+                {
+                    const auto bsid = modelFetcher(state, chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z);
+                    it = solidCache.emplace(state, handler->querySoild(bsid)).first;
+                }
+
+                if (it->second)
+                {
+                    blocking[y * 256 + z * 16 + x] = 1;
+                }
+            }
+        }
+    }
+
+    return computeSectionVisibility(blocking);
+}
+
 auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                               std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
                               int chunkid, std::function<void(OMVoxel)> committer,
@@ -496,8 +532,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             // 角点高度由同一组 4 个相邻方块平均得到，两侧结果一致，
             // 因此不会因为 1/255 的量化差留下缝隙；同时也保证同一面只画一次。
             auto cornerHeightOf = [&](const glm::ivec3 &p, int mdl, int idx) -> float {
-                if (handler->queryFluidFalling(mdl) ||
-                    checkExistFluidSame(chunk, externalAccessor, p, PosY, mdl))
+                if (handler->queryFluidFalling(mdl) || checkExistFluidSame(chunk, externalAccessor, p, PosY, mdl))
                 {
                     return 255.0f;
                 }
@@ -535,12 +570,10 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                     }
 
                     const uint32_t nst = queryBlockState(chunk, externalAccessor, np.x, np.y, np.z);
-                    const int nmdl =
-                        modelFetcher(nst, chunk.chunkx, chunk.chunky, chunk.chunkz, np.x, np.y, np.z);
+                    const int nmdl = modelFetcher(nst, chunk.chunkx, chunk.chunky, chunk.chunkz, np.x, np.y, np.z);
 
                     if (handler->queryFluid(nmdl) && handler->queryFluidSame(nmdl, bsid))
                     {
-                        // 共享边的角点索引：idx0=(-x,-z) idx1=(-x,+z) idx2=(+x,-z) idx3=(+x,+z)
                         int selfA = 0, selfB = 0, nA = 0, nB = 0;
 
                         switch (f)
@@ -560,12 +593,8 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                         }
 
                         const float selfH = std::max(cornerHeights[selfA], cornerHeights[selfB]);
-                        const float neighbourH =
-                            std::max(cornerHeightOf(np, nmdl, nA), cornerHeightOf(np, nmdl, nB));
+                        const float neighbourH = std::max(cornerHeightOf(np, nmdl, nA), cornerHeightOf(np, nmdl, nB));
 
-                        // 邻居液面 >= 本侧（几乎相等）=> 本侧面被挡住；
-                        // 本侧只要更高（哪怕 1/255）就保留这一面，把缝隙完全盖住。
-                        // 两侧永远不会同时绘制 => 不会 z-fighting。
                         culled = neighbourH >= selfH - 1e-3f;
                     }
                 }
@@ -579,9 +608,8 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                     auto useSec = fluidLevel != 0 || isFalling;
 
                     const glm::u8vec3 fluidTint =
-                        paletteProvider
-                            ? paletteProvider->fluidColor(chunk, v.first.x, v.first.y, v.first.z, v.second)
-                            : glm::u8vec3{255, 255, 255};
+                        paletteProvider ? paletteProvider->fluidColor(chunk, v.first.x, v.first.y, v.first.z, v.second)
+                                        : glm::u8vec3{255, 255, 255};
 
                     auto vox =
                         packVoxelFluid(v.first.x, v.first.y, v.first.z, f,

@@ -1,4 +1,5 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include <array>
 #include <chrono>
 #include <mutex>
 #include <queue>
@@ -7,6 +8,101 @@
 
 namespace openminecraft::renderer::common::wrap
 {
+auto computeSectionVisibility(const std::array<uint8_t, 4096> &blocking) -> uint64_t
+{
+    std::array<int16_t, 4096> comp;
+    comp.fill(-1);
+
+    std::vector<uint8_t> compFaces;
+    std::vector<int> stack;
+
+    auto faceBits = [](int x, int y, int z) -> uint8_t {
+        uint8_t f = 0;
+        if (x == 0)
+            f |= 1 << 0;
+        if (x == 15)
+            f |= 1 << 1;
+        if (y == 0)
+            f |= 1 << 2;
+        if (y == 15)
+            f |= 1 << 3;
+        if (z == 0)
+            f |= 1 << 4;
+        if (z == 15)
+            f |= 1 << 5;
+        return f;
+    };
+
+    for (int i = 0; i < 4096; ++i)
+    {
+        if (blocking[i] != 0 || comp[i] >= 0)
+        {
+            continue;
+        }
+
+        const int id = static_cast<int>(compFaces.size());
+        compFaces.push_back(0);
+        stack.clear();
+        stack.push_back(i);
+        comp[i] = static_cast<int16_t>(id);
+
+        while (!stack.empty())
+        {
+            const int c = stack.back();
+            stack.pop_back();
+
+            const int x = c & 15;
+            const int z = (c >> 4) & 15;
+            const int y = c >> 8;
+
+            compFaces[id] |= faceBits(x, y, z);
+
+            auto push = [&](int n) {
+                if (n >= 0 && n < 4096 && blocking[n] == 0 && comp[n] < 0)
+                {
+                    comp[n] = static_cast<int16_t>(id);
+                    stack.push_back(n);
+                }
+            };
+
+            if (x > 0)
+                push(c - 1);
+            if (x < 15)
+                push(c + 1);
+            if (z > 0)
+                push(c - 16);
+            if (z < 15)
+                push(c + 16);
+            if (y > 0)
+                push(c - 256);
+            if (y < 15)
+                push(c + 256);
+        }
+    }
+
+    uint64_t matrix = 0;
+
+    for (const uint8_t faces : compFaces)
+    {
+        for (int a = 0; a < 6; ++a)
+        {
+            if ((faces & (1 << a)) == 0)
+            {
+                continue;
+            }
+            for (int b = 0; b < 6; ++b)
+            {
+                if ((faces & (1 << b)) != 0)
+                {
+                    matrix |= static_cast<uint64_t>(1) << (a * 6 + b);
+                }
+            }
+        }
+    }
+
+    return matrix | (static_cast<uint64_t>(1) << 63);
+}
+
 OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMVoxelCompiler &compiler, int num)
     : manager(manager), compiler(compiler)
 {
@@ -24,6 +120,33 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                 poolMutex.lock();
                 if (queuedChunks.empty())
                 {
+                    // 没有几何编译任务时，处理遮挡剔除的"纯可见性"请求
+                    if (!visRequests.empty())
+                    {
+                        next = visRequests.back();
+                        visRequests.pop_back();
+                        visQueued.erase(next);
+                        poolMutex.unlock();
+
+                        auto visChunk = manager.getChunk(next);
+                        if (visChunk)
+                        {
+                            const world::OMChunkIndex visOrigin = {visChunk->chunkx, visChunk->chunky,
+                                                                   visChunk->chunkz};
+                            auto visAccessor = [&](glm::ivec3 pos, int64_t chunkx, int64_t chunky,
+                                                   int64_t chunkz) -> uint32_t {
+                                return 0; // 可见性扫描只需要本 section 内的方块
+                            };
+
+                            const uint64_t vis = compiler.computeVisibility(*visChunk, visAccessor);
+
+                            std::lock_guard<std::mutex> g(bufferMutex);
+                            visC[next] = vis;
+                            visPending[next] = {visOrigin, vis};
+                        }
+                        continue;
+                    }
+
                     poolMutex.unlock();
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     continue;
@@ -111,6 +234,12 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                             translucentComplex[next] = translucentComplexC[next];
                             fluid[next] = fluidC[next];
                             translucentFluid[next] = translucentFluidC[next];
+
+                            auto visIt = visC.find(next);
+                            if (visIt != visC.end())
+                            {
+                                visPending[next] = {origin, visIt->second};
+                            }
                         }
                     }
 
@@ -122,16 +251,30 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                     std::vector<OMVoxel> m = {}, tm = {};
                     std::vector<OMVoxelComplex> cm = {}, tcm = {};
                     std::vector<OMVoxelFluid> fm = {}, tfm = {};
+
+                    std::array<uint8_t, 4096> blocking = {};
+
                     compiler.compile(
-                        *cnk, externalAccessor, next, [&](OMVoxel v) -> void { m.emplace_back(v); },
+                        *cnk, externalAccessor, next,
+                        [&](OMVoxel v) -> void {
+                            m.emplace_back(v);
+                            const int vx = (v.voxelBasic >> 28) & 15;
+                            const int vy = (v.voxelBasic >> 24) & 15;
+                            const int vz = (v.voxelBasic >> 20) & 15;
+                            blocking[vy * 256 + vz * 16 + vx] = 1;
+                        },
                         [&](OMVoxelComplex v) -> void { cm.emplace_back(v); },
                         [&](OMVoxelFluid v) { fm.emplace_back(v); }, [&](OMVoxel v) -> void { tm.emplace_back(v); },
                         [&](OMVoxelComplex v) -> void { tcm.emplace_back(v); },
                         [&](OMVoxelFluid v) { tfm.emplace_back(v); });
 
+                    const uint64_t sectionVis = computeSectionVisibility(blocking);
+
                     bufferMutex.lock();
                     cached[next] = true;
                     cachedOrigin[next] = origin;
+                    visC[next] = sectionVis;
+                    visPending[next] = {origin, sectionVis};
                     cutout[next].assign(m.begin(), m.end());
                     cutoutComplex[next].assign(cm.begin(), cm.end());
                     translucent[next].assign(tm.begin(), tm.end());
@@ -164,13 +307,20 @@ OMVoxelCompilerPool::~OMVoxelCompilerPool()
 void OMVoxelCompilerPool::upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMVoxelComplex> *cutoutComplex,
                                  OMVoxelLayer<OMVoxelFluid> *fluid, OMVoxelLayer<OMVoxel> *translucent,
                                  OMVoxelLayer<OMVoxelComplex> *translucentComplex,
-                                 OMVoxelLayer<OMVoxelFluid> *translucentFluid)
+                                 OMVoxelLayer<OMVoxelFluid> *translucentFluid,
+                                 const std::function<void(int, world::OMChunkIndex, uint64_t)> &visSink)
 {
     std::lock_guard g(bufferMutex);
 
-    // 每帧上传预算：编译完成的结果可能一次堆积很多（尤其是快速加载/旋转），
-    // 一次性全部 memcpy 进 segbuf 会造成几十 ms 的卡顿。这里按字节限流，
-    // 未处理完的留到下一帧继续。
+    if (visSink)
+    {
+        for (const auto &vp : visPending)
+        {
+            visSink(vp.first, vp.second.first, vp.second.second);
+        }
+        visPending.clear();
+    }
+
     static constexpr uint64_t uploadBudgetBytes = 2 * 1024 * 1024;
     uint64_t uploadSpent = 0;
 
@@ -189,50 +339,23 @@ void OMVoxelCompilerPool::upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMV
     drain(this->translucentComplex, translucentComplex, sizeof(OMVoxelComplex));
     drain(this->fluid, fluid, sizeof(OMVoxelFluid));
     drain(this->translucentFluid, translucentFluid, sizeof(OMVoxelFluid));
-
-    /* 旧的"一次性全部上传"实现保留在下面作为参考
-    for (auto &p : this->cutout)
-    {
-        cutout->loadData(p.first, p.second, false);
-    }
-    this->cutout.clear();
-
-    for (auto &p : this->cutoutComplex)
-    {
-        cutoutComplex->loadData(p.first, p.second, false);
-    }
-    this->cutoutComplex.clear();
-
-    for (auto &p : this->translucent)
-    {
-        translucent->loadData(p.first, p.second, false);
-    }
-    this->translucent.clear();
-
-    for (auto &p : this->translucentComplex)
-    {
-        translucentComplex->loadData(p.first, p.second, false);
-    }
-    this->translucentComplex.clear();
-
-    for (auto &p : this->fluid)
-    {
-        fluid->loadData(p.first, p.second, false);
-    }
-    this->fluid.clear();
-
-    for (auto &p : this->translucentFluid)
-    {
-        translucentFluid->loadData(p.first, p.second, false);
-    }
-    this->translucentFluid.clear();
-    */
 }
+void OMVoxelCompilerPool::requestVisibility(int i)
+{
+    std::lock_guard g(poolMutex);
+
+    if (!visQueued.insert(i).second)
+    {
+        return;
+    }
+
+    visRequests.push_back(i);
+}
+
 void OMVoxelCompilerPool::compile(int i, bool useCache, float distanceSq)
 {
     std::lock_guard g(poolMutex);
 
-    // 去重：同一 chunk 已有排队请求时直接复用，避免快速旋转时队列膨胀
     if (!queuedIndex.insert(i).second)
     {
         return;

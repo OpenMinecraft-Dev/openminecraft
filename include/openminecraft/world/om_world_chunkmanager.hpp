@@ -162,6 +162,13 @@ template <int Cs> class OMChunkManager
         func(chunks);
     }
 
+    // 同时暴露坐标索引表与槽位数组（遮挡剔除 BFS 需要按坐标找邻居）
+    template <typename Func> void withChunkMap(Func &&func)
+    {
+        std::shared_lock<std::shared_mutex> lock(chunkMutex);
+        func(chunkMap, chunks);
+    }
+
     // 当前槽位数量（含空槽）
     auto chunkSlotCount() -> int
     {
