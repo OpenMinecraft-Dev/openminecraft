@@ -8,6 +8,7 @@
 #include "openminecraft/io/json/om_io_ast_json.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include "openminecraft-shell/data/block/om_block.hpp"
 #include <cstdint>
 #include <initializer_list>
 #include <iostream>
@@ -98,8 +99,8 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelPart;
 
     auto composeModel(std::vector<int>, bool = true, bool = false, bool = false) -> int;
-    auto composeFluidModel(OMIdentifier ident, bool translucent, bool falling, uint8_t level, OMIdentifier tex,
-                           OMIdentifier texFlow) -> int;
+    auto composeFluidModel(OMIdentifier ident, block::OMBlockFluidType fluidType, bool translucent, bool falling,
+                           uint8_t level) -> int;
 
     auto loadModelPart(OMIdentifier) -> int;
     auto loadModelPartWithArgs(OMIdentifier, int, int, int, bool) -> int;

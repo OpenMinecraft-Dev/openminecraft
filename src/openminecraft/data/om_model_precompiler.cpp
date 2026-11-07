@@ -812,20 +812,24 @@ auto OMModelPrecompiler::composeModel(std::vector<int> partids, bool soild, bool
     return blockModels.size() - 1;
 }
 
-auto OMModelPrecompiler::composeFluidModel(OMIdentifier ident, bool translucent, bool falling, uint8_t level,
-                                           OMIdentifier tex, OMIdentifier texFlow) -> int
+auto OMModelPrecompiler::composeFluidModel(OMIdentifier ident, block::OMBlockFluidType fluidType, bool translucent,
+                                           bool falling, uint8_t level) -> int
 {
+    // 贴图与"同种流体"分组都由 fluidType 决定：
+    // 含水方块（如 bubble_column）只要标记为 FluidWater，就自动复用水的贴图并与水归为一组。
+    const std::string fluidName = fluidType == block::OMBlockFluidType::FluidLava ? "lava" : "water";
+
     auto &m = blockModels.emplace_back();
     m.soild = false;
     m.translucent = translucent;
     m.fluid = true;
     m.fluidFalling = falling;
     m.fluidLevel = level;
-    m.fluidTex = textureAtlas.addTexture(tex);
-    m.fluidTexFlow = textureAtlas.addWideTexture(texFlow);
+    m.fluidTex = textureAtlas.addTexture(OMIdentifier("minecraft:block/" + fluidName + "_still"));
+    m.fluidTexFlow = textureAtlas.addWideTexture(OMIdentifier("minecraft:block/" + fluidName + "_flow"));
     m.waterlogged = false;
 
-    fluidModels[blockModels.size() - 1] = ident;
+    fluidModels[blockModels.size() - 1] = OMIdentifier("minecraft:" + fluidName);
 
     return blockModels.size() - 1;
 }

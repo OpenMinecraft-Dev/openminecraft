@@ -47,6 +47,14 @@ template <> struct hash<openminecraft::shell::data::block::OMBlockModelIdentifie
 using openminecraft::renderer::common::wrap::OMVoxelFacing;
 namespace openminecraft::shell::data::block
 {
+// 流体类型：决定流体使用的贴图与"同种流体"分组
+enum OMBlockFluidType
+{
+    FluidNone = 0,
+    FluidWater,
+    FluidLava,
+};
+
 enum OMBlockColorSource
 {
     None,
@@ -68,6 +76,12 @@ class OMBlock : public std::enable_shared_from_this<OMBlock>
     auto isFluid(bool v) -> std::shared_ptr<OMBlock>
     {
         fluid = v;
+        return shared_from_this();
+    }
+    auto setFluidType(OMBlockFluidType type) -> std::shared_ptr<OMBlock>
+    {
+        fluidType = type;
+        fluid = type != FluidNone;
         return shared_from_this();
     }
     auto isTranslucent(bool v) -> std::shared_ptr<OMBlock>
@@ -100,6 +114,7 @@ class OMBlock : public std::enable_shared_from_this<OMBlock>
 
     bool soild = true;
     bool translucent = false;
+    OMBlockFluidType fluidType = FluidNone;
     bool fluid = false;
     std::unordered_map<std::string, std::vector<std::string>> properties;
     OMBlockColorSource colorSource = None;

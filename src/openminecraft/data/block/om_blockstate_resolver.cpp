@@ -191,9 +191,7 @@ void OMBlockStateResolver::buildModel(OMIdentifier ident, OMBlockState state)
         const int rawLevel = st.properties.count("level") ? std::stoi(st.properties["level"]) : 0;
 
         states[ident][st].emplace_back(compiler.composeFluidModel(
-            ident, blk->translucent, rawLevel >= 8, static_cast<uint8_t>(rawLevel & 7),
-            OMIdentifier(ident.namesp + ":block/" + ident.path + "_still"),
-            OMIdentifier(ident.namesp + ":block/" + ident.path + "_flow")));
+            ident, blk->fluidType, blk->translucent, rawLevel >= 8, static_cast<uint8_t>(rawLevel & 7)));
         return;
     }
 

@@ -174,31 +174,11 @@ void main()
             {
                 vec2 f = flowDir / flowLen;
 
-                float angle;
-                if (abs(f.x) > abs(f.y) * 2.414)
-                {
-                    angle = f.x > 0.0 ? 0.0 : 3.14159265;
-                }
-                else if (abs(f.y) > abs(f.x) * 2.414)
-                {
-                    angle = f.y > 0.0 ? 1.57079633 : -1.57079633;
-                }
-                else if (f.x > 0.0 && f.y > 0.0)
-                {
-                    angle = 0.78539816;
-                }
-                else if (f.x > 0.0 && f.y < 0.0)
-                {
-                    angle = -0.78539816;
-                }
-                else if (f.x < 0.0 && f.y > 0.0)
-                {
-                    angle = 2.35619449;
-                }
-                else
-                {
-                    angle = -2.35619449;
-                }
+                // water_flow 贴图的纹理流向沿 V 轴（即顶面的世界 +Z）。
+                // 旋转采样坐标 A 后，贴图在世界中的流向为 (sin A, cos A)，
+                // 因此要让流向对齐 f 需要 A = atan2(f.x, f.y)；
+                // 原先按 f.x 主导给 0° 的写法整体差了 90°，对角线也有两项符号错误。
+                float angle = atan(f.x, f.y);
 
                 float cosA = cos(angle);
                 float sinA = sin(angle);

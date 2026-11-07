@@ -69,10 +69,13 @@ void registerBlocks()
     registerBlock(OMIdentifier("minecraft:glass"),
                   std::make_shared<OMTransparentBlock>()->isSolid(false)->isTranslucent(true));
     registerBlock(OMIdentifier("minecraft:stone_pressure_plate"), std::make_shared<OMBlock>()->isSolid(false));
-    registerBlock(
-        OMIdentifier("minecraft:water"),
-        std::make_shared<OMBlock>()->isSolid(false)->isFluid(true)->isTranslucent(true)->setColorSource(BiomeWater));
-    registerBlock(OMIdentifier("minecraft:lava"), std::make_shared<OMBlock>()->isSolid(false)->isFluid(true));
+    registerBlock(OMIdentifier("minecraft:water"), std::make_shared<OMBlock>()
+                                                       ->isSolid(false)
+                                                       ->setFluidType(FluidWater)
+                                                       ->isTranslucent(true)
+                                                       ->setColorSource(BiomeWater));
+    registerBlock(OMIdentifier("minecraft:lava"),
+                  std::make_shared<OMBlock>()->isSolid(false)->setFluidType(FluidLava));
 
     registerBlock(OMIdentifier("minecraft:amethyst_block"), std::make_shared<OMBlock>()->isSolid(true));
     registerBlock(OMIdentifier("minecraft:amethyst_cluster"), std::make_shared<OMBlock>()->isSolid(false));
@@ -82,8 +85,12 @@ void registerBlocks()
     registerBlock(OMIdentifier("minecraft:big_dripleaf"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:big_dripleaf_stem"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:brown_mushroom"), std::make_shared<OMBlock>()->isSolid(false));
-    registerBlock(OMIdentifier("minecraft:bubble_column"),
-                  std::make_shared<OMTransparentBlock>()->isSolid(false)->isTranslucent(true));
+    // 气泡柱没有自己的流体贴图：标记为水即可复用水的贴图与流体分组
+    registerBlock(OMIdentifier("minecraft:bubble_column"), std::make_shared<OMBlock>()
+                                                               ->isSolid(false)
+                                                               ->setFluidType(FluidWater)
+                                                               ->isTranslucent(true)
+                                                               ->setColorSource(BiomeWater));
     registerBlock(OMIdentifier("minecraft:budding_amethyst"), std::make_shared<OMBlock>()->isSolid(true));
     registerBlock(OMIdentifier("minecraft:calcite"), std::make_shared<OMBlock>()->isSolid(true));
     registerBlock(OMIdentifier("minecraft:cave_air"), std::make_shared<OMBlock>()->isSolid(false));
