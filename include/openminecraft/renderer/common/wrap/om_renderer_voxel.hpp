@@ -365,8 +365,8 @@ class OMVoxelCompiler
                  std::function<void(OMVoxelFluid)>) -> void;
 
     // 只做可见性扫描（不做网格生成）：给遮挡剔除的 BFS 补全所有区块的数据
-    auto computeVisibility(const world::OMChunk<16> &,
-                           std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>) -> uint64_t;
+    auto computeVisibility(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>)
+        -> uint64_t;
 
     OMVoxelHandler *handler = new OMVoxelHandlerDummy();
     std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> modelFetcher;
@@ -399,6 +399,7 @@ template <typename It> class OMVoxelLayer
 
         while (!chunkBlocks[i].empty())
         {
+            liveBytes -= chunkBlocks[i].back().length;
             voxelBuffer->deallocate(chunkBlocks[i].back());
             chunkBlocks[i].pop_back();
         }
@@ -408,6 +409,7 @@ template <typename It> class OMVoxelLayer
             auto blk = voxelBuffer->allocate(sizeof(It), cm.size() * sizeof(It), sizeof(It));
             voxelBuffer->update(blk, cm.data());
             cm.erase(cm.begin(), std::next(cm.begin(), blk.length / sizeof(It)));
+            liveBytes += blk.length;
             chunkBlocks[i].push_back(blk);
         }
 
@@ -425,13 +427,8 @@ template <typename It> class OMVoxelLayer
         {
             p = voxelBuffer->compact(p);
         }
-
-        // flush 统一推迟到 OMVoxelManager::update() 末尾，每帧每个 layer 只写一次
     }
 
-    // 增量 compact：每帧只整理 maxChunks 个区块，避免"整层 compact"造成周期性卡顿，
-    // 同时让 usedSize 始终接近实际存活数据量（否则绘制实例数会随碎片增长而膨胀，
-    // 表现为 FPS 周期性突然上升/下降）。
     auto mergeStep(size_t maxChunks) -> void
     {
         if (chunkBlocks.empty())
@@ -459,8 +456,15 @@ template <typename It> class OMVoxelLayer
         return voxelBuffer;
     }
 
+    // 实际存活数据量（用于判断碎片化程度）
+    auto liveBytesCount() const -> uint64_t
+    {
+        return liveBytes;
+    }
+
   private:
     size_t mergeCursor = 0;
+    uint64_t liveBytes = 0;
     std::vector<std::list<OMRendererSegBufBlock>> chunkBlocks;
     OMRendererSegBuf *voxelBuffer;
 };

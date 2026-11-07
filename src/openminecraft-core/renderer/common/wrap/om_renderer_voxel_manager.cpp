@@ -921,7 +921,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
     // 云层固定在相机高度（地平线附近）：视线顶边低于地平线时整层不可见
     renderClouds = (camera.getPitch() + camera.getFov() * 0.5f) > -2.0f;
 
-
     auto cur = std::chrono::steady_clock::now();
     cloudTime += std::chrono::duration_cast<std::chrono::milliseconds>(cur - lastp).count() / 1000.0f * 3.0f;
     cloudTime = std::fmod(cloudTime, 256 * 12);
@@ -1359,7 +1358,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             });
 
             cullingReady = true;
-
         }
         else
         {
@@ -1482,6 +1480,34 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             voxelTranslucentLayer->mergeStep(16);
             voxelTranslucentComplexLayer->mergeStep(16);
             voxelTranslucentFluidLayer->mergeStep(16);
+        }
+
+        static int compactCooldown = 0;
+
+        if (--compactCooldown <= 0)
+        {
+            bool didCompact = false;
+
+            auto tryCompact = [&](auto *layer) {
+                const uint64_t live = layer->liveBytesCount();
+                if (layer->buf()->usedSize() > live + live / 4 + 128 * 1024)
+                {
+                    layer->merge();
+                    didCompact = true;
+                }
+            };
+
+            tryCompact(voxelLayer);
+            tryCompact(voxelComplexLayer);
+            tryCompact(voxelFluidLayer);
+            tryCompact(voxelTranslucentLayer);
+            tryCompact(voxelTranslucentComplexLayer);
+            tryCompact(voxelTranslucentFluidLayer);
+
+            if (didCompact)
+            {
+                compactCooldown = 10;
+            }
         }
 
         voxelLayer->buf()->flushDirty();
