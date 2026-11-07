@@ -483,6 +483,38 @@ void OMWorldRenderer::afterFrame()
         gameT %= 24000;
         colorManager->updateGameTime(gameT);
     }
+
+    // 临时诊断：把合成后的世界画面读回并写成 PPM（OM_SNAPSHOT=<path>）
+    if (const char *snapPath = std::getenv("OM_SNAPSHOT"))
+    {
+        static int snapFrame = 0;
+        static const int snapAt = []() -> int {
+            const char *v = std::getenv("OM_SNAPSHOT_AT");
+            return v != nullptr ? std::atoi(v) : 200;
+        }();
+
+        ++snapFrame;
+
+        if (snapFrame == snapAt && tempTarget->colorTexture != nullptr)
+        {
+            auto tex = tempTarget->colorTexture;
+            auto data = tex->fetchData();
+            const auto *px = reinterpret_cast<const uint8_t *>(data.get());
+
+            if (px != nullptr)
+            {
+                std::ofstream f(snapPath, std::ios::binary);
+                f << "P6\n" << tex->width << " " << tex->height << "\n255\n";
+
+                for (uint64_t i = 0; i < tex->width * tex->height; ++i)
+                {
+                    const char rgb[3] = {static_cast<char>(px[i * 4]), static_cast<char>(px[i * 4 + 1]),
+                                         static_cast<char>(px[i * 4 + 2])};
+                    f.write(rgb, 3);
+                }
+            }
+        }
+    }
 }
 
 void OMWorldRenderer::submitTasks()

@@ -703,7 +703,7 @@ class OMVoxelManager
     glm::vec3 cameraForward = glm::vec3(0.0f, 0.0f, 1.0f);
     int renderDistance = 8;
 
-    std::vector<glm::vec3> chunkOffsetCache;
+    std::vector<glm::vec4> chunkOffsetCache;
 
     std::array<int64_t, 3> lastCameraChunk = {INT64_MIN, INT64_MIN, INT64_MIN};
     glm::vec3 lastCameraLocal = glm::vec3{INFINITY};

@@ -549,7 +549,9 @@ OMVoxelManager::OMVoxelManager(
     voxelFluidLayer = new OMVoxelLayer<OMVoxelFluid>(renderer);
     voxelTranslucentFluidLayer = new OMVoxelLayer<OMVoxelFluid>(renderer);
 
-    chunkOffsetBuffer = renderer->allocateBuffer(UniformTexel, 3 * sizeof(float));
+    // chunk 偏移打包成 RGBA32F 的一个 texel（x/y/z/w），顶点端只需 1 次 texelFetch
+    chunkOffsetBuffer = renderer->allocateBuffer(UniformTexel, sizeof(glm::vec4));
+    chunkOffsetBuffer->format = basics::Vec4f;
 
     // 体素四边形改为 4 顶点 + 共享索引缓冲（6 个索引），顶点着色器只跑 4 次/面
     voxelIndexBuffer = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
@@ -988,7 +990,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
         if (chunkOffsetCache.size() != chunkManager->numChunks())
         {
-            chunkOffsetCache.resize(chunkManager->numChunks());
+            chunkOffsetCache.resize(chunkManager->numChunks(), glm::vec4{INFINITY});
             skipCulling = false;
         }
 
@@ -1155,7 +1157,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         auto syncSlotState = [&](const std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
             if (chunkOffsetCache.size() < chunks.size())
             {
-                chunkOffsetCache.resize(chunks.size(), glm::vec3{INFINITY});
+                chunkOffsetCache.resize(chunks.size(), glm::vec4{INFINITY});
             }
             if (hideFrames.size() < chunks.size())
             {
@@ -1170,7 +1172,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         {
             if (rebuildOffsets)
             {
-                std::fill(chunkOffsetCache.begin(), chunkOffsetCache.end(), glm::vec3{INFINITY});
+                std::fill(chunkOffsetCache.begin(), chunkOffsetCache.end(), glm::vec4{INFINITY});
 
                 chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
                     syncSlotState(chunks);
@@ -1180,7 +1182,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     {
                         if (!ochk)
                         {
-                            chunkOffsetCache[i] = glm::vec3{INFINITY};
+                            chunkOffsetCache[i] = glm::vec4{INFINITY};
                         }
                         else
                         {
@@ -1190,7 +1192,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                             position.chunky = chk.chunky;
                             position.chunkz = chk.chunkz;
 
-                            chunkOffsetCache[i] = position - camera.getPosRaw();
+                            chunkOffsetCache[i] = glm::vec4(position - camera.getPosRaw(), 1.0f);
                         }
                         ++i;
                     }
@@ -1410,11 +1412,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         }
 
         bool chunkOffsetBufferReallocated = false;
-        if (chunkOffsetCache.size() * sizeof(glm::vec3) > chunkOffsetBuffer->length)
+        if (chunkOffsetCache.size() * sizeof(glm::vec4) > chunkOffsetBuffer->length)
         {
             delete chunkOffsetBuffer;
-            chunkOffsetBuffer =
-                renderer->allocateBuffer(UniformTexel, chunkManager->numChunks() * 3 * sizeof(float) * 2);
+            chunkOffsetBuffer = renderer->allocateBuffer(
+                UniformTexel, static_cast<uint64_t>(chunkManager->numChunks()) * sizeof(glm::vec4) * 2);
+            chunkOffsetBuffer->format = basics::Vec4f;
             pipeline->bindInput(2, chunkOffsetBuffer);
             complexPipeline->bindInput(3, chunkOffsetBuffer);
             fluidPipeline->bindInput(3, chunkOffsetBuffer);
@@ -1431,15 +1434,15 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
         if (offsetsDirty)
         {
-            const uint64_t usedBytes = chunkOffsetCache.size() * sizeof(glm::vec3);
+            const uint64_t usedBytes = chunkOffsetCache.size() * sizeof(glm::vec4);
             chunkOffsetBuffer->updateDataPart(chunkOffsetCache.data(), 0,
                                               std::min<uint64_t>(usedBytes, chunkOffsetBuffer->length));
 
-            static std::vector<glm::vec3> offsetGuard(512, glm::vec3{INFINITY});
+            static std::vector<glm::vec4> offsetGuard(512, glm::vec4{INFINITY});
             if (chunkOffsetBuffer->length > usedBytes)
             {
                 const uint64_t guardBytes =
-                    std::min<uint64_t>(chunkOffsetBuffer->length - usedBytes, offsetGuard.size() * sizeof(glm::vec3));
+                    std::min<uint64_t>(chunkOffsetBuffer->length - usedBytes, offsetGuard.size() * sizeof(glm::vec4));
                 chunkOffsetBuffer->updateDataPart(offsetGuard.data(), usedBytes, guardBytes);
             }
 
