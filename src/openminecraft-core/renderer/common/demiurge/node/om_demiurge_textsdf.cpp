@@ -67,7 +67,7 @@ auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, float dep
                 s[i].size.y * th,
             };
             t->depth = depth;
-            t->factor = stylesStorage.get<float>("factor", 0.05f);
+            t->factor = stylesStorage.get<float>("factor", 0.025f);
             t->glyphIndex = ch->storeGlyph(s[i]);
         }
 

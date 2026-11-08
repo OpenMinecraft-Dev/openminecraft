@@ -9,6 +9,7 @@ layout(location = 0) out vec4 textColor;
 layout(location = 1) out vec2 textUv;
 layout(location = 2) flat out int textGlyphId;
 layout(location = 3) out float textFactor;
+layout(location = 4) out vec2 textPixelUv;
 
 uniform ScreenData
 {
@@ -37,6 +38,9 @@ void main()
     textUv = bb.xz + vec2(inPosition.x, 1 - inPosition.y) * (bb.yw - bb.xz);
     textGlyphId = inTextGlyphId;
     textFactor = inTextFactor;
+
+    // UV units per screen pixel, used for subpixel (RGB) antialiasing offsets.
+    textPixelUv = (bb.yw - bb.xz) / max(inTextPos.zw, vec2(1.0));
 }
 #endif
 
@@ -47,6 +51,7 @@ layout(location = 0) in vec4 textColor;
 layout(location = 1) in vec2 textUv;
 layout(location = 2) flat in int textGlyphId;
 layout(location = 3) in float textFactor;
+layout(location = 4) in vec2 textPixelUv;
 
 layout(location = 0) out vec4 outColor;
 
@@ -95,26 +100,12 @@ vec4 getCurve(int outlineCount, int curveGlobalIndex)
 
 #include "basics/sdf/sdf_text.glsl"
 
-void main()
+float glyphDistance(vec2 uv)
 {
-    float dummy = ubo.width + ubo.height;
-    vec4 bbox = getBBox();
-
-    // Keep a margin around the glyph bbox so the anti-aliased fringe of outlines
-    // that touch/overshoot the bbox is not clipped away.
-    float bboxMargin = max(textFactor * 2.0, 1e-4);
-
-    if (textUv.x < bbox.x - bboxMargin || textUv.x > bbox.y + bboxMargin || textUv.y < bbox.z - bboxMargin ||
-        textUv.y > bbox.w + bboxMargin)
-    {
-        discard;
-    }
-
     int outlineCount = getOutlineCount();
     int curveId = 0;
     float minDist = 1e10;
     int winding = 0;
-    int intersects = 0;
 
     for (int i = 0; i < outlineCount; ++i)
     {
@@ -128,24 +119,22 @@ void main()
             vec2 control = curve.zw;
             bool isLine = isinf(control.x);
 
-            // Update minimum distance
             if (isLine)
             {
-                minDist = min(minDist, sdf_distanceToLineSegment(textUv, currentPos, target));
+                minDist = min(minDist, sdf_distanceToLineSegment(uv, currentPos, target));
             }
             else
             {
-                minDist = min(minDist, sdf_distanceToQuadraticBezier(textUv, currentPos, control, target));
+                minDist = min(minDist, sdf_distanceToQuadraticBezier(uv, currentPos, control, target));
             }
 
-            // Winding number contribution
             if (isLine)
             {
                 float t;
-                if (sdf_intersectLineY(textUv.y, currentPos, target, t) > 0)
+                if (sdf_intersectLineY(uv.y, currentPos, target, t) > 0)
                 {
                     float x = mix(currentPos.x, target.x, t);
-                    if (x < textUv.x)
+                    if (x < uv.x)
                     {
                         float dydt = target.y - currentPos.y;
                         if (abs(dydt) > DERIVATIVE_THRESHOLD)
@@ -158,12 +147,12 @@ void main()
             else
             {
                 float t1, t2;
-                int hits = sdf_intersectQuadraticY(textUv.y, currentPos, control, target, t1, t2);
+                int hits = sdf_intersectQuadraticY(uv.y, currentPos, control, target, t1, t2);
                 for (int h = 0; h < hits; ++h)
                 {
                     float t = (h == 0) ? t1 : t2;
                     float x = sdf_evalQuadraticX(t, currentPos, control, target);
-                    if (x < textUv.x)
+                    if (x < uv.x)
                     {
                         float dydt = sdf_derivativeQuadraticY(t, currentPos, control, target);
                         if (abs(dydt) > DERIVATIVE_THRESHOLD)
@@ -179,10 +168,48 @@ void main()
         }
     }
 
-    // Determine inside/outside
-    minDist = minDist * (2.0 * step(0.5, abs(float(winding))) - 1.0);
+    // Negative inside, positive outside.
+    return minDist * (2.0 * step(0.5, abs(float(winding))) - 1.0);
+}
 
-    float actualFactor = smoothstep(-textFactor, textFactor, minDist);
-    outColor = vec4(textColor.rgb, textColor.a * actualFactor);
+void main()
+{
+    float dummy = ubo.width + ubo.height;
+    vec4 bbox = getBBox();
+
+    // Keep a margin around the glyph bbox so the anti-aliased fringe of outlines
+    // that touch/overshoot the bbox is not clipped away.
+    float bboxMargin = max(textFactor * 2.0, 1e-4);
+
+    if (textUv.x < bbox.x - bboxMargin || textUv.x > bbox.y + bboxMargin || textUv.y < bbox.z - bboxMargin ||
+        textUv.y > bbox.w + bboxMargin)
+    {
+        discard;
+    }
+
+    // Subpixel (RGB) antialiasing: evaluate the SDF at three horizontal sample
+    // positions one third of a pixel apart, matching the physical RGB stripes.
+    // This complements the natural grayscale coverage of the SDF.
+    vec2 subpixel = vec2(textPixelUv.x / 3.0, 0.0);
+
+    float distR = glyphDistance(textUv - subpixel);
+    float distG = glyphDistance(textUv);
+    float distB = glyphDistance(textUv + subpixel);
+
+    vec3 coverage;
+    coverage.r = smoothstep(-textFactor, textFactor, distR);
+    coverage.g = smoothstep(-textFactor, textFactor, distG);
+    coverage.b = smoothstep(-textFactor, textFactor, distB);
+
+    // Blend the subpixel coverage with the plain grayscale coverage: subpixel
+    // sharpens horizontal stems, the grayscale part keeps colored fringes mild.
+    float gray = (coverage.r + coverage.g + coverage.b) / 3.0;
+    const float subpixelStrength = 0.6;
+    coverage = mix(vec3(gray), coverage, subpixelStrength);
+
+    // Premultiplied per-channel coverage; the text pipeline blends with
+    // (One, OneMinusSrcAlpha) so each color channel is attenuated independently.
+    float alpha = max(max(coverage.r, coverage.g), coverage.b);
+    outColor = vec4(textColor.rgb * coverage, textColor.a * alpha);
 }
 #endif
