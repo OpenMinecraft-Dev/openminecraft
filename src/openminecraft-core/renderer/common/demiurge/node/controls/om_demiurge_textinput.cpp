@@ -134,8 +134,6 @@ auto OMDemiurgeTextInput::caretFromX(float x) -> size_t
         return 0;
     }
 
-    auto shaped = fontset->shape(text);
-
     std::vector<size_t> boundaries;
     boundaries.push_back(0);
 
@@ -148,20 +146,12 @@ auto OMDemiurgeTextInput::caretFromX(float x) -> size_t
     size_t best = 0;
     float bestDistance = std::abs(x);
 
+    const int textHeight = stylesStorage.get<int>("textheight", 14);
+
     for (size_t i = 0; i < boundaries.size(); ++i)
     {
-        float width = 0.0f;
-
-        if (i < shaped.size())
-        {
-            width = shaped[i].position.x * static_cast<float>(stylesStorage.get<int>("textheight", 14));
-        }
-        else if (!shaped.empty())
-        {
-            const auto &last = shaped.back();
-            width = (last.position.x + last.size.x) * static_cast<float>(stylesStorage.get<int>("textheight", 14));
-        }
-
+        const float width =
+            fontset->advance(text.substr(0, boundaries[i])) * static_cast<float>(textHeight);
         const float distance = std::abs(x - width);
 
         if (distance < bestDistance)
@@ -304,25 +294,13 @@ void OMDemiurgeTextInput::update()
             glyphX.push_back(g.position.x * static_cast<float>(textHeight));
         }
 
-        const auto &last = shaped.back();
-        textWidth = (last.position.x + last.size.x) * static_cast<float>(textHeight);
+        textWidth = fontset->advance(display) * static_cast<float>(textHeight);
     }
 
-    float caretX = 0.0f;
-
-    if (!shaped.empty())
-    {
-        const int before = codepointCount(display.substr(0, displayCaret));
-
-        if (before < static_cast<int>(glyphX.size()))
-        {
-            caretX = glyphX[before];
-        }
-        else
-        {
-            caretX = textWidth;
-        }
-    }
+    // Use pen advances so trailing spaces move the caret immediately.
+    float caretX = fontset != nullptr
+                       ? fontset->advance(display.substr(0, displayCaret)) * static_cast<float>(textHeight)
+                       : 0.0f;
 
     const float maxScroll = std::max(0.0f, textWidth - clipWidth + 2.0f);
     static float scroll = 0.0f;

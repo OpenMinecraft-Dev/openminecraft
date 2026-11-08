@@ -26,6 +26,10 @@ class OMFontSet
     ~OMFontSet() = default;
 
     auto shape(std::string s) -> std::vector<OMFontSetShapeResult>;
+
+    // Pen advance width of the string (relative to the first glyph's ink),
+    // including trailing spaces and advances that carry no visible ink.
+    auto advance(std::string s) -> float;
     auto compile(OMFontSetShapeResult) -> std::vector<float>;
     auto bound(std::vector<OMFontSetShapeResult>) -> glm::vec2;
 

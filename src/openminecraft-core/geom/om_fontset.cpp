@@ -9,11 +9,13 @@
 
 namespace openminecraft::geom
 {
-auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
+static auto resolveGlyphs(const std::vector<std::shared_ptr<OMFont>> &fontList, const std::string &s)
+    -> std::vector<OMFontShapeResult>
 {
     std::vector<OMFontShapeResult> glyphs = {};
     int id = 0;
     bool rtl = false;
+
     for (auto f : fontList)
     {
         auto r = f->shape(s, rtl);
@@ -34,6 +36,14 @@ auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
         ++id;
     }
 
+    return glyphs;
+}
+
+auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
+{
+    auto glyphs = resolveGlyphs(fontList, s);
+
+    bool rtl = false;
     std::vector<OMFontSetShapeResult> result;
 
     glm::vec2 penpos(0.0f);
@@ -63,6 +73,40 @@ auto OMFontSet::shape(std::string s) -> std::vector<OMFontSetShapeResult>
     }
 
     return result;
+}
+
+auto OMFontSet::advance(std::string s) -> float
+{
+    auto glyphs = resolveGlyphs(fontList, s);
+
+    glm::vec2 penpos(0.0f);
+    float originX = 0.0f;
+    bool first = true;
+
+    for (auto &g : glyphs)
+    {
+        if (g.glyphId == 0x0)
+        {
+            continue;
+        }
+
+        if (first)
+        {
+            auto bbox = g.font->fetchBox(g.glyphId, false);
+            originX = penpos.x + g.offsetx + bbox.x;
+            first = false;
+        }
+
+        penpos.x += g.advancex;
+        penpos.y += g.advancey;
+    }
+
+    if (first)
+    {
+        return 0.0f;
+    }
+
+    return penpos.x - originX;
 }
 
 static auto approximateCubicToQuadratic(glm::vec2 P0, glm::vec2 P1, glm::vec2 P2, glm::vec2 P3) -> glm::vec2

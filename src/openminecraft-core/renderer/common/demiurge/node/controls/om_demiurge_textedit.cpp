@@ -173,7 +173,7 @@ auto OMDemiurgeTextEdit::columnXForPos(size_t pos) -> float
     const std::string prefix = text.substr(start, std::min(pos, text.size()) - std::min(start, text.size()));
 
     const int textHeight = stylesStorage.get<int>("textheight", 14);
-    return fontset->bound(fontset->shape(prefix)).x * static_cast<float>(textHeight);
+    return fontset->advance(prefix) * static_cast<float>(textHeight);
 }
 
 auto OMDemiurgeTextEdit::moveVertical(int direction) -> void
@@ -194,8 +194,8 @@ auto OMDemiurgeTextEdit::moveVertical(int direction) -> void
     }
 
     const size_t currentStart = lineStartOf(caret);
-    const float targetX = fontset->bound(fontset->shape(text.substr(currentStart, caret - currentStart))).x *
-                          static_cast<float>(textHeight);
+    const float targetX =
+        fontset->advance(text.substr(currentStart, caret - currentStart)) * static_cast<float>(textHeight);
 
     size_t start = 0;
     int line = 0;
@@ -213,8 +213,7 @@ auto OMDemiurgeTextEdit::moveVertical(int direction) -> void
 
     for (size_t pos = start; pos <= end; pos = nextCodepoint(text, pos))
     {
-        const float x =
-            fontset->bound(fontset->shape(text.substr(start, pos - start))).x * static_cast<float>(textHeight);
+        const float x = fontset->advance(text.substr(start, pos - start)) * static_cast<float>(textHeight);
         const float distance = std::abs(targetX - x);
 
         if (distance < bestDistance)
@@ -261,8 +260,7 @@ auto OMDemiurgeTextEdit::caretFromPointer(float x, float y) -> size_t
 
     for (size_t pos = start; pos <= end; pos = nextCodepoint(text, pos))
     {
-        const float posX =
-            fontset->bound(fontset->shape(text.substr(start, pos - start))).x * static_cast<float>(textHeight);
+        const float posX = fontset->advance(text.substr(start, pos - start)) * static_cast<float>(textHeight);
         const float distance = std::abs(x - posX);
 
         if (distance < bestDistance)
@@ -428,7 +426,7 @@ void OMDemiurgeTextEdit::update()
             return 0.0f;
         }
 
-        return fontset->bound(fontset->shape(line.substr(0, prefixBytes))).x * static_cast<float>(textHeight);
+        return fontset->advance(line.substr(0, prefixBytes)) * static_cast<float>(textHeight);
     };
 
     const std::string caretLineText = display.substr(caretLineStart, std::min(caretLineEnd, display.size()) -
@@ -463,9 +461,9 @@ void OMDemiurgeTextEdit::update()
     {
         if (fontset != nullptr)
         {
-            maxLineWidth = std::max(
-                maxLineWidth, fontset->bound(fontset->shape(display.substr(line.first, line.second - line.first))).x *
-                                  static_cast<float>(textHeight));
+            maxLineWidth =
+                std::max(maxLineWidth, fontset->advance(display.substr(line.first, line.second - line.first)) *
+                                           static_cast<float>(textHeight));
         }
     }
 
