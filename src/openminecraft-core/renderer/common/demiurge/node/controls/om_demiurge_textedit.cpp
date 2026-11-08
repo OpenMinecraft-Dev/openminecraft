@@ -70,7 +70,7 @@ static auto codepointCount(const std::string &text) -> int
 static constexpr int LinePoolSize = 32;
 
 OMDemiurgeTextEdit::OMDemiurgeTextEdit(geom::OMFontSet *fontset)
-    : focusAmount(0.0f), disabledAmount(0.0f), backgroundColor(glm::vec4(0.12f, 0.12f, 0.15f, 0.95f)),
+    : focusAmount(0.0f), disabledAmount(0.0f), backgroundColor(glm::vec4(0.12f, 0.12f, 0.15f, 0.6f)),
       textColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)), caretColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f)),
       placeholderColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.35f)), caretXAnimation(0.0f), fontset(fontset)
 {
@@ -80,6 +80,20 @@ OMDemiurgeTextEdit::OMDemiurgeTextEdit(geom::OMFontSet *fontset)
     stylesStorage.put("height", OMDemiurgeSize::pixels(120.0f));
     stylesStorage.put("radius", glm::vec4(6.0f));
     stylesStorage.put("padding", OMDemiurgeEdgeInsets{4, 8, 4, 8});
+
+    for (int i = 0; i < LinePoolSize; ++i)
+    {
+        auto node = std::make_shared<OMDemiurgeRectNode>()->style({
+            {"position", OMDemiurgePosition::Absolute},
+            {"offsetX", OMDemiurgeSize::pixels(0.0f)},
+            {"offsetY", OMDemiurgeSize::pixels(0.0f)},
+            {"width", OMDemiurgeSize::pixels(0.0f)},
+            {"height", OMDemiurgeSize::pixels(16.0f)},
+            {"radius", glm::vec4(2.0f)},
+        });
+        this->mountDirect(node);
+        selectionNodes.push_back(node);
+    }
 
     if (fontset != nullptr)
     {
@@ -306,6 +320,22 @@ auto OMDemiurgeTextEdit::insertText(const std::string &value) -> bool
     return true;
 }
 
+auto OMDemiurgeTextEdit::deleteSelection() -> bool
+{
+    if (!hasSelection())
+    {
+        return false;
+    }
+
+    const size_t begin = selectionBegin();
+    const size_t end = selectionEnd();
+    text.erase(begin, end - begin);
+    caret = begin;
+    selectionAnchor = begin;
+    blinkStart = std::chrono::steady_clock::now();
+    return true;
+}
+
 auto OMDemiurgeTextEdit::notifyChange() -> void
 {
     handleChange(text);
@@ -320,6 +350,7 @@ void OMDemiurgeTextEdit::update()
     std::string textState;
     std::string composingState;
     size_t caretState = 0;
+    size_t anchorState = 0;
     bool disabledState = false;
     std::chrono::steady_clock::time_point blinkState = blinkStart;
 
@@ -328,6 +359,7 @@ void OMDemiurgeTextEdit::update()
         textState = text;
         composingState = composing;
         caretState = caret;
+        anchorState = selectionAnchor;
         disabledState = disabled;
         blinkState = blinkStart;
     }
@@ -346,6 +378,11 @@ void OMDemiurgeTextEdit::update()
         auto self = std::static_pointer_cast<OMDemiurgeTextEdit>(shared_from_this());
 
         for (auto &node : lineNodes)
+        {
+            node->setClipNode(self);
+        }
+
+        for (auto &node : selectionNodes)
         {
             node->setClipNode(self);
         }
@@ -476,11 +513,71 @@ void OMDemiurgeTextEdit::update()
     lastScrollX = scrollX;
     lastScrollY = scrollY;
 
-    // Render only the visible lines / glyph slices.
     const int firstVisible = std::max(0, static_cast<int>(std::floor(scrollY / lineHeight)) - 1);
     const int lastVisible = std::min(static_cast<int>(lines.size()) - 1,
                                      static_cast<int>(std::ceil((scrollY + contentHeight) / lineHeight)));
 
+    // Selection highlight (behind the text, one rect per visible line).
+    {
+        const size_t selBegin = std::min(caretState, anchorState);
+        const size_t selEnd = std::max(caretState, anchorState);
+        const bool showSelection =
+            !disabledState && selBegin != selEnd && composingState.empty() && fontset != nullptr;
+
+        int selectionUsed = 0;
+
+        if (showSelection)
+        {
+            for (int lineIndex = firstVisible; lineIndex <= lastVisible; ++lineIndex)
+            {
+                if (lineIndex < 0 || lineIndex >= static_cast<int>(lines.size()) ||
+                    selectionUsed >= static_cast<int>(selectionNodes.size()))
+                {
+                    continue;
+                }
+
+                const auto &range = lines[lineIndex];
+                const size_t lineStart = range.first;
+                const size_t lineEnd = range.second;
+
+                if (selEnd <= lineStart || selBegin > lineEnd)
+                {
+                    continue;
+                }
+
+                const size_t beginInLine = std::clamp(selBegin, lineStart, lineEnd) - lineStart;
+                const size_t endInLine = std::clamp(selEnd, lineStart, lineEnd) - lineStart;
+                const std::string lineText = display.substr(lineStart, lineEnd - lineStart);
+                const int textHeightLocal = stylesStorage.get<int>("textheight", 14);
+                float x0 = fontset->advance(lineText.substr(0, beginInLine)) * static_cast<float>(textHeightLocal);
+                float x1 = fontset->advance(lineText.substr(0, endInLine)) * static_cast<float>(textHeightLocal);
+
+                x0 = std::clamp(x0, scrollX, scrollX + contentWidth);
+                x1 = std::clamp(x1, scrollX, scrollX + contentWidth);
+
+                if (x1 <= x0 && lineStart == lineEnd)
+                {
+                    x1 = x0 + 2.0f;
+                }
+
+                auto node = selectionNodes[selectionUsed++];
+                node->style("offsetX", OMDemiurgeSize::pixels(x0 - scrollX))
+                    ->style("offsetY", OMDemiurgeSize::pixels(static_cast<float>(lineIndex) * lineHeight - scrollY))
+                    ->style("width", OMDemiurgeSize::pixels(std::max(0.0f, x1 - x0)))
+                    ->style("height", OMDemiurgeSize::pixels(lineHeight))
+                    ->style("color", (int)f4ToRgba(glm::vec4(0.0f, 0.831f, 1.0f, 0.32f)));
+            }
+        }
+
+        for (int i = selectionUsed; i < static_cast<int>(selectionNodes.size()); ++i)
+        {
+            selectionNodes[i]->style("width", OMDemiurgeSize::pixels(0.0f))
+                ->style("height", OMDemiurgeSize::pixels(0.0f))
+                ->style("color", (int)0);
+        }
+    }
+
+    // Render only the visible lines / glyph slices.
     const bool empty = display.empty();
     const auto color = empty ? placeholderColor.get() : textColor.get();
     const glm::vec4 finalColor(glm::mix(glm::vec3(color), glm::vec3(0.55f), disabledValue * 0.75f), color.a);
@@ -656,9 +753,47 @@ auto OMDemiurgeTextEdit::processMouseDown(float x, float y, uint8_t button) -> O
     {
         std::lock_guard<std::mutex> lock(stateMutex);
         caret = caretFromPointer(localX, localY);
+        selectionAnchor = caret;
+        selecting = true;
         blinkStart = std::chrono::steady_clock::now();
     }
 
+    captureMouse();
+    return Handled;
+}
+
+auto OMDemiurgeTextEdit::processMouseMove(float x, float y) -> OMDemiurgeEventResult
+{
+    if (disabled || fontset == nullptr || !selecting)
+    {
+        return Ignored;
+    }
+
+    float localX = x;
+    float localY = y;
+
+    try
+    {
+        auto bound = this->fetchLayoutBound();
+        localX = x - bound.x - 8.0f + scrollX;
+        localY = y - bound.y - 4.0f + scrollY;
+    }
+    catch (std::bad_any_cast &)
+    {
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(stateMutex);
+        caret = caretFromPointer(localX, localY);
+        blinkStart = std::chrono::steady_clock::now();
+    }
+
+    return Handled;
+}
+
+auto OMDemiurgeTextEdit::processMouseUp(float x, float y, uint8_t button) -> OMDemiurgeEventResult
+{
+    selecting = false;
     return Handled;
 }
 
@@ -672,6 +807,8 @@ auto OMDemiurgeTextEdit::processKeyDown(const OMDemiurgeEvent &event) -> OMDemiu
     bool changed = false;
     bool release = false;
     OMDemiurgeEventResult result = Handled;
+    const bool shift = (event.modifier & SDL_KMOD_SHIFT) != 0;
+    const bool ctrl = (event.modifier & SDL_KMOD_CTRL) != 0;
 
     {
         std::lock_guard<std::mutex> lock(stateMutex);
@@ -698,17 +835,26 @@ auto OMDemiurgeTextEdit::processKeyDown(const OMDemiurgeEvent &event) -> OMDemiu
             switch (event.keycode)
             {
             case SDLK_BACKSPACE:
-                if (caret > 0)
+                if (deleteSelection())
+                {
+                    changed = true;
+                }
+                else if (caret > 0)
                 {
                     const size_t previous = prevCodepoint(text, caret);
                     text.erase(previous, caret - previous);
                     caret = previous;
+                    selectionAnchor = caret;
                     blinkStart = std::chrono::steady_clock::now();
                     changed = true;
                 }
                 break;
             case SDLK_DELETE:
-                if (caret < text.size())
+                if (deleteSelection())
+                {
+                    changed = true;
+                }
+                else if (caret < text.size())
                 {
                     const size_t next = nextCodepoint(text, caret);
                     text.erase(caret, next - caret);
@@ -717,40 +863,140 @@ auto OMDemiurgeTextEdit::processKeyDown(const OMDemiurgeEvent &event) -> OMDemiu
                 }
                 break;
             case SDLK_LEFT:
-                caret = prevCodepoint(text, caret);
+                if (!shift && hasSelection())
+                {
+                    caret = selectionBegin();
+                    selectionAnchor = caret;
+                }
+                else
+                {
+                    if (shift && !hasSelection())
+                    {
+                        selectionAnchor = caret;
+                    }
+
+                    caret = prevCodepoint(text, caret);
+                }
+
+                if (!shift)
+                {
+                    selectionAnchor = caret;
+                }
+
                 blinkStart = std::chrono::steady_clock::now();
                 break;
             case SDLK_RIGHT:
-                caret = nextCodepoint(text, caret);
+                if (!shift && hasSelection())
+                {
+                    caret = selectionEnd();
+                    selectionAnchor = caret;
+                }
+                else
+                {
+                    if (shift && !hasSelection())
+                    {
+                        selectionAnchor = caret;
+                    }
+
+                    caret = nextCodepoint(text, caret);
+                }
+
+                if (!shift)
+                {
+                    selectionAnchor = caret;
+                }
+
                 blinkStart = std::chrono::steady_clock::now();
                 break;
             case SDLK_UP:
+                if (shift && !hasSelection())
+                {
+                    selectionAnchor = caret;
+                }
+
                 moveVertical(-1);
+
+                if (!shift)
+                {
+                    selectionAnchor = caret;
+                }
                 break;
             case SDLK_DOWN:
+                if (shift && !hasSelection())
+                {
+                    selectionAnchor = caret;
+                }
+
                 moveVertical(1);
+
+                if (!shift)
+                {
+                    selectionAnchor = caret;
+                }
                 break;
             case SDLK_HOME:
+                if (shift && !hasSelection())
+                {
+                    selectionAnchor = caret;
+                }
+
                 caret = lineStartOf(caret);
+
+                if (!shift)
+                {
+                    selectionAnchor = caret;
+                }
+
                 blinkStart = std::chrono::steady_clock::now();
                 break;
             case SDLK_END:
+                if (shift && !hasSelection())
+                {
+                    selectionAnchor = caret;
+                }
+
                 caret = lineEndOf(caret);
+
+                if (!shift)
+                {
+                    selectionAnchor = caret;
+                }
+
                 blinkStart = std::chrono::steady_clock::now();
+                break;
+            case SDLK_A:
+                if (ctrl)
+                {
+                    selectionAnchor = 0;
+                    caret = text.size();
+                    blinkStart = std::chrono::steady_clock::now();
+                }
+                else
+                {
+                    result = Ignored;
+                }
                 break;
             case SDLK_RETURN:
             case SDLK_KP_ENTER: {
-                if (codepointCount(text) < maxLength)
+                if (deleteSelection() || codepointCount(text) < maxLength)
                 {
                     text.insert(caret, "\n");
                     ++caret;
+                    selectionAnchor = caret;
                     blinkStart = std::chrono::steady_clock::now();
                     changed = true;
                 }
                 break;
             }
             case SDLK_ESCAPE:
-                release = true;
+                if (hasSelection())
+                {
+                    selectionAnchor = caret;
+                }
+                else
+                {
+                    release = true;
+                }
                 break;
             default:
                 result = Ignored;
@@ -785,7 +1031,11 @@ auto OMDemiurgeTextEdit::processTextInput(const OMDemiurgeEvent &event) -> OMDem
         std::lock_guard<std::mutex> lock(stateMutex);
         composing.clear();
         composingEnded = false;
-        changed = insertText(event.text);
+
+        const bool removed = deleteSelection();
+        const bool inserted = insertText(event.text);
+        selectionAnchor = caret;
+        changed = removed || inserted;
     }
 
     if (changed)
@@ -803,19 +1053,30 @@ auto OMDemiurgeTextEdit::processTextEditing(const OMDemiurgeEvent &event) -> OMD
         return Ignored;
     }
 
-    std::lock_guard<std::mutex> lock(stateMutex);
+    bool changed = false;
 
-    if (event.text.empty())
     {
-        composingEnded = true;
-        composingEndedAt = std::chrono::steady_clock::now();
-        return Handled;
+        std::lock_guard<std::mutex> lock(stateMutex);
+
+        if (event.text.empty())
+        {
+            composingEnded = true;
+            composingEndedAt = std::chrono::steady_clock::now();
+            return Handled;
+        }
+
+        changed = deleteSelection();
+        composingEnded = false;
+        composing = event.text;
+        lastComposingAt = std::chrono::steady_clock::now();
+        blinkStart = std::chrono::steady_clock::now();
     }
 
-    composingEnded = false;
-    composing = event.text;
-    lastComposingAt = std::chrono::steady_clock::now();
-    blinkStart = std::chrono::steady_clock::now();
+    if (changed)
+    {
+        notifyChange();
+    }
+
     return Handled;
 }
 
@@ -835,6 +1096,8 @@ auto OMDemiurgeTextEdit::processFocusLost() -> void
     std::lock_guard<std::mutex> lock(stateMutex);
     composing.clear();
     composingEnded = false;
+    selectionAnchor = caret;
+    selecting = false;
     focusAmount.animateTo(0.0f, easeOutCirc<float>, 0.15f);
 }
 
@@ -844,6 +1107,8 @@ void OMDemiurgeTextEdit::setText(const std::string &value)
         std::lock_guard<std::mutex> lock(stateMutex);
         text = value;
         caret = text.size();
+        selectionAnchor = caret;
+        selecting = false;
         blinkStart = std::chrono::steady_clock::now();
     }
 

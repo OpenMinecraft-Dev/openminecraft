@@ -10,6 +10,7 @@
 #include <functional>
 #include <memory>
 #include "openminecraft/renderer/common/om_text_input_controller.hpp"
+#include <algorithm>
 #include <mutex>
 #include <string>
 
@@ -26,6 +27,8 @@ class OMDemiurgeTextInput : public OMDemiurgeRectNode
     void update() override;
 
     auto processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult override;
+    auto processMouseMove(float x, float y) -> OMDemiurgeEventResult override;
+    auto processMouseUp(float x, float y, uint8_t button) -> OMDemiurgeEventResult override;
     auto processKeyDown(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult override;
     auto processTextInput(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult override;
     auto processTextEditing(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult override;
@@ -71,9 +74,27 @@ class OMDemiurgeTextInput : public OMDemiurgeRectNode
     auto scrollForCaret() -> float;
     auto insertText(const std::string &value) -> bool;
     auto notifyChange() -> void;
+    auto selectionBegin() const -> size_t
+    {
+        return std::min(caret, selectionAnchor);
+    }
+    auto selectionEnd() const -> size_t
+    {
+        return std::max(caret, selectionAnchor);
+    }
+    auto hasSelection() const -> bool
+    {
+        return selectionAnchor != caret;
+    }
+    auto deleteSelection() -> bool;
+    auto displayIndex(size_t textIndex) const -> size_t;
 
     std::shared_ptr<OMDemiurgeNode> textNode;
     std::shared_ptr<OMDemiurgeNode> caretNode;
+    std::shared_ptr<OMDemiurgeNode> selectionNode;
+    size_t selectionAnchor = 0;
+    bool selecting = false;
+    bool clipInitialized = false;
 
     geom::OMFontSet *fontset = nullptr;
     std::string text;

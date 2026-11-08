@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
+#include <algorithm>
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -26,6 +27,8 @@ class OMDemiurgeTextEdit : public OMDemiurgeRectNode
     void update() override;
 
     auto processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult override;
+    auto processMouseMove(float x, float y) -> OMDemiurgeEventResult override;
+    auto processMouseUp(float x, float y, uint8_t button) -> OMDemiurgeEventResult override;
     auto processKeyDown(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult override;
     auto processTextInput(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult override;
     auto processTextEditing(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult override;
@@ -63,9 +66,25 @@ class OMDemiurgeTextEdit : public OMDemiurgeRectNode
     auto moveVertical(int direction) -> void;
     auto insertText(const std::string &value) -> bool;
     auto notifyChange() -> void;
+    auto selectionBegin() const -> size_t
+    {
+        return std::min(caret, selectionAnchor);
+    }
+    auto selectionEnd() const -> size_t
+    {
+        return std::max(caret, selectionAnchor);
+    }
+    auto hasSelection() const -> bool
+    {
+        return selectionAnchor != caret;
+    }
+    auto deleteSelection() -> bool;
 
     std::vector<std::shared_ptr<OMDemiurgeNode>> lineNodes;
+    std::vector<std::shared_ptr<OMDemiurgeNode>> selectionNodes;
     std::shared_ptr<OMDemiurgeNode> caretNode;
+    size_t selectionAnchor = 0;
+    bool selecting = false;
 
     geom::OMFontSet *fontset = nullptr;
     std::string text;

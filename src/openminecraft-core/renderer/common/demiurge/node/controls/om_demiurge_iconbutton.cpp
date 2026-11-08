@@ -13,7 +13,7 @@ namespace openminecraft::renderer::common::demiurge::node::controls
 {
 OMDemiurgeIconButton::OMDemiurgeIconButton(float size)
     : hoverAmount(0.0f), pressAmount(0.0f), disabledAmount(0.0f),
-      iconColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)), backgroundColor(glm::vec4(0.17f, 0.17f, 0.20f, 1.0f)),
+      iconColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)), backgroundColor(glm::vec4(0.17f, 0.17f, 0.20f, 0.6f)),
       buttonSize(size)
 {
     setFocusable(true);
