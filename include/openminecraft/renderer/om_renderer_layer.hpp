@@ -42,7 +42,8 @@ class OMRenderer
         clearRegistry();
     }
 
-    // ---- Object registry: all buffers / textures / render targets are owned by the renderer and accessed by string tag ----
+    // ---- Object registry: all buffers / textures / render targets are owned by the renderer and accessed by string
+    // tag ----
 
     auto registerBuffer(const std::string &tag, common::OMBufferUsage usage, uint64_t length)
         -> common::OMRendererBuffer *
@@ -260,11 +261,25 @@ class OMRenderer
     virtual auto getExtent() const -> glm::vec2 = 0;
     virtual auto getLogicalExtent() const -> glm::vec2 = 0;
 
+    // In-app UI scale (supports fractional values, e.g. 1.5x).
+    auto getUiScale() const -> float
+    {
+        return uiScale;
+    }
+    void setUiScale(float scale)
+    {
+        uiScale = scale > 0.01f ? scale : 1.0f;
+    }
+
     virtual void render(util::OMTicker &) = 0;
     virtual void requestResize() = 0;
 
     common::OMRendererShaderCompiler compiler;
 
+  private:
+    float uiScale = 1.0f;
+
+  public:
     void buildTaskGraph()
     {
         layeredTasks.clear();

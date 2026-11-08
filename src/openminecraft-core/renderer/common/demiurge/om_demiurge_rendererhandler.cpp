@@ -84,7 +84,7 @@ void OMDemiurgeRendererHandler::submitTasks()
 {
     middleTarget->construct(renderer->getExtent());
 
-    auto ext = renderer->getLogicalExtent();
+    auto ext = renderer->getLogicalExtent() / renderer->getUiScale();
     uniformBuffer->updateData(std::array<float, 2>{ext.x, ext.y}.data());
 
     renderer->createTask("demiurgeui_compose_" + name);
@@ -118,7 +118,7 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
 
 void OMDemiurgeRendererHandler::beforeFrame()
 {
-    auto ext = renderer->getLogicalExtent();
+    auto ext = renderer->getLogicalExtent() / renderer->getUiScale();
 
     node->layout(fit ? YGUndefined : ext.x, fit ? YGUndefined : ext.y);
     node->submit(this, bottomDepth);

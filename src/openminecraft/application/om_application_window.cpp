@@ -243,32 +243,36 @@ void OMApplication::mainLoop(OMBackend backend)
         bus.append(SDL_EVENT_MOUSE_MOTION, [&](SDL_Event &e) -> void {
             event::OMEvent ev;
             ev.type = event::MouseMotion;
-            ev.mousemotion.x = e.motion.x;
-            ev.mousemotion.y = e.motion.y;
+            const float uiScale = std::max(0.01f, win()->getUiScale());
+            ev.mousemotion.x = e.motion.x / uiScale;
+            ev.mousemotion.y = e.motion.y / uiScale;
             ev.mousemotion.button = -1;
             buswrap.handle(event::MouseMotion, ev);
         });
         bus.append(SDL_EVENT_MOUSE_BUTTON_UP, [&](SDL_Event &e) -> void {
             event::OMEvent ev;
             ev.type = event::MouseUp;
-            ev.mousebutton.x = e.button.x;
-            ev.mousebutton.y = e.button.y;
+            const float uiScale = std::max(0.01f, win()->getUiScale());
+            ev.mousebutton.x = e.button.x / uiScale;
+            ev.mousebutton.y = e.button.y / uiScale;
             ev.mousebutton.button = e.button.button;
             buswrap.handle(event::MouseUp, ev);
         });
         bus.append(SDL_EVENT_MOUSE_BUTTON_DOWN, [&](SDL_Event &e) -> void {
             event::OMEvent ev;
             ev.type = event::MouseDown;
-            ev.mousebutton.x = e.button.x;
-            ev.mousebutton.y = e.button.y;
+            const float uiScale = std::max(0.01f, win()->getUiScale());
+            ev.mousebutton.x = e.button.x / uiScale;
+            ev.mousebutton.y = e.button.y / uiScale;
             ev.mousebutton.button = e.button.button;
             buswrap.handle(event::MouseDown, ev);
         });
         bus.append(SDL_EVENT_MOUSE_WHEEL, [&](SDL_Event &e) -> void {
             event::OMEvent ev;
             ev.type = event::MouseWheel;
-            ev.mousewheel.x = e.wheel.x;
-            ev.mousewheel.y = e.wheel.y;
+            const float uiScale = std::max(0.01f, win()->getUiScale());
+            ev.mousewheel.x = e.wheel.x / uiScale;
+            ev.mousewheel.y = e.wheel.y / uiScale;
             ev.mousewheel.wheelx = e.wheel.x;
             ev.mousewheel.wheely = e.wheel.y;
             buswrap.handle(event::MouseWheel, ev);
@@ -308,8 +312,9 @@ void OMApplication::mainLoop(OMBackend backend)
             SDL_GetWindowSize(SDL_GetWindowFromEvent(&e), &w, &h);
             event::OMEvent ev;
             ev.type = event::MouseMotion;
-            ev.mousemotion.x = e.tfinger.x * w;
-            ev.mousemotion.y = e.tfinger.y * h;
+            const float uiScale = std::max(0.01f, win()->getUiScale());
+            ev.mousemotion.x = e.tfinger.x * w / uiScale;
+            ev.mousemotion.y = e.tfinger.y * h / uiScale;
             ev.mousemotion.button = e.tfinger.fingerID;
             buswrap.handle(event::MouseMotion, ev);
         });
@@ -318,8 +323,9 @@ void OMApplication::mainLoop(OMBackend backend)
             SDL_GetWindowSize(SDL_GetWindowFromEvent(&e), &w, &h);
             event::OMEvent ev;
             ev.type = event::MouseUp;
-            ev.mousebutton.x = e.tfinger.x * w;
-            ev.mousebutton.y = e.tfinger.y * h;
+            const float uiScale = std::max(0.01f, win()->getUiScale());
+            ev.mousebutton.x = e.tfinger.x * w / uiScale;
+            ev.mousebutton.y = e.tfinger.y * h / uiScale;
             ev.mousebutton.button = e.tfinger.fingerID;
             buswrap.handle(event::MouseUp, ev);
         });
@@ -328,8 +334,9 @@ void OMApplication::mainLoop(OMBackend backend)
             SDL_GetWindowSize(SDL_GetWindowFromEvent(&e), &w, &h);
             event::OMEvent ev;
             ev.type = event::MouseDown;
-            ev.mousebutton.x = e.tfinger.x * w;
-            ev.mousebutton.y = e.tfinger.y * h;
+            const float uiScale = std::max(0.01f, win()->getUiScale());
+            ev.mousebutton.x = e.tfinger.x * w / uiScale;
+            ev.mousebutton.y = e.tfinger.y * h / uiScale;
             ev.mousebutton.button = e.tfinger.fingerID;
             buswrap.handle(event::MouseDown, ev);
         });
@@ -418,6 +425,7 @@ void OMApplication::mainLoop(OMBackend backend)
             {
                 bus.handle(static_cast<SDL_EventType>(e.type), e);
             }
+
             SDL_SetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win), inGame);
             win.applyTextInputState();
 

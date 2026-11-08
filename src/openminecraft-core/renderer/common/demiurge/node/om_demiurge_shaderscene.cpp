@@ -34,7 +34,7 @@ auto OMDemiurgeShaderSceneNode::submit(OMDemiurgeRendererHandler *handler, float
         stylesStorage.solve();
     }
 
-    handler->shaderScene.setClip(sceneId, resolveClipBound());
+    handler->applyClip(handler->shaderScene, sceneId, resolveClipBound());
 
     for (auto c : children)
     {

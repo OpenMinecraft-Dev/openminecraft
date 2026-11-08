@@ -31,7 +31,7 @@ auto OMDemiurgeSvgNode::submit(OMDemiurgeRendererHandler *handler, float depth) 
         stylesStorage.solve();
     }
 
-    handler->svg.setClip(svgId, resolveClipBound());
+    handler->applyClip(handler->svg, svgId, resolveClipBound());
 
     for (auto c : children)
     {

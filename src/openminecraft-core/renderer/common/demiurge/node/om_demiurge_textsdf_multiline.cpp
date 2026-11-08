@@ -126,7 +126,7 @@ auto OMDemiurgeTextSdfMultilineNode::submit(OMDemiurgeRendererHandler *handler, 
 
         for (auto id : glyphIds)
         {
-            ch->setClip(id, clip);
+            handler->applyClip(*ch, id, clip);
         }
     }
 

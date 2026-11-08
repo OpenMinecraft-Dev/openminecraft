@@ -64,6 +64,27 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     auto fetchFontChannel(geom::OMFontSet *) -> std::shared_ptr<element::OMDemiurgeTextSdfChannel>;
 
+    // Converts a logical (layout) clip rect into target pixels and stores it on the
+    // channel. Keeping the conversion here lets the UI be rendered at a different
+    // scale than the layout without touching the element channels.
+    template <typename Channel>
+    auto applyClip(Channel &channel, int index, const std::optional<OMDemiurgeRect> &bound) -> void
+    {
+        if (!bound.has_value())
+        {
+            channel.setClip(index, std::nullopt);
+            return;
+        }
+
+        const auto extent = renderer->getExtent();
+        const auto logical = renderer->getLogicalExtent() / renderer->getUiScale();
+        const float scaleX = logical.x > 0 ? static_cast<float>(extent.x) / static_cast<float>(logical.x) : 1.0f;
+        const float scaleY = logical.y > 0 ? static_cast<float>(extent.y) / static_cast<float>(logical.y) : 1.0f;
+
+        channel.setClip(index, OMDemiurgeRect{bound->x * scaleX, bound->y * scaleY, bound->width * scaleX,
+                                              bound->height * scaleY});
+    }
+
     bool fit = false;
     std::string name = "default";
 

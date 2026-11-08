@@ -108,19 +108,17 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
         applyClipScissor(task, this->fetchClip(index));
     }
 
+    // Clip rects are stored in target pixels (converted by the renderer handler),
+    // so they can be applied to the scissor directly.
     auto applyClipScissor(OMRendererTask *task, const std::optional<OMDemiurgeRect> &clip) -> void
     {
-        const auto ext = renderer->getExtent();
-        const auto logical = renderer->getLogicalExtent();
-        const float scaleX = logical.x > 0 ? static_cast<float>(ext.x) / static_cast<float>(logical.x) : 1.0f;
-        const float scaleY = logical.y > 0 ? static_cast<float>(ext.y) / static_cast<float>(logical.y) : 1.0f;
-
         if (clip.has_value())
         {
-            task->setScissor(clip->x * scaleX, clip->y * scaleY, clip->width * scaleX, clip->height * scaleY);
+            task->setScissor(clip->x, clip->y, clip->width, clip->height);
         }
         else
         {
+            const auto ext = renderer->getExtent();
             task->setScissor(0.0f, 0.0f, static_cast<float>(ext.x), static_cast<float>(ext.y));
         }
     }
