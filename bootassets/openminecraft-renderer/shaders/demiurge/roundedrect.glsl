@@ -10,6 +10,8 @@ layout(location = 1) out vec2 rrectPosition;
 layout(location = 2) out vec4 rrectRadius;
 layout(location = 3) out vec4 rrectRectPosition;
 layout(location = 4) out float rrectFactor;
+layout(location = 5) out vec4 rrectClipPos;
+layout(location = 6) out float rrectClipRadius;
 
 uniform ScreenData
 {
@@ -32,6 +34,8 @@ void main()
     rrectRadius = inRectRadius;
     rrectRectPosition = inRectPos;
     rrectFactor = inRectFactor;
+    rrectClipPos = inClipPos;
+    rrectClipRadius = inClipRadius;
 }
 #endif
 
@@ -43,6 +47,8 @@ layout(location = 1) in vec2 rrectPosition;
 layout(location = 2) in vec4 rrectRadius;
 layout(location = 3) in vec4 rrectRectPosition;
 layout(location = 4) in float rrectFactor;
+layout(location = 5) in vec4 rrectClipPos;
+layout(location = 6) in float rrectClipRadius;
 
 layout(location = 0) out vec4 outColor;
 
@@ -53,6 +59,14 @@ void main()
     vec2 localPos = rrectPosition - rectCenter;
 
     float alpha = sdf_rrect(localPos, halfSize, rrectRadius, 0.0, rrectFactor);
+
+    // Optional clip (screen space pixel rect with its own corner radius)
+    if (rrectClipPos.z > 0.0 && rrectClipPos.w > 0.0)
+    {
+        vec2 clipCenter = rrectClipPos.xy + rrectClipPos.zw * 0.5;
+        float clipAlpha = sdf_rrect(rrectPosition - clipCenter, rrectClipPos.zw * 0.5, vec4(rrectClipRadius), 0.0, 1.0);
+        alpha *= clipAlpha;
+    }
 
     outColor = rrectColor * alpha;
 }

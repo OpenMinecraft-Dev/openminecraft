@@ -28,6 +28,8 @@ auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, float depth)
         t->depth = depth;
         t->factor = stylesStorage.get<float>("factor", 2.0f);
         t->radius = stylesStorage.get<glm::vec4>("radius", {0, 0, 0, 0});
+        t->clipPosition = stylesStorage.get<glm::vec4>("clip", glm::vec4(0.0f));
+        t->clipRadius = stylesStorage.get<float>("clipRadius", 0.0f);
 
         glm::vec3 defaultNormal = glm::vec3(0.0f, 0.0f, 1.0f);
         glm::vec3 targetNormal = glm::normalize(stylesStorage.get<glm::vec3>("rotationPivot", {0.0f, 0.0f, 1.0f}));

@@ -135,6 +135,12 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         return shared_from_this();
     }
 
+    // Absolute (screen space) bounds computed by the last layout pass.
+    auto fetchLayoutBound() -> OMDemiurgeRect
+    {
+        return stylesStorage.get<OMDemiurgeRect>("layoutBound");
+    }
+
     inline auto style(std::initializer_list<std::pair<std::string, std::any>> d) -> std::shared_ptr<OMDemiurgeNode>
     {
         for (auto &p : d)

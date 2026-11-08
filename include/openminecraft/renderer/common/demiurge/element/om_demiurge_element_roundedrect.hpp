@@ -14,6 +14,9 @@ struct OMDemiurgeElementRoundedRect
     glm::quat rotation;
     float factor;
     float depth;
+    // 屏幕像素空间的裁剪矩形（x, y, w, h）；w/h <= 0 表示不裁剪
+    glm::vec4 clipPosition = glm::vec4(0.0f);
+    float clipRadius = 0.0f;
 };
 
 template <> inline auto objectGetDepth<OMDemiurgeElementRoundedRect>(OMDemiurgeElementRoundedRect &obj) -> float

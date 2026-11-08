@@ -56,6 +56,8 @@ class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandle
 
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode> node, fpsTextNode, posTextNode,
         povTextNode, precisionNode, precisionNode2, tickNode;
+    // macOS-style indeterminate progress bar (track + sliding segment)
+    std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode> progressTrack, progressSegment;
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode> vState, vcState, vfState, vtState,
         vtcState, vtfState, chunkstate;
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeRendererHandler> internal;
