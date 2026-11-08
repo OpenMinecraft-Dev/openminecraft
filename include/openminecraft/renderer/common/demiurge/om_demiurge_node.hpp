@@ -13,6 +13,7 @@
 #include <initializer_list>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -125,6 +126,19 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     void captureMouse();
     void releaseMouse();
     auto containsPoint(float x, float y) -> bool;
+
+    // Clipping: point this node at another node whose layout bounds define the
+    // visible range. The clip applies to this node and its whole subtree, and is
+    // intersected with the clip ranges of the ancestors.
+    void setClipNode(const std::shared_ptr<OMDemiurgeNode> &node)
+    {
+        clipNodeRef = node;
+    }
+    auto fetchClipNode() const -> std::shared_ptr<OMDemiurgeNode>
+    {
+        return clipNodeRef.lock();
+    }
+    auto resolveClipBound() -> std::optional<OMDemiurgeRect>;
 
     // Focus: at most one focused node per window tree. Gaining/losing focus walks the
     // whole ancestor chain, so every node between the root and the focused node is
@@ -297,6 +311,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     std::vector<std::shared_ptr<OMDemiurgeNode>> children;
 
     bool focusable = false;
+    std::weak_ptr<OMDemiurgeNode> clipNodeRef;
 
     inline static std::weak_ptr<OMDemiurgeNode> capturedNode;
     inline static std::weak_ptr<OMDemiurgeNode> capturedRoot;

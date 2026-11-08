@@ -110,6 +110,7 @@ OMDemiurgeInputBox::~OMDemiurgeInputBox()
 
 auto OMDemiurgeInputBox::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
 {
+    textNode->setClipNode(shared_from_this());
     OMDemiurgeRectNode::submit(handler, depth);
 }
 
@@ -220,8 +221,8 @@ void OMDemiurgeInputBox::update()
     const float disabledValue = std::clamp(disabledAmount.get(), 0.0f, 1.0f);
 
     glm::vec4 background = backgroundColor.get();
-    background = glm::vec4(glm::mix(glm::vec3(background), glm::vec3(0.16f, 0.42f, 0.55f), focus * 0.35f),
-                           background.a);
+    background =
+        glm::vec4(glm::mix(glm::vec3(background), glm::vec3(0.16f, 0.42f, 0.55f), focus * 0.35f), background.a);
     background = glm::vec4(glm::mix(glm::vec3(background), glm::vec3(0.30f), disabledValue * 0.75f),
                            background.a * (1.0f - disabledValue * 0.35f));
 
@@ -253,10 +254,9 @@ void OMDemiurgeInputBox::update()
     // Composition preview is spliced in at the caret; text itself is only updated
     // when the IME commits (SDL_EVENT_TEXT_INPUT).
     const size_t caretClamped = std::min(caretState, textState.size());
-    const std::string display = composingState.empty()
-                                    ? textState
-                                    : textState.substr(0, caretClamped) + composingState +
-                                          textState.substr(caretClamped);
+    const std::string display =
+        composingState.empty() ? textState
+                               : textState.substr(0, caretClamped) + composingState + textState.substr(caretClamped);
     const size_t displayCaret = composingState.empty() ? caretClamped : caretClamped + composingState.size();
     const bool composingActiveChanged = composingWasActive != !composingState.empty();
     const bool empty = display.empty();
@@ -471,7 +471,7 @@ void OMDemiurgeInputBox::update()
         ->style("height", OMDemiurgeSize::pixels(caretHeight))
         ->style("width", OMDemiurgeSize::pixels(caretVisible ? 1.0f + 0.6f * pulse : 1.0f))
         ->style("color", (int)f4ToRgba(glm::vec4(glm::mix(glm::vec3(caretBase), glm::vec3(0.55f), disabledValue),
-                                                  caretVisible ? caretBase.a * blinkAlpha : 0.0f)));
+                                                 caretVisible ? caretBase.a * blinkAlpha : 0.0f)));
 
     // Keep the IME candidate window anchored to the caret. The window is the only
     // place that talks to SDL; here we just publish the caret rectangle.

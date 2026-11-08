@@ -34,6 +34,8 @@ auto OMDemiurgeShaderSceneNode::submit(OMDemiurgeRendererHandler *handler, float
         stylesStorage.solve();
     }
 
+    handler->shaderScene.setClip(sceneId, resolveClipBound());
+
     for (auto c : children)
     {
         c->submit(handler, depth - layerHalfWidth * 2);

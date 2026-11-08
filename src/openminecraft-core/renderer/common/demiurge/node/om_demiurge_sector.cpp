@@ -43,6 +43,8 @@ auto OMDemiurgeSectorNode::submit(OMDemiurgeRendererHandler *handler, float dept
         stylesStorage.solve();
     }
 
+    handler->sector.setClip(sectorId, resolveClipBound());
+
     for (auto c : children)
     {
         c->submit(handler, depth - layerHalfWidth * 2);

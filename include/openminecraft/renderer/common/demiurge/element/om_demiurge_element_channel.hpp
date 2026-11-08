@@ -4,7 +4,9 @@
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
+#include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include <functional>
+#include <optional>
 #include <string>
 #include <vector>
 namespace openminecraft::renderer::common::demiurge::element
@@ -50,6 +52,7 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
         }
         objects.emplace_back(T{});
         dirty.resize(objects.size());
+        clipBounds.resize(objects.size());
         hasDirty = true;
         return objects.size() - 1;
     }
@@ -59,6 +62,24 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
         dirty[i] = true;
         hasDirty = true;
         return &objects[i];
+    }
+
+    inline auto setClip(int i, const std::optional<OMDemiurgeRect> &rect) -> void
+    {
+        if (i >= 0 && static_cast<size_t>(i) < clipBounds.size())
+        {
+            clipBounds[i] = rect;
+        }
+    }
+
+    inline auto fetchClip(int i) const -> std::optional<OMDemiurgeRect>
+    {
+        if (i >= 0 && static_cast<size_t>(i) < clipBounds.size())
+        {
+            return clipBounds[i];
+        }
+
+        return std::nullopt;
     }
 
     inline auto solve() -> void
@@ -114,6 +135,7 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
     std::vector<int> removed;
     std::vector<T> objects;
     std::vector<bool> dirty;
+    std::vector<std::optional<OMDemiurgeRect>> clipBounds;
     bool hasDirty = true;
     int lastCount = -1;
 };

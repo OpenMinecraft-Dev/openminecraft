@@ -43,6 +43,8 @@ auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, float depth)
         stylesStorage.solve();
     }
 
+    handler->roundedRect.setClip(rectId, resolveClipBound());
+
     for (auto c : children)
     {
         c->submit(handler, depth - layerHalfWidth * 2);

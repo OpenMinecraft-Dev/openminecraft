@@ -318,6 +318,49 @@ updateChildren:
     }
 }
 
+auto OMDemiurgeNode::resolveClipBound() -> std::optional<OMDemiurgeRect>
+{
+    std::optional<OMDemiurgeRect> bound;
+
+    for (auto cur = this; cur != nullptr; cur = cur->parent)
+    {
+        auto clip = cur->clipNodeRef.lock();
+
+        if (!clip)
+        {
+            continue;
+        }
+
+        try
+        {
+            const auto b = clip->fetchLayoutBound();
+
+            if (!bound.has_value())
+            {
+                bound = b;
+            }
+            else
+            {
+                const float x0 = std::max(bound->x, b.x);
+                const float y0 = std::max(bound->y, b.y);
+                const float x1 = std::min(bound->x + bound->width, b.x + b.width);
+                const float y1 = std::min(bound->y + bound->height, b.y + b.height);
+
+                bound->x = x0;
+                bound->y = y0;
+                bound->width = std::max(0.0f, x1 - x0);
+                bound->height = std::max(0.0f, y1 - y0);
+            }
+        }
+        catch (std::bad_any_cast &)
+        {
+            // Clip node not laid out yet: ignore it.
+        }
+    }
+
+    return bound;
+}
+
 void OMDemiurgeNode::setFocusable(bool value)
 {
     focusable = value;

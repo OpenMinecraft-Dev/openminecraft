@@ -49,22 +49,69 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
             instanceBuffer = ninstanceBuffer;
         }
 
+        // Clip rects are stored in layout (logical) coordinates; scissor works in
+        // target pixels.
+        const auto ext = renderer->getExtent();
+        const auto logical = renderer->getLogicalExtent();
+        const float scaleX = logical.x > 0 ? static_cast<float>(ext.x) / static_cast<float>(logical.x) : 1.0f;
+        const float scaleY = logical.y > 0 ? static_cast<float>(ext.y) / static_cast<float>(logical.y) : 1.0f;
+
+        auto sameClip = [](const std::optional<OMDemiurgeRect> &a, const std::optional<OMDemiurgeRect> &b) -> bool {
+            if (a.has_value() != b.has_value())
+            {
+                return false;
+            }
+
+            if (!a.has_value())
+            {
+                return true;
+            }
+
+            return a->x == b->x && a->y == b->y && a->width == b->width && a->height == b->height;
+        };
+
+        auto flush = [&](int end, int start, const std::optional<OMDemiurgeRect> &clip) -> void {
+            if (clip.has_value())
+            {
+                task->setScissor(clip->x * scaleX, clip->y * scaleY, clip->width * scaleX, clip->height * scaleY);
+            }
+            else
+            {
+                task->setScissor(0.0f, 0.0f, static_cast<float>(ext.x), static_cast<float>(ext.y));
+            }
+
+            task->pipeline(pipeline)->vertexBufferInstanced({instanceBuffer}, start)->drawInstance(6, end - start, start);
+        };
+
         bool inDraw = false;
         int start = 0;
+        std::optional<OMDemiurgeRect> currentClip;
+
         for (int i = 0; i <= this->objects.size(); ++i)
         {
             bool isDraw =
                 (i < this->objects.size()) && this->objects[i].depth > lower && this->objects[i].depth < upper;
+
             if (!inDraw && isDraw)
             {
                 start = i;
+                currentClip = this->fetchClip(i);
                 inDraw = true;
+            }
+            else if (inDraw && isDraw)
+            {
+                auto clip = this->fetchClip(i);
+
+                if (!sameClip(clip, currentClip))
+                {
+                    flush(i, start, currentClip);
+                    start = i;
+                    currentClip = clip;
+                }
             }
             else if (inDraw && !isDraw)
             {
-                task->pipeline(pipeline)
-                    ->vertexBufferInstanced({instanceBuffer}, start)
-                    ->drawInstance(6, i - start, start);
+                flush(i, start, currentClip);
                 inDraw = false;
             }
         }

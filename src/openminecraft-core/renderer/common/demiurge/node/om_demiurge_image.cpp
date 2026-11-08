@@ -48,6 +48,8 @@ auto OMDemiurgeImageNode::submit(OMDemiurgeRendererHandler *handler, float depth
         stylesStorage.solve();
     }
 
+    handler->image.setClip(imageId, resolveClipBound());
+
     for (auto c : children)
     {
         c->submit(handler, depth - layerHalfWidth * 2);

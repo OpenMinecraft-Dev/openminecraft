@@ -52,11 +52,18 @@ void OMRendererTaskVk::setScissor(float x, float y, float width, float height)
 {
     try
     {
-        const float clampW = std::max(0.0f, std::min(width, static_cast<float>(renderer->getExtent().x) - x));
-        const float clampH = std::max(0.0f, std::min(height, static_cast<float>(renderer->getExtent().y) - y));
+        const glm::vec2 ext = target != nullptr ? target->fetchSize()
+                                                : glm::vec2(static_cast<float>(renderer->getExtent().x),
+                                                            static_cast<float>(renderer->getExtent().y));
+        const float clampW = std::max(0.0f, std::min(width, ext.x - x));
+        const float clampH = std::max(0.0f, std::min(height, ext.y - y));
+
+        // The API uses top-left coordinates; this renderer's framebuffer rows are
+        // stored bottom-up, so convert to the framebuffer's own y axis.
+        const float flipY = ext.y - y - clampH;
 
         commandBuffer.setScissor(0, {Rect2D(Offset2D(static_cast<int32_t>(std::max(0.0f, x)),
-                                                     static_cast<int32_t>(std::max(0.0f, y))),
+                                                     static_cast<int32_t>(std::max(0.0f, flipY))),
                                              Extent2D(static_cast<uint32_t>(clampW), static_cast<uint32_t>(clampH)))});
     }
     catch (SystemError &e)

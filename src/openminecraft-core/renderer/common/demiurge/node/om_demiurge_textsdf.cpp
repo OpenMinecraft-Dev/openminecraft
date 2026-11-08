@@ -74,6 +74,17 @@ auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, float dep
         stylesStorage.solve();
     }
 
+    if (!glyphIds.empty())
+    {
+        auto clip = resolveClipBound();
+        auto ch = handler->fetchFontChannel(set);
+
+        for (auto id : glyphIds)
+        {
+            ch->setClip(id, clip);
+        }
+    }
+
     for (auto c : children)
     {
         c->submit(handler, depth - layerHalfWidth * 2);
