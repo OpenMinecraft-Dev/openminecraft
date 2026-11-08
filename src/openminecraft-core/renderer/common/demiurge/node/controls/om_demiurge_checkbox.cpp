@@ -22,6 +22,8 @@ OMDemiurgeCheckBox::OMDemiurgeCheckBox(geom::OMFontSet *fontset)
       boxChecked(glm::vec4(0.0f, 0.55f, 0.75f, 1.0f)), checkColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)),
       labelColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)), hoverAmount(0.0f), pressAmount(0.0f), disabledAmount(0.0f)
 {
+    setFocusable(true);
+
     stylesStorage.put("flexDirection", OMDemiurgeDirection::Row);
     stylesStorage.put("alignItems", OMDemiurgeAlign::Center);
     stylesStorage.put("flexGap", OMDemiurgeSize::pixels(6.0f));

@@ -105,7 +105,7 @@ void OMDemiurgeProgressBar::update()
         // Ping-pong: one leg left->right, the next right->left.
         const float phase = std::fmod(t / cycle, 2.0f);
         const float triangle = phase <= 1.0f ? phase : 2.0f - phase;
-        const float u = easeInOutSine(std::clamp(triangle, 0.0f, 1.0f));
+        const float u = easeInOutCubic(std::clamp(triangle, 0.0f, 1.0f));
 
         // Squash: allow the pill to push past each end, then fold the overshoot back in.
         const float base = trackWidth - segmentLength;
@@ -132,8 +132,7 @@ void OMDemiurgeProgressBar::update()
     // blend when switching modes, so the bar never jumps.
     if (blendActive)
     {
-        const float blend = std::clamp(
-            std::chrono::duration<float>(now - blendStart).count() / 0.28f, 0.0f, 1.0f);
+        const float blend = std::clamp(std::chrono::duration<float>(now - blendStart).count() / 0.28f, 0.0f, 1.0f);
         const float e = easeOutCubic(blend);
 
         visualLeft = blendFromLeft * (1.0f - e) + targetLeft * e;

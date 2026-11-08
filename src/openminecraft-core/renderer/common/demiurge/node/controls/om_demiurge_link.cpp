@@ -15,6 +15,8 @@ OMDemiurgeLink::OMDemiurgeLink(geom::OMFontSet *fontset)
     : hoverAmount(0.0f), pressAmount(0.0f), disabledAmount(0.0f), textColor(glm::vec4(0.35f, 0.7f, 1.0f, 1.0f)),
       underlineColor(glm::vec4(0.35f, 0.7f, 1.0f, 1.0f))
 {
+    setFocusable(true);
+
     stylesStorage.put("width", OMDemiurgeSize::fit());
     stylesStorage.put("height", OMDemiurgeSize::fit());
 

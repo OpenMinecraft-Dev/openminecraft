@@ -21,6 +21,7 @@ OMDemiurgeButton::OMDemiurgeButton(geom::OMFontSet *fontset)
     : opacity(0.6f), backgroundColor({0.1f, 0.1f, 0.1f}), textColor({1.0f, 1.0f, 1.0f, 1.0f}),
       disabledAmount(0.0f)
 {
+    setFocusable(true);
     stylesStorage.put("justifyContent", OMDemiurgeAlign::Center);
     stylesStorage.put("alignItems", OMDemiurgeAlign::Center);
     bkgNode = std::make_shared<OMDemiurgeRectNode>()->style({

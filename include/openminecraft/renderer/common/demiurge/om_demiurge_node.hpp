@@ -126,6 +126,29 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     void releaseMouse();
     auto containsPoint(float x, float y) -> bool;
 
+    // Focus: at most one focused node per window tree. Gaining/losing focus walks the
+    // whole ancestor chain, so every node between the root and the focused node is
+    // notified (and therefore counts as focused while the focus is inside it).
+    void setFocusable(bool value);
+    auto isFocusable() const -> bool
+    {
+        return focusable;
+    }
+    void requestFocus();
+    void releaseFocus();
+    auto hasFocus() -> bool;
+    static auto fetchFocusedNode() -> std::shared_ptr<OMDemiurgeNode>
+    {
+        return focusedNode.lock();
+    }
+
+    virtual auto processFocusGained() -> void
+    {
+    }
+    virtual auto processFocusLost() -> void
+    {
+    }
+
     static auto fetchMouseCapture() -> std::shared_ptr<OMDemiurgeNode>
     {
         return capturedNode.lock();
@@ -259,8 +282,12 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     OMDemiurgeNode *parent = nullptr;
     std::vector<std::shared_ptr<OMDemiurgeNode>> children;
 
+    bool focusable = false;
+
     inline static std::weak_ptr<OMDemiurgeNode> capturedNode;
     inline static std::weak_ptr<OMDemiurgeNode> capturedRoot;
+    inline static std::weak_ptr<OMDemiurgeNode> focusedNode;
+    inline static std::weak_ptr<OMDemiurgeNode> focusedRoot;
 };
 } // namespace openminecraft::renderer::common::demiurge
 

@@ -16,6 +16,8 @@ OMDemiurgeIconButton::OMDemiurgeIconButton(float size)
       iconColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)), backgroundColor(glm::vec4(0.17f, 0.17f, 0.20f, 1.0f)),
       buttonSize(size)
 {
+    setFocusable(true);
+
     stylesStorage.put("width", OMDemiurgeSize::pixels(buttonSize));
     stylesStorage.put("height", OMDemiurgeSize::pixels(buttonSize));
 

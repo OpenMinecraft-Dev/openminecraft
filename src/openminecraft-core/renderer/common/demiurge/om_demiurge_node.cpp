@@ -318,6 +318,100 @@ updateChildren:
     }
 }
 
+void OMDemiurgeNode::setFocusable(bool value)
+{
+    focusable = value;
+}
+
+void OMDemiurgeNode::requestFocus()
+{
+    auto self = shared_from_this();
+    auto previous = focusedNode.lock();
+
+    if (previous.get() == this)
+    {
+        return;
+    }
+
+    auto buildChain = [](std::shared_ptr<OMDemiurgeNode> cur) -> std::vector<OMDemiurgeNode *> {
+        std::vector<OMDemiurgeNode *> chain;
+
+        while (cur)
+        {
+            chain.push_back(cur.get());
+            cur = cur->parent ? cur->parent->shared_from_this() : nullptr;
+        }
+
+        return chain;
+    };
+
+    auto oldChain = buildChain(previous);
+    auto newChain = buildChain(self);
+
+    auto inChain = [](const std::vector<OMDemiurgeNode *> &chain, OMDemiurgeNode *node) -> bool {
+        return std::find(chain.begin(), chain.end(), node) != chain.end();
+    };
+
+    // Losing nodes: leaf -> root.
+    for (auto *node : oldChain)
+    {
+        if (!inChain(newChain, node))
+        {
+            node->processFocusLost();
+        }
+    }
+
+    // Gaining nodes: root -> leaf, so ancestors react before their children.
+    for (auto it = newChain.rbegin(); it != newChain.rend(); ++it)
+    {
+        if (!inChain(oldChain, *it))
+        {
+            (*it)->processFocusGained();
+        }
+    }
+
+    focusedNode = self;
+    focusedRoot = newChain.back()->shared_from_this();
+}
+
+void OMDemiurgeNode::releaseFocus()
+{
+    auto current = focusedNode.lock();
+
+    if (current.get() != this)
+    {
+        return;
+    }
+
+    auto cur = current;
+
+    while (cur)
+    {
+        cur->processFocusLost();
+        cur = cur->parent ? cur->parent->shared_from_this() : nullptr;
+    }
+
+    focusedNode.reset();
+    focusedRoot.reset();
+}
+
+auto OMDemiurgeNode::hasFocus() -> bool
+{
+    auto cur = focusedNode.lock();
+
+    while (cur)
+    {
+        if (cur.get() == this)
+        {
+            return true;
+        }
+
+        cur = cur->parent ? cur->parent->shared_from_this() : nullptr;
+    }
+
+    return false;
+}
+
 void OMDemiurgeNode::captureMouse()
 {
     auto self = shared_from_this();
@@ -417,6 +511,30 @@ void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
 
     if (event.isKeyboard())
     {
+        if (parent == nullptr)
+        {
+            auto focused = focusedNode.lock();
+            auto root = focusedRoot.lock();
+
+            if (focused && root.get() == this)
+            {
+                // Walk focus chain from the focused node up to the root.
+                auto cur = focused;
+
+                while (cur)
+                {
+                    if (cur->processEvent(event) == Handled)
+                    {
+                        return;
+                    }
+
+                    cur = cur->parent ? cur->parent->shared_from_this() : nullptr;
+                }
+
+                return;
+            }
+        }
+
         if (processEvent(event) == Ignored)
         {
             for (auto f : children)
@@ -453,7 +571,15 @@ void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
                 }
             }
 
-            if (processEvent(event) == Ignored)
+            const auto result = processEvent(event);
+
+            if (result == OMDemiurgeEventResult::Handled &&
+                event.type == OMDemiurgeEventType::MouseDown && focusable)
+            {
+                requestFocus();
+            }
+
+            if (result == Ignored)
             {
                 for (auto f : children)
                 {
