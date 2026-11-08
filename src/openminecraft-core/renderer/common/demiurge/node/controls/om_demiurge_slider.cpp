@@ -180,7 +180,18 @@ auto OMDemiurgeSlider::processMouseExit(float x, float y) -> OMDemiurgeEventResu
         return Ignored;
     }
 
-    hoverAmount.animateTo(0.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    const float speed = stylesStorage.get<float>("animation_speed", 0.18f);
+    hoverAmount.animateTo(0.0f, easeOutCirc<float>, speed);
+
+    // Mouse-up outside the control is not routed back to us, so a drag that leaves
+    // the bounds must be cancelled here; otherwise the thumb keeps following the
+    // pointer when it re-enters without any button pressed.
+    if (dragging)
+    {
+        dragging = false;
+        pressAmount.animateTo(0.0f, easeOutCirc<float>, speed);
+    }
+
     return Handled;
 }
 
