@@ -2,6 +2,7 @@
 #include "openminecraft-shell/om_application.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_checkbox.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_progressbar.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
@@ -72,11 +73,15 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     progressBar->setTrackColor(glm::vec4(0.106f, 0.106f, 0.141f, 0.35f));
     progressBar->setBarColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f));
 
-    bgNode = std::make_shared<node::OMDemiurgeShaderSceneNode>("demiurge/scene/galaxy.glsl")
-                 ->style({
-                     {"width", OMDemiurgeSize::fit()},
-                     {"height", OMDemiurgeSize::fit()},
-                 });
+    checkBox = std::make_shared<node::controls::OMDemiurgeCheckBox>(fontset.get());
+    checkBox->style({
+        {"label", "Demo Option"},
+        {"textheight", 14},
+        {"alignSelf", OMDemiurgeAlign::Center},
+    });
+    checkBox->setBoxColors(glm::vec4(0.1f, 0.1f, 0.12f, 0.65f), glm::vec4(0.0f, 0.55f, 0.75f, 1.0f));
+    checkBox->setCheckColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
     node = std::make_shared<node::OMDemiurgeRectNode>()
                ->style({
                    {"color", (int)0x2c2c3412},
@@ -109,7 +114,8 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                                        }))
                            ->mount(button->style("animation_speed", 1.0f)->style("label", "Demo Test"))
                            ->mount(button2->style("animation_speed", 1.0f)->style("label", "Quit"))
-                           ->mount(progressBar));
+                           ->mount(progressBar)
+                           ->mount(checkBox));
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->name = "surface";
@@ -135,7 +141,6 @@ void OMSurfaceRenderer::beforeFrame()
 void OMSurfaceRenderer::afterFrame()
 {
     node->style("offsetY", OMDemiurgeSize::percent(offset.get()));
-    bgNode->style("offsetY", OMDemiurgeSize::percent(offset.get()));
 }
 
 void OMSurfaceRenderer::openScreen()

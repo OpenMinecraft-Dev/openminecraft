@@ -24,7 +24,9 @@ void main()
     vec2 inPosition = vertexgen_quad_normal();
     vec2 screenPos = inSvgPos.xy - vec2(10) + inPosition.xy * (inSvgPos.zw + vec2(20));
 
-    svgGlyphPos = inPosition;
+    // Glyph coordinates are normalized to 0..1 inside the node rect (compile() divides
+    // by svgSize), so map the expanded quad back into rect-local space here.
+    svgGlyphPos = (screenPos - inSvgPos.xy) / inSvgPos.zw;
     svgIndex = inSvgGlyphId;
     svgColor = inSvgColor;
     svgFactor = inSvgFactor;
