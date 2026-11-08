@@ -49,13 +49,6 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
             instanceBuffer = ninstanceBuffer;
         }
 
-        // Clip rects are stored in layout (logical) coordinates; scissor works in
-        // target pixels.
-        const auto ext = renderer->getExtent();
-        const auto logical = renderer->getLogicalExtent();
-        const float scaleX = logical.x > 0 ? static_cast<float>(ext.x) / static_cast<float>(logical.x) : 1.0f;
-        const float scaleY = logical.y > 0 ? static_cast<float>(ext.y) / static_cast<float>(logical.y) : 1.0f;
-
         auto sameClip = [](const std::optional<OMDemiurgeRect> &a, const std::optional<OMDemiurgeRect> &b) -> bool {
             if (a.has_value() != b.has_value())
             {
@@ -71,15 +64,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
         };
 
         auto flush = [&](int end, int start, const std::optional<OMDemiurgeRect> &clip) -> void {
-            if (clip.has_value())
-            {
-                task->setScissor(clip->x * scaleX, clip->y * scaleY, clip->width * scaleX, clip->height * scaleY);
-            }
-            else
-            {
-                task->setScissor(0.0f, 0.0f, static_cast<float>(ext.x), static_cast<float>(ext.y));
-            }
-
+            applyClipScissor(task, clip);
             task->pipeline(pipeline)->vertexBufferInstanced({instanceBuffer}, start)->drawInstance(6, end - start, start);
         };
 
@@ -114,6 +99,29 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
                 flush(i, start, currentClip);
                 inDraw = false;
             }
+        }
+    }
+
+    // Applies a per-instance clip rect through the task's dynamic scissor.
+    auto applyClipScissor(OMRendererTask *task, int index) -> void
+    {
+        applyClipScissor(task, this->fetchClip(index));
+    }
+
+    auto applyClipScissor(OMRendererTask *task, const std::optional<OMDemiurgeRect> &clip) -> void
+    {
+        const auto ext = renderer->getExtent();
+        const auto logical = renderer->getLogicalExtent();
+        const float scaleX = logical.x > 0 ? static_cast<float>(ext.x) / static_cast<float>(logical.x) : 1.0f;
+        const float scaleY = logical.y > 0 ? static_cast<float>(ext.y) / static_cast<float>(logical.y) : 1.0f;
+
+        if (clip.has_value())
+        {
+            task->setScissor(clip->x * scaleX, clip->y * scaleY, clip->width * scaleX, clip->height * scaleY);
+        }
+        else
+        {
+            task->setScissor(0.0f, 0.0f, static_cast<float>(ext.x), static_cast<float>(ext.y));
         }
     }
 

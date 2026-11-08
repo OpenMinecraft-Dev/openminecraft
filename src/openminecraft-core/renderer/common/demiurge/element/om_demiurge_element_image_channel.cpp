@@ -65,6 +65,7 @@ auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, float upper, float
                 pipelines[i]->bindInput(1, renderer->getTexture(textures[i]));
             }
 
+            applyClipScissor(task, i);
             task->pipeline(pipelines[i])->vertexBufferInstanced({instanceBuffer}, i)->drawInstance(6, 1, i);
         }
     }

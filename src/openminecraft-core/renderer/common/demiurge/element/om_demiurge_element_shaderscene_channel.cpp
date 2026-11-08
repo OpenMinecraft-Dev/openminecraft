@@ -87,6 +87,7 @@ auto OMDemiurgeShaderSceneChannel::submitTask(OMRendererTask *task, float upper,
             continue;
         }
 
+        applyClipScissor(task, i);
         task->pipeline(pipeline)->vertexBufferInstanced({instanceBuffer}, i)->drawInstance(6, 1, i);
     }
 }
