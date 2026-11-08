@@ -153,6 +153,6 @@ void main()
         minDist = minDist * ((float(winding % 2) - 0.5) * 2);
     }
 
-    outColor = svgColor * smoothstep(-svgFactor, svgFactor, minDist);
+    outColor = vec4(svgColor.rgb, svgColor.a * smoothstep(-svgFactor, svgFactor, minDist));
 }
 #endif

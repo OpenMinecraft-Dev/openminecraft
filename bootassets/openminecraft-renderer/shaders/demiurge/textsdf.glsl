@@ -26,7 +26,9 @@ vec4 getBBox()
 
 void main()
 {
-    vec2 inPosition = (vertexgen_quad_normal() - 0.5) * 2 + 0.5;
+    // Quad is expanded around the glyph bbox to leave room for the SDF edge;
+    // 1.5x is enough coverage while reducing overdraw.
+    vec2 inPosition = (vertexgen_quad_normal() - 0.5) * 1.5 + 0.5;
     vec2 screenPos = inTextPos.xy + inPosition.xy * inTextPos.zw;
 
     gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), inTextDepth, 1.0);
@@ -97,7 +99,13 @@ void main()
 {
     float dummy = ubo.width + ubo.height;
     vec4 bbox = getBBox();
-    if (textUv.x < bbox.x || textUv.x > bbox.y || textUv.y < bbox.z || textUv.y > bbox.w)
+
+    // Keep a margin around the glyph bbox so the anti-aliased fringe of outlines
+    // that touch/overshoot the bbox is not clipped away.
+    float bboxMargin = max(textFactor * 2.0, 1e-4);
+
+    if (textUv.x < bbox.x - bboxMargin || textUv.x > bbox.y + bboxMargin || textUv.y < bbox.z - bboxMargin ||
+        textUv.y > bbox.w + bboxMargin)
     {
         discard;
     }

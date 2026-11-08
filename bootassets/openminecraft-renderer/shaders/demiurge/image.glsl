@@ -93,6 +93,8 @@ void main()
         }
     }
 
-    outColor = imageColor * alpha * texture(inTexture, uv);
+    vec4 sampled = texture(inTexture, uv);
+    vec4 tinted = imageColor * sampled;
+    outColor = vec4(tinted.rgb, tinted.a * alpha);
 }
 #endif

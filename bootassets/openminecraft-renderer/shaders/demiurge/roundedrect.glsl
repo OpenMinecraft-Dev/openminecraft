@@ -68,6 +68,7 @@ void main()
         alpha *= clipAlpha;
     }
 
-    outColor = rrectColor * alpha;
+    // Straight alpha: the pipeline blends with SrcAlpha/OneMinusSrcAlpha.
+    outColor = vec4(rrectColor.rgb, rrectColor.a * alpha);
 }
 #endif
