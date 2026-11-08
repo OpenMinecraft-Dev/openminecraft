@@ -461,6 +461,13 @@ auto OMDemiurgeNode::dispatchCapturedEvent(const OMDemiurgeEvent &event) -> void
 
 void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
 {
+    std::shared_ptr<OMDemiurgeNode> focusBefore;
+
+    if (parent == nullptr && event.type == OMDemiurgeEventType::MouseDown)
+    {
+        focusBefore = focusedNode.lock();
+    }
+
     // Mouse capture takes over the whole tree while a control is held down.
     if (parent == nullptr && event.isMouse())
     {
@@ -605,6 +612,14 @@ void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
         {
             mx = event.x;
             my = event.y;
+        }
+
+        // Clicking outside the focused node (or on a non-focusable element) drops
+        // focus. Focus changes triggered during this dispatch keep the new node.
+        if (parent == nullptr && event.type == OMDemiurgeEventType::MouseDown && focusBefore &&
+            focusedNode.lock() == focusBefore && !focusBefore->containsPoint(event.x, event.y))
+        {
+            focusBefore->releaseFocus();
         }
     }
     catch (std::bad_any_cast &e)

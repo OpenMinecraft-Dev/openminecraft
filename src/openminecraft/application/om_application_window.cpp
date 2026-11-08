@@ -54,6 +54,7 @@
 #include <iomanip>
 
 #include "openminecraft-shell/om_application.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_inputbox.hpp"
 #include "openminecraft-shell/om_application_terrain.hpp"
 
 using namespace openminecraft;
@@ -184,6 +185,11 @@ void OMApplication::mainLoop(OMBackend backend)
 
             while (accumulator >= TICK_DT)
             {
+                if (openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeInputBox::isTextInputFocused())
+                {
+                    keystates.fill(false);
+                }
+
                 float inputX = (keystates[0] ? 1.0f : 0.0f) - (keystates[2] ? 1.0f : 0.0f);
                 float inputZ = (keystates[3] ? 1.0f : 0.0f) - (keystates[1] ? 1.0f : 0.0f);
                 float len = std::sqrt(inputX * inputX + inputZ * inputZ);
@@ -327,6 +333,11 @@ void OMApplication::mainLoop(OMBackend backend)
                 return;
             }
 
+            if (openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeInputBox::isTextInputFocused())
+            {
+                return;
+            }
+
             switch (e.key.key)
             {
             case SDLK_ESCAPE:
@@ -353,6 +364,11 @@ void OMApplication::mainLoop(OMBackend backend)
             }
         });
         bus.append(SDL_EVENT_KEY_UP, [&](SDL_Event &e) -> void {
+            if (openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeInputBox::isTextInputFocused())
+            {
+                return;
+            }
+
             switch (e.key.key)
             {
             case SDLK_W:
