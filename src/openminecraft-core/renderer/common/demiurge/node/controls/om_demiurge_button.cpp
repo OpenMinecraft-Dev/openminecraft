@@ -8,6 +8,7 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
+#include <algorithm>
 #include <array>
 #include <SDL3/SDL.h>
 #include <memory>
@@ -17,7 +18,8 @@ using namespace openminecraft::renderer::common::animation;
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
 OMDemiurgeButton::OMDemiurgeButton(geom::OMFontSet *fontset)
-    : opacity(0.6f), backgroundColor({0.1f, 0.1f, 0.1f}), textColor({1.0f, 1.0f, 1.0f, 1.0f})
+    : opacity(0.6f), backgroundColor({0.1f, 0.1f, 0.1f}), textColor({1.0f, 1.0f, 1.0f, 1.0f}),
+      disabledAmount(0.0f)
 {
     stylesStorage.put("justifyContent", OMDemiurgeAlign::Center);
     stylesStorage.put("alignItems", OMDemiurgeAlign::Center);
@@ -36,21 +38,39 @@ OMDemiurgeButton::OMDemiurgeButton(geom::OMFontSet *fontset)
 OMDemiurgeButton::~OMDemiurgeButton() = default;
 void OMDemiurgeButton::update()
 {
-    bkgNode->style("color", (int)(f3ToRgba(backgroundColor.get()) | static_cast<uint8_t>(opacity.get() * 255.0f)));
+    const float disabledValue = std::clamp(disabledAmount.get(), 0.0f, 1.0f);
+
+    glm::vec3 background = glm::mix(backgroundColor.get(), glm::vec3(0.30f), disabledValue * 0.75f);
+    float alpha = std::clamp(opacity.get() * (1.0f - disabledValue * 0.5f), 0.0f, 1.0f);
+
+    glm::vec4 text = textColor.get();
+    glm::vec3 textRgb = glm::mix(glm::vec3(text), glm::vec3(0.55f), disabledValue * 0.75f);
+
+    bkgNode->style("color", (int)(f3ToRgba(background) | static_cast<uint8_t>(alpha * 255.0f)));
     bkgNode->style("radius", stylesStorage.get<glm::vec4>("radius", glm::vec4(5.0f)));
-    textNode->style("color", f4ToRgba(textColor.get()));
+    textNode->style("color", (int)f4ToRgba(glm::vec4(textRgb, text.a)));
     textNode->style("text", stylesStorage.get<std::string>("label", "Button"));
     textNode->style("textheight", stylesStorage.get<int>("textheight", 16));
     OMDemiurgeContainerNode::update();
 }
 auto OMDemiurgeButton::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult
 {
+    if (disabled)
+    {
+        return Ignored;
+    }
+
     opacity.animateTo(stylesStorage.get<float>("opacity_clicked", 1.0f), easeOutCirc<float>,
                       stylesStorage.get<float>("animation_speed", 0.2f));
     return Handled;
 }
 auto OMDemiurgeButton::processMouseUp(float x, float y, uint8_t button) -> OMDemiurgeEventResult
 {
+    if (disabled)
+    {
+        return Ignored;
+    }
+
     opacity.animateTo(stylesStorage.get<float>("opacity_hovered", 0.8f), easeOutCirc<float>,
                       stylesStorage.get<float>("animation_speed", 0.2f));
     handle();
@@ -59,12 +79,22 @@ auto OMDemiurgeButton::processMouseUp(float x, float y, uint8_t button) -> OMDem
 
 auto OMDemiurgeButton::processMouseEnter(float x, float y) -> OMDemiurgeEventResult
 {
+    if (disabled)
+    {
+        return Ignored;
+    }
+
     opacity.animateTo(stylesStorage.get<float>("opacity_hovered", 0.8f), easeOutCirc<float>,
                       stylesStorage.get<float>("animation_speed", 0.2f));
     return Handled;
 }
 auto OMDemiurgeButton::processMouseExit(float x, float y) -> OMDemiurgeEventResult
 {
+    if (disabled)
+    {
+        return Ignored;
+    }
+
     opacity.animateTo(stylesStorage.get<float>("opacity_normal", 0.6f), easeOutCirc<float>,
                       stylesStorage.get<float>("animation_speed", 0.2f));
     return Handled;
@@ -87,6 +117,26 @@ void OMDemiurgeButton::setBackgroundRadius(glm::vec4 r)
 {
     bkgNode->style("radius", r);
 }
+void OMDemiurgeButton::setDisabled(bool value, bool animate)
+{
+    if (disabled == value)
+    {
+        return;
+    }
+
+    disabled = value;
+
+    if (animate)
+    {
+        disabledAmount.animateTo(disabled ? 1.0f : 0.0f, easeOutCirc<float>,
+                                 stylesStorage.get<float>("animation_speed", 0.2f));
+    }
+    else
+    {
+        disabledAmount.setTo(disabled ? 1.0f : 0.0f);
+    }
+}
+
 void OMDemiurgeButton::setOnClick(std::function<void()> h)
 {
     handle = h;

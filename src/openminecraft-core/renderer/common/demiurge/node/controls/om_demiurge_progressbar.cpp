@@ -13,7 +13,8 @@ using namespace openminecraft::renderer::common::animation;
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
 OMDemiurgeProgressBar::OMDemiurgeProgressBar()
-    : trackColor(glm::vec4(0.106f, 0.106f, 0.141f, 0.25f)), barColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f))
+    : trackColor(glm::vec4(0.106f, 0.106f, 0.141f, 0.25f)), barColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f)),
+      disabledAmount(0.0f)
 {
     startedAt = std::chrono::steady_clock::now();
     lastUpdate = startedAt;
@@ -54,8 +55,15 @@ void OMDemiurgeProgressBar::update()
 {
     const auto radius = stylesStorage.get<glm::vec4>("radius", glm::vec4(4.0f));
 
-    trackNode->style("color", (int)f4ToRgba(trackColor.get()))->style("radius", radius);
-    barNode->style("color", (int)f4ToRgba(barColor.get()))->style("radius", radius);
+    const float disabledValue = std::clamp(disabledAmount.get(), 0.0f, 1.0f);
+
+    auto applyDisabled = [&](glm::vec4 color) -> glm::vec4 {
+        glm::vec3 rgb = glm::mix(glm::vec3(color), glm::vec3(0.30f), disabledValue * 0.75f);
+        return glm::vec4(rgb, color.a * (1.0f - disabledValue * 0.35f));
+    };
+
+    trackNode->style("color", (int)f4ToRgba(applyDisabled(trackColor.get())))->style("radius", radius);
+    barNode->style("color", (int)f4ToRgba(applyDisabled(barColor.get())))->style("radius", radius);
 
     // Track width in pixels (falls back to the style value before the first layout pass).
     float trackWidth = 180.0f;
@@ -182,6 +190,26 @@ void OMDemiurgeProgressBar::setProgress(float progress)
     if (nextDeterminate)
     {
         targetProgress = progress;
+    }
+}
+
+void OMDemiurgeProgressBar::setDisabled(bool value, bool animate)
+{
+    if (disabled == value)
+    {
+        return;
+    }
+
+    disabled = value;
+
+    if (animate)
+    {
+        disabledAmount.animateTo(disabled ? 1.0f : 0.0f, easeOutCirc<float>,
+                                 stylesStorage.get<float>("animation_speed", 0.18f));
+    }
+    else
+    {
+        disabledAmount.setTo(disabled ? 1.0f : 0.0f);
     }
 }
 

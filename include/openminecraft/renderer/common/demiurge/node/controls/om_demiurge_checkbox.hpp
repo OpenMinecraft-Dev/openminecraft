@@ -38,6 +38,11 @@ class OMDemiurgeCheckBox : public OMDemiurgeContainerNode
     void setTextColor(glm::vec4 color);
     void setLabel(const std::string &label);
     void setAnimationSpeed(float seconds);
+    void setDisabled(bool value, bool animate = true);
+    auto isDisabled() const -> bool
+    {
+        return disabled;
+    }
 
     animation::OMAnimationValue<float> checkAmount;
     animation::OMAnimationValue<glm::vec4> boxUnchecked;
@@ -46,6 +51,7 @@ class OMDemiurgeCheckBox : public OMDemiurgeContainerNode
     animation::OMAnimationValue<glm::vec4> labelColor;
     animation::OMAnimationValue<float> hoverAmount;
     animation::OMAnimationValue<float> pressAmount;
+    animation::OMAnimationValue<float> disabledAmount;
 
   private:
     std::shared_ptr<OMDemiurgeNode> boxNode;
@@ -53,6 +59,7 @@ class OMDemiurgeCheckBox : public OMDemiurgeContainerNode
     std::shared_ptr<OMDemiurgeNode> textNode;
 
     bool checked = false;
+    bool disabled = false;
     std::function<void(bool)> handle = [](bool) {};
 };
 } // namespace openminecraft::renderer::common::demiurge::node::controls

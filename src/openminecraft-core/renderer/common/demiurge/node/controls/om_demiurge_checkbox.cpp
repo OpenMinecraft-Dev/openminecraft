@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 
+#include <algorithm>
 #include <array>
 
 using namespace openminecraft::renderer::common::animation;
@@ -19,7 +20,7 @@ static constexpr const char *CheckPath = "M 1.2 7.0 L 5.6 11.4 L 13.0 4.0 L 11.6
 OMDemiurgeCheckBox::OMDemiurgeCheckBox(geom::OMFontSet *fontset)
     : checkAmount(0.0f), boxUnchecked(glm::vec4(0.1f, 0.1f, 0.12f, 0.65f)),
       boxChecked(glm::vec4(0.0f, 0.55f, 0.75f, 1.0f)), checkColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)),
-      labelColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)), hoverAmount(0.0f), pressAmount(0.0f)
+      labelColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)), hoverAmount(0.0f), pressAmount(0.0f), disabledAmount(0.0f)
 {
     stylesStorage.put("flexDirection", OMDemiurgeDirection::Row);
     stylesStorage.put("alignItems", OMDemiurgeAlign::Center);
@@ -79,10 +80,17 @@ void OMDemiurgeCheckBox::update()
     glm::vec3 rgb = glm::mix(glm::vec3(boxColor), glm::vec3(1.0f), hover * hoverBoost);
     rgb = glm::mix(rgb, glm::vec3(0.0f), press * pressBoost);
     boxColor = glm::vec4(rgb, boxColor.a);
+
+    // Disabled: desaturate towards a muted grey and fade a little.
+    const float disabledValue = std::clamp(disabledAmount.get(), 0.0f, 1.0f);
+    boxColor = glm::vec4(glm::mix(glm::vec3(boxColor), glm::vec3(0.30f), disabledValue * 0.75f),
+                         boxColor.a * (1.0f - disabledValue * 0.35f));
     boxNode->style("color", (int)f4ToRgba(boxColor))
         ->style("radius", stylesStorage.get<glm::vec4>("radius", glm::vec4(4.0f)));
 
-    checkNode->style("color", (int)f4ToRgba(glm::vec4(tick.r, tick.g, tick.b, tick.a * amount)))
+    const glm::vec3 tickRgb = glm::mix(glm::vec3(tick), glm::vec3(0.55f), disabledValue * 0.75f);
+    checkNode->style("color",
+                     (int)f4ToRgba(glm::vec4(tickRgb, tick.a * amount * (1.0f - disabledValue * 0.85f))))
         ->style("svgPath", stylesStorage.get<std::string>("svgPath", std::string(CheckPath)))
         ->style("svgSize", glm::vec2(14.0f, 14.0f));
 
@@ -98,7 +106,9 @@ void OMDemiurgeCheckBox::update()
         textNode->style("text", stylesStorage.get<std::string>("label", "Checkbox"));
         textNode->style("textheight", textHeight);
         textNode->style("offsetY", OMDemiurgeSize::pixels(textOffset));
-        textNode->style("color", (int)f4ToRgba(labelColor.get()));
+        const auto label = labelColor.get();
+        const glm::vec3 labelRgb = glm::mix(glm::vec3(label), glm::vec3(0.55f), disabledValue * 0.75f);
+        textNode->style("color", (int)f4ToRgba(glm::vec4(labelRgb, label.a)));
     }
 
     OMDemiurgeContainerNode::update();
@@ -106,12 +116,22 @@ void OMDemiurgeCheckBox::update()
 
 auto OMDemiurgeCheckBox::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult
 {
+    if (disabled)
+    {
+        return Ignored;
+    }
+
     pressAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
     return Handled;
 }
 
 auto OMDemiurgeCheckBox::processMouseUp(float x, float y, uint8_t button) -> OMDemiurgeEventResult
 {
+    if (disabled)
+    {
+        return Ignored;
+    }
+
     pressAmount.animateTo(0.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
     toggle();
     return Handled;
@@ -119,12 +139,22 @@ auto OMDemiurgeCheckBox::processMouseUp(float x, float y, uint8_t button) -> OMD
 
 auto OMDemiurgeCheckBox::processMouseEnter(float x, float y) -> OMDemiurgeEventResult
 {
+    if (disabled)
+    {
+        return Ignored;
+    }
+
     hoverAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
     return Handled;
 }
 
 auto OMDemiurgeCheckBox::processMouseExit(float x, float y) -> OMDemiurgeEventResult
 {
+    if (disabled)
+    {
+        return Ignored;
+    }
+
     const float speed = stylesStorage.get<float>("animation_speed", 0.18f);
     hoverAmount.animateTo(0.0f, easeOutCirc<float>, speed);
     pressAmount.animateTo(0.0f, easeOutCirc<float>, speed);
@@ -183,6 +213,26 @@ void OMDemiurgeCheckBox::setTextColor(glm::vec4 color)
 void OMDemiurgeCheckBox::setLabel(const std::string &label)
 {
     stylesStorage.put("label", label);
+}
+
+void OMDemiurgeCheckBox::setDisabled(bool value, bool animate)
+{
+    if (disabled == value)
+    {
+        return;
+    }
+
+    disabled = value;
+
+    if (animate)
+    {
+        disabledAmount.animateTo(disabled ? 1.0f : 0.0f, easeOutCirc<float>,
+                                 stylesStorage.get<float>("animation_speed", 0.18f));
+    }
+    else
+    {
+        disabledAmount.setTo(disabled ? 1.0f : 0.0f);
+    }
 }
 
 void OMDemiurgeCheckBox::setAnimationSpeed(float seconds)

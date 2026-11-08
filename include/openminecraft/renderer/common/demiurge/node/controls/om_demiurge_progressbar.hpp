@@ -27,6 +27,11 @@ class OMDemiurgeProgressBar : public OMDemiurgeContainerNode
 
     // 0..1 => determinate; anything outside (or NaN) => indeterminate.
     void setProgress(float progress);
+    void setDisabled(bool value, bool animate = true);
+    auto isDisabled() const -> bool
+    {
+        return disabled;
+    }
     auto isDeterminate() const -> bool
     {
         return determinate;
@@ -38,6 +43,7 @@ class OMDemiurgeProgressBar : public OMDemiurgeContainerNode
 
     animation::OMAnimationValue<glm::vec4> trackColor;
     animation::OMAnimationValue<glm::vec4> barColor;
+    animation::OMAnimationValue<float> disabledAmount;
 
   private:
     std::shared_ptr<OMDemiurgeNode> trackNode;
@@ -46,6 +52,7 @@ class OMDemiurgeProgressBar : public OMDemiurgeContainerNode
     std::chrono::steady_clock::time_point lastUpdate;
 
     bool determinate = false;
+    bool disabled = false;
     float targetProgress = 0.0f;
     float visualLeft = 0.0f;
     float visualWidth = 0.0f;

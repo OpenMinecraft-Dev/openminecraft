@@ -3,7 +3,14 @@
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_checkbox.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_badge.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_divider.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_iconbutton.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_link.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_progressbar.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_slider.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_spinner.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_switch.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
@@ -30,6 +37,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     fontset->fontList.push_back(std::make_shared<geom::OMFont>(*rawfile1.get()));
 
     auto button = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
+    demoButton = button;
     button->setOnClick([&]() {
         offset.animateTo(-1.05, common::animation::easeInOutCirc<float>, 1.0);
 
@@ -55,6 +63,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     });
     button->setBackgroundColor({0.17, 0.17, 0.20});
     auto button2 = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
+    quitButton = button2;
     button2->setOnClick([&]() {
         event::OMEvent e;
         e.type = event::Custom;
@@ -81,6 +90,55 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     });
     checkBox->setBoxColors(glm::vec4(0.1f, 0.1f, 0.12f, 0.65f), glm::vec4(0.0f, 0.55f, 0.75f, 1.0f));
     checkBox->setCheckColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+    radioGroup = std::make_shared<node::controls::OMDemiurgeRadioGroup>();
+    radioGroup->setDirection(OMDemiurgeDirection::Row);
+    radioGroup->setGap(16.0f);
+    radioGroup->style("alignSelf", OMDemiurgeAlign::Center);
+
+    radioA = std::make_shared<node::controls::OMDemiurgeRadioBox>(fontset.get());
+    radioB = std::make_shared<node::controls::OMDemiurgeRadioBox>(fontset.get());
+    radioA->setLabel("Option A");
+    radioB->setLabel("Option B");
+    radioA->setGroup(radioGroup);
+    radioB->setGroup(radioGroup);
+
+    demoSwitch = std::make_shared<node::controls::OMDemiurgeSwitch>();
+
+    demoSlider = std::make_shared<node::controls::OMDemiurgeSlider>();
+    demoSlider->style("width", OMDemiurgeSize::pixels(110.0f));
+    demoSlider->setValue(0.4f, false);
+
+    demoSpinner = std::make_shared<node::controls::OMDemiurgeSpinner>();
+    demoSpinner->setColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f));
+
+    demoIconButton = std::make_shared<node::controls::OMDemiurgeIconButton>(24.0f);
+    demoIconButton->setIcon("M 3 1 L 12 7 L 3 13 Z", 14.0f);
+    demoIconButton->setIconColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+    demoBadge = std::make_shared<node::controls::OMDemiurgeBadge>(fontset.get());
+    demoBadge->setText("3");
+
+    demoLink = std::make_shared<node::controls::OMDemiurgeLink>(fontset.get());
+    demoLink->setText("Docs");
+
+    demoDivider = std::make_shared<node::controls::OMDemiurgeDivider>(true);
+    demoDivider->style("height", OMDemiurgeSize::pixels(20.0f));
+
+    auto controlRow = std::make_shared<node::OMDemiurgeContainerNode>();
+    controlRow->style({
+        {"flexDirection", OMDemiurgeDirection::Row},
+        {"alignItems", OMDemiurgeAlign::Center},
+        {"flexGap", OMDemiurgeSize::pixels(12.0f)},
+        {"alignSelf", OMDemiurgeAlign::Center},
+    });
+    controlRow->mount(demoSwitch);
+    controlRow->mount(demoDivider);
+    controlRow->mount(demoSlider);
+    controlRow->mount(demoSpinner);
+    controlRow->mount(demoIconButton);
+    controlRow->mount(demoBadge);
+    controlRow->mount(demoLink);
 
     node = std::make_shared<node::OMDemiurgeRectNode>()
                ->style({
@@ -115,7 +173,9 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                            ->mount(button->style("animation_speed", 1.0f)->style("label", "Demo Test"))
                            ->mount(button2->style("animation_speed", 1.0f)->style("label", "Quit"))
                            ->mount(progressBar)
-                           ->mount(checkBox));
+                           ->mount(checkBox)
+                           ->mount(radioGroup)
+                           ->mount(controlRow));
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->name = "surface";

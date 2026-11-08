@@ -28,16 +28,23 @@ class OMDemiurgeButton : public OMDemiurgeContainerNode
     void setBackgroundColor(glm::vec3 d);
     void setBackgroundRadius(glm::vec4 r);
     void setOnClick(std::function<void()> h);
+    void setDisabled(bool value, bool animate = true);
+    auto isDisabled() const -> bool
+    {
+        return disabled;
+    }
     void update() override;
 
     animation::OMAnimationValue<float> opacity;
     animation::OMAnimationValue<glm::vec3> backgroundColor;
     animation::OMAnimationValue<glm::vec4> textColor;
+    animation::OMAnimationValue<float> disabledAmount;
 
   private:
     std::shared_ptr<OMDemiurgeNode> textNode;
     std::shared_ptr<OMDemiurgeNode> bkgNode;
     std::function<void()> handle = []() -> void {};
+    bool disabled = false;
 };
 } // namespace openminecraft::renderer::common::demiurge::node::controls
 
