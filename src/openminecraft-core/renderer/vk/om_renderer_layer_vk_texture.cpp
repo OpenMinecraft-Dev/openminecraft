@@ -484,8 +484,8 @@ void OMRendererTextureVk::updateDataMulti(const std::vector<common::OMRendererTe
         cmdBuff.reset({});
         cmdBuff.begin(CommandBufferBeginInfo(CommandBufferUsageFlagBits::eOneTimeSubmit));
 
-        // 所有 layer 在 build() 阶段都已初始化过，可以对整张图用一次 barrier；
-        // 若仍有未初始化的 layer（首次上传），退回逐层转换以保证正确性。
+        // All layers were initialized during build(), so one barrier can cover the whole image;
+        // if any layer is still uninitialized (first upload), fall back to per-layer transitions for correctness.
         bool allUploaded = true;
         for (auto &u : updates)
         {
@@ -500,7 +500,7 @@ void OMRendererTextureVk::updateDataMulti(const std::vector<common::OMRendererTe
 
         if (allUploaded)
         {
-            // 一次 barrier 覆盖整张图：ShaderReadOnly -> TransferDst
+            // One barrier for the whole image: ShaderReadOnly -> TransferDst
             transitionImageLayout(cmdBuff, ImageLayout::eShaderReadOnlyOptimal, ImageLayout::eTransferDstOptimal, 0, 0,
                                   layers);
 
@@ -520,7 +520,7 @@ void OMRendererTextureVk::updateDataMulti(const std::vector<common::OMRendererTe
                 offset += bytes;
             }
 
-            // 一次 barrier 覆盖整张图：TransferDst -> ShaderReadOnly
+            // One barrier for the whole image: TransferDst -> ShaderReadOnly
             transitionImageLayout(cmdBuff, ImageLayout::eTransferDstOptimal, ImageLayout::eShaderReadOnlyOptimal, 0, 0,
                                   layers);
         }

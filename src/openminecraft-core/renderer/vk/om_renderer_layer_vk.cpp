@@ -1106,6 +1106,9 @@ OMRendererVk::~OMRendererVk()
         delete defaultTarget;
         handlers.clear();
 
+        // Destroy all registered buffers / textures / render targets (must happen before the device is destroyed)
+        clearRegistry();
+
         swapchainManager->destroy();
         validationLayer->ifEnable(
             [&]() -> void { instance.destroyDebugReportCallbackEXT(reportCallback, &allocator); });

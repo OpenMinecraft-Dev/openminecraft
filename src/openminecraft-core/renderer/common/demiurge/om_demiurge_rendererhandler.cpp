@@ -33,19 +33,20 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer, std::
 {
     node = n;
 
-    uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(float) * 2);
+    uniformBuffer = wrap::OMBufferRef(renderer, "demiurge.uniform." + std::to_string(wrap::nextObjectTagId()));
+    renderer->registerBuffer(uniformBuffer.getTag(), Uniform, sizeof(float) * 2);
 
     auto ext = renderer->getExtent();
-    middleTarget = new wrap::OMRendererTempTarget(renderer);
+    middleTarget = new wrap::OMRendererTempTarget(renderer, "demiurge.middle");
     middleTarget->construct(ext);
 
-    rect.init(uniformBuffer, middleTarget->target);
-    roundedRect.init(uniformBuffer, middleTarget->target);
-    image.init(uniformBuffer, middleTarget->target);
-    sector.init(uniformBuffer, middleTarget->target);
-    clipRect.init(uniformBuffer, middleTarget->target);
-    svg.init(uniformBuffer, middleTarget->target);
-    shaderScene.init(uniformBuffer, middleTarget->target);
+    rect.init(uniformBuffer.getTag(), middleTarget->targetTagName());
+    roundedRect.init(uniformBuffer.getTag(), middleTarget->targetTagName());
+    image.init(uniformBuffer.getTag(), middleTarget->targetTagName());
+    sector.init(uniformBuffer.getTag(), middleTarget->targetTagName());
+    clipRect.init(uniformBuffer.getTag(), middleTarget->targetTagName());
+    svg.init(uniformBuffer.getTag(), middleTarget->targetTagName());
+    shaderScene.init(uniformBuffer.getTag(), middleTarget->targetTagName());
 
     basics::OMVertexFormat simp;
     simp.nextGroup()->decideStruct();
@@ -64,7 +65,6 @@ OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
     {
         p.second->destroy();
     }
-    delete uniformBuffer;
 
     delete middleTarget;
 }
@@ -78,7 +78,7 @@ auto OMDemiurgeRendererHandler::fetchFontChannel(geom::OMFontSet *s)
     }
 
     auto c = std::make_shared<element::OMDemiurgeTextSdfChannel>(this->renderer, [&]() -> void { recordTask(); }, s);
-    c->init(uniformBuffer, middleTarget->target);
+    c->init(uniformBuffer.getTag(), middleTarget->targetTagName());
     fonts[s] = c;
     return c;
 }
@@ -97,10 +97,10 @@ void OMDemiurgeRendererHandler::submitTasks()
 void OMDemiurgeRendererHandler::recordTask(bool resize)
 {
     auto task = renderer->fetchTask("demiurgeui_compose_" + name);
-    task->target(middleTarget->target);
+    task->target(middleTarget->target());
 
-    // 调试：OM_CLOSE_UI=1 时主界面与 galaxy 不再绘制（只清空目标），
-    // 用于 GPU 满负载渲染场景本体的性能测试。
+    // Debug: with OM_CLOSE_UI=1 the main UI and galaxy are not drawn (targets are only cleared),
+    // used for performance tests that render the scene under full GPU load.
     static const bool hideUi = std::getenv("OM_CLOSE_UI") != nullptr;
 
     if (hideUi && (name == "surface" || name == "surface_background"))

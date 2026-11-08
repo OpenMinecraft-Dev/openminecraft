@@ -21,7 +21,7 @@ using namespace openminecraft::renderer;
 
 namespace openminecraft::shell
 {
-// 区块存储格式（little-endian，展开形式，便于 mmap/直接读取）：
+// Chunk storage format (little-endian, expanded layout, easy to mmap/read directly):
 //   magic        char[4] "OMCH"
 //   version      u32 = 2
 //   chunkX       i32
@@ -30,10 +30,10 @@ namespace openminecraft::shell
 //   per section:
 //     blockCount i16
 //     fluidCount i16
-//     blockIds   u32 * 4096   // 按 y*256 + z*16 + x 索引（原版顺序，x 最快），值为原始 block state id
-//     biomeIds   u32 * 64     // 按 y*16 + x*4 + z 索引（4x4x4）
-// 每个 section 固定 4096+64 个 u32，不需要解码调色板，可直接索引读取。
-// 注意：方块索引沿用 Minecraft 原版顺序 y*256 + z*16 + x，与 OMChunk 的 y*256 + x*16 + z 不同。
+//     blockIds   u32 * 4096   // indexed by y*256 + z*16 + x (vanilla order, x fastest); values are raw block state ids
+//     biomeIds   u32 * 64     // indexed by y*16 + x*4 + z (4x4x4)
+// Each section has exactly 4096+64 u32 values; no palette decoding, direct indexed reads.
+// Note: block indexing follows vanilla Minecraft order y*256 + z*16 + x, unlike OMChunk's y*256 + x*16 + z.
 static void storeChunkToFile(const network::OMProtocolChunkDataAndLight &chunk)
 {
     std::error_code ec;
@@ -55,7 +55,7 @@ static void storeChunkToFile(const network::OMProtocolChunkDataAndLight &chunk)
     auto writeU32 = [&](uint32_t v) { out.write(reinterpret_cast<const char *>(&v), sizeof(v)); };
     auto writeI32 = [&](int32_t v) { out.write(reinterpret_cast<const char *>(&v), sizeof(v)); };
 
-    // 把 paletted container 展开成 entryCount 个 id
+    // Expand the paletted container into entryCount ids
     auto expand = [](const network::OMProtocolPalettedContainer &pc, size_t entryCount, uint32_t fallback) {
         std::vector<uint32_t> ids(entryCount, fallback);
 
@@ -123,8 +123,8 @@ static void storeChunkToFile(const network::OMProtocolChunkDataAndLight &chunk)
 }
 
 
-// 异步区块写盘：网络线程只负责入队，避免同步写盘（约 400KB/区块、~3ms）
-// 拖慢 chunk_batch_received 的 ACK，从而被服务端限速。
+// Asynchronous chunk writing: the network thread only enqueues, avoiding synchronous writes (~400KB/chunk, ~3ms)
+// that would delay the chunk_batch_received ACK and get throttled by the server.
 class OMChunkWriter
 {
   public:
@@ -260,7 +260,7 @@ void OMApplication::networkSetup(std::string host, std::string port)
                 return v != nullptr ? std::clamp(std::atoi(v), 2, 32) : 24;
             }();
 
-            // 上报 view distance：服务端实际发送半径 = min(服务端配置, 该值)
+            // Report view distance: the server's actual send radius = min(server config, this value)
             transformer->sendConfigurationClientInformation(viewDistance);
             logger->debug("client view distance: {}", viewDistance);
 
@@ -1115,10 +1115,10 @@ void OMApplication::networkSetup(std::string host, std::string port)
 
         void handlePlayChunkBatchEnd(uint32_t numOfChunks) override
         {
-            // 1.20.2+：每批区块结束后必须回 Chunk Batch Received，
-            // 否则服务端会认为客户端处理不过来而停止继续发送区块。
-            // 固定速率：不要用客户端处理耗时（含写盘）反推 desired，
-            // 否则会被服务端限速到 1~3 个/tick，导致长时间只收到附近一小片区块。
+            // 1.20.2+: Chunk Batch Received must be sent after each chunk batch,
+            // otherwise the server assumes the client cannot keep up and stops sending chunks.
+            // Fixed rate: do not derive desired from client processing time (including disk writes),
+            // otherwise the server throttles us to 1~3 chunks/tick and only a small nearby area loads.
             static const float fixedDesired = []() -> float {
                 const char *v = std::getenv("OM_CHUNK_BATCH");
                 return v != nullptr ? std::stof(v) : 12.0f;

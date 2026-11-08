@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_object_ref.hpp"
 #include <functional>
 #include <iostream>
 #include <utility>
@@ -16,28 +17,35 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
     OMDemiurgeQuadChannel(OMRenderer *renderer, std::function<void()> recreate)
         : renderer(renderer), recreation(std::move(recreate))
     {
+        instanceTag = "demiurge.quad." + std::to_string(wrap::nextObjectTagId());
     }
     ~OMDemiurgeQuadChannel() = default;
 
     auto destroy() -> void override
     {
-        delete instanceBuffer;
+        if (instanceBuffer)
+        {
+            renderer->unregisterBuffer(instanceBuffer.getTag());
+            instanceBuffer = wrap::OMBufferRef();
+        }
         delete pipeline;
     }
 
-    auto init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) -> void override
+    auto init(const std::string &uniformTag, const std::string &targetTag) -> void override
     {
-        initPipeline(uniform, target, true);
+        initPipeline(wrap::OMBufferRef(renderer, uniformTag), wrap::OMRenderTargetRef(renderer, targetTag), true);
     }
 
     auto submitTask(OMRendererTask *task, float upper, float lower) -> void override
     {
         if (instanceBuffer->length < this->bufferSize())
         {
-            auto ninstanceBuffer = renderer->allocateBuffer(InstanceData, this->bufferSize());
+            const std::string newTag = instanceTag + ".g" + std::to_string(++instanceGeneration);
+            auto ninstanceBuffer = wrap::OMBufferRef(renderer, newTag);
+            renderer->registerBuffer(newTag, InstanceData, this->bufferSize());
             instanceBuffer->copyTo(ninstanceBuffer);
 
-            delete instanceBuffer;
+            renderer->unregisterBuffer(instanceBuffer.getTag());
             instanceBuffer = ninstanceBuffer;
         }
 
@@ -77,11 +85,24 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
     }
 
   protected:
-    // 所有 Demiurge 四边形通道共用的管线构建；writeColor = false 的通道只写深度，
-    // 不对 color attachment 产生任何写入（cliprect 这类"只做剪裁"的通道用）。
+    // Shared pipeline construction for all Demiurge quad channels; with writeColor = false the channel only writes depth,
+    // producing no writes to the color attachment (used by clipping-only channels such as cliprect).
+    // Reallocate the instance buffer (the old object is unregistered from the registry)
+    auto resetInstanceBuffer(uint64_t size) -> void
+    {
+        if (instanceBuffer)
+        {
+            renderer->unregisterBuffer(instanceBuffer.getTag());
+        }
+
+        const std::string tag = instanceTag + ".g" + std::to_string(++instanceGeneration);
+        instanceBuffer = wrap::OMBufferRef(renderer, tag);
+        renderer->registerBuffer(tag, InstanceData, size);
+    }
+
     auto initPipeline(OMRendererBuffer *uniform, OMRendererRenderTarget *target, bool writeColor) -> void
     {
-        instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
+        resetInstanceBuffer(8);
 
         pipeline = renderer->createPipeline()
                        ->input(UniformBuffer)
@@ -103,7 +124,9 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
     std::function<void()> recreation;
     basics::OMVertexFormat format;
 
-    OMRendererBuffer *instanceBuffer = nullptr;
+    wrap::OMBufferRef instanceBuffer;
+    std::string instanceTag;
+    uint64_t instanceGeneration = 0;
 
     OMRendererPipeline *pipeline;
     std::shared_ptr<OMShader> vtxShader, frgShader;

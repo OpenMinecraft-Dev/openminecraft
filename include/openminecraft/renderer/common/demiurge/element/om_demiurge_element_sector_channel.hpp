@@ -14,7 +14,7 @@ class OMDemiurgeSectorChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementSe
     }
     ~OMDemiurgeSectorChannel() = default;
 
-    void init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) override;
+    void init(const std::string &uniformTag, const std::string &targetTag) override;
 };
 } // namespace openminecraft::renderer::common::demiurge::element
 

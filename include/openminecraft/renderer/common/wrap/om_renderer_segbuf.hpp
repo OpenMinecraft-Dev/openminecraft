@@ -39,19 +39,31 @@ struct OMRendererSegBufBlock
 class OMRendererSegBuf
 {
   public:
-    OMRendererSegBuf(OMRenderer *renderer, uint32_t initialSize) : totalSize(initialSize), renderer(renderer)
+    OMRendererSegBuf(OMRenderer *renderer, std::string tag, uint32_t initialSize)
+        : renderer(renderer), bufferTag(std::move(tag)), totalSize(initialSize)
     {
-        buffer = renderer->allocateBuffer(InstanceData, totalSize);
+        renderer->registerBuffer(bufferTag, InstanceData, totalSize);
         freeBlocks = {{0, totalSize}};
 
         shadow.resize(totalSize, 0);
 
-        buffer->updateData(shadow.data());
+        buffer()->updateData(shadow.data());
     }
 
     ~OMRendererSegBuf()
     {
-        delete buffer;
+        for (auto &r : retiredBuffers)
+        {
+            renderer->unregisterBuffer(r.first);
+        }
+
+        retiredBuffers.clear();
+        renderer->unregisterBuffer(bufferTag);
+    }
+
+    auto buffer() -> OMRendererBuffer *
+    {
+        return renderer->getBuffer(bufferTag);
     }
 
     auto allocate(uint32_t minSize, uint32_t maxSize, uint32_t alignment) -> OMRendererSegBufBlock
@@ -95,7 +107,7 @@ class OMRendererSegBuf
         }
         freeBlocks.insert(it, block);
 
-        // freeBlocks 插入时保持有序，这里只需线性合并相邻块
+        // freeBlocks stays sorted on insert, so only a linear merge of adjacent blocks is needed
         mergeFreeBlocks();
     }
 
@@ -149,8 +161,8 @@ class OMRendererSegBuf
         return result;
     }
 
-    // 单次 flush 的默认上传预算：避免一次性上传几百 MB 造成几十 ms 的卡顿。
-    // 未传完的区间会留到下一帧继续（每帧最多 6 个图层 × 该值）。
+    // Default upload budget per flush: avoid multi-hundred-MB uploads causing tens of ms of stutter.
+    // Unfinished ranges resume next frame (at most 6 layers x this value per frame).
     static constexpr uint64_t flushBudgetBytes = 1 * 1024 * 1024;
 
     void flushDirty(uint64_t budget = flushBudgetBytes)
@@ -161,7 +173,7 @@ class OMRendererSegBuf
         {
             if (frameCounter - retiredBuffers[i].second > 8)
             {
-                delete retiredBuffers[i].first;
+                renderer->unregisterBuffer(retiredBuffers[i].first);
                 retiredBuffers.erase(retiredBuffers.begin() + static_cast<std::ptrdiff_t>(i));
             }
             else
@@ -180,7 +192,7 @@ class OMRendererSegBuf
             const uint64_t available = budget - spent;
             const uint32_t part = static_cast<uint32_t>(std::min<uint64_t>(length, available));
 
-            buffer->updateDataPart(shadow.data() + range.begin, range.begin, part);
+            buffer()->updateDataPart(shadow.data() + range.begin, range.begin, part);
             spent += part;
 
             if (part < length)
@@ -201,7 +213,8 @@ class OMRendererSegBuf
         markDirty(block.offset, block.length);
     }
 
-    OMRendererBuffer *buffer;
+    std::string bufferTag;
+    uint32_t generation = 0;
     uint32_t totalSize;
 
     auto usedSize() -> uint32_t
@@ -230,12 +243,12 @@ class OMRendererSegBuf
         uint32_t end;
     };
 
-    // 相邻/重叠的脏区间在 gap <= 16KB 时合并，既避免逐块上传调用过多，又不会把
-    // 整块 buffer 都算作脏（旧的 [dirtyMin, dirtyMax] 方案在区块分散时会退化成全部上传）。
+    // Adjacent/overlapping dirty ranges merge when the gap is <= 16KB, avoiding too many per-block upload calls without treating
+    // the whole buffer as dirty (the old [dirtyMin, dirtyMax] scheme degraded to full uploads when chunks were scattered).
     static constexpr uint32_t dirtyMergeGap = 16 * 1024;
     std::vector<OMRendererSegBufDirtyRange> dirtyRanges;
     uint32_t frameCounter = 0;
-    std::vector<std::pair<OMRendererBuffer *, uint32_t>> retiredBuffers;
+    std::vector<std::pair<std::string, uint32_t>> retiredBuffers;
 
     void markDirty(uint32_t offset, uint32_t length)
     {
@@ -279,7 +292,7 @@ class OMRendererSegBuf
         mergeFreeBlocks();
     }
 
-    // 线性合并相邻空闲块（假设已按 offset 有序）
+    // Linearly merge adjacent free blocks (assumes sorted by offset)
     void mergeFreeBlocks()
     {
         std::vector<OMRendererSegBufBlock> merged;
@@ -300,16 +313,17 @@ class OMRendererSegBuf
     void expand()
     {
         uint32_t newTotal = totalSize * 2;
-        OMRendererBuffer *newBuffer = renderer->allocateBuffer(InstanceData, newTotal);
-        buffer->copyTo(newBuffer);
+        const std::string newTag = bufferTag + ".g" + std::to_string(++generation);
+        auto *newBuffer = renderer->registerBuffer(newTag, InstanceData, newTotal);
+        buffer()->copyTo(newBuffer);
 
-        // 旧数据之后的新区域清零
+        // Zero the new region after the old data
         shadow.resize(newTotal, 0);
         newBuffer->updateDataPart(shadow.data() + totalSize, totalSize, totalSize);
 
-        // 旧 GPU 缓冲可能仍被飞行中的帧引用：延迟若干帧再释放
-        retiredBuffers.push_back({buffer, frameCounter});
-        buffer = newBuffer;
+        // The old GPU buffer may still be referenced by in-flight frames: release it a few frames later
+        retiredBuffers.emplace_back(bufferTag, frameCounter);
+        bufferTag = newTag;
 
         freeBlocks.push_back({totalSize, totalSize});
 

@@ -165,9 +165,6 @@ class OMRendererPipeline : public OMRendererObject
         enableBlend = enable;
         return this;
     }
-
-    // 关闭该管线对 color attachment 的写入（只保留深度/模板写入）。
-    // Vulkan 侧映射为 colorWriteMask = 0，OpenGL 侧映射为 glColorMask(GL_FALSE x4)。
     inline auto writeColor(bool enable) -> OMRendererPipeline *
     {
         colorWrite = enable;

@@ -3,6 +3,7 @@
 
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
+#include <string>
 namespace openminecraft::renderer::common::demiurge::node
 {
 enum OMDemiurgeImageFillType
@@ -14,7 +15,7 @@ enum OMDemiurgeImageFillType
 class OMDemiurgeImageNode : public OMDemiurgeNode
 {
   public:
-    OMDemiurgeImageNode(OMRendererTexture *texture);
+    OMDemiurgeImageNode(std::string textureTag);
     virtual ~OMDemiurgeImageNode();
 
     auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
@@ -22,7 +23,7 @@ class OMDemiurgeImageNode : public OMDemiurgeNode
 
   private:
     int imageId = -1;
-    OMRendererTexture *texture = nullptr;
+    std::string textureTag;
     OMDemiurgeRendererHandler *handler = nullptr;
 };
 } // namespace openminecraft::renderer::common::demiurge::node

@@ -408,8 +408,8 @@ auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
         return 0.0f;
     }
 
-    // 上方还有同种流体时，该格不是液面，按满格（9）计算；
-    // 否则按 vanilla 的 8 - level（源水 = 8，即 8/9 格高）。
+    // If the block above is the same fluid, this cell is not a surface; use a full cell (9);
+    // otherwise use vanilla's 8 - level (source water = 8, i.e. 8/9 of a block).
     const bool selfHasFluidAbove = checkExistFluidSame(chunk, externalAccessor, v, PosY, selfModel);
 
     float tot = selfHasFluidAbove ? 9.0f : (handler->queryFluidFalling(selfModel) ? 9.0f : (8.0f - current));
@@ -466,7 +466,7 @@ auto OMVoxelCompiler::computeVisibility(const world::OMChunk<16> &chunk,
 {
     std::array<uint8_t, 4096> blocking = {};
 
-    // 同一 blockstate 的 soild 结果固定，缓存避免逐方块做模型解析
+    // Solidness is constant per blockstate; cache it to avoid per-block model resolution
     std::unordered_map<uint32_t, bool> solidCache;
     solidCache.reserve(256);
 
@@ -507,7 +507,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
 {
     for (const auto &v : chunk)
     {
-        // INFO: bsid 是 model id（由方块状态 id 映射而来），方块状态 id 是 v.second
+        // INFO: bsid is the model id (mapped from the blockstate id); the blockstate id is v.second
         auto bsid = modelFetcher(v.second, chunk.chunkx, chunk.chunky, chunk.chunkz, v.first.x, v.first.y, v.first.z);
         auto trans = handler->queryTranslucent(bsid);
 
@@ -516,8 +516,8 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             const auto isFalling = handler->queryFluidFalling(bsid);
             const auto fluidLevel = (handler->queryFluidLevel(bsid) & 0b111);
 
-            // 上方仍是同种流体 => 当前格不是液面，应该占满整格；
-            // 只有液面顶层的源水才是 8/9 格高（vanilla 行为）。
+            // Same fluid above => this cell is not a surface and should fill the whole cell;
+            // only source water on the top surface layer is 8/9 of a block tall (vanilla behavior).
             const bool fluidAbove = checkExistFluidSame(chunk, externalAccessor, v.first, PosY, bsid);
             const bool fullBlock = isFalling || fluidAbove;
 
@@ -528,9 +528,9 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                 fullBlock ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 3, fluidLevel),
             };
 
-            // 流体高度比较使用"共享边两侧的角点高度（0..255）"：
-            // 角点高度由同一组 4 个相邻方块平均得到，两侧结果一致，
-            // 因此不会因为 1/255 的量化差留下缝隙；同时也保证同一面只画一次。
+            // Fluid height comparison uses corner heights (0..255) on both sides of the shared edge:
+            // corner heights average the same 4 neighboring cells, so both sides agree,
+            // leaving no gaps from 1/255 quantization and ensuring each face is drawn once.
             auto cornerHeightOf = [&](const glm::ivec3 &p, int mdl, int idx) -> float {
                 if (handler->queryFluidFalling(mdl) || checkExistFluidSame(chunk, externalAccessor, p, PosY, mdl))
                 {
@@ -547,8 +547,8 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
 
                 if (f == NegX || f == PosX || f == NegZ || f == PosZ)
                 {
-                    // 侧面：同种流体但邻居液面更低时不能剔除，
-                    // 否则瀑布/台阶水流的侧面会出现缝隙
+                    // Side face: cannot be culled when the neighbor is the same fluid with a lower surface,
+                    // otherwise waterfall/step flows show gaps on their sides
                     glm::ivec3 np = v.first;
 
                     switch (f)

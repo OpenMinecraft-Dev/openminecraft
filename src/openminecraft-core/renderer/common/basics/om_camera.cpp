@@ -33,7 +33,7 @@ auto OMCamera::fetchProjMat() -> glm::mat4
 {
     auto extent = renderer->getExtent();
     extent = glm::max(extent, glm::vec2(1.0f, 1.0f));
-    // near 从 0.05 提到 0.1：深度精度与 near 成反比，可显著减少远处共面/近共面表面的 z-fighting
+    // near raised from 0.05 to 0.1: depth precision is inversely proportional to near, greatly reducing z-fighting on distant coplanar surfaces
     return glm::perspectiveRH_ZO(glm::radians(fov), extent.x / extent.y, 0.1f, 1500.0f);
 }
 

@@ -80,6 +80,10 @@ OMRendererOpenGL::~OMRendererOpenGL()
     }
     tasks.clear();
     handlers.clear();
+
+    // Destroy all registered buffers / textures / render targets (must happen before the context is destroyed)
+    clearRegistry();
+
     delete defaultTarget;
     SDL_GL_DestroyContext(reinterpret_cast<SDL_GLContext>(glContext));
 }

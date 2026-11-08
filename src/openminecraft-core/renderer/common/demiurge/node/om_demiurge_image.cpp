@@ -7,9 +7,9 @@
 
 namespace openminecraft::renderer::common::demiurge::node
 {
-OMDemiurgeImageNode::OMDemiurgeImageNode(OMRendererTexture *texture)
+OMDemiurgeImageNode::OMDemiurgeImageNode(std::string textureTag)
 {
-    this->texture = texture;
+    this->textureTag = std::move(textureTag);
 }
 
 OMDemiurgeImageNode::~OMDemiurgeImageNode() = default;
@@ -20,7 +20,7 @@ auto OMDemiurgeImageNode::submit(OMDemiurgeRendererHandler *handler, float depth
     {
         imageId = handler->image.request(depth);
         this->handler = handler;
-        handler->image.textures[imageId] = texture;
+        handler->image.textures[imageId] = textureTag;
         goto update;
     }
     if (stylesStorage.isModified())

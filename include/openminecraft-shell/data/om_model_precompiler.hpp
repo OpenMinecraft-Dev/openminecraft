@@ -46,7 +46,7 @@ struct OMModelFace
     int rotation;
     bool secondaryTex;
 
-    // 染色层索引：-1 表示该面不染色（对应模型 JSON 的 tintindex 字段）
+    // Tint layer index: -1 means the face is untinted (maps to the model JSON tintindex field)
     int tintindex = -1;
 };
 struct OMModelPart

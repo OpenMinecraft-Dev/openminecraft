@@ -20,8 +20,10 @@ auto OMDemiurgeTextSdfChannel::storeGlyph(geom::OMFontSetShapeResult r) -> int
 
     if (glyphBuffer->length < glyphData.size() * sizeof(float))
     {
-        delete glyphBuffer;
-        glyphBuffer = renderer->allocateBuffer(UniformTexel, 8 * glyphData.size() * sizeof(float));
+        renderer->unregisterBuffer(glyphBuffer.getTag());
+        glyphTag = baseGlyphTag + ".g" + std::to_string(++glyphGeneration);
+        glyphBuffer = wrap::OMBufferRef(renderer, glyphTag);
+        renderer->registerBuffer(glyphTag, UniformTexel, 8 * glyphData.size() * sizeof(float));
         pipeline->bindInput(1, glyphBuffer);
         glyphBuffer->updateDataPart(glyphData.data(), 0, glyphData.size() * sizeof(float));
         recreation();
@@ -35,8 +37,11 @@ auto OMDemiurgeTextSdfChannel::storeGlyph(geom::OMFontSetShapeResult r) -> int
 
     return offset;
 }
-void OMDemiurgeTextSdfChannel::init(OMRendererBuffer *uniform, OMRendererRenderTarget *target)
+void OMDemiurgeTextSdfChannel::init(const std::string &uniformTag, const std::string &targetTag)
 {
+    const auto uniform = wrap::OMBufferRef(renderer, uniformTag);
+    const auto target = wrap::OMRenderTargetRef(renderer, targetTag);
+
     format.setInstance()
         ->appendPart("inTextPos", basics::Vec4f)
         ->appendPart("inTextColor", basics::Vec4f)
@@ -49,9 +54,14 @@ void OMDemiurgeTextSdfChannel::init(OMRendererBuffer *uniform, OMRendererRenderT
     vtxShader = renderer->shaderManager.preprocess("demiurge/textsdf.vert.glsl", Vertex, GLSLSource, format);
     frgShader = renderer->shaderManager.preprocess("demiurge/textsdf.frag.glsl", Fragment, GLSLSource, format);
 
-    instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
+    resetInstanceBuffer(8);
 
-    glyphBuffer = renderer->allocateBuffer(UniformTexel, 1024 * sizeof(float));
+    if (!glyphBuffer)
+    {
+        glyphTag = baseGlyphTag;
+        glyphBuffer = wrap::OMBufferRef(renderer, glyphTag);
+        renderer->registerBuffer(glyphTag, UniformTexel, 1024 * sizeof(float));
+    }
 
     pipeline = renderer->createPipeline()
                    ->input(UniformBuffer)

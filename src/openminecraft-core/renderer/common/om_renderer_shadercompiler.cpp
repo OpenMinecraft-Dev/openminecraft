@@ -34,7 +34,7 @@ OMRendererShaderCompiler::OMRendererShaderCompiler() : logger("OMRendererShaderC
                     shaderQueue.pop();
                 }
 
-                // 编译在锁外进行，避免长时间阻塞其它线程
+                // Compile outside the lock to avoid blocking other threads for long
                 std::shared_ptr<OMShader> target;
 
                 for (auto &comp : backends)
@@ -48,7 +48,7 @@ OMRendererShaderCompiler::OMRendererShaderCompiler() : logger("OMRendererShaderC
 
                 if (!target)
                 {
-                    // 线程里不能抛异常（会直接 std::terminate），记录并跳过
+                    // Exceptions must not escape a thread (std::terminate); log and skip
                     logger.error("no backend accepted shader {} (type {})", queued.source->filename.c_str(),
                                  static_cast<int>(queued.source->type));
                 }

@@ -76,11 +76,13 @@ struct Frustum
 };
 
 OMVoxelManager::OMVoxelManager(
-    OMRenderer *renderer, OMRendererRenderTarget *resolveTarget, OMRendererTexture *tex, OMRendererTexture *texSec,
-    std::shared_ptr<world::OMChunkManager<16>> man, std::function<void(bool)> recordTask, OMVoxelHandler *handler,
+    OMRenderer *renderer, OMRendererRenderTarget *resolveTarget, const std::string &texTag,
+    const std::string &texSecTag, std::shared_ptr<world::OMChunkManager<16>> man,
+    std::function<void(bool)> recordTask, OMVoxelHandler *handler,
     std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> modelFetcher,
-    OMVoxelColorManager *colorman, OMRendererTexture *sunTex, OMRendererTexture *moonTex, OMRendererTexture *cloudTex,
-    std::vector<bool> cloudStats, std::shared_ptr<OMChunkPaletteProvider> paletteProvider)
+    OMVoxelColorManager *colorman, const std::string &sunTag, const std::string &moonTag,
+    const std::string &cloudTag, std::vector<bool> cloudStats,
+    std::shared_ptr<OMChunkPaletteProvider> paletteProvider)
     : logger("OMVoxelManager", this)
 {
     this->recordTask = recordTask;
@@ -91,9 +93,9 @@ OMVoxelManager::OMVoxelManager(
     this->compiler.paletteProvider = this->paletteProvider;
     this->modelFetcher = modelFetcher;
     this->colorManager = colorman;
-    this->sunTex = sunTex;
-    this->moonTex = moonTex;
-    this->cloudTex = cloudTex;
+    this->sunTex = OMTextureRef(renderer, sunTag);
+    this->moonTex = OMTextureRef(renderer, moonTag);
+    this->cloudTex = OMTextureRef(renderer, cloudTag);
     this->cloudStats = cloudStats;
 
     delete compiler.handler;
@@ -102,31 +104,31 @@ OMVoxelManager::OMVoxelManager(
 
     compilerPool = new OMVoxelCompilerPool(*man.get(), compiler, 12);
 
-    cutoutTargetMS = new OMRendererTempTarget(renderer);
+    cutoutTargetMS = new OMRendererTempTarget(renderer, "voxel.cutout.ms");
     cutoutTargetMS->setStoreDepth(true);
     cutoutTargetMS->construct(renderer->getExtent(), samples);
 
-    translucentTargetMS = new OMRendererTempTarget(renderer);
+    translucentTargetMS = new OMRendererTempTarget(renderer, "voxel.translucent.ms");
     translucentTargetMS->additionalTexFormats.push_back(R32Sfloat);
     translucentTargetMS->setClearDepth(false);
     translucentTargetMS->construct(renderer->getExtent(), samples, true);
 
-    cloudTargetMS = new OMRendererTempTarget(renderer);
+    cloudTargetMS = new OMRendererTempTarget(renderer, "voxel.cloud.ms");
     cloudTargetMS->additionalTexFormats.push_back(R32Sfloat);
     cloudTargetMS->setClearDepth(false);
     cloudTargetMS->setStoreDepth(true);
     cloudTargetMS->construct(renderer->getExtent(), samples);
 
-    cloudTarget = new OMRendererTempTarget(renderer);
+    cloudTarget = new OMRendererTempTarget(renderer, "voxel.cloud");
     cloudTarget->additionalTexFormats.push_back(R32Sfloat);
     cloudTarget->construct(renderer->getExtent());
 
-    cutoutTarget = new OMRendererTempTarget(renderer);
+    cutoutTarget = new OMRendererTempTarget(renderer, "voxel.cutout");
     cutoutTarget->setClearDepth(false);
     cutoutTarget->construct(renderer->getExtent());
-    translucentTarget = new OMRendererTempTarget(renderer);
+    translucentTarget = new OMRendererTempTarget(renderer, "voxel.translucent");
     translucentTarget->additionalTexFormats.push_back(R32Sfloat);
-    lightmap = new OMRendererTempTarget(renderer);
+    lightmap = new OMRendererTempTarget(renderer, "voxel.lightmap");
     lightmap->construct({16.0, 16.0}, 1, true);
 
     basics::OMVertexFormat voxelFormat, voxelDebug, formatComplex, simpleFormat, starFormat, cloudFormat,
@@ -189,7 +191,7 @@ OMVoxelManager::OMVoxelManager(
             ->inputName("FogData")
             ->input(ImageSampler)
             ->inputName("inLightmap")
-            ->output(cutoutTargetMS->target)
+            ->output(cutoutTargetMS->target())
             ->samples(samples)
             ->setCullMode(renderer::common::Back)
             ->setFrontClockwise(true)
@@ -216,7 +218,7 @@ OMVoxelManager::OMVoxelManager(
                           ->inputName("FogData")
                           ->input(ImageSampler)
                           ->inputName("inLightmap")
-                          ->output(cutoutTargetMS->target)
+                          ->output(cutoutTargetMS->target())
                           ->samples(samples)
                           ->setCullMode(renderer::common::Back)
                           ->setFrontClockwise(true)
@@ -243,7 +245,7 @@ OMVoxelManager::OMVoxelManager(
                         ->inputName("FogData")
                         ->input(ImageSampler)
                         ->inputName("inLightmap")
-                        ->output(cutoutTargetMS->target)
+                        ->output(cutoutTargetMS->target())
                         ->samples(samples)
                         ->setCullMode(renderer::common::Back)
                         ->setFrontClockwise(true)
@@ -270,7 +272,7 @@ OMVoxelManager::OMVoxelManager(
             ->inputName("FogData")
             ->input(ImageSampler)
             ->inputName("inLightmap")
-            ->output(translucentTargetMS->target)
+            ->output(translucentTargetMS->target())
             ->samples(samples)
             ->setCullMode(renderer::common::Back)
             ->setFrontClockwise(true)
@@ -297,7 +299,7 @@ OMVoxelManager::OMVoxelManager(
                                      ->inputName("FogData")
                                      ->input(ImageSampler)
                                      ->inputName("inLightmap")
-                                     ->output(translucentTargetMS->target)
+                                     ->output(translucentTargetMS->target())
                                      ->samples(samples)
                                      ->setCullMode(renderer::common::Back)
                                      ->setFrontClockwise(true)
@@ -325,7 +327,7 @@ OMVoxelManager::OMVoxelManager(
                                    ->inputName("FogData")
                                    ->input(ImageSampler)
                                    ->inputName("inLightmap")
-                                   ->output(translucentTargetMS->target)
+                                   ->output(translucentTargetMS->target())
                                    ->samples(samples)
                                    ->setCullMode(renderer::common::Back)
                                    ->setFrontClockwise(true)
@@ -347,7 +349,7 @@ OMVoxelManager::OMVoxelManager(
                         ->inputName("Camera")
                         ->primitiveType(LineList)
                         ->setLineWidth(2.0f)
-                        ->output(cutoutTargetMS->target)
+                        ->output(cutoutTargetMS->target())
                         ->samples(samples)
                         ->shader(renderer->shaderManager.preprocess("core/voxel/voxeldebug.frag.glsl", Fragment,
                                                                     GLSLSource, voxelDebug))
@@ -365,7 +367,7 @@ OMVoxelManager::OMVoxelManager(
                           ->inputName("Camera")
                           ->input(UniformBuffer)
                           ->inputName("SkyDiscData")
-                          ->output(cutoutTargetMS->target)
+                          ->output(cutoutTargetMS->target())
                           ->samples(samples)
                           ->primitiveType(TriangleFan)
                           ->shader(renderer->shaderManager.preprocess("core/voxel/skydisc.frag.glsl", Fragment,
@@ -387,7 +389,7 @@ OMVoxelManager::OMVoxelManager(
             ->inputName("SunRiseData")
             ->input(ImageSampler)
             ->inputName("inTexture")
-            ->output(cutoutTargetMS->target)
+            ->output(cutoutTargetMS->target())
             ->samples(samples)
             ->shader(renderer->shaderManager.preprocess("core/voxel/sun.frag.glsl", Fragment, GLSLSource, simpleFormat))
             ->shader(renderer->shaderManager.preprocess("core/voxel/sun.vert.glsl", Vertex, GLSLSource, simpleFormat))
@@ -406,7 +408,7 @@ OMVoxelManager::OMVoxelManager(
             ->inputName("MoonData")
             ->input(ImageSampler)
             ->inputName("inTexture")
-            ->output(cutoutTargetMS->target)
+            ->output(cutoutTargetMS->target())
             ->samples(samples)
             ->shader(
                 renderer->shaderManager.preprocess("core/voxel/moon.frag.glsl", Fragment, GLSLSource, simpleFormat))
@@ -424,7 +426,7 @@ OMVoxelManager::OMVoxelManager(
             ->inputName("Camera")
             ->input(UniformBuffer)
             ->inputName("StarData")
-            ->output(cutoutTargetMS->target)
+            ->output(cutoutTargetMS->target())
             ->samples(samples)
             ->shader(renderer->shaderManager.preprocess("core/voxel/star.frag.glsl", Fragment, GLSLSource, starFormat))
             ->shader(renderer->shaderManager.preprocess("core/voxel/star.vert.glsl", Vertex, GLSLSource, starFormat))
@@ -440,7 +442,7 @@ OMVoxelManager::OMVoxelManager(
                           ->inputName("Camera")
                           ->input(UniformBuffer)
                           ->inputName("SunRiseData")
-                          ->output(cutoutTargetMS->target)
+                          ->output(cutoutTargetMS->target())
                           ->samples(samples)
                           ->primitiveType(TriangleFan)
                           ->shader(renderer->shaderManager.preprocess("core/voxel/sunrise.frag.glsl", Fragment,
@@ -461,7 +463,7 @@ OMVoxelManager::OMVoxelManager(
                         ->inputName("CloudData")
                         ->input(UniformBuffer)
                         ->inputName("FogData")
-                        ->output(cloudTargetMS->target)
+                        ->output(cloudTargetMS->target())
                         ->samples(samples)
                         ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcloud.frag.glsl", Fragment,
                                                                     GLSLSource, cloudFormat))
@@ -481,7 +483,7 @@ OMVoxelManager::OMVoxelManager(
             ->inputName("inTexture")
             ->input(ImageSampler)
             ->inputName("inTextureReveal")
-            ->output(translucentTargetMS->target)
+            ->output(translucentTargetMS->target())
             ->samples(samples)
             ->shader(
                 renderer->shaderManager.preprocess("core/voxel/cloud.frag.glsl", Fragment, GLSLSource, simpleFormat))
@@ -497,7 +499,7 @@ OMVoxelManager::OMVoxelManager(
     lightmapPipeline = renderer->createPipeline()
                            ->input(UniformBuffer)
                            ->inputName("LightmapInfo")
-                           ->output(lightmap->target)
+                           ->output(lightmap->target())
                            ->samples(1)
                            ->shader(renderer->shaderManager.preprocess("core/voxel/lightmap.frag.glsl", Fragment,
                                                                        GLSLSource, simpleFormat))
@@ -513,7 +515,7 @@ OMVoxelManager::OMVoxelManager(
         renderer->createPipeline()
             ->input(UniformBuffer)
             ->inputName("SkyDiscData")
-            ->output(cutoutTargetMS->target)
+            ->output(cutoutTargetMS->target())
             ->samples(samples)
             ->shader(renderer->shaderManager.preprocess("core/voxel/sky.frag.glsl", Fragment, GLSLSource, simpleFormat))
             ->shader(renderer->shaderManager.preprocess("core/voxel/sky.vert.glsl", Vertex, GLSLSource, simpleFormat))
@@ -542,41 +544,50 @@ OMVoxelManager::OMVoxelManager(
                           ->depth(false, false)
                           ->buildN();
 
-    voxelLayer = new OMVoxelLayer<OMVoxel>(renderer);
-    voxelComplexLayer = new OMVoxelLayer<OMVoxelComplex>(renderer);
-    voxelTranslucentLayer = new OMVoxelLayer<OMVoxel>(renderer);
-    voxelTranslucentComplexLayer = new OMVoxelLayer<OMVoxelComplex>(renderer);
-    voxelFluidLayer = new OMVoxelLayer<OMVoxelFluid>(renderer);
-    voxelTranslucentFluidLayer = new OMVoxelLayer<OMVoxelFluid>(renderer);
+    voxelLayer = new OMVoxelLayer<OMVoxel>(renderer, "voxel.opaque");
+    voxelComplexLayer = new OMVoxelLayer<OMVoxelComplex>(renderer, "voxel.complex");
+    voxelTranslucentLayer = new OMVoxelLayer<OMVoxel>(renderer, "voxel.translucent");
+    voxelTranslucentComplexLayer = new OMVoxelLayer<OMVoxelComplex>(renderer, "voxel.translucent.complex");
+    voxelFluidLayer = new OMVoxelLayer<OMVoxelFluid>(renderer, "voxel.fluid");
+    voxelTranslucentFluidLayer = new OMVoxelLayer<OMVoxelFluid>(renderer, "voxel.translucent.fluid");
 
-    // chunk 偏移打包成 RGBA32F 的一个 texel（x/y/z/w），顶点端只需 1 次 texelFetch
-    chunkOffsetBuffer = renderer->allocateBuffer(UniformTexel, sizeof(glm::vec4));
+    chunkOffsetBuffer = OMBufferRef(renderer, "voxel.chunkOffset");
+    renderer->registerBuffer(chunkOffsetBuffer.getTag(), UniformTexel, sizeof(glm::vec4));
     chunkOffsetBuffer->format = basics::Vec4f;
 
-    // 体素四边形改为 4 顶点 + 共享索引缓冲（6 个索引），顶点着色器只跑 4 次/面
-    voxelIndexBuffer = renderer->allocateBuffer(VertexIndex, 6 * sizeof(uint32_t));
+    voxelIndexBuffer = OMBufferRef(renderer, "voxel.index");
+    renderer->registerBuffer(voxelIndexBuffer.getTag(), VertexIndex, 6 * sizeof(uint32_t));
     {
         const std::array<uint32_t, 6> idx = {0, 1, 2, 2, 3, 0};
         voxelIndexBuffer->updateData(const_cast<uint32_t *>(idx.data()));
     }
-    debugOffsetBuffer = renderer->allocateBuffer(VertexData, 12 * 2 * 3 * sizeof(float));
-    skydisc = renderer->allocateBuffer(Uniform, sizeof(OMVoxelSkyDisc));
-    fogdata = renderer->allocateBuffer(Uniform, sizeof(float) * 5);
-    cloudFogdata = renderer->allocateBuffer(Uniform, sizeof(float) * 5);
-    sunrise = renderer->allocateBuffer(Uniform, sizeof(OMVoxelSunrise));
-    moonData = renderer->allocateBuffer(Uniform, sizeof(OMVoxelMoon));
-    cloudData = renderer->allocateBuffer(Uniform, sizeof(OMVoxelCloud));
+    debugOffsetBuffer = OMBufferRef(renderer, "voxel.debugOffset");
+    renderer->registerBuffer(debugOffsetBuffer.getTag(), VertexData, 12 * 2 * 3 * sizeof(float));
+    skydisc = OMBufferRef(renderer, "voxel.skydisc");
+    renderer->registerBuffer(skydisc.getTag(), Uniform, sizeof(OMVoxelSkyDisc));
+    fogdata = OMBufferRef(renderer, "voxel.fog");
+    renderer->registerBuffer(fogdata.getTag(), Uniform, sizeof(float) * 5);
+    cloudFogdata = OMBufferRef(renderer, "voxel.cloud.fog");
+    renderer->registerBuffer(cloudFogdata.getTag(), Uniform, sizeof(float) * 5);
+    sunrise = OMBufferRef(renderer, "voxel.sunrise");
+    renderer->registerBuffer(sunrise.getTag(), Uniform, sizeof(OMVoxelSunrise));
+    moonData = OMBufferRef(renderer, "voxel.moon");
+    renderer->registerBuffer(moonData.getTag(), Uniform, sizeof(OMVoxelMoon));
+    cloudData = OMBufferRef(renderer, "voxel.cloud");
+    renderer->registerBuffer(cloudData.getTag(), Uniform, sizeof(OMVoxelCloud));
 
     {
         auto p = buildVoxelCloud();
-        cloudBuffer = renderer->allocateBuffer(InstanceData, sizeof(uint32_t) * p.size());
+        cloudBuffer = OMBufferRef(renderer, "voxel.cloudMesh");
+        renderer->registerBuffer(cloudBuffer.getTag(), InstanceData, sizeof(uint32_t) * p.size());
         cloudBuffer->updateData(p.data());
     }
 
-    lightmapData = renderer->allocateBuffer(Uniform, sizeof(OMVoxelLightMap));
+    lightmapData = OMBufferRef(renderer, "voxel.lightmapData");
+    renderer->registerBuffer(lightmapData.getTag(), Uniform, sizeof(OMVoxelLightMap));
 
-    textureAtlas = tex;
-    textureAtlasSecondary = texSec;
+    textureAtlas = OMTextureRef(renderer, texTag);
+    textureAtlasSecondary = OMTextureRef(renderer, texSecTag);
 
     std::mt19937 gen(1029);
     std::uniform_real_distribution<> distrib(0.0f, 1.0f);
@@ -609,44 +620,46 @@ OMVoxelManager::OMVoxelManager(
             starData.emplace_back(starSize);
         }
     }
-    starBuffer = renderer->allocateBuffer(InstanceData, starData.size() * sizeof(float));
+    starBuffer = OMBufferRef(renderer, "voxel.star");
+    renderer->registerBuffer(starBuffer.getTag(), InstanceData, starData.size() * sizeof(float));
     starBuffer->updateData(starData.data());
 
-    starBaseData = renderer->allocateBuffer(Uniform, sizeof(float) * 2);
+    starBaseData = OMBufferRef(renderer, "voxel.starBase");
+    renderer->registerBuffer(starBaseData.getTag(), Uniform, sizeof(float) * 2);
 
     pipeline->bindInput(1, textureAtlas);
     pipeline->bindInput(2, chunkOffsetBuffer);
     pipeline->bindInput(3, fogdata);
-    pipeline->bindInput(4, lightmap->colorTexture);
+    pipeline->bindInput(4, lightmap->colorTexture());
 
     complexPipeline->bindInput(1, textureAtlas);
     complexPipeline->bindInput(2, textureAtlasSecondary);
     complexPipeline->bindInput(3, chunkOffsetBuffer);
     complexPipeline->bindInput(4, fogdata);
-    complexPipeline->bindInput(5, lightmap->colorTexture);
+    complexPipeline->bindInput(5, lightmap->colorTexture());
 
     fluidPipeline->bindInput(1, textureAtlas);
     fluidPipeline->bindInput(2, textureAtlasSecondary);
     fluidPipeline->bindInput(3, chunkOffsetBuffer);
     fluidPipeline->bindInput(4, fogdata);
-    fluidPipeline->bindInput(5, lightmap->colorTexture);
+    fluidPipeline->bindInput(5, lightmap->colorTexture());
 
     translucentPipeline->bindInput(1, textureAtlas);
     translucentPipeline->bindInput(2, chunkOffsetBuffer);
     translucentPipeline->bindInput(3, fogdata);
-    translucentPipeline->bindInput(4, lightmap->colorTexture);
+    translucentPipeline->bindInput(4, lightmap->colorTexture());
 
     translucentComplexPipeline->bindInput(1, textureAtlas);
     translucentComplexPipeline->bindInput(2, textureAtlasSecondary);
     translucentComplexPipeline->bindInput(3, chunkOffsetBuffer);
     translucentComplexPipeline->bindInput(4, fogdata);
-    translucentComplexPipeline->bindInput(5, lightmap->colorTexture);
+    translucentComplexPipeline->bindInput(5, lightmap->colorTexture());
 
     translucentFluidPipeline->bindInput(1, textureAtlas);
     translucentFluidPipeline->bindInput(2, textureAtlasSecondary);
     translucentFluidPipeline->bindInput(3, chunkOffsetBuffer);
     translucentFluidPipeline->bindInput(4, fogdata);
-    translucentFluidPipeline->bindInput(5, lightmap->colorTexture);
+    translucentFluidPipeline->bindInput(5, lightmap->colorTexture());
 
     skyDiscPipeline->bindInput(1, skydisc);
     lightmapPipeline->bindInput(0, lightmapData);
@@ -665,9 +678,6 @@ OMVoxelManager::~OMVoxelManager()
     delete skyPipeline;
     delete lightmap;
     delete lightmapPipeline;
-    delete lightmapData;
-    delete fogdata;
-    delete cloudFogdata;
     delete compilerPool;
     delete voxelLayer;
     delete voxelComplexLayer;
@@ -675,12 +685,6 @@ OMVoxelManager::~OMVoxelManager()
     delete voxelTranslucentComplexLayer;
     delete voxelFluidLayer;
     delete voxelTranslucentFluidLayer;
-    delete chunkOffsetBuffer;
-    delete debugOffsetBuffer;
-    delete voxelIndexBuffer;
-    delete skydisc;
-    delete sunrise;
-    delete moonData;
     delete pipeline;
     delete complexPipeline;
     delete fluidPipeline;
@@ -699,12 +703,8 @@ OMVoxelManager::~OMVoxelManager()
     delete sunrisePipeline;
     delete sunPipeline;
     delete moonPipeline;
-    delete starBuffer;
     delete starPipeline;
-    delete starBaseData;
-    delete cloudData;
     delete cloudPipeline;
-    delete cloudBuffer;
     delete cloudComposePipeline;
 }
 
@@ -859,12 +859,12 @@ auto OMVoxelManager::fetchLayerState() -> std::array<std::tuple<uint32_t, uint32
     }};
 }
 
-// 绘制/重录粒度：1MB
+// Draw/re-record granularity: 1MB
 auto OMVoxelManager::hashLayerState() -> std::array<uint32_t, 12>
 {
-    // 用"按 1MB 圆整后的实例字节数"参与哈希：区块陆续上传时 usedSize 每帧都会变，
-    // 直接用它会导致 recordTask 每帧重录。圆整后只有跨过 1MB 边界（或容量变化）才重录，
-    // 绘制时同样按圆整后的数量提交，多出来的实例是清零数据（顶点着色器直接剔除）。
+    // Hash the instance byte count rounded up to 1MB: usedSize changes every frame while chunks upload,
+    // so using it directly would re-record every frame. After rounding, only crossing a 1MB boundary (or a capacity change) re-records,
+    // and draws submit the rounded count too; extra instances are zeroed data rejected by the vertex shader.
     return {
         voxelLayer->buf()->usedSize(),
         voxelLayer->buf()->totalSize,
@@ -906,8 +906,8 @@ static auto lastp = std::chrono::steady_clock::now();
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
-    // BFS 遮挡剔除在快速转视角时会造成 6~7ms 主线程尖峰，且实测整体为负收益；
-    // 默认关闭，需要时用 OM_BFS=1 打开。
+    // BFS occlusion culling causes 6~7ms main-thread spikes during fast rotation and measured as a net loss;
+    // disabled by default; enable with OM_BFS=1 when needed.
     static const bool bfsOcclusionEnabled = std::getenv("OM_BFS") != nullptr;
 
     auto cameraPos = camera.getPosRaw();
@@ -920,7 +920,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
     lastCameraChunk = cameraChunk;
     lastCameraLocal = cameraLocal;
 
-    // 云层固定在相机高度（地平线附近）：视线顶边低于地平线时整层不可见
+    // Clouds are pinned at camera height (near the horizon): the layer is invisible when the view's top edge is below the horizon
     renderClouds = (camera.getPitch() + camera.getFov() * 0.5f) > -2.0f;
 
     auto cur = std::chrono::steady_clock::now();
@@ -980,8 +980,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         const bool chunksLoading = loadVersionNow != lastLoadVersion;
         bool skipCulling = cameraStill && !chunksLoading && !extentChanged && cullingReady;
 
-        // 区块渲染距离（单位：16 格区块）。10 是在这块预载地图上稳定跑到 600 FPS 的取值；
-        // 可通过 OM_RENDER_DISTANCE 覆盖（例如 12 / 16 提高视距、换取更低帧率）。
+        // Chunk render distance (in 16-block chunks). 10 gave a stable 600 FPS on this preloaded map;
+        // override with OM_RENDER_DISTANCE (e.g. 12 / 16 for more view distance at lower FPS).
         static const int effectiveRenderDistance = []() -> int {
             const char *env = std::getenv("OM_RENDER_DISTANCE");
             return std::clamp(env != nullptr ? std::atoi(env) : 10, 2, 64);
@@ -1009,8 +1009,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
         pendingUnload = 0;
 
-        // 遮挡剔除：从相机所在 section 出发做 BFS，用可见性矩阵判断能否穿过 section。
-        // 只在相机换 section 或可见性数据变化时重算；数据变化的重算做 100ms 节流。
+        // Occlusion culling: BFS from the camera's section, using the visibility matrix to tell whether a path can pass through a section.
+        // Recompute only when the camera changes section or visibility data changes; data-driven recomputes are throttled to 100ms.
         if (sectionVisibility.size() < static_cast<size_t>(chunkManager->numChunks()))
         {
             sectionVisibility.resize(static_cast<size_t>(chunkManager->numChunks()), 0);
@@ -1023,7 +1023,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                                                            std::chrono::steady_clock::now() - lastBfsTime)
                                                                .count() < 100;
 
-        // 给距离内的候选 section 逐步补全可见性数据（每帧限量，避免抢占几何编译）
+        // Incrementally fill visibility data for candidate sections in range (limited per frame to avoid starving geometry compilation)
         if (bfsOcclusionEnabled && !cullCandidates.empty())
         {
             int requested = 0;
@@ -1096,7 +1096,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
                     if (!visKnown)
                     {
-                        // 还没编译：视为完全可透过（保守，避免误剔除）
+                        // Not compiled yet: treat as fully permeable (conservative, avoids wrong culling)
                         exits = 0x3F;
                     }
                     else
@@ -1265,7 +1265,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     {
                         auto &chk = *ochk;
 
-                        // 全空气区块：不编译、不绘制、不占用缓冲空间
+                        // All-air chunk: not compiled, not drawn, consumes no buffer space
                         if (chk.isEmpty())
                         {
                             if (chk.visible)
@@ -1430,9 +1430,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         bool chunkOffsetBufferReallocated = false;
         if (chunkOffsetCache.size() * sizeof(glm::vec4) > chunkOffsetBuffer->length)
         {
-            delete chunkOffsetBuffer;
-            chunkOffsetBuffer = renderer->allocateBuffer(
-                UniformTexel, static_cast<uint64_t>(chunkManager->numChunks()) * sizeof(glm::vec4) * 2);
+            renderer->unregisterBuffer(chunkOffsetBuffer.getTag());
+            static uint64_t chunkOffsetGeneration = 1;
+            chunkOffsetBuffer = OMBufferRef(
+                renderer, "voxel.chunkOffset.g" + std::to_string(chunkOffsetGeneration++));
+            renderer->registerBuffer(chunkOffsetBuffer.getTag(), UniformTexel,
+                                     static_cast<uint64_t>(chunkManager->numChunks()) * sizeof(glm::vec4) * 2);
             chunkOffsetBuffer->format = basics::Vec4f;
             pipeline->bindInput(2, chunkOffsetBuffer);
             complexPipeline->bindInput(3, chunkOffsetBuffer);
@@ -1496,7 +1499,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             voxelTranslucentFluidLayer->mergeStep(16);
         }
 
-        // 碎片整理改为限时增量式：每帧最多花 ~1ms，避免整层 merge 造成 10~40ms 卡顿
         {
             const auto compactStart = std::chrono::steady_clock::now();
 
@@ -1588,26 +1590,26 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
         cutoutTargetMS->setStoreDepth(true);
         cutoutTargetMS->construct(renderer->getExtent(), samples);
         translucentTargetMS->setClearDepth(false);
-        translucentTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), samples, true);
+        translucentTargetMS->constructWithDepth(cutoutTargetMS->depthTexTag(), renderer->getExtent(), samples, true);
         cutoutTarget->construct(renderer->getExtent());
         translucentTarget->construct(renderer->getExtent(), 1, true);
         cloudTargetMS->setClearDepth(false);
-        cloudTargetMS->constructWithDepth(cutoutTargetMS->depthTexture, renderer->getExtent(), samples);
+        cloudTargetMS->constructWithDepth(cutoutTargetMS->depthTexTag(), renderer->getExtent(), samples);
         cloudTarget->construct(renderer->getExtent());
-        composePipeline->bindInput(0, (samples == 1 ? cutoutTargetMS : cutoutTarget)->colorTexture);
-        composePipeline->bindInput(1, (samples == 1 ? translucentTargetMS : translucentTarget)->colorTexture);
-        composePipeline->bindInput(2, (samples == 1 ? translucentTargetMS : translucentTarget)->additionalTex[0]);
-        cloudComposePipeline->bindInput(0, (samples == 1 ? cloudTargetMS : cloudTarget)->colorTexture);
-        cloudComposePipeline->bindInput(1, (samples == 1 ? cloudTargetMS : cloudTarget)->additionalTex[0]);
+        composePipeline->bindInput(0, (samples == 1 ? cutoutTargetMS : cutoutTarget)->colorTexture());
+        composePipeline->bindInput(1, (samples == 1 ? translucentTargetMS : translucentTarget)->colorTexture());
+        composePipeline->bindInput(2, (samples == 1 ? translucentTargetMS : translucentTarget)->additionalTex(0));
+        cloudComposePipeline->bindInput(0, (samples == 1 ? cloudTargetMS : cloudTarget)->colorTexture());
+        cloudComposePipeline->bindInput(1, (samples == 1 ? cloudTargetMS : cloudTarget)->additionalTex(0));
     }
 
-    auto tsk = task->target(lightmap->target)
+    auto tsk = task->target(lightmap->target())
                    ->beginDebugTag("environment")
                    ->pipeline(lightmapPipeline)
                    ->drawN(6)
                    ->clearColor({0.0f, 0.0f, 0.0f, 0.0f})
                    ->clearDepth(1.0f)
-                   ->target(cutoutTargetMS->target)
+                   ->target(cutoutTargetMS->target())
                    ->pipeline(skyPipeline)
                    ->drawN(6)
                    ->pipeline(skyDiscPipeline)
@@ -1624,15 +1626,15 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
                    ->endDebugTag()
                    ->beginDebugTag("cutout/opaque chunks")
                    ->pipeline(pipeline)
-                   ->vertexBuffer({voxelLayer->buf()->buffer})
+                   ->vertexBuffer({voxelLayer->buf()->buffer()})
                    ->indexBuffer(voxelIndexBuffer)
                    ->drawIndexedInstanceN(6, voxelLayer->buf()->usedSize() / sizeof(OMVoxel))
                    ->pipeline(complexPipeline)
-                   ->vertexBuffer({voxelComplexLayer->buf()->buffer})
+                   ->vertexBuffer({voxelComplexLayer->buf()->buffer()})
                    ->indexBuffer(voxelIndexBuffer)
                    ->drawIndexedInstanceN(6, voxelComplexLayer->buf()->usedSize() / sizeof(OMVoxelComplex))
                    ->pipeline(fluidPipeline)
-                   ->vertexBuffer({voxelFluidLayer->buf()->buffer})
+                   ->vertexBuffer({voxelFluidLayer->buf()->buffer()})
                    ->indexBuffer(voxelIndexBuffer)
                    ->drawIndexedInstanceN(6, voxelFluidLayer->buf()->usedSize() / sizeof(OMVoxelFluid))
                    ->pipeline(debugPipeline)
@@ -1642,7 +1644,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
 
     if (samples != 1)
     {
-        tsk->resolve(cutoutTarget->target);
+        tsk->resolve(cutoutTarget->target());
     }
 
     if (renderClouds)
@@ -1650,7 +1652,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
         tsk->beginDebugTag("clouds")
             ->clearColor(glm::vec4(0.0), 0)
             ->clearColor(glm::vec4(1.0), 1)
-            ->target(cloudTargetMS->target)
+            ->target(cloudTargetMS->target())
             ->pipeline(cloudPipeline)
             ->vertexBuffer({cloudBuffer})
             ->drawInstanceN(36, cloudBuffer->length / sizeof(uint32_t))
@@ -1658,44 +1660,44 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     }
     else
     {
-        // 整层不可见：只清空目标，避免后续 compose 采样到上一帧的云
+        // Whole layer invisible: only clear the target so later compose does not sample last frame's clouds
         tsk->beginDebugTag("clouds(skip)")
             ->clearColor(glm::vec4(0.0), 0)
             ->clearColor(glm::vec4(1.0), 1)
-            ->target(cloudTargetMS->target)
+            ->target(cloudTargetMS->target())
             ->endDebugTag();
     }
 
     if (samples != 1)
     {
-        tsk->resolve(cloudTarget->target);
+        tsk->resolve(cloudTarget->target());
     }
 
     tsk->beginDebugTag("translucent chunks")
         ->clearColor(glm::vec4(0.0), 0)
         ->clearColor(glm::vec4(1.0), 1)
-        ->target(translucentTargetMS->target)
+        ->target(translucentTargetMS->target())
         ->pipeline(cloudComposePipeline)
         ->drawN(6)
         ->pipeline(translucentPipeline)
-        ->vertexBuffer({voxelTranslucentLayer->buf()->buffer})
+        ->vertexBuffer({voxelTranslucentLayer->buf()->buffer()})
         ->indexBuffer(voxelIndexBuffer)
         ->drawIndexedInstanceN(6, voxelTranslucentLayer->buf()->usedSize() / sizeof(OMVoxel))
         ->pipeline(translucentComplexPipeline)
-        ->vertexBuffer({voxelTranslucentComplexLayer->buf()->buffer})
+        ->vertexBuffer({voxelTranslucentComplexLayer->buf()->buffer()})
         ->indexBuffer(voxelIndexBuffer)
         ->drawIndexedInstanceN(6, voxelTranslucentComplexLayer->buf()->usedSize() / sizeof(OMVoxelComplex))
         ->pipeline(translucentFluidPipeline)
-        ->vertexBuffer({voxelTranslucentFluidLayer->buf()->buffer})
+        ->vertexBuffer({voxelTranslucentFluidLayer->buf()->buffer()})
         ->indexBuffer(voxelIndexBuffer)
         ->drawIndexedInstanceN(6, voxelTranslucentFluidLayer->buf()->usedSize() / sizeof(OMVoxelFluid))
         ->endDebugTag();
 
     if (samples != 1)
     {
-        tsk->resolve(translucentTarget->target);
+        tsk->resolve(translucentTarget->target());
     }
-    return tsk->removeClearColor(1)->target(resolveTarget->target)->pipeline(composePipeline)->drawN(6);
+    return tsk->removeClearColor(1)->target(resolveTarget->target())->pipeline(composePipeline)->drawN(6);
 }
 
 void OMVoxelManager::bindCameraBuffer(OMRendererBuffer *cameraBuffer)

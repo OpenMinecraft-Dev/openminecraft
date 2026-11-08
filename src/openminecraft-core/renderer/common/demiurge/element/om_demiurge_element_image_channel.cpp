@@ -6,8 +6,11 @@
 
 namespace openminecraft::renderer::common::demiurge::element
 {
-void OMDemiurgeImageChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRenderTarget *target)
+void OMDemiurgeImageChannel::init(const std::string &uniformTag, const std::string &targetTag)
 {
+    uniform = wrap::OMBufferRef(renderer, uniformTag);
+    target = wrap::OMRenderTargetRef(renderer, targetTag);
+
     format.setInstance()
         ->appendPart("inRectPos", basics::Vec4f)
         ->appendPart("inRectColor", basics::Vec4f)
@@ -22,18 +25,15 @@ void OMDemiurgeImageChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRen
     vtxShader = renderer->shaderManager.preprocess("demiurge/image.vert.glsl", Vertex, GLSLSource, format);
     frgShader = renderer->shaderManager.preprocess("demiurge/image.frag.glsl", Fragment, GLSLSource, format);
 
-    instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
+    resetInstanceBuffer(8);
 
-    this->uniform = uniformBuffer;
-    this->target = target;
 }
 
 auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, float upper, float lower) -> void
 {
     if (instanceBuffer->length < this->bufferSize())
     {
-        delete instanceBuffer;
-        instanceBuffer = renderer->allocateBuffer(InstanceData, this->bufferSize());
+        resetInstanceBuffer(this->bufferSize());
     }
 
     for (int i = 0; i < objects.size(); ++i)
@@ -62,7 +62,7 @@ auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, float upper, float
                                    ->depthOp(LessOrEqual)
                                    ->buildN();
                 pipelines[i]->bindInput(0, uniform);
-                pipelines[i]->bindInput(1, textures[i]);
+                pipelines[i]->bindInput(1, renderer->getTexture(textures[i]));
             }
 
             task->pipeline(pipelines[i])->vertexBufferInstanced({instanceBuffer}, i)->drawInstance(6, 1, i);

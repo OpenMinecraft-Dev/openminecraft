@@ -24,10 +24,10 @@ layout(location = 0) out vec4 fragColor;
 #define SCREEN_EFFECT 0
 
 // random/hash function
-// INFO: 原实现 fract(cos(n) * 41415.92653) 在 n 很大时会因 float 精度不足
-// 退化成与 lattice 对齐的条纹 / 网格伪影（噪声坐标经常到 1e4 量级）。
-// 这里改成基于整数位运算的 PCG 哈希：n 在 noise() 里一定是整数（floor 后组合），
-// 所以 int(n) 精确，且没有三角函数精度问题。
+// INFO: the original fract(cos(n) * 41415.92653) loses float precision for large n,
+// degrading into lattice-aligned stripes / grid artifacts (noise coordinates often reach 1e4).
+// Replaced with an integer-bitwise PCG hash: n is always an integer inside noise() (combined after floor),
+// so int(n) is exact and there are no trig precision issues.
 float hash(float n)
 {
     uint u = uint(int(n)) * 747796405u + 2891336453u;

@@ -30,7 +30,7 @@ class OMRendererRenderTarget : public OMRendererObject
         return RenderTarget;
     }
 
-    // INFO: 配置项统一走 setter，子类（各后端）可直接读取保护成员
+    // INFO: configuration goes through setters; subclasses (backends) read the protected members directly
     inline auto setClearDepth(bool value) -> OMRendererRenderTarget *
     {
         clearDepth = value;

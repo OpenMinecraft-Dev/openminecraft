@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include <functional>
+#include <string>
 #include <vector>
 namespace openminecraft::renderer::common::demiurge::element
 {
@@ -17,7 +18,7 @@ class OMDemiurgeAbstractChannel
     OMDemiurgeAbstractChannel() = default;
     ~OMDemiurgeAbstractChannel() = default;
 
-    virtual void init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) = 0;
+    virtual void init(const std::string &uniformTag, const std::string &targetTag) = 0;
     virtual void submitTask(OMRendererTask *task, float upper, float lower) = 0;
     virtual void update() = 0;
     virtual void destroy() = 0;
@@ -28,7 +29,7 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
     OMDemiurgeChannel() = default;
     ~OMDemiurgeChannel() = default;
 
-    void init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) override = 0;
+    void init(const std::string &uniformTag, const std::string &targetTag) override = 0;
     void submitTask(OMRendererTask *task, float upper, float lower) override = 0;
     void update() override = 0;
     void destroy() override = 0;

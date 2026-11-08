@@ -11,12 +11,12 @@
 
 namespace openminecraft::renderer::common::demiurge::element
 {
-// INFO: 用 fragment shader 绘制整屏场景的通道。
-// 每个元素可以绑定自己的 fragment shader（由 shaders[i] 指定），
-// shader 需要两个 uniform block：
-//   ScreenData { float width; float height; }   —— 由 init 传入的 uniform buffer 提供
-//   Time       { float value; }                 —— 通道内部每帧更新的时间
-// 参考 bootassets/openminecraft-renderer/shaders/demiurge/scene/scene*.frag.glsl
+// INFO: channel that draws a full-screen scene with a fragment shader.
+// Each element can bind its own fragment shader (selected by shaders[i]),
+// the shader requires two uniform blocks:
+//   ScreenData { float width; float height; }   -- provided by the uniform buffer passed to init
+//   Time       { float value; }                 -- time updated internally every frame
+// See bootassets/openminecraft-renderer/shaders/demiurge/scene/scene*.frag.glsl
 class OMDemiurgeShaderSceneChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementShaderScene>
 {
   public:
@@ -25,14 +25,17 @@ class OMDemiurgeShaderSceneChannel : public OMDemiurgeQuadChannel<OMDemiurgeElem
     }
     ~OMDemiurgeShaderSceneChannel() = default;
 
-    void init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) override;
+    void init(const std::string &uniformTag, const std::string &targetTag) override;
     auto submitTask(OMRendererTask *task, float upper, float lower) -> void override;
     auto update() -> void override;
 
     auto destroy() -> void override
     {
-        delete instanceBuffer;
-        delete timeBuffer;
+        if (timeBuffer)
+        {
+            renderer->unregisterBuffer(timeBuffer.getTag());
+            timeBuffer = wrap::OMBufferRef();
+        }
 
         for (auto p : pipelines)
         {
@@ -52,9 +55,9 @@ class OMDemiurgeShaderSceneChannel : public OMDemiurgeQuadChannel<OMDemiurgeElem
         shaders.erase(i);
     }
 
-    // 给第 i 个元素绑定 fragment shader。
-    // 既可以传完整相对路径（demiurge/scene/scene1.frag.glsl），
-    // 也可以只传名字（scene1），内部会自动补全。
+    // Bind a fragment shader to element i.
+    // Pass either a full relative path (demiurge/scene/scene1.frag.glsl)
+    // or just a name (scene1); it is expanded internally.
     auto bindShader(int i, const std::string &name) -> void
     {
         shaders[i] = name;
@@ -87,9 +90,9 @@ class OMDemiurgeShaderSceneChannel : public OMDemiurgeQuadChannel<OMDemiurgeElem
         return full;
     }
 
-    OMRendererBuffer *uniform = nullptr;
-    OMRendererRenderTarget *target = nullptr;
-    OMRendererBuffer *timeBuffer = nullptr;
+    wrap::OMBufferRef uniform;
+    wrap::OMRenderTargetRef target;
+    wrap::OMBufferRef timeBuffer;
     std::shared_ptr<OMShader> vtxShader;
 
     std::chrono::steady_clock::time_point startedAt = std::chrono::steady_clock::now();

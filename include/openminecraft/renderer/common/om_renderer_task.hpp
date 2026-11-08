@@ -79,7 +79,7 @@ class OMRendererTask : public OMRendererObject
     }
     virtual void bindIndirectBuffer(OMRendererBuffer *buffer) = 0;
 
-    // 当前后端/任务是否支持 indirect draw（drawIndirect* 可用）
+    // Whether this backend/task supports indirect draw (drawIndirect* available)
     virtual auto isSupportIndirect() const -> bool
     {
         return false;
@@ -199,7 +199,7 @@ class OMRendererTask : public OMRendererObject
     }
     bool solved = false;
 
-    // INFO: 用 setter 替代直接赋值，避免外部随意修改任务状态
+    // INFO: use setters instead of direct assignment so external code cannot freely mutate task state
     inline auto setDisabled(bool value) -> OMRendererTask *
     {
         disabledState = value;

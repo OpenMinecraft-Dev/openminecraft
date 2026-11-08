@@ -258,7 +258,7 @@ class OMWorldPaletteProvider : public wrap::OMChunkPaletteProvider
     {
     }
 
-    // 含水方块（waterlogged=true）中的水必须使用水体颜色，否则会是白色
+    // Water in waterlogged blocks must use the water color, otherwise it renders white
     auto fluidColor(const world::OMChunk<16> &chunk, int x, int y, int z, uint32_t blockState) -> glm::u8vec3 override
     {
         if (blockState < data::block::blockStateRegistry.idToRegistry.size())
@@ -335,18 +335,21 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
 {
     format.nextGroup()->decideStruct();
 
-    uniformBuffer = renderer->allocateBuffer(Uniform, sizeof(glm::mat4));
+    uniformBuffer = wrap::OMBufferRef(renderer, "world.uniform");
+    renderer->registerBuffer(uniformBuffer.getTag(), Uniform, sizeof(glm::mat4));
     auto model = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     uniformBuffer->updateData(&model);
-    cameraBuffer = renderer->allocateBuffer(Uniform, sizeof(glm::mat4));
+    cameraBuffer = wrap::OMBufferRef(renderer, "world.camera");
+    renderer->registerBuffer(cameraBuffer.getTag(), Uniform, sizeof(glm::mat4));
 
     outputFrg = renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format);
     outputVtx = renderer->shaderManager.preprocess("core/bilt.vert.glsl", Vertex, GLSLSource, format);
 
-    tempTarget = new wrap::OMRendererTempTarget(renderer);
+    tempTarget = new wrap::OMRendererTempTarget(renderer, "world.temp");
     tempTarget->construct(renderer->getExtent());
 
-    sunTex = renderer->allocateTexture(32, 32, 0, Dim2, R8G8B8A8Srgb);
+    sunTex = wrap::OMTextureRef(renderer, "world.sun");
+    renderer->registerTexture(sunTex.getTag(), 32, 32, 0, Dim2, R8G8B8A8Srgb);
     specs::png::OMPngFile f;
     f.parseBase(vfs::fsfetch("/external/assets/minecraft/textures/environment/celestial/sun.png"));
     sunTex->updateData(f.fetchData());
@@ -354,7 +357,8 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     sunTex->minFilter = Nearest;
     sunTex->setupSampler();
 
-    moonTex = renderer->allocateTexture(32, 32, 8, 0, Dim2Array, R8G8B8A8Srgb);
+    moonTex = wrap::OMTextureRef(renderer, "world.moon");
+    renderer->registerTexture(moonTex.getTag(), 32, 32, 8, 0, Dim2Array, R8G8B8A8Srgb);
     int i = 0;
     for (auto p : {"new_moon", "waxing_crescent", "first_quarter", "waxing_gibbous", "full_moon", "waning_gibbous",
                    "third_quarter", "waning_crescent"})
@@ -369,7 +373,8 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     moonTex->minFilter = Nearest;
     moonTex->setupSampler();
 
-    cloudTex = renderer->allocateTexture(256, 256, 0, Dim2, R8G8B8A8Srgb);
+    cloudTex = wrap::OMTextureRef(renderer, "world.cloud");
+    renderer->registerTexture(cloudTex.getTag(), 256, 256, 0, Dim2, R8G8B8A8Srgb);
     specs::png::OMPngFile f2;
     f2.parseBase(vfs::fsfetch("/external/assets/minecraft/textures/environment/clouds.png"));
     cloudTex->updateData(f2.fetchData());
@@ -436,7 +441,8 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
 
     colorManager->updateGameTime(12000);
     voxelManager = new wrap::OMVoxelManager(
-        renderer, tempTarget->target, textureAtlas->texture, textureAtlas->textureSecondary, chunkManager,
+        renderer, tempTarget->target(), textureAtlas->texture.getTag(), textureAtlas->textureSecondary.getTag(),
+        chunkManager,
         [&](bool r) -> void { record(r); }, this->voxelHandler,
         [&](uint32_t v, uint64_t cx, uint64_t cy, uint64_t cz, int x, int y, int z) -> uint32_t {
             const auto &reg = data::block::blockStateRegistry.idToRegistry[v];
@@ -444,7 +450,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
             h ^= h >> 16;
             return blockStateResolver->fetchModel(reg.block, reg.state, h);
         },
-        colorManager, sunTex, moonTex, cloudTex, stats,
+        colorManager, sunTex.getTag(), moonTex.getTag(), cloudTex.getTag(), stats,
         std::make_shared<OMWorldPaletteProvider>(grassColor, foliageColor, dryFoliageColor));
 
     voxelManager->bindCameraBuffer(cameraBuffer);
@@ -484,7 +490,7 @@ void OMWorldRenderer::afterFrame()
         colorManager->updateGameTime(gameT);
     }
 
-    // 临时诊断：把合成后的世界画面读回并写成 PPM（OM_SNAPSHOT=<path>）
+    // Temporary diagnostics: read back the composed world image and write it as PPM (OM_SNAPSHOT=<path>)
     if (const char *snapPath = std::getenv("OM_SNAPSHOT"))
     {
         static int snapFrame = 0;
@@ -495,9 +501,9 @@ void OMWorldRenderer::afterFrame()
 
         ++snapFrame;
 
-        if (snapFrame == snapAt && tempTarget->colorTexture != nullptr)
+        if (snapFrame == snapAt && tempTarget->colorTexture() != nullptr)
         {
-            auto tex = tempTarget->colorTexture;
+            auto tex = tempTarget->colorTexture();
             auto data = tex->fetchData();
             const auto *px = reinterpret_cast<const uint8_t *>(data.get());
 
@@ -528,14 +534,9 @@ void OMWorldRenderer::submitTasks()
 }
 OMWorldRenderer::~OMWorldRenderer()
 {
-    delete uniformBuffer;
-    delete cameraBuffer;
     delete voxelManager;
     delete blockStateResolver;
     delete textureAtlas;
-    delete sunTex;
-    delete moonTex;
-    delete cloudTex;
 
     delete tempTarget;
     delete voxelHandler;

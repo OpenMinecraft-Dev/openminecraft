@@ -115,7 +115,7 @@ class OMRendererTexture : public OMRendererObject
     virtual void updateData(void *p, uint64_t layer = 0) = 0;
     virtual void updateDataPart(void *p, uint64_t x, uint64_t y, uint64_t w, uint64_t h, uint64_t layer = 0) = 0;
 
-    // 批量上传多个 layer：Vulkan 后端会合并成一次 barrier + 一次 submit
+    // Upload multiple layers at once: the Vulkan backend merges them into one barrier + one submit
     struct OMTextureDataUpdate
     {
         void *data;

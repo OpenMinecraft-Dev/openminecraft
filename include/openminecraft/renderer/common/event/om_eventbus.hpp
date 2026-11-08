@@ -37,7 +37,7 @@ namespace openminecraft::renderer::common::event
                         continue;
                     }
 
-                    // 在锁内取走事件，锁外执行回调，避免回调重入 handle() 死锁
+                    // Take events under the lock and run callbacks outside it, avoiding deadlock when callbacks re-enter handle()
                     auto e = std::move(eventQueue.front());
                     eventQueue.pop();
                     lock.unlock();

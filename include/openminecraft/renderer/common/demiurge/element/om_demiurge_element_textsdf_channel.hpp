@@ -15,14 +15,19 @@ class OMDemiurgeTextSdfChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementT
     OMDemiurgeTextSdfChannel(OMRenderer *renderer, std::function<void()> f, geom::OMFontSet *set)
         : OMDemiurgeQuadChannel(renderer, f), fontSet(set)
     {
+        static std::atomic<uint64_t> counter = 0;
+        baseGlyphTag = "demiurge.textsdf.glyph." + std::to_string(++counter);
     }
     virtual ~OMDemiurgeTextSdfChannel() = default;
 
-    void init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) override;
+    void init(const std::string &uniformTag, const std::string &targetTag) override;
     void destroy() override
     {
-        delete glyphBuffer;
-
+        if (glyphBuffer)
+        {
+            renderer->unregisterBuffer(glyphBuffer.getTag());
+            glyphBuffer = wrap::OMBufferRef();
+        }
         OMDemiurgeQuadChannel::destroy();
     }
 
@@ -30,7 +35,10 @@ class OMDemiurgeTextSdfChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementT
 
   private:
     geom::OMFontSet *fontSet;
-    OMRendererBuffer *glyphBuffer;
+    wrap::OMBufferRef glyphBuffer;
+    std::string glyphTag;
+    std::string baseGlyphTag;
+    uint64_t glyphGeneration = 0;
 
     std::unordered_map<uint64_t, uint32_t> glyphOffsets = {};
     std::vector<float> glyphData = {};

@@ -320,11 +320,11 @@ auto parseSvgPath(std::string p) -> std::vector<OMSvgPathSegment>
             }
 
             if (paramsPerCmd <= 0)
-                continue; // 无效命令，跳过
+                continue; // invalid command, skip
 
             int numGroups = a.size() / paramsPerCmd;
             if (numGroups == 0)
-                continue; // 没有参数
+                continue; // no parameters
 
             for (int gi = 0; gi < numGroups; ++gi)
             {
@@ -340,7 +340,7 @@ auto parseSvgPath(std::string p) -> std::vector<OMSvgPathSegment>
                     }
                     else
                     {
-                        seg.op = LineTo; // 后续组隐式转换为 LineTo
+                        seg.op = LineTo; // subsequent groups implicitly convert to LineTo
                         seg.line = {{a[offset], a[offset + 1]}};
                     }
                     break;

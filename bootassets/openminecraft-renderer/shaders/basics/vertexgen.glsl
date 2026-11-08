@@ -7,8 +7,8 @@ const vec2 ndc[6] =
 const vec2 normal[6] =
     vec2[6](vec2(0.0, 0.0), vec2(0.0, 1.0), vec2(1.0, 1.0), vec2(1.0, 1.0), vec2(1.0, 0.0), vec2(0.0, 0.0));
 
-// 4 顶点四边形（配合索引缓冲 0,1,2,2,3,0）：
-// 与上面的 6 顶点版本产生完全相同的两个三角形，但顶点着色器只跑 4 次。
+// 4-vertex quad (with index buffer 0,1,2,2,3,0):
+// Produces exactly the same two triangles as the 6-vertex version above, but runs the vertex shader only 4 times.
 const vec2 normal4[4] = vec2[4](vec2(0.0, 0.0), vec2(0.0, 1.0), vec2(1.0, 1.0), vec2(1.0, 0.0));
 const vec2 normal4ccw[4] = vec2[4](vec2(0.0, 0.0), vec2(1.0, 0.0), vec2(1.0, 1.0), vec2(0.0, 1.0));
 

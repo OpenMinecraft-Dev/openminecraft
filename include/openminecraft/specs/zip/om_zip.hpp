@@ -35,7 +35,7 @@ static inline auto ParseDosDateTime(DosTime dosTime, DosDate dosDate) -> std::tm
 static inline auto DosToTimePoint(DosTime dosTime, DosDate dosDate) -> std::chrono::system_clock::time_point
 {
     std::tm t = ParseDosDateTime(dosTime, dosDate);
-    std::time_t tt = std::mktime(&t); // 将本地时间转换为 time_t
+    std::time_t tt = std::mktime(&t); // Convert local time to time_t
     return std::chrono::system_clock::from_time_t(tt);
 }
 

@@ -20,11 +20,15 @@ class OMDemiurgeImageChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementIma
     }
     ~OMDemiurgeImageChannel() = default;
 
-    auto init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) -> void override;
+    auto init(const std::string &uniformTag, const std::string &targetTag) -> void override;
     auto submitTask(OMRendererTask *task, float upper, float lower) -> void override;
     auto destroy() -> void override
     {
-        delete instanceBuffer;
+        if (instanceBuffer)
+        {
+            renderer->unregisterBuffer(instanceBuffer.getTag());
+            instanceBuffer = wrap::OMBufferRef();
+        }
         for (auto p : pipelines)
         {
             delete p.second;
@@ -37,9 +41,9 @@ class OMDemiurgeImageChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementIma
         recreation();
     }
 
-    OMRendererBuffer *uniform;
-    OMRendererRenderTarget *target;
-    std::unordered_map<int, OMRendererTexture *> textures;
+    wrap::OMBufferRef uniform;
+    wrap::OMRenderTargetRef target;
+    std::unordered_map<int, std::string> textures;
     std::unordered_map<int, OMRendererPipeline *> pipelines;
 };
 } // namespace openminecraft::renderer::common::demiurge::element

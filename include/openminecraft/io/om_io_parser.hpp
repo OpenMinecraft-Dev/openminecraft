@@ -10,8 +10,8 @@ namespace openminecraft::io
 class OMParser
 {
   public:
-    // INFO: 只接受 shared_ptr —— 解析器必须持有流对象，否则构造参数里的 shared_ptr
-    // 在构造结束时析构，之后的 check()/读取都会访问已释放的流（SIGSEGV 或乱码）。
+    // INFO: only shared_ptr is accepted - the parser must keep the stream alive, otherwise the shared_ptr parameter
+    // is destroyed when construction ends and later check()/reads touch a freed stream (SIGSEGV or garbage).
     explicit OMParser(std::shared_ptr<std::istream> stream);
     ~OMParser();
     auto check() -> bool;

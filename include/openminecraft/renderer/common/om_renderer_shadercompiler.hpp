@@ -33,7 +33,7 @@ class OMRendererShaderCompiler
     OMRendererShaderCompiler();
     ~OMRendererShaderCompiler();
 
-    // 停止所有编译线程并丢弃未完成的任务；可重复调用（析构时也会调用）
+    // Stop all compile threads and drop unfinished jobs; safe to call repeatedly (also called on destruction)
     void stop();
 
     void install(std::shared_ptr<OMRendererShaderCompilerBackend> backend);

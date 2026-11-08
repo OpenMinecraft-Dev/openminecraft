@@ -7,7 +7,7 @@
 
 namespace openminecraft::shell::application
 {
-// 启动时的相机位置：普通模式放在地形偏移处，预加载模式放在区块包围盒上方
+// Initial camera position: terrain offset in normal mode; above the chunk bounding box in preload mode
 struct OMStartupCamera
 {
     int64_t chunkX = 0, chunkY = 0, chunkZ = 0;
@@ -17,7 +17,7 @@ struct OMStartupCamera
 
 auto startupCamera() -> OMStartupCamera;
 
-// 地形生成线程主体：OM_CHUNK_PRELOAD 时从 chunks_mapped 读取，否则用 Perlin 生成
+// Terrain generation thread body: read from chunks_mapped with OM_CHUNK_PRELOAD, otherwise generate with Perlin
 void runTerrainGeneration(world::OMChunkManager<16> &manager, std::atomic<bool> &stopProducing);
 } // namespace openminecraft::shell::application
 

@@ -17,21 +17,29 @@ class OMDemiurgeSvgChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementSvg>
   public:
     OMDemiurgeSvgChannel(OMRenderer *renderer, std::function<void()> f) : OMDemiurgeQuadChannel(renderer, f)
     {
+        static std::atomic<uint64_t> counter = 0;
+        baseGlyphTag = "demiurge.svg.glyph." + std::to_string(++counter);
     }
     virtual ~OMDemiurgeSvgChannel() = default;
 
-    void init(OMRendererBuffer *uniform, OMRendererRenderTarget *target) override;
+    void init(const std::string &uniformTag, const std::string &targetTag) override;
     void destroy() override
     {
-        delete glyphBuffer;
-
+        if (glyphBuffer)
+        {
+            renderer->unregisterBuffer(glyphBuffer.getTag());
+            glyphBuffer = wrap::OMBufferRef();
+        }
         OMDemiurgeQuadChannel::destroy();
     }
 
     auto storeGlyph(std::string, glm::vec2 size) -> int;
 
   private:
-    OMRendererBuffer *glyphBuffer;
+    wrap::OMBufferRef glyphBuffer;
+    std::string glyphTag;
+    std::string baseGlyphTag;
+    uint64_t glyphGeneration = 0;
 
     std::unordered_map<binary::hash::hash_t, uint32_t> glyphOffsets = {};
     std::vector<float> glyphData = {};

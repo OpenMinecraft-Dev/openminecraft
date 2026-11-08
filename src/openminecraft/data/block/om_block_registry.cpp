@@ -85,7 +85,7 @@ void registerBlocks()
     registerBlock(OMIdentifier("minecraft:big_dripleaf"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:big_dripleaf_stem"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:brown_mushroom"), std::make_shared<OMBlock>()->isSolid(false));
-    // 气泡柱没有自己的流体贴图：标记为水即可复用水的贴图与流体分组
+    // Bubble columns have no fluid texture of their own: tag them as water to reuse water's texture and fluid group
     registerBlock(OMIdentifier("minecraft:bubble_column"), std::make_shared<OMBlock>()
                                                                ->isSolid(false)
                                                                ->setFluidType(FluidWater)
@@ -116,8 +116,8 @@ void registerBlocks()
     registerBlock(OMIdentifier("minecraft:gold_ore"), std::make_shared<OMBlock>()->isSolid(true));
     registerBlock(OMIdentifier("minecraft:granite"), std::make_shared<OMBlock>()->isSolid(true));
     registerBlock(OMIdentifier("minecraft:gravel"), std::make_shared<OMBlock>()->isSolid(true));
-    // 冰是半透明方块（贴图 alpha≈190），不能按"实心"参与剔除：
-    // 否则冰下方水面的顶面会被剔除，透过冰就看到"空洞"。
+    // Ice is translucent (texture alpha ~190); it must not be culled as "solid":
+    // otherwise the water top below ice gets culled, exposing a hole through the ice.
     registerBlock(OMIdentifier("minecraft:ice"),
                   std::make_shared<OMTransparentBlock>()->isSolid(false)->isTranslucent(true));
     registerBlock(OMIdentifier("minecraft:lapis_ore"), std::make_shared<OMBlock>()->isSolid(true));

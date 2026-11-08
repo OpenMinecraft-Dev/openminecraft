@@ -173,10 +173,10 @@ void main()
             {
                 vec2 f = flowDir / flowLen;
 
-                // water_flow 贴图的纹理流向沿 V 轴（即顶面的世界 +Z）。
-                // 旋转采样坐标 A 后，贴图在世界中的流向为 (sin A, cos A)，
-                // 因此要让流向对齐 f 需要 A = atan2(f.x, f.y)；
-                // 原先按 f.x 主导给 0° 的写法整体差了 90°，对角线也有两项符号错误。
+                // The water_flow texture's flow runs along the V axis (world +Z on the top face).
+                // After rotating the sampling coordinate by A, the texture's world flow becomes (sin A, cos A),
+                // so aligning the flow with f requires A = atan2(f.x, f.y);
+                // the old code that used 0 degrees dominated by f.x was off by 90 degrees overall, with two sign errors on diagonals.
                 float angle = atan(f.x, f.y);
 
                 float cosA = cos(angle);

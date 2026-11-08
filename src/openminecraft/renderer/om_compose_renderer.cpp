@@ -19,7 +19,7 @@ OMComposeRenderer::OMComposeRenderer(openminecraft::renderer::OMRenderer *render
     basics::OMVertexFormat format;
     format.nextGroup()->decideStruct();
 
-    uplayerTarget = new wrap::OMRendererTempTarget(renderer);
+    uplayerTarget = new wrap::OMRendererTempTarget(renderer, "compose.uplayer");
     uplayerTarget->construct(renderer->getExtent());
 
     mainPipeline = renderer->createPipeline()
@@ -53,9 +53,9 @@ void OMComposeRenderer::submitTasks()
 {
     uplayerTarget->construct(renderer->getExtent());
 
-    mainPipeline->bindInput(0, scene->colorTexture);
-    blurHandler->bind(surface->colorTexture, scene->colorTexture);
-    overlayBlurHandler->bind(overlay->colorTexture, scene->colorTexture);
+    mainPipeline->bindInput(0, scene->colorTexture());
+    blurHandler->bind(surface->colorTexture(), scene->colorTexture());
+    overlayBlurHandler->bind(overlay->colorTexture(), scene->colorTexture());
 
     auto voxel = renderer->fetchTask("voxel");
     auto uiSurface = renderer->fetchTask("demiurgeui_compose_surface");

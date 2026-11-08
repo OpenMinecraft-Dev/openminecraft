@@ -6,6 +6,7 @@
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_object_ref.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
@@ -18,7 +19,7 @@
 using namespace openminecraft;
 namespace openminecraft::shell::data
 {
-// 每张动画贴图的帧缓存：预先拆好每一帧的 RGBA 数据，避免每次 tick 都做逐行 memcpy。
+// Frame cache per animated texture: pre-split each frame's RGBA data to avoid row-by-row memcpy every tick.
 struct OMTextureAnimCache
 {
     std::vector<std::vector<uint8_t>> frames = {};
@@ -42,11 +43,7 @@ class OMTextureAtlas
         : root(std::move(root)), renderer(renderer), logger("OMTextureAtlas", this)
     {
     }
-    ~OMTextureAtlas()
-    {
-        delete textureSecondary;
-        delete texture;
-    }
+    ~OMTextureAtlas() = default;
 
     auto addTexture(OMIdentifier i) -> int
     {
@@ -155,8 +152,9 @@ class OMTextureAtlas
 
     void build()
     {
-        texture = renderer->allocateTexture(16, 16, tid, 4, openminecraft::renderer::common::Dim2Array,
-                                            openminecraft::renderer::common::R8G8B8A8Srgb);
+        texture = openminecraft::renderer::common::wrap::OMTextureRef(renderer, "atlas.main");
+        renderer->registerTexture(texture.getTag(), 16, 16, tid, 4, openminecraft::renderer::common::Dim2Array,
+                                  openminecraft::renderer::common::R8G8B8A8Srgb);
         for (auto &p : subtex)
         {
             if (subtexFiles[p.first]->getWidth() > 16 && subtexFiles[p.first]->getHeight() > 16)
@@ -183,8 +181,10 @@ class OMTextureAtlas
         texture->minFilter = openminecraft::renderer::common::Nearest;
         texture->setupSampler();
 
-        textureSecondary = renderer->allocateTexture(32, 32, wtid, 4, openminecraft::renderer::common::Dim2Array,
-                                                     openminecraft::renderer::common::R8G8B8A8Srgb);
+        textureSecondary = openminecraft::renderer::common::wrap::OMTextureRef(renderer, "atlas.secondary");
+        renderer->registerTexture(textureSecondary.getTag(), 32, 32, wtid, 4,
+                                  openminecraft::renderer::common::Dim2Array,
+                                  openminecraft::renderer::common::R8G8B8A8Srgb);
         for (auto &p : subtexWide)
         {
             std::array<uint8_t, 4 * 32 * 32> bm = {};
@@ -209,7 +209,7 @@ class OMTextureAtlas
 
     void updateAnim()
     {
-        // 同一 tick 内收集所有动画层，最后合并成一次提交（Vulkan 后端内部合并 barrier）
+        // Collect all animated layers within a tick and submit once (the Vulkan backend merges barriers internally)
         std::vector<openminecraft::renderer::common::OMRendererTexture::OMTextureDataUpdate> pendingSubtexUpdates;
         std::vector<openminecraft::renderer::common::OMRendererTexture::OMTextureDataUpdate> pendingWideUpdates;
 
@@ -349,8 +349,8 @@ class OMTextureAtlas
     openminecraft::renderer::OMRenderer *renderer;
 
   public:
-    openminecraft::renderer::common::OMRendererTexture *texture = nullptr;
-    openminecraft::renderer::common::OMRendererTexture *textureSecondary = nullptr;
+    openminecraft::renderer::common::wrap::OMTextureRef texture;
+    openminecraft::renderer::common::wrap::OMTextureRef textureSecondary;
     std::unordered_map<OMIdentifier, int> subtex;
     std::unordered_map<OMIdentifier, std::shared_ptr<specs::png::OMPngFile>> subtexFiles;
     std::unordered_map<OMIdentifier, OMTextureAnimation> subtexAnimData;

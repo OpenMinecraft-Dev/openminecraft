@@ -36,7 +36,171 @@ class OMRenderer
 {
   public:
     OMRenderer(AppInfo info, void *window, std::string shaderPath);
-    virtual ~OMRenderer() = default;
+    virtual ~OMRenderer()
+    {
+        // Fallback: derived classes normally call clearRegistry() before destroying the device
+        clearRegistry();
+    }
+
+    // ---- Object registry: all buffers / textures / render targets are owned by the renderer and accessed by string tag ----
+
+    auto registerBuffer(const std::string &tag, common::OMBufferUsage usage, uint64_t length)
+        -> common::OMRendererBuffer *
+    {
+        if (bufferRegistry.count(tag))
+        {
+            throw std::logic_error("duplicate buffer tag: " + tag);
+        }
+
+        auto *buffer = allocateBuffer(usage, length);
+        bufferRegistry[tag] = buffer;
+        return buffer;
+    }
+
+    auto getBuffer(const std::string &tag) -> common::OMRendererBuffer *
+    {
+        auto it = bufferRegistry.find(tag);
+
+        if (it == bufferRegistry.end())
+        {
+            throw std::logic_error("buffer tag not found: " + tag);
+        }
+
+        return it->second;
+    }
+
+    auto hasBuffer(const std::string &tag) const -> bool
+    {
+        return bufferRegistry.count(tag) != 0;
+    }
+
+    void unregisterBuffer(const std::string &tag)
+    {
+        auto it = bufferRegistry.find(tag);
+
+        if (it == bufferRegistry.end())
+        {
+            return;
+        }
+
+        delete it->second;
+        bufferRegistry.erase(it);
+    }
+
+    auto registerTexture(const std::string &tag, uint64_t width, uint64_t height, uint64_t mipmap,
+                         common::OMTextureType type, common::OMTextureArrangement arrangement)
+        -> common::OMRendererTexture *
+    {
+        return registerTexture(tag, width, height, 1, mipmap, type, arrangement);
+    }
+
+    auto registerTexture(const std::string &tag, uint64_t width, uint64_t height, uint64_t layers, uint64_t mipmap,
+                         common::OMTextureType type, common::OMTextureArrangement arrangement)
+        -> common::OMRendererTexture *
+    {
+        if (textureRegistry.count(tag))
+        {
+            throw std::logic_error("duplicate texture tag: " + tag);
+        }
+
+        auto *texture = allocateTexture(width, height, layers, mipmap, type, arrangement);
+        textureRegistry[tag] = texture;
+        return texture;
+    }
+
+    auto getTexture(const std::string &tag) -> common::OMRendererTexture *
+    {
+        auto it = textureRegistry.find(tag);
+
+        if (it == textureRegistry.end())
+        {
+            throw std::logic_error("texture tag not found: " + tag);
+        }
+
+        return it->second;
+    }
+
+    auto hasTexture(const std::string &tag) const -> bool
+    {
+        return textureRegistry.count(tag) != 0;
+    }
+
+    void unregisterTexture(const std::string &tag)
+    {
+        auto it = textureRegistry.find(tag);
+
+        if (it == textureRegistry.end())
+        {
+            return;
+        }
+
+        delete it->second;
+        textureRegistry.erase(it);
+    }
+
+    auto registerRenderTarget(const std::string &tag) -> common::OMRendererRenderTarget *
+    {
+        if (renderTargetRegistry.count(tag))
+        {
+            throw std::logic_error("duplicate render target tag: " + tag);
+        }
+
+        auto *target = createRenderTarget();
+        renderTargetRegistry[tag] = target;
+        return target;
+    }
+
+    auto getRenderTarget(const std::string &tag) -> common::OMRendererRenderTarget *
+    {
+        auto it = renderTargetRegistry.find(tag);
+
+        if (it == renderTargetRegistry.end())
+        {
+            throw std::logic_error("render target tag not found: " + tag);
+        }
+
+        return it->second;
+    }
+
+    auto hasRenderTarget(const std::string &tag) const -> bool
+    {
+        return renderTargetRegistry.count(tag) != 0;
+    }
+
+    void unregisterRenderTarget(const std::string &tag)
+    {
+        auto it = renderTargetRegistry.find(tag);
+
+        if (it == renderTargetRegistry.end())
+        {
+            return;
+        }
+
+        delete it->second;
+        renderTargetRegistry.erase(it);
+    }
+
+    // Must be called before the device is destroyed (at the start of derived destructors)
+    void clearRegistry()
+    {
+        for (auto &p : bufferRegistry)
+        {
+            delete p.second;
+        }
+        bufferRegistry.clear();
+
+        for (auto &p : textureRegistry)
+        {
+            delete p.second;
+        }
+        textureRegistry.clear();
+
+        for (auto &p : renderTargetRegistry)
+        {
+            delete p.second;
+        }
+        renderTargetRegistry.clear();
+    }
 
     virtual auto driver() -> std::string = 0;
     virtual auto allocateBuffer(common::OMBufferUsage usage, uint64_t length) -> common::OMRendererBuffer * = 0;
@@ -159,6 +323,10 @@ class OMRenderer
     std::vector<std::shared_ptr<common::OMRendererHandler>> handlers;
 
     std::vector<std::function<void()>> scheduleQueue;
+
+    std::unordered_map<std::string, common::OMRendererBuffer *> bufferRegistry;
+    std::unordered_map<std::string, common::OMRendererTexture *> textureRegistry;
+    std::unordered_map<std::string, common::OMRendererRenderTarget *> renderTargetRegistry;
     void runSchedules()
     {
         std::lock_guard g(scheduleMutex);

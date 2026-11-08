@@ -81,7 +81,7 @@ class OMZipSubStreamBuf : public std::streambuf
         }
 
         if (newAbsolute < 0 || newAbsolute > length)
-            return {-1}; // 越界
+            return {-1}; // out of bounds
 
         std::streampos newSrcPos = start + newAbsolute;
         if (!src.seekg(newSrcPos))

@@ -22,7 +22,7 @@ OMRendererTaskOpenGL::OMRendererTaskOpenGL(OMRendererOpenGL *renderer) : common:
 {
     this->gl = &renderer->gl;
 
-    // indirect draw 需要 GL 4.3+（glMultiDrawElementsIndirect）；macOS 最高 4.1，因此为 false
+    // indirect draw needs GL 4.3+ (glMultiDrawElementsIndirect); macOS caps at 4.1, so this is false
     GLint major = 0, minor = 0;
     gl->glGetIntegerv(GL_MAJOR_VERSION, &major);
     gl->glGetIntegerv(GL_MINOR_VERSION, &minor);
@@ -293,8 +293,8 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
 
     if (!isCleared)
     {
-        // glClear 同样受写掩码影响：绑定到该目标的第一个管线可能是 writeColor / depthWrite 关闭的
-        // （例如 cliprect），先把掩码恢复成全写，否则这次清除会被静默跳过。
+        // glClear is also affected by write masks: the first pipeline bound to this target may have writeColor / depthWrite disabled
+        // (e.g. cliprect); restore full write masks first, otherwise this clear is silently skipped.
         ops.push_back({ColorMask, static_cast<GLuint>(GL_TRUE), static_cast<GLuint>(GL_TRUE),
                        static_cast<GLuint>(GL_TRUE), static_cast<GLuint>(GL_TRUE)});
         ops.push_back({DepthMask, static_cast<GLuint>(GL_TRUE)});

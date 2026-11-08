@@ -815,8 +815,8 @@ auto OMModelPrecompiler::composeModel(std::vector<int> partids, bool soild, bool
 auto OMModelPrecompiler::composeFluidModel(OMIdentifier ident, block::OMBlockFluidType fluidType, bool translucent,
                                            bool falling, uint8_t level) -> int
 {
-    // 贴图与"同种流体"分组都由 fluidType 决定：
-    // 含水方块（如 bubble_column）只要标记为 FluidWater，就自动复用水的贴图并与水归为一组。
+    // Both the texture and the "same fluid" grouping are determined by fluidType:
+    // Waterlogged blocks (e.g. bubble_column) tagged FluidWater reuse water's texture and join water's group.
     const std::string fluidName = fluidType == block::OMBlockFluidType::FluidLava ? "lava" : "water";
 
     auto &m = blockModels.emplace_back();

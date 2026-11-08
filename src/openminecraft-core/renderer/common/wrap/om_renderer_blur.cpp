@@ -15,18 +15,21 @@ OMRendererBlurHandler::OMRendererBlurHandler(OMRenderer *renderer, int passes) :
 
     format.nextGroup()->decideStruct();
 
-    blurTemp = new wrap::OMRendererTempTarget(renderer);
+    blurTemp = new wrap::OMRendererTempTarget(renderer, "blur.temp");
     blurTemp->construct(renderer->getExtent());
-    blurTemp2 = new wrap::OMRendererTempTarget(renderer);
+    blurTemp2 = new wrap::OMRendererTempTarget(renderer, "blur.temp2");
     blurTemp2->construct(renderer->getExtent());
 
-    blurArgs = renderer->allocateBuffer(Uniform, sizeof(OMRendererBlurArg));
-    blurArgs2 = renderer->allocateBuffer(Uniform, sizeof(OMRendererBlurArg));
+    const std::string blurTagPrefix = "blur." + std::to_string(nextObjectTagId());
+    blurArgs = OMBufferRef(renderer, blurTagPrefix + ".args");
+    renderer->registerBuffer(blurArgs.getTag(), Uniform, sizeof(OMRendererBlurArg));
+    blurArgs2 = OMBufferRef(renderer, blurTagPrefix + ".args2");
+    renderer->registerBuffer(blurArgs2.getTag(), Uniform, sizeof(OMRendererBlurArg));
 
     biltPipeline = renderer->createPipeline()
                        ->input(ImageSampler)
                        ->inputName("inTexture")
-                       ->output(blurTemp2->target)
+                       ->output(blurTemp2->target())
                        ->shader(renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format))
                        ->shader(renderer->shaderManager.preprocess("core/bilt2.vert.glsl", Vertex, GLSLSource, format))
                        ->format(format)
@@ -40,7 +43,7 @@ OMRendererBlurHandler::OMRendererBlurHandler(OMRenderer *renderer, int passes) :
             ->inputName("BlurArgs")
             ->input(ImageSampler)
             ->inputName("inTexture")
-            ->output(blurTemp->target)
+            ->output(blurTemp->target())
             ->shader(renderer->shaderManager.preprocess("core/effects/blur.frag.glsl", Fragment, GLSLSource, format))
             ->shader(renderer->shaderManager.preprocess("core/effects/blur.vert.glsl", Vertex, GLSLSource, format))
             ->format(format)
@@ -55,7 +58,7 @@ OMRendererBlurHandler::OMRendererBlurHandler(OMRenderer *renderer, int passes) :
             ->inputName("BlurArgs")
             ->input(ImageSampler)
             ->inputName("inTexture")
-            ->output(blurTemp2->target)
+            ->output(blurTemp2->target())
             ->shader(renderer->shaderManager.preprocess("core/effects/blur.frag.glsl", Fragment, GLSLSource, format))
             ->shader(renderer->shaderManager.preprocess("core/effects/blur.vert.glsl", Vertex, GLSLSource, format))
             ->format(format)
@@ -86,21 +89,19 @@ OMRendererBlurHandler::~OMRendererBlurHandler()
     delete blurp2Pipeline;
     delete composePipeline;
     delete biltPipeline;
-    delete blurArgs;
-    delete blurArgs2;
     delete blurTemp;
     delete blurTemp2;
 }
 
 auto OMRendererBlurHandler::firstLayerTask(OMRendererTask *pre, std::string name) -> OMRendererTask *
 {
-    auto task = renderer->createTask(name)->target(blurTemp2->target)->pipeline(biltPipeline)->drawN(6);
+    auto task = renderer->createTask(name)->target(blurTemp2->target())->pipeline(biltPipeline)->drawN(6);
     for (int i = 0; i < passes; ++i)
     {
-        task->target(blurTemp->target)
+        task->target(blurTemp->target())
             ->pipeline(blurp1Pipeline)
             ->drawN(6)
-            ->target(blurTemp2->target)
+            ->target(blurTemp2->target())
             ->pipeline(blurp2Pipeline)
             ->drawN(6);
     }
@@ -130,9 +131,9 @@ void OMRendererBlurHandler::submitTasks()
 {
     blurTemp->construct(renderer->getExtent());
     blurTemp2->construct(renderer->getExtent());
-    blurp1Pipeline->bindInput(1, blurTemp2->colorTexture);
-    blurp2Pipeline->bindInput(1, blurTemp->colorTexture);
-    composePipeline->bindInput(1, blurTemp2->colorTexture);
+    blurp1Pipeline->bindInput(1, blurTemp2->colorTexture());
+    blurp2Pipeline->bindInput(1, blurTemp->colorTexture());
+    composePipeline->bindInput(1, blurTemp2->colorTexture());
 }
 
 void OMRendererBlurHandler::bind(OMRendererTexture *uplayer, OMRendererTexture *bottomLayer)

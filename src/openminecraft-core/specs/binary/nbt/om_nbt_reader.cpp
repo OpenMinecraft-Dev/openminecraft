@@ -185,7 +185,7 @@ auto OMNbtReader::parse(bool haveName) -> std::shared_ptr<OMNbtTag>
             {
                 result = tag;
 
-                // INFO: 根节点不是 Compound/List 时（例如文本组件的 String 根），读完就是整个 NBT
+                // INFO: when the root is not Compound/List (e.g. a String root for text components), reading it completes the whole NBT
                 if (tag->type != List && tag->type != Compound)
                 {
                     break;

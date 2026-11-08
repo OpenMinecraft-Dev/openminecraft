@@ -55,13 +55,13 @@ class OMWorldRenderer : public OMRendererHandler
     auto getTick() -> int;
 
     // INFO: these are the resource handles used for rendering
-    OMRendererBuffer *uniformBuffer, *voxelModelBuffer, *cameraBuffer;
+    wrap::OMBufferRef uniformBuffer, voxelModelBuffer, cameraBuffer;
     wrap::OMRendererTempTarget *tempTarget;
     wrap::OMVoxelManager *voxelManager;
     data::OMTextureAtlas *textureAtlas;
-    OMRendererTexture *sunTex;
-    OMRendererTexture *moonTex;
-    OMRendererTexture *cloudTex;
+    wrap::OMTextureRef sunTex;
+    wrap::OMTextureRef moonTex;
+    wrap::OMTextureRef cloudTex;
 
     data::block::OMBlockStateResolver *blockStateResolver;
     data::OMModelPrecompiler *voxelHandler;

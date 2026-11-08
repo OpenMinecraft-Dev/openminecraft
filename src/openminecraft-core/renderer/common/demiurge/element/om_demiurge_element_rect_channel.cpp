@@ -4,8 +4,11 @@
 
 namespace openminecraft::renderer::common::demiurge::element
 {
-void OMDemiurgeRectChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRenderTarget *target)
+void OMDemiurgeRectChannel::init(const std::string &uniformTag, const std::string &targetTag)
 {
+    const auto uniformBuffer = wrap::OMBufferRef(renderer, uniformTag);
+    const auto target = wrap::OMRenderTargetRef(renderer, targetTag);
+
     format.setInstance()
         ->appendPart("inRectPos", basics::Vec4f)
         ->appendPart("inRectColor", basics::Vec4f)
@@ -16,6 +19,6 @@ void OMDemiurgeRectChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRend
     vtxShader = renderer->shaderManager.preprocess("demiurge/rect.vert.glsl", Vertex, GLSLSource, format);
     frgShader = renderer->shaderManager.preprocess("demiurge/rect.frag.glsl", Fragment, GLSLSource, format);
 
-    OMDemiurgeQuadChannel::init(uniformBuffer, target);
+    OMDemiurgeQuadChannel::init(uniformTag, targetTag);
 }
 } // namespace openminecraft::renderer::common::demiurge::element

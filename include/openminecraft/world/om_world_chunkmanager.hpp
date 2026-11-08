@@ -44,7 +44,7 @@ template <int Cs> class OMChunkManager
   public:
     OMChunkManager() = default;
 
-    // 加载/卸载版本号：渲染端据此判断"是否有区块在加载"，避免无意义地重算 culling
+    // Load/unload version: the renderer uses it to detect chunk loading and avoid pointless culling recomputation
     auto loadVersion() const -> uint64_t
     {
         return version.load(std::memory_order_relaxed);
@@ -61,7 +61,7 @@ template <int Cs> class OMChunkManager
         auto existing = chunkMap.find(idx);
         if (existing != chunkMap.end())
         {
-            // 同一坐标重复下发：覆盖原槽位，避免旧槽位泄漏成幽灵区块
+            // Duplicate coordinates: overwrite the original slot to avoid leaking ghost chunks
             slot = existing->second;
         }
         else if (emptySlots.empty())
@@ -115,7 +115,7 @@ template <int Cs> class OMChunkManager
         return chunks[it->second];
     }
 
-    // 不抛异常的版本（工作线程的邻域查询用）
+    // Non-throwing variant (used by worker threads for neighbor queries)
     auto tryGetChunk(const OMChunkIndex &idx) const -> std::shared_ptr<const OMChunk<Cs>>
     {
         std::shared_lock<std::shared_mutex> lock(chunkMutex);
@@ -162,14 +162,14 @@ template <int Cs> class OMChunkManager
         func(chunks);
     }
 
-    // 同时暴露坐标索引表与槽位数组（遮挡剔除 BFS 需要按坐标找邻居）
+    // Expose both the coordinate index map and the slot array (occlusion-culling BFS needs neighbor lookup by coordinate)
     template <typename Func> void withChunkMap(Func &&func)
     {
         std::shared_lock<std::shared_mutex> lock(chunkMutex);
         func(chunkMap, chunks);
     }
 
-    // 当前槽位数量（含空槽）
+    // Current slot count (including empty slots)
     auto chunkSlotCount() -> int
     {
         std::shared_lock<std::shared_mutex> lock(chunkMutex);
@@ -183,7 +183,7 @@ template <int Cs> class OMChunkManager
     }
 
   private:
-    // 只在持锁时调用
+    // Only call while holding the lock
     void markIfExists(OMChunkIndex idx)
     {
         auto it = chunkMap.find(idx);
@@ -193,7 +193,7 @@ template <int Cs> class OMChunkManager
         }
     }
 
-    // 槽位存 shared_ptr：元素本身稳定，且卸载后旧的持有者仍安全
+    // Slots hold shared_ptr: elements stay stable and old holders remain safe after unload
     std::atomic<uint64_t> version{0};
     std::vector<std::shared_ptr<OMChunk<Cs>>> chunks;
     std::unordered_map<OMChunkIndex, int> chunkMap;

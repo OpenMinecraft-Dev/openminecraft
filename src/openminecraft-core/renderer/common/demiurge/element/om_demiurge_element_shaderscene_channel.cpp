@@ -8,8 +8,11 @@
 
 namespace openminecraft::renderer::common::demiurge::element
 {
-void OMDemiurgeShaderSceneChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRenderTarget *renderTarget)
+void OMDemiurgeShaderSceneChannel::init(const std::string &uniformTag, const std::string &targetTag)
 {
+    uniform = wrap::OMBufferRef(renderer, uniformTag);
+    target = wrap::OMRenderTargetRef(renderer, targetTag);
+
     format.setInstance()
         ->appendPart("inShaderScenePos", basics::Vec4f)
         ->appendPart("inShaderSceneDepth", basics::Float)
@@ -18,13 +21,12 @@ void OMDemiurgeShaderSceneChannel::init(OMRendererBuffer *uniformBuffer, OMRende
 
     vtxShader = renderer->shaderManager.preprocess("demiurge/shaderscene.vert.glsl", Vertex, GLSLSource, format);
 
-    instanceBuffer = renderer->allocateBuffer(InstanceData, 8);
+    resetInstanceBuffer(8);
 
-    timeBuffer = renderer->allocateBuffer(Uniform, sizeof(float));
+    timeBuffer = wrap::OMBufferRef(renderer, instanceTag + ".time");
+    renderer->registerBuffer(timeBuffer.getTag(), Uniform, sizeof(float));
     timeBuffer->updateData(std::array<float, 1>{0.0f}.data());
 
-    this->uniform = uniformBuffer;
-    this->target = renderTarget;
 
     startedAt = std::chrono::steady_clock::now();
 }
@@ -50,14 +52,16 @@ auto OMDemiurgeShaderSceneChannel::submitTask(OMRendererTask *task, float upper,
 
     if (instanceBuffer->length < this->bufferSize())
     {
-        auto *newBuffer = renderer->allocateBuffer(InstanceData, this->bufferSize());
+        const std::string newTag = instanceTag + ".g" + std::to_string(++instanceGeneration);
+        auto newBuffer = wrap::OMBufferRef(renderer, newTag);
+        renderer->registerBuffer(newTag, InstanceData, this->bufferSize());
 
         if (instanceBuffer->length > 0)
         {
             instanceBuffer->copyTo(newBuffer);
         }
 
-        delete instanceBuffer;
+        renderer->unregisterBuffer(instanceBuffer.getTag());
         instanceBuffer = newBuffer;
     }
 

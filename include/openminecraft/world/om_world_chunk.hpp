@@ -18,7 +18,7 @@ template <int Cs> class OMChunk
     {
     }
 
-    // std::atomic 成员会删除隐式的拷贝/移动构造，这里显式实现
+    // std::atomic members delete implicit copy/move constructors, so implement them explicitly
     OMChunk(const OMChunk &other)
         : chunkx(other.chunkx), chunky(other.chunky), chunkz(other.chunkz), visible(other.visible.load()),
           blocks(other.blocks), nonAirCount(other.nonAirCount.load()), dirty(other.dirty.load())
@@ -58,17 +58,17 @@ template <int Cs> class OMChunk
     {
     }
 
-    // 该区块的空气方块 id（加载器设置，用于统计非空气方块数）
+    // Air block id of this chunk (set by the loader, used to count non-air blocks)
     void setAirId(uint32_t id)
     {
         airId = id;
     }
 
-    // 用同一个方块状态填充整个区块（比逐块 setBlock 快得多）
+    // Fill the whole chunk with one block state (much faster than per-block setBlock)
     void fill(uint32_t blockState)
     {
         blocks.fill(blockState);
-        // 全空气区块标记为 empty：编译器/渲染器可以直接跳过，不占缓冲
+        // Mark all-air chunks as empty: compiler/renderer can skip them entirely, using no buffer space
         nonAirCount.store(blockState == airId ? 0 : static_cast<uint32_t>(Cs * Cs * Cs));
         dirty = true;
     }
@@ -90,7 +90,7 @@ template <int Cs> class OMChunk
         dirty = true;
     }
 
-    // 区块内没有任何非空气方块（加载器可直接打上 empty tag）
+    // No non-air blocks in this chunk (the loader can tag it as empty directly)
     [[nodiscard]] auto isEmpty() const -> bool
     {
         return nonAirCount.load(std::memory_order_relaxed) == 0;
@@ -183,10 +183,10 @@ template <int Cs> class OMChunk
 
     int64_t chunkx, chunky, chunkz;
 
-    // 新加载的区块默认不可见：避免第一次剔除时被当成"原本可见"，
-    // 从而走 hideFrames 延迟卸载（会保留渲染 120 帧，且每帧只卸载 32 个）。
+    // Newly loaded chunks are invisible by default: avoids being treated as "previously visible" on the first cull,
+    // which would take the hideFrames delayed-unload path (keeps rendering 120 frames and unloads only 32 per frame).
     std::atomic<bool> visible{false};
-    // 非空气方块数量：为 0 即 empty chunk，编译与渲染都可以直接跳过
+    // Non-air block count: 0 means an empty chunk; compiling and rendering can be skipped
     std::atomic<uint32_t> nonAirCount{0};
     uint32_t airId = 0;
 

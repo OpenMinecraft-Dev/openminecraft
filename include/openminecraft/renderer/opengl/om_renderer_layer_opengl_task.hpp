@@ -123,7 +123,7 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     bool needClearDepth = false;
     bool finished = false;
     std::vector<std::string> tags;
-    // GL 4.3+ 才有 glMultiDrawElementsIndirect（drawIndirect(begin,count) 用到）
+    // glMultiDrawElementsIndirect requires GL 4.3+ (used by drawIndirect(begin,count))
     bool supportIndirect = false;
 };
 } // namespace openminecraft::renderer::opengl

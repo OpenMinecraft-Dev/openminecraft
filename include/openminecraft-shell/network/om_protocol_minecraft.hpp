@@ -247,7 +247,7 @@ class OMProtocolMinecraftTransformer
     virtual void sendLoginAcknowledged() = 0;
 
     virtual void sendConfigurationKnownPacks(std::vector<OMProtocolKnownPack>) = 0;
-    // 上报客户端信息（含请求的 view distance），服务端据此决定区块发送半径
+    // Report client info (including requested view distance); the server uses it to decide the chunk send radius
     virtual void sendConfigurationClientInformation(int viewDistance)
     {
         (void)viewDistance;
@@ -257,8 +257,8 @@ class OMProtocolMinecraftTransformer
                                               float pitch) = 0;
     virtual void sendPlayKeepAlive(int64_t id) = 0;
 
-    // 1.20.2+：服务端按批发送区块，客户端必须在每批结束后回 Chunk Batch Received，
-    // 否则服务端会停止继续发送区块。
+    // 1.20.2+: the server sends chunks in batches; the client must reply Chunk Batch Received after each batch,
+    // otherwise the server stops sending chunks.
     virtual void sendPlayChunkBatchReceived(float desiredChunksPerTick)
     {
     }

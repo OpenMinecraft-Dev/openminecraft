@@ -120,7 +120,7 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                 poolMutex.lock();
                 if (queuedChunks.empty())
                 {
-                    // 没有几何编译任务时，处理遮挡剔除的"纯可见性"请求
+                    // With no geometry jobs pending, handle "visibility-only" requests for occlusion culling
                     if (!visRequests.empty())
                     {
                         next = visRequests.back();
@@ -135,7 +135,7 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                                                                    visChunk->chunkz};
                             auto visAccessor = [&](glm::ivec3 pos, int64_t chunkx, int64_t chunky,
                                                    int64_t chunkz) -> uint32_t {
-                                return 0; // 可见性扫描只需要本 section 内的方块
+                                return 0; // Visibility scan only needs blocks within this section
                             };
 
                             const uint64_t vis = compiler.computeVisibility(*visChunk, visAccessor);
@@ -196,7 +196,7 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
 
                     world::OMChunkIndex idx = {chunkx, chunky, chunkz};
 
-                    // 邻域指针做缓存：每个 chunk 编译只加锁一次，而不是逐方块加锁
+                    // Cache neighbor pointers: lock once per chunk compile instead of per block
                     auto cachedNeighbor = neighborCache.find(idx);
                     if (cachedNeighbor == neighborCache.end())
                     {
@@ -213,7 +213,7 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                 auto cnk = manager.getChunk(next);
                 if (cnk && cnk->isEmpty())
                 {
-                    // 防御：空区块不编译，直接写入空结果（不占任何 block）
+                    // Defensive: empty chunks are not compiled; write empty results (no blocks used)
                     std::lock_guard<std::mutex> g(bufferMutex);
                     cached[next] = true;
                     cachedOrigin[next] = {cnk->chunkx, cnk->chunky, cnk->chunkz};
@@ -229,17 +229,17 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                     translucentComplexC[next].clear();
                     fluidC[next].clear();
                     translucentFluidC[next].clear();
-                    visC[next] = (static_cast<uint64_t>(1) << 63); // 已知：完全可透过
+                    visC[next] = (static_cast<uint64_t>(1) << 63); // known: fully permeable
                     visPending[next] = {{cnk->chunkx, cnk->chunky, cnk->chunkz}, static_cast<uint64_t>(1) << 63};
                     continue;
                 }
                 if (cnk)
                 {
-                    // slot 可能已被 chunkManager 复用：只有坐标一致时缓存才有效
+                    // The slot may have been reused by chunkManager; the cache is valid only when coordinates match
                     const world::OMChunkIndex origin = {cnk->chunkx, cnk->chunky, cnk->chunkz};
 
-                    // 多个编译线程会并发读写 cached/cachedOrigin 和缓存数据，必须与写入端使用同一把锁，
-                    // 否则在 unordered_map rehash 期间读取会访问已释放节点并破坏堆。
+                    // Multiple compile threads access cached/cachedOrigin and cached data concurrently and must share the writers' lock,
+                    // otherwise reads during unordered_map rehash touch freed nodes and corrupt the heap.
                     bool cacheHit = false;
                     {
                         std::lock_guard<std::mutex> g(bufferMutex);

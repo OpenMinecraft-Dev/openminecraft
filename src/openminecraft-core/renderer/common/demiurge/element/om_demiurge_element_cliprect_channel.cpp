@@ -4,8 +4,11 @@
 
 namespace openminecraft::renderer::common::demiurge::element
 {
-void OMDemiurgeClipRectChannel::init(OMRendererBuffer *uniformBuffer, OMRendererRenderTarget *target)
+void OMDemiurgeClipRectChannel::init(const std::string &uniformTag, const std::string &targetTag)
 {
+    const auto uniformBuffer = wrap::OMBufferRef(renderer, uniformTag);
+    const auto target = wrap::OMRenderTargetRef(renderer, targetTag);
+
     format.setInstance()
         ->appendPart("inRectPos", basics::Vec4f)
         ->appendPart("inRectDepth", basics::Float)

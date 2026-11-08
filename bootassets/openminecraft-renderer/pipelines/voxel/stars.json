@@ -49,7 +49,8 @@
     },
     "depth": {
         "test": false,
-        "write": false,
+        "write": true,
         "operator": ">"
-    }
+    },
+    "primitive": "triangles"
 }

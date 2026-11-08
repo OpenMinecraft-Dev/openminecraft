@@ -11,6 +11,7 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_object_ref.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
@@ -326,15 +327,15 @@ class OMChunkPaletteProvider
     virtual auto color(const world::OMChunk<16> &chunk, int x, int y, int z, uint32_t blockState, int tintIndex)
         -> glm::u8vec3 = 0;
 
-    // 流体部分的染色：含水方块（waterlogged）里的水应该用水体颜色，
-    // 而不是沿用方块自身的 colorSource（通常为 None -> 白色）
+    // Fluid tinting: water inside waterlogged blocks should use the water color,
+    // not the block's own colorSource (usually None -> white)
     virtual auto fluidColor(const world::OMChunk<16> &chunk, int x, int y, int z, uint32_t blockState) -> glm::u8vec3
     {
         return color(chunk, x, y, z, blockState, 0);
     }
 };
 
-// 由 16x16x16 的不透明占用网格计算 6x6 面可见性矩阵（bit63 = 已知）
+// Compute a 6x6 face visibility matrix from the 16x16x16 opaque occupancy grid (bit63 = known)
 auto computeSectionVisibility(const std::array<uint8_t, 4096> &blocking) -> uint64_t;
 
 class OMVoxelCompiler
@@ -364,7 +365,7 @@ class OMVoxelCompiler
                  std::function<void(OMVoxelFluid)>, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>,
                  std::function<void(OMVoxelFluid)>) -> void;
 
-    // 只做可见性扫描（不做网格生成）：给遮挡剔除的 BFS 补全所有区块的数据
+    // Visibility-only scan (no mesh generation): fill visibility data for all chunks used by occlusion-culling BFS
     auto computeVisibility(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>)
         -> uint64_t;
 
@@ -380,9 +381,9 @@ class OMVoxelCompiler
 template <typename It> class OMVoxelLayer
 {
   public:
-    OMVoxelLayer(OMRenderer *renderer)
+    OMVoxelLayer(OMRenderer *renderer, std::string tag)
     {
-        voxelBuffer = new OMRendererSegBuf(renderer, 1024 * 1024);
+        voxelBuffer = new OMRendererSegBuf(renderer, std::move(tag), 1024 * 1024);
         chunkBlocks.resize(1);
     }
     ~OMVoxelLayer()
@@ -429,7 +430,7 @@ template <typename It> class OMVoxelLayer
         }
     }
 
-    // 限时压缩：避免一次性整理整个图层造成几十毫秒的卡顿
+    // Time-limited compaction: avoid compacting an entire layer at once and causing tens of ms of stutter
     auto mergeStepTimed(double budgetMs) -> void
     {
         if (chunkBlocks.empty())
@@ -487,7 +488,7 @@ template <typename It> class OMVoxelLayer
         return voxelBuffer;
     }
 
-    // 实际存活数据量（用于判断碎片化程度）
+    // Actual live data size (used to judge fragmentation)
     auto liveBytesCount() const -> uint64_t
     {
         return liveBytes;
@@ -557,7 +558,7 @@ class OMVoxelCompilerPool
                 OMVoxelLayer<OMVoxelComplex> *translucentComplex, OMVoxelLayer<OMVoxelFluid> *translucentFluid,
                 const std::function<void(int, world::OMChunkIndex, uint64_t)> &visSink);
     void compile(int i, bool useCache = false, float distanceSq = 3.4e38f);
-    // 轻量可见性计算请求（不生成几何，只给遮挡剔除补数据）
+    // Lightweight visibility request (no geometry; only fills data for occlusion culling)
     void requestVisibility(int i);
     void dropCache(int i)
     {
@@ -574,15 +575,15 @@ class OMVoxelCompilerPool
 
   private:
     std::unordered_map<int, bool> cached;
-    // 缓存对应的 chunk 坐标：slot 会被 chunkManager 回收复用，
-    // 仅当坐标一致时缓存才有效
+    // Cache the chunk coordinates: slots are recycled by chunkManager,
+    // so the cache is valid only when coordinates match
     std::unordered_map<int, world::OMChunkIndex> cachedOrigin;
     world::OMChunkManager<16> &manager;
     OMVoxelCompiler &compiler;
 
     std::mutex poolMutex;
 
-    // 编译请求：按与相机的距离平方排序（越近越先编译）
+    // Compile requests: sorted by squared distance to the camera (nearest first)
     struct OMCompileRequest
     {
         float distanceSq = 0.0f;
@@ -598,14 +599,14 @@ class OMVoxelCompilerPool
     std::priority_queue<OMCompileRequest, std::vector<OMCompileRequest>, std::greater<>> queuedChunks;
     std::vector<int> visRequests;
     std::unordered_set<int> visQueued;
-    // 同一 chunk 在队列中只保留一份（快速转视角时会反复请求同一 chunk）
+    // Keep one entry per chunk in the queue (fast rotation repeatedly requests the same chunk)
     std::unordered_set<int> queuedIndex;
 
     std::mutex bufferMutex;
     std::unordered_map<int, std::vector<OMVoxel>> cutout, translucent;
     std::unordered_map<int, std::vector<OMVoxelComplex>> cutoutComplex, translucentComplex;
     std::unordered_map<int, std::vector<OMVoxelFluid>> fluid, translucentFluid;
-    // 每个 section 的 6x6 面可见性矩阵：bit(f*6 + t) 表示从 f 面看进去能否从 t 面穿出
+    // Per-section 6x6 face visibility matrix: bit(f*6 + t) means you can see in through face f and exit through face t
     std::unordered_map<int, uint64_t> visC;
     std::unordered_map<int, std::pair<world::OMChunkIndex, uint64_t>> visPending;
 
@@ -663,11 +664,12 @@ class OMVoxelColorManager
 class OMVoxelManager
 {
   public:
-    OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, OMRendererTexture *, OMRendererTexture *,
-                   std::shared_ptr<world::OMChunkManager<16>>, std::function<void(bool)>, OMVoxelHandler *,
+    OMVoxelManager(OMRenderer *renderer, OMRendererRenderTarget *, const std::string &texTag,
+                   const std::string &texSecTag, std::shared_ptr<world::OMChunkManager<16>>,
+                   std::function<void(bool)>, OMVoxelHandler *,
                    std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)>,
-                   OMVoxelColorManager *, OMRendererTexture *, OMRendererTexture *, OMRendererTexture *,
-                   std::vector<bool>, std::shared_ptr<OMChunkPaletteProvider>);
+                   OMVoxelColorManager *, const std::string &sunTag, const std::string &moonTag,
+                   const std::string &cloudTag, std::vector<bool>, std::shared_ptr<OMChunkPaletteProvider>);
     ~OMVoxelManager();
 
     auto submit(OMRendererTask *, OMRendererTempTarget *, bool = true) -> OMRendererTask *;
@@ -690,32 +692,32 @@ class OMVoxelManager
     OMRendererPipeline *skyDiscPipeline;
     OMRendererPipeline *lightmapPipeline;
     OMRendererPipeline *skyPipeline;
-    OMRendererBuffer *chunkOffsetBuffer, *debugOffsetBuffer;
-    // 体素四边形的共享索引缓冲（0,1,2, 2,3,0）：4 顶点/面
-    OMRendererBuffer *voxelIndexBuffer = nullptr;
-    OMRendererBuffer *skydisc;
-    OMRendererBuffer *fogdata, *cloudFogdata;
-    OMRendererBuffer *lightmapData;
-    OMRendererBuffer *moonData;
-    OMRendererBuffer *cloudData;
-    OMRendererTexture *cloudTex;
-    OMRendererTexture *textureAtlas;
-    OMRendererTexture *textureAtlasSecondary;
+    OMBufferRef chunkOffsetBuffer, debugOffsetBuffer;
+    // Shared index buffer for voxel quads (0,1,2, 2,3,0): 4 vertices per face
+    OMBufferRef voxelIndexBuffer;
+    OMBufferRef skydisc;
+    OMBufferRef fogdata, cloudFogdata;
+    OMBufferRef lightmapData;
+    OMBufferRef moonData;
+    OMBufferRef cloudData;
+    OMTextureRef cloudTex;
+    OMTextureRef textureAtlas;
+    OMTextureRef textureAtlasSecondary;
     OMRendererTempTarget *lightmap;
     OMVoxelColorManager *colorManager;
 
-    OMRendererBuffer *sunrise;
+    OMBufferRef sunrise;
     OMRendererPipeline *sunrisePipeline;
     OMRendererPipeline *sunPipeline, *moonPipeline;
 
-    OMRendererTexture *sunTex, *moonTex;
-    OMRendererBuffer *starBuffer;
-    OMRendererBuffer *starBaseData;
+    OMTextureRef sunTex, moonTex;
+    OMBufferRef starBuffer;
+    OMBufferRef starBaseData;
     OMRendererPipeline *starPipeline;
 
     OMRendererPipeline *cloudPipeline, *cloudComposePipeline;
     std::vector<bool> cloudStats;
-    OMRendererBuffer *cloudBuffer;
+    OMBufferRef cloudBuffer;
 
   private:
     int samples = 4;
@@ -755,7 +757,7 @@ class OMVoxelManager
     std::vector<int> cullCandidates;
 
     std::vector<uint64_t> sectionVisibility;
-    // 可见性预计算游标（按 cullCandidates 轮转，每帧最多补 48 个）
+    // Visibility prefetch cursor (rotates over cullCandidates, at most 48 per frame)
     size_t visFillCursor = 0;
     std::vector<uint8_t> bfsVisibleMask;
     uint64_t graphVersion = 0;
@@ -763,7 +765,7 @@ class OMVoxelManager
     std::array<int64_t, 3> lastBfsSection = {INT64_MIN, INT64_MIN, INT64_MIN};
     std::chrono::steady_clock::time_point lastBfsTime = std::chrono::steady_clock::now();
     bool bfsValid = false;
-    // 云层是否可见（相机俯仰 + 半 FOV 低于地平线时整层不可见，可跳过该 pass）
+    // Whether clouds are visible (layer invisible when pitch + half FOV is below the horizon; the pass can be skipped)
     bool renderClouds = true;
     glm::vec2 lastExtent = glm::vec2(0.0f);
 

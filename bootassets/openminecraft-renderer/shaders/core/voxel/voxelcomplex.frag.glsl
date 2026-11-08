@@ -37,8 +37,8 @@ void main()
         texColor = texture(inTextureSec, vec3(voxTexCoord, voxTexLayer));
     }
 
-    // cutout 必须是不透明的 alpha test：
-    // 远处 mipmap 会把 alpha 平均成 0.3~0.6，若继续按 alpha 混合就会"透视"。
+    // Cutout must be an opaque alpha test:
+    // Distant mipmaps average alpha to 0.3~0.6; blending by alpha would make it look see-through.
     if (texColor.a < 0.1)
     {
         discard;

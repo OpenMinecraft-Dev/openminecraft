@@ -72,7 +72,7 @@ class OMDebugRenderer : public openminecraft::renderer::common::OMRendererHandle
 
     auto getTex() -> openminecraft::renderer::common::OMRendererTexture *
     {
-        return internal->middleTarget->colorTexture;
+        return internal->middleTarget->colorTexture();
     }
 };
 } // namespace openminecraft::shell::renderer

@@ -5,6 +5,7 @@
 #include "glm/ext/vector_float3.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
+#include "openminecraft/renderer/common/wrap/om_renderer_object_ref.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <istream>
 namespace openminecraft::renderer::common::model
@@ -18,7 +19,7 @@ class OMRendererModelObj
     ~OMRendererModelObj();
 
     basics::OMVertexFormat format;
-    OMRendererBuffer *vertexData, *vertexIndex;
+    wrap::OMBufferRef vertexData, vertexIndex;
     uint32_t vertexCount;
 };
 } // namespace openminecraft::renderer::common::model

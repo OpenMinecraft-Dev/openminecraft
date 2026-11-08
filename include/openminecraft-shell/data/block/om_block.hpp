@@ -47,7 +47,7 @@ template <> struct hash<openminecraft::shell::data::block::OMBlockModelIdentifie
 using openminecraft::renderer::common::wrap::OMVoxelFacing;
 namespace openminecraft::shell::data::block
 {
-// 流体类型：决定流体使用的贴图与"同种流体"分组
+// Fluid type: determines the texture used and the "same fluid" grouping
 enum OMBlockFluidType
 {
     FluidNone = 0,
