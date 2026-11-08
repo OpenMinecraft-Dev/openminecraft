@@ -15,7 +15,8 @@ enum OMEventType
     MouseWheel,
     KeyDown,
     KeyUp,
-    TextInput
+    TextInput,
+    TextEditing
 };
 
 struct OMEvent
@@ -53,8 +54,10 @@ struct OMEvent
         } custom;
     };
 
-    // TextInput payload (kept outside the union: std::string is not trivial).
+    // TextInput / TextEditing payload (kept outside the union: std::string is not trivial).
     std::string text;
+    int selectionStart = 0;
+    int selectionLength = 0;
 };
 using OMEventBusWrap = OMEventBus<OMEventType, OMEvent>;
 } // namespace openminecraft::renderer::common::event

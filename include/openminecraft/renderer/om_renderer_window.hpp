@@ -42,11 +42,16 @@ class OMWindow
         return window;
     }
 
+    // Applies pending text-input (IME) requests from the UI layer. This is the
+    // only place that touches SDL text input functions.
+    void applyTextInputState();
+
   private:
     OMVersionRequirement requirement;
     OMWindowConfig config;
     OMRenderer *renderer;
     SDL_Window *window;
+    bool textInputActive = false;
 
     log::OMLogger logger;
 };

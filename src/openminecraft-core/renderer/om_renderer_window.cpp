@@ -1,5 +1,6 @@
 #include "openminecraft/renderer/om_renderer_window.hpp"
 #include "SDL3/SDL_keyboard.h"
+#include "openminecraft/renderer/common/om_text_input_controller.hpp"
 #include "SDL3/SDL_video.h"
 #include "openminecraft/renderer/common/shader/om_renderer_shadercompiler_shaderc.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
@@ -29,7 +30,6 @@ OMWindow::OMWindow(OMVersionRequirement requirement, OMWindowConfig config, std:
     }
 
     window = SDL_CreateWindow(config.initialTitle.c_str(), config.initialWidth, config.initialHeight, additionalFlags);
-    SDL_StartTextInput(window);
 
     switch (config.backend)
     {
@@ -47,6 +47,40 @@ OMWindow::OMWindow(OMVersionRequirement requirement, OMWindowConfig config, std:
         break;
     }
 }
+void OMWindow::applyTextInputState()
+{
+    auto &controller = common::OMTextInputController::instance();
+    const bool active = controller.isActive();
+
+    if (active != textInputActive)
+    {
+        if (active)
+        {
+            SDL_StartTextInput(window);
+        }
+        else
+        {
+            SDL_StopTextInput(window);
+        }
+
+        textInputActive = active;
+    }
+
+    if (!active)
+    {
+        return;
+    }
+
+    float x = 0.0f, y = 0.0f, width = 1.0f, height = 1.0f;
+
+    if (controller.takeArea(x, y, width, height))
+    {
+        SDL_Rect area{static_cast<int>(x), static_cast<int>(y), static_cast<int>(width), static_cast<int>(height)};
+        SDL_SetTextInputArea(window, &area, 0);
+
+    }
+}
+
 OMWindow::~OMWindow()
 {
     delete renderer;

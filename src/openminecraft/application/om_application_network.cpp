@@ -255,10 +255,7 @@ void OMApplication::networkSetup(std::string host, std::string port)
         {
             title("Enter Configuration");
 
-            static const int viewDistance = []() -> int {
-                const char *v = std::getenv("OM_VIEW_DISTANCE");
-                return v != nullptr ? std::clamp(std::atoi(v), 2, 32) : 24;
-            }();
+            constexpr int viewDistance = 24;
 
             // Report view distance: the server's actual send radius = min(server config, this value)
             transformer->sendConfigurationClientInformation(viewDistance);
@@ -1119,10 +1116,7 @@ void OMApplication::networkSetup(std::string host, std::string port)
             // otherwise the server assumes the client cannot keep up and stops sending chunks.
             // Fixed rate: do not derive desired from client processing time (including disk writes),
             // otherwise the server throttles us to 1~3 chunks/tick and only a small nearby area loads.
-            static const float fixedDesired = []() -> float {
-                const char *v = std::getenv("OM_CHUNK_BATCH");
-                return v != nullptr ? std::stof(v) : 12.0f;
-            }();
+            constexpr float fixedDesired = 12.0f;
             desiredChunksPerTick = std::clamp(fixedDesired, 1.0f, 32.0f);
 
             logger->debug("chunk batch: {} chunks, elapsed {:.1f}ms, desired {:.1f}/tick", numOfChunks,

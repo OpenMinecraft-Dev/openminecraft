@@ -177,6 +177,8 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
             return processKeyUp(event);
         case OMDemiurgeEventType::TextInput:
             return processTextInput(event);
+        case OMDemiurgeEventType::TextEditing:
+            return processTextEditing(event);
         default:
             return Ignored;
         }
@@ -191,6 +193,10 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         return Ignored;
     }
     virtual auto processTextInput(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
+    {
+        return Ignored;
+    }
+    virtual auto processTextEditing(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
     {
         return Ignored;
     }
@@ -269,6 +275,14 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
             OMDemiurgeEvent ev;
             ev.type = OMDemiurgeEventType::TextInput;
             ev.text = e.text;
+            acceptEvent(ev);
+        });
+        buswrap.append(event::TextEditing, [&](event::OMEvent &e) {
+            OMDemiurgeEvent ev;
+            ev.type = OMDemiurgeEventType::TextEditing;
+            ev.text = e.text;
+            ev.compositionStart = e.selectionStart;
+            ev.compositionLength = e.selectionLength;
             acceptEvent(ev);
         });
     }

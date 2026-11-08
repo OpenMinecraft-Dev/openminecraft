@@ -906,9 +906,8 @@ static auto lastp = std::chrono::steady_clock::now();
 
 auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 {
-    // BFS occlusion culling causes 6~7ms main-thread spikes during fast rotation and measured as a net loss;
-    // disabled by default; enable with OM_BFS=1 when needed.
-    static const bool bfsOcclusionEnabled = std::getenv("OM_BFS") != nullptr;
+    // BFS occlusion culling measured as a net loss (6~7ms main-thread spikes during rotation).
+    constexpr bool bfsOcclusionEnabled = false;
 
     auto cameraPos = camera.getPosRaw();
 

@@ -99,16 +99,6 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
     auto task = renderer->fetchTask("demiurgeui_compose_" + name);
     task->target(middleTarget->target());
 
-    // Debug: with OM_CLOSE_UI=1 the main UI and galaxy are not drawn (targets are only cleared),
-    // used for performance tests that render the scene under full GPU load.
-    static const bool hideUi = std::getenv("OM_CLOSE_UI") != nullptr;
-
-    if (hideUi && (name == "surface" || name == "surface_background"))
-    {
-        task->clearColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f))->clearDepth(1.0f)->finish();
-        return;
-    }
-
     for (float layer = bottomDepth; layer >= topDepth; layer -= 0.01f)
     {
         rect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);

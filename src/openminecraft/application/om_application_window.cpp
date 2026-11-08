@@ -294,6 +294,15 @@ void OMApplication::mainLoop(OMBackend backend)
             ev.text = e.text.text != nullptr ? e.text.text : "";
             buswrap.handle(event::TextInput, ev);
         });
+
+        bus.append(SDL_EVENT_TEXT_EDITING, [&](SDL_Event &e) -> void {
+            event::OMEvent ev;
+            ev.type = event::TextEditing;
+            ev.text = e.edit.text != nullptr ? e.edit.text : "";
+            ev.selectionStart = e.edit.start;
+            ev.selectionLength = e.edit.length;
+            buswrap.handle(event::TextEditing, ev);
+        });
         bus.append(SDL_EVENT_FINGER_MOTION, [&](SDL_Event &e) {
             int w, h;
             SDL_GetWindowSize(SDL_GetWindowFromEvent(&e), &w, &h);
@@ -400,20 +409,8 @@ void OMApplication::mainLoop(OMBackend backend)
 
         util::OMTicker ticker;
 
-        const char *autoExitEnv = std::getenv("OM_AUTOEXIT_MS");
-        const long long autoExitMs = autoExitEnv ? std::atoll(autoExitEnv) : 0;
-        const auto loopStart = std::chrono::steady_clock::now();
-
         while (isRunning)
         {
-            if (autoExitMs > 0 &&
-                std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - loopStart)
-                        .count() > autoExitMs)
-            {
-                logger->info("auto exit triggered after {} ms", autoExitMs);
-                isRunning = false;
-            }
-
             ticker.begin();
 
             SDL_Event e;
@@ -422,6 +419,7 @@ void OMApplication::mainLoop(OMBackend backend)
                 bus.handle(static_cast<SDL_EventType>(e.type), e);
             }
             SDL_SetWindowRelativeMouseMode(reinterpret_cast<SDL_Window *>(*win), inGame);
+            win.applyTextInputState();
 
             win()->render(ticker);
         }

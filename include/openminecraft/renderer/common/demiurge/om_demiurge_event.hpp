@@ -17,6 +17,7 @@ enum class OMDemiurgeEventType
     KeyDown,
     KeyUp,
     TextInput,
+    TextEditing,
 };
 
 // Unified UI event: mouse, wheel, keyboard and text input.
@@ -37,6 +38,10 @@ struct OMDemiurgeEvent
     uint16_t modifier = 0;
     bool repeat = false;
     std::string text;
+
+    // IME composition (TextEditing): text holds the composition string.
+    int compositionStart = 0;
+    int compositionLength = 0;
 
     auto isMouse() const -> bool
     {
@@ -61,6 +66,7 @@ struct OMDemiurgeEvent
         case OMDemiurgeEventType::KeyDown:
         case OMDemiurgeEventType::KeyUp:
         case OMDemiurgeEventType::TextInput:
+        case OMDemiurgeEventType::TextEditing:
             return true;
         default:
             return false;

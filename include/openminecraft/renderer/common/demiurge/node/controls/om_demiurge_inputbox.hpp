@@ -9,6 +9,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 
 namespace openminecraft::renderer::common::demiurge::node::controls
@@ -26,12 +27,14 @@ class OMDemiurgeInputBox : public OMDemiurgeRectNode
     auto processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult override;
     auto processKeyDown(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult override;
     auto processTextInput(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult override;
+    auto processTextEditing(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult override;
     auto processFocusGained() -> void override;
     auto processFocusLost() -> void override;
 
     void setText(const std::string &text);
-    auto getText() const -> const std::string &
+    auto getText() const -> std::string
     {
+        std::lock_guard<std::mutex> lock(stateMutex);
         return text;
     }
     void setPlaceholder(const std::string &placeholder);
@@ -59,12 +62,13 @@ class OMDemiurgeInputBox : public OMDemiurgeRectNode
     animation::OMAnimationValue<glm::vec4> textColor;
     animation::OMAnimationValue<glm::vec4> caretColor;
     animation::OMAnimationValue<glm::vec4> placeholderColor;
+    animation::OMAnimationValue<float> caretXAnimation;
 
   private:
     auto measure(const std::string &value) -> float;
     auto caretFromX(float x) -> size_t;
     auto scrollForCaret() -> float;
-    auto insertText(const std::string &value) -> void;
+    auto insertText(const std::string &value) -> bool;
     auto notifyChange() -> void;
 
     std::shared_ptr<OMDemiurgeNode> textNode;
@@ -73,16 +77,30 @@ class OMDemiurgeInputBox : public OMDemiurgeRectNode
     geom::OMFontSet *fontset = nullptr;
     std::string text;
     std::string placeholder = "";
+    std::string composing;
+    int composingStart = 0;
+    int composingLength = 0;
+    bool composingEnded = false;
+    std::chrono::steady_clock::time_point composingEndedAt = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point lastComposingAt = std::chrono::steady_clock::now();
     size_t caret = 0;
     int maxLength = 256;
     bool disabled = false;
     std::chrono::steady_clock::time_point blinkStart = std::chrono::steady_clock::now();
     float lastScroll = 0.0f;
+    float lastCaretTarget = -1.0f;
+    bool composingWasActive = false;
+    float lastAreaX = -1.0e9f;
+    float lastAreaY = -1.0e9f;
+    float lastAreaWidth = 0.0f;
+    float lastAreaHeight = 0.0f;
 
     std::function<void(const std::string &)> handleChange = [](const std::string &) {};
     std::function<void(const std::string &)> handleSubmit = [](const std::string &) {};
 
     inline static std::weak_ptr<OMDemiurgeInputBox> activeInput;
+
+    mutable std::mutex stateMutex;
 };
 } // namespace openminecraft::renderer::common::demiurge::node::controls
 

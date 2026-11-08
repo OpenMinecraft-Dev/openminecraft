@@ -336,10 +336,7 @@ static void preloadChunks(world::OMChunkManager<16> &manager)
 auto startupCamera() -> OMStartupCamera
 {
     static const bool preloadFromDisk = std::getenv("OM_CHUNK_PRELOAD") != nullptr;
-    static const int64_t worldOffsetChunks = []() -> int64_t {
-        const char *v = std::getenv("OM_WORLD_OFFSET");
-        return v != nullptr ? std::atoll(v) : 0;
-    }();
+    constexpr int64_t worldOffsetChunks = 0;
 
     OMStartupCamera cam;
 
@@ -377,10 +374,7 @@ auto startupCamera() -> OMStartupCamera
 void runTerrainGeneration(world::OMChunkManager<16> &manager, std::atomic<bool> &stopProducing)
 {
     static const bool preloadFromDisk = std::getenv("OM_CHUNK_PRELOAD") != nullptr;
-    static const int64_t worldOffsetChunks = []() -> int64_t {
-        const char *v = std::getenv("OM_WORLD_OFFSET");
-        return v != nullptr ? std::atoll(v) : 0;
-    }();
+    constexpr int64_t worldOffsetChunks = 0;
 
     if (preloadFromDisk)
     {
