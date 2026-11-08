@@ -1,3 +1,5 @@
+#define NOMINMAX
+
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_task.hpp"
 #include "GL/glcorearb.h"
 #include "openminecraft/log/om_log_common.hpp"
@@ -293,8 +295,8 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
 
     if (!isCleared)
     {
-        // glClear is also affected by write masks: the first pipeline bound to this target may have writeColor / depthWrite disabled
-        // restore full write masks first, otherwise this clear is silently skipped.
+        // glClear is also affected by write masks: the first pipeline bound to this target may have writeColor /
+        // depthWrite disabled restore full write masks first, otherwise this clear is silently skipped.
         ops.push_back({ColorMask, static_cast<GLuint>(GL_TRUE), static_cast<GLuint>(GL_TRUE),
                        static_cast<GLuint>(GL_TRUE), static_cast<GLuint>(GL_TRUE)});
         ops.push_back({DepthMask, static_cast<GLuint>(GL_TRUE)});
@@ -510,8 +512,8 @@ void OMRendererTaskOpenGL::setScissor(float x, float y, float width, float heigh
     const GLuint glY = static_cast<GLuint>(std::max(0.0f, static_cast<float>(siz.y) - y - clampH));
 
     ops.push_back({Enable, GL_SCISSOR_TEST});
-    ops.push_back({Scissor, static_cast<GLuint>(std::max(0.0f, x)), glY,
-                   static_cast<GLuint>(clampW), static_cast<GLuint>(clampH)});
+    ops.push_back({Scissor, static_cast<GLuint>(std::max(0.0f, x)), glY, static_cast<GLuint>(clampW),
+                   static_cast<GLuint>(clampH)});
 }
 
 void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
