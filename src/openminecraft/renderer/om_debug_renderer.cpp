@@ -63,24 +63,6 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
     });
     button->setBackgroundColor({0.17, 0.17, 0.20});
 
-    // Indeterminate progress bar: rounded track + absolutely positioned rounded segment.
-    // Head and tail are driven by different easing curves (see afterFrame).
-    progressTrack = std::make_shared<node::OMDemiurgeRectNode>()->style({
-        {"color", (int)0x1b1b2440},
-        {"width", OMDemiurgeSize::pixels(180.0f)},
-        {"height", OMDemiurgeSize::pixels(4.0f)},
-        {"radius", glm::vec4(4.0f)},
-    });
-    progressSegment = std::make_shared<node::OMDemiurgeRectNode>()->style({
-        {"color", (int)0x00d4ffff},
-        {"position", OMDemiurgePosition::Absolute},
-        {"offsetX", OMDemiurgeSize::pixels(0.0f)},
-        {"offsetY", OMDemiurgeSize::pixels(0.0f)},
-        {"width", OMDemiurgeSize::pixels(1.0f)},
-        {"height", OMDemiurgeSize::pixels(4.0f)},
-        {"radius", glm::vec4(4.0f)},
-    });
-    progressTrack->mount(progressSegment);
     node = std::make_shared<node::OMDemiurgeContainerNode>()
                ->style({
                    {"flexDirection", Row},
@@ -165,8 +147,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
                                                        {"text", "Operations"},
                                                        {"textheight", 16},
                                                    }))
-                                       ->mount(button->style("animation_speed", 1.0f)->style("label", "Main Menu"))
-                                       ->mount(progressTrack)))
+                                       ->mount(button->style("animation_speed", 1.0f)->style("label", "Main Menu"))))
                ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                            ->style({
                                {"flexDirection", Column},
@@ -338,43 +319,6 @@ void OMDebugRenderer::beforeFrame()
 
 void OMDebugRenderer::afterFrame()
 {
-    // Indeterminate bar: one constant-length pill sliding across the track.
-    // Head and tail leave the track visually because the pill is clipped against the
-    // track's (rounded) bounds; the pill itself never stretches or shrinks.
-    {
-        static const auto startedAt = std::chrono::steady_clock::now();
-        constexpr float cycle = 1.15f;       // one leg (left->right or right->left) in seconds
-        constexpr float trackWidth = 180.0f; // must match progressTrack width
-        constexpr float segmentLength = 64.0f;
-
-        const float t = std::chrono::duration<float>(std::chrono::steady_clock::now() - startedAt).count();
-
-        // Ping-pong: travel to the right outside edge, then back to the left one.
-        const float phase = std::fmod(t / cycle, 2.0f);
-        const float triangle = phase <= 1.0f ? phase : 2.0f - phase;
-        const float u = animation::easeInOutSine(std::clamp(triangle, 0.0f, 1.0f));
-
-        const float x = -segmentLength + (trackWidth + segmentLength) * u;
-
-        progressSegment->style("offsetX", OMDemiurgeSize::pixels(x))
-            ->style("width", OMDemiurgeSize::pixels(segmentLength));
-
-        // Clip against the track bounds (filled by the first layout pass).
-        try
-        {
-            auto b = progressTrack->fetchLayoutBound();
-
-            if (b.width > 0.0f && b.height > 0.0f)
-            {
-                progressSegment->style("clip", glm::vec4(b.x, b.y, b.width, b.height))
-                    ->style("clipRadius", 4.0f);
-            }
-        }
-        catch (std::bad_any_cast &)
-        {
-        }
-    }
-
     const float frameTime = renderer->fetchFrameTime();
     if (frameTime > 0.0f)
     {

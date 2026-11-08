@@ -2,6 +2,7 @@
 #include "openminecraft-shell/om_application.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_progressbar.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
@@ -61,6 +62,16 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     });
     button2->setBackgroundColor({0.17, 0.17, 0.20});
 
+    progressBar = std::make_shared<node::controls::OMDemiurgeProgressBar>();
+    progressBar->style({
+        {"width", OMDemiurgeSize::pixels(220.0f)},
+        {"height", OMDemiurgeSize::pixels(3.0f)},
+        {"radius", glm::vec4(3.0f)},
+        {"alignSelf", OMDemiurgeAlign::Center},
+    });
+    progressBar->setTrackColor(glm::vec4(0.106f, 0.106f, 0.141f, 0.35f));
+    progressBar->setBarColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f));
+
     bgNode = std::make_shared<node::OMDemiurgeShaderSceneNode>("demiurge/scene/galaxy.glsl")
                  ->style({
                      {"width", OMDemiurgeSize::fit()},
@@ -97,7 +108,8 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                                            {"border", OMDemiurgeEdgeInsets{0, 60, 0, 0}},
                                        }))
                            ->mount(button->style("animation_speed", 1.0f)->style("label", "Demo Test"))
-                           ->mount(button2->style("animation_speed", 1.0f)->style("label", "Quit")));
+                           ->mount(button2->style("animation_speed", 1.0f)->style("label", "Quit"))
+                           ->mount(progressBar));
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->name = "surface";
