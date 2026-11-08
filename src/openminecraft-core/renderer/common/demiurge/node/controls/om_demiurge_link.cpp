@@ -96,6 +96,7 @@ auto OMDemiurgeLink::processMouseDown(float x, float y, uint8_t button) -> OMDem
     }
 
     // Keep hover/underline applied while the link is held down.
+    captureMouse();
     hoverAmount.animateTo(1.0f, easeOutCirc<float>, 0.12f);
     pressAmount.animateTo(1.0f, easeOutCirc<float>, 0.08f);
     return Handled;
@@ -112,20 +113,15 @@ auto OMDemiurgeLink::processMouseUp(float x, float y, uint8_t button) -> OMDemiu
 
     // Re-assert the hover state after the click so the underline does not vanish
     // while the cursor is still over the link.
-    bool inside = true;
-
-    try
-    {
-        auto bound = fetchLayoutBound();
-        inside = x >= bound.x && x <= bound.x + bound.width && y >= bound.y && y <= bound.y + bound.height;
-    }
-    catch (std::bad_any_cast &)
-    {
-    }
+    const bool inside = containsPoint(x, y);
 
     hoverAmount.animateTo(inside ? 1.0f : 0.0f, easeOutCirc<float>, 0.12f);
 
-    handle();
+    if (inside)
+    {
+        handle();
+    }
+
     return Handled;
 }
 

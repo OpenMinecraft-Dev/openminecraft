@@ -67,7 +67,8 @@ void OMDemiurgeSwitch::update()
         ->style("radius", glm::vec4(TrackHeight * 0.5f));
 
     const float travel = TrackWidth - ThumbSize - 4.0f;
-    thumbNode->style("offsetX", OMDemiurgeSize::pixels(2.0f + travel * amount))
+    const float thumbAmount = dragging ? dragValue : amount;
+    thumbNode->style("offsetX", OMDemiurgeSize::pixels(2.0f + travel * thumbAmount))
         ->style("color", (int)f4ToRgba(thumbFinal))
         ->style("radius", glm::vec4(ThumbSize * 0.5f));
 
@@ -81,7 +82,39 @@ auto OMDemiurgeSwitch::processMouseDown(float x, float y, uint8_t button) -> OMD
         return Ignored;
     }
 
+    captureMouse();
+    pressed = true;
+    dragging = false;
+    pressX = x;
+    dragValue = checked ? 1.0f : 0.0f;
     pressAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    return Handled;
+}
+
+auto OMDemiurgeSwitch::processMouseMove(float x, float y) -> OMDemiurgeEventResult
+{
+    if (disabled)
+    {
+        return Ignored;
+    }
+
+    // Hovering alone must never drag the thumb: only a held press can.
+    if (!pressed)
+    {
+        return Ignored;
+    }
+
+    if (!dragging && std::abs(x - pressX) <= 2.0f)
+    {
+        return Ignored;
+    }
+
+    dragging = true;
+    dragValue = dragPosition(x);
+
+    // Crossing the halfway point flips the background colour while dragging.
+    setChecked(dragValue > 0.5f);
+
     return Handled;
 }
 
@@ -92,8 +125,29 @@ auto OMDemiurgeSwitch::processMouseUp(float x, float y, uint8_t button) -> OMDem
         return Ignored;
     }
 
+    pressed = false;
     pressAmount.animateTo(0.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
-    setChecked(!checked);
+
+    if (dragging)
+    {
+        // Snap the thumb from its dragged position to the final side.
+        const bool next = dragValue > 0.5f;
+
+        if (checked != next)
+        {
+            setChecked(next);
+        }
+
+        onAmount.setTo(dragValue);
+        onAmount.animateTo(checked ? 1.0f : 0.0f, easeOutCubic<float>,
+                           stylesStorage.get<float>("animation_speed", 0.18f));
+        dragging = false;
+    }
+    else if (containsPoint(x, y))
+    {
+        setChecked(!checked);
+    }
+
     return Handled;
 }
 
@@ -118,7 +172,30 @@ auto OMDemiurgeSwitch::processMouseExit(float x, float y) -> OMDemiurgeEventResu
     const float speed = stylesStorage.get<float>("animation_speed", 0.18f);
     hoverAmount.animateTo(0.0f, easeOutCirc<float>, speed);
     pressAmount.animateTo(0.0f, easeOutCirc<float>, speed);
+    pressed = false;
+    dragging = false;
     return Handled;
+}
+
+auto OMDemiurgeSwitch::dragPosition(float x) -> float
+{
+    const float travel = TrackWidth - ThumbSize - 4.0f;
+
+    if (travel <= 0.0f)
+    {
+        return 0.0f;
+    }
+
+    try
+    {
+        auto b = fetchLayoutBound();
+        const float start = b.x + 2.0f + ThumbSize * 0.5f;
+        return std::clamp((x - start) / travel, 0.0f, 1.0f);
+    }
+    catch (std::bad_any_cast &)
+    {
+        return 0.0f;
+    }
 }
 
 void OMDemiurgeSwitch::setChecked(bool value, bool animate)

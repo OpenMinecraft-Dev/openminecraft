@@ -281,6 +281,13 @@ void OMApplication::mainLoop(OMBackend backend)
             ev.key.modifier = e.key.mod;
             buswrap.handle(event::KeyUp, ev);
         });
+
+        bus.append(SDL_EVENT_TEXT_INPUT, [&](SDL_Event &e) -> void {
+            event::OMEvent ev;
+            ev.type = event::TextInput;
+            ev.text = e.text.text != nullptr ? e.text.text : "";
+            buswrap.handle(event::TextInput, ev);
+        });
         bus.append(SDL_EVENT_FINGER_MOTION, [&](SDL_Event &e) {
             int w, h;
             SDL_GetWindowSize(SDL_GetWindowFromEvent(&e), &w, &h);

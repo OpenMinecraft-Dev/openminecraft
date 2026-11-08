@@ -2,6 +2,7 @@
 #define OM_EVENTBUS_WRAP_HPP
 
 #include <cstdint>
+#include <string>
 #include "openminecraft/renderer/common/event/om_eventbus.hpp"
 namespace openminecraft::renderer::common::event
 {
@@ -13,7 +14,8 @@ enum OMEventType
     MouseDown,
     MouseWheel,
     KeyDown,
-    KeyUp
+    KeyUp,
+    TextInput
 };
 
 struct OMEvent
@@ -50,6 +52,9 @@ struct OMEvent
             uint64_t flag;
         } custom;
     };
+
+    // TextInput payload (kept outside the union: std::string is not trivial).
+    std::string text;
 };
 using OMEventBusWrap = OMEventBus<OMEventType, OMEvent>;
 } // namespace openminecraft::renderer::common::event

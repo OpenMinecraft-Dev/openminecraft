@@ -134,6 +134,7 @@ auto OMDemiurgeSlider::processMouseDown(float x, float y, uint8_t button) -> OMD
         return Ignored;
     }
 
+    captureMouse();
     dragging = true;
     updateFromMouse(x);
     return Handled;
@@ -159,6 +160,7 @@ auto OMDemiurgeSlider::processMouseUp(float x, float y, uint8_t button) -> OMDem
 
     dragging = false;
     updateFromMouse(x);
+    releaseMouse();
     return Handled;
 }
 

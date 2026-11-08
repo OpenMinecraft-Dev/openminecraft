@@ -318,87 +318,172 @@ updateChildren:
     }
 }
 
-void OMDemiurgeNode::acceptEvent(OMDemiurgeEventType type, uint32_t ext, uint16_t mod)
+void OMDemiurgeNode::captureMouse()
 {
-    for (auto f : children)
+    auto self = shared_from_this();
+    auto root = self;
+
+    while (root->parent != nullptr)
     {
-        f->acceptEvent(type, ext, mod);
+        root = root->parent->shared_from_this();
+    }
+
+    capturedNode = self;
+    capturedRoot = root;
+}
+
+void OMDemiurgeNode::releaseMouse()
+{
+    if (auto current = capturedNode.lock(); current.get() == this)
+    {
+        capturedNode.reset();
+        capturedRoot.reset();
     }
 }
 
-void OMDemiurgeNode::acceptEvent(float x, float y, OMDemiurgeEventType type, uint8_t ext, void *data)
+auto OMDemiurgeNode::containsPoint(float x, float y) -> bool
 {
     try
     {
         auto bo = stylesStorage.get<OMDemiurgeRect>("layoutBound");
-        if ((x >= bo.x && x <= bo.x + bo.width && y >= bo.y && y <= bo.y + bo.height) ||
-            (std::isinf(x) && std::isinf(y)))
+        return x >= bo.x && x <= bo.x + bo.width && y >= bo.y && y <= bo.y + bo.height;
+    }
+    catch (std::bad_any_cast &e)
+    {
+        return false;
+    }
+}
+
+auto OMDemiurgeNode::dispatchCapturedEvent(const OMDemiurgeEvent &event) -> void
+{
+    if (event.x != INFINITY && event.y != INFINITY)
+    {
+        mx = event.x;
+        my = event.y;
+    }
+
+    processEvent(event);
+}
+
+void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
+{
+    // Mouse capture takes over the whole tree while a control is held down.
+    if (parent == nullptr && event.isMouse())
+    {
+        if (auto captured = capturedNode.lock())
         {
-            if (!(mx >= bo.x && mx <= bo.x + bo.width && my >= bo.y && my <= bo.y + bo.height))
+            auto root = capturedRoot.lock();
+
+            if (root.get() == this)
             {
-                if (processMouseEnter(x, y) == Ignored)
+                switch (event.type)
+                {
+                case OMDemiurgeEventType::MouseDown: {
+                    // A new press cancels the previous capture.
+                    OMDemiurgeEvent exit = event;
+                    exit.type = OMDemiurgeEventType::MouseExit;
+                    captured->dispatchCapturedEvent(exit);
+                    capturedNode.reset();
+                    capturedRoot.reset();
+                    break;
+                }
+                case OMDemiurgeEventType::MouseMove: {
+                    captured->dispatchCapturedEvent(event);
+                    return;
+                }
+                case OMDemiurgeEventType::MouseUp: {
+                    captured->dispatchCapturedEvent(event);
+
+                    const bool inside = captured->containsPoint(event.x, event.y);
+
+                    capturedNode.reset();
+                    capturedRoot.reset();
+
+                    if (!inside)
+                    {
+                        OMDemiurgeEvent exit = event;
+                        exit.type = OMDemiurgeEventType::MouseExit;
+                        captured->dispatchCapturedEvent(exit);
+                    }
+
+                    return;
+                }
+                default:
+                    break;
+                }
+            }
+        }
+    }
+
+    if (event.isKeyboard())
+    {
+        if (processEvent(event) == Ignored)
+        {
+            for (auto f : children)
+            {
+                f->acceptEvent(event);
+            }
+        }
+
+        return;
+    }
+
+    try
+    {
+        auto bo = stylesStorage.get<OMDemiurgeRect>("layoutBound");
+
+        const bool inside = (event.x >= bo.x && event.x <= bo.x + bo.width && event.y >= bo.y &&
+                             event.y <= bo.y + bo.height) ||
+                            (std::isinf(event.x) && std::isinf(event.y));
+        const bool wasInside = mx >= bo.x && mx <= bo.x + bo.width && my >= bo.y && my <= bo.y + bo.height;
+
+        if (inside)
+        {
+            if (!wasInside)
+            {
+                OMDemiurgeEvent enter = event;
+                enter.type = OMDemiurgeEventType::MouseEnter;
+
+                if (processEvent(enter) == Ignored)
                 {
                     for (auto f : children)
                     {
-                        f->acceptEvent(x, y, MouseEnter, ext, data);
+                        f->acceptEvent(enter);
                     }
                 }
             }
 
-            OMDemiurgeEventResult result = Ignored;
-            switch (type)
-            {
-            case MouseDown:
-                result = processMouseDown(x, y, ext);
-                break;
-            case MouseMove:
-                result = processMouseMove(x, y);
-                break;
-            case MouseUp:
-                result = processMouseUp(x, y, ext);
-                break;
-            case MouseEnter:
-                result = processMouseEnter(x, y);
-                break;
-            case MouseExit:
-                result = processMouseExit(x, y);
-                break;
-            case MouseWheel: {
-                auto f = reinterpret_cast<float *>(data);
-                result = processMouseScroll(x, y, f[0], f[1]);
-                break;
-            }
-            default:
-                break;
-            }
-
-            if (result == Ignored)
+            if (processEvent(event) == Ignored)
             {
                 for (auto f : children)
                 {
-                    f->acceptEvent(x, y, type, ext, data);
+                    f->acceptEvent(event);
                 }
             }
         }
-        else if (mx >= bo.x && mx <= bo.x + bo.width && my >= bo.y && my <= bo.y + bo.height)
+        else if (wasInside)
         {
-            if (processMouseExit(x, y) == Ignored)
+            OMDemiurgeEvent exit = event;
+            exit.type = OMDemiurgeEventType::MouseExit;
+
+            if (processEvent(exit) == Ignored)
             {
                 for (auto f : children)
                 {
-                    f->acceptEvent(x, y, MouseExit, ext, data);
+                    f->acceptEvent(exit);
                 }
             }
         }
 
-        if (x != INFINITY && y != INFINITY)
+        if (event.x != INFINITY && event.y != INFINITY)
         {
-            mx = x;
-            my = y;
+            mx = event.x;
+            my = event.y;
         }
     }
     catch (std::bad_any_cast &e)
     {
     }
 }
+
 } // namespace openminecraft::renderer::common::demiurge

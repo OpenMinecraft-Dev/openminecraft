@@ -60,6 +60,7 @@ auto OMDemiurgeButton::processMouseDown(float x, float y, uint8_t button) -> OMD
         return Ignored;
     }
 
+    captureMouse();
     opacity.animateTo(stylesStorage.get<float>("opacity_clicked", 1.0f), easeOutCirc<float>,
                       stylesStorage.get<float>("animation_speed", 0.2f));
     return Handled;
@@ -71,9 +72,16 @@ auto OMDemiurgeButton::processMouseUp(float x, float y, uint8_t button) -> OMDem
         return Ignored;
     }
 
-    opacity.animateTo(stylesStorage.get<float>("opacity_hovered", 0.8f), easeOutCirc<float>,
-                      stylesStorage.get<float>("animation_speed", 0.2f));
-    handle();
+    const bool inside = containsPoint(x, y);
+    opacity.animateTo(inside ? stylesStorage.get<float>("opacity_hovered", 0.8f)
+                             : stylesStorage.get<float>("opacity_normal", 0.6f),
+                      easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.2f));
+
+    if (inside)
+    {
+        handle();
+    }
+
     return Handled;
 }
 

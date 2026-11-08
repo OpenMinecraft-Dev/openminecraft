@@ -2,6 +2,7 @@
 #define OM_DEMIURGE_NODE_HPP
 
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
+#include "openminecraft/renderer/common/demiurge/om_demiurge_event.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_styles.hpp"
 #include "openminecraft/renderer/common/event/om_eventbus_wrap.hpp"
 #include "yoga/YGNode.h"
@@ -22,17 +23,6 @@
 namespace openminecraft::renderer::common::demiurge
 {
 class OMDemiurgeRendererHandler;
-enum OMDemiurgeEventType
-{
-    MouseMove,
-    MouseDown,
-    MouseUp,
-    MouseWheel,
-    MouseEnter,
-    MouseExit,
-    KeyDown,
-    KeyUp,
-};
 enum OMDemiurgeEventResult
 {
     Handled,
@@ -126,8 +116,61 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     {
         return Ignored;
     }
-    void acceptEvent(float x, float y, OMDemiurgeEventType type, uint8_t, void * = nullptr);
-    void acceptEvent(OMDemiurgeEventType type, uint32_t, uint16_t);
+    // Unified event entry: mouse events are routed by layout bounds (with
+    // enter/exit synthesis), keyboard/text events are broadcast to the tree.
+    void acceptEvent(const OMDemiurgeEvent &event);
+
+    // Mouse capture: while held, MouseMove/MouseUp are delivered to this node even
+    // when the pointer leaves its bounds. The capture is released on MouseUp.
+    void captureMouse();
+    void releaseMouse();
+    auto containsPoint(float x, float y) -> bool;
+
+    static auto fetchMouseCapture() -> std::shared_ptr<OMDemiurgeNode>
+    {
+        return capturedNode.lock();
+    }
+
+    // Dispatch one event to this node only.
+    virtual auto processEvent(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
+    {
+        switch (event.type)
+        {
+        case OMDemiurgeEventType::MouseDown:
+            return processMouseDown(event.x, event.y, event.button);
+        case OMDemiurgeEventType::MouseMove:
+            return processMouseMove(event.x, event.y);
+        case OMDemiurgeEventType::MouseUp:
+            return processMouseUp(event.x, event.y, event.button);
+        case OMDemiurgeEventType::MouseEnter:
+            return processMouseEnter(event.x, event.y);
+        case OMDemiurgeEventType::MouseExit:
+            return processMouseExit(event.x, event.y);
+        case OMDemiurgeEventType::MouseWheel:
+            return processMouseScroll(event.x, event.y, event.wheelX, event.wheelY);
+        case OMDemiurgeEventType::KeyDown:
+            return processKeyDown(event);
+        case OMDemiurgeEventType::KeyUp:
+            return processKeyUp(event);
+        case OMDemiurgeEventType::TextInput:
+            return processTextInput(event);
+        default:
+            return Ignored;
+        }
+    }
+
+    virtual auto processKeyDown(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
+    {
+        return Ignored;
+    }
+    virtual auto processKeyUp(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
+    {
+        return Ignored;
+    }
+    virtual auto processTextInput(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
+    {
+        return Ignored;
+    }
 
     inline auto style(std::string s, std::any a) -> std::shared_ptr<OMDemiurgeNode>
     {
@@ -153,30 +196,71 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     inline void bindEventBus(event::OMEventBusWrap &buswrap)
     {
         buswrap.append(event::MouseMotion, [&](event::OMEvent &e) {
-            acceptEvent(e.mousemotion.x, e.mousemotion.y, demiurge::MouseMove, -1);
+            OMDemiurgeEvent ev;
+            ev.type = OMDemiurgeEventType::MouseMove;
+            ev.x = e.mousemotion.x;
+            ev.y = e.mousemotion.y;
+            ev.button = e.mousemotion.button;
+            acceptEvent(ev);
         });
         buswrap.append(event::MouseUp, [&](event::OMEvent &e) {
-            acceptEvent(e.mousebutton.x, e.mousebutton.y, demiurge::MouseUp, e.mousebutton.button);
+            OMDemiurgeEvent ev;
+            ev.type = OMDemiurgeEventType::MouseUp;
+            ev.x = e.mousebutton.x;
+            ev.y = e.mousebutton.y;
+            ev.button = e.mousebutton.button;
+            acceptEvent(ev);
         });
         buswrap.append(event::MouseDown, [&](event::OMEvent &e) {
-            acceptEvent(e.mousebutton.x, e.mousebutton.y, demiurge::MouseDown, e.mousebutton.button);
+            OMDemiurgeEvent ev;
+            ev.type = OMDemiurgeEventType::MouseDown;
+            ev.x = e.mousebutton.x;
+            ev.y = e.mousebutton.y;
+            ev.button = e.mousebutton.button;
+            acceptEvent(ev);
         });
         buswrap.append(event::MouseWheel, [&](event::OMEvent &e) {
-            acceptEvent(e.mousewheel.x, e.mousewheel.y, demiurge::MouseWheel, -1,
-                        std::array<float, 2>{e.mousewheel.wheelx, e.mousewheel.wheely}.data());
+            OMDemiurgeEvent ev;
+            ev.type = OMDemiurgeEventType::MouseWheel;
+            ev.x = e.mousewheel.x;
+            ev.y = e.mousewheel.y;
+            ev.wheelX = e.mousewheel.wheelx;
+            ev.wheelY = e.mousewheel.wheely;
+            acceptEvent(ev);
         });
-        buswrap.append(event::KeyDown,
-                       [&](event::OMEvent &e) { acceptEvent(demiurge::KeyDown, e.key.keycode, e.key.modifier); });
-        buswrap.append(event::KeyUp,
-                       [&](event::OMEvent &e) { acceptEvent(demiurge::KeyUp, e.key.keycode, e.key.modifier); });
+        buswrap.append(event::KeyDown, [&](event::OMEvent &e) {
+            OMDemiurgeEvent ev;
+            ev.type = OMDemiurgeEventType::KeyDown;
+            ev.keycode = e.key.keycode;
+            ev.modifier = e.key.modifier;
+            acceptEvent(ev);
+        });
+        buswrap.append(event::KeyUp, [&](event::OMEvent &e) {
+            OMDemiurgeEvent ev;
+            ev.type = OMDemiurgeEventType::KeyUp;
+            ev.keycode = e.key.keycode;
+            ev.modifier = e.key.modifier;
+            acceptEvent(ev);
+        });
+        buswrap.append(event::TextInput, [&](event::OMEvent &e) {
+            OMDemiurgeEvent ev;
+            ev.type = OMDemiurgeEventType::TextInput;
+            ev.text = e.text;
+            acceptEvent(ev);
+        });
     }
 
   protected:
+    auto dispatchCapturedEvent(const OMDemiurgeEvent &event) -> void;
+
     float mx = INFINITY, my = INFINITY;
     OMDemiurgeStyles stylesStorage;
     YGNodeRef yogaNode;
     OMDemiurgeNode *parent = nullptr;
     std::vector<std::shared_ptr<OMDemiurgeNode>> children;
+
+    inline static std::weak_ptr<OMDemiurgeNode> capturedNode;
+    inline static std::weak_ptr<OMDemiurgeNode> capturedRoot;
 };
 } // namespace openminecraft::renderer::common::demiurge
 

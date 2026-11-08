@@ -1,4 +1,5 @@
 #include "openminecraft/renderer/om_renderer_window.hpp"
+#include "SDL3/SDL_keyboard.h"
 #include "SDL3/SDL_video.h"
 #include "openminecraft/renderer/common/shader/om_renderer_shadercompiler_shaderc.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
@@ -28,6 +29,7 @@ OMWindow::OMWindow(OMVersionRequirement requirement, OMWindowConfig config, std:
     }
 
     window = SDL_CreateWindow(config.initialTitle.c_str(), config.initialWidth, config.initialHeight, additionalFlags);
+    SDL_StartTextInput(window);
 
     switch (config.backend)
     {

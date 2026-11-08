@@ -21,6 +21,7 @@ class OMDemiurgeSwitch : public OMDemiurgeContainerNode
     void update() override;
 
     auto processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult override;
+    auto processMouseMove(float x, float y) -> OMDemiurgeEventResult override;
     auto processMouseUp(float x, float y, uint8_t button) -> OMDemiurgeEventResult override;
     auto processMouseEnter(float x, float y) -> OMDemiurgeEventResult override;
     auto processMouseExit(float x, float y) -> OMDemiurgeEventResult override;
@@ -49,10 +50,16 @@ class OMDemiurgeSwitch : public OMDemiurgeContainerNode
     animation::OMAnimationValue<glm::vec4> thumbColor;
 
   private:
+    auto dragPosition(float x) -> float;
+
     std::shared_ptr<OMDemiurgeNode> trackNode;
     std::shared_ptr<OMDemiurgeNode> thumbNode;
 
     bool checked = false;
+    bool pressed = false;
+    bool dragging = false;
+    float dragValue = 0.0f;
+    float pressX = 0.0f;
     bool disabled = false;
     std::function<void(bool)> handle = [](bool) {};
 };

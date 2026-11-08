@@ -83,6 +83,7 @@ auto OMDemiurgeIconButton::processMouseDown(float x, float y, uint8_t button) ->
         return Ignored;
     }
 
+    captureMouse();
     pressAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
     return Handled;
 }
@@ -95,7 +96,12 @@ auto OMDemiurgeIconButton::processMouseUp(float x, float y, uint8_t button) -> O
     }
 
     pressAmount.animateTo(0.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
-    handle();
+
+    if (containsPoint(x, y))
+    {
+        handle();
+    }
+
     return Handled;
 }
 

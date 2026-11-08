@@ -206,6 +206,7 @@ auto OMDemiurgeRadioBox::processMouseDown(float x, float y, uint8_t button) -> O
         return Ignored;
     }
 
+    captureMouse();
     pressAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
     return Handled;
 }
@@ -218,6 +219,11 @@ auto OMDemiurgeRadioBox::processMouseUp(float x, float y, uint8_t button) -> OMD
     }
 
     pressAmount.animateTo(0.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+
+    if (!containsPoint(x, y))
+    {
+        return Handled;
+    }
 
     if (group)
     {
