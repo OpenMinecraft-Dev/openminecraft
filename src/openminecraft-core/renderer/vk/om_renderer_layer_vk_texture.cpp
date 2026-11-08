@@ -431,7 +431,11 @@ void OMRendererTextureVk::updateData(void *p, uint64_t layer)
     {
         const uint64_t bytes = width * height * ((this->arr == common::R8G8B8Srgb) ? 3 : 4);
         auto &slot = acquireUpdateSlot(bytes);
-        slot.staging->updateData(p);
+
+        // The staging buffer may be reused from a larger multi-layer upload, so only
+        // copy the bytes that belong to this layer (updateData would copy the whole
+        // buffer and read past the source image).
+        slot.staging->updateDataPart(p, 0, bytes);
 
         auto cmdBuff = slot.cmd;
         cmdBuff.reset({});
