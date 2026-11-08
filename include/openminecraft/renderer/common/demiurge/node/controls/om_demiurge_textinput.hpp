@@ -1,5 +1,5 @@
-#ifndef OM_DEMIURGE_INPUTBOX_HPP
-#define OM_DEMIURGE_INPUTBOX_HPP
+#ifndef OM_DEMIURGE_TEXTINPUT_HPP
+#define OM_DEMIURGE_TEXTINPUT_HPP
 
 #include "glm/ext/vector_float4.hpp"
 #include "openminecraft/geom/om_fontset.hpp"
@@ -9,17 +9,18 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include "openminecraft/renderer/common/om_text_input_controller.hpp"
 #include <mutex>
 #include <string>
 
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
 // Single-line text input with caret, placeholder and horizontal scrolling.
-class OMDemiurgeInputBox : public OMDemiurgeRectNode
+class OMDemiurgeTextInput : public OMDemiurgeRectNode
 {
   public:
-    explicit OMDemiurgeInputBox(geom::OMFontSet *fontset = nullptr);
-    ~OMDemiurgeInputBox() override;
+    explicit OMDemiurgeTextInput(geom::OMFontSet *fontset = nullptr);
+    ~OMDemiurgeTextInput() override;
 
     auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
     void update() override;
@@ -53,7 +54,7 @@ class OMDemiurgeInputBox : public OMDemiurgeRectNode
     // while a text input is focused.
     static auto isTextInputFocused() -> bool
     {
-        return activeInput.lock() != nullptr;
+        return common::OMTextInputController::instance().isTextFocus();
     }
 
     animation::OMAnimationValue<float> focusAmount;
@@ -98,7 +99,7 @@ class OMDemiurgeInputBox : public OMDemiurgeRectNode
     std::function<void(const std::string &)> handleChange = [](const std::string &) {};
     std::function<void(const std::string &)> handleSubmit = [](const std::string &) {};
 
-    inline static std::weak_ptr<OMDemiurgeInputBox> activeInput;
+    inline static std::weak_ptr<OMDemiurgeTextInput> activeInput;
 
     mutable std::mutex stateMutex;
 };

@@ -17,6 +17,16 @@ class OMTextInputController
         return controller;
     }
 
+    // Any text-editing control (single or multi line) currently owns the keyboard.
+    void setTextFocus(bool value)
+    {
+        textFocused.store(value, std::memory_order_relaxed);
+    }
+    auto isTextFocus() const -> bool
+    {
+        return textFocused.load(std::memory_order_relaxed);
+    }
+
     // UI side (event thread). Safe to call from any thread.
     void setActive(bool value)
     {
@@ -55,6 +65,7 @@ class OMTextInputController
 
   private:
     std::atomic<bool> active{false};
+    std::atomic<bool> textFocused{false};
     std::atomic<float> areaX{0.0f};
     std::atomic<float> areaY{0.0f};
     std::atomic<float> areaWidth{1.0f};

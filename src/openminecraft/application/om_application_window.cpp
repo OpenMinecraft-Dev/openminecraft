@@ -54,7 +54,7 @@
 #include <iomanip>
 
 #include "openminecraft-shell/om_application.hpp"
-#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_inputbox.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textinput.hpp"
 #include "openminecraft-shell/om_application_terrain.hpp"
 
 using namespace openminecraft;
@@ -185,7 +185,7 @@ void OMApplication::mainLoop(OMBackend backend)
 
             while (accumulator >= TICK_DT)
             {
-                if (openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeInputBox::isTextInputFocused())
+                if (openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeTextInput::isTextInputFocused())
                 {
                     keystates.fill(false);
                 }
@@ -342,7 +342,7 @@ void OMApplication::mainLoop(OMBackend backend)
                 return;
             }
 
-            if (openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeInputBox::isTextInputFocused())
+            if (openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeTextInput::isTextInputFocused())
             {
                 return;
             }
@@ -373,7 +373,7 @@ void OMApplication::mainLoop(OMBackend backend)
             }
         });
         bus.append(SDL_EVENT_KEY_UP, [&](SDL_Event &e) -> void {
-            if (openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeInputBox::isTextInputFocused())
+            if (openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeTextInput::isTextInputFocused())
             {
                 return;
             }

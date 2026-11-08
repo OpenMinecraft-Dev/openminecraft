@@ -1,4 +1,4 @@
-#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_inputbox.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textinput.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
@@ -65,7 +65,7 @@ static auto codepointCount(const std::string &text) -> int
     return count;
 }
 
-OMDemiurgeInputBox::OMDemiurgeInputBox(geom::OMFontSet *fontset)
+OMDemiurgeTextInput::OMDemiurgeTextInput(geom::OMFontSet *fontset)
     : focusAmount(0.0f), disabledAmount(0.0f), backgroundColor(glm::vec4(0.12f, 0.12f, 0.15f, 0.95f)),
       textColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)), caretColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f)),
       placeholderColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.35f)), caretXAnimation(0.0f), fontset(fontset)
@@ -99,22 +99,23 @@ OMDemiurgeInputBox::OMDemiurgeInputBox(geom::OMFontSet *fontset)
     this->mountDirect(caretNode);
 }
 
-OMDemiurgeInputBox::~OMDemiurgeInputBox()
+OMDemiurgeTextInput::~OMDemiurgeTextInput()
 {
     if (activeInput.lock().get() == this)
     {
         activeInput.reset();
         common::OMTextInputController::instance().setActive(false);
+        common::OMTextInputController::instance().setTextFocus(false);
     }
 }
 
-auto OMDemiurgeInputBox::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeTextInput::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
 {
     textNode->setClipNode(shared_from_this());
     OMDemiurgeRectNode::submit(handler, depth);
 }
 
-auto OMDemiurgeInputBox::measure(const std::string &value) -> float
+auto OMDemiurgeTextInput::measure(const std::string &value) -> float
 {
     if (fontset == nullptr)
     {
@@ -126,7 +127,7 @@ auto OMDemiurgeInputBox::measure(const std::string &value) -> float
     return fontset->bound(shaped).x * static_cast<float>(textHeight);
 }
 
-auto OMDemiurgeInputBox::caretFromX(float x) -> size_t
+auto OMDemiurgeTextInput::caretFromX(float x) -> size_t
 {
     if (fontset == nullptr || text.empty())
     {
@@ -173,7 +174,7 @@ auto OMDemiurgeInputBox::caretFromX(float x) -> size_t
     return best;
 }
 
-auto OMDemiurgeInputBox::insertText(const std::string &value) -> bool
+auto OMDemiurgeTextInput::insertText(const std::string &value) -> bool
 {
     if (value.empty())
     {
@@ -209,12 +210,12 @@ auto OMDemiurgeInputBox::insertText(const std::string &value) -> bool
     return true;
 }
 
-auto OMDemiurgeInputBox::notifyChange() -> void
+auto OMDemiurgeTextInput::notifyChange() -> void
 {
     handleChange(text);
 }
 
-void OMDemiurgeInputBox::update()
+void OMDemiurgeTextInput::update()
 {
     const int textHeight = stylesStorage.get<int>("textheight", 14);
     const float focus = std::clamp(focusAmount.get(), 0.0f, 1.0f);
@@ -501,12 +502,12 @@ void OMDemiurgeInputBox::update()
     OMDemiurgeRectNode::update();
 }
 
-auto OMDemiurgeInputBox::scrollForCaret() -> float
+auto OMDemiurgeTextInput::scrollForCaret() -> float
 {
     return lastScroll;
 }
 
-auto OMDemiurgeInputBox::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult
+auto OMDemiurgeTextInput::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult
 {
     if (disabled || fontset == nullptr)
     {
@@ -533,7 +534,7 @@ auto OMDemiurgeInputBox::processMouseDown(float x, float y, uint8_t button) -> O
     return Handled;
 }
 
-auto OMDemiurgeInputBox::processKeyDown(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
+auto OMDemiurgeTextInput::processKeyDown(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
 {
     if (disabled)
     {
@@ -638,7 +639,7 @@ auto OMDemiurgeInputBox::processKeyDown(const OMDemiurgeEvent &event) -> OMDemiu
     return result;
 }
 
-auto OMDemiurgeInputBox::processTextInput(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
+auto OMDemiurgeTextInput::processTextInput(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
 {
     if (disabled)
     {
@@ -662,7 +663,7 @@ auto OMDemiurgeInputBox::processTextInput(const OMDemiurgeEvent &event) -> OMDem
     return Handled;
 }
 
-auto OMDemiurgeInputBox::processTextEditing(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
+auto OMDemiurgeTextInput::processTextEditing(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
 {
     if (disabled)
     {
@@ -695,15 +696,16 @@ auto OMDemiurgeInputBox::processTextEditing(const OMDemiurgeEvent &event) -> OMD
     return Handled;
 }
 
-auto OMDemiurgeInputBox::processFocusGained() -> void
+auto OMDemiurgeTextInput::processFocusGained() -> void
 {
-    activeInput = std::static_pointer_cast<OMDemiurgeInputBox>(shared_from_this());
+    activeInput = std::static_pointer_cast<OMDemiurgeTextInput>(shared_from_this());
     common::OMTextInputController::instance().setActive(true);
+    common::OMTextInputController::instance().setTextFocus(true);
     focusAmount.animateTo(1.0f, easeOutCirc<float>, 0.15f);
     blinkStart = std::chrono::steady_clock::now();
 }
 
-auto OMDemiurgeInputBox::processFocusLost() -> void
+auto OMDemiurgeTextInput::processFocusLost() -> void
 {
     if (activeInput.lock().get() == this)
     {
@@ -717,7 +719,7 @@ auto OMDemiurgeInputBox::processFocusLost() -> void
     focusAmount.animateTo(0.0f, easeOutCirc<float>, 0.15f);
 }
 
-void OMDemiurgeInputBox::setText(const std::string &value)
+void OMDemiurgeTextInput::setText(const std::string &value)
 {
     {
         std::lock_guard<std::mutex> lock(stateMutex);
@@ -729,40 +731,40 @@ void OMDemiurgeInputBox::setText(const std::string &value)
     notifyChange();
 }
 
-void OMDemiurgeInputBox::setPlaceholder(const std::string &value)
+void OMDemiurgeTextInput::setPlaceholder(const std::string &value)
 {
     std::lock_guard<std::mutex> lock(stateMutex);
     placeholder = value;
 }
 
-void OMDemiurgeInputBox::setMaxLength(int codepoints)
+void OMDemiurgeTextInput::setMaxLength(int codepoints)
 {
     maxLength = std::max(1, codepoints);
 }
 
-void OMDemiurgeInputBox::setOnChange(std::function<void(const std::string &)> handler)
+void OMDemiurgeTextInput::setOnChange(std::function<void(const std::string &)> handler)
 {
     handleChange = std::move(handler);
 }
 
-void OMDemiurgeInputBox::setOnSubmit(std::function<void(const std::string &)> handler)
+void OMDemiurgeTextInput::setOnSubmit(std::function<void(const std::string &)> handler)
 {
     handleSubmit = std::move(handler);
 }
 
-void OMDemiurgeInputBox::setTextHeight(int height)
+void OMDemiurgeTextInput::setTextHeight(int height)
 {
     stylesStorage.put("textheight", height);
 }
 
-void OMDemiurgeInputBox::setColors(glm::vec4 background, glm::vec4 text, glm::vec4 caret)
+void OMDemiurgeTextInput::setColors(glm::vec4 background, glm::vec4 text, glm::vec4 caret)
 {
     backgroundColor.animateTo(background, easeOutCirc<float>, 0.18f);
     textColor.animateTo(text, easeOutCirc<float>, 0.18f);
     caretColor.animateTo(caret, easeOutCirc<float>, 0.18f);
 }
 
-void OMDemiurgeInputBox::setDisabled(bool value, bool animate)
+void OMDemiurgeTextInput::setDisabled(bool value, bool animate)
 {
     std::lock_guard<std::mutex> lock(stateMutex);
 

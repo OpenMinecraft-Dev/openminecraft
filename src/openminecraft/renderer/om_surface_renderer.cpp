@@ -6,7 +6,8 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_badge.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_divider.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_iconbutton.hpp"
-#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_inputbox.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textedit.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textinput.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_link.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_progressbar.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_slider.hpp"
@@ -141,9 +142,13 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     controlRow->mount(demoBadge);
     controlRow->mount(demoLink);
 
-    demoInput = std::make_shared<node::controls::OMDemiurgeInputBox>(fontset.get());
+    demoInput = std::make_shared<node::controls::OMDemiurgeTextInput>(fontset.get());
     demoInput->setPlaceholder("Type here...");
     demoInput->style("width", OMDemiurgeSize::pixels(220.0f));
+
+    demoTextEdit = std::make_shared<node::controls::OMDemiurgeTextEdit>(fontset.get());
+    demoTextEdit->setPlaceholder("Multi-line text...");
+    demoTextEdit->style({{"width", OMDemiurgeSize::pixels(260.0f)}, {"height", OMDemiurgeSize::pixels(48.0f)}});
 
     node = std::make_shared<node::OMDemiurgeRectNode>()
                ->style({
@@ -181,7 +186,8 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                            ->mount(checkBox)
                            ->mount(radioGroup)
                            ->mount(controlRow)
-                           ->mount(demoInput));
+                           ->mount(demoInput)
+                           ->mount(demoTextEdit));
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->name = "surface";

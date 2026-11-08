@@ -11,7 +11,8 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_badge.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_divider.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_iconbutton.hpp"
-#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_inputbox.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textedit.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textinput.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_link.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_progressbar.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_slider.hpp"
@@ -45,7 +46,8 @@ class OMSurfaceRenderer : public openminecraft::renderer::common::OMRendererHand
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeBadge> demoBadge;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeLink> demoLink;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeDivider> demoDivider;
-    std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeInputBox> demoInput;
+    std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeTextInput> demoInput;
+    std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeTextEdit> demoTextEdit;
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeRendererHandler> internal;
     openminecraft::renderer::common::animation::OMAnimationValue<float> offset;
 
