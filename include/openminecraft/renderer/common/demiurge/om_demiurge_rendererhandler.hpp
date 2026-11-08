@@ -72,7 +72,11 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     {
         if (!bound.has_value())
         {
-            channel.setClip(index, std::nullopt);
+            if (channel.setClip(index, std::nullopt))
+            {
+                clipDirty = true;
+            }
+
             return;
         }
 
@@ -81,11 +85,15 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
         const float scaleX = logical.x > 0 ? static_cast<float>(extent.x) / static_cast<float>(logical.x) : 1.0f;
         const float scaleY = logical.y > 0 ? static_cast<float>(extent.y) / static_cast<float>(logical.y) : 1.0f;
 
-        channel.setClip(index, OMDemiurgeRect{bound->x * scaleX, bound->y * scaleY, bound->width * scaleX,
-                                              bound->height * scaleY});
+        if (channel.setClip(index, OMDemiurgeRect{bound->x * scaleX, bound->y * scaleY, bound->width * scaleX,
+                                                  bound->height * scaleY}))
+        {
+            clipDirty = true;
+        }
     }
 
     bool fit = false;
+    bool clipDirty = false;
     std::string name = "default";
 
   private:

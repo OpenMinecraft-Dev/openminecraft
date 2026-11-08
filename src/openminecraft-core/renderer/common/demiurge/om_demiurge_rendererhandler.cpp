@@ -138,5 +138,13 @@ void OMDemiurgeRendererHandler::beforeFrame()
 
 void OMDemiurgeRendererHandler::afterFrame()
 {
+    // Scissor commands are baked into the recorded task; re-record when a clip
+    // rectangle changed (layout moved) so the clip follows the node.
+    if (clipDirty)
+    {
+        clipDirty = false;
+        recordTask();
+    }
+
 }
 } // namespace openminecraft::renderer::common::demiurge

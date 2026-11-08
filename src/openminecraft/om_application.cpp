@@ -83,6 +83,9 @@ auto OMApplication::entry() -> int
     SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_VERSION_STRING, OM_VERSION);
     SDL_SetHint(SDL_HINT_APP_NAME, "OpenMinecraft");
     SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+    // macOS: the default "press and hold" accent menu prevents key repeat, which
+    // breaks held-key text input. Disable it so holding a key emits repeats.
+    SDL_SetHint(SDL_HINT_MAC_PRESS_AND_HOLD, "0");
 
     SDL_SetMemoryFunctions(mem::allocator::tracedMallocSDL, mem::allocator::tracedCallocSDL,
                            mem::allocator::tracedReallocSDL, mem::allocator::tracedFreeSDL);

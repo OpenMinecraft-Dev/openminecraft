@@ -64,12 +64,27 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
         return &objects[i];
     }
 
-    inline auto setClip(int i, const std::optional<OMDemiurgeRect> &rect) -> void
+    inline auto setClip(int i, const std::optional<OMDemiurgeRect> &rect) -> bool
     {
-        if (i >= 0 && static_cast<size_t>(i) < clipBounds.size())
+        if (i < 0 || static_cast<size_t>(i) >= clipBounds.size())
         {
-            clipBounds[i] = rect;
+            return false;
         }
+
+        const auto &current = clipBounds[i];
+
+        if (current.has_value() == rect.has_value())
+        {
+            if (!current.has_value() ||
+                (current->x == rect->x && current->y == rect->y && current->width == rect->width &&
+                 current->height == rect->height))
+            {
+                return false;
+            }
+        }
+
+        clipBounds[i] = rect;
+        return true;
     }
 
     inline auto fetchClip(int i) const -> std::optional<OMDemiurgeRect>
