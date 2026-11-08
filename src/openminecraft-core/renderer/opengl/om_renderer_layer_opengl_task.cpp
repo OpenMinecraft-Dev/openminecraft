@@ -294,7 +294,7 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     if (!isCleared)
     {
         // glClear is also affected by write masks: the first pipeline bound to this target may have writeColor / depthWrite disabled
-        // (e.g. cliprect); restore full write masks first, otherwise this clear is silently skipped.
+        // restore full write masks first, otherwise this clear is silently skipped.
         ops.push_back({ColorMask, static_cast<GLuint>(GL_TRUE), static_cast<GLuint>(GL_TRUE),
                        static_cast<GLuint>(GL_TRUE), static_cast<GLuint>(GL_TRUE)});
         ops.push_back({DepthMask, static_cast<GLuint>(GL_TRUE)});
@@ -495,6 +495,25 @@ void OMRendererTaskOpenGL::drawIndirect()
     ops.push_back({DrawElementsIndirect, {primitiveType(), GL_UNSIGNED_INT}, {nullptr}});
     gl->glBindVertexArray(0);
 }
+void OMRendererTaskOpenGL::setScissor(float x, float y, float width, float height)
+{
+    if (target == nullptr)
+    {
+        return;
+    }
+
+    auto siz = target->fetchSize();
+    const float clampW = std::max(0.0f, std::min(width, static_cast<float>(siz.x) - x));
+    const float clampH = std::max(0.0f, std::min(height, static_cast<float>(siz.y) - y));
+
+    // GL scissor uses a bottom-left origin; the API uses top-left like the UI.
+    const GLuint glY = static_cast<GLuint>(std::max(0.0f, static_cast<float>(siz.y) - y - clampH));
+
+    ops.push_back({Enable, GL_SCISSOR_TEST});
+    ops.push_back({Scissor, static_cast<GLuint>(std::max(0.0f, x)), glY,
+                   static_cast<GLuint>(clampW), static_cast<GLuint>(clampH)});
+}
+
 void OMRendererTaskOpenGL::bindTarget(common::OMRendererRenderTarget *target)
 {
     if (finished)

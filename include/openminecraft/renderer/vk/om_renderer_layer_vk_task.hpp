@@ -17,6 +17,7 @@ class OMRendererTaskVk : public common::OMRendererTask
     ~OMRendererTaskVk() override;
 
     void bindPipeline(common::OMRendererPipeline *pipeline) override;
+    void setScissor(float x, float y, float width, float height) override;
     void bindVertexBuffer(std::vector<common::OMRendererBuffer *> buffer) override;
     void bindIndexBuffer(common::OMRendererBuffer *buffer) override;
     void bindIndirectBuffer(common::OMRendererBuffer *buffer) override;

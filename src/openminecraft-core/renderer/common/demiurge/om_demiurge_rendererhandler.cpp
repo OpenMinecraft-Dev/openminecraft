@@ -7,7 +7,6 @@
 #include "openminecraft/geom/om_svg_structure.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
-#include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_cliprect_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_roundedrect_channel.hpp"
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_textsdf_channel.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
@@ -27,7 +26,7 @@ namespace openminecraft::renderer::common::demiurge
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer, std::shared_ptr<OMDemiurgeNode> n)
     : OMRendererHandler(renderer), renderer(renderer), rect(renderer, [&]() -> void { recordTask(); }),
       roundedRect(renderer, [&]() -> void { recordTask(); }), image(renderer, [&]() -> void { recordTask(); }),
-      sector(renderer, [&]() -> void { recordTask(); }), clipRect(renderer, [&]() -> void { recordTask(); }),
+      sector(renderer, [&]() -> void { recordTask(); }),
       svg(renderer, [&]() -> void { recordTask(); }), shaderScene(renderer, [&]() -> void { recordTask(); }),
       logger("OMDemiurgeRendererHandler", this)
 {
@@ -44,7 +43,6 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer, std::
     roundedRect.init(uniformBuffer.getTag(), middleTarget->targetTagName());
     image.init(uniformBuffer.getTag(), middleTarget->targetTagName());
     sector.init(uniformBuffer.getTag(), middleTarget->targetTagName());
-    clipRect.init(uniformBuffer.getTag(), middleTarget->targetTagName());
     svg.init(uniformBuffer.getTag(), middleTarget->targetTagName());
     shaderScene.init(uniformBuffer.getTag(), middleTarget->targetTagName());
 
@@ -58,7 +56,6 @@ OMDemiurgeRendererHandler::~OMDemiurgeRendererHandler()
     roundedRect.destroy();
     image.destroy();
     sector.destroy();
-    clipRect.destroy();
     svg.destroy();
     shaderScene.destroy();
     for (auto &p : fonts)
@@ -105,7 +102,6 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
         roundedRect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
         image.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
         sector.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
-        clipRect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
         svg.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
         shaderScene.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
         for (auto &p : fonts)
@@ -132,7 +128,6 @@ void OMDemiurgeRendererHandler::beforeFrame()
     roundedRect.update();
     image.update();
     sector.update();
-    clipRect.update();
     svg.update();
     shaderScene.update();
     for (auto &p : fonts)

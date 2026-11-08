@@ -85,8 +85,8 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
     }
 
   protected:
-    // Shared pipeline construction for all Demiurge quad channels; with writeColor = false the channel only writes depth,
-    // producing no writes to the color attachment (used by clipping-only channels such as cliprect).
+    // Shared pipeline construction for all Demiurge quad channels; with writeColor = false the channel only writes
+    // depth, producing no writes to the color attachment.
     // Reallocate the instance buffer (the old object is unregistered from the registry)
     auto resetInstanceBuffer(uint64_t size) -> void
     {

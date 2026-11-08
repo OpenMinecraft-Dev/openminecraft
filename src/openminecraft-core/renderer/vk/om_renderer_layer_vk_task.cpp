@@ -48,6 +48,23 @@ auto OMRendererTaskVk::isOnDefault() -> bool
     return isDefault;
 }
 
+void OMRendererTaskVk::setScissor(float x, float y, float width, float height)
+{
+    try
+    {
+        const float clampW = std::max(0.0f, std::min(width, static_cast<float>(renderer->getExtent().x) - x));
+        const float clampH = std::max(0.0f, std::min(height, static_cast<float>(renderer->getExtent().y) - y));
+
+        commandBuffer.setScissor(0, {Rect2D(Offset2D(static_cast<int32_t>(std::max(0.0f, x)),
+                                                     static_cast<int32_t>(std::max(0.0f, y))),
+                                             Extent2D(static_cast<uint32_t>(clampW), static_cast<uint32_t>(clampH)))});
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.task"));
+    }
+}
+
 void OMRendererTaskVk::bindPipeline(common::OMRendererPipeline *pipeline)
 {
     pipe = pipeline;

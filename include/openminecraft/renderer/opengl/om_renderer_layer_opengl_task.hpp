@@ -86,6 +86,7 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     ~OMRendererTaskOpenGL() override;
 
     void bindPipeline(common::OMRendererPipeline *pipeline) override;
+    void setScissor(float x, float y, float width, float height) override;
     void bindVertexBuffer(std::vector<common::OMRendererBuffer *> buffer) override;
     void bindVertexBufferInstanced(std::vector<common::OMRendererBuffer *> buffer, int off) override;
     void bindIndexBuffer(common::OMRendererBuffer *buffer) override;

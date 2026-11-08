@@ -50,6 +50,17 @@ class OMRendererTask : public OMRendererObject
         return this;
     }
 
+    // Restricts subsequent draws to a rectangle in target pixels (top-left origin).
+    // Backends record this dynamically inside the task; no pipeline/target changes.
+    virtual void setScissor(float x, float y, float width, float height)
+    {
+    }
+    inline auto scissor(float x, float y, float width, float height) -> OMRendererTask *
+    {
+        setScissor(x, y, width, height);
+        return this;
+    }
+
     virtual void bindPipeline(OMRendererPipeline *pipeline) = 0;
     inline auto pipeline(OMRendererPipeline *pipeline) -> OMRendererTask *
     {
