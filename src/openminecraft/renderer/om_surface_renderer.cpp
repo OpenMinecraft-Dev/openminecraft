@@ -8,6 +8,7 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_iconbutton.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textedit.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_dropdown.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_tabs.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textinput.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_link.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_progressbar.hpp"
@@ -167,43 +168,64 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
 
     demoDropDown = std::make_shared<node::controls::OMDemiurgeDropDownPane>(fontset.get());
     demoDropDown->setTitle("More controls");
-    demoDropDown->style("width", OMDemiurgeSize::pixels(360.0f));
+    demoDropDown->style("width", OMDemiurgeSize::fill());
     demoDropDown->setHeaderHeight(30.0f);
     demoDropDown->setContentNode(dropContent);
+
+    auto pageMain = std::make_shared<node::OMDemiurgeContainerNode>();
+    pageMain->style(
+        {{"flexDirection", Column}, {"flexGap", OMDemiurgeSize::pixels(15.0f)}, {"width", OMDemiurgeSize::fill()}});
+    pageMain->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                              ->style({{"color", (int)0xffffffff},
+                                       {"text", "OpenMinecraft"},
+                                       {"textheight", 24},
+                                       {"alignSelf", OMDemiurgeAlign::FlexStart}}));
+    pageMain->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                              ->style({{"color", (int)0xffffffff},
+                                       {"text", fmt::format("Version {}-{}", OM_VERSION, OM_VERSION_CHANNEL)},
+                                       {"textheight", 12},
+                                       {"border", OMDemiurgeEdgeInsets{0, 60, 0, 0}}}));
+    pageMain->mountDirect(button->style("animation_speed", 1.0f)->style("label", "Demo Test"));
+    pageMain->mountDirect(button2->style("animation_speed", 1.0f)->style("label", "Quit"));
+
+    auto pageGallery = std::make_shared<node::OMDemiurgeContainerNode>();
+    pageGallery->style({{"flexDirection", Column},
+                        {"alignItems", OMDemiurgeAlign::Center},
+                        {"flexGap", OMDemiurgeSize::pixels(12.0f)},
+                        {"width", OMDemiurgeSize::fill()}});
+    pageGallery->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                 ->style({{"color", (int)0xffffffff},
+                                          {"text", "Control Gallery"},
+                                          {"textheight", 18},
+                                          {"alignSelf", OMDemiurgeAlign::FlexStart}}));
+    pageGallery->mountDirect(demoDropDown);
+
+    demoTabs = std::make_shared<node::controls::OMDemiurgeTabMultiPage>(fontset.get());
+    demoTabs->style("width", OMDemiurgeSize::fill());
+    demoTabs->style("height", OMDemiurgeSize::fill());
+    demoTabs->setPageFill(true);
+    demoTabs->addPage("Main", pageMain);
+    demoTabs->addPage("Gallery", pageGallery);
 
     node = std::make_shared<node::OMDemiurgeRectNode>()
                ->style({
                    {"color", (int)0x2c2c3412},
                    {"flexDirection", Column},
                    {"justifyContent", SpaceBetween},
-                   {"width", OMDemiurgeSize::fit()},
-                   {"height", OMDemiurgeSize::fit()},
+                   {"width", OMDemiurgeSize::fill()},
+                   {"height", OMDemiurgeSize::fill()},
                    {"radius", glm::vec4(5.0f)},
-                   {"border", OMDemiurgeEdgeInsets{50, 10, 100, 10}},
+                   {"border", OMDemiurgeEdgeInsets{10, 10, 10, 10}},
                })
                ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
                            ->style({
                                {"flexDirection", Column},
+                               {"width", OMDemiurgeSize::fill()},
+                               {"height", OMDemiurgeSize::fill()},
                                {"flexGap", 15_px},
-                               {"border", OMDemiurgeEdgeInsets{10, 10, 10, 220}},
+                               {"border", OMDemiurgeEdgeInsets{10, 10, 10, 10}},
                            })
-                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                                       ->style({
-                                           {"color", (int)0xffffffff},
-                                           {"text", "OpenMinecraft"},
-                                           {"textheight", 24},
-                                           {"alignSelf", OMDemiurgeAlign::FlexStart},
-                                       }))
-                           ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                                       ->style({
-                                           {"color", (int)0xffffffff},
-                                           {"text", fmt::format("Version {}-{}", OM_VERSION, OM_VERSION_CHANNEL)},
-                                           {"textheight", 12},
-                                           {"border", OMDemiurgeEdgeInsets{0, 60, 0, 0}},
-                                       }))
-                           ->mount(button->style("animation_speed", 1.0f)->style("label", "Demo Test"))
-                           ->mount(button2->style("animation_speed", 1.0f)->style("label", "Quit"))
-                           ->mount(demoDropDown));
+                           ->mount(demoTabs));
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->name = "surface";

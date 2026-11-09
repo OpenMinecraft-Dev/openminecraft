@@ -438,6 +438,25 @@ void OMDemiurgeNode::releaseFocus()
     focusedRoot.reset();
 }
 
+void OMDemiurgeNode::releaseFocusWithin(const std::shared_ptr<OMDemiurgeNode> &root)
+{
+    if (!root)
+    {
+        return;
+    }
+
+    auto focused = focusedNode.lock();
+
+    for (auto cur = focused; cur; cur = cur->parent ? cur->parent->shared_from_this() : nullptr)
+    {
+        if (cur == root)
+        {
+            focused->releaseFocus();
+            return;
+        }
+    }
+}
+
 auto OMDemiurgeNode::hasFocus() -> bool
 {
     auto cur = focusedNode.lock();
@@ -480,6 +499,11 @@ void OMDemiurgeNode::releaseMouse()
 
 auto OMDemiurgeNode::containsPoint(float x, float y) -> bool
 {
+    if (!visible)
+    {
+        return false;
+    }
+
     try
     {
         auto bo = stylesStorage.get<OMDemiurgeRect>("layoutBound");
@@ -504,6 +528,11 @@ auto OMDemiurgeNode::dispatchCapturedEvent(const OMDemiurgeEvent &event) -> void
 
 void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
 {
+    if (!visible)
+    {
+        return;
+    }
+
     std::shared_ptr<OMDemiurgeNode> focusBefore;
 
     if (parent == nullptr && event.type == OMDemiurgeEventType::MouseDown)

@@ -95,6 +95,8 @@ OMDemiurgeRendererHandler
 | `submit(handler, depth)` | 纯虚；提交元素与裁剪 |
 | `update()` | 虚函数；默认递归更新子节点 |
 | `remove()` | 纯虚；从通道移除元素 |
+| `setVisible(bool)` / `isVisible()` | 不可见节点跳过命中测试与事件派发；是否提交由所有者决定（如 TabMultiPage 只提交当前页） |
+| `invalidate()` | 强制节点重新执行由样式驱动的提交逻辑（元素被移除后重新显示时使用） |
 
 ### 3.5 事件
 
@@ -501,6 +503,50 @@ RadioGroup：
 - 箭头使用 SVG 的 `rotation` style，旋转角为 `openAmount * π`；
 - 只点击标题行区域才会切换，内容区的控件交互不受影响。
 
+### 7.16 TabMultiPage
+
+`OMDemiurgeTabMultiPage(geom::OMFontSet *fontset = nullptr)`
+
+顶部 Tab 栏 + 多页面容器。所有页面必须通过 `addPage()` 挂载；只有当前页会被提交，其余页面保持挂载但不可见、不参与命中测试。页面内容切换没有动画，但 Tab 指示条会沿 Tab 栏滑动。
+
+| API | 说明 |
+| --- | --- |
+| `addPage(title, page)` | 挂载页面并返回索引；第一个页面自动激活 |
+| `setActivePage(int)` / `getActivePage()` | 切换 / 查询当前页 |
+| `setTabPosition(OMDemiurgeTabPosition)` / `getTabPosition()` | Tab 栏位置：`Top` / `Bottom` / `Left` / `Right` |
+| `setTabWidth(float)` | 顶部/底部布局时单个 Tab 的宽度 |
+| `setTabAlignment(OMDemiurgeTabAlignment)` / `getTabAlignment()` | Tab 栏对齐：`Start` / `Center` / `End`；顶部/底部为左/中/右，左侧/右侧为上/中/下，默认 `Center` |
+| `setPageFill(bool)` / `isPageFill()` | 页面填充剩余空间：控件需要显式高度/`height: fill`，页面节点自动设为 `height: fill` |
+| `getPageCount()` | 页面数量 |
+| `setOnPageChange(std::function<void(int)>)` | 页面切换回调 |
+| `setDisabled(bool, bool animate)` / `isDisabled()` | 禁用（Tab 变暗、不可点击） |
+
+主要 style：
+
+| 键 | 说明 |
+| --- | --- |
+| `tab_height` / `tab_width` / `textheight` | 竖排 Tab 行高 / 横排 Tab 宽度 / 文字字号 |
+| `active_text_color` / `inactive_text_color` | 当前页 / 非当前页文字颜色 |
+| `indicator_color` / `indicator_height` | 下划线指示条颜色 / 高度 |
+| `bar_line_color` | Tab 栏底部整条分隔线颜色 |
+| `animation_speed` | 禁用状态动画时长 |
+
+行为说明：
+
+- 切换页面时旧页面 `remove()` 掉自己的元素，新页面整棵子树 `invalidate()` 以重建元素；
+- 非当前页 `setVisible(false)`，因此不会响应鼠标事件（但仍保持挂载与布局）；
+- Tab 栏尺寸只与 Tab 数量有关，不随页面内容变化：
+  - 上/下布局：每个 Tab 宽 `tab_width`（默认 100），Tab 栏长度 = `数量 × tab_width`，并在控件内水平居中；
+  - 左/右布局：每个 Tab 行高 `tab_height`，Tab 栏长度 = `数量 × tab_height`，Tab 栏宽度 = `max(tab_height, 64)`（保证竖排文字可读）；
+- 左右布局时文字会为指示条让出额外内边距，避免文字与指示条重合；控件高度取 `max(当前页高度, Tab 栏高度)`；
+- Tab 栏可在其方向上对齐（`Start` / `Center` / `End`），底部整宽分隔线会跟随 Tab 栏位置；
+- 指示条位置会被限制在实际 Tab 范围内，不会越过首/末 Tab（使用控件局部坐标计算，保证与 Tab 居中）；
+- 左/右布局的竖向分隔线只覆盖 Tab 栏范围，不再延伸到整个页面高度；
+- 开启 `setPageFill(true)` 后，页面区域 = 控件高度减去 Tab 栏高度（左/右布局为整个控件高度），页面节点高度自动改为 `fill`，超出部分由 `pageClip` 裁剪；
+- 指示条是单独一条，沿 Tab 栏方向从旧页滑动到新页（`indicatorPosition` 动画，时长取 `animation_speed`），并位于靠近内容的一侧；
+- 顶部/底部布局：控件高度 = `tabHeight + 当前页高度`；左侧/右侧布局：控件高度 = 当前页高度，宽度减去 Tab 栏厚度；
+- 当前页元素通过 `pageClip` 裁剪到页面区域，避免内容溢出到 Tab 栏。
+
 ## 8. 示例
 
 ### 8.1 基础节点与样式
@@ -555,7 +601,7 @@ control->setDisabled(true);
 新增 / 修改控件、节点或元素时：
 
 1. 在本文档与 [README-en.md](README-en.md) 中同步更新对应章节（API 表、style 表、元素表）；
-2. 新控件需要加入 7.2–7.15 的控件列表，并说明：
+2. 新控件需要加入 7.2–7.16 的控件列表，并说明：
    - 构造函数与基类；
    - 公开 API；
    - 读取的 style 键（区分公共键与调参/内部键）；

@@ -47,6 +47,11 @@ class OMDemiurgeStyles
         styles[s] = t;
         modified = true;
     }
+    inline auto invalidate() -> void
+    {
+        modified = true;
+    }
+
     inline auto has(const std::string &s) const -> bool
     {
         return styles.count(s) != 0;

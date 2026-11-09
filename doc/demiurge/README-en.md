@@ -95,6 +95,8 @@ Base class: `OMDemiurgeNode` (`include/openminecraft/renderer/common/demiurge/om
 | `submit(handler, depth)` | Pure virtual; submit elements and clips |
 | `update()` | Virtual; recursively updates children by default |
 | `remove()` | Pure virtual; remove elements from channels |
+| `setVisible(bool)` / `isVisible()` | Invisible nodes skip hit-testing and event dispatch; submission is decided by the owner (TabMultiPage submits only the active page) |
+| `invalidate()` | Force the node to re-run style-driven submit logic (used when elements were removed and the node becomes visible again) |
 
 ### 3.5 Events
 
@@ -501,6 +503,50 @@ Behavior:
 - The chevron uses the SVG `rotation` style with `openAmount * π`;
 - Only clicks on the header row toggle the pane; content controls keep their own interaction.
 
+### 7.16 TabMultiPage
+
+`OMDemiurgeTabMultiPage(geom::OMFontSet *fontset = nullptr)`
+
+A top tab bar plus a multi-page container. Every page must be mounted through `addPage()`; only the active page is submitted, while the others stay mounted, invisible and excluded from hit-testing. Page content switching is not animated, but the tab indicator slides along the tab bar.
+
+| API | Description |
+| --- | --- |
+| `addPage(title, page)` | Mount a page and return its index; the first page becomes active |
+| `setActivePage(int)` / `getActivePage()` | Switch / query the active page |
+| `setTabPosition(OMDemiurgeTabPosition)` / `getTabPosition()` | Tab bar position: `Top` / `Bottom` / `Left` / `Right` |
+| `setTabWidth(float)` | Width of a single tab for top/bottom layouts |
+| `setTabAlignment(OMDemiurgeTabAlignment)` / `getTabAlignment()` | Bar alignment: `Start` / `Center` / `End`; left/center/right for top/bottom, top/center/bottom for left/right, default `Center` |
+| `setPageFill(bool)` / `isPageFill()` | Page fills the remaining space: the control needs an explicit/`height: fill`; page nodes get `height: fill` automatically |
+| `getPageCount()` | Page count |
+| `setOnPageChange(std::function<void(int)>)` | Page change callback |
+| `setDisabled(bool, bool animate)` / `isDisabled()` | Disable (tabs dimmed and not clickable) |
+
+Main styles:
+
+| Key | Description |
+| --- | --- |
+| `tab_height` / `tab_width` / `textheight` | Vertical tab row height / horizontal tab width / label font height |
+| `active_text_color` / `inactive_text_color` | Active / inactive label colors |
+| `indicator_color` / `indicator_height` | Underline indicator color / height |
+| `bar_line_color` | Full-width divider under the tab bar |
+| `animation_speed` | Disabled-state animation duration |
+
+Behavior:
+
+- On switch the old page `remove()`s its elements and the new page's whole subtree is `invalidate()`d so elements are rebuilt;
+- Inactive pages are `setVisible(false)`: they stay mounted and laid out but receive no mouse events;
+- The tab bar size depends only on the tab count, not on page content:
+  - Top/bottom: each tab is `tab_width` wide (default 100); bar length = `count × tab_width`, centered horizontally inside the control;
+  - Left/right: each tab row is `tab_height` tall; bar length = `count × tab_height`, bar width = `max(tab_height, 64)` so vertical labels remain readable;
+- For left/right the label reserves extra padding on the indicator side to avoid overlapping the indicator; control height = `max(active page height, bar height)`;
+- The bar can be aligned along its own axis (`Start` / `Center` / `End`); the full-width divider follows the bar position;
+- The indicator position is clamped to the actual tab range and never goes past the first/last tab (computed in the control's local space so it stays centered on the tab);
+- For left/right layouts the vertical divider only covers the tab bar, not the full page height;
+- With `setPageFill(true)`, the page area is the control height minus the bar (or the full control height for left/right); page nodes switch to `height: fill` and overflow is clipped by `pageClip`;
+- A single indicator slides from the old page to the new one along the bar (`indicatorPosition` animation, duration from `animation_speed`) and sits on the content-facing edge;
+- Top/bottom: control height = `tabHeight + active page height`; left/right: control height = active page height, width minus the bar thickness;
+- The active page is clipped to the page area via `pageClip`, so content cannot overflow into the tab bar.
+
 ## 8. Examples
 
 ### 8.1 Basic node and styles
@@ -555,7 +601,7 @@ control->setDisabled(true);
 When adding or changing a control, node or element:
 
 1. Update the corresponding sections (API tables, style tables, element table) in both this document and [README.md](README.md);
-2. Add new controls to the control list in 7.2–7.15 and document:
+2. Add new controls to the control list in 7.2–7.16 and document:
    - Constructor and base class;
    - Public APIs;
    - Style keys read (distinguishing public keys from tuning/internal keys);

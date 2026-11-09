@@ -95,6 +95,17 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         return children;
     }
 
+    // Invisible nodes are skipped by hit-testing and event dispatch. Rendering is
+    // managed by the owner (tab pages submit only the active page).
+    auto setVisible(bool value) -> void
+    {
+        visible = value;
+    }
+    auto isVisible() const -> bool
+    {
+        return visible;
+    }
+
     auto syncLayoutAll() -> void;
     auto syncBoundary(float x, float y) -> void;
 
@@ -163,6 +174,9 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     }
     void requestFocus();
     void releaseFocus();
+
+    // Releases focus if the currently focused node is inside the given subtree.
+    static auto releaseFocusWithin(const std::shared_ptr<OMDemiurgeNode> &root) -> void;
     auto hasFocus() -> bool;
     static auto fetchFocusedNode() -> std::shared_ptr<OMDemiurgeNode>
     {
@@ -226,6 +240,13 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     virtual auto processTextEditing(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
     {
         return Ignored;
+    }
+
+    // Forces this node to re-run its style-driven submit logic (used after
+    // elements were removed and the node becomes visible again).
+    inline auto invalidate() -> void
+    {
+        stylesStorage.invalidate();
     }
 
     inline auto style(std::string s, std::any a) -> std::shared_ptr<OMDemiurgeNode>
@@ -324,6 +345,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     std::vector<std::shared_ptr<OMDemiurgeNode>> children;
 
     bool focusable = false;
+    bool visible = true;
     std::weak_ptr<OMDemiurgeNode> clipNodeRef;
 
     inline static std::weak_ptr<OMDemiurgeNode> capturedNode;
