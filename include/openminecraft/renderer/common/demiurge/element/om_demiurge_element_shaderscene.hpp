@@ -11,6 +11,7 @@ struct OMDemiurgeElementShaderScene
 {
     glm::vec4 position;
     float depth;
+    glm::vec2 scale = glm::vec2(1.0f);
 };
 
 template <> inline auto objectGetDepth<OMDemiurgeElementShaderScene>(OMDemiurgeElementShaderScene &obj) -> float

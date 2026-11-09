@@ -21,15 +21,17 @@ ubo;
 void main()
 {
     vec2 inPosition = vertexgen_quad_normal();
-    vec2 screenPos = inSectorPos.xy - vec2(10) + inPosition.xy * (inSectorPos.zw + vec2(20));
     vec2 rectCenter = geom_rectCenterPos(inSectorPos);
+    vec2 scaledSize = abs(inSectorPos.zw) * inSectorScale;
+    vec2 halfSize = scaledSize * 0.5;
+    vec2 screenPos = rectCenter - halfSize - vec2(10) + inPosition.xy * (scaledSize + vec2(20));
     vec3 localPos = vec3(screenPos - rectCenter, 0.0);
 
     gl_Position = vec4(geom_toNdc(rectCenter + rotation_quat(inSectorRotation, localPos).xy, ubo.width, ubo.height),
                        inSectorDepth, 1.0);
     secColor = inSectorColor;
     secPosition = screenPos;
-    secSectorPosition = inSectorPos;
+    secSectorPosition = vec4(rectCenter - halfSize, scaledSize);
     secSectorAngle = vec2(inSectorBeginAngle, inSectorEndAngle);
     secSectorFactor = inSectorFactor;
 }

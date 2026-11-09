@@ -25,6 +25,7 @@ auto OMDemiurgeSvgNode::submit(OMDemiurgeRendererHandler *handler, float depth) 
         t->color = genLinear(stylesStorage.get<int>("color", 0));
         t->depth = depth;
         t->factor = stylesStorage.get<float>("factor", 0.01f);
+        t->scale = stylesStorage.get<glm::vec2>("scale", glm::vec2(1.0f));
         t->glyphId = handler->svg.storeGlyph(stylesStorage.get<std::string>("svgPath", ""),
                                              stylesStorage.get<glm::vec2>("svgSize", {10.0f, 10.0f}));
 

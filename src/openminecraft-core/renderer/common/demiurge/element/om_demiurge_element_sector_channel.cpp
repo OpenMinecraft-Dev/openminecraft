@@ -16,6 +16,7 @@ void OMDemiurgeSectorChannel::init(const std::string &uniformTag, const std::str
         ->appendPart("inSectorEndAngle", basics::Float)
         ->appendPart("inSectorFactor", basics::Float)
         ->appendPart("inSectorDepth", basics::Float)
+        ->appendPart("inSectorScale", basics::Vec2f)
         ->nextGroup()
         ->decideStruct();
 

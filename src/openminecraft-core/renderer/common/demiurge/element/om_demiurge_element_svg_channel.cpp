@@ -50,6 +50,7 @@ void OMDemiurgeSvgChannel::init(const std::string &uniformTag, const std::string
         ->appendPart("inSvgDepth", basics::Float)
         ->appendPart("inSvgFactor", basics::Float)
         ->appendPart("inSvgGlyphId", basics::Integer)
+        ->appendPart("inSvgScale", basics::Vec2f)
         ->nextGroup()
         ->decideStruct();
 

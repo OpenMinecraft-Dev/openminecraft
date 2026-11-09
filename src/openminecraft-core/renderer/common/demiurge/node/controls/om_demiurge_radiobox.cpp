@@ -178,7 +178,7 @@ void OMDemiurgeRadioBox::update()
     const float pressShrink = stylesStorage.get<float>("press_shrink", 0.35f);
     const float dotScale = amount * (1.0f - press * pressShrink);
 
-    dotNode->style("scale", dotScale)
+    dotNode->style("scale", glm::vec2(dotScale))
         ->style("color", (int)f4ToRgba(glm::vec4(glm::mix(glm::vec3(dot), glm::vec3(0.55f), disabledValue * 0.75f),
                                                   dot.a * amount * (1.0f - disabledValue * 0.85f))));
 

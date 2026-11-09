@@ -19,6 +19,7 @@ void OMDemiurgeImageChannel::init(const std::string &uniformTag, const std::stri
         ->appendPart("inRectFactor", basics::Float)
         ->appendPart("inRectDepth", basics::Float)
         ->appendPart("inFillType", basics::Float)
+        ->appendPart("inRectScale", basics::Vec2f)
         ->nextGroup()
         ->decideStruct();
 

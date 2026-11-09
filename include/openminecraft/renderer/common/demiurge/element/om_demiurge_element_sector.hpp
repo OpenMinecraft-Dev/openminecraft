@@ -15,6 +15,7 @@ struct OMDemiurgeElementSector
     float endAngle;
     float factor;
     float depth;
+    glm::vec2 scale = glm::vec2(1.0f);
 };
 
 template <> inline auto objectGetDepth<OMDemiurgeElementSector>(OMDemiurgeElementSector &obj) -> float

@@ -30,6 +30,7 @@ auto OMDemiurgeShaderSceneNode::submit(OMDemiurgeRendererHandler *handler, float
         auto *t = handler->shaderScene.temporary(sceneId);
         t->position = {layoutBound.x, layoutBound.y, layoutBound.width, layoutBound.height};
         t->depth = depth;
+        t->scale = stylesStorage.get<glm::vec2>("scale", glm::vec2(1.0f));
 
         stylesStorage.solve();
     }

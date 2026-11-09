@@ -48,6 +48,7 @@ void OMDemiurgeTextSdfChannel::init(const std::string &uniformTag, const std::st
         ->appendPart("inTextDepth", basics::Float)
         ->appendPart("inTextFactor", basics::Float)
         ->appendPart("inTextGlyphId", basics::Integer)
+        ->appendPart("inTextScale", basics::Vec2f)
         ->nextGroup()
         ->decideStruct();
 

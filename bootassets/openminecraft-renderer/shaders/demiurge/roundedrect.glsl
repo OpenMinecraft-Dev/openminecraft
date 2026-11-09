@@ -10,7 +10,7 @@ layout(location = 1) out vec2 rrectPosition;
 layout(location = 2) out vec4 rrectRadius;
 layout(location = 3) out vec4 rrectRectPosition;
 layout(location = 4) out float rrectFactor;
-layout(location = 5) out float rrectScale;
+layout(location = 5) out vec2 rrectScale;
 layout(location = 6) out vec4 rrectClipPos;
 layout(location = 7) out float rrectClipRadius;
 
@@ -24,8 +24,12 @@ ubo;
 void main()
 {
     vec2 inPosition = vertexgen_quad_normal();
-    vec2 screenPos = inRectPos.xy - vec2(10) + inPosition.xy * (inRectPos.zw + vec2(20));
     vec2 rectCenter = geom_rectCenterPos(inRectPos);
+    vec2 halfSize = abs(inRectPos.zw) * 0.5;
+    // The fragment scales sampling coordinates, so make sure the quad covers the
+    // scaled shape when scale > 1.
+    vec2 quadHalf = halfSize * max(abs(inRectScale), vec2(1.0)) + vec2(10.0);
+    vec2 screenPos = rectCenter - quadHalf + inPosition.xy * (quadHalf * 2.0);
     vec3 localPos = vec3(screenPos - rectCenter, 0.0);
 
     gl_Position = vec4(geom_toNdc(rectCenter + rotation_quat(inRectRotation, localPos).xy, ubo.width, ubo.height),
@@ -49,7 +53,7 @@ layout(location = 1) in vec2 rrectPosition;
 layout(location = 2) in vec4 rrectRadius;
 layout(location = 3) in vec4 rrectRectPosition;
 layout(location = 4) in float rrectFactor;
-layout(location = 5) in float rrectScale;
+layout(location = 5) in vec2 rrectScale;
 layout(location = 6) in vec4 rrectClipPos;
 layout(location = 7) in float rrectClipRadius;
 
@@ -60,7 +64,7 @@ void main()
     vec2 rectCenter = geom_rectCenterPos(rrectRectPosition);
     vec2 halfSize = rrectRectPosition.zw / 2.0;
     // Shrink/grow the shape around its center without touching layout geometry.
-    vec2 localPos = (rrectPosition - rectCenter) / max(rrectScale, 0.001);
+    vec2 localPos = (rrectPosition - rectCenter) / max(rrectScale, vec2(0.001));
 
     float alpha = sdf_rrect(localPos, halfSize, rrectRadius, 0.0, rrectFactor);
 

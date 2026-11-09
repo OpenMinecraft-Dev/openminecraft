@@ -16,6 +16,7 @@ void OMDemiurgeShaderSceneChannel::init(const std::string &uniformTag, const std
     format.setInstance()
         ->appendPart("inShaderScenePos", basics::Vec4f)
         ->appendPart("inShaderSceneDepth", basics::Float)
+        ->appendPart("inShaderSceneScale", basics::Vec2f)
         ->nextGroup()
         ->decideStruct();
 

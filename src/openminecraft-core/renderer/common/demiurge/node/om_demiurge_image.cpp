@@ -35,6 +35,7 @@ auto OMDemiurgeImageNode::submit(OMDemiurgeRendererHandler *handler, float depth
         t->radius = stylesStorage.get<glm::vec4>("radius", {0, 0, 0, 0});
         t->fillMode = static_cast<float>(
             stylesStorage.get<node::OMDemiurgeImageFillType>("fill", node::OMDemiurgeImageFillType::Cover));
+        t->scale = stylesStorage.get<glm::vec2>("scale", glm::vec2(1.0f));
 
         glm::vec3 defaultNormal = glm::vec3(0.0f, 0.0f, 1.0f);
         glm::vec3 targetNormal = glm::normalize(stylesStorage.get<glm::vec3>("rotationPivot", {0.0f, 0.0f, 1.0f}));

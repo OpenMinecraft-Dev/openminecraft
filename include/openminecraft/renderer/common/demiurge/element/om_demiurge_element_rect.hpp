@@ -10,6 +10,7 @@ struct OMDemiurgeElementRect
     glm::vec4 position;
     glm::vec4 color;
     float depth;
+    glm::vec2 scale = glm::vec2(1.0f);
 };
 
 template <> inline auto objectGetDepth<OMDemiurgeElementRect>(OMDemiurgeElementRect &obj) -> float

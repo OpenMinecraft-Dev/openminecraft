@@ -18,7 +18,7 @@ void OMDemiurgeRoundedRectChannel::init(const std::string &uniformTag, const std
         ->appendPart("inRectRotation", basics::Vec4f)
         ->appendPart("inRectFactor", basics::Float)
         ->appendPart("inRectDepth", basics::Float)
-        ->appendPart("inRectScale", basics::Float)
+        ->appendPart("inRectScale", basics::Vec2f)
         ->appendPart("inClipPos", basics::Vec4f)
         ->appendPart("inClipRadius", basics::Float)
         ->nextGroup()

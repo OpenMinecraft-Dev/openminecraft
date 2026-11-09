@@ -16,7 +16,9 @@ ubo;
 void main()
 {
     vec2 inPosition = vertexgen_quad_normal();
-    vec2 screenPos = inRectPos.xy + inPosition.xy * inRectPos.zw;
+    vec2 center = geom_rectCenterPos(inRectPos);
+    vec2 halfSize = abs(inRectPos.zw) * 0.5 * inRectScale;
+    vec2 screenPos = center - halfSize + inPosition.xy * (halfSize * 2.0);
 
     gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), inRectDepth, 1.0);
     rectColor = inRectColor;

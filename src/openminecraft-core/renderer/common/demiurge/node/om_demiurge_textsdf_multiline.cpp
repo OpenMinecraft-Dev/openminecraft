@@ -95,6 +95,9 @@ auto OMDemiurgeTextSdfMultilineNode::submit(OMDemiurgeRendererHandler *handler, 
         }
 
         size_t index = 0;
+        const glm::vec2 textScale = stylesStorage.get<glm::vec2>("scale", glm::vec2(1.0f));
+        const glm::vec2 textCenter(layoutBound.x + layoutBound.width * 0.5f,
+                                   layoutBound.y + layoutBound.height * 0.5f);
 
         for (size_t li = 0; li < lines.size(); ++li)
         {
@@ -104,12 +107,14 @@ auto OMDemiurgeTextSdfMultilineNode::submit(OMDemiurgeRendererHandler *handler, 
             {
                 auto t = ch->temporary(glyphIds[index++]);
                 t->color = genLinear(stylesStorage.get<int>("color", 0));
-                t->position = {
-                    layoutBound.x + glyph.position.x * th,
-                    lineY + glyph.position.y * th,
-                    glyph.size.x * th,
-                    glyph.size.y * th,
-                };
+                const glm::vec2 glyphPos(layoutBound.x + glyph.position.x * th, lineY + glyph.position.y * th);
+                const glm::vec2 glyphSize(glyph.size.x * th, glyph.size.y * th);
+                const glm::vec2 glyphCenter = glyphPos + glyphSize * 0.5f;
+                const glm::vec2 scaledCenter = textCenter + (glyphCenter - textCenter) * textScale;
+
+                t->position = {scaledCenter.x - glyphSize.x * 0.5f, scaledCenter.y - glyphSize.y * 0.5f, glyphSize.x,
+                               glyphSize.y};
+                t->scale = textScale;
                 t->depth = depth;
                 t->factor = stylesStorage.get<float>("factor", 0.025f);
                 t->glyphIndex = ch->storeGlyph(glyph);

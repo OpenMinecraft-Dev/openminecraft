@@ -12,6 +12,7 @@ struct OMDemiurgeElementSvg
     float depth;
     float factor;
     uint32_t glyphId;
+    glm::vec2 scale = glm::vec2(1.0f);
 };
 
 template <> inline auto objectGetDepth<OMDemiurgeElementSvg>(OMDemiurgeElementSvg &obj) -> float

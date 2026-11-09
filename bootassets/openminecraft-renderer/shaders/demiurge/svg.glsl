@@ -22,11 +22,14 @@ layout(location = 3) flat out float svgFactor;
 void main()
 {
     vec2 inPosition = vertexgen_quad_normal();
-    vec2 screenPos = inSvgPos.xy - vec2(10) + inPosition.xy * (inSvgPos.zw + vec2(20));
+    vec2 rectCenter = geom_rectCenterPos(inSvgPos);
+    vec2 scaledSize = abs(inSvgPos.zw) * inSvgScale;
+    vec2 halfSize = scaledSize * 0.5;
+    vec2 screenPos = rectCenter - halfSize - vec2(10) + inPosition.xy * (scaledSize + vec2(20));
 
     // Glyph coordinates are normalized to 0..1 inside the node rect (compile() divides
     // by svgSize), so map the expanded quad back into rect-local space here.
-    svgGlyphPos = (screenPos - inSvgPos.xy) / inSvgPos.zw;
+    svgGlyphPos = (screenPos - (rectCenter - halfSize)) / max(scaledSize, vec2(0.0001));
     svgIndex = inSvgGlyphId;
     svgColor = inSvgColor;
     svgFactor = inSvgFactor;

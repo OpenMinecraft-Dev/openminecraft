@@ -28,6 +28,7 @@ auto OMDemiurgeSectorNode::submit(OMDemiurgeRendererHandler *handler, float dept
         t->position = {layoutBound.x, layoutBound.y, layoutBound.width, layoutBound.height};
         t->depth = depth;
         t->factor = stylesStorage.get<float>("factor", 2.0f);
+        t->scale = stylesStorage.get<glm::vec2>("scale", glm::vec2(1.0f));
         t->beginAngle = stylesStorage.get<float>("beginAngle", 0.0f);
         t->endAngle = stylesStorage.get<float>("endAngle", 3.1415926 / 2);
 

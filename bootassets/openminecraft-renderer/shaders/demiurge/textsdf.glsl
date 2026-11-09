@@ -30,7 +30,9 @@ void main()
     // Quad is expanded around the glyph bbox to leave room for the SDF edge;
     // 1.5x is enough coverage while reducing overdraw.
     vec2 inPosition = (vertexgen_quad_normal() - 0.5) * 1.5 + 0.5;
-    vec2 screenPos = inTextPos.xy + inPosition.xy * inTextPos.zw;
+    vec2 glyphCenter = inTextPos.xy + inTextPos.zw * 0.5;
+    vec2 glyphSize = abs(inTextPos.zw) * inTextScale;
+    vec2 screenPos = glyphCenter + (inPosition - 0.5) * glyphSize;
 
     gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), inTextDepth, 1.0);
     textColor = inTextColor;
@@ -40,7 +42,7 @@ void main()
     textFactor = inTextFactor;
 
     // UV units per screen pixel, used for subpixel (RGB) antialiasing offsets.
-    textPixelUv = (bb.yw - bb.xz) / max(inTextPos.zw, vec2(1.0));
+    textPixelUv = (bb.yw - bb.xz) / max(glyphSize, vec2(1.0));
 }
 #endif
 

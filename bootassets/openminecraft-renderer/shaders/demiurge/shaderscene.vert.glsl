@@ -21,7 +21,9 @@ void main()
     fragCoord = uv;
     uv.y = 1 - uv.y;
 
-    vec2 screenPos = inShaderScenePos.xy + uv * inShaderScenePos.zw;
+    vec2 center = inShaderScenePos.xy + inShaderScenePos.zw * 0.5;
+    vec2 size = abs(inShaderScenePos.zw) * inShaderSceneScale;
+    vec2 screenPos = center - size * 0.5 + uv * size;
 
     gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), inShaderSceneDepth, 1.0);
 }

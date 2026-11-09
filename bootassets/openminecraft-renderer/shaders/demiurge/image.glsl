@@ -23,16 +23,18 @@ ubo;
 void main()
 {
     vec2 inPosition = vertexgen_quad_normal();
-    vec2 screenPos = inRectPos.xy - vec2(10) + inPosition.xy * (inRectPos.zw + vec2(20));
     vec2 rectCenter = geom_rectCenterPos(inRectPos);
+    vec2 scaledSize = abs(inRectPos.zw) * inRectScale;
+    vec2 halfSize = scaledSize * 0.5;
+    vec2 screenPos = rectCenter - halfSize - vec2(10) + inPosition.xy * (scaledSize + vec2(20));
     vec3 localPos = vec3(screenPos - rectCenter, 0.0);
 
     gl_Position = vec4(geom_toNdc(rectCenter + rotation_quat(inRectRotation, localPos).xy, ubo.width, ubo.height),
                        inRectDepth, 1.0);
     imageColor = inRectColor;
     imagePosition = screenPos;
-    imageRadius = inRectRadius;
-    imageRectPosition = inRectPos;
+    imageRadius = inRectRadius * ((inRectScale.x + inRectScale.y) * 0.5);
+    imageRectPosition = vec4(rectCenter - halfSize, scaledSize);
     imageFactor = inRectFactor;
     imageUv = inPosition;
     imageFillType = inFillType;

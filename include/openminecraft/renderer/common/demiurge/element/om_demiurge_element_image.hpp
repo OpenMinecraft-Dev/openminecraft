@@ -16,6 +16,7 @@ struct OMDemiurgeElementImage
     float factor;
     float depth;
     float fillMode;
+    glm::vec2 scale = glm::vec2(1.0f);
 };
 
 template <> inline auto objectGetDepth<OMDemiurgeElementImage>(OMDemiurgeElementImage &obj) -> float
