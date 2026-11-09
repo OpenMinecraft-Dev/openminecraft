@@ -47,6 +47,7 @@ void OMDemiurgeSvgChannel::init(const std::string &uniformTag, const std::string
     format.setInstance()
         ->appendPart("inSvgPos", basics::Vec4f)
         ->appendPart("inSvgColor", basics::Vec4f)
+        ->appendPart("inSvgRotation", basics::Vec4f)
         ->appendPart("inSvgDepth", basics::Float)
         ->appendPart("inSvgFactor", basics::Float)
         ->appendPart("inSvgGlyphId", basics::Integer)

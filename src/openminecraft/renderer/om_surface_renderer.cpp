@@ -7,6 +7,7 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_divider.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_iconbutton.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textedit.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_dropdown.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textinput.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_link.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_progressbar.hpp"
@@ -108,6 +109,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     demoSwitch = std::make_shared<node::controls::OMDemiurgeSwitch>();
 
     demoSlider = std::make_shared<node::controls::OMDemiurgeSlider>();
+    demoSlider->style("width", OMDemiurgeSize::pixels(120.0f));
     demoSlider->style("width", OMDemiurgeSize::pixels(110.0f));
     demoSlider->setValue(0.4f, false);
 
@@ -148,7 +150,26 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
 
     demoTextEdit = std::make_shared<node::controls::OMDemiurgeTextEdit>(fontset.get());
     demoTextEdit->setPlaceholder("Multi-line text...");
-    demoTextEdit->style({{"width", OMDemiurgeSize::pixels(260.0f)}, {"height", OMDemiurgeSize::pixels(48.0f)}});
+    demoTextEdit->style({{"width", OMDemiurgeSize::pixels(260.0f)}, {"height", OMDemiurgeSize::pixels(36.0f)}});
+
+    auto dropContent = std::make_shared<node::OMDemiurgeContainerNode>();
+    dropContent->style({{"flexDirection", OMDemiurgeDirection::Column},
+                        {"alignItems", OMDemiurgeAlign::Center},
+                        {"flexGap", OMDemiurgeSize::pixels(6.0f)},
+                        {"width", OMDemiurgeSize::fill()},
+                        {"padding", OMDemiurgeEdgeInsets{6, 6, 6, 6}}});
+    dropContent->mount(progressBar);
+    dropContent->mount(checkBox);
+    dropContent->mount(radioGroup);
+    dropContent->mount(controlRow);
+    dropContent->mount(demoInput);
+    dropContent->mount(demoTextEdit);
+
+    demoDropDown = std::make_shared<node::controls::OMDemiurgeDropDownPane>(fontset.get());
+    demoDropDown->setTitle("More controls");
+    demoDropDown->style("width", OMDemiurgeSize::pixels(360.0f));
+    demoDropDown->setHeaderHeight(30.0f);
+    demoDropDown->setContentNode(dropContent);
 
     node = std::make_shared<node::OMDemiurgeRectNode>()
                ->style({
@@ -182,12 +203,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                                        }))
                            ->mount(button->style("animation_speed", 1.0f)->style("label", "Demo Test"))
                            ->mount(button2->style("animation_speed", 1.0f)->style("label", "Quit"))
-                           ->mount(progressBar)
-                           ->mount(checkBox)
-                           ->mount(radioGroup)
-                           ->mount(controlRow)
-                           ->mount(demoInput)
-                           ->mount(demoTextEdit));
+                           ->mount(demoDropDown));
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->name = "surface";

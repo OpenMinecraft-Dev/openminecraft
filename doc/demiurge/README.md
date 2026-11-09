@@ -170,7 +170,7 @@ OMDemiurgeRendererHandler
 | `color` | rect 系 / 文本 / svg / image / sector | 颜色（RGBA int） |
 | `radius` | `OMDemiurgeRectNode` | 四角半径（vec4） |
 | `factor` | 多数元素节点 | 边缘软/SDF 宽度，按节点默认值 |
-| `rotation` / `rotationPivot` | rect / image / sector | 绕指定法线旋转 |
+| `rotation` / `rotationPivot` | rect / image / sector / svg | 绕指定法线旋转 |
 | `scale` | 所有元素节点 | `glm::vec2`，绕元素中心、按两轴独立缩放（着色器内完成，不抖动） |
 | `clip` / `clipRadius` | `OMDemiurgeRectNode` | 元素级像素裁剪矩形与圆角 |
 | `text` | `OMDemiurgeTextSdfNode` / multiline | 文本内容 |
@@ -210,7 +210,7 @@ OMDemiurgeRendererHandler
 | `OMDemiurgePaneContainer` | `OMDemiurgeContainerNode` | 无参 | 把**直接子节点**强制裁剪到自身；见下 |
 | `OMDemiurgeTextSdfNode` | `OMDemiurgeNode` | `(OMFontSet*)` | 单行文本；`text/textheight/color/factor/scale` |
 | `OMDemiurgeTextSdfMultilineNode` | `OMDemiurgeNode` | `(OMFontSet*)` | 多行文本；额外 `textlineheight` |
-| `OMDemiurgeSvgNode` | `OMDemiurgeNode` | 无参 | SDF SVG 图标；`svgPath/svgSize/color/factor/scale` |
+| `OMDemiurgeSvgNode` | `OMDemiurgeNode` | 无参 | SDF SVG 图标；`svgPath/svgSize/color/factor/rotation/scale` |
 | `OMDemiurgeImageNode` | `OMDemiurgeNode` | `(std::string textureTag)` | 纹理贴图；`fill/radius/rotation/factor/color/scale` |
 | `OMDemiurgeSectorNode` | `OMDemiurgeNode` | 无参 | 扇形/圆环；`beginAngle/endAngle/factor/rotation/color/scale` |
 | `OMDemiurgeShaderSceneNode` | `OMDemiurgeNode` | `(std::string shader)` | 全屏 shader 场景；仅布局与 `scale` |
@@ -231,7 +231,7 @@ OMDemiurgeRendererHandler
 | --- | --- | --- |
 | `OMDemiurgeElementRect` | `color`、`depth`、`scale` | `OMDemiurgeRectChannel` |
 | `OMDemiurgeElementRoundedRect` | `color/radius/rotation/factor/scale/clipPosition/clipRadius` | `OMDemiurgeRoundedRectChannel` |
-| `OMDemiurgeElementSvg` | `color/factor/glyphId/scale` | `OMDemiurgeSvgChannel` |
+| `OMDemiurgeElementSvg` | `color/rotation/factor/glyphId/scale` | `OMDemiurgeSvgChannel` |
 | `OMDemiurgeElementImage` | `color/radius/rotation/factor/fillMode/scale` | `OMDemiurgeImageChannel` |
 | `OMDemiurgeElementSector` | `color/rotation/beginAngle/endAngle/factor/scale` | `OMDemiurgeSectorChannel` |
 | `OMDemiurgeElementTextSdf` | `color/factor/glyphIndex/scale` | `OMDemiurgeTextSdfChannel` |
@@ -466,6 +466,41 @@ RadioGroup：
 
 额外支持：←/→/↑/↓、Home/End、Enter 换行、跨行选择、垂直滚动、按行渲染虚拟化、选区/光标裁剪到自身。
 
+### 7.15 DropDownPane
+
+`OMDemiurgeDropDownPane(geom::OMFontSet *fontset = nullptr)`
+
+可展开/收起的面板：主体为圆角矩形，标题行右侧有随状态旋转的箭头，点击标题行切换，高度在收起/展开之间做动画，内容由自身裁剪。
+
+| API | 说明 |
+| --- | --- |
+| `setTitle(std::string)` | 标题（也可用 `label` style） |
+| `setContentNode(shared_ptr<OMDemiurgeNode>)` / `getContentNode()` | 设置 / 获取内容节点（替换旧内容） |
+| `setExpanded(bool, bool animate = true)` / `isExpanded()` | 展开状态 |
+| `toggle(bool animate = true)` | 切换展开/收起 |
+| `setOnToggle(std::function<void(bool)>)` | 状态变化回调 |
+| `setHeaderHeight(float)` / `setAnimationSpeed(float)` | 头部高度 / 动画时长 |
+| `setDisabled(bool, bool animate)` / `isDisabled()` | 禁用（不可点击并变暗） |
+
+主要 style：
+
+| 键 | 说明 |
+| --- | --- |
+| `label` / `textheight` | 标题文本 / 字号 |
+| `color` / `radius` | 圆角矩形主体背景色 / 圆角 |
+| `text_color` / `arrow_color` | 标题 / 箭头颜色 |
+| `animation_speed` | 展开/收起动画时长 |
+| `header_height` | 标题行高度（也可用 `setHeaderHeight`） |
+| `header_padding` | 标题行内边距（`OMDemiurgeEdgeInsets`） |
+| `arrow_path` / `svgSize` | 箭头 SVG 路径（默认向下 chevron） |
+
+行为说明：
+
+- 高度 = `headerHeight + contentHeight * openAmount`，内容以绝对定位放在标题行下方；
+- 内容通过 `clipNode` 裁剪到控件自身，展开过程中随高度逐渐露出；
+- 箭头使用 SVG 的 `rotation` style，旋转角为 `openAmount * π`；
+- 只点击标题行区域才会切换，内容区的控件交互不受影响。
+
 ## 8. 示例
 
 ### 8.1 基础节点与样式
@@ -520,7 +555,7 @@ control->setDisabled(true);
 新增 / 修改控件、节点或元素时：
 
 1. 在本文档与 [README-en.md](README-en.md) 中同步更新对应章节（API 表、style 表、元素表）；
-2. 新控件需要加入 7.2–7.14 的控件列表，并说明：
+2. 新控件需要加入 7.2–7.15 的控件列表，并说明：
    - 构造函数与基类；
    - 公开 API；
    - 读取的 style 键（区分公共键与调参/内部键）；

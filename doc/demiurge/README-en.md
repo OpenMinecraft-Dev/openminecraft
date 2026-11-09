@@ -170,7 +170,7 @@ Clip rects are screen-space rectangles (no rounded corners, no rotation), implem
 | `color` | rect / text / svg / image / sector | Color (packed RGBA `int`) |
 | `radius` | `OMDemiurgeRectNode` | Per-corner radius (`vec4`) |
 | `factor` | most element nodes | Edge softness / SDF width; per-node default |
-| `rotation` / `rotationPivot` | rect / image / sector | Rotate around the given normal |
+| `rotation` / `rotationPivot` | rect / image / sector / svg | Rotate around the given normal |
 | `scale` | all element nodes | `glm::vec2`, around the element center, independent axes (done in shaders; no jitter) |
 | `clip` / `clipRadius` | `OMDemiurgeRectNode` | Per-element pixel clip rect and corner radius |
 | `text` | `OMDemiurgeTextSdfNode` / multiline | Text content |
@@ -210,7 +210,7 @@ Paths: `node/` and `node/container/`.
 | `OMDemiurgePaneContainer` | `OMDemiurgeContainerNode` | default | Clips **direct children** to itself; see below |
 | `OMDemiurgeTextSdfNode` | `OMDemiurgeNode` | `(OMFontSet*)` | Single-line text; `text/textheight/color/factor/scale` |
 | `OMDemiurgeTextSdfMultilineNode` | `OMDemiurgeNode` | `(OMFontSet*)` | Multi-line text; plus `textlineheight` |
-| `OMDemiurgeSvgNode` | `OMDemiurgeNode` | default | SDF SVG icon; `svgPath/svgSize/color/factor/scale` |
+| `OMDemiurgeSvgNode` | `OMDemiurgeNode` | default | SDF SVG icon; `svgPath/svgSize/color/factor/rotation/scale` |
 | `OMDemiurgeImageNode` | `OMDemiurgeNode` | `(std::string textureTag)` | Texture image; `fill/radius/rotation/factor/color/scale` |
 | `OMDemiurgeSectorNode` | `OMDemiurgeNode` | default | Sector/ring; `beginAngle/endAngle/factor/rotation/color/scale` |
 | `OMDemiurgeShaderSceneNode` | `OMDemiurgeNode` | `(std::string shader)` | Full-screen shader scene; layout and `scale` only |
@@ -231,7 +231,7 @@ Elements are per-channel instance structs, not business-facing APIs. Every eleme
 | --- | --- | --- |
 | `OMDemiurgeElementRect` | `color`, `depth`, `scale` | `OMDemiurgeRectChannel` |
 | `OMDemiurgeElementRoundedRect` | `color/radius/rotation/factor/scale/clipPosition/clipRadius` | `OMDemiurgeRoundedRectChannel` |
-| `OMDemiurgeElementSvg` | `color/factor/glyphId/scale` | `OMDemiurgeSvgChannel` |
+| `OMDemiurgeElementSvg` | `color/rotation/factor/glyphId/scale` | `OMDemiurgeSvgChannel` |
 | `OMDemiurgeElementImage` | `color/radius/rotation/factor/fillMode/scale` | `OMDemiurgeImageChannel` |
 | `OMDemiurgeElementSector` | `color/rotation/beginAngle/endAngle/factor/scale` | `OMDemiurgeSectorChannel` |
 | `OMDemiurgeElementTextSdf` | `color/factor/glyphIndex/scale` | `OMDemiurgeTextSdfChannel` |
@@ -466,6 +466,41 @@ Supports mouse drag selection, Shift+arrows, Ctrl/Cmd+A, Backspace/Delete, IME c
 
 Also supports ←/→/↑/↓, Home/End, Enter for a new line, multi-line selection, vertical scrolling, per-line render virtualization, and selection/caret clipping to itself.
 
+### 7.15 DropDownPane
+
+`OMDemiurgeDropDownPane(geom::OMFontSet *fontset = nullptr)`
+
+A collapsible panel: rounded-rect body, a title row with a chevron that rotates with the state, click the title row to toggle, animated height between collapsed and expanded, and content clipped by the control itself.
+
+| API | Description |
+| --- | --- |
+| `setTitle(std::string)` | Title (also available as the `label` style) |
+| `setContentNode(shared_ptr<OMDemiurgeNode>)` / `getContentNode()` | Set / get the content node (replaces the old content) |
+| `setExpanded(bool, bool animate = true)` / `isExpanded()` | Expanded state |
+| `toggle(bool animate = true)` | Toggle expanded/collapsed |
+| `setOnToggle(std::function<void(bool)>)` | State change callback |
+| `setHeaderHeight(float)` / `setAnimationSpeed(float)` | Header height / animation duration |
+| `setDisabled(bool, bool animate)` / `isDisabled()` | Disable (no click, dimmed) |
+
+Main styles:
+
+| Key | Description |
+| --- | --- |
+| `label` / `textheight` | Title text / font height |
+| `color` / `radius` | Rounded-rect body background / corner radius |
+| `text_color` / `arrow_color` | Title / chevron colors |
+| `animation_speed` | Expand/collapse duration |
+| `header_height` | Header height (also `setHeaderHeight`) |
+| `header_padding` | Header padding (`OMDemiurgeEdgeInsets`) |
+| `arrow_path` / `svgSize` | Chevron SVG path (downward chevron by default) |
+
+Behavior:
+
+- Height = `headerHeight + contentHeight * openAmount`; content is absolutely positioned below the header;
+- Content is clipped to the control via `clipNode`, revealing progressively while the height animates;
+- The chevron uses the SVG `rotation` style with `openAmount * π`;
+- Only clicks on the header row toggle the pane; content controls keep their own interaction.
+
 ## 8. Examples
 
 ### 8.1 Basic node and styles
@@ -520,7 +555,7 @@ control->setDisabled(true);
 When adding or changing a control, node or element:
 
 1. Update the corresponding sections (API tables, style tables, element table) in both this document and [README.md](README.md);
-2. Add new controls to the control list in 7.2–7.14 and document:
+2. Add new controls to the control list in 7.2–7.15 and document:
    - Constructor and base class;
    - Public APIs;
    - Style keys read (distinguishing public keys from tuning/internal keys);

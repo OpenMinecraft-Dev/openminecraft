@@ -11,6 +11,7 @@ uniform samplerBuffer SvgData;
 #ifdef VERTEX_SHADER
 #include "basics/vertexgen.glsl"
 #include "basics/geometry.glsl"
+#include "basics/rotation.glsl"
 
 #vertex
 
@@ -27,9 +28,12 @@ void main()
     vec2 halfSize = scaledSize * 0.5;
     vec2 screenPos = rectCenter - halfSize - vec2(10) + inPosition.xy * (scaledSize + vec2(20));
 
-    // Glyph coordinates are normalized to 0..1 inside the node rect (compile() divides
-    // by svgSize), so map the expanded quad back into rect-local space here.
-    svgGlyphPos = (screenPos - (rectCenter - halfSize)) / max(scaledSize, vec2(0.0001));
+    // Sample glyph space with the unrotated local position, but rotate the output
+    // quad around the icon center; this makes the glyph itself rotate.
+    vec2 localPos = screenPos - rectCenter;
+    svgGlyphPos = (localPos + halfSize) / max(scaledSize, vec2(0.0001));
+    vec2 rotatedPos = rotation_quat(inSvgRotation, vec3(localPos, 0.0)).xy;
+    screenPos = rectCenter + rotatedPos;
     svgIndex = inSvgGlyphId;
     svgColor = inSvgColor;
     svgFactor = inSvgFactor;
