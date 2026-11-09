@@ -13,7 +13,7 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_slider.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_spinner.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_switch.hpp"
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"

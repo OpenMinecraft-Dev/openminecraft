@@ -1,7 +1,7 @@
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_container.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
 
-namespace openminecraft::renderer::common::demiurge::node
+namespace openminecraft::renderer::common::demiurge::node::container
 {
 OMDemiurgeContainerNode::OMDemiurgeContainerNode() = default;
 OMDemiurgeContainerNode::~OMDemiurgeContainerNode() = default;
@@ -21,4 +21,4 @@ auto OMDemiurgeContainerNode::remove() -> void
         c->remove();
     }
 }
-} // namespace openminecraft::renderer::common::demiurge::node
+} // namespace openminecraft::renderer::common::demiurge::node::container
