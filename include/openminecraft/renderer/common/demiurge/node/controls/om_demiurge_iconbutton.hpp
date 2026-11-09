@@ -2,6 +2,7 @@
 #define OM_DEMIURGE_ICONBUTTON_HPP
 
 #include "glm/ext/vector_float4.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
 #include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
@@ -12,7 +13,7 @@
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
 // Square button with an SVG icon (no label).
-class OMDemiurgeIconButton : public OMDemiurgeContainerNode
+class OMDemiurgeIconButton : public OMDemiurgeContainerNode, public OMDemiurgeControl
 {
   public:
     explicit OMDemiurgeIconButton(float size = 28.0f);
@@ -31,7 +32,7 @@ class OMDemiurgeIconButton : public OMDemiurgeContainerNode
     void setBackgroundColor(glm::vec4 color);
     void setOnClick(std::function<void()> handler);
     void setAnimationSpeed(float seconds);
-    void setDisabled(bool value, bool animate = true);
+    void setDisabled(bool value, bool animate = true) override;
     auto isDisabled() const -> bool
     {
         return disabled;

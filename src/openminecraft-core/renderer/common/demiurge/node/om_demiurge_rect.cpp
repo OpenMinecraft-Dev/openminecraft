@@ -23,7 +23,12 @@ auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, float depth)
     update:
         auto layoutBound = stylesStorage.get<OMDemiurgeRect>("layoutBound");
         auto t = handler->roundedRect.temporary(rectId);
-        t->color = genLinear(stylesStorage.get<int>("color", 0));
+        // Controls whose color is driven by animation publish it as an internal
+        // style (prefixed `_internal.`) so the public `color` style is not
+        // silently overwritten every frame.
+        const int rectColor = stylesStorage.has("_internal.color") ? stylesStorage.get<int>("_internal.color", 0)
+                                                                   : stylesStorage.get<int>("color", 0);
+        t->color = genLinear(rectColor);
         t->position = {layoutBound.x, layoutBound.y, layoutBound.width, layoutBound.height};
         t->depth = depth;
         t->factor = stylesStorage.get<float>("factor", 2.0f);

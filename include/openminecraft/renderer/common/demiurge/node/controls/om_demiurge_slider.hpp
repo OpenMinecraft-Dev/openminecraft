@@ -2,6 +2,7 @@
 #define OM_DEMIURGE_SLIDER_HPP
 
 #include "glm/ext/vector_float4.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
 #include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
@@ -11,7 +12,7 @@
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
 // Horizontal slider with draggable thumb. Value is normalized to 0..1.
-class OMDemiurgeSlider : public OMDemiurgeContainerNode
+class OMDemiurgeSlider : public OMDemiurgeContainerNode, public OMDemiurgeControl
 {
   public:
     OMDemiurgeSlider();
@@ -34,7 +35,7 @@ class OMDemiurgeSlider : public OMDemiurgeContainerNode
     void setOnChange(std::function<void(float)> handler);
     void setColors(glm::vec4 track, glm::vec4 fill, glm::vec4 thumb);
     void setAnimationSpeed(float seconds);
-    void setDisabled(bool value, bool animate = true);
+    void setDisabled(bool value, bool animate = true) override;
     auto isDisabled() const -> bool
     {
         return disabled;

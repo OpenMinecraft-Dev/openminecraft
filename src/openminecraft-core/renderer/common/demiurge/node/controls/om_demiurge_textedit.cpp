@@ -125,7 +125,27 @@ OMDemiurgeTextEdit::~OMDemiurgeTextEdit() = default;
 
 auto OMDemiurgeTextEdit::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
 {
+    applyInternalClips();
     OMDemiurgeRectNode::submit(handler, depth);
+}
+
+auto OMDemiurgeTextEdit::applyInternalClips() -> void
+{
+    // An enclosing pane assigns its clip to the whole subtree; keep the editor's
+    // own lines/selection/caret clipped to the editor (pane ∧ editor).
+    auto self = std::static_pointer_cast<OMDemiurgeTextEdit>(shared_from_this());
+
+    for (auto &node : lineNodes)
+    {
+        node->setClipNode(self);
+    }
+
+    for (auto &node : selectionNodes)
+    {
+        node->setClipNode(self);
+    }
+
+    caretNode->setClipNode(self);
 }
 
 auto OMDemiurgeTextEdit::lineStartOf(size_t pos) const -> size_t
@@ -370,26 +390,8 @@ void OMDemiurgeTextEdit::update()
     background = glm::vec4(glm::mix(glm::vec3(background), glm::vec3(0.30f), disabledValue * 0.75f),
                            background.a * (1.0f - disabledValue * 0.35f));
 
-    this->style("color", (int)f4ToRgba(background))
+    this->style("_internal.color", (int)f4ToRgba(background))
         ->style("radius", stylesStorage.get<glm::vec4>("radius", glm::vec4(6.0f)));
-
-    if (!clipInitialized)
-    {
-        auto self = std::static_pointer_cast<OMDemiurgeTextEdit>(shared_from_this());
-
-        for (auto &node : lineNodes)
-        {
-            node->setClipNode(self);
-        }
-
-        for (auto &node : selectionNodes)
-        {
-            node->setClipNode(self);
-        }
-
-        caretNode->setClipNode(self);
-        clipInitialized = true;
-    }
 
     float contentWidth = stylesStorage.get<float>("width", 260.0f) - 16.0f;
     float contentHeight = stylesStorage.get<float>("height", 120.0f) - 8.0f;

@@ -248,7 +248,7 @@ void OMDemiurgeTextInput::update()
     background = glm::vec4(glm::mix(glm::vec3(background), glm::vec3(0.30f), disabledValue * 0.75f),
                            background.a * (1.0f - disabledValue * 0.35f));
 
-    this->style("color", (int)f4ToRgba(background))
+    this->style("_internal.color", (int)f4ToRgba(background))
         ->style("radius", stylesStorage.get<glm::vec4>("radius", glm::vec4(6.0f)));
 
     // The event bus dispatches on its own thread; copy the editing state under the
@@ -290,14 +290,6 @@ void OMDemiurgeTextInput::update()
 
     const auto color = empty ? placeholderColor.get() : textColor.get();
     const glm::vec4 finalColor(glm::mix(glm::vec3(color), glm::vec3(0.55f), disabledValue * 0.75f), color.a);
-
-    if (!clipInitialized)
-    {
-        auto self = std::static_pointer_cast<OMDemiurgeTextInput>(shared_from_this());
-        selectionNode->setClipNode(self);
-        caretNode->setClipNode(self);
-        clipInitialized = true;
-    }
 
     float clipWidth = stylesStorage.get<float>("width", 220.0f) - 16.0f;
 

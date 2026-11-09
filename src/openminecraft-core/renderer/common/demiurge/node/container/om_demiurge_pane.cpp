@@ -3,19 +3,34 @@
 
 namespace openminecraft::renderer::common::demiurge::node::container
 {
+void OMDemiurgePaneContainer::applyClipsRecursive(const std::shared_ptr<OMDemiurgeNode> &node,
+                                                 const std::shared_ptr<OMDemiurgePaneContainer> &self)
+{
+    for (auto &child : node->fetchChildren())
+    {
+        if (!child)
+        {
+            continue;
+        }
+
+        child->setClipNode(self);
+
+        // A nested pane owns its own descendants; do not override them here.
+        if (child->isClipBoundary())
+        {
+            continue;
+        }
+
+        applyClipsRecursive(child, self);
+    }
+}
+
 void OMDemiurgePaneContainer::applyChildClips()
 {
-    // Only direct children are managed here. Nested panes keep managing their own
-    // descendants, and the clips intersect through clipNode resolution.
+    // Constrain the whole subtree (not only direct children). Nested panes are
+    // left alone below their own boundary; clips still intersect via clipNode.
     auto self = std::static_pointer_cast<OMDemiurgePaneContainer>(shared_from_this());
-
-    for (auto &child : children)
-    {
-        if (child)
-        {
-            child->setClipNode(self);
-        }
-    }
+    applyClipsRecursive(self, self);
 }
 
 auto OMDemiurgePaneContainer::submit(OMDemiurgeRendererHandler *handler, float depth) -> void

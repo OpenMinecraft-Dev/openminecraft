@@ -2,6 +2,7 @@
 #define OM_DEMIURGE_SWITCH_HPP
 
 #include "glm/ext/vector_float4.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
 #include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
@@ -11,7 +12,7 @@
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
 // iOS/macOS style switch: rounded track with a sliding thumb.
-class OMDemiurgeSwitch : public OMDemiurgeContainerNode
+class OMDemiurgeSwitch : public OMDemiurgeContainerNode, public OMDemiurgeControl
 {
   public:
     OMDemiurgeSwitch();
@@ -35,7 +36,7 @@ class OMDemiurgeSwitch : public OMDemiurgeContainerNode
     void setTrackColors(glm::vec4 offColor, glm::vec4 onColor);
     void setThumbColor(glm::vec4 color);
     void setAnimationSpeed(float seconds);
-    void setDisabled(bool value, bool animate = true);
+    void setDisabled(bool value, bool animate = true) override;
     auto isDisabled() const -> bool
     {
         return disabled;

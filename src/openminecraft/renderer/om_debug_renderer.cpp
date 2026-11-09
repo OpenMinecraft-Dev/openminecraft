@@ -61,7 +61,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
         e.custom.flag = EventMainScreenOpen;
         bus.handle(event::Custom, e);
     });
-    button->setBackgroundColor({0.17, 0.17, 0.20});
+    button->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
 
     node = std::make_shared<node::OMDemiurgeContainerNode>()
                ->style({

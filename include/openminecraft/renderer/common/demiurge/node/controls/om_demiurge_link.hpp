@@ -2,6 +2,7 @@
 #define OM_DEMIURGE_LINK_HPP
 
 #include "glm/ext/vector_float4.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
 #include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
 #include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
@@ -13,7 +14,7 @@
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
 // Clickable text with an underline that appears on hover.
-class OMDemiurgeLink : public OMDemiurgeContainerNode
+class OMDemiurgeLink : public OMDemiurgeContainerNode, public OMDemiurgeControl
 {
   public:
     explicit OMDemiurgeLink(geom::OMFontSet *fontset = nullptr);
@@ -31,7 +32,7 @@ class OMDemiurgeLink : public OMDemiurgeContainerNode
     void setTextColor(glm::vec4 color);
     void setUnderlineColor(glm::vec4 color);
     void setOnClick(std::function<void()> handler);
-    void setDisabled(bool value, bool animate = true);
+    void setDisabled(bool value, bool animate = true) override;
     auto isDisabled() const -> bool
     {
         return disabled;

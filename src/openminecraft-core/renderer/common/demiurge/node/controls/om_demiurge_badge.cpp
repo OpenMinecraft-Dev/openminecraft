@@ -36,7 +36,7 @@ auto OMDemiurgeBadge::submit(OMDemiurgeRendererHandler *handler, float depth) ->
 
 void OMDemiurgeBadge::update()
 {
-    this->style("color", (int)f4ToRgba(backgroundColor.get()))
+    this->style("_internal.color", (int)f4ToRgba(backgroundColor.get()))
         ->style("radius", stylesStorage.get<glm::vec4>("radius", glm::vec4(9.0f)));
 
     if (textNode)

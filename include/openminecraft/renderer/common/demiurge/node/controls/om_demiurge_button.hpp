@@ -2,6 +2,7 @@
 #define OM_DEMIURGE_BUTTON_HPP
 
 #include "glm/ext/vector_float3.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
 #include "glm/fwd.hpp"
 #include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
@@ -12,7 +13,7 @@
 
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
-class OMDemiurgeButton : public OMDemiurgeContainerNode
+class OMDemiurgeButton : public OMDemiurgeContainerNode, public OMDemiurgeControl
 {
   public:
     OMDemiurgeButton(geom::OMFontSet *fontset);
@@ -25,10 +26,11 @@ class OMDemiurgeButton : public OMDemiurgeContainerNode
     auto processMouseExit(float x, float y) -> OMDemiurgeEventResult override;
 
     void setTextColor(glm::vec4 d);
-    void setBackgroundColor(glm::vec3 d);
+    void setBackgroundColor(glm::vec4 d);
+    void setOpacity(float value);
     void setBackgroundRadius(glm::vec4 r);
     void setOnClick(std::function<void()> h);
-    void setDisabled(bool value, bool animate = true);
+    void setDisabled(bool value, bool animate = true) override;
     auto isDisabled() const -> bool
     {
         return disabled;
@@ -36,7 +38,7 @@ class OMDemiurgeButton : public OMDemiurgeContainerNode
     void update() override;
 
     animation::OMAnimationValue<float> opacity;
-    animation::OMAnimationValue<glm::vec3> backgroundColor;
+    animation::OMAnimationValue<glm::vec4> backgroundColor;
     animation::OMAnimationValue<glm::vec4> textColor;
     animation::OMAnimationValue<float> disabledAmount;
 

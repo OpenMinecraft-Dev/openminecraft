@@ -2,6 +2,7 @@
 #define OM_DEMIURGE_TEXTEDIT_HPP
 
 #include "glm/ext/vector_float4.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
 #include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
@@ -17,7 +18,7 @@
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
 // Multi-line text editor: caret navigation, line scrolling, IME composition.
-class OMDemiurgeTextEdit : public OMDemiurgeRectNode
+class OMDemiurgeTextEdit : public OMDemiurgeRectNode, public OMDemiurgeControl
 {
   public:
     explicit OMDemiurgeTextEdit(geom::OMFontSet *fontset = nullptr);
@@ -42,7 +43,7 @@ class OMDemiurgeTextEdit : public OMDemiurgeRectNode
     void setOnChange(std::function<void(const std::string &)> handler);
     void setTextHeight(int height);
     void setColors(glm::vec4 background, glm::vec4 text, glm::vec4 caret);
-    void setDisabled(bool value, bool animate = true);
+    void setDisabled(bool value, bool animate = true) override;
     auto isDisabled() const -> bool
     {
         return disabled;
@@ -64,6 +65,7 @@ class OMDemiurgeTextEdit : public OMDemiurgeRectNode
     auto caretFromPointer(float x, float y) -> size_t;
     auto columnXForPos(size_t pos) -> float;
     auto moveVertical(int direction) -> void;
+    auto applyInternalClips() -> void;
     auto insertText(const std::string &value) -> bool;
     auto notifyChange() -> void;
     auto selectionBegin() const -> size_t

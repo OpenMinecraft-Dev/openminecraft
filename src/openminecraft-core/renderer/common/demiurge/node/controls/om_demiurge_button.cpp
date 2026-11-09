@@ -17,7 +17,7 @@ using namespace openminecraft::renderer::common::animation;
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
 OMDemiurgeButton::OMDemiurgeButton(geom::OMFontSet *fontset)
-    : opacity(0.6f), backgroundColor({0.1f, 0.1f, 0.1f}), textColor({1.0f, 1.0f, 1.0f, 1.0f}),
+    : opacity(0.6f), backgroundColor({0.1f, 0.1f, 0.1f, 1.0f}), textColor({1.0f, 1.0f, 1.0f, 1.0f}),
       disabledAmount(0.0f)
 {
     setFocusable(true);
@@ -40,13 +40,15 @@ void OMDemiurgeButton::update()
 {
     const float disabledValue = std::clamp(disabledAmount.get(), 0.0f, 1.0f);
 
-    glm::vec3 background = glm::mix(backgroundColor.get(), glm::vec3(0.30f), disabledValue * 0.75f);
-    float alpha = std::clamp(opacity.get() * (1.0f - disabledValue * 0.5f), 0.0f, 1.0f);
+    const glm::vec4 background = backgroundColor.get();
+    const glm::vec3 backgroundRgb = glm::mix(glm::vec3(background), glm::vec3(0.30f), disabledValue * 0.75f);
+    const float alpha =
+        std::clamp(background.a * opacity.get() * (1.0f - disabledValue * 0.5f), 0.0f, 1.0f);
 
     glm::vec4 text = textColor.get();
     glm::vec3 textRgb = glm::mix(glm::vec3(text), glm::vec3(0.55f), disabledValue * 0.75f);
 
-    bkgNode->style("color", (int)(f3ToRgba(background) | static_cast<uint8_t>(alpha * 255.0f)));
+    bkgNode->style("color", (int)(f3ToRgba(backgroundRgb) | static_cast<uint8_t>(alpha * 255.0f)));
     bkgNode->style("radius", stylesStorage.get<glm::vec4>("radius", glm::vec4(5.0f)));
     textNode->style("color", (int)f4ToRgba(glm::vec4(textRgb, text.a)));
     textNode->style("text", stylesStorage.get<std::string>("label", "Button"));
@@ -117,9 +119,15 @@ void OMDemiurgeButton::setTextColor(glm::vec4 d)
 {
     textColor.animateTo(d, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.2f));
 }
-void OMDemiurgeButton::setBackgroundColor(glm::vec3 d)
+void OMDemiurgeButton::setBackgroundColor(glm::vec4 d)
 {
     backgroundColor.animateTo(d, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.2f));
+}
+
+void OMDemiurgeButton::setOpacity(float value)
+{
+    opacity.animateTo(std::clamp(value, 0.0f, 1.0f), easeOutCirc<float>,
+                      stylesStorage.get<float>("animation_speed", 0.2f));
 }
 void OMDemiurgeButton::setBackgroundRadius(glm::vec4 r)
 {

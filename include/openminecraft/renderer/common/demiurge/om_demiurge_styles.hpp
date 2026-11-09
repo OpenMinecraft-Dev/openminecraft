@@ -47,6 +47,11 @@ class OMDemiurgeStyles
         styles[s] = t;
         modified = true;
     }
+    inline auto has(const std::string &s) const -> bool
+    {
+        return styles.count(s) != 0;
+    }
+
     template <typename T> inline auto get(std::string s) -> T
     {
         return std::any_cast<T>(styles[s]);

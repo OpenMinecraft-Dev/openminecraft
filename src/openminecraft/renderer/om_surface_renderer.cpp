@@ -63,7 +63,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
             this->renderer->fetchTask("demiurgeui_bgblur")->setDisabled(true);
         }
     });
-    button->setBackgroundColor({0.17, 0.17, 0.20});
+    button->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
     auto button2 = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     quitButton = button2;
     button2->setOnClick([&]() {
@@ -72,7 +72,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
         e.custom.flag = EventQuit;
         bus.handle(event::Custom, e);
     });
-    button2->setBackgroundColor({0.17, 0.17, 0.20});
+    button2->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
 
     progressBar = std::make_shared<node::controls::OMDemiurgeProgressBar>();
     progressBar->style({

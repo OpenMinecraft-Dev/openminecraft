@@ -2,6 +2,7 @@
 #define OM_DEMIURGE_TEXTINPUT_HPP
 
 #include "glm/ext/vector_float4.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
 #include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
@@ -17,7 +18,7 @@
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
 // Single-line text input with caret, placeholder and horizontal scrolling.
-class OMDemiurgeTextInput : public OMDemiurgeRectNode
+class OMDemiurgeTextInput : public OMDemiurgeRectNode, public OMDemiurgeControl
 {
   public:
     explicit OMDemiurgeTextInput(geom::OMFontSet *fontset = nullptr);
@@ -47,7 +48,7 @@ class OMDemiurgeTextInput : public OMDemiurgeRectNode
     void setOnSubmit(std::function<void(const std::string &)> handler);
     void setTextHeight(int height);
     void setColors(glm::vec4 background, glm::vec4 text, glm::vec4 caret);
-    void setDisabled(bool value, bool animate = true);
+    void setDisabled(bool value, bool animate = true) override;
     auto isDisabled() const -> bool
     {
         return disabled;
@@ -94,7 +95,6 @@ class OMDemiurgeTextInput : public OMDemiurgeRectNode
     std::shared_ptr<OMDemiurgeNode> selectionNode;
     size_t selectionAnchor = 0;
     bool selecting = false;
-    bool clipInitialized = false;
 
     geom::OMFontSet *fontset = nullptr;
     std::string text;

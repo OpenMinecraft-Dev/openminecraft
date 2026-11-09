@@ -20,8 +20,15 @@ class OMDemiurgePaneContainer : public OMDemiurgeContainerNode
     auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
     auto update() -> void override;
 
+    auto isClipBoundary() const -> bool override
+    {
+        return true;
+    }
+
   private:
     auto applyChildClips() -> void;
+    auto applyClipsRecursive(const std::shared_ptr<OMDemiurgeNode> &node,
+                             const std::shared_ptr<OMDemiurgePaneContainer> &self) -> void;
 };
 } // namespace openminecraft::renderer::common::demiurge::node::container
 

@@ -82,6 +82,19 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     virtual auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void = 0;
     virtual auto remove() -> void = 0;
     virtual auto syncLayout() -> void;
+
+    // True when this node manages clipping for its own subtree; ancestor panes
+    // stop their clip propagation here.
+    virtual auto isClipBoundary() const -> bool
+    {
+        return false;
+    }
+
+    auto fetchChildren() const -> const std::vector<std::shared_ptr<OMDemiurgeNode>> &
+    {
+        return children;
+    }
+
     auto syncLayoutAll() -> void;
     auto syncBoundary(float x, float y) -> void;
 
