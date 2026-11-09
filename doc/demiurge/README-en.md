@@ -388,6 +388,7 @@ RadioGroup:
 | API | Description |
 | --- | --- |
 | `setProgress(float)` | 0..1 is determinate; outside that range or NaN is indeterminate |
+| `setIndeterminate(bool)` / `isIndeterminate()` | Explicitly switch/query the indeterminate state |
 | `getProgress()` / `isDeterminate()` | Query |
 | `setTrackColor(vec4)` / `setBarColor(vec4)` | Colors |
 | `setAnimationSpeed(float)` | Animation duration |

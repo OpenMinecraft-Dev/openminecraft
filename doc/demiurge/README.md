@@ -388,6 +388,7 @@ RadioGroup：
 | API | 说明 |
 | --- | --- |
 | `setProgress(float)` | 0..1 为确定态；越界或 NaN 为不定态 |
+| `setIndeterminate(bool)` / `isIndeterminate()` | 显式切换不定态 / 查询 |
 | `getProgress()` / `isDeterminate()` | 查询 |
 | `setTrackColor(vec4)` / `setBarColor(vec4)` | 颜色 |
 | `setAnimationSpeed(float)` | 动画时长 |

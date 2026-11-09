@@ -130,21 +130,6 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     demoDivider = std::make_shared<node::controls::OMDemiurgeDivider>(true);
     demoDivider->style("height", OMDemiurgeSize::pixels(20.0f));
 
-    auto controlRow = std::make_shared<node::OMDemiurgeContainerNode>();
-    controlRow->style({
-        {"flexDirection", OMDemiurgeDirection::Row},
-        {"alignItems", OMDemiurgeAlign::Center},
-        {"flexGap", OMDemiurgeSize::pixels(12.0f)},
-        {"alignSelf", OMDemiurgeAlign::Center},
-    });
-    controlRow->mount(demoSwitch);
-    controlRow->mount(demoDivider);
-    controlRow->mount(demoSlider);
-    controlRow->mount(demoSpinner);
-    controlRow->mount(demoIconButton);
-    controlRow->mount(demoBadge);
-    controlRow->mount(demoLink);
-
     demoInput = std::make_shared<node::controls::OMDemiurgeTextInput>(fontset.get());
     demoInput->setPlaceholder("Type here...");
     demoInput->style("width", OMDemiurgeSize::pixels(220.0f));
@@ -153,24 +138,89 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     demoTextEdit->setPlaceholder("Multi-line text...");
     demoTextEdit->style({{"width", OMDemiurgeSize::pixels(260.0f)}, {"height", OMDemiurgeSize::pixels(36.0f)}});
 
-    auto dropContent = std::make_shared<node::OMDemiurgeContainerNode>();
-    dropContent->style({{"flexDirection", OMDemiurgeDirection::Column},
-                        {"alignItems", OMDemiurgeAlign::Center},
-                        {"flexGap", OMDemiurgeSize::pixels(6.0f)},
-                        {"width", OMDemiurgeSize::fill()},
-                        {"padding", OMDemiurgeEdgeInsets{6, 6, 6, 6}}});
-    dropContent->mount(progressBar);
-    dropContent->mount(checkBox);
-    dropContent->mount(radioGroup);
-    dropContent->mount(controlRow);
-    dropContent->mount(demoInput);
-    dropContent->mount(demoTextEdit);
+    progressBar->setProgress(0.62f);
 
-    demoDropDown = std::make_shared<node::controls::OMDemiurgeDropDownPane>(fontset.get());
-    demoDropDown->setTitle("More controls");
-    demoDropDown->style("width", OMDemiurgeSize::fill());
-    demoDropDown->setHeaderHeight(30.0f);
-    demoDropDown->setContentNode(dropContent);
+    auto progressBarIndeterminate = std::make_shared<node::controls::OMDemiurgeProgressBar>();
+    progressBarIndeterminate->style({
+        {"width", OMDemiurgeSize::fill()},
+        {"height", OMDemiurgeSize::pixels(3.0f)},
+        {"radius", glm::vec4(3.0f)},
+    });
+    progressBarIndeterminate->setTrackColor(glm::vec4(0.106f, 0.106f, 0.141f, 0.35f));
+    progressBarIndeterminate->setBarColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f));
+    progressBarIndeterminate->setIndeterminate(true);
+
+    auto progressContent = std::make_shared<node::OMDemiurgeContainerNode>();
+    progressContent->style({{"flexDirection", OMDemiurgeDirection::Column},
+                            {"flexGap", OMDemiurgeSize::pixels(4.0f)},
+                            {"width", OMDemiurgeSize::fill()}});
+    progressContent->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                     ->style({{"color", (int)0xffffff8c},
+                                              {"text", "Determinate"},
+                                              {"textheight", 11},
+                                              {"alignSelf", OMDemiurgeAlign::FlexStart}}));
+    progressBar->style("width", OMDemiurgeSize::fill());
+    progressContent->mountDirect(progressBar);
+    progressContent->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                     ->style({{"color", (int)0xffffff8c},
+                                              {"text", "Indeterminate"},
+                                              {"textheight", 11},
+                                              {"alignSelf", OMDemiurgeAlign::FlexStart},
+                                              {"border", OMDemiurgeEdgeInsets{8, 0, 0, 0}}}));
+    progressContent->mountDirect(progressBarIndeterminate);
+
+    auto makeDropdown = [&](const std::string &title,
+                            const std::shared_ptr<OMDemiurgeNode> &content) -> std::shared_ptr<node::controls::OMDemiurgeDropDownPane> {
+        auto contentWrap = std::make_shared<node::OMDemiurgeContainerNode>();
+        contentWrap->style({{"flexDirection", OMDemiurgeDirection::Column},
+                            {"alignItems", OMDemiurgeAlign::Center},
+                            {"flexGap", OMDemiurgeSize::pixels(6.0f)},
+                            {"width", OMDemiurgeSize::fill()},
+                            {"padding", OMDemiurgeEdgeInsets{6, 6, 6, 6}}});
+        contentWrap->mountDirect(content);
+
+        auto pane = std::make_shared<node::controls::OMDemiurgeDropDownPane>(fontset.get());
+        pane->setTitle(title);
+        pane->style("width", OMDemiurgeSize::fill());
+        pane->setHeaderHeight(30.0f);
+        pane->setContentNode(contentWrap);
+        return pane;
+    };
+
+    auto galleryColumn1 = std::make_shared<node::OMDemiurgeContainerNode>();
+    galleryColumn1->style({{"flexDirection", OMDemiurgeDirection::Column},
+                           {"flexGap", OMDemiurgeSize::pixels(8.0f)},
+                           {"flexGrow", 1.0f},
+                           {"flexBasis", OMDemiurgeSize::pixels(0.0f)}});
+    demoDropDown = makeDropdown("ProgressBar", progressContent);
+    galleryColumn1->mountDirect(demoDropDown);
+    galleryColumn1->mountDirect(makeDropdown("CheckBox", checkBox));
+    galleryColumn1->mountDirect(makeDropdown("RadioGroup", radioGroup));
+    galleryColumn1->mountDirect(makeDropdown("Switch", demoSwitch));
+    galleryColumn1->mountDirect(makeDropdown("Divider", demoDivider));
+    galleryColumn1->mountDirect(makeDropdown("Slider", demoSlider));
+
+    auto galleryColumn2 = std::make_shared<node::OMDemiurgeContainerNode>();
+    galleryColumn2->style({{"flexDirection", OMDemiurgeDirection::Column},
+                           {"flexGap", OMDemiurgeSize::pixels(8.0f)},
+                           {"flexGrow", 1.0f},
+                           {"flexBasis", OMDemiurgeSize::pixels(0.0f)}});
+    galleryColumn2->mountDirect(makeDropdown("Spinner", demoSpinner));
+    galleryColumn2->mountDirect(makeDropdown("IconButton", demoIconButton));
+    galleryColumn2->mountDirect(makeDropdown("Badge", demoBadge));
+    galleryColumn2->mountDirect(makeDropdown("Link", demoLink));
+    demoInput->style("width", OMDemiurgeSize::fill());
+    galleryColumn2->mountDirect(makeDropdown("TextInput", demoInput));
+    demoTextEdit->style("width", OMDemiurgeSize::fill());
+    galleryColumn2->mountDirect(makeDropdown("TextEdit", demoTextEdit));
+
+    auto galleryGrid = std::make_shared<node::OMDemiurgeContainerNode>();
+    galleryGrid->style({{"flexDirection", OMDemiurgeDirection::Row},
+                        {"alignItems", OMDemiurgeAlign::FlexStart},
+                        {"flexGap", OMDemiurgeSize::pixels(12.0f)},
+                        {"width", OMDemiurgeSize::fill()}});
+    galleryGrid->mountDirect(galleryColumn1);
+    galleryGrid->mountDirect(galleryColumn2);
 
     auto pageMain = std::make_shared<node::OMDemiurgeContainerNode>();
     pageMain->style(
@@ -190,7 +240,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
 
     auto pageGallery = std::make_shared<node::OMDemiurgeContainerNode>();
     pageGallery->style({{"flexDirection", Column},
-                        {"alignItems", OMDemiurgeAlign::Center},
+                        {"alignItems", OMDemiurgeAlign::Stretch},
                         {"flexGap", OMDemiurgeSize::pixels(12.0f)},
                         {"width", OMDemiurgeSize::fill()}});
     pageGallery->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
@@ -198,7 +248,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                                           {"text", "Control Gallery"},
                                           {"textheight", 18},
                                           {"alignSelf", OMDemiurgeAlign::FlexStart}}));
-    pageGallery->mountDirect(demoDropDown);
+    pageGallery->mountDirect(galleryGrid);
 
     demoTabs = std::make_shared<node::controls::OMDemiurgeTabMultiPage>(fontset.get());
     demoTabs->style("width", OMDemiurgeSize::fill());

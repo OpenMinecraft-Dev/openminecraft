@@ -28,6 +28,14 @@ class OMDemiurgeProgressBar : public OMDemiurgeContainerNode, public OMDemiurgeC
 
     // 0..1 => determinate; anything outside (or NaN) => indeterminate.
     void setProgress(float progress);
+    void setIndeterminate(bool value)
+    {
+        setProgress(value ? std::numeric_limits<float>::quiet_NaN() : 0.0f);
+    }
+    auto isIndeterminate() const -> bool
+    {
+        return !determinate;
+    }
     void setDisabled(bool value, bool animate = true) override;
     auto isDisabled() const -> bool
     {
