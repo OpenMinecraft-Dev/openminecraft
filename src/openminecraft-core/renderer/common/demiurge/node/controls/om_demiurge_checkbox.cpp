@@ -15,7 +15,9 @@ namespace openminecraft::renderer::common::demiurge::node::controls
 {
 // Filled check mark in a 14x14 view box (strokes are not supported by the SVG
 // rasterizer, so the tick is a closed polygon).
-static constexpr const char *CheckPath = "M 1.2 7.0 L 5.6 11.4 L 13.0 4.0 L 11.6 2.6 L 5.6 8.6 L 2.6 5.6 Z";
+static constexpr const char *CheckPath =
+    "M6.956 2.905a.7.7 0 0 1 .989.99l-3.2 3.2a.7.7 0 0 1-.99 0l-1.7-1.7a.7.7 0 0 1 "
+    ".99-.99l.265.264c.419.419.628.628.886.649a1 1 0 0 0 .11 0c.257-.02.466-.23.885-.649z";
 
 OMDemiurgeCheckBox::OMDemiurgeCheckBox(geom::OMFontSet *fontset)
     : checkAmount(0.0f), boxUnchecked(glm::vec4(0.1f, 0.1f, 0.12f, 0.65f)),
@@ -38,12 +40,10 @@ OMDemiurgeCheckBox::OMDemiurgeCheckBox(geom::OMFontSet *fontset)
 
     checkNode = std::make_shared<OMDemiurgeSvgNode>()->style({
         {"position", OMDemiurgePosition::Absolute},
-        {"offsetX", OMDemiurgeSize::pixels(1.0f)},
-        {"offsetY", OMDemiurgeSize::pixels(1.0f)},
         {"width", OMDemiurgeSize::pixels(14.0f)},
         {"height", OMDemiurgeSize::pixels(14.0f)},
         {"svgPath", std::string(CheckPath)},
-        {"svgSize", glm::vec2(14.0f, 14.0f)},
+        {"svgSize", glm::vec2(8.0f, 8.0f)},
         {"factor", 0.08f},
     });
 
@@ -91,8 +91,7 @@ void OMDemiurgeCheckBox::update()
         ->style("radius", stylesStorage.get<glm::vec4>("radius", glm::vec4(4.0f)));
 
     const glm::vec3 tickRgb = glm::mix(glm::vec3(tick), glm::vec3(0.55f), disabledValue * 0.75f);
-    checkNode->style("color",
-                     (int)f4ToRgba(glm::vec4(tickRgb, tick.a * amount * (1.0f - disabledValue * 0.85f))))
+    checkNode->style("color", (int)f4ToRgba(glm::vec4(tickRgb, tick.a * amount * (1.0f - disabledValue * 0.85f))))
         ->style("svgPath", stylesStorage.get<std::string>("svgPath", std::string(CheckPath)))
         ->style("svgSize", glm::vec2(14.0f, 14.0f));
 
@@ -102,8 +101,7 @@ void OMDemiurgeCheckBox::update()
 
         // Text glyphs are laid out from the top of their node (font ascent included), so
         // center the visible ink against the box instead of centering the layout box.
-        const float textOffset =
-            stylesStorage.get<float>("text_offset", -0.21f * static_cast<float>(textHeight));
+        const float textOffset = stylesStorage.get<float>("text_offset", -0.21f * static_cast<float>(textHeight));
 
         textNode->style("text", stylesStorage.get<std::string>("label", "Checkbox"));
         textNode->style("textheight", textHeight);
