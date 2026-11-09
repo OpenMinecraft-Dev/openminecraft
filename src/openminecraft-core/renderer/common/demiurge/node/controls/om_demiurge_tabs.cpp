@@ -28,6 +28,7 @@ OMDemiurgeTabMultiPage::OMDemiurgeTabMultiPage(geom::OMFontSet *fontset)
     stylesStorage.put("indicator_height", 2.0f);
     stylesStorage.put("bar_line_color", (int)0xffffff1a);
     stylesStorage.put("animation_speed", 0.18f);
+    stylesStorage.put("page_animation_speed", 0.25f);
 
     tabBar = std::make_shared<OMDemiurgeContainerNode>();
     tabBar->style({{"position", OMDemiurgePosition::Absolute},
@@ -108,7 +109,7 @@ auto OMDemiurgeTabMultiPage::addPage(const std::string &title, const std::shared
     page->setVisible(false);
     pageHost->mountDirect(page);
 
-    tabs.push_back({root, label, page, title});
+    tabs.push_back({root, label, page, title, animation::easeOutCubic<float>});
 
     if (activeIndex < 0)
     {
@@ -157,13 +158,16 @@ void OMDemiurgeTabMultiPage::setActivePage(int index)
         return;
     }
 
-    // Drop the previous page's elements so it stops rendering immediately.
-    if (activeIndex >= 0)
+    // A new switch during an existing transition snaps the previous one to its end.
+    finishPageTransition();
+
+    const int oldIndex = activeIndex;
+    auto oldPage = activeIndex >= 0 ? tabs[activeIndex].page : nullptr;
+
+    if (oldPage)
     {
-        auto &old = tabs[activeIndex];
-        OMDemiurgeNode::releaseFocusWithin(old.page);
-        old.page->setVisible(false);
-        old.page->remove();
+        OMDemiurgeNode::releaseFocusWithin(oldPage);
+        oldPage->setVisible(false);
     }
 
     activeIndex = index;
@@ -173,7 +177,55 @@ void OMDemiurgeTabMultiPage::setActivePage(int index)
                                 stylesStorage.get<float>("animation_speed", 0.22f));
     lastHeight = -1.0f;
 
+    const float speed = stylesStorage.get<float>("page_animation_speed", pageAnimationSpeed);
+
+    if (oldPage && speed > 0.001f)
+    {
+        // Keep the old page mounted and slide it out; the new page slides in from
+        // the direction implied by the tab order (horizontal for top/bottom,
+        // vertical for left/right).
+        outgoingPage = oldPage;
+        outgoingIndex = oldIndex;
+        pageTransitioning = true;
+        pageTransitionDir = index > oldIndex ? 1.0f : -1.0f;
+        pageProgress.setTo(0.0f);
+        pageProgress.animateTo(1.0f, animation::linear<float>, speed);
+    }
+    else if (oldPage)
+    {
+        oldPage->remove();
+    }
+
     handlePageChange(activeIndex);
+}
+
+auto OMDemiurgeTabMultiPage::setPageOffset(const std::shared_ptr<OMDemiurgeNode> &page, float x, float y) -> void
+{
+    if (!page)
+    {
+        return;
+    }
+
+    page->style("offsetX", OMDemiurgeSize::pixels(x))->style("offsetY", OMDemiurgeSize::pixels(y));
+}
+
+auto OMDemiurgeTabMultiPage::finishPageTransition() -> void
+{
+    if (outgoingPage)
+    {
+        setPageOffset(outgoingPage, 0.0f, 0.0f);
+        outgoingPage->remove();
+        outgoingPage->setVisible(false);
+        outgoingPage.reset();
+    }
+
+    outgoingIndex = -1;
+    pageTransitioning = false;
+
+    if (activeIndex >= 0 && activeIndex < static_cast<int>(tabs.size()))
+    {
+        setPageOffset(tabs[activeIndex].page, 0.0f, 0.0f);
+    }
 }
 
 auto OMDemiurgeTabMultiPage::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
@@ -183,6 +235,12 @@ auto OMDemiurgeTabMultiPage::submit(OMDemiurgeRendererHandler *handler, float de
     tabBar->submit(handler, depth - layerHalfWidth * 2);
     barLine->submit(handler, depth - layerHalfWidth * 2);
     indicator->submit(handler, depth - layerHalfWidth * 2);
+
+    if (pageTransitioning && outgoingPage)
+    {
+        outgoingPage->setClipNode(pageClip);
+        outgoingPage->submit(handler, depth - layerHalfWidth * 2);
+    }
 
     if (activeIndex >= 0 && activeIndex < static_cast<int>(tabs.size()))
     {
@@ -465,6 +523,42 @@ void OMDemiurgeTabMultiPage::update()
         ->style("height", OMDemiurgeSize::pixels(indH))
         ->style("color", (int)(count > 0 ? dim(indicatorColor) : 0));
 
+    if (activeIndex >= 0 && activeIndex < count)
+    {
+        auto &activePage = tabs[activeIndex].page;
+
+        if (pageTransitioning)
+        {
+            const float progress = std::clamp(pageProgress.get(), 0.0f, 1.0f);
+
+            if (progress >= 0.999f)
+            {
+                finishPageTransition();
+            }
+            else
+            {
+                const auto &easing = tabs[activeIndex].easing;
+                const float eased = easing ? easing(progress) : progress;
+                const float extent = horizontal ? pageW : pageH;
+
+                if (horizontal)
+                {
+                    setPageOffset(activePage, pageTransitionDir * extent * (1.0f - eased), 0.0f);
+                    setPageOffset(outgoingPage, -pageTransitionDir * extent * eased, 0.0f);
+                }
+                else
+                {
+                    setPageOffset(activePage, 0.0f, pageTransitionDir * extent * (1.0f - eased));
+                    setPageOffset(outgoingPage, 0.0f, -pageTransitionDir * extent * eased);
+                }
+            }
+        }
+        else
+        {
+            setPageOffset(activePage, 0.0f, 0.0f);
+        }
+    }
+
     tabBar->update();
     barLine->update();
     indicator->update();
@@ -530,8 +624,25 @@ void OMDemiurgeTabMultiPage::setTabPosition(OMDemiurgeTabPosition position)
         return;
     }
 
+    finishPageTransition();
     tabPosition = position;
     lastHeight = -1.0f;
+}
+
+void OMDemiurgeTabMultiPage::setPageEasing(int index, animation::OMEasingFunc easing)
+{
+    if (index < 0 || index >= static_cast<int>(tabs.size()))
+    {
+        return;
+    }
+
+    tabs[index].easing = std::move(easing);
+}
+
+void OMDemiurgeTabMultiPage::setPageAnimationSpeed(float seconds)
+{
+    pageAnimationSpeed = std::max(0.0f, seconds);
+    stylesStorage.put("page_animation_speed", pageAnimationSpeed);
 }
 
 void OMDemiurgeTabMultiPage::setOnPageChange(std::function<void(int)> handler)

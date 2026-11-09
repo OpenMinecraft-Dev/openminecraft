@@ -2,6 +2,7 @@
 #define OM_DEMIURGE_TABS_HPP
 
 #include "openminecraft/geom/om_fontset.hpp"
+#include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
 #include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
@@ -61,6 +62,15 @@ class OMDemiurgeTabMultiPage : public OMDemiurgeContainerNode, public OMDemiurge
     // When enabled the page area fills the remaining control height (the control
     // must have an explicit/filled height); pages get height: fill.
     void setPageFill(bool value);
+    // Per-page easing used when that page slides in (and the old one slides
+    // out). The movement axis follows the tab bar: horizontal for top/bottom,
+    // vertical for left/right; direction follows the tab index relationship.
+    void setPageEasing(int index, animation::OMEasingFunc easing);
+    void setPageAnimationSpeed(float seconds);
+    auto getPageAnimationSpeed() const -> float
+    {
+        return pageAnimationSpeed;
+    }
     auto isPageFill() const -> bool
     {
         return pageFill;
@@ -94,9 +104,12 @@ class OMDemiurgeTabMultiPage : public OMDemiurgeContainerNode, public OMDemiurge
         std::shared_ptr<OMDemiurgeNode> label;
         std::shared_ptr<OMDemiurgeNode> page;
         std::string title;
+        animation::OMEasingFunc easing;
     };
 
     auto setPageVisible(int index, bool visible) -> void;
+    auto finishPageTransition() -> void;
+    auto setPageOffset(const std::shared_ptr<OMDemiurgeNode> &page, float x, float y) -> void;
     auto applyActivePage() -> void;
 
     std::shared_ptr<OMDemiurgeNode> tabBar;
@@ -111,6 +124,12 @@ class OMDemiurgeTabMultiPage : public OMDemiurgeContainerNode, public OMDemiurge
     OMDemiurgeTabPosition tabPosition = OMDemiurgeTabPosition::Top;
     OMDemiurgeTabAlignment tabAlignment = OMDemiurgeTabAlignment::Center;
     bool pageFill = false;
+    std::shared_ptr<OMDemiurgeNode> outgoingPage;
+    int outgoingIndex = -1;
+    bool pageTransitioning = false;
+    float pageTransitionDir = 1.0f;
+    float pageAnimationSpeed = 0.25f;
+    animation::OMAnimationValue<float> pageProgress{1.0f};
     bool disabled = false;
     float lastHeight = -1.0f;
     std::function<void(int)> handlePageChange = [](int) {};

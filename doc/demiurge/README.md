@@ -517,6 +517,8 @@ RadioGroup：
 | `setTabWidth(float)` | 顶部/底部布局时单个 Tab 的宽度 |
 | `setTabAlignment(OMDemiurgeTabAlignment)` / `getTabAlignment()` | Tab 栏对齐：`Start` / `Center` / `End`；顶部/底部为左/中/右，左侧/右侧为上/中/下，默认 `Center` |
 | `setPageFill(bool)` / `isPageFill()` | 页面填充剩余空间：控件需要显式高度/`height: fill`，页面节点自动设为 `height: fill` |
+| `setPageEasing(int, animation::OMEasingFunc)` | 设置指定页面滑入时的缓动函数（旧页面按同一缓动滑出），默认 `easeOutCubic` |
+| `setPageAnimationSpeed(float)` | 页面切换动画时长（秒），默认 0.25，0 表示关闭动画 |
 | `getPageCount()` | 页面数量 |
 | `setOnPageChange(std::function<void(int)>)` | 页面切换回调 |
 | `setDisabled(bool, bool animate)` / `isDisabled()` | 禁用（Tab 变暗、不可点击） |
@@ -529,7 +531,8 @@ RadioGroup：
 | `active_text_color` / `inactive_text_color` | 当前页 / 非当前页文字颜色 |
 | `indicator_color` / `indicator_height` | 下划线指示条颜色 / 高度 |
 | `bar_line_color` | Tab 栏底部整条分隔线颜色 |
-| `animation_speed` | 禁用状态动画时长 |
+| `animation_speed` | Tab 指示条/禁用状态动画时长 |
+| `page_animation_speed` | 页面切换动画时长（秒） |
 
 行为说明：
 
@@ -542,6 +545,11 @@ RadioGroup：
 - Tab 栏可在其方向上对齐（`Start` / `Center` / `End`），底部整宽分隔线会跟随 Tab 栏位置；
 - 指示条位置会被限制在实际 Tab 范围内，不会越过首/末 Tab（使用控件局部坐标计算，保证与 Tab 居中）；
 - 左/右布局的竖向分隔线只覆盖 Tab 栏范围，不再延伸到整个页面高度；
+- 切换页面时旧页面不会立即移除：新旧页面同时提交并沿 Tab 栏轴向滑动，动画结束后旧页面 `remove()`；
+  - 顶部/底部布局为水平滑动，左侧/右侧布局为垂直滑动；
+  - 切到索引更大的 Tab 时，新页面从正向进入、旧页面向反向滑出，切回时方向相反；
+  - 动画进度线性推进，再套用**目标页面**的 `easing`（可用 `setPageEasing` 自定义，默认 `easeOutCubic`）；
+  - 动画过程中再次切换会先立即结束上一次动画，再开始新的切换；
 - 开启 `setPageFill(true)` 后，页面区域 = 控件高度减去 Tab 栏高度（左/右布局为整个控件高度），页面节点高度自动改为 `fill`，超出部分由 `pageClip` 裁剪；
 - 指示条是单独一条，沿 Tab 栏方向从旧页滑动到新页（`indicatorPosition` 动画，时长取 `animation_speed`），并位于靠近内容的一侧；
 - 顶部/底部布局：控件高度 = `tabHeight + 当前页高度`；左侧/右侧布局：控件高度 = 当前页高度，宽度减去 Tab 栏厚度；

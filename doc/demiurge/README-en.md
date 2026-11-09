@@ -517,6 +517,8 @@ A top tab bar plus a multi-page container. Every page must be mounted through `a
 | `setTabWidth(float)` | Width of a single tab for top/bottom layouts |
 | `setTabAlignment(OMDemiurgeTabAlignment)` / `getTabAlignment()` | Bar alignment: `Start` / `Center` / `End`; left/center/right for top/bottom, top/center/bottom for left/right, default `Center` |
 | `setPageFill(bool)` / `isPageFill()` | Page fills the remaining space: the control needs an explicit/`height: fill`; page nodes get `height: fill` automatically |
+| `setPageEasing(int, animation::OMEasingFunc)` | Easing used when that page slides in (the old page slides out with the same easing); defaults to `easeOutCubic` |
+| `setPageAnimationSpeed(float)` | Page transition duration in seconds (default 0.25, 0 disables it) |
 | `getPageCount()` | Page count |
 | `setOnPageChange(std::function<void(int)>)` | Page change callback |
 | `setDisabled(bool, bool animate)` / `isDisabled()` | Disable (tabs dimmed and not clickable) |
@@ -529,7 +531,8 @@ Main styles:
 | `active_text_color` / `inactive_text_color` | Active / inactive label colors |
 | `indicator_color` / `indicator_height` | Underline indicator color / height |
 | `bar_line_color` | Full-width divider under the tab bar |
-| `animation_speed` | Disabled-state animation duration |
+| `animation_speed` | Indicator / disabled-state animation duration |
+| `page_animation_speed` | Page transition duration in seconds |
 
 Behavior:
 
@@ -542,6 +545,11 @@ Behavior:
 - The bar can be aligned along its own axis (`Start` / `Center` / `End`); the full-width divider follows the bar position;
 - The indicator position is clamped to the actual tab range and never goes past the first/last tab (computed in the control's local space so it stays centered on the tab);
 - For left/right layouts the vertical divider only covers the tab bar, not the full page height;
+- On switch the old page is not removed immediately: both pages are submitted and slide along the tab bar axis, and the old page is `remove()`d when the animation ends;
+  - Top/bottom layouts slide horizontally, left/right layouts slide vertically;
+  - When moving to a larger tab index the new page enters from the positive direction and the old page exits to the negative direction; moving back reverses it;
+  - Progress advances linearly and is then shaped by the **incoming page's** `easing` (customize with `setPageEasing`, default `easeOutCubic`);
+  - Switching again mid-animation snaps the previous animation to its end before starting the new one;
 - With `setPageFill(true)`, the page area is the control height minus the bar (or the full control height for left/right); page nodes switch to `height: fill` and overflow is clipped by `pageClip`;
 - A single indicator slides from the old page to the new one along the bar (`indicatorPosition` animation, duration from `animation_speed`) and sits on the content-facing edge;
 - Top/bottom: control height = `tabHeight + active page height`; left/right: control height = active page height, width minus the bar thickness;
