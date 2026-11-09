@@ -2,6 +2,7 @@
 #define OM_TEXT_INPUT_CONTROLLER_HPP
 
 #include <atomic>
+#include <cmath>
 #include <cstdint>
 
 namespace openminecraft::renderer::common
@@ -34,6 +35,17 @@ class OMTextInputController
     }
     void setArea(float x, float y, float width, float height)
     {
+        // Publishing the same rectangle every frame made the window call
+        // SDL_SetTextInputArea continuously, which dismisses the IME candidate
+        // window on some platforms. Only bump the version on a real change.
+        if (std::abs(x - areaX.load(std::memory_order_relaxed)) < 0.01f &&
+            std::abs(y - areaY.load(std::memory_order_relaxed)) < 0.01f &&
+            std::abs(width - areaWidth.load(std::memory_order_relaxed)) < 0.01f &&
+            std::abs(height - areaHeight.load(std::memory_order_relaxed)) < 0.01f)
+        {
+            return;
+        }
+
         areaX.store(x, std::memory_order_relaxed);
         areaY.store(y, std::memory_order_relaxed);
         areaWidth.store(width, std::memory_order_relaxed);

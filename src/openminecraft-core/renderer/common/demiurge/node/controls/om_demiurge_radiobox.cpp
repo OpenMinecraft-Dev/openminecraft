@@ -173,14 +173,12 @@ void OMDemiurgeRadioBox::update()
     boxNode->style("color", (int)f4ToRgba(boxColor))
         ->style("radius", glm::vec4(stylesStorage.get<float>("box_radius", RadioSize * 0.5f)));
 
-    // Dot grows and fades in with the selection amount.
-    const float size = DotSize * amount;
+    // Keep the dot geometry fixed and scale it in the shader: animating the layout
+    // size snapped to whole pixels and made the small circle jitter.
+    const float pressShrink = stylesStorage.get<float>("press_shrink", 0.35f);
+    const float dotScale = amount * (1.0f - press * pressShrink);
 
-    dotNode->style("width", OMDemiurgeSize::pixels(size))
-        ->style("height", OMDemiurgeSize::pixels(size))
-        ->style("offsetX", OMDemiurgeSize::pixels((RadioSize - size) * 0.5f))
-        ->style("offsetY", OMDemiurgeSize::pixels((RadioSize - size) * 0.5f))
-        ->style("radius", glm::vec4(size * 0.5f))
+    dotNode->style("scale", dotScale)
         ->style("color", (int)f4ToRgba(glm::vec4(glm::mix(glm::vec3(dot), glm::vec3(0.55f), disabledValue * 0.75f),
                                                   dot.a * amount * (1.0f - disabledValue * 0.85f))));
 

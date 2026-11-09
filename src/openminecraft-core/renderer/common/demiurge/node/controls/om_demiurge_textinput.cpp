@@ -908,6 +908,8 @@ auto OMDemiurgeTextInput::processFocusLost() -> void
         common::OMTextInputController::instance().setActive(false);
     }
 
+    common::OMTextInputController::instance().setTextFocus(false);
+
     composing.clear();
     composingEnded = false;
     selectionAnchor = caret;

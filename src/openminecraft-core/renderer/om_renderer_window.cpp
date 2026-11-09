@@ -77,7 +77,6 @@ void OMWindow::applyTextInputState()
     {
         SDL_Rect area{static_cast<int>(x), static_cast<int>(y), static_cast<int>(width), static_cast<int>(height)};
         SDL_SetTextInputArea(window, &area, 0);
-
     }
 }
 

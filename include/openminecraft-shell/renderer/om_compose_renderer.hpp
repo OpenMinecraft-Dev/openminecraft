@@ -22,8 +22,9 @@ class OMComposeRenderer : public openminecraft::renderer::common::OMRendererHand
     void afterFrame() override;
 
   private:
-    std::shared_ptr<openminecraft::renderer::common::wrap::OMRendererBlurHandler> blurHandler, overlayBlurHandler;
+    std::shared_ptr<openminecraft::renderer::common::wrap::OMRendererBlurHandler> blurHandler;
     openminecraft::renderer::common::OMRendererPipeline *mainPipeline;
+    openminecraft::renderer::common::OMRendererPipeline *overlayPipeline;
     openminecraft::renderer::OMRenderer *renderer;
 
     openminecraft::renderer::common::wrap::OMRendererTempTarget *overlay, *scene, *surface;

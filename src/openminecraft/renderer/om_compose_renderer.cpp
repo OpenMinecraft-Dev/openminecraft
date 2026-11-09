@@ -34,18 +34,29 @@ OMComposeRenderer::OMComposeRenderer(openminecraft::renderer::OMRenderer *render
                        ->depth(false, false)
                        ->buildN();
 
+    // Debug HUD is composited with a plain blit (no blur).
+    overlayPipeline =
+        renderer->createPipeline()
+            ->input(ImageSampler)
+            ->inputName("inTexture")
+            ->output(renderer->getDefaultRenderTarget())
+            ->shader(renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format))
+            ->shader(renderer->shaderManager.preprocess("core/bilt.vert.glsl", Vertex, GLSLSource, format))
+            ->format(format)
+            ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
+            ->blend(true)
+            ->depth(false, false)
+            ->buildN();
+
     blurHandler = std::make_shared<wrap::OMRendererBlurHandler>(renderer, 1);
     renderer->registerHandler(blurHandler);
     blurHandler->update({8.0f, wrap::Triangular});
-
-    overlayBlurHandler = std::make_shared<wrap::OMRendererBlurHandler>(renderer, 1);
-    renderer->registerHandler(overlayBlurHandler);
-    overlayBlurHandler->update({8.0f, wrap::Triangular});
 }
 
 OMComposeRenderer::~OMComposeRenderer()
 {
     delete mainPipeline;
+    delete overlayPipeline;
     delete uplayerTarget;
 }
 
@@ -54,8 +65,8 @@ void OMComposeRenderer::submitTasks()
     uplayerTarget->construct(renderer->getExtent());
 
     mainPipeline->bindInput(0, scene->colorTexture());
+    overlayPipeline->bindInput(0, overlay->colorTexture());
     blurHandler->bind(surface->colorTexture(), scene->colorTexture());
-    overlayBlurHandler->bind(overlay->colorTexture(), scene->colorTexture());
 
     auto voxel = renderer->fetchTask("voxel");
     auto uiSurface = renderer->fetchTask("demiurgeui_compose_surface");
@@ -68,16 +79,8 @@ void OMComposeRenderer::submitTasks()
         bgBlur->dependOn(uiSurface);
     }
 
-    auto overlayBlur = overlayBlurHandler->firstLayerTask(voxel, "demiurgeui_overlayblur");
-    overlayBlur->dependOn(voxel);
-    if (uiDebug)
-    {
-        overlayBlur->dependOn(uiDebug);
-    }
-
     auto main = renderer->createTask("main");
     main->dependOn(bgBlur);
-    main->dependOn(overlayBlur);
     if (uiSurface)
     {
         main->dependOn(uiSurface);
@@ -88,8 +91,10 @@ void OMComposeRenderer::submitTasks()
     }
     main->target(renderer->getDefaultRenderTarget())->pipeline(mainPipeline)->drawN(6);
 
-    overlayBlurHandler->secondLayerTask(main);
-    blurHandler->secondLayerTask(main)->finishN();
+    main->pipeline(overlayPipeline)->drawN(6);
+    blurHandler->secondLayerTask(main);
+
+    main->finishN();
 }
 void OMComposeRenderer::beforeFrame()
 {

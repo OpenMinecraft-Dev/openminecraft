@@ -10,8 +10,9 @@ layout(location = 1) out vec2 rrectPosition;
 layout(location = 2) out vec4 rrectRadius;
 layout(location = 3) out vec4 rrectRectPosition;
 layout(location = 4) out float rrectFactor;
-layout(location = 5) out vec4 rrectClipPos;
-layout(location = 6) out float rrectClipRadius;
+layout(location = 5) out float rrectScale;
+layout(location = 6) out vec4 rrectClipPos;
+layout(location = 7) out float rrectClipRadius;
 
 uniform ScreenData
 {
@@ -34,6 +35,7 @@ void main()
     rrectRadius = inRectRadius;
     rrectRectPosition = inRectPos;
     rrectFactor = inRectFactor;
+    rrectScale = inRectScale;
     rrectClipPos = inClipPos;
     rrectClipRadius = inClipRadius;
 }
@@ -47,8 +49,9 @@ layout(location = 1) in vec2 rrectPosition;
 layout(location = 2) in vec4 rrectRadius;
 layout(location = 3) in vec4 rrectRectPosition;
 layout(location = 4) in float rrectFactor;
-layout(location = 5) in vec4 rrectClipPos;
-layout(location = 6) in float rrectClipRadius;
+layout(location = 5) in float rrectScale;
+layout(location = 6) in vec4 rrectClipPos;
+layout(location = 7) in float rrectClipRadius;
 
 layout(location = 0) out vec4 outColor;
 
@@ -56,7 +59,8 @@ void main()
 {
     vec2 rectCenter = geom_rectCenterPos(rrectRectPosition);
     vec2 halfSize = rrectRectPosition.zw / 2.0;
-    vec2 localPos = rrectPosition - rectCenter;
+    // Shrink/grow the shape around its center without touching layout geometry.
+    vec2 localPos = (rrectPosition - rectCenter) / max(rrectScale, 0.001);
 
     float alpha = sdf_rrect(localPos, halfSize, rrectRadius, 0.0, rrectFactor);
 

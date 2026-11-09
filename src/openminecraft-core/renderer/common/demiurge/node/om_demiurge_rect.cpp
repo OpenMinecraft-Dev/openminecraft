@@ -27,6 +27,7 @@ auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, float depth)
         t->position = {layoutBound.x, layoutBound.y, layoutBound.width, layoutBound.height};
         t->depth = depth;
         t->factor = stylesStorage.get<float>("factor", 2.0f);
+        t->scale = stylesStorage.get<float>("scale", 1.0f);
         t->radius = stylesStorage.get<glm::vec4>("radius", {0, 0, 0, 0});
         t->clipPosition = stylesStorage.get<glm::vec4>("clip", glm::vec4(0.0f));
         t->clipRadius = stylesStorage.get<float>("clipRadius", 0.0f);
