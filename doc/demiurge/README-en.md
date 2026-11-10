@@ -672,7 +672,7 @@ Main styles:
 
 Behavior:
 
-- The wheel scrolls smoothly by `wheel_step`; dragging past the bounds applies `rubber_band` damping and springs back with `easeOutCubic` over `bounce_speed`;
+- The wheel scrolls smoothly by `wheel_step`; at the top/bottom it snaps exactly to the edge, so repeated wheel events cannot produce a sub-pixel shake; dragging past the bounds applies `rubber_band` damping and springs back with `easeOutCubic` over `bounce_speed`;
 - Dragging the scroll bars updates the content, and content dragging/wheel updates the bars;
 - Releasing a fast drag inside the valid range continues with inertia, using `inertia_factor` for the projection and `inertia_speed` for deceleration; releasing while out of range springs back;
 - Scroll bars reserve their own space: when the vertical bar is visible the content viewport loses one thickness in width, and likewise for the horizontal bar in height, so content never overlaps the bars (Both mode iterates to converge);

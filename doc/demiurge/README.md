@@ -672,7 +672,7 @@ visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eas
 
 行为说明：
 
-- 滚轮按 `wheel_step` 平滑滚动；拖动越界时按 `rubber_band` 阻尼显示，松手后用 `easeOutCubic` 在 `bounce_speed` 内回弹；
+- 滚轮按 `wheel_step` 平滑滚动；到达顶部/底部后直接吸附到边缘，不会因重复滚轮事件产生微抖；拖动越界时按 `rubber_band` 阻尼显示，松手后用 `easeOutCubic` 在 `bounce_speed` 内回弹；
 - 滚动条拖动会同步内容，内容拖动/滚轮会同步滚动条；
 - 在合法范围内快速拖动后松手会带惯性继续滚动，按 `inertia_factor` 预测目标、`inertia_speed` 减速；越界松手则执行回弹；
 - 滚动条会预留独立空间：纵向条出现时内容视口宽度减去条厚，横向条出现时高度减去条厚，内容不会与滚动条重叠（Both 模式会迭代计算两条滚动条）；

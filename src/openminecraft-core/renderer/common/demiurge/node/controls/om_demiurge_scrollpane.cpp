@@ -292,8 +292,26 @@ void OMDemiurgeScrollPane::update()
     maxScrollX = std::max(0.0f, contentWidth - viewWidth);
     maxScrollY = std::max(0.0f, contentHeight - viewHeight);
 
-    const float visualX = rubberBand(scrollX.get(), maxScrollX);
-    const float visualY = rubberBand(scrollY.get(), maxScrollY);
+    float visualX = rubberBand(scrollX.get(), maxScrollX);
+    float visualY = rubberBand(scrollY.get(), maxScrollY);
+
+    if (std::abs(visualX) < 0.05f)
+    {
+        visualX = 0.0f;
+    }
+    else if (std::abs(visualX - maxScrollX) < 0.05f)
+    {
+        visualX = maxScrollX;
+    }
+
+    if (std::abs(visualY) < 0.05f)
+    {
+        visualY = 0.0f;
+    }
+    else if (std::abs(visualY - maxScrollY) < 0.05f)
+    {
+        visualY = maxScrollY;
+    }
 
     viewportClip->style("width", OMDemiurgeSize::pixels(viewWidth))
         ->style("height", OMDemiurgeSize::pixels(viewHeight));
@@ -501,15 +519,41 @@ auto OMDemiurgeScrollPane::processMouseScroll(float x, float y, float wx, float 
 
     if (vertical && maxScrollY > 0.0f && wy != 0.0f)
     {
-        const float target = std::clamp(scrollY.get() - wy * step, 0.0f, maxScrollY);
-        scrollY.animateTo(target, easeOutCubic<float>, speed);
+        const float current = scrollY.get();
+        const float target = std::clamp(current - wy * step, 0.0f, maxScrollY);
+
+        const bool atEdge = target <= 0.01f || target >= maxScrollY - 0.01f;
+
+        if (std::abs(target - current) < 0.5f || (atEdge && std::abs(target - current) < 2.0f))
+        {
+            // Already at/near the edge: snap instead of restarting an animation,
+            // so repeated wheel events cannot produce a sub-pixel shake.
+            scrollY.setTo(target);
+        }
+        else
+        {
+            scrollY.animateTo(target, easeOutCubic<float>, speed);
+        }
+
         consumed = true;
     }
 
     if (horizontal && maxScrollX > 0.0f && wx != 0.0f)
     {
-        const float target = std::clamp(scrollX.get() - wx * step, 0.0f, maxScrollX);
-        scrollX.animateTo(target, easeOutCubic<float>, speed);
+        const float current = scrollX.get();
+        const float target = std::clamp(current - wx * step, 0.0f, maxScrollX);
+
+        const bool atEdge = target <= 0.01f || target >= maxScrollX - 0.01f;
+
+        if (std::abs(target - current) < 0.5f || (atEdge && std::abs(target - current) < 2.0f))
+        {
+            scrollX.setTo(target);
+        }
+        else
+        {
+            scrollX.animateTo(target, easeOutCubic<float>, speed);
+        }
+
         consumed = true;
     }
 
