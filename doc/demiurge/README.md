@@ -132,7 +132,7 @@ OMDemiurgeRendererHandler
 
 | API | 说明 |
 | --- | --- |
-| `typeName()` | 运行时类名（demangle 并去掉命名空间），每个节点类型自动返回自己的类名 |
+| `typeName()` | 运行时类名（跨平台 Boost.Core demangle，去掉命名空间），每个节点类型自动返回自己的类名 |
 | `styleDump()` | 当前 styles 的字符串形式：`{key=value, ...}`，按 key 排序 |
 | `dumpTree()` | 从该节点开始递归输出整棵 UI 树，内部使用 `OMLogger`（logger 名 `demiurge.ui`），每个节点一行 |
 
@@ -630,6 +630,50 @@ visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eas
 - 越界接近一个 view 高度时压缩加快，`overscroll` 达到 `viewSize * overscroll_range` 时 thumb 长度等于厚度，配合自动收敛的圆角变成一个**圆点**；
 - `getThumbLength()` 返回压缩后的显示长度，`setOnScroll` 仍收到原始（可能越界的）offset。
 
+### 7.18 ScrollPane
+
+`OMDemiurgeScrollPane()`
+
+可滚动视口：内容挂在 `contentHost` 上并裁剪到视口，右侧/底部叠加 ScrollBar，并与内容滚动位置双向绑定。
+
+| API | 说明 |
+| --- | --- |
+| `setOrientation(Horizontal / Vertical / Both)` | 滚动方向，默认 `Vertical` |
+| `setContentNode(shared_ptr)` / `getContentNode()` | 设置 / 获取内容 |
+| `setContentStretch(bool)` / `isContentStretch()` | 单轴模式下是否把内容交叉轴拉伸到视口尺寸 |
+| `setScrollOffset(x, y, bool notify = false)` / `getScrollX()` / `getScrollY()` | 原始滚动位置（允许临时越界） |
+| `setOnScroll(std::function<void(float, float)>)` | 拖动 / 滚轮 / 滚动条改变时回调 |
+| `setDisabled(bool, bool animate)` / `isDisabled()` | 禁用 |
+| `fetchVerticalScrollBar()` / `fetchHorizontalScrollBar()` | 访问内部滚动条 |
+
+布局规则：
+
+- `Vertical`：内容高度自由（滚动轴），宽度在 `contentStretch=true` 时为 `fill`，否则为 `fit`；
+- `Horizontal`：内容宽度自由，高度在 `contentStretch=true` 时为 `fill`，否则为 `fit`；
+- `Both`：宽高都自由，`contentStretch` 不生效。
+
+主要 style：
+
+| 键 | 说明 |
+| --- | --- |
+| `wheel_step` | 滚轮步长（默认 40） |
+| `drag_threshold` | 开始拖拽的位移阈值（默认 4） |
+| `rubber_band` | 越界拖拽阻尼系数（默认 0.45） |
+| `bounce_speed` | 松手回弹时长（默认 0.3） |
+| `wheel_speed` | 滚轮平滑时长（默认 0.18） |
+| `scrollbar_thickness` | 内部滚动条厚度（默认 4） |
+
+行为说明：
+
+- 滚轮按 `wheel_step` 平滑滚动；拖动越界时按 `rubber_band` 阻尼显示，松手后用 `easeOutCubic` 在 `bounce_speed` 内回弹；
+- 滚动条拖动会同步内容，内容拖动/滚轮会同步滚动条；
+- 滚动条会预留独立空间：纵向条出现时内容视口宽度减去条厚，横向条出现时高度减去条厚，内容不会与滚动条重叠（Both 模式会迭代计算两条滚动条）；
+- 内容尺寸变化时滚动条自动显示/隐藏；
+- 按钮、输入框、DropDown 等会捕获鼠标的控件仍可正常点击；按住并拖动超过 `drag_threshold` 后 ScrollPane 会接管捕获并开始滚动；
+- 滚轮使用鼠标在窗口中的实际位置命中 ScrollPane，即使指针位于内部控件上也能滚动。
+
+Gallery 页签现在由 ScrollPane 承载所有控件 DropDown（纵向滚动）。
+
 ## 8. 示例
 
 ### 8.1 基础节点与样式
@@ -684,7 +728,7 @@ control->setDisabled(true);
 新增 / 修改控件、节点或元素时：
 
 1. 在本文档与 [README-en.md](README-en.md) 中同步更新对应章节（API 表、style 表、元素表）；
-2. 新控件需要加入 7.2–7.17 的控件列表，并说明：
+2. 新控件需要加入 7.2–7.18 的控件列表，并说明：
    - 构造函数与基类；
    - 公开 API；
    - 读取的 style 键（区分公共键与调参/内部键）；

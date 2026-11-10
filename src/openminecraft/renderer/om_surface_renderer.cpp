@@ -10,6 +10,7 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_dropdown.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_tabs.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_scrollbar.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_scrollpane.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textinput.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_link.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_progressbar.hpp"
@@ -188,33 +189,6 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
         return pane;
     };
 
-    auto galleryColumn1 = std::make_shared<node::OMDemiurgeContainerNode>();
-    galleryColumn1->style({{"flexDirection", OMDemiurgeDirection::Column},
-                           {"flexGap", OMDemiurgeSize::pixels(8.0f)},
-                           {"flexGrow", 1.0f},
-                           {"flexBasis", OMDemiurgeSize::pixels(0.0f)}});
-    demoDropDown = makeDropdown("ProgressBar", progressContent);
-    galleryColumn1->mountDirect(demoDropDown);
-    galleryColumn1->mountDirect(makeDropdown("CheckBox", checkBox));
-    galleryColumn1->mountDirect(makeDropdown("RadioGroup", radioGroup));
-    galleryColumn1->mountDirect(makeDropdown("Switch", demoSwitch));
-    galleryColumn1->mountDirect(makeDropdown("Divider", demoDivider));
-    galleryColumn1->mountDirect(makeDropdown("Slider", demoSlider));
-
-    auto galleryColumn2 = std::make_shared<node::OMDemiurgeContainerNode>();
-    galleryColumn2->style({{"flexDirection", OMDemiurgeDirection::Column},
-                           {"flexGap", OMDemiurgeSize::pixels(8.0f)},
-                           {"flexGrow", 1.0f},
-                           {"flexBasis", OMDemiurgeSize::pixels(0.0f)}});
-    galleryColumn2->mountDirect(makeDropdown("Spinner", demoSpinner));
-    galleryColumn2->mountDirect(makeDropdown("IconButton", demoIconButton));
-    galleryColumn2->mountDirect(makeDropdown("Badge", demoBadge));
-    galleryColumn2->mountDirect(makeDropdown("Link", demoLink));
-    demoInput->style("width", OMDemiurgeSize::fill());
-    galleryColumn2->mountDirect(makeDropdown("TextInput", demoInput));
-    demoTextEdit->style("width", OMDemiurgeSize::fill());
-    galleryColumn2->mountDirect(makeDropdown("TextEdit", demoTextEdit));
-
     auto scrollBarVertical = std::make_shared<node::controls::OMDemiurgeScrollBar>();
     demoScrollBar = scrollBarVertical;
     scrollBarVertical->style("width", OMDemiurgeSize::pixels(4.0f));
@@ -257,15 +231,39 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                           {"width", OMDemiurgeSize::fill()}});
     scrollContent->mountDirect(scrollRowVertical);
     scrollContent->mountDirect(scrollRowHorizontal);
-    galleryColumn2->mountDirect(makeDropdown("ScrollBar", scrollContent));
 
-    auto galleryGrid = std::make_shared<node::OMDemiurgeContainerNode>();
-    galleryGrid->style({{"flexDirection", OMDemiurgeDirection::Row},
-                        {"alignItems", OMDemiurgeAlign::FlexStart},
-                        {"flexGap", OMDemiurgeSize::pixels(12.0f)},
+    auto galleryList = std::make_shared<node::OMDemiurgeContainerNode>();
+    galleryList->style({{"flexDirection", OMDemiurgeDirection::Column},
+                        {"flexGap", OMDemiurgeSize::pixels(8.0f)},
                         {"width", OMDemiurgeSize::fill()}});
-    galleryGrid->mountDirect(galleryColumn1);
-    galleryGrid->mountDirect(galleryColumn2);
+    galleryList->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                 ->style({{"color", (int)0xffffff8c},
+                                          {"text", "Drag here to scroll"},
+                                          {"textheight", 11},
+                                          {"alignSelf", OMDemiurgeAlign::FlexStart}}));
+    galleryList->mountDirect(makeDropdown("ProgressBar", progressContent));
+    galleryList->mountDirect(makeDropdown("CheckBox", checkBox));
+    galleryList->mountDirect(makeDropdown("RadioGroup", radioGroup));
+    galleryList->mountDirect(makeDropdown("Switch", demoSwitch));
+    galleryList->mountDirect(makeDropdown("Divider", demoDivider));
+    galleryList->mountDirect(makeDropdown("Slider", demoSlider));
+    galleryList->mountDirect(makeDropdown("Spinner", demoSpinner));
+    galleryList->mountDirect(makeDropdown("IconButton", demoIconButton));
+    galleryList->mountDirect(makeDropdown("Badge", demoBadge));
+    galleryList->mountDirect(makeDropdown("Link", demoLink));
+    demoInput->style("width", OMDemiurgeSize::fill());
+    galleryList->mountDirect(makeDropdown("TextInput", demoInput));
+    demoTextEdit->style("width", OMDemiurgeSize::fill());
+    galleryList->mountDirect(makeDropdown("TextEdit", demoTextEdit));
+    galleryList->mountDirect(makeDropdown("ScrollBar", scrollContent));
+
+    demoScrollPane = std::make_shared<node::controls::OMDemiurgeScrollPane>();
+    demoScrollPane->style("width", OMDemiurgeSize::fill());
+    demoScrollPane->style("height", OMDemiurgeSize::fit());
+    demoScrollPane->style("flexGrow", 1.0f);
+    demoScrollPane->setOrientation(node::controls::OMDemiurgeScrollPaneOrientation::Vertical);
+    demoScrollPane->setContentStretch(true);
+    demoScrollPane->setContentNode(galleryList);
 
     auto pageMain = std::make_shared<node::OMDemiurgeContainerNode>();
     pageMain->style(
@@ -293,7 +291,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                                           {"text", "Control Gallery"},
                                           {"textheight", 18},
                                           {"alignSelf", OMDemiurgeAlign::FlexStart}}));
-    pageGallery->mountDirect(galleryGrid);
+    pageGallery->mountDirect(demoScrollPane);
 
     auto pageMisc = std::make_shared<node::OMDemiurgeContainerNode>();
     pageMisc->style({{"flexDirection", Column},

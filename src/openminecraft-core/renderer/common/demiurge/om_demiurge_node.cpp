@@ -6,9 +6,8 @@
 #include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float4.hpp"
 #include "fmt/format.h"
+#include "boost/core/demangle.hpp"
 #include <algorithm>
-#include <cxxabi.h>
-#include <cstdlib>
 #include <typeinfo>
 #include <vector>
 #include "yoga/YGNode.h"
@@ -507,6 +506,11 @@ void OMDemiurgeNode::releaseMouse()
     }
 }
 
+auto OMDemiurgeNode::hasMouseCapture() -> bool
+{
+    return capturedNode.lock().get() == this;
+}
+
 auto OMDemiurgeNode::containsPoint(float x, float y) -> bool
 {
     if (!visible)
@@ -571,6 +575,15 @@ void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
                     break;
                 }
                 case OMDemiurgeEventType::MouseMove: {
+                    // Give ancestors (e.g. ScrollPane) a chance to steal the drag.
+                    for (auto ancestor = captured->parent; ancestor != nullptr; ancestor = ancestor->parent)
+                    {
+                        if (ancestor->processNestedDrag(event) == Handled)
+                        {
+                            return;
+                        }
+                    }
+
                     captured->dispatchCapturedEvent(event);
                     return;
                 }
@@ -639,9 +652,9 @@ void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
     {
         auto bo = stylesStorage.get<OMDemiurgeRect>("layoutBound");
 
-        const bool inside = (event.x >= bo.x && event.x <= bo.x + bo.width && event.y >= bo.y &&
-                             event.y <= bo.y + bo.height) ||
-                            (std::isinf(event.x) && std::isinf(event.y));
+        const bool inside =
+            (event.x >= bo.x && event.x <= bo.x + bo.width && event.y >= bo.y && event.y <= bo.y + bo.height) ||
+            (std::isinf(event.x) && std::isinf(event.y));
         const bool wasInside = mx >= bo.x && mx <= bo.x + bo.width && my >= bo.y && my <= bo.y + bo.height;
 
         if (inside)
@@ -662,8 +675,7 @@ void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
 
             const auto result = processEvent(event);
 
-            if (result == OMDemiurgeEventResult::Handled &&
-                event.type == OMDemiurgeEventType::MouseDown && focusable)
+            if (result == OMDemiurgeEventResult::Handled && event.type == OMDemiurgeEventType::MouseDown && focusable)
             {
                 requestFocus();
             }
@@ -715,25 +727,15 @@ namespace openminecraft::renderer::common::demiurge
 {
 static auto demangleName(const char *name) -> std::string
 {
-    int status = 0;
-    char *output = abi::__cxa_demangle(name, nullptr, nullptr, &status);
+    std::string full = boost::core::demangle(name);
+    const auto pos = full.rfind("::");
 
-    if (status == 0 && output != nullptr)
+    if (pos != std::string::npos)
     {
-        std::string full = output;
-        std::free(output);
-        const auto pos = full.rfind("::");
-
-        if (pos != std::string::npos)
-        {
-            return full.substr(pos + 2);
-        }
-
-        return full;
+        return full.substr(pos + 2);
     }
 
-    std::free(output);
-    return name;
+    return full;
 }
 
 static auto sizeToString(const OMDemiurgeSize &size) -> std::string
@@ -902,8 +904,7 @@ static auto stylesToString(const OMDemiurgeStyles &styles) -> std::string
         entries.emplace_back(entry.first, styleValueToString(entry.second));
     }
 
-    std::sort(entries.begin(), entries.end(),
-              [](const auto &a, const auto &b) { return a.first < b.first; });
+    std::sort(entries.begin(), entries.end(), [](const auto &a, const auto &b) { return a.first < b.first; });
 
     std::string out = "{";
 

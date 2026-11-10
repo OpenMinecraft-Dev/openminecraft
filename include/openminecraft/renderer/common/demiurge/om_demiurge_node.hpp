@@ -149,6 +149,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     // when the pointer leaves its bounds. The capture is released on MouseUp.
     void captureMouse();
     void releaseMouse();
+    auto hasMouseCapture() -> bool;
     auto containsPoint(float x, float y) -> bool;
 
     // Clipping: point this node at another node whose layout bounds define the
@@ -193,6 +194,14 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     static auto fetchMouseCapture() -> std::shared_ptr<OMDemiurgeNode>
     {
         return capturedNode.lock();
+    }
+
+    // While a descendant holds the mouse capture, ancestors get a chance to
+    // take over drags (used by ScrollPane to scroll even when the press started
+    // on an interactive control).
+    virtual auto processNestedDrag(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
+    {
+        return Ignored;
     }
 
     // Dispatch one event to this node only.

@@ -132,7 +132,7 @@ Clip rects are screen-space rectangles (no rounded corners, no rotation), implem
 
 | API | Description |
 | --- | --- |
-| `typeName()` | Runtime class name (demangled, namespace stripped); every node type returns its own class name |
+| `typeName()` | Runtime class name (cross-platform Boost.Core demangle, namespace stripped); every node type returns its own class name |
 | `styleDump()` | Current styles as a string: `{key=value, ...}`, sorted by key |
 | `dumpTree()` | Recursively logs the whole UI tree from this node through `OMLogger` (logger name `demiurge.ui`), one line per node |
 
@@ -630,6 +630,50 @@ visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eas
 - Near one full view height of overscroll the compression accelerates; at `viewSize * overscroll_range` the thumb length equals its thickness, and with the clamped corner radius it becomes a **circle**;
 - `getThumbLength()` returns the compressed display length, while `setOnScroll` still receives the raw (possibly out-of-range) offset.
 
+### 7.18 ScrollPane
+
+`OMDemiurgeScrollPane()`
+
+A scrollable viewport: content lives on a `contentHost` clipped to the viewport, with ScrollBars overlaid on the right/bottom and two-way bound to the content offset.
+
+| API | Description |
+| --- | --- |
+| `setOrientation(Horizontal / Vertical / Both)` | Scroll axes, `Vertical` by default |
+| `setContentNode(shared_ptr)` / `getContentNode()` | Set / get the content |
+| `setContentStretch(bool)` / `isContentStretch()` | Whether to stretch the content's cross axis to the viewport in single-axis modes |
+| `setScrollOffset(x, y, bool notify = false)` / `getScrollX()` / `getScrollY()` | Raw scroll offset (may temporarily overshoot) |
+| `setOnScroll(std::function<void(float, float)>)` | Called when dragging / wheel / scroll bars change the offset |
+| `setDisabled(bool, bool animate)` / `isDisabled()` | Disable |
+| `fetchVerticalScrollBar()` / `fetchHorizontalScrollBar()` | Access the internal scroll bars |
+
+Layout rules:
+
+- `Vertical`: content height is free (scroll axis); width is `fill` when `contentStretch=true`, otherwise `fit`;
+- `Horizontal`: content width is free; height is `fill` when `contentStretch=true`, otherwise `fit`;
+- `Both`: both dimensions are free; `contentStretch` has no effect.
+
+Main styles:
+
+| Key | Description |
+| --- | --- |
+| `wheel_step` | Wheel step (default 40) |
+| `drag_threshold` | Drag start threshold (default 4) |
+| `rubber_band` | Overscroll damping (default 0.45) |
+| `bounce_speed` | Spring-back duration (default 0.3) |
+| `wheel_speed` | Wheel smoothing duration (default 0.18) |
+| `scrollbar_thickness` | Internal scroll bar thickness (default 4) |
+
+Behavior:
+
+- The wheel scrolls smoothly by `wheel_step`; dragging past the bounds applies `rubber_band` damping and springs back with `easeOutCubic` over `bounce_speed`;
+- Dragging the scroll bars updates the content, and content dragging/wheel updates the bars;
+- Scroll bars reserve their own space: when the vertical bar is visible the content viewport loses one thickness in width, and likewise for the horizontal bar in height, so content never overlaps the bars (Both mode iterates to converge);
+- Bars show/hide automatically as the content size changes;
+- Controls that capture the mouse (buttons, inputs, DropDown, ...) still receive clicks; once the pointer moves past `drag_threshold` the ScrollPane takes over the capture and starts scrolling;
+- The wheel is hit-tested against the actual cursor position, so it scrolls even when the pointer is over inner controls.
+
+The Gallery tab is now a ScrollPane containing all control DropDowns (vertical scrolling).
+
 ## 8. Examples
 
 ### 8.1 Basic node and styles
@@ -684,7 +728,7 @@ control->setDisabled(true);
 When adding or changing a control, node or element:
 
 1. Update the corresponding sections (API tables, style tables, element table) in both this document and [README.md](README.md);
-2. Add new controls to the control list in 7.2–7.17 and document:
+2. Add new controls to the control list in 7.2–7.18 and document:
    - Constructor and base class;
    - Public APIs;
    - Style keys read (distinguishing public keys from tuning/internal keys);

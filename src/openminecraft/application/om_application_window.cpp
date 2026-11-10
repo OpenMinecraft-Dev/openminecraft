@@ -271,8 +271,9 @@ void OMApplication::mainLoop(OMBackend backend)
             event::OMEvent ev;
             ev.type = event::MouseWheel;
             const float uiScale = std::max(0.01f, win()->getUiScale());
-            ev.mousewheel.x = e.wheel.x / uiScale;
-            ev.mousewheel.y = e.wheel.y / uiScale;
+            // SDL wheel x/y are scroll deltas; the cursor position is mouse_x/mouse_y.
+            ev.mousewheel.x = e.wheel.mouse_x / uiScale;
+            ev.mousewheel.y = e.wheel.mouse_y / uiScale;
             ev.mousewheel.wheelx = e.wheel.x;
             ev.mousewheel.wheely = e.wheel.y;
             buswrap.handle(event::MouseWheel, ev);
