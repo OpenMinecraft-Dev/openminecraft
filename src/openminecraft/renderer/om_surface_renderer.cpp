@@ -250,12 +250,35 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                                           {"alignSelf", OMDemiurgeAlign::FlexStart}}));
     pageGallery->mountDirect(galleryGrid);
 
+    auto pageMisc = std::make_shared<node::OMDemiurgeContainerNode>();
+    pageMisc->style({{"flexDirection", Column},
+                     {"flexGap", OMDemiurgeSize::pixels(12.0f)},
+                     {"width", OMDemiurgeSize::fill()}});
+    pageMisc->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                              ->style({{"color", (int)0xffffffff},
+                                       {"text", "Misc"},
+                                       {"textheight", 18},
+                                       {"alignSelf", OMDemiurgeAlign::FlexStart}}));
+    auto debugTreeButton = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
+    debugTreeButton->style("animation_speed", 1.0f)->style("label", "Debug UI Tree");
+    debugTreeButton->style("width", OMDemiurgeSize::pixels(200.0f));
+    debugTreeButton->style("alignSelf", OMDemiurgeAlign::FlexStart);
+    debugTreeButton->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
+    debugTreeButton->setOnClick([this]() {
+        if (this->node)
+        {
+            this->node->dumpTree();
+        }
+    });
+    pageMisc->mountDirect(debugTreeButton);
+
     demoTabs = std::make_shared<node::controls::OMDemiurgeTabMultiPage>(fontset.get());
     demoTabs->style("width", OMDemiurgeSize::fill());
     demoTabs->style("height", OMDemiurgeSize::fill());
     demoTabs->setPageFill(true);
     demoTabs->addPage("Main", pageMain);
     demoTabs->addPage("Gallery", pageGallery);
+    demoTabs->addPage("Misc", pageMisc);
 
     node = std::make_shared<node::OMDemiurgeRectNode>()
                ->style({

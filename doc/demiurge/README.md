@@ -128,6 +128,27 @@ OMDemiurgeRendererHandler
 
 裁剪矩形是屏幕空间矩形（无圆角、非旋转），由渲染器 scissor 实现。
 
+### 3.8 调试输出
+
+| API | 说明 |
+| --- | --- |
+| `typeName()` | 运行时类名（demangle 并去掉命名空间），每个节点类型自动返回自己的类名 |
+| `styleDump()` | 当前 styles 的字符串形式：`{key=value, ...}`，按 key 排序 |
+| `dumpTree()` | 从该节点开始递归输出整棵 UI 树，内部使用 `OMLogger`（logger 名 `demiurge.ui`），每个节点一行 |
+
+输出格式：每层缩进两个空格，行内容为 `类名 {style...}`；`OMDemiurgeSize`、rect、insets、颜色、枚举等都有可读形式。
+
+示例：
+
+```cpp
+node->dumpTree();                 // 输出整棵界面树
+someNode->dumpTree();             // 只输出某个子树
+someNode->typeName();             // "OMDemiurgeTextSdfNode"
+someNode->styleDump();            // "{color=-1, text="Main", textheight=14}"
+```
+
+主界面 `Misc` 页签中的 `Debug UI Tree` 按钮会调用 `node->dumpTree()`。
+
 ## 4. Style 参考
 
 ### 4.1 值类型

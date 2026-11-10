@@ -242,6 +242,15 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         return Ignored;
     }
 
+    // Runtime class name (demangled), used by the UI tree dump.
+    virtual auto typeName() const -> std::string;
+
+    // Human-readable style dump: "{key=value, ...}".
+    auto styleDump() const -> std::string;
+
+    // Logs this node and its whole subtree through OMLogger, one line per node.
+    auto dumpTree() const -> void;
+
     // Forces this node to re-run its style-driven submit logic (used after
     // elements were removed and the node becomes visible again).
     inline auto invalidate() -> void

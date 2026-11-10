@@ -1,6 +1,16 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
+#include "openminecraft/log/om_log_common.hpp"
+#include "glm/ext/vector_float2.hpp"
+#include "glm/ext/vector_float3.hpp"
+#include "glm/ext/vector_float4.hpp"
+#include "fmt/format.h"
+#include <algorithm>
+#include <cxxabi.h>
+#include <cstdlib>
+#include <typeinfo>
+#include <vector>
 #include "yoga/YGNode.h"
 #include "yoga/YGNodeStyle.h"
 #include "yoga/YGValue.h"
@@ -699,4 +709,247 @@ void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
     }
 }
 
+} // namespace openminecraft::renderer::common::demiurge
+
+namespace openminecraft::renderer::common::demiurge
+{
+static auto demangleName(const char *name) -> std::string
+{
+    int status = 0;
+    char *output = abi::__cxa_demangle(name, nullptr, nullptr, &status);
+
+    if (status == 0 && output != nullptr)
+    {
+        std::string full = output;
+        std::free(output);
+        const auto pos = full.rfind("::");
+
+        if (pos != std::string::npos)
+        {
+            return full.substr(pos + 2);
+        }
+
+        return full;
+    }
+
+    std::free(output);
+    return name;
+}
+
+static auto sizeToString(const OMDemiurgeSize &size) -> std::string
+{
+    switch (size.unit)
+    {
+    case OMDemiurgeSize::Pixel:
+        return fmt::format("px({:.1f})", size.value);
+    case OMDemiurgeSize::Percent:
+        return fmt::format("fill({:.0f}%)", size.value * 100.0f);
+    case OMDemiurgeSize::Fit:
+    default:
+        return "fit";
+    }
+}
+
+static auto styleValueToString(const std::any &value) -> std::string
+{
+    if (!value.has_value())
+    {
+        return "null";
+    }
+
+    const auto &type = value.type();
+
+    if (type == typeid(OMDemiurgeSize))
+    {
+        return sizeToString(std::any_cast<OMDemiurgeSize>(value));
+    }
+
+    if (type == typeid(std::array<OMDemiurgeSize, 4>))
+    {
+        const auto v = std::any_cast<std::array<OMDemiurgeSize, 4>>(value);
+        return fmt::format("insets4(t={}, b={}, l={}, r={})", sizeToString(v[0]), sizeToString(v[1]),
+                           sizeToString(v[2]), sizeToString(v[3]));
+    }
+
+    if (type == typeid(OMDemiurgeRect))
+    {
+        const auto rect = std::any_cast<OMDemiurgeRect>(value);
+        return fmt::format("rect({:.1f}, {:.1f}, {:.1f}, {:.1f})", rect.x, rect.y, rect.width, rect.height);
+    }
+
+    if (type == typeid(OMDemiurgeEdgeInsets))
+    {
+        const auto in = std::any_cast<OMDemiurgeEdgeInsets>(value);
+        return fmt::format("insets(t={:.1f}, b={:.1f}, l={:.1f}, r={:.1f})", in.top, in.bottom, in.left, in.right);
+    }
+
+    if (type == typeid(glm::vec4))
+    {
+        const auto v = std::any_cast<glm::vec4>(value);
+        return fmt::format("vec4({:.3f}, {:.3f}, {:.3f}, {:.3f})", v.x, v.y, v.z, v.w);
+    }
+
+    if (type == typeid(glm::vec3))
+    {
+        const auto v = std::any_cast<glm::vec3>(value);
+        return fmt::format("vec3({:.3f}, {:.3f}, {:.3f})", v.x, v.y, v.z);
+    }
+
+    if (type == typeid(glm::vec2))
+    {
+        const auto v = std::any_cast<glm::vec2>(value);
+        return fmt::format("vec2({:.3f}, {:.3f})", v.x, v.y);
+    }
+
+    if (type == typeid(OMDemiurgePosition))
+    {
+        return std::any_cast<OMDemiurgePosition>(value) == Absolute ? "Absolute" : "Relative";
+    }
+
+    if (type == typeid(OMDemiurgeDirection))
+    {
+        switch (std::any_cast<OMDemiurgeDirection>(value))
+        {
+        case Row:
+            return "Row";
+        case RowReverse:
+            return "RowReverse";
+        case Column:
+            return "Column";
+        case ColumnReverse:
+            return "ColumnReverse";
+        }
+    }
+
+    if (type == typeid(OMDemiurgeWrap))
+    {
+        switch (std::any_cast<OMDemiurgeWrap>(value))
+        {
+        case Wrap:
+            return "Wrap";
+        case WrapReverse:
+            return "WrapReverse";
+        case NoWrap:
+            return "NoWrap";
+        }
+    }
+
+    if (type == typeid(OMDemiurgeAlign))
+    {
+        switch (std::any_cast<OMDemiurgeAlign>(value))
+        {
+        case Auto:
+            return "Auto";
+        case FlexStart:
+            return "FlexStart";
+        case Center:
+            return "Center";
+        case FlexEnd:
+            return "FlexEnd";
+        case Stretch:
+            return "Stretch";
+        case Baseline:
+            return "Baseline";
+        case SpaceBetween:
+            return "SpaceBetween";
+        case SpaceAround:
+            return "SpaceAround";
+        case SpaceEvenly:
+            return "SpaceEvenly";
+        }
+    }
+
+    if (type == typeid(int))
+    {
+        return fmt::format("{}", std::any_cast<int>(value));
+    }
+
+    if (type == typeid(uint32_t))
+    {
+        return fmt::format("{}", std::any_cast<uint32_t>(value));
+    }
+
+    if (type == typeid(float))
+    {
+        return fmt::format("{:.3f}", std::any_cast<float>(value));
+    }
+
+    if (type == typeid(bool))
+    {
+        return std::any_cast<bool>(value) ? "true" : "false";
+    }
+
+    if (type == typeid(std::string))
+    {
+        return fmt::format("\"{}\"", std::any_cast<std::string>(value));
+    }
+
+    if (type == typeid(const char *))
+    {
+        const char *str = std::any_cast<const char *>(value);
+        return fmt::format("\"{}\"", str != nullptr ? str : "");
+    }
+
+    return fmt::format("<{}>", demangleName(type.name()));
+}
+
+static auto stylesToString(const OMDemiurgeStyles &styles) -> std::string
+{
+    std::vector<std::pair<std::string, std::string>> entries;
+
+    for (const auto &entry : styles)
+    {
+        entries.emplace_back(entry.first, styleValueToString(entry.second));
+    }
+
+    std::sort(entries.begin(), entries.end(),
+              [](const auto &a, const auto &b) { return a.first < b.first; });
+
+    std::string out = "{";
+
+    for (size_t i = 0; i < entries.size(); ++i)
+    {
+        if (i != 0)
+        {
+            out += ", ";
+        }
+
+        out += entries[i].first;
+        out += "=";
+        out += entries[i].second;
+    }
+
+    out += "}";
+    return out;
+}
+
+static auto dumpNode(const OMDemiurgeNode &node, int depth, log::OMLogger &logger) -> void
+{
+    logger.info("{}{} {}", std::string(static_cast<size_t>(depth) * 2, ' '), node.typeName(), node.styleDump());
+
+    for (const auto &child : node.fetchChildren())
+    {
+        if (child)
+        {
+            dumpNode(*child, depth + 1, logger);
+        }
+    }
+}
+
+auto OMDemiurgeNode::typeName() const -> std::string
+{
+    return demangleName(typeid(*this).name());
+}
+
+auto OMDemiurgeNode::styleDump() const -> std::string
+{
+    return stylesToString(stylesStorage);
+}
+
+auto OMDemiurgeNode::dumpTree() const -> void
+{
+    log::OMLogger logger("demiurge.ui");
+    logger.info("UI tree:");
+    dumpNode(*this, 0, logger);
+}
 } // namespace openminecraft::renderer::common::demiurge

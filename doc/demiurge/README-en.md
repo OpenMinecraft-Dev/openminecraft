@@ -128,6 +128,27 @@ Base class: `OMDemiurgeNode` (`include/openminecraft/renderer/common/demiurge/om
 
 Clip rects are screen-space rectangles (no rounded corners, no rotation), implemented by the renderer scissor.
 
+### 3.8 Debug output
+
+| API | Description |
+| --- | --- |
+| `typeName()` | Runtime class name (demangled, namespace stripped); every node type returns its own class name |
+| `styleDump()` | Current styles as a string: `{key=value, ...}`, sorted by key |
+| `dumpTree()` | Recursively logs the whole UI tree from this node through `OMLogger` (logger name `demiurge.ui`), one line per node |
+
+Format: two spaces of indentation per depth, then `ClassName {styles...}`. `OMDemiurgeSize`, rects, insets, colors and enums are rendered in readable form.
+
+Example:
+
+```cpp
+node->dumpTree();                 // dump the whole UI tree
+someNode->dumpTree();             // dump a subtree
+someNode->typeName();             // "OMDemiurgeTextSdfNode"
+someNode->styleDump();            // "{color=-1, text="Main", textheight=14}"
+```
+
+The `Debug UI Tree` button on the `Misc` tab calls `node->dumpTree()`.
+
 ## 4. Style Reference
 
 ### 4.1 Value types
