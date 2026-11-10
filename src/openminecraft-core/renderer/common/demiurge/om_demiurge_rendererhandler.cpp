@@ -135,17 +135,16 @@ void OMDemiurgeRendererHandler::beforeFrame()
         p.second->update();
     }
 
-    // Clip rectangles are baked into the recorded task. Re-record at the end of
-    // beforeFrame so fast-moving clipped content uses this frame's clip instead
-    // of lagging one frame behind.
+}
+
+void OMDemiurgeRendererHandler::afterFrame()
+{
+    // Scissor commands are baked into the recorded task; re-record when a clip
+    // rectangle changed (layout moved) so the clip follows the node.
     if (clipDirty)
     {
         clipDirty = false;
         recordTask();
     }
-}
-
-void OMDemiurgeRendererHandler::afterFrame()
-{
 }
 } // namespace openminecraft::renderer::common::demiurge

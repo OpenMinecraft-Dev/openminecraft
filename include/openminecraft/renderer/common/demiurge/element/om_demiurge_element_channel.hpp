@@ -143,7 +143,24 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
 
     inline auto bufferSize() -> int
     {
-        return sizeof(T) * objects.size();
+        // Grow the instance buffer by a larger factor than the object count so
+        // adding a few objects does not force a GPU buffer reallocation every
+        // time. The unused tail stays allocated for later frames.
+        constexpr size_t growthFactor = 4;
+
+        if (objects.size() > bufferCapacity)
+        {
+            size_t next = std::max<size_t>(bufferCapacity, 8);
+
+            while (next < objects.size())
+            {
+                next *= growthFactor;
+            }
+
+            bufferCapacity = next;
+        }
+
+        return sizeof(T) * bufferCapacity;
     }
 
   protected:
@@ -153,6 +170,7 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
     std::vector<std::optional<OMDemiurgeRect>> clipBounds;
     bool hasDirty = true;
     int lastCount = -1;
+    size_t bufferCapacity = 0;
 };
 } // namespace openminecraft::renderer::common::demiurge::element
 

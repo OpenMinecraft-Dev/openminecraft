@@ -312,7 +312,15 @@ class OMRendererSegBuf
 
     void expand()
     {
-        uint32_t newTotal = totalSize * 2;
+        // Grow aggressively to reduce reallocations/copies while streaming.
+        constexpr uint32_t growthFactor = 4;
+        const uint64_t grown = static_cast<uint64_t>(totalSize) * growthFactor;
+        uint32_t newTotal = static_cast<uint32_t>(std::min<uint64_t>(grown, 0xffffffffu));
+
+        if (newTotal <= totalSize)
+        {
+            newTotal = totalSize + 1024 * 1024;
+        }
         const std::string newTag = bufferTag + ".g" + std::to_string(++generation);
         auto *newBuffer = renderer->registerBuffer(newTag, InstanceData, newTotal);
         buffer()->copyTo(newBuffer);
