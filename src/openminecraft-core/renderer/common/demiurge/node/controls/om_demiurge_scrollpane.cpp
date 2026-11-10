@@ -19,6 +19,8 @@ OMDemiurgeScrollPane::OMDemiurgeScrollPane() : disabledAmount(0.0f)
     stylesStorage.put("rubber_band", 0.45f);
     stylesStorage.put("bounce_speed", 0.3f);
     stylesStorage.put("wheel_speed", 0.18f);
+    stylesStorage.put("inertia_factor", 0.18f);
+    stylesStorage.put("inertia_speed", 0.55f);
     stylesStorage.put("scrollbar_thickness", 4.0f);
     stylesStorage.put("animation_speed", 0.18f);
 
@@ -43,6 +45,7 @@ OMDemiurgeScrollPane::OMDemiurgeScrollPane() : disabledAmount(0.0f)
     verticalBar->style({{"position", OMDemiurgePosition::Absolute},
                         {"width", OMDemiurgeSize::pixels(4.0f)},
                         {"height", OMDemiurgeSize::fill()}});
+    verticalBar->setAllowOverscroll(false);
     verticalBar->setVisible(false);
     verticalBar->setOnScroll([this](float value) {
         scrollY.setTo(value);
@@ -55,6 +58,7 @@ OMDemiurgeScrollPane::OMDemiurgeScrollPane() : disabledAmount(0.0f)
     horizontalBar->style({{"position", OMDemiurgePosition::Absolute},
                           {"width", OMDemiurgeSize::fill()},
                           {"height", OMDemiurgeSize::pixels(4.0f)}});
+    horizontalBar->setAllowOverscroll(false);
     horizontalBar->setVisible(false);
     horizontalBar->setOnScroll([this](float value) {
         scrollX.setTo(value);
@@ -104,6 +108,45 @@ void OMDemiurgeScrollPane::applyBounce()
     else
     {
         scrollY.setTo(targetY);
+    }
+}
+
+void OMDemiurgeScrollPane::applyInertia()
+{
+    const auto now = std::chrono::steady_clock::now();
+    const float idle = std::chrono::duration<float>(now - lastDragTime).count();
+
+    if (idle > 0.1f)
+    {
+        dragVelocityX = 0.0f;
+        dragVelocityY = 0.0f;
+    }
+
+    const float factor = std::max(0.0f, stylesStorage.get<float>("inertia_factor", 0.18f));
+    const float speed = std::max(0.05f, stylesStorage.get<float>("inertia_speed", 0.55f));
+    const float minSpeed = 40.0f;
+
+    const bool inertX = std::abs(dragVelocityX) > minSpeed && maxScrollX > 0.0f;
+    const bool inertY = std::abs(dragVelocityY) > minSpeed && maxScrollY > 0.0f;
+
+    if (inertX)
+    {
+        const float target = std::clamp(scrollX.get() + dragVelocityX * factor, 0.0f, maxScrollX);
+
+        if (std::abs(target - scrollX.get()) > 0.5f)
+        {
+            scrollX.animateTo(target, easeOutCubic<float>, speed);
+        }
+    }
+
+    if (inertY)
+    {
+        const float target = std::clamp(scrollY.get() + dragVelocityY * factor, 0.0f, maxScrollY);
+
+        if (std::abs(target - scrollY.get()) > 0.5f)
+        {
+            scrollY.animateTo(target, easeOutCubic<float>, speed);
+        }
     }
 }
 
@@ -269,6 +312,9 @@ void OMDemiurgeScrollPane::update()
             ->style("offsetY", OMDemiurgeSize::pixels(0.0f));
         verticalBar->setMetrics(viewHeight, contentHeight);
         verticalBar->setScrollOffset(visualY, false);
+
+        const float rawY = scrollY.get();
+        verticalBar->setVisualOverscroll(rawY < 0.0f ? -rawY : std::max(0.0f, rawY - maxScrollY));
     }
 
     if (horizontalVisible)
@@ -279,6 +325,9 @@ void OMDemiurgeScrollPane::update()
             ->style("offsetY", OMDemiurgeSize::pixels(std::max(0.0f, paneHeight - thickness)));
         horizontalBar->setMetrics(viewWidth, contentWidth);
         horizontalBar->setScrollOffset(visualX, false);
+
+        const float rawX = scrollX.get();
+        horizontalBar->setVisualOverscroll(rawX < 0.0f ? -rawX : std::max(0.0f, rawX - maxScrollX));
     }
 
     verticalBar->setDisabled(disabled, false);
@@ -300,6 +349,9 @@ auto OMDemiurgeScrollPane::processMouseDown(float x, float y, uint8_t button) ->
     pressY = y;
     dragStartX = scrollX.get();
     dragStartY = scrollY.get();
+    dragVelocityX = 0.0f;
+    dragVelocityY = 0.0f;
+    lastDragTime = std::chrono::steady_clock::now();
     captureMouse();
     return Ignored;
 }
@@ -324,15 +376,33 @@ auto OMDemiurgeScrollPane::updateDrag(float x, float y) -> OMDemiurgeEventResult
         }
     }
 
+    const float oldX = scrollX.get();
+    const float oldY = scrollY.get();
+    float nextX = oldX;
+    float nextY = oldY;
+
     if (horizontal && maxScrollX > 0.0f)
     {
-        scrollX.setTo(dragStartX - dx);
+        nextX = dragStartX - dx;
     }
 
     if (vertical && maxScrollY > 0.0f)
     {
-        scrollY.setTo(dragStartY - dy);
+        nextY = dragStartY - dy;
     }
+
+    const auto now = std::chrono::steady_clock::now();
+    const float dt = std::chrono::duration<float>(now - lastDragTime).count();
+
+    if (dt > 0.001f)
+    {
+        dragVelocityX = std::clamp((nextX - oldX) / dt, -6000.0f, 6000.0f);
+        dragVelocityY = std::clamp((nextY - oldY) / dt, -6000.0f, 6000.0f);
+        lastDragTime = now;
+    }
+
+    scrollX.setTo(nextX);
+    scrollY.setTo(nextY);
 
     notifyScroll();
     return Handled;
@@ -356,9 +426,17 @@ auto OMDemiurgeScrollPane::processMouseMove(float x, float y) -> OMDemiurgeEvent
     return updateDrag(x, y);
 }
 
-auto OMDemiurgeScrollPane::processNestedDrag(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
+auto OMDemiurgeScrollPane::processNestedDrag(const std::shared_ptr<OMDemiurgeNode> &captured,
+                                             const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
 {
     if (disabled || event.type != OMDemiurgeEventType::MouseMove || !pressed)
+    {
+        return Ignored;
+    }
+
+    // A ScrollBar drag (including this pane's own bars or a bar embedded in the
+    // content) owns the mouse capture; do not steal it.
+    if (captured && dynamic_cast<OMDemiurgeScrollBar *>(captured.get()) != nullptr)
     {
         return Ignored;
     }
@@ -389,7 +467,18 @@ auto OMDemiurgeScrollPane::processMouseUp(float x, float y, uint8_t button) -> O
 
     if (wasDragging)
     {
-        applyBounce();
+        const bool outside = scrollX.get() < 0.0f || scrollX.get() > maxScrollX || scrollY.get() < 0.0f ||
+                             scrollY.get() > maxScrollY;
+
+        if (outside)
+        {
+            applyBounce();
+        }
+        else
+        {
+            applyInertia();
+        }
+
         notifyScroll();
         return Handled;
     }

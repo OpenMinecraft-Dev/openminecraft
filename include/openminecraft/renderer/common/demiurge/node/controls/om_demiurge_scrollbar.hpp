@@ -51,8 +51,21 @@ class OMDemiurgeScrollBar : public OMDemiurgeContainerNode, public OMDemiurgeCon
         return contentSize;
     }
 
-    // Values outside [0, contentSize - viewSize] are kept as overscroll and
-    // visualized by compressing the thumb.
+    // When overscroll is allowed, values outside [0, contentSize - viewSize] are
+    // kept and visualized by compressing the thumb. When disabled the offset is
+    // clamped instead.
+    void setAllowOverscroll(bool value);
+    // Extra overscroll used only for the thumb compression animation. Lets a
+    // ScrollPane show rubber-band feedback while the bar's own offset is clamped.
+    void setVisualOverscroll(float value);
+    auto getVisualOverscroll() const -> float
+    {
+        return visualOverscroll;
+    }
+    auto isOverscrollAllowed() const -> bool
+    {
+        return allowOverscroll;
+    }
     void setScrollOffset(float value, bool notify = false);
     auto getScrollOffset() const -> float
     {
@@ -94,6 +107,8 @@ class OMDemiurgeScrollBar : public OMDemiurgeContainerNode, public OMDemiurgeCon
     float dragStartPointer = 0.0f;
     float dragStartOffset = 0.0f;
     bool disabled = false;
+    bool allowOverscroll = true;
+    float visualOverscroll = 0.0f;
     std::function<void(float)> handleScroll = [](float) {};
 
     auto axisCoordinate(float x, float y) const -> float;

@@ -578,7 +578,7 @@ void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
                     // Give ancestors (e.g. ScrollPane) a chance to steal the drag.
                     for (auto ancestor = captured->parent; ancestor != nullptr; ancestor = ancestor->parent)
                     {
-                        if (ancestor->processNestedDrag(event) == Handled)
+                        if (ancestor->processNestedDrag(captured, event) == Handled)
                         {
                             return;
                         }

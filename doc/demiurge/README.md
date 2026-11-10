@@ -588,7 +588,9 @@ RadioGroup：
 | `setMetrics(viewSize, contentSize)` | 沿滚动轴的可视区尺寸 / 内容总尺寸 |
 | `setViewSize(float)` / `setContentSize(float)` | 单独设置 |
 | `getViewSize()` / `getContentSize()` / `getMaxScrollOffset()` | 查询 |
-| `setScrollOffset(float, bool notify = false)` | 设置滚动位置；越界值保留为 overscroll，不静默 clamp |
+| `setAllowOverscroll(bool)` / `isOverscrollAllowed()` | 是否允许越界（默认允许）；关闭后 offset 自动 clamp |
+| `setVisualOverscroll(float)` | 仅用于 thumb 压缩动画的外部越界量；禁止 overscroll 时可用它保留拖拽动画 |
+| `setScrollOffset(float, bool notify = false)` | 设置滚动位置；允许越界时保留为 overscroll，禁止时 clamp |
 | `getOverscroll()` / `isOverscrolling()` | 当前越界量 / 是否越界 |
 | `getScrollOffset()` / `getThumbLength()` | 当前 offset / 当前显示 thumb 长度（含 overscroll 压缩） |
 | `setOnScroll(std::function<void(float)>)` | 拖动、点击轨道或滚轮改变 offset 时回调 |
@@ -659,7 +661,9 @@ visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eas
 | `wheel_step` | 滚轮步长（默认 40） |
 | `drag_threshold` | 开始拖拽的位移阈值（默认 4） |
 | `rubber_band` | 越界拖拽阻尼系数（默认 0.45） |
-| `bounce_speed` | 松手回弹时长（默认 0.3） |
+| `bounce_speed` | 越界松手回弹时长（默认 0.3） |
+| `inertia_factor` | 松手惯性预测时长（默认 0.18s） |
+| `inertia_speed` | 惯性减速动画时长（默认 0.55s） |
 | `wheel_speed` | 滚轮平滑时长（默认 0.18） |
 | `scrollbar_thickness` | 内部滚动条厚度（默认 4） |
 
@@ -667,9 +671,12 @@ visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eas
 
 - 滚轮按 `wheel_step` 平滑滚动；拖动越界时按 `rubber_band` 阻尼显示，松手后用 `easeOutCubic` 在 `bounce_speed` 内回弹；
 - 滚动条拖动会同步内容，内容拖动/滚轮会同步滚动条；
+- 在合法范围内快速拖动后松手会带惯性继续滚动，按 `inertia_factor` 预测目标、`inertia_speed` 减速；越界松手则执行回弹；
 - 滚动条会预留独立空间：纵向条出现时内容视口宽度减去条厚，横向条出现时高度减去条厚，内容不会与滚动条重叠（Both 模式会迭代计算两条滚动条）；
 - 内容尺寸变化时滚动条自动显示/隐藏；
 - 按钮、输入框、DropDown 等会捕获鼠标的控件仍可正常点击；按住并拖动超过 `drag_threshold` 后 ScrollPane 会接管捕获并开始滚动；
+- ScrollBar 的拖动不会被 ScrollPane 接管，即使鼠标移出滚动条范围也会持续跟随（全局捕获）；
+- ScrollPane 内部的横向/纵向 ScrollBar 都禁用实际 overscroll（`setAllowOverscroll(false)`），但会通过 `setVisualOverscroll` 接收内容的 rubber-band 量，因此拖动过度时 thumb 仍会压缩、回弹后恢复；
 - 滚轮使用鼠标在窗口中的实际位置命中 ScrollPane，即使指针位于内部控件上也能滚动。
 
 Gallery 页签现在由 ScrollPane 承载所有控件 DropDown（纵向滚动）。

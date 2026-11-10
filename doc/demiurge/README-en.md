@@ -588,7 +588,9 @@ Computes thumb length/position from externally supplied view/content metrics. It
 | `setMetrics(viewSize, contentSize)` | Visible size / total content size along the scroll axis |
 | `setViewSize(float)` / `setContentSize(float)` | Set them individually |
 | `getViewSize()` / `getContentSize()` / `getMaxScrollOffset()` | Query |
-| `setScrollOffset(float, bool notify = false)` | Set the offset; out-of-range values are kept as overscroll instead of being silently clamped |
+| `setAllowOverscroll(bool)` / `isOverscrollAllowed()` | Whether overscroll is allowed (default on); when off the offset is clamped |
+| `setVisualOverscroll(float)` | Extra overscroll used only by the thumb compression animation; keeps the overdrag animation alive when overscroll is disabled |
+| `setScrollOffset(float, bool notify = false)` | Set the offset; out-of-range values become overscroll when allowed, otherwise they are clamped |
 | `getOverscroll()` / `isOverscrolling()` | Current overscroll amount / whether out of range |
 | `getScrollOffset()` / `getThumbLength()` | Current offset / displayed thumb length (including overscroll compression) |
 | `setOnScroll(std::function<void(float)>)` | Called when dragging, track clicks or the wheel change the offset |
@@ -659,7 +661,9 @@ Main styles:
 | `wheel_step` | Wheel step (default 40) |
 | `drag_threshold` | Drag start threshold (default 4) |
 | `rubber_band` | Overscroll damping (default 0.45) |
-| `bounce_speed` | Spring-back duration (default 0.3) |
+| `bounce_speed` | Overscroll spring-back duration (default 0.3) |
+| `inertia_factor` | Inertia projection time (default 0.18s) |
+| `inertia_speed` | Inertia deceleration duration (default 0.55s) |
 | `wheel_speed` | Wheel smoothing duration (default 0.18) |
 | `scrollbar_thickness` | Internal scroll bar thickness (default 4) |
 
@@ -667,9 +671,12 @@ Behavior:
 
 - The wheel scrolls smoothly by `wheel_step`; dragging past the bounds applies `rubber_band` damping and springs back with `easeOutCubic` over `bounce_speed`;
 - Dragging the scroll bars updates the content, and content dragging/wheel updates the bars;
+- Releasing a fast drag inside the valid range continues with inertia, using `inertia_factor` for the projection and `inertia_speed` for deceleration; releasing while out of range springs back;
 - Scroll bars reserve their own space: when the vertical bar is visible the content viewport loses one thickness in width, and likewise for the horizontal bar in height, so content never overlaps the bars (Both mode iterates to converge);
 - Bars show/hide automatically as the content size changes;
 - Controls that capture the mouse (buttons, inputs, DropDown, ...) still receive clicks; once the pointer moves past `drag_threshold` the ScrollPane takes over the capture and starts scrolling;
+- ScrollBar drags are never taken over by the ScrollPane; dragging continues to follow globally even when the pointer leaves the bar;
+- Both internal ScrollBars of a ScrollPane disable actual overscroll (`setAllowOverscroll(false)`), but receive the content's rubber-band amount through `setVisualOverscroll`, so the thumb still compresses while over-dragging and returns to normal after bouncing back;
 - The wheel is hit-tested against the actual cursor position, so it scrolls even when the pointer is over inner controls.
 
 The Gallery tab is now a ScrollPane containing all control DropDowns (vertical scrolling).

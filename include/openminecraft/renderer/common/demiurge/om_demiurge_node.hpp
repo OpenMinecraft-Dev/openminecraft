@@ -199,7 +199,8 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     // While a descendant holds the mouse capture, ancestors get a chance to
     // take over drags (used by ScrollPane to scroll even when the press started
     // on an interactive control).
-    virtual auto processNestedDrag(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
+    virtual auto processNestedDrag(const std::shared_ptr<OMDemiurgeNode> &captured,
+                                   const OMDemiurgeEvent &event) -> OMDemiurgeEventResult
     {
         return Ignored;
     }

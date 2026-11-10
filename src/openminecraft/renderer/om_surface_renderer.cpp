@@ -129,8 +129,8 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     demoLink = std::make_shared<node::controls::OMDemiurgeLink>(fontset.get());
     demoLink->setText("Docs");
 
-    demoDivider = std::make_shared<node::controls::OMDemiurgeDivider>(true);
-    demoDivider->style("height", OMDemiurgeSize::pixels(20.0f));
+    demoDivider = std::make_shared<node::controls::OMDemiurgeDivider>(false);
+    demoDivider->style("width", OMDemiurgeSize::fill());
 
     demoInput = std::make_shared<node::controls::OMDemiurgeTextInput>(fontset.get());
     demoInput->setPlaceholder("Type here...");
@@ -170,24 +170,6 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                                               {"alignSelf", OMDemiurgeAlign::FlexStart},
                                               {"border", OMDemiurgeEdgeInsets{8, 0, 0, 0}}}));
     progressContent->mountDirect(progressBarIndeterminate);
-
-    auto makeDropdown = [&](const std::string &title,
-                            const std::shared_ptr<OMDemiurgeNode> &content) -> std::shared_ptr<node::controls::OMDemiurgeDropDownPane> {
-        auto contentWrap = std::make_shared<node::OMDemiurgeContainerNode>();
-        contentWrap->style({{"flexDirection", OMDemiurgeDirection::Column},
-                            {"alignItems", OMDemiurgeAlign::Center},
-                            {"flexGap", OMDemiurgeSize::pixels(6.0f)},
-                            {"width", OMDemiurgeSize::fill()},
-                            {"padding", OMDemiurgeEdgeInsets{6, 6, 6, 6}}});
-        contentWrap->mountDirect(content);
-
-        auto pane = std::make_shared<node::controls::OMDemiurgeDropDownPane>(fontset.get());
-        pane->setTitle(title);
-        pane->style("width", OMDemiurgeSize::fill());
-        pane->setHeaderHeight(30.0f);
-        pane->setContentNode(contentWrap);
-        return pane;
-    };
 
     auto scrollBarVertical = std::make_shared<node::controls::OMDemiurgeScrollBar>();
     demoScrollBar = scrollBarVertical;
@@ -234,28 +216,54 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
 
     auto galleryList = std::make_shared<node::OMDemiurgeContainerNode>();
     galleryList->style({{"flexDirection", OMDemiurgeDirection::Column},
-                        {"flexGap", OMDemiurgeSize::pixels(8.0f)},
                         {"width", OMDemiurgeSize::fill()}});
-    galleryList->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+
+    auto addGallerySection = [&](const std::string &title, const std::string &description,
+                                 const std::shared_ptr<OMDemiurgeNode> &body) {
+        auto section = std::make_shared<node::OMDemiurgeContainerNode>();
+        section->style({{"flexDirection", OMDemiurgeDirection::Column},
+                        {"flexGap", OMDemiurgeSize::pixels(6.0f)},
+                        {"width", OMDemiurgeSize::fill()},
+                        {"padding", OMDemiurgeEdgeInsets{12, 12, 12, 12}}});
+        section->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
+                                 ->style({{"color", (int)0xffffffff},
+                                          {"text", title},
+                                          {"textheight", 18},
+                                          {"alignSelf", OMDemiurgeAlign::FlexStart}}));
+        section->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                  ->style({{"color", (int)0xffffff8c},
-                                          {"text", "Drag here to scroll"},
+                                          {"text", description},
                                           {"textheight", 11},
                                           {"alignSelf", OMDemiurgeAlign::FlexStart}}));
-    galleryList->mountDirect(makeDropdown("ProgressBar", progressContent));
-    galleryList->mountDirect(makeDropdown("CheckBox", checkBox));
-    galleryList->mountDirect(makeDropdown("RadioGroup", radioGroup));
-    galleryList->mountDirect(makeDropdown("Switch", demoSwitch));
-    galleryList->mountDirect(makeDropdown("Divider", demoDivider));
-    galleryList->mountDirect(makeDropdown("Slider", demoSlider));
-    galleryList->mountDirect(makeDropdown("Spinner", demoSpinner));
-    galleryList->mountDirect(makeDropdown("IconButton", demoIconButton));
-    galleryList->mountDirect(makeDropdown("Badge", demoBadge));
-    galleryList->mountDirect(makeDropdown("Link", demoLink));
+
+        auto bodyWrap = std::make_shared<node::OMDemiurgeContainerNode>();
+        bodyWrap->style({{"flexDirection", OMDemiurgeDirection::Column},
+                         {"alignItems", OMDemiurgeAlign::Center},
+                         {"flexGap", OMDemiurgeSize::pixels(6.0f)},
+                         {"width", OMDemiurgeSize::fill()}});
+        bodyWrap->mountDirect(body);
+        section->mountDirect(bodyWrap);
+        galleryList->mountDirect(section);
+
+        auto separator = std::make_shared<node::controls::OMDemiurgeDivider>(false);
+        galleryList->mountDirect(separator);
+    };
+
+    addGallerySection("ProgressBar", "Determinate and indeterminate progress states.", progressContent);
+    addGallerySection("CheckBox", "Toggle a boolean option with an animated check.", checkBox);
+    addGallerySection("RadioGroup", "Select one option from a group.", radioGroup);
+    addGallerySection("Switch", "Animated on/off switch.", demoSwitch);
+    addGallerySection("Divider", "Thin separator line.", demoDivider);
+    addGallerySection("Slider", "Drag the handle to pick a value.", demoSlider);
+    addGallerySection("Spinner", "Continuous loading indicator.", demoSpinner);
+    addGallerySection("IconButton", "Compact button with an SVG icon.", demoIconButton);
+    addGallerySection("Badge", "Small count or status badge.", demoBadge);
+    addGallerySection("Link", "Text link with hover animation.", demoLink);
     demoInput->style("width", OMDemiurgeSize::fill());
-    galleryList->mountDirect(makeDropdown("TextInput", demoInput));
+    addGallerySection("TextInput", "Single-line text input.", demoInput);
     demoTextEdit->style("width", OMDemiurgeSize::fill());
-    galleryList->mountDirect(makeDropdown("TextEdit", demoTextEdit));
-    galleryList->mountDirect(makeDropdown("ScrollBar", scrollContent));
+    addGallerySection("TextEdit", "Multi-line text editor.", demoTextEdit);
+    addGallerySection("ScrollBar", "Vertical and horizontal scroll bars.", scrollContent);
 
     demoScrollPane = std::make_shared<node::controls::OMDemiurgeScrollPane>();
     demoScrollPane->style("width", OMDemiurgeSize::fill());

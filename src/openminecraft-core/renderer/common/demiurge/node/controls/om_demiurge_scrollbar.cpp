@@ -83,10 +83,30 @@ auto OMDemiurgeScrollBar::axisCoordinate(float x, float y) const -> float
     return orientation == OMDemiurgeScrollBarOrientation::Vertical ? y : x;
 }
 
+void OMDemiurgeScrollBar::setAllowOverscroll(bool value)
+{
+    allowOverscroll = value;
+
+    if (!allowOverscroll)
+    {
+        scrollOffset = std::clamp(scrollOffset, 0.0f, getMaxScrollOffset());
+    }
+}
+
+void OMDemiurgeScrollBar::setVisualOverscroll(float value)
+{
+    visualOverscroll = std::max(0.0f, value);
+}
+
 void OMDemiurgeScrollBar::setMetrics(float view, float content)
 {
     viewSize = std::max(0.0f, view);
     contentSize = std::max(0.0f, content);
+
+    if (!allowOverscroll)
+    {
+        scrollOffset = std::clamp(scrollOffset, 0.0f, getMaxScrollOffset());
+    }
 }
 
 void OMDemiurgeScrollBar::setViewSize(float value)
@@ -101,12 +121,14 @@ void OMDemiurgeScrollBar::setContentSize(float value)
 
 void OMDemiurgeScrollBar::setScrollOffset(float value, bool notify)
 {
-    if (std::abs(value - scrollOffset) < 1e-4f)
+    const float next = allowOverscroll ? value : std::clamp(value, 0.0f, getMaxScrollOffset());
+
+    if (std::abs(next - scrollOffset) < 1e-4f)
     {
         return;
     }
 
-    scrollOffset = value;
+    scrollOffset = next;
 
     if (notify && handleScroll)
     {
@@ -149,7 +171,7 @@ void OMDemiurgeScrollBar::update()
     // Out-of-range offsets (overscroll) compress the thumb against the end it
     // overshoots. The compression is non-linear: with one full view height of
     // overscroll the thumb collapses into a circle (length == thickness).
-    const float overscroll = getOverscroll();
+    const float overscroll = allowOverscroll ? getOverscroll() : visualOverscroll;
     const float thickness = vertical ? width : height;
     const float curve = std::max(0.1f, stylesStorage.get<float>("overscroll_curve", 2.0f));
     const float range = std::max(1.0f, viewSize * std::max(0.01f, stylesStorage.get<float>("overscroll_range", 1.0f)));

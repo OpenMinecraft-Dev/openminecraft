@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_scrollbar.hpp"
+#include <chrono>
 #include <functional>
 #include <memory>
 
@@ -37,7 +38,8 @@ class OMDemiurgeScrollPane : public OMDemiurgeContainerNode, public OMDemiurgeCo
 
     void update() override;
     auto processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult override;
-    auto processNestedDrag(const OMDemiurgeEvent &event) -> OMDemiurgeEventResult override;
+    auto processNestedDrag(const std::shared_ptr<OMDemiurgeNode> &captured,
+                           const OMDemiurgeEvent &event) -> OMDemiurgeEventResult override;
     auto processMouseMove(float x, float y) -> OMDemiurgeEventResult override;
     auto processMouseUp(float x, float y, uint8_t button) -> OMDemiurgeEventResult override;
     auto processMouseScroll(float x, float y, float wx, float wy) -> OMDemiurgeEventResult override;
@@ -103,6 +105,9 @@ class OMDemiurgeScrollPane : public OMDemiurgeContainerNode, public OMDemiurgeCo
     float pressY = 0.0f;
     float dragStartX = 0.0f;
     float dragStartY = 0.0f;
+    float dragVelocityX = 0.0f;
+    float dragVelocityY = 0.0f;
+    std::chrono::steady_clock::time_point lastDragTime;
 
     float viewWidth = 0.0f;
     float viewHeight = 0.0f;
@@ -116,6 +121,7 @@ class OMDemiurgeScrollPane : public OMDemiurgeContainerNode, public OMDemiurgeCo
     auto rubberBand(float raw, float maxValue) -> float;
     auto updateDrag(float x, float y) -> OMDemiurgeEventResult;
     void applyBounce();
+    void applyInertia();
     void notifyScroll();
 };
 } // namespace openminecraft::renderer::common::demiurge::node::controls
