@@ -98,11 +98,19 @@ auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, float dep
 
 auto OMDemiurgeTextSdfNode::remove() -> void
 {
-    for (auto r : glyphIds)
+    if (handler != nullptr)
     {
-        handler->fetchFontChannel(set)->remove(r);
+        for (auto r : glyphIds)
+        {
+            handler->fetchFontChannel(set)->remove(r);
+        }
     }
+
+    // Elements were removed from the channel; drop their ids so a later
+    // invalidate()+submit requests fresh ones instead of reusing dead slots.
+    glyphIds.clear();
     handler = nullptr;
+    stylesStorage.invalidate();
 
     for (auto c : children)
     {
