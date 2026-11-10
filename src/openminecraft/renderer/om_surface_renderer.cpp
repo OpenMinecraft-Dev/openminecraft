@@ -78,16 +78,6 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     });
     button2->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
 
-    progressBar = std::make_shared<node::controls::OMDemiurgeProgressBar>();
-    progressBar->style({
-        {"width", OMDemiurgeSize::pixels(220.0f)},
-        {"height", OMDemiurgeSize::pixels(3.0f)},
-        {"radius", glm::vec4(3.0f)},
-        {"alignSelf", OMDemiurgeAlign::Center},
-    });
-    progressBar->setTrackColor(glm::vec4(0.106f, 0.106f, 0.141f, 0.35f));
-    progressBar->setBarColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f));
-
     checkBox = std::make_shared<node::controls::OMDemiurgeCheckBox>(fontset.get());
     checkBox->style({
         {"label", "Demo Option"},
@@ -140,17 +130,36 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     demoTextEdit->setPlaceholder("Multi-line text...");
     demoTextEdit->style({{"width", OMDemiurgeSize::pixels(260.0f)}, {"height", OMDemiurgeSize::pixels(36.0f)}});
 
-    progressBar->setProgress(0.62f);
-
-    auto progressBarIndeterminate = std::make_shared<node::controls::OMDemiurgeProgressBar>();
-    progressBarIndeterminate->style({
+    demoProgressBar = std::make_shared<node::controls::OMDemiurgeProgressBar>();
+    demoProgressBar->style({
         {"width", OMDemiurgeSize::fill()},
         {"height", OMDemiurgeSize::pixels(3.0f)},
         {"radius", glm::vec4(3.0f)},
     });
-    progressBarIndeterminate->setTrackColor(glm::vec4(0.106f, 0.106f, 0.141f, 0.35f));
-    progressBarIndeterminate->setBarColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f));
-    progressBarIndeterminate->setIndeterminate(true);
+    demoProgressBar->setTrackColor(glm::vec4(0.106f, 0.106f, 0.141f, 0.35f));
+    demoProgressBar->setBarColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f));
+    demoProgressBar->setIndeterminate(true);
+
+    demoProgError = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
+    demoProgError->style("label", "Error");
+    demoProgError->setOnClick([&]() {
+        demoProgressBar->setBarColor(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+        demoProgressBar->setIndeterminate(false);
+        demoProgressBar->setProgress(1.0f);
+    });
+    demoProgIndetermined = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
+    demoProgIndetermined->style("label", "Indetermined");
+    demoProgIndetermined->setOnClick([&]() {
+        demoProgressBar->setBarColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f));
+        demoProgressBar->setIndeterminate(true);
+    });
+    demoProgNorm = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
+    demoProgNorm->style("label", "Norm");
+    demoProgNorm->setOnClick([&]() {
+        demoProgressBar->setBarColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f));
+        demoProgressBar->setIndeterminate(false);
+        demoProgressBar->setProgress(0.6f);
+    });
 
     auto progressContent = std::make_shared<node::OMDemiurgeContainerNode>();
     progressContent->style({{"flexDirection", OMDemiurgeDirection::Column},
@@ -158,18 +167,14 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                             {"width", OMDemiurgeSize::fill()}});
     progressContent->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                      ->style({{"color", (int)0xffffff8c},
-                                              {"text", "Determinate"},
-                                              {"textheight", 11},
-                                              {"alignSelf", OMDemiurgeAlign::FlexStart}}));
-    progressBar->style("width", OMDemiurgeSize::fill());
-    progressContent->mountDirect(progressBar);
-    progressContent->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
-                                     ->style({{"color", (int)0xffffff8c},
                                               {"text", "Indeterminate"},
                                               {"textheight", 11},
                                               {"alignSelf", OMDemiurgeAlign::FlexStart},
                                               {"border", OMDemiurgeEdgeInsets{8, 0, 0, 0}}}));
-    progressContent->mountDirect(progressBarIndeterminate);
+    progressContent->mountDirect(demoProgressBar);
+    progressContent->mountDirect(demoProgError);
+    progressContent->mountDirect(demoProgIndetermined);
+    progressContent->mountDirect(demoProgNorm);
 
     auto scrollBarVertical = std::make_shared<node::controls::OMDemiurgeScrollBar>();
     demoScrollBar = scrollBarVertical;
@@ -178,9 +183,8 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     scrollBarVertical->setMetrics(80.0f, 320.0f);
     auto scrollLabelVertical = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get());
     scrollLabelVertical->style({{"color", (int)0xffffff8c}, {"text", "V: 0.0"}, {"textheight", 11}});
-    scrollBarVertical->setOnScroll([scrollLabelVertical](float value) {
-        scrollLabelVertical->style("text", fmt::format("V: {:.1f}", value));
-    });
+    scrollBarVertical->setOnScroll(
+        [scrollLabelVertical](float value) { scrollLabelVertical->style("text", fmt::format("V: {:.1f}", value)); });
     auto scrollRowVertical = std::make_shared<node::OMDemiurgeContainerNode>();
     scrollRowVertical->style({{"flexDirection", OMDemiurgeDirection::Row},
                               {"alignItems", OMDemiurgeAlign::Center},
@@ -215,8 +219,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     scrollContent->mountDirect(scrollRowHorizontal);
 
     auto galleryList = std::make_shared<node::OMDemiurgeContainerNode>();
-    galleryList->style({{"flexDirection", OMDemiurgeDirection::Column},
-                        {"width", OMDemiurgeSize::fill()}});
+    galleryList->style({{"flexDirection", OMDemiurgeDirection::Column}, {"width", OMDemiurgeSize::fill()}});
 
     auto addGallerySection = [&](const std::string &title, const std::string &description,
                                  const std::shared_ptr<OMDemiurgeNode> &body) {
@@ -302,9 +305,8 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     pageGallery->mountDirect(demoScrollPane);
 
     auto pageMisc = std::make_shared<node::OMDemiurgeContainerNode>();
-    pageMisc->style({{"flexDirection", Column},
-                     {"flexGap", OMDemiurgeSize::pixels(12.0f)},
-                     {"width", OMDemiurgeSize::fill()}});
+    pageMisc->style(
+        {{"flexDirection", Column}, {"flexGap", OMDemiurgeSize::pixels(12.0f)}, {"width", OMDemiurgeSize::fill()}});
     pageMisc->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                               ->style({{"color", (int)0xffffffff},
                                        {"text", "Misc"},

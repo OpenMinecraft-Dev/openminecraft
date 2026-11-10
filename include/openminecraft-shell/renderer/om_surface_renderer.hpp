@@ -37,9 +37,11 @@ class OMSurfaceRenderer : public openminecraft::renderer::common::OMRendererHand
 
     openminecraft::renderer::OMRenderer *renderer;
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode> node;
-    std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeProgressBar> progressBar;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeCheckBox> checkBox;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeButton> demoButton, quitButton;
+    std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeProgressBar> demoProgressBar;
+    std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeButton> demoProgError,
+        demoProgIndetermined, demoProgNorm;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeRadioGroup> radioGroup;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeRadioBox> radioA, radioB;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeSwitch> demoSwitch;
