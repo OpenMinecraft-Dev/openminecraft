@@ -9,6 +9,7 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textedit.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_dropdown.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_tabs.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_scrollbar.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textinput.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_link.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_progressbar.hpp"
@@ -213,6 +214,50 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     galleryColumn2->mountDirect(makeDropdown("TextInput", demoInput));
     demoTextEdit->style("width", OMDemiurgeSize::fill());
     galleryColumn2->mountDirect(makeDropdown("TextEdit", demoTextEdit));
+
+    auto scrollBarVertical = std::make_shared<node::controls::OMDemiurgeScrollBar>();
+    demoScrollBar = scrollBarVertical;
+    scrollBarVertical->style("width", OMDemiurgeSize::pixels(4.0f));
+    scrollBarVertical->style("height", OMDemiurgeSize::pixels(80.0f));
+    scrollBarVertical->setMetrics(80.0f, 320.0f);
+    auto scrollLabelVertical = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get());
+    scrollLabelVertical->style({{"color", (int)0xffffff8c}, {"text", "V: 0.0"}, {"textheight", 11}});
+    scrollBarVertical->setOnScroll([scrollLabelVertical](float value) {
+        scrollLabelVertical->style("text", fmt::format("V: {:.1f}", value));
+    });
+    auto scrollRowVertical = std::make_shared<node::OMDemiurgeContainerNode>();
+    scrollRowVertical->style({{"flexDirection", OMDemiurgeDirection::Row},
+                              {"alignItems", OMDemiurgeAlign::Center},
+                              {"flexGap", OMDemiurgeSize::pixels(12.0f)},
+                              {"width", OMDemiurgeSize::fill()}});
+    scrollRowVertical->mountDirect(scrollBarVertical);
+    scrollRowVertical->mountDirect(scrollLabelVertical);
+
+    auto scrollBarHorizontal = std::make_shared<node::controls::OMDemiurgeScrollBar>();
+    scrollBarHorizontal->setOrientation(node::controls::OMDemiurgeScrollBarOrientation::Horizontal);
+    scrollBarHorizontal->style("width", OMDemiurgeSize::pixels(220.0f));
+    scrollBarHorizontal->style("height", OMDemiurgeSize::pixels(4.0f));
+    scrollBarHorizontal->setMetrics(120.0f, 400.0f);
+    auto scrollLabelHorizontal = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get());
+    scrollLabelHorizontal->style({{"color", (int)0xffffff8c}, {"text", "H: 0.0"}, {"textheight", 11}});
+    scrollBarHorizontal->setOnScroll([scrollLabelHorizontal](float value) {
+        scrollLabelHorizontal->style("text", fmt::format("H: {:.1f}", value));
+    });
+    auto scrollRowHorizontal = std::make_shared<node::OMDemiurgeContainerNode>();
+    scrollRowHorizontal->style({{"flexDirection", OMDemiurgeDirection::Row},
+                                {"alignItems", OMDemiurgeAlign::Center},
+                                {"flexGap", OMDemiurgeSize::pixels(12.0f)},
+                                {"width", OMDemiurgeSize::fill()}});
+    scrollRowHorizontal->mountDirect(scrollBarHorizontal);
+    scrollRowHorizontal->mountDirect(scrollLabelHorizontal);
+
+    auto scrollContent = std::make_shared<node::OMDemiurgeContainerNode>();
+    scrollContent->style({{"flexDirection", OMDemiurgeDirection::Column},
+                          {"flexGap", OMDemiurgeSize::pixels(10.0f)},
+                          {"width", OMDemiurgeSize::fill()}});
+    scrollContent->mountDirect(scrollRowVertical);
+    scrollContent->mountDirect(scrollRowHorizontal);
+    galleryColumn2->mountDirect(makeDropdown("ScrollBar", scrollContent));
 
     auto galleryGrid = std::make_shared<node::OMDemiurgeContainerNode>();
     galleryGrid->style({{"flexDirection", OMDemiurgeDirection::Row},

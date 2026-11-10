@@ -14,6 +14,7 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textedit.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_dropdown.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_tabs.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_scrollbar.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textinput.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_link.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_progressbar.hpp"
@@ -52,6 +53,7 @@ class OMSurfaceRenderer : public openminecraft::renderer::common::OMRendererHand
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeTextEdit> demoTextEdit;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeDropDownPane> demoDropDown;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeTabMultiPage> demoTabs;
+    std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeScrollBar> demoScrollBar;
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeRendererHandler> internal;
     openminecraft::renderer::common::animation::OMAnimationValue<float> offset;
 

@@ -577,6 +577,59 @@ RadioGroup：
 - 顶部/底部布局：控件高度 = `tabHeight + 当前页高度`；左侧/右侧布局：控件高度 = 当前页高度，宽度减去 Tab 栏厚度；
 - 当前页元素通过 `pageClip` 裁剪到页面区域，避免内容溢出到 Tab 栏。
 
+### 7.17 ScrollBar
+
+`OMDemiurgeScrollBar()`
+
+由外部提供 view / content 尺寸，自动计算 thumb 的长度与位置；外观与 Tab 指示条一致（细圆角条）。为后续 `ScrollPane` 提供滚动量回调。
+
+| API | 说明 |
+| --- | --- |
+| `setMetrics(viewSize, contentSize)` | 沿滚动轴的可视区尺寸 / 内容总尺寸 |
+| `setViewSize(float)` / `setContentSize(float)` | 单独设置 |
+| `getViewSize()` / `getContentSize()` / `getMaxScrollOffset()` | 查询 |
+| `setScrollOffset(float, bool notify = false)` | 设置滚动位置；越界值保留为 overscroll，不静默 clamp |
+| `getOverscroll()` / `isOverscrolling()` | 当前越界量 / 是否越界 |
+| `getScrollOffset()` / `getThumbLength()` | 当前 offset / 当前显示 thumb 长度（含 overscroll 压缩） |
+| `setOnScroll(std::function<void(float)>)` | 拖动、点击轨道或滚轮改变 offset 时回调 |
+| `setOrientation(Vertical / Horizontal)` | 滚动方向，默认 `Vertical` |
+| `setDisabled(bool, bool animate)` / `isDisabled()` | 禁用 |
+
+主要 style：
+
+| 键 | 说明 |
+| --- | --- |
+| `color` / `track_color` | thumb / 轨道颜色 |
+| `radius` | 圆角 |
+| `min_thumb` | thumb 最小长度（默认 24） |
+| `scroll_step` | 滚轮步长（默认 40） |
+| `overscroll_curve` | 压缩曲线指数（默认 2.0，越大越晚压缩） |
+| `overscroll_range` | 压缩参考范围，以 viewSize 的倍数计（默认 1.0） |
+| `width` / `height` | `Vertical` 时 width 为条宽（默认 4）、height 为轨道长度；`Horizontal` 相反 |
+
+计算方式：
+
+```text
+thumbLength = clamp(viewSize / contentSize * trackLength, min_thumb, trackLength)
+maxScroll   = max(0, contentSize - viewSize)
+thumbPos    = scrollOffset / maxScroll * (trackLength - thumbLength)
+```
+
+不可滚动（`contentSize <= viewSize`）时 thumb 隐藏；轨道点击会把 thumb 中心移动到点击位置，拖动与滚轮都会通过 `setOnScroll` 通知外部。
+
+越界（`offset < 0` 或 `offset > maxScroll`）时不会把 thumb 移出轨道，而是把它贴住对应的上/下端并**非线性压缩**：
+
+```text
+overscroll        = offset < 0 ? -offset : max(0, offset - maxScroll)
+t                 = clamp(overscroll / (viewSize * overscroll_range), 0, 1)
+eased             = pow(t, overscroll_curve)
+visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eased)
+```
+
+- `thickness` 为滚动条厚度（`Vertical` 时是宽度）；
+- 越界接近一个 view 高度时压缩加快，`overscroll` 达到 `viewSize * overscroll_range` 时 thumb 长度等于厚度，配合自动收敛的圆角变成一个**圆点**；
+- `getThumbLength()` 返回压缩后的显示长度，`setOnScroll` 仍收到原始（可能越界的）offset。
+
 ## 8. 示例
 
 ### 8.1 基础节点与样式
@@ -631,7 +684,7 @@ control->setDisabled(true);
 新增 / 修改控件、节点或元素时：
 
 1. 在本文档与 [README-en.md](README-en.md) 中同步更新对应章节（API 表、style 表、元素表）；
-2. 新控件需要加入 7.2–7.16 的控件列表，并说明：
+2. 新控件需要加入 7.2–7.17 的控件列表，并说明：
    - 构造函数与基类；
    - 公开 API；
    - 读取的 style 键（区分公共键与调参/内部键）；

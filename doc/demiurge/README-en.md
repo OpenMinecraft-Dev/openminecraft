@@ -577,6 +577,59 @@ Behavior:
 - Top/bottom: control height = `tabHeight + active page height`; left/right: control height = active page height, width minus the bar thickness;
 - The active page is clipped to the page area via `pageClip`, so content cannot overflow into the tab bar.
 
+### 7.17 ScrollBar
+
+`OMDemiurgeScrollBar()`
+
+Computes thumb length/position from externally supplied view/content metrics. Its appearance follows the tab indicator (a thin rounded pill). It reports scrolling changes through a callback so a future `ScrollPane` can stay in sync.
+
+| API | Description |
+| --- | --- |
+| `setMetrics(viewSize, contentSize)` | Visible size / total content size along the scroll axis |
+| `setViewSize(float)` / `setContentSize(float)` | Set them individually |
+| `getViewSize()` / `getContentSize()` / `getMaxScrollOffset()` | Query |
+| `setScrollOffset(float, bool notify = false)` | Set the offset; out-of-range values are kept as overscroll instead of being silently clamped |
+| `getOverscroll()` / `isOverscrolling()` | Current overscroll amount / whether out of range |
+| `getScrollOffset()` / `getThumbLength()` | Current offset / displayed thumb length (including overscroll compression) |
+| `setOnScroll(std::function<void(float)>)` | Called when dragging, track clicks or the wheel change the offset |
+| `setOrientation(Vertical / Horizontal)` | Scroll axis, `Vertical` by default |
+| `setDisabled(bool, bool animate)` / `isDisabled()` | Disable |
+
+Main styles:
+
+| Key | Description |
+| --- | --- |
+| `color` / `track_color` | Thumb / track colors |
+| `radius` | Corner radius |
+| `min_thumb` | Minimum thumb length (default 24) |
+| `scroll_step` | Wheel step (default 40) |
+| `overscroll_curve` | Compression curve exponent (default 2.0; larger compresses later) |
+| `overscroll_range` | Compression reference range as a multiple of viewSize (default 1.0) |
+| `width` / `height` | For `Vertical`, width is the bar thickness (default 4) and height the track length; reversed for `Horizontal` |
+
+Computation:
+
+```text
+thumbLength = clamp(viewSize / contentSize * trackLength, min_thumb, trackLength)
+maxScroll   = max(0, contentSize - viewSize)
+thumbPos    = scrollOffset / maxScroll * (trackLength - thumbLength)
+```
+
+When not scrollable (`contentSize <= viewSize`) the thumb is hidden. Clicking the track centers the thumb at the click position; dragging and the wheel notify the outside world through `setOnScroll`.
+
+Out-of-range offsets (`offset < 0` or `offset > maxScroll`) do not move the thumb outside the track; instead it sticks to the corresponding end and compresses **non-linearly**:
+
+```text
+overscroll        = offset < 0 ? -offset : max(0, offset - maxScroll)
+t                 = clamp(overscroll / (viewSize * overscroll_range), 0, 1)
+eased             = pow(t, overscroll_curve)
+visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eased)
+```
+
+- `thickness` is the scroll bar thickness (width for `Vertical`);
+- Near one full view height of overscroll the compression accelerates; at `viewSize * overscroll_range` the thumb length equals its thickness, and with the clamped corner radius it becomes a **circle**;
+- `getThumbLength()` returns the compressed display length, while `setOnScroll` still receives the raw (possibly out-of-range) offset.
+
 ## 8. Examples
 
 ### 8.1 Basic node and styles
@@ -631,7 +684,7 @@ control->setDisabled(true);
 When adding or changing a control, node or element:
 
 1. Update the corresponding sections (API tables, style tables, element table) in both this document and [README.md](README.md);
-2. Add new controls to the control list in 7.2–7.16 and document:
+2. Add new controls to the control list in 7.2–7.17 and document:
    - Constructor and base class;
    - Public APIs;
    - Style keys read (distinguishing public keys from tuning/internal keys);
