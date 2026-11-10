@@ -320,7 +320,7 @@ This allows a uniform `std::shared_ptr<OMDemiurgeControl>` to call `setDisabled(
 | `setDisabled(bool, bool animate)` | Disable |
 | `isDisabled()` | Query |
 
-Main styles: `label`, `textheight`, `radius`, `opacity_normal`, `opacity_hovered`, `opacity_clicked`, `animation_speed`.
+Main styles: `label`, `textheight`, `text_margin` (`std::array<OMDemiurgeSize,4>`, order top/bottom/left/right), `radius`, `opacity_normal`, `opacity_hovered`, `opacity_clicked`, `animation_speed`.
 The label is set through the `label` style (there is no `setLabel`).
 
 ### 7.3 IconButton
@@ -410,6 +410,8 @@ RadioGroup:
 | --- | --- |
 | `setProgress(float)` | 0..1 is determinate; outside that range or NaN is indeterminate |
 | `setIndeterminate(bool)` / `isIndeterminate()` | Explicitly switch/query the indeterminate state |
+| `setError(bool, bool animate = true)` / `isError()` | Error state: the bar color smoothly blends to `errorColor` |
+| `setErrorColor(glm::vec4)` | Custom error color, default soft red `vec4(0.937, 0.376, 0.400, 1)` |
 | `getProgress()` / `isDeterminate()` | Query |
 | `setTrackColor(vec4)` / `setBarColor(vec4)` | Colors |
 | `setAnimationSpeed(float)` | Animation duration |
@@ -555,6 +557,7 @@ Main styles:
 | `bar_line_color` | Full-width divider under the tab bar |
 | `animation_speed` | Indicator / disabled-state animation duration |
 | `page_animation_speed` | Page transition duration in seconds |
+| `page_border` | Inset border applied to page content, default `{2,2,2,2}`, prevents edge clipping |
 
 Behavior:
 

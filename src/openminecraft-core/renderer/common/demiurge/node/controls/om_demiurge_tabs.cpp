@@ -29,6 +29,7 @@ OMDemiurgeTabMultiPage::OMDemiurgeTabMultiPage(geom::OMFontSet *fontset)
     stylesStorage.put("bar_line_color", (int)0xffffff1a);
     stylesStorage.put("animation_speed", 0.18f);
     stylesStorage.put("page_animation_speed", 0.25f);
+    stylesStorage.put("page_border", OMDemiurgeEdgeInsets{2, 2, 2, 2});
 
     tabBar = std::make_shared<OMDemiurgeContainerNode>();
     tabBar->style({{"position", OMDemiurgePosition::Absolute},
@@ -101,6 +102,7 @@ auto OMDemiurgeTabMultiPage::addPage(const std::string &title, const std::shared
 
     tabBar->mountDirect(root);
 
+    page->style("border", stylesStorage.get<OMDemiurgeEdgeInsets>("page_border", OMDemiurgeEdgeInsets{2, 2, 2, 2}));
     page->style({{"position", OMDemiurgePosition::Absolute},
                  {"offsetX", OMDemiurgeSize::pixels(0.0f)},
                  {"offsetY", OMDemiurgeSize::pixels(0.0f)},

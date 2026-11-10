@@ -320,7 +320,7 @@ class OMDemiurgeControl
 | `setDisabled(bool, bool animate)` | 禁用 |
 | `isDisabled()` | 查询 |
 
-主要 style：`label`、`textheight`、`radius`、`opacity_normal`、`opacity_hovered`、`opacity_clicked`、`animation_speed`。
+主要 style：`label`、`textheight`、`text_margin`（`std::array<OMDemiurgeSize,4>`，顺序 top/bottom/left/right）、`radius`、`opacity_normal`、`opacity_hovered`、`opacity_clicked`、`animation_speed`。
 文本通过 `label` style 设置（没有 `setLabel`）。
 
 ### 7.3 IconButton
@@ -410,6 +410,8 @@ RadioGroup：
 | --- | --- |
 | `setProgress(float)` | 0..1 为确定态；越界或 NaN 为不定态 |
 | `setIndeterminate(bool)` / `isIndeterminate()` | 显式切换不定态 / 查询 |
+| `setError(bool, bool animate = true)` / `isError()` | 错误状态：进度条颜色平滑过渡到 `errorColor` |
+| `setErrorColor(glm::vec4)` | 自定义错误颜色，默认柔和红 `vec4(0.937, 0.376, 0.400, 1)` |
 | `getProgress()` / `isDeterminate()` | 查询 |
 | `setTrackColor(vec4)` / `setBarColor(vec4)` | 颜色 |
 | `setAnimationSpeed(float)` | 动画时长 |
@@ -555,6 +557,7 @@ RadioGroup：
 | `bar_line_color` | Tab 栏底部整条分隔线颜色 |
 | `animation_speed` | Tab 指示条/禁用状态动画时长 |
 | `page_animation_speed` | 页面切换动画时长（秒） |
+| `page_border` | 页面内容的边框内缩，默认 `{2,2,2,2}`，避免裁剪到边缘 |
 
 行为说明：
 

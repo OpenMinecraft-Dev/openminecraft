@@ -53,6 +53,8 @@ void OMDemiurgeButton::update()
     textNode->style("color", (int)f4ToRgba(glm::vec4(textRgb, text.a)));
     textNode->style("text", stylesStorage.get<std::string>("label", "Button"));
     textNode->style("textheight", stylesStorage.get<int>("textheight", 16));
+    textNode->style("margin", stylesStorage.get<std::array<OMDemiurgeSize, 4>>(
+                                  "text_margin", std::array<OMDemiurgeSize, 4>{5_px, 10_px, 5_px, 5_px}));
     OMDemiurgeContainerNode::update();
 }
 auto OMDemiurgeButton::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult

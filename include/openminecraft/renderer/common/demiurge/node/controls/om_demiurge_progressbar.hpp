@@ -24,6 +24,13 @@ class OMDemiurgeProgressBar : public OMDemiurgeContainerNode, public OMDemiurgeC
 
     void setTrackColor(glm::vec4 color);
     void setBarColor(glm::vec4 color);
+    // Error state tints the bar with errorColor (soft red by default).
+    void setError(bool value, bool animate = true);
+    auto isError() const -> bool
+    {
+        return error;
+    }
+    void setErrorColor(glm::vec4 color);
     void setAnimationSpeed(float seconds);
 
     // 0..1 => determinate; anything outside (or NaN) => indeterminate.
@@ -52,6 +59,8 @@ class OMDemiurgeProgressBar : public OMDemiurgeContainerNode, public OMDemiurgeC
 
     animation::OMAnimationValue<glm::vec4> trackColor;
     animation::OMAnimationValue<glm::vec4> barColor;
+    animation::OMAnimationValue<glm::vec4> errorColor;
+    animation::OMAnimationValue<float> errorAmount;
     animation::OMAnimationValue<float> disabledAmount;
 
   private:
@@ -62,6 +71,7 @@ class OMDemiurgeProgressBar : public OMDemiurgeContainerNode, public OMDemiurgeC
 
     bool determinate = false;
     bool disabled = false;
+    bool error = false;
     float targetProgress = 0.0f;
     float visualLeft = 0.0f;
     float visualWidth = 0.0f;

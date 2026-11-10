@@ -50,7 +50,6 @@ class OMSurfaceRenderer : public openminecraft::renderer::common::OMRendererHand
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeIconButton> demoIconButton;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeBadge> demoBadge;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeLink> demoLink;
-    std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeDivider> demoDivider;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeTextInput> demoInput;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeTextEdit> demoTextEdit;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeTabMultiPage> demoTabs;

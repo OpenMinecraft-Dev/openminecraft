@@ -14,7 +14,7 @@ namespace openminecraft::renderer::common::demiurge::node::controls
 {
 OMDemiurgeProgressBar::OMDemiurgeProgressBar()
     : trackColor(glm::vec4(0.106f, 0.106f, 0.141f, 0.25f)), barColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f)),
-      disabledAmount(0.0f)
+      errorColor(glm::vec4(0.937f, 0.376f, 0.400f, 1.0f)), errorAmount(0.0f), disabledAmount(0.0f)
 {
     startedAt = std::chrono::steady_clock::now();
     lastUpdate = startedAt;
@@ -62,8 +62,12 @@ void OMDemiurgeProgressBar::update()
         return glm::vec4(rgb, color.a * (1.0f - disabledValue * 0.35f));
     };
 
+    const float errorValue = std::clamp(errorAmount.get(), 0.0f, 1.0f);
+    const glm::vec4 effectiveBarColor =
+        glm::mix(barColor.get(), errorColor.get(), errorValue);
+
     trackNode->style("color", (int)f4ToRgba(applyDisabled(trackColor.get())))->style("radius", radius);
-    barNode->style("color", (int)f4ToRgba(applyDisabled(barColor.get())))->style("radius", radius);
+    barNode->style("color", (int)f4ToRgba(applyDisabled(effectiveBarColor)))->style("radius", radius);
 
     // Track width in pixels (falls back to the style value before the first layout pass).
     float trackWidth = 180.0f;
@@ -169,6 +173,31 @@ void OMDemiurgeProgressBar::setTrackColor(glm::vec4 color)
 void OMDemiurgeProgressBar::setBarColor(glm::vec4 color)
 {
     barColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.2f));
+}
+
+void OMDemiurgeProgressBar::setError(bool value, bool animate)
+{
+    if (error == value)
+    {
+        return;
+    }
+
+    error = value;
+
+    if (animate)
+    {
+        errorAmount.animateTo(value ? 1.0f : 0.0f, easeOutCirc<float>,
+                              stylesStorage.get<float>("animation_speed", 0.2f));
+    }
+    else
+    {
+        errorAmount.setTo(value ? 1.0f : 0.0f);
+    }
+}
+
+void OMDemiurgeProgressBar::setErrorColor(glm::vec4 color)
+{
+    errorColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.2f));
 }
 
 void OMDemiurgeProgressBar::setProgress(float progress)
