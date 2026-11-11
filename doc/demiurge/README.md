@@ -250,6 +250,8 @@ someNode->styleDump();            // "{color=-1, text="Main", textheight=14}"
 
 元素是通道内的实例结构体，不是业务 API。所有元素都带 `position = {x, y, w, h}`、`depth`（`uint32_t` 层号，根为 0、每深一层 +1），并统一支持 `glm::vec2 scale = (1, 1)`。UI 管线关闭深度测试（`Always`），层号只用于提交顺序。
 
+层号的最高位（`0x80000000`）是组标记：置位表示 overlay 组（供对话框等使用），计算层号时会被移除。overlay 组拥有独立的最大层计数，并在所有普通层之后统一渲染。可用 `om_demiurge_layer.hpp` 中的 `layerGroupBit`、`isOverlayLayer()`、`layerIndex()`、`overlayLayer()` 处理。
+
 | 元素 | 额外字段 | 通道 |
 | --- | --- | --- |
 | `OMDemiurgeElementRect` | `color`、`depth`、`scale` | `OMDemiurgeRectChannel` |

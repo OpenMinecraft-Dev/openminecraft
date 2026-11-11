@@ -1,6 +1,7 @@
 #ifndef OM_DEMIURGE_ELEMENT_CHANNEL_HPP
 #define OM_DEMIURGE_ELEMENT_CHANNEL_HPP
 
+#include "openminecraft/renderer/common/demiurge/om_demiurge_layer.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
@@ -47,7 +48,7 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
                     auto i = *it;
                     removed.erase(it);
                     active[i] = true;
-                    maxLayerValue = std::max(maxLayerValue, depth);
+                    updateMaxLayer(depth);
                     return i;
                 }
             }
@@ -57,7 +58,7 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
         clipBounds.resize(objects.size());
         active.resize(objects.size(), true);
         hasDirty = true;
-        maxLayerValue = std::max(maxLayerValue, depth);
+        updateMaxLayer(depth);
         return objects.size() - 1;
     }
 
@@ -117,17 +118,9 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
         active[i] = false;
         removed.emplace_back(i);
 
-        if (depth == maxLayerValue)
+        if (depth == (isOverlayLayer(depth) ? maxLayerOverlayValue | layerGroupBit : maxLayerNormalValue))
         {
-            maxLayerValue = 0;
-
-            for (size_t j = 0; j < objects.size(); ++j)
-            {
-                if (j < active.size() && active[j])
-                {
-                    maxLayerValue = std::max(maxLayerValue, objectGetDepth<T>(objects[j]));
-                }
-            }
+            recomputeMaxLayers();
         }
     }
 
@@ -159,9 +152,14 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
         }
     }
 
-    inline auto maxLayer() -> uint32_t
+    inline auto maxLayer(bool overlay = false) -> uint32_t
     {
-        return maxLayerValue;
+        return overlay ? maxLayerOverlayValue : maxLayerNormalValue;
+    }
+
+    inline auto hasLayerGroup(bool overlay = false) -> bool
+    {
+        return overlay ? hasOverlayObjects : hasNormalObjects;
     }
 
     inline auto bufferSize() -> int
@@ -195,7 +193,40 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
     int lastCount = -1;
     size_t bufferCapacity = 0;
     std::vector<bool> active;
-    uint32_t maxLayerValue = 0;
+    uint32_t maxLayerNormalValue = 0;
+    uint32_t maxLayerOverlayValue = 0;
+    bool hasNormalObjects = false;
+    bool hasOverlayObjects = false;
+
+    inline auto updateMaxLayer(uint32_t depth) -> void
+    {
+        if (isOverlayLayer(depth))
+        {
+            maxLayerOverlayValue = std::max(maxLayerOverlayValue, layerIndex(depth));
+            hasOverlayObjects = true;
+        }
+        else
+        {
+            maxLayerNormalValue = std::max(maxLayerNormalValue, layerIndex(depth));
+            hasNormalObjects = true;
+        }
+    }
+
+    inline auto recomputeMaxLayers() -> void
+    {
+        maxLayerNormalValue = 0;
+        maxLayerOverlayValue = 0;
+        hasNormalObjects = false;
+        hasOverlayObjects = false;
+
+        for (size_t j = 0; j < objects.size(); ++j)
+        {
+            if (j < active.size() && active[j])
+            {
+                updateMaxLayer(objectGetDepth<T>(objects[j]));
+            }
+        }
+    }
 };
 } // namespace openminecraft::renderer::common::demiurge::element
 

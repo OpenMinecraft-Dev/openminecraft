@@ -1,8 +1,7 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
+#include "openminecraft/renderer/common/demiurge/om_demiurge_layer.hpp"
 #include <vector>
-#include <cstdlib>
 #include <typeinfo>
-#include <fstream>
 #include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/geom/om_svg_structure.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
@@ -97,8 +96,14 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
     task->target(middleTarget->target());
 
     uint32_t maxLayer = rect.maxLayer();
+    uint32_t maxOverlayLayer = rect.maxLayer(true);
+    bool hasOverlay = rect.hasLayerGroup(true);
 
-    auto includeMax = [&maxLayer](auto &channel) { maxLayer = std::max(maxLayer, channel.maxLayer()); };
+    auto includeMax = [&](auto &channel) {
+        maxLayer = std::max(maxLayer, channel.maxLayer());
+        maxOverlayLayer = std::max(maxOverlayLayer, channel.maxLayer(true));
+        hasOverlay = hasOverlay || channel.hasLayerGroup(true);
+    };
     includeMax(roundedRect);
     includeMax(image);
     includeMax(sector);
@@ -110,6 +115,7 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
         includeMax(*p.second);
     }
 
+    // Normal layers first.
     for (uint32_t layer = 0; layer <= maxLayer; ++layer)
     {
         rect.submitTask(task, layer);
@@ -122,6 +128,27 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
         for (auto &p : fonts)
         {
             p.second->submitTask(task, layer);
+        }
+    }
+
+    // Overlay group: highest bit set, separate max, always after normal layers.
+    if (hasOverlay)
+    {
+        for (uint32_t layer = 0; layer <= maxOverlayLayer; ++layer)
+        {
+            const uint32_t overlay = overlayLayer(layer);
+
+            rect.submitTask(task, overlay);
+            roundedRect.submitTask(task, overlay);
+            image.submitTask(task, overlay);
+            sector.submitTask(task, overlay);
+            svg.submitTask(task, overlay);
+            shaderScene.submitTask(task, overlay);
+
+            for (auto &p : fonts)
+            {
+                p.second->submitTask(task, overlay);
+            }
         }
     }
     task->finish();

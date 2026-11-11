@@ -250,6 +250,8 @@ Paths: `node/` and `node/container/`.
 
 Elements are per-channel instance structs, not business-facing APIs. Every element carries `position = {x, y, w, h}` and `depth` (a `uint32_t` layer: root 0, +1 per level), and supports `glm::vec2 scale = (1, 1)`. UI pipelines disable depth testing (`Always`); the layer is only used for submission order.
 
+The highest bit (`0x80000000`) is a group marker: when set the element belongs to the overlay group (used by dialogs), and it is removed when computing the layer index. The overlay group has its own max-layer count and is rendered after all normal layers. Use `layerGroupBit`, `isOverlayLayer()`, `layerIndex()` and `overlayLayer()` from `om_demiurge_layer.hpp`.
+
 | Element | Extra fields | Channel |
 | --- | --- | --- |
 | `OMDemiurgeElementRect` | `color`, `depth`, `scale` | `OMDemiurgeRectChannel` |
