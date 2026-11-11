@@ -64,6 +64,22 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         auto f = std::find(children.begin(), children.end(), child);
         if (f != children.end())
         {
+            // A focused/captured control must not keep keyboard/mouse ownership
+            // after it leaves the tree.
+            releaseFocusWithin(child);
+
+            if (auto captured = fetchMouseCapture())
+            {
+                for (auto cur = captured.get(); cur != nullptr; cur = cur->parent)
+                {
+                    if (cur == child.get())
+                    {
+                        captured->releaseMouse();
+                        break;
+                    }
+                }
+            }
+
             YGNodeRemoveChild(yogaNode, child->yogaNode);
             child->remove();
 

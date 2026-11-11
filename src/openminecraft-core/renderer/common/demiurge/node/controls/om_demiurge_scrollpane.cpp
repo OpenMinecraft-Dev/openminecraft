@@ -1,4 +1,5 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_scrollpane.hpp"
+#include <cstdlib>
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
@@ -181,6 +182,20 @@ void OMDemiurgeScrollPane::setContentNode(const std::shared_ptr<OMDemiurgeNode> 
     {
         contentHost->mountDirect(contentNode);
     }
+
+    preserveScrollOnContentChange();
+}
+
+void OMDemiurgeScrollPane::preserveScrollOnContentChange()
+{
+    pressed = false;
+    dragging = false;
+    releaseMouse();
+
+    // Preserve the current offset as much as possible. The next update compares
+    // against the new content metrics and clamps it to min(offset, new max).
+    lastMaxScrollX = -1.0f;
+    lastMaxScrollY = -1.0f;
 }
 
 void OMDemiurgeScrollPane::setContentStretch(bool value)
@@ -291,6 +306,31 @@ void OMDemiurgeScrollPane::update()
 
     maxScrollX = std::max(0.0f, contentWidth - viewWidth);
     maxScrollY = std::max(0.0f, contentHeight - viewHeight);
+
+    // Only react to a meaningful shrink. The content viewport can jitter by a
+    // pixel while scrollbars are laid out, and clamping on every jitter would
+    // cancel wheel/bounce/inertia animations.
+    const bool contentShrunk =
+        maxScrollX + 1.5f < lastMaxScrollX || maxScrollY + 1.5f < lastMaxScrollY;
+
+    lastMaxScrollX = maxScrollX;
+    lastMaxScrollY = maxScrollY;
+
+    if (contentShrunk && !dragging && !pressed)
+    {
+        const float currentX = scrollX.get();
+        const float currentY = scrollY.get();
+
+        if (currentX < 0.0f || currentX > maxScrollX)
+        {
+            scrollX.setTo(std::clamp(currentX, 0.0f, maxScrollX));
+        }
+
+        if (currentY < 0.0f || currentY > maxScrollY)
+        {
+            scrollY.setTo(std::clamp(currentY, 0.0f, maxScrollY));
+        }
+    }
 
     float visualX = rubberBand(scrollX.get(), maxScrollX);
     float visualY = rubberBand(scrollY.get(), maxScrollY);

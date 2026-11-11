@@ -115,6 +115,8 @@ class OMDemiurgeScrollPane : public OMDemiurgeContainerNode, public OMDemiurgeCo
     float contentHeight = 0.0f;
     float maxScrollX = 0.0f;
     float maxScrollY = 0.0f;
+    float lastMaxScrollX = -1.0f;
+    float lastMaxScrollY = -1.0f;
 
     std::function<void(float, float)> handleScroll = [](float, float) {};
 
@@ -122,6 +124,7 @@ class OMDemiurgeScrollPane : public OMDemiurgeContainerNode, public OMDemiurgeCo
     auto updateDrag(float x, float y) -> OMDemiurgeEventResult;
     void applyBounce();
     void applyInertia();
+    void preserveScrollOnContentChange();
     void notifyScroll();
 };
 } // namespace openminecraft::renderer::common::demiurge::node::controls

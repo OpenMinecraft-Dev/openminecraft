@@ -61,7 +61,7 @@ Base class: `OMDemiurgeNode` (`include/openminecraft/renderer/common/demiurge/om
 | --- | --- |
 | `mount(child)` | Mount a child, returns `shared_ptr<OMDemiurgeNode>` (`this`) |
 | `mountDirect(child)` | Mount without returning a value, for constructors |
-| `umount(child)` | Unmount and call the child's `remove()` |
+| `umount(child)` | Unmount and call the child's `remove()`; also releases focus and mouse capture inside the subtree |
 | `store(child)` | Child stores itself into a target pointer for chained construction |
 | `children` | Direct child list |
 
@@ -522,7 +522,7 @@ Main styles:
 
 Behavior:
 
-- Height = `headerHeight + contentHeight * openAmount`; content is absolutely positioned below the header;
+- Height = `headerHeight + contentHeight * openAmount`; content is absolutely positioned below the header; `setContentNode` re-measures after replacing/removing content (shrinks to the header, expands when added);
 - Content is clipped to the control via `clipNode`, revealing progressively while the height animates;
 - The chevron uses the SVG `rotation` style with `openAmount * π`;
 - Only clicks on the header row toggle the pane; content controls keep their own interaction.
@@ -644,7 +644,7 @@ A scrollable viewport: content lives on a `contentHost` clipped to the viewport,
 | API | Description |
 | --- | --- |
 | `setOrientation(Horizontal / Vertical / Both)` | Scroll axes, `Vertical` by default |
-| `setContentNode(shared_ptr)` / `getContentNode()` | Set / get the content |
+| `setContentNode(shared_ptr)` / `getContentNode()` | Set / get the content; replacing it preserves the offset where possible and clamps to the new maximum (`min(offset, max)`); removing content resets it to zero |
 | `setContentStretch(bool)` / `isContentStretch()` | Whether to stretch the content's cross axis to the viewport in single-axis modes |
 | `setScrollOffset(x, y, bool notify = false)` / `getScrollX()` / `getScrollY()` | Raw scroll offset (may temporarily overshoot) |
 | `setOnScroll(std::function<void(float, float)>)` | Called when dragging / wheel / scroll bars change the offset |

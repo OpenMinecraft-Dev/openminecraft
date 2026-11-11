@@ -61,7 +61,7 @@ OMDemiurgeRendererHandler
 | --- | --- |
 | `mount(child)` | 挂载子节点，返回 `shared_ptr<OMDemiurgeNode>`（`this`） |
 | `mountDirect(child)` | 挂载但不返回值，用于构造函数内 |
-| `umount(child)` | 卸载并调用子节点 `remove()` |
+| `umount(child)` | 卸载并调用子节点 `remove()`；同时释放子树内的焦点与鼠标捕获 |
 | `store(child)` | 子节点把自身写入目标指针，便于链式构建 |
 | `children` | 直接子节点列表 |
 
@@ -522,7 +522,7 @@ RadioGroup：
 
 行为说明：
 
-- 高度 = `headerHeight + contentHeight * openAmount`，内容以绝对定位放在标题行下方；
+- 高度 = `headerHeight + contentHeight * openAmount`，内容以绝对定位放在标题行下方；`setContentNode` 替换/移除内容后会重新测量高度（移除时收缩到标题行，添加时扩展）；
 - 内容通过 `clipNode` 裁剪到控件自身，展开过程中随高度逐渐露出；
 - 箭头使用 SVG 的 `rotation` style，旋转角为 `openAmount * π`；
 - 只点击标题行区域才会切换，内容区的控件交互不受影响。
@@ -644,7 +644,7 @@ visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eas
 | API | 说明 |
 | --- | --- |
 | `setOrientation(Horizontal / Vertical / Both)` | 滚动方向，默认 `Vertical` |
-| `setContentNode(shared_ptr)` / `getContentNode()` | 设置 / 获取内容 |
+| `setContentNode(shared_ptr)` / `getContentNode()` | 设置 / 获取内容；替换内容时尽量保留原偏移，并按新的最大滚动范围 clamp（`min(offset, max)`）；移除内容时归零 |
 | `setContentStretch(bool)` / `isContentStretch()` | 单轴模式下是否把内容交叉轴拉伸到视口尺寸 |
 | `setScrollOffset(x, y, bool notify = false)` / `getScrollX()` / `getScrollY()` | 原始滚动位置（允许临时越界） |
 | `setOnScroll(std::function<void(float, float)>)` | 拖动 / 滚轮 / 滚动条改变时回调 |

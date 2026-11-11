@@ -29,6 +29,8 @@
 using namespace openminecraft::renderer;
 using namespace openminecraft;
 using namespace openminecraft::renderer::common::demiurge;
+
+
 using namespace openminecraft::renderer::common;
 
 namespace openminecraft::shell::renderer
@@ -332,6 +334,11 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
         }
     });
     pageMisc->mountDirect(debugTreeButton);
+
+
+
+
+
 
     demoTabs = std::make_shared<node::controls::OMDemiurgeTabMultiPage>(fontset.get());
     demoTabs->style("width", OMDemiurgeSize::fill());
