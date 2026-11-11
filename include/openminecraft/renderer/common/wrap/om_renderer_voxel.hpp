@@ -488,6 +488,7 @@ template <typename It> class OMVoxelLayer
         return voxelBuffer;
     }
 
+
     // Actual live data size (used to judge fragmentation)
     auto liveBytesCount() const -> uint64_t
     {
