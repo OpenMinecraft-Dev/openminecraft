@@ -48,7 +48,7 @@ void OMDemiurgeSvgChannel::init(const std::string &uniformTag, const std::string
         ->appendPart("inSvgPos", basics::Vec4f)
         ->appendPart("inSvgColor", basics::Vec4f)
         ->appendPart("inSvgRotation", basics::Vec4f)
-        ->appendPart("inSvgDepth", basics::Float)
+        ->appendPart("inSvgDepth", basics::UInteger)
         ->appendPart("inSvgFactor", basics::Float)
         ->appendPart("inSvgGlyphId", basics::Integer)
         ->appendPart("inSvgScale", basics::Vec2f)
@@ -79,7 +79,7 @@ void OMDemiurgeSvgChannel::init(const std::string &uniformTag, const std::string
                    ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
                    ->blend(true)
                    ->depth(true, true)
-                   ->depthOp(LessOrEqual)
+                   ->depthOp(Always)
                    ->buildN();
     pipeline->bindInput(0, uniform);
     pipeline->bindInput(1, glyphBuffer);

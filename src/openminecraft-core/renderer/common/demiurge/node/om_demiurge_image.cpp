@@ -14,7 +14,7 @@ OMDemiurgeImageNode::OMDemiurgeImageNode(std::string textureTag)
 
 OMDemiurgeImageNode::~OMDemiurgeImageNode() = default;
 
-auto OMDemiurgeImageNode::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeImageNode::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     if (imageId == -1)
     {
@@ -53,7 +53,7 @@ auto OMDemiurgeImageNode::submit(OMDemiurgeRendererHandler *handler, float depth
 
     for (auto c : children)
     {
-        c->submit(handler, depth - layerHalfWidth * 2);
+        c->submit(handler, depth + 1);
     }
 }
 auto OMDemiurgeImageNode::remove() -> void

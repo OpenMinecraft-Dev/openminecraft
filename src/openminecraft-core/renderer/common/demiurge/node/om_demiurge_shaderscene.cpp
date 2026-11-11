@@ -9,7 +9,7 @@ OMDemiurgeShaderSceneNode::OMDemiurgeShaderSceneNode(std::string shader) : shade
 
 OMDemiurgeShaderSceneNode::~OMDemiurgeShaderSceneNode() = default;
 
-auto OMDemiurgeShaderSceneNode::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeShaderSceneNode::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     bool created = false;
 
@@ -39,7 +39,7 @@ auto OMDemiurgeShaderSceneNode::submit(OMDemiurgeRendererHandler *handler, float
 
     for (auto c : children)
     {
-        c->submit(handler, depth - layerHalfWidth * 2);
+        c->submit(handler, depth + 1);
     }
 }
 

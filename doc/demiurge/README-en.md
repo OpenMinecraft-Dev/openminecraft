@@ -38,10 +38,10 @@ Three extension layers:
 `OMDemiurgeRendererHandler` runs the following every frame:
 
 1. `layout(uiWidth, uiHeight)`: Yoga layout; `syncLayoutAll()` feeds layout keys into Yoga, `syncBoundary()` writes the absolute rect back to `layoutBound`;
-2. `submit(handler, bottomDepth)`: nodes submit their `layoutBound` and rendering keys as element instances, and call `handler->applyClip(...)` for child clips;
+2. `submit(handler, 0)`: the root node starts submission, emitting its `layoutBound` and rendering keys as element instances and calling `handler->applyClip(...)` for child clips; children use `layer + 1`;
 3. `update()`: recursively update children; controls advance animations and write styles here;
 4. channel `update()` uploads instance data;
-5. task recording: layers by depth, groups by identical clip rects, and calls `task->setScissor` before draws.
+5. task recording: each channel tracks its current maximum layer, and the handler submits layers 0..max; within a layer, draws are grouped by identical clip rects and `task->setScissor` is called before draws.
 
 Coordinates and scaling:
 
@@ -92,7 +92,7 @@ Base class: `OMDemiurgeNode` (`include/openminecraft/renderer/common/demiurge/om
 
 | API | Description |
 | --- | --- |
-| `submit(handler, depth)` | Pure virtual; submit elements and clips |
+| `submit(handler, uint32_t layer)` | Pure virtual; submit elements and clips; root starts at 0 and children use +1 |
 | `update()` | Virtual; recursively updates children by default |
 | `remove()` | Pure virtual; remove elements from channels |
 | `setVisible(bool)` / `isVisible()` | Invisible nodes skip hit-testing and event dispatch; submission is decided by the owner (TabMultiPage submits only the active page) |
@@ -248,7 +248,7 @@ Paths: `node/` and `node/container/`.
 
 ## 6. Element Layer (Renderer Contributors)
 
-Elements are per-channel instance structs, not business-facing APIs. Every element carries `position = {x, y, w, h}` and `depth`, and supports `glm::vec2 scale = (1, 1)`.
+Elements are per-channel instance structs, not business-facing APIs. Every element carries `position = {x, y, w, h}` and `depth` (a `uint32_t` layer: root 0, +1 per level), and supports `glm::vec2 scale = (1, 1)`. UI pipelines disable depth testing (`Always`); the layer is only used for submission order.
 
 | Element | Extra fields | Channel |
 | --- | --- | --- |
@@ -270,7 +270,7 @@ Elements are per-channel instance structs, not business-facing APIs. Every eleme
 ### 6.2 Clipping and batches
 
 - Nodes call `handler->applyClip(channel, index, logicalRect)` to store clips;
-- Channels group by `depth` and identical clip rects before calling `task->setScissor`;
+- Channels group by the `depth` layer and identical clip rects before calling `task->setScissor`;
 - `image` / `shaderscene` channels use a per-element pipeline and set the scissor for each draw;
 - Clip changes trigger a task re-record; other frames have zero overhead.
 

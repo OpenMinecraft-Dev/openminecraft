@@ -21,7 +21,7 @@ class OMDemiurgeImageChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementIma
     ~OMDemiurgeImageChannel() = default;
 
     auto init(const std::string &uniformTag, const std::string &targetTag) -> void override;
-    auto submitTask(OMRendererTask *task, float upper, float lower) -> void override;
+    auto submitTask(OMRendererTask *task, uint32_t layer) -> void override;
     auto destroy() -> void override
     {
         if (instanceBuffer)

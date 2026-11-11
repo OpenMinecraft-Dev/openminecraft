@@ -79,7 +79,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
                 YGNodeLayoutGetHeight(yogaNode)};
     }
 
-    virtual auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void = 0;
+    virtual auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void = 0;
     virtual auto remove() -> void = 0;
     virtual auto syncLayout() -> void;
 

@@ -9,7 +9,7 @@ namespace openminecraft::renderer::common::demiurge::node
 OMDemiurgeSvgNode::OMDemiurgeSvgNode() = default;
 OMDemiurgeSvgNode::~OMDemiurgeSvgNode() = default;
 
-auto OMDemiurgeSvgNode::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeSvgNode::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     if (svgId == -1)
     {
@@ -43,7 +43,7 @@ auto OMDemiurgeSvgNode::submit(OMDemiurgeRendererHandler *handler, float depth) 
 
     for (auto c : children)
     {
-        c->submit(handler, depth - layerHalfWidth * 2);
+        c->submit(handler, depth + 1);
     }
 }
 

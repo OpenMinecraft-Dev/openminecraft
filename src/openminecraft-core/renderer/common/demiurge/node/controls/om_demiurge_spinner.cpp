@@ -49,7 +49,7 @@ void OMDemiurgeSpinner::rebuildDots()
     }
 }
 
-auto OMDemiurgeSpinner::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeSpinner::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     OMDemiurgeContainerNode::submit(handler, depth);
 }

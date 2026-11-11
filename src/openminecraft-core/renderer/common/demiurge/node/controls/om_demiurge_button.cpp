@@ -112,7 +112,7 @@ auto OMDemiurgeButton::processMouseExit(float x, float y) -> OMDemiurgeEventResu
     return Handled;
 }
 
-auto OMDemiurgeButton::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeButton::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     OMDemiurgeContainerNode::submit(handler, depth);
 }

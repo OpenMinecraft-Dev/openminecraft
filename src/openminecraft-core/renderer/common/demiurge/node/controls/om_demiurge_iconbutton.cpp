@@ -48,7 +48,7 @@ OMDemiurgeIconButton::OMDemiurgeIconButton(float size)
 
 OMDemiurgeIconButton::~OMDemiurgeIconButton() = default;
 
-auto OMDemiurgeIconButton::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeIconButton::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     OMDemiurgeContainerNode::submit(handler, depth);
 }

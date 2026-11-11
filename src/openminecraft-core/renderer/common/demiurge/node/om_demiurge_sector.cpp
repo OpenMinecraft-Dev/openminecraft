@@ -11,7 +11,7 @@ namespace openminecraft::renderer::common::demiurge::node
 OMDemiurgeSectorNode::OMDemiurgeSectorNode() = default;
 OMDemiurgeSectorNode::~OMDemiurgeSectorNode() = default;
 
-auto OMDemiurgeSectorNode::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeSectorNode::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     if (sectorId == -1)
     {
@@ -48,7 +48,7 @@ auto OMDemiurgeSectorNode::submit(OMDemiurgeRendererHandler *handler, float dept
 
     for (auto c : children)
     {
-        c->submit(handler, depth - layerHalfWidth * 2);
+        c->submit(handler, depth + 1);
     }
 }
 

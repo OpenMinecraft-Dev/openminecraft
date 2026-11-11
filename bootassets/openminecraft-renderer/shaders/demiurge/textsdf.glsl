@@ -34,7 +34,7 @@ void main()
     vec2 glyphSize = abs(inTextPos.zw) * inTextScale;
     vec2 screenPos = glyphCenter + (inPosition - 0.5) * glyphSize;
 
-    gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), inTextDepth, 1.0);
+    gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), 0.0, 1.0);
     textColor = inTextColor;
     vec4 bb = getBBox();
     textUv = bb.xz + vec2(inPosition.x, 1 - inPosition.y) * (bb.yw - bb.xz);

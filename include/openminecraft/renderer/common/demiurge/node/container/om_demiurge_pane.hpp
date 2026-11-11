@@ -17,7 +17,7 @@ class OMDemiurgePaneContainer : public OMDemiurgeContainerNode
     OMDemiurgePaneContainer() = default;
     ~OMDemiurgePaneContainer() override = default;
 
-    auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
+    auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void override;
     auto update() -> void override;
 
     auto isClipBoundary() const -> bool override

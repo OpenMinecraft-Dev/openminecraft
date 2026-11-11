@@ -46,7 +46,7 @@ OMDemiurgeProgressBar::OMDemiurgeProgressBar()
 
 OMDemiurgeProgressBar::~OMDemiurgeProgressBar() = default;
 
-auto OMDemiurgeProgressBar::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeProgressBar::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     OMDemiurgeContainerNode::submit(handler, depth);
 }

@@ -119,7 +119,7 @@ OMDemiurgeTextInput::~OMDemiurgeTextInput()
     }
 }
 
-auto OMDemiurgeTextInput::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeTextInput::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     textNode->setClipNode(shared_from_this());
     OMDemiurgeRectNode::submit(handler, depth);

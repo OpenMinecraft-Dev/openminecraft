@@ -57,7 +57,7 @@ OMDemiurgeSlider::OMDemiurgeSlider()
 
 OMDemiurgeSlider::~OMDemiurgeSlider() = default;
 
-auto OMDemiurgeSlider::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeSlider::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     OMDemiurgeContainerNode::submit(handler, depth);
 }

@@ -39,7 +39,7 @@ OMDemiurgeLink::OMDemiurgeLink(geom::OMFontSet *fontset)
 
 OMDemiurgeLink::~OMDemiurgeLink() = default;
 
-auto OMDemiurgeLink::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeLink::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     OMDemiurgeContainerNode::submit(handler, depth);
 }

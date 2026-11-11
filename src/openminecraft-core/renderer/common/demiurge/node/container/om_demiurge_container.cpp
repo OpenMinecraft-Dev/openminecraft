@@ -6,11 +6,11 @@ namespace openminecraft::renderer::common::demiurge::node::container
 OMDemiurgeContainerNode::OMDemiurgeContainerNode() = default;
 OMDemiurgeContainerNode::~OMDemiurgeContainerNode() = default;
 
-auto OMDemiurgeContainerNode::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeContainerNode::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     for (auto c : children)
     {
-        c->submit(handler, depth - layerHalfWidth * 2);
+        c->submit(handler, depth + 1);
     }
 }
 

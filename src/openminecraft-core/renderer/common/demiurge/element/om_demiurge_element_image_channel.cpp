@@ -17,7 +17,7 @@ void OMDemiurgeImageChannel::init(const std::string &uniformTag, const std::stri
         ->appendPart("inRectRadius", basics::Vec4f)
         ->appendPart("inRectRotation", basics::Vec4f)
         ->appendPart("inRectFactor", basics::Float)
-        ->appendPart("inRectDepth", basics::Float)
+        ->appendPart("inRectDepth", basics::UInteger)
         ->appendPart("inFillType", basics::Float)
         ->appendPart("inRectScale", basics::Vec2f)
         ->nextGroup()
@@ -30,7 +30,7 @@ void OMDemiurgeImageChannel::init(const std::string &uniformTag, const std::stri
 
 }
 
-auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, float upper, float lower) -> void
+auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, uint32_t layer) -> void
 {
     if (instanceBuffer->length < this->bufferSize())
     {
@@ -39,7 +39,7 @@ auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, float upper, float
 
     for (int i = 0; i < objects.size(); ++i)
     {
-        if (this->objects[i].depth > lower && this->objects[i].depth < upper)
+        if (this->objects[i].depth == layer)
         {
             if (!textures.count(i))
             {
@@ -60,7 +60,7 @@ auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, float upper, float
                                    ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
                                    ->blend(true)
                                    ->depth(true, true)
-                                   ->depthOp(LessOrEqual)
+                                   ->depthOp(Always)
                                    ->buildN();
                 pipelines[i]->bindInput(0, uniform);
                 pipelines[i]->bindInput(1, renderer->getTexture(textures[i]));

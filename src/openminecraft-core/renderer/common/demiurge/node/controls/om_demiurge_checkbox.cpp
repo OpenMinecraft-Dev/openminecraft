@@ -59,7 +59,7 @@ OMDemiurgeCheckBox::OMDemiurgeCheckBox(geom::OMFontSet *fontset)
 
 OMDemiurgeCheckBox::~OMDemiurgeCheckBox() = default;
 
-auto OMDemiurgeCheckBox::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeCheckBox::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     OMDemiurgeContainerNode::submit(handler, depth);
 }

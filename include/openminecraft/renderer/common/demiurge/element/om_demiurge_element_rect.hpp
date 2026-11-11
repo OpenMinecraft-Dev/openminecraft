@@ -9,15 +9,15 @@ struct OMDemiurgeElementRect
 {
     glm::vec4 position;
     glm::vec4 color;
-    float depth;
+    uint32_t depth;
     glm::vec2 scale = glm::vec2(1.0f);
 };
 
-template <> inline auto objectGetDepth<OMDemiurgeElementRect>(OMDemiurgeElementRect &obj) -> float
+template <> inline auto objectGetDepth<OMDemiurgeElementRect>(OMDemiurgeElementRect &obj) -> uint32_t
 {
     return obj.depth;
 }
-template <> inline auto objectSetDepth<OMDemiurgeElementRect>(OMDemiurgeElementRect &obj, float depth) -> void
+template <> inline auto objectSetDepth<OMDemiurgeElementRect>(OMDemiurgeElementRect &obj, uint32_t depth) -> void
 {
     obj.depth = depth;
 }

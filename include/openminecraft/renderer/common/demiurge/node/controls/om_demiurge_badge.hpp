@@ -18,7 +18,7 @@ class OMDemiurgeBadge : public OMDemiurgeRectNode
     explicit OMDemiurgeBadge(geom::OMFontSet *fontset = nullptr);
     ~OMDemiurgeBadge() override;
 
-    auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
+    auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void override;
     void update() override;
 
     void setText(const std::string &text);

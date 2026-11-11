@@ -19,7 +19,7 @@ class OMDemiurgeProgressBar : public OMDemiurgeContainerNode, public OMDemiurgeC
     OMDemiurgeProgressBar();
     ~OMDemiurgeProgressBar() override;
 
-    auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
+    auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void override;
     void update() override;
 
     void setTrackColor(glm::vec4 color);

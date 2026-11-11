@@ -123,7 +123,7 @@ OMDemiurgeTextEdit::OMDemiurgeTextEdit(geom::OMFontSet *fontset)
 
 OMDemiurgeTextEdit::~OMDemiurgeTextEdit() = default;
 
-auto OMDemiurgeTextEdit::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeTextEdit::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     applyInternalClips();
     OMDemiurgeRectNode::submit(handler, depth);

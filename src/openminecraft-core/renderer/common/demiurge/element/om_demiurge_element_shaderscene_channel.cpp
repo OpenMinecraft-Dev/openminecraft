@@ -15,7 +15,7 @@ void OMDemiurgeShaderSceneChannel::init(const std::string &uniformTag, const std
 
     format.setInstance()
         ->appendPart("inShaderScenePos", basics::Vec4f)
-        ->appendPart("inShaderSceneDepth", basics::Float)
+        ->appendPart("inShaderSceneDepth", basics::UInteger)
         ->appendPart("inShaderSceneScale", basics::Vec2f)
         ->nextGroup()
         ->decideStruct();
@@ -44,7 +44,7 @@ auto OMDemiurgeShaderSceneChannel::update() -> void
     }
 }
 
-auto OMDemiurgeShaderSceneChannel::submitTask(OMRendererTask *task, float upper, float lower) -> void
+auto OMDemiurgeShaderSceneChannel::submitTask(OMRendererTask *task, uint32_t layer) -> void
 {
     if (!instanceBuffer)
     {
@@ -70,7 +70,7 @@ auto OMDemiurgeShaderSceneChannel::submitTask(OMRendererTask *task, float upper,
     {
         const auto &obj = objects[i];
 
-        if (obj.depth <= lower || obj.depth >= upper)
+        if (obj.depth != layer)
         {
             continue;
         }
@@ -122,6 +122,7 @@ auto OMDemiurgeShaderSceneChannel::ensurePipeline(int i) -> OMRendererPipeline *
                          ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
                          ->blend(false)
                          ->depth(false, false)
+                         ->depthOp(Always)
                          ->buildN();
 
     if (uniform)

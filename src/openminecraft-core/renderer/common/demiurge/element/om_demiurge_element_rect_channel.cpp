@@ -12,7 +12,7 @@ void OMDemiurgeRectChannel::init(const std::string &uniformTag, const std::strin
     format.setInstance()
         ->appendPart("inRectPos", basics::Vec4f)
         ->appendPart("inRectColor", basics::Vec4f)
-        ->appendPart("inRectDepth", basics::Float)
+        ->appendPart("inRectDepth", basics::UInteger)
         ->appendPart("inRectScale", basics::Vec2f)
         ->nextGroup()
         ->decideStruct();

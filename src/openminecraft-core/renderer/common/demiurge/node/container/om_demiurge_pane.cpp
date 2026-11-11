@@ -33,7 +33,7 @@ void OMDemiurgePaneContainer::applyChildClips()
     applyClipsRecursive(self, self);
 }
 
-auto OMDemiurgePaneContainer::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgePaneContainer::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     applyChildClips();
     OMDemiurgeContainerNode::submit(handler, depth);

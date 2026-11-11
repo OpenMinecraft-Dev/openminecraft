@@ -29,7 +29,7 @@ OMDemiurgeBadge::OMDemiurgeBadge(geom::OMFontSet *fontset)
 
 OMDemiurgeBadge::~OMDemiurgeBadge() = default;
 
-auto OMDemiurgeBadge::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeBadge::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     OMDemiurgeRectNode::submit(handler, depth);
 }

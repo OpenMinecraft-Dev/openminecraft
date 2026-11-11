@@ -15,7 +15,7 @@ class OMDemiurgeTextSdfMultilineNode : public OMDemiurgeNode
     explicit OMDemiurgeTextSdfMultilineNode(geom::OMFontSet *fontset);
     virtual ~OMDemiurgeTextSdfMultilineNode();
 
-    auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
+    auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void override;
     auto remove() -> void override;
     auto syncLayout() -> void override;
 

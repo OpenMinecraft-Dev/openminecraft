@@ -11,17 +11,17 @@ struct OMDemiurgeElementSvg
     glm::vec4 position;
     glm::vec4 color;
     glm::quat rotation;
-    float depth;
+    uint32_t depth;
     float factor;
     uint32_t glyphId;
     glm::vec2 scale = glm::vec2(1.0f);
 };
 
-template <> inline auto objectGetDepth<OMDemiurgeElementSvg>(OMDemiurgeElementSvg &obj) -> float
+template <> inline auto objectGetDepth<OMDemiurgeElementSvg>(OMDemiurgeElementSvg &obj) -> uint32_t
 {
     return obj.depth;
 }
-template <> inline auto objectSetDepth<OMDemiurgeElementSvg>(OMDemiurgeElementSvg &obj, float depth) -> void
+template <> inline auto objectSetDepth<OMDemiurgeElementSvg>(OMDemiurgeElementSvg &obj, uint32_t depth) -> void
 {
     obj.depth = depth;
 }

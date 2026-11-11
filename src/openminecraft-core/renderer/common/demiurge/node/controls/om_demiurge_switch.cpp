@@ -45,7 +45,7 @@ OMDemiurgeSwitch::OMDemiurgeSwitch()
 
 OMDemiurgeSwitch::~OMDemiurgeSwitch() = default;
 
-auto OMDemiurgeSwitch::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeSwitch::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     OMDemiurgeContainerNode::submit(handler, depth);
 }

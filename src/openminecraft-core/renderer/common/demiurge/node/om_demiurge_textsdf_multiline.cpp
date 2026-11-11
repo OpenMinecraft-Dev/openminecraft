@@ -61,7 +61,7 @@ auto OMDemiurgeTextSdfMultilineNode::syncLayout() -> void
     OMDemiurgeNode::syncLayout();
 }
 
-auto OMDemiurgeTextSdfMultilineNode::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeTextSdfMultilineNode::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     this->handler = handler;
 
@@ -137,7 +137,7 @@ auto OMDemiurgeTextSdfMultilineNode::submit(OMDemiurgeRendererHandler *handler, 
 
     for (auto c : children)
     {
-        c->submit(handler, depth - layerHalfWidth * 2);
+        c->submit(handler, depth + 1);
     }
 }
 

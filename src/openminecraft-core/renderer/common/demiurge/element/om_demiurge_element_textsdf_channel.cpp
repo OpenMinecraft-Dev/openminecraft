@@ -45,7 +45,7 @@ void OMDemiurgeTextSdfChannel::init(const std::string &uniformTag, const std::st
     format.setInstance()
         ->appendPart("inTextPos", basics::Vec4f)
         ->appendPart("inTextColor", basics::Vec4f)
-        ->appendPart("inTextDepth", basics::Float)
+        ->appendPart("inTextDepth", basics::UInteger)
         ->appendPart("inTextFactor", basics::Float)
         ->appendPart("inTextGlyphId", basics::Integer)
         ->appendPart("inTextScale", basics::Vec2f)
@@ -76,7 +76,7 @@ void OMDemiurgeTextSdfChannel::init(const std::string &uniformTag, const std::st
                    ->blendFunc({One, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
                    ->blend(true)
                    ->depth(true, true)
-                   ->depthOp(LessOrEqual)
+                   ->depthOp(Always)
                    ->buildN();
     pipeline->bindInput(0, uniform);
     pipeline->bindInput(1, glyphBuffer);

@@ -38,10 +38,10 @@ OMDemiurgeRendererHandler
 `OMDemiurgeRendererHandler` 每帧顺序：
 
 1. `layout(uiWidth, uiHeight)`：Yoga 计算布局，`syncLayoutAll()` 把布局键写入 Yoga，`syncBoundary()` 把绝对矩形写回 `layoutBound`；
-2. `submit(handler, bottomDepth)`：节点把自己的 `layoutBound` 与渲染键提交为元素实例，并调用 `handler->applyClip(...)` 设置子元素裁剪；
+2. `submit(handler, 0)`：根节点开始提交，把自己的 `layoutBound` 与渲染键提交为元素实例，并调用 `handler->applyClip(...)` 设置子元素裁剪；子节点使用 `layer + 1`；
 3. `update()`：递归更新子节点；控件在这里推进动画并写回样式；
 4. 通道 `update()` 上传实例数据；
-5. task 录制：按深度分层、按相同裁剪矩形分组，绘制前调用 `task->setScissor`。
+5. task 录制：每个 channel 记录当前最大层，handler 从 0 到最大层逐层提交；同一层内按相同裁剪矩形分组，绘制前调用 `task->setScissor`。
 
 坐标与缩放：
 
@@ -92,7 +92,7 @@ OMDemiurgeRendererHandler
 
 | API | 说明 |
 | --- | --- |
-| `submit(handler, depth)` | 纯虚；提交元素与裁剪 |
+| `submit(handler, uint32_t layer)` | 纯虚；提交元素与裁剪；根节点从 0 开始，子节点 +1 |
 | `update()` | 虚函数；默认递归更新子节点 |
 | `remove()` | 纯虚；从通道移除元素 |
 | `setVisible(bool)` / `isVisible()` | 不可见节点跳过命中测试与事件派发；是否提交由所有者决定（如 TabMultiPage 只提交当前页） |
@@ -248,7 +248,7 @@ someNode->styleDump();            // "{color=-1, text="Main", textheight=14}"
 
 ## 6. Element 层（渲染贡献者）
 
-元素是通道内的实例结构体，不是业务 API。所有元素都带 `position = {x, y, w, h}`、`depth`，并统一支持 `glm::vec2 scale = (1, 1)`。
+元素是通道内的实例结构体，不是业务 API。所有元素都带 `position = {x, y, w, h}`、`depth`（`uint32_t` 层号，根为 0、每深一层 +1），并统一支持 `glm::vec2 scale = (1, 1)`。UI 管线关闭深度测试（`Always`），层号只用于提交顺序。
 
 | 元素 | 额外字段 | 通道 |
 | --- | --- | --- |
@@ -270,7 +270,7 @@ someNode->styleDump();            // "{color=-1, text="Main", textheight=14}"
 ### 6.2 裁剪与批次
 
 - 节点通过 `handler->applyClip(channel, index, logicalRect)` 写入裁剪；
-- 通道按 `depth` 与相同裁剪矩形分组后调用 `task->setScissor`；
+- 通道按 `depth` 层号与相同裁剪矩形分组后调用 `task->setScissor`；
 - `image` / `shaderscene` 通道每个元素独立管线，逐次设置 scissor；
 - 裁剪矩形变化时 handler 触发 task 重录（其余帧零开销）。
 

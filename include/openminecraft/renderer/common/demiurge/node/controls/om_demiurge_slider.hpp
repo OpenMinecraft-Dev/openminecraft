@@ -18,7 +18,7 @@ class OMDemiurgeSlider : public OMDemiurgeContainerNode, public OMDemiurgeContro
     OMDemiurgeSlider();
     ~OMDemiurgeSlider() override;
 
-    auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
+    auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void override;
     void update() override;
 
     auto processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult override;

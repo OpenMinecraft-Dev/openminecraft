@@ -10,16 +10,16 @@ namespace openminecraft::renderer::common::demiurge::element
 struct OMDemiurgeElementShaderScene
 {
     glm::vec4 position;
-    float depth;
+    uint32_t depth;
     glm::vec2 scale = glm::vec2(1.0f);
 };
 
-template <> inline auto objectGetDepth<OMDemiurgeElementShaderScene>(OMDemiurgeElementShaderScene &obj) -> float
+template <> inline auto objectGetDepth<OMDemiurgeElementShaderScene>(OMDemiurgeElementShaderScene &obj) -> uint32_t
 {
     return obj.depth;
 }
 template <>
-inline auto objectSetDepth<OMDemiurgeElementShaderScene>(OMDemiurgeElementShaderScene &obj, float depth) -> void
+inline auto objectSetDepth<OMDemiurgeElementShaderScene>(OMDemiurgeElementShaderScene &obj, uint32_t depth) -> void
 {
     obj.depth = depth;
 }

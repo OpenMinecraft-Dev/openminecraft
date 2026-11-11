@@ -19,7 +19,7 @@ class OMDemiurgeIconButton : public OMDemiurgeContainerNode, public OMDemiurgeCo
     explicit OMDemiurgeIconButton(float size = 28.0f);
     ~OMDemiurgeIconButton() override;
 
-    auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
+    auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void override;
     void update() override;
 
     auto processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult override;

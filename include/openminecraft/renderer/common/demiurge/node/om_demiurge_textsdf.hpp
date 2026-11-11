@@ -11,7 +11,7 @@ class OMDemiurgeTextSdfNode : public OMDemiurgeNode
     OMDemiurgeTextSdfNode(geom::OMFontSet *fontset);
     virtual ~OMDemiurgeTextSdfNode();
 
-    auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
+    auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void override;
     auto remove() -> void override;
     auto syncLayout() -> void override;
 

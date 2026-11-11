@@ -90,7 +90,7 @@ OMDemiurgeDropDownPane::OMDemiurgeDropDownPane(geom::OMFontSet *fontset)
 
 OMDemiurgeDropDownPane::~OMDemiurgeDropDownPane() = default;
 
-auto OMDemiurgeDropDownPane::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeDropDownPane::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     // A parent pane assigns its own clip to the whole subtree; keep the expanding
     // content clipped to the dropdown body as well.

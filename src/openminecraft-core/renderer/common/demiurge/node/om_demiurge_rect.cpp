@@ -10,7 +10,7 @@ namespace openminecraft::renderer::common::demiurge::node
 OMDemiurgeRectNode::OMDemiurgeRectNode() = default;
 OMDemiurgeRectNode::~OMDemiurgeRectNode() = default;
 
-auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     if (rectId == -1)
     {
@@ -53,7 +53,7 @@ auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, float depth)
 
     for (auto c : children)
     {
-        c->submit(handler, depth - layerHalfWidth * 2);
+        c->submit(handler, depth + 1);
     }
 }
 

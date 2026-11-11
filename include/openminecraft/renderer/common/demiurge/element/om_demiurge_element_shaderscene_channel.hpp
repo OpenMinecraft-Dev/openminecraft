@@ -26,7 +26,7 @@ class OMDemiurgeShaderSceneChannel : public OMDemiurgeQuadChannel<OMDemiurgeElem
     ~OMDemiurgeShaderSceneChannel() = default;
 
     void init(const std::string &uniformTag, const std::string &targetTag) override;
-    auto submitTask(OMRendererTask *task, float upper, float lower) -> void override;
+    auto submitTask(OMRendererTask *task, uint32_t layer) -> void override;
     auto update() -> void override;
 
     auto destroy() -> void override

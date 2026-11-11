@@ -28,7 +28,7 @@ void main()
     vec3 localPos = vec3(screenPos - rectCenter, 0.0);
 
     gl_Position = vec4(geom_toNdc(rectCenter + rotation_quat(inSectorRotation, localPos).xy, ubo.width, ubo.height),
-                       inSectorDepth, 1.0);
+                       0.0, 1.0);
     secColor = inSectorColor;
     secPosition = screenPos;
     secSectorPosition = vec4(rectCenter - halfSize, scaledSize);

@@ -19,7 +19,7 @@ class OMDemiurgeButton : public OMDemiurgeContainerNode, public OMDemiurgeContro
     OMDemiurgeButton(geom::OMFontSet *fontset);
     ~OMDemiurgeButton() override;
 
-    auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
+    auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void override;
     auto processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult override;
     auto processMouseUp(float x, float y, uint8_t button) -> OMDemiurgeEventResult override;
     auto processMouseEnter(float x, float y) -> OMDemiurgeEventResult override;

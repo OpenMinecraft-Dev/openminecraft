@@ -143,7 +143,7 @@ OMDemiurgeRadioBox::OMDemiurgeRadioBox(geom::OMFontSet *fontset)
 
 OMDemiurgeRadioBox::~OMDemiurgeRadioBox() = default;
 
-auto OMDemiurgeRadioBox::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeRadioBox::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     OMDemiurgeContainerNode::submit(handler, depth);
 }

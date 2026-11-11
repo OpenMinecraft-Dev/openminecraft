@@ -9,17 +9,17 @@ struct OMDemiurgeElementTextSdf
 {
     glm::vec4 position;
     glm::vec4 color;
-    float depth;
+    uint32_t depth;
     float factor;
     uint32_t glyphIndex;
     glm::vec2 scale = glm::vec2(1.0f);
 };
 
-template <> inline auto objectGetDepth<OMDemiurgeElementTextSdf>(OMDemiurgeElementTextSdf &obj) -> float
+template <> inline auto objectGetDepth<OMDemiurgeElementTextSdf>(OMDemiurgeElementTextSdf &obj) -> uint32_t
 {
     return obj.depth;
 }
-template <> inline auto objectSetDepth<OMDemiurgeElementTextSdf>(OMDemiurgeElementTextSdf &obj, float depth) -> void
+template <> inline auto objectSetDepth<OMDemiurgeElementTextSdf>(OMDemiurgeElementTextSdf &obj, uint32_t depth) -> void
 {
     obj.depth = depth;
 }

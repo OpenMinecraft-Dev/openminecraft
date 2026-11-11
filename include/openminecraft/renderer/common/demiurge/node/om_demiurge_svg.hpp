@@ -10,7 +10,7 @@ class OMDemiurgeSvgNode : public OMDemiurgeNode
     OMDemiurgeSvgNode();
     virtual ~OMDemiurgeSvgNode();
 
-    auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
+    auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void override;
     auto remove() -> void override;
 
   private:

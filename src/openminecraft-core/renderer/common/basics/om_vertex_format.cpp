@@ -109,6 +109,8 @@ auto OMVertexFormat::typeSize(OMVertexPropType type) -> int
         return sizeof(float);
     case Integer:
         return sizeof(int);
+    case UInteger:
+        return sizeof(uint32_t);
     case Double:
         return sizeof(double);
     case Vec2f:
@@ -123,6 +125,12 @@ auto OMVertexFormat::typeSize(OMVertexPropType type) -> int
         return sizeof(int) * 3;
     case Vec4i:
         return sizeof(int) * 4;
+    case Vec2ui:
+        return sizeof(uint32_t) * 2;
+    case Vec3ui:
+        return sizeof(uint32_t) * 3;
+    case Vec4ui:
+        return sizeof(uint32_t) * 4;
     case Vec2d:
         return sizeof(double) * 2;
     case Vec3d:

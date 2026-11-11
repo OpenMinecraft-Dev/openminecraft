@@ -28,7 +28,7 @@ OMDemiurgeDivider::OMDemiurgeDivider(bool vertical)
 
 OMDemiurgeDivider::~OMDemiurgeDivider() = default;
 
-auto OMDemiurgeDivider::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeDivider::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     OMDemiurgeContainerNode::submit(handler, depth);
 }

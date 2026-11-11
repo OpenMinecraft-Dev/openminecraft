@@ -230,25 +230,25 @@ auto OMDemiurgeTabMultiPage::finishPageTransition() -> void
     }
 }
 
-auto OMDemiurgeTabMultiPage::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeTabMultiPage::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     // Only the active page is submitted; inactive pages stay mounted for layout and
     // state but have no elements in the channels.
-    tabBar->submit(handler, depth - layerHalfWidth * 2);
-    barLine->submit(handler, depth - layerHalfWidth * 2);
-    indicator->submit(handler, depth - layerHalfWidth * 2);
+    tabBar->submit(handler, depth + 1);
+    barLine->submit(handler, depth + 1);
+    indicator->submit(handler, depth + 1);
 
     if (pageTransitioning && outgoingPage)
     {
         outgoingPage->setClipNode(pageClip);
-        outgoingPage->submit(handler, depth - layerHalfWidth * 2);
+        outgoingPage->submit(handler, depth + 1);
     }
 
     if (activeIndex >= 0 && activeIndex < static_cast<int>(tabs.size()))
     {
         auto &page = tabs[activeIndex].page;
         page->setClipNode(pageClip);
-        page->submit(handler, depth - layerHalfWidth * 2);
+        page->submit(handler, depth + 1);
     }
 }
 

@@ -16,7 +16,7 @@ class OMDemiurgeDivider : public OMDemiurgeContainerNode
     explicit OMDemiurgeDivider(bool vertical = false);
     ~OMDemiurgeDivider() override;
 
-    auto submit(OMDemiurgeRendererHandler *handler, float depth) -> void override;
+    auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void override;
     void update() override;
 
     void setColor(glm::vec4 color);

@@ -36,7 +36,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
         initPipeline(wrap::OMBufferRef(renderer, uniformTag), wrap::OMRenderTargetRef(renderer, targetTag), true);
     }
 
-    auto submitTask(OMRendererTask *task, float upper, float lower) -> void override
+    auto submitTask(OMRendererTask *task, uint32_t layer) -> void override
     {
         if (instanceBuffer->length < this->bufferSize())
         {
@@ -74,8 +74,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
 
         for (int i = 0; i <= this->objects.size(); ++i)
         {
-            bool isDraw =
-                (i < this->objects.size()) && this->objects[i].depth > lower && this->objects[i].depth < upper;
+            bool isDraw = (i < this->objects.size()) && this->objects[i].depth == layer;
 
             if (!inDraw && isDraw)
             {
@@ -167,7 +166,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
                        ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
                        ->blend(true)
                        ->depth(true, true)
-                       ->depthOp(LessOrEqual)
+                       ->depthOp(Always)
                        ->writeColor(writeColor)
                        ->buildN();
         pipeline->bindInput(0, uniform);

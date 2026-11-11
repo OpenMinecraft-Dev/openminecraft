@@ -14,7 +14,7 @@ struct OMDemiurgeElementRoundedRect
     glm::vec4 radius;
     glm::quat rotation;
     float factor;
-    float depth;
+    uint32_t depth;
     // Per-axis scale around the rect center (applied in the shader, so it is not
     // affected by layout pixel snapping).
     glm::vec2 scale = glm::vec2(1.0f);
@@ -23,12 +23,12 @@ struct OMDemiurgeElementRoundedRect
     float clipRadius = 0.0f;
 };
 
-template <> inline auto objectGetDepth<OMDemiurgeElementRoundedRect>(OMDemiurgeElementRoundedRect &obj) -> float
+template <> inline auto objectGetDepth<OMDemiurgeElementRoundedRect>(OMDemiurgeElementRoundedRect &obj) -> uint32_t
 {
     return obj.depth;
 }
 template <>
-inline auto objectSetDepth<OMDemiurgeElementRoundedRect>(OMDemiurgeElementRoundedRect &obj, float depth) -> void
+inline auto objectSetDepth<OMDemiurgeElementRoundedRect>(OMDemiurgeElementRoundedRect &obj, uint32_t depth) -> void
 {
     obj.depth = depth;
 }

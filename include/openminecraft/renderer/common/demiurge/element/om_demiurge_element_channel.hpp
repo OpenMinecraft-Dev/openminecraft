@@ -11,8 +11,8 @@
 #include <vector>
 namespace openminecraft::renderer::common::demiurge::element
 {
-template <typename T> auto objectGetDepth(T &obj) -> float;
-template <typename T> auto objectSetDepth(T &obj, float) -> void;
+template <typename T> auto objectGetDepth(T &obj) -> uint32_t;
+template <typename T> auto objectSetDepth(T &obj, uint32_t) -> void;
 
 class OMDemiurgeAbstractChannel
 {
@@ -21,7 +21,7 @@ class OMDemiurgeAbstractChannel
     ~OMDemiurgeAbstractChannel() = default;
 
     virtual void init(const std::string &uniformTag, const std::string &targetTag) = 0;
-    virtual void submitTask(OMRendererTask *task, float upper, float lower) = 0;
+    virtual void submitTask(OMRendererTask *task, uint32_t layer) = 0;
     virtual void update() = 0;
     virtual void destroy() = 0;
 };
@@ -32,11 +32,11 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
     ~OMDemiurgeChannel() = default;
 
     void init(const std::string &uniformTag, const std::string &targetTag) override = 0;
-    void submitTask(OMRendererTask *task, float upper, float lower) override = 0;
+    void submitTask(OMRendererTask *task, uint32_t layer) override = 0;
     void update() override = 0;
     void destroy() override = 0;
 
-    inline auto request(float depth) -> int
+    inline auto request(uint32_t depth) -> int
     {
         if (!removed.empty())
         {
@@ -46,6 +46,8 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
                 {
                     auto i = *it;
                     removed.erase(it);
+                    active[i] = true;
+                    maxLayerValue = std::max(maxLayerValue, depth);
                     return i;
                 }
             }
@@ -53,7 +55,9 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
         objects.emplace_back(T{});
         dirty.resize(objects.size());
         clipBounds.resize(objects.size());
+        active.resize(objects.size(), true);
         hasDirty = true;
+        maxLayerValue = std::max(maxLayerValue, depth);
         return objects.size() - 1;
     }
 
@@ -110,7 +114,21 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
         objectSetDepth(objects[i], depth);
         dirty[i] = true;
         hasDirty = true;
+        active[i] = false;
         removed.emplace_back(i);
+
+        if (depth == maxLayerValue)
+        {
+            maxLayerValue = 0;
+
+            for (size_t j = 0; j < objects.size(); ++j)
+            {
+                if (j < active.size() && active[j])
+                {
+                    maxLayerValue = std::max(maxLayerValue, objectGetDepth<T>(objects[j]));
+                }
+            }
+        }
     }
 
     virtual auto onRemove(int i) -> void
@@ -139,6 +157,11 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
             }
             solve();
         }
+    }
+
+    inline auto maxLayer() -> uint32_t
+    {
+        return maxLayerValue;
     }
 
     inline auto bufferSize() -> int
@@ -171,6 +194,8 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
     bool hasDirty = true;
     int lastCount = -1;
     size_t bufferCapacity = 0;
+    std::vector<bool> active;
+    uint32_t maxLayerValue = 0;
 };
 } // namespace openminecraft::renderer::common::demiurge::element
 

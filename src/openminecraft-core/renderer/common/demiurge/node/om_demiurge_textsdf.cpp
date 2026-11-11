@@ -27,7 +27,7 @@ auto OMDemiurgeTextSdfNode::syncLayout() -> void
     OMDemiurgeNode::syncLayout();
 }
 
-auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, float depth) -> void
+auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     this->handler = handler;
     if (stylesStorage.isModified())
@@ -92,7 +92,7 @@ auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, float dep
 
     for (auto c : children)
     {
-        c->submit(handler, depth - layerHalfWidth * 2);
+        c->submit(handler, depth + 1);
     }
 }
 

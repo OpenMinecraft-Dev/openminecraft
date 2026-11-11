@@ -391,6 +391,12 @@ static auto fromCommon(common::basics::OMVertexPropType t) -> std::pair<int, GLu
     }
 }
 
+static auto isIntegerAttribute(GLuint type) -> bool
+{
+    return type == GL_INT || type == GL_UNSIGNED_INT || type == GL_SHORT || type == GL_UNSIGNED_SHORT ||
+           type == GL_BYTE || type == GL_UNSIGNED_BYTE;
+}
+
 void OMRendererTaskOpenGL::bindVertexBufferInstanced(std::vector<common::OMRendererBuffer *> buffer, int off)
 {
     int index = 0;
@@ -402,8 +408,7 @@ void OMRendererTaskOpenGL::bindVertexBufferInstanced(std::vector<common::OMRende
             auto offset = binding.isInstance ? off * binding.size : 0;
 
             auto p = fromCommon(std::get<common::basics::OMVertexPropType>(part));
-            if (std::get<GLuint>(p) == GL_INT || std::get<GLuint>(p) == GL_SHORT ||
-                std::get<GLuint>(p) == GL_UNSIGNED_SHORT)
+            if (isIntegerAttribute(std::get<GLuint>(p)))
             {
                 gl->glVertexAttribIPointer(index, p.first, p.second, binding.size,
                                            reinterpret_cast<void *>(std::get<int>(part) + offset));
@@ -433,7 +438,7 @@ void OMRendererTaskOpenGL::bindVertexBuffer(std::vector<common::OMRendererBuffer
         for (auto part : binding.parts)
         {
             auto p = fromCommon(std::get<common::basics::OMVertexPropType>(part));
-            if (std::get<GLuint>(p) == GL_INT)
+            if (isIntegerAttribute(std::get<GLuint>(p)))
             {
                 gl->glVertexAttribIPointer(index, p.first, p.second, binding.size,
                                            reinterpret_cast<void *>(std::get<int>(part)));

@@ -96,17 +96,32 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
     auto task = renderer->fetchTask("demiurgeui_compose_" + name);
     task->target(middleTarget->target());
 
-    for (float layer = bottomDepth; layer >= topDepth; layer -= 0.01f)
+    uint32_t maxLayer = rect.maxLayer();
+
+    auto includeMax = [&maxLayer](auto &channel) { maxLayer = std::max(maxLayer, channel.maxLayer()); };
+    includeMax(roundedRect);
+    includeMax(image);
+    includeMax(sector);
+    includeMax(svg);
+    includeMax(shaderScene);
+
+    for (auto &p : fonts)
     {
-        rect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
-        roundedRect.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
-        image.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
-        sector.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
-        svg.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
-        shaderScene.submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
+        includeMax(*p.second);
+    }
+
+    for (uint32_t layer = 0; layer <= maxLayer; ++layer)
+    {
+        rect.submitTask(task, layer);
+        roundedRect.submitTask(task, layer);
+        image.submitTask(task, layer);
+        sector.submitTask(task, layer);
+        svg.submitTask(task, layer);
+        shaderScene.submitTask(task, layer);
+
         for (auto &p : fonts)
         {
-            p.second->submitTask(task, layer + layerHalfWidth, layer - layerHalfWidth);
+            p.second->submitTask(task, layer);
         }
     }
     task->finish();
@@ -121,7 +136,7 @@ void OMDemiurgeRendererHandler::beforeFrame()
     auto ext = renderer->getLogicalExtent() / renderer->getUiScale();
 
     node->layout(fit ? YGUndefined : ext.x, fit ? YGUndefined : ext.y);
-    node->submit(this, bottomDepth);
+    node->submit(this, 0);
     node->update();
 
     rect.update();
