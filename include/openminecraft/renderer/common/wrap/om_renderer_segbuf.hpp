@@ -313,27 +313,30 @@ class OMRendererSegBuf
     void expand()
     {
         // Grow aggressively to reduce reallocations/copies while streaming.
-        constexpr uint32_t growthFactor = 4;
-        const uint64_t grown = static_cast<uint64_t>(totalSize) * growthFactor;
+        constexpr uint32_t growthFactor = 2;
+        const uint32_t oldTotal = totalSize;
+        const uint64_t grown = static_cast<uint64_t>(oldTotal) * growthFactor;
         uint32_t newTotal = static_cast<uint32_t>(std::min<uint64_t>(grown, 0xffffffffu));
 
-        if (newTotal <= totalSize)
+        if (newTotal <= oldTotal)
         {
-            newTotal = totalSize + 1024 * 1024;
+            newTotal = oldTotal + 1024 * 1024;
         }
+
+        const uint32_t grownBytes = newTotal - oldTotal;
         const std::string newTag = bufferTag + ".g" + std::to_string(++generation);
         auto *newBuffer = renderer->registerBuffer(newTag, InstanceData, newTotal);
         buffer()->copyTo(newBuffer);
 
-        // Zero the new region after the old data
+        // Zero and expose the entire grown region, not only one old-sized slice.
         shadow.resize(newTotal, 0);
-        newBuffer->updateDataPart(shadow.data() + totalSize, totalSize, totalSize);
+        newBuffer->updateDataPart(shadow.data() + oldTotal, grownBytes, grownBytes);
 
         // The old GPU buffer may still be referenced by in-flight frames: release it a few frames later
         retiredBuffers.emplace_back(bufferTag, frameCounter);
         bufferTag = newTag;
 
-        freeBlocks.push_back({totalSize, totalSize});
+        freeBlocks.push_back({oldTotal, grownBytes});
 
         totalSize = newTotal;
 
