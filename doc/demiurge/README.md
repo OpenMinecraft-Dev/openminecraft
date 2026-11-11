@@ -678,6 +678,7 @@ visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eas
 - 滚动条会预留独立空间：纵向条出现时内容视口宽度减去条厚，横向条出现时高度减去条厚，内容不会与滚动条重叠（Both 模式会迭代计算两条滚动条）；
 - 内容尺寸变化时滚动条自动显示/隐藏；
 - 按钮、输入框、DropDown 等会捕获鼠标的控件仍可正常点击；按住并拖动超过 `drag_threshold` 后 ScrollPane 会接管捕获并开始滚动；
+- 若捕获鼠标的控件当前拥有焦点（Slider、Switch、TextInput 等），ScrollPane 不会接管拖拽，控件操作优先；
 - ScrollBar 的拖动不会被 ScrollPane 接管，即使鼠标移出滚动条范围也会持续跟随（全局捕获）；
 - ScrollPane 内部的横向/纵向 ScrollBar 都禁用实际 overscroll（`setAllowOverscroll(false)`），但会通过 `setVisualOverscroll` 接收内容的 rubber-band 量，因此拖动过度时 thumb 仍会压缩、回弹后恢复；
 - 滚轮使用鼠标在窗口中的实际位置命中 ScrollPane，即使指针位于内部控件上也能滚动。

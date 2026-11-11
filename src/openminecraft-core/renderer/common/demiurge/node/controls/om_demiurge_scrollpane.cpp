@@ -452,6 +452,13 @@ auto OMDemiurgeScrollPane::processNestedDrag(const std::shared_ptr<OMDemiurgeNod
         return Ignored;
     }
 
+    // A focused control (slider, switch, input, ...) is being manipulated: its
+    // drag must not turn into a pane scroll.
+    if (captured && captured->hasFocus())
+    {
+        return Ignored;
+    }
+
     // A ScrollBar drag (including this pane's own bars or a bar embedded in the
     // content) owns the mouse capture; do not steal it.
     if (captured && dynamic_cast<OMDemiurgeScrollBar *>(captured.get()) != nullptr)

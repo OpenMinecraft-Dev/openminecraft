@@ -678,6 +678,7 @@ Behavior:
 - Scroll bars reserve their own space: when the vertical bar is visible the content viewport loses one thickness in width, and likewise for the horizontal bar in height, so content never overlaps the bars (Both mode iterates to converge);
 - Bars show/hide automatically as the content size changes;
 - Controls that capture the mouse (buttons, inputs, DropDown, ...) still receive clicks; once the pointer moves past `drag_threshold` the ScrollPane takes over the capture and starts scrolling;
+- If the captured control currently has focus (Slider, Switch, TextInput, ...), the ScrollPane never takes over; the control keeps the drag;
 - ScrollBar drags are never taken over by the ScrollPane; dragging continues to follow globally even when the pointer leaves the bar;
 - Both internal ScrollBars of a ScrollPane disable actual overscroll (`setAllowOverscroll(false)`), but receive the content's rubber-band amount through `setVisualOverscroll`, so the thumb still compresses while over-dragging and returns to normal after bouncing back;
 - The wheel is hit-tested against the actual cursor position, so it scrolls even when the pointer is over inner controls.
