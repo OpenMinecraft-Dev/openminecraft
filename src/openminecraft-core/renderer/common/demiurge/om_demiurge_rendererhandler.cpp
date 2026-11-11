@@ -162,9 +162,11 @@ void OMDemiurgeRendererHandler::beforeFrame()
 {
     auto ext = renderer->getLogicalExtent() / renderer->getUiScale();
 
+    node->flushDeferredActions();
     node->layout(fit ? YGUndefined : ext.x, fit ? YGUndefined : ext.y);
     node->submit(this, 0);
     node->update();
+    node->flushDeferredActions();
 
     rect.update();
     roundedRect.update();

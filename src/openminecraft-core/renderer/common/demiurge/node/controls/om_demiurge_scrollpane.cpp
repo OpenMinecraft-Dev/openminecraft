@@ -5,9 +5,31 @@
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 
 #include <algorithm>
+#include <mutex>
 #include <cmath>
 
 using namespace openminecraft::renderer::common::animation;
+
+namespace
+{
+std::mutex overlayWheelMutex;
+const openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeScrollPane *overlayWheelOwner = nullptr;
+std::optional<openminecraft::renderer::common::demiurge::OMDemiurgeRect> overlayWheelRect;
+
+auto wheelRegionBlocks(const openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeScrollPane *pane,
+                       float x, float y) -> bool
+{
+    std::lock_guard<std::mutex> lock(overlayWheelMutex);
+
+    if (!overlayWheelRect.has_value() || overlayWheelOwner == pane)
+    {
+        return false;
+    }
+
+    const auto &r = *overlayWheelRect;
+    return x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height;
+}
+} // namespace
 
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
@@ -23,6 +45,7 @@ OMDemiurgeScrollPane::OMDemiurgeScrollPane() : disabledAmount(0.0f)
     stylesStorage.put("inertia_factor", 0.18f);
     stylesStorage.put("inertia_speed", 0.55f);
     stylesStorage.put("scrollbar_thickness", 4.0f);
+    stylesStorage.put("scrollbar_gap", 4.0f);
     stylesStorage.put("animation_speed", 0.18f);
 
     viewportClip = std::make_shared<OMDemiurgeRectNode>();
@@ -229,6 +252,71 @@ void OMDemiurgeScrollPane::setOnScroll(std::function<void(float, float)> handler
     handleScroll = std::move(handler);
 }
 
+void OMDemiurgeScrollPane::scrollRectIntoView(const OMDemiurgeRect &rect, bool center)
+{
+    OMDemiurgeRect viewport{};
+
+    try
+    {
+        viewport = fetchLayoutBound();
+    }
+    catch (const std::bad_any_cast &)
+    {
+        return;
+    }
+
+    const bool vertical = orientation != OMDemiurgeScrollPaneOrientation::Horizontal;
+    const bool horizontal = orientation != OMDemiurgeScrollPaneOrientation::Vertical;
+
+    if (vertical && viewHeight > 0.0f && maxScrollY > 0.0f)
+    {
+        const bool visible = rect.y >= viewport.y && rect.y + rect.height <= viewport.y + viewHeight;
+
+        if (!visible)
+        {
+            const float centerOffset = rect.y + rect.height * 0.5f - (viewport.y + viewHeight * 0.5f);
+            const float visibleOffset = rect.y - viewport.y;
+            const float target = center ? scrollY.get() + centerOffset : scrollY.get() + visibleOffset;
+
+            scrollY.setTo(std::clamp(target, 0.0f, maxScrollY));
+        }
+    }
+
+    if (horizontal && viewWidth > 0.0f && maxScrollX > 0.0f)
+    {
+        const bool visible = rect.x >= viewport.x && rect.x + rect.width <= viewport.x + viewWidth;
+
+        if (!visible)
+        {
+            const float centerOffset = rect.x + rect.width * 0.5f - (viewport.x + viewWidth * 0.5f);
+            const float visibleOffset = rect.x - viewport.x;
+            const float target = center ? scrollX.get() + centerOffset : scrollX.get() + visibleOffset;
+
+            scrollX.setTo(std::clamp(target, 0.0f, maxScrollX));
+        }
+    }
+
+    notifyScroll();
+}
+
+void OMDemiurgeScrollPane::setOverlayWheelRegion(const OMDemiurgeScrollPane *owner, const OMDemiurgeRect &rect)
+{
+    std::lock_guard<std::mutex> lock(overlayWheelMutex);
+    overlayWheelOwner = owner;
+    overlayWheelRect = rect;
+}
+
+void OMDemiurgeScrollPane::clearOverlayWheelRegion(const OMDemiurgeScrollPane *owner)
+{
+    std::lock_guard<std::mutex> lock(overlayWheelMutex);
+
+    if (overlayWheelOwner == owner)
+    {
+        overlayWheelOwner = nullptr;
+        overlayWheelRect.reset();
+    }
+}
+
 void OMDemiurgeScrollPane::update()
 {
     const bool vertical = orientation != OMDemiurgeScrollPaneOrientation::Horizontal;
@@ -248,6 +336,7 @@ void OMDemiurgeScrollPane::update()
     }
 
     const float thickness = std::max(2.0f, stylesStorage.get<float>("scrollbar_thickness", 4.0f));
+    const float gap = std::max(0.0f, stylesStorage.get<float>("scrollbar_gap", 4.0f));
     const float paneWidth = width;
     const float paneHeight = height;
 
@@ -272,8 +361,8 @@ void OMDemiurgeScrollPane::update()
     {
         for (int pass = 0; pass < 3; ++pass)
         {
-            const float candidateW = std::max(0.0f, paneWidth - (verticalVisible ? thickness : 0.0f));
-            const float candidateH = std::max(0.0f, paneHeight - (horizontalVisible ? thickness : 0.0f));
+            const float candidateW = std::max(0.0f, paneWidth - (verticalVisible ? thickness + gap : 0.0f));
+            const float candidateH = std::max(0.0f, paneHeight - (horizontalVisible ? thickness + gap : 0.0f));
             verticalVisible = contentHeight > candidateH + 0.5f;
             horizontalVisible = contentWidth > candidateW + 0.5f;
         }
@@ -284,8 +373,8 @@ void OMDemiurgeScrollPane::update()
         horizontalVisible = horizontal && contentWidth > paneWidth + 0.5f;
     }
 
-    viewWidth = std::max(0.0f, paneWidth - (verticalVisible ? thickness : 0.0f));
-    viewHeight = std::max(0.0f, paneHeight - (horizontalVisible ? thickness : 0.0f));
+    viewWidth = std::max(0.0f, paneWidth - (verticalVisible ? thickness + gap : 0.0f));
+    viewHeight = std::max(0.0f, paneHeight - (horizontalVisible ? thickness + gap : 0.0f));
 
     // Content layout: the scroll axis is free, the cross axis is constrained to
     // the viewport when stretch is enabled (the viewport excludes scroll bars).
@@ -553,7 +642,7 @@ auto OMDemiurgeScrollPane::processMouseUp(float x, float y, uint8_t button) -> O
 
 auto OMDemiurgeScrollPane::processMouseScroll(float x, float y, float wx, float wy) -> OMDemiurgeEventResult
 {
-    if (disabled || !containsPoint(x, y))
+    if (disabled || !containsPoint(x, y) || wheelRegionBlocks(this, x, y))
     {
         return Ignored;
     }

@@ -2,12 +2,15 @@
 #define OM_DEMIURGE_NODE_HPP
 
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
+#include "openminecraft/renderer/common/demiurge/om_demiurge_layer.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_event.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_styles.hpp"
 #include "openminecraft/renderer/common/event/om_eventbus_wrap.hpp"
 #include "yoga/YGNode.h"
 #include "yoga/YGNodeLayout.h"
 #include <algorithm>
+#include <functional>
+#include <mutex>
 #include <any>
 #include <cmath>
 #include <initializer_list>
@@ -57,6 +60,83 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         children.push_back(child);
 
         YGNodeInsertChild(yogaNode, child->yogaNode, children.size() - 1);
+    }
+
+    // Inserts a child before all existing children. Overlay roots use this so
+    // they receive pointer events before the normal UI below them.
+    auto mountFront(std::shared_ptr<OMDemiurgeNode> child)
+    {
+        child->parent = this;
+        children.insert(children.begin(), child);
+
+        YGNodeInsertChild(yogaNode, child->yogaNode, 0);
+    }
+
+    auto getRoot() -> std::shared_ptr<OMDemiurgeNode>
+    {
+        auto cur = shared_from_this();
+
+        while (cur->parent)
+        {
+            cur = cur->parent->shared_from_this();
+        }
+
+        return cur;
+    }
+
+    // Structural changes that happen during event dispatch (e.g. mounting an
+    // overlay popup) are deferred until the frame can safely traverse children.
+    void deferAction(std::function<void()> action)
+    {
+        std::lock_guard<std::mutex> lock(deferredMutex);
+        deferredActions.push_back(std::move(action));
+    }
+
+    void flushDeferredActions()
+    {
+        std::vector<std::function<void()>> actions;
+        {
+            std::lock_guard<std::mutex> lock(deferredMutex);
+            actions = std::move(deferredActions);
+            deferredActions.clear();
+        }
+
+        for (auto &action : actions)
+        {
+            if (action)
+            {
+                action();
+            }
+        }
+    }
+
+    // While a modal child (e.g. an overlay popup) is set on the root, mouse
+    // events are dispatched only inside that subtree, so controls underneath
+    // cannot capture the pointer or steal the mouse-up.
+    void setModalChild(const std::shared_ptr<OMDemiurgeNode> &child)
+    {
+        std::lock_guard<std::mutex> lock(modalMutex);
+        modalChild = child;
+    }
+
+    void clearModalChild(const std::shared_ptr<OMDemiurgeNode> &child)
+    {
+        std::lock_guard<std::mutex> lock(modalMutex);
+
+        if (modalChild.lock() == child)
+        {
+            modalChild.reset();
+        }
+    }
+
+    void setLayerOverlay(bool value)
+    {
+        layerOverlay = value;
+    }
+
+    auto isLayerOverlay() const -> bool
+    {
+        return layerOverlay;
     }
 
     virtual void umount(std::shared_ptr<OMDemiurgeNode> child)
@@ -296,6 +376,18 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         return stylesStorage.get<OMDemiurgeRect>("layoutBound");
     }
 
+    auto fetchBorderInsets() -> OMDemiurgeEdgeInsets
+    {
+        try
+        {
+            return stylesStorage.get<OMDemiurgeEdgeInsets>("border");
+        }
+        catch (const std::bad_any_cast &)
+        {
+            return OMDemiurgeEdgeInsets{0.0f, 0.0f, 0.0f, 0.0f};
+        }
+    }
+
     inline auto style(std::initializer_list<std::pair<std::string, std::any>> d) -> std::shared_ptr<OMDemiurgeNode>
     {
         for (auto &p : d)
@@ -382,6 +474,11 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     bool focusable = false;
     bool visible = true;
     std::weak_ptr<OMDemiurgeNode> clipNodeRef;
+    std::vector<std::function<void()>> deferredActions;
+    std::mutex deferredMutex;
+    std::weak_ptr<OMDemiurgeNode> modalChild;
+    std::mutex modalMutex;
+    bool layerOverlay = false;
 
     inline static std::weak_ptr<OMDemiurgeNode> capturedNode;
     inline static std::weak_ptr<OMDemiurgeNode> capturedRoot;

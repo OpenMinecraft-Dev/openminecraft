@@ -548,6 +548,13 @@ void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
     }
 
     std::shared_ptr<OMDemiurgeNode> focusBefore;
+    std::shared_ptr<OMDemiurgeNode> modal;
+
+    if (parent == nullptr && event.isMouse())
+    {
+        std::lock_guard<std::mutex> lock(modalMutex);
+        modal = modalChild.lock();
+    }
 
     if (parent == nullptr && event.type == OMDemiurgeEventType::MouseDown)
     {
@@ -609,6 +616,12 @@ void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
                 }
             }
         }
+    }
+
+    if (parent == nullptr && event.isMouse() && modal && modal.get() != this)
+    {
+        modal->acceptEvent(event);
+        return;
     }
 
     if (event.isKeyboard())

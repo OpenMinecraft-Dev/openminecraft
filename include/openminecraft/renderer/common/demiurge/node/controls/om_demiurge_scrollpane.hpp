@@ -67,6 +67,16 @@ class OMDemiurgeScrollPane : public OMDemiurgeContainerNode, public OMDemiurgeCo
     auto getScrollX() -> float;
     auto getScrollY() -> float;
 
+    // Scrolls so `rect` (absolute screen bounds) is visible; with center=true
+    // the rect is centered in the viewport when possible. Used by popups to
+    // reveal their selected item.
+    void scrollRectIntoView(const OMDemiurgeRect &rect, bool center = true);
+
+    // An overlay popup (e.g. DropDownSelector) registers its panel so other
+    // panes do not also consume wheel events over the popup.
+    static void setOverlayWheelRegion(const OMDemiurgeScrollPane *owner, const OMDemiurgeRect &rect);
+    static void clearOverlayWheelRegion(const OMDemiurgeScrollPane *owner);
+
     void setOnScroll(std::function<void(float, float)> handler);
     void setDisabled(bool value, bool animate = true) override;
     auto isDisabled() const -> bool

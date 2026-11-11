@@ -43,7 +43,7 @@ auto OMDemiurgeSvgNode::submit(OMDemiurgeRendererHandler *handler, uint32_t dept
 
     for (auto c : children)
     {
-        c->submit(handler, depth + 1);
+        c->submit(handler, c->isLayerOverlay() ? overlayLayer(depth + 1) : depth + 1);
     }
 }
 

@@ -529,7 +529,40 @@ RadioGroup：
 - 箭头使用 SVG 的 `rotation` style，旋转角为 `openAmount * π`；
 - 只点击标题行区域才会切换，内容区的控件交互不受影响。
 
-### 7.16 TabMultiPage
+### 7.16 DropDownSelector
+
+`OMDemiurgeDropDownSelector(geom::OMFontSet *fontset = nullptr)`
+
+下拉选择器：标题行留在正常布局中；展开后的选项列表挂到根节点的 overlay 子树，使用层的最高位单独计数，排在所有普通层之后渲染，因此不会被 ScrollPane 等祖先裁剪。
+
+| API | 说明 |
+| --- | --- |
+| `setItems(const std::vector<std::string> &)` / `getItems()` | 设置 / 获取选项列表 |
+| `setSelectedIndex(int, bool notify = true)` / `getSelectedIndex()` | 设置 / 获取选中下标（`-1` 表示未选中） |
+| `getSelectedValue()` | 当前选中文本，未选中返回空串 |
+| `setPlaceholder(std::string)` | 未选中时标题行占位文本（默认 `Select...`） |
+| `setHeaderColors(normal, hovered, pressed)` | 设置标题行三层颜色 |
+| `setOnSelect(std::function<void(int, const std::string &)>)` | 选中回调 |
+| `open()` / `close()` / `isOpen()` | 打开 / 关闭 / 查询弹层 |
+| `setDisabled(bool, bool animate)` / `isDisabled()` | 禁用 |
+
+行为说明：
+
+- 选项列表由 `OMDemiurgeScrollPane` 承载，总高度上限 240px，并按完整选项行取整，避免底部出现半截选项；超出内容通过列表滚动查看；
+- 每次打开时若选中项不在视口内，列表会自动滚动使其可见（尽量居中）；已可见时保持原偏移；
+- 标题行背景随 normal / hover / pressed 三态做颜色动画，默认 `(0.16,0.16,0.20)`、`(0.21,0.21,0.27)`、`(0.28,0.28,0.36)`；
+- 选项在鼠标悬停时用颜色动画高亮（未选中项为半透明蓝灰，选中项提亮）；列表滚动时内容在指针下移动，会清除所有选项的 hover 状态，避免悬停色残留；
+- 鼠标按下后松开，且松开位置仍在选项内时才选中并关闭弹层；拖出后松开不会选中；
+- 弹层打开时鼠标事件只分发给弹层（modal child），底层控件不会抢走捕获；
+- 点击弹层外部（透明 backdrop）或再次点击标题行关闭；关闭采用延迟卸载，事件批次内不会立刻重新打开；
+- 弹层优先显示在标题行下方；下方空间不足且上方能容纳完整列表时翻转到上方，否则限制高度并让列表内部滚动；
+- 弹层展开期间，面板区域内的滚轮事件只作用于列表 ScrollPane，不再带动外层 ScrollPane；
+- 弹层根节点设置 `setLayerOverlay(true)`，子节点层号自动继承最高位；overlay 组与普通层分开计数；
+- 弹层挂载/卸载通过根节点的 `deferAction()` 延迟到帧边界执行，避免事件遍历期间修改 children 导致迭代器失效。
+
+主要 style：`width` / `height`（标题行尺寸）、`padding`。选项行高暂固定 28px。
+
+### 7.17 TabMultiPage
 
 `OMDemiurgeTabMultiPage(geom::OMFontSet *fontset = nullptr)`
 
@@ -582,7 +615,7 @@ RadioGroup：
 - 顶部/底部布局：控件高度 = `tabHeight + 当前页高度`；左侧/右侧布局：控件高度 = 当前页高度，宽度减去 Tab 栏厚度；
 - 当前页元素通过 `pageClip` 裁剪到页面区域，避免内容溢出到 Tab 栏。
 
-### 7.17 ScrollBar
+### 7.18 ScrollBar
 
 `OMDemiurgeScrollBar()`
 
@@ -637,7 +670,7 @@ visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eas
 - 越界接近一个 view 高度时压缩加快，`overscroll` 达到 `viewSize * overscroll_range` 时 thumb 长度等于厚度，配合自动收敛的圆角变成一个**圆点**；
 - `getThumbLength()` 返回压缩后的显示长度，`setOnScroll` 仍收到原始（可能越界的）offset。
 
-### 7.18 ScrollPane
+### 7.19 ScrollPane
 
 `OMDemiurgeScrollPane()`
 
@@ -671,6 +704,7 @@ visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eas
 | `inertia_speed` | 惯性减速动画时长（默认 0.55s） |
 | `wheel_speed` | 滚轮平滑时长（默认 0.18） |
 | `scrollbar_thickness` | 内部滚动条厚度（默认 4） |
+| `scrollbar_gap` | 滚动条与内容之间的间隔（默认 4） |
 
 行为说明：
 
@@ -741,7 +775,7 @@ control->setDisabled(true);
 新增 / 修改控件、节点或元素时：
 
 1. 在本文档与 [README-en.md](README-en.md) 中同步更新对应章节（API 表、style 表、元素表）；
-2. 新控件需要加入 7.2–7.18 的控件列表，并说明：
+2. 新控件需要加入 7.2–7.19 的控件列表，并说明：
    - 构造函数与基类；
    - 公开 API；
    - 读取的 style 键（区分公共键与调参/内部键）；

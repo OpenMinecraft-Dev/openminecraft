@@ -276,6 +276,14 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     addGallerySection("TextInput", "Single-line text input.", demoInput);
     demoTextEdit->style("width", OMDemiurgeSize::fill());
     addGallerySection("TextEdit", "Multi-line text editor.", demoTextEdit);
+
+    demoSelector = std::make_shared<node::controls::OMDemiurgeDropDownSelector>(fontset.get());
+    demoSelector->style("width", OMDemiurgeSize::pixels(220.0f));
+    demoSelector->setItems({"Apple", "Banana", "Cherry", "Dragonfruit", "Elderberry", "Fig", "Grape",
+                            "Honeydew", "Kiwi", "Lemon", "Mango", "Nectarine"});
+    demoSelector->setSelectedIndex(0, false);
+    addGallerySection("Dropdown Selector", "Overlay dropdown with scrollable options.", demoSelector);
+
     addGallerySection("ScrollBar", "Vertical and horizontal scroll bars.", scrollContent);
 
     demoScrollPane = std::make_shared<node::controls::OMDemiurgeScrollPane>();

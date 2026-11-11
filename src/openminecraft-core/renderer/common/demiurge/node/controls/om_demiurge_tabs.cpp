@@ -234,21 +234,21 @@ auto OMDemiurgeTabMultiPage::submit(OMDemiurgeRendererHandler *handler, uint32_t
 {
     // Only the active page is submitted; inactive pages stay mounted for layout and
     // state but have no elements in the channels.
-    tabBar->submit(handler, depth + 1);
-    barLine->submit(handler, depth + 1);
-    indicator->submit(handler, depth + 1);
+    tabBar->submit(handler, tabBar->isLayerOverlay() ? overlayLayer(depth + 1) : depth + 1);
+    barLine->submit(handler, barLine->isLayerOverlay() ? overlayLayer(depth + 1) : depth + 1);
+    indicator->submit(handler, indicator->isLayerOverlay() ? overlayLayer(depth + 1) : depth + 1);
 
     if (pageTransitioning && outgoingPage)
     {
         outgoingPage->setClipNode(pageClip);
-        outgoingPage->submit(handler, depth + 1);
+        outgoingPage->submit(handler, outgoingPage->isLayerOverlay() ? overlayLayer(depth + 1) : depth + 1);
     }
 
     if (activeIndex >= 0 && activeIndex < static_cast<int>(tabs.size()))
     {
         auto &page = tabs[activeIndex].page;
         page->setClipNode(pageClip);
-        page->submit(handler, depth + 1);
+        page->submit(handler, page->isLayerOverlay() ? overlayLayer(depth + 1) : depth + 1);
     }
 }
 

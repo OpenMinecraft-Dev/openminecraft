@@ -529,7 +529,40 @@ Behavior:
 - The chevron uses the SVG `rotation` style with `openAmount * π`;
 - Only clicks on the header row toggle the pane; content controls keep their own interaction.
 
-### 7.16 TabMultiPage
+### 7.16 DropDownSelector
+
+`OMDemiurgeDropDownSelector(geom::OMFontSet *fontset = nullptr)`
+
+Drop-down selector: the header stays in normal layout; the opened option list is mounted as an overlay subtree on the root. It uses the layer's highest bit as a separate group and renders after all normal layers, so it is not clipped by ScrollPane or other ancestors.
+
+| API | Description |
+| --- | --- |
+| `setItems(const std::vector<std::string> &)` / `getItems()` | Set / get the option list |
+| `setSelectedIndex(int, bool notify = true)` / `getSelectedIndex()` | Set / get the selected index (`-1` = none) |
+| `getSelectedValue()` | Selected text, or an empty string |
+| `setPlaceholder(std::string)` | Header placeholder when nothing is selected (default `Select...`) |
+| `setHeaderColors(normal, hovered, pressed)` | Set the header's three-state colors |
+| `setOnSelect(std::function<void(int, const std::string &)>)` | Selection callback |
+| `open()` / `close()` / `isOpen()` | Open / close / query the popup |
+| `setDisabled(bool, bool animate)` / `isDisabled()` | Disable the selector |
+
+Behavior:
+
+- The option list is hosted by an `OMDemiurgeScrollPane`, capped at 240px and rounded down to whole option rows so no item is half-clipped; overflowing options are reached by scrolling the list;
+- On open, if the selected item is outside the viewport the list scrolls it into view (preferably centered); if already visible, the offset is kept;
+- The header background animates through normal / hover / pressed colors; defaults are `(0.16,0.16,0.20)`, `(0.21,0.21,0.27)`, `(0.28,0.28,0.36)`;
+- Options highlight with a color animation on hover (unselected rows use a translucent blue-grey, the selected row brightens); scrolling the list moves rows under the pointer, so all item hover states are cleared to avoid a stuck highlight;
+- Pressing an option and releasing while still inside selects it and closes the popup; releasing outside does not select;
+- While open, mouse events go only to the popup (modal child), so controls underneath cannot steal the capture;
+- Clicking outside (transparent backdrop) or the header again closes it; removal is deferred so the same event batch cannot immediately reopen it;
+- The popup prefers the space below the header; if that is too short but the full list fits above, it flips above; otherwise its height is clamped and the list scrolls internally;
+- While open, wheel events over the panel only drive the list ScrollPane and never the outer ScrollPane;
+- The popup root calls `setLayerOverlay(true)`; descendants inherit the highest bit, and the overlay group is counted separately from normal layers;
+- Popup mount/unmount is deferred with the root's `deferAction()` until a frame boundary, so event traversal never sees a mutated children vector.
+
+Main styles: `width` / `height` (header size), `padding`. Option rows are currently fixed at 28px.
+
+### 7.17 TabMultiPage
 
 `OMDemiurgeTabMultiPage(geom::OMFontSet *fontset = nullptr)`
 
@@ -582,7 +615,7 @@ Behavior:
 - Top/bottom: control height = `tabHeight + active page height`; left/right: control height = active page height, width minus the bar thickness;
 - The active page is clipped to the page area via `pageClip`, so content cannot overflow into the tab bar.
 
-### 7.17 ScrollBar
+### 7.18 ScrollBar
 
 `OMDemiurgeScrollBar()`
 
@@ -637,7 +670,7 @@ visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eas
 - Near one full view height of overscroll the compression accelerates; at `viewSize * overscroll_range` the thumb length equals its thickness, and with the clamped corner radius it becomes a **circle**;
 - `getThumbLength()` returns the compressed display length, while `setOnScroll` still receives the raw (possibly out-of-range) offset.
 
-### 7.18 ScrollPane
+### 7.19 ScrollPane
 
 `OMDemiurgeScrollPane()`
 
@@ -671,6 +704,7 @@ Main styles:
 | `inertia_speed` | Inertia deceleration duration (default 0.55s) |
 | `wheel_speed` | Wheel smoothing duration (default 0.18) |
 | `scrollbar_thickness` | Internal scroll bar thickness (default 4) |
+| `scrollbar_gap` | Gap between the scroll bar and content (default 4) |
 
 Behavior:
 
@@ -741,7 +775,7 @@ control->setDisabled(true);
 When adding or changing a control, node or element:
 
 1. Update the corresponding sections (API tables, style tables, element table) in both this document and [README.md](README.md);
-2. Add new controls to the control list in 7.2–7.18 and document:
+2. Add new controls to the control list in 7.2–7.19 and document:
    - Constructor and base class;
    - Public APIs;
    - Style keys read (distinguishing public keys from tuning/internal keys);
