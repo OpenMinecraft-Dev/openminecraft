@@ -50,13 +50,46 @@ void OMDemiurgeTooltip::setTooltip(const OMDemiurgeNode *node, const std::string
         return;
     }
 
-    entries[node] = Entry{text, std::max(0.0f, delay)};
+    entries[node] = Entry{text, std::max(0.0f, delay), false};
 
     if (panel && active == node && label && shownText != text)
     {
         label->style("text", text);
         shownText = text;
     }
+}
+
+void OMDemiurgeTooltip::setImmediateTooltip(const OMDemiurgeNode *node, const std::string &text)
+{
+    if (node == nullptr)
+    {
+        return;
+    }
+
+    if (text.empty())
+    {
+        detach(node);
+        return;
+    }
+
+    entries[node] = Entry{text, 0.0f, true};
+
+    if (active == node)
+    {
+        hoverStart = std::chrono::steady_clock::now();
+    }
+
+    if (panel && active == node && label && shownText != text)
+    {
+        label->style("text", text);
+        shownText = text;
+    }
+}
+
+auto OMDemiurgeTooltip::isImmediate(const OMDemiurgeNode *node) const -> bool
+{
+    auto it = entries.find(node);
+    return it != entries.end() && it->second.immediate;
 }
 
 auto OMDemiurgeTooltip::getTooltip(const OMDemiurgeNode *node) const -> std::string
@@ -355,8 +388,9 @@ void OMDemiurgeTooltip::update(const std::shared_ptr<OMDemiurgeNode> &root)
     }
 
     const auto elapsed = std::chrono::duration<float>(std::chrono::steady_clock::now() - hoverStart).count();
+    const float effectiveDelay = it->second.immediate ? 0.0f : it->second.delay;
 
-    if (elapsed < it->second.delay)
+    if (elapsed < effectiveDelay)
     {
         return;
     }

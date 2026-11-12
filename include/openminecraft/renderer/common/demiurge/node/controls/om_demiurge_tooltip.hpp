@@ -29,6 +29,8 @@ class OMDemiurgeTooltip
     static auto instance() -> OMDemiurgeTooltip &;
 
     void setTooltip(const OMDemiurgeNode *node, const std::string &text, float delay = 0.6f);
+    void setImmediateTooltip(const OMDemiurgeNode *node, const std::string &text);
+    auto isImmediate(const OMDemiurgeNode *node) const -> bool;
     auto getTooltip(const OMDemiurgeNode *node) const -> std::string;
     void setTooltipDelay(const OMDemiurgeNode *node, float seconds);
     auto getTooltipDelay(const OMDemiurgeNode *node) const -> float;
@@ -53,6 +55,7 @@ class OMDemiurgeTooltip
     {
         std::string text;
         float delay = 0.6f;
+        bool immediate = false;
     };
 
     void startFade(float target);

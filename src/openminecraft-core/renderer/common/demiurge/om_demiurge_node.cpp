@@ -479,6 +479,12 @@ auto OMDemiurgeNode::setTooltip(const std::string &text, float delay) -> std::sh
     return shared_from_this();
 }
 
+auto OMDemiurgeNode::setImmediateTooltip(const std::string &text) -> std::shared_ptr<OMDemiurgeNode>
+{
+    node::controls::OMDemiurgeTooltip::instance().setImmediateTooltip(this, text);
+    return shared_from_this();
+}
+
 auto OMDemiurgeNode::getTooltip() const -> std::string
 {
     return node::controls::OMDemiurgeTooltip::instance().getTooltip(this);

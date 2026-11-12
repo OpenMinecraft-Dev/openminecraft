@@ -115,6 +115,9 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     // Tooltip settings are stored by OMDemiurgeTooltip, not by the node. The
     // panel is mounted on the UI root and submitted in the overlay layer.
     auto setTooltip(const std::string &text, float delay = 0.6f) -> std::shared_ptr<OMDemiurgeNode>;
+    // Cursor tooltip for dense UI such as inventory slots: no hover delay,
+    // follows the pointer, and only fades on enter/exit.
+    auto setImmediateTooltip(const std::string &text) -> std::shared_ptr<OMDemiurgeNode>;
     auto getTooltip() const -> std::string;
     void setTooltipDelay(float seconds);
     auto getTooltipDelay() const -> float;

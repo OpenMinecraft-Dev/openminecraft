@@ -185,6 +185,7 @@ control->hideTooltip();
 Behavior:
 
 - The tooltip target is re-evaluated from the current pointer position every frame (it does not rely on Enter/Exit events, which can be missed); after the pointer stays for `delay` seconds, the panel is mounted on the **UI root** (not on the control);
+- `setImmediateTooltip(text)` is an instant mode for inventory grids and dense UIs: no hover delay, shows on entry and follows the pointer; it fades in only on entry and out only on exit, and moving inside the same control does not restart the animation;
 - The tooltip root sets `setLayerOverlay(true)`, so it is drawn in the overlay group above normal UI;
 - Appearing and disappearing both use a 0.12s opacity animation: the internal rect background and text each set their own `opacity` style while the color alpha stays unchanged;
 - A mouse press temporarily hides the tooltip so it cannot interfere with Slider / ScrollPane drags; on release the target is re-evaluated from the current pointer position and the hover delay restarts;

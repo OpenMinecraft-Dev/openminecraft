@@ -309,8 +309,10 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     labelDemo->setTooltip("Label: single-line text with setText/getText and animated color.");
 
     auto multilineDemo = std::make_shared<node::controls::OMDemiurgeMultilineLabel>(fontset.get());
-    multilineDemo->style({{"textHeight", 13}, {"textLineHeight", 17.0f}, {"color", (int)0xffffffff},
-                           {"alignSelf", OMDemiurgeAlign::FlexStart}});
+    multilineDemo->style({{"textHeight", 13},
+                          {"textLineHeight", 17.0f},
+                          {"color", (int)0xffffffff},
+                          {"alignSelf", OMDemiurgeAlign::FlexStart}});
     multilineDemo->setText("MultilineLabel\nSecond line of text.\nThird line demonstrates \\n handling.");
     multilineDemo->setTooltip("MultilineLabel: '\\n' starts a new line.");
 
