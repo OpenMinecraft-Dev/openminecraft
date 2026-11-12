@@ -25,6 +25,7 @@ auto OMDemiurgeSvgNode::submit(OMDemiurgeRendererHandler *handler, uint32_t dept
 
         t->position = {layoutBound.x, layoutBound.y, layoutBound.width, layoutBound.height};
         t->color = genLinear(stylesStorage.get<int>("color", 0));
+        t->color.a *= fetchOpacity();
         t->depth = depth;
         t->factor = stylesStorage.get<float>("factor", 0.01f);
         t->scale = stylesStorage.get<glm::vec2>("scale", glm::vec2(1.0f));

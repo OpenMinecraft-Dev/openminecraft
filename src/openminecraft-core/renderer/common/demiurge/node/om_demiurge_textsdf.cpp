@@ -55,6 +55,7 @@ auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, uint32_t 
         }
 
         auto th = stylesStorage.get<int>("textHeight", 12);
+        const float opacity = fetchOpacity();
         const glm::vec2 textScale = stylesStorage.get<glm::vec2>("scale", glm::vec2(1.0f));
         const glm::vec2 textCenter(layoutBound.x + layoutBound.width * 0.5f,
                                    layoutBound.y + layoutBound.height * 0.5f);

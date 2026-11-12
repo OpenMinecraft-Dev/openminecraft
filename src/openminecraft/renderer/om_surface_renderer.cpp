@@ -21,10 +21,13 @@
 #include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_pane.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_label.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_tooltip.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_multiline_label.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/event/om_eventbus_wrap.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include <memory>
+#include <cstdlib>
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_shaderscene.hpp"
 
 using namespace openminecraft::renderer;
@@ -43,6 +46,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
 
     auto rawfile1 = vfs::fsfetch("/bootassets/openminecraft-renderer/font/MapleMono-NF-Regular.ttf");
     fontset->fontList.push_back(std::make_shared<geom::OMFont>(*rawfile1.get()));
+    node::controls::OMDemiurgeTooltip::instance().setFontSet(fontset.get());
 
     auto button = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     demoButton = button;
@@ -70,6 +74,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
         }
     });
     button->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
+    button->setTooltip("Open the world demo.");
     auto button2 = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     quitButton = button2;
     button2->setOnClick([&]() {
@@ -79,6 +84,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
         bus.handle(event::Custom, e);
     });
     button2->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
+    button2->setTooltip("Quit OpenMinecraft.");
 
     checkBox = std::make_shared<node::controls::OMDemiurgeCheckBox>(fontset.get());
     checkBox->style({
@@ -88,6 +94,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     });
     checkBox->setBoxColors(glm::vec4(0.1f, 0.1f, 0.12f, 0.65f), glm::vec4(0.0f, 0.55f, 0.75f, 1.0f));
     checkBox->setCheckColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    checkBox->setTooltip("CheckBox\nClick to toggle the option.");
 
     radioGroup = std::make_shared<node::controls::OMDemiurgeRadioGroup>();
     radioGroup->setDirection(OMDemiurgeDirection::Row);
@@ -100,34 +107,45 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     radioB->setLabel("Option B");
     radioA->setGroup(radioGroup);
     radioB->setGroup(radioGroup);
+    radioA->setTooltip("RadioBox: Option A");
+    radioB->setTooltip("RadioBox: Option B");
+    radioGroup->setTooltip("RadioGroup: only one option can stay selected.");
 
     demoSwitch = std::make_shared<node::controls::OMDemiurgeSwitch>();
+    demoSwitch->setTooltip("Switch\nAnimated on/off toggle.");
 
     demoSlider = std::make_shared<node::controls::OMDemiurgeSlider>();
     demoSlider->style("width", OMDemiurgeSize::pixels(120.0f));
     demoSlider->style("width", OMDemiurgeSize::pixels(110.0f));
     demoSlider->setValue(0.4f, false);
+    demoSlider->setTooltip("Slider: drag the handle to change the value.");
 
     demoSpinner = std::make_shared<node::controls::OMDemiurgeSpinner>();
     demoSpinner->setColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f));
+    demoSpinner->setTooltip("Spinner: shown while work is in progress.");
 
     demoIconButton = std::make_shared<node::controls::OMDemiurgeIconButton>(24.0f);
     demoIconButton->setIcon("M 3 1 L 12 7 L 3 13 Z", 14.0f);
     demoIconButton->setIconColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    demoIconButton->setTooltip("IconButton: compact action with an icon.");
 
     demoBadge = std::make_shared<node::controls::OMDemiurgeBadge>(fontset.get());
     demoBadge->setText("3");
+    demoBadge->setTooltip("Badge: small count or status indicator.");
 
     demoLink = std::make_shared<node::controls::OMDemiurgeLink>(fontset.get());
     demoLink->setText("Docs");
+    demoLink->setTooltip("Link: opens documentation on click.");
 
     demoInput = std::make_shared<node::controls::OMDemiurgeTextInput>(fontset.get());
     demoInput->setPlaceholder("Type here...");
     demoInput->style("width", OMDemiurgeSize::pixels(220.0f));
+    demoInput->setTooltip("TextInput: single-line text with IME support.");
 
     demoTextEdit = std::make_shared<node::controls::OMDemiurgeTextEdit>(fontset.get());
     demoTextEdit->setPlaceholder("Multi-line text...");
     demoTextEdit->style({{"width", OMDemiurgeSize::pixels(260.0f)}, {"height", OMDemiurgeSize::pixels(120.0f)}});
+    demoTextEdit->setTooltip("TextEdit: multi-line text editor.\nUse Shift+arrows to select.");
 
     demoProgressBar = std::make_shared<node::controls::OMDemiurgeProgressBar>();
     demoProgressBar->style({
@@ -138,6 +156,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     demoProgressBar->setTrackColor(glm::vec4(0.106f, 0.106f, 0.141f, 0.35f));
     demoProgressBar->setBarColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f));
     demoProgressBar->setIndeterminate(true);
+    demoProgressBar->setTooltip("ProgressBar: determinate or indeterminate progress.");
 
     demoProgError = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     demoProgError->style("label", "Error");
@@ -179,6 +198,9 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
         button->findChildById("background")->style("radius", glm::vec4(4.0f));
         button->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
     };
+    demoProgError->setTooltip("Show the error state.");
+    demoProgIndetermined->setTooltip("Switch to indeterminate mode.");
+    demoProgNorm->setTooltip("Show 60% progress.");
     styleProgressButton(demoProgError);
     styleProgressButton(demoProgIndetermined);
     styleProgressButton(demoProgNorm);
@@ -192,6 +214,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     scrollBarVertical->style("width", OMDemiurgeSize::pixels(4.0f));
     scrollBarVertical->style("height", OMDemiurgeSize::pixels(80.0f));
     scrollBarVertical->setMetrics(80.0f, 320.0f);
+    scrollBarVertical->setTooltip("Vertical ScrollBar: drag the thumb.");
     auto scrollLabelVertical = std::make_shared<node::controls::OMDemiurgeLabel>(fontset.get());
     scrollLabelVertical->style({{"color", (int)0xffffff8c}, {"text", "V: 0.0"}, {"textHeight", 11}});
     scrollBarVertical->setOnScroll(
@@ -209,6 +232,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     scrollBarHorizontal->style("width", OMDemiurgeSize::pixels(220.0f));
     scrollBarHorizontal->style("height", OMDemiurgeSize::pixels(4.0f));
     scrollBarHorizontal->setMetrics(120.0f, 400.0f);
+    scrollBarHorizontal->setTooltip("Horizontal ScrollBar: drag the thumb.");
     auto scrollLabelHorizontal = std::make_shared<node::controls::OMDemiurgeLabel>(fontset.get());
     scrollLabelHorizontal->style({{"color", (int)0xffffff8c}, {"text", "H: 0.0"}, {"textHeight", 11}});
     scrollBarHorizontal->setOnScroll([scrollLabelHorizontal](float value) {
@@ -260,6 +284,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
         galleryList->mountDirect(section);
 
         auto separator = std::make_shared<node::controls::OMDemiurgeDivider>(false);
+        separator->setTooltip("Divider: separates gallery sections.");
         galleryList->mountDirect(separator);
     };
 
@@ -277,11 +302,42 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     demoTextEdit->style("width", OMDemiurgeSize::fill());
     addGallerySection("TextEdit", "Multi-line text editor.", demoTextEdit);
 
+    auto labelDemo = std::make_shared<node::controls::OMDemiurgeLabel>(fontset.get());
+    labelDemo->style({{"textHeight", 14}, {"alignSelf", OMDemiurgeAlign::FlexStart}});
+    labelDemo->setText("OMDemiurgeLabel");
+    labelDemo->setColor(glm::vec4(0.0f, 0.831f, 1.0f, 1.0f));
+    labelDemo->setTooltip("Label: single-line text with setText/getText and animated color.");
+
+    auto multilineDemo = std::make_shared<node::controls::OMDemiurgeMultilineLabel>(fontset.get());
+    multilineDemo->style({{"textHeight", 13}, {"textLineHeight", 17.0f}, {"color", (int)0xffffffff},
+                           {"alignSelf", OMDemiurgeAlign::FlexStart}});
+    multilineDemo->setText("MultilineLabel\nSecond line of text.\nThird line demonstrates \\n handling.");
+    multilineDemo->setTooltip("MultilineLabel: '\\n' starts a new line.");
+
+    auto labelContent = std::make_shared<node::OMDemiurgePane>();
+    labelContent->style({{"flexDirection", OMDemiurgeDirection::Column},
+                         {"flexGap", OMDemiurgeSize::pixels(6.0f)},
+                         {"width", OMDemiurgeSize::fill()}});
+    labelContent->mountDirect(labelDemo);
+    labelContent->mountDirect(multilineDemo);
+    addGallerySection("Label / MultilineLabel", "Single-line and multi-line text labels.", labelContent);
+
+    auto collapsibleDemo = std::make_shared<node::container::OMDemiurgeDropDownPane>(fontset.get());
+    collapsibleDemo->style("width", OMDemiurgeSize::fill());
+    collapsibleDemo->setTitle("Details");
+    auto collapsibleText = std::make_shared<node::controls::OMDemiurgeMultilineLabel>(fontset.get());
+    collapsibleText->style({{"textHeight", 12}, {"textLineHeight", 16.0f}, {"color", (int)0xffffffcc}});
+    collapsibleText->setText("Collapsible content.\nClick the header to expand or collapse.");
+    collapsibleDemo->setContentNode(collapsibleText);
+    collapsibleDemo->setTooltip("DropDownPane: collapsible panel with an animated header.");
+    addGallerySection("DropDownPane", "Collapsible panel for secondary content.", collapsibleDemo);
+
     demoSelector = std::make_shared<node::controls::OMDemiurgeDropDownSelector>(fontset.get());
     demoSelector->style("width", OMDemiurgeSize::pixels(220.0f));
     demoSelector->setItems({"Apple", "Banana", "Cherry", "Dragonfruit", "Elderberry", "Fig", "Grape", "Honeydew",
                             "Kiwi", "Lemon", "Mango", "Nectarine"});
     demoSelector->setSelectedIndex(0, false);
+    demoSelector->setTooltip("DropDownSelector: opens an overlay list.");
     addGallerySection("Dropdown Selector", "Overlay dropdown with scrollable options.", demoSelector);
 
     addGallerySection("ScrollBar", "Vertical and horizontal scroll bars.", scrollContent);
@@ -293,6 +349,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     demoScrollPane->setOrientation(node::container::OMDemiurgeScrollPaneOrientation::Vertical);
     demoScrollPane->setContentStretch(true);
     demoScrollPane->setContentNode(galleryList);
+    demoScrollPane->setTooltip("ScrollPane: scroll the gallery with the wheel or by dragging.");
 
     auto pageMain = std::make_shared<node::OMDemiurgePane>();
     pageMain->style(
@@ -336,6 +393,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     debugTreeButton->style("textHeight", 11);
     debugTreeButton->style("alignSelf", OMDemiurgeAlign::FlexStart);
     debugTreeButton->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
+    debugTreeButton->setTooltip("Dump the current Demiurge UI tree to the log.");
     debugTreeButton->setOnClick([this]() {
         if (this->node)
         {
@@ -345,6 +403,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     pageMisc->mountDirect(debugTreeButton);
 
     demoTabs = std::make_shared<node::container::OMDemiurgeTabPane>(fontset.get());
+    demoTabs->setTooltip("TabPane: switches between Main, Gallery and Misc pages.");
     demoTabs->style("width", OMDemiurgeSize::fill());
     demoTabs->style("height", OMDemiurgeSize::fill());
     demoTabs->setPageFill(true);
@@ -385,6 +444,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
 }
 OMSurfaceRenderer::~OMSurfaceRenderer()
 {
+    node::controls::OMDemiurgeTooltip::instance().setFontSet(nullptr);
 }
 
 void OMSurfaceRenderer::submitTasks()

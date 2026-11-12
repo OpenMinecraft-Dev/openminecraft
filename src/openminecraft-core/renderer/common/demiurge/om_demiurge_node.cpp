@@ -1,6 +1,10 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
+#include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
+#include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
+#include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_tooltip.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "glm/ext/vector_float2.hpp"
 #include "glm/ext/vector_float3.hpp"
@@ -129,6 +133,7 @@ OMDemiurgeNode::OMDemiurgeNode()
 }
 OMDemiurgeNode::~OMDemiurgeNode()
 {
+    node::controls::OMDemiurgeTooltip::instance().detach(this);
     YGNodeFree(yogaNode);
 }
 
@@ -301,6 +306,27 @@ void OMDemiurgeNode::layout(float width, float height)
     syncBoundary(0, 0);
 }
 
+void OMDemiurgeNode::refreshHover()
+{
+    // While a control owns the mouse, hover must not be re-synthesized: the
+    // captured node is already receiving the real move stream.
+    if (fetchMouseCapture())
+    {
+        return;
+    }
+
+    if (!std::isfinite(mx) || !std::isfinite(my))
+    {
+        return;
+    }
+
+    OMDemiurgeEvent event;
+    event.type = OMDemiurgeEventType::MouseMove;
+    event.x = mx;
+    event.y = my;
+    acceptEvent(event);
+}
+
 auto OMDemiurgeNode::syncBoundary(float x, float y) -> void
 {
     auto b = boundary();
@@ -445,6 +471,37 @@ void OMDemiurgeNode::releaseFocus()
 
     focusedNode.reset();
     focusedRoot.reset();
+}
+
+auto OMDemiurgeNode::setTooltip(const std::string &text, float delay) -> std::shared_ptr<OMDemiurgeNode>
+{
+    node::controls::OMDemiurgeTooltip::instance().setTooltip(this, text, delay);
+    return shared_from_this();
+}
+
+auto OMDemiurgeNode::getTooltip() const -> std::string
+{
+    return node::controls::OMDemiurgeTooltip::instance().getTooltip(this);
+}
+
+void OMDemiurgeNode::setTooltipDelay(float seconds)
+{
+    node::controls::OMDemiurgeTooltip::instance().setTooltipDelay(this, seconds);
+}
+
+auto OMDemiurgeNode::getTooltipDelay() const -> float
+{
+    return node::controls::OMDemiurgeTooltip::instance().getTooltipDelay(this);
+}
+
+void OMDemiurgeNode::hideTooltip()
+{
+    node::controls::OMDemiurgeTooltip::instance().hideFor(this);
+}
+
+auto OMDemiurgeNode::isTooltipHovered() const -> bool
+{
+    return node::controls::OMDemiurgeTooltip::instance().isHovered(this);
 }
 
 auto OMDemiurgeNode::setChildId(const std::shared_ptr<OMDemiurgeNode> &child, const std::string &id) -> bool
@@ -627,6 +684,29 @@ auto OMDemiurgeNode::containsPoint(float x, float y) -> bool
     }
 }
 
+auto OMDemiurgeNode::isHoverableAt(float x, float y) -> bool
+{
+    for (auto cur = this; cur != nullptr; cur = cur->parent)
+    {
+        if (!cur->visible)
+        {
+            return false;
+        }
+    }
+
+    if (!containsPoint(x, y))
+    {
+        return false;
+    }
+
+    if (auto clip = resolveClipBound(); clip.has_value())
+    {
+        return x >= clip->x && x <= clip->x + clip->width && y >= clip->y && y <= clip->y + clip->height;
+    }
+
+    return true;
+}
+
 auto OMDemiurgeNode::dispatchCapturedEvent(const OMDemiurgeEvent &event) -> void
 {
     if (event.x != INFINITY && event.y != INFINITY)
@@ -643,6 +723,28 @@ void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
     if (!visible)
     {
         return;
+    }
+
+    if (event.isMouse() && std::isfinite(event.x) && std::isfinite(event.y))
+    {
+        // Update even while a child holds the mouse capture; hover refresh and
+        // captured drags must see the latest pointer, not the press position.
+        mx = event.x;
+        my = event.y;
+    }
+
+    if (parent == nullptr && event.isMouse())
+    {
+        node::controls::OMDemiurgeTooltip::instance().setPointer(event.x, event.y);
+    }
+
+    if (event.type == OMDemiurgeEventType::MouseDown)
+    {
+        node::controls::OMDemiurgeTooltip::instance().dismiss();
+    }
+    else if (event.type == OMDemiurgeEventType::MouseUp)
+    {
+        node::controls::OMDemiurgeTooltip::instance().resume();
     }
 
     std::shared_ptr<OMDemiurgeNode> focusBefore;
@@ -766,12 +868,17 @@ void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
         const bool inside =
             (event.x >= bo.x && event.x <= bo.x + bo.width && event.y >= bo.y && event.y <= bo.y + bo.height) ||
             (std::isinf(event.x) && std::isinf(event.y));
-        const bool wasInside = mx >= bo.x && mx <= bo.x + bo.width && my >= bo.y && my <= bo.y + bo.height;
+        // Keep a separate hover flag: comparing mx/my against the *new* bounds
+        // fails when layout moves a node under a stationary pointer.
+        const bool wasInside = hoverInside;
 
         if (inside)
         {
             if (!wasInside)
             {
+                hoverInside = true;
+                node::controls::OMDemiurgeTooltip::instance().onHover(this, true, event.x, event.y);
+
                 OMDemiurgeEvent enter = event;
                 enter.type = OMDemiurgeEventType::MouseEnter;
 
@@ -801,6 +908,9 @@ void OMDemiurgeNode::acceptEvent(const OMDemiurgeEvent &event)
         }
         else if (wasInside)
         {
+            hoverInside = false;
+            node::controls::OMDemiurgeTooltip::instance().onHover(this, false, event.x, event.y);
+
             OMDemiurgeEvent exit = event;
             exit.type = OMDemiurgeEventType::MouseExit;
 

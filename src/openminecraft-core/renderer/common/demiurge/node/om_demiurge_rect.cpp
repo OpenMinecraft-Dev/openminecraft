@@ -29,6 +29,7 @@ auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, uint32_t dep
         const int rectColor = stylesStorage.has("internal.color") ? stylesStorage.get<int>("internal.color", 0)
                                                                    : stylesStorage.get<int>("color", 0);
         t->color = genLinear(rectColor);
+        t->color.a *= fetchOpacity();
         t->position = {layoutBound.x, layoutBound.y, layoutBound.width, layoutBound.height};
         t->depth = depth;
         t->factor = stylesStorage.get<float>("factor", 2.0f);

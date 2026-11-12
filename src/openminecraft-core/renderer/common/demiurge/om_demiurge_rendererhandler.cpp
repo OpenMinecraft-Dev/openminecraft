@@ -1,4 +1,5 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_tooltip.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_layer.hpp"
 #include <vector>
 #include <typeinfo>
@@ -163,7 +164,9 @@ void OMDemiurgeRendererHandler::beforeFrame()
     auto ext = renderer->getLogicalExtent() / renderer->getUiScale();
 
     node->flushDeferredActions();
+    ::openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeTooltip::instance().update(node);
     node->layout(fit ? YGUndefined : ext.x, fit ? YGUndefined : ext.y);
+    node->refreshHover();
     node->submit(this, 0);
     node->update();
     node->flushDeferredActions();

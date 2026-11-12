@@ -25,6 +25,7 @@ auto OMDemiurgeSectorNode::submit(OMDemiurgeRendererHandler *handler, uint32_t d
         auto layoutBound = stylesStorage.get<OMDemiurgeRect>("layoutBound");
         auto t = handler->sector.temporary(sectorId);
         t->color = genLinear(stylesStorage.get<int>("color", 0));
+        t->color.a *= fetchOpacity();
         t->position = {layoutBound.x, layoutBound.y, layoutBound.width, layoutBound.height};
         t->depth = depth;
         t->factor = stylesStorage.get<float>("factor", 2.0f);

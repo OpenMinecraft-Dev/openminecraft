@@ -171,6 +171,30 @@ someNode->styleDump();            // "{color=-1, text="Main", textHeight=14}"
 
 The `Debug UI Tree` button on the `Misc` tab calls `node->dumpTree()`.
 
+### 3.10 Tooltip
+
+Tooltips are owned by a standalone `OMDemiurgeTooltip` manager and do not occupy a node's child list. Every `OMDemiurgeNode` (including all controls and Label) still has convenience APIs:
+
+```cpp
+control->setTooltip("Text", 0.6f);  // delay in seconds, default 0.6
+control->setTooltipDelay(0.4f);
+control->getTooltip();
+control->hideTooltip();
+```
+
+Behavior:
+
+- The tooltip target is re-evaluated from the current pointer position every frame (it does not rely on Enter/Exit events, which can be missed); after the pointer stays for `delay` seconds, the panel is mounted on the **UI root** (not on the control);
+- The tooltip root sets `setLayerOverlay(true)`, so it is drawn in the overlay group above normal UI;
+- Appearing and disappearing both use a 0.12s opacity animation: the internal rect background and text each set their own `opacity` style while the color alpha stays unchanged;
+- A mouse press temporarily hides the tooltip so it cannot interfere with Slider / ScrollPane drags; on release the target is re-evaluated from the current pointer position and the hover delay restarts;
+- When the root has a modal child (DropDownSelector list, Dialog, etc.) the tooltip hides immediately instead of covering the popup;
+- It is unmounted only after the fade-out completes, and re-mounted on the next hover;
+- When nested controls both have tooltips, only the innermost tooltipped control wins and ancestors' pending tooltips are cancelled;
+- The tooltip uses a fixed dark panel with a multi-line Label and supports `\n` line breaks;
+- The tooltip follows the pointer horizontally and is clamped only by the window edge, not by the hovered control's width;
+- Because the panel lives under the root, it never enters the control subtree and is not clipped by ScrollPane or other ancestors; tooltip state is fully separate from the node tree.
+
 ## 4. Style Reference
 
 ### 4.1 Value types
@@ -213,6 +237,7 @@ The `Debug UI Tree` button on the `Misc` tab calls `node->dumpTree()`.
 | Key | Nodes | Notes |
 | --- | --- | --- |
 | `color` | rect / text / svg / image / sector | Color (packed RGBA `int`) |
+| `opacity` | rect / text / svg / image / sector | Independent element opacity `float` (0..1, default 1); final alpha = color.a * opacity, children are unaffected |
 | `radius` | `OMDemiurgeRectNode` | Per-corner radius (`vec4`) |
 | `factor` | most element nodes | Edge softness / SDF width; per-node default |
 | `rotation` / `rotationPivot` | rect / image / sector / svg | Rotate around the given normal |
@@ -324,6 +349,7 @@ This allows a uniform `std::shared_ptr<OMDemiurgeControl>` to call `setDisabled(
 - **APIs** own runtime state and animation; **styles** own layout, static appearance and control tuning;
 - Color/selection/progress setters drive `OMAnimationValue<T>` internally and write child styles in `update()`;
 - `setDisabled(value, animate)`: animated transition when `animate = true`, immediate otherwise;
+- Discrete state animations consistently use `animation::OMAnimationValue<T>` (hover, press, selection, colors, expansion, Tooltip fade, etc.); continuous/procedural animation (Spinner rotation, indeterminate ProgressBar, caret blink, scroll inertia, shader time) stays time-driven;
 - Animation duration defaults to about 0.18s; override with `setAnimationSpeed(seconds)` or the `animationSpeed` style (per control);
 - Do not overwrite internal styles written by `update()` every frame (for example `internal.color`);
 - Internals migrated to child ids (e.g. Button `background` / `text`, CheckBox `box` / `check` / `label`, RadioBox `box` / `dot` / `label`) are decoupled from parent style sync; set their static styles via `findChildById("xxx")->style(...)`.
@@ -783,6 +809,20 @@ Notes:
 - Existing styles such as `textHeight`, `text`, and `factor` keep working;
 - Layout and glyph caching remain handled by the underlying `OMDemiurgeTextSdfNode`.
 
+
+### 7.21 OMDemiurgeMultilineLabel
+
+`OMDemiurgeMultilineLabel(geom::OMFontSet *fontset = nullptr)`
+
+Public wrapper around `OMDemiurgeTextSdfMultilineNode`. Supports `\n` line breaks and mirrors the `OMDemiurgeLabel` API:
+
+| API | Description |
+| --- | --- |
+| `setText(std::string)` / `getText()` | Multi-line text |
+| `setColor(glm::vec4)` / `getColor()` | Color; `setColor` animates over `animationSpeed` (default 0.18s) |
+| `setAnimationSpeed(float)` | Color animation duration |
+
+Main styles: `textHeight`, `textLineHeight`, `color`, `factor`, `scale`. Tooltips use this widget internally.
 
 ## 8. Examples
 

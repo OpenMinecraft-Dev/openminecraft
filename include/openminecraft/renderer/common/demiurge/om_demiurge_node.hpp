@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/common/demiurge/om_demiurge_layer.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_event.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_styles.hpp"
+#include "openminecraft/renderer/common/animation/om_animation_value.hpp"
 #include "openminecraft/renderer/common/event/om_eventbus_wrap.hpp"
 #include "yoga/YGNode.h"
 #include "yoga/YGNodeLayout.h"
@@ -24,6 +25,12 @@
 #include <yoga/Yoga.h>
 #include <cstdint>
 #include <array>
+#include <chrono>
+
+namespace openminecraft::geom
+{
+class OMFontSet;
+}
 
 namespace openminecraft::renderer::common::demiurge
 {
@@ -105,6 +112,15 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     }
     auto findChildById(const std::string &id) -> std::shared_ptr<OMDemiurgeNode>;
 
+    // Tooltip settings are stored by OMDemiurgeTooltip, not by the node. The
+    // panel is mounted on the UI root and submitted in the overlay layer.
+    auto setTooltip(const std::string &text, float delay = 0.6f) -> std::shared_ptr<OMDemiurgeNode>;
+    auto getTooltip() const -> std::string;
+    void setTooltipDelay(float seconds);
+    auto getTooltipDelay() const -> float;
+    void hideTooltip();
+    auto isTooltipHovered() const -> bool;
+
     auto getRoot() -> std::shared_ptr<OMDemiurgeNode>
     {
         auto cur = shared_from_this();
@@ -150,6 +166,12 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     {
         std::lock_guard<std::mutex> lock(modalMutex);
         modalChild = child;
+    }
+
+    auto hasModalChild() -> bool
+    {
+        std::lock_guard<std::mutex> lock(modalMutex);
+        return !modalChild.expired();
     }
 
     void clearModalChild(const std::shared_ptr<OMDemiurgeNode> &child)
@@ -283,6 +305,12 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     auto hasMouseCapture() -> bool;
     auto containsPoint(float x, float y) -> bool;
 
+    // True when the point is inside this node and every ancestor is visible and
+    // the point is not excluded by an active clip. Used by overlay hit-testing
+    // (tooltips) so controls on hidden tab pages or outside a ScrollPane viewport
+    // cannot steal hover.
+    auto isHoverableAt(float x, float y) -> bool;
+
     // Clipping: point this node at another node whose layout bounds define the
     // visible range. The clip applies to this node and its whole subtree, and is
     // intersected with the clip ranges of the ancestors.
@@ -383,6 +411,10 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         return Ignored;
     }
 
+    // Re-runs hover enter/exit synthesis at the last pointer position. Called
+    // after layout when the UI may have moved under a stationary pointer.
+    void refreshHover();
+
     // Runtime class name (demangled), used by the UI tree dump.
     virtual auto typeName() const -> std::string;
 
@@ -409,6 +441,13 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     auto fetchLayoutBound() -> OMDemiurgeRect
     {
         return stylesStorage.get<OMDemiurgeRect>("layoutBound");
+    }
+
+    // Element opacity, separate from the color's alpha. Applies to the node's
+    // own element only; children keep their own opacity.
+    auto fetchOpacity() -> float
+    {
+        return std::clamp(stylesStorage.get<float>("opacity", 1.0f), 0.0f, 1.0f);
     }
 
     auto fetchBorderInsets() -> OMDemiurgeEdgeInsets
@@ -501,6 +540,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     auto dispatchCapturedEvent(const OMDemiurgeEvent &event) -> void;
 
     float mx = INFINITY, my = INFINITY;
+    bool hoverInside = false;
     OMDemiurgeStyles stylesStorage;
     YGNodeRef yogaNode;
     OMDemiurgeNode *parent = nullptr;

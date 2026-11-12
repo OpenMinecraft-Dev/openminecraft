@@ -29,6 +29,7 @@ auto OMDemiurgeImageNode::submit(OMDemiurgeRendererHandler *handler, uint32_t de
         auto layoutBound = stylesStorage.get<OMDemiurgeRect>("layoutBound");
         auto t = handler->image.temporary(imageId);
         t->color = genLinear(stylesStorage.get<int>("color", 0));
+        t->color.a *= fetchOpacity();
         t->position = {layoutBound.x, layoutBound.y, layoutBound.width, layoutBound.height};
         t->depth = depth;
         t->factor = stylesStorage.get<float>("factor", 2.0f);

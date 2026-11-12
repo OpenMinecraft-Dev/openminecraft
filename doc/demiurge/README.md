@@ -171,6 +171,30 @@ someNode->styleDump();            // "{color=-1, text="Main", textHeight=14}"
 
 主界面 `Misc` 页签中的 `Debug UI Tree` 按钮会调用 `node->dumpTree()`。
 
+### 3.10 Tooltip
+
+Tooltip 由独立的 `OMDemiurgeTooltip` 管理器维护，不占用节点的子节点列表。所有 `OMDemiurgeNode`（包括全部控件和 Label）仍可用便捷 API：
+
+```cpp
+control->setTooltip("Text", 0.6f);  // delay 秒，默认 0.6
+control->setTooltipDelay(0.4f);
+control->getTooltip();
+control->hideTooltip();
+```
+
+行为：
+
+- Tooltip 目标每帧按当前指针位置重新判定（不依赖容易丢失的 Enter/Exit 事件）；指针停留超过 `delay` 后，面板挂载到 **UI 根节点**（不是控件自身）；
+- Tooltip 根节点设置 `setLayerOverlay(true)`，在 overlay 组中绘制，位于普通 UI 之上；
+- 出现与消失都有 0.12s 透明度动画：内部矩形背景和文字分别设置独立的 `opacity` style，颜色 alpha 保持不变；
+- 鼠标按下时暂时隐藏 Tooltip，避免阻碍 Slider / ScrollPane 等拖拽；松开后会按当前指针位置重新判定目标，并重新开始 hover 延迟；
+- 根节点存在 modal 子节点（DropDownSelector 列表、Dialog 等）时立即隐藏 Tooltip，不覆盖弹层；
+- 淡出完成后才自动 `umount`，下一次 hover 重新挂载；
+- 多个嵌套控件都有 Tooltip 时，只有最内层带 Tooltip 的控件生效，祖先的待显示 Tooltip 会被取消；
+- Tooltip 使用固定深色面板 + 多行 Label，支持 `\n` 换行；
+- Tooltip 横向跟随指针移动，只受窗口边缘约束，不再被限制在控件自身宽度内；
+- 因为面板直接挂在根节点，它不会进入控件子树，也不会被 ScrollPane 等祖先裁剪；Tooltip 数据与控件节点的树结构完全分离。
+
 ## 4. Style 参考
 
 ### 4.1 值类型
@@ -213,6 +237,7 @@ someNode->styleDump();            // "{color=-1, text="Main", textHeight=14}"
 | 键 | 适用节点 | 说明 |
 | --- | --- | --- |
 | `color` | rect 系 / 文本 / svg / image / sector | 颜色（RGBA int） |
+| `opacity` | rect 系 / 文本 / svg / image / sector | 独立的元素不透明度 `float`（0..1，默认 1）；最终 alpha = color.a * opacity，不影响子节点 |
 | `radius` | `OMDemiurgeRectNode` | 四角半径（vec4） |
 | `factor` | 多数元素节点 | 边缘软/SDF 宽度，按节点默认值 |
 | `rotation` / `rotationPivot` | rect / image / sector / svg | 绕指定法线旋转 |
@@ -324,6 +349,7 @@ class OMDemiurgeControl
 - **API** 负责运行期状态与动画；**style** 负责布局、静态外观与控件调参；
 - 颜色/选中/进度等 setter 内部驱动 `OMAnimationValue<T>`，在 `update()` 中写入子节点样式；
 - `setDisabled(value, animate)`：`animate = true` 时用缓动动画过渡，`false` 时立即生效；
+- 离散状态动画统一使用 `animation::OMAnimationValue<T>`（悬停、按下、选中、颜色、展开、Tooltip 淡入淡出等）；连续/程序化动画（Spinner 旋转、ProgressBar 不定态、光标闪烁、滚动惯性、shader time）保留时间驱动；
 - 动画时长默认多为 0.18s，可用 `setAnimationSpeed(seconds)` 或 `animationSpeed` style 覆盖（具体见各控件）；
 - 控件在 `update()` 中每帧写入的内部样式（例如 `internal.color`）不要从外部覆盖；
 - 迁移到 child id 的内部节点（如 Button 的 `background` / `text`、CheckBox 的 `box` / `check` / `label`、RadioBox 的 `box` / `dot` / `label`）脱离主控件样式同步；静态样式通过 `findChildById("xxx")->style(...)` 设置。
@@ -783,6 +809,20 @@ Gallery 页签现在由 ScrollPane 承载所有控件 DropDown（纵向滚动）
 - `textHeight`、`text`、`factor` 等原有 style 继续有效；
 - 文本布局/字形缓存仍由底层 `OMDemiurgeTextSdfNode` 处理。
 
+
+### 7.21 OMDemiurgeMultilineLabel
+
+`OMDemiurgeMultilineLabel(geom::OMFontSet *fontset = nullptr)`
+
+`OMDemiurgeTextSdfMultilineNode` 的公开包装，支持 `\n` 换行，API 与 `OMDemiurgeLabel` 对齐：
+
+| API | 说明 |
+| --- | --- |
+| `setText(std::string)` / `getText()` | 多行文本 |
+| `setColor(glm::vec4)` / `getColor()` | 颜色，`setColor` 带 `animationSpeed` 动画（默认 0.18s） |
+| `setAnimationSpeed(float)` | 颜色动画时长 |
+
+主要 style：`textHeight`、`textLineHeight`、`color`、`factor`、`scale`。Tooltip 内部即使用该控件。
 
 ## 8. 示例
 

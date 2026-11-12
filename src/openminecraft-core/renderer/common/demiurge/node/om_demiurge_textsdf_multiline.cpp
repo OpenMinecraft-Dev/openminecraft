@@ -95,6 +95,7 @@ auto OMDemiurgeTextSdfMultilineNode::submit(OMDemiurgeRendererHandler *handler, 
         }
 
         size_t index = 0;
+        const float opacity = fetchOpacity();
         const glm::vec2 textScale = stylesStorage.get<glm::vec2>("scale", glm::vec2(1.0f));
         const glm::vec2 textCenter(layoutBound.x + layoutBound.width * 0.5f,
                                    layoutBound.y + layoutBound.height * 0.5f);
@@ -107,6 +108,7 @@ auto OMDemiurgeTextSdfMultilineNode::submit(OMDemiurgeRendererHandler *handler, 
             {
                 auto t = ch->temporary(glyphIds[index++]);
                 t->color = genLinear(stylesStorage.get<int>("color", 0));
+                t->color.a *= opacity;
                 const glm::vec2 glyphPos(layoutBound.x + glyph.position.x * th, lineY + glyph.position.y * th);
                 const glm::vec2 glyphSize(glyph.size.x * th, glyph.size.y * th);
                 const glm::vec2 glyphCenter = glyphPos + glyphSize * 0.5f;
