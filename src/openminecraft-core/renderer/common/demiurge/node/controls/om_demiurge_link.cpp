@@ -1,7 +1,7 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_link.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_label.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 
@@ -22,7 +22,7 @@ OMDemiurgeLink::OMDemiurgeLink(geom::OMFontSet *fontset)
 
     if (fontset != nullptr)
     {
-        textNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
+        textNode = std::make_shared<OMDemiurgeLabel>(fontset);
         this->mountDirect(textNode);
     }
 

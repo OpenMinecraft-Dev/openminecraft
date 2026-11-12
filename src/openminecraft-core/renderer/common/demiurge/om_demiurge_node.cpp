@@ -447,6 +447,104 @@ void OMDemiurgeNode::releaseFocus()
     focusedRoot.reset();
 }
 
+auto OMDemiurgeNode::setChildId(const std::shared_ptr<OMDemiurgeNode> &child, const std::string &id) -> bool
+{
+    if (!child || std::find(children.begin(), children.end(), child) == children.end())
+    {
+        return false;
+    }
+
+    std::lock_guard<std::mutex> lock(childIdMutex);
+
+    if (id.empty())
+    {
+        auto old = childIdByNode.find(child.get());
+
+        if (old != childIdByNode.end())
+        {
+            childById.erase(old->second);
+            childIdByNode.erase(old);
+        }
+
+        return true;
+    }
+
+    if (auto existing = childById.find(id); existing != childById.end())
+    {
+        auto holder = existing->second.lock();
+
+        if (holder && holder != child)
+        {
+            return false;
+        }
+
+        if (!holder)
+        {
+            childById.erase(existing);
+        }
+    }
+
+    if (auto old = childIdByNode.find(child.get()); old != childIdByNode.end())
+    {
+        childById.erase(old->second);
+        childIdByNode.erase(old);
+    }
+
+    childIdByNode[child.get()] = id;
+    childById[id] = child;
+    return true;
+}
+
+void OMDemiurgeNode::clearChildId(const std::shared_ptr<OMDemiurgeNode> &child)
+{
+    if (!child)
+    {
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(childIdMutex);
+    auto old = childIdByNode.find(child.get());
+
+    if (old != childIdByNode.end())
+    {
+        childById.erase(old->second);
+        childIdByNode.erase(old);
+    }
+}
+
+auto OMDemiurgeNode::getChildId(const OMDemiurgeNode *child) const -> std::optional<std::string>
+{
+    if (child == nullptr)
+    {
+        return std::nullopt;
+    }
+
+    std::lock_guard<std::mutex> lock(childIdMutex);
+    auto it = childIdByNode.find(child);
+    return it == childIdByNode.end() ? std::nullopt : std::optional<std::string>(it->second);
+}
+
+auto OMDemiurgeNode::findChildById(const std::string &id) -> std::shared_ptr<OMDemiurgeNode>
+{
+    std::lock_guard<std::mutex> lock(childIdMutex);
+    auto it = childById.find(id);
+
+    if (it == childById.end())
+    {
+        return nullptr;
+    }
+
+    auto child = it->second.lock();
+
+    if (!child)
+    {
+        childById.erase(it);
+        return nullptr;
+    }
+
+    return child;
+}
+
 void OMDemiurgeNode::releaseFocusWithin(const std::shared_ptr<OMDemiurgeNode> &root)
 {
     if (!root)

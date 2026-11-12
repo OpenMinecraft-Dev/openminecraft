@@ -3,7 +3,7 @@
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_pane.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_label.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
@@ -28,12 +28,18 @@ OMDemiurgeButton::OMDemiurgeButton(geom::OMFontSet *fontset)
         {"width", 100_percent},
         {"height", 100_percent},
     });
-    textNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset)->style({
+    textNode = std::make_shared<OMDemiurgeLabel>(fontset)->style({
         {"alignSelf", OMDemiurgeAlign::Center},
         {"margin", std::array<OMDemiurgeSize, 4>{5_px, 10_px, 5_px, 5_px}},
     });
-    this->mountDirect(bkgNode);
-    this->mountDirect(textNode);
+    // Internal structure is addressable through child ids. These nodes own their
+    // own visual styles; the Button only syncs text/color/animation state.
+    bkgNode->style("radius", glm::vec4(5.0f));
+    textNode->style("textHeight", 16)
+        ->style("margin", std::array<OMDemiurgeSize, 4>{5_px, 10_px, 5_px, 5_px});
+
+    this->mountDirect(bkgNode, "background");
+    this->mountDirect(textNode, "text");
 }
 OMDemiurgeButton::~OMDemiurgeButton() = default;
 void OMDemiurgeButton::update()
@@ -49,12 +55,8 @@ void OMDemiurgeButton::update()
     glm::vec3 textRgb = glm::mix(glm::vec3(text), glm::vec3(0.55f), disabledValue * 0.75f);
 
     bkgNode->style("color", (int)(f3ToRgba(backgroundRgb) | static_cast<uint8_t>(alpha * 255.0f)));
-    bkgNode->style("radius", stylesStorage.get<glm::vec4>("radius", glm::vec4(5.0f)));
     textNode->style("color", (int)f4ToRgba(glm::vec4(textRgb, text.a)));
     textNode->style("text", stylesStorage.get<std::string>("label", "Button"));
-    textNode->style("textHeight", stylesStorage.get<int>("textHeight", 16));
-    textNode->style("margin", stylesStorage.get<std::array<OMDemiurgeSize, 4>>(
-                                  "textMargin", std::array<OMDemiurgeSize, 4>{5_px, 10_px, 5_px, 5_px}));
     OMDemiurgePane::update();
 }
 auto OMDemiurgeButton::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult

@@ -2,7 +2,7 @@
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_svg.hpp"
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_label.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 
@@ -47,13 +47,14 @@ OMDemiurgeCheckBox::OMDemiurgeCheckBox(geom::OMFontSet *fontset)
         {"factor", 0.08f},
     });
 
-    boxNode->mount(checkNode);
-    this->mountDirect(boxNode);
+    boxNode->mount(checkNode, "check");
+    this->mountDirect(boxNode, "box");
 
     if (fontset != nullptr)
     {
-        textNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
-        this->mountDirect(textNode);
+        textNode = std::make_shared<OMDemiurgeLabel>(fontset);
+        textNode->style("textHeight", 14)->style("offsetY", OMDemiurgeSize::pixels(-0.21f * 14.0f));
+        this->mountDirect(textNode, "label");
     }
 }
 
@@ -87,25 +88,14 @@ void OMDemiurgeCheckBox::update()
     const float disabledValue = std::clamp(disabledAmount.get(), 0.0f, 1.0f);
     boxColor = glm::vec4(glm::mix(glm::vec3(boxColor), glm::vec3(0.30f), disabledValue * 0.75f),
                          boxColor.a * (1.0f - disabledValue * 0.35f));
-    boxNode->style("color", (int)f4ToRgba(boxColor))
-        ->style("radius", stylesStorage.get<glm::vec4>("radius", glm::vec4(4.0f)));
+    boxNode->style("color", (int)f4ToRgba(boxColor));
 
     const glm::vec3 tickRgb = glm::mix(glm::vec3(tick), glm::vec3(0.55f), disabledValue * 0.75f);
-    checkNode->style("color", (int)f4ToRgba(glm::vec4(tickRgb, tick.a * amount * (1.0f - disabledValue * 0.85f))))
-        ->style("svgPath", stylesStorage.get<std::string>("svgPath", std::string(CheckPath)))
-        ->style("svgSize", glm::vec2(14.0f, 14.0f));
+    checkNode->style("color", (int)f4ToRgba(glm::vec4(tickRgb, tick.a * amount * (1.0f - disabledValue * 0.85f))));
 
     if (textNode != nullptr)
     {
-        const int textHeight = stylesStorage.get<int>("textHeight", 14);
-
-        // Text glyphs are laid out from the top of their node (font ascent included), so
-        // center the visible ink against the box instead of centering the layout box.
-        const float textOffset = stylesStorage.get<float>("textOffset", -0.21f * static_cast<float>(textHeight));
-
         textNode->style("text", stylesStorage.get<std::string>("label", "Checkbox"));
-        textNode->style("textHeight", textHeight);
-        textNode->style("offsetY", OMDemiurgeSize::pixels(textOffset));
         const auto label = labelColor.get();
         const glm::vec3 labelRgb = glm::mix(glm::vec3(label), glm::vec3(0.55f), disabledValue * 0.75f);
         textNode->style("color", (int)f4ToRgba(glm::vec4(labelRgb, label.a)));

@@ -2,7 +2,7 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_radiogroup.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_label.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 
@@ -44,13 +44,14 @@ OMDemiurgeRadioBox::OMDemiurgeRadioBox(geom::OMFontSet *fontset)
         {"radius", glm::vec4(DotSize * 0.5f)},
     });
 
-    boxNode->mount(dotNode);
-    this->mountDirect(boxNode);
+    boxNode->mount(dotNode, "dot");
+    this->mountDirect(boxNode, "box");
 
     if (fontset != nullptr)
     {
-        textNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
-        this->mountDirect(textNode);
+        textNode = std::make_shared<OMDemiurgeLabel>(fontset);
+        textNode->style("textHeight", 14)->style("offsetY", OMDemiurgeSize::pixels(-0.21f * 14.0f));
+        this->mountDirect(textNode, "label");
     }
 }
 
@@ -83,8 +84,7 @@ void OMDemiurgeRadioBox::update()
     boxColor = glm::vec4(glm::mix(glm::vec3(boxColor), glm::vec3(0.30f), disabledValue * 0.75f),
                          boxColor.a * (1.0f - disabledValue * 0.35f));
 
-    boxNode->style("color", (int)f4ToRgba(boxColor))
-        ->style("radius", glm::vec4(stylesStorage.get<float>("boxRadius", RadioSize * 0.5f)));
+    boxNode->style("color", (int)f4ToRgba(boxColor));
 
     // Keep the dot geometry fixed and scale it in the shader: animating the layout
     // size snapped to whole pixels and made the small circle jitter.
@@ -97,13 +97,7 @@ void OMDemiurgeRadioBox::update()
 
     if (textNode != nullptr)
     {
-        const int textHeight = stylesStorage.get<int>("textHeight", 14);
-        const float textOffset =
-            stylesStorage.get<float>("textOffset", -0.21f * static_cast<float>(textHeight));
-
         textNode->style("text", stylesStorage.get<std::string>("label", "Radio"));
-        textNode->style("textHeight", textHeight);
-        textNode->style("offsetY", OMDemiurgeSize::pixels(textOffset));
         const auto label = labelColor.get();
         const glm::vec3 labelRgb = glm::mix(glm::vec3(label), glm::vec3(0.55f), disabledValue * 0.75f);
         textNode->style("color", (int)f4ToRgba(glm::vec4(labelRgb, label.a)));

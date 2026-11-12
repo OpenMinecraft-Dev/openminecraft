@@ -1,6 +1,6 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textedit.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_label.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_event.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
@@ -83,7 +83,7 @@ OMDemiurgeTextEdit::OMDemiurgeTextEdit(geom::OMFontSet *fontset)
 
     if (fontset != nullptr)
     {
-        placeholderNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
+        placeholderNode = std::make_shared<OMDemiurgeLabel>(fontset);
         placeholderNode->style({
             {"position", OMDemiurgePosition::Absolute},
             {"offsetX", OMDemiurgeSize::pixels(0.0f)},
@@ -110,7 +110,7 @@ OMDemiurgeTextEdit::OMDemiurgeTextEdit(geom::OMFontSet *fontset)
     {
         for (int i = 0; i < LinePoolSize; ++i)
         {
-            auto node = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
+            auto node = std::make_shared<OMDemiurgeLabel>(fontset);
             node->style({
                 {"position", OMDemiurgePosition::Absolute},
                 {"offsetX", OMDemiurgeSize::pixels(0.0f)},

@@ -1,7 +1,7 @@
 #include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_tabs.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_label.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
@@ -93,7 +93,7 @@ auto OMDemiurgeTabPane::addPage(const std::string &title, const std::shared_ptr<
                  {"alignItems", OMDemiurgeAlign::Center},
                  {"padding", OMDemiurgeEdgeInsets{0.0f, 0.0f, 10.0f, 10.0f}}});
 
-    auto label = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
+    auto label = std::make_shared<controls::OMDemiurgeLabel>(fontset);
     label->style({{"text", title},
                   {"textHeight", 14},
                   {"color", (int)0x8cffffff},

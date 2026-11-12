@@ -65,7 +65,29 @@ OMDemiurgeRendererHandler
 | `store(child)` | 子节点把自身写入目标指针，便于链式构建 |
 | `children` | 直接子节点列表 |
 
-### 3.2 样式
+### 3.2 子节点 ID
+
+每个节点为自己的**直接子节点**维护一个可选 ID 表，并同时保存两个方向：
+
+- `节点指针 -> ID`
+- `ID -> 弱引用节点指针`
+
+| API | 说明 |
+| --- | --- |
+| `mount(child, id)` / `mountDirect(child, id)` / `mountFront(child, id)` | 挂载时附带 ID |
+| `setChildId(child, id) -> bool` | 设置/替换 ID；重复 ID 返回 `false`；空串表示清除 |
+| `clearChildId(child)` | 清除该子节点的 ID |
+| `getChildId(child) -> optional<string>` | 通过子节点查 ID |
+| `findChildById(id) -> shared_ptr<Node>` | 通过 ID 查子节点；目标失效时返回 `nullptr` |
+
+规则：
+
+- ID 只在同一个父节点的直接子节点中唯一；
+- `umount(child)` 会自动删除对应标签，两个方向同时清理；
+- 表内保存弱引用，子节点销毁后不会延长生命周期；
+- 适合给内部组件打稳定标签（如 `closeButton`、`contentHost`），避免业务层额外维护查找表。
+
+### 3.3 样式
 
 | API | 说明 |
 | --- | --- |
@@ -76,7 +98,7 @@ OMDemiurgeRendererHandler
 
 `put` 会置 `modified = true`。布局键在 `layout()` 时被消费，渲染键在节点 `submit()` 时读取。
 
-### 3.3 布局查询
+### 3.4 布局查询
 
 | API | 说明 |
 | --- | --- |
@@ -88,7 +110,7 @@ OMDemiurgeRendererHandler
 | `isClipBoundary()` | 该节点是否自行管理子树裁剪；Pane 返回 `true`，祖先 pane 的递归到此停止 |
 | `fetchChildren()` | 只读的直接子节点列表 |
 
-### 3.4 生命周期与渲染
+### 3.5 生命周期与渲染
 
 | API | 说明 |
 | --- | --- |
@@ -98,7 +120,7 @@ OMDemiurgeRendererHandler
 | `setVisible(bool)` / `isVisible()` | 不可见节点跳过命中测试与事件派发；是否提交由所有者决定（如 TabPane 只提交当前页） |
 | `invalidate()` | 强制节点重新执行由样式驱动的提交逻辑（元素被移除后重新显示时使用） |
 
-### 3.5 事件
+### 3.6 事件
 
 | API | 说明 |
 | --- | --- |
@@ -108,7 +130,7 @@ OMDemiurgeRendererHandler
 | `processTextInput / TextEditing` | 文本输入与 IME 组合 |
 | `processFocusGained / FocusLost` | 焦点变化 |
 
-### 3.6 焦点与鼠标捕获
+### 3.7 焦点与鼠标捕获
 
 | API | 说明 |
 | --- | --- |
@@ -118,7 +140,7 @@ OMDemiurgeRendererHandler
 | `captureMouse()` / `releaseMouse()` | 鼠标捕获，拖拽期间持续接收 Move/Up |
 | `containsPoint(x, y)` | 绝对坐标是否落在当前布局矩形内 |
 
-### 3.7 裁剪
+### 3.8 裁剪
 
 | API | 说明 |
 | --- | --- |
@@ -128,7 +150,7 @@ OMDemiurgeRendererHandler
 
 裁剪矩形是屏幕空间矩形（无圆角、非旋转），由渲染器 scissor 实现。
 
-### 3.8 调试输出
+### 3.9 调试输出
 
 | API | 说明 |
 | --- | --- |
@@ -143,7 +165,7 @@ OMDemiurgeRendererHandler
 ```cpp
 node->dumpTree();                 // 输出整棵界面树
 someNode->dumpTree();             // 只输出某个子树
-someNode->typeName();             // "OMDemiurgeTextSdfNode"
+someNode->typeName();             // "OMDemiurgeLabel"
 someNode->styleDump();            // "{color=-1, text="Main", textHeight=14}"
 ```
 
@@ -304,7 +326,7 @@ class OMDemiurgeControl
 - `setDisabled(value, animate)`：`animate = true` 时用缓动动画过渡，`false` 时立即生效；
 - 动画时长默认多为 0.18s，可用 `setAnimationSpeed(seconds)` 或 `animationSpeed` style 覆盖（具体见各控件）；
 - 控件在 `update()` 中每帧写入的内部样式（例如 `internal.color`）不要从外部覆盖；
-- 文本 / SVG 图标等内部节点同样不应直接改 style，应使用控件 API。
+- 迁移到 child id 的内部节点（如 Button 的 `background` / `text`、CheckBox 的 `box` / `check` / `label`、RadioBox 的 `box` / `dot` / `label`）脱离主控件样式同步；静态样式通过 `findChildById("xxx")->style(...)` 设置。
 
 ### 7.2 Button
 
@@ -320,8 +342,17 @@ class OMDemiurgeControl
 | `setDisabled(bool, bool animate)` | 禁用 |
 | `isDisabled()` | 查询 |
 
-主要 style：`label`、`textHeight`、`textMargin`（`std::array<OMDemiurgeSize,4>`，顺序 top/bottom/left/right）、`radius`、`opacityNormal`、`opacityHovered`、`opacityClicked`、`animationSpeed`。
+主要 style：`label`、`opacityNormal`、`opacityHovered`、`opacityClicked`、`animationSpeed`。
 文本通过 `label` style 设置（没有 `setLabel`）。
+
+内部节点 id：
+
+| id | 说明 | 独立 style 示例 |
+| --- | --- | --- |
+| `background` | 背景矩形 | `findChildById("background")->style("radius", glm::vec4(4.0f))` |
+| `text` | 文本 | `findChildById("text")->style("textHeight", 11)`；边距用 `margin`（`std::array<OMDemiurgeSize,4>`，顺序 top/bottom/left/right） |
+
+`radius`、`textHeight`、`textMargin` 不再从主控件同步到内部节点。
 
 ### 7.3 IconButton
 
@@ -348,7 +379,15 @@ class OMDemiurgeControl
 | `setAnimationSpeed(float)` | 动画时长 |
 | `setDisabled(bool, bool animate)` / `isDisabled()` | 禁用 |
 
-主要 style：`label`、`textHeight`、`radius`、`svgPath`（勾路径）、`hoverBoost`、`pressBoost`、`textOffset`、`animationSpeed`。
+主要 style：`label`、`hoverBoost`、`pressBoost`、`animationSpeed`。
+
+内部节点 id：`box`（外框）、`check`（SVG 勾）、`label`（文本）。`radius`、`svgPath`、`textHeight`、`textOffset` 通过对应子节点设置，例如：
+
+```cpp
+checkbox->findChildById("box")->style("radius", glm::vec4(6.0f));
+checkbox->findChildById("check")->style("svgPath", path);
+checkbox->findChildById("label")->style("textHeight", 15);
+```
 
 ### 7.5 RadioBox / RadioGroup
 
@@ -358,6 +397,8 @@ class OMDemiurgeControl
 `OMDemiurgeRadioBox` 与 `OMDemiurgeRadioGroup` 使用独立头文件与实现文件。
 
 RadioBox：
+
+内部节点 id：`box`（外框）、`dot`（内圆）、`label`（文本）。`boxRadius`、`textHeight`、`textOffset` 通过子节点设置；`pressShrink`、`hoverBoost` 仍为主控件参数。
 
 | API | 说明 |
 | --- | --- |
@@ -723,6 +764,26 @@ visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eas
 
 Gallery 页签现在由 ScrollPane 承载所有控件 DropDown（纵向滚动）。
 
+### 7.20 OMDemiurgeLabel
+
+`OMDemiurgeLabel(geom::OMFontSet *fontset = nullptr)`
+
+`OMDemiurgeTextSdfNode` 的公开包装，放在 `node/controls/`。所有单行文本控件/页面标题均使用它。
+
+| API | 说明 |
+| --- | --- |
+| `setText(std::string)` / `getText()` | 文本内容（写入 `text` style） |
+| `setColor(glm::vec4)` / `getColor()` | 文本颜色；`setColor` 做 `animationSpeed`（默认 0.18s）动画 |
+| `setAnimationSpeed(float)` | 颜色动画时长 |
+
+说明：
+
+- `getColor()` 返回当前动画中的颜色；动画结束后返回目标颜色；
+- 未调用 `setColor()` 时仍可直接写 `color` style，Label 不会覆盖；
+- `textHeight`、`text`、`factor` 等原有 style 继续有效；
+- 文本布局/字形缓存仍由底层 `OMDemiurgeTextSdfNode` 处理。
+
+
 ## 8. 示例
 
 ### 8.1 基础节点与样式
@@ -736,7 +797,7 @@ panel->style({
     {"color", (int)f4ToRgba(glm::vec4(0.1f, 0.1f, 0.12f, 0.8f))},
 });
 
-auto label = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get());
+auto label = std::make_shared<node::controls::OMDemiurgeLabel>(fontset.get());
 label->style({
     {"text", "Hello"},
     {"textHeight", 16},

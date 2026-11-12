@@ -1,6 +1,6 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_textinput.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_label.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 #include "openminecraft/renderer/common/om_text_input_controller.hpp"
@@ -79,7 +79,7 @@ OMDemiurgeTextInput::OMDemiurgeTextInput(geom::OMFontSet *fontset)
 
     if (fontset != nullptr)
     {
-        placeholderNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
+        placeholderNode = std::make_shared<OMDemiurgeLabel>(fontset);
         placeholderNode->style({
             {"position", OMDemiurgePosition::Absolute},
             {"offsetX", OMDemiurgeSize::pixels(0.0f)},
@@ -100,7 +100,7 @@ OMDemiurgeTextInput::OMDemiurgeTextInput(geom::OMFontSet *fontset)
 
     if (fontset != nullptr)
     {
-        contentNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
+        contentNode = std::make_shared<OMDemiurgeLabel>(fontset);
         contentNode->style({
             {"position", OMDemiurgePosition::Absolute},
             {"offsetX", OMDemiurgeSize::pixels(0.0f)},

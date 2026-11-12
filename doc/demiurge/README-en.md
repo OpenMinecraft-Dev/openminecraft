@@ -65,7 +65,29 @@ Base class: `OMDemiurgeNode` (`include/openminecraft/renderer/common/demiurge/om
 | `store(child)` | Child stores itself into a target pointer for chained construction |
 | `children` | Direct child list |
 
-### 3.2 Styles
+### 3.2 Child IDs
+
+Each node keeps an optional ID table for its **direct children**, storing both directions:
+
+- `node pointer -> ID`
+- `ID -> weak node pointer`
+
+| API | Description |
+| --- | --- |
+| `mount(child, id)` / `mountDirect(child, id)` / `mountFront(child, id)` | Mount with an ID |
+| `setChildId(child, id) -> bool` | Set/replace an ID; duplicate IDs return `false`; an empty string clears it |
+| `clearChildId(child)` | Clear the child's ID |
+| `getChildId(child) -> optional<string>` | Look up the ID from a child |
+| `findChildById(id) -> shared_ptr<Node>` | Look up a child by ID; returns `nullptr` if it expired |
+
+Rules:
+
+- An ID is unique only among the direct children of one parent;
+- `umount(child)` automatically removes the tag from both maps;
+- The table stores weak references, so it never extends a child's lifetime;
+- Useful for stable internal component tags (e.g. `closeButton`, `contentHost`) without extra lookup tables in business code.
+
+### 3.3 Styles
 
 | API | Description |
 | --- | --- |
@@ -76,7 +98,7 @@ Base class: `OMDemiurgeNode` (`include/openminecraft/renderer/common/demiurge/om
 
 `put` sets `modified = true`. Layout keys are consumed by `layout()`, rendering keys are read by the node's `submit()`.
 
-### 3.3 Layout queries
+### 3.4 Layout queries
 
 | API | Description |
 | --- | --- |
@@ -88,7 +110,7 @@ Base class: `OMDemiurgeNode` (`include/openminecraft/renderer/common/demiurge/om
 | `isClipBoundary()` | Whether the node manages clipping for its own subtree; panes return `true` and stop ancestor recursion |
 | `fetchChildren()` | Read-only list of direct children |
 
-### 3.4 Lifecycle and rendering
+### 3.5 Lifecycle and rendering
 
 | API | Description |
 | --- | --- |
@@ -98,7 +120,7 @@ Base class: `OMDemiurgeNode` (`include/openminecraft/renderer/common/demiurge/om
 | `setVisible(bool)` / `isVisible()` | Invisible nodes skip hit-testing and event dispatch; submission is decided by the owner (TabPane submits only the active page) |
 | `invalidate()` | Force the node to re-run style-driven submit logic (used when elements were removed and the node becomes visible again) |
 
-### 3.5 Events
+### 3.6 Events
 
 | API | Description |
 | --- | --- |
@@ -108,7 +130,7 @@ Base class: `OMDemiurgeNode` (`include/openminecraft/renderer/common/demiurge/om
 | `processTextInput / TextEditing` | Text input and IME composition |
 | `processFocusGained / FocusLost` | Focus transitions |
 
-### 3.6 Focus and mouse capture
+### 3.7 Focus and mouse capture
 
 | API | Description |
 | --- | --- |
@@ -118,7 +140,7 @@ Base class: `OMDemiurgeNode` (`include/openminecraft/renderer/common/demiurge/om
 | `captureMouse()` / `releaseMouse()` | Mouse capture; keeps receiving Move/Up while dragging |
 | `containsPoint(x, y)` | Whether absolute coordinates are inside the current layout rect |
 
-### 3.7 Clipping
+### 3.8 Clipping
 
 | API | Description |
 | --- | --- |
@@ -128,7 +150,7 @@ Base class: `OMDemiurgeNode` (`include/openminecraft/renderer/common/demiurge/om
 
 Clip rects are screen-space rectangles (no rounded corners, no rotation), implemented by the renderer scissor.
 
-### 3.8 Debug output
+### 3.9 Debug output
 
 | API | Description |
 | --- | --- |
@@ -143,7 +165,7 @@ Example:
 ```cpp
 node->dumpTree();                 // dump the whole UI tree
 someNode->dumpTree();             // dump a subtree
-someNode->typeName();             // "OMDemiurgeTextSdfNode"
+someNode->typeName();             // "OMDemiurgeLabel"
 someNode->styleDump();            // "{color=-1, text="Main", textHeight=14}"
 ```
 
@@ -304,7 +326,7 @@ This allows a uniform `std::shared_ptr<OMDemiurgeControl>` to call `setDisabled(
 - `setDisabled(value, animate)`: animated transition when `animate = true`, immediate otherwise;
 - Animation duration defaults to about 0.18s; override with `setAnimationSpeed(seconds)` or the `animationSpeed` style (per control);
 - Do not overwrite internal styles written by `update()` every frame (for example `internal.color`);
-- Do not edit internal nodes (text / SVG icon) directly; use the control APIs.
+- Internals migrated to child ids (e.g. Button `background` / `text`, CheckBox `box` / `check` / `label`, RadioBox `box` / `dot` / `label`) are decoupled from parent style sync; set their static styles via `findChildById("xxx")->style(...)`.
 
 ### 7.2 Button
 
@@ -320,8 +342,17 @@ This allows a uniform `std::shared_ptr<OMDemiurgeControl>` to call `setDisabled(
 | `setDisabled(bool, bool animate)` | Disable |
 | `isDisabled()` | Query |
 
-Main styles: `label`, `textHeight`, `textMargin` (`std::array<OMDemiurgeSize,4>`, order top/bottom/left/right), `radius`, `opacityNormal`, `opacityHovered`, `opacityClicked`, `animationSpeed`.
+Main styles: `label`, `opacityNormal`, `opacityHovered`, `opacityClicked`, `animationSpeed`.
 The label is set through the `label` style (there is no `setLabel`).
+
+Internal node ids:
+
+| id | Purpose | Independent style example |
+| --- | --- | --- |
+| `background` | Background rect | `findChildById("background")->style("radius", glm::vec4(4.0f))` |
+| `text` | Text | `findChildById("text")->style("textHeight", 11)`; margins use `margin` (`std::array<OMDemiurgeSize,4>`, top/bottom/left/right) |
+
+`radius`, `textHeight` and `textMargin` are no longer synced from the control to its internals.
 
 ### 7.3 IconButton
 
@@ -348,7 +379,15 @@ The label is set through the `label` style (there is no `setLabel`).
 | `setAnimationSpeed(float)` | Animation duration |
 | `setDisabled(bool, bool animate)` / `isDisabled()` | Disable |
 
-Main styles: `label`, `textHeight`, `radius`, `svgPath` (check path), `hoverBoost`, `pressBoost`, `textOffset`, `animationSpeed`.
+Main styles: `label`, `hoverBoost`, `pressBoost`, `animationSpeed`.
+
+Internal node ids: `box` (frame), `check` (SVG check), `label` (text). Set `radius`, `svgPath`, `textHeight` and `textOffset` on those children, for example:
+
+```cpp
+checkbox->findChildById("box")->style("radius", glm::vec4(6.0f));
+checkbox->findChildById("check")->style("svgPath", path);
+checkbox->findChildById("label")->style("textHeight", 15);
+```
 
 ### 7.5 RadioBox / RadioGroup
 
@@ -358,6 +397,8 @@ Main styles: `label`, `textHeight`, `radius`, `svgPath` (check path), `hoverBoos
 `OMDemiurgeRadioBox` and `OMDemiurgeRadioGroup` have separate headers and implementation files.
 
 RadioBox:
+
+Internal node ids: `box` (frame), `dot` (inner dot), `label` (text). Set `boxRadius`, `textHeight` and `textOffset` through those children; `pressShrink` and `hoverBoost` remain control-level parameters.
 
 | API | Description |
 | --- | --- |
@@ -723,6 +764,26 @@ Behavior:
 
 The Gallery tab is now a ScrollPane containing all control DropDowns (vertical scrolling).
 
+### 7.20 OMDemiurgeLabel
+
+`OMDemiurgeLabel(geom::OMFontSet *fontset = nullptr)`
+
+Public wrapper around `OMDemiurgeTextSdfNode`, located in `node/controls/`. All single-line text controls and page titles use it.
+
+| API | Description |
+| --- | --- |
+| `setText(std::string)` / `getText()` | Text content (writes the `text` style) |
+| `setColor(glm::vec4)` / `getColor()` | Text color; `setColor` animates over `animationSpeed` (default 0.18s) |
+| `setAnimationSpeed(float)` | Color animation duration |
+
+Notes:
+
+- `getColor()` returns the current animated color, or the target once the animation completes;
+- Until `setColor()` is used, the `color` style can still be written directly and the Label will not overwrite it;
+- Existing styles such as `textHeight`, `text`, and `factor` keep working;
+- Layout and glyph caching remain handled by the underlying `OMDemiurgeTextSdfNode`.
+
+
 ## 8. Examples
 
 ### 8.1 Basic node and styles
@@ -736,7 +797,7 @@ panel->style({
     {"color", (int)f4ToRgba(glm::vec4(0.1f, 0.1f, 0.12f, 0.8f))},
 });
 
-auto label = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get());
+auto label = std::make_shared<node::controls::OMDemiurgeLabel>(fontset.get());
 label->style({
     {"text", "Hello"},
     {"textHeight", 16},

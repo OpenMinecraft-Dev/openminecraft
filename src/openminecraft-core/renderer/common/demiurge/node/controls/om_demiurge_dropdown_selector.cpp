@@ -3,7 +3,7 @@
 #include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_scrollpane.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_svg.hpp"
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_label.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
@@ -137,7 +137,7 @@ OMDemiurgeDropDownSelector::OMDemiurgeDropDownSelector(geom::OMFontSet *fontset)
                        {"color", (int)f4ToRgba(glm::vec4(0.16f, 0.16f, 0.20f, 1.0f))}});
     this->mountDirect(background);
 
-    labelNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
+    labelNode = std::make_shared<OMDemiurgeLabel>(fontset);
     labelNode->style({{"text", placeholder},
                       {"textHeight", 13},
                       {"color", (int)0xffffffff},

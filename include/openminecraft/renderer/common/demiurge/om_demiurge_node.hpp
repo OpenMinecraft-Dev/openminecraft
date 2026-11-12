@@ -17,6 +17,7 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <unordered_map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -54,6 +55,14 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         return shared_from_this();
     }
 
+    // Optional child id, attached in the same call as the mount.
+    auto mount(std::shared_ptr<OMDemiurgeNode> child, const std::string &id) -> std::shared_ptr<OMDemiurgeNode>
+    {
+        auto self = mount(child);
+        setChildId(child, id);
+        return self;
+    }
+
     auto mountDirect(std::shared_ptr<OMDemiurgeNode> child)
     {
         child->parent = this;
@@ -64,6 +73,12 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
 
     // Inserts a child before all existing children. Overlay roots use this so
     // they receive pointer events before the normal UI below them.
+    auto mountDirect(std::shared_ptr<OMDemiurgeNode> child, const std::string &id)
+    {
+        mountDirect(child);
+        setChildId(child, id);
+    }
+
     auto mountFront(std::shared_ptr<OMDemiurgeNode> child)
     {
         child->parent = this;
@@ -71,6 +86,24 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
 
         YGNodeInsertChild(yogaNode, child->yogaNode, 0);
     }
+
+    auto mountFront(std::shared_ptr<OMDemiurgeNode> child, const std::string &id)
+    {
+        mountFront(child);
+        setChildId(child, id);
+    }
+
+    // Optional per-parent child id table. Direct children can carry one id;
+    // lookup works in both directions (node -> id, id -> node). umount removes
+    // the tag together with the child.
+    auto setChildId(const std::shared_ptr<OMDemiurgeNode> &child, const std::string &id) -> bool;
+    void clearChildId(const std::shared_ptr<OMDemiurgeNode> &child);
+    auto getChildId(const OMDemiurgeNode *child) const -> std::optional<std::string>;
+    auto getChildId(const std::shared_ptr<OMDemiurgeNode> &child) const -> std::optional<std::string>
+    {
+        return getChildId(child.get());
+    }
+    auto findChildById(const std::string &id) -> std::shared_ptr<OMDemiurgeNode>;
 
     auto getRoot() -> std::shared_ptr<OMDemiurgeNode>
     {
@@ -159,6 +192,8 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
                     }
                 }
             }
+
+            clearChildId(child);
 
             YGNodeRemoveChild(yogaNode, child->yogaNode);
             child->remove();
@@ -470,6 +505,10 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     YGNodeRef yogaNode;
     OMDemiurgeNode *parent = nullptr;
     std::vector<std::shared_ptr<OMDemiurgeNode>> children;
+
+    mutable std::mutex childIdMutex;
+    std::unordered_map<const OMDemiurgeNode *, std::string> childIdByNode;
+    std::unordered_map<std::string, std::weak_ptr<OMDemiurgeNode>> childById;
 
     bool focusable = false;
     bool visible = true;

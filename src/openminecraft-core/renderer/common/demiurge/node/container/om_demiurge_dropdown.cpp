@@ -2,7 +2,7 @@
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_svg.hpp"
-#include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_label.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_rendererhandler.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
@@ -57,7 +57,7 @@ OMDemiurgeDropDownPane::OMDemiurgeDropDownPane(geom::OMFontSet *fontset)
                    {"alignItems", OMDemiurgeAlign::Center},
                    {"padding", OMDemiurgeEdgeInsets{0.0f, 0.0f, 12.0f, 10.0f}}});
 
-    titleNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
+    titleNode = std::make_shared<controls::OMDemiurgeLabel>(fontset);
     titleNode->style({{"text", "Details"},
                       {"textHeight", 14},
                       {"color", (int)0xffffffff},
