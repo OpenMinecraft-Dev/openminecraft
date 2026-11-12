@@ -39,6 +39,8 @@ class OMDemiurgeTextEdit : public OMDemiurgeRectNode, public OMDemiurgeControl
     void setText(const std::string &text);
     auto getText() const -> std::string;
     void setPlaceholder(const std::string &placeholder);
+    auto getPlaceholder() const -> std::string;
+    void setPlaceholderColor(const glm::vec4 &color);
     void setMaxLength(int codepoints);
     void setOnChange(std::function<void(const std::string &)> handler);
     void setTextHeight(int height);
@@ -82,6 +84,7 @@ class OMDemiurgeTextEdit : public OMDemiurgeRectNode, public OMDemiurgeControl
     }
     auto deleteSelection() -> bool;
 
+    std::shared_ptr<OMDemiurgeNode> placeholderNode;
     std::vector<std::shared_ptr<OMDemiurgeNode>> lineNodes;
     std::vector<std::shared_ptr<OMDemiurgeNode>> selectionNodes;
     std::shared_ptr<OMDemiurgeNode> caretNode;

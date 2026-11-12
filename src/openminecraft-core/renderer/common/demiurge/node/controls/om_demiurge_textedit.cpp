@@ -81,6 +81,17 @@ OMDemiurgeTextEdit::OMDemiurgeTextEdit(geom::OMFontSet *fontset)
     stylesStorage.put("radius", glm::vec4(6.0f));
     stylesStorage.put("padding", OMDemiurgeEdgeInsets{4, 8, 4, 8});
 
+    if (fontset != nullptr)
+    {
+        placeholderNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
+        placeholderNode->style({
+            {"position", OMDemiurgePosition::Absolute},
+            {"offsetX", OMDemiurgeSize::pixels(0.0f)},
+            {"offsetY", OMDemiurgeSize::pixels(0.0f)},
+        });
+        this->mountDirect(placeholderNode);
+    }
+
     for (int i = 0; i < LinePoolSize; ++i)
     {
         auto node = std::make_shared<OMDemiurgeRectNode>()->style({
@@ -134,6 +145,11 @@ auto OMDemiurgeTextEdit::applyInternalClips() -> void
     // An enclosing pane assigns its clip to the whole subtree; keep the editor's
     // own lines/selection/caret clipped to the editor (pane ∧ editor).
     auto self = std::static_pointer_cast<OMDemiurgeTextEdit>(shared_from_this());
+
+    if (placeholderNode)
+    {
+        placeholderNode->setClipNode(self);
+    }
 
     for (auto &node : lineNodes)
     {
@@ -523,8 +539,7 @@ void OMDemiurgeTextEdit::update()
     {
         const size_t selBegin = std::min(caretState, anchorState);
         const size_t selEnd = std::max(caretState, anchorState);
-        const bool showSelection =
-            !disabledState && selBegin != selEnd && composingState.empty() && fontset != nullptr;
+        const bool showSelection = !disabledState && selBegin != selEnd && composingState.empty() && fontset != nullptr;
 
         int selectionUsed = 0;
 
@@ -573,7 +588,8 @@ void OMDemiurgeTextEdit::update()
 
         for (int i = selectionUsed; i < static_cast<int>(selectionNodes.size()); ++i)
         {
-            selectionNodes[i]->style("width", OMDemiurgeSize::pixels(0.0f))
+            selectionNodes[i]
+                ->style("width", OMDemiurgeSize::pixels(0.0f))
                 ->style("height", OMDemiurgeSize::pixels(0.0f))
                 ->style("color", (int)0);
         }
@@ -581,8 +597,20 @@ void OMDemiurgeTextEdit::update()
 
     // Render only the visible lines / glyph slices.
     const bool empty = display.empty();
-    const auto color = empty ? placeholderColor.get() : textColor.get();
-    const glm::vec4 finalColor(glm::mix(glm::vec3(color), glm::vec3(0.55f), disabledValue * 0.75f), color.a);
+    const auto textBase = textColor.get();
+    const glm::vec4 finalColor(glm::mix(glm::vec3(textBase), glm::vec3(0.55f), disabledValue * 0.75f), textBase.a);
+    const auto placeholderBase = placeholderColor.get();
+    const glm::vec4 placeholderFinalColor(glm::mix(glm::vec3(placeholderBase), glm::vec3(0.55f), disabledValue * 0.75f),
+                                          placeholderBase.a);
+
+    if (placeholderNode)
+    {
+        placeholderNode->style("text", empty ? placeholder : std::string())
+            ->style("textheight", textHeight)
+            ->style("color", (int)f4ToRgba(placeholderFinalColor))
+            ->style("offsetX", OMDemiurgeSize::pixels(0.0f))
+            ->style("offsetY", OMDemiurgeSize::pixels(0.0f));
+    }
 
     for (int i = 0; i < static_cast<int>(lineNodes.size()); ++i)
     {
@@ -597,16 +625,6 @@ void OMDemiurgeTextEdit::update()
 
         const auto &range = lines[lineIndex];
         const std::string lineText = display.substr(range.first, range.second - range.first);
-
-        if (empty && lineIndex == 0)
-        {
-            node->style("text", placeholder)
-                ->style("textheight", textHeight)
-                ->style("color", (int)f4ToRgba(finalColor))
-                ->style("offsetX", OMDemiurgeSize::pixels(0.0f))
-                ->style("offsetY", OMDemiurgeSize::pixels(static_cast<float>(lineIndex) * lineHeight - scrollY));
-            continue;
-        }
 
         std::string visible = lineText;
         float offsetX = -scrollX;
@@ -710,7 +728,7 @@ void OMDemiurgeTextEdit::update()
     caretNode->style("offsetX", OMDemiurgeSize::pixels(caretXAnimation.get()))
         ->style("offsetY", OMDemiurgeSize::pixels(caretY - scrollY))
         ->style("height", OMDemiurgeSize::pixels(static_cast<float>(textHeight)))
-        ->style("width", OMDemiurgeSize::pixels(caretVisible ? 1.0f + 0.6f * pulse : 1.0f))
+        ->style("width", OMDemiurgeSize::pixels(1.0f))
         ->style("color", (int)f4ToRgba(glm::vec4(glm::mix(glm::vec3(caretBase), glm::vec3(0.55f), disabledValue),
                                                  caretVisible ? caretBase.a * blinkAlpha : 0.0f)));
 
@@ -1127,6 +1145,17 @@ void OMDemiurgeTextEdit::setPlaceholder(const std::string &value)
 {
     std::lock_guard<std::mutex> lock(stateMutex);
     placeholder = value;
+}
+
+auto OMDemiurgeTextEdit::getPlaceholder() const -> std::string
+{
+    std::lock_guard<std::mutex> lock(stateMutex);
+    return placeholder;
+}
+
+void OMDemiurgeTextEdit::setPlaceholderColor(const glm::vec4 &color)
+{
+    placeholderColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
 }
 
 void OMDemiurgeTextEdit::setMaxLength(int codepoints)

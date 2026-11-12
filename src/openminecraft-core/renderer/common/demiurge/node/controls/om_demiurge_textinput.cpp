@@ -77,6 +77,17 @@ OMDemiurgeTextInput::OMDemiurgeTextInput(geom::OMFontSet *fontset)
     stylesStorage.put("radius", glm::vec4(6.0f));
     stylesStorage.put("padding", OMDemiurgeEdgeInsets{3, 8, 3, 8});
 
+    if (fontset != nullptr)
+    {
+        placeholderNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
+        placeholderNode->style({
+            {"position", OMDemiurgePosition::Absolute},
+            {"offsetX", OMDemiurgeSize::pixels(0.0f)},
+            {"offsetY", OMDemiurgeSize::pixels(0.0f)},
+        });
+        this->mountDirect(placeholderNode);
+    }
+
     selectionNode = std::make_shared<OMDemiurgeRectNode>()->style({
         {"position", OMDemiurgePosition::Absolute},
         {"offsetX", OMDemiurgeSize::pixels(0.0f)},
@@ -89,13 +100,13 @@ OMDemiurgeTextInput::OMDemiurgeTextInput(geom::OMFontSet *fontset)
 
     if (fontset != nullptr)
     {
-        textNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
-        textNode->style({
+        contentNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
+        contentNode->style({
             {"position", OMDemiurgePosition::Absolute},
             {"offsetX", OMDemiurgeSize::pixels(0.0f)},
             {"offsetY", OMDemiurgeSize::pixels(0.0f)},
         });
-        this->mountDirect(textNode);
+        this->mountDirect(contentNode);
     }
 
     caretNode = std::make_shared<OMDemiurgeRectNode>()->style({
@@ -121,7 +132,13 @@ OMDemiurgeTextInput::~OMDemiurgeTextInput()
 
 auto OMDemiurgeTextInput::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
-    textNode->setClipNode(shared_from_this());
+    contentNode->setClipNode(shared_from_this());
+
+    if (placeholderNode)
+    {
+        placeholderNode->setClipNode(shared_from_this());
+    }
+
     OMDemiurgeRectNode::submit(handler, depth);
 }
 
@@ -160,8 +177,7 @@ auto OMDemiurgeTextInput::caretFromX(float x) -> size_t
 
     for (size_t i = 0; i < boundaries.size(); ++i)
     {
-        const float width =
-            fontset->advance(text.substr(0, boundaries[i])) * static_cast<float>(textHeight);
+        const float width = fontset->advance(text.substr(0, boundaries[i])) * static_cast<float>(textHeight);
         const float distance = std::abs(x - width);
 
         if (distance < bestDistance)
@@ -288,8 +304,14 @@ void OMDemiurgeTextInput::update()
     // active; show an empty field instead.
     const bool suppressPlaceholder = empty && lastComposingActivity < 1.0f;
 
-    const auto color = empty ? placeholderColor.get() : textColor.get();
-    const glm::vec4 finalColor(glm::mix(glm::vec3(color), glm::vec3(0.55f), disabledValue * 0.75f), color.a);
+    const bool showPlaceholder = empty && !suppressPlaceholder;
+
+    const auto textBase = textColor.get();
+    const glm::vec4 finalColor(glm::mix(glm::vec3(textBase), glm::vec3(0.55f), disabledValue * 0.75f), textBase.a);
+
+    const auto placeholderBase = placeholderColor.get();
+    const glm::vec4 placeholderFinalColor(glm::mix(glm::vec3(placeholderBase), glm::vec3(0.55f), disabledValue * 0.75f),
+                                          placeholderBase.a);
 
     float clipWidth = stylesStorage.get<float>("width", 220.0f) - 16.0f;
 
@@ -331,9 +353,8 @@ void OMDemiurgeTextInput::update()
     }
 
     // Use pen advances so trailing spaces move the caret immediately.
-    float caretX = fontset != nullptr
-                       ? fontset->advance(display.substr(0, displayCaret)) * static_cast<float>(textHeight)
-                       : 0.0f;
+    float caretX =
+        fontset != nullptr ? fontset->advance(display.substr(0, displayCaret)) * static_cast<float>(textHeight) : 0.0f;
 
     const float maxScroll = std::max(0.0f, textWidth - clipWidth + 2.0f);
     static float scroll = 0.0f;
@@ -353,7 +374,7 @@ void OMDemiurgeTextInput::update()
 
     // Cull glyphs outside the visible range instead of using a clip rect (the
     // depth-based clip mask hides unrelated elements of the whole UI layer).
-    std::string visible = empty ? (suppressPlaceholder ? std::string() : placeholder) : display;
+    std::string visible = display;
     float textOffset = 0.0f;
 
     if (!empty && !shaped.empty())
@@ -459,13 +480,21 @@ void OMDemiurgeTextInput::update()
         }
     }
 
-
-    if (textNode)
+    if (contentNode)
     {
-        textNode->style("text", visible)
+        contentNode->style("text", visible)
             ->style("textheight", textHeight)
             ->style("color", (int)f4ToRgba(finalColor))
             ->style("offsetX", OMDemiurgeSize::pixels(textOffset))
+            ->style("offsetY", OMDemiurgeSize::pixels(textOffsetY));
+    }
+
+    if (placeholderNode)
+    {
+        placeholderNode->style("text", showPlaceholder ? placeholder : std::string())
+            ->style("textheight", textHeight)
+            ->style("color", (int)f4ToRgba(placeholderFinalColor))
+            ->style("offsetX", OMDemiurgeSize::pixels(0.0f))
             ->style("offsetY", OMDemiurgeSize::pixels(textOffsetY));
     }
 
@@ -514,7 +543,7 @@ void OMDemiurgeTextInput::update()
     caretNode->style("offsetX", OMDemiurgeSize::pixels(caretXAnimation.get()))
         ->style("offsetY", OMDemiurgeSize::pixels(textOffsetY + (lineHeight - caretHeight) * 0.5f))
         ->style("height", OMDemiurgeSize::pixels(caretHeight))
-        ->style("width", OMDemiurgeSize::pixels(caretVisible ? 1.0f + 0.6f * pulse : 1.0f))
+        ->style("width", OMDemiurgeSize::pixels(1.0f))
         ->style("color", (int)f4ToRgba(glm::vec4(glm::mix(glm::vec3(caretBase), glm::vec3(0.55f), disabledValue),
                                                  caretVisible ? caretBase.a * blinkAlpha : 0.0f)));
 
@@ -928,6 +957,17 @@ void OMDemiurgeTextInput::setPlaceholder(const std::string &value)
 {
     std::lock_guard<std::mutex> lock(stateMutex);
     placeholder = value;
+}
+
+auto OMDemiurgeTextInput::getPlaceholder() const -> std::string
+{
+    std::lock_guard<std::mutex> lock(stateMutex);
+    return placeholder;
+}
+
+void OMDemiurgeTextInput::setPlaceholderColor(const glm::vec4 &color)
+{
+    placeholderColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
 }
 
 void OMDemiurgeTextInput::setMaxLength(int codepoints)

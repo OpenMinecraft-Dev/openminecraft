@@ -469,7 +469,8 @@ RadioGroup：
 | API | 说明 |
 | --- | --- |
 | `setText(std::string)` / `getText()` | 文本 |
-| `setPlaceholder(std::string)` | 占位符 |
+| `setPlaceholder(std::string)` / `getPlaceholder()` | 占位符（由独立 `placeholderNode` 渲染） |
+| `setPlaceholderColor(glm::vec4)` | 占位符颜色动画 |
 | `setMaxLength(int)` | 最大码点数 |
 | `setOnChange(fn)` / `setOnSubmit(fn)` | 变化 / 提交回调 |
 | `setTextHeight(int)` | 字号（写 style） |
@@ -486,7 +487,8 @@ RadioGroup：
 | API | 说明 |
 | --- | --- |
 | `setText(std::string)` / `getText()` | 文本（`\n` 分行） |
-| `setPlaceholder(std::string)` | 占位符 |
+| `setPlaceholder(std::string)` / `getPlaceholder()` | 占位符（由独立 `placeholderNode` 渲染） |
+| `setPlaceholderColor(glm::vec4)` | 占位符颜色动画 |
 | `setMaxLength(int)` | 最大码点数 |
 | `setOnChange(fn)` | 变化回调 |
 | `setTextHeight(int)` / `setColors(background, text, caret)` | 字号 / 颜色 |

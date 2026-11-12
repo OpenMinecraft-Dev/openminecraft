@@ -469,7 +469,8 @@ Indeterminate animation styles: `segment_length`, `squeeze`, `min_length`, `cycl
 | API | Description |
 | --- | --- |
 | `setText(std::string)` / `getText()` | Text |
-| `setPlaceholder(std::string)` | Placeholder |
+| `setPlaceholder(std::string)` / `getPlaceholder()` | Placeholder (rendered by a dedicated `placeholderNode`) |
+| `setPlaceholderColor(glm::vec4)` | Animated placeholder color |
 | `setMaxLength(int)` | Maximum code points |
 | `setOnChange(fn)` / `setOnSubmit(fn)` | Change / submit callbacks |
 | `setTextHeight(int)` | Font height (writes a style) |
@@ -486,7 +487,8 @@ Supports mouse drag selection, Shift+arrows, Ctrl/Cmd+A, Backspace/Delete, IME c
 | API | Description |
 | --- | --- |
 | `setText(std::string)` / `getText()` | Text (`\n` separates lines) |
-| `setPlaceholder(std::string)` | Placeholder |
+| `setPlaceholder(std::string)` / `getPlaceholder()` | Placeholder (rendered by a dedicated `placeholderNode`) |
+| `setPlaceholderColor(glm::vec4)` | Animated placeholder color |
 | `setMaxLength(int)` | Maximum code points |
 | `setOnChange(fn)` | Change callback |
 | `setTextHeight(int)` / `setColors(background, text, caret)` | Font height / colors |

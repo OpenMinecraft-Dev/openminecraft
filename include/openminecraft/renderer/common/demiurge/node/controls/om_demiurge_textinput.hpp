@@ -43,6 +43,8 @@ class OMDemiurgeTextInput : public OMDemiurgeRectNode, public OMDemiurgeControl
         return text;
     }
     void setPlaceholder(const std::string &placeholder);
+    auto getPlaceholder() const -> std::string;
+    void setPlaceholderColor(const glm::vec4 &color);
     void setMaxLength(int codepoints);
     void setOnChange(std::function<void(const std::string &)> handler);
     void setOnSubmit(std::function<void(const std::string &)> handler);
@@ -90,7 +92,8 @@ class OMDemiurgeTextInput : public OMDemiurgeRectNode, public OMDemiurgeControl
     auto deleteSelection() -> bool;
     auto displayIndex(size_t textIndex) const -> size_t;
 
-    std::shared_ptr<OMDemiurgeNode> textNode;
+    std::shared_ptr<OMDemiurgeNode> contentNode;
+    std::shared_ptr<OMDemiurgeNode> placeholderNode;
     std::shared_ptr<OMDemiurgeNode> caretNode;
     std::shared_ptr<OMDemiurgeNode> selectionNode;
     size_t selectionAnchor = 0;

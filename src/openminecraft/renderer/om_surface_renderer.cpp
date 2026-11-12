@@ -30,7 +30,6 @@ using namespace openminecraft::renderer;
 using namespace openminecraft;
 using namespace openminecraft::renderer::common::demiurge;
 
-
 using namespace openminecraft::renderer::common;
 
 namespace openminecraft::shell::renderer
@@ -127,7 +126,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
 
     demoTextEdit = std::make_shared<node::controls::OMDemiurgeTextEdit>(fontset.get());
     demoTextEdit->setPlaceholder("Multi-line text...");
-    demoTextEdit->style({{"width", OMDemiurgeSize::pixels(260.0f)}, {"height", OMDemiurgeSize::pixels(36.0f)}});
+    demoTextEdit->style({{"width", OMDemiurgeSize::pixels(260.0f)}, {"height", OMDemiurgeSize::pixels(120.0f)}});
 
     demoProgressBar = std::make_shared<node::controls::OMDemiurgeProgressBar>();
     demoProgressBar->style({
@@ -279,8 +278,8 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
 
     demoSelector = std::make_shared<node::controls::OMDemiurgeDropDownSelector>(fontset.get());
     demoSelector->style("width", OMDemiurgeSize::pixels(220.0f));
-    demoSelector->setItems({"Apple", "Banana", "Cherry", "Dragonfruit", "Elderberry", "Fig", "Grape",
-                            "Honeydew", "Kiwi", "Lemon", "Mango", "Nectarine"});
+    demoSelector->setItems({"Apple", "Banana", "Cherry", "Dragonfruit", "Elderberry", "Fig", "Grape", "Honeydew",
+                            "Kiwi", "Lemon", "Mango", "Nectarine"});
     demoSelector->setSelectedIndex(0, false);
     addGallerySection("Dropdown Selector", "Overlay dropdown with scrollable options.", demoSelector);
 
@@ -333,6 +332,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     auto debugTreeButton = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     debugTreeButton->style("animation_speed", 1.0f)->style("label", "Debug UI Tree");
     debugTreeButton->style("width", OMDemiurgeSize::pixels(200.0f));
+    debugTreeButton->style("textheight", 11);
     debugTreeButton->style("alignSelf", OMDemiurgeAlign::FlexStart);
     debugTreeButton->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
     debugTreeButton->setOnClick([this]() {
@@ -342,11 +342,6 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
         }
     });
     pageMisc->mountDirect(debugTreeButton);
-
-
-
-
-
 
     demoTabs = std::make_shared<node::controls::OMDemiurgeTabMultiPage>(fontset.get());
     demoTabs->style("width", OMDemiurgeSize::fill());
