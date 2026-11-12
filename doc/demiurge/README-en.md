@@ -825,6 +825,37 @@ Public wrapper around `OMDemiurgeTextSdfMultilineNode`. Supports `\n` line break
 
 Main styles: `textHeight`, `textLineHeight`, `color`, `factor`, `scale`. Tooltips use this widget internally.
 
+### 7.22 OMDemiurgeDialog
+
+`OMDemiurgeDialog(geom::OMFontSet *fontset = nullptr)`
+
+Minimal message dialog: full-screen translucent backdrop + centered panel + multi-line message + a single close button.
+
+| API | Description |
+| --- | --- |
+| `show(root, message, closeLabel = "Close")` | Show on the root; updates message/button text when already open |
+| `close()` / `isOpen()` | Close / query state |
+| `setOnClose(fn)` | Close callback |
+
+Behavior:
+
+- The dialog layer is mounted on the root with `setLayerOverlay(true)`;
+- It is also set as the root modal child, so events are dispatched only to the dialog;
+- Mount/unmount is deferred to the frame boundary via `deferAction()`;
+- Opening/closing uses a 0.18s animation: the backdrop fades from transparent to 62% black and the panel slides from 18px below into the center; closing plays in reverse and the dialog unmounts only after the animation finishes;
+- There is exactly one close button; clicking the backdrop does not close it;
+- Multiple open dialogs use a modal stack: the newest is on top, and closing it restores the previous dialog's modal state so every dialog remains closable;
+- Tooltips hide automatically while it is open;
+- The close button receives focus; message and button label use the normal text widgets.
+
+Example:
+
+```cpp
+auto dialog = std::make_shared<node::controls::OMDemiurgeDialog>(fontset.get());
+dialog->show(root, "Operation failed.\nPlease try again.", "Close");
+```
+
+
 ## 8. Examples
 
 ### 8.1 Basic node and styles

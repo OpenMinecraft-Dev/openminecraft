@@ -168,23 +168,39 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     void setModalChild(const std::shared_ptr<OMDemiurgeNode> &child)
     {
         std::lock_guard<std::mutex> lock(modalMutex);
+        modalStack.erase(std::remove_if(modalStack.begin(), modalStack.end(),
+                                        [&](const std::weak_ptr<OMDemiurgeNode> &item) {
+                                            auto current = item.lock();
+                                            return !current || current == child;
+                                        }),
+                         modalStack.end());
+
+        if (child)
+        {
+            modalStack.push_back(child);
+        }
+
         modalChild = child;
     }
 
     auto hasModalChild() -> bool
     {
         std::lock_guard<std::mutex> lock(modalMutex);
+        promoteModalChild();
         return !modalChild.expired();
     }
 
     void clearModalChild(const std::shared_ptr<OMDemiurgeNode> &child)
     {
         std::lock_guard<std::mutex> lock(modalMutex);
-
-        if (modalChild.lock() == child)
-        {
-            modalChild.reset();
-        }
+        modalStack.erase(std::remove_if(modalStack.begin(), modalStack.end(),
+                                        [&](const std::weak_ptr<OMDemiurgeNode> &item) {
+                                            auto current = item.lock();
+                                            return !current || current == child;
+                                        }),
+                         modalStack.end());
+        modalChild.reset();
+        promoteModalChild();
     }
 
     void setLayerOverlay(bool value)
@@ -219,6 +235,7 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
             }
 
             clearChildId(child);
+            clearModalChild(child);
 
             YGNodeRemoveChild(yogaNode, child->yogaNode);
             child->remove();
@@ -559,7 +576,28 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
     std::vector<std::function<void()>> deferredActions;
     std::mutex deferredMutex;
     std::weak_ptr<OMDemiurgeNode> modalChild;
+    std::vector<std::weak_ptr<OMDemiurgeNode>> modalStack;
     std::mutex modalMutex;
+
+    // Caller must hold modalMutex.
+    void promoteModalChild()
+    {
+        modalChild.reset();
+
+        while (!modalStack.empty())
+        {
+            auto current = modalStack.back().lock();
+
+            if (current)
+            {
+                modalChild = current;
+                return;
+            }
+
+            modalStack.pop_back();
+        }
+    }
+
     bool layerOverlay = false;
 
     inline static std::weak_ptr<OMDemiurgeNode> capturedNode;

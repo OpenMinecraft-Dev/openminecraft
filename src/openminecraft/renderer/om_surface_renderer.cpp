@@ -20,6 +20,7 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_switch.hpp"
 #include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_pane.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
+#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_dialog.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_label.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_tooltip.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_multiline_label.hpp"
@@ -47,6 +48,8 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     auto rawfile1 = vfs::fsfetch("/bootassets/openminecraft-renderer/font/MapleMono-NF-Regular.ttf");
     fontset->fontList.push_back(std::make_shared<geom::OMFont>(*rawfile1.get()));
     node::controls::OMDemiurgeTooltip::instance().setFontSet(fontset.get());
+    dialog = std::make_shared<node::controls::OMDemiurgeDialog>(fontset.get());
+    dialog2 = std::make_shared<node::controls::OMDemiurgeDialog>(fontset.get());
 
     auto button = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     demoButton = button;
@@ -310,6 +313,17 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     collapsibleDemo->setContentNode(collapsibleText);
     addGallerySection("DropDownPane", "Collapsible panel for secondary content.", collapsibleDemo);
 
+    auto dialogDemoButton = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
+    dialogDemoButton->style("label", "Open Dialog");
+    dialogDemoButton->style("width", OMDemiurgeSize::pixels(200.0f));
+    dialogDemoButton->style("height", OMDemiurgeSize::pixels(30.0f));
+    dialogDemoButton->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
+    dialogDemoButton->setOnClick([this]() {
+        dialog->show(node, "This is a simple message dialog.\n\nIt has one button used to close it.", "Close");
+        dialog2->show(node, "This is a simple message dialog.\n\nIt has one button used to close it.", "Close");
+    });
+    addGallerySection("Dialog", "Simple modal message dialog with one close button.", dialogDemoButton);
+
     demoSelector = std::make_shared<node::controls::OMDemiurgeDropDownSelector>(fontset.get());
     demoSelector->style("width", OMDemiurgeSize::pixels(220.0f));
     demoSelector->setItems({"Apple", "Banana", "Cherry", "Dragonfruit", "Elderberry", "Fig", "Grape", "Honeydew",
@@ -385,25 +399,37 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     demoTabs->addPage("Gallery", pageGallery);
     demoTabs->addPage("Misc", pageMisc);
 
-    node = std::make_shared<node::OMDemiurgeRectNode>()
+    // Keep the window frame (radius + border) as a child of a full-screen
+    // root. Overlays such as Dialog and Tooltip mount on the outer root and
+    // therefore cover the whole window instead of being inset by the frame
+    // border, which previously produced visible seams at the edges.
+    auto windowRoot = std::make_shared<node::OMDemiurgeRectNode>()
+                          ->style({
+                              {"color", (int)0x2c2c3412},
+                              {"flexDirection", Column},
+                              {"justifyContent", SpaceBetween},
+                              {"width", OMDemiurgeSize::fill()},
+                              {"height", OMDemiurgeSize::fill()},
+                              {"radius", glm::vec4(5.0f)},
+                              {"border", OMDemiurgeEdgeInsets{10, 10, 10, 10}},
+                          })
+                          ->mount(std::make_shared<node::OMDemiurgePane>()
+                                      ->style({
+                                          {"flexDirection", Column},
+                                          {"width", OMDemiurgeSize::fill()},
+                                          {"height", OMDemiurgeSize::fill()},
+                                          {"flexGap", 15_px},
+                                          {"border", OMDemiurgeEdgeInsets{10, 10, 10, 10}},
+                                      })
+                                      ->mount(demoTabs));
+
+    node = std::make_shared<node::OMDemiurgePane>()
                ->style({
-                   {"color", (int)0x2c2c3412},
                    {"flexDirection", Column},
-                   {"justifyContent", SpaceBetween},
                    {"width", OMDemiurgeSize::fill()},
                    {"height", OMDemiurgeSize::fill()},
-                   {"radius", glm::vec4(5.0f)},
-                   {"border", OMDemiurgeEdgeInsets{10, 10, 10, 10}},
                })
-               ->mount(std::make_shared<node::OMDemiurgePane>()
-                           ->style({
-                               {"flexDirection", Column},
-                               {"width", OMDemiurgeSize::fill()},
-                               {"height", OMDemiurgeSize::fill()},
-                               {"flexGap", 15_px},
-                               {"border", OMDemiurgeEdgeInsets{10, 10, 10, 10}},
-                           })
-                           ->mount(demoTabs));
+               ->mount(windowRoot);
 
     internal = std::make_shared<OMDemiurgeRendererHandler>(renderer, node);
     internal->name = "surface";

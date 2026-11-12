@@ -825,6 +825,37 @@ Gallery 页签现在由 ScrollPane 承载所有控件 DropDown（纵向滚动）
 
 主要 style：`textHeight`、`textLineHeight`、`color`、`factor`、`scale`。Tooltip 内部即使用该控件。
 
+### 7.22 OMDemiurgeDialog
+
+`OMDemiurgeDialog(geom::OMFontSet *fontset = nullptr)`
+
+最小消息对话框：全屏半透明遮罩 + 居中面板 + 多行消息 + 单个关闭按钮。
+
+| API | 说明 |
+| --- | --- |
+| `show(root, message, closeLabel = "Close")` | 在根节点上显示；已打开时更新消息和按钮文本 |
+| `close()` / `isOpen()` | 关闭 / 查询状态 |
+| `setOnClose(fn)` | 关闭回调 |
+
+行为：
+
+- 对话框层挂到根节点并设置 `setLayerOverlay(true)`；
+- 同时设为根节点的 modal child，事件只分发给对话框；
+- 挂载与卸载通过 `deferAction()` 延迟到帧边界，避免事件遍历中修改 children；
+- 打开/关闭有 0.18s 动画：背景从全透明淡入到 62% 黑色，面板从下方 18px 平移到居中；关闭时反向播放，动画结束后才卸载；
+- 只有单个关闭按钮，点击遮罩不会关闭；
+- 多个 Dialog 同时打开时使用 modal 栈：后打开的在上层，关闭上层后自动恢复下层的 modal 状态，因此每个 Dialog 都能正常关闭；
+- 打开期间 Tooltip 会自动隐藏；
+- 关闭按钮获得焦点，按钮文本和消息均为多行/单行 Text。
+
+用法：
+
+```cpp
+auto dialog = std::make_shared<node::controls::OMDemiurgeDialog>(fontset.get());
+dialog->show(root, "Operation failed.\nPlease try again.", "Close");
+```
+
+
 ## 8. 示例
 
 ### 8.1 基础节点与样式
