@@ -1,5 +1,6 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_dropdown_selector.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_pane.hpp"
 #include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_scrollpane.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_svg.hpp"
@@ -78,6 +79,26 @@ class SelectorItem : public OMDemiurgeButton
     {
         backgroundColor.setTo(glm::mix(normalColor, hoverColor, std::clamp(hover.get(), 0.0f, 1.0f)));
         OMDemiurgeButton::update();
+    }
+};
+
+class SelectorPopupLayer : public container::OMDemiurgePane
+{
+  public:
+    auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void override
+    {
+        // The selector can be opened above a dialog. Give the whole popup a
+        // layer range ordered by its modal-stack position so it is not drawn
+        // underneath the dialog it was opened over.
+        int index = -1;
+
+        if (auto root = getRoot())
+        {
+            index = root->modalIndex(this);
+        }
+
+        const uint32_t base = static_cast<uint32_t>(std::max(0, index) + 1) * 8;
+        container::OMDemiurgePane::submit(handler, overlayLayer(base));
     }
 };
 
@@ -285,8 +306,7 @@ void OMDemiurgeDropDownSelector::update()
 {
     std::lock_guard<std::recursive_mutex> lock(stateMutex);
 
-    if (pressing && opened.load() &&
-        std::chrono::steady_clock::now() - pressStarted > std::chrono::milliseconds(120))
+    if (pressing && opened.load() && std::chrono::steady_clock::now() - pressStarted > std::chrono::milliseconds(120))
     {
         pressing = false;
         pressAmount.animateTo(0.0f, easeOutCubic<float>, 0.16f);
@@ -298,11 +318,9 @@ void OMDemiurgeDropDownSelector::update()
     headerColor = glm::mix(headerColor, pressedColor, press);
     background->style("color", (int)f4ToRgba(headerColor));
 
-    const std::string text = selectedIndex >= 0 && selectedIndex < static_cast<int>(items.size())
-                                 ? items[selectedIndex]
-                                 : placeholder;
-    labelNode->style("text", text)
-        ->style("color", (int)(selectedIndex >= 0 ? 0xffffffff : 0xffffff9a));
+    const std::string text =
+        selectedIndex >= 0 && selectedIndex < static_cast<int>(items.size()) ? items[selectedIndex] : placeholder;
+    labelNode->style("text", text)->style("color", (int)(selectedIndex >= 0 ? 0xffffffff : 0xffffff9a));
 
     if (opened.load() && popupLayer)
     {
@@ -394,7 +412,7 @@ void OMDemiurgeDropDownSelector::ensurePopup()
         return;
     }
 
-    popupLayer = std::make_shared<OMDemiurgePane>();
+    popupLayer = std::make_shared<SelectorPopupLayer>();
     popupLayer->style({{"position", OMDemiurgePosition::Absolute},
                        {"offsetX", OMDemiurgeSize::pixels(0.0f)},
                        {"offsetY", OMDemiurgeSize::pixels(0.0f)},
@@ -474,10 +492,9 @@ void OMDemiurgeDropDownSelector::rebuildPopupContent()
                      {"radius", glm::vec4(4.0f)},
                      {"label", items[i]},
                      {"textHeight", 12},
-                     {"textMargin", std::array<OMDemiurgeSize, 4>{OMDemiurgeSize::pixels(2.0f),
-                                                                   OMDemiurgeSize::pixels(2.0f),
-                                                                   OMDemiurgeSize::pixels(8.0f),
-                                                                   OMDemiurgeSize::pixels(8.0f)}}});
+                     {"textMargin",
+                      std::array<OMDemiurgeSize, 4>{OMDemiurgeSize::pixels(2.0f), OMDemiurgeSize::pixels(2.0f),
+                                                    OMDemiurgeSize::pixels(8.0f), OMDemiurgeSize::pixels(8.0f)}}});
         item->setTextColor(glm::vec4(1.0f));
 
         if (i == selectedIndex)
@@ -522,10 +539,10 @@ void OMDemiurgeDropDownSelector::open()
 
     rebuildPopupContent();
 
-    popupHeight = snapPopupHeight(std::max(
-        44.0f, std::min(PanelPadding * 2.0f + ItemHeight * static_cast<float>(items.size()) +
-                            std::max(0, static_cast<int>(items.size()) - 1) * ItemGap,
-                        240.0f)));
+    popupHeight =
+        snapPopupHeight(std::max(44.0f, std::min(PanelPadding * 2.0f + ItemHeight * static_cast<float>(items.size()) +
+                                                     std::max(0, static_cast<int>(items.size()) - 1) * ItemGap,
+                                                 240.0f)));
 
     // Place the panel before the deferred mount so its first submitted frame is
     // not drawn at (0, 0). Reuse the last known popup viewport so the first frame
@@ -536,8 +553,7 @@ void OMDemiurgeDropDownSelector::open()
 
         if (lastPopupViewWidth > 1.0f && lastPopupViewHeight > 1.0f)
         {
-            const OMDemiurgeRect viewport{lastPopupOriginX, lastPopupOriginY, lastPopupViewWidth,
-                                          lastPopupViewHeight};
+            const OMDemiurgeRect viewport{lastPopupOriginX, lastPopupOriginY, lastPopupViewWidth, lastPopupViewHeight};
             const auto rect = computePanelRect(bound, viewport);
 
             panel->style("offsetX", OMDemiurgeSize::pixels(rect.x - lastPopupOriginX))
@@ -673,10 +689,10 @@ void OMDemiurgeDropDownSelector::setItems(const std::vector<std::string> &values
     if (opened.load())
     {
         rebuildPopupContent();
-        popupHeight = snapPopupHeight(std::max(
-        44.0f, std::min(PanelPadding * 2.0f + ItemHeight * static_cast<float>(items.size()) +
-                            std::max(0, static_cast<int>(items.size()) - 1) * ItemGap,
-                        240.0f)));
+        popupHeight = snapPopupHeight(
+            std::max(44.0f, std::min(PanelPadding * 2.0f + ItemHeight * static_cast<float>(items.size()) +
+                                         std::max(0, static_cast<int>(items.size()) - 1) * ItemGap,
+                                     240.0f)));
         panel->style("height", OMDemiurgeSize::pixels(popupHeight));
     }
 }
@@ -711,7 +727,8 @@ auto OMDemiurgeDropDownSelector::getSelectedValue() const -> std::string
     return selectedIndex >= 0 && selectedIndex < static_cast<int>(items.size()) ? items[selectedIndex] : std::string();
 }
 
-void OMDemiurgeDropDownSelector::setHeaderColors(const glm::vec4 &normal, const glm::vec4 &hovered, const glm::vec4 &pressed)
+void OMDemiurgeDropDownSelector::setHeaderColors(const glm::vec4 &normal, const glm::vec4 &hovered,
+                                                 const glm::vec4 &pressed)
 {
     std::lock_guard<std::recursive_mutex> lock(stateMutex);
     normalColor = normal;

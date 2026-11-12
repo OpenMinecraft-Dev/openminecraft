@@ -76,22 +76,52 @@ void OMDemiurgeDialog::show(const std::shared_ptr<OMDemiurgeNode> &parent, const
 
     if (layerNode)
     {
-        if (closing)
+        auto children = parent->fetchChildren();
+        const bool mounted = std::find(children.begin(), children.end(), layerNode) != children.end();
+
+        if (!mounted)
         {
+            if (auto oldRoot = layerNode->getRoot())
+            {
+                oldRoot->clearModalChild(layerNode);
+                oldRoot->umount(layerNode);
+            }
+
+            layerNode.reset();
+            panelNode.reset();
+            messageNode.reset();
+            closeButton.reset();
             closing = false;
             cleanupScheduled = false;
-            openRequested = true;
-            openAmount.animateTo(1.0f, animation::easeOutCubic<float>, 0.18f);
         }
-
-        messageNode->style("text", message);
-
-        if (closeButton)
+        else
         {
-            closeButton->style("label", closeLabel);
-        }
+            // A selector popup may have temporarily owned the modal slot.
+            // Showing the dialog again must always re-register it as the
+            // active modal instead of silently returning while it is stale.
+            openRequested = true;
+            parent->setModalChild(layerNode);
 
-        return;
+            if (closing)
+            {
+                closing = false;
+                cleanupScheduled = false;
+                openAmount.animateTo(1.0f, animation::easeOutCubic<float>, 0.18f);
+            }
+            else if (openAmount.get() <= 0.001f)
+            {
+                openAmount.animateTo(1.0f, animation::easeOutCubic<float>, 0.18f);
+            }
+
+            messageNode->style("text", message);
+
+            if (closeButton)
+            {
+                closeButton->style("label", closeLabel);
+            }
+
+            return;
+        }
     }
 
     openRequested = true;
@@ -156,7 +186,7 @@ void OMDemiurgeDialog::show(const std::shared_ptr<OMDemiurgeNode> &parent, const
         panel->mountDirect(button);
         layer->mountDirect(panel);
 
-        parent->mountDirect(layer);
+        parent->mountFront(layer);
         parent->setModalChild(layer);
 
         layerNode = layer;
