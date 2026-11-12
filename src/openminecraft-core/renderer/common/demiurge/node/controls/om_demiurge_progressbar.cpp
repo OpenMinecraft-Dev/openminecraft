@@ -48,7 +48,7 @@ OMDemiurgeProgressBar::~OMDemiurgeProgressBar() = default;
 
 auto OMDemiurgeProgressBar::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
-    OMDemiurgeContainerNode::submit(handler, depth);
+    OMDemiurgePane::submit(handler, depth);
 }
 
 void OMDemiurgeProgressBar::update()
@@ -162,7 +162,7 @@ void OMDemiurgeProgressBar::update()
     barNode->style("offsetX", OMDemiurgeSize::pixels(visualLeft))
         ->style("width", OMDemiurgeSize::pixels(std::max(0.0f, visualWidth)));
 
-    OMDemiurgeContainerNode::update();
+    OMDemiurgePane::update();
 }
 
 void OMDemiurgeProgressBar::setTrackColor(glm::vec4 color)

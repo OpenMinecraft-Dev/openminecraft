@@ -3,14 +3,14 @@
 
 #include "glm/ext/vector_float4.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
-#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_pane.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include <memory>
 
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
 // Thin separator line, horizontal (default) or vertical.
-class OMDemiurgeDivider : public OMDemiurgeContainerNode
+class OMDemiurgeDivider : public OMDemiurgePane
 {
   public:
     explicit OMDemiurgeDivider(bool vertical = false);

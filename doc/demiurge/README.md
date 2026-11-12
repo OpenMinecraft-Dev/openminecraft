@@ -95,7 +95,7 @@ OMDemiurgeRendererHandler
 | `submit(handler, uint32_t layer)` | 纯虚；提交元素与裁剪；根节点从 0 开始，子节点 +1 |
 | `update()` | 虚函数；默认递归更新子节点 |
 | `remove()` | 纯虚；从通道移除元素 |
-| `setVisible(bool)` / `isVisible()` | 不可见节点跳过命中测试与事件派发；是否提交由所有者决定（如 TabMultiPage 只提交当前页） |
+| `setVisible(bool)` / `isVisible()` | 不可见节点跳过命中测试与事件派发；是否提交由所有者决定（如 TabPane 只提交当前页） |
 | `invalidate()` | 强制节点重新执行由样式驱动的提交逻辑（元素被移除后重新显示时使用） |
 
 ### 3.5 事件
@@ -229,8 +229,7 @@ someNode->styleDump();            // "{color=-1, text="Main", textheight=14}"
 | 节点 | 基类 | 构造 | 作用 / 主要键 |
 | --- | --- | --- | --- |
 | `OMDemiurgeRectNode` | `OMDemiurgeNode` | 无参 | 圆角矩形；`color/radius/factor/rotation/clip/clipRadius/scale` |
-| `OMDemiurgeContainerNode` | `OMDemiurgeNode` | 无参 | 纯容器，不绘制自身；只提交子节点 |
-| `OMDemiurgePaneContainer` | `OMDemiurgeContainerNode` | 无参 | 把**直接子节点**强制裁剪到自身；见下 |
+| `OMDemiurgePane` | `OMDemiurgeNode` | 无参 | 纯容器，不绘制自身；只提交子节点 |
 | `OMDemiurgeTextSdfNode` | `OMDemiurgeNode` | `(OMFontSet*)` | 单行文本；`text/textheight/color/factor/scale` |
 | `OMDemiurgeTextSdfMultilineNode` | `OMDemiurgeNode` | `(OMFontSet*)` | 多行文本；额外 `textlineheight` |
 | `OMDemiurgeSvgNode` | `OMDemiurgeNode` | 无参 | SDF SVG 图标；`svgPath/svgSize/color/factor/rotation/scale` |
@@ -238,13 +237,12 @@ someNode->styleDump();            // "{color=-1, text="Main", textheight=14}"
 | `OMDemiurgeSectorNode` | `OMDemiurgeNode` | 无参 | 扇形/圆环；`beginAngle/endAngle/factor/rotation/color/scale` |
 | `OMDemiurgeShaderSceneNode` | `OMDemiurgeNode` | `(std::string shader)` | 全屏 shader 场景；仅布局与 `scale` |
 
-### 5.1 PaneContainer
+### 5.1 OMDemiurgePane
 
-- `submit()` 与 `update()` 都会**递归遍历整棵子树**，把每个后代的 `clipNode` 重新指向自身；
-- 遍历在遇到 `isClipBoundary() == true` 的节点时停止：嵌套 pane 会被父 pane 设置裁剪，但其内部由子 pane 自己递归管理；
-- 子节点解析裁剪时沿父链求交，因此嵌套 pane 的实际裁剪是 `child pane ∩ parent pane`；
-- 控件若需要更小的内部裁剪（例如 TextInput / TextEdit 的光标与选区），会在自己的 `submit()` 中重新声明自裁剪，最终与 pane 求交；
-- pane 自身不绘制元素，需要背景时挂一个 `OMDemiurgeRectNode` 子节点（同样会被裁到 pane 边界）。
+- 纯容器：不绘制自身，只提交子节点；
+- 本身不强制裁剪子节点；需要裁剪时使用 `OMDemiurgeScrollPane` 的 viewport，或显式给节点 `setClipNode(...)`；
+- 旧的 `OMDemiurgePaneContainer` 已删除，避免同一套裁剪语义分散在两个容器类中；
+- 控件仍可在自己的 `submit()` 中声明内部裁剪（例如 TextInput / TextEdit 的光标与选区）。
 
 ## 6. Element 层（渲染贡献者）
 
@@ -286,7 +284,7 @@ someNode->styleDump();            // "{color=-1, text="Main", textheight=14}"
 
 ## 7. 控件（Controls）
 
-路径：`node/controls/`。所有控件默认继承其视觉基类（`OMDemiurgeRectNode` 或 `OMDemiurgeContainerNode`），并（除 Badge / Divider 外）实现公共接口：
+路径：`node/controls/`；`*Pane` 类（`OMDemiurgeTabPane`、`OMDemiurgeDropDownPane`、`OMDemiurgeScrollPane`）位于 `node/container/`。所有控件默认继承其视觉基类（`OMDemiurgeRectNode` 或 `OMDemiurgePane`），并（除 Badge / Divider 外）实现公共接口：
 
 ```cpp
 class OMDemiurgeControl
@@ -356,6 +354,8 @@ class OMDemiurgeControl
 
 `OMDemiurgeRadioBox(geom::OMFontSet *fontset = nullptr)`  
 `OMDemiurgeRadioGroup()`
+
+`OMDemiurgeRadioBox` 与 `OMDemiurgeRadioGroup` 使用独立头文件与实现文件。
 
 RadioBox：
 
@@ -564,9 +564,9 @@ RadioGroup：
 
 主要 style：`width` / `height`（标题行尺寸）、`padding`。选项行高暂固定 28px。
 
-### 7.17 TabMultiPage
+### 7.17 TabPane
 
-`OMDemiurgeTabMultiPage(geom::OMFontSet *fontset = nullptr)`
+`OMDemiurgeTabPane(geom::OMFontSet *fontset = nullptr)`
 
 顶部 Tab 栏 + 多页面容器。所有页面必须通过 `addPage()` 挂载；只有当前页会被提交，其余页面保持挂载但不可见、不参与命中测试。页面内容切换没有动画，但 Tab 指示条会沿 Tab 栏滑动。
 
@@ -747,16 +747,16 @@ label->style({
 panel->mount(label);
 ```
 
-### 8.2 Pane 裁剪
+### 8.2 ScrollPane 裁剪
 
 ```cpp
-auto pane = std::make_shared<node::container::OMDemiurgePaneContainer>();
+auto pane = std::make_shared<node::container::OMDemiurgeScrollPane>();
 pane->style({
     {"position", OMDemiurgePosition::Absolute},
     {"width", 200_px},
     {"height", 120_px},
 });
-pane->mount(longContentNode);   // 超出部分被裁掉
+pane->setContentNode(longContentNode);   // 超出 viewport 的部分被裁掉并可滚动
 ```
 
 ### 8.3 控件
@@ -784,5 +784,5 @@ control->setDisabled(true);
    - 若实现 `OMDemiurgeControl`，在接口说明中注明；
 3. 新 style 键要归入 4.2 / 4.3 / 4.4 的正确分类；
 4. 新元素要更新第 6 章的元素表与顶点格式说明；
-5. 若改变帧生命周期、裁剪、缩放或坐标换算行为，更新第 2 章；Pane 的递归/边界语义变化时同步更新 5.1；
+5. 若改变帧生命周期、裁剪、缩放或坐标换算行为，更新第 2 章；Pane / ScrollPane 的裁剪语义变化时同步更新 5.1 / 7.19；
 6. 文档示例必须可以对应到真实 API（优先使用当前代码中的命名）。

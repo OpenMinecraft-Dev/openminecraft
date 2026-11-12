@@ -3,7 +3,7 @@
 
 #include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
-#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_pane.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_event.hpp"
 #include <chrono>
@@ -19,7 +19,7 @@ namespace openminecraft::renderer::common::demiurge::node::controls
 // Drop-down selector. The header stays in the normal layout; the option list is
 // mounted as an overlay subtree on the root, so it escapes ScrollPane clips and
 // is rendered after all normal layers.
-class OMDemiurgeDropDownSelector : public OMDemiurgeContainerNode, public OMDemiurgeControl
+class OMDemiurgeDropDownSelector : public OMDemiurgePane, public OMDemiurgeControl
 {
   public:
     explicit OMDemiurgeDropDownSelector(geom::OMFontSet *fontset = nullptr);

@@ -1,6 +1,6 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_dropdown_selector.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
-#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_scrollpane.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_scrollpane.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_svg.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
@@ -16,6 +16,8 @@ using namespace openminecraft::renderer::common::animation;
 
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
+using container::OMDemiurgeScrollPane;
+using container::OMDemiurgeScrollPaneOrientation;
 static constexpr const char *ChevronPath = "M 3 6 L 8 11 L 13 6";
 static constexpr float ItemHeight = 28.0f;
 static constexpr float ItemGap = 2.0f;
@@ -369,13 +371,13 @@ void OMDemiurgeDropDownSelector::update()
         OMDemiurgeScrollPane::clearOverlayWheelRegion(static_cast<OMDemiurgeScrollPane *>(scrollPane.get()));
     }
 
-    OMDemiurgeContainerNode::update();
+    OMDemiurgePane::update();
 }
 
 void OMDemiurgeDropDownSelector::remove()
 {
     close();
-    OMDemiurgeContainerNode::remove();
+    OMDemiurgePane::remove();
 }
 
 void OMDemiurgeDropDownSelector::ensurePopup()
@@ -392,7 +394,7 @@ void OMDemiurgeDropDownSelector::ensurePopup()
         return;
     }
 
-    popupLayer = std::make_shared<OMDemiurgeContainerNode>();
+    popupLayer = std::make_shared<OMDemiurgePane>();
     popupLayer->style({{"position", OMDemiurgePosition::Absolute},
                        {"offsetX", OMDemiurgeSize::pixels(0.0f)},
                        {"offsetY", OMDemiurgeSize::pixels(0.0f)},
@@ -459,7 +461,7 @@ void OMDemiurgeDropDownSelector::rebuildPopupContent()
     }
 
     itemNodes.clear();
-    scrollContent = std::make_shared<OMDemiurgeContainerNode>();
+    scrollContent = std::make_shared<OMDemiurgePane>();
     scrollContent->style({{"flexDirection", OMDemiurgeDirection::Column},
                           {"flexGap", OMDemiurgeSize::pixels(2.0f)},
                           {"width", OMDemiurgeSize::fill()}});

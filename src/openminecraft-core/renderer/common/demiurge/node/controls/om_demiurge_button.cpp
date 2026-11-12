@@ -1,7 +1,7 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
-#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_pane.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
@@ -55,7 +55,7 @@ void OMDemiurgeButton::update()
     textNode->style("textheight", stylesStorage.get<int>("textheight", 16));
     textNode->style("margin", stylesStorage.get<std::array<OMDemiurgeSize, 4>>(
                                   "text_margin", std::array<OMDemiurgeSize, 4>{5_px, 10_px, 5_px, 5_px}));
-    OMDemiurgeContainerNode::update();
+    OMDemiurgePane::update();
 }
 auto OMDemiurgeButton::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult
 {
@@ -114,7 +114,7 @@ auto OMDemiurgeButton::processMouseExit(float x, float y) -> OMDemiurgeEventResu
 
 auto OMDemiurgeButton::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
-    OMDemiurgeContainerNode::submit(handler, depth);
+    OMDemiurgePane::submit(handler, depth);
 }
 
 void OMDemiurgeButton::setTextColor(glm::vec4 d)

@@ -50,7 +50,7 @@ OMDemiurgeIconButton::~OMDemiurgeIconButton() = default;
 
 auto OMDemiurgeIconButton::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
-    OMDemiurgeContainerNode::submit(handler, depth);
+    OMDemiurgePane::submit(handler, depth);
 }
 
 void OMDemiurgeIconButton::update()
@@ -75,7 +75,7 @@ void OMDemiurgeIconButton::update()
         ->style("svgSize", stylesStorage.get<glm::vec2>("svgSize", glm::vec2(14.0f, 14.0f)))
         ->style("factor", stylesStorage.get<float>("factor", 0.08f));
 
-    OMDemiurgeContainerNode::update();
+    OMDemiurgePane::update();
 }
 
 auto OMDemiurgeIconButton::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult

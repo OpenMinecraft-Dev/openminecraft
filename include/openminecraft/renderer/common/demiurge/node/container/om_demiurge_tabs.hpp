@@ -4,7 +4,7 @@
 #include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
-#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_pane.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_event.hpp"
 #include <functional>
@@ -12,8 +12,9 @@
 #include <string>
 #include <vector>
 
-namespace openminecraft::renderer::common::demiurge::node::controls
+namespace openminecraft::renderer::common::demiurge::node::container
 {
+using controls::OMDemiurgeControl;
 enum class OMDemiurgeTabPosition
 {
     Top,
@@ -34,11 +35,11 @@ enum class OMDemiurgeTabAlignment
 // Multi-page container with a tab bar. Every page must be mounted through
 // addPage(); only the active page is submitted, while the others stay mounted and
 // invisible (no animation for now).
-class OMDemiurgeTabMultiPage : public OMDemiurgeContainerNode, public OMDemiurgeControl
+class OMDemiurgeTabPane : public OMDemiurgePane, public OMDemiurgeControl
 {
   public:
-    explicit OMDemiurgeTabMultiPage(geom::OMFontSet *fontset = nullptr);
-    ~OMDemiurgeTabMultiPage() override;
+    explicit OMDemiurgeTabPane(geom::OMFontSet *fontset = nullptr);
+    ~OMDemiurgeTabPane() override;
 
     auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void override;
     void update() override;
@@ -134,6 +135,9 @@ class OMDemiurgeTabMultiPage : public OMDemiurgeContainerNode, public OMDemiurge
     float lastHeight = -1.0f;
     std::function<void(int)> handlePageChange = [](int) {};
 };
-} // namespace openminecraft::renderer::common::demiurge::node::controls
+} // namespace openminecraft::renderer::common::demiurge::node::container
+
+
+
 
 #endif

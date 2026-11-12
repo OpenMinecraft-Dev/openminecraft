@@ -59,7 +59,7 @@ OMDemiurgeSlider::~OMDemiurgeSlider() = default;
 
 auto OMDemiurgeSlider::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
-    OMDemiurgeContainerNode::submit(handler, depth);
+    OMDemiurgePane::submit(handler, depth);
 }
 
 void OMDemiurgeSlider::update()
@@ -99,7 +99,7 @@ void OMDemiurgeSlider::update()
     thumbNode->style("color", (int)f4ToRgba(finish(thumbColor.get())))
         ->style("offsetX", OMDemiurgeSize::pixels(travel * value));
 
-    OMDemiurgeContainerNode::update();
+    OMDemiurgePane::update();
 }
 
 auto OMDemiurgeSlider::updateFromMouse(float x) -> bool

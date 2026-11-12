@@ -30,7 +30,7 @@ OMDemiurgeDivider::~OMDemiurgeDivider() = default;
 
 auto OMDemiurgeDivider::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
-    OMDemiurgeContainerNode::submit(handler, depth);
+    OMDemiurgePane::submit(handler, depth);
 }
 
 void OMDemiurgeDivider::update()
@@ -39,7 +39,7 @@ void OMDemiurgeDivider::update()
         ->style("width", vertical ? OMDemiurgeSize::pixels(thickness) : OMDemiurgeSize::fill())
         ->style("height", vertical ? OMDemiurgeSize::fill() : OMDemiurgeSize::pixels(thickness));
 
-    OMDemiurgeContainerNode::update();
+    OMDemiurgePane::update();
 }
 
 void OMDemiurgeDivider::setColor(glm::vec4 color)

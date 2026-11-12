@@ -6,7 +6,7 @@
 #include "openminecraft-shell/om_application.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
-#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_pane.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
@@ -63,7 +63,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
     });
     button->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
 
-    node = std::make_shared<node::OMDemiurgeContainerNode>()
+    node = std::make_shared<node::OMDemiurgePane>()
                ->style({
                    {"flexDirection", Row},
                    {"justifyContent", OMDemiurgeAlign::SpaceBetween},
@@ -71,7 +71,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
                    {"height", OMDemiurgeSize::fit()},
                    {"alignItems", OMDemiurgeAlign::FlexStart},
                })
-               ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
+               ->mount(std::make_shared<node::OMDemiurgePane>()
                            ->style({
                                {"flexDirection", Column},
                                {"width", OMDemiurgeSize::fit()},
@@ -148,7 +148,7 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
                                                        {"textheight", 16},
                                                    }))
                                        ->mount(button->style("animation_speed", 1.0f)->style("label", "Main Menu"))))
-               ->mount(std::make_shared<node::OMDemiurgeContainerNode>()
+               ->mount(std::make_shared<node::OMDemiurgePane>()
                            ->style({
                                {"flexDirection", Column},
                                {"width", OMDemiurgeSize::fit()},

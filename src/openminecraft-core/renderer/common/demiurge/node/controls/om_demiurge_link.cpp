@@ -41,7 +41,7 @@ OMDemiurgeLink::~OMDemiurgeLink() = default;
 
 auto OMDemiurgeLink::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
-    OMDemiurgeContainerNode::submit(handler, depth);
+    OMDemiurgePane::submit(handler, depth);
 }
 
 void OMDemiurgeLink::update()
@@ -87,7 +87,7 @@ void OMDemiurgeLink::update()
     underlineNode->style("color", (int)f4ToRgba(glm::vec4(glm::vec3(underline), underline.a * underlineAmount)))
         ->style("width", OMDemiurgeSize::pixels(std::max(0.0f, underlineWidth)));
 
-    OMDemiurgeContainerNode::update();
+    OMDemiurgePane::update();
 }
 
 auto OMDemiurgeLink::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult

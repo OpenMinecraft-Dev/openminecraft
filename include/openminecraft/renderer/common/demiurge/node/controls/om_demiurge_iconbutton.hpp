@@ -4,7 +4,7 @@
 #include "glm/ext/vector_float4.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
-#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_pane.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include <functional>
 #include <memory>
@@ -13,7 +13,7 @@
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
 // Square button with an SVG icon (no label).
-class OMDemiurgeIconButton : public OMDemiurgeContainerNode, public OMDemiurgeControl
+class OMDemiurgeIconButton : public OMDemiurgePane, public OMDemiurgeControl
 {
   public:
     explicit OMDemiurgeIconButton(float size = 28.0f);

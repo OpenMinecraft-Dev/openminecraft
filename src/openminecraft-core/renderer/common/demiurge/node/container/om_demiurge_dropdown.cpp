@@ -1,4 +1,4 @@
-#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_dropdown.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_dropdown.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_svg.hpp"
@@ -12,7 +12,7 @@
 
 using namespace openminecraft::renderer::common::animation;
 
-namespace openminecraft::renderer::common::demiurge::node::controls
+namespace openminecraft::renderer::common::demiurge::node::container
 {
 static constexpr const char *ChevronPath = "M 3 6 L 8 11 L 13 6";
 
@@ -47,7 +47,7 @@ OMDemiurgeDropDownPane::OMDemiurgeDropDownPane(geom::OMFontSet *fontset)
                        {"height", OMDemiurgeSize::fill()}});
     this->mountDirect(background);
 
-    header = std::make_shared<OMDemiurgeContainerNode>();
+    header = std::make_shared<OMDemiurgePane>();
     header->style({{"position", OMDemiurgePosition::Absolute},
                    {"offsetX", OMDemiurgeSize::pixels(0.0f)},
                    {"offsetY", OMDemiurgeSize::pixels(0.0f)},
@@ -78,7 +78,7 @@ OMDemiurgeDropDownPane::OMDemiurgeDropDownPane(geom::OMFontSet *fontset)
 
     this->mountDirect(header);
 
-    contentHost = std::make_shared<OMDemiurgeContainerNode>();
+    contentHost = std::make_shared<OMDemiurgePane>();
     contentHost->style({{"position", OMDemiurgePosition::Absolute},
                         {"offsetX", OMDemiurgeSize::pixels(0.0f)},
                         {"offsetY", OMDemiurgeSize::pixels(headerHeight)},
@@ -95,7 +95,7 @@ auto OMDemiurgeDropDownPane::submit(OMDemiurgeRendererHandler *handler, uint32_t
     // A parent pane assigns its own clip to the whole subtree; keep the expanding
     // content clipped to the dropdown body as well.
     contentHost->setClipNode(std::static_pointer_cast<OMDemiurgeDropDownPane>(shared_from_this()));
-    OMDemiurgeContainerNode::submit(handler, depth);
+    OMDemiurgePane::submit(handler, depth);
 }
 
 void OMDemiurgeDropDownPane::update()
@@ -155,7 +155,7 @@ void OMDemiurgeDropDownPane::update()
     contentHost->style("offsetY", OMDemiurgeSize::pixels(headerH));
     contentHost->setClipNode(std::static_pointer_cast<OMDemiurgeDropDownPane>(shared_from_this()));
 
-    OMDemiurgeContainerNode::update();
+    OMDemiurgePane::update();
 }
 
 auto OMDemiurgeDropDownPane::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult
@@ -297,4 +297,4 @@ void OMDemiurgeDropDownPane::setDisabled(bool value, bool animate)
         disabledAmount.setTo(value ? 1.0f : 0.0f);
     }
 }
-} // namespace openminecraft::renderer::common::demiurge::node::controls
+} // namespace openminecraft::renderer::common::demiurge::node::container

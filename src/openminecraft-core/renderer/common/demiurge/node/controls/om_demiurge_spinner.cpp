@@ -51,7 +51,7 @@ void OMDemiurgeSpinner::rebuildDots()
 
 auto OMDemiurgeSpinner::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
-    OMDemiurgeContainerNode::submit(handler, depth);
+    OMDemiurgePane::submit(handler, depth);
 }
 
 void OMDemiurgeSpinner::update()
@@ -106,7 +106,7 @@ void OMDemiurgeSpinner::update()
             ->style("color", (int)f4ToRgba(glm::vec4(rgb, base.a * alpha * (1.0f - disabledValue * 0.5f))));
     }
 
-    OMDemiurgeContainerNode::update();
+    OMDemiurgePane::update();
 }
 
 void OMDemiurgeSpinner::setColor(glm::vec4 color)

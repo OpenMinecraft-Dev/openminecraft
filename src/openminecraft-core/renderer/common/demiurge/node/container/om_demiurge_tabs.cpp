@@ -1,4 +1,4 @@
-#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_tabs.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_tabs.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_textsdf.hpp"
@@ -11,11 +11,11 @@
 
 using namespace openminecraft::renderer::common::animation;
 
-namespace openminecraft::renderer::common::demiurge::node::controls
+namespace openminecraft::renderer::common::demiurge::node::container
 {
 static auto invalidatePage(const std::shared_ptr<OMDemiurgeNode> &node) -> void;
 
-OMDemiurgeTabMultiPage::OMDemiurgeTabMultiPage(geom::OMFontSet *fontset)
+OMDemiurgeTabPane::OMDemiurgeTabPane(geom::OMFontSet *fontset)
     : disabledAmount(0.0f), indicatorPosition(0.0f), fontset(fontset)
 {
     stylesStorage.put("width", OMDemiurgeSize::pixels(360.0f));
@@ -31,7 +31,7 @@ OMDemiurgeTabMultiPage::OMDemiurgeTabMultiPage(geom::OMFontSet *fontset)
     stylesStorage.put("page_animation_speed", 0.25f);
     stylesStorage.put("page_border", OMDemiurgeEdgeInsets{2, 2, 2, 2});
 
-    tabBar = std::make_shared<OMDemiurgeContainerNode>();
+    tabBar = std::make_shared<OMDemiurgePane>();
     tabBar->style({{"position", OMDemiurgePosition::Absolute},
                    {"offsetX", OMDemiurgeSize::pixels(0.0f)},
                    {"offsetY", OMDemiurgeSize::pixels(0.0f)},
@@ -49,7 +49,7 @@ OMDemiurgeTabMultiPage::OMDemiurgeTabMultiPage(geom::OMFontSet *fontset)
                     {"height", OMDemiurgeSize::pixels(1.0f)}});
     this->mountDirect(barLine);
 
-    pageHost = std::make_shared<OMDemiurgeContainerNode>();
+    pageHost = std::make_shared<OMDemiurgePane>();
     pageHost->style({{"position", OMDemiurgePosition::Absolute},
                      {"offsetX", OMDemiurgeSize::pixels(0.0f)},
                      {"offsetY", OMDemiurgeSize::pixels(34.0f)},
@@ -76,16 +76,16 @@ OMDemiurgeTabMultiPage::OMDemiurgeTabMultiPage(geom::OMFontSet *fontset)
     this->mountDirect(indicator);
 }
 
-OMDemiurgeTabMultiPage::~OMDemiurgeTabMultiPage() = default;
+OMDemiurgeTabPane::~OMDemiurgeTabPane() = default;
 
-auto OMDemiurgeTabMultiPage::addPage(const std::string &title, const std::shared_ptr<OMDemiurgeNode> &page) -> int
+auto OMDemiurgeTabPane::addPage(const std::string &title, const std::shared_ptr<OMDemiurgeNode> &page) -> int
 {
     if (!page)
     {
         return -1;
     }
 
-    auto root = std::make_shared<OMDemiurgeContainerNode>();
+    auto root = std::make_shared<OMDemiurgePane>();
     root->style({{"flexGrow", 1.0f},
                  {"height", OMDemiurgeSize::fill()},
                  {"flexDirection", OMDemiurgeDirection::Column},
@@ -125,7 +125,7 @@ auto OMDemiurgeTabMultiPage::addPage(const std::string &title, const std::shared
     return static_cast<int>(tabs.size()) - 1;
 }
 
-auto OMDemiurgeTabMultiPage::setPageVisible(int index, bool visible) -> void
+auto OMDemiurgeTabPane::setPageVisible(int index, bool visible) -> void
 {
     if (index < 0 || index >= static_cast<int>(tabs.size()))
     {
@@ -145,7 +145,7 @@ static auto invalidatePage(const std::shared_ptr<OMDemiurgeNode> &node) -> void
     }
 }
 
-auto OMDemiurgeTabMultiPage::applyActivePage() -> void
+auto OMDemiurgeTabPane::applyActivePage() -> void
 {
     for (int i = 0; i < static_cast<int>(tabs.size()); ++i)
     {
@@ -153,7 +153,7 @@ auto OMDemiurgeTabMultiPage::applyActivePage() -> void
     }
 }
 
-void OMDemiurgeTabMultiPage::setActivePage(int index)
+void OMDemiurgeTabPane::setActivePage(int index)
 {
     if (index < 0 || index >= static_cast<int>(tabs.size()) || index == activeIndex)
     {
@@ -201,7 +201,7 @@ void OMDemiurgeTabMultiPage::setActivePage(int index)
     handlePageChange(activeIndex);
 }
 
-auto OMDemiurgeTabMultiPage::setPageOffset(const std::shared_ptr<OMDemiurgeNode> &page, float x, float y) -> void
+auto OMDemiurgeTabPane::setPageOffset(const std::shared_ptr<OMDemiurgeNode> &page, float x, float y) -> void
 {
     if (!page)
     {
@@ -211,7 +211,7 @@ auto OMDemiurgeTabMultiPage::setPageOffset(const std::shared_ptr<OMDemiurgeNode>
     page->style("offsetX", OMDemiurgeSize::pixels(x))->style("offsetY", OMDemiurgeSize::pixels(y));
 }
 
-auto OMDemiurgeTabMultiPage::finishPageTransition() -> void
+auto OMDemiurgeTabPane::finishPageTransition() -> void
 {
     if (outgoingPage)
     {
@@ -230,7 +230,7 @@ auto OMDemiurgeTabMultiPage::finishPageTransition() -> void
     }
 }
 
-auto OMDemiurgeTabMultiPage::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
+auto OMDemiurgeTabPane::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
     // Only the active page is submitted; inactive pages stay mounted for layout and
     // state but have no elements in the channels.
@@ -252,7 +252,7 @@ auto OMDemiurgeTabMultiPage::submit(OMDemiurgeRendererHandler *handler, uint32_t
     }
 }
 
-void OMDemiurgeTabMultiPage::update()
+void OMDemiurgeTabPane::update()
 {
     const float tabThicknessStyle = std::max(8.0f, stylesStorage.get<float>("tab_height", 34.0f));
     const float indicatorThickness = std::max(1.0f, stylesStorage.get<float>("indicator_height", 2.0f));
@@ -572,7 +572,7 @@ void OMDemiurgeTabMultiPage::update()
     }
 }
 
-auto OMDemiurgeTabMultiPage::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult
+auto OMDemiurgeTabPane::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult
 {
     if (disabled || button != 1)
     {
@@ -591,13 +591,13 @@ auto OMDemiurgeTabMultiPage::processMouseDown(float x, float y, uint8_t button) 
     return Ignored;
 }
 
-void OMDemiurgeTabMultiPage::setTabWidth(float pixels)
+void OMDemiurgeTabPane::setTabWidth(float pixels)
 {
     stylesStorage.put("tab_width", std::max(24.0f, pixels));
     lastHeight = -1.0f;
 }
 
-void OMDemiurgeTabMultiPage::setPageFill(bool value)
+void OMDemiurgeTabPane::setPageFill(bool value)
 {
     if (pageFill == value)
     {
@@ -608,7 +608,7 @@ void OMDemiurgeTabMultiPage::setPageFill(bool value)
     lastHeight = -1.0f;
 }
 
-void OMDemiurgeTabMultiPage::setTabAlignment(OMDemiurgeTabAlignment alignment)
+void OMDemiurgeTabPane::setTabAlignment(OMDemiurgeTabAlignment alignment)
 {
     if (tabAlignment == alignment)
     {
@@ -619,7 +619,7 @@ void OMDemiurgeTabMultiPage::setTabAlignment(OMDemiurgeTabAlignment alignment)
     lastHeight = -1.0f;
 }
 
-void OMDemiurgeTabMultiPage::setTabPosition(OMDemiurgeTabPosition position)
+void OMDemiurgeTabPane::setTabPosition(OMDemiurgeTabPosition position)
 {
     if (tabPosition == position)
     {
@@ -631,7 +631,7 @@ void OMDemiurgeTabMultiPage::setTabPosition(OMDemiurgeTabPosition position)
     lastHeight = -1.0f;
 }
 
-void OMDemiurgeTabMultiPage::setPageEasing(int index, animation::OMEasingFunc easing)
+void OMDemiurgeTabPane::setPageEasing(int index, animation::OMEasingFunc easing)
 {
     if (index < 0 || index >= static_cast<int>(tabs.size()))
     {
@@ -641,18 +641,18 @@ void OMDemiurgeTabMultiPage::setPageEasing(int index, animation::OMEasingFunc ea
     tabs[index].easing = std::move(easing);
 }
 
-void OMDemiurgeTabMultiPage::setPageAnimationSpeed(float seconds)
+void OMDemiurgeTabPane::setPageAnimationSpeed(float seconds)
 {
     pageAnimationSpeed = std::max(0.0f, seconds);
     stylesStorage.put("page_animation_speed", pageAnimationSpeed);
 }
 
-void OMDemiurgeTabMultiPage::setOnPageChange(std::function<void(int)> handler)
+void OMDemiurgeTabPane::setOnPageChange(std::function<void(int)> handler)
 {
     handlePageChange = std::move(handler);
 }
 
-void OMDemiurgeTabMultiPage::setDisabled(bool value, bool animate)
+void OMDemiurgeTabPane::setDisabled(bool value, bool animate)
 {
     if (disabled == value)
     {
@@ -671,4 +671,4 @@ void OMDemiurgeTabMultiPage::setDisabled(bool value, bool animate)
         disabledAmount.setTo(value ? 1.0f : 0.0f);
     }
 }
-} // namespace openminecraft::renderer::common::demiurge::node::controls
+} // namespace openminecraft::renderer::common::demiurge::node::container

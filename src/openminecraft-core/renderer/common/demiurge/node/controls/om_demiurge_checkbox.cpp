@@ -61,7 +61,7 @@ OMDemiurgeCheckBox::~OMDemiurgeCheckBox() = default;
 
 auto OMDemiurgeCheckBox::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
-    OMDemiurgeContainerNode::submit(handler, depth);
+    OMDemiurgePane::submit(handler, depth);
 }
 
 void OMDemiurgeCheckBox::update()
@@ -111,7 +111,7 @@ void OMDemiurgeCheckBox::update()
         textNode->style("color", (int)f4ToRgba(glm::vec4(labelRgb, label.a)));
     }
 
-    OMDemiurgeContainerNode::update();
+    OMDemiurgePane::update();
 }
 
 auto OMDemiurgeCheckBox::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult

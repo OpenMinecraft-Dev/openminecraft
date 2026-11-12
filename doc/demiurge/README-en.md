@@ -95,7 +95,7 @@ Base class: `OMDemiurgeNode` (`include/openminecraft/renderer/common/demiurge/om
 | `submit(handler, uint32_t layer)` | Pure virtual; submit elements and clips; root starts at 0 and children use +1 |
 | `update()` | Virtual; recursively updates children by default |
 | `remove()` | Pure virtual; remove elements from channels |
-| `setVisible(bool)` / `isVisible()` | Invisible nodes skip hit-testing and event dispatch; submission is decided by the owner (TabMultiPage submits only the active page) |
+| `setVisible(bool)` / `isVisible()` | Invisible nodes skip hit-testing and event dispatch; submission is decided by the owner (TabPane submits only the active page) |
 | `invalidate()` | Force the node to re-run style-driven submit logic (used when elements were removed and the node becomes visible again) |
 
 ### 3.5 Events
@@ -229,8 +229,7 @@ Paths: `node/` and `node/container/`.
 | Node | Base | Constructor | Purpose / main keys |
 | --- | --- | --- | --- |
 | `OMDemiurgeRectNode` | `OMDemiurgeNode` | default | Rounded rect; `color/radius/factor/rotation/clip/clipRadius/scale` |
-| `OMDemiurgeContainerNode` | `OMDemiurgeNode` | default | Pure container, draws nothing itself; submits children |
-| `OMDemiurgePaneContainer` | `OMDemiurgeContainerNode` | default | Clips **direct children** to itself; see below |
+| `OMDemiurgePane` | `OMDemiurgeNode` | default | Pure container, draws nothing itself; submits children |
 | `OMDemiurgeTextSdfNode` | `OMDemiurgeNode` | `(OMFontSet*)` | Single-line text; `text/textheight/color/factor/scale` |
 | `OMDemiurgeTextSdfMultilineNode` | `OMDemiurgeNode` | `(OMFontSet*)` | Multi-line text; plus `textlineheight` |
 | `OMDemiurgeSvgNode` | `OMDemiurgeNode` | default | SDF SVG icon; `svgPath/svgSize/color/factor/rotation/scale` |
@@ -238,13 +237,12 @@ Paths: `node/` and `node/container/`.
 | `OMDemiurgeSectorNode` | `OMDemiurgeNode` | default | Sector/ring; `beginAngle/endAngle/factor/rotation/color/scale` |
 | `OMDemiurgeShaderSceneNode` | `OMDemiurgeNode` | `(std::string shader)` | Full-screen shader scene; layout and `scale` only |
 
-### 5.1 PaneContainer
+### 5.1 OMDemiurgePane
 
-- Both `submit()` and `update()` **walk the whole subtree recursively** and reassign every descendant's `clipNode` to the pane;
-- The walk stops at nodes where `isClipBoundary() == true`: a nested pane is still clipped by its parent pane, but its interior is managed recursively by the child pane itself;
-- Child clip resolution intersects along the ancestor chain, so the effective clip of a nested pane is `child pane ∩ parent pane`;
-- Controls that need a tighter internal clip (for example the caret/selection of TextInput / TextEdit) re-assert their own clips in their `submit()`, and the result is intersected with the pane;
-- The pane draws no element; mount an `OMDemiurgeRectNode` child for a background (it is clipped to the pane too).
+- Pure container: draws nothing itself and only submits children;
+- It does not force-clip children; use the `OMDemiurgeScrollPane` viewport, or call `setClipNode(...)` explicitly on a node when clipping is needed;
+- The old `OMDemiurgePaneContainer` was removed so clipping semantics live in one place;
+- Controls can still declare an internal clip in their own `submit()` (e.g. TextInput / TextEdit caret and selection).
 
 ## 6. Element Layer (Renderer Contributors)
 
@@ -286,7 +284,7 @@ The highest bit (`0x80000000`) is a group marker: when set the element belongs t
 
 ## 7. Controls
 
-Path: `node/controls/`. Controls derive from their visual base (`OMDemiurgeRectNode` or `OMDemiurgeContainerNode`) and, except Badge / Divider, implement the common interface:
+Path: `node/controls/`; `*Pane` classes (`OMDemiurgeTabPane`, `OMDemiurgeDropDownPane`, `OMDemiurgeScrollPane`) live in `node/container/`. Controls derive from their visual base (`OMDemiurgeRectNode` or `OMDemiurgePane`) and, except Badge / Divider, implement the common interface:
 
 ```cpp
 class OMDemiurgeControl
@@ -356,6 +354,8 @@ Main styles: `label`, `textheight`, `radius`, `svgPath` (check path), `hover_boo
 
 `OMDemiurgeRadioBox(geom::OMFontSet *fontset = nullptr)`  
 `OMDemiurgeRadioGroup()`
+
+`OMDemiurgeRadioBox` and `OMDemiurgeRadioGroup` have separate headers and implementation files.
 
 RadioBox:
 
@@ -564,9 +564,9 @@ Behavior:
 
 Main styles: `width` / `height` (header size), `padding`. Option rows are currently fixed at 28px.
 
-### 7.17 TabMultiPage
+### 7.17 TabPane
 
-`OMDemiurgeTabMultiPage(geom::OMFontSet *fontset = nullptr)`
+`OMDemiurgeTabPane(geom::OMFontSet *fontset = nullptr)`
 
 A top tab bar plus a multi-page container. Every page must be mounted through `addPage()`; only the active page is submitted, while the others stay mounted, invisible and excluded from hit-testing. Page content switching is not animated, but the tab indicator slides along the tab bar.
 
@@ -747,16 +747,16 @@ label->style({
 panel->mount(label);
 ```
 
-### 8.2 Pane clipping
+### 8.2 ScrollPane clipping
 
 ```cpp
-auto pane = std::make_shared<node::container::OMDemiurgePaneContainer>();
+auto pane = std::make_shared<node::container::OMDemiurgeScrollPane>();
 pane->style({
     {"position", OMDemiurgePosition::Absolute},
     {"width", 200_px},
     {"height", 120_px},
 });
-pane->mount(longContentNode);   // overflow is clipped
+pane->setContentNode(longContentNode);   // overflow is clipped by the viewport and can scroll
 ```
 
 ### 8.3 Controls
@@ -784,5 +784,5 @@ When adding or changing a control, node or element:
    - Whether it implements `OMDemiurgeControl`;
 3. Classify new style keys correctly in 4.2 / 4.3 / 4.4;
 4. Extend the element table and vertex-format notes in section 6 for new elements;
-5. Update section 2 if frame lifecycle, clipping, scaling or coordinate conversion behavior changes; update 5.1 whenever pane recursion/boundary semantics change;
+5. Update section 2 if frame lifecycle, clipping, scaling or coordinate conversion behavior changes; update 5.1 / 7.19 whenever Pane or ScrollPane clipping semantics change;
 6. Examples must map to real APIs (prefer names used in the current code).

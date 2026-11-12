@@ -2,15 +2,18 @@
 #define OM_DEMIURGE_SCROLLPANE_HPP
 
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
-#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_pane.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_scrollbar.hpp"
 #include <chrono>
 #include <functional>
 #include <memory>
 
-namespace openminecraft::renderer::common::demiurge::node::controls
+namespace openminecraft::renderer::common::demiurge::node::container
 {
+using controls::OMDemiurgeControl;
+using controls::OMDemiurgeScrollBar;
+using controls::OMDemiurgeScrollBarOrientation;
 enum class OMDemiurgeScrollPaneOrientation
 {
     Horizontal,
@@ -30,7 +33,7 @@ enum class OMDemiurgeScrollPaneOrientation
 // Dragging the content beyond its bounds applies a rubber-band resistance and
 // springs back on release. The internal ScrollBars are two-way bound to the
 // content offset.
-class OMDemiurgeScrollPane : public OMDemiurgeContainerNode, public OMDemiurgeControl
+class OMDemiurgeScrollPane : public OMDemiurgePane, public OMDemiurgeControl
 {
   public:
     OMDemiurgeScrollPane();
@@ -137,6 +140,9 @@ class OMDemiurgeScrollPane : public OMDemiurgeContainerNode, public OMDemiurgeCo
     void preserveScrollOnContentChange();
     void notifyScroll();
 };
-} // namespace openminecraft::renderer::common::demiurge::node::controls
+} // namespace openminecraft::renderer::common::demiurge::node::container
+
+
+
 
 #endif

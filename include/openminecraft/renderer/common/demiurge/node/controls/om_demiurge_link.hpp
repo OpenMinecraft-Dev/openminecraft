@@ -5,7 +5,7 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
 #include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
-#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_pane.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include <functional>
 #include <memory>
@@ -14,7 +14,7 @@
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
 // Clickable text with an underline that appears on hover.
-class OMDemiurgeLink : public OMDemiurgeContainerNode, public OMDemiurgeControl
+class OMDemiurgeLink : public OMDemiurgePane, public OMDemiurgeControl
 {
   public:
     explicit OMDemiurgeLink(geom::OMFontSet *fontset = nullptr);

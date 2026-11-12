@@ -5,7 +5,7 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
 #include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
-#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_pane.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include <functional>
@@ -16,36 +16,10 @@
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
 class OMDemiurgeRadioBox;
-
-// Radio group: lays the radios out (row/column) and owns the selection policy.
-class OMDemiurgeRadioGroup : public OMDemiurgeContainerNode
-{
-  public:
-    OMDemiurgeRadioGroup();
-
-    void add(const std::shared_ptr<OMDemiurgeRadioBox> &box);
-
-    // Single-select groups clear the previous member; multi-select groups keep them.
-    void select(const std::shared_ptr<OMDemiurgeRadioBox> &box);
-
-    // Click policy: single selects, multi toggles.
-    void click(const std::shared_ptr<OMDemiurgeRadioBox> &box);
-
-    void setDirection(OMDemiurgeDirection direction);
-    void setGap(float pixels);
-    void setMultiSelect(bool value);
-    auto isMultiSelect() const -> bool
-    {
-        return multiSelect;
-    }
-
-  private:
-    std::vector<std::weak_ptr<OMDemiurgeRadioBox>> members;
-    bool multiSelect = false;
-};
+class OMDemiurgeRadioGroup;
 
 // Radio button: circular box + animated inner dot + optional label.
-class OMDemiurgeRadioBox : public OMDemiurgeContainerNode, public OMDemiurgeControl
+class OMDemiurgeRadioBox : public OMDemiurgePane, public OMDemiurgeControl
 {
   public:
     explicit OMDemiurgeRadioBox(geom::OMFontSet *fontset = nullptr);

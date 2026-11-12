@@ -47,7 +47,7 @@ OMDemiurgeSwitch::~OMDemiurgeSwitch() = default;
 
 auto OMDemiurgeSwitch::submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void
 {
-    OMDemiurgeContainerNode::submit(handler, depth);
+    OMDemiurgePane::submit(handler, depth);
 }
 
 void OMDemiurgeSwitch::update()
@@ -74,7 +74,7 @@ void OMDemiurgeSwitch::update()
         ->style("color", (int)f4ToRgba(thumbFinal))
         ->style("radius", glm::vec4(ThumbSize * 0.5f));
 
-    OMDemiurgeContainerNode::update();
+    OMDemiurgePane::update();
 }
 
 auto OMDemiurgeSwitch::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult

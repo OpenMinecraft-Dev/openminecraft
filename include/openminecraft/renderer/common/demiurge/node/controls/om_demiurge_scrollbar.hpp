@@ -2,7 +2,7 @@
 #define OM_DEMIURGE_SCROLLBAR_HPP
 
 #include "openminecraft/renderer/common/animation/om_animation_value.hpp"
-#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_container.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_pane.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_control.hpp"
 #include <functional>
 #include <memory>
@@ -19,7 +19,7 @@ enum class OMDemiurgeScrollBarOrientation
 // the thumb size/position from viewSize/contentSize, and reports drag/wheel
 // changes through setOnScroll so a future ScrollPane can keep its content in sync.
 // Appearance follows the tab indicator: a thin rounded pill.
-class OMDemiurgeScrollBar : public OMDemiurgeContainerNode, public OMDemiurgeControl
+class OMDemiurgeScrollBar : public OMDemiurgePane, public OMDemiurgeControl
 {
   public:
     OMDemiurgeScrollBar();

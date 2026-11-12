@@ -1,4 +1,4 @@
-#include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_scrollpane.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_scrollpane.hpp"
 #include <cstdlib>
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
@@ -13,10 +13,10 @@ using namespace openminecraft::renderer::common::animation;
 namespace
 {
 std::mutex overlayWheelMutex;
-const openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeScrollPane *overlayWheelOwner = nullptr;
+const openminecraft::renderer::common::demiurge::node::container::OMDemiurgeScrollPane *overlayWheelOwner = nullptr;
 std::optional<openminecraft::renderer::common::demiurge::OMDemiurgeRect> overlayWheelRect;
 
-auto wheelRegionBlocks(const openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeScrollPane *pane,
+auto wheelRegionBlocks(const openminecraft::renderer::common::demiurge::node::container::OMDemiurgeScrollPane *pane,
                        float x, float y) -> bool
 {
     std::lock_guard<std::mutex> lock(overlayWheelMutex);
@@ -31,7 +31,7 @@ auto wheelRegionBlocks(const openminecraft::renderer::common::demiurge::node::co
 }
 } // namespace
 
-namespace openminecraft::renderer::common::demiurge::node::controls
+namespace openminecraft::renderer::common::demiurge::node::container
 {
 OMDemiurgeScrollPane::OMDemiurgeScrollPane() : disabledAmount(0.0f)
 {
@@ -57,7 +57,7 @@ OMDemiurgeScrollPane::OMDemiurgeScrollPane() : disabledAmount(0.0f)
                          {"color", (int)0}});
     this->mountDirect(viewportClip);
 
-    contentHost = std::make_shared<OMDemiurgeContainerNode>();
+    contentHost = std::make_shared<OMDemiurgePane>();
     contentHost->style({{"position", OMDemiurgePosition::Absolute},
                         {"offsetX", OMDemiurgeSize::pixels(0.0f)},
                         {"offsetY", OMDemiurgeSize::pixels(0.0f)},
@@ -480,7 +480,7 @@ void OMDemiurgeScrollPane::update()
     verticalBar->setDisabled(disabled, false);
     horizontalBar->setDisabled(disabled, false);
 
-    OMDemiurgeContainerNode::update();
+    OMDemiurgePane::update();
 }
 
 auto OMDemiurgeScrollPane::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult
@@ -721,4 +721,4 @@ void OMDemiurgeScrollPane::setDisabled(bool value, bool animate)
         disabledAmount.setTo(value ? 1.0f : 0.0f);
     }
 }
-} // namespace openminecraft::renderer::common::demiurge::node::controls
+} // namespace openminecraft::renderer::common::demiurge::node::container

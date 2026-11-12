@@ -235,7 +235,7 @@ void OMDemiurgeScrollBar::update()
             ->style("offsetY", OMDemiurgeSize::pixels(0.0f));
     }
 
-    OMDemiurgeContainerNode::update();
+    OMDemiurgePane::update();
 }
 
 auto OMDemiurgeScrollBar::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult
