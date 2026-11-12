@@ -49,7 +49,6 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     fontset->fontList.push_back(std::make_shared<geom::OMFont>(*rawfile1.get()));
     node::controls::OMDemiurgeTooltip::instance().setFontSet(fontset.get());
     dialog = std::make_shared<node::controls::OMDemiurgeDialog>(fontset.get());
-    dialog2 = std::make_shared<node::controls::OMDemiurgeDialog>(fontset.get());
 
     auto button = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     demoButton = button;
@@ -313,14 +312,13 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     collapsibleDemo->setContentNode(collapsibleText);
     addGallerySection("DropDownPane", "Collapsible panel for secondary content.", collapsibleDemo);
 
-    auto dialogDemoButton = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
+    dialogDemoButton = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     dialogDemoButton->style("label", "Open Dialog");
     dialogDemoButton->style("width", OMDemiurgeSize::pixels(200.0f));
     dialogDemoButton->style("height", OMDemiurgeSize::pixels(30.0f));
     dialogDemoButton->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
     dialogDemoButton->setOnClick([this]() {
         dialog->show(node, "This is a simple message dialog.\n\nIt has one button used to close it.", "Close");
-        dialog2->show(node, "This is a simple message dialog.\n\nIt has one button used to close it.", "Close");
     });
     addGallerySection("Dialog", "Simple modal message dialog with one close button.", dialogDemoButton);
 

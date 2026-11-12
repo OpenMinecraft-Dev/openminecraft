@@ -270,11 +270,13 @@ auto OMDemiurgeNode::syncLayout() -> void
                 break;
             }
             case "border"_hash: {
-                auto insets = std::any_cast<OMDemiurgeEdgeInsets>(p.second);
-                YGNodeStyleSetBorder(yogaNode, YGEdgeTop, insets.top);
-                YGNodeStyleSetBorder(yogaNode, YGEdgeBottom, insets.bottom);
-                YGNodeStyleSetBorder(yogaNode, YGEdgeLeft, insets.left);
-                YGNodeStyleSetBorder(yogaNode, YGEdgeRight, insets.right);
+                if (auto insets = std::any_cast<OMDemiurgeEdgeInsets>(&p.second))
+                {
+                    YGNodeStyleSetBorder(yogaNode, YGEdgeTop, insets->top);
+                    YGNodeStyleSetBorder(yogaNode, YGEdgeBottom, insets->bottom);
+                    YGNodeStyleSetBorder(yogaNode, YGEdgeLeft, insets->left);
+                    YGNodeStyleSetBorder(yogaNode, YGEdgeRight, insets->right);
+                }
                 break;
             }
             case "padding"_hash: {

@@ -60,7 +60,8 @@ class OMSurfaceRenderer : public openminecraft::renderer::common::OMRendererHand
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeTextEdit> demoTextEdit;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeDropDownSelector> demoSelector;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::container::OMDemiurgeTabPane> demoTabs;
-    std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeDialog> dialog, dialog2;
+    std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeDialog> dialog;
+    std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeButton> dialogDemoButton;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeScrollBar> demoScrollBar;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::container::OMDemiurgeScrollPane> demoScrollPane;
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeRendererHandler> internal;
