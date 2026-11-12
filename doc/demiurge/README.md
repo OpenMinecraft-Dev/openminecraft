@@ -184,7 +184,7 @@ control->hideTooltip();
 
 行为：
 
-- Tooltip 目标每帧按当前指针位置重新判定（不依赖容易丢失的 Enter/Exit 事件）；指针停留超过 `delay` 后，面板挂载到 **UI 根节点**（不是控件自身）；
+- Tooltip 目标每帧按当前指针位置重新判定（不依赖容易丢失的 Enter/Exit 事件）；命中使用与鼠标事件一致的 layout bounds，不受渲染用 clipRect 影响（避免 ScrollPane 内的控件在滚动前被误判为不可 hover）；指针停留超过 `delay` 后，面板挂载到 **UI 根节点**（不是控件自身）；
 - `setImmediateTooltip(text)` 是面向物品栏/密集网格的即时模式：无 hover 延迟，进入即显示并跟随鼠标；淡入只在进入时、淡出只在离开时发生，在同一控件内移动不会重启动画；
 - Tooltip 根节点设置 `setLayerOverlay(true)`，在 overlay 组中绘制，位于普通 UI 之上；
 - 出现与消失都有 0.12s 透明度动画：内部矩形背景和文字分别设置独立的 `opacity` style，颜色 alpha 保持不变；

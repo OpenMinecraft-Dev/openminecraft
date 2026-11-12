@@ -700,17 +700,11 @@ auto OMDemiurgeNode::isHoverableAt(float x, float y) -> bool
         }
     }
 
-    if (!containsPoint(x, y))
-    {
-        return false;
-    }
-
-    if (auto clip = resolveClipBound(); clip.has_value())
-    {
-        return x >= clip->x && x <= clip->x + clip->width && y >= clip->y && y <= clip->y + clip->height;
-    }
-
-    return true;
+    // Match event hit-testing, which ignores render-only clipping. Layout
+    // bounds of controls outside a ScrollPane viewport are already outside the
+    // pointer; applying clipRect here caused visible controls to lose tooltips
+    // until the pane happened to scroll and refresh the clip rect.
+    return containsPoint(x, y);
 }
 
 auto OMDemiurgeNode::dispatchCapturedEvent(const OMDemiurgeEvent &event) -> void
