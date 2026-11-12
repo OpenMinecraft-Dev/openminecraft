@@ -149,7 +149,7 @@ auto OMDemiurgeTextInput::measure(const std::string &value) -> float
         return 0.0f;
     }
 
-    const int textHeight = stylesStorage.get<int>("textheight", 14);
+    const int textHeight = stylesStorage.get<int>("textHeight", 14);
     auto shaped = fontset->shape(value);
     return fontset->bound(shaped).x * static_cast<float>(textHeight);
 }
@@ -173,7 +173,7 @@ auto OMDemiurgeTextInput::caretFromX(float x) -> size_t
     size_t best = 0;
     float bestDistance = std::abs(x);
 
-    const int textHeight = stylesStorage.get<int>("textheight", 14);
+    const int textHeight = stylesStorage.get<int>("textHeight", 14);
 
     for (size_t i = 0; i < boundaries.size(); ++i)
     {
@@ -254,7 +254,7 @@ auto OMDemiurgeTextInput::notifyChange() -> void
 
 void OMDemiurgeTextInput::update()
 {
-    const int textHeight = stylesStorage.get<int>("textheight", 14);
+    const int textHeight = stylesStorage.get<int>("textHeight", 14);
     const float focus = std::clamp(focusAmount.get(), 0.0f, 1.0f);
     const float disabledValue = std::clamp(disabledAmount.get(), 0.0f, 1.0f);
 
@@ -264,7 +264,7 @@ void OMDemiurgeTextInput::update()
     background = glm::vec4(glm::mix(glm::vec3(background), glm::vec3(0.30f), disabledValue * 0.75f),
                            background.a * (1.0f - disabledValue * 0.35f));
 
-    this->style("_internal.color", (int)f4ToRgba(background))
+    this->style("internal.color", (int)f4ToRgba(background))
         ->style("radius", stylesStorage.get<glm::vec4>("radius", glm::vec4(6.0f)));
 
     // The event bus dispatches on its own thread; copy the editing state under the
@@ -483,7 +483,7 @@ void OMDemiurgeTextInput::update()
     if (contentNode)
     {
         contentNode->style("text", visible)
-            ->style("textheight", textHeight)
+            ->style("textHeight", textHeight)
             ->style("color", (int)f4ToRgba(finalColor))
             ->style("offsetX", OMDemiurgeSize::pixels(textOffset))
             ->style("offsetY", OMDemiurgeSize::pixels(textOffsetY));
@@ -492,7 +492,7 @@ void OMDemiurgeTextInput::update()
     if (placeholderNode)
     {
         placeholderNode->style("text", showPlaceholder ? placeholder : std::string())
-            ->style("textheight", textHeight)
+            ->style("textHeight", textHeight)
             ->style("color", (int)f4ToRgba(placeholderFinalColor))
             ->style("offsetX", OMDemiurgeSize::pixels(0.0f))
             ->style("offsetY", OMDemiurgeSize::pixels(textOffsetY));
@@ -967,7 +967,7 @@ auto OMDemiurgeTextInput::getPlaceholder() const -> std::string
 
 void OMDemiurgeTextInput::setPlaceholderColor(const glm::vec4 &color)
 {
-    placeholderColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    placeholderColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
 }
 
 void OMDemiurgeTextInput::setMaxLength(int codepoints)
@@ -987,7 +987,7 @@ void OMDemiurgeTextInput::setOnSubmit(std::function<void(const std::string &)> h
 
 void OMDemiurgeTextInput::setTextHeight(int height)
 {
-    stylesStorage.put("textheight", height);
+    stylesStorage.put("textHeight", height);
 }
 
 void OMDemiurgeTextInput::setColors(glm::vec4 background, glm::vec4 text, glm::vec4 caret)

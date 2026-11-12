@@ -89,7 +89,7 @@ auto OMDemiurgeSwitch::processMouseDown(float x, float y, uint8_t button) -> OMD
     dragging = false;
     pressX = x;
     dragValue = checked ? 1.0f : 0.0f;
-    pressAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    pressAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
     return Handled;
 }
 
@@ -128,7 +128,7 @@ auto OMDemiurgeSwitch::processMouseUp(float x, float y, uint8_t button) -> OMDem
     }
 
     pressed = false;
-    pressAmount.animateTo(0.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    pressAmount.animateTo(0.0f, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
 
     if (dragging)
     {
@@ -142,7 +142,7 @@ auto OMDemiurgeSwitch::processMouseUp(float x, float y, uint8_t button) -> OMDem
 
         onAmount.setTo(dragValue);
         onAmount.animateTo(checked ? 1.0f : 0.0f, easeOutCubic<float>,
-                           stylesStorage.get<float>("animation_speed", 0.18f));
+                           stylesStorage.get<float>("animationSpeed", 0.18f));
         dragging = false;
     }
     else if (containsPoint(x, y))
@@ -160,7 +160,7 @@ auto OMDemiurgeSwitch::processMouseEnter(float x, float y) -> OMDemiurgeEventRes
         return Ignored;
     }
 
-    hoverAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    hoverAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
     return Handled;
 }
 
@@ -171,7 +171,7 @@ auto OMDemiurgeSwitch::processMouseExit(float x, float y) -> OMDemiurgeEventResu
         return Ignored;
     }
 
-    const float speed = stylesStorage.get<float>("animation_speed", 0.18f);
+    const float speed = stylesStorage.get<float>("animationSpeed", 0.18f);
     hoverAmount.animateTo(0.0f, easeOutCirc<float>, speed);
     pressAmount.animateTo(0.0f, easeOutCirc<float>, speed);
     pressed = false;
@@ -212,7 +212,7 @@ void OMDemiurgeSwitch::setChecked(bool value, bool animate)
     if (animate)
     {
         onAmount.animateTo(checked ? 1.0f : 0.0f, easeOutCubic<float>,
-                           stylesStorage.get<float>("animation_speed", 0.18f));
+                           stylesStorage.get<float>("animationSpeed", 0.18f));
     }
     else
     {
@@ -229,19 +229,19 @@ void OMDemiurgeSwitch::setOnChange(std::function<void(bool)> handler)
 
 void OMDemiurgeSwitch::setTrackColors(glm::vec4 offColor, glm::vec4 onColor)
 {
-    const float speed = stylesStorage.get<float>("animation_speed", 0.18f);
+    const float speed = stylesStorage.get<float>("animationSpeed", 0.18f);
     trackOff.animateTo(offColor, easeOutCirc<float>, speed);
     trackOn.animateTo(onColor, easeOutCirc<float>, speed);
 }
 
 void OMDemiurgeSwitch::setThumbColor(glm::vec4 color)
 {
-    thumbColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    thumbColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
 }
 
 void OMDemiurgeSwitch::setAnimationSpeed(float seconds)
 {
-    stylesStorage.put("animation_speed", seconds);
+    stylesStorage.put("animationSpeed", seconds);
 }
 
 void OMDemiurgeSwitch::setDisabled(bool value, bool animate)
@@ -256,7 +256,7 @@ void OMDemiurgeSwitch::setDisabled(bool value, bool animate)
     if (animate)
     {
         disabledAmount.animateTo(disabled ? 1.0f : 0.0f, easeOutCirc<float>,
-                                 stylesStorage.get<float>("animation_speed", 0.18f));
+                                 stylesStorage.get<float>("animationSpeed", 0.18f));
     }
     else
     {

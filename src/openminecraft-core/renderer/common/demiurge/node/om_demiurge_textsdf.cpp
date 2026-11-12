@@ -19,7 +19,7 @@ auto OMDemiurgeTextSdfNode::syncLayout() -> void
     {
         shapeResult = set->shape(stylesStorage.get<std::string>("text", ""));
         auto b = set->bound(shapeResult);
-        auto th = stylesStorage.get<int>("textheight", 12);
+        auto th = stylesStorage.get<int>("textHeight", 12);
 
         stylesStorage.put("minWidth", b.x * th);
         stylesStorage.put("minHeight", b.y * th);
@@ -54,7 +54,7 @@ auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, uint32_t 
             }
         }
 
-        auto th = stylesStorage.get<int>("textheight", 12);
+        auto th = stylesStorage.get<int>("textHeight", 12);
         const glm::vec2 textScale = stylesStorage.get<glm::vec2>("scale", glm::vec2(1.0f));
         const glm::vec2 textCenter(layoutBound.x + layoutBound.width * 0.5f,
                                    layoutBound.y + layoutBound.height * 0.5f);

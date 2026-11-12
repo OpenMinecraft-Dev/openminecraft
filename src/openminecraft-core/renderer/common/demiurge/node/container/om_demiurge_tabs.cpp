@@ -19,17 +19,17 @@ OMDemiurgeTabPane::OMDemiurgeTabPane(geom::OMFontSet *fontset)
     : disabledAmount(0.0f), indicatorPosition(0.0f), fontset(fontset)
 {
     stylesStorage.put("width", OMDemiurgeSize::pixels(360.0f));
-    stylesStorage.put("tab_height", 34.0f);
-    stylesStorage.put("tab_width", 100.0f);
-    stylesStorage.put("textheight", 14);
-    stylesStorage.put("active_text_color", (int)0xffffffff);
-    stylesStorage.put("inactive_text_color", (int)0xffffff8c);
-    stylesStorage.put("indicator_color", (int)0x00d4ffff);
-    stylesStorage.put("indicator_height", 2.0f);
-    stylesStorage.put("bar_line_color", (int)0xffffff1a);
-    stylesStorage.put("animation_speed", 0.18f);
-    stylesStorage.put("page_animation_speed", 0.25f);
-    stylesStorage.put("page_border", OMDemiurgeEdgeInsets{2, 2, 2, 2});
+    stylesStorage.put("tabHeight", 34.0f);
+    stylesStorage.put("tabWidth", 100.0f);
+    stylesStorage.put("textHeight", 14);
+    stylesStorage.put("activeTextColor", (int)0xffffffff);
+    stylesStorage.put("inactiveTextColor", (int)0xffffff8c);
+    stylesStorage.put("indicatorColor", (int)0x00d4ffff);
+    stylesStorage.put("indicatorHeight", 2.0f);
+    stylesStorage.put("barLineColor", (int)0xffffff1a);
+    stylesStorage.put("animationSpeed", 0.18f);
+    stylesStorage.put("pageAnimationSpeed", 0.25f);
+    stylesStorage.put("pageBorder", OMDemiurgeEdgeInsets{2, 2, 2, 2});
 
     tabBar = std::make_shared<OMDemiurgePane>();
     tabBar->style({{"position", OMDemiurgePosition::Absolute},
@@ -95,14 +95,14 @@ auto OMDemiurgeTabPane::addPage(const std::string &title, const std::shared_ptr<
 
     auto label = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
     label->style({{"text", title},
-                  {"textheight", 14},
+                  {"textHeight", 14},
                   {"color", (int)0x8cffffff},
                   {"alignSelf", OMDemiurgeAlign::Center}});
     root->mountDirect(label);
 
     tabBar->mountDirect(root);
 
-    page->style("border", stylesStorage.get<OMDemiurgeEdgeInsets>("page_border", OMDemiurgeEdgeInsets{2, 2, 2, 2}));
+    page->style("border", stylesStorage.get<OMDemiurgeEdgeInsets>("pageBorder", OMDemiurgeEdgeInsets{2, 2, 2, 2}));
     page->style({{"position", OMDemiurgePosition::Absolute},
                  {"offsetX", OMDemiurgeSize::pixels(0.0f)},
                  {"offsetY", OMDemiurgeSize::pixels(0.0f)},
@@ -176,10 +176,10 @@ void OMDemiurgeTabPane::setActivePage(int index)
     tabs[activeIndex].page->setVisible(true);
     invalidatePage(tabs[activeIndex].page);
     indicatorPosition.animateTo(static_cast<float>(activeIndex), easeOutCubic<float>,
-                                stylesStorage.get<float>("animation_speed", 0.22f));
+                                stylesStorage.get<float>("animationSpeed", 0.22f));
     lastHeight = -1.0f;
 
-    const float speed = stylesStorage.get<float>("page_animation_speed", pageAnimationSpeed);
+    const float speed = stylesStorage.get<float>("pageAnimationSpeed", pageAnimationSpeed);
 
     if (oldPage && speed > 0.001f)
     {
@@ -254,16 +254,16 @@ auto OMDemiurgeTabPane::submit(OMDemiurgeRendererHandler *handler, uint32_t dept
 
 void OMDemiurgeTabPane::update()
 {
-    const float tabThicknessStyle = std::max(8.0f, stylesStorage.get<float>("tab_height", 34.0f));
-    const float indicatorThickness = std::max(1.0f, stylesStorage.get<float>("indicator_height", 2.0f));
+    const float tabThicknessStyle = std::max(8.0f, stylesStorage.get<float>("tabHeight", 34.0f));
+    const float indicatorThickness = std::max(1.0f, stylesStorage.get<float>("indicatorHeight", 2.0f));
     const float disabledValue = std::clamp(disabledAmount.get(), 0.0f, 1.0f);
-    const int textHeight = stylesStorage.get<int>("textheight", 14);
+    const int textHeight = stylesStorage.get<int>("textHeight", 14);
     const int count = static_cast<int>(tabs.size());
     const bool horizontal = tabPosition == OMDemiurgeTabPosition::Top || tabPosition == OMDemiurgeTabPosition::Bottom;
 
     // Vertical tabs need a wider bar so labels fit.
     const float tabThickness = horizontal ? tabThicknessStyle : std::max(tabThicknessStyle, 64.0f);
-    const float tabWidth = std::max(24.0f, stylesStorage.get<float>("tab_width", 100.0f));
+    const float tabWidth = std::max(24.0f, stylesStorage.get<float>("tabWidth", 100.0f));
 
     float pageHeight = 0.0f;
 
@@ -424,7 +424,7 @@ void OMDemiurgeTabPane::update()
         ->style("offsetY", OMDemiurgeSize::pixels(lineY))
         ->style("width", OMDemiurgeSize::pixels(lineW))
         ->style("height", OMDemiurgeSize::pixels(lineH))
-        ->style("color", (int)stylesStorage.get<int>("bar_line_color", (int)0xffffff1a));
+        ->style("color", (int)stylesStorage.get<int>("barLineColor", (int)0xffffff1a));
 
     pageHost->style("offsetX", OMDemiurgeSize::pixels(pageX))
         ->style("offsetY", OMDemiurgeSize::pixels(pageY))
@@ -440,10 +440,10 @@ void OMDemiurgeTabPane::update()
         return static_cast<uint32_t>(f4ToRgba(glm::vec4(rgb, a * (1.0f - disabledValue * 0.35f))));
     };
 
-    const uint32_t activeColor = static_cast<uint32_t>(stylesStorage.get<int>("active_text_color", (int)0xffffffff));
+    const uint32_t activeColor = static_cast<uint32_t>(stylesStorage.get<int>("activeTextColor", (int)0xffffffff));
     const uint32_t inactiveColor =
-        static_cast<uint32_t>(stylesStorage.get<int>("inactive_text_color", (int)0xffffff8c));
-    const uint32_t indicatorColor = static_cast<uint32_t>(stylesStorage.get<int>("indicator_color", (int)0x00d4ffff));
+        static_cast<uint32_t>(stylesStorage.get<int>("inactiveTextColor", (int)0xffffff8c));
+    const uint32_t indicatorColor = static_cast<uint32_t>(stylesStorage.get<int>("indicatorColor", (int)0x00d4ffff));
 
     const float indicatorSide = indicatorThickness + 4.0f;
 
@@ -461,7 +461,7 @@ void OMDemiurgeTabPane::update()
             ->style("flexGrow", 0.0f)
             ->style("width", horizontal ? OMDemiurgeSize::pixels(tabWidth) : OMDemiurgeSize::fill())
             ->style("height", horizontal ? OMDemiurgeSize::fill() : OMDemiurgeSize::pixels(tabThicknessStyle));
-        tab.label->style("textheight", textHeight)
+        tab.label->style("textHeight", textHeight)
             ->style("color", (int)dim(active ? activeColor : inactiveColor));
     }
 
@@ -593,7 +593,7 @@ auto OMDemiurgeTabPane::processMouseDown(float x, float y, uint8_t button) -> OM
 
 void OMDemiurgeTabPane::setTabWidth(float pixels)
 {
-    stylesStorage.put("tab_width", std::max(24.0f, pixels));
+    stylesStorage.put("tabWidth", std::max(24.0f, pixels));
     lastHeight = -1.0f;
 }
 
@@ -644,7 +644,7 @@ void OMDemiurgeTabPane::setPageEasing(int index, animation::OMEasingFunc easing)
 void OMDemiurgeTabPane::setPageAnimationSpeed(float seconds)
 {
     pageAnimationSpeed = std::max(0.0f, seconds);
-    stylesStorage.put("page_animation_speed", pageAnimationSpeed);
+    stylesStorage.put("pageAnimationSpeed", pageAnimationSpeed);
 }
 
 void OMDemiurgeTabPane::setOnPageChange(std::function<void(int)> handler)
@@ -664,7 +664,7 @@ void OMDemiurgeTabPane::setDisabled(bool value, bool animate)
     if (animate)
     {
         disabledAmount.animateTo(value ? 1.0f : 0.0f, easeOutCirc<float>,
-                                 stylesStorage.get<float>("animation_speed", 0.18f));
+                                 stylesStorage.get<float>("animationSpeed", 0.18f));
     }
     else
     {

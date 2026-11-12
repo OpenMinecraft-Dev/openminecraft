@@ -85,9 +85,9 @@ void OMDemiurgeProgressBar::update()
     {
     }
 
-    const float segmentLength = std::max(4.0f, stylesStorage.get<float>("segment_length", 64.0f));
+    const float segmentLength = std::max(4.0f, stylesStorage.get<float>("segmentLength", 64.0f));
     const float squeeze = std::max(0.0f, stylesStorage.get<float>("squeeze", 30.0f));
-    const float minLength = std::max(1.0f, stylesStorage.get<float>("min_length", 12.0f));
+    const float minLength = std::max(1.0f, stylesStorage.get<float>("minLength", 12.0f));
     const float cycle = std::max(0.05f, stylesStorage.get<float>("cycle", 1.15f));
 
     const auto now = std::chrono::steady_clock::now();
@@ -167,12 +167,12 @@ void OMDemiurgeProgressBar::update()
 
 void OMDemiurgeProgressBar::setTrackColor(glm::vec4 color)
 {
-    trackColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.2f));
+    trackColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.2f));
 }
 
 void OMDemiurgeProgressBar::setBarColor(glm::vec4 color)
 {
-    barColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.2f));
+    barColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.2f));
 }
 
 void OMDemiurgeProgressBar::setError(bool value, bool animate)
@@ -187,7 +187,7 @@ void OMDemiurgeProgressBar::setError(bool value, bool animate)
     if (animate)
     {
         errorAmount.animateTo(value ? 1.0f : 0.0f, easeOutCirc<float>,
-                              stylesStorage.get<float>("animation_speed", 0.2f));
+                              stylesStorage.get<float>("animationSpeed", 0.2f));
     }
     else
     {
@@ -197,7 +197,7 @@ void OMDemiurgeProgressBar::setError(bool value, bool animate)
 
 void OMDemiurgeProgressBar::setErrorColor(glm::vec4 color)
 {
-    errorColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.2f));
+    errorColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.2f));
 }
 
 void OMDemiurgeProgressBar::setProgress(float progress)
@@ -233,7 +233,7 @@ void OMDemiurgeProgressBar::setDisabled(bool value, bool animate)
     if (animate)
     {
         disabledAmount.animateTo(disabled ? 1.0f : 0.0f, easeOutCirc<float>,
-                                 stylesStorage.get<float>("animation_speed", 0.18f));
+                                 stylesStorage.get<float>("animationSpeed", 0.18f));
     }
     else
     {
@@ -243,6 +243,6 @@ void OMDemiurgeProgressBar::setDisabled(bool value, bool animate)
 
 void OMDemiurgeProgressBar::setAnimationSpeed(float seconds)
 {
-    stylesStorage.put("animation_speed", seconds);
+    stylesStorage.put("animationSpeed", seconds);
 }
 } // namespace openminecraft::renderer::common::demiurge::node::controls

@@ -36,13 +36,13 @@ auto OMDemiurgeBadge::submit(OMDemiurgeRendererHandler *handler, uint32_t depth)
 
 void OMDemiurgeBadge::update()
 {
-    this->style("_internal.color", (int)f4ToRgba(backgroundColor.get()))
+    this->style("internal.color", (int)f4ToRgba(backgroundColor.get()))
         ->style("radius", stylesStorage.get<glm::vec4>("radius", glm::vec4(9.0f)));
 
     if (textNode)
     {
         textNode->style("text", stylesStorage.get<std::string>("text", "0"))
-            ->style("textheight", stylesStorage.get<int>("textheight", 12))
+            ->style("textHeight", stylesStorage.get<int>("textHeight", 12))
             ->style("color", (int)f4ToRgba(textColor.get()));
     }
 
@@ -66,6 +66,6 @@ void OMDemiurgeBadge::setTextColor(glm::vec4 color)
 
 void OMDemiurgeBadge::setTextHeight(int height)
 {
-    stylesStorage.put("textheight", height);
+    stylesStorage.put("textHeight", height);
 }
 } // namespace openminecraft::renderer::common::demiurge::node::controls

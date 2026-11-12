@@ -86,7 +86,7 @@ auto OMDemiurgeIconButton::processMouseDown(float x, float y, uint8_t button) ->
     }
 
     captureMouse();
-    pressAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    pressAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
     return Handled;
 }
 
@@ -97,7 +97,7 @@ auto OMDemiurgeIconButton::processMouseUp(float x, float y, uint8_t button) -> O
         return Ignored;
     }
 
-    pressAmount.animateTo(0.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    pressAmount.animateTo(0.0f, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
 
     if (containsPoint(x, y))
     {
@@ -114,7 +114,7 @@ auto OMDemiurgeIconButton::processMouseEnter(float x, float y) -> OMDemiurgeEven
         return Ignored;
     }
 
-    hoverAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    hoverAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
     return Handled;
 }
 
@@ -125,7 +125,7 @@ auto OMDemiurgeIconButton::processMouseExit(float x, float y) -> OMDemiurgeEvent
         return Ignored;
     }
 
-    hoverAmount.animateTo(0.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    hoverAmount.animateTo(0.0f, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
     return Handled;
 }
 
@@ -137,12 +137,12 @@ void OMDemiurgeIconButton::setIcon(const std::string &svgPath, float viewBox)
 
 void OMDemiurgeIconButton::setIconColor(glm::vec4 color)
 {
-    iconColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    iconColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
 }
 
 void OMDemiurgeIconButton::setBackgroundColor(glm::vec4 color)
 {
-    backgroundColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    backgroundColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
 }
 
 void OMDemiurgeIconButton::setOnClick(std::function<void()> handler)
@@ -152,7 +152,7 @@ void OMDemiurgeIconButton::setOnClick(std::function<void()> handler)
 
 void OMDemiurgeIconButton::setAnimationSpeed(float seconds)
 {
-    stylesStorage.put("animation_speed", seconds);
+    stylesStorage.put("animationSpeed", seconds);
 }
 
 void OMDemiurgeIconButton::setDisabled(bool value, bool animate)
@@ -167,7 +167,7 @@ void OMDemiurgeIconButton::setDisabled(bool value, bool animate)
     if (animate)
     {
         disabledAmount.animateTo(disabled ? 1.0f : 0.0f, easeOutCirc<float>,
-                                 stylesStorage.get<float>("animation_speed", 0.18f));
+                                 stylesStorage.get<float>("animationSpeed", 0.18f));
     }
     else
     {

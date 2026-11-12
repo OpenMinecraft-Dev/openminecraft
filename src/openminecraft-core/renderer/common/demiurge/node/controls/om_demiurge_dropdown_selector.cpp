@@ -139,7 +139,7 @@ OMDemiurgeDropDownSelector::OMDemiurgeDropDownSelector(geom::OMFontSet *fontset)
 
     labelNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
     labelNode->style({{"text", placeholder},
-                      {"textheight", 13},
+                      {"textHeight", 13},
                       {"color", (int)0xffffffff},
                       {"flexGrow", 1.0f},
                       {"alignSelf", OMDemiurgeAlign::Center}});
@@ -473,8 +473,8 @@ void OMDemiurgeDropDownSelector::rebuildPopupContent()
                      {"height", OMDemiurgeSize::pixels(ItemHeight)},
                      {"radius", glm::vec4(4.0f)},
                      {"label", items[i]},
-                     {"textheight", 12},
-                     {"text_margin", std::array<OMDemiurgeSize, 4>{OMDemiurgeSize::pixels(2.0f),
+                     {"textHeight", 12},
+                     {"textMargin", std::array<OMDemiurgeSize, 4>{OMDemiurgeSize::pixels(2.0f),
                                                                    OMDemiurgeSize::pixels(2.0f),
                                                                    OMDemiurgeSize::pixels(8.0f),
                                                                    OMDemiurgeSize::pixels(8.0f)}}});

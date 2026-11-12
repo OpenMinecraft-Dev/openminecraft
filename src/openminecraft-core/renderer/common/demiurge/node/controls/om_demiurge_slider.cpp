@@ -173,7 +173,7 @@ auto OMDemiurgeSlider::processMouseEnter(float x, float y) -> OMDemiurgeEventRes
         return Ignored;
     }
 
-    hoverAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    hoverAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
     return Handled;
 }
 
@@ -184,7 +184,7 @@ auto OMDemiurgeSlider::processMouseExit(float x, float y) -> OMDemiurgeEventResu
         return Ignored;
     }
 
-    const float speed = stylesStorage.get<float>("animation_speed", 0.18f);
+    const float speed = stylesStorage.get<float>("animationSpeed", 0.18f);
     hoverAmount.animateTo(0.0f, easeOutCirc<float>, speed);
 
     // Mouse-up outside the control is not routed back to us, so a drag that leaves
@@ -223,7 +223,7 @@ void OMDemiurgeSlider::setOnChange(std::function<void(float)> handler)
 
 void OMDemiurgeSlider::setColors(glm::vec4 track, glm::vec4 fill, glm::vec4 thumb)
 {
-    const float speed = stylesStorage.get<float>("animation_speed", 0.18f);
+    const float speed = stylesStorage.get<float>("animationSpeed", 0.18f);
     trackColor.animateTo(track, easeOutCirc<float>, speed);
     fillColor.animateTo(fill, easeOutCirc<float>, speed);
     thumbColor.animateTo(thumb, easeOutCirc<float>, speed);
@@ -231,7 +231,7 @@ void OMDemiurgeSlider::setColors(glm::vec4 track, glm::vec4 fill, glm::vec4 thum
 
 void OMDemiurgeSlider::setAnimationSpeed(float seconds)
 {
-    stylesStorage.put("animation_speed", seconds);
+    stylesStorage.put("animationSpeed", seconds);
 }
 
 void OMDemiurgeSlider::setDisabled(bool value, bool animate)
@@ -251,7 +251,7 @@ void OMDemiurgeSlider::setDisabled(bool value, bool animate)
     if (animate)
     {
         disabledAmount.animateTo(disabled ? 1.0f : 0.0f, easeOutCirc<float>,
-                                 stylesStorage.get<float>("animation_speed", 0.18f));
+                                 stylesStorage.get<float>("animationSpeed", 0.18f));
     }
     else
     {

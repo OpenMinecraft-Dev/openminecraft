@@ -24,9 +24,9 @@ auto OMDemiurgeRectNode::submit(OMDemiurgeRendererHandler *handler, uint32_t dep
         auto layoutBound = stylesStorage.get<OMDemiurgeRect>("layoutBound");
         auto t = handler->roundedRect.temporary(rectId);
         // Controls whose color is driven by animation publish it as an internal
-        // style (prefixed `_internal.`) so the public `color` style is not
+        // style (prefixed `internal.`) so the public `color` style is not
         // silently overwritten every frame.
-        const int rectColor = stylesStorage.has("_internal.color") ? stylesStorage.get<int>("_internal.color", 0)
+        const int rectColor = stylesStorage.has("internal.color") ? stylesStorage.get<int>("internal.color", 0)
                                                                    : stylesStorage.get<int>("color", 0);
         t->color = genLinear(rectColor);
         t->position = {layoutBound.x, layoutBound.y, layoutBound.width, layoutBound.height};

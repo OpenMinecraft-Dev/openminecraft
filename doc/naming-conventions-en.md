@@ -25,7 +25,7 @@
 | Constant | `constexpr` + lowerCamelCase | `topDepth` |
 | Macro | `OM_` + UPPER_CASE | `OM_MEM_CPP`, `OM_PLATFORM_UNIX` |
 | Include guard | uppercase file name + `_HPP` | `OM_UTIL_VERSION_HPP` |
-| External data key | snake_case, or inherit the upstream format | `animation_speed`, `minecraft:grass_block` |
+| External data key | snake_case, or inherit the upstream format | `animationSpeed`, `minecraft:grass_block` |
 | Commit message | `[Tag] lowercase English phrase` | `[Renderer] timeline finish` |
 
 ## 2. Directories and Files
@@ -230,7 +230,7 @@ These are **external contracts** and are not rewritten according to C++ identifi
 
 - Resource identifiers keep the Minecraft format:
   `minecraft:grass_block[snowy=false]`, `minecraft:water[falling=true,level=8]`.
-- JSON / style-sheet keys use snake_case: `animation_speed`, `opacity_hovered`
+- JSON / style-sheet keys use snake_case: `animationSpeed`, `opacityHovered`
   (see `doc/demiurge/control.md`).
 - Protocol fields keep the Minecraft protocol names; do not localize them.
 - Log messages are short English sentences, starting lowercase, naming the module after its type:

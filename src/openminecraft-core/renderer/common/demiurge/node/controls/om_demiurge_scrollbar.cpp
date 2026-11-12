@@ -15,12 +15,12 @@ OMDemiurgeScrollBar::OMDemiurgeScrollBar() : disabledAmount(0.0f)
     stylesStorage.put("height", OMDemiurgeSize::pixels(160.0f));
     stylesStorage.put("radius", glm::vec4(3.0f));
     stylesStorage.put("color", (int)0x00d4ffff);
-    stylesStorage.put("track_color", (int)0);
-    stylesStorage.put("min_thumb", 24.0f);
-    stylesStorage.put("scroll_step", 40.0f);
-    stylesStorage.put("overscroll_curve", 2.0f);
-    stylesStorage.put("overscroll_range", 1.0f);
-    stylesStorage.put("animation_speed", 0.18f);
+    stylesStorage.put("trackColor", (int)0);
+    stylesStorage.put("minThumb", 24.0f);
+    stylesStorage.put("scrollStep", 40.0f);
+    stylesStorage.put("overscrollCurve", 2.0f);
+    stylesStorage.put("overscrollRange", 1.0f);
+    stylesStorage.put("animationSpeed", 0.18f);
 
     trackNode = std::make_shared<OMDemiurgeRectNode>();
     trackNode->style({{"position", OMDemiurgePosition::Absolute},
@@ -144,7 +144,7 @@ void OMDemiurgeScrollBar::setOnScroll(std::function<void(float)> handler)
 void OMDemiurgeScrollBar::update()
 {
     const auto radius = stylesStorage.get<glm::vec4>("radius", glm::vec4(3.0f));
-    const float minThumb = std::max(1.0f, stylesStorage.get<float>("min_thumb", 24.0f));
+    const float minThumb = std::max(1.0f, stylesStorage.get<float>("minThumb", 24.0f));
     const bool vertical = orientation == OMDemiurgeScrollBarOrientation::Vertical;
 
     float width = 6.0f;
@@ -173,8 +173,8 @@ void OMDemiurgeScrollBar::update()
     // overscroll the thumb collapses into a circle (length == thickness).
     const float overscroll = allowOverscroll ? getOverscroll() : visualOverscroll;
     const float thickness = vertical ? width : height;
-    const float curve = std::max(0.1f, stylesStorage.get<float>("overscroll_curve", 2.0f));
-    const float range = std::max(1.0f, viewSize * std::max(0.01f, stylesStorage.get<float>("overscroll_range", 1.0f)));
+    const float curve = std::max(0.1f, stylesStorage.get<float>("overscrollCurve", 2.0f));
+    const float range = std::max(1.0f, viewSize * std::max(0.01f, stylesStorage.get<float>("overscrollRange", 1.0f)));
     const float progress = std::clamp(overscroll / range, 0.0f, 1.0f);
     const float eased = std::pow(progress, curve);
     const float collapsed = thumbLength - (thumbLength - thickness) * eased;
@@ -215,7 +215,7 @@ void OMDemiurgeScrollBar::update()
     const float cornerRadius = std::min(std::max(radius.x, 0.0f), thickness * 0.5f);
     const glm::vec4 thumbRadius(cornerRadius);
 
-    trackNode->style("color", (int)stylesStorage.get<int>("track_color", (int)0))
+    trackNode->style("color", (int)stylesStorage.get<int>("trackColor", (int)0))
         ->style("radius", radius);
     thumbNode->style("radius", thumbRadius)
         ->style("color", (int)(scrollable ? applyDisabled(stylesStorage.get<int>("color", (int)0x00d4ffff)) : 0));
@@ -313,7 +313,7 @@ auto OMDemiurgeScrollBar::processMouseScroll(float x, float y, float wx, float w
         return Ignored;
     }
 
-    const float step = std::max(1.0f, stylesStorage.get<float>("scroll_step", 40.0f));
+    const float step = std::max(1.0f, stylesStorage.get<float>("scrollStep", 40.0f));
     setScrollOffset(scrollOffset - wy * step, true);
     return Handled;
 }
@@ -330,7 +330,7 @@ void OMDemiurgeScrollBar::setDisabled(bool value, bool animate)
     if (animate)
     {
         disabledAmount.animateTo(value ? 1.0f : 0.0f, animation::easeOutCirc<float>,
-                                 stylesStorage.get<float>("animation_speed", 0.18f));
+                                 stylesStorage.get<float>("animationSpeed", 0.18f));
     }
     else
     {

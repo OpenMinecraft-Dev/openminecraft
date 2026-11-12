@@ -37,16 +37,16 @@ OMDemiurgeScrollPane::OMDemiurgeScrollPane() : disabledAmount(0.0f)
 {
     stylesStorage.put("width", OMDemiurgeSize::fill());
     stylesStorage.put("height", OMDemiurgeSize::fill());
-    stylesStorage.put("wheel_step", 40.0f);
-    stylesStorage.put("drag_threshold", 4.0f);
-    stylesStorage.put("rubber_band", 0.45f);
-    stylesStorage.put("bounce_speed", 0.3f);
-    stylesStorage.put("wheel_speed", 0.18f);
-    stylesStorage.put("inertia_factor", 0.18f);
-    stylesStorage.put("inertia_speed", 0.55f);
-    stylesStorage.put("scrollbar_thickness", 4.0f);
-    stylesStorage.put("scrollbar_gap", 4.0f);
-    stylesStorage.put("animation_speed", 0.18f);
+    stylesStorage.put("wheelStep", 40.0f);
+    stylesStorage.put("dragThreshold", 4.0f);
+    stylesStorage.put("rubberBand", 0.45f);
+    stylesStorage.put("bounceSpeed", 0.3f);
+    stylesStorage.put("wheelSpeed", 0.18f);
+    stylesStorage.put("inertiaFactor", 0.18f);
+    stylesStorage.put("inertiaSpeed", 0.55f);
+    stylesStorage.put("scrollbarThickness", 4.0f);
+    stylesStorage.put("scrollbarGap", 4.0f);
+    stylesStorage.put("animationSpeed", 0.18f);
 
     viewportClip = std::make_shared<OMDemiurgeRectNode>();
     viewportClip->style({{"position", OMDemiurgePosition::Absolute},
@@ -95,7 +95,7 @@ OMDemiurgeScrollPane::~OMDemiurgeScrollPane() = default;
 
 auto OMDemiurgeScrollPane::rubberBand(float raw, float maxValue) -> float
 {
-    const float band = std::clamp(stylesStorage.get<float>("rubber_band", 0.45f), 0.02f, 1.0f);
+    const float band = std::clamp(stylesStorage.get<float>("rubberBand", 0.45f), 0.02f, 1.0f);
 
     if (raw < 0.0f)
     {
@@ -112,7 +112,7 @@ auto OMDemiurgeScrollPane::rubberBand(float raw, float maxValue) -> float
 
 void OMDemiurgeScrollPane::applyBounce()
 {
-    const float speed = std::max(0.01f, stylesStorage.get<float>("bounce_speed", 0.3f));
+    const float speed = std::max(0.01f, stylesStorage.get<float>("bounceSpeed", 0.3f));
     const float targetX = std::clamp(scrollX.get(), 0.0f, maxScrollX);
     const float targetY = std::clamp(scrollY.get(), 0.0f, maxScrollY);
 
@@ -146,8 +146,8 @@ void OMDemiurgeScrollPane::applyInertia()
         dragVelocityY = 0.0f;
     }
 
-    const float factor = std::max(0.0f, stylesStorage.get<float>("inertia_factor", 0.18f));
-    const float speed = std::max(0.05f, stylesStorage.get<float>("inertia_speed", 0.55f));
+    const float factor = std::max(0.0f, stylesStorage.get<float>("inertiaFactor", 0.18f));
+    const float speed = std::max(0.05f, stylesStorage.get<float>("inertiaSpeed", 0.55f));
     const float minSpeed = 40.0f;
 
     const bool inertX = std::abs(dragVelocityX) > minSpeed && maxScrollX > 0.0f;
@@ -335,8 +335,8 @@ void OMDemiurgeScrollPane::update()
     {
     }
 
-    const float thickness = std::max(2.0f, stylesStorage.get<float>("scrollbar_thickness", 4.0f));
-    const float gap = std::max(0.0f, stylesStorage.get<float>("scrollbar_gap", 4.0f));
+    const float thickness = std::max(2.0f, stylesStorage.get<float>("scrollbarThickness", 4.0f));
+    const float gap = std::max(0.0f, stylesStorage.get<float>("scrollbarGap", 4.0f));
     const float paneWidth = width;
     const float paneHeight = height;
 
@@ -507,7 +507,7 @@ auto OMDemiurgeScrollPane::updateDrag(float x, float y) -> OMDemiurgeEventResult
 {
     const bool vertical = orientation != OMDemiurgeScrollPaneOrientation::Horizontal;
     const bool horizontal = orientation != OMDemiurgeScrollPaneOrientation::Vertical;
-    const float threshold = std::max(1.0f, stylesStorage.get<float>("drag_threshold", 4.0f));
+    const float threshold = std::max(1.0f, stylesStorage.get<float>("dragThreshold", 4.0f));
     const float dx = x - pressX;
     const float dy = y - pressY;
 
@@ -649,8 +649,8 @@ auto OMDemiurgeScrollPane::processMouseScroll(float x, float y, float wx, float 
 
     const bool vertical = orientation != OMDemiurgeScrollPaneOrientation::Horizontal;
     const bool horizontal = orientation != OMDemiurgeScrollPaneOrientation::Vertical;
-    const float step = std::max(1.0f, stylesStorage.get<float>("wheel_step", 40.0f));
-    const float speed = std::max(0.01f, stylesStorage.get<float>("wheel_speed", 0.18f));
+    const float step = std::max(1.0f, stylesStorage.get<float>("wheelStep", 40.0f));
+    const float speed = std::max(0.01f, stylesStorage.get<float>("wheelSpeed", 0.18f));
     bool consumed = false;
 
     if (vertical && maxScrollY > 0.0f && wy != 0.0f)
@@ -714,7 +714,7 @@ void OMDemiurgeScrollPane::setDisabled(bool value, bool animate)
     if (animate)
     {
         disabledAmount.animateTo(value ? 1.0f : 0.0f, easeOutCirc<float>,
-                                 stylesStorage.get<float>("animation_speed", 0.18f));
+                                 stylesStorage.get<float>("animationSpeed", 0.18f));
     }
     else
     {

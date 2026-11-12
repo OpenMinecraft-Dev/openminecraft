@@ -83,7 +83,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     checkBox = std::make_shared<node::controls::OMDemiurgeCheckBox>(fontset.get());
     checkBox->style({
         {"label", "Demo Option"},
-        {"textheight", 14},
+        {"textHeight", 14},
         {"alignSelf", OMDemiurgeAlign::Center},
     });
     checkBox->setBoxColors(glm::vec4(0.1f, 0.1f, 0.12f, 0.65f), glm::vec4(0.0f, 0.55f, 0.75f, 1.0f));
@@ -174,8 +174,8 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     auto styleProgressButton = [](const std::shared_ptr<node::controls::OMDemiurgeButton> &button) {
         button->style("width", OMDemiurgeSize::pixels(84.0f));
         button->style("height", OMDemiurgeSize::pixels(22.0f));
-        button->style("textheight", 11);
-        button->style("text_margin", std::array<OMDemiurgeSize, 4>{2_px, 2_px, 6_px, 6_px});
+        button->style("textHeight", 11);
+        button->style("textMargin", std::array<OMDemiurgeSize, 4>{2_px, 2_px, 6_px, 6_px});
         button->style("radius", glm::vec4(4.0f));
         button->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
     };
@@ -193,7 +193,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     scrollBarVertical->style("height", OMDemiurgeSize::pixels(80.0f));
     scrollBarVertical->setMetrics(80.0f, 320.0f);
     auto scrollLabelVertical = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get());
-    scrollLabelVertical->style({{"color", (int)0xffffff8c}, {"text", "V: 0.0"}, {"textheight", 11}});
+    scrollLabelVertical->style({{"color", (int)0xffffff8c}, {"text", "V: 0.0"}, {"textHeight", 11}});
     scrollBarVertical->setOnScroll(
         [scrollLabelVertical](float value) { scrollLabelVertical->style("text", fmt::format("V: {:.1f}", value)); });
     auto scrollRowVertical = std::make_shared<node::OMDemiurgePane>();
@@ -210,7 +210,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     scrollBarHorizontal->style("height", OMDemiurgeSize::pixels(4.0f));
     scrollBarHorizontal->setMetrics(120.0f, 400.0f);
     auto scrollLabelHorizontal = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get());
-    scrollLabelHorizontal->style({{"color", (int)0xffffff8c}, {"text", "H: 0.0"}, {"textheight", 11}});
+    scrollLabelHorizontal->style({{"color", (int)0xffffff8c}, {"text", "H: 0.0"}, {"textHeight", 11}});
     scrollBarHorizontal->setOnScroll([scrollLabelHorizontal](float value) {
         scrollLabelHorizontal->style("text", fmt::format("H: {:.1f}", value));
     });
@@ -242,12 +242,12 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
         section->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                  ->style({{"color", (int)0xffffffff},
                                           {"text", title},
-                                          {"textheight", 18},
+                                          {"textHeight", 18},
                                           {"alignSelf", OMDemiurgeAlign::FlexStart}}));
         section->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                  ->style({{"color", (int)0xffffff8c},
                                           {"text", description},
-                                          {"textheight", 11},
+                                          {"textHeight", 11},
                                           {"alignSelf", OMDemiurgeAlign::FlexStart}}));
 
         auto bodyWrap = std::make_shared<node::OMDemiurgePane>();
@@ -300,15 +300,15 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     pageMain->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                               ->style({{"color", (int)0xffffffff},
                                        {"text", "OpenMinecraft"},
-                                       {"textheight", 24},
+                                       {"textHeight", 24},
                                        {"alignSelf", OMDemiurgeAlign::FlexStart}}));
     pageMain->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                               ->style({{"color", (int)0xffffffff},
                                        {"text", fmt::format("Version {}-{}", OM_VERSION, OM_VERSION_CHANNEL)},
-                                       {"textheight", 12},
+                                       {"textHeight", 12},
                                        {"border", OMDemiurgeEdgeInsets{0, 60, 0, 0}}}));
-    pageMain->mountDirect(button->style("animation_speed", 1.0f)->style("label", "Demo Test"));
-    pageMain->mountDirect(button2->style("animation_speed", 1.0f)->style("label", "Quit"));
+    pageMain->mountDirect(button->style("animationSpeed", 1.0f)->style("label", "Demo Test"));
+    pageMain->mountDirect(button2->style("animationSpeed", 1.0f)->style("label", "Quit"));
 
     auto pageGallery = std::make_shared<node::OMDemiurgePane>();
     pageGallery->style({{"flexDirection", Column},
@@ -318,7 +318,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     pageGallery->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                  ->style({{"color", (int)0xffffffff},
                                           {"text", "Control Gallery"},
-                                          {"textheight", 18},
+                                          {"textHeight", 18},
                                           {"alignSelf", OMDemiurgeAlign::FlexStart}}));
     pageGallery->mountDirect(demoScrollPane);
 
@@ -328,12 +328,12 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     pageMisc->mountDirect(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                               ->style({{"color", (int)0xffffffff},
                                        {"text", "Misc"},
-                                       {"textheight", 18},
+                                       {"textHeight", 18},
                                        {"alignSelf", OMDemiurgeAlign::FlexStart}}));
     auto debugTreeButton = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
-    debugTreeButton->style("animation_speed", 1.0f)->style("label", "Debug UI Tree");
+    debugTreeButton->style("animationSpeed", 1.0f)->style("label", "Debug UI Tree");
     debugTreeButton->style("width", OMDemiurgeSize::pixels(200.0f));
-    debugTreeButton->style("textheight", 11);
+    debugTreeButton->style("textHeight", 11);
     debugTreeButton->style("alignSelf", OMDemiurgeAlign::FlexStart);
     debugTreeButton->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
     debugTreeButton->setOnClick([this]() {

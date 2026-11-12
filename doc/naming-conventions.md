@@ -24,7 +24,7 @@
 | 常量 | `constexpr` + lowerCamelCase | `topDepth` |
 | 宏 | `OM_` + 全大写 | `OM_MEM_CPP`、`OM_PLATFORM_UNIX` |
 | include guard | `文件名大写_HPP` | `OM_UTIL_VERSION_HPP` |
-| 外部数据键 | snake_case 或沿用上游格式 | `animation_speed`、`minecraft:grass_block` |
+| 外部数据键 | snake_case 或沿用上游格式 | `animationSpeed`、`minecraft:grass_block` |
 | 提交信息 | `[Tag] 小写英文短语` | `[Renderer] timeline finish` |
 
 ## 2. 目录与文件
@@ -207,7 +207,7 @@ src/openminecraft/<子模块>/...             shell 层实现
 这些是**对外契约**，不按 C++ 标识符规则改：
 
 - 资源标识符沿用 Minecraft 原格式：`minecraft:grass_block[snowy=false]`、`minecraft:water[falling=true,level=8]`。
-- JSON / 样式表键用 snake_case：`animation_speed`、`opacity_hovered`（见 `doc/demiurge/control.md`）。
+- JSON / 样式表键用 snake_case：`animationSpeed`、`opacityHovered`（见 `doc/demiurge/control.md`）。
 - 协议字段按 Minecraft 协议原名，不做本地化改写。
 - 日志文本用英文短句、小写开头，模块名用类型名：
 

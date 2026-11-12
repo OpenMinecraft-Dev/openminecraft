@@ -32,12 +32,12 @@ OMDemiurgeDropDownPane::OMDemiurgeDropDownPane(geom::OMFontSet *fontset)
     stylesStorage.put("width", OMDemiurgeSize::pixels(280.0f));
     stylesStorage.put("radius", glm::vec4(8.0f));
     stylesStorage.put("color", (int)f4ToRgba(glm::vec4(0.13f, 0.13f, 0.16f, 0.55f)));
-    stylesStorage.put("text_color", (int)0xffffffff);
-    stylesStorage.put("arrow_color", (int)0xe6ffffff);
-    stylesStorage.put("textheight", 14);
+    stylesStorage.put("textColor", (int)0xffffffff);
+    stylesStorage.put("arrowColor", (int)0xe6ffffff);
+    stylesStorage.put("textHeight", 14);
     stylesStorage.put("label", "Details");
-    stylesStorage.put("header_height", 34.0f);
-    stylesStorage.put("animation_speed", 0.22f);
+    stylesStorage.put("headerHeight", 34.0f);
+    stylesStorage.put("animationSpeed", 0.22f);
 
     background = std::make_shared<OMDemiurgeRectNode>();
     background->style({{"position", OMDemiurgePosition::Absolute},
@@ -59,7 +59,7 @@ OMDemiurgeDropDownPane::OMDemiurgeDropDownPane(geom::OMFontSet *fontset)
 
     titleNode = std::make_shared<OMDemiurgeTextSdfNode>(fontset);
     titleNode->style({{"text", "Details"},
-                      {"textheight", 14},
+                      {"textHeight", 14},
                       {"color", (int)0xffffffff},
                       {"flexGrow", 1.0f},
                       {"alignSelf", OMDemiurgeAlign::Center}});
@@ -102,7 +102,7 @@ void OMDemiurgeDropDownPane::update()
 {
     const float disabledValue = std::clamp(disabledAmount.get(), 0.0f, 1.0f);
     const float open = std::clamp(openAmount.get(), 0.0f, 1.0f);
-    const float headerH = std::max(8.0f, stylesStorage.get<float>("header_height", headerHeight));
+    const float headerH = std::max(8.0f, stylesStorage.get<float>("headerHeight", headerHeight));
     headerHeight = headerH;
 
     // Natural content height comes from the absolute content host, which is
@@ -133,23 +133,23 @@ void OMDemiurgeDropDownPane::update()
     const auto radius = stylesStorage.get<glm::vec4>("radius", glm::vec4(8.0f));
     const auto bg = dimColor(static_cast<uint32_t>(stylesStorage.get<int>("color", (int)0x2222298c)), disabledValue);
     const auto text =
-        dimColor(static_cast<uint32_t>(stylesStorage.get<int>("text_color", (int)0xffffffff)), disabledValue);
+        dimColor(static_cast<uint32_t>(stylesStorage.get<int>("textColor", (int)0xffffffff)), disabledValue);
     const auto arrow =
-        dimColor(static_cast<uint32_t>(stylesStorage.get<int>("arrow_color", (int)0xe6ffffff)), disabledValue);
+        dimColor(static_cast<uint32_t>(stylesStorage.get<int>("arrowColor", (int)0xe6ffffff)), disabledValue);
 
     background->style("color", (int)f4ToRgba(bg))->style("radius", radius);
 
     header->style("height", OMDemiurgeSize::pixels(headerH))
         ->style("padding",
-                stylesStorage.get<OMDemiurgeEdgeInsets>("header_padding", OMDemiurgeEdgeInsets{0, 0, 12, 10}));
+                stylesStorage.get<OMDemiurgeEdgeInsets>("headerPadding", OMDemiurgeEdgeInsets{0, 0, 12, 10}));
 
-    const int textHeight = stylesStorage.get<int>("textheight", 14);
+    const int textHeight = stylesStorage.get<int>("textHeight", 14);
     titleNode->style("text", stylesStorage.get<std::string>("label", "Details"))
-        ->style("textheight", textHeight)
+        ->style("textHeight", textHeight)
         ->style("color", (int)f4ToRgba(text));
 
     arrowNode->style("color", (int)f4ToRgba(arrow))
-        ->style("svgPath", stylesStorage.get<std::string>("arrow_path", std::string(ChevronPath)))
+        ->style("svgPath", stylesStorage.get<std::string>("arrowPath", std::string(ChevronPath)))
         ->style("rotation", open * 3.1415926535f);
 
     contentHost->style("offsetY", OMDemiurgeSize::pixels(headerH));
@@ -243,7 +243,7 @@ void OMDemiurgeDropDownPane::setExpanded(bool value, bool animate)
     }
 
     expanded = value;
-    const float speed = stylesStorage.get<float>("animation_speed", 0.22f);
+    const float speed = stylesStorage.get<float>("animationSpeed", 0.22f);
 
     if (animate)
     {
@@ -270,12 +270,12 @@ void OMDemiurgeDropDownPane::setOnToggle(std::function<void(bool)> handler)
 void OMDemiurgeDropDownPane::setHeaderHeight(float pixels)
 {
     headerHeight = std::max(8.0f, pixels);
-    stylesStorage.put("header_height", headerHeight);
+    stylesStorage.put("headerHeight", headerHeight);
 }
 
 void OMDemiurgeDropDownPane::setAnimationSpeed(float seconds)
 {
-    stylesStorage.put("animation_speed", std::max(0.0f, seconds));
+    stylesStorage.put("animationSpeed", std::max(0.0f, seconds));
 }
 
 void OMDemiurgeDropDownPane::setDisabled(bool value, bool animate)
@@ -290,7 +290,7 @@ void OMDemiurgeDropDownPane::setDisabled(bool value, bool animate)
     if (animate)
     {
         disabledAmount.animateTo(value ? 1.0f : 0.0f, easeOutCirc<float>,
-                                 stylesStorage.get<float>("animation_speed", 0.18f));
+                                 stylesStorage.get<float>("animationSpeed", 0.18f));
     }
     else
     {

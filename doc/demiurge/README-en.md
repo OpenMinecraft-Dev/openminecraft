@@ -144,7 +144,7 @@ Example:
 node->dumpTree();                 // dump the whole UI tree
 someNode->dumpTree();             // dump a subtree
 someNode->typeName();             // "OMDemiurgeTextSdfNode"
-someNode->styleDump();            // "{color=-1, text="Main", textheight=14}"
+someNode->styleDump();            // "{color=-1, text="Main", textHeight=14}"
 ```
 
 The `Debug UI Tree` button on the `Misc` tab calls `node->dumpTree()`.
@@ -197,8 +197,8 @@ The `Debug UI Tree` button on the `Misc` tab calls `node->dumpTree()`.
 | `scale` | all element nodes | `glm::vec2`, around the element center, independent axes (done in shaders; no jitter) |
 | `clip` / `clipRadius` | `OMDemiurgeRectNode` | Per-element pixel clip rect and corner radius |
 | `text` | `OMDemiurgeTextSdfNode` / multiline | Text content |
-| `textheight` | text nodes | Font height |
-| `textlineheight` | multiline text | Line height |
+| `textHeight` | text nodes | Font height |
+| `textLineHeight` | multiline text | Line height |
 | `label` | controls with labels | Control label (Button / CheckBox / RadioBox, etc.) |
 | `svgPath` / `svgSize` | `OMDemiurgeSvgNode` | SVG path and logical size |
 | `fill` | `OMDemiurgeImageNode` | `OMDemiurgeImageFillType`: Fit / Contain / Cover |
@@ -210,15 +210,15 @@ The following keys are maintained by the framework or control internals; externa
 
 | Key | Notes |
 | --- | --- |
-| `_internal.color` | Written by controls whose background color is animation-driven; `OMDemiurgeRectNode::submit` prefers it over the public `color` |
+| `internal.color` | Written by controls whose background color is animation-driven; `OMDemiurgeRectNode::submit` prefers it over the public `color` |
 | `layoutBound` | Read-only absolute rect written back after layout (framework cache) |
-| `animation_speed` | Control animation duration (seconds); most controls accept `setAnimationSpeed()` or this style |
-| `hover_boost` / `press_boost` | CheckBox / RadioBox hover and press color boost |
-| `press_shrink` | RadioBox dot press scale (default 0.35) |
-| `box_radius` | CheckBox / RadioBox box corner radius |
-| `text_offset` | Label vertical offset factor |
-| `opacity_normal` / `opacity_hovered` / `opacity_clicked` | Button opacity in the three states |
-| `segment_length` / `squeeze` / `min_length` / `cycle` | ProgressBar indeterminate animation parameters |
+| `animationSpeed` | Control animation duration (seconds); most controls accept `setAnimationSpeed()` or this style |
+| `hoverBoost` / `pressBoost` | CheckBox / RadioBox hover and press color boost |
+| `pressShrink` | RadioBox dot press scale (default 0.35) |
+| `boxRadius` | CheckBox / RadioBox box corner radius |
+| `textOffset` | Label vertical offset factor |
+| `opacityNormal` / `opacityHovered` / `opacityClicked` | Button opacity in the three states |
+| `segmentLength` / `squeeze` / `minLength` / `cycle` | ProgressBar indeterminate animation parameters |
 
 > `get<T>(key, default)` silently returns the default when the stored type does not match; there is no compile-time check. New keys must use identical write/read types.
 
@@ -230,8 +230,8 @@ Paths: `node/` and `node/container/`.
 | --- | --- | --- | --- |
 | `OMDemiurgeRectNode` | `OMDemiurgeNode` | default | Rounded rect; `color/radius/factor/rotation/clip/clipRadius/scale` |
 | `OMDemiurgePane` | `OMDemiurgeNode` | default | Pure container, draws nothing itself; submits children |
-| `OMDemiurgeTextSdfNode` | `OMDemiurgeNode` | `(OMFontSet*)` | Single-line text; `text/textheight/color/factor/scale` |
-| `OMDemiurgeTextSdfMultilineNode` | `OMDemiurgeNode` | `(OMFontSet*)` | Multi-line text; plus `textlineheight` |
+| `OMDemiurgeTextSdfNode` | `OMDemiurgeNode` | `(OMFontSet*)` | Single-line text; `text/textHeight/color/factor/scale` |
+| `OMDemiurgeTextSdfMultilineNode` | `OMDemiurgeNode` | `(OMFontSet*)` | Multi-line text; plus `textLineHeight` |
 | `OMDemiurgeSvgNode` | `OMDemiurgeNode` | default | SDF SVG icon; `svgPath/svgSize/color/factor/rotation/scale` |
 | `OMDemiurgeImageNode` | `OMDemiurgeNode` | `(std::string textureTag)` | Texture image; `fill/radius/rotation/factor/color/scale` |
 | `OMDemiurgeSectorNode` | `OMDemiurgeNode` | default | Sector/ring; `beginAngle/endAngle/factor/rotation/color/scale` |
@@ -302,8 +302,8 @@ This allows a uniform `std::shared_ptr<OMDemiurgeControl>` to call `setDisabled(
 - **APIs** own runtime state and animation; **styles** own layout, static appearance and control tuning;
 - Color/selection/progress setters drive `OMAnimationValue<T>` internally and write child styles in `update()`;
 - `setDisabled(value, animate)`: animated transition when `animate = true`, immediate otherwise;
-- Animation duration defaults to about 0.18s; override with `setAnimationSpeed(seconds)` or the `animation_speed` style (per control);
-- Do not overwrite internal styles written by `update()` every frame (for example `_internal.color`);
+- Animation duration defaults to about 0.18s; override with `setAnimationSpeed(seconds)` or the `animationSpeed` style (per control);
+- Do not overwrite internal styles written by `update()` every frame (for example `internal.color`);
 - Do not edit internal nodes (text / SVG icon) directly; use the control APIs.
 
 ### 7.2 Button
@@ -320,7 +320,7 @@ This allows a uniform `std::shared_ptr<OMDemiurgeControl>` to call `setDisabled(
 | `setDisabled(bool, bool animate)` | Disable |
 | `isDisabled()` | Query |
 
-Main styles: `label`, `textheight`, `text_margin` (`std::array<OMDemiurgeSize,4>`, order top/bottom/left/right), `radius`, `opacity_normal`, `opacity_hovered`, `opacity_clicked`, `animation_speed`.
+Main styles: `label`, `textHeight`, `textMargin` (`std::array<OMDemiurgeSize,4>`, order top/bottom/left/right), `radius`, `opacityNormal`, `opacityHovered`, `opacityClicked`, `animationSpeed`.
 The label is set through the `label` style (there is no `setLabel`).
 
 ### 7.3 IconButton
@@ -348,7 +348,7 @@ The label is set through the `label` style (there is no `setLabel`).
 | `setAnimationSpeed(float)` | Animation duration |
 | `setDisabled(bool, bool animate)` / `isDisabled()` | Disable |
 
-Main styles: `label`, `textheight`, `radius`, `svgPath` (check path), `hover_boost`, `press_boost`, `text_offset`, `animation_speed`.
+Main styles: `label`, `textHeight`, `radius`, `svgPath` (check path), `hoverBoost`, `pressBoost`, `textOffset`, `animationSpeed`.
 
 ### 7.5 RadioBox / RadioGroup
 
@@ -369,7 +369,7 @@ RadioBox:
 | `setAnimationSpeed(float)` | Animation duration |
 | `setDisabled(bool, bool animate)` / `isDisabled()` | Disable |
 
-The dot scales down while pressed by `press_shrink` (default 0.35), applied in the shader.
+The dot scales down while pressed by `pressShrink` (default 0.35), applied in the shader.
 
 RadioGroup:
 
@@ -419,7 +419,7 @@ RadioGroup:
 | `setAnimationSpeed(float)` | Animation duration |
 | `setDisabled(bool, bool animate)` / `isDisabled()` | Disable |
 
-Indeterminate animation styles: `segment_length`, `squeeze`, `min_length`, `cycle`.
+Indeterminate animation styles: `segmentLength`, `squeeze`, `minLength`, `cycle`.
 
 ### 7.9 Spinner
 
@@ -516,13 +516,13 @@ Main styles:
 
 | Key | Description |
 | --- | --- |
-| `label` / `textheight` | Title text / font height |
+| `label` / `textHeight` | Title text / font height |
 | `color` / `radius` | Rounded-rect body background / corner radius |
-| `text_color` / `arrow_color` | Title / chevron colors |
-| `animation_speed` | Expand/collapse duration |
-| `header_height` | Header height (also `setHeaderHeight`) |
-| `header_padding` | Header padding (`OMDemiurgeEdgeInsets`) |
-| `arrow_path` / `svgSize` | Chevron SVG path (downward chevron by default) |
+| `textColor` / `arrowColor` | Title / chevron colors |
+| `animationSpeed` | Expand/collapse duration |
+| `headerHeight` | Header height (also `setHeaderHeight`) |
+| `headerPadding` | Header padding (`OMDemiurgeEdgeInsets`) |
+| `arrowPath` / `svgSize` | Chevron SVG path (downward chevron by default) |
 
 Behavior:
 
@@ -588,21 +588,21 @@ Main styles:
 
 | Key | Description |
 | --- | --- |
-| `tab_height` / `tab_width` / `textheight` | Vertical tab row height / horizontal tab width / label font height |
-| `active_text_color` / `inactive_text_color` | Active / inactive label colors |
-| `indicator_color` / `indicator_height` | Underline indicator color / height |
-| `bar_line_color` | Full-width divider under the tab bar |
-| `animation_speed` | Indicator / disabled-state animation duration |
-| `page_animation_speed` | Page transition duration in seconds |
-| `page_border` | Inset border applied to page content, default `{2,2,2,2}`, prevents edge clipping |
+| `tabHeight` / `tabWidth` / `textHeight` | Vertical tab row height / horizontal tab width / label font height |
+| `activeTextColor` / `inactiveTextColor` | Active / inactive label colors |
+| `indicatorColor` / `indicatorHeight` | Underline indicator color / height |
+| `barLineColor` | Full-width divider under the tab bar |
+| `animationSpeed` | Indicator / disabled-state animation duration |
+| `pageAnimationSpeed` | Page transition duration in seconds |
+| `pageBorder` | Inset border applied to page content, default `{2,2,2,2}`, prevents edge clipping |
 
 Behavior:
 
 - On switch the old page `remove()`s its elements and the new page's whole subtree is `invalidate()`d so elements are rebuilt;
 - Inactive pages are `setVisible(false)`: they stay mounted and laid out but receive no mouse events;
 - The tab bar size depends only on the tab count, not on page content:
-  - Top/bottom: each tab is `tab_width` wide (default 100); bar length = `count × tab_width`, centered horizontally inside the control;
-  - Left/right: each tab row is `tab_height` tall; bar length = `count × tab_height`, bar width = `max(tab_height, 64)` so vertical labels remain readable;
+  - Top/bottom: each tab is `tabWidth` wide (default 100); bar length = `count × tabWidth`, centered horizontally inside the control;
+  - Left/right: each tab row is `tabHeight` tall; bar length = `count × tabHeight`, bar width = `max(tabHeight, 64)` so vertical labels remain readable;
 - For left/right the label reserves extra padding on the indicator side to avoid overlapping the indicator; control height = `max(active page height, bar height)`;
 - The bar can be aligned along its own axis (`Start` / `Center` / `End`); the full-width divider follows the bar position;
 - The indicator position is clamped to the actual tab range and never goes past the first/last tab (computed in the control's local space so it stays centered on the tab);
@@ -613,7 +613,7 @@ Behavior:
   - Progress advances linearly and is then shaped by the **incoming page's** `easing` (customize with `setPageEasing`, default `easeOutCubic`);
   - Switching again mid-animation snaps the previous animation to its end before starting the new one;
 - With `setPageFill(true)`, the page area is the control height minus the bar (or the full control height for left/right); page nodes switch to `height: fill` and overflow is clipped by `pageClip`;
-- A single indicator slides from the old page to the new one along the bar (`indicatorPosition` animation, duration from `animation_speed`) and sits on the content-facing edge;
+- A single indicator slides from the old page to the new one along the bar (`indicatorPosition` animation, duration from `animationSpeed`) and sits on the content-facing edge;
 - Top/bottom: control height = `tabHeight + active page height`; left/right: control height = active page height, width minus the bar thickness;
 - The active page is clipped to the page area via `pageClip`, so content cannot overflow into the tab bar.
 
@@ -641,18 +641,18 @@ Main styles:
 
 | Key | Description |
 | --- | --- |
-| `color` / `track_color` | Thumb / track colors |
+| `color` / `trackColor` | Thumb / track colors |
 | `radius` | Corner radius |
-| `min_thumb` | Minimum thumb length (default 24) |
-| `scroll_step` | Wheel step (default 40) |
-| `overscroll_curve` | Compression curve exponent (default 2.0; larger compresses later) |
-| `overscroll_range` | Compression reference range as a multiple of viewSize (default 1.0) |
+| `minThumb` | Minimum thumb length (default 24) |
+| `scrollStep` | Wheel step (default 40) |
+| `overscrollCurve` | Compression curve exponent (default 2.0; larger compresses later) |
+| `overscrollRange` | Compression reference range as a multiple of viewSize (default 1.0) |
 | `width` / `height` | For `Vertical`, width is the bar thickness (default 4) and height the track length; reversed for `Horizontal` |
 
 Computation:
 
 ```text
-thumbLength = clamp(viewSize / contentSize * trackLength, min_thumb, trackLength)
+thumbLength = clamp(viewSize / contentSize * trackLength, minThumb, trackLength)
 maxScroll   = max(0, contentSize - viewSize)
 thumbPos    = scrollOffset / maxScroll * (trackLength - thumbLength)
 ```
@@ -663,13 +663,13 @@ Out-of-range offsets (`offset < 0` or `offset > maxScroll`) do not move the thum
 
 ```text
 overscroll        = offset < 0 ? -offset : max(0, offset - maxScroll)
-t                 = clamp(overscroll / (viewSize * overscroll_range), 0, 1)
-eased             = pow(t, overscroll_curve)
+t                 = clamp(overscroll / (viewSize * overscrollRange), 0, 1)
+eased             = pow(t, overscrollCurve)
 visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eased)
 ```
 
 - `thickness` is the scroll bar thickness (width for `Vertical`);
-- Near one full view height of overscroll the compression accelerates; at `viewSize * overscroll_range` the thumb length equals its thickness, and with the clamped corner radius it becomes a **circle**;
+- Near one full view height of overscroll the compression accelerates; at `viewSize * overscrollRange` the thumb length equals its thickness, and with the clamped corner radius it becomes a **circle**;
 - `getThumbLength()` returns the compressed display length, while `setOnScroll` still receives the raw (possibly out-of-range) offset.
 
 ### 7.19 ScrollPane
@@ -698,24 +698,24 @@ Main styles:
 
 | Key | Description |
 | --- | --- |
-| `wheel_step` | Wheel step (default 40) |
-| `drag_threshold` | Drag start threshold (default 4) |
-| `rubber_band` | Overscroll damping (default 0.45) |
-| `bounce_speed` | Overscroll spring-back duration (default 0.3) |
-| `inertia_factor` | Inertia projection time (default 0.18s) |
-| `inertia_speed` | Inertia deceleration duration (default 0.55s) |
-| `wheel_speed` | Wheel smoothing duration (default 0.18) |
-| `scrollbar_thickness` | Internal scroll bar thickness (default 4) |
-| `scrollbar_gap` | Gap between the scroll bar and content (default 4) |
+| `wheelStep` | Wheel step (default 40) |
+| `dragThreshold` | Drag start threshold (default 4) |
+| `rubberBand` | Overscroll damping (default 0.45) |
+| `bounceSpeed` | Overscroll spring-back duration (default 0.3) |
+| `inertiaFactor` | Inertia projection time (default 0.18s) |
+| `inertiaSpeed` | Inertia deceleration duration (default 0.55s) |
+| `wheelSpeed` | Wheel smoothing duration (default 0.18) |
+| `scrollbarThickness` | Internal scroll bar thickness (default 4) |
+| `scrollbarGap` | Gap between the scroll bar and content (default 4) |
 
 Behavior:
 
-- The wheel scrolls smoothly by `wheel_step`; at the top/bottom it snaps exactly to the edge, so repeated wheel events cannot produce a sub-pixel shake; dragging past the bounds applies `rubber_band` damping and springs back with `easeOutCubic` over `bounce_speed`;
+- The wheel scrolls smoothly by `wheelStep`; at the top/bottom it snaps exactly to the edge, so repeated wheel events cannot produce a sub-pixel shake; dragging past the bounds applies `rubberBand` damping and springs back with `easeOutCubic` over `bounceSpeed`;
 - Dragging the scroll bars updates the content, and content dragging/wheel updates the bars;
-- Releasing a fast drag inside the valid range continues with inertia, using `inertia_factor` for the projection and `inertia_speed` for deceleration; releasing while out of range springs back;
+- Releasing a fast drag inside the valid range continues with inertia, using `inertiaFactor` for the projection and `inertiaSpeed` for deceleration; releasing while out of range springs back;
 - Scroll bars reserve their own space: when the vertical bar is visible the content viewport loses one thickness in width, and likewise for the horizontal bar in height, so content never overlaps the bars (Both mode iterates to converge);
 - Bars show/hide automatically as the content size changes;
-- Controls that capture the mouse (buttons, inputs, DropDown, ...) still receive clicks; once the pointer moves past `drag_threshold` the ScrollPane takes over the capture and starts scrolling;
+- Controls that capture the mouse (buttons, inputs, DropDown, ...) still receive clicks; once the pointer moves past `dragThreshold` the ScrollPane takes over the capture and starts scrolling;
 - If the captured control currently has focus (Slider, Switch, TextInput, ...), the ScrollPane never takes over; the control keeps the drag;
 - ScrollBar drags are never taken over by the ScrollPane; dragging continues to follow globally even when the pointer leaves the bar;
 - Both internal ScrollBars of a ScrollPane disable actual overscroll (`setAllowOverscroll(false)`), but receive the content's rubber-band amount through `setVisualOverscroll`, so the thumb still compresses while over-dragging and returns to normal after bouncing back;
@@ -739,7 +739,7 @@ panel->style({
 auto label = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get());
 label->style({
     {"text", "Hello"},
-    {"textheight", 16},
+    {"textHeight", 16},
     {"color", (int)f4ToRgba(glm::vec4(1.0f))},
     {"scale", glm::vec2(1.2f, 0.9f)},   // two-axis scale
 });

@@ -222,7 +222,7 @@ auto OMDemiurgeTextEdit::columnXForPos(size_t pos) -> float
     const size_t start = lineStartOf(pos);
     const std::string prefix = text.substr(start, std::min(pos, text.size()) - std::min(start, text.size()));
 
-    const int textHeight = stylesStorage.get<int>("textheight", 14);
+    const int textHeight = stylesStorage.get<int>("textHeight", 14);
     return fontset->advance(prefix) * static_cast<float>(textHeight);
 }
 
@@ -234,7 +234,7 @@ auto OMDemiurgeTextEdit::moveVertical(int direction) -> void
         return;
     }
 
-    const int textHeight = stylesStorage.get<int>("textheight", 14);
+    const int textHeight = stylesStorage.get<int>("textHeight", 14);
     const int currentLine = lineIndexOf(caret);
     const int targetLine = std::clamp(currentLine + direction, 0, lineCount() - 1);
 
@@ -290,7 +290,7 @@ auto OMDemiurgeTextEdit::caretFromPointer(float x, float y) -> size_t
         return 0;
     }
 
-    const int textHeight = stylesStorage.get<int>("textheight", 14);
+    const int textHeight = stylesStorage.get<int>("textHeight", 14);
     const float lineHeight = fontset->bound(fontset->shape("A")).y * static_cast<float>(textHeight) * 1.25f;
     const int line = std::clamp(static_cast<int>(std::floor(y / lineHeight)), 0, lineCount() - 1);
 
@@ -379,7 +379,7 @@ auto OMDemiurgeTextEdit::notifyChange() -> void
 
 void OMDemiurgeTextEdit::update()
 {
-    const int textHeight = stylesStorage.get<int>("textheight", 14);
+    const int textHeight = stylesStorage.get<int>("textHeight", 14);
     const float focus = std::clamp(focusAmount.get(), 0.0f, 1.0f);
     const float disabledValue = std::clamp(disabledAmount.get(), 0.0f, 1.0f);
 
@@ -406,7 +406,7 @@ void OMDemiurgeTextEdit::update()
     background = glm::vec4(glm::mix(glm::vec3(background), glm::vec3(0.30f), disabledValue * 0.75f),
                            background.a * (1.0f - disabledValue * 0.35f));
 
-    this->style("_internal.color", (int)f4ToRgba(background))
+    this->style("internal.color", (int)f4ToRgba(background))
         ->style("radius", stylesStorage.get<glm::vec4>("radius", glm::vec4(6.0f)));
 
     float contentWidth = stylesStorage.get<float>("width", 260.0f) - 16.0f;
@@ -434,7 +434,7 @@ void OMDemiurgeTextEdit::update()
         }
     }
 
-    lineHeight = stylesStorage.get<float>("textlineheight", lineHeight);
+    lineHeight = stylesStorage.get<float>("textLineHeight", lineHeight);
 
     const size_t caretClamped = std::min(caretState, textState.size());
     const std::string display =
@@ -565,7 +565,7 @@ void OMDemiurgeTextEdit::update()
                 const size_t beginInLine = std::clamp(selBegin, lineStart, lineEnd) - lineStart;
                 const size_t endInLine = std::clamp(selEnd, lineStart, lineEnd) - lineStart;
                 const std::string lineText = display.substr(lineStart, lineEnd - lineStart);
-                const int textHeightLocal = stylesStorage.get<int>("textheight", 14);
+                const int textHeightLocal = stylesStorage.get<int>("textHeight", 14);
                 float x0 = fontset->advance(lineText.substr(0, beginInLine)) * static_cast<float>(textHeightLocal);
                 float x1 = fontset->advance(lineText.substr(0, endInLine)) * static_cast<float>(textHeightLocal);
 
@@ -606,7 +606,7 @@ void OMDemiurgeTextEdit::update()
     if (placeholderNode)
     {
         placeholderNode->style("text", empty ? placeholder : std::string())
-            ->style("textheight", textHeight)
+            ->style("textHeight", textHeight)
             ->style("color", (int)f4ToRgba(placeholderFinalColor))
             ->style("offsetX", OMDemiurgeSize::pixels(0.0f))
             ->style("offsetY", OMDemiurgeSize::pixels(0.0f));
@@ -689,7 +689,7 @@ void OMDemiurgeTextEdit::update()
         }
 
         node->style("text", visible)
-            ->style("textheight", textHeight)
+            ->style("textHeight", textHeight)
             ->style("color", (int)f4ToRgba(finalColor))
             ->style("offsetX", OMDemiurgeSize::pixels(offsetX))
             ->style("offsetY", OMDemiurgeSize::pixels(static_cast<float>(lineIndex) * lineHeight - scrollY));
@@ -1155,7 +1155,7 @@ auto OMDemiurgeTextEdit::getPlaceholder() const -> std::string
 
 void OMDemiurgeTextEdit::setPlaceholderColor(const glm::vec4 &color)
 {
-    placeholderColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    placeholderColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
 }
 
 void OMDemiurgeTextEdit::setMaxLength(int codepoints)
@@ -1170,7 +1170,7 @@ void OMDemiurgeTextEdit::setOnChange(std::function<void(const std::string &)> ha
 
 void OMDemiurgeTextEdit::setTextHeight(int height)
 {
-    stylesStorage.put("textheight", height);
+    stylesStorage.put("textHeight", height);
 }
 
 void OMDemiurgeTextEdit::setColors(glm::vec4 background, glm::vec4 text, glm::vec4 caret)

@@ -36,7 +36,7 @@ auto OMDemiurgeTextSdfMultilineNode::syncLayout() -> void
             start = pos + 1;
         }
 
-        const auto th = static_cast<float>(stylesStorage.get<int>("textheight", 12));
+        const auto th = static_cast<float>(stylesStorage.get<int>("textHeight", 12));
 
         float maxWidth = 0.0f;
         float maxUnitHeight = 0.0f;
@@ -49,7 +49,7 @@ auto OMDemiurgeTextSdfMultilineNode::syncLayout() -> void
         }
 
         textUnitHeight = maxUnitHeight;
-        lineAdvance = stylesStorage.get<float>("textlineheight", maxUnitHeight * th * 1.25f);
+        lineAdvance = stylesStorage.get<float>("textLineHeight", maxUnitHeight * th * 1.25f);
 
         const float width = maxWidth * th;
         const float height = textUnitHeight * th + std::max<int>(0, static_cast<int>(lines.size()) - 1) * lineAdvance;
@@ -69,7 +69,7 @@ auto OMDemiurgeTextSdfMultilineNode::submit(OMDemiurgeRendererHandler *handler, 
     {
         const auto layoutBound = stylesStorage.get<OMDemiurgeRect>("layoutBound");
         const auto ch = handler->fetchFontChannel(set);
-        const auto th = static_cast<float>(stylesStorage.get<int>("textheight", 12));
+        const auto th = static_cast<float>(stylesStorage.get<int>("textHeight", 12));
 
         size_t total = 0;
 

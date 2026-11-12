@@ -52,9 +52,9 @@ void OMDemiurgeButton::update()
     bkgNode->style("radius", stylesStorage.get<glm::vec4>("radius", glm::vec4(5.0f)));
     textNode->style("color", (int)f4ToRgba(glm::vec4(textRgb, text.a)));
     textNode->style("text", stylesStorage.get<std::string>("label", "Button"));
-    textNode->style("textheight", stylesStorage.get<int>("textheight", 16));
+    textNode->style("textHeight", stylesStorage.get<int>("textHeight", 16));
     textNode->style("margin", stylesStorage.get<std::array<OMDemiurgeSize, 4>>(
-                                  "text_margin", std::array<OMDemiurgeSize, 4>{5_px, 10_px, 5_px, 5_px}));
+                                  "textMargin", std::array<OMDemiurgeSize, 4>{5_px, 10_px, 5_px, 5_px}));
     OMDemiurgePane::update();
 }
 auto OMDemiurgeButton::processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult
@@ -65,8 +65,8 @@ auto OMDemiurgeButton::processMouseDown(float x, float y, uint8_t button) -> OMD
     }
 
     captureMouse();
-    opacity.animateTo(stylesStorage.get<float>("opacity_clicked", 1.0f), easeOutCirc<float>,
-                      stylesStorage.get<float>("animation_speed", 0.2f));
+    opacity.animateTo(stylesStorage.get<float>("opacityClicked", 1.0f), easeOutCirc<float>,
+                      stylesStorage.get<float>("animationSpeed", 0.2f));
     return Handled;
 }
 auto OMDemiurgeButton::processMouseUp(float x, float y, uint8_t button) -> OMDemiurgeEventResult
@@ -77,9 +77,9 @@ auto OMDemiurgeButton::processMouseUp(float x, float y, uint8_t button) -> OMDem
     }
 
     const bool inside = containsPoint(x, y);
-    opacity.animateTo(inside ? stylesStorage.get<float>("opacity_hovered", 0.8f)
-                             : stylesStorage.get<float>("opacity_normal", 0.6f),
-                      easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.2f));
+    opacity.animateTo(inside ? stylesStorage.get<float>("opacityHovered", 0.8f)
+                             : stylesStorage.get<float>("opacityNormal", 0.6f),
+                      easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.2f));
 
     if (inside)
     {
@@ -96,8 +96,8 @@ auto OMDemiurgeButton::processMouseEnter(float x, float y) -> OMDemiurgeEventRes
         return Ignored;
     }
 
-    opacity.animateTo(stylesStorage.get<float>("opacity_hovered", 0.8f), easeOutCirc<float>,
-                      stylesStorage.get<float>("animation_speed", 0.2f));
+    opacity.animateTo(stylesStorage.get<float>("opacityHovered", 0.8f), easeOutCirc<float>,
+                      stylesStorage.get<float>("animationSpeed", 0.2f));
     return Handled;
 }
 auto OMDemiurgeButton::processMouseExit(float x, float y) -> OMDemiurgeEventResult
@@ -107,8 +107,8 @@ auto OMDemiurgeButton::processMouseExit(float x, float y) -> OMDemiurgeEventResu
         return Ignored;
     }
 
-    opacity.animateTo(stylesStorage.get<float>("opacity_normal", 0.6f), easeOutCirc<float>,
-                      stylesStorage.get<float>("animation_speed", 0.2f));
+    opacity.animateTo(stylesStorage.get<float>("opacityNormal", 0.6f), easeOutCirc<float>,
+                      stylesStorage.get<float>("animationSpeed", 0.2f));
     return Handled;
 }
 
@@ -119,17 +119,17 @@ auto OMDemiurgeButton::submit(OMDemiurgeRendererHandler *handler, uint32_t depth
 
 void OMDemiurgeButton::setTextColor(glm::vec4 d)
 {
-    textColor.animateTo(d, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.2f));
+    textColor.animateTo(d, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.2f));
 }
 void OMDemiurgeButton::setBackgroundColor(glm::vec4 d)
 {
-    backgroundColor.animateTo(d, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.2f));
+    backgroundColor.animateTo(d, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.2f));
 }
 
 void OMDemiurgeButton::setOpacity(float value)
 {
     opacity.animateTo(std::clamp(value, 0.0f, 1.0f), easeOutCirc<float>,
-                      stylesStorage.get<float>("animation_speed", 0.2f));
+                      stylesStorage.get<float>("animationSpeed", 0.2f));
 }
 void OMDemiurgeButton::setBackgroundRadius(glm::vec4 r)
 {
@@ -147,7 +147,7 @@ void OMDemiurgeButton::setDisabled(bool value, bool animate)
     if (animate)
     {
         disabledAmount.animateTo(disabled ? 1.0f : 0.0f, easeOutCirc<float>,
-                                 stylesStorage.get<float>("animation_speed", 0.2f));
+                                 stylesStorage.get<float>("animationSpeed", 0.2f));
     }
     else
     {

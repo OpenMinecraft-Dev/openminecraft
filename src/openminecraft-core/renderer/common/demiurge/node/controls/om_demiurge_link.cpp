@@ -57,11 +57,11 @@ void OMDemiurgeLink::update()
 
     if (textNode)
     {
-        const int textHeight = stylesStorage.get<int>("textheight", 14);
+        const int textHeight = stylesStorage.get<int>("textHeight", 14);
         const float textOffset =
-            stylesStorage.get<float>("text_offset", -0.21f * static_cast<float>(textHeight));
+            stylesStorage.get<float>("textOffset", -0.21f * static_cast<float>(textHeight));
         textNode->style("text", stylesStorage.get<std::string>("text", "Link"))
-            ->style("textheight", textHeight)
+            ->style("textHeight", textHeight)
             ->style("offsetY", OMDemiurgeSize::pixels(textOffset))
             ->style("color", (int)f4ToRgba(glm::vec4(textRgb, text.a)));
     }

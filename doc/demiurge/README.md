@@ -144,7 +144,7 @@ OMDemiurgeRendererHandler
 node->dumpTree();                 // 输出整棵界面树
 someNode->dumpTree();             // 只输出某个子树
 someNode->typeName();             // "OMDemiurgeTextSdfNode"
-someNode->styleDump();            // "{color=-1, text="Main", textheight=14}"
+someNode->styleDump();            // "{color=-1, text="Main", textHeight=14}"
 ```
 
 主界面 `Misc` 页签中的 `Debug UI Tree` 按钮会调用 `node->dumpTree()`。
@@ -197,8 +197,8 @@ someNode->styleDump();            // "{color=-1, text="Main", textheight=14}"
 | `scale` | 所有元素节点 | `glm::vec2`，绕元素中心、按两轴独立缩放（着色器内完成，不抖动） |
 | `clip` / `clipRadius` | `OMDemiurgeRectNode` | 元素级像素裁剪矩形与圆角 |
 | `text` | `OMDemiurgeTextSdfNode` / multiline | 文本内容 |
-| `textheight` | 文本节点 | 字号 |
-| `textlineheight` | multiline 文本 | 行高 |
+| `textHeight` | 文本节点 | 字号 |
+| `textLineHeight` | multiline 文本 | 行高 |
 | `label` | 带标签控件 | 控件标签（Button / CheckBox / RadioBox 等） |
 | `svgPath` / `svgSize` | `OMDemiurgeSvgNode` | SVG 路径与逻辑尺寸 |
 | `fill` | `OMDemiurgeImageNode` | `OMDemiurgeImageFillType`：Fit / Contain / Cover |
@@ -210,15 +210,15 @@ someNode->styleDump();            // "{color=-1, text="Main", textheight=14}"
 
 | 键 | 说明 |
 | --- | --- |
-| `_internal.color` | 控件动画驱动背景色时写入；`OMDemiurgeRectNode::submit` 优先于公开 `color` 读取 |
+| `internal.color` | 控件动画驱动背景色时写入；`OMDemiurgeRectNode::submit` 优先于公开 `color` 读取 |
 | `layoutBound` | 布局后写回的只读绝对矩形（框架内部缓存） |
-| `animation_speed` | 控件动画时长（秒）；多数控件可通过 `setAnimationSpeed()` 或 style 设置 |
-| `hover_boost` / `press_boost` | CheckBox / RadioBox 悬停与按下的颜色增强量 |
-| `press_shrink` | RadioBox 内圆按下缩放比例（默认 0.35） |
-| `box_radius` | CheckBox / RadioBox 外框圆角 |
-| `text_offset` | 标签相对控件的垂直偏移系数 |
-| `opacity_normal` / `opacity_hovered` / `opacity_clicked` | Button 在三种状态下的透明度 |
-| `segment_length` / `squeeze` / `min_length` / `cycle` | ProgressBar 不定态动画参数 |
+| `animationSpeed` | 控件动画时长（秒）；多数控件可通过 `setAnimationSpeed()` 或 style 设置 |
+| `hoverBoost` / `pressBoost` | CheckBox / RadioBox 悬停与按下的颜色增强量 |
+| `pressShrink` | RadioBox 内圆按下缩放比例（默认 0.35） |
+| `boxRadius` | CheckBox / RadioBox 外框圆角 |
+| `textOffset` | 标签相对控件的垂直偏移系数 |
+| `opacityNormal` / `opacityHovered` / `opacityClicked` | Button 在三种状态下的透明度 |
+| `segmentLength` / `squeeze` / `minLength` / `cycle` | ProgressBar 不定态动画参数 |
 
 > `get<T>(key, default)` 在类型不匹配时会静默返回默认值，没有编译期检查；新增键必须保证写入与读取类型一致。
 
@@ -230,8 +230,8 @@ someNode->styleDump();            // "{color=-1, text="Main", textheight=14}"
 | --- | --- | --- | --- |
 | `OMDemiurgeRectNode` | `OMDemiurgeNode` | 无参 | 圆角矩形；`color/radius/factor/rotation/clip/clipRadius/scale` |
 | `OMDemiurgePane` | `OMDemiurgeNode` | 无参 | 纯容器，不绘制自身；只提交子节点 |
-| `OMDemiurgeTextSdfNode` | `OMDemiurgeNode` | `(OMFontSet*)` | 单行文本；`text/textheight/color/factor/scale` |
-| `OMDemiurgeTextSdfMultilineNode` | `OMDemiurgeNode` | `(OMFontSet*)` | 多行文本；额外 `textlineheight` |
+| `OMDemiurgeTextSdfNode` | `OMDemiurgeNode` | `(OMFontSet*)` | 单行文本；`text/textHeight/color/factor/scale` |
+| `OMDemiurgeTextSdfMultilineNode` | `OMDemiurgeNode` | `(OMFontSet*)` | 多行文本；额外 `textLineHeight` |
 | `OMDemiurgeSvgNode` | `OMDemiurgeNode` | 无参 | SDF SVG 图标；`svgPath/svgSize/color/factor/rotation/scale` |
 | `OMDemiurgeImageNode` | `OMDemiurgeNode` | `(std::string textureTag)` | 纹理贴图；`fill/radius/rotation/factor/color/scale` |
 | `OMDemiurgeSectorNode` | `OMDemiurgeNode` | 无参 | 扇形/圆环；`beginAngle/endAngle/factor/rotation/color/scale` |
@@ -302,8 +302,8 @@ class OMDemiurgeControl
 - **API** 负责运行期状态与动画；**style** 负责布局、静态外观与控件调参；
 - 颜色/选中/进度等 setter 内部驱动 `OMAnimationValue<T>`，在 `update()` 中写入子节点样式；
 - `setDisabled(value, animate)`：`animate = true` 时用缓动动画过渡，`false` 时立即生效；
-- 动画时长默认多为 0.18s，可用 `setAnimationSpeed(seconds)` 或 `animation_speed` style 覆盖（具体见各控件）；
-- 控件在 `update()` 中每帧写入的内部样式（例如 `_internal.color`）不要从外部覆盖；
+- 动画时长默认多为 0.18s，可用 `setAnimationSpeed(seconds)` 或 `animationSpeed` style 覆盖（具体见各控件）；
+- 控件在 `update()` 中每帧写入的内部样式（例如 `internal.color`）不要从外部覆盖；
 - 文本 / SVG 图标等内部节点同样不应直接改 style，应使用控件 API。
 
 ### 7.2 Button
@@ -320,7 +320,7 @@ class OMDemiurgeControl
 | `setDisabled(bool, bool animate)` | 禁用 |
 | `isDisabled()` | 查询 |
 
-主要 style：`label`、`textheight`、`text_margin`（`std::array<OMDemiurgeSize,4>`，顺序 top/bottom/left/right）、`radius`、`opacity_normal`、`opacity_hovered`、`opacity_clicked`、`animation_speed`。
+主要 style：`label`、`textHeight`、`textMargin`（`std::array<OMDemiurgeSize,4>`，顺序 top/bottom/left/right）、`radius`、`opacityNormal`、`opacityHovered`、`opacityClicked`、`animationSpeed`。
 文本通过 `label` style 设置（没有 `setLabel`）。
 
 ### 7.3 IconButton
@@ -348,7 +348,7 @@ class OMDemiurgeControl
 | `setAnimationSpeed(float)` | 动画时长 |
 | `setDisabled(bool, bool animate)` / `isDisabled()` | 禁用 |
 
-主要 style：`label`、`textheight`、`radius`、`svgPath`（勾路径）、`hover_boost`、`press_boost`、`text_offset`、`animation_speed`。
+主要 style：`label`、`textHeight`、`radius`、`svgPath`（勾路径）、`hoverBoost`、`pressBoost`、`textOffset`、`animationSpeed`。
 
 ### 7.5 RadioBox / RadioGroup
 
@@ -369,7 +369,7 @@ RadioBox：
 | `setAnimationSpeed(float)` | 动画时长 |
 | `setDisabled(bool, bool animate)` / `isDisabled()` | 禁用 |
 
-内圆按下时会按 `press_shrink`（默认 0.35）缩放，动画在着色器中完成。
+内圆按下时会按 `pressShrink`（默认 0.35）缩放，动画在着色器中完成。
 
 RadioGroup：
 
@@ -419,7 +419,7 @@ RadioGroup：
 | `setAnimationSpeed(float)` | 动画时长 |
 | `setDisabled(bool, bool animate)` / `isDisabled()` | 禁用 |
 
-不定态动画参数（style）：`segment_length`、`squeeze`、`min_length`、`cycle`。
+不定态动画参数（style）：`segmentLength`、`squeeze`、`minLength`、`cycle`。
 
 ### 7.9 Spinner
 
@@ -516,13 +516,13 @@ RadioGroup：
 
 | 键 | 说明 |
 | --- | --- |
-| `label` / `textheight` | 标题文本 / 字号 |
+| `label` / `textHeight` | 标题文本 / 字号 |
 | `color` / `radius` | 圆角矩形主体背景色 / 圆角 |
-| `text_color` / `arrow_color` | 标题 / 箭头颜色 |
-| `animation_speed` | 展开/收起动画时长 |
-| `header_height` | 标题行高度（也可用 `setHeaderHeight`） |
-| `header_padding` | 标题行内边距（`OMDemiurgeEdgeInsets`） |
-| `arrow_path` / `svgSize` | 箭头 SVG 路径（默认向下 chevron） |
+| `textColor` / `arrowColor` | 标题 / 箭头颜色 |
+| `animationSpeed` | 展开/收起动画时长 |
+| `headerHeight` | 标题行高度（也可用 `setHeaderHeight`） |
+| `headerPadding` | 标题行内边距（`OMDemiurgeEdgeInsets`） |
+| `arrowPath` / `svgSize` | 箭头 SVG 路径（默认向下 chevron） |
 
 行为说明：
 
@@ -588,21 +588,21 @@ RadioGroup：
 
 | 键 | 说明 |
 | --- | --- |
-| `tab_height` / `tab_width` / `textheight` | 竖排 Tab 行高 / 横排 Tab 宽度 / 文字字号 |
-| `active_text_color` / `inactive_text_color` | 当前页 / 非当前页文字颜色 |
-| `indicator_color` / `indicator_height` | 下划线指示条颜色 / 高度 |
-| `bar_line_color` | Tab 栏底部整条分隔线颜色 |
-| `animation_speed` | Tab 指示条/禁用状态动画时长 |
-| `page_animation_speed` | 页面切换动画时长（秒） |
-| `page_border` | 页面内容的边框内缩，默认 `{2,2,2,2}`，避免裁剪到边缘 |
+| `tabHeight` / `tabWidth` / `textHeight` | 竖排 Tab 行高 / 横排 Tab 宽度 / 文字字号 |
+| `activeTextColor` / `inactiveTextColor` | 当前页 / 非当前页文字颜色 |
+| `indicatorColor` / `indicatorHeight` | 下划线指示条颜色 / 高度 |
+| `barLineColor` | Tab 栏底部整条分隔线颜色 |
+| `animationSpeed` | Tab 指示条/禁用状态动画时长 |
+| `pageAnimationSpeed` | 页面切换动画时长（秒） |
+| `pageBorder` | 页面内容的边框内缩，默认 `{2,2,2,2}`，避免裁剪到边缘 |
 
 行为说明：
 
 - 切换页面时旧页面 `remove()` 掉自己的元素，新页面整棵子树 `invalidate()` 以重建元素；
 - 非当前页 `setVisible(false)`，因此不会响应鼠标事件（但仍保持挂载与布局）；
 - Tab 栏尺寸只与 Tab 数量有关，不随页面内容变化：
-  - 上/下布局：每个 Tab 宽 `tab_width`（默认 100），Tab 栏长度 = `数量 × tab_width`，并在控件内水平居中；
-  - 左/右布局：每个 Tab 行高 `tab_height`，Tab 栏长度 = `数量 × tab_height`，Tab 栏宽度 = `max(tab_height, 64)`（保证竖排文字可读）；
+  - 上/下布局：每个 Tab 宽 `tabWidth`（默认 100），Tab 栏长度 = `数量 × tabWidth`，并在控件内水平居中；
+  - 左/右布局：每个 Tab 行高 `tabHeight`，Tab 栏长度 = `数量 × tabHeight`，Tab 栏宽度 = `max(tabHeight, 64)`（保证竖排文字可读）；
 - 左右布局时文字会为指示条让出额外内边距，避免文字与指示条重合；控件高度取 `max(当前页高度, Tab 栏高度)`；
 - Tab 栏可在其方向上对齐（`Start` / `Center` / `End`），底部整宽分隔线会跟随 Tab 栏位置；
 - 指示条位置会被限制在实际 Tab 范围内，不会越过首/末 Tab（使用控件局部坐标计算，保证与 Tab 居中）；
@@ -613,7 +613,7 @@ RadioGroup：
   - 动画进度线性推进，再套用**目标页面**的 `easing`（可用 `setPageEasing` 自定义，默认 `easeOutCubic`）；
   - 动画过程中再次切换会先立即结束上一次动画，再开始新的切换；
 - 开启 `setPageFill(true)` 后，页面区域 = 控件高度减去 Tab 栏高度（左/右布局为整个控件高度），页面节点高度自动改为 `fill`，超出部分由 `pageClip` 裁剪；
-- 指示条是单独一条，沿 Tab 栏方向从旧页滑动到新页（`indicatorPosition` 动画，时长取 `animation_speed`），并位于靠近内容的一侧；
+- 指示条是单独一条，沿 Tab 栏方向从旧页滑动到新页（`indicatorPosition` 动画，时长取 `animationSpeed`），并位于靠近内容的一侧；
 - 顶部/底部布局：控件高度 = `tabHeight + 当前页高度`；左侧/右侧布局：控件高度 = 当前页高度，宽度减去 Tab 栏厚度；
 - 当前页元素通过 `pageClip` 裁剪到页面区域，避免内容溢出到 Tab 栏。
 
@@ -641,18 +641,18 @@ RadioGroup：
 
 | 键 | 说明 |
 | --- | --- |
-| `color` / `track_color` | thumb / 轨道颜色 |
+| `color` / `trackColor` | thumb / 轨道颜色 |
 | `radius` | 圆角 |
-| `min_thumb` | thumb 最小长度（默认 24） |
-| `scroll_step` | 滚轮步长（默认 40） |
-| `overscroll_curve` | 压缩曲线指数（默认 2.0，越大越晚压缩） |
-| `overscroll_range` | 压缩参考范围，以 viewSize 的倍数计（默认 1.0） |
+| `minThumb` | thumb 最小长度（默认 24） |
+| `scrollStep` | 滚轮步长（默认 40） |
+| `overscrollCurve` | 压缩曲线指数（默认 2.0，越大越晚压缩） |
+| `overscrollRange` | 压缩参考范围，以 viewSize 的倍数计（默认 1.0） |
 | `width` / `height` | `Vertical` 时 width 为条宽（默认 4）、height 为轨道长度；`Horizontal` 相反 |
 
 计算方式：
 
 ```text
-thumbLength = clamp(viewSize / contentSize * trackLength, min_thumb, trackLength)
+thumbLength = clamp(viewSize / contentSize * trackLength, minThumb, trackLength)
 maxScroll   = max(0, contentSize - viewSize)
 thumbPos    = scrollOffset / maxScroll * (trackLength - thumbLength)
 ```
@@ -663,13 +663,13 @@ thumbPos    = scrollOffset / maxScroll * (trackLength - thumbLength)
 
 ```text
 overscroll        = offset < 0 ? -offset : max(0, offset - maxScroll)
-t                 = clamp(overscroll / (viewSize * overscroll_range), 0, 1)
-eased             = pow(t, overscroll_curve)
+t                 = clamp(overscroll / (viewSize * overscrollRange), 0, 1)
+eased             = pow(t, overscrollCurve)
 visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eased)
 ```
 
 - `thickness` 为滚动条厚度（`Vertical` 时是宽度）；
-- 越界接近一个 view 高度时压缩加快，`overscroll` 达到 `viewSize * overscroll_range` 时 thumb 长度等于厚度，配合自动收敛的圆角变成一个**圆点**；
+- 越界接近一个 view 高度时压缩加快，`overscroll` 达到 `viewSize * overscrollRange` 时 thumb 长度等于厚度，配合自动收敛的圆角变成一个**圆点**；
 - `getThumbLength()` 返回压缩后的显示长度，`setOnScroll` 仍收到原始（可能越界的）offset。
 
 ### 7.19 ScrollPane
@@ -698,24 +698,24 @@ visualThumbLength = max(thickness, thumbLength - (thumbLength - thickness) * eas
 
 | 键 | 说明 |
 | --- | --- |
-| `wheel_step` | 滚轮步长（默认 40） |
-| `drag_threshold` | 开始拖拽的位移阈值（默认 4） |
-| `rubber_band` | 越界拖拽阻尼系数（默认 0.45） |
-| `bounce_speed` | 越界松手回弹时长（默认 0.3） |
-| `inertia_factor` | 松手惯性预测时长（默认 0.18s） |
-| `inertia_speed` | 惯性减速动画时长（默认 0.55s） |
-| `wheel_speed` | 滚轮平滑时长（默认 0.18） |
-| `scrollbar_thickness` | 内部滚动条厚度（默认 4） |
-| `scrollbar_gap` | 滚动条与内容之间的间隔（默认 4） |
+| `wheelStep` | 滚轮步长（默认 40） |
+| `dragThreshold` | 开始拖拽的位移阈值（默认 4） |
+| `rubberBand` | 越界拖拽阻尼系数（默认 0.45） |
+| `bounceSpeed` | 越界松手回弹时长（默认 0.3） |
+| `inertiaFactor` | 松手惯性预测时长（默认 0.18s） |
+| `inertiaSpeed` | 惯性减速动画时长（默认 0.55s） |
+| `wheelSpeed` | 滚轮平滑时长（默认 0.18） |
+| `scrollbarThickness` | 内部滚动条厚度（默认 4） |
+| `scrollbarGap` | 滚动条与内容之间的间隔（默认 4） |
 
 行为说明：
 
-- 滚轮按 `wheel_step` 平滑滚动；到达顶部/底部后直接吸附到边缘，不会因重复滚轮事件产生微抖；拖动越界时按 `rubber_band` 阻尼显示，松手后用 `easeOutCubic` 在 `bounce_speed` 内回弹；
+- 滚轮按 `wheelStep` 平滑滚动；到达顶部/底部后直接吸附到边缘，不会因重复滚轮事件产生微抖；拖动越界时按 `rubberBand` 阻尼显示，松手后用 `easeOutCubic` 在 `bounceSpeed` 内回弹；
 - 滚动条拖动会同步内容，内容拖动/滚轮会同步滚动条；
-- 在合法范围内快速拖动后松手会带惯性继续滚动，按 `inertia_factor` 预测目标、`inertia_speed` 减速；越界松手则执行回弹；
+- 在合法范围内快速拖动后松手会带惯性继续滚动，按 `inertiaFactor` 预测目标、`inertiaSpeed` 减速；越界松手则执行回弹；
 - 滚动条会预留独立空间：纵向条出现时内容视口宽度减去条厚，横向条出现时高度减去条厚，内容不会与滚动条重叠（Both 模式会迭代计算两条滚动条）；
 - 内容尺寸变化时滚动条自动显示/隐藏；
-- 按钮、输入框、DropDown 等会捕获鼠标的控件仍可正常点击；按住并拖动超过 `drag_threshold` 后 ScrollPane 会接管捕获并开始滚动；
+- 按钮、输入框、DropDown 等会捕获鼠标的控件仍可正常点击；按住并拖动超过 `dragThreshold` 后 ScrollPane 会接管捕获并开始滚动；
 - 若捕获鼠标的控件当前拥有焦点（Slider、Switch、TextInput 等），ScrollPane 不会接管拖拽，控件操作优先；
 - ScrollBar 的拖动不会被 ScrollPane 接管，即使鼠标移出滚动条范围也会持续跟随（全局捕获）；
 - ScrollPane 内部的横向/纵向 ScrollBar 都禁用实际 overscroll（`setAllowOverscroll(false)`），但会通过 `setVisualOverscroll` 接收内容的 rubber-band 量，因此拖动过度时 thumb 仍会压缩、回弹后恢复；
@@ -739,7 +739,7 @@ panel->style({
 auto label = std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get());
 label->style({
     {"text", "Hello"},
-    {"textheight", 16},
+    {"textHeight", 16},
     {"color", (int)f4ToRgba(glm::vec4(1.0f))},
     {"scale", glm::vec2(1.2f, 0.9f)},   // 两轴缩放
 });

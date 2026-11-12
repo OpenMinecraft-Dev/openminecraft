@@ -72,8 +72,8 @@ void OMDemiurgeRadioBox::update()
 
     const float hover = std::clamp(hoverAmount.get(), 0.0f, 1.0f);
     const float press = std::clamp(pressAmount.get(), 0.0f, 1.0f);
-    const float hoverBoost = stylesStorage.get<float>("hover_boost", 0.18f);
-    const float pressBoost = stylesStorage.get<float>("press_boost", 0.12f);
+    const float hoverBoost = stylesStorage.get<float>("hoverBoost", 0.18f);
+    const float pressBoost = stylesStorage.get<float>("pressBoost", 0.12f);
 
     glm::vec3 rgb = glm::mix(glm::vec3(boxColor), glm::vec3(1.0f), hover * hoverBoost);
     rgb = glm::mix(rgb, glm::vec3(0.0f), press * pressBoost);
@@ -84,11 +84,11 @@ void OMDemiurgeRadioBox::update()
                          boxColor.a * (1.0f - disabledValue * 0.35f));
 
     boxNode->style("color", (int)f4ToRgba(boxColor))
-        ->style("radius", glm::vec4(stylesStorage.get<float>("box_radius", RadioSize * 0.5f)));
+        ->style("radius", glm::vec4(stylesStorage.get<float>("boxRadius", RadioSize * 0.5f)));
 
     // Keep the dot geometry fixed and scale it in the shader: animating the layout
     // size snapped to whole pixels and made the small circle jitter.
-    const float pressShrink = stylesStorage.get<float>("press_shrink", 0.35f);
+    const float pressShrink = stylesStorage.get<float>("pressShrink", 0.35f);
     const float dotScale = amount * (1.0f - press * pressShrink);
 
     dotNode->style("scale", glm::vec2(dotScale))
@@ -97,12 +97,12 @@ void OMDemiurgeRadioBox::update()
 
     if (textNode != nullptr)
     {
-        const int textHeight = stylesStorage.get<int>("textheight", 14);
+        const int textHeight = stylesStorage.get<int>("textHeight", 14);
         const float textOffset =
-            stylesStorage.get<float>("text_offset", -0.21f * static_cast<float>(textHeight));
+            stylesStorage.get<float>("textOffset", -0.21f * static_cast<float>(textHeight));
 
         textNode->style("text", stylesStorage.get<std::string>("label", "Radio"));
-        textNode->style("textheight", textHeight);
+        textNode->style("textHeight", textHeight);
         textNode->style("offsetY", OMDemiurgeSize::pixels(textOffset));
         const auto label = labelColor.get();
         const glm::vec3 labelRgb = glm::mix(glm::vec3(label), glm::vec3(0.55f), disabledValue * 0.75f);
@@ -120,7 +120,7 @@ auto OMDemiurgeRadioBox::processMouseDown(float x, float y, uint8_t button) -> O
     }
 
     captureMouse();
-    pressAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    pressAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
     return Handled;
 }
 
@@ -131,7 +131,7 @@ auto OMDemiurgeRadioBox::processMouseUp(float x, float y, uint8_t button) -> OMD
         return Ignored;
     }
 
-    pressAmount.animateTo(0.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    pressAmount.animateTo(0.0f, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
 
     if (!containsPoint(x, y))
     {
@@ -157,7 +157,7 @@ auto OMDemiurgeRadioBox::processMouseEnter(float x, float y) -> OMDemiurgeEventR
         return Ignored;
     }
 
-    hoverAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    hoverAmount.animateTo(1.0f, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
     return Handled;
 }
 
@@ -168,7 +168,7 @@ auto OMDemiurgeRadioBox::processMouseExit(float x, float y) -> OMDemiurgeEventRe
         return Ignored;
     }
 
-    const float speed = stylesStorage.get<float>("animation_speed", 0.18f);
+    const float speed = stylesStorage.get<float>("animationSpeed", 0.18f);
     hoverAmount.animateTo(0.0f, easeOutCirc<float>, speed);
     pressAmount.animateTo(0.0f, easeOutCirc<float>, speed);
     return Handled;
@@ -197,7 +197,7 @@ void OMDemiurgeRadioBox::applySelection(bool value, bool animate, bool notify)
     if (animate)
     {
         selectAmount.animateTo(selected ? 1.0f : 0.0f, easeOutCubic<float>,
-                               stylesStorage.get<float>("animation_speed", 0.18f));
+                               stylesStorage.get<float>("animationSpeed", 0.18f));
     }
     else
     {
@@ -227,19 +227,19 @@ void OMDemiurgeRadioBox::setOnChange(std::function<void(bool)> handler)
 
 void OMDemiurgeRadioBox::setDotColor(glm::vec4 color)
 {
-    dotColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    dotColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
 }
 
 void OMDemiurgeRadioBox::setBoxColors(glm::vec4 unselectedColor, glm::vec4 selectedColor)
 {
-    const float speed = stylesStorage.get<float>("animation_speed", 0.18f);
+    const float speed = stylesStorage.get<float>("animationSpeed", 0.18f);
     boxUnselected.animateTo(unselectedColor, easeOutCirc<float>, speed);
     boxSelected.animateTo(selectedColor, easeOutCirc<float>, speed);
 }
 
 void OMDemiurgeRadioBox::setTextColor(glm::vec4 color)
 {
-    labelColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animation_speed", 0.18f));
+    labelColor.animateTo(color, easeOutCirc<float>, stylesStorage.get<float>("animationSpeed", 0.18f));
 }
 
 void OMDemiurgeRadioBox::setLabel(const std::string &label)
@@ -259,7 +259,7 @@ void OMDemiurgeRadioBox::setDisabled(bool value, bool animate)
     if (animate)
     {
         disabledAmount.animateTo(disabled ? 1.0f : 0.0f, easeOutCirc<float>,
-                                 stylesStorage.get<float>("animation_speed", 0.18f));
+                                 stylesStorage.get<float>("animationSpeed", 0.18f));
     }
     else
     {
@@ -269,6 +269,6 @@ void OMDemiurgeRadioBox::setDisabled(bool value, bool animate)
 
 void OMDemiurgeRadioBox::setAnimationSpeed(float seconds)
 {
-    stylesStorage.put("animation_speed", seconds);
+    stylesStorage.put("animationSpeed", seconds);
 }
 } // namespace openminecraft::renderer::common::demiurge::node::controls

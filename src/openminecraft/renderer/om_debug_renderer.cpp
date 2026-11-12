@@ -94,40 +94,40 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
                                                        {"color", (int)0x00d4ffff},
                                                        {"text", fmt::format("OpenMinecraft {}-{}", OM_VERSION,
                                                                             OM_VERSION_CHANNEL)},
-                                                       {"textheight", 16},
+                                                       {"textHeight", 16},
                                                    }))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", "\"virtual testing world\""},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    }))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", ""},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    })
                                                    ->store(fpsTextNode))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", ""},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    })
                                                    ->store(posTextNode))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", ""},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    })
                                                    ->store(povTextNode))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", ""},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    })
                                                    ->store(tickNode)))
                            ->mount(std::make_shared<node::OMDemiurgeRectNode>()
@@ -145,9 +145,9 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
                                                    ->style({
                                                        {"color", (int)0x00d4ffff},
                                                        {"text", "Operations"},
-                                                       {"textheight", 16},
+                                                       {"textHeight", 16},
                                                    }))
-                                       ->mount(button->style("animation_speed", 1.0f)->style("label", "Main Menu"))))
+                                       ->mount(button->style("animationSpeed", 1.0f)->style("label", "Main Menu"))))
                ->mount(std::make_shared<node::OMDemiurgePane>()
                            ->style({
                                {"flexDirection", Column},
@@ -171,33 +171,33 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
                                                    ->style({
                                                        {"color", (int)0x00d4ffff},
                                                        {"text", "Hardware/software stats"},
-                                                       {"textheight", 16},
+                                                       {"textHeight", 16},
                                                    }))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", renderer->driver()},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    }))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", vm::os::fetchCpuName()},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    }))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text",
                                                         vm::os::fetchSystemName() + " " + vm::os::fetchSystemVersion()},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    }))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", fromBytes(vm::os::fetchMemoryTotal()) + " / Page " +
                                                                     fromBytes(vm::os::fetchPageSize())},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    })))
                            ->mount(std::make_shared<node::OMDemiurgeRectNode>()
                                        ->style({
@@ -215,20 +215,20 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
                                                    ->style({
                                                        {"color", (int)0x00d4ffff},
                                                        {"text", "Precision stats"},
-                                                       {"textheight", 16},
+                                                       {"textHeight", 16},
                                                    }))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", ""},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    })
                                                    ->store(precisionNode))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", ""},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    })
                                                    ->store(precisionNode2)))
                            ->mount(std::make_shared<node::OMDemiurgeRectNode>()
@@ -247,55 +247,55 @@ OMDebugRenderer::OMDebugRenderer(OMRenderer *renderer, openminecraft::renderer::
                                                    ->style({
                                                        {"color", (int)0x00d4ffff},
                                                        {"text", "Chunk stats"},
-                                                       {"textheight", 16},
+                                                       {"textHeight", 16},
                                                    }))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", ""},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    })
                                                    ->store(vState))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", ""},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    })
                                                    ->store(vcState))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", ""},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    })
                                                    ->store(vfState))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", ""},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    })
                                                    ->store(vtState))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", ""},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    })
                                                    ->store(vtcState))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", ""},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    })
                                                    ->store(vtfState))
                                        ->mount(std::make_shared<node::OMDemiurgeTextSdfNode>(fontset.get())
                                                    ->style({
                                                        {"color", (int)0xffffffff},
                                                        {"text", ""},
-                                                       {"textheight", 12},
+                                                       {"textHeight", 12},
                                                    })
                                                    ->store(chunkstate))));
 
