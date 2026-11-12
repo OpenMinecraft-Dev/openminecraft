@@ -56,14 +56,14 @@ auto OMDemiurgeTextSdfNode::submit(OMDemiurgeRendererHandler *handler, uint32_t 
 
         auto th = stylesStorage.get<int>("textHeight", 12);
         const float opacity = fetchOpacity();
-        const glm::vec2 textScale = stylesStorage.get<glm::vec2>("scale", glm::vec2(1.0f));
-        const glm::vec2 textCenter(layoutBound.x + layoutBound.width * 0.5f,
-                                   layoutBound.y + layoutBound.height * 0.5f);
+        const auto textScale = stylesStorage.get<glm::vec2>("scale", glm::vec2(1.0f));
+        const glm::vec2 textCenter(layoutBound.x + layoutBound.width * 0.5f, layoutBound.y + layoutBound.height * 0.5f);
 
         for (int i = 0; i < s.size(); ++i)
         {
             auto t = ch->temporary(glyphIds[i]);
             t->color = genLinear(stylesStorage.get<int>("color", 0));
+            t->color.a *= opacity;
             const glm::vec2 glyphPos(layoutBound.x + s[i].position.x * th, layoutBound.y + s[i].position.y * th);
             const glm::vec2 glyphSize(s[i].size.x * th, s[i].size.y * th);
             const glm::vec2 glyphCenter = glyphPos + glyphSize * 0.5f;

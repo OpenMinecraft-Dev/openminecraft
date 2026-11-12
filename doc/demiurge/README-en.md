@@ -64,6 +64,7 @@ Base class: `OMDemiurgeNode` (`include/openminecraft/renderer/common/demiurge/om
 | `umount(child)` | Unmount and call the child's `remove()`; also releases focus and mouse capture inside the subtree |
 | `store(child)` | Child stores itself into a target pointer for chained construction |
 | `children` | Direct child list |
+| `setOpacity(value)` | Recursively set `opacity` on this node and all current children; base elements use final alpha = color.a × opacity |
 
 ### 3.2 Child IDs
 
@@ -238,7 +239,7 @@ Behavior:
 | Key | Nodes | Notes |
 | --- | --- | --- |
 | `color` | rect / text / svg / image / sector | Color (packed RGBA `int`) |
-| `opacity` | rect / text / svg / image / sector | Independent element opacity `float` (0..1, default 1); final alpha = color.a * opacity, children are unaffected |
+| `opacity` | rect / text / svg / image / sector | Independent element opacity `float` (0..1, default 1); final alpha = color.a * opacity, children are unaffected (use `setOpacity` for recursive application) |
 | `radius` | `OMDemiurgeRectNode` | Per-corner radius (`vec4`) |
 | `factor` | most element nodes | Edge softness / SDF width; per-node default |
 | `rotation` / `rotationPivot` | rect / image / sector / svg | Rotate around the given normal |
@@ -842,9 +843,9 @@ Behavior:
 - The dialog layer is mounted on the root with `setLayerOverlay(true)`;
 - It is also set as the root modal child, so events are dispatched only to the dialog;
 - Mount/unmount is deferred to the frame boundary via `deferAction()`;
-- Opening/closing uses a 0.18s animation: the backdrop fades from transparent to 62% black and the panel slides from 18px below into the center; closing plays in reverse and the dialog unmounts only after the animation finishes;
+- Opening/closing uses a 0.18s animation: the backdrop fades from transparent to 62% black, the panel slides from 18px below into the center, and `setOpacity` fades the panel and all of its children; closing plays in reverse and the dialog unmounts only after the animation finishes;
 - There is exactly one close button; clicking the backdrop does not close it;
-- Multiple open dialogs use a modal stack: the newest is on top, and closing it restores the previous dialog's modal state so every dialog remains closable;
+- Multiple open dialogs use a modal stack: lower dialogs remain visible, but each dialog gets its own overlay layer range based on its modal-stack index so the upper dialog's backdrop, panel and text correctly occlude the lower one; panels are also offset by stack position (+18px X / +14px Y per level) so multiple dialogs remain visible;
 - Tooltips hide automatically while it is open;
 - The close button receives focus; message and button label use the normal text widgets.
 

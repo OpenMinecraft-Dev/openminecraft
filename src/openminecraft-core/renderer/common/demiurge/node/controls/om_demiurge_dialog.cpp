@@ -26,6 +26,23 @@ class DialogLayerNode : public node::OMDemiurgeRectNode
 
         OMDemiurgeRectNode::syncLayout();
     }
+
+    auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void override
+    {
+        // Put every dialog in its own overlay layer range according to its
+        // position in the modal stack. This keeps a newer dialog's panel/text
+        // above an older dialog's text even though text channels are submitted
+        // after rect channels.
+        int index = -1;
+
+        if (auto root = getRoot())
+        {
+            index = root->modalIndex(this);
+        }
+
+        const uint32_t base = static_cast<uint32_t>(std::max(0, index) + 1) * 8;
+        OMDemiurgeRectNode::submit(handler, overlayLayer(base));
+    }
 };
 } // namespace
 
@@ -139,7 +156,7 @@ void OMDemiurgeDialog::show(const std::shared_ptr<OMDemiurgeNode> &parent, const
         panel->mountDirect(button);
         layer->mountDirect(panel);
 
-        parent->mountFront(layer);
+        parent->mountDirect(layer);
         parent->setModalChild(layer);
 
         layerNode = layer;
@@ -185,9 +202,17 @@ void OMDemiurgeDialog::updateAnimation()
     }
 
     const float amount = std::clamp(openAmount.get(), 0.0f, 1.0f);
-    layerNode->style("color",
-                     static_cast<int>(f4ToRgba(glm::vec4(0.0f, 0.0f, 0.0f, 0.62f * amount))));
+    layerNode->style("color", static_cast<int>(f4ToRgba(glm::vec4(0.0f, 0.0f, 0.0f, 0.62f * amount))));
+
+    int stackIndex = 0;
+
+    if (auto root = layerNode->getRoot())
+    {
+        stackIndex = std::max(0, root->modalIndex(layerNode.get()));
+    }
+
     panelNode->style("offsetY", OMDemiurgeSize::pixels((1.0f - amount) * 18.0f));
+    panelNode->setOpacity(amount);
 
     if (!closing || amount > 0.001f || cleanupScheduled)
     {

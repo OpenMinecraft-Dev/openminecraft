@@ -58,8 +58,7 @@ void OMDemiurgeLink::update()
     if (textNode)
     {
         const int textHeight = stylesStorage.get<int>("textHeight", 14);
-        const float textOffset =
-            stylesStorage.get<float>("textOffset", -0.21f * static_cast<float>(textHeight));
+        const auto textOffset = stylesStorage.get<float>("textOffset", -0.21f * static_cast<float>(textHeight));
         textNode->style("text", stylesStorage.get<std::string>("text", "Link"))
             ->style("textHeight", textHeight)
             ->style("offsetY", OMDemiurgeSize::pixels(textOffset))

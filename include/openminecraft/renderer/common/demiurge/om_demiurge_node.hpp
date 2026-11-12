@@ -190,6 +190,28 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         return !modalChild.expired();
     }
 
+    auto modalIndex(const OMDemiurgeNode *child) -> int
+    {
+        std::lock_guard<std::mutex> lock(modalMutex);
+
+        for (size_t i = 0; i < modalStack.size(); ++i)
+        {
+            auto current = modalStack[i].lock();
+
+            if (!current)
+            {
+                continue;
+            }
+
+            if (current.get() == child)
+            {
+                return static_cast<int>(i);
+            }
+        }
+
+        return -1;
+    }
+
     void clearModalChild(const std::shared_ptr<OMDemiurgeNode> &child)
     {
         std::lock_guard<std::mutex> lock(modalMutex);
@@ -481,6 +503,10 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
             return OMDemiurgeEdgeInsets{0.0f, 0.0f, 0.0f, 0.0f};
         }
     }
+
+    // Sets the opacity style on this node and recursively on all current
+    // children. Base elements multiply their own color alpha by it.
+    void setOpacity(float value);
 
     inline auto style(std::initializer_list<std::pair<std::string, std::any>> d) -> std::shared_ptr<OMDemiurgeNode>
     {

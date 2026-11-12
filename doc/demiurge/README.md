@@ -64,6 +64,7 @@ OMDemiurgeRendererHandler
 | `umount(child)` | 卸载并调用子节点 `remove()`；同时释放子树内的焦点与鼠标捕获 |
 | `store(child)` | 子节点把自身写入目标指针，便于链式构建 |
 | `children` | 直接子节点列表 |
+| `setOpacity(value)` | 递归设置本节点及所有当前 children 的 `opacity`；基础图元最终 alpha = color.a × opacity |
 
 ### 3.2 子节点 ID
 
@@ -238,7 +239,7 @@ control->hideTooltip();
 | 键 | 适用节点 | 说明 |
 | --- | --- | --- |
 | `color` | rect 系 / 文本 / svg / image / sector | 颜色（RGBA int） |
-| `opacity` | rect 系 / 文本 / svg / image / sector | 独立的元素不透明度 `float`（0..1，默认 1）；最终 alpha = color.a * opacity，不影响子节点 |
+| `opacity` | rect 系 / 文本 / svg / image / sector | 独立的元素不透明度 `float`（0..1，默认 1）；最终 alpha = color.a * opacity，不影响子节点（需要递归时使用 `setOpacity`） |
 | `radius` | `OMDemiurgeRectNode` | 四角半径（vec4） |
 | `factor` | 多数元素节点 | 边缘软/SDF 宽度，按节点默认值 |
 | `rotation` / `rotationPivot` | rect / image / sector / svg | 绕指定法线旋转 |
@@ -842,9 +843,9 @@ Gallery 页签现在由 ScrollPane 承载所有控件 DropDown（纵向滚动）
 - 对话框层挂到根节点并设置 `setLayerOverlay(true)`；
 - 同时设为根节点的 modal child，事件只分发给对话框；
 - 挂载与卸载通过 `deferAction()` 延迟到帧边界，避免事件遍历中修改 children；
-- 打开/关闭有 0.18s 动画：背景从全透明淡入到 62% 黑色，面板从下方 18px 平移到居中；关闭时反向播放，动画结束后才卸载；
+- 打开/关闭有 0.18s 动画：背景从全透明淡入到 62% 黑色，面板从下方 18px 平移到居中，同时通过 `setOpacity` 让面板及其全部子控件淡入淡出；关闭时反向播放，动画结束后才卸载；
 - 只有单个关闭按钮，点击遮罩不会关闭；
-- 多个 Dialog 同时打开时使用 modal 栈：后打开的在上层，关闭上层后自动恢复下层的 modal 状态，因此每个 Dialog 都能正常关闭；
+- 多个 Dialog 同时打开时使用 modal 栈：底层 Dialog 继续显示，但每个 Dialog 按 modal 栈位置使用独立的 overlay layer 区间，保证上层背景、面板和文字正确遮挡下层；面板还会按栈位置轻微错开（每层 +18px X / +14px Y），便于同时看到多层 Dialog；
 - 打开期间 Tooltip 会自动隐藏；
 - 关闭按钮获得焦点，按钮文本和消息均为多行/单行 Text。
 

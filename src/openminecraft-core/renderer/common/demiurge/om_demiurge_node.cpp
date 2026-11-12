@@ -473,6 +473,16 @@ void OMDemiurgeNode::releaseFocus()
     focusedRoot.reset();
 }
 
+void OMDemiurgeNode::setOpacity(float value)
+{
+    this->style("opacity", std::clamp(value, 0.0f, 1.0f));
+
+    for (auto &child : children)
+    {
+        child->setOpacity(value);
+    }
+}
+
 auto OMDemiurgeNode::setTooltip(const std::string &text, float delay) -> std::shared_ptr<OMDemiurgeNode>
 {
     node::controls::OMDemiurgeTooltip::instance().setTooltip(this, text, delay);
