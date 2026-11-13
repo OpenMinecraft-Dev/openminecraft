@@ -77,12 +77,11 @@ struct Frustum
 
 OMVoxelManager::OMVoxelManager(
     OMRenderer *renderer, OMRendererRenderTarget *resolveTarget, const std::string &texTag,
-    const std::string &texSecTag, std::shared_ptr<world::OMChunkManager<16>> man,
-    std::function<void(bool)> recordTask, OMVoxelHandler *handler,
+    const std::string &texSecTag, std::shared_ptr<world::OMChunkManager<16>> man, std::function<void(bool)> recordTask,
+    OMVoxelHandler *handler,
     std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> modelFetcher,
-    OMVoxelColorManager *colorman, const std::string &sunTag, const std::string &moonTag,
-    const std::string &cloudTag, std::vector<bool> cloudStats,
-    std::shared_ptr<OMChunkPaletteProvider> paletteProvider)
+    OMVoxelColorManager *colorman, const std::string &sunTag, const std::string &moonTag, const std::string &cloudTag,
+    std::vector<bool> cloudStats, std::shared_ptr<OMChunkPaletteProvider> paletteProvider)
     : logger("OMVoxelManager", this)
 {
     this->recordTask = recordTask;
@@ -716,6 +715,25 @@ void OMVoxelManager::unloadChunk(int i)
         ++graphVersion;
     }
 
+    if (static_cast<size_t>(i) < sectionResident.size())
+    {
+        sectionResident[i] = 0;
+    }
+
+    if (static_cast<size_t>(i) < chunkOffsetCache.size())
+    {
+        if (chunkOffsetCache[i] != glm::vec4{INFINITY})
+        {
+            chunkOffsetCache[i] = glm::vec4{INFINITY};
+            offsetCacheDirty = true;
+        }
+    }
+
+    if (compilerPool)
+    {
+        compilerPool->dropCache(i);
+    }
+
     std::vector<OMVoxel> m = {}, tm = {};
     std::vector<OMVoxelComplex> cm = {}, tcm = {};
     std::vector<OMVoxelFluid> fm = {}, tfm = {};
@@ -863,8 +881,9 @@ auto OMVoxelManager::fetchLayerState() -> std::array<std::tuple<uint32_t, uint32
 auto OMVoxelManager::hashLayerState() -> std::array<uint32_t, 12>
 {
     // Hash the instance byte count rounded up to 1MB: usedSize changes every frame while chunks upload,
-    // so using it directly would re-record every frame. After rounding, only crossing a 1MB boundary (or a capacity change) re-records,
-    // and draws submit the rounded count too; extra instances are zeroed data rejected by the vertex shader.
+    // so using it directly would re-record every frame. After rounding, only crossing a 1MB boundary (or a capacity
+    // change) re-records, and draws submit the rounded count too; extra instances are zeroed data rejected by the
+    // vertex shader.
     return {
         voxelLayer->buf()->usedSize(),
         voxelLayer->buf()->totalSize,
@@ -919,7 +938,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
     lastCameraChunk = cameraChunk;
     lastCameraLocal = cameraLocal;
 
-    // Clouds are pinned at camera height (near the horizon): the layer is invisible when the view's top edge is below the horizon
+    // Clouds are pinned at camera height (near the horizon): the layer is invisible when the view's top edge is below
+    // the horizon
     renderClouds = (camera.getPitch() + camera.getFov() * 0.5f) > -2.0f;
 
     auto cur = std::chrono::steady_clock::now();
@@ -1008,8 +1028,9 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
         pendingUnload = 0;
 
-        // Occlusion culling: BFS from the camera's section, using the visibility matrix to tell whether a path can pass through a section.
-        // Recompute only when the camera changes section or visibility data changes; data-driven recomputes are throttled to 100ms.
+        // Occlusion culling: BFS from the camera's section, using the visibility matrix to tell whether a path can pass
+        // through a section. Recompute only when the camera changes section or visibility data changes; data-driven
+        // recomputes are throttled to 100ms.
         if (sectionVisibility.size() < static_cast<size_t>(chunkManager->numChunks()))
         {
             sectionVisibility.resize(static_cast<size_t>(chunkManager->numChunks()), 0);
@@ -1022,7 +1043,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                                                            std::chrono::steady_clock::now() - lastBfsTime)
                                                                .count() < 100;
 
-        // Incrementally fill visibility data for candidate sections in range (limited per frame to avoid starving geometry compilation)
+        // Incrementally fill visibility data for candidate sections in range (limited per frame to avoid starving
+        // geometry compilation)
         if (bfsOcclusionEnabled && !cullCandidates.empty())
         {
             int requested = 0;
@@ -1167,6 +1189,24 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             {
                 hideFrames.resize(chunks.size(), 0);
             }
+            if (sectionResident.size() < chunks.size())
+            {
+                sectionResident.resize(chunks.size(), 0);
+                residentOrigin.resize(chunks.size(), {INT64_MIN, INT64_MIN, INT64_MIN});
+            }
+        };
+
+        auto setOffset = [&](int index, const glm::vec4 &value) {
+            if (index < 0 || static_cast<size_t>(index) >= chunkOffsetCache.size())
+            {
+                return;
+            }
+
+            if (chunkOffsetCache[index] != value)
+            {
+                chunkOffsetCache[index] = value;
+                offsetCacheDirty = true;
+            }
         };
 
         const bool rebuildOffsets =
@@ -1181,24 +1221,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                 chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
                     syncSlotState(chunks);
 
-                    int i = 0;
-                    for (auto &ochk : chunks)
+                    for (size_t i = 0; i < chunks.size(); ++i)
                     {
-                        if (!ochk)
-                        {
-                            chunkOffsetCache[i] = glm::vec4{INFINITY};
-                        }
-                        else
-                        {
-                            const auto &chk = *ochk;
-                            auto position = basics::OMPosition<16, int64_t, float>();
-                            position.chunkx = chk.chunkx;
-                            position.chunky = chk.chunky;
-                            position.chunkz = chk.chunkz;
-
-                            chunkOffsetCache[i] = glm::vec4(position - camera.getPosRaw(), 1.0f);
-                        }
-                        ++i;
+                        // Visible sections receive a finite offset below. All
+                        // others are moved to infinity so resident geometry is
+                        // rejected by the vertex shader without a rebuild.
+                        setOffset(static_cast<int>(i), glm::vec4{INFINITY});
                     }
                 });
             }
@@ -1246,6 +1274,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                         {
                             cullCandidates.push_back(ci);
                         }
+                        else
+                        {
+                            candidate->visible = false;
+                            setOffset(ci, glm::vec4{INFINITY});
+                        }
                     }
                 }
 
@@ -1264,10 +1297,14 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     {
                         auto &chk = *ochk;
 
-                        // All-air chunk: not compiled, not drawn, consumes no buffer space
+                        // Hidden sections keep their resident geometry. Moving
+                        // the chunk offset to infinity makes the vertex shader
+                        // reject its instances without a rebuild.
+                        setOffset(i, glm::vec4{INFINITY});
+
                         if (chk.isEmpty())
                         {
-                            if (chk.visible)
+                            if (chk.visible || (static_cast<size_t>(i) < sectionResident.size() && sectionResident[i]))
                             {
                                 unloadChunk(i);
                                 chk.visible = false;
@@ -1286,11 +1323,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                         bool beyondDistance = cheapFar;
                         glm::vec3 chunkCenter{0.0f};
                         float compileDistanceSq = 0.0f;
+                        auto chunkOffset = basics::OMPosition<16, int64_t, float>(chk.chunkx, chk.chunky, chk.chunkz) -
+                                           camera.getPosRaw();
 
                         if (!cheapFar)
                         {
-                            auto pp0 = basics::OMPosition<16, int64_t, float>(chk.chunkx, chk.chunky, chk.chunkz) -
-                                       camera.getPosRaw();
+                            auto pp0 = chunkOffset;
                             auto pp1 =
                                 basics::OMPosition<16, int64_t, float>(chk.chunkx + 1, chk.chunky + 1, chk.chunkz + 1) -
                                 camera.getPosRaw();
@@ -1331,40 +1369,39 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                                 ++hideFrames[i];
                                 visible = true;
                             }
-                            else if (unloadBudget > 0)
-                            {
-                                --unloadBudget;
-                                unloadChunk(i);
-                            }
-                            else
-                            {
-                                ++hideFrames[i];
-                                visible = true;
-                            }
                         }
                         else if (chk.visible && visible)
                         {
                             hideFrames[i] = 0;
-
-                            if (chk.isDirty())
-                            {
-                                compilerPool->compile(i, false, compileDistanceSq);
-                                chk.solveDirty();
-                            }
-                        }
-                        else if (!chk.visible && visible)
-                        {
-                            hideFrames[i] = 0;
-                            compilerPool->compile(i, true, compileDistanceSq);
-                            chk.solveDirty();
                         }
 
                         chk.visible = visible;
 
-                        if (visible && hideFrames[i] > 0)
+                        if (!visible)
                         {
-                            ++pendingUnload;
+                            continue;
                         }
+
+                        hideFrames[i] = 0;
+                        setOffset(i, glm::vec4(chunkOffset, 1.0f));
+
+                        const auto origin = std::array<int64_t, 3>{chk.chunkx, chk.chunky, chk.chunkz};
+                        const bool resident = static_cast<size_t>(i) < sectionResident.size() && sectionResident[i] &&
+                                              residentOrigin[i] == origin;
+
+                        if (!resident || chk.isDirty())
+                        {
+                            compilerPool->compile(i, !resident, compileDistanceSq);
+
+                            if (static_cast<size_t>(i) < sectionResident.size())
+                            {
+                                sectionResident[i] = 1;
+                                residentOrigin[i] = origin;
+                            }
+
+                            chk.solveDirty();
+                        }
+
                     }
                     ++i;
                 }
@@ -1431,8 +1468,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         {
             renderer->unregisterBuffer(chunkOffsetBuffer.getTag());
             static uint64_t chunkOffsetGeneration = 1;
-            chunkOffsetBuffer = OMBufferRef(
-                renderer, "voxel.chunkOffset.g" + std::to_string(chunkOffsetGeneration++));
+            chunkOffsetBuffer = OMBufferRef(renderer, "voxel.chunkOffset.g" + std::to_string(chunkOffsetGeneration++));
             renderer->registerBuffer(chunkOffsetBuffer.getTag(), UniformTexel,
                                      static_cast<uint64_t>(chunkManager->numChunks()) * sizeof(glm::vec4) * 2);
             chunkOffsetBuffer->format = basics::Vec4f;
@@ -1448,7 +1484,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         chunkOffsetBuffer->synced = true;
 
         const bool offsetsDirty =
-            cameraMoved || chunkOffsetBufferReallocated || chunkOffsetCache.size() != lastOffsetCount;
+            cameraMoved || chunkOffsetBufferReallocated || offsetCacheDirty ||
+            chunkOffsetCache.size() != lastOffsetCount;
 
         if (offsetsDirty)
         {
@@ -1466,6 +1503,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
             lastOffsetCount = chunkOffsetCache.size();
             offsetUploadedOnce = true;
+            offsetCacheDirty = false;
         }
 
         compilerPool->upload(

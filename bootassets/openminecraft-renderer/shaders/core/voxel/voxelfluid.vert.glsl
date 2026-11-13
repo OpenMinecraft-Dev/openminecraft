@@ -151,6 +151,11 @@ void main()
     worldPos += vec3(bx, by, bz);
 
     vec3 coff = texelFetch(inChunkPos, VOXEL_CHUNKID).xyz;
+    if (isinf(coff.x))
+    {
+        gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+        return;
+    }
     gl_Position = camera.viewProj * vec4(worldPos + coff, 1.0);
 
     if (VOXEL_FLUIDFLOW == 1)
