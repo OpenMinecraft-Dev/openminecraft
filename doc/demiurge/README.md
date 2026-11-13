@@ -303,7 +303,7 @@ bit 30..16 15 位 z-order（越大越靠前）
 bit 15..0  真实 layer index
 ```
 
-顶点 shader 用 `geom_zOrderDepth()` 把 15 位 z-order 映射到 0..1 的裁剪空间深度；所有几何图元管线启用 `LessOrEqual` 深度测试和写入。相同 z-order 的图元按提交顺序混合，不同 z-order 由深度缓冲决定遮挡。overlay 组仍拥有独立的最大层计数，并在普通层之后渲染；同一个真实 layer 下的 overlay 通过 z-order 排序。
+顶点 shader 用 `geom_zOrderDepth()` 把 15 位 z-order 映射到 0..1 的裁剪空间深度；所有几何图元管线启用 `LessOrEqual` 深度测试和写入。SDF 图元为抗锯齿扩展的 quad 边距在最终 alpha 为 0 时通过 `discard` 跳过，避免透明像素写入深度、形成不可见的遮挡边。相同 z-order 的图元按提交顺序混合，不同 z-order 由深度缓冲决定遮挡。overlay 组仍拥有独立的最大层计数，并在普通层之后渲染；同一个真实 layer 下的 overlay 实例会在 CPU 端按 z-order 升序重新排序后提交，保证透明混合顺序与遮挡顺序一致。
 
 | 元素 | 额外字段 | 通道 |
 | --- | --- | --- |
@@ -851,7 +851,7 @@ Gallery 页签现在由 ScrollPane 承载所有控件 DropDown（纵向滚动）
 - 挂载与卸载通过 `deferAction()` 延迟到帧边界，避免事件遍历中修改 children；
 - 打开/关闭有 0.18s 动画：面板从下方 18px 平移到居中，同时通过 `setOpacity` 让面板及其全部子控件淡入淡出；关闭时反向播放，动画结束后才卸载；
 - 只有单个关闭按钮，点击面板外不会关闭；
-- 多个 Dialog 同时打开时使用 modal 栈和 z-order：所有 Dialog 共用真实 overlay layer，z-order 按 modal 栈位置递增；多个面板会按栈位置左右并排（间距 360px），避免相互完全覆盖，同时保持 depth 遮挡关系正确；
+- 多个 Dialog 同时打开时使用 modal 栈和 z-order：所有 Dialog 共用真实 overlay layer，z-order 按 modal 栈位置递增；面板全部居中并完全重合，由深度测试保证上层遮挡下层；没有额外的并排/错开位移动画；
 - 打开期间 Tooltip 会自动隐藏；
 - 关闭按钮获得焦点，按钮文本和消息均为多行/单行 Text。
 

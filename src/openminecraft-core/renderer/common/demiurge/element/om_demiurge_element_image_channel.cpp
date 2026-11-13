@@ -37,9 +37,8 @@ auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, uint32_t layer) ->
         resetInstanceBuffer(this->bufferSize());
     }
 
-    for (int i = 0; i < objects.size(); ++i)
+    for (int i : this->layerDrawOrder(layer))
     {
-        if (sameLayer(this->objects[i].depth, layer))
         {
             if (!textures.count(i))
             {

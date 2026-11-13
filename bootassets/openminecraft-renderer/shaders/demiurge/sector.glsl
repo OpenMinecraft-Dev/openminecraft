@@ -53,7 +53,12 @@ void main()
     vec2 sectorCenter = geom_rectCenterPos(secSectorPosition);
     vec2 halfSize = secSectorPosition.zw / 2.0;
 
-    outColor = vec4(secColor.rgb,
-                   secColor.a * sdf_sector(secPosition, halfSize, sectorCenter, secSectorAngle, 0, secSectorFactor));
+    vec4 color = vec4(secColor.rgb,
+                      secColor.a * sdf_sector(secPosition, halfSize, sectorCenter, secSectorAngle, 0, secSectorFactor));
+    if (color.a <= 0.0)
+    {
+        discard;
+    }
+    outColor = color;
 }
 #endif

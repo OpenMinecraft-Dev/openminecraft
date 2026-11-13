@@ -77,6 +77,14 @@ void main()
     }
 
     // Straight alpha: the pipeline blends with SrcAlpha/OneMinusSrcAlpha.
-    outColor = vec4(rrectColor.rgb, rrectColor.a * alpha);
+    // Fully transparent fragments must not write depth; the vertex shader
+    // expands the quad by 10px for SDF antialiasing, and a default depth write
+    // would create an invisible occluder around every rounded rectangle.
+    vec4 color = vec4(rrectColor.rgb, rrectColor.a * alpha);
+    if (color.a <= 0.0)
+    {
+        discard;
+    }
+    outColor = color;
 }
 #endif

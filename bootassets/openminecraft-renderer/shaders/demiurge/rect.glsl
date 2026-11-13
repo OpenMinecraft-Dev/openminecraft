@@ -31,6 +31,10 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
+    if (rectColor.a <= 0.0)
+    {
+        discard;
+    }
     outColor = rectColor;
 }
 #endif

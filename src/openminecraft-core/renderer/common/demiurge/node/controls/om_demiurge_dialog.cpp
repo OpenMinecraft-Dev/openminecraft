@@ -236,29 +236,8 @@ void OMDemiurgeDialog::updateAnimation()
 
     const float amount = std::clamp(openAmount.get(), 0.0f, 1.0f);
 
-    int stackIndex = 0;
-    int modalDepth = 1;
-
-    if (auto root = layerNode->getRoot())
-    {
-        stackIndex = std::max(0, root->modalIndex(layerNode.get()));
-        modalDepth = std::max(1, root->modalDepth());
-    }
-
-    // Multiple dialogs are laid out side by side instead of almost completely
-    // covering one another. A single dialog stays centered.
-    float stackX = 0.0f;
-    float stackY = 0.0f;
-
-    if (modalDepth > 1)
-    {
-        constexpr float DialogSpacing = 360.0f;
-        stackX = (static_cast<float>(stackIndex) - (static_cast<float>(modalDepth) - 1.0f) * 0.5f) * DialogSpacing;
-        stackY = 8.0f;
-    }
-
-    panelNode->style("offsetX", OMDemiurgeSize::pixels(stackX));
-    panelNode->style("offsetY", OMDemiurgeSize::pixels(stackY + (1.0f - amount) * 18.0f));
+    panelNode->style("offsetX", OMDemiurgeSize::pixels(0.0f));
+    panelNode->style("offsetY", OMDemiurgeSize::pixels((1.0f - amount) * 18.0f));
     // Only the close fade uses panel opacity. On open the panel is immediately
     // opaque, so a stalled/zero openAmount cannot leave an interactive but
     // invisible dialog in the tree.

@@ -303,7 +303,7 @@ bit 30..16 15-bit z-order (larger is closer)
 bit 15..0  actual layer index
 ```
 
-`geom_zOrderDepth()` maps z-order to clip-space depth in 0..1. All geometry pipelines enable `LessOrEqual` depth testing and writes. Equal z-order uses submission order; different z-order is resolved by the depth buffer. The overlay group still has its own max-layer count and renders after normal layers; overlays sharing an actual layer are ordered by z-order.
+`geom_zOrderDepth()` maps z-order to clip-space depth in 0..1. All geometry pipelines enable `LessOrEqual` depth testing and writes. SDF quads expanded for antialiasing discard fully transparent fragments, so their margins never write depth and create invisible occluders. Equal z-order uses submission order; different z-order is resolved by the depth buffer. The overlay group still has its own max-layer count and renders after normal layers; overlay instances sharing an actual layer are sorted by z-order on the CPU before submission so translucent blending and occlusion follow the same order.
 
 | Element | Extra fields | Channel |
 | --- | --- | --- |
@@ -851,7 +851,7 @@ Behavior:
 - Mount/unmount is deferred to the frame boundary via `deferAction()`;
 - Opening/closing uses a 0.18s animation: the panel slides from 18px below into the center, and `setOpacity` fades the panel and all of its children; closing plays in reverse and the dialog unmounts only after the animation finishes;
 - There is exactly one close button; clicking outside the panel does not close it;
-- Multiple open dialogs use the modal stack plus z-order: all dialogs share the real overlay layer and get increasing z-order values. Their panels are laid out side by side (360px spacing) so they stay visible, while depth testing preserves correct occlusion;
+- Multiple open dialogs use the modal stack plus z-order: all dialogs share the real overlay layer and get increasing z-order values. Their panels are all centered and fully overlap; depth testing keeps the upper one in front. There is no extra side-by-side or stagger translation animation;
 - Tooltips hide automatically while it is open;
 - The close button receives focus; message and button label use the normal text widgets.
 

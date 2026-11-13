@@ -97,6 +97,11 @@ void main()
 
     vec4 sampled = texture(inTexture, uv);
     vec4 tinted = imageColor * sampled;
-    outColor = vec4(tinted.rgb, tinted.a * alpha);
+    vec4 color = vec4(tinted.rgb, tinted.a * alpha);
+    if (color.a <= 0.0)
+    {
+        discard;
+    }
+    outColor = color;
 }
 #endif

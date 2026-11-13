@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_geometry.hpp"
+#include <algorithm>
 #include <functional>
 #include <optional>
 #include <string>
@@ -100,6 +101,34 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
         }
 
         return std::nullopt;
+    }
+
+    // Draw order inside one actual layer: lower z-order first, then stable
+    // instance order. The renderer still buckets by the low 16-bit layer; this
+    // only sorts overlay instances that share that bucket.
+    inline auto layerDrawOrder(uint32_t layer) -> std::vector<int>
+    {
+        std::vector<int> indices;
+        indices.reserve(objects.size());
+
+        for (int i = 0; i < static_cast<int>(objects.size()); ++i)
+        {
+            const auto depth = objectGetDepth(objects[i]);
+
+            if (sameLayer(depth, layer))
+            {
+                indices.push_back(i);
+            }
+        }
+
+        std::sort(indices.begin(), indices.end(), [&](int a, int b) {
+            const auto za = layerZOrder(objectGetDepth(objects[a]));
+            const auto zb = layerZOrder(objectGetDepth(objects[b]));
+
+            return za != zb ? za < zb : a < b;
+        });
+
+        return indices;
     }
 
     inline auto solve() -> void

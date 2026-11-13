@@ -212,6 +212,11 @@ void main()
     // Premultiplied per-channel coverage; the text pipeline blends with
     // (One, OneMinusSrcAlpha) so each color channel is attenuated independently.
     float alpha = max(max(coverage.r, coverage.g), coverage.b);
-    outColor = vec4(textColor.rgb * coverage, textColor.a * alpha);
+    vec4 color = vec4(textColor.rgb * coverage, textColor.a * alpha);
+    if (color.a <= 0.0)
+    {
+        discard;
+    }
+    outColor = color;
 }
 #endif

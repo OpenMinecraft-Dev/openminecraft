@@ -70,36 +70,42 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
                 ->drawInstance(6, end - start, start);
         };
 
+        // Sort overlay instances by their 15-bit z-order before batching.
+        // Normal UI is entirely z-order 0, so this preserves its existing order.
+        const auto order = this->layerDrawOrder(layer);
         bool inDraw = false;
         int start = 0;
+        int last = -1;
+        uint32_t currentZ = 0;
         std::optional<OMDemiurgeRect> currentClip;
 
-        for (int i = 0; i <= this->objects.size(); ++i)
+        for (int i : order)
         {
-            bool isDraw = (i < this->objects.size()) && sameLayer(this->objects[i].depth, layer);
+            const uint32_t z = layerZOrder(this->objects[i].depth);
+            auto clip = this->fetchClip(i);
+            const bool contiguous =
+                inDraw && i == last + 1 && z == currentZ && sameClip(clip, currentClip);
 
-            if (!inDraw && isDraw)
+            if (inDraw && !contiguous)
             {
-                start = i;
-                currentClip = this->fetchClip(i);
-                inDraw = true;
-            }
-            else if (inDraw && isDraw)
-            {
-                auto clip = this->fetchClip(i);
-
-                if (!sameClip(clip, currentClip))
-                {
-                    flush(i, start, currentClip);
-                    start = i;
-                    currentClip = clip;
-                }
-            }
-            else if (inDraw && !isDraw)
-            {
-                flush(i, start, currentClip);
+                flush(last + 1, start, currentClip);
                 inDraw = false;
             }
+
+            if (!inDraw)
+            {
+                start = i;
+                currentZ = z;
+                currentClip = clip;
+                inDraw = true;
+            }
+
+            last = i;
+        }
+
+        if (inDraw)
+        {
+            flush(last + 1, start, currentClip);
         }
     }
 

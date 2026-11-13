@@ -66,15 +66,8 @@ auto OMDemiurgeShaderSceneChannel::submitTask(OMRendererTask *task, uint32_t lay
         instanceBuffer = newBuffer;
     }
 
-    for (int i = 0; i < static_cast<int>(objects.size()); ++i)
+    for (int i : this->layerDrawOrder(layer))
     {
-        const auto &obj = objects[i];
-
-        if (!sameLayer(obj.depth, layer))
-        {
-            continue;
-        }
-
         auto shaderIt = shaders.find(i);
         if (shaderIt == shaders.end())
         {
