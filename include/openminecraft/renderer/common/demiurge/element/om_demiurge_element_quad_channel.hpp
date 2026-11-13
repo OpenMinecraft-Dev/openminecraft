@@ -65,7 +65,9 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
 
         auto flush = [&](int end, int start, const std::optional<OMDemiurgeRect> &clip) -> void {
             applyClipScissor(task, clip);
-            task->pipeline(pipeline)->vertexBufferInstanced({instanceBuffer}, start)->drawInstance(6, end - start, start);
+            task->pipeline(pipeline)
+                ->vertexBufferInstanced({instanceBuffer}, start)
+                ->drawInstance(6, end - start, start);
         };
 
         bool inDraw = false;

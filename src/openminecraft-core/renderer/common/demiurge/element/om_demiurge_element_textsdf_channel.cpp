@@ -73,7 +73,7 @@ void OMDemiurgeTextSdfChannel::init(const std::string &uniformTag, const std::st
                    ->shader(frgShader)
                    ->shader(vtxShader)
                    ->format(format)
-                   ->blendFunc({One, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
+                   ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
                    ->blend(true)
                    ->depth(true, true)
                    ->depthOp(Always)
