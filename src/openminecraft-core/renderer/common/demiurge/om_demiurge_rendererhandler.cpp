@@ -91,20 +91,19 @@ void OMDemiurgeRendererHandler::submitTasks()
     recordTask(true);
 }
 
-void OMDemiurgeRendererHandler::recordTask(bool resize)
+auto OMDemiurgeRendererHandler::currentLayerBounds() -> LayerBounds
 {
-    auto task = renderer->fetchTask("demiurgeui_compose_" + name);
-    task->target(middleTarget->target());
-
-    uint32_t maxLayer = rect.maxLayer();
-    uint32_t maxOverlayLayer = rect.maxLayer(true);
-    bool hasOverlay = rect.hasLayerGroup(true);
+    LayerBounds bounds;
+    bounds.maxLayer = rect.maxLayer();
+    bounds.maxOverlayLayer = rect.maxLayer(true);
+    bounds.hasOverlay = rect.hasLayerGroup(true);
 
     auto includeMax = [&](auto &channel) {
-        maxLayer = std::max(maxLayer, channel.maxLayer());
-        maxOverlayLayer = std::max(maxOverlayLayer, channel.maxLayer(true));
-        hasOverlay = hasOverlay || channel.hasLayerGroup(true);
+        bounds.maxLayer = std::max(bounds.maxLayer, channel.maxLayer());
+        bounds.maxOverlayLayer = std::max(bounds.maxOverlayLayer, channel.maxLayer(true));
+        bounds.hasOverlay = bounds.hasOverlay || channel.hasLayerGroup(true);
     };
+
     includeMax(roundedRect);
     includeMax(image);
     includeMax(sector);
@@ -115,6 +114,20 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
     {
         includeMax(*p.second);
     }
+
+    return bounds;
+}
+
+void OMDemiurgeRendererHandler::recordTask(bool resize)
+{
+    auto task = renderer->fetchTask("demiurgeui_compose_" + name);
+    task->target(middleTarget->target());
+
+    const auto bounds = currentLayerBounds();
+    const uint32_t maxLayer = bounds.maxLayer;
+    const uint32_t maxOverlayLayer = bounds.maxOverlayLayer;
+    const bool hasOverlay = bounds.hasOverlay;
+    recordedLayerBounds = bounds;
 
     // Normal layers first.
     for (uint32_t layer = 0; layer <= maxLayer; ++layer)
@@ -170,6 +183,17 @@ void OMDemiurgeRendererHandler::beforeFrame()
     node->submit(this, 0);
     node->update();
     node->flushDeferredActions();
+
+    // Opening a dialog or selector can introduce a new layer group / higher
+    // layer index after the task was recorded. Re-record before presenting so
+    // the new overlay is actually included in the command list.
+    const auto bounds = currentLayerBounds();
+    if (bounds.maxLayer != recordedLayerBounds.maxLayer ||
+        bounds.maxOverlayLayer != recordedLayerBounds.maxOverlayLayer ||
+        bounds.hasOverlay != recordedLayerBounds.hasOverlay)
+    {
+        recordTask();
+    }
 
     rect.update();
     roundedRect.update();

@@ -45,6 +45,14 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     void recordTask(bool resize = false);
 
+    struct LayerBounds
+    {
+        uint32_t maxLayer = 0;
+        uint32_t maxOverlayLayer = 0;
+        bool hasOverlay = false;
+    };
+    auto currentLayerBounds() -> LayerBounds;
+
     std::shared_ptr<OMDemiurgeNode> node;
 
     wrap::OMRendererTempTarget *middleTarget;
@@ -90,6 +98,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
 
     bool fit = false;
     bool clipDirty = false;
+    LayerBounds recordedLayerBounds;
     std::string name = "default";
 
   private:
