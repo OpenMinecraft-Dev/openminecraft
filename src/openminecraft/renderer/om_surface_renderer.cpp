@@ -250,9 +250,9 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                                           {"textHeight", 18},
                                           {"alignSelf", OMDemiurgeAlign::FlexStart}}));
         section->mountDirect(std::make_shared<node::controls::OMDemiurgeLabel>(fontset.get())
-                                 ->style({{"color", (int)0xffffff8c},
+                                 ->style({{"color", (int)0xffffffdd},
                                           {"text", description},
-                                          {"textHeight", 11},
+                                          {"textHeight", 12},
                                           {"alignSelf", OMDemiurgeAlign::FlexStart}}));
 
         auto bodyWrap = std::make_shared<node::OMDemiurgePane>();
