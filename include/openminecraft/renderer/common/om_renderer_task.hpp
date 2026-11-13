@@ -15,6 +15,17 @@ class OMRenderer;
 
 namespace openminecraft::renderer::common
 {
+// Matches Vulkan's VkDrawIndexedIndirectCommand and OpenGL's
+// DrawElementsIndirectCommand (5 uint32_t, tightly packed).
+struct OMRendererDrawIndexedIndirect
+{
+    uint32_t indexCount = 0;
+    uint32_t instanceCount = 0;
+    uint32_t firstIndex = 0;
+    uint32_t vertexOffset = 0;
+    uint32_t firstInstance = 0;
+};
+
 class OMRendererTask : public OMRendererObject
 {
   public:
@@ -90,7 +101,9 @@ class OMRendererTask : public OMRendererObject
     }
     virtual void bindIndirectBuffer(OMRendererBuffer *buffer) = 0;
 
-    // Whether this backend/task supports indirect draw (drawIndirect* available)
+    // Whether this backend/task supports indirect draw. Vulkan always returns
+    // true; OpenGL decides inside its task implementation from the runtime GL
+    // version/function availability.
     virtual auto isSupportIndirect() const -> bool
     {
         return false;
@@ -154,6 +167,36 @@ class OMRendererTask : public OMRendererObject
     inline auto drawIndirectN() -> OMRendererTask *
     {
         drawIndirect();
+        return this;
+    }
+
+    // Backend-neutral indirect draw with a CPU fallback. The decision belongs
+    // to the task: Vulkan takes the indirect path, while OpenGL uses indirect
+    // only when the task reports support and otherwise replays the same
+    // commands through normal instanced draws. The fallback path supports
+    // firstInstance but assumes firstIndex == 0 and vertexOffset == 0 (the
+    // voxel index buffer layout).
+    inline auto drawIndexedIndirectN(OMRendererBuffer *indirect, uint64_t begin, uint64_t count,
+                                     const std::vector<OMRendererDrawIndexedIndirect> &fallback)
+        -> OMRendererTask *
+    {
+        if (isSupportIndirect())
+        {
+            bindIndirectBuffer(indirect);
+            drawIndirect(begin, count);
+            return this;
+        }
+
+        for (const auto &cmd : fallback)
+        {
+            if (cmd.instanceCount == 0 || cmd.indexCount == 0)
+            {
+                continue;
+            }
+
+            drawIndexedInstance(cmd.indexCount, cmd.instanceCount, cmd.firstInstance);
+        }
+
         return this;
     }
     virtual void finish() = 0;

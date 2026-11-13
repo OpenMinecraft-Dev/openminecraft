@@ -488,6 +488,14 @@ auto OMRendererTaskOpenGL::primitiveType() -> GLenum
 }
 void OMRendererTaskOpenGL::drawIndirect(uint64_t begin, uint64_t count)
 {
+    // The task owns the capability decision. Callers that need a fallback use
+    // OMRendererTask::drawIndexedIndirectN(); a raw indirect draw on an
+    // unsupported GL context is a no-op rather than a null function call.
+    if (!supportIndirect)
+    {
+        return;
+    }
+
     ops.push_back({BindVertexArray, vaos.back()});
     ops.push_back({UseProgram, program});
     ops.push_back({MultiDrawElementsIndirect,
@@ -497,6 +505,11 @@ void OMRendererTaskOpenGL::drawIndirect(uint64_t begin, uint64_t count)
 }
 void OMRendererTaskOpenGL::drawIndirect()
 {
+    if (!supportIndirect)
+    {
+        return;
+    }
+
     ops.push_back({BindVertexArray, vaos.back()});
     ops.push_back({UseProgram, program});
     ops.push_back({DrawElementsIndirect, {primitiveType(), GL_UNSIGNED_INT}, {nullptr}});

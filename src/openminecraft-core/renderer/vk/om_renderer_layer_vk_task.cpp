@@ -20,7 +20,8 @@ using namespace openminecraft::i18n::res;
 
 namespace openminecraft::renderer::vk
 {
-OMRendererTaskVk::OMRendererTaskVk(OMRendererVk *renderer) : common::OMRendererTask(renderer), renderer(renderer)
+OMRendererTaskVk::OMRendererTaskVk(OMRendererVk *renderer)
+    : common::OMRendererTask(renderer), renderer(renderer), indirectBuffer(nullptr)
 {
     try
     {
