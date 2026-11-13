@@ -12,7 +12,7 @@ namespace
 {
 // Ticks the open/close animation from syncLayout(), so the panel offset and
 // backdrop alpha are applied before Yoga computes layout for the frame.
-class DialogLayerNode : public node::OMDemiurgeRectNode
+class OMDemiurgeDialogLayerNode : public node::OMDemiurgeRectNode
 {
   public:
     std::function<void()> tick;
@@ -101,6 +101,7 @@ void OMDemiurgeDialog::show(const std::shared_ptr<OMDemiurgeNode> &parent, const
             // active modal instead of silently returning while it is stale.
             openRequested = true;
             parent->setModalChild(layerNode);
+            panelNode->setOpacity(1.0f);
 
             if (closing)
             {
@@ -134,7 +135,7 @@ void OMDemiurgeDialog::show(const std::shared_ptr<OMDemiurgeNode> &parent, const
             return;
         }
 
-        auto layer = std::make_shared<DialogLayerNode>();
+        auto layer = std::make_shared<OMDemiurgeDialogLayerNode>();
         layer->tick = [this]() { updateAnimation(); };
         layer->style({
             {"position", OMDemiurgePosition::Absolute},
@@ -195,6 +196,7 @@ void OMDemiurgeDialog::show(const std::shared_ptr<OMDemiurgeNode> &parent, const
         closeButton = button;
         openAmount.setTo(0.0f);
         openAmount.animateTo(1.0f, animation::easeOutCubic<float>, 0.18f);
+        panel->setOpacity(1.0f);
         button->requestFocus();
     });
 }
@@ -242,7 +244,10 @@ void OMDemiurgeDialog::updateAnimation()
     }
 
     panelNode->style("offsetY", OMDemiurgeSize::pixels((1.0f - amount) * 18.0f));
-    panelNode->setOpacity(amount);
+    // Only the close fade uses panel opacity. On open the panel is immediately
+    // opaque, so a stalled/zero openAmount cannot leave an interactive but
+    // invisible dialog in the tree.
+    panelNode->setOpacity(closing ? amount : 1.0f);
 
     if (!closing || amount > 0.001f || cleanupScheduled)
     {

@@ -28,9 +28,6 @@
 #include "openminecraft/renderer/common/event/om_eventbus_wrap.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include <memory>
-#include <fstream>
-#include <cstdlib>
-#include <cstdlib>
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_shaderscene.hpp"
 
 using namespace openminecraft::renderer;
