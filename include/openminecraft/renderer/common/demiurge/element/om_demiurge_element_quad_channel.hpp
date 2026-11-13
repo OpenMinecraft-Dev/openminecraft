@@ -76,7 +76,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
 
         for (int i = 0; i <= this->objects.size(); ++i)
         {
-            bool isDraw = (i < this->objects.size()) && this->objects[i].depth == layer;
+            bool isDraw = (i < this->objects.size()) && sameLayer(this->objects[i].depth, layer);
 
             if (!inDraw && isDraw)
             {
@@ -168,7 +168,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
                        ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
                        ->blend(true)
                        ->depth(true, true)
-                       ->depthOp(Always)
+                       ->depthOp(LessOrEqual)
                        ->writeColor(writeColor)
                        ->buildN();
         pipeline->bindInput(0, uniform);

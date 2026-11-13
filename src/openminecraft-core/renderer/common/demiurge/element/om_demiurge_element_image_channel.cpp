@@ -39,7 +39,7 @@ auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, uint32_t layer) ->
 
     for (int i = 0; i < objects.size(); ++i)
     {
-        if (this->objects[i].depth == layer)
+        if (sameLayer(this->objects[i].depth, layer))
         {
             if (!textures.count(i))
             {
@@ -60,7 +60,7 @@ auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, uint32_t layer) ->
                                    ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
                                    ->blend(true)
                                    ->depth(true, true)
-                                   ->depthOp(Always)
+                                   ->depthOp(LessOrEqual)
                                    ->buildN();
                 pipelines[i]->bindInput(0, uniform);
                 pipelines[i]->bindInput(1, renderer->getTexture(textures[i]));

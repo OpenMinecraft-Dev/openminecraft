@@ -48,6 +48,7 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     fontset->fontList.push_back(std::make_shared<geom::OMFont>(*rawfile1.get()));
     node::controls::OMDemiurgeTooltip::instance().setFontSet(fontset.get());
     dialog = std::make_shared<node::controls::OMDemiurgeDialog>(fontset.get());
+    dialog2 = std::make_shared<node::controls::OMDemiurgeDialog>(fontset.get());
 
     auto button = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
     demoButton = button;
@@ -319,7 +320,25 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     dialogDemoButton->setOnClick([this]() {
         dialog->show(node, "This is a simple message dialog.\n\nIt has one button used to close it.", "Close");
     });
-    addGallerySection("Dialog", "Simple modal message dialog with one close button.", dialogDemoButton);
+
+    auto dialogPairButton = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
+    dialogPairButton->style("label", "Open Two Dialogs");
+    dialogPairButton->style("width", OMDemiurgeSize::pixels(200.0f));
+    dialogPairButton->style("height", OMDemiurgeSize::pixels(30.0f));
+    dialogPairButton->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
+    dialogPairButton->setOnClick([this]() {
+        dialog->show(node, "First dialog.\n\nThis one is below the second dialog.", "Close");
+        dialog2->show(node, "Second dialog.\n\nBoth dialogs are visible at the same time.", "Close");
+    });
+
+    auto dialogDemoRow = std::make_shared<node::OMDemiurgePane>();
+    dialogDemoRow->style({{"flexDirection", OMDemiurgeDirection::Row},
+                          {"alignItems", OMDemiurgeAlign::Center},
+                          {"flexGap", OMDemiurgeSize::pixels(8.0f)},
+                          {"width", OMDemiurgeSize::fill()}});
+    dialogDemoRow->mountDirect(dialogDemoButton);
+    dialogDemoRow->mountDirect(dialogPairButton);
+    addGallerySection("Dialog", "Simple modal dialogs; open one or two at the same time.", dialogDemoRow);
 
     demoSelector = std::make_shared<node::controls::OMDemiurgeDropDownSelector>(fontset.get());
     demoSelector->style("width", OMDemiurgeSize::pixels(220.0f));

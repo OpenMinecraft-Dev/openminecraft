@@ -190,6 +190,22 @@ class OMDemiurgeNode : public std::enable_shared_from_this<OMDemiurgeNode>
         return !modalChild.expired();
     }
 
+    auto modalDepth() -> int
+    {
+        std::lock_guard<std::mutex> lock(modalMutex);
+        int count = 0;
+
+        for (auto &item : modalStack)
+        {
+            if (!item.expired())
+            {
+                ++count;
+            }
+        }
+
+        return count;
+    }
+
     auto modalIndex(const OMDemiurgeNode *child) -> int
     {
         std::lock_guard<std::mutex> lock(modalMutex);

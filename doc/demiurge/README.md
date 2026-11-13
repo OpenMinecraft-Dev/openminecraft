@@ -295,9 +295,15 @@ control->hideTooltip();
 
 ## 6. Element 层（渲染贡献者）
 
-元素是通道内的实例结构体，不是业务 API。所有元素都带 `position = {x, y, w, h}`、`depth`（`uint32_t` 层号，根为 0、每深一层 +1），并统一支持 `glm::vec2 scale = (1, 1)`。UI 管线关闭深度测试（`Always`），层号只用于提交顺序。
+元素是通道内的实例结构体，不是业务 API。所有元素都带 `position = {x, y, w, h}`、`depth`（`uint32_t` 打包层号）和 `glm::vec2 scale = (1, 1)`。`depth` 的布局为：
 
-层号的最高位（`0x80000000`）是组标记：置位表示 overlay 组（供对话框等使用），计算层号时会被移除。overlay 组拥有独立的最大层计数，并在所有普通层之后统一渲染。可用 `om_demiurge_layer.hpp` 中的 `layerGroupBit`、`isOverlayLayer()`、`layerIndex()`、`overlayLayer()` 处理。
+```text
+bit 31      overlay 组标记
+bit 30..16 15 位 z-order（越大越靠前）
+bit 15..0  真实 layer index
+```
+
+顶点 shader 用 `geom_zOrderDepth()` 把 15 位 z-order 映射到 0..1 的裁剪空间深度；所有几何图元管线启用 `LessOrEqual` 深度测试和写入。相同 z-order 的图元按提交顺序混合，不同 z-order 由深度缓冲决定遮挡。overlay 组仍拥有独立的最大层计数，并在普通层之后渲染；同一个真实 layer 下的 overlay 通过 z-order 排序。
 
 | 元素 | 额外字段 | 通道 |
 | --- | --- | --- |
@@ -628,7 +634,7 @@ RadioGroup：
 - 点击弹层外部（透明 backdrop）或再次点击标题行关闭；关闭采用延迟卸载，事件批次内不会立刻重新打开；
 - 弹层优先显示在标题行下方；下方空间不足且上方能容纳完整列表时翻转到上方，否则限制高度并让列表内部滚动；
 - 弹层展开期间，面板区域内的滚轮事件只作用于列表 ScrollPane，不再带动外层 ScrollPane；
-- 弹层根节点设置 `setLayerOverlay(true)`，子节点层号自动继承最高位；overlay 组与普通层分开计数；
+- 弹层根节点设置 `setLayerOverlay(true)`，子节点继承组标记和 z-order；overlay 组与普通层分开计数；
 - 弹层挂载/卸载通过根节点的 `deferAction()` 延迟到帧边界执行，避免事件遍历期间修改 children 导致迭代器失效。
 
 主要 style：`width` / `height`（标题行尺寸）、`padding`。选项行高暂固定 28px。
@@ -830,7 +836,7 @@ Gallery 页签现在由 ScrollPane 承载所有控件 DropDown（纵向滚动）
 
 `OMDemiurgeDialog(geom::OMFontSet *fontset = nullptr)`
 
-最小消息对话框：全屏半透明遮罩 + 居中面板 + 多行消息 + 单个关闭按钮。
+最小消息对话框：居中面板 + 多行消息 + 单个关闭按钮，无全屏遮罩。
 
 | API | 说明 |
 | --- | --- |
@@ -840,12 +846,12 @@ Gallery 页签现在由 ScrollPane 承载所有控件 DropDown（纵向滚动）
 
 行为：
 
-- 对话框层挂到根节点并设置 `setLayerOverlay(true)`；
+- 对话框层挂到根节点并设置 `setLayerOverlay(true)`；只渲染 Dialog 面板，不再创建全屏 backdrop；
 - 同时设为根节点的 modal child，事件只分发给对话框；
 - 挂载与卸载通过 `deferAction()` 延迟到帧边界，避免事件遍历中修改 children；
-- 打开/关闭有 0.18s 动画：背景从全透明淡入到 62% 黑色，面板从下方 18px 平移到居中，同时通过 `setOpacity` 让面板及其全部子控件淡入淡出；关闭时反向播放，动画结束后才卸载；
-- 只有单个关闭按钮，点击遮罩不会关闭；
-- 多个 Dialog 同时打开时使用 modal 栈：底层 Dialog 继续显示，但每个 Dialog 按 modal 栈位置使用独立的 overlay layer 区间，保证上层背景、面板和文字正确遮挡下层；面板还会按栈位置轻微错开（每层 +18px X / +14px Y），便于同时看到多层 Dialog；
+- 打开/关闭有 0.18s 动画：面板从下方 18px 平移到居中，同时通过 `setOpacity` 让面板及其全部子控件淡入淡出；关闭时反向播放，动画结束后才卸载；
+- 只有单个关闭按钮，点击面板外不会关闭；
+- 多个 Dialog 同时打开时使用 modal 栈和 z-order：所有 Dialog 共用真实 overlay layer，z-order 按 modal 栈位置递增；多个面板会按栈位置左右并排（间距 360px），避免相互完全覆盖，同时保持 depth 遮挡关系正确；
 - 打开期间 Tooltip 会自动隐藏；
 - 关闭按钮获得焦点，按钮文本和消息均为多行/单行 Text。
 

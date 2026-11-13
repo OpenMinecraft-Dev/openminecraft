@@ -2,6 +2,7 @@
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_button.hpp"
 #include "openminecraft/renderer/common/demiurge/node/controls/om_demiurge_multiline_label.hpp"
 #include "openminecraft/renderer/common/demiurge/node/om_demiurge_rect.hpp"
+#include "openminecraft/renderer/common/demiurge/node/container/om_demiurge_pane.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_srgb.hpp"
 #include <algorithm>
@@ -11,8 +12,8 @@ namespace openminecraft::renderer::common::demiurge::node::controls
 namespace
 {
 // Ticks the open/close animation from syncLayout(), so the panel offset and
-// backdrop alpha are applied before Yoga computes layout for the frame.
-class OMDemiurgeDialogLayerNode : public node::OMDemiurgeRectNode
+// opacity are applied before Yoga computes layout for the frame.
+class OMDemiurgeDialogLayerNode : public node::container::OMDemiurgePane
 {
   public:
     std::function<void()> tick;
@@ -24,15 +25,13 @@ class OMDemiurgeDialogLayerNode : public node::OMDemiurgeRectNode
             tick();
         }
 
-        OMDemiurgeRectNode::syncLayout();
+        OMDemiurgePane::syncLayout();
     }
 
     auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void override
     {
-        // Put every dialog in its own overlay layer range according to its
-        // position in the modal stack. This keeps a newer dialog's panel/text
-        // above an older dialog's text even though text channels are submitted
-        // after rect channels.
+        // Overlay z-order comes directly from the modal stack. There is no
+        // full-screen backdrop; only the dialog panel is rendered.
         int index = -1;
 
         if (auto root = getRoot())
@@ -40,8 +39,12 @@ class OMDemiurgeDialogLayerNode : public node::OMDemiurgeRectNode
             index = root->modalIndex(this);
         }
 
-        const uint32_t base = static_cast<uint32_t>(std::max(0, index) + 1) * 8;
-        OMDemiurgeRectNode::submit(handler, overlayLayer(base));
+        const uint32_t zorder = static_cast<uint32_t>(std::max(0, index) + 1);
+
+        for (auto &child : children)
+        {
+            child->submit(handler, withLayerZOrder(overlayLayer(0), zorder));
+        }
     }
 };
 } // namespace
@@ -141,11 +144,9 @@ void OMDemiurgeDialog::show(const std::shared_ptr<OMDemiurgeNode> &parent, const
             {"position", OMDemiurgePosition::Absolute},
             {"width", OMDemiurgeSize::fill()},
             {"height", OMDemiurgeSize::fill()},
-            {"color", static_cast<int>(f4ToRgba(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f)))},
             {"flexDirection", OMDemiurgeDirection::Column},
             {"justifyContent", OMDemiurgeAlign::Center},
             {"alignItems", OMDemiurgeAlign::Center},
-            {"padding", OMDemiurgeEdgeInsets{24, 24, 24, 24}},
         });
         layer->setLayerOverlay(true);
 
@@ -153,7 +154,7 @@ void OMDemiurgeDialog::show(const std::shared_ptr<OMDemiurgeNode> &parent, const
         panel->style({
             {"width", OMDemiurgeSize::pixels(340.0f)},
             {"height", OMDemiurgeSize::fit()},
-            {"color", static_cast<int>(f4ToRgba(glm::vec4(0.075f, 0.075f, 0.095f, 0.98f)))},
+            {"color", static_cast<int>(f4ToRgba(glm::vec4(0.075f, 0.075f, 0.095f, 1.0f)))},
             {"radius", glm::vec4(8.0f)},
             {"padding", OMDemiurgeEdgeInsets{16, 16, 16, 16}},
             {"flexDirection", OMDemiurgeDirection::Column},
@@ -187,7 +188,7 @@ void OMDemiurgeDialog::show(const std::shared_ptr<OMDemiurgeNode> &parent, const
         panel->mountDirect(button);
         layer->mountDirect(panel);
 
-        parent->mountFront(layer);
+        parent->mountDirect(layer);
         parent->setModalChild(layer);
 
         layerNode = layer;
@@ -234,16 +235,30 @@ void OMDemiurgeDialog::updateAnimation()
     }
 
     const float amount = std::clamp(openAmount.get(), 0.0f, 1.0f);
-    layerNode->style("color", static_cast<int>(f4ToRgba(glm::vec4(0.0f, 0.0f, 0.0f, 0.62f * amount))));
 
     int stackIndex = 0;
+    int modalDepth = 1;
 
     if (auto root = layerNode->getRoot())
     {
         stackIndex = std::max(0, root->modalIndex(layerNode.get()));
+        modalDepth = std::max(1, root->modalDepth());
     }
 
-    panelNode->style("offsetY", OMDemiurgeSize::pixels((1.0f - amount) * 18.0f));
+    // Multiple dialogs are laid out side by side instead of almost completely
+    // covering one another. A single dialog stays centered.
+    float stackX = 0.0f;
+    float stackY = 0.0f;
+
+    if (modalDepth > 1)
+    {
+        constexpr float DialogSpacing = 360.0f;
+        stackX = (static_cast<float>(stackIndex) - (static_cast<float>(modalDepth) - 1.0f) * 0.5f) * DialogSpacing;
+        stackY = 8.0f;
+    }
+
+    panelNode->style("offsetX", OMDemiurgeSize::pixels(stackX));
+    panelNode->style("offsetY", OMDemiurgeSize::pixels(stackY + (1.0f - amount) * 18.0f));
     // Only the close fade uses panel opacity. On open the panel is immediately
     // opaque, so a stalled/zero openAmount cannot leave an interactive but
     // invisible dialog in the tree.

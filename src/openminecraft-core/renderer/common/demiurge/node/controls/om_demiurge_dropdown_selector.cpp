@@ -87,9 +87,8 @@ class SelectorPopupLayer : public container::OMDemiurgePane
   public:
     auto submit(OMDemiurgeRendererHandler *handler, uint32_t depth) -> void override
     {
-        // The selector can be opened above a dialog. Give the whole popup a
-        // layer range ordered by its modal-stack position so it is not drawn
-        // underneath the dialog it was opened over.
+        // The selector can be opened above a dialog. Its modal-stack position
+        // becomes the overlay z-order; all overlay roots share the real layer.
         int index = -1;
 
         if (auto root = getRoot())
@@ -97,8 +96,8 @@ class SelectorPopupLayer : public container::OMDemiurgePane
             index = root->modalIndex(this);
         }
 
-        const uint32_t base = static_cast<uint32_t>(std::max(0, index) + 1) * 8;
-        container::OMDemiurgePane::submit(handler, overlayLayer(base));
+        const uint32_t zorder = static_cast<uint32_t>(std::max(0, index) + 1);
+        container::OMDemiurgePane::submit(handler, withLayerZOrder(overlayLayer(0), zorder));
     }
 };
 

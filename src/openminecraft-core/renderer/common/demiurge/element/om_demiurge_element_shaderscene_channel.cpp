@@ -70,7 +70,7 @@ auto OMDemiurgeShaderSceneChannel::submitTask(OMRendererTask *task, uint32_t lay
     {
         const auto &obj = objects[i];
 
-        if (obj.depth != layer)
+        if (!sameLayer(obj.depth, layer))
         {
             continue;
         }
@@ -121,8 +121,8 @@ auto OMDemiurgeShaderSceneChannel::ensurePipeline(int i) -> OMRendererPipeline *
                          ->format(format)
                          ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
                          ->blend(false)
-                         ->depth(false, false)
-                         ->depthOp(Always)
+                         ->depth(true, true)
+                         ->depthOp(LessOrEqual)
                          ->buildN();
 
     if (uniform)

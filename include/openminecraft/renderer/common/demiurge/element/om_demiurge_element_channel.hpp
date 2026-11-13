@@ -43,7 +43,7 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
         {
             for (auto it = removed.begin(); it != removed.end(); ++it)
             {
-                if (objectGetDepth(objects[*it]) == depth)
+                if (sameLayer(objectGetDepth(objects[*it]), depth))
                 {
                     auto i = *it;
                     removed.erase(it);
@@ -118,7 +118,8 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
         active[i] = false;
         removed.emplace_back(i);
 
-        if (depth == (isOverlayLayer(depth) ? maxLayerOverlayValue | layerGroupBit : maxLayerNormalValue))
+        const uint32_t maxLayer = isOverlayLayer(depth) ? overlayLayer(maxLayerOverlayValue) : maxLayerNormalValue;
+        if (sameLayer(depth, maxLayer))
         {
             recomputeMaxLayers();
         }

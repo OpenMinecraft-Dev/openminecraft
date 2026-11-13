@@ -30,7 +30,7 @@ void main()
     vec3 localPos = vec3(screenPos - rectCenter, 0.0);
 
     gl_Position = vec4(geom_toNdc(rectCenter + rotation_quat(inRectRotation, localPos).xy, ubo.width, ubo.height),
-                       0.0, 1.0);
+                       geom_zOrderDepth(inRectDepth), 1.0);
     imageColor = inRectColor;
     imagePosition = screenPos;
     imageRadius = inRectRadius * ((inRectScale.x + inRectScale.y) * 0.5);

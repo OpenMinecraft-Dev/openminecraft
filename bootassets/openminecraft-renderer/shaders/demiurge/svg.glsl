@@ -37,7 +37,7 @@ void main()
     svgIndex = inSvgGlyphId;
     svgColor = inSvgColor;
     svgFactor = inSvgFactor;
-    gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), 0.0, 1.0);
+    gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), geom_zOrderDepth(inSvgDepth), 1.0);
 }
 #endif
 

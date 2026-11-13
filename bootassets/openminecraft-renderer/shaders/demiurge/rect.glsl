@@ -20,7 +20,7 @@ void main()
     vec2 halfSize = abs(inRectPos.zw) * 0.5 * inRectScale;
     vec2 screenPos = center - halfSize + inPosition.xy * (halfSize * 2.0);
 
-    gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), 0.0, 1.0);
+    gl_Position = vec4(geom_toNdc(screenPos, ubo.width, ubo.height), geom_zOrderDepth(inRectDepth), 1.0);
     rectColor = inRectColor;
 }
 #endif

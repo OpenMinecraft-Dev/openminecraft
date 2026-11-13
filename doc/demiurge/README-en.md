@@ -295,9 +295,15 @@ Paths: `node/` and `node/container/`.
 
 ## 6. Element Layer (Renderer Contributors)
 
-Elements are per-channel instance structs, not business-facing APIs. Every element carries `position = {x, y, w, h}` and `depth` (a `uint32_t` layer: root 0, +1 per level), and supports `glm::vec2 scale = (1, 1)`. UI pipelines disable depth testing (`Always`); the layer is only used for submission order.
+Elements are per-channel instance structs, not business-facing APIs. Every element carries `position = {x, y, w, h}`, packed `depth` and `glm::vec2 scale = (1, 1)`. The layer layout is:
 
-The highest bit (`0x80000000`) is a group marker: when set the element belongs to the overlay group (used by dialogs), and it is removed when computing the layer index. The overlay group has its own max-layer count and is rendered after all normal layers. Use `layerGroupBit`, `isOverlayLayer()`, `layerIndex()` and `overlayLayer()` from `om_demiurge_layer.hpp`.
+```text
+bit 31     overlay group marker
+bit 30..16 15-bit z-order (larger is closer)
+bit 15..0  actual layer index
+```
+
+`geom_zOrderDepth()` maps z-order to clip-space depth in 0..1. All geometry pipelines enable `LessOrEqual` depth testing and writes. Equal z-order uses submission order; different z-order is resolved by the depth buffer. The overlay group still has its own max-layer count and renders after normal layers; overlays sharing an actual layer are ordered by z-order.
 
 | Element | Extra fields | Channel |
 | --- | --- | --- |
@@ -628,7 +634,7 @@ Behavior:
 - Clicking outside (transparent backdrop) or the header again closes it; removal is deferred so the same event batch cannot immediately reopen it;
 - The popup prefers the space below the header; if that is too short but the full list fits above, it flips above; otherwise its height is clamped and the list scrolls internally;
 - While open, wheel events over the panel only drive the list ScrollPane and never the outer ScrollPane;
-- The popup root calls `setLayerOverlay(true)`; descendants inherit the highest bit, and the overlay group is counted separately from normal layers;
+- The popup root calls `setLayerOverlay(true)`; descendants inherit the group marker and z-order, and the overlay group is counted separately from normal layers;
 - Popup mount/unmount is deferred with the root's `deferAction()` until a frame boundary, so event traversal never sees a mutated children vector.
 
 Main styles: `width` / `height` (header size), `padding`. Option rows are currently fixed at 28px.
@@ -830,7 +836,7 @@ Main styles: `textHeight`, `textLineHeight`, `color`, `factor`, `scale`. Tooltip
 
 `OMDemiurgeDialog(geom::OMFontSet *fontset = nullptr)`
 
-Minimal message dialog: full-screen translucent backdrop + centered panel + multi-line message + a single close button.
+Minimal message dialog: centered panel + multi-line message + a single close button, without a full-screen backdrop.
 
 | API | Description |
 | --- | --- |
@@ -843,9 +849,9 @@ Behavior:
 - The dialog layer is mounted on the root with `setLayerOverlay(true)`;
 - It is also set as the root modal child, so events are dispatched only to the dialog;
 - Mount/unmount is deferred to the frame boundary via `deferAction()`;
-- Opening/closing uses a 0.18s animation: the backdrop fades from transparent to 62% black, the panel slides from 18px below into the center, and `setOpacity` fades the panel and all of its children; closing plays in reverse and the dialog unmounts only after the animation finishes;
-- There is exactly one close button; clicking the backdrop does not close it;
-- Multiple open dialogs use a modal stack: lower dialogs remain visible, but each dialog gets its own overlay layer range based on its modal-stack index so the upper dialog's backdrop, panel and text correctly occlude the lower one; panels are also offset by stack position (+18px X / +14px Y per level) so multiple dialogs remain visible;
+- Opening/closing uses a 0.18s animation: the panel slides from 18px below into the center, and `setOpacity` fades the panel and all of its children; closing plays in reverse and the dialog unmounts only after the animation finishes;
+- There is exactly one close button; clicking outside the panel does not close it;
+- Multiple open dialogs use the modal stack plus z-order: all dialogs share the real overlay layer and get increasing z-order values. Their panels are laid out side by side (360px spacing) so they stay visible, while depth testing preserves correct occlusion;
 - Tooltips hide automatically while it is open;
 - The close button receives focus; message and button label use the normal text widgets.
 

@@ -79,7 +79,7 @@ void OMDemiurgeSvgChannel::init(const std::string &uniformTag, const std::string
                    ->blendFunc({SrcAlpha, OneMinusSrcAlpha, One, OneMinusSrcAlpha})
                    ->blend(true)
                    ->depth(true, true)
-                   ->depthOp(Always)
+                   ->depthOp(LessOrEqual)
                    ->buildN();
     pipeline->bindInput(0, uniform);
     pipeline->bindInput(1, glyphBuffer);
