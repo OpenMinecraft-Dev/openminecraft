@@ -74,6 +74,11 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
             this->renderer->fetchTask("demiurgeui_compose_surface")->setDisabled(true);
             this->renderer->fetchTask("demiurgeui_bgblur")->setDisabled(true);
         }
+
+        if (e.custom.flag == EventChunkLoadStatus && chunkStatusBar)
+        {
+            chunkStatusBar->setProgress(e.custom.value);
+        }
     });
     button->setBackgroundColor({0.17f, 0.17f, 0.20f, 1.0f});
     auto button2 = std::make_shared<node::controls::OMDemiurgeButton>(fontset.get());
@@ -372,6 +377,13 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
                                        {"border", OMDemiurgeEdgeInsets{0, 60, 0, 0}}}));
     pageMain->mountDirect(button->style("animationSpeed", 1.0f)->style("label", "Demo Test"));
     pageMain->mountDirect(button2->style("animationSpeed", 1.0f)->style("label", "Quit"));
+    chunkStatusBar = std::make_shared<node::controls::OMDemiurgeProgressBar>();
+    chunkStatusBar->style({
+        {"width", OMDemiurgeSize::fill()},
+        {"height", OMDemiurgeSize::pixels(3.0f)},
+        {"radius", glm::vec4(3.0f)},
+    });
+    pageMain->mountDirect(chunkStatusBar);
 
     auto pageGallery = std::make_shared<node::OMDemiurgePane>();
     pageGallery->style({{"flexDirection", Column},

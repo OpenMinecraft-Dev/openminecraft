@@ -98,14 +98,20 @@ void OMApplication::mainLoop(OMBackend backend)
 
         const auto startupCam = application::startupCamera();
 
-        auto camera = std::make_shared<basics::OMCamera>(win(), startupCam.chunkX, startupCam.chunkY,
-                                                         startupCam.chunkZ, startupCam.localX, startupCam.localY,
-                                                         startupCam.localZ, startupCam.yaw, startupCam.pitch);
+        auto camera = std::make_shared<basics::OMCamera>(win(), startupCam.chunkX, startupCam.chunkY, startupCam.chunkZ,
+                                                         startupCam.localX, startupCam.localY, startupCam.localZ,
+                                                         startupCam.yaw, startupCam.pitch);
 
         auto chunkManager = std::make_shared<world::OMChunkManager<16>>();
 
-        producer = std::thread([chunkManager, &stopProducing]() {
-            application::runTerrainGeneration(*chunkManager, stopProducing);
+        producer = std::thread([chunkManager, &stopProducing, &buswrap]() {
+            application::runTerrainGeneration(*chunkManager, stopProducing, [&buswrap](double stat) {
+                event::OMEvent e;
+                e.type = event::Custom;
+                e.custom.flag = EventChunkLoadStatus;
+                e.custom.value = stat;
+                buswrap.handle(event::Custom, e);
+            });
         });
 
         bool inGame = false;
@@ -185,7 +191,8 @@ void OMApplication::mainLoop(OMBackend backend)
 
             while (accumulator >= TICK_DT)
             {
-                if (openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeTextInput::isTextInputFocused())
+                if (openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeTextInput::
+                        isTextInputFocused())
                 {
                     keystates.fill(false);
                 }

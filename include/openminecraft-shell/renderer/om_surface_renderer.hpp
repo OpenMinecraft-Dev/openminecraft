@@ -41,6 +41,8 @@ class OMSurfaceRenderer : public openminecraft::renderer::common::OMRendererHand
     void beforeFrame() override;
     void afterFrame() override;
 
+    std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeProgressBar> chunkStatusBar;
+
     openminecraft::renderer::OMRenderer *renderer;
     std::shared_ptr<openminecraft::renderer::common::demiurge::OMDemiurgeNode> node;
     std::shared_ptr<openminecraft::renderer::common::demiurge::node::controls::OMDemiurgeCheckBox> checkBox;

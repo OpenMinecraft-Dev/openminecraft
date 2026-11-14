@@ -51,6 +51,7 @@ struct OMEvent
         struct
         {
             uint64_t flag;
+            double value;
         } custom;
     };
 

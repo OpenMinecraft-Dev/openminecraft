@@ -12,6 +12,7 @@ constexpr int EventMainScreenClose = 1;
 constexpr int EventQuit = 2;
 constexpr int EventMainScreenOpenFinish = 3;
 constexpr int EventMainScreenCloseFinish = 4;
+constexpr int EventChunkLoadStatus = 5;
 
 class OMApplication
 {

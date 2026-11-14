@@ -12,11 +12,13 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <memory>
 #include <random>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <cstring>
 
 namespace openminecraft::shell::application
 {
@@ -41,17 +43,17 @@ struct OMPerlinNoise
         }
     }
 
-    static double fade(double t)
+    static auto fade(double t) -> double
     {
         return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
     }
 
-    static double lerp(double a, double b, double t)
+    static auto lerp(double a, double b, double t) -> double
     {
         return a + t * (b - a);
     }
 
-    static double grad(int hash, double x, double y)
+    static auto grad(int hash, double x, double y) -> double
     {
         switch (hash & 7)
         {
@@ -74,7 +76,7 @@ struct OMPerlinNoise
         }
     }
 
-    auto noise(double x, double y) const -> double
+    [[nodiscard]] auto noise(double x, double y) const -> double
     {
         const int xi = static_cast<int>(std::floor(x)) & 255;
         const int yi = static_cast<int>(std::floor(y)) & 255;
@@ -93,7 +95,7 @@ struct OMPerlinNoise
         return lerp(x1, x2, v);
     }
 
-    auto fbm(double x, double y, int octaves) const -> double
+    [[nodiscard]] auto fbm(double x, double y, int octaves) const -> double
     {
         double sum = 0.0;
         double amp = 1.0;
@@ -204,7 +206,7 @@ static auto preloadChunkBounds() -> OMPreloadInfo
     return info;
 }
 
-static void preloadChunks(world::OMChunkManager<16> &manager)
+static void preloadChunks(world::OMChunkManager<16> &manager, std::function<void(double)> statusReport)
 {
     namespace fs = std::filesystem;
 
@@ -258,6 +260,12 @@ static void preloadChunks(world::OMChunkManager<16> &manager)
 
     std::error_code ec;
     int loadedChunks = 0;
+    int totChunks = 0;
+
+    for (auto &entry : fs::directory_iterator("chunks_mapped", ec))
+    {
+        ++totChunks;
+    }
 
     for (auto &entry : fs::directory_iterator("chunks_mapped", ec))
     {
@@ -325,8 +333,8 @@ static void preloadChunks(world::OMChunkManager<16> &manager)
             manager.loadChunk(cnk);
         }
 
-
         ++loadedChunks;
+        statusReport(static_cast<double>(loadedChunks) / totChunks);
     }
 
     std::fprintf(stderr, "[preload] loaded %d chunks from chunks_mapped, tempIds=%zu\n", loadedChunks,
@@ -371,14 +379,15 @@ auto startupCamera() -> OMStartupCamera
     return cam;
 }
 
-void runTerrainGeneration(world::OMChunkManager<16> &manager, std::atomic<bool> &stopProducing)
+void runTerrainGeneration(world::OMChunkManager<16> &manager, std::atomic<bool> &stopProducing,
+                          std::function<void(double)> statusReport)
 {
     static const bool preloadFromDisk = std::getenv("OM_CHUNK_PRELOAD") != nullptr;
     constexpr int64_t worldOffsetChunks = 0;
 
     if (preloadFromDisk)
     {
-        preloadChunks(manager);
+        preloadChunks(manager, statusReport);
         return;
     }
 
@@ -398,6 +407,10 @@ void runTerrainGeneration(world::OMChunkManager<16> &manager, std::atomic<bool> 
     long long gChunkUniqueSum = 0;
     long long gChunkUniqueCount = 0;
     unsigned long long gHeightHash = 1469598103934665603ull;
+
+    auto totChunks = 2 * width * (depth + 1) * 2 * height;
+    int loadedChunks = 0;
+
     for (int cx = -width; cx < width; ++cx)
     {
         for (int cy = -depth; cy <= 0; ++cy)
@@ -555,6 +568,9 @@ void runTerrainGeneration(world::OMChunkManager<16> &manager, std::atomic<bool> 
                 }
 
                 manager.loadChunk(cnk);
+                ++loadedChunks;
+
+                statusReport(static_cast<double>(loadedChunks) / totChunks);
             }
         }
     }

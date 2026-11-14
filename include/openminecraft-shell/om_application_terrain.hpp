@@ -4,6 +4,7 @@
 #include "openminecraft/world/om_world_chunkmanager.hpp"
 #include <atomic>
 #include <cstdint>
+#include <functional>
 
 namespace openminecraft::shell::application
 {
@@ -18,7 +19,8 @@ struct OMStartupCamera
 auto startupCamera() -> OMStartupCamera;
 
 // Terrain generation thread body: read from chunks_mapped with OM_CHUNK_PRELOAD, otherwise generate with Perlin
-void runTerrainGeneration(world::OMChunkManager<16> &manager, std::atomic<bool> &stopProducing);
+void runTerrainGeneration(world::OMChunkManager<16> &manager, std::atomic<bool> &stopProducing,
+                          std::function<void(double)> statusReport);
 } // namespace openminecraft::shell::application
 
 #endif
