@@ -1,7 +1,7 @@
 #ifndef OM_BIOME_HPP
 #define OM_BIOME_HPP
 
-// #include <cstdint>
+#include <cstdint>
 #include <memory>
 
 namespace openminecraft::shell::data::biome
