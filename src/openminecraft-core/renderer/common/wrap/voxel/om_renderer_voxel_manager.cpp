@@ -192,7 +192,7 @@ OMVoxelManager::OMVoxelManager(
             ->inputName("inLightmap")
             ->output(cutoutTargetMS->target())
             ->samples(samples)
-            ->setCullMode(renderer::common::None)
+            ->setCullMode(renderer::common::Back)
             ->setFrontClockwise(true)
             ->shader(
                 renderer->shaderManager.preprocess("core/voxel/voxel.frag.glsl", Fragment, GLSLSource, voxelFormat))
@@ -219,7 +219,7 @@ OMVoxelManager::OMVoxelManager(
                           ->inputName("inLightmap")
                           ->output(cutoutTargetMS->target())
                           ->samples(samples)
-                          ->setCullMode(renderer::common::None)
+                          ->setCullMode(renderer::common::Back)
                           ->setFrontClockwise(true)
                           ->shader(renderer->shaderManager.preprocess("core/voxel/voxelcomplex.frag.glsl", Fragment,
                                                                       GLSLSource, formatComplex))
@@ -246,7 +246,7 @@ OMVoxelManager::OMVoxelManager(
                         ->inputName("inLightmap")
                         ->output(cutoutTargetMS->target())
                         ->samples(samples)
-                        ->setCullMode(renderer::common::None)
+                        ->setCullMode(renderer::common::Back)
                         ->setFrontClockwise(true)
                         ->shader(renderer->shaderManager.preprocess("core/voxel/voxelfluid.frag.glsl", Fragment,
                                                                     GLSLSource, voxelFluidFormat))
