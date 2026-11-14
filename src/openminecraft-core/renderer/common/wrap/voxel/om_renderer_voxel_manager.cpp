@@ -348,8 +348,8 @@ OMVoxelManager::OMVoxelManager(
                         ->inputName("Camera")
                         ->primitiveType(LineList)
                         ->setLineWidth(2.0f)
-                        ->output(cutoutTargetMS->target())
-                        ->samples(samples)
+                        ->output(resolveTarget)
+                        ->samples(1)
                         ->shader(renderer->shaderManager.preprocess("core/voxel/voxeldebug.frag.glsl", Fragment,
                                                                     GLSLSource, voxelDebug))
                         ->shader(renderer->shaderManager.preprocess("core/voxel/voxeldebug.vert.glsl", Vertex,
