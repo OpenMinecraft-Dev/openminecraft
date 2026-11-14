@@ -59,7 +59,7 @@ jobs:
             plat: linux
             arch: arm64
             loaderarch: arm64
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             plat: linux-cross
             arch: loong64
             loaderarch: loong64
