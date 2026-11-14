@@ -190,6 +190,12 @@ auto OMVoxelCompiler::fluidIsFullCell(
         return true;
     }
 
+    // A flowing cell keeps a sloped/lower surface even when covered.
+    if (!handler->queryFluidFalling(modelId) && (handler->queryFluidLevel(modelId) & 0b111) != 0)
+    {
+        return false;
+    }
+
     auto above = v;
     above.y += 1;
     const uint32_t aboveState = queryBlockState(chunk, externalAccessor, above.x, above.y, above.z);
@@ -221,8 +227,10 @@ auto OMVoxelCompiler::fluidIsFullCell(
         const int naModel =
             modelFetcher(naState, chunk.chunkx, chunk.chunky, chunk.chunkz, nAbove.x, nAbove.y, nAbove.z);
 
-        const bool covered = handler->queryFluidFalling(model) ||
-                             checkExistFluidSame(chunk, externalAccessor, p, PosY, model) || isFullBlock(naModel);
+        const bool falling = handler->queryFluidFalling(model);
+        const bool fluidAbove = checkExistFluidSame(chunk, externalAccessor, p, PosY, model);
+        const bool covered = falling || fluidAbove ||
+                             (! ( (handler->queryFluidLevel(model) & 0b111) != 0 ) && isFullBlock(naModel));
 
         if (!covered)
         {
@@ -716,14 +724,34 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                             // The bottom always touches the block below.
                             culled = isFullBlock(nmdl);
                         }
-                        else if (f == PosY && isFullBlock(nmdl))
+                        else if (f == PosY)
                         {
-                            // Only cull if the fluid surface actually reaches
-                            // the block. Around an air hole/open edge the surface
-                            // is lowered, so its top must remain visible.
-                            culled = isFalling || fluidAbove ||
-                                     (cornerHeights[0] >= 254.0f && cornerHeights[1] >= 254.0f &&
-                                      cornerHeights[2] >= 254.0f && cornerHeights[3] >= 254.0f);
+                            const bool aboveIsAir =
+                                !handler->queryFluid(nmdl) && handler->queryNumParts(nmdl) == 0;
+
+                            if (aboveIsAir)
+                            {
+                                culled = false;
+                            }
+                            else if (handler->queryTranslucent(nmdl))
+                            {
+                                // Ice/glass/leaves let the surface show through.
+                                // Cull only when the water actually reaches the
+                                // block; otherwise keep the top to avoid a hole.
+                                culled = isFalling || fluidAbove ||
+                                         (cornerHeights[0] >= 254.0f && cornerHeights[1] >= 254.0f &&
+                                          cornerHeights[2] >= 254.0f && cornerHeights[3] >= 254.0f);
+                            }
+                            else
+                            {
+                                // Under any other block, cull only when the
+                                // surface reaches it. A sloped/flowing surface
+                                // under an overhang is still visible from the
+                                // side and must not leave a hole at the wall.
+                                culled = isFalling || fluidAbove ||
+                                         (cornerHeights[0] >= 254.0f && cornerHeights[1] >= 254.0f &&
+                                          cornerHeights[2] >= 254.0f && cornerHeights[3] >= 254.0f);
+                            }
                         }
                     }
                 }
