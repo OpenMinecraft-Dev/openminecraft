@@ -411,8 +411,11 @@ auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
     // If the block above is the same fluid, this cell is not a surface; use a full cell (9);
     // otherwise use vanilla's 8 - level (source water = 8, i.e. 8/9 of a block).
     const bool selfHasFluidAbove = checkExistFluidSame(chunk, externalAccessor, v, PosY, selfModel);
+    const bool selfHasSolidAbove = existSoild(chunk, externalAccessor, v.x, v.y + 1, v.z);
 
-    float tot = selfHasFluidAbove ? 9.0f : (handler->queryFluidFalling(selfModel) ? 9.0f : (8.0f - current));
+    float tot = (selfHasFluidAbove || selfHasSolidAbove)
+                    ? 9.0f
+                    : (handler->queryFluidFalling(selfModel) ? 9.0f : (8.0f - current));
     int lev = 1;
 
     std::array<glm::ivec3, 3> nPos;
@@ -446,7 +449,8 @@ auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
             continue;
         }
 
-        if (handler->queryFluidFalling(ns) || checkExistFluidSame(chunk, externalAccessor, p, PosY, ns))
+        if (handler->queryFluidFalling(ns) || checkExistFluidSame(chunk, externalAccessor, p, PosY, ns) ||
+            existSoild(chunk, externalAccessor, p.x, p.y + 1, p.z))
         {
             tot += 9.0f;
         }
@@ -519,7 +523,8 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             // Same fluid above => this cell is not a surface and should fill the whole cell;
             // only source water on the top surface layer is 8/9 of a block tall (vanilla behavior).
             const bool fluidAbove = checkExistFluidSame(chunk, externalAccessor, v.first, PosY, bsid);
-            const bool fullBlock = isFalling || fluidAbove;
+            const bool solidAbove = existSoild(chunk, externalAccessor, v.first.x, v.first.y + 1, v.first.z);
+            const bool fullBlock = isFalling || fluidAbove || solidAbove;
 
             const std::array<float, 4> cornerHeights = {
                 fullBlock ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 0, fluidLevel),
@@ -532,7 +537,8 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             // corner heights average the same 4 neighboring cells, so both sides agree,
             // leaving no gaps from 1/255 quantization and ensuring each face is drawn once.
             auto cornerHeightOf = [&](const glm::ivec3 &p, int mdl, int idx) -> float {
-                if (handler->queryFluidFalling(mdl) || checkExistFluidSame(chunk, externalAccessor, p, PosY, mdl))
+                if (handler->queryFluidFalling(mdl) || checkExistFluidSame(chunk, externalAccessor, p, PosY, mdl) ||
+                    existSoild(chunk, externalAccessor, p.x, p.y + 1, p.z))
                 {
                     return 255.0f;
                 }
@@ -572,7 +578,13 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                     const uint32_t nst = queryBlockState(chunk, externalAccessor, np.x, np.y, np.z);
                     const int nmdl = modelFetcher(nst, chunk.chunkx, chunk.chunky, chunk.chunkz, np.x, np.y, np.z);
 
-                    if (handler->queryFluid(nmdl) && handler->queryFluidSame(nmdl, bsid))
+                    if (handler->querySoild(nmdl))
+                    {
+                        // The fluid side is completely covered by a full solid
+                        // block; it can only be seen from inside that block.
+                        culled = true;
+                    }
+                    else if (handler->queryFluid(nmdl) && handler->queryFluidSame(nmdl, bsid))
                     {
                         int selfA = 0, selfB = 0, nA = 0, nB = 0;
 
@@ -601,6 +613,19 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                 else
                 {
                     culled = checkExistFluidSame(chunk, externalAccessor, v.first, f, bsid);
+
+                    if (!culled)
+                    {
+                        glm::ivec3 np = v.first;
+                        if (f == PosY)
+                            np.y += 1;
+                        else if (f == NegY)
+                            np.y -= 1;
+
+                        const uint32_t nst = queryBlockState(chunk, externalAccessor, np.x, np.y, np.z);
+                        const int nmdl = modelFetcher(nst, chunk.chunkx, chunk.chunky, chunk.chunkz, np.x, np.y, np.z);
+                        culled = handler->querySoild(nmdl);
+                    }
                 }
 
                 if (!culled)

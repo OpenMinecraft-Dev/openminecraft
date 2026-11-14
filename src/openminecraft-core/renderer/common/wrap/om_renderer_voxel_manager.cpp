@@ -715,11 +715,6 @@ void OMVoxelManager::unloadChunk(int i)
         ++graphVersion;
     }
 
-    if (static_cast<size_t>(i) < sectionResident.size())
-    {
-        sectionResident[i] = 0;
-    }
-
     if (static_cast<size_t>(i) < chunkOffsetCache.size())
     {
         if (chunkOffsetCache[i] != glm::vec4{INFINITY})
@@ -727,11 +722,6 @@ void OMVoxelManager::unloadChunk(int i)
             chunkOffsetCache[i] = glm::vec4{INFINITY};
             offsetCacheDirty = true;
         }
-    }
-
-    if (compilerPool)
-    {
-        compilerPool->dropCache(i);
     }
 
     std::vector<OMVoxel> m = {}, tm = {};
@@ -1189,11 +1179,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             {
                 hideFrames.resize(chunks.size(), 0);
             }
-            if (sectionResident.size() < chunks.size())
-            {
-                sectionResident.resize(chunks.size(), 0);
-                residentOrigin.resize(chunks.size(), {INT64_MIN, INT64_MIN, INT64_MIN});
-            }
         };
 
         auto setOffset = [&](int index, const glm::vec4 &value) {
@@ -1209,28 +1194,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             }
         };
 
-        const bool rebuildOffsets =
-            cameraMoved || chunksLoading || !offsetUploadedOnce || chunkOffsetCache.size() != lastOffsetCount;
-
         if (!skipCulling)
         {
-            if (rebuildOffsets)
-            {
-                std::fill(chunkOffsetCache.begin(), chunkOffsetCache.end(), glm::vec4{INFINITY});
-
-                chunkManager->withChunks([&](std::vector<std::shared_ptr<world::OMChunk<16>>> &chunks) -> void {
-                    syncSlotState(chunks);
-
-                    for (size_t i = 0; i < chunks.size(); ++i)
-                    {
-                        // Visible sections receive a finite offset below. All
-                        // others are moved to infinity so resident geometry is
-                        // rejected by the vertex shader without a rebuild.
-                        setOffset(static_cast<int>(i), glm::vec4{INFINITY});
-                    }
-                });
-            }
-
             auto frusturm = Frustum::fromMatrix(camera.fetchProjMat() * camera.fetchViewMat());
 
             const int64_t cheapRange =
@@ -1238,8 +1203,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             const int64_t camChunkX = cameraPos.getChunkX();
             const int64_t camChunkY = cameraPos.getChunkY();
             const int64_t camChunkZ = cameraPos.getChunkZ();
-
-            int unloadBudget = 32;
 
             const bool rebuildCandidates = cameraMoved || chunksLoading || extentChanged || cullCandidates.empty() ||
                                            static_cast<int>(cullCandidates.size()) > chunkManager->numChunks();
@@ -1258,11 +1221,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
                         if (!candidate)
                         {
-                            if (unloadBudget > 0)
+                            if (static_cast<size_t>(ci) < chunkOffsetCache.size() &&
+                                !std::isinf(chunkOffsetCache[ci].x))
                             {
-                                --unloadBudget;
                                 unloadChunk(ci);
                             }
+                            setOffset(ci, glm::vec4{INFINITY});
                             continue;
                         }
 
@@ -1276,6 +1240,10 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                         }
                         else
                         {
+                            if (candidate->visible)
+                            {
+                                unloadChunk(ci);
+                            }
                             candidate->visible = false;
                             setOffset(ci, glm::vec4{INFINITY});
                         }
@@ -1294,116 +1262,93 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     {
                         continue;
                     }
+
+                    auto &chk = *ochk;
+                    setOffset(i, glm::vec4{INFINITY});
+
+                    if (chk.isEmpty())
                     {
-                        auto &chk = *ochk;
-
-                        // Hidden sections keep their resident geometry. Moving
-                        // the chunk offset to infinity makes the vertex shader
-                        // reject its instances without a rebuild.
-                        setOffset(i, glm::vec4{INFINITY});
-
-                        if (chk.isEmpty())
+                        if (chk.visible)
                         {
-                            if (chk.visible || (static_cast<size_t>(i) < sectionResident.size() && sectionResident[i]))
-                            {
-                                unloadChunk(i);
-                                chk.visible = false;
-                            }
-                            hideFrames[i] = 0;
-                            continue;
+                            unloadChunk(i);
+                            chk.visible = false;
                         }
+                        hideFrames[i] = 0;
+                        continue;
+                    }
 
-                        const int64_t dcx = chk.chunkx - camChunkX;
-                        const int64_t dcy = chk.chunky - camChunkY;
-                        const int64_t dcz = chk.chunkz - camChunkZ;
-                        const bool cheapFar =
-                            std::abs(dcx) > cheapRange || std::abs(dcz) > cheapRange || std::abs(dcy) > cheapRange;
+                    const int64_t dcx = chk.chunkx - camChunkX;
+                    const int64_t dcy = chk.chunky - camChunkY;
+                    const int64_t dcz = chk.chunkz - camChunkZ;
+                    const bool cheapFar =
+                        std::abs(dcx) > cheapRange || std::abs(dcz) > cheapRange || std::abs(dcy) > cheapRange;
 
-                        bool visible = false;
-                        bool beyondDistance = cheapFar;
-                        glm::vec3 chunkCenter{0.0f};
-                        float compileDistanceSq = 0.0f;
-                        auto chunkOffset = basics::OMPosition<16, int64_t, float>(chk.chunkx, chk.chunky, chk.chunkz) -
-                                           camera.getPosRaw();
+                    bool visible = false;
+                    bool beyondDistance = cheapFar;
+                    glm::vec3 chunkCenter{0.0f};
+                    float compileDistanceSq = 0.0f;
+                    auto chunkOffset =
+                        basics::OMPosition<16, int64_t, float>(chk.chunkx, chk.chunky, chk.chunkz) - camera.getPosRaw();
 
-                        if (!cheapFar)
-                        {
-                            auto pp0 = chunkOffset;
-                            auto pp1 =
-                                basics::OMPosition<16, int64_t, float>(chk.chunkx + 1, chk.chunky + 1, chk.chunkz + 1) -
-                                camera.getPosRaw();
+                    if (!cheapFar)
+                    {
+                        auto pp0 = chunkOffset;
+                        auto pp1 =
+                            basics::OMPosition<16, int64_t, float>(chk.chunkx + 1, chk.chunky + 1, chk.chunkz + 1) -
+                            camera.getPosRaw();
 
-                            visible = frusturm.cubeVisible(std::array<glm::vec3, 8>{{
-                                {pp0.x, pp0.y, pp0.z},
-                                {pp1.x, pp0.y, pp0.z},
-                                {pp0.x, pp1.y, pp0.z},
-                                {pp1.x, pp1.y, pp0.z},
-                                {pp0.x, pp0.y, pp1.z},
-                                {pp1.x, pp0.y, pp1.z},
-                                {pp0.x, pp1.y, pp1.z},
-                                {pp1.x, pp1.y, pp1.z},
-                            }});
+                        visible = frusturm.cubeVisible(std::array<glm::vec3, 8>{{
+                            {pp0.x, pp0.y, pp0.z},
+                            {pp1.x, pp0.y, pp0.z},
+                            {pp0.x, pp1.y, pp0.z},
+                            {pp1.x, pp1.y, pp0.z},
+                            {pp0.x, pp0.y, pp1.z},
+                            {pp1.x, pp0.y, pp1.z},
+                            {pp0.x, pp1.y, pp1.z},
+                            {pp1.x, pp1.y, pp1.z},
+                        }});
 
-                            chunkCenter = pp0 + glm::vec3(8.0f, 8.0f, 8.0f);
-                            compileDistanceSq = glm::dot(chunkCenter, chunkCenter);
+                        chunkCenter = pp0 + glm::vec3(8.0f, 8.0f, 8.0f);
+                        compileDistanceSq = glm::dot(chunkCenter, chunkCenter);
 
-                            beyondDistance = cullRadiusSq > 0.0f && compileDistanceSq > cullRadiusSq;
-                            if (beyondDistance)
-                            {
-                                visible = false;
-                            }
-                        }
-
-                        if (bfsOcclusionEnabled && bfsValid && static_cast<size_t>(i) < bfsVisibleMask.size() &&
-                            bfsVisibleMask[i] == 0)
+                        beyondDistance = cullRadiusSq > 0.0f && compileDistanceSq > cullRadiusSq;
+                        if (beyondDistance)
                         {
                             visible = false;
                         }
-
-                        if (chk.visible && !visible)
-                        {
-                            const uint16_t hideDelay = beyondDistance ? 2 : OMVoxelManager::unloadDelay;
-
-                            if (hideFrames[i] < hideDelay)
-                            {
-                                ++hideFrames[i];
-                                visible = true;
-                            }
-                        }
-                        else if (chk.visible && visible)
-                        {
-                            hideFrames[i] = 0;
-                        }
-
-                        chk.visible = visible;
-
-                        if (!visible)
-                        {
-                            continue;
-                        }
-
-                        hideFrames[i] = 0;
-                        setOffset(i, glm::vec4(chunkOffset, 1.0f));
-
-                        const auto origin = std::array<int64_t, 3>{chk.chunkx, chk.chunky, chk.chunkz};
-                        const bool resident = static_cast<size_t>(i) < sectionResident.size() && sectionResident[i] &&
-                                              residentOrigin[i] == origin;
-
-                        if (!resident || chk.isDirty())
-                        {
-                            compilerPool->compile(i, !resident, compileDistanceSq);
-
-                            if (static_cast<size_t>(i) < sectionResident.size())
-                            {
-                                sectionResident[i] = 1;
-                                residentOrigin[i] = origin;
-                            }
-
-                            chk.solveDirty();
-                        }
-
                     }
-                    ++i;
+
+                    if (bfsOcclusionEnabled && bfsValid && static_cast<size_t>(i) < bfsVisibleMask.size() &&
+                        bfsVisibleMask[i] == 0)
+                    {
+                        visible = false;
+                    }
+
+                    if (!visible)
+                    {
+                        if (chk.visible)
+                        {
+                            unloadChunk(i);
+                            chk.visible = false;
+                        }
+                        hideFrames[i] = 0;
+                        continue;
+                    }
+
+                    hideFrames[i] = 0;
+                    setOffset(i, glm::vec4(chunkOffset, 1.0f));
+
+                    if (!chk.visible)
+                    {
+                        compilerPool->compile(i, true, compileDistanceSq);
+                    }
+                    else if (chk.isDirty())
+                    {
+                        compilerPool->compile(i, false, compileDistanceSq);
+                    }
+
+                    chk.solveDirty();
+                    chk.visible = true;
                 }
             });
 
@@ -1483,9 +1428,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
 
         chunkOffsetBuffer->synced = true;
 
-        const bool offsetsDirty =
-            cameraMoved || chunkOffsetBufferReallocated || offsetCacheDirty ||
-            chunkOffsetCache.size() != lastOffsetCount;
+        const bool offsetsDirty = cameraMoved || chunkOffsetBufferReallocated || offsetCacheDirty ||
+                                  chunkOffsetCache.size() != lastOffsetCount;
 
         if (offsetsDirty)
         {
@@ -1525,16 +1469,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             });
 
         const bool layerStateChanged = layerState != hashLayerState();
-
-        if (!skipCulling || layerStateChanged)
-        {
-            voxelLayer->mergeStep(16);
-            voxelComplexLayer->mergeStep(16);
-            voxelFluidLayer->mergeStep(16);
-            voxelTranslucentLayer->mergeStep(16);
-            voxelTranslucentComplexLayer->mergeStep(16);
-            voxelTranslucentFluidLayer->mergeStep(16);
-        }
 
         {
             const auto compactStart = std::chrono::steady_clock::now();

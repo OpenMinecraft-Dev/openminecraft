@@ -745,8 +745,6 @@ class OMVoxelManager
     // Geometry stays resident while a section is out of view. The offset is
     // moved to infinity instead, which the voxel vertex shaders use to reject
     // the instance before rasterization.
-    std::vector<uint8_t> sectionResident;
-    std::vector<std::array<int64_t, 3>> residentOrigin;
     bool offsetCacheDirty = false;
 
     std::array<int64_t, 3> lastCameraChunk = {INT64_MIN, INT64_MIN, INT64_MIN};
