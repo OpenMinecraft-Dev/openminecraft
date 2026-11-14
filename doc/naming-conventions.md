@@ -207,7 +207,7 @@ src/openminecraft/<子模块>/...             shell 层实现
 这些是**对外契约**，不按 C++ 标识符规则改：
 
 - 资源标识符沿用 Minecraft 原格式：`minecraft:grass_block[snowy=false]`、`minecraft:water[falling=true,level=8]`。
-- JSON / 样式表键用 snake_case：`animationSpeed`、`opacityHovered`（见 `doc/demiurge/control.md`）。
+- JSON / 样式表键用 camelCase：`animationSpeed`、`opacityHovered`（见 `doc/demiurge/control.md`）。
 - 协议字段按 Minecraft 协议原名，不做本地化改写。
 - 日志文本用英文短句、小写开头，模块名用类型名：
 
