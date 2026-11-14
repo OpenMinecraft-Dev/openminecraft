@@ -28,8 +28,14 @@ jobs:
             loaderarch: arm64
           - os: ubuntu-latest
             plat: mingw
+            arch: x86
+            loaderarch: x86
+            triplet: i686-w64-mingw32
+          - os: ubuntu-latest
+            plat: mingw
             arch: x86_64
             loaderarch: amd64
+            triplet: x86_64-w64-mingw32
           - os: ubuntu-22.04
             plat: harmony
             arch: arm64-v8a
@@ -228,7 +234,7 @@ jobs:
         if: matrix.plat == 'mingw'
         run: |
           sudo apt install gcc-mingw-w64 g++-mingw-w64 binutils-mingw-w64 mingw-w64-common mingw-w64-i686-dev mingw-w64-x86-64-dev libz-mingw-w64-dev
-          xmake f -p mingw -a ${{ matrix.arch }} --toolchain=mingw --sdk=/usr --cross=x86_64-w64-mingw32- --ldflags="-static" -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
+          xmake f -p mingw -a ${{ matrix.arch }} --toolchain=mingw --sdk=/usr --cross=${{ matrix.triplet }}- --ldflags="-static" -m ${{ env.MODE }} -yc ${{ env.XMAKE_ARGS }}
       - name: Save xmake packages
         uses: actions/cache/save@v5
         with:
