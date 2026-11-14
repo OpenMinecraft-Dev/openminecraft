@@ -316,17 +316,20 @@ auto OMModelPrecompiler::querySoild(int modelId) -> bool
 
 auto OMModelPrecompiler::queryFullBlock(int modelId) -> bool
 {
-    const auto &parts = blockModels[modelId].parts;
+    // Models such as stone/ore variants use a full cube plus an overlay part.
+    // A single full-cube part is enough to make the block a full occluder.
+    constexpr float eps = 0.001f;
 
-    if (parts.size() != 1)
+    for (const auto &part : blockModels[modelId].parts)
     {
-        return false;
+        if (part.from.x <= eps && part.from.y <= eps && part.from.z <= eps && part.to.x >= 16.0f - eps &&
+            part.to.y >= 16.0f - eps && part.to.z >= 16.0f - eps)
+        {
+            return true;
+        }
     }
 
-    const auto &part = parts[0];
-    constexpr float eps = 0.001f;
-    return part.from.x <= eps && part.from.y <= eps && part.from.z <= eps && part.to.x >= 16.0f - eps &&
-           part.to.y >= 16.0f - eps && part.to.z >= 16.0f - eps;
+    return false;
 }
 
 auto OMModelPrecompiler::queryFluid(int modelId) -> bool

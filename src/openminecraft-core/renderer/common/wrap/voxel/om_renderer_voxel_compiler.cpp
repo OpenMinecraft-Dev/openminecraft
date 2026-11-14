@@ -200,14 +200,6 @@ auto OMVoxelCompiler::fluidIsFullCell(
         return false;
     }
 
-    // Ice/glass are full cube but translucent. Their lower water is an
-    // interior cell: it must reach the block above, otherwise the lowered
-    // top face becomes visible through the ice.
-    if (handler->queryTranslucent(aboveModel))
-    {
-        return true;
-    }
-
     static constexpr glm::ivec3 dirs[4] = {{-1, 0, 0}, {1, 0, 0}, {0, 0, -1}, {0, 0, 1}};
 
     for (const auto &d : dirs)
@@ -218,6 +210,8 @@ auto OMVoxelCompiler::fluidIsFullCell(
 
         if (!handler->queryFluid(model) || !handler->queryFluidSame(model, modelId))
         {
+            // An air/solid neighbor is an exposed edge or a hole; the water
+            // surface must slope toward it instead of staying a full plateau.
             return false;
         }
 
@@ -660,6 +654,23 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                     }
                     else if (handler->queryFluid(nmdl) && handler->queryFluidSame(nmdl, bsid))
                     {
+                        auto covered = [&](glm::ivec3 p) -> bool {
+                            auto above = p;
+                            above.y += 1;
+                            const uint32_t ast = queryBlockState(chunk, externalAccessor, above.x, above.y, above.z);
+                            const int amdl =
+                                modelFetcher(ast, chunk.chunkx, chunk.chunky, chunk.chunkz, above.x, above.y, above.z);
+                            return isFullBlock(amdl) || checkExistFluidSame(chunk, externalAccessor, p, PosY, bsid);
+                        };
+
+                        if (covered(v.first) && covered(np))
+                        {
+                            // Both water cells are under a full ceiling: their
+                            // shared side is an internal volume boundary.
+                            culled = true;
+                        }
+                        else
+                        {
                         int selfA = 0, selfB = 0, nA = 0, nB = 0;
 
                         switch (f)
@@ -682,6 +693,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                         const float neighbourH = std::max(cornerHeightOf(np, nmdl, nA), cornerHeightOf(np, nmdl, nB));
 
                         culled = neighbourH >= selfH - 1e-3f;
+                        }
                     }
                 }
                 else
@@ -706,10 +718,12 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                         }
                         else if (f == PosY && isFullBlock(nmdl))
                         {
-                            // The top is covered by a full block (including
-                            // translucent ice/glass); it can never be visible
-                            // from outside, even if the fluid surface is below 1.
-                            culled = true;
+                            // Only cull if the fluid surface actually reaches
+                            // the block. Around an air hole/open edge the surface
+                            // is lowered, so its top must remain visible.
+                            culled = isFalling || fluidAbove ||
+                                     (cornerHeights[0] >= 254.0f && cornerHeights[1] >= 254.0f &&
+                                      cornerHeights[2] >= 254.0f && cornerHeights[3] >= 254.0f);
                         }
                     }
                 }
