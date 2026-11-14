@@ -161,6 +161,12 @@ class OMVoxelHandler
     virtual auto queryPartRotationAngle(int bsid, int pid) -> int = 0;
     virtual auto queryPartRotationAngleExt(int bsid, int pid) -> glm::vec3 = 0;
     virtual auto querySoild(int bsid) -> bool = 0;
+    // Full-cube occluder, including translucent blocks such as ice/glass.
+    // Defaults to the opaque-solid flag for handlers without geometry checks.
+    virtual auto queryFullBlock(int bsid) -> bool
+    {
+        return querySoild(bsid);
+    }
     virtual auto queryOcclusionShape(int bsid) -> OMVoxelShape = 0;
     virtual auto queryPartAmbientOcclusion(int bsid, int pid) -> bool = 0;
     virtual auto queryPartShade(int bsid, int pid) -> bool = 0;

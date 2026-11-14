@@ -176,6 +176,78 @@ auto OMVoxelCompiler::existSoild(const world::OMChunk<16> &chunk,
     return handler->querySoild(modelFetcher(chunk.fetch(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
 }
 
+auto OMVoxelCompiler::isFullBlock(int modelId) -> bool
+{
+    return handler->queryFullBlock(modelId);
+}
+
+auto OMVoxelCompiler::fluidIsFullCell(
+    const world::OMChunk<16> &chunk,
+    std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, glm::ivec3 v, int modelId) -> bool
+{
+    if (checkExistFluidSame(chunk, externalAccessor, v, PosY, modelId))
+    {
+        return true;
+    }
+
+    auto above = v;
+    above.y += 1;
+    const uint32_t aboveState = queryBlockState(chunk, externalAccessor, above.x, above.y, above.z);
+    const int aboveModel = modelFetcher(aboveState, chunk.chunkx, chunk.chunky, chunk.chunkz, above.x, above.y, above.z);
+
+    if (!isFullBlock(aboveModel))
+    {
+        return false;
+    }
+
+    // Ice/glass are full cube but translucent. Their lower water is an
+    // interior cell: it must reach the block above, otherwise the lowered
+    // top face becomes visible through the ice.
+    if (handler->queryTranslucent(aboveModel))
+    {
+        return true;
+    }
+
+    static constexpr glm::ivec3 dirs[4] = {{-1, 0, 0}, {1, 0, 0}, {0, 0, -1}, {0, 0, 1}};
+
+    for (const auto &d : dirs)
+    {
+        const glm::ivec3 p = v + d;
+        const uint32_t state = queryBlockState(chunk, externalAccessor, p.x, p.y, p.z);
+        const int model = modelFetcher(state, chunk.chunkx, chunk.chunky, chunk.chunkz, p.x, p.y, p.z);
+
+        if (!handler->queryFluid(model) || !handler->queryFluidSame(model, modelId))
+        {
+            return false;
+        }
+
+        auto nAbove = p;
+        nAbove.y += 1;
+        const uint32_t naState = queryBlockState(chunk, externalAccessor, nAbove.x, nAbove.y, nAbove.z);
+        const int naModel =
+            modelFetcher(naState, chunk.chunkx, chunk.chunky, chunk.chunkz, nAbove.x, nAbove.y, nAbove.z);
+
+        const bool covered = handler->queryFluidFalling(model) ||
+                             checkExistFluidSame(chunk, externalAccessor, p, PosY, model) || isFullBlock(naModel);
+
+        if (!covered)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+auto OMVoxelCompiler::existFullBlock(const world::OMChunk<16> &chunk,
+                                     std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
+                                     int x, int y, int z) -> bool
+{
+    const uint32_t state = queryBlockState(chunk, externalAccessor, x, y, z);
+    const int model = modelFetcher(state, chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z);
+    return isFullBlock(model);
+}
+
 auto OMVoxelCompiler::existFluidSame(const world::OMChunk<16> &chunk,
                                      std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
                                      int x, int y, int z, int modelId) -> bool
@@ -411,9 +483,12 @@ auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
     // If the block above is the same fluid, this cell is not a surface; use a full cell (9);
     // otherwise use vanilla's 8 - level (source water = 8, i.e. 8/9 of a block).
     const bool selfHasFluidAbove = checkExistFluidSame(chunk, externalAccessor, v, PosY, selfModel);
-    const bool selfHasSolidAbove = existSoild(chunk, externalAccessor, v.x, v.y + 1, v.z);
 
-    float tot = (selfHasFluidAbove || selfHasSolidAbove)
+    // A full block above only fills the cell when the surrounding water is
+    // also a covered column. A spring/edge with flowing neighbors stays lower.
+    const bool selfIsFullCell = fluidIsFullCell(chunk, externalAccessor, v, selfModel);
+
+    float tot = (selfHasFluidAbove || selfIsFullCell)
                     ? 9.0f
                     : (handler->queryFluidFalling(selfModel) ? 9.0f : (8.0f - current));
     int lev = 1;
@@ -449,8 +524,7 @@ auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
             continue;
         }
 
-        if (handler->queryFluidFalling(ns) || checkExistFluidSame(chunk, externalAccessor, p, PosY, ns) ||
-            existSoild(chunk, externalAccessor, p.x, p.y + 1, p.z))
+        if (handler->queryFluidFalling(ns) || fluidIsFullCell(chunk, externalAccessor, p, ns))
         {
             tot += 9.0f;
         }
@@ -523,8 +597,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             // Same fluid above => this cell is not a surface and should fill the whole cell;
             // only source water on the top surface layer is 8/9 of a block tall (vanilla behavior).
             const bool fluidAbove = checkExistFluidSame(chunk, externalAccessor, v.first, PosY, bsid);
-            const bool solidAbove = existSoild(chunk, externalAccessor, v.first.x, v.first.y + 1, v.first.z);
-            const bool fullBlock = isFalling || fluidAbove || solidAbove;
+            const bool fullBlock = isFalling || fluidAbove || fluidIsFullCell(chunk, externalAccessor, v.first, bsid);
 
             const std::array<float, 4> cornerHeights = {
                 fullBlock ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 0, fluidLevel),
@@ -537,8 +610,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             // corner heights average the same 4 neighboring cells, so both sides agree,
             // leaving no gaps from 1/255 quantization and ensuring each face is drawn once.
             auto cornerHeightOf = [&](const glm::ivec3 &p, int mdl, int idx) -> float {
-                if (handler->queryFluidFalling(mdl) || checkExistFluidSame(chunk, externalAccessor, p, PosY, mdl) ||
-                    existSoild(chunk, externalAccessor, p.x, p.y + 1, p.z))
+                if (handler->queryFluidFalling(mdl) || checkExistFluidSame(chunk, externalAccessor, p, PosY, mdl))
                 {
                     return 255.0f;
                 }
@@ -578,10 +650,12 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                     const uint32_t nst = queryBlockState(chunk, externalAccessor, np.x, np.y, np.z);
                     const int nmdl = modelFetcher(nst, chunk.chunkx, chunk.chunky, chunk.chunkz, np.x, np.y, np.z);
 
-                    if (handler->querySoild(nmdl))
+                    if (isFullBlock(nmdl))
                     {
-                        // The fluid side is completely covered by a full solid
-                        // block; it can only be seen from inside that block.
+                        // The fluid side contacts a full cube. Its face is
+                        // hidden inside the block and must not be rendered,
+                        // matching vanilla fluid face culling. This also covers
+                        // translucent full blocks such as ice.
                         culled = true;
                     }
                     else if (handler->queryFluid(nmdl) && handler->queryFluidSame(nmdl, bsid))
@@ -624,7 +698,19 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
 
                         const uint32_t nst = queryBlockState(chunk, externalAccessor, np.x, np.y, np.z);
                         const int nmdl = modelFetcher(nst, chunk.chunkx, chunk.chunky, chunk.chunkz, np.x, np.y, np.z);
-                        culled = handler->querySoild(nmdl);
+
+                        if (f == NegY)
+                        {
+                            // The bottom always touches the block below.
+                            culled = isFullBlock(nmdl);
+                        }
+                        else if (f == PosY && isFullBlock(nmdl))
+                        {
+                            // The top is covered by a full block (including
+                            // translucent ice/glass); it can never be visible
+                            // from outside, even if the fluid surface is below 1.
+                            culled = true;
+                        }
                     }
                 }
 

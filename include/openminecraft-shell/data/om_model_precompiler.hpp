@@ -124,6 +124,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::voxel::
     auto queryPartRotationCenter(int modelId, int pid) -> glm::vec3 override;
     auto queryPartRotationAngle(int modelId, int pid) -> int override;
     auto querySoild(int modelId) -> bool override;
+    auto queryFullBlock(int modelId) -> bool override;
     auto queryOcclusionShape(int modelId) -> openminecraft::renderer::common::wrap::voxel::OMVoxelShape override;
     auto queryPartAmbientOcclusion(int modelId, int pid) -> bool override;
     auto queryPartShade(int modelId, int pid) -> bool override;

@@ -314,6 +314,21 @@ auto OMModelPrecompiler::querySoild(int modelId) -> bool
     return blockModels[modelId].soild;
 }
 
+auto OMModelPrecompiler::queryFullBlock(int modelId) -> bool
+{
+    const auto &parts = blockModels[modelId].parts;
+
+    if (parts.size() != 1)
+    {
+        return false;
+    }
+
+    const auto &part = parts[0];
+    constexpr float eps = 0.001f;
+    return part.from.x <= eps && part.from.y <= eps && part.from.z <= eps && part.to.x >= 16.0f - eps &&
+           part.to.y >= 16.0f - eps && part.to.z >= 16.0f - eps;
+}
+
 auto OMModelPrecompiler::queryFluid(int modelId) -> bool
 {
     return blockModels[modelId].fluid;

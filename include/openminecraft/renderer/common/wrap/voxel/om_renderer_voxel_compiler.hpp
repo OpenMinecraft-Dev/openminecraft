@@ -23,6 +23,17 @@ class OMVoxelCompiler
                          int x, int y, int z) -> uint32_t;
     auto existSoild(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, int x,
                     int y, int z) -> bool;
+    // A full-cube occluder (ice/glass included), unlike querySoild which only
+    // marks opaque blocks. Used for fluid height and face occlusion.
+    auto existFullBlock(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
+                        int x, int y, int z) -> bool;
+    auto isFullBlock(int modelId) -> bool;
+    // True when this fluid cell is covered from above and all four horizontal
+    // neighbors are themselves covered fluid cells. Used to distinguish an
+    // interior ice-covered water column from a spring whose neighbors flow.
+    auto fluidIsFullCell(const world::OMChunk<16> &,
+                         std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, glm::ivec3, int modelId)
+        -> bool;
     auto existFluidSame(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                         int x, int y, int z, int) -> bool;
     auto computeAO(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, int x,
